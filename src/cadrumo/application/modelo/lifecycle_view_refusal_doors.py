@@ -88,6 +88,15 @@ def work_create_verdict(reason: str, *, modelo: str, filing_year: int | None = N
     )
 
 
+def work_address_absent_verdict(
+    *, modelo: str | None, filing_year: int | None, unit_id_stated: bool
+) -> PreconditionVerdict:
+    """Open creation for a stated declaration with no work unit, otherwise the work list."""
+    if modelo is not None and not unit_id_stated:
+        return work_create_verdict("work_address_absent", modelo=modelo, filing_year=filing_year)
+    return work_list_verdict("work_address_absent")
+
+
 def modelo_describe_verdict(reason: str, modelo: str) -> PreconditionVerdict:
     """The description of the declaration, which states the periods and revisions it accepts."""
     return action_door_verdict(
@@ -146,6 +155,7 @@ __all__ = [
     "unit_status_verdict",
     "unit_verify_verdict",
     "verification_reports_verdict",
+    "work_address_absent_verdict",
     "work_create_verdict",
     "work_list_verdict",
 ]

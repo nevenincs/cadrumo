@@ -49,6 +49,7 @@ from ..operations.registry import (
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .action_errors import CalculationRevisionNotFoundError
+from .lifecycle_view_refusal_doors import work_address_absent_verdict
 from .reconciliation import (
     ModeloReconciliationCommand,
     ModeloReconciliationReport,
@@ -453,6 +454,11 @@ class ModeloReconciliationImportExecutor:
                 raise ModeloWorkAddressNotFoundError(
                     translated_message="errors.error.modelo_work_address_not_found",
                     context={"work_unit_present": False},
+                    precondition_verdict=work_address_absent_verdict(
+                        modelo=None if selector.modelo is None else str(selector.modelo),
+                        filing_year=selector.filing_year,
+                        unit_id_stated=selector.work_unit_id is not None or selector.operator_work_unit_id is not None,
+                    ),
                 )
             if selected_work_unit.bucket_id != profile_id:
                 raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)

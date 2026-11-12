@@ -57,7 +57,7 @@ from .calculation_revision_gate import require_calculation_revision_coordinates_
 from .lifecycle_view_refusal_doors import (
     modelo_describe_verdict,
     unit_revisions_verdict,
-    work_create_verdict,
+    work_address_absent_verdict,
     work_list_verdict,
 )
 from .preconditions import (
@@ -842,9 +842,11 @@ def ensure_modelo_work_unit_for_active_target(
 
 def _address_absent_verdict(address: ModeloWorkAddress) -> PreconditionVerdict:
     """Open creation for a stated declaration with no work unit, otherwise the work list."""
-    if address.modelo is not None and address.work_unit_id is None and address.operator_work_unit_id is None:
-        return work_create_verdict("work_address_absent", modelo=address.modelo, filing_year=address.filing_year)
-    return work_list_verdict("work_address_absent")
+    return work_address_absent_verdict(
+        modelo=address.modelo,
+        filing_year=address.filing_year,
+        unit_id_stated=address.work_unit_id is not None or address.operator_work_unit_id is not None,
+    )
 
 
 def resolve_modelo_work_address(

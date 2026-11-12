@@ -11,7 +11,7 @@ from typing import Self
 
 from pydantic import BaseModel, Field, field_validator
 
-from ...core.errors.hierarchy import CoreValidationError, pydantic_validation_boundary
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.filing_year import FourDigitYear
 from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -30,6 +30,8 @@ from ..aggregation.withholding_recognition import (
 from ..operations.public_model_conversion import domain_value, public_value
 from ..operations.public_period import PublicPeriod
 from ..operations.public_scalar import PublicDecimal
+from .calculate_input_validation import ModeloCalculateDetailRowsError
+from .calculation_input_refusal_doors import calculate_detail_rows_verdict
 
 
 class PublicAnnualRecipientDetail(BaseModel):
@@ -170,10 +172,11 @@ class PublicAnnualRecipientDetail(BaseModel):
     @pydantic_validation_boundary
     def _orden_is_within_the_declared_ceiling(cls, value: int | None) -> int | None:
         if value is not None and exceeds_form_bound(value, "withholding.numero_orden_max"):
-            raise CoreValidationError(
+            raise ModeloCalculateDetailRowsError(
                 "the order number is above the ceiling the form declares",
                 translated_message="application.modelo.errors.withholding_order_number_above_form_ceiling",
                 context={"order_number": str(value)},
+                precondition_verdict=calculate_detail_rows_verdict("withholding_order_number_above_form_ceiling"),
             )
         return value
 
