@@ -12,20 +12,23 @@ from datetime import UTC, datetime
 from hashlib import sha256
 
 from .....application.ledger.counterparty_establishment import declared_filing_name_from_parts
+from .....application.ledger.counterparty_filing_name_kind_findings import (
+    CounterpartyFilingNameFinding,
+    served_kind_finding_words,
+)
 from .....application.ledger.counterparty_filing_name_slots import (
     CounterpartyFilingNamePartLimit,
     CounterpartyFilingNameSlot,
     FilingNameSlotRefusal,
 )
+from .....application.ledger.counterparty_filing_name_words import FilingNameSlotState, kind_words
 from .....application.ledger.counterparty_operation import (
     CounterpartyFactProjection,
-    CounterpartyFilingNameFinding,
     CounterpartyFilingNameProjection,
     CounterpartyFilingNameRendering,
     CounterpartyResolutionProjection,
     LedgerCounterpartyRequest,
     LedgerCounterpartyResult,
-    served_kind_finding_words,
 )
 from .....application.ledger.llm_diagnostics_operation import (
     LedgerLlmConfidenceProviderSnapshot,
@@ -49,6 +52,7 @@ from .....application.ledger.ratios_contracts import (
     LedgerRatiosValidateRequest,
     LedgerRatiosValidationFinding,
 )
+from .....application.operations.error_detail import served_words_language
 from .....application.operations.public_scalar import PublicDecimal
 from .....core.external_constants import OutputLanguage
 from .....core.operations import OperationEffect
@@ -65,8 +69,12 @@ SYNTHETIC_EDITION_WORDS = ("Synthetic edition A", "Synthetic edition B")
 SYNTHETIC_SLOT_WIDTHS = (40, 20)
 """The widths of the synthetic party-name slots a view serves."""
 SYNTHETIC_PART_LIMITS = (
-    CounterpartyFilingNamePartLimit(part="primer_apellido", max_length=36),
-    CounterpartyFilingNamePartLimit(part="razon_social", max_length=40),
+    CounterpartyFilingNamePartLimit(
+        part="primer_apellido", part_words="first surname", words_language=OutputLanguage.EN, max_length=36
+    ),
+    CounterpartyFilingNamePartLimit(
+        part="razon_social", part_words="company name", words_language=OutputLanguage.EN, max_length=40
+    ),
 )
 
 
@@ -89,6 +97,8 @@ def _synthetic_slots(name: CounterpartyFilingNameProjection | None) -> tuple[Cou
         refusal: FilingNameSlotRefusal | None = (
             "missing" if composed is None else "too_wide" if len(composed) > width and not rendered else None
         )
+        uses_rendering = refusal is None and composed is not None and len(composed) > width
+        state: FilingNameSlotState = refusal or ("fits_by_rendering" if uses_rendering else "fits")
         slots.append(
             CounterpartyFilingNameSlot(
                 modelo="synthetic",
@@ -102,7 +112,9 @@ def _synthetic_slots(name: CounterpartyFilingNameProjection | None) -> tuple[Cou
                 fits=refusal is None,
                 refusal=refusal,
                 composed_length=None if composed is None else len(composed),
-                uses_rendering=refusal is None and composed is not None and len(composed) > width,
+                uses_rendering=uses_rendering,
+                state=state,
+                state_words=f"{state} words",
             )
         )
     return tuple(slots)
@@ -156,6 +168,7 @@ class MemoryCounterparties:
             razon_social=request.razon_social,
             renderings=tuple((item.width, item.text) for item in request.renderings),
         )
+        language = served_words_language()
         name = CounterpartyFilingNameProjection(
             party_kind=stated.kind.value,
             primer_apellido=stated.primer_apellido,
@@ -168,6 +181,8 @@ class MemoryCounterparties:
             ),
             asserted_by=request.asserted_by or "operator",
             asserted_at=_ASSERTED_AT,
+            party_kind_words=kind_words(stated.kind.value, language),
+            party_kind_words_language=language,
         )
         changed = self.filing_names.get(request.tax_identifier) != name
         self.filing_names[request.tax_identifier] = name

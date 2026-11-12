@@ -74,6 +74,7 @@ COMMAND_OPERATION_ROWS: Final[tuple[tuple[tuple[str, ...], str | None], ...]] = 
     (("app", "ledger", "counterparty", "filing-name"), "ledger.counterparty"),
     (("app", "ledger", "counterparty", "view"), "ledger.counterparty"),
     (("app", "ledger", "counterparty", "withdraw"), "ledger.counterparty"),
+    (("app", "ledger", "counterparty", "withdraw-filing-name"), "ledger.counterparty"),
     (("app", "ledger", "detach"), "ledger.detach"),
     (("app", "ledger", "entry-options"), "ledger.entry-options"),
     (("app", "ledger", "evidence", "add"), "ledger.evidence.add"),

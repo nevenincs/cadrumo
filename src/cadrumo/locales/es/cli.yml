@@ -115,6 +115,8 @@ cli:
           aparece impreso en el documento.
         view_help: Muestra lo que la escalera de identificación de IVA respondería
           para esta contraparte con lo confirmado hasta ahora.
+        withdraw_filing_name_help: Retira solo el nombre de declaración indicado para
+          una contraparte. Todo lo demás que indicaste sobre ella se conserva.
         withdraw_help: Retira lo confirmado sobre una contraparte, declarando que
           la respuesta anterior era incorrecta.
       evidence:
@@ -3693,6 +3695,7 @@ cli:
       lines:
         filing_name_stated: '{identifier}: nombre de declaración indicado'
         filing_name_unchanged: '{identifier}: el nombre de declaración ya estaba indicado'
+        filing_name_withdrawn: '{identifier}: nombre de declaración retirado'
       notices:
         already_confirmed: '''{identifier}'' ya había sido confirmada por ''{asserted_by}''
           como ''{answered}''; esta llamada no creó ninguna confirmación nueva y se
@@ -3708,6 +3711,9 @@ cli:
           para {declared}, pero la forma de este identificador fiscal español es la
           de {observed}. El nombre se guarda tal como lo indicaste y no se ha cambiado
           nada; comprueba cuál de las dos cosas es correcta.
+        no_filing_name_to_withdraw: No había ningún nombre de declaración indicado
+          para '{identifier}', por lo que no se ha retirado nada y el almacén ya está
+          en el estado solicitado.
         not_confirmed: No hay ningún establecimiento confirmado para '{identifier}',
           por lo que este peldaño no resuelve nada y un documento cuyo papel no sea
           concluyente planteará la pregunta.

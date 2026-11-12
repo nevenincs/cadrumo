@@ -108,6 +108,8 @@ cli:
         tax_identifier_help: The counterparty's tax identifier as printed on the document.
         view_help: Show what the VAT-identification ladder would answer for this counterparty
           based on what is confirmed so far.
+        withdraw_filing_name_help: Withdraw only the filing name stated for a counterparty.
+          Everything else stated about it stays.
         withdraw_help: Withdraw what was confirmed about a counterparty, stating the
           earlier answer was wrong.
       evidence:
@@ -3427,6 +3429,7 @@ cli:
       lines:
         filing_name_stated: '{identifier}: filing name stated'
         filing_name_unchanged: '{identifier}: filing name already stated'
+        filing_name_withdrawn: '{identifier}: filing name withdrawn'
       notices:
         already_confirmed: '''{identifier}'' was already confirmed by ''{asserted_by}''
           as ''{answered}''; this call created no new confirmation and the original
@@ -3442,6 +3445,9 @@ cli:
           {declared}, but the form of this Spanish tax identifier is that of {observed}.
           The name is stored as stated and nothing was changed; check which of the
           two is right.
+        no_filing_name_to_withdraw: No filing name was stated for '{identifier}',
+          so nothing was withdrawn and the store is already in the state you asked
+          for.
         not_confirmed: No establishment is confirmed for '{identifier}', so the ladder
           settles nothing from this rung and a document whose paper is non-decisive
           will raise the question.

@@ -8,8 +8,6 @@ the stated name, so the view and the export cannot disagree.
 
 from __future__ import annotations
 
-from typing import Literal
-
 from pydantic import BaseModel, Field
 
 from ...core.external_constants import OutputLanguage
@@ -25,12 +23,17 @@ from ...domain.calculations.registry.party_name_export_slots import (
 from ...domain.filing.declared_party_name import DeclaredPartyFilingName
 from ...domain.filing.declared_party_name_filing import PartyNameSlot, party_name_slot_fit
 from ..operations.error_detail import MAX_OPERATION_ERROR_WORDS_LENGTH, served_words_language
+from .counterparty_filing_name_words import (
+    FilingNamePart,
+    FilingNameSlotRefusal,
+    FilingNameSlotState,
+    name_part_words,
+    slot_state,
+    slot_state_words,
+)
 
 _ID_MAX = 128
 """The longest registry identity a slot projection carries."""
-
-FilingNameSlotRefusal = Literal["missing", "single_surname", "too_wide"]
-FilingNamePart = Literal["primer_apellido", "segundo_apellido", "nombre", "razon_social"]
 
 
 class CounterpartyFilingNameSlot(BaseModel):
@@ -43,7 +46,9 @@ class CounterpartyFilingNameSlot(BaseModel):
     composes none; ``uses_rendering`` says the slot files the rendering stated for
     its width because the full name is wider. ``edition_words`` name the slot's
     edition as the registry words it, in ``edition_words_language``, so a surface
-    tells editions apart without reading a revision identity.
+    tells editions apart without reading a revision identity. ``state`` is the one
+    state the slot is in (filed whole, filed by the rendering stated for its width,
+    or the export's refusal) and ``state_words`` says it, in ``edition_words_language``.
     """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -59,6 +64,8 @@ class CounterpartyFilingNameSlot(BaseModel):
     refusal: FilingNameSlotRefusal | None = None
     composed_length: int | None = Field(default=None, gt=0)
     uses_rendering: bool = False
+    state: FilingNameSlotState
+    state_words: str = Field(min_length=1, max_length=MAX_OPERATION_ERROR_WORDS_LENGTH)
 
 
 class CounterpartyFilingNamePartLimit(BaseModel):
@@ -73,6 +80,8 @@ class CounterpartyFilingNamePartLimit(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     part: FilingNamePart
+    part_words: str = Field(min_length=1, max_length=MAX_OPERATION_ERROR_WORDS_LENGTH)
+    words_language: OutputLanguage
     max_length: int = Field(gt=0)
 
 
@@ -101,6 +110,8 @@ def _slot_projection(
             field_length=slot.width,
         ),
     )
+    refusal = _refusal(fit.refusal)
+    state = slot_state(fits=fit.fits, refusal=refusal, uses_rendering=fit.uses_rendering)
     return CounterpartyFilingNameSlot(
         modelo=slot.modelo,
         revision_id=slot.revision_id,
@@ -111,13 +122,17 @@ def _slot_projection(
         export_field_id=slot.export_field_id,
         width=slot.width,
         fits=fit.fits,
-        refusal=_refusal(fit.refusal),
+        refusal=refusal,
         composed_length=fit.composed_length,
         uses_rendering=fit.uses_rendering,
+        state=state,
+        state_words=slot_state_words(state, language),
     )
 
 
-def _part_limits(slots: tuple[PartyNameExportSlot, ...]) -> tuple[CounterpartyFilingNamePartLimit, ...]:
+def _part_limits(
+    slots: tuple[PartyNameExportSlot, ...], language: OutputLanguage
+) -> tuple[CounterpartyFilingNamePartLimit, ...]:
     limits: dict[PartyNameComponent, int] = {}
     for slot in slots:
         composition = slot.composition
@@ -128,7 +143,12 @@ def _part_limits(slots: tuple[PartyNameExportSlot, ...]) -> tuple[CounterpartyFi
                 if bound > limits.get(part, 0):
                     limits[part] = bound
     return tuple(
-        CounterpartyFilingNamePartLimit(part=_part(component), max_length=limits[component])
+        CounterpartyFilingNamePartLimit(
+            part=_part(component),
+            part_words=name_part_words(_part(component), language),
+            words_language=language,
+            max_length=limits[component],
+        )
         for component in PartyNameComponent
         if component in limits
     )
@@ -150,13 +170,11 @@ def counterparty_filing_name_slots(
     """Every party-name slot of the pinned authority with the stated name's fit, and the per-part limits."""
     slots = party_name_export_slots(operation)
     language = served_words_language()
-    return tuple(_slot_projection(slot, name, language) for slot in slots), _part_limits(slots)
+    return tuple(_slot_projection(slot, name, language) for slot in slots), _part_limits(slots, language)
 
 
 __all__ = [
     "CounterpartyFilingNamePartLimit",
     "CounterpartyFilingNameSlot",
-    "FilingNamePart",
-    "FilingNameSlotRefusal",
     "counterparty_filing_name_slots",
 ]

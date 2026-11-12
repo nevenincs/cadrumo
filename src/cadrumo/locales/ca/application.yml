@@ -1185,6 +1185,24 @@ application:
       party_kinds:
         entity: una entitat
         natural_person: una persona física
+      served:
+        part:
+          nombre: Nom
+          primer_apellido: Primer cognom
+          razon_social: Raó social
+          segundo_apellido: Segon cognom
+        party_kind:
+          entity: Entitat
+          natural_person: Persona física
+        slot_state:
+          fits: El nom indicat hi cap sencer en aquest camp
+          fits_by_rendering: Es declara amb la versió més curta que has indicat per
+            a aquesta amplada
+          missing: No hi ha cap nom indicat, així que aquest camp no es pot declarar
+          single_surname: Una persona física amb un sol cognom no té regla de composició
+            en aquest camp
+          too_wide: El nom indicat és més ample que aquest camp i no té versió per
+            a la seva amplada
     draft_finding:
       breakdown_bases_disagree: Les bases per tipus sumen {summed}, però el document
         indica una base imposable de {base}. Són dues lectures del mateix document

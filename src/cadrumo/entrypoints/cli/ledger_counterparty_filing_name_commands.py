@@ -20,9 +20,10 @@ from uuid import UUID
 
 import typer
 
+from ...application.ledger.counterparty_establishment import confirmed_counterparty_facts_key
+from ...application.ledger.counterparty_filing_name_kind_findings import CounterpartyFilingNameFinding
 from ...application.ledger.counterparty_operation import (
     CounterpartyFactProjection,
-    CounterpartyFilingNameFinding,
     CounterpartyFilingNameProjection,
     CounterpartyFilingNameRendering,
     LedgerCounterpartyRequest,
@@ -30,12 +31,13 @@ from ...application.ledger.counterparty_operation import (
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.filing.declared_party_name import DeclaredPartyKind
-from .common import active_bucket_id_or_refuse, emit_envelope
+from .common import active_bucket_id_or_refuse, bad, emit_envelope
 from .ledger_counterparty_results import (
     CounterpartyFilingNameFindingPayload,
     CounterpartyFilingNamePayload,
     CounterpartyFilingNameRenderingPayload,
     CounterpartyFilingNameResult,
+    CounterpartyWithdrawFilingNameResult,
 )
 from .operation_counterparty import run_counterparty
 
@@ -166,6 +168,48 @@ def counterparty_filing_name(
                 else "cli.ledger.counterparty.lines.filing_name_unchanged",
                 identifier=facts.canonical_tax_identifier,
             )
+        ],
+        notices=notices,
+    )
+
+
+def counterparty_withdraw_filing_name(
+    ctx: typer.Context,
+    tax_identifier: str,
+    country_code: str | None = None,
+) -> None:
+    """Withdraw only the stated filing name, keeping every other answer about the counterparty."""
+    bucket_id = active_bucket_id_or_refuse()
+    if confirmed_counterparty_facts_key(tax_identifier, country_code=country_code) is None:
+        raise bad(tr("cli.ledger.counterparty.errors.unverifiable_identifier", identifier=tax_identifier))
+    completed = run_counterparty(
+        ctx,
+        request=LedgerCounterpartyRequest(
+            profile_id=UUID(bucket_id),
+            action="withdraw_filing_name",
+            tax_identifier=tax_identifier,
+            country_code=country_code,
+        ),
+    )
+    withdrawn = cast("bool", completed.projection.withdrawn)
+    notices: list[Notice] = []
+    if not withdrawn:
+        notices.append(
+            Notice(
+                severity=NoticeSeverity.INFO,
+                code="ledger.counterparty.no_filing_name_to_withdraw",
+                message=tr("cli.ledger.counterparty.notices.no_filing_name_to_withdraw", identifier=tax_identifier),
+                context={"tax_identifier": tax_identifier},
+            )
+        )
+    emit_envelope(
+        ctx,
+        command="ledger.counterparty.withdraw_filing_name",
+        result=CounterpartyWithdrawFilingNameResult(canonical_tax_identifier=tax_identifier, withdrawn=withdrawn),
+        lines=[
+            tr("cli.ledger.counterparty.lines.filing_name_withdrawn", identifier=tax_identifier)
+            if withdrawn
+            else tr("cli.ledger.counterparty.notices.no_filing_name_to_withdraw", identifier=tax_identifier)
         ],
         notices=notices,
     )

@@ -141,6 +141,20 @@ class CounterpartyWithdrawResult(OutputSchema):
     withdrawn: bool
 
 
+class CounterpartyWithdrawFilingNameResult(OutputSchema):
+    """JSON envelope for ``aeat app ledger counterparty withdraw-filing-name``.
+
+    Attributes:
+        canonical_tax_identifier: Whom the withdrawal was about, canonicalised.
+        withdrawn: Whether a filing name was actually held and removed.
+            ``False`` is a successful no-op: no name was stated, and every other
+            answer about the counterparty is untouched either way.
+    """
+
+    canonical_tax_identifier: NonEmptyStr
+    withdrawn: bool
+
+
 class CounterpartyViewResult(OutputSchema):
     """JSON envelope for ``aeat app ledger counterparty view``.
 
