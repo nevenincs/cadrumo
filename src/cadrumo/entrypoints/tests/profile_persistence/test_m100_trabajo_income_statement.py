@@ -258,3 +258,41 @@ def test_a_return_with_no_work_income_record_asks_for_no_statement_of_the_four_b
         assert work.apply(binding=tuple(_attest(binding_id) for binding_id in _CARRIES)).refusal is None
         assert _blocking_boxes(_findings(work)) == set()
         assert _TRABAJO not in {a.family for a in _form(work).carry_attestations}
+
+
+@pytest.mark.parametrize("year", _renta_years()[-1:])
+def test_the_work_income_statement_is_offered_only_once_the_open_carries_are_stated(tmp_path: Path, year: int) -> None:
+    """Both families are never open at once: a return with an open carry has no calculation to rest a record on.
+
+    The carries must be answered before the first calculation, and the work-income statement is
+    offered from the calculation on, so the carry family comes first and the work-income family
+    follows without any refusal beside it. Withdrawing a carry statement afterwards leaves the
+    return uncalculable, and the edit refuses that withdrawal.
+    """
+    with (
+        profile_adapter_composition(),
+        seeded_operator_work(tmp_path, modelo="100", filing_year=year, period_code="0A", extra_facts=_FACTS) as work,
+    ):
+        _record_certificate(work, year)
+        carry = AbsenceAttestationFamily.RENTA_NEGATIVE_GENERAL_BASES_PENDING
+        before = {attestation.family: attestation for attestation in _form(work).carry_attestations}
+        assert set(before) == {carry}
+        with pytest.raises(ModeloAbsenceStatementNothingOpenError):
+            absence_statement_submission(work.baseline(), before.values(), family=_TRABAJO)
+
+        stated = absence_statement_submission(work.baseline(), before.values(), family=carry)
+        assert work.apply(binding=stated.binding_intents).refusal is None
+        after = {attestation.family: attestation for attestation in _form(work).carry_attestations}
+        assert set(after) == {_TRABAJO}
+        submission = absence_statement_submission(work.baseline(), after.values(), family=_TRABAJO)
+        assert work.apply(binding=submission.binding_intents).refusal is None
+
+        withdrawn = work.apply(
+            binding=(
+                ModeloBindingEditIntentV1(
+                    address=ModeloEditBindingAddressV1(binding_id=_CARRIES[0]),
+                    kind=ModeloEditBindingIntentKind.REMOVE_OVERRIDE,
+                ),
+            )
+        )
+        assert withdrawn.refusal is not None
