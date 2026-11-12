@@ -265,6 +265,43 @@ def _credit_target_failures(
     return failures
 
 
+def _income_reach_failures(revision: ModeloRevision, binding: BindingDefinition) -> list[str]:
+    """Return the refusals of an income binding read other than directly by one casilla."""
+    failures: list[str] = []
+    if binding.aeat_prefilled:
+        failures.append(f"binding {binding.id!r} is an income binding and cannot be aeat_prefilled")
+    if any(binding.id in expression_binding_refs(formula.expression) for formula in revision.formulas):
+        failures.append(f"binding {binding.id!r} is an income binding and cannot be a formula operand")
+    failures.extend(
+        f"binding {binding.id!r} is an alternate binding of casilla {casilla.id!r}; an income binding is the "
+        "only source of its casilla"
+        for casilla in revision.casillas
+        if binding.id in casilla.alternate_bindings
+    )
+    return failures
+
+
+def _income_target_failures(
+    revision: ModeloRevision,
+    binding: BindingDefinition,
+    provider: RetencionSoportadaProvider,
+    expected: str,
+) -> list[str]:
+    """Return the refusals of an income binding whose directly bound casillas are not the pair's role."""
+    direct = [casilla for casilla in revision.casillas if casilla.binding == binding.id]
+    if not direct:
+        return [
+            f"binding {binding.id!r} is an income binding and fills a casilla of role {expected!r} directly; "
+            "no casilla binds it",
+        ]
+    return [
+        f"binding {binding.id!r}: casilla {casilla.id!r} has role {casilla.semantic_role!r}, but "
+        f"{provider.quantity.value!r} of income class {provider.income_class.value!r} fills role {expected!r}"
+        for casilla in direct
+        if casilla.semantic_role != expected
+    ]
+
+
 def _income_binding_failures(
     revision: ModeloRevision,
     binding: BindingDefinition,
@@ -282,30 +319,10 @@ def _income_binding_failures(
             f"binding {binding.id!r}: quantity {provider.quantity.value!r} of income class "
             f"{provider.income_class.value!r} is admitted on no casilla role",
         ]
-    failures: list[str] = []
-    if binding.aeat_prefilled:
-        failures.append(f"binding {binding.id!r} is an income binding and cannot be aeat_prefilled")
-    if any(binding.id in expression_binding_refs(formula.expression) for formula in revision.formulas):
-        failures.append(f"binding {binding.id!r} is an income binding and cannot be a formula operand")
-    direct = [casilla for casilla in revision.casillas if casilla.binding == binding.id]
-    if not direct:
-        failures.append(
-            f"binding {binding.id!r} is an income binding and fills a casilla of role {expected!r} directly; "
-            "no casilla binds it",
-        )
-    failures.extend(
-        f"binding {binding.id!r} is an alternate binding of casilla {casilla.id!r}; an income binding is the "
-        "only source of its casilla"
-        for casilla in revision.casillas
-        if binding.id in casilla.alternate_bindings
-    )
-    failures.extend(
-        f"binding {binding.id!r}: casilla {casilla.id!r} has role {casilla.semantic_role!r}, but "
-        f"{provider.quantity.value!r} of income class {provider.income_class.value!r} fills role {expected!r}"
-        for casilla in direct
-        if casilla.semantic_role != expected
-    )
-    return failures
+    return [
+        *_income_reach_failures(revision, binding),
+        *_income_target_failures(revision, binding, provider, expected),
+    ]
 
 
 def _one_source_per_figure_failures(revision: ModeloRevision) -> list[str]:
