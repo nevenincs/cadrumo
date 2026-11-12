@@ -741,16 +741,7 @@ class InventorySourceResolver:
             return ledgers
         activities = _direct_estimation_activities(context)
         if not ledgers:
-            # Only an activity in estimacion directa keeps a book for the rows. A book kept for
-            # an activity outside the block still reaches the count check below and is refused.
-            if activities is not None and activities.none_in_direct_estimation:
-                return self._inapplicable(binding_ids)
-            return _missing_books_refusal(
-                binding_ids,
-                filing_year=context.filing_year,
-                resolver_id=self.resolver_id,
-                owned_sources=self.owned_sources,
-            )
+            return self._without_books(activities, binding_ids=binding_ids, filing_year=context.filing_year)
         refusal = self._books_refusal(context, activities, ledgers, binding_ids=binding_ids)
         if refusal is not None:
             return refusal
@@ -759,6 +750,27 @@ class InventorySourceResolver:
             revision=context.revision,
             binding_ids=binding_ids,
             bindings_by_operation=template.by_operation,
+            resolver_id=self.resolver_id,
+            owned_sources=self.owned_sources,
+        )
+
+    def _without_books(
+        self,
+        activities: _DirectEstimationActivities | None,
+        *,
+        binding_ids: tuple[str, ...],
+        filing_year: int,
+    ) -> CalculationSourceResolution:
+        """Resolve the rows of a filer who keeps no inventory book.
+
+        Only an activity in estimacion directa keeps a book for the rows. A book kept for an
+        activity outside the block still reaches the count check and is refused.
+        """
+        if activities is not None and activities.none_in_direct_estimation:
+            return self._inapplicable(binding_ids)
+        return _missing_books_refusal(
+            binding_ids,
+            filing_year=filing_year,
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
         )
