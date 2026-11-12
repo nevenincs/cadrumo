@@ -38,7 +38,6 @@ __all__ = [
     "trabajo_recorded",
 ]
 
-_FINDINGS_KEY: Final[str] = "application.modelo.findings"
 _ROLE_PREFIX: Final[str] = "irpf_rendimiento_trabajo_"
 
 TRABAJO_INCOME_STATEMENT_ROLES: Final[Mapping[str, str]] = {
@@ -97,7 +96,15 @@ def _unstated_findings(revision: ModeloRevision, target: CalculationRevision) ->
                     kind=ModeloVerificationFindingKind.BLOCKING_RULE,
                     severity=ModeloVerificationFindingSeverity.BLOCKING,
                     casilla_id=casilla_id,
-                    message_locale_key=f"{_FINDINGS_KEY}.trabajo_income_unstated.{suffix}",
+                    message_locale_key=(
+                        "application.modelo.findings.trabajo_income_unstated.prevision"
+                        if suffix == "prevision"
+                        else "application.modelo.findings.trabajo_income_unstated.dependencia"
+                        if suffix == "dependencia"
+                        else "application.modelo.findings.trabajo_income_unstated.patrimonio_protegido"
+                        if suffix == "patrimonio_protegido"
+                        else "application.modelo.findings.trabajo_income_unstated.decision_trabajador"
+                    ),
                     message_facts={"casilla_id": casilla_id},
                     legal_refs=("ley-35-2006:art-17",),
                 ),
@@ -117,7 +124,7 @@ def _disability_finding(
         kind=ModeloVerificationFindingKind.BLOCKING_RULE,
         severity=ModeloVerificationFindingSeverity.BLOCKING,
         casilla_id=casilla_id,
-        message_locale_key=f"{_FINDINGS_KEY}.trabajo_disability_unstated",
+        message_locale_key="application.modelo.findings.trabajo_disability_unstated",
         message_facts={"casilla_id": casilla_id},
         legal_refs=("ley-35-2006:art-19",),
     )
@@ -141,7 +148,11 @@ def _limit_findings(
                     kind=ModeloVerificationFindingKind.BLOCKING_RULE,
                     severity=ModeloVerificationFindingSeverity.BLOCKING,
                     casilla_id=casilla_id,
-                    message_locale_key=f"{_FINDINGS_KEY}.trabajo_expense_above_limit.{suffix}",
+                    message_locale_key=(
+                        "application.modelo.findings.trabajo_expense_above_limit.colegio_profesional"
+                        if suffix == "colegio_profesional"
+                        else "application.modelo.findings.trabajo_expense_above_limit.defensa_juridica"
+                    ),
                     message_facts={"casilla_id": casilla_id, "stated": stated, "limit": limit},
                     legal_refs=(legal_ref,),
                 ),
@@ -173,7 +184,7 @@ def trabajo_income_findings(
                 kind=ModeloVerificationFindingKind.ADVISORY,
                 severity=ModeloVerificationFindingSeverity.WARNING,
                 casilla_id=total_id,
-                message_locale_key=f"{_FINDINGS_KEY}.trabajo_deduction_not_computed",
+                message_locale_key="application.modelo.findings.trabajo_deduction_not_computed",
                 legal_refs=("ley-35-2006:art-19",),
             ),
         )

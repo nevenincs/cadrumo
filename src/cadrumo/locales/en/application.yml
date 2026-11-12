@@ -3040,6 +3040,10 @@ application:
         modelo 123 that declares it was submitted by your payer, not by you, so this
         value cannot be filled in automatically.
       suffered_retencion_trabajo_uncredited: This declaration includes income from
+        work (rendimientos del trabajo), but no withholding (retención) is credited
+        against it. Enter the amount from your payer's certificado de retenciones
+        e ingresos a cuenta. The modelo 111 that declares it was submitted by your
+        payer, not by you, so this value cannot be filled in automatically.
       trabajo_deduction_not_computed: 'Your work income does not include the deductions
         only you can evidence: union dues (0014), professional-body fees (0015), legal-defence
         costs (0016) and the increase for geographic mobility (0020). If any applies,
@@ -3066,10 +3070,6 @@ application:
         prevision: Box [%{casilla_id}] (employer contributions to pension plans and
           welfare mutuals) is income from work that no payer certificate states. State
           the amount you received, or state that there is none.
-        work (rendimientos del trabajo), but no withholding (retención) is credited
-        against it. Enter the amount from your payer's certificado de retenciones
-        e ingresos a cuenta. The modelo 111 that declares it was submitted by your
-        payer, not by you, so this value cannot be filled in automatically.
       transaction_evidence_missing_deductible: An expense you deduct has no invoice
         or receipt attached. Attach it to the entry in your records.
       transaction_evidence_missing_output: An issued invoice on which you charge VAT
@@ -3201,14 +3201,14 @@ application:
         complete_profile_setup: Declare the profile setup complete
         open_profile_field: Fill in %{field}
     projection_words:
-        income_family_contradicts_profile: This box compares your other income with
-          the limit, but the income categories you stated exclude a kind of income
-          that you have figures for. Correct the categories or remove the figures,
-          then project again. It is never shown as zero.
       binding_unresolved: No value could be worked out for this figure from your records,
         so it stays unresolved instead of counting as zero. Record the missing evidence,
         then project again.
       casilla_reason:
+        income_family_contradicts_profile: This box compares your other income with
+          the limit, but the income categories you stated exclude a kind of income
+          that you have figures for. Correct the categories or remove the figures,
+          then project again. It is never shown as zero.
         m210_baseline_tipo_deferred: This box needs the general rate for this kind
           of income, which is not yet grounded for the year, so it has no value.
         m210_convenio_rate_missing: This box needs the tax-treaty rate for the country

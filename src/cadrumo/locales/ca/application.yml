@@ -3206,6 +3206,10 @@ application:
         compte del teu pagador. El model 123 que la declara el va presentar el teu
         pagador, no tu, així que aquest valor no es pot emplenar automàticament.
       suffered_retencion_trabajo_uncredited: Aquesta declaració recull rendiments
+        del treball, però no hi consta cap retenció suportada. Introdueix l'import
+        del certificat de retencions i ingressos a compte del teu pagador. El model
+        111 que la declara el va presentar el teu pagador, no tu, així que aquest
+        valor no es pot emplenar automàticament.
       trabajo_deduction_not_computed: 'Els teus rendiments del treball no inclouen
         les deduccions que només tu pots acreditar: quotes sindicals (0014), quotes
         de col·legis professionals (0015), despeses de defensa jurídica (0016) i increment
@@ -3237,10 +3241,6 @@ application:
           de pensions i mutualitats de previsió social) és un ingrés del treball que
           cap certificat del pagador indica. Indica l'import que vas rebre o declara
           que no n'hi ha cap.
-        del treball, però no hi consta cap retenció suportada. Introdueix l'import
-        del certificat de retencions i ingressos a compte del teu pagador. El model
-        111 que la declara el va presentar el teu pagador, no tu, així que aquest
-        valor no es pot emplenar automàticament.
       transaction_evidence_missing_deductible: Una despesa deduïble no té cap factura
         ni justificant adjunt. Adjunta'l a l'apunt dels teus registres.
       transaction_evidence_missing_output: Una factura emesa amb IVA repercutit no
@@ -3375,14 +3375,14 @@ application:
         complete_profile_setup: Declara completa la configuració del perfil
         open_profile_field: Omple %{field}
     projection_words:
-        income_family_contradicts_profile: Aquesta casella compara les teves altres
-          rendes amb el límit, però les categories de renda que has indicat exclouen
-          un tipus de renda del qual tens imports. Corregeix les categories o retira
-          els imports i torna a projectar. Mai es mostra com a zero.
       binding_unresolved: No s'ha pogut treure cap valor per a aquesta xifra a partir
         dels teus registres, així que queda sense resoldre en lloc de comptar com
         a zero. Registra l'evidència que falta i torna a projectar.
       casilla_reason:
+        income_family_contradicts_profile: Aquesta casella compara les teves altres
+          rendes amb el límit, però les categories de renda que has indicat exclouen
+          un tipus de renda del qual tens imports. Corregeix les categories o retira
+          els imports i torna a projectar. Mai es mostra com a zero.
         m210_baseline_tipo_deferred: Aquesta casella necessita el tipus de gravamen
           general d'aquesta classe de renda, que encara no està fonamentat per a l'exercici,
           així que no té valor.

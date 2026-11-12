@@ -3161,6 +3161,10 @@ application:
         levonást bevalló Modelo 123 nyomtatványt a kifizető nyújtotta be, nem te,
         ezért ez az érték nem tölthető ki automatikusan.
       suffered_retencion_trabajo_uncredited: Ez a bevallás munkaviszonyból származó
+        jövedelmet (rendimientos del trabajo) tartalmaz, de nem szerepel benne levont
+        forrásadó (retención). Add meg az összeget a kifizető igazolásából (certificado
+        de retenciones e ingresos a cuenta). A levonást bevalló Modelo 111 nyomtatványt
+        a kifizető nyújtotta be, nem te, ezért ez az érték nem tölthető ki automatikusan.
       trabajo_deduction_not_computed: 'A munkaviszonyi jövedelmed nem tartalmazza
         azokat a levonásokat, amelyeket csak te tudsz igazolni: szakszervezeti díj
         (0014), szakmai kamarai díj (0015), jogvédelmi költség (0016) és a földrajzi
@@ -3193,10 +3197,6 @@ application:
           egyesületekhez nyújtott munkáltatói hozzájárulások) olyan munkaviszonyi
           jövedelem, amelyet egyetlen kifizetői igazolás sem tartalmaz. Add meg a
           kapott összeget, vagy nyilatkozz arról, hogy nincs.
-        jövedelmet (rendimientos del trabajo) tartalmaz, de nem szerepel benne levont
-        forrásadó (retención). Add meg az összeget a kifizető igazolásából (certificado
-        de retenciones e ingresos a cuenta). A levonást bevalló Modelo 111 nyomtatványt
-        a kifizető nyújtotta be, nem te, ezért ez az érték nem tölthető ki automatikusan.
       transaction_evidence_missing_deductible: Egy levonható kiadáshoz nincs csatolva
         számla vagy bizonylat. Csatold a nyilvántartásaid megfelelő tételéhez.
       transaction_evidence_missing_output: Egy felszámított IVA-t tartalmazó kiállított
@@ -3333,14 +3333,14 @@ application:
         complete_profile_setup: Nyilvánítsd befejezettnek a profil beállítását
         open_profile_field: 'Töltsd ki: %{field}'
     projection_words:
-        income_family_contradicts_profile: Ez a rovat a többi jövedelmedet veti össze
-          a határral, de a megadott jövedelemkategóriák kizárnak egy olyan jövedelemfajtát,
-          amelyhez összegeid vannak. Javítsd a kategóriákat, vagy távolítsd el az
-          összegeket, majd vetíts újra. Soha nem jelenik meg nullaként.
       binding_unresolved: Ehhez az értékhez a nyilvántartásaidból nem sikerült értéket
         kiszámolni, ezért feloldatlan marad, és nem számít nullának. Rögzítsd a hiányzó
         igazolást, majd vetíts újra.
       casilla_reason:
+        income_family_contradicts_profile: Ez a rovat a többi jövedelmedet veti össze
+          a határral, de a megadott jövedelemkategóriák kizárnak egy olyan jövedelemfajtát,
+          amelyhez összegeid vannak. Javítsd a kategóriákat, vagy távolítsd el az
+          összegeket, majd vetíts újra. Soha nem jelenik meg nullaként.
         m210_baseline_tipo_deferred: Ehhez a rovathoz az ilyen jellegű jövedelem általános
           adókulcsa kell, amely az adóévre még nincs megalapozva, ezért nincs értéke.
         m210_convenio_rate_missing: Ehhez a rovathoz a kettős adóztatást kizáró egyezmény

@@ -3207,6 +3207,10 @@ application:
         tu pagador. El modelo 123 que la declara lo presentó tu pagador, no tú, así
         que este valor no puede rellenarse automáticamente.
       suffered_retencion_trabajo_uncredited: Esta declaración recoge rendimientos
+        del trabajo, pero no consta ninguna retención soportada. Introduce el importe
+        del certificado de retenciones e ingresos a cuenta de tu pagador. El modelo
+        111 que la declara lo presentó tu pagador, no tú, así que este valor no puede
+        rellenarse automáticamente.
       trabajo_deduction_not_computed: 'Tus rendimientos del trabajo no incluyen las
         deducciones que solo tú puedes acreditar: cuotas sindicales (0014), cuotas
         de colegios profesionales (0015), gastos de defensa jurídica (0016) e incremento
@@ -3238,10 +3242,6 @@ application:
           de pensiones y mutualidades de previsión social) es un ingreso del trabajo
           que ningún certificado del pagador indica. Indica el importe que recibiste
           o declara que no hay ninguno.
-        del trabajo, pero no consta ninguna retención soportada. Introduce el importe
-        del certificado de retenciones e ingresos a cuenta de tu pagador. El modelo
-        111 que la declara lo presentó tu pagador, no tú, así que este valor no puede
-        rellenarse automáticamente.
       transaction_evidence_missing_deductible: Un gasto deducible no tiene factura
         ni justificante adjunto. Adjúntalo al apunte de tus registros.
       transaction_evidence_missing_output: Una factura emitida con IVA repercutido
@@ -3377,14 +3377,14 @@ application:
         complete_profile_setup: Declara completa la configuración del perfil
         open_profile_field: Rellena %{field}
     projection_words:
-        income_family_contradicts_profile: Esta casilla compara tus demás rentas con
-          el límite, pero las categorías de renta que indicaste excluyen un tipo de
-          renta del que tienes importes. Corrige las categorías o retira los importes
-          y vuelve a proyectar. Nunca se muestra como cero.
       binding_unresolved: No se ha podido sacar ningún valor para esta cifra a partir
         de tus registros, así que queda sin resolver en lugar de contar como cero.
         Registra la evidencia que falta y vuelve a proyectar.
       casilla_reason:
+        income_family_contradicts_profile: Esta casilla compara tus demás rentas con
+          el límite, pero las categorías de renta que indicaste excluyen un tipo de
+          renta del que tienes importes. Corrige las categorías o retira los importes
+          y vuelve a proyectar. Nunca se muestra como cero.
         m210_baseline_tipo_deferred: Esta casilla necesita el tipo de gravamen general
           de esta clase de renta, que aún no está fundamentado para el ejercicio,
           así que no tiene valor.

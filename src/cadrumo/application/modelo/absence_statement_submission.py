@@ -11,8 +11,7 @@ state is refused before anything is staged, in the words of the family asked abo
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping
-from types import MappingProxyType
+from collections.abc import Iterable
 from typing import Final
 
 from ...domain.calculations.registry.binding_absence_attestation import AbsenceAttestationFamily
@@ -27,17 +26,13 @@ from .edit_models import (
 )
 from .work_form_models import ModeloFormCarryAttestation
 
-_NOTHING_OPEN_MESSAGE_KEYS: Final[Mapping[AbsenceAttestationFamily, str]] = MappingProxyType(
+_WORDED_FAMILIES: Final[frozenset[AbsenceAttestationFamily]] = frozenset(
     {
-        AbsenceAttestationFamily.RENTA_NEGATIVE_GENERAL_BASES_PENDING: (
-            "application.modelo.errors.prior_carries_nothing_open"
-        ),
-        AbsenceAttestationFamily.RENTA_TRABAJO_INCOME_NOT_STATED: (
-            "application.modelo.errors.trabajo_income_nothing_open"
-        ),
+        AbsenceAttestationFamily.RENTA_NEGATIVE_GENERAL_BASES_PENDING,
+        AbsenceAttestationFamily.RENTA_TRABAJO_INCOME_NOT_STATED,
     }
 )
-if frozenset(_NOTHING_OPEN_MESSAGE_KEYS) != frozenset(AbsenceAttestationFamily):
+if frozenset(AbsenceAttestationFamily) != _WORDED_FAMILIES:
     raise ValueError("every statement family needs the words of its nothing-open refusal")
 
 
@@ -51,7 +46,11 @@ class ModeloAbsenceStatementNothingOpenError(ModeloError):
     def __init__(self, *, modelo: str, filing_year: int, family: AbsenceAttestationFamily) -> None:
         """Name the declaration the filer asked about, in the words of the family."""
         super().__init__(
-            translated_message=_NOTHING_OPEN_MESSAGE_KEYS[family],
+            translated_message=(
+                "application.modelo.errors.trabajo_income_nothing_open"
+                if family is AbsenceAttestationFamily.RENTA_TRABAJO_INCOME_NOT_STATED
+                else "application.modelo.errors.prior_carries_nothing_open"
+            ),
             context={"modelo": modelo, "filing_year": filing_year},
         )
 
