@@ -7,9 +7,11 @@ from uuid import UUID
 import pytest
 from pydantic import ValidationError
 
+from ....core.external_constants import OutputLanguage
 from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ...operator_actions.preconditions import no_action_precondition_verdict
 from ...operator_actions.projection import PreconditionVerdictSnapshot
+from ...operator_actions.served_actions import serve_precondition_verdict
 from ..google_configuration_operation_contracts import GoogleConfigurationOutcome
 from ..google_configuration_operation_refusal import (
     GoogleConfigurationPresentationFacts,
@@ -32,10 +34,12 @@ def test_closed_tty_refusal_keeps_ordered_canonical_verdict_without_a_second_fra
         provider_code="REFUSED_GOOGLE_NON_INTERACTIVE",
         message_key="adapters.google.oauth_flow.errors.non_interactive",
         facts=GoogleConfigurationPresentationFacts(profile=_PROFILE, reason="stdin_not_tty"),
-        verdict=PreconditionVerdictSnapshot.from_verdict(verdict),
+        verdict=PreconditionVerdictSnapshot.from_verdict(verdict, OutputLanguage.EN),
     )
     reopened = GoogleConfigurationRefusalProjection.model_validate_json(refusal.model_dump_json())
-    assert reopened.verdict is not None and reopened.verdict.to_verdict() == verdict
+    assert reopened.verdict is not None and reopened.verdict.to_verdict() == serve_precondition_verdict(
+        verdict, OutputLanguage.EN
+    )
     assert reopened.provider_code == "REFUSED_GOOGLE_NON_INTERACTIVE"
     assert reopened.message_key == "adapters.google.oauth_flow.errors.non_interactive"
     assert reopened.facts.presentation_context() == {"profile": str(_PROFILE), "reason": "stdin_not_tty"}
