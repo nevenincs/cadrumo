@@ -14,6 +14,8 @@ import pytest
 
 from ....core.aggregation import BindingSourceKind
 from ....core.authority_grade import RegistryAuthorityGrade
+from ....core.errors.error_codes import get_registered_error_code
+from ....core.errors.hierarchy import RecordedRegisteredError
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.binding_targets import bound_casilla_binding_ids
@@ -26,7 +28,7 @@ from ....domain.calculations.registry.tests.published_authority import published
 from ...operations.models import OperationIdentity, OperationRequest
 from ...operations.tests.financial_operand_delivery import deliver_financial_operand
 from .. import edit_operation as operation_definitions
-from ..action_errors import ModeloEditRefusedError, modelo_edit_refusal_error
+from ..action_errors import modelo_edit_refusal_error
 from ..edit_contract import ModeloEditMutationFamily
 from ..edit_execution import pre_effect_refusal
 from ..edit_models import (
@@ -276,8 +278,11 @@ async def test_observer_failure_keeps_the_exact_registered_refusal_and_none_effe
         operand=submission,
     ) as access:
         context.typed_financial_operand = access
-        with pytest.raises(ModeloEditRefusedError) as caught:
+        # The admitted value's recalculation refused for an unresolved source: the edit
+        # settles under that refusal's own code, never as a value to state again.
+        with pytest.raises(RecordedRegisteredError) as caught:
             await executor.execute(request, context)
+    assert get_registered_error_code(caught.value).code == "ERROR_CALCULATIONS_REGISTRY_VALIDATION"
     assert [str(effect) for effect in effects] == ["unknown", "none"]
     assert len(delivered) == 1 and delivered[0].baseline_id == str(baseline.baseline_id)
     assert _BINDING not in str(caught.value.context) and "1388" not in str(caught.value.context)
