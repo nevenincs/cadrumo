@@ -23,6 +23,8 @@ class RetencionSoportadaRowPayload(OutputSchema):
     retencion: str
     ingreso_a_cuenta: str
     ingreso_a_cuenta_repercutido: str
+    reducciones_aplicables: str | None = None
+    gastos_deducibles: str | None = None
     pago_a_cuenta: str
     origin: str
     evidence_sha256: str | None = None

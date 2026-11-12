@@ -720,7 +720,6 @@
         "cadrumo.application.modelo.amendment_actions",
         "cadrumo.application.modelo.amendment_context_operation",
         "cadrumo.application.modelo.amendment_projection",
-        "cadrumo.application.modelo.art20_advisory",
         "cadrumo.application.modelo.art52_advisory",
         "cadrumo.application.modelo.audit_operation",
         "cadrumo.application.modelo.audit_operation_ports",

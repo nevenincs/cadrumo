@@ -10,7 +10,7 @@ related:
   - '[[2026-10-18-runtime-authority-boundary-adr]]'
 modified: '2026-11-12'
 body_schema: body-v2
-body_hash: 'sha256:43df29e3141f67da21d7bd0b31805f907c2421271970cd365b650149b721dc0b'
+body_hash: 'sha256:3049c995ac9f503e11e9d34f6d35a47a9552ca4afa5c64984523cbfd8cf5fe25'
 ---
 
 <!-- RETIRED: S44 -->
@@ -95,6 +95,7 @@ Real backend work that the tree does not yet do, checked against the code on 202
 - [ ] `P02.S48` - Compute Modelo 100 furniture amortisation (0117) and the LIRPF art. 23.3 reduction (0151) from the property records, where today each is a served non-blocking limitation (lane CALC-RENTA, with LIFECYCLE for the XML layout); `src/cadrumo/_data/registry/aeat/modelos/100, src/cadrumo/application/aggregation`.
 - [ ] `P02.S52` - Compute the negative branch of Modelo 100 casilla 0695 (TCNN112, 0670 minus 0694), unresolved until then (lane CALC-RENTA); `src/cadrumo/_data/registry/aeat/modelos/100`.
 - [ ] `P02.S53` - Hold 'no employer contributions or imputed work income' as a dated stated profile fact asked once, replacing the per-return statement of Modelo 100 casillas 0008, 0009, 0010 and 0024 (lane CALC-PAGOS); `src/cadrumo/_data/registry/cadrumo/user_profile, src/cadrumo/application/aggregation`.
+- [ ] `P02.S58` - Keep the provenance of an operator-entered casilla value (modelo.edit.apply): that it was operator-stated, when, and an optional stated source reference, carried to the verification report and the saved revision; owner LIFECYCLE; it moves no table row and is not built before the P01 rows are green; `src/cadrumo/application/modelo/edit_apply_contracts.py, src/cadrumo/application/modelo/edit_operator_input.py, src/cadrumo/application/modelo/verification_actions.py, src/cadrumo/application/modelo/revision_persistence.py`.
 
 ### Phase `P03` - Desktop re-entry
 

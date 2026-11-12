@@ -686,6 +686,8 @@ cli:
         evidence_sha256_help: SHA-256 d'un certificat que ja és al teu emmagatzematge,
           o comprovació davant de --certificate-file. Un payer_certificate necessita
           una de les dues coses.
+        gastos_deducibles_help: Despeses deduïbles que indica el pagador segons l'article
+          19.2 a), b) i c). Obligatòria per a `trabajo`; escriu 0 si no n'indica cap.
         group_help: Registra les retencions que et certifiquen els teus pagadors.
         importe_integro_help: Renda dinerària que va pagar el pagador, abans de la
           retenció.
@@ -708,6 +710,9 @@ cli:
           un registre desat. Omet-la en el primer registre.
         record_help: Registra o substitueix les xifres que declara el certificat d'un
           pagador per a un exercici i una classe de renda.
+        reducciones_aplicables_help: Reduccions que va aplicar el pagador segons els
+          articles 18.2 i 18.3, tal com les indica el certificat. Obligatòria per
+          a `trabajo`; escriu 0 si no n'indica cap.
         remove_expected_revision_help: Revisió que ha mostrat el llistat per al registre
           que vols eliminar.
         remove_help: Elimina un registre de pagador, protegit per la revisió que ha
@@ -1728,6 +1733,17 @@ cli:
           registra la xifra com a declarada per tu per a aquella declaració, diferent
           d'una xifra escrita. Es rebutja si la declaració anterior està desada, perquè
           llavors se segueix aquella declaració.
+        attest_work_income_confirm: Encara no s'ha declarat res. Executa `aeat app
+          modelo work attest-work-income %{work_unit_id} --yes` per declarar-ho.
+        attest_work_income_help: Indica que les caselles de rendiments del treball
+          que cap certificat del pagador omple (contribucions empresarials a plans
+          de pensions i mutualitats de previsió social, a assegurances de dependència,
+          aportacions al patrimoni protegit i aportacions per decisió teva) són buides,
+          per a cada casella per a la qual el formulari d'una declaració basada en
+          un registre de pagador ofereix la declaració. Mostra la declaració i la
+          comprovació del canvi; amb --yes registra cada casella com un 0 que has
+          declarat, diferent d'una xifra que has escrit.
+        attest_work_income_yes_help: Confirma la declaració i registra-la a l'autoliquidació
         autoconsumo_promotor_base_help: 'Base imposable de l''autoconsum del promotor
           immobiliari (art. 9.1.c + art. 79.4 LISIVA): cost de construcció o rehabilitació
           d''immobles afectats al patrimoni d''arrendament. L''assistent aplica automàticament
@@ -3465,6 +3481,7 @@ cli:
         cobrada o pagada neta
       irpf_purpose_employment_income: rendiments del treball (no per a factures netes)
       irpf_purpose_rent_expense_withholding: retenció de lloguer pagat net
+      irpf_purpose_rental_property_income: ingressos i despeses de lloguer d'un immoble
       irpf_usage_example: 'Lloguer net: --category-id {rent_category} --irpf-category
         {rent_category}. Servei professional net: --category-id {professional_category}
         --irpf-category {activity_category}.'
@@ -3488,6 +3505,10 @@ cli:
     classify:
       apply_help: Desa el suggeriment de l'LLM amb origen `llm:` en lloc de només
         previsualitzar-lo.
+      arrendamiento_help: Clau de fila de l'arrendament desat al qual pertany aquesta
+        fila d'ingrés; consulta els arrendaments amb «aeat config profile arrendamiento
+        list». Un text en blanc treu el vincle. Una fila vinculada porta la categoria
+        de renda capital_inmobiliario.
       auto_split_help: Llegeix la factura adjunta i, quan conté diversos components,
         la divideix en fills base/IVA per línia; si no, la classifica al lloc (requereix
         --read-evidence).
@@ -3528,9 +3549,16 @@ cli:
         category_id, business_pct, usage_ratio_id, taxable_base, iva_rate, iva_amount,
         iva_category, irpf_category].
       file_not_found: 'Fitxer CSV no trobat: %{path}'
+      gasto_inmobiliario_help: Classe de despesa de l'immoble, una de les que declara
+        el registre; un valor desconegut es rebutja amb les admeses. Necessita un
+        immoble vinculat (--inmueble). Un text en blanc el treu.
       help: Classificar un moviment dels teus registres al perfil actiu
       id_help: Id del moviment a classificar
       id_required: Cal un id de transacció quan no s'usa --file.
+      inmueble_help: Clau de fila de l'immoble desat al qual pertany aquesta fila
+        de despesa; consulta els immobles amb «aeat config profile inmueble list».
+        No juntament amb --arrendamiento. Un text en blanc treu el vincle. Una fila
+        vinculada porta la categoria de renda capital_inmobiliario.
       investment_asset_id_help: Identitat del registre de béns d'inversió contra la
         qual es dedueix aquesta adquisició, tal com consta en aquest registre. Obligatòria
         amb un tipus de deducció d'inversió i rebutjada en qualsevol altre.
@@ -3677,6 +3705,8 @@ cli:
       negative_amount: L'--amount %{raw} ha de ser una magnitud no negativa. Indica
         l'import sense signe i defineix el flux amb --direction (OUTGOING per a sortides,
         INCOMING per a entrades, INTERNAL_TRANSFER entre els teus propis comptes).
+      rental_concept_unknown: '--gasto-inmobiliario {value!r} no reconegut. Classes
+        admeses: {accepted}.'
       unknown_category: --category-id {category!r} no reconegut. Indica un identificador
         de categoria sense prefix, com {example!r}, no una clau composta ni amb prefix
         de família. Consulta el catàleg de categories dels teus registres per veure

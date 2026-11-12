@@ -689,6 +689,8 @@ cli:
         evidence_sha256_help: SHA-256 de un certificado que ya está en tu almacenamiento,
           o comprobación frente a --certificate-file. Un payer_certificate necesita
           una de las dos cosas.
+        gastos_deducibles_help: Gastos deducibles que indica el pagador según el artículo
+          19.2 a), b) y c). Obligatorio para `trabajo`; escribe 0 si no indica ninguno.
         group_help: Registra las retenciones que te certifican tus pagadores.
         importe_integro_help: Renta dineraria que pagó el pagador, antes de la retención.
         income_class_help: Clase de renta sobre la que el pagador retuvo, por ejemplo
@@ -710,6 +712,9 @@ cli:
           un registro guardado. Omítela en el primer registro.
         record_help: Registra o sustituye las cifras que declara el certificado de
           un pagador para un ejercicio y una clase de renta.
+        reducciones_aplicables_help: Reducciones que aplicó el pagador según los artículos
+          18.2 y 18.3, tal como las indica el certificado. Obligatoria para `trabajo`;
+          escribe 0 si no indica ninguna.
         remove_expected_revision_help: Revisión que mostró el listado para el registro
           que quieres eliminar.
         remove_help: Elimina un registro de pagador, protegido por la revisión que
@@ -1746,6 +1751,17 @@ cli:
           con --yes registra la cifra como declarada por ti para esa declaración,
           distinta de una cifra escrita. Se rechaza si la declaración anterior está
           guardada, porque entonces se sigue esa declaración.
+        attest_work_income_confirm: Todavía no se ha declarado nada. Ejecuta `aeat
+          app modelo work attest-work-income %{work_unit_id} --yes` para declararlo.
+        attest_work_income_help: Indica que las casillas de rendimientos del trabajo
+          que ningún certificado del pagador rellena (contribuciones empresariales
+          a planes de pensiones y mutualidades de previsión social, a seguros de dependencia,
+          aportaciones al patrimonio protegido y aportaciones por decisión tuya) están
+          vacías, para cada casilla para la que el formulario de una declaración basada
+          en un registro de pagador ofrece la declaración. Muestra la declaración
+          y la comprobación del cambio; con --yes registra cada casilla como un 0
+          que declaraste, distinto de una cifra que escribiste.
+        attest_work_income_yes_help: Confirma la declaración y regístrala en la autoliquidación
         autoconsumo_promotor_base_help: 'Base imponible del autoconsumo del promotor
           inmobiliario (Art. 9.1.c + Art. 79.4 LISIVA): coste de construcción o rehabilitación
           de inmuebles afectados al patrimonio de arrendamiento. El asistente aplica
@@ -3494,6 +3510,7 @@ cli:
         cobrada o pagada neta
       irpf_purpose_employment_income: rendimientos del trabajo (no para facturas netas)
       irpf_purpose_rent_expense_withholding: retención de alquiler pagado neto
+      irpf_purpose_rental_property_income: ingresos y gastos de alquiler de un inmueble
       irpf_usage_example: 'Alquiler neto: --category-id {rent_category} --irpf-category
         {rent_category}. Servicio profesional neto: --category-id {professional_category}
         --irpf-category {activity_category}.'
@@ -3517,6 +3534,10 @@ cli:
     classify:
       apply_help: Guarda la sugerencia del LLM con origen `llm:` en lugar de solo
         previsualizarla.
+      arrendamiento_help: Clave de fila del arrendamiento guardado al que pertenece
+        esta fila de ingreso; consulta los arrendamientos con «aeat config profile
+        arrendamiento list». Un texto en blanco quita el vínculo. Una fila vinculada
+        lleva la categoría de renta capital_inmobiliario.
       auto_split_help: Lee la factura adjunta y, cuando es multicomponente, la divide
         en hijos base/IVA por línea; si no, la clasifica en su sitio (requiere --read-evidence).
       auto_split_needs_evidence: '--auto-split requiere --read-evidence: la decisión
@@ -3555,9 +3576,16 @@ cli:
         category_id, business_pct, usage_ratio_id, taxable_base, iva_rate, iva_amount,
         iva_category, irpf_category].
       file_not_found: 'Archivo CSV no encontrado: %{path}'
+      gasto_inmobiliario_help: Clase de gasto del inmueble, una de las que declara
+        el registro; un valor desconocido se rechaza con las admitidas. Necesita un
+        inmueble vinculado (--inmueble). Un texto en blanco lo quita.
       help: Clasificar un movimiento de tus registros en el perfil activo
       id_help: Id del movimiento a clasificar
       id_required: Se requiere un id de transacción cuando no se usa --file.
+      inmueble_help: Clave de fila del inmueble guardado al que pertenece esta fila
+        de gasto; consulta los inmuebles con «aeat config profile inmueble list».
+        No junto con --arrendamiento. Un texto en blanco quita el vínculo. Una fila
+        vinculada lleva la categoría de renta capital_inmobiliario.
       investment_asset_id_help: Identidad del registro de bienes de inversión contra
         la que se deduce esta adquisición, tal como consta en ese registro. Obligatoria
         con un tipo de deducción de inversión y rechazada en cualquier otro.
@@ -3703,6 +3731,8 @@ cli:
       negative_amount: El --amount %{raw} debe ser una magnitud no negativa. Indica
         el importe sin signo y define el flujo con --direction (OUTGOING para salidas,
         INCOMING para entradas, INTERNAL_TRANSFER entre tus propias cuentas).
+      rental_concept_unknown: '--gasto-inmobiliario {value!r} no reconocido. Clases
+        admitidas: {accepted}.'
       unknown_category: --category-id {category!r} no reconocido. Indica un identificador
         de categoría sin prefijo, como {example!r}, no una clave compuesta ni con
         prefijo de familia. Consulta el catálogo de categorías de tus registros para

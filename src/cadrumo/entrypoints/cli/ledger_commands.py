@@ -15,6 +15,7 @@ with the registered ledger payload contracts.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import TYPE_CHECKING
 
 import typer
@@ -64,6 +65,7 @@ from .ledger_llm_cli import (
     ledger_saturate_llm,
 )
 from .ledger_m210_classify_cli import M210LedgerClassifyOptions
+from .ledger_rental_inputs import rental_link_patch_values
 from .ledger_support import (
     invoice_link_error_bad_parameter,
     ledger_transaction_validation_no_recovery,
@@ -94,9 +96,12 @@ def _parse_optional_iso_date(raw: str | None, *, label: str) -> date | None:
     return parse_iso_date(raw, label=label) if raw is not None else None
 
 
-def _patch_from_options(**values: object) -> ManualLedgerTransactionPatch:
+def _patch_from_options(
+    *, explicit: Mapping[str, object] | None = None, **values: object
+) -> ManualLedgerTransactionPatch:
+    """Build the patch from the options stated; ``explicit`` values are kept even when they clear a field."""
     return ManualLedgerTransactionPatch.model_validate(
-        {key: value for key, value in values.items() if value is not None},
+        {**{key: value for key, value in values.items() if value is not None}, **(explicit or {})},
     )
 
 
@@ -203,6 +208,9 @@ def ledger_add(
     idempotency_key: str | None = None,
     source_jurisdiction: str | None = None,
     account: str | None = None,
+    arrendamiento: str | None = None,
+    inmueble: str | None = None,
+    gasto_inmobiliario: str | None = None,
 ) -> None:
     """Create one manual ledger transaction through exact-profile operation custody."""
     _require_add_assignable_classification(business_classification)
@@ -248,6 +256,9 @@ def ledger_add(
             idempotency_key=idempotency_key,
             source_jurisdiction=source_jurisdiction,
             own_account_id=account,
+            arrendamiento=arrendamiento,
+            inmueble=inmueble,
+            gasto_inmobiliario=gasto_inmobiliario,
         )
     except ValidationError as exc:
         raise ledger_validation_bad(exc) from exc
@@ -522,6 +533,9 @@ def ledger_classify(
     iva_vehicle_use: str | None = None,
     counterparty_country: str | None = None,
     counterparty_identification_state: EUMemberState | None = None,
+    arrendamiento: str | None = None,
+    inmueble: str | None = None,
+    gasto_inmobiliario: str | None = None,
     actor: str | None = None,
     reaffirm: bool = False,
     llm: bool = False,
@@ -602,6 +616,9 @@ def ledger_classify(
             iva_vehicle_use=iva_vehicle_use,
             counterparty_country=counterparty_country,
             counterparty_identification_state=counterparty_identification_state,
+            explicit=rental_link_patch_values(
+                ctx, arrendamiento=arrendamiento, inmueble=inmueble, gasto_inmobiliario=gasto_inmobiliario
+            ),
             notes=reason,
         )
         parsed_m210_gross_income_amount = parse_decimal_option(

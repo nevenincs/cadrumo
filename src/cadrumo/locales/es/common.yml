@@ -309,6 +309,10 @@ aggregation:
         a leerlo antes de guardar.
       taxpayer_tax_id_unknown: Tu perfil no declara NIF, así que no se puede descartar
         que el pagador seas tú. Añade tu NIF al perfil primero.
+      trabajo_certificate_figure_missing: Un certificado de rendimientos del trabajo
+        indica las reducciones y los gastos deducibles (--reducciones-aplicables,
+        --gastos-deducibles). Indica ambos, con 0 donde el certificado no indique
+        nada; ninguna otra clase de renta los admite.
       validation: 'El registro de retención no se guardó: revisa el NIF del pagador,
         los importes (como máximo dos decimales) y la huella del certificado.'
     served:
@@ -340,6 +344,9 @@ aggregation:
         a leerlo y reinténtalo.
       taxpayer_tax_id_unknown: Tu perfil todavía no tiene NIF, así que no se puede
         descartar que el pagador seas tú. Añade primero tu NIF al perfil.
+      trabajo_certificate_figure_missing: Un certificado de rendimientos del trabajo
+        indica las reducciones que aplicó el pagador y los gastos deducibles. Introduce
+        ambos, con 0 donde el certificado no indique nada.
       validation: El registro de retención no se guardó. Revisa el NIF del pagador,
         que los importes tengan como máximo dos decimales y el certificado.
   retencion_soportada_absence:
@@ -3525,6 +3532,7 @@ desktop:
       actividad_economica: Actividad económica
       arrendamiento_local: Arrendamiento de local
       arrendamiento_vivienda_afecto: Arrendamiento de vivienda afecta
+      capital_inmobiliario: Alquiler de inmuebles
       trabajo: Trabajo
     issue:
       next: Siguiente problema de preparación

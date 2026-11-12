@@ -225,9 +225,6 @@ FINDING_MESSAGE_ACTION_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
             "application.modelo.work_form.finding_action.regroup_income_lines"
         ),
         # Reductions and deductions the figures suggest.
-        "application.modelo.findings.art20_reduccion_possible": (
-            "application.modelo.work_form.finding_action.check_possible_reduction"
-        ),
         "application.modelo.findings.dt12a_reduccion_possible": (
             "application.modelo.work_form.finding_action.check_possible_reduction"
         ),

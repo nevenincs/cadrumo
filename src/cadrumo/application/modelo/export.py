@@ -181,6 +181,7 @@ from .required_binding_gate import (
     require_persisted_revision_required_bindings_resolved,
 )
 from .result_disposition_resolution import resolve_modelo_result_disposition
+from .trabajo_income_findings import trabajo_recorded
 from .verification_cross_period import cross_period_expected_member_sets_from_profile, require_cross_period_clean_state
 
 
@@ -573,6 +574,7 @@ def _export_result(
         software_identity_grade=None if software_identity is None else software_identity.grade,
         domiciliation_cutoff_unverified=domiciliation_cutoff_unverified,
         completeness_unverified=completeness_unverified,
+        trabajo_deductions_not_computed=trabajo_recorded(revision),
     )
 
 

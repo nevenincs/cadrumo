@@ -74,7 +74,8 @@ class Verdict(StrEnum):
 VERDICT_MEANING: dict[Verdict, str] = {
     Verdict.PASSED: "a live calculation equals values grounded in an official source, verificado completo is granted "
     "and the fichero BOE is written",
-    Verdict.FAIL: "a live calculation ran and at least one stage is red",
+    Verdict.FAIL: "a live calculation ran and at least one stage is red, or the application refused the calculation "
+    "with a code the persona does not state",
     Verdict.EXPECTED_REFUSAL: "the application refuses with the code the persona states for that return",
     Verdict.HISTORY_FILED: "filed by the persona's history replay; no value is asserted and nothing is exported",
     Verdict.UNVERIFIED: "the stated values cite no official source (grounding `unverified` or no legal_ref); "
@@ -253,6 +254,10 @@ def classify(row: TableRow) -> Verdict:
     terminal = _TERMINAL_VERDICTS.get(row.calculate)
     if terminal is not None:
         return terminal
+    # A refusal the persona does not state is red whatever the oracle holds: the
+    # return was not calculated, so no missing or unsourced value can explain it away.
+    if row.calculate is Stage.REFUSED:
+        return Verdict.FLOOR_SOURCE if _refused_for_dropped_source(row) else Verdict.FAIL
     if not row.has_values:
         return _unless_unchecked(row, Verdict.NO_ORACLE)
     if row.grounding == "unverified" or not row.sources:

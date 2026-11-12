@@ -75,6 +75,9 @@ class LedgerAddRequest(BaseModel):
     iva_vehicle_use: Annotated[str, Field(max_length=128)] | None = None
     counterparty_country: CountryCodeAlpha2 | None = None
     counterparty_identification_state: _AddEUMemberState = None
+    arrendamiento_ref: Annotated[str, Field(max_length=64)] | None = None
+    inmueble_ref: Annotated[str, Field(max_length=64)] | None = None
+    gasto_capital_inmobiliario: Annotated[str, Field(max_length=128)] | None = None
     recargo_amount: _AddOptionalDecimalText = None
     irpf_category: _AddOptionalText = None
     usage_ratio_id: _AddOptionalId = None

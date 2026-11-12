@@ -28,6 +28,7 @@ _SERVED_REFUSAL_LOCALE_KEYS: Final[dict[str, str]] = {
     "taxpayer_tax_id_unknown": "aggregation.retencion_soportada.served.taxpayer_tax_id_unknown",
     "not_found": "aggregation.retencion_soportada.served.not_found",
     "validation": "aggregation.retencion_soportada.served.validation",
+    "trabajo_certificate_figure_missing": "aggregation.retencion_soportada.served.trabajo_certificate_figure_missing",
 }
 
 

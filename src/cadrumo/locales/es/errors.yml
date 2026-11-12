@@ -2171,5 +2171,11 @@ errors:
       un perfil activo, salvo en modo de prueba.
     own_account_unknown: La cuenta propia {own_account_id} no está entre tus cuentas
       bancarias propias registradas.
+    rental_lease_unknown: El arrendamiento {ref} no es uno de los arrendamientos de
+      tu perfil. Consúltalos con «{door}».
+    rental_link_category: Una fila vinculada a un arrendamiento o a un inmueble debe
+      llevar la categoría de renta {category}; indícala con «{door}» y --irpf-category.
+    rental_property_unknown: El inmueble {ref} no es uno de los inmuebles de tu perfil.
+      Consúltalos con «{door}».
     unknown_ledger_provider: 'Proveedor de libro {provider!r} desconocido. Proveedores
       reconocidos: {providers}.'

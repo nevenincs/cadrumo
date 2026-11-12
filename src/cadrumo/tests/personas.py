@@ -346,6 +346,15 @@ class WithholdingCertificate:
     importe_integro: Decimal
     retencion: Decimal
     cotizaciones_seguridad_social: Decimal | None
+    reducciones_aplicables: Decimal | None = None
+    gastos_deducibles: Decimal | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class WorkIncomeNoneStatement:
+    """The taxpayer's statement that, for one ejercicio, no employer contribution, patrimonio protegido or other imputed work income exists."""
+
+    ejercicio: YearToken
 
 
 @dataclass(frozen=True, slots=True)
@@ -684,6 +693,8 @@ type BelowFloorBlock = Literal[
     "expectations.obligations",
     "expectations.deadlines",
     "expectations.values",
+    "withholding_certificates",
+    "work_income_none_statements",
 ]
 
 _HISTORY_BLOCKS: Final[frozenset[BelowFloorBlock]] = frozenset(
@@ -764,6 +775,8 @@ class Persona:
     """The figures the taxpayer states for earlier returns the application does not hold."""
     work_inputs: tuple[WorkInput, ...] = ()
     """The casilla values the operator enters on a return because no record the application holds produces them."""
+    work_income_none_statements: tuple[WorkIncomeNoneStatement, ...] = ()
+    """The ejercicios whose Modelo 100 the taxpayer states holds no income of the work-income boxes no payer certificate fills."""
 
     def identity(self, reference: str | IdentityRef) -> str:
         """Return the value an identity role or a role field reference names."""
@@ -1052,6 +1065,7 @@ _PERSONA_TABLES = frozenset(
         "own_accounts",
         "prior_carries",
         "withholding_certificates",
+        "work_income_none_statements",
         "rental_properties",
         "officers",
         "filed_returns",
@@ -1204,9 +1218,11 @@ def _withholding(table: _Table, where: str, roles: _Roles) -> WithholdingCertifi
         table,
         where,
         required=frozenset({"payer", "ejercicio", "income_class", "origin", "importe_integro", "retencion"}),
-        optional=frozenset({"cotizaciones_seguridad_social"}),
+        optional=frozenset({"cotizaciones_seguridad_social", "reducciones_aplicables", "gastos_deducibles"}),
     )
     cotizaciones = table.get("cotizaciones_seguridad_social")
+    reducciones = table.get("reducciones_aplicables")
+    gastos = table.get("gastos_deducibles")
     return WithholdingCertificate(
         payer=roles(table["payer"], where),
         ejercicio=YearToken.parse(table["ejercicio"], where=f"{where}.ejercicio"),
@@ -1215,7 +1231,14 @@ def _withholding(table: _Table, where: str, roles: _Roles) -> WithholdingCertifi
         importe_integro=_amount(table["importe_integro"], f"{where}.importe_integro"),
         retencion=_amount(table["retencion"], f"{where}.retencion"),
         cotizaciones_seguridad_social=None if cotizaciones is None else _amount(cotizaciones, where),
+        reducciones_aplicables=None if reducciones is None else _amount(reducciones, f"{where}.reducciones_aplicables"),
+        gastos_deducibles=None if gastos is None else _amount(gastos, f"{where}.gastos_deducibles"),
     )
+
+
+def _work_income_none(table: _Table, where: str) -> WorkIncomeNoneStatement:
+    _keys(table, where, required=frozenset({"ejercicio"}), optional=frozenset())
+    return WorkIncomeNoneStatement(ejercicio=YearToken.parse(table["ejercicio"], where=f"{where}.ejercicio"))
 
 
 def _rental(table: _Table, where: str, roles: _Roles) -> RentalProperty:
@@ -1982,6 +2005,10 @@ def parse_persona(
             _withholding(table, f"{where} withholding_certificates[{index}]", roles)
             for index, table in enumerate(_tables(persona_document.get("withholding_certificates"), where))
         ),
+        work_income_none_statements=tuple(
+            _work_income_none(table, f"{where} work_income_none_statements[{index}]")
+            for index, table in enumerate(_tables(persona_document.get("work_income_none_statements"), where))
+        ),
         rental_properties=tuple(
             _rental(table, f"{where} rental_properties[{index}]", roles)
             for index, table in enumerate(_tables(persona_document.get("rental_properties"), where))
@@ -2038,6 +2065,7 @@ def parse_persona(
             raise _fail(f"{persona_id}/documents.toml", f"{document.id}: its row does not name it in ledger.csv")
     _check_returns(persona)
     _check_inventory(persona)
+    _check_work_income_none_statements(persona)
     if omit_below_floor:
         persona = _without_records_below_floor(persona, envelope)
     _check_years(persona, envelope)
@@ -2067,8 +2095,15 @@ def _record_periods(record: _DatedRecord) -> tuple[str, ...]:
     return (record.period,)
 
 
+_WORK_INCOME_CLASS: Final = "trabajo"
+"""The suffered-withholding class whose certificate carries work income."""
+_CERTIFICATE_RETURN_MODELO: Final = "100"
+"""The return a suffered-withholding certificate feeds, named when the certificate is left out."""
+_CERTIFICATE_RETURN_PERIOD: Final = "0A"
+
+
 def _without_records_below_floor(persona: Persona, envelope: YearEnvelope) -> Persona:
-    """``persona`` without its return-history records, prior-carry statements and expectations below the floor, listed."""
+    """``persona`` without its dated records, statements, certificates and expectations below the floor, listed."""
     dropped: list[BelowFloorRecord] = []
 
     def kept[Record: _DatedRecord](block: BelowFloorBlock, records: tuple[Record, ...]) -> tuple[Record, ...]:
@@ -2091,9 +2126,37 @@ def _without_records_below_floor(persona: Persona, envelope: YearEnvelope) -> Pe
         else:
             carries.append(statement)
     expectations = persona.expectations
+    certificates: list[WithholdingCertificate] = []
+    for certificate in persona.withholding_certificates:
+        if certificate.ejercicio.precedes_floor(envelope):
+            dropped.append(
+                BelowFloorRecord(
+                    block="withholding_certificates",
+                    modelo=_CERTIFICATE_RETURN_MODELO,
+                    year=certificate.ejercicio,
+                    periods=(_CERTIFICATE_RETURN_PERIOD,),
+                )
+            )
+        else:
+            certificates.append(certificate)
+    statements: list[WorkIncomeNoneStatement] = []
+    for statement in persona.work_income_none_statements:
+        if statement.ejercicio.precedes_floor(envelope):
+            dropped.append(
+                BelowFloorRecord(
+                    block="work_income_none_statements",
+                    modelo=_CERTIFICATE_RETURN_MODELO,
+                    year=statement.ejercicio,
+                    periods=(_CERTIFICATE_RETURN_PERIOD,),
+                )
+            )
+        else:
+            statements.append(statement)
     return dataclasses.replace(
         persona,
         prior_carries=tuple(carries),
+        withholding_certificates=tuple(certificates),
+        work_income_none_statements=tuple(statements),
         filed_returns=kept("filed_returns", persona.filed_returns),
         calculated_returns=kept("calculated_returns", persona.calculated_returns),
         local_observations=kept("local_observations", persona.local_observations),
@@ -2107,6 +2170,26 @@ def _without_records_below_floor(persona: Persona, envelope: YearEnvelope) -> Pe
         ),
         below_floor=tuple(dropped),
     )
+
+
+def _check_work_income_none_statements(persona: Persona) -> None:
+    """Refuse a statement of no other work income for an ejercicio with no work-income certificate.
+
+    The statement answers the boxes a work-income return leaves to the filer; for an
+    ejercicio whose return rests on no work-income record the form never offers it, so
+    stating it there is a mistake the replay would otherwise pass over in silence.
+    """
+    certified = {
+        str(certificate.ejercicio)
+        for certificate in persona.withholding_certificates
+        if certificate.income_class == _WORK_INCOME_CLASS
+    }
+    for statement in persona.work_income_none_statements:
+        if str(statement.ejercicio) not in certified:
+            raise _fail(
+                persona.id,
+                f"work_income_none_statements {statement.ejercicio}: no work-income certificate for that ejercicio",
+            )
 
 
 def _check_returns(persona: Persona) -> None:
@@ -2222,6 +2305,7 @@ def _check_years(persona: Persona, envelope: YearEnvelope) -> None:
         persona.fiscal_year,
         *(election.year for election in persona.elections),
         *(certificate.ejercicio for certificate in persona.withholding_certificates),
+        *(statement.ejercicio for statement in persona.work_income_none_statements),
         *(statement.year for statement in persona.prior_carries),
         *(filed.year for filed in persona.filed_returns),
         *(calculated.year for calculated in persona.calculated_returns),

@@ -2191,5 +2191,11 @@ errors:
       perfil actiu, llevat del mode de prova.
     own_account_unknown: El compte propi {own_account_id} no és cap dels teus comptes
       bancaris propis registrats.
+    rental_lease_unknown: L'arrendament {ref} no és cap dels arrendaments del teu
+      perfil. Consulta'ls amb «{door}».
+    rental_link_category: Una fila vinculada a un arrendament o a un immoble ha de
+      portar la categoria de renda {category}; indica-la amb «{door}» i --irpf-category.
+    rental_property_unknown: L'immoble {ref} no és cap dels immobles del teu perfil.
+      Consulta'ls amb «{door}».
     unknown_ledger_provider: 'Proveïdor de llibre {provider!r} desconegut. Proveïdors
       reconeguts: {providers}.'

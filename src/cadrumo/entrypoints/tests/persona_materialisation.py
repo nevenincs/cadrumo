@@ -253,6 +253,7 @@ from ...tests.personas import (
     ProfileValue,
     ProvisionPeriods,
     WithholdingCertificate,
+    WorkIncomeNoneStatement,
     WorkInput,
     YearEnvelope,
     filed_period_order,
@@ -267,6 +268,7 @@ from .persona_aeat_filings import PERSONA_AEAT_REGISTER, PERSONA_FILED_REGISTER,
 from .persona_inventory_purchases import replay_inventory_purchases
 from .persona_own_accounts import replay_own_accounts
 from .persona_prior_values import PriorValueAttestationError, attest_prior_values
+from .persona_work_income_statements import state_work_income_none
 from .persona_work_inputs import WorkInputError, check_work_inputs, enter_work_inputs
 
 PERSONA_ACTOR = "operator:persona"
@@ -340,6 +342,8 @@ class PersonaWorld:
     """The persona's stated figures for earlier returns; :func:`run_operation` submits them after a calculation."""
     work_inputs: tuple[WorkInput, ...] = ()
     """The values the persona's operator enters on a return; :func:`run_operation` enters them before its first calculation."""
+    work_income_none_statements: tuple[WorkIncomeNoneStatement, ...] = ()
+    """The ejercicios whose unevidenced work income the persona states is none; submitted after a calculation."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -437,12 +441,14 @@ def _operations_over(
     envelope: YearEnvelope | None = None,
     attested_prior_values: tuple[AttestedPriorValue, ...] = (),
     work_inputs: tuple[WorkInput, ...] = (),
+    work_income_none_statements: tuple[WorkIncomeNoneStatement, ...] = (),
 ) -> Generator[PersonaWorld]:
     """Compose a production supervisor over the profile already resumed in the isolated ``root``.
 
     ``envelope`` is the year envelope the persona was read under; the registry's own when omitted.
-    ``attested_prior_values`` are the persona's stated figures for earlier returns, and
-    ``work_inputs`` the values its operator enters on a return.
+    ``attested_prior_values`` are the persona's stated figures for earlier returns,
+    ``work_inputs`` the values its operator enters on a return, and
+    ``work_income_none_statements`` the ejercicios whose unevidenced work income it states is none.
     """
     with (
         profile_custody_secure_object_repository(profile_id=profile_id, dek=b"", root=root) as objects,
@@ -482,6 +488,7 @@ def _operations_over(
                 operation=operation,
                 attested_prior_values=attested_prior_values,
                 work_inputs=work_inputs,
+                work_income_none_statements=work_income_none_statements,
             )
         finally:
             asyncio.run(services.shutdown())
@@ -508,6 +515,7 @@ def persona_world(
                     envelope=envelope,
                     attested_prior_values=persona.attested_prior_values,
                     work_inputs=persona.work_inputs,
+                    work_income_none_statements=persona.work_income_none_statements,
                 ) as opened:
                     yield opened
             finally:
@@ -689,7 +697,7 @@ def _with_attested_prior_values(
     *,
     subject: str | None,
 ) -> BaseModel:
-    """``calculated``, or its calculation again once the persona's stated prior values are attested."""
+    """``calculated``, or its calculation again once the persona's stated prior values and work-income statements are made."""
 
     def settle(
         definition_id: str,
@@ -707,9 +715,16 @@ def _with_attested_prior_values(
             calculated=calculated,
             settle=settle,
         )
+        stated = state_work_income_none(
+            world.work_income_none_statements,
+            envelope=world.envelope,
+            profile_id=world.profile_id,
+            calculated=calculated,
+            settle=settle,
+        )
     except PriorValueAttestationError as error:
         raise PersonaMaterialisationError(str(error)) from error
-    if not attested:
+    if not (attested or stated):
         return calculated
     recalculated = settle_operation(world, definition_id, payload, subject=subject)
     if not isinstance(recalculated, ModeloWorkCalculatePublicResultV3):
@@ -1044,6 +1059,10 @@ def declared_withholding(persona: Persona) -> list[WithholdingCertificate]:
     return [item for item in persona.withholding_certificates if item.origin == "operator_declaration"]
 
 
+def _stated_figure(figure: Decimal | None) -> PublicDecimal | None:
+    return None if figure is None else PublicDecimal(decimal=str(figure))
+
+
 def _replay_withholding(persona: Persona, world: PersonaWorld) -> None:
     zero = PublicDecimal(decimal="0.00")
     for certificate in declared_withholding(persona):
@@ -1062,6 +1081,8 @@ def _replay_withholding(persona: Persona, world: PersonaWorld) -> None:
                 retencion=PublicDecimal(decimal=str(certificate.retencion)),
                 ingreso_a_cuenta=zero,
                 ingreso_a_cuenta_repercutido=zero,
+                reducciones_aplicables=_stated_figure(certificate.reducciones_aplicables),
+                gastos_deducibles=_stated_figure(certificate.gastos_deducibles),
                 origin=RetencionSoportadaOrigen.OPERATOR_DECLARATION,
             ),
             RetencionSoportadaMutationProjection,
@@ -1924,6 +1945,7 @@ def _sealed_replay(
                 envelope=envelope,
                 attested_prior_values=persona.attested_prior_values,
                 work_inputs=persona.work_inputs,
+                work_income_none_statements=persona.work_income_none_statements,
             ) as world,
         ):
             replayed = materialise_persona(persona, world, scope, complete_setup=complete_setup)
@@ -1985,6 +2007,7 @@ def _reused_persona_world(
                     envelope=envelope,
                     attested_prior_values=persona.attested_prior_values,
                     work_inputs=persona.work_inputs,
+                    work_income_none_statements=persona.work_income_none_statements,
                 ) as world:
                     yield MaterialisedPersona(
                         persona=persona,
