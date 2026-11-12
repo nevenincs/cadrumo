@@ -221,7 +221,7 @@ def _prepare_verification_profile(
         profile=profile,
     )
     require_persisted_revision_required_bindings_resolved(
-        work_unit=work_unit, revision=target, action="verify", operation=operation
+        work_unit=work_unit, revision=target, action="verify", operation=operation, profile=checked_profile
     )
     try:
         require_work_unit_calculation_unblocked(

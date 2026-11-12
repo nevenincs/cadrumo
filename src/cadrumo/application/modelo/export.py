@@ -928,7 +928,7 @@ def _prepare_modelo_export_schema(
     raise_if_export_layout_unsupported(work_unit=work_unit, schema_provider=schema_provider)
     from .profile_readiness_gate import require_profile_ready_for_work_unit
 
-    require_profile_ready_for_work_unit(
+    checked_profile = require_profile_ready_for_work_unit(
         work_unit,
         profile_decode_context=operation.profile_decode_context(),
         operation=operation,
@@ -938,6 +938,7 @@ def _prepare_modelo_export_schema(
         revision=revision,
         action="export",
         operation=operation,
+        profile=checked_profile,
     )
     require_work_unit_calculation_unblocked(
         work_unit=work_unit, revision=revision, action="export", operation=operation, resolutions=resolutions
