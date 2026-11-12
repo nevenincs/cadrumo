@@ -54,6 +54,7 @@ from defusedxml import ElementTree as DefusedElementTree
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+from cadrumo.adapters.persistence.profile.inventory import InventoryLedgerRepository
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -63,6 +64,7 @@ from cadrumo.adapters.persistence.profile.tests.secure_objects_fixture import se
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+from cadrumo.application.aggregation.tests.inventory_source_support import closed_no_stock_ledger
 from cadrumo.application.calculations.observations_repository import observation_key
 from cadrumo.application.modelo.action_errors import ModeloLedgerPreflightBlockedError
 from cadrumo.application.modelo.export_contracts import ModeloExportCommand
@@ -75,6 +77,7 @@ from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.categories.spending_category import SpendingCategory
+from cadrumo.domain.contribuyente.inventory.records import InventoryLedgerDocument
 from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
 from cadrumo.domain.invoices.catalogue import InvoiceCatalogue
 from cadrumo.domain.modelos.calculation_revision import CalculationRevision
@@ -215,7 +218,11 @@ _M130_MANUAL_INPUTS: dict[CasillaId, Decimal] = {
 
 
 def persist_autonoma_style_ledger(secure_objects: SecureObjectRepository) -> None:
-    """Persist Autonoma-shaped annual activity income plus deductible expenses."""
+    """Persist Autonoma-shaped annual activity income, deductible expenses and the activity's inventory book.
+
+    The activity sells services and held no existencias, which it states as a book opened with no stock and
+    closed at zero, so the Modelo 100 Anexo D rows of its estimacion directa block read zero.
+    """
     tx_repo = TransactionCatalogueRepository(bucket_id=BUCKET_ID, objects=secure_objects)
     transactions = tuple(income_transaction(period) for period in _QUARTER_ORDER) + tuple(
         expense_transaction(transaction_id, value_date=value_date, category=category, taxable_base=taxable_base)
@@ -225,6 +232,9 @@ def persist_autonoma_style_ledger(secure_objects: SecureObjectRepository) -> Non
         TransactionCatalogue.from_transactions(transactions),
     )
     InvoiceCatalogueRepository(bucket_id=BUCKET_ID, objects=secure_objects).save(InvoiceCatalogue())
+    InventoryLedgerRepository(objects=secure_objects).save(
+        InventoryLedgerDocument(ledgers=(closed_no_stock_ledger(YEAR),))
+    )
 
 
 def calculate_and_file_m130_quarter(
