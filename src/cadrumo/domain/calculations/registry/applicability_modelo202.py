@@ -47,6 +47,7 @@ class Modelo202InstalmentOutcome(StrEnum):
     BASE_UNDECLARED = "filing_depends_on_ingreso"
     ELECTION_UNSTATED = "instalment_election_unstated"
     ELECTED_PENDING_CALCULATION = "instalment_elected_pending_calculation"
+    ELECTED_PENDING_VERIFICATION = "instalment_elected_pending_verification"
     ELECTED_CALCULATION_POSITIVE = "instalment_elected_calculation_positive"
     ELECTED_CALCULATION_ZERO = "instalment_elected_calculation_zero"
     BASE_POSITIVE = "instalment_base_positive"

@@ -35,6 +35,7 @@ from .....domain.calculations.registry.tests.registry_observations import (
     revision_id_for_observation,
 )
 from .....domain.modelos.work_unit import WorkUnitCatalogue
+from .....domain.transactions.models import TransactionCatalogue
 from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..calculation_observations import CalculationObservationRepository
 from ..modelos_calculation import CalculationRevisionCatalogueRepository
@@ -85,6 +86,7 @@ def _read(
         observations=repository,
         work_units=WorkUnitCatalogue,
         calculations=CalculationRevisionCatalogueRepository(),
+        transactions=TransactionCatalogue,
         activity_start_date=activity_start_date,
         election_for=lambda _instalment: False,
     )

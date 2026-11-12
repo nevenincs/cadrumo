@@ -182,6 +182,7 @@ def _modelo_202_instalment_facts(
     """
     from ..adapters.persistence.profile.calculation_observations import CalculationObservationRepository
     from ..adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+    from ..adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
     from .calculation_revision_composition import bind_calculation_revision_persistence_from_profile
 
@@ -197,6 +198,7 @@ def _modelo_202_instalment_facts(
                 operation=operation,
                 profile_record=record,
             ).calculation_repository(),
+            transactions=TransactionCatalogueRepository(bucket_id=bucket_id, objects=objects).load,
             activity_start_date=parse_iso8601_date(fact_value(record, "censo.activity_start_date")),
             election_for=_art_40_3_election_unrecorded,
         ),

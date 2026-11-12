@@ -6,7 +6,9 @@ revision of the earlier Modelo 200 or its captured AEAT evidence. A draft never
 writes a filed observation, and an operator-entered observation is not a filing,
 so neither decides. Where no such filing is held, the base the operator stated
 on the instalment's own work unit stands for it. The instalment's own
-calculation is read from that work unit's current revision.
+calculation is read from that work unit's current revision, and counts as
+current only while its registry stamp carries and its ledger anchor has not
+moved against the live transaction catalogue.
 """
 
 from __future__ import annotations
@@ -28,6 +30,8 @@ from ...domain.modelos.calculation_revision import (
 from ...domain.modelos.errors import ModeloError
 from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
+from ...domain.transactions.models import TransactionCatalogue
+from ..aggregation.ledger_filing_snapshot import evaluate_ledger_filing_staleness
 from ..calculations.modelo_202_base_source import (
     MODELO_202_BASE_BINDING_ID,
     modelo_202_base_source_periods,
@@ -63,6 +67,7 @@ class Modelo202InstalmentStores:
         observations: The filed-observation store the base binding resolves from.
         work_units: Loads the bucket's work-unit catalogue once per read.
         calculations: The bucket's calculation-revision store.
+        transactions: Loads the bucket's live transaction catalogue.
         activity_start_date: The declared activity start, if any.
         election_for: The art. 40.3 election in force for an instalment; ``None``
             when it was never stated.
@@ -72,6 +77,7 @@ class Modelo202InstalmentStores:
     observations: CalculationObservationRepositoryProtocol
     work_units: Callable[[], WorkUnitCatalogue]
     calculations: CalculationRevisionCatalogueRepositoryProtocol
+    transactions: Callable[[], TransactionCatalogue]
     activity_start_date: date | None
     election_for: Callable[[Period], bool | None]
 
@@ -120,10 +126,24 @@ def _attested_base(revision: CalculationRevision | None, source: Modelo202BaseSo
     return Modelo202BaseReading(value=Decimal(stated.value), basis=Modelo202BaseBasis.OPERATOR_ATTESTED)
 
 
+def _calculation_is_current(
+    revision: CalculationRevision,
+    *,
+    transactions: Callable[[], TransactionCatalogue],
+    operation: PinnedAuthorityOperation,
+) -> bool:
+    """Report whether the revision's registry stamp carries and its ledger anchor has not moved."""
+    if revision_carry_outcome(revision.registry_snapshot_ref, operation=operation).refused:
+        return False
+    anchor = revision.ledger_filing_snapshot
+    return anchor is None or not evaluate_ledger_filing_staleness(anchor, transactions()).is_stale
+
+
 def _calculation_reading(
     revision: CalculationRevision,
     *,
     modelo: str,
+    transactions: Callable[[], TransactionCatalogue],
     operation: PinnedAuthorityOperation,
 ) -> Modelo202CalculationReading | None:
     result_ids = result_disposition_casilla_ids(modelo)
@@ -141,7 +161,7 @@ def _calculation_reading(
         return None
     return Modelo202CalculationReading(
         result=result,
-        current=not revision_carry_outcome(revision.registry_snapshot_ref, operation=operation).refused,
+        current=_calculation_is_current(revision, transactions=transactions, operation=operation),
         verified=revision.state in _VERIFIED_STATES,
     )
 
@@ -169,6 +189,12 @@ def bind_modelo_202_instalment_facts(
     modelo = modelo_202_form(operation=operation)
     work_units: list[WorkUnitCatalogue] = []
     revisions: list[CalculationRevisionCatalogue] = []
+    ledgers: list[TransactionCatalogue] = []
+
+    def transactions() -> TransactionCatalogue:
+        if not ledgers:
+            ledgers.append(stores.transactions())
+        return ledgers[0]
 
     def catalogue() -> WorkUnitCatalogue:
         if not work_units:
@@ -209,7 +235,7 @@ def bind_modelo_202_instalment_facts(
             work_unit_id=None if unit is None else unit.work_unit_id,
             calculation=None
             if revision is None
-            else _calculation_reading(revision, modelo=modelo, operation=operation),
+            else _calculation_reading(revision, modelo=modelo, transactions=transactions, operation=operation),
         )
 
     return read

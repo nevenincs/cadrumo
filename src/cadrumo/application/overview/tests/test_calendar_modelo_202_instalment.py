@@ -47,6 +47,7 @@ _MODELO_202 = "202"
 _MODELO_200 = "200"
 _INSTALMENTS = ("1P", "2P", "3P")
 _WORK_UNIT_ID = "a" * 64
+_ELECTION_SELECTOR = "taxpayer.pago_fraccionado_art_40_3_elected"
 
 
 def _year() -> int:
@@ -172,12 +173,20 @@ def test_no_prior_return_decides_before_the_base_is_looked_for() -> None:
             Modelo202InstalmentOutcome.ELECTED_PENDING_CALCULATION,
         ),
         (
+            Modelo202CalculationReading(result=Decimal("0"), current=False, verified=True),
+            Modelo202InstalmentOutcome.ELECTED_PENDING_CALCULATION,
+        ),
+        (
             Modelo202CalculationReading(result=Decimal("10.00"), current=True, verified=False),
-            Modelo202InstalmentOutcome.ELECTED_CALCULATION_POSITIVE,
+            Modelo202InstalmentOutcome.ELECTED_PENDING_VERIFICATION,
         ),
         (
             Modelo202CalculationReading(result=Decimal("0"), current=True, verified=False),
-            Modelo202InstalmentOutcome.ELECTED_PENDING_CALCULATION,
+            Modelo202InstalmentOutcome.ELECTED_PENDING_VERIFICATION,
+        ),
+        (
+            Modelo202CalculationReading(result=Decimal("10.00"), current=True, verified=True),
+            Modelo202InstalmentOutcome.ELECTED_CALCULATION_POSITIVE,
         ),
         (
             Modelo202CalculationReading(result=Decimal("0"), current=True, verified=True),
@@ -185,12 +194,22 @@ def test_no_prior_return_decides_before_the_base_is_looked_for() -> None:
         ),
     ],
 )
-def test_under_the_election_only_a_current_calculation_decides(
+def test_under_the_election_only_a_current_verified_calculation_decides(
     calculation: Modelo202CalculationReading | None, expected: Modelo202InstalmentOutcome
 ) -> None:
-    """A zero result decides no ingreso only once the current calculation is verified."""
+    """Neither a positive nor a zero result decides until a passing verification sealed a current calculation."""
     facts = _facts("2P", election=True, work_unit_id=_WORK_UNIT_ID, calculation=calculation)
     assert decide_modelo_202_instalment(facts) is expected
+
+
+def test_an_unverified_calculation_opens_its_verification() -> None:
+    calculation = Modelo202CalculationReading(result=Decimal("10.00"), current=True, verified=False)
+    facts = _facts("2P", election=True, work_unit_id=_WORK_UNIT_ID, calculation=calculation)
+    doors = modelo_202_instalment_doors(
+        Modelo202InstalmentOutcome.ELECTED_PENDING_VERIFICATION, facts, modelo=_MODELO_202
+    )
+    assert [door.action.action_id for door in doors] == ["operator.modelo.work.verify"]
+    assert _arguments(doors[0]) == {"work_unit_id": _WORK_UNIT_ID}
 
 
 def test_an_absent_base_opens_the_earlier_modelo_200_first() -> None:
@@ -272,6 +291,16 @@ def test_the_calendar_keeps_an_unstated_election_incomplete(authority_operation:
     assert {entry.period.registry_token for entry in entries} == set(_INSTALMENTS)
     assert all(entry.verdict is ApplicabilityVerdict.INCOMPLETE for entry in entries)
     assert all(entry.actions[0].action.action_id == "operator.profile.edit" for entry in entries)
+    election = [warning for warning in calendar.warnings if warning.code == _ELECTION_SELECTOR]
+    assert len(election) == 1
+    assert election[0].affected_modelos == (_MODELO_202,)
+    assert election[0].fix_action.action.action_id == "operator.profile.edit"
+
+
+def test_a_stated_election_raises_no_election_warning(authority_operation: PinnedAuthorityOperation) -> None:
+    facts = {token: _facts(token, election=False) for token in _INSTALMENTS}
+    calendar = _calendar(_legal_entity(authority_operation), facts, authority_operation)
+    assert [warning for warning in calendar.warnings if warning.code == _ELECTION_SELECTOR] == []
 
 
 def test_the_calendar_leaves_the_threshold_verdict_alone(authority_operation: PinnedAuthorityOperation) -> None:

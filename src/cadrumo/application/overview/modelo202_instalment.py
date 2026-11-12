@@ -65,9 +65,11 @@ class Modelo202CalculationReading:
 
     Attributes:
         result: The canonical result amount of the revision.
-        current: Whether the revision is the work unit's current revision and its
-            registry stamp is the one the pinned authority selects.
-        verified: Whether the revision passed verification.
+        current: Whether the registry stamp of the work unit's current revision is
+            the one the pinned authority selects and, where the revision anchored
+            the ledger, no contributing ledger row has moved since.
+        verified: Whether a passing verification sealed the revision; that
+            verification ran the ledger and invoice drift gates when it sealed it.
     """
 
     result: Decimal
@@ -106,13 +108,31 @@ type Modelo202InstalmentFactsReader = Callable[[Period], Modelo202InstalmentFact
 """Gather one instalment's facts from the stores one read is bound to."""
 
 
+@dataclass(frozen=True, slots=True)
+class Modelo202InstalmentVerdict:
+    """One instalment's filing verdict, the doors that move it on, and whether its election is unstated.
+
+    Attributes:
+        applicability: The verdict, unchanged where the instalment's facts are
+            not consulted.
+        doors: The primary door first, then its alternatives in order.
+        election_unstated: Whether the verdict waits on the art. 40.3 election,
+            a profile fact the calendar names as a gating key.
+    """
+
+    applicability: ModeloApplicability
+    doors: tuple[DeclaredNextAction, ...] = ()
+    election_unstated: bool = False
+
+
 def decide_modelo_202_instalment(facts: Modelo202InstalmentFacts) -> Modelo202InstalmentOutcome:
     """Return the outcome the facts decide; an undecided instalment stays incomplete.
 
     Under the election only the instalment's own calculation knows the base
-    imponible of the 3, 9 or 11 months: a positive current result decides an
-    ingreso, and a zero result decides none only once that calculation is also
-    verified. Without it the art. 40.2 base decides, and a base that was never
+    imponible of the 3, 9 or 11 months, and only a current calculation that a
+    passing verification sealed shows it still answers the ledger and the
+    invoices: its positive result decides an ingreso and its zero result none.
+    Without the election the art. 40.2 base decides, and a base that was never
     held stays incomplete rather than read as zero.
     """
     if facts.election_stated is None:
@@ -121,11 +141,11 @@ def decide_modelo_202_instalment(facts: Modelo202InstalmentFacts) -> Modelo202In
         calculation = facts.calculation
         if calculation is None or not calculation.current:
             return Modelo202InstalmentOutcome.ELECTED_PENDING_CALCULATION
+        if not calculation.verified:
+            return Modelo202InstalmentOutcome.ELECTED_PENDING_VERIFICATION
         if calculation.result > 0:
             return Modelo202InstalmentOutcome.ELECTED_CALCULATION_POSITIVE
-        if calculation.verified:
-            return Modelo202InstalmentOutcome.ELECTED_CALCULATION_ZERO
-        return Modelo202InstalmentOutcome.ELECTED_PENDING_CALCULATION
+        return Modelo202InstalmentOutcome.ELECTED_CALCULATION_ZERO
     if facts.base_source is None:
         return Modelo202InstalmentOutcome.BASE_UNDECLARED
     if facts.no_prior_return:
@@ -200,6 +220,8 @@ def modelo_202_instalment_doors(
         return (declare_next_action(_PROFILE_EDIT_ACTION_ID),)
     if outcome is Modelo202InstalmentOutcome.ELECTED_PENDING_CALCULATION:
         return (_instalment_work_door(facts, modelo=modelo),)
+    if outcome is Modelo202InstalmentOutcome.ELECTED_PENDING_VERIFICATION and facts.work_unit_id is not None:
+        return (declare_next_action(_VERIFY_WORK_ACTION_ID, work_unit_id=facts.work_unit_id),)
     if outcome is Modelo202InstalmentOutcome.NO_PRIOR_RETURN:
         return (declare_next_action(_PROFILE_EDIT_ACTION_ID),)
     if outcome is Modelo202InstalmentOutcome.BASE_UNDECLARED:
@@ -216,7 +238,7 @@ def modelo_202_instalment_verdict(
     profile: TaxpayerProfile,
     facts_reader: Modelo202InstalmentFactsReader,
     operation: PinnedAuthorityOperation,
-) -> tuple[ModeloApplicability, tuple[DeclaredNextAction, ...]]:
+) -> Modelo202InstalmentVerdict:
     """Decide one Modelo 202 instalment where the profile alone left the obligation open.
 
     Only an incomplete Modelo 202 verdict under modalidad cuota is decided here:
@@ -226,11 +248,11 @@ def modelo_202_instalment_verdict(
     if applicability.verdict is not ApplicabilityVerdict.INCOMPLETE or not is_modelo_202(
         str(applicability.modelo), operation=operation
     ):
-        return applicability, ()
+        return Modelo202InstalmentVerdict(applicability)
     effective_date = date(instalment.filing_year, 12, 31)
     modality = derive_modelo_202_modality(profile, effective_date=effective_date, authority=operation)
     if modality.modality is not Modelo202Modality.ART_40_2_OPTIONAL:
-        return applicability, ()
+        return Modelo202InstalmentVerdict(applicability)
     facts = facts_reader(instalment)
     outcome = decide_modelo_202_instalment(facts)
     basis = facts.base.basis if facts.base is not None and outcome in _BASE_DECIDED else None
@@ -241,7 +263,11 @@ def modelo_202_instalment_verdict(
         effective_date=effective_date,
         authority=operation,
     )
-    return decided, modelo_202_instalment_doors(outcome, facts, modelo=str(applicability.modelo))
+    return Modelo202InstalmentVerdict(
+        applicability=decided,
+        doors=modelo_202_instalment_doors(outcome, facts, modelo=str(applicability.modelo)),
+        election_unstated=outcome is Modelo202InstalmentOutcome.ELECTION_UNSTATED,
+    )
 
 
 __all__ = [
@@ -250,6 +276,7 @@ __all__ = [
     "Modelo202CalculationReading",
     "Modelo202InstalmentFacts",
     "Modelo202InstalmentFactsReader",
+    "Modelo202InstalmentVerdict",
     "decide_modelo_202_instalment",
     "modelo_202_instalment_doors",
     "modelo_202_instalment_verdict",

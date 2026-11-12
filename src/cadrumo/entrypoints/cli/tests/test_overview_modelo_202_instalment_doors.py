@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from datetime import date
+from decimal import Decimal
 from typing import Any
 
 import pytest
@@ -19,6 +20,7 @@ from ....application.overview.calendar import build_overview_calendar
 from ....application.overview.calendar_models import OverviewCalendarRange
 from ....application.overview.modelo202_instalment import (
     Modelo202BaseSource,
+    Modelo202CalculationReading,
     Modelo202InstalmentFacts,
 )
 from ....core.period import Period
@@ -50,6 +52,7 @@ def _facts(
     base_source: bool = True,
     no_prior_return: bool = False,
     work_unit_id: str | None = None,
+    calculation: Modelo202CalculationReading | None = None,
 ) -> Modelo202InstalmentFacts:
     return Modelo202InstalmentFacts(
         instalment=Period.from_year_and_code(_year(), token),
@@ -62,7 +65,7 @@ def _facts(
         no_prior_return=no_prior_return,
         base=None,
         work_unit_id=work_unit_id,
-        calculation=None,
+        calculation=calculation,
     )
 
 
@@ -158,3 +161,17 @@ def test_pending_calculation_undeclared_base_and_no_prior_return_doors_resolve(
     assert [door["action"]["action_id"] for door in rendered["1P"]] == ["operator.modelo.work.calculate"]
     assert [door["action"]["action_id"] for door in rendered["2P"]] == ["operator.modelo.describe"]
     assert [door["action"]["action_id"] for door in rendered["3P"]] == ["operator.profile.edit"]
+
+
+def test_unverified_calculation_door_resolves(authority_operation: PinnedAuthorityOperation) -> None:
+    unverified = Modelo202CalculationReading(result=Decimal("10.00"), current=True, verified=False)
+    rendered = _suppressed_doors(
+        {
+            token: _facts(token, election=True, work_unit_id=_WORK_UNIT_ID, calculation=unverified)
+            for token in ("1P", "2P", "3P")
+        },
+        authority_operation,
+    )
+    assert {token: [door["action"]["action_id"] for door in doors] for token, doors in rendered.items()} == {
+        token: ["operator.modelo.work.verify"] for token in ("1P", "2P", "3P")
+    }

@@ -83,6 +83,7 @@ from .calendar_warnings import (
     calendar_censo_enrolment_state,
     calendar_censo_reconciliation_warnings,
     calendar_deadline_windows_unavailable_warnings,
+    calendar_modelo_202_election_warnings,
     calendar_regime_incompatibility_warnings,
     calendar_unverified_justificante_warnings,
 )
@@ -629,8 +630,13 @@ def _calendar_obligation_projection(
     SuppressedCalendarEntry | None,
     str | None,
     str | None,
+    str | None,
 ]:
-    """Classify one scheduled obligation for the requested calendar projection."""
+    """Classify one scheduled obligation for the requested calendar projection.
+
+    The fifth result names the modelo when the obligation waits on an
+    unstated art. 40.3 election inside the range.
+    """
     intersects_range = entry_intersects_range(
         obligation,
         calendar_range,
@@ -650,14 +656,18 @@ def _calendar_obligation_projection(
         obligation.modelo if applicability.evidence_disagreement is not None and intersects_range else None
     )
     doors: tuple[DeclaredNextAction, ...] = ()
+    election_unstated_modelo: str | None = None
     if applicability_evidence is not None and applicability_evidence.modelo_202_instalment_facts is not None:
-        applicability, doors = modelo_202_instalment_verdict(
+        instalment = modelo_202_instalment_verdict(
             applicability,
             instalment=obligation.period,
             profile=applicability_evidence.profile_for_year(filing_year),
             facts_reader=applicability_evidence.modelo_202_instalment_facts,
             operation=operation,
         )
+        applicability, doors = instalment.applicability, instalment.doors
+        if instalment.election_unstated and intersects_range:
+            election_unstated_modelo = obligation.modelo
     if applicability.verdict is not ApplicabilityVerdict.APPLICABLE:
         suppressed_entry = (
             SuppressedCalendarEntry(
@@ -670,10 +680,10 @@ def _calendar_obligation_projection(
             if show_suppressed and intersects_range
             else None
         )
-        return None, suppressed_entry, None, disagreeing_modelo
+        return None, suppressed_entry, None, disagreeing_modelo, election_unstated_modelo
 
     if not intersects_range:
-        return None, None, obligation.modelo, disagreeing_modelo
+        return None, None, obligation.modelo, disagreeing_modelo, None
     entry = calendar_entry_from_obligation(
         obligation,
         filing_evidence=filing_evidence,
@@ -683,7 +693,7 @@ def _calendar_obligation_projection(
         operation=operation,
         censo_enrolment_states=censo_enrolment_states,
     )
-    return entry, None, obligation.modelo, disagreeing_modelo
+    return entry, None, obligation.modelo, disagreeing_modelo, None
 
 
 def _entries_and_suppressed_from_schedules(
@@ -698,7 +708,7 @@ def _entries_and_suppressed_from_schedules(
     due_soon_days: int,
     operation: PinnedAuthorityOperation,
     applicability_evidence: FilingYearApplicabilityEvidence | None = None,
-) -> tuple[list[OverviewCalendarEntry], list[SuppressedCalendarEntry], set[str], set[str]]:
+) -> tuple[list[OverviewCalendarEntry], list[SuppressedCalendarEntry], set[str], set[str], set[str]]:
     """Project every schedule's obligations into applicable calendar entries.
 
     Each modelo's applicability is DERIVED from the taxpayer model. Only a
@@ -716,17 +726,19 @@ def _entries_and_suppressed_from_schedules(
     With ``applicability_evidence``, each obligation is decided on the profile
     as of its own filing year and on the ledger derivations for that year. The
     fourth result names the modelos whose in-range rows carry a disagreement
-    between the profile answer and the ledger.
+    between the profile answer and the ledger, and the fifth those whose
+    in-range rows wait on an unstated art. 40.3 election.
     """
     entries: list[OverviewCalendarEntry] = []
     suppressed: list[SuppressedCalendarEntry] = []
     coverage_surface_modelos: set[str] = set()
     disagreeing_modelos: set[str] = set()
+    election_unstated_modelos: set[str] = set()
     # Every row shares this pinned authority and live-censo tuple. Resolve
     # enrolment once per modelo, rather than reloading rules for each period.
     censo_enrolment_states: dict[str, OverviewCensoEnrolmentState] = {}
     for obligation in (row for schedule in schedules for row in schedule.obligations):
-        entry, suppressed_entry, covered_modelo, disagreeing_modelo = _calendar_obligation_projection(
+        entry, suppressed_entry, covered_modelo, disagreeing_modelo, unstated = _calendar_obligation_projection(
             obligation,
             profile=profile,
             calendar_range=calendar_range,
@@ -747,7 +759,9 @@ def _entries_and_suppressed_from_schedules(
             coverage_surface_modelos.add(covered_modelo)
         if disagreeing_modelo is not None:
             disagreeing_modelos.add(disagreeing_modelo)
-    return entries, suppressed, coverage_surface_modelos, disagreeing_modelos
+        if unstated is not None:
+            election_unstated_modelos.add(unstated)
+    return entries, suppressed, coverage_surface_modelos, disagreeing_modelos, election_unstated_modelos
 
 
 def _undeclared_taxpayer_model_reason(profile: TaxpayerProfile) -> str:
@@ -831,7 +845,13 @@ def build_overview_calendar(
         operation=operation,
     )
     due_soon_days = deadline_engine.due_soon_days
-    entries, suppressed, coverage_surface_modelos, disagreeing_modelos = _entries_and_suppressed_from_schedules(
+    (
+        entries,
+        suppressed,
+        coverage_surface_modelos,
+        disagreeing_modelos,
+        election_unstated_modelos,
+    ) = _entries_and_suppressed_from_schedules(
         schedules,
         profile=profile,
         calendar_range=calendar_range,
@@ -896,6 +916,7 @@ def build_overview_calendar(
             + evidence_conflict_warnings
             + regime_incompatibility_warnings
             + calendar_applicability_disagreement_warnings(disagreeing_modelos)
+            + calendar_modelo_202_election_warnings(election_unstated_modelos)
             + calendar_deadline_windows_unavailable_warnings(unresolved_years)
         ),
         completeness=completeness,
