@@ -275,22 +275,31 @@ def _declaration_view(
     )
 
 
-def _removed_by(revision: ModeloRevision | None, predecessor_id: str) -> frozenset[str]:
-    if revision is None:
-        return frozenset[str]()
-    return frozenset(
-        str(removal.selector.id) for removal in revision.casilla_removals if removal.selector.revision == predecessor_id
-    )
+def _removed_before_successor(revisions: Sequence[ModeloRevision], index: int) -> frozenset[str]:
+    """Return the casillas a later edition removes from this one before its successor on its period track.
+
+    A split year prints its periods on parallel editions, and the removal may be
+    declared by one of them against an edition that inherited the casilla from
+    this one; that removal still cites where the casilla leaves the form.
+    """
+    track = _period_track(revisions[index])
+    carriers = {str(revisions[index].id)}
+    removed: set[str] = set()
+    for later in revisions[index + 1 :]:
+        removed.update(
+            str(removal.selector.id) for removal in later.casilla_removals if str(removal.selector.revision) in carriers
+        )
+        if _period_track(later) == track:
+            break
+        carriers.add(str(later.id))
+    return frozenset(removed)
 
 
 def _period_track(revision: ModeloRevision) -> tuple[str, ...]:
     return tuple(sorted(revision.period_selector.periods))
 
 
-def _edition_view(
-    revision: ModeloRevision, following: ModeloRevision | None, catalogues: RegistryCatalogues
-) -> EditionView:
-    removed = _removed_by(following, str(revision.id))
+def _edition_view(revision: ModeloRevision, removed: frozenset[str], catalogues: RegistryCatalogues) -> EditionView:
     views = (
         _declaration_view(family, item, catalogues, removed)
         for family in _SCOPED_FAMILIES
@@ -313,7 +322,7 @@ def editions_in_support(
     floor = support.date_envelope().floor
     revisions = tuple(ordered_revisions(definition))
     return tuple(
-        _edition_view(revision, revisions[index + 1] if index + 1 < len(revisions) else None, catalogues)
+        _edition_view(revision, _removed_before_successor(revisions, index), catalogues)
         for index, revision in enumerate(revisions)
         if revision.valid_to is None or revision.valid_to >= floor
     )
