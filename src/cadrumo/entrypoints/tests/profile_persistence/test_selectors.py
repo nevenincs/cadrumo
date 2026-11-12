@@ -746,8 +746,9 @@ def test_exportable_revision_refuses_draft_current_no_current_and_ambiguous_veri
         select_exportable_revision(work_unit, calculation_repository=cr_repo, operation=operation)
     absent_verdict = absent.value.terminal_precondition_verdict
     assert absent_verdict is not None
-    assert absent_verdict.action is not None
-    assert absent_verdict.action.action_id == "operator.modelo.work.calculate"
+    absent_action = absent_verdict.action
+    assert absent_action is not None
+    assert absent_action.action_id == "operator.modelo.work.calculate"
 
     # A current calculation that is neither verified nor a draft, with no filed pointer naming it,
     # falls back to one verified revision.
