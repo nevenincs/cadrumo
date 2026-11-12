@@ -164,6 +164,7 @@ errors:
     count: count
     currency: currency
     detail: detail
+    door: command
     ejercicio: tax year
     entry_count: entry count
     expected: expected

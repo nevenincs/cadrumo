@@ -175,6 +175,7 @@ errors:
     count: darabszám
     currency: pénznem
     detail: részlet
+    door: parancs
     ejercicio: adóév
     entry_count: bejegyzések száma
     expected: várt
