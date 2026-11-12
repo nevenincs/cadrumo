@@ -26,14 +26,9 @@ import type {
 /** One further way out, as the generated contract serves it. */
 export type ServedAlternativeAction = AlternativeActionSnapshot;
 
-/** A precondition verdict as served: the generated snapshot, whose wire form
- * leaves `alternative_actions` out when it is empty. */
-export type ServedVerdict = Omit<
-  PreconditionVerdictSnapshot,
-  "alternative_actions"
-> & {
-  alternative_actions?: ServedAlternativeAction[];
-};
+/** A precondition verdict as served: the generated snapshot, whose optional
+ * properties are the ones the wire leaves out. */
+export type ServedVerdict = PreconditionVerdictSnapshot;
 
 /** What a refusal notice is given: the refusal words the operation detail
  * served (`refusal_words`, as `servedRefusalWords` reads them) and the verdict

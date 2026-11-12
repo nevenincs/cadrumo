@@ -5,8 +5,9 @@
 // The request and result of every definition the desktop admits, and the
 // edit operator input the financial body carries, with field names, nullity
 // and closed vocabularies as the application serialises them. A result field
-// is always present; a field of what the window sends may be left out where
-// the model gives it a default.
+// is always present unless the model leaves it out while absent or empty, and
+// then the property is optional. A field of what the window sends may be left
+// out where the model gives it a default.
 
 import type {
   BindingSourceKind,
@@ -105,7 +106,7 @@ export type PublicModeloVerificationFinding = {
   message_facts: PublicFactEntryV1[];
   legal_refs: string[];
   source_refs: string[];
-  disclosed_limitation: boolean;
+  disclosed_limitation?: boolean;
 };
 
 /**
@@ -153,7 +154,7 @@ export type PublicModeloWorkForm = {
   last_export: ModeloFormExport | null;
   edit_closure: ModeloFormEditClosure | null;
   carry_attestations: ModeloFormCarryAttestation[];
-  prior_value_attestations: PublicModeloFormPriorValueAttestation[];
+  prior_value_attestations?: PublicModeloFormPriorValueAttestation[];
   modelo_title: string | null;
   modelo_name: string | null;
   modelo_number: string | null;
