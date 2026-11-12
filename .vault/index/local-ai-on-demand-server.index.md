@@ -4,11 +4,10 @@ tags:
   - '#index'
   - '#local-ai-on-demand-server'
 date: '2026-11-11'
-modified: '2026-11-12'
+modified: '2026-11-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:07409bf6e315e6554a1f6e28b56419e086bc3de4e06d357b30c9aa1d27cdf478'
+body_hash: 'sha256:39e2fdba7b430becc563197c8117c7c963b77e74ae6f6f8ff90b0ad33b1a804d'
 related:
-  - '[[2026-11-11-local-ai-on-demand-server-ledger]]'
   - '[[2026-11-11-local-ai-on-demand-server-plan]]'
 ---
 
@@ -17,10 +16,6 @@ related:
 Auto-generated index of all documents tagged with `#local-ai-on-demand-server`.
 
 ## Documents
-
-### exec
-
-- `2026-11-11-local-ai-on-demand-server-ledger` - `local-ai-on-demand-server` ledger
 
 ### plan
 
