@@ -9182,6 +9182,16 @@ tui:
     taxation:
       key: Conjunta o individual
       reading: Calculant les dues opcions…
+    wallet:
+      code_label: Codi del període
+      key: Cartera d'IVA
+      no_lots: No hi ha cap lot de crèdit registrat per a aquest any.
+      not_sent: 'Revisa el que has indicat: no s''ha enviat res.'
+      outcome_unknown: Pot ser que el que has indicat s'hagi desat. Torna a llegir
+        el saldo abans d'indicar res més.
+      refused: S'ha rebutjat el que has indicat.
+      sending: Enviant el que has indicat...
+      year_label: Any del període
   operations:
     action:
       close: Tanca

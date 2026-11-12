@@ -127,6 +127,9 @@ CADRUMO_CSS_TOKENS: Final[Mapping[str, str]] = MappingProxyType(
         "cadrumo-saved-filing-values-min-height": str(5),
         "cadrumo-modal-max-height": "80vh",
         "cadrumo-log-max-height": str(12),
+        # A dialog's detail pane beside its list, and a short choice list.
+        "cadrumo-dialog-detail-max-height": "40%",
+        "cadrumo-choice-list-max-height": str(5),
         # -- Spacing scale, in terminal cells -------------------------------
         # Cells, not rem: the unit here is a character, so the useful scale is
         # tiny and every step has to earn itself. A web 4-point scale has no

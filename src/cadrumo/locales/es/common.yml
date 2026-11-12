@@ -9200,6 +9200,16 @@ tui:
     taxation:
       key: Conjunta o individual
       reading: Calculando las dos opciones…
+    wallet:
+      code_label: Código del periodo
+      key: Cartera de IVA
+      no_lots: No hay lotes de crédito registrados para este año.
+      not_sent: 'Revisa lo que has indicado: no se ha enviado nada.'
+      outcome_unknown: Puede que lo que has indicado se haya guardado. Vuelve a leer
+        el saldo antes de indicar nada más.
+      refused: Se ha rechazado lo que has indicado.
+      sending: Enviando lo que has indicado...
+      year_label: Año del periodo
   operations:
     action:
       close: Cerrar

@@ -56,6 +56,7 @@ from cadrumo_client.transport.workbench_generation import read_workbench_generat
 from .aeat_sync.runtime_handoff import compose_runtime_aeat_sync_handoff
 from .modelo.runtime_disagreements import RuntimeModeloDisagreements
 from .modelo.runtime_lifecycle import compose_runtime_modelo_lifecycle_door
+from .modelo.runtime_wallet import RuntimeModeloIvaWallet
 from .modelo.runtime_work_create import compose_runtime_calendar_create_handoff, compose_runtime_work_create_handoff
 from .modelo.runtime_workbench_reads import RuntimeModeloWorkbenchSource
 from .profile.manager_client import ProfileManagerClientComposition
@@ -167,6 +168,7 @@ class _DeclarationDestination:
             own_accounts=compose_runtime_own_account_door(client=self._root._client, profile_label=self._root._label),
             native_review=lambda revision_id: GoogleSavedReviewScreen(self._root._client, revision_id),
             disagreements=lambda selected: RuntimeModeloDisagreements(self._root._client, selected),
+            wallet=lambda _selected: RuntimeModeloIvaWallet(self._root._client),
         )(declaration)
 
     def calendar_declaration(

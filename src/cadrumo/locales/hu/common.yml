@@ -9148,6 +9148,16 @@ tui:
     taxation:
       key: Közös vagy egyéni
       reading: Mindkét módszer kiszámítása…
+    wallet:
+      code_label: Az időszak kódja
+      key: IVA-tárca
+      no_lots: Ehhez az évhez nincs rögzített jóváírási tétel.
+      not_sent: 'Ellenőrizd a megadott adatokat: semmi sem lett elküldve.'
+      outcome_unknown: Lehet, hogy a megadott adat elmentődött. Olvasd be újra az
+        egyenleget, mielőtt bármi mást megadnál.
+      refused: A megadott adatot elutasították.
+      sending: A megadott adatok küldése...
+      year_label: Az időszak éve
   operations:
     action:
       close: Bezárás

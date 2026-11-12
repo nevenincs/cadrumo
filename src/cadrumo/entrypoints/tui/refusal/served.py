@@ -1,11 +1,9 @@
 """A refusal as the backend serves it, and its ways out in served order.
 
-The TUI words none of this. The verdict snapshot names the actions; the
-refusal sentence, each action's words and the sentence saying there is no way
-out come from the backend. The verdict snapshot does not carry action words
-yet, so they travel beside it here, one per action in the verdict's own order;
-when the snapshot carries them, this module is where they are read from it
-instead.
+The TUI words none of this. The verdict snapshot names the actions and
+carries the words and target operations served for each of them, and the
+sentence saying there is no way out; the refusal sentence comes from the
+backend beside it. This module reads them from the snapshot and invents none.
 
 :func:`served_refusal` is the one place a recorded stop becomes a served
 refusal, whatever surface shows it.
@@ -14,9 +12,9 @@ refusal, whatever surface shows it.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Annotated, Literal, Self
+from typing import Annotated, Literal
 
-from pydantic import BaseModel, StringConstraints, model_validator
+from pydantic import BaseModel, StringConstraints
 
 from ....application.operations.error_detail import (
     OperationErrorDetailKind,
@@ -45,32 +43,24 @@ class ServedWordsV1(BaseModel):
 
 
 class ServedRefusalV1(BaseModel):
-    """What a refusal panel is given: the served sentences and the verdict that settled the refusal.
+    """What a refusal panel is given: the served refusal sentence and the verdict that settled the refusal.
 
-    ``alternative_action_words`` is empty until the backend serves words for
-    the alternatives; once served it holds one entry per alternative, in the
-    verdict's order, ``None`` where that alternative has no words.
+    The verdict carries the words served for each way out and the sentence
+    served for a refusal with no way out.
     """
 
     model_config = STRICT_FROZEN_CONFIG
 
     refusal_words: ServedWordsV1 | None = None
     verdict: PreconditionVerdictSnapshot | None = None
-    primary_action_words: ServedWordsV1 | None = None
-    alternative_action_words: tuple[ServedWordsV1 | None, ...] = ()
-    no_recovery_words: ServedWordsV1 | None = None
 
-    @model_validator(mode="after")
-    def _words_belong_to_the_verdict(self) -> Self:
+    @property
+    def no_recovery_words(self) -> ServedWordsV1 | None:
+        """The sentence the verdict served for a refusal with no way out, when it served one."""
         verdict = self.verdict
-        if self.primary_action_words is not None and (verdict is None or verdict.action_id is None):
-            raise ValueError("primary action words need a verdict that names a primary action")
-        alternatives = () if verdict is None else verdict.alternative_actions
-        if self.alternative_action_words and len(self.alternative_action_words) != len(alternatives):
-            raise ValueError("alternative action words are served one per alternative, in the verdict's order")
-        if self.no_recovery_words is not None and (verdict is None or verdict.no_recovery_outcome is None):
-            raise ValueError("no-recovery words need a verdict with a no-recovery outcome")
-        return self
+        if verdict is None or verdict.no_recovery_outcome is None:
+            return None
+        return _served(verdict.no_recovery_words, verdict.no_recovery_words_language)
 
     @property
     def sentence(self) -> str | None:
@@ -88,11 +78,19 @@ class RefusalWayV1:
     missing_argument_names: tuple[str, ...]
     conditionality: ActionConditionality
     words: ServedWordsV1 | None
+    target_operation_ids: tuple[str, ...]
 
     @property
     def conditional(self) -> bool:
         """Whether the action was served as needing arguments before it can run."""
         return self.conditionality is ActionConditionality.REQUIRES_ARGUMENTS or bool(self.missing_argument_names)
+
+
+def _served(words: str | None, language: OutputLanguage | None) -> ServedWordsV1 | None:
+    """The words a snapshot served, bound to their language, or ``None`` when it served none."""
+    if words is None or language is None:
+        return None
+    return ServedWordsV1(words=words, language=language)
 
 
 def refusal_ways(refusal: ServedRefusalV1) -> tuple[RefusalWayV1, ...]:
@@ -113,11 +111,11 @@ def refusal_ways(refusal: ServedRefusalV1) -> tuple[RefusalWayV1, ...]:
                 argument_bindings=verdict.argument_bindings,
                 missing_argument_names=verdict.missing_argument_names,
                 conditionality=verdict.conditionality,
-                words=refusal.primary_action_words,
+                words=_served(verdict.action_words, verdict.action_words_language),
+                target_operation_ids=verdict.target_operation_ids,
             )
         )
-    served_words = refusal.alternative_action_words
-    for index, alternative in enumerate(verdict.alternative_actions):
+    for alternative in verdict.alternative_actions:
         ways.append(
             RefusalWayV1(
                 role="alternative",
@@ -125,7 +123,8 @@ def refusal_ways(refusal: ServedRefusalV1) -> tuple[RefusalWayV1, ...]:
                 argument_bindings=alternative.argument_bindings,
                 missing_argument_names=alternative.missing_argument_names,
                 conditionality=alternative.conditionality,
-                words=served_words[index] if served_words else None,
+                words=_served(alternative.action_words, alternative.action_words_language),
+                target_operation_ids=alternative.target_operation_ids,
             )
         )
     return tuple(ways)

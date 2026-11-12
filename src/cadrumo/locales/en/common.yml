@@ -8999,6 +8999,16 @@ tui:
     taxation:
       key: Joint or individual
       reading: Working out both ways…
+    wallet:
+      code_label: Period code
+      key: IVA wallet
+      no_lots: No credit lots are recorded for this year.
+      not_sent: 'Check your entry: nothing was sent.'
+      outcome_unknown: Your entry may have been stored. Read the balance again before
+        entering anything else.
+      refused: Your entry was refused.
+      sending: Sending your entry...
+      year_label: Year of the period
   operations:
     action:
       close: Close

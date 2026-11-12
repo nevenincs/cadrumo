@@ -216,6 +216,8 @@ class WorkbenchFooterMixin:
             hidden.add("a")
         if not self._offers_taxation_comparison():
             hidden.add("t")
+        if not self._offers_wallet():
+            hidden.add("w")
         if not self._offers_amendment():
             hidden.add("m")
         if self.query_one(CasillaList).highlighted is None:
