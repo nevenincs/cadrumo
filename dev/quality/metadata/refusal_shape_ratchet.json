@@ -789,8 +789,6 @@
   "src/cadrumo/application/modelo/typed_binding_validation.py::_validate_enum_kind::REFUSED_MODELO_BINDING_VALUE_CONTRACT_UNSUPPORTED::0",
   "src/cadrumo/application/modelo/typed_binding_validation.py::_validate_legal_entity_form_enum::REFUSED_MODELO_BINDING_VALUE_CONTRACT_UNSUPPORTED::0",
   "src/cadrumo/application/modelo/typed_binding_validation.py::_validate_legal_entity_form_enum::REFUSED_MODELO_BINDING_VALUE_INVALID::0",
-  "src/cadrumo/application/modelo/typed_binding_validation.py::_validate_rental_reduction_enum::REFUSED_MODELO_BINDING_VALUE_CONTRACT_UNSUPPORTED::0",
-  "src/cadrumo/application/modelo/typed_binding_validation.py::_validate_rental_reduction_enum::REFUSED_MODELO_BINDING_VALUE_INVALID::0",
   "src/cadrumo/application/modelo/typed_binding_validation.py::_validate_typed_enum::REFUSED_MODELO_BINDING_VALUE_CONTRACT_UNSUPPORTED::0",
   "src/cadrumo/application/modelo/typed_binding_validation.py::_validate_typed_enum::REFUSED_MODELO_BINDING_VALUE_CONTRACT_UNSUPPORTED::1",
   "src/cadrumo/application/modelo/typed_binding_validation.py::_validate_typed_enum::REFUSED_MODELO_BINDING_VALUE_INVALID::0",

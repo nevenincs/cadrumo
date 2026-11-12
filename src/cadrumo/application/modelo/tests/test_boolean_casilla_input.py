@@ -15,19 +15,35 @@ still refused.
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import UTC, date, datetime
 from decimal import Decimal
 
 import pytest
 
+from ....core.aggregation import BindingSourceKind
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
+from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from ....domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
 from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.calculations.registry.tests.authored_editions import authored_revisions_where
-from ....domain.calculations.registry.tests.published_authority import published_snapshot
+from ....domain.calculations.registry.tests.published_authority import (
+    leased_profile_create_context,
+    published_snapshot,
+)
+from ....domain.user_profile.registry_contract import profile_binding_selectors
+from ....domain.user_profile.values import (
+    ProfileSetupState,
+    UserProfileFact,
+    UserProfileRecord,
+    create_user_profile_record,
+)
+from ...aggregation.source_mesh import CalculationSourceResolution
+from ..profile_binding import resolve_profile_sourced_bindings
+from ..profile_rental_reduction import RENTAL_REDUCTION_APLICABLE_PATH, RENTAL_REDUCTION_TIER_PATH
 from ..registry_helpers import validate_casilla_input_ids
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -51,28 +67,85 @@ def _computes_the_reduccion(revision: ModeloRevision) -> bool:
 
 _YEAR = authored_revisions_where("100", _computes_the_reduccion)[-1].valid_from.year
 """The newest Modelo 100 edition whose flag gates a computed reducción, the wiring these tests pin."""
+_CLOCK = datetime(_YEAR, 5, 21, 10, 0, 0, tzinfo=UTC)
+"""A record timestamp inside that edition's ejercicio; the value decides nothing."""
+_PROFILE_ID = "10010010-0100-4100-8100-100100100100"
 
 
 def _snapshot() -> RegistrySnapshot:
     return published_snapshot("100", filing_year=_YEAR, period=_PERIOD)
 
 
-def _calculate(snapshot: RegistrySnapshot, inputs: dict[CasillaId, Decimal]) -> dict[CasillaId, Decimal]:
+def _lease_record(**lease: object) -> UserProfileRecord:
+    """A profile whose one lease is active in the ejercicio, stating ``lease`` at signing."""
+    stated: dict[str, object] = {
+        "inmueble": 0,
+        "fecha_contrato": date(_YEAR, 1, 1),
+        "fecha_inicio": date(_YEAR, 1, 1),
+        "uso_vivienda": True,
+        "zona_tensionada": False,
+    }
+    stated.update(lease)
+    return create_user_profile_record(
+        setup_state=ProfileSetupState.COMPLETE,
+        profile_id=_PROFILE_ID,
+        facts=(
+            UserProfileFact(path="identity.tax_id", value="12345678Z"),
+            UserProfileFact(path="taxpayer_type.irpf_income_categories", value="capital_inmobiliario"),
+            *(
+                UserProfileFact(path=f"renta_arrendamiento.0.{leaf}", value=value)
+                for leaf, value in stated.items()
+                if value is not None
+            ),
+        ),
+        created_at=_CLOCK,
+        updated_at=_CLOCK,
+        context=leased_profile_create_context(),
+    )
+
+
+def _rental_reduction_binding_ids(revision: ModeloRevision) -> frozenset[BindingId]:
+    """The bindings the profile derives from the lease rather than reads as stated facts."""
+    derived = {RENTAL_REDUCTION_APLICABLE_PATH, RENTAL_REDUCTION_TIER_PATH}
+    return frozenset(
+        binding.id
+        for binding in revision.bindings
+        if binding.source is BindingSourceKind.PROFILE and derived & set(profile_binding_selectors(binding.provider))
+    )
+
+
+def _calculate(
+    snapshot: RegistrySnapshot,
+    inputs: dict[CasillaId, Decimal],
+    profile: CalculationSourceResolution,
+) -> dict[CasillaId, Decimal]:
     """Run the real registry engine, resolving every non-casilla channel to zero.
 
     The channels are filled wholesale rather than one at a time so the test states
     one fact -- what the CASILLA inputs do -- instead of silently depending on
-    which bindings the revision happens to declare this year.
+    which bindings the revision happens to declare this year. The lease-derived
+    reduction bindings are the exception: they come only from ``profile``, the
+    real profile resolver's answer, and stay unresolved where it gives none.
     """
     revision = snapshot.revision
+    derived = _rental_reduction_binding_ids(revision)
+    supplied = {*profile.binding_values, *profile.enum_binding_values, *profile.boolean_binding_values}
     result = calculate_registry_snapshot(
         snapshot,
         inputs=inputs,
         date_context={"filing_year_end": date(_YEAR, 12, 31)},
-        binding_values={binding.id: Decimal(0) for binding in revision.bindings},
+        binding_values={
+            **{binding.id: Decimal(0) for binding in revision.bindings if binding.id not in derived},
+            **{binding_id: value for binding_id, value in profile.binding_values.items() if binding_id in derived},
+        },
         enum_binding_values={
             "renta-profile-tax-residence-ccaa": "madrid",
+            **{binding_id: value for binding_id, value in profile.enum_binding_values.items() if binding_id in derived},
         },
+        boolean_binding_values={
+            binding_id: value for binding_id, value in profile.boolean_binding_values.items() if binding_id in derived
+        },
+        unresolved_binding_ids=tuple(sorted(derived - supplied)),
         relation_values={binding.id: Decimal(0) for binding, _ in relation_prefill_bindings_for_period(revision)},
         date_binding_values={binding.id: date(1980, 1, 2) for binding in revision.bindings},
         text_inputs={},
@@ -143,21 +216,40 @@ def test_numeric_casilla_keeps_its_unrestricted_domain() -> None:
     }
 
 
-def test_reduccion_is_withheld_unset_and_reachable_when_the_flag_is_supplied() -> None:
-    """The defect this change closes, stated as the engine's own behaviour.
+def test_reduccion_is_withheld_unset_reached_from_the_lease_and_refused_with_its_door(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    """The flag and the lease decide the reducción together, through the real resolver.
 
-    Asserts the WIRING rather than the reduced amount: that the flag is the thing
-    standing between a declared arrendamiento and its reducción. Asserting the
-    figure would only re-run the registry's own formula and would pass just as
-    happily if the rate were wrong.
+    Asserts the WIRING rather than the reduced amount: the flag stands between a
+    declared arrendamiento and its reducción, the lease the profile records
+    supplies whether it applies and at which rate, and a lease that leaves a
+    deciding fact unstated leaves the box unresolved with the door that records
+    the fact. Asserting the figure would only re-run the registry's own formula
+    and would pass just as happily if the rate were wrong.
     """
     snapshot = _snapshot()
     base = {_RENDIMIENTO_INTEGRO: Decimal("10000")}
 
-    withheld = _calculate(snapshot, dict(base))
-    claimed = _calculate(snapshot, {**base, _REDUCCION_FLAG: Decimal("1")})
+    def resolved(record: UserProfileRecord) -> CalculationSourceResolution:
+        return resolve_profile_sourced_bindings(
+            snapshot, bucket_id=_PROFILE_ID, profile_record=record, operation=authority_operation
+        )
+
+    lease = resolved(_lease_record())
+    unstated = resolved(_lease_record(zona_tensionada=None))
+
+    withheld = _calculate(snapshot, dict(base), lease)
+    claimed = _calculate(snapshot, {**base, _REDUCCION_FLAG: Decimal("1")}, lease)
+    refused = _calculate(snapshot, {**base, _REDUCCION_FLAG: Decimal("1")}, unstated)
 
     assert withheld[_REDUCCION_FLAG] == Decimal("0"), "an unsupplied flag reaches the engine as zero"
-    assert withheld[_REDUCCION_TARGET] == Decimal("0"), "so the reducción is silently withheld"
+    assert withheld[_REDUCCION_TARGET] == Decimal("0"), "so the reducción is withheld"
     assert claimed[_REDUCCION_FLAG] == Decimal("1")
-    assert claimed[_REDUCCION_TARGET] > Decimal("0"), "supplying the flag makes the reducción reachable"
+    assert claimed[_REDUCCION_TARGET] > Decimal("0"), "the flag and the lease make the reducción reachable"
+    assert _REDUCCION_TARGET not in refused, "an unstated lease fact leaves the reducción unresolved, not zero"
+    assert [
+        (diagnostic.reason, diagnostic.remedy)
+        for diagnostic in unstated.diagnostics
+        if diagnostic.casilla_id == _REDUCCION_TARGET
+    ] == [("source_issue", "aeat config profile arrendamiento edit")]

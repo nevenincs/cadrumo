@@ -2397,6 +2397,81 @@ required_text = ["límite máximo de 60.100 euros anuales"]
 value = "60100"
 date_axis = "filing_period"
 valid_from = 2022-01-01
+[[revisions."2022".parameters]]
+id = "renta-rental-reduccion-rate-tier-50"
+data_type = "ratio"
+unit = "ratio"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital inmobiliario", "reducción"]
+
+[[revisions."2022".parameters.values]]
+value = "0.50"
+date_axis = "filing_period"
+valid_from = 2022-01-01
+[[revisions."2022".parameters]]
+id = "renta-rental-reduccion-rate-tier-60"
+data_type = "ratio"
+unit = "ratio"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital inmobiliario", "reducción"]
+
+[[revisions."2022".parameters.values]]
+value = "0.60"
+date_axis = "filing_period"
+valid_from = 2022-01-01
+[[revisions."2022".parameters]]
+id = "renta-rental-reduccion-rate-tier-70"
+data_type = "ratio"
+unit = "ratio"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital inmobiliario", "reducción"]
+
+[[revisions."2022".parameters.values]]
+value = "0.70"
+date_axis = "filing_period"
+valid_from = 2022-01-01
+[[revisions."2022".parameters]]
+id = "renta-rental-reduccion-rate-tier-90"
+data_type = "ratio"
+unit = "ratio"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital inmobiliario", "reducción"]
+
+[[revisions."2022".parameters.values]]
+value = "0.90"
+date_axis = "filing_period"
+valid_from = 2022-01-01
+[[revisions."2022".parameters]]
+id = "renta-rental-reduccion-rate-legacy"
+data_type = "ratio"
+unit = "ratio"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["en su redacción vigente a 31 de diciembre de 2021"]
+
+[[revisions."2022".parameters.values]]
+value = "0.60"
+date_axis = "filing_period"
+valid_from = 2022-01-01
 # Mínimo del contribuyente aplicable al GRAVAMEN AUTONÓMICO para residentes en
 # Principado de Asturias (Ley 22/2009 art. 46.1.a cede esta competencia a la comunidad).
 # La Ley del Principado 3/2025 añade el art. 2 bis y entra en vigor el 3 de diciembre de
