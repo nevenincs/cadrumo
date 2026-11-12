@@ -10,7 +10,7 @@ related:
   - '[[2026-10-18-runtime-authority-boundary-adr]]'
 modified: '2026-11-12'
 body_schema: body-v2
-body_hash: 'sha256:946230ec0ae3f539346ebd002b60047d22428f77cb6d01b9e82221d0a88d63e0'
+body_hash: 'sha256:6c9267997565345d03c2db09aa96e158dd9b430b6164aa69f732dc3f304b3f77'
 ---
 
 <!-- RETIRED: S44 -->
@@ -66,6 +66,8 @@ Every persona row passes calculate, verify and export, proven in Python with no 
 - [ ] `P01.S50` - Bind the Modelo 100 ascendant minimum, casilla 0515, in every edition, where today it has no binding or formula (lane CALC-RENTA); `src/cadrumo/_data/registry/aeat/modelos/100, src/cadrumo/application/aggregation`.
 - [x] `P01.S51` - Keep the intracomunitario-desarrollador reverse-charge purchases in Modelo 100 casillas 0218 and 0222, where today the settlement comparison drops them by comparing cash paid with an invoice total that includes the recipient's self-assessed cuota (lane CALC-RENTA); `src/cadrumo/application/aggregation`.
 - [ ] `P01.S54` - Add a persona that owes a prorrata Modelo 303 (general prorrata, with the annual regularisation in 4T) and make its rows pass, expectations keyed by role and cited, after the Modelo 200 re-key (lanes CALC-IVA and ACCEPTANCE); `src/cadrumo/domain/iva, src/cadrumo/_data/registry/aeat/modelos/303, dev/fixtures/personas`.
+- [ ] `P01.S55` - Source the prorrata persona's Modelo 130 rows from its ledger, after CALC-PAGOS's current causes; until then they show unchecked with the declared reason (lane CALC-PAGOS); `src/cadrumo/_data/registry/aeat/modelos/130, dev/fixtures/personas`.
+- [ ] `P01.S56` - Source the prorrata persona's Modelo 100 rows, after CALC-RENTA's current causes; until then they show unchecked with the declared reason (lane CALC-RENTA); `src/cadrumo/_data/registry/aeat/modelos/100, dev/fixtures/personas`.
 
 ### Phase `P02` - Deferred backend scope
 
