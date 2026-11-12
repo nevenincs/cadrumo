@@ -30,6 +30,7 @@ from ...domain.modelos.row_models import (
 from ...domain.user_profile.errors import ProfileNotFoundError
 from ...domain.user_profile.schema import numeric_value_refusal
 from ...domain.user_profile.values import UserProfileFact, UserProfileRecord
+from ..user_profile.profile_read_recorder import profile_facts_under
 from ..user_profile.profile_record_repository import ProfileRecordRepository
 from .source_mesh import (
     CalculationSourceContext,
@@ -109,7 +110,7 @@ class AtribucionMemberSourceResolver:
             return profile
         record, profile_schema = profile
         projection = _project_attribution_socio_facts(
-            _attribution_entity_socio_facts(record.facts),
+            _attribution_entity_socio_facts(profile_facts_under(record.facts, f"{_SOCIOS_SECTION_KEY}.")),
             schema=profile_schema,
         )
         observations = tuple(
