@@ -1833,6 +1833,8 @@ errors:
     refused_modelo_export_required_record_absent: El disseny oficial exigeix almenys
       un registre %{export_record_id}, però aquesta declaració no en té cap, així
       que no hi ha res a escriure en aquest format i no s'ha escrit res.
+    refused_modelo_export_settlement: 'No s''ha escrit res: l''exportació no pot indicar
+      com es paga o es retorna la declaració.'
     refused_modelo_export_unrepresentable_character: 'No s''ha escrit res: el camp
       %{field_id} conté el caràcter «%{character}» (%{code_point}), que el disseny
       de registre de l''AEAT no permet escriure. Treure''l o substituir-lo declararia

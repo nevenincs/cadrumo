@@ -2570,6 +2570,15 @@ application:
         consta en aquest perfil, així que no pot donar suport al model 303 del període
         %{period} de %{filing_year}. No s'ha calculat res. Registra una atestació
         nova per a aquest període i fes servir els valors que t'indiqui.
+      export_amended_filing_evidence_missing: 'No s''ha escrit res: la presentació
+        que rectifica aquesta declaració no té registrat cap justificant atestat per
+        l''AEAT. Importa''n la prova per a la unitat de treball de la declaració i
+        torna a exportar.'
+      export_amended_filing_justificante_unresolved: 'No s''ha escrit res: el justificant
+        registrat per a la presentació que rectifica aquesta declaració no pot donar
+        suport a la rectificació. Falta, apareix més d''una vegada o no coincideix
+        amb el model, el període i el contribuent de la declaració. Decideix tu quin
+        registre és erroni: revisa la presentació registrada i el seu justificant.'
       export_cross_bucket_refused: La revisió indicada pertany a un bucket diferent
         del bucket del perfil actiu. Canvia de perfil abans d'exportar.
       export_draft_approval_failed: No s'ha pogut aprovar l'esborrany per a la revisió

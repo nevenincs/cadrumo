@@ -99,13 +99,11 @@ from ..filing.export_verification import (
     FilingExportPayloadConsumer,
     assert_export_artifact_matches_receipt,
 )
-from ..filing.export_xml_value_limits import is_xml_value_refusal
 from ..filing.producer_snapshot import (
     AmendmentEvidence,
     FilingProducerSnapshot,
 )
 from ..filing.runtime import RegistryModeloSubview, RegistrySchemaAccessor, build_runtime_schema_provider
-from ..filing.shared_owner_refusal import is_shared_owner_refusal
 from .action_errors import (
     CalculationRevisionNotFoundError,
     WorkUnitNotFoundError,
@@ -644,8 +642,6 @@ def export_write_failure(command: ModeloExportCommand, exc: FilingExportError) -
     field_refusal = export_field_level_refusal(command, exc)
     if field_refusal is not None:
         return field_refusal
-    if is_xml_value_refusal(exc) or is_shared_owner_refusal(exc):
-        return ModeloExportError(translated_message=exc.translated_message, context=refusal_context)
     return ModeloExportError(
         translated_message="application.modelo.errors.export_draft_write_failed",
         context={"calculation_revision_id": command.calculation_revision_id, "cause": str(exc)},

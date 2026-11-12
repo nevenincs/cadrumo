@@ -2569,6 +2569,15 @@ application:
         consta en este perfil, así que no puede respaldar el modelo 303 del periodo
         %{period} de %{filing_year}. No se ha calculado nada. Registra una atestación
         nueva para este periodo y usa los valores que te indique.
+      export_amended_filing_evidence_missing: 'No se ha escrito nada: la presentación
+        que rectifica esta declaración no tiene registrado un justificante atestiguado
+        por la AEAT. Importa su prueba para la unidad de trabajo de la declaración
+        y vuelve a exportar.'
+      export_amended_filing_justificante_unresolved: 'No se ha escrito nada: el justificante
+        registrado para la presentación que rectifica esta declaración no puede respaldar
+        la rectificación. Falta, aparece más de una vez o no coincide con el modelo,
+        el periodo y el contribuyente de la declaración. Decide tú qué registro es
+        erróneo: revisa la presentación registrada y su justificante.'
       export_cross_bucket_refused: La revisión indicada pertenece a un bucket distinto
         del bucket del perfil activo. Cambia de perfil antes de exportar.
       export_draft_approval_failed: No se pudo aprobar el borrador para la revisión

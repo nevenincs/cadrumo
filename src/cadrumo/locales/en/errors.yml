@@ -1674,6 +1674,8 @@ errors:
     refused_modelo_export_required_record_absent: The official design requires at
       least one %{export_record_id} record, but this return has none, so there is
       nothing to write in this format and nothing was written.
+    refused_modelo_export_settlement: 'Nothing was written: the export cannot state
+      how the return is paid or refunded.'
     refused_modelo_export_unrepresentable_character: 'Nothing was written: field %{field_id}
       holds the character «%{character}» (%{code_point}), which the AEAT record design
       cannot write. Dropping or replacing it would declare something else. Correct

@@ -243,6 +243,15 @@ class ModeloExportCasillaValueRefusedError(ModeloPreconditionErrorMixin, ModeloE
     """
 
 
+class ModeloExportSettlementRefusedError(ModeloPreconditionErrorMixin, ModeloExportError):
+    """Refused: the export cannot state how the return is paid or refunded.
+
+    Nothing is written. The served words say which settlement it cannot state:
+    a result that is not calculated is put right by calculating the declaration,
+    a settlement the export does not compose is the operator's decision.
+    """
+
+
 class ModeloExportFieldUnrenderableError(ModeloPreconditionErrorMixin, ModeloExportError):
     """Integrity: the official record design and a value disagree, so a field cannot be written.
 

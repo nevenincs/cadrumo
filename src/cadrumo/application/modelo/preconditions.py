@@ -352,6 +352,24 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.export.casilla_value.refused",
         action_id="operator.modelo.work.set_value",
     ),
+    # The refusals below are real but no catalogued action repairs them: the
+    # registry has not adjudicated cells the stated boxes share, the schema
+    # refuses a field that is no box of the declaration, the return suspends or
+    # waives part of its result where no remainder is computed, and the
+    # persisted justificante of an amended filing does not back it. A result
+    # box that holds no value is put right by calculating the declaration.
+    *(
+        _profile(
+            "modelo.export", f"modelo.export.{subject}.{sound}", f"modelo.export.{subject}.{refused}", action_id=act
+        )
+        for subject, sound, refused, act in (
+            ("shared_cells", "adjudicated", "unadjudicated", None),
+            ("schema_field", "valid", "refused", None),
+            ("settlement", "stated", "unsupported", None),
+            ("settlement", "stated", "result_unknown", "operator.modelo.work.calculate"),
+            ("amended_filing_justificante", "backs_filing", "unresolved", None),
+        )
+    ),
     _profile(
         "modelo.export",
         "modelo.export.period.maps_to_filing_period",
@@ -365,7 +383,7 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
             f"{leaf}.external_evidence.missing",
             action_id="operator.modelo.filing_record.import",
         )
-        for leaf in ("modelo.work.amend", "modelo.work.amend_wizard")
+        for leaf in ("modelo.work.amend", "modelo.work.amend_wizard", "modelo.export")
     ),
     _profile(
         "modelo.work.wizard",

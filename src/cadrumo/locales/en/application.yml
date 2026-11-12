@@ -2443,6 +2443,14 @@ application:
         on record in this profile, so it cannot back the Modelo 303 for period %{period}
         of %{filing_year}. Nothing was calculated. Record a new attestation for this
         period and use the values it reports.
+      export_amended_filing_evidence_missing: 'Nothing was written: the filing this
+        declaration amends has no justificante on record that AEAT attested. Import
+        its evidence for the declaration''s work unit and export again.'
+      export_amended_filing_justificante_unresolved: 'Nothing was written: the justificante
+        recorded for the filing this declaration amends cannot back the amendment.
+        It is missing, appears more than once, or does not match the declaration''s
+        modelo, period and taxpayer. Which record is wrong is your decision: check
+        the recorded filing and its justificante.'
       export_cross_bucket_refused: The addressed revision belongs to a bucket other
         than the active profile bucket. Switch profile before exporting.
       export_draft_approval_failed: Could not approve the draft for calculation revision

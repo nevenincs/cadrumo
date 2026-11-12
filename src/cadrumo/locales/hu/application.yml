@@ -2525,6 +2525,14 @@ application:
         ebben a profilban, ezért nem támaszthatja alá a(z) %{filing_year}. év %{period}
         időszakának Modelo 303-át. Semmi sem lett kiszámítva. Rögzíts új nyilatkozatot
         erre az időszakra, és a kapott értékeket használd.
+      export_amended_filing_evidence_missing: 'Semmi sem íródott ki: a módosítandó
+        beadáshoz nincs rögzítve az AEAT által igazolt justificante. Importáld a bizonyítékát
+        a bevallás munkaegységéhez, és exportálj újra.'
+      export_amended_filing_justificante_unresolved: 'Semmi sem íródott ki: a módosítandó
+        beadáshoz rögzített justificante nem támasztja alá a módosítást. Hiányzik,
+        többször szerepel, vagy nem egyezik a bevallás modelljével, időszakával és
+        adózójával. Te döntöd el, melyik nyilvántartás téves: ellenőrizd a rögzített
+        beadást és a justificantét.'
       export_cross_bucket_refused: A megcímzett revízió nem az aktív profil bucketjéhez
         tartozik. Exportálás előtt váltson profilt.
       export_draft_approval_failed: Nem sikerült jóváhagyni a(z) %{calculation_revision_id}
