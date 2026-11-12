@@ -2247,6 +2247,14 @@ application:
         el ejercicio y no tiene ningún cobro de alquiler vinculado.'
       renta_inmueble_naturaleza_unstated: 'Inmueble {record}: no indica si es urbano
         o rústico.'
+      renta_inmueble_pending_expenses_held_return_unstated: 'Inmueble {record}: la
+        declaración del ejercicio anterior está guardada aquí, pero nada asigna a
+        este inmueble los gastos de intereses y reparación que dejó pendientes. Indícalos
+        para este inmueble con app modelo work attest-no-amount --row inmueble:{record}.'
+      renta_inmueble_pending_expenses_origin_unsplit: 'Inmueble {record}: tiene gastos
+        de intereses y reparación pendientes, y el anexo que los reparte por el ejercicio
+        en que se originaron todavía no se puede presentar. Revisa su importe pendiente
+        con app modelo work attest-no-amount --row inmueble:{record}.'
       renta_inmueble_pending_expenses_unstated: 'Inmueble {record}: no se indican
         los gastos de intereses y reparación de ejercicios anteriores pendientes de
         deducir, y ninguna declaración anterior guardada aquí los recoge.'
@@ -3503,10 +3511,10 @@ application:
         de inmueble, arrendamiento, movimientos vinculados o retenciones (%{rows_recorded}
         inmuebles registrados, %{rows_current} ahora, %{rows_changed} cambiados).
         Vuelve a calcular antes de usarlo.'
-      renta_inmueble_rows_unavailable: Cadrumo no ha podido leer los registros de
-        inmuebles, arrendamientos, movimientos o retenciones de los inmuebles arrendados
-        de este cálculo del modelo %{modelo}, así que no puede saber si han cambiado.
-        Vuelve a intentarlo cuando puedan leerse y después vuelve a calcular.
+      renta_inmueble_rows_unavailable: No se han podido leer los registros de inmuebles,
+        arrendamientos, movimientos o retenciones de los inmuebles arrendados de este
+        cálculo del modelo %{modelo}, así que no se sabe si han cambiado. Vuelve a
+        intentarlo cuando puedan leerse y después vuelve a calcular.
       required_maximum_unresolved: La casilla [%{box}] aún no se puede comprobar,
         porque no se conoce la cuantía máxima que la ley exige aplicar en este ejercicio.
         Faltan algunas de las cifras de las que depende esa cuantía.

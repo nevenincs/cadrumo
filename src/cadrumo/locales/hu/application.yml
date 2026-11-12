@@ -2206,6 +2206,14 @@ application:
         hatályos, de nincs hozzá kapcsolt bérleti díj tétel.'
       renta_inmueble_naturaleza_unstated: '{record}. ingatlan: nem szerepel, hogy
         városi vagy külterületi (rústico) ingatlan-e.'
+      renta_inmueble_pending_expenses_held_return_unstated: '{record}. ingatlan: az
+        előző adóév bevallása itt tárolva van, de semmi nem rendeli ehhez az ingatlanhoz
+        a benne levonásra váróként maradt kamat- és javítási kiadásokat. Add meg őket
+        ehhez az ingatlanhoz ezzel: app modelo work attest-no-amount --row inmueble:{record}.'
+      renta_inmueble_pending_expenses_origin_unsplit: '{record}. ingatlan: levonásra
+        váró kamat- és javítási kiadásai vannak, és a keletkezésük adóéve szerint
+        felosztó melléklet még nem nyújtható be. Ellenőrizd a levonásra váró összegét
+        ezzel: app modelo work attest-no-amount --row inmueble:{record}.'
       renta_inmueble_pending_expenses_unstated: '{record}. ingatlan: a korábbi adóévekből
         még levonásra váró kamat- és javítási kiadások nem szerepelnek, és egyik itt
         tárolt korábbi bevallás sem tartalmazza őket.'
@@ -3450,10 +3458,9 @@ application:
         a számítás óta megváltoztak: módosultak az ingatlan-, bérleti, kapcsolt főkönyvi
         vagy levonási rekordjaik (%{rows_recorded} rögzített ingatlan, most %{rows_current},
         %{rows_changed} módosult). Használat előtt számold újra.'
-      renta_inmueble_rows_unavailable: A Cadrumo nem tudta beolvasni a(z) %{modelo}
-        számítás bérbe adott ingatlanjainak ingatlan-, bérleti, főkönyvi vagy levonási
-        rekordjait, ezért nem tudja megmondani, változtak-e. Próbáld újra, amikor
-        olvashatók, majd számold újra.
+      renta_inmueble_rows_unavailable: A(z) %{modelo} számítás bérbe adott ingatlanjainak
+        ingatlan-, bérleti, főkönyvi vagy levonási rekordjai nem olvashatók, ezért
+        nem tudható, változtak-e. Próbáld újra, amikor olvashatók, majd számold újra.
       required_maximum_unresolved: A(z) [%{box}] rovat még nem ellenőrizhető, mert
         nem ismert, mekkora az a legnagyobb összeg, amelyet a törvény szerint ebben
         az évben alkalmazni kell. Hiányzik néhány adat, amelytől ez az összeg függ.

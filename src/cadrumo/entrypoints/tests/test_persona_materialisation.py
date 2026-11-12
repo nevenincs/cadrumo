@@ -238,10 +238,20 @@ def _assert_rentals_recorded(
     for rental in persona.rental_properties:
         lease = next(item for item in leases.values() if item.fecha_contrato == rental.fecha_contrato.resolve(envelope))
         dwelling = properties[lease.inmueble]
-        assert (dwelling.referencia_catastral, dwelling.importe_adquisicion, dwelling.valor_suelo) == (
+        assert (
+            dwelling.referencia_catastral,
+            dwelling.importe_adquisicion,
+            dwelling.valor_suelo,
+            dwelling.adquisicion_titulo.value,
+            dwelling.fecha_adquisicion,
+            dwelling.gastos_tributos_adquisicion,
+        ) == (
             rental.referencia_catastral,
             rental.importe_adquisicion,
             rental.valor_suelo,
+            rental.adquisicion_titulo,
+            rental.fecha_adquisicion.resolve(envelope),
+            rental.gastos_tributos_adquisicion,
         )
         assert {(value.year, value.total, value.construccion) for value in dwelling.valores_catastrales} == {
             (value.year.resolve(envelope), value.total, value.construccion) for value in rental.valores_catastrales

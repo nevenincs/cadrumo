@@ -2133,6 +2133,14 @@ application:
         and has no rent entry linked to it.'
       renta_inmueble_naturaleza_unstated: 'Property {record}: it does not say whether
         it is urban or rustic.'
+      renta_inmueble_pending_expenses_held_return_unstated: 'Property {record}: the
+        return of the previous year is held here, but nothing matches the interest
+        and repair expenses it left pending to this property. State them for this
+        property with app modelo work attest-no-amount --row inmueble:{record}.'
+      renta_inmueble_pending_expenses_origin_unsplit: 'Property {record}: interest
+        and repair expenses are pending on it, and the annex that splits them by the
+        year they arose in cannot be filed yet. Review its pending amount with app
+        modelo work attest-no-amount --row inmueble:{record}.'
       renta_inmueble_pending_expenses_unstated: 'Property {record}: the interest and
         repair expenses of earlier years still pending are not stated, and no earlier
         return held here states them.'
@@ -3325,10 +3333,10 @@ application:
         changed since it was calculated: their property, lease, linked ledger or withholding
         records moved (%{rows_recorded} properties recorded, %{rows_current} now,
         %{rows_changed} changed). Recalculate before relying on it.'
-      renta_inmueble_rows_unavailable: Cadrumo could not read the property, lease,
-        ledger or withholding records behind the let properties of this %{modelo}
-        calculation, so it cannot say whether they changed. Try again when they can
-        be read, then recalculate.
+      renta_inmueble_rows_unavailable: The property, lease, ledger or withholding
+        records behind the let properties of this %{modelo} calculation could not
+        be read, so whether they changed is unknown. Try again when they can be read,
+        then recalculate.
       required_maximum_unresolved: Box [%{box}] cannot be checked yet, because the
         largest amount the law requires it to apply this year is not known. Some of
         the figures that amount depends on are missing.

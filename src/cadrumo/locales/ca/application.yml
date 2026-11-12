@@ -2242,6 +2242,15 @@ application:
         i no té cap cobrament de lloguer vinculat.'
       renta_inmueble_naturaleza_unstated: 'Immoble {record}: no indica si és urbà
         o rústic.'
+      renta_inmueble_pending_expenses_held_return_unstated: 'Immoble {record}: la
+        declaració de l''exercici anterior està desada aquí, però res no assigna a
+        aquest immoble les despeses d''interessos i reparació que va deixar pendents.
+        Indica-les per a aquest immoble amb app modelo work attest-no-amount --row
+        inmueble:{record}.'
+      renta_inmueble_pending_expenses_origin_unsplit: 'Immoble {record}: té despeses
+        d''interessos i reparació pendents, i l''annex que les reparteix per l''exercici
+        en què es van originar encara no es pot presentar. Revisa''n l''import pendent
+        amb app modelo work attest-no-amount --row inmueble:{record}.'
       renta_inmueble_pending_expenses_unstated: 'Immoble {record}: no s''indiquen
         les despeses d''interessos i reparació d''exercicis anteriors pendents de
         deduir, i cap declaració anterior desada aquí no les recull.'
@@ -3496,9 +3505,9 @@ application:
         d''immoble, arrendament, moviments vinculats o retencions (%{rows_recorded}
         immobles registrats, %{rows_current} ara, %{rows_changed} canviats). Torna
         a calcular abans de fer-lo servir.'
-      renta_inmueble_rows_unavailable: Cadrumo no ha pogut llegir els registres d'immobles,
+      renta_inmueble_rows_unavailable: No s'han pogut llegir els registres d'immobles,
         arrendaments, moviments o retencions dels immobles arrendats d'aquest càlcul
-        del model %{modelo}, així que no pot saber si han canviat. Torna-ho a provar
+        del model %{modelo}, així que no se sap si han canviat. Torna-ho a provar
         quan es puguin llegir i després torna a calcular.
       required_maximum_unresolved: La casella [%{box}] encara no es pot comprovar,
         perquè no se sap la quantia màxima que la llei exigeix aplicar en aquest exercici.

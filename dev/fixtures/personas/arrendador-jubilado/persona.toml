@@ -82,6 +82,9 @@ titular = "primer_declarante" # synthetic
 porcentaje_propiedad = "100.00" # synthetic: the whole property is his
 importe_adquisicion = "150000.00" # synthetic: the inherited value
 valor_suelo = "42000.00" # synthetic: so the construction share of the acquisition is 108000.00
+adquisicion_titulo = "lucrativa" # synthetic: inherited, as the persona's summary states
+fecha_adquisicion = { year = "horizon-3", month = 3, day = 15 } # synthetic: inherited before the lease and before every return year
+gastos_tributos_adquisicion = "0.00" # synthetic: no acquisition expenses or taxes are added to the inherited value
 valores_catastrales = [
   { year = "horizon-1", total = "90000.00", construccion = "54000.00" }, # synthetic
 ]

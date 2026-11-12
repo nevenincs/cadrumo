@@ -143,6 +143,7 @@ def _regime_entries(devengo: date, operation: PinnedAuthorityOperation) -> dict[
 
 def resolve_rental_reduction_art232_rates(
     *,
+    modelo_id: ModeloId,
     revision_id: RevisionId,
     devengo: date,
     operation: PinnedAuthorityOperation,
@@ -156,7 +157,7 @@ def resolve_rental_reduction_art232_rates(
     date_context = {DateAxis.FILING_PERIOD.value: devengo}
 
     def rate(parameter_id: str) -> Decimal:
-        return read_parameter("100", revision_id, parameter_id, date_context=date_context, operation=operation)
+        return read_parameter(modelo_id, revision_id, parameter_id, date_context=date_context, operation=operation)
 
     rates = {
         RentalReductionArt232Tier(_regime_text(entries, "legacy_tier")): rate(

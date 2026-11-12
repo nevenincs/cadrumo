@@ -406,6 +406,9 @@ class RentalProperty:
     porcentaje_propiedad: Decimal
     importe_adquisicion: Decimal
     valor_suelo: Decimal
+    adquisicion_titulo: str
+    fecha_adquisicion: PersonaDate
+    gastos_tributos_adquisicion: Decimal
     valores_catastrales: tuple[CadastralValue, ...]
     fecha_contrato: PersonaDate
     fecha_inicio: PersonaDate
@@ -1318,6 +1321,9 @@ def _rental(table: _Table, where: str, roles: _Roles) -> RentalProperty:
                 "porcentaje_propiedad",
                 "importe_adquisicion",
                 "valor_suelo",
+                "adquisicion_titulo",
+                "fecha_adquisicion",
+                "gastos_tributos_adquisicion",
                 "valores_catastrales",
                 "fecha_contrato",
                 "fecha_inicio",
@@ -1355,6 +1361,9 @@ def _rental(table: _Table, where: str, roles: _Roles) -> RentalProperty:
         porcentaje_propiedad=_amount(table["porcentaje_propiedad"], where),
         importe_adquisicion=_amount(table["importe_adquisicion"], where),
         valor_suelo=_amount(table["valor_suelo"], where),
+        adquisicion_titulo=_string(table, "adquisicion_titulo", where),
+        fecha_adquisicion=_date(table["fecha_adquisicion"], f"{where}.fecha_adquisicion", biographical=True),
+        gastos_tributos_adquisicion=_amount(table["gastos_tributos_adquisicion"], where),
         valores_catastrales=_cadastral_values(table["valores_catastrales"], f"{where}.valores_catastrales"),
         fecha_contrato=fecha_contrato,
         fecha_inicio=fecha_inicio,
@@ -2329,6 +2338,7 @@ def _dates(persona: Persona) -> list[PersonaDate]:
     for member in (*persona.descendants, *persona.ascendants):
         found.extend(value for _key, value in member.leaves if isinstance(value, PersonaDate))
     found.extend(rental.contract_start for rental in persona.rental_properties)
+    found.extend(rental.fecha_adquisicion for rental in persona.rental_properties)
     found.extend(identity.birth_date for identity in persona.identities.identities if identity.birth_date is not None)
     found.extend(filing.presented for filing in persona.aeat_filings)
     found.extend(deadline.statutory_end for deadline in persona.expectations.deadlines)

@@ -8,7 +8,9 @@ official design states the boxes of one ``Inmueble``:
   Earlier ejercicios' pending amounts apply first, then the year's own; what
   the year's own leaves over is pending for the four following years. What
   earlier ejercicios left pending is never inferred: while it is unknown the
-  net yield is not computed.
+  net yield is not computed. A pending amount, earlier or the year's own, is
+  filed split by the ejercicio it arose in; the property states one total, so
+  the split is never invented and the property blocks.
 * The building is amortised at the registry's rate on the greater of the
   acquisition cost and the cadastral value, the land excluded (LIRPF art.
   23.1.b; RIRPF art. 14.2.a), for the days the property was let. Without a
@@ -56,7 +58,6 @@ from .renta_inmueble_findings import RentaInmuebleCause
 
 _ZERO: Final = Decimal(0)
 _HUNDRED: Final = Decimal(100)
-_PERCENT_PLACES: Final = Decimal("0.01")
 
 
 @dataclass(frozen=True, slots=True)
@@ -94,6 +95,8 @@ class RentaInmuebleNetInputs:
     """The suffered-withholding records placed on this property."""
     pendiente: Decimal | None
     """The interest and repair earlier ejercicios left pending, or ``None`` when it is not known."""
+    prior_return_held: bool = False
+    """Whether the profile holds the return of the previous ejercicio, which states its pending amounts unmatched."""
 
     @property
     def ejercicio_days(self) -> int:
@@ -170,7 +173,7 @@ def _construction_cost(
         return None
     # RIRPF art. 14.2.a: without a stated land value the cost is split by the cadastral values of
     # the year; the design states the construction share as a percentage with two decimals.
-    percentage = (cadastral.construccion / cadastral.total * _HUNDRED).quantize(_PERCENT_PLACES)
+    percentage = (cadastral.construccion / cadastral.total * _HUNDRED).quantize(Decimal("0.01"))
     net.porcentaje_construccion = percentage
     return round_to_cents(cost * percentage / _HUNDRED)
 
@@ -252,19 +255,28 @@ def _apply_limit(
     """Fill the limited-expense boxes; return what they deduct, or ``None`` while the carry is unknown.
 
     Earlier ejercicios' pending amounts take the room the gross income leaves
-    first; the year's own interest and repairs take what remains.
+    first; the year's own interest and repairs take what remains. Any amount
+    pending, carried in or left over, needs its split by year of origin.
     """
-    if inputs.pendiente is None:
-        net.causes.append(RentaInmuebleCause.PENDING_EXPENSES_UNSTATED)
-        return None
     limited = _limited_concepts(concepts)
     own = sum((amount for concept, amount in inputs.gastos.items() if concept in limited), _ZERO)
+    if inputs.pendiente is None:
+        net.causes.append(
+            RentaInmuebleCause.PENDING_EXPENSES_HELD_RETURN_UNSTATED
+            if inputs.prior_return_held
+            else RentaInmuebleCause.PENDING_EXPENSES_UNSTATED
+        )
+        if own > inputs.ingresos:
+            net.causes.append(RentaInmuebleCause.PENDING_EXPENSES_ORIGIN_UNSPLIT)
+        return None
     net.gastos_pendientes_anteriores = _nonzero(inputs.pendiente)
     earlier = min(inputs.pendiente, inputs.ingresos)
     applied = min(own, inputs.ingresos - earlier)
     net.gastos_pendientes_aplicados = _nonzero(earlier)
     net.intereses_reparacion_aplicados = _nonzero(applied)
     net.intereses_reparacion_pendientes = _nonzero(own - applied)
+    if inputs.pendiente or own > applied:
+        net.causes.append(RentaInmuebleCause.PENDING_EXPENSES_ORIGIN_UNSPLIT)
     return earlier + applied
 
 

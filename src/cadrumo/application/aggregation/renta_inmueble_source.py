@@ -673,6 +673,7 @@ def _net(
     withholding: tuple[RetencionSoportadaRecord, ...],
     rules: tuple[RentaInmuebleTerms, GastoCapitalInmobiliarioCatalogue],
     pendiente: Decimal | None,
+    prior_return_held: bool,
 ) -> RentaInmuebleNet | None:
     occupancy, (ingresos, gastos) = inputs.occupancy, figures
     if occupancy is None or not occupancy.leases or ingresos is None:
@@ -694,6 +695,7 @@ def _net(
             improvements_in=_total(inputs.improvements) * share,
             withholding=withholding,
             pendiente=pendiente,
+            prior_return_held=prior_return_held,
         ),
         terms=terms,
         concepts=concepts,
@@ -759,6 +761,7 @@ def renta_inmueble_occurrences(
     terms: RentaInmuebleTerms,
     withholding: Iterable[RetencionSoportadaRecord] = (),
     pending_stated: Mapping[str, Decimal] | None = None,
+    prior_return_held: bool = False,
 ) -> RentaInmuebleOccurrences:
     """Build one occurrence per property held on at least one day of ``ejercicio``, in row-key order.
 
@@ -772,6 +775,8 @@ def renta_inmueble_occurrences(
         withholding: The ejercicio's suffered-withholding records, of every income class.
         pending_stated: The filer's statement of what earlier ejercicios left pending, by the
             source identity of the property it speaks of; zero where nothing is pending.
+        prior_return_held: Whether the profile holds the return of the previous ejercicio,
+            whose pending amounts no path matches to a property.
 
     Returns:
         The occurrences and every finding, those of a property and those no property owns.
@@ -792,7 +797,9 @@ def renta_inmueble_occurrences(
         own = _occurrence_findings(inputs, period)
         ingresos, gastos, read = _figures(inputs, period)
         pendiente = _pendiente(inputs.record, period, pending_stated or {})
-        net = _net(inputs, period, (ingresos, gastos), placed.get(clave, ()), (terms, concepts), pendiente)
+        net = _net(
+            inputs, period, (ingresos, gastos), placed.get(clave, ()), (terms, concepts), pendiente, prior_return_held
+        )
         if net is not None:
             own.extend(RentaInmuebleFinding(cause, _source_identity(clave)) for cause in net.causes)
         occurrences.append(

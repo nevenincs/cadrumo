@@ -1428,6 +1428,7 @@
         "cadrumo.application.modelo.printed_boxes",
         "cadrumo.application.modelo.prior_domiciliation",
         "cadrumo.application.modelo.prior_payment_advisory",
+        "cadrumo.application.modelo.prior_return_held",
         "cadrumo.application.modelo.profile_binding",
         "cadrumo.application.modelo.profile_binding_refusal_doors",
         "cadrumo.application.modelo.profile_derived_facts",

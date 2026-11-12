@@ -42,6 +42,11 @@ class RentaInmuebleDoor(StrEnum):
         """Return the command path as the live command tree addresses it."""
         return tuple(self.value.split(" "))
 
+    @property
+    def takes_row(self) -> bool:
+        """Whether the command names the property row it settles with ``--row``."""
+        return self is RentaInmuebleDoor.ATTEST_NO_AMOUNT
+
 
 class RentaInmuebleCause(StrEnum):
     """Why an occurrence is refused, blocked or limited."""
@@ -76,6 +81,8 @@ class RentaInmuebleCause(StrEnum):
     CADASTRAL_VALUES_UNSTATED = "cadastral_values_unstated"
     CUMULATIVE_AMORTISATION_UNSTATED = "cumulative_amortisation_unstated"
     PENDING_EXPENSES_UNSTATED = "pending_expenses_unstated"
+    PENDING_EXPENSES_HELD_RETURN_UNSTATED = "pending_expenses_held_return_unstated"
+    PENDING_EXPENSES_ORIGIN_UNSPLIT = "pending_expenses_origin_unsplit"
     REDUCTION_FACT_UNSTATED = "reduction_fact_unstated"
     REDUCTION_TENANTS_MIXED = "reduction_tenants_mixed"
     WITHHOLDING_PAYER_NO_TENANT = "withholding_payer_no_tenant"
@@ -241,6 +248,18 @@ _CAUSE_TERMS: Final[dict[RentaInmuebleCause, tuple[RentaInmuebleFindingKind, Ren
         RentaInmuebleDoor.ATTEST_NO_AMOUNT,
         "the interest and repair expenses of earlier ejercicios still pending on the let property are "
         "not stated, and no earlier return the application holds states them",
+    ),
+    RentaInmuebleCause.PENDING_EXPENSES_HELD_RETURN_UNSTATED: (
+        _BLOCKING,
+        RentaInmuebleDoor.ATTEST_NO_AMOUNT,
+        "the return of the previous ejercicio is held, but nothing matches the interest and repair expenses "
+        "it left pending to the let property, so they must be stated per property",
+    ),
+    RentaInmuebleCause.PENDING_EXPENSES_ORIGIN_UNSPLIT: (
+        _BLOCKING,
+        RentaInmuebleDoor.ATTEST_NO_AMOUNT,
+        "interest and repair expenses are pending on the let property, and the annex that splits them by the "
+        "ejercicio they arose in (LIRPF art. 23.1.a.1.º; RIRPF art. 13.a) cannot be filed yet",
     ),
     RentaInmuebleCause.REDUCTION_FACT_UNSTATED: (
         _BLOCKING,

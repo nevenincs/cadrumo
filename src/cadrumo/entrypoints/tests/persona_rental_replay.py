@@ -86,6 +86,9 @@ def property_row(rental: RentalProperty, envelope: YearEnvelope) -> tuple[tuple[
         ("porcentaje_propiedad", str(rental.porcentaje_propiedad)),
         ("importe_adquisicion", str(rental.importe_adquisicion)),
         ("valor_suelo", str(rental.valor_suelo)),
+        ("adquisicion_titulo", rental.adquisicion_titulo),
+        ("fecha_adquisicion", rental.fecha_adquisicion.resolve(envelope).isoformat()),
+        ("gastos_tributos_adquisicion", str(rental.gastos_tributos_adquisicion)),
         ("valores_catastrales", cadastral),
     )
 

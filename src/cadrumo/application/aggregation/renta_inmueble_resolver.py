@@ -13,7 +13,7 @@ property; it is unresolved while any let property's value of that column is.
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
@@ -122,15 +122,23 @@ def _finding_fact(finding: RentaInmuebleFinding) -> CalculationNoteFact:
     return CalculationNoteFact.of(_FINDING_SENTENCES[finding.cause], rows=(finding.subject,), **named)
 
 
-def _finding_diagnostic(finding: RentaInmuebleFinding) -> CalculationSourceDiagnostic:
+def _door_text(finding: RentaInmuebleFinding) -> str | None:
+    """Return the command that settles ``finding``, naming its row where the command takes one."""
     door = finding.door
+    if door is None:
+        return None
+    return f"{door.value} --row {finding.subject}" if door.takes_row else door.value
+
+
+def _finding_diagnostic(finding: RentaInmuebleFinding) -> CalculationSourceDiagnostic:
+    door = _door_text(finding)
     return _diagnostic(
         reason="deferred_binding_source"
         if finding.kind is RentaInmuebleFindingKind.LIMITATION
         else "source_domain_not_ready",
         message=finding.message,
         source_ref=finding.subject,
-        remedy=None if door is None else f"Settle it with {door.value}, then calculate again.",
+        remedy=None if door is None else f"Settle it with {door}, then calculate again.",
         fact=_finding_fact(finding),
     )
 
@@ -281,7 +289,7 @@ def resolve_renta_inmueble_terms(
             modelo_id=modelo, revision_id=revision_id, devengo=devengo, operation=operation
         ),
         reduction_rates=resolve_rental_reduction_art232_rates(
-            revision_id=revision_id, devengo=devengo, operation=operation
+            modelo_id=modelo, revision_id=revision_id, devengo=devengo, operation=operation
         ),
     )
 
@@ -318,6 +326,10 @@ def _provenance(built: RentaInmuebleOccurrences) -> tuple[CalculationSourceProve
     return tuple(nodes)
 
 
+type PriorReturnHeld = Callable[[CalculationSourceContext], bool]
+"""Whether the profile holds a filed return of the context's modelo and period for the previous ejercicio."""
+
+
 class RentaInmuebleSourceResolver:
     """Resolve ``renta_inmueble`` row columns: one row per property held in the ejercicio.
 
@@ -333,10 +345,17 @@ class RentaInmuebleSourceResolver:
         *,
         transaction_repository: TransactionCatalogueRepositoryProtocol,
         retencion_soportada_ports: RetencionSoportadaPorts,
+        prior_return_held: PriorReturnHeld | None = None,
     ) -> None:
-        """Bind the ledger the rent and expense rows are read from, and the suffered-withholding store."""
+        """Bind the ledger the rent and expense rows are read from, and the suffered-withholding store.
+
+        ``prior_return_held`` reads whether the previous ejercicio's return is held, which words the
+        finding on a property whose earlier pending amounts are unstated. A caller that reads only the
+        rows' identities passes none, and every unstated property is worded as having no return held.
+        """
         self._transaction_repository = transaction_repository
         self._retencion_soportada_ports = retencion_soportada_ports
+        self._prior_return_held = prior_return_held
 
     def _withheld(
         self, binding_ids: tuple[BindingId, ...], reasons: Iterable[CalculationSourceDiagnostic | str]
@@ -369,6 +388,7 @@ class RentaInmuebleSourceResolver:
         try:
             transactions = self._transaction_repository.load()
             withholding = self._retencion_soportada_ports.repository.load_records(context.filing_year)
+            prior_return_held = self._prior_return_held is not None and self._prior_return_held(context)
         except (RetencionSoportadaPersistenceError, *STORAGE_DEGRADATION_ERRORS) as exc:
             return storage_degradation_resolution(
                 resolver_id=self.resolver_id,
@@ -398,6 +418,7 @@ class RentaInmuebleSourceResolver:
             terms=terms,
             withholding=withholding,
             pending_stated=_pending_stated(declared, context),
+            prior_return_held=prior_return_held,
         )
         return self._resolution(built, columns, totals, binding_ids)
 
@@ -428,4 +449,4 @@ class RentaInmuebleSourceResolver:
         )
 
 
-__all__ = ["RentaInmuebleSourceResolver", "resolve_renta_inmueble_terms"]
+__all__ = ["PriorReturnHeld", "RentaInmuebleSourceResolver", "resolve_renta_inmueble_terms"]
