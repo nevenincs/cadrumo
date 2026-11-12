@@ -442,8 +442,8 @@ def select_exportable_revision(
     current_selection = _current_exportable_revision(work_unit, current_revision, operation=operation)
     if current_selection is not None:
         return current_selection
-    if work_unit.current_calculation_revision_id is None:
-        raise _exportable_revision_absent(work_unit)
+    # A withdrawn calculation stays stored but is no longer the declaration's; the door is calculating it again.
+    require_work_unit_holds_a_calculation(work_unit)
     return _verified_exportable_fallback(
         work_unit,
         catalogue=catalogue,

@@ -19,6 +19,7 @@ from cadrumo.application.modelo.action_errors import CalculationRevisionStateErr
 from cadrumo.application.modelo.selectors import (
     ModeloCalculationRevisionSelector,
     ModeloCalculationRevisionSelectorAmbiguousError,
+    ModeloCalculationRevisionSelectorNotFoundError,
     ModeloCalculationRevisionSelectorStateError,
     resolve_modelo_calculation_revision_pick,
     select_current_verified_revision,
@@ -701,12 +702,19 @@ def test_exportable_revision_prefers_filed_then_current_verified(
     )
 
 
-def test_exportable_revision_refuses_draft_current_and_ambiguous_verified(
+def test_exportable_revision_refuses_draft_current_no_current_and_ambiguous_verified(
     selector_repos: tuple[WorkUnitCatalogueRepository, CalculationRevisionCatalogueRepository],
     operation: PinnedAuthorityOperation,
 ) -> None:
     wu_repo, cr_repo = selector_repos
     work_unit = _seed_work_unit(wu_repo, operation=operation)
+    filed = _seed_revision(
+        cr_repo,
+        work_unit_id=work_unit.work_unit_id,
+        state=CalculationRevisionState.PRESENTADO,
+        created_at=_T0,
+        output=Decimal("5"),
+    )
     draft = _seed_revision(
         cr_repo,
         work_unit_id=work_unit.work_unit_id,
@@ -733,8 +741,21 @@ def test_exportable_revision_refuses_draft_current_and_ambiguous_verified(
     with pytest.raises(ModeloCalculationRevisionSelectorStateError):
         select_exportable_revision(draft_current, calculation_repository=cr_repo, operation=operation)
 
-    with pytest.raises(ModeloCalculationRevisionSelectorAmbiguousError) as raised:
+    # A work unit with no current calculation exports nothing, however many verified revisions it stores.
+    with pytest.raises(ModeloCalculationRevisionSelectorNotFoundError) as absent:
         select_exportable_revision(work_unit, calculation_repository=cr_repo, operation=operation)
+    absent_verdict = absent.value.terminal_precondition_verdict
+    assert absent_verdict is not None
+    assert absent_verdict.action is not None
+    assert absent_verdict.action.action_id == "operator.modelo.work.calculate"
+
+    # A current calculation that is neither verified nor a draft, with no filed pointer naming it,
+    # falls back to one verified revision.
+    unpointed_filed_current = work_unit.model_copy(
+        update={"current_calculation_revision_id": filed.calculation_revision_id}
+    )
+    with pytest.raises(ModeloCalculationRevisionSelectorAmbiguousError) as raised:
+        select_exportable_revision(unpointed_filed_current, calculation_repository=cr_repo, operation=operation)
     assert {candidate.calculation_revision_id for candidate in raised.value.candidates} == {
         verified_a.calculation_revision_id,
         verified_b.calculation_revision_id,

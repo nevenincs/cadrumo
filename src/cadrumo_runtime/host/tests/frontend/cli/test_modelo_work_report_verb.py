@@ -44,31 +44,18 @@ def _invoke(args: Sequence[str]) -> Result:
 
 
 def _seed_current_sealed_revision(*, operation: PinnedAuthorityOperation) -> tuple[str, str]:
-    """Seed a sealed Modelo 111 revision and make it the work unit's current one.
+    """Seed a sealed Modelo 111 revision as the work unit's current one.
 
     The work target's *current* revision is what the report addresses, exactly as
-    ``work review`` does, so the pointer is advanced here the way calculating the
-    revision would have advanced it.
+    ``work review`` does; the seed makes it current the way calculating it would.
     """
     work_unit_id, calculation_revision_id = seed_exportable_modelo_revision(
         input_values_by_casilla_id={},
         operation=operation,
     )
-    repository = WorkUnitCatalogueRepository()
-    catalogue = repository.load()
-    work_unit = catalogue.get(work_unit_id)
+    work_unit = WorkUnitCatalogueRepository().load().get(work_unit_id)
     assert work_unit is not None
-    repository.save(
-        upsert_work_unit(
-            catalogue,
-            work_unit.model_copy(
-                update={
-                    "current_calculation_revision_id": calculation_revision_id,
-                    "updated_at": datetime.now(UTC),
-                },
-            ),
-        ),
-    )
+    assert work_unit.current_calculation_revision_id == calculation_revision_id
     return work_unit_id, calculation_revision_id
 
 
@@ -222,10 +209,20 @@ def test_a_work_target_without_a_calculation_is_refused_with_its_address(
     *,
     operation: PinnedAuthorityOperation,
 ) -> None:
-    """A work unit that was never calculated has nothing to report."""
+    """A work unit with no current calculation has nothing to report, though a withdrawn one stays stored."""
     work_unit_id, _ = seed_exportable_modelo_revision(
         input_values_by_casilla_id={},
         operation=operation,
+    )
+    repository = WorkUnitCatalogueRepository()
+    catalogue = repository.load()
+    work_unit = catalogue.get(work_unit_id)
+    assert work_unit is not None
+    repository.save(
+        upsert_work_unit(
+            catalogue,
+            work_unit.model_copy(update={"current_calculation_revision_id": None, "updated_at": datetime.now(UTC)}),
+        ),
     )
     output = tmp_path / "modelo-111-report.csv"
 
