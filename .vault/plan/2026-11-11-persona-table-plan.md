@@ -8,9 +8,9 @@ related:
   - '[[2026-11-05-per-activity-estimation-regime-adr]]'
   - '[[2026-11-03-backend-served-surface-adr]]'
   - '[[2026-10-18-runtime-authority-boundary-adr]]'
-modified: '2026-11-11'
+modified: '2026-11-12'
 body_schema: body-v2
-body_hash: 'sha256:53c1a810ca68f0a035638f94ba7d12b718b7ee72596de663f6c7e197b6702894'
+body_hash: 'sha256:1006e5cf0325082d286f297362efa9f4da1e98b25218c212ced3e24060c8f713'
 ---
 
 <!-- RETIRED: S44 -->
@@ -90,6 +90,7 @@ Real backend work that the tree does not yet do, checked against the code on 202
 - [ ] `P02.S47` - Export a Modelo 100 property let under more than one contract in the ejercicio, with its nested Arrendamiento rows, where today it calculates and is blocked at export (lane CALC-RENTA, with LIFECYCLE for the XML layout); `src/cadrumo/_data/registry/aeat/modelos/100, src/cadrumo/application/filing, src/cadrumo/application/aggregation`.
 - [ ] `P02.S48` - Compute Modelo 100 furniture amortisation (0117) and the LIRPF art. 23.3 reduction (0151) from the property records, where today each is a served non-blocking limitation (lane CALC-RENTA, with LIFECYCLE for the XML layout); `src/cadrumo/_data/registry/aeat/modelos/100, src/cadrumo/application/aggregation`.
 - [ ] `P02.S52` - Compute the negative branch of Modelo 100 casilla 0695 (TCNN112, 0670 minus 0694), unresolved until then (lane CALC-RENTA); `src/cadrumo/_data/registry/aeat/modelos/100`.
+- [ ] `P02.S53` - Hold 'no employer contributions or imputed work income' as a dated stated profile fact asked once, replacing the per-return statement of Modelo 100 casillas 0008, 0009, 0010 and 0024 (lane CALC-PAGOS); `src/cadrumo/_data/registry/cadrumo/user_profile, src/cadrumo/application/aggregation`.
 
 ### Phase `P03` - Desktop re-entry
 
