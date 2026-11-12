@@ -113,7 +113,8 @@ def test_verify_after_profile_activity_start_change_reports_scoped_advisories_wi
         "the activity-start change is not reported as a scoped advisory"
     )
     blocking = [finding for finding in findings if finding["kind"] != "advisory"]
-    if _reaches_filing_grade("200", filing_year=2026, period="0A"):
+    snapshot = report["registry_snapshot_ref"]
+    if _reaches_filing_grade(snapshot["modelo"], filing_year=snapshot["modelo_year"], period=snapshot["period"]):
         assert verification.exit_code == 0, verification.output
         assert report["completeness_status"] == "complete"
         assert report["granted_verificado_completo"] is True
