@@ -171,12 +171,18 @@ test("the scenario lists the declarations the envelopes read and opens each one"
   const { port } = scenario();
   const list = await port.declarations("en");
   const local = list.rows.filter((row) => row.work_unit_id);
-  expect(local.map((row) => row.modelo).sort()).toEqual([
-    "130",
-    "303",
-    "347",
-    "390",
-  ]);
+  // The declarations the producer recorded the profile holding, read from
+  // the written list rather than restated here.
+  const recorded = (
+    JSON.parse(
+      readFileSync(new URL("declarations-en.json", MODELO_FIXTURES), "utf8"),
+    ) as { rows: { modelo: string; work_unit_id: string | null }[] }
+  ).rows
+    .filter((row) => row.work_unit_id)
+    .map((row) => row.modelo)
+    .sort();
+  expect(recorded.length).toBeGreaterThan(0);
+  expect(local.map((row) => row.modelo).sort()).toEqual(recorded);
   for (const row of local) {
     const form = await port.form(row.work_unit_id!, "es");
     expect(form.work_unit_id).toBe(row.work_unit_id);
