@@ -14,6 +14,7 @@ from pydantic import BaseModel, model_validator
 
 from ...core.filing_year import FilingYear
 from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ...core.period import Period
 from ...domain.attachments.errors import AttachmentNotFoundError, AttachmentValidationError
 from ...domain.attachments.protocols import AttachmentStoreProtocol
@@ -30,6 +31,7 @@ from ...domain.modelos.calculation_revision_m303_handoff import (
 )
 from ...domain.modelos.work_unit import WorkUnit
 from ..calculations.m303_regimen_simplificado import calculate_m303_regimen_simplificado_result
+from ..operator_actions.preconditions import no_action_precondition_verdict
 from .action_errors import M303FilingEvidenceError, ModeloProfileReadinessError
 from .m303_exonerado_390_applicability_attestation import (
     m303_exonerado_390_filing_evidence_reference,
@@ -46,6 +48,7 @@ from .m303_exonerado_390_attestation_refusal import (
 from .m303_filing_evidence import m303_filing_evidence_failure, validate_m303_filing_instance_evidence_for_revision
 from .m303_ordinary_evidence_coordinate import ordinary_m303_evidence_coordinate_supported
 from .m303_regimen_simplificado_scope import (
+    m303_profile_readiness_failure,
     m303_regimen_simplificado_scope_for_profile,
     taxpayer_profile_for_work,
 )
@@ -316,8 +319,22 @@ def _require_current_profile(
             bucket_id=work_unit.bucket_id,
             profile_decode_context=operation.profile_decode_context(),
         )
-    if profile is None or profile.record.profile_id != work_unit.bucket_id:
-        raise ModeloProfileReadinessError("ordinary M303 evidence requires an authenticated current profile")
+    if profile is None:
+        raise ModeloProfileReadinessError(
+            "ordinary M303 evidence requires an authenticated current profile",
+            precondition_failure=m303_profile_readiness_failure("profile_absent", {"profile_present": False}),
+        )
+    if profile.record.profile_id != work_unit.bucket_id:
+        # A profile of another bucket handed in by the caller is not the operator's to repair.
+        raise ModeloProfileReadinessError(
+            "ordinary M303 evidence requires the work unit's own profile",
+            profile_precondition_verdict=no_action_precondition_verdict(
+                condition_id="modelo.m303.ordinary_evidence.profile_matches_work_unit",
+                facts={"profile_matches_work_unit": False},
+                provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+                outcome=NoRecoveryOutcome.SAFETY,
+            ),
+        )
     return profile
 
 
