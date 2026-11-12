@@ -29,7 +29,8 @@ from ...application.modelo.work_create_operation import (
 )
 from ...application.operations.public_period import PublicPeriod
 from ...application.operations.public_scalar import restore_scalar
-from ...tests.personas import PRIOR_CARRY_BOXES, Persona, PriorCarries, YearToken
+from ...domain.calculations.registry.binding_absence_attestation import AbsenceAttestationFamily
+from ...tests.personas import GENERAL_BASES_CARRY_FAMILY, PRIOR_CARRY_BOXES, Persona, PriorCarries, YearToken
 from .persona_materialisation import (
     PERSONA_ACTOR,
     MaterialisedPersona,
@@ -40,7 +41,7 @@ from .persona_materialisation import (
     run_operation,
     settle_operation,
 )
-from .persona_prior_carries import attest_prior_carries
+from .persona_prior_carries import attest_prior_carries, statement_families
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -82,8 +83,13 @@ def _calculated(world: PersonaWorld, work_unit_id: str) -> dict[str, object]:
     return {str(item.key): restore_scalar(item.value) for item in calculated.calculation.casilla_values}
 
 
-def _stating(persona: Persona, token: str, pending: tuple[tuple[str, Decimal], ...] = ()) -> Persona:
-    statement = PriorCarries(year=YearToken.parse(token, where="test"), pending=pending)
+def _stating(
+    persona: Persona,
+    token: str,
+    pending: tuple[tuple[str, Decimal], ...] = (),
+    family: str = GENERAL_BASES_CARRY_FAMILY,
+) -> Persona:
+    statement = PriorCarries(year=YearToken.parse(token, where="test"), family=family, pending=pending)
     return dataclasses.replace(persona, prior_carries=(statement,))
 
 
@@ -141,3 +147,58 @@ def test_the_catalogue_statement_answers_the_return_the_persona_owes(renta_world
 
     assert attest_prior_carries(persona, world, work_unit_id, year)
     assert _calculated(world, work_unit_id)
+
+
+def test_a_carry_of_a_family_the_statement_does_not_name_stays_open(renta_world: MaterialisedPersona) -> None:
+    world = renta_world.world
+    year = world.envelope.floor + 1
+    others = [member for member in AbsenceAttestationFamily if member.value != GENERAL_BASES_CARRY_FAMILY]
+    work_unit_id = _created(world, year)
+
+    for other in others:
+        persona = _stating(renta_world.persona, "floor+1", family=other.value)
+        assert attest_prior_carries(persona, world, work_unit_id, year) == ()
+    # The general-bases carries were never answered from a statement of another family.
+    with pytest.raises(PersonaMaterialisationError, match=_REFUSAL):
+        _calculated(world, work_unit_id)
+
+
+def test_a_statement_answers_only_the_carries_of_its_own_family(renta_world: MaterialisedPersona) -> None:
+    world = renta_world.world
+    year = world.envelope.floor + 4
+    persona = _stating(renta_world.persona, "floor+4", family=GENERAL_BASES_CARRY_FAMILY)
+    work_unit_id = _created(world, year)
+
+    answered = attest_prior_carries(persona, world, work_unit_id, year)
+    assert answered
+    assert attest_prior_carries(persona, world, work_unit_id, year) == ()
+
+
+def test_every_family_of_the_registry_is_accepted_as_a_statement_token(renta_world: MaterialisedPersona) -> None:
+    for member in AbsenceAttestationFamily:
+        persona = _stating(renta_world.persona, "floor", family=member.value)
+        assert set(statement_families(persona).values()) == {member}
+
+
+def test_an_unknown_family_token_is_refused_before_anything_is_staged(renta_world: MaterialisedPersona) -> None:
+    world = renta_world.world
+    year = world.envelope.floor + 5
+    persona = _stating(renta_world.persona, "floor+5", family="renta_negative_nothing_pending")
+    work_unit_id = _created(world, year)
+
+    with pytest.raises(PersonaMaterialisationError, match="is not one of"):
+        attest_prior_carries(persona, world, work_unit_id, year)
+
+
+def test_a_stated_box_that_is_no_carry_of_the_family_is_refused_before_the_form_is_read(
+    renta_world: MaterialisedPersona,
+) -> None:
+    world = renta_world.world
+    year = world.envelope.floor + 3
+    # 0460 is the savings base, fed by no carry: a mistyped box must not leave the
+    # real carries to be stated as nothing pending.
+    persona = _stating(renta_world.persona, "floor+3", (("0460", Decimal("300.00")),))
+    work_unit_id = _created(world, year)
+
+    with pytest.raises(PersonaMaterialisationError, match="are not carries of that family"):
+        attest_prior_carries(persona, world, work_unit_id, year)

@@ -107,8 +107,10 @@ reason = "Bases liquidables generales negativas pendientes en la declaración de
 # Modelo 100 year whose earlier return the profile does not hold.
 [[prior_carries]]
 year = "horizon-2"
+family = "renta_negative_general_bases_pending"
 nothing_pending = true
 
 [[prior_carries]]
 year = "horizon-1"
+family = "renta_negative_general_bases_pending"
 nothing_pending = true

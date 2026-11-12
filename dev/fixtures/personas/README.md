@@ -132,7 +132,7 @@ appear in a persona; identifier-refusal tests take them from here.
 | `[[household.descendants]]` | array | one descendant row |
 | `[[household.ascendants]]` | array | one ascendant row |
 | `[[own_accounts]]` | array | bank accounts the taxpayer holds, with the charge and refund roles they are designated for |
-| `[[prior_carries]]` | array | per Modelo 100 year, the negative general bases of earlier ejercicios still pending |
+| `[[prior_carries]]` | array | per Modelo 100 year and carry family, what is still pending of earlier ejercicios |
 | `[[withholding_certificates]]` | array | retenciones soportadas declared by a payer |
 | `[[rental_properties]]` | array | declarative facts for a let dwelling |
 | `[[officers]]` | array | company officers (`identity`, `role`, `remunerated`) |
@@ -218,24 +218,35 @@ The materialiser registers each account and designates it through the
 
 ### Prior carries
 
-A Modelo 100 carries the negative general bases still pending from the four
-previous ejercicios (Ley 35/2006 art. 50.3) in casillas 1380, 1382, 1385 and
-1388, read from the previous return. Where the profile holds no earlier return,
-as for the return of the support floor, those carries are unknown and the
-calculation refuses until the taxpayer states them. One entry per Modelo 100
-year states them:
+A Modelo 100 carries amounts still pending from the four previous ejercicios,
+read from the previous return: the negative general bases (Ley 35/2006
+art. 50.3, casillas 1380, 1382, 1385 and 1388) and the negative savings-base
+balances of capital income and of gains and losses (art. 49.1). Where the
+profile holds no earlier return, as for the return of the support floor, those
+carries are unknown and the calculation refuses until the taxpayer states them.
+Carries are never inferred: a statement speaks only of the family it names, and
+a carry of a family no statement names stays open. One entry per Modelo 100 year
+and family states them:
 
 | key | meaning |
 | --- | --- |
-| `year` | year token of the Modelo 100 the statement belongs to; stated once per year |
-| `nothing_pending` | `true`: no carry is pending; the only admitted value |
-| `pending` | instead of `nothing_pending`, a table of box to positive canonical amount; a box left out holds nothing |
+| `year` | year token of the Modelo 100 the statement belongs to |
+| `family` | the carry family the entry speaks of, a token of the registry's absence-attestation families (`renta_negative_general_bases_pending`, `renta_negative_savings_capital_income_pending`, `renta_negative_savings_gains_losses_pending`); a year and family is stated once. An unknown token is refused when the statement is used |
+| `nothing_pending` | `true`: nothing is pending in that family; the only admitted value |
+| `pending` | instead of `nothing_pending`, a table of box to positive canonical amount; a box of the family left out holds nothing. The general-bases family admits only its four boxes |
 
-The statement answers only the carries no earlier return supplies. The helper
-`attest_prior_carries` in `src/cadrumo/entrypoints/tests/persona_prior_carries.py`
-makes it through the operations the refusal's door names: the declaration's
-form read, then the edit check and apply, after the return is created and
-before it is calculated.
+```toml
+[[prior_carries]]
+year = "horizon-1"
+family = "renta_negative_general_bases_pending"
+nothing_pending = true
+```
+
+The statement answers only the carries of the families it names that no earlier
+return supplies. The helper `attest_prior_carries` in
+`src/cadrumo/entrypoints/tests/persona_prior_carries.py` makes it through the
+operations the refusal's door names: the declaration's form read, then the edit
+check and apply, after the return is created and before it is calculated.
 
 ### Withholding certificates
 
