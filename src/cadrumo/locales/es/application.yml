@@ -4354,6 +4354,8 @@ application:
         pueden quedar en blanco y admiten como máximo %{limit} caracteres.
       ascendant_nif_invalid: El NIF o NIE del ascendiente %{row} no es válido; revisa
         sus letras y cifras.
+      ascendant_row_not_stored: Ese ascendiente ya no consta en este perfil. Vuelve
+        a leer los datos familiares antes de quitar a nadie.
       ascendant_rows_over_limit: Una declaración incluye como máximo %{limit} ascendientes
         y se han indicado %{count}.
       censal_read_identity_absent: La lectura censal no incluye ningún NIF, por lo
@@ -4388,6 +4390,8 @@ application:
         pueden quedar en blanco y admiten como máximo %{limit} caracteres.
       descendant_nif_invalid: El NIF o NIE del descendiente %{row} no es válido; revisa
         sus letras y cifras.
+      descendant_row_not_stored: Ese descendiente ya no consta en este perfil. Vuelve
+        a leer los datos familiares antes de quitar a nadie.
       descendant_rows_over_limit: Una declaración incluye como máximo %{limit} descendientes
         y se han indicado %{count}.
       descendant_value_invalid: El descendiente %{row} indica un valor que la declaración
@@ -4457,6 +4461,11 @@ application:
       row_unknown_field: 'La sección ''%{section}'' no declara estos campos: %{unknown}.
         Campos disponibles: %{fields}.'
     family_rows:
+      actions:
+        add_ascendiente: Añade un ascendiente
+        add_descendiente: Añade un descendiente
+        remove_ascendiente: Quita este ascendiente
+        remove_descendiente: Quita este descendiente
       ascendiente:
         apellidos_nombre:
           label: Apellidos y nombre del ascendiente (primero los apellidos)
@@ -4469,6 +4478,12 @@ application:
           label: Fecha de fallecimiento
         nif:
           label: NIF/NIE del ascendiente (déjalo en blanco si no tiene)
+      descendiente:
+        cotizaciones_ss_madre:
+          help: Déjalo en blanco si no lo sabes. Escribe el importe con punto decimal
+            y sin separador de miles, por ejemplo 2332.80.
+          label: Cotizaciones a la Seguridad Social de la madre posteriores al nacimiento
+            de este hijo (euros)
       incomplete: '{stated} indicadas, {recorded} registradas'
     notices:
       censo_divergences_open: '{count} dato(s) del perfil o del certificado siguen

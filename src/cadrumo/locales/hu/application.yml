@@ -4290,6 +4290,8 @@ application:
         és legfeljebb %{limit} karakter lehet.
       ascendant_nif_invalid: A(z) %{row}. felmenő NIF- vagy NIE-száma nem érvényes;
         ellenőrizd a betűit és számjegyeit.
+      ascendant_row_not_stored: Ez a felmenő már nem szerepel ebben a profilban. Olvasd
+        be újra a családi adatokat, mielőtt bárkit eltávolítasz.
       ascendant_rows_over_limit: Egy bevallás legfeljebb %{limit} felmenőt tartalmaz,
         de %{count} lett megadva.
       censal_read_identity_absent: A nyilvántartási olvasás nem tartalmazott adóazonosítót,
@@ -4324,6 +4326,8 @@ application:
         üres, és legfeljebb %{limit} karakter lehet.
       descendant_nif_invalid: A(z) %{row}. leszármazott NIF- vagy NIE-száma nem érvényes;
         ellenőrizd a betűit és számjegyeit.
+      descendant_row_not_stored: Ez a leszármazott már nem szerepel ebben a profilban.
+        Olvasd be újra a családi adatokat, mielőtt bárkit eltávolítasz.
       descendant_rows_over_limit: Egy bevallás legfeljebb %{limit} leszármazottat
         tartalmaz, de %{count} lett megadva.
       descendant_value_invalid: A(z) %{row}. leszármazott olyan értéket ad meg, amelyet
@@ -4392,6 +4396,11 @@ application:
       row_unknown_field: 'A(z) ''%{section}'' szakasz nem deklarálja ezeket a mezőket:
         %{unknown}. Elérhető mezők: %{fields}.'
     family_rows:
+      actions:
+        add_ascendiente: Adj hozzá egy felmenőt
+        add_descendiente: Adj hozzá egy leszármazottat
+        remove_ascendiente: Távolítsd el ezt a felmenőt
+        remove_descendiente: Távolítsd el ezt a leszármazottat
       ascendiente:
         apellidos_nombre:
           label: A felmenő vezeték- és utóneve (elöl a vezetéknév)
@@ -4405,6 +4414,12 @@ application:
           label: A halálozás dátuma
         nif:
           label: A felmenő adószáma (NIF/NIE) (hagyd üresen, ha nincs)
+      descendiente:
+        cotizaciones_ss_madre:
+          help: Hagyd üresen, ha nem tudod. Az összeget tizedesponttal és ezres elválasztó
+            nélkül írd, például 2332.80.
+          label: Az anya társadalombiztosítási járulékai a gyermek születése után
+            (euró)
       incomplete: '{stated} megadva, {recorded} rögzítve'
     notices:
       censo_divergences_open: '{count} profil- vagy tanúsítványadat továbbra is eltér

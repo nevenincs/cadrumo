@@ -141,7 +141,13 @@ def test_descendants_are_served_as_stored_rows_in_the_wizard_words(tmp_path: Pat
     assert ascendants.label == tr("profile.schema.field.renta_family.ascendiente.label", locale=language)
     assert ascendants.state is ProfileFamilyGroupState.UNKNOWN
     assert ascendants.stated_count is None and ascendants.row_count == 0
-    assert {leaf.leaf for leaf in ascendants.leaves} == {"nif", "birth_date", "fallecimiento", "convivientes"}
+    assert {leaf.leaf for leaf in ascendants.leaves} == {
+        "nif",
+        "apellidos_nombre",
+        "birth_date",
+        "fallecimiento",
+        "convivientes",
+    }
 
 
 def test_no_stated_descendants_is_unknown_not_an_empty_household(tmp_path: Path) -> None:
