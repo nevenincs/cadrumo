@@ -659,6 +659,7 @@ type BelowFloorBlock = Literal[
     "expectations.obligations",
     "expectations.deadlines",
     "expectations.values",
+    "withholding_certificates",
 ]
 
 _HISTORY_BLOCKS: Final[frozenset[BelowFloorBlock]] = frozenset(
@@ -2008,8 +2009,13 @@ def _record_periods(record: _DatedRecord) -> tuple[str, ...]:
     return (record.period,)
 
 
+_CERTIFICATE_RETURN_MODELO: Final = "100"
+"""The return a suffered-withholding certificate feeds, named when the certificate is left out."""
+_CERTIFICATE_RETURN_PERIOD: Final = "0A"
+
+
 def _without_records_below_floor(persona: Persona, envelope: YearEnvelope) -> Persona:
-    """``persona`` without its return-history records and expectations below the envelope floor, listing them."""
+    """``persona`` without its return-history records, certificates and expectations below the floor, listing them."""
     dropped: list[BelowFloorRecord] = []
 
     def kept[Record: _DatedRecord](block: BelowFloorBlock, records: tuple[Record, ...]) -> tuple[Record, ...]:
@@ -2026,8 +2032,22 @@ def _without_records_below_floor(persona: Persona, envelope: YearEnvelope) -> Pe
         return tuple(inside)
 
     expectations = persona.expectations
+    certificates: list[WithholdingCertificate] = []
+    for certificate in persona.withholding_certificates:
+        if certificate.ejercicio.precedes_floor(envelope):
+            dropped.append(
+                BelowFloorRecord(
+                    block="withholding_certificates",
+                    modelo=_CERTIFICATE_RETURN_MODELO,
+                    year=certificate.ejercicio,
+                    periods=(_CERTIFICATE_RETURN_PERIOD,),
+                )
+            )
+        else:
+            certificates.append(certificate)
     return dataclasses.replace(
         persona,
+        withholding_certificates=tuple(certificates),
         filed_returns=kept("filed_returns", persona.filed_returns),
         calculated_returns=kept("calculated_returns", persona.calculated_returns),
         local_observations=kept("local_observations", persona.local_observations),

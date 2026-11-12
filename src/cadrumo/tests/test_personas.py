@@ -263,11 +263,30 @@ def test_a_history_record_below_the_floor_is_refused_unless_a_lowered_horizon_om
     persona = _parse(document, envelope=_LOWERED, omit_below_floor=True)
 
     assert persona.local_observations == ()
-    assert [(item.block, item.modelo, str(item.year), item.periods) for item in persona.below_floor] == [
-        ("local_observations", observation["modelo"], observation["year"], (observation["period"],))
+    (left_out,) = [item for item in persona.below_floor if item.block == "local_observations"]
+    assert (left_out.modelo, str(left_out.year), left_out.periods) == (
+        observation["modelo"],
+        observation["year"],
+        (observation["period"],),
+    )
+    assert left_out.history
+    assert f"floor {_LOWERED.floor}" in left_out.reason(_LOWERED)
+
+
+def test_a_withholding_certificate_below_the_floor_is_left_out_under_a_lowered_horizon() -> None:
+    document = _document("persona.toml")
+    stated = [YearToken.parse(item["ejercicio"], where="test") for item in document["withholding_certificates"]]
+    below = [token for token in stated if token.precedes_floor(_LOWERED)]
+    assert below and len(below) < len(stated)
+
+    persona = _parse(document, envelope=_LOWERED, omit_below_floor=True)
+
+    assert [str(item.ejercicio) for item in persona.withholding_certificates] == [
+        str(token) for token in stated if not token.precedes_floor(_LOWERED)
     ]
-    assert persona.below_floor[0].history
-    assert f"floor {_LOWERED.floor}" in persona.below_floor[0].reason(_LOWERED)
+    left_out = [item for item in persona.below_floor if item.block == "withholding_certificates"]
+    assert [str(item.year) for item in left_out] == [str(token) for token in below]
+    assert not any(item.history for item in left_out)
 
 
 def test_records_and_expectations_of_supported_years_survive_a_lowered_horizon() -> None:
@@ -298,6 +317,7 @@ def test_records_and_expectations_of_supported_years_survive_a_lowered_horizon()
         "expectations.values",
         "filed_returns",
         "local_observations",
+        "withholding_certificates",
     ]
     assert sorted(item.block for item in persona.below_floor if item.history) == [
         "filed_returns",

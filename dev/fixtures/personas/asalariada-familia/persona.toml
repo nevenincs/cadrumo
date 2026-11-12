@@ -89,6 +89,27 @@ origin = "operator_declaration"
 importe_integro = "36000.00"
 retencion = "5412.00"
 cotizaciones_seguridad_social = "2332.80"
+# Her Social Security contributions are the certificate's deductible expense
+# (LIRPF art. 19.2.a); her derivation names no irregular income, so no
+# reducción applies (LIRPF art. 18).
+gastos_deducibles = "2332.80"
+reducciones_aplicables = "0.00"
+
+# The same employer and the same certificate figures for the next ejercicio:
+# every fact of this persona is stated relative to the horizon.
+[[withholding_certificates]]
+payer = "asalariada.empleador"
+ejercicio = "horizon-2"
+income_class = "trabajo"
+origin = "operator_declaration"
+importe_integro = "36000.00"
+retencion = "5412.00"
+cotizaciones_seguridad_social = "2332.80"
+# Her Social Security contributions are the certificate's deductible expense
+# (LIRPF art. 19.2.a); her derivation names no irregular income, so no
+# reducción applies (LIRPF art. 18).
+gastos_deducibles = "2332.80"
+reducciones_aplicables = "0.00"
 
 # Her own copy of the previous year's Renta: no negative general base was left
 # pending to offset, so the four-year carry of casilla 1380 starts from zero.
