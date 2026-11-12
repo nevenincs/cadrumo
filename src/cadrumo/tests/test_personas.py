@@ -289,6 +289,46 @@ def test_a_withholding_certificate_below_the_floor_is_left_out_under_a_lowered_h
     assert not any(item.history for item in left_out)
 
 
+def test_work_income_none_statements_are_read_with_their_ejercicio() -> None:
+    document = _document("persona.toml")
+    stated = [item["ejercicio"] for item in document["work_income_none_statements"]]
+    assert stated
+
+    persona = _parse(document)
+
+    assert [str(item.ejercicio) for item in persona.work_income_none_statements] == stated
+
+
+def test_a_work_income_none_statement_with_an_unknown_key_or_no_ejercicio_is_refused() -> None:
+    document = copy.deepcopy(_document("persona.toml"))
+    document["work_income_none_statements"][0]["amount"] = "0.00"
+    with pytest.raises(PersonaCatalogueError, match="unknown fields"):
+        _parse(document)
+
+    document = copy.deepcopy(_document("persona.toml"))
+    del document["work_income_none_statements"][0]["ejercicio"]
+    with pytest.raises(PersonaCatalogueError, match="missing fields"):
+        _parse(document)
+
+
+def test_a_work_income_none_statement_below_the_floor_is_left_out_under_a_lowered_horizon() -> None:
+    document = _document("persona.toml")
+    stated = [YearToken.parse(item["ejercicio"], where="test") for item in document["work_income_none_statements"]]
+    below = [token for token in stated if token.precedes_floor(_LOWERED)]
+    assert below and len(below) < len(stated)
+
+    persona = _parse(document, envelope=_LOWERED, omit_below_floor=True)
+
+    assert [str(item.ejercicio) for item in persona.work_income_none_statements] == [
+        str(token) for token in stated if not token.precedes_floor(_LOWERED)
+    ]
+    left_out = [item for item in persona.below_floor if item.block == "work_income_none_statements"]
+    assert [str(item.year) for item in left_out] == [str(token) for token in below]
+    assert not any(item.history for item in left_out)
+    with pytest.raises(PersonaCatalogueError, match="outside the supported envelope"):
+        _parse(document, envelope=_LOWERED)
+
+
 def test_records_and_expectations_of_supported_years_survive_a_lowered_horizon() -> None:
     document = _with_filed_returns(
         {"modelo": "303", "year": "horizon-1", "periods": ["1T"], "iva_compensation_carried_in": "0.00"},
@@ -318,6 +358,7 @@ def test_records_and_expectations_of_supported_years_survive_a_lowered_horizon()
         "filed_returns",
         "local_observations",
         "withholding_certificates",
+        "work_income_none_statements",
     ]
     assert sorted(item.block for item in persona.below_floor if item.history) == [
         "filed_returns",

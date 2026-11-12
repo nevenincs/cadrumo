@@ -55,6 +55,11 @@ retencion = "2180.00"
 reducciones_aplicables = "0.00"
 gastos_deducibles = "0.00"
 
+# Neither derivation names an employer contribution, patrimonio protegido or other
+# imputed work income, so he states none of it for the ejercicio.
+[[work_income_none_statements]]
+ejercicio = "horizon-1"
+
 # Declarative scenario facts for the let dwelling. No production operation that
 # records them was located; the reader keeps this block as expectation input
 # and reports it as not materialised.

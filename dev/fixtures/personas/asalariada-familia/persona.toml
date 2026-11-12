@@ -95,6 +95,11 @@ cotizaciones_seguridad_social = "2332.80"
 gastos_deducibles = "2332.80"
 reducciones_aplicables = "0.00"
 
+# Neither derivation names an employer contribution, patrimonio protegido or other
+# imputed work income, so she states none of it for the ejercicio.
+[[work_income_none_statements]]
+ejercicio = "horizon-1"
+
 # The same employer and the same certificate figures for the next ejercicio:
 # every fact of this persona is stated relative to the horizon.
 [[withholding_certificates]]
@@ -110,6 +115,11 @@ cotizaciones_seguridad_social = "2332.80"
 # reducción applies (LIRPF art. 18).
 gastos_deducibles = "2332.80"
 reducciones_aplicables = "0.00"
+
+# Neither derivation names an employer contribution, patrimonio protegido or other
+# imputed work income, so she states none of it for the ejercicio.
+[[work_income_none_statements]]
+ejercicio = "horizon-2"
 
 # Her own copy of the previous year's Renta: no negative general base was left
 # pending to offset, so the four-year carry of casilla 1380 starts from zero.
