@@ -65,6 +65,7 @@ import { FormView } from "../form/FormView";
 import { useFormSession, type FormSession } from "../form/session";
 import type { BorradorPort } from "../../../shell/borrador";
 import { CheckView } from "./CheckView";
+import { NoteRecoveries } from "./NoteRecoveries";
 import { ComparisonView, offersComparison } from "./ComparisonView";
 import { CalculationEvidenceDialog } from "./CalculationEvidenceDialog";
 import {
@@ -934,6 +935,12 @@ function Ready({
             }
             onAnswer={onAnswer}
             onOpenInvoice={onOpenInvoice ?? null}
+            recoveries={
+              <NoteRecoveries
+                notes={envelope.form.form.calculation_notes}
+                onOpenInvoice={onOpenInvoice ?? null}
+              />
+            }
             answers={<DisagreementAnswers read={disagreements} />}
           />
         ),
