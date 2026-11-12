@@ -43,15 +43,18 @@ def _finished_in_every_language(key: str) -> bool:
 
 
 def _message_key(error: CadrumoError, registered: ErrorCode) -> str | None:
-    """The key the refusal is worded by, chosen as the error envelope chooses it, if no value completes it.
+    """The key the refusal is worded by, if no value completes it.
 
-    The error's own key comes first unless its code's registry entry owns the
-    public message; then the code's catalogue key.
+    The error's own key names its cause, unless its code's registry entry owns
+    the public message; only an error without one takes its code's catalogue
+    key. A cause's key that needs a value is not swapped for the code's
+    broader sentence, which can state another cause: none is chosen, and the
+    sentence then names the code.
     """
     own = error.translated_message
     registry_owned = registered.public_message_from_registry or ".canonical_" in registered.message_key
-    keys = (registered.message_key,) if registry_owned or own is None else (own, registered.message_key)
-    return next((key for key in keys if _finished_in_every_language(key)), None)
+    key = registered.message_key if registry_owned or own is None else own
+    return key if _finished_in_every_language(key) else None
 
 
 def downstream_refusal(error: CadrumoError) -> ModeloEditDownstreamRefusalV1:

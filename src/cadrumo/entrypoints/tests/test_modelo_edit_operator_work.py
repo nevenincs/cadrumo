@@ -19,6 +19,7 @@ from cadrumo.entrypoints.tests.modelo_operator_work_storage import (
     seeded_operator_work,
 )
 
+from ...application.cli_exception_preconditions import nested_terminal_precondition_verdict
 from ...application.modelo.action_errors import ModeloEditRefusedError
 from ...application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
@@ -30,6 +31,7 @@ from ...application.modelo.edit_models import (
     ModeloScalarEditIntentV1,
 )
 from ...core.casilla_id import CasillaId, validated_casilla_id
+from ...core.errors.error_codes import get_registered_error_code
 from ...core.operations import OperationEffect
 from ...domain.filing.schema import ModeloScalar
 from ...domain.modelos.calculation_revision_operator_layer import CalculationOperatorLayer
@@ -106,12 +108,22 @@ def test_a_clear_is_recorded_distinct_from_zero_and_a_later_set_withdraws_it(tmp
 
 
 def test_applying_a_third_quarter_without_earlier_filings_is_refused(tmp_path: Path) -> None:
-    """A correction cannot apply while the required preceding quarterly filings are missing."""
+    """A correction cannot apply while the required preceding quarterly filings are missing.
+
+    The value was admitted; the recalculation refused for the unfiled earlier
+    quarters, so the edit settles as that refusal, opening the creation of the
+    earlier work unit, never as a value to state again.
+    """
     with seeded_operator_work(tmp_path, period_code="3T") as work:
         head_before = work.head()
         applied = work.apply(scalar=(_set(_C06, "1234.56"),))
 
-        assert isinstance(applied.refusal, ModeloEditRefusedError)
+        assert applied.refusal is not None
+        assert get_registered_error_code(applied.refusal).code == "REFUSED_MODELO_PRIOR_PERIOD_UNFILED"
+        door = nested_terminal_precondition_verdict(applied.refusal)
+        assert door is not None
+        assert door.action is not None
+        assert door.action.action_id == "operator.modelo.work.create"
         assert applied.effects[-1] is OperationEffect.NONE
         assert work.head() == head_before
 
