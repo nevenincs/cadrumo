@@ -13,12 +13,13 @@ from __future__ import annotations
 from datetime import date, datetime
 from decimal import Decimal
 from enum import StrEnum
+from typing import Final
 
 from pydantic import BaseModel, Field, model_validator
 
 from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.casilla_id import CasillaId
-from ...core.errors.hierarchy import pydantic_validation_boundary
+from ...core.errors.hierarchy import InternalInvariantError, pydantic_validation_boundary
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import tr
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -100,18 +101,32 @@ class ModeloFormYearProjection(ModeloFormBase):
     across; ``authored_filing_year`` is the year that edition authors and
     ``reachable_grade`` the rung of authority the year reaches. The registry's
     temporal resolver and grade rule supply all three; a surface renders them.
-    ``words`` says, for a carried year only, that the declaration calculates
-    under that edition's rules and cannot be checked for filing or exported:
-    the same sentence verification refuses it with, served before any check.
+    ``reachable_grade_words`` names that rung. ``words`` is the sentence
+    verification refuses a filing check with, served before any check: for a
+    carried year, that the declaration calculates under that edition's rules
+    and cannot be checked for filing or exported; for a year its own edition
+    authors below filing grade, that those rules are not yet checked against
+    the official sources closely enough to file. It is ``None`` when the year
+    reaches filing grade.
     """
 
     direction: TemporalProjectionDirection
     authored_filing_year: int
     reachable_grade: RegistryAuthorityGrade
+    reachable_grade_words: str = Field(min_length=1)
     words: str | None = None
 
 
-_PROJECTED_YEAR_LOCALE_KEY = "application.modelo.findings.registry_filing_year_projected"
+_PROJECTED_YEAR_LOCALE_KEY: Final = "application.modelo.findings.registry_filing_year_projected"
+_GRADE_INSUFFICIENT_LOCALE_KEY: Final = "application.modelo.findings.registry_authority_grade_insufficient"
+_REACHABLE_GRADE_LOCALE_KEYS: Final[dict[RegistryAuthorityGrade, str]] = {
+    RegistryAuthorityGrade.APPLICABILITY: "application.modelo.work_form.authority_grade.applicability",
+    RegistryAuthorityGrade.CALCULATION: "application.modelo.work_form.authority_grade.calculation",
+    RegistryAuthorityGrade.FILING: "application.modelo.work_form.authority_grade.filing",
+}
+"""A literal table so the locale audit sees each rung's word reach the translator."""
+if set(_REACHABLE_GRADE_LOCALE_KEYS) != set(RegistryAuthorityGrade):
+    raise InternalInvariantError("every authority grade needs its word")
 
 
 def year_projection(
@@ -128,10 +143,10 @@ def year_projection(
     """
     direction = snapshot.revision_projection_direction
     authored = snapshot.edition_filing_year
-    words = (
-        None
-        if direction is TemporalProjectionDirection.AUTHORED
-        else tr(
+    reachable = snapshot.effective_authority_grade
+    words: str | None = None
+    if direction is not TemporalProjectionDirection.AUTHORED:
+        words = tr(
             _PROJECTED_YEAR_LOCALE_KEY,
             modelo=modelo,
             filing_year=snapshot.filing_year,
@@ -139,11 +154,19 @@ def year_projection(
             authored_filing_year=authored,
             locale=language.value,
         )
-    )
+    elif reachable is not RegistryAuthorityGrade.FILING:
+        words = tr(
+            _GRADE_INSUFFICIENT_LOCALE_KEY,
+            modelo=modelo,
+            filing_year=snapshot.filing_year,
+            period=period,
+            locale=language.value,
+        )
     return ModeloFormYearProjection(
         direction=direction,
         authored_filing_year=authored,
-        reachable_grade=snapshot.effective_authority_grade,
+        reachable_grade=reachable,
+        reachable_grade_words=tr(_REACHABLE_GRADE_LOCALE_KEYS[reachable], locale=language.value),
         words=words,
     )
 

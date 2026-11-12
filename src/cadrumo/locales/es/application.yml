@@ -3770,6 +3770,10 @@ application:
       pattern: '{day} {month} {year}'
     work_form:
       additional_data_for_box: Dato adicional de la casilla {box}
+      authority_grade:
+        applicability: Solo plazos
+        calculation: Solo cálculo y vista previa
+        filing: Cálculo, comprobación para presentar y exportación
       box_locator_help:
         one_year: Casilla {box} del modelo {modelo}, ejercicio {years}.
         onwards: Casilla {box} del modelo {modelo}, ejercicio {years} y siguientes.

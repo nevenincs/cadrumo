@@ -3715,6 +3715,10 @@ application:
       pattern: '{year}. {month} {day}.'
     work_form:
       additional_data_for_box: Kiegészítő adat a(z) {box}. rovathoz
+      authority_grade:
+        applicability: Csak határidők
+        calculation: Csak számítás és előnézet
+        filing: Számítás, benyújtás előtti ellenőrzés és exportálás
       box_locator_help:
         one_year: A Modelo {modelo} nyomtatvány {box}. rovata, {years}. adóév.
         onwards: A Modelo {modelo} nyomtatvány {box}. mezője, {years}. és az azt követő
