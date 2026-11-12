@@ -31,6 +31,7 @@ LedgerClassifyPatchField = Literal[
     "irpf_category",
     "m210_income_classification",
     "iva_category",
+    "exemption_article",
     "deduction_fact_kind",
     "investment_asset_id",
     "iva_vehicle_use",
@@ -56,6 +57,7 @@ CLASSIFY_FIELD_NAMES = frozenset(
         "irpf_category",
         "m210_income_classification",
         "iva_category",
+        "exemption_article",
         "deduction_fact_kind",
         "investment_asset_id",
         "iva_vehicle_use",
@@ -108,6 +110,7 @@ class LedgerClassifyPatch(BaseModel):
     recargo_amount: LedgerClassifyDecimalText | None = None
     irpf_category: LedgerClassifyLongText | None = None
     iva_category: LedgerClassifyShortText | None = None
+    exemption_article: LedgerClassifyShortText | None = None
     deduction_fact_kind: LedgerClassifyShortText | None = None
     investment_asset_id: LedgerClassifyShortText | None = None
     iva_vehicle_use: LedgerClassifyShortText | None = None

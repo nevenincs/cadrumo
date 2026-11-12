@@ -110,7 +110,7 @@ def test_employee_credits_the_certified_retention_and_cannot_export_an_undisclos
     attest_no_withholding(operation, RetencionSoportadaClase.CAPITAL_MOBILIARIO)
     register_refund_account(secure_objects)
 
-    annual = calculate_annual(secure_objects, casilla_inputs={})
+    annual = calculate_annual(secure_objects)
 
     # oracle: Ley 35/2006 arts. 79.e and 99.6 with Reglamento del IRPF art. 108.3: 3.120,00 + 600,00 + 200,00.
     assert _box(annual, "0596") == Decimal("3920.00")
@@ -139,7 +139,7 @@ def test_the_unattested_movable_capital_credit_stays_unresolved(
     seed_prior_year_m100(secure_objects)
     _record_employers(operation, tmp_path)
 
-    annual = calculate_annual(secure_objects, casilla_inputs={})
+    annual = calculate_annual(secure_objects)
 
     assert _box(annual, "0596") == Decimal("3920.00")
     assert validated_casilla_id("0597") not in annual.casilla_values
@@ -302,11 +302,7 @@ def _seed_inventory_book(secure_objects: SecureObjectRepository) -> None:
 
 
 def _calculate_autonomo_annual(secure_objects: SecureObjectRepository) -> CalculationRevision:
-    return calculate_annual(
-        secure_objects,
-        casilla_inputs={},
-        text_casilla_inputs=_ACTIVITY_INPUTS,
-    )
+    return calculate_annual(secure_objects, text_casilla_inputs=_ACTIVITY_INPUTS)
 
 
 def test_employee_autonomo_files_credits_equal_to_their_oracles_and_the_fourth_quarter_agrees(

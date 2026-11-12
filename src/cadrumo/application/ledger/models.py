@@ -46,7 +46,7 @@ from ...domain.calculations.registry.iva_deduction_catalogue import require_iva_
 from ...domain.calculations.registry.prorrata_exclusions import require_art104_tres_exclusion
 from ...domain.calculations.registry.prorrata_vocabulary import require_input_classification
 from ...domain.iva.prorrata import InputClassification
-from ...domain.iva.schema import EUMemberState, IvaCategory
+from ...domain.iva.schema import EUMemberState, IvaCategory, IvaExemptionArticle
 from ...domain.iva.vehicle_use import IvaVehicleUse
 from ...domain.transactions.enums import TRANSFER_ALLOWED_STATES, BusinessClassification, TransactionDirection
 from ...domain.transactions.errors import TransactionValidationError
@@ -233,6 +233,10 @@ class ManualLedgerTransactionCommand(ManualLedgerTransactionInput):
     attachment_ids: tuple[str, ...] = ()
     notes: str = ""
     iva_category: IvaCategory | None = None
+    #: The Ley 37/1992 art. 20.Uno exemption a DOMESTIC_EXEMPT row falls under, as
+    #: the operator states it. Whether the operation gives the right to deduct
+    #: depends on it, so it is never inferred from the category or the counterparty.
+    exemption_article: IvaExemptionArticle | None = None
     #: Operator-declared M303 deduction source. The taxonomy is documented as
     #: non-inferable, so it is carried from the operator rather than derived
     #: from the category, the direction, or the counterparty country.
@@ -355,6 +359,7 @@ class ManualLedgerTransactionCommand(ManualLedgerTransactionInput):
             "operation_date": self.operation_date,
             "accrual_date": self.accrual_date,
             "iva_category": self.iva_category,
+            "exemption_article": self.exemption_article,
             "deduction_fact_kind": self.deduction_fact_kind,
             "investment_asset_id": self.investment_asset_id,
             "iva_vehicle_use": self.iva_vehicle_use,
@@ -413,6 +418,7 @@ class ManualLedgerTransactionPatch(ManualLedgerTransactionInput):
     attachment_ids: tuple[str, ...] | None = None
     notes: _LedgerOptionalText = None
     iva_category: IvaCategory | None = None
+    exemption_article: IvaExemptionArticle | None = None
     deduction_fact_kind: IvaDeductionFactKind | None = None
     investment_asset_id: str | None = Field(default=None, min_length=1, max_length=128)
     #: What the row's vehicle is, where LIVA art. 95.Tres.2.ª treats it apart from the

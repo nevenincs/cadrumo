@@ -36,6 +36,7 @@ docs:
       payable_invoice: from the invoices you received
       previous_filing: from your previous filing
       profile: from your taxpayer profile
+      prorrata_register_activity: from the activities in your prorrata register
       prorrata_regularizacion: from your prorrata regularisation
       purchase_invoice_evidence: from the supporting documents of your received invoices
       relation_prefill: from a related modelo's result

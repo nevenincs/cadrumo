@@ -26,7 +26,6 @@ _MODULES = (
     "destination.py",
     "interactions.py",
     "palette.py",
-    "refusal_explanation.py",
     "run_fields.py",
     "run_result.py",
     "run_screen.py",
@@ -120,7 +119,6 @@ def test_the_placeholders_agree_across_the_four_locales() -> None:
     for key in (
         "tui.operations.status.count",
         "tui.operations.result.page",
-        "tui.operations.stopped.remedy_command",
     ):
         english = _resolve(catalogues["en"], key) or ""
         names = {part.split("}")[0] for part in english.split("{")[1:]}

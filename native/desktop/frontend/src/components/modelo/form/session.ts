@@ -13,12 +13,14 @@ import type {
 } from "../../../shell/modeloContract/modeloEdit";
 import type {
   ModeloEditApplyBaselineV1,
+  ModeloEditBindingIntentKind,
   ModeloEditValueAddressV1,
   ModeloEditValueGrammarV1,
   ModeloEditWireScalar,
   ModeloFormAddressV1,
 } from "../../../shell/modeloContract/modeloEditWork";
 import type {
+  AbsenceAttestationFamily,
   ModeloWorkbenchFormProjectionV1,
   PublicModeloFormField,
   ModeloFormCarryAttestation,
@@ -73,7 +75,9 @@ type SetValue = {
  * statement that it holds no amount, said in the words the form served for
  * that statement. `change` is the kind of change the filer made, as a
  * preflight is told it: removing an override clears a value the filer gave,
- * or gives the box back to its source. */
+ * or gives the box back to its source. A statement and its withdrawal name
+ * the statement's family, which keeps every box of it together: a family is
+ * staged whole or not at all. */
 export type StagedIntent =
   | ({ kind: "set_typed_value" } & SetValue)
   | { kind: "clear_declared_value"; change: "clear" }
@@ -82,10 +86,13 @@ export type StagedIntent =
   | {
       kind: "remove_override";
       change: Exclude<ModeloEditHeldKind, "set">;
+      /** The family whose statement this removal withdraws, when it does. */
+      withdraws?: AbsenceAttestationFamily;
     }
   | {
       kind: "attest_no_amount";
       change: "set";
+      family: AbsenceAttestationFamily;
       words: string;
       effect: string;
     };
@@ -191,6 +198,171 @@ export function confirmIntent(
 ): StagedIntent | null {
   if (!field.confirmable || field.confirm_value === null) return null;
   return valueIntent(field, field.confirm_value, field.confirm_comparable);
+}
+
+/** The intent that withdraws the statement a box was stated by: its value
+ * taken out at its binding, or the box given back to its source; null where
+ * no statement stands on the box or neither is offered. */
+export function withdrawIntent(
+  field: PublicModeloFormField,
+): StagedIntent | null {
+  const family = field.stated_absent;
+  if (family === null || !atBinding(field)) return null;
+  if (field.clearable)
+    return { kind: "remove_override", change: "clear", withdraws: family };
+  if (field.restorable)
+    return { kind: "remove_override", change: "restore", withdraws: family };
+  return null;
+}
+
+/** The statement a staged intent belongs to, as one key: its family stated
+ * or withdrawn; null for an edit of one box alone. Edits sharing it are
+ * staged, kept and taken back together. */
+export function statementOf(intent: StagedIntent): string | null {
+  if (intent.kind === "attest_no_amount") return `state:${intent.family}`;
+  if (intent.kind === "remove_override" && intent.withdraws !== undefined)
+    return `withdraw:${intent.withdraws}`;
+  return null;
+}
+
+/** One box of a statement and the intent it takes. */
+export type StatementEdit = {
+  field: PublicModeloFormField;
+  intent: StagedIntent;
+};
+
+/** The box at each binding `statement` names, in its order, each taking the
+ * statement; null when the form draws one of them nowhere, so a statement
+ * is never staged on part of what it names. */
+export function statementEdits(
+  placed: readonly PlacedField[],
+  statement: ModeloFormCarryAttestation,
+): StatementEdit[] | null {
+  const edits: StatementEdit[] = [];
+  for (const bindingId of statement.binding_ids) {
+    const found = placed.find(
+      (p) =>
+        p.field.edit_address.kind === "binding" &&
+        p.field.edit_address.binding_id === bindingId,
+    );
+    if (!found) return null;
+    edits.push({
+      field: found.field,
+      intent: {
+        kind: "attest_no_amount",
+        change: "set",
+        family: statement.family,
+        words: statement.action_words,
+        effect: statement.effect_words,
+      },
+    });
+  }
+  return edits;
+}
+
+/** What withdrawing a box's statement comes to: the withdrawal of every box
+ * the same statement stands on, or, when one of them cannot be taken out
+ * here, that box, and nothing is staged. */
+export type Withdrawal =
+  | { kind: "offered"; edits: StatementEdit[] }
+  | { kind: "refused"; field: PublicModeloFormField };
+
+/** The boxes a statement stands on, once each, in reading order. */
+function statedBoxes(
+  placed: readonly PlacedField[],
+  family: AbsenceAttestationFamily,
+): PublicModeloFormField[] {
+  const seen = new Set<string>();
+  const boxes: PublicModeloFormField[] = [];
+  for (const { field } of placed) {
+    const key = editKey(field);
+    if (field.stated_absent !== family || seen.has(key)) continue;
+    seen.add(key);
+    boxes.push(field);
+  }
+  return boxes;
+}
+
+/** The withdrawal a stated box offers, or null where it offers none: a
+ * statement is withdrawn from every box it stands on at once, each as the
+ * baseline admits removing its value (`admits`) and as the box allows. */
+export function withdrawal(
+  placed: readonly PlacedField[],
+  field: PublicModeloFormField,
+  admits: (field: PublicModeloFormField) => boolean,
+): Withdrawal | null {
+  const family = field.stated_absent;
+  if (family === null || !admits(field) || !withdrawIntent(field)) return null;
+  const edits: StatementEdit[] = [];
+  for (const box of statedBoxes(placed, family)) {
+    const intent = admits(box) ? withdrawIntent(box) : null;
+    if (!intent) return { kind: "refused", field: box };
+    edits.push({ field: box, intent });
+  }
+  return { kind: "offered", edits };
+}
+
+/** The binding intents the baseline admits, by `addressKey`. */
+export function bindingIntents(
+  baseline: ModeloEditApplyBaselineV1 | null,
+): ReadonlyMap<string, readonly ModeloEditBindingIntentKind[]> {
+  const intents = new Map<string, readonly ModeloEditBindingIntentKind[]>();
+  for (const entry of baseline?.permitted_surface ?? [])
+    if (entry.kind === "writable_binding_override")
+      intents.set(`b:${entry.binding_id}`, entry.allowed_intents);
+  return intents;
+}
+
+/** The boxes a staged statement or withdrawal must cover to stand, by
+ * `editKey`: every box the form serves the statement for, or every box it
+ * shows stated; none when it serves or shows none. */
+function coveredBy(
+  intent: StagedIntent,
+  placed: readonly PlacedField[],
+  served: readonly ModeloFormCarryAttestation[],
+): string[] {
+  if (intent.kind === "attest_no_amount") {
+    const statement = served.find((each) => each.family === intent.family);
+    const edits = statement ? statementEdits(placed, statement) : null;
+    return edits?.map((edit) => editKey(edit.field)) ?? [];
+  }
+  if (intent.kind === "remove_override" && intent.withdraws !== undefined)
+    return statedBoxes(placed, intent.withdraws).map(editKey);
+  return [];
+}
+
+/** `staged` with every statement whole: a statement or a withdrawal whose
+ * boxes are not all staged, as the form now serves the statement (`served`)
+ * or shows it stated, is dropped with every box of it. */
+export function wholeStatements(
+  staged: ReadonlyMap<string, StagedEdit>,
+  placed: readonly PlacedField[],
+  served: readonly ModeloFormCarryAttestation[],
+): { next: Map<string, StagedEdit>; dropped: StagedEdit[] } {
+  const groups = new Map<string, StagedEdit[]>();
+  for (const edit of staged.values()) {
+    const group = statementOf(edit.intent);
+    if (group) groups.set(group, [...(groups.get(group) ?? []), edit]);
+  }
+  const next = new Map(staged);
+  const dropped: StagedEdit[] = [];
+  for (const edits of groups.values()) {
+    const first = edits[0];
+    if (!first) continue;
+    const wanted = coveredBy(first.intent, placed, served);
+    const keys = new Set(edits.map((edit) => edit.key));
+    if (
+      wanted.length > 0 &&
+      wanted.length === keys.size &&
+      wanted.every((key) => keys.has(key))
+    )
+      continue;
+    for (const edit of edits) {
+      next.delete(edit.key);
+      dropped.push(edit);
+    }
+  }
+  return { next, dropped };
 }
 
 /** An edit address as one string, as a preflight's report names it. */
@@ -376,6 +548,11 @@ export function restaged(
     return field.takes_typed_value && field.origin !== "imported"
       ? intent
       : null;
+  // A withdrawal stands only while the box still holds its statement.
+  if (intent.kind === "remove_override" && intent.withdraws !== undefined)
+    return field.stated_absent === intent.withdraws
+      ? withdrawIntent(field)
+      : null;
   if (intent.change === "set") {
     if (!field.takes_typed_value) return null;
     if (
@@ -394,12 +571,15 @@ export function restaged(
 
 /** The staged edits as a preflight's `report` leaves them on the boxes
  * `placed` as they now stand: each kept or changed edit staged again on its
- * box, the others dropped; and what the report moved or dropped, by the
- * box's own address. */
+ * box, the others dropped, and a statement or withdrawal left with only some
+ * of its boxes dropped whole, against the statements the form now serves
+ * (`served`); and what the report moved or dropped, by the box's own
+ * address. */
 export function rebasedEdits(
   staged: ReadonlyMap<string, StagedEdit>,
   report: ModeloFormRebaseEntryV1[],
   placed: readonly PlacedField[],
+  served: readonly ModeloFormCarryAttestation[] = [],
 ): {
   next: Map<string, StagedEdit>;
   found: [string, "changed" | "dropped"][];
@@ -431,7 +611,10 @@ export function rebasedEdits(
       beforeChanged: outcome === "changed" || edit.beforeChanged,
     });
   }
-  return { next, found };
+  const whole = wholeStatements(next, placed, served);
+  for (const edit of whole.dropped)
+    found.push([addressKey(edit.field.address), "dropped"]);
+  return { next: whole.next, found };
 }
 
 /** What each writable address takes as the baseline admits it, by
@@ -474,13 +657,28 @@ export type FormSession = {
   adoptBaseline(baseline: ModeloEditApplyBaselineV1): void;
   staged: ReadonlyMap<string, StagedEdit>;
   stagedCount: number;
+  /** Stages one edit on its box; an edit staged over one box of a statement
+   * or withdrawal takes the rest of it back, so none is left in part. */
   stage(field: PublicModeloFormField, intent: StagedIntent): void;
+  /** Takes back the edit staged under `editKey`, and with it every other box
+   * of the statement or withdrawal it belongs to. */
   unstage(editKey: string): void;
-  /** The form's statements that no earlier-ejercicio amount is pending, one
-   * per family, each while some carry it names is not yet staged as stated. */
-  carryAttestations: ModeloFormCarryAttestation[];
-  /** Stages one statement on every carry it names, one edit each. */
-  attestCarries(attestation: ModeloFormCarryAttestation): void;
+  /** Every statement the form serves, in its order and words; none where
+   * the declaration takes no edit. */
+  statements: readonly ModeloFormCarryAttestation[];
+  /** Whether `statement` is staged on every box it names. */
+  stagesStatement(statement: ModeloFormCarryAttestation): boolean;
+  /** Stages each of `chosen` on every box it names and takes back every
+   * served statement not chosen; answers the chosen statements that name a
+   * box the form draws nowhere, which are not staged. */
+  stageStatements(
+    chosen: readonly ModeloFormCarryAttestation[],
+  ): ModeloFormCarryAttestation[];
+  /** The withdrawal a box stated by a statement offers, or null. */
+  withdrawal(field: PublicModeloFormField): Withdrawal | null;
+  /** Stages the withdrawal a box offers on every box of its statement, and
+   * answers it; nothing is staged when it is refused. */
+  withdraw(field: PublicModeloFormField): Withdrawal | null;
   discardAll(): void;
   /** Keeps the staged edits a preflight's `report` keeps, staged again
    * against the declaration as it stands, and drops the others. */
@@ -574,6 +772,13 @@ export function useFormSession({
       const key = editKey(field);
       setStaged((now) => {
         const next = new Map(now);
+        // A statement or withdrawal stands whole or not at all: an edit
+        // staged over one of its boxes takes the rest of it back.
+        const before = now.get(key);
+        const group = before ? statementOf(before.intent) : null;
+        if (group && group !== statementOf(intent))
+          for (const [other, edit] of now)
+            if (statementOf(edit.intent) === group) next.delete(other);
         next.set(key, {
           key,
           address: editAddress(field),
@@ -591,9 +796,14 @@ export function useFormSession({
   );
   const unstage = useCallback((key: string) => {
     setStaged((now) => {
-      if (!now.has(key)) return now;
+      const held = now.get(key);
+      if (!held) return now;
       const next = new Map(now);
       next.delete(key);
+      const group = statementOf(held.intent);
+      if (group)
+        for (const [other, edit] of now)
+          if (statementOf(edit.intent) === group) next.delete(other);
       return next;
     });
   }, []);
@@ -617,13 +827,18 @@ export function useFormSession({
   useEffect(() => {
     if (!pendingRebase) return;
     setPendingRebase(null);
-    const { next, found } = rebasedEdits(staged, pendingRebase, placed);
+    const { next, found } = rebasedEdits(
+      staged,
+      pendingRebase,
+      placed,
+      form.carry_attestations,
+    );
     setStaged(next);
     // What a report moved or dropped is said until the filer acknowledges
     // it: a later check is told only the changes still held, so it adds what
     // it finds, by box, and never takes back what an earlier report dropped.
     if (found.length) setMoved((shown) => noteMoved(shown, found));
-  }, [pendingRebase, placed, staged]);
+  }, [pendingRebase, placed, staged, form.carry_attestations]);
   const acknowledge = useCallback(() => {
     setMoved(new Map());
     setStaged((held) => {
@@ -667,6 +882,70 @@ export function useFormSession({
     },
     [admitted, grammarOf],
   );
+  // What the baseline admits at each binding, for the statements' boxes.
+  const intents = useMemo(() => bindingIntents(baseline), [baseline]);
+  const admitsRemoval = useCallback(
+    (field: PublicModeloFormField) =>
+      admitted &&
+      (intents.get(editKey(field))?.includes("remove_override") ?? false),
+    [admitted, intents],
+  );
+  const withdrawalOf = useCallback(
+    (field: PublicModeloFormField) => withdrawal(placed, field, admitsRemoval),
+    [placed, admitsRemoval],
+  );
+  const stageAll = useCallback(
+    (edits: readonly StatementEdit[]) => {
+      for (const edit of edits) stage(edit.field, edit.intent);
+    },
+    [stage],
+  );
+  const withdraw = useCallback(
+    (field: PublicModeloFormField) => {
+      const offer = withdrawalOf(field);
+      if (offer?.kind === "offered") stageAll(offer.edits);
+      return offer;
+    },
+    [withdrawalOf, stageAll],
+  );
+  const statements = useMemo(
+    () => (admitted ? form.carry_attestations : []),
+    [admitted, form.carry_attestations],
+  );
+  const stagesStatement = useCallback(
+    (statement: ModeloFormCarryAttestation) =>
+      statement.binding_ids.length > 0 &&
+      statement.binding_ids.every((bindingId) => {
+        const intent = staged.get(`b:${bindingId}`)?.intent;
+        return (
+          intent?.kind === "attest_no_amount" &&
+          intent.family === statement.family
+        );
+      }),
+    [staged],
+  );
+  const stageStatements = useCallback(
+    (chosen: readonly ModeloFormCarryAttestation[]) => {
+      const unplaced: ModeloFormCarryAttestation[] = [];
+      for (const statement of statements) {
+        if (!chosen.includes(statement)) {
+          const held = [...staged.values()].find(
+            (edit) =>
+              edit.intent.kind === "attest_no_amount" &&
+              edit.intent.family === statement.family,
+          );
+          if (held) unstage(held.key);
+          continue;
+        }
+        if (stagesStatement(statement)) continue;
+        const edits = statementEdits(placed, statement);
+        if (edits) stageAll(edits);
+        else unplaced.push(statement);
+      }
+      return unplaced;
+    },
+    [statements, staged, unstage, stagesStatement, placed, stageAll],
+  );
   const enter = useCallback(
     async (field: PublicModeloFormField, text: string) => {
       const lexeme = text.trim();
@@ -679,7 +958,13 @@ export function useFormSession({
           unstage(key);
           return { kind: "staged" } as const;
         }
-        if (held || !field.clearable) return { kind: "unchanged" } as const;
+        if (held) return { kind: "unchanged" } as const;
+        // Emptying a stated box withdraws its statement from every box of it.
+        if (field.stated_absent !== null)
+          return withdraw(field)?.kind === "offered"
+            ? ({ kind: "staged" } as const)
+            : ({ kind: "unchanged" } as const);
+        if (!field.clearable) return { kind: "unchanged" } as const;
         stage(field, clearIntent(field));
         return { kind: "staged" } as const;
       }
@@ -751,7 +1036,7 @@ export function useFormSession({
         } as const;
       }
     },
-    [adoptBaseline, baseline, language, port, stage, staged, unstage],
+    [adoptBaseline, baseline, language, port, stage, staged, unstage, withdraw],
   );
 
   const bring = useCallback((target: PlacedField | undefined) => {
@@ -807,38 +1092,6 @@ export function useFormSession({
     [form.pages],
   );
 
-  // Each statement's carries, at the box whose edit address is its binding.
-  const attestCarries = useCallback(
-    (attestation: ModeloFormCarryAttestation) => {
-      for (const bindingId of attestation.binding_ids) {
-        const found = placed.find(
-          (p) =>
-            p.field.edit_address.kind === "binding" &&
-            p.field.edit_address.binding_id === bindingId,
-        );
-        if (found)
-          stage(found.field, {
-            kind: "attest_no_amount",
-            change: "set",
-            words: attestation.action_words,
-            effect: attestation.effect_words,
-          });
-      }
-    },
-    [placed, stage],
-  );
-  // A statement stands until every carry it served is staged as stated: a
-  // served carry the window cannot place keeps it standing.
-  const carryAttestations = editsAdmitted(envelope)
-    ? form.carry_attestations.filter(
-        (attestation) =>
-          !attestation.binding_ids.every(
-            (bindingId) =>
-              staged.get(`b:${bindingId}`)?.intent.kind === "attest_no_amount",
-          ),
-      )
-    : [];
-
   return {
     baseline,
     adoptBaseline,
@@ -846,8 +1099,11 @@ export function useFormSession({
     stagedCount: staged.size,
     stage,
     unstage,
-    carryAttestations,
-    attestCarries,
+    statements,
+    stagesStatement,
+    stageStatements,
+    withdrawal: withdrawalOf,
+    withdraw,
     discardAll,
     rebase,
     rebased,

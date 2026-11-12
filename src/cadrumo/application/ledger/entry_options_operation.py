@@ -24,6 +24,10 @@ The profile's own rental rows are served as the two link families a ledger row
 names them by: each lease and each property, valued by the row key a ledger row
 stores and worded by the row's summary in ``output_language``. They are read from
 the exact profile's record, so a form offers only rows the profile holds.
+
+The figures a payer's withholding certificate states are served per income
+class, from the declaration the record writer enforces, so a withholding form
+asks for each figure exactly where the record takes it.
 """
 
 from __future__ import annotations
@@ -44,6 +48,7 @@ from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.external_constants import DEFAULT_CURRENCY, DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect, profile_operation_subject
+from ...core.retencion_soportada import RetencionSoportadaClase
 from ...core.time.clock import now, today_madrid
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.bienes_inversion_catalogue import resolve_bienes_inversion_catalogue
@@ -58,6 +63,7 @@ from ...domain.contribuyente.inmueble_facts import ARRENDAMIENTO_SECTION, INMUEB
 from ...domain.invoices.business_premises import SituacionInmueble
 from ...domain.invoices.enums import default_invoice_class, invoice_class_rectificativa, invoice_class_simplificada
 from ...domain.iva.establishment import catalogued_country_codes
+from ...domain.renta.retencion_soportada import certificate_figures
 from ...domain.transactions.classification_effects import keeps_category, takes_usage_ratio
 from ...domain.transactions.enums import (
     BusinessClassification,
@@ -117,6 +123,7 @@ type EntryOptionFamily = Literal[
     "gasto_capital_inmobiliario",
     "rental_lease",
     "rental_property",
+    "withholding_certificate_figure",
 ]
 
 type EntryOptionProfileFacts = Callable[[str, PinnedAuthorityOperation], Mapping[str, str] | None]
@@ -261,6 +268,19 @@ def _tipo_renta_options(operation: PinnedAuthorityOperation) -> tuple[LedgerEntr
     )
 
 
+def _withholding_figure_options() -> tuple[LedgerEntryOptionProjection, ...]:
+    """Offer each figure a payer's certificate states, filed under the income class whose certificate states it."""
+    return tuple(
+        LedgerEntryOptionProjection(
+            value=figure.value,
+            label_key=f"{ENTRY_OPTION_LABEL_PREFIX}withholding_certificate_figure.{figure.value}",
+            group=income_class.value,
+        )
+        for income_class in RetencionSoportadaClase
+        for figure in certificate_figures(income_class)
+    )
+
+
 def _plain(tokens: Iterable[object]) -> tuple[LedgerEntryOptionProjection, ...]:
     return tuple(LedgerEntryOptionProjection(value=str(token)) for token in tokens)
 
@@ -388,6 +408,7 @@ def ledger_entry_options(
         ("gasto_capital_inmobiliario", _rental_concept_options(on_date, operation)),
         ("rental_lease", _rental_row_options(ARRENDAMIENTO_SECTION, profile_facts, language)),
         ("rental_property", _rental_row_options(INMUEBLE_SECTION, profile_facts, language)),
+        ("withholding_certificate_figure", _withholding_figure_options()),
     )
     return LedgerEntryOptionsProjection(
         profile_id=profile_id,

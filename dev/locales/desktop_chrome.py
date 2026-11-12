@@ -52,6 +52,7 @@ from .desktop_entry_option_keys import (
     ENTRY_OPTION_KEYS,
     ENTRY_TOKEN_WORD_FAMILIES,
     ENTRY_TOKEN_WORD_KEYS,
+    WITHHOLDING_CERTIFICATE_FIGURE_KEYS,
 )
 from .desktop_interface_keys import DESKTOP_INTERFACE_KEYS
 from .desktop_ledger_catalogue_keys import DESKTOP_LEDGER_CATALOGUE_KEYS
@@ -759,13 +760,6 @@ DESKTOP_CHROME_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType
         ),
         "desktop.ledger.registers.area.": ("accounts", "prorrata", "capital", "withholding"),
         "desktop.ledger.withholding.action.": ("record", "attest"),
-        "desktop.ledger.withholding.amount.": (
-            "importe_integro_dinerario",
-            "valoracion_especie",
-            "retencion",
-            "ingreso_a_cuenta",
-            "ingreso_a_cuenta_repercutido",
-        ),
         "desktop.ledger.withholding.column.": (
             "integro",
             "especie",
@@ -822,12 +816,17 @@ DESKTOP_CHROME_AWAITING_CONSUMER: Final[frozenset[str]] = frozenset({"desktop.si
 #: come, so its source never names them. Their declaration reads the same
 #: shape that serves them, and generation refuses until each word is authored.
 DESKTOP_CHROME_SERVED_KEYS: Final[frozenset[str]] = (
-    MODELO_CHOICE_KEYS | FINDING_KEYS | RULE_FINDING_KEYS | RATE_SLOT_KEYS | EVIDENCE_STRUCTURED_LABEL_KEYS
+    MODELO_CHOICE_KEYS
+    | FINDING_KEYS
+    | RULE_FINDING_KEYS
+    | RATE_SLOT_KEYS
+    | EVIDENCE_STRUCTURED_LABEL_KEYS
+    | WITHHOLDING_CERTIFICATE_FIGURE_KEYS
 )
 
 #: A whole key in quotes, or the fixed head of a template literal up to ``${``.
 _SHELL_LITERAL_KEY: Final[re.Pattern[str]] = re.compile(
-    r"""["'`]((?:desktop|workspace|ledger\.actividad_asset|tui\.ledger\.activity_asset|tui\.modelo\.export\.result\.warning|application\.inventory\.labels|application\.inventory\.service|application\.ledger\.entry_options|application\.modelo\.edit_choice|auth\.sync\.requirement)\.[A-Za-z0-9_.]+|application\.inventory\.advisories\.)["'`]"""
+    r"""["'`]((?:desktop|workspace|ledger\.actividad_asset|tui\.ledger\.activity_asset|tui\.modelo\.export\.result\.warning|application\.modelo\.findings|application\.inventory\.labels|application\.inventory\.service|application\.ledger\.entry_options|application\.modelo\.edit_choice|auth\.sync\.requirement)\.[A-Za-z0-9_.]+|application\.inventory\.advisories\.)["'`]"""
 )
 _SHELL_TEMPLATE_HEAD: Final[re.Pattern[str]] = re.compile(
     r"`((?:desktop|workspace|ledger\.actividad_asset)\.[A-Za-z0-9_.]*)\$\{"

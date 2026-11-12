@@ -290,61 +290,13 @@ sequence_additions = {source_refs = ["aeat-dr-390-2026"]}
 sequence_removals = {source_refs = [0]}
 
 # Page bindings at the positions aeat-dr-390-2026 moves: page 1 after the new
-# position-133 mark, and page 7 after each prorrata CNAE code widens to four.
-[[revisions."2026".family_overrides]]
-family = "bindings"
-selector = {revision = "2025", id = "modelo-390.page_7.prorratas-1-codigo-cnae"}
-fields = {provider = {length = 4}}
-
-[[revisions."2026".family_overrides]]
-family = "bindings"
-selector = {revision = "2025", id = "modelo-390.page_7.prorratas-1-importe-de-operaciones"}
-fields = {provider = {offset = 244}}
-
-[[revisions."2026".family_overrides]]
-family = "bindings"
-selector = {revision = "2025", id = "modelo-390.page_7.prorratas-1-importe-de-operaciones-con-derecho-a-deduccion"}
-fields = {provider = {offset = 261}}
-
-[[revisions."2026".family_overrides]]
-family = "bindings"
-selector = {revision = "2025", id = "modelo-390.page_7.prorratas-1-tipo-de-prorrata"}
-fields = {provider = {offset = 278}}
-
-[[revisions."2026".family_overrides]]
-family = "bindings"
-selector = {revision = "2025", id = "modelo-390.page_7.prorratas-1-porcentaje-de-prorrata"}
-fields = {provider = {offset = 279}}
-
+# position-133 mark, and each page 7 activity description after the prorrata
+# CNAE code of the row before it widens to four. The prorrata boxes themselves
+# are register-bound casillas whose positions the record mapping carries.
 [[revisions."2026".family_overrides]]
 family = "bindings"
 selector = {revision = "2025", id = "modelo-390.page_7.prorratas-2-actividad-desarrollada"}
 fields = {provider = {offset = 284}}
-
-[[revisions."2026".family_overrides]]
-family = "bindings"
-selector = {revision = "2025", id = "modelo-390.page_7.prorratas-2-codigo-cnae"}
-fields = {provider = {offset = 324, length = 4}}
-
-[[revisions."2026".family_overrides]]
-family = "bindings"
-selector = {revision = "2025", id = "modelo-390.page_7.prorratas-2-importe-de-operaciones"}
-fields = {provider = {offset = 328}}
-
-[[revisions."2026".family_overrides]]
-family = "bindings"
-selector = {revision = "2025", id = "modelo-390.page_7.prorratas-2-importe-de-operaciones-con-derecho-a-deduccion"}
-fields = {provider = {offset = 345}}
-
-[[revisions."2026".family_overrides]]
-family = "bindings"
-selector = {revision = "2025", id = "modelo-390.page_7.prorratas-2-tipo-de-prorrata"}
-fields = {provider = {offset = 362}}
-
-[[revisions."2026".family_overrides]]
-family = "bindings"
-selector = {revision = "2025", id = "modelo-390.page_7.prorratas-2-porcentaje-de-prorrata"}
-fields = {provider = {offset = 363}}
 
 [[revisions."2026".family_overrides]]
 family = "bindings"
@@ -353,88 +305,13 @@ fields = {provider = {offset = 368}}
 
 [[revisions."2026".family_overrides]]
 family = "bindings"
-selector = {revision = "2025", id = "modelo-390.page_7.prorratas-3-codigo-cnae"}
-fields = {provider = {offset = 408, length = 4}}
-
-[[revisions."2026".family_overrides]]
-family = "bindings"
-selector = {revision = "2025", id = "modelo-390.page_7.prorratas-3-importe-de-operaciones"}
-fields = {provider = {offset = 412}}
-
-[[revisions."2026".family_overrides]]
-family = "bindings"
-selector = {revision = "2025", id = "modelo-390.page_7.prorratas-3-importe-de-operaciones-con-derecho-a-deduccion"}
-fields = {provider = {offset = 429}}
-
-[[revisions."2026".family_overrides]]
-family = "bindings"
-selector = {revision = "2025", id = "modelo-390.page_7.prorratas-3-tipo-de-prorrata"}
-fields = {provider = {offset = 446}}
-
-[[revisions."2026".family_overrides]]
-family = "bindings"
-selector = {revision = "2025", id = "modelo-390.page_7.prorratas-3-porcentaje-de-prorrata"}
-fields = {provider = {offset = 447}}
-
-[[revisions."2026".family_overrides]]
-family = "bindings"
 selector = {revision = "2025", id = "modelo-390.page_7.prorratas-4-actividad-desarrollada"}
 fields = {provider = {offset = 452}}
 
 [[revisions."2026".family_overrides]]
 family = "bindings"
-selector = {revision = "2025", id = "modelo-390.page_7.prorratas-4-codigo-cnae"}
-fields = {provider = {offset = 492, length = 4}}
-
-[[revisions."2026".family_overrides]]
-family = "bindings"
-selector = {revision = "2025", id = "modelo-390.page_7.prorratas-4-importe-de-operaciones"}
-fields = {provider = {offset = 496}}
-
-[[revisions."2026".family_overrides]]
-family = "bindings"
-selector = {revision = "2025", id = "modelo-390.page_7.prorratas-4-importe-de-operaciones-con-derecho-a-deduccion"}
-fields = {provider = {offset = 513}}
-
-[[revisions."2026".family_overrides]]
-family = "bindings"
-selector = {revision = "2025", id = "modelo-390.page_7.prorratas-4-tipo-de-prorrata"}
-fields = {provider = {offset = 530}}
-
-[[revisions."2026".family_overrides]]
-family = "bindings"
-selector = {revision = "2025", id = "modelo-390.page_7.prorratas-4-porcentaje-de-prorrata"}
-fields = {provider = {offset = 531}}
-
-[[revisions."2026".family_overrides]]
-family = "bindings"
 selector = {revision = "2025", id = "modelo-390.page_7.prorratas-5-actividad-desarrollada"}
 fields = {provider = {offset = 536}}
-
-[[revisions."2026".family_overrides]]
-family = "bindings"
-selector = {revision = "2025", id = "modelo-390.page_7.prorratas-5-codigo-cnae"}
-fields = {provider = {offset = 576, length = 4}}
-
-[[revisions."2026".family_overrides]]
-family = "bindings"
-selector = {revision = "2025", id = "modelo-390.page_7.prorratas-5-importe-de-operaciones"}
-fields = {provider = {offset = 580}}
-
-[[revisions."2026".family_overrides]]
-family = "bindings"
-selector = {revision = "2025", id = "modelo-390.page_7.prorratas-5-importe-de-operaciones-con-derecho-a-deduccion"}
-fields = {provider = {offset = 597}}
-
-[[revisions."2026".family_overrides]]
-family = "bindings"
-selector = {revision = "2025", id = "modelo-390.page_7.prorratas-5-tipo-de-prorrata"}
-fields = {provider = {offset = 614}}
-
-[[revisions."2026".family_overrides]]
-family = "bindings"
-selector = {revision = "2025", id = "modelo-390.page_7.prorratas-5-porcentaje-de-prorrata"}
-fields = {provider = {offset = 615}}
 
 [[revisions."2026".family_overrides]]
 family = "bindings"

@@ -8,7 +8,6 @@ from datetime import date
 from types import MappingProxyType
 from typing import Final
 
-from ....core.time.clock import today_madrid
 from ...iva.schema import EUMemberState
 from .errors import RegistryValidationError
 from .facts.resolution import unique_mapping_tokens
@@ -94,7 +93,7 @@ _ENTRIES_FACT = StringMappingFact(fact_id=_FACT_ID, date_axis=DateAxis.FILING_PE
 
 
 @cache_governed_projection(maxsize=512)
-def _scoped_catalogue(effective_date: date) -> EuMemberStateCatalogue:
+def _scoped_catalogue(effective_date: date | None) -> EuMemberStateCatalogue:
     entries = _ENTRIES_FACT.resolve_scoped_entries(effective_date=effective_date, authority=None)
     raw_order = unique_mapping_tokens(entries, _ORDER_KEY, subject=_ENTRY_SUBJECT)
     raw_aliases = unique_mapping_tokens(entries, _ALIASES_KEY, subject=_ENTRY_SUBJECT)
@@ -158,11 +157,16 @@ def resolve_eu_member_state_catalogue(
     effective_date: date | None = None,
     authority: GovernedFactSource | None = None,
 ) -> EuMemberStateCatalogue:
-    """Resolve the complete EU member-state vocabulary through fact 0131."""
-    coordinate = effective_date or today_madrid()
+    """Resolve the complete EU member-state vocabulary through fact 0131.
+
+    A dated read takes the catalogue in force on ``effective_date``. Without a
+    date the run date is never substituted: the catalogue admits every member
+    state an edition inside the supported filing years declares, and the dated
+    read that decides a tax fact refuses one its date does not carry.
+    """
     selected = require_governed_fact_authority(authority, subject=_ENTRY_SUBJECT)
     with validating_governed_facts(selected):
-        return _scoped_catalogue(coordinate)
+        return _scoped_catalogue(effective_date)
 
 
 def require_eu_member_state(

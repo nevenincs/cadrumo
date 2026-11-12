@@ -1164,6 +1164,15 @@ application:
           aquí
         unnumbered_invoice: El número de factura llegit no és un número
         unresolved_direction: No està clar quina part va emetre el document
+    counterparty:
+      findings:
+        kind_contradicts_identifier_form: Has indicat el nom de declaració per a {declared},
+          però la forma d'aquest identificador fiscal espanyol és la de {observed}.
+          El nom es desa tal com l'has indicat i no s'ha canviat res; comprova quina
+          de les dues coses és correcta.
+      party_kinds:
+        entity: una entitat
+        natural_person: una persona física
     draft_finding:
       breakdown_bases_disagree: Les bases per tipus sumen {summed}, però el document
         indica una base imposable de {base}. Són dues lectures del mateix document
@@ -1308,6 +1317,14 @@ application:
       m210_payer_mode:
         multiple_payers_code_35: Diversos pagadors (codi 35)
         single_payer: Un pagador
+      withholding_certificate_figure:
+        gastos_deducibles: Despeses deduïbles
+        importe_integro_dinerario: Import íntegre dinerari
+        ingreso_a_cuenta: Ingrés a compte
+        ingreso_a_cuenta_repercutido: Ingrés a compte repercutit
+        reducciones_aplicables: Reduccions aplicables
+        retencion: Retenció
+        valoracion_especie: Valoració en espècie
     errors:
       evidence_attachment_requires_ids: Adjuntar un justificant als teus registres
         requereix evidència de compra o identificadors d'adjunt.

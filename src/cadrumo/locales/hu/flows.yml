@@ -192,6 +192,7 @@ flows:
           payable_invoice: Bejövő számla
           previous_filing: Előző bevallás
           profile: Profil
+          prorrata_register_activity: Arányosítási nyilvántartás tevékenységei
           prorrata_regularizacion: Arányosítás kiigazítása
           purchase_invoice_evidence: Beszerzési számla bizonylata
           relation_prefill: Kapcsolódó bevallás

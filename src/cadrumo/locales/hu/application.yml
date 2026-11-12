@@ -1152,6 +1152,15 @@ application:
         unmodelled_invoice_class: A feltüntetett számlatípusnak itt nincs megfelelője
         unnumbered_invoice: A beolvasott számlaszám nem szám
         unresolved_direction: Nem egyértelmű, melyik fél állította ki a dokumentumot
+    counterparty:
+      findings:
+        kind_contradicts_identifier_form: A bevallási nevet {declared} számára adtad
+          meg, de ennek a spanyol adóazonosítónak a formája {observed} formája. A
+          nevet úgy tároltuk, ahogy megadtad, és semmi sem változott; ellenőrizd,
+          melyik a helyes.
+      party_kinds:
+        entity: szervezet
+        natural_person: természetes személy
     draft_finding:
       breakdown_bases_disagree: A kulcsonkénti alapok összege {summed}, a dokumentum
         viszont {base} adóalapot tüntet fel. Ez ugyanannak a dokumentumnak két olvasata,
@@ -1296,6 +1305,14 @@ application:
       m210_payer_mode:
         multiple_payers_code_35: Több kifizető (35-ös kód)
         single_payer: Egy kifizető
+      withholding_certificate_figure:
+        gastos_deducibles: Levonható költségek
+        importe_integro_dinerario: Bruttó pénzbeli összeg
+        ingreso_a_cuenta: Előlegbefizetés
+        ingreso_a_cuenta_repercutido: Áthárított előlegbefizetés
+        reducciones_aplicables: Alkalmazott csökkentések
+        retencion: Levonás
+        valoracion_especie: Természetbeni érték
     errors:
       evidence_attachment_requires_ids: A bizonylatnak a nyilvántartásaidhoz való
         csatolásához vásárlási bizonyítékra vagy csatolmány-azonosítókra van szükség.

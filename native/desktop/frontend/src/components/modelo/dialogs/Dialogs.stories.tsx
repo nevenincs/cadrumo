@@ -274,3 +274,84 @@ export const FilingRentaHeld: Story = {
     <Filing locale={globals.locale} declaration={M100} />
   ),
 };
+
+/** Exports the file again from a story's Export and record view, once the
+ * view lets it. */
+async function exportAgain(canvasElement: HTMLElement, locale: unknown) {
+  const t = translator(String(locale));
+  const page = within(canvasElement.ownerDocument.body);
+  const again = await page.findByRole(
+    "button",
+    { name: t("workspace.modelo.filing.export_again") },
+    { timeout: READ_WAIT },
+  );
+  await waitFor(() => expect(again).toBeEnabled(), { timeout: READ_WAIT });
+  await userEvent.click(again);
+  return { t, page };
+}
+
+export const FilingWorkIncomeLimitation: Story = {
+  name: "Export and record · file that leaves out work-income deductions",
+  render: (_, { globals }) => (
+    <Filing
+      locale={globals.locale}
+      declaration={`${M130}-exported`}
+      shape="export-work-income-limitation"
+    />
+  ),
+  play: async ({ canvasElement, globals }) => {
+    const { t, page } = await exportAgain(canvasElement, globals.locale);
+    // The limitation is disclosed apart from the saved file's warnings, in
+    // the sentence the command line states for it, never as a warning.
+    const sentence = await page.findByText(
+      t("application.modelo.findings.trabajo_deduction_not_computed"),
+      undefined,
+      { timeout: READ_WAIT },
+    );
+    const disclosure = sentence.closest("[data-disclosure]");
+    await expect(disclosure?.getAttribute("data-disclosure")).toBe(
+      "limitation",
+    );
+    await expect(disclosure?.getAttribute("data-tone")).toBe("neutral");
+    await expect(
+      within(disclosure as HTMLElement).getByText(
+        t("desktop.modelo.export.limitation.title"),
+      ),
+    ).toBeVisible();
+    await expect(
+      canvasElement.ownerDocument.querySelectorAll(
+        '[data-disclosure="warning"]',
+      ),
+    ).toHaveLength(0);
+  },
+};
+
+export const FilingExportRefused: Story = {
+  name: "Export and record · export refused, in the served sentence",
+  render: (_, { globals }) => (
+    <Filing
+      locale={globals.locale}
+      declaration={`${M130}-exported`}
+      shape="export-past-cutoff"
+    />
+  ),
+  play: async ({ canvasElement, globals }) => {
+    const { t, page } = await exportAgain(canvasElement, globals.locale);
+    // The refusal is drawn by the window's one refusal notice, with the
+    // sentence the backend served and no generic notice beside it.
+    const notice = await waitFor(
+      () => {
+        const found = canvasElement.ownerDocument.querySelector(
+          '[data-slot="refusal-notice"]',
+        );
+        if (!found) throw new Error("no refusal notice yet");
+        return found as HTMLElement;
+      },
+      { timeout: READ_WAIT },
+    );
+    await expect(notice.textContent?.trim()).not.toBe("");
+    await expect(
+      page.queryByText(t("workspace.modelo.outcome.not_done")),
+    ).toBeNull();
+  },
+};

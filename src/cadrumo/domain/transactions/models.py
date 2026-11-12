@@ -877,7 +877,9 @@ class Transaction(BaseModel):
             return None
         # Resolving the catalogue stays outside the refusal below: a missing
         # authority scope is not evidence that the country is outside the Union.
-        catalogue = resolve_eu_member_state_catalogue()
+        # The row's devengo date (else its ledger date) selects the membership
+        # edition; the run date is never substituted.
+        catalogue = resolve_eu_member_state_catalogue(effective_date=transaction_operation_date(self))
         try:
             return catalogue.require(self.counterparty_country)
         except RegistryValidationError:

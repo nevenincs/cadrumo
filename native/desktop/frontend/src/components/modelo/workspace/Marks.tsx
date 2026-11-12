@@ -23,8 +23,8 @@ export const ATTENTION_ICON: Record<ModeloFormAttention, IconName> = {
 };
 
 export const ATTENTION_TONE: Record<ModeloFormAttention, string> = {
-  blocks: "text-destructive",
-  missing: "text-destructive",
+  blocks: "text-destructive group-aria-selected:text-destructive-ink",
+  missing: "text-destructive group-aria-selected:text-destructive-ink",
   confirm: "text-warning",
   check: "text-muted-foreground",
   info: "text-faint",

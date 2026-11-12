@@ -355,94 +355,14 @@ modelo:
           label: Indicador de pàgina complementària
         x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqc9dc5hn8qbmd5i62p1dchin6obie9nmor31chgg:
           label: 'Prorrata 1: activitat desenvolupada'
-        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqc9dcdnm8qb7dsmm6rj1ck:
-          box_number: '114'
-          label: 'Prorrata 1: codi CNAE'
-        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqc9dd5mn0rriehiiqp355lnn0pbic5hmirreclpg:
-          box_number: '115'
-          label: 'Prorrata 1: import de les operacions'
-        ? x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqc9dd5mn0rriehiiqp355lnn0pbic5hmirreclpiqorfdomm8pbiclhmgrpdc4mm8pb4elhm6qbfdo
-        : box_number: '116'
-          label: 'Prorrata 1: import de les operacions amb dret a deducció'
-        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqc9de1nn4or5dpq62qj55li6abbge9nn4sj1ehgg:
-          box_number: '118'
-          label: 'Prorrata 1: percentatge de prorrata'
-        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqc9dehkn0rpdchiiqs3idtp74obkc4:
-          box_number: '117'
-          help: Indica G o E, o deixa-ho en blanc.
-          label: 'Prorrata 1: tipus de prorrata'
         x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqchdc5hn8qbmd5i62p1dchin6obie9nmor31chgg:
           label: 'Prorrata 2: activitat desenvolupada'
-        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqchdcdnm8qb7dsmm6rj1ck:
-          box_number: '114'
-          label: 'Prorrata 2: codi CNAE'
-        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqchdd5mn0rriehiiqp355lnn0pbic5hmirreclpg:
-          box_number: '115'
-          label: 'Prorrata 2: import de les operacions'
-        ? x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqchdd5mn0rriehiiqp355lnn0pbic5hmirreclpiqorfdomm8pbiclhmgrpdc4mm8pb4elhm6qbfdo
-        : box_number: '116'
-          label: 'Prorrata 2: import de les operacions amb dret a deducció'
-        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqchde1nn4or5dpq62qj55li6abbge9nn4sj1ehgg:
-          box_number: '118'
-          label: 'Prorrata 2: percentatge de prorrata'
-        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqchdehkn0rpdchiiqs3idtp74obkc4:
-          box_number: '117'
-          help: Indica G o E, o deixa-ho en blanc.
-          label: 'Prorrata 2: tipus de prorrata'
         x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqcpdc5hn8qbmd5i62p1dchin6obie9nmor31chgg:
           label: 'Prorrata 3: activitat desenvolupada'
-        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqcpdcdnm8qb7dsmm6rj1ck:
-          box_number: '114'
-          label: 'Prorrata 3: codi CNAE'
-        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqcpdd5mn0rriehiiqp355lnn0pbic5hmirreclpg:
-          box_number: '115'
-          label: 'Prorrata 3: import de les operacions'
-        ? x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqcpdd5mn0rriehiiqp355lnn0pbic5hmirreclpiqorfdomm8pbiclhmgrpdc4mm8pb4elhm6qbfdo
-        : box_number: '116'
-          label: 'Prorrata 3: import de les operacions amb dret a deducció'
-        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqcpde1nn4or5dpq62qj55li6abbge9nn4sj1ehgg:
-          box_number: '118'
-          label: 'Prorrata 3: percentatge de prorrata'
-        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqcpdehkn0rpdchiiqs3idtp74obkc4:
-          box_number: '117'
-          help: Indica G o E, o deixa-ho en blanc.
-          label: 'Prorrata 3: tipus de prorrata'
         x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqd1dc5hn8qbmd5i62p1dchin6obie9nmor31chgg:
           label: 'Prorrata 4: activitat desenvolupada'
-        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqd1dcdnm8qb7dsmm6rj1ck:
-          box_number: '114'
-          label: 'Prorrata 4: codi CNAE'
-        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqd1dd5mn0rriehiiqp355lnn0pbic5hmirreclpg:
-          box_number: '115'
-          label: 'Prorrata 4: import de les operacions'
-        ? x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqd1dd5mn0rriehiiqp355lnn0pbic5hmirreclpiqorfdomm8pbiclhmgrpdc4mm8pb4elhm6qbfdo
-        : box_number: '116'
-          label: 'Prorrata 4: import de les operacions amb dret a deducció'
-        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqd1de1nn4or5dpq62qj55li6abbge9nn4sj1ehgg:
-          box_number: '118'
-          label: 'Prorrata 4: percentatge de prorrata'
-        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqd1dehkn0rpdchiiqs3idtp74obkc4:
-          box_number: '117'
-          help: Indica G o E, o deixa-ho en blanc.
-          label: 'Prorrata 4: tipus de prorrata'
         x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqd9dc5hn8qbmd5i62p1dchin6obie9nmor31chgg:
           label: 'Prorrata 5: activitat desenvolupada'
-        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqd9dcdnm8qb7dsmm6rj1ck:
-          box_number: '114'
-          label: 'Prorrata 5: codi CNAE'
-        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqd9dd5mn0rriehiiqp355lnn0pbic5hmirreclpg:
-          box_number: '115'
-          label: 'Prorrata 5: import de les operacions'
-        ? x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqd9dd5mn0rriehiiqp355lnn0pbic5hmirreclpiqorfdomm8pbiclhmgrpdc4mm8pb4elhm6qbfdo
-        : box_number: '116'
-          label: 'Prorrata 5: import de les operacions amb dret a deducció'
-        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqd9de1nn4or5dpq62qj55li6abbge9nn4sj1ehgg:
-          box_number: '118'
-          label: 'Prorrata 5: percentatge de prorrata'
-        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqd9dehkn0rpdchiiqs3idtp74obkc4:
-          box_number: '117'
-          help: Indica G o E, o deixa-ho en blanc.
-          label: 'Prorrata 5: tipus de prorrata'
       casilla:
         continuidad:
           filing-year:
@@ -605,6 +525,56 @@ modelo:
             label: Rectificació de deduccions en operacions amb inversió del subjecte
               passiu, interiors i intracomunitàries - quota deduïble (part de la casella
               oficial 62)
+          iva-anual-prorrata-actividad-1-codigo-cnae:
+            label: 'Prorrata 1: codi CNAE'
+          iva-anual-prorrata-actividad-1-importe-con-derecho:
+            label: 'Prorrata 1: import de les operacions amb dret a deducció'
+          iva-anual-prorrata-actividad-1-importe-operaciones:
+            label: 'Prorrata 1: import de les operacions'
+          iva-anual-prorrata-actividad-1-porcentaje:
+            label: 'Prorrata 1: percentatge de prorrata'
+          iva-anual-prorrata-actividad-1-tipo:
+            label: 'Prorrata 1: tipus de prorrata'
+          iva-anual-prorrata-actividad-2-codigo-cnae:
+            label: 'Prorrata 2: codi CNAE'
+          iva-anual-prorrata-actividad-2-importe-con-derecho:
+            label: 'Prorrata 2: import de les operacions amb dret a deducció'
+          iva-anual-prorrata-actividad-2-importe-operaciones:
+            label: 'Prorrata 2: import de les operacions'
+          iva-anual-prorrata-actividad-2-porcentaje:
+            label: 'Prorrata 2: percentatge de prorrata'
+          iva-anual-prorrata-actividad-2-tipo:
+            label: 'Prorrata 2: tipus de prorrata'
+          iva-anual-prorrata-actividad-3-codigo-cnae:
+            label: 'Prorrata 3: codi CNAE'
+          iva-anual-prorrata-actividad-3-importe-con-derecho:
+            label: 'Prorrata 3: import de les operacions amb dret a deducció'
+          iva-anual-prorrata-actividad-3-importe-operaciones:
+            label: 'Prorrata 3: import de les operacions'
+          iva-anual-prorrata-actividad-3-porcentaje:
+            label: 'Prorrata 3: percentatge de prorrata'
+          iva-anual-prorrata-actividad-3-tipo:
+            label: 'Prorrata 3: tipus de prorrata'
+          iva-anual-prorrata-actividad-4-codigo-cnae:
+            label: 'Prorrata 4: codi CNAE'
+          iva-anual-prorrata-actividad-4-importe-con-derecho:
+            label: 'Prorrata 4: import de les operacions amb dret a deducció'
+          iva-anual-prorrata-actividad-4-importe-operaciones:
+            label: 'Prorrata 4: import de les operacions'
+          iva-anual-prorrata-actividad-4-porcentaje:
+            label: 'Prorrata 4: percentatge de prorrata'
+          iva-anual-prorrata-actividad-4-tipo:
+            label: 'Prorrata 4: tipus de prorrata'
+          iva-anual-prorrata-actividad-5-codigo-cnae:
+            label: 'Prorrata 5: codi CNAE'
+          iva-anual-prorrata-actividad-5-importe-con-derecho:
+            label: 'Prorrata 5: import de les operacions amb dret a deducció'
+          iva-anual-prorrata-actividad-5-importe-operaciones:
+            label: 'Prorrata 5: import de les operacions'
+          iva-anual-prorrata-actividad-5-porcentaje:
+            label: 'Prorrata 5: percentatge de prorrata'
+          iva-anual-prorrata-actividad-5-tipo:
+            label: 'Prorrata 5: tipus de prorrata'
           iva-anual-reconciliacion-deducible-303:
             label: Reconciliació anual - quota deduïble declarada en els models 303
           iva-anual-reconciliacion-devengada-303:

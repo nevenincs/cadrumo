@@ -58,6 +58,7 @@ from ...adapter_composition_work_ports import build_work_lifecycle_ports
 from .file_flow_test_support import calculation_ports_for_test
 from .general_iva_profile_facts_support import renta_single_taxpayer_facts
 from .observation_seeding_support import save_stamped_observation
+from .work_income_support import record_work_income
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -87,21 +88,23 @@ _PRIOR_NEGATIVE_BASE_CASILLA: CasillaId = validated_casilla_id("1391")
 #: The prior return's remainders that open the three older Anexo C rows (1380, 1382, 1385).
 _PRIOR_OLDER_REMAINDERS: tuple[CasillaId, ...] = tuple(validated_casilla_id(box) for box in ("1384", "1387", "1390"))
 
-#: Trabajo income leaf (Retribuciones dinerarias, importe íntegro) — a manual
-#: input that produces a positive base liquidable general before the Art. 50.3 carry.
-_TRABAJO_INGRESO: CasillaId = validated_casilla_id("0003")
+_TAXPAYER_TAX_ID = "12345678Z"
 
 _CLOCK = datetime(2026, 6, 30, 9, 0, 0, tzinfo=UTC)
 
 
-def _seed_taxpayer_unit_profile() -> None:
-    """Seed a single-taxpayer profile so the profile-sourced bindings resolve."""
+def _seed_taxpayer_unit_profile(*, work_income: Decimal) -> None:
+    """Seed a single-taxpayer profile so the profile-sourced bindings resolve, with one payer certificate.
+
+    The certificate states the trabajo income (Retribuciones dinerarias, importe íntegro): it produces
+    a positive base liquidable general before the Art. 50.3 carry.
+    """
     record = create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=persona_facts_beneath(
             (
-                UserProfileFact(path="identity.tax_id", value="12345678Z"),
+                UserProfileFact(path="identity.tax_id", value=_TAXPAYER_TAX_ID),
                 UserProfileFact(path="identity.name", value="Test"),
                 UserProfileFact(path="identity.surnames", value="Operator"),
                 # A salaried taxpayer: the work income below is this unit's only income.
@@ -115,6 +118,10 @@ def _seed_taxpayer_unit_profile() -> None:
         context=profile_creation_context_for_test(),
     )
     seed_test_profile_record(record)
+    with bundled_indexed_authority().operation() as operation:
+        record_work_income(
+            operation=operation, taxpayer_tax_id=_TAXPAYER_TAX_ID, filing_year=_FILING_YEAR, gross=work_income
+        )
 
 
 def _seed_prior_negative_base(*, saldo: Decimal, obs_repo: CalculationObservationRepository) -> None:
@@ -277,15 +284,15 @@ def test_applied_compensation_reduces_base_liquidable_general_by_applied_amount(
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         obs_repo = CalculationObservationRepository()
-        _seed_taxpayer_unit_profile()
+        _seed_taxpayer_unit_profile(work_income=ingreso)
         _seed_prior_negative_base(saldo=prior_negative, obs_repo=obs_repo)
 
         baseline = _calculate(
-            casilla_inputs={_TRABAJO_INGRESO: ingreso, _APLICADO: Decimal("0")},
+            casilla_inputs={_APLICADO: Decimal("0")},
             obs_repo=obs_repo,
         )
         compensated = _calculate(
-            casilla_inputs={_TRABAJO_INGRESO: ingreso, _APLICADO: applied},
+            casilla_inputs={_APLICADO: applied},
             obs_repo=obs_repo,
         )
 
@@ -324,11 +331,11 @@ def test_no_prior_negative_base_leaves_result_unchanged(tmp_path: Path) -> None:
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         obs_repo = CalculationObservationRepository()
-        _seed_taxpayer_unit_profile()
+        _seed_taxpayer_unit_profile(work_income=ingreso)
         # No prior return is recorded, so each carry stays unresolved until the
         # operator states every prior pending negative base was zero.
         result = _calculate(
-            casilla_inputs={_TRABAJO_INGRESO: ingreso, _APLICADO: Decimal("0")},
+            casilla_inputs={_APLICADO: Decimal("0")},
             obs_repo=obs_repo,
             binding_overrides=dict.fromkeys(_PRIOR_NEGATIVE_BASE_BINDINGS, Decimal("0")),
         )

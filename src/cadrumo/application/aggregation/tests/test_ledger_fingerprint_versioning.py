@@ -31,7 +31,7 @@ from ....core.hashing import sha256_hex
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.prorrata import InputClassification
-from ....domain.iva.schema import EUMemberState
+from ....domain.iva.schema import EUMemberState, IvaExemptionArticle
 from ....domain.iva.vehicle_use import IvaVehicleUse
 from ....domain.modelos.errors import ModeloValidationError
 from ....domain.modelos.ledger_filing_snapshot import LedgerEvidenceRow, LedgerFilingEvidence, LedgerFilingSnapshot
@@ -49,6 +49,7 @@ from ..ledger_filing_snapshot import (
     FINGERPRINT_FIELDS_V6,
     FINGERPRINT_FIELDS_V7,
     FINGERPRINT_FIELDS_V8,
+    FINGERPRINT_FIELDS_V9,
     compute_ledger_filing_evidence,
     compute_ledger_filing_snapshot,
     evaluate_ledger_filing_staleness,
@@ -181,17 +182,22 @@ def test_v7_appends_exactly_the_stated_accrual_date_to_v6() -> None:
     assert ACCRUAL_DATE_FIELD_SET_VERSION == 7
 
 
-def test_v8_appends_exactly_the_savings_link_to_v7_and_is_current() -> None:
+def test_v8_appends_exactly_the_stated_exemption_article_to_v7() -> None:
     assert FINGERPRINT_FIELDS_V8[: len(FINGERPRINT_FIELDS_V7)] == FINGERPRINT_FIELDS_V7
-    assert FINGERPRINT_FIELDS_V8[len(FINGERPRINT_FIELDS_V7) :] == (
+    assert FINGERPRINT_FIELDS_V8[len(FINGERPRINT_FIELDS_V7) :] == (("exemption_article", "exemption_article"),)
+
+
+def test_v9_appends_exactly_the_savings_link_to_v8_and_is_current() -> None:
+    assert FINGERPRINT_FIELDS_V9[: len(FINGERPRINT_FIELDS_V8)] == FINGERPRINT_FIELDS_V8
+    assert FINGERPRINT_FIELDS_V9[len(FINGERPRINT_FIELDS_V8) :] == (
         ("posicion_ref", "posicion_ref"),
         ("concepto_capital_mobiliario", "concepto_capital_mobiliario"),
     )
-    assert CURRENT_FINGERPRINT_FIELD_SET_VERSION == 8
+    assert CURRENT_FINGERPRINT_FIELD_SET_VERSION == 9
 
 
-@pytest.mark.parametrize("version", [1, 2, 3, 5, 6, 7])
-def test_a_savings_link_is_drift_under_v8_and_quiet_under_every_older_field_set(version: int) -> None:
+@pytest.mark.parametrize("version", [1, 2, 3, 5, 6, 7, 8])
+def test_a_savings_link_is_drift_under_v9_and_quiet_under_every_older_field_set(version: int) -> None:
     plain = savings_row(provider_id="savings-fingerprint", direction=TransactionDirection.INCOMING)
     linked = savings_row(
         provider_id="savings-fingerprint",
@@ -206,8 +212,8 @@ def test_a_savings_link_is_drift_under_v8_and_quiet_under_every_older_field_set(
         concepto_capital_mobiliario="dividendos",
     )
     assert row_fingerprint(linked, field_set_version=version) == row_fingerprint(plain, field_set_version=version)
-    assert row_fingerprint(linked, field_set_version=8) != row_fingerprint(plain, field_set_version=8)
-    assert row_fingerprint(other_concept, field_set_version=8) != row_fingerprint(linked, field_set_version=8)
+    assert row_fingerprint(linked, field_set_version=9) != row_fingerprint(plain, field_set_version=9)
+    assert row_fingerprint(other_concept, field_set_version=9) != row_fingerprint(linked, field_set_version=9)
 
 
 @pytest.mark.parametrize("version", [1, 2, 3, 5, 6])
@@ -216,6 +222,14 @@ def test_a_stated_accrual_date_is_drift_under_v7_and_quiet_under_every_older_fie
     stated = purchase.model_copy(update={"accrual_date": date(2026, 3, 30)})
     assert row_fingerprint(stated, field_set_version=version) == row_fingerprint(purchase, field_set_version=version)
     assert row_fingerprint(stated, field_set_version=7) != row_fingerprint(purchase, field_set_version=7)
+
+
+@pytest.mark.parametrize("version", [1, 2, 3, 5, 6, 7])
+def test_a_stated_exemption_article_is_drift_under_v8_and_quiet_under_every_older_field_set(version: int) -> None:
+    purchase = _purchase()
+    stated = purchase.model_copy(update={"exemption_article": IvaExemptionArticle("art_20_uno_9")})
+    assert row_fingerprint(stated, field_set_version=version) == row_fingerprint(purchase, field_set_version=version)
+    assert row_fingerprint(stated, field_set_version=8) != row_fingerprint(purchase, field_set_version=8)
 
 
 def _evidence_row_of(transaction: Transaction) -> LedgerEvidenceRow:
@@ -430,13 +444,13 @@ def test_a_version_this_build_does_not_know_is_refused_not_approximated() -> Non
     with pytest.raises(ModeloValidationError, match="unknown to this build"):
         row_fingerprint(_purchase(), field_set_version=99)
     with pytest.raises(ModeloValidationError, match="unknown to this build"):
-        row_fingerprint(_purchase(), field_set_version=9)
+        row_fingerprint(_purchase(), field_set_version=10)
 
 
 def test_a_stored_snapshot_stamped_with_an_unknown_version_is_refused_at_comparison() -> None:
     purchase = _purchase()
-    unknown = _snapshot_of(purchase).model_copy(update={"fingerprint_field_set_version": 9})
-    with pytest.raises(ModeloValidationError, match=r"known versions are \[1, 2, 3, 5, 6, 7, 8\]"):
+    unknown = _snapshot_of(purchase).model_copy(update={"fingerprint_field_set_version": 10})
+    with pytest.raises(ModeloValidationError, match=r"known versions are \[1, 2, 3, 5, 6, 7, 8, 9\]"):
         evaluate_ledger_filing_staleness(unknown, _catalogue(purchase))
 
 

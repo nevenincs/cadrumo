@@ -32,6 +32,8 @@ from ..components.dialogs import ConfirmScreen
 from ..components.language import localized, repaint_tables
 from ..components.theme import tokenised
 from ..operations.outcome import OperationOutcomeUnknownError
+from ..refusal.panel import RefusalSlot
+from ..refusal.served import ServedRefusalV1
 from .controller import LedgerWorkspaceController
 from .workspace_presentation import door_refusal_text, ledger_workspace_page
 from .workspace_screen import LedgerWorkspaceScreen
@@ -189,6 +191,7 @@ class CategorisationScreen(LedgerWorkspaceScreen):
             )
             yield Static("", id="ledger-flow-status", markup=False)
             yield Static("", id="ledger-refusal", classes="ledger-refusal", markup=False)
+            yield RefusalSlot(id="ledger-refusal-panel")
             yield Static("", id="categorisation-outcome", markup=False)
             yield from self.compose_body()
 
@@ -251,8 +254,14 @@ class CategorisationScreen(LedgerWorkspaceScreen):
         self.query_one("#ledger-flow-status", Static).update("" if key is None else tr(key))
 
     def refuse(self, text: str) -> None:
-        """Say why the last request was not done."""
+        """Say why the last request was not done, in place of any served refusal shown before."""
         self.query_one("#ledger-refusal", Static).update(text)
+        self.show_refusal(None)
+
+    def show_refusal(self, refusal: ServedRefusalV1 | None) -> None:
+        """Show the refusal an operation served, with its ways out, or nothing."""
+        for slot in self.query("#ledger-refusal-panel").results(RefusalSlot):
+            slot.show(refusal)
 
     def refuse_error(self, error: CadrumoError | ValueError) -> None:
         """Say why typed values could not become a request, in the operator's language."""

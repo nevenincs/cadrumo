@@ -653,6 +653,46 @@ required_text = ["modelo 390"]
 [revisions."2022".bindings.aggregation]
 op = "sum"
 
+# Box [105] "Operaciones exentas sin derecho a deduccion" draws the base of the
+# taxpayer's own domestic exempt supplies, the operations LIVA art. 20 exempts
+# without the right to deduct (art. 94 grants it only to the supplies it lists).
+# The category is the prorrata output-volume vocabulary's sin derecho member
+# (fact renta-iva-deduction-ratio-policy, prorrata.volume.sin_derecho_categories),
+# so the box and the prorrata denominator read the same operations. No
+# exemption-article axis is declared: the instructions ask for every operation
+# "como las mencionadas en el articulo 20", not a subset of its apartados.
+#
+# A row the operator declared performed from a permanent establishment outside
+# the territorio de aplicacion (LIVA art. 104.Tres.1) stays out: the volumen de
+# operaciones excludes "las operaciones realizadas desde establecimientos
+# permanentes situados fuera del territorio de aplicacion del Impuesto" (Modelo
+# 303 instructions, annual volume boxes, worded as the Modelo 390 apartado 10;
+# the same page words the annual casilla 83 exactly as the Modelo 390
+# instructions word box [105], and AEAT's record design numbers the slot [105]
+# on page 6 of every bundled edition).
+# A non-habitual inmobiliaria or financiera operation is NOT excluded here, though
+# art. 104.Tres.4 removes it from the prorrata: the design reaches the art. 121
+# volume as [108] = ... + [105] ... - [106] - [107], and box [106] states "el
+# importe de las operaciones financieras del articulo 20.Uno.18 ... que tengan la
+# misma consideracion" so that [108] subtracts what [105] includes. Leaving it
+# out of [105] as well would subtract it twice.
+[[revisions."2022".bindings]]
+id = "modelo-390-volumen-exentas-sin-derecho-deduccion-base"
+provider = { kind = "ledger_iva_aggregation", categories = ["domestic_exempt"], rate_kinds = ["exempt"], flow_direction = "repercutido", fact = "base_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"], excluded_art_104_tres_exclusions = ["foreign_permanent_establishment"] }
+value = { data_type = "money", channel = "decimal" }
+legal_refs = ["ley-37-1992:art-20", "ley-37-1992:art-94", "ley-37-1992:art-104", "ley-37-1992:art-121", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-303-instructions-20261106", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-303-instructions-20261106"
+required_text = [
+    "se hará constar el importe de las operaciones exentas sin derecho a deducción, como las mencionadas en el artículo 20",
+    "Las operaciones realizadas desde establecimientos permanentes situados fuera del territorio de aplicación del Impuesto",
+]
+
+[revisions."2022".bindings.aggregation]
+op = "sum"
+
 # Box [99] "Operaciones en regimen general" draws the taxpayer's own domestic
 # regimen-general supplies, excluding the IVA itself. The Modelo 390
 # instructions (aeat-modelo-390-2025-instructions, apartado 10, box 99; bundled
@@ -1199,35 +1239,81 @@ provider = { kind = "manual_input", record = "page_7", field = "prorratas-1-acti
 value = { data_type = "text", channel = "text" }
 legal_refs = ["ley-37-1992:art-101", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 
+# Modelo 390 apartado 12 "Prorratas": for each of five activity rows the design
+# prints the CNAE code [114], the volume of operations [115], the volume with the
+# right to deduct [116], the kind of prorrata [117] ("G", "E" o blanco) and the
+# definitive percentage [118] (aeat-dr-390-2022, Pag. 7). Those are rows of the
+# profile's prorrata register, the same rows the Modelo 303 reads, so each box is
+# bound to the register fact of its row rather than offered as an operator
+# input. The activity description carries no box and stays an operator input.
+# The Modelo 303 instructions word the same per-activity rows (casillas 500 to
+# 524, filed by a sujeto pasivo exonerated from the Modelo 390), so that page
+# grounds each fact for every edition.
 [[revisions."2022".bindings]]
-id = "modelo-390.page_7.prorratas-1-codigo-cnae"
-provider = { kind = "manual_input", record = "page_7", field = "prorratas-1-codigo-cnae", offset = 240, length = 3, data_type = "text", signed = false }
+id = "modelo-390-prorrata-actividad-1-codigo-cnae"
+provider = { kind = "prorrata_register_activity", row = "1", field = "cnae" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["ley-37-1992:art-101", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+additional_source_refs = ["aeat-modelo-303-instructions-20261106", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-303-instructions-20261106"
+required_text = [
+    "se consignará el código correspondiente a la Clasificación Nacional de Actividades Económicas que corresponda a cada una de las actividades desarrolladas por el sujeto pasivo",
+]
 
 [[revisions."2022".bindings]]
-id = "modelo-390.page_7.prorratas-1-importe-de-operaciones"
-provider = { kind = "manual_input", record = "page_7", field = "prorratas-1-importe-de-operaciones", offset = 243, length = 17, data_type = "money", signed = false }
+id = "modelo-390-prorrata-actividad-1-importe-operaciones"
+provider = { kind = "prorrata_register_activity", row = "1", field = "operaciones_total" }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-104", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+additional_source_refs = ["aeat-modelo-303-instructions-20261106", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-303-instructions-20261106"
+required_text = [
+    "se hará constar el importe total de las entregas de bienes y prestaciones de servicios realizadas por el sujeto pasivo, incluidas aquellas que no originan el derecho a deducir, correspondientes a la actividad de que se trate",
+]
 
 [[revisions."2022".bindings]]
-id = "modelo-390.page_7.prorratas-1-importe-de-operaciones-con-derecho-a-deduccion"
-provider = { kind = "manual_input", record = "page_7", field = "prorratas-1-importe-de-operaciones-con-derecho-a-deduccion", offset = 260, length = 17, data_type = "money", signed = false }
+id = "modelo-390-prorrata-actividad-1-importe-con-derecho"
+provider = { kind = "prorrata_register_activity", row = "1", field = "operaciones_con_derecho" }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-104", "ley-37-1992:art-94", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+additional_source_refs = ["aeat-modelo-303-instructions-20261106", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-303-instructions-20261106"
+required_text = [
+    "se hará constar el importe total de las entregas de bienes y prestaciones de servicios que originen el derecho a la deducción, realizadas por el sujeto pasivo, correspondientes a la actividad de que se trate",
+]
 
 [[revisions."2022".bindings]]
-id = "modelo-390.page_7.prorratas-1-tipo-de-prorrata"
-provider = { kind = "manual_input", record = "page_7", field = "prorratas-1-tipo-de-prorrata", offset = 277, length = 1, data_type = "text", signed = false }
+id = "modelo-390-prorrata-actividad-1-tipo"
+provider = { kind = "prorrata_register_activity", row = "1", field = "tipo" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["ley-37-1992:art-103", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+additional_source_refs = ["aeat-modelo-303-instructions-20261106", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-303-instructions-20261106"
+required_text = [
+    "si aplica la prorrata general o una",
+    "si es la prorrata especial la que aplica el sujeto pasivo",
+]
 
 [[revisions."2022".bindings]]
-id = "modelo-390.page_7.prorratas-1-porcentaje-de-prorrata"
-provider = { kind = "manual_input", record = "page_7", field = "prorratas-1-porcentaje-de-prorrata", offset = 278, length = 5, data_type = "decimal", decimals = 2, signed = false }
-value = { data_type = "money", channel = "decimal" }
+id = "modelo-390-prorrata-actividad-1-porcentaje"
+provider = { kind = "prorrata_register_activity", row = "1", field = "porcentaje" }
+value = { data_type = "decimal", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+additional_source_refs = ["aeat-modelo-303-instructions-20261106", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-303-instructions-20261106"
+required_text = [
+    "se hará constar en esta casilla el porcentaje definitivo en función de las operaciones del ejercicio correspondientes a la actividad de que se trate",
+]
 
 [[revisions."2022".bindings]]
 id = "modelo-390.page_7.prorratas-2-actividad-desarrollada"
@@ -1236,34 +1322,70 @@ value = { data_type = "text", channel = "text" }
 legal_refs = ["ley-37-1992:art-101", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 
 [[revisions."2022".bindings]]
-id = "modelo-390.page_7.prorratas-2-codigo-cnae"
-provider = { kind = "manual_input", record = "page_7", field = "prorratas-2-codigo-cnae", offset = 323, length = 3, data_type = "text", signed = false }
+id = "modelo-390-prorrata-actividad-2-codigo-cnae"
+provider = { kind = "prorrata_register_activity", row = "2", field = "cnae" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["ley-37-1992:art-101", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+additional_source_refs = ["aeat-modelo-303-instructions-20261106", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-303-instructions-20261106"
+required_text = [
+    "se consignará el código correspondiente a la Clasificación Nacional de Actividades Económicas que corresponda a cada una de las actividades desarrolladas por el sujeto pasivo",
+]
 
 [[revisions."2022".bindings]]
-id = "modelo-390.page_7.prorratas-2-importe-de-operaciones"
-provider = { kind = "manual_input", record = "page_7", field = "prorratas-2-importe-de-operaciones", offset = 326, length = 17, data_type = "money", signed = false }
+id = "modelo-390-prorrata-actividad-2-importe-operaciones"
+provider = { kind = "prorrata_register_activity", row = "2", field = "operaciones_total" }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-104", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+additional_source_refs = ["aeat-modelo-303-instructions-20261106", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-303-instructions-20261106"
+required_text = [
+    "se hará constar el importe total de las entregas de bienes y prestaciones de servicios realizadas por el sujeto pasivo, incluidas aquellas que no originan el derecho a deducir, correspondientes a la actividad de que se trate",
+]
 
 [[revisions."2022".bindings]]
-id = "modelo-390.page_7.prorratas-2-importe-de-operaciones-con-derecho-a-deduccion"
-provider = { kind = "manual_input", record = "page_7", field = "prorratas-2-importe-de-operaciones-con-derecho-a-deduccion", offset = 343, length = 17, data_type = "money", signed = false }
+id = "modelo-390-prorrata-actividad-2-importe-con-derecho"
+provider = { kind = "prorrata_register_activity", row = "2", field = "operaciones_con_derecho" }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-104", "ley-37-1992:art-94", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+additional_source_refs = ["aeat-modelo-303-instructions-20261106", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-303-instructions-20261106"
+required_text = [
+    "se hará constar el importe total de las entregas de bienes y prestaciones de servicios que originen el derecho a la deducción, realizadas por el sujeto pasivo, correspondientes a la actividad de que se trate",
+]
 
 [[revisions."2022".bindings]]
-id = "modelo-390.page_7.prorratas-2-tipo-de-prorrata"
-provider = { kind = "manual_input", record = "page_7", field = "prorratas-2-tipo-de-prorrata", offset = 360, length = 1, data_type = "text", signed = false }
+id = "modelo-390-prorrata-actividad-2-tipo"
+provider = { kind = "prorrata_register_activity", row = "2", field = "tipo" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["ley-37-1992:art-103", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+additional_source_refs = ["aeat-modelo-303-instructions-20261106", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-303-instructions-20261106"
+required_text = [
+    "si aplica la prorrata general o una",
+    "si es la prorrata especial la que aplica el sujeto pasivo",
+]
 
 [[revisions."2022".bindings]]
-id = "modelo-390.page_7.prorratas-2-porcentaje-de-prorrata"
-provider = { kind = "manual_input", record = "page_7", field = "prorratas-2-porcentaje-de-prorrata", offset = 361, length = 5, data_type = "decimal", decimals = 2, signed = false }
-value = { data_type = "money", channel = "decimal" }
+id = "modelo-390-prorrata-actividad-2-porcentaje"
+provider = { kind = "prorrata_register_activity", row = "2", field = "porcentaje" }
+value = { data_type = "decimal", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+additional_source_refs = ["aeat-modelo-303-instructions-20261106", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-303-instructions-20261106"
+required_text = [
+    "se hará constar en esta casilla el porcentaje definitivo en función de las operaciones del ejercicio correspondientes a la actividad de que se trate",
+]
 
 [[revisions."2022".bindings]]
 id = "modelo-390.page_7.prorratas-3-actividad-desarrollada"
@@ -1272,34 +1394,70 @@ value = { data_type = "text", channel = "text" }
 legal_refs = ["ley-37-1992:art-101", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 
 [[revisions."2022".bindings]]
-id = "modelo-390.page_7.prorratas-3-codigo-cnae"
-provider = { kind = "manual_input", record = "page_7", field = "prorratas-3-codigo-cnae", offset = 406, length = 3, data_type = "text", signed = false }
+id = "modelo-390-prorrata-actividad-3-codigo-cnae"
+provider = { kind = "prorrata_register_activity", row = "3", field = "cnae" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["ley-37-1992:art-101", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+additional_source_refs = ["aeat-modelo-303-instructions-20261106", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-303-instructions-20261106"
+required_text = [
+    "se consignará el código correspondiente a la Clasificación Nacional de Actividades Económicas que corresponda a cada una de las actividades desarrolladas por el sujeto pasivo",
+]
 
 [[revisions."2022".bindings]]
-id = "modelo-390.page_7.prorratas-3-importe-de-operaciones"
-provider = { kind = "manual_input", record = "page_7", field = "prorratas-3-importe-de-operaciones", offset = 409, length = 17, data_type = "money", signed = false }
+id = "modelo-390-prorrata-actividad-3-importe-operaciones"
+provider = { kind = "prorrata_register_activity", row = "3", field = "operaciones_total" }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-104", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+additional_source_refs = ["aeat-modelo-303-instructions-20261106", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-303-instructions-20261106"
+required_text = [
+    "se hará constar el importe total de las entregas de bienes y prestaciones de servicios realizadas por el sujeto pasivo, incluidas aquellas que no originan el derecho a deducir, correspondientes a la actividad de que se trate",
+]
 
 [[revisions."2022".bindings]]
-id = "modelo-390.page_7.prorratas-3-importe-de-operaciones-con-derecho-a-deduccion"
-provider = { kind = "manual_input", record = "page_7", field = "prorratas-3-importe-de-operaciones-con-derecho-a-deduccion", offset = 426, length = 17, data_type = "money", signed = false }
+id = "modelo-390-prorrata-actividad-3-importe-con-derecho"
+provider = { kind = "prorrata_register_activity", row = "3", field = "operaciones_con_derecho" }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-104", "ley-37-1992:art-94", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+additional_source_refs = ["aeat-modelo-303-instructions-20261106", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-303-instructions-20261106"
+required_text = [
+    "se hará constar el importe total de las entregas de bienes y prestaciones de servicios que originen el derecho a la deducción, realizadas por el sujeto pasivo, correspondientes a la actividad de que se trate",
+]
 
 [[revisions."2022".bindings]]
-id = "modelo-390.page_7.prorratas-3-tipo-de-prorrata"
-provider = { kind = "manual_input", record = "page_7", field = "prorratas-3-tipo-de-prorrata", offset = 443, length = 1, data_type = "text", signed = false }
+id = "modelo-390-prorrata-actividad-3-tipo"
+provider = { kind = "prorrata_register_activity", row = "3", field = "tipo" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["ley-37-1992:art-103", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+additional_source_refs = ["aeat-modelo-303-instructions-20261106", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-303-instructions-20261106"
+required_text = [
+    "si aplica la prorrata general o una",
+    "si es la prorrata especial la que aplica el sujeto pasivo",
+]
 
 [[revisions."2022".bindings]]
-id = "modelo-390.page_7.prorratas-3-porcentaje-de-prorrata"
-provider = { kind = "manual_input", record = "page_7", field = "prorratas-3-porcentaje-de-prorrata", offset = 444, length = 5, data_type = "decimal", decimals = 2, signed = false }
-value = { data_type = "money", channel = "decimal" }
+id = "modelo-390-prorrata-actividad-3-porcentaje"
+provider = { kind = "prorrata_register_activity", row = "3", field = "porcentaje" }
+value = { data_type = "decimal", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+additional_source_refs = ["aeat-modelo-303-instructions-20261106", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-303-instructions-20261106"
+required_text = [
+    "se hará constar en esta casilla el porcentaje definitivo en función de las operaciones del ejercicio correspondientes a la actividad de que se trate",
+]
 
 [[revisions."2022".bindings]]
 id = "modelo-390.page_7.prorratas-4-actividad-desarrollada"
@@ -1308,34 +1466,70 @@ value = { data_type = "text", channel = "text" }
 legal_refs = ["ley-37-1992:art-101", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 
 [[revisions."2022".bindings]]
-id = "modelo-390.page_7.prorratas-4-codigo-cnae"
-provider = { kind = "manual_input", record = "page_7", field = "prorratas-4-codigo-cnae", offset = 489, length = 3, data_type = "text", signed = false }
+id = "modelo-390-prorrata-actividad-4-codigo-cnae"
+provider = { kind = "prorrata_register_activity", row = "4", field = "cnae" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["ley-37-1992:art-101", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+additional_source_refs = ["aeat-modelo-303-instructions-20261106", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-303-instructions-20261106"
+required_text = [
+    "se consignará el código correspondiente a la Clasificación Nacional de Actividades Económicas que corresponda a cada una de las actividades desarrolladas por el sujeto pasivo",
+]
 
 [[revisions."2022".bindings]]
-id = "modelo-390.page_7.prorratas-4-importe-de-operaciones"
-provider = { kind = "manual_input", record = "page_7", field = "prorratas-4-importe-de-operaciones", offset = 492, length = 17, data_type = "money", signed = false }
+id = "modelo-390-prorrata-actividad-4-importe-operaciones"
+provider = { kind = "prorrata_register_activity", row = "4", field = "operaciones_total" }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-104", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+additional_source_refs = ["aeat-modelo-303-instructions-20261106", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-303-instructions-20261106"
+required_text = [
+    "se hará constar el importe total de las entregas de bienes y prestaciones de servicios realizadas por el sujeto pasivo, incluidas aquellas que no originan el derecho a deducir, correspondientes a la actividad de que se trate",
+]
 
 [[revisions."2022".bindings]]
-id = "modelo-390.page_7.prorratas-4-importe-de-operaciones-con-derecho-a-deduccion"
-provider = { kind = "manual_input", record = "page_7", field = "prorratas-4-importe-de-operaciones-con-derecho-a-deduccion", offset = 509, length = 17, data_type = "money", signed = false }
+id = "modelo-390-prorrata-actividad-4-importe-con-derecho"
+provider = { kind = "prorrata_register_activity", row = "4", field = "operaciones_con_derecho" }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-104", "ley-37-1992:art-94", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+additional_source_refs = ["aeat-modelo-303-instructions-20261106", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-303-instructions-20261106"
+required_text = [
+    "se hará constar el importe total de las entregas de bienes y prestaciones de servicios que originen el derecho a la deducción, realizadas por el sujeto pasivo, correspondientes a la actividad de que se trate",
+]
 
 [[revisions."2022".bindings]]
-id = "modelo-390.page_7.prorratas-4-tipo-de-prorrata"
-provider = { kind = "manual_input", record = "page_7", field = "prorratas-4-tipo-de-prorrata", offset = 526, length = 1, data_type = "text", signed = false }
+id = "modelo-390-prorrata-actividad-4-tipo"
+provider = { kind = "prorrata_register_activity", row = "4", field = "tipo" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["ley-37-1992:art-103", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+additional_source_refs = ["aeat-modelo-303-instructions-20261106", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-303-instructions-20261106"
+required_text = [
+    "si aplica la prorrata general o una",
+    "si es la prorrata especial la que aplica el sujeto pasivo",
+]
 
 [[revisions."2022".bindings]]
-id = "modelo-390.page_7.prorratas-4-porcentaje-de-prorrata"
-provider = { kind = "manual_input", record = "page_7", field = "prorratas-4-porcentaje-de-prorrata", offset = 527, length = 5, data_type = "decimal", decimals = 2, signed = false }
-value = { data_type = "money", channel = "decimal" }
+id = "modelo-390-prorrata-actividad-4-porcentaje"
+provider = { kind = "prorrata_register_activity", row = "4", field = "porcentaje" }
+value = { data_type = "decimal", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+additional_source_refs = ["aeat-modelo-303-instructions-20261106", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-303-instructions-20261106"
+required_text = [
+    "se hará constar en esta casilla el porcentaje definitivo en función de las operaciones del ejercicio correspondientes a la actividad de que se trate",
+]
 
 [[revisions."2022".bindings]]
 id = "modelo-390.page_7.prorratas-5-actividad-desarrollada"
@@ -1344,34 +1538,70 @@ value = { data_type = "text", channel = "text" }
 legal_refs = ["ley-37-1992:art-101", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 
 [[revisions."2022".bindings]]
-id = "modelo-390.page_7.prorratas-5-codigo-cnae"
-provider = { kind = "manual_input", record = "page_7", field = "prorratas-5-codigo-cnae", offset = 572, length = 3, data_type = "text", signed = false }
+id = "modelo-390-prorrata-actividad-5-codigo-cnae"
+provider = { kind = "prorrata_register_activity", row = "5", field = "cnae" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["ley-37-1992:art-101", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+additional_source_refs = ["aeat-modelo-303-instructions-20261106", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-303-instructions-20261106"
+required_text = [
+    "se consignará el código correspondiente a la Clasificación Nacional de Actividades Económicas que corresponda a cada una de las actividades desarrolladas por el sujeto pasivo",
+]
 
 [[revisions."2022".bindings]]
-id = "modelo-390.page_7.prorratas-5-importe-de-operaciones"
-provider = { kind = "manual_input", record = "page_7", field = "prorratas-5-importe-de-operaciones", offset = 575, length = 17, data_type = "money", signed = false }
+id = "modelo-390-prorrata-actividad-5-importe-operaciones"
+provider = { kind = "prorrata_register_activity", row = "5", field = "operaciones_total" }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-104", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+additional_source_refs = ["aeat-modelo-303-instructions-20261106", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-303-instructions-20261106"
+required_text = [
+    "se hará constar el importe total de las entregas de bienes y prestaciones de servicios realizadas por el sujeto pasivo, incluidas aquellas que no originan el derecho a deducir, correspondientes a la actividad de que se trate",
+]
 
 [[revisions."2022".bindings]]
-id = "modelo-390.page_7.prorratas-5-importe-de-operaciones-con-derecho-a-deduccion"
-provider = { kind = "manual_input", record = "page_7", field = "prorratas-5-importe-de-operaciones-con-derecho-a-deduccion", offset = 592, length = 17, data_type = "money", signed = false }
+id = "modelo-390-prorrata-actividad-5-importe-con-derecho"
+provider = { kind = "prorrata_register_activity", row = "5", field = "operaciones_con_derecho" }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-104", "ley-37-1992:art-94", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+additional_source_refs = ["aeat-modelo-303-instructions-20261106", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-303-instructions-20261106"
+required_text = [
+    "se hará constar el importe total de las entregas de bienes y prestaciones de servicios que originen el derecho a la deducción, realizadas por el sujeto pasivo, correspondientes a la actividad de que se trate",
+]
 
 [[revisions."2022".bindings]]
-id = "modelo-390.page_7.prorratas-5-tipo-de-prorrata"
-provider = { kind = "manual_input", record = "page_7", field = "prorratas-5-tipo-de-prorrata", offset = 609, length = 1, data_type = "text", signed = false }
+id = "modelo-390-prorrata-actividad-5-tipo"
+provider = { kind = "prorrata_register_activity", row = "5", field = "tipo" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["ley-37-1992:art-103", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+additional_source_refs = ["aeat-modelo-303-instructions-20261106", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-303-instructions-20261106"
+required_text = [
+    "si aplica la prorrata general o una",
+    "si es la prorrata especial la que aplica el sujeto pasivo",
+]
 
 [[revisions."2022".bindings]]
-id = "modelo-390.page_7.prorratas-5-porcentaje-de-prorrata"
-provider = { kind = "manual_input", record = "page_7", field = "prorratas-5-porcentaje-de-prorrata", offset = 610, length = 5, data_type = "decimal", decimals = 2, signed = false }
-value = { data_type = "money", channel = "decimal" }
+id = "modelo-390-prorrata-actividad-5-porcentaje"
+provider = { kind = "prorrata_register_activity", row = "5", field = "porcentaje" }
+value = { data_type = "decimal", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+additional_source_refs = ["aeat-modelo-303-instructions-20261106", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-303-instructions-20261106"
+required_text = [
+    "se hará constar en esta casilla el porcentaje definitivo en función de las operaciones del ejercicio correspondientes a la actividad de que se trate",
+]
 [[revisions."2022".bindings]]
 id = "modelo-390.page_5.indicador-de-pagina-complementaria"
 provider = { kind = "manual_input", record = "page_5", field = "indicador-de-pagina-complementaria", offset = 12, length = 1, data_type = "text", signed = false }

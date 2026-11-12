@@ -32,7 +32,7 @@ from .....core.operations import OperationTerminalCondition
 from .....domain.modelos.verification_report import VerificationCompletenessStatus
 from ...components.dialogs import ConfirmScreen
 from ...operations.controller_port import OperationControllerPort
-from ...operations.refusal_explanation import public_refusal_explanation
+from ...refusal.panel import RefusalSlot
 from ..export_result import ModeloExportResultScreen
 from .casilla_list_models import AddressKey
 from .export import WorkbenchExportScreen
@@ -49,6 +49,7 @@ from .screen_constants import (
 if TYPE_CHECKING:
     from .....application.operations.frontend_projection import OperationPublicProjectionV1
     from ...operations.modal import OperationModalSettledOutcomeV1
+    from ...refusal.served import ServedRefusalV1
     from .screen import ModeloWorkbenchScreen
 
 
@@ -227,28 +228,27 @@ class WorkbenchOperationMixin:
         condition: OperationTerminalCondition | None,
     ) -> None:
         self._apply_prerequisite = None
-        notice = self._operation_refusal_notice(outcome)
+        notice = tr("workspace.modelo.operation.not_done")
+        self._show_operation_refusal(outcome.refusal)
         if applies_changes:
             refused = condition is OperationTerminalCondition.REFUSED
             self.run_worker(partial(self._read_refused_apply, notice, refused), group="workbench-read", exclusive=True)
         else:
             self._notice(notice)
 
-    @staticmethod
-    def _operation_refusal_notice(outcome: OperationModalSettledOutcomeV1) -> str:
-        # The stopped executor's own message, when it recorded one, says more than the registry's generic sentence.
-        explanation = outcome.error_explanation or (
-            public_refusal_explanation(outcome.view_model.receipt_ref)
-            if outcome.view_model.receipt_kind == "refusal"
-            else None
-        )
-        message = tr("workspace.modelo.operation.not_done")
-        return message if explanation is None else f"{message} {explanation}"
+    def _show_operation_refusal(self: ModeloWorkbenchScreen, refusal: ServedRefusalV1 | None) -> None:
+        """Show the refusal the last operation served beneath the notice, or take the last one away."""
+        slot = next(iter(self.query("#wb-operation-refusal").results(RefusalSlot)), None)
+        if slot is not None:
+            slot.show(refusal)
+        elif refusal is not None:
+            self.query_one("#wb-status").mount(RefusalSlot(refusal, id="wb-operation-refusal"), after="#wb-notice")
 
     def _settle_succeeded_operation(
         self: ModeloWorkbenchScreen, applies_changes: bool, outcome: OperationModalSettledOutcomeV1
     ) -> None:
         self._apply_prerequisite = None
+        self._show_operation_refusal(None)
         yours = frozenset(change.key for change in self._session.changes) if applies_changes else frozenset()
         if applies_changes:
             self._session.discard()

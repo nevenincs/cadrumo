@@ -131,7 +131,12 @@ class WorkbenchConfirmationMixin:
 
     def on_casilla_list_clear_requested(self: ModeloWorkbenchScreen, message: CasillaList.ClearRequested) -> None:
         """Stage removing the value the filer declared on the casilla under the cursor."""
-        self._after_stage(self._session.stage_clear(message.entry.field))
+        field = message.entry.field
+        form = self.form
+        if field.stated_absent is not None and form is not None:
+            self._after_stage(self._session.withdraw_stated(form, field))
+            return
+        self._after_stage(self._session.stage_clear(field))
 
     def on_casilla_list_revert_requested(self: ModeloWorkbenchScreen, message: CasillaList.RevertRequested) -> None:
         """Drop the change staged on the casilla under the cursor."""

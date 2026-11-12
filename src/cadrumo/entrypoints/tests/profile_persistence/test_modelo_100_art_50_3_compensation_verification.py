@@ -24,7 +24,6 @@ from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
-from uuid import UUID
 
 import pytest
 
@@ -50,7 +49,6 @@ from ....adapters.persistence.profile.tests.published_authority_support import p
 from ....adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from ....application.aggregation.retencion_soportada_absence_repository import attest_retencion_soportada_absence
 from ....application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
@@ -62,8 +60,6 @@ from ....application.modelo.work_missing_input import ModeloWorkMissingInputErro
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.identity.hex_ids import WorkUnitId
 from ....core.period import Period
-from ....core.retencion_soportada import RetencionSoportadaClase
-from ....core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.ids import BindingId, RelationId
 from ....domain.calculations.registry.relations import relation_prefill_bindings_for_period
@@ -75,13 +71,12 @@ from ....domain.modelos.verification_report import (
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
 )
-from ....domain.renta.retencion_soportada_absence import RetencionSoportadaAbsence
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from ...adapter_composition_work_ports import build_work_lifecycle_ports
-from ...retencion_soportada_absence_composition import build_retencion_soportada_absence_ports
 from .file_flow_test_support import calculation_ports_for_test
 from .general_iva_profile_facts_support import renta_single_taxpayer_facts
 from .observation_seeding_support import save_stamped_observation
+from .work_income_support import record_work_income
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -103,7 +98,8 @@ _COMPENSATION: CasillaId = validated_casilla_id("0501")
 _BASE_IMPONIBLE_GENERAL: CasillaId = validated_casilla_id("0435")
 _BASE_LIQUIDABLE_GENERAL: CasillaId = validated_casilla_id("0500")
 #: Retribuciones dinerarias, importe íntegro: this unit's only income.
-_WORK_INCOME: CasillaId = validated_casilla_id("0003")
+_DEFAULT_WORK_INCOME = Decimal("40000.00")
+_TAXPAYER_TAX_ID = "12345678Z"
 
 
 @dataclass(frozen=True)
@@ -164,13 +160,13 @@ def _maximum_predicate_id(year: int, row: _OriginRow) -> str:
     return f"modelo-100-{year}-compensacion-base-neg-general-{row.name}-cuantia-maxima"
 
 
-def _seed_profile(filing_year: int) -> None:
+def _seed_profile(filing_year: int, *, work_income: Decimal = _DEFAULT_WORK_INCOME) -> None:
     record = create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=persona_facts_beneath(
             (
-                UserProfileFact(path="identity.tax_id", value="12345678Z"),
+                UserProfileFact(path="identity.tax_id", value=_TAXPAYER_TAX_ID),
                 UserProfileFact(path="identity.name", value="Test"),
                 UserProfileFact(path="identity.surnames", value="Operator"),
                 UserProfileFact(path="taxpayer_type.irpf_income_categories", value="trabajo"),
@@ -183,17 +179,11 @@ def _seed_profile(filing_year: int) -> None:
         context=profile_creation_context_for_test(),
     )
     seed_test_profile_record(record)
-    # The 0596 withholding comes only from the register; here it records that no payer withheld.
+    # The 0596 withholding and the work income come only from the payer register: one certificate,
+    # which withheld nothing, states the work income (none at all for a zero).
     with bundled_indexed_authority().operation() as operation:
-        attest_retencion_soportada_absence(
-            RetencionSoportadaAbsence(
-                ejercicio=filing_year,
-                income_class=RetencionSoportadaClase.TRABAJO,
-                note="No payer withheld on this income in the ejercicio.",
-                attested_at=_CLOCK,
-            ),
-            ports=build_retencion_soportada_absence_ports(profile_id=UUID(_PROFILE_ID), operation=operation),
-            expected_revision_id=ABSENT_SECURE_OBJECT_REVISION_ID,
+        record_work_income(
+            operation=operation, taxpayer_tax_id=_TAXPAYER_TAX_ID, filing_year=filing_year, gross=work_income
         )
 
 
@@ -256,7 +246,6 @@ def _calculate(
     filing_year: int,
     work_unit_id: WorkUnitId,
     *,
-    work_income: Decimal,
     applied: Mapping[str, Decimal],
     stated_stocks: Mapping[BindingId, Decimal],
 ) -> CalculationRevision:
@@ -264,7 +253,7 @@ def _calculate(
     # The negative savings balances (art. 49.2), which these gates do not read, hold nothing pending.
     binding_values.update(M100_NO_PENDING_SAVINGS_BALANCES)
     binding_values.update(stated_stocks)
-    casilla_inputs = {_WORK_INCOME: work_income}
+    casilla_inputs: dict[CasillaId, Decimal] = {}
     casilla_inputs.update({_ROW_BY_NAME[name].applied: amount for name, amount in applied.items()})
     with calculation_ports_for_test(
         bucket_id=_PROFILE_ID,
@@ -365,7 +354,6 @@ def test_every_origin_row_applied_at_its_maximum_passes_and_sums_into_0501(tmp_p
         revision = _calculate(
             filing_year,
             _create_work_unit(filing_year),
-            work_income=Decimal("40000.00"),
             applied=_EVERY_ROW_STOCKED,
             stated_stocks=_EVERY_ROW_STATED,
         )
@@ -391,19 +379,15 @@ def test_a_small_base_is_consumed_oldest_row_first(tmp_path: Path, filing_year: 
     }
     stated = _stated_stocks(em4="5000.00", em3="30000.00", em2="7000.00", em1="8000.00")
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID):
-        _seed_profile(filing_year)
+        _seed_profile(filing_year, work_income=Decimal("20000.00"))
         work_unit_id = _create_work_unit(filing_year)
-        probe = _calculate(filing_year, work_unit_id, work_income=Decimal("20000.00"), applied={}, stated_stocks=stated)
+        probe = _calculate(filing_year, work_unit_id, applied={}, stated_stocks=stated)
         maxima = _statutory_maxima(probe, stocks)
-        exact = _calculate(
-            filing_year, work_unit_id, work_income=Decimal("20000.00"), applied=maxima, stated_stocks=stated
-        )
+        exact = _calculate(filing_year, work_unit_id, applied=maxima, stated_stocks=stated)
         exact_findings = _art_50_3_findings(filing_year, exact)
         # Applying the youngest row instead of the oldest is refused on both rows.
         youngest_first = {"em1": stocks["em4"], "em3": maxima["em3"]}
-        swapped = _calculate(
-            filing_year, work_unit_id, work_income=Decimal("20000.00"), applied=youngest_first, stated_stocks=stated
-        )
+        swapped = _calculate(filing_year, work_unit_id, applied=youngest_first, stated_stocks=stated)
         swapped_findings = _art_50_3_findings(filing_year, swapped)
 
     assert maxima["em4"] == stocks["em4"]
@@ -455,7 +439,6 @@ def test_an_application_other_than_the_row_maximum_is_refused(
         revision = _calculate(
             filing_year,
             _create_work_unit(filing_year),
-            work_income=Decimal("40000.00"),
             applied={"em4": Decimal("1000.00"), "em3": applied, "em2": Decimal("3000.00"), "em1": Decimal("4000.00")},
             stated_stocks=_EVERY_ROW_STATED,
         )
@@ -479,19 +462,16 @@ def test_a_positive_application_with_no_positive_base_is_refused(tmp_path: Path,
     """Art. 50.3 compensates only against a positive base, so a zero base admits nothing on any row."""
     em4 = _ROW_BY_NAME["em4"]
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID):
-        _seed_profile(filing_year)
+        _seed_profile(filing_year, work_income=Decimal("0"))
         work_unit_id = _create_work_unit(filing_year)
         refused = _calculate(
             filing_year,
             work_unit_id,
-            work_income=Decimal("0"),
             applied={"em4": Decimal("500.00")},
             stated_stocks=_EVERY_ROW_STATED,
         )
         refused_findings = _art_50_3_findings(filing_year, refused)
-        nothing = _calculate(
-            filing_year, work_unit_id, work_income=Decimal("0"), applied={}, stated_stocks=_EVERY_ROW_STATED
-        )
+        nothing = _calculate(filing_year, work_unit_id, applied={}, stated_stocks=_EVERY_ROW_STATED)
         nothing_findings = _art_50_3_findings(filing_year, nothing)
 
     assert refused.casilla_values[_BASE_IMPONIBLE_GENERAL] <= Decimal("0")
@@ -518,14 +498,11 @@ def test_a_positive_application_against_a_proven_zero_stock_is_refused(tmp_path:
         refused = _calculate(
             filing_year,
             work_unit_id,
-            work_income=Decimal("40000.00"),
             applied={"em2": Decimal("500.00")},
             stated_stocks=_NO_STOCK_STATED,
         )
         refused_findings = _art_50_3_findings(filing_year, refused)
-        nothing = _calculate(
-            filing_year, work_unit_id, work_income=Decimal("40000.00"), applied={}, stated_stocks=_NO_STOCK_STATED
-        )
+        nothing = _calculate(filing_year, work_unit_id, applied={}, stated_stocks=_NO_STOCK_STATED)
         nothing_findings = _art_50_3_findings(filing_year, nothing)
 
     assert refused.casilla_values[_COMPENSATION] == Decimal("500.00")
@@ -550,7 +527,7 @@ def test_an_unknown_stock_of_any_row_stops_the_calculation(tmp_path: Path, filin
         _seed_profile(filing_year)
         work_unit_id = _create_work_unit(filing_year)
         with pytest.raises(ModeloWorkMissingInputError) as refused:
-            _calculate(filing_year, work_unit_id, work_income=Decimal("40000.00"), applied={}, stated_stocks=stated)
+            _calculate(filing_year, work_unit_id, applied={}, stated_stocks=stated)
 
     assert refused.value.binding_id == unknown_binding
 
@@ -566,7 +543,6 @@ def test_the_prior_return_opens_each_row_one_year_older(tmp_path: Path, filing_y
         revision = _calculate(
             filing_year,
             _create_work_unit(filing_year),
-            work_income=Decimal("40000.00"),
             applied={row.name: amount for row, amount in zip(_ROWS, amounts, strict=True)},
             stated_stocks={},
         )

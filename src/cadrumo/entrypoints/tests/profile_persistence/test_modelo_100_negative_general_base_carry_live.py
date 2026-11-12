@@ -26,8 +26,7 @@ from ....adapters.persistence.profile.calculation_observations import Calculatio
 from ....adapters.persistence.profile.inventory import InventoryLedgerRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
-from ....adapters.persistence.profile.tests.ready_profile_support import persona_taxpayer_tax_id, seed_persona_profile
-from ....adapters.persistence.profile.tests.retencion_soportada_seed import seed_payer_certificate
+from ....adapters.persistence.profile.tests.ready_profile_support import seed_persona_profile
 from ....adapters.persistence.profile.tests.secure_objects_fixture import secure_objects
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....application.aggregation.tests.test_inventory_source import inventory_ledger
@@ -42,7 +41,6 @@ from ....application.modelo.work_missing_input import ModeloWorkMissingInputErro
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.errors.error_codes import resolve_error_message
 from ....core.period import Period
-from ....core.retencion_soportada import RetencionSoportadaClase
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.ids import BindingId
@@ -53,6 +51,8 @@ from ....domain.calculations.registry.tests.registry_observations import (
 from ....domain.contribuyente.inventory.records import InventoryLedgerDocument
 from ...adapter_composition_work_ports import build_calculation_action_ports
 from .observation_seeding_support import save_stamped_observation
+from .ready_profile_taxpayer import ready_profile_tax_id
+from .work_income_support import record_work_income
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -94,6 +94,8 @@ _BASE_LIQUIDABLE_GENERAL: CasillaId = validated_casilla_id("0500", surface="_BAS
 _BASE_LIQUIDABLE_SOMETIDA: CasillaId = validated_casilla_id("0505", surface="_BASE_LIQUIDABLE_SOMETIDA")
 #: A direct-estimation expense the filer enters by hand, with no activity income against it.
 _ACTIVITY_MANUAL_EXPENSE: CasillaId = validated_casilla_id("0184", surface="_ACTIVITY_MANUAL_EXPENSE")
+#: Work income above the level where the art. 20 reduction ends, so the base stays above the 2.000 applied.
+_TRABAJO_INGRESOS = Decimal("40000.00")
 _M130_PAGOS_OUTPUT: CasillaId = validated_casilla_id("19", surface="_M130_PAGOS_OUTPUT")
 _M131_PAGOS_OUTPUT: CasillaId = validated_casilla_id("15", surface="_M131_PAGOS_OUTPUT")
 
@@ -238,17 +240,13 @@ def test_m100_anexo_c_applied_amount_reduces_base_liquidable_not_base_imponible(
     )
     _seed_prior_m100_generated_pending(obs_repo, source_year=_NEWEST_EDITION - 1, value=Decimal("4321.00"))
     _seed_zero_pagos_quarters(obs_repo, filing_year=_NEWEST_EDITION)
-    # Casilla 0003 is sourced only from a payer certificate: the filer's pay is recorded as one, large enough that the base exceeds the 2.000,00 compensated.
-    seed_payer_certificate(
-        operation=published_authority_operation(),
-        taxpayer_tax_id=persona_taxpayer_tax_id("autonomo-fontanero"),
-        ejercicio=_NEWEST_EDITION,
-        payer_tax_id="B00010082",
-        income_class=RetencionSoportadaClase.TRABAJO,
-        retencion=Decimal("0.00"),
-        importe_integro_dinerario=Decimal("15000.00"),
-    )
-
+    with bundled_indexed_authority().operation() as operation:
+        record_work_income(
+            operation=operation,
+            taxpayer_tax_id=ready_profile_tax_id(),
+            filing_year=_NEWEST_EDITION,
+            gross=_TRABAJO_INGRESOS,
+        )
     baseline = _calculate_m100(secure_objects, filing_year=_NEWEST_EDITION).revision
     applied = _calculate_m100(
         secure_objects,

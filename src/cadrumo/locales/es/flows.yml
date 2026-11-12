@@ -194,6 +194,7 @@ flows:
           payable_invoice: Factura recibida
           previous_filing: Declaración anterior
           profile: Perfil
+          prorrata_register_activity: Actividades del registro de prorrata
           prorrata_regularizacion: Regularización de prorrata
           purchase_invoice_evidence: Evidencia de factura de compra
           relation_prefill: Declaración relacionada

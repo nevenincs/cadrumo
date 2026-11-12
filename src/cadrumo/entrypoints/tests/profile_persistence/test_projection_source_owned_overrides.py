@@ -24,9 +24,9 @@ from .projection_m130_seeding_support import PROJECTION_YEAR, run_projection
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _CREDIT_CASILLAS = ("0596", "0597", "0603")
-# A manual money box no source resolver owns (cash employment pay), and the
-# computed employment-income total it is the only supplied addend of.
-_UNRELATED_CASILLA = "0003"
+# A manual money box no source resolver owns (the employer's contribution to a pension plan, which no
+# payer certificate states), and the computed employment-income total it is the only supplied addend of.
+_UNRELATED_CASILLA = "0008"
 _EMPLOYMENT_INCOME_TOTAL = "0012"
 
 
@@ -42,6 +42,12 @@ def test_the_family_binding_ids_are_the_revisions_own_declarations(*, operation:
         "renta-retencion-soportada-capital-mobiliario",
         "renta-retencion-soportada-ganancia-patrimonial",
         "renta-retencion-soportada-trabajo",
+        "renta-retencion-soportada-trabajo-gastos-deducibles",
+        "renta-retencion-soportada-trabajo-importe-integro-dinerario",
+        "renta-retencion-soportada-trabajo-ingreso-a-cuenta",
+        "renta-retencion-soportada-trabajo-ingreso-a-cuenta-repercutido",
+        "renta-retencion-soportada-trabajo-reducciones-aplicables",
+        "renta-retencion-soportada-trabajo-valoracion-especie",
     )
 
 

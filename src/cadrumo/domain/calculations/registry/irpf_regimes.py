@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from datetime import date
 from typing import Final
 
-from ....core.time.clock import today_madrid
 from ...deadlines.models import IrpfEstimationRegime, IrpfSpecialRegime
 from .errors import RegistryValidationError
 from .facts.resolution import required_mapping_entry, unique_mapping_tokens
@@ -153,17 +152,21 @@ def resolve_irpf_regime_vocabulary(
     effective_date: date | None = None,
     authority: GovernedFactSource | None = None,
 ) -> IrpfRegimeVocabulary:
-    """Resolve and validate all five IRPF regime tokens from fact 0125."""
-    coordinate = effective_date or today_madrid()
+    """Resolve and validate all five IRPF regime tokens from fact 0125.
+
+    A dated read takes the vocabulary in force on ``effective_date``. Without a
+    date the run date is never substituted: the vocabulary admits every token
+    an edition inside the supported filing years declares.
+    """
     selected = require_governed_fact_authority(authority, subject=_ENTRY_SUBJECT)
     if selected is governed_facts_in_scope():
-        return _scoped_irpf_regime_vocabulary(coordinate)
+        return _scoped_irpf_regime_vocabulary(effective_date)
     with validating_governed_facts(selected):
-        return _scoped_irpf_regime_vocabulary(coordinate)
+        return _scoped_irpf_regime_vocabulary(effective_date)
 
 
 @cache_governed_projection(maxsize=64)
-def _scoped_irpf_regime_vocabulary(effective_date: date) -> IrpfRegimeVocabulary:
+def _scoped_irpf_regime_vocabulary(effective_date: date | None) -> IrpfRegimeVocabulary:
     """Build the vocabulary once per scoped authority generation and coordinate."""
     entries = _ENTRIES_FACT.resolve_scoped_entries(effective_date=effective_date, authority=None)
     estimation_regimes: list[IrpfEstimationRegimeDefinition] = []

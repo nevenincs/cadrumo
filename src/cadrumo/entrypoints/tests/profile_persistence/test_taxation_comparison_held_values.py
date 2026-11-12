@@ -33,7 +33,7 @@ from cadrumo.domain.user_profile.tests.profile_creation_authority import (
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....adapters.persistence.profile.tests.retencion_soportada_seed import seed_payer_certificate
+from ....adapters.persistence.profile.tests.retencion_soportada_seed import seed_absence_attestation
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.modelo.calculation_action_ports import CalculationActionPorts
@@ -85,6 +85,7 @@ from ....domain.contribuyente.renta_codes import RentaDeclaracionType, RentaMari
 from ....domain.modelos.calculation_revision import CalculationRevision
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from .file_flow_test_support import calculation_ports_for_test
+from .work_income_support import record_work_income
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -96,7 +97,6 @@ _YEAR = 2025
 _COMPARED_YEARS = supported_exercises_with_projection("100")
 """Every authored Modelo 100 exercise from the support floor up, then the first year projected from the newest edition."""
 _RESIDENCE: BindingId = "renta-profile-tax-residence-ccaa"
-_WORK_INCOME: CasillaId = "0003"
 _SAVINGS_INCOME: CasillaId = "0031"
 """Income from other financial assets (casilla 0031), a leaf no source binds, integrated into the savings base through casillas 0041 and 0429."""
 _WORK_CREDIT: BindingId = "renta-retencion-soportada-trabajo"
@@ -145,11 +145,16 @@ _SALARIED_OMISSIONS = ("irpf.estimation_regime", "activities.", "censo.activity_
 """A salaried filer: work income only, so no economic-activity register is owed."""
 
 
-def _seed_taxpayer(renta_facts: tuple[UserProfileFact, ...], *, economic_activity: bool) -> None:
+def _seed_taxpayer(renta_facts: tuple[UserProfileFact, ...], *, economic_activity: bool, holds_savings: bool) -> None:
     taxpayer_facts = (
         (UserProfileFact(path="activities.description", value="economic activity"),)
         if economic_activity
-        else (UserProfileFact(path="taxpayer_type.irpf_income_categories", value="trabajo"),)
+        else (
+            UserProfileFact(
+                path="taxpayer_type.irpf_income_categories",
+                value="trabajo,capital_mobiliario" if holds_savings else "trabajo",
+            ),
+        )
     )
     seed_test_profile_record(
         create_user_profile_record(
@@ -228,7 +233,6 @@ class _Profile:
         self,
         work_unit_id: str,
         *,
-        work_income: Decimal,
         savings_income: Decimal | None = None,
         leave_unanswered: frozenset[BindingId] = frozenset(),
         record_operator_layer: bool = True,
@@ -243,7 +247,6 @@ class _Profile:
                 work_unit_id,
                 actor="operator-A",
                 casilla_inputs={
-                    _WORK_INCOME: work_income,
                     **({} if savings_income is None else {_SAVINGS_INCOME: savings_income}),
                 },
                 binding_values=_filler_binding_values(
@@ -383,12 +386,19 @@ def profile_factory(tmp_path: Path, *, operation: PinnedAuthorityOperation) -> G
             renta_facts: tuple[UserProfileFact, ...] | None = None,
             *,
             economic_activity: bool = False,
+            holds_savings: bool = False,
             year: int = _YEAR,
         ) -> _Profile:
             _seed_taxpayer(
                 _married_facts() if renta_facts is None else renta_facts,
                 economic_activity=economic_activity,
+                holds_savings=holds_savings,
             )
+            if holds_savings:
+                # The savings income is other financial assets no payer withheld on, so the credit 0597 is a proven zero.
+                seed_absence_attestation(
+                    operation=operation, ejercicio=year, income_class=RetencionSoportadaClase.CAPITAL_MOBILIARIO
+                )
             return _Profile(
                 operation=operation,
                 work_units=WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects),
@@ -400,14 +410,15 @@ def profile_factory(tmp_path: Path, *, operation: PinnedAuthorityOperation) -> G
         yield build
 
 
-def _credited(profile: _Profile) -> None:
-    seed_payer_certificate(
+def _credited(profile: _Profile, *, work_income: Decimal) -> None:
+    """Record the work income as the payer's certificate, which credits one euro of withholding."""
+    record_work_income(
         operation=profile.operation,
         taxpayer_tax_id=_TAX_ID,
-        ejercicio=profile.year,
-        payer_tax_id="B00015016",
-        income_class=RetencionSoportadaClase.TRABAJO,
+        filing_year=profile.year,
+        gross=work_income,
         retencion=Decimal("1.00"),
+        payer_tax_id="B00015016",
     )
 
 
@@ -427,9 +438,9 @@ def test_married_return_compares_on_its_held_values(profile_factory, year: int) 
     off the joint base, so with one earner the joint result is lower.
     """
     profile = profile_factory(year=year)
-    _credited(profile)
+    _credited(profile, work_income=Decimal("52000"))
     work_unit_id = profile.create_work()
-    profile.calculate(work_unit_id, work_income=Decimal("52000"))
+    profile.calculate(work_unit_id)
     saved = set(profile.calculations.load(operation=profile.operation).revisions)
 
     result = profile.compare(work_unit_id)
@@ -455,9 +466,9 @@ def test_calculate_work_completes_end_to_end_for_an_authored_and_a_projected_yea
     unresolvable.
     """
     profile = profile_factory(year=year)
-    _credited(profile)
+    _credited(profile, work_income=Decimal("52000"))
     work_unit_id = profile.create_work()
-    profile.calculate(work_unit_id, work_income=Decimal("52000"))
+    profile.calculate(work_unit_id)
 
     result = profile.calculate_through_operation(work_unit_id, monkeypatch=monkeypatch)
 
@@ -473,9 +484,9 @@ def test_unresolved_result_input_refuses_naming_the_boxes(profile_factory) -> No
     inventory boxes unresolved, and the results read them.
     """
     profile = profile_factory(economic_activity=True)
-    _credited(profile)
+    _credited(profile, work_income=Decimal("52000"))
     work_unit_id = profile.create_work()
-    profile.calculate(work_unit_id, work_income=Decimal("52000"))
+    profile.calculate(work_unit_id)
 
     refusal = _refused(profile, work_unit_id)
 
@@ -496,9 +507,9 @@ def test_unresolved_result_input_refuses_naming_the_boxes(profile_factory) -> No
 def test_single_parent_with_cohabitation_unstated_refuses_on_the_joint_reduction(profile_factory, year: int) -> None:
     """Art. 84.2.4º LIRPF: the 2,150 EUR depends on cohabitation, so an unstated fact leaves 0461 unresolved."""
     profile = profile_factory(_single_parent_facts(convive_con_otro_progenitor=None), year=year)
-    _credited(profile)
+    _credited(profile, work_income=Decimal("30000"))
     work_unit_id = profile.create_work()
-    profile.calculate(work_unit_id, work_income=Decimal("30000"))
+    profile.calculate(work_unit_id)
 
     refusal = _refused(profile, work_unit_id)
 
@@ -510,9 +521,9 @@ def test_single_parent_with_cohabitation_unstated_refuses_on_the_joint_reduction
 def test_single_parent_without_spouse_compares(profile_factory, year: int) -> None:
     """A single-parent joint return has no spouse, so it compares without a spouse tax ID."""
     profile = profile_factory(_single_parent_facts(convive_con_otro_progenitor=False), year=year)
-    _credited(profile)
+    _credited(profile, work_income=Decimal("30000"))
     work_unit_id = profile.create_work()
-    profile.calculate(work_unit_id, work_income=Decimal("30000"))
+    profile.calculate(work_unit_id)
 
     result = profile.compare(work_unit_id)
 
@@ -544,9 +555,9 @@ def test_profile_that_cannot_file_jointly_refuses(
     profile_factory, facts: Callable[[], tuple[UserProfileFact, ...]], refusal: TaxationComparisonRefusal
 ) -> None:
     profile = profile_factory(facts())
-    _credited(profile)
+    _credited(profile, work_income=Decimal("52000"))
     work_unit_id = profile.create_work()
-    profile.calculate(work_unit_id, work_income=Decimal("52000"))
+    profile.calculate(work_unit_id)
 
     assert _refused(profile, work_unit_id).refusal is refusal
 
@@ -602,25 +613,25 @@ def test_stating_the_cohabitation_lets_a_single_parent_compare(profile_factory, 
     answer returns the refusal: not stated is not "no".
     """
     profile = profile_factory(_single_parent_facts(convive_con_otro_progenitor=None))
-    _credited(profile)
+    _credited(profile, work_income=Decimal("30000"))
     work_unit_id = profile.create_work()
 
-    profile.calculate(work_unit_id, work_income=Decimal("30000"))
+    profile.calculate(work_unit_id)
     assert "0461" in _refused(profile, work_unit_id).casilla_ids
 
     _state_cohabitation(profile, "false", through=door)
-    profile.calculate(work_unit_id, work_income=Decimal("30000"))
+    profile.calculate(work_unit_id)
     apart = profile.compare(work_unit_id)
 
     _state_cohabitation(profile, "true", through=door)
-    profile.calculate(work_unit_id, work_income=Decimal("30000"))
+    profile.calculate(work_unit_id)
     together = profile.compare(work_unit_id)
 
     assert Decimal(together.conjunta_resultado) > Decimal(apart.conjunta_resultado)
     assert together.individual_resultado == apart.individual_resultado
 
     _state_cohabitation(profile, "", through="desktop")
-    profile.calculate(work_unit_id, work_income=Decimal("30000"))
+    profile.calculate(work_unit_id)
     refusal = _refused(profile, work_unit_id)
     assert refusal.refusal is TaxationComparisonRefusal.UNRESOLVED_BOXES
     assert "0461" in refusal.casilla_ids
@@ -643,10 +654,12 @@ def _joint_values(
     year: int, profile_factory: Callable[..., _Profile], *, work_income: Decimal, savings_income: Decimal | None
 ) -> Mapping[CasillaId, Decimal]:
     """Calculate a married joint return and return the values it saved."""
-    profile = profile_factory(_married_facts(declaration_type=RentaDeclaracionType.JOINT), year=year)
-    _credited(profile)
+    profile = profile_factory(
+        _married_facts(declaration_type=RentaDeclaracionType.JOINT), holds_savings=savings_income is not None, year=year
+    )
+    _credited(profile, work_income=work_income)
     work_unit_id = profile.create_work()
-    revision = profile.calculate(work_unit_id, work_income=work_income, savings_income=savings_income)
+    revision = profile.calculate(work_unit_id, savings_income=savings_income)
     return revision.casilla_values
 
 
@@ -698,10 +711,10 @@ def test_comparison_credits_the_joint_reduction_remainder_against_savings(profil
     exceeds the personal minimum, so the only difference between the two runs
     is the remainder taken off the taxed savings base.
     """
-    profile = profile_factory(year=year)
-    _credited(profile)
+    profile = profile_factory(holds_savings=True, year=year)
+    _credited(profile, work_income=_LOW_WORK_INCOME)
     work_unit_id = profile.create_work()
-    profile.calculate(work_unit_id, work_income=_LOW_WORK_INCOME, savings_income=_SAVINGS)
+    profile.calculate(work_unit_id, savings_income=_SAVINGS)
 
     result = profile.compare(work_unit_id)
 

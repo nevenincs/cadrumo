@@ -36,6 +36,7 @@ docs:
       payable_invoice: desde las facturas recibidas
       previous_filing: desde tu declaración anterior
       profile: desde tu perfil de contribuyente
+      prorrata_register_activity: desde las actividades de tu registro de prorrata
       prorrata_regularizacion: desde la regularización de prorrata
       purchase_invoice_evidence: desde los justificantes de tus facturas recibidas
       relation_prefill: desde el resultado de un modelo relacionado

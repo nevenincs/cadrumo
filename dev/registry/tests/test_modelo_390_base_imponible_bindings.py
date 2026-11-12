@@ -43,7 +43,7 @@ from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.tests.authored_editions import filing_grade_exercises
 from cadrumo.domain.calculations.registry.tests.m390_formula_support import liquidation_operands
 from cadrumo.domain.iva.flow import IvaFlowDirection
-from cadrumo.domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
+from cadrumo.domain.iva.schema import IvaCategory, IvaExemptionArticle, IvaLedgerObservationRole, IvaRateKind
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .ledger_iva_aggregation_support import ledger_iva_aggregation_deduction_provenance
@@ -68,6 +68,9 @@ _SOPORTADO_CUOTA = Decimal("189.00")
 # -- all three are zero-rated repercutido -- fails on value rather than on shape.
 _INTRACOM_BASE = Decimal("1750.00")
 _EXPORT_BASE = Decimal("2300.00")
+# Box [105]: an exempt supply without the right to deduct (LIVA art. 20.Uno.14),
+# distinct from every base above.
+_EXENTA_SIN_DERECHO_BASE = Decimal("3150.00")
 
 
 def _m390_revision() -> ModeloRevision:
@@ -82,12 +85,13 @@ def _observation(
     base: Decimal,
     iva: Decimal,
     deduction_fact_kind: IvaDeductionFactKind | None = None,
+    exemption_article: IvaExemptionArticle | None = None,
 ) -> IvaLedgerObservation:
     return IvaLedgerObservation(
         ledger_id="ledger-m390-base",
         transaction_date=date(_EXERCISE, 6, 15),
         category=category,
-        exemption_article=None,
+        exemption_article=exemption_article,
         rate_kind=rate_kind,
         flow_direction=flow,
         base_amount=base,
@@ -165,6 +169,14 @@ def _annual_observations() -> tuple[IvaLedgerObservation, ...]:
             base=_EXPORT_BASE,
             iva=Decimal("0.00"),
         ),
+        _observation(
+            category=IvaCategory("domestic_exempt"),
+            rate_kind=IvaRateKind("exempt"),
+            flow=IvaFlowDirection.from_registry("repercutido"),
+            base=_EXENTA_SIN_DERECHO_BASE,
+            iva=Decimal("0.00"),
+            exemption_article=IvaExemptionArticle("art_20_uno_14"),
+        ),
     )
 
 
@@ -183,6 +195,7 @@ def _resolved() -> dict[str, Decimal]:
         ("modelo-390-iva-soportado-interiores-base", _SOPORTADO_BASE),
         ("modelo-390-volumen-entregas-intracomunitarias-base", _INTRACOM_BASE),
         ("modelo-390-volumen-exportaciones-exentas-base", _EXPORT_BASE),
+        ("modelo-390-volumen-exentas-sin-derecho-deduccion-base", _EXENTA_SIN_DERECHO_BASE),
     ),
 )
 def test_annual_base_binding_draws_its_tier_base_amount(binding_id: str, expected: Decimal) -> None:

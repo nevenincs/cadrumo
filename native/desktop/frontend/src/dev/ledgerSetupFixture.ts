@@ -81,7 +81,12 @@ import { fixtureInstant } from "@/dev/fixtureDates";
 export function setupOperations(ledger: FixtureLedger, tools: Tools) {
   const { profileId, today, hex64, events, now } = tools;
   const prorrataWork = prorrataOperations(tools);
-  const inventoryWork = inventoryOperations(tools);
+  const inventoryWork = inventoryOperations(tools, () =>
+    ledger.movements.map(({ transaction }) => ({
+      id: transaction.transaction_id,
+      currency: transaction.currency,
+    })),
+  );
   const ratios = new Map<string, string>([["telefonia_fija", "0.5"]]);
   const counterparties = new Map<string, JsonObject>([
     [
@@ -283,6 +288,7 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
 
   // ---- Counterparties ------------------------------------------------------
 
+  const filingNames = new Map<string, JsonObject>();
   function counterparty(request: JsonObject): JsonObject {
     fromKeys(request, [
       "action",
@@ -294,9 +300,34 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
       "note",
       "asserted_by",
       "provincia_code",
+      "party_kind",
+      "primer_apellido",
+      "segundo_apellido",
+      "no_second_surname",
+      "nombre",
+      "razon_social",
+      "renderings",
     ]);
     const action = required(request.action);
-    if (!["view", "confirm", "withdraw", "provincia"].includes(action))
+    if (
+      !["view", "confirm", "withdraw", "provincia", "filing_name"].includes(
+        action,
+      )
+    )
+      invalid();
+    const carriesName = [
+      "party_kind",
+      "primer_apellido",
+      "segundo_apellido",
+      "nombre",
+      "razon_social",
+    ].some((key) => text(request[key]) !== null);
+    if (
+      action !== "filing_name" &&
+      (carriesName ||
+        request.no_second_surname === true ||
+        (Array.isArray(request.renderings) && request.renderings.length > 0))
+    )
       invalid();
     if (action !== "confirm" && text(request.note)) invalid();
     // Only a provincia statement carries a provincia, and it states one the
@@ -328,6 +359,51 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
     const state = text(request.identification_state);
     if ((country && country.length !== 2) || (state && state.length !== 2))
       invalid();
+    if (action === "filing_name") {
+      const kind = text(request.party_kind);
+      const renderings = (request.renderings ?? []) as unknown as {
+        width: number;
+        text: string;
+      }[];
+      const natural = kind === "natural_person";
+      if (
+        !text(request.asserted_by) ||
+        (kind !== "entity" && !natural) ||
+        (natural
+          ? !text(request.primer_apellido) ||
+            !text(request.nombre) ||
+            text(request.razon_social) ||
+            Boolean(text(request.segundo_apellido)) ===
+              (request.no_second_surname === true)
+          : !text(request.razon_social) ||
+            text(request.primer_apellido) ||
+            text(request.segundo_apellido) ||
+            text(request.nombre) ||
+            request.no_second_surname === true) ||
+        renderings.length > 16 ||
+        new Set(renderings.map((one) => one.width)).size !==
+          renderings.length ||
+        renderings.some((one) => one.width < 1 || one.text.length > one.width)
+      )
+        invalid();
+      filingNames.set(tax, {
+        party_kind: kind,
+        primer_apellido: text(request.primer_apellido),
+        segundo_apellido: text(request.segundo_apellido),
+        no_second_surname: request.no_second_surname === true,
+        nombre: text(request.nombre),
+        razon_social: text(request.razon_social),
+        renderings: renderings as unknown as JsonValue,
+        asserted_by: text(request.asserted_by),
+        asserted_at: now(),
+      });
+    }
+    const filingName = filingNames.get(tax) ?? null;
+    // The identifier's own form: a leading letter other than the natural
+    // persons' foreign-resident prefixes names an entity.
+    const observedForm = /^[A-HJNP-SUVW]/.test(tax)
+      ? "entity"
+      : "natural_person";
     let facts = counterparties.get(tax) ?? null;
     let changed = false;
     if (action === "confirm" || action === "provincia") {
@@ -398,6 +474,20 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
         (facts?.provincia_code as string | null | undefined) ?? null,
       // Served on a view, a confirmation and a provincia statement.
       provincia_choices: action === "withdraw" ? [] : PROVINCIA_CHOICES,
+      filing_name:
+        action === "view" || action === "filing_name"
+          ? (filingName as JsonValue)
+          : null,
+      findings:
+        filingName && filingName.party_kind !== observedForm
+          ? [
+              {
+                code: "counterparty_filing_name_kind_contradicts_identifier_form",
+                declared_kind: filingName.party_kind as JsonValue,
+                observed_form: observedForm,
+              },
+            ]
+          : [],
     };
   }
 

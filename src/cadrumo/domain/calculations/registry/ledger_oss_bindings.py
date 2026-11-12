@@ -13,7 +13,9 @@ from typing import TYPE_CHECKING, Annotated, Final, Literal, Self
 from pydantic import BaseModel, BeforeValidator, Field, field_validator, model_validator
 
 from ....core.aggregation import BindingSourceKind
+from ....core.errors.hierarchy import CoreValidationError
 from ....core.models import STRICT_FROZEN_CONFIG
+from ....core.parsing.codes import normalise_iso_3166_alpha2_jurisdiction
 from ....core.period import Period
 from ...iva.classification import TransactionKind, require_transaction_kind
 from ...iva.errors import IvaValidationError
@@ -44,12 +46,9 @@ if TYPE_CHECKING:
 _SELECTOR_TOKEN: Final = re.compile(r"[a-z][a-z0-9_]*")
 """The closed form of an authored OSS/IOSS selector token."""
 
-_MEMBER_STATE_TOKEN: Final = re.compile(r"[A-Z]{2}")
-"""The closed form of an authored destination Member State token, once upper-cased."""
-
 
 def _member_state_token_form(value: object) -> object:
-    """Refuse a destination token outside the two-letter form before the member-state type projects it.
+    """Refuse a destination token outside the ISO 3166-1 alpha-2 form before the member-state type projects it.
 
     A selector carries no governing date of its own, so its membership in the
     dated member-state vocabulary is checked by
@@ -58,9 +57,14 @@ def _member_state_token_form(value: object) -> object:
     """
     if isinstance(value, EUMemberState):
         return value
-    if not isinstance(value, str) or _MEMBER_STATE_TOKEN.fullmatch(value.strip().upper()) is None:
-        raise RegistryValidationError("destination member state must be a two-letter registry token")
-    return value.strip().upper()
+    if not isinstance(value, str):
+        raise RegistryValidationError("destination member state must be an ISO 3166-1 alpha-2 registry token")
+    try:
+        return normalise_iso_3166_alpha2_jurisdiction(value.strip().upper())
+    except CoreValidationError as error:
+        raise RegistryValidationError(
+            "destination member state must be an ISO 3166-1 alpha-2 registry token"
+        ) from error
 
 
 class OssLineEffect(StrEnum):
