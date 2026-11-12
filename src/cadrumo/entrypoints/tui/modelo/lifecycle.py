@@ -78,6 +78,7 @@ from ....core.i18n.render import output_language
 from ....core.modelo_export_artefact import ModeloExportArtefact
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....core.payment_election import PaymentElection
+from ....core.payment_instalment_election import PaymentInstalmentElection
 from ....core.prior_domiciliation_election import PriorDomiciliationElection
 from ....core.refund_election import RefundElection
 from ....domain.modelos.calculation_revision_amendment import M303RectificativaMotive
@@ -294,6 +295,7 @@ class ModeloWorkspaceLifecycleDoor:
         artefact: ModeloExportArtefact = ModeloExportArtefact.FICHERO_BOE,
         charge_account_id: str | None = None,
         refund_account_id: str | None = None,
+        instalment_election: PaymentInstalmentElection = PaymentInstalmentElection.SINGLE,
     ) -> OperationControllerPort:
         """Export the selected verified revision to the operator-selected path with the operator's choices.
 
@@ -329,6 +331,7 @@ class ModeloWorkspaceLifecycleDoor:
                     refund_election=refund_election,
                     payment_election=payment_election,
                     prior_domiciliation_election=prior_domiciliation_election,
+                    instalment_election=instalment_election,
                     charge_account_id=charge_account_id,
                     refund_account_id=refund_account_id,
                     replace_existing=replace_existing,

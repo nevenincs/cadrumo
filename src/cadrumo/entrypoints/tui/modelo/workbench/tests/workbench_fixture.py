@@ -21,6 +21,12 @@ from ......application.modelo.casilla_help_formula import ModeloHelpFormulaV1
 from ......application.modelo.source_policy import source_policy
 from ......application.modelo.work_form import build_modelo_work_form
 from ......application.modelo.work_form_declaration_facts import ModeloFormYearProjection
+from ......application.modelo.work_form_export_offer import (
+    ModeloExportRequestField,
+    ModeloFormElection,
+    ModeloFormElectionChoice,
+    ModeloFormElectionQuestion,
+)
 from ......application.modelo.work_form_field_vocabulary import (
     ModeloFormBinding,
     ModeloFormCasillaAddressV1,
@@ -366,6 +372,29 @@ def with_pages(form: ModeloWorkForm, pages: tuple[ModeloFormPage, ...], **update
     return paged.model_copy(update={"outline": outline})
 
 
+def served_elections() -> tuple[ModeloFormElectionQuestion, ...]:
+    """The three settlement questions a read serves, each answerable and at its neutral default; the words are synthetic."""
+
+    def question(
+        election: ModeloFormElection, request_field: ModeloExportRequestField, default: str, *others: str
+    ) -> ModeloFormElectionQuestion:
+        return ModeloFormElectionQuestion(
+            election=election,
+            request_field=request_field,
+            words=f"Synthetic question {election.value}",
+            default=default,
+            choices=tuple(
+                ModeloFormElectionChoice(value=value, words=f"Synthetic answer {value}") for value in (default, *others)
+            ),
+        )
+
+    return (
+        question(ModeloFormElection.REFUND, "refund_election", "compensar", "devolver"),
+        question(ModeloFormElection.PAYMENT, "payment_election", "ingreso", "domiciliacion", "cuenta_corriente"),
+        question(ModeloFormElection.PRIOR_DOMICILIATION, "prior_domiciliation_election", "keep", "cancel_or_modify"),
+    )
+
+
 @dataclass
 class FakeReader:
     """Answers the workbench's reads from a fixed form and counts them."""
@@ -474,7 +503,11 @@ class FakeActions:
 
     def export_offer(self) -> WorkbenchExportOffer:
         """Offer the filing file, and the payment elections when the test asks for them."""
-        return WorkbenchExportOffer(artefacts=self.export_artefacts, asks_elections=self.asks_elections)
+        return WorkbenchExportOffer(
+            artefacts=self.export_artefacts,
+            asks_elections=self.asks_elections,
+            elections=served_elections() if self.asks_elections else (),
+        )
 
     async def export(self, request: WorkbenchExportRequest) -> OperationControllerPort:
         """Record an export request."""

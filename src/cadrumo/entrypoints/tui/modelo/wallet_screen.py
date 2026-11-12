@@ -44,6 +44,7 @@ from .wallet import (
     IvaWalletActionKind,
     IvaWalletEntryV1,
     IvaWalletNotSentError,
+    IvaWalletOpeningV1,
     IvaWalletReceiptV1,
     IvaWalletRefusedError,
     ModeloIvaWalletDoorV1,
@@ -71,6 +72,7 @@ REGISTER_STATUS_LOCALE_KEY: Final = f"{_PREFIX}.receipt.register_status"
 SELECTED_SOURCE_LOCALE_KEY: Final = f"{_PREFIX}.receipt.selected_source"
 OUTCOME_LOCALE_KEY: Final = f"{_PREFIX}.receipt.reconciliation_outcome"
 PERIOD_LOCALE_KEY: Final = "workspace.declarations.list.column.period"
+YEAR_NOT_A_NUMBER_LOCALE_KEY: Final = "desktop.ledger.edit.refusal.year_not_a_number"
 CLOSE_LOCALE_KEY: Final = "workspace.modelo.key.close"
 BACK_LOCALE_KEY: Final = "workspace.modelo.key.back"
 
@@ -221,16 +223,26 @@ class ModeloIvaWalletScreen(ModalScreen[str | None]):
 
     BINDINGS: ClassVar = [Binding("escape", "close", "", show=False)]
 
-    def __init__(self, door: ModeloIvaWalletDoorV1, *, form: ModeloWorkForm) -> None:
-        """Bind the door, and open on the declaration's own year and period."""
+    def __init__(
+        self, door: ModeloIvaWalletDoorV1, *, form: ModeloWorkForm, opening: IvaWalletOpeningV1 | None = None
+    ) -> None:
+        """Bind the door, and open on the declaration's own year and period.
+
+        A refusal's ``opening`` names the recording to open on and the period,
+        and for an override the amount, exactly as it was served.
+        """
         super().__init__()
         self._door = door
         self._year = form.filing_year
-        self._code = form.period.registry_token
+        self._entry_year = form.filing_year if opening is None or opening.filing_year is None else opening.filing_year
+        self._code = (
+            form.period.registry_token if opening is None or opening.period_code is None else opening.period_code
+        )
+        self._amount = "" if opening is None else opening.amount
         self._language = OutputLanguage(output_language())
         self._phase: BalancePhase = "reading"
         self._balance: ModeloIvaWalletBalanceProjection | None = None
-        self._mode = IvaWalletActionKind.SEED
+        self._mode = IvaWalletActionKind.SEED if opening is None else opening.kind
         self._receipt: IvaWalletReceiptV1 | None = None
         self._busy = False
         self._held = False
@@ -264,11 +276,11 @@ class ModeloIvaWalletScreen(ModalScreen[str | None]):
                 )
                 yield Static(id="wallet-help", markup=False)
                 yield localized(Static(tr(YEAR_LOCALE_KEY), classes="wallet-label", markup=False), YEAR_LOCALE_KEY)
-                yield Input(value=str(self._year), type="integer", id="wallet-period-year")
+                yield Input(value=str(self._entry_year), type="integer", id="wallet-period-year")
                 yield localized(Static(tr(CODE_LOCALE_KEY), classes="wallet-label", markup=False), CODE_LOCALE_KEY)
                 yield Input(value=self._code, id="wallet-period-code")
                 yield localized(Static(tr(AMOUNT_LOCALE_KEY), classes="wallet-label", markup=False), AMOUNT_LOCALE_KEY)
-                yield Input(id="wallet-amount")
+                yield Input(value=self._amount, id="wallet-amount")
                 yield localized(
                     Static(tr(REASON_LOCALE_KEY), id="wallet-reason-label", markup=False), REASON_LOCALE_KEY
                 )
@@ -291,7 +303,7 @@ class ModeloIvaWalletScreen(ModalScreen[str | None]):
         fit_dialog_height(self, self.app.size.height)
         describe_bindings(self._bindings.key_to_bindings, _KEY_DESCRIPTIONS)
         self.refresh_bindings()
-        self.query_one("#wallet-modes", OptionList).highlighted = 0
+        self.query_one("#wallet-modes", OptionList).highlighted = _MODES.index(self._mode)
         self._paint()
         self._read_balance()
         self.query_one("#wallet-as-of", Input).focus()
@@ -350,9 +362,16 @@ class ModeloIvaWalletScreen(ModalScreen[str | None]):
 
     # -- drawing ---------------------------------------------------------------
 
+    def _failed_words(self) -> str:
+        """Why no balance is drawn: the year typed is no year, or the read failed."""
+        typed = self.query_one("#wallet-as-of", Input).value.strip()
+        if typed and self._as_of_year() is None:
+            return tr(YEAR_NOT_A_NUMBER_LOCALE_KEY, raw=typed)
+        return tr(READ_FAILED_LOCALE_KEY)
+
     def _paint(self) -> None:
         status = self.query_one("#wallet-status", Static)
-        said = {"reading": tr(LOADING_LOCALE_KEY), "failed": tr(READ_FAILED_LOCALE_KEY)}.get(self._phase, "")
+        said = {"reading": tr(LOADING_LOCALE_KEY), "failed": self._failed_words()}.get(self._phase, "")
         status.update(said)
         status.display = bool(said)
         lines: tuple[str, ...] = ()
