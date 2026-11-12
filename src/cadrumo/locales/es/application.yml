@@ -2107,6 +2107,13 @@ application:
         ningún registro de pagador ni declaración de ausencia, y tu perfil no declara
         ausente esta renta. Registra el certificado de cada pagador o declara que
         ningún pagador practicó retención.'
+      retencion_soportada_income_record_required: 'Clase de renta {income_class}:
+        declaraste que ningún pagador practicó retención, lo que no dice nada del
+        importe de los ingresos. Retira la declaración y registra después el certificado
+        de cada pagador como declaración del operador.'
+      retencion_soportada_record_figure_missing: 'Clase de renta {income_class}: un
+        registro de pagador guardado no indica las reducciones ni los gastos deducibles
+        del certificado. Sustituye el registro por las cifras del certificado.'
       row_unregistered: El movimiento del {row_date} por {row_amount} registra un
         elemento que no está en tu registro.
       row_unregistered_undated: Un movimiento registra un elemento que no consta en

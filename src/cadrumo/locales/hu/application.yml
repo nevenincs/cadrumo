@@ -2064,6 +2064,13 @@ application:
         kifizetői rekord és hiánynyilatkozat sem, a profilod pedig nem jelöli hiányzónak
         ezt a jövedelmet. Rögzítsd minden kifizető igazolását, vagy jelentsd ki, hogy
         egyetlen kifizető sem vont le.'
+      retencion_soportada_income_record_required: '{income_class} jövedelemosztály:
+        azt nyilatkoztad, hogy egy kifizető sem vont le adót, de ez nem mondja meg
+        a jövedelem összegét. Vond vissza a nyilatkozatot, majd rögzítsd minden kifizető
+        igazolását operátori nyilatkozatként.'
+      retencion_soportada_record_figure_missing: '{income_class} jövedelemosztály:
+        egy tárolt kifizetői rekord nem tartalmazza az igazolás csökkentéseit és levonható
+        költségeit. Cseréld le a rekordot az igazolás adataival.'
       row_unregistered: A(z) {row_date} napi, {row_amount} összegű tétel olyan eszközt
         rögzít, amely nincs a nyilvántartásodban.
       row_unregistered_undated: Egy könyvelt tétel a nyilvántartásban nem szereplő

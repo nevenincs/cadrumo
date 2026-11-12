@@ -71,6 +71,8 @@ def seed_payer_certificate(
     ingreso_a_cuenta_repercutido: Decimal = Decimal("0.00"),
     importe_integro_dinerario: Decimal = Decimal("0.00"),
     valoracion_especie: Decimal = Decimal("0.00"),
+    reducciones_aplicables: Decimal = Decimal("0.00"),
+    gastos_deducibles: Decimal = Decimal("0.00"),
 ) -> RetencionSoportadaRecord:
     """Store one payer certificate record in the active bucket and return it."""
     repository = RetencionSoportadaRecordRepositoryAdapter(objects=secure_object_repository_for_active_bucket())
@@ -86,8 +88,8 @@ def seed_payer_certificate(
         retencion=retencion,
         ingreso_a_cuenta=ingreso_a_cuenta,
         ingreso_a_cuenta_repercutido=ingreso_a_cuenta_repercutido,
-        reducciones_aplicables=Decimal("0.00") if income_class is RetencionSoportadaClase.TRABAJO else None,
-        gastos_deducibles=Decimal("0.00") if income_class is RetencionSoportadaClase.TRABAJO else None,
+        reducciones_aplicables=reducciones_aplicables if income_class is RetencionSoportadaClase.TRABAJO else None,
+        gastos_deducibles=gastos_deducibles if income_class is RetencionSoportadaClase.TRABAJO else None,
         origin=RetencionSoportadaOrigen.PAYER_CERTIFICATE,
         # The sha256 of a synthetic certificate's bytes, kept in custody: one certificate per payer, class and ejercicio.
         evidence_fingerprint=keep_certificate(

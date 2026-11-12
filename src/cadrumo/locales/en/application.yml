@@ -1999,6 +1999,13 @@ application:
         no payer record and no absence attestation, and your profile does not declare
         this income absent. Record each payer''s certificate, or attest that no payer
         withheld.'
+      retencion_soportada_income_record_required: 'Income class {income_class}: you
+        attested that no payer withheld, which says nothing about the amount of the
+        income. Withdraw the attestation, then record each payer''s certificate as
+        an operator declaration.'
+      retencion_soportada_record_figure_missing: 'Income class {income_class}: a stored
+        payer record does not state the reductions and deductible expenses of the
+        certificate. Replace the record with the certificate''s figures.'
       row_unregistered: The ledger entry of {row_date} for {row_amount} records an
         asset your register does not hold.
       row_unregistered_undated: A ledger entry records an asset your register does

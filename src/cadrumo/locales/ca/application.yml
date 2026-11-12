@@ -2104,6 +2104,13 @@ application:
         ha cap registre de pagador ni declaració d''absència, i el teu perfil no declara
         absent aquesta renda. Registra el certificat de cada pagador o declara que
         cap pagador no va practicar retenció.'
+      retencion_soportada_income_record_required: 'Classe de renda {income_class}:
+        has declarat que cap pagador va practicar retenció, cosa que no diu res de
+        l''import dels ingressos. Retira la declaració i registra després el certificat
+        de cada pagador com a declaració de l''operador.'
+      retencion_soportada_record_figure_missing: 'Classe de renda {income_class}:
+        un registre de pagador desat no indica les reduccions ni les despeses deduïbles
+        del certificat. Substitueix el registre per les xifres del certificat.'
       row_unregistered: El moviment del {row_date} per {row_amount} registra un element
         que no és al teu registre.
       row_unregistered_undated: Un moviment registra un element que no consta al teu
