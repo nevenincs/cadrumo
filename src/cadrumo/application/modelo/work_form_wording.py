@@ -251,6 +251,9 @@ STATED_ABSENT_LOCALE_KEYS: Final[Mapping[AbsenceAttestationFamily, str]] = Mappi
         AbsenceAttestationFamily.RENTA_NEGATIVE_GENERAL_BASES_PENDING: (
             "application.modelo.work_form.carry_attestation.renta_negative_general_bases_pending.origin"
         ),
+        AbsenceAttestationFamily.RENTA_TRABAJO_INCOME_NOT_STATED: (
+            "application.modelo.work_form.carry_attestation.renta_trabajo_income_not_stated.origin"
+        ),
     }
 )
 """What a carry the filer stated holds nothing says beside it, by the family of the statement."""

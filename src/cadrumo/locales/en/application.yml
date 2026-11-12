@@ -2741,6 +2741,9 @@ application:
         valid with the explicit revision selector.
       source_owned_binding_override: You entered a value in a box that comes from
         your records; remove it or correct the record it comes from.
+      trabajo_income_nothing_open: 'Modelo %{modelo} for %{filing_year} has no work-income
+        box left to state as none: each one already holds a figure or your statement,
+        or the declaration has no work income from a payer record. Nothing was changed.'
       verification_report_not_found: No check report found with id=%{verification_report_id}.
       work_create_not_applicable: 'Modelo %{modelo} does not apply to you according
         to your profile: %{reason} No declaration was created.'
@@ -3011,6 +3014,32 @@ application:
         modelo 123 that declares it was submitted by your payer, not by you, so this
         value cannot be filled in automatically.
       suffered_retencion_trabajo_uncredited: This declaration includes income from
+      trabajo_deduction_not_computed: 'Your work income does not include the deductions
+        only you can evidence: union dues (0014), professional-body fees (0015), legal-defence
+        costs (0016) and the increase for geographic mobility (0020). If any applies,
+        the return overstates your tax. State it in those boxes.'
+      trabajo_disability_unstated: Your profile states a disability, so box [%{casilla_id}]
+        (increase of the work expenses for an active worker with a disability) may
+        apply to you. State the amount, or 0 if you are not an active worker.
+      trabajo_expense_above_limit:
+        colegio_profesional: Box [%{casilla_id}] (professional-body fees) states %{stated}
+          EUR, above the legal limit of %{limit} EUR. Lower it to the limit or less.
+        defensa_juridica: Box [%{casilla_id}] (legal-defence costs) states %{stated}
+          EUR, above the legal limit of %{limit} EUR. Lower it to the limit or less.
+      trabajo_income_unstated:
+        decision_trabajador: Box [%{casilla_id}] (employer contributions made at your
+          decision) is income from work that no payer certificate states. State the
+          amount you received, or state that there is none.
+        dependencia: Box [%{casilla_id}] (employer contributions to dependency insurance)
+          is income from work that no payer certificate states. State the amount you
+          received, or state that there is none.
+        patrimonio_protegido: Box [%{casilla_id}] (contributions to the protected
+          estate of a person with a disability) is income from work that no payer
+          certificate states. State the amount you received, or state that there is
+          none.
+        prevision: Box [%{casilla_id}] (employer contributions to pension plans and
+          welfare mutuals) is income from work that no payer certificate states. State
+          the amount you received, or state that there is none.
         work (rendimientos del trabajo), but no withholding (retención) is credited
         against it. Enter the amount from your payer's certificado de retenciones
         e ingresos a cuenta. The modelo 111 that declares it was submitted by your
@@ -3284,6 +3313,18 @@ application:
             years is still pending offset (art. 50.3 Ley 35/2006). Each carry is recorded
             as a 0 you stated, apart from a figure you typed; if an earlier return
             later shows an amount, the declaration flags the difference.
+        renta_trabajo_income_not_stated:
+          action: I have no employer contributions or protected-estate contributions
+            to state
+          effect: 'Recorded as a 0 you stated: none of these contributions.'
+          origin: You stated there is none
+          statement: 'States that you have nothing in four boxes of your work income:
+            employer contributions to pension plans and welfare mutuals (0008), employer
+            contributions to dependency insurance (0009), contributions to the protected
+            estate of a person with a disability (0010) and employer contributions
+            made at your decision (0024). Each box is recorded as a 0 you stated,
+            apart from a figure you typed. No payer certificate states these amounts,
+            so only you can.'
       credits_heading:
         mixed: Withholdings
         practised: Withholdings you have taken

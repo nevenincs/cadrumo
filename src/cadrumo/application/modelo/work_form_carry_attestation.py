@@ -25,6 +25,7 @@ from .edit_models import (
     ModeloEditPermittedSurfaceEntryV1,
     ModeloEditWritableBindingOverrideSurfaceEntryV1,
 )
+from .trabajo_income_findings import trabajo_recorded
 from .work_form_context import WorkFormContext
 from .work_form_models import ModeloFormCarryAttestation
 
@@ -33,6 +34,9 @@ _ACTION_LOCALE_KEYS: Final[Mapping[AbsenceAttestationFamily, str]] = MappingProx
         AbsenceAttestationFamily.RENTA_NEGATIVE_GENERAL_BASES_PENDING: (
             "application.modelo.work_form.carry_attestation.renta_negative_general_bases_pending.action"
         ),
+        AbsenceAttestationFamily.RENTA_TRABAJO_INCOME_NOT_STATED: (
+            "application.modelo.work_form.carry_attestation.renta_trabajo_income_not_stated.action"
+        ),
     }
 )
 _STATEMENT_LOCALE_KEYS: Final[Mapping[AbsenceAttestationFamily, str]] = MappingProxyType(
@@ -40,12 +44,18 @@ _STATEMENT_LOCALE_KEYS: Final[Mapping[AbsenceAttestationFamily, str]] = MappingP
         AbsenceAttestationFamily.RENTA_NEGATIVE_GENERAL_BASES_PENDING: (
             "application.modelo.work_form.carry_attestation.renta_negative_general_bases_pending.statement"
         ),
+        AbsenceAttestationFamily.RENTA_TRABAJO_INCOME_NOT_STATED: (
+            "application.modelo.work_form.carry_attestation.renta_trabajo_income_not_stated.statement"
+        ),
     }
 )
 _EFFECT_LOCALE_KEYS: Final[Mapping[AbsenceAttestationFamily, str]] = MappingProxyType(
     {
         AbsenceAttestationFamily.RENTA_NEGATIVE_GENERAL_BASES_PENDING: (
             "application.modelo.work_form.carry_attestation.renta_negative_general_bases_pending.effect"
+        ),
+        AbsenceAttestationFamily.RENTA_TRABAJO_INCOME_NOT_STATED: (
+            "application.modelo.work_form.carry_attestation.renta_trabajo_income_not_stated.effect"
         ),
     }
 )
@@ -74,6 +84,9 @@ def _open_carries_by_family(
         binding = context.bindings.get(entry.binding_id)
         if binding is not None and binding.absence_attestation is not None:
             open_by_family.setdefault(binding.absence_attestation, []).append(entry.binding_id)
+    if revision is None or not trabajo_recorded(revision):
+        # No payer record of work income, so the employer's contributions are not in question.
+        open_by_family.pop(AbsenceAttestationFamily.RENTA_TRABAJO_INCOME_NOT_STATED, None)
     return open_by_family
 
 

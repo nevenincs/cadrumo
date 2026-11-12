@@ -2845,6 +2845,10 @@ application:
         explicit revízió kiválasztóval érvényes.
       source_owned_binding_override: Olyan mezőbe írtál értéket, amely a nyilvántartásaidból
         származik; töröld, vagy javítsd a forrásbejegyzést.
+      trabajo_income_nothing_open: 'A(z) %{modelo} modell %{filing_year}. évi bevallásában
+        nincs olyan munkaviszonyi jövedelemrovat, amelyet nullának lehetne nyilatkozni:
+        mindegyikben van már összeg vagy a nyilatkozatod, vagy a bevallásnak nincs
+        kifizetői rekordból származó munkaviszonyi jövedelme. Semmi sem változott.'
       verification_report_not_found: 'Nem található ellenőrzési jelentés ezzel az
         azonosítóval: %{verification_report_id}.'
       work_create_not_applicable: 'A Modelo %{modelo} a profilod szerint nem vonatkozik
@@ -3128,6 +3132,38 @@ application:
         levonást bevalló Modelo 123 nyomtatványt a kifizető nyújtotta be, nem te,
         ezért ez az érték nem tölthető ki automatikusan.
       suffered_retencion_trabajo_uncredited: Ez a bevallás munkaviszonyból származó
+      trabajo_deduction_not_computed: 'A munkaviszonyi jövedelmed nem tartalmazza
+        azokat a levonásokat, amelyeket csak te tudsz igazolni: szakszervezeti díj
+        (0014), szakmai kamarai díj (0015), jogvédelmi költség (0016) és a földrajzi
+        mobilitás miatti növekmény (0020). Ha bármelyik megilleti, a bevallás túlzott
+        adót mutat. Add meg ezekben a rovatokban.'
+      trabajo_disability_unstated: A profilod fogyatékosságot jelez, ezért a(z) [%{casilla_id}]
+        rovat (a fogyatékossággal élő aktív munkavállaló munkaköltségeinek növekménye)
+        megillethet. Add meg az összeget, vagy 0-t, ha nem vagy aktív munkavállaló.
+      trabajo_expense_above_limit:
+        colegio_profesional: A(z) [%{casilla_id}] rovat (szakmai kamarai díj) %{stated}
+          EUR-t mutat, ami meghaladja a %{limit} EUR törvényes határt. Csökkentsd
+          a határra vagy az alá.
+        defensa_juridica: A(z) [%{casilla_id}] rovat (jogvédelmi költség) %{stated}
+          EUR-t mutat, ami meghaladja a %{limit} EUR törvényes határt. Csökkentsd
+          a határra vagy az alá.
+      trabajo_income_unstated:
+        decision_trabajador: A(z) [%{casilla_id}] rovat (a te döntésedre teljesített
+          munkáltatói befizetések) olyan munkaviszonyi jövedelem, amelyet egyetlen
+          kifizetői igazolás sem tartalmaz. Add meg a kapott összeget, vagy nyilatkozz
+          arról, hogy nincs.
+        dependencia: A(z) [%{casilla_id}] rovat (függőségi biztosításhoz nyújtott
+          munkáltatói hozzájárulások) olyan munkaviszonyi jövedelem, amelyet egyetlen
+          kifizetői igazolás sem tartalmaz. Add meg a kapott összeget, vagy nyilatkozz
+          arról, hogy nincs.
+        patrimonio_protegido: A(z) [%{casilla_id}] rovat (fogyatékossággal élő személy
+          védett vagyonába tett befizetések) olyan munkaviszonyi jövedelem, amelyet
+          egyetlen kifizetői igazolás sem tartalmaz. Add meg a kapott összeget, vagy
+          nyilatkozz arról, hogy nincs.
+        prevision: A(z) [%{casilla_id}] rovat (nyugdíjtervekhez és szociális előrelátási
+          egyesületekhez nyújtott munkáltatói hozzájárulások) olyan munkaviszonyi
+          jövedelem, amelyet egyetlen kifizetői igazolás sem tartalmaz. Add meg a
+          kapott összeget, vagy nyilatkozz arról, hogy nincs.
         jövedelmet (rendimientos del trabajo) tartalmaz, de nem szerepel benne levont
         forrásadó (retención). Add meg az összeget a kifizető igazolásából (certificado
         de retenciones e ingresos a cuenta). A levonást bevalló Modelo 111 nyomtatványt
@@ -3412,6 +3448,19 @@ application:
             negatív általános adóalapod (Ley 35/2006, 50.3. cikk). Minden összeg általad
             kijelentett 0-ként kerül rögzítésre, a beírt számtól elkülönítve; ha egy
             korábbi bevallás később összeget mutat, a bevallás jelzi az eltérést.
+        renta_trabajo_income_not_stated:
+          action: Nincs megadandó munkáltatói hozzájárulásom vagy védett vagyonba
+            tett befizetésem
+          effect: 'Általad megadott 0-ként rögzítve: ezekből a hozzájárulásokból nincs.'
+          origin: Megadtad, hogy nincs
+          statement: 'Kijelented, hogy a munkaviszonyból származó jövedelmed négy
+            rovatában nincs összeg: a nyugdíjtervekhez és szociális előrelátási egyesületekhez
+            nyújtott munkáltatói hozzájárulások (0008), a függőségi biztosításhoz
+            nyújtott munkáltatói hozzájárulások (0009), a fogyatékossággal élő személy
+            védett vagyonába tett befizetések (0010) és a te döntésedre teljesített
+            munkáltatói befizetések (0024). Minden rovat általad megadott 0-ként kerül
+            rögzítésre, a beírt számtól elkülönítve. Ezeket az összegeket egyetlen
+            kifizetői igazolás sem tartalmazza, ezért csak te adhatod meg őket.'
       credits_heading:
         mixed: Levonások
         practised: Az általad levont összegek
