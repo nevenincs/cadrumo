@@ -48,7 +48,7 @@ BIOGRAPHICAL_DATE_KEYS: frozenset[str] = frozenset(
 )
 """Date fields describing a life or contract event, which may lie before the envelope floor."""
 
-DECLARATIVE_BLOCKS: tuple[str, ...] = ("rental_properties", "officers")
+DECLARATIVE_BLOCKS: tuple[str, ...] = ("officers",)
 """Persona blocks no production operation records; a materialiser reports them as not loaded."""
 
 #: An application error or refusal code, the token a refused operation settles with.
@@ -195,6 +195,8 @@ class Identity:
     """Two-digit Spanish province code (01-52) of the holder's domicile, where a filing names it."""
     ceuta_melilla_deduction: bool | None = None
     """Whether a payer's retención on this holder's rentas applied the LIRPF art. 68.4 Ceuta/Melilla deduction."""
+    birth_date: PersonaDate | None = None
+    """The holder's date of birth, where a fact derived from the holder's age at a date reads it."""
 
     @property
     def is_entity(self) -> bool:
@@ -358,8 +360,34 @@ class WorkIncomeNoneStatement:
 
 
 @dataclass(frozen=True, slots=True)
+class CadastralValue:
+    """The cadastral values of one IBI year the persona states for a property."""
+
+    year: YearToken
+    total: Decimal
+    construccion: Decimal
+
+
+@dataclass(frozen=True, slots=True)
+class RentalLedgerLink:
+    """The ledger rows whose reference starts with ``ref_prefix`` and the rental row they are linked to."""
+
+    ref_prefix: str
+    target: Literal["arrendamiento", "inmueble"]
+    gasto: str | None
+    """The registry property-expense concept of a link to the property; a link to the lease states none."""
+
+
+@dataclass(frozen=True, slots=True)
 class RentalProperty:
-    """Declarative facts of a let dwelling; no production operation records them."""
+    """A let dwelling: the property row and the lease row the replay records, and the expectation inputs.
+
+    ``monthly_rent``, ``days_let``, ``amortization_base``, ``amortization_rate``
+    and its note are expectation inputs; the record holds none of them, since
+    the rent comes from the ledger rows and the amortisation from the stored
+    acquisition and cadastral values. The art. 23.2 rate is derived from the
+    lease facts and is never stated.
+    """
 
     id: str
     use: str
@@ -370,7 +398,23 @@ class RentalProperty:
     amortization_base: Decimal
     amortization_rate: Decimal
     amortization_base_note: str | None
-    reduccion_art_23_2: str
+    situacion: str
+    referencia_catastral: str
+    naturaleza: str
+    titularidad_regimen: str
+    titular: str
+    porcentaje_propiedad: Decimal
+    importe_adquisicion: Decimal
+    valor_suelo: Decimal
+    valores_catastrales: tuple[CadastralValue, ...]
+    fecha_contrato: PersonaDate
+    fecha_inicio: PersonaDate
+    uso_vivienda: bool
+    zona_tensionada: bool
+    primer_arrendamiento_vivienda: bool
+    arrendatario_pariente_art24: bool
+    incumple_lau_17_6: bool
+    ledger_links: tuple[RentalLedgerLink, ...]
 
 
 @dataclass(frozen=True, slots=True)
@@ -757,7 +801,7 @@ class Persona:
 
     def declared_blocks(self) -> tuple[str, ...]:
         """Return the declarative blocks this persona fills, which no production operation records."""
-        filled = {"rental_properties": self.rental_properties, "officers": self.officers}
+        filled = {"officers": self.officers}
         return tuple(name for name in DECLARATIVE_BLOCKS if filled[name])
 
 
@@ -947,6 +991,7 @@ def _identity(table: _Table, where: str) -> Identity:
                 "primary",
                 "province",
                 "ceuta_melilla_deduction",
+                "birth_date",
             }
         ),
     )
@@ -983,6 +1028,9 @@ def _identity(table: _Table, where: str) -> Identity:
         province=province,
         ceuta_melilla_deduction=(
             _bool(table, "ceuta_melilla_deduction", where) if "ceuta_melilla_deduction" in table else None
+        ),
+        birth_date=(
+            _date(table["birth_date"], f"{where}.birth_date", biographical=True) if "birth_date" in table else None
         ),
     )
 
@@ -1212,6 +1260,40 @@ def _work_income_none(table: _Table, where: str) -> WorkIncomeNoneStatement:
     return WorkIncomeNoneStatement(ejercicio=YearToken.parse(table["ejercicio"], where=f"{where}.ejercicio"))
 
 
+def _cadastral_values(value: object, where: str) -> tuple[CadastralValue, ...]:
+    values: list[CadastralValue] = []
+    for index, table in enumerate(_tables(value, where)):
+        here = f"{where}[{index}]"
+        _keys(table, here, required=frozenset({"year", "total", "construccion"}))
+        values.append(
+            CadastralValue(
+                year=YearToken.parse(table["year"], where=f"{here}.year"),
+                total=_amount(table["total"], f"{here}.total"),
+                construccion=_amount(table["construccion"], f"{here}.construccion"),
+            )
+        )
+    return tuple(values)
+
+
+def _ledger_links(value: object, where: str) -> tuple[RentalLedgerLink, ...]:
+    links: list[RentalLedgerLink] = []
+    for index, table in enumerate(_tables(value, where)):
+        here = f"{where}[{index}]"
+        _keys(table, here, required=frozenset({"ref_prefix", "target"}), optional=frozenset({"gasto"}))
+        target = _choice(_string(table, "target", here), ("arrendamiento", "inmueble"), here)
+        gasto = _optional_string(table, "gasto", here)
+        if (gasto is not None) != (target == "inmueble"):
+            raise _fail(here, "a link to the property states its expense concept and a link to the lease none")
+        links.append(
+            RentalLedgerLink(
+                ref_prefix=_string(table, "ref_prefix", here),
+                target=cast(Literal["arrendamiento", "inmueble"], target),
+                gasto=gasto,
+            )
+        )
+    return tuple(links)
+
+
 def _rental(table: _Table, where: str, roles: _Roles) -> RentalProperty:
     _keys(
         table,
@@ -1226,22 +1308,60 @@ def _rental(table: _Table, where: str, roles: _Roles) -> RentalProperty:
                 "days_let",
                 "amortization_base",
                 "amortization_rate",
-                "reduccion_art_23_2",
+                "situacion",
+                "referencia_catastral",
+                "naturaleza",
+                "titularidad_regimen",
+                "titular",
+                "porcentaje_propiedad",
+                "importe_adquisicion",
+                "valor_suelo",
+                "valores_catastrales",
+                "fecha_contrato",
+                "fecha_inicio",
+                "uso_vivienda",
+                "zona_tensionada",
+                "primer_arrendamiento_vivienda",
+                "arrendatario_pariente_art24",
+                "incumple_lau_17_6",
+                "ledger_links",
             }
         ),
         optional=frozenset({"amortization_base_note"}),
     )
+    contract_start = _date(table["contract_start"], f"{where}.contract_start", biographical=True)
+    fecha_contrato = _date(table["fecha_contrato"], f"{where}.fecha_contrato", biographical=True)
+    fecha_inicio = _date(table["fecha_inicio"], f"{where}.fecha_inicio", biographical=True)
+    if fecha_contrato != contract_start or fecha_inicio != contract_start:
+        raise _fail(where, "the lease is signed and starts on contract_start")
+    reference = _cadastral_reference(table["referencia_catastral"], f"{where}.referencia_catastral")
     return RentalProperty(
         id=_string(table, "id", where),
         use=_string(table, "use", where),
         tenant=roles(table["tenant"], where),
-        contract_start=_date(table["contract_start"], f"{where}.contract_start", biographical=True),
+        contract_start=contract_start,
         monthly_rent=_amount(table["monthly_rent"], where),
         days_let=_string(table, "days_let", where),
         amortization_base=_amount(table["amortization_base"], where),
         amortization_rate=_amount(table["amortization_rate"], where),
         amortization_base_note=_optional_string(table, "amortization_base_note", where),
-        reduccion_art_23_2=_string(table, "reduccion_art_23_2", where),
+        situacion=_string(table, "situacion", where),
+        referencia_catastral=reference,
+        naturaleza=_string(table, "naturaleza", where),
+        titularidad_regimen=_string(table, "titularidad_regimen", where),
+        titular=_string(table, "titular", where),
+        porcentaje_propiedad=_amount(table["porcentaje_propiedad"], where),
+        importe_adquisicion=_amount(table["importe_adquisicion"], where),
+        valor_suelo=_amount(table["valor_suelo"], where),
+        valores_catastrales=_cadastral_values(table["valores_catastrales"], f"{where}.valores_catastrales"),
+        fecha_contrato=fecha_contrato,
+        fecha_inicio=fecha_inicio,
+        uso_vivienda=_bool(table, "uso_vivienda", where),
+        zona_tensionada=_bool(table, "zona_tensionada", where),
+        primer_arrendamiento_vivienda=_bool(table, "primer_arrendamiento_vivienda", where),
+        arrendatario_pariente_art24=_bool(table, "arrendatario_pariente_art24", where),
+        incumple_lau_17_6=_bool(table, "incumple_lau_17_6", where),
+        ledger_links=_ledger_links(table["ledger_links"], f"{where}.ledger_links"),
     )
 
 
@@ -2202,6 +2322,7 @@ def _dates(persona: Persona) -> list[PersonaDate]:
     for member in (*persona.descendants, *persona.ascendants):
         found.extend(value for _key, value in member.leaves if isinstance(value, PersonaDate))
     found.extend(rental.contract_start for rental in persona.rental_properties)
+    found.extend(identity.birth_date for identity in persona.identities.identities if identity.birth_date is not None)
     found.extend(filing.presented for filing in persona.aeat_filings)
     found.extend(deadline.statutory_end for deadline in persona.expectations.deadlines)
     return found
@@ -2225,6 +2346,7 @@ def _check_years(persona: Persona, envelope: YearEnvelope) -> None:
         *(item.year for item in persona.expectations.obligations),
         *(item.year for item in persona.expectations.deadlines),
         *(item.year for item in persona.expectations.values),
+        *(value.year for rental in persona.rental_properties for value in rental.valores_catastrales),
     ]
     try:
         for token in tokens:
@@ -2278,6 +2400,7 @@ __all__ = [
     "AttestedPriorValue",
     "BelowFloorBlock",
     "BelowFloorRecord",
+    "CadastralValue",
     "CalculatedReturns",
     "Election",
     "Expectations",
@@ -2307,6 +2430,7 @@ __all__ = [
     "ProfileAnswer",
     "ProfileValue",
     "ProvisionPeriods",
+    "RentalLedgerLink",
     "RentalProperty",
     "WithholdingCertificate",
     "YearEnvelope",

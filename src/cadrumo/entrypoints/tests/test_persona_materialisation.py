@@ -51,8 +51,11 @@ from ...application.wizard.catalogue import build_setup_flow
 from ...application.wizard.imputation_election import YEAR_QUESTION_ID
 from ...core.i18n.render import tr
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.contribuyente.inmueble_facts import arrendamientos_from_facts, inmuebles_from_facts
 from ...domain.modelos.calculation_revision import CalculationRevisionState
 from ...domain.modelos.filing_record import AeatConfirmationState, FilingOrigin, ModeloRecordStatus
+from ...domain.transactions.models import TransactionCatalogue
+from ...domain.transactions.rental_link import RENTAL_LINK_IRPF_CATEGORY
 from ...domain.user_profile.values import ProfileSetupState
 from ...tests.personas import persona_ids
 from ..ledger_action_composition import compose_ledger_action_ports
@@ -72,13 +75,14 @@ from .persona_materialisation import (
     run_operation,
     settle_operation,
 )
+from .persona_rental_replay import tenant_age_band
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 #: What no production operation can record of each persona, read off its files: the declarative blocks and
 #: the employee's Seguridad Social contributions on a withholding certificate.
 _NOT_LOADED: dict[str, set[str]] = {
-    "arrendador-jubilado": {"rental_properties"},
+    "arrendador-jubilado": set(),
     "asalariada-familia": {"withholding_certificates.cotizaciones_seguridad_social"},
     "autonomo-alta-reciente": set(),
     "autonomo-electricista": set(),
@@ -210,9 +214,69 @@ def test_a_persona_replays_through_production_operations(
         )
         for activity, ledger in books.items()
     } == {book.activity: (book.opening_stock, (), True) for book in persona.inventory}
+    _assert_rentals_recorded(materialised, values, stored)
     assert {item.block for item in materialised.not_loaded} == _NOT_LOADED[persona_id]
     # Every run registers the persona at the same identity, so what is read of it names the same profile.
     assert world.profile_id == persona_profile_id(persona_id)
+
+
+def _assert_rentals_recorded(
+    materialised: MaterialisedPersona, values: dict[str, str], stored: TransactionCatalogue
+) -> None:
+    """Each let dwelling reads back as a property and a lease through the profile's record readers, and its rows link."""
+    persona, envelope = materialised.persona, materialised.world.envelope
+    properties = {record.clave: record for record in inmuebles_from_facts(values)}
+    leases = {record.clave: record for record in arrendamientos_from_facts(values)}
+    assert len(properties) == len(persona.rental_properties)
+    assert len(leases) == len(persona.rental_properties)
+    for rental in persona.rental_properties:
+        lease = next(item for item in leases.values() if item.fecha_contrato == rental.fecha_contrato.resolve(envelope))
+        dwelling = properties[lease.inmueble]
+        assert (dwelling.referencia_catastral, dwelling.importe_adquisicion, dwelling.valor_suelo) == (
+            rental.referencia_catastral,
+            rental.importe_adquisicion,
+            rental.valor_suelo,
+        )
+        assert {(value.year, value.total, value.construccion) for value in dwelling.valores_catastrales} == {
+            (value.year.resolve(envelope), value.total, value.construccion) for value in rental.valores_catastrales
+        }
+        assert (lease.fecha_inicio, lease.uso_vivienda, lease.zona_tensionada, lease.primer_arrendamiento_vivienda) == (
+            rental.fecha_inicio.resolve(envelope),
+            rental.uso_vivienda,
+            rental.zona_tensionada,
+            rental.primer_arrendamiento_vivienda,
+        )
+        assert (lease.arrendatario_pariente_art24, lease.incumple_lau_17_6, lease.rehabilitacion_fecha) == (
+            rental.arrendatario_pariente_art24,
+            rental.incumple_lau_17_6,
+            None,
+        )
+        assert [(tenant.nif, tenant.franja_edad, tenant.extranjero) for tenant in lease.inquilinos] == [
+            (persona.identity(rental.tenant), tenant_age_band(persona, rental, envelope), False)
+        ]
+        linked = {
+            row.ref: (
+                stored.transactions[materialised.transactions[row.ref]].arrendamiento_ref,
+                stored.transactions[materialised.transactions[row.ref]].inmueble_ref,
+                str(stored.transactions[materialised.transactions[row.ref]].gasto_capital_inmobiliario),
+                stored.transactions[materialised.transactions[row.ref]].irpf_category,
+            )
+            for row in persona.ledger
+            if any(row.ref.startswith(link.ref_prefix) for link in rental.ledger_links)
+        }
+        expected = {
+            row.ref: (
+                str(lease.clave) if link.target == "arrendamiento" else None,
+                str(dwelling.clave) if link.target == "inmueble" else None,
+                str(link.gasto),
+                RENTAL_LINK_IRPF_CATEGORY,
+            )
+            for row in persona.ledger
+            for link in rental.ledger_links
+            if row.ref.startswith(link.ref_prefix)
+        }
+        assert linked == expected
+        assert {ref for ref in expected if ref.startswith("ARR-REN-")} and len(expected) == len(linked)
 
 
 def _profile_values(world: PersonaWorld) -> dict[str, str]:
