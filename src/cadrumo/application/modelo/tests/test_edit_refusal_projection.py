@@ -75,7 +75,8 @@ def test_a_known_producer_names_only_revision_validated_prerequisite_coordinates
     assert "calculation_source_unresolved" in refusal.facts
     assert "private exception" not in refusal.model_dump_json()
     public = modelo_edit_refusal_error(refusal)
-    assert "1388" not in str(public.context) and _BINDING not in str(public.context)
+    # The settled refusal carries only the public coordinate its sentence names.
+    assert public.context == {"binding_id": _BINDING}
 
 
 @pytest.mark.parametrize(
@@ -285,4 +286,4 @@ async def test_observer_failure_keeps_the_exact_registered_refusal_and_none_effe
     assert get_registered_error_code(caught.value).code == "ERROR_CALCULATIONS_REGISTRY_VALIDATION"
     assert [str(effect) for effect in effects] == ["unknown", "none"]
     assert len(delivered) == 1 and delivered[0].baseline_id == str(baseline.baseline_id)
-    assert _BINDING not in str(caught.value.context) and "1388" not in str(caught.value.context)
+    assert caught.value.context == {"binding_id": _BINDING}
