@@ -3248,8 +3248,7 @@ application:
       cross_period_dependency_unclean_attestable: Esta declaración usa cifras del
         modelo %{source_modelo} de %{source_filing_year}, periodo %{source_period},
         y esa declaración aún tiene incidencias abiertas. Resuélvelas allí primero
-        o, si no vas a registrar esa declaración aquí, indica su cifra con `aeat app
-        modelo work attest-prior-value <unidad de trabajo> <binding> <valor>`.
+        o, si no vas a registrar esa declaración aquí, indica tú mismo su cifra.
       cross_period_first_year_fractional_suppression: El modelo %{source_modelo} de
         %{source_filing_year}, periodo %{source_period}, no te corresponde porque
         tu actividad empezó el %{activity_start_date}.

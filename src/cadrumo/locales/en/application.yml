@@ -3082,8 +3082,7 @@ application:
       cross_period_dependency_unclean_attestable: This declaration uses figures from
         modelo %{source_modelo} for %{source_filing_year}, period %{source_period},
         and that declaration still has open issues. Resolve them there first or, if
-        you will not record that return here, state its figure with `aeat app modelo
-        work attest-prior-value <work unit> <binding> <value>`.
+        you will not record that return here, state its figure yourself.
       cross_period_first_year_fractional_suppression: Modelo %{source_modelo} for
         %{source_filing_year}, period %{source_period}, does not apply to you because
         your activity started on %{activity_start_date}.

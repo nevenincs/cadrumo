@@ -3197,8 +3197,7 @@ application:
       cross_period_dependency_unclean_attestable: Ez a nyilatkozat a(z) %{source_modelo}
         modell %{source_filing_year} évi, %{source_period} időszakának adataiból dolgozik,
         és az a nyilatkozat még nyitott hibákat tartalmaz. Először ott oldd meg őket,
-        vagy ha nem rögzíted itt azt a bevallást, add meg az értékét a `aeat app modelo
-        work attest-prior-value <munkaegység> <binding> <érték>` paranccsal.
+        vagy ha nem rögzíted itt azt a bevallást, add meg magad az értékét.
       cross_period_first_year_fractional_suppression: A Modelo %{source_modelo} (%{source_filing_year},
         %{source_period} időszak) nem vonatkozik rád, mert a tevékenységed %{activity_start_date}
         napon kezdődött.
