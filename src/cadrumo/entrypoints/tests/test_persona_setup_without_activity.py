@@ -106,14 +106,16 @@ def _calculated(world: PersonaWorld, *, year: int, period: str) -> dict[str, obj
 
 
 def _stated_withholding(values: tuple[ExpectedValue, ...], envelope: YearEnvelope) -> ExpectedValue:
-    (stated,) = (
-        value
-        for _year, value in values_in_force(values, envelope)
+    """The withholding the persona states for the latest ejercicio it states one for."""
+    stated = [
+        (year, value)
+        for year, value in values_in_force(values, envelope)
         if value.modelo == _MODELO
         and value.grounding != "unverified"
         and any(casilla == _WITHHOLDING_CASILLA for casilla, _amount in value.casillas)
-    )
-    return stated
+    ]
+    assert stated, "the persona states its Modelo 100 withholding"
+    return max(stated, key=lambda item: item[0])[1]
 
 
 @pytest.mark.parametrize("persona_id", ["arrendador-jubilado", "asalariada-familia"])
