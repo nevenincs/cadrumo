@@ -885,6 +885,8 @@ _EDIT_MISSING_ACTION_ARGUMENTS: Final[Mapping[str, tuple[str, ...]]] = MappingPr
 
 _PRIOR_CARRY_CODE: Final[str] = "REFUSED_MODELO_PRIOR_CARRY_ABSENCE_UNSTATED"
 _PRIOR_CARRY_EDIT_MESSAGE_KEY: Final[str] = "application.modelo.errors.edit_prior_carries_unstated"
+_REQUIRED_BINDINGS_CODE: Final[str] = "REFUSED_MODELO_REQUIRED_BINDINGS_MISSING"
+_REQUIRED_BINDINGS_EDIT_MESSAGE_KEY: Final[str] = "application.modelo.errors.edit_required_bindings_missing"
 _PRIOR_CARRY_FAMILIES: Final[frozenset[str]] = frozenset({"renta_negative_general_bases_pending"})
 _CARRY_WITHDRAWAL_ERRORS: Final[Mapping[str, type[ModeloEditRefusedError]]] = MappingProxyType(
     {
@@ -926,8 +928,24 @@ def _prior_carry_edit_refusal(family: str) -> RecordedRegisteredError:
     )
 
 
+def _required_bindings_edit_refusal(binding_ids: tuple[str, ...]) -> RecordedRegisteredError:
+    """The refusal of an edit whose recalculation lacks required inputs, naming them, under that refusal's code.
+
+    The binding ids are registry declarations, never the filer's values; the
+    door is the edit itself, where the filer states an input's value.
+    """
+    return RecordedRegisteredError(
+        _REQUIRED_BINDINGS_CODE,
+        translated_message=_REQUIRED_BINDINGS_EDIT_MESSAGE_KEY,
+        context={"bindings": ", ".join(binding_ids)},
+        precondition_verdict=_edit_refusal_failure(ModeloEditRefusedError).verdict,
+    )
+
+
 def _domain_refusal_error(refusal: ModeloEditDomainRefusalV1) -> CadrumoError:
     """The registered refusal of a domain refusal: its carry cause when it names one, else the value family."""
+    if _REQUIRED_BINDINGS_CODE in refusal.facts and refusal.evidence:
+        return _required_bindings_edit_refusal(refusal.evidence)
     for fact in refusal.facts:
         withdrawal = _CARRY_WITHDRAWAL_ERRORS.get(fact)
         if withdrawal is not None:
@@ -949,10 +967,13 @@ def modelo_edit_refusal_error(refusal: ModeloEditRefusalV1) -> CadrumoError:
 
     One error per refusal family: the refusal's addresses, facts, and evidence
     are deliberately not carried, so none of them can reach operation
-    persistence or a rendered message. Two causes are served by name: a
-    withdrawn carry statement that cannot leave the declaration uncalculated,
-    and an edit that leaves an earlier-ejercicio carry unstated, which settles
-    under that refusal's public code with the door to state the carries.
+    persistence or a rendered message. Three causes are served by name: a
+    withdrawn carry statement that cannot leave the declaration uncalculated;
+    an edit that leaves an earlier-ejercicio carry unstated, which settles
+    under that refusal's public code with the door to state the carries; and
+    an edit whose recalculation lacks required inputs, which settles under the
+    required-bindings code naming those inputs by their registry binding ids,
+    never by a value.
     """
     match refusal:
         case ModeloEditStaleBaselineRefusalV1():
