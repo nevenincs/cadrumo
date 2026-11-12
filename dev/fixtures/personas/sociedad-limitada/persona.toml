@@ -82,7 +82,7 @@ period = "0A"
 year = "horizon-1"
 binding = "modelo-200-bin-pendiente-ejercicios-anteriores"
 value = "16300.00"
-source = { modelo = "200", year = "horizon-2", period = "0A" }
+sources = [{ modelo = "200", year = "horizon-2", period = "0A" }]
 derivation = "Casilla 00671 (bases imponibles negativas pendientes de aplicación en períodos futuros) de su Modelo 200 del ejercicio anterior. Pérdidas de los tres primeros ejercicios 34000.00 + 20000.00 + 6000.00 = 60000.00; compensadas 20600.00 en horizon-3 y 23100.00 en horizon-2, toda la base previa de cada año, dentro del límite de 1000000.00 del art. 26.1 LIS; quedan 60000.00 - 20600.00 - 23100.00 = 16300.00."
 legal_ref = ["ley-27-2014:art-26"]
 
@@ -92,7 +92,7 @@ period = "0A"
 year = "horizon-1"
 binding = "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores"
 value = "0.00"
-source = { modelo = "200", year = "horizon-2", period = "0A" }
+sources = [{ modelo = "200", year = "horizon-2", period = "0A" }]
 derivation = "Casilla 01498 del Modelo 200 del ejercicio anterior: la sociedad nunca dotó un deterioro de créditos, porque su único cliente ha pagado todas sus facturas; no queda saldo pendiente que no cumpla las condiciones del art. 13.1 LIS."
 legal_ref = ["ley-27-2014:art-13"]
 
@@ -102,42 +102,27 @@ period = "0A"
 year = "horizon-1"
 binding = "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores"
 value = "0.00"
-source = { modelo = "200", year = "horizon-2", period = "0A" }
+sources = [{ modelo = "200", year = "horizon-2", period = "0A" }]
 derivation = "Casilla 01499 del Modelo 200 del ejercicio anterior: sin dotación por deterioro de créditos en ningún ejercicio, no queda saldo pendiente que cumpla las condiciones del art. 13.1 LIS."
 legal_ref = ["ley-27-2014:art-13"]
 
 # Each art. 40.2 instalment (casilla 03 of the 202) is 18 % of the cuota íntegra, less deducciones,
 # bonificaciones, retenciones e ingresos a cuenta, of the last return whose deadline had passed on the
 # first day of the payment month: horizon-3 for April, horizon-2 for October and December. Both were 0.00,
-# so no instalment was due and, the INCN being below 6000000.00, no 202 was to be filed.
+# so no instalment was due and, the INCN being below 6000000.00, no 202 was to be filed. The application
+# records one figure for the binding, standing for the three instalments.
 [[attested_prior_values]]
 modelo = "200"
 period = "0A"
 year = "horizon-1"
 binding = "modelo-200-pagos-fraccionados-anuales-40-2"
 value = "0.00"
-source = { modelo = "202", year = "horizon-1", period = "1P" }
-derivation = "Pago fraccionado de abril, art. 40.2 LIS: 18 % de la cuota del Modelo 200 de horizon-3 (último con plazo vencido el 1 de abril), que fue 0.00 por compensar toda su base con bases imponibles negativas; no hubo ingreso ni obligación de presentar el 202."
-legal_ref = ["ley-27-2014:art-40"]
-
-[[attested_prior_values]]
-modelo = "200"
-period = "0A"
-year = "horizon-1"
-binding = "modelo-200-pagos-fraccionados-anuales-40-2"
-value = "0.00"
-source = { modelo = "202", year = "horizon-1", period = "2P" }
-derivation = "Pago fraccionado de octubre, art. 40.2 LIS: 18 % de la cuota del Modelo 200 de horizon-2 (vencido el 25 de julio), que fue 0.00 por compensar toda su base; no hubo ingreso ni obligación de presentar el 202."
-legal_ref = ["ley-27-2014:art-40"]
-
-[[attested_prior_values]]
-modelo = "200"
-period = "0A"
-year = "horizon-1"
-binding = "modelo-200-pagos-fraccionados-anuales-40-2"
-value = "0.00"
-source = { modelo = "202", year = "horizon-1", period = "3P" }
-derivation = "Pago fraccionado de diciembre, art. 40.2 LIS: 18 % de la misma cuota 0.00 del Modelo 200 de horizon-2; no hubo ingreso ni obligación de presentar el 202."
+sources = [
+  { modelo = "202", year = "horizon-1", period = "1P" },
+  { modelo = "202", year = "horizon-1", period = "2P" },
+  { modelo = "202", year = "horizon-1", period = "3P" },
+]
+derivation = "Pagos fraccionados del art. 40.2 LIS: abril, 18 % de la cuota del Modelo 200 de horizon-3 (último con plazo vencido el 1 de abril); octubre y diciembre, 18 % de la cuota del Modelo 200 de horizon-2 (vencido el 25 de julio). Ambas cuotas fueron 0.00 por compensar toda su base con bases imponibles negativas: 0.00 + 0.00 + 0.00 = 0.00; no hubo ingreso ni obligación de presentar el 202."
 legal_ref = ["ley-27-2014:art-40"]
 
 # The art. 40.3 modality (casilla 34 of the 202) was never elected in a censal declaration, and an INCN
@@ -148,28 +133,12 @@ period = "0A"
 year = "horizon-1"
 binding = "modelo-200-pagos-fraccionados-anuales"
 value = "0.00"
-source = { modelo = "202", year = "horizon-1", period = "1P" }
-derivation = "Modalidad de base imponible del art. 40.3 LIS: la sociedad nunca la eligió en declaración censal y su INCN no supera 6000000.00, así que no aplica; ningún pago por esta modalidad."
-legal_ref = ["ley-27-2014:art-40-3"]
-
-[[attested_prior_values]]
-modelo = "200"
-period = "0A"
-year = "horizon-1"
-binding = "modelo-200-pagos-fraccionados-anuales"
-value = "0.00"
-source = { modelo = "202", year = "horizon-1", period = "2P" }
-derivation = "Modalidad de base imponible del art. 40.3 LIS no elegida y no obligatoria (INCN inferior a 6000000.00); ningún pago por esta modalidad."
-legal_ref = ["ley-27-2014:art-40-3"]
-
-[[attested_prior_values]]
-modelo = "200"
-period = "0A"
-year = "horizon-1"
-binding = "modelo-200-pagos-fraccionados-anuales"
-value = "0.00"
-source = { modelo = "202", year = "horizon-1", period = "3P" }
-derivation = "Modalidad de base imponible del art. 40.3 LIS no elegida y no obligatoria (INCN inferior a 6000000.00); ningún pago por esta modalidad."
+sources = [
+  { modelo = "202", year = "horizon-1", period = "1P" },
+  { modelo = "202", year = "horizon-1", period = "2P" },
+  { modelo = "202", year = "horizon-1", period = "3P" },
+]
+derivation = "Modalidad de base imponible del art. 40.3 LIS: la sociedad nunca la eligió en declaración censal y su INCN no supera 6000000.00, así que no aplica; ningún pago por esta modalidad en abril, octubre ni diciembre: 0.00."
 legal_ref = ["ley-27-2014:art-40-3"]
 
 # At the clock every quarterly IVA return of the fiscal year is past its window,
