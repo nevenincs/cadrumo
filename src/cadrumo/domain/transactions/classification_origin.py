@@ -34,6 +34,7 @@ CLASSIFICATION_DECISION_FIELDS: Final[frozenset[str]] = _MOVEMENT_FIELDS | {
     "usage_ratio_id",
     "prorrata_reference",
     "iva_category",
+    "exemption_article",
     "iva_rate",
     "taxable_base",
     "iva_amount",

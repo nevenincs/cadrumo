@@ -3488,6 +3488,10 @@ cli:
       derive_non_derivable: 'A(z) {category} kategóriához nincs egyszerű spanyol kulcs,
         amelyet le lehetne vezetni: {note} Add meg kézzel a --taxable-base, --iva-rate
         és --iva-amount értékeket ehhez a kategóriához.'
+      exemption_article_help: A LIVA 20.Uno cikke szerinti mentesség, amely alá egy
+        `domestic_exempt` sor tartozik, a nyilvántartás által a sor dátumára meghatározott
+        mentességi cikk-szókészlet egyik tokenjeként. Ez dönti el, hogy a sor levonási
+        jog nélküli ügyletként számít-e a prorrata volumenébe.
       file_exclusive: --file nem kombinálható tranzakció-azonosítóval vagy --classification
         értékkel.
       file_help: 'Egy CSV-fájl útvonala, amelynek oszlopai: transaction_id, classification[,

@@ -16,6 +16,7 @@ from ...domain.calculations.registry.eu_member_state_catalogue import require_eu
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.calculations.registry.iva_category_catalogue import require_iva_category
 from ...domain.calculations.registry.iva_deduction_catalogue import require_iva_deduction_fact_kind
+from ...domain.calculations.registry.iva_legal_vocabulary import require_iva_exemption_article
 from ...domain.categories.spending_category_catalogue import require_spending_category
 from ...domain.iva.vehicle_use import require_iva_vehicle_use
 from ...domain.transactions.enums import BusinessClassification
@@ -97,6 +98,10 @@ def _resolve_manual_authority_value(
         return require_ledger_irpf_category(value, authority=operation) if value.strip() else None
     if field_name == "iva_category":
         return require_iva_category(value, effective_date=current.raw.booked_date, authority=operation)
+    if field_name == "exemption_article":
+        # The row's own IVA date, as the stored row's admission reads the article.
+        effective_date = current.operation_date or current.raw.value_date or current.raw.booked_date
+        return require_iva_exemption_article(value, effective_date=effective_date, authority=operation)
     if field_name == "deduction_fact_kind":
         return require_iva_deduction_fact_kind(value, authority=operation)
     if field_name == "iva_vehicle_use":

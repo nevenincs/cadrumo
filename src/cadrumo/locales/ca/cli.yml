@@ -3519,6 +3519,10 @@ cli:
       derive_non_derivable: '{category} no té un tipus espanyol simple que es pugui
         derivar: {note} Indica --taxable-base, --iva-rate i --iva-amount a mà per
         a aquesta categoria.'
+      exemption_article_help: L'exempció de l'art. 20.Uno LIVA en què encaixa una
+        fila `domestic_exempt`, com a token del vocabulari d'articles d'exempció que
+        el registre declara per a la data de la fila. Decideix si la fila compta en
+        el volum de la prorrata com a operació sense dret a deducció.
       file_exclusive: --file no pot combinar-se amb un id de transacció ni --classification.
       file_help: Ruta a un fitxer CSV amb columnes transaction_id, classification[,
         category_id, business_pct, usage_ratio_id, taxable_base, iva_rate, iva_amount,

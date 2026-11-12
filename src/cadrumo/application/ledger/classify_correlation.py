@@ -13,7 +13,7 @@ from .classify_requests import LedgerClassifyM210Options, LedgerClassifyPatch
 from .classify_result_contracts import LedgerClassifyOperationResult
 from .transaction_projection import LedgerM210IncomeProjection
 
-_RESULT_ONLY_FIELDS = frozenset({"deduction_fact_kind", "investment_asset_id", "iva_vehicle_use"})
+_RESULT_ONLY_FIELDS = frozenset({"deduction_fact_kind", "exemption_article", "investment_asset_id", "iva_vehicle_use"})
 
 
 def _expected_value(field_name: str, patch: LedgerClassifyPatch, cleared: frozenset[str]) -> object:

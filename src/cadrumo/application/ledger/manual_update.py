@@ -750,6 +750,7 @@ def command_from_patch(
     notes = required_patched(patch, patch_fields, "notes", current.notes)
     attachment_ids = required_patched(patch, patch_fields, "attachment_ids", current.attachment_ids)
     iva_category = optional_patched(patch, patch_fields, "iva_category", current.iva_category)
+    exemption_article = optional_patched(patch, patch_fields, "exemption_article", current.exemption_article)
     deduction_fact_kind = optional_patched(patch, patch_fields, "deduction_fact_kind", current.deduction_fact_kind)
     investment_asset_id = optional_patched(patch, patch_fields, "investment_asset_id", current.investment_asset_id)
     iva_vehicle_use = _unless_cleared(
@@ -799,6 +800,7 @@ def command_from_patch(
         attachment_ids=attachment_ids,
         notes=notes,
         iva_category=iva_category,
+        exemption_article=exemption_article,
         deduction_fact_kind=deduction_fact_kind,
         investment_asset_id=investment_asset_id,
         iva_vehicle_use=iva_vehicle_use,
