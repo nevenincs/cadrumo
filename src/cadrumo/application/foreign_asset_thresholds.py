@@ -58,6 +58,16 @@ class ForeignAssetDeclarationThreshold:
     """
 
 
+def modelo_720_declaration_date(filing_year: int) -> date:
+    """Return the date a Modelo 720 declares its assets at: 31 December of the ejercicio.
+
+    RD 1065/2007 arts. 42 bis, 42 ter and 54 bis inform the accounts, securities,
+    insurance and real estate held abroad at that date, so the thresholds and the
+    obligation block an asset belongs to are read as they stood then.
+    """
+    return date(filing_year, 12, 31)
+
+
 def foreign_asset_declaration_thresholds(
     *,
     modelo: str,
@@ -79,12 +89,12 @@ def foreign_asset_declaration_thresholds(
         modelo,
         filing_year=filing_year,
         period=_ANNUAL_PERIOD,
-        on=date(filing_year, 12, 31),
+        on=modelo_720_declaration_date(filing_year),
     )
     return foreign_asset_declaration_thresholds_for_parameters(
         modelo=modelo,
         parameters=selected.parameters,
-        filing_date=date(filing_year, 12, 31),
+        filing_date=modelo_720_declaration_date(filing_year),
         revision_review_status=selected.review_status,
     )
 
@@ -189,4 +199,5 @@ __all__ = [
     "foreign_asset_declaration_thresholds",
     "foreign_asset_declaration_thresholds_for_parameters",
     "foreign_asset_declaration_thresholds_for_revision",
+    "modelo_720_declaration_date",
 ]
