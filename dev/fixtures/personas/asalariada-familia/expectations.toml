@@ -49,14 +49,15 @@ reason = "The application sources neither figure from the employer's certificate
 modelo = "100"
 period = "0A"
 year = "horizon-1"
-concepts = { minimo_contribuyente = "5550.00", minimo_descendientes = "3950.00", minimo_ascendientes = "2550.00", minimo_personal_familiar = "12050.00" }
+roles = { "irpf_minimo_contribuyente_estatal" = "5550.00", "irpf_minimo_descendientes_estatal" = "3950.00", "irpf_minimo_ascendientes_estatal" = "2550.00", "irpf_minimo_personal_familiar_estatal" = "12050.00" }
 derivation = """
-Contribuyente under 65: 5550.00 (art. 57).
+Contribuyente under 65: 5550.00 (art. 57), role irpf_minimo_contribuyente_estatal, casilla 0511.
 Descendientes (art. 58): first 2400.00 + second 2700.00 + 2800.00 for the second being under three = 7900.00; both parents live with
-them, so each applies half: 3950.00.
+them, so each applies half: 3950.00, role irpf_minimo_descendientes_estatal, casilla 0513.
 Ascendiente (art. 59): mother aged 78 at year end, living with the taxpayer all year, annual income 7200.00 (pension, below 8000.00;
-not a profile leaf, stated here as a scenario fact), sole descendant with right: 1150.00 + 1400.00 (over 75) = 2550.00.
-Total 12050.00. These are the state amounts; the autonomic amounts Madrid may set under art. 56.3 and the cuota are not asserted.
+stated on the row as household.ascendants.rentas_anuales), no return of her own (art. 61 norma 2ª), sole descendant with right:
+1150.00 + 1400.00 (over 75) = 2550.00, role irpf_minimo_ascendientes_estatal, casilla 0515.
+Total 12050.00, role irpf_minimo_personal_familiar_estatal, casilla 0519. These are the state amounts; the autonomic amounts Madrid may set under art. 56.3 and the cuota are not asserted.
 """
 legal_ref = ["ley-35-2006:art-56", "ley-35-2006:art-57", "ley-35-2006:art-58", "ley-35-2006:art-59", "ley-35-2006:art-61"]
 grounding = "verified"
