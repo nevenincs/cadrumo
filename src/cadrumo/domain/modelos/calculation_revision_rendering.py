@@ -11,7 +11,7 @@ from copy import deepcopy
 from dataclasses import dataclass, field
 from functools import partial
 from threading import RLock
-from typing import Annotated, Literal, Self, TypeGuard
+from typing import Annotated, Final, Literal, Self, TypeGuard
 from weakref import ReferenceType, ref
 
 from pydantic import (
@@ -46,6 +46,7 @@ from ..calculations.registry.schema import (
     MODELO_REVISION_IDS_CONTEXT,
     RegistrySnapshot,
 )
+from ..calculations.registry.schema_formula import bracket_kind_is_default
 
 _OBJECT_MAPPING_ADAPTER: TypeAdapter[dict[object, object]] = TypeAdapter(dict[object, object])
 _OBJECT_SEQUENCE_ADAPTER: TypeAdapter[tuple[object, ...]] = TypeAdapter(tuple[object, ...])
@@ -53,6 +54,9 @@ _STRING_MAPPING_ADAPTER: TypeAdapter[dict[str, object]] = TypeAdapter(dict[str, 
 
 _REVISION_ID_SEQUENCE_ADAPTER: TypeAdapter[tuple[RevisionId, ...]] = TypeAdapter(tuple[RevisionId, ...])
 _SAVED_JSON_ADAPTER: TypeAdapter[object] = TypeAdapter(object)
+# The exclusions of fields added after snapshots were saved: each leaves its field out at the
+# value an earlier snapshot implies, so that snapshot's dumps and digests are unchanged.
+_LATER_FIELD_EXCLUSIONS: Final = (absent_when_none, bracket_kind_is_default)
 
 
 def _complete_registry_value(value: object) -> object:
@@ -74,7 +78,7 @@ def _complete_model_fields(value: BaseModel) -> dict[str, object]:
     completed: dict[str, object] = {}
     for name, model_field in type(value).model_fields.items():
         item = getattr(value, name)
-        if model_field.exclude_if is absent_when_none and absent_when_none(item):
+        if model_field.exclude_if in _LATER_FIELD_EXCLUSIONS and model_field.exclude_if(item):
             continue
         completed[name] = _complete_registry_value(item)
     return completed
@@ -100,9 +104,9 @@ def _retain_schema_node_fields(node: dict[object, object], *, predecessor: bool)
             node.pop("serialization", None)
     if node.get("type") == "model-field" and not predecessor:
         node.pop("serialization_exclude", None)
-        # A field added after snapshots were saved stays out while absent,
-        # so an earlier snapshot's complete payload is unchanged.
-        if node.get("serialization_exclude_if") is not absent_when_none:
+        # A field added after snapshots were saved stays out while absent or at
+        # its default, so an earlier snapshot's complete payload is unchanged.
+        if node.get("serialization_exclude_if") not in _LATER_FIELD_EXCLUSIONS:
             node.pop("serialization_exclude_if", None)
     return predecessor
 
