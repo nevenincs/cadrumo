@@ -3126,6 +3126,7 @@
         "cadrumo.entrypoints.cli.ledger_commands",
         "cadrumo.entrypoints.cli.ledger_counterparty_commands",
         "cadrumo.entrypoints.cli.ledger_counterparty_filing_name_commands",
+        "cadrumo.entrypoints.cli.ledger_counterparty_rendering_parser",
         "cadrumo.entrypoints.cli.ledger_counterparty_results",
         "cadrumo.entrypoints.cli.ledger_diagnostic_results",
         "cadrumo.entrypoints.cli.ledger_evidence_batch_commands",
