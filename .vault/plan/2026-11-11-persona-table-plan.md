@@ -10,7 +10,7 @@ related:
   - '[[2026-10-18-runtime-authority-boundary-adr]]'
 modified: '2026-11-12'
 body_schema: body-v2
-body_hash: 'sha256:3049c995ac9f503e11e9d34f6d35a47a9552ca4afa5c64984523cbfd8cf5fe25'
+body_hash: 'sha256:02eb8c75fa8440ef929ae8cf8815955c921e071cb9ccda5b9d212b9645b1ec9a'
 ---
 
 <!-- RETIRED: S44 -->
@@ -69,6 +69,7 @@ Every persona row passes calculate, verify and export, proven in Python with no 
 - [ ] `P01.S55` - Source the prorrata persona's Modelo 130 rows from its ledger, after CALC-PAGOS's current causes; until then they show unchecked with the declared reason (lane CALC-PAGOS); `src/cadrumo/_data/registry/aeat/modelos/130, dev/fixtures/personas`.
 - [ ] `P01.S56` - Source the prorrata persona's Modelo 100 rows, after CALC-RENTA's current causes; until then they show unchecked with the declared reason (lane CALC-RENTA); `src/cadrumo/_data/registry/aeat/modelos/100, dev/fixtures/personas`.
 - [ ] `P01.S57` - Register Modelo 390 apartado 12 (prorratas, boxes 114 to 118), which no edition holds so a prorrata filer's 390 exports without its definitive percentage: first a blocking finding until it renders, then the boxes registered at the earliest edition and sourced from the ProrrataRegister; the S54 persona's 390 row stays unchecked on it until then (lane CALC-IVA); `src/cadrumo/_data/registry/aeat/modelos/390, src/cadrumo/application/prorrata_register, src/cadrumo/application/modelo`.
+- [ ] `P01.S59` - Make no registry lookup substitute the run date: a dated tax-fact read takes its date from the caller and refuses or stays unresolved without one, a dateless vocabulary read admits the envelope union and offers the newest edition's choices from the temporal resolver, and today_madrid() stays only for calendar, deadline, overview and session questions, with a guard test failing on any call from domain/calculations/registry and the catalogue modules (PRIME ORDER 12:52, RULINGS.md); owner CALC-PAGOS for the core API, the four clock-reading catalogues and the guard test, then caller units by family (CALC-RENTA Renta catalogues, LIFECYCLE ccaa/wizard/patch_edit, CALC-PAGOS e-invoice and ledger, CALC-IVA IVA and Modelo 200/303/390); closes when the guard test passes on feature/tui and the persona table shows +0 -0; `src/cadrumo/domain/calculations/registry, src/cadrumo/core/string_mapping.py, catalogue modules entity_type, eu_member_state_catalogue, irpf_regimes, renta_codes_catalogue`.
 
 ### Phase `P02` - Deferred backend scope
 
