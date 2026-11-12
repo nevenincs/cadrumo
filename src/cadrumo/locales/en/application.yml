@@ -2174,19 +2174,27 @@ application:
         your profile does not hold.'
       renta_inmueble_lease_without_income: 'Lease {record}: it is active this year
         and has no rent entry linked to it.'
+      renta_inmueble_letting_start_unstated: 'Property {record}: it does not say when
+        it was first let, so the earlier years whose interest and repair excess it
+        may still carry are unknown. Add that date with config profile inmueble edit.'
       renta_inmueble_naturaleza_unstated: 'Property {record}: it does not say whether
         it is urban or rustic.'
-      renta_inmueble_pending_expenses_held_return_unstated: 'Property {record}: the
-        return of the previous year is held here, but nothing matches the interest
-        and repair expenses it left pending to this property. State them for this
-        property with app modelo work attest-no-amount --row inmueble:{record}.'
-      renta_inmueble_pending_expenses_origin_unsplit: 'Property {record}: interest
-        and repair expenses are pending on it, and the annex that splits them by the
-        year they arose in cannot be filed yet. Review its pending amount with app
-        modelo work attest-no-amount --row inmueble:{record}.'
-      renta_inmueble_pending_expenses_unstated: 'Property {record}: the interest and
-        repair expenses of earlier years still pending are not stated, and no earlier
-        return held here states them.'
+      renta_inmueble_pending_expenses_held_return_unstated: 'Property {record}: it
+        was let before this year, and the return of the previous year is held here,
+        but it is not read for what the year of box {box} left pending of interest
+        and repair expenses. State it with app modelo work attest-no-amount <work
+        unit> {binding} --row inmueble:{record}, or with attest-prior-value and the
+        amount.'
+      renta_inmueble_pending_expenses_total_unsplit: 'Property {record}: its pending
+        interest and repair expenses were stated as one total, and annex C.1 asks
+        for them by the year they arose in. State what the year of box {box} left
+        pending with app modelo work attest-prior-value <work unit> {binding} <amount>
+        --row inmueble:{record}, or with attest-no-amount if it left nothing.'
+      renta_inmueble_pending_expenses_unstated: 'Property {record}: it was let before
+        this year, and what the year of box {box} left pending of interest and repair
+        expenses is not stated, and no earlier return held here states it. State it
+        with app modelo work attest-no-amount <work unit> {binding} --row inmueble:{record},
+        or with attest-prior-value and the amount.'
       renta_inmueble_property_abroad_let: 'Property {record}: it is abroad and let,
         and its treatment as foreign income is not offered.'
       renta_inmueble_record_unreadable: A property or lease record of your profile

@@ -2246,19 +2246,30 @@ application:
         ingatlant nevez meg, amely nincs a profilodban.'
       renta_inmueble_lease_without_income: '{record}. bérleti szerződés: az adóévben
         hatályos, de nincs hozzá kapcsolt bérleti díj tétel.'
+      renta_inmueble_letting_start_unstated: '{record}. ingatlan: nincs megadva, mikor
+        adtad bérbe először, ezért nem tudható, mely korábbi adóévekből hozhat még
+        magával kamat- és javítási többletet. Add meg ezt a dátumot ezzel: config
+        profile inmueble edit.'
       renta_inmueble_naturaleza_unstated: '{record}. ingatlan: nem szerepel, hogy
         városi vagy külterületi (rústico) ingatlan-e.'
-      renta_inmueble_pending_expenses_held_return_unstated: '{record}. ingatlan: az
-        előző adóév bevallása itt tárolva van, de semmi nem rendeli ehhez az ingatlanhoz
-        a benne levonásra váróként maradt kamat- és javítási kiadásokat. Add meg őket
-        ehhez az ingatlanhoz ezzel: app modelo work attest-no-amount --row inmueble:{record}.'
-      renta_inmueble_pending_expenses_origin_unsplit: '{record}. ingatlan: levonásra
-        váró kamat- és javítási kiadásai vannak, és a keletkezésük adóéve szerint
-        felosztó melléklet még nem nyújtható be. Ellenőrizd a levonásra váró összegét
-        ezzel: app modelo work attest-no-amount --row inmueble:{record}.'
-      renta_inmueble_pending_expenses_unstated: '{record}. ingatlan: a korábbi adóévekből
-        még levonásra váró kamat- és javítási kiadások nem szerepelnek, és egyik itt
-        tárolt korábbi bevallás sem tartalmazza őket.'
+      renta_inmueble_pending_expenses_held_return_unstated: '{record}. ingatlan: már
+        az adóév előtt is bérbe volt adva, és az előző adóév bevallása itt tárolva
+        van, de nem olvassuk ki belőle, mennyi kamat- és javítási kiadást hagyott
+        levonásra váróként a(z) {box}. mező adóéve. Add meg ezzel: app modelo work
+        attest-no-amount <munkaegység> {binding} --row inmueble:{record}, vagy az
+        összeggel az attest-prior-value paranccsal.'
+      renta_inmueble_pending_expenses_total_unsplit: '{record}. ingatlan: a levonásra
+        váró kamat- és javítási kiadásait egyetlen összegként adtad meg, a C.1 melléklet
+        viszont keletkezésük adóéve szerint kéri őket. Add meg, mennyit hagyott levonásra
+        váróként a(z) {box}. mező adóéve, ezzel: app modelo work attest-prior-value
+        <munkaegység> {binding} <összeg> --row inmueble:{record}, vagy az attest-no-amount
+        paranccsal, ha semmit.'
+      renta_inmueble_pending_expenses_unstated: '{record}. ingatlan: már az adóév
+        előtt is bérbe volt adva, és nincs megadva, mennyi kamat- és javítási kiadást
+        hagyott levonásra váróként a(z) {box}. mező adóéve, és egyik itt tárolt korábbi
+        bevallás sem tartalmazza. Add meg ezzel: app modelo work attest-no-amount
+        <munkaegység> {binding} --row inmueble:{record}, vagy az összeggel az attest-prior-value
+        paranccsal.'
       renta_inmueble_property_abroad_let: '{record}. ingatlan: külföldön van és bérbe
         adott, külföldi jövedelemként való kezelése nem elérhető.'
       renta_inmueble_record_unreadable: A profilod egyik ingatlan- vagy bérleti rekordja

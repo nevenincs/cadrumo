@@ -2282,20 +2282,30 @@ application:
         que el teu perfil no té.'
       renta_inmueble_lease_without_income: 'Arrendament {record}: és vigent en l''exercici
         i no té cap cobrament de lloguer vinculat.'
+      renta_inmueble_letting_start_unstated: 'Immoble {record}: no indica quan es
+        va arrendar per primera vegada, així que no se sap de quins exercicis anteriors
+        pot arrossegar encara un excés d''interessos i reparació. Indica aquesta data
+        amb config profile inmueble edit.'
       renta_inmueble_naturaleza_unstated: 'Immoble {record}: no indica si és urbà
         o rústic.'
-      renta_inmueble_pending_expenses_held_return_unstated: 'Immoble {record}: la
-        declaració de l''exercici anterior està desada aquí, però res no assigna a
-        aquest immoble les despeses d''interessos i reparació que va deixar pendents.
-        Indica-les per a aquest immoble amb app modelo work attest-no-amount --row
-        inmueble:{record}.'
-      renta_inmueble_pending_expenses_origin_unsplit: 'Immoble {record}: té despeses
-        d''interessos i reparació pendents, i l''annex que les reparteix per l''exercici
-        en què es van originar encara no es pot presentar. Revisa''n l''import pendent
-        amb app modelo work attest-no-amount --row inmueble:{record}.'
-      renta_inmueble_pending_expenses_unstated: 'Immoble {record}: no s''indiquen
-        les despeses d''interessos i reparació d''exercicis anteriors pendents de
-        deduir, i cap declaració anterior desada aquí no les recull.'
+      renta_inmueble_pending_expenses_held_return_unstated: 'Immoble {record}: estava
+        arrendat abans d''aquest exercici, i la declaració de l''exercici anterior
+        està desada aquí, però no es llegeix per saber el que l''exercici de la casella
+        {box} va deixar pendent de deduir en despeses d''interessos i reparació. Indica-ho
+        amb app modelo work attest-no-amount <unitat de treball> {binding} --row inmueble:{record},
+        o amb attest-prior-value i l''import.'
+      renta_inmueble_pending_expenses_total_unsplit: 'Immoble {record}: les seves
+        despeses d''interessos i reparació pendents es van indicar com un sol total,
+        i l''annex C.1 les demana per l''exercici en què es van originar. Indica el
+        que va deixar pendent l''exercici de la casella {box} amb app modelo work
+        attest-prior-value <unitat de treball> {binding} <import> --row inmueble:{record},
+        o amb attest-no-amount si no en va deixar res.'
+      renta_inmueble_pending_expenses_unstated: 'Immoble {record}: estava arrendat
+        abans d''aquest exercici, i no s''indica el que l''exercici de la casella
+        {box} va deixar pendent de deduir en despeses d''interessos i reparació, ni
+        ho recull cap declaració anterior desada aquí. Indica-ho amb app modelo work
+        attest-no-amount <unitat de treball> {binding} --row inmueble:{record}, o
+        amb attest-prior-value i l''import.'
       renta_inmueble_property_abroad_let: 'Immoble {record}: és a l''estranger i arrendat,
         i el seu tractament com a renda estrangera no s''ofereix.'
       renta_inmueble_record_unreadable: No es pot llegir un registre d'immoble o d'arrendament

@@ -2288,19 +2288,30 @@ application:
         que tu perfil no tiene.'
       renta_inmueble_lease_without_income: 'Arrendamiento {record}: está vigente en
         el ejercicio y no tiene ningún cobro de alquiler vinculado.'
+      renta_inmueble_letting_start_unstated: 'Inmueble {record}: no indica cuándo
+        se arrendó por primera vez, así que no se sabe de qué ejercicios anteriores
+        puede arrastrar todavía un exceso de intereses y reparación. Indica esa fecha
+        con config profile inmueble edit.'
       renta_inmueble_naturaleza_unstated: 'Inmueble {record}: no indica si es urbano
         o rústico.'
-      renta_inmueble_pending_expenses_held_return_unstated: 'Inmueble {record}: la
-        declaración del ejercicio anterior está guardada aquí, pero nada asigna a
-        este inmueble los gastos de intereses y reparación que dejó pendientes. Indícalos
-        para este inmueble con app modelo work attest-no-amount --row inmueble:{record}.'
-      renta_inmueble_pending_expenses_origin_unsplit: 'Inmueble {record}: tiene gastos
-        de intereses y reparación pendientes, y el anexo que los reparte por el ejercicio
-        en que se originaron todavía no se puede presentar. Revisa su importe pendiente
-        con app modelo work attest-no-amount --row inmueble:{record}.'
-      renta_inmueble_pending_expenses_unstated: 'Inmueble {record}: no se indican
-        los gastos de intereses y reparación de ejercicios anteriores pendientes de
-        deducir, y ninguna declaración anterior guardada aquí los recoge.'
+      renta_inmueble_pending_expenses_held_return_unstated: 'Inmueble {record}: estaba
+        arrendado antes de este ejercicio, y la declaración del ejercicio anterior
+        está guardada aquí, pero no se lee para saber lo que el ejercicio de la casilla
+        {box} dejó pendiente de deducir en gastos de intereses y reparación. Indícalo
+        con app modelo work attest-no-amount <unidad de trabajo> {binding} --row inmueble:{record},
+        o con attest-prior-value y el importe.'
+      renta_inmueble_pending_expenses_total_unsplit: 'Inmueble {record}: sus gastos
+        de intereses y reparación pendientes se indicaron como un solo total, y el
+        anexo C.1 los pide por el ejercicio en que se originaron. Indica lo que dejó
+        pendiente el ejercicio de la casilla {box} con app modelo work attest-prior-value
+        <unidad de trabajo> {binding} <importe> --row inmueble:{record}, o con attest-no-amount
+        si no dejó nada.'
+      renta_inmueble_pending_expenses_unstated: 'Inmueble {record}: estaba arrendado
+        antes de este ejercicio, y no se indica lo que el ejercicio de la casilla
+        {box} dejó pendiente de deducir en gastos de intereses y reparación, ni lo
+        recoge ninguna declaración anterior guardada aquí. Indícalo con app modelo
+        work attest-no-amount <unidad de trabajo> {binding} --row inmueble:{record},
+        o con attest-prior-value y el importe.'
       renta_inmueble_property_abroad_let: 'Inmueble {record}: está en el extranjero
         y arrendado, y su tratamiento como renta extranjera no se ofrece.'
       renta_inmueble_record_unreadable: No se puede leer un registro de inmueble o

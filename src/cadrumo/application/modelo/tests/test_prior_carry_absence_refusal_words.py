@@ -4,8 +4,10 @@ A carry the registry lets the filer state as holding nothing is unknown, never
 zero, while no earlier return supplies it. Each statement family has its
 refusal words in every output language. The negative general bases are stated
 for the declaration as a whole; a let property's pending interest and repairs
-(LIRPF art. 23.1.a.1.º) are stated on that property's own row, so their
-refusal names the per-property command and never the declaration-wide one.
+(LIRPF art. 23.1.a.1.º) are stated on that property's own row and origin
+year, so their refusal names the per-property command and the anexo C.1
+opening box of the origin year, never the declaration-wide door and never box
+0103, which only sums the openings.
 
 Real behaviour: the published Modelo 100 revision of every year of the support
 envelope and the real refusal builder; the engine refusal is the one it raises
@@ -125,7 +127,8 @@ def test_a_property_s_pending_carry_is_refused_with_its_row_door_not_the_declara
     context = refusal.context or {}
 
     assert context["command"] == RentaInmuebleDoor.ATTEST_NO_AMOUNT.value
-    assert context["boxes"] == "0103", context
+    # The opening boxes of anexo C.1, oldest origin year first, as the official form prints them.
+    assert context["boxes"] in {"1213", "1215", "1218", "1221"}, context
     for language in OutputLanguage:
         words = _words(refusal, language)
         assert "%{command}" in words and "%{boxes}" in words, (language, words)

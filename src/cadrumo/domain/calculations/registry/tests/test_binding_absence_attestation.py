@@ -20,7 +20,7 @@ from .....core.authority_grade import RegistryAuthorityGrade
 from ..binding_absence_attestation import AbsenceAttestationFamily
 from ..binding_value_contract import BindingValueChannel
 from ..errors import FilingYearOutsideSupportEnvelopeError, RegistryValidationError
-from ..renta_inmueble_bindings import RentaInmuebleProvider
+from ..renta_inmueble_bindings import RentaInmuebleOriginPart, RentaInmuebleProvider
 from ..schema import BindingDefinition
 from .published_authority import published_snapshot, published_supported_filing_years
 
@@ -29,7 +29,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _FAMILY = AbsenceAttestationFamily.RENTA_NEGATIVE_GENERAL_BASES_PENDING
 _ROW_FAMILY = AbsenceAttestationFamily.RENTA_CAPITAL_INMOBILIARIO_GASTOS_PENDIENTES
 _WORK_INCOME_FAMILY = AbsenceAttestationFamily.RENTA_TRABAJO_INCOME_NOT_STATED
-_PENDING_EXPENSES_BOX = "0103"
 _DECLARED = (
     "renta-base-liquidable-negativa-general-anterior",
     "renta-base-liquidable-negativa-general-em2-pendiente-inicio",
@@ -73,7 +72,8 @@ def _pending_expense_columns(bindings: dict[str, BindingDefinition]) -> set[str]
         binding.id
         for binding in bindings.values()
         if isinstance(binding.provider, RentaInmuebleProvider)
-        and binding.provider.target_casilla_id == _PENDING_EXPENSES_BOX
+        and binding.provider.origin is not None
+        and binding.provider.origin.part is RentaInmuebleOriginPart.OPENING
     }
 
 

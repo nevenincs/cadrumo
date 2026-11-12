@@ -2587,3 +2587,22 @@ required_text = ["con el límite de 300 euros anuales"]
 value = "300"
 date_axis = "filing_period"
 valid_from = 2015-01-01
+
+# LIRPF art. 23.1.a.1.º and RIRPF art. 13.a: the interest and repair expenses of a let property
+# that exceed its gross income are deducted in the four following years; anexo C.1 follows
+# each excess for that many years by the ejercicio it arose in.
+[[revisions."2022".parameters]]
+id = "renta-rental-gastos-pendientes-carry-years"
+data_type = "integer"
+unit = "years"
+legal_refs = ["ley-35-2006:art-23", "rd-439-2007:art-13"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["El exceso se podrá deducir en los cuatro años siguientes"]
+
+[[revisions."2022".parameters.values]]
+value = "4"
+date_axis = "filing_period"
+valid_from = 2007-01-01

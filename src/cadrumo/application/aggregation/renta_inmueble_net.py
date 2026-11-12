@@ -5,12 +5,13 @@ official design states the boxes of one ``Inmueble``:
 
 * Financing interest and repair and conservation are limited, for each
   property, to its gross income (LIRPF art. 23.1.a.1.º; RIRPF art. 13.a).
-  Earlier ejercicios' pending amounts apply first, then the year's own; what
-  the year's own leaves over is pending for the four following years. What
-  earlier ejercicios left pending is never inferred: while it is unknown the
-  net yield is not computed. A pending amount, earlier or the year's own, is
-  filed split by the ejercicio it arose in; the property states one total, so
-  the split is never invented and the property blocks.
+  Earlier ejercicios' pending amounts apply first, oldest origin year first,
+  then the year's own; what the year's own leaves over is pending for the
+  following years of the registry's carry window, and what the oldest origin
+  year of the window still leaves expires. Anexo C.1 states each origin year's
+  opening, applied and carried amounts; 0103 and 0104 are their sums. What
+  earlier ejercicios left pending is never inferred: while one origin year is
+  unknown the net yield is not computed.
 * The building is amortised at the registry's rate on the greater of the
   acquisition cost and the cadastral value, the land excluded (LIRPF art.
   23.1.b; RIRPF art. 14.2.a), for the days the property was let. Without a
@@ -46,7 +47,7 @@ from typing import Final
 from ...core.money.rounding import round_to_cents
 from ...domain.calculations.registry.gasto_capital_inmobiliario import GastoCapitalInmobiliarioCatalogue
 from ...domain.contribuyente.arrendamiento_record import ArrendamientoRecord
-from ...domain.contribuyente.inmueble_record import InmuebleRecord, ValorCatastral
+from ...domain.contribuyente.inmueble_record import InmuebleRecord, TitularRole, ValorCatastral
 from ...domain.renta.rental_reduction import RentalReductionArt232Tier
 from ...domain.renta.rental_reduction_derivation import (
     RentalReductionArt232Rules,
@@ -66,6 +67,8 @@ class RentaInmuebleTerms:
 
     amortizacion_rate: Decimal
     """The annual amortisation rate of a building (RIRPF art. 14.2.a)."""
+    carry_years: int
+    """How many following ejercicios an interest and repair excess carries into (LIRPF art. 23.1.a.1.º)."""
     reduction_rules: RentalReductionArt232Rules
     reduction_rates: Mapping[RentalReductionArt232Tier, Decimal]
     """The rate of every reduction a lease can take at the ejercicio's devengo."""
@@ -93,10 +96,9 @@ class RentaInmuebleNetInputs:
     """The taxpayer's part of the improvements made in the ejercicio."""
     withholding: tuple[RetencionSoportadaRecord, ...]
     """The suffered-withholding records placed on this property."""
-    pendiente: Decimal | None
-    """The interest and repair earlier ejercicios left pending, or ``None`` when it is not known."""
-    prior_return_held: bool = False
-    """Whether the profile holds the return of the previous ejercicio, which states its pending amounts unmatched."""
+    pendientes: Mapping[int, Decimal] | None
+    """What each origin year of the carry window left pending at the start of the ejercicio, by how many
+    ejercicios before it the excess arose; ``None`` while one of them is not known."""
 
     @property
     def ejercicio_days(self) -> int:
@@ -119,6 +121,15 @@ class RentaInmuebleNet:
     amortizacion: Decimal | None = None
     gastos_pendientes_anteriores: Decimal | None = None
     gastos_pendientes_aplicados: Decimal | None = None
+    origen_pendiente: dict[int, Decimal] = field(default_factory=dict)
+    """Anexo C.1: what each origin year left pending at the start of the period, by origin back."""
+    origen_aplicado: dict[int, Decimal] = field(default_factory=dict)
+    """Anexo C.1: what this return applies of each origin year, by origin back."""
+    origen_futuro: dict[int, Decimal] = field(default_factory=dict)
+    """Anexo C.1: what each origin year inside the window still carries on, by origin back."""
+    anexo_c1_titular: str | None = None
+    """The holder of the property on its anexo C.1, stated only when the annex carries an amount."""
+    anexo_c1_referencia_catastral: str | None = None
     intereses_reparacion_aplicados: Decimal | None = None
     intereses_reparacion_pendientes: Decimal | None = None
     rendimiento_neto: Decimal | None = None
@@ -249,34 +260,43 @@ def _limited_concepts(concepts: GastoCapitalInmobiliarioCatalogue) -> frozenset[
     return frozenset(str(concept.token) for concept in concepts.concepts if concept.limited)
 
 
+_HOLDER_TOKENS: Final = {TitularRole.PRIMER_DECLARANTE: "declarante", TitularRole.CONYUGE: "conyuge"}
+"""The holder token the return states for a property's titular, where the role names one holder."""
+
+
 def _apply_limit(
-    inputs: RentaInmuebleNetInputs, net: RentaInmuebleNet, concepts: GastoCapitalInmobiliarioCatalogue
+    inputs: RentaInmuebleNetInputs, net: RentaInmuebleNet, concepts: GastoCapitalInmobiliarioCatalogue, window: int
 ) -> Decimal | None:
-    """Fill the limited-expense boxes; return what they deduct, or ``None`` while the carry is unknown.
+    """Fill the limited-expense boxes and anexo C.1; return what they deduct, or ``None`` while a carry is unknown.
 
     Earlier ejercicios' pending amounts take the room the gross income leaves
-    first; the year's own interest and repairs take what remains. Any amount
-    pending, carried in or left over, needs its split by year of origin.
+    first, the oldest origin year first (LIRPF art. 23.1.a.1.º; RIRPF art.
+    13.a); the year's own interest and repairs take what remains. An origin
+    year inside the window carries what it could not apply; the oldest, at the
+    window's end, carries nothing further.
     """
+    if inputs.pendientes is None:
+        return None
     limited = _limited_concepts(concepts)
     own = sum((amount for concept, amount in inputs.gastos.items() if concept in limited), _ZERO)
-    if inputs.pendiente is None:
-        net.causes.append(
-            RentaInmuebleCause.PENDING_EXPENSES_HELD_RETURN_UNSTATED
-            if inputs.prior_return_held
-            else RentaInmuebleCause.PENDING_EXPENSES_UNSTATED
-        )
-        if own > inputs.ingresos:
-            net.causes.append(RentaInmuebleCause.PENDING_EXPENSES_ORIGIN_UNSPLIT)
-        return None
-    net.gastos_pendientes_anteriores = _nonzero(inputs.pendiente)
-    earlier = min(inputs.pendiente, inputs.ingresos)
-    applied = min(own, inputs.ingresos - earlier)
+    room = max(inputs.ingresos, _ZERO)
+    for back, opening in sorted(inputs.pendientes.items(), reverse=True):
+        used = min(opening, room)
+        room -= used
+        net.origen_pendiente[back] = opening
+        net.origen_aplicado[back] = used
+        if back < window:
+            net.origen_futuro[back] = opening - used
+    earlier = sum(net.origen_aplicado.values(), _ZERO)
+    applied = min(own, room)
+    net.gastos_pendientes_anteriores = _nonzero(sum(net.origen_pendiente.values(), _ZERO))
     net.gastos_pendientes_aplicados = _nonzero(earlier)
     net.intereses_reparacion_aplicados = _nonzero(applied)
     net.intereses_reparacion_pendientes = _nonzero(own - applied)
-    if inputs.pendiente or own > applied:
-        net.causes.append(RentaInmuebleCause.PENDING_EXPENSES_ORIGIN_UNSPLIT)
+    if net.gastos_pendientes_anteriores is not None or net.intereses_reparacion_pendientes is not None:
+        titularidad = inputs.record.titularidad
+        net.anexo_c1_titular = None if titularidad is None else _HOLDER_TOKENS.get(titularidad.titular)
+        net.anexo_c1_referencia_catastral = inputs.record.referencia_catastral
     return earlier + applied
 
 
@@ -344,7 +364,7 @@ def renta_inmueble_net(
     net = RentaInmuebleNet()
     _withhold(inputs, net)
     amortised = _amortise(inputs, net, terms.amortizacion_rate)
-    limited = _apply_limit(inputs, net, concepts)
+    limited = _apply_limit(inputs, net, concepts, terms.carry_years)
     tiers = _reduction_tiers(inputs, net, terms)
     if not amortised or limited is None or net.amortizacion is None:
         return net

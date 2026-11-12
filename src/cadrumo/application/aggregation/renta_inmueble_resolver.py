@@ -23,6 +23,7 @@ from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.hashing import content_hash_hex
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.binding_absence_attestation import AbsenceAttestationFamily
+from ...domain.calculations.registry.binding_selector_utils import provider_member
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.formula_runtime_ops import read_parameter
 from ...domain.calculations.registry.gasto_capital_inmobiliario import (
@@ -31,8 +32,13 @@ from ...domain.calculations.registry.gasto_capital_inmobiliario import (
 )
 from ...domain.calculations.registry.ids import BindingId, RevisionId
 from ...domain.calculations.registry.renta_inmueble_bindings import (
+    CARRY_YEARS_PARAMETER,
+    RentaInmuebleOrigin,
+    RentaInmuebleOriginPart,
     RentaInmuebleProvider,
     renta_inmueble_columns,
+    renta_inmueble_origin_columns,
+    renta_inmueble_origin_failures,
     renta_inmueble_totals,
 )
 from ...domain.calculations.registry.rental_reduction import (
@@ -46,6 +52,7 @@ from ...domain.modelos.calculation_revision_sources import CalculationNoteFact, 
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..user_profile.projections import record_to_path_values
 from .modelo_bindings_support import STORAGE_DEGRADATION_ERRORS
+from .renta_inmueble_carry import PendingStatements
 from .renta_inmueble_findings import RentaInmuebleCause, RentaInmuebleFinding, RentaInmuebleFindingKind
 from .renta_inmueble_net import RentaInmuebleTerms
 from .renta_inmueble_source import (
@@ -80,10 +87,13 @@ class _Column:
     binding: BindingDefinition
     field: RentaInmuebleRowField | None
     concept: str | None
+    origin: RentaInmuebleOrigin | None = None
 
     def value(self, occurrence: RentaInmuebleOccurrence) -> RentaInmuebleColumnValue | None:
         if self.concept is not None:
             return occurrence.gasto(self.concept)
+        if self.origin is not None:
+            return occurrence.origin(self.origin)
         return None if self.field is None else occurrence.column(self.field)
 
 
@@ -116,22 +126,42 @@ _FINDING_SENTENCES: Final = {
 """The catalogue sentence that states each finding, so it reads in every language."""
 
 
-def _finding_fact(finding: RentaInmuebleFinding) -> CalculationNoteFact:
+type _Openings = dict[int, BindingDefinition]
+"""The anexo C.1 opening column of each origin year, by origin back."""
+
+
+def _finding_fact(finding: RentaInmuebleFinding, openings: _Openings) -> CalculationNoteFact:
     kind, _separator, record = finding.subject.partition(":")
-    named = {"record": record} if kind in _NAMED_RECORDS and record else {}
+    named: dict[str, str] = {"record": record} if kind in _NAMED_RECORDS and record else {}
+    opening = None if finding.back is None else openings.get(finding.back)
+    if opening is not None:
+        named["box"] = _target_casilla(opening)
+        named["binding"] = opening.id
     return CalculationNoteFact.of(_FINDING_SENTENCES[finding.cause], rows=(finding.subject,), **named)
 
 
-def _door_text(finding: RentaInmuebleFinding) -> str | None:
-    """Return the command that settles ``finding``, naming its row where the command takes one."""
+def _target_casilla(binding: BindingDefinition) -> str:
+    return str(provider_member(binding, RentaInmuebleProvider).target_casilla_id)
+
+
+def _door_text(finding: RentaInmuebleFinding, openings: _Openings) -> str | None:
+    """Return the command that settles ``finding``, naming the column and row where the command takes them.
+
+    A statement of one origin year's carry names that year's opening column; the work unit is the
+    caller's, so it stands as a placeholder.
+    """
     door = finding.door
     if door is None:
         return None
-    return f"{door.value} --row {finding.subject}" if door.takes_row else door.value
+    if not door.takes_row:
+        return door.value
+    opening = None if finding.back is None else openings.get(finding.back)
+    column = "" if opening is None else f" <work-unit> {opening.id}"
+    return f"{door.value}{column} --row {finding.subject}"
 
 
-def _finding_diagnostic(finding: RentaInmuebleFinding) -> CalculationSourceDiagnostic:
-    door = _door_text(finding)
+def _finding_diagnostic(finding: RentaInmuebleFinding, openings: _Openings) -> CalculationSourceDiagnostic:
+    door = _door_text(finding, openings)
     return _diagnostic(
         reason="deferred_binding_source"
         if finding.kind is RentaInmuebleFindingKind.LIMITATION
@@ -139,7 +169,7 @@ def _finding_diagnostic(finding: RentaInmuebleFinding) -> CalculationSourceDiagn
         message=finding.message,
         source_ref=finding.subject,
         remedy=None if door is None else f"Settle it with {door}, then calculate again.",
-        fact=_finding_fact(finding),
+        fact=_finding_fact(finding, openings),
     )
 
 
@@ -156,6 +186,10 @@ def _typed_column(
         if declared.casilla_id != provider.target_casilla_id:
             return f"column {binding.id} fills a box other than the one the concept vocabulary gives {concept}"
         return _Column(binding=binding, field=None, concept=concept)
+    if provider.origin is not None:
+        return _Column(
+            binding=binding, field=RentaInmuebleRowField.GASTOS_PENDIENTES_ORIGEN, concept=None, origin=provider.origin
+        )
     try:
         return _Column(binding=binding, field=RentaInmuebleRowField(token), concept=None)
     except ValueError:
@@ -258,19 +292,42 @@ def _totals(
 
 
 def _pending_stated(
-    declared: Iterable[tuple[BindingDefinition, RentaInmuebleProvider]], context: CalculationSourceContext
-) -> dict[str, Decimal]:
-    """Read the filer's per-property statements of the carry, on the columns whose family takes them."""
-    stated_on = {
-        binding.id
-        for binding, _provider in declared
+    declared: Iterable[tuple[BindingDefinition, RentaInmuebleProvider]],
+    openings: _Openings,
+    context: CalculationSourceContext,
+) -> PendingStatements:
+    """Read the filer's per-property statements of the carry, keyed by the column and row each names.
+
+    A statement on an opening column, which the family takes, speaks of that column's origin year.
+    A statement on the column of the whole carry, from before the carry was split by origin year,
+    is kept as that property's total.
+    """
+    backs = {
+        binding.id: back
+        for back, binding in openings.items()
         if binding.absence_attestation is AbsenceAttestationFamily.RENTA_CAPITAL_INMOBILIARIO_GASTOS_PENDIENTES
     }
-    return {
-        statement.source_row_identity: statement.stated_amount
-        for statement in context.caller_row_attestations
-        if statement.binding_id in stated_on
+    whole = {
+        binding.id
+        for binding, provider in declared
+        if provider.row_field == RentaInmuebleRowField.GASTOS_PENDIENTES_ANTERIORES.value
+        and binding.absence_attestation is None
     }
+    by_origin: dict[int, dict[str, Decimal]] = {}
+    totals: dict[str, Decimal] = {}
+    for statement in context.caller_row_attestations:
+        back = backs.get(statement.binding_id)
+        if back is not None:
+            by_origin.setdefault(back, {})[statement.source_row_identity] = statement.stated_amount
+        elif statement.binding_id in whole:
+            totals[statement.source_row_identity] = statement.stated_amount
+    return PendingStatements(by_origin=by_origin, totals=totals)
+
+
+def _whole_years(value: Decimal) -> int:
+    if value != value.to_integral_value() or value < 1:
+        raise ValueError(f"{CARRY_YEARS_PARAMETER} must be a whole number of years of at least one, got {value}")
+    return int(value)
 
 
 def resolve_renta_inmueble_terms(
@@ -284,6 +341,15 @@ def resolve_renta_inmueble_terms(
             _AMORTISATION_RATE,
             date_context={DateAxis.FILING_PERIOD.value: devengo},
             operation=operation,
+        ),
+        carry_years=_whole_years(
+            read_parameter(
+                modelo,
+                revision_id,
+                CARRY_YEARS_PARAMETER,
+                date_context={DateAxis.FILING_PERIOD.value: devengo},
+                operation=operation,
+            )
         ),
         reduction_rules=resolve_rental_reduction_art232_rules(
             modelo_id=modelo, revision_id=revision_id, devengo=devengo, operation=operation
@@ -407,9 +473,10 @@ class RentaInmuebleSourceResolver:
                 operation=operation,
             )
         columns, unreadable = _typed_columns(declared, concepts)
-        unreadable = (*unreadable, *_unreadable_totals(totals))
+        unreadable = (*unreadable, *_unreadable_totals(totals), *renta_inmueble_origin_failures(context.revision))
         if unreadable:
             return self._withheld(binding_ids, unreadable)
+        openings = renta_inmueble_origin_columns(context.revision).get(RentaInmuebleOriginPart.OPENING, {})
         built = renta_inmueble_occurrences(
             path_values=record_to_path_values(context.profile.record, as_of=context.period.end_date),
             transactions=transactions.values(),
@@ -417,10 +484,10 @@ class RentaInmuebleSourceResolver:
             concepts=concepts,
             terms=terms,
             withholding=withholding,
-            pending_stated=_pending_stated(declared, context),
+            pending_stated=_pending_stated(declared, openings, context),
             prior_return_held=prior_return_held,
         )
-        return self._resolution(built, columns, totals, binding_ids)
+        return self._resolution(built, columns, totals, binding_ids, openings)
 
     def _resolution(
         self,
@@ -428,9 +495,10 @@ class RentaInmuebleSourceResolver:
         columns: tuple[_Column, ...],
         totals: tuple[tuple[BindingDefinition, RentaInmuebleProvider], ...],
         binding_ids: tuple[BindingId, ...],
+        openings: _Openings,
     ) -> CalculationSourceResolution:
         diagnostics = (
-            *(_finding_diagnostic(finding) for finding in built.findings),
+            *(_finding_diagnostic(finding, openings) for finding in built.findings),
             *_unrouted_expenses(built, columns),
         )
         if built.refused or any(diagnostic.reason == "unrouted_observation" for diagnostic in diagnostics):
