@@ -839,6 +839,11 @@ __all__ = [
     "ModeloDomiciliationPastCutoffError",
     "ModeloEditBaselineStaleError",
     "ModeloEditContractIncompatibleError",
+def modelo_edit_value_refusal_verdict() -> PreconditionVerdict:
+    """Return the door of a refused edit value: state it again on the work unit."""
+    return _edit_refusal_failure(ModeloEditRefusedError).verdict
+
+
     "ModeloEditIntentUnsupportedError",
     "ModeloEditRefusedError",
     "ModeloExportPeriodUnmappableError",
@@ -867,3 +872,4 @@ __all__ = [
     "modelo_work_wizard_retry_exhausted_precondition",
     "own_account_missing_error",
 ]
+    "modelo_edit_value_refusal_verdict",
