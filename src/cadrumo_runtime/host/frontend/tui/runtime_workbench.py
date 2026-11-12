@@ -48,6 +48,7 @@ from cadrumo.entrypoints.tui.operations.destination import OperationsDestination
 from cadrumo.entrypoints.tui.reconciliation_export import ReconciliationExportScreen
 from cadrumo.entrypoints.tui.reference.destination import reference_screen_factory
 from cadrumo.entrypoints.tui.root_binding import RootBindingV1, RootPresentationV1
+from cadrumo.entrypoints.tui.withholding.screen import withholding_screen_factory
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo_client.transport.workbench_generation import read_workbench_generation
@@ -78,6 +79,7 @@ from .runtime_ledger_review import compose_runtime_ledger_review_doors
 from .runtime_ledger_tools import compose_runtime_ledger_tools
 from .runtime_own_accounts import compose_runtime_own_account_door
 from .runtime_profile_language import RuntimeProfileLanguage
+from .runtime_withholding import compose_runtime_withholding_door
 
 if TYPE_CHECKING:
     from cadrumo.application.aeat_sync.workspace import AeatSyncWorkspaceProjectionV1
@@ -353,12 +355,18 @@ class RuntimeWorkbenchRoot(RuntimeProfileLanguage):
             "workbench.ledger": generation.ledger_admission,
             "workbench.declarations": generation.declarations_admission,
             "workbench.aeat_sync": generation.aeat_sync_admission,
-            "workbench.withholding": WorkbenchDestinationAdmission(
+        }
+        # Admitted only when the runtime serves every withholding operation under this session.
+        withholding = compose_runtime_withholding_door(self._client, profile_label=self._label)
+        admissions["workbench.withholding"] = (
+            WorkbenchDestinationAdmission(
                 destination="workbench.withholding",
                 state=WorkbenchDestinationAdmissionState.UNAVAILABLE,
                 reason_code="workbench.withholding.runtime_unavailable",
-            ),
-        }
+            )
+            if withholding is None
+            else _available("workbench.withholding")
+        )
 
         factories = self._base_factories(generation, profile_factory)
         factories["workbench.operations"] = self._operations
@@ -372,6 +380,8 @@ class RuntimeWorkbenchRoot(RuntimeProfileLanguage):
         aeat_sync = self._aeat_sync_factory(generation)
         if aeat_sync is not None:
             factories["workbench.aeat_sync"] = aeat_sync
+        if withholding is not None:
+            factories["workbench.withholding"] = withholding_screen_factory(withholding)
         return build_destination_catalogue(admissions=admissions, factories=factories)
 
     @staticmethod
