@@ -1147,6 +1147,10 @@ errors:
       %{binding_id} a la vez sin importe y con un importe declarado. La aplicación
       escribió ese registro ella misma, así que se ha alterado o dañado y el cálculo
       no puede usarlo.
+    operator_layer_income_family_entry_digest_malformed: El registro guardado de las
+      cifras introducidas a mano para la familia de rentas %{family} no contiene un
+      resumen válido de sus filas del libro. La aplicación escribió ese registro,
+      así que se alteró o dañó y el cálculo no puede usarlo.
     operator_layer_value_attestation_not_canonical: La declaración de valor guardada
       para el enlace %{binding_id} no contiene un importe decimal canónico. La aplicación
       escribió ese registro ella misma, así que se ha alterado o dañado y el cálculo

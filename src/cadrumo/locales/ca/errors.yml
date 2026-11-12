@@ -1166,6 +1166,10 @@ errors:
       %{binding_id} alhora sense import i amb un import declarat. L'aplicació va escriure
       aquest registre ella mateixa, així que s'ha alterat o malmès i el càlcul no
       el pot fer servir.
+    operator_layer_income_family_entry_digest_malformed: El registre desat de les
+      xifres introduïdes a mà per a la família de rendes %{family} no conté un resum
+      vàlid de les seves files del llibre. L'aplicació va escriure aquest registre,
+      així que es va alterar o malmetre i el càlcul no el pot fer servir.
     operator_layer_value_attestation_not_canonical: La declaració de valor desada
       per a l'enllaç %{binding_id} no conté un import decimal canònic. L'aplicació
       va escriure aquest registre ella mateixa, així que s'ha alterat o malmès i el

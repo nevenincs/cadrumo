@@ -1055,6 +1055,10 @@ errors:
       both as having no amount and as having a stated amount. The application wrote
       that record itself, so it was altered or damaged and the calculation cannot
       use it.
+    operator_layer_income_family_entry_digest_malformed: The stored record of the
+      figures entered by hand for income family %{family} does not hold a well-formed
+      digest of its ledger rows. The application wrote that record itself, so it was
+      altered or damaged and the calculation cannot use it.
     operator_layer_value_attestation_not_canonical: The stored value statement for
       binding %{binding_id} does not hold a canonical decimal amount. The application
       wrote that record itself, so it was altered or damaged and the calculation cannot

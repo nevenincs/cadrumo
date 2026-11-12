@@ -1081,6 +1081,10 @@ errors:
       kötést egyszerre állítja összeg nélkülinek és megadott összegűnek. Az alkalmazás
       maga írta ezt a rekordot, ezért megváltozott vagy megsérült, és a számítás nem
       használhatja.
+    operator_layer_income_family_entry_digest_malformed: A(z) %{family} jövedelemcsaládhoz
+      kézzel megadott adatok mentett rekordja nem tartalmaz érvényes kivonatot a főkönyvi
+      soraikról. Ezt a rekordot maga az alkalmazás írta, így módosult vagy megsérült,
+      és a számítás nem használhatja.
     operator_layer_value_attestation_not_canonical: A(z) %{binding_id} kötéshez mentett
       értéknyilatkozat nem kanonikus tizedes összeget tartalmaz. Az alkalmazás maga
       írta ezt a rekordot, ezért megváltozott vagy megsérült, és a számítás nem használhatja.
