@@ -139,6 +139,7 @@ appear in a persona; identifier-refusal tests take them from here.
 | `[[filed_returns]]` | array | returns the taxpayer has already filed: `modelo`, `year` (token), `periods` |
 | `[[calculated_returns]]` | array | returns the history replay calculates without filing: `modelo`, `year`, `periods` |
 | `[[local_observations]]` | array | casilla values of a return the taxpayer knows from his own copy |
+| `[[work_inputs]]` | array | values the operator enters on a return because no record produces them, by registry role |
 | `[[leased_premises]]` | array | premises the taxpayer rents and on whose rent he withholds |
 | `[[inventory]]` | array | the existencias book of one activity for one year |
 
@@ -291,6 +292,26 @@ table of casilla to amount, and a Spanish `reason`) through the local
 observation operation. The product keeps such a value at calculation grade:
 it feeds a later calculation and never clears the cross-period check that
 verification applies, which needs AEAT evidence.
+
+`[[work_inputs]]` gives the values the operator enters on one return because
+no record the application holds produces them: `modelo`, `year` (token),
+`period`, `roles` as a table of registry identity (a casilla's
+`continuidad_id` or `semantic_role`) to canonical amount, `sources` as a table
+naming exactly the same roles, each with the text that states where its
+figure comes from, and a Spanish `reason`. The materialiser resolves each role
+in the edition the law selects for the return, as expectation `roles` are
+resolved, so no casilla id of one edition is frozen here; a role no edition of
+the modelo declares is refused, one naming several casillas of the edition is
+refused as ambiguous, and one the selected edition does not declare is not
+entered there, leaving the calculation to refuse on its own terms. The replay
+enters the resolved casillas through the declaration edit before the return's
+first calculation, as an operator types them; the edit records no source, so
+`sources` and `reason` stay here. One block per return. Only a casilla the
+edition leaves to the operator may be given: the materialiser refuses one the
+edition computes, binds or produces by formula. A given value is never asserted
+back: the reader refuses a role an expectation of the same return states under
+`roles`, and the materialiser a resolved casilla an expectation states under
+`casillas` or `not_sourced` or names by role.
 
 `[[leased_premises]]` describes premises the taxpayer rents for the activity:
 `key`, the `landlord` identity role, the landlord's `landlord_tax_status`,

@@ -236,6 +236,7 @@ class LedgerEvidenceRow(BaseModel):
     usage_ratio_id: str | None = None
     deduction_fact_kind: str | None = None
     iva_vehicle_use: str | None = None
+    exemption_article: str | None = None
     art_104_tres_exclusion: str | None = None
     input_classification: str | None = None
     prorrata_sector_id: str | None = None

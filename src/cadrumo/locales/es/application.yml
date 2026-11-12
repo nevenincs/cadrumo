@@ -1169,6 +1169,15 @@ application:
           aquí
         unnumbered_invoice: El número de factura leído no es un número
         unresolved_direction: No está claro qué parte emitió el documento
+    counterparty:
+      findings:
+        kind_contradicts_identifier_form: Has indicado el nombre de declaración para
+          {declared}, pero la forma de este identificador fiscal español es la de
+          {observed}. El nombre se guarda tal como lo indicaste y no se ha cambiado
+          nada; comprueba cuál de las dos cosas es correcta.
+      party_kinds:
+        entity: una entidad
+        natural_person: una persona física
     draft_finding:
       breakdown_bases_disagree: Las bases por tipo suman {summed}, pero el documento
         indica una base imponible de {base}. Son dos lecturas del mismo documento

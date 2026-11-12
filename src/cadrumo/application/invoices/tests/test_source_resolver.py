@@ -24,6 +24,7 @@ from ....domain.calculations.registry.temporal import select_revision
 from ....domain.calculations.registry.tests.published_authority import published_supported_filing_years
 from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from ....domain.filing.declared_party_name import DeclaredPartyFilingName, DeclaredPartyKind
+from ....domain.filing.declared_party_name_filing import DECLARED_PARTY_NAME_DOOR_ACTION_ID
 from ....domain.invoices.business_premises import BusinessPremisesLease
 from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.invoices.enums import IvaRate, PaymentStatus
@@ -42,6 +43,7 @@ from ...modelo.calculation_note_gate import gate_refuses
 from ...modelo.calculation_notes import note_attention, note_record_verdict
 from ...modelo.printed_boxes import PrintedBoxes
 from ...modelo.work_form_findings import ModeloFormAttention
+from ...operator_actions.catalogue import lookup_action
 from ..source_observations import intracommunity_clave, invoice_sources_for_revision
 from ..source_resolver import (
     InvoiceCatalogueSourceResolver,
@@ -903,5 +905,34 @@ def test_m347_party_without_a_declared_filing_name_files_no_name_and_is_named_wi
         CalculationNoteSentence.DECLARED_PARTY_NAME_MISSING
     }
     assert {item.fact.row_refs for item in unresolved if item.fact is not None} == {(lease.invoice_id,)}
-    assert all(item.remedy is not None and "filing-name" in item.remedy for item in unresolved)
+    assert all(item.remedy is not None for item in unresolved)
     assert all(lease.counterparty_name not in str(item.casilla_id) for item in unresolved)
+
+
+def test_an_unstated_party_name_note_opens_the_counterparty_filing_name_door() -> None:
+    """The note carries the catalogued door that states the name, binding nothing that identifies the party."""
+    lease = _lease(
+        "ALQ-1", "B00015016", "10000.00", situacion_inmueble="1", referencia_catastral="9872023VH5797S0001WX"
+    )
+    resolver = InvoiceCatalogueSourceResolver(
+        ports=InvoiceSourceResolverPorts(
+            catalogue_reader=_InMemoryCatalogueReader(build_invoice_catalogue([lease])),
+            counterparty_filing_names=_NoStatedFilingNames(),
+        ),
+    )
+    (finding, *_others) = [
+        item
+        for item in resolver.resolve(_m347_context(2025)).diagnostics
+        if item.reason == "declared_party_name_unresolved"
+    ]
+
+    verdict = note_record_verdict(finding.reason, finding.fact)
+
+    assert verdict is not None
+    assert verdict.action is not None
+    assert verdict.action.action_id == DECLARED_PARTY_NAME_DOOR_ACTION_ID
+    assert lookup_action(verdict.action.action_id).action_id == DECLARED_PARTY_NAME_DOOR_ACTION_ID
+    assert set(verdict.missing_argument_names) == {"tax_identifier", "country_code", "kind"}
+    assert "B00015016" not in verdict.model_dump_json()
+    assert finding.remedy is not None
+    assert "cadrumo" not in finding.remedy
