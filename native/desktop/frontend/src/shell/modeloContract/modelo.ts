@@ -5,8 +5,9 @@
 // The request and result of every definition the desktop admits, and the
 // edit operator input the financial body carries, with field names, nullity
 // and closed vocabularies as the application serialises them. A result field
-// is always present; a field of what the window sends may be left out where
-// the model gives it a default.
+// is always present unless the model leaves it out while absent or empty, and
+// then the property is optional. A field of what the window sends may be left
+// out where the model gives it a default.
 
 /**
  * One bounded recovery argument with its canonical provenance.
@@ -72,9 +73,9 @@ export type AeatSoftwareIdentityGrade = "reviewed" | "development_mock";
  * its served words and routing.
  */
 export type AlternativeActionSnapshot = {
-  action_words: string | null;
-  action_words_language: OutputLanguage | null;
-  target_operation_ids: string[];
+  action_words?: string | null;
+  action_words_language?: OutputLanguage | null;
+  target_operation_ids?: string[];
   action_id: string;
   argument_bindings: ActionArgumentSnapshot[];
   missing_argument_names: string[];
@@ -841,7 +842,7 @@ export type ModeloFindingSnapshot = {
   message_facts: PublicNamedScalar[];
   legal_refs: LegalRefId[];
   source_refs: SourceRefId[];
-  disclosed_limitation: boolean;
+  disclosed_limitation?: boolean;
 };
 
 /**
@@ -1039,11 +1040,11 @@ export type PaymentElection = "ingreso" | "domiciliacion" | "cuenta_corriente";
  * a refusal with no way out, in the language of the process that projected it.
  */
 export type PreconditionVerdictSnapshot = {
-  no_recovery_words: string | null;
-  no_recovery_words_language: OutputLanguage | null;
-  action_words: string | null;
-  action_words_language: OutputLanguage | null;
-  target_operation_ids: string[];
+  no_recovery_words?: string | null;
+  no_recovery_words_language?: OutputLanguage | null;
+  action_words?: string | null;
+  action_words_language?: OutputLanguage | null;
+  target_operation_ids?: string[];
   failed_condition_id: string;
   evidence: ConditionEvidenceSnapshot[];
   action_id: string | null;
@@ -1051,7 +1052,7 @@ export type PreconditionVerdictSnapshot = {
   missing_argument_names: string[];
   conditionality: ActionConditionality;
   no_recovery_outcome: NoRecoveryOutcome | null;
-  alternative_actions: AlternativeActionSnapshot[];
+  alternative_actions?: AlternativeActionSnapshot[];
 };
 
 /**

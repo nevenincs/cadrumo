@@ -64,7 +64,7 @@ export function NoteRecoveries({
             <RefusalNotice
               refusal={{
                 refusal_words: note.message,
-                verdict: note.recovery,
+                verdict: note.recovery ?? null,
               }}
               onAction={follow}
               opens={opens}

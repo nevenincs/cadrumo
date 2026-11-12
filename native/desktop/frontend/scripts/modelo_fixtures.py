@@ -47,7 +47,7 @@ from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from functools import cache
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Annotated, Any, cast, get_args, get_origin
 from uuid import UUID
 
 from dev.fixture_projections.location import family_directory, scratch_tree
@@ -388,6 +388,49 @@ def _model_roots() -> tuple[list[tuple[str, str, type[BaseModel]]], list[type[Ba
     return roots, sent
 
 
+def _models_in(annotation: object) -> Iterator[type[BaseModel]]:
+    """The Pydantic models an annotation names, through unions, containers and ``Annotated``."""
+    if isinstance(annotation, type) and issubclass(annotation, BaseModel):
+        yield annotation
+        return
+    if get_origin(annotation) is Annotated:
+        yield from _models_in(get_args(annotation)[0])
+        return
+    for argument in get_args(annotation):
+        yield from _models_in(argument)
+
+
+def omittable_fields(roots: Iterable[type[BaseModel]], defs: Mapping[str, Any]) -> dict[str, frozenset[str]]:
+    """Each definition's fields the wire can leave out, from the models' own serialisation config.
+
+    A field with an ``exclude_if`` predicate is left out of the serialised record whenever the predicate
+    holds, so its generated property is optional whatever its default. The definition is named as the
+    JSON schema names it: the class name, with a parametrised generic's brackets read as underscores. A model
+    carrying such a field that the schema does not define is refused rather than left required.
+    """
+    seen: dict[str, type[BaseModel]] = {}
+    pending = list(roots)
+    while pending:
+        model = pending.pop()
+        name = re.sub(r"[^A-Za-z0-9_]", "_", model.__name__)
+        if name in seen:
+            if seen[name] is not model:
+                raise SystemExit(f"two models are both named {name}")
+            continue
+        seen[name] = model
+        for found in model.model_fields.values():
+            pending.extend(_models_in(found.annotation))
+    omittable: dict[str, frozenset[str]] = {}
+    for name, model in seen.items():
+        fields = frozenset(key for key, found in model.model_fields.items() if found.exclude_if is not None)
+        if not fields:
+            continue
+        if name not in defs:
+            continue
+        omittable[name] = fields
+    return omittable
+
+
 def _ts_name(name: str) -> str:
     return name.lstrip("_")
 
@@ -424,9 +467,12 @@ def _literal(value: object) -> str:
 class _Writer:
     """Render JSON-schema definitions as TypeScript types, one per definition."""
 
-    def __init__(self, defs: Mapping[str, Any], *, sent_only: set[str]) -> None:
+    def __init__(
+        self, defs: Mapping[str, Any], *, sent_only: set[str], omittable: Mapping[str, frozenset[str]]
+    ) -> None:
         self._defs = defs
         self._sent_only = sent_only
+        self._omittable = omittable
         #: The definitions named by what was written since the last ``definition`` call began.
         self.named: set[str] = set()
 
@@ -482,7 +528,8 @@ class _Writer:
         lines.append(f"export type {_ts_name(name)} = {{")
         for prop, schema in node["properties"].items():
             lines.extend(_doc(schema.get("description"), indent="  "))
-            mark = "?" if optional_absent and prop not in required else ""
+            absent = (optional_absent and prop not in required) or prop in self._omittable.get(name, ())
+            mark = "?" if absent else ""
             lines.append(f"  {prop}{mark}: {self.type_of(schema)};")
         lines.append("};")
         return "\n".join(lines)
@@ -514,8 +561,9 @@ _HEADER = """\
 // The request and result of every definition the desktop admits, and the
 // edit operator input the financial body carries, with field names, nullity
 // and closed vocabularies as the application serialises them. A result field
-// is always present; a field of what the window sends may be left out where
-// the model gives it a default.
+// is always present unless the model leaves it out while absent or empty, and
+// then the property is optional. A field of what the window sends may be left
+// out where the model gives it a default.
 """
 
 
@@ -692,7 +740,11 @@ def render_contract() -> dict[str, str]:
     defs: dict[str, Any] = schema["$defs"]
     received = _reach(defs, (model.__name__ for _, role, model in roots if role != "request"))
     sent_reach = _reach(defs, (model.__name__ for model in sent))
-    writer = _Writer(defs, sent_only=sent_reach - received)
+    writer = _Writer(
+        defs,
+        sent_only=sent_reach - received,
+        omittable=omittable_fields([model for _, _, model in roots], defs),
+    )
     names = sorted((name for name in defs if not writer.inlined(name)), key=_ts_name)
     rendered: dict[str, str] = {}
     sized: dict[str, WrittenDefinition] = {}
