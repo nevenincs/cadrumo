@@ -240,9 +240,9 @@ class IvaLedgerObservation(BaseModel):
     @pydantic_validation_boundary
     def _enforce_exemption_article_category(self) -> IvaLedgerObservation:
         require_iva_rate_kind(self.rate_kind, effective_date=self.transaction_date)
-        require_iva_cash_accounting_treatment(self.cash_accounting_treatment)
+        require_iva_cash_accounting_treatment(self.cash_accounting_treatment, effective_date=self.transaction_date)
         if self.exemption_article is not None:
-            require_iva_exemption_article(self.exemption_article)
+            require_iva_exemption_article(self.exemption_article, effective_date=self.transaction_date)
         category_catalogue = resolve_iva_category_catalogue(effective_date=self.transaction_date)
         if self.exemption_article is not None and self.category != category_catalogue.require("domestic_exempt"):
             raise RegistryValidationError(
@@ -259,6 +259,7 @@ class IvaLedgerObservation(BaseModel):
         if not is_deducible_flow(self.flow_direction) or not admits_iva_deduction_classification(
             category=self.category,
             flow_direction=self.flow_direction,
+            effective_date=self.transaction_date,
         ):
             if self.deduction_fact_kind is not None or self.deduction_provenance is not None:
                 raise RegistryValidationError("an IVA row bearing no deducible cuota cannot carry deduction authority")
@@ -275,6 +276,7 @@ class IvaLedgerObservation(BaseModel):
             iva_amount=self.iva_amount,
             investment_asset_id=self.investment_asset_id,
             rectifies_ledger_id=self.rectifies_ledger_id,
+            effective_date=self.transaction_date,
         )
         return self
 
@@ -762,7 +764,10 @@ def unsupported_ledger_iva_observations(
         provider_model=LedgerIvaProvider,
         build_matcher=iva_build_matcher,
         is_declarable=lambda observation: True,
-        extra_exclusion=lambda observation: observation.category in registry_category_projection("cuota_less_m303"),
+        extra_exclusion=lambda observation: (
+            observation.category
+            in registry_category_projection("cuota_less_m303", effective_date=observation.transaction_date)
+        ),
     )
 
 
@@ -1018,7 +1023,7 @@ def structurally_unroutable_iva_base_categories(
         observation of that category, in enum declaration order.
     """
     if out_of_scope is None:
-        out_of_scope = registry_category_projection("m303_base_out_of_scope")
+        out_of_scope = registry_category_projection("m303_base_out_of_scope", effective_date=revision.valid_from)
     base_selectors = _base_iva_selectors(revision)
     matchers = tuple((selector, iva_build_matcher(selector)) for selector in base_selectors)
     return tuple(

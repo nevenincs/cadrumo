@@ -296,13 +296,16 @@ def test_records_and_expectations_of_supported_years_survive_a_lowered_horizon()
         (persona.expectations.deadlines, unchanged.expectations.deadlines),
     ):
         assert kept == tuple(item for item in every if str(item.year) != "horizon-2")
-    assert sorted({item.block for item in persona.below_floor}) == [
+    assert persona.prior_carries == tuple(item for item in unchanged.prior_carries if str(item.year) != "horizon-2")
+    carries_dropped = {"prior_carries"} if len(persona.prior_carries) < len(unchanged.prior_carries) else set()
+    assert {item.block for item in persona.below_floor} == {
         "expectations.deadlines",
         "expectations.obligations",
         "expectations.values",
         "filed_returns",
         "local_observations",
-    ]
+        *carries_dropped,
+    }
     assert sorted(item.block for item in persona.below_floor if item.history) == [
         "filed_returns",
         "local_observations",

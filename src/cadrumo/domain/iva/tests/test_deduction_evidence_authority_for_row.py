@@ -2,11 +2,16 @@
 
 from __future__ import annotations
 
+from datetime import date
+
 import pytest
 
 from ....core.iva_deduction_fact import IvaDeductionFactKind
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..deduction_facts import deduction_evidence_authority_for_row
 from ..schema import IvaCategory
+
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
@@ -29,7 +34,7 @@ def test_a_declared_kind_keeps_its_required_authority_even_when_the_category_dis
     kind: str, authority: str
 ) -> None:
     found = deduction_evidence_authority_for_row(
-        kind=IvaDeductionFactKind.from_registry(kind), category=IvaCategory("domestic_general")
+        kind=IvaDeductionFactKind.from_registry(kind), category=IvaCategory("domestic_general"), effective_date=_ON_DATE
     )
     assert found is not None
     assert found.value == authority
@@ -48,7 +53,7 @@ def test_a_declared_kind_keeps_its_required_authority_even_when_the_category_dis
 def test_an_undeclared_kind_is_resolved_only_by_a_unanimous_registry_category_family(
     category: str, authority: str
 ) -> None:
-    found = deduction_evidence_authority_for_row(kind=None, category=IvaCategory(category))
+    found = deduction_evidence_authority_for_row(kind=None, category=IvaCategory(category), effective_date=_ON_DATE)
     assert found is not None
     assert found.value == authority
 
@@ -56,6 +61,8 @@ def test_an_undeclared_kind_is_resolved_only_by_a_unanimous_registry_category_fa
 @pytest.mark.parametrize("category", [None, "domestic_exempt", "domestic_not_subject", "export"])
 def test_a_category_without_a_deduction_family_does_not_guess_a_supporting_document(category: str | None) -> None:
     assert (
-        deduction_evidence_authority_for_row(kind=None, category=None if category is None else IvaCategory(category))
+        deduction_evidence_authority_for_row(
+            kind=None, category=None if category is None else IvaCategory(category), effective_date=_ON_DATE
+        )
         is None
     )

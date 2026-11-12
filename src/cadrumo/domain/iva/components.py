@@ -18,7 +18,6 @@ from pydantic import Field, ValidationInfo, model_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.registry_token import StrictRegistryToken
-from ...core.time.clock import today_madrid
 from ...core.type_guards import is_object_mapping
 from ..calculations.registry.governed_fact_scope import (
     GovernedFactSource,
@@ -306,6 +305,11 @@ class IvaCategoryComponents(IvaStrictFrozen):
                 no_settlement_token = context_token
             elif isinstance(context_token, str):
                 no_settlement_token = IvaCuotaSettlement(context_token)
+        if no_settlement_token is None:
+            raise IvaValidationError(
+                f"{label}: the no-settlement token must be projected from the dated cuota-settlement "
+                "catalogue before row validation",
+            )
         self._validate_cuota_settlement(
             label,
             component_vocabulary=component_vocabulary,
@@ -331,14 +335,10 @@ class IvaCategoryComponents(IvaStrictFrozen):
         label: str,
         *,
         component_vocabulary: IvaComponentVocabulary,
-        no_settlement_token: IvaCuotaSettlement | None = None,
+        no_settlement_token: IvaCuotaSettlement,
     ) -> None:
         """Refuse a cuota whose declared settlement disagrees with its presence."""
-        no_settlement = (
-            no_settlement_token
-            if no_settlement_token is not None
-            else registry_cuota_settlement_catalogue().no_settlement_token
-        )
+        no_settlement = no_settlement_token
         zero_by_law = component_vocabulary.require_component_presence("zero_by_law")
         cuota = component_vocabulary.require_component_presence(self.cuota)
         if (cuota == zero_by_law) != (self.cuota_settlement == no_settlement):
@@ -474,18 +474,17 @@ CategoryProjectionName = Literal[
 
 def registry_cuota_settlement_catalogue(
     *,
-    effective_date: date | None = None,
+    effective_date: date,
     authority: GovernedFactSource | None = None,
 ) -> IvaCuotaSettlementCatalogue:
     """Resolve the explicit cuota-settlement vocabulary from published 0084."""
-    selected_date = today_madrid() if effective_date is None else effective_date
     authority = authority or governed_facts_in_scope()
     if authority is None:
         raise IvaValidationError(
             "IVA cuota-settlement catalogue requires an explicit authority operation or scope",
         )
     entries = resolve_component_catalogue_entries(
-        effective_date=selected_date,
+        effective_date=effective_date,
         authority=authority,
     )
     return cuota_settlement_catalogue_from_entries(entries)
@@ -513,18 +512,17 @@ def component_axis_membership[IvaRegistryTokenT: StrictRegistryToken](
 
 def registry_component_vocabulary(
     *,
-    effective_date: date | None = None,
+    effective_date: date,
     authority: GovernedFactSource | None = None,
 ) -> IvaComponentVocabulary:
     """Resolve the four typed component-axis memberships from fact 0084."""
-    selected_date = today_madrid() if effective_date is None else effective_date
     authority = authority or governed_facts_in_scope()
     if authority is None:
         raise IvaValidationError(
             "IVA component vocabulary requires an explicit authority operation or scope",
         )
     entries = resolve_component_catalogue_entries(
-        effective_date=selected_date,
+        effective_date=effective_date,
         authority=authority,
     )
     return component_vocabulary_from_entries(entries)
@@ -533,7 +531,7 @@ def registry_component_vocabulary(
 def registry_component_presence_token(
     value: str,
     *,
-    effective_date: date | None = None,
+    effective_date: date,
     authority: GovernedFactSource | None = None,
 ) -> IvaComponentPresence:
     """Resolve one component-presence token through the governed registry."""
@@ -546,7 +544,7 @@ def registry_component_presence_token(
 def registry_retencion_role_token(
     value: str,
     *,
-    effective_date: date | None = None,
+    effective_date: date,
     authority: GovernedFactSource | None = None,
 ) -> IvaRetencionRole:
     """Resolve one retencion-role token through the governed registry."""
@@ -559,7 +557,7 @@ def registry_retencion_role_token(
 def registry_kind_applicability_token(
     value: str,
     *,
-    effective_date: date | None = None,
+    effective_date: date,
     authority: GovernedFactSource | None = None,
 ) -> IvaKindApplicability:
     """Resolve one kind-applicability token through the governed registry."""
@@ -572,7 +570,7 @@ def registry_kind_applicability_token(
 def registry_category_projection(
     projection: CategoryProjectionName,
     *,
-    effective_date: date | None = None,
+    effective_date: date,
     authority: GovernedFactSource | None = None,
 ) -> frozenset[IvaCategory]:
     """Resolve an explicit category membership projection from published 0084.
@@ -581,26 +579,25 @@ def registry_category_projection(
     malformed, duplicate, or stale projection entries fail through
     :class:`IvaValidationError`.
     """
-    selected_date = today_madrid() if effective_date is None else effective_date
     authority = authority or governed_facts_in_scope()
     if authority is None:
         raise IvaValidationError(
             "IVA category projection requires an explicit authority operation or scope",
         )
     entries = resolve_component_catalogue_entries(
-        effective_date=selected_date,
+        effective_date=effective_date,
         authority=authority,
     )
     return category_projection_from_entries(
         entries,
         projection,
-        resolve_iva_category_catalogue(effective_date=selected_date, authority=authority),
+        resolve_iva_category_catalogue(effective_date=effective_date, authority=authority),
     )
 
 
 def registry_component_catalogue(
     *,
-    effective_date: date | None = None,
+    effective_date: date,
     authority: GovernedFactSource | None = None,
 ) -> ComponentCatalogue:
     """Return the Axis-A catalogue projected by the validated registry authority.
@@ -609,19 +606,19 @@ def registry_component_catalogue(
     tests and review tooling can pass an isolated generation to inspect another
     governed projection without introducing a second source of row data.
     """
-    selected_date = today_madrid() if effective_date is None else effective_date
     authority = authority or governed_facts_in_scope()
     if authority is None:
         raise IvaValidationError(
             "IVA component catalogue requires an explicit authority operation or scope",
         )
-    return project_component_catalogue(effective_date=selected_date, authority=authority)
+    return project_component_catalogue(effective_date=effective_date, authority=authority)
 
 
 def category_components(
     category: IvaCategory,
     kind: InvoiceKind,
     *,
+    effective_date: date,
     component_catalogue: ComponentCatalogue | None = None,
 ) -> IvaCategoryComponents:
     """Return a registry-projected Axis-A row for ``category`` on ``kind``.
@@ -635,6 +632,8 @@ def category_components(
     Args:
         category: The declared IVA situation of the row being decomposed.
         kind: Whether the taxpayer issued or received the invoice.
+        effective_date: The date the law selects the catalogue on: the
+            operation's devengo date.
         component_catalogue: Optional already-projected Axis-A catalogue.
 
     Returns:
@@ -648,7 +647,7 @@ def category_components(
             no row for the pair.
     """
     if component_catalogue is None:
-        component_catalogue = registry_component_catalogue()
+        component_catalogue = registry_component_catalogue(effective_date=effective_date)
     try:
         return component_catalogue[(category, kind)]
     except KeyError as exc:  # pragma: no cover - guarded by the completeness gate
@@ -661,6 +660,7 @@ def category_components(
 def retencion_role_of_kind(
     kind: InvoiceKind,
     *,
+    effective_date: date,
     component_catalogue: ComponentCatalogue | None = None,
 ) -> IvaRetencionRole | None:
     """Return the one retención role every arising ``kind`` row that admits a retención declares.
@@ -672,8 +672,8 @@ def retencion_role_of_kind(
     a retención, so the caller cannot read a role the table does not settle.
     """
     if component_catalogue is None:
-        component_catalogue = registry_component_catalogue()
-    vocabulary = registry_component_vocabulary()
+        component_catalogue = registry_component_catalogue(effective_date=effective_date)
+    vocabulary = registry_component_vocabulary(effective_date=effective_date)
     does_not_arise = vocabulary.require_kind_applicability("does_not_arise")
     admitting = {
         vocabulary.require_retencion_expectation("expected"),
@@ -693,6 +693,7 @@ def category_bears_taxable_base(
     category: IvaCategory,
     kind: InvoiceKind,
     *,
+    effective_date: date,
     component_catalogue: ComponentCatalogue | None = None,
 ) -> bool:
     """Return ``True`` when a declared taxable base is legally required.
@@ -709,6 +710,8 @@ def category_bears_taxable_base(
     Args:
         category: The declared IVA situation.
         kind: Whether the taxpayer issued or received the invoice.
+        effective_date: The date the law selects the catalogue on: the
+            operation's devengo date.
         component_catalogue: Optional already-projected Axis-A catalogue.
 
     Returns:
@@ -717,15 +720,17 @@ def category_bears_taxable_base(
     row = category_components(
         category,
         kind,
+        effective_date=effective_date,
         component_catalogue=component_catalogue,
     )
-    return row.base == registry_component_presence_token("required")
+    return row.base == registry_component_presence_token("required", effective_date=effective_date)
 
 
 def category_cuota_is_zero_by_law(
     category: IvaCategory,
     kind: InvoiceKind,
     *,
+    effective_date: date,
     component_catalogue: ComponentCatalogue | None = None,
 ) -> bool:
     """Return ``True`` when the pair's IVA cuota is structurally zero.
@@ -742,6 +747,8 @@ def category_cuota_is_zero_by_law(
     Args:
         category: The declared IVA situation.
         kind: Whether the taxpayer issued or received the invoice.
+        effective_date: The date the law selects the catalogue on: the
+            operation's devengo date.
         component_catalogue: Optional already-projected Axis-A catalogue.
 
     Returns:
@@ -750,9 +757,10 @@ def category_cuota_is_zero_by_law(
     row = category_components(
         category,
         kind,
+        effective_date=effective_date,
         component_catalogue=component_catalogue,
     )
-    return row.cuota == registry_component_presence_token("zero_by_law")
+    return row.cuota == registry_component_presence_token("zero_by_law", effective_date=effective_date)
 
 
 __all__ = [

@@ -48,7 +48,7 @@ def _profile(entity: str, regime: str) -> TaxpayerProfile:
 def test_request_specific_eligibility_is_undetermined(entity: str, regime: str) -> None:
     authority = compiled_bundled_authority()
     result = derive_modelo_applicability(
-        _profile(entity, regime), "360", today=date(_REQUEST_YEAR, 4, 1), authority=authority
+        _profile(entity, regime), "360", reference_date=date(_REQUEST_YEAR, 4, 1), authority=authority
     )
     assert result.verdict is ApplicabilityVerdict.INCOMPLETE
     assert "otros Estados miembros" in result.reason
@@ -60,11 +60,11 @@ def test_missing_entity_is_incomplete_and_303_still_applies_to_general_company()
     authority = compiled_bundled_authority()
     missing = TaxpayerProfile(tax_id="B00015016", iva_regime=require_iva_regime("GENERAL"))
     assert derive_modelo_applicability(
-        missing, "360", today=date(_REQUEST_YEAR, 4, 1), authority=authority
+        missing, "360", reference_date=date(_REQUEST_YEAR, 4, 1), authority=authority
     ).verdict is (ApplicabilityVerdict.INCOMPLETE)
     assert (
         derive_modelo_applicability(
-            _profile("legal_entity", "GENERAL"), "303", today=date(_REQUEST_YEAR, 4, 1), authority=authority
+            _profile("legal_entity", "GENERAL"), "303", reference_date=date(_REQUEST_YEAR, 4, 1), authority=authority
         ).verdict
         is ApplicabilityVerdict.APPLICABLE
     )
@@ -141,4 +141,9 @@ def test_calendar_advises_and_local_work_does_not_refuse_unknown_request(
                 UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),
             ),
         )
-        assert modelo_applicability_refusal(record=record, bucket_id="test", modelo="360", operation=operation) is None
+        assert (
+            modelo_applicability_refusal(
+                record=record, bucket_id="test", modelo="360", filing_year=_EXERCISE, operation=operation
+            )
+            is None
+        )
