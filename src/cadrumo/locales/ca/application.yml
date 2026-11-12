@@ -1304,6 +1304,14 @@ application:
       m210_payer_mode:
         multiple_payers_code_35: Diversos pagadors (codi 35)
         single_payer: Un pagador
+      withholding_certificate_figure:
+        gastos_deducibles: Despeses deduïbles
+        importe_integro_dinerario: Import íntegre dinerari
+        ingreso_a_cuenta: Ingrés a compte
+        ingreso_a_cuenta_repercutido: Ingrés a compte repercutit
+        reducciones_aplicables: Reduccions aplicables
+        retencion: Retenció
+        valoracion_especie: Valoració en espècie
     errors:
       evidence_attachment_requires_ids: Adjuntar un justificant als teus registres
         requereix evidència de compra o identificadors d'adjunt.
