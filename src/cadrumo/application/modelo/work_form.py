@@ -77,6 +77,7 @@ from ...domain.calculations.registry.schema_form_layouts import (
 )
 from ...domain.iva.refund_eligibility import RedemeEnrolmentState
 from ...domain.modelos.calculation_revision import CalculationRevision
+from ...domain.modelos.verification_report import ModeloVerificationFinding
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
 from .calculation_note_gate import NO_SOURCE_DISAGREEMENT_RESOLUTIONS, SourceDisagreementResolutions
 from .calculation_notes import UNWORKED_BOX_REASONS
@@ -95,6 +96,7 @@ from .work_form_field_vocabulary import (
     ModeloFormCasillaAddressV1,
     ModeloFormScalar,
 )
+from .work_form_findings import ModeloFormIssue
 from .work_form_inspection import (
     build_inspection_only_form,
     project_aeat_data,
@@ -146,6 +148,7 @@ def build_modelo_work_form(
     profile_binding_values: Mapping[BindingId, ModeloFormScalar] | None = None,
     resolutions: SourceDisagreementResolutions = NO_SOURCE_DISAGREEMENT_RESOLUTIONS,
     redeme: RedemeEnrolmentState = RedemeEnrolmentState.UNSTATED,
+    filed_findings: tuple[ModeloVerificationFinding, ...] = (),
 ) -> ModeloWorkForm:
     """Join one work review with its revision's declared layout into a classified editor form.
 
@@ -185,6 +188,11 @@ def build_modelo_work_form(
     mensual. The settlement result needs it to say whether a negative IVA
     result may be elected as a refund in this period or only carried forward;
     its default leaves the answer unstated rather than assuming one.
+
+    ``filed_findings`` are what the caller found about a declaration recorded
+    as filed since it was filed, such as profile facts it rested on that were
+    edited. Verify returns a filed declaration's sealed report unchanged, so
+    these reach the filer only here, after the report's own findings.
 
     ``known_truths`` are the yes-or-no facts already known for the filer, by
     boolean binding. They decide which guarded inputs the calculation is
@@ -244,7 +252,9 @@ def build_modelo_work_form(
         notes=(sources, held),
     )
     if inspection is not None:
-        return _worded(inspection)
+        return _worded(
+            inspection.model_copy(update={"issues": (*inspection.issues, *_filed_issues(context, filed_findings))})
+        )
     if layout is None:
         raise ValueError("usable form layout is absent")
     usable_layout = layout
@@ -271,6 +281,7 @@ def build_modelo_work_form(
         aeat_data_imported_at=aeat_data_imported_at,
         sources=sources,
         held=held,
+        filed_findings=filed_findings,
     )
     return _worded(form)
 
@@ -381,6 +392,7 @@ def _assemble_work_form(
     aeat_data_imported_at: datetime | None,
     sources: tuple[NoteSource, ...],
     held: bool,
+    filed_findings: tuple[ModeloVerificationFinding, ...],
 ) -> ModeloWorkForm:
     provenance = (
         ModeloFormLayoutProvenance.REVIEWED
@@ -421,7 +433,10 @@ def _assemble_work_form(
         operator_entries_known=entered_casilla_ids is not None,
         edit_admitted=context.surface is not None,
         verification=review.verification_outcome,
-        issues=project_verification_issues(review, every_field),
+        issues=(
+            *project_verification_issues(review, every_field),
+            *_filed_issues(context, filed_findings),
+        ),
         calculation_notes=project_calculation_notes(context, sources, every_field),
         calculation_notes_held=held,
         result=project_settlement_result(context, every_field),
@@ -432,6 +447,13 @@ def _assemble_work_form(
         carry_attestations=form_carry_attestations(context),
         prior_value_attestations=form_prior_value_attestations(context),
     )
+
+
+def _filed_issues(
+    context: WorkFormContext, filed_findings: tuple[ModeloVerificationFinding, ...]
+) -> tuple[ModeloFormIssue, ...]:
+    """The caller's findings about a filed declaration, shown only while the form shows one."""
+    return tuple(ModeloFormIssue(finding=finding) for finding in filed_findings) if context.filed else ()
 
 
 def _worded(form: ModeloWorkForm) -> ModeloWorkForm:
