@@ -32,6 +32,7 @@ from ....application.operations.next_step import (
     OperationOpenIvaWalletStepV1,
 )
 from ....application.operations.public_scalar import PublicDecimal
+from ....core.errors.hierarchy import CadrumoError
 from ....core.operator_action_enums import ActionArgumentStatus
 from ..refusal.served import ServedRefusalV1, refusal_ways
 
@@ -80,11 +81,11 @@ class IvaWalletOpeningV1(BaseModel, frozen=True):
     amount: str = ""
 
 
-class IvaWalletNotSentError(Exception):
+class IvaWalletNotSentError(CadrumoError):
     """The request failed the application's own validation, so nothing was sent and nothing changed."""
 
 
-class IvaWalletRefusedError(Exception):
+class IvaWalletRefusedError(CadrumoError):
     """The application refused the read or the recording; a refused recording changed nothing.
 
     ``refusal`` is the refusal as served, ``None`` when it served nothing to show.
