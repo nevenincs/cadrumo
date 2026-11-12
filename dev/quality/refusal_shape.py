@@ -49,12 +49,13 @@ from collections import defaultdict
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING, Final, TypeIs
 
 from dev.paths import REPO_ROOT, UTF_8
 
 if TYPE_CHECKING:
     from cadrumo.core.errors.error_codes import ErrorCode
+    from cadrumo.core.errors.hierarchy import CadrumoError
 
 __all__ = [
     "GOVERNED_TREES",
@@ -209,6 +210,30 @@ def _registry_words_win(code: ErrorCode) -> bool:
 _CLASS_KEY_CACHE: dict[type, bool] = {}
 
 
+def _passes_translated_message(node: ast.AST) -> bool:
+    """Whether ``node`` is a ``*.__init__(...)`` call handing its base a non-``None`` ``translated_message``."""
+    if not (isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr == "__init__"):
+        return False
+    return any(
+        keyword.arg == "translated_message"
+        and not (isinstance(keyword.value, ast.Constant) and keyword.value.value is None)
+        for keyword in node.keywords
+    )
+
+
+def _own_initializer_source(error_type: type) -> str | None:
+    """Source of the nearest initializer a class above the error hierarchy defines, when readable."""
+    for klass in error_type.__mro__:
+        initializer = klass.__dict__.get("__init__")
+        if initializer is None or klass.__module__.startswith("cadrumo.core.errors.hierarchy"):
+            continue
+        try:
+            return textwrap.dedent(inspect.getsource(initializer))
+        except (OSError, TypeError):
+            return None
+    return None
+
+
 def class_keys_its_words(error_type: type) -> bool:
     """Whether an initializer the class defines always hands its base a catalogue key.
 
@@ -218,27 +243,8 @@ def class_keys_its_words(error_type: type) -> bool:
     cached = _CLASS_KEY_CACHE.get(error_type)
     if cached is not None:
         return cached
-    keyed = False
-    for klass in error_type.__mro__:
-        initializer = klass.__dict__.get("__init__")
-        if initializer is None or klass.__module__.startswith("cadrumo.core.errors.hierarchy"):
-            continue
-        try:
-            source = textwrap.dedent(inspect.getsource(initializer))
-        except (OSError, TypeError):
-            break
-        keyed = any(
-            isinstance(node, ast.Call)
-            and isinstance(node.func, ast.Attribute)
-            and node.func.attr == "__init__"
-            and any(
-                keyword.arg == "translated_message"
-                and not (isinstance(keyword.value, ast.Constant) and keyword.value.value is None)
-                for keyword in node.keywords
-            )
-            for node in ast.walk(ast.parse(source))
-        )
-        break
+    source = _own_initializer_source(error_type)
+    keyed = source is not None and any(_passes_translated_message(node) for node in ast.walk(ast.parse(source)))
     _CLASS_KEY_CACHE[error_type] = keyed
     return keyed
 
@@ -288,8 +294,8 @@ class _Factory:
     passes_translated_message: bool
 
 
-def _factory_of(target: type, attribute: str) -> _Factory | None:
-    """Describe ``target.attribute`` when it is a classmethod returning ``cls(...)``, else ``None``."""
+def _classmethod_function(target: type, attribute: str) -> ast.FunctionDef | ast.AsyncFunctionDef | None:
+    """Parse ``target.attribute`` when it is a classmethod with a receiver, else ``None``."""
     try:
         member = inspect.getattr_static(target, attribute)
     except AttributeError:
@@ -303,17 +309,24 @@ def _factory_of(target: type, attribute: str) -> _Factory | None:
     function = next(
         (node for node in ast.walk(tree) if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))), None
     )
-    if function is None or not function.args.args:
+    return function if function is not None and function.args.args else None
+
+
+def _returns_receiver_call(node: ast.AST, receiver: str) -> ast.Call | None:
+    """The ``receiver(...)`` call ``node`` returns, when it is such a return."""
+    if not (isinstance(node, ast.Return) and isinstance(node.value, ast.Call)):
+        return None
+    func = node.value.func
+    return node.value if isinstance(func, ast.Name) and func.id == receiver else None
+
+
+def _factory_of(target: type, attribute: str) -> _Factory | None:
+    """Describe ``target.attribute`` when it is a classmethod returning ``cls(...)``, else ``None``."""
+    function = _classmethod_function(target, attribute)
+    if function is None:
         return None
     receiver = function.args.args[0].arg
-    built = [
-        node.value
-        for node in ast.walk(function)
-        if isinstance(node, ast.Return)
-        and isinstance(node.value, ast.Call)
-        and isinstance(node.value.func, ast.Name)
-        and node.value.func.id == receiver
-    ]
+    built = [call for node in ast.walk(function) if (call := _returns_receiver_call(node, receiver)) is not None]
     if not built:
         return None
     return _Factory(
@@ -322,10 +335,56 @@ def _factory_of(target: type, attribute: str) -> _Factory | None:
     )
 
 
+def _is_error_class(target: object) -> TypeIs[type[CadrumoError]]:
+    from cadrumo.core.errors.hierarchy import CadrumoError
+
+    return inspect.isclass(target) and issubclass(target, CadrumoError)
+
+
+def _constructed_error(
+    call: ast.Call, module_object: object | None, imports: Mapping[str, tuple[str, str]]
+) -> tuple[type[CadrumoError], _Factory | None] | None:
+    """The error class ``call`` constructs, directly or through a classmethod factory."""
+    target = _resolve(call.func, module_object, imports)
+    if _is_error_class(target):
+        return target, None
+    if not isinstance(call.func, ast.Attribute):
+        return None
+    owner = _resolve(call.func.value, module_object, imports)
+    if not _is_error_class(owner):
+        return None
+    factory = _factory_of(owner, call.func.attr)
+    return None if factory is None else (owner, factory)
+
+
+def _site_for(
+    call: ast.Call, target: type[CadrumoError], factory: _Factory | None, *, path: str, qualname: str, ordinal: int
+) -> Site:
+    from cadrumo.core.errors.error_codes import get_registered_error_code
+
+    code = get_registered_error_code(target)
+    passed, literal_key = _literal_translated_key(call)
+    door = _has_literal_door(call) or class_default_door(target)
+    if factory is not None:
+        door = door or factory.has_door
+        passed = passed or factory.passes_translated_message
+    words_served = passed or _registry_words_win(code) or class_keys_its_words(target)
+    return Site(
+        path=path,
+        qualname=qualname,
+        code=code.code,
+        ordinal=ordinal,
+        line=call.lineno,
+        has_door=door,
+        free_text=bool(call.args) and not words_served,
+        message_key=code.message_key,
+        translated_keys=() if literal_key is None else (literal_key,),
+    )
+
+
 def scan_source(source: str, *, path: str, module: str, module_object: object | None = None) -> list[Site]:
     """Return every registered-error construction in ``source``, in source order."""
     from cadrumo.core.errors.error_codes import get_registered_error_code
-    from cadrumo.core.errors.hierarchy import CadrumoError
 
     tree = ast.parse(source)
     imports = _import_map(tree, module, is_package=path.endswith("/__init__.py"))
@@ -337,42 +396,14 @@ def scan_source(source: str, *, path: str, module: str, module_object: object | 
     ordinals: dict[tuple[str, str], int] = defaultdict(int)
     sites: list[Site] = []
     for call in calls:
-        factory: _Factory | None = None
-        target = _resolve(call.func, module_object, imports)
-        if not (inspect.isclass(target) and issubclass(target, CadrumoError)):
-            if not isinstance(call.func, ast.Attribute):
-                continue
-            target = _resolve(call.func.value, module_object, imports)
-            if not (inspect.isclass(target) and issubclass(target, CadrumoError)):
-                continue
-            factory = _factory_of(target, call.func.attr)
-            if factory is None:
-                continue
-        code = get_registered_error_code(target)
+        constructed = _constructed_error(call, module_object, imports)
+        if constructed is None:
+            continue
+        target, factory = constructed
         qualname = scopes.get(id(call), "<module>")
-        ordinal = ordinals[(qualname, code.code)]
-        ordinals[(qualname, code.code)] += 1
-        passed, literal_key = _literal_translated_key(call)
-        door = _has_literal_door(call) or class_default_door(target)
-        if factory is not None:
-            door = door or factory.has_door
-            passed = passed or factory.passes_translated_message
-        sites.append(
-            Site(
-                path=path,
-                qualname=qualname,
-                code=code.code,
-                ordinal=ordinal,
-                line=call.lineno,
-                has_door=door,
-                free_text=bool(call.args)
-                and not passed
-                and not _registry_words_win(code)
-                and not class_keys_its_words(target),
-                message_key=code.message_key,
-                translated_keys=() if literal_key is None else (literal_key,),
-            )
-        )
+        identity = (qualname, get_registered_error_code(target).code)
+        sites.append(_site_for(call, target, factory, path=path, qualname=qualname, ordinal=ordinals[identity]))
+        ordinals[identity] += 1
     return sites
 
 

@@ -112,6 +112,7 @@ from .workspace_producers import (
     MODELO_WORKSPACE_WORK_PRODUCER_CONTRACT_V1,
     ModeloWorkspaceBoundedReviewPortV1,
     ModeloWorkspaceCalculationPortV1,
+    ModeloWorkspaceContributingProjectionV1,
     ModeloWorkspaceFieldManifestPortV1,
     ModeloWorkspaceLocaleCataloguePortV1,
     ModeloWorkspaceProducerContractV1,
@@ -618,6 +619,19 @@ def _require_graded_readiness(readiness_reports: tuple[ProjectionModeloReadiness
     return readiness
 
 
+def _capture_agreeing_review(
+    review_port: ModeloWorkspaceBoundedReviewPortV1, resolved_target: ModeloWorkspaceResolvedTargetV1
+) -> ModeloWorkspaceContributingProjectionV1[ModeloWorkReview]:
+    """Capture the bounded review, refusing one that resolved another work unit than the admission."""
+    review_capture = review_port.capture_projection_with_epoch()
+    if review_capture.projection.work_unit_id != resolved_target.work_unit_id:
+        raise InternalInvariantError(
+            "the bounded review resolved a different work unit than the graded admission it contributes to",
+            precondition_verdict=internal_invariant_verdict("workspace_graded.review_work_unit_agrees"),
+        )
+    return review_capture
+
+
 def resolve_graded_snapshot_result(
     target: ModeloWorkspaceTargetV1,
     *,
@@ -693,13 +707,8 @@ def resolve_graded_snapshot_result(
         calculation_repository=calculation_ports.calculation_repository,
         verification_repository=verification_repository,
     )
-    review_capture = review_port.capture_projection_with_epoch()
+    review_capture = _capture_agreeing_review(review_port, resolved_target)
     review = review_capture.projection
-    if review.work_unit_id != resolved_target.work_unit_id:
-        raise InternalInvariantError(
-            "the bounded review resolved a different work unit than the graded admission it contributes to",
-            precondition_verdict=internal_invariant_verdict("workspace_graded.review_work_unit_agrees"),
-        )
     readiness_port = ModeloWorkspaceReadinessPortV1(
         requests=(
             ModeloReadinessRequest(

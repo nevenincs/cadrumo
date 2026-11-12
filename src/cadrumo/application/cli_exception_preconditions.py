@@ -31,7 +31,7 @@ if TYPE_CHECKING:
 def _registered_terminal_precondition_verdict(current: BaseException) -> PreconditionVerdict | None:
     """Extract one registered terminal verdict from a single exception."""
     from ..core.errors.error_codes import get_registered_error_code
-    from ..core.errors.hierarchy import CadrumoError, CoreValidationError
+    from ..core.errors.hierarchy import CadrumoError
 
     if not isinstance(current, CadrumoError):
         return None
@@ -43,15 +43,21 @@ def _registered_terminal_precondition_verdict(current: BaseException) -> Precond
     verdict = getattr(current, "terminal_precondition_verdict", None)
     if isinstance(verdict, PreconditionVerdict):
         return verdict
-    registry_verdict = _calculation_registry_verdict(current)
-    if registry_verdict is not None:
-        return registry_verdict
-    decision_verdict = _operator_decision_verdict(current)
-    if decision_verdict is not None:
-        return decision_verdict
-    record_verdict = _modelo_record_verdict(current)
-    if record_verdict is not None:
-        return record_verdict
+    for resolve in (
+        _calculation_registry_verdict,
+        _operator_decision_verdict,
+        _modelo_record_verdict,
+        _terminal_integrity_verdict,
+        _external_constants_verdict,
+    ):
+        resolved = resolve(current)
+        if resolved is not None:
+            return resolved
+    return None
+
+
+def _terminal_integrity_verdict(current: BaseException) -> PreconditionVerdict | None:
+    """Return the terminal verdict of a stored record that failed its integrity check."""
     for integrity_class, (precondition, record) in _TERMINAL_INTEGRITY_RECORDS.items():
         if isinstance(current, integrity_class):
             return cli_exception_no_recovery_verdict(
@@ -59,6 +65,13 @@ def _registered_terminal_precondition_verdict(current: BaseException) -> Precond
                 facts={"record": record, "valid": False},
                 outcome=NoRecoveryOutcome.TERMINAL,
             )
+    return None
+
+
+def _external_constants_verdict(current: BaseException) -> PreconditionVerdict | None:
+    """Return the no-recovery verdict of an invalid bundled pre-303 constants section."""
+    from ..core.errors.hierarchy import CoreValidationError
+
     if (
         isinstance(current, CoreValidationError)
         and current.context is not None
