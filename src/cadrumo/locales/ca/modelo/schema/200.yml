@@ -11852,6 +11852,13 @@ modelo:
                 de l'exercici - Temporànies (amb origen en exercicis anteriors) [03368]
             x-8h834c1g60o32ehg60o3gcg:
               label: Societat matriu última d'un grup multinacional [00082]
+            x-8h834c1g60oj4ehg60qj0c8:
+              label: Liquidació I - Resultat del compte de pèrdues i guanys - Resultat
+                compte pèrdues i guanys abans de l'Impost sobre Societats [00501]
+            x-8h834c1g60oj8ehg64pj6c0:
+              label: Liquidació III - Base imposable - Entitats de dimensió reduïda
+                - Base imposable després de la reserva de nivellació - Disminucions
+                [01330]
           field:
             label: Model 200, exercici 2022
         '2023':
@@ -11983,13 +11990,6 @@ modelo:
               label: Liquidació I - Detall correccions resultat cte. pèrdues i guanys
                 - Altres supòsits de llibertat d'amortització (art. 12.3 a) i d) i
                 DA 16a i 17a LIS) - Disminucions [00310]
-            x-8h834c1g60oj4ehg60qj0c8:
-              label: Liquidació I - Resultat del compte de pèrdues i guanys - Resultat
-                compte pèrdues i guanys abans de l'Impost sobre Societats [00501]
-            x-8h834c1g60oj8ehg64pj6c0:
-              label: Liquidació III - Base imposable - Entitats de dimensió reduïda
-                - Base imposable després de la reserva de nivellació - Disminucions
-                [01330]
             x-8h834c1g60ojgehg60pj2d8:
               label: Deduccions per incentivar determ. activitats - 2023 Centenari
                 del Rugby a Espanya i de la Unió Esportiva Santboiana (CRE) - Deducció

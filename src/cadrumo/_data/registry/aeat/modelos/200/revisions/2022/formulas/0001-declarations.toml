@@ -25,21 +25,20 @@ required_text = [
     "base imponible antes de la compensacion",
 ]
 
-# Base imponible [00552] = max(0, [00550] - [01032] - [00547]): aeat-dr-200-2022 DP200013
+# Base imponible [00552] = [00550] - [01032] - [00547]: aeat-dr-200-2022 DP200013
 # fields 92, 95, 98 and 101 (offsets 1475, 1526, 1577, 1628), all under "Liquidación II -
-# Base imponible"; the 2023 design moves them to DP200014.
+# Base imponible"; the 2023 design moves them to DP200014. The sign is kept: for a zero or
+# negative [00550] the manual has the amount "precedida del signo menos (-)" in [00550] and
+# [00552] (manuals/sociedades/2022 L12517-12528).
 [[revisions."2022".formulas]]
 id = "modelo-200-base-imponible"
 target_casilla_id = "DP200013:00552"
-expression = { op = "max", args = [
+expression = { op = "subtract", args = [
     { op = "subtract", args = [
-        { op = "subtract", args = [
-            { casilla_id = "DP200013:00550" },
-            { casilla_id = "DP200013:01032" },
-        ] },
-        { casilla_id = "DP200013:00547" },
+        { casilla_id = "DP200013:00550" },
+        { casilla_id = "DP200013:01032" },
     ] },
-    { literal = "0" },
+    { casilla_id = "DP200013:00547" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-27-2014:art-25", "ley-27-2014:art-26", "ley-27-2014:art-105"]
@@ -336,16 +335,21 @@ required_text = [
 # 2022 states the 1 millón de euros floor ("en todo caso, se podrán compensar en el período
 # impositivo bases imponibles negativas hasta el importe de 1 millón de euros"); it is read
 # from its own parameter, not from an INCN threshold. aeat-dr-200-2022 prints [00550] on
-# DP200013 field 92. The 50 % and 25 % limits LIS DA 15ª sets for INCN of at least 20 and
-# 60 millones de euros are not modelled, as in the 2023 edition.
+# DP200013 field 92. The 2022 manual prints the 70 alone. A nueva creación that marks
+# casilla 00070 does not apply the límite (art. 26.3 LIS, manuals/sociedades/2022 L2903), so
+# its ceiling is the stock.
 [[revisions."2022".formulas]]
 id = "modelo-200-bin-aplicada-maxima"
 target_casilla_id = "DP200013:bin-aplicada-maxima"
-expression = { op = "min", args = [
+expression = { op = "if_then_else", args = [
+    { op = "greater_than", args = [{ casilla_id = "00070" }, { literal = "0" }] },
     { casilla_id = "00670" },
-    { op = "max", args = [
-        { parameter = "is.modelo-200.bin-compensacion-importe-minimo" },
-        { op = "percent", args = [{ casilla_id = "DP200013:00550" }, { literal = "70" }] },
+    { op = "min", args = [
+        { casilla_id = "00670" },
+        { op = "max", args = [
+            { parameter = "is.modelo-200.bin-compensacion-importe-minimo" },
+            { op = "percent", args = [{ casilla_id = "DP200013:00550" }, { literal = "70" }] },
+        ] },
     ] },
 ] }
 rounding = "money-2"

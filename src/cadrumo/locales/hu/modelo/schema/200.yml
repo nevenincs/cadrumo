@@ -11999,6 +11999,12 @@ modelo:
                 - Évi korrekciók - Átmeneti (korábbi időszakokból eredő) [03368]
             x-8h834c1g60o32ehg60o3gcg:
               label: Multinacionális csoport végső anyavállalata [00082]
+            x-8h834c1g60oj4ehg60qj0c8:
+              label: Elszámolás I - Eredménykimutatás eredménye - Az eredménykimutatás
+                eredménye a társasági adó előtt [00501]
+            x-8h834c1g60oj8ehg64pj6c0:
+              label: Elszámolás III - Adóalap - Kis méretű vállalkozások - Adóalap
+                a kiegyenlítési tartalék után - Csökkentések [01330]
           field:
             label: 200-es modelo, 2022. adóév
         '2023':
@@ -12140,12 +12146,6 @@ modelo:
               label: Elszámolás I - Az eredménykimutatás eredményét érintő korrekciók
                 részletezése - A szabad értékcsökkenés egyéb esetei (LIS 12.3. a)
                 és d) cikk, valamint DA 16. és 17. cikk) - Csökkentések [00310]
-            x-8h834c1g60oj4ehg60qj0c8:
-              label: Elszámolás I - Eredménykimutatás eredménye - Az eredménykimutatás
-                eredménye a társasági adó előtt [00501]
-            x-8h834c1g60oj8ehg64pj6c0:
-              label: Elszámolás III - Adóalap - Kis méretű vállalkozások - Adóalap
-                a kiegyenlítési tartalék után - Csökkentések [01330]
             x-8h834c1g60ojgehg60pj2d8:
               label: Egyes tevékenységek ösztönzésére szolgáló levonások - 2023 A
                 spanyol rögbi és az Unió Esportiva Santboiana centenáriuma (CRE) -

@@ -24,6 +24,10 @@ calculate them, so no year is named here.
       LIS); L14305-14306 up to 1 millón in any case; L14481-14485 the rentas of
       00545, 00925 and 01509 are taken off 00547 before the límite; L3183-3192
       a nueva creación marking 00070 does not apply the límite.
+2023 edition lines used:
+    L13026-13050 the same 00552 rule and sign; L13561, L13689 the same 00562
+      rule; L13568-13641 the same rate table as 2024; L13273-13277 the 70 per
+      cent límite with no DA 15ª turnover límites; L2908 casilla 00070.
 2025 edition lines used:
     L14097, L14111 the same 00552 rule; L14948-14954 the same 00562 rule;
     L14980-14983 INCN < 1 millón: "Hasta 50.000 euros 21 por 100 / Resto Base
@@ -110,6 +114,23 @@ _TWO_RATE_EXERCISES = tuple(
 _EXERCISES = tuple(sorted(set(_FLAT_23_EXERCISES) | set(_TWO_RATE_EXERCISES)))
 assert _FLAT_23_EXERCISES, "no calculated Modelo 200 exercise has a manual printing the flat 23 per cent"
 assert _TWO_RATE_EXERCISES, "no calculated Modelo 200 exercise has a manual printing the 21 / 22 scale"
+_TURNOVER_LIMIT_EXERCISES = tuple(
+    exercise
+    for exercise in manual_editions_printing(
+        "sociedades",
+        "sustituirán el límite del 70 por ciento por los siguientes",
+        "El 50 por ciento",
+        "El 25 por ciento",
+    )
+    if _calculated(exercise)
+)
+_RENTAS_OUTSIDE_LIMIT_EXERCISES = tuple(
+    exercise
+    for exercise in manual_editions_printing("sociedades", "citadas casillas [00545], [00925] y [01509]")
+    if _calculated(exercise)
+)
+assert _TURNOVER_LIMIT_EXERCISES, "no calculated Modelo 200 exercise has a manual printing the DA 15ª límites"
+assert _RENTAS_OUTSIDE_LIMIT_EXERCISES, "no calculated Modelo 200 exercise has a manual printing 00545, 00925, 01509"
 
 
 def _calculate(
@@ -294,11 +315,17 @@ _BIN_STOCK_HELD = Decimal("9000000")
 
 
 @pytest.mark.parametrize("exercise", _EXERCISES)
+def test_bin_ceiling_is_seventy_per_cent_of_the_base_previa(exercise: int) -> None:
+    """70 % x 10.000.000 = 7.000.000 at an INCN of 12.000.000 (L14282-14284)."""
+    values = _calculate(exercise, resultado=_BIN_BASE_PREVIA, bin_stock=_BIN_STOCK_HELD).values
+
+    assert values[_BIN_MAXIMA] == Decimal("7000000.00")
+
+
+@pytest.mark.parametrize("exercise", _TURNOVER_LIMIT_EXERCISES)
 @pytest.mark.parametrize(
     ("incn", "ceiling"),
     [
-        # 70 % x 10.000.000 = 7.000.000 (L14282-14284).
-        (Decimal("12000000"), Decimal("7000000.00")),
         # INCN 20.000.000: 50 % x 10.000.000 = 5.000.000 (L14294-14297).
         (Decimal("20000000"), Decimal("5000000.00")),
         # INCN 60.000.000: 25 % x 10.000.000 = 2.500.000 (L14298-14300).
@@ -321,7 +348,7 @@ def test_bin_ceiling_keeps_the_one_million_floor(exercise: int) -> None:
     assert values[_BIN_MAXIMA] == Decimal("1000000.00")
 
 
-@pytest.mark.parametrize("exercise", _EXERCISES)
+@pytest.mark.parametrize("exercise", _RENTAS_OUTSIDE_LIMIT_EXERCISES)
 def test_bin_ceiling_rises_by_the_rentas_outside_the_limit(exercise: int) -> None:
     """00545 = 200.000 and 01509 = 50.000 are taken off 00547 first: 7.000.000 + 250.000 (L14481-14485)."""
     values = _calculate(

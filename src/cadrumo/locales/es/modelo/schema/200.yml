@@ -12013,6 +12013,14 @@ modelo:
                 anteriores) [03368]
             x-8h834c1g60o32ehg60o3gcg:
               label: Sociedad matriz última grupo multinacional [00082]
+            x-8h834c1g60oj4ehg60qj0c8:
+              label: Liquidación I - Resultado de la cuenta de pérdidas y ganancias
+                - Resultado cuenta pérdidas y ganancias antes de Impuesto Sociedades
+                [00501]
+            x-8h834c1g60oj8ehg64pj6c0:
+              label: Liquidación III - Base Imponible - Entidades Reducida dimensión
+                - Base imponible después de la reserva de nivelación - Disminuciones
+                [01330]
           field:
             label: Modelo 200, ejercicio 2022
         '2023':
@@ -12152,14 +12160,6 @@ modelo:
               label: Liquidación I - Detalle correcciones resultado cta. pérdidas
                 y ganancias - Otros supuestos de libertad de amortización (art. 12.3
                 a) y d) y DA 16ª y 17ª LIS) - Disminuciones [00310]
-            x-8h834c1g60oj4ehg60qj0c8:
-              label: Liquidación I - Resultado de la cuenta de pérdidas y ganancias
-                - Resultado cuenta pérdidas y ganancias antes de Impuesto Sociedades
-                [00501]
-            x-8h834c1g60oj8ehg64pj6c0:
-              label: Liquidación III - Base Imponible - Entidades Reducida dimensión
-                - Base imponible después de la reserva de nivelación - Disminuciones
-                [01330]
             x-8h834c1g60ojgehg60pj2d8:
               label: Deducc. para incentivar determ.actividades - 2023 Centenario
                 del Rugby en España y de la Unió Esportiva Santboiana (CRE) - Deducción

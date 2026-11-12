@@ -1202,24 +1202,20 @@ fields = { target_casilla_id = "DP200014:00550" }
 sequence_additions = {source_refs = ["aeat-dr-200-2023", "aeat-modelo-200-manual-2023"], source_citations = [{source_ref = "aeat-modelo-200-manual-2023", required_text = ["correcciones al resultado de la cuenta de perdidas y ganancias", "base imponible antes de la compensacion"]}]}
 sequence_removals = {source_refs = [0, 1], source_citations = [0]}
 
-# Base imponible (casilla 00552) = base imponible previa (00550) − reserva de
-# capitalización (01032, LIS Art. 25) − compensación de bases imponibles
-# negativas aplicada (00547, LIS Art. 26), with a non-negative clamp: «si el
-# resultado es cero, consignar cero». The reserva and the BIN compensación
-# cannot drive the base below zero. The applied-BIN amount (00547) and the
-# reserva (01032) stay operator-input; their stateful multi-period caps (the
-# 70% / EUR 1M BIN floor; the Art. 25 reserva uplift) are separate follow-on
-# sub-engines. Grounded against AEAT Manual de Sociedades 2023 Cap. 5 and LIS
-# Arts. 25, 26; diseño de registro 2023 DP200014 pos 13/64/115/166.
+# Base imponible (casilla 00552) = 00550 - 01032 - 00547, the 2022 member read on the
+# record this design prints it on (DP200014). The sign is kept, as in 2022: the 2023
+# manual prints "[00552] = [00550] - [01032] - [00547]" and, for a zero or negative
+# 00550, "la cuantía precedida del signo menos (-) tanto en dicha casilla [00550] como
+# en la casilla [00552]" (manuals/sociedades/2023 L13026-13050). A negative base is
+# a base imponible negativa the entity carries forward; the cuota íntegra of such a
+# period is zero, which the cuota íntegra formula owns. The applied-BIN amount (00547)
+# and the reserva (01032) stay operator-input.
 [[revisions."2023".family_overrides]]
 family = "formulas"
 selector = {revision = "2022", id = "modelo-200-base-imponible"}
 fields = { target_casilla_id = "DP200014:00552", expression = { args = [
-    { op = "subtract", args = [
-        { op = "subtract", args = [{ casilla_id = "DP200014:00550" }, { casilla_id = "01032" }] },
-        { casilla_id = "DP200014:00547" },
-    ] },
-    { literal = "0" },
+    { op = "subtract", args = [{ casilla_id = "DP200014:00550" }, { casilla_id = "01032" }] },
+    { casilla_id = "DP200014:00547" },
 ] } }
 sequence_additions = {source_refs = ["aeat-dr-200-2023", "aeat-modelo-200-manual-2023"], source_citations = [{source_ref = "aeat-modelo-200-manual-2023", required_text = ["compensacion de bases imponibles negativas", "reserva de capitalizacion"]}]}
 sequence_removals = {source_refs = [0, 1], source_citations = [0]}
@@ -1234,97 +1230,180 @@ fields = { expression = { args = [
 sequence_additions = {source_refs = ["aeat-dr-200-2023", "aeat-modelo-200-manual-2023"], source_citations = [{source_ref = "aeat-modelo-200-manual-2023", required_text = ["base imponible despues de la reserva de nivelacion", "casilla [01330] = [00552] + [01033] - [01034]"]}]}
 sequence_removals = {source_refs = [0, 1], source_citations = [0]}
 
-# Entity-type rate dispatch: the LIS art. 29 tipo de gravamen (casilla
-# 00558) is selected through a three-lane priority hierarchy:
+# Tipo de gravamen (casilla 00558): "se hará constar el tipo de gravamen que
+# corresponda de acuerdo con el régimen de tributación aplicable a la entidad
+# declarante" (manuals/sociedades/2023 L13568-13570), read from the table of
+# contribuyentes 2023 (L13572-13641) and the caracteres the declaration marks on its
+# first page. The 2023 table is the one the 2024 manual prints: it adds to the 2022
+# table the 23 of INCN < 1 millón (Ley 31/2022 art. 39, L13587-13588) and the 15 of
+# empresas emergentes (L13589).
 #
-#   1. New-entity override (LIS Art. 29 par. 4, Ley 27/2014): if the
-#      period state flag `new_entity_first_two_profit_periods` is set,
-#      casilla 00558 = 15 % regardless of sub-form.
-#   2. Micro-empresa lane: if prior-period INCN is below 1.000.000 EUR,
-#      general-rate forms resolve through the dated first-tranche display
-#      scalar that mirrors the bracket schedule used by cuota íntegra.
-#      Cooperativas and entidades sin fines lucrativos retain their special
-#      rates (20 % and 10 %) even when the INCN threshold is met.
-#   3. ERD art.101 lane: if prior-period INCN is below 10.000.000 EUR,
-#      general-rate forms resolve through the DT 44ª art.101 schedule
-#      (2025-2028) and the final art.29 ERD rate from 2029; periods
-#      initiated before 2025 resolve the general 25 % rate here.
-#   4. General sub-form lane: sl/sa/sal/sll/scm/other → 25 %;
-#      cooperativas fiscalmente protegidas → 20 %; entidades sin fines
-#      lucrativos → 10 %.
+# Refused with a typed outcome (no value, never zero) when the declaration marks a
+# régimen whose rate or cuota this registry does not author: entidad de crédito
+# 00024 (L13591), hidrocarburos 00034, nueva creación of DT 22ª 00063 (15 / 20
+# scale), empresa emergente 00083 (L13589), ZEC 00015 / 00079, the 1 per cent
+# instituciones 00003 / 00004 / 00008, SOCIMI 00012 (L13630) and fondos de pensiones
+# 00048 (L13634), entidades parcialmente exentas 00002 and uniones de cooperativas
+# 00080.
 #
-# Casilla 00558 is the scalar rate echo used on the export layout; the
-# cuota íntegra 00562 is derived independently by
-# `modelo-200-cuota-integra` via bracket application.
+#   1. Ley 49/2002 (casilla 00001 marked): 10 (L13615). A sin fines lucrativos
+#      legal form that does not mark 00001 states no régimen, so it is refused, as
+#      is a legal form outside the vocabulary's other forms.
+#   2. Cooperativas (legal form cooperativa or casillas 00017 / 00018 / 00019): a
+#      fiscalmente protegida (00017 / 00018) states the 20 of its resultados
+#      cooperativos "a los únicos efectos de cumplimentar la casilla [00558]"
+#      (nota (1), L13641); a no protegida (00019) takes the rates of any other
+#      entity; a cooperativa marking neither is refused.
+#   3. Entidad patrimonial (casilla 00066): the general 25, being excluded from the
+#      15 of nueva creación and the 23 of INCN < 1 millón (L13580-13588).
+#   4. Nueva creación (LIS art. 29.1): 15.
+#   5. INCN < 1 millón: 23. The profile fact read here is the INCN of the 12 months
+#      before the period, while the table speaks of the período impositivo
+#      inmediato anterior; the two coincide for a twelve-month prior period.
+#   6. Below the art. 101 threshold: the dated ERD rate, the general 25 for 2023.
+#   7. Otherwise the general 25 (L13574).
 [[revisions."2023".family_overrides]]
 family = "formulas"
 selector = {revision = "2022", id = "modelo-200-tipo-gravamen-por-forma-juridica"}
 fields = { expression = { args = [
-    { binding = "modelo-200-profile-new-entity-flag" },
-    { op = "lookup_parameter_by_entity_type", args = [{ literal = "0" }, { binding = "modelo-200-profile-legal-entity-form" }, { dispatch_table_entries = [{ key = "sl", parameter = "is.modelo-200.tipo-gravamen-new-entity-first-2-years" }, { key = "sa", parameter = "is.modelo-200.tipo-gravamen-new-entity-first-2-years" }, { key = "sal", parameter = "is.modelo-200.tipo-gravamen-new-entity-first-2-years" }, { key = "sll", parameter = "is.modelo-200.tipo-gravamen-new-entity-first-2-years" }, { key = "sociedad_civil_mercantil", parameter = "is.modelo-200.tipo-gravamen-new-entity-first-2-years" }, { key = "other", parameter = "is.modelo-200.tipo-gravamen-new-entity-first-2-years" }, { key = "cooperativa", parameter = "is.modelo-200.tipo-gravamen-new-entity-first-2-years" }, { key = "sin_fines_lucrativos", parameter = "is.modelo-200.tipo-gravamen-new-entity-first-2-years" }] }] },
+    { op = "greater_than", args = [
+        { op = "add", args = [
+            { casilla_id = "00024" },
+            { casilla_id = "00034" },
+            { casilla_id = "00063" },
+            { casilla_id = "DP200001:00083" },
+            { casilla_id = "00015" },
+            { casilla_id = "00079" },
+            { casilla_id = "00003" },
+            { casilla_id = "DP200001:00004" },
+            { casilla_id = "00008" },
+            { casilla_id = "00012" },
+            { casilla_id = "00048" },
+            { casilla_id = "00002" },
+            { casilla_id = "00080" },
+        ] },
+        { literal = "0" },
+    ] },
+    { op = "unresolved_outcome", args = [{ text_literal = "m200-tax-regime-unsupported" }] },
     { op = "if_then_else", args = [
-        { op = "less_than", args = [{ binding = "modelo-200-profile-incn-prior-12-months" }, { parameter = "is.modelo-200.incn-umbral-microempresa" }] },
-        { op = "lookup_parameter_by_entity_type", args = [{ literal = "0" }, { binding = "modelo-200-profile-legal-entity-form" }, { dispatch_table_entries = [{ key = "sl", parameter = "is.modelo-200.tipo-gravamen-pyme-display" }, { key = "sa", parameter = "is.modelo-200.tipo-gravamen-pyme-display" }, { key = "sal", parameter = "is.modelo-200.tipo-gravamen-pyme-display" }, { key = "sll", parameter = "is.modelo-200.tipo-gravamen-pyme-display" }, { key = "sociedad_civil_mercantil", parameter = "is.modelo-200.tipo-gravamen-pyme-display" }, { key = "other", parameter = "is.modelo-200.tipo-gravamen-pyme-display" }, { key = "cooperativa", parameter = "is.modelo-200.tipo-gravamen-cooperative-protected" }, { key = "sin_fines_lucrativos", parameter = "is.modelo-200.tipo-gravamen-non-profit-special-regime" }] }] },
+        { op = "greater_than", args = [{ casilla_id = "00001" }, { literal = "0" }] },
+        { parameter = "is.modelo-200.tipo-gravamen-non-profit-special-regime" },
         { op = "if_then_else", args = [
-            { op = "less_than", args = [{ binding = "modelo-200-profile-incn-prior-12-months" }, { parameter = "is.modelo-200.incn-umbral-erd-art101" }] },
-            { op = "lookup_parameter_by_entity_type", args = [{ literal = "0" }, { binding = "modelo-200-profile-legal-entity-form" }, { dispatch_table_entries = [{ key = "sl", parameter = "is.modelo-200.tipo-gravamen-erd-art101" }, { key = "sa", parameter = "is.modelo-200.tipo-gravamen-erd-art101" }, { key = "sal", parameter = "is.modelo-200.tipo-gravamen-erd-art101" }, { key = "sll", parameter = "is.modelo-200.tipo-gravamen-erd-art101" }, { key = "sociedad_civil_mercantil", parameter = "is.modelo-200.tipo-gravamen-erd-art101" }, { key = "other", parameter = "is.modelo-200.tipo-gravamen-erd-art101" }, { key = "cooperativa", parameter = "is.modelo-200.tipo-gravamen-cooperative-protected" }, { key = "sin_fines_lucrativos", parameter = "is.modelo-200.tipo-gravamen-non-profit-special-regime" }] }] },
-            { op = "lookup_parameter_by_entity_type", args = [{ literal = "0" }, { binding = "modelo-200-profile-legal-entity-form" }, { dispatch_table_entries = [{ key = "sl", parameter = "is.modelo-200.tipo-gravamen-general" }, { key = "sa", parameter = "is.modelo-200.tipo-gravamen-general" }, { key = "sal", parameter = "is.modelo-200.tipo-gravamen-general" }, { key = "sll", parameter = "is.modelo-200.tipo-gravamen-general" }, { key = "sociedad_civil_mercantil", parameter = "is.modelo-200.tipo-gravamen-general" }, { key = "other", parameter = "is.modelo-200.tipo-gravamen-general" }, { key = "cooperativa", parameter = "is.modelo-200.tipo-gravamen-cooperative-protected" }, { key = "sin_fines_lucrativos", parameter = "is.modelo-200.tipo-gravamen-non-profit-special-regime" }] }] },
+            { op = "less_than", args = [
+                { op = "add", args = [
+                    { op = "text_equal", args = [{ binding = "modelo-200-profile-legal-entity-form" }, { text_literal = "sl" }] },
+                    { op = "text_equal", args = [{ binding = "modelo-200-profile-legal-entity-form" }, { text_literal = "sa" }] },
+                    { op = "text_equal", args = [{ binding = "modelo-200-profile-legal-entity-form" }, { text_literal = "sal" }] },
+                    { op = "text_equal", args = [{ binding = "modelo-200-profile-legal-entity-form" }, { text_literal = "sll" }] },
+                    { op = "text_equal", args = [{ binding = "modelo-200-profile-legal-entity-form" }, { text_literal = "cooperativa" }] },
+                    { op = "text_equal", args = [{ binding = "modelo-200-profile-legal-entity-form" }, { text_literal = "sociedad_civil_mercantil" }] },
+                    { op = "text_equal", args = [{ binding = "modelo-200-profile-legal-entity-form" }, { text_literal = "other" }] },
+                ] },
+                { literal = "1" },
+            ] },
+            { op = "unresolved_outcome", args = [{ text_literal = "m200-tax-regime-unsupported" }] },
+            { op = "if_then_else", args = [
+                { op = "greater_than", args = [
+                    { op = "add", args = [
+                        { op = "text_equal", args = [
+                            { binding = "modelo-200-profile-legal-entity-form" },
+                            { text_literal = "cooperativa" },
+                        ] },
+                        { casilla_id = "00017" },
+                        { casilla_id = "00018" },
+                        { casilla_id = "00019" },
+                    ] },
+                    { literal = "0" },
+                ] },
+                { op = "if_then_else", args = [
+                    { op = "greater_than", args = [
+                        { op = "add", args = [{ casilla_id = "00017" }, { casilla_id = "00018" }] },
+                        { literal = "0" },
+                    ] },
+                    { parameter = "is.modelo-200.tipo-gravamen-cooperative-protected" },
+                    { op = "if_then_else", args = [
+                        { op = "greater_than", args = [{ casilla_id = "00019" }, { literal = "0" }] },
+                        { op = "if_then_else", args = [
+                            { binding = "modelo-200-profile-new-entity-flag" },
+                            { parameter = "is.modelo-200.tipo-gravamen-new-entity-first-2-years" },
+                            { op = "if_then_else", args = [
+                                { op = "less_than", args = [
+                                    { binding = "modelo-200-profile-incn-prior-12-months" },
+                                    { parameter = "is.modelo-200.incn-umbral-microempresa" },
+                                ] },
+                                { parameter = "is.modelo-200.tipo-gravamen-pyme-display" },
+                                { op = "if_then_else", args = [
+                                    { op = "less_than", args = [
+                                        { binding = "modelo-200-profile-incn-prior-12-months" },
+                                        { parameter = "is.modelo-200.incn-umbral-erd-art101" },
+                                    ] },
+                                    { parameter = "is.modelo-200.tipo-gravamen-erd-art101" },
+                                    { parameter = "is.modelo-200.tipo-gravamen-general" },
+                                ] },
+                            ] },
+                        ] },
+                        { op = "unresolved_outcome", args = [{ text_literal = "m200-tax-regime-unsupported" }] },
+                    ] },
+                ] },
+                { op = "if_then_else", args = [
+                    { op = "greater_than", args = [{ casilla_id = "00066" }, { literal = "0" }] },
+                    { parameter = "is.modelo-200.tipo-gravamen-general" },
+                    { op = "if_then_else", args = [
+                        { binding = "modelo-200-profile-new-entity-flag" },
+                        { parameter = "is.modelo-200.tipo-gravamen-new-entity-first-2-years" },
+                        { op = "if_then_else", args = [
+                            { op = "less_than", args = [
+                                { binding = "modelo-200-profile-incn-prior-12-months" },
+                                { parameter = "is.modelo-200.incn-umbral-microempresa" },
+                            ] },
+                            { parameter = "is.modelo-200.tipo-gravamen-pyme-display" },
+                            { op = "if_then_else", args = [
+                                { op = "less_than", args = [
+                                    { binding = "modelo-200-profile-incn-prior-12-months" },
+                                    { parameter = "is.modelo-200.incn-umbral-erd-art101" },
+                                ] },
+                                { parameter = "is.modelo-200.tipo-gravamen-erd-art101" },
+                                { parameter = "is.modelo-200.tipo-gravamen-general" },
+                            ] },
+                        ] },
+                    ] },
+                ] },
+            ] },
         ] },
     ] },
-] } }
+] }}
 sequence_additions = {legal_refs = ["ley-27-2014:art-101", "ley-31-2022:art-39"], source_refs = ["aeat-dr-200-2023", "aeat-modelo-200-manual-2023"], source_citations = [{source_ref = "aeat-modelo-200-manual-2023", required_text = ["tipo de gravamen", "cuota integra (casilla 00562)"]}]}
 sequence_removals = {source_refs = [0, 1], source_citations = [0]}
 sequence_order = {legal_refs = [0, 1, 3, 4, 2]}
 
-# Cuota integra (casilla 00562) via layered LIS Art. 29 dispatch.
-# Three lanes coexist; the formula composition selects exactly one:
-#
-#   1. New-entity override (LIS Art. 29 par. 4): if the period state
-#      flag `new_entity_first_two_profit_periods` is set, the cuota
-#      applies the 15 % rate regardless of sub-form. The override
-#      layers ON TOP of the sub-form dispatch via the outer
-#      `if_then_else` predicate over
-#      `modelo-200-profile-new-entity-flag`.
-#   2. Micro-empresa lane: if prior-period INCN is below 1.000.000 EUR,
-#      general-rate forms (sl / sa / sal / sll /
-#      sociedad_civil_mercantil / other) resolve against the
-#      micro-empresa bracket table `is.modelo-200.tipo-gravamen-pyme`.
-#      The same parameter carries the 2023-2024 flat 23 % row and the LIS
-#      DT 44ª two-tranche transition (21/22 in 2025, 19/21 in 2026).
-#      Cooperativas fiscalmente protegidas and entidades sin fines
-#      lucrativos retain their own special-rate brackets even when INCN
-#      < 1M.
-#   3. ERD art.101 lane: if INCN is below 10.000.000 EUR, general-rate
-#      forms resolve through `is.modelo-200.cuota-integra-bracket-erd-art101`
-#      for the DT 44ª 2025-2028 transition and the final art.29 rate from 2029.
-#   4. Sub-form lane (LIS Art. 29.1-3): otherwise the base resolves
-#      against the sub-form's single-row bracket — general 25 %,
-#      cooperativa fiscalmente protegida 20 %, entidad sin fines
-#      lucrativos 10 %.
-#
-# A profile that would otherwise micro-empresa-qualify but supplies no
-# INCN raises `binding has no supplied value` and yields INCOMPLETE
-# rather than a defaulted answer; an unrecognised sub-form raises
-# `dispatch_table is missing key`. The casilla 00558 scalar-rate
-# dispatch (`modelo-200-tipo-gravamen-por-forma-juridica`) is
-# preserved for the export-layout rate echo, but the cuota integra
-# is no longer derived from 00558.
+# Cuota íntegra (casilla 00562): "[00562] = [01330] x [00558]/100", always "una
+# cantidad positiva o cero" (manuals/sociedades/2023 L13561, L13689), so a negative
+# base gives zero. A cooperativa states its cuota íntegra from the cuota íntegra
+# previa of its resultados cooperativos and extracooperativos (L25508), which this
+# registry does not author, so it is refused; every other régimen the tipo de
+# gravamen refuses leaves this box without a value through 00558.
 [[revisions."2023".family_overrides]]
 family = "formulas"
 selector = {revision = "2022", id = "modelo-200-cuota-integra"}
 fields = { expression = { args = [
-    { binding = "modelo-200-profile-new-entity-flag" },
-    { op = "lookup_bracket_by_entity_type", args = [{ casilla_id = "DP200014:01330" }, { binding = "modelo-200-profile-legal-entity-form" }, { dispatch_table_entries = [{ key = "sl", parameter = "is.modelo-200.cuota-integra-bracket-new-entity" }, { key = "sa", parameter = "is.modelo-200.cuota-integra-bracket-new-entity" }, { key = "sal", parameter = "is.modelo-200.cuota-integra-bracket-new-entity" }, { key = "sll", parameter = "is.modelo-200.cuota-integra-bracket-new-entity" }, { key = "sociedad_civil_mercantil", parameter = "is.modelo-200.cuota-integra-bracket-new-entity" }, { key = "other", parameter = "is.modelo-200.cuota-integra-bracket-new-entity" }, { key = "cooperativa", parameter = "is.modelo-200.cuota-integra-bracket-new-entity" }, { key = "sin_fines_lucrativos", parameter = "is.modelo-200.cuota-integra-bracket-new-entity" }] }] },
-    { op = "if_then_else", args = [
-        { op = "less_than", args = [{ binding = "modelo-200-profile-incn-prior-12-months" }, { parameter = "is.modelo-200.incn-umbral-microempresa" }] },
-        { op = "lookup_bracket_by_entity_type", args = [{ casilla_id = "DP200014:01330" }, { binding = "modelo-200-profile-legal-entity-form" }, { dispatch_table_entries = [{ key = "sl", parameter = "is.modelo-200.tipo-gravamen-pyme" }, { key = "sa", parameter = "is.modelo-200.tipo-gravamen-pyme" }, { key = "sal", parameter = "is.modelo-200.tipo-gravamen-pyme" }, { key = "sll", parameter = "is.modelo-200.tipo-gravamen-pyme" }, { key = "sociedad_civil_mercantil", parameter = "is.modelo-200.tipo-gravamen-pyme" }, { key = "other", parameter = "is.modelo-200.tipo-gravamen-pyme" }, { key = "cooperativa", parameter = "is.modelo-200.cuota-integra-bracket-cooperative-protected" }, { key = "sin_fines_lucrativos", parameter = "is.modelo-200.cuota-integra-bracket-non-profit-special-regime" }] }] },
-        { op = "if_then_else", args = [
-            { op = "less_than", args = [{ binding = "modelo-200-profile-incn-prior-12-months" }, { parameter = "is.modelo-200.incn-umbral-erd-art101" }] },
-            { op = "lookup_bracket_by_entity_type", args = [{ casilla_id = "DP200014:01330" }, { binding = "modelo-200-profile-legal-entity-form" }, { dispatch_table_entries = [{ key = "sl", parameter = "is.modelo-200.cuota-integra-bracket-erd-art101" }, { key = "sa", parameter = "is.modelo-200.cuota-integra-bracket-erd-art101" }, { key = "sal", parameter = "is.modelo-200.cuota-integra-bracket-erd-art101" }, { key = "sll", parameter = "is.modelo-200.cuota-integra-bracket-erd-art101" }, { key = "sociedad_civil_mercantil", parameter = "is.modelo-200.cuota-integra-bracket-erd-art101" }, { key = "other", parameter = "is.modelo-200.cuota-integra-bracket-erd-art101" }, { key = "cooperativa", parameter = "is.modelo-200.cuota-integra-bracket-cooperative-protected" }, { key = "sin_fines_lucrativos", parameter = "is.modelo-200.cuota-integra-bracket-non-profit-special-regime" }] }] },
-            { op = "lookup_bracket_by_entity_type", args = [{ casilla_id = "DP200014:01330" }, { binding = "modelo-200-profile-legal-entity-form" }, { dispatch_table_entries = [{ key = "sl", parameter = "is.modelo-200.cuota-integra-bracket-general" }, { key = "sa", parameter = "is.modelo-200.cuota-integra-bracket-general" }, { key = "sal", parameter = "is.modelo-200.cuota-integra-bracket-general" }, { key = "sll", parameter = "is.modelo-200.cuota-integra-bracket-general" }, { key = "sociedad_civil_mercantil", parameter = "is.modelo-200.cuota-integra-bracket-general" }, { key = "other", parameter = "is.modelo-200.cuota-integra-bracket-general" }, { key = "cooperativa", parameter = "is.modelo-200.cuota-integra-bracket-cooperative-protected" }, { key = "sin_fines_lucrativos", parameter = "is.modelo-200.cuota-integra-bracket-non-profit-special-regime" }] }] },
+    { op = "greater_than", args = [
+        { op = "add", args = [
+            { op = "text_equal", args = [
+                { binding = "modelo-200-profile-legal-entity-form" },
+                { text_literal = "cooperativa" },
+            ] },
+            { casilla_id = "00017" },
+            { casilla_id = "00018" },
+            { casilla_id = "00019" },
         ] },
+        { literal = "0" },
     ] },
-] } }
+    { op = "unresolved_outcome", args = [{ text_literal = "m200-tax-regime-unsupported" }] },
+    { op = "max", args = [
+        { op = "percent", args = [{ casilla_id = "DP200014:01330" }, { casilla_id = "DP200014:00558" }] },
+        { literal = "0" },
+    ] },
+] }}
 sequence_additions = {legal_refs = ["ley-27-2014:art-101"], source_refs = ["aeat-dr-200-2023", "aeat-modelo-200-manual-2023"], source_citations = [{source_ref = "aeat-modelo-200-manual-2023", required_text = ["cuota integra (casilla 00562)", "tipo de gravamen"]}]}
 sequence_removals = {source_refs = [0, 1], source_citations = [0]}
 sequence_order = {legal_refs = [0, 1, 3, 2]}
@@ -1371,21 +1450,24 @@ fields = { expression = { args = [
 sequence_additions = {source_refs = ["aeat-dr-200-2023", "aeat-modelo-200-manual-2023"], source_citations = [{source_ref = "aeat-modelo-200-manual-2023", required_text = ["cuota del ejercicio a ingresar o a devolver (casilla 00599)", "[00599] = ([00625]/100", "retenciones e ingresos a cuenta"]}]}
 sequence_removals = {source_refs = [0, 1], source_citations = [0]}
 
-# BIN compensation MÁXIMA (LIS art. 26.1): the maximum BIN compensable this
-# period = min(BIN stock held at period start, max(EUR 1.000.000, 70% of base
-# imponible previa)). The 70% / EUR 1M límite is on the base imponible previa a
-# la reserva de capitalización y a su compensación — casilla 00550, BEFORE the
-# reserva de capitalización (01032) and the applied compensación (00547). This
-# internal ceiling bounds the operator-elective applied amount 00547 via a
-# BLOCKING cap_le_when_positive predicate; it never forces 00547 to the cap.
+# BIN compensation MÁXIMA (LIS art. 26.1): min(stock 00670, max(1 millón, 70 % of the
+# base imponible previa 00550)), as in 2022; the 2023 manual prints the 70 alone
+# (manuals/sociedades/2023 L13273+). A nueva creación that marks casilla 00070 does
+# not apply the límite (art. 26.3 LIS, L2908), so its ceiling is the stock. The
+# ceiling bounds the operator-elective applied amount 00547 through a BLOCKING
+# cap_le_when_positive predicate; it never forces 00547 to the cap.
 [[revisions."2023".family_overrides]]
 family = "formulas"
 selector = {revision = "2022", id = "modelo-200-bin-aplicada-maxima"}
 fields = { target_casilla_id = "DP200014:bin-aplicada-maxima", expression = { args = [
+    { op = "greater_than", args = [{ casilla_id = "00070" }, { literal = "0" }] },
     { casilla_id = "00670" },
-    { op = "max", args = [
-        { parameter = "is.modelo-200.incn-umbral-microempresa" },
-        { op = "percent", args = [{ casilla_id = "DP200014:00550" }, { literal = "70" }] },
+    { op = "min", args = [
+        { casilla_id = "00670" },
+        { op = "max", args = [
+            { parameter = "is.modelo-200.incn-umbral-microempresa" },
+            { op = "percent", args = [{ casilla_id = "DP200014:00550" }, { literal = "70" }] },
+        ] },
     ] },
 ] } }
 sequence_additions = {source_refs = ["aeat-dr-200-2023", "aeat-modelo-200-manual-2023"], source_citations = [{source_ref = "aeat-modelo-200-manual-2023", required_text = ["bases imponibles negativas"]}]}

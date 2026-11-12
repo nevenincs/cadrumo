@@ -3457,28 +3457,11 @@ fields = {fixture_id = "modelo-200-2024-record-design-layout", workbook_source =
 sequence_additions = {legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"], source_refs = ["aeat-dr-200-2024"]}
 sequence_removals = {legal_refs = [0], source_refs = [0]}
 
-# Base imponible (casilla 00552) = base imponible previa (00550) − reserva de
-# capitalización (01032, LIS Art. 25) − compensación de bases imponibles
-# negativas aplicada (00547, LIS Art. 26). The sign is kept: the manual of the
-# 2024 exercise prints "[00552] = [00550] - [01032] - [00547]" and, when 00550
-# is zero or negative, "se deberá consignar cero (0) o la cuantía precedida del
-# signo menos (-) tanto en dicha casilla [00550] como en la casilla [00552]"
-# (manuals/sociedades/2024 L14021, L14034-14036). A negative base is a base
-# imponible negativa the entity carries forward (L14040-14041); the cuota íntegra
-# of such a period is zero (L14036-14037), which the cuota íntegra formula owns. The applied-BIN
-# amount (00547) and the reserva (01032) stay operator-input.
 [[revisions."2024".family_overrides]]
 family = "formulas"
 selector = {revision = "2023", id = "modelo-200-base-imponible"}
 sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2024", required_text = ["compensacion de bases imponibles negativas", "reserva de capitalizacion"]}], source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]}
 sequence_removals = {source_citations = [0], source_refs = [0, 1]}
-fields = { expression = { op = "subtract", args = [
-    { op = "subtract", args = [
-        { casilla_id = "DP200014:00550" },
-        { casilla_id = "01032" },
-    ] },
-    { casilla_id = "DP200014:00547" },
-] }}
 [[revisions."2024".family_overrides]]
 family = "formulas"
 selector = {revision = "2023", id = "modelo-200-base-imponible-despues-reserva-nivelacion"}
@@ -3510,7 +3493,7 @@ family = "formulas"
 selector = {revision = "2023", id = "modelo-200-bin-aplicada-maxima"}
 sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2024", required_text = ["bases imponibles negativas"]}], source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]}
 sequence_removals = {source_citations = [0], source_refs = [0, 1]}
-fields = { expression = { op = "if_then_else", args = [
+fields = { expression = { args = [
     { op = "greater_than", args = [{ casilla_id = "00070" }, { literal = "0" }] },
     { casilla_id = "00670" },
     { op = "if_then_else", args = [
@@ -3565,40 +3548,11 @@ family = "formulas"
 selector = {revision = "2023", id = "modelo-200-cuota-ejercicio-a-ingresar-devolver"}
 sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2024", required_text = ["cuota del ejercicio a ingresar o a devolver (casilla 00599)", "[00599] = ([00625]/100", "retenciones e ingresos a cuenta"]}], source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]}
 sequence_removals = {source_citations = [0], source_refs = [0, 1]}
-# Cuota íntegra (casilla 00562): "se consignará el resultado de aplicar a la
-# cantidad positiva reflejada en la casilla [01330] ... el tipo de gravamen de
-# la casilla [00558]": [00562] = [01330] x [00558]/100, "siempre ... una
-# cantidad positiva o cero" (manuals/sociedades/2024 L14648-14656). A negative
-# base therefore gives zero (L14034-14037). A cooperativa states its cuota
-# íntegra from the cuota íntegra previa of its resultados cooperativos and
-# extracooperativos ([00562] = [00560] + [00210] - [00480] + [00408] - [01037]
-# - [00561], L26990), which this registry does not author, so it is refused;
-# every other régimen the tipo de gravamen refuses leaves this box without a
-# value through 00558.
 [[revisions."2024".family_overrides]]
 family = "formulas"
 selector = {revision = "2023", id = "modelo-200-cuota-integra"}
 sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2024", required_text = ["cuota integra (casilla 00562)", "tipo de gravamen"]}], source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]}
 sequence_removals = {source_citations = [0], source_refs = [0, 1]}
-fields = { expression = { args = [
-    { op = "greater_than", args = [
-        { op = "add", args = [
-            { op = "text_equal", args = [
-                { binding = "modelo-200-profile-legal-entity-form" },
-                { text_literal = "cooperativa" },
-            ] },
-            { casilla_id = "00017" },
-            { casilla_id = "00018" },
-            { casilla_id = "00019" },
-        ] },
-        { literal = "0" },
-    ] },
-    { op = "unresolved_outcome", args = [{ text_literal = "m200-tax-regime-unsupported" }] },
-    { op = "max", args = [
-        { op = "percent", args = [{ casilla_id = "DP200014:01330" }, { casilla_id = "DP200014:00558" }] },
-        { literal = "0" },
-    ] },
-] }}
 [[revisions."2024".family_overrides]]
 family = "formulas"
 selector = {revision = "2023", id = "modelo-200-cuota-integra-ajustada-positiva"}
@@ -3609,154 +3563,11 @@ family = "formulas"
 selector = {revision = "2023", id = "modelo-200-cuota-liquida"}
 sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2024", required_text = ["La cuota líquida se obtiene aplicando sobre la cuota íntegra ajustada positiva", "[00592] = [00582] - ([00583] + [00585]", "El resultado de esta operación siempre tendrá que ser una cantidad positiva o cero"]}], source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]}
 sequence_removals = {source_citations = [0], source_refs = [0, 1]}
-# Tipo de gravamen (casilla 00558): "se hará constar el tipo de gravamen que
-# corresponda de acuerdo con el régimen de tributación aplicable a la entidad
-# declarante" (manuals/sociedades/2024 L14663-14665), read from the rate table
-# of the 2024 exercise (L14666-14755) and the caracteres the declaration marks
-# on its first page (manual cap. 2).
-#
-# Refused with a typed outcome (no value, never zero) when the declaration marks
-# a régimen whose rate or cuota this registry does not author: entidad de
-# crédito 00024 (L14686), hidrocarburos 00034 (L14687-14695), nueva creación of
-# DT 22ª 00063 (15 / 20 scale, L14676-14681), empresa emergente 00083
-# (L14684-14685), ZEC 00015 / 00079, the 1 per cent instituciones 00003 / 00004 /
-# 00008, SOCIMI 00012 and fondos de pensiones 00048 (L14732-14751), entidades
-# parcialmente exentas 00002 (Capítulo XIV Título VII LIS, L2411-2414) and
-# uniones de cooperativas 00080.
-#
-#   1. Ley 49/2002 (casilla 00001 marked): 10 (L14724). A sin fines lucrativos
-#      legal form that does not mark 00001 states no régimen, so it is refused,
-#      as is a legal form outside the vocabulary's other forms.
-#   2. Cooperativas (legal form cooperativa or casillas 00017 / 00018 / 00019):
-#      a fiscalmente protegida (00017 / 00018) states the 20 of its resultados
-#      cooperativos "a los únicos efectos de cumplimentar la casilla [00558]"
-#      (L14704-14712, nota (1) L14752-14755); a no protegida (00019) takes the
-#      rates of any other entity (L14713-14716); a cooperativa marking neither
-#      is refused.
-#   3. Entidad patrimonial (casilla 00066): the general 25, being excluded from
-#      the 15 of nueva creación and the 23 of INCN < 1 millón (L14671-14675,
-#      L14682-14683).
-#   4. Nueva creación (LIS art. 29.1): 15 (L14671-14675).
-#   5. INCN < 1 millón: the 23 of the 2024 table (L14682-14683). The profile
-#      fact read here is the INCN of the 12 months before the period, while the
-#      table speaks of the período impositivo inmediato anterior (L14682,
-#      casilla 00088 L3169-3175); the two coincide for a twelve-month prior
-#      period.
-#   6. Below the art. 101 threshold: the dated ERD rate, which equals the
-#      general 25 for the 2024 exercise.
-#   7. Otherwise the general 25 (L14670).
 [[revisions."2024".family_overrides]]
 family = "formulas"
 selector = {revision = "2023", id = "modelo-200-tipo-gravamen-por-forma-juridica"}
 sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2024", required_text = ["tipo de gravamen", "cuota integra (casilla 00562)"]}], source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]}
 sequence_removals = {source_citations = [0], source_refs = [0, 1]}
-fields = { expression = { args = [
-    { op = "greater_than", args = [
-        { op = "add", args = [
-            { casilla_id = "00024" },
-            { casilla_id = "00034" },
-            { casilla_id = "00063" },
-            { casilla_id = "DP200001:00083" },
-            { casilla_id = "00015" },
-            { casilla_id = "00079" },
-            { casilla_id = "00003" },
-            { casilla_id = "DP200001:00004" },
-            { casilla_id = "00008" },
-            { casilla_id = "00012" },
-            { casilla_id = "00048" },
-            { casilla_id = "00002" },
-            { casilla_id = "00080" },
-        ] },
-        { literal = "0" },
-    ] },
-    { op = "unresolved_outcome", args = [{ text_literal = "m200-tax-regime-unsupported" }] },
-    { op = "if_then_else", args = [
-        { op = "greater_than", args = [{ casilla_id = "00001" }, { literal = "0" }] },
-        { parameter = "is.modelo-200.tipo-gravamen-non-profit-special-regime" },
-        { op = "if_then_else", args = [
-            { op = "less_than", args = [
-                { op = "add", args = [
-                    { op = "text_equal", args = [{ binding = "modelo-200-profile-legal-entity-form" }, { text_literal = "sl" }] },
-                    { op = "text_equal", args = [{ binding = "modelo-200-profile-legal-entity-form" }, { text_literal = "sa" }] },
-                    { op = "text_equal", args = [{ binding = "modelo-200-profile-legal-entity-form" }, { text_literal = "sal" }] },
-                    { op = "text_equal", args = [{ binding = "modelo-200-profile-legal-entity-form" }, { text_literal = "sll" }] },
-                    { op = "text_equal", args = [{ binding = "modelo-200-profile-legal-entity-form" }, { text_literal = "cooperativa" }] },
-                    { op = "text_equal", args = [{ binding = "modelo-200-profile-legal-entity-form" }, { text_literal = "sociedad_civil_mercantil" }] },
-                    { op = "text_equal", args = [{ binding = "modelo-200-profile-legal-entity-form" }, { text_literal = "other" }] },
-                ] },
-                { literal = "1" },
-            ] },
-            { op = "unresolved_outcome", args = [{ text_literal = "m200-tax-regime-unsupported" }] },
-            { op = "if_then_else", args = [
-                { op = "greater_than", args = [
-                    { op = "add", args = [
-                        { op = "text_equal", args = [
-                            { binding = "modelo-200-profile-legal-entity-form" },
-                            { text_literal = "cooperativa" },
-                        ] },
-                        { casilla_id = "00017" },
-                        { casilla_id = "00018" },
-                        { casilla_id = "00019" },
-                    ] },
-                    { literal = "0" },
-                ] },
-                { op = "if_then_else", args = [
-                    { op = "greater_than", args = [
-                        { op = "add", args = [{ casilla_id = "00017" }, { casilla_id = "00018" }] },
-                        { literal = "0" },
-                    ] },
-                    { parameter = "is.modelo-200.tipo-gravamen-cooperative-protected" },
-                    { op = "if_then_else", args = [
-                        { op = "greater_than", args = [{ casilla_id = "00019" }, { literal = "0" }] },
-                        { op = "if_then_else", args = [
-                            { binding = "modelo-200-profile-new-entity-flag" },
-                            { parameter = "is.modelo-200.tipo-gravamen-new-entity-first-2-years" },
-                            { op = "if_then_else", args = [
-                                { op = "less_than", args = [
-                                    { binding = "modelo-200-profile-incn-prior-12-months" },
-                                    { parameter = "is.modelo-200.incn-umbral-microempresa" },
-                                ] },
-                                { parameter = "is.modelo-200.tipo-gravamen-pyme-display" },
-                                { op = "if_then_else", args = [
-                                    { op = "less_than", args = [
-                                        { binding = "modelo-200-profile-incn-prior-12-months" },
-                                        { parameter = "is.modelo-200.incn-umbral-erd-art101" },
-                                    ] },
-                                    { parameter = "is.modelo-200.tipo-gravamen-erd-art101" },
-                                    { parameter = "is.modelo-200.tipo-gravamen-general" },
-                                ] },
-                            ] },
-                        ] },
-                        { op = "unresolved_outcome", args = [{ text_literal = "m200-tax-regime-unsupported" }] },
-                    ] },
-                ] },
-                { op = "if_then_else", args = [
-                    { op = "greater_than", args = [{ casilla_id = "00066" }, { literal = "0" }] },
-                    { parameter = "is.modelo-200.tipo-gravamen-general" },
-                    { op = "if_then_else", args = [
-                        { binding = "modelo-200-profile-new-entity-flag" },
-                        { parameter = "is.modelo-200.tipo-gravamen-new-entity-first-2-years" },
-                        { op = "if_then_else", args = [
-                            { op = "less_than", args = [
-                                { binding = "modelo-200-profile-incn-prior-12-months" },
-                                { parameter = "is.modelo-200.incn-umbral-microempresa" },
-                            ] },
-                            { parameter = "is.modelo-200.tipo-gravamen-pyme-display" },
-                            { op = "if_then_else", args = [
-                                { op = "less_than", args = [
-                                    { binding = "modelo-200-profile-incn-prior-12-months" },
-                                    { parameter = "is.modelo-200.incn-umbral-erd-art101" },
-                                ] },
-                                { parameter = "is.modelo-200.tipo-gravamen-erd-art101" },
-                                { parameter = "is.modelo-200.tipo-gravamen-general" },
-                            ] },
-                        ] },
-                    ] },
-                ] },
-            ] },
-        ] },
-    ] },
-] }}
 [[revisions."2024".family_overrides]]
 family = "dependency_classifications"
 selector = {revision = "2023", id = "modelo-200-dep-202-instalments"}
@@ -3946,28 +3757,9 @@ family = "completeness_manifest"
 selector = {revision = "2023", id = "aeat-dr-200-2023"}
 replacement_id = "aeat-dr-200-2024"
 sequence_additions = {source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"], casillas = [
-    {casilla_id = "00001", number = "00001"},
-    {casilla_id = "00002", number = "00002"},
-    {casilla_id = "00003", number = "00003"},
-    {casilla_id = "00008", number = "00008"},
-    {casilla_id = "00012", number = "00012"},
-    {casilla_id = "00015", number = "00015"},
-    {casilla_id = "00017", number = "00017"},
-    {casilla_id = "00018", number = "00018"},
-    {casilla_id = "00019", number = "00019"},
-    {casilla_id = "00024", number = "00024"},
-    {casilla_id = "00034", number = "00034"},
-    {casilla_id = "00048", number = "00048"},
-    {casilla_id = "00063", number = "00063"},
-    {casilla_id = "00066", number = "00066"},
-    {casilla_id = "00070", number = "00070"},
-    {casilla_id = "00079", number = "00079"},
-    {casilla_id = "00080", number = "00080"},
     {casilla_id = "00545", number = "00545"},
     {casilla_id = "00925", number = "00925"},
     {casilla_id = "01509", number = "01509"},
-    {casilla_id = "DP200001:00004", segmento = "DP200001", number = "00004"},
-    {casilla_id = "DP200001:00083", segmento = "DP200001", number = "00083"},
 ]}
 sequence_removals = {source_refs = [0, 1]}
 [[revisions."2024".family_positions]]

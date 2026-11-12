@@ -12019,6 +12019,12 @@ modelo:
                 years) [03368]
             x-8h834c1g60o32ehg60o3gcg:
               label: Ultimate parent company of a multinational group [00082]
+            x-8h834c1g60oj4ehg60qj0c8:
+              label: Settlement I - Profit and loss account result - Profit and loss
+                account result before Corporate Income Tax [00501]
+            x-8h834c1g60oj8ehg64pj6c0:
+              label: Settlement III - Taxable base - Reduced-size entities - Tax base
+                after the equalization reserve - Decreases [01330]
           field:
             label: Modelo 200, tax year 2022
         '2023':
@@ -12160,12 +12166,6 @@ modelo:
               label: Settlement I - Detail of adjustments to the profit and loss account
                 result - Other cases of free depreciation (art. 12.3 a) and d) and
                 Additional Provisions 16 and 17 LIS) - Decreases [00310]
-            x-8h834c1g60oj4ehg60qj0c8:
-              label: Settlement I - Profit and loss account result - Profit and loss
-                account result before Corporate Income Tax [00501]
-            x-8h834c1g60oj8ehg64pj6c0:
-              label: Settlement III - Taxable base - Reduced-size entities - Tax base
-                after the equalization reserve - Decreases [01330]
             x-8h834c1g60ojgehg60pj2d8:
               label: Deductions to incentivise certain activities - 2023 Centenary
                 of Rugby in Spain and of the Unió Esportiva Santboiana (CRE) - Deduction

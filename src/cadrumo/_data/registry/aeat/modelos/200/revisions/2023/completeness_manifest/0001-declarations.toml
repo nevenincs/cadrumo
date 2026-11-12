@@ -320,3 +320,81 @@ number = "00619"
 casilla_id = "DP200026:00625"
 segmento = "DP200026"
 number = "00625"
+
+[[revisions."2023".completeness_manifest.casillas]]
+casilla_id = "00001"
+number = "00001"
+
+[[revisions."2023".completeness_manifest.casillas]]
+casilla_id = "00002"
+number = "00002"
+
+[[revisions."2023".completeness_manifest.casillas]]
+casilla_id = "00003"
+number = "00003"
+
+[[revisions."2023".completeness_manifest.casillas]]
+casilla_id = "00008"
+number = "00008"
+
+[[revisions."2023".completeness_manifest.casillas]]
+casilla_id = "00012"
+number = "00012"
+
+[[revisions."2023".completeness_manifest.casillas]]
+casilla_id = "00015"
+number = "00015"
+
+[[revisions."2023".completeness_manifest.casillas]]
+casilla_id = "00017"
+number = "00017"
+
+[[revisions."2023".completeness_manifest.casillas]]
+casilla_id = "00018"
+number = "00018"
+
+[[revisions."2023".completeness_manifest.casillas]]
+casilla_id = "00019"
+number = "00019"
+
+[[revisions."2023".completeness_manifest.casillas]]
+casilla_id = "00024"
+number = "00024"
+
+[[revisions."2023".completeness_manifest.casillas]]
+casilla_id = "00034"
+number = "00034"
+
+[[revisions."2023".completeness_manifest.casillas]]
+casilla_id = "00048"
+number = "00048"
+
+[[revisions."2023".completeness_manifest.casillas]]
+casilla_id = "00063"
+number = "00063"
+
+[[revisions."2023".completeness_manifest.casillas]]
+casilla_id = "00066"
+number = "00066"
+
+[[revisions."2023".completeness_manifest.casillas]]
+casilla_id = "00070"
+number = "00070"
+
+[[revisions."2023".completeness_manifest.casillas]]
+casilla_id = "00079"
+number = "00079"
+
+[[revisions."2023".completeness_manifest.casillas]]
+casilla_id = "00080"
+number = "00080"
+
+[[revisions."2023".completeness_manifest.casillas]]
+casilla_id = "DP200001:00004"
+segmento = "DP200001"
+number = "00004"
+
+[[revisions."2023".completeness_manifest.casillas]]
+casilla_id = "DP200001:00083"
+segmento = "DP200001"
+number = "00083"
