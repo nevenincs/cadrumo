@@ -9173,8 +9173,6 @@ tui:
         reconciliation_resolved: Resolved
         revision_current: Current
         revision_superseded: Replaced
-workspace:
-  declarations:
   withholding:
     absence:
       state:
@@ -9207,6 +9205,8 @@ workspace:
       read_failed: The records could not be read.
       read_first: Read a year first.
       reading: Reading…
+workspace:
+  declarations:
     availability:
       available: Available
       locked: Locked

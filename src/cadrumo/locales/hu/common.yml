@@ -9318,8 +9318,6 @@ tui:
         reconciliation_resolved: Rendezett
         revision_current: Aktuális
         revision_superseded: Felváltva
-workspace:
-  declarations:
   withholding:
     absence:
       state:
@@ -9352,6 +9350,8 @@ workspace:
       read_failed: A nyilvántartásokat nem sikerült beolvasni.
       read_first: Előbb olvass be egy évet.
       reading: Beolvasás…
+workspace:
+  declarations:
     availability:
       available: Elérhető
       locked: Zárolva
