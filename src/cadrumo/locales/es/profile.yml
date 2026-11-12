@@ -133,6 +133,8 @@ profile:
       legal_entity_form: Forma jurídica
       new_entity_first_two_profit_periods: ¿Es una entidad de nueva creación en uno
         de sus dos primeros periodos impositivos con beneficios?
+      pago_fraccionado_art_40_3_elected: ¿Ejerció la entidad en su declaración censal
+        la opción del artículo 40.3 de la LIS para el pago fraccionado?
       representante_fiscal_nif: NIF/NIE del representante fiscal en España (obligatorio
         fuera UE/EEE)
       representante_fiscal_nombre: Nombre del representante fiscal en España
@@ -675,6 +677,8 @@ profile:
           label: Forma jurídica
         new_entity_first_two_profit_periods:
           label: En uno de los dos primeros períodos con beneficio
+        pago_fraccionado_art_40_3_elected:
+          label: Opción del art. 40.3 LIS en el pago fraccionado
         representante_fiscal_nif:
           label: NIF del representante fiscal
         representante_fiscal_nombre:

@@ -65,6 +65,7 @@ entries = [
   { key = "setup.field.name", value = "identity.name|str|" },
   { key = "setup.field.new_entity_first_two_profit_periods", value = "taxpayer_type.new_entity_first_two_profit_periods|bool|" },
   { key = "setup.field.output_language", value = "preferences.output_language|str|es" },
+  { key = "setup.field.pago_fraccionado_art_40_3_elected", value = "taxpayer_type.pago_fraccionado_art_40_3_elected|bool|" },
   { key = "setup.field.pays_capital_income_with_retencion", value = "withholding.pays_capital_income_with_retencion|bool|" },
   { key = "setup.field.pays_non_resident_income_with_retencion", value = "withholding.pays_non_resident_income_with_retencion|bool|" },
   { key = "setup.field.patrimonio_declaration_threshold_met", value = "obligations.patrimonio_declaration_threshold_met|bool|" },
