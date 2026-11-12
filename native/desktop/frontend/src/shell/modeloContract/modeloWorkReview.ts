@@ -17,6 +17,7 @@ import type {
   ModeloVerificationFindingKind,
   ModeloVerificationFindingSeverity,
   PublicPeriod,
+  RegistryAuthorityGrade,
   RevisionId,
   SourceRefId,
   VerificationCompletenessStatus,
@@ -56,6 +57,7 @@ export type ModeloWorkReviewFindingSnapshot = {
   legal_refs: LegalRefId[];
   source_refs: SourceRefId[];
   disclosed_limitation?: boolean;
+  below_filing_grade?: RegistryAuthorityGrade | null;
 };
 
 /**

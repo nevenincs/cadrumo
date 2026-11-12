@@ -16,6 +16,7 @@ import type {
   ModeloVerificationFindingKind,
   ModeloVerificationFindingSeverity,
   ModeloVerificationRegistrySnapshotProjection,
+  RegistryAuthorityGrade,
   SourceRefId,
   VerificationCompletenessStatus,
   VerificationExpectationId,
@@ -44,6 +45,7 @@ export type ModeloVerificationFindingProjection = {
   legal_refs: LegalRefId[];
   source_refs: SourceRefId[];
   disclosed_limitation?: boolean;
+  below_filing_grade?: RegistryAuthorityGrade | null;
 };
 
 /**
