@@ -1154,7 +1154,17 @@ _DESCENDANT_LEAVES = frozenset(
     }
 )
 _ASCENDANT_LEAVES = frozenset(
-    {"birth_date", "fallecimiento", "convivientes", "rentas_anuales", "declaracion_propia", "discapacidad"}
+    {
+        "birth_date",
+        "fallecimiento",
+        "convivientes",
+        "convivencia_mitad_periodo",
+        "rentas_anuales",
+        "declaracion_propia",
+        "discapacidad",
+        "discapacidad_asistencia",
+        "incapacidad_judicial",
+    }
 )
 
 

@@ -78,10 +78,17 @@ cotizaciones_ss_madre = "2332.80"
 identity = "asalariada.madre"
 birth_date = { year = "horizon-79", month = 1, day = 8 }
 convivientes = "1"
+# She lives with the taxpayer the whole year, so at least half the period
+# (LIRPF art. 61 norma 5ª).
+convivencia_mitad_periodo = "true"
 # Her pension, the only income she has: below the 8000 euros of LIRPF art. 59.1. Being
 # under the filing limits she files no return of her own (art. 61 norma 2ª).
 rentas_anuales = "7200.00"
 declaracion_propia = "false"
+# She has no disability (LIRPF art. 60.3) and no judicial resolution declares her
+# incapacity, which art. 60.3 would count as a grade of 65 % or more.
+discapacidad = "0"
+incapacidad_judicial = "false"
 
 # The taxpayer transcribes the payer's certificate: the catalogue holds no
 # certificate document, so the figures are recorded as her own declaration.

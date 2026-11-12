@@ -2681,8 +2681,8 @@ cli:
       ascendiente:
         add_flag_help: NACIMIENTO=ÉÉÉÉ-HH-NN[,NIF=<NIF vagy NIE>][,APELLIDOS_NOMBRE=<vezeték-
           és utónév>][,FALLECIMIENTO=ÉÉÉÉ-HH-NN][,CONVIVIENTES=<azon leszármazottak
-          száma, akikkel a felmenő együtt él>][,RENTAS=<éves jövedelem a mentes jövedelmek
-          nélkül, euróban>][,DECLARACION_PROPIA=true|false][,DISCAPACIDAD=0|33|65].
+          száma, akikkel a felmenő együtt él>][,CONVIVENCIA_MITAD_PERIODO=true|false][,RENTAS=<éves
+          jövedelem a mentes jövedelmek nélkül, euróban>][,DECLARACION_PROPIA=true|false][,DISCAPACIDAD=0|33|65][,DISCAPACIDAD_ASISTENCIA=true|false][,INCAPACIDAD_JUDICIAL=true|false].
           Ismételhető; a NACIMIENTO minden sorban kötelező.
         add_help: Egy vagy több felmenő hozzáadása az aktív profilhoz, vagy a --none
           megadásával annak rögzítése, hogy nincs egy sem.
@@ -2691,8 +2691,9 @@ cli:
         edit_empty: Nevezz meg legalább egy adatot, amelyet --ascendiente KULCS=ÉRTÉK
           formában módosítasz, vagy --clear KULCS formában törölsz.
         edit_flag_help: 'Lecserélendő KULCS=ÉRTÉK párok az add kulcsaival: NACIMIENTO,
-          NIF, APELLIDOS_NOMBRE, FALLECIMIENTO, CONVIVIENTES, RENTAS, DECLARACION_PROPIA
-          és DISCAPACIDAD. Ismételhető; minden kulcs legfeljebb egyszer.'
+          NIF, APELLIDOS_NOMBRE, FALLECIMIENTO, CONVIVIENTES, CONVIVENCIA_MITAD_PERIODO,
+          RENTAS, DECLARACION_PROPIA, DISCAPACIDAD, DISCAPACIDAD_ASISTENCIA és INCAPACIDAD_JUDICIAL.
+          Ismételhető; minden kulcs legfeljebb egyszer.'
         edit_help: Az aktív profil egy felmenőjének megadott adatait módosítja 0-tól
           kezdődő index alapján; a meg nem nevezett adatok változatlanok maradnak.
         edit_index_help: A módosítandó felmenő 0-tól kezdődő indexe, ahogy a list
@@ -2701,9 +2702,10 @@ cli:
         index_out_of_range: A(z) %{index} index tartományon kívül esik; a profilon
           %{total} felmenő van.
         invalid_row: Az --ascendiente sor nem olvasható. KULCS=ÉRTÉK párokat használj
-          a NACIMIENTO, NIF, APELLIDOS_NOMBRE, FALLECIMIENTO, CONVIVIENTES, RENTAS,
-          DECLARACION_PROPIA és DISCAPACIDAD kulcsokkal, mindegyiket legfeljebb egyszer
-          és értékkel; a hiba kontextusa megnevezi a kulcsot, ha az azonosítható.
+          a NACIMIENTO, NIF, APELLIDOS_NOMBRE, FALLECIMIENTO, CONVIVIENTES, CONVIVENCIA_MITAD_PERIODO,
+          RENTAS, DECLARACION_PROPIA, DISCAPACIDAD, DISCAPACIDAD_ASISTENCIA és INCAPACIDAD_JUDICIAL
+          kulcsokkal, mindegyiket legfeljebb egyszer és értékkel; a hiba kontextusa
+          megnevezi a kulcsot, ha az azonosítható.
         list_help: Az aktív profilon megadott felmenők listázása, és annak jelzése,
           hogy a profil szerint nincs egy sem.
         remove_help: Egy felmenő eltávolítása 0-alapú index szerint az aktív profilról.
@@ -2950,6 +2952,12 @@ cli:
       no_active_profile: 'Nincs aktív profil. Futtasd: `aeat config profile create
         NÉV --tax-id <NIF/CIF/DNI/NIE>`.'
       notices:
+        ascendant_disability_key_cleared: 'A profilod fogyatékossági kódot tárolt
+          a(z) {row}. felmenőhöz. Ez az adat már nem létezik: a kód a fogyatékossági
+          fokból, abból, hogy a felmenőnek szüksége van-e mások segítségére vagy csökkent-e
+          a mozgásképessége, valamint abból adódik, hogy bíróság cselekvőképtelennek
+          nyilvánította-e. Add meg ezt a három adatot az «aeat config profile ascendiente
+          edit {row}» paranccsal, hogy a felmenői minimum újra kiszámítható legyen.'
         payer_fact_cleared: '{fact}: ez a profil egy „nem” választ tárolt, amelyet
           a beállítási varázsló alapértelmezésként írt be, ezért nem volt megkülönböztethető
           a megválaszolatlan kérdéstől, és törlésre került. Az ettől függő kötelezettségek

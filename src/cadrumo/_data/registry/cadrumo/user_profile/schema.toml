@@ -1,6 +1,6 @@
 [schema]
 id = "cadrumo.user_profile"
-version = 9
+version = 11
 title = "Cadrumo user profile schema"
 snapshot_policy = "immutable_secure_snapshot_hash"
 remove_policy = "live_profile_tombstone_retain_snapshots"
@@ -2181,8 +2181,8 @@ type = "object"
 required = false
 sensitivity = "identity"
 effective_dated = true
-description = "Details of each ascendant who gives entitlement to the ascendant minimum, stored as renta_family.ascendiente.{n}: NIF, surnames and name, birth date, official disability code, statutory disability grade, number of descendants the ascendant lives with, date of death, annual income excluding exempt income and whether the ascendant files their own return."
-legal_refs = ["ley-35-2006:art-59", "ley-35-2006:art-61"]
+description = "Each ascendant for the ascendant minimum, stored as renta_family.ascendiente.{n}: NIF, surnames and name, birth date, date of death, descendants the ascendant lives with, cohabitation for half the period, annual income excluding exempt income, own return, disability grade, assistance or reduced mobility, and judicial incapacity, each as at the devengo or the date of death. The official disability code is derived from the grade and both circumstances, never stored."
+legal_refs = ["ley-35-2006:art-59", "ley-35-2006:art-60", "ley-35-2006:art-61"]
 
 [[sections.fields]]
 key = "ascendientes_count"

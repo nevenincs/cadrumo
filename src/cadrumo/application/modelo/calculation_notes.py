@@ -92,6 +92,7 @@ GATE_REFUSED_REASONS: Final[frozenset[str]] = frozenset(
         "credit_source_disagreement",
         "precedence_tier_divergence",
         "household_row_fact_unstated",
+        "ascendant_disability_minimum_not_computed",
     }
 )
 """Reasons the calculation-note gate refuses checking, exporting and recording on.
@@ -264,7 +265,9 @@ RECORDS_REASONS: Final[frozenset[str]] = frozenset(
 )
 """Reasons whose cause is an entry in the filer's records, where the note sits and is put right."""
 
-PROFILE_REASONS: Final[frozenset[str]] = frozenset({"household_rows_incomplete", "household_row_fact_unstated"})
+PROFILE_REASONS: Final[frozenset[str]] = frozenset(
+    {"household_rows_incomplete", "household_row_fact_unstated", "ascendant_disability_minimum_not_computed"}
+)
 """Reasons whose cause is a fact the filer keeps in their profile, where the note is put right."""
 
 _KEY_ROOT: Final[str] = "application.modelo.calc_diagnostic"
@@ -316,6 +319,10 @@ _HOUSEHOLD_LEAF_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
         "rentas_anuales": "application.modelo.calc_diagnostic_words.household_leaf.rentas_anuales",
         "declaracion_propia": "application.modelo.calc_diagnostic_words.household_leaf.declaracion_propia",
         "discapacidad": "application.modelo.calc_diagnostic_words.household_leaf.discapacidad",
+        "convivencia_mitad_periodo": (
+            "application.modelo.calc_diagnostic_words.household_leaf.convivencia_mitad_periodo"
+        ),
+        "incapacidad_judicial": "application.modelo.calc_diagnostic_words.household_leaf.incapacidad_judicial",
     }
 )
 """The words of each household row fact a note can name, by the leaf token the profile stores.

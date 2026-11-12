@@ -9,9 +9,12 @@ so a stated zero is a real answer and a person left out is removed.
 The leaves are the ones an ascendant row can state and the declaration reads: the
 NIF or NIE, the surnames and name, the date of birth, the date of death and the number
 of descendants the ascendant lives with, plus the facts the mínimo por ascendientes
-turns on: the annual rentas excluding exempt income, whether the ascendant files
-their own return and the statutory disability grade. The row limit is the one the
-declaration's own design states.
+turns on: whether the ascendant lived with the filer at least half the period, the
+annual rentas excluding exempt income, whether the ascendant files their own return,
+the statutory disability grade, whether the ascendant needs assistance of third
+persons or has reduced mobility and whether a judicial resolution declares the
+incapacity. Each yes-or-no fact is three-state: a leaf left out is unanswered. The
+row limit is the one the declaration's own design states.
 Every refusal names the row by its position and never echoes what was typed;
 :class:`UserProfileRecord`, the stored taxpayer profile record.
 """
@@ -36,8 +39,11 @@ from ...domain.calculations.registry.descendant_disability_catalogue import acce
 from ...domain.calculations.registry.form_codes import resolve_form_codes
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.contribuyente.ascendant_minimum import (
+    CONVIVENCIA_MITAD_PERIODO_LEAF,
     DECLARACION_PROPIA_LEAF,
+    DISCAPACIDAD_ASISTENCIA_LEAF,
     DISCAPACIDAD_LEAF,
+    INCAPACIDAD_JUDICIAL_LEAF,
     RENTAS_ANUALES_LEAF,
 )
 from ...domain.contribuyente.household_person_name import admitted_household_person_name, household_person_name_limit
@@ -85,8 +91,18 @@ ASCENDANT_ROW_LEAVES: Final = (
     RENTAS_ANUALES_LEAF,
     DECLARACION_PROPIA_LEAF,
     DISCAPACIDAD_LEAF,
+    CONVIVENCIA_MITAD_PERIODO_LEAF,
+    DISCAPACIDAD_ASISTENCIA_LEAF,
+    INCAPACIDAD_JUDICIAL_LEAF,
 )
 """The leaves an ascendant row states, in stored order; a row stating none of them is not a row."""
+
+_YES_NO_LEAVES: Final = (
+    DECLARACION_PROPIA_LEAF,
+    CONVIVENCIA_MITAD_PERIODO_LEAF,
+    DISCAPACIDAD_ASISTENCIA_LEAF,
+    INCAPACIDAD_JUDICIAL_LEAF,
+)
 
 
 class ProfileAscendantFact(BaseModel):
@@ -249,8 +265,7 @@ def _household_facts(
         stored[_COHABITING_LEAF] = _cohabiting(supplied[_COHABITING_LEAF], position=position, operation=operation)
     if RENTAS_ANUALES_LEAF in supplied:
         stored[RENTAS_ANUALES_LEAF] = _rentas(supplied[RENTAS_ANUALES_LEAF], position=position)
-    if DECLARACION_PROPIA_LEAF in supplied:
-        stored[DECLARACION_PROPIA_LEAF] = _yes_no(supplied[DECLARACION_PROPIA_LEAF], position=position)
+    stored.update({leaf: _yes_no(supplied[leaf], position=position) for leaf in _YES_NO_LEAVES if leaf in supplied})
     if DISCAPACIDAD_LEAF in supplied:
         stored[DISCAPACIDAD_LEAF] = _disability_grade(
             supplied[DISCAPACIDAD_LEAF], position=position, operation=operation

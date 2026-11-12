@@ -175,6 +175,7 @@ def test_household_notes_reach_the_calculation_through_its_profile_diagnostics(
         UserProfileFact(path="renta_family.ascendiente.0.apellidos_nombre", value="Navarro Gil Carmen"),
         # The facts the mínimo por ascendientes reads, so the NIF is the one row fact left unstated.
         UserProfileFact(path="renta_family.ascendiente.0.convivientes", value="1"),
+        UserProfileFact(path="renta_family.ascendiente.0.convivencia_mitad_periodo", value="true"),
         UserProfileFact(path="renta_family.ascendiente.0.rentas_anuales", value="7200.00"),
         UserProfileFact(path="renta_family.ascendiente.0.declaracion_propia", value="false"),
     )

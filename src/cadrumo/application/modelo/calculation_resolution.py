@@ -392,9 +392,15 @@ _BACKEND_SOURCE_FAMILY: Final[str] = "source_mesh"
 _BINDING_REF_MARKER: Final[str] = ":binding:"
 _ROWS_REF_MARKER: Final[str] = ":rows:"
 _PROFILE_NOTE_REASONS: Final[frozenset[str]] = frozenset(
-    {"unresolved_binding", "household_rows_incomplete", "household_row_fact_unstated"}
+    {
+        "unresolved_binding",
+        "household_rows_incomplete",
+        "household_row_fact_unstated",
+        "ascendant_disability_minimum_not_computed",
+    }
 )
-"""The profile diagnostics a calculation carries onward: an unanswered fact and the household rows still owed."""
+"""The profile diagnostics a calculation carries onward: an unanswered fact, the household rows still owed
+and an ascendant disability minimum not computed."""
 _PRECEDENCE_TIERS_RESOLVER_ID: Final[str] = "calculate_precedence_tiers"
 _BACKEND_ROWS_RESOLVER_ID: Final[str] = "calculate_backend_rows"
 PRECEDENCE_TIER_DIVERGENCE_REASON: Final = "precedence_tier_divergence"

@@ -151,6 +151,7 @@ def _mother_over_75(year: int) -> dict[str, str]:
     return {
         "birth_date": _born(year, 78).isoformat(),
         "convivientes": "1",
+        "convivencia_mitad_periodo": "true",
         "rentas_anuales": "7200.00",
         "declaracion_propia": "false",
     }
@@ -188,6 +189,7 @@ def test_the_comunidad_amount_is_shared_and_aged_as_the_state_one(
     under_75 = {
         "birth_date": _born(year, 70).isoformat(),
         "convivientes": "2",
+        "convivencia_mitad_periodo": "true",
         "rentas_anuales": "5000.00",
         "declaracion_propia": "false",
     }
@@ -195,6 +197,7 @@ def test_the_comunidad_amount_is_shared_and_aged_as_the_state_one(
         "birth_date": _born(year, 85).isoformat(),
         "fallecimiento": date(year, 9, 30).isoformat(),
         "convivientes": "1",
+        "convivencia_mitad_periodo": "true",
         "rentas_anuales": "1000.00",
     }
 

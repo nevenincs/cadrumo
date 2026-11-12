@@ -3,7 +3,8 @@
 Each key names exactly one stored leaf. The values stay text: the ascendants operation
 the window also uses reads them, requires the birth date, checks the NIF or NIE, the
 name's length, the dates, the cohabiting bound, the rentas amount, the yes-or-no
-own-return answer and the disability grade against the pinned authority, and refuses
+answers (own return, half-period cohabitation, assistance, judicial incapacity) and
+the disability grade against the pinned authority, and refuses
 a row by its position. A value cannot contain ``,``, which separates the keys. An edit
 names the same keys to replace and, through ``--clear``, the keys to drop.
 """
@@ -25,6 +26,9 @@ _KEY_TO_LEAF: Final = {
     "RENTAS": "rentas_anuales",
     "DECLARACION_PROPIA": "declaracion_propia",
     "DISCAPACIDAD": "discapacidad",
+    "CONVIVENCIA_MITAD_PERIODO": "convivencia_mitad_periodo",
+    "DISCAPACIDAD_ASISTENCIA": "discapacidad_asistencia",
+    "INCAPACIDAD_JUDICIAL": "incapacidad_judicial",
 }
 _INVALID_ROW_LOCALE_KEY: Final = "cli.config.profile.ascendiente.invalid_row"
 _EDIT_EMPTY_LOCALE_KEY: Final = "cli.config.profile.ascendiente.edit_empty"

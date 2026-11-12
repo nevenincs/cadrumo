@@ -1736,6 +1736,12 @@ application:
           sense tipus d'activitat.
         what_to_do: Indica el tipus d'activitat en aquests registres d'ingressos i
           torna a calcular.
+      ascendant_disability_minimum_not_computed:
+        what: Un ascendent pel qual apliques el mínim té discapacitat, i el seu mínim
+          per discapacitat encara no es calcula, així que la declaració no es pot
+          comprovar, exportar ni presentar.
+        what_to_do: Revisa al teu perfil les dades de discapacitat d'aquest ascendent.
+          Mentre tingui discapacitat, aquesta declaració no es pot completar aquí.
       autonomic_deducciones_not_enrolled:
         what: No es calcula cap deducció autonòmica de la teva comunitat de residència
           en aquest exercici, així que el total de deduccions autonòmiques només inclou
@@ -2122,6 +2128,8 @@ application:
         queda fora del pagament fraccionat del període que acaba el {period_end}.'
       amortization_box_unbound: '{element}: aquesta edició no té casella per a la
         seva dotació, de manera que no suma res a aquest càlcul.'
+      ascendant_disability_minimum_not_computed: '{group}: {count} amb discapacitat
+        el mínim per discapacitat dels quals no es calcula.'
       book_claimed_purchase: El moviment del {row_date} per {row_amount} és una compra
         del teu inventari, de manera que es declara com a compra d'existències i no
         com a despesa.
@@ -2373,9 +2381,11 @@ application:
       household_leaf:
         apellidos_nombre: cognoms i nom
         birth_date: data de naixement
+        convivencia_mitad_periodo: si ha conviscut amb tu almenys la meitat de l'any
         convivientes: nombre de descendents amb qui conviu
         declaracion_propia: si presenta declaració pròpia
         discapacidad: grau de discapacitat
+        incapacidad_judicial: si un jutge n'ha declarat la incapacitat
         nif: NIF
         rentas_anuales: rendes anuals
       income_class:
@@ -3749,8 +3759,8 @@ application:
           de residència, o introdueix tu aquesta casella. Mai es mostra com a zero.
         autonomic_deduction_unsummed_box: Aquesta casella suma les deduccions autonòmiques
           de la teva comunitat de residència, però la suma oficial també anomena una
-          casella que aquest càlcul no suma, i aquesta casella té un import. Revisa-la, o
-          introdueix tu aquesta casella. Mai es mostra com a zero.
+          casella que aquest càlcul no suma, i aquesta casella té un import. Revisa-la,
+          o introdueix tu aquesta casella. Mai es mostra com a zero.
         income_family_contradicts_profile: Aquesta casella compara les teves altres
           rendes amb el límit, però les categories de renda que has indicat exclouen
           un tipus de renda del qual tens imports. Corregeix les categories o retira
@@ -4460,6 +4470,10 @@ application:
           label: Cognoms i nom de l'ascendent (primer els cognoms)
         birth_date:
           label: Data de naixement
+        convivencia_mitad_periodo:
+          help: Compta fins a la data de defunció si l'ascendent va morir durant l'any.
+            L'internament en un centre especialitzat compta com a convivència.
+          label: Aquest ascendent ha conviscut amb tu almenys la meitat de l'any?
         convivientes:
           label: Nombre de descendents amb els quals conviu aquest ascendent
         declaracion_propia:
@@ -4470,9 +4484,18 @@ application:
           help: Es pregunta per a un ascendent per sota de l'edat mínima, que dona
             dret al mínim només amb discapacitat.
           label: Grau de discapacitat d'aquest ascendent
+        discapacidad_asistencia:
+          help: Es pregunta per a un grau de discapacitat des del 33 % fins a menys
+            del 65 %; fixa la clau de discapacitat que consigna la declaració.
+          label: Aquest ascendent necessita ajuda de terceres persones o té mobilitat
+            reduïda?
         fallecimiento:
           help: Deixa-ho en blanc si aquest ascendent no ha mort.
           label: Data de defunció
+        incapacidad_judicial:
+          help: La incapacitat declarada judicialment compta com un grau de discapacitat
+            del 65 % o més, sigui quin sigui el grau indicat.
+          label: Un jutge ha declarat la incapacitat d'aquest ascendent?
         nif:
           label: NIF/NIE de l'ascendent (deixa'l en blanc si no en té)
         rentas_anuales:

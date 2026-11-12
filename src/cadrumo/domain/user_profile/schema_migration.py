@@ -14,6 +14,13 @@ two.
   reduction is derived from the facts of each lease, and a stored tier cannot be
   converted into those facts, so the migration clears whatever value is stored
   and the operator is asked to record the leases.
+- Schema 10 adds a field and changes no stored value, so its transition clears
+  nothing.
+- Schema 11 retires the disability key stored on an ascendant row. The Modelo 100
+  key is derived from the grade, the assistance and the judicial incapacity of
+  the row, and a stored key 1 or 2 cannot be converted into a grade, so the
+  migration clears every stored key and the operator is asked for the grade and
+  both circumstances of that row.
 
 Before each of those bumps the setup wizard pre-answered the affected
 questions and wrote its default as an ordinary ``manual_cli`` fact, so the
@@ -37,6 +44,7 @@ and a current record is never passed through it.
 
 from __future__ import annotations
 
+import re
 from collections.abc import Iterable, Mapping
 from types import MappingProxyType
 from typing import Final, Self
@@ -49,7 +57,7 @@ from .errors import UserProfileValidationError
 from .schema import ProfileSchemaDefinition
 from .values import UserProfileFact, UserProfileRecord, section_field_key
 
-MIGRATED_PROFILE_SCHEMA_VERSION: Final[int] = 9
+MIGRATED_PROFILE_SCHEMA_VERSION: Final[int] = 11
 """The profile schema version the migration writes."""
 
 _UNPROVEN_FALSE: Final[bool] = False
@@ -137,6 +145,30 @@ no successor to read its value, so every stored value goes.
 """
 
 
+RETIRED_ASCENDANT_DISABILITY_KEY_GROUP: Final[str] = "renta_family.ascendiente"
+"""The household group whose rows stored the disability key schema 11 retires."""
+RETIRED_ASCENDANT_DISABILITY_KEY_LEAF: Final[str] = "discapacidad_clave"
+"""The row leaf that stored the official disability key of an ascendant."""
+_RETIRED_ASCENDANT_KEY_PATH: Final[re.Pattern[str]] = re.compile(
+    rf"^{re.escape(RETIRED_ASCENDANT_DISABILITY_KEY_GROUP)}\.(\d+)\.{re.escape(RETIRED_ASCENDANT_DISABILITY_KEY_LEAF)}$"
+)
+
+_RETIRED_ROW_LEAVES_BY_TRANSITION: Final[Mapping[int, re.Pattern[str]]] = MappingProxyType(
+    {10: _RETIRED_ASCENDANT_KEY_PATH},
+)
+"""Row leaves the transition that LEAVES each version retires on every row of their group, by path pattern."""
+
+_ASCENDANT_DISABILITY_LEAVES: Final[tuple[str, ...]] = (
+    "discapacidad",
+    "discapacidad_asistencia",
+    "incapacidad_judicial",
+)
+"""The row facts the retired key is derived from now, which a row whose key was cleared is asked for."""
+
+_ADDITIVE_TRANSITIONS: Final[frozenset[int]] = frozenset({9})
+"""Versions whose outgoing transition only adds fields, so it clears no stored value."""
+
+
 def _transition_paths(version: int) -> frozenset[str]:
     defaulted: set[str] = set(_DEFAULTED_VALUES_BY_TRANSITION.get(version, _NO_DEFAULTS))
     return frozenset(defaulted | _RETIRED_PATHS_BY_TRANSITION.get(version, _NO_PATHS))
@@ -145,7 +177,12 @@ def _transition_paths(version: int) -> frozenset[str]:
 _CLEARED_PATHS_BY_TRANSITION: Final[Mapping[int, frozenset[str]]] = MappingProxyType(
     {
         version: _transition_paths(version)
-        for version in (*_DEFAULTED_VALUES_BY_TRANSITION, *_RETIRED_PATHS_BY_TRANSITION)
+        for version in (
+            *_DEFAULTED_VALUES_BY_TRANSITION,
+            *_RETIRED_PATHS_BY_TRANSITION,
+            *_RETIRED_ROW_LEAVES_BY_TRANSITION,
+            *_ADDITIVE_TRANSITIONS,
+        )
     },
 )
 """The same transitions as path sets, for the callers that only need the names."""
@@ -268,6 +305,15 @@ def _defaulted_values_between(from_version: int, to_version: int) -> Mapping[str
     return defaulted
 
 
+def _is_retired_row_leaf(path: str, from_version: int, to_version: int) -> bool:
+    """Report whether a transition from ``from_version`` to ``to_version`` retires the row leaf at ``path``."""
+    return any(
+        pattern.match(path) is not None
+        for version, pattern in _RETIRED_ROW_LEAVES_BY_TRANSITION.items()
+        if from_version <= version < to_version
+    )
+
+
 def _retired_paths_between(from_version: int, to_version: int) -> frozenset[str]:
     """Return the paths the transitions from ``from_version`` to ``to_version`` retire."""
     retired: set[str] = set()
@@ -338,7 +384,11 @@ class ProfileSchemaMigration(BaseModel):
         if tuple(sorted(set(self.cleared_paths))) != self.cleared_paths:
             raise UserProfileValidationError("cleared payer-fact paths must be sorted and unique")
         clearable = cleared_payer_fact_paths_between(self.from_version, self.to_version)
-        unknown = set(self.cleared_paths) - clearable
+        unknown = {
+            path
+            for path in set(self.cleared_paths) - clearable
+            if not _is_retired_row_leaf(path, self.from_version, self.to_version)
+        }
         if unknown:
             raise UserProfileValidationError(f"migration names paths it never clears: {sorted(unknown)!r}")
         return self
@@ -397,7 +447,11 @@ def migrate_profile_facts(
     kept: list[UserProfileFact] = []
     cleared: set[str] = set()
     for fact in stored:
-        if fact.path in retired or _is_stored_default(fact, defaulted):
+        if (
+            fact.path in retired
+            or _is_retired_row_leaf(fact.path, from_version, MIGRATED_PROFILE_SCHEMA_VERSION)
+            or _is_stored_default(fact, defaulted)
+        ):
             cleared.add(fact.path)
             continue
         kept.append(fact)
@@ -418,14 +472,19 @@ def pending_cleared_payer_fact_paths(
     A path counts as answered once the record carries a fact on it with a
     value, whether yes or no; a cleared (``None``) fact is still unanswered.
     A retired path is not a payer fact and is never offered here: its finding is
-    :func:`rental_tier_finding_pending`.
+    :func:`rental_tier_finding_pending` or :func:`ascendant_disability_rows_pending`.
 
     Core types:
     :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
     """
     answered = {fact.path for fact in record.facts if fact.value is not None}
     retired = _retired_paths_between(0, MIGRATED_PROFILE_SCHEMA_VERSION)
-    cleared = {path for migration in migrations for path in migration.cleared_paths} - retired
+    cleared = {
+        path
+        for migration in migrations
+        for path in migration.cleared_paths
+        if not _is_retired_row_leaf(path, 0, MIGRATED_PROFILE_SCHEMA_VERSION)
+    } - retired
     return tuple(sorted(cleared - answered))
 
 
@@ -446,13 +505,48 @@ def rental_tier_finding_pending(
     return not any(fact.value is not None and fact.path.startswith("renta_arrendamiento.") for fact in record.facts)
 
 
+def ascendant_disability_rows_pending(
+    record: UserProfileRecord,
+    migrations: Iterable[ProfileSchemaMigration],
+) -> tuple[str, ...]:
+    """Return the ascendant rows whose stored disability key a migration cleared and that still owe its facts.
+
+    A key 1 or 2 cannot be converted into a grade, so the finding stands for a row until
+    it states the grade, the assistance and the judicial incapacity. The rows are named
+    by their stored number, the index the ascendant edit takes, in ascending order.
+
+    Core types:
+    :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
+    """
+    cleared_rows = {
+        match.group(1)
+        for migration in migrations
+        for path in migration.cleared_paths
+        if (match := _RETIRED_ASCENDANT_KEY_PATH.match(path)) is not None
+    }
+    stated = {fact.path for fact in record.facts if fact.value is not None}
+    pending = (
+        row
+        for row in cleared_rows
+        if any(
+            f"{RETIRED_ASCENDANT_DISABILITY_KEY_GROUP}.{row}.{leaf}" not in stated
+            for leaf in _ASCENDANT_DISABILITY_LEAVES
+        )
+    )
+    ordered: list[str] = sorted(pending, key=int)
+    return tuple(ordered)
+
+
 __all__ = [
     "MIGRATED_PROFILE_SCHEMA_VERSION",
     "PATHS_INTRODUCED_IN_V7",
     "PATHS_INTRODUCED_IN_V9",
+    "RETIRED_ASCENDANT_DISABILITY_KEY_GROUP",
+    "RETIRED_ASCENDANT_DISABILITY_KEY_LEAF",
     "RETIRED_RENTAL_TIER_PATH",
     "SUPPORTED_LEGACY_PROFILE_SCHEMA_VERSIONS",
     "ProfileSchemaMigration",
+    "ascendant_disability_rows_pending",
     "cleared_payer_fact_paths_between",
     "legacy_profile_schema",
     "migrate_profile_facts",

@@ -2692,9 +2692,9 @@ cli:
       ascendiente:
         add_flag_help: NACIMIENTO=AAAA-MM-DD[,NIF=<NIF o NIE>][,APELLIDOS_NOMBRE=<cognoms
           i nom>][,FALLECIMIENTO=AAAA-MM-DD][,CONVIVIENTES=<nombre de descendents
-          amb qui conviu l'ascendent>][,RENTAS=<rendes anuals excloses les exemptes,
-          en euros>][,DECLARACION_PROPIA=true|false][,DISCAPACIDAD=0|33|65]. Repetible;
-          NACIMIENTO és obligatori a cada fila.
+          amb qui conviu l'ascendent>][,CONVIVENCIA_MITAD_PERIODO=true|false][,RENTAS=<rendes
+          anuals excloses les exemptes, en euros>][,DECLARACION_PROPIA=true|false][,DISCAPACIDAD=0|33|65][,DISCAPACIDAD_ASISTENCIA=true|false][,INCAPACIDAD_JUDICIAL=true|false].
+          Repetible; NACIMIENTO és obligatori a cada fila.
         add_help: Afegeix un o més ascendents al perfil actiu, o declara amb --none
           que no n'hi ha cap.
         edit_clear_help: Una clau la dada declarada de la qual vols treure de l'ascendent,
@@ -2702,9 +2702,9 @@ cli:
         edit_empty: Indica almenys una dada per canviar amb --ascendiente CLAU=VALOR
           o per treure amb --clear CLAU.
         edit_flag_help: 'Parells CLAU=VALOR que se substitueixen, amb les claus d''add:
-          NACIMIENTO, NIF, APELLIDOS_NOMBRE, FALLECIMIENTO, CONVIVIENTES, RENTAS,
-          DECLARACION_PROPIA i DISCAPACIDAD. Repetible; cada clau com a màxim una
-          vegada.'
+          NACIMIENTO, NIF, APELLIDOS_NOMBRE, FALLECIMIENTO, CONVIVIENTES, CONVIVENCIA_MITAD_PERIODO,
+          RENTAS, DECLARACION_PROPIA, DISCAPACIDAD, DISCAPACIDAD_ASISTENCIA i INCAPACIDAD_JUDICIAL.
+          Repetible; cada clau com a màxim una vegada.'
         edit_help: Canvia les dades declarades d'un ascendent del perfil actiu per
           índex (base 0); les dades que no indiquis es queden com estan.
         edit_index_help: Índex (base 0) de l'ascendent que vols canviar, tal com el
@@ -2714,9 +2714,9 @@ cli:
         index_out_of_range: Índex %{index} fora de rang; el perfil té %{total} ascendent(s).
         invalid_row: No s'ha pogut llegir la fila de --ascendiente. Fes servir parells
           CLAU=VALOR amb les claus NACIMIENTO, NIF, APELLIDOS_NOMBRE, FALLECIMIENTO,
-          CONVIVIENTES, RENTAS, DECLARACION_PROPIA i DISCAPACIDAD, cadascuna com a
-          màxim una vegada i amb valor; el context de l'error indica la clau quan
-          es pot identificar.
+          CONVIVIENTES, CONVIVENCIA_MITAD_PERIODO, RENTAS, DECLARACION_PROPIA, DISCAPACIDAD,
+          DISCAPACIDAD_ASISTENCIA i INCAPACIDAD_JUDICIAL, cadascuna com a màxim una
+          vegada i amb valor; el context de l'error indica la clau quan es pot identificar.
         list_help: Llista els ascendents declarats al perfil actiu i si el perfil
           declara que no n'hi ha cap.
         remove_help: Elimina un ascendent per índex (base 0) del perfil actiu.
@@ -2959,6 +2959,12 @@ cli:
       no_active_profile: No hi ha cap perfil actiu. Executa `aeat config profile create
         NAME --tax-id <NIF>` primer.
       notices:
+        ascendant_disability_key_cleared: 'El teu perfil desava una clau de discapacitat
+          per a l''ascendent {row}. Aquesta dada ja no existeix: la clau es deriva
+          del grau de discapacitat, de si l''ascendent necessita ajuda de terceres
+          persones o té mobilitat reduïda i de si un jutge n''ha declarat la incapacitat.
+          Indica aquestes tres dades amb «aeat config profile ascendiente edit {row}»
+          per tornar a calcular el mínim per ascendents.'
         payer_fact_cleared: '{fact}: aquest perfil desava un «no» que l''assistent
           de configuració va escriure per defecte, de manera que no es distingia d''una
           pregunta sense resposta i s''ha esborrat. Les obligacions que en depenen

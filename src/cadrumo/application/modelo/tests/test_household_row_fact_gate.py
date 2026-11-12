@@ -52,8 +52,13 @@ _BUCKET = "0de41ce4-0000-4000-8000-000000000810"
 _CLOCK = datetime(1980, 5, 21, 10, 0, tzinfo=UTC)
 _NIF = "00000001R"
 _ACTIONS = {"verify": "modelo.work.verify", "file": "modelo.work.file", "export": "modelo.export"}
-_MINIMUM_FACTS = {"convivientes": "1", "rentas_anuales": "7200.00", "declaracion_propia": "false"}
-"""The art. 59 facts a stated ascendant row carries, so a test of another fact sees only that fact's note."""
+_MINIMUM_FACTS = {
+    "convivientes": "1",
+    "convivencia_mitad_periodo": "true",
+    "rentas_anuales": "7200.00",
+    "declaracion_propia": "false",
+}
+"""The art. 59 and art. 61 facts a stated ascendant row carries, so a test of another fact sees only that fact's note."""
 
 
 def _filing_years(operation: PinnedAuthorityOperation) -> tuple[int, ...]:

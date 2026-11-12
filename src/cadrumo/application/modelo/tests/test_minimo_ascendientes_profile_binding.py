@@ -108,7 +108,17 @@ def _casilla_0515(year: int, resolution: CalculationSourceResolution) -> Decimal
 
 
 # The leaves the art. 59/61 share turns on; the row's identity leaves are another gate's notes.
-_DECIDING_LEAVES = frozenset({"birth_date", "convivientes", "rentas_anuales", "declaracion_propia", "discapacidad"})
+_DECIDING_LEAVES = frozenset(
+    {
+        "birth_date",
+        "convivientes",
+        "convivencia_mitad_periodo",
+        "rentas_anuales",
+        "declaracion_propia",
+        "discapacidad",
+        "incapacidad_judicial",
+    }
+)
 
 
 def _unstated_leaves(resolution: CalculationSourceResolution) -> set[str]:
@@ -143,12 +153,14 @@ def test_one_ascendant_over_65_and_one_over_75_reach_casilla_0515_in_every_suppo
         {
             "birth_date": _born(year, 70).isoformat(),
             "convivientes": "1",
+            "convivencia_mitad_periodo": "true",
             "rentas_anuales": "5000.00",
             "declaracion_propia": "false",
         },
         {
             "birth_date": _born(year, 80).isoformat(),
             "convivientes": "2",
+            "convivencia_mitad_periodo": "true",
             "rentas_anuales": "7999.99",
             "declaracion_propia": "false",
         },
@@ -180,6 +192,8 @@ def test_an_ascendant_who_dies_in_the_period_takes_the_flat_cuantia(
             "birth_date": _born(year, 85).isoformat(),
             "fallecimiento": date(year, 9, 30).isoformat(),
             "convivientes": "1",
+            # Art. 61 norma 5ª counts the half period up to the death.
+            "convivencia_mitad_periodo": "true",
             "rentas_anuales": "1000.00",
         },
         {
@@ -199,7 +213,12 @@ def test_a_stated_disqualifying_fact_makes_the_missing_ones_irrelevant(
     year = newest_authored_edition("100")
     record = _record(
         {"birth_date": _born(year, 70).isoformat(), "rentas_anuales": "8000.01"},
-        {"birth_date": _born(year, 50).isoformat(), "discapacidad": "0", "convivientes": "1"},
+        {
+            "birth_date": _born(year, 50).isoformat(),
+            "discapacidad": "0",
+            "incapacidad_judicial": "false",
+            "convivientes": "1",
+        },
         {"birth_date": _born(year, 70).isoformat(), "convivientes": "0"},
         {
             "birth_date": _born(year, 70).isoformat(),
@@ -218,7 +237,13 @@ def test_a_stated_disqualifying_fact_makes_the_missing_ones_irrelevant(
 def test_an_ascendant_under_65_with_a_disability_is_entitled(authority_operation: PinnedAuthorityOperation) -> None:
     year = newest_authored_edition("100")
     record = _record(
-        {"birth_date": _born(year, 50).isoformat(), "discapacidad": "33", "convivientes": "1", "rentas_anuales": "0"}
+        {
+            "birth_date": _born(year, 50).isoformat(),
+            "discapacidad": "33",
+            "convivientes": "1",
+            "convivencia_mitad_periodo": "true",
+            "rentas_anuales": "0",
+        }
     )
 
     resolution = _resolve(year, record, authority_operation)
@@ -226,22 +251,29 @@ def test_an_ascendant_under_65_with_a_disability_is_entitled(authority_operation
     assert resolution.binding_values[_BINDING] == _BASE
 
 
-_COMPLETE = {"convivientes": "1", "rentas_anuales": "5000.00", "declaracion_propia": "false"}
+_COMPLETE = {
+    "convivientes": "1",
+    "convivencia_mitad_periodo": "true",
+    "rentas_anuales": "5000.00",
+    "declaracion_propia": "false",
+}
 
 
 @pytest.mark.parametrize(
-    ("age", "omitted", "leaf"),
+    ("age", "omitted", "stated", "leaf"),
     [
-        (70, "convivientes", "convivientes"),
-        (70, "rentas_anuales", "rentas_anuales"),
-        (50, None, "discapacidad"),
+        (70, "convivientes", {}, "convivientes"),
+        (70, "convivencia_mitad_periodo", {}, "convivencia_mitad_periodo"),
+        (70, "rentas_anuales", {}, "rentas_anuales"),
+        (50, None, {"incapacidad_judicial": "false"}, "discapacidad"),
+        (50, None, {"discapacidad": "0"}, "incapacidad_judicial"),
     ],
 )
 def test_each_unstated_deciding_fact_withholds_casilla_0515(
-    age: int, omitted: str | None, leaf: str, authority_operation: PinnedAuthorityOperation
+    age: int, omitted: str | None, stated: dict[str, str], leaf: str, authority_operation: PinnedAuthorityOperation
 ) -> None:
     year = newest_authored_edition("100")
-    row = {"birth_date": _born(year, age).isoformat(), **_COMPLETE}
+    row = {"birth_date": _born(year, age).isoformat(), **_COMPLETE, **stated}
     if omitted is not None:
         del row[omitted]
     complete = {"birth_date": _born(year, 80).isoformat(), **_COMPLETE}
@@ -275,8 +307,9 @@ def test_an_unstated_own_return_withholds_only_above_the_norma_2_figure(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     year = newest_authored_edition("100")
-    below = {"birth_date": _born(year, 70).isoformat(), "convivientes": "1", "rentas_anuales": "1800.00"}
-    above = {"birth_date": _born(year, 70).isoformat(), "convivientes": "1", "rentas_anuales": "1800.01"}
+    stated = {"birth_date": _born(year, 70).isoformat(), "convivientes": "1", "convivencia_mitad_periodo": "true"}
+    below = {**stated, "rentas_anuales": "1800.00"}
+    above = {**stated, "rentas_anuales": "1800.01"}
 
     assert _resolve(year, _record(below), authority_operation).binding_values[_BINDING] == _BASE
     withheld = _resolve(year, _record(above), authority_operation)

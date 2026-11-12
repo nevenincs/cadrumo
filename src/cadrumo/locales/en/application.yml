@@ -1643,10 +1643,17 @@ application:
           of activity.
         what_to_do: Set the type of activity on those income entries, then calculate
           again.
+      ascendant_disability_minimum_not_computed:
+        what: An ascendant you apply the minimum for has a disability, and the disability
+          minimum for that ascendant is not calculated yet, so the declaration cannot
+          be checked, exported or filed.
+        what_to_do: Check the disability facts of that ascendant in your profile.
+          While the ascendant has a disability, this declaration cannot be completed
+          here.
       autonomic_deducciones_not_enrolled:
-        what: None of the regional deductions of your comunidad of residence is
-          worked out for this year, so the total of regional deductions includes
-          only the amounts you enter yourself.
+        what: None of the regional deductions of your comunidad of residence is worked
+          out for this year, so the total of regional deductions includes only the
+          amounts you enter yourself.
         what_to_do: If any applies to you, enter its amount yourself in its box.
       calculation_screen_outdated:
         what: This calculation was made before Cadrumo's current checks on its figures,
@@ -2021,6 +2028,8 @@ application:
         is left out of the instalment for the period ending {period_end}.'
       amortization_box_unbound: '{element}: this edition has no box for its depreciation
         charge, so it adds nothing to this calculation.'
+      ascendant_disability_minimum_not_computed: '{group}: {count} with a disability
+        whose disability minimum is not calculated.'
       book_claimed_purchase: The ledger entry of {row_date} for {row_amount} is a
         purchase in your inventory, so it is declared as a purchase of stock rather
         than as an expense.
@@ -2261,9 +2270,11 @@ application:
       household_leaf:
         apellidos_nombre: surnames and name
         birth_date: date of birth
+        convivencia_mitad_periodo: whether they lived with you at least half the year
         convivientes: the number of descendants they live with
         declaracion_propia: whether they file their own return
         discapacidad: disability grade
+        incapacidad_judicial: whether a court declared them incapacitated
         nif: tax ID (NIF)
         rentas_anuales: annual income
       income_class:
@@ -3567,10 +3578,10 @@ application:
           boxes of another comunidad. A return carries the deductions of one comunidad
           only. Correct those boxes or your comunidad of residence, or enter this
           box yourself. It is never shown as zero.
-        autonomic_deduction_unsummed_box: This box adds the regional deductions
-          of your comunidad of residence, but the official sum also names a box that
-          this calculation does not add, and that box holds an amount. Check it, or enter this
-          box yourself. It is never shown as zero.
+        autonomic_deduction_unsummed_box: This box adds the regional deductions of
+          your comunidad of residence, but the official sum also names a box that
+          this calculation does not add, and that box holds an amount. Check it, or
+          enter this box yourself. It is never shown as zero.
         income_family_contradicts_profile: This box compares your other income with
           the limit, but the income categories you stated exclude a kind of income
           that you have figures for. Correct the categories or remove the figures,
@@ -4255,6 +4266,10 @@ application:
           label: Ascendant's surnames and name (surnames first)
         birth_date:
           label: Date of birth
+        convivencia_mitad_periodo:
+          help: Count up to the date of death if the ascendant died during the year.
+            A stay in a specialised care centre counts as living with you.
+          label: Did this ascendant live with you for at least half the year?
         convivientes:
           label: Number of descendants this ascendant lives with
         declaracion_propia:
@@ -4265,9 +4280,17 @@ application:
           help: Asked for an ascendant under the minimum age, who gives the minimum
             only with a disability.
           label: This ascendant's disability grade
+        discapacidad_asistencia:
+          help: Asked for a disability grade from 33 % up to under 65 %; it sets the
+            disability key the declaration reports.
+          label: Does this ascendant need help from other people or have reduced mobility?
         fallecimiento:
           help: Leave blank if this ascendant has not died.
           label: Date of death
+        incapacidad_judicial:
+          help: A court declaration counts as a disability grade of 65 % or more,
+            whatever grade is stated.
+          label: Has a court declared this ascendant legally incapacitated?
         nif:
           label: Ascendant's NIF/NIE (leave blank if none)
         rentas_anuales:

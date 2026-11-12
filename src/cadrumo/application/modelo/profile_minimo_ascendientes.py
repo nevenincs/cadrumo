@@ -20,6 +20,15 @@ fact stays absent, never zero; the consuming binding is reported unresolved, and
 their 0-based position. That note is what stops checking, local filing and export,
 sending the filer to the ascendant edit door for the first such row.
 
+Two further facts come from the same rows. The ``PCTMINASDLG`` disability key of
+each row is derived from its grade, assistance and judicial incapacity, and written
+at ``renta_family.ascendiente.{n}.minimo_discapacidad_clave`` for the bindings that
+read it; the code for each circumstance is the design's, from the registry. The
+art. 60.2 disability minimum of an ascendant is not computed: a row the art. 59
+mínimo reaches whose art. 60.3 grade reaches the disability threshold raises one
+``ascendant_disability_minimum_not_computed`` note, which stops checking, local
+filing and export rather than leaving that minimum silently out.
+
 :class:`RegistrySnapshot` is the pinned registry snapshot.
 """
 
@@ -35,16 +44,23 @@ from typing import TYPE_CHECKING, Final
 from ...core.aggregation import BindingSourceKind
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.parsing.dates import parse_iso8601_date
+from ...domain.calculations.registry.form_codes import resolve_form_codes
 from ...domain.calculations.registry.formula_runtime_ops import resolve_keyed_bracket, resolve_parameter
+from ...domain.calculations.registry.profile_bindings import ProfileProvider
 from ...domain.contribuyente.ascendant_minimum import (
+    CONVIVENCIA_MITAD_PERIODO_LEAF,
     CONVIVIENTES_LEAF,
     DECLARACION_PROPIA_LEAF,
+    DISCAPACIDAD_ASISTENCIA_LEAF,
     DISCAPACIDAD_LEAF,
+    INCAPACIDAD_JUDICIAL_LEAF,
     RENTAS_ANUALES_LEAF,
     AscendantInfo,
     AscendantMinimumAmounts,
     AscendantMinimumResult,
+    DisabilityGrades,
     ascendant_entitlement_weighted_count,
+    disability_minimum_positions,
     minimo_ascendientes,
 )
 from ...domain.modelos.calculation_revision_sources import CalculationNoteFact, CalculationNoteSentence
@@ -59,6 +75,8 @@ if TYPE_CHECKING:
     from ...domain.user_profile.values import UserProfileFactValue
 
 __all__ = [
+    "ASCENDANT_DISABILITY_KEY_LEAF",
+    "ASCENDANT_DISABILITY_MINIMUM_NOT_COMPUTED_REASON",
     "MINIMO_ASCENDIENTES_AGGREGATE_KEY",
     "MINIMO_ASCENDIENTES_AUTONOMICO_AGGREGATE_KEY",
     "AscendantEntitlementCount",
@@ -70,7 +88,13 @@ __all__ = [
 MINIMO_ASCENDIENTES_AGGREGATE_KEY: Final = "renta_family.ascendientes_minimos_aggregate"
 MINIMO_ASCENDIENTES_AUTONOMICO_AGGREGATE_KEY: Final = "renta_family.ascendientes_minimos_aggregate_autonomico"
 
+ASCENDANT_DISABILITY_KEY_LEAF: Final = "minimo_discapacidad_clave"
+"""The derived row leaf that carries the ``PCTMINASDLG`` code; the profile never stores it."""
+ASCENDANT_DISABILITY_MINIMUM_NOT_COMPUTED_REASON: Final = "ascendant_disability_minimum_not_computed"
+
 _ASCENDANT_GROUP: Final = "renta_family.ascendiente"
+_FORM_ROW_CODES_FACT: Final = "form-row-codes"
+_DISABILITY_KEY_CODE_PREFIX: Final = "m100.ascendant_disability_key"
 _BIRTH_DATE_LEAF: Final = "birth_date"
 _DEATH_DATE_LEAF: Final = "fallecimiento"
 _ROW_LEAF: Final = re.compile(rf"^{re.escape(_ASCENDANT_GROUP)}\.(\d+)\.([a-z0-9_]+)$")
@@ -119,6 +143,8 @@ class _StoredAscendants:
     owed: dict[str, list[int]]
     """The rows that cannot be read at all, by the leaf they omit."""
     recorded: int
+    indexes: tuple[int, ...] = ()
+    """The stored row number of each read ascendant, which its derived leaves are written under."""
 
 
 def _amounts(snapshot: RegistrySnapshot) -> AscendantMinimumAmounts | None:
@@ -199,13 +225,13 @@ def _stored_amount(row: Mapping[str, str], index: int) -> Decimal | None:
     return value
 
 
-def _stored_answer(row: Mapping[str, str], index: int) -> bool | None:
-    raw = row.get(DECLARACION_PROPIA_LEAF)
+def _stored_answer(row: Mapping[str, str], index: int, leaf: str) -> bool | None:
+    raw = row.get(leaf)
     if raw is None:
         return None
     answer = _YES_NO.get(raw.lower())
     if answer is None:
-        raise _refuse_stored(index, DECLARACION_PROPIA_LEAF)
+        raise _refuse_stored(index, leaf)
     return answer
 
 
@@ -231,9 +257,12 @@ def _ascendant(index: int, row: Mapping[str, str]) -> AscendantInfo | None:
         birth_date=birth,
         death_date=_stored_date(row, index, _DEATH_DATE_LEAF),
         convivientes=_stored_count(row, index, CONVIVIENTES_LEAF),
+        convivencia_mitad_periodo=_stored_answer(row, index, CONVIVENCIA_MITAD_PERIODO_LEAF),
         rentas_anuales_euros=_stored_amount(row, index),
-        presenta_declaracion_propia=_stored_answer(row, index),
+        presenta_declaracion_propia=_stored_answer(row, index, DECLARACION_PROPIA_LEAF),
         discapacidad_grado=_stored_count(row, index, DISCAPACIDAD_LEAF),
+        discapacidad_asistencia=_stored_answer(row, index, DISCAPACIDAD_ASISTENCIA_LEAF),
+        incapacidad_judicial=_stored_answer(row, index, INCAPACIDAD_JUDICIAL_LEAF),
     )
 
 
@@ -265,6 +294,7 @@ def _read_stored_ascendants(fact_index: Mapping[str, UserProfileFactValue]) -> _
     rows = _stored_rows(fact_index)
     ascendants: list[AscendantInfo] = []
     positions: list[int] = []
+    indexes: list[int] = []
     owed: dict[str, list[int]] = {}
     for position, (index, row) in enumerate(rows.items()):
         ascendant = _ascendant(index, row)
@@ -273,7 +303,78 @@ def _read_stored_ascendants(fact_index: Mapping[str, UserProfileFactValue]) -> _
         else:
             ascendants.append(ascendant)
             positions.append(position)
-    return _StoredAscendants(tuple(ascendants), tuple(positions), owed, len(rows))
+            indexes.append(index)
+    return _StoredAscendants(tuple(ascendants), tuple(positions), owed, len(rows), tuple(indexes))
+
+
+def _reads_disability_key(snapshot: RegistrySnapshot) -> bool:
+    """Whether a row binding of the edition reads the derived disability key of the ascendant rows."""
+    return any(
+        isinstance(binding.provider, ProfileProvider)
+        and binding.provider.rows is not None
+        and binding.provider.rows.object_path == _ASCENDANT_GROUP
+        and binding.provider.rows.leaf == ASCENDANT_DISABILITY_KEY_LEAF
+        for binding in snapshot.revision.bindings
+    )
+
+
+def _inject_disability_keys(
+    fact_index: dict[str, UserProfileFactValue],
+    snapshot: RegistrySnapshot,
+    stored: _StoredAscendants,
+    *,
+    context: FamilyFactResolutionContext,
+) -> None:
+    """Write each row's ``PCTMINASDLG`` code where an edition reads it; a row with none decided gets none.
+
+    The path is derived, so a value already there can only be stale or hand-planted.
+    """
+    prefix = f"{_ASCENDANT_GROUP}."
+    suffix = f".{ASCENDANT_DISABILITY_KEY_LEAF}"
+    for path in [path for path in fact_index if path.startswith(prefix) and path.endswith(suffix)]:
+        fact_index.pop(path)
+    if not _reads_disability_key(snapshot):
+        return
+    grades = DisabilityGrades.resolve(context)
+    codes = resolve_form_codes(_FORM_ROW_CODES_FACT, authority=context.authority)
+    for index, ascendant in zip(stored.indexes, stored.ascendants, strict=True):
+        key = ascendant.disability_key(grades)
+        if key is not None:
+            fact_index[f"{_ASCENDANT_GROUP}.{index}{suffix}"] = codes.code(f"{_DISABILITY_KEY_CODE_PREFIX}.{key.value}")
+
+
+def _disability_minimum_notes(
+    stored: _StoredAscendants,
+    snapshot: RegistrySnapshot,
+    *,
+    amounts: AscendantMinimumAmounts,
+    context: FamilyFactResolutionContext,
+    bucket_id: str,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """The note that the art. 60.2 minimum of the rows it reaches is not computed, or none when it reaches none."""
+    positions = disability_minimum_positions(stored.ascendants, snapshot.filing_year, amounts=amounts, context=context)
+    if not positions:
+        return ()
+    rows = tuple(str(stored.positions[position - 1]) for position in positions)
+    return (
+        CalculationSourceDiagnostic(
+            reason=ASCENDANT_DISABILITY_MINIMUM_NOT_COMPUTED_REASON,
+            source_kind=BindingSourceKind.PROFILE.value,
+            binding_source=BindingSourceKind.PROFILE,
+            message=(
+                f"profile object {_ASCENDANT_GROUP!r} records {len(rows)} ascendants with a disability for whom the "
+                "mínimo por ascendientes applies; their disability minimum is not computed"
+            ),
+            resolver_id="profile",
+            source_ref=f"profile:{bucket_id}:rows:{_ASCENDANT_GROUP}.{DISCAPACIDAD_LEAF}",
+            fact=CalculationNoteFact.of(
+                CalculationNoteSentence.ASCENDANT_DISABILITY_MINIMUM_NOT_COMPUTED,
+                rows=rows,
+                group=_ASCENDANT_GROUP,
+                count=len(rows),
+            ),
+        ),
+    )
 
 
 def _owed_notes(
@@ -339,7 +440,12 @@ def inject_derived_minimo_ascendientes_facts(
     advisory then reports as a structural gap. A row that owes a fact withholds both
     parts. The autonomic part is also withheld when an ascendant is entitled and the
     profile states no comunidad of residence, since its amounts depend on it.
+
+    Also writes each row's derived disability key where the edition reads it, and
+    notes the rows whose art. 60.2 disability minimum is not computed.
     """
+    stored = _read_stored_ascendants(fact_index)
+    _inject_disability_keys(fact_index, snapshot, stored, context=context)
     consumed = tuple(
         key
         for key in (MINIMO_ASCENDIENTES_AGGREGATE_KEY, MINIMO_ASCENDIENTES_AUTONOMICO_AGGREGATE_KEY)
@@ -352,19 +458,20 @@ def inject_derived_minimo_ascendientes_facts(
     amounts = _amounts(snapshot)
     if amounts is None:
         return AscendantMinimumDerivation()
-    stored = _read_stored_ascendants(fact_index)
     ascendants = stored.ascendants
     result = minimo_ascendientes(ascendants, snapshot.filing_year, amounts=amounts, context=context)
+    unproven = _disability_minimum_notes(stored, snapshot, amounts=amounts, context=context, bucket_id=bucket_id)
     notes = _owed_notes(stored, result, bucket_id=bucket_id)
     if notes or result.total is None:
-        return AscendantMinimumDerivation(withheld_paths=frozenset(consumed), diagnostics=notes)
+        return AscendantMinimumDerivation(withheld_paths=frozenset(consumed), diagnostics=(*notes, *unproven))
     if MINIMO_ASCENDIENTES_AGGREGATE_KEY in consumed:
         fact_index[MINIMO_ASCENDIENTES_AGGREGATE_KEY] = result.total
     if MINIMO_ASCENDIENTES_AUTONOMICO_AGGREGATE_KEY not in consumed:
-        return AscendantMinimumDerivation()
-    return _inject_autonomic_part(
+        return AscendantMinimumDerivation(diagnostics=unproven)
+    autonomic = _inject_autonomic_part(
         fact_index, snapshot, ascendants, amounts=amounts, state_total=result.total, context=context
     )
+    return AscendantMinimumDerivation(withheld_paths=autonomic.withheld_paths, diagnostics=unproven)
 
 
 def _inject_autonomic_part(

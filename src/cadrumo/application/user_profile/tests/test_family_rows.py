@@ -18,6 +18,7 @@ from ....domain.contribuyente.family_types import GuarderiaMonthSpend
 from ....domain.user_profile.schema import ProfileFieldType
 from ..family_rows import (
     ProfileFamilyGroupState,
+    ProfileFamilyLeaf,
     ProfileViewFamilyGroupItem,
     ProfileViewFamilyRowItem,
     family_row_items,
@@ -66,10 +67,19 @@ def test_every_stored_descendant_leaf_but_one_has_served_wording() -> None:
 
 _ASCENDANT_OBJECT = "renta_family.ascendiente"
 _ASCENDANT_COUNT = "renta_family.ascendientes_count"
-# Read by the mínimo por ascendientes aggregate rather than by a form binding of the row.
-_MINIMO_ASCENDIENTES_LEAVES = frozenset({"rentas_anuales", "declaracion_propia", "discapacidad"})
-# The Modelo 100 bindings read this leaf from the object, but nothing can store it yet.
-_BOUND_WITHOUT_STORED_LEAF = frozenset({"discapacidad_clave"})
+# Read by the mínimo por ascendientes aggregate and the derived disability key rather than by a form binding.
+_MINIMO_ASCENDIENTES_LEAVES = frozenset(
+    {
+        "rentas_anuales",
+        "declaracion_propia",
+        "discapacidad",
+        "convivencia_mitad_periodo",
+        "discapacidad_asistencia",
+        "incapacidad_judicial",
+    }
+)
+# The Modelo 100 bindings read this leaf from the object; the calculation derives it and nothing stores it.
+_BOUND_WITHOUT_STORED_LEAF = frozenset({"minimo_discapacidad_clave"})
 
 
 def _ascendant_group(
@@ -84,6 +94,20 @@ def _ascendant_group(
         item for item in items if isinstance(item, ProfileViewFamilyRowItem) and item.group_key == _ASCENDANT_OBJECT
     )
     return group, rows
+
+
+_ASCENDANT_YES_NO_LEAVES = (
+    "declaracion_propia",
+    "convivencia_mitad_periodo",
+    "discapacidad_asistencia",
+    "incapacidad_judicial",
+)
+
+
+def _assert_yes_no_leaf(leaf: ProfileFamilyLeaf) -> None:
+    assert leaf.field_type is ProfileFieldType.BOOLEAN
+    assert [choice.value for choice in leaf.choices] == ["true", "false"]
+    assert leaf.help is not None and leaf.help != ""
 
 
 def test_ascendant_leaves_are_those_the_form_reads_from_the_object_that_a_row_can_store() -> None:
@@ -102,7 +126,8 @@ def test_ascendant_leaves_are_those_the_form_reads_from_the_object_that_a_row_ca
     assert by_leaf["apellidos_nombre"].field_type is ProfileFieldType.STRING
     assert not by_leaf["apellidos_nombre"].required
     assert by_leaf["rentas_anuales"].field_type is ProfileFieldType.DECIMAL
-    assert [choice.value for choice in by_leaf["declaracion_propia"].choices] == ["true", "false"]
+    for answer in _ASCENDANT_YES_NO_LEAVES:
+        _assert_yes_no_leaf(by_leaf[answer])
     with bundled_indexed_authority().operation() as authority:
         grades = sorted(accepted_descendant_disability_grades(authority=authority))
     assert [choice.value for choice in by_leaf["discapacidad"].choices] == [str(grade) for grade in grades]

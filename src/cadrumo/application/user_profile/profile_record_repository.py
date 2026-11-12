@@ -26,7 +26,11 @@ from ...core.process_binding import ProcessScopedBinding
 from ...core.time.clock import now as clock_utc_now
 from ...domain.buckets.event import BucketEventType
 from ...domain.user_profile.errors import ProfileNotFoundError
-from ...domain.user_profile.schema_migration import pending_cleared_payer_fact_paths, rental_tier_finding_pending
+from ...domain.user_profile.schema_migration import (
+    ascendant_disability_rows_pending,
+    pending_cleared_payer_fact_paths,
+    rental_tier_finding_pending,
+)
 from ...domain.user_profile.values import (
     ProfileSetupState,
     UserProfileFact,
@@ -371,6 +375,12 @@ class ProfileRecordRepository:
         record = self.load(profile_id)
         migrations = ProfileRecordStore(session=self.session, root=self._root).schema_migrations()
         return rental_tier_finding_pending(record, migrations)
+
+    def ascendant_disability_rows_pending(self, profile_id: str | UUID) -> tuple[str, ...]:
+        """Return the ascendant rows whose stored disability key a migration cleared and that still owe its facts."""
+        record = self.load(profile_id)
+        migrations = ProfileRecordStore(session=self.session, root=self._root).schema_migrations()
+        return ascendant_disability_rows_pending(record, migrations)
 
     def complete_setup(
         self,

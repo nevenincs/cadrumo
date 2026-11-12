@@ -25,9 +25,14 @@ from ..application.operator_actions.catalogue import next_action
 from ..application.user_profile.profile_schema_migration import drain_migration_cleared_paths
 from ..core.i18n.render import tr
 from ..core.json_contract import Notice, NoticeSeverity
-from ..domain.user_profile.schema_migration import RETIRED_RENTAL_TIER_PATH
+from ..domain.user_profile.schema_migration import (
+    RETIRED_ASCENDANT_DISABILITY_KEY_GROUP,
+    RETIRED_ASCENDANT_DISABILITY_KEY_LEAF,
+    RETIRED_RENTAL_TIER_PATH,
+)
 
 if TYPE_CHECKING:
+    from ..application.user_profile.profile_record_repository import ProfileRecordRepository
     from ..application.wizard.models import WizardQuestion
     from ..domain.calculations.registry.authority import PinnedAuthorityOperation
     from ..domain.user_profile.values import UserProfileRecord
@@ -39,6 +44,11 @@ _CLEARED_SELECT_LOCALE_KEY = "cli.config.profile.notices.payer_fact_cleared_sele
 RENTAL_TIER_NOTICE_CODE = "config.profile.rental_tier_cleared"
 _RENTAL_TIER_ACTION_ID = "operator.profile.arrendamiento"
 _RENTAL_TIER_LOCALE_KEY = "cli.config.profile.notices.rental_tier_cleared"
+ASCENDANT_DISABILITY_KEY_NOTICE_CODE = "config.profile.ascendant_disability_key_cleared"
+_ASCENDANT_ACTION_ID = "operator.profile.ascendiente"
+_ASCENDANT_DISABILITY_KEY_LOCALE_KEY = "cli.config.profile.notices.ascendant_disability_key_cleared"
+_ASCENDANT_KEY_PREFIX = f"{RETIRED_ASCENDANT_DISABILITY_KEY_GROUP}."
+_ASCENDANT_KEY_SUFFIX = f".{RETIRED_ASCENDANT_DISABILITY_KEY_LEAF}"
 
 
 def rental_tier_cleared_notice() -> Notice:
@@ -50,6 +60,25 @@ def rental_tier_cleared_notice() -> Notice:
         action=next_action(_RENTAL_TIER_ACTION_ID),
         context={"path": RETIRED_RENTAL_TIER_PATH},
     )
+
+
+def ascendant_disability_key_cleared_notice(row: str) -> Notice:
+    """Return the finding that asks for the grade and both circumstances of an ascendant row whose key was cleared."""
+    return Notice(
+        severity=NoticeSeverity.WARNING,
+        code=ASCENDANT_DISABILITY_KEY_NOTICE_CODE,
+        message=tr(_ASCENDANT_DISABILITY_KEY_LOCALE_KEY, row=row),
+        action=next_action(_ASCENDANT_ACTION_ID),
+        context={"path": f"{_ASCENDANT_KEY_PREFIX}{row}{_ASCENDANT_KEY_SUFFIX}", "row": row},
+    )
+
+
+def _cleared_ascendant_key_row(path: str) -> str | None:
+    """The stored row number of a cleared ascendant disability key path, or ``None`` for any other path."""
+    if not (path.startswith(_ASCENDANT_KEY_PREFIX) and path.endswith(_ASCENDANT_KEY_SUFFIX)):
+        return None
+    row = path[len(_ASCENDANT_KEY_PREFIX) : -len(_ASCENDANT_KEY_SUFFIX)]
+    return row if row.isascii() and row.isdigit() else None
 
 
 def _edit_question_by_path(operation: PinnedAuthorityOperation) -> dict[str, WizardQuestion]:
@@ -89,6 +118,10 @@ def payer_fact_cleared_notices(
     for path in sorted(set(paths)):
         if path == RETIRED_RENTAL_TIER_PATH:
             notices.append(rental_tier_cleared_notice())
+            continue
+        row = _cleared_ascendant_key_row(path)
+        if row is not None:
+            notices.append(ascendant_disability_key_cleared_notice(row))
             continue
         question = questions[path]
         notices.append(
@@ -153,6 +186,34 @@ def _modelo_reads_rental_reduction(modelo: str, *, operation: PinnedAuthorityOpe
     )
 
 
+def _modelo_reads_ascendant_rows(modelo: str, *, operation: PinnedAuthorityOperation) -> bool:
+    """Return whether any edition of ``modelo`` declares a binding that reads the ascendant rows."""
+    from ..domain.calculations.registry.profile_bindings import ProfileProvider
+
+    if modelo not in operation.modelo_ids():
+        return False
+    return any(
+        isinstance(binding.provider, ProfileProvider)
+        and binding.provider.rows is not None
+        and binding.provider.rows.object_path == RETIRED_ASCENDANT_DISABILITY_KEY_GROUP
+        for edition in operation.modelo_directory(modelo).revisions
+        for binding in operation.revision(modelo, edition.id).bindings
+    )
+
+
+def _pending_ascendant_key_notices(
+    repository: ProfileRecordRepository,
+    record: UserProfileRecord,
+    *,
+    operation: PinnedAuthorityOperation,
+    modelo: str | None,
+) -> tuple[Notice, ...]:
+    if modelo is not None and not _modelo_reads_ascendant_rows(modelo, operation=operation):
+        return ()
+    rows = repository.ascendant_disability_rows_pending(record.profile_id)
+    return tuple(ascendant_disability_key_cleared_notice(row) for row in rows)
+
+
 def pending_payer_fact_notices(
     record: UserProfileRecord | None,
     *,
@@ -182,12 +243,14 @@ def pending_payer_fact_notices(
         modelo is None or _modelo_reads_rental_reduction(modelo, operation=operation)
     ):
         notices = (*notices, rental_tier_cleared_notice())
-    return notices
+    return (*notices, *_pending_ascendant_key_notices(repository, record, operation=operation, modelo=modelo))
 
 
 __all__ = [
+    "ASCENDANT_DISABILITY_KEY_NOTICE_CODE",
     "NOTICE_CODE",
     "RENTAL_TIER_NOTICE_CODE",
+    "ascendant_disability_key_cleared_notice",
     "drain_payer_fact_migration_notices",
     "payer_fact_cleared_notices",
     "payer_fact_gated_modelos",

@@ -368,4 +368,8 @@ CalculationSourceDiagnosticReason = Literal[
     # group, such as an ascendant stored with no NIF. The declaration cannot be checked,
     # exported or filed until the filer states it; nothing stands in for it.
     "household_row_fact_unstated",
+    # An ascendant the mínimo por ascendientes reaches has a disability grade that reaches
+    # the threshold, and the disability minimum for that ascendant is not computed. The
+    # declaration cannot be checked, exported or filed while it would leave that minimum out.
+    "ascendant_disability_minimum_not_computed",
 ]

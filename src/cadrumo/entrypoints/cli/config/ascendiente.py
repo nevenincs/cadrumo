@@ -35,6 +35,12 @@ def _row_values(row: ProfileAscendantRow) -> dict[str, str]:
     return {fact.field_key: fact.value for fact in row.facts}
 
 
+def _answer(values: dict[str, str], leaf: str) -> bool | None:
+    """A stored yes-or-no leaf, ``None`` while the row does not state it."""
+    stored = values.get(leaf)
+    return None if stored is None else stored == "true"
+
+
 def _row_lines(rows: tuple[ProfileAscendantRow, ...]) -> list[str]:
     lines: list[str] = []
     for index, row in enumerate(rows):
@@ -49,6 +55,9 @@ def _row_lines(rows: tuple[ProfileAscendantRow, ...]) -> list[str]:
                     f"rentas={values.get('rentas_anuales', '-')}",
                     f"declaracion_propia={values.get('declaracion_propia', '-')}",
                     f"discapacidad={values.get('discapacidad', '-')}",
+                    f"convivencia_mitad_periodo={values.get('convivencia_mitad_periodo', '-')}",
+                    f"discapacidad_asistencia={values.get('discapacidad_asistencia', '-')}",
+                    f"incapacidad_judicial={values.get('incapacidad_judicial', '-')}",
                     f"nif={values.get('nif', '-')}",
                     f"apellidos_nombre={values.get('apellidos_nombre', '-')}",
                 )
@@ -69,7 +78,6 @@ def _row_payloads(rows: tuple[ProfileAscendantRow, ...]) -> list[ProfileAscendie
         death = values.get("fallecimiento")
         cohabiting = values.get("convivientes")
         rentas = values.get("rentas_anuales")
-        own_return = values.get("declaracion_propia")
         disability = values.get("discapacidad")
         payloads.append(
             ProfileAscendientePayload(
@@ -80,8 +88,11 @@ def _row_payloads(rows: tuple[ProfileAscendantRow, ...]) -> list[ProfileAscendie
                 death_date=date.fromisoformat(death) if death is not None else None,
                 convivientes=int(cohabiting) if cohabiting is not None else None,
                 rentas_anuales=Decimal(rentas) if rentas is not None else None,
-                declaracion_propia=own_return == "true" if own_return is not None else None,
+                declaracion_propia=_answer(values, "declaracion_propia"),
                 discapacidad=int(disability) if disability is not None else None,
+                convivencia_mitad_periodo=_answer(values, "convivencia_mitad_periodo"),
+                discapacidad_asistencia=_answer(values, "discapacidad_asistencia"),
+                incapacidad_judicial=_answer(values, "incapacidad_judicial"),
             )
         )
     return payloads

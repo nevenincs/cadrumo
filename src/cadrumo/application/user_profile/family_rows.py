@@ -82,6 +82,24 @@ _ASCENDANT_DECLARACION_PROPIA_HELP_LOCALE_KEY: Final = (
 )
 _ASCENDANT_DISCAPACIDAD_LABEL_LOCALE_KEY: Final = "application.user_profile.family_rows.ascendiente.discapacidad.label"
 _ASCENDANT_DISCAPACIDAD_HELP_LOCALE_KEY: Final = "application.user_profile.family_rows.ascendiente.discapacidad.help"
+_ASCENDANT_ANSWER_LEAVES: Final[tuple[tuple[str, str, str], ...]] = (
+    (
+        "convivencia_mitad_periodo",
+        "application.user_profile.family_rows.ascendiente.convivencia_mitad_periodo.label",
+        "application.user_profile.family_rows.ascendiente.convivencia_mitad_periodo.help",
+    ),
+    (
+        "discapacidad_asistencia",
+        "application.user_profile.family_rows.ascendiente.discapacidad_asistencia.label",
+        "application.user_profile.family_rows.ascendiente.discapacidad_asistencia.help",
+    ),
+    (
+        "incapacidad_judicial",
+        "application.user_profile.family_rows.ascendiente.incapacidad_judicial.label",
+        "application.user_profile.family_rows.ascendiente.incapacidad_judicial.help",
+    ),
+)
+"""The yes-or-no ascendant leaves served after the grade, with the locale keys of their label and help."""
 # The art. 60.3 grade bands are the same for every family member, so their words are shared.
 _DISABILITY_GRADE_CHOICE_LOCALE_KEY: Final = "wizard.setup.descendientes.discapacidad.choices.{grade}.label"
 _INCOMPLETE_WORDS_LOCALE_KEY: Final = "application.user_profile.family_rows.incomplete"
@@ -285,6 +303,17 @@ def _ascendant_leaves(operation: PinnedAuthorityOperation) -> tuple[ProfileFamil
                 ProfileFieldChoice(value=str(grade), label=tr(_DISABILITY_GRADE_CHOICE_LOCALE_KEY.format(grade=grade)))
                 for grade in sorted(accepted_descendant_disability_grades(authority=operation))
             ),
+        ),
+        *(
+            ProfileFamilyLeaf(
+                leaf=leaf,
+                label=tr(label),
+                help=tr(help_text),
+                field_type=ProfileFieldType.BOOLEAN,
+                required=False,
+                choices=_yes_no_choices(),
+            )
+            for leaf, label, help_text in _ASCENDANT_ANSWER_LEAVES
         ),
     )
 

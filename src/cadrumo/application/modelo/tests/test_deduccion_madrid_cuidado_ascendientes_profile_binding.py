@@ -123,6 +123,7 @@ def _mother(year: int, age: int = 78, **changes: str | None) -> dict[str, str]:
     row: dict[str, str | None] = {
         "birth_date": _born(year, age).isoformat(),
         "convivientes": "1",
+        "convivencia_mitad_periodo": "true",
         "rentas_anuales": "7200.00",
         "declaracion_propia": "false",
         **changes,
@@ -197,8 +198,9 @@ def test_stated_facts_that_rule_the_deduccion_out_give_a_proven_zero(
     box = _box(_snapshot(year))
     assert box is not None
     ruled_out = (
-        _mother(year, age=60, discapacidad="0"),
+        _mother(year, age=60, discapacidad="0", incapacidad_judicial="false"),
         _mother(year, convivientes="0", rentas_anuales=None),
+        _mother(year, convivencia_mitad_periodo="false", rentas_anuales=None),
         _mother(year, rentas_anuales="9000.00", convivientes=None),
     )
 
@@ -224,6 +226,20 @@ def test_a_disabled_ascendant_under_65_qualifies_and_the_amount_is_shared_as_the
     resolution = _resolve(year, _record("madrid", *rows), authority_operation)
 
     assert _casilla(year, box, resolution) == _AMOUNT + _AMOUNT / 2
+
+
+@pytest.mark.parametrize("year", [year for year in _YEARS if _carries_the_deduccion(year)])
+def test_a_judicially_incapacitated_ascendant_under_65_qualifies_whatever_grade_is_stated(
+    year: int, authority_operation: PinnedAuthorityOperation
+) -> None:
+    """LIRPF art. 60.3 counts a judicial incapacity as a grade of 65 % or more, above DL 1/2010's 33 %."""
+    box = _box(_snapshot(year))
+    assert box is not None
+    row = _mother(year, age=60, discapacidad="0", incapacidad_judicial="true")
+
+    resolution = _resolve(year, _record("madrid", row), authority_operation)
+
+    assert _casilla(year, box, resolution) == _AMOUNT
 
 
 @pytest.mark.parametrize("ccaa", ["cataluna", None])
