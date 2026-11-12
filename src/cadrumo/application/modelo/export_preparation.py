@@ -104,6 +104,7 @@ from .export_contracts import (
     ModeloExportUnsupportedError,
     ModeloIvaWalletDecisionProvenance,
 )
+from .export_field_refusal import export_taxpayer_name_missing_refusal
 from .export_sink import LocalFileExportSink
 from .m303_regimen_simplificado_scope import (
     m303_regimen_simplificado_scope_for_profile,
@@ -265,10 +266,7 @@ def compose_export_dictionary_values(
         ),
     )
     if taxpayer_identity.full_name is None:
-        raise ModeloExportError(
-            translated_message="application.modelo.errors.export_draft_write_failed",
-            context={"cause": "XML dictionary export requires exact taxpayer full_name"},
-        )
+        raise export_taxpayer_name_missing_refusal()
     values["DPNIF_D"] = draft.profile_tax_id
     values["DP_APENOM_D"] = taxpayer_identity.full_name
     return values

@@ -76,12 +76,15 @@ def _child(
 
 
 def _total(*descendientes: DescendantInfo, year: int = _YEAR) -> Decimal:
-    return RentaFamilyProfile(descendientes=descendientes).incremento_guarderia_0613(
+    """The resolved increment; every case here states the facts, so ``None`` (unresolved) is a failure."""
+    total = RentaFamilyProfile(descendientes=descendientes).incremento_guarderia_0613(
         year,
         thresholds=_THRESHOLDS if year == _YEAR else registry_thresholds(year),
         cap_anual=_CAP_ANUAL,
         context=_context(year),
     )
+    assert total is not None
+    return total
 
 
 class TestManualWorkedOracles:

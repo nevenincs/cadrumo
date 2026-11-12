@@ -1037,3 +1037,109 @@ def test_missing_active_bucket_session_classifier_terminates_on_a_cyclic_chain()
     second.__context__ = first
 
     assert is_missing_active_bucket_session_failure(first, ports=_diagnostics_ports()) is False
+
+
+class _ScriptedIntegrityRepository:
+    """Storage-port double scripting only the integrity projection inputs."""
+
+    def __init__(
+        self,
+        *,
+        namespaces: tuple[str, ...] | None,
+        counts: dict[str, tuple[int, int]],
+    ) -> None:
+        self._namespaces = namespaces
+        self._counts = counts
+
+    def list_namespaces(self) -> tuple[str, ...]:
+        if self._namespaces is None:
+            raise OSError("private store path")
+        return self._namespaces
+
+    def probe_namespace_integrity(self, namespace: str) -> DiagnosticSecureObjectNamespace:
+        if namespace not in self._counts:
+            raise OSError("private probe detail")
+        readable, unreadable = self._counts[namespace]
+        return DiagnosticSecureObjectNamespace(namespace=namespace, readable=readable, unreadable=unreadable)
+
+    def quarantine_unreadable_rows(self) -> tuple[DiagnosticSecureObjectNamespace, ...]:
+        return ()
+
+
+def _integrity_row(
+    tmp_path: Path,
+    *,
+    namespaces: tuple[str, ...] | None,
+    counts: dict[str, tuple[int, int]],
+):
+    ports = DiagnosticsPorts(
+        secure_object_repository=_ScriptedIntegrityRepository(namespaces=namespaces, counts=counts),
+        session_failure_classifier=_diagnostics_ports().session_failure_classifier,
+    )
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        report = build_config_repair_report(ports=ports)
+    return report, next(c for c in report.checks if c.name == "secure_objects.integrity")
+
+
+def test_secure_objects_integrity_unreachable_store_is_not_reported_healthy(tmp_path: Path) -> None:
+    """A store that cannot be listed is a warn row with a door, never empty-and-ok."""
+    from .....core.i18n.render import tr
+
+    report, row = _integrity_row(tmp_path, namespaces=None, counts={})
+    assert row.status == "warn"
+    assert row.summary == tr("cli.diagnostics.summary.secure_objects_unavailable")
+    assert row.summary != tr("cli.diagnostics.summary.secure_objects_empty")
+    assert row.detail is None
+    assert row.precondition_verdict is not None
+    assert row.precondition_verdict.action is not None
+    assert row.precondition_verdict.action.action_id == "operator.diagnostics.repair"
+    assert "private" not in row.summary
+    assert report.secure_objects.unreadable_total == 0
+
+
+def test_secure_objects_integrity_failed_probe_is_not_an_unreadable_object(tmp_path: Path) -> None:
+    """A namespace whose probe raised is surfaced as not checked, with no quarantine verdict."""
+    from .....core.i18n.render import tr
+
+    report, row = _integrity_row(tmp_path, namespaces=("alpha", "beta"), counts={"alpha": (3, 0)})
+    assert report.secure_objects.unreadable_total == 0
+    assert report.secure_objects.readable_total == 3
+    assert [item.namespace for item in report.secure_objects.namespaces] == ["alpha"]
+    assert row.status == "warn"
+    assert row.summary == tr("cli.diagnostics.summary.secure_objects_probe_failed", failed=1)
+    assert row.detail == "beta"
+    assert row.precondition_verdict is not None
+    assert row.precondition_verdict.action is not None
+    assert row.precondition_verdict.action.action_id == "operator.diagnostics.repair"
+    assert "private" not in (row.detail or "")
+
+
+def test_secure_objects_integrity_empty_store_stays_ok(tmp_path: Path) -> None:
+    """A store that lists no namespaces is genuinely empty."""
+    from .....core.i18n.render import tr
+
+    _report, row = _integrity_row(tmp_path, namespaces=(), counts={})
+    assert row.status == "ok"
+    assert row.summary == tr("cli.diagnostics.summary.secure_objects_empty")
+
+
+def test_secure_objects_integrity_real_unreadable_keeps_quarantine_row(tmp_path: Path) -> None:
+    """Unreadable rows keep the quarantine verdict; a failed probe is only added to the detail."""
+    from .....core.i18n.render import tr
+
+    report, row = _integrity_row(
+        tmp_path,
+        namespaces=("alpha", "beta"),
+        counts={"alpha": (1, 2)},
+    )
+    assert report.secure_objects.unreadable_total == 2
+    assert row.status == "warn"
+    assert row.summary == tr("cli.diagnostics.summary.secure_objects_unreadable", unreadable=2, readable=1)
+    assert row.precondition_verdict is not None
+    assert row.precondition_verdict.action is not None
+    assert row.precondition_verdict.action.action_id == "operator.diagnostics.secure_objects.quarantine"
+    assert (row.detail or "").startswith("alpha (2/3)")
+    assert "beta" in (row.detail or "")
+
+    _clean, plain = _integrity_row(tmp_path / "plain", namespaces=("alpha",), counts={"alpha": (1, 2)})
+    assert plain.detail == "alpha (2/3)"

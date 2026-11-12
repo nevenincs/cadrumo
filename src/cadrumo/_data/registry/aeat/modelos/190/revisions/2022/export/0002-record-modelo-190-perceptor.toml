@@ -147,6 +147,15 @@ legal_refs = [
 ]
 source_refs = ["aeat-dr-190-2020"]
 
+[revisions.2022.export_layouts.records.fields.party_name]
+separator = " "
+natural_person = [
+    "primer_apellido",
+    "segundo_apellido",
+    "nombre",
+]
+entity = ["razon_social"]
+
 [[revisions.2022.export_layouts.records.fields]]
 id = "modelo-190-perc-codigo-provincia"
 offset = 76
@@ -1320,27 +1329,6 @@ legal_refs = [
 ]
 source_refs = ["aeat-dr-190-2020"]
 
-[[revisions.2022.export_layouts.records.fields]]
-id = "modelo-190-perc-incapacidad-especie-repercutidos"
-offset = 309
-length = 13
-kind = "binding"
-binding = "modelo-190-perceptor-row-incapacidad-especie-repercutidos"
-data_type = "decimal"
-required = false
-padding = "left_zero"
-justification = "right"
-decimals = 2
-signed = false
-value_policy = "implied-decimal"
-legal_refs = [
-    "orden-eha-3127-2009:art-1",
-    "rd-439-2007:art-108",
-    "ley-35-2006:art-99",
-    "ley-58-2003:art-93",
-]
-source_refs = ["aeat-dr-190-2020"]
-
 [revisions.2022.export_layouts.records.row_field_casilla_ids]
 accrual_year = "perc.ejercicio-devengo"
 anualidades_alimentos = "perc.anualidades-alimentos"
@@ -1379,9 +1367,9 @@ incapacity_kind_repercutido = "perc.incapacidad-especie-repercutidos"
 incapacity_kind_value = "perc.incapacidad-especie-valoracion"
 ingreso_a_cuenta = "perc.ingresos-a-cuenta"
 ingreso_a_cuenta_repercutido = "perc.ingresos-a-cuenta-repercutidos"
+party_filing_name = "perc.nombre"
 pension_compensatoria = "perc.pension-compensatoria"
 perceptor_birth_year = "perc.ano-nacimiento"
-perceptor_legal_name = "perc.nombre"
 perceptor_situacion_familiar = "perc.situacion-familiar"
 perceptor_tax_id = "perc.nif"
 percibido_dinerario = "perc.percepcion-dineraria"

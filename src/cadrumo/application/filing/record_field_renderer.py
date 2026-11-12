@@ -28,6 +28,7 @@ from ...domain.filing.errors import (
     FilingExportDesignIntegrityError,
     FilingExportFieldUnrenderableError,
     FilingExportIntegrityError,
+    FilingExportProfileFactMissingError,
     FilingExportUnrepresentableCharacterError,
     FilingExportValidationError,
     FilingExportValueOverflowError,
@@ -35,10 +36,11 @@ from ...domain.filing.errors import (
 from ...domain.filing.schema import ModeloDraft
 from ...domain.iva.sepa_marca import derive_sepa_marca
 from ...domain.modelos.perceptor_clave_scope import PerceptorClaveScope
-from .errors import FilingPreconditionCondition, filing_no_recovery_verdict
+from .errors import FilingPreconditionCondition, casilla_value_refusal, filing_no_recovery_verdict
 from .m190_context_validation import require_m190_signed_reintegro_context
 from .m193_context_validation import require_m193_perceptor_devengo_context
 from .m280_context_validation import m280_contextual_sign_byte, m280_key_wire, require_m280_negative_imputation_context
+from .producer_profile_facts import missing_producer_fact_names, missing_producer_fact_verdict
 from .producer_snapshot import ChargeAccountSelection, FilingProducerSnapshot, RefundAccountSelection
 from .projection import FilingRecordRenderContext
 from .record_types import ProjectionAddress, RecordRenderRow
@@ -385,9 +387,12 @@ def _casilla_field_value(field: ExportFieldDefinition, casilla_values: dict[Casi
         )
     value = casilla_values.get(field.casilla_id)
     if field.required_with is not None and _is_blank(casilla_values.get(field.required_with)) and not _is_blank(value):
-        # An empty block has no occurrence to carry this campo.
-        raise FilingExportValidationError(
-            f"export field {field.id!r} has a value but its block anchor {field.required_with!r} has none",
+        # An empty block has no occurrence to carry this campo; stating its
+        # anchor opens the block.
+        raise casilla_value_refusal(
+            field.required_with,
+            translated_message="application.filing.export.errors.block_anchor_unstated",
+            context={"field_id": field.id, "field_casilla_id": field.casilla_id},
         )
     return value
 
@@ -451,9 +456,14 @@ def header_field_value(field: ExportFieldDefinition, headers: Mapping[FilingProd
     if field.presence_marker is not None:
         return _presence_marker_value(field, headers, value)
     if _is_blank(value) and (field.required or _required_for_this_taxpayer(field, headers)):
-        raise FilingExportValidationError(
+        raise FilingExportProfileFactMissingError(
             f"export producer {field.producer_key!r} is required",
-            context={"missing_producer_key": field.producer_key.value},
+            translated_message="application.filing.export.errors.producer_fact_required",
+            context={
+                "missing_producer_key": field.producer_key.value,
+                "fact": missing_producer_fact_names(field.producer_key),
+            },
+            precondition_verdict=missing_producer_fact_verdict(field.producer_key),
         )
     if isinstance(value, bool) and field.data_type == "text":
         return _text_presence_marker(field, value)
@@ -548,7 +558,10 @@ def _sepa_marca(
     if selected is None or isinstance(selected, ChargeAccountSelection):
         return None
     if not isinstance(selected, RefundAccountSelection):
-        raise FilingExportValidationError("SEPA marker requires a selected refund account")
+        raise FilingExportDesignIntegrityError(
+            "SEPA marker requires a selected refund account",
+            translated_message="errors.integrity.filing_export_sepa_marker_selection_unsupported",
+        )
     return derive_sepa_marca(
         iban=selected.account.iban,
         bank_country_code=selected.account.bank_country_code,

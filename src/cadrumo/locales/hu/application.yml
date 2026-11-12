@@ -514,13 +514,20 @@ application:
         során (%{adapter_error}).
     export:
       errors:
-        draft_not_approved: Az exportáláshoz jóváhagyott piszkozat szükséges.
-        draft_snapshot_stale: Az exportáláshoz a jelenleg használt nyomtatványdefiníciókból
-          készült piszkozat szükséges.
+        block_anchor_unstated: 'Semmi sem íródott ki: a(z) %{field_casilla_id} mezőnek
+          van értéke, de a blokkját megnyitó %{casilla_id} mezőnek nincs. Töltsd ki
+          a(z) %{casilla_id} mezőt, vagy ürítsd ki a(z) %{field_casilla_id} mezőt,
+          és exportálj újra.'
+        box_not_stated_by_rows: 'Semmi sem íródott ki: a(z) %{casilla_id} mező értéke
+          nem egyezik a(z) %{element_path} sorainak összegével. Javítsd a mezőt vagy
+          a sorokat úgy, hogy minden sor a saját összegeit adja meg, és exportálj
+          újra.'
         layout_not_renderable: Ez a nyomtatvány nem tud helyi bevallás-exportfájlt
           előállítani.
         post_write_verification_refused: Az írás utáni ellenőrzés elutasította az
           exportált bevallásfájlt.
+        producer_fact_required: 'Semmi sem íródott ki: az exportáláshoz szükség van
+          erre: %{fact}, de az nincs megadva. Add meg, és exportálj újra.'
         receipt_artefact_unreadable: Az exportnyugta olyan fájlt nevez meg, amely
           nem olvasható.
         receipt_byte_size_mismatch: Az exportált fájl mérete nem egyezik az exportnyugtával.
@@ -2518,6 +2525,14 @@ application:
         ebben a profilban, ezért nem támaszthatja alá a(z) %{filing_year}. év %{period}
         időszakának Modelo 303-át. Semmi sem lett kiszámítva. Rögzíts új nyilatkozatot
         erre az időszakra, és a kapott értékeket használd.
+      export_amended_filing_evidence_missing: 'Semmi sem íródott ki: a módosítandó
+        beadáshoz nincs rögzítve az AEAT által igazolt justificante. Importáld a bizonyítékát
+        a bevallás munkaegységéhez, és exportálj újra.'
+      export_amended_filing_justificante_unresolved: 'Semmi sem íródott ki: a módosítandó
+        beadáshoz rögzített justificante nem támasztja alá a módosítást. Hiányzik,
+        többször szerepel, vagy nem egyezik a bevallás modelljével, időszakával és
+        adózójával. Te döntöd el, melyik nyilvántartás téves: ellenőrizd a rögzített
+        beadást és a justificantét.'
       export_cross_bucket_refused: A megcímzett revízió nem az aktív profil bucketjéhez
         tartozik. Exportálás előtt váltson profilt.
       export_draft_approval_failed: Nem sikerült jóváhagyni a(z) %{calculation_revision_id}

@@ -312,14 +312,6 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.export.instalment_election.admitted",
         "modelo.export.instalment_election.refused",
     ),
-    # A party-name slot the record design fills from the party's own name parts
-    # is given by the operator stating that party's filing name.
-    _profile(
-        "modelo.export",
-        "modelo.export.declared_party_name.stated",
-        "modelo.export.declared_party_name.unstated",
-        action_id="operator.ledger.counterparty.filing_name",
-    ),
     # The character sits in a name the operator recorded on a profile fact, a
     # ledger entry or an invoice; the layout field does not say which, so no
     # single catalogued edit action reaches it.
@@ -344,6 +336,40 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.export.design.inconsistent",
         no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
     ),
+    # A party-name slot the filer's declared filing names leave without content
+    # is put right by stating that party's filing name.
+    _profile(
+        "modelo.export",
+        "modelo.export.declared_party_name.stated",
+        "modelo.export.declared_party_name.unstated",
+        action_id="operator.ledger.counterparty.filing_name",
+    ),
+    # A box the filer states holds a value the design cannot place; stating
+    # that box again on the work unit puts it right.
+    _profile(
+        "modelo.export",
+        "modelo.export.casilla_value.writable",
+        "modelo.export.casilla_value.refused",
+        action_id="operator.modelo.work.set_value",
+    ),
+    # The refusals below are real but no catalogued action repairs them: the
+    # registry has not adjudicated cells the stated boxes share, the schema
+    # refuses a field that is no box of the declaration, the return suspends or
+    # waives part of its result where no remainder is computed, and the
+    # persisted justificante of an amended filing does not back it. A result
+    # box that holds no value is put right by calculating the declaration.
+    *(
+        _profile(
+            "modelo.export", f"modelo.export.{subject}.{sound}", f"modelo.export.{subject}.{refused}", action_id=act
+        )
+        for subject, sound, refused, act in (
+            ("shared_cells", "adjudicated", "unadjudicated", None),
+            ("schema_field", "valid", "refused", None),
+            ("settlement", "stated", "unsupported", None),
+            ("settlement", "stated", "result_unknown", "operator.modelo.work.calculate"),
+            ("amended_filing_justificante", "backs_filing", "unresolved", None),
+        )
+    ),
     _profile(
         "modelo.export",
         "modelo.export.period.maps_to_filing_period",
@@ -357,7 +383,7 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
             f"{leaf}.external_evidence.missing",
             action_id="operator.modelo.filing_record.import",
         )
-        for leaf in ("modelo.work.amend", "modelo.work.amend_wizard")
+        for leaf in ("modelo.work.amend", "modelo.work.amend_wizard", "modelo.export")
     ),
     _profile(
         "modelo.work.wizard",

@@ -22,7 +22,7 @@ from ...core.money.rounding import round_to_cents
 from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.invoices.decomposition import decompose_invoice
 from ...domain.invoices.models import Invoice
-from ...domain.invoices.service import INVOICE_MATCH_TOLERANCE
+from ...domain.invoices.service import INVOICE_MATCH_TOLERANCE, invoice_settlement, invoice_settlement_eur
 from ...domain.iva.components import category_cuota_is_zero_by_law
 from ...domain.iva.schema import InvoiceKind
 from ...domain.transactions.dates import transaction_operation_date
@@ -85,11 +85,6 @@ class SalesInvoiceEvidencePayload(BaseModel):
     allocated_to_part_payment: bool = False
 
 
-def invoice_net_cash(invoice: Invoice) -> Decimal:
-    """Return what the customer owes the bank account: the total less the retención it remits itself."""
-    return invoice.grand_total - (invoice.retention_amount or Decimal("0"))
-
-
 class SettlementComparison(NamedTuple):
     """Receipts and what their invoice leaves to be paid, stated in one currency."""
 
@@ -121,22 +116,25 @@ def _in_settling_direction(invoice: Invoice, row: Transaction, magnitude: Decima
 def settlement_comparison(invoice: Invoice, receipts: Sequence[Transaction]) -> SettlementComparison | None:
     """Put ``receipts`` and ``invoice`` in one currency, or return ``None`` when none can be justified.
 
-    Figures stated in the invoice's own currency compare as stated, because no rate
-    stands between them. Any other receipt compares in EUR: the movement's own
-    ``value_in_eur`` against the invoice's total at the rate stamped on it. A side with
+    What the invoice leaves to be paid is its
+    :func:`~cadrumo.domain.invoices.service.invoice_settlement`: the total less the
+    retención, and less a cuota the recipient self-assesses. Figures stated in the
+    invoice's own currency compare as stated, because no rate stands between them. Any
+    other receipt compares in EUR: the movement's own ``value_in_eur`` against that
+    figure at the rate stamped on the invoice. A side with
     no EUR value leaves nothing to compare, and the raw figures never stand in for it.
     """
     if all(receipt.raw.currency == invoice.currency for receipt in receipts):
         return SettlementComparison(
             cash=sum((_in_settling_direction(invoice, row, row.raw.amount) for row in receipts), Decimal("0")),
-            owed=invoice_net_cash(invoice),
+            owed=invoice_settlement(invoice),
         )
-    total_eur = invoice.grand_total_eur
-    if total_eur is None or any(is_non_eur_without_conversion(receipt) for receipt in receipts):
+    owed_eur = invoice_settlement_eur(invoice)
+    if owed_eur is None or any(is_non_eur_without_conversion(receipt) for receipt in receipts):
         return None
     return SettlementComparison(
         cash=sum((_in_settling_direction(invoice, row, effective_eur_amount(row)) for row in receipts), Decimal("0")),
-        owed=total_eur - (invoice.retention_amount_eur or Decimal("0")),
+        owed=owed_eur,
     )
 
 
@@ -170,8 +168,9 @@ def taxable_base_comparison(invoice: Invoice, rows: Sequence[Transaction]) -> Se
 def part_payment_share(invoice: Invoice, transaction: Transaction) -> Decimal | None:
     """Return the share of ``invoice`` this receipt settles, or ``None`` when it is no part payment.
 
-    The share is cash over what the invoice leaves to be paid, base + IVA - retención,
-    read through :func:`settlement_comparison`, and it applies to the invoice's EUR
+    The share is cash over what the invoice leaves to be paid, its
+    :func:`~cadrumo.domain.invoices.service.invoice_settlement`, read through
+    :func:`settlement_comparison`, and it applies to the invoice's EUR
     figures. A receipt settling the whole invoice alone, or exceeding it, is no part
     payment, nor is a refund, and an invoice with no EUR value, a receipt that cannot be
     compared or ungrounded figures cannot be shared out.

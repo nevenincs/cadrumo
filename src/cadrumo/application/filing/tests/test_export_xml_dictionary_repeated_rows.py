@@ -19,6 +19,7 @@ from defusedxml import ElementTree
 from cadrumo.domain.renta.actividad_asset.disposal import ActivityAssetDisposal, ActivityAssetDisposalReason
 
 from ....core.aggregation import BindingAggregationOp
+from ....core.errors.error_codes import resolve_error_message
 from ....core.modelo import Modelo
 from ....core.period import Period
 from ....core.prior_domiciliation_election import PriorDomiciliationElection
@@ -28,7 +29,7 @@ from ....domain.calculations.registry.binding_selector_utils import selector_as_
 from ....domain.calculations.registry.binding_targets import revision_bindings_by_id
 from ....domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from ....domain.calculations.registry.export_xml_dictionary import xml_dictionary_entries
-from ....domain.filing.errors import FilingExportValidationError
+from ....domain.filing.errors import FilingExportCasillaValueRefusedError, FilingExportValidationError
 from ....domain.filing.protocols import ModeloInputScalar, ModeloInputValue
 from ....domain.filing.schema import ModeloDraft
 from ....domain.renta.actividad_asset.lifecycle import ActivityAssetRevision
@@ -243,8 +244,15 @@ def test_a_box_total_the_rows_do_not_add_up_to_refuses(operation: PinnedAuthorit
     gain_total = next(key for key in inputs if key == "renta-activity-asset-disposal-gain-element-1654")
     inputs[gain_total] = Decimal("1.00")
 
-    with pytest.raises(FilingExportValidationError, match="do not add up"):
+    with pytest.raises(FilingExportCasillaValueRefusedError) as refused:
         _render(provider, _draft(provider, 2025, inputs))
+    assert refused.value.casilla_id == "1654"
+    assert refused.value.translated_message == "application.filing.export.errors.box_not_stated_by_rows"
+    assert refused.value.context == {"element_path": f"/{_ELEMENT_PATH}", "casilla_id": "1654"}
+    for locale in ("es", "ca", "en", "hu"):
+        message = resolve_error_message(refused.value, locale=locale)
+        assert "1654" in message
+        assert "%{" not in message
 
 
 def test_a_value_on_another_box_of_the_element_refuses_rather_than_landing_on_a_sale(
@@ -253,8 +261,9 @@ def test_a_value_on_another_box_of_the_element_refuses_rather_than_landing_on_a_
     provider = _provider(operation, 2025)
     inputs = {**_inputs(_resolved(second_proceeds="13000.00")), "1652": Decimal("10.00")}
 
-    with pytest.raises(FilingExportValidationError, match="do not add up"):
+    with pytest.raises(FilingExportCasillaValueRefusedError) as refused:
         _render(provider, _draft(provider, 2025, inputs))
+    assert refused.value.casilla_id == "1652"
 
 
 def test_a_value_on_another_box_of_a_lone_sale_refuses_rather_than_landing_on_it(
@@ -280,8 +289,9 @@ def test_a_value_on_another_box_of_a_lone_sale_refuses_rather_than_landing_on_it
     )
     draft = _draft(provider, year, {column: {"1": Decimal("40.00")}, "1652": Decimal("10.00")})
 
-    with pytest.raises(FilingExportValidationError, match="box 1652 holds"):
+    with pytest.raises(FilingExportCasillaValueRefusedError) as refused:
         _render(provider, draft)
+    assert refused.value.casilla_id == "1652"
     (rows,) = xml_dictionary_repeated_rows(layout, draft=draft, entries=entries, schema_provider=provider)
     assert rows.element_path == element
     assert len(rows.occurrences) == 1

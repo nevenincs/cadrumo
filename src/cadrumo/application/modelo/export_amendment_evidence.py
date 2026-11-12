@@ -6,9 +6,10 @@ Core types:
 
 from __future__ import annotations
 
-from typing import NoReturn, Protocol
+from typing import Protocol
 
 from ...core.modelo import Modelo
+from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
@@ -24,7 +25,6 @@ from ...domain.modelos.calculation_revision_amendment import (
     CalculationRevisionAmendmentIdentity,
     M303RectificativaMotive,
 )
-from ...domain.modelos.errors import ModeloExportError
 from ...domain.modelos.filing_record import (
     FilingDeclarationKind,
     ModeloRecord,
@@ -35,7 +35,11 @@ from ...domain.modelos.protocols import ModeloRecordCatalogueRepositoryProtocol
 from ...domain.modelos.work_unit import WorkUnit
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ..filing.producer_snapshot import AmendmentEvidence
+from .action_errors import amendment_evidence_missing_precondition
 from .amendment_kind_resolution import assert_amendment_kind_permitted
+from .export_contracts import ModeloExportDesignIntegrityError, ModeloExportEvidenceMissingError
+from .export_field_refusal import export_design_fault_refusal
+from .preconditions import build_modelo_precondition_failure_for_scenario
 
 
 class AmendmentExportCommand(Protocol):
@@ -75,7 +79,7 @@ def resolve_persisted_amendment_export_evidence(
     identity = revision.amendment_identity
     if identity is None:
         if command.amendment_evidence is not None:
-            _raise(command, "typed amendment evidence was supplied for a non-amendment revision")
+            raise _fault(command, "typed amendment evidence was supplied for a non-amendment revision")
         return None
     with validating_governed_facts(operation):
         assert_amendment_kind_permitted(
@@ -108,14 +112,62 @@ def resolve_persisted_amendment_export_evidence(
         original_aeat_receipt=receipt_number,
     )
     if command.amendment_evidence is not None and command.amendment_evidence != persisted:
-        _raise(command, "supplied amendment evidence diverges from persisted authority")
+        raise _fault(command, "supplied amendment evidence diverges from persisted authority")
     return persisted
 
 
-def _raise(command: AmendmentExportCommand, cause: str) -> NoReturn:
-    raise ModeloExportError(
-        translated_message="application.modelo.errors.export_draft_write_failed",
-        context={"calculation_revision_id": command.calculation_revision_id, "cause": cause},
+def _fault(command: AmendmentExportCommand, cause: str) -> ModeloExportDesignIntegrityError:
+    """Refuse a guard only a caller or design fault reaches, as the terminal integrity refusal."""
+    return export_design_fault_refusal(cause=cause, calculation_revision_id=command.calculation_revision_id)
+
+
+def _evidence_missing(
+    command: AmendmentExportCommand, *, work_unit: WorkUnit, target: ModeloRecord
+) -> ModeloExportEvidenceMissingError:
+    """Refuse an amendment whose amended filing AEAT has not attested, with the door that imports its evidence."""
+    return ModeloExportEvidenceMissingError(
+        translated_message="application.modelo.errors.export_amended_filing_evidence_missing",
+        context={
+            "calculation_revision_id": command.calculation_revision_id,
+            "work_unit_id": work_unit.work_unit_id,
+            "filing_record_id": target.filing_record_id,
+        },
+        precondition_failure=amendment_evidence_missing_precondition(
+            subject_leaf_key="modelo.export",
+            work_unit_id=work_unit.work_unit_id,
+            filing_record_id=target.filing_record_id,
+        ),
+    )
+
+
+def _justificante_unresolved(
+    command: AmendmentExportCommand, *, work_unit: WorkUnit, target: ModeloRecord
+) -> ModeloExportEvidenceMissingError:
+    """Refuse an amendment whose recorded justificante does not back the amended filing.
+
+    The record holds evidence that is absent from the justificantes, repeated in
+    them or disagreeing with the declaration. Which of the records is wrong is
+    the operator's decision; no catalogued action corrects one.
+    """
+    failure = build_modelo_precondition_failure_for_scenario(
+        subject_leaf_key="modelo.export",
+        scenario_id="modelo.export.amended_filing_justificante.unresolved",
+        evidence_id="modelo.export.amended_filing_justificante",
+        evidence_values={
+            "work_unit_id": work_unit.work_unit_id,
+            "filing_record_id": target.filing_record_id,
+            "backs_filing": False,
+        },
+        provenance=ActionEvidenceProvenance.PERSISTED_STATE,
+    )
+    return ModeloExportEvidenceMissingError(
+        translated_message="application.modelo.errors.export_amended_filing_justificante_unresolved",
+        context={
+            "calculation_revision_id": command.calculation_revision_id,
+            "work_unit_id": work_unit.work_unit_id,
+            "filing_record_id": target.filing_record_id,
+        },
+        precondition_failure=failure,
     )
 
 
@@ -127,8 +179,14 @@ def _target(
     records: ModeloRecordCatalogue,
 ) -> ModeloRecord:
     target = records.get(identity.amends_filing_record_id)
-    if target is None or not target.aeat_accepted or target.external_evidence is None:
-        _raise(command, "amended filing target lacks persisted AEAT evidence")
+    if target is None:
+        raise _fault(command, "amended filing record is not on record")
+    if (
+        not target.aeat_accepted
+        or target.external_evidence is None
+        or not is_justificante_backed_external_evidence(target.external_evidence.kind)
+    ):
+        raise _evidence_missing(command, work_unit=work_unit, target=target)
     if (
         target.work_unit_id,
         target.bucket_id,
@@ -141,8 +199,8 @@ def _target(
         work_unit.modelo,
         work_unit.filing_year,
         work_unit.period,
-    ) or not is_justificante_backed_external_evidence(target.external_evidence.kind):
-        _raise(command, "amended filing target crosses the export coordinate")
+    ):
+        raise _fault(command, "amended filing target crosses the export coordinate")
     return target
 
 
@@ -155,14 +213,14 @@ def _receipt(
     repository: JustificanteRepositoryProtocol | None,
 ) -> tuple[tuple[Justificante, ...], Justificante]:
     if repository is None:
-        _raise(command, "amendment export requires injected justificante repository authority")
+        raise _fault(command, "amendment export requires injected justificante repository authority")
     evidence = target.external_evidence
     if evidence is None:
-        _raise(command, "amended filing target lacks persisted AEAT evidence")
+        raise _fault(command, "amended filing target lacks persisted AEAT evidence")
     justificantes = tuple(repository.iter_justificantes())
     matches = tuple(item for item in justificantes if item.csv == evidence.reference_id)
     if len(matches) != 1:
-        _raise(command, "amended filing target does not resolve to one persisted justificante")
+        raise _justificante_unresolved(command, work_unit=work_unit, target=target)
     receipt = matches[0]
     if (
         not receipt.matches_filing_target(
@@ -173,7 +231,7 @@ def _receipt(
         )
         or receipt.presentation_id is None
     ):
-        _raise(command, "persisted justificante disagrees with the export authority")
+        raise _justificante_unresolved(command, work_unit=work_unit, target=target)
     return justificantes, receipt
 
 
@@ -192,7 +250,7 @@ def _evidence(
 ) -> tuple[M303RectificativaMotive | None, str]:
     receipt_number = receipt.presentation_id
     if receipt_number is None:
-        _raise(command, "persisted justificante has no AEAT presentation receipt")
+        raise _fault(command, "persisted justificante has no AEAT presentation receipt")
     if identity.kind is not FilingDeclarationKind.RECTIFICATIVA or work_unit.modelo != form_for_role("iva.periodic"):
         return identity.m303_rectificativa_motive, receipt_number
     validated = validate_calculation_revision_aggregate(
@@ -212,7 +270,7 @@ def _evidence(
         ),
     )
     if validated is None:
-        _raise(command, "M303 rectificativa aggregate did not resolve persisted evidence")
+        raise _fault(command, "M303 rectificativa aggregate did not resolve persisted evidence")
     return validated.motive, validated.original_aeat_receipt
 
 
