@@ -7360,6 +7360,26 @@ tui:
           muestra %{evidenced}. %{detail}'
         country: Código de país (2 letras, opcional)
         evidenced: Ámbito que muestra un documento, para la consulta (opcional)
+        filing_done: Se indicó el nombre de presentación de %{identifier}.
+        filing_heading: Nombre de presentación
+        filing_kind_entity: Entidad
+        filing_kind_natural_person: Persona física
+        filing_no_second: Sin segundo apellido
+        filing_nombre: Nombre
+        filing_primer: Primer apellido
+        filing_razon: Razón social
+        filing_rendering: 'Para %{width} caracteres: %{text}'
+        filing_renderings: Versiones más cortas, como ancho=texto; ancho=texto (opcional)
+        filing_renderings_malformed: Escribe cada versión más corta como un ancho,
+          un signo igual y su texto, por ejemplo 20=Nombre corto, y separa varias
+          con punto y coma.
+        filing_review: Revisar nombre de presentación
+        filing_segundo: Segundo apellido
+        filing_stage: Indicar el nombre de presentación de %{identifier} como %{kind}.
+        filing_stated: 'Nombre de presentación de %{identifier}: %{kind} · %{name}'
+        filing_stated_by: Indicado por %{name} el %{date}.
+        filing_unchanged: '%{identifier} ya tenía este nombre de presentación.'
+        filing_unstated: No hay nombre de presentación indicado para %{identifier}.
         identification: Estado miembro de la UE de su NIF-IVA (2 letras)
         identifier: Identificador fiscal
         identifier_required: Escribe primero el identificador fiscal de la contraparte.
@@ -8740,6 +8760,7 @@ tui:
           create: Crear un inventario
           evidence_add: Guardar un documento de compra
           movement_add: Añadir un movimiento
+          movement_claim: Indicar el apunte del libro de una compra
           valuation_preview: Previsualizar la valoración
         column:
           actividad: Actividad
@@ -8779,6 +8800,10 @@ tui:
           count: Recuento
           opening: Apertura
           purchase: Compra
+        ledger_row:
+          claimed: Un apunte del libro registra esta compra
+          none: Ningún apunte del libro registra esta compra
+          unstated: Borrar la indicación (sin indicar)
         list: Inventarios
         method:
           coste_medio: Coste medio

@@ -7352,6 +7352,26 @@ tui:
           mostra %{evidenced}. %{detail}'
         country: Codi de país (2 lletres, opcional)
         evidenced: Àmbit que mostra un document, per a la consulta (opcional)
+        filing_done: S'ha indicat el nom de presentació de %{identifier}.
+        filing_heading: Nom de presentació
+        filing_kind_entity: Entitat
+        filing_kind_natural_person: Persona física
+        filing_no_second: Sense segon cognom
+        filing_nombre: Nom
+        filing_primer: Primer cognom
+        filing_razon: Raó social
+        filing_rendering: 'Per a %{width} caràcters: %{text}'
+        filing_renderings: Versions més curtes, com amplada=text; amplada=text (opcional)
+        filing_renderings_malformed: Escriu cada versió més curta com una amplada,
+          un signe igual i el seu text, per exemple 20=Nom curt, i separa'n diverses
+          amb un punt i coma.
+        filing_review: Revisar nom de presentació
+        filing_segundo: Segon cognom
+        filing_stage: Indicar el nom de presentació de %{identifier} com a %{kind}.
+        filing_stated: 'Nom de presentació de %{identifier}: %{kind} · %{name}'
+        filing_stated_by: Indicat per %{name} el %{date}.
+        filing_unchanged: '%{identifier} ja tenia aquest nom de presentació.'
+        filing_unstated: No hi ha cap nom de presentació indicat per a %{identifier}.
         identification: Estat membre de la UE del seu NIF-IVA (2 lletres)
         identifier: Identificador fiscal
         identifier_required: Escriu primer l'identificador fiscal de la contrapart.
@@ -8722,6 +8742,7 @@ tui:
           create: Crea un inventari
           evidence_add: Desa un document de compra
           movement_add: Afegeix un moviment
+          movement_claim: Indicar l'apunt del llibre d'una compra
           valuation_preview: Previsualitza la valoració
         column:
           actividad: Activitat
@@ -8761,6 +8782,10 @@ tui:
           count: Recompte
           opening: Obertura
           purchase: Compra
+        ledger_row:
+          claimed: Un apunt del llibre registra aquesta compra
+          none: Cap apunt del llibre registra aquesta compra
+          unstated: Esborrar la indicació (sense indicar)
         list: Inventaris
         method:
           coste_medio: Cost mitjà
