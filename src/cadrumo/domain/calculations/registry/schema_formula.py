@@ -41,6 +41,7 @@ from .schema_scalars import DecimalValue
 
 __all__ = [
     "BracketEntry",
+    "BracketKind",
     "DatedValue",
     "FormulaExpression",
     "KeyedBracketEntry",
@@ -133,6 +134,23 @@ LegalParameterDataTypeField = Annotated[
     LegalParameterDataType, BeforeValidator(coerce_enum_member(LegalParameterDataType))
 ]
 """Registry token hydrated into a LegalParameterDataType member."""
+
+
+class BracketKind(StrEnum):
+    """How a ``bracket_table`` parameter's rows are read.
+
+    ``PROGRESSIVE`` is the cumulative-cuota schedule (an escala): rates are
+    non-negative. ``PHASE_OUT`` is a printed amount that shrinks as the base
+    grows (a reduction schedule): rates may be non-positive, and every row's
+    value must stay non-negative at both of its bounds.
+    """
+
+    PROGRESSIVE = "progressive"
+    PHASE_OUT = "phase_out"
+
+
+BracketKindField = Annotated[BracketKind, BeforeValidator(coerce_enum_member(BracketKind))]
+"""Registry token hydrated into a BracketKind member."""
 
 
 class FormulaExpression(RegistryModel):
@@ -247,7 +265,8 @@ class BracketEntry(RegistryModel):
 
     Each entry encodes a half-open base-amount interval ``[lower_bound, upper_bound]``
     plus the cuota previously accumulated up to ``lower_bound`` (``fixed_addition``)
-    and the marginal rate applied to the slice above ``lower_bound``. A ``None``
+    and the marginal rate applied to the slice above ``lower_bound``. The sign
+    contract of the rate belongs to the owning parameter's ``bracket_kind``. A ``None``
     ``upper_bound`` declares the open-ended top bracket.
 
     Cuota for a base amount ``base`` resolved by `lookup_bracket`:
@@ -270,8 +289,6 @@ class BracketEntry(RegistryModel):
             raise RegistryValidationError("bracket valid_to must be on or after valid_from")
         if self.lower_bound < Decimal("0"):
             raise RegistryValidationError("bracket lower_bound must be non-negative")
-        if self.marginal_rate < Decimal("0"):
-            raise RegistryValidationError("bracket marginal_rate must be non-negative")
         return self
 
 
@@ -404,6 +421,7 @@ class ParameterDefinition(RegistryModel):
     brackets: tuple[BracketEntry, ...] = Field(default_factory=tuple)
     keyed_brackets: tuple[KeyedBracketEntry, ...] = Field(default_factory=tuple)
     bracket_axis: DateAxisField | None = None
+    bracket_kind: BracketKindField = BracketKind.PROGRESSIVE
     non_filing_axis_admission: NonFilingAxisAdmission | None = None
     legal_refs: LegalRefs
     source_refs: SourceRefs
@@ -412,6 +430,10 @@ class ParameterDefinition(RegistryModel):
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _validate_bracket_table(self) -> ParameterDefinition:
+        if self.bracket_kind is not BracketKind.PROGRESSIVE and self.data_type != "bracket_table":
+            raise RegistryValidationError(
+                f"parameter {self.id!r} declares bracket_kind {self.bracket_kind.value!r} but is not a bracket_table",
+            )
         if self.data_type == "bracket_table":
             self._validate_bracket_table_shape()
         elif self.data_type == "keyed_bracket_table":
@@ -439,6 +461,8 @@ class ParameterDefinition(RegistryModel):
             raise RegistryValidationError(f"parameter {self.id!r} cannot mix bracket_table and keyed_brackets")
         if self.bracket_axis is None:
             raise RegistryValidationError(f"parameter {self.id!r} bracket_table requires a bracket_axis")
+        for row in self.brackets:
+            self._validate_bracket_row_kind(row)
         sorted_brackets = sorted(self.brackets, key=lambda b: (b.valid_from, b.lower_bound))
         for prev, current in pairwise(sorted_brackets):
             if _brackets_overlap_in_same_window(prev, current):
@@ -457,6 +481,35 @@ class ParameterDefinition(RegistryModel):
                         f"windows and overlapping bounds, so bracket resolution would depend on "
                         f"declaration order",
                     )
+
+    def _validate_bracket_row_kind(self, row: BracketEntry) -> None:
+        """Verify one row obeys the rate and value contract of the table's ``bracket_kind``."""
+        span = f"{row.lower_bound}-{row.upper_bound}"
+        if self.bracket_kind is BracketKind.PROGRESSIVE:
+            if row.marginal_rate < Decimal("0"):
+                raise RegistryValidationError(
+                    f"parameter {self.id!r} progressive bracket {span} marginal_rate must be non-negative",
+                )
+            return
+        if row.marginal_rate > Decimal("0"):
+            raise RegistryValidationError(
+                f"parameter {self.id!r} phase_out bracket {span} marginal_rate must be non-positive",
+            )
+        if row.fixed_addition < Decimal("0"):
+            raise RegistryValidationError(
+                f"parameter {self.id!r} phase_out bracket {span} fixed_addition must be non-negative",
+            )
+        if row.upper_bound is None:
+            if row.marginal_rate != Decimal("0"):
+                raise RegistryValidationError(
+                    f"parameter {self.id!r} phase_out open bracket from {row.lower_bound} must have marginal_rate 0",
+                )
+            return
+        value_at_upper = row.fixed_addition + row.marginal_rate * (row.upper_bound - row.lower_bound)
+        if value_at_upper < Decimal("0"):
+            raise RegistryValidationError(
+                f"parameter {self.id!r} phase_out bracket {span} is negative at its upper bound",
+            )
 
     def _validate_keyed_bracket_table_shape(self) -> None:
         """Verify a keyed_bracket_table parameter has a valid keyed shape.
