@@ -33,6 +33,7 @@ from ....core.period import Period, RegistrySelectorPeriodCode
 from ....core.revision_review import RevisionReviewStatus
 from ....core.tax_domain import TaxDomain
 from ....core.type_guards import is_object_mapping
+from .autonomic_deduccion_enrolment import AutonomicDeduccionEnrolment
 from .binding_absence_attestation import AbsenceAttestationFamilyField
 from .binding_borrador_participation import BorradorParticipation, BorradorParticipationField
 from .binding_grade_cap import BindingGradeCap
@@ -353,6 +354,8 @@ class FormulaDefinition(RegistryModel):
     legal_refs: LegalRefs
     source_refs: SourceRefs
     source_citations: tuple[SourceCitation, ...] = Field(default_factory=tuple)
+    autonomic_deduccion: AutonomicDeduccionEnrolment | None = Field(default=None, exclude_if=absent_when_none)
+    """The comunidad deducción this formula computes, when its box is an enrolled autonomic deducción."""
 
 
 def _frozen_index[K, V](index: Mapping[K, Sequence[V]]) -> dict[K, tuple[V, ...]]:

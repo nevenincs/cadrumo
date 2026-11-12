@@ -1127,6 +1127,7 @@ def test_revision_replay_does_not_resubmit_m100_formula_informational_casilla() 
         "renta-maritime-annual-salary": Decimal("0"),
         "renta-maritime-qualifying-days": Decimal("0"),
         "renta-profile-madrid-nacimiento-adopcion-eligible-count": Decimal("0"),
+        "renta-profile-deduccion-madrid-cuidado-ascendientes-count": Decimal("0"),
         "renta-profile-unidad-familiar-otros-miembros-base": Decimal("0"),
     }
     # Editions differ in which profile bindings they declare; supply only the ones this edition has.

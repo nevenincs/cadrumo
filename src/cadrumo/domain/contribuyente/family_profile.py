@@ -514,16 +514,6 @@ class RentaFamilyProfile(BaseModel):
     # autonómica (DL 1/2010 arts. 4 y 18.1) — casilla 1039 framework primitives
     # ------------------------------------------------------------------
 
-    def madrid_nacimiento_adopcion_eligible_count(
-        self, filing_year: int, *, context: FamilyFactResolutionContext
-    ) -> int:
-        """Count of descendants inside the Madrid nacimiento/adopción window who cohabit.
-
-        The raw (unweighted) eligible count; ``madrid_nacimiento_adopcion_weighted_count``
-        applies the per-descendant prorrateo the registry cuantía is multiplied by.
-        """
-        return sum(1 for d in self.descendientes if d.is_nacimiento_adopcion_eligible(filing_year, context=context))
-
     def unidad_familiar_otros_miembros_base(self) -> Decimal:
         """Base imponible of unidad-familiar members OTHER than the filer.
 

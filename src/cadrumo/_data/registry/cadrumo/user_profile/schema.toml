@@ -48,6 +48,13 @@ description = "Parte autonomica del minimo por ascendientes, resuelta contra la 
 legal_refs = ["ley-35-2006:art-56", "ley-35-2006:art-59", "ley-35-2006:art-61"]
 
 [[derived_selectors]]
+pattern = "renta_family.deduccion_madrid_cuidado_ascendientes_count"
+derived_from = ["renta_family.ascendiente", "tax_residence.ccaa"]
+entry_surface = "aeat config profile ascendiente"
+description = "Ascendientes por los que se aplica el minimo por ascendientes y que cumplen la edad o la discapacidad de la deduccion de la Comunidad de Madrid por cuidado de ascendientes, ponderados por la parte del minimo que corresponde al contribuyente."
+legal_refs = ["ley-35-2006:art-77", "madrid-dl-1-2010:art-7-bis"]
+
+[[derived_selectors]]
 pattern = "renta_family.anualidades_sin_minimo_descendientes_{filing_year}"
 derived_from = ["renta_family.descendiente"]
 entry_surface = "aeat config profile descendiente"

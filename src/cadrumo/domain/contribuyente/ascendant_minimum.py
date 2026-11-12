@@ -20,6 +20,10 @@ as eligible. The row is reported with the leaves it owes and the aggregate is
 withheld. A fact a stated one already makes irrelevant is not asked for: an
 ascendant whose stated rentas exceed the ceiling contributes nothing whatever else
 is missing. Every euro figure and age is a registry value the caller resolves.
+
+A comunidad deducción that rests on the mínimo reads the same entitlement: it counts
+each ascendant the filer applies the mínimo for and that meets the comunidad's own age
+or disability condition, by the filer's share of that ascendant.
 """
 
 from __future__ import annotations
@@ -113,21 +117,19 @@ class AscendantMinimumResult(BaseModel):
     unstated: tuple[AscendantFactUnstated, ...] = ()
 
 
-def _share(
+def _entitlement(
     ascendant: AscendantInfo,
     filing_year: int,
     *,
     amounts: AscendantMinimumAmounts,
     minimum_age: int,
-    increment_age: int,
-) -> Decimal | tuple[str, ...]:
-    """One row's share, or the leaves the share depends on and the row omits."""
+) -> int | tuple[str, ...]:
+    """The divisor the row's mínimo is shared by, ``0`` when a stated fact excludes it, or the leaves it owes."""
     if ascendant.died_before_period(filing_year):
-        return Decimal("0")
-    age = ascendant.age_at_devengo(filing_year)
+        return 0
     owed: list[str] = []
     excluded = False
-    if age < minimum_age:
+    if ascendant.age_at_devengo(filing_year) < minimum_age:
         if ascendant.discapacidad_grado is None:
             owed.append(DISCAPACIDAD_LEAF)
         elif ascendant.discapacidad_grado == 0:
@@ -148,14 +150,82 @@ def _share(
         elif ascendant.presenta_declaracion_propia:
             excluded = True
     if excluded:
-        return Decimal("0")
+        return 0
     if owed:
         return tuple(owed)
+    return divisor
+
+
+def _share(
+    ascendant: AscendantInfo,
+    filing_year: int,
+    *,
+    amounts: AscendantMinimumAmounts,
+    minimum_age: int,
+    increment_age: int,
+) -> Decimal | tuple[str, ...]:
+    """One row's share, or the leaves the share depends on and the row omits."""
+    divisor = _entitlement(ascendant, filing_year, amounts=amounts, minimum_age=minimum_age)
+    if isinstance(divisor, tuple):
+        return divisor
+    if divisor == 0:
+        return Decimal("0")
     if ascendant.died_in_period(filing_year):
         amount = amounts.fallecimiento
     else:
-        amount = amounts.base + (amounts.increment_over_age if age >= increment_age else Decimal("0"))
+        increment = ascendant.age_at_devengo(filing_year) >= increment_age
+        amount = amounts.base + (amounts.increment_over_age if increment else Decimal("0"))
     return amount / Decimal(divisor)
+
+
+def _comunidad_condition(
+    ascendant: AscendantInfo, filing_year: int, *, qualifying_age: int, qualifying_discapacidad_grado: int
+) -> bool | None:
+    """Whether the row meets a comunidad's age-or-disability condition, ``None`` while its grade is unstated."""
+    if ascendant.age_at_devengo(filing_year) >= qualifying_age:
+        return True
+    if ascendant.discapacidad_grado is None:
+        return None
+    return ascendant.discapacidad_grado >= qualifying_discapacidad_grado
+
+
+def _weight(
+    ascendant: AscendantInfo,
+    filing_year: int,
+    *,
+    amounts: AscendantMinimumAmounts,
+    minimum_age: int,
+    qualifying_age: int,
+    qualifying_discapacidad_grado: int,
+) -> Decimal | tuple[str, ...]:
+    """One row's share of a comunidad deducción that rests on the mínimo, or the leaves it owes."""
+    divisor = _entitlement(ascendant, filing_year, amounts=amounts, minimum_age=minimum_age)
+    condition = _comunidad_condition(
+        ascendant,
+        filing_year,
+        qualifying_age=qualifying_age,
+        qualifying_discapacidad_grado=qualifying_discapacidad_grado,
+    )
+    if divisor == 0 or condition is False:
+        return Decimal("0")
+    if isinstance(divisor, tuple):
+        return divisor if condition else tuple(dict.fromkeys((*divisor, DISCAPACIDAD_LEAF)))
+    if condition is None:
+        return (DISCAPACIDAD_LEAF,)
+    return Decimal(1) / Decimal(divisor)
+
+
+def _aggregate(shares: Sequence[Decimal | tuple[str, ...]]) -> AscendantMinimumResult:
+    total = Decimal("0")
+    unstated: list[AscendantFactUnstated] = []
+    for position, share in enumerate(shares, start=1):
+        if isinstance(share, tuple):
+            unstated.append(AscendantFactUnstated(position=position, leaves=share))
+        else:
+            total += share
+    if unstated:
+        return AscendantMinimumResult(total=None, unstated=tuple(unstated))
+    return AscendantMinimumResult(total=total)
 
 
 def minimo_ascendientes(
@@ -174,23 +244,48 @@ def minimo_ascendientes(
     """
     minimum_age = context.integer(_MINIMUM_AGE_FACT)
     increment_age = context.integer(_INCREMENT_AGE_FACT)
-    total = Decimal("0")
-    unstated: list[AscendantFactUnstated] = []
-    for position, ascendant in enumerate(ascendants, start=1):
-        share = _share(
-            ascendant,
-            filing_year,
-            amounts=amounts,
-            minimum_age=minimum_age,
-            increment_age=increment_age,
-        )
-        if isinstance(share, tuple):
-            unstated.append(AscendantFactUnstated(position=position, leaves=share))
-        else:
-            total += share
-    if unstated:
-        return AscendantMinimumResult(total=None, unstated=tuple(unstated))
-    return AscendantMinimumResult(total=total)
+    return _aggregate(
+        [
+            _share(ascendant, filing_year, amounts=amounts, minimum_age=minimum_age, increment_age=increment_age)
+            for ascendant in ascendants
+        ]
+    )
+
+
+def ascendant_entitlement_weighted_count(
+    ascendants: Sequence[AscendantInfo],
+    filing_year: int,
+    *,
+    amounts: AscendantMinimumAmounts,
+    context: FamilyFactResolutionContext,
+    qualifying_age: int,
+    qualifying_discapacidad_grado: int,
+) -> AscendantMinimumResult:
+    """Count the ascendants a comunidad deducción resting on the mínimo reaches, each by its share.
+
+    An ascendant counts when the filer applies the art. 59 mínimo for them, read
+    exactly as :func:`minimo_ascendientes` reads it, and the comunidad's own
+    condition holds: an age at the devengo of at least ``qualifying_age``, or a
+    disability grade of at least ``qualifying_discapacidad_grado``. It counts by the
+    art. 61 norma 1ª share, one over the descendants entitled with the filer. A row
+    a stated fact rules out, on either side, counts zero whatever else it omits; any
+    other row that omits a deciding fact withholds the count, as it withholds the
+    mínimo. The total is a weighted count of persons, not an amount.
+    """
+    minimum_age = context.integer(_MINIMUM_AGE_FACT)
+    return _aggregate(
+        [
+            _weight(
+                ascendant,
+                filing_year,
+                amounts=amounts,
+                minimum_age=minimum_age,
+                qualifying_age=qualifying_age,
+                qualifying_discapacidad_grado=qualifying_discapacidad_grado,
+            )
+            for ascendant in ascendants
+        ]
+    )
 
 
 __all__ = [
@@ -202,5 +297,6 @@ __all__ = [
     "AscendantInfo",
     "AscendantMinimumAmounts",
     "AscendantMinimumResult",
+    "ascendant_entitlement_weighted_count",
     "minimo_ascendientes",
 ]

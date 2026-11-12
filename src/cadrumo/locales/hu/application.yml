@@ -1571,6 +1571,10 @@ application:
           nélküli bevételei.
         what_to_do: Add meg a tevékenység típusát ezeknél a bevételi tételeknél, majd
           számolj újra.
+      autonomic_deducciones_not_enrolled:
+        what: Ebben az évben a lakóhelyed szerinti autonóm közösség regionális kedvezményei
+          nincsenek kiszámítva.
+        what_to_do: Ha valamelyik megillet, írd be te magad az összegét a rovatába.
       calculation_screen_outdated:
         what: Ez a számítás a Cadrumo jelenlegi ellenőrzései előtt készült, ezért
           ebben a formában nem ellenőrizhető, nem exportálható és nem rögzíthető.

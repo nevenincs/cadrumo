@@ -43,6 +43,8 @@ from ...domain.contribuyente.ascendant_minimum import (
     RENTAS_ANUALES_LEAF,
     AscendantInfo,
     AscendantMinimumAmounts,
+    AscendantMinimumResult,
+    ascendant_entitlement_weighted_count,
     minimo_ascendientes,
 )
 from ...domain.modelos.calculation_revision_sources import CalculationNoteFact, CalculationNoteSentence
@@ -58,7 +60,9 @@ if TYPE_CHECKING:
 __all__ = [
     "MINIMO_ASCENDIENTES_AGGREGATE_KEY",
     "MINIMO_ASCENDIENTES_AUTONOMICO_AGGREGATE_KEY",
+    "AscendantEntitlementCount",
     "AscendantMinimumDerivation",
+    "ascendant_entitlement_count",
     "inject_derived_minimo_ascendientes_facts",
 ]
 
@@ -95,6 +99,25 @@ class AscendantMinimumDerivation:
 
     withheld_paths: frozenset[str] = frozenset()
     diagnostics: tuple[CalculationSourceDiagnostic, ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
+class AscendantEntitlementCount:
+    """The weighted count of ascendants a comunidad deducción reaches, or the notes that withhold it."""
+
+    count: Decimal | None
+    """``None`` while a row owes a deciding fact or the edition lacks a state figure."""
+    diagnostics: tuple[CalculationSourceDiagnostic, ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
+class _StoredAscendants:
+    ascendants: tuple[AscendantInfo, ...]
+    positions: tuple[int, ...]
+    """The 0-based stored position of each read ascendant, which is the edit door's index."""
+    owed: dict[str, list[int]]
+    """The rows that cannot be read at all, by the leaf they omit."""
+    recorded: int
 
 
 def _amounts(snapshot: RegistrySnapshot) -> AscendantMinimumAmounts | None:
@@ -232,6 +255,68 @@ def _unstated_note(leaf: str, rows: tuple[int, ...], recorded: int, *, bucket_id
     )
 
 
+def _read_stored_ascendants(fact_index: Mapping[str, UserProfileFactValue]) -> _StoredAscendants:
+    rows = _stored_rows(fact_index)
+    ascendants: list[AscendantInfo] = []
+    positions: list[int] = []
+    owed: dict[str, list[int]] = {}
+    for position, (index, row) in enumerate(rows.items()):
+        ascendant = _ascendant(index, row)
+        if ascendant is None:
+            owed.setdefault(_BIRTH_DATE_LEAF, []).append(position)
+        else:
+            ascendants.append(ascendant)
+            positions.append(position)
+    return _StoredAscendants(tuple(ascendants), tuple(positions), owed, len(rows))
+
+
+def _owed_notes(
+    stored: _StoredAscendants, result: AscendantMinimumResult, *, bucket_id: str
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """One note per leaf the stored rows omit, unreadable rows and withholding rows alike."""
+    owed = {leaf: list(rows) for leaf, rows in stored.owed.items()}
+    for unstated in result.unstated:
+        for leaf in unstated.leaves:
+            owed.setdefault(leaf, []).append(stored.positions[unstated.position - 1])
+    return tuple(
+        _unstated_note(leaf, tuple(sorted(omitting)), stored.recorded, bucket_id=bucket_id)
+        for leaf, omitting in sorted(owed.items())
+    )
+
+
+def ascendant_entitlement_count(
+    fact_index: Mapping[str, UserProfileFactValue],
+    snapshot: RegistrySnapshot,
+    *,
+    qualifying_age: int,
+    qualifying_discapacidad_grado: int,
+    context: FamilyFactResolutionContext,
+    bucket_id: str,
+) -> AscendantEntitlementCount:
+    """Count the stored ascendants a comunidad deducción resting on the mínimo reaches.
+
+    Reads the rows exactly as the mínimo does, so a row that owes a fact for one owes
+    it for the other and the notes coincide. A row a stated fact rules out counts
+    zero; a row that owes a deciding fact withholds the count with its notes.
+    """
+    amounts = _amounts(snapshot)
+    if amounts is None:
+        return AscendantEntitlementCount(count=None)
+    stored = _read_stored_ascendants(fact_index)
+    result = ascendant_entitlement_weighted_count(
+        stored.ascendants,
+        snapshot.filing_year,
+        amounts=amounts,
+        context=context,
+        qualifying_age=qualifying_age,
+        qualifying_discapacidad_grado=qualifying_discapacidad_grado,
+    )
+    notes = _owed_notes(stored, result, bucket_id=bucket_id)
+    if notes or result.total is None:
+        return AscendantEntitlementCount(count=None, diagnostics=notes)
+    return AscendantEntitlementCount(count=result.total)
+
+
 def inject_derived_minimo_ascendientes_facts(
     fact_index: dict[str, UserProfileFactValue],
     snapshot: RegistrySnapshot,
@@ -261,30 +346,12 @@ def inject_derived_minimo_ascendientes_facts(
     amounts = _amounts(snapshot)
     if amounts is None:
         return AscendantMinimumDerivation()
-    rows = _stored_rows(fact_index)
-    ascendants: list[AscendantInfo] = []
-    # The position of each read ascendant in the stored order, which is the edit door's index.
-    positions: list[int] = []
-    owed: dict[str, list[int]] = {}
-    for position, (index, row) in enumerate(rows.items()):
-        ascendant = _ascendant(index, row)
-        if ascendant is None:
-            owed.setdefault(_BIRTH_DATE_LEAF, []).append(position)
-        else:
-            ascendants.append(ascendant)
-            positions.append(position)
+    stored = _read_stored_ascendants(fact_index)
+    ascendants = stored.ascendants
     result = minimo_ascendientes(ascendants, snapshot.filing_year, amounts=amounts, context=context)
-    for unstated in result.unstated:
-        for leaf in unstated.leaves:
-            owed.setdefault(leaf, []).append(positions[unstated.position - 1])
-    if owed or result.total is None:
-        return AscendantMinimumDerivation(
-            withheld_paths=frozenset(consumed),
-            diagnostics=tuple(
-                _unstated_note(leaf, tuple(sorted(omitting)), len(rows), bucket_id=bucket_id)
-                for leaf, omitting in sorted(owed.items())
-            ),
-        )
+    notes = _owed_notes(stored, result, bucket_id=bucket_id)
+    if notes or result.total is None:
+        return AscendantMinimumDerivation(withheld_paths=frozenset(consumed), diagnostics=notes)
     if MINIMO_ASCENDIENTES_AGGREGATE_KEY in consumed:
         fact_index[MINIMO_ASCENDIENTES_AGGREGATE_KEY] = result.total
     if MINIMO_ASCENDIENTES_AUTONOMICO_AGGREGATE_KEY not in consumed:

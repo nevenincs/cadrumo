@@ -76,6 +76,7 @@ from ..aggregation.source_mesh import (
     CalculationSourceResolution,
 )
 from ..user_profile.projections import profile_fact_index
+from .autonomic_deduccion_dispatch import inject_autonomic_deduccion_facts
 from .printed_boxes import first_printed_dependent, printed_boxes
 from .profile_derived_facts import (
     ProfileBindingResolutionError,
@@ -83,7 +84,6 @@ from .profile_derived_facts import (
     family_fact_context,
     inject_derived_activity_tipo_clave_fact,
     inject_derived_anualidades_eligibility_facts,
-    inject_derived_autonomic_deduccion_facts,
     inject_derived_cash_election_fact,
     inject_derived_estimation_modality_fact,
     inject_derived_incremento_guarderia_facts,
@@ -92,7 +92,6 @@ from .profile_derived_facts import (
     inject_derived_state_attribution_facts,
     inject_ordinary_work_maritime_facts,
     profile_declares_economic_activity,
-    snapshot_authored_year,
 )
 from .profile_maternidad_meses import inject_derived_deduccion_maternidad_facts
 from .profile_minimo_ascendientes import inject_derived_minimo_ascendientes_facts
@@ -456,13 +455,6 @@ def _load_profile_facts(
         context=family_context,
         operation=operation,
     )
-    inject_derived_autonomic_deduccion_facts(
-        fact_index,
-        snapshot.filing_year,
-        authored_year=snapshot_authored_year(snapshot),
-        context=family_context,
-        operation=operation,
-    )
     inject_derived_minimo_descendientes_facts(
         fact_index,
         snapshot,
@@ -480,6 +472,13 @@ def _load_profile_facts(
         fact_index,
         snapshot,
         declared_selectors,
+        context=family_context,
+        bucket_id=bucket_id,
+    )
+    autonomicas = inject_autonomic_deduccion_facts(
+        fact_index,
+        snapshot,
+        schema=resolved_schema,
         context=family_context,
         bucket_id=bucket_id,
     )
@@ -501,9 +500,13 @@ def _load_profile_facts(
     return _ProfileFacts(
         fact_index=fact_index,
         fingerprint=profile_record_fingerprint,
-        decided_derived_paths=decided_derived_paths | ascendientes.withheld_paths,
-        withheld_derived_paths=ascendientes.withheld_paths,
-        derived_diagnostics=ascendientes.diagnostics,
+        decided_derived_paths=decided_derived_paths | ascendientes.withheld_paths | autonomicas.decided_paths,
+        withheld_derived_paths=ascendientes.withheld_paths | autonomicas.withheld_paths,
+        # A deducción resting on the mínimo owes the facts the mínimo owes, so one note serves both.
+        derived_diagnostics=(
+            *ascendientes.diagnostics,
+            *(note for note in autonomicas.diagnostics if note not in ascendientes.diagnostics),
+        ),
     )
 
 

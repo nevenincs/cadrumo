@@ -208,6 +208,7 @@ CALCULATION_NOTE_ATTENTION: Final[Mapping[str, ModeloFormAttention]] = MappingPr
         # For the filer's information.
         "deferred_binding_source": _I,
         "oss_no_live_source": _I,
+        "autonomic_deducciones_not_enrolled": _I,
         "register_owned_capital_acquisition": _I,
         "inventory_book_claimed_purchase": _I,
         "activity_asset_agrarian_excluded": _I,

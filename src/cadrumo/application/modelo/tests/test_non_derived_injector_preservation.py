@@ -27,9 +27,9 @@ that, "the stored value survived" is equally satisfied by an injector that
 writes nothing at all, and the test would pass against a function that had been
 gutted.
 
-One trap worth naming, because it is invisible at the call site: the Madrid
-injector is gated on filing year 2025. Probing it at 2024 returns before writing
-anything, which reads as a broken test rather than a year gate.
+The Madrid pair is supplied by the shared autonomic deducción dispatch, which reads
+the edition's enrolments, so it is probed at the newest authored Modelo 100 edition,
+the one that enrols box 1039.
 """
 
 from __future__ import annotations
@@ -42,8 +42,12 @@ import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import newest_authored_edition
+from ....domain.calculations.registry.tests.published_authority import published_profile_schema, published_snapshot
+from ..autonomic_deduccion_dispatch import inject_autonomic_deduccion_facts
 from ..profile_derived_facts import (
-    inject_derived_autonomic_deduccion_facts,
+    family_fact_context,
     inject_derived_marriage_facts,
     inject_derived_state_attribution_facts,
 )
@@ -55,7 +59,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _MARRIAGE_FULL_YEAR = "renta_taxpayer.marriage_full_year"
 _STATE_ATTRIBUTION = "tax_residence.state_attribution_ratio"
-_MADRID_YEAR = 2025
+_MADRID_YEAR = newest_authored_edition("100")
 
 #: Values no branch of these injectors can produce. The marriage flag is 0 or 1,
 #: the attribution ratio is 1 or 0, and the Madrid count is a non-negative
@@ -65,6 +69,17 @@ _MADRID_YEAR = 2025
 _UNREACHABLE_FLAG = Decimal("7")
 _UNREACHABLE_RATIO = Decimal("0.5")
 _UNREACHABLE_COUNT = Decimal("42")
+
+
+def _dispatch_madrid(facts: dict[str, Any], operation: PinnedAuthorityOperation) -> None:
+    snapshot = published_snapshot("100", filing_year=_MADRID_YEAR, period="0A")
+    inject_autonomic_deduccion_facts(
+        facts,
+        snapshot,
+        schema=published_profile_schema(),
+        context=family_fact_context(snapshot, operation=operation),
+        bucket_id="0de41ce4-0000-4000-8000-000000000082",
+    )
 
 
 def _married_profile() -> dict[str, Any]:
@@ -116,7 +131,7 @@ def test_state_attribution_ratio_rejects_a_stored_value_as_authority() -> None:
 # ---------------------------------------------------------------------------
 # Family 3: the Madrid nacimiento/adopción pair -- a DIFFERENT shape.
 #
-# Not skip-if-present. It unconditionally ``setdefault``s a neutral zero so the
+# Not skip-if-present. The dispatch ``setdefault``s a neutral zero so the
 # casilla-1039 formula resolves for every filer, then OVERWRITES the count for a
 # determinable Madrid unit with eligible descendants. So a stored value survives
 # in one direction and is replaced in the other, and flattening it into the same
@@ -132,9 +147,7 @@ def test_madrid_count_preserves_a_stored_value_for_a_non_madrid_filer() -> None:
             "tax_residence.ccaa": "cataluna",
             _AUTONOMIC_DEDUCCION_ELIGIBLE_COUNT_KEY: _UNREACHABLE_COUNT,
         }
-        inject_derived_autonomic_deduccion_facts(
-            seeded, _MADRID_YEAR, authored_year=_MADRID_YEAR, operation=_authority_operation_for_test
-        )
+        _dispatch_madrid(seeded, _authority_operation_for_test)
 
         assert seeded[_AUTONOMIC_DEDUCCION_ELIGIBLE_COUNT_KEY] == _UNREACHABLE_COUNT
         # The neutral default still lands on the sibling key it does own.
@@ -156,9 +169,7 @@ def test_madrid_count_is_overwritten_for_a_determinable_madrid_unit() -> None:
             "renta_family.descendiente.0.convivencia": "true",
             _AUTONOMIC_DEDUCCION_ELIGIBLE_COUNT_KEY: _UNREACHABLE_COUNT,
         }
-        inject_derived_autonomic_deduccion_facts(
-            seeded, _MADRID_YEAR, authored_year=_MADRID_YEAR, operation=_authority_operation_for_test
-        )
+        _dispatch_madrid(seeded, _authority_operation_for_test)
 
         resolved = seeded[_AUTONOMIC_DEDUCCION_ELIGIBLE_COUNT_KEY]
         assert isinstance(resolved, Decimal)
@@ -175,9 +186,7 @@ def test_unidad_familiar_base_preserves_a_stored_value() -> None:
             "renta_filing.declaration_type": "1",
         }
         seeded: dict[str, Any] = {**determinable_madrid, _UNIDAD_FAMILIAR_OTROS_MIEMBROS_BASE_KEY: _UNREACHABLE_COUNT}
-        inject_derived_autonomic_deduccion_facts(
-            seeded, _MADRID_YEAR, authored_year=_MADRID_YEAR, operation=_authority_operation_for_test
-        )
+        _dispatch_madrid(seeded, _authority_operation_for_test)
 
         assert seeded[_UNIDAD_FAMILIAR_OTROS_MIEMBROS_BASE_KEY] == _UNREACHABLE_COUNT
 
@@ -186,9 +195,7 @@ def test_unidad_familiar_base_preserves_a_stored_value() -> None:
         # different, so the survival above is the setdefault deferring rather than
         # the injector never touching the key at all.
         computed: dict[str, Any] = dict(determinable_madrid)
-        inject_derived_autonomic_deduccion_facts(
-            computed, _MADRID_YEAR, authored_year=_MADRID_YEAR, operation=_authority_operation_for_test
-        )
+        _dispatch_madrid(computed, _authority_operation_for_test)
         assert _UNIDAD_FAMILIAR_OTROS_MIEMBROS_BASE_KEY in computed
         assert computed[_UNIDAD_FAMILIAR_OTROS_MIEMBROS_BASE_KEY] != _UNREACHABLE_COUNT
 

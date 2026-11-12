@@ -1,0 +1,16 @@
+# DL 1/2010 art. 7 bis (Comunidad de Madrid): the ascendants the filer applies the mínimo por
+# ascendientes for and who meet the article's age or disability, each weighted by the share of
+# that mínimo the filer applies (LIRPF art. 61 norma 1ª). The shared autonomic-deducción
+# dispatch derives the count from the stored ascendant rows; the selector carries no year, so
+# every later edition inherits this declaration.
+[[revisions."2023".bindings]]
+id = "renta-profile-deduccion-madrid-cuidado-ascendientes-count"
+provider = { kind = "profile", profile_key = "renta_family.deduccion_madrid_cuidado_ascendientes_count" }
+value = { data_type = "decimal", channel = "decimal" }
+aggregation = { op = "copy" }
+legal_refs = ["ley-35-2006:art-77", "madrid-dl-1-2010:art-7-bis"]
+source_refs = ["aeat-renta-2023-manual-parte1"]
+
+[[revisions."2023".bindings.source_citations]]
+source_ref = "aeat-renta-2023-manual-parte1"
+required_text = ["el importe de la misma se prorrateará por partes iguales en la"]

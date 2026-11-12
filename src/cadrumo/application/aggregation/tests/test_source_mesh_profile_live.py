@@ -56,6 +56,7 @@ _DERIVED_FACT_PROFILE_BINDINGS = frozenset(
         "renta-profile-minimo-descendientes-autonomico",
         "renta-profile-has-economic-activity",
         "renta-profile-madrid-nacimiento-adopcion-eligible-count",
+        "renta-profile-deduccion-madrid-cuidado-ascendientes-count",
         "renta-profile-unidad-familiar-otros-miembros-base",
         "renta-profile-anualidades-sin-minimo-descendientes",
         "renta-profile-deduccion-maternidad",

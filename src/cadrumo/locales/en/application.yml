@@ -1513,6 +1513,10 @@ application:
           of activity.
         what_to_do: Set the type of activity on those income entries, then calculate
           again.
+      autonomic_deducciones_not_enrolled:
+        what: The regional deductions of your comunidad of residence are not worked
+          out for this year.
+        what_to_do: If any applies to you, enter its amount yourself in its box.
       calculation_screen_outdated:
         what: This calculation was made before Cadrumo's current checks on its figures,
           so it cannot be checked, exported or recorded as it stands.

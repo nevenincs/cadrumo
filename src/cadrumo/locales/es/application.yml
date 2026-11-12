@@ -1610,6 +1610,10 @@ application:
           sin tipo de actividad.
         what_to_do: Indica el tipo de actividad en esos registros de ingresos y vuelve
           a calcular.
+      autonomic_deducciones_not_enrolled:
+        what: Las deducciones autonómicas de tu comunidad de residencia no se calculan
+          en este ejercicio.
+        what_to_do: Si te corresponde alguna, escribe tú su importe en su casilla.
       calculation_screen_outdated:
         what: Este cálculo se hizo antes de las comprobaciones actuales de Cadrumo
           sobre sus cifras, así que no se puede comprobar, exportar ni registrar tal

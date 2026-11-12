@@ -193,6 +193,7 @@ def test_advisory_fires_when_a_selected_derived_binding_resolves_to_nothing() ->
         "renta-modelo-100-estimacion-directa-modalidad-clave",
         "renta-profile-activity-cash-criterion-0169",
         "renta-profile-anualidades-sin-minimo-descendientes",
+        "renta-profile-deduccion-madrid-cuidado-ascendientes-count",
         "renta-profile-deduccion-maternidad",
         "renta-profile-estimacion-directa",
         "renta-profile-incremento-guarderia",

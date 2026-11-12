@@ -94,6 +94,10 @@ CalculationSourceDiagnosticReason = Literal[
     "iva_row_placed_on_movement_date",
     "iva_operation_date_after_movement",
     "oss_no_live_source",
+    # The filer's comunidad of residence, or an unstated one, has no autonomic
+    # deducción enrolled in the edition: its regional deducciones are not computed
+    # and stay enterable by hand. Leaving one out can only raise the tax.
+    "autonomic_deducciones_not_enrolled",
     # An annual withholding summary whose per-perceptor-clave detail store holds
     # NO observation for the year. The bound percepciones count is still
     # materialised as an explicit zero so the casilla gets its fact and the

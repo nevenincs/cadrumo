@@ -1601,6 +1601,10 @@ application:
           sense tipus d'activitat.
         what_to_do: Indica el tipus d'activitat en aquests registres d'ingressos i
           torna a calcular.
+      autonomic_deducciones_not_enrolled:
+        what: Les deduccions autonòmiques de la teva comunitat de residència no es
+          calculen en aquest exercici.
+        what_to_do: Si te'n correspon alguna, escriu tu el seu import a la seva casella.
       calculation_screen_outdated:
         what: Aquest càlcul es va fer abans de les comprovacions actuals de Cadrumo
           sobre les seves xifres, així que no es pot comprovar, exportar ni registrar
