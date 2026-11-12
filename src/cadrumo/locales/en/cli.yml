@@ -978,6 +978,7 @@ cli:
         period_help: 'Period code: 0A annual, 1T-4T quarters, 01-12 months; for censo
           modelos (036): alta (registration), modificacion (change), or baja (deregistration).'
         readiness:
+          actividades_prorrata: prorrata register activities
           activo_extranjero: foreign asset
           afiliado_cotizacion: contributions-relationship affiliate
           borrador_aeat: AEAT draft
