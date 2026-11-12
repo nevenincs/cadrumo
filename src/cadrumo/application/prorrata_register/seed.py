@@ -404,6 +404,20 @@ def _prior_annual_summary_definitiva(
     if refusal is not None:
         return _OfficialPriorDefinitiva(source=None, findings=(refusal,))
     rows = _activity_row_casillas(operation.revision(annual_modelo, payload.stamped_revision_id))
+    return _definitiva_from_activity_rows(
+        payload, rows, prior_year=prior_year, annual_modelo=annual_modelo, annual_period=annual_period
+    )
+
+
+def _definitiva_from_activity_rows(
+    payload: ObservationEnvelopePayload,
+    rows: dict[int, dict[ProrrataActivityField, CasillaId]],
+    *,
+    prior_year: int,
+    annual_modelo: str,
+    annual_period: str,
+) -> _OfficialPriorDefinitiva:
+    """Take the first activity row's percentage, refusing a summary that declares further activities."""
     percentage_id = rows.get(1, {}).get(ProrrataActivityField.PORCENTAJE)
     values = payload.observation.casilla_values
     percentage = None if percentage_id is None else values.get(percentage_id)
