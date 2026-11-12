@@ -17,4 +17,16 @@ def absent_when_none(value: object) -> bool:
     return value is None
 
 
-__all__ = ["absent_when_none"]
+def later_absent_when_none(value: object) -> bool:
+    """Leave out, while it holds nothing, an optional field added after builds stopped writing ``null``.
+
+    Some builds wrote :func:`absent_when_none` fields as ``null``, and the
+    snapshots they saved are bound by digests of that form, so a reader also
+    tries it. A field those builds never had appears in none of their
+    snapshots, so it stays out of that form too; it takes this exclusion
+    instead of :func:`absent_when_none`.
+    """
+    return value is None
+
+
+__all__ = ["absent_when_none", "later_absent_when_none"]

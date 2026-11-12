@@ -11,7 +11,7 @@ import { MODELO_FIXTURES } from "../support/windowFixtures";
 // from a finding or a source, says why a declaration cannot be changed, and
 // says an operation whose settlement was not seen is unknown.
 // The rules-incomplete banner is shown by the stories: the list does not
-// open the scenario's 390, which its read model says could not be read.
+// open the scenario's rules-incomplete declaration, which its read model says could not be read.
 
 const workspace = (target: Page) => target.locator(".declarations-workspace");
 const tab = (target: Page, key: string) =>

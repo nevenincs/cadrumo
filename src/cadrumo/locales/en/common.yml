@@ -9182,6 +9182,38 @@ tui:
         reconciliation_resolved: Resolved
         revision_current: Current
         revision_superseded: Replaced
+  withholding:
+    absence:
+      state:
+        active: Active
+        withdrawn: Withdrawn
+    absences:
+      title: Statements of no withholding
+    action:
+      attest_absence: State there was no withholding
+      read: Read
+      record: Add or replace a record
+      remove: Remove selected record
+      withdraw_absence: Withdraw selected statement
+    column:
+      attested_on: Stated on
+      income: Income
+      note: Note
+      payer: Payer
+      state: State
+    ejercicio: Year
+    prompt: Enter a year and read it to see its payer records and statements of no
+      withholding.
+    records:
+      title: Payer records
+    status:
+      choose_active_absence: Select an active statement first.
+      choose_record: Select a payer record first.
+      ejercicio_invalid: Enter the year as four digits.
+      empty: Nothing is recorded for %{ejercicio}.
+      read_failed: The records could not be read.
+      read_first: Read a year first.
+      reading: Reading…
 workspace:
   declarations:
     availability:

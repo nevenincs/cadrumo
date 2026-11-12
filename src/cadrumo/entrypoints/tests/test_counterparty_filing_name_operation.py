@@ -107,6 +107,59 @@ def test_a_statement_stores_the_name_a_view_shows_it_and_a_retry_changes_nothing
         assert retried.filing_name == stated.filing_name
 
 
+def test_a_view_serves_each_export_slot_with_its_width_and_whether_the_stated_name_fills_it(tmp_path: Path) -> None:
+    with conformance.conformance_operation_runtime(
+        tmp_path / "runtime", cleanup=conformance.OperationRuntimeCloseWitness()
+    ) as (driver, registry, profile_id):
+
+        def run(request: LedgerCounterpartyRequest) -> LedgerCounterpartyResult:
+            submitted, observed = asyncio.run(
+                driver.run(
+                    definition_id=_DEFINITION,
+                    subject_ref=profile_operation_subject(str(profile_id)),
+                    payload=request,
+                )
+            )
+            assert observed.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
+            return conformance.resolve_result_projection(
+                driver,
+                registry,
+                definition_id=_DEFINITION,
+                operation_id=submitted.receipt.operation_id,
+                terminal_revision=observed.projection.revision,
+                projection_type=LedgerCounterpartyResult,
+            )
+
+        view = LedgerCounterpartyRequest(profile_id=profile_id, action="view", tax_identifier=_SUPPLIER_CIF)
+        unstated = run(view)
+        assert unstated.filing_name_slots
+        assert {(slot.fits, slot.refusal) for slot in unstated.filing_name_slots} == {(False, "missing")}
+        widest = max(slot.width for slot in unstated.filing_name_slots)
+        limits = {limit.part: limit.max_length for limit in unstated.filing_name_part_limits}
+        assert limits["razon_social"] == widest
+
+        # One character wider than every slot: each refuses as the export would, until a rendering is stated.
+        too_wide = "F" * (widest + 1)
+        run(_statement(profile_id, party_kind=DeclaredPartyKind.ENTITY.value, razon_social=too_wide))
+        overflowing = run(view)
+        assert {(slot.fits, slot.refusal, slot.composed_length) for slot in overflowing.filing_name_slots} == {
+            (False, "too_wide", widest + 1)
+        }
+
+        narrower = sorted({slot.width for slot in unstated.filing_name_slots})
+        run(
+            _statement(
+                profile_id,
+                party_kind=DeclaredPartyKind.ENTITY.value,
+                razon_social=too_wide,
+                renderings=tuple(CounterpartyFilingNameRendering(width=width, text="R" * width) for width in narrower),
+            )
+        )
+        rendered = run(view)
+        assert all(slot.fits and slot.uses_rendering for slot in rendered.filing_name_slots)
+        assert rendered.filing_name_part_limits == unstated.filing_name_part_limits
+
+
 def test_parts_that_form_no_filing_name_are_refused_and_nothing_is_written(tmp_path: Path) -> None:
     with conformance.conformance_operation_runtime(
         tmp_path / "runtime", cleanup=conformance.OperationRuntimeCloseWitness()

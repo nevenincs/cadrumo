@@ -27,7 +27,13 @@ import type {
   FixtureLedger,
   FixtureMovement,
 } from "./fixtures/ledger";
-import { DOCUMENT_PAGE } from "./fixtures/documentPage";
+import {
+  DOCUMENT_PAGE,
+  STRUCTURED_SAMPLE_NAMES,
+  STRUCTURED_WITH_LINES,
+  STRUCTURED_WITHOUT_LINES,
+  structuredSampleId,
+} from "./fixtures/documentPage";
 import servedWords from "@fixtures/ledger-served-words/ledgerServedWords.json" with { type: "json" };
 import {
   ATTACHMENTS,
@@ -1031,8 +1037,9 @@ export function evidenceOperations(ledger: FixtureLedger, tools: Tools) {
   }
   /** One page of a stored document, drawn: an invented ticket prints what
    * its reading read, and every other page is the same invented picture. A
-   * PDF has two pages and an image one; any other document cannot be
-   * drawn. */
+   * PDF has two pages and an image one. An XML document is a structured
+   * e-invoice and is shown as its facts, as one page; any other document
+   * cannot be drawn. */
   function page(request: JsonObject): JsonObject {
     const evidenceId = text(request.evidence_id);
     const attachmentId = text(request.attachment_id);
@@ -1051,6 +1058,14 @@ export function evidenceOperations(ledger: FixtureLedger, tools: Tools) {
     const refused = (reason: string): never => {
       throw new InvoiceStopped(`REFUSED_LEDGER_EVIDENCE_PAGE_${reason}`, {});
     };
+    const structuredSamples = () =>
+      Object.values(STRUCTURED_SAMPLE_NAMES).map((name) => ({
+        name,
+        id: structuredSampleId(name),
+      }));
+    const isXml = (found: { media: string; name: string | null }) =>
+      found.media === "application/xml" ||
+      (found.name?.toLowerCase().endsWith(".xml") ?? false);
     let facts: { id: string; sha: string; name: string | null; media: string };
     if (evidenceId !== null) {
       const record = recordOf(evidenceId) ?? refused("NOT_FOUND");
@@ -1062,18 +1077,48 @@ export function evidenceOperations(ledger: FixtureLedger, tools: Tools) {
       };
     } else {
       if (!HEX64.test(attachmentId!)) invalid();
-      const item =
-        attachments.find((found) => found.attachment_id === attachmentId) ??
-        refused("NOT_FOUND");
-      facts = {
-        id: item.attachment_id,
-        sha: item.sha256,
-        name: null,
-        media: item.mime_type,
-      };
+      const sample = structuredSamples().find(
+        (found) => found.id === attachmentId,
+      );
+      const item = sample
+        ? undefined
+        : (attachments.find((found) => found.attachment_id === attachmentId) ??
+          refused("NOT_FOUND"));
+      facts = sample
+        ? {
+            id: sample.id,
+            sha: sample.id,
+            name: sample.name,
+            media: "application/xml",
+          }
+        : {
+            id: item!.attachment_id,
+            sha: item!.sha256,
+            name: null,
+            media: item!.mime_type,
+          };
     }
     const held = facts.name === null ? undefined : pageRefusals.get(facts.name);
     if (held) refused(held);
+    if (number > 1 && isXml(facts)) refused("OUT_OF_RANGE");
+    if (isXml(facts)) {
+      return {
+        profile_id: profileId,
+        evidence_id: evidenceId,
+        attachment_id: facts.id,
+        media_type: "application/xml",
+        page: number,
+        page_count: 1,
+        width: null,
+        height: null,
+        source_sha256: facts.sha,
+        file_name: facts.name,
+        image_data_url: null,
+        structured_invoice: (facts.name === STRUCTURED_SAMPLE_NAMES.withoutLines
+          ? STRUCTURED_WITHOUT_LINES
+          : STRUCTURED_WITH_LINES) as unknown as JsonObject,
+      };
+    }
     const count =
       facts.media === "application/pdf"
         ? 2

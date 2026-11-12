@@ -32,6 +32,7 @@ from .export_literal_fact import ExportLiteralFact, resolve_export_literal_fact
 from .export_record_components import validate_export_record_components
 from .export_semantics import ExportComputedKey, ExportDraftAttribute
 from .export_value_policy import ExportValuePolicyValue
+from .field_absence import later_absent_when_none
 from .fixed_width_codec import (
     ExportAlphanumericTextValue,
     ExportEncodingValue,
@@ -593,7 +594,7 @@ class ExportFieldDefinition(RegistryModel):
     otherwise for its unused slots, as DR369's general notes 6-7 do, which keeps an
     absent quantity apart from a declared zero.
     """
-    party_name: PartyNameComposition | None = None
+    party_name: PartyNameComposition | None = Field(default=None, exclude_if=later_absent_when_none)
     """How a party-name slot is composed from the parts its party's filing name states.
 
     Carried by generated layouts from the reviewed design text that prescribes
@@ -710,7 +711,7 @@ class ExportRecordDefinition(RegistryModel):
     record_type: str
     order: NonNegativeInt
     encoding: ExportEncodingValue
-    alphanumeric_text: ExportAlphanumericTextValue | None = None
+    alphanumeric_text: ExportAlphanumericTextValue | None = Field(default=None, exclude_if=later_absent_when_none)
     """How the record design states its alphanumeric field text is written.
 
     Absent where the design states no rule, and the text is written as given.
@@ -718,7 +719,7 @@ class ExportRecordDefinition(RegistryModel):
     its alphanumeric and alphabetic fields.
     """
 
-    alphanumeric_text_source_ref: SourceRefId | None = None
+    alphanumeric_text_source_ref: SourceRefId | None = Field(default=None, exclude_if=later_absent_when_none)
     """The design whose own text states :attr:`alphanumeric_text`; required with it."""
 
     line_ending: ExportLineEndingField

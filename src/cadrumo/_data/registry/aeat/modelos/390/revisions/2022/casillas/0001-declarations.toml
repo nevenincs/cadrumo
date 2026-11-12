@@ -2529,7 +2529,9 @@ continuidad_origin = "predecessor_edition_silent"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:480 (sha256 0164fbea6f50) prints box [105] (34 429 17 N 10. Volumen de operaciones - Operaciones exentas sin de...); edition 2021 declares no row for it"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of pagina 6 on the bundled Diseno de Registros."
-legal_refs = ["ley-37-1992:art-121", "ley-37-1992:art-20", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+input_kind = "bound"
+binding = "modelo-390-volumen-exentas-sin-derecho-deduccion-base"
+legal_refs = ["ley-37-1992:art-121", "ley-37-1992:art-20", "ley-37-1992:art-104", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 
 # Box [110] - "10. Volumen de operaciones - Operaciones no sujetas por reglas de localizacion (excepto las incluidas en la casilla 126) [110]" (offset 446, length 17).
 [[revisions."2022".casillas]]
@@ -4860,3 +4862,382 @@ input_kind = "bound"
 binding = "modelo-390-iva-deducible-aic-servicios-cuota"
 legal_refs = ["ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+# Modelo 390 apartado 12 "Prorratas" (aeat-dr-390-2022, Pag. 7). The design prints the
+# same five box numbers [114]-[118] on each of five activity rows, so a casilla's
+# number names its row and fact and form_number carries the printed box.
+
+# Box [114] - "12. Prorratas - 1 - Codigo CNAE [114]".
+[[revisions."2022".casillas]]
+id = "iva.anual.prorrata.actividad-1.codigo-cnae"
+number = "iva.anual.prorrata.actividad-1.codigo-cnae"
+form_number = "114"
+section = ["iva", "anual", "prorratas"]
+data_type = "text"
+semantic_role = "iva_anual_prorrata_actividad_1_codigo_cnae"
+continuidad_id = "iva-anual-prorrata-actividad-1-codigo-cnae"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:527 (sha256 0164fbea6f50) prints box [114] on prorrata row 1; edition 2021 declares no row for it"
+input_kind = "bound"
+binding = "modelo-390-prorrata-actividad-1-codigo-cnae"
+legal_refs = ["ley-37-1992:art-101", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+# Box [115] - "12. Prorratas - 1 - Importe de operaciones [115]".
+[[revisions."2022".casillas]]
+id = "iva.anual.prorrata.actividad-1.importe-operaciones"
+number = "iva.anual.prorrata.actividad-1.importe-operaciones"
+form_number = "115"
+section = ["iva", "anual", "prorratas"]
+data_type = "money"
+semantic_role = "iva_anual_prorrata_actividad_1_importe_operaciones"
+continuidad_id = "iva-anual-prorrata-actividad-1-importe-operaciones"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:528 (sha256 0164fbea6f50) prints box [115] on prorrata row 1; edition 2021 declares no row for it"
+input_kind = "bound"
+binding = "modelo-390-prorrata-actividad-1-importe-operaciones"
+legal_refs = ["ley-37-1992:art-104", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+# Box [116] - "12. Prorratas - 1 - Importe de operaciones con derecho a deduccion [116]".
+[[revisions."2022".casillas]]
+id = "iva.anual.prorrata.actividad-1.importe-con-derecho"
+number = "iva.anual.prorrata.actividad-1.importe-con-derecho"
+form_number = "116"
+section = ["iva", "anual", "prorratas"]
+data_type = "money"
+semantic_role = "iva_anual_prorrata_actividad_1_importe_con_derecho"
+continuidad_id = "iva-anual-prorrata-actividad-1-importe-con-derecho"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:529 (sha256 0164fbea6f50) prints box [116] on prorrata row 1; edition 2021 declares no row for it"
+input_kind = "bound"
+binding = "modelo-390-prorrata-actividad-1-importe-con-derecho"
+legal_refs = ["ley-37-1992:art-104", "ley-37-1992:art-94", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+# Box [117] - "12. Prorratas - 1 - Tipo de prorrata [117]".
+[[revisions."2022".casillas]]
+id = "iva.anual.prorrata.actividad-1.tipo"
+number = "iva.anual.prorrata.actividad-1.tipo"
+form_number = "117"
+section = ["iva", "anual", "prorratas"]
+data_type = "text"
+semantic_role = "iva_anual_prorrata_actividad_1_tipo"
+continuidad_id = "iva-anual-prorrata-actividad-1-tipo"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:530 (sha256 0164fbea6f50) prints box [117] on prorrata row 1; edition 2021 declares no row for it"
+input_kind = "bound"
+binding = "modelo-390-prorrata-actividad-1-tipo"
+legal_refs = ["ley-37-1992:art-103", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+# Box [118] - "12. Prorratas - 1 - % de prorrata [118]".
+[[revisions."2022".casillas]]
+id = "iva.anual.prorrata.actividad-1.porcentaje"
+number = "iva.anual.prorrata.actividad-1.porcentaje"
+form_number = "118"
+section = ["iva", "anual", "prorratas"]
+data_type = "decimal"
+semantic_role = "iva_anual_prorrata_actividad_1_porcentaje"
+continuidad_id = "iva-anual-prorrata-actividad-1-porcentaje"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:531 (sha256 0164fbea6f50) prints box [118] on prorrata row 1; edition 2021 declares no row for it"
+input_kind = "bound"
+binding = "modelo-390-prorrata-actividad-1-porcentaje"
+legal_refs = ["ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+# Box [114] - "12. Prorratas - 2 - Codigo CNAE [114]".
+[[revisions."2022".casillas]]
+id = "iva.anual.prorrata.actividad-2.codigo-cnae"
+number = "iva.anual.prorrata.actividad-2.codigo-cnae"
+form_number = "114"
+section = ["iva", "anual", "prorratas"]
+data_type = "text"
+semantic_role = "iva_anual_prorrata_actividad_2_codigo_cnae"
+continuidad_id = "iva-anual-prorrata-actividad-2-codigo-cnae"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:533 (sha256 0164fbea6f50) prints box [114] on prorrata row 2; edition 2021 declares no row for it"
+input_kind = "bound"
+binding = "modelo-390-prorrata-actividad-2-codigo-cnae"
+legal_refs = ["ley-37-1992:art-101", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+# Box [115] - "12. Prorratas - 2 - Importe de operaciones [115]".
+[[revisions."2022".casillas]]
+id = "iva.anual.prorrata.actividad-2.importe-operaciones"
+number = "iva.anual.prorrata.actividad-2.importe-operaciones"
+form_number = "115"
+section = ["iva", "anual", "prorratas"]
+data_type = "money"
+semantic_role = "iva_anual_prorrata_actividad_2_importe_operaciones"
+continuidad_id = "iva-anual-prorrata-actividad-2-importe-operaciones"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:534 (sha256 0164fbea6f50) prints box [115] on prorrata row 2; edition 2021 declares no row for it"
+input_kind = "bound"
+binding = "modelo-390-prorrata-actividad-2-importe-operaciones"
+legal_refs = ["ley-37-1992:art-104", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+# Box [116] - "12. Prorratas - 2 - Importe de operaciones con derecho a deduccion [116]".
+[[revisions."2022".casillas]]
+id = "iva.anual.prorrata.actividad-2.importe-con-derecho"
+number = "iva.anual.prorrata.actividad-2.importe-con-derecho"
+form_number = "116"
+section = ["iva", "anual", "prorratas"]
+data_type = "money"
+semantic_role = "iva_anual_prorrata_actividad_2_importe_con_derecho"
+continuidad_id = "iva-anual-prorrata-actividad-2-importe-con-derecho"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:535 (sha256 0164fbea6f50) prints box [116] on prorrata row 2; edition 2021 declares no row for it"
+input_kind = "bound"
+binding = "modelo-390-prorrata-actividad-2-importe-con-derecho"
+legal_refs = ["ley-37-1992:art-104", "ley-37-1992:art-94", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+# Box [117] - "12. Prorratas - 2 - Tipo de prorrata [117]".
+[[revisions."2022".casillas]]
+id = "iva.anual.prorrata.actividad-2.tipo"
+number = "iva.anual.prorrata.actividad-2.tipo"
+form_number = "117"
+section = ["iva", "anual", "prorratas"]
+data_type = "text"
+semantic_role = "iva_anual_prorrata_actividad_2_tipo"
+continuidad_id = "iva-anual-prorrata-actividad-2-tipo"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:536 (sha256 0164fbea6f50) prints box [117] on prorrata row 2; edition 2021 declares no row for it"
+input_kind = "bound"
+binding = "modelo-390-prorrata-actividad-2-tipo"
+legal_refs = ["ley-37-1992:art-103", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+# Box [118] - "12. Prorratas - 2 - % de prorrata [118]".
+[[revisions."2022".casillas]]
+id = "iva.anual.prorrata.actividad-2.porcentaje"
+number = "iva.anual.prorrata.actividad-2.porcentaje"
+form_number = "118"
+section = ["iva", "anual", "prorratas"]
+data_type = "decimal"
+semantic_role = "iva_anual_prorrata_actividad_2_porcentaje"
+continuidad_id = "iva-anual-prorrata-actividad-2-porcentaje"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:537 (sha256 0164fbea6f50) prints box [118] on prorrata row 2; edition 2021 declares no row for it"
+input_kind = "bound"
+binding = "modelo-390-prorrata-actividad-2-porcentaje"
+legal_refs = ["ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+# Box [114] - "12. Prorratas - 3 - Codigo CNAE [114]".
+[[revisions."2022".casillas]]
+id = "iva.anual.prorrata.actividad-3.codigo-cnae"
+number = "iva.anual.prorrata.actividad-3.codigo-cnae"
+form_number = "114"
+section = ["iva", "anual", "prorratas"]
+data_type = "text"
+semantic_role = "iva_anual_prorrata_actividad_3_codigo_cnae"
+continuidad_id = "iva-anual-prorrata-actividad-3-codigo-cnae"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:539 (sha256 0164fbea6f50) prints box [114] on prorrata row 3; edition 2021 declares no row for it"
+input_kind = "bound"
+binding = "modelo-390-prorrata-actividad-3-codigo-cnae"
+legal_refs = ["ley-37-1992:art-101", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+# Box [115] - "12. Prorratas - 3 - Importe de operaciones [115]".
+[[revisions."2022".casillas]]
+id = "iva.anual.prorrata.actividad-3.importe-operaciones"
+number = "iva.anual.prorrata.actividad-3.importe-operaciones"
+form_number = "115"
+section = ["iva", "anual", "prorratas"]
+data_type = "money"
+semantic_role = "iva_anual_prorrata_actividad_3_importe_operaciones"
+continuidad_id = "iva-anual-prorrata-actividad-3-importe-operaciones"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:540 (sha256 0164fbea6f50) prints box [115] on prorrata row 3; edition 2021 declares no row for it"
+input_kind = "bound"
+binding = "modelo-390-prorrata-actividad-3-importe-operaciones"
+legal_refs = ["ley-37-1992:art-104", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+# Box [116] - "12. Prorratas - 3 - Importe de operaciones con derecho a deduccion [116]".
+[[revisions."2022".casillas]]
+id = "iva.anual.prorrata.actividad-3.importe-con-derecho"
+number = "iva.anual.prorrata.actividad-3.importe-con-derecho"
+form_number = "116"
+section = ["iva", "anual", "prorratas"]
+data_type = "money"
+semantic_role = "iva_anual_prorrata_actividad_3_importe_con_derecho"
+continuidad_id = "iva-anual-prorrata-actividad-3-importe-con-derecho"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:541 (sha256 0164fbea6f50) prints box [116] on prorrata row 3; edition 2021 declares no row for it"
+input_kind = "bound"
+binding = "modelo-390-prorrata-actividad-3-importe-con-derecho"
+legal_refs = ["ley-37-1992:art-104", "ley-37-1992:art-94", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+# Box [117] - "12. Prorratas - 3 - Tipo de prorrata [117]".
+[[revisions."2022".casillas]]
+id = "iva.anual.prorrata.actividad-3.tipo"
+number = "iva.anual.prorrata.actividad-3.tipo"
+form_number = "117"
+section = ["iva", "anual", "prorratas"]
+data_type = "text"
+semantic_role = "iva_anual_prorrata_actividad_3_tipo"
+continuidad_id = "iva-anual-prorrata-actividad-3-tipo"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:542 (sha256 0164fbea6f50) prints box [117] on prorrata row 3; edition 2021 declares no row for it"
+input_kind = "bound"
+binding = "modelo-390-prorrata-actividad-3-tipo"
+legal_refs = ["ley-37-1992:art-103", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+# Box [118] - "12. Prorratas - 3 - % de prorrata [118]".
+[[revisions."2022".casillas]]
+id = "iva.anual.prorrata.actividad-3.porcentaje"
+number = "iva.anual.prorrata.actividad-3.porcentaje"
+form_number = "118"
+section = ["iva", "anual", "prorratas"]
+data_type = "decimal"
+semantic_role = "iva_anual_prorrata_actividad_3_porcentaje"
+continuidad_id = "iva-anual-prorrata-actividad-3-porcentaje"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:543 (sha256 0164fbea6f50) prints box [118] on prorrata row 3; edition 2021 declares no row for it"
+input_kind = "bound"
+binding = "modelo-390-prorrata-actividad-3-porcentaje"
+legal_refs = ["ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+# Box [114] - "12. Prorratas - 4 - Codigo CNAE [114]".
+[[revisions."2022".casillas]]
+id = "iva.anual.prorrata.actividad-4.codigo-cnae"
+number = "iva.anual.prorrata.actividad-4.codigo-cnae"
+form_number = "114"
+section = ["iva", "anual", "prorratas"]
+data_type = "text"
+semantic_role = "iva_anual_prorrata_actividad_4_codigo_cnae"
+continuidad_id = "iva-anual-prorrata-actividad-4-codigo-cnae"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:545 (sha256 0164fbea6f50) prints box [114] on prorrata row 4; edition 2021 declares no row for it"
+input_kind = "bound"
+binding = "modelo-390-prorrata-actividad-4-codigo-cnae"
+legal_refs = ["ley-37-1992:art-101", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+# Box [115] - "12. Prorratas - 4 - Importe de operaciones [115]".
+[[revisions."2022".casillas]]
+id = "iva.anual.prorrata.actividad-4.importe-operaciones"
+number = "iva.anual.prorrata.actividad-4.importe-operaciones"
+form_number = "115"
+section = ["iva", "anual", "prorratas"]
+data_type = "money"
+semantic_role = "iva_anual_prorrata_actividad_4_importe_operaciones"
+continuidad_id = "iva-anual-prorrata-actividad-4-importe-operaciones"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:546 (sha256 0164fbea6f50) prints box [115] on prorrata row 4; edition 2021 declares no row for it"
+input_kind = "bound"
+binding = "modelo-390-prorrata-actividad-4-importe-operaciones"
+legal_refs = ["ley-37-1992:art-104", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+# Box [116] - "12. Prorratas - 4 - Importe de operaciones con derecho a deduccion [116]".
+[[revisions."2022".casillas]]
+id = "iva.anual.prorrata.actividad-4.importe-con-derecho"
+number = "iva.anual.prorrata.actividad-4.importe-con-derecho"
+form_number = "116"
+section = ["iva", "anual", "prorratas"]
+data_type = "money"
+semantic_role = "iva_anual_prorrata_actividad_4_importe_con_derecho"
+continuidad_id = "iva-anual-prorrata-actividad-4-importe-con-derecho"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:547 (sha256 0164fbea6f50) prints box [116] on prorrata row 4; edition 2021 declares no row for it"
+input_kind = "bound"
+binding = "modelo-390-prorrata-actividad-4-importe-con-derecho"
+legal_refs = ["ley-37-1992:art-104", "ley-37-1992:art-94", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+# Box [117] - "12. Prorratas - 4 - Tipo de prorrata [117]".
+[[revisions."2022".casillas]]
+id = "iva.anual.prorrata.actividad-4.tipo"
+number = "iva.anual.prorrata.actividad-4.tipo"
+form_number = "117"
+section = ["iva", "anual", "prorratas"]
+data_type = "text"
+semantic_role = "iva_anual_prorrata_actividad_4_tipo"
+continuidad_id = "iva-anual-prorrata-actividad-4-tipo"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:548 (sha256 0164fbea6f50) prints box [117] on prorrata row 4; edition 2021 declares no row for it"
+input_kind = "bound"
+binding = "modelo-390-prorrata-actividad-4-tipo"
+legal_refs = ["ley-37-1992:art-103", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+# Box [118] - "12. Prorratas - 4 - % de prorrata [118]".
+[[revisions."2022".casillas]]
+id = "iva.anual.prorrata.actividad-4.porcentaje"
+number = "iva.anual.prorrata.actividad-4.porcentaje"
+form_number = "118"
+section = ["iva", "anual", "prorratas"]
+data_type = "decimal"
+semantic_role = "iva_anual_prorrata_actividad_4_porcentaje"
+continuidad_id = "iva-anual-prorrata-actividad-4-porcentaje"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:549 (sha256 0164fbea6f50) prints box [118] on prorrata row 4; edition 2021 declares no row for it"
+input_kind = "bound"
+binding = "modelo-390-prorrata-actividad-4-porcentaje"
+legal_refs = ["ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+# Box [114] - "12. Prorratas - 5 - Codigo CNAE [114]".
+[[revisions."2022".casillas]]
+id = "iva.anual.prorrata.actividad-5.codigo-cnae"
+number = "iva.anual.prorrata.actividad-5.codigo-cnae"
+form_number = "114"
+section = ["iva", "anual", "prorratas"]
+data_type = "text"
+semantic_role = "iva_anual_prorrata_actividad_5_codigo_cnae"
+continuidad_id = "iva-anual-prorrata-actividad-5-codigo-cnae"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:551 (sha256 0164fbea6f50) prints box [114] on prorrata row 5; edition 2021 declares no row for it"
+input_kind = "bound"
+binding = "modelo-390-prorrata-actividad-5-codigo-cnae"
+legal_refs = ["ley-37-1992:art-101", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+# Box [115] - "12. Prorratas - 5 - Importe de operaciones [115]".
+[[revisions."2022".casillas]]
+id = "iva.anual.prorrata.actividad-5.importe-operaciones"
+number = "iva.anual.prorrata.actividad-5.importe-operaciones"
+form_number = "115"
+section = ["iva", "anual", "prorratas"]
+data_type = "money"
+semantic_role = "iva_anual_prorrata_actividad_5_importe_operaciones"
+continuidad_id = "iva-anual-prorrata-actividad-5-importe-operaciones"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:552 (sha256 0164fbea6f50) prints box [115] on prorrata row 5; edition 2021 declares no row for it"
+input_kind = "bound"
+binding = "modelo-390-prorrata-actividad-5-importe-operaciones"
+legal_refs = ["ley-37-1992:art-104", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+# Box [116] - "12. Prorratas - 5 - Importe de operaciones con derecho a deduccion [116]".
+[[revisions."2022".casillas]]
+id = "iva.anual.prorrata.actividad-5.importe-con-derecho"
+number = "iva.anual.prorrata.actividad-5.importe-con-derecho"
+form_number = "116"
+section = ["iva", "anual", "prorratas"]
+data_type = "money"
+semantic_role = "iva_anual_prorrata_actividad_5_importe_con_derecho"
+continuidad_id = "iva-anual-prorrata-actividad-5-importe-con-derecho"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:553 (sha256 0164fbea6f50) prints box [116] on prorrata row 5; edition 2021 declares no row for it"
+input_kind = "bound"
+binding = "modelo-390-prorrata-actividad-5-importe-con-derecho"
+legal_refs = ["ley-37-1992:art-104", "ley-37-1992:art-94", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+# Box [117] - "12. Prorratas - 5 - Tipo de prorrata [117]".
+[[revisions."2022".casillas]]
+id = "iva.anual.prorrata.actividad-5.tipo"
+number = "iva.anual.prorrata.actividad-5.tipo"
+form_number = "117"
+section = ["iva", "anual", "prorratas"]
+data_type = "text"
+semantic_role = "iva_anual_prorrata_actividad_5_tipo"
+continuidad_id = "iva-anual-prorrata-actividad-5-tipo"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:554 (sha256 0164fbea6f50) prints box [117] on prorrata row 5; edition 2021 declares no row for it"
+input_kind = "bound"
+binding = "modelo-390-prorrata-actividad-5-tipo"
+legal_refs = ["ley-37-1992:art-103", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+# Box [118] - "12. Prorratas - 5 - % de prorrata [118]".
+[[revisions."2022".casillas]]
+id = "iva.anual.prorrata.actividad-5.porcentaje"
+number = "iva.anual.prorrata.actividad-5.porcentaje"
+form_number = "118"
+section = ["iva", "anual", "prorratas"]
+data_type = "decimal"
+semantic_role = "iva_anual_prorrata_actividad_5_porcentaje"
+continuidad_id = "iva-anual-prorrata-actividad-5-porcentaje"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:555 (sha256 0164fbea6f50) prints box [118] on prorrata row 5; edition 2021 declares no row for it"
+input_kind = "bound"
+binding = "modelo-390-prorrata-actividad-5-porcentaje"
+legal_refs = ["ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]

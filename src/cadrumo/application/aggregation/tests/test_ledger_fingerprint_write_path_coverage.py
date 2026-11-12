@@ -35,6 +35,7 @@ from ..ledger_filing_snapshot import (
     FINGERPRINT_FIELDS_V2,
     FINGERPRINT_FIELDS_V3,
     FINGERPRINT_FIELDS_V5,
+    FINGERPRINT_FIELDS_V7,
     fingerprint_fields,
 )
 
@@ -172,7 +173,7 @@ def test_the_accrual_date_is_writable_and_no_iva_module_reads_it() -> None:
 
 
 def test_the_guard_would_have_caught_the_v2_gap() -> None:
-    """Against the V2 field set, the check names the V3 facts and the later V5 and V6 ones."""
+    """Against the V2 field set, the check names the V3 facts and the later V5, V6 and V8 ones."""
     missing = unwatched_writable_iva_fields(
         writable=writable_transaction_fields(),
         iva_read=iva_read_fields(_IVA_AGGREGATION_MODULES),
@@ -182,6 +183,7 @@ def test_the_guard_would_have_caught_the_v2_gap() -> None:
     assert missing == (
         "counterparty_identification_state",
         "deduction_provenance",
+        "exemption_article",
         "investment_asset_id",
         "iva_vehicle_use",
         "operation_date",
@@ -197,18 +199,35 @@ def test_the_guard_would_have_caught_the_v3_gap() -> None:
         field_set=FINGERPRINT_FIELDS_V3,
         excluded=INTENTIONALLY_EXCLUDED,
     )
-    assert missing == ("deduction_provenance", "iva_vehicle_use", "operation_date", "purchase_invoice_evidence_id")
+    assert missing == (
+        "deduction_provenance",
+        "exemption_article",
+        "iva_vehicle_use",
+        "operation_date",
+        "purchase_invoice_evidence_id",
+    )
 
 
 def test_the_guard_would_have_caught_the_v5_gap() -> None:
-    """The stated vehicle use was the one writable fact V5 could not see."""
+    """The stated vehicle use was the one writable fact V5 could not see, before the exemption article became one."""
     missing = unwatched_writable_iva_fields(
         writable=writable_transaction_fields(),
         iva_read=iva_read_fields(_IVA_AGGREGATION_MODULES),
         field_set=FINGERPRINT_FIELDS_V5,
         excluded=INTENTIONALLY_EXCLUDED,
     )
-    assert missing == ("iva_vehicle_use",)
+    assert missing == ("exemption_article", "iva_vehicle_use")
+
+
+def test_the_guard_would_have_caught_the_v7_gap() -> None:
+    """The stated art. 20.Uno exemption article is the one writable fact V7 cannot see."""
+    missing = unwatched_writable_iva_fields(
+        writable=writable_transaction_fields(),
+        iva_read=iva_read_fields(_IVA_AGGREGATION_MODULES),
+        field_set=FINGERPRINT_FIELDS_V7,
+        excluded=INTENTIONALLY_EXCLUDED,
+    )
+    assert missing == ("exemption_article",)
 
 
 #: An isolated write path shaped like the real signature, with one extra writable field.

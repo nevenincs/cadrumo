@@ -74,3 +74,30 @@ modelo = "303"
 year = "horizon-1"
 periods = ["1T", "2T", "3T", "4T"]
 iva_compensation_carried_in = "0.00"
+
+# The Modelo 200 starts from the accounting result before the Impuesto sobre
+# Sociedades, casilla 00501 of page DP200012 (Manual práctico de Sociedades 2023,
+# corpus manuals/sociedades/2023 source.pdf.extracted.md:91-92: "Resultado de la
+# cuenta de pérdidas y ganancias antes del Impuesto sobre Sociedades (casilla
+# 00501)"). No record the application holds produces it, so the company enters it
+# as the closed accounts give it. No closing entry is authored here: each one the
+# accounts could carry is stated below as absent, with the persona fact behind it.
+[[work_inputs]]
+modelo = "200"
+year = "horizon-1"
+period = "0A"
+roles = { "is-liquidacion-i-importe" = "25400.00" }
+reason = "El resultado contable antes del Impuesto sobre Sociedades sale de las cuentas cerradas del ejercicio, que ningún registro de la aplicación produce; la sociedad lo consigna en la casilla 00501."
+[work_inputs.sources]
+"is-liquidacion-i-importe" = """
+Cuenta de pérdidas y ganancias del ejercicio con las filas del extracto (ledger.csv, base imponible sin IVA, \
+deducible en su totalidad). Ingresos: SOC-VTA-1 5200.00 + SOC-VTA-2 1800.00 + SOC-VTA-3 6400.00 + \
+SOC-VTA-4 1800.00 + SOC-VTA-5 4700.00 + SOC-VTA-6 1800.00 + SOC-VTA-7 7300.00 + SOC-VTA-8 1800.00 = 30800.00. \
+Gastos: SOC-ALQ-1 1350.00 + SOC-ALQ-2 1350.00 + SOC-ALQ-3 1350.00 + SOC-ALQ-4 1350.00 = 5400.00. \
+No hay otra fila de pérdidas y ganancias en el extracto. Resultado: 30800.00 - 5400.00 = 25400.00. \
+Asientos de cierre: amortización ausente, la sociedad no posee inmovilizado y alquila los equipos y licencias \
+(persona.toml línea 8; filas SOC-ALQ-1..4); retribución de administradores ausente, la administradora única no \
+cobra retribución (persona.toml línea 9 y [[officers]] remunerated = false, línea 67); periodificaciones \
+ausentes, todas las filas se devengan dentro del ejercicio: cada alquiler trimestral pagado el 15 de enero, \
+abril, julio y octubre (SOC-ALQ-1..4) cubre su propio trimestre, y cada venta (SOC-VTA-1..8, del 30 de enero al \
+19 de diciembre) factura un desarrollo o un mantenimiento prestado en el ejercicio."""

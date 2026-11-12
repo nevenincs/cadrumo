@@ -13,6 +13,7 @@ from decimal import Decimal
 from ...core.i18n.render import tr as render_tr
 from ...core.iva_deduction_fact import IvaDeductionFactKind
 from ...core.period import Period
+from ...core.prorrata_exclusions import Art104TresExclusion
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
 from ...domain.iva.deduction_facts import (
@@ -160,6 +161,7 @@ def iva_observation(
     deduction_provenance: IvaDeductionClassificationProvenance | None,
     investment_asset_id: str | None = None,
     rectifies_ledger_id: str | None = None,
+    art_104_tres_exclusion: Art104TresExclusion | None = None,
     operation: PinnedAuthorityOperation,
 ) -> IvaLedgerObservation:
     """Build an observation from the admitted transaction facts."""
@@ -185,6 +187,7 @@ def iva_observation(
         deduction_provenance=deduction_provenance,
         investment_asset_id=investment_asset_id,
         rectifies_ledger_id=rectifies_ledger_id,
+        art_104_tres_exclusion=art_104_tres_exclusion,
     )
 
 
@@ -253,6 +256,7 @@ def cash_accounting_observations(
                 deduction_provenance=deduction_provenance,
                 investment_asset_id=transaction.investment_asset_id,
                 rectifies_ledger_id=transaction.rectifies_ledger_id,
+                art_104_tres_exclusion=transaction.art_104_tres_exclusion,
                 operation=operation,
             ),
         )
@@ -276,6 +280,7 @@ def cash_accounting_observations(
                 deduction_provenance=deduction_provenance,
                 investment_asset_id=transaction.investment_asset_id,
                 rectifies_ledger_id=transaction.rectifies_ledger_id,
+                art_104_tres_exclusion=transaction.art_104_tres_exclusion,
                 operation=operation,
             ),
         )

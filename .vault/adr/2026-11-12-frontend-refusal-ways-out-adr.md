@@ -5,7 +5,7 @@ tags:
 date: '2026-11-12'
 modified: '2026-11-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:a6f0e3c94188840a1f16191d0b1104f96b4c42b072828ab7a2676f12461b269d'
+body_hash: 'sha256:bf9d7ac4e3ba57e03a7668a8806bff9bd99609d3c1cc147979e337308db6ead8'
 related:
   - "[[2026-11-02-operation-refusal-words-adr]]"
   - "[[2026-11-03-backend-served-surface-adr]]"
@@ -16,7 +16,7 @@ related:
   - '[[2026-11-12-frontend-refusal-ways-out-reference]]'
 ---
 
-# `frontend-refusal-ways-out` adr: `One refusal component per frontend: served words, primary action, ordered alternatives, no way out` | (**status:** `proposed`)
+# `frontend-refusal-ways-out` adr: `One refusal component per frontend: served words, primary action, ordered alternatives, no way out` | (**status:** `accepted`)
 
 ## Problem Statement
 
@@ -42,6 +42,7 @@ Every refusal verdict (`PreconditionVerdictSnapshot`, `native/desktop/frontend/s
 - Routing is by `target_command_key` of the action through each frontend's existing closed lists: the window's host-admitted definitions and places; the TUI's route and action registries. An action with no admitted place is shown as served words, disabled, with the generic chrome reason "not available here"; it is never dropped and never rendered as a CLI line.
 - Arguments come only from `argument_bindings`; a non-empty `missing_argument_names` opens the destination's form for those arguments rather than submitting.
 - `conditionality` is shown as served; a conditional action is not presented as certain.
+- Acceptance conditions (PRIME, 2026-11-12 09:30): no visible regression lands, so an existing rendering of a primary action is replaced only once the backend serves action words, and until then the component and its stories are built against fixtures that carry the words; terminal and operator-decision outcomes are shown as served, never as an action; the unroutable-action reason is a chrome key authored through `dev.locales` in every locale; the TUI router reads the route registry and keeps no hand table of action ids.
 
 ## Implementation
 
@@ -58,5 +59,5 @@ A single component per frontend makes the next backend refusal kind a data chang
 ## Consequences
 
 - Both frontends lose their hand-kept action tables; a new action appears with its words once the backend serves them.
-- Until the action words are served, refusals show words without an action control; this is a visible regression for the Modelo area's primary action, accepted to avoid a temporary hand table. Reconsider if the backend ask is declined.
+- Until the action words are served, existing primary-action renderings stay as they are; the component replaces them only once the words are served. Reconsider if the backend ask is declined.
 - The TUI needs a destination for each routable action; actions without one stay visibly disabled, which exposes TUI coverage gaps rather than hiding them.
