@@ -34,7 +34,7 @@ from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObject
 from cadrumo.application.aggregation.retenciones import RetencionObservation
 from cadrumo.application.modelo.calculation_note_gate import blocking_calculation_issues
 from cadrumo.core.aggregation import AggregationCaptureKind, BindingSourceKind, RetencionScheme
-from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.core.retencion_soportada import RetencionSoportadaClase
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -73,14 +73,6 @@ def _box(revision: CalculationRevision, casilla: str) -> Decimal:
     return Decimal(revision.casilla_values[validated_casilla_id(casilla)])
 
 
-_SALARY: dict[CasillaId, Decimal] = {
-    # Cash pay of both employers: 24.000,00 + 6.000,00.
-    validated_casilla_id("0003"): Decimal("30000.00"),
-    # Retribucion en especie of employer B: valuation 1.000,00, ingreso a cuenta 200,00 passed on in full.
-    validated_casilla_id("0004"): Decimal("1000.00"),
-    validated_casilla_id("0005"): Decimal("200.00"),
-    validated_casilla_id("0006"): Decimal("200.00"),
-}
 _EMPLOYEE = Persona(categories="trabajo,capital_mobiliario")
 
 
@@ -115,7 +107,7 @@ def test_employee_credits_the_certified_retention_and_files_a_verified_export(
     attest_no_withholding(operation, RetencionSoportadaClase.CAPITAL_MOBILIARIO)
     register_refund_account(secure_objects)
 
-    annual = calculate_annual(secure_objects, casilla_inputs=_SALARY)
+    annual = calculate_annual(secure_objects)
 
     # oracle: Ley 35/2006 arts. 79.e and 99.6 with Reglamento del IRPF art. 108.3: 3.120,00 + 600,00 + 200,00.
     assert _box(annual, "0596") == Decimal("3920.00")
@@ -138,7 +130,7 @@ def test_the_unattested_movable_capital_credit_stays_unresolved(
     seed_prior_year_m100(secure_objects)
     _record_employers(operation, tmp_path)
 
-    annual = calculate_annual(secure_objects, casilla_inputs=_SALARY)
+    annual = calculate_annual(secure_objects)
 
     assert _box(annual, "0596") == Decimal("3920.00")
     assert validated_casilla_id("0597") not in annual.casilla_values
@@ -294,11 +286,7 @@ def _record_employer(operation: PinnedAuthorityOperation, directory: Path) -> No
 
 
 def _calculate_autonomo_annual(secure_objects: SecureObjectRepository) -> CalculationRevision:
-    return calculate_annual(
-        secure_objects,
-        casilla_inputs={validated_casilla_id("0003"): _D("24000.00")},
-        text_casilla_inputs=_ACTIVITY_INPUTS,
-    )
+    return calculate_annual(secure_objects, text_casilla_inputs=_ACTIVITY_INPUTS)
 
 
 def test_employee_autonomo_files_credits_equal_to_their_oracles_and_the_fourth_quarter_agrees(
