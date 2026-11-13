@@ -592,7 +592,7 @@ def settle_operation(
 
     with _failure_frames() as failures:
         terminal = asyncio.run(settle())
-    result = _public_result(world, terminal)
+    result = public_result(world, terminal)
     if terminal.terminal_condition is not OperationTerminalCondition.SUCCEEDED:
         # A refusal names its registered code through its refusal reference; only a failure has an error code.
         code = (
@@ -716,7 +716,7 @@ def run_operation[Projection: BaseModel](
     the result reads the stated figure.
     """
     if isinstance(payload, ModeloWorkCalculateRequest) and world.work_inputs:
-        _enter_work_inputs(world, payload.work_unit_id)
+        enter_return_work_inputs(world, payload.work_unit_id)
     result = settle_operation(world, definition_id, payload, subject=subject)
     if not isinstance(result, projection):
         raise PersonaMaterialisationError(f"{definition_id} published no {projection.__name__}")
@@ -773,7 +773,7 @@ def attest_before_first_calculation(
         raise PersonaMaterialisationError(f"{modelo} {year} {period}: {error}") from error
 
 
-def _enter_work_inputs(world: PersonaWorld, work_unit_id: str) -> None:
+def enter_return_work_inputs(world: PersonaWorld, work_unit_id: str) -> None:
     """Enter the values the persona gives for the work unit's return, before its first calculation."""
 
     def settle(definition_id: str, payload: BaseModel, *, subject: str | None = None) -> BaseModel | None:
@@ -801,6 +801,19 @@ def _with_attested_prior_values(
     subject: str | None,
 ) -> BaseModel:
     """``calculated``, or its calculation again once the persona's stated prior values and work-income statements are made."""
+    if not state_after_calculation(world, calculated):
+        return calculated
+    recalculated = settle_operation(world, definition_id, payload, subject=subject)
+    if not isinstance(recalculated, ModeloWorkCalculatePublicResultV3):
+        raise PersonaMaterialisationError(f"{definition_id} published no calculation after the attestation")
+    return recalculated
+
+
+def state_after_calculation(world: PersonaWorld, calculated: ModeloWorkCalculatePublicResultV3) -> bool:
+    """Make the persona's stated prior values and work-income statements the calculation offers; whether any was made.
+
+    A calculation that made one must be calculated again to read the stated figure.
+    """
 
     def settle(
         definition_id: str,
@@ -827,15 +840,10 @@ def _with_attested_prior_values(
         )
     except PriorValueAttestationError as error:
         raise PersonaMaterialisationError(str(error)) from error
-    if not (attested or stated):
-        return calculated
-    recalculated = settle_operation(world, definition_id, payload, subject=subject)
-    if not isinstance(recalculated, ModeloWorkCalculatePublicResultV3):
-        raise PersonaMaterialisationError(f"{definition_id} published no calculation after the attestation")
-    return recalculated
+    return bool(attested or stated)
 
 
-def _public_result(world: PersonaWorld, terminal: OperationPublicProjectionV1) -> BaseModel | None:
+def public_result(world: PersonaWorld, terminal: OperationPublicProjectionV1) -> BaseModel | None:
     """The public result, or refusal detail, a settled operation publishes, in its registered model."""
     contract = terminal.definition_contract
     if contract.result_schema is None or (terminal.result_ref is None and terminal.refusal_ref is None):
@@ -1959,7 +1967,7 @@ def _replay_attested_returns(persona: Persona, world: PersonaWorld) -> dict[str,
         work_unit_id = outcome.unit.work_unit_id
         try:
             if world.work_inputs:
-                _enter_work_inputs(world, work_unit_id)
+                enter_return_work_inputs(world, work_unit_id)
             attested = attest_return_prior_values(
                 world.attested_prior_values,
                 envelope=world.envelope,
@@ -2310,6 +2318,7 @@ __all__ = [
     "ReplayScope",
     "attest_before_first_calculation",
     "attested_before_calculating",
+    "enter_return_work_inputs",
     "filing_key",
     "household_leaves",
     "load_profile_record",
@@ -2318,9 +2327,11 @@ __all__ = [
     "patch_answers",
     "persona_profile_id",
     "persona_world",
+    "public_result",
     "run_operation",
     "scenario_instant",
     "settle_operation",
+    "state_after_calculation",
     "submitted_answer",
     "year_envelope",
 ]
