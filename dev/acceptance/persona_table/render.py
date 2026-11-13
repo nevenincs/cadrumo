@@ -9,6 +9,18 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import cast
 
+from .diff import row_id
+from .frontend import (
+    DIFFERS,
+    EXTRA,
+    NOT_COMPARABLE,
+    SURFACE_LABELS,
+    SURFACES,
+    FrontendComparison,
+    cell_text,
+    frontend_line,
+    row_cell,
+)
 from .rows import GREEN, VERDICT_MEANING, Stage, TableRow, Verdict
 
 _RED_CALCULATE = frozenset({Stage.MISMATCH, Stage.REFUSED, Stage.REFUSAL_NOT_RAISED})
@@ -216,11 +228,12 @@ def render_table(
     provenance: Mapping[str, str] | None = None,
     coverage_gaps: Sequence[CoverageGap] | None = None,
     undecided: Sequence[UndecidedObligation] | None = None,
+    frontend: FrontendComparison | None = None,
 ) -> str:
     """The full table for ``head`` as Markdown, naming the run's tree and authority when ``provenance`` is given.
 
     ``coverage_gaps`` is ``None`` when no coverage audit was supplied, which the rows line says; ``undecided`` lists the
-    returns that audit could not decide.
+    returns that audit could not decide. ``frontend`` adds a column per surface, a summary line and the frontend matrix.
     """
     ordered = sorted(rows, key=lambda row: row.key)
     lines = [f"# Persona table at {head}", ""]
@@ -232,8 +245,10 @@ def render_table(
     lines += [
         f"Summary: {summary_line(ordered)}.",
         rows_line(ordered, coverage_gaps),
-        "",
     ]
+    if frontend is not None:
+        lines.append(frontend_line(frontend))
+    lines.append("")
     if lanes is not None:
         lines += [lane_line(ordered, lanes), ""]
     lines += _unchecked_section(ordered)
@@ -245,9 +260,11 @@ def render_table(
         "",
         "Each year is replayed with the registry horizon moved to it (column `run`); the real horizon wins a tie.",
         "",
-        "| persona | modelo | year | period | verdict | calculate | verify | export | grounding | run | reason |",
-        "|---|---|---|---|---|---|---|---|---|---|---|",
+        "| persona | modelo | year | period | verdict | calculate | verify | export | grounding | run | reason |"
+        + ("".join(f" {surface} |" for surface in SURFACES) if frontend is not None else ""),
+        "|---|---|---|---|---|---|---|---|---|---|---|" + ("---|" * len(SURFACES) if frontend is not None else ""),
     ]
+    cells = _frontend_cells(frontend, head)
     for row in ordered:
         export = row.export.value + (f" ({row.export_detail})" if row.export_detail else "")
         lines.append(
@@ -266,11 +283,47 @@ def render_table(
                     row.grounding,
                     row.horizon,
                     row.reason,
+                    *cells.get(row.key, ()),
                 )
             )
             + " |"
         )
+    if frontend is not None:
+        lines += _frontend_section(frontend)
     return "\n".join(lines) + "\n"
+
+
+def _frontend_cells(frontend: FrontendComparison | None, head: str) -> dict[tuple[str, str, int, str], list[str]]:
+    """Each table row's cell per surface, in ``SURFACES`` order."""
+    cells: dict[tuple[str, str, int, str], list[str]] = {}
+    if frontend is None:
+        return cells
+    for surface in SURFACES:
+        for item in frontend.parities[surface]:
+            cells.setdefault(item.key, []).append(row_cell(item, head))
+    return cells
+
+
+def _frontend_section(frontend: FrontendComparison) -> list[str]:
+    """The matrix of each persona on each surface, then the rows that did not match with their causes."""
+    lines = [
+        "",
+        "## Frontend matrix",
+        "",
+        "| persona | " + " | ".join(SURFACE_LABELS[surface] for surface in SURFACES) + " |",
+        "|---|" + "---|" * len(SURFACES),
+    ]
+    for persona in frontend.personas():
+        cells = [persona, *(cell_text(frontend.cells[persona, surface]) for surface in SURFACES)]
+        lines.append("| " + " | ".join(_cell(item) for item in cells) + " |")
+    lines += ["", "### Rows differing", ""]
+    causes: dict[tuple[str, str, int, str], list[str]] = {}
+    for surface in SURFACES:
+        for item in (*frontend.parities[surface], *frontend.extras[surface]):
+            if item.outcome in (DIFFERS, NOT_COMPARABLE, EXTRA):
+                causes.setdefault(item.key, []).append(f"{surface} {item.outcome}: {'; '.join(item.causes)}")
+    lines += [f"- {row_id(key)}: {' / '.join(found)}" for key, found in sorted(causes.items())] or ["- none"]
+    return lines
 
 
 __all__ = [
