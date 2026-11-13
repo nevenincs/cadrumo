@@ -16,6 +16,7 @@ from typing import Final
 
 from cadrumo.application.user_profile.projections import record_to_path_values
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
+from cadrumo.domain.calculations.registry.binding_targets import revision_bindings_by_id
 from cadrumo.domain.calculations.registry.errors import RegistryError
 from cadrumo.domain.calculations.registry.renta_inmueble_bindings import (
     RentaInmuebleOriginPart,
@@ -31,7 +32,7 @@ from cadrumo.entrypoints.tests.persona_materialisation import (
 )
 from cadrumo.entrypoints.tests.persona_prior_values import entries_on
 from cadrumo.entrypoints.tests.persona_work_inputs import WorkInputError, resolved_casillas, work_inputs_for
-from cadrumo.tests.personas import Persona, PriorCarries, RentalProperty, YearEnvelope
+from cadrumo.tests.personas import AttestedPriorValue, Persona, PriorCarries, RentalProperty, YearEnvelope
 
 from ..rows import PlannedRow
 from .world_report import Phase, Statement, StatementKind
@@ -82,14 +83,38 @@ def carry_statements(
     return (Statement(StatementKind.PRIOR_CARRIES, Phase.BEFORE_EVIDENCE, families=families, amounts=amounts, gap=gap),)
 
 
+def declared_entries(
+    world: PersonaWorld, plan: PlannedRow, entries: Sequence[AttestedPriorValue]
+) -> tuple[AttestedPriorValue, ...]:
+    """``entries`` less those stating ``where_declared`` for a return whose edition does not declare their binding.
+
+    The table skips such an entry without a refusal, so the CLI column does not state a binding the edition lacks.
+    An entry without the flag is kept whatever the edition declares, and a return the registry selects no edition
+    for keeps every entry, left to its own calculation refusal.
+    """
+    if not any(entry.where_declared for entry in entries):
+        return tuple(entries)
+    try:
+        revision = world.operation.revision_for_context(plan.modelo, filing_year=plan.year, period=plan.period)
+    except RegistryError:
+        return tuple(entries)
+    declared = revision_bindings_by_id(revision)
+    return tuple(entry for entry in entries if not entry.where_declared or entry.binding in declared)
+
+
 def prior_value_statements(world: PersonaWorld, plan: PlannedRow) -> tuple[Statement, ...]:
     """The figures the persona attests for the return: before its first calculation where the table states them so.
 
     The table also states them after every calculation, where the application offers it, so the statements follow
-    again in that phase.
+    again in that phase. An entry that states ``where_declared`` is left out of a return whose edition lacks its
+    binding.
     """
-    entries = entries_on(
-        world.attested_prior_values, world.envelope, modelo=plan.modelo, filing_year=plan.year, period=plan.period
+    entries = declared_entries(
+        world,
+        plan,
+        entries_on(
+            world.attested_prior_values, world.envelope, modelo=plan.modelo, filing_year=plan.year, period=plan.period
+        ),
     )
     before = attested_before_calculating(world, modelo=plan.modelo, year=plan.year, period=plan.period)
     phases = (Phase.BEFORE_EVIDENCE, Phase.AFTER_CALCULATION) if before else (Phase.AFTER_CALCULATION,)

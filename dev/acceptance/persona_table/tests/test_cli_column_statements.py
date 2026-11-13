@@ -17,14 +17,18 @@ from typing import cast
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.binding_targets import revision_bindings_by_id
 from cadrumo.entrypoints.tests.persona_materialisation import MaterialisedPersona, PersonaWorld
+from cadrumo.entrypoints.tests.persona_prior_values import entries_on
+from cadrumo.tests.personas import AttestedPriorValue, YearToken
 
 from .. import planner
 from ..cli_column import statements as builder
 from ..cli_column.statements import (
     carry_amount,
     carry_statements,
+    declared_entries,
     plain_amount,
     prior_value_statements,
     rental_statements,
@@ -51,12 +55,12 @@ def _opaque(value: object) -> object:
     return value
 
 
-def _world(persona_id: str, operation: object) -> PersonaWorld:
+def _world(persona_id: str, operation: object, attested: tuple[AttestedPriorValue, ...] | None = None) -> PersonaWorld:
     persona = persona_under_horizon(persona_id, registry_envelope().horizon)
     held = SimpleNamespace(
         envelope=registry_envelope(),
         operation=operation,
-        attested_prior_values=persona.attested_prior_values,
+        attested_prior_values=persona.attested_prior_values if attested is None else attested,
         work_inputs=persona.work_inputs,
         work_income_none_statements=persona.work_income_none_statements,
     )
@@ -144,7 +148,78 @@ def test_the_values_the_operator_types_resolve_to_their_casillas_and_the_figures
     ]
     assert [item.target for item in typed] == ["DP200012:00501", "DP200014:00547"]
     assert {item.phase for item in figures} == {Phase.AFTER_CALCULATION}
-    assert [item.value for item in figures] == ["16300", "0", "0"]
+    envelope = registry_envelope()
+    persona = persona_under_horizon("sociedad-limitada", envelope.horizon)
+    with bundled_indexed_authority().operation() as operation:
+        declared = revision_bindings_by_id(operation.revision_for_context("200", filing_year=plan.year, period="0A"))
+    stated = [
+        entry
+        for entry in entries_on(
+            persona.attested_prior_values, envelope, modelo="200", filing_year=plan.year, period="0A"
+        )
+        if entry.binding in declared
+    ]
+    assert stated
+    assert [item.target for item in figures] == [entry.binding for entry in stated]
+    assert [item.value for item in figures] == [plain_amount(entry.value) for entry in stated]
+
+
+def _incn_entry() -> AttestedPriorValue:
+    """The sociedad-limitada attestation that states ``where_declared``, which only some editions declare."""
+    persona = persona_under_horizon("sociedad-limitada", registry_envelope().horizon)
+    (entry,) = (item for item in persona.attested_prior_values if item.where_declared)
+    return entry
+
+
+def _declaring_and_lacking(operation: PinnedAuthorityOperation, entry: AttestedPriorValue) -> tuple[int, int]:
+    """A supported filing year whose edition declares the entry's binding, and one whose edition lacks it."""
+    envelope = registry_envelope()
+    declares = {
+        year: entry.binding
+        in revision_bindings_by_id(operation.revision_for_context(entry.modelo, filing_year=year, period=entry.period))
+        for year in range(envelope.floor, envelope.horizon + 1)
+    }
+    return (
+        max(year for year, declared in declares.items() if declared),
+        max(year for year, declared in declares.items() if not declared),
+    )
+
+
+def _stated_in(operation: PinnedAuthorityOperation, entry: AttestedPriorValue, year: int) -> tuple[Statement, ...]:
+    """The prior-value statements of the Modelo 200 return of ``year`` for a persona that states only ``entry``."""
+    envelope = registry_envelope()
+    stated = dataclasses.replace(entry, year=YearToken(anchor="horizon", offset=year - envelope.horizon))
+    plan = dataclasses.replace(_row("sociedad-limitada", "200", -1, "0A"), year=year)
+    return prior_value_statements(_world("sociedad-limitada", operation, (stated,)), plan)
+
+
+def test_an_entry_that_states_where_declared_is_dropped_for_an_edition_lacking_its_binding_and_kept_otherwise() -> None:
+    entry = _incn_entry()
+    with bundled_indexed_authority().operation() as operation:
+        declaring, lacking = _declaring_and_lacking(operation, entry)
+        kept = _stated_in(operation, entry, declaring)
+        dropped = _stated_in(operation, entry, lacking)
+
+    assert {item.target for item in kept} == {entry.binding}
+    assert {item.value for item in kept} == {plain_amount(entry.value)}
+    assert dropped == ()
+
+
+def test_an_entry_without_the_flag_is_never_dropped_even_for_an_edition_lacking_its_binding() -> None:
+    strict = dataclasses.replace(_incn_entry(), where_declared=False)
+    with bundled_indexed_authority().operation() as operation:
+        declaring, lacking = _declaring_and_lacking(operation, strict)
+        kept = [_stated_in(operation, strict, year) for year in (declaring, lacking)]
+
+    assert all({item.target for item in made} == {strict.binding} for made in kept)
+
+
+def test_a_return_the_registry_selects_no_edition_for_keeps_every_entry_for_its_own_refusal() -> None:
+    entry = _incn_entry()
+    plan = dataclasses.replace(_row("sociedad-limitada", "200", -1, "0A"), modelo="999")
+    with bundled_indexed_authority().operation() as operation:
+        world = _world("sociedad-limitada", operation, (entry,))
+        assert declared_entries(world, plan, (entry,)) == (entry,)
 
 
 def test_the_work_income_statement_follows_the_calculation_of_the_ejercicio_it_is_made_for() -> None:
