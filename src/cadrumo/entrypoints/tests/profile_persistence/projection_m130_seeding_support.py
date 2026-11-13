@@ -8,13 +8,18 @@ payer evidence. Payer records are written through the production write port.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from dataclasses import dataclass
+import asyncio
+from collections.abc import AsyncGenerator, Mapping
+from contextlib import asynccontextmanager
+from dataclasses import dataclass, field
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from enum import StrEnum
 from pathlib import Path
+from typing import cast
 from uuid import UUID
+
+from pydantic import BaseModel
 
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
@@ -27,14 +32,22 @@ from cadrumo.application.modelo.projection import (
     ModeloProjectServiceResult,
     project_modelo_100_from_m130,
 )
+from cadrumo.application.modelo.projection_operation import (
+    MODELO_PROJECT_OPERATION_DEFINITION_ID,
+    ModeloProjectOperationProjection,
+    ModeloProjectOperationRequest,
+)
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
+from cadrumo.application.operations.models import OperationIdentity, OperationRequest
 from cadrumo.application.operations.next_step import (
     OperationCalculateWorkStepV1,
     OperationCreateWorkStepV1,
     error_next_step,
 )
+from cadrumo.application.operations.owner import OperationExecutorContext
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.core.operations import profile_operation_subject
 from cadrumo.core.period import Period
 from cadrumo.core.retencion_soportada import RetencionSoportadaClase
 from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
@@ -57,6 +70,7 @@ from cadrumo.entrypoints.adapter_composition_work_ports import (
     build_calculation_action_ports,
     build_work_lifecycle_ports,
 )
+from cadrumo.entrypoints.operation_composition import build_production_operation_registry
 from cadrumo.entrypoints.retencion_soportada_certificado_composition import (
     build_retencion_soportada_certificado_ports,
 )
@@ -138,16 +152,20 @@ def _seed_profile(
 
 
 def _seed_first_quarter(
-    profile: TestRuntimeProfile, operation: PinnedAuthorityOperation, *, seeding: QuarterSeeding
+    profile: TestRuntimeProfile,
+    operation: PinnedAuthorityOperation,
+    *,
+    seeding: QuarterSeeding,
+    year: int = PROJECTION_YEAR,
 ) -> None:
-    """Store the Modelo 130 1T draft, and with a calculated seeding its revision carrying the boxes it holds."""
+    """Store the Modelo 130 1T draft of ``year``, and with a calculated seeding its revision carrying the boxes it holds."""
     if seeding is QuarterSeeding.NONE:
         return
     work_unit = create_work_unit(
         bucket_id=profile.bucket_id,
         modelo="130",
-        filing_year=PROJECTION_YEAR,
-        period=Period.from_year_and_code(PROJECTION_YEAR, "1T"),
+        filing_year=year,
+        period=Period.from_year_and_code(year, "1T"),
         revision_id=_M130_REVISION_ID,
         ports=build_work_lifecycle_ports(bucket_id=profile.bucket_id),
         clock=_T0,
@@ -183,7 +201,7 @@ def _seed_first_quarter(
         casilla_values=held,
         observations=registry_grounded_observations(
             modelo="130",
-            filing_year=PROJECTION_YEAR,
+            filing_year=year,
             period="1T",
             casilla_values=held,
         ),
@@ -281,6 +299,83 @@ def run_projection(
             )
 
 
+class _ProjectEvents:
+    """The supervisor's phase and effect reports, which the projection tests do not read."""
+
+    async def phase(self, phase_code: str) -> None:
+        del phase_code
+
+    async def effect(self, effect: object) -> None:
+        del effect
+
+
+@dataclass(slots=True)
+class _ProjectContext:
+    """The slice of the supervisor context the registered projection executor reads; its operands are kept."""
+
+    identity: OperationIdentity
+    authority_operation: PinnedAuthorityOperation
+    events: _ProjectEvents = field(default_factory=_ProjectEvents)
+    results: list[BaseModel] = field(default_factory=list)
+
+    @property
+    def operands(self) -> _ProjectContext:
+        return self
+
+    @property
+    def cancellation(self) -> _ProjectContext:
+        return self
+
+    @asynccontextmanager
+    async def irreversible_section(self) -> AsyncGenerator[None]:
+        yield
+
+    async def put(self, operand: BaseModel, *, written_at: object) -> str:
+        del written_at
+        self.results.append(operand)
+        return "e" * 64
+
+
+def run_registered_projection(
+    tmp_path: Path,
+    *,
+    year: int,
+    income_categories: str = ACTIVITY_ONLY,
+    profile_facts: tuple[UserProfileFact, ...] = (),
+) -> ModeloProjectOperationProjection:
+    """Seed one isolated profile with ``year``'s first Modelo 130 quarter and run the registered ``modelo.project``.
+
+    The executor is the one the production operation registry composes, run as the supervisor runs it, and the
+    result is the public projection it hands the supervisor.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        _seed_profile(
+            profile.bucket_id, income_categories=income_categories, profile_facts=profile_facts, states_region=True
+        )
+        with bundled_indexed_authority().operation() as operation:
+            _seed_first_quarter(profile, operation, seeding=QuarterSeeding.CALCULATED, year=year)
+            subject = profile_operation_subject(profile.bucket_id)
+            registration = build_production_operation_registry().lookup(MODELO_PROJECT_OPERATION_DEFINITION_ID)
+            context = _ProjectContext(
+                identity=OperationIdentity(
+                    operation_id="e" * 64, definition_id=MODELO_PROJECT_OPERATION_DEFINITION_ID, subject_ref=subject
+                ),
+                authority_operation=operation,
+            )
+            request = OperationRequest(
+                definition_id=MODELO_PROJECT_OPERATION_DEFINITION_ID,
+                subject_ref=subject,
+                payload=ModeloProjectOperationRequest(profile_id=UUID(profile.bucket_id), year=year),
+            )
+            asyncio.run(
+                registration.executor_factory.create().execute(request, cast(OperationExecutorContext, context))
+            )
+    (result,) = context.results
+    if not isinstance(result, ModeloProjectOperationProjection):
+        raise AssertionError("the registered projection handed the supervisor another result")
+    return result
+
+
 @dataclass(frozen=True, slots=True)
 class FollowedProjectionSteps:
     """The steps the projection served at each stage, and the declaration the first one created."""
@@ -355,4 +450,5 @@ __all__ = [
     "QuarterSeeding",
     "follow_projection_steps",
     "run_projection",
+    "run_registered_projection",
 ]
