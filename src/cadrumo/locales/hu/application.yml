@@ -4871,6 +4871,7 @@ application:
           remove: Töröld ezt az igazolást
         renta_arrendamiento:
           edit: Bérlet szerkesztése
+          end: Bérlet lezárása
           remove: Bérlet törlése
         renta_inmueble:
           edit: Ingatlan szerkesztése
@@ -4890,6 +4891,56 @@ application:
           kerül'
         summary_unplaced: '{holder}: {amount} EUR, {clave} kulcs, nem kerül egyetlen
           rovatba sem; ezt az összeget te adod meg'
+      reduction:
+        fact: '%{name}: %{value}'
+        fill_in: 'Add meg: %{fact}'
+        no_ejercicio: Egyetlen elkezdett 100-as bevallásod sem fed le olyan évet,
+          amelyben ez a bérlet fennáll, ezért a csökkentés nem jelenik meg. Kezdd
+          el egy ilyen év 100-as bevallását, és olvasd be újra.
+        refusal:
+          lau_17_6_unstated: '%{ejercicio}. adóév: a csökkentés nem vezethető le,
+            mert a bérlet feszített övezetben van, és hiányzik ez az adat: %{fact}.
+            Add meg.'
+          lease_unreadable: '%{ejercicio}. adóév: a bérlet adatai nem olvashatók (%{fact}).
+            Javítsd őket.'
+          mixed_tenant_ages: '%{ejercicio}. adóév: csak néhány bérlő 18 és 35 év közötti,
+            ilyenkor a törvény csak az ő jövedelemrészüket csökkenti, amelyet egyetlen
+            tárolt adat sem ad meg. Nézd át ezt: %{fact}.'
+          no_lease: '%{ejercicio}. adóév: ehhez az évhez nincs bérlet, amelyből a
+            csökkentés levezethető lenne.'
+          several_leases: '%{ejercicio}. adóév: ebben az évben több bérlet is fennáll,
+            és a csökkentés nem vezethető le belőlük együtt. Zárd le a korábbit, hogy
+            csak egy maradjon.'
+          uso_vivienda_unstated: '%{ejercicio}. adóév: a csökkentés nem vezethető
+            le, mert hiányzik ez az adat: %{fact}. Add meg.'
+          zona_tensionada_unstated: '%{ejercicio}. adóév: a csökkentés nem vezethető
+            le, mert hiányzik ez az adat: %{fact}. Add meg.'
+        tenant_band:
+          ages_18_to_35: 18 és 35 év közötti
+          not_a_person: nem természetes személy
+          other_ages: más korú
+        tier:
+          legacy: '%{rate} %-os csökkentés a 2021. december 31-én hatályos szöveg
+            szerint, amely erre a bérletre vonatkozik'
+          tier_50: '%{rate} %-os csökkentés: bármely más lakásbérlet'
+          tier_60: '%{rate} %-os csökkentés: a szerződést megelőző években felújított
+            lakás'
+          tier_70: '%{rate} %-os csökkentés: feszített övezetben az első bérbeadás
+            18 és 35 év közötti bérlőknek, vagy bérbeadás közigazgatási szervnek vagy
+            nonprofit szervezetnek megfizethető vagy szociális lakhatásra'
+          tier_90: '%{rate} %-os csökkentés: feszített lakáspiaci övezet, és a kezdő
+            bérleti díj a törvényi küszöbnél nagyobb mértékben alacsonyabb az előző
+            szerződés utolsó bérleti díjánál'
+        title: Bérleti csökkentés (LIRPF 23.2. cikk)
+        value:
+          affirmative: igen
+          negative: nem
+          not_readable: nem olvasható
+          not_stated: nincs megadva
+        year:
+          applies: '%{ejercicio}. adóév: %{tier}'
+          does_not_apply: '%{ejercicio}. adóév: a csökkentés nem vonatkozik erre a
+            bérletre. Az alábbi adatok megmutatják, miért.'
       refusal:
         item_too_large: A lista egyik eleme túl nagy ahhoz, hogy egy oldalon megjelenjen.
         stale_revision: A profil vagy a tételei megváltoztak a lista beolvasása óta.

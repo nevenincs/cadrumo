@@ -4941,6 +4941,7 @@ application:
           remove: Elimina este certificado
         renta_arrendamiento:
           edit: Editar arrendamiento
+          end: Finalizar arrendamiento
           remove: Eliminar arrendamiento
         renta_inmueble:
           edit: Editar inmueble
@@ -4961,6 +4962,56 @@ application:
           {box}'
         summary_unplaced: '{holder}: {amount} EUR, clave {clave}, no llega a ninguna
           casilla; ese importe lo introduces tú'
+      reduction:
+        fact: '%{name}: %{value}'
+        fill_in: 'Indica: %{fact}'
+        no_ejercicio: Ninguna de las declaraciones del Modelo 100 que has iniciado
+          cubre un año en el que este arrendamiento está vigente, así que no se muestra
+          la reducción. Inicia el Modelo 100 de uno de esos años y vuelve a leer esto.
+        refusal:
+          lau_17_6_unstated: 'Ejercicio %{ejercicio}: no se puede derivar la reducción
+            porque el arrendamiento está en zona tensionada y falta este dato: %{fact}.
+            Indícalo.'
+          lease_unreadable: 'Ejercicio %{ejercicio}: los datos de este arrendamiento
+            no se pueden leer (%{fact}). Corrígelos.'
+          mixed_tenant_ages: 'Ejercicio %{ejercicio}: solo algunos arrendatarios tienen
+            de 18 a 35 años, y entonces la ley reduce solo su parte de los ingresos,
+            que ningún dato guardado indica. Revisa %{fact}.'
+          no_lease: 'Ejercicio %{ejercicio}: este ejercicio no tiene ningún arrendamiento
+            del que derivar la reducción.'
+          several_leases: 'Ejercicio %{ejercicio}: en este ejercicio hay varios arrendamientos
+            vigentes y la reducción no se puede derivar de ellos a la vez. Finaliza
+            el anterior para que quede uno solo.'
+          uso_vivienda_unstated: 'Ejercicio %{ejercicio}: no se puede derivar la reducción
+            porque falta este dato: %{fact}. Indícalo.'
+          zona_tensionada_unstated: 'Ejercicio %{ejercicio}: no se puede derivar la
+            reducción porque falta este dato: %{fact}. Indícalo.'
+        tenant_band:
+          ages_18_to_35: de 18 a 35 años
+          not_a_person: no es persona física
+          other_ages: de otra edad
+        tier:
+          legacy: reducción del %{rate} % según la redacción vigente a 31 de diciembre
+            de 2021, que se aplica a este arrendamiento
+          tier_50: 'reducción del %{rate} %: cualquier otro arrendamiento de vivienda'
+          tier_60: 'reducción del %{rate} %: vivienda rehabilitada en los años anteriores
+            al contrato'
+          tier_70: 'reducción del %{rate} %: primer arrendamiento en zona tensionada
+            a arrendatarios de 18 a 35 años, o arrendamiento a una administración
+            pública o entidad sin fines lucrativos para vivienda asequible o social'
+          tier_90: 'reducción del %{rate} %: zona de mercado residencial tensionado
+            y renta inicial rebajada en más del umbral legal respecto de la última
+            renta del contrato anterior'
+        title: Reducción del arrendamiento (art. 23.2 LIRPF)
+        value:
+          affirmative: sí
+          negative: 'no'
+          not_readable: no se puede leer
+          not_stated: sin indicar
+        year:
+          applies: 'Ejercicio %{ejercicio}: %{tier}'
+          does_not_apply: 'Ejercicio %{ejercicio}: la reducción no alcanza a este
+            arrendamiento. Los datos de abajo explican por qué.'
       refusal:
         item_too_large: Una entrada de esta lista es demasiado grande para mostrarla
           en una página.

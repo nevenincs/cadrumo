@@ -28,15 +28,21 @@ from .record_group_contracts import (
     ProfileRecordGroupsResult,
     project_record_groups_result,
 )
-from .record_groups import LedgerRowsLoader, read_profile_record_groups
+from .record_groups import LedgerRowsLoader, WorkUnitsLoader, read_profile_record_groups
 
 
 class ProfileRecordGroupsExecutor:
     """Read the record groups through the canonical encrypted record owner and the profile's ledger."""
 
-    def __init__(self, ledger_rows: LedgerRowsLoader, contribution_ports: PrevisionSocialPortsFactory) -> None:
-        """Bind the read of the profile's ledger rows the groups join and of its pension certificates."""
+    def __init__(
+        self,
+        ledger_rows: LedgerRowsLoader,
+        work_units: WorkUnitsLoader,
+        contribution_ports: PrevisionSocialPortsFactory,
+    ) -> None:
+        """Bind the reads of the ledger rows the groups join, of the Modelo works and of the pension certificates."""
         self._ledger_rows = ledger_rows
+        self._work_units = work_units
         self._contribution_ports = contribution_ports
 
     async def execute(
@@ -57,6 +63,7 @@ class ProfileRecordGroupsExecutor:
                 request.payload,
                 authority_operation=context.authority_operation,
                 ledger_rows=self._ledger_rows,
+                work_units=self._work_units,
                 contribution_ports=self._contribution_ports,
             ),
             task_name="profile-record-groups-read",
@@ -68,9 +75,9 @@ class ProfileRecordGroupsExecutor:
 
 
 def build_record_groups_definition(
-    ledger_rows: LedgerRowsLoader, contribution_ports: PrevisionSocialPortsFactory
+    ledger_rows: LedgerRowsLoader, work_units: WorkUnitsLoader, contribution_ports: PrevisionSocialPortsFactory
 ) -> OperationDefinition:
-    """Declare the exact-profile read of the record groups over ``ledger_rows`` and ``contribution_ports``."""
+    """Declare the exact-profile read of the record groups over the three loaders it joins."""
     return OperationDefinition(
         definition_id=PROFILE_RECORD_GROUPS_OPERATION_DEFINITION_ID,
         request_type=ProfileRecordGroupsRequest,
@@ -79,7 +86,7 @@ def build_record_groups_definition(
         executor_factory=OperationExecutorFactory(
             request_type=ProfileRecordGroupsRequest,
             executor_type=ProfileRecordGroupsExecutor,
-            build=lambda: ProfileRecordGroupsExecutor(ledger_rows, contribution_ports),
+            build=lambda: ProfileRecordGroupsExecutor(ledger_rows, work_units, contribution_ports),
         ),
         phase_codes=PROFILE_RECORD_GROUPS_PHASES,
         interaction_kinds=frozenset[OperationInteractionKind](),

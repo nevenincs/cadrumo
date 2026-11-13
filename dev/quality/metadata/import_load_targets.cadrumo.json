@@ -2047,6 +2047,8 @@
         "cadrumo.application.user_profile.record_group_contracts",
         "cadrumo.application.user_profile.record_group_operation",
         "cadrumo.application.user_profile.record_group_pension",
+        "cadrumo.application.user_profile.record_group_reduction",
+        "cadrumo.application.user_profile.record_group_reduction_words",
         "cadrumo.application.user_profile.record_group_words",
         "cadrumo.application.user_profile.record_groups",
         "cadrumo.application.user_profile.record_row_words",

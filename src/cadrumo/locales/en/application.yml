@@ -4697,6 +4697,7 @@ application:
           remove: Remove this certificate
         renta_arrendamiento:
           edit: Edit lease
+          end: End lease
           remove: Remove lease
         renta_inmueble:
           edit: Edit property
@@ -4714,6 +4715,55 @@ application:
         summary_placed: '{holder}: {amount} EUR, clave {clave}, reaches box {box}'
         summary_unplaced: '{holder}: {amount} EUR, clave {clave}, reaches no box;
           you enter that amount yourself'
+      reduction:
+        fact: '%{name}: %{value}'
+        fill_in: 'State: %{fact}'
+        no_ejercicio: None of the Modelo 100 returns you have started covers a year
+          in which this lease runs, so the reduction is not shown. Start the Modelo
+          100 of such a year and read this again.
+        refusal:
+          lau_17_6_unstated: 'Tax year %{ejercicio}: the reduction cannot be derived
+            because the lease is in a tensioned zone and this fact is not stated:
+            %{fact}. State it.'
+          lease_unreadable: 'Tax year %{ejercicio}: the facts of this lease cannot
+            be read (%{fact}). Correct them.'
+          mixed_tenant_ages: 'Tax year %{ejercicio}: only some of the tenants are
+            aged 18 to 35, and the law then reduces only their share of the income,
+            which no stored fact gives. Review %{fact}.'
+          no_lease: 'Tax year %{ejercicio}: this year has no lease to derive the reduction
+            from.'
+          several_leases: 'Tax year %{ejercicio}: several leases run in this year
+            and the reduction cannot be derived from them together. End the earlier
+            lease so only one runs.'
+          uso_vivienda_unstated: 'Tax year %{ejercicio}: the reduction cannot be derived
+            because this fact is not stated: %{fact}. State it.'
+          zona_tensionada_unstated: 'Tax year %{ejercicio}: the reduction cannot be
+            derived because this fact is not stated: %{fact}. State it.'
+        tenant_band:
+          ages_18_to_35: aged 18 to 35
+          not_a_person: not an individual
+          other_ages: another age
+        tier:
+          legacy: '%{rate} % reduction under the wording in force on 31 December 2021,
+            which applies to this lease'
+          tier_50: '%{rate} % reduction: any other dwelling lease'
+          tier_60: '%{rate} % reduction: dwelling rehabilitated in the years before
+            the contract'
+          tier_70: '%{rate} % reduction: first letting in a tensioned zone to tenants
+            aged 18 to 35, or a letting to a public administration or non-profit entity
+            for affordable or social housing'
+          tier_90: '%{rate} % reduction: tensioned zone and an initial rent cut by
+            more than the legal threshold below the last rent of the previous contract'
+        title: Rental reduction (art. 23.2 LIRPF)
+        value:
+          affirmative: 'yes'
+          negative: 'no'
+          not_readable: cannot be read
+          not_stated: not stated
+        year:
+          applies: 'Tax year %{ejercicio}: %{tier}'
+          does_not_apply: 'Tax year %{ejercicio}: the reduction does not reach this
+            lease. The facts below say why.'
       refusal:
         item_too_large: One item of this list is too large to show on a page.
         stale_revision: The profile or its ledger entries changed after this list
