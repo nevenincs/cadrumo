@@ -18,6 +18,7 @@ from ..frontend import (
     SurfaceResult,
     cell_text,
     compare_frontend,
+    extra_figures,
     figure_causes,
     parity,
     parse_result,
@@ -183,8 +184,33 @@ def test_a_stage_or_figure_that_differs_is_named_with_both_values() -> None:
     assert outcome.causes == (
         "verify window incomplete, table pass",
         "casilla 0700 window -3095.05, table -2104.67",
-        "casilla 0123 shown 10.00, table has none",
     )
+    assert (outcome.extra_names, outcome.extra_casillas) == (("0123",), 1)
+
+
+def test_casillas_beyond_the_table_row_never_make_a_row_differ_and_are_counted() -> None:
+    shown = _result(
+        figures={"0505": "1200.5", "0700": "-2104.67", "DPNIF_D": "12345678Z", "0002": "21", "0003": "0.00"}
+    )
+    outcome = parity(_row(), "tui", shown)
+    assert (outcome.outcome, outcome.causes) == ("matched", ())
+    assert (outcome.extra_names, outcome.extra_casillas) == (("0002", "DPNIF_D"), 2)
+    assert extra_figures({"0505": "1"}, {"0505": "1", "0002": "0", "0003": "7"}) == ("0003",)
+    assert parity(_row(), "tui", _result(figures=dict(_FIGURES))).extra_casillas == 0
+
+
+def test_the_cell_counts_rows_showing_extra_casillas_only_when_there_are_some() -> None:
+    rows = [_row("1T"), _row("2T"), _row("3T")]
+    lines = [
+        _line(period="1T", figures={"0505": "1200.50", "0700": "-2104.67", "SEXO_D": "H"}),
+        _line(period="2T", figures={"0505": "1200.50", "0700": "-2104.67", "02": "21", "05": "10"}),
+        _line(period="3T"),
+    ]
+    results = {parse_result(json.dumps(line)).key: parse_result(json.dumps(line)) for line in lines}
+    cell = compare_frontend(rows, results).cells["persona", "tui"]
+    assert cell.extra_rows == 2
+    assert cell_text(cell) == "loads, 3/3 matched, 0 differs, 0 not run, 2 rows show extra casillas"
+    assert "show extra" not in cell_text(PersonaCell(True, 1, {"matched": 1}))
 
 
 def test_a_casilla_the_surface_does_not_show_differs() -> None:

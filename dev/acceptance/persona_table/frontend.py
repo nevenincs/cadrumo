@@ -3,8 +3,10 @@
 Each surface's pilot writes one JSON object per line into ``*.jsonl`` files of one directory (``read_results``
 documents and enforces the schema). This module reads them, normalises a Python row's stages to the surface
 vocabulary, and decides for each row whether a surface matched it, differs from it, could not be compared with it,
-did not load the persona, or was not run. A match needs the same three stages and the same non-zero casilla
-figures; a surface that shows less, more or other figures than the Python row differs.
+did not load the persona, or was not run. The table row is the oracle for calculated values: a match needs the
+same three stages and every casilla figure of the table row shown with an equal value. A casilla the surface shows
+that the row has no figure for (identity fields, rates, period) never makes a row differ; the rows that show such
+casillas are counted and the names stay on the parity.
 """
 
 from __future__ import annotations
@@ -261,6 +263,13 @@ class RowParity:
     causes: tuple[str, ...] = ()
     tree: str | None = None
     """The commit the surface ran, when a result was read for the row."""
+    extra_names: tuple[str, ...] = ()
+    """The non-zero casillas the surface showed that the table row has no figure for; never a cause of a difference."""
+
+    @property
+    def extra_casillas(self) -> int:
+        """How many casillas the surface showed beyond the table row's figures."""
+        return len(self.extra_names)
 
 
 @dataclass(frozen=True, slots=True)
@@ -271,6 +280,8 @@ class PersonaCell:
     """None when the surface has no line at all for the persona."""
     rows: int
     counts: Mapping[str, int]
+    extra_rows: int = 0
+    """The rows on which the surface showed casillas the table row has no figure for."""
 
 
 def _number(text: str) -> Decimal | None:
@@ -293,19 +304,22 @@ def _is_zero(text: str) -> bool:
 
 
 def figure_causes(surface: str, table: Mapping[str, str], shown: Mapping[str, str]) -> list[str]:
-    """Each way the figures ``shown`` by a surface disagree with the table row's ``table`` figures."""
+    """Each way the figures ``shown`` by a surface miss or disagree with the table row's ``table`` figures.
+
+    The table row is the oracle for calculated values, so a casilla shown beyond ``table`` is not a cause.
+    """
     causes: list[str] = []
     for casilla in sorted(table):
         if casilla not in shown:
             causes.append(f"casilla {casilla} not shown")
         elif not _equal(table[casilla], shown[casilla]):
             causes.append(f"casilla {casilla} {surface} {shown[casilla]}, table {table[casilla]}")
-    causes += [
-        f"casilla {casilla} shown {shown[casilla]}, table has none"
-        for casilla in sorted(set(shown) - set(table))
-        if not _is_zero(shown[casilla])
-    ]
     return causes
+
+
+def extra_figures(table: Mapping[str, str], shown: Mapping[str, str]) -> tuple[str, ...]:
+    """The non-zero casillas ``shown`` that the table row has no figure for, sorted."""
+    return tuple(casilla for casilla in sorted(set(shown) - set(table)) if not _is_zero(shown[casilla]))
 
 
 def parity(
@@ -330,9 +344,10 @@ def parity(
     stages = {name: STAGE_OF[getattr(row, name)] for name in _STAGE_FIELDS}
     if (why := _uncomparable_reason(row, stages)) is not None:
         return RowParity(row.key, surface, NOT_COMPARABLE, (why,), tree)
-    causes = _stage_causes(surface, stages, result)
-    causes += figure_causes(surface, dict(row.figures), dict(result.figures))
-    return RowParity(row.key, surface, DIFFERS if causes else MATCHED, tuple(causes), tree)
+    table, shown = dict(row.figures), dict(result.figures)
+    causes = _stage_causes(surface, stages, result) + figure_causes(surface, table, shown)
+    outcome = DIFFERS if causes else MATCHED
+    return RowParity(row.key, surface, outcome, tuple(causes), tree, extra_figures(table, shown))
 
 
 def _load_failure_reason(result: SurfaceResult | None, load_reason: str) -> str:
@@ -434,7 +449,9 @@ def _surface_extras(surface: str, held: Mapping[ResultKey, SurfaceResult], keys:
 def _persona_cell(found: Iterable[RowParity], persona: str, loads: bool | None) -> PersonaCell:
     """``persona``'s cell on one surface from the parities of that surface's rows."""
     mine = [item for item in found if item.key[0] == persona]
-    return PersonaCell(loads, len(mine), Counter(item.outcome for item in mine))
+    return PersonaCell(
+        loads, len(mine), Counter(item.outcome for item in mine), sum(item.extra_casillas > 0 for item in mine)
+    )
 
 
 def _persona_line(held: Mapping[ResultKey, SurfaceResult], persona: str) -> SurfaceResult | None:
@@ -462,7 +479,8 @@ def _load_reason(held: Mapping[ResultKey, SurfaceResult], persona: str) -> str:
 def cell_text(cell: PersonaCell) -> str:
     """The persona cell summary, ``loads, 5/7 matched, 1 differs, 1 not run``, or ``not yet run``.
 
-    Rows that could not be compared and rows lost to a failed load are named after the three counts when there are any.
+    Rows that could not be compared, rows lost to a failed load and rows that show extra casillas are named after
+    the three counts when there are any.
     """
     if cell.loads is None:
         return "not yet run"
@@ -477,6 +495,8 @@ def cell_text(cell: PersonaCell) -> str:
         parts.append(f"{counts.get(NOT_COMPARABLE, 0)} not comparable")
     if counts.get(LOAD_FAILED, 0):
         parts.append(f"{counts.get(LOAD_FAILED, 0)} load failed")
+    if cell.extra_rows:
+        parts.append(f"{cell.extra_rows} rows show extra casillas")
     return ", ".join(parts)
 
 
@@ -508,6 +528,7 @@ __all__ = [
     "SurfaceResult",
     "cell_text",
     "compare_frontend",
+    "extra_figures",
     "figure_causes",
     "frontend_line",
     "parity",
