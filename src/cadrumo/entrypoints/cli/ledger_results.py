@@ -56,11 +56,17 @@ from .ledger_period_results import LedgerPeriodsPayload
 
 
 class LedgerEntryOptionPayload(OutputSchema):
-    """One offered value, the key of its word where the backend words it, and the group it is filed under."""
+    """One offered value, the key of its word where the backend words it, and the group it is filed under.
+
+    A value naming a row of the profile has no catalogue word: ``label_words`` is its served label, in
+    ``label_words_language``.
+    """
 
     value: str
     label_key: str | None = None
     group: str | None = None
+    label_words: str | None = None
+    label_words_language: str | None = None
 
 
 class LedgerEntryOptionFamilyPayload(OutputSchema):
@@ -68,6 +74,21 @@ class LedgerEntryOptionFamilyPayload(OutputSchema):
 
     family: str
     options: list[LedgerEntryOptionPayload]
+
+
+class LedgerLinkFieldPayload(OutputSchema):
+    """One link field of a ledger row, the served family its choices come from, and its name in a language."""
+
+    field: str
+    family: str
+    field_words: str
+    field_words_language: str
+
+
+class LedgerTransactionLinkFieldPayload(LedgerLinkFieldPayload):
+    """A link field of a ledger row with the value the row stores for it."""
+
+    value: str | None = None
 
 
 class LedgerEntryClassificationPayload(OutputSchema):
@@ -128,6 +149,7 @@ class LedgerEntryOptionsResult(OutputSchema):
 
     default_currency: str
     families: list[LedgerEntryOptionFamilyPayload]
+    link_fields: list[LedgerLinkFieldPayload]
     classifications: list[LedgerEntryClassificationPayload]
     limits: LedgerEntryLimitsPayload
     periods: LedgerPeriodsPayload
@@ -475,6 +497,7 @@ class TransactionPayload(OutputSchema):
     arrendamiento_ref: str | None = None
     inmueble_ref: str | None = None
     gasto_capital_inmobiliario: str | None = None
+    link_fields: list[LedgerTransactionLinkFieldPayload] = []
     purchase_invoice_evidence_id: str | None = None
     invoice_id: str | None = None
     attachment_ids: list[str] = []
@@ -824,6 +847,7 @@ class LedgerListRowPayload(OutputSchema):
     arrendamiento_ref: str | None = None
     inmueble_ref: str | None = None
     gasto_capital_inmobiliario: str | None = None
+    link_fields: list[LedgerTransactionLinkFieldPayload] = []
     purchase_invoice_evidence_id: str | None = None
     invoice_id: str | None = None
     attachment_ids: list[str] = []
@@ -1151,6 +1175,7 @@ __all__ = [
     "LedgerInvoicePreviewResult",
     "LedgerInvoicePreviewRetentionPayload",
     "LedgerInvoicePreviewTotalsPayload",
+    "LedgerLinkFieldPayload",
     "LedgerLinkResult",
     "LedgerListResult",
     "LedgerListRowPayload",
@@ -1180,6 +1205,7 @@ __all__ = [
     "LedgerStaleFilingPayload",
     "LedgerStashResult",
     "LedgerStatusResult",
+    "LedgerTransactionLinkFieldPayload",
     "LedgerUpdateResult",
     "LedgerViewResult",
     "M210IncomeClassificationPayload",

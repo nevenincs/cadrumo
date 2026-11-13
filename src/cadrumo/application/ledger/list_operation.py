@@ -84,7 +84,9 @@ def ledger_list_row(
     words = classification_reason_words(source, language)
     concept_words = rental_expense_concept_words(transaction.gasto_capital_inmobiliario, language)
     return LedgerTransactionReviewProjection(
-        transaction=LedgerTransactionProjection.from_payload(ledger_transaction_payload(transaction)),
+        transaction=LedgerTransactionProjection.from_payload(
+            ledger_transaction_payload(transaction), language=language
+        ),
         review_status=ledger_transaction_review_status(transaction),
         group_label=transaction.group_label,
         own_account_id=transaction.own_account_id,

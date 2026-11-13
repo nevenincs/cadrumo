@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
+from ...core.external_constants import DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...domain.buckets.event import BucketEventType
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
@@ -34,10 +35,14 @@ LEDGER_VIEW_OPERATION_DEFINITION_ID = "ledger.view"
 
 
 class LedgerViewRequest(CredentialFreeOperationRequest):
-    """An exact profile and a current or superseded transaction handle."""
+    """An exact profile and a current or superseded transaction handle.
+
+    ``output_language`` is the language the transaction's link fields are named in.
+    """
 
     profile_id: UUID
     transaction_prefix: str = Field(min_length=1, max_length=64, pattern=r"^[0-9a-f]+$")
+    output_language: OutputLanguage = DEFAULT_OUTPUT_LANGUAGE
 
 
 class LedgerViewRejectionProjection(BaseModel):
@@ -104,7 +109,9 @@ class LedgerViewExecutor:
             return LedgerViewProjection(
                 profile_id=payload.profile_id,
                 transaction_prefix=payload.transaction_prefix,
-                transaction=LedgerTransactionProjection.from_payload(canonical.transaction),
+                transaction=LedgerTransactionProjection.from_payload(
+                    canonical.transaction, language=payload.output_language
+                ),
                 review_status=canonical.review_status,
                 latest_llm_rejection=rejection,
             )

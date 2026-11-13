@@ -2,19 +2,21 @@
 
 from __future__ import annotations
 
+import json
 from decimal import Decimal, InvalidOperation
 from typing import Final, Literal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
-from ...core.external_constants import OutputLanguage
+from ...core.external_constants import DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
 from ...core.i18n.render import tr
 from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...domain.calculations.registry.form_codes import require_form_width
 from ...domain.transactions.own_accounts import OwnAccountId
 from ..review.filter import LedgerReviewStatus
+from .entry_option_families import LEDGER_LINK_FIELDS, LedgerLinkFieldProjection, served_link_fields
 from .models import LedgerTransactionPayload
 
 type LedgerReasonSource = Literal["none", "stated", "command"]
@@ -75,12 +77,23 @@ class LedgerM210IncomeProjection(BaseModel):
         return require_form_width(value, "m210.tipo_renta_digits")
 
 
+class LedgerTransactionLinkFieldProjection(LedgerLinkFieldProjection):
+    """One link field of a row: the field, the served family its choices come from, its name, and the value stored."""
+
+    value: str | None
+
+
 class LedgerTransactionProjection(BaseModel):
     """The existing transaction payload with a strict JSON-stable M210 projection.
 
     Financial values are copied from canonical read facts, never recomputed.
     Domain reconstruction and registry validation remain inside the worker;
     frontends receive only the admitted display and audit facts.
+
+    ``link_fields`` serves every link field of a row in form order, the stored
+    value or ``None`` for each, so a frontend holds no field-to-family table; the
+    three flat link fields carry the same values. The projection built from a
+    payload names the fields in the language it is given.
     """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -116,6 +129,7 @@ class LedgerTransactionProjection(BaseModel):
     arrendamiento_ref: str | None = None
     inmueble_ref: str | None = None
     gasto_capital_inmobiliario: str | None = None
+    link_fields: tuple[LedgerTransactionLinkFieldProjection, ...] = ()
     purchase_invoice_evidence_id: str | None
     invoice_id: str | None
     attachment_ids: tuple[str, ...]
@@ -132,9 +146,16 @@ class LedgerTransactionProjection(BaseModel):
     modified_at: str
 
     @classmethod
-    def from_payload(cls, payload: LedgerTransactionPayload) -> LedgerTransactionProjection:
-        """Copy the canonical JSON meaning, preserving absence and decimal text."""
-        return cls.model_validate_json(payload.model_dump_json())
+    def from_payload(
+        cls, payload: LedgerTransactionPayload, *, language: OutputLanguage = DEFAULT_OUTPUT_LANGUAGE
+    ) -> LedgerTransactionProjection:
+        """Copy the canonical JSON meaning, absence and decimal text kept; name the link fields in ``language``."""
+        stored = payload.model_dump(mode="json")
+        link_fields = [
+            {**served.model_dump(mode="json"), "value": stored[spec.field]}
+            for spec, served in zip(LEDGER_LINK_FIELDS, served_link_fields(language), strict=True)
+        ]
+        return cls.model_validate_json(json.dumps({**stored, "link_fields": link_fields}))
 
 
 class LedgerMovementWithholdingProjection(BaseModel):

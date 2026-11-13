@@ -15,6 +15,8 @@ from ...application.ledger.view_operation import (
     LedgerViewRequest,
 )
 from ...core.bucket_pointer import require_active_bucket_id
+from ...core.external_constants import OutputLanguage
+from ...core.i18n.render import output_language as active_output_language
 from ...core.identity.transaction_ids import TransactionId
 from .operation_ledger_prefix import normalise_ledger_transaction_id_prefix
 from .operation_ledger_prefix_read import read_ledger_prefix_projection
@@ -26,7 +28,11 @@ def read_ledger_view_for_cli(ctx: typer.Context, *, transaction_id: str) -> Ledg
     prefix = normalise_ledger_transaction_id_prefix(transaction_id)
     return read_ledger_prefix_projection(
         client,
-        LedgerViewRequest(profile_id=client.profile_id, transaction_prefix=prefix),
+        LedgerViewRequest(
+            profile_id=client.profile_id,
+            transaction_prefix=prefix,
+            output_language=OutputLanguage(active_output_language()),
+        ),
         prefix=prefix,
         definition_id=LEDGER_VIEW_OPERATION_DEFINITION_ID,
         result_type=LedgerViewProjection,

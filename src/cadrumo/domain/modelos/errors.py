@@ -129,6 +129,18 @@ class CalculationRevisionIntegrityError(ModeloValidationError):
     """
 
 
+class LedgerFilingCoverageError(ModeloError):
+    """Raised when a persisted revision's snapshot and evidence contributor sets diverge.
+
+    A ledger-derived revision bundles a ``ledger_filing_snapshot`` (the
+    fingerprinted contributor set) and a ``ledger_filing_evidence`` (the typed
+    fact basis). The two are projected from the same ``source_transaction_ids``
+    and MUST cover the same contributors. A divergence on read-back means a
+    contributor row was silently dropped after persistence; this gate surfaces it
+    on load rather than letting the filing artefact ship an unexplainable casilla.
+    """
+
+
 class ModeloExportError(ModeloError):
     """Base error for modelo-revision export failures (manifest, archive build)."""
 
@@ -230,6 +242,7 @@ def raise_catalogue_integrity_error(
 
 __all__ = [
     "CalculationRevisionIntegrityError",
+    "LedgerFilingCoverageError",
     "Modelo036LifecycleError",
     "Modelo036PriorAltaRequiredError",
     "Modelo036TerminalStateError",

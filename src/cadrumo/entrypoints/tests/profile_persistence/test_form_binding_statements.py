@@ -45,6 +45,12 @@ _PENDING_CARRIES = (
     "renta-base-liquidable-negativa-general-em3-pendiente-inicio",
     "renta-base-liquidable-negativa-general-em4-pendiente-inicio",
 )
+#: The negative savings balances (rcm and gyp) of the four earlier ejercicios, which LIRPF art. 49 reads from the previous return.
+_PENDING_SAVINGS_BALANCES = tuple(
+    f"renta-saldo-negativo-{kind}-ahorro-{origin}-pendiente-inicio"
+    for kind in ("gyp", "rcm")
+    for origin in ("em1", "em2", "em3", "em4")
+)
 _PENDING_BASE = _PENDING_CARRIES[0]
 _RENTA_FACTS = (UserProfileFact(path="tax_residence.ccaa", value="madrid"), *RENTA_UNMARRIED_TAXPAYER_FACTS)
 _WORDS = "application.modelo.work_form.binding_statement"
@@ -144,7 +150,7 @@ def test_a_pending_carry_offers_the_statement_of_no_amount_until_it_is_made(
                 address=ModeloEditBindingAddressV1(binding_id=binding_id),
                 kind=ModeloEditBindingIntentKind.ATTEST_NO_AMOUNT,
             )
-            for binding_id in _PENDING_CARRIES
+            for binding_id in (*_PENDING_CARRIES, *_PENDING_SAVINGS_BALANCES)
         )
         applied = renta.apply(binding=intents)
         assert applied.refusal is None, applied.refusal

@@ -68,6 +68,7 @@ from ....application.modelo.work_lifecycle import create_work_unit
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ....domain.calculations.registry.bindings import binding_source_casilla_ids
 from ....domain.calculations.registry.ids import BindingId, RelationId
 from ....domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from ....domain.calculations.registry.schema import RegistrySnapshot
@@ -98,6 +99,9 @@ _PENDIENTE_INICIO: CasillaId = validated_casilla_id("1388")
 _PRIOR_ANEXO_C_REMAINDERS: tuple[CasillaId, ...] = tuple(
     validated_casilla_id(box, surface="_PRIOR_ANEXO_C_REMAINDERS") for box in ("1384", "1387", "1390")
 )
+#: The carries of negative savings balances (LIRPF art. 49) pending from earlier years.
+_SAVINGS_CARRY_PREFIX = "renta-saldo-negativo-"
+_SAVINGS_CARRY_SUFFIX = "-pendiente-inicio"
 
 #: Two distinct renta years the enrollment spans; each sources the prior year's 1391.
 _YEAR_N = 2024
@@ -117,15 +121,32 @@ def _snapshot(filing_year: int) -> RegistrySnapshot:
     return published_authority_operation().snapshot(_MODELO, filing_year=filing_year, period=_PERIOD)
 
 
+def _prior_savings_remainders(filing_year: int) -> tuple[CasillaId, ...]:
+    """The prior-return boxes the year's savings carries open from, read from the year's own bindings."""
+    return tuple(
+        casilla_id
+        for binding in _snapshot(filing_year).revision.bindings
+        if binding.provider.kind == "previous_filing"
+        and binding.id.startswith(_SAVINGS_CARRY_PREFIX)
+        and binding.id.endswith(_SAVINGS_CARRY_SUFFIX)
+        for casilla_id in binding_source_casilla_ids(binding)
+    )
+
+
 def _seed_prior_year_saldo(*, source_year: int, saldo: Decimal, obs_repo: CalculationObservationRepository) -> None:
-    """Record a prior-year M100 end-of-year generated saldo (casilla 1391)."""
+    """Record a prior-year M100 with its generated saldo (casilla 1391) and no other pending balance.
+
+    The prior return states every older general-base remainder and every savings
+    remainder as zero, so the only carry it hands the next year is the saldo.
+    """
+    remainders = (*_PRIOR_ANEXO_C_REMAINDERS, *_prior_savings_remainders(source_year + 1))
     save_stamped_observation(
         obs_repo,
         registry_grounded_modelo_observation(
             modelo=_MODELO,
             filing_year=source_year,
             period=_PERIOD,
-            casilla_values={_GENERATED_SALDO: saldo, **dict.fromkeys(_PRIOR_ANEXO_C_REMAINDERS, Decimal("0"))},
+            casilla_values={_GENERATED_SALDO: saldo, **dict.fromkeys(remainders, Decimal("0"))},
         ),
         source_kind="app_filing",
         captured_at=_CLOCK,

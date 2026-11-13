@@ -23,6 +23,7 @@ _EXPECTED = {
     "taxpayer_type.country_of_fiscal_residence": "countries",
     "attribution_entity_socios.country_of_residence": "countries",
     "m200_establecimiento_permanente.pais_residencia_fiscal": "countries",
+    "inversiones_posicion.pais_origen": "countries",
     "renta_spouse.eu_eea_country": "eu_eea_countries",
 }
 

@@ -7698,6 +7698,13 @@ family = "parameters"
 id = "renta-minimo-descendientes-madrid-menor-tres-anos"
 position = 47
 
+# Casilla 0155 sums the imputed income of every property, which the Inmueble rows carry in casilla 0089.
+[[revisions."2022".family_overrides]]
+family = "formulas"
+selector = {revision = "2021", id = "renta-inmobiliario-suma-rentas-imputadas"}
+sequence_additions = {"expression.args" = [{binding = "renta-inmueble-total-renta-imputada-0089"}]}
+sequence_removals = {"expression.args" = [0]}
+
 # BEGIN casilla 0564 autonomic deduction sum, written by dev.registry.authoring.autonomic_deduction_sum
 [[revisions."2022".family_overrides]]
 family = "formulas"
@@ -7924,10 +7931,3 @@ sequence_additions = { "expression.args" = [
 ], source_refs = ["aeat-dr-100-2022-dictionary"] }
 sequence_order = { "expression.args" = [5, 6, 7, 8, 9, 10, 11, 0, 1, 12, 2, 3, 13, 4, 14], "source_citations" = [0, 6, 7, 8, 9, 10, 11, 12, 1, 2, 13, 3, 4, 14, 5, 15] }
 # END casilla 0564 autonomic deduction sum
-
-# Casilla 0155 sums the imputed income of every property, which the Inmueble rows carry in casilla 0089.
-[[revisions."2022".family_overrides]]
-family = "formulas"
-selector = {revision = "2021", id = "renta-inmobiliario-suma-rentas-imputadas"}
-sequence_additions = {"expression.args" = [{binding = "renta-inmueble-total-renta-imputada-0089"}]}
-sequence_removals = {"expression.args" = [0]}

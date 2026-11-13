@@ -68,6 +68,10 @@ _YEAR = 2025
 _PERIOD = "0A"
 _CATEGORIES = "taxpayer_type.irpf_income_categories"
 _CREDIT_CASILLAS = ("0596", "0597", "0603")
+# The work-income casillas the trabajo payer record also binds: its gross wages, valuation in kind, ingresos a
+# cuenta, ingresos a cuenta repercutidos, reducciones and gastos deducibles. They are not credits, but a profile that
+# declares work income has no figure for them without the payer's certificate either.
+_WORK_INCOME_CASILLAS = ("0003", "0004", "0005", "0006", "0011", "0013")
 # Computed credit casillas whose formula reads a family binding as one operand.
 _COMPUTED_CREDIT_CASILLAS = ("0598",)
 _ABSENT_CLASSES = (RetencionSoportadaClase.CAPITAL_MOBILIARIO, RetencionSoportadaClase.GANANCIA_PATRIMONIAL)
@@ -101,10 +105,18 @@ def _credit_targets() -> frozenset[BindingId]:
     ) | frozenset(operands)
 
 
+def _work_income_targets() -> frozenset[BindingId]:
+    """Every binding that reaches a casilla the trabajo payer record states beside the credit."""
+    targets = casillas_by_binding(_revision_definition())
+    return frozenset(
+        binding_id for binding_id, casillas in targets.items() if set(casillas).intersection(_WORK_INCOME_CASILLAS)
+    )
+
+
 def _zero_binding_values() -> dict[BindingId, Decimal]:
     revision = _revision_definition()
     alternates = {binding_id for casilla in revision.casillas for binding_id in casilla.alternate_bindings}
-    excluded = {*alternates, *_credit_targets()}
+    excluded = {*alternates, *_credit_targets(), *_work_income_targets()}
     return {
         binding.id: Decimal("0")
         for binding in revision.bindings
@@ -228,8 +240,10 @@ def _credit_blockers(revision: CalculationRevision) -> list[tuple[str, str | Non
 
 
 def test_the_mesh_supplies_the_credit_casillas_and_no_caller_filler_reaches_them() -> None:
-    assert _family_binding_ids() <= _credit_targets()
+    assert _family_binding_ids() <= _credit_targets() | _work_income_targets()
+    assert _family_binding_ids() & _work_income_targets()
     assert _credit_targets().isdisjoint(_zero_binding_values())
+    assert _work_income_targets().isdisjoint(_zero_binding_values())
     assert _credit_targets().isdisjoint(_zero_relation_values())
 
 
@@ -274,7 +288,8 @@ def test_declared_work_income_with_no_payer_record_and_no_attestation_leaves_059
 
     The profile declares trabajo, so the work-income credit 0596 has a payer to come from; with no
     payer record and no absence attestation nothing proves it zero, and the box stays out of the
-    result with a blocking issue. Capital mobiliario and ganancias are not declared, so they read zero.
+    result with a blocking issue. The payer record also states the work-income boxes, which stay
+    unresolved with it. Capital mobiliario and ganancias are not declared, so they read zero.
     """
     _seed_profile("trabajo,actividad_economica")
     revision = _calculate(objects, operation, with_payer=False)
@@ -282,4 +297,6 @@ def test_declared_work_income_with_no_payer_record_and_no_attestation_leaves_059
     assert "0596" not in revision.casilla_values
     assert revision.casilla_values["0597"] == Decimal("0")
     assert revision.casilla_values["0603"] == Decimal("0")
-    assert _credit_blockers(revision) == [("unresolved_binding", "0596")]
+    assert _credit_blockers(revision) == sorted(
+        ("unresolved_binding", casilla) for casilla in ("0596", *_WORK_INCOME_CASILLAS)
+    )

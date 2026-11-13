@@ -20,9 +20,9 @@ from ...application.ledger.counterparty_establishment import (
     CounterpartyFilingNameInputError,
     confirmed_counterparty_facts_key,
 )
+from ...application.ledger.counterparty_filing_name_rendering import CounterpartyFilingNameRendering
 from ...application.ledger.counterparty_operation import (
     LEDGER_COUNTERPARTY_OPERATION_DEFINITION_ID,
-    CounterpartyFilingNameRendering,
     LedgerCounterpartyRequest,
     LedgerCounterpartyResult,
 )

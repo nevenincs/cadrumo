@@ -98,6 +98,9 @@ _PROBES: dict[str, tuple[str, str]] = {
     # taxpayer reads off a certificate (a constant fee across an enrolment span)
     # and it is the half a parser could drop while still honouring bare months.
     "GASTOS_GUARDERIA_MENSUAL": ("GASTOS_GUARDERIA_MENSUAL=9-12:210;1:180", "gastos_guarderia_mensuales"),
+    # The baseline leaves the figure unset (None), so any stated amount is a
+    # change only an honoured token produces.
+    "COTIZACIONES_SS_MADRE": ("COTIZACIONES_SS_MADRE=1200", "cotizaciones_ss_madre_euros"),
     "NIF": ("NIF=12345678Z", "nif"),
     "APELLIDOS_NOMBRE": ("APELLIDOS_NOMBRE=Ortega Navarro Pablo", "apellidos_nombre"),
 }
