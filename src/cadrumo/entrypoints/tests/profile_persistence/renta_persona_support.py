@@ -174,8 +174,8 @@ class ActivityExpense:
     base: Decimal
 
 
-def seed_profile(persona: Persona) -> None:
-    """Store the complete profile of the persona's taxpayer in the active bucket."""
+def seed_profile(persona: Persona, *, extra_facts: Iterable[UserProfileFact] = ()) -> None:
+    """Store the complete profile of the persona's taxpayer in the active bucket, with ``extra_facts`` beside it."""
     criterion_facts = () if persona.criterion is None else _criterion_facts(persona)
     seed_test_profile_record(
         create_user_profile_record(
@@ -194,6 +194,7 @@ def seed_profile(persona: Persona) -> None:
                     UserProfileFact(path="censo.activity_start_date", value=persona.activity_start),
                     *renta_single_taxpayer_facts(birth_date=date(1980, 3, 15)),
                     *criterion_facts,
+                    *extra_facts,
                 )
             ),
             created_at=T0,

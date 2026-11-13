@@ -24,6 +24,12 @@ The credit reconciliation declares, for each Modelo 100 casilla that credits IRP
 legal_refs = ["orden-eha-3290-2008:art-6", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-modelo-296-procedure", "boe-modelo-296-form-layout", "aeat-dr-296-2023"]
 
+[revisions."2023".family_dispositions.prevision_social_placements]
+reason = """
+The pension contribution placement declares, for each Modelo 345 clave and subclave a contribution certificate states, the Modelo 100 casilla of the reduction for contributions to social-welfare systems it reaches (LIRPF arts. 51 and 52). This modelo is not the annual Renta return and declares no casilla of that reduction, so there is no contribution for an entry to place."""
+legal_refs = ["orden-eha-3290-2008:art-6", "trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-modelo-296-procedure", "boe-modelo-296-form-layout", "aeat-dr-296-2023"]
+
 [revisions."2023".family_dispositions.parameters]
 reason = """
 A parameter holds a regulatory value a formula of this revision applies -- a rate, a threshold, a coefficient. Modelo 296 applies none, and the revision is small enough to say so exhaustively rather than in general: it declares THREE casillas and ONE formula. Casillas 03 and 04 are manual money inputs (the base and the retenciones e ingresos a cuenta of the annual summary) and casilla 05 is their computed total. The single formula, modelo-296-total, is an `add` whose only argument is casilla 04, \

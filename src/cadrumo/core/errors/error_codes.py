@@ -288,6 +288,9 @@ RETIRED_ERROR_CODE_SUCCESSORS: Final[Mapping[str, str]] = MappingProxyType(
         "ERROR_MODELO_AMENDMENT_EVIDENCE_MISSING": "REFUSED_MODELO_AMENDMENT_EVIDENCE_MISSING",
         # A calculation missing an input the operator supplies became a refusal whose door is that input.
         "ERROR_MODELO_WORK_INPUT_REQUIRED": "REFUSED_MODELO_WORK_INPUT_REQUIRED",
+        # The interim refusal of a savings return ended when the export placed its detail records;
+        # a record settled under it reads as an export the product did not support.
+        "REFUSED_MODELO_EXPORT_SAVINGS_DETAIL_RECORDS_UNWRITABLE": "REFUSED_MODELO_EXPORT_UNSUPPORTED",
     }
 )
 """Every code no longer declared that a persisted record can still hold, with the code it now reads as.

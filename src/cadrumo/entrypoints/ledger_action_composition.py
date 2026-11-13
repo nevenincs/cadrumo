@@ -107,6 +107,14 @@ def load_ledger_rows_for_rental_references(bucket_id: str) -> Iterable[Transacti
     return TransactionCatalogueRepository(bucket_id=bucket_id).load().transactions.values()
 
 
+def load_entry_option_profile_facts(bucket_id: str, operation: PinnedAuthorityOperation) -> Mapping[str, str] | None:
+    """Read the facts of ``bucket_id``'s profile under ``operation``'s pin, for the rental rows an entry form offers."""
+    from .adapter_composition_ports import build_pinned_profile_read_ports
+
+    ports = build_pinned_profile_read_ports(bucket_id=bucket_id, operation=operation)
+    return ports.path_values.load_path_values(bucket_id=bucket_id)
+
+
 def compose_ledger_import_ports() -> LedgerImportPorts:
     """Bind the concrete financial source and catalogue-location adapters."""
     from ..adapters.inbound.financial.ledger_import import build_ledger_import_ports
@@ -117,5 +125,6 @@ def compose_ledger_import_ports() -> LedgerImportPorts:
 __all__ = [
     "compose_ledger_action_ports",
     "compose_ledger_import_ports",
+    "load_entry_option_profile_facts",
     "load_ledger_rows_for_rental_references",
 ]

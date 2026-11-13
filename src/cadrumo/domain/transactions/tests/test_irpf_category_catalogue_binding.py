@@ -239,6 +239,8 @@ def test_catalogue_membership_is_closed_and_direction_aware() -> None:
         _RENT_CATEGORY,
         "arrendamiento_vivienda_afecto",
         RENTAL_LINK_IRPF_CATEGORY,
+        "capital_mobiliario",
+        "ganancias_patrimoniales",
     }
 
     assert ledger_irpf_category("bogus_withholding") is None

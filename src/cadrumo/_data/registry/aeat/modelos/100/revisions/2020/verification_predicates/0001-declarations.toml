@@ -70,10 +70,12 @@ legal_refs = ["ley-35-2006:art-99", "ley-35-2006:art-101", "rd-439-2007:art-80"]
 # would false-fire. implies_nonzero holds trivially when the antecedent
 # <= 0, so a filer with no capital mobiliario ahorro income never fires.
 #
-# The remedy is the payer's withholding certificate, keyed as the casilla
-# value. Modelo 123 (or 193) is the payer's return, not this taxpayer's, so
-# there is no filing of theirs to capture. AEAT's datos fiscales report what
-# payers declared, but only as information, and Cadrumo does not read them yet.
+# The remedy is the payer's withholding certificate, recorded as a capital
+# mobiliario payer record (or an attestation that no payer withheld), from
+# which 0597 is sourced. Modelo 123 (or 193) is the payer's return, not this
+# taxpayer's, so there is no filing of theirs to capture. AEAT's datos fiscales
+# report what payers declared, but only as information, and Cadrumo does not
+# read them yet.
 [[revisions."2020".verification_predicates]]
 id = "implies-nonzero:retenciones-capital-mobiliario-declaradas-cuando-ingresos-integros-positivos"
 predicate_id = "modelo-100-2020-retenciones-capital-mobiliario-declaradas-cuando-ingresos-integros-positivos"

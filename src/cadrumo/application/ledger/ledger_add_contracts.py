@@ -78,6 +78,8 @@ class LedgerAddRequest(BaseModel):
     arrendamiento_ref: Annotated[str, Field(max_length=64)] | None = None
     inmueble_ref: Annotated[str, Field(max_length=64)] | None = None
     gasto_capital_inmobiliario: Annotated[str, Field(max_length=128)] | None = None
+    posicion_ref: Annotated[str, Field(max_length=64)] | None = None
+    concepto_capital_mobiliario: Annotated[str, Field(max_length=128)] | None = None
     recargo_amount: _AddOptionalDecimalText = None
     irpf_category: _AddOptionalText = None
     usage_ratio_id: _AddOptionalId = None

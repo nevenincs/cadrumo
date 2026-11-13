@@ -491,6 +491,8 @@ errors:
       de percepcions.
     canonical_persistence_degradation: La capacitat de persistència no ha pogut proporcionar
       l'operació sol·licitada.
+    canonical_prevision_social_contribution_persistence: No s'han pogut llegir ni
+      desar els teus registres d'aportacions a sistemes de previsió social.
     canonical_retencion_observation_persistence: No s'han pogut desar les observacions
       de retencions.
     canonical_retencion_soportada_persistence: No s'han pogut llegir ni desar els
@@ -912,6 +914,23 @@ errors:
     filing_export_field_projection_ref_undeclared: El camp d'exportació %{field} no
       declara referència de projecció. L'aplicació ho deriva del seu propi disseny
       d'exportació, així que cap canvi a les teves dades ho corregeix.
+    filing_export_input_dictionary_field_undeclared: 'El disseny d''exportació %{layout}
+      no pot col·locar el camp %{field}: cap dels seus diccionaris no el declara.
+      L''aplicació ho deriva del seu propi disseny d''exportació, així que cap canvi
+      a les teves dades ho corregeix.'
+    filing_export_input_dictionary_not_repeated: 'El disseny d''exportació %{layout}
+      no pot col·locar el camp %{field} del diccionari d''entrada a %{path}: cap element
+      que l''XSD oficial repeteix no el conté. L''aplicació ho deriva del seu propi
+      disseny d''exportació, així que cap canvi a les teves dades ho corregeix.'
+    filing_export_input_dictionary_outside_xsd: 'El disseny d''exportació %{layout}
+      no pot col·locar el camp %{field} del diccionari d''entrada a %{path}: l''XSD
+      oficial no declara aquest element. L''aplicació ho deriva del seu propi disseny
+      d''exportació, així que cap canvi a les teves dades ho corregeix.'
+    filing_export_input_dictionary_path_conflict: 'El disseny d''exportació %{layout}
+      no pot col·locar el camp %{field} del diccionari d''entrada a %{path}: el diccionari
+      de la declaració ja defineix aquest registre o aquesta ruta com a %{declared_field}.
+      L''aplicació ho deriva del seu propi disseny d''exportació, així que cap canvi
+      a les teves dades ho corregeix.'
     filing_export_layout_not_owned_by_snapshot: El disseny d'exportació no pertany
       a la instantània del registre seleccionada. L'aplicació ho deriva del seu propi
       disseny d'exportació, així que cap canvi a les teves dades ho corregeix.
@@ -1091,6 +1110,9 @@ errors:
     filing_export_xml_row_column_undeclared: L'enllaç %{binding} porta files però
       no declara cap columna de fila. L'aplicació ho deriva del seu propi disseny
       d'exportació, així que cap canvi a les teves dades ho corregeix.
+    filing_export_xml_row_total_box_unresolved: L'enllaç %{binding} totalitza columnes
+      de fila però no omple una sola casella. L'aplicació ho deriva del seu propi
+      disseny d'exportació, així que cap canvi a les teves dades ho corregeix.
     filing_export_xml_serialiser_not_bytes: El serialitzador XML ha retornat %{type}
       i no bytes. L'aplicació ho deriva del seu propi disseny d'exportació, així que
       cap canvi a les teves dades ho corregeix.
@@ -1229,6 +1251,10 @@ errors:
       %{binding_id} alhora sense import i amb un import declarat. L'aplicació va escriure
       aquest registre ella mateixa, així que s'ha alterat o malmès i el càlcul no
       el pot fer servir.
+    operator_layer_income_family_entry_digest_malformed: El registre desat de les
+      xifres introduïdes a mà per a la família de rendes %{family} no conté un resum
+      vàlid de les seves files del llibre. L'aplicació va escriure aquest registre,
+      així que es va alterar o malmetre i el càlcul no el pot fer servir.
     operator_layer_value_attestation_not_canonical: La declaració de valor desada
       per a l'enllaç %{binding_id} no conté un import decimal canònic. L'aplicació
       va escriure aquest registre ella mateixa, així que s'ha alterat o malmès i el
@@ -1586,6 +1612,10 @@ errors:
     pension_reduccion_total_contributions_not_positive: Les aportacions totals al
       pla de pensions han de ser superiors a zero; has indicat %{value}. Indica el
       total de totes les aportacions.
+    prevision_social_contribution_revision_conflict: El registre d'aportacions ha
+      canviat des que el vas llegir; torna a llegir-lo abans de desar.
+    prevision_social_contribution_write_refused: No s'ha desat el registre d'aportacions
+      a sistemes de previsió social.
     producer_capture_not_current: Una projecció de productor ha canviat mentre es
       llegia; torna a capturar-la.
     profile_access_administration_denied: El teu accés actual no permet gestionar
@@ -2290,5 +2320,14 @@ errors:
       portar la categoria de renda {category}; indica-la amb «{door}» i --irpf-category.
     rental_property_unknown: L'immoble {ref} no és cap dels immobles del teu perfil.
       Consulta'ls amb «{door}».
+    savings_concept_kind: El concepte {concepto} només s'admet en una posició de tipus
+      {kind}, i la posició {ref} és d'un altre tipus. Tria un altre concepte o una
+      altra posició amb «{door}».
+    savings_concept_unknown: '--concepto-capital-mobiliario {value!r} no reconegut.
+      Conceptes admesos: {accepted}.'
+    savings_link_category: Una fila vinculada a una posició d'estalvi ha de portar
+      la categoria de renda {category}; indica-la amb «{door}» i --irpf-category.
+    savings_position_unknown: La posició d'estalvi {ref} no és cap de les posicions
+      del teu perfil. Consulta-les amb «{door}».
     unknown_ledger_provider: 'Proveïdor de llibre {provider!r} desconegut. Proveïdors
       reconeguts: {providers}.'

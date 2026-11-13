@@ -522,6 +522,44 @@ cli:
           exists (%{invoice_id}); nothing was created.'
         yes_help: Confirm deleting the invoice
         yes_required: Pass --yes to delete an invoice
+      prevision_social:
+        amount_help: Contribution amount in euros the certificate states, for example
+          1500.00.
+        beneficiary_help: 'Whose system the contribution went to: taxpayer, spouse
+          or disabled_person. Only taxpayer is calculated in this version.'
+        certificate_file_help: Certificate file (PDF or image) to keep encrypted in
+          your storage; its SHA-256 becomes the evidence of the record.
+        clave_help: Modelo 345 clave the certificate states, A to M.
+        ejercicio_help: Tax year (`ejercicio`) the contribution was paid in.
+        employer_same_plan_help: Whether your employer also contributed to the same
+          plan (yes or no). Required for a clave and subclave whose box depends on
+          it.
+        evidence_sha256_help: SHA-256 of a certificate already in your storage, or
+          a check against --certificate-file. A record needs one of the two.
+        group_help: Record the contributions your pension contribution certificates
+          report.
+        invalid_input: 'A value is not valid: check the ejercicio, the issuer and
+          plan references, the revision and the certificate fingerprint.'
+        issuer_name_help: Legal name of the issuer.
+        issuer_ref_help: Issuer reference (issuer_ref) shown by the list.
+        issuer_tax_id_help: Tax ID (NIF) of the plan manager, mutualidad or insurer
+          that issued the certificate.
+        list_help: List the stored pension contribution records of an ejercicio without
+          any tax ID, with the box each one reaches.
+        plan_name_help: Name of the plan.
+        plan_nif_help: Tax ID (NIF) of the plan or fund, where it has one of its own.
+        plan_ref_help: Plan reference (plan_ref) shown by the list, for a record that
+          names a plan NIF.
+        record_expected_revision_help: Revision the list showed, to correct a stored
+          record. Leave it out for a first record.
+        record_help: Record the contribution one certificate states for a plan, clave
+          and subclave in an ejercicio, or correct the stored one with --expected-revision.
+        remove_expected_revision_help: Revision the list showed for the record to
+          remove.
+        remove_help: Remove one pension contribution record against the revision the
+          list showed.
+        subclave_help: Modelo 345 subclave the certificate states, for a clave that
+          takes one.
       prorrata:
         activity_code_help: CNAE / IAE activity code grouped into this sector (repeatable,
           at least one).
@@ -993,6 +1031,7 @@ cli:
           actividades_prorrata: prorrata register activities
           activo_extranjero: foreign asset
           afiliado_cotizacion: contributions-relationship affiliate
+          aportacion_prevision_social: pension contribution certificate
           borrador_aeat: AEAT draft
           compensacion_iva_anual: annual IVA compensation
           constante_diseno: Record design constant
@@ -1625,13 +1664,25 @@ cli:
         attest_no_amount_help: State that one carry from an earlier filing holds no
           amount. Shows the check of the change; with --yes it records the carry as
           a 0 you stated, apart from a figure you typed.
+        attest_prior_carries_amount_effect: stated as %{amount}
+        attest_prior_carries_amount_help: Give an amount for one carry instead of
+          nothing pending, as <box>=<amount> with the box the carry feeds and a positive
+          amount like 1234.56; repeat it for more carries. The box must belong to
+          a family named with --family. The other open carries of that family are
+          stated as nothing pending
         attest_prior_carries_confirm: Nothing was stated yet. Run `aeat app modelo
-          work attest-prior-carries %{work_unit_id} --yes` to state it.
-        attest_prior_carries_help: State that no amount from earlier years is still
-          pending on a declaration (the negative general taxable bases of the four
-          previous years in a Modelo 100), for every carry its form offers the statement
-          for. Shows the statement and the check of the change; with --yes it records
-          each carry as a 0 you stated, apart from a figure you typed.
+          work attest-prior-carries %{work_unit_id}%{selection} --yes` to state it.
+        attest_prior_carries_family_help: State this family of earlier-year carries
+          as nothing pending; repeat it to name every open family. One statement must
+          cover all of them
+        attest_prior_carries_help: 'State that no amount from earlier years is still
+          pending on a declaration (the negative general taxable bases and the negative
+          savings balances of the four previous years in a Modelo 100). Shows the
+          statement and the check of the change; with --yes it records each carry
+          as a 0 you stated, apart from a figure you typed. One statement covers every
+          open family: name each with --family (repeatable), or none when only one
+          is open. To give an amount for a carry, use --amount; the other open carries
+          of its family are then stated as nothing pending.'
         attest_prior_carries_yes_help: Confirm the statement and record it on the
           declaration
         attest_prior_value_help: State the figure a declaration takes from an earlier
@@ -2822,6 +2873,17 @@ cli:
         state_help: '`observed` for a closed year; `committed` for a year not yet
           closed, which must be regularised if not met.'
         year_help: Calendar year the average applies to.
+      posicion:
+        add_help: Add a position from --value FACT=VALUE facts; it is stored only
+          if they cohere.
+        clear_help: Clear a fact by name; repeat the option for several.
+        edit_help: Change facts of a position and clear the ones you name; the rest
+          stay.
+        help: Record your bank accounts, term deposits and securities accounts.
+        list_help: List the stored positions with their row key.
+        remove_help: Remove a position.
+        row_help: Row key of the position, as «list» shows it.
+        value_help: One FACT=VALUE fact; repeat the option for several facts.
       recovery:
         channel_absent: A recovery code can only be shown on a terminal. On a headless
           host, provide both --recovery-handoff-fd and --recovery-verification-fd;
@@ -3286,6 +3348,8 @@ cli:
       irpf_id_column: irpf-category (pass this exact value)
       irpf_purpose_activity_income_withholding: professional activity withholding
         (received or paid net)
+      irpf_purpose_capital_gain: capital gain or loss (not computed yet)
+      irpf_purpose_capital_mobiliario_yield: movable capital yield (interest, dividends)
       irpf_purpose_employment_income: employment income (not for net-paid invoices)
       irpf_purpose_rent_expense_withholding: net-paid rent expense withholding
       irpf_purpose_rental_property_income: rental income and expenses of a property
@@ -3333,6 +3397,10 @@ cli:
         drop --business-pct, or pass --classification MIXED.
       classification_help: Business classification state for the transaction
       classification_required: --classification is required when --file is not provided.
+      concepto_capital_mobiliario_help: What the row is within its savings position,
+        one of the concepts the registry declares; an unknown value is refused with
+        the accepted ones. Needs a position link (--posicion). Blank text removes
+        it.
       counterparty_country_help: Country where the counterparty is established (ISO
         3166-1 alpha-2, e.g. US, DE). Establishment only; use --counterparty-identification-state
         for VAT identification.
@@ -3414,6 +3482,9 @@ cli:
       mixed_requires_business_pct: Refused. --classification MIXED needs a business
         share. Pass --business-pct with a value from 0 to 1, or classify the row as
         BUSINESS or PERSONAL instead.
+      posicion_help: Row key of the stored savings position this row belongs to. Not
+        together with --arrendamiento or --inmueble. Blank text removes the link.
+        A linked row carries the income category capital_mobiliario.
       read_evidence_help: Read the transaction's attached evidence on-host and feed
         it to the classifier.
       reaffirm_help: Reaffirm the classification of an already-classified transaction.

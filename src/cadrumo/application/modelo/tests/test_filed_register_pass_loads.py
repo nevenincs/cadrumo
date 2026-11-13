@@ -45,6 +45,7 @@ from ...aggregation.tests.ledger_source_mesh_support import (
     catalogue_read_ports,
     empty_invoice_repository,
     empty_prorrata_repository,
+    empty_retencion_soportada_ports,
     machine_acquisition_transaction,
     machine_asset,
     machine_claim,
@@ -144,6 +145,7 @@ def _pass_ports(history: _CountingHistory, transactions: _CountingTransactions) 
         activity_asset_history_repository=history,
         usage_ratio_profile_loader=no_stored_usage_ratios,
         inventory_repository=EmptyInventoryRepository(),
+        retencion_soportada_ports=empty_retencion_soportada_ports(),
     )
 
 

@@ -41,6 +41,12 @@ The credit reconciliation declares, for each Modelo 100 casilla that credits IRP
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "orden-hfp-207-2022:art-3"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-renta-2021-manual-parte1", "boe-modelo-100-2021-form"]
 
+[revisions."2021".family_dispositions.prevision_social_placements]
+reason = """
+The pension contribution placement declares, for each Modelo 345 clave and subclave a contribution certificate states, the Modelo 100 casilla of the reduction for contributions to social-welfare systems it reaches (LIRPF arts. 51 and 52). A row is admitted only where the Modelo 345 design for the same ejercicio and this edition's casilla text name the same instrument and payer. Cadrumo bundles no Modelo 345 design for this ejercicio, and a later design is never read back into an earlier year, so every clave is refused here and the operator enters the contribution boxes. The placements begin with the 2022 revision, whose design is the anexo of Orden HFP/823/2022."""
+legal_refs = ["ley-35-2006:art-51", "ley-35-2006:art-52-2021"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-renta-2021-manual-parte1", "boe-modelo-100-2021-form"]
+
 [revisions."2021".family_dispositions.projection_endpoints]
 reason = """
 A projection endpoint admits one typed filing endpoint that an export record REPEATS. This revision's export layout (modelo-100-2021-xml-dictionary) declares no record with repeat = 'projection_rows' and no field of kind 'projection', so there is no repeated endpoint for the family to admit and nothing an entry here could name. Empty by construction rather than unbuilt: authoring a projection row into the layout is what would make this family apply, and that change reaches this declaration \
@@ -1695,8 +1701,7 @@ fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-
 
 [[revisions."2021".casilla_overrides]]
 selector = { revision = "2020", id = "0463" }
-fields = { semantic_role = "irpf_red_prevision_social_aportaciones_individuales_contribuciones_empresariales", legal_refs = ["ley-35-2006:art-51", "ley-35-2006:art-52-2021"], source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"] }
-removed_fields = ["semantic_role_cardinality", "semantic_role_cardinality_reason"]
+fields = { legal_refs = ["ley-35-2006:art-51", "ley-35-2006:art-52-2021"], source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"] }
 
 [[revisions."2021".casilla_overrides]]
 selector = { revision = "2020", id = "0464" }
@@ -6999,9 +7004,9 @@ sequence_removals = {source_citations = [0], source_refs = [0, 1, 2]}
 [[revisions."2021".family_overrides]]
 family = "export_layouts"
 selector = {revision = "2020", id = "modelo-100-xml-dictionary"}
-fields = {dictionary_source_ref = "aeat-dr-100-2021-dictionary"}
-sequence_additions = {source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-xsd"]}
-sequence_removals = {source_refs = [0, 1]}
+fields = {dictionary_source_ref = "aeat-dr-100-2021-dictionary", input_dictionary_source_ref = "aeat-dr-100-2021-input-dictionary"}
+sequence_additions = {source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-xsd", "aeat-dr-100-2021-input-dictionary"]}
+sequence_removals = {source_refs = [0, 1, 2]}
 
 [[revisions."2021".family_overrides]]
 family = "workbook_parity_refs"

@@ -32,6 +32,7 @@ from .....core.period import Period
 from .....domain.calculations.registry.applicability_modelo202 import Modelo202Modality
 from .....domain.calculations.registry.authority import bundled_indexed_authority
 from .....domain.calculations.registry.schema import RegistrySnapshot
+from .....domain.calculations.registry.tests.modelo_100_registry_support import M100_NO_PENDING_SAVINGS_BALANCES
 from .....domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from .....domain.modelos.filing_record import ModeloRecordCatalogue, ModeloRecordStatus
 from ...storage.tests.secure_sql import isolated_runtime_profile
@@ -148,10 +149,12 @@ def test_m100_pagos_fraccionados_scopes_out_mutually_exclusive_m131(tmp_path: Pa
 def test_m100_zero_prior_negative_base_carry_scopes_previous_filing_evidence(tmp_path: Path) -> None:
     """An explicit zero prior BIN does not require prior M100 evidence."""
     zero_binding = "renta-base-liquidable-negativa-general-anterior"
+    # The same previous return also carries the negative savings balances, stated zero alike.
     older_zero_bindings = (
         "renta-base-liquidable-negativa-general-em4-pendiente-inicio",
         "renta-base-liquidable-negativa-general-em3-pendiente-inicio",
         "renta-base-liquidable-negativa-general-em2-pendiente-inicio",
+        *M100_NO_PENDING_SAVINGS_BALANCES,
     )
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID):
         snapshot = published_authority_operation().snapshot("100", filing_year=2025, period="0A")
@@ -167,11 +170,11 @@ def test_m100_zero_prior_negative_base_carry_scopes_previous_filing_evidence(tmp
         if item.requirement.origin is CrossPeriodDependencyOrigin.PREVIOUS_FILING_BINDING
         and item.requirement.origin_ids == tuple(sorted({zero_binding, *older_zero_bindings}))
     )
-    zero_binding_definition = next(binding for binding in snapshot.revision.bindings if binding.id == zero_binding)
+    carried = [binding for binding in snapshot.revision.bindings if binding.id in zero_carry.requirement.origin_ids]
     assert zero_carry.clean
     assert zero_carry.zero_value_previous_filing_advisory is True
-    assert set(zero_carry.requirement.legal_refs) == set(zero_binding_definition.legal_refs)
-    assert set(zero_carry.requirement.source_refs) == set(zero_binding_definition.source_refs)
+    assert set(zero_carry.requirement.legal_refs) == {ref for binding in carried for ref in binding.legal_refs}
+    assert set(zero_carry.requirement.source_refs) == {ref for binding in carried for ref in binding.source_refs}
     assert all(
         item.clean
         for item in verdict.dependencies

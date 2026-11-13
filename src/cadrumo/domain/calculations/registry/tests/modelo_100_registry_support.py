@@ -21,6 +21,17 @@ M100_NO_DESCENDANT_MATERNIDAD_BINDINGS: Final = MappingProxyType(
     {"renta-profile-deduccion-maternidad": Decimal(0)},
 )
 
+#: M100's negative savings balances pending from the four previous ejercicios (Ley
+#: 35/2006 art. 49.2), each stated as nothing pending, for a scenario that does not
+#: exercise their compensation: net capital income and net gains and losses, by origin year.
+M100_NO_PENDING_SAVINGS_BALANCES: Final = MappingProxyType(
+    {
+        f"renta-saldo-negativo-{kind}-ahorro-{origin}-pendiente-inicio": Decimal(0)
+        for kind in ("gyp", "rcm")
+        for origin in ("em4", "em3", "em2", "em1")
+    },
+)
+
 M100_NO_MARITIME_WORKER_BINDINGS: Final = MappingProxyType(
     {
         "renta-maritime-gross-navigation-income": Decimal(0),

@@ -138,6 +138,8 @@ def run_ledger_add(
     arrendamiento: str | None = None,
     inmueble: str | None = None,
     gasto_inmobiliario: str | None = None,
+    posicion: str | None = None,
+    concepto_capital_mobiliario: str | None = None,
 ) -> LedgerAddOperationResult:
     """Submit one bounded add request and strictly correlate its terminal receipt."""
     client = bound_profile_client(ctx)
@@ -181,6 +183,8 @@ def run_ledger_add(
         arrendamiento_ref=arrendamiento,
         inmueble_ref=inmueble,
         gasto_capital_inmobiliario=gasto_inmobiliario,
+        posicion_ref=posicion,
+        concepto_capital_mobiliario=concepto_capital_mobiliario,
     )
     completed = run_registered_operation(
         client,

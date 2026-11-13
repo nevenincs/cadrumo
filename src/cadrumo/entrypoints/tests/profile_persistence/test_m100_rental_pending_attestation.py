@@ -57,6 +57,11 @@ _NEGATIVE_BASE_CARRIES: tuple[BindingId, ...] = (
     "renta-base-liquidable-negativa-general-em2-pendiente-inicio",
     "renta-base-liquidable-negativa-general-em3-pendiente-inicio",
     "renta-base-liquidable-negativa-general-em4-pendiente-inicio",
+    *(
+        f"renta-saldo-negativo-{kind}-ahorro-{origin}-pendiente-inicio"
+        for kind in ("gyp", "rcm")
+        for origin in ("em1", "em2", "em3", "em4")
+    ),
 )
 _PENDING_SENTENCE = f"renta_inmueble_{RentaInmuebleCause.PENDING_EXPENSES_UNSTATED.value}"
 
@@ -109,7 +114,8 @@ def _calculated(renta: SeededOperatorWork, year: int) -> CalculationRevision:
             )
         )
     )
-    # The negative general bases pending from earlier years are another carry; stating them opens the calculation.
+    # The negative bases and savings balances pending from earlier years are other carries; stating them opens
+    # the calculation.
     stated = renta.apply(
         binding=tuple(
             _state(binding_id, ModeloEditBindingIntentKind.ATTEST_NO_AMOUNT, row=None)

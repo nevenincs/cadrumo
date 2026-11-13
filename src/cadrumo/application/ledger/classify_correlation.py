@@ -16,15 +16,19 @@ from .transaction_projection import LedgerM210IncomeProjection
 _RESULT_ONLY_FIELDS = frozenset(
     {
         "arrendamiento_ref",
+        "concepto_capital_mobiliario",
         "deduction_fact_kind",
         "exemption_article",
         "gasto_capital_inmobiliario",
         "inmueble_ref",
         "investment_asset_id",
         "iva_vehicle_use",
+        "posicion_ref",
     }
 )
-_BLANK_CLEARS_FIELDS = frozenset({"arrendamiento_ref", "inmueble_ref", "gasto_capital_inmobiliario"})
+_BLANK_CLEARS_FIELDS = frozenset(
+    {"arrendamiento_ref", "inmueble_ref", "gasto_capital_inmobiliario", "posicion_ref", "concepto_capital_mobiliario"}
+)
 
 
 def _expected_value(field_name: str, patch: LedgerClassifyPatch, cleared: frozenset[str]) -> object:

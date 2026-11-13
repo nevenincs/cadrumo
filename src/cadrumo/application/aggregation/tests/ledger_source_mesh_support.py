@@ -52,6 +52,7 @@ from ....domain.renta.actividad_asset.lifecycle import (
     OpeningAmortizationHistory,
     OpeningHistoryStatus,
 )
+from ....domain.renta.retencion_soportada import RetencionSoportadaRecord
 from ....domain.transactions.date_partition import (
     LedgerDatePartition,
     OutOfWindowTransactionIndexEntry,
@@ -73,6 +74,7 @@ from ..modelo_bindings_renta_expenses import (
     LedgerRentaGastosEstimacionDirectaAggregationSourceResolver,
     LedgerRentaGastosPagoFraccionadoAggregationSourceResolver,
 )
+from ..retencion_soportada_repository import RetencionSoportadaPorts
 from ..source_mesh import (
     CalculationSourceContext,
     CalculationSourceResolution,
@@ -721,6 +723,17 @@ class EmptyInvestmentRegisterRepository:
         raise AssertionError("membership reads never write the investment register")
 
 
+class EmptyRetencionSoportadaRecords:
+    def load_records(self, ejercicio: int) -> tuple[RetencionSoportadaRecord, ...]:
+        del ejercicio
+        return ()
+
+
+def empty_retencion_soportada_ports() -> RetencionSoportadaPorts:
+    """Return suffered-withholding ports with no payer record and no absence attestation."""
+    return RetencionSoportadaPorts(repository=EmptyRetencionSoportadaRecords())
+
+
 def activity_asset_ledger_membership(
     work_unit: WorkUnit,
     history: ActivityAssetHistory,
@@ -741,6 +754,7 @@ def activity_asset_ledger_membership(
         activity_asset_history_repository=StaticActivityAssetHistoryRepository(history),
         usage_ratio_profile_loader=no_stored_usage_ratios,
         inventory_repository=EmptyInventoryRepository(),
+        retencion_soportada_ports=empty_retencion_soportada_ports(),
     )
     resolver = (
         LedgerRentaGastosEstimacionDirectaAggregationSourceResolver

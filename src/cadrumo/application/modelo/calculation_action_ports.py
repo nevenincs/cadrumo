@@ -32,6 +32,7 @@ from ...domain.transactions.protocols import TransactionCatalogueRepositoryProto
 from ..actividad_asset.ports import ActivityAssetHistoryRepository
 from ..aggregation.inventory import InventoryLedgerRepositoryProtocol
 from ..aggregation.percepciones_observations_repository import PercepcionObservationPorts
+from ..aggregation.prevision_social_contribution_repository import PrevisionSocialContributionRecordReader
 from ..aggregation.retencion_observations_repository import RetencionObservationPorts
 from ..aggregation.retencion_soportada_repository import RetencionSoportadaPorts
 from ..bienes_inversion.ports import BienesInversionIvaRegisterRepositoryProtocol
@@ -108,6 +109,7 @@ class CalculationActionPorts:
     borrador_snapshot_repository: Borrador100SnapshotRepository
     retencion_observation_ports: RetencionObservationPorts
     retencion_soportada_ports: RetencionSoportadaPorts
+    prevision_social_contribution_repository: PrevisionSocialContributionRecordReader
     credit_resolution_reader: CreditResolutionReader
     relation_override_migration: CalculationRevisionOverrideMigrationProtocol
 

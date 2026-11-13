@@ -72,7 +72,8 @@ class LedgerBulkClassifyRequest(BaseModel):
     operand is the classification table itself, never a path to one.
     Columns: transaction_id, classification (required); category_id, business_pct,
     usage_ratio_id, taxable_base, iva_rate, iva_amount, iva_category, irpf_category,
-    arrendamiento_ref, inmueble_ref, gasto_capital_inmobiliario, notes (optional).
+    arrendamiento_ref, inmueble_ref, gasto_capital_inmobiliario, posicion_ref,
+    concepto_capital_mobiliario, notes (optional).
     Blank optional cells preserve existing values. Results report applied/skipped
     counts and each failed row; a batch is not atomic.
 

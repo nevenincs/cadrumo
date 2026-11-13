@@ -458,6 +458,8 @@ errors:
       sikerült menteni.
     canonical_persistence_degradation: A tárolási képesség nem tudta biztosítani a
       kért műveletet.
+    canonical_prevision_social_contribution_persistence: A nyugdíj-hozzájárulási rekordjaidat
+      nem sikerült beolvasni vagy menteni.
     canonical_retencion_observation_persistence: A forrásadó-levonási megfigyeléseket
       nem sikerült menteni.
     canonical_retencion_soportada_persistence: A kifizetőidtől származó levonási rekordokat
@@ -844,6 +846,23 @@ errors:
     filing_export_field_projection_ref_undeclared: A(z) %{field} exportmező nem ad
       meg vetületi hivatkozást. Az alkalmazás ezt a saját exportálási tervéből származtatja,
       ezért az adataid módosítása nem javítja ki.
+    filing_export_input_dictionary_field_undeclared: 'A(z) %{layout} exportálási terv
+      nem tudja elhelyezni a(z) %{field} mezőt: egyik szótára sem deklarálja. Az alkalmazás
+      ezt a saját exportálási tervéből származtatja, ezért az adataid módosítása nem
+      javítja ki.'
+    filing_export_input_dictionary_not_repeated: 'A(z) %{layout} exportálási terv
+      nem tudja a bemeneti szótár %{field} mezőjét a(z) %{path} helyre tenni: a hivatalos
+      XSD egyetlen ismétlődő eleme sem tartalmazza. Az alkalmazás ezt a saját exportálási
+      tervéből származtatja, ezért az adataid módosítása nem javítja ki.'
+    filing_export_input_dictionary_outside_xsd: 'A(z) %{layout} exportálási terv nem
+      tudja a bemeneti szótár %{field} mezőjét a(z) %{path} helyre tenni: a hivatalos
+      XSD nem deklarál ilyen elemet. Az alkalmazás ezt a saját exportálási tervéből
+      származtatja, ezért az adataid módosítása nem javítja ki.'
+    filing_export_input_dictionary_path_conflict: 'A(z) %{layout} exportálási terv
+      nem tudja a bemeneti szótár %{field} mezőjét a(z) %{path} helyre tenni: a bevallási
+      szótár ezt a rekordot vagy útvonalat már %{declared_field} néven definiálja.
+      Az alkalmazás ezt a saját exportálási tervéből származtatja, ezért az adataid
+      módosítása nem javítja ki.'
     filing_export_layout_not_owned_by_snapshot: Az exportálási terv nem a kiválasztott
       nyilvántartási pillanatképhez tartozik. Az alkalmazás ezt a saját exportálási
       tervéből származtatja, ezért az adataid módosítása nem javítja ki.
@@ -1013,6 +1032,9 @@ errors:
     filing_export_xml_row_column_undeclared: A(z) %{binding} kötés sorokat hordoz,
       de nem ad meg oszlopot a sorokhoz. Az alkalmazás ezt a saját exportálási tervéből
       származtatja, ezért az adataid módosítása nem javítja ki.
+    filing_export_xml_row_total_box_unresolved: A(z) %{binding} kötés soroszlopokat
+      összegez, de nem tölt ki egyetlen mezőt sem. Az alkalmazás ezt a saját exportálási
+      tervéből származtatja, ezért az adataid módosítása nem javítja ki.
     filing_export_xml_serialiser_not_bytes: Az XML-szerializáló %{type} értéket adott
       vissza bájtok helyett. Az alkalmazás ezt a saját exportálási tervéből származtatja,
       ezért az adataid módosítása nem javítja ki.
@@ -1141,6 +1163,10 @@ errors:
       kötést egyszerre állítja összeg nélkülinek és megadott összegűnek. Az alkalmazás
       maga írta ezt a rekordot, ezért megváltozott vagy megsérült, és a számítás nem
       használhatja.
+    operator_layer_income_family_entry_digest_malformed: A(z) %{family} jövedelemcsaládhoz
+      kézzel megadott adatok mentett rekordja nem tartalmaz érvényes kivonatot a főkönyvi
+      soraikról. Ezt a rekordot maga az alkalmazás írta, így módosult vagy megsérült,
+      és a számítás nem használhatja.
     operator_layer_value_attestation_not_canonical: A(z) %{binding_id} kötéshez mentett
       értéknyilatkozat nem kanonikus tizedes összeget tartalmaz. Az alkalmazás maga
       írta ezt a rekordot, ezért megváltozott vagy megsérült, és a számítás nem használhatja.
@@ -1474,6 +1500,10 @@ errors:
     pension_reduccion_total_contributions_not_positive: A nyugdíjterv összes befizetésének
       nullánál nagyobbnak kell lennie; te %{value} értéket adtál meg. Add meg az összes
       befizetés összegét.
+    prevision_social_contribution_revision_conflict: A hozzájárulási rekord megváltozott,
+      amióta elolvastad; olvasd be újra mentés előtt.
+    prevision_social_contribution_write_refused: A nyugdíj-hozzájárulási rekord nem
+      lett mentve.
     producer_capture_not_current: Egy termelői vetület megváltozott olvasás közben;
       rögzítsd újra.
     profile_access_administration_denied: A jelenlegi hozzáféréseddel a hozzáférési
@@ -2159,5 +2189,15 @@ errors:
       és a --irpf-category kapcsolóval.
     rental_property_unknown: A(z) {ref} ingatlan nem szerepel a profilodban. Az ingatlanokat
       az «{door}» paranccsal listázhatod.
+    savings_concept_kind: A(z) {concepto} jogcím csak {kind} típusú pozíción engedélyezett,
+      a(z) {ref} pozíció pedig más típusú. Válassz másik jogcímet vagy pozíciót az
+      «{door}» paranccsal.
+    savings_concept_unknown: 'Ismeretlen --concepto-capital-mobiliario {value!r}.
+      Elfogadott fogalmak: {accepted}.'
+    savings_link_category: A megtakarítási pozícióhoz kapcsolt sornak a(z) {category}
+      jövedelemkategóriát kell viselnie; add meg az «{door}» paranccsal és a --irpf-category
+      kapcsolóval.
+    savings_position_unknown: A(z) {ref} megtakarítási pozíció nem szerepel a profilodban.
+      A pozíciókat az «{door}» paranccsal listázhatod.
     unknown_ledger_provider: 'Ismeretlen főkönyv-szolgáltató: {provider!r}. Elismert
       szolgáltatók: {providers}.'

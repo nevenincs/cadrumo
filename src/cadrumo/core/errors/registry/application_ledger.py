@@ -229,6 +229,36 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.aggregation.prevision_social_contribution_repository.PrevisionSocialContributionPersistenceError",
+        ErrorCode(
+            code="FAIL_PREVISION_SOCIAL_CONTRIBUTION_PERSISTENCE",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.canonical_prevision_social_contribution_persistence",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.aggregation.prevision_social_contribution_repository.PrevisionSocialContributionRevisionConflictError",
+        ErrorCode(
+            code="REFUSED_PREVISION_SOCIAL_CONTRIBUTION_REVISION_CONFLICT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.prevision_social_contribution_revision_conflict",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.aggregation.prevision_social_contribution_repository.PrevisionSocialContributionWriteRefusedError",
+        ErrorCode(
+            code="REFUSED_PREVISION_SOCIAL_CONTRIBUTION_WRITE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.prevision_social_contribution_write_refused",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.aggregation.retencion_soportada_absence_repository.RetencionSoportadaAbsenceRefusedError",
         ErrorCode(
             code="REFUSED_RETENCION_SOPORTADA_ABSENCE",

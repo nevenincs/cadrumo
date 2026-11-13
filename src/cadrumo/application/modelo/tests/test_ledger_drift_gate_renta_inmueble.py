@@ -39,7 +39,7 @@ from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from ...aggregation.ledger_membership import LedgerMembershipPorts, observe_renta_inmueble_rows
 from ...aggregation.renta_inmueble_source import RentaInmuebleRowField
-from ...aggregation.retencion_soportada_repository import RetencionSoportadaPorts
+from ...aggregation.retencion_soportada_repository import RetencionSoportadaPersistenceError, RetencionSoportadaPorts
 from ...aggregation.tests.ledger_source_mesh_support import (
     BUCKET_ID,
     EmptyActivityAssetHistoryRepository,
@@ -78,6 +78,11 @@ class _Withholding:
 
     def load_records(self, ejercicio: int) -> tuple[RetencionSoportadaRecord, ...]:
         return tuple(record for record in self._records if record.ejercicio == ejercicio)
+
+
+class _UnreadableWithholding:
+    def load_records(self, ejercicio: int) -> tuple[RetencionSoportadaRecord, ...]:
+        raise RetencionSoportadaPersistenceError("retencion_soportada_list")
 
 
 def _withheld(amount: str) -> RetencionSoportadaRecord:
@@ -133,7 +138,7 @@ def _profile(facts: dict[str, str]) -> ModeloWorkProfile:
     )
 
 
-def _ports(rows: tuple[Transaction, ...], withholding: RetencionSoportadaPorts | None) -> LedgerMembershipPorts:
+def _ports(rows: tuple[Transaction, ...], withholding: RetencionSoportadaPorts) -> LedgerMembershipPorts:
     repository = InMemoryTransactionCatalogueRepository(bucket_id=BUCKET_ID)
     repository.save(TransactionCatalogue.from_transactions(rows))
     return LedgerMembershipPorts(
@@ -174,7 +179,7 @@ def _observe(
     *,
     facts: dict[str, str],
     rows: tuple[Transaction, ...],
-    withholding: RetencionSoportadaPorts | None,
+    withholding: RetencionSoportadaPorts,
 ) -> frozenset[tuple[str, str]] | None:
     operation = governed_facts_in_scope()
     assert isinstance(operation, PinnedAuthorityOperation)
@@ -295,7 +300,13 @@ def test_a_property_that_no_longer_resolves_drops_its_row() -> None:
 def test_an_unreadable_withholding_store_refuses_a_draft_with_let_properties_and_passes_one_without() -> None:
     work_unit = _work_unit()
     draft = _calculated(work_unit)
-    current = _observe(work_unit, draft, facts=_facts(), rows=_ledger(), withholding=None)
+    current = _observe(
+        work_unit,
+        draft,
+        facts=_facts(),
+        rows=_ledger(),
+        withholding=RetencionSoportadaPorts(repository=_UnreadableWithholding()),
+    )
 
     assert current is None
     finding = renta_inmueble_drift_finding(target=draft, work_unit=work_unit, current=current)

@@ -35,6 +35,12 @@ legal_refs = ["orden-eha-3290-2008:art-6", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-modelo-296-procedure", "boe-modelo-296-form-layout", "aeat-dr-296-2024"]
 
 
+[revisions."2024-2025".family_dispositions.prevision_social_placements]
+reason = """
+The pension contribution placement declares, for each Modelo 345 clave and subclave a contribution certificate states, the Modelo 100 casilla of the reduction for contributions to social-welfare systems it reaches (LIRPF arts. 51 and 52). This modelo is not the annual Renta return and declares no casilla of that reduction, so there is no contribution for an entry to place."""
+legal_refs = ["orden-eha-3290-2008:art-6", "trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-modelo-296-procedure", "boe-modelo-296-form-layout", "aeat-dr-296-2024"]
+
 [revisions."2024-2025".family_dispositions.extraction_profiles]
 reason = """
 An extraction profile matches printed labels in a filed artefact, and every label_pattern must be grounded against an AEAT-published document that PRINTS those labels -- never against the registry's own casilla labels. Modelo 296's corpus carries its diseno de registro (aeat-dr-296-2024), which is a wire-record description printing no form labels, and no label-printing specimen. Authoring patterns without such a document would invent them. Modelo 100's 2020 revision disposes this family on \

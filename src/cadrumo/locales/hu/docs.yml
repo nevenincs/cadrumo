@@ -7,6 +7,8 @@ docs:
       atribucion_member: az atribución de rentas tagjaiból
       bienes_inversion_regularizacion: a beruházási javak korrekciójából
       borrador: az AEAT-adatokból (borrador)
+      capital_mobiliario_position: a megtakarítási pozícióidhoz kapcsolt főkönyvi
+        tételekből és a kifizetőid igazolásaiból
       collectible_invoice: a kiállított számláiból
       design_constant: az AEAT rekordtervében rögzített állandóból
       foreign_asset: a külföldi vagyonelemeiből
@@ -32,6 +34,8 @@ docs:
       manual_input: az általad megadott értékből
       payable_invoice: a beérkezett számláiból
       previous_filing: a korábbi bevallásából
+      prevision_social_contribution: a nyugdíj-hozzájárulási igazolásaidon szereplő
+        hozzájárulásokból
       profile: az adózói profiljából
       prorrata_register_activity: az arányosítási nyilvántartásod tevékenységeiből
       prorrata_regularizacion: az arányosítás korrekciójából

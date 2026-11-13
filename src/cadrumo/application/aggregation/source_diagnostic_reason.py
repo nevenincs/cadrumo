@@ -372,4 +372,11 @@ CalculationSourceDiagnosticReason = Literal[
     # the threshold, and the disability minimum for that ascendant is not computed. The
     # declaration cannot be checked, exported or filed while it would leave that minimum out.
     "ascendant_disability_minimum_not_computed",
+    # An income family the taxpayer has (ledger rows classified to it, or a profile
+    # that declares it) and the application has no calculator for yet. Distinct from
+    # "unrouted_observation", whose remedy is to reclassify the row so a binding takes
+    # it: here the classification is correct and no binding exists to take it, so
+    # reclassifying would push the filer to falsify the category. The family's casillas
+    # stay unresolved until the filer enters their figures by hand.
+    "income_family_not_computed",
 ]

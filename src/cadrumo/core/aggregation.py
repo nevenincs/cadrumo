@@ -326,6 +326,19 @@ class BindingSourceKind(StrEnum):
     # boxes each Modelo 100 revision gives them. The boxes hold other facts of the
     # same kind too, so the filer's own entry stays admissible over the figure.
     ACTIVITY_ASSET_DISPOSAL = "activity_asset_disposal"
+    # Interest and dividends from a saver's positions: the profile position
+    # records joined to the ledger rows linked to them and to each payer's
+    # suffered-withholding record. Gross is rebuilt from linked net cash plus the
+    # payer's withholding and checked against the payer's own gross. Deliberately
+    # not a ledger aggregation kind: the rows are read only through their position
+    # link, and the activity aggregations exclude every linked row.
+    CAPITAL_MOBILIARIO_POSITION = "capital_mobiliario_position"
+    # Contributions to social-welfare systems, from the taxpayer's contribution
+    # certificate records: each record's Modelo 345 clave and subclave reaches the
+    # Modelo 100 box the edition's placement rows give it. The boxes hold what the
+    # filer may also type, so the filer's own entry stays admissible beside the
+    # figure and a differing one is reported, never applied in silence.
+    PREVISION_SOCIAL_CONTRIBUTION = "prevision_social_contribution"
     # One let property's ``Inmueble`` occurrence of Modelo 100: the property and
     # lease rows of the profile joined with the ledger rows linked to them. Each
     # column a revision declares fills its box on the property's own row.

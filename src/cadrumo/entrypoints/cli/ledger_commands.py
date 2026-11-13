@@ -66,6 +66,7 @@ from .ledger_llm_cli import (
 )
 from .ledger_m210_classify_cli import M210LedgerClassifyOptions
 from .ledger_rental_inputs import rental_link_patch_values
+from .ledger_savings_inputs import savings_link_patch_values
 from .ledger_support import (
     invoice_link_error_bad_parameter,
     ledger_transaction_validation_no_recovery,
@@ -211,6 +212,8 @@ def ledger_add(
     arrendamiento: str | None = None,
     inmueble: str | None = None,
     gasto_inmobiliario: str | None = None,
+    posicion: str | None = None,
+    concepto_capital_mobiliario: str | None = None,
 ) -> None:
     """Create one manual ledger transaction through exact-profile operation custody."""
     _require_add_assignable_classification(business_classification)
@@ -259,6 +262,8 @@ def ledger_add(
             arrendamiento=arrendamiento,
             inmueble=inmueble,
             gasto_inmobiliario=gasto_inmobiliario,
+            posicion=posicion,
+            concepto_capital_mobiliario=concepto_capital_mobiliario,
         )
     except ValidationError as exc:
         raise ledger_validation_bad(exc) from exc
@@ -508,6 +513,22 @@ def _require_classification_business_pct(
         raise bad(tr("cli.ledger.classify.business_pct_requires_mixed"))
 
 
+def _ledger_link_patch_values(
+    ctx: typer.Context,
+    rental: tuple[str | None, str | None, str | None],
+    savings: tuple[str | None, str | None],
+) -> dict[str, object]:
+    """Return the explicitly given rental and savings link fields of a classify patch."""
+    arrendamiento, inmueble, gasto_inmobiliario = rental
+    posicion, concepto_capital_mobiliario = savings
+    return {
+        **rental_link_patch_values(
+            ctx, arrendamiento=arrendamiento, inmueble=inmueble, gasto_inmobiliario=gasto_inmobiliario
+        ),
+        **savings_link_patch_values(ctx, posicion=posicion, concepto_capital_mobiliario=concepto_capital_mobiliario),
+    }
+
+
 def ledger_classify(
     ctx: typer.Context,
     transaction_id: str | None = None,
@@ -536,6 +557,8 @@ def ledger_classify(
     arrendamiento: str | None = None,
     inmueble: str | None = None,
     gasto_inmobiliario: str | None = None,
+    posicion: str | None = None,
+    concepto_capital_mobiliario: str | None = None,
     actor: str | None = None,
     reaffirm: bool = False,
     llm: bool = False,
@@ -616,8 +639,10 @@ def ledger_classify(
             iva_vehicle_use=iva_vehicle_use,
             counterparty_country=counterparty_country,
             counterparty_identification_state=counterparty_identification_state,
-            explicit=rental_link_patch_values(
-                ctx, arrendamiento=arrendamiento, inmueble=inmueble, gasto_inmobiliario=gasto_inmobiliario
+            explicit=_ledger_link_patch_values(
+                ctx,
+                (arrendamiento, inmueble, gasto_inmobiliario),
+                (posicion, concepto_capital_mobiliario),
             ),
             notes=reason,
         )

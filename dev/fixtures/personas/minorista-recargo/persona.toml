@@ -100,8 +100,8 @@ period = "0A"
 presented = { year = "horizon-1", month = 6, day = 2 }
 csv = "M8XD4QH7W2KP9FZC"
 justificante = "1004348706139"
-casillas = { "0224" = "19000.00", "1384" = "0.00", "1387" = "0.00", "1390" = "0.00", "1391" = "0.00" }
-reason = "Rendimiento neto de la actividad y bases liquidables generales negativas pendientes en la declaración de la renta del ejercicio anterior"
+casillas = { "0224" = "19000.00", "1263" = "0.00", "1266" = "0.00", "1269" = "0.00", "1270" = "0.00", "1276" = "0.00", "1279" = "0.00", "1282" = "0.00", "1283" = "0.00", "1384" = "0.00", "1387" = "0.00", "1390" = "0.00", "1391" = "0.00" }
+reason = "Rendimiento neto de la actividad y bases liquidables generales negativas y saldos negativos de la base del ahorro pendientes en la declaración de la renta del ejercicio anterior"
 
 # The first-quarter Modelo 130 reads the previous ejercicio's net activity income
 # from his Modelo 100 of the year before. When that year lies below the support
@@ -155,6 +155,19 @@ legal_ref = ["rd-439-2007:art-110"]
 # takes them as zero, so the taxpayer states that none is pending.
 [[prior_carries]]
 year = "horizon-1"
+family = "renta_negative_general_bases_pending"
+nothing_pending = true
+
+# No interest, dividends or other capital mobiliario in this year or the four before it, so no negative balance of it is pending.
+[[prior_carries]]
+year = "horizon-1"
+family = "renta_negative_savings_capital_income_pending"
+nothing_pending = true
+
+# No sale of shares, funds or other asset in this year or the four before it, so no negative savings balance of gains and losses is pending.
+[[prior_carries]]
+year = "horizon-1"
+family = "renta_negative_savings_gains_losses_pending"
 nothing_pending = true
 
 # A synthetic titular account (checksum-valid, not a real bank) designated for a

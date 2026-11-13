@@ -2,15 +2,24 @@
 id = "renta-dep-100"
 source_modelo = "100"
 treatment = "direct_annual_settlement"
-target_constructs = ["renta-anexo-c-base-liquidable-negativa-general"]
+target_constructs = ["renta-anexo-c-base-liquidable-negativa-general", "renta-anexo-c-saldos-negativos-ahorro"]
 binding_refs = [
     "renta-base-liquidable-negativa-general-anterior",
     "renta-base-liquidable-negativa-general-em4-pendiente-inicio",
     "renta-base-liquidable-negativa-general-em3-pendiente-inicio",
     "renta-base-liquidable-negativa-general-em2-pendiente-inicio",
+    "renta-saldo-negativo-gyp-ahorro-em4-pendiente-inicio",
+    "renta-saldo-negativo-gyp-ahorro-em3-pendiente-inicio",
+    "renta-saldo-negativo-gyp-ahorro-em2-pendiente-inicio",
+    "renta-saldo-negativo-gyp-ahorro-em1-pendiente-inicio",
+    "renta-saldo-negativo-rcm-ahorro-em4-pendiente-inicio",
+    "renta-saldo-negativo-rcm-ahorro-em3-pendiente-inicio",
+    "renta-saldo-negativo-rcm-ahorro-em2-pendiente-inicio",
+    "renta-saldo-negativo-rcm-ahorro-em1-pendiente-inicio",
 ]
 legal_refs = [
     "ley-35-2006:art-50",
+    "ley-35-2006:art-49",
 ]
 source_refs = [
     "aeat-renta-2022-manual-parte1",

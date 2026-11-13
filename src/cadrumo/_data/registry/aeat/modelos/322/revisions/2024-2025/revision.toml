@@ -52,6 +52,12 @@ The credit reconciliation declares, for each Modelo 100 casilla that credits IRP
 legal_refs = ["orden-eha-3434-2007:art-1", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2024-2025", "aeat-modelo-322-procedure", "boe-modelo-322-2007-form", "aeat-calendario-contribuyente-2024", "aeat-calendario-contribuyente-2025"]
 
+[revisions."2024-2025".family_dispositions.prevision_social_placements]
+reason = """
+The pension contribution placement declares, for each Modelo 345 clave and subclave a contribution certificate states, the Modelo 100 casilla of the reduction for contributions to social-welfare systems it reaches (LIRPF arts. 51 and 52). This modelo is not the annual Renta return and declares no casilla of that reduction, so there is no contribution for an entry to place."""
+legal_refs = ["orden-eha-3434-2007:art-1", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2024-2025", "aeat-modelo-322-procedure", "boe-modelo-322-2007-form", "aeat-calendario-contribuyente-2024", "aeat-calendario-contribuyente-2025"]
+
 [revisions."2024-2025".family_dispositions.dependency_classifications]
 reason = """
 A dependency classification names another modelo whose filing this one depends on. 322 depends on none: it is the LEAF of the grupo de entidades chain, the member entity's own monthly liquidation of its own operations, and every value it reports originates in that member's ledger. The dependency runs the other way -- Modelo 353 declares 'modelo-353-dep-322' because the group aggregate reads these results -- and a classification is authored on the DEPENDENT revision, not the source. Empty by \

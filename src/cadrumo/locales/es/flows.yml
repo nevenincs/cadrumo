@@ -183,6 +183,7 @@ flows:
           atribucion_member: Miembro de atribución de rentas
           bienes_inversion_regularizacion: Regularización de bienes de inversión
           borrador: Borrador de la AEAT
+          capital_mobiliario_position: Intereses y dividendos del ahorro
           collectible_invoice: Facturas emitidas
           design_constant: Constante del diseño
           foreign_asset: Activo extranjero
@@ -206,6 +207,7 @@ flows:
           manual_input: Entrada manual
           payable_invoice: Factura recibida
           previous_filing: Declaración anterior
+          prevision_social_contribution: Aportaciones a previsión social
           profile: Perfil
           prorrata_register_activity: Actividades del registro de prorrata
           prorrata_regularizacion: Regularización de prorrata

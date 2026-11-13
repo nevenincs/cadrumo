@@ -489,6 +489,8 @@ errors:
       de percepciones.
     canonical_persistence_degradation: La capacidad de persistencia no pudo proporcionar
       la operación solicitada.
+    canonical_prevision_social_contribution_persistence: No se pudieron leer ni guardar
+      tus registros de aportaciones a sistemas de previsión social.
     canonical_retencion_observation_persistence: No se pudieron guardar las observaciones
       de retenciones.
     canonical_retencion_soportada_persistence: No se pudieron leer ni guardar los
@@ -894,6 +896,23 @@ errors:
     filing_export_field_projection_ref_undeclared: El campo de exportación %{field}
       no declara referencia de proyección. La aplicación lo deriva de su propio diseño
       de exportación, así que ningún cambio en tus datos lo corrige.
+    filing_export_input_dictionary_field_undeclared: 'El diseño de exportación %{layout}
+      no puede colocar el campo %{field}: ninguno de sus diccionarios lo declara.
+      La aplicación lo deriva de su propio diseño de exportación, así que ningún cambio
+      en tus datos lo corrige.'
+    filing_export_input_dictionary_not_repeated: 'El diseño de exportación %{layout}
+      no puede colocar el campo %{field} del diccionario de entrada en %{path}: ningún
+      elemento que el XSD oficial repite lo contiene. La aplicación lo deriva de su
+      propio diseño de exportación, así que ningún cambio en tus datos lo corrige.'
+    filing_export_input_dictionary_outside_xsd: 'El diseño de exportación %{layout}
+      no puede colocar el campo %{field} del diccionario de entrada en %{path}: el
+      XSD oficial no declara ese elemento. La aplicación lo deriva de su propio diseño
+      de exportación, así que ningún cambio en tus datos lo corrige.'
+    filing_export_input_dictionary_path_conflict: 'El diseño de exportación %{layout}
+      no puede colocar el campo %{field} del diccionario de entrada en %{path}: el
+      diccionario de la declaración ya define ese registro o esa ruta como %{declared_field}.
+      La aplicación lo deriva de su propio diseño de exportación, así que ningún cambio
+      en tus datos lo corrige.'
     filing_export_layout_not_owned_by_snapshot: El diseño de exportación no pertenece
       a la instantánea del registro seleccionada. La aplicación lo deriva de su propio
       diseño de exportación, así que ningún cambio en tus datos lo corrige.
@@ -1074,6 +1093,9 @@ errors:
     filing_export_xml_row_column_undeclared: El enlace %{binding} lleva filas pero
       no declara columna de fila. La aplicación lo deriva de su propio diseño de exportación,
       así que ningún cambio en tus datos lo corrige.
+    filing_export_xml_row_total_box_unresolved: El enlace %{binding} totaliza columnas
+      de fila pero no rellena una sola casilla. La aplicación lo deriva de su propio
+      diseño de exportación, así que ningún cambio en tus datos lo corrige.
     filing_export_xml_serialiser_not_bytes: El serializador XML devolvió %{type} y
       no bytes. La aplicación lo deriva de su propio diseño de exportación, así que
       ningún cambio en tus datos lo corrige.
@@ -1209,6 +1231,10 @@ errors:
       %{binding_id} a la vez sin importe y con un importe declarado. La aplicación
       escribió ese registro ella misma, así que se ha alterado o dañado y el cálculo
       no puede usarlo.
+    operator_layer_income_family_entry_digest_malformed: El registro guardado de las
+      cifras introducidas a mano para la familia de rentas %{family} no contiene un
+      resumen válido de sus filas del libro. La aplicación escribió ese registro,
+      así que se alteró o dañó y el cálculo no puede usarlo.
     operator_layer_value_attestation_not_canonical: La declaración de valor guardada
       para el enlace %{binding_id} no contiene un importe decimal canónico. La aplicación
       escribió ese registro ella misma, así que se ha alterado o dañado y el cálculo
@@ -1566,6 +1592,10 @@ errors:
     pension_reduccion_total_contributions_not_positive: Las aportaciones totales al
       plan de pensiones deben ser mayores que cero; has indicado %{value}. Indica
       el total de todas las aportaciones.
+    prevision_social_contribution_revision_conflict: El registro de aportaciones cambió
+      desde que lo leíste; vuelve a leerlo antes de guardar.
+    prevision_social_contribution_write_refused: No se guardó el registro de aportaciones
+      a sistemas de previsión social.
     producer_capture_not_current: Una proyección de productor cambió mientras se leía;
       vuelve a capturarla.
     profile_access_administration_denied: Tu acceso actual no permite gestionar los
@@ -2269,5 +2299,14 @@ errors:
       llevar la categoría de renta {category}; indícala con «{door}» y --irpf-category.
     rental_property_unknown: El inmueble {ref} no es uno de los inmuebles de tu perfil.
       Consúltalos con «{door}».
+    savings_concept_kind: El concepto {concepto} solo se admite en una posición de
+      tipo {kind}, y la posición {ref} es de otro tipo. Elige otro concepto u otra
+      posición con «{door}».
+    savings_concept_unknown: '--concepto-capital-mobiliario {value!r} no reconocido.
+      Conceptos admitidos: {accepted}.'
+    savings_link_category: Una fila vinculada a una posición de ahorro debe llevar
+      la categoría de renta {category}; indícala con «{door}» y --irpf-category.
+    savings_position_unknown: La posición de ahorro {ref} no es una de las posiciones
+      de tu perfil. Consúltalas con «{door}».
     unknown_ledger_provider: 'Proveedor de libro {provider!r} desconocido. Proveedores
       reconocidos: {providers}.'

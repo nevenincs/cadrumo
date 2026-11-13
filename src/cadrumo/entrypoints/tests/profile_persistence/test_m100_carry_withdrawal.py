@@ -30,6 +30,7 @@ from ....application.modelo.action_errors import (
     ModeloEditCarryWithdrawalFiledError,
     ModeloEditCarryWithdrawalKeepsEntriesError,
 )
+from ....application.modelo.carry_family_selection import prior_carry_binding_ids
 from ....application.modelo.declarations_portfolio import project_declarations_portfolio
 from ....application.modelo.declarations_workspace_contracts import (
     DeclarationsWorkspaceAvailability,
@@ -98,6 +99,12 @@ _PENDING_CARRIES: tuple[BindingId, ...] = (
     "renta-base-liquidable-negativa-general-em3-pendiente-inicio",
     "renta-base-liquidable-negativa-general-em4-pendiente-inicio",
 )
+#: The negative savings balances still pending, whose own statements the calculation also needs.
+_SAVINGS_CARRIES: tuple[BindingId, ...] = tuple(
+    f"renta-saldo-negativo-{kind}-ahorro-{origin}-pendiente-inicio"
+    for kind in ("gyp", "rcm")
+    for origin in ("em1", "em2", "em3", "em4")
+)
 _FACTS = (UserProfileFact(path="tax_residence.ccaa", value="madrid"), *RENTA_UNMARRIED_TAXPAYER_FACTS)
 _FAMILY = AbsenceAttestationFamily.RENTA_NEGATIVE_GENERAL_BASES_PENDING
 _LANGUAGES = (OutputLanguage.ES, OutputLanguage.CA, OutputLanguage.EN, OutputLanguage.HU)
@@ -159,8 +166,8 @@ def _form(work: SeededOperatorWork, language: OutputLanguage = OutputLanguage.EN
 
 
 def _stated(work: SeededOperatorWork) -> str:
-    """State all four carries and return the calculation the statement made."""
-    applied = work.apply(binding=tuple(_attest(binding_id) for binding_id in _PENDING_CARRIES))
+    """State every pending carry and return the calculation the statement made."""
+    applied = work.apply(binding=tuple(_attest(binding_id) for binding_id in (*_PENDING_CARRIES, *_SAVINGS_CARRIES)))
     assert applied.refusal is None
     assert applied.calculation_revision_id is not None
     return applied.calculation_revision_id
@@ -178,8 +185,7 @@ def _assert_returned_to_no_calculation(work: SeededOperatorWork, withdrawn_id: s
     assert verdict.action.action_id == "operator.modelo.work.attest_prior_carries"
     form = _form(work)
     assert form.calculation_revision_id is None
-    (offered,) = form.carry_attestations
-    assert offered.family is _FAMILY
+    (offered,) = [item for item in form.carry_attestations if item.family is _FAMILY]
     assert set(_PENDING_CARRIES) <= set(offered.binding_ids)
 
 
@@ -309,6 +315,7 @@ def test_the_preview_of_a_carry_withdrawal_says_the_calculation_is_withdrawn(tmp
             work_catalogue=renta.ports.work_unit_repository.load(),
             calculation_catalogue=renta.ports.calculation_repository.load(),
             tax_id_format=runtime_tax_id_format(authority=renta.operation),
+            prior_carry_bindings=prior_carry_binding_ids(renta.operation, submission),
             carry_bindings=calculation_refusing_carry_bindings(revision),
         )
 

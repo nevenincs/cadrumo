@@ -54,6 +54,7 @@ from .validate_exports import validate_export_layout_section
 from .validate_form_layouts import validate_form_layout_section
 from .validate_formulas import validate_formula_section
 from .validate_helpers import missing_refs
+from .validate_prevision_social_placements import validate_prevision_social_placement_section
 from .validate_record_sections import (
     validate_binding_section,
     validate_casilla_section,
@@ -155,6 +156,14 @@ def _validate_revision_surface_sections(
     failures.extend(validate_binding_grade_cap_section(prefix=prefix, revision=revision, legal_refs=legal_refs))
     failures.extend(
         validate_complementaria_only_section(
+            prefix=prefix,
+            revision=revision,
+            source_refs=source_refs,
+            evidence=evidence,
+        ),
+    )
+    failures.extend(
+        validate_prevision_social_placement_section(
             prefix=prefix,
             revision=revision,
             source_refs=source_refs,

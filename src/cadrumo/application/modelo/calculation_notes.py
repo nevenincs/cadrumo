@@ -93,6 +93,7 @@ GATE_REFUSED_REASONS: Final[frozenset[str]] = frozenset(
         "precedence_tier_divergence",
         "household_row_fact_unstated",
         "ascendant_disability_minimum_not_computed",
+        "income_family_not_computed",
     }
 )
 """Reasons the calculation-note gate refuses checking, exporting and recording on.

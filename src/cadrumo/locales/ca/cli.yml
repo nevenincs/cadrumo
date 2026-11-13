@@ -557,6 +557,45 @@ cli:
           amb aquesta identitat (%{invoice_id}); no s''ha creat res.'
         yes_help: Confirma l'eliminació de la factura
         yes_required: Has de passar --yes per eliminar una factura
+      prevision_social:
+        amount_help: Import de l'aportació en euros que indica el certificat, per
+          exemple 1500.00.
+        beneficiary_help: 'A quin sistema va anar l''aportació: taxpayer, spouse o
+          disabled_person. En aquesta versió només es calcula taxpayer.'
+        certificate_file_help: Fitxer del certificat (PDF o imatge) que es desa xifrat
+          al teu emmagatzematge; el seu SHA-256 passa a ser la prova del registre.
+        clave_help: Clau del model 345 que indica el certificat, de l'A a la M.
+        ejercicio_help: Exercici (`ejercicio`) en què es va pagar l'aportació.
+        employer_same_plan_help: Si el teu ocupador també va fer contribucions al
+          mateix pla (yes o no). És obligatori per a una clau i subclau la casella
+          de les quals en depèn.
+        evidence_sha256_help: SHA-256 d'un certificat que ja és al teu emmagatzematge,
+          o una comprovació davant de --certificate-file. Un registre en necessita
+          un dels dos.
+        group_help: Registra les aportacions que indiquen els teus certificats d'aportacions
+          a sistemes de previsió social.
+        invalid_input: 'Un valor no és vàlid: comprova l''exercici, les referències
+          de l''emissor i del pla, la revisió i l''empremta del certificat.'
+        issuer_name_help: Raó social de l'emissor.
+        issuer_ref_help: Referència de l'emissor (issuer_ref) que mostra la llista.
+        issuer_tax_id_help: NIF de la gestora, la mutualitat o l'asseguradora que
+          va emetre el certificat.
+        list_help: Llista els registres d'aportacions desats d'un exercici sense cap
+          NIF, amb la casella a la qual arriba cadascun.
+        plan_name_help: Nom del pla.
+        plan_nif_help: NIF del pla o del fons, quan en té un de propi.
+        plan_ref_help: Referència del pla (plan_ref) que mostra la llista, per a un
+          registre que indica un NIF de pla.
+        record_expected_revision_help: Revisió que va mostrar la llista, per corregir
+          un registre desat. Omet-la en un primer registre.
+        record_help: Registra l'aportació que indica un certificat per a un pla, clau
+          i subclau en un exercici, o corregeix la desada amb --expected-revision.
+        remove_expected_revision_help: Revisió que va mostrar la llista per al registre
+          que vols eliminar.
+        remove_help: Elimina un registre d'aportacions amb la revisió que va mostrar
+          la llista.
+        subclave_help: Subclau del model 345 que indica el certificat, per a una clau
+          que en porti.
       prorrata:
         activity_code_help: Codi d'activitat CNAE / IAE agrupat en aquest sector (repetible,
           com a mínim un).
@@ -1062,6 +1101,8 @@ cli:
           actividades_prorrata: activitats del registre de prorrata
           activo_extranjero: actiu estranger
           afiliado_cotizacion: afiliat de la relació de cotitzacions
+          aportacion_prevision_social: certificat d'aportacions a sistemes de previsió
+            social
           borrador_aeat: esborrany de l’AEAT
           compensacion_iva_anual: compensació anual de l'IVA
           constante_diseno: Constant del disseny de registre
@@ -1733,14 +1774,27 @@ cli:
         attest_no_amount_help: Indica que un import que s'arrossega d'una declaració
           anterior és nul. Mostra la comprovació del canvi; amb --yes el registra
           com un 0 que has declarat, diferent d'una xifra escrita.
+        attest_prior_carries_amount_effect: declarat com a %{amount}
+        attest_prior_carries_amount_help: Dona un import per a un import arrossegat
+          en lloc de res pendent, com <casella>=<import> amb la casella que alimenta
+          aquest import i un import positiu com 1234.56; repeteix-ho per a més imports.
+          La casella ha de pertànyer a una família indicada amb --family. Els altres
+          imports oberts de la família es declaren com a res pendent
         attest_prior_carries_confirm: Encara no s'ha declarat res. Executa `aeat app
-          modelo work attest-prior-carries %{work_unit_id} --yes` per declarar-ho.
-        attest_prior_carries_help: Indica que no et queda cap import pendent d'exercicis
-          anteriors en una declaració (les bases liquidables generals negatives dels
-          quatre exercicis anteriors en un Modelo 100), per a cada import al qual
-          el seu formulari ofereix la declaració. Mostra la declaració i la comprovació
-          del canvi; amb --yes registra cada import com un 0 que has declarat, diferent
-          d'una xifra escrita.
+          modelo work attest-prior-carries %{work_unit_id}%{selection} --yes` per
+          declarar-ho.
+        attest_prior_carries_family_help: Declara aquesta família d'exercicis anteriors
+          com a res pendent; repeteix-ho per indicar totes les famílies obertes. Una
+          sola declaració les ha de cobrir totes
+        attest_prior_carries_help: 'Indica que no et queda cap import pendent d''exercicis
+          anteriors en una declaració (les bases liquidables generals negatives i
+          els saldos negatius de la base de l''estalvi dels quatre exercicis anteriors
+          en un Modelo 100). Mostra la declaració i la comprovació del canvi; amb
+          --yes registra cada import com un 0 que has declarat, diferent d''una xifra
+          escrita. Una declaració cobreix totes les famílies obertes: indica cadascuna
+          amb --family (repetible), o cap quan només n''hi ha una d''oberta. Per donar
+          l''import d''un, usa --amount; els altres imports oberts de la seva família
+          queden declarats sense res pendent.'
         attest_prior_carries_yes_help: Confirma la declaració i registra-la a l'autoliquidació
         attest_prior_value_help: Indica la xifra que una declaració pren d'una declaració
           anterior que l'aplicació no desa, com el Model 100 de l'any passat presentat
@@ -3006,6 +3060,18 @@ cli:
         state_help: '`observed` per a un any tancat; `committed` per a un any encara
           no tancat, que s''haurà de regularitzar si no es compleix.'
         year_help: Any natural al qual correspon la mitjana.
+      posicion:
+        add_help: Afegeix una posició amb dades --value FET=VALOR; es desa només si
+          les dades són coherents.
+        clear_help: Esborra una dada pel seu nom; repeteix l'opció per a diverses.
+        edit_help: Canvia dades d'una posició i esborra les que indiquis; les altres
+          es mantenen.
+        help: Registra els teus comptes bancaris, dipòsits a termini i comptes de
+          valors.
+        list_help: Llista les posicions desades amb la seva clau de fila.
+        remove_help: Elimina una posició.
+        row_help: Clau de fila de la posició, la que mostra «list».
+        value_help: Una dada FET=VALOR; repeteix l'opció per a diverses dades.
       recovery:
         channel_absent: Un codi de recuperació només es pot mostrar en un terminal.
           En un host sense terminal, indica --recovery-handoff-fd i --recovery-verification-fd;
@@ -3517,6 +3583,9 @@ cli:
       irpf_id_column: irpf-category (passa aquest valor exacte)
       irpf_purpose_activity_income_withholding: retenció d'activitat professional
         cobrada o pagada neta
+      irpf_purpose_capital_gain: guany o pèrdua patrimonial (encara no calculada)
+      irpf_purpose_capital_mobiliario_yield: rendiments del capital mobiliari (interessos,
+        dividends)
       irpf_purpose_employment_income: rendiments del treball (no per a factures netes)
       irpf_purpose_rent_expense_withholding: retenció de lloguer pagat net
       irpf_purpose_rental_property_income: ingressos i despeses de lloguer d'un immoble
@@ -3566,6 +3635,10 @@ cli:
         privada; treu --business-pct o passa --classification MIXED.
       classification_help: Estat de classificació professional del moviment
       classification_required: --classification és obligatori quan no s'usa --file.
+      concepto_capital_mobiliario_help: Què és la fila dins de la seva posició d'estalvi,
+        un dels conceptes que declara el registre; un valor desconegut es rebutja
+        amb els admesos. Necessita una posició vinculada (--posicion). Un text en
+        blanc el treu.
       counterparty_country_help: País d'establiment de la contrapart (ISO 3166-1 alfa-2,
         p. ex. US, DE). Només establiment; per a la identificació a efectes d'IVA
         fes servir --counterparty-identification-state.
@@ -3655,6 +3728,9 @@ cli:
       mixed_requires_business_pct: Rebutjat. --classification MIXED necessita un percentatge
         professional. Passa --business-pct amb un valor de 0 a 1, o classifica la
         fila com a BUSINESS o PERSONAL.
+      posicion_help: Clau de fila de la posició d'estalvi desada a la qual pertany
+        aquesta fila. No juntament amb --arrendamiento ni --inmueble. Un text en blanc
+        treu el vincle. Una fila vinculada porta la categoria de renda capital_mobiliario.
       read_evidence_help: Llegeix en local l'evidència adjunta de la transacció i
         la passa al classificador.
       reaffirm_help: Reafirmar la classificació d'una transacció ja classificada.

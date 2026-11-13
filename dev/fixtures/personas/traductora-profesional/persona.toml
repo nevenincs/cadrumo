@@ -90,13 +90,14 @@ value = "devengo"
 year = "horizon-1"
 
 # Her own copy of the previous year's Renta: no negative general base was left
-# pending to offset, so the four-year carry of casilla 1380 starts from zero.
+# pending to offset, so the four-year carry of casilla 1380 starts from zero,
+# and no negative savings balance either (Anexo C.3 boxes 1263, 1266, 1269, 1270, 1276, 1279, 1282 and 1283).
 [[local_observations]]
 modelo = "100"
 year = "horizon-2"
 period = "0A"
-casillas = { "1384" = "0.00", "1387" = "0.00", "1390" = "0.00", "1391" = "0.00" }
-reason = "Bases liquidables generales negativas pendientes en la declaración de la renta del ejercicio anterior"
+casillas = { "1263" = "0.00", "1266" = "0.00", "1269" = "0.00", "1270" = "0.00", "1276" = "0.00", "1279" = "0.00", "1282" = "0.00", "1283" = "0.00", "1384" = "0.00", "1387" = "0.00", "1390" = "0.00", "1391" = "0.00" }
+reason = "Bases liquidables generales negativas y saldos negativos de la base del ahorro pendientes en la declaración de la renta del ejercicio anterior"
 
 # At the clock every quarterly IVA return of the fiscal year is past its window,
 # so she has filed each one. Every quarter was to pay, so no compensation was
@@ -123,4 +124,17 @@ designations = [{ role = "refund", modelo = "100" }]
 # takes them as zero, so the taxpayer states that none is pending.
 [[prior_carries]]
 year = "horizon-1"
+family = "renta_negative_general_bases_pending"
+nothing_pending = true
+
+# No interest, dividends or other capital mobiliario in this year or the four before it, so no negative balance of it is pending.
+[[prior_carries]]
+year = "horizon-1"
+family = "renta_negative_savings_capital_income_pending"
+nothing_pending = true
+
+# No sale of shares, funds or other asset in this year or the four before it, so no negative savings balance of gains and losses is pending.
+[[prior_carries]]
+year = "horizon-1"
+family = "renta_negative_savings_gains_losses_pending"
 nothing_pending = true

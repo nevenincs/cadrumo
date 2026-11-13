@@ -7,6 +7,8 @@ docs:
       atribucion_member: from the atribución de rentas members you recorded
       bienes_inversion_regularizacion: from your bienes de inversión regularisation
       borrador: from AEAT data (the borrador)
+      capital_mobiliario_position: from the ledger rows linked to your savings positions
+        and your payers' certificates
       collectible_invoice: from the invoices you issued
       design_constant: from a constant fixed by the AEAT record design
       foreign_asset: from your foreign-asset records
@@ -33,6 +35,8 @@ docs:
       manual_input: from a value you supply
       payable_invoice: from the invoices you received
       previous_filing: from your previous filing
+      prevision_social_contribution: from the contributions your pension contribution
+        certificates report
       profile: from your taxpayer profile
       prorrata_register_activity: from the activities in your prorrata register
       prorrata_regularizacion: from your prorrata regularisation

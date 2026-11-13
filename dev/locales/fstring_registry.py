@@ -305,10 +305,11 @@ def _runtime_registrations(
     from cadrumo.core.operations import OperationTerminalCondition
     from cadrumo.entrypoints.tui.components.account_chrome import AccountActionV1
     from dev.locales.activity_asset_fstring_registrations import activity_asset_dynamic_registrations
-    from dev.locales.desktop_entry_option_keys import ENTRY_OPTION_KEYS
+    from dev.locales.desktop_entry_option_keys import ENTRY_OPTION_KEYS, SERVED_ONLY_ENTRY_OPTION_KEYS
     from dev.locales.desktop_modelo_choice_keys import MODELO_CHOICE_KEYS
     from dev.locales.inventory_fstring_registrations import inventory_dynamic_registrations
     from dev.locales.invoice_figures_preview_keys import FINDING_KEYS, RATE_SLOT_KEYS, RULE_FINDING_KEYS
+    from dev.locales.record_group_fstring_registrations import record_group_dynamic_registrations
 
     from .m303_carry_fstring_registrations import m303_carry_error_registration
 
@@ -401,10 +402,11 @@ def _runtime_registrations(
         ),
         *_diagnostics_command_spec_registrations(),
         *inventory_dynamic_registrations(),
+        *record_group_dynamic_registrations(),
         FStringKeyRegistration(
             description="application.ledger.entry_options.* (served ledger entry vocabularies)",
             key_factory=lambda key: key,
-            values=tuple(sorted(ENTRY_OPTION_KEYS)),
+            values=tuple(sorted(ENTRY_OPTION_KEYS | SERVED_ONLY_ENTRY_OPTION_KEYS)),
         ),
         FStringKeyRegistration(
             description="application.invoices.figures_preview.finding.* (words of the closed figure findings)",

@@ -297,6 +297,27 @@ profile:
           label: Surnames
         tax_id:
           label: Tax ID (NIF/NIE/CIF)
+      inversiones_posicion:
+        fecha_fin:
+          label: Share held until
+        fecha_inicio:
+          label: Share held from
+        identificador:
+          label: Your identifier for the position
+        pagador_nif:
+          label: Payer tax ID
+        pagador_nombre:
+          label: Payer name
+        pais_origen:
+          label: State the income comes from
+        porcentaje_titularidad:
+          label: Your ownership share
+        tipo:
+          choices:
+            cuenta: Current or savings account
+            deposito: Term deposit
+            valores_negociables: Securities account
+          label: Kind of position
       irpf:
         activity_income_imputation_criterion:
           choices:
@@ -896,6 +917,10 @@ profile:
       identity:
         summary: 'Your name and NIF: who the declarations are prepared for.'
         title: Identity
+      inversiones_posicion:
+        summary: Your bank accounts, term deposits and securities accounts, one row
+          per position. Their fixed facts go here; amounts come from the ledger.
+        title: Savings positions
       irpf:
         summary: How your personal income tax is calculated and how much tax is withheld
           from your income.

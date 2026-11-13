@@ -560,6 +560,45 @@ cli:
           con esta identidad (%{invoice_id}); no se creó nada.'
         yes_help: Confirma la eliminación de la factura
         yes_required: Debes pasar --yes para eliminar una factura
+      prevision_social:
+        amount_help: Importe de la aportación en euros que indica el certificado,
+          por ejemplo 1500.00.
+        beneficiary_help: 'A qué sistema fue la aportación: taxpayer, spouse o disabled_person.
+          En esta versión solo se calcula taxpayer.'
+        certificate_file_help: Archivo del certificado (PDF o imagen) que se guarda
+          cifrado en tu almacenamiento; su SHA-256 pasa a ser la prueba del registro.
+        clave_help: Clave del modelo 345 que indica el certificado, de la A a la M.
+        ejercicio_help: Ejercicio (`ejercicio`) en el que se pagó la aportación.
+        employer_same_plan_help: Si tu empleador también hizo contribuciones al mismo
+          plan (yes o no). Es obligatorio para una clave y subclave cuya casilla depende
+          de ello.
+        evidence_sha256_help: SHA-256 de un certificado que ya está en tu almacenamiento,
+          o una comprobación frente a --certificate-file. Un registro necesita uno
+          de los dos.
+        group_help: Registra las aportaciones que indican tus certificados de aportaciones
+          a sistemas de previsión social.
+        invalid_input: 'Un valor no es válido: comprueba el ejercicio, las referencias
+          del emisor y del plan, la revisión y la huella del certificado.'
+        issuer_name_help: Razón social del emisor.
+        issuer_ref_help: Referencia del emisor (issuer_ref) que muestra la lista.
+        issuer_tax_id_help: NIF de la gestora, la mutualidad o la aseguradora que
+          emitió el certificado.
+        list_help: Lista los registros de aportaciones guardados de un ejercicio sin
+          ningún NIF, con la casilla a la que llega cada uno.
+        plan_name_help: Nombre del plan.
+        plan_nif_help: NIF del plan o del fondo, cuando tiene uno propio.
+        plan_ref_help: Referencia del plan (plan_ref) que muestra la lista, para un
+          registro que indica un NIF de plan.
+        record_expected_revision_help: Revisión que mostró la lista, para corregir
+          un registro guardado. Omítela en un primer registro.
+        record_help: Registra la aportación que indica un certificado para un plan,
+          clave y subclave en un ejercicio, o corrige la guardada con --expected-revision.
+        remove_expected_revision_help: Revisión que mostró la lista para el registro
+          que quieres eliminar.
+        remove_help: Elimina un registro de aportaciones con la revisión que mostró
+          la lista.
+        subclave_help: Subclave del modelo 345 que indica el certificado, para una
+          clave que la lleve.
       prorrata:
         activity_code_help: Código de actividad CNAE / IAE agrupado en este sector
           (repetible, al menos uno).
@@ -1071,6 +1110,8 @@ cli:
           actividades_prorrata: actividades del registro de prorrata
           activo_extranjero: activo extranjero
           afiliado_cotizacion: afiliado de la relación de cotizaciones
+          aportacion_prevision_social: certificado de aportaciones a sistemas de previsión
+            social
           borrador_aeat: borrador de la AEAT
           compensacion_iva_anual: compensación anual del IVA
           constante_diseno: Constante del diseño de registro
@@ -1750,14 +1791,27 @@ cli:
         attest_no_amount_help: Indica que un importe que se arrastra de una declaración
           anterior es nulo. Muestra la comprobación del cambio; con --yes lo registra
           como un 0 que has declarado, distinto de una cifra escrita.
+        attest_prior_carries_amount_effect: declarado como %{amount}
+        attest_prior_carries_amount_help: Da un importe para un importe arrastrado
+          en lugar de nada pendiente, como <casilla>=<importe> con la casilla que
+          alimenta ese importe y un importe positivo como 1234.56; repítelo para más
+          importes. La casilla debe pertenecer a una familia indicada con --family.
+          Los demás importes abiertos de la familia se declaran como nada pendiente
         attest_prior_carries_confirm: Todavía no se ha declarado nada. Ejecuta `aeat
-          app modelo work attest-prior-carries %{work_unit_id} --yes` para declararlo.
-        attest_prior_carries_help: Indica que no te queda ningún importe pendiente
+          app modelo work attest-prior-carries %{work_unit_id}%{selection} --yes`
+          para declararlo.
+        attest_prior_carries_family_help: Declara esta familia de ejercicios anteriores
+          como nada pendiente; repítelo para indicar todas las familias abiertas.
+          Una sola declaración debe cubrirlas todas
+        attest_prior_carries_help: 'Indica que no te queda ningún importe pendiente
           de ejercicios anteriores en una declaración (las bases liquidables generales
-          negativas de los cuatro ejercicios anteriores en un Modelo 100), para cada
-          importe al que su formulario ofrece la declaración. Muestra la declaración
-          y la comprobación del cambio; con --yes registra cada importe como un 0
-          que has declarado, distinto de una cifra escrita.
+          negativas y los saldos negativos de la base del ahorro de los cuatro ejercicios
+          anteriores en un Modelo 100). Muestra la declaración y la comprobación del
+          cambio; con --yes registra cada importe como un 0 que has declarado, distinto
+          de una cifra escrita. Una declaración cubre todas las familias abiertas:
+          indica cada una con --family (repetible), o ninguna cuando solo hay una
+          abierta. Para dar el importe de uno, usa --amount; los demás importes abiertos
+          de su familia quedan declarados sin nada pendiente.'
         attest_prior_carries_yes_help: Confirma la declaración y regístrala en la
           autoliquidación
         attest_prior_value_help: Indica la cifra que una declaración toma de una declaración
@@ -3034,6 +3088,17 @@ cli:
         state_help: '`observed` para un año cerrado; `committed` para un año aún no
           cerrado, que deberá regularizarse si no se cumple.'
         year_help: Año natural al que corresponde la media.
+      posicion:
+        add_help: Añade una posición con datos --value HECHO=VALOR; se guarda solo
+          si los datos son coherentes.
+        clear_help: Borra un dato por su nombre; repite la opción para varios.
+        edit_help: Cambia datos de una posición y borra los que indiques; los demás
+          se mantienen.
+        help: Registra tus cuentas bancarias, depósitos a plazo y cuentas de valores.
+        list_help: Lista las posiciones guardadas con su clave de fila.
+        remove_help: Elimina una posición.
+        row_help: Clave de fila de la posición, la que muestra «list».
+        value_help: Un dato HECHO=VALOR; repite la opción para varios datos.
       recovery:
         channel_absent: Un código de recuperación solo puede mostrarse en un terminal.
           En un sistema sin terminal interactiva, indica --recovery-handoff-fd y --recovery-verification-fd;
@@ -3546,6 +3611,9 @@ cli:
       irpf_id_column: irpf-category (pasa este valor exacto)
       irpf_purpose_activity_income_withholding: retención por actividad profesional
         cobrada o pagada neta
+      irpf_purpose_capital_gain: ganancia o pérdida patrimonial (aún no calculada)
+      irpf_purpose_capital_mobiliario_yield: rendimientos del capital mobiliario (intereses,
+        dividendos)
       irpf_purpose_employment_income: rendimientos del trabajo (no para facturas netas)
       irpf_purpose_rent_expense_withholding: retención de alquiler pagado neto
       irpf_purpose_rental_property_income: ingresos y gastos de alquiler de un inmueble
@@ -3594,6 +3662,10 @@ cli:
         o totalmente privada; quita --business-pct o pasa --classification MIXED.
       classification_help: Estado de clasificación profesional del movimiento
       classification_required: --classification es obligatorio cuando no se usa --file.
+      concepto_capital_mobiliario_help: Qué es la fila dentro de su posición de ahorro,
+        uno de los conceptos que declara el registro; un valor desconocido se rechaza
+        con los admitidos. Necesita una posición vinculada (--posicion). Un texto
+        en blanco lo quita.
       counterparty_country_help: País de establecimiento de la contraparte (ISO 3166-1
         alfa-2, p. ej. US, DE). Solo establecimiento; para la identificación a efectos
         de IVA usa --counterparty-identification-state.
@@ -3681,6 +3753,9 @@ cli:
       mixed_requires_business_pct: Rechazado. --classification MIXED necesita un porcentaje
         profesional. Pasa --business-pct con un valor de 0 a 1, o clasifica la fila
         como BUSINESS o PERSONAL.
+      posicion_help: Clave de fila de la posición de ahorro guardada a la que pertenece
+        esta fila. No junto con --arrendamiento ni --inmueble. Un texto en blanco
+        quita el vínculo. Una fila vinculada lleva la categoría de renta capital_mobiliario.
       read_evidence_help: Lee en local la evidencia adjunta de la transacción y la
         pasa al clasificador.
       reaffirm_help: Reafirmar la clasificación de una transacción ya clasificada.

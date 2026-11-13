@@ -225,6 +225,9 @@ EXPECTATIONS: Mapping[str, RegisteredExecutorConformanceCase] = expectations_own
             "user-profile.imputation-election.set", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
         ),
         RegisteredExecutorConformanceCase(
+            "user-profile.record-groups", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE
+        ),
+        RegisteredExecutorConformanceCase(
             "workbench.generation",
             OperationTerminalCondition.REFUSED,
             OperationEffect.NONE,

@@ -41,6 +41,7 @@ from .edit_models import (
 from .edit_parse_text import parse_refusal_text
 from .edit_preflight import (
     CALCULATION_WITHDRAWN,
+    CARRY_LEFT_OPEN,
     CARRY_WITHDRAWAL_FILED,
     CARRY_WITHDRAWAL_KEEPS_ENTRIES,
     CLEAR_OF_SOURCE_FED_CASILLA,
@@ -65,6 +66,7 @@ WORDED_FINDING_CODES: Final[tuple[str, ...]] = (
     CLEAR_OF_SOURCE_FED_CASILLA,
     REQUIRED_EMPTY,
     NOTHING_TO_RESTORE,
+    CARRY_LEFT_OPEN,
     CALCULATION_WITHDRAWN,
     CARRY_WITHDRAWAL_FILED,
     CARRY_WITHDRAWAL_KEEPS_ENTRIES,

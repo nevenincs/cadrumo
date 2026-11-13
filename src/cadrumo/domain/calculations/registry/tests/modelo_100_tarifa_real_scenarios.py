@@ -253,6 +253,14 @@ def base_binding_values() -> dict[BindingId, Decimal]:
         # test corpus. Test fixtures with no carry exercise this baseline.
         "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
         "renta-base-liquidable-negativa-general-em4-pendiente-inicio": Decimal("0"),
+        "renta-saldo-negativo-gyp-ahorro-em4-pendiente-inicio": Decimal("0"),
+        "renta-saldo-negativo-gyp-ahorro-em3-pendiente-inicio": Decimal("0"),
+        "renta-saldo-negativo-gyp-ahorro-em2-pendiente-inicio": Decimal("0"),
+        "renta-saldo-negativo-gyp-ahorro-em1-pendiente-inicio": Decimal("0"),
+        "renta-saldo-negativo-rcm-ahorro-em4-pendiente-inicio": Decimal("0"),
+        "renta-saldo-negativo-rcm-ahorro-em3-pendiente-inicio": Decimal("0"),
+        "renta-saldo-negativo-rcm-ahorro-em2-pendiente-inicio": Decimal("0"),
+        "renta-saldo-negativo-rcm-ahorro-em1-pendiente-inicio": Decimal("0"),
         "renta-base-liquidable-negativa-general-em3-pendiente-inicio": Decimal("0"),
         "renta-base-liquidable-negativa-general-em2-pendiente-inicio": Decimal("0"),
         # LIRPF art. 64/75 anualidades separate-escala eligibility flag.

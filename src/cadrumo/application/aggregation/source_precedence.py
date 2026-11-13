@@ -75,6 +75,7 @@ CALLER_OVERRIDE_PRECEDENCE_LADDER: tuple[CallerOverridePrecedenceTier, ...] = (
                 BindingSourceKind.INVENTORY,
                 BindingSourceKind.RENTA_INMUEBLE,
                 BindingSourceKind.RETENCION_SOPORTADA,
+                BindingSourceKind.CAPITAL_MOBILIARIO_POSITION,
             },
         ),
         disposition=CallerOverrideDisposition.LOCK,
@@ -93,7 +94,9 @@ CALLER_OVERRIDE_PRECEDENCE_LADDER: tuple[CallerOverridePrecedenceTier, ...] = (
     ),
     CallerOverridePrecedenceTier(
         name="box_shared_with_the_filer",
-        source_kinds=frozenset({BindingSourceKind.ACTIVITY_ASSET_DISPOSAL}),
+        source_kinds=frozenset(
+            {BindingSourceKind.ACTIVITY_ASSET_DISPOSAL, BindingSourceKind.PREVISION_SOCIAL_CONTRIBUTION}
+        ),
         disposition=CallerOverrideDisposition.CARRY,
     ),
 )

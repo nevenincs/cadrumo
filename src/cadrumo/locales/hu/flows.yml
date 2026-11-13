@@ -181,6 +181,7 @@ flows:
           atribucion_member: Jövedelem-hozzárendelési tag
           bienes_inversion_regularizacion: Beruházási javak kiigazítása
           borrador: AEAT-tervezet
+          capital_mobiliario_position: Megtakarítási kamatok és osztalékok
           collectible_invoice: Kimenő számlák
           design_constant: Tervezeti állandó
           foreign_asset: Külföldi eszköz
@@ -204,6 +205,7 @@ flows:
           manual_input: Kézi adatbevitel
           payable_invoice: Bejövő számla
           previous_filing: Előző bevallás
+          prevision_social_contribution: Nyugdíj-hozzájárulások
           profile: Profil
           prorrata_register_activity: Arányosítási nyilvántartás tevékenységei
           prorrata_regularizacion: Arányosítás kiigazítása

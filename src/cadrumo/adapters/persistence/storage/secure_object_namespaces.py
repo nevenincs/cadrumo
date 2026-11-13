@@ -464,6 +464,25 @@ MODELO_232_RELATED_PARTY_NAMESPACE = SecureObjectNamespaceDefinition(
     scope=StorageNamespaceScope.PROFILE_LOCAL,
     custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
 )
+# Contributions to social-welfare systems, one row per certificate line: the
+# ejercicio, the issuer, the plan and the Modelo 345 clave and subclave, read by
+# the annual Renta contribution casillas. FINANCIAL: each row holds the issuer's
+# and the plan's tax identifiers and the certified amount.
+#
+# The issuer and plan segments are HMAC-SHA256 digests under labelled sub-keys of
+# the profile's own key, never the NIFs and never their unkeyed sha256. A plan
+# without a NIF of its own takes ``-``. A corrected or replacement certificate
+# overwrites its row under the row's expected revision.
+PREVISION_SOCIAL_CONTRIBUTION_RECORDS_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="prevision_social_contribution_records",
+    namespace="cadrumo.renta.prevision_social_contribution.records",
+    owner="cadrumo.application.aggregation",
+    sensitivity=SensitivityClass.FINANCIAL,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="{ejercicio}:{issuer_ref}:{plan_ref|-}:{clave}:{subclave|-}",
+    scope=StorageNamespaceScope.PROFILE_LOCAL,
+    custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
+)
 WITHHOLDING_WORKFLOW_NAMESPACE = SecureObjectNamespaceDefinition(
     key="withholding_workflow",
     namespace="cadrumo.withholding.workflow",

@@ -87,6 +87,7 @@ def resolve_bucket_source_mesh(
     filing_period_date: date | None = None,
     profile: ModeloWorkProfile | None = None,
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
+    income_family_entry_digests: Mapping[str, str] | None = None,
     row_attestations: tuple[RowCarryAttestation, ...] = (),
 ) -> CalculationSourceResolution:
     """Resolve enrolled sources against one pinned operation and profile.
@@ -108,10 +109,7 @@ def resolve_bucket_source_mesh(
             asset_profile_id=work_unit.bucket_id,
         )
         iva_investment_asset_profile_id = work_unit.bucket_id
-    from ..aggregation.source_mesh import (
-        CalculationSourceContext,
-        ModeloSourceResolver,
-    )
+    from ..aggregation.source_mesh import CalculationSourceContext, ModeloSourceResolver
     from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 
     renta_catalogue_read_ports = InvoiceCatalogueReadPorts(
@@ -127,6 +125,8 @@ def resolve_bucket_source_mesh(
         revision=snapshot.revision,
         caller_binding_values=dict(binding_values or {}),
         caller_enum_binding_values=dict(enum_binding_values or {}),
+        caller_casilla_ids=frozenset(casilla_inputs or {}),
+        income_family_entry_digests=dict(income_family_entry_digests or {}),
         caller_row_attestations=row_attestations,
         m210_official_tipo_renta_code=m210_official_tipo_renta_code,
         m210_gross_income_source_mode=m210_gross_income_source_mode,
@@ -633,9 +633,11 @@ def _resolve_observation_families(
 ) -> tuple[CalculationSourceResolution, ...]:
     """Resolve the OSS/IOSS, withholding, invoice, foreign-asset and member families."""
     from ..aggregation.atribucion_member import AtribucionMemberSourceResolver
+    from ..aggregation.capital_mobiliario_position_source import CapitalMobiliarioPositionSourceResolver
     from ..aggregation.foreign_assets import ForeignAssetsAggregationSourceResolver
     from ..aggregation.modelo_bindings_retenciones import RetencionesAggregationSourceResolver
     from ..aggregation.oss_ioss_resolver import OssIossLedgerSourceResolver
+    from ..aggregation.prevision_social_contribution_source import PrevisionSocialContributionSourceResolver
     from ..aggregation.retencion_soportada_source import RetencionSoportadaSourceResolver
     from ..aggregation.withholding_source import WithholdingSourceResolver
     from ..calculations.m115_no_relevant_payments import m115_no_relevant_payment_periods_for_bucket
@@ -666,6 +668,15 @@ def _resolve_observation_families(
             )
         ),
         resolve_declared(RetencionSoportadaSourceResolver(ports=ports.retencion_soportada_ports)),
+        resolve_declared(
+            CapitalMobiliarioPositionSourceResolver(
+                transaction_repository=memoized_transaction_repository,
+                retencion_soportada_ports=ports.retencion_soportada_ports,
+            )
+        ),
+        resolve_declared(
+            PrevisionSocialContributionSourceResolver(repository=ports.prevision_social_contribution_repository)
+        ),
         resolve_declared(
             InvoiceCatalogueSourceResolver(
                 ports=ports.invoice_source_ports,

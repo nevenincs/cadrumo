@@ -17,6 +17,7 @@ from pydantic import (
     model_validator,
 )
 
+from ...core.concepto_capital_mobiliario import ConceptoCapitalMobiliario
 from ...core.decimal.grammar import is_non_negative_canonical_decimal
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.external_constants import (
@@ -67,6 +68,7 @@ from ...domain.transactions.models import (
 from ...domain.transactions.own_accounts import OwnAccountId
 from ...domain.transactions.rental_link import validate_rental_link_category
 from ...domain.transactions.repository import ImportSummary
+from ...domain.transactions.savings_link import validate_savings_link_category
 from ..export.tabular import ExportSerializationFormat, verify_export_metadata
 from ..review.filter import LedgerReviewStatus
 
@@ -257,6 +259,10 @@ class ManualLedgerTransactionCommand(ManualLedgerTransactionInput):
     inmueble_ref: _LedgerOptionalText = None
     #: Which kind of property expense the row is; the registry names the casilla it feeds.
     gasto_capital_inmobiliario: GastoCapitalInmobiliario | None = None
+    #: The stored savings position an income or expense row belongs to, by row key.
+    posicion_ref: _LedgerOptionalText = None
+    #: What the row is within its position; the registry names the Modelo 100 record it feeds.
+    concepto_capital_mobiliario: ConceptoCapitalMobiliario | None = None
     art_104_tres_exclusion: Art104TresExclusion | None = None
     input_classification: InputClassification | None = None
     prorrata_sector_id: str | None = Field(default=None, min_length=1, max_length=64)
@@ -318,6 +324,17 @@ class ManualLedgerTransactionCommand(ManualLedgerTransactionInput):
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
+    def _validate_savings_link_category(self) -> Self:
+        """Ask the domain whether a linked row carries the capital-mobiliario income category."""
+        validate_savings_link_category(
+            posicion_ref=self.posicion_ref,
+            classification=self.business_classification,
+            irpf_category=self.irpf_category,
+        )
+        return self
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_direction_policy(self) -> Self:
         if self.amount < Decimal("0"):
             raise TransactionValidationError(
@@ -349,6 +366,8 @@ class ManualLedgerTransactionCommand(ManualLedgerTransactionInput):
             "arrendamiento_ref": self.arrendamiento_ref,
             "inmueble_ref": self.inmueble_ref,
             "gasto_capital_inmobiliario": self.gasto_capital_inmobiliario,
+            "posicion_ref": self.posicion_ref,
+            "concepto_capital_mobiliario": self.concepto_capital_mobiliario,
             "taxable_base": self.taxable_base,
             "iva_rate": self.iva_rate,
             "iva_amount": self.iva_amount,
@@ -410,6 +429,8 @@ class ManualLedgerTransactionPatch(ManualLedgerTransactionInput):
     arrendamiento_ref: _LedgerOptionalText = None
     inmueble_ref: _LedgerOptionalText = None
     gasto_capital_inmobiliario: GastoCapitalInmobiliario | None = None
+    posicion_ref: _LedgerOptionalText = None
+    concepto_capital_mobiliario: ConceptoCapitalMobiliario | None = None
     source_jurisdiction: str | None = None
     group_label: _LedgerOptionalGroupLabel = None
     own_account_id: OwnAccountId | None = None
@@ -911,7 +932,8 @@ class BulkClassifyRow(BaseModel):
     Optional columns: ``category_id``, ``business_pct``, ``usage_ratio_id``,
     ``taxable_base``, ``iva_rate``, ``iva_amount``, ``iva_category``,
     ``irpf_category``, ``arrendamiento_ref``, ``inmueble_ref``,
-    ``gasto_capital_inmobiliario``, ``notes``. Blank optional cells preserve existing values.
+    ``gasto_capital_inmobiliario``, ``posicion_ref``, ``concepto_capital_mobiliario``,
+    ``notes``. Blank optional cells preserve existing values.
     Unknown column names are rejected pre-persistence to protect against
     silent field mis-mapping. The IVA facts (``taxable_base``, ``iva_rate``,
     ``iva_amount``) are typed ``Decimal`` exactly as the single-classify path
@@ -940,6 +962,8 @@ class BulkClassifyRow(BaseModel):
     arrendamiento_ref: str | None = None
     inmueble_ref: str | None = None
     gasto_capital_inmobiliario: str | None = None
+    posicion_ref: str | None = None
+    concepto_capital_mobiliario: str | None = None
 
 
 class BulkClassifyFailure(BaseModel):
@@ -984,6 +1008,8 @@ BULK_CLASSIFY_ALLOWED_COLUMNS: frozenset[str] = frozenset(
         "arrendamiento_ref",
         "inmueble_ref",
         "gasto_capital_inmobiliario",
+        "posicion_ref",
+        "concepto_capital_mobiliario",
         "notes",
     },
 )

@@ -183,6 +183,7 @@ flows:
           atribucion_member: Membre d'atribució de rendes
           bienes_inversion_regularizacion: Regularització de béns d'inversió
           borrador: Esborrany de l'AEAT
+          capital_mobiliario_position: Interessos i dividends de l'estalvi
           collectible_invoice: Factures emeses
           design_constant: Constant del disseny
           foreign_asset: Actiu estranger
@@ -206,6 +207,7 @@ flows:
           manual_input: Entrada manual
           payable_invoice: Factura rebuda
           previous_filing: Declaració anterior
+          prevision_social_contribution: Aportacions a previsió social
           profile: Perfil
           prorrata_register_activity: Activitats del registre de prorrata
           prorrata_regularizacion: Regularització de prorrata

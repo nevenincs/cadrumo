@@ -36,6 +36,7 @@ from typing import TYPE_CHECKING, ClassVar, Final, Literal, override
 from ...core.errors.hierarchy import CadrumoError, RecordedRegisteredError
 from ...core.errors.not_found import CoreNotFoundError
 from ...core.operator_action_enums import ActionEvidenceProvenance
+from ...domain.calculations.registry.binding_absence_attestation import PRIOR_CARRY_FAMILIES
 from ...domain.modelos.errors import ModeloError
 from ..operations.next_step import OperationNextStepErrorMixin, OperationNextStepWording
 from ..operator_actions.models import PreconditionVerdict
@@ -887,7 +888,7 @@ _PRIOR_CARRY_CODE: Final[str] = "REFUSED_MODELO_PRIOR_CARRY_ABSENCE_UNSTATED"
 _PRIOR_CARRY_EDIT_MESSAGE_KEY: Final[str] = "application.modelo.errors.edit_prior_carries_unstated"
 _REQUIRED_BINDINGS_CODE: Final[str] = "REFUSED_MODELO_REQUIRED_BINDINGS_MISSING"
 _REQUIRED_BINDINGS_EDIT_MESSAGE_KEY: Final[str] = "application.modelo.errors.edit_required_bindings_missing"
-_PRIOR_CARRY_FAMILIES: Final[frozenset[str]] = frozenset({"renta_negative_general_bases_pending"})
+_PRIOR_CARRY_FAMILIES: Final[frozenset[str]] = frozenset(family.value for family in PRIOR_CARRY_FAMILIES)
 _CARRY_WITHDRAWAL_ERRORS: Final[Mapping[str, type[ModeloEditRefusedError]]] = MappingProxyType(
     {
         ModeloEditCarryWithdrawalBlock.KEEPS_ENTRIES.value: ModeloEditCarryWithdrawalKeepsEntriesError,

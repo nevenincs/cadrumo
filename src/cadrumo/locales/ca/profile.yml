@@ -295,6 +295,27 @@ profile:
           label: Cognoms
         tax_id:
           label: NIF/NIE/CIF d'identificació
+      inversiones_posicion:
+        fecha_fin:
+          label: Titular fins a
+        fecha_inicio:
+          label: Titular des de
+        identificador:
+          label: El teu identificador de la posició
+        pagador_nif:
+          label: NIF del pagador
+        pagador_nombre:
+          label: Nom del pagador
+        pais_origen:
+          label: Estat d'origen dels rendiments
+        porcentaje_titularidad:
+          label: El teu percentatge de titularitat
+        tipo:
+          choices:
+            cuenta: Compte corrent o d'estalvi
+            deposito: Dipòsit a termini
+            valores_negociables: Compte de valors
+          label: Classe de posició
       irpf:
         activity_income_imputation_criterion:
           choices:
@@ -893,6 +914,11 @@ profile:
       identity:
         summary: 'El teu nom i NIF: per a qui es preparen les declaracions.'
         title: Identitat
+      inversiones_posicion:
+        summary: Els teus comptes bancaris, dipòsits a termini i comptes de valors,
+          una fila per posició. Aquí van les seves dades fixes; els imports surten
+          del llibre major.
+        title: Posicions d'estalvi
       irpf:
         summary: Com es calcula el teu IRPF i quines retencions suportes.
         title: IRPF i retencions

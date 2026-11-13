@@ -42,6 +42,9 @@ from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCata
 from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.percepciones_observations import PercepcionObservationRepositoryAdapter
+from cadrumo.adapters.persistence.profile.prevision_social_contribution_records import (
+    PrevisionSocialContributionRecordRepositoryAdapter,
+)
 from cadrumo.adapters.persistence.profile.profile_path_values import ProfilePathValuesPersistenceAdapter
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from cadrumo.adapters.persistence.profile.retencion_observations import RetencionObservationRepositoryAdapter
@@ -271,6 +274,9 @@ def calculation_ports_for_test(
             retencion_soportada_ports=RetencionSoportadaPorts(
                 repository=RetencionSoportadaRecordRepositoryAdapter(objects=objects),
                 absences=RetencionSoportadaAbsenceRepositoryAdapter(objects=objects),
+            ),
+            prevision_social_contribution_repository=PrevisionSocialContributionRecordRepositoryAdapter(
+                objects=objects
             ),
             credit_resolution_reader=CreditResolutionRepositoryAdapter(objects=objects),
             relation_override_migration=_RelationOverrideMigration(),

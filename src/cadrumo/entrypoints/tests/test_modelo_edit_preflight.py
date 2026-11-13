@@ -69,6 +69,7 @@ def _preflight(
         work_catalogue=work.ports.work_unit_repository.load(),
         calculation_catalogue=work.ports.calculation_repository.load(),
         tax_id_format=runtime_tax_id_format(authority=work.operation),
+        prior_carry_bindings=frozenset(),
     )
 
 

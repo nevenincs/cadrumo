@@ -33,6 +33,7 @@ from cadrumo.application.user_profile.tests.persona_profile_facts import persona
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from ....application.modelo.carry_family_selection import prior_carry_binding_ids
 from ....application.modelo.casilla_help import ModeloCasillaHelpCardV1
 from ....application.modelo.declarations_workspace_contracts import DeclarationsWorkspaceDeclarationRefV1
 from ....application.modelo.edit_admission import ModeloEditRenewalResultV1, renew_modelo_edit_baseline
@@ -247,6 +248,7 @@ def application_lifecycle_door(
             work_catalogue=ports.work_units.load(),
             calculation_catalogue=ports.calculations.load(),
             tax_id_format=runtime_tax_id_format(authority=operation),
+            prior_carry_bindings=prior_carry_binding_ids(operation, submission),
         )
 
     def prerequisite(

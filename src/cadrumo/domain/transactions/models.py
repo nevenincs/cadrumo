@@ -19,6 +19,7 @@ from pydantic import (
 )
 from pydantic_core import core_schema
 
+from ...core.concepto_capital_mobiliario import ConceptoCapitalMobiliario
 from ...core.concepto_ingreso import ConceptoIngreso
 from ...core.decimal.constants import ONE
 from ...core.errors.hierarchy import CoreValidationError, pydantic_validation_boundary
@@ -35,6 +36,7 @@ from ...core.time.clock import now
 from ...core.tipos_actividad import TipoActividad
 from ...core.type_adapters import OBJECT_TUPLE_ADAPTER
 from ...core.type_guards import is_object_mapping
+from ..calculations.registry.capital_mobiliario_facts import require_concepto_capital_mobiliario
 from ..calculations.registry.concepto_ingreso import require_concepto_ingreso
 from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.eu_member_state_catalogue import (
@@ -66,6 +68,7 @@ from .dates import transaction_operation_date
 from .enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from .errors import TransactionValidationError
 from .gross_validation import validate_gross_reconstitution
+from .ledger_links import validate_ledger_links
 from .lineage_models import (
     ClassificationHistoryEntry,
     DecisionProvenance,
@@ -253,15 +256,22 @@ def _translate_registry_enum_error(resolve: Callable[[], object]) -> object:
         raise TransactionValidationError(str(exc)) from exc
 
 
-def _coerce_concepto_ingreso_field(value: object, info: core_schema.ValidationInfo) -> object:
-    if value is None or isinstance(value, ConceptoIngreso):
-        return value
-    effective_date = _effective_date_for_enum_projection(info)
-    if effective_date is None:
-        raise TransactionValidationError(
-            "concepto_ingreso requires the transaction's effective date for registry resolution",
-        )
-    return _translate_registry_enum_error(lambda: require_concepto_ingreso(value, effective_date=effective_date))
+def _dated_token_coercer(
+    field: str, token_type: type, require: Callable[..., object]
+) -> Callable[[object, core_schema.ValidationInfo], object]:
+    """Return the projection of ``field`` through ``require`` on the row's effective date."""
+
+    def coerce(value: object, info: core_schema.ValidationInfo) -> object:
+        if value is None or isinstance(value, token_type):
+            return value
+        effective_date = _effective_date_for_enum_projection(info)
+        if effective_date is None:
+            raise TransactionValidationError(
+                f"{field} requires the transaction's effective date for registry resolution",
+            )
+        return _translate_registry_enum_error(lambda: require(value, effective_date=effective_date))
+
+    return coerce
 
 
 def _coerce_deduction_fact_kind_field(value: object, info: core_schema.ValidationInfo) -> object:
@@ -270,30 +280,6 @@ def _coerce_deduction_fact_kind_field(value: object, info: core_schema.Validatio
     effective_date = _effective_date_for_enum_projection(info)
     return _translate_registry_enum_error(
         lambda: require_iva_deduction_fact_kind(value, effective_date=effective_date),
-    )
-
-
-def _coerce_input_classification_field(value: object, info: core_schema.ValidationInfo) -> object:
-    if value is None or isinstance(value, InputClassification):
-        return value
-    effective_date = _effective_date_for_enum_projection(info)
-    if effective_date is None:
-        raise TransactionValidationError(
-            "input_classification requires the transaction's effective date for registry resolution",
-        )
-    return _translate_registry_enum_error(lambda: require_input_classification(value, effective_date=effective_date))
-
-
-def _coerce_gasto_capital_inmobiliario_field(value: object, info: core_schema.ValidationInfo) -> object:
-    if value is None or isinstance(value, GastoCapitalInmobiliario):
-        return value
-    effective_date = _effective_date_for_enum_projection(info)
-    if effective_date is None:
-        raise TransactionValidationError(
-            "gasto_capital_inmobiliario requires the transaction's effective date for registry resolution",
-        )
-    return _translate_registry_enum_error(
-        lambda: require_gasto_capital_inmobiliario(value, effective_date=effective_date),
     )
 
 
@@ -307,10 +293,17 @@ def _coerce_counterparty_identification_state_field(value: object, info: core_sc
 _REGISTRY_TOKEN_PROJECTION_BY_FIELD: Mapping[str, Callable[[object, core_schema.ValidationInfo], object]] = (
     MappingProxyType(
         {
-            "concepto_ingreso": _coerce_concepto_ingreso_field,
+            "concepto_ingreso": _dated_token_coercer("concepto_ingreso", ConceptoIngreso, require_concepto_ingreso),
             "deduction_fact_kind": _coerce_deduction_fact_kind_field,
-            "input_classification": _coerce_input_classification_field,
-            "gasto_capital_inmobiliario": _coerce_gasto_capital_inmobiliario_field,
+            "input_classification": _dated_token_coercer(
+                "input_classification", InputClassification, require_input_classification
+            ),
+            "gasto_capital_inmobiliario": _dated_token_coercer(
+                "gasto_capital_inmobiliario", GastoCapitalInmobiliario, require_gasto_capital_inmobiliario
+            ),
+            "concepto_capital_mobiliario": _dated_token_coercer(
+                "concepto_capital_mobiliario", ConceptoCapitalMobiliario, require_concepto_capital_mobiliario
+            ),
             "counterparty_identification_state": _coerce_counterparty_identification_state_field,
         },
     )
@@ -409,6 +402,14 @@ class Transaction(BaseModel):
             (:class:`~core.gasto_capital_inmobiliario.GastoCapitalInmobiliario`)
             routing an expense row to a casilla of its property. Requires
             ``inmueble_ref``; ``None`` for every row that is not a rental expense.
+        posicion_ref: Optional reference to the ``inversiones.posicion`` profile row
+            a savings row belongs to. At most one of ``arrendamiento_ref``,
+            ``inmueble_ref`` and ``posicion_ref`` is set.
+        concepto_capital_mobiliario: Registry-declared capital-mobiliario concept
+            (:class:`~core.concepto_capital_mobiliario.ConceptoCapitalMobiliario`)
+            routing a savings row to its Modelo 100 detail record. Set exactly when
+            ``posicion_ref`` is; whether the position's kind admits it is checked
+            against the profile elsewhere.
         concepto_ingreso: Operator-declared income concept
             (:class:`~core.concepto_ingreso.ConceptoIngreso`) for base-inclusion purposes. RD
             439/2007 art. 110.1.c) fixes the agrarian pago fraccionado on the
@@ -627,6 +628,8 @@ class Transaction(BaseModel):
     arrendamiento_ref: str | None = None
     inmueble_ref: str | None = None
     gasto_capital_inmobiliario: GastoCapitalInmobiliario | None = None
+    posicion_ref: str | None = None
+    concepto_capital_mobiliario: ConceptoCapitalMobiliario | None = None
     prorrata_sector_id: str | None = Field(default=None, min_length=1, max_length=64)
     purchase_invoice_evidence_id: str | None = None
     attachment_ids: tuple[str, ...] = ()
@@ -692,6 +695,7 @@ class Transaction(BaseModel):
         "input_classification",
         "concepto_ingreso",
         "gasto_capital_inmobiliario",
+        "concepto_capital_mobiliario",
         mode="before",
     )
     @classmethod
@@ -746,6 +750,7 @@ class Transaction(BaseModel):
         "created_event_id",
         "arrendamiento_ref",
         "inmueble_ref",
+        "posicion_ref",
     )
     @classmethod
     @pydantic_validation_boundary
@@ -899,7 +904,7 @@ class Transaction(BaseModel):
         self._enforce_cash_accounting_axis()
         self._enforce_fx_coupling()
         self._enforce_gross_equals_base_plus_iva_plus_recargo()
-        self._enforce_rental_link()
+        self._enforce_ledger_links()
         return self
 
     def _enforce_derived_transaction_id(self) -> Self:
@@ -986,20 +991,15 @@ class Transaction(BaseModel):
             )
         return self
 
-    def _enforce_rental_link(self) -> Self:
-        """Keep the rental link single and the expense concept attached to a property.
-
-        An income row links to one lease and an expense row to one property, so a
-        row carrying both references would belong to two rental subjects. The
-        expense concept routes a row to a casilla of the property it is linked to,
-        so it is meaningless without that reference.
-        """
-        if self.arrendamiento_ref is not None and self.inmueble_ref is not None:
-            raise TransactionValidationError(
-                "arrendamiento_ref and inmueble_ref are mutually exclusive: a row links to one lease or one property",
-            )
-        if self.gasto_capital_inmobiliario is not None and self.inmueble_ref is None:
-            raise TransactionValidationError("gasto_capital_inmobiliario requires inmueble_ref")
+    def _enforce_ledger_links(self) -> Self:
+        """Keep the ledger link single and each concept attached to its subject."""
+        validate_ledger_links(
+            arrendamiento_ref=self.arrendamiento_ref,
+            inmueble_ref=self.inmueble_ref,
+            gasto_capital_inmobiliario=self.gasto_capital_inmobiliario,
+            posicion_ref=self.posicion_ref,
+            concepto_capital_mobiliario=self.concepto_capital_mobiliario,
+        )
         return self
 
     def _enforce_fx_coupling(self) -> Self:

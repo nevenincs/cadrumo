@@ -42,14 +42,22 @@ _TYPED_WORK_INCOME_0003 = (
     "typed here to exercise the base and reductions downstream; the record binding is covered by its own "
     "resolver tests"
 )
+_TYPED_CONTRIBUTION = (
+    "the scenario carries no pension contribution certificate record, so the contribution box the record "
+    "binding fills is typed here to exercise the art. 52 limits downstream; the record binding is covered by "
+    "its own resolver tests"
+)
+_CONTRIBUTION_BOXES = frozenset(
+    validated_casilla_id(box, surface="test_renta_chain_behaviour casilla id")
+    for box in ("0465", "0426", "0427", "0438", "0499", "0466")
+)
 _C0426 = validated_casilla_id("0426", surface="test_renta_chain_behaviour casilla id")
 _C0427 = validated_casilla_id("0427", surface="test_renta_chain_behaviour casilla id")
-_C0429 = validated_casilla_id("0429", surface="test_renta_chain_behaviour casilla id")
 _C0432 = validated_casilla_id("0432", surface="test_renta_chain_behaviour casilla id")
 _C0433 = validated_casilla_id("0433", surface="test_renta_chain_behaviour casilla id")
 _C0435 = validated_casilla_id("0435", surface="test_renta_chain_behaviour casilla id")
 _C0461 = validated_casilla_id("0461", surface="test_renta_chain_behaviour casilla id")
-_C0463 = validated_casilla_id("0463", surface="test_renta_chain_behaviour casilla id")
+_C0465 = validated_casilla_id("0465", surface="test_renta_chain_behaviour casilla id")
 _C0466 = validated_casilla_id("0466", surface="test_renta_chain_behaviour casilla id")
 _C0467 = validated_casilla_id("0467", surface="test_renta_chain_behaviour casilla id")
 _C0468 = validated_casilla_id("0468", surface="test_renta_chain_behaviour casilla id")
@@ -139,7 +147,6 @@ def _expected_output(
 def _base_2025_inputs() -> dict[CasillaId, Decimal]:
     return {
         _C0003: Decimal("0"),
-        _C0429: Decimal("0"),
         # 0424 is now computed via the ganancias-patrimoniales saldo formula
         # (max(0422-0423, 0)) and cannot be supplied as input.
         # 0461 is now computed via renta-reduccion-art-84-conjunta
@@ -203,7 +210,10 @@ def _scenario_2025(
         filing_year=_EXERCISE,
         period="0A",
         inputs=inputs,
-        hand_typed_bound_casillas={_C0003: _TYPED_WORK_INCOME_0003},
+        hand_typed_bound_casillas={
+            _C0003: _TYPED_WORK_INCOME_0003,
+            **{box: _TYPED_CONTRIBUTION for box in overrides if box in _CONTRIBUTION_BOXES},
+        },
         binding_values={
             "renta-profile-has-economic-activity": Decimal("0"),
             "renta-profile-income-family-excluded-capital-mobiliario": Decimal("0"),
@@ -221,6 +231,14 @@ def _scenario_2025(
             # BIN-pendiente fresh-filer baseline (2025 binding).
             "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
             "renta-base-liquidable-negativa-general-em4-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-gyp-ahorro-em4-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-gyp-ahorro-em3-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-gyp-ahorro-em2-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-gyp-ahorro-em1-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-rcm-ahorro-em4-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-rcm-ahorro-em3-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-rcm-ahorro-em2-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-rcm-ahorro-em1-pendiente-inicio": Decimal("0"),
             "renta-base-liquidable-negativa-general-em3-pendiente-inicio": Decimal("0"),
             "renta-base-liquidable-negativa-general-em2-pendiente-inicio": Decimal("0"),
             "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),
@@ -380,6 +398,14 @@ def test_base_liquidable_general_applies_reductions() -> None:
             # Anexo C opening pending balance for the applied €1,000 amount; no older year is pending.
             "renta-base-liquidable-negativa-general-anterior": Decimal("1000"),
             "renta-base-liquidable-negativa-general-em4-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-gyp-ahorro-em4-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-gyp-ahorro-em3-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-gyp-ahorro-em2-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-gyp-ahorro-em1-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-rcm-ahorro-em4-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-rcm-ahorro-em3-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-rcm-ahorro-em2-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-rcm-ahorro-em1-pendiente-inicio": Decimal("0"),
             "renta-base-liquidable-negativa-general-em3-pendiente-inicio": Decimal("0"),
             "renta-base-liquidable-negativa-general-em2-pendiente-inicio": Decimal("0"),
             "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),
@@ -419,29 +445,31 @@ def test_base_liquidable_general_applies_reductions() -> None:
 
 
 def test_plan_de_empleo_reduccion_below_caps_full_amount() -> None:
-    """0468 = min(0467, 10000, 30% * 0432) — aportación below both caps, full reducción applies.
+    """0468: a worker contribution to the employment plan matched by the employer, below every cap.
 
-    Oracle derivation (Art. 52 LIRPF, AEAT Renta 2025 Manual Parte 1):
+    Oracle derivation (Art. 52.1 LIRPF, AEAT Renta 2025 Manual Parte 1):
       trabajo rendimientos (0003) = 58,500 → 0019 (otros gastos, art. 19.2.f)
-        = min(2000, 58500) = 2,000 → 0025 = 0432 = 58,500 - 2,000 = 56,500
-      30% cap = 0.30 * 56,500 = 16,950
-      plan de empleo aportación (0426) = 4,200 → 0467 = 4,200
-      0468 = min(4200, 10000, 16950) = 4,200   (below both caps)
-      0435 = 56,500 (no negative G/P balance)
-      0461 = 0 (individual declaration)
-      0501 = 0 (no prior negative bases)
-      0500 = 56,500 - 4,200 - 0 - 0 = 52,300
+        = min(2000, 58500) = 2,000 → 0022 = 0432 = 58,500 - 2,000 = 56,500
+      30% cap = 0.30 * 56,500 (net work income, art. 19) = 16,950
+      contribución empresarial (0427) = 4,200; worker aportación to that plan (0426) = 4,200
+      0383 unmarked (income from that employer not above 60,000): coefficient table applies,
+        and above 1,500 of employer contribution the worker counts up to 1 x 4,200 = 4,200
+      1º increment = 4,200 + min(4,200, 4,200) = 8,400 (≤ 8,500)
+      0467 = 8,400; 0468 = min(16950, min(8400, 1500 + 8400)) = 8,400   (below every cap)
+      0435 = 56,500 (no negative G/P balance); 0461 = 0; 0501 = 0
+      0500 = 56,500 - 8,400 = 48,100
     """
     scenario = _scenario_2025(
         "plan-empleo-reduccion-below-caps",
         overrides={
-            _C0003: Decimal("58500.00"),  # trabajo → nets to 0432 = 56,500 after otros gastos
-            _C0426: Decimal("4200.00"),  # plan de empleo aportación → 0467 = 4,200
+            _C0003: Decimal("58500.00"),  # trabajo → nets to 0022 = 56,500 after otros gastos
+            _C0426: Decimal("4200.00"),  # worker aportación to the employment plan
+            _C0427: Decimal("4200.00"),  # matching contribución empresarial
         },
         expected=(
-            _expected_output(target_casilla_id=_C0467, value=Decimal("4200.00")),
-            _expected_output(target_casilla_id=_C0468, value=Decimal("4200.00")),
-            _expected_output(target_casilla_id=_C0500, value=Decimal("52300.00")),
+            _expected_output(target_casilla_id=_C0467, value=Decimal("8400.00")),
+            _expected_output(target_casilla_id=_C0468, value=Decimal("8400.00")),
+            _expected_output(target_casilla_id=_C0500, value=Decimal("48100.00")),
         ),
     )
     report = run_registry_calculation_scenario(scenario)
@@ -449,16 +477,16 @@ def test_plan_de_empleo_reduccion_below_caps_full_amount() -> None:
 
 
 def test_individual_aportaciones_prevision_social_reduce_base_general() -> None:
-    """Individual pension-plan contributions (casilla 0463) reduce the base imponible general.
+    """Individual pension-plan contributions (casilla 0465) reduce the base imponible general.
 
     An individual's own contributions to a personal previsión-social system
     (plan de pensiones individual) give an Art. 51/52 LIRPF reducción to the
-    base imponible general. Casilla 0463 ("Aportaciones individuales y
-    contribuciones empresariales ...", semantic_role
-    ``irpf_red_prevision_social_aportaciones_individuales``) is the individual
-    input box. The existing chain tests exercise the plan-de-empleo worker box
-    (0426) and the employer box (0427); this locks the individual-side (0463)
-    path, flowing 0463 → 0467 → 0468 → base liquidable general 0500.
+    base imponible general. Casilla 0465 ("Aportaciones del trabajador, salvo
+    las consignadas en [0438] y [0426]") is the individual input box; 0463 holds
+    the excesses pending from earlier ejercicios (Anexo C.3), not the year's own
+    contributions. The existing chain tests exercise the plan-de-empleo worker box
+    (0426) and the employer box (0427); this locks the individual-side (0465)
+    path, flowing 0465 → 0467 → 0468 → base liquidable general 0500.
 
     Oracle derivation (Art. 52 LIRPF, AEAT Renta 2025 Manual Parte 1 —
     "Reducciones por aportaciones a sistemas de previsión social"): an
@@ -467,7 +495,7 @@ def test_individual_aportaciones_prevision_social_reduce_base_general() -> None:
       trabajo rendimientos (0003) = 32,000 → 0019 (otros gastos, art. 19.2.f)
         = min(2000, 32000) = 2,000 → 0025 = 0432 = 32,000 - 2,000 = 30,000
       30% cap = 0.30 * 30,000 = 9,000
-      individual aportación (0463) = 1,200 → 0467 = 1,200
+      individual aportación (0465) = 1,200 → 0467 = 1,200
       1,200 < 1,500 (individual limit) and 1,200 < 9,000 (30% limit)
       0468 = min(1200, 10000, 9000) = 1,200   (below every cap → full reducción)
       0435 = 30,000 (no negative G/P balance); 0461 = 0; 0501 = 0
@@ -477,7 +505,7 @@ def test_individual_aportaciones_prevision_social_reduce_base_general() -> None:
         "individual-aportaciones-prevision-social-reduces-base",
         overrides={
             _C0003: Decimal("32000.00"),  # trabajo → nets to 0432 = 30,000 after otros gastos
-            _C0463: Decimal("1200.00"),  # individual aportación → 0467 = 1,200
+            _C0465: Decimal("1200.00"),  # individual aportación → 0467 = 1,200
         },
         expected=(
             _expected_output(target_casilla_id=_C0467, value=Decimal("1200.00")),
@@ -531,15 +559,15 @@ def test_plan_de_empleo_reduccion_capped_at_10000() -> None:
       trabajo rendimientos (0003) = 82,000 → 0019 (otros gastos, art. 19.2.f)
         = min(2000, 82000) = 2,000 → 0432 = 82,000 - 2,000 = 80,000
       30% cap = 0.30 * 80,000 = 24,000
-      plan de empleo aportación (0426) = 15,000 → 0467 = 15,000
-      0468 = min(15000, 10000, 24000) = 10,000   (€10k absolute cap applies)
+      contribución empresarial to the plan de empleo (0427) = 15,000 → 0467 = 15,000
+      0468 = min(24000, min(15000, 1500 + min(15000, 8500))) = 10,000   (€10k absolute cap applies)
       0500 = 80,000 - 10,000 = 70,000
     """
     scenario = _scenario_2025(
         "plan-empleo-reduccion-capped-10k",
         overrides={
             _C0003: Decimal("82000.00"),  # trabajo → nets to 0432 = 80,000 after otros gastos
-            _C0426: Decimal("15000.00"),  # plan de empleo aportación → 0467 = 15,000
+            _C0427: Decimal("15000.00"),  # contribución empresarial → 0467 = 15,000
         },
         expected=(
             _expected_output(target_casilla_id=_C0467, value=Decimal("15000.00")),
@@ -571,8 +599,8 @@ def test_art52_tiered_purely_individual_aportacion_capped_at_1500() -> None:
       trabajo rendimientos (0003) = 60,000 → 0019 (otros gastos, art. 19.2.f)
         = min(2000, 60000) = 2,000 → 0432 = 60,000 - 2,000 = 58,000
       30% cap = 0.30 * 58,000 = 17,400 (not binding)
-      individual aportación (0463) = 3,000 → 0467 = 3,000 (raw sum, unchanged)
-      individual pool = 0463 + 0465 = 3,000; employer-linked backing = 0
+      individual aportación (0465) = 3,000 → 0467 = 3,000 (raw sum, unchanged)
+      individual pool = 0465 = 3,000; employer-linked backing = 0
       pool cap = 1,500 + min(0, 8500) = 1,500
       0468 = min(17400, min(3000, 1500) + min(0, 5000)) = min(17400, 1500) = 1,500
       0500 = 58,000 - 1,500 = 56,500
@@ -581,7 +609,7 @@ def test_art52_tiered_purely_individual_aportacion_capped_at_1500() -> None:
         "art52-tiered-purely-individual-capped-1500",
         overrides={
             _C0003: Decimal("60000.00"),  # trabajo → nets to 0432 = 58,000 after otros gastos
-            _C0463: Decimal("3000.00"),  # purely individual aportación, no employer-linked backing
+            _C0465: Decimal("3000.00"),  # purely individual aportación, no employer-linked backing
         },
         expected=(
             _expected_output(target_casilla_id=_C0467, value=Decimal("3000.00")),
@@ -649,10 +677,10 @@ def test_art52_tiered_dependencia_uses_separate_5000_ceiling() -> None:
       trabajo rendimientos (0003) = 42,000 → 0019 (otros gastos, art. 19.2.f)
         = min(2000, 42000) = 2,000 → 0432 = 42,000 - 2,000 = 40,000
       30% cap = 0.30 * 40,000 = 12,000 (not binding)
-      individual aportación (0463) = 1,000 → within its own 1,500 sub-limit
+      individual aportación (0465) = 1,000 → within its own 1,500 sub-limit
       contribución seguro colectivo de dependencia (0466) = 6,000 → exceeds
         its own separate 5,000 ceiling, capped there
-      0467 = 0463 + 0466 = 1,000 + 6,000 = 7,000 (raw sum, unchanged)
+      0467 = 0465 + 0466 = 1,000 + 6,000 = 7,000 (raw sum, unchanged)
       individual pool = 1,000 (backing = 0) → capped at 1,500 → 1,000
       dependencia pool = 6,000 → capped at 5,000 → 5,000
       0468 = min(12000, 1000 + 5000) = min(12000, 6000) = 6,000
@@ -662,7 +690,7 @@ def test_art52_tiered_dependencia_uses_separate_5000_ceiling() -> None:
         "art52-tiered-dependencia-separate-5000-ceiling",
         overrides={
             _C0003: Decimal("42000.00"),  # trabajo → nets to 0432 = 40,000 after otros gastos
-            _C0463: Decimal("1000.00"),  # individual aportación, within the 1,500 sub-limit
+            _C0465: Decimal("1000.00"),  # individual aportación, within the 1,500 sub-limit
             _C0466: Decimal("6000.00"),  # dependencia contribution, exceeds its own 5,000 ceiling
         },
         expected=(

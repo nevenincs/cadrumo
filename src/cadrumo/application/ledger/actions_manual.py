@@ -84,6 +84,7 @@ from .protocols import (
     TransactionCatalogueCoCommitWriterProtocol,
 )
 from .rental_link_admission import verify_rental_link_references
+from .savings_link_admission import verify_savings_link_references
 
 _MANUAL_PROVIDER_NAME = "manual-ledger"
 
@@ -99,6 +100,7 @@ SOURCE_HASH_FIELDS_OMITTED_WHEN_ABSENT = frozenset(
     {
         "accrual_date",
         "arrendamiento_ref",
+        "concepto_capital_mobiliario",
         "exemption_article",
         "gasto_capital_inmobiliario",
         "inmueble_ref",
@@ -106,6 +108,7 @@ SOURCE_HASH_FIELDS_OMITTED_WHEN_ABSENT = frozenset(
         "iva_vehicle_use",
         "operation_date",
         "own_account_id",
+        "posicion_ref",
     }
 )
 
@@ -199,6 +202,15 @@ def prepare_manual_transaction(
         inmueble_ref=command.inmueble_ref,
         stored_arrendamiento_ref=None,
         stored_inmueble_ref=None,
+        loader=ports.rental_profile_facts,
+    )
+    verify_savings_link_references(
+        posicion_ref=command.posicion_ref,
+        concepto=None if command.concepto_capital_mobiliario is None else str(command.concepto_capital_mobiliario),
+        stored_posicion_ref=None,
+        stored_concepto=None,
+        booked_date=command.booked_date,
+        operation=ports.operation,
         loader=ports.rental_profile_facts,
     )
     event = build_ledger_bucket_event(
@@ -556,6 +568,8 @@ def transaction_from_command(
         "arrendamiento_ref": command.arrendamiento_ref,
         "inmueble_ref": command.inmueble_ref,
         "gasto_capital_inmobiliario": command.gasto_capital_inmobiliario,
+        "posicion_ref": command.posicion_ref,
+        "concepto_capital_mobiliario": command.concepto_capital_mobiliario,
         "counterparty_country": command.counterparty_country,
         "counterparty_identification_state": command.counterparty_identification_state,
         "source_jurisdiction": command.source_jurisdiction,

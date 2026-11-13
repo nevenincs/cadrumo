@@ -30,6 +30,7 @@ See Also:
 
 from __future__ import annotations
 
+from collections.abc import Collection
 from dataclasses import dataclass
 
 from ...core.casilla_id import CasillaId
@@ -42,6 +43,7 @@ from .edit_carry_withdrawal import carry_withdrawal_block, holds_carry_statement
 from .edit_models import (
     ModeloBindingEditIntentV1,
     ModeloEditAddressV1,
+    ModeloEditBindingAddressV1,
     ModeloEditBindingIntentKind,
     ModeloEditCarryWithdrawalBlock,
     ModeloEditFindingSeverity,
@@ -53,6 +55,7 @@ from .edit_models import (
     ModeloEditScalarAddressV1,
     ModeloEditScalarIntentKind,
     ModeloEditSubmissionV1,
+    ModeloEditWritableBindingOverrideSurfaceEntryV1,
     ModeloEditWritableScalarSurfaceEntryV1,
     ModeloScalarEditIntentV1,
 )
@@ -65,6 +68,7 @@ OVERRIDES_SOURCE_VALUE = "overrides_source_value"
 REQUIRED_EMPTY = "required_empty"
 OPERATOR_LAYER_UNKNOWN = "operator_layer_unknown"
 NOTHING_TO_RESTORE = "nothing_to_restore"
+CARRY_LEFT_OPEN = "carry_left_open"
 CALCULATION_WITHDRAWN = "calculation_withdrawn"
 CARRY_WITHDRAWAL_FILED = ModeloEditCarryWithdrawalBlock.FILED.value
 CARRY_WITHDRAWAL_KEEPS_ENTRIES = ModeloEditCarryWithdrawalBlock.KEEPS_ENTRIES.value
@@ -207,6 +211,60 @@ def _required_empty_findings(submission: ModeloEditSubmissionV1, head: _Head) ->
     return findings
 
 
+_CARRY_STATEMENT_KINDS = frozenset(
+    {
+        ModeloEditBindingIntentKind.ATTEST_NO_AMOUNT,
+        ModeloEditBindingIntentKind.SET_OVERRIDE_VALUE,
+        ModeloEditBindingIntentKind.ATTEST_PRIOR_VALUE,
+    }
+)
+
+
+def _open_carry_findings(
+    submission: ModeloEditSubmissionV1, head: _Head, prior_carry_bindings: Collection[BindingId]
+) -> list[ModeloEditFindingV1]:
+    """Block a statement of earlier-ejercicio carries that leaves another attestable carry holding no value.
+
+    The apply recalculates, and the calculation refuses while any such carry is
+    unstated, so a statement that covers only some of them could never commit.
+    Only the bindings of a prior-carry family count: a statement of another
+    family's absent figures never stops the calculation. A submission that
+    states no carry is not about them and raises nothing.
+    """
+    attestable = _attestable_carries(submission, prior_carry_bindings)
+    stated = {
+        intent.address.binding_id
+        for intent in submission.binding_intents
+        if intent.kind in _CARRY_STATEMENT_KINDS and intent.address.binding_id in attestable
+    }
+    if not stated:
+        return []
+    answered = stated | _held_carries(head)
+    return [
+        _finding(CARRY_LEFT_OPEN, ModeloEditFindingSeverity.ERROR, ModeloEditBindingAddressV1(binding_id=binding_id))
+        for binding_id in sorted(attestable - answered)
+    ]
+
+
+def _attestable_carries(
+    submission: ModeloEditSubmissionV1, prior_carry_bindings: Collection[BindingId]
+) -> frozenset[BindingId]:
+    """The prior-carry bindings the baseline admits a statement of absence on."""
+    return frozenset(
+        entry.binding_id
+        for entry in submission.baseline.permitted_surface
+        if isinstance(entry, ModeloEditWritableBindingOverrideSurfaceEntryV1)
+        and ModeloEditBindingIntentKind.ATTEST_NO_AMOUNT in entry.allowed_intents
+        and entry.binding_id in prior_carry_bindings
+    )
+
+
+def _held_carries(head: _Head) -> frozenset[BindingId]:
+    """The bindings the head already holds a value for, stored or the operator's own."""
+    stored = frozenset[BindingId]() if head.revision is None else frozenset(head.revision.binding_overrides)
+    return stored | head.operator_bindings
+
+
 def _carry_withdrawal_findings(
     submission: ModeloEditSubmissionV1,
     revision: CalculationRevision | None,
@@ -239,15 +297,18 @@ def preflight_modelo_edit(
     work_catalogue: WorkUnitCatalogue,
     calculation_catalogue: CalculationRevisionCatalogue,
     tax_id_format: SpanishTaxIdFormat | None,
+    prior_carry_bindings: Collection[BindingId],
     carry_bindings: frozenset[BindingId] = frozenset(),
 ) -> ModeloEditPreflightResultV1:
     """Recheck the baseline, then evaluate every intent and the resulting required casillas.
 
     ``tax_id_format`` is the governed Spanish tax-identifier format NIF values
     are validated with; ``None`` reports NIF values as refused rather than
-    validating them against nothing. ``carry_bindings`` are the bindings whose
-    unstated carry refuses the calculation; withdrawing a statement of one is
-    previewed as withdrawing the calculation.
+    validating them against nothing. ``prior_carry_bindings`` are the bindings
+    of the revision's prior-carry families, which one statement must cover together.
+    ``carry_bindings`` are the bindings whose unstated carry refuses the
+    calculation; withdrawing a statement of one is previewed as withdrawing the
+    calculation.
     """
     baseline = submission.baseline
     stale = reconfirm_modelo_edit_baseline(
@@ -276,6 +337,7 @@ def preflight_modelo_edit(
     for binding_intent in submission.binding_intents:
         findings.extend(_binding_findings(binding_intent, submission, head, tax_id_format=tax_id_format))
     findings.extend(_required_empty_findings(submission, head))
+    findings.extend(_open_carry_findings(submission, head, prior_carry_bindings))
     findings.extend(
         _carry_withdrawal_findings(submission, revision, work_catalogue=work_catalogue, carry_bindings=carry_bindings)
     )
@@ -284,6 +346,7 @@ def preflight_modelo_edit(
 
 __all__ = [
     "CALCULATION_WITHDRAWN",
+    "CARRY_LEFT_OPEN",
     "CARRY_WITHDRAWAL_FILED",
     "CARRY_WITHDRAWAL_KEEPS_ENTRIES",
     "CLEAR_OF_SOURCE_FED_CASILLA",

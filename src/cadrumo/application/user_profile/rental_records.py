@@ -21,7 +21,7 @@ exactly one. Every refusal names the command that resolves it.
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import TYPE_CHECKING, Final, Protocol
 
@@ -64,10 +64,11 @@ _DOOR_FAMILY: Final = {INMUEBLE_SECTION: "inmueble", ARRENDAMIENTO_SECTION: "arr
 
 @dataclass(frozen=True, slots=True)
 class RentalLedgerReferences:
-    """The lease and property references the ledger rows of one profile carry, with how many rows carry each."""
+    """The lease, property and position references of one profile's ledger rows, with the row count of each."""
 
     leases: Mapping[str, int]
     properties: Mapping[str, int]
+    positions: Mapping[str, int] = field(default_factory=dict[str, int])
 
 
 class RentalLedgerReferenceReader(Protocol):
@@ -78,7 +79,7 @@ class RentalLedgerReferenceReader(Protocol):
         ...
 
 
-class RentalRowMutation(StrEnum):
+class ProfileRecordRowMutation(StrEnum):
     """The row mutation an admission judges; it names the door command in a refusal."""
 
     ADD = "add"
@@ -86,7 +87,7 @@ class RentalRowMutation(StrEnum):
     REMOVE = "remove"
 
 
-def _door(section_key: str, mutation: RentalRowMutation) -> str:
+def _door(section_key: str, mutation: ProfileRecordRowMutation) -> str:
     return f"aeat config profile {_DOOR_FAMILY[section_key]} {mutation.value}"
 
 
@@ -121,7 +122,7 @@ def admit_rental_row(
     row: Mapping[str, str],
     path_values: Mapping[str, object],
     authority: PinnedAuthorityOperation,
-    mutation: RentalRowMutation,
+    mutation: ProfileRecordRowMutation,
 ) -> dict[str, str]:
     """Return the stored form of a rental row, refusing a row the profile cannot hold.
 
@@ -136,7 +137,7 @@ def admit_rental_row(
 
 
 def _admit_inmueble(
-    row_key: int, row: Mapping[str, str], path_values: Mapping[str, object], mutation: RentalRowMutation
+    row_key: int, row: Mapping[str, str], path_values: Mapping[str, object], mutation: ProfileRecordRowMutation
 ) -> dict[str, str]:
     record = _refusing_incoherent(lambda: inmueble_from_row(row_key, row), door=_door(INMUEBLE_SECTION, mutation))
     principal = record.inmueble_principal
@@ -145,7 +146,7 @@ def _admit_inmueble(
     }:
         raise UserProfileValidationError(
             translated_message=_PRINCIPAL_MISSING_LOCALE_KEY,
-            context={"principal": principal, "door": _door(INMUEBLE_SECTION, RentalRowMutation.ADD)},
+            context={"principal": principal, "door": _door(INMUEBLE_SECTION, ProfileRecordRowMutation.ADD)},
         )
     return inmueble_row_values(record)
 
@@ -155,7 +156,7 @@ def _admit_arrendamiento(
     row: Mapping[str, str],
     path_values: Mapping[str, object],
     authority: PinnedAuthorityOperation,
-    mutation: RentalRowMutation,
+    mutation: ProfileRecordRowMutation,
 ) -> dict[str, str]:
     record = _refusing_incoherent(
         lambda: arrendamiento_from_row(row_key, row), door=_door(ARRENDAMIENTO_SECTION, mutation)
@@ -163,7 +164,7 @@ def _admit_arrendamiento(
     if record.inmueble not in {inmueble.clave for inmueble in inmuebles_from_facts(path_values)}:
         raise UserProfileValidationError(
             translated_message=_LEASE_PROPERTY_MISSING_LOCALE_KEY,
-            context={"inmueble": record.inmueble, "door": _door(INMUEBLE_SECTION, RentalRowMutation.ADD)},
+            context={"inmueble": record.inmueble, "door": _door(INMUEBLE_SECTION, ProfileRecordRowMutation.ADD)},
         )
     if len(record.inquilinos) > _tenant_capacity(authority):
         raise UserProfileValidationError(
@@ -237,7 +238,7 @@ def _require_property_unreferenced_by_profile(row_key: int, path_values: Mapping
             context={
                 "inmueble": row_key,
                 "leases": ", ".join(str(lease) for lease in leases),
-                "door": _door(ARRENDAMIENTO_SECTION, RentalRowMutation.REMOVE),
+                "door": _door(ARRENDAMIENTO_SECTION, ProfileRecordRowMutation.REMOVE),
             },
         )
     accessories = sorted(
@@ -249,16 +250,16 @@ def _require_property_unreferenced_by_profile(row_key: int, path_values: Mapping
             context={
                 "inmueble": row_key,
                 "accessories": ", ".join(str(clave) for clave in accessories),
-                "door": _door(INMUEBLE_SECTION, RentalRowMutation.EDIT),
+                "door": _door(INMUEBLE_SECTION, ProfileRecordRowMutation.EDIT),
             },
         )
 
 
 __all__ = [
     "RENTAL_SECTIONS",
+    "ProfileRecordRowMutation",
     "RentalLedgerReferenceReader",
     "RentalLedgerReferences",
-    "RentalRowMutation",
     "admit_rental_row",
     "canonical_rental_ref",
     "is_rental_section",

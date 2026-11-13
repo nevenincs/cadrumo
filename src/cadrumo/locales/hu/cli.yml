@@ -550,6 +550,44 @@ cli:
           (%{invoice_id}); semmi sem jött létre.'
         yes_help: Üzleti számla törlésének megerősítése.
         yes_required: Add meg a --yes kapcsolót az üzleti számla törléséhez.
+      prevision_social:
+        amount_help: Az igazoláson szereplő hozzájárulás összege euróban, például
+          1500.00.
+        beneficiary_help: 'Kinek a rendszerébe került a hozzájárulás: taxpayer, spouse
+          vagy disabled_person. Ebben a verzióban csak a taxpayer számítódik.'
+        certificate_file_help: Az igazolás fájlja (PDF vagy kép), amelyet titkosítva
+          tárolsz; az SHA-256 értéke lesz a rekord bizonyítéka.
+        clave_help: Az igazoláson szereplő 345-ös modell szerinti kulcs, A-tól M-ig.
+        ejercicio_help: Az adóév (`ejercicio`), amelyben a hozzájárulást befizették.
+        employer_same_plan_help: A munkáltatód is fizetett-e hozzájárulást ugyanabba
+          a tervbe (yes vagy no). Kötelező annál a kulcsnál és alkulcsnál, amelynek
+          mezője ettől függ.
+        evidence_sha256_help: Egy már tárolt igazolás SHA-256 értéke, vagy ellenőrzés
+          a --certificate-file fájllal szemben. A rekordhoz a kettő közül az egyik
+          kell.
+        group_help: Rögzítsd a nyugdíj-hozzájárulási igazolásaidon szereplő hozzájárulásokat.
+        invalid_input: 'Egy érték érvénytelen: ellenőrizd az évet, a kibocsátói és
+          tervhivatkozást, a revíziót és az igazolás ujjlenyomatát.'
+        issuer_name_help: A kibocsátó cégneve.
+        issuer_ref_help: A lista által mutatott kibocsátói hivatkozás (issuer_ref).
+        issuer_tax_id_help: Az igazolást kiállító pénztárkezelő, kölcsönös biztosító
+          vagy biztosító adóazonosító száma (NIF).
+        list_help: Listázd egy év tárolt hozzájárulási rekordjait adóazonosító nélkül,
+          azzal a mezővel együtt, amelybe mindegyik kerül.
+        plan_name_help: A terv neve.
+        plan_nif_help: A terv vagy az alap adóazonosító száma (NIF), ha van sajátja.
+        plan_ref_help: A lista által mutatott tervhivatkozás (plan_ref), olyan rekordhoz,
+          amely terv-NIF-et tartalmaz.
+        record_expected_revision_help: A lista által mutatott revízió egy tárolt rekord
+          javításához. Első rekordnál hagyd el.
+        record_help: Rögzítsd egy igazoláson szereplő hozzájárulást egy tervhez, kulcshoz
+          és alkulcshoz egy évben, vagy javítsd a tároltat a --expected-revision kapcsolóval.
+        remove_expected_revision_help: A lista által a törlendő rekordhoz mutatott
+          revízió.
+        remove_help: Törölj egy hozzájárulási rekordot a lista által mutatott revízió
+          alapján.
+        subclave_help: Az igazoláson szereplő 345-ös modell szerinti alkulcs, ha a
+          kulcshoz tartozik ilyen.
       prorrata:
         activity_code_help: Ebbe a szektorba sorolt CNAE / IAE tevékenységi kód (ismételhető,
           legalább egy).
@@ -1050,6 +1088,7 @@ cli:
           actividades_prorrata: arányosítási nyilvántartás tevékenységei
           activo_extranjero: külföldi eszköz
           afiliado_cotizacion: járulék-kimutatás biztosítottja
+          aportacion_prevision_social: nyugdíj-hozzájárulási igazolás
           borrador_aeat: AEAT-tervezet
           compensacion_iva_anual: éves IVA-kompenzáció
           constante_diseno: Rekordterv-állandó
@@ -1722,14 +1761,27 @@ cli:
         attest_no_amount_help: Kijelented, hogy egy korábbi bevallásból áthozott tételnek
           nincs összege. Megmutatja a módosítás ellenőrzését; a --yes kapcsolóval
           általad kijelentett 0-ként rögzíti, a beírt számtól külön.
+        attest_prior_carries_amount_effect: 'kijelentve: %{amount}'
+        attest_prior_carries_amount_help: Megadsz egy összeget egy áthozott tételhez
+          a nincs függőben helyett, <rovat>=<összeg> alakban, a tételt tápláló rovattal
+          és 1234.56 formájú pozitív összeggel; ismételd meg több tételhez. A rovatnak
+          a --family által megnevezett családhoz kell tartoznia. A család többi nyitott
+          tétele nincs függőben lévőként lesz kijelentve
         attest_prior_carries_confirm: 'Még semmit sem jelentettél ki. Futtasd: `aeat
-          app modelo work attest-prior-carries %{work_unit_id} --yes` a kijelentéshez.'
-        attest_prior_carries_help: Kijelented, hogy egy bevallásban nincs korábbi
+          app modelo work attest-prior-carries %{work_unit_id}%{selection} --yes`
+          a kijelentéshez.'
+        attest_prior_carries_family_help: Ezt a korábbi évekből áthozott családot
+          nincs függőben lévő összegként jelented ki; ismételd meg az összes nyitott
+          család megnevezéséhez. Egyetlen kijelentésnek mindet le kell fedni
+        attest_prior_carries_help: 'Kijelented, hogy egy bevallásban nincs korábbi
           évekből fennmaradó összeged (a Modelo 100 esetén az előző négy adóév negatív
-          általános adóalapjai), minden olyan összegre, amelyre az űrlap felkínálja
-          a kijelentést. Megmutatja a kijelentést és a változás ellenőrzését; --yes
-          megadásával minden összeget általad kijelentett 0-ként rögzít, a beírt számtól
-          elkülönítve.
+          általános adóalapjai és negatív megtakarítási alap egyenlegei). Megmutatja
+          a kijelentést és a változás ellenőrzését; --yes megadásával minden összeget
+          általad kijelentett 0-ként rögzít, a beírt számtól elkülönítve. Egy kijelentés
+          minden nyitott családot lefed: nevezd meg mindegyiket a --family (ismételhető)
+          kapcsolóval, vagy egyiket sem, ha csak egy nyitott. Egy tétel összegének
+          megadásához használd a --amount kapcsolót; a család többi nyitott tétele
+          ekkor függő összeg nélküliként rögzül.'
         attest_prior_carries_yes_help: A kijelentés megerősítése és rögzítése a bevallásban
         attest_prior_value_help: Kijelented azt az összeget, amelyet egy bevallás
           egy olyan korábbi bevallásból vesz át, amelyet az alkalmazás nem tárol,
@@ -3000,6 +3052,17 @@ cli:
         state_help: '`observed` lezárt évre; `committed` még le nem zárt évre, amelyet
           teljesítés hiányában helyesbíteni kell.'
         year_help: Az a naptári év, amelyre az átlag vonatkozik.
+      posicion:
+        add_help: Adj hozzá egy pozíciót --value TÉNY=ÉRTÉK adatokkal; csak akkor
+          kerül mentésre, ha az adatok összhangban vannak.
+        clear_help: Töröl egy adatot a nevével; több adathoz ismételd az opciót.
+        edit_help: Módosítsd egy pozíció adatait, és töröld a megnevezetteket; a többi
+          marad.
+        help: Rögzítsd a bankszámláidat, lekötött betéteidet és értékpapírszámláidat.
+        list_help: Listázd a mentett pozíciókat a sorkulcsukkal.
+        remove_help: Töröld a pozíciót.
+        row_help: A pozíció sorkulcsa, ahogy a «list» mutatja.
+        value_help: Egy TÉNY=ÉRTÉK adat; több adathoz ismételd az opciót.
       recovery:
         channel_absent: A helyreállítási kód csak terminálon jeleníthető meg. Terminál
           nélküli gépen add meg a --recovery-handoff-fd és --recovery-verification-fd
@@ -3487,6 +3550,9 @@ cli:
       irpf_id_column: irpf-category (ezt az értéket add meg)
       irpf_purpose_activity_income_withholding: szakmai tevékenységi visszatartás
         (nettó bevétel vagy kiadás)
+      irpf_purpose_capital_gain: vagyoni nyereség vagy veszteség (még nincs kiszámítva)
+      irpf_purpose_capital_mobiliario_yield: ingó tőkéből származó jövedelem (kamat,
+        osztalék)
       irpf_purpose_employment_income: munkaviszonyból származó jövedelem (nem nettó
         számlákhoz)
       irpf_purpose_rent_expense_withholding: nettó bérleti díj visszatartása
@@ -3536,6 +3602,10 @@ cli:
       classification_help: A tranzakció üzleti besorolási állapota.
       classification_required: A --classification megadása kötelező, ha a --file nincs
         megadva.
+      concepto_capital_mobiliario_help: Mi a sor a megtakarítási pozíción belül, a
+        nyilvántartás által deklarált fogalmak egyike; ismeretlen értéket az elfogadottak
+        felsorolásával utasít el. Pozíciókapcsolat (--posicion) szükséges hozzá. Üres
+        szöveg törli.
       counterparty_country_help: Az ügyfél letelepedési országa (ISO 3166-1 alfa-2,
         például US, DE). Csak letelepedés; az áfa-azonosításhoz használd a --counterparty-identification-state
         kapcsolót.
@@ -3621,6 +3691,10 @@ cli:
       mixed_requires_business_pct: Elutasítva. A --classification MIXED értékhez üzleti
         arány szükséges. Adj meg --business-pct értéket 0 és 1 között, vagy sorold
         be a sort BUSINESS vagy PERSONAL kategóriába.
+      posicion_help: A tárolt megtakarítási pozíció sorkulcsa, amelyhez ez a sor tartozik.
+        Nem használható a --arrendamiento vagy az --inmueble kapcsolóval együtt. Üres
+        szöveg törli a kapcsolatot. A kapcsolt sor a capital_mobiliario jövedelemkategóriát
+        viseli.
       read_evidence_help: Olvasd be helyben a tranzakció csatolt bizonyítékát, és
         add át az osztályozónak.
       reaffirm_help: Egy már besorolt tranzakció besorolásának megerősítése.

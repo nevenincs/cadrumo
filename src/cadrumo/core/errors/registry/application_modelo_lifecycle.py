@@ -280,6 +280,56 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.modelo.carry_family_selection.ModeloPriorCarryFamilyNothingOpenError",
+        ErrorCode(
+            code="REFUSED_MODELO_PRIOR_CARRY_FAMILY_NOTHING_OPEN",
+            category=ErrorCategory.REFUSED,
+            message_key="application.modelo.errors.prior_carries_family_nothing_open",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.modelo.carry_family_selection.ModeloPriorCarryFamilyChoiceRequiredError",
+        ErrorCode(
+            code="REFUSED_MODELO_PRIOR_CARRY_FAMILY_CHOICE_REQUIRED",
+            category=ErrorCategory.REFUSED,
+            message_key="application.modelo.errors.prior_carries_family_choice_required",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.modelo.carry_amount_statement.ModeloPriorCarryAmountInvalidError",
+        ErrorCode(
+            code="REFUSED_MODELO_PRIOR_CARRY_AMOUNT_INVALID",
+            category=ErrorCategory.REFUSED,
+            message_key="application.modelo.errors.prior_carries_amount_invalid",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.modelo.carry_amount_statement.ModeloPriorCarryAmountNotACarryError",
+        ErrorCode(
+            code="REFUSED_MODELO_PRIOR_CARRY_AMOUNT_NOT_A_CARRY",
+            category=ErrorCategory.REFUSED,
+            message_key="application.modelo.errors.prior_carries_amount_not_a_carry",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.modelo.carry_amount_statement.ModeloPriorCarryAmountDuplicateError",
+        ErrorCode(
+            code="REFUSED_MODELO_PRIOR_CARRY_AMOUNT_DUPLICATE",
+            category=ErrorCategory.REFUSED,
+            message_key="application.modelo.errors.prior_carries_amount_duplicate",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.modelo.work_missing_input.ModeloPriorCarryAbsenceUnstatedError",
         ErrorCode(
             code="REFUSED_MODELO_PRIOR_CARRY_ABSENCE_UNSTATED",

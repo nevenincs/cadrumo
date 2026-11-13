@@ -145,6 +145,8 @@ _DECIMAL_OPERAND_ROLES: Mapping[VerificationPredicateOperator, tuple[str, ...]] 
     {
         VerificationPredicateOperator.POSITIVE_APPLICATION_LE_PRESENT_STOCK: ("application", "stock"),
         VerificationPredicateOperator.APPLICATION_EQUALS_PRESENT_MAXIMUM: ("application", "maximum"),
+        # A capacity and the stocks it is split across; every operand after the capacity is a stock.
+        VerificationPredicateOperator.APPLICATION_ORDER_IMMATERIAL: ("capacity", *("stock",) * 4),
     }
 )
 

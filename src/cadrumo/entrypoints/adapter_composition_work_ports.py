@@ -212,6 +212,9 @@ def build_calculation_action_ports(
     from ..adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
     from ..adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
     from ..adapters.persistence.profile.percepciones_observations import PercepcionObservationRepositoryAdapter
+    from ..adapters.persistence.profile.prevision_social_contribution_records import (
+        PrevisionSocialContributionRecordRepositoryAdapter,
+    )
     from ..adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
     from ..adapters.persistence.profile.retencion_soportada_records import (
         RetencionSoportadaAbsenceRepositoryAdapter,
@@ -318,6 +321,7 @@ def build_calculation_action_ports(
             repository=RetencionSoportadaRecordRepositoryAdapter(objects=objects),
             absences=RetencionSoportadaAbsenceRepositoryAdapter(objects=objects),
         ),
+        prevision_social_contribution_repository=PrevisionSocialContributionRecordRepositoryAdapter(objects=objects),
         credit_resolution_reader=CreditResolutionRepositoryAdapter(objects=objects),
         relation_override_migration=RelationOverrideMigration(),
     )
@@ -607,7 +611,10 @@ def build_ledger_membership_ports(
     from ..adapters.persistence.profile.catalogue_reads import build_invoice_catalogue_read_ports
     from ..adapters.persistence.profile.inventory import InventoryLedgerRepository
     from ..adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
-    from ..adapters.persistence.profile.retencion_soportada_records import RetencionSoportadaRecordRepositoryAdapter
+    from ..adapters.persistence.profile.retencion_soportada_records import (
+        RetencionSoportadaAbsenceRepositoryAdapter,
+        RetencionSoportadaRecordRepositoryAdapter,
+    )
     from ..adapters.persistence.profile.usage_ratios import load_usage_ratios
     from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
     from ..application.aggregation.ledger_membership import LedgerMembershipPorts
@@ -628,7 +635,8 @@ def build_ledger_membership_ports(
         usage_ratio_profile_loader=load_usage_ratios,
         inventory_repository=InventoryLedgerRepository(objects=objects),
         retencion_soportada_ports=RetencionSoportadaPorts(
-            repository=RetencionSoportadaRecordRepositoryAdapter(objects=objects)
+            repository=RetencionSoportadaRecordRepositoryAdapter(objects=objects),
+            absences=RetencionSoportadaAbsenceRepositoryAdapter(objects=objects),
         ),
     )
 

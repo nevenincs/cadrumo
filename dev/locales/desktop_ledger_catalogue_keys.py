@@ -339,6 +339,8 @@ DESKTOP_LEDGER_CATALOGUE_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.ledger.irpf_category.actividad_economica",
         "desktop.ledger.irpf_category.arrendamiento_local",
         "desktop.ledger.irpf_category.arrendamiento_vivienda_afecto",
+        "desktop.ledger.irpf_category.capital_mobiliario",
+        "desktop.ledger.irpf_category.ganancias_patrimoniales",
         "desktop.ledger.irpf_category.trabajo",
         "desktop.ledger.issue.next",
         "desktop.ledger.issue.none",

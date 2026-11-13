@@ -356,6 +356,80 @@ def test_application_equals_present_maximum_blocks_an_unknown_maximum_as_unresol
     assert dict(findings[0].message_facts) == {"predicate_id": "test-cuantia-maxima", "box": CASILLA_15}
 
 
+_APPLICATION_ORDER = 'application_order_immaterial(["14", "10", "11"])'
+
+
+@pytest.mark.parametrize(
+    ("casilla_values", "expected"),
+    (
+        pytest.param({}, True, id="no-stock"),
+        pytest.param({CASILLA_10: Decimal("700")}, True, id="one-stock-unknown-capacity"),
+        pytest.param({CASILLA_10: Decimal("700"), CASILLA_14: Decimal("100")}, True, id="one-stock-short-capacity"),
+        pytest.param(
+            {CASILLA_10: Decimal("700"), CASILLA_11: Decimal("0"), CASILLA_14: Decimal("1")}, True, id="zero-stock"
+        ),
+        pytest.param({CASILLA_10: Decimal("700"), CASILLA_11: Decimal("2100")}, False, id="two-stocks-unknown"),
+        pytest.param(
+            {CASILLA_10: Decimal("700"), CASILLA_11: Decimal("2100"), CASILLA_14: Decimal("0")},
+            True,
+            id="two-stocks-no-capacity",
+        ),
+        pytest.param(
+            {CASILLA_10: Decimal("700"), CASILLA_11: Decimal("2100"), CASILLA_14: Decimal("2799.99")},
+            False,
+            id="two-stocks-capacity-short-by-a-cent",
+        ),
+        pytest.param(
+            {CASILLA_10: Decimal("700"), CASILLA_11: Decimal("2100"), CASILLA_14: Decimal("2800")},
+            True,
+            id="two-stocks-capacity-covers",
+        ),
+    ),
+)
+def test_application_order_immaterial_contract(casilla_values: dict[CasillaId, Decimal], expected: bool) -> None:
+    """The order of the stocks matters only when two are positive and a positive capacity falls short."""
+    assert evaluate_predicate_expression(_APPLICATION_ORDER, casilla_values, workflow_profile()) is expected
+
+
+def _application_order_predicate() -> VerificationPredicateDefinition:
+    return VerificationPredicateDefinition(
+        id="application-order-immaterial:test-orden",
+        predicate_id="test-orden",
+        legal_refs=("ley-35-2006:art-49",),
+        expression=_APPLICATION_ORDER,
+        finding_kind="BLOCKING_RULE",
+    )
+
+
+def test_application_order_names_the_capacity_and_the_pending_total_it_falls_short_of() -> None:
+    findings = evaluate_verification_predicates(
+        (_application_order_predicate(),),
+        {CASILLA_10: Decimal("700"), CASILLA_11: Decimal("2100"), CASILLA_14: Decimal("1000")},
+        workflow_profile(),
+    )
+
+    assert len(findings) == 1
+    assert findings[0].kind is ModeloVerificationFindingKind.BLOCKING_RULE
+    assert findings[0].message_locale_key == "application.modelo.findings.application_order_unsettled"
+    assert dict(findings[0].message_facts) == {
+        "predicate_id": "test-orden",
+        "capacity": Decimal("1000"),
+        "pending_total": Decimal("2800"),
+    }
+
+
+def test_application_order_with_an_unknown_capacity_blocks_as_unresolved() -> None:
+    findings = evaluate_verification_predicates(
+        (_application_order_predicate(),),
+        {CASILLA_10: Decimal("700"), CASILLA_11: Decimal("2100")},
+        workflow_profile(),
+    )
+
+    assert len(findings) == 1
+    assert findings[0].message_locale_key == "application.modelo.findings.application_order_capacity_unresolved"
+    assert dict(findings[0].message_facts) == {"predicate_id": "test-orden", "pending_total": Decimal("2800")}
+
+
 def test_at_most_one_positive_blocks_only_multiple_positive_casillas() -> None:
     """at_most_one_positive treats absent, zero, and negative values as non-positive."""
 

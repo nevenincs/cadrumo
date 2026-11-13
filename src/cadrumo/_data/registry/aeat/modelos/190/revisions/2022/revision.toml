@@ -71,6 +71,12 @@ The credit reconciliation declares, for each Modelo 100 casilla that credits IRP
 legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-190-2020", "aeat-modelo-190-procedure"]
 
+[revisions."2022".family_dispositions.prevision_social_placements]
+reason = """
+The pension contribution placement declares, for each Modelo 345 clave and subclave a contribution certificate states, the Modelo 100 casilla of the reduction for contributions to social-welfare systems it reaches (LIRPF arts. 51 and 52). This modelo is not the annual Renta return and declares no casilla of that reduction, so there is no contribution for an entry to place."""
+legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2020", "aeat-modelo-190-procedure"]
+
 [revisions."2022".family_dispositions.dependency_classifications]
 reason = """
 A dependency classification records how another modelo's declarations reach this one. This edition's declarante resumen takes none: its three totals are the sums the record design itself states over this declaration's own type-2 perceptor records, so the whole calculation closes inside the edition. Every design from aeat-dr-190-2020 onward, and the 2025 instrucciones for casillas 01 to 03, define the totals the same way and none defines them from modelo 111, so no edition takes a cross-modelo edge. Empty because no cross-modelo edge exists, not because one is unbuilt."""

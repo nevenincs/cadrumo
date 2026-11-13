@@ -100,7 +100,9 @@ _CUOTA_DIFERENCIAL: CasillaId = validated_casilla_id("0610", surface="0610")
 _RESULTADO_DECLARACION: CasillaId = validated_casilla_id("0670", surface="0670")
 
 _BASE_LIQUIDABLE_GENERAL_LEAF: CasillaId = validated_casilla_id("0156", surface="0156")
-_BASE_LIQUIDABLE_AHORRO_LEAF: CasillaId = validated_casilla_id("0429", surface="0429")
+# The savings base is computed from its income (0429 = max(0041, 0)), so the
+# scenario keys the same amount as income from other financial assets, an input leaf.
+_OTROS_ACTIVOS_FINANCIEROS_LEAF: CasillaId = validated_casilla_id("0031", surface="0031")
 _RETENCION_TRABAJO: CasillaId = validated_casilla_id("0596", surface="0596")
 
 
@@ -119,6 +121,14 @@ def _bindings(revision_id: str) -> dict[str, Decimal]:
         "renta-profile-marriage-month-end": Decimal("0"),
         "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
         "renta-base-liquidable-negativa-general-em4-pendiente-inicio": Decimal("0"),
+        "renta-saldo-negativo-gyp-ahorro-em4-pendiente-inicio": Decimal("0"),
+        "renta-saldo-negativo-gyp-ahorro-em3-pendiente-inicio": Decimal("0"),
+        "renta-saldo-negativo-gyp-ahorro-em2-pendiente-inicio": Decimal("0"),
+        "renta-saldo-negativo-gyp-ahorro-em1-pendiente-inicio": Decimal("0"),
+        "renta-saldo-negativo-rcm-ahorro-em4-pendiente-inicio": Decimal("0"),
+        "renta-saldo-negativo-rcm-ahorro-em3-pendiente-inicio": Decimal("0"),
+        "renta-saldo-negativo-rcm-ahorro-em2-pendiente-inicio": Decimal("0"),
+        "renta-saldo-negativo-rcm-ahorro-em1-pendiente-inicio": Decimal("0"),
         "renta-base-liquidable-negativa-general-em3-pendiente-inicio": Decimal("0"),
         "renta-base-liquidable-negativa-general-em2-pendiente-inicio": Decimal("0"),
         "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),
@@ -153,7 +163,7 @@ def _scenario(ejercicio: int, *, retencion: str, scenario_id: str) -> RegistryCa
         period="0A",
         inputs={
             _BASE_LIQUIDABLE_GENERAL_LEAF: Decimal("23900.00"),
-            _BASE_LIQUIDABLE_AHORRO_LEAF: Decimal("2800.00"),
+            _OTROS_ACTIVOS_FINANCIEROS_LEAF: Decimal("2800.00"),
             _RETENCION_TRABAJO: Decimal(retencion),
         },
         hand_typed_bound_casillas={

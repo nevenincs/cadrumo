@@ -297,6 +297,27 @@ profile:
           label: Apellidos
         tax_id:
           label: NIF/NIE/CIF de identificación
+      inversiones_posicion:
+        fecha_fin:
+          label: Titular hasta
+        fecha_inicio:
+          label: Titular desde
+        identificador:
+          label: Tu identificador de la posición
+        pagador_nif:
+          label: NIF del pagador
+        pagador_nombre:
+          label: Nombre del pagador
+        pais_origen:
+          label: Estado de origen de los rendimientos
+        porcentaje_titularidad:
+          label: Tu porcentaje de titularidad
+        tipo:
+          choices:
+            cuenta: Cuenta corriente o de ahorro
+            deposito: Depósito a plazo
+            valores_negociables: Cuenta de valores
+          label: Clase de posición
       irpf:
         activity_income_imputation_criterion:
           choices:
@@ -896,6 +917,11 @@ profile:
       identity:
         summary: 'Tu nombre y NIF: para quién se preparan las declaraciones.'
         title: Identidad
+      inversiones_posicion:
+        summary: Tus cuentas bancarias, depósitos a plazo y cuentas de valores, una
+          fila por posición. Aquí van sus datos fijos; los importes salen del libro
+          mayor.
+        title: Posiciones de ahorro
       irpf:
         summary: Cómo se calcula tu IRPF y qué retenciones soportas.
         title: IRPF y retenciones

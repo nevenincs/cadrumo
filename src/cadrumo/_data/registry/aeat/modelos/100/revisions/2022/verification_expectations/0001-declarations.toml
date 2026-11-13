@@ -75,6 +75,70 @@ discrepancy_causes = [
 legal_refs = ["ley-35-2006:art-23", "ley-35-2006:art-81", "ley-35-2006:art-81-2"]
 source_refs = ["lirpf-cuota-chain-authority"]
 
+# Anexo C.3 applied and carry-forward rows of the negative savings balances
+# pending from earlier ejercicios, and the internal step 1/2 maxima that fix
+# 0439-0455 (art. 49.2). A filing prints the rows only when such a balance is
+# pending, so they reconcile when present and stay out of the coverage
+# denominator; the internal steps are never printed.
+[[revisions."2022".verification_expectations]]
+id = "modelo-100-saldos-negativos-ahorro-pendientes-reconcile-when-present"
+computed_casilla_ids = []
+reconcile_when_present_casilla_ids = [
+    "1260",
+    "1262",
+    "1263",
+    "1265",
+    "1266",
+    "1268",
+    "1269",
+    "1273",
+    "1275",
+    "1276",
+    "1278",
+    "1279",
+    "1281",
+    "1282",
+    "saldo-neg-gyp-ahorro-em1-paso1-maxima",
+    "saldo-neg-gyp-ahorro-em1-paso2-maxima",
+    "saldo-neg-gyp-ahorro-em1-resto-paso1",
+    "saldo-neg-gyp-ahorro-em2-paso1-maxima",
+    "saldo-neg-gyp-ahorro-em2-paso2-maxima",
+    "saldo-neg-gyp-ahorro-em2-resto-paso1",
+    "saldo-neg-gyp-ahorro-em3-paso1-maxima",
+    "saldo-neg-gyp-ahorro-em3-paso2-maxima",
+    "saldo-neg-gyp-ahorro-em3-resto-paso1",
+    "saldo-neg-gyp-ahorro-em4-paso1-maxima",
+    "saldo-neg-gyp-ahorro-em4-paso2-maxima",
+    "saldo-neg-gyp-ahorro-em4-resto-paso1",
+    "saldo-neg-gyp-ahorro-paso1-capacidad",
+    "saldo-neg-gyp-ahorro-paso2-capacidad",
+    "saldo-neg-rcm-ahorro-em1-paso1-maxima",
+    "saldo-neg-rcm-ahorro-em1-paso2-maxima",
+    "saldo-neg-rcm-ahorro-em1-resto-paso1",
+    "saldo-neg-rcm-ahorro-em2-paso1-maxima",
+    "saldo-neg-rcm-ahorro-em2-paso2-maxima",
+    "saldo-neg-rcm-ahorro-em2-resto-paso1",
+    "saldo-neg-rcm-ahorro-em3-paso1-maxima",
+    "saldo-neg-rcm-ahorro-em3-paso2-maxima",
+    "saldo-neg-rcm-ahorro-em3-resto-paso1",
+    "saldo-neg-rcm-ahorro-em4-paso1-maxima",
+    "saldo-neg-rcm-ahorro-em4-paso2-maxima",
+    "saldo-neg-rcm-ahorro-em4-resto-paso1",
+    "saldo-neg-rcm-ahorro-paso1-capacidad",
+    "saldo-neg-rcm-ahorro-paso2-capacidad",
+]
+tolerance = "0.01"
+rounding = "money-2"
+min_coverage = "0"
+discrepancy_causes = [
+    "extraction_unreliable",
+    "unmodelled_rule",
+    "rounding",
+    "correctness_divergence",
+]
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
 # Reconcile-when-present enrolment of the Ley 35/2006 art. 20 work-income
 # reduction 0023 and the rentas distintas del trabajo it is conditioned on.
 # Each is reconciled when a filing prints it and stays out of the coverage

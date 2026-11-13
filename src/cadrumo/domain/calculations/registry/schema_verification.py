@@ -431,6 +431,16 @@ KNOWN_VERIFICATION_PREDICATE_OPERATORS: frozenset[str] = frozenset(
         # LIRPF art. 50.3, whose compensation "deberá efectuarse en la cuantía
         # máxima que permita cada uno de los ejercicios siguientes".
         "application_equals_present_maximum",
+        # application_order_immaterial(["capacity_id", "stock_id", "stock_id", ...])
+        # — the amounts applied from several origin years of one kind do not
+        # depend on the order the origin years are taken in. Holds when at most
+        # one listed stock is strictly positive, when the capacity is at or
+        # below zero, or when the capacity covers every positive stock; an
+        # absent capacity with two or more positive stocks never holds. BLOCKING-
+        # only. Authored for LIRPF art. 49.2, which fixes the cuantía máxima a
+        # year compensates but states no order among the four origin years, so
+        # a result that turns on that order stays at calculation grade.
+        "application_order_immaterial",
         # casilla_equals_implies_nonzero(["antecedent_casilla_id", "literal",
         # "consequent_casilla_id"]) — categorical-conditional material
         # implication: when the operator-entered raw text value of the named
@@ -567,6 +577,7 @@ class VerificationPredicateOperator(StrEnum):
     CAP_LE_WHEN_POSITIVE = "cap_le_when_positive"
     POSITIVE_APPLICATION_LE_PRESENT_STOCK = "positive_application_le_present_stock"
     APPLICATION_EQUALS_PRESENT_MAXIMUM = "application_equals_present_maximum"
+    APPLICATION_ORDER_IMMATERIAL = "application_order_immaterial"
     CASILLA_EQUALS_IMPLIES_DIVERGES = "casilla_equals_implies_diverges"
     CASILLA_EQUALS_IMPLIES_NONZERO = "casilla_equals_implies_nonzero"
     CASILLA_EQUALS_IMPLIES_ZERO = "casilla_equals_implies_zero"
@@ -687,6 +698,12 @@ VERIFICATION_PREDICATE_SPECIFICATIONS: Mapping[
             VerificationPredicateSyntax.CASILLA_LIST,
             minimum_casilla_ids=2,
             maximum_casilla_ids=2,
+        ),
+        # A capacity and at least two stocks: one stock has no order to settle.
+        VerificationPredicateOperator.APPLICATION_ORDER_IMMATERIAL: _predicate_specification(
+            VerificationPredicateOperator.APPLICATION_ORDER_IMMATERIAL,
+            VerificationPredicateSyntax.CASILLA_LIST,
+            minimum_casilla_ids=3,
         ),
         VerificationPredicateOperator.CASILLA_EQUALS_IMPLIES_DIVERGES: _predicate_specification(
             VerificationPredicateOperator.CASILLA_EQUALS_IMPLIES_DIVERGES,
@@ -1022,6 +1039,11 @@ class VerificationPredicateDefinition(RegistryModel):
       Applying less or more than the maximum is violated, and an absent
       maximum is violated whatever the application, because the amount the
       law requires is unknown.
+    - ``application_order_immaterial(["capacity_id", "stock_id", ...])`` — the
+      split of a capacity across several origin stocks does not depend on
+      their order: at most one stock is positive, the capacity is at or below
+      zero, or it covers every positive stock. An absent capacity with two or
+      more positive stocks is violated.
     - ``implies_nonzero(["antecedent_id", "consequent_id"])`` — material
       implication with a strictly-positive antecedent test: predicate
       holds iff ``casilla_values[antecedent] <= 0`` OR

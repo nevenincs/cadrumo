@@ -67,6 +67,10 @@ def _durable_register_note_reason(diagnostic: CalculationSourceDiagnostic) -> _D
         return "register_owned_capital_acquisition"
     if diagnostic.reason == "inventory_book_claimed_purchase":
         return "inventory_book_claimed_purchase"
+    return _durable_ledger_note_reason(diagnostic)
+
+
+def _durable_ledger_note_reason(diagnostic: CalculationSourceDiagnostic) -> _DurableSourceIssueReason | None:
     if diagnostic.reason == "ledger_expense_may_be_durable":
         return "ledger_expense_may_be_durable"
     return _durable_household_note_reason(diagnostic)
@@ -80,6 +84,8 @@ def _durable_household_note_reason(diagnostic: CalculationSourceDiagnostic) -> _
         return "household_row_fact_unstated"
     if diagnostic.reason == "ascendant_disability_minimum_not_computed":
         return "ascendant_disability_minimum_not_computed"
+    if diagnostic.reason == "income_family_not_computed":
+        return "income_family_not_computed"
     return None
 
 
@@ -212,6 +218,7 @@ _DurableSourceIssueReason = Literal[
     "household_rows_incomplete",
     "household_row_fact_unstated",
     "ascendant_disability_minimum_not_computed",
+    "income_family_not_computed",
     "advisory_binding_value",
     "credit_source_disagreement",
     "credit_cross_check_absent",

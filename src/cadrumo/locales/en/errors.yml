@@ -453,6 +453,8 @@ errors:
       be persisted.
     canonical_persistence_degradation: The persistence capability could not provide
       the requested operation.
+    canonical_prevision_social_contribution_persistence: Your pension contribution
+      records could not be read or saved.
     canonical_retencion_observation_persistence: Retention observations could not
       be persisted.
     canonical_retencion_soportada_persistence: The withholding records from your payers
@@ -829,6 +831,22 @@ errors:
     filing_export_field_projection_ref_undeclared: The export field %{field} declares
       no projection reference. The application derives this from its own export design,
       so no change to your data repairs it.
+    filing_export_input_dictionary_field_undeclared: 'The export layout %{layout}
+      cannot place the field %{field}: neither of its dictionaries declares it. The
+      application derives this from its own export design, so no change to your data
+      repairs it.'
+    filing_export_input_dictionary_not_repeated: 'The export layout %{layout} cannot
+      place the input-dictionary field %{field} at %{path}: no element the official
+      XSD repeats encloses it. The application derives this from its own export design,
+      so no change to your data repairs it.'
+    filing_export_input_dictionary_outside_xsd: 'The export layout %{layout} cannot
+      place the input-dictionary field %{field} at %{path}: the official XSD declares
+      no such element. The application derives this from its own export design, so
+      no change to your data repairs it.'
+    filing_export_input_dictionary_path_conflict: 'The export layout %{layout} cannot
+      place the input-dictionary field %{field} at %{path}: the declaration dictionary
+      already defines that record or path as %{declared_field}. The application derives
+      this from its own export design, so no change to your data repairs it.'
     filing_export_layout_not_owned_by_snapshot: The export layout is not owned by
       the selected registry snapshot. The application derives this from its own export
       design, so no change to your data repairs it.
@@ -989,6 +1007,9 @@ errors:
     filing_export_xml_row_column_undeclared: The binding %{binding} carries rows but
       declares no row column. The application derives this from its own export design,
       so no change to your data repairs it.
+    filing_export_xml_row_total_box_unresolved: The binding %{binding} totals row
+      columns but fills no single box. The application derives this from its own export
+      design, so no change to your data repairs it.
     filing_export_xml_serialiser_not_bytes: The XML serialiser returned %{type}, not
       bytes. The application derives this from its own export design, so no change
       to your data repairs it.
@@ -1113,6 +1134,10 @@ errors:
       both as having no amount and as having a stated amount. The application wrote
       that record itself, so it was altered or damaged and the calculation cannot
       use it.
+    operator_layer_income_family_entry_digest_malformed: The stored record of the
+      figures entered by hand for income family %{family} does not hold a well-formed
+      digest of its ledger rows. The application wrote that record itself, so it was
+      altered or damaged and the calculation cannot use it.
     operator_layer_value_attestation_not_canonical: The stored value statement for
       binding %{binding_id} does not hold a canonical decimal amount. The application
       wrote that record itself, so it was altered or damaged and the calculation cannot
@@ -1444,6 +1469,10 @@ errors:
     pension_reduccion_total_contributions_not_positive: The total contributions to
       the pension plan must be greater than zero; you gave %{value}. Enter the total
       of all contributions.
+    prevision_social_contribution_revision_conflict: The pension contribution record
+      changed since you read it; read it again before saving.
+    prevision_social_contribution_write_refused: The pension contribution record was
+      not saved.
     producer_capture_not_current: A producer projection changed while it was being
       read; capture it again.
     profile_access_administration_denied: Your current access does not allow managing
@@ -2106,5 +2135,14 @@ errors:
       category {category}; set it with “{door}” and --irpf-category.
     rental_property_unknown: The property {ref} is not one of the properties in your
       profile. List them with “{door}”.
+    savings_concept_kind: The concept {concepto} is admitted only on a {kind} position,
+      and position {ref} is of another kind. Choose another concept or position with
+      “{door}”.
+    savings_concept_unknown: 'Unrecognised --concepto-capital-mobiliario {value!r}.
+      Accepted concepts: {accepted}.'
+    savings_link_category: A row linked to a savings position must carry the income
+      category {category}; set it with “{door}” and --irpf-category.
+    savings_position_unknown: The savings position {ref} is not one of the positions
+      in your profile. List them with “{door}”.
     unknown_ledger_provider: 'Unknown ledger provider {provider!r}. Recognised providers:
       {providers}.'

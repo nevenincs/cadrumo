@@ -40,6 +40,8 @@ LedgerClassifyPatchField = Literal[
     "arrendamiento_ref",
     "inmueble_ref",
     "gasto_capital_inmobiliario",
+    "posicion_ref",
+    "concepto_capital_mobiliario",
     "notes",
 ]
 
@@ -64,6 +66,8 @@ CLASSIFY_FIELD_NAMES = frozenset(
         "arrendamiento_ref",
         "inmueble_ref",
         "gasto_capital_inmobiliario",
+        "posicion_ref",
+        "concepto_capital_mobiliario",
         "notes",
     },
 )
@@ -115,6 +119,8 @@ class LedgerClassifyPatch(BaseModel):
     arrendamiento_ref: LedgerClassifyShortText | None = None
     inmueble_ref: LedgerClassifyShortText | None = None
     gasto_capital_inmobiliario: LedgerClassifyShortText | None = None
+    posicion_ref: LedgerClassifyShortText | None = None
+    concepto_capital_mobiliario: LedgerClassifyShortText | None = None
     notes: LedgerClassifyLongText | None = None
 
     @field_validator("business_classification")

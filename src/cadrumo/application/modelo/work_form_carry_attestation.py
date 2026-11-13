@@ -35,6 +35,12 @@ _ACTION_LOCALE_KEYS: Final[Mapping[AbsenceAttestationFamily, str]] = MappingProx
         AbsenceAttestationFamily.RENTA_NEGATIVE_GENERAL_BASES_PENDING: (
             "application.modelo.work_form.carry_attestation.renta_negative_general_bases_pending.action"
         ),
+        AbsenceAttestationFamily.RENTA_NEGATIVE_SAVINGS_CAPITAL_INCOME_PENDING: (
+            "application.modelo.work_form.carry_attestation.renta_negative_savings_capital_income_pending.action"
+        ),
+        AbsenceAttestationFamily.RENTA_NEGATIVE_SAVINGS_GAINS_LOSSES_PENDING: (
+            "application.modelo.work_form.carry_attestation.renta_negative_savings_gains_losses_pending.action"
+        ),
         AbsenceAttestationFamily.RENTA_TRABAJO_INCOME_NOT_STATED: (
             "application.modelo.work_form.carry_attestation.renta_trabajo_income_not_stated.action"
         ),
@@ -45,6 +51,12 @@ _STATEMENT_LOCALE_KEYS: Final[Mapping[AbsenceAttestationFamily, str]] = MappingP
         AbsenceAttestationFamily.RENTA_NEGATIVE_GENERAL_BASES_PENDING: (
             "application.modelo.work_form.carry_attestation.renta_negative_general_bases_pending.statement"
         ),
+        AbsenceAttestationFamily.RENTA_NEGATIVE_SAVINGS_CAPITAL_INCOME_PENDING: (
+            "application.modelo.work_form.carry_attestation.renta_negative_savings_capital_income_pending.statement"
+        ),
+        AbsenceAttestationFamily.RENTA_NEGATIVE_SAVINGS_GAINS_LOSSES_PENDING: (
+            "application.modelo.work_form.carry_attestation.renta_negative_savings_gains_losses_pending.statement"
+        ),
         AbsenceAttestationFamily.RENTA_TRABAJO_INCOME_NOT_STATED: (
             "application.modelo.work_form.carry_attestation.renta_trabajo_income_not_stated.statement"
         ),
@@ -54,6 +66,12 @@ _EFFECT_LOCALE_KEYS: Final[Mapping[AbsenceAttestationFamily, str]] = MappingProx
     {
         AbsenceAttestationFamily.RENTA_NEGATIVE_GENERAL_BASES_PENDING: (
             "application.modelo.work_form.carry_attestation.renta_negative_general_bases_pending.effect"
+        ),
+        AbsenceAttestationFamily.RENTA_NEGATIVE_SAVINGS_CAPITAL_INCOME_PENDING: (
+            "application.modelo.work_form.carry_attestation.renta_negative_savings_capital_income_pending.effect"
+        ),
+        AbsenceAttestationFamily.RENTA_NEGATIVE_SAVINGS_GAINS_LOSSES_PENDING: (
+            "application.modelo.work_form.carry_attestation.renta_negative_savings_gains_losses_pending.effect"
         ),
         AbsenceAttestationFamily.RENTA_TRABAJO_INCOME_NOT_STATED: (
             "application.modelo.work_form.carry_attestation.renta_trabajo_income_not_stated.effect"

@@ -194,3 +194,226 @@ id = "application-equals-present-maximum:compensacion-base-neg-general-em1-cuant
 predicate_id = "modelo-100-2022-compensacion-base-neg-general-em1-cuantia-maxima"
 expression = 'application_equals_present_maximum(["1389", "base-liq-neg-general-em1-aplicada-maxima"])'
 legal_refs = ["ley-35-2006:art-50"]
+
+# LIRPF art. 49.2 gates on the savings compensation (Anexo C.3). Each applied box
+# 0439-0455 needs its row's pending balance (stock gate) and must equal the
+# row's computed maximum (cuantía-máxima gate). The order gate keeps a result at
+# calculation grade where the split between origin years of one kind turns on
+# an order no official text states: more than one origin year with a pending
+# balance and a positive step capacity smaller than their sum.
+
+[[revisions."2022".verification_predicates]]
+id = "positive-application-le-present-stock:compensacion-saldo-neg-gyp-ahorro-em4-paso1-no-excede-stock"
+predicate_id = "modelo-100-2022-compensacion-saldo-neg-gyp-ahorro-em4-paso1-no-excede-stock"
+expression = 'positive_application_le_present_stock(["0439", "1259"])'
+legal_refs = ["ley-35-2006:art-49"]
+
+[[revisions."2022".verification_predicates]]
+id = "application-equals-present-maximum:compensacion-saldo-neg-gyp-ahorro-em4-paso1-cuantia-maxima"
+predicate_id = "modelo-100-2022-compensacion-saldo-neg-gyp-ahorro-em4-paso1-cuantia-maxima"
+expression = 'application_equals_present_maximum(["0439", "saldo-neg-gyp-ahorro-em4-paso1-maxima"])'
+legal_refs = ["ley-35-2006:art-49"]
+
+[[revisions."2022".verification_predicates]]
+id = "positive-application-le-present-stock:compensacion-saldo-neg-gyp-ahorro-em3-paso1-no-excede-stock"
+predicate_id = "modelo-100-2022-compensacion-saldo-neg-gyp-ahorro-em3-paso1-no-excede-stock"
+expression = 'positive_application_le_present_stock(["0440", "1261"])'
+legal_refs = ["ley-35-2006:art-49"]
+
+[[revisions."2022".verification_predicates]]
+id = "application-equals-present-maximum:compensacion-saldo-neg-gyp-ahorro-em3-paso1-cuantia-maxima"
+predicate_id = "modelo-100-2022-compensacion-saldo-neg-gyp-ahorro-em3-paso1-cuantia-maxima"
+expression = 'application_equals_present_maximum(["0440", "saldo-neg-gyp-ahorro-em3-paso1-maxima"])'
+legal_refs = ["ley-35-2006:art-49"]
+
+[[revisions."2022".verification_predicates]]
+id = "positive-application-le-present-stock:compensacion-saldo-neg-gyp-ahorro-em2-paso1-no-excede-stock"
+predicate_id = "modelo-100-2022-compensacion-saldo-neg-gyp-ahorro-em2-paso1-no-excede-stock"
+expression = 'positive_application_le_present_stock(["0441", "1264"])'
+legal_refs = ["ley-35-2006:art-49"]
+
+[[revisions."2022".verification_predicates]]
+id = "application-equals-present-maximum:compensacion-saldo-neg-gyp-ahorro-em2-paso1-cuantia-maxima"
+predicate_id = "modelo-100-2022-compensacion-saldo-neg-gyp-ahorro-em2-paso1-cuantia-maxima"
+expression = 'application_equals_present_maximum(["0441", "saldo-neg-gyp-ahorro-em2-paso1-maxima"])'
+legal_refs = ["ley-35-2006:art-49"]
+
+[[revisions."2022".verification_predicates]]
+id = "positive-application-le-present-stock:compensacion-saldo-neg-gyp-ahorro-em1-paso1-no-excede-stock"
+predicate_id = "modelo-100-2022-compensacion-saldo-neg-gyp-ahorro-em1-paso1-no-excede-stock"
+expression = 'positive_application_le_present_stock(["0442", "1267"])'
+legal_refs = ["ley-35-2006:art-49"]
+
+[[revisions."2022".verification_predicates]]
+id = "application-equals-present-maximum:compensacion-saldo-neg-gyp-ahorro-em1-paso1-cuantia-maxima"
+predicate_id = "modelo-100-2022-compensacion-saldo-neg-gyp-ahorro-em1-paso1-cuantia-maxima"
+expression = 'application_equals_present_maximum(["0442", "saldo-neg-gyp-ahorro-em1-paso1-maxima"])'
+legal_refs = ["ley-35-2006:art-49"]
+
+[[revisions."2022".verification_predicates]]
+id = "positive-application-le-present-stock:compensacion-saldo-neg-gyp-ahorro-em4-paso2-no-excede-stock"
+predicate_id = "modelo-100-2022-compensacion-saldo-neg-gyp-ahorro-em4-paso2-no-excede-stock"
+expression = 'positive_application_le_present_stock(["0453", "saldo-neg-gyp-ahorro-em4-resto-paso1"])'
+legal_refs = ["ley-35-2006:art-49"]
+
+[[revisions."2022".verification_predicates]]
+id = "application-equals-present-maximum:compensacion-saldo-neg-gyp-ahorro-em4-paso2-cuantia-maxima"
+predicate_id = "modelo-100-2022-compensacion-saldo-neg-gyp-ahorro-em4-paso2-cuantia-maxima"
+expression = 'application_equals_present_maximum(["0453", "saldo-neg-gyp-ahorro-em4-paso2-maxima"])'
+legal_refs = ["ley-35-2006:art-49"]
+
+[[revisions."2022".verification_predicates]]
+id = "positive-application-le-present-stock:compensacion-saldo-neg-gyp-ahorro-em3-paso2-no-excede-stock"
+predicate_id = "modelo-100-2022-compensacion-saldo-neg-gyp-ahorro-em3-paso2-no-excede-stock"
+expression = 'positive_application_le_present_stock(["0454", "saldo-neg-gyp-ahorro-em3-resto-paso1"])'
+legal_refs = ["ley-35-2006:art-49"]
+
+[[revisions."2022".verification_predicates]]
+id = "application-equals-present-maximum:compensacion-saldo-neg-gyp-ahorro-em3-paso2-cuantia-maxima"
+predicate_id = "modelo-100-2022-compensacion-saldo-neg-gyp-ahorro-em3-paso2-cuantia-maxima"
+expression = 'application_equals_present_maximum(["0454", "saldo-neg-gyp-ahorro-em3-paso2-maxima"])'
+legal_refs = ["ley-35-2006:art-49"]
+
+[[revisions."2022".verification_predicates]]
+id = "positive-application-le-present-stock:compensacion-saldo-neg-gyp-ahorro-em2-paso2-no-excede-stock"
+predicate_id = "modelo-100-2022-compensacion-saldo-neg-gyp-ahorro-em2-paso2-no-excede-stock"
+expression = 'positive_application_le_present_stock(["0455", "saldo-neg-gyp-ahorro-em2-resto-paso1"])'
+legal_refs = ["ley-35-2006:art-49"]
+
+[[revisions."2022".verification_predicates]]
+id = "application-equals-present-maximum:compensacion-saldo-neg-gyp-ahorro-em2-paso2-cuantia-maxima"
+predicate_id = "modelo-100-2022-compensacion-saldo-neg-gyp-ahorro-em2-paso2-cuantia-maxima"
+expression = 'application_equals_present_maximum(["0455", "saldo-neg-gyp-ahorro-em2-paso2-maxima"])'
+legal_refs = ["ley-35-2006:art-49"]
+
+[[revisions."2022".verification_predicates]]
+id = "positive-application-le-present-stock:compensacion-saldo-neg-gyp-ahorro-em1-paso2-no-excede-stock"
+predicate_id = "modelo-100-2022-compensacion-saldo-neg-gyp-ahorro-em1-paso2-no-excede-stock"
+expression = 'positive_application_le_present_stock(["0448", "saldo-neg-gyp-ahorro-em1-resto-paso1"])'
+legal_refs = ["ley-35-2006:art-49"]
+
+[[revisions."2022".verification_predicates]]
+id = "application-equals-present-maximum:compensacion-saldo-neg-gyp-ahorro-em1-paso2-cuantia-maxima"
+predicate_id = "modelo-100-2022-compensacion-saldo-neg-gyp-ahorro-em1-paso2-cuantia-maxima"
+expression = 'application_equals_present_maximum(["0448", "saldo-neg-gyp-ahorro-em1-paso2-maxima"])'
+legal_refs = ["ley-35-2006:art-49"]
+
+[[revisions."2022".verification_predicates]]
+id = "application-order-immaterial:compensacion-saldo-neg-gyp-ahorro-paso1-orden-indiferente"
+predicate_id = "modelo-100-2022-compensacion-saldo-neg-gyp-ahorro-paso1-orden-indiferente"
+expression = 'application_order_immaterial(["saldo-neg-gyp-ahorro-paso1-capacidad", "1259", "1261", "1264", "1267"])'
+legal_refs = ["ley-35-2006:art-49"]
+
+[[revisions."2022".verification_predicates]]
+id = "application-order-immaterial:compensacion-saldo-neg-gyp-ahorro-paso2-orden-indiferente"
+predicate_id = "modelo-100-2022-compensacion-saldo-neg-gyp-ahorro-paso2-orden-indiferente"
+expression = 'application_order_immaterial(["saldo-neg-gyp-ahorro-paso2-capacidad", "saldo-neg-gyp-ahorro-em4-resto-paso1", "saldo-neg-gyp-ahorro-em3-resto-paso1", "saldo-neg-gyp-ahorro-em2-resto-paso1", "saldo-neg-gyp-ahorro-em1-resto-paso1"])'
+legal_refs = ["ley-35-2006:art-49"]
+
+[[revisions."2022".verification_predicates]]
+id = "positive-application-le-present-stock:compensacion-saldo-neg-rcm-ahorro-em4-paso1-no-excede-stock"
+predicate_id = "modelo-100-2022-compensacion-saldo-neg-rcm-ahorro-em4-paso1-no-excede-stock"
+expression = 'positive_application_le_present_stock(["0449", "1272"])'
+legal_refs = ["ley-35-2006:art-49"]
+
+[[revisions."2022".verification_predicates]]
+id = "application-equals-present-maximum:compensacion-saldo-neg-rcm-ahorro-em4-paso1-cuantia-maxima"
+predicate_id = "modelo-100-2022-compensacion-saldo-neg-rcm-ahorro-em4-paso1-cuantia-maxima"
+expression = 'application_equals_present_maximum(["0449", "saldo-neg-rcm-ahorro-em4-paso1-maxima"])'
+legal_refs = ["ley-35-2006:art-49"]
+
+[[revisions."2022".verification_predicates]]
+id = "positive-application-le-present-stock:compensacion-saldo-neg-rcm-ahorro-em3-paso1-no-excede-stock"
+predicate_id = "modelo-100-2022-compensacion-saldo-neg-rcm-ahorro-em3-paso1-no-excede-stock"
+expression = 'positive_application_le_present_stock(["0450", "1274"])'
+legal_refs = ["ley-35-2006:art-49"]
+
+[[revisions."2022".verification_predicates]]
+id = "application-equals-present-maximum:compensacion-saldo-neg-rcm-ahorro-em3-paso1-cuantia-maxima"
+predicate_id = "modelo-100-2022-compensacion-saldo-neg-rcm-ahorro-em3-paso1-cuantia-maxima"
+expression = 'application_equals_present_maximum(["0450", "saldo-neg-rcm-ahorro-em3-paso1-maxima"])'
+legal_refs = ["ley-35-2006:art-49"]
+
+[[revisions."2022".verification_predicates]]
+id = "positive-application-le-present-stock:compensacion-saldo-neg-rcm-ahorro-em2-paso1-no-excede-stock"
+predicate_id = "modelo-100-2022-compensacion-saldo-neg-rcm-ahorro-em2-paso1-no-excede-stock"
+expression = 'positive_application_le_present_stock(["0451", "1277"])'
+legal_refs = ["ley-35-2006:art-49"]
+
+[[revisions."2022".verification_predicates]]
+id = "application-equals-present-maximum:compensacion-saldo-neg-rcm-ahorro-em2-paso1-cuantia-maxima"
+predicate_id = "modelo-100-2022-compensacion-saldo-neg-rcm-ahorro-em2-paso1-cuantia-maxima"
+expression = 'application_equals_present_maximum(["0451", "saldo-neg-rcm-ahorro-em2-paso1-maxima"])'
+legal_refs = ["ley-35-2006:art-49"]
+
+[[revisions."2022".verification_predicates]]
+id = "positive-application-le-present-stock:compensacion-saldo-neg-rcm-ahorro-em1-paso1-no-excede-stock"
+predicate_id = "modelo-100-2022-compensacion-saldo-neg-rcm-ahorro-em1-paso1-no-excede-stock"
+expression = 'positive_application_le_present_stock(["0452", "1280"])'
+legal_refs = ["ley-35-2006:art-49"]
+
+[[revisions."2022".verification_predicates]]
+id = "application-equals-present-maximum:compensacion-saldo-neg-rcm-ahorro-em1-paso1-cuantia-maxima"
+predicate_id = "modelo-100-2022-compensacion-saldo-neg-rcm-ahorro-em1-paso1-cuantia-maxima"
+expression = 'application_equals_present_maximum(["0452", "saldo-neg-rcm-ahorro-em1-paso1-maxima"])'
+legal_refs = ["ley-35-2006:art-49"]
+
+[[revisions."2022".verification_predicates]]
+id = "positive-application-le-present-stock:compensacion-saldo-neg-rcm-ahorro-em4-paso2-no-excede-stock"
+predicate_id = "modelo-100-2022-compensacion-saldo-neg-rcm-ahorro-em4-paso2-no-excede-stock"
+expression = 'positive_application_le_present_stock(["0443", "saldo-neg-rcm-ahorro-em4-resto-paso1"])'
+legal_refs = ["ley-35-2006:art-49"]
+
+[[revisions."2022".verification_predicates]]
+id = "application-equals-present-maximum:compensacion-saldo-neg-rcm-ahorro-em4-paso2-cuantia-maxima"
+predicate_id = "modelo-100-2022-compensacion-saldo-neg-rcm-ahorro-em4-paso2-cuantia-maxima"
+expression = 'application_equals_present_maximum(["0443", "saldo-neg-rcm-ahorro-em4-paso2-maxima"])'
+legal_refs = ["ley-35-2006:art-49"]
+
+[[revisions."2022".verification_predicates]]
+id = "positive-application-le-present-stock:compensacion-saldo-neg-rcm-ahorro-em3-paso2-no-excede-stock"
+predicate_id = "modelo-100-2022-compensacion-saldo-neg-rcm-ahorro-em3-paso2-no-excede-stock"
+expression = 'positive_application_le_present_stock(["0444", "saldo-neg-rcm-ahorro-em3-resto-paso1"])'
+legal_refs = ["ley-35-2006:art-49"]
+
+[[revisions."2022".verification_predicates]]
+id = "application-equals-present-maximum:compensacion-saldo-neg-rcm-ahorro-em3-paso2-cuantia-maxima"
+predicate_id = "modelo-100-2022-compensacion-saldo-neg-rcm-ahorro-em3-paso2-cuantia-maxima"
+expression = 'application_equals_present_maximum(["0444", "saldo-neg-rcm-ahorro-em3-paso2-maxima"])'
+legal_refs = ["ley-35-2006:art-49"]
+
+[[revisions."2022".verification_predicates]]
+id = "positive-application-le-present-stock:compensacion-saldo-neg-rcm-ahorro-em2-paso2-no-excede-stock"
+predicate_id = "modelo-100-2022-compensacion-saldo-neg-rcm-ahorro-em2-paso2-no-excede-stock"
+expression = 'positive_application_le_present_stock(["0445", "saldo-neg-rcm-ahorro-em2-resto-paso1"])'
+legal_refs = ["ley-35-2006:art-49"]
+
+[[revisions."2022".verification_predicates]]
+id = "application-equals-present-maximum:compensacion-saldo-neg-rcm-ahorro-em2-paso2-cuantia-maxima"
+predicate_id = "modelo-100-2022-compensacion-saldo-neg-rcm-ahorro-em2-paso2-cuantia-maxima"
+expression = 'application_equals_present_maximum(["0445", "saldo-neg-rcm-ahorro-em2-paso2-maxima"])'
+legal_refs = ["ley-35-2006:art-49"]
+
+[[revisions."2022".verification_predicates]]
+id = "positive-application-le-present-stock:compensacion-saldo-neg-rcm-ahorro-em1-paso2-no-excede-stock"
+predicate_id = "modelo-100-2022-compensacion-saldo-neg-rcm-ahorro-em1-paso2-no-excede-stock"
+expression = 'positive_application_le_present_stock(["0447", "saldo-neg-rcm-ahorro-em1-resto-paso1"])'
+legal_refs = ["ley-35-2006:art-49"]
+
+[[revisions."2022".verification_predicates]]
+id = "application-equals-present-maximum:compensacion-saldo-neg-rcm-ahorro-em1-paso2-cuantia-maxima"
+predicate_id = "modelo-100-2022-compensacion-saldo-neg-rcm-ahorro-em1-paso2-cuantia-maxima"
+expression = 'application_equals_present_maximum(["0447", "saldo-neg-rcm-ahorro-em1-paso2-maxima"])'
+legal_refs = ["ley-35-2006:art-49"]
+
+[[revisions."2022".verification_predicates]]
+id = "application-order-immaterial:compensacion-saldo-neg-rcm-ahorro-paso1-orden-indiferente"
+predicate_id = "modelo-100-2022-compensacion-saldo-neg-rcm-ahorro-paso1-orden-indiferente"
+expression = 'application_order_immaterial(["saldo-neg-rcm-ahorro-paso1-capacidad", "1272", "1274", "1277", "1280"])'
+legal_refs = ["ley-35-2006:art-49"]
+
+[[revisions."2022".verification_predicates]]
+id = "application-order-immaterial:compensacion-saldo-neg-rcm-ahorro-paso2-orden-indiferente"
+predicate_id = "modelo-100-2022-compensacion-saldo-neg-rcm-ahorro-paso2-orden-indiferente"
+expression = 'application_order_immaterial(["saldo-neg-rcm-ahorro-paso2-capacidad", "saldo-neg-rcm-ahorro-em4-resto-paso1", "saldo-neg-rcm-ahorro-em3-resto-paso1", "saldo-neg-rcm-ahorro-em2-resto-paso1", "saldo-neg-rcm-ahorro-em1-resto-paso1"])'
+legal_refs = ["ley-35-2006:art-49"]

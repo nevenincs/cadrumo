@@ -2458,6 +2458,7 @@ type = "integer"
 required = false
 sensitivity = "identity"
 effective_dated = true
+references_section = "renta_inmueble"
 description = "Solo para un anejo (casillas 0074 y 0090): identificador de fila del inmueble principal con el que se arrienda, otra fila de esta misma seccion."
 minimum = "0"
 legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
@@ -2504,6 +2505,7 @@ type = "integer"
 required = true
 sensitivity = "identity"
 effective_dated = true
+references_section = "renta_inmueble"
 description = "Identificador de fila del inmueble arrendado: el indice de su fila en la seccion de inmuebles."
 minimum = "0"
 legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
@@ -2637,6 +2639,89 @@ sensitivity = "identity"
 effective_dated = true
 description = "El inmueble esta en zona tensionada y el contrato incumple el articulo 17.6 de la Ley de Arrendamientos Urbanos."
 legal_refs = ["ley-35-2006:art-23"]
+
+[[sections]]
+key = "inversiones_posicion"
+title = "Inversiones posicion"
+sensitivity = "identity"
+effective_dated = true
+repeatable = true
+
+[[sections.fields]]
+key = "tipo"
+type = "enum"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "Clase de posicion: cuenta corriente o de ahorro, deposito a plazo, o cuenta de valores negociables."
+enum_values = ["cuenta", "deposito", "valores_negociables"]
+legal_refs = ["ley-35-2006:art-25"]
+
+[[sections.fields]]
+key = "pagador_nif"
+type = "string"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "NIF de la entidad pagadora de los rendimientos; une la posicion con el registro de retenciones soportadas de ese pagador. Un pagador extranjero consigna su identificador fiscal."
+legal_refs = ["ley-35-2006:art-25", "rd-439-2007:art-108"]
+
+[[sections.fields]]
+key = "pagador_nombre"
+type = "string"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "Nombre o razon social de la entidad pagadora."
+legal_refs = ["ley-35-2006:art-25", "rd-439-2007:art-108"]
+
+[[sections.fields]]
+key = "pais_origen"
+type = "string"
+code_list = "countries"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "Codigo ISO 3166-1 alfa-2 del Estado del que proceden los rendimientos: ES para Espana u otro Estado."
+legal_refs = ["ley-35-2006:art-25"]
+
+[[sections.fields]]
+key = "porcentaje_titularidad"
+type = "decimal"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "Porcentaje de titularidad del contribuyente sobre la posicion, mayor que 0 y hasta 100, con dos decimales como maximo."
+minimum = "0"
+maximum = "100"
+legal_refs = ["ley-35-2006:art-25"]
+
+[[sections.fields]]
+key = "fecha_inicio"
+type = "date"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "Fecha desde la que el contribuyente es titular de la posicion con ese porcentaje."
+legal_refs = ["ley-35-2006:art-25"]
+
+[[sections.fields]]
+key = "fecha_fin"
+type = "date"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Fecha hasta la que el contribuyente es titular de la posicion con ese porcentaje; ausente indica que continua."
+legal_refs = ["ley-35-2006:art-25"]
+
+[[sections.fields]]
+key = "identificador"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Identificador de la posicion para el operador: los ultimos digitos de la cuenta o la referencia de la cuenta de valores."
+legal_refs = ["ley-35-2006:art-25"]
 
 [[sections]]
 key = "renta_taxpayer"

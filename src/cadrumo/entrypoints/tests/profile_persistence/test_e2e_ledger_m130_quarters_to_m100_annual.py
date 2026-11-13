@@ -217,11 +217,12 @@ _M130_MANUAL_INPUTS: dict[CasillaId, Decimal] = {
 # without any synthetic M131 filings.
 
 
-def persist_autonoma_style_ledger(secure_objects: SecureObjectRepository) -> None:
+def persist_autonoma_style_ledger(secure_objects: SecureObjectRepository, *, inventory_book: bool = True) -> None:
     """Persist Autonoma-shaped annual activity income, deductible expenses and the activity's inventory book.
 
     The activity sells services and held no existencias, which it states as a book opened with no stock and
-    closed at zero, so the Modelo 100 Anexo D rows of its estimacion directa block read zero.
+    closed at zero, so the Modelo 100 Anexo D rows of its estimacion directa block read zero. With
+    ``inventory_book`` false no book is saved, so those rows stay unread.
     """
     tx_repo = TransactionCatalogueRepository(bucket_id=BUCKET_ID, objects=secure_objects)
     transactions = tuple(income_transaction(period) for period in _QUARTER_ORDER) + tuple(
@@ -232,9 +233,10 @@ def persist_autonoma_style_ledger(secure_objects: SecureObjectRepository) -> Non
         TransactionCatalogue.from_transactions(transactions),
     )
     InvoiceCatalogueRepository(bucket_id=BUCKET_ID, objects=secure_objects).save(InvoiceCatalogue())
-    InventoryLedgerRepository(objects=secure_objects).save(
-        InventoryLedgerDocument(ledgers=(closed_no_stock_ledger(YEAR),))
-    )
+    if inventory_book:
+        InventoryLedgerRepository(objects=secure_objects).save(
+            InventoryLedgerDocument(ledgers=(closed_no_stock_ledger(YEAR),))
+        )
 
 
 def calculate_and_file_m130_quarter(
@@ -402,6 +404,24 @@ def test_ledger_drives_m130_quarters_and_folds_into_m100_annual(
     # which is also 20 per cent of the 9120.00 fourth-quarter casilla 03.
     casilla_0604 = Decimal(annual.casilla_values[_M100_PAGOS_CASILLA])
     assert casilla_0604 == Decimal("1824.00"), casilla_0604
+
+
+def test_without_an_inventory_book_the_activity_expenses_and_net_income_stay_unresolved(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """With the same ledger but no inventory book, 0218 and 0224 have no value.
+
+    The activity expenses sum the Anexo D inventory rows, so an unread inventory
+    book leaves 0218 unknown rather than reading as zero, and 0224 with it.
+    """
+    _seed_taxpayer_profile()
+    persist_autonoma_style_ledger(secure_objects, inventory_book=False)
+    seed_prior_year_m100(secure_objects)
+
+    annual = calculate_m100_annual(secure_objects)
+
+    assert _M100_EXPENSES_PREVIOUS_SUM_CASILLA not in annual.casilla_values
+    assert M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA not in annual.casilla_values
 
 
 def test_a_locally_filed_quarter_records_the_kind_its_revision_states(

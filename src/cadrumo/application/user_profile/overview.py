@@ -329,6 +329,12 @@ class ProfileFieldView(BaseModel):
     """The schema's own description of the field, the explanation of last resort."""
     ejercicio_answer: ProfileFieldEjercicioAnswer | None = Field(default=None)
     """How a field stated per ejercicio is answered, or ``None`` for a field holding one value."""
+    references_section: str | None = Field(default=None)
+    """The repeatable section one of whose rows this field names, or ``None``.
+
+    Declared by the schema, so a generic editor offers the rows of that section
+    to pick from instead of asking for a row key.
+    """
     row_index: str | None = Field(default=None)
     """Which instance of a repeated fact this row belongs to, if any.
 
@@ -546,6 +552,7 @@ def _field_view(
         choices=choices,
         help=help_lines,
         about=field.description,
+        references_section=field.references_section,
         row_index=row_index,
     )
 

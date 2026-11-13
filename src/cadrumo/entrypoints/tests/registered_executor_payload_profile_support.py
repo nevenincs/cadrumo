@@ -23,6 +23,7 @@ from ...application.user_profile.censal_operation import (
 )
 from ...application.user_profile.censo_sync import CENSAL_ADOPTABLE_PATHS
 from ...application.user_profile.profile_record_repository import ProfileRecordRepository
+from ...application.user_profile.record_group_contracts import ProfileRecordGroupKind
 from ...application.user_profile.recovery_custody import enroll_profile_recovery
 from ...application.user_profile.view_operation import ProfileViewPageKind
 from ...core.auth_provider import AuthProviderKind
@@ -206,6 +207,12 @@ def _user_profile_imputation_election_read(ctx: PayloadContext) -> PayloadResult
     return ctx.request(ctx.raw_profile_subject, {"profile_id": ctx.profile_id, "tax_year": 2025})
 
 
+def _user_profile_record_groups(ctx: PayloadContext) -> PayloadResult:
+    return ctx.request(
+        ctx.raw_profile_subject, {"profile_id": ctx.profile_id, "group_kind": ProfileRecordGroupKind.RENTAL_PROPERTY}
+    )
+
+
 def _user_profile_imputation_election_set(ctx: PayloadContext) -> PayloadResult:
     return ctx.request(ctx.raw_profile_subject, {**_baselined(ctx), "tax_year": 2025, "criterion": "devengo"})
 
@@ -340,6 +347,7 @@ PROFILE_BUILDERS: dict[str, PayloadBuilder] = {
     "user-profile.view": _user_profile_view,
     "user-profile.imputation-election.read": _user_profile_imputation_election_read,
     "user-profile.imputation-election.set": _user_profile_imputation_election_set,
+    "user-profile.record-groups": _user_profile_record_groups,
     "workbench.generation": _workbench_generation,
     "user-profile.repeatable-row-mutation": _user_profile_repeatable_row_mutation,
     "user-profile.repeatable-row-update": _user_profile_repeatable_row_existing,

@@ -86,6 +86,7 @@ from ...domain.transactions.enums import BusinessClassification, TransactionDire
 from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ...domain.transactions.rental_link import has_rental_link
+from ...domain.transactions.savings_link import has_savings_link
 from ...domain.transactions.tipo_actividad_partitions import agrarian_instalment_activity_codes
 from ...domain.user_profile.values import UserProfileRecord
 from . import shared_issue_reasons
@@ -646,6 +647,9 @@ def _owned_gasto_proportion(
     if transaction.direction is not TransactionDirection.OUTGOING and not refunded:
         return None
     if transaction.business_classification is BusinessClassification.REVIEWED_EXCLUDED:
+        return None
+    if has_savings_link(posicion_ref=transaction.posicion_ref):
+        # A savings-position expense belongs to the position's capital-mobiliario return.
         return None
     return _gasto_business_proportion(transaction, accept_activity_marker=accept_activity_marker)
 

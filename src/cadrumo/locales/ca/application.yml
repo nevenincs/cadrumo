@@ -1329,6 +1329,19 @@ application:
         intra_eu_investment: Adquisicions intracomunitàries de béns d'inversió
         reagp_compensation: Compensacions del REAGP
         rectification: Rectificació de deduccions
+      gasto_capital_inmobiliario:
+        comunidad: Quotes de la comunitat de propietaris
+        defensa_juridica: Despeses de defensa jurídica
+        formalizacion_contrato: Despeses de formalització del contracte
+        interes_financiacion: Interessos i altres despeses de finançament
+        mejora: Millora, que se suma al valor d'adquisició
+        otros: Altres despeses fiscalment deduïbles
+        primas_seguro: Primes de contractes d'assegurança
+        reparacion_conservacion: Despeses de reparació i conservació
+        saldos_dudoso_cobro: Saldos de cobrament dubtós
+        servicios_terceros: Serveis prestats per tercers
+        suministros: Serveis i subministraments
+        tributos: Tributs, recàrrecs i taxes
       m210_income_concept:
         canones: Cànons
         dividend: Dividends
@@ -1862,6 +1875,13 @@ application:
           el grup per complet.
         what_to_do: Afegeix al teu perfil les persones que falten o corregeix el nombre,
           i torna a calcular.
+      income_family_not_computed:
+        what: L'aplicació encara no calcula una de les famílies de renda que apareixen
+          als teus registres o al teu perfil, així que aquesta declaració queda sense
+          resoldre fins que introdueixis a mà les xifres d'aquesta família.
+        what_to_do: Introdueix a mà les xifres a les caselles d'aquesta família i
+          torna a calcular. Reclassifica una fila només si estava classificada a la
+          família equivocada.
       inferred_retencion_excluded_from_credit:
         what: Part de la retenció de les teves factures emeses s'ha calculat a partir
           del que va pagar el client, així que s'ha deixat fora de la teva deducció
@@ -2160,6 +2180,32 @@ application:
         com a despesa.
       book_claimed_purchase_undated: Un moviment és una compra del teu inventari,
         de manera que es declara com a compra d'existències i no com a despesa.
+      capital_mobiliario_foreign_source: '{payer}: els rendiments d''aquesta posició
+        d''estalvi provenen de {country}, i els rendiments d''un altre Estat encara
+        no es calculen. Introdueix aquestes caselles a mà.'
+      capital_mobiliario_income_in_kind: '{payer}: el registre del pagador declara
+        rendiments en espècie, que encara no es calculen. Introdueix aquestes caselles
+        a mà.'
+      capital_mobiliario_payer_check_mismatch: '{payer}: les teves files vinculades
+        més la retenció sumen {amount}, i el certificat del pagador declara {compared_amount}.
+        Corregeix el registre o les files fins que coincideixin.'
+      capital_mobiliario_payer_evidence_missing: '{payer}: el teu llibre mostra rendiments
+        d''aquest pagador, però no hi ha registre del pagador ni declaració que no
+        s''hi va practicar retenció. Registra el certificat del pagador o declara
+        que cap pagador no va retenir.'
+      capital_mobiliario_payer_without_rows: '{payer}: el registre del pagador declara
+        rendiments del capital que cap fila del llibre vinculada a una posició d''estalvi
+        no mostra. Vincula les files a la seva posició o afegeix la posició.'
+      capital_mobiliario_position_not_held: '{payer}: {count} files del llibre estan
+        vinculades a una posició d''estalvi que el teu perfil no té en la seva data,
+        així que les caselles d''interessos i dividends queden obertes.'
+      capital_mobiliario_row_not_readable: '{payer}: {count} files del llibre vinculades
+        a aquesta posició d''estalvi tenen un concepte, una moneda o un total que
+        el càlcul no pot llegir, així que les caselles que alimenten queden obertes.'
+      capital_mobiliario_withholding_sum_mismatch: '{payer}: al tipus de retenció,
+        la retenció de les teves files vinculades suma {amount}, i el certificat del
+        pagador declara {compared_amount}. Corregeix el registre o les files fins
+        que coincideixin.'
       claim_gap_accrued: '{element}: no hi ha dotació registrada de {start} a {end}.
         S''han meritat {amount}, i la casella {box} només declara el que està registrat.'
       claim_gap_free_method: '{element}: no hi ha dotació registrada de {start} a
@@ -2236,6 +2282,9 @@ application:
       household_row_fact_unstated: '{group}: {recorded} registrades, {omitting} sense
         {leaf}.'
       household_rows_incomplete: '{group}: {stated} indicades, {recorded} registrades.'
+      income_family_rows_changed_since_entry: Les files del llibre d'una família de
+        renda han canviat després que n'introduïssis les xifres a mà; ara té {count}
+        files aquest any, així que torna a introduir-ne les xifres.
       instalment_free_gap: '{element}: no hi ha dotació registrada de {start} a {end}.
         El seu mètode deixa l''import a la teva elecció, de manera que no suma res
         a la casella {box}.'
@@ -2249,6 +2298,16 @@ application:
         operació intracomunitària recull.
       possibly_durable_expense: El moviment del {row_date} per {row_amount} es dedueix
         com a despesa corrent i la seva descripció sembla la d'un element durador.
+      prevision_social_contribution_not_certified: No hi ha cap certificat d'aportacions
+        a sistemes de previsió social registrat per a aquest exercici, així que les
+        caselles d'aportacions no es calculen.
+      prevision_social_contribution_not_placed: 'Casella {box}: {count} registres
+        d''aportacions a sistemes de previsió social d''aquest exercici no arriben
+        a cap casella, i no has introduït cap casella d''aportacions.'
+      prevision_social_placement_inherited: 'Casella {box}: {amount} d''aportacions
+        a sistemes de previsió social només se situen segons els textos oficials d''un
+        exercici anterior, així que la comprovació, l''exportació i el registre esperen
+        que els textos d''aquest exercici ho confirmin.'
       prior_filing_unrecorded: Per calcular la casella {box}, registra el teu Modelo
         {modelo} de {year}.
       profile_fact_unrecorded: 'Per calcular la casella {box}, registra al teu perfil:
@@ -3216,6 +3275,26 @@ application:
         que la dada %{binding} arrossega d''ella. Una casella que no mostra és desconeguda,
         no zero: registra aquesta declaració amb aquestes caselles o indica tu l''import
         de la dada %{binding}, i torna a calcular. No s''ha desat res.'
+      prior_carries_amount_duplicate: Al Modelo %{modelo} de %{filing_year}, l'import
+        que alimenta la casella %{box} ja té un import en aquesta declaració. Dona
+        un sol import a cadascun. No s'ha canviat res.
+      prior_carries_amount_invalid: Al Modelo %{modelo} de %{filing_year}, cada --amount
+        ha de ser <casella>=<import>, amb un import positiu escrit com 1234.56 (fins
+        a dos decimals, sense signe ni separador de milers). No s'ha canviat res.
+      prior_carries_amount_not_a_carry: Al Modelo %{modelo} de %{filing_year}, la
+        casella %{box} no és un import obert d'exercicis anteriors d'una família que
+        hagis indicat amb --family. Revisa la casella i les famílies. No s'ha canviat
+        res.
+      prior_carries_family_choice_required: 'El Modelo %{modelo} de %{filing_year}
+        té imports d''exercicis anteriors oberts en aquestes famílies: %{families}.
+        Una sola declaració les cobreix totes, perquè el càlcul es nega mentre alguna
+        quedi sense declarar, de manera que no s''ha canviat res. La teva elecció
+        deixa fora: %{missing}. Declara totes les famílies obertes, cadascuna com
+        a res pendent: %{family_door}.'
+      prior_carries_family_nothing_open: 'El Modelo %{modelo} de %{filing_year} no
+        té cap import obert d''exercicis anteriors a la família %{family}: cadascun
+        ja té un valor o la teva declaració, o la declaració no n''arrossega cap.
+        No s''ha canviat res.'
       prior_carries_nothing_open: 'El Modelo %{modelo} de %{filing_year} no té cap
         import d''exercicis anteriors que puguis declarar com a no pendent: cadascun
         ja té un valor o la teva declaració, o la declaració no n''arrossega cap.
@@ -3232,6 +3311,18 @@ application:
           d''exercicis anteriors pendents de compensar (caselles %{boxes}). Desa la
           declaració de l''any anterior o indica a la declaració que no en queda cap
           de pendent. No s''ha desat res.'
+        renta_negative_savings_capital_income_pending: 'No es pot calcular el Modelo
+          %{modelo} de %{filing_year}: no consta si queden saldos negatius de rendiments
+          del capital mobiliari de la base de l''estalvi d''exercicis anteriors pendents
+          de compensar (caselles %{boxes}). Desa la declaració de l''any anterior
+          o indica a la declaració que no en queda cap de pendent. No s''ha desat
+          res.'
+        renta_negative_savings_gains_losses_pending: 'No es pot calcular el Modelo
+          %{modelo} de %{filing_year}: no consta si queden saldos negatius de guanys
+          i pèrdues patrimonials de la base de l''estalvi d''exercicis anteriors pendents
+          de compensar (caselles %{boxes}). Desa la declaració de l''any anterior
+          o indica a la declaració que no en queda cap de pendent. No s''ha desat
+          res.'
       prior_period_unfiled: 'Encara no es pot calcular el Model %{modelo} %{period}
         %{filing_year}: arrossega imports de la declaració de %{unfiled_period}, que
         no està presentada. Presenta primer %{unfiled_period} i torna a calcular.
@@ -3463,6 +3554,16 @@ application:
       application_not_required_maximum: 'La casella [%{box}] té %{casilla_value},
         però ha de ser %{computed_value}: la llei exigeix aplicar la quantia més gran
         que permet aquest exercici, ni més ni menys.'
+      application_order_capacity_unresolved: Aquest exercici compensa saldos pendents
+        de diversos exercicis anteriors (%{pending_total} en total), però encara no
+        es coneix l'import disponible per compensar-los, així que no es pot saber
+        quant en pren cada exercici. Completa els imports dels quals depèn.
+      application_order_unsettled: Aquest exercici pot compensar %{capacity} dels
+        %{pending_total} pendents de diversos exercicis anteriors, i cap text oficial
+        no indica en quin ordre es prenen aquests exercicis. El que s'aplica de cadascun,
+        i el que queda pendent, depèn d'aquest ordre, així que aquesta declaració
+        es queda en càlcul i no es pot presentar des d'aquesta aplicació fins que
+        s'aclareixi la regla.
       art52_reduccion_individual_sublimit_possible: La casella [%{reduccion_id}] recull
         %{reduccion_value} EUR de reducció per previsió social, per sobre del sublímit
         individual de %{sublimit} EUR de l'art. 52 LIRPF, i no has declarat aportacions
@@ -3894,6 +3995,10 @@ application:
           rendes amb el límit, però les categories de renda que has indicat exclouen
           un tipus de renda del qual tens imports. Corregeix les categories o retira
           els imports i torna a projectar. Mai es mostra com a zero.
+        joint_return_member_income_unavailable: Aquesta reducció no es pot calcular
+          en una declaració conjunta, perquè la teva declaració no separa els rendiments
+          del treball i d'activitats econòmiques de cada membre, i els límits s'apliquen
+          a cada membre individualment (art. 52.1 LIRPF). Mai es mostra com a zero.
         m200_tax_regime_unsupported: Aquesta casella necessita el tipus de gravamen
           del règim fiscal de la teva entitat, que no es calcula per a aquest règim
           o forma jurídica, així que no té valor. Introdueix la casella tu mateix
@@ -4063,6 +4168,28 @@ application:
             35/2006). Cada import es registra com un 0 que has declarat, diferent
             d'una xifra escrita; si després una declaració anterior mostra un import,
             la declaració assenyala la diferència.
+        renta_negative_savings_capital_income_pending:
+          action: No tinc rendiments del capital mobiliari negatius pendents d'exercicis
+            anteriors
+          effect: 'Es registra com un 0 que has declarat: cap rendiment del capital
+            mobiliari negatiu pendent d''exercicis anteriors.'
+          origin: Has declarat que no queda res pendent
+          statement: Indica que no et queda cap saldo net negatiu de rendiments del
+            capital mobiliari dels quatre exercicis anteriors pendent de compensar
+            a la base imposable de l'estalvi (art. 49.1.a de la Llei 35/2006). Cada
+            import es registra com un 0 que has declarat, diferent d'una xifra escrita;
+            si després una declaració anterior mostra un import, la declaració assenyala
+            la diferència.
+        renta_negative_savings_gains_losses_pending:
+          action: No tinc pèrdues patrimonials pendents d'exercicis anteriors
+          effect: 'Es registra com un 0 que has declarat: cap pèrdua patrimonial pendent
+            d''exercicis anteriors.'
+          origin: Has declarat que no queda res pendent
+          statement: Indica que no et queda cap saldo negatiu de guanys i pèrdues
+            patrimonials de la base imposable de l'estalvi dels quatre exercicis anteriors
+            pendent de compensar (art. 49.1.b de la Llei 35/2006). Cada import es
+            registra com un 0 que has declarat, diferent d'una xifra escrita; si després
+            una declaració anterior mostra un import, la declaració assenyala la diferència.
         renta_trabajo_income_not_stated:
           action: No tinc contribucions de l'empresa ni aportacions al patrimoni protegit
             per declarar
@@ -4650,6 +4777,14 @@ application:
         no coincideixen.
       passphrase_current_rejected: La contrasenya actual no és correcta; la contrasenya
         no s'ha canviat.
+      posicion_country_unknown: L'Estat d'origen «%{pais}» no és un codi de país de
+        dues lletres conegut; corregeix-lo i repeteix «%{door}».
+      posicion_has_ledger_rows: La posició d'estalvi %{row} és anomenada per %{rows}
+        files del llibre; canvia o esborra'n abans el vincle amb «%{door}».
+      posicion_payer_id_invalid: El NIF d'un pagador espanyol no és vàlid; revisa'n
+        les lletres i xifres, i repeteix «%{door}».
+      posicion_row_invalid: La dada «%{leaf}» no és vàlida o contradiu altres dades
+        de la posició; no s'ha desat res. Corregeix-la i repeteix «%{door}».
       profile_already_exists: El perfil '%{profile}' ja existeix; executa aeat config
         login NAME per activar-lo o aeat config profile delete NAME primer.
       profile_authentication_refused: No s'ha acceptat la contrasenya del perfil.
@@ -4766,6 +4901,48 @@ application:
         aquest ordinador no va poder confirmar a temps una configuració més forta
         quan es va crear el perfil. Canvia la contrasenya per reforçar-la; pots tornar
         a introduir la mateixa.
+    record_groups:
+      door:
+        prevision_social_contribution:
+          edit: Corregeix aquest certificat
+          remove: Elimina aquest certificat
+        renta_arrendamiento:
+          edit: Edita l'arrendament
+          remove: Elimina l'arrendament
+        renta_inmueble:
+          edit: Edita l'immoble
+          remove: Elimina l'immoble
+      kind:
+        ledger_row: Moviment
+        pension_contribution: Certificats d'aportacions a previsió social d'un exercici
+        prevision_social_contribution: Certificat d'aportacions a previsió social
+        renta_arrendamiento: Arrendament
+        renta_inmueble: Immoble
+        rental_property: Immoble arrendat
+      prevision_social_contribution:
+        group_summary: 'Certificats d''aportacions a previsió social de l''exercici
+          {ejercicio}: {count}'
+        holder_unnamed: Emissor sense nom
+        summary_placed: '{holder}: {amount} EUR, clau {clave}, arriba a la casella
+          {box}'
+        summary_unplaced: '{holder}: {amount} EUR, clau {clave}, no arriba a cap casella;
+          aquest import l''introdueixes tu'
+      refusal:
+        item_too_large: Una entrada d'aquesta llista és massa gran per mostrar-la
+          en una pàgina.
+        stale_revision: El perfil o els seus moviments han canviat després de llegir
+          aquesta llista. Torna a llegir la llista.
+      relation:
+        prevision_social_contribution: Certificat de l'exercici
+        renta_arrendamiento:
+          inmueble: Arrendament d'aquest immoble
+        renta_inmueble:
+          inmueble_principal: Annex arrendat juntament amb aquest immoble
+      renta_arrendamiento:
+        summary_ended: Arrendament %{row}, del %{start} al %{end}
+        summary_open: Arrendament %{row}, des del %{start}
+      renta_inmueble:
+        summary: 'Immoble %{row}: %{place}'
   wizard:
     errors:
       command_input_invalid: 'Les dades del perfil no han superat la validació: %{details}'

@@ -112,6 +112,8 @@ _VALUES = {
     "invoice": "F-2025/0042",
     "counterparty": "Asesoría Ejemplo SL",
     "record": "2",
+    "payer": "Banco Ejemplo SA",
+    "country": "FR",
 }
 _RAW = re.compile(
     r"[0-9a-f]{12,}"  # a hash or the tail of one

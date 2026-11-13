@@ -20,6 +20,7 @@ from ....adapters.persistence.profile.tests.retencion_soportada_seed import seed
 from ....application.modelo.absence_statement_submission import (
     ModeloAbsenceStatementNothingOpenError,
     absence_statement_submission,
+    prior_carry_absence_submission,
 )
 from ....application.modelo.edit_models import (
     ModeloBindingEditIntentV1,
@@ -35,7 +36,7 @@ from ....application.modelo.work_form_service import load_modelo_work_form
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.external_constants import OutputLanguage
 from ....core.retencion_soportada import RetencionSoportadaClase
-from ....domain.calculations.registry.binding_absence_attestation import AbsenceAttestationFamily
+from ....domain.calculations.registry.binding_absence_attestation import PRIOR_CARRY_FAMILIES, AbsenceAttestationFamily
 from ....domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
 from ....domain.calculations.registry.tests.published_authority import published_supported_filing_years
 from ....domain.modelos.calculation_revision import CalculationRevision
@@ -54,6 +55,11 @@ _CARRIES = (
     "renta-base-liquidable-negativa-general-em2-pendiente-inicio",
     "renta-base-liquidable-negativa-general-em3-pendiente-inicio",
     "renta-base-liquidable-negativa-general-em4-pendiente-inicio",
+    *(
+        f"renta-saldo-negativo-{kind}-ahorro-{origin}-pendiente-inicio"
+        for kind in ("rcm", "gyp")
+        for origin in ("em1", "em2", "em3", "em4")
+    ),
 )
 #: The four income boxes no payer certificate states, by the binding that carries each.
 _STATEMENT_BINDINGS = {
@@ -279,13 +285,12 @@ def test_the_work_income_statement_is_offered_only_once_the_open_carries_are_sta
         seeded_operator_work(tmp_path, modelo="100", filing_year=year, period_code="0A", extra_facts=_FACTS) as work,
     ):
         _record_certificate(work, year)
-        carry = AbsenceAttestationFamily.RENTA_NEGATIVE_GENERAL_BASES_PENDING
         before = {attestation.family: attestation for attestation in _form(work).carry_attestations}
-        assert set(before) == {carry}
+        assert set(before) == PRIOR_CARRY_FAMILIES
         with pytest.raises(ModeloAbsenceStatementNothingOpenError):
             absence_statement_submission(work.baseline(), before.values(), family=_TRABAJO)
 
-        stated = absence_statement_submission(work.baseline(), before.values(), family=carry)
+        stated = prior_carry_absence_submission(work.baseline(), before.values())
         assert work.apply(binding=stated.binding_intents).refusal is None
         after = {attestation.family: attestation for attestation in _form(work).carry_attestations}
         assert set(after) == {_TRABAJO}

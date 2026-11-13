@@ -94,7 +94,6 @@ _BASE_INPUTS: dict[CasillaId, Decimal] = _casilla_values(
         # formula target (registry formula 0290); the engine computes it and
         # would refuse it as a supplied input.
         "0003": Decimal("0"),
-        "0429": Decimal("0"),
         "0507": Decimal("0"),
         # 0513/0514 (mínimo por descendientes) are computed (Option A engine);
         # the zero for these
@@ -147,6 +146,14 @@ _BASE_BINDINGS = {
     # (LIRPF art. 50.3 carry-forward; defaults to 0 for new couples).
     "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
     "renta-base-liquidable-negativa-general-em4-pendiente-inicio": Decimal("0"),
+    "renta-saldo-negativo-gyp-ahorro-em4-pendiente-inicio": Decimal("0"),
+    "renta-saldo-negativo-gyp-ahorro-em3-pendiente-inicio": Decimal("0"),
+    "renta-saldo-negativo-gyp-ahorro-em2-pendiente-inicio": Decimal("0"),
+    "renta-saldo-negativo-gyp-ahorro-em1-pendiente-inicio": Decimal("0"),
+    "renta-saldo-negativo-rcm-ahorro-em4-pendiente-inicio": Decimal("0"),
+    "renta-saldo-negativo-rcm-ahorro-em3-pendiente-inicio": Decimal("0"),
+    "renta-saldo-negativo-rcm-ahorro-em2-pendiente-inicio": Decimal("0"),
+    "renta-saldo-negativo-rcm-ahorro-em1-pendiente-inicio": Decimal("0"),
     "renta-base-liquidable-negativa-general-em3-pendiente-inicio": Decimal("0"),
     "renta-base-liquidable-negativa-general-em2-pendiente-inicio": Decimal("0"),
     "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),

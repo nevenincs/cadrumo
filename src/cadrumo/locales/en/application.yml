@@ -1260,6 +1260,19 @@ application:
         intra_eu_investment: Intra-EU acquisitions, capital goods
         reagp_compensation: Farming compensation (REAGP)
         rectification: Rectified deduction
+      gasto_capital_inmobiliario:
+        comunidad: Owners' association fees
+        defensa_juridica: Legal defence
+        formalizacion_contrato: Drawing up the lease contract
+        interes_financiacion: Interest and other financing costs
+        mejora: Improvement, added to the acquisition value
+        otros: Other deductible expenses
+        primas_seguro: Insurance premiums
+        reparacion_conservacion: Repair and upkeep
+        saldos_dudoso_cobro: Doubtful debts
+        servicios_terceros: Services provided by third parties
+        suministros: Services and supplies
+        tributos: Taxes, surcharges and fees
       m210_income_concept:
         canones: Royalties
         dividend: Dividends
@@ -1769,6 +1782,12 @@ application:
           complete.
         what_to_do: Add the missing people to your profile or correct the count, then
           calculate again.
+      income_family_not_computed:
+        what: The application does not compute one of the income families in your
+          records or profile yet, so this return stays unresolved until you enter
+          that family's figures by hand.
+        what_to_do: Enter the figures in that family's casillas by hand, then calculate
+          again. Reclassify a row only if it was classified to the wrong family.
       inferred_retencion_excluded_from_credit:
         what: Some withholding on your issued invoices was worked out from what the
           client paid, so it was left out of your credit and you may pay more than
@@ -2060,6 +2079,29 @@ application:
         than as an expense.
       book_claimed_purchase_undated: A ledger entry is a purchase in your inventory,
         so it is declared as a purchase of stock rather than as an expense.
+      capital_mobiliario_foreign_source: '{payer}: this savings position''s income
+        comes from {country}, and income from another state is not computed yet. Enter
+        these boxes by hand.'
+      capital_mobiliario_income_in_kind: '{payer}: the payer record states income
+        in kind, which is not computed yet. Enter these boxes by hand.'
+      capital_mobiliario_payer_check_mismatch: '{payer}: your linked rows plus the
+        withholding come to {amount}, and the payer''s certificate states {compared_amount}.
+        Correct the record or the rows until they agree.'
+      capital_mobiliario_payer_evidence_missing: '{payer}: your ledger shows income
+        from this payer, but there is no payer record and no attestation that nothing
+        was withheld. Record the payer''s certificate, or attest that no payer withheld.'
+      capital_mobiliario_payer_without_rows: '{payer}: the payer record states capital
+        income that no ledger row linked to a savings position shows. Link the rows
+        to their position, or add the position.'
+      capital_mobiliario_position_not_held: '{payer}: {count} ledger rows are linked
+        to a savings position your profile does not hold on their date, so the interest
+        and dividend boxes stay open.'
+      capital_mobiliario_row_not_readable: '{payer}: {count} ledger rows linked to
+        this savings position have a concept, currency or total the calculation cannot
+        read, so the boxes they feed stay open.'
+      capital_mobiliario_withholding_sum_mismatch: '{payer}: at the withholding rate,
+        the withholding on your linked rows comes to {amount}, and the payer''s certificate
+        states {compared_amount}. Correct the record or the rows until they agree.'
       claim_gap_accrued: '{element}: no depreciation charge is recorded from {start}
         to {end}. {amount} accrued, and box {box} declares only what is recorded.'
       claim_gap_free_method: '{element}: no depreciation charge is recorded from {start}
@@ -2130,6 +2172,9 @@ application:
       household_row_fact_unstated: '{group}: {recorded} recorded, {omitting} without
         {leaf}.'
       household_rows_incomplete: '{group}: {stated} stated, {recorded} recorded.'
+      income_family_rows_changed_since_entry: An income family's ledger rows changed
+        after you entered its figures by hand; it now has {count} rows this year,
+        so enter its figures again.
       instalment_free_gap: '{element}: no depreciation charge is recorded from {start}
         to {end}. Its method leaves the amount to you, so it adds nothing to box {box}.'
       inventory_purchase_claim_refused: '{count} purchases of the {year} inventory
@@ -2142,6 +2187,14 @@ application:
         intra-community operation it records.
       possibly_durable_expense: The ledger entry of {row_date} for {row_amount} deducts
         as a current expense, and its description reads like a long-term asset.
+      prevision_social_contribution_not_certified: No pension contribution certificate
+        is recorded for this year, so the contribution boxes are not worked out.
+      prevision_social_contribution_not_placed: 'Box {box}: {count} pension contribution
+        records of this year reach no box, and you have entered no contribution box
+        yourself.'
+      prevision_social_placement_inherited: 'Box {box}: {amount} in pension contributions
+        is placed only by the official texts of an earlier year, so checking, exporting
+        and recording wait until this year''s texts confirm it.'
       prior_filing_unrecorded: To calculate box {box}, record your Modelo {modelo}
         for {year}.
       profile_fact_unrecorded: 'To calculate box {box}, record in your profile: {field}.'
@@ -3071,6 +3124,24 @@ application:
         carries from it. A box it does not show is unknown, not zero: record that
         return with those boxes, or state the amount of the input %{binding} yourself,
         then calculate again. Nothing was saved.'
+      prior_carries_amount_duplicate: In Modelo %{modelo} for %{filing_year}, the
+        carry that box %{box} feeds already has an amount in this statement. Give
+        each carry one amount. Nothing was changed.
+      prior_carries_amount_invalid: For Modelo %{modelo} of %{filing_year}, each --amount
+        must read <box>=<amount>, with a positive amount written like 1234.56 (up
+        to two decimals, no sign and no thousands separator). Nothing was changed.
+      prior_carries_amount_not_a_carry: In Modelo %{modelo} for %{filing_year}, box
+        %{box} is not an open amount from earlier years in a family you named with
+        --family. Check the box and the families. Nothing was changed.
+      prior_carries_family_choice_required: 'Modelo %{modelo} for %{filing_year} has
+        amounts from earlier years open in these families: %{families}. One statement
+        covers all of them, because the calculation refuses while any stays unstated,
+        so nothing was changed. Your choice leaves out: %{missing}. State every open
+        family, each as nothing pending: %{family_door}.'
+      prior_carries_family_nothing_open: 'Modelo %{modelo} for %{filing_year} has
+        no open amount from earlier years in the family %{family}: each one already
+        holds a value or your statement, or the declaration carries none of them.
+        Nothing was changed.'
       prior_carries_nothing_open: 'Modelo %{modelo} for %{filing_year} has no amount
         from earlier years left to state as not pending: each one already holds a
         value or your statement, or the declaration carries none. Nothing was changed.'
@@ -3085,6 +3156,16 @@ application:
           from earlier years are still pending offset (boxes %{boxes}). Store the
           previous year''s return, or state in the declaration that none is pending.
           Nothing was saved.'
+        renta_negative_savings_capital_income_pending: 'Modelo %{modelo} for %{filing_year}
+          cannot be calculated: it is not known whether negative capital income of
+          the savings base from earlier years is still pending offset (boxes %{boxes}).
+          Store the previous year''s return, or state in the declaration that none
+          is pending. Nothing was saved.'
+        renta_negative_savings_gains_losses_pending: 'Modelo %{modelo} for %{filing_year}
+          cannot be calculated: it is not known whether negative balances of capital
+          gains and losses of the savings base from earlier years are still pending
+          offset (boxes %{boxes}). Store the previous year''s return, or state in
+          the declaration that none is pending. Nothing was saved.'
       prior_period_unfiled: 'Modelo %{modelo} %{period} %{filing_year} cannot be calculated
         yet: it carries figures from the return for %{unfiled_period}, which has not
         been filed. File %{unfiled_period} first, then calculate again. Nothing was
@@ -3297,6 +3378,15 @@ application:
       application_not_required_maximum: 'Box [%{box}] holds %{casilla_value}, but
         it must be %{computed_value}: the law requires applying the largest amount
         this year allows, no more and no less.'
+      application_order_capacity_unresolved: Pending balances from several earlier
+        years (%{pending_total} in total) are offset this year, but the amount available
+        to offset them is not known yet, so how much each year takes cannot be worked
+        out. Complete the figures that amount depends on.
+      application_order_unsettled: This year can offset %{capacity} of the %{pending_total}
+        pending from several earlier years, and no official text says in which order
+        those years are taken. What each year applies, and what it carries forward,
+        depends on that order, so this declaration stays a calculation and cannot
+        be filed from this application until the rule is settled.
       art52_reduccion_individual_sublimit_possible: Box [%{reduccion_id}] shows a
         pension plan (previsión social) reduction of %{reduccion_value} EUR, above
         the individual limit of %{sublimit} EUR in Art. 52 LIRPF, and no employer
@@ -3708,6 +3798,10 @@ application:
           the limit, but the income categories you stated exclude a kind of income
           that you have figures for. Correct the categories or remove the figures,
           then project again. It is never shown as zero.
+        joint_return_member_income_unavailable: This reduction cannot be calculated
+          for a joint return, because your return does not separate each member's
+          work and business income, and the limits apply to each member individually
+          (LIRPF art. 52.1). It is never shown as zero.
         m200_tax_regime_unsupported: This box needs the tipo de gravamen of your entity's
           tax regime, which is not calculated for that regime or legal form, so it
           has no value. Enter the box yourself from the official instructions. It
@@ -3863,6 +3957,26 @@ application:
           origin: You stated nothing is pending
           statement: States that no negative general taxable base from the four previous
             years is still pending offset (art. 50.3 Ley 35/2006). Each carry is recorded
+            as a 0 you stated, apart from a figure you typed; if an earlier return
+            later shows an amount, the declaration flags the difference.
+        renta_negative_savings_capital_income_pending:
+          action: I have no negative capital income pending from earlier years
+          effect: 'Recorded as a 0 you stated: no negative capital income pending
+            from earlier years.'
+          origin: You stated nothing is pending
+          statement: States that no negative net balance of income from movable capital
+            (rendimientos del capital mobiliario) from the four previous years is
+            still pending offset in the savings base (art. 49.1.a Ley 35/2006). Each
+            carry is recorded as a 0 you stated, apart from a figure you typed; if
+            an earlier return later shows an amount, the declaration flags the difference.
+        renta_negative_savings_gains_losses_pending:
+          action: I have no capital losses pending from earlier years
+          effect: 'Recorded as a 0 you stated: no capital losses pending from earlier
+            years.'
+          origin: You stated nothing is pending
+          statement: States that no negative balance of capital gains and losses (ganancias
+            y pérdidas patrimoniales) of the savings base from the four previous years
+            is still pending offset (art. 49.1.b Ley 35/2006). Each carry is recorded
             as a 0 you stated, apart from a figure you typed; if an earlier return
             later shows an amount, the declaration flags the difference.
         renta_trabajo_income_not_stated:
@@ -4435,6 +4549,14 @@ application:
         match.
       passphrase_current_rejected: The current password is not correct; the password
         was not changed.
+      posicion_country_unknown: The source state “%{pais}” is not a known two-letter
+        country code; correct it and repeat “%{door}”.
+      posicion_has_ledger_rows: Savings position %{row} is named by %{rows} ledger
+        rows; change or clear their link first with “%{door}”.
+      posicion_payer_id_invalid: The tax ID of a Spanish payer is not valid; check
+        its letters and digits, then repeat “%{door}”.
+      posicion_row_invalid: The fact “%{leaf}” is not valid or contradicts other facts
+        of the position; nothing was stored. Correct it and repeat “%{door}”.
       profile_already_exists: Profile '%{profile}' already exists; run aeat config
         login NAME to activate it or aeat config profile delete NAME first.
       profile_authentication_refused: The profile password was not accepted.
@@ -4548,6 +4670,45 @@ application:
         this computer could not confirm a stronger setting in time when the profile
         was created. Change the password to strengthen it; you can enter the same
         password again.
+    record_groups:
+      door:
+        prevision_social_contribution:
+          edit: Correct this certificate
+          remove: Remove this certificate
+        renta_arrendamiento:
+          edit: Edit lease
+          remove: Remove lease
+        renta_inmueble:
+          edit: Edit property
+          remove: Remove property
+      kind:
+        ledger_row: Ledger entry
+        pension_contribution: Pension contribution certificates of one year
+        prevision_social_contribution: Pension contribution certificate
+        renta_arrendamiento: Lease
+        renta_inmueble: Property
+        rental_property: Rental property
+      prevision_social_contribution:
+        group_summary: 'Pension contribution certificates for {ejercicio}: {count}'
+        holder_unnamed: Unnamed issuer
+        summary_placed: '{holder}: {amount} EUR, clave {clave}, reaches box {box}'
+        summary_unplaced: '{holder}: {amount} EUR, clave {clave}, reaches no box;
+          you enter that amount yourself'
+      refusal:
+        item_too_large: One item of this list is too large to show on a page.
+        stale_revision: The profile or its ledger entries changed after this list
+          was read. Read the list again.
+      relation:
+        prevision_social_contribution: Certificate of the year
+        renta_arrendamiento:
+          inmueble: Lease of this property
+        renta_inmueble:
+          inmueble_principal: Accessory let together with this property
+      renta_arrendamiento:
+        summary_ended: Lease %{row}, from %{start} to %{end}
+        summary_open: Lease %{row}, from %{start}
+      renta_inmueble:
+        summary: 'Property %{row}: %{place}'
   wizard:
     errors:
       command_input_invalid: 'The profile details are invalid: %{details}'

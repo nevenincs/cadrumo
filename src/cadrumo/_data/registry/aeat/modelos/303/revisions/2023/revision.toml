@@ -31,6 +31,12 @@ The credit reconciliation declares, for each Modelo 100 casilla that credits IRP
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1", "orden-eha-3786-2008:art-7"]
 source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure", "boe-orden-hfp-1172-2022-iva-authority", "boe-modelo-303-2008-form"]
 
+[revisions."2023".family_dispositions.prevision_social_placements]
+reason = """
+The pension contribution placement declares, for each Modelo 345 clave and subclave a contribution certificate states, the Modelo 100 casilla of the reduction for contributions to social-welfare systems it reaches (LIRPF arts. 51 and 52). This modelo is not the annual Renta return and declares no casilla of that reduction, so there is no contribution for an entry to place."""
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1", "orden-eha-3786-2008:art-7"]
+source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure", "boe-orden-hfp-1172-2022-iva-authority", "boe-modelo-303-2008-form"]
+
 [revisions.2023.period_selector]
 year_from = 2023
 year_to = 2023

@@ -33,6 +33,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 #: Derived for the inputs below by the revision-id derivation before the
 #: operator layer existed; a stored revision's id must not move.
 _PINNED_ID_WITHOUT_OPERATOR_LAYER = "68302bf28b2c55ca4a6f1e34777bbff916eb8b5c593167e10d7d2e31ea3ec4e8"
+#: Derived for ``_LAYER`` by the derivation before income-family entry digests
+#: existed; a stored revision whose layer holds none must not move.
+_PINNED_ID_WITH_LAYER_BEFORE_ENTRY_DIGESTS = "d09f06fd3117cbcf05925f63fbf210872988f1d4d766837b2c27f0e34db56954"
 _WORK_UNIT_ID = "b" * 64
 _C06: CasillaId = validated_casilla_id("06")
 _C07: CasillaId = validated_casilla_id("07")
@@ -313,3 +316,56 @@ def test_the_sources_a_statement_covers_move_the_revision_identity() -> None:
     assert _revision_id(_relation_attested_layer("1T", "2T")) != _revision_id(
         _relation_attested_layer("1T", "2T", "3T", "4T")
     )
+
+
+_ENTRY_DIGEST = "c" * 64
+
+
+def _entered_layer(digests: dict[str, str]) -> CalculationOperatorLayer:
+    return _LAYER.model_copy(update={"income_family_entry_digests": digests})
+
+
+def test_a_layer_with_no_income_family_entry_keeps_the_id_it_was_stored_under() -> None:
+    explicit_empty = CalculationOperatorLayer(
+        decimal_casilla_inputs={_C06: "100"},
+        text_casilla_inputs={_C08: "texto"},
+        binding_overrides={_BINDING: "0"},
+        income_family_entry_digests={},
+    )
+
+    assert "income_family_entry_digests" not in explicit_empty.identity_payload()
+    assert _revision_id(_LAYER) == _PINNED_ID_WITH_LAYER_BEFORE_ENTRY_DIGESTS
+    assert _revision_id(explicit_empty) == _PINNED_ID_WITH_LAYER_BEFORE_ENTRY_DIGESTS
+
+
+def test_a_stored_layer_without_the_field_loads_with_no_entry_and_re_derives_its_id() -> None:
+    stored = json.loads(_revision(_LAYER).model_dump_json())
+    del stored["operator_layer"]["income_family_entry_digests"]
+
+    loaded = CalculationRevision.model_validate_json(json.dumps(stored))
+
+    assert loaded.operator_layer is not None
+    assert loaded.operator_layer.income_family_entry_digests == {}
+    assert derive_calculation_revision_id_from_revision(loaded) == _PINNED_ID_WITH_LAYER_BEFORE_ENTRY_DIGESTS
+
+
+def test_an_income_family_entry_joins_the_identity_and_round_trips() -> None:
+    entered = _entered_layer({"capital_mobiliario": _ENTRY_DIGEST})
+    revision = _revision(entered)
+
+    loaded = CalculationRevision.model_validate_json(revision.model_dump_json())
+
+    assert entered.identity_payload()["income_family_entry_digests"] == {"capital_mobiliario": _ENTRY_DIGEST}
+    assert _revision_id(entered) != _PINNED_ID_WITH_LAYER_BEFORE_ENTRY_DIGESTS
+    assert _revision_id(entered) != _revision_id(_entered_layer({"capital_mobiliario": "d" * 64}))
+    assert loaded.operator_layer == entered
+    assert derive_calculation_revision_id_from_revision(loaded) == revision.calculation_revision_id
+
+
+@pytest.mark.parametrize(
+    ("family", "digest"),
+    [("capital_mobiliario", "C" * 64), ("capital_mobiliario", "c" * 63), ("capital_mobiliario", ""), (" ", "c" * 64)],
+)
+def test_an_income_family_entry_must_name_a_family_and_a_sha256_digest(family: str, digest: str) -> None:
+    with pytest.raises(ValidationError):
+        CalculationOperatorLayer(income_family_entry_digests={family: digest})

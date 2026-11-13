@@ -33,6 +33,12 @@ The credit reconciliation declares, for each Modelo 100 casilla that credits IRP
 legal_refs = ["orden-hap-2455-2013:art-1", "orden-hap-2455-2013:art-4", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-165-procedure", "enrolled-modelo-165-layout", "aeat-dr-165-2016-2022"]
 
+[revisions."2016-2022".family_dispositions.prevision_social_placements]
+reason = """
+The pension contribution placement declares, for each Modelo 345 clave and subclave a contribution certificate states, the Modelo 100 casilla of the reduction for contributions to social-welfare systems it reaches (LIRPF arts. 51 and 52). This modelo is not the annual Renta return and declares no casilla of that reduction, so there is no contribution for an entry to place."""
+legal_refs = ["orden-hap-2455-2013:art-1", "orden-hap-2455-2013:art-4", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-165-procedure", "enrolled-modelo-165-layout", "aeat-dr-165-2016-2022"]
+
 [revisions."2016-2022".family_dispositions.applicability]
 reason = "Modelo 165's registered scope is established by the approving Orden and is consumed through its temporal selector. This informative emitter declaration has no taxpayer-profile predicate or alternative applicability branch to model, so no applicability rule can be authored without inventing one."
 legal_refs = ["orden-hap-2455-2013:art-1", "orden-hap-2455-2013:art-4", "ley-58-2003:art-93"]

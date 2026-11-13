@@ -7,6 +7,7 @@ from cadrumo_client.commands.spec import CommandSpec
 from .collab_command_specs import CONFIG_COLLAB_COMMAND_SPECS
 from .custody_command_specs import CONFIG_CUSTODY_COMMAND_SPECS
 from .google_command_specs import GOOGLE_COMMAND_SPECS
+from .posicion_command_specs import POSICION_COMMAND_SPECS
 from .profile_command_specs import PROFILE_COMMAND_SPECS
 from .profile_inventory_specs import PROFILE_INVENTORY_COMMAND_SPECS
 from .rental_command_specs import RENTAL_COMMAND_SPECS
@@ -21,6 +22,7 @@ CONFIG_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     *PROFILE_COMMAND_SPECS,
     *PROFILE_INVENTORY_COMMAND_SPECS,
     *RENTAL_COMMAND_SPECS,
+    *POSICION_COMMAND_SPECS,
     *CONFIG_REPAIR_COMMAND_SPECS,
     *CONFIG_RESET_COMMAND_SPECS,
     *CONFIG_STORAGE_COMMAND_SPECS,

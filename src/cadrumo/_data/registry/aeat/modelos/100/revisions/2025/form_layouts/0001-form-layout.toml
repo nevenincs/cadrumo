@@ -7,7 +7,7 @@ revision_id = "2025"
 seed_source = "xml_dictionary"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "fce79744c04702dfd4c1d49b23d399610f43a905200e30e61c9e8e21caf83160"
+source_state_digest = "e4a3195287227aa41372715e8fcbcfd72b6355abe38b09e195c5084e807cdff1"
 design_sources = [
     { source_ref = "aeat-dr-100-2025-dictionary", sha256 = "67409ad3027f2548d90bd64ea5eeff7fa344ace87377a048527d2c7de92fe93b" },
     { source_ref = "aeat-dr-100-2025-input-dictionary", sha256 = "ef63737b6d52e22a4c1c4b7934975488b93b0f37f9a8bc10f6c365219b6ecade" },
@@ -2267,6 +2267,34 @@ placements = [
     { casilla_id = "eo-agraria-reduccion-irregularidad-base", kind = "unplaced", unplaced_reason = "no_official_anchor" },
     { casilla_id = "prestacion-inss-maternidad-paternidad-exenta", kind = "unplaced", unplaced_reason = "no_official_anchor" },
     { casilla_id = "rentas-distintas-del-trabajo", kind = "working_figure" },
+    { casilla_id = "saldo-neg-gyp-ahorro-em1-paso1-maxima", kind = "working_figure" },
+    { casilla_id = "saldo-neg-gyp-ahorro-em1-paso2-maxima", kind = "working_figure" },
+    { casilla_id = "saldo-neg-gyp-ahorro-em1-resto-paso1", kind = "working_figure" },
+    { casilla_id = "saldo-neg-gyp-ahorro-em2-paso1-maxima", kind = "working_figure" },
+    { casilla_id = "saldo-neg-gyp-ahorro-em2-paso2-maxima", kind = "working_figure" },
+    { casilla_id = "saldo-neg-gyp-ahorro-em2-resto-paso1", kind = "working_figure" },
+    { casilla_id = "saldo-neg-gyp-ahorro-em3-paso1-maxima", kind = "working_figure" },
+    { casilla_id = "saldo-neg-gyp-ahorro-em3-paso2-maxima", kind = "working_figure" },
+    { casilla_id = "saldo-neg-gyp-ahorro-em3-resto-paso1", kind = "working_figure" },
+    { casilla_id = "saldo-neg-gyp-ahorro-em4-paso1-maxima", kind = "working_figure" },
+    { casilla_id = "saldo-neg-gyp-ahorro-em4-paso2-maxima", kind = "working_figure" },
+    { casilla_id = "saldo-neg-gyp-ahorro-em4-resto-paso1", kind = "working_figure" },
+    { casilla_id = "saldo-neg-gyp-ahorro-paso1-capacidad", kind = "working_figure" },
+    { casilla_id = "saldo-neg-gyp-ahorro-paso2-capacidad", kind = "working_figure" },
+    { casilla_id = "saldo-neg-rcm-ahorro-em1-paso1-maxima", kind = "working_figure" },
+    { casilla_id = "saldo-neg-rcm-ahorro-em1-paso2-maxima", kind = "working_figure" },
+    { casilla_id = "saldo-neg-rcm-ahorro-em1-resto-paso1", kind = "working_figure" },
+    { casilla_id = "saldo-neg-rcm-ahorro-em2-paso1-maxima", kind = "working_figure" },
+    { casilla_id = "saldo-neg-rcm-ahorro-em2-paso2-maxima", kind = "working_figure" },
+    { casilla_id = "saldo-neg-rcm-ahorro-em2-resto-paso1", kind = "working_figure" },
+    { casilla_id = "saldo-neg-rcm-ahorro-em3-paso1-maxima", kind = "working_figure" },
+    { casilla_id = "saldo-neg-rcm-ahorro-em3-paso2-maxima", kind = "working_figure" },
+    { casilla_id = "saldo-neg-rcm-ahorro-em3-resto-paso1", kind = "working_figure" },
+    { casilla_id = "saldo-neg-rcm-ahorro-em4-paso1-maxima", kind = "working_figure" },
+    { casilla_id = "saldo-neg-rcm-ahorro-em4-paso2-maxima", kind = "working_figure" },
+    { casilla_id = "saldo-neg-rcm-ahorro-em4-resto-paso1", kind = "working_figure" },
+    { casilla_id = "saldo-neg-rcm-ahorro-paso1-capacidad", kind = "working_figure" },
+    { casilla_id = "saldo-neg-rcm-ahorro-paso2-capacidad", kind = "working_figure" },
     { casilla_id = "trabajo-mar-renta-exenta", kind = "working_figure" },
 ]
 

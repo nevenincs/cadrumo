@@ -124,6 +124,8 @@ def test_common_ledger_parameters_keep_their_full_command_order_and_identity() -
             "arrendamiento",
             "inmueble",
             "gasto_inmobiliario",
+            "posicion",
+            "concepto_capital_mobiliario",
             "recargo_amount",
             "irpf_category",
             "usage_ratio_id",
@@ -167,11 +169,11 @@ def test_common_ledger_parameters_keep_their_full_command_order_and_identity() -
     )
     restore, stash, status = (specs[key] for key in ("app_ledger_restore", "app_ledger_stash", "app_ledger_status"))
     assert add.parameters[11] is allocate.parameters[2] is LEDGER_ADD_CATEGORY_ID_OPTION
-    assert add.parameters[26] is allocate.parameters[3] is LEDGER_USAGE_RATIO_ID_OPTION
+    assert add.parameters[28] is allocate.parameters[3] is LEDGER_USAGE_RATIO_ID_OPTION
     assert all(
         parameter is LEDGER_ACTOR_OPTION
         for parameter in (
-            add.parameters[34],
+            add.parameters[36],
             allocate.parameters[5],
             archive.parameters[3],
             attach.parameters[3],

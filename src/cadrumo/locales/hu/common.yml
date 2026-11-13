@@ -253,6 +253,84 @@ aggregation:
   per_modelo:
     errors:
       unsupported_modelo: Nem támogatott nyomtatvány a nyomtatványonkénti aggregáláshoz.
+  prevision_social_contribution:
+    errors:
+      certificate_file_unreadable: A --certificate-file nem olvasható, vagy üres,
+        vagy nem PDF, kép vagy XML-dokumentum.
+      certificate_fingerprint_mismatch: A --evidence-sha256 nem a --certificate-file
+        SHA-256 értéke, ezért semmi sem lett mentve.
+      certificate_fingerprint_required: 'A hozzájárulási rekordhoz kell az igazolása:
+        add meg a --certificate-file, vagy a már tárolt igazoláshoz a --evidence-sha256
+        kapcsolót.'
+      certificate_not_in_custody: Az igazolás dokumentuma, amelyre ez a rekord hivatkozik,
+        nincs a profilodban tárolva, ezért a rekord nem lett mentve. Előbb add hozzá
+        a dokumentumot.
+      clave_pair_undefined: A 345-ös modell rekordterve nem határoz meg ilyen --subclave
+        értéket ehhez a --clave értékhez, vagy ehhez a kulcshoz alkulcs tartozik,
+        amelyet nem adtál meg.
+      ejercicio_unsupported: Ez az év kívül esik azokon, amelyeket a Cadrumo kiszámít,
+        ezért a hozzájárulási rekord nem lett mentve.
+      identity_mismatch: A rekord kibocsátója, terve, kulcsa vagy éve nem egyezik
+        azzal a rekorddal, amelyet módosítani szeretnél, ezért semmi sem lett mentve.
+      not_found: Ebben az évben nincs hozzájárulási rekord ezzel a kibocsátói hivatkozással,
+        --plan-ref, --clave és --subclave értékkel. Futtasd a list parancsot a tárolt
+        rekordokért.
+      same_plan_split_unstated: Ennek a kulcsnak és alkulcsnak a mezője attól függ,
+        hogy a munkáltatód is fizetett-e hozzájárulást ugyanabba a tervbe. Add meg
+        a --employer-same-plan yes vagy no értékkel, vagy add meg te a mezőt operátori
+        értékként.
+      stale_revision: A hozzájárulási rekord megváltozott, mióta elolvastad. Olvasd
+        el újra, és ismételd meg a módosítást.
+      validation: 'Egy érték érvénytelen: ellenőrizd a kibocsátó NIF-jét, a --plan-nif
+        értéket, valamint hogy az --amount ne legyen negatív, és legfeljebb két tizedesjegyet
+        tartalmazzon.'
+    served:
+      beneficiary_out_of_scope: A házastársad vagy egy fogyatékossággal élő személy
+        társadalombiztosítási rendszerébe fizetett hozzájárulásokat ez a verzió nem
+        számítja ki. Add meg te a mezőt kezelői értékként.
+      certificate_file_unreadable: Az igazolás fájlja nem olvasható. Ellenőrizd, hogy
+        még létezik, nem üres, és PDF, kép vagy XML-dokumentum, majd válaszd ki újra.
+      certificate_fingerprint_mismatch: Az igazolás fájlja nem egyezik a hozzá rögzített
+        ujjlenyomattal, ezért semmi sem lett mentve. Válaszd ki a megfelelő fájlt,
+        és próbáld újra.
+      certificate_fingerprint_required: A hozzájárulási rekordhoz kell az igazolás,
+        amelyet a pénztárkezelő, a kölcsönös biztosító vagy a biztosító állított ki.
+        Válaszd ki az igazolás fájlját, vagy add meg te a hozzájárulási mezőt operátori
+        értékként.
+      certificate_not_in_custody: A Cadrumo nem tárol ilyen ujjlenyomatú igazolást,
+        vagy a tárolt fájl már nem egyezik vele. Válaszd ki az igazolás fájlját, hogy
+        a Cadrumo a titkosított dokumentumaid között tárolja.
+      clave_pair_undefined: A 345-ös modell rekordterve nem határoz meg ilyen alkulcsot
+        ehhez a kulcshoz. Ellenőrizd az igazoláson szereplő kulcsot és alkulcsot.
+      design_not_bundled: A Cadrumo nem rendelkezik az erre az évre vonatkozó 345-ös
+        modell rekordtervével, ezért egyetlen nyugdíj-hozzájárulást sem helyez el.
+        Add meg te a hozzájárulási mezőket kezelői értékként.
+      ejercicio_unsupported: Ez az év kívül esik azokon, amelyeket a Cadrumo támogat,
+        ezért a hozzájárulási rekord nem lett mentve.
+      identity_mismatch: A rekord nem egyezik a hozzá már tárolt kibocsátóval, tervvel,
+        kulccsal vagy igazolással, ezért semmi sem lett mentve.
+      indirect_match: A társadalombiztosítási rendszerekbe fizetett hozzájárulások
+        csökkentésének egyik mezője csak analógia alapján illik ehhez a 345-ös modell
+        szerinti kulcshoz, és egyetlen hivatalos szöveg sem nevezi meg, ezért a Cadrumo
+        nem oda rögzíti. Add meg te a mezőt kezelői értékként.
+      not_certified: Erre az évre nincs rögzített nyugdíj-hozzájárulási igazolás,
+        ezért a Cadrumo üresen hagyja a hozzájárulási mezőket. Rögzítsd az egyes igazolásokat,
+        vagy add meg te a mezőket kezelői értékként.
+      not_found: Nincs hozzájárulási rekord ehhez az évhez, kibocsátóhoz, tervhez,
+        kulcshoz és alkulcshoz. Lehet, hogy már törölték.
+      same_plan_split_unstated: Ennek a hozzájárulásnak a mezője attól függ, hogy
+        a munkáltatód is fizetett-e hozzájárulást ugyanabba a tervbe, és a rekord
+        ezt nem tartalmazza. Add meg a rekordban, vagy add meg te a mezőt kezelői
+        értékként.
+      stale_revision: Ez a hozzájárulási rekord megváltozott, mióta elolvastad. Olvasd
+        el újra, és próbáld újra.
+      unplaced_clave: Egyetlen hivatalos szöveg sem helyezi ezt a 345-ös modell szerinti
+        kulcsot és alkulcsot a társadalombiztosítási rendszerekbe fizetett hozzájárulások
+        csökkentésének egyik mezőjébe sem, ezért a Cadrumo nem helyezi el. Add meg
+        te a mezőt kezelői értékként.
+      validation: 'A rekord egyik értéke érvénytelen: ellenőrizd a kibocsátó és a
+        terv adóazonosító számát (NIF), valamint hogy az összeg ne legyen negatív,
+        és legfeljebb két tizedesjegyet tartalmazzon.'
   renta_ledger:
     errors:
       annual_period_required: A Renta összesítéséhez a nyilvántartásaidból éves időszak
@@ -3547,6 +3625,8 @@ desktop:
       arrendamiento_local: Üzlethelyiség bérlete
       arrendamiento_vivienda_afecto: Üzleti célú lakás bérlete
       capital_inmobiliario: Ingatlan bérbeadása
+      capital_mobiliario: Értékpapír-hozam (kamat, osztalék)
+      ganancias_patrimoniales: Vagyoni nyereség és veszteség
       trabajo: Munkaviszony
     issue:
       next: Következő készültségi hiba
@@ -10832,6 +10912,9 @@ workspace:
       finding:
         calculation_withdrawn: A számítás visszavonásra kerül. Számolj újra, miután
           megadtad a korábbi évekből áthozott összegeket.
+        carry_left_open: Ez a korábbi évből származó összeg még nyitott. Jelentsd
+          ki ugyanebben a változtatásban, nincs függőben lévő összegként vagy az összegével;
+          amíg nyitott, a számítás nem folytatható.
         carry_withdrawal_filed: Ez a bevallás benyújtottként van rögzítve. Javítsd
           önellenőrzéssel.
         carry_withdrawal_keeps_entries: A nyilatkozat visszavonása elvetné a többi

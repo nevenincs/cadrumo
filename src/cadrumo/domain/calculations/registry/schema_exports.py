@@ -933,6 +933,16 @@ class ExportLayoutDefinition(RegistryModel):
     id: ExportLayoutId
     format: ExportLayoutFormatValue = ExportLayoutFormat.FIXED_WIDTH
     dictionary_source_ref: SourceRefId | None = None
+    input_dictionary_source_ref: SourceRefId | None = None
+    """The edition's input dictionary, read only for repeated records the declaration dictionary lacks.
+
+    AEAT publishes two dictionaries per edition. The declaration dictionary names
+    what a filed return carries; the input dictionary also names repeated detail
+    records that the declaration dictionary leaves out, although the edition's XSD
+    declares them. A row binding that names a field of such a record is placed
+    through this dictionary, checked against the XSD, and never displaces a row
+    of the declaration dictionary.
+    """
     source_refs: SourceRefs
     legal_refs: LegalRefs
     records: tuple[ExportRecordDefinition, ...] = Field(default_factory=tuple)
@@ -1044,6 +1054,7 @@ def _validate_xml_dictionary_layout(layout: ExportLayoutDefinition) -> None:
             f"export layout {layout.id!r} must declare aux_idioma: the declaration's Aux block is "
             "mandatory in every AEAT XSD and no dictionary declares its rows",
         )
+    _validate_input_dictionary_ref(layout)
     override_fields = [override.field_id for override in layout.dictionary_path_overrides]
     duplicates = sorted({name for name in override_fields if override_fields.count(name) > 1})
     if duplicates:
@@ -1077,6 +1088,21 @@ def _validate_dictionary_row_targets(layout: ExportLayoutDefinition) -> None:
             )
 
 
+def _validate_input_dictionary_ref(layout: ExportLayoutDefinition) -> None:
+    """Require a declared input dictionary to be a second, cited dictionary of the layout."""
+    reference = layout.input_dictionary_source_ref
+    if reference is None:
+        return
+    if reference == layout.dictionary_source_ref:
+        raise RegistryValidationError(
+            f"export layout {layout.id!r} names its declaration dictionary again as its input dictionary",
+        )
+    if reference not in layout.source_refs:
+        raise RegistryValidationError(
+            f"export layout {layout.id!r} input dictionary source must be included in source_refs",
+        )
+
+
 def _validate_non_xml_layout(layout: ExportLayoutDefinition) -> None:
     _validate_non_xml_metadata(layout)
     _validate_non_xml_envelope(layout)
@@ -1108,6 +1134,11 @@ def _validate_non_xml_metadata(layout: ExportLayoutDefinition) -> None:
     if layout.dictionary_row_targets:
         raise RegistryValidationError(
             f"export layout {layout.id!r} declares dictionary row targets on a {layout.format} layout, "
+            "which reads no dictionary",
+        )
+    if layout.input_dictionary_source_ref is not None:
+        raise RegistryValidationError(
+            f"export layout {layout.id!r} declares an input dictionary on a {layout.format} layout, "
             "which reads no dictionary",
         )
 

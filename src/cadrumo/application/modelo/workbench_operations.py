@@ -67,6 +67,7 @@ from ..operations.registry import (
 )
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
+from .carry_family_selection import prior_carry_binding_ids
 from .casilla_help import ModeloCasillaHelpCardV1
 from .edit_admission import ModeloEditRenewedV1, renew_modelo_edit_baseline
 from .edit_apply_scalar_contracts import ModeloEditWireScalar, wire_scalar_value
@@ -533,6 +534,7 @@ class ModeloEditPreflightExecutor:
                 work_catalogue=ports.work_units.load(),
                 calculation_catalogue=ports.calculations.load(operation=operation),
                 tax_id_format=tax_id_format,
+                prior_carry_bindings=prior_carry_binding_ids(operation, submission),
                 carry_bindings=calculation_refusing_carry_bindings(
                     operation.revision_for_context(
                         str(baseline.modelo),

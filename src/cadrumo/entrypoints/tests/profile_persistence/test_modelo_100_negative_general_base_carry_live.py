@@ -37,12 +37,12 @@ from ....application.modelo.calculation_bucket_actions import (
 )
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
+from ....application.modelo.work_missing_input import ModeloWorkMissingInputError
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.errors.error_codes import resolve_error_message
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
-from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.tests.authored_editions import newest_authored_editions
 from ....domain.calculations.registry.tests.registry_observations import (
@@ -82,6 +82,11 @@ _GENERATED_PENDING: CasillaId = validated_casilla_id("1391", surface="_GENERATED
 #: The prior return's remainders that open this year's older Anexo C rows (1380, 1382, 1385).
 _PRIOR_ANEXO_C_REMAINDERS: tuple[CasillaId, ...] = tuple(
     validated_casilla_id(box, surface="_PRIOR_ANEXO_C_REMAINDERS") for box in ("1384", "1387", "1390")
+)
+#: The prior return's savings-base carry boxes, stated as nil: an unprinted box is unknown, not zero.
+_PRIOR_SAVINGS_CARRIES: tuple[CasillaId, ...] = tuple(
+    validated_casilla_id(box, surface="_PRIOR_SAVINGS_CARRIES")
+    for box in ("1263", "1266", "1269", "1270", "1276", "1279", "1282", "1283")
 )
 _CASILLA_0501: CasillaId = validated_casilla_id("0501", surface="_CASILLA_0501")
 _BASE_IMPONIBLE_GENERAL: CasillaId = validated_casilla_id("0435", surface="_BASE_IMPONIBLE_GENERAL")
@@ -132,7 +137,11 @@ def _seed_prior_m100_generated_pending(
         modelo="100",
         filing_year=source_year,
         period=_PERIOD,
-        casilla_values={_GENERATED_PENDING: value, **dict.fromkeys(_PRIOR_ANEXO_C_REMAINDERS, Decimal("0"))},
+        casilla_values={
+            _GENERATED_PENDING: value,
+            **dict.fromkeys(_PRIOR_ANEXO_C_REMAINDERS, Decimal("0")),
+            **dict.fromkeys(_PRIOR_SAVINGS_CARRIES, Decimal("0.00")),
+        },
     )
 
 
@@ -231,7 +240,6 @@ def test_m100_anexo_c_applied_amount_reduces_base_liquidable_not_base_imponible(
     )
     _seed_prior_m100_generated_pending(obs_repo, source_year=_NEWEST_EDITION - 1, value=Decimal("4321.00"))
     _seed_zero_pagos_quarters(obs_repo, filing_year=_NEWEST_EDITION)
-
     with bundled_indexed_authority().operation() as operation:
         record_work_income(
             operation=operation,
@@ -306,24 +314,27 @@ def test_m100_prior_return_without_the_older_remainders_refuses_naming_them(
         modelo="100",
         filing_year=_NEWEST_EDITION - 1,
         period=_PERIOD,
-        casilla_values={_GENERATED_PENDING: Decimal("1500.00")},
+        casilla_values={
+            _GENERATED_PENDING: Decimal("1500.00"),
+            **dict.fromkeys(_PRIOR_SAVINGS_CARRIES, Decimal("0.00")),
+        },
     )
     _seed_zero_pagos_quarters(obs_repo, filing_year=_NEWEST_EDITION)
 
-    with pytest.raises(RegistryValidationError) as refused:
+    with pytest.raises(ModeloWorkMissingInputError) as refused:
         _calculate_m100(secure_objects, filing_year=_NEWEST_EDITION)
 
-    assert refused.value.translated_message == "errors.calc.previous_filing_casillas_unobserved"
+    assert refused.value.translated_message == "application.modelo.errors.previous_filing_unobserved"
     context = refused.value.context or {}
-    assert context["casilla_ids"] == "1384,1387,1390"
+    assert context["source_boxes"] == "1384, 1387, 1390"
     assert (context["source_modelo"], context["source_filing_year"], context["source_period"]) == (
         "100",
         _NEWEST_EDITION - 1,
         _PERIOD,
     )
     words = resolve_error_message(refused.value, locale="es")
-    assert words.startswith(f"La declaración del modelo 100 de {_NEWEST_EDITION - 1} (0A)")
-    assert "las casillas 1384,1387,1390" in words
+    assert f"la declaración del Modelo 100 de {_NEWEST_EDITION - 1} (0A) que tienes guardada" in words
+    assert "no muestra las casillas 1384, 1387, 1390" in words
 
 
 def test_m100_base_liquidable_carry_is_grounded_in_art_50_not_art_48() -> None:

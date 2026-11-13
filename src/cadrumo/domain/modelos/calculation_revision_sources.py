@@ -190,6 +190,28 @@ class CalculationNoteSentence(StrEnum):
     """An absence attestation zeroes a credit but not the income of its class, which only a record states."""
     RETENCION_SOPORTADA_RECORD_FIGURE_MISSING = "retencion_soportada_record_figure_missing"
     """A stored payer record predates a figure an income casilla draws and does not state it."""
+    CAPITAL_MOBILIARIO_POSITION_NOT_HELD = "capital_mobiliario_position_not_held"
+    """Ledger rows name a savings position the profile does not hold on their date."""
+    CAPITAL_MOBILIARIO_ROW_NOT_READABLE = "capital_mobiliario_row_not_readable"
+    """Ledger rows of a savings position carry a concept, currency or sum the calculation cannot read."""
+    CAPITAL_MOBILIARIO_FOREIGN_SOURCE = "capital_mobiliario_foreign_source"
+    """A savings position's income comes from another state, whose double taxation is not computed."""
+    CAPITAL_MOBILIARIO_INCOME_IN_KIND = "capital_mobiliario_income_in_kind"
+    """A payer record states capital-mobiliario income in kind, which is not computed."""
+    CAPITAL_MOBILIARIO_PAYER_EVIDENCE_MISSING = "capital_mobiliario_payer_evidence_missing"
+    """A payer's linked rows have neither the payer's record nor an attestation that nothing was withheld."""
+    CAPITAL_MOBILIARIO_PAYER_CHECK_MISMATCH = "capital_mobiliario_payer_check_mismatch"
+    """The gross rebuilt from a payer's linked rows differs from the gross the payer's record states."""
+    CAPITAL_MOBILIARIO_WITHHOLDING_SUM_MISMATCH = "capital_mobiliario_withholding_sum_mismatch"
+    """The withholding rebuilt at the governed rate differs from the withholding the payer's record states."""
+    CAPITAL_MOBILIARIO_PAYER_WITHOUT_ROWS = "capital_mobiliario_payer_without_rows"
+    """A payer record states capital-mobiliario income that no linked ledger row shows."""
+    PREVISION_SOCIAL_CONTRIBUTION_NOT_PLACED = "prevision_social_contribution_not_placed"
+    """Contribution records of the ejercicio reach no box, and the filer has entered no contribution box."""
+    PREVISION_SOCIAL_CONTRIBUTION_NOT_CERTIFIED = "prevision_social_contribution_not_certified"
+    """No contribution certificate is recorded for the ejercicio, so the contribution boxes are not computed."""
+    PREVISION_SOCIAL_PLACEMENT_INHERITED = "prevision_social_placement_inherited"
+    """A box holds contributions placed by the official texts of an earlier ejercicio only."""
     CREDIT_SOURCE_DISAGREEMENT = "credit_source_disagreement"
     """A credit casilla's value and one of its declared cross-check sources state different amounts."""
     CREDIT_CROSS_CHECK_ABSENT = "credit_cross_check_absent"
@@ -206,6 +228,8 @@ class CalculationNoteSentence(StrEnum):
     """An ascendant the mínimo reaches has a disability, and its disability minimum is not computed."""
     PROFILE_FACT_UNRECORDED = "profile_fact_unrecorded"
     """A profile fact a calculation compares is unrecorded, so the box built on it stays open."""
+    INCOME_FAMILY_ROWS_CHANGED_SINCE_ENTRY = "income_family_rows_changed_since_entry"
+    """An income family's ledger rows changed after the operator entered its figures by hand."""
     PRIOR_FILING_UNRECORDED = "prior_filing_unrecorded"
     """A box is built on a figure of an earlier filing, and that filing is not recorded, so the box stays open."""
     WITHHOLDING_INVOICE_KIND_UNDECLARED = "withholding_invoice_kind_undeclared"
@@ -439,6 +463,10 @@ class CalculationSourceIssue(BaseModel):
     ascendientes reaches whose grade reaches the disability threshold: the
     disability minimum for that ascendant is not computed, so it withholds checking,
     exporting and filing rather than leave the minimum silently out.
+    ``income_family_not_computed`` is an income family the taxpayer has, by
+    classified ledger rows or a profile declaration, and the application has no
+    calculator for: it withholds checking, exporting and filing until the
+    family's casillas are entered by hand.
     ``fact`` states such a note's own row, element, interval and amount.
     ``binding_source`` is ``None`` only where the condition names no binding
     source kind. ``precedence_tier_divergence`` is a filed figure for
@@ -480,6 +508,7 @@ class CalculationSourceIssue(BaseModel):
         "household_rows_incomplete",
         "household_row_fact_unstated",
         "ascendant_disability_minimum_not_computed",
+        "income_family_not_computed",
         "advisory_binding_value",
         "credit_source_disagreement",
         "credit_cross_check_absent",
@@ -516,6 +545,10 @@ class CalculationSourceIssue(BaseModel):
                 record=ModeloValidatedRecord.CALCULATION_REVISION,
             )
         return self
+
+
+CAPITAL_MOBILIARIO_POSITION_REF_PREFIX: Final = "capital-mobiliario-position:"
+"""Prefix of the source reference naming one savings occurrence: ``{position_ref}:{detail_record}``."""
 
 
 ACTIVITY_ASSET_CLAIM_REF_PREFIX: Final = "activity-asset-claim:"

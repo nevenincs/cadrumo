@@ -9,6 +9,15 @@ from ...core.identity.bucket import BucketId
 from ...core.json_contract import OutputSchema
 
 
+class PriorCarryPayload(OutputSchema):
+    """One carry a statement answers and what the statement did to it."""
+
+    binding_id: str
+    #: The amount stated for the carry, written like ``1234.56``; ``None`` when it is stated as nothing pending.
+    amount: str | None = None
+    effect_words: str
+
+
 class PriorCarryStatementPayload(OutputSchema):
     """One statement the declaration's form serves, in the words it serves it, and the carries it answers."""
 
@@ -17,6 +26,7 @@ class PriorCarryStatementPayload(OutputSchema):
     statement_words: str
     effect_words: str
     binding_ids: list[str]
+    carries: list[PriorCarryPayload]
 
 
 class WorkAttestPriorCarriesResult(OutputSchema):
@@ -37,4 +47,4 @@ class WorkAttestPriorCarriesResult(OutputSchema):
     calculation_revision_id: str | None = None
 
 
-__all__ = ["PriorCarryStatementPayload", "WorkAttestPriorCarriesResult"]
+__all__ = ["PriorCarryPayload", "PriorCarryStatementPayload", "WorkAttestPriorCarriesResult"]

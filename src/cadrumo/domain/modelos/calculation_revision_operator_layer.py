@@ -28,6 +28,14 @@ and :attr:`CalculationOperatorLayer.value_attestations` names the source filing
 the statement stands in for, so verification can tell a figure stated for a
 return that cannot be held from one merely typed.
 
+Figures the operator enters for an income family the application does not
+calculate are bound to the ledger rows present at entry:
+:attr:`CalculationOperatorLayer.income_family_entry_digests` keeps, per family,
+the digest of the family's rows in the filing window when its figures were
+entered, so a later calculation can tell an entry that still stands from one
+the rows have since moved under. Replaying the layer replays the digests
+verbatim; only an edit that enters the family's figures again moves them.
+
 A carry stated per row of a repeating group is kept in
 :attr:`CalculationOperatorLayer.row_attestations`: no binding override can hold
 it, because the binding fills one value per row. Each statement names the
@@ -37,6 +45,7 @@ nothing is pending or states the amount.
 
 from __future__ import annotations
 
+import re
 from collections.abc import Mapping
 from decimal import Decimal
 from typing import Final
@@ -59,6 +68,8 @@ ATTESTED_ZERO: Final = canonical_decimal_string(Decimal(0))
 
 OPERATOR_LAYER_IDENTITY_KEY: Final = "operator_layer"
 """The revision-identity payload key the layer contributes when it is present."""
+
+_ENTRY_DIGEST: Final = re.compile(r"[0-9a-f]{64}")
 
 
 class AttestedSource(BaseModel):
@@ -204,6 +215,10 @@ class CalculationOperatorLayer(BaseModel):
             the operator's stated figure for an earlier filing the product cannot
             hold, keyed by binding id, each naming that filing. A binding is never
             both here and in ``attested_binding_ids``.
+        income_family_entry_digests: Per income family the application does
+            not calculate and whose figures the operator entered by hand, the
+            lowercase SHA-256 digest of the family's ledger rows in the filing
+            window at entry, keyed by family token.
         row_attestations: The operator's statements of a carry on one row of a
             repeating group, one per binding and row, in key order.
     """
@@ -215,6 +230,7 @@ class CalculationOperatorLayer(BaseModel):
     binding_overrides: Mapping[BindingId, str] = Field(default_factory=dict)
     attested_binding_ids: tuple[BindingId, ...] = ()
     value_attestations: Mapping[BindingId, ValueAttestation] = Field(default_factory=dict)
+    income_family_entry_digests: Mapping[str, str] = Field(default_factory=dict)
     row_attestations: tuple[RowCarryAttestation, ...] = ()
 
     def _require_casilla_channels_canonical(self) -> None:
@@ -251,11 +267,21 @@ class CalculationOperatorLayer(BaseModel):
                 )
         return attested
 
+    def _require_entry_digests_well_formed(self) -> None:
+        for family, digest in self.income_family_entry_digests.items():
+            if not family.strip() or _ENTRY_DIGEST.fullmatch(digest) is None:
+                raise ModeloOperatorLayerIntegrityError(
+                    f"operator layer income-family entry digest for {family!r} must be a lowercase SHA-256 digest",
+                    translated_message="errors.integrity.operator_layer_income_family_entry_digest_malformed",
+                    context={"family": family},
+                )
+
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _require_channel_unique_canonical_values(self) -> CalculationOperatorLayer:
         self._require_casilla_channels_canonical()
         attested = self._require_attested_bindings_hold_zero()
+        self._require_entry_digests_well_formed()
         for binding_id in self.value_attestations:
             raw = self.binding_overrides.get(binding_id)
             parsed = None if raw is None else try_parse_canonical_decimal(raw)
@@ -290,9 +316,9 @@ class CalculationOperatorLayer(BaseModel):
     def identity_payload(self) -> dict[str, object]:
         """Return the order-canonical projection the revision identity hashes.
 
-        Attested bindings, value attestations and row statements are named only
-        when there are any, so a layer that attests nothing keeps the identity it had before
-        attestations existed.
+        Attested bindings, value attestations, income-family entry digests and
+        row statements are named only when there are any, so a layer that holds
+        none keeps the identity it had before each existed.
         """
         payload: dict[str, object] = {
             "decimal_casilla_inputs": dict(sorted(self.decimal_casilla_inputs.items())),
@@ -306,6 +332,8 @@ class CalculationOperatorLayer(BaseModel):
                 binding_id: attestation.identity_payload()
                 for binding_id, attestation in sorted(self.value_attestations.items())
             }
+        if self.income_family_entry_digests:
+            payload["income_family_entry_digests"] = dict(sorted(self.income_family_entry_digests.items()))
         if self.row_attestations:
             payload["row_attestations"] = [statement.identity_payload() for statement in self.row_attestations]
         return payload

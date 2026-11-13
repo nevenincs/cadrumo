@@ -520,70 +520,70 @@ required_text = ["El remanente, si lo hubiera, minorará la base imponible del a
 [[revisions."2022".formulas]]
 id = "renta-reduccion-prevision-social-total"
 target_casilla_id = "0468"
-# Art. 52.1 LIRPF tiered joint limit. Two independent pools, each bounded by
-# 30% of net yields (0432) as the overall global cap:
-#   - aportaciones/contribuciones pool (0463+0465 individual, plus
-#     0426+0427+0438 employer-linked, plus 0499 autónomo/empresario-individual):
-#     capped at the general EUR 1.500 sub-limit (art. 52.1.b) PLUS an EUR 8.500
-#     increment split into two art. 52.1 sub-tiers that are NOT
-#     interchangeable — 1.º grants up to EUR 8.500 but only "siempre que tal
-#     incremento provenga de contribuciones empresariales, o de aportaciones
-#     del trabajador al mismo instrumento de previsión social" (0426+0427+0438);
-#     2.º grants up to EUR 4.250 for "aportaciones... realizadas por
-#     trabajadores por cuenta propia o autónomos" / "empresario individual...
-#     partícipe" (0499). Both sub-tiers are additive but jointly re-capped at
-#     EUR 8.500 ("en todo caso, la cuantía máxima de reducción por aplicación
-#     de los incrementos previstos en los números 1.º y 2.º anteriores será de
-#     8.500 euros anuales"), so a purely-0499 filer is correctly bound at
-#     EUR 4.250 (not the full EUR 8.500 a uniform employer-linked pool would
-#     silently grant), and a purely-individual filer (no 0426/0427/0438/0499)
-#     stays bound at EUR 1.500.
-#   - dependencia pool (0464+0466): a separate EUR 5.000 ceiling (art. 52.1,
-#     final paragraph), additive to the first pool per the AEAT Renta manual
-#     worked example ("10.000 euros por aportaciones y contribuciones +
-#     5.000 euros por seguros colectivos de dependencia").
-expression = { op = "min", args = [
-    { op = "percent", args = [{ casilla_id = "0432" }, { literal = "30" }] },
-    { op = "add", args = [
-        { op = "min", args = [
-            { op = "add", args = [
-                { op = "sum", args = [{ casilla_id = "0463" }, { casilla_id = "0465" }] },
-                { op = "sum", args = [
-                    { casilla_id = "0426" },
-                    { casilla_id = "0427" },
-                    { casilla_id = "0438" },
-                    { casilla_id = "0499" },
-                ] },
-            ] },
-            { op = "add", args = [
-                { literal = "1500" },
-                { op = "min", args = [
-                    { op = "add", args = [
-                        { op = "min", args = [
-                            { op = "sum", args = [
-                                { casilla_id = "0426" },
-                                { casilla_id = "0427" },
-                                { casilla_id = "0438" },
-                            ] },
-                            { literal = "8500" },
-                        ] },
-                        { op = "min", args = [
-                            { casilla_id = "0499" },
-                            { literal = "4250" },
-                        ] },
-                    ] },
-                    { literal = "8500" },
-                ] },
+# LIRPF art. 52.1 as in force for 2022 (Ley 22/2021), applied individually to each participant.
+# The limit is the lesser of 30% of the net work income (art. 19, box 0022, before the art. 20
+# reduction) plus the net activity income before the art. 32 reductions (direct estimation 0224,
+# objective estimation 1479 and agrarian objective estimation 1553), and the absolute limits:
+#   - general: 1.500, increased by up to 8.500 when the increase comes from employer
+#     contributions (0427), the empresario individual's own contributions treated as employer
+#     contributions (0499), or the worker's contributions to the same instrument (0426, and the
+#     employer amounts deriving from the worker's decision, 0438) up to the employer contribution;
+#   - collective dependency insurance (0464 + 0466): its own 5.000.
+# The excesses pending from earlier ejercicios (0463) reduce first, against the 1.500 + 8.500 pool
+# taken whole; the year's own contributions then reduce within their own limits and what remains of
+# that pool (RIRPF art. 51). The excess does not consume the own contributions' 1.500 sub-limit, as
+# the manual's worked example shows. The 30% stays the global limit.
+# Capital, rental and imputed income never enter the 30% base, so rental income in 0432 does not
+# raise the limit.
+# A joint return holds one combined figure of each income box, while art. 52.1 limits each
+# member on that member's own income, so with any contribution the box stays unresolved; with
+# none it is zero.
+expression = { op = "if_then_else", args = [
+    { op = "equal", args = [{ binding = "renta-profile-declaration-type" }, { literal = "2" }] },
+    { op = "if_then_else", args = [
+        { op = "greater_than", args = [
+            { op = "sum", args = [{ casilla_id = "0463" }, { casilla_id = "0464" }, { casilla_id = "0465" }, { casilla_id = "0466" }, { casilla_id = "0426" }, { casilla_id = "0427" }, { casilla_id = "0438" }, { casilla_id = "0499" }] },
+            { literal = "0" },
+        ] },
+        { op = "unresolved_outcome", args = [{ text_literal = "joint-return-member-income-unavailable" }] },
+        { literal = "0" },
+    ] },
+    { op = "min", args = [
+        { op = "max", args = [
+            { literal = "0" },
+            { op = "multiply", args = [
+                { parameter = "renta-prevision-social-limite-porcentual-rendimientos" },
+                { op = "sum", args = [{ casilla_id = "0022" }, { casilla_id = "0224" }, { casilla_id = "1479" }, { casilla_id = "1553" }] },
             ] },
         ] },
-        { op = "min", args = [
-            { op = "sum", args = [{ casilla_id = "0464" }, { casilla_id = "0466" }] },
-            { literal = "5000" },
+        { op = "sum", args = [
+            { op = "min", args = [{ casilla_id = "0463" }, { op = "sum", args = [{ parameter = "lirpf-art-52-individual-contribution-sublimit" }, { parameter = "renta-prevision-social-incremento-limite" }] }] },
+            { op = "min", args = [
+                { op = "subtract", args = [{ op = "sum", args = [{ parameter = "lirpf-art-52-individual-contribution-sublimit" }, { parameter = "renta-prevision-social-incremento-limite" }] }, { op = "min", args = [{ casilla_id = "0463" }, { op = "sum", args = [{ parameter = "lirpf-art-52-individual-contribution-sublimit" }, { parameter = "renta-prevision-social-incremento-limite" }] }] }] },
+                { op = "min", args = [
+                    { op = "sum", args = [{ casilla_id = "0465" }, { casilla_id = "0426" }, { casilla_id = "0438" }, { casilla_id = "0427" }, { casilla_id = "0499" }] },
+                    { op = "sum", args = [
+                        { parameter = "lirpf-art-52-individual-contribution-sublimit" },
+                        { op = "min", args = [
+                            { op = "sum", args = [
+                                { casilla_id = "0427" },
+                                { casilla_id = "0499" },
+                                { op = "min", args = [{ op = "sum", args = [{ casilla_id = "0426" }, { casilla_id = "0438" }] }, { casilla_id = "0427" }] },
+                            ] },
+                            { parameter = "renta-prevision-social-incremento-limite" },
+                        ] },
+                    ] },
+                ] },
+            ] },
+            { op = "min", args = [
+                { op = "sum", args = [{ casilla_id = "0464" }, { casilla_id = "0466" }] },
+                { parameter = "renta-prevision-social-seguros-colectivos-dependencia-limite" },
+            ] },
         ] },
     ] },
 ] }
 rounding = "money-2"
-legal_refs = ["ley-35-2006:art-52-2022"]
+legal_refs = ["ley-35-2006:art-52-2022", "rd-439-2007:art-51"]
 source_refs = ["aeat-dr-100-2022-dictionary", "boe-modelo-100-2022-form", "aeat-renta-2022-manual-parte1"]
 
 [[revisions."2022".formulas.source_citations]]
@@ -1074,6 +1074,554 @@ source_refs = ["lirpf-cuota-chain-authority"]
 [[revisions."2022".formulas.source_citations]]
 source_ref = "lirpf-cuota-chain-authority"
 required_text = ["sin que pueda resultar negativa como consecuencia de dichas disminuciones", "Si la base liquidable general resultase negativa, su importe podrá ser compensado"]
+# Step 1 capacity (gains and losses): the kind's positive balance of the year after the
+# current-year cross offset (0424 - 0436); the pending
+# balances of the same kind offset it first (Manual Renta, Fase 2a, 1o).
+[[revisions."2022".formulas]]
+id = "renta-saldo-neg-gyp-ahorro-paso1-capacidad"
+target_casilla_id = "saldo-neg-gyp-ahorro-paso1-capacidad"
+expression = { op = "max", args = [{ literal = "0" }, { op = "subtract", args = [{ casilla_id = "0424" }, { casilla_id = "0436" }] }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Si tras dicha compensación quedase saldo negativo, su importe se compensará en los cuatro años siguientes", "deberán efectuarse en la cuantía máxima que permita cada uno de los ejercicios siguientes"]
+# Art. 49.2 maximum of the em4 row in paso1: the lesser of its pending
+# balance and the paso1 capacity the older rows leave (oldest row first).
+[[revisions."2022".formulas]]
+id = "renta-saldo-neg-gyp-ahorro-em4-paso1-maxima"
+target_casilla_id = "saldo-neg-gyp-ahorro-em4-paso1-maxima"
+expression = { op = "min", args = [{ casilla_id = "1259" }, { casilla_id = "saldo-neg-gyp-ahorro-paso1-capacidad" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Si tras dicha compensación quedase saldo negativo, su importe se compensará en los cuatro años siguientes", "deberán efectuarse en la cuantía máxima que permita cada uno de los ejercicios siguientes"]
+# Art. 49.2 maximum of the em3 row in paso1: the lesser of its pending
+# balance and the paso1 capacity the older rows leave (oldest row first).
+[[revisions."2022".formulas]]
+id = "renta-saldo-neg-gyp-ahorro-em3-paso1-maxima"
+target_casilla_id = "saldo-neg-gyp-ahorro-em3-paso1-maxima"
+expression = { op = "min", args = [{ casilla_id = "1261" }, { op = "subtract", args = [{ casilla_id = "saldo-neg-gyp-ahorro-paso1-capacidad" }, { casilla_id = "saldo-neg-gyp-ahorro-em4-paso1-maxima" }] }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Si tras dicha compensación quedase saldo negativo, su importe se compensará en los cuatro años siguientes", "deberán efectuarse en la cuantía máxima que permita cada uno de los ejercicios siguientes"]
+# Art. 49.2 maximum of the em2 row in paso1: the lesser of its pending
+# balance and the paso1 capacity the older rows leave (oldest row first).
+[[revisions."2022".formulas]]
+id = "renta-saldo-neg-gyp-ahorro-em2-paso1-maxima"
+target_casilla_id = "saldo-neg-gyp-ahorro-em2-paso1-maxima"
+expression = { op = "min", args = [{ casilla_id = "1264" }, { op = "subtract", args = [{ casilla_id = "saldo-neg-gyp-ahorro-paso1-capacidad" }, { op = "sum", args = [{ casilla_id = "saldo-neg-gyp-ahorro-em4-paso1-maxima" }, { casilla_id = "saldo-neg-gyp-ahorro-em3-paso1-maxima" }] }] }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Si tras dicha compensación quedase saldo negativo, su importe se compensará en los cuatro años siguientes", "deberán efectuarse en la cuantía máxima que permita cada uno de los ejercicios siguientes"]
+# Art. 49.2 maximum of the em1 row in paso1: the lesser of its pending
+# balance and the paso1 capacity the older rows leave (oldest row first).
+[[revisions."2022".formulas]]
+id = "renta-saldo-neg-gyp-ahorro-em1-paso1-maxima"
+target_casilla_id = "saldo-neg-gyp-ahorro-em1-paso1-maxima"
+expression = { op = "min", args = [{ casilla_id = "1267" }, { op = "subtract", args = [{ casilla_id = "saldo-neg-gyp-ahorro-paso1-capacidad" }, { op = "sum", args = [{ casilla_id = "saldo-neg-gyp-ahorro-em4-paso1-maxima" }, { casilla_id = "saldo-neg-gyp-ahorro-em3-paso1-maxima" }, { casilla_id = "saldo-neg-gyp-ahorro-em2-paso1-maxima" }] }] }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Si tras dicha compensación quedase saldo negativo, su importe se compensará en los cuatro años siguientes", "deberán efectuarse en la cuantía máxima que permita cada uno de los ejercicios siguientes"]
+# What the em4 row still holds after step 1, for step 2.
+[[revisions."2022".formulas]]
+id = "renta-saldo-neg-gyp-ahorro-em4-resto-paso1"
+target_casilla_id = "saldo-neg-gyp-ahorro-em4-resto-paso1"
+expression = { op = "max", args = [{ literal = "0" }, { op = "subtract", args = [{ casilla_id = "1259" }, { casilla_id = "saldo-neg-gyp-ahorro-em4-paso1-maxima" }] }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Si tras dicha compensación quedase saldo negativo, su importe se compensará en los cuatro años siguientes", "deberán efectuarse en la cuantía máxima que permita cada uno de los ejercicios siguientes"]
+# What the em3 row still holds after step 1, for step 2.
+[[revisions."2022".formulas]]
+id = "renta-saldo-neg-gyp-ahorro-em3-resto-paso1"
+target_casilla_id = "saldo-neg-gyp-ahorro-em3-resto-paso1"
+expression = { op = "max", args = [{ literal = "0" }, { op = "subtract", args = [{ casilla_id = "1261" }, { casilla_id = "saldo-neg-gyp-ahorro-em3-paso1-maxima" }] }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Si tras dicha compensación quedase saldo negativo, su importe se compensará en los cuatro años siguientes", "deberán efectuarse en la cuantía máxima que permita cada uno de los ejercicios siguientes"]
+# What the em2 row still holds after step 1, for step 2.
+[[revisions."2022".formulas]]
+id = "renta-saldo-neg-gyp-ahorro-em2-resto-paso1"
+target_casilla_id = "saldo-neg-gyp-ahorro-em2-resto-paso1"
+expression = { op = "max", args = [{ literal = "0" }, { op = "subtract", args = [{ casilla_id = "1264" }, { casilla_id = "saldo-neg-gyp-ahorro-em2-paso1-maxima" }] }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Si tras dicha compensación quedase saldo negativo, su importe se compensará en los cuatro años siguientes", "deberán efectuarse en la cuantía máxima que permita cada uno de los ejercicios siguientes"]
+# What the em1 row still holds after step 1, for step 2.
+[[revisions."2022".formulas]]
+id = "renta-saldo-neg-gyp-ahorro-em1-resto-paso1"
+target_casilla_id = "saldo-neg-gyp-ahorro-em1-resto-paso1"
+expression = { op = "max", args = [{ literal = "0" }, { op = "subtract", args = [{ casilla_id = "1267" }, { casilla_id = "saldo-neg-gyp-ahorro-em1-paso1-maxima" }] }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Si tras dicha compensación quedase saldo negativo, su importe se compensará en los cuatro años siguientes", "deberán efectuarse en la cuantía máxima que permita cada uno de los ejercicios siguientes"]
+# Step 1 capacity (capital mobiliario): the kind's positive balance of the year after the
+# current-year cross offset (0429 - 0446); the pending
+# balances of the same kind offset it first (Manual Renta, Fase 2a, 1o).
+[[revisions."2022".formulas]]
+id = "renta-saldo-neg-rcm-ahorro-paso1-capacidad"
+target_casilla_id = "saldo-neg-rcm-ahorro-paso1-capacidad"
+expression = { op = "max", args = [{ literal = "0" }, { op = "subtract", args = [{ casilla_id = "0429" }, { casilla_id = "0446" }] }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Si tras dicha compensación quedase saldo negativo, su importe se compensará en los cuatro años siguientes", "deberán efectuarse en la cuantía máxima que permita cada uno de los ejercicios siguientes"]
+# Art. 49.2 maximum of the em4 row in paso1: the lesser of its pending
+# balance and the paso1 capacity the older rows leave (oldest row first).
+[[revisions."2022".formulas]]
+id = "renta-saldo-neg-rcm-ahorro-em4-paso1-maxima"
+target_casilla_id = "saldo-neg-rcm-ahorro-em4-paso1-maxima"
+expression = { op = "min", args = [{ casilla_id = "1272" }, { casilla_id = "saldo-neg-rcm-ahorro-paso1-capacidad" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Si tras dicha compensación quedase saldo negativo, su importe se compensará en los cuatro años siguientes", "deberán efectuarse en la cuantía máxima que permita cada uno de los ejercicios siguientes"]
+# Art. 49.2 maximum of the em3 row in paso1: the lesser of its pending
+# balance and the paso1 capacity the older rows leave (oldest row first).
+[[revisions."2022".formulas]]
+id = "renta-saldo-neg-rcm-ahorro-em3-paso1-maxima"
+target_casilla_id = "saldo-neg-rcm-ahorro-em3-paso1-maxima"
+expression = { op = "min", args = [{ casilla_id = "1274" }, { op = "subtract", args = [{ casilla_id = "saldo-neg-rcm-ahorro-paso1-capacidad" }, { casilla_id = "saldo-neg-rcm-ahorro-em4-paso1-maxima" }] }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Si tras dicha compensación quedase saldo negativo, su importe se compensará en los cuatro años siguientes", "deberán efectuarse en la cuantía máxima que permita cada uno de los ejercicios siguientes"]
+# Art. 49.2 maximum of the em2 row in paso1: the lesser of its pending
+# balance and the paso1 capacity the older rows leave (oldest row first).
+[[revisions."2022".formulas]]
+id = "renta-saldo-neg-rcm-ahorro-em2-paso1-maxima"
+target_casilla_id = "saldo-neg-rcm-ahorro-em2-paso1-maxima"
+expression = { op = "min", args = [{ casilla_id = "1277" }, { op = "subtract", args = [{ casilla_id = "saldo-neg-rcm-ahorro-paso1-capacidad" }, { op = "sum", args = [{ casilla_id = "saldo-neg-rcm-ahorro-em4-paso1-maxima" }, { casilla_id = "saldo-neg-rcm-ahorro-em3-paso1-maxima" }] }] }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Si tras dicha compensación quedase saldo negativo, su importe se compensará en los cuatro años siguientes", "deberán efectuarse en la cuantía máxima que permita cada uno de los ejercicios siguientes"]
+# Art. 49.2 maximum of the em1 row in paso1: the lesser of its pending
+# balance and the paso1 capacity the older rows leave (oldest row first).
+[[revisions."2022".formulas]]
+id = "renta-saldo-neg-rcm-ahorro-em1-paso1-maxima"
+target_casilla_id = "saldo-neg-rcm-ahorro-em1-paso1-maxima"
+expression = { op = "min", args = [{ casilla_id = "1280" }, { op = "subtract", args = [{ casilla_id = "saldo-neg-rcm-ahorro-paso1-capacidad" }, { op = "sum", args = [{ casilla_id = "saldo-neg-rcm-ahorro-em4-paso1-maxima" }, { casilla_id = "saldo-neg-rcm-ahorro-em3-paso1-maxima" }, { casilla_id = "saldo-neg-rcm-ahorro-em2-paso1-maxima" }] }] }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Si tras dicha compensación quedase saldo negativo, su importe se compensará en los cuatro años siguientes", "deberán efectuarse en la cuantía máxima que permita cada uno de los ejercicios siguientes"]
+# What the em4 row still holds after step 1, for step 2.
+[[revisions."2022".formulas]]
+id = "renta-saldo-neg-rcm-ahorro-em4-resto-paso1"
+target_casilla_id = "saldo-neg-rcm-ahorro-em4-resto-paso1"
+expression = { op = "max", args = [{ literal = "0" }, { op = "subtract", args = [{ casilla_id = "1272" }, { casilla_id = "saldo-neg-rcm-ahorro-em4-paso1-maxima" }] }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Si tras dicha compensación quedase saldo negativo, su importe se compensará en los cuatro años siguientes", "deberán efectuarse en la cuantía máxima que permita cada uno de los ejercicios siguientes"]
+# What the em3 row still holds after step 1, for step 2.
+[[revisions."2022".formulas]]
+id = "renta-saldo-neg-rcm-ahorro-em3-resto-paso1"
+target_casilla_id = "saldo-neg-rcm-ahorro-em3-resto-paso1"
+expression = { op = "max", args = [{ literal = "0" }, { op = "subtract", args = [{ casilla_id = "1274" }, { casilla_id = "saldo-neg-rcm-ahorro-em3-paso1-maxima" }] }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Si tras dicha compensación quedase saldo negativo, su importe se compensará en los cuatro años siguientes", "deberán efectuarse en la cuantía máxima que permita cada uno de los ejercicios siguientes"]
+# What the em2 row still holds after step 1, for step 2.
+[[revisions."2022".formulas]]
+id = "renta-saldo-neg-rcm-ahorro-em2-resto-paso1"
+target_casilla_id = "saldo-neg-rcm-ahorro-em2-resto-paso1"
+expression = { op = "max", args = [{ literal = "0" }, { op = "subtract", args = [{ casilla_id = "1277" }, { casilla_id = "saldo-neg-rcm-ahorro-em2-paso1-maxima" }] }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Si tras dicha compensación quedase saldo negativo, su importe se compensará en los cuatro años siguientes", "deberán efectuarse en la cuantía máxima que permita cada uno de los ejercicios siguientes"]
+# What the em1 row still holds after step 1, for step 2.
+[[revisions."2022".formulas]]
+id = "renta-saldo-neg-rcm-ahorro-em1-resto-paso1"
+target_casilla_id = "saldo-neg-rcm-ahorro-em1-resto-paso1"
+expression = { op = "max", args = [{ literal = "0" }, { op = "subtract", args = [{ casilla_id = "1280" }, { casilla_id = "saldo-neg-rcm-ahorro-em1-paso1-maxima" }] }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Si tras dicha compensación quedase saldo negativo, su importe se compensará en los cuatro años siguientes", "deberán efectuarse en la cuantía máxima que permita cada uno de los ejercicios siguientes"]
+# Step 2 capacity (gains and losses): what step 1 leaves of the other kind's positive
+# balance, within 25 per cent of that balance (0429) jointly with the
+# current-year cross offset (0446) (Manual Renta, Fase 2a, 2o).
+[[revisions."2022".formulas]]
+id = "renta-saldo-neg-gyp-ahorro-paso2-capacidad"
+target_casilla_id = "saldo-neg-gyp-ahorro-paso2-capacidad"
+expression = { op = "max", args = [{ literal = "0" }, { op = "min", args = [{ op = "subtract", args = [{ casilla_id = "saldo-neg-rcm-ahorro-paso1-capacidad" }, { op = "sum", args = [{ casilla_id = "saldo-neg-rcm-ahorro-em4-paso1-maxima" }, { casilla_id = "saldo-neg-rcm-ahorro-em3-paso1-maxima" }, { casilla_id = "saldo-neg-rcm-ahorro-em2-paso1-maxima" }, { casilla_id = "saldo-neg-rcm-ahorro-em1-paso1-maxima" }] }] }, { op = "subtract", args = [{ op = "percent", args = [{ casilla_id = "0429" }, { literal = "25" }] }, { casilla_id = "0446" }] }] }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["con el límite del 25 por ciento de dicho saldo positivo", "deberán efectuarse en la cuantía máxima que permita cada uno de los ejercicios siguientes"]
+# Art. 49.2 maximum of the em4 row in paso2: the lesser of its pending
+# balance and the paso2 capacity the older rows leave (oldest row first).
+[[revisions."2022".formulas]]
+id = "renta-saldo-neg-gyp-ahorro-em4-paso2-maxima"
+target_casilla_id = "saldo-neg-gyp-ahorro-em4-paso2-maxima"
+expression = { op = "min", args = [{ casilla_id = "saldo-neg-gyp-ahorro-em4-resto-paso1" }, { casilla_id = "saldo-neg-gyp-ahorro-paso2-capacidad" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Si tras dicha compensación quedase saldo negativo, su importe se compensará en los cuatro años siguientes", "deberán efectuarse en la cuantía máxima que permita cada uno de los ejercicios siguientes"]
+# Art. 49.2 maximum of the em3 row in paso2: the lesser of its pending
+# balance and the paso2 capacity the older rows leave (oldest row first).
+[[revisions."2022".formulas]]
+id = "renta-saldo-neg-gyp-ahorro-em3-paso2-maxima"
+target_casilla_id = "saldo-neg-gyp-ahorro-em3-paso2-maxima"
+expression = { op = "min", args = [{ casilla_id = "saldo-neg-gyp-ahorro-em3-resto-paso1" }, { op = "subtract", args = [{ casilla_id = "saldo-neg-gyp-ahorro-paso2-capacidad" }, { casilla_id = "saldo-neg-gyp-ahorro-em4-paso2-maxima" }] }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Si tras dicha compensación quedase saldo negativo, su importe se compensará en los cuatro años siguientes", "deberán efectuarse en la cuantía máxima que permita cada uno de los ejercicios siguientes"]
+# Art. 49.2 maximum of the em2 row in paso2: the lesser of its pending
+# balance and the paso2 capacity the older rows leave (oldest row first).
+[[revisions."2022".formulas]]
+id = "renta-saldo-neg-gyp-ahorro-em2-paso2-maxima"
+target_casilla_id = "saldo-neg-gyp-ahorro-em2-paso2-maxima"
+expression = { op = "min", args = [{ casilla_id = "saldo-neg-gyp-ahorro-em2-resto-paso1" }, { op = "subtract", args = [{ casilla_id = "saldo-neg-gyp-ahorro-paso2-capacidad" }, { op = "sum", args = [{ casilla_id = "saldo-neg-gyp-ahorro-em4-paso2-maxima" }, { casilla_id = "saldo-neg-gyp-ahorro-em3-paso2-maxima" }] }] }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Si tras dicha compensación quedase saldo negativo, su importe se compensará en los cuatro años siguientes", "deberán efectuarse en la cuantía máxima que permita cada uno de los ejercicios siguientes"]
+# Art. 49.2 maximum of the em1 row in paso2: the lesser of its pending
+# balance and the paso2 capacity the older rows leave (oldest row first).
+[[revisions."2022".formulas]]
+id = "renta-saldo-neg-gyp-ahorro-em1-paso2-maxima"
+target_casilla_id = "saldo-neg-gyp-ahorro-em1-paso2-maxima"
+expression = { op = "min", args = [{ casilla_id = "saldo-neg-gyp-ahorro-em1-resto-paso1" }, { op = "subtract", args = [{ casilla_id = "saldo-neg-gyp-ahorro-paso2-capacidad" }, { op = "sum", args = [{ casilla_id = "saldo-neg-gyp-ahorro-em4-paso2-maxima" }, { casilla_id = "saldo-neg-gyp-ahorro-em3-paso2-maxima" }, { casilla_id = "saldo-neg-gyp-ahorro-em2-paso2-maxima" }] }] }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Si tras dicha compensación quedase saldo negativo, su importe se compensará en los cuatro años siguientes", "deberán efectuarse en la cuantía máxima que permita cada uno de los ejercicios siguientes"]
+# Step 2 capacity (capital mobiliario): what step 1 leaves of the other kind's positive
+# balance, within 25 per cent of that balance (0424) jointly with the
+# current-year cross offset (0436) (Manual Renta, Fase 2a, 2o).
+[[revisions."2022".formulas]]
+id = "renta-saldo-neg-rcm-ahorro-paso2-capacidad"
+target_casilla_id = "saldo-neg-rcm-ahorro-paso2-capacidad"
+expression = { op = "max", args = [{ literal = "0" }, { op = "min", args = [{ op = "subtract", args = [{ casilla_id = "saldo-neg-gyp-ahorro-paso1-capacidad" }, { op = "sum", args = [{ casilla_id = "saldo-neg-gyp-ahorro-em4-paso1-maxima" }, { casilla_id = "saldo-neg-gyp-ahorro-em3-paso1-maxima" }, { casilla_id = "saldo-neg-gyp-ahorro-em2-paso1-maxima" }, { casilla_id = "saldo-neg-gyp-ahorro-em1-paso1-maxima" }] }] }, { op = "subtract", args = [{ op = "percent", args = [{ casilla_id = "0424" }, { literal = "25" }] }, { casilla_id = "0436" }] }] }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["con el límite del 25 por ciento de dicho saldo positivo", "deberán efectuarse en la cuantía máxima que permita cada uno de los ejercicios siguientes"]
+# Art. 49.2 maximum of the em4 row in paso2: the lesser of its pending
+# balance and the paso2 capacity the older rows leave (oldest row first).
+[[revisions."2022".formulas]]
+id = "renta-saldo-neg-rcm-ahorro-em4-paso2-maxima"
+target_casilla_id = "saldo-neg-rcm-ahorro-em4-paso2-maxima"
+expression = { op = "min", args = [{ casilla_id = "saldo-neg-rcm-ahorro-em4-resto-paso1" }, { casilla_id = "saldo-neg-rcm-ahorro-paso2-capacidad" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Si tras dicha compensación quedase saldo negativo, su importe se compensará en los cuatro años siguientes", "deberán efectuarse en la cuantía máxima que permita cada uno de los ejercicios siguientes"]
+# Art. 49.2 maximum of the em3 row in paso2: the lesser of its pending
+# balance and the paso2 capacity the older rows leave (oldest row first).
+[[revisions."2022".formulas]]
+id = "renta-saldo-neg-rcm-ahorro-em3-paso2-maxima"
+target_casilla_id = "saldo-neg-rcm-ahorro-em3-paso2-maxima"
+expression = { op = "min", args = [{ casilla_id = "saldo-neg-rcm-ahorro-em3-resto-paso1" }, { op = "subtract", args = [{ casilla_id = "saldo-neg-rcm-ahorro-paso2-capacidad" }, { casilla_id = "saldo-neg-rcm-ahorro-em4-paso2-maxima" }] }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Si tras dicha compensación quedase saldo negativo, su importe se compensará en los cuatro años siguientes", "deberán efectuarse en la cuantía máxima que permita cada uno de los ejercicios siguientes"]
+# Art. 49.2 maximum of the em2 row in paso2: the lesser of its pending
+# balance and the paso2 capacity the older rows leave (oldest row first).
+[[revisions."2022".formulas]]
+id = "renta-saldo-neg-rcm-ahorro-em2-paso2-maxima"
+target_casilla_id = "saldo-neg-rcm-ahorro-em2-paso2-maxima"
+expression = { op = "min", args = [{ casilla_id = "saldo-neg-rcm-ahorro-em2-resto-paso1" }, { op = "subtract", args = [{ casilla_id = "saldo-neg-rcm-ahorro-paso2-capacidad" }, { op = "sum", args = [{ casilla_id = "saldo-neg-rcm-ahorro-em4-paso2-maxima" }, { casilla_id = "saldo-neg-rcm-ahorro-em3-paso2-maxima" }] }] }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Si tras dicha compensación quedase saldo negativo, su importe se compensará en los cuatro años siguientes", "deberán efectuarse en la cuantía máxima que permita cada uno de los ejercicios siguientes"]
+# Art. 49.2 maximum of the em1 row in paso2: the lesser of its pending
+# balance and the paso2 capacity the older rows leave (oldest row first).
+[[revisions."2022".formulas]]
+id = "renta-saldo-neg-rcm-ahorro-em1-paso2-maxima"
+target_casilla_id = "saldo-neg-rcm-ahorro-em1-paso2-maxima"
+expression = { op = "min", args = [{ casilla_id = "saldo-neg-rcm-ahorro-em1-resto-paso1" }, { op = "subtract", args = [{ casilla_id = "saldo-neg-rcm-ahorro-paso2-capacidad" }, { op = "sum", args = [{ casilla_id = "saldo-neg-rcm-ahorro-em4-paso2-maxima" }, { casilla_id = "saldo-neg-rcm-ahorro-em3-paso2-maxima" }, { casilla_id = "saldo-neg-rcm-ahorro-em2-paso2-maxima" }] }] }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Si tras dicha compensación quedase saldo negativo, su importe se compensará en los cuatro años siguientes", "deberán efectuarse en la cuantía máxima que permita cada uno de los ejercicios siguientes"]
+# Anexo C.3 applied row 1260: the em4 amounts applied in step 1
+# (0439) and step 2 (0453).
+[[revisions."2022".formulas]]
+id = "renta-saldo-neg-gyp-ahorro-em4-aplicado"
+target_casilla_id = "1260"
+expression = { op = "sum", args = [{ casilla_id = "0439" }, { casilla_id = "0453" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Si tras dicha compensación quedase saldo negativo, su importe se compensará en los cuatro años siguientes", "deberán efectuarse en la cuantía máxima que permita cada uno de los ejercicios siguientes"]
+# Anexo C.3 applied row 1262: the em3 amounts applied in step 1
+# (0440) and step 2 (0454).
+[[revisions."2022".formulas]]
+id = "renta-saldo-neg-gyp-ahorro-em3-aplicado"
+target_casilla_id = "1262"
+expression = { op = "sum", args = [{ casilla_id = "0440" }, { casilla_id = "0454" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Si tras dicha compensación quedase saldo negativo, su importe se compensará en los cuatro años siguientes", "deberán efectuarse en la cuantía máxima que permita cada uno de los ejercicios siguientes"]
+# Anexo C.3 applied row 1265: the em2 amounts applied in step 1
+# (0441) and step 2 (0455).
+[[revisions."2022".formulas]]
+id = "renta-saldo-neg-gyp-ahorro-em2-aplicado"
+target_casilla_id = "1265"
+expression = { op = "sum", args = [{ casilla_id = "0441" }, { casilla_id = "0455" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Si tras dicha compensación quedase saldo negativo, su importe se compensará en los cuatro años siguientes", "deberán efectuarse en la cuantía máxima que permita cada uno de los ejercicios siguientes"]
+# Anexo C.3 applied row 1268: the em1 amounts applied in step 1
+# (0442) and step 2 (0448).
+[[revisions."2022".formulas]]
+id = "renta-saldo-neg-gyp-ahorro-em1-aplicado"
+target_casilla_id = "1268"
+expression = { op = "sum", args = [{ casilla_id = "0442" }, { casilla_id = "0448" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Si tras dicha compensación quedase saldo negativo, su importe se compensará en los cuatro años siguientes", "deberán efectuarse en la cuantía máxima que permita cada uno de los ejercicios siguientes"]
+# Remainder of the em3 row carried to later years (1263 =
+# 1261 - 1262); the stock gate refuses an
+# application above the stock, so the clamp only guards the arithmetic.
+[[revisions."2022".formulas]]
+id = "renta-saldo-neg-gyp-ahorro-em3-pendiente-fin"
+target_casilla_id = "1263"
+expression = { op = "max", args = [{ literal = "0" }, { op = "subtract", args = [{ casilla_id = "1261" }, { casilla_id = "1262" }] }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Si tras dicha compensación quedase saldo negativo, su importe se compensará en los cuatro años siguientes", "deberán efectuarse en la cuantía máxima que permita cada uno de los ejercicios siguientes"]
+# Remainder of the em2 row carried to later years (1266 =
+# 1264 - 1265); the stock gate refuses an
+# application above the stock, so the clamp only guards the arithmetic.
+[[revisions."2022".formulas]]
+id = "renta-saldo-neg-gyp-ahorro-em2-pendiente-fin"
+target_casilla_id = "1266"
+expression = { op = "max", args = [{ literal = "0" }, { op = "subtract", args = [{ casilla_id = "1264" }, { casilla_id = "1265" }] }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Si tras dicha compensación quedase saldo negativo, su importe se compensará en los cuatro años siguientes", "deberán efectuarse en la cuantía máxima que permita cada uno de los ejercicios siguientes"]
+# Remainder of the em1 row carried to later years (1269 =
+# 1267 - 1268); the stock gate refuses an
+# application above the stock, so the clamp only guards the arithmetic.
+[[revisions."2022".formulas]]
+id = "renta-saldo-neg-gyp-ahorro-em1-pendiente-fin"
+target_casilla_id = "1269"
+expression = { op = "max", args = [{ literal = "0" }, { op = "subtract", args = [{ casilla_id = "1267" }, { casilla_id = "1268" }] }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Si tras dicha compensación quedase saldo negativo, su importe se compensará en los cuatro años siguientes", "deberán efectuarse en la cuantía máxima que permita cada uno de los ejercicios siguientes"]
+# Anexo C.3 applied row 1273: the em4 amounts applied in step 1
+# (0449) and step 2 (0443).
+[[revisions."2022".formulas]]
+id = "renta-saldo-neg-rcm-ahorro-em4-aplicado"
+target_casilla_id = "1273"
+expression = { op = "sum", args = [{ casilla_id = "0449" }, { casilla_id = "0443" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Si tras dicha compensación quedase saldo negativo, su importe se compensará en los cuatro años siguientes", "deberán efectuarse en la cuantía máxima que permita cada uno de los ejercicios siguientes"]
+# Anexo C.3 applied row 1275: the em3 amounts applied in step 1
+# (0450) and step 2 (0444).
+[[revisions."2022".formulas]]
+id = "renta-saldo-neg-rcm-ahorro-em3-aplicado"
+target_casilla_id = "1275"
+expression = { op = "sum", args = [{ casilla_id = "0450" }, { casilla_id = "0444" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Si tras dicha compensación quedase saldo negativo, su importe se compensará en los cuatro años siguientes", "deberán efectuarse en la cuantía máxima que permita cada uno de los ejercicios siguientes"]
+# Anexo C.3 applied row 1278: the em2 amounts applied in step 1
+# (0451) and step 2 (0445).
+[[revisions."2022".formulas]]
+id = "renta-saldo-neg-rcm-ahorro-em2-aplicado"
+target_casilla_id = "1278"
+expression = { op = "sum", args = [{ casilla_id = "0451" }, { casilla_id = "0445" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Si tras dicha compensación quedase saldo negativo, su importe se compensará en los cuatro años siguientes", "deberán efectuarse en la cuantía máxima que permita cada uno de los ejercicios siguientes"]
+# Anexo C.3 applied row 1281: the em1 amounts applied in step 1
+# (0452) and step 2 (0447).
+[[revisions."2022".formulas]]
+id = "renta-saldo-neg-rcm-ahorro-em1-aplicado"
+target_casilla_id = "1281"
+expression = { op = "sum", args = [{ casilla_id = "0452" }, { casilla_id = "0447" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Si tras dicha compensación quedase saldo negativo, su importe se compensará en los cuatro años siguientes", "deberán efectuarse en la cuantía máxima que permita cada uno de los ejercicios siguientes"]
+# Remainder of the em3 row carried to later years (1276 =
+# 1274 - 1275); the stock gate refuses an
+# application above the stock, so the clamp only guards the arithmetic.
+[[revisions."2022".formulas]]
+id = "renta-saldo-neg-rcm-ahorro-em3-pendiente-fin"
+target_casilla_id = "1276"
+expression = { op = "max", args = [{ literal = "0" }, { op = "subtract", args = [{ casilla_id = "1274" }, { casilla_id = "1275" }] }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Si tras dicha compensación quedase saldo negativo, su importe se compensará en los cuatro años siguientes", "deberán efectuarse en la cuantía máxima que permita cada uno de los ejercicios siguientes"]
+# Remainder of the em2 row carried to later years (1279 =
+# 1277 - 1278); the stock gate refuses an
+# application above the stock, so the clamp only guards the arithmetic.
+[[revisions."2022".formulas]]
+id = "renta-saldo-neg-rcm-ahorro-em2-pendiente-fin"
+target_casilla_id = "1279"
+expression = { op = "max", args = [{ literal = "0" }, { op = "subtract", args = [{ casilla_id = "1277" }, { casilla_id = "1278" }] }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Si tras dicha compensación quedase saldo negativo, su importe se compensará en los cuatro años siguientes", "deberán efectuarse en la cuantía máxima que permita cada uno de los ejercicios siguientes"]
+# Remainder of the em1 row carried to later years (1282 =
+# 1280 - 1281); the stock gate refuses an
+# application above the stock, so the clamp only guards the arithmetic.
+[[revisions."2022".formulas]]
+id = "renta-saldo-neg-rcm-ahorro-em1-pendiente-fin"
+target_casilla_id = "1282"
+expression = { op = "max", args = [{ literal = "0" }, { op = "subtract", args = [{ casilla_id = "1280" }, { casilla_id = "1281" }] }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Si tras dicha compensación quedase saldo negativo, su importe se compensará en los cuatro años siguientes", "deberán efectuarse en la cuantía máxima que permita cada uno de los ejercicios siguientes"]
 [[revisions."2022".formulas]]
 id = "renta-deduccion-maternidad-0611-cotizaciones"
 target_casilla_id = "0611"

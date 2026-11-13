@@ -42,11 +42,13 @@ def _classified_result_is_complete(result: LedgerClassifyOperationResult) -> Non
         raise ValueError("classified result requires its transaction and review status")
 
 
-def _carries_rental_link(result: LedgerClassifyOperationResult) -> bool:
+def _carries_ledger_link(result: LedgerClassifyOperationResult) -> bool:
     return (
         result.arrendamiento_ref is not None
         or result.inmueble_ref is not None
         or result.gasto_capital_inmobiliario is not None
+        or result.posicion_ref is not None
+        or result.concepto_capital_mobiliario is not None
     )
 
 
@@ -63,7 +65,7 @@ def _validation_result_is_closed(result: LedgerClassifyOperationResult) -> None:
     if (
         result.transaction is not None
         or _carries_iva_classification(result)
-        or _carries_rental_link(result)
+        or _carries_ledger_link(result)
         or result.review_status is not None
         or result.bucket_event_ids
         or result.validation_kind == "none"
@@ -87,6 +89,8 @@ class LedgerClassifyOperationResult(BaseModel):
     arrendamiento_ref: LedgerClassifyShortText | None = None
     inmueble_ref: LedgerClassifyShortText | None = None
     gasto_capital_inmobiliario: LedgerClassifyShortText | None = None
+    posicion_ref: LedgerClassifyShortText | None = None
+    concepto_capital_mobiliario: LedgerClassifyShortText | None = None
     review_status: LedgerReviewStatus | None = None
     bucket_event_ids: Annotated[tuple[BucketEventId, ...], Field(max_length=_MAX_CLASSIFY_EVENT_IDS)] = ()
     validation_kind: LedgerClassifyValidationKind = "none"

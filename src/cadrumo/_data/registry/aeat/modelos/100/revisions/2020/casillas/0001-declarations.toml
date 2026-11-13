@@ -2950,6 +2950,8 @@ number = "0429"
 section = ["resultados", "base_imponible_res"]
 semantic_role = "irpf_saldo_neto_rdto_capital_mobiliario_ahorro"
 continuidad_id = "irpf-saldo-neto-rdto-capital-mobiliario-ahorro"
+input_kind = "computed"
+formula = "renta-capital-mobiliario-ahorro-saldo-positivo"
 legal_refs = ["ley-35-2006:art-49"]
 [[revisions."2020".casillas]]
 id = "0430"
@@ -2957,6 +2959,8 @@ number = "0430"
 section = ["resultados", "integracion_res", "rendimientos_mobiliario_res"]
 semantic_role = "irpf_saldo_neto_rdto_capital_mobiliario_ahorro_imputado"
 continuidad_id = "irpf-saldo-neto-rdto-capital-mobiliario-ahorro-imputado"
+input_kind = "computed"
+formula = "renta-capital-mobiliario-ahorro-saldo-negativo"
 legal_refs = ["ley-35-2006:art-25"]
 [[revisions."2020".casillas]]
 id = "0431"
@@ -3186,10 +3190,8 @@ legal_refs = ["ley-35-2006:art-11"]
 id = "0463"
 number = "0463"
 section = ["toma_datos_ampliada", "red_base_imponible", "red_prevision_social"]
-semantic_role = "irpf_red_prevision_social_exceso_2015_2019"
-semantic_role_cardinality = "intentional_singleton"
-semantic_role_cardinality_reason = "2020-only rolling 2015-2019 social-provision excess window; the label explicitly names the window and 2021 shifts to 2016-2020."
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26"]
+semantic_role = "irpf_red_prevision_social_exceso_ejercicios_anteriores"
+legal_refs = ["ley-35-2006:art-51", "ley-35-2006:art-52-2015"]
 [[revisions."2020".casillas]]
 id = "0464"
 number = "0464"

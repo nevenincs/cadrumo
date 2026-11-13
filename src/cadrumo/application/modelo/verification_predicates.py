@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import decimal as _decimal
 from collections.abc import Callable, Collection, Mapping
-from dataclasses import dataclass
 from datetime import date as _date
 from decimal import Decimal
 from enum import StrEnum
@@ -12,8 +11,6 @@ from types import MappingProxyType
 from typing import TYPE_CHECKING
 
 from ...core.casilla_id import CasillaId, validated_casilla_id
-from ...core.money.rounding import CENT
-from ...core.parsing.dates import parse_date
 from ...domain.calculations.registry.queries import RegistryQueryService
 from ...domain.calculations.registry.renta_codes_catalogue import (
     is_ue_eea_country_code,
@@ -37,10 +34,16 @@ from ...domain.modelos.verification_report import (
 )
 from .action_errors import (
     ModeloApplicabilityFilterError,
-    ModeloPredicateDateRequiredError,
     ModeloVerificationPredicateMalformedError,
 )
 from .refusal_door_verdicts import caller_defect_verdict, registry_defect_verdict
+from .verification_predicate_advisory import ADVISORY_PREDICATE_EVALUATORS
+from .verification_predicate_operands import (
+    AdmittedPredicate,
+    equals_sum_operands,
+    parse_predicate_date,
+    roll_forward_balance_reconciles,
+)
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -72,21 +75,6 @@ class VerificationPredicateRefusal(StrEnum):
 
 _BLOCKING_ROUTE = VerificationPredicateRoute.BLOCKING
 _ADVISORY_ROUTE = VerificationPredicateRoute.ADVISORY
-
-
-@dataclass(frozen=True, slots=True)
-class _AdmittedPredicate:
-    """A registry predicate admitted to one evaluation route, its operands already read.
-
-    ``threshold`` and ``cutoff`` are the registry-authored literals of the
-    operators that carry them, read once at admission so no evaluator can meet
-    an unreadable one.
-    """
-
-    parsed: ParsedVerificationPredicate
-    casilla_ids: tuple[CasillaId, ...]
-    threshold: Decimal | None = None
-    cutoff: _date | None = None
 
 
 def _predicate_casilla_ids(predicate: ParsedVerificationPredicate) -> list[CasillaId]:
@@ -184,7 +172,7 @@ def _predicate_literals(
     return threshold, cutoff
 
 
-def _required_parsed_predicate(expression: str, *, route: VerificationPredicateRoute) -> _AdmittedPredicate:
+def _required_parsed_predicate(expression: str, *, route: VerificationPredicateRoute) -> AdmittedPredicate:
     """Admit one registry predicate to its route, refusing it before any evaluation.
 
     An unparseable expression, an operator the route has no evaluator for, a
@@ -198,7 +186,7 @@ def _required_parsed_predicate(expression: str, *, route: VerificationPredicateR
     if parsed is None:
         raise _predicate_refusal(_vocabulary_operator(expression), VerificationPredicateRefusal.UNPARSEABLE, route)
     operator = parsed.operator
-    route_operators = _BLOCKING_PREDICATE_EVALUATORS if route is _BLOCKING_ROUTE else _ADVISORY_PREDICATE_EVALUATORS
+    route_operators = _BLOCKING_PREDICATE_EVALUATORS if route is _BLOCKING_ROUTE else ADVISORY_PREDICATE_EVALUATORS
     if operator not in route_operators:
         raise _predicate_refusal(operator, VerificationPredicateRefusal.OPERATOR_FAMILY, route)
     specification = VERIFICATION_PREDICATE_SPECIFICATIONS[operator]
@@ -209,7 +197,7 @@ def _required_parsed_predicate(expression: str, *, route: VerificationPredicateR
         raise _predicate_refusal(operator, VerificationPredicateRefusal.ARITY, route)
     casilla_ids = tuple(_predicate_casilla_ids(parsed))
     threshold, cutoff = _predicate_literals(parsed, route)
-    return _AdmittedPredicate(parsed=parsed, casilla_ids=casilla_ids, threshold=threshold, cutoff=cutoff)
+    return AdmittedPredicate(parsed=parsed, casilla_ids=casilla_ids, threshold=threshold, cutoff=cutoff)
 
 
 def _refuse_undeclared_blocking_casillas(
@@ -247,79 +235,8 @@ def _unique_predicate_casilla_id(
     return casilla_ids[0] if len(casilla_ids) == 1 else None
 
 
-def parse_predicate_date(raw: str) -> _date | None:
-    """Parse a date string, or ``None`` when absent/unparseable.
-
-    Accepts the ISO form (the cutoff literal shape) and the Spanish day-first
-    operator-entry forms ``DD/MM/YYYY`` and ``DD-MM-YYYY``, both resolved by the
-    canonical :func:`core.parsing.dates.parse_date` contract rather than a local
-    format list. Used by the ``deduccion_requires_adquisicion_before`` advisory
-    to read the acquisition-date TEXT casilla and the cutoff literal.
-
-    The canonical parser requires two-digit day and month components, so a
-    partially-typed ``1/2/2024`` is no longer silently resolved to a date. That
-    matters here specifically: the value decides a deduction's eligibility
-    against a statutory cutoff, and an under-specified entry is a date the
-    operator has not actually stated. For the operator-entered acquisition date
-    it returns ``None`` like any other unparseable value, so the advisory treats
-    it as "no eligibility signal" rather than acting on a guess; an unreadable
-    registry cutoff is instead refused at predicate admission.
-    """
-    text = raw.strip()
-    if not text:
-        return None
-    for fmt in ("iso8601", "ddmmyyyy"):
-        parsed = parse_date(text, fmt=fmt, on_error="none")
-        if parsed is not None:
-            return parsed
-    return None
-
-
-def _roll_forward_balance_reconciles(
-    ids: tuple[CasillaId, ...],
-    casilla_values: Mapping[CasillaId, Decimal],
-) -> bool:
-    """Return whether a carry-forward closing balance reconciles to its roll-forward.
-
-    ``ids`` is ``[closing, opening, applied, base]``, its arity fixed by
-    predicate admission. The carry-forward stock continuity invariant is::
-
-        closing == opening − applied + max(0, −base)
-
-    the opening stock less the amount applied plus any stock newly generated
-    this period. Holds within a one-cent tolerance to absorb per-detail
-    rounding. A missing casilla reads as ``Decimal(0)`` via ``.get``.
-    """
-    closing_id, opening_id, applied_id, base_id = ids
-    closing = casilla_values.get(closing_id, Decimal(0))
-    opening = casilla_values.get(opening_id, Decimal(0))
-    applied = casilla_values.get(applied_id, Decimal(0))
-    base = casilla_values.get(base_id, Decimal(0))
-    generated = max(Decimal(0), -base)
-    expected = opening - applied + generated
-    # Bounded at the cent quantum: absorbs the sub-cent drift a
-    # total-of-per-year-detail figure accumulates, without masking a genuine
-    # discontinuity, which is euros rather than cents.
-    return abs(closing - expected) <= CENT
-
-
 _NON_RESIDENT_IRNR_NON_EEA_FILTER = "non_resident_irnr_non_eea"
 _IRNR_TAX_REGIME = "irnr"
-_UE_EEE_STATUS_FIELD = "ue_eee_status"
-
-
-def _profile_flag(profile: TaxpayerProfile, field: str, fact_date: _date | None) -> bool:
-    """Read one named profile flag; the EU/EEA status is a fact of ``fact_date``."""
-    if field == _UE_EEE_STATUS_FIELD:
-        if fact_date is None:
-            raise ModeloPredicateDateRequiredError(
-                f"Reading {field} needs the date of the filing period; none was given",
-                translated_message="errors.refused.refused_modelo_predicate_date_required",
-                context={"fact": field},
-                precondition_verdict=caller_defect_verdict("predicate_date"),
-            )
-        return profile.ue_eee_status_on(fact_date)
-    return bool(getattr(profile, field, False))
 
 
 def evaluate_applicability_filter(
@@ -365,13 +282,13 @@ def evaluate_applicability_filter(
 
 
 _BlockingPredicateEvaluator = Callable[
-    [_AdmittedPredicate, Mapping[CasillaId, Decimal], TaxpayerProfile, Mapping[CasillaId, str], _date | None],
+    [AdmittedPredicate, Mapping[CasillaId, Decimal], TaxpayerProfile, Mapping[CasillaId, str], _date | None],
     bool,
 ]
 
 
 def _evaluate_all_nonzero(
-    predicate: _AdmittedPredicate,
+    predicate: AdmittedPredicate,
     casilla_values: Mapping[CasillaId, Decimal],
     _profile: TaxpayerProfile,
     _text_values: Mapping[CasillaId, str],
@@ -381,7 +298,7 @@ def _evaluate_all_nonzero(
 
 
 def _evaluate_any_nonzero(
-    predicate: _AdmittedPredicate,
+    predicate: AdmittedPredicate,
     casilla_values: Mapping[CasillaId, Decimal],
     _profile: TaxpayerProfile,
     _text_values: Mapping[CasillaId, str],
@@ -391,7 +308,7 @@ def _evaluate_any_nonzero(
 
 
 def _evaluate_at_most_one_positive(
-    predicate: _AdmittedPredicate,
+    predicate: AdmittedPredicate,
     casilla_values: Mapping[CasillaId, Decimal],
     _profile: TaxpayerProfile,
     _text_values: Mapping[CasillaId, str],
@@ -401,7 +318,7 @@ def _evaluate_at_most_one_positive(
 
 
 def _evaluate_positive_amount_within_present_bound(
-    predicate: _AdmittedPredicate,
+    predicate: AdmittedPredicate,
     casilla_values: Mapping[CasillaId, Decimal],
     _profile: TaxpayerProfile,
     _text_values: Mapping[CasillaId, str],
@@ -424,7 +341,7 @@ def _evaluate_positive_amount_within_present_bound(
 
 
 def _evaluate_application_equals_present_maximum(
-    predicate: _AdmittedPredicate,
+    predicate: AdmittedPredicate,
     casilla_values: Mapping[CasillaId, Decimal],
     _profile: TaxpayerProfile,
     _text_values: Mapping[CasillaId, str],
@@ -441,8 +358,33 @@ def _evaluate_application_equals_present_maximum(
     return casilla_values.get(application_id, Decimal(0)) == casilla_values[maximum_id]
 
 
+def _evaluate_application_order_immaterial(
+    predicate: AdmittedPredicate,
+    casilla_values: Mapping[CasillaId, Decimal],
+    _profile: TaxpayerProfile,
+    _text_values: Mapping[CasillaId, str],
+    _fact_date: _date | None,
+) -> bool:
+    """Hold when the amounts applied from each stock do not turn on the order the stocks are taken in.
+
+    The capacity is split across the stocks one after another, so the split
+    depends on the order only when two or more stocks are positive and a
+    positive capacity falls short of their sum. An omitted stock reads as zero;
+    an absent capacity facing two or more positive stocks never holds, because
+    the split is then unknown.
+    """
+    capacity_id, *stock_ids = predicate.casilla_ids
+    positive = [value for cid in stock_ids if (value := casilla_values.get(cid, Decimal(0))) > Decimal(0)]
+    if len(positive) <= 1:
+        return True
+    if capacity_id not in casilla_values:
+        return False
+    capacity = casilla_values[capacity_id]
+    return capacity <= Decimal(0) or capacity >= sum(positive, Decimal(0))
+
+
 def _evaluate_equals(
-    predicate: _AdmittedPredicate,
+    predicate: AdmittedPredicate,
     casilla_values: Mapping[CasillaId, Decimal],
     _profile: TaxpayerProfile,
     _text_values: Mapping[CasillaId, str],
@@ -452,33 +394,19 @@ def _evaluate_equals(
     return lhs == rhs
 
 
-def _equals_sum_operands(
-    predicate: _AdmittedPredicate,
-    casilla_values: Mapping[CasillaId, Decimal],
-) -> tuple[CasillaId, Decimal, Decimal]:
-    """Return the total casilla, its value, and the sum of its addends.
-
-    Admission guarantees a total and at least two addends; a missing casilla
-    reads as ``Decimal(0)`` like every other operator.
-    """
-    total_id, *addend_ids = predicate.casilla_ids
-    addend_sum = sum((casilla_values.get(cid, Decimal(0)) for cid in addend_ids), Decimal(0))
-    return total_id, casilla_values.get(total_id, Decimal(0)), addend_sum
-
-
 def _evaluate_equals_sum(
-    predicate: _AdmittedPredicate,
+    predicate: AdmittedPredicate,
     casilla_values: Mapping[CasillaId, Decimal],
     _profile: TaxpayerProfile,
     _text_values: Mapping[CasillaId, str],
     _fact_date: _date | None,
 ) -> bool:
-    _total_id, total, addend_sum = _equals_sum_operands(predicate, casilla_values)
+    _total_id, total, addend_sum = equals_sum_operands(predicate, casilla_values)
     return total == addend_sum
 
 
 def _evaluate_implies_nonzero(
-    predicate: _AdmittedPredicate,
+    predicate: AdmittedPredicate,
     casilla_values: Mapping[CasillaId, Decimal],
     _profile: TaxpayerProfile,
     _text_values: Mapping[CasillaId, str],
@@ -493,7 +421,7 @@ def _evaluate_implies_nonzero(
 
 
 def _evaluate_implies_any_nonzero(
-    predicate: _AdmittedPredicate,
+    predicate: AdmittedPredicate,
     casilla_values: Mapping[CasillaId, Decimal],
     _profile: TaxpayerProfile,
     _text_values: Mapping[CasillaId, str],
@@ -507,7 +435,7 @@ def _evaluate_implies_any_nonzero(
 
 
 def _evaluate_casilla_equals_implies_nonzero(
-    predicate: _AdmittedPredicate,
+    predicate: AdmittedPredicate,
     casilla_values: Mapping[CasillaId, Decimal],
     _profile: TaxpayerProfile,
     text_values: Mapping[CasillaId, str],
@@ -520,7 +448,7 @@ def _evaluate_casilla_equals_implies_nonzero(
 
 
 def _evaluate_casilla_equals_implies_zero(
-    predicate: _AdmittedPredicate,
+    predicate: AdmittedPredicate,
     casilla_values: Mapping[CasillaId, Decimal],
     _profile: TaxpayerProfile,
     text_values: Mapping[CasillaId, str],
@@ -533,7 +461,7 @@ def _evaluate_casilla_equals_implies_zero(
 
 
 def _evaluate_profile_field_required(
-    predicate: _AdmittedPredicate,
+    predicate: AdmittedPredicate,
     _casilla_values: Mapping[CasillaId, Decimal],
     profile: TaxpayerProfile,
     _text_values: Mapping[CasillaId, str],
@@ -546,13 +474,13 @@ def _evaluate_profile_field_required(
 
 
 def _evaluate_roll_forward_balances(
-    predicate: _AdmittedPredicate,
+    predicate: AdmittedPredicate,
     casilla_values: Mapping[CasillaId, Decimal],
     _profile: TaxpayerProfile,
     _text_values: Mapping[CasillaId, str],
     _fact_date: _date | None,
 ) -> bool:
-    return _roll_forward_balance_reconciles(predicate.casilla_ids, casilla_values)
+    return roll_forward_balance_reconciles(predicate.casilla_ids, casilla_values)
 
 
 _BLOCKING_PREDICATE_EVALUATORS: Mapping[VerificationPredicateOperator, _BlockingPredicateEvaluator] = MappingProxyType(
@@ -567,6 +495,7 @@ _BLOCKING_PREDICATE_EVALUATORS: Mapping[VerificationPredicateOperator, _Blocking
         VerificationPredicateOperator.APPLICATION_EQUALS_PRESENT_MAXIMUM: (
             _evaluate_application_equals_present_maximum
         ),
+        VerificationPredicateOperator.APPLICATION_ORDER_IMMATERIAL: _evaluate_application_order_immaterial,
         VerificationPredicateOperator.CASILLA_EQUALS_IMPLIES_NONZERO: _evaluate_casilla_equals_implies_nonzero,
         VerificationPredicateOperator.CASILLA_EQUALS_IMPLIES_ZERO: _evaluate_casilla_equals_implies_zero,
         VerificationPredicateOperator.EQUALS: _evaluate_equals,
@@ -602,6 +531,10 @@ def evaluate_predicate_expression(
       present bound value and must not exceed it.
     - ``application_equals_present_maximum(["application_id", "maximum_id"])``
       — the maximum must be present and the application must equal it.
+    - ``application_order_immaterial(["capacity_id", "stock_id", ...])`` —
+      the split of the capacity across the stocks must not depend on their
+      order: at most one positive stock, a capacity at or below zero, or a
+      capacity covering every positive stock.
     - ``casilla_equals_implies_nonzero`` / ``casilla_equals_implies_zero`` —
       when the antecedent's operator-entered text equals the literal, the
       consequent must be non-zero, or present and zero.
@@ -643,243 +576,8 @@ def evaluate_predicate_expression(
     )
 
 
-_AdvisoryPredicateEvaluator = Callable[
-    [
-        _AdmittedPredicate,
-        Mapping[CasillaId, Decimal],
-        Mapping[CasillaId, str],
-        TaxpayerProfile | None,
-        _date | None,
-    ],
-    bool,
-]
-
-
-def _advisory_ratio_ge_fires(
-    predicate: _AdmittedPredicate,
-    casilla_values: Mapping[CasillaId, Decimal],
-    _text_values: Mapping[CasillaId, str],
-    _profile: TaxpayerProfile | None,
-    _fact_date: _date | None,
-) -> bool:
-    num_id, den_id = predicate.casilla_ids
-    threshold = predicate.threshold
-    if threshold is None:
-        raise AssertionError("admission reads every ratio threshold")
-    den = casilla_values.get(den_id, Decimal(0))
-    if den <= Decimal(0):
-        return False
-    return (casilla_values.get(num_id, Decimal(0)) / den) >= threshold
-
-
-def _advisory_profile_flag_fires(
-    predicate: _AdmittedPredicate,
-    _casilla_values: Mapping[CasillaId, Decimal],
-    _text_values: Mapping[CasillaId, str],
-    profile: TaxpayerProfile | None,
-    fact_date: _date | None,
-) -> bool:
-    if profile is None:
-        return False
-    return _profile_flag(profile, predicate.parsed.profile_field, fact_date)
-
-
-def _advisory_positive_fires(
-    predicate: _AdmittedPredicate,
-    casilla_values: Mapping[CasillaId, Decimal],
-    _text_values: Mapping[CasillaId, str],
-    _profile: TaxpayerProfile | None,
-    _fact_date: _date | None,
-) -> bool:
-    (casilla_id,) = predicate.casilla_ids
-    return casilla_values.get(casilla_id, Decimal(0)) > Decimal(0)
-
-
-def _advisory_at_most_one_positive_fires(
-    predicate: _AdmittedPredicate,
-    casilla_values: Mapping[CasillaId, Decimal],
-    _text_values: Mapping[CasillaId, str],
-    _profile: TaxpayerProfile | None,
-    _fact_date: _date | None,
-) -> bool:
-    return sum(1 for cid in predicate.casilla_ids if casilla_values.get(cid, Decimal(0)) > Decimal(0)) > 1
-
-
-def _advisory_implies_nonzero_fires(
-    predicate: _AdmittedPredicate,
-    casilla_values: Mapping[CasillaId, Decimal],
-    _text_values: Mapping[CasillaId, str],
-    _profile: TaxpayerProfile | None,
-    _fact_date: _date | None,
-) -> bool:
-    antecedent_id, consequent_id = predicate.casilla_ids
-    antecedent = casilla_values.get(antecedent_id, Decimal(0))
-    consequent = casilla_values.get(consequent_id, Decimal(0))
-    return antecedent > Decimal(0) and consequent == Decimal(0)
-
-
-def _advisory_implies_any_nonzero_fires(
-    predicate: _AdmittedPredicate,
-    casilla_values: Mapping[CasillaId, Decimal],
-    _text_values: Mapping[CasillaId, str],
-    _profile: TaxpayerProfile | None,
-    _fact_date: _date | None,
-) -> bool:
-    antecedent_id, *consequent_ids = predicate.casilla_ids
-    antecedent = casilla_values.get(antecedent_id, Decimal(0))
-    if antecedent <= Decimal(0):
-        return False
-    return all(casilla_values.get(cid, Decimal(0)) == Decimal(0) for cid in consequent_ids)
-
-
-def _advisory_roll_forward_balances_fires(
-    predicate: _AdmittedPredicate,
-    casilla_values: Mapping[CasillaId, Decimal],
-    _text_values: Mapping[CasillaId, str],
-    _profile: TaxpayerProfile | None,
-    _fact_date: _date | None,
-) -> bool:
-    return not _roll_forward_balance_reconciles(predicate.casilla_ids, casilla_values)
-
-
-def _advisory_equals_fires(
-    predicate: _AdmittedPredicate,
-    casilla_values: Mapping[CasillaId, Decimal],
-    _text_values: Mapping[CasillaId, str],
-    _profile: TaxpayerProfile | None,
-    _fact_date: _date | None,
-) -> bool:
-    lhs, rhs = (casilla_values.get(cid, Decimal(0)) for cid in predicate.casilla_ids)
-    return lhs != rhs
-
-
-def _advisory_equals_sum_fires(
-    predicate: _AdmittedPredicate,
-    casilla_values: Mapping[CasillaId, Decimal],
-    _text_values: Mapping[CasillaId, str],
-    _profile: TaxpayerProfile | None,
-    _fact_date: _date | None,
-) -> bool:
-    _total_id, total, addend_sum = _equals_sum_operands(predicate, casilla_values)
-    return total != addend_sum
-
-
-def _advisory_casilla_equals_implies_nonzero_fires(
-    predicate: _AdmittedPredicate,
-    casilla_values: Mapping[CasillaId, Decimal],
-    text_values: Mapping[CasillaId, str],
-    _profile: TaxpayerProfile | None,
-    _fact_date: _date | None,
-) -> bool:
-    antecedent_id, consequent_id = predicate.casilla_ids
-    if text_values.get(antecedent_id) != predicate.parsed.literal:
-        return False
-    return casilla_values.get(consequent_id, Decimal(0)) == Decimal(0)
-
-
-def _advisory_casilla_equals_implies_zero_fires(
-    predicate: _AdmittedPredicate,
-    casilla_values: Mapping[CasillaId, Decimal],
-    text_values: Mapping[CasillaId, str],
-    _profile: TaxpayerProfile | None,
-    _fact_date: _date | None,
-) -> bool:
-    antecedent, consequent = predicate.casilla_ids
-    return text_values.get(antecedent) == predicate.parsed.literal and (
-        consequent not in casilla_values or casilla_values[consequent] != 0
-    )
-
-
-def _advisory_casilla_equals_implies_profile_flag_fires(
-    predicate: _AdmittedPredicate,
-    _casilla_values: Mapping[CasillaId, Decimal],
-    text_values: Mapping[CasillaId, str],
-    profile: TaxpayerProfile | None,
-    fact_date: _date | None,
-) -> bool:
-    (antecedent_id,) = predicate.casilla_ids
-    if text_values.get(antecedent_id) != predicate.parsed.literal:
-        return False
-    if profile is None:
-        return False
-    return not _profile_flag(profile, predicate.parsed.profile_field, fact_date)
-
-
-def _advisory_casilla_equals_implies_diverges_fires(
-    predicate: _AdmittedPredicate,
-    casilla_values: Mapping[CasillaId, Decimal],
-    text_values: Mapping[CasillaId, str],
-    _profile: TaxpayerProfile | None,
-    _fact_date: _date | None,
-) -> bool:
-    antecedent_id, casilla_a_id, casilla_b_id = predicate.casilla_ids
-    if text_values.get(antecedent_id) != predicate.parsed.literal:
-        return False
-    casilla_a = casilla_values.get(casilla_a_id, Decimal(0))
-    casilla_b = casilla_values.get(casilla_b_id, Decimal(0))
-    return abs(casilla_a - casilla_b) > Decimal("0.01")
-
-
-def _advisory_deduccion_requires_adquisicion_before_fires(
-    predicate: _AdmittedPredicate,
-    casilla_values: Mapping[CasillaId, Decimal],
-    text_values: Mapping[CasillaId, str],
-    _profile: TaxpayerProfile | None,
-    _fact_date: _date | None,
-) -> bool:
-    amount_id, acquisition_date_id, construction_date_id = predicate.casilla_ids
-    cutoff = predicate.cutoff
-    if cutoff is None:
-        raise AssertionError("admission reads every deduction cutoff")
-    if casilla_values.get(amount_id, Decimal(0)) <= Decimal(0):
-        return False
-    acquisition_date = parse_predicate_date(text_values.get(acquisition_date_id, ""))
-    eligible_by_acquisition = acquisition_date is not None and acquisition_date < cutoff
-    eligible_by_construction = bool(text_values.get(construction_date_id, "").strip())
-    return not (eligible_by_acquisition or eligible_by_construction)
-
-
-def _advisory_computed_diverges_fires(
-    predicate: _AdmittedPredicate,
-    casilla_values: Mapping[CasillaId, Decimal],
-    _text_values: Mapping[CasillaId, str],
-    _profile: TaxpayerProfile | None,
-    _fact_date: _date | None,
-) -> bool:
-    declared_id, computed_id = predicate.casilla_ids
-    computed = casilla_values.get(computed_id, Decimal(0))
-    if computed <= Decimal(0):
-        return False
-    declared = casilla_values.get(declared_id, Decimal(0))
-    return abs(declared - computed) > Decimal("0.01")
-
-
-_ADVISORY_PREDICATE_EVALUATORS: Mapping[VerificationPredicateOperator, _AdvisoryPredicateEvaluator] = MappingProxyType(
-    {
-        VerificationPredicateOperator.ADVISORY_WHEN_RATIO_GE: _advisory_ratio_ge_fires,
-        VerificationPredicateOperator.PROFILE_FLAG_ENABLED: _advisory_profile_flag_fires,
-        VerificationPredicateOperator.ADVISORY_WHEN_POSITIVE: _advisory_positive_fires,
-        VerificationPredicateOperator.AT_MOST_ONE_POSITIVE: _advisory_at_most_one_positive_fires,
-        VerificationPredicateOperator.IMPLIES_NONZERO: _advisory_implies_nonzero_fires,
-        VerificationPredicateOperator.IMPLIES_ANY_NONZERO: _advisory_implies_any_nonzero_fires,
-        VerificationPredicateOperator.ROLL_FORWARD_BALANCES: _advisory_roll_forward_balances_fires,
-        VerificationPredicateOperator.EQUALS: _advisory_equals_fires,
-        VerificationPredicateOperator.EQUALS_SUM: _advisory_equals_sum_fires,
-        VerificationPredicateOperator.CASILLA_EQUALS_IMPLIES_NONZERO: _advisory_casilla_equals_implies_nonzero_fires,
-        VerificationPredicateOperator.CASILLA_EQUALS_IMPLIES_ZERO: _advisory_casilla_equals_implies_zero_fires,
-        VerificationPredicateOperator.CASILLA_EQUALS_IMPLIES_PROFILE_FLAG: (
-            _advisory_casilla_equals_implies_profile_flag_fires
-        ),
-        VerificationPredicateOperator.CASILLA_EQUALS_IMPLIES_DIVERGES: _advisory_casilla_equals_implies_diverges_fires,
-        VerificationPredicateOperator.DEDUCCION_REQUIRES_ADQUISICION_BEFORE: (
-            _advisory_deduccion_requires_adquisicion_before_fires
-        ),
-        VerificationPredicateOperator.ADVISORY_WHEN_COMPUTED_DIVERGES: _advisory_computed_diverges_fires,
-    }
-)
-
 BLOCKING_PREDICATE_OPERATORS: frozenset[VerificationPredicateOperator] = frozenset(_BLOCKING_PREDICATE_EVALUATORS)
-ADVISORY_PREDICATE_OPERATORS: frozenset[VerificationPredicateOperator] = frozenset(_ADVISORY_PREDICATE_EVALUATORS)
+ADVISORY_PREDICATE_OPERATORS: frozenset[VerificationPredicateOperator] = frozenset(ADVISORY_PREDICATE_EVALUATORS)
 
 
 def evaluate_advisory_predicate_fires(
@@ -910,7 +608,7 @@ def evaluate_advisory_predicate_fires(
     :class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`.
     """
     predicate = _required_parsed_predicate(expression, route=_ADVISORY_ROUTE)
-    evaluator = _ADVISORY_PREDICATE_EVALUATORS[predicate.parsed.operator]
+    evaluator = ADVISORY_PREDICATE_EVALUATORS[predicate.parsed.operator]
     return evaluator(predicate, casilla_values, text_values, profile, fact_date)
 
 
@@ -994,8 +692,10 @@ def _blocking_predicate_finding(
         )
     if operator is VerificationPredicateOperator.APPLICATION_EQUALS_PRESENT_MAXIMUM:
         return _application_maximum_finding(predicate, admitted, casilla_values)
+    if operator is VerificationPredicateOperator.APPLICATION_ORDER_IMMATERIAL:
+        return _application_order_finding(predicate, admitted, casilla_values)
     if operator is VerificationPredicateOperator.EQUALS_SUM:
-        total_id, _total, addend_sum = _equals_sum_operands(admitted, casilla_values)
+        total_id, _total, addend_sum = equals_sum_operands(admitted, casilla_values)
         return ModeloVerificationFinding(
             kind=ModeloVerificationFindingKind.BLOCKING_RULE,
             severity=ModeloVerificationFindingSeverity.BLOCKING,
@@ -1020,7 +720,7 @@ def _blocking_predicate_finding(
 
 def _application_maximum_finding(
     predicate: VerificationPredicateDefinition,
-    admitted: _AdmittedPredicate,
+    admitted: AdmittedPredicate,
     casilla_values: Mapping[CasillaId, Decimal],
 ) -> ModeloVerificationFinding:
     """Refuse an application that is not the required maximum, or whose maximum is unknown.
@@ -1050,6 +750,42 @@ def _application_maximum_finding(
             "box": application_id,
             "casilla_value": casilla_values.get(application_id, Decimal(0)),
             "computed_value": casilla_values[maximum_id],
+        },
+        legal_refs=legal_refs,
+    )
+
+
+def _application_order_finding(
+    predicate: VerificationPredicateDefinition,
+    admitted: AdmittedPredicate,
+    casilla_values: Mapping[CasillaId, Decimal],
+) -> ModeloVerificationFinding:
+    """Refuse filing grade where the amount applied from each origin year turns on an order no text states.
+
+    The finding names the capacity and the pending total it falls short of, or
+    says the capacity is not yet known; the calculation itself stands.
+    """
+    capacity_id, *stock_ids = admitted.casilla_ids
+    pending = sum(
+        (value for cid in stock_ids if (value := casilla_values.get(cid, Decimal(0))) > Decimal(0)), Decimal(0)
+    )
+    legal_refs = tuple(predicate.legal_refs)
+    if capacity_id not in casilla_values:
+        return ModeloVerificationFinding(
+            kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+            severity=ModeloVerificationFindingSeverity.BLOCKING,
+            message_locale_key="application.modelo.findings.application_order_capacity_unresolved",
+            message_facts={"predicate_id": predicate.predicate_id, "pending_total": pending},
+            legal_refs=legal_refs,
+        )
+    return ModeloVerificationFinding(
+        kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+        severity=ModeloVerificationFindingSeverity.BLOCKING,
+        message_locale_key="application.modelo.findings.application_order_unsettled",
+        message_facts={
+            "predicate_id": predicate.predicate_id,
+            "capacity": casilla_values[capacity_id],
+            "pending_total": pending,
         },
         legal_refs=legal_refs,
     )

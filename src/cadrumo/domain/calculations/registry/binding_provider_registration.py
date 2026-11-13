@@ -31,9 +31,8 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from datetime import date
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Final, Literal, get_args, get_origin
+from typing import TYPE_CHECKING, Final, Literal, get_args
 
 from pydantic import BaseModel
 
@@ -54,10 +53,15 @@ from .bienes_inversion_regularizacion_bindings import (
 )
 from .binding_aggregation import binding_aggregation_op
 from .binding_provider import BindingProvider
+from .binding_provider_coordinates import TEMPORAL_PROVIDER_FIELD_NAME, absolute_coordinate_offenders
 from .binding_temporal import temporal_reach_diagnostic
 from .binding_terminal_origin import TerminalOriginClass
 from .binding_value_contract import BindingValueChannel
 from .bindings_previous_filing import PreviousFilingProvider, validate_previous_filing_binding
+from .capital_mobiliario_position_bindings import (
+    CapitalMobiliarioPositionProvider,
+    validate_capital_mobiliario_position_binding,
+)
 from .counterpart_bindings import validate_counterpart_binding
 from .design_constant_bindings import DesignConstantProvider, validate_design_constant_binding
 from .detail_record_bindings import (
@@ -68,7 +72,6 @@ from .detail_record_bindings import (
 )
 from .errors import RegistryValidationError
 from .gasto193_bindings import Gasto193ContributorProvider, validate_gasto193_binding_selector_shape
-from .ids import RevisionId
 from .inventory_bindings import InventoryProvider, validate_inventory_binding
 from .invoice_bindings import (
     CollectibleInvoiceProvider,
@@ -105,6 +108,10 @@ from .m303_regimen_simplificado_annual_summary_bindings import (
     validate_m303_regimen_simplificado_annual_summary_binding,
 )
 from .manual_input_selector import ManualInputProvider, validate_manual_input_binding
+from .prevision_social_contribution_bindings import (
+    PrevisionSocialContributionProvider,
+    validate_prevision_social_contribution_binding,
+)
 from .profile_bindings import ProfileProvider, validate_profile_binding
 from .prorrata_register_activity_bindings import (
     ProrrataRegisterActivityProvider,
@@ -668,6 +675,42 @@ _REGISTRATIONS: Final[tuple[BindingProviderRegistration, ...]] = (
         stage="mesh",
     ),
     _filing_grade(
+        BindingSourceKind.CAPITAL_MOBILIARIO_POSITION,
+        CapitalMobiliarioPositionProvider,
+        validate_capital_mobiliario_position_binding,
+        # A saver's interest and dividends: net cash from the ledger rows linked
+        # to a profile position, plus the withholding of the payer's certificate,
+        # or none under the operator's attestation that the payer withheld nothing.
+        # Each occurrence also states its own row of the record the design repeats,
+        # so both shapes belong to this registration.
+        channels=_MONEY_CHANNELS | _ROW_CHANNELS,
+        ops=frozenset({BindingAggregationOp.SUM}) | _ROW_OPS,
+        origins=frozenset(
+            {
+                TerminalOriginClass.LEDGER_AGGREGATE,
+                TerminalOriginClass.PAYER_CERTIFICATE,
+                TerminalOriginClass.OPERATOR_INPUT,
+            },
+        ),
+        output="scalar_and_rows",
+        resolver_id="capital_mobiliario_position",
+        stage="mesh",
+    ),
+    _filing_grade(
+        BindingSourceKind.PREVISION_SOCIAL_CONTRIBUTION,
+        PrevisionSocialContributionProvider,
+        validate_prevision_social_contribution_binding,
+        # Contributions to social-welfare systems, one record per certificate
+        # line: the issuer's certificate, placed in its box by the edition's
+        # placement rows. A box no record reaches is left to the filer.
+        channels=_MONEY_CHANNELS,
+        ops=frozenset({BindingAggregationOp.SUM}),
+        origins=frozenset({TerminalOriginClass.PAYER_CERTIFICATE}),
+        output="scalar",
+        resolver_id="prevision_social_contribution",
+        stage="mesh",
+    ),
+    _filing_grade(
         BindingSourceKind.WITHHOLDING,
         WithholdingProvider,
         validate_withholding_binding_selector_shape,
@@ -900,117 +943,6 @@ BINDING_PROVIDER_REGISTRATIONS: Final[Mapping[BindingSourceKind, BindingProvider
     validate_binding_provider_registrations(_REGISTRATIONS)
 )
 """The canonical enrollment authority, one row per provider union member."""
-
-
-AUTHORED_LAYOUT_INTEGER_FIELD_NAMES: Final[frozenset[str]] = frozenset({"offset", "length", "decimals"})
-"""Provider field names whose integer is a record-layout fact, not a filing coordinate.
-
-``offset``, ``length`` and ``decimals`` describe where a value sits in an
-official fixed-width record and how it is written, which is authored design data
-that does not change with the filing context. Every other integer on a provider
-member would pin the declaration to one concrete year, revision, or date, and is
-refused. The list is explicit so that adding a fourth is a deliberate decision
-with a stated reason rather than a field that slipped through.
-"""
-
-TEMPORAL_PROVIDER_FIELD_NAME: Final[str] = "temporal"
-"""The one provider field allowed to carry numbers that move with the context.
-
-The temporal union is where a relative coordinate is *supposed* to live: its
-members carry offsets and spans that are resolved against the target filing
-context. The guard therefore skips this field rather than descending into it.
-"""
-
-
-def _absolute_coordinate_leaves(annotation: object) -> bool:
-    """Return whether one resolved annotation pins a concrete filing coordinate.
-
-    Unwraps ``Annotated``, optionals and unions, then recognises the four shapes
-    that name a coordinate rather than describe one: a plain ``int``, the
-    ``RevisionId`` alias, a ``date``, and a ``Literal`` whose members are ints.
-    ``bool`` is a subclass of ``int`` in Python but names a flag, not a
-    coordinate, so it is not treated as one.
-    """
-    if annotation is RevisionId:
-        return True
-    origin = get_origin(annotation)
-    if origin is Literal:
-        return any(isinstance(arg, int) and not isinstance(arg, bool) for arg in get_args(annotation))
-    if origin is not None:
-        return any(_absolute_coordinate_leaves(arg) for arg in get_args(annotation))
-    if not isinstance(annotation, type):
-        return False
-    if issubclass(annotation, bool):
-        return False
-    return issubclass(annotation, (int, date))
-
-
-def _nested_models(annotation: object) -> tuple[type[BaseModel], ...]:
-    """Return every :class:`BaseModel` class reachable from one resolved annotation.
-
-    A provider that nests its coordinate one model deep is exactly as pinned as
-    one that declares it at the top level, so the walk follows the type rather
-    than stopping at the first structured field.
-    """
-    origin = get_origin(annotation)
-    if origin is Literal:
-        return ()
-    if origin is not None:
-        return tuple(model for arg in get_args(annotation) for model in _nested_models(arg))
-    if isinstance(annotation, type) and issubclass(annotation, BaseModel):
-        return (annotation,)
-    return ()
-
-
-def absolute_coordinate_offenders(label: str, model: type[BaseModel]) -> tuple[str, ...]:
-    """Return one diagnostic per field of ``model`` that pins a filing coordinate.
-
-    The walk descends into nested models, reporting a dotted field path, because
-    a coordinate reached through a structured field is still a coordinate: a
-    provider declaring ``window: Window`` where ``Window`` carries a ``year``
-    would otherwise pass a check that only ever looked one level down. The
-    ``temporal`` field is skipped at every depth for the reason its own constant
-    states, and each model is visited once so a self-referential shape
-    terminates.
-
-    Both exemptions -- the record-layout integer names and the ``temporal`` field
-    -- are granted to the PROVIDER MODEL ITSELF and to nothing below it. Each is
-    a statement about one specific declared surface: ``offset`` on a provider is
-    an authored fixed-width address, and ``temporal`` on a provider is the union
-    built to carry relative coordinates. A field of the same name on some nested
-    model is a different field with a different contract, and an exemption that
-    followed the name down would let any nested structure re-admit an absolute
-    coordinate by calling it ``offset``.
-
-    Pure and model-agnostic, so the guard can be exercised against a fabricated
-    provider class without touching the enrolled table.
-    """
-    return _absolute_coordinate_offenders(label, model, seen=frozenset(), top_level=True)
-
-
-def _absolute_coordinate_offenders(
-    label: str,
-    model: type[BaseModel],
-    *,
-    seen: frozenset[type[BaseModel]],
-    top_level: bool,
-) -> tuple[str, ...]:
-    """Walk one model's fields, recursing into nested models not already visited."""
-    if model in seen:
-        return ()
-    visited = seen | {model}
-    offenders: list[str] = []
-    for name, field_info in sorted(model.model_fields.items()):
-        if top_level and name == TEMPORAL_PROVIDER_FIELD_NAME:
-            continue
-        exempt = top_level and name in AUTHORED_LAYOUT_INTEGER_FIELD_NAMES
-        if not exempt and _absolute_coordinate_leaves(field_info.annotation):
-            offenders.append(f"{label} declares absolute coordinate field {name!r}")
-        for nested in _nested_models(field_info.annotation):
-            offenders.extend(
-                _absolute_coordinate_offenders(f"{label}.{name}", nested, seen=visited, top_level=False),
-            )
-    return tuple(offenders)
 
 
 def require_relative_provider_coordinates(

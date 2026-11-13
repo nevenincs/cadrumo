@@ -48,6 +48,9 @@ _CASILLA_REASON_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
         RegistryUnresolvedOutcomeReason.AUTONOMIC_DEDUCTION_UNSUMMED_BOX.value: (
             "application.modelo.projection_words.casilla_reason.autonomic_deduction_unsummed_box"
         ),
+        RegistryUnresolvedOutcomeReason.JOINT_RETURN_MEMBER_INCOME_UNAVAILABLE.value: (
+            "application.modelo.projection_words.casilla_reason.joint_return_member_income_unavailable"
+        ),
         RegistryUnresolvedOutcomeReason.M200_TAX_REGIME_UNSUPPORTED.value: (
             "application.modelo.projection_words.casilla_reason.m200_tax_regime_unsupported"
         ),

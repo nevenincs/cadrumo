@@ -54,6 +54,12 @@ The credit reconciliation declares, for each Modelo 100 casilla that credits IRP
 legal_refs = ["orden-eha-3434-2007:art-2", "orden-eha-3434-2007:art-8", "orden-hac-27-2026:disposicion-final-unica", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-353-2021-2025", "aeat-modelo-353-procedure", "boe-modelo-353-2007-form", "aeat-calendario-contribuyente-2022", "aeat-calendario-contribuyente-2023", "aeat-calendario-contribuyente-2024", "aeat-calendario-contribuyente-2025", "aeat-calendario-contribuyente-2026-domiciliacion"]
 
+[revisions."2021-hasta-2026-01".family_dispositions.prevision_social_placements]
+reason = """
+The pension contribution placement declares, for each Modelo 345 clave and subclave a contribution certificate states, the Modelo 100 casilla of the reduction for contributions to social-welfare systems it reaches (LIRPF arts. 51 and 52). This modelo is not the annual Renta return and declares no casilla of that reduction, so there is no contribution for an entry to place."""
+legal_refs = ["orden-eha-3434-2007:art-2", "orden-eha-3434-2007:art-8", "orden-hac-27-2026:disposicion-final-unica", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2021-2025", "aeat-modelo-353-procedure", "boe-modelo-353-2007-form", "aeat-calendario-contribuyente-2022", "aeat-calendario-contribuyente-2023", "aeat-calendario-contribuyente-2024", "aeat-calendario-contribuyente-2025", "aeat-calendario-contribuyente-2026-domiciliacion"]
+
 [revisions."2021-hasta-2026-01".family_dispositions.parameters]
 reason = """
 A parameter is a regulatory value the engine applies -- a rate, a bracket tranche, a threshold, a reduction coefficient. 353 applies none. It is an AGGREGATION return: every cuota it reports was already determined, at its own rate, on the member entity's own Modelo 322, and 353 only sums those results and nets them against the group's pending compensaciones and prior payments. Every formula on this revision is addition and subtraction over casillas whose values arrive from the members; not one \

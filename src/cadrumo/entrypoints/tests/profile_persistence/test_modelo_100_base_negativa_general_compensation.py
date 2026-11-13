@@ -48,6 +48,7 @@ from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.ids import BindingId, RelationId
 from ....domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from ....domain.calculations.registry.schema import RegistrySnapshot
+from ....domain.calculations.registry.tests.modelo_100_registry_support import M100_NO_PENDING_SAVINGS_BALANCES
 from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
 )
@@ -183,6 +184,8 @@ def _calculate(
     snapshot = _snapshot()
     with bundled_indexed_authority().operation() as operation:
         binding_values, relation_values = _zeroed_channels(snapshot)
+        # The negative savings balances (art. 49.2), which this chain does not read, hold nothing pending.
+        binding_values.update(M100_NO_PENDING_SAVINGS_BALANCES)
         binding_values.update(binding_overrides or {})
 
         work_repo = WorkUnitCatalogueRepository()
@@ -243,11 +246,14 @@ def test_base_liquidable_negative_compensation_surfaces_cite_art50_not_art48_or_
         opening_pending.legal_refs,
         compensation.legal_refs,
         casilla.legal_refs,
-        construct.legal_refs,
     ):
         assert _BASE_LIQUIDABLE_ART_50_REF in refs
         assert _GENERAL_BASE_ART_48_REF not in refs
         assert _SAVINGS_BASE_ART_49_REF not in refs
+    # The construct also holds the previous-return dependency, which carries the art. 49.2 negative
+    # savings balances as well, so it includes that member's citation; the general base itself cites art. 50.
+    assert _BASE_LIQUIDABLE_ART_50_REF in construct.legal_refs
+    assert _GENERAL_BASE_ART_48_REF not in construct.legal_refs
 
 
 @pytest.mark.parametrize("filing_year", [2024, 2025])

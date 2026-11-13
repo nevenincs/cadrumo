@@ -800,6 +800,129 @@ source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-xsd", "boe-model
 source_ref = "aeat-renta-2022-manual-parte1"
 required_text = ["Modelo 100", "ejercicio 2022"]
 
+# A saver's interest and dividends, one occurrence per position and detail record
+# of the input design (RegistroB11 under 0027, RegistroB13 under 0029, each with
+# IMP1 ingresos integros, IMP2 retenciones and IMP3 gastos). The gross is the
+# taxpayer's share of the net cash the linked ledger rows credited plus the
+# payer's withholding, checked against the payer's certificate. Every edition from
+# this one on carries the same records, so later editions inherit these bindings.
+[[revisions."2022".bindings]]
+id = "renta-capital-mobiliario-intereses-0027"
+provider = { kind = "capital_mobiliario_position", modelo = "100", period = "0A", detail_record = "RegistroB11", quantity = "gross" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-14", "ley-35-2006:art-25", "rd-439-2007:art-90"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["sin descontar la retención practicada sobre dicho rendimiento"]
+
+[[revisions."2022".bindings]]
+id = "renta-capital-mobiliario-dividendos-0029"
+provider = { kind = "capital_mobiliario_position", modelo = "100", period = "0A", detail_record = "RegistroB13", quantity = "gross" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-14", "ley-35-2006:art-25", "rd-439-2007:art-90"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["sin descontar la retención practicada sobre dicho rendimiento"]
+
+# Only administration and custody of valores negociables is deductible (LIRPF art.
+# 26.1.a); the design states it per occurrence as IMP3 of each record, and 0037
+# totals them.
+[[revisions."2022".bindings]]
+id = "renta-capital-mobiliario-gastos-0037"
+provider = { kind = "capital_mobiliario_position", modelo = "100", period = "0A", quantity = "expenses" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-26"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["gastos de administración y depósito de valores negociables"]
+
+# Each occurrence states its own row of the record the design repeats (RegistroB11
+# and RegistroB13, up to 20 times each): IMP1 ingresos integros, IMP2 retenciones and
+# IMP3 gastos. The input dictionary names these fields and the declaration dictionary
+# does not, so the export layout admits them from the input dictionary. The scalar
+# bindings above stay the totals the form's sums read; these rows must add up to them.
+
+[[revisions."2022".bindings]]
+id = "renta-capital-mobiliario-row-intereses-ingresos"
+provider = { kind = "capital_mobiliario_position", modelo = "100", period = "0A", detail_record = "RegistroB11", quantity = "gross", dictionary_field = "IMP1DB11" }
+value = { data_type = "money", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-14", "ley-35-2006:art-25", "rd-439-2007:art-90"]
+source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["sin descontar la retención practicada sobre dicho rendimiento"]
+
+[[revisions."2022".bindings]]
+id = "renta-capital-mobiliario-row-intereses-retenciones"
+provider = { kind = "capital_mobiliario_position", modelo = "100", period = "0A", detail_record = "RegistroB11", quantity = "withholding", dictionary_field = "IMP2DB11" }
+value = { data_type = "money", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-14", "ley-35-2006:art-25", "rd-439-2007:art-90"]
+source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["sin descontar la retención practicada sobre dicho rendimiento"]
+
+[[revisions."2022".bindings]]
+id = "renta-capital-mobiliario-row-intereses-gastos"
+provider = { kind = "capital_mobiliario_position", modelo = "100", period = "0A", detail_record = "RegistroB11", quantity = "expenses", dictionary_field = "IMP3DB11" }
+value = { data_type = "money", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-26"]
+source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["gastos de administración y depósito de valores negociables"]
+
+[[revisions."2022".bindings]]
+id = "renta-capital-mobiliario-row-dividendos-ingresos"
+provider = { kind = "capital_mobiliario_position", modelo = "100", period = "0A", detail_record = "RegistroB13", quantity = "gross", dictionary_field = "IMP1DB13" }
+value = { data_type = "money", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-14", "ley-35-2006:art-25", "rd-439-2007:art-90"]
+source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["sin descontar la retención practicada sobre dicho rendimiento"]
+
+[[revisions."2022".bindings]]
+id = "renta-capital-mobiliario-row-dividendos-retenciones"
+provider = { kind = "capital_mobiliario_position", modelo = "100", period = "0A", detail_record = "RegistroB13", quantity = "withholding", dictionary_field = "IMP2DB13" }
+value = { data_type = "money", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-14", "ley-35-2006:art-25", "rd-439-2007:art-90"]
+source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["sin descontar la retención practicada sobre dicho rendimiento"]
+
+[[revisions."2022".bindings]]
+id = "renta-capital-mobiliario-row-dividendos-gastos"
+provider = { kind = "capital_mobiliario_position", modelo = "100", period = "0A", detail_record = "RegistroB13", quantity = "expenses", dictionary_field = "IMP3DB13" }
+value = { data_type = "money", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-26"]
+source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["gastos de administración y depósito de valores negociables"]
+
 # A baja's figure from the activity-asset register. The box holds other facts of the
 # same kind too, so the filer's own entry stays admissible over it.
 [[revisions."2022".bindings]]
@@ -1119,6 +1242,116 @@ source_refs = ["aeat-dr-100-2022-dictionary", "aeat-renta-2022-manual-parte1", "
 [[revisions."2022".bindings.source_citations]]
 source_ref = "aeat-renta-2022-manual-parte1"
 required_text = ["pendientes de compensar al inicio del ejercicio", "remanente pendiente de aplicación en ejercicios futuros"]
+# Ley 35/2006 art. 49.1 - the negative savings balances of Anexo C.3. Each row the
+# prior year's return carried as "Pendiente de aplicación en ejercicios futuros"
+# opens this year one row older as "Pendiente de aplicación al principio del
+# periodo", and the balance the prior year generated (1270, 1283) opens the
+# previous-year row. The design keeps the same rows and order in every edition;
+# the fourth-year row has no remainder because the four-year window ends.
+[[revisions."2022".bindings]]
+id = "renta-saldo-negativo-gyp-ahorro-em4-pendiente-inicio"
+provider = { kind = "previous_filing", source_modelo = "100", source_casilla_id = "1263", temporal = { kind = "filing_year_offset", years = -1, source_periods = ["0A"] } }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "copy" }
+absence_attestation = "renta_negative_savings_gains_losses_pending"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-renta-2022-manual-parte1", "boe-modelo-100-2022-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Compensación de las partidas negativas pendientes de ejercicios anteriores", "Fase 2ª. Compensación de partidas negativas pendientes de ejercicios"]
+
+[[revisions."2022".bindings]]
+id = "renta-saldo-negativo-gyp-ahorro-em3-pendiente-inicio"
+provider = { kind = "previous_filing", source_modelo = "100", source_casilla_id = "1266", temporal = { kind = "filing_year_offset", years = -1, source_periods = ["0A"] } }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "copy" }
+absence_attestation = "renta_negative_savings_gains_losses_pending"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-renta-2022-manual-parte1", "boe-modelo-100-2022-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Compensación de las partidas negativas pendientes de ejercicios anteriores", "Fase 2ª. Compensación de partidas negativas pendientes de ejercicios"]
+
+[[revisions."2022".bindings]]
+id = "renta-saldo-negativo-gyp-ahorro-em2-pendiente-inicio"
+provider = { kind = "previous_filing", source_modelo = "100", source_casilla_id = "1269", temporal = { kind = "filing_year_offset", years = -1, source_periods = ["0A"] } }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "copy" }
+absence_attestation = "renta_negative_savings_gains_losses_pending"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-renta-2022-manual-parte1", "boe-modelo-100-2022-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Compensación de las partidas negativas pendientes de ejercicios anteriores", "Fase 2ª. Compensación de partidas negativas pendientes de ejercicios"]
+
+[[revisions."2022".bindings]]
+id = "renta-saldo-negativo-gyp-ahorro-em1-pendiente-inicio"
+provider = { kind = "previous_filing", source_modelo = "100", source_casilla_id = "1270", temporal = { kind = "filing_year_offset", years = -1, source_periods = ["0A"] } }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "copy" }
+absence_attestation = "renta_negative_savings_gains_losses_pending"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-renta-2022-manual-parte1", "boe-modelo-100-2022-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Compensación de las partidas negativas pendientes de ejercicios anteriores", "Fase 2ª. Compensación de partidas negativas pendientes de ejercicios"]
+
+[[revisions."2022".bindings]]
+id = "renta-saldo-negativo-rcm-ahorro-em4-pendiente-inicio"
+provider = { kind = "previous_filing", source_modelo = "100", source_casilla_id = "1276", temporal = { kind = "filing_year_offset", years = -1, source_periods = ["0A"] } }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "copy" }
+absence_attestation = "renta_negative_savings_capital_income_pending"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-renta-2022-manual-parte1", "boe-modelo-100-2022-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Compensación de las partidas negativas pendientes de ejercicios anteriores", "Fase 2ª. Compensación de partidas negativas pendientes de ejercicios"]
+
+[[revisions."2022".bindings]]
+id = "renta-saldo-negativo-rcm-ahorro-em3-pendiente-inicio"
+provider = { kind = "previous_filing", source_modelo = "100", source_casilla_id = "1279", temporal = { kind = "filing_year_offset", years = -1, source_periods = ["0A"] } }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "copy" }
+absence_attestation = "renta_negative_savings_capital_income_pending"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-renta-2022-manual-parte1", "boe-modelo-100-2022-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Compensación de las partidas negativas pendientes de ejercicios anteriores", "Fase 2ª. Compensación de partidas negativas pendientes de ejercicios"]
+
+[[revisions."2022".bindings]]
+id = "renta-saldo-negativo-rcm-ahorro-em2-pendiente-inicio"
+provider = { kind = "previous_filing", source_modelo = "100", source_casilla_id = "1282", temporal = { kind = "filing_year_offset", years = -1, source_periods = ["0A"] } }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "copy" }
+absence_attestation = "renta_negative_savings_capital_income_pending"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-renta-2022-manual-parte1", "boe-modelo-100-2022-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Compensación de las partidas negativas pendientes de ejercicios anteriores", "Fase 2ª. Compensación de partidas negativas pendientes de ejercicios"]
+
+[[revisions."2022".bindings]]
+id = "renta-saldo-negativo-rcm-ahorro-em1-pendiente-inicio"
+provider = { kind = "previous_filing", source_modelo = "100", source_casilla_id = "1283", temporal = { kind = "filing_year_offset", years = -1, source_periods = ["0A"] } }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "copy" }
+absence_attestation = "renta_negative_savings_capital_income_pending"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-renta-2022-manual-parte1", "boe-modelo-100-2022-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Compensación de las partidas negativas pendientes de ejercicios anteriores", "Fase 2ª. Compensación de partidas negativas pendientes de ejercicios"]
+
 [[revisions."2022".bindings]]
 id = "renta-profile-incremento-guarderia"
 provider = { kind = "profile", profile_key = "renta_family.incremento_guarderia_cotizaciones" }
@@ -2078,3 +2311,81 @@ source_refs = ["aeat-dr-100-2022-dictionary", "aeat-renta-2022-manual-parte1"]
 [[revisions."2022".bindings.source_citations]]
 source_ref = "aeat-renta-2022-manual-parte1"
 required_text = ["la empresa que deriven de una decisión del trabajador"]
+
+# Contributions to social-welfare systems from the taxpayer's contribution
+# certificate records: each record's Modelo 345 clave and subclave reaches one
+# of these boxes through the edition's prevision_social_placements rows, and the
+# box sums the records placed in it. Declared at the first edition whose texts
+# place claves; later editions inherit them.
+
+[[revisions."2022".bindings]]
+id = "renta-prevision-social-aportaciones-trabajador-0465"
+provider = { kind = "prevision_social_contribution", modelo = "100", period = "0A" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-51"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Aportaciones del trabajador, salvo las consignadas en las casillas [0438] y [0426]"]
+
+[[revisions."2022".bindings]]
+id = "renta-prevision-social-aportaciones-trabajador-con-contribucion-empresarial-0426"
+provider = { kind = "prevision_social_contribution", modelo = "100", period = "0A" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-51"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Aportaciones del trabajador al plan de pensiones de empleo, mutualidad de previsión"]
+
+[[revisions."2022".bindings]]
+id = "renta-prevision-social-contribuciones-empresariales-0427"
+provider = { kind = "prevision_social_contribution", modelo = "100", period = "0A" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-51"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Contribuciones empresariales a sistemas de previsión social, excepto las realizadas a"]
+
+[[revisions."2022".bindings]]
+id = "renta-prevision-social-aportaciones-empresa-decision-trabajador-0438"
+provider = { kind = "prevision_social_contribution", modelo = "100", period = "0A" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-51"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Aportaciones efectuadas por la empresa que deriven de una decisión del trabajador."]
+
+[[revisions."2022".bindings]]
+id = "renta-prevision-social-aportaciones-empresarios-individuales-0499"
+provider = { kind = "prevision_social_contribution", modelo = "100", period = "0A" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-51"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Aportaciones de empresarios individuales o profesionales a planes de pensiones de"]
+
+[[revisions."2022".bindings]]
+id = "renta-prevision-social-contribuciones-seguros-colectivos-dependencia-0466"
+provider = { kind = "prevision_social_contribution", modelo = "100", period = "0A" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-51"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Contribuciones a seguros colectivos de dependencia. Casilla [0466]"]

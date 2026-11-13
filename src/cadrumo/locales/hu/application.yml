@@ -1316,6 +1316,19 @@ application:
         intra_eu_investment: EU-n belüli beszerzés, beruházási tárgyi eszköz
         reagp_compensation: REAGP-kompenzáció
         rectification: Levonás helyesbítése
+      gasto_capital_inmobiliario:
+        comunidad: Társasházi közös költség
+        defensa_juridica: Jogi képviselet költségei
+        formalizacion_contrato: A bérleti szerződés megkötésének költségei
+        interes_financiacion: Kamatok és egyéb finanszírozási költségek
+        mejora: Felújítás, amely a beszerzési értéket növeli
+        otros: Egyéb adóból levonható költségek
+        primas_seguro: Biztosítási díjak
+        reparacion_conservacion: Javítási és állagmegóvási költségek
+        saldos_dudoso_cobro: Kétes kintlévőségek
+        servicios_terceros: Harmadik fél által nyújtott szolgáltatások
+        suministros: Szolgáltatások és közművek
+        tributos: Adók, pótlékok és illetékek
       m210_income_concept:
         canones: Jogdíj
         dividend: Osztalék
@@ -1830,6 +1843,12 @@ application:
           nem tekinti teljesnek.
         what_to_do: Vedd fel a hiányzó személyeket a profilodba, vagy javítsd a számot,
           majd számolj újra.
+      income_family_not_computed:
+        what: Az alkalmazás még nem számítja ki a nyilvántartásaidban vagy a profilodban
+          szereplő egyik jövedelemcsaládot, ezért a bevallás addig marad megoldatlan,
+          amíg kézzel meg nem adod a család összegeit.
+        what_to_do: Add meg kézzel az összegeket a család rovataiban, majd számíts
+          újra. Csak akkor sorold át a tételt, ha tévesen sorolták be.
       inferred_retencion_excluded_from_credit:
         what: A kiállított számláin szereplő levonás egy részét az ügyfél által kifizetett
           összegből számoltuk ki, ezért kimaradt a jóváírásból, és a szükségesnél
@@ -2126,6 +2145,33 @@ application:
         egyik vásárlása, ezért készletbeszerzésként szerepel, nem költségként.
       book_claimed_purchase_undated: Egy könyvelt tétel a készletnyilvántartásod egyik
         vásárlása, ezért készletbeszerzésként szerepel, nem költségként.
+      capital_mobiliario_foreign_source: '{payer}: a megtakarítási pozíció jövedelme
+        más államból ({country}) származik, és az ilyen jövedelmet a program még nem
+        számítja ki. Add meg ezeket a mezőket kézzel.'
+      capital_mobiliario_income_in_kind: '{payer}: a kifizető nyilvántartása természetbeni
+        jövedelmet tartalmaz, amelyet a program még nem számít ki. Add meg ezeket
+        a mezőket kézzel.'
+      capital_mobiliario_payer_check_mismatch: '{payer}: a kapcsolt tételeid és a
+        levont adó együtt {amount}, a kifizető igazolása viszont {compared_amount}
+        összeget tartalmaz. Javítsd a nyilvántartást vagy a tételeket, amíg egyeznek.'
+      capital_mobiliario_payer_evidence_missing: '{payer}: a főkönyved jövedelmet
+        mutat ettől a kifizetőtől, de nincs kifizetői nyilvántartás, és nyilatkozat
+        sincs arról, hogy nem vontak le adót. Rögzítsd a kifizető igazolását, vagy
+        nyilatkozz arról, hogy egyetlen kifizető sem vont le adót.'
+      capital_mobiliario_payer_without_rows: '{payer}: a kifizető nyilvántartása olyan
+        tőkejövedelmet tartalmaz, amelyet egyetlen megtakarítási pozícióhoz kapcsolt
+        főkönyvi tétel sem mutat. Kapcsold a tételeket a pozíciójukhoz, vagy vedd
+        fel a pozíciót.'
+      capital_mobiliario_position_not_held: '{payer}: {count} főkönyvi tétel olyan
+        megtakarítási pozícióhoz kapcsolódik, amely a profilodban a tétel dátumán
+        nem szerepel, ezért a kamat- és osztalékmezők nyitva maradnak.'
+      capital_mobiliario_row_not_readable: '{payer}: a megtakarítási pozícióhoz kapcsolt
+        {count} főkönyvi tétel olyan jogcímet, pénznemet vagy összeget tartalmaz,
+        amelyet a számítás nem tud kiolvasni, ezért az általuk táplált mezők nyitva
+        maradnak.'
+      capital_mobiliario_withholding_sum_mismatch: '{payer}: a levonási kulccsal a
+        kapcsolt tételeid utáni levonás {amount}, a kifizető igazolása viszont {compared_amount}
+        összeget tartalmaz. Javítsd a nyilvántartást vagy a tételeket, amíg egyeznek.'
       claim_gap_accrued: '{element}: {start} és {end} között nincs rögzített értékcsökkenési
         leírás. {amount} halmozódott fel, a(z) {box} mező pedig csak a rögzítettet
         tartalmazza.'
@@ -2201,6 +2247,9 @@ application:
       household_row_fact_unstated: '{group}: {recorded} rögzítve, ebből {omitting}
         {leaf} nélkül.'
       household_rows_incomplete: '{group}: {stated} megadva, {recorded} rögzítve.'
+      income_family_rows_changed_since_entry: Egy jövedelemcsalád tételei megváltoztak,
+        miután kézzel megadtad az összegeit; most {count} tétele van ebben az évben,
+        ezért add meg újra az összegeit.
       instalment_free_gap: '{element}: {start} és {end} között nincs rögzített értékcsökkenési
         leírás. A módszere rád bízza az összeget, ezért semmit sem ad a(z) {box} mezőhöz.'
       inventory_purchase_claim_refused: A(z) {year}. évi készlet {count} vásárlása
@@ -2213,6 +2262,13 @@ application:
         milyen Közösségen belüli ügyletet rögzít.
       possibly_durable_expense: A(z) {row_date} napi, {row_amount} összegű tétel folyó
         költségként kerül levonásra, a leírása pedig tartós eszközre utal.
+      prevision_social_contribution_not_certified: Erre az évre nincs rögzített nyugdíj-hozzájárulási
+        igazolás, ezért a hozzájárulási mezők nincsenek kiszámítva.
+      prevision_social_contribution_not_placed: '{box}. mező: az év {count} nyugdíj-hozzájárulási
+        rekordja egyik mezőbe sem kerül, és te sem adtál meg hozzájárulási mezőt.'
+      prevision_social_placement_inherited: '{box}. mező: {amount} nyugdíj-hozzájárulást
+        csak egy korábbi év hivatalos szövegei helyeznek el, ezért az ellenőrzés,
+        az exportálás és a rögzítés megvárja, amíg az idei szövegek ezt megerősítik.'
       prior_filing_unrecorded: A(z) {box} mező kiszámításához rögzítsd a(z) {year}.
         évi Modelo {modelo} bevallásodat.
       profile_fact_unrecorded: 'A(z) {box} mező kiszámításához rögzítsd a profilodban:
@@ -3172,6 +3228,26 @@ application:
         nem szerepel, ismeretlen, nem nulla: rögzítsd azt a bevallást ezekkel a mezőkkel,
         vagy add meg te a(z) %{binding} adat összegét, majd számolj újra. Semmi nem
         lett mentve.'
+      prior_carries_amount_duplicate: A(z) %{filing_year}. évi %{modelo} modellben
+        a(z) %{box} rovatot tápláló tételnek már van összege ebben a kijelentésben.
+        Minden tételnek egyetlen összeget adj. Semmi sem változott.
+      prior_carries_amount_invalid: A(z) %{filing_year}. évi %{modelo} modellben minden
+        --amount <rovat>=<összeg> alakú legyen, 1234.56 formában írt pozitív összeggel
+        (legfeljebb két tizedes, előjel és ezerelválasztó nélkül). Semmi sem változott.
+      prior_carries_amount_not_a_carry: A(z) %{filing_year}. évi %{modelo} modellben
+        a(z) %{box} rovat nem nyitott, korábbi évekből származó összeg a --family
+        által megnevezett családban. Ellenőrizd a rovatot és a családokat. Semmi sem
+        változott.
+      prior_carries_family_choice_required: 'A(z) %{filing_year}. évi %{modelo} modellben
+        ezekben a családokban nyitottak a korábbi évekből származó összegek: %{families}.
+        Egyetlen kijelentés mindet lefedi, mert a számítás addig elutasít, amíg bármelyik
+        kijelentetlen marad, ezért semmi sem változott. A választásod kihagyja: %{missing}.
+        Jelentsd ki az összes nyitott családot, mindegyiket nincs függőben lévő összegként:
+        %{family_door}.'
+      prior_carries_family_nothing_open: 'A(z) %{filing_year}. évi %{modelo} modellben
+        a(z) %{family} családban nincs nyitott összeg a korábbi évekből: mindegyikhez
+        van már érték vagy kijelentésed, vagy a bevallás egyet sem hoz át. Semmi sem
+        változott.'
       prior_carries_nothing_open: 'A %{filing_year}. évi Modelo %{modelo} bevallásban
         nincs olyan korábbi évekből származó összeg, amelyről kijelenthetnéd, hogy
         nincs függőben: mindegyiknek van már értéke vagy kijelentésed, vagy a bevallás
@@ -3187,6 +3263,17 @@ application:
           egyenlített negatív általános adóalap (%{boxes}. mező). Mentsd el az előző
           évi bevallást, vagy jelezd a bevallásban, hogy nincs függőben lévő összeg.
           Semmi sem lett mentve.'
+        renta_negative_savings_capital_income_pending: 'A %{filing_year}. évi Modelo
+          %{modelo} nem számítható ki: nem ismert, hogy maradt-e korábbi adóévekből
+          még ki nem egyenlített negatív ingó tőkejövedelem a megtakarítási adóalapban
+          (%{boxes}. mező). Mentsd el az előző évi bevallást, vagy jelezd a bevallásban,
+          hogy nincs függőben lévő összeg. Semmi sem lett mentve.'
+        renta_negative_savings_gains_losses_pending: 'A %{filing_year}. évi Modelo
+          %{modelo} nem számítható ki: nem ismert, hogy maradt-e korábbi adóévekből
+          még ki nem egyenlített negatív vagyoni nyereség- és veszteségegyenleg a
+          megtakarítási adóalapban (%{boxes}. mező). Mentsd el az előző évi bevallást,
+          vagy jelezd a bevallásban, hogy nincs függőben lévő összeg. Semmi sem lett
+          mentve.'
       prior_period_unfiled: 'A(z) %{modelo} %{period} %{filing_year} nyomtatvány még
         nem számolható ki: összegeket visz át a(z) %{unfiled_period} bevallásából,
         amely még nincs benyújtva. Előbb nyújtsd be a(z) %{unfiled_period} bevallást,
@@ -3416,6 +3503,16 @@ application:
       application_not_required_maximum: 'A(z) [%{box}] rovatban %{casilla_value} szerepel,
         de %{computed_value} kell, hogy legyen: a törvény előírja, hogy az adott évben
         megengedett legnagyobb összeget kell alkalmazni, se többet, se kevesebbet.'
+      application_order_capacity_unresolved: Ebben az évben több korábbi adóévből
+        fennmaradó egyenleg (összesen %{pending_total}) kerül beszámításra, de a beszámításra
+        rendelkezésre álló összeg még nem ismert, így nem állapítható meg, mennyit
+        vesz fel az egyes évekből. Töltsd ki azokat az összegeket, amelyektől függ.
+      application_order_unsettled: Ebben az évben %{capacity} számítható be a több
+        korábbi adóévből fennmaradó %{pending_total} összegből, és egyetlen hivatalos
+        szöveg sem mondja meg, milyen sorrendben kell az éveket figyelembe venni.
+        Az egyes évekből beszámított és a továbbvitt összeg ettől a sorrendtől függ,
+        ezért ez a bevallás számítás marad, és ebből az alkalmazásból nem nyújtható
+        be, amíg a szabály nem tisztázott.
       art52_reduccion_individual_sublimit_possible: A(z) [%{reduccion_id}] rovat %{reduccion_value}
         EUR nyugdíj-előtakarékossági (previsión social) csökkentést tartalmaz, ami
         meghaladja az Art. 52 LIRPF szerinti %{sublimit} EUR egyéni részhatárt, és
@@ -3849,6 +3946,10 @@ application:
           a határral, de a megadott jövedelemkategóriák kizárnak egy olyan jövedelemfajtát,
           amelyhez összegeid vannak. Javítsd a kategóriákat, vagy távolítsd el az
           összegeket, majd vetíts újra. Soha nem jelenik meg nullaként.
+        joint_return_member_income_unavailable: Ez a csökkentés együttes bevallásnál
+          nem számítható ki, mert a bevallásod nem választja szét az egyes tagok munkaviszonyból
+          és gazdasági tevékenységből származó jövedelmét, a határok pedig tagonként
+          külön érvényesek (LIRPF 52.1. cikk). Soha nem jelenik meg nullaként.
         m200_tax_regime_unsupported: Ehhez a rovathoz a szervezeted adózási rendszerének
           adókulcsa (tipo de gravamen) kell, ez viszont az adott rendszerre vagy jogi
           formára nem számolható ki, ezért a rovatnak nincs értéke. Add meg a rovatot
@@ -4011,6 +4112,26 @@ application:
           origin: Kijelentetted, hogy nincs fennmaradó összeg
           statement: Rögzíti, hogy az előző négy adóévből nincs beszámításra váró
             negatív általános adóalapod (Ley 35/2006, 50.3. cikk). Minden összeg általad
+            kijelentett 0-ként kerül rögzítésre, a beírt számtól elkülönítve; ha egy
+            korábbi bevallás később összeget mutat, a bevallás jelzi az eltérést.
+        renta_negative_savings_capital_income_pending:
+          action: Nincs korábbi évekből fennmaradó negatív tőkejövedelmem
+          effect: 'Általad kijelentett 0-ként rögzítve: nincs korábbi évekből fennmaradó
+            negatív tőkejövedelem.'
+          origin: Kijelentetted, hogy nincs fennmaradó összeg
+          statement: Rögzíti, hogy az előző négy adóévből nincs a megtakarítási adóalapban
+            beszámításra váró negatív nettó ingó tőkejövedelem-egyenleged (rendimientos
+            del capital mobiliario; Ley 35/2006, 49.1.a cikk). Minden összeg általad
+            kijelentett 0-ként kerül rögzítésre, a beírt számtól elkülönítve; ha egy
+            korábbi bevallás később összeget mutat, a bevallás jelzi az eltérést.
+        renta_negative_savings_gains_losses_pending:
+          action: Nincs korábbi évekből fennmaradó vagyoni veszteségem
+          effect: 'Általad kijelentett 0-ként rögzítve: nincs korábbi évekből fennmaradó
+            vagyoni veszteség.'
+          origin: Kijelentetted, hogy nincs fennmaradó összeg
+          statement: Rögzíti, hogy az előző négy adóévből nincs a megtakarítási adóalapban
+            beszámításra váró negatív vagyoni nyereség- és veszteségegyenleged (ganancias
+            y pérdidas patrimoniales; Ley 35/2006, 49.1.b cikk). Minden összeg általad
             kijelentett 0-ként kerül rögzítésre, a beírt számtól elkülönítve; ha egy
             korábbi bevallás később összeget mutat, a bevallás jelzi az eltérést.
         renta_trabajo_income_not_stated:
@@ -4594,6 +4715,14 @@ application:
         profil sémájának.
       passphrase_confirmation_mismatch: Az új jelszó és a megerősítése nem egyezik.
       passphrase_current_rejected: A jelenlegi jelszó helytelen; a jelszó nem változott.
+      posicion_country_unknown: 'A(z) „%{pais}” forrásállam nem ismert kétbetűs országkód;
+        javítsd, és ismételd meg: «%{door}».'
+      posicion_has_ledger_rows: A(z) %{row} megtakarítási pozícióra %{rows} főkönyvi
+        sor hivatkozik; előbb módosítsd vagy töröld a kapcsolatukat az «%{door}» paranccsal.
+      posicion_payer_id_invalid: 'Egy spanyol kifizető adóazonosítója érvénytelen;
+        ellenőrizd a betűit és számjegyeit, majd ismételd meg: «%{door}».'
+      posicion_row_invalid: 'A(z) „%{leaf}” adat érvénytelen, vagy ellentmond a pozíció
+        más adatainak; semmi nem került mentésre. Javítsd, és ismételd meg: «%{door}».'
       profile_already_exists: A(z) %{profile} profil már létezik; futtasd az aeat
         config login NÉV parancsot az aktiváláshoz, vagy az aeat config profile delete
         NÉV parancsot a törléshez.
@@ -4711,6 +4840,47 @@ application:
         a profil létrehozásakor nem tudott időben erősebb beállítást megerősíteni.
         Változtasd meg a jelszót a megerősítéséhez; ugyanazt a jelszót is megadhatod
         újra.
+    record_groups:
+      door:
+        prevision_social_contribution:
+          edit: Javítsd ezt az igazolást
+          remove: Töröld ezt az igazolást
+        renta_arrendamiento:
+          edit: Bérlet szerkesztése
+          remove: Bérlet törlése
+        renta_inmueble:
+          edit: Ingatlan szerkesztése
+          remove: Ingatlan törlése
+      kind:
+        ledger_row: Tétel
+        pension_contribution: Egy év nyugdíjcélú befizetési igazolásai
+        prevision_social_contribution: Nyugdíjcélú befizetési igazolás
+        renta_arrendamiento: Bérlet
+        renta_inmueble: Ingatlan
+        rental_property: Bérbe adott ingatlan
+      prevision_social_contribution:
+        group_summary: 'Nyugdíjcélú befizetési igazolások a(z) {ejercicio}. évre:
+          {count}'
+        holder_unnamed: Névtelen kibocsátó
+        summary_placed: '{holder}: {amount} EUR, {clave} kulcs, a(z) {box} rovatba
+          kerül'
+        summary_unplaced: '{holder}: {amount} EUR, {clave} kulcs, nem kerül egyetlen
+          rovatba sem; ezt az összeget te adod meg'
+      refusal:
+        item_too_large: A lista egyik eleme túl nagy ahhoz, hogy egy oldalon megjelenjen.
+        stale_revision: A profil vagy a tételei megváltoztak a lista beolvasása óta.
+          Olvasd be újra a listát.
+      relation:
+        prevision_social_contribution: Az év igazolása
+        renta_arrendamiento:
+          inmueble: Az ingatlan bérlete
+        renta_inmueble:
+          inmueble_principal: Az ingatlannal együtt bérbe adott tartozék
+      renta_arrendamiento:
+        summary_ended: 'Bérlet %{row}, kezdete: %{start}, vége: %{end}'
+        summary_open: 'Bérlet %{row}, kezdete: %{start}'
+      renta_inmueble:
+        summary: 'Ingatlan %{row}: %{place}'
   wizard:
     errors:
       command_input_invalid: 'A profiladatok érvényesítése sikertelen: %{details}'

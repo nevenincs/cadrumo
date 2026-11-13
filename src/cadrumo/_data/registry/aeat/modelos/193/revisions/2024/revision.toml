@@ -36,6 +36,12 @@ The credit reconciliation declares, for each Modelo 100 casilla that credits IRP
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-193-2024", "aeat-modelo-193-procedure"]
 
+[revisions."2024".family_dispositions.prevision_social_placements]
+reason = """
+The pension contribution placement declares, for each Modelo 345 clave and subclave a contribution certificate states, the Modelo 100 casilla of the reduction for contributions to social-welfare systems it reaches (LIRPF arts. 51 and 52). This modelo is not the annual Renta return and declares no casilla of that reduction, so there is no contribution for an entry to place."""
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2024", "aeat-modelo-193-procedure"]
+
 [revisions."2024".family_dispositions.parameters]
 reason = """
 A parameter holds a regulatory value a formula of this revision applies -- a rate, a threshold, a coefficient. Modelo 193 applies none: both of its formulas are op = 'copy', carrying the annual modelo 123 base and retenciones relations into the resumen casillas, and a copy applies nothing to what it copies. The retention rates reaching these figures were set by the retenedor at payment time under RD 439/2007 art. 90 and consumed by the quarterly modelo 123; this annual resumen receives the \

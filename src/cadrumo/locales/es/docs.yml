@@ -7,6 +7,8 @@ docs:
       atribucion_member: desde los miembros en atribución de rentas
       bienes_inversion_regularizacion: desde la regularización de bienes de inversión
       borrador: desde los datos de la AEAT (el borrador)
+      capital_mobiliario_position: desde las filas del libro vinculadas a tus posiciones
+        de ahorro y los certificados de tus pagadores
       collectible_invoice: desde las facturas emitidas
       design_constant: desde una constante fijada por el diseño de registro de la
         AEAT
@@ -33,6 +35,8 @@ docs:
       manual_input: desde un valor que aportas tú
       payable_invoice: desde las facturas recibidas
       previous_filing: desde tu declaración anterior
+      prevision_social_contribution: desde las aportaciones que informan tus certificados
+        de aportaciones a sistemas de previsión social
       profile: desde tu perfil de contribuyente
       prorrata_register_activity: desde las actividades de tu registro de prorrata
       prorrata_regularizacion: desde la regularización de prorrata

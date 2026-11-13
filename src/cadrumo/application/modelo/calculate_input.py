@@ -229,6 +229,8 @@ class WorkCalculateInputBundle:
     """Binding overrides the operator stated hold nothing, replayed from the head's layer."""
     value_attestations: Mapping[BindingId, ValueAttestation] = field(default_factory=dict)
     """Figures the operator stated for earlier filings outside the envelope, replayed from the head layer."""
+    income_family_entry_digests: Mapping[str, str] = field(default_factory=dict[str, str])
+    """Per uncomputed income family, its ledger-row digest at the operator's entry, replayed from the head layer."""
     row_attestations: tuple[RowCarryAttestation, ...] = ()
     """The operator's per-row statements of a carry no source holds, replayed from the head layer."""
 
@@ -251,6 +253,7 @@ class WorkCalculateInputBundle:
         record_operator_layer: bool = False,
         attested_binding_ids: tuple[BindingId, ...] = (),
         value_attestations: Mapping[BindingId, ValueAttestation] | None = None,
+        income_family_entry_digests: Mapping[str, str] | None = None,
         row_attestations: tuple[RowCarryAttestation, ...] = (),
     ) -> WorkCalculateInputBundle:
         """Freeze CLI-assembled mappings before crossing into calculation services.
@@ -280,6 +283,7 @@ class WorkCalculateInputBundle:
             record_operator_layer=record_operator_layer,
             attested_binding_ids=attested_binding_ids,
             value_attestations=dict(value_attestations or {}),
+            income_family_entry_digests=dict(income_family_entry_digests or {}),
             row_attestations=row_attestations,
         )
 
@@ -385,6 +389,7 @@ def calculate_modelo_work_revision(
         record_operator_layer=inputs.record_operator_layer,
         attested_binding_ids=inputs.attested_binding_ids,
         value_attestations=inputs.value_attestations,
+        income_family_entry_digests=inputs.income_family_entry_digests,
         row_attestations=inputs.row_attestations,
         m210_official_tipo_renta_code=inputs.m210_official_tipo_renta_code,
         m210_gross_income_source_mode=inputs.m210_gross_income_source_mode,

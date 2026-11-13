@@ -630,9 +630,12 @@ def test_revision_replay_does_not_resubmit_m100_formula_informational_casilla() 
         "renta-profile-marriage-month-start": Decimal("0"),
         "renta-profile-marriage-month-end": Decimal("0"),
         "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
-        "renta-base-liquidable-negativa-general-em4-pendiente-inicio": Decimal("0"),
-        "renta-base-liquidable-negativa-general-em3-pendiente-inicio": Decimal("0"),
-        "renta-base-liquidable-negativa-general-em2-pendiente-inicio": Decimal("0"),
+        **{f"renta-base-liquidable-negativa-general-em{n}-pendiente-inicio": Decimal("0") for n in (2, 3, 4)},
+        **{
+            f"renta-saldo-negativo-{kind}-ahorro-em{n}-pendiente-inicio": Decimal("0")
+            for kind in ("gyp", "rcm")
+            for n in (1, 2, 3, 4)
+        },
         "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),
         "renta-profile-deduccion-maternidad": Decimal("0"),
         "renta-maritime-path-rebeca": Decimal("0"),

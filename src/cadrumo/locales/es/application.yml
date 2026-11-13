@@ -1337,6 +1337,19 @@ application:
         intra_eu_investment: Adquisiciones intracomunitarias de bienes de inversión
         reagp_compensation: Compensaciones del REAGP
         rectification: Rectificación de deducciones
+      gasto_capital_inmobiliario:
+        comunidad: Cuotas de la comunidad de propietarios
+        defensa_juridica: Gastos de defensa jurídica
+        formalizacion_contrato: Gastos de formalización del contrato
+        interes_financiacion: Intereses y demás gastos de financiación
+        mejora: Mejora, que se suma al valor de adquisición
+        otros: Otros gastos fiscalmente deducibles
+        primas_seguro: Primas de contratos de seguro
+        reparacion_conservacion: Gastos de reparación y conservación
+        saldos_dudoso_cobro: Saldos de dudoso cobro
+        servicios_terceros: Servicios prestados por terceros
+        suministros: Servicios y suministros
+        tributos: Tributos, recargos y tasas
       m210_income_concept:
         canones: Cánones
         dividend: Dividendos
@@ -1874,6 +1887,13 @@ application:
           completo.
         what_to_do: Añade a tu perfil las personas que faltan o corrige el número,
           y vuelve a calcular.
+      income_family_not_computed:
+        what: La aplicación todavía no calcula una de las familias de renta que aparecen
+          en tus registros o en tu perfil, así que esta declaración queda sin resolver
+          hasta que introduzcas a mano las cifras de esa familia.
+        what_to_do: Introduce a mano las cifras en las casillas de esa familia y vuelve
+          a calcular. Reclasifica una fila solo si estaba clasificada en la familia
+          equivocada.
       inferred_retencion_excluded_from_credit:
         what: Parte de la retención de tus facturas emitidas se ha calculado a partir
           de lo que pagó el cliente, así que se ha dejado fuera de tu deducción y
@@ -2169,6 +2189,31 @@ application:
         como gasto.
       book_claimed_purchase_undated: Un movimiento es una compra de tu inventario,
         así que se declara como compra de existencias y no como gasto.
+      capital_mobiliario_foreign_source: '{payer}: los rendimientos de esta posición
+        de ahorro proceden de {country}, y los rendimientos de otro Estado aún no
+        se calculan. Introduce estas casillas a mano.'
+      capital_mobiliario_income_in_kind: '{payer}: el registro del pagador declara
+        rendimientos en especie, que aún no se calculan. Introduce estas casillas
+        a mano.'
+      capital_mobiliario_payer_check_mismatch: '{payer}: tus filas vinculadas más
+        la retención suman {amount}, y el certificado del pagador declara {compared_amount}.
+        Corrige el registro o las filas hasta que coincidan.'
+      capital_mobiliario_payer_evidence_missing: '{payer}: tu libro muestra rendimientos
+        de este pagador, pero no hay registro del pagador ni declaración de que no
+        se practicó retención. Registra el certificado del pagador o declara que ningún
+        pagador retuvo.'
+      capital_mobiliario_payer_without_rows: '{payer}: el registro del pagador declara
+        rendimientos del capital que ninguna fila del libro vinculada a una posición
+        de ahorro muestra. Vincula las filas a su posición o añade la posición.'
+      capital_mobiliario_position_not_held: '{payer}: {count} filas del libro están
+        vinculadas a una posición de ahorro que tu perfil no tiene en su fecha, así
+        que las casillas de intereses y dividendos quedan abiertas.'
+      capital_mobiliario_row_not_readable: '{payer}: {count} filas del libro vinculadas
+        a esta posición de ahorro tienen un concepto, una moneda o un total que el
+        cálculo no puede leer, así que las casillas que alimentan quedan abiertas.'
+      capital_mobiliario_withholding_sum_mismatch: '{payer}: al tipo de retención,
+        la retención de tus filas vinculadas suma {amount}, y el certificado del pagador
+        declara {compared_amount}. Corrige el registro o las filas hasta que coincidan.'
       claim_gap_accrued: '{element}: no hay dotación registrada de {start} a {end}.
         Se han devengado {amount}, y la casilla {box} solo declara lo registrado.'
       claim_gap_free_method: '{element}: no hay dotación registrada de {start} a {end}.
@@ -2242,6 +2287,9 @@ application:
       household_row_fact_unstated: '{group}: {recorded} registradas, {omitting} sin
         {leaf}.'
       household_rows_incomplete: '{group}: {stated} indicadas, {recorded} registradas.'
+      income_family_rows_changed_since_entry: Las filas del libro de una familia de
+        renta han cambiado después de que introdujeras sus cifras a mano; ahora tiene
+        {count} filas este año, así que vuelve a introducir sus cifras.
       instalment_free_gap: '{element}: no hay dotación registrada de {start} a {end}.
         Su método deja el importe a tu elección, así que no suma nada a la casilla
         {box}.'
@@ -2255,6 +2303,16 @@ application:
         operación intracomunitaria recoge.
       possibly_durable_expense: El movimiento del {row_date} por {row_amount} se deduce
         como gasto corriente y su descripción parece la de un elemento duradero.
+      prevision_social_contribution_not_certified: No hay ningún certificado de aportaciones
+        a sistemas de previsión social registrado para este ejercicio, así que las
+        casillas de aportaciones no se calculan.
+      prevision_social_contribution_not_placed: 'Casilla {box}: {count} registros
+        de aportaciones a sistemas de previsión social de este ejercicio no llegan
+        a ninguna casilla, y no has introducido ninguna casilla de aportaciones.'
+      prevision_social_placement_inherited: 'Casilla {box}: {amount} de aportaciones
+        a sistemas de previsión social solo se sitúan según los textos oficiales de
+        un ejercicio anterior, así que la comprobación, la exportación y el registro
+        esperan a que los textos de este ejercicio lo confirmen.'
       prior_filing_unrecorded: Para calcular la casilla {box}, registra tu Modelo
         {modelo} de {year}.
       profile_fact_unrecorded: 'Para calcular la casilla {box}, registra en tu perfil:
@@ -3222,6 +3280,27 @@ application:
         casilla que no muestra es desconocida, no cero: registra esa declaración con
         esas casillas o indica tú el importe del dato %{binding}, y vuelve a calcular.
         No se ha guardado nada.'
+      prior_carries_amount_duplicate: En el Modelo %{modelo} de %{filing_year}, el
+        importe que alimenta la casilla %{box} ya tiene un importe en esta declaración.
+        Da un solo importe a cada uno. No se ha cambiado nada.
+      prior_carries_amount_invalid: En el Modelo %{modelo} de %{filing_year}, cada
+        --amount debe ser <casilla>=<importe>, con un importe positivo escrito como
+        1234.56 (hasta dos decimales, sin signo ni separador de miles). No se ha cambiado
+        nada.
+      prior_carries_amount_not_a_carry: En el Modelo %{modelo} de %{filing_year},
+        la casilla %{box} no es un importe abierto de ejercicios anteriores de una
+        familia que hayas indicado con --family. Revisa la casilla y las familias.
+        No se ha cambiado nada.
+      prior_carries_family_choice_required: 'El Modelo %{modelo} de %{filing_year}
+        tiene importes de ejercicios anteriores abiertos en estas familias: %{families}.
+        Una sola declaración las cubre todas, porque el cálculo se niega mientras
+        alguna quede sin declarar, así que no se ha cambiado nada. Tu elección deja
+        fuera: %{missing}. Declara todas las familias abiertas, cada una como nada
+        pendiente: %{family_door}.'
+      prior_carries_family_nothing_open: 'El Modelo %{modelo} de %{filing_year} no
+        tiene ningún importe abierto de ejercicios anteriores en la familia %{family}:
+        cada uno ya tiene un valor o tu declaración, o la declaración no arrastra
+        ninguno. No se ha cambiado nada.'
       prior_carries_nothing_open: 'El Modelo %{modelo} de %{filing_year} no tiene
         ningún importe de ejercicios anteriores que puedas declarar como no pendiente:
         cada uno ya tiene un valor o tu declaración, o la declaración no arrastra
@@ -3238,6 +3317,18 @@ application:
           de ejercicios anteriores pendientes de compensar (casillas %{boxes}). Guarda
           la declaración del año anterior o indica en la declaración que no queda
           ninguna pendiente. No se ha guardado nada.'
+        renta_negative_savings_capital_income_pending: 'No se puede calcular el Modelo
+          %{modelo} de %{filing_year}: no consta si quedan saldos negativos de rendimientos
+          del capital mobiliario de la base del ahorro de ejercicios anteriores pendientes
+          de compensar (casillas %{boxes}). Guarda la declaración del año anterior
+          o indica en la declaración que no queda ninguno pendiente. No se ha guardado
+          nada.'
+        renta_negative_savings_gains_losses_pending: 'No se puede calcular el Modelo
+          %{modelo} de %{filing_year}: no consta si quedan saldos negativos de ganancias
+          y pérdidas patrimoniales de la base del ahorro de ejercicios anteriores
+          pendientes de compensar (casillas %{boxes}). Guarda la declaración del año
+          anterior o indica en la declaración que no queda ninguno pendiente. No se
+          ha guardado nada.'
       prior_period_unfiled: 'Todavía no se puede calcular el Modelo %{modelo} %{period}
         %{filing_year}: arrastra importes de la declaración de %{unfiled_period},
         que no está presentada. Presenta primero %{unfiled_period} y vuelve a calcular.
@@ -3470,6 +3561,16 @@ application:
       application_not_required_maximum: 'La casilla [%{box}] tiene %{casilla_value},
         pero debe ser %{computed_value}: la ley exige aplicar la mayor cuantía que
         permite este ejercicio, ni más ni menos.'
+      application_order_capacity_unresolved: Este ejercicio compensa saldos pendientes
+        de varios ejercicios anteriores (%{pending_total} en total), pero aún no se
+        conoce el importe disponible para compensarlos, así que no se puede saber
+        cuánto toma cada ejercicio. Completa los importes de los que depende.
+      application_order_unsettled: Este ejercicio puede compensar %{capacity} de los
+        %{pending_total} pendientes de varios ejercicios anteriores, y ningún texto
+        oficial indica en qué orden se toman esos ejercicios. Lo que se aplica de
+        cada uno, y lo que queda pendiente, depende de ese orden, así que esta declaración
+        se queda en cálculo y no se puede presentar desde esta aplicación hasta que
+        se aclare la regla.
       art52_reduccion_individual_sublimit_possible: La casilla [%{reduccion_id}] recoge
         %{reduccion_value} EUR de reducción por previsión social, por encima del sublímite
         individual de %{sublimit} EUR del art. 52 LIRPF, y no has declarado aportaciones
@@ -3901,6 +4002,11 @@ application:
           el límite, pero las categorías de renta que indicaste excluyen un tipo de
           renta del que tienes importes. Corrige las categorías o retira los importes
           y vuelve a proyectar. Nunca se muestra como cero.
+        joint_return_member_income_unavailable: Esta reducción no se puede calcular
+          en una declaración conjunta, porque tu declaración no separa los rendimientos
+          del trabajo y de actividades económicas de cada miembro, y los límites se
+          aplican a cada miembro individualmente (art. 52.1 LIRPF). Nunca se muestra
+          como cero.
         m200_tax_regime_unsupported: Esta casilla necesita el tipo de gravamen del
           régimen fiscal de tu entidad, que no se calcula para ese régimen o forma
           jurídica, así que no tiene valor. Introduce la casilla tú mismo según las
@@ -4072,6 +4178,29 @@ application:
             de la Ley 35/2006). Cada importe se registra como un 0 que has declarado,
             distinto de una cifra escrita; si después una declaración anterior muestra
             un importe, la declaración señala la diferencia.
+        renta_negative_savings_capital_income_pending:
+          action: No tengo rendimientos del capital mobiliario negativos pendientes
+            de ejercicios anteriores
+          effect: 'Se registra como un 0 que has declarado: ningún rendimiento del
+            capital mobiliario negativo pendiente de ejercicios anteriores.'
+          origin: Has declarado que no queda nada pendiente
+          statement: Indica que no te queda ningún saldo neto negativo de rendimientos
+            del capital mobiliario de los cuatro ejercicios anteriores pendiente de
+            compensar en la base imponible del ahorro (art. 49.1.a de la Ley 35/2006).
+            Cada importe se registra como un 0 que has declarado, distinto de una
+            cifra escrita; si después una declaración anterior muestra un importe,
+            la declaración señala la diferencia.
+        renta_negative_savings_gains_losses_pending:
+          action: No tengo pérdidas patrimoniales pendientes de ejercicios anteriores
+          effect: 'Se registra como un 0 que has declarado: ninguna pérdida patrimonial
+            pendiente de ejercicios anteriores.'
+          origin: Has declarado que no queda nada pendiente
+          statement: Indica que no te queda ningún saldo negativo de ganancias y pérdidas
+            patrimoniales de la base imponible del ahorro de los cuatro ejercicios
+            anteriores pendiente de compensar (art. 49.1.b de la Ley 35/2006). Cada
+            importe se registra como un 0 que has declarado, distinto de una cifra
+            escrita; si después una declaración anterior muestra un importe, la declaración
+            señala la diferencia.
         renta_trabajo_income_not_stated:
           action: No tengo contribuciones de la empresa ni aportaciones al patrimonio
             protegido que declarar
@@ -4658,6 +4787,14 @@ application:
       passphrase_confirmation_mismatch: La nueva contraseña y su confirmación no coinciden.
       passphrase_current_rejected: La contraseña actual no es correcta; la contraseña
         no se ha cambiado.
+      posicion_country_unknown: El Estado de origen «%{pais}» no es un código de país
+        de dos letras conocido; corrígelo y repite «%{door}».
+      posicion_has_ledger_rows: La posición de ahorro %{row} está nombrada por %{rows}
+        filas del libro; cambia o borra antes su vínculo con «%{door}».
+      posicion_payer_id_invalid: El NIF de un pagador español no es válido; revisa
+        sus letras y cifras, y repite «%{door}».
+      posicion_row_invalid: El dato «%{leaf}» no es válido o contradice otros datos
+        de la posición; no se guardó nada. Corrígelo y repite «%{door}».
       profile_already_exists: El perfil '%{profile}' ya existe; ejecuta aeat config
         login NAME para activarlo o aeat config profile delete NAME primero.
       profile_authentication_refused: No se aceptó la contraseña del perfil.
@@ -4774,6 +4911,49 @@ application:
       kdf_at_fallback: La contraseña de este perfil tiene la protección mínima, porque
         este equipo no pudo confirmar a tiempo un ajuste más fuerte al crear el perfil.
         Cambia la contraseña para reforzarla; puedes volver a introducir la misma.
+    record_groups:
+      door:
+        prevision_social_contribution:
+          edit: Corrige este certificado
+          remove: Elimina este certificado
+        renta_arrendamiento:
+          edit: Editar arrendamiento
+          remove: Eliminar arrendamiento
+        renta_inmueble:
+          edit: Editar inmueble
+          remove: Eliminar inmueble
+      kind:
+        ledger_row: Movimiento
+        pension_contribution: Certificados de aportaciones a previsión social de un
+          ejercicio
+        prevision_social_contribution: Certificado de aportaciones a previsión social
+        renta_arrendamiento: Arrendamiento
+        renta_inmueble: Inmueble
+        rental_property: Inmueble arrendado
+      prevision_social_contribution:
+        group_summary: 'Certificados de aportaciones a previsión social del ejercicio
+          {ejercicio}: {count}'
+        holder_unnamed: Emisor sin nombre
+        summary_placed: '{holder}: {amount} EUR, clave {clave}, llega a la casilla
+          {box}'
+        summary_unplaced: '{holder}: {amount} EUR, clave {clave}, no llega a ninguna
+          casilla; ese importe lo introduces tú'
+      refusal:
+        item_too_large: Una entrada de esta lista es demasiado grande para mostrarla
+          en una página.
+        stale_revision: El perfil o sus movimientos han cambiado después de leer esta
+          lista. Vuelve a leer la lista.
+      relation:
+        prevision_social_contribution: Certificado del ejercicio
+        renta_arrendamiento:
+          inmueble: Arrendamiento de este inmueble
+        renta_inmueble:
+          inmueble_principal: Anejo arrendado junto con este inmueble
+      renta_arrendamiento:
+        summary_ended: Arrendamiento %{row}, del %{start} al %{end}
+        summary_open: Arrendamiento %{row}, desde el %{start}
+      renta_inmueble:
+        summary: 'Inmueble %{row}: %{place}'
   wizard:
     errors:
       command_input_invalid: 'Los datos del perfil no superaron la validación: %{details}'

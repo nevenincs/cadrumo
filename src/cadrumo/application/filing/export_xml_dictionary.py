@@ -32,19 +32,16 @@ from xml.etree import ElementTree
 
 from defusedxml import ElementTree as DefusedElementTree
 
-from ...core.aggregation import BindingAggregationOp
 from ...core.casilla_id import CasillaId
 from ...core.decimal.coercion import coerce_decimal
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.filing_producer_key import FilingProducerKey
-from ...domain.calculations.registry.binding_aggregation import binding_aggregation_op
 from ...domain.calculations.registry.binding_selector_utils import selector_as_dict
 from ...domain.calculations.registry.binding_value_contract import BindingDataType
 from ...domain.calculations.registry.export_xml_dictionary import XmlDictionaryEntry
 from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.inventory_bindings import TAXPAYER_YEAR_ACTIVITY_GRAIN
-from ...domain.calculations.registry.profile_bindings import ProfileProvider
-from ...domain.calculations.registry.schema import BindingDefinition
+from ...domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition
 from ...domain.contribuyente.renta_codes import modelo100_ccaa_codigo, modelo100_ecivil_export_code
 from ...domain.filing.errors import (
@@ -61,7 +58,7 @@ from .export_xml_dictionary_modelo100 import (
     refuse_family_minimum_without_its_rows,
     registry_modelo_100_xml_declarations,
 )
-from .export_xml_dictionary_rows import xml_dictionary_layout_entries
+from .export_xml_dictionary_rows import xml_dictionary_layout_casillas, xml_dictionary_layout_entries
 from .export_xml_dictionary_values import format_xml_dictionary_value, is_xml_dictionary_numeric_type
 from .export_xml_dictionary_xsd import (
     XML_DICTIONARY_ROOT_TAG,
@@ -72,6 +69,8 @@ from .export_xml_dictionary_xsd import (
     xml_dictionary_xsd_root,
     xml_dictionary_xsd_source,
 )
+from .export_xml_input_dictionary import declared_and_admitted_dictionary_entries
+from .export_xml_row_columns import require_row_totals_stated, row_column_entry
 from .export_xml_value_limits import (
     XmlValueSchema,
     canonical_xml_text,
@@ -234,7 +233,8 @@ def render_xml_dictionary_layout(
     Returns:
         UTF-8 XML declaration bytes for the local export artefact.
     """
-    entries = xml_dictionary_layout_entries(layout, schema_provider=schema_provider)
+    revision = schema_provider.get_snapshot(draft.modelo).revision
+    entries = layout_dictionary_entries(layout, revision=revision, schema_provider=schema_provider)
     root = ElementTree.Element(
         XML_DICTIONARY_ROOT_TAG,
         expected_xml_dictionary_root_identity(layout, draft=draft, schema_provider=schema_provider),
@@ -251,6 +251,15 @@ def render_xml_dictionary_layout(
     casilla_values: dict[CasillaId, object] = {value.casilla_id: value.value for value in draft.values}
     declarations, unfiled_paths = _modelo100_render_exclusions(draft, entries, casilla_values)
     repeated_rows = xml_dictionary_repeated_rows(layout, draft=draft, entries=entries, schema_provider=schema_provider)
+    require_row_totals_stated(
+        revision,
+        draft,
+        entries=entries,
+        repeating=xml_dictionary_repeating_element_paths(
+            xml_dictionary_xsd_source(layout, schema_provider.sources),
+            source_payloads=schema_provider.source_payloads,
+        ),
+    )
     value_schema = xml_dictionary_value_schema(layout, schema_provider=schema_provider)
     _write_xml_dictionary_entries(
         root,
@@ -268,6 +277,32 @@ def render_xml_dictionary_layout(
     _finish_xml_dictionary_root(root, draft, optional_element_paths=optional_element_paths, value_schema=value_schema)
     _refuse_values_outside_xsd(root, layout, entries=entries, schema_provider=schema_provider)
     return _serialize_xml_dictionary(root)
+
+
+def layout_dictionary_entries(
+    layout: ExportLayoutDefinition,
+    *,
+    revision: ModeloRevision,
+    schema_provider: RegistrySchemaAccessor,
+) -> tuple[XmlDictionaryEntry, ...]:
+    """Return every dictionary row the layout places for a revision: the declared rows, then the admitted ones.
+
+    Args:
+        layout: The ``xml_dictionary`` layout being rendered or verified.
+        revision: The :class:`ModeloRevision` whose row bindings may need input-dictionary rows.
+        schema_provider: Resolves the layout's dictionaries and XSD.
+
+    Returns:
+        The declaration dictionary's rows followed by the input-dictionary rows admitted beside them.
+    """
+    declared, admitted = declared_and_admitted_dictionary_entries(
+        layout,
+        bindings=revision.bindings,
+        casillas=xml_dictionary_layout_casillas(layout, schema_provider=schema_provider),
+        sources=schema_provider.sources,
+        source_payloads=schema_provider.source_payloads,
+    )
+    return (*declared, *admitted)
 
 
 def xml_dictionary_value_schema(
@@ -343,7 +378,9 @@ def refuse_incomplete_xml_dictionary_payload(
         document,
         schema=xml_dictionary_xsd_root(source, source_payloads=schema_provider.source_payloads),
         source_id=source.id,
-        entries=xml_dictionary_layout_entries(layout, schema_provider=schema_provider),
+        entries=layout_dictionary_entries(
+            layout, revision=schema_provider.get_snapshot(draft.modelo).revision, schema_provider=schema_provider
+        ),
     )
     if draft.modelo == form_for_role("renta.annual"):
         refuse_family_minimum_without_its_rows(document)
@@ -720,67 +757,6 @@ class XmlDictionaryRepeatedRows:
         )
 
 
-def _nearest_repeating_path(path: str, repeating: Mapping[str, int | None]) -> str | None:
-    """Return the innermost repeating element that encloses ``path``."""
-    parts = path.split("/")
-    return next(
-        (candidate for end in range(len(parts) - 1, 0, -1) if (candidate := "/".join(parts[:end])) in repeating),
-        None,
-    )
-
-
-def _row_column_entry(
-    binding: BindingDefinition,
-    entries: tuple[XmlDictionaryEntry, ...],
-    repeating: Mapping[str, int | None],
-) -> tuple[str, XmlDictionaryEntry]:
-    """Find the one dictionary row a row binding fills, and the repeating element around it.
-
-    A source row binding names the box it fills. A profile row object names the
-    dictionary field and the schema path of its column, as its scalar profile
-    bindings do, so it is placed by that field and must sit at that path.
-    """
-    if binding_aggregation_op(binding) is not BindingAggregationOp.ROWS:
-        raise FilingExportDesignIntegrityError(
-            f"binding {binding.id!r} carries rows but declares no row column",
-            translated_message="errors.integrity.filing_export_xml_row_column_undeclared",
-            context={"binding": binding.id},
-        )
-    provider = binding.provider
-    if isinstance(provider, ProfileProvider) and provider.rows is not None and provider.dictionary_field is not None:
-        column = provider.dictionary_field
-        expected_path = provider.xsd_path
-
-        def fills(entry: XmlDictionaryEntry) -> bool:
-            return entry.field_id == column and expected_path in {None, entry.path}
-
-    else:
-        target = selector_as_dict(binding).get("target_casilla_id")
-        if target is None:
-            raise FilingExportDesignIntegrityError(
-                f"binding {binding.id!r} carries rows but declares no row column",
-                translated_message="errors.integrity.filing_export_xml_row_column_undeclared",
-                context={"binding": binding.id},
-            )
-        column = str(target)
-
-        def fills(entry: XmlDictionaryEntry) -> bool:
-            return entry.casilla_id == target
-
-    placed = tuple(
-        (element, entry)
-        for entry in entries
-        if fills(entry) and (element := _nearest_repeating_path(entry.path, repeating)) is not None
-    )
-    if len(placed) != 1:
-        raise FilingExportDesignIntegrityError(
-            f"row column {binding.id!r} needs one repeating dictionary row for {column}, found {len(placed)}",
-            translated_message="errors.integrity.filing_export_xml_row_column_occurrence",
-            context={"binding": binding.id, "column": column, "found": len(placed)},
-        )
-    return placed[0]
-
-
 def _row_values(draft: ModeloDraft) -> tuple[ModeloBindingValue, ...]:
     """Return the draft's row values in row order; a column a row has no value for stays off it."""
     return tuple(
@@ -831,7 +807,7 @@ def xml_dictionary_repeated_rows(
     grains: dict[str, set[object]] = {}
     for value in values:
         binding = bindings[value.binding_id]
-        element, entry = _row_column_entry(binding, entries, repeating)
+        element, entry = row_column_entry(binding, entries, repeating)
         grains.setdefault(element, set()).add(selector_as_dict(binding).get("projection_grain"))
         row = occurrences.setdefault(element, {}).setdefault(value.row_index or 0, {})
         row[entry.path] = canonical_xml_text(
@@ -1156,6 +1132,7 @@ def _declared_child_position(
 
 __all__ = [
     "XmlDictionaryRepeatedRows",
+    "layout_dictionary_entries",
     "mismatched_xml_dictionary_repeated_casillas",
     "refuse_xml_dictionary_payload_outside_xsd",
     "render_xml_dictionary_layout",

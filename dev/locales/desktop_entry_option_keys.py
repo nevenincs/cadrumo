@@ -32,6 +32,7 @@ _PRORRATA_FACT: Final[str] = "0116-renta-iva-deduction-ratio-policy.toml"
 _CAPITAL_FACT: Final[str] = "0130-liva-bienes-inversion-vocabulary.toml"
 _INVOICE_CLASS_FACT: Final[str] = "0141-invoice-legal-classification-catalogue.toml"
 _PREMISES_FACT: Final[str] = "0155-modelo-347-premises-form-codes.toml"
+_GASTO_INMOBILIARIO_FACT: Final[str] = "0185-renta-capital-inmobiliario-gasto-concept-vocabulary.toml"
 
 
 def _entries(fact_file: str) -> list[dict[str, str]]:
@@ -83,6 +84,13 @@ ENTRY_OPTION_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType(
             )
         ),
     }
+)
+
+#: Entry option words the ledger entry read serves that no desktop surface renders yet: the
+#: rental expense concepts. They must exist in every locale, but they are not desktop chrome.
+SERVED_ONLY_ENTRY_OPTION_KEYS: Final[frozenset[str]] = frozenset(
+    f"{ENTRY_OPTION_LABEL_PREFIX}gasto_capital_inmobiliario.{member}"
+    for member in _ordered(_GASTO_INMOBILIARIO_FACT, "concept_order")
 )
 
 #: Every entry option key the desktop words, each family member spelled out.

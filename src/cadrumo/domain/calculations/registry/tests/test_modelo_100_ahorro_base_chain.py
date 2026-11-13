@@ -90,6 +90,14 @@ _BINDINGS: dict[str, Decimal] = {
     # casilla 1388 (LIRPF Art. 48) resolves to zero with no prior filing.
     "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
     "renta-base-liquidable-negativa-general-em4-pendiente-inicio": Decimal("0"),
+    "renta-saldo-negativo-gyp-ahorro-em4-pendiente-inicio": Decimal("0"),
+    "renta-saldo-negativo-gyp-ahorro-em3-pendiente-inicio": Decimal("0"),
+    "renta-saldo-negativo-gyp-ahorro-em2-pendiente-inicio": Decimal("0"),
+    "renta-saldo-negativo-gyp-ahorro-em1-pendiente-inicio": Decimal("0"),
+    "renta-saldo-negativo-rcm-ahorro-em4-pendiente-inicio": Decimal("0"),
+    "renta-saldo-negativo-rcm-ahorro-em3-pendiente-inicio": Decimal("0"),
+    "renta-saldo-negativo-rcm-ahorro-em2-pendiente-inicio": Decimal("0"),
+    "renta-saldo-negativo-rcm-ahorro-em1-pendiente-inicio": Decimal("0"),
     "renta-base-liquidable-negativa-general-em3-pendiente-inicio": Decimal("0"),
     "renta-base-liquidable-negativa-general-em2-pendiente-inicio": Decimal("0"),
     "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),
@@ -271,13 +279,9 @@ def test_0460_scales_proportionally_with_capital_mobiliario_input(
 # ── reviewed edition: same defect must also be fixed ──────────────────────────
 
 
-def test_reviewed_edition_0029_dividends_20000_populates_0460(
-    registry_snapshot: Callable[..., RegistrySnapshot],
-) -> None:
-    """The reviewed edition: same Art. 49.1.a chain must hold.
-
-    Every shipped M100 revision had the same missing-0041 defect.
-    """
+def _run_reviewed_edition(
+    registry_snapshot: Callable[..., RegistrySnapshot], inputs: dict[CasillaId, Decimal]
+) -> dict[CasillaId, Decimal]:
     snapshot = registry_snapshot("100", _REVIEWED_EDITION, "0A", grade=RegistryAuthorityGrade.CALCULATION)
     bindings: dict[str, Decimal] = {
         # The production profile resolver supplies this predicate as 1/0 from
@@ -292,12 +296,21 @@ def test_reviewed_edition_0029_dividends_20000_populates_0460(
         # declaration_type = 1 (individual) → 0461 computed = 0
         "renta-profile-declaration-type": Decimal("1"),
         "renta-profile-family-minor-children-in-unit": Decimal("0"),
+        "renta-profile-incremento-guarderia": Decimal("0"),
         # matrimonio-sobrevenido bindings (81feae7b0): zero = marriage pre-dates filing year.
         "renta-profile-marriage-full-year": Decimal("0"),
         "renta-profile-marriage-month-start": Decimal("0"),
         "renta-profile-marriage-month-end": Decimal("0"),
         "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
         "renta-base-liquidable-negativa-general-em4-pendiente-inicio": Decimal("0"),
+        "renta-saldo-negativo-gyp-ahorro-em4-pendiente-inicio": Decimal("0"),
+        "renta-saldo-negativo-gyp-ahorro-em3-pendiente-inicio": Decimal("0"),
+        "renta-saldo-negativo-gyp-ahorro-em2-pendiente-inicio": Decimal("0"),
+        "renta-saldo-negativo-gyp-ahorro-em1-pendiente-inicio": Decimal("0"),
+        "renta-saldo-negativo-rcm-ahorro-em4-pendiente-inicio": Decimal("0"),
+        "renta-saldo-negativo-rcm-ahorro-em3-pendiente-inicio": Decimal("0"),
+        "renta-saldo-negativo-rcm-ahorro-em2-pendiente-inicio": Decimal("0"),
+        "renta-saldo-negativo-rcm-ahorro-em1-pendiente-inicio": Decimal("0"),
         "renta-base-liquidable-negativa-general-em3-pendiente-inicio": Decimal("0"),
         "renta-base-liquidable-negativa-general-em2-pendiente-inicio": Decimal("0"),
         "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),
@@ -315,8 +328,6 @@ def test_reviewed_edition_0029_dividends_20000_populates_0460(
         # The Art. 81.1 maternidad deducción of an edition that computes casilla 0611;
         # neutral zero for a scenario with no descendants.
         **M100_NO_DESCENDANT_MATERNIDAD_BINDINGS,
-        # Art. 81.2 guarderia increment (casilla 0613); neutral zero for a scenario with no descendants.
-        "renta-profile-incremento-guarderia": Decimal("0"),
     }
     # The reviewed edition requires all cross-model relation values; supply zeros for
     # all relations so the ahorro chain can be exercised in isolation.
@@ -330,7 +341,7 @@ def test_reviewed_edition_0029_dividends_20000_populates_0460(
     )
     result = calculate_registry_snapshot(
         snapshot,
-        inputs={_CAPITAL_MOBILIARIO_DIVIDENDOS_CASILLA: Decimal("20000")},
+        inputs=inputs,
         date_context=_DATE_REVIEWED_EDITION,
         enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
         binding_values=bindings,
@@ -340,10 +351,132 @@ def test_reviewed_edition_0029_dividends_20000_populates_0460(
         # when the chain under test is unrelated.
         boolean_binding_values={"renta-maritime-path-rebeca": False},
     )
-    values = dict(result.values)
+    return dict(result.values)
+
+
+def test_reviewed_edition_0029_dividends_20000_populates_0460(
+    registry_snapshot: Callable[..., RegistrySnapshot],
+) -> None:
+    """The reviewed edition: same Art. 49.1.a chain must hold.
+
+    Every shipped M100 revision had the same missing-0041 defect.
+    """
+    values = _run_reviewed_edition(registry_snapshot, {_CAPITAL_MOBILIARIO_DIVIDENDOS_CASILLA: Decimal("20000")})
 
     assert values[_BASE_IMPONIBLE_AHORRO_CASILLA] >= Decimal("20000"), (
         f"{_REVIEWED_EDITION}: casilla 0460 = {values[_BASE_IMPONIBLE_AHORRO_CASILLA]!r}; expected ≥ 20000.  "
         f"Defect #181 also affects the {_REVIEWED_EDITION} revision.  "
         "Check its renta-base-imponible-del-ahorro formula."
     )
+
+
+# ── saldo neto del capital mobiliario (casillas 0429 / 0430) ──────────────────
+# Art. 49.1.a LIRPF integrates the net movable-capital yield of the year. The
+# official BIAHOH expression is 0460 = 0424 - 0436 - ... + 0429 - 0446 - ...
+# (no 0041 term); 0429 carries the positive net yield, 0430 the magnitude of
+# the negative one, and the negative one is compensated against 0424 within the
+# 25 per cent cap (0436) before it reaches 0460.
+
+_GASTOS_DEDUCIBLES_CASILLA: CasillaId = validated_casilla_id(
+    "0037", surface="test_modelo_100_ahorro_base_chain.casilla"
+)
+_SALDO_POSITIVO_CAPITAL_MOBILIARIO_CASILLA: CasillaId = validated_casilla_id(
+    "0429", surface="test_modelo_100_ahorro_base_chain.casilla"
+)
+_SALDO_NEGATIVO_CAPITAL_MOBILIARIO_CASILLA: CasillaId = validated_casilla_id(
+    "0430", surface="test_modelo_100_ahorro_base_chain.casilla"
+)
+_GANANCIAS_BASE_AHORRO_CASILLA: CasillaId = validated_casilla_id(
+    "0392", surface="test_modelo_100_ahorro_base_chain.casilla"
+)
+_PERDIDAS_BASE_AHORRO_CASILLA: CasillaId = validated_casilla_id(
+    "0395", surface="test_modelo_100_ahorro_base_chain.casilla"
+)
+_SALDO_POSITIVO_GYP_AHORRO_CASILLA: CasillaId = validated_casilla_id(
+    "0424", surface="test_modelo_100_ahorro_base_chain.casilla"
+)
+_SALDO_NEGATIVO_GYP_AHORRO_CASILLA: CasillaId = validated_casilla_id(
+    "0425", surface="test_modelo_100_ahorro_base_chain.casilla"
+)
+_COMPENSACION_RCM_CAP_CASILLA: CasillaId = validated_casilla_id(
+    "0436", surface="test_modelo_100_ahorro_base_chain.casilla"
+)
+_COMPENSACION_GYP_CAP_CASILLA: CasillaId = validated_casilla_id(
+    "0446", surface="test_modelo_100_ahorro_base_chain.casilla"
+)
+
+
+def test_positive_net_capital_mobiliario_is_0429_and_0430_is_zero(
+    m100_second_newest_snapshot: RegistrySnapshot,
+) -> None:
+    values = _run_second_newest(m100_second_newest_snapshot, {_CAPITAL_MOBILIARIO_DIVIDENDOS_CASILLA: Decimal("20000")})
+
+    assert values[_SALDO_POSITIVO_CAPITAL_MOBILIARIO_CASILLA] == Decimal("20000")
+    assert values[_SALDO_NEGATIVO_CAPITAL_MOBILIARIO_CASILLA] == Decimal("0")
+    assert values[_BASE_IMPONIBLE_AHORRO_CASILLA] == Decimal("20000")
+
+
+def test_negative_net_capital_mobiliario_is_a_positive_0430_magnitude_and_does_not_reduce_0460(
+    m100_second_newest_snapshot: RegistrySnapshot,
+) -> None:
+    """A 800 EUR loss (income 1 000, deductible expenses 1 800) is carried as 0430 = 800."""
+    values = _run_second_newest(
+        m100_second_newest_snapshot,
+        {
+            _CAPITAL_MOBILIARIO_DIVIDENDOS_CASILLA: Decimal("1000"),
+            _GASTOS_DEDUCIBLES_CASILLA: Decimal("1800"),
+        },
+    )
+
+    assert values[_CAPITAL_MOBILIARIO_RENDIMIENTOS_REDUCIDOS_CASILLA] == Decimal("-800")
+    assert values[_SALDO_POSITIVO_CAPITAL_MOBILIARIO_CASILLA] == Decimal("0")
+    assert values[_SALDO_NEGATIVO_CAPITAL_MOBILIARIO_CASILLA] == Decimal("800")
+    # With no positive gains to offset against, nothing is compensated and the
+    # negative yield cannot push the savings base below zero.
+    assert values[_COMPENSACION_RCM_CAP_CASILLA] == Decimal("0")
+    assert values[_BASE_IMPONIBLE_AHORRO_CASILLA] == Decimal("0")
+
+
+def test_0446_cap_is_a_quarter_of_positive_0429_when_losses_exist(
+    m100_second_newest_snapshot: RegistrySnapshot,
+) -> None:
+    """Art. 49.1.b: pérdidas del año (0425) offset positive 0429 up to 25 per cent."""
+    values = _run_second_newest(
+        m100_second_newest_snapshot,
+        {
+            _CAPITAL_MOBILIARIO_DIVIDENDOS_CASILLA: Decimal("4000"),
+            _PERDIDAS_BASE_AHORRO_CASILLA: Decimal("3000"),
+        },
+    )
+
+    assert values[_SALDO_NEGATIVO_GYP_AHORRO_CASILLA] == Decimal("3000")
+    assert values[_COMPENSACION_GYP_CAP_CASILLA] == Decimal("1000")
+    # 4 000 positive yield - 1 000 offset; the 2 000 balance of the loss stays unapplied.
+    assert values[_BASE_IMPONIBLE_AHORRO_CASILLA] == Decimal("3000")
+
+
+def test_manual_renta_2025_savings_base_integration_current_year_part(
+    registry_snapshot: Callable[..., RegistrySnapshot],
+) -> None:
+    """Manual práctico Renta 2025, ahorro: gains 5 600, losses 1 600, RCM -800.
+
+    Independent oracle: net gains 4 000; the negative movable-capital yield of
+    800 is within the 25 per cent cap (1 000), so every balance before prior-year
+    carries is compensated: base del ahorro = 4 000 - 800 = 3 200 (the manual
+    then applies 3 000 of prior-year carries, which are zero here).
+    """
+    values = _run_reviewed_edition(
+        registry_snapshot,
+        {
+            _GANANCIAS_BASE_AHORRO_CASILLA: Decimal("5600"),
+            _PERDIDAS_BASE_AHORRO_CASILLA: Decimal("1600"),
+            _CAPITAL_MOBILIARIO_DIVIDENDOS_CASILLA: Decimal("1000"),
+            _GASTOS_DEDUCIBLES_CASILLA: Decimal("1800"),
+        },
+    )
+
+    assert values[_SALDO_POSITIVO_GYP_AHORRO_CASILLA] == Decimal("4000")
+    assert values[_SALDO_POSITIVO_CAPITAL_MOBILIARIO_CASILLA] == Decimal("0")
+    assert values[_SALDO_NEGATIVO_CAPITAL_MOBILIARIO_CASILLA] == Decimal("800")
+    assert values[_COMPENSACION_RCM_CAP_CASILLA] == Decimal("800")
+    assert values[_BASE_IMPONIBLE_AHORRO_CASILLA] == Decimal("3200")

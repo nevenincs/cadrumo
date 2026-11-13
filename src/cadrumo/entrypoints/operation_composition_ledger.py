@@ -303,9 +303,10 @@ def compose_ledger_entry_options_operation(inputs: OperationCompositionInputs) -
         build_ledger_entry_options_definition,
         build_ledger_entry_options_registration,
     )
+    from .ledger_action_composition import load_entry_option_profile_facts
 
     del inputs
-    definition = build_ledger_entry_options_definition()
+    definition = build_ledger_entry_options_definition(load_entry_option_profile_facts)
     return built((definition,), (build_ledger_entry_options_registration(definition),))
 
 

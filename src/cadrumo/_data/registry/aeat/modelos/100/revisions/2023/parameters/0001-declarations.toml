@@ -116,3 +116,59 @@ valid_from = 2022-10-20
 [[revisions."2023".parameters.source_citations]]
 source_ref = "aeat-renta-2023-manual-parte1"
 required_text = ["Que las instalaciones se han de haber puesto a disposición del contribuyente a partir", "del 20 de octubre de 2022."]
+
+# LIRPF art. 52.1.b.2.º (Ley 31/2022): the increment for the own contributions of autonomos and
+# empresarios individuales, inside the joint 8.500 cap of both increments.
+[[revisions."2023".parameters]]
+id = "renta-prevision-social-incremento-autonomos-limite"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-52"]
+source_refs = ["lirpf-cuota-chain-authority", "aeat-renta-2023-manual-parte1"]
+
+[[revisions."2023".parameters.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["2.º En 4.250 euros anuales, siempre que tal incremento provenga de aportaciones a los planes de pensiones sectoriales"]
+
+[[revisions."2023".parameters.values]]
+value = "4250"
+date_axis = "filing_period"
+valid_from = 2023-01-01
+
+# LIRPF art. 52.1.b.1.º (Ley 31/2022): the most a worker's own contributions to the same
+# instrument count toward the increment, by the annual employer contribution. The printed table
+# is cumulative: 2,5 times up to 500; 1.250 plus 0,25 times the excess over 500 up to 1.500; the
+# contribution itself (multiplier 1) above 1.500, which is 1.500 plus 1 times the excess.
+[[revisions."2023".parameters]]
+id = "renta-prevision-social-aportacion-trabajador-maxima"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-35-2006:art-52"]
+source_refs = ["lirpf-cuota-chain-authority", "aeat-renta-2023-manual-parte1"]
+
+[[revisions."2023".parameters.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = [
+    "El resultado de multiplicar la contribución empresarial por 2,5.",
+    "1.250 euros, más el resultado de multiplicar por 0,25 la diferencia entre la contribución empresarial y 500 euros.",
+    "El resultado de multiplicar la contribución empresarial por 1.",
+]
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "0"
+upper_bound = "500"
+fixed_addition = "0"
+marginal_rate = "2.5"
+valid_from = 2023-01-01
+[[revisions."2023".parameters.brackets]]
+lower_bound = "500"
+upper_bound = "1500"
+fixed_addition = "1250"
+marginal_rate = "0.25"
+valid_from = 2023-01-01
+[[revisions."2023".parameters.brackets]]
+lower_bound = "1500"
+fixed_addition = "1500"
+marginal_rate = "1"
+valid_from = 2023-01-01

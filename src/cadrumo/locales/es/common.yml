@@ -261,6 +261,81 @@ aggregation:
   per_modelo:
     errors:
       unsupported_modelo: Modelo no soportado para la agregación por modelo
+  prevision_social_contribution:
+    errors:
+      certificate_file_unreadable: No se ha podido leer el --certificate-file, o está
+        vacío o no es un PDF, una imagen o un documento XML.
+      certificate_fingerprint_mismatch: El --evidence-sha256 no es el SHA-256 del
+        --certificate-file, así que no se ha guardado nada.
+      certificate_fingerprint_required: 'Un registro de aportaciones necesita su certificado:
+        indica --certificate-file, o --evidence-sha256 para un certificado que ya
+        esté en tu almacenamiento.'
+      certificate_not_in_custody: El documento del certificado que cita este registro
+        no está guardado en tu perfil, así que el registro no se ha guardado. Añade
+        primero el documento.
+      clave_pair_undefined: El diseño de registro del modelo 345 no define esa --subclave
+        para esta --clave, o esta clave lleva una subclave que no has indicado.
+      ejercicio_unsupported: Este ejercicio está fuera de los que Cadrumo calcula,
+        así que el registro de aportaciones no se ha guardado.
+      identity_mismatch: El emisor, el plan, la clave o el ejercicio del registro
+        no coinciden con el registro que quieres cambiar, así que no se ha guardado
+        nada.
+      not_found: No existe ningún registro de aportaciones con esa referencia de emisor,
+        --plan-ref, --clave y --subclave en este ejercicio. Ejecuta el comando list
+        para ver los registros guardados.
+      same_plan_split_unstated: La casilla de esta clave y subclave depende de si
+        tu empleador también hizo contribuciones al mismo plan. Indícalo con --employer-same-plan
+        yes o no, o introduce tú la casilla como valor del operador.
+      stale_revision: El registro de aportaciones ha cambiado desde que lo leíste.
+        Vuelve a leerlo y repite el cambio.
+      validation: 'Un valor no es válido: comprueba el NIF del emisor, el --plan-nif,
+        y que --amount no sea negativo y tenga como máximo dos decimales.'
+    served:
+      beneficiary_out_of_scope: Las aportaciones al sistema de previsión social de
+        tu cónyuge o al de una persona con discapacidad no se calculan en esta versión.
+        Introduce tú la casilla como valor del operador.
+      certificate_file_unreadable: No se ha podido leer el archivo del certificado.
+        Comprueba que sigue existiendo, que no está vacío y que es un PDF, una imagen
+        o un documento XML, y vuelve a elegirlo.
+      certificate_fingerprint_mismatch: El archivo del certificado no coincide con
+        la huella registrada para él, así que no se ha guardado nada. Elige el archivo
+        correcto y vuelve a intentarlo.
+      certificate_fingerprint_required: Un registro de aportaciones necesita el certificado
+        que emitió la gestora, la mutualidad o la aseguradora. Elige el archivo del
+        certificado o introduce tú la casilla de aportaciones como valor del operador.
+      certificate_not_in_custody: Cadrumo no guarda ningún certificado con esa huella,
+        o el archivo guardado ya no coincide con ella. Elige el archivo del certificado
+        para que Cadrumo lo guarde entre tus documentos cifrados.
+      clave_pair_undefined: El diseño de registro del modelo 345 no define esa subclave
+        para esta clave. Comprueba la clave y la subclave que indica el certificado.
+      design_not_bundled: Cadrumo no tiene el diseño de registro del modelo 345 de
+        este ejercicio, así que no sitúa ninguna aportación a sistemas de previsión
+        social. Introduce tú las casillas de aportaciones como valores del operador.
+      ejercicio_unsupported: Este ejercicio está fuera de los que Cadrumo admite,
+        así que el registro de aportaciones no se ha guardado.
+      identity_mismatch: El registro no coincide con el emisor, el plan, la clave
+        o el certificado ya guardados para él, así que no se ha guardado nada.
+      indirect_match: Una casilla de la reducción por aportaciones a sistemas de previsión
+        social encaja con esta clave del modelo 345 solo por analogía y ningún texto
+        oficial la nombra, así que Cadrumo no la consigna ahí. Introduce tú la casilla
+        como valor del operador.
+      not_certified: No hay ningún certificado de aportaciones a sistemas de previsión
+        social registrado para este ejercicio, así que Cadrumo deja en blanco las
+        casillas de aportaciones. Registra cada certificado o introduce tú las casillas
+        como valores del operador.
+      not_found: No existe ningún registro de aportaciones para ese ejercicio, emisor,
+        plan, clave y subclave. Puede que ya se haya eliminado.
+      same_plan_split_unstated: La casilla de esta aportación depende de si tu empleador
+        también hizo contribuciones al mismo plan, y el registro no lo indica. Indícalo
+        en el registro o introduce tú la casilla como valor del operador.
+      stale_revision: Este registro de aportaciones ha cambiado desde que lo leíste.
+        Vuelve a leerlo y repite el cambio.
+      unplaced_clave: Ningún texto oficial sitúa esta clave y subclave del modelo
+        345 en una casilla de la reducción por aportaciones a sistemas de previsión
+        social, así que Cadrumo no la sitúa. Introduce tú la casilla como valor del
+        operador.
+      validation: 'Un valor del registro no es válido: comprueba los NIF del emisor
+        y del plan, y que el importe no sea negativo y tenga como máximo dos decimales.'
   renta_ledger:
     errors:
       annual_period_required: Se requiere un periodo anual para los totales de Renta
@@ -3575,6 +3650,8 @@ desktop:
       arrendamiento_local: Arrendamiento de local
       arrendamiento_vivienda_afecto: Arrendamiento de vivienda afecta
       capital_inmobiliario: Alquiler de inmuebles
+      capital_mobiliario: Rendimientos del capital mobiliario
+      ganancias_patrimoniales: Ganancias y pérdidas patrimoniales
       trabajo: Trabajo
     issue:
       next: Siguiente problema de preparación
@@ -10883,6 +10960,9 @@ workspace:
       finding:
         calculation_withdrawn: El cálculo se retira. Vuelve a calcular cuando indiques
           los importes pendientes de ejercicios anteriores.
+        carry_left_open: Este importe de un ejercicio anterior sigue abierto. Decláralo,
+          como nada pendiente o con su importe, en este mismo cambio; el cálculo no
+          puede continuar mientras siga abierto.
         carry_withdrawal_filed: Esta declaración consta como presentada. Corrígela
           con una declaración complementaria o rectificativa.
         carry_withdrawal_keeps_entries: Retirar esta declaración descartaría los demás
