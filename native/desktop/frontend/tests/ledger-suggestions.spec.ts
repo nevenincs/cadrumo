@@ -22,7 +22,7 @@ import {
   statesReference,
 } from "../src/components/ledger/assets/assetFields";
 import { shownSuggestions } from "../src/components/ui/suggestions";
-import type { CatalogueInvoice } from "../src/shell/ledgerInvoiceOperations";
+import type { CatalogueInvoiceSnapshot } from "../src/shell/ledgerInvoiceContract";
 import type {
   KnownCounterparty,
   KnownText,
@@ -32,7 +32,7 @@ import type { CapitalGood } from "../src/shell/ledgerRegisterOperations";
 
 // What the ledger's own records offer a field. No page is opened.
 
-const invoice = (changes: Partial<CatalogueInvoice>) =>
+const invoice = (changes: Partial<CatalogueInvoiceSnapshot>) =>
   ({
     kind: "issued",
     invoice_number: "1",
@@ -44,7 +44,7 @@ const invoice = (changes: Partial<CatalogueInvoice>) =>
     series: null,
     lines: [],
     ...changes,
-  }) as unknown as CatalogueInvoice;
+  }) as unknown as CatalogueInvoiceSnapshot;
 
 const row = (changes: Partial<LedgerRow["transaction"]>) =>
   ({
@@ -296,11 +296,11 @@ test("a line description of this party comes first", () => {
       invoice({
         counterparty_name: "Other",
         issued_at: "2026-09-01",
-        lines: [{ description: "Theirs" }] as CatalogueInvoice["lines"],
+        lines: [{ description: "Theirs" }] as CatalogueInvoiceSnapshot["lines"],
       }),
       invoice({
         counterparty_name: "Norte, S.L.",
-        lines: [{ description: "Ours" }] as CatalogueInvoice["lines"],
+        lines: [{ description: "Ours" }] as CatalogueInvoiceSnapshot["lines"],
       }),
     ],
     "norte, s.l.",

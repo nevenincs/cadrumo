@@ -3,7 +3,7 @@
 // invented: the studio, its clients, its suppliers and its accounts. The
 // ledger is generated from a fixed seed, so every run sees the same rows.
 
-import type { CatalogueInvoice } from "../../shell/ledgerInvoiceOperations";
+import type { CatalogueInvoiceSnapshot } from "../../shell/ledgerInvoiceContract";
 import type {
   LedgerMovementWithholding,
   LedgerTransaction,
@@ -82,7 +82,7 @@ export type FixtureAccount = {
 };
 export type FixtureLedger = {
   movements: FixtureMovement[];
-  invoices: CatalogueInvoice[];
+  invoices: CatalogueInvoiceSnapshot[];
   evidence: FixtureEvidence[];
   rules: FixtureRule[];
   accounts: FixtureAccount[];
@@ -417,7 +417,7 @@ function receivedInvoice(
   baseCents: number,
   ivaCents: number,
   linked: string,
-): CatalogueInvoice {
+): CatalogueInvoiceSnapshot {
   return {
     invoice_id: invoiceId,
     bucket_id: null,
@@ -470,6 +470,7 @@ function receivedInvoice(
       decimal(baseCents + ivaCents).decimal,
       null,
     ),
+    documents: [],
   };
 }
 
@@ -494,7 +495,7 @@ export function fixtureLedger(
 ): FixtureLedger {
   const random = generator(20_260_101);
   const movements: FixtureMovement[] = [];
-  const invoices: CatalogueInvoice[] = [];
+  const invoices: CatalogueInvoiceSnapshot[] = [];
   const evidence: FixtureEvidence[] = [];
   let sequence = 0;
 
@@ -722,6 +723,7 @@ export function fixtureLedger(
           decimal(baseCents + ivaCents).decimal,
           decimal(retentionCents).decimal,
         ),
+        documents: [],
       });
     }
     // A client abroad pays in dollars every other month.
@@ -950,6 +952,7 @@ export function fixtureLedger(
         decimal(36300).decimal,
         decimal(4500).decimal,
       ),
+      documents: [],
     });
     movements.at(-1)!.withholding = [
       {

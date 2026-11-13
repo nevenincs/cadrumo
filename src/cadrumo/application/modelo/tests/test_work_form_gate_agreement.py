@@ -62,7 +62,7 @@ from ..work_form_header import ModeloFormExportHoldReason, export_hold
 from ..work_form_issue_lines import form_issue_lines
 from ..work_form_models import ModeloWorkForm
 from ..work_form_next_step import ModeloFormNextAction, check_count, form_next_step, missing_count, result_fields
-from ..work_form_service import ModeloWorkFormLoadV1
+from ..work_form_service import modelo_work_form_load
 from ..workbench_projection import project_modelo_workbench_form
 from ..workbench_read import ModeloWorkbenchFormReadV1
 from .work_form_fixture import built_form, form_snapshot
@@ -417,7 +417,7 @@ def test_a_stale_screen_reaches_the_public_workbench_read(operation: PinnedAutho
 
 def _read(form: ModeloWorkForm, admission: ModeloEditRefusedV1, operation: PinnedAuthorityOperation):
     return ModeloWorkbenchFormReadV1(
-        load=ModeloWorkFormLoadV1(form=form, verified=False, filed=False),
+        load=modelo_work_form_load(form, verified=False, filed=False),
         admission=admission,
         calculation_revision_id=form.calculation_revision_id,
         verification_report_id=None,

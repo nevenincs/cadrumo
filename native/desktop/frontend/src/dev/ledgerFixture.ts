@@ -28,10 +28,10 @@ import {
   type LedgerReview,
 } from "../shell/ledger";
 import type {
-  CatalogueInvoice,
   LedgerInvoiceDuplicateRequest,
   LedgerInvoiceMatchRequest,
 } from "../shell/ledgerInvoiceOperations";
+import type { CatalogueInvoiceSnapshot } from "../shell/ledgerInvoiceContract";
 import type {
   LedgerSplitCheckRequest,
   LedgerStagedCheckRequest,
@@ -684,7 +684,7 @@ export function ledgerFixture(options: Options): LedgerPort {
     "ledger.invoice.list": (request) => ({
       profile_id: LEDGER_FIXTURE_PROFILE_ID,
       kind: (request.kind as string | null | undefined) ?? null,
-      invoices: ledger.invoices.filter((invoice: CatalogueInvoice) =>
+      invoices: ledger.invoices.filter((invoice: CatalogueInvoiceSnapshot) =>
         request.kind ? invoice.kind === request.kind : true,
       ) as unknown as JsonValue,
     }),

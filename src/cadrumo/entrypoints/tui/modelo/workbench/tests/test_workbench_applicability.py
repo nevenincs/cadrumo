@@ -15,7 +15,7 @@ from rich.text import Text
 from textual.widgets import OptionList, Static
 
 from ......application.modelo.work_form_findings import ModeloFormAttention
-from ......application.modelo.work_form_next_step import ModeloFormNextAction, inapplicable_pages
+from ......application.modelo.work_form_next_step import ModeloFormNextAction
 from ......application.modelo.work_form_wording import does_not_apply_words
 from ......core.config import override_settings
 from ......core.i18n.render import tr
@@ -26,10 +26,9 @@ from ..casilla_list import CasillaList
 from ..header import attention_chips
 from ..navigator import NavigatorState, checked_boxes, navigator_rows, presented_form
 from ..page_items import workbench_pages
-from ..progress import workbench_progress
 from ..screen import ModeloWorkbenchScreen
 from .sectioned_form import LAST_QUARTER_PAGE, sectioned_form
-from .workbench_fixture import FakeActions, FakeReader
+from .workbench_fixture import FakeActions, FakeReader, served_progress
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -46,7 +45,6 @@ def _rows(*, last_quarter_applies: bool | None, current: int = 0) -> tuple[Text,
         checked=checked_boxes(form),
         width=60,
         show_attention=True,
-        inapplicable=inapplicable_pages(form),
         not_applying=does_not_apply_words(form.period),
     )
     return tuple(row.prompt for row in rows)
@@ -84,9 +82,9 @@ def test_what_a_page_that_does_not_apply_holds_is_never_to_do_in_the_header_or_t
     undecided = sectioned_form(last_quarter_applies=None)
 
     chips = {chip.level: chip.count for chip in attention_chips(set_aside, recorded=False)}
-    progress = workbench_progress(set_aside, staged=0, verified=False, filed=False)
+    progress = served_progress(set_aside, staged=0, verified=False, filed=False)
     undecided_chips = {chip.level: chip.count for chip in attention_chips(undecided, recorded=False)}
-    undecided_progress = workbench_progress(undecided, staged=0, verified=False, filed=False)
+    undecided_progress = served_progress(undecided, staged=0, verified=False, filed=False)
 
     assert chips == {ModeloFormAttention.CONFIRM: 4}
     assert (progress.next_action, progress.count) == (ModeloFormNextAction.CONFIRM, 4)

@@ -50,7 +50,7 @@ from ......application.modelo.work_form_models import (
     ModeloWorkForm,
 )
 from ......application.modelo.work_form_outline import form_outline
-from ......application.modelo.work_form_service import ModeloWorkFormLoadV1, modelo_form_snapshot
+from ......application.modelo.work_form_service import ModeloWorkFormLoadV1, modelo_form_snapshot, modelo_work_form_load
 from ......application.modelo.work_review import (
     ModeloWorkProgress,
     ModeloWorkReview,
@@ -84,6 +84,7 @@ from ..ports import (
     WorkbenchPreflight,
     WorkbenchRefused,
 )
+from ..progress import WorkbenchProgress, workbench_progress
 
 if TYPE_CHECKING:
     from ......application.modelo.export_projection import ModeloExportPublicResultV3
@@ -395,6 +396,13 @@ def served_elections() -> tuple[ModeloFormElectionQuestion, ...]:
     )
 
 
+def served_progress(
+    form: ModeloWorkForm, *, staged: int = 0, verified: bool = False, filed: bool = False
+) -> WorkbenchProgress:
+    """The progress the workbench draws for ``form``, from the journey the application serves with it."""
+    return workbench_progress(modelo_work_form_load(form, verified=verified, filed=filed), staged=staged)
+
+
 @dataclass
 class FakeReader:
     """Answers the workbench's reads from a fixed form and counts them."""
@@ -409,7 +417,7 @@ class FakeReader:
     def load(self, language: OutputLanguage) -> ModeloWorkFormLoadV1:
         """Return the fixed form."""
         self.loads += 1
-        return ModeloWorkFormLoadV1(form=self.form, verified=self.verified, filed=self.filed)
+        return modelo_work_form_load(self.form, verified=self.verified, filed=self.filed)
 
     def help_card(self, casilla_id: CasillaId, language: OutputLanguage) -> ModeloCasillaHelpCardV1:
         """Return a card whose formula names the casilla, and record the request."""
