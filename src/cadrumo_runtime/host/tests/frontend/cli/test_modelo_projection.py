@@ -624,6 +624,10 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
             "renta-base-liquidable-negativa-general-em2-pendiente-inicio": Decimal("0"),
             "renta-profile-minimo-descendientes-estatal": Decimal("0"),
             "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
+            # No ascendant rows: the mínimo por ascendientes aggregates and the Madrid count are zero.
+            "renta-profile-minimo-ascendientes-estatal": Decimal("0"),
+            "renta-profile-minimo-ascendientes-autonomico": Decimal("0"),
+            "renta-profile-deduccion-madrid-cuidado-ascendientes-count": Decimal("0"),
             # The verb reads no let property's rows, so its baseline states no net rental total.
             **M100_NO_LET_PROPERTY_BINDINGS,
         }.items()

@@ -183,6 +183,10 @@ def test_build_draft_replay_routes_m100_tax_residence_ccaa_string_enum() -> None
             "renta-profile-minimo-descendientes-estatal": Decimal("0"),
             # Parte autonómica: non-Madrid profile mirrors the estatal zero.
             "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
+            # No ascendant rows: the mínimo por ascendientes aggregates and the Madrid count are zero.
+            "renta-profile-minimo-ascendientes-estatal": Decimal("0"),
+            "renta-profile-minimo-ascendientes-autonomico": Decimal("0"),
+            "renta-profile-deduccion-madrid-cuidado-ascendientes-count": Decimal("0"),
             "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
             "renta-base-liquidable-negativa-general-em4-pendiente-inicio": Decimal("0"),
             "renta-saldo-negativo-gyp-ahorro-em4-pendiente-inicio": Decimal("0"),

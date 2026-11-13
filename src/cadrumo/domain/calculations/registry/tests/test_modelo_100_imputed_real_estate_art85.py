@@ -64,6 +64,10 @@ def _binding_values(year: int) -> dict[str, Decimal]:
         "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),
         "renta-profile-minimo-descendientes-estatal": Decimal("0"),
         "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
+        # No ascendant rows: the mínimo por ascendientes aggregates and the Madrid count are zero.
+        "renta-profile-minimo-ascendientes-estatal": Decimal("0"),
+        "renta-profile-minimo-ascendientes-autonomico": Decimal("0"),
+        "renta-profile-deduccion-madrid-cuidado-ascendientes-count": Decimal("0"),
         # Every edition computes the maritime-worker exemption; neutral when the chain under test is unrelated.
         **M100_NO_MARITIME_WORKER_BINDINGS,
     }

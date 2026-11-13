@@ -145,6 +145,8 @@ _LATER_NEUTRAL_BINDINGS: dict[str, Decimal] = {
     "renta-maritime-qualifying-days": Decimal("0"),
     "renta-profile-unidad-familiar-otros-miembros-base": Decimal("0"),
     "renta-profile-madrid-nacimiento-adopcion-eligible-count": Decimal("0"),
+    # Madrid cuidado de ascendientes arrives with a later edition; no ascendant rows, so its count is zero.
+    "renta-profile-deduccion-madrid-cuidado-ascendientes-count": Decimal("0"),
 }
 _LATER_NEUTRAL_BOOLEAN_BINDINGS: dict[str, bool] = {"renta-maritime-path-rebeca": False}
 
@@ -183,6 +185,9 @@ def _run(
         "renta-profile-anualidades-sin-minimo-descendientes": flag,
         "renta-profile-minimo-descendientes-estatal": Decimal("0"),
         "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
+        # No ascendant rows: the mínimo por ascendientes aggregates are zero.
+        "renta-profile-minimo-ascendientes-estatal": Decimal("0"),
+        "renta-profile-minimo-ascendientes-autonomico": Decimal("0"),
         # An individual filer without minor children in the unit, and no
         # negative general base carried in from earlier ejercicios.
         "renta-profile-declaration-type": Decimal("1"),

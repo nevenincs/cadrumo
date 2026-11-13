@@ -235,6 +235,10 @@ def normal_direct_estimation_payments_scenario() -> RegistryCalculationScenario:
             # aggregate is zero.
             "renta-profile-minimo-descendientes-estatal": Decimal("0"),
             "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
+            # No ascendant rows: the mínimo por ascendientes aggregates and the Madrid count are zero.
+            "renta-profile-minimo-ascendientes-estatal": Decimal("0"),
+            "renta-profile-minimo-ascendientes-autonomico": Decimal("0"),
+            "renta-profile-deduccion-madrid-cuidado-ascendientes-count": Decimal("0"),
         },
         enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
         relation_values={
@@ -385,6 +389,10 @@ def simplified_direct_estimation_cap_scenario() -> RegistryCalculationScenario:
             "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),
             "renta-profile-minimo-descendientes-estatal": Decimal("0"),
             "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
+            # No ascendant rows: the mínimo por ascendientes aggregates and the Madrid count are zero.
+            "renta-profile-minimo-ascendientes-estatal": Decimal("0"),
+            "renta-profile-minimo-ascendientes-autonomico": Decimal("0"),
+            "renta-profile-deduccion-madrid-cuidado-ascendientes-count": Decimal("0"),
         },
         enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
         relation_values={
@@ -461,6 +469,10 @@ def negative_simplified_base_scenario() -> RegistryCalculationScenario:
             "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),
             "renta-profile-minimo-descendientes-estatal": Decimal("0"),
             "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
+            # No ascendant rows: the mínimo por ascendientes aggregates and the Madrid count are zero.
+            "renta-profile-minimo-ascendientes-estatal": Decimal("0"),
+            "renta-profile-minimo-ascendientes-autonomico": Decimal("0"),
+            "renta-profile-deduccion-madrid-cuidado-ascendientes-count": Decimal("0"),
         },
         enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
         relation_values={
@@ -541,6 +553,10 @@ def real_estate_capital_scenario() -> RegistryCalculationScenario:
             "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),
             "renta-profile-minimo-descendientes-estatal": Decimal("0"),
             "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
+            # No ascendant rows: the mínimo por ascendientes aggregates and the Madrid count are zero.
+            "renta-profile-minimo-ascendientes-estatal": Decimal("0"),
+            "renta-profile-minimo-ascendientes-autonomico": Decimal("0"),
+            "renta-profile-deduccion-madrid-cuidado-ascendientes-count": Decimal("0"),
         },
         enum_binding_values={
             "renta-profile-tax-residence-ccaa": "madrid",
@@ -668,6 +684,14 @@ def final_settlement_scenario() -> RegistryCalculationScenario:
             "renta-base-liquidable-negativa-general-em2-pendiente-inicio": Decimal("0"),
             "renta-profile-minimo-descendientes-estatal": Decimal("0"),
             "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
+            # No ascendant rows: the mínimo por ascendientes aggregates and the Madrid count are zero.
+            "renta-profile-minimo-ascendientes-estatal": Decimal("0"),
+            "renta-profile-minimo-ascendientes-autonomico": Decimal("0"),
+            "renta-profile-deduccion-madrid-cuidado-ascendientes-count": Decimal("0"),
+            # The Madrid birth or adoption deducción (casilla 1039) reads these two; the filer has no eligible
+            # descendant and no other member of the unit.
+            "renta-profile-madrid-nacimiento-adopcion-eligible-count": Decimal("0"),
+            "renta-profile-unidad-familiar-otros-miembros-base": Decimal("0"),
             "renta-profile-incremento-guarderia": Decimal("20.00"),
             # 0596 takes the sum of the payee's work-payer certificates.
             "renta-retencion-soportada-trabajo": Decimal("40.00"),
