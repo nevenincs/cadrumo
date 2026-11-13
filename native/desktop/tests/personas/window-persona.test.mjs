@@ -651,7 +651,24 @@ async function runAction(action, before, timeout, row) {
       before,
       Math.max(timeout - (Date.now() - started), 1000),
     );
-    if (!state.dialogTitle) return { state, notes, declined: null };
+    if (!state.dialogTitle) {
+      // A finished write that left the declaration unread holds the form until
+      // it is read again; the operator presses the notice's button, and so do we.
+      const reread = await clickText(".modelo-write-hold", "button", [
+        label("workspace.modelo.read_again"),
+      ]);
+      if (!reread) return { state, notes, declined: null };
+      notes.push("read the declaration again after the write");
+      log("read-again", { action });
+      return {
+        state: await settle(
+          before,
+          Math.max(timeout - (Date.now() - started), 1000),
+        ),
+        notes,
+        declined: null,
+      };
+    }
     const declined = await answerDialog(state.dialogTitle, row, notes);
     // The dialog leaves with an animation; settle must not see it again.
     await waitFor(async () => !(await readState()).dialogTitle, {
