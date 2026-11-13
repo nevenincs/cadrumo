@@ -417,6 +417,7 @@ def _legal_entity_profile(incn: Decimal | None) -> TaxpayerProfile:
         legal_entity_form=LegalEntityForm.from_registry("sl"),
         iva_regime=IVARegime("GENERAL"),
         incn_prior_12_months=incn,
+        regimen_entidades_navieras_tonelaje=False,
     )
 
 
@@ -497,6 +498,7 @@ def test_modelo_202_modality_is_incomplete_for_non_legal_entity() -> None:
         entity_type=EntityType.from_registry("natural_person"),
         iva_regime=IVARegime("GENERAL"),
         incn_prior_12_months=Decimal("9000000"),
+        regimen_entidades_navieras_tonelaje=False,
     )
     verdict = derive_modelo_202_modality(natural_person, effective_date=_PERIOD_END_FIRST_DT44)
     assert verdict.modality is Modelo202Modality.INCOMPLETE

@@ -51,6 +51,7 @@ def test_verify_after_profile_activity_start_change_reports_scoped_advisories_wi
             "identity.legal_name": "S.A. Drift Test",
             "activities.description": "industrial services",
             "taxpayer_type.incn_prior_12_months": "500000",
+            "taxpayer_type.regimen_entidades_navieras_tonelaje": "false",
             "taxpayer_type.new_entity_first_two_profit_periods": "false",
             "tax_residence.ccaa": "madrid",
         },

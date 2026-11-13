@@ -42,6 +42,7 @@ def _legal_entity() -> TaxpayerProfile:
         bienes_extranjero_above_threshold=False,
         fiscal_residency=FiscalResidency.from_registry("resident_irpf"),
         enrollment=ModeloEnrollment(large_company=False),
+        regimen_entidades_navieras_tonelaje=False,
     )
 
 
