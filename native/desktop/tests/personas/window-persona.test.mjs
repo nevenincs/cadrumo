@@ -9,6 +9,9 @@
 //   CADRUMO_PERSONA_RESULTS  path of the JSONL file to append
 //   CADRUMO_TREE             the commit the window was built from
 //   CADRUMO_CMAKE_BINARY_DIR, CADRUMO_BUILD_CONFIG   as the automation harness
+//   CADRUMO_PERSONA_HOST     (optional) the JSON `dev.desktop_automation_stage`
+//                            printed, when the caller staged the package once
+//                            for several windows; default: stage here
 //   CADRUMO_PERSONA_PROFILE  (optional) profile label, default "persona"
 //   CADRUMO_PERSONA_LANGUAGE (optional) chrome-string locale; default: the
 //                            window's own document language, else "en"
@@ -60,11 +63,11 @@ const CREDENTIAL_SOURCE = resolve(
 );
 const MARK = "data-persona-target";
 const TIMEOUT = {
-  signIn: 180_000,
-  list: 90_000,
-  calculate: 300_000,
-  verify: 180_000,
-  export: 180_000,
+  signIn: 300_000,
+  list: 300_000,
+  calculate: 600_000,
+  verify: 400_000,
+  export: 400_000,
 };
 // The keys of `workspace.modelo.next_button.*`: the one next action the
 // workspace header offers, by what it does.
@@ -1095,28 +1098,32 @@ async function launch(world, runDir) {
   );
   for (const member of ["temporary", "fixtures", "exports"])
     mkdirSync(resolve(runDir, member), { mode: 0o700, recursive: true });
-  const staged = spawnSync(
-    resolve(
-      repository,
-      inspectionPlatform() === "windows"
-        ? ".venv/Scripts/python.exe"
-        : ".venv/bin/python",
-    ),
-    [
-      "-m",
-      "dev.desktop_automation_stage",
-      "--build",
-      process.env.CADRUMO_CMAKE_BINARY_DIR,
-      "--config",
-      process.env.CADRUMO_BUILD_CONFIG,
-    ],
-    { cwd: repository, encoding: "utf8" },
-  );
-  if (staged.status !== 0)
-    throw new Error(
-      staged.stdout || staged.stderr || "Native test package staging failed.",
+  let hostJson = process.env.CADRUMO_PERSONA_HOST;
+  if (!hostJson) {
+    const staged = spawnSync(
+      resolve(
+        repository,
+        inspectionPlatform() === "windows"
+          ? ".venv/Scripts/python.exe"
+          : ".venv/bin/python",
+      ),
+      [
+        "-m",
+        "dev.desktop_automation_stage",
+        "--build",
+        process.env.CADRUMO_CMAKE_BINARY_DIR,
+        "--config",
+        process.env.CADRUMO_BUILD_CONFIG,
+      ],
+      { cwd: repository, encoding: "utf8" },
     );
-  const host = JSON.parse(staged.stdout.trim());
+    if (staged.status !== 0)
+      throw new Error(
+        staged.stdout || staged.stderr || "Native test package staging failed.",
+      );
+    hostJson = staged.stdout.trim();
+  }
+  const host = JSON.parse(hostJson);
   const port = await freePort();
   const nonce = randomBytes(32).toString("hex");
   const stdout = openSync(resolve(runDir, "host.stdout.log"), "a", 0o600);

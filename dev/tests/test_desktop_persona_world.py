@@ -97,8 +97,15 @@ def test_world_holds_the_rows_the_table_plans_and_a_profile_that_signs_in(
         if row["prepared"]:
             assert row["work_unit_id"], row
             assert row["pre_calculate_outcome"] is None
+            assert row["stages"][0] == "create"
+            assert "calculate" in row["stages"]
+            assert row["driver_calculate"] in {"calculated", "refused"}
         else:
             assert row["pre_calculate_outcome"], row
+            assert row["stages"] == []
+            assert row["driver_calculate"] is None
+    assert any(row["driver_calculate"] == "calculated" for row in report["rows"]), report["rows"]
+    assert _PROFILE_CREDENTIAL not in json.dumps(report)
 
     storage_root = Path(report["storage_root"])
     assert storage_root.is_dir()

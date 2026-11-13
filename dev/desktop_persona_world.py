@@ -5,7 +5,9 @@ local filing. The desktop window does calculate, verify and export itself, so th
 the table stops before the calculate operation: it replays the persona's world with ``reuse=False`` into a
 caller-given directory, then, in the table's own chain order, runs the table's preparation of every planned row
 (create, the pending carries and prior figures the table states first and a Modelo 303's evidence), then enters
-the values the persona's operator gives. Planning, scope, values and preparation are the table's own functions.
+takes each prepared return through the table's own calculate, which enters the persona's work inputs, states the prior
+values and work-income statements and the pending rental carries, and calculates again over them. Planning, scope,
+stated values, preparation and calculation are the table's own functions.
 
     python -m dev.desktop_persona_world --persona <id> --horizon <year> --storage-root <absolute directory>
 
@@ -14,8 +16,10 @@ the ``CADRUMO_STORAGE_ROOT`` the packaged desktop must be started with, the prof
 passphrase is defined (never the passphrase), the scenario instant, and one entry per planned row.
 
 Every operation here ran under the persona's frozen scenario clock, as the table's calculate does; a desktop on the
-wall clock calculates at a later instant. Each row is prepared against a profile in which the rows before it are
-only prepared, not filed locally, whereas the table files each verified row before it creates the next.
+wall clock calculates at a later instant. Each row is left calculated once, so the window's own calculate reads the
+statements kept on its revision. A row is prepared against a profile in which the rows before it are calculated, not
+verified and filed locally, whereas the table files each verified row before it creates the next; the window drives
+those rows itself, so they stay unfiled here.
 """
 
 from __future__ import annotations
@@ -37,10 +41,8 @@ from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
 from cadrumo.entrypoints.tests.persona_materialisation import (
     PersonaMaterialisationError,
     materialised_persona,
-    settle_operation,
     year_envelope,
 )
-from cadrumo.entrypoints.tests.persona_work_inputs import WorkInputError, enter_work_inputs
 from cadrumo.tests.env_scope import scoped_env_var
 from cadrumo.tests.personas import PersonaCatalogueError, persona_ids, read_persona
 
@@ -49,9 +51,7 @@ from .exit_codes import FAILED, OK
 from .paths import STORAGE_ROOT_ENV
 
 if TYPE_CHECKING:
-    from pydantic import BaseModel
-
-    from cadrumo.entrypoints.tests.persona_materialisation import MaterialisedPersona, PersonaWorld
+    from cadrumo.entrypoints.tests.persona_materialisation import MaterialisedPersona
 
     from .acceptance.persona_table.rows import PlannedRow
     from .acceptance.persona_table.sweep import PreparedReturn
@@ -82,6 +82,8 @@ def _entry(
     outcome: str | None = None,
     reason: str | None = None,
     m303_evidence: dict[str, str] | None = None,
+    stages: Sequence[str] = (),
+    calculate_outcome: str | None = None,
 ) -> dict[str, Any]:
     """The report entry of one planned row: its work unit when prepared, else the stage where the table stops."""
     return {
@@ -94,26 +96,9 @@ def _entry(
         "pre_calculate_outcome": outcome,
         "reason": reason,
         "m303_evidence": m303_evidence,
+        "stages": list(stages),
+        "driver_calculate": calculate_outcome,
     }
-
-
-def _enter_work_inputs(world: PersonaWorld, work_unit_id: str) -> None:
-    """Enter the values the persona's operator gives for the work unit's return, as the calculate operation does."""
-
-    def settle(definition_id: str, payload: BaseModel, *, subject: str | None = None) -> BaseModel | None:
-        return settle_operation(world, definition_id, payload, subject=subject)
-
-    try:
-        enter_work_inputs(
-            world.work_inputs,
-            envelope=world.envelope,
-            operation=world.operation,
-            profile_id=world.profile_id,
-            work_unit_id=work_unit_id,
-            settle=settle,
-        )
-    except WorkInputError as error:
-        raise PersonaMaterialisationError(str(error)) from error
 
 
 def _m303_evidence(prepared: PreparedReturn) -> dict[str, str] | None:
@@ -125,6 +110,43 @@ def _m303_evidence(prepared: PreparedReturn) -> dict[str, str] | None:
         "attachment_id": evidence.m303_exonerado_390_attachment_id,
         "sha256": str(evidence.m303_exonerado_390_sha256),
     }
+
+
+def _stage_names(materialised: MaterialisedPersona, plan: PlannedRow, prepared: PreparedReturn) -> list[str]:
+    """The names of the table's stages this return passes before verify, from what the persona's world holds."""
+    world = materialised.world
+    stages = ["create"]
+    if plan.modelo == "100":
+        stages.append("prior_carries")
+    if world.attested_prior_values:
+        stages.append("attested_prior_values")
+    if _m303_evidence(prepared) is not None:
+        stages.append("m303_attestation")
+    if world.work_inputs:
+        stages.append("work_inputs")
+    stages.append("calculate")
+    if world.work_income_none_statements:
+        stages.append("work_income_none")
+    if plan.modelo == "100":
+        stages.append("rental_carries")
+    return stages
+
+
+def _calculated(materialised: MaterialisedPersona, plan: PlannedRow, prepared: PreparedReturn) -> tuple[list[str], str]:
+    """Run the table's own calculate on the prepared return; a refusal leaves the window to meet it itself.
+
+    The table's calculate enters the work inputs, calculates, states the prior values and work-income statements the
+    calculation offers and the pending rental carries, and calculates again over them. The statements are kept on
+    the work unit, so the window's calculate reads them.
+    """
+    from .acceptance.persona_table import sweep
+
+    stages = _stage_names(materialised, plan, prepared)
+    try:
+        sweep._calculate(materialised, plan, prepared)  # the table's own calculate, not a copy
+    except PersonaMaterialisationError:
+        return stages, "refused"
+    return stages, "calculated"
 
 
 def _prepared_rows(materialised: MaterialisedPersona, plans: Sequence[PlannedRow]) -> list[dict[str, Any]]:
@@ -140,19 +162,15 @@ def _prepared_rows(materialised: MaterialisedPersona, plans: Sequence[PlannedRow
         if isinstance(prepared, TableRow):
             rows.append(_entry(plan, outcome=str(prepared.calculate), reason=prepared.reason or None))
             continue
-        if world.work_inputs:
-            try:
-                _enter_work_inputs(world, prepared.work_unit_id)
-            except PersonaMaterialisationError as error:
-                # The table meets this refusal at calculate, where the operation enters the inputs itself.
-                rows.append(_entry(plan, work_unit_id=prepared.work_unit_id, outcome="refused", reason=str(error)))
-                continue
+        stages, calculate_outcome = _calculated(materialised, plan, prepared)
         rows.append(
             _entry(
                 plan,
                 work_unit_id=prepared.work_unit_id,
                 prepared=True,
                 m303_evidence=_m303_evidence(prepared),
+                stages=stages,
+                calculate_outcome=calculate_outcome,
             )
         )
     return rows
