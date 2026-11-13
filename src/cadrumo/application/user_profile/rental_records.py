@@ -31,6 +31,7 @@ from ...core.identity.documents import IdentityError
 from ...core.identity.tax_id import validate_spanish_tax_id
 from ...core.modelo import Modelo
 from ...domain.calculations.registry.tax_id_format import runtime_tax_id_format
+from ...domain.contribuyente.arrendamiento_record import ArrendamientoRecord
 from ...domain.contribuyente.inmueble_facts import (
     ARRENDAMIENTO_SECTION,
     INMUEBLE_SECTION,
@@ -160,6 +161,26 @@ def _admit_inmueble(
     return inmueble_row_values(record)
 
 
+def _require_lease_after_letting_start(
+    row_key: int, record: ArrendamientoRecord, path_values: Mapping[str, object]
+) -> None:
+    """Refuse a lease that starts before its property's stated letting start."""
+    landlord_property = next(
+        (inmueble for inmueble in inmuebles_from_facts(path_values) if inmueble.clave == record.inmueble), None
+    )
+    if landlord_property is None:
+        return
+    others = (
+        lease.fecha_inicio
+        for lease in arrendamientos_from_facts(path_values)
+        if lease.inmueble == record.inmueble and lease.clave != row_key
+    )
+    _refusing_incoherent(
+        lambda: require_letting_start_before_leases(landlord_property, (*others, record.fecha_inicio)),
+        door=_door(INMUEBLE_SECTION, ProfileRecordRowMutation.EDIT),
+    )
+
+
 def _admit_arrendamiento(
     row_key: int,
     row: Mapping[str, str],
@@ -175,19 +196,7 @@ def _admit_arrendamiento(
             translated_message=_LEASE_PROPERTY_MISSING_LOCALE_KEY,
             context={"inmueble": record.inmueble, "door": _door(INMUEBLE_SECTION, ProfileRecordRowMutation.ADD)},
         )
-    landlord_property = next(
-        (inmueble for inmueble in inmuebles_from_facts(path_values) if inmueble.clave == record.inmueble), None
-    )
-    if landlord_property is not None:
-        others = (
-            lease.fecha_inicio
-            for lease in arrendamientos_from_facts(path_values)
-            if lease.inmueble == record.inmueble and lease.clave != row_key
-        )
-        _refusing_incoherent(
-            lambda: require_letting_start_before_leases(landlord_property, (*others, record.fecha_inicio)),
-            door=_door(INMUEBLE_SECTION, ProfileRecordRowMutation.EDIT),
-        )
+    _require_lease_after_letting_start(row_key, record, path_values)
     if len(record.inquilinos) > _tenant_capacity(authority):
         raise UserProfileValidationError(
             translated_message=_ROW_INVALID_LOCALE_KEY,

@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+from datetime import date
+
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.user_profile.errors import UserProfileValidationError
 from cadrumo.domain.user_profile.schema_migration import (
     MIGRATED_PROFILE_SCHEMA_VERSION,
@@ -17,10 +20,11 @@ from cadrumo.domain.user_profile.values import UserProfileFact
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PRIOR_VERSION = 13
+_YEAR = filing_year_envelope().horizon
 _KEPT = (
     UserProfileFact(path="identity.tax_id", value="X0001500M"),
     UserProfileFact(path="renta_inmueble.0.situacion", value="5"),
-    UserProfileFact(path="renta_inmueble.0.fecha_adquisicion", value="2020-03-04"),
+    UserProfileFact(path="renta_inmueble.0.fecha_adquisicion", value=date(_YEAR - 2, 3, 4).isoformat()),
 )
 
 
@@ -42,7 +46,7 @@ def test_the_transition_out_of_schema_13_clears_nothing() -> None:
 
 @pytest.mark.parametrize("leaf", ["arrendado_desde", "sin_arrendar"])
 def test_a_schema_13_record_carrying_a_schema_14_leaf_is_refused(leaf: str) -> None:
-    carrier = UserProfileFact(path=f"renta_inmueble.0.{leaf}", value="2022-06-01")
+    carrier = UserProfileFact(path=f"renta_inmueble.0.{leaf}", value=date(_YEAR - 1, 6, 1).isoformat())
 
     with pytest.raises(UserProfileValidationError):
         migrate_profile_facts((*_KEPT, carrier), from_version=_PRIOR_VERSION)
