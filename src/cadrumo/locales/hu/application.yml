@@ -3695,13 +3695,13 @@ application:
         évben keletkezett jövedelemre vonatkozik. A hivatalos szabályok nem határozzák
         meg, hogyan kell ezek alapját és a levont adót bevallani, ezért ezt a bevallást
         egyelőre nem rögzítheti benyújtottként, és nem is exportálhatja.
-      m200_incn_periodo_anterior_disagrees: Az adókulcsot a megelőző adómegállapítási
+      m200_incn_periodo_anterior_disagrees: 'Az adókulcsot a megelőző adómegállapítási
         időszak nettó árbevétele határozza meg, de az erről az időszakról elmentett
         %{source_filing_year}. évi %{modelo}-as nyomtatvány %{held_turnover} összeget
         vall be, a profilod pedig %{stated_turnover} tizenkét havi árbevételt ad meg.
         Az az időszak tizenkét hónapig tartott, így mindkettő a saját árbevétele,
-        és egyezniük kell; egyik sem írja felül a másikat. Javítsd ki a hibásat a(z)
-        %{profile_path} helyen vagy abban a %{modelo}-as nyomtatványban.
+        és egyezniük kell; egyik sem írja felül a másikat. Javítsd ki a hibásat: a
+        profilodban megadott tizenkét havi árbevételt vagy azt a %{modelo}-as nyomtatványt.'
       m210_agrupacion_renta_invalid: 'Modelo %{modelo_id}, %{period_code} időszak:
         egyes jövedelemsorok olyan csoportosításban szerepelnek, amelyet a nyomtatvány
         nem fogad el.'

@@ -3752,13 +3752,13 @@ application:
         un ejercicio anterior. Las normas oficiales no indican cómo declarar su base
         y su retención, así que aún no puedes registrar esta declaración como presentada
         ni exportarla.
-      m200_incn_periodo_anterior_disagrees: El importe neto de la cifra de negocios
+      m200_incn_periodo_anterior_disagrees: 'El importe neto de la cifra de negocios
         del período impositivo anterior decide el tipo de gravamen, pero el Modelo
         %{modelo} %{source_filing_year} guardado de ese período declara %{held_turnover}
         y tu perfil indica un importe de doce meses de %{stated_turnover}. Ese período
         duró doce meses, así que ambos son su propio importe y deben coincidir; ninguno
-        se impone al otro. Corrige el que esté mal, en %{profile_path} o en ese Modelo
-        %{modelo}.
+        se impone al otro. Corrige el que esté mal: el importe de doce meses de tu
+        perfil o ese Modelo %{modelo}.'
       m210_agrupacion_renta_invalid: 'Modelo %{modelo_id}, periodo %{period_code}:
         algunas rentas están agrupadas de una forma que el modelo no admite.'
       m210_convenio_lob_advisory: Las rentas del tipo %{tipo_renta_code} del país

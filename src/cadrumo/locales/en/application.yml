@@ -3558,12 +3558,13 @@ application:
         includes %{settled_prior_accrual_rows} payment(s) of income earned in an earlier
         year. The official rules do not say how to report their base and withholding,
         so you cannot record this declaration as filed or export it yet.
-      m200_incn_periodo_anterior_disagrees: The turnover of the período impositivo
+      m200_incn_periodo_anterior_disagrees: 'The turnover of the período impositivo
         before this one decides the tipo de gravamen, but the Modelo %{modelo} %{source_filing_year}
         held for that período declares %{held_turnover} and your profile states a
         twelve-month turnover of %{stated_turnover}. That período lasted twelve months,
         so both are its own turnover and must agree; neither is taken over the other.
-        Correct the one that is wrong, at %{profile_path} or in that Modelo %{modelo}.
+        Correct the one that is wrong: the twelve-month turnover in your profile or
+        that Modelo %{modelo}.'
       m210_agrupacion_renta_invalid: 'Modelo %{modelo_id}, period %{period_code}:
         some income lines are grouped in a way the form does not accept.'
       m210_convenio_lob_advisory: Income of type %{tipo_renta_code} from country %{country_code}
