@@ -15,6 +15,7 @@ from pathlib import Path
 import pytest
 
 from ..cli_column.driver import (
+    READ_BACK_WORKAROUND,
     Case,
     bind_profile,
     profile_check,
@@ -192,6 +193,7 @@ def test_a_return_runs_create_calculate_verify_export_and_file_in_the_tables_ord
     assert (line["calculate"], line["verify"], line["export"], line["file"]) == ("pass", "pass", "pass", "pass")
     assert line["figures"] == {"01": "10.5"}
     assert line["reason"] == "filed locally"
+    assert "workaround" not in line
 
 
 def test_a_return_whose_line_exists_runs_for_the_chain_but_is_not_written_again(tmp_path: Path) -> None:
@@ -497,6 +499,7 @@ def test_a_returns_statements_are_made_around_its_calculation_in_the_tables_orde
         "state rental_carry bind-rental applied",
     ):
         assert made in str(line["reason"])
+    assert line["workaround"] == READ_BACK_WORKAROUND == "cli_calculate_drops_statements"
 
 
 def test_a_modelo_303_with_statements_sends_no_calculate_that_would_drop_them(tmp_path: Path) -> None:
@@ -518,6 +521,7 @@ def test_a_modelo_303_with_statements_sends_no_calculate_that_would_drop_them(tm
     (line,) = _lines(tmp_path)
     assert line["calculate"] == "error"
     assert "calculate carries the Modelo 303 evidence but drops the statements made" in str(line["reason"])
+    assert "workaround" not in line
 
 
 def test_a_return_is_calculated_again_only_after_a_phase_that_applied_a_statement(tmp_path: Path) -> None:
@@ -531,6 +535,7 @@ def test_a_return_is_calculated_again_only_after_a_phase_that_applied_a_statemen
     assert runner.keys().count("work calculate") == 1
     (line,) = _lines(tmp_path)
     assert "state work_income_none not applied" in str(line["reason"])
+    assert "workaround" not in line
 
 
 def test_an_optional_statement_the_application_refuses_is_named_and_the_calculation_goes_on(tmp_path: Path) -> None:
@@ -656,3 +661,18 @@ def test_a_world_report_carries_the_statements_and_refuses_a_malformed_one() -> 
     bad_amounts = {**row, "statements": [{**statement_record(statement), "amounts": [["1380"]]}]}
     with pytest.raises(ReportError, match="amounts"):
         parse_report(json.dumps({**document, "rows": [bad_amounts]}))
+
+
+def test_only_the_returns_whose_calculation_was_read_back_state_the_workaround(tmp_path: Path) -> None:
+    statements = (_stated(StatementKind.WORK_INPUT, Phase.AT_CALCULATION, "00501", "7"),)
+    runner = _Scripted(tmp_path / "exports", **_STATEMENT_COMMANDS)
+    report = _report(_plan("100", "0A", statements=statements), _plan("130", "1T"))
+
+    run_case(_case(tmp_path, report, runner), select_rows(report))
+
+    stated, plain = _lines(tmp_path)
+    assert (stated["modelo"], plain["modelo"]) == ("100", "130")
+    assert stated["workaround"] == READ_BACK_WORKAROUND
+    assert runner.keys().count("work revision") == 1
+    assert "workaround" not in plain
+    assert runner.keys().count("work calculate") == 1

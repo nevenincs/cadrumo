@@ -41,6 +41,10 @@ statements the edits recorded stay in it. ``aeat app modelo work calculate`` alw
 on its command line, which replaces those statements with none; the edit that made the last statement already
 calculated the declaration with every statement in force, so its revision is read instead.
 """
+READ_BACK_WORKAROUND = "cli_calculate_drops_statements"
+"""The workaround an intake line states for a return whose calculation was read back instead of calculated.
+
+The read-back is a diagnosis; a person runs ``calculate``, so such a row never counts as matched."""
 _M303 = "303"
 _WORK = ("app", "modelo", "work")
 
@@ -212,6 +216,8 @@ class _Stated:
     notes: list[str] = field(default_factory=list)
     applied: bool = False
     revision: str | None = None
+    read_back: bool = False
+    """Whether any calculation of the return was read back instead of calculated."""
 
     def noted(self, stage: StageResult) -> StageResult:
         """``stage`` with the statements made named in its reason."""
@@ -279,6 +285,7 @@ def _calculation(case: Case, work_unit_id: str, evidence: list[str], stated: _St
         return StageResult("error", reason="calculate carries the Modelo 303 evidence but drops the statements made")
     if stated.revision is None:
         return StageResult("error", reason="the statement applied printed no calculation_revision_id")
+    stated.read_back = True
     stated.notes.append(f"calculation read with {READ_BACK}: calculate keeps no statement")
     return _step(case, READ_BACK, [*_WORK, READ_BACK, stated.revision])
 
@@ -304,6 +311,12 @@ def run_return(case: Case, plan: RowPlan) -> RowResult:
     if isinstance(work_unit_id, StageResult):
         return RowResult(work_unit_id)
     stated = _Stated()
+    result = _stated_return(case, plan, work_unit_id, stated)
+    return replace(result, workaround=READ_BACK_WORKAROUND) if stated.read_back else result
+
+
+def _stated_return(case: Case, plan: RowPlan, work_unit_id: str, stated: _Stated) -> RowResult:
+    """State, calculate, verify, export and file a created return."""
     evidence = _prepared(case, plan, work_unit_id, stated)
     if isinstance(evidence, StageResult):
         return RowResult(stated.noted(evidence))

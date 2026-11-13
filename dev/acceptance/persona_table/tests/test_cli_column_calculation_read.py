@@ -136,6 +136,7 @@ def _drive(tmp_path: Path, plan: RowPlan) -> list[tuple[str, ...]]:
     run_case(Case("t", report, runner, tmp_path, writer, "case.log", export_check=lambda *_: ""), select_rows(report))
     (line,) = [json.loads(text) for text in (tmp_path / "cli.jsonl").read_text(encoding="utf-8").splitlines()]
     assert (line["calculate"], line["verify"], line["file"]) == ("pass", "pass", "pass")
+    assert line["workaround"] == "cli_calculate_drops_statements"
     return runner.sent
 
 
