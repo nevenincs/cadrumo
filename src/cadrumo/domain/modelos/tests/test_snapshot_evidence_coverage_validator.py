@@ -20,10 +20,10 @@ from ...calculations.registry.schema_references import RegistrySnapshotRef
 from ..calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
-    LedgerFilingCoverageError,
     assert_revision_snapshot_evidence_coverage,
     derive_calculation_revision_id,
 )
+from ..errors import LedgerFilingCoverageError
 from ..ledger_filing_snapshot import (
     LedgerEvidenceRow,
     LedgerFilingEvidence,

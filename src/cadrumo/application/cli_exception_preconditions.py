@@ -16,9 +16,9 @@ from pydantic import ValidationError
 
 from ..core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ..domain.filing.errors import FilingExportIntegrityError, FilingValidationError
-from ..domain.modelos.calculation_revision import LedgerFilingCoverageError
 from ..domain.modelos.errors import (
     CalculationRevisionIntegrityError,
+    LedgerFilingCoverageError,
     ModeloOperatorLayerIntegrityError,
     ModeloValidationError,
     PensionReduccionError,

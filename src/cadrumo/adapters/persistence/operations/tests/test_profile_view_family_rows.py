@@ -147,6 +147,14 @@ def test_descendants_are_served_as_stored_rows_in_the_wizard_words(tmp_path: Pat
         "birth_date",
         "fallecimiento",
         "convivientes",
+        # The art. 59 and 61 LIRPF facts the mínimo por ascendientes turns on, and
+        # the art. 60 disability facts, are editable leaves of every row.
+        "rentas_anuales",
+        "declaracion_propia",
+        "discapacidad",
+        "convivencia_mitad_periodo",
+        "discapacidad_asistencia",
+        "incapacidad_judicial",
     }
 
 

@@ -197,7 +197,9 @@ LEDGER_COUNTERPARTY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 declarations=("--rendering",),
                 value=ValueContract(
                     DeferredTarget(
-                        "...application.ledger.counterparty_operation", "CounterpartyFilingNameRendering", __package__
+                        "...application.ledger.counterparty_filing_name_rendering",
+                        "CounterpartyFilingNameRendering",
+                        __package__,
                     ),
                     parser=DeferredTarget(
                         ".ledger_counterparty_rendering_parser", "parse_filing_name_rendering", __package__
