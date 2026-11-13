@@ -35,6 +35,7 @@ from ..export_fragment_provenance import (
     load_export_fragment_provenance_manifest,
     verify_export_fragment_provenance_manifest,
 )
+from ..export_fragment_provenance_projection import normalised_loader_semantics
 from ..export_tree import render_complete_export_tree
 from ..joined_record_design import join_record_design_semantics
 from .export_tree_support import (
@@ -245,6 +246,28 @@ def test_layout_metadata_writes_dictionary_row_targets_only_when_the_layout_decl
         "export_layouts"
     ][0]["dictionary_row_targets"]
     assert [XmlDictionaryRowTarget.model_validate(row) for row in written] == [target]
+
+
+def test_loader_semantics_attest_an_input_dictionary_only_when_the_layout_declares_one(tmp_path) -> None:
+    """A layout without an input dictionary keeps its attested semantics; a declared one is attested."""
+    revision_dir = write_modelo_shell(tmp_path / "modelos" / "130")
+    rendered = render_complete_export_tree(
+        revision_dir / "export",
+        revision_id=SHELL_REVISION,
+        joined=export_tree_joined(m130_inspection()),
+        semantic_map=export_tree_semantic_map(),
+        transport_profile=export_tree_profile(),
+        render_profile=wire_profile(),
+        render_profile_source_evidence=wire_evidence(),
+    )
+    assert rendered.layout.input_dictionary_source_ref is None
+    undeclared = normalised_loader_semantics(rendered.layout)
+    assert "input_dictionary_source_ref" not in undeclared
+
+    declared_layout = rendered.layout.model_copy(update={"input_dictionary_source_ref": "aeat-dr-130-input-dictionary"})
+    declared = normalised_loader_semantics(declared_layout)
+    assert declared["input_dictionary_source_ref"] == "aeat-dr-130-input-dictionary"
+    assert {key: value for key, value in declared.items() if key != "input_dictionary_source_ref"} == undeclared
 
 
 def test_real_loader_accepts_only_generator_owned_export_provenance(tmp_path) -> None:

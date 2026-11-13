@@ -110,6 +110,7 @@ _LAYOUT_KEYS: Final[frozenset[str]] = frozenset(
         "id",
         "format",
         "dictionary_source_ref",
+        "input_dictionary_source_ref",
         "source_refs",
         "legal_refs",
         "records",
@@ -278,6 +279,8 @@ def normalised_loader_semantics(loaded_layout: ExportLayoutDefinition) -> dict[s
     if row_targets:
         row_targets.sort(key=lambda item: _as_string(item["field_id"], subject="loader dictionary row target field_id"))
         projected["dictionary_row_targets"] = row_targets
+    if payload["input_dictionary_source_ref"] is not None:
+        projected["input_dictionary_source_ref"] = payload["input_dictionary_source_ref"]
     if payload["auxiliary_envelope_header"] is not None:
         projected["auxiliary_envelope_header"] = payload["auxiliary_envelope_header"]
     return projected
