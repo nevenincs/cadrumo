@@ -6451,6 +6451,8 @@ sheets:
       amortizacion: Amortización
       amount: Importe
       amount_donated: Importe donado
+      anexo_c1_referencia_catastral: Referencia catastral (anexo C.1)
+      anexo_c1_titular: Titular del inmueble (anexo C.1)
       anualidades_alimentos: Anualidades por alimentos
       arrendado: Arrendamiento
       ascendants_75_plus_total: Ascendientes ≥ 75 años (total)
@@ -6583,6 +6585,8 @@ sheets:
         pendientes de los cuatro ejercicios anteriores
       gastos_pendientes_aplicados: Importe pendiente de ejercicios anteriores aplicado
         en este ejercicio
+      gastos_pendientes_origen: Intereses y gastos de reparación y conservación pendientes,
+        por ejercicio de origen
       geographic_mobility_clave: Movilidad geográfica
       house_number: Número de casa
       housing_loan_communication_clave: Comunicación de préstamos de vivienda habitual

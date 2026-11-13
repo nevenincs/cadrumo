@@ -6443,6 +6443,8 @@ sheets:
       amortizacion: Amortització
       amount: Import
       amount_donated: Import donat
+      anexo_c1_referencia_catastral: Referència cadastral (annex C.1)
+      anexo_c1_titular: Titular de l'immoble (annex C.1)
       anualidades_alimentos: Anualitats per aliments
       arrendado: Arrendament
       ascendants_75_plus_total: Ascendents ≥ 75 anys (total)
@@ -6575,6 +6577,8 @@ sheets:
         pendents dels quatre exercicis anteriors
       gastos_pendientes_aplicados: Import pendent d'exercicis anteriors aplicat en
         aquest exercici
+      gastos_pendientes_origen: Interessos i despeses de reparació i conservació pendents,
+        per exercici d'origen
       geographic_mobility_clave: Mobilitat geogràfica
       house_number: Número de casa
       housing_loan_communication_clave: Comunicació de préstecs d'habitatge habitual

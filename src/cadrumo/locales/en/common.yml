@@ -6307,6 +6307,8 @@ sheets:
       amortizacion: Depreciation
       amount: Amount
       amount_donated: Amount donated
+      anexo_c1_referencia_catastral: Cadastral reference (annex C.1)
+      anexo_c1_titular: Property holder (annex C.1)
       anualidades_alimentos: Food annuities
       arrendado: Let
       ascendants_75_plus_total: Ascendants 75+ (total)
@@ -6437,6 +6439,8 @@ sheets:
         four previous years
       gastos_pendientes_aplicados: Pending amount from previous years applied this
         year
+      gastos_pendientes_origen: Pending interest and repair and maintenance expenses,
+        by year of origin
       geographic_mobility_clave: Geographic mobility
       house_number: House number
       housing_loan_communication_clave: Home loan communication

@@ -6421,6 +6421,8 @@ sheets:
       amortizacion: Értékcsökkenés
       amount: Összeg
       amount_donated: Adományozott összeg
+      anexo_c1_referencia_catastral: Ingatlan-nyilvántartási hivatkozás (C.1 melléklet)
+      anexo_c1_titular: Az ingatlan tulajdonosa (C.1 melléklet)
       anualidades_alimentos: Tartásdíj-járadék
       arrendado: Bérbe adva
       ascendants_75_plus_total: Felmenők 75+ (összes)
@@ -6553,6 +6555,8 @@ sheets:
         javítási kiadások
       gastos_pendientes_aplicados: Korábbi adóévekből levonásra váró, ebben az adóévben
         levont összeg
+      gastos_pendientes_origen: Levonásra váró kamatok, javítási és karbantartási
+        költségek a keletkezés adóéve szerint
       geographic_mobility_clave: Földrajzi mobilitás
       house_number: Házszám
       housing_loan_communication_clave: Lakáshitel-bevallás
