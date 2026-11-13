@@ -1235,7 +1235,7 @@ fields = { target_casilla_id = "DP200014:00552", expression = { args = [
     { op = "subtract", args = [{ casilla_id = "DP200014:00550" }, { casilla_id = "01032" }] },
     { casilla_id = "DP200014:00547" },
 ] } }
-sequence_additions = {source_refs = ["aeat-dr-200-2023", "aeat-modelo-200-manual-2023"], source_citations = [{source_ref = "aeat-modelo-200-manual-2023", required_text = ["compensacion de bases imponibles negativas", "reserva de capitalizacion"]}]}
+sequence_additions = {source_refs = ["aeat-dr-200-2023", "aeat-modelo-200-manual-2023"], source_citations = [{source_ref = "aeat-modelo-200-manual-2023", required_text = ["el importe a consignar en la casilla [00552] «Base imponible» de la página 14 del modelo 200", "[00552] = [00550] - [01032] - [00547]"]}]}
 sequence_removals = {source_refs = [0, 1], source_citations = [0]}
 
 [[revisions."2023".family_overrides]]
@@ -1278,9 +1278,12 @@ sequence_removals = {source_refs = [0, 1], source_citations = [0]}
 #   5. INCN < 1 millón: 23. The INCN read here is the one the table and LIS art.
 #      29.1 name, that of the período impositivo inmediato anterior: casilla 00255
 #      of the preceding Modelo 200, held or stated by the filer
-#      (modelo-200-incn-periodo-impositivo-anterior), never the twelve-month figure.
-#   6. Below the art. 101 threshold: the dated ERD rate, the general 25 for 2023.
-#   7. Otherwise the general 25 (L13574).
+#      (modelo-200-incn-periodo-impositivo-anterior). Art. 29.1 as Ley 31/2022 art. 39
+#      words it determines that INCN "con arreglo a lo dispuesto en los apartados 2 y
+#      3 del artículo 101" (corpus normatives ley-31-2022 L1797), so art. 101 stays
+#      among this formula's legal refs for the comparison it makes here.
+#   6. Otherwise the general 25 (L13575). The 2023 table prints no reducida
+#      dimensión rate, so no art. 101 rate lane is read.
 [[revisions."2023".family_overrides]]
 family = "formulas"
 selector = {revision = "2022", id = "modelo-200-tipo-gravamen-por-forma-juridica"}
@@ -1351,14 +1354,7 @@ fields = { expression = { args = [
                                     { parameter = "is.modelo-200.incn-umbral-microempresa" },
                                 ] },
                                 { parameter = "is.modelo-200.tipo-gravamen-pyme-display" },
-                                { op = "if_then_else", args = [
-                                    { op = "less_than", args = [
-                                        { binding = "modelo-200-incn-periodo-impositivo-anterior" },
-                                        { parameter = "is.modelo-200.incn-umbral-erd-art101" },
-                                    ] },
-                                    { parameter = "is.modelo-200.tipo-gravamen-erd-art101" },
-                                    { parameter = "is.modelo-200.tipo-gravamen-general" },
-                                ] },
+                                { parameter = "is.modelo-200.tipo-gravamen-general" },
                             ] },
                         ] },
                         { op = "unresolved_outcome", args = [{ text_literal = "m200-tax-regime-unsupported" }] },
@@ -1376,14 +1372,7 @@ fields = { expression = { args = [
                                 { parameter = "is.modelo-200.incn-umbral-microempresa" },
                             ] },
                             { parameter = "is.modelo-200.tipo-gravamen-pyme-display" },
-                            { op = "if_then_else", args = [
-                                { op = "less_than", args = [
-                                    { binding = "modelo-200-incn-periodo-impositivo-anterior" },
-                                    { parameter = "is.modelo-200.incn-umbral-erd-art101" },
-                                ] },
-                                { parameter = "is.modelo-200.tipo-gravamen-erd-art101" },
-                                { parameter = "is.modelo-200.tipo-gravamen-general" },
-                            ] },
+                            { parameter = "is.modelo-200.tipo-gravamen-general" },
                         ] },
                     ] },
                 ] },
@@ -1391,13 +1380,15 @@ fields = { expression = { args = [
         ] },
     ] },
 ] }}
-sequence_additions = {legal_refs = ["ley-27-2014:art-101", "ley-27-2014:art-29-2023"], source_refs = ["aeat-dr-200-2023", "aeat-modelo-200-manual-2023"], source_citations = [{source_ref = "aeat-modelo-200-manual-2023", required_text = ["tipo de gravamen", "cuota integra (casilla 00562)"]}]}
+sequence_additions = {legal_refs = ["ley-27-2014:art-101", "ley-27-2014:art-29-2023"], source_refs = ["aeat-dr-200-2023", "aeat-modelo-200-manual-2023"], source_citations = [{source_ref = "aeat-modelo-200-manual-2023", required_text = ["se hará constar el tipo de gravamen que corresponda de acuerdo con el régimen de tributación aplicable a la entidad declarante", "Tipo general 25 por 100", "Entidades de nueva creación del artículo 29.1 de la LIS que realicen actividades económicas", "Entidades INCN < 1 millón de euros en el período impositivo inmediato anterior", "consideración de entidad patrimonial", "Entidades a las que sea de aplicación el régimen fiscal establecido en la Ley 49/2002 10 por 100", "será el que corresponda a los resultados cooperativos: 20 por ciento"]}]}
 sequence_removals = {source_refs = [0, 1], source_citations = [0]}
 sequence_order = {legal_refs = [0, 1, 3, 4, 2]}
 
-# Cuota íntegra (casilla 00562): "[00562] = [01330] x [00558]/100", always "una
-# cantidad positiva o cero" (manuals/sociedades/2023 L13561, L13689), so a negative
-# base gives zero. A cooperativa states its cuota íntegra from the cuota íntegra
+# Cuota íntegra (casilla 00562): "[00562] = [01330] x [00558] / 100" (manuals/
+# sociedades/2023 L24089, LIS art. 30 second paragraph); where 01033 and 01034 are
+# empty "el importe de la casilla [01330] coincidirá con el de la casilla [00552]"
+# (L23766-23767), which is the general "[00562] = [00552] x [00558]/100" of L13559.
+# Always "una cantidad positiva o cero" (L13561), so a negative base gives zero. A cooperativa states its cuota íntegra from the cuota íntegra
 # previa of its resultados cooperativos and extracooperativos (L25508), which this
 # registry does not author, so it is refused; every other régimen the tipo de
 # gravamen refuses leaves this box without a value through 00558.
@@ -1423,7 +1414,7 @@ fields = { expression = { args = [
         { literal = "0" },
     ] },
 ] }}
-sequence_additions = {legal_refs = ["ley-27-2014:art-101"], source_refs = ["aeat-dr-200-2023", "aeat-modelo-200-manual-2023"], source_citations = [{source_ref = "aeat-modelo-200-manual-2023", required_text = ["cuota integra (casilla 00562)", "tipo de gravamen"]}]}
+sequence_additions = {legal_refs = ["ley-27-2014:art-101"], source_refs = ["aeat-dr-200-2023", "aeat-modelo-200-manual-2023"], source_citations = [{source_ref = "aeat-modelo-200-manual-2023", required_text = ["el tipo de gravamen de la casilla [00558]", "[00562] = [01330] x [00558] / 100", "el importe de la casilla [01330] coincidirá con el de la casilla [00552]", "El contenido de la casilla [00562] «Cuota íntegra» siempre deberá ser una cantidad positiva o cero"]}]}
 sequence_removals = {source_refs = [0, 1], source_citations = [0]}
 sequence_order = {legal_refs = [0, 1, 3, 2]}
 
@@ -1520,7 +1511,7 @@ fields = { target_casilla_id = "DP200014:bin-aplicada-maxima", expression = { ar
         ] },
     ] },
 ] } }
-sequence_additions = {source_refs = ["aeat-dr-200-2023", "aeat-modelo-200-manual-2023"], source_citations = [{source_ref = "aeat-modelo-200-manual-2023", required_text = ["bases imponibles negativas"]}]}
+sequence_additions = {source_refs = ["aeat-dr-200-2023", "aeat-modelo-200-manual-2023"], source_citations = [{source_ref = "aeat-modelo-200-manual-2023", required_text = ["con el límite del 70 por ciento de la base imponible previa a la aplicación de la reserva de capitalización y a su compensación", "se podrán compensar en el período impositivo bases imponibles negativas hasta el importe de 1 millón de euros", "deberán marcar la casilla [00072] «Extinción de la entidad»", "la limitación a la compensación de bases imponibles no se aplicará en los 3 primeros períodos impositivos", "deberán marcar la casilla [00070]"]}]}
 sequence_removals = {source_refs = [0, 1], source_citations = [0]}
 
 [[revisions."2023".family_overrides]]
@@ -1814,11 +1805,6 @@ position = 1
 family = "parameters"
 id = "is.modelo-200.tipo-gravamen-pyme-display"
 position = 2
-
-[[revisions."2023".family_positions]]
-family = "parameters"
-id = "is.modelo-200.tipo-gravamen-erd-art101"
-position = 9
 
 [[revisions."2023".family_overrides]]
 family = "filing_schedules"

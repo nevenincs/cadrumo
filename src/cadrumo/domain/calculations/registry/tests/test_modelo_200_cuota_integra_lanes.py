@@ -513,7 +513,7 @@ def test_modelo_202_modality_is_incomplete_for_non_legal_entity() -> None:
 def _calculate_with_estado_percentage(estado_percentage: Decimal | None):
     """Run the SL cuota chain from an 80.000 base; ``None`` leaves the estado percentage binding unsupplied."""
     return calculate_registry_snapshot(
-        _snapshot(),
+        _snapshot(_PERIOD_END_BEFORE_DT44.year),
         inputs={
             M200_RESULTADO_CONTABLE_CASILLA: Decimal("80000"),
             M200_CORRECCIONES_AUMENTO_CASILLA: Decimal("0"),

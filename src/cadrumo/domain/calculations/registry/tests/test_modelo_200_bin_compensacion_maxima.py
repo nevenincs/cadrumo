@@ -25,7 +25,7 @@ from ..bindings import CasillaObservation
 from ..formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from ..formula_runtime_ops import RegistryUnresolvedOutcomeReason
 from ..schema import RegistrySnapshot
-from .authored_editions import filing_year_envelope
+from .authored_editions import filing_year_envelope, manual_editions_printing
 from .modelo_200_casilla_ids import (
     M200_BONIFICACIONES_CASILLA,
     M200_CORRECCIONES_AUMENTO_CASILLA,
@@ -82,6 +82,30 @@ _EXERCISES_WITHOUT_TIERS = tuple(
     e for e in _EXERCISES if _TIER_PARAMETER not in {p.id for p in _snapshot(e).revision.parameters}
 )
 _EXERCISES_WITH_TIERS = tuple(e for e in _EXERCISES if _reads_da_15_tiers(e))
+
+# The supported exercises whose own Manual practico de Sociedades prints the DA 15a.1 limits in place
+# of the 70 per cent. They are read from the official text rather than from the registry, so an edition
+# that lost its tier parameters or its twelve-month turnover binding is caught here. The editions word
+# the substitution two ways.
+_DA_15_TIER_TEXT = (
+    "cuando en los referidos 12 meses el importe neto de la cifra de negocios sea al menos de 60 millones de euros"
+)
+_EXERCISES_WHOSE_MANUAL_PRINTS_TIERS = tuple(
+    e
+    for e in sorted(
+        set(
+            manual_editions_printing(
+                "sociedades", "el límite del 70 por ciento se sustituirá por los siguientes", _DA_15_TIER_TEXT
+            )
+        )
+        | set(
+            manual_editions_printing(
+                "sociedades", "sustituirán el límite del 70 por ciento por los siguientes", _DA_15_TIER_TEXT
+            )
+        )
+    )
+    if e in _EXERCISES
+)
 
 
 def _in_edition(snapshot: RegistrySnapshot, casilla_id: CasillaId) -> CasillaId:
@@ -198,6 +222,15 @@ def test_the_da_15_tiers_apply_where_the_edition_reads_the_twelve_month_turnover
     result = _calculate(exercise, turnover=turnover, marked={_QUITAS: Decimal("200000")})
 
     assert result.values[_ceiling_casilla(snapshot)] == _BASE * percent / Decimal(100) + Decimal("200000")
+
+
+def test_some_supported_exercise_has_a_manual_printing_the_da_15_limits() -> None:
+    assert _EXERCISES_WHOSE_MANUAL_PRINTS_TIERS
+
+
+@pytest.mark.parametrize("exercise", _EXERCISES_WHOSE_MANUAL_PRINTS_TIERS)
+def test_an_edition_whose_manual_prints_the_da_15_limits_reads_the_tiers(exercise: int) -> None:
+    assert _reads_da_15_tiers(exercise)
 
 
 @pytest.mark.parametrize("exercise", _EXERCISES_WITHOUT_TIERS)

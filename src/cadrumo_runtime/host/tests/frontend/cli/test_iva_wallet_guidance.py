@@ -71,7 +71,8 @@ def test_m303_fresh_profile_binding_override_is_a_terminal_typed_refusal(
         )
 
     assert result.exit_code != 0, "Expected non-zero exit when compensation binding is supplied without a seeded wallet"
-    _assert_names_the_opening_balance_command(result.output, filing_year=_FILING_YEAR, period_code="2T")
+    # The 2T carry reads the closing balance of the 1T seed, so that is the period the door names.
+    _assert_names_the_opening_balance_command(result.output, filing_year=_FILING_YEAR, period_code="1T")
 
 
 def test_m303_in_scope_missing_wallet_surfaces_typed_terminal_refusal(
@@ -117,7 +118,8 @@ def test_m303_in_scope_missing_wallet_surfaces_typed_terminal_refusal(
         )
 
     assert result.exit_code != 0, "Expected non-zero exit when in-scope prior IVA authority is missing"
-    _assert_names_the_opening_balance_command(result.output, filing_year=filing_year, period_code=period_code)
+    # The carry of a 2T work unit reads the 1T seed's closing balance, so the door names 1T.
+    _assert_names_the_opening_balance_command(result.output, filing_year=filing_year, period_code="1T")
 
 
 def test_m303_fresh_profile_calculate_without_binding_override_does_not_raise_wallet_error(
