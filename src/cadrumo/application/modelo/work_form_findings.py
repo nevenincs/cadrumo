@@ -181,6 +181,9 @@ FINDING_MESSAGE_ACTION_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
         "application.modelo.findings.m303_m349_intracom_reconciliation_mismatch": (
             "application.modelo.work_form.finding_action.compare_figures"
         ),
+        "application.modelo.findings.m200_incn_periodo_anterior_disagrees": (
+            "application.modelo.work_form.finding_action.compare_figures"
+        ),
         "application.modelo.findings.pulled_filing_casilla_mismatch": (
             "application.modelo.work_form.finding_action.compare_figures"
         ),

@@ -83,6 +83,8 @@ CASILLAS = (
 BINDINGS = (
     "modelo-200-profile-legal-entity-form=sl",
     "modelo-200-profile-incn-prior-12-months=500000",
+    # The rate reads the preceding período's turnover, a carry of that período's Modelo 200.
+    "modelo-200-incn-periodo-impositivo-anterior=500000",
     "modelo-200-profile-tributacion-estado-porcentaje=100",
 )
 RELATIONS = (

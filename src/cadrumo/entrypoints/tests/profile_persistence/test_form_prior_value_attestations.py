@@ -146,6 +146,7 @@ _DECLARATIONS = (
             "modelo-200-bin-pendiente-ejercicios-anteriores": "200",
             "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": "200",
             "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": "200",
+            "modelo-200-incn-periodo-impositivo-anterior": "200",
             "modelo-200-pagos-fraccionados-anuales-40-2": "202",
             "modelo-200-pagos-fraccionados-anuales": "202",
         },

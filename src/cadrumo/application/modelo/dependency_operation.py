@@ -18,6 +18,7 @@ from ...core.period import Period
 from ...domain.calculations.registry.applicability import derive_taxpayer_files_economic_activity
 from ...domain.calculations.registry.applicability_modelo202 import derive_modelo_202_modality
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.binding_prior_value_rules import set_aside_binding_ids
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.codes import ModeloCodeText
@@ -224,21 +225,20 @@ class ModeloDependencyExecutor:
                 payload.modelo, filing_year=payload.filing_year, period=payload.period.code
             )
             work_catalogue = repositories.work_unit.load()
-            attestations = operator_value_attestations(
-                _declaration_revision(
-                    snapshot,
-                    modelo=payload.modelo,
-                    period=payload.period.to_period(),
-                    bucket_id=profile_id,
-                    work_catalogue=work_catalogue,
-                    ports=ports,
-                    operation=operation,
-                )
+            declaration = _declaration_revision(
+                snapshot,
+                modelo=payload.modelo,
+                period=payload.period.to_period(),
+                bucket_id=profile_id,
+                work_catalogue=work_catalogue,
+                ports=ports,
+                operation=operation,
             )
             # The modality is the one verification reads, at the close of the target's year.
             modelo_202_modality = derive_modelo_202_modality(
                 ports.profile, effective_date=date(payload.filing_year, 12, 31)
             ).modality
+            attestations = operator_value_attestations(declaration)
             verdict = evaluate_cross_period_clean_state(
                 snapshot,
                 operation=operation,
@@ -268,6 +268,9 @@ class ModeloDependencyExecutor:
                     activity_start_date=ports.profile.activity_start_date,
                     modality=modelo_202_modality,
                     operation=operation,
+                ),
+                set_aside_binding_ids=set_aside_binding_ids(
+                    snapshot.revision, {} if declaration is None else declaration.casilla_values
                 ),
             )
             allowed = dependency_access_periods(payload, operation)

@@ -3486,7 +3486,7 @@ removed_fields = []
 restate_provenance = true
 
 [[revisions."2025-y-siguientes".casilla_overrides]]
-selector = { revision = "2024", id = "00545" }
+selector = { revision = "2024", id = "DP200011:00545" }
 fields = { continuidad_origin = "seeded" }
 removed_fields = []
 restate_provenance = true
@@ -21908,7 +21908,7 @@ fields = { expression = { args = [
                         { binding = "modelo-200-profile-new-entity-flag" },
                         { op = "max", args = [{ op = "percent", args = [{ casilla_id = "DP200014:01330" }, { parameter = "is.modelo-200.tipo-gravamen-new-entity-first-2-years" }] }, { literal = "0" }] },
                         { op = "if_then_else", args = [
-                            { op = "less_than", args = [{ binding = "modelo-200-profile-incn-prior-12-months" }, { parameter = "is.modelo-200.incn-umbral-microempresa" }] },
+                            { op = "less_than", args = [{ binding = "modelo-200-incn-periodo-impositivo-anterior" }, { parameter = "is.modelo-200.incn-umbral-microempresa" }] },
                             { op = "max", args = [
                                 { op = "lookup_bracket", args = [
                                     { op = "max", args = [{ casilla_id = "DP200014:01330" }, { literal = "0" }] },
@@ -21917,7 +21917,7 @@ fields = { expression = { args = [
                                 { literal = "0" },
                             ] },
                             { op = "if_then_else", args = [
-                                { op = "less_than", args = [{ binding = "modelo-200-profile-incn-prior-12-months" }, { parameter = "is.modelo-200.incn-umbral-erd-art101" }] },
+                                { op = "less_than", args = [{ binding = "modelo-200-incn-periodo-impositivo-anterior" }, { parameter = "is.modelo-200.incn-umbral-erd-art101" }] },
                                 { op = "max", args = [{ op = "percent", args = [{ casilla_id = "DP200014:01330" }, { parameter = "is.modelo-200.tipo-gravamen-erd-art101" }] }, { literal = "0" }] },
                                 { op = "max", args = [{ op = "percent", args = [{ casilla_id = "DP200014:01330" }, { parameter = "is.modelo-200.tipo-gravamen-general" }] }, { literal = "0" }] },
                             ] },
@@ -21964,9 +21964,9 @@ sequence_removals = {source_citations = [0], source_refs = [0, 1]}
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "formulas"
 selector = {revision = "2024", id = "modelo-200-tipo-gravamen-por-forma-juridica"}
-sequence_additions = {legal_refs = ["ley-27-2014:dt-44"], source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["tipo de gravamen", "cuota integra (casilla 00562)", "Resto Base Imponible 22 por 100"]}], source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]}
-sequence_removals = {source_citations = [0], source_refs = [0, 1]}
-sequence_order = {legal_refs = [0, 1, 2, 5, 3, 4]}
+sequence_additions = {legal_refs = ["ley-27-2014:dt-44", "ley-27-2014:art-29-2025"], source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["tipo de gravamen", "cuota integra (casilla 00562)", "Resto Base Imponible 22 por 100"]}], source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]}
+sequence_removals = {legal_refs = [3], source_citations = [0], source_refs = [0, 1]}
+sequence_order = {legal_refs = [0, 1, 2, 4, 5, 3]}
 fields = { expression = { op = "multiply", args = [
     { op = "if_then_else", args = [
         { op = "greater_than", args = [
@@ -22031,7 +22031,7 @@ fields = { expression = { op = "multiply", args = [
                                 { parameter = "is.modelo-200.tipo-gravamen-new-entity-first-2-years" },
                                 { op = "if_then_else", args = [
                                     { op = "less_than", args = [
-                                        { binding = "modelo-200-profile-incn-prior-12-months" },
+                                        { binding = "modelo-200-incn-periodo-impositivo-anterior" },
                                         { parameter = "is.modelo-200.incn-umbral-microempresa" },
                                     ] },
                                     { op = "add", args = [
@@ -22040,7 +22040,7 @@ fields = { expression = { op = "multiply", args = [
                                     ] },
                                     { op = "if_then_else", args = [
                                         { op = "less_than", args = [
-                                            { binding = "modelo-200-profile-incn-prior-12-months" },
+                                            { binding = "modelo-200-incn-periodo-impositivo-anterior" },
                                             { parameter = "is.modelo-200.incn-umbral-erd-art101" },
                                         ] },
                                         { parameter = "is.modelo-200.tipo-gravamen-erd-art101" },
@@ -22059,7 +22059,7 @@ fields = { expression = { op = "multiply", args = [
                             { parameter = "is.modelo-200.tipo-gravamen-new-entity-first-2-years" },
                             { op = "if_then_else", args = [
                                 { op = "less_than", args = [
-                                    { binding = "modelo-200-profile-incn-prior-12-months" },
+                                    { binding = "modelo-200-incn-periodo-impositivo-anterior" },
                                     { parameter = "is.modelo-200.incn-umbral-microempresa" },
                                 ] },
                                 { op = "add", args = [
@@ -22068,7 +22068,7 @@ fields = { expression = { op = "multiply", args = [
                                 ] },
                                 { op = "if_then_else", args = [
                                     { op = "less_than", args = [
-                                        { binding = "modelo-200-profile-incn-prior-12-months" },
+                                        { binding = "modelo-200-incn-periodo-impositivo-anterior" },
                                         { parameter = "is.modelo-200.incn-umbral-erd-art101" },
                                     ] },
                                     { parameter = "is.modelo-200.tipo-gravamen-erd-art101" },
@@ -22177,12 +22177,6 @@ sequence_removals = {source_citations = [0], source_refs = [0]}
 
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "parameters"
-selector = {revision = "2024", id = "is.modelo-200.cuota-integra-bracket-erd-art101"}
-sequence_additions = {legal_refs = ["ley-27-2014:dt-44"], source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["tipo de gravamen"]}], source_refs = ["aeat-modelo-200-manual-2025"]}
-sequence_removals = {source_citations = [0], source_refs = [0]}
-
-[[revisions."2025-y-siguientes".family_overrides]]
-family = "parameters"
 selector = {revision = "2024", id = "is.modelo-200.cuota-integra-bracket-general"}
 sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["tipo de gravamen"]}], source_refs = ["aeat-modelo-200-manual-2025"]}
 sequence_removals = {source_citations = [0], source_refs = [0]}
@@ -22202,25 +22196,19 @@ sequence_removals = {source_citations = [0], source_refs = [0]}
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "parameters"
 selector = {revision = "2024", id = "is.modelo-200.incn-umbral-erd-art101"}
-sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["tipo de gravamen"]}], source_refs = ["aeat-modelo-200-manual-2025"], values = [{value = "10000000", date_axis = "filing_period", valid_from = 2024-01-01}]}
-sequence_removals = {source_citations = [0], source_refs = [0], values = [0]}
-
-[[revisions."2025-y-siguientes".family_overrides]]
-family = "parameters"
-selector = {revision = "2024", id = "is.modelo-200.incn-umbral-microempresa"}
-sequence_additions = {legal_refs = ["ley-27-2014:dt-44"], source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["tipo de gravamen"]}], source_refs = ["aeat-modelo-200-manual-2025"], values = [{value = "1000000", date_axis = "filing_period", valid_from = 2024-01-01}]}
-sequence_removals = {legal_refs = [1], source_citations = [0], source_refs = [0], values = [0]}
-sequence_order = {legal_refs = [1, 0]}
-
-[[revisions."2025-y-siguientes".family_overrides]]
-family = "parameters"
-selector = {revision = "2024", id = "is.modelo-200.tipo-gravamen-cooperative-protected"}
 sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["tipo de gravamen"]}], source_refs = ["aeat-modelo-200-manual-2025"]}
 sequence_removals = {source_citations = [0], source_refs = [0]}
 
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "parameters"
-selector = {revision = "2024", id = "is.modelo-200.tipo-gravamen-erd"}
+selector = {revision = "2024", id = "is.modelo-200.incn-umbral-microempresa"}
+sequence_additions = {legal_refs = ["ley-27-2014:dt-44"], source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["tipo de gravamen"]}], source_refs = ["aeat-modelo-200-manual-2025"]}
+sequence_removals = {legal_refs = [1], source_citations = [0], source_refs = [0]}
+sequence_order = {legal_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "is.modelo-200.tipo-gravamen-cooperative-protected"}
 sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["tipo de gravamen"]}], source_refs = ["aeat-modelo-200-manual-2025"]}
 sequence_removals = {source_citations = [0], source_refs = [0]}
 
@@ -22234,6 +22222,31 @@ sequence_removals = {source_citations = [0], source_refs = [0]}
 family = "parameters"
 selector = {revision = "2024", id = "is.modelo-200.bin-compensacion-importe-minimo"}
 sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["se podran compensar en el periodo impositivo bases imponibles negativas hasta el importe de 1 millon de euros"]}], source_refs = ["aeat-modelo-200-manual-2025"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "is.modelo-200.bin-limite-porcentaje-general"}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["el limite del 70 por ciento de la base imponible previa a la aplicacion de la reserva de capitalizacion y a su compensacion"]}], source_refs = ["aeat-modelo-200-manual-2025"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "is.modelo-200.bin-limite-da15-tramo-medio-incn-minimo"}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["pero inferior a 60 millones de euros"]}], source_refs = ["aeat-modelo-200-manual-2025"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "is.modelo-200.bin-limite-da15-tramo-medio-porcentaje"}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["sustituiran el limite del 70 por ciento por los siguientes"]}], source_refs = ["aeat-modelo-200-manual-2025"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "is.modelo-200.bin-limite-da15-tramo-alto-incn-minimo"}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["al menos de 60 millones de euros"]}], source_refs = ["aeat-modelo-200-manual-2025"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "is.modelo-200.bin-limite-da15-tramo-alto-porcentaje"}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["sustituiran el limite del 70 por ciento por los siguientes"]}], source_refs = ["aeat-modelo-200-manual-2025"]}
 sequence_removals = {source_citations = [0], source_refs = [0]}
 
 [[revisions."2025-y-siguientes".family_overrides]]
@@ -25800,7 +25813,13 @@ sequence_removals = {source_refs = [0], source_citations = [0]}
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "bindings"
 selector = {revision = "2024", id = "modelo-200-profile-incn-prior-12-months"}
-sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["tipo de gravamen"]}], source_refs = ["aeat-modelo-200-manual-2025"]}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["disposición adicional decimoquinta de la LIS", "doce meses anteriores a la fecha de inicio del período impositivo"]}], source_refs = ["aeat-modelo-200-manual-2025"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-200-incn-periodo-impositivo-anterior"}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["importe neto de la cifra de negocios del período"]}], source_refs = ["aeat-modelo-200-manual-2025"]}
 sequence_removals = {source_citations = [0], source_refs = [0]}
 
 [[revisions."2025-y-siguientes".family_overrides]]

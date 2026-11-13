@@ -14,20 +14,26 @@ from dev.packaging.installed_runtime import installed_cli_runtime
 from ..annual_cli_journey import (
     run_iva_annual_foundation_cli_journey,
     run_iva_annual_m390_cli_journey,
+    run_iva_annual_prorrata_settlement_cli_journey,
 )
 from ..annual_contracts import (
     IvaAnnualFoundationCliJourneyReceipt,
     IvaAnnualM390CliJourneyReceipt,
+    IvaAnnualProrrataSettlementCliJourneyReceipt,
+    IvaProrrataSettlementScenario,
     IvaQuarterlyLocalFilingReceipt,
 )
+from ..annual_prorrata_settlement import PRORRATA_SETTLEMENT_COORDINATES
 from ..cli_journey import SanitizedCommandReceipt
-from .journey_year_support import newest_fully_authored_journey_year
+from .journey_year_support import newest_fully_authored_journey_year, supported_journey_years
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
 def _assert_receipt_is_private_and_clean(
-    receipt: IvaAnnualFoundationCliJourneyReceipt | IvaAnnualM390CliJourneyReceipt,
+    receipt: IvaAnnualFoundationCliJourneyReceipt
+    | IvaAnnualM390CliJourneyReceipt
+    | IvaAnnualProrrataSettlementCliJourneyReceipt,
 ) -> None:
     rendered = str(receipt.to_dict())
     assert "synthetic-annual-foundation-purchase.pdf" not in rendered
@@ -161,3 +167,73 @@ def test_installed_cli_four_local_303_quarters_verify_the_annual_m390(
     assert receipt.purchase_artifact == "<synthetic-purchase-artifact>"
     _assert_m390_commands(receipt.commands)
     _assert_receipt_is_private_and_clean(receipt)
+
+
+def _run_settlement_journey(
+    tmp_path: Path, installed_wheel_aeat: Path, *, year: int, scenario: IvaProrrataSettlementScenario
+) -> IvaAnnualProrrataSettlementCliJourneyReceipt:
+    authority_root = Path(__file__).resolve().parents[4] / ".authority"
+    assert (authority_root / "authority.current.json").is_file(), authority_root
+    receipt = run_iva_annual_prorrata_settlement_cli_journey(
+        executable=installed_wheel_aeat,
+        authority_root=authority_root,
+        storage_root=tmp_path / "secure-store",
+        artifact_root=tmp_path / "private-source-artifacts",
+        year=year,
+        scenario=scenario,
+        runtime_scope=installed_cli_runtime(
+            installed_wheel_aeat,
+            build_installed_cli_environment(storage_root=tmp_path / "secure-store", authority_root=authority_root),
+            tmp_path / "caller-owned-runtime.log",
+        ),
+    )
+    assert receipt.filing_year == year
+    assert receipt.scenario == scenario.value
+    assert all(command.returncode == 0 for command in receipt.commands)
+    return receipt
+
+
+def test_installed_cli_exports_the_verified_last_quarter_before_filing_in_every_supported_year(
+    tmp_path: Path, installed_wheel_aeat: Path
+) -> None:
+    """The fourth quarter exports with the register as filing will leave it, and filing writes the exported figure."""
+    authority_root = Path(__file__).resolve().parents[4] / ".authority"
+    years = supported_journey_years(authority_root, PRORRATA_SETTLEMENT_COORDINATES)
+    assert years
+    for year in years:
+        receipt = _run_settlement_journey(
+            tmp_path / str(year), installed_wheel_aeat, year=year, scenario=IvaProrrataSettlementScenario.SETTLED
+        )
+
+        assert (receipt.exported_opcion, receipt.exported_revocacion) == ("2", "2")
+        assert Decimal(receipt.next_year_provisional_percentage) == Decimal(receipt.definitive_percentage)
+        assert receipt.filing_record_id
+        exports = [
+            index for index, command in enumerate(receipt.commands) if command.argv[2:5] == ("app", "modelo", "export")
+        ]
+        filings = [
+            index
+            for index, command in enumerate(receipt.commands)
+            if command.argv[2:6] == ("app", "modelo", "work", "file")
+        ]
+        assert len(exports) == 1
+        assert len(filings) == len(("1T", "2T", "3T", "4T"))
+        assert exports[0] < filings[-1]
+        _assert_receipt_is_private_and_clean(receipt)
+
+
+@pytest.mark.parametrize(
+    "scenario", (IvaProrrataSettlementScenario.UNDECLARED_SECTOR, IvaProrrataSettlementScenario.PRIOR_YEAR_ESPECIAL)
+)
+def test_installed_cli_refuses_a_last_quarter_whose_register_cannot_cover_the_year(
+    tmp_path: Path, installed_wheel_aeat: Path, scenario: IvaProrrataSettlementScenario
+) -> None:
+    """A declared sector with no entry, or an especial year with no declaration after it, stops the export."""
+    authority_root = Path(__file__).resolve().parents[4] / ".authority"
+    year = max(supported_journey_years(authority_root, PRORRATA_SETTLEMENT_COORDINATES))
+
+    receipt = _run_settlement_journey(tmp_path, installed_wheel_aeat, year=year, scenario=scenario)
+
+    assert receipt.refusal_code
+    assert not receipt.filing_record_id
+    assert not receipt.exported_opcion

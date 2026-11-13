@@ -3539,15 +3539,6 @@ section = ["deducciones_doble_imposicion_internacional_lis", "di_internacional_2
 semantic_role = "is_deduccion_di_internacional_detalle"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2024".casillas]]
-id = "01509"
-continuidad_id = "01509"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1493 (DP200014 field 28): Liquidación III - Base imponible - - Rentas que no limitan compensación de bases imponibles - Rentas correspondientes a la reversión de deterioros .... aeat-dr-200-2023 prints box [01509] on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1436 (DP200014 field 27) as 'Liquidación III - Base imponible - Rentas correspondientes a la reversión de deterioros (DT 16ª.8 LIS) - Disminuciones [01509]', a reworded caption of the same field; the 2023 edition leaves the rewording unadjudicated and does not declare the row."
-number = "01509"
-section = ["liquidacion_iii", "base_imponible"]
-semantic_role = "is_liquidacion_iii_importe"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2024".casillas]]
 id = "01510"
 continuidad_id = "is-cooperativa-reversion-deterioro"
 continuidad_origin = "predecessor_edition_silent"

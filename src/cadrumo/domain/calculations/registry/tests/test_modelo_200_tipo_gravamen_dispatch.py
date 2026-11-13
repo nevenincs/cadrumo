@@ -41,7 +41,7 @@ from .....core.casilla_id import CasillaId, validated_casilla_id
 from ..binding_selector_utils import selector_as_dict
 from ..formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from ..formula_runtime_ops import RegistryUnresolvedOutcomeReason
-from ..schema_formula import ParameterDefinition
+from ..schema_formula import DatedValue, ParameterDefinition
 from .modelo_200_casilla_ids import (
     M200_BIN_APLICADA_CASILLA,
     M200_BONIFICACIONES_CASILLA,
@@ -54,6 +54,7 @@ from .modelo_200_casilla_ids import (
     M200_RESERVA_CAPITALIZACION_CASILLA,
     M200_RESULTADO_CONTABLE_CASILLA,
 )
+from .modelo_200_turnover import turnover_binding_values
 from .published_authority import published_legal_evidence_text, published_legal_reference, published_snapshot
 from .registry_tree import bundled_modelo_components
 
@@ -117,7 +118,7 @@ def _calculate_tipo_gravamen(
         enum_binding_values={_DISPATCH_BINDING: dispatch},
         binding_values={
             "modelo-200-profile-new-entity-flag": new_entity,
-            "modelo-200-profile-incn-prior-12-months": Decimal(incn),
+            **turnover_binding_values(_snapshot(exercise), Decimal(incn)),
             "modelo-200-profile-tributacion-estado-porcentaje": Decimal("100"),
             "modelo-200-bin-pendiente-ejercicios-anteriores": Decimal("0"),
             "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
@@ -136,6 +137,18 @@ def _unresolved_reason(
     result: RegistryCalculationResult, casilla_id: CasillaId
 ) -> RegistryUnresolvedOutcomeReason | None:
     return next((outcome.reason for outcome in result.unresolved_outcomes if outcome.casilla_id == casilla_id), None)
+
+
+def _assert_contiguous(windows: list[DatedValue]) -> None:
+    """Each dated window ends the day before the next begins, so no filing period falls between two rates.
+
+    The first window is not one year long: the pre-DT 44ª rate applies to the
+    periods initiated in 2023 and 2024 alike (Ley 31/2022 art. 39), so a window
+    is checked by where it ends, not by its length.
+    """
+    for earlier, later in pairwise(windows):
+        assert earlier.valid_to is not None
+        assert earlier.valid_to + timedelta(days=1) == later.valid_from, (earlier.valid_to, later.valid_from)
 
 
 def _parameters() -> dict[str, ParameterDefinition]:
@@ -287,11 +300,10 @@ def test_micro_empresa_display_rate_echoes_first_tranche_by_year() -> None:
     assert parameter.unit == "percent"
     assert "ley-27-2014:dt-44" in parameter.legal_refs
 
-    dated = sorted((value.valid_from.year, value.value) for value in parameter.values)
-    years = [exercise for exercise, _ in dated]
-    assert [rate for _, rate in dated] == [Decimal("23"), Decimal("21"), Decimal("19")]
-    assert years[1] == _DT44_FIRST_TRANSITIONAL_EXERCISE
-    assert all(later - earlier == 1 for earlier, later in pairwise(years))
+    windows = sorted(parameter.values, key=lambda value: value.valid_from)
+    assert [value.value for value in windows] == [Decimal("23"), Decimal("21"), Decimal("19")]
+    assert windows[1].valid_from.year == _DT44_FIRST_TRANSITIONAL_EXERCISE
+    _assert_contiguous(windows)
 
 
 def test_micro_empresa_first_tranche_fixed_addition_carries_into_the_rest_tranche() -> None:
@@ -341,7 +353,7 @@ def test_tipo_gravamen_dispatch_routes_00558_by_legal_entity_form() -> None:
             enum_binding_values={_DISPATCH_BINDING: form},
             binding_values={
                 "modelo-200-profile-new-entity-flag": Decimal("0"),
-                "modelo-200-profile-incn-prior-12-months": Decimal("10000000"),
+                **turnover_binding_values(_snapshot(_PERIOD_END_BEFORE_DT44.year), Decimal("10000000")),
                 "modelo-200-profile-tributacion-estado-porcentaje": Decimal("100"),
                 "modelo-200-bin-pendiente-ejercicios-anteriores": Decimal("0"),
                 "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
@@ -393,7 +405,7 @@ def test_tipo_gravamen_and_cuota_stay_unresolved_when_legal_entity_form_is_unsup
         inputs=_base_inputs(Decimal("1000000")),
         binding_values={
             "modelo-200-profile-new-entity-flag": Decimal("0"),
-            "modelo-200-profile-incn-prior-12-months": Decimal("10000000"),
+            **turnover_binding_values(_snapshot(exercise), Decimal("10000000")),
             "modelo-200-profile-tributacion-estado-porcentaje": Decimal("100"),
             "modelo-200-bin-pendiente-ejercicios-anteriores": Decimal("0"),
             "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
@@ -439,27 +451,6 @@ def test_dispatch_binding_is_a_profile_sourced_enum_binding() -> None:
     assert "ley-27-2014:art-29" in binding.legal_refs
 
 
-def test_erd_parameter_encodes_the_budget_law_art_39_rate() -> None:
-    """The ERD parameter encodes the Ley 31/2022 Art. 39 flat 23 % rate.
-
-    Ley 31/2022 Art. 39 modified LIS Art. 29 to introduce a 23 %
-    rate for entities whose INCN in the immediately prior period was
-    below 1.000.000 EUR (entidades de reducida dimensión), effective
-    for periods initiated from 2023. The registry parameter must
-    encode exactly 23, be a scalar ratio/percent, and cite both the
-    original LIS Art. 29 and the Ley 31/2022 modification.
-    """
-    parameters = _parameters()
-    assert "is.modelo-200.tipo-gravamen-erd" in parameters, "ERD parameter must be registered (Ley 31/2022 Art. 39)"
-    erd = parameters["is.modelo-200.tipo-gravamen-erd"]
-    assert erd.data_type == "ratio"
-    assert erd.unit == "percent"
-    assert len(erd.values) == 1
-    assert erd.values[0].value == Decimal("23"), "ERD rate must be 23 % per Ley 31/2022 Art. 39"
-    assert "ley-27-2014:art-29" in erd.legal_refs
-    assert "ley-31-2022:art-39" in erd.legal_refs, "ERD parameter must cite Ley 31/2022 Art. 39 as modification source"
-
-
 def test_art101_erd_parameter_encodes_the_dt44_transition_schedule() -> None:
     """The art.101 ERD parameter encodes the DT 44ª 2025-2028 schedule.
 
@@ -478,11 +469,10 @@ def test_art101_erd_parameter_encodes_the_dt44_transition_schedule() -> None:
     assert "ley-27-2014:art-101" in erd.legal_refs
     assert "ley-27-2014:dt-44" in erd.legal_refs
 
-    dated = sorted((value.valid_from.year, value.value) for value in erd.values)
-    years = [exercise for exercise, _ in dated]
-    assert [rate for _, rate in dated] == [Decimal(rate) for rate in ("25", "24", "23", "22", "21", "20")]
-    assert years[1] == _DT44_FIRST_TRANSITIONAL_EXERCISE
-    assert all(later - earlier == 1 for earlier, later in pairwise(years))
+    windows = sorted(erd.values, key=lambda value: value.valid_from)
+    assert [value.value for value in windows] == [Decimal(rate) for rate in ("25", "24", "23", "22", "21", "20")]
+    assert windows[1].valid_from.year == _DT44_FIRST_TRANSITIONAL_EXERCISE
+    _assert_contiguous(windows)
 
 
 def test_tipo_gravamen_dispatch_routes_erd_23_when_incn_below_1m() -> None:
@@ -496,7 +486,7 @@ def test_tipo_gravamen_dispatch_routes_erd_23_when_incn_below_1m() -> None:
     base_inputs = _base_inputs(Decimal("1000000"))
     common_bindings = {
         "modelo-200-profile-new-entity-flag": Decimal("0"),
-        "modelo-200-profile-incn-prior-12-months": Decimal("850000"),
+        **turnover_binding_values(_snapshot(_PERIOD_END_BEFORE_DT44.year), Decimal("850000")),
         "modelo-200-profile-tributacion-estado-porcentaje": Decimal("100"),
         "modelo-200-bin-pendiente-ejercicios-anteriores": Decimal("0"),
         "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),

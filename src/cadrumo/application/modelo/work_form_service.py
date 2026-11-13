@@ -67,6 +67,7 @@ from ...domain.modelos.protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
     VerificationReportCatalogueRepositoryProtocol,
 )
+from ...domain.modelos.work_unit import WorkUnit
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.user_profile.errors import ProfileSchemaValidationError
 from ..actividad_asset.ports import ActivityAssetHistoryRepository
@@ -288,6 +289,7 @@ def _profile_context_values(
     bucket_id: BucketId,
     operation: PinnedAuthorityOperation,
     m303_arrivals: M303ArrivalPorts | None,
+    work_unit: WorkUnit | None,
 ) -> Mapping[FilingProducerKey, ModeloFormScalar]:
     """Resolve the producer context a layout declares, as the export resolves it.
 
@@ -317,6 +319,7 @@ def _profile_context_values(
                 operation=operation,
                 read_profile=current,
                 arrivals=m303_arrivals,
+                work_unit=work_unit,
             )
         )
     return values
@@ -342,6 +345,7 @@ def _m303_context_values(
     operation: PinnedAuthorityOperation,
     read_profile: bool,
     arrivals: M303ArrivalPorts | None,
+    work_unit: WorkUnit | None,
 ) -> Mapping[FilingProducerKey, ModeloFormScalar]:
     """The Modelo 303 identification answers, through the export's own lexical projection.
 
@@ -359,11 +363,23 @@ def _m303_context_values(
     evidence = None if revision is None else revision.filing_instance_evidence
     filing = M303FilingLexicals() if evidence is None else m303_evidence_lexicals(evidence.m303)
     period = snapshot.filing_period
-    if evidence is not None and arrivals is not None and period is not None:
+    if (
+        revision is not None
+        and evidence is not None
+        and arrivals is not None
+        and period is not None
+        and work_unit is not None
+    ):
         with contextlib.suppress(CadrumoError):
             filing = m303_filing_lexicals(
                 resolve_m303_filing_facts_from_arrivals(
-                    bucket_id=str(bucket_id), period=period, evidence=evidence, arrivals=arrivals, operation=operation
+                    bucket_id=str(bucket_id),
+                    period=period,
+                    evidence=evidence,
+                    arrivals=arrivals,
+                    revision=revision,
+                    work_unit=work_unit,
+                    operation=operation,
                 )
             )
     values: dict[FilingProducerKey, ModeloFormScalar] = {}
@@ -542,6 +558,7 @@ def load_modelo_work_form(
             bucket_id=bucket_id,
             operation=operation,
             m303_arrivals=m303_arrivals,
+            work_unit=work_unit_repository.load().get(review.work_unit_id),
         ),
         profile_binding_values=_profile_binding_context_values(
             layout, snapshot, head, review.lifecycle_state, bucket_id=bucket_id, operation=operation

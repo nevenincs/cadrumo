@@ -9210,6 +9210,10 @@ modelo:
             label: Entitats asseguradores - Estat de canvis en el patrimoni propi
               (II) - Operacions amb socis o mutualistes - Operacions amb accions o
               participacions pròpies (netes). (Accions en patrimoni pròpies) [00547]
+          is-ecpp-aseguradoras-ii-acciones-propias-netas-prima-emision:
+            label: Entitats asseguradores - Estat de canvis en el patrimoni propi
+              (II) - Operacions amb socis o mutualistes - Operacions amb accions o
+              participacions pròpies (netes). Prima d'emissió [00545]
           is-ecpp-aseguradoras-ii-combinacion-negocios-otras-aportaciones-socios-mutualistas:
             label: Entitats asseguradores - Estat de canvis en el patrimoni propi
               (II) - Operacions amb socis o mutualistes - Increment (reducció) de
@@ -9623,6 +9627,9 @@ modelo:
             label: Liquidació III - Bonificacions/Deduccions doble imposició - Deduccions
               per doble imposició - D.I. internacional generada i aplicada en l'exercici
               actual (art. 31 i 32 LIS) [00573]
+          is-liquidacion-iii-quitas-acuerdo-acreedores:
+            label: Liquidació III - base imposable - Rendes corresponents a quites
+              per acord amb creditors (art. 26.1 LIS) - Disminucions [00545]
           is-liquidacion-iii-reserva-nivelacion-aumentos:
             label: Liquidació III - Base imposable - Entitats de dimensió reduïda
               - Reserva de nivellació - Augments [01033]

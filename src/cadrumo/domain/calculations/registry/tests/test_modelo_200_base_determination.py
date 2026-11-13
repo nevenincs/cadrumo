@@ -49,6 +49,7 @@ from .modelo_200_casilla_ids import (
     M200_RESERVA_CAPITALIZACION_CASILLA,
     M200_RESULTADO_CONTABLE_CASILLA,
 )
+from .modelo_200_turnover import turnover_binding_values
 from .published_authority import published_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -80,7 +81,7 @@ def _calculate(inputs: dict[CasillaId, Decimal]):
         enum_binding_values={_DISPATCH_BINDING: "sl"},
         binding_values={
             "modelo-200-profile-new-entity-flag": Decimal("0"),
-            "modelo-200-profile-incn-prior-12-months": Decimal("10000000"),
+            **turnover_binding_values(_snapshot_2024(), Decimal("10000000")),
             "modelo-200-profile-tributacion-estado-porcentaje": Decimal("100"),
             "modelo-200-bin-pendiente-ejercicios-anteriores": Decimal("0"),
             "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),

@@ -82,6 +82,10 @@ _SALDO_INICIAL_CUMPLIDO: CasillaId = validated_casilla_id(
 _YEAR_N = 2025
 _YEAR_N_PLUS_1 = 2026
 
+#: Net turnover (00255) every filed prior return states; the current rate reads it.
+_M200_TURNOVER: CasillaId = validated_casilla_id("00255", surface="_M200_TURNOVER")
+_PRIOR_TURNOVER = Decimal("500000")
+
 #: Distinct prior-year stock per source year + condition-state so a cross-year
 #: contamination (or a condition-state channel swap) surfaces.
 _STOCK_BY_SOURCE_YEAR: dict[int, dict[CasillaId, Decimal]] = {
@@ -121,6 +125,7 @@ def _seed_prior_saldo_final(*, source_year: int, obs_repo: CalculationObservatio
                     casilla_values={
                         _SALDO_FINAL_NO_CUMPLIDO: stock[_SALDO_FINAL_NO_CUMPLIDO],
                         _SALDO_FINAL_CUMPLIDO: stock[_SALDO_FINAL_CUMPLIDO],
+                        _M200_TURNOVER: _PRIOR_TURNOVER,
                     },
                     grade=RegistryAuthorityGrade.CALCULATION,
                 ),
@@ -139,6 +144,7 @@ def _seed_prior_saldo_final(*, source_year: int, obs_repo: CalculationObservatio
                         casilla_values={
                             _SALDO_FINAL_NO_CUMPLIDO: stock[_SALDO_FINAL_NO_CUMPLIDO],
                             _SALDO_FINAL_CUMPLIDO: stock[_SALDO_FINAL_CUMPLIDO],
+                            _M200_TURNOVER: _PRIOR_TURNOVER,
                         },
                         grade=RegistryAuthorityGrade.CALCULATION,
                     ),

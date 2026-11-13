@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from decimal import Decimal
 
-from ...core.casilla_id import CasillaId, validated_casilla_id
+from ...core.casilla_id import CasillaId
 from ...core.identity.hex_ids import VerificationReportId
 from ...core.modelo import Modelo
 from ...core.result_disposition import ResultDisposition, result_disposition_is_refund
@@ -15,14 +15,8 @@ from ...domain.buckets.event_repository import bucket_event_history_write
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.form_codes import form_for_role
-from ...domain.calculations.registry.prorrata_register_catalogue import (
-    general_prorrata_register_regime,
-    ninguna_prorrata_register_regime,
-)
 from ...domain.calculations.registry.result_casillas import canonical_result_amount, result_disposition_casilla_ids
-from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.deadlines.effective_close import decide_filing_timeliness
-from ...domain.iva.m303_settlement import is_m303_annual_settlement_period
 from ...domain.justificante.protocols import JustificanteRepositoryProtocol
 from ...domain.modelos.calculation_repository import upsert_calculation_revision
 from ...domain.modelos.calculation_revision import (
@@ -60,7 +54,6 @@ from ...domain.modelos.verification_repository import revision_granting_reports
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
-from ...domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
 from ..calculations.iva_compensation_history_ports import IvaCompensationHistoryRepositoryProtocol
 from ..calculations.observations_repository import (
     CalculationObservationRepositoryProtocol,
@@ -69,6 +62,7 @@ from ..calculations.observations_repository import (
 from ..calculations.verification_report_gate import require_verification_report_coordinates_current
 from ..filing.retention import try_record_filing_retention_snapshot
 from ..prorrata_register.service import require_prorrata_register_coordinates_current
+from ..prorrata_register.settlement import prorrata_settlement_values, settled_prorrata_register
 from .action_errors import (
     CalculationRevisionStateError,
     M303FilingEvidenceError,
@@ -85,21 +79,6 @@ from .lifecycle_view_refusal_doors import verification_reports_verdict
 from .m303_filing_evidence import m303_filing_evidence_failure
 from .modelo_bucket_events import build_modelo_bucket_event
 from .participation_writes import build_participation_writes
-
-_PRORRATA_VOLUMEN_TOTAL_CASILLA = validated_casilla_id(
-    "iva.prorrata-volumen-total",
-    surface="prorrata settlement volumen total casilla id",
-)
-
-_PRORRATA_VOLUMEN_CON_DERECHO_CASILLA = validated_casilla_id(
-    "iva.prorrata-volumen-con-derecho",
-    surface="prorrata settlement volumen con derecho casilla id",
-)
-
-_PRORRATA_PORCENTAJE_CASILLA = validated_casilla_id(
-    "iva.prorrata-porcentaje",
-    surface="prorrata settlement definitive percentage casilla id",
-)
 
 
 def require_filing_instance_evidence_for_work_unit(
@@ -164,8 +143,7 @@ def _build_prorrata_settlement_write(
     operation: PinnedAuthorityOperation,
 ) -> SecureObjectWrite | None:
     """Build the settlement prorrata-register write for an M303 year close."""
-    values = _prorrata_settlement_values(filed_target=filed_target, work_unit=work_unit)
-    if values is None:
+    if prorrata_settlement_values(revision=filed_target, work_unit=work_unit, operation=operation) is None:
         return None
 
     # Revisioned: the write this returns joins the caller's co-commit batch, so
@@ -173,92 +151,10 @@ def _build_prorrata_settlement_write(
     # back over a sector entry another writer added in between.
     register, register_revision_id = prorrata_register_repository.load_revisioned()
     register = require_prorrata_register_coordinates_current(register, operation=operation)
-    entry = _settled_prorrata_register_entry(
-        work_unit=work_unit,
-        register=register,
-        volumen_total=values[0],
-        volumen_con_derecho=values[1],
-        definitive_percentage=values[2],
-    )
-    retained = tuple(
-        existing
-        for existing in register.entries
-        if (existing.ejercicio, existing.sector_id) != (entry.ejercicio, entry.sector_id)
-    )
-    return prorrata_register_repository.to_secure_object_write(
-        ProrrataRegister(
-            entries=(*retained, entry),
-            sector_definitions=register.sector_definitions,
-            activity_rows=register.activity_rows,
-            gross_declarations=register.gross_declarations,
-        ),
-        expected_revision_id=register_revision_id,
-    )
-
-
-def _prorrata_settlement_values(
-    *,
-    filed_target: CalculationRevision,
-    work_unit: WorkUnit,
-) -> tuple[Decimal, Decimal, Decimal] | None:
-    if str(work_unit.modelo) != form_for_role("iva.periodic"):
+    settled = settled_prorrata_register(register, revision=filed_target, work_unit=work_unit, operation=operation)
+    if settled is None:
         return None
-    if not is_m303_annual_settlement_period(work_unit.period):
-        return None
-
-    casilla_values = filed_target.casilla_values
-    volumen_total = casilla_values.get(_PRORRATA_VOLUMEN_TOTAL_CASILLA)
-    volumen_con_derecho = casilla_values.get(_PRORRATA_VOLUMEN_CON_DERECHO_CASILLA)
-    definitive_percentage = casilla_values.get(_PRORRATA_PORCENTAJE_CASILLA)
-    if volumen_total is None or volumen_con_derecho is None or definitive_percentage is None:
-        return None
-    return volumen_total, volumen_con_derecho, definitive_percentage
-
-
-def _settled_prorrata_register_entry(
-    *,
-    work_unit: WorkUnit,
-    register: ProrrataRegister,
-    volumen_total: Decimal,
-    volumen_con_derecho: Decimal,
-    definitive_percentage: Decimal,
-) -> ProrrataRegisterEntry:
-    volumen_sin_derecho = volumen_total - volumen_con_derecho
-    settlement_snapshot_ref = RegistrySnapshotRef(
-        modelo=work_unit.modelo,
-        revision_id=work_unit.revision_id,
-        modelo_year=work_unit.filing_year,
-        period=work_unit.period.registry_token,
-    )
-    settlement_fields = {
-        "definitive_percentage": definitive_percentage,
-        "definitive_volume_con_derecho": volumen_con_derecho,
-        "definitive_volume_sin_derecho": volumen_sin_derecho,
-    }
-    existing = register.entry_for(work_unit.filing_year)
-    if existing is not None:
-        return ProrrataRegisterEntry.model_validate(
-            {
-                **existing.model_dump(),
-                **settlement_fields,
-                "source_registry_snapshot_refs": tuple(
-                    dict.fromkeys((*existing.source_registry_snapshot_refs, settlement_snapshot_ref))
-                ),
-            }
-        )
-
-    regime = (
-        general_prorrata_register_regime() if volumen_sin_derecho > Decimal("0") else ninguna_prorrata_register_regime()
-    )
-    return ProrrataRegisterEntry(
-        ejercicio=work_unit.filing_year,
-        regime=regime,
-        especial_transition=None,
-        definitive_percentage=definitive_percentage,
-        definitive_volume_con_derecho=volumen_con_derecho,
-        definitive_volume_sin_derecho=volumen_sin_derecho,
-        source_registry_snapshot_refs=(settlement_snapshot_ref,),
-    )
+    return prorrata_register_repository.to_secure_object_write(settled, expected_revision_id=register_revision_id)
 
 
 def _new_local_filing_record(

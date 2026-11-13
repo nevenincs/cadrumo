@@ -66,7 +66,8 @@ _PERIOD_END_BEFORE_DT44 = date(_DT44_FIRST_TRANSITIONAL_EXERCISE, 1, 1) - timede
 _PERIOD_END_FIRST_DT44 = date(_DT44_FIRST_TRANSITIONAL_EXERCISE, 12, 31)
 _FORM_BINDING = "modelo-200-profile-legal-entity-form"
 _NEW_ENTITY_BINDING = "modelo-200-profile-new-entity-flag"
-_INCN_BINDING = "modelo-200-profile-incn-prior-12-months"
+# The rate reads the turnover of the immediately preceding tax period (LIS art. 29.1, art. 101.1).
+_INCN_BINDING = "modelo-200-incn-periodo-impositivo-anterior"
 _ESTADO_PCT_BINDING = "modelo-200-profile-tributacion-estado-porcentaje"
 _TIPO_GRAVAMEN_CASILLA: CasillaId = validated_casilla_id("DP200014:00558", surface="_TIPO_GRAVAMEN_CASILLA")
 # Caracteres de la declaración (page 1): cooperativa protegida, and entidad acogida a la Ley 49/2002.

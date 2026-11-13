@@ -479,6 +479,9 @@ def _resolve_binding_values(
             required_period,
             activity_start_date=activity_start_date,
         ):
+            if binding.before_activity_unresolved:
+                # The law gives that period a figure of its own, so zero would be a default.
+                return None
             scoped_pre_activity = True
             continue
         try:

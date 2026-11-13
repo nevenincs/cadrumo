@@ -81,6 +81,7 @@ from ..calculations.cross_period_models import (
 )
 from ..calculations.iva_compensation_history_ports import IvaCompensationHistoryRepositoryProtocol
 from .imputation_filings import imputation_filings_from_repositories
+from .incn_periodo_anterior_finding import incn_periodo_anterior_disagreement_finding
 from .invoice_drift_gate import invoice_drift_findings
 from .iva_wallet_gate import require_persisted_iva_compensation_decision_matches_revision
 from .iva_wallet_refusal import ModeloIvaWalletReconciliationBlocked
@@ -842,6 +843,7 @@ def collect_verification_gate_findings(
         work_unit_repository=work_unit_repository,
         operation=operation,
         transaction_repository=transaction_repository,
+        target_casilla_values=target.casilla_values,
     )
 
     _append_cross_period_findings(
@@ -864,6 +866,32 @@ def collect_verification_gate_findings(
     _append_ledger_evidence_findings(
         target, work_unit, transaction_repository, operation, findings, failures_by_finding_id
     )
+    turnover_finding = incn_periodo_anterior_disagreement_finding(
+        work_unit=work_unit,
+        workflow_profile=workflow_profile,
+        operation=operation,
+        observation_repository=observation_repository,
+        iva_compensation_history_repository=iva_compensation_history_repository,
+        calculation_repository=calculation_repository,
+        work_unit_repository=work_unit_repository,
+        filing_repository=filing_repository,
+    )
+    if turnover_finding is not None:
+        findings.append(turnover_finding)
+        failures_by_finding_id[id(turnover_finding)] = build_verification_precondition_failure(
+            calculation_revision_id=target.calculation_revision_id,
+            work_unit_id=target.work_unit_id,
+            condition_id="modelo.work.verify.m200.incn_periodo_anterior.agrees",
+            scenario_id="modelo.work.verify.m200.incn_periodo_anterior.disagrees",
+            evidence_id="modelo.work.verify.m200.incn_periodo_anterior",
+            evidence_values={
+                "modelo": str(work_unit.modelo),
+                "year": work_unit.filing_year,
+                "period": work_unit.period.registry_token,
+                "profile_fact_id": "taxpayer_type.incn_prior_12_months",
+            },
+            provenance=ActionEvidenceProvenance.DOMAIN_EVALUATION,
+        )
     # A refused registry snapshot is the verdict: the gates below read that same
     # snapshot, so they would only raise the refusal again instead of reporting it.
     if any(failure.scenario_id in REGISTRY_SNAPSHOT_REFUSAL_SCENARIOS for failure in failures_by_finding_id.values()):

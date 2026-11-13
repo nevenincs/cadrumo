@@ -11,6 +11,7 @@ from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
 from ...core.irnr import M210GrossIncomeSourceMode
 from ...core.period import Period
+from ...domain.calculations.registry.binding_prior_value_rules import set_aside_binding_ids
 from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.ids import (
     BindingId,
@@ -173,6 +174,7 @@ def resolve_bucket_source_mesh(
         foreign_asset_row_observations,
         inventory_resolutions,
         annual_summary_resolutions,
+        set_aside_binding_ids(snapshot.revision, casilla_inputs or {}),
     )
     source_resolution = _source_resolution_excluding_iva_compensation(
         snapshot,
@@ -500,6 +502,7 @@ def _resolve_mesh_families(
     foreign_asset_row_observations: tuple[Modelo720RowObservation, ...],
     inventory_resolutions: tuple[CalculationSourceResolution, ...],
     annual_summary_resolutions: tuple[CalculationSourceResolution, ...],
+    held_sources_set_aside: frozenset[BindingId],
 ) -> tuple[CalculationSourceResolution, ...]:
     """Resolve every enrolled source family except the IVA ledger through the mesh context.
 
@@ -529,7 +532,14 @@ def _resolve_mesh_families(
             foreign_asset_row_observations,
         ),
         *inventory_resolutions,
-        *_resolve_cross_period_families(resolve_declared, snapshot, ports, profile_read_ports, work_unit.bucket_id),
+        *_resolve_cross_period_families(
+            resolve_declared,
+            snapshot,
+            ports,
+            profile_read_ports,
+            work_unit.bucket_id,
+            held_sources_set_aside=held_sources_set_aside,
+        ),
         *annual_summary_resolutions,
     )
 
@@ -745,8 +755,14 @@ def _resolve_cross_period_families(
     ports: CalculationActionPorts,
     profile_read_ports: ProfileReadPorts,
     bucket_id: str,
+    *,
+    held_sources_set_aside: frozenset[BindingId],
 ) -> tuple[CalculationSourceResolution, ...]:
-    """Resolve the previous-filing, relation-prefill and IVA compensation partition families."""
+    """Resolve the previous-filing, relation-prefill and IVA compensation partition families.
+
+    A carry whose held earlier return the current return's marked boxes set
+    aside is left unresolved, for the filer's statement of its figure.
+    """
     from ..calculations.iva_compensation_annual_partition import IvaCompensationAnnualPartitionSourceResolver
     from ..calculations.multi_year import PreviousFilingSourceResolver
     from ..calculations.relation_prefill import RelationPrefillSourceResolver
@@ -761,7 +777,8 @@ def _resolve_cross_period_families(
                 excluded_binding_ids=iva_wallet_owned_binding_ids_for_revision(
                     modelo_id=snapshot.modelo.id,
                     revision_id=snapshot.revision.id,
-                ),
+                )
+                | held_sources_set_aside,
                 operation=ports.operation,
             )
         ),

@@ -63,6 +63,8 @@ from ..export_contracts import ModeloExportCommand
 from ..export_m202_profile import modelo_202_producer_profile
 from ..export_m202_tipo_gravamen import GovernedRates, RegimenMarks, tipo_gravamen_rates
 from ..export_periodo_impositivo import PeriodoImpositivo, periodo_impositivo_from_facts
+from ..incn_periodo_anterior import IncnPeriodoAnteriorReader
+from .incn_periodo_anterior_support import held_return, nothing_held, reads_preceding_turnover
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -75,6 +77,7 @@ _CNAE_PATH = "taxpayer_type.principal_cnae"
 _CLASSIFICATION_PATH = "taxpayer_type.principal_cnae_classification"
 _INCN_PATH = "taxpayer_type.incn_prior_12_months"
 _PRIOR_PERIODO_TURNOVER_KEY = "application.filing.export.errors.m202_prior_periodo_turnover_unreadable"
+_PRIOR_PERIODO_TURNOVER_DISAGREES_KEY = "application.filing.export.errors.m202_prior_periodo_turnover_disagrees"
 _COOPERATIVA_PATH = "taxpayer_type.cooperativa_fiscalmente_protegida"
 _ERD_PATH = "taxpayer_type.erd_tipo_gravamen_especifico"
 _TIPO_FACT = "tipo_gravamen_impuesto_sociedades"
@@ -226,6 +229,7 @@ def _resolve(
     operation: PinnedAuthorityOperation,
     turnover: Decimal | None = _TURNOVER,
     periodo: PeriodoImpositivo | None = None,
+    held: Decimal | None = None,
 ) -> dict[FilingProducerKey, object]:
     # The CNAE is stated in the classification the year requires unless a test states another,
     # and the twelve-month turnover the workflow profile carries is the one the profile states.
@@ -234,15 +238,23 @@ def _resolve(
         **({} if turnover is None else {_INCN_PATH: str(turnover)}),
         **values,
     }
+    periodo = periodo or _periodo(year)
+    # Nothing is held of the preceding período unless a test holds its Modelo 200.
+    reader: IncnPeriodoAnteriorReader = (
+        nothing_held(operation, periodo.start.year)
+        if held is None
+        else held_return(operation, periodo.start.year, held)
+    )
     model_profile = modelo_202_producer_profile(
         workflow_profile=_sociedad(turnover),
         profile_values=stated,
         cited_producer_keys=_cited(records),
         effective_date=_filing_date(year),
-        periodo=periodo or _periodo(year),
+        periodo=periodo,
         filing_year=year,
         art_40_3_elected=False,
         operation=operation,
+        incn_periodo_anterior=reader,
     )
     snapshot = build_filing_producer_snapshot(
         modelo=Modelo("202"),
@@ -283,8 +295,9 @@ def _render(
     *,
     turnover: Decimal | None = _TURNOVER,
     periodo: PeriodoImpositivo | None = None,
+    held: Decimal | None = None,
 ) -> dict[FilingProducerKey, tuple[ExportFieldDefinition, str]]:
-    headers = _resolve(records, year, values, operation=operation, turnover=turnover, periodo=periodo)
+    headers = _resolve(records, year, values, operation=operation, turnover=turnover, periodo=periodo, held=held)
     return _rendered(records, headers)
 
 
@@ -512,7 +525,7 @@ def test_a_first_periodo_has_no_preceding_turnover_so_it_is_no_microempresa(
             assert rendered[_K.M202_CIFRA_NEGOCIOS_PERIODO_ANTERIOR_BAJO_UMBRAL][1] == " "
 
 
-def test_a_shorter_preceding_periodo_refuses_because_its_turnover_is_read_from_its_modelo_200(
+def test_a_shorter_preceding_periodo_with_nothing_held_or_stated_refuses_because_its_turnover_is_its_own(
     operation: PinnedAuthorityOperation,
     page_01_fields: Mapping[int, tuple[ExportRecordDefinition, ...]],
     rate_years: tuple[int, ...],
@@ -548,6 +561,77 @@ def test_a_shorter_preceding_periodo_refuses_because_its_turnover_is_read_from_i
             message = resolve_error_message(failure, locale=locale)
             assert "200" in message, locale
             assert "%{" not in message, locale
+
+
+def test_a_shorter_preceding_periodo_takes_its_turnover_from_its_held_modelo_200(
+    operation: PinnedAuthorityOperation,
+    page_01_fields: Mapping[int, tuple[ExportRecordDefinition, ...]],
+    rate_years: tuple[int, ...],
+) -> None:
+    for year in rate_years:
+        periodo = _periodo(year, constitution=date(year - 1, 7, 1))
+        if not reads_preceding_turnover(operation, periodo.start.year):
+            continue
+        # The stated twelve-month turnover is the general one; the held short período's own is below the threshold.
+        rendered = _render(
+            operation, page_01_fields[year], year, _STATED, turnover=_TURNOVER, periodo=periodo, held=_MICRO_TURNOVER
+        )
+
+        assert _tipo(rendered) == "/".join(_micro_scale(operation, year)), year
+
+
+def test_a_held_return_disagreeing_with_the_stated_twelve_month_turnover_refuses_with_both(
+    operation: PinnedAuthorityOperation,
+    page_01_fields: Mapping[int, tuple[ExportRecordDefinition, ...]],
+    rate_years: tuple[int, ...],
+) -> None:
+    checked = 0
+    for year in rate_years:
+        periodo = _periodo(year)
+        assert periodo.prior_lasted_twelve_months
+        if not reads_preceding_turnover(operation, periodo.start.year):
+            continue
+        with pytest.raises(FilingProducerSnapshotError) as refused:
+            _resolve(
+                page_01_fields[year],
+                year,
+                _STATED,
+                operation=operation,
+                turnover=_TURNOVER,
+                periodo=periodo,
+                held=_MICRO_TURNOVER,
+            )
+        cause = refused.value
+        checked += 1
+
+        # Neither figure is taken over the other: the refusal carries both.
+        assert cause.translated_message == _PRIOR_PERIODO_TURNOVER_DISAGREES_KEY, year
+        assert cause.context is not None
+        assert cause.context["held_value"] == str(_MICRO_TURNOVER), year
+        assert cause.context["stated_value"] == str(_TURNOVER), year
+        failure = _producer_facts_refusal(
+            ModeloExportCommand(calculation_revision_id="a" * 64, output_path=Path("unused.txt"), actor="operator"),
+            cause,
+        )
+        for locale in _LOCALES:
+            message = resolve_error_message(failure, locale=locale)
+            assert "%{" not in message, locale
+    assert checked
+
+
+def test_a_held_return_agreeing_with_the_stated_twelve_month_turnover_selects_the_scale(
+    operation: PinnedAuthorityOperation,
+    page_01_fields: Mapping[int, tuple[ExportRecordDefinition, ...]],
+    rate_years: tuple[int, ...],
+) -> None:
+    for year in rate_years:
+        if not reads_preceding_turnover(operation, _periodo(year).start.year):
+            continue
+        rendered = _render(
+            operation, page_01_fields[year], year, _STATED, turnover=_MICRO_TURNOVER, held=_MICRO_TURNOVER
+        )
+
+        assert _tipo(rendered) == "/".join(_micro_scale(operation, year)), year
 
 
 @pytest.mark.parametrize("year", _YEARS)

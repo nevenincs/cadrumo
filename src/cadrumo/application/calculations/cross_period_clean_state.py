@@ -153,6 +153,7 @@ def partition_cross_period_requirements_by_activity_start(
     requirements: Iterable[CrossPeriodDependencyRequirement],
     *,
     activity_start_date: date | None,
+    before_activity_unresolved_binding_ids: frozenset[str] = frozenset(),
 ) -> _RequirementPartition:
     """Split registry-derived requirements into in-scope and pre-activity-suppressed.
 
@@ -171,13 +172,20 @@ def partition_cross_period_requirements_by_activity_start(
 
     When ``activity_start_date`` is ``None`` every requirement stays in scope; the
     caller decides whether a missing declared date should fail closed.
+
+    A requirement fed by a binding in ``before_activity_unresolved_binding_ids``
+    stays in scope however early its period: the registry declares that the law
+    gives such a period a figure of its own, so it is proven or stated, never
+    scoped out.
     """
     if activity_start_date is None:
         return _RequirementPartition(tuple(requirements), ())
     in_scope: list[CrossPeriodDependencyRequirement] = []
     suppressed: list[CrossPeriodDependencyRequirement] = []
     for requirement in requirements:
-        if period_strictly_before_activity_start(requirement.period, activity_start_date):
+        if period_strictly_before_activity_start(requirement.period, activity_start_date) and not any(
+            origin_id in before_activity_unresolved_binding_ids for origin_id in requirement.origin_ids
+        ):
             suppressed.append(requirement)
         else:
             in_scope.append(requirement)
@@ -512,6 +520,20 @@ def _first_year_fractional_requirements(
     )
 
 
+def _zero_exemptible_binding_ids(
+    snapshot: RegistrySnapshot, zero_value_previous_filing_binding_ids: frozenset[str] | None
+) -> frozenset[str] | None:
+    """The zero-valued carries a typed zero may exempt: never one whose zero the registry says must be attested.
+
+    Where a zero is the figure that benefits the taxpayer, a typed zero proves
+    nothing, so only an attestation or the earlier return makes it clean.
+    """
+    if zero_value_previous_filing_binding_ids is None:
+        return None
+    attested_only = {binding.id for binding in snapshot.revision.bindings if binding.zero_needs_attestation}
+    return frozenset(item for item in zero_value_previous_filing_binding_ids if item not in attested_only)
+
+
 def _zero_value_previous_filing_requirements(
     requirements: Iterable[CrossPeriodDependencyRequirement],
     zero_value_previous_filing_binding_ids: frozenset[str] | None,
@@ -622,6 +644,7 @@ def attestable_carry_sources(
     observation_repository: CalculationObservationRepositoryProtocol,
     filing_catalogue: ModeloRecordCatalogue,
     work_catalogue: WorkUnitCatalogue,
+    set_aside_binding_ids: frozenset[BindingId] = frozenset(),
 ) -> dict[BindingId, tuple[CrossPeriodDependencyRequirement, ...]]:
     """Return, per scalar carry binding, the source requirements the application holds nothing of.
 
@@ -629,13 +652,16 @@ def attestable_carry_sources(
     binding folds several source periods. A binding is offered only when
     *every* one of its sources is absent: where any is held the carry follows
     the sources, and a partial statement is not admitted. Row-set bindings stay
-    sourced from records and are never offered.
+    sourced from records and are never offered. A binding in
+    ``set_aside_binding_ids``, whose held return the current return's marks set
+    aside, is offered whether or not its sources are held.
     """
     by_binding = _attestable_requirements_by_binding(snapshot, support=operation.supported_filing_years())
     return {
         binding_id: tuple(requirements)
         for binding_id, requirements in by_binding.items()
-        if all(
+        if binding_id in set_aside_binding_ids
+        or all(
             upstream_source_absent(
                 requirement,
                 observation_repository=observation_repository,
@@ -654,6 +680,7 @@ def attestable_carry_binding_ids(
     observation_repository: CalculationObservationRepositoryProtocol,
     filing_catalogue: ModeloRecordCatalogue,
     work_catalogue: WorkUnitCatalogue,
+    set_aside_binding_ids: frozenset[BindingId] = frozenset(),
 ) -> frozenset[BindingId]:
     """Return the bindings an operator may state a figure for."""
     return frozenset(
@@ -663,6 +690,7 @@ def attestable_carry_binding_ids(
             observation_repository=observation_repository,
             filing_catalogue=filing_catalogue,
             work_catalogue=work_catalogue,
+            set_aside_binding_ids=set_aside_binding_ids,
         )
     )
 
@@ -850,6 +878,9 @@ def _clean_state_requirement_scope(
     partition = partition_cross_period_requirements_by_activity_start(
         _requirements_outside_non_filer_modelos(all_requirements, non_filer_modelos),
         activity_start_date=activity_start_date,
+        before_activity_unresolved_binding_ids=frozenset(
+            binding.id for binding in snapshot.revision.bindings if binding.before_activity_unresolved
+        ),
     )
     attested_keys = {
         requirement.key
@@ -871,7 +902,7 @@ def _clean_state_requirement_scope(
             requirement
             for requirement in _zero_value_previous_filing_requirements(
                 partition.in_scope,
-                zero_value_previous_filing_binding_ids,
+                _zero_exemptible_binding_ids(snapshot, zero_value_previous_filing_binding_ids),
             )
             if requirement.key not in attested_keys
         ),
@@ -920,6 +951,7 @@ def _evaluate_in_scope_dependencies(
     operator_value_attestations: Mapping[str, OperatorAttestedValue] | None,
     work_catalogue: WorkUnitCatalogue,
     snapshot: RegistrySnapshot,
+    set_aside_binding_ids: frozenset[BindingId] = frozenset(),
 ) -> tuple[CrossPeriodDependencyEvidence, ...]:
     """Evaluate only requirements that were not explicitly scoped out."""
     suppressed_keys = _scoped_out_keys(scope)
@@ -927,6 +959,11 @@ def _evaluate_in_scope_dependencies(
     attestable: frozenset[BindingId] | None = None
     for requirement in scope.partition.in_scope:
         if requirement.key in suppressed_keys:
+            continue
+        if requirement.origin_ids and all(origin_id in set_aside_binding_ids for origin_id in requirement.origin_ids):
+            dependencies.append(
+                _set_aside_evidence(requirement, _stated_values_for(requirement, operator_value_attestations))
+            )
             continue
         evidence = evaluate_requirement(
             requirement,
@@ -960,11 +997,26 @@ def _evaluate_in_scope_dependencies(
                     observation_repository=observation_repository,
                     filing_catalogue=repositories.filing_catalogue,
                     work_catalogue=work_catalogue,
+                    set_aside_binding_ids=set_aside_binding_ids,
                 )
             if all(origin_id in attestable for origin_id in requirement.origin_ids):
                 evidence = evidence.model_copy(update={"attestation_admitted": True})
         dependencies.append(evidence)
     return tuple(dependencies)
+
+
+def _set_aside_evidence(
+    requirement: CrossPeriodDependencyRequirement,
+    stated: tuple[OperatorAttestedValue, ...],
+) -> CrossPeriodDependencyEvidence:
+    """A carry whose held return the current return's marks set aside: only the filer's statement settles it."""
+    if stated:
+        return CrossPeriodDependencyEvidence(requirement=requirement, operator_attested_absent_upstream=stated)
+    return CrossPeriodDependencyEvidence(
+        requirement=requirement,
+        blockers=(CrossPeriodCleanStateBlocker.HELD_SOURCE_SET_ASIDE,),
+        attestation_admitted=True,
+    )
 
 
 def _pre_activity_dependencies(
@@ -1043,6 +1095,7 @@ def evaluate_cross_period_clean_state(
     operator_value_attestations: Mapping[str, OperatorAttestedValue] | None = None,
     work_catalogue: WorkUnitCatalogue | None = None,
     modelo_202_instalment_resolver: Modelo202InstalmentResolver | None = None,
+    set_aside_binding_ids: frozenset[BindingId] = frozenset(),
 ) -> CrossPeriodCleanStateVerdict:
     """Evaluate cross-period dependencies and return a clean-state verdict.
 
@@ -1117,6 +1170,12 @@ def evaluate_cross_period_clean_state(
     and contributes 0.00. A filed instalment, and one whose verdict is unknown,
     incomplete or owed, is evaluated as before. ``None`` resolves nothing, so
     every unfiled instalment keeps blocking.
+
+    ``set_aside_binding_ids`` names the carries whose held earlier return the
+    target's marked boxes set aside (see
+    :func:`~domain.calculations.registry.binding_prior_value_rules.set_aside_binding_ids`).
+    Their requirements are not read from any source: the filer's statement makes
+    them clean, and without one they block with the statement admitted.
     """
     repositories = _load_clean_state_repositories(
         operation=operation,
@@ -1161,6 +1220,7 @@ def evaluate_cross_period_clean_state(
                 operator_value_attestations=operator_value_attestations,
                 work_catalogue=WorkUnitCatalogue() if work_catalogue is None else work_catalogue,
                 snapshot=snapshot,
+                set_aside_binding_ids=set_aside_binding_ids,
             ),
             activity_start_date=activity_start_date,
         ),

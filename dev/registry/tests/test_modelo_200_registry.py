@@ -545,6 +545,7 @@ def test_modelo_200_page_14_cuota_chain_matches_aeat_manual_worked_example() -> 
         binding_values={
             "modelo-200-profile-new-entity-flag": Decimal("0"),
             "modelo-200-profile-incn-prior-12-months": Decimal("10000000"),
+            "modelo-200-incn-periodo-impositivo-anterior": Decimal("10000000"),
             "modelo-200-profile-tributacion-estado-porcentaje": Decimal("100"),
             "modelo-200-bin-pendiente-ejercicios-anteriores": Decimal("0"),
             "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
@@ -646,6 +647,7 @@ def test_modelo_200_cuota_liquida_is_computed_and_rejects_direct_input() -> None
             binding_values={
                 "modelo-200-profile-new-entity-flag": Decimal("0"),
                 "modelo-200-profile-incn-prior-12-months": Decimal("10000000"),
+                "modelo-200-incn-periodo-impositivo-anterior": Decimal("10000000"),
                 "modelo-200-profile-tributacion-estado-porcentaje": Decimal("100"),
             },
             relation_values={
@@ -708,6 +710,7 @@ def test_modelo_200_cuota_integra_chain_applies_dispatched_rate_to_post_nivelaci
         binding_values={
             "modelo-200-profile-new-entity-flag": Decimal("0"),
             "modelo-200-profile-incn-prior-12-months": Decimal("10000000"),
+            "modelo-200-incn-periodo-impositivo-anterior": Decimal("10000000"),
             "modelo-200-profile-tributacion-estado-porcentaje": Decimal("100"),
             "modelo-200-bin-pendiente-ejercicios-anteriores": Decimal("0"),
             "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),

@@ -232,6 +232,8 @@ class FormulaExpression(RegistryModel):
         elif self.op == "unresolved_outcome":
             if self.args[0].text_literal is None:
                 raise RegistryValidationError("unresolved_outcome requires one text_literal leaf naming its reason")
+            if len(self.args) == 2 and self.args[1].casilla_id is None:
+                raise RegistryValidationError("unresolved_outcome names the box the operator states as a casilla leaf")
         elif any(arg.text_literal is not None for arg in self.args):
             raise RegistryValidationError("text_literal may only be an operand of text_equal or unresolved_outcome")
 

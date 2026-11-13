@@ -395,20 +395,57 @@ required_text = [
 # 2022 states the 1 millón de euros floor ("en todo caso, se podrán compensar en el período
 # impositivo bases imponibles negativas hasta el importe de 1 millón de euros"); it is read
 # from its own parameter, not from an INCN threshold. aeat-dr-200-2022 prints [00550] on
-# DP200013 field 92. The 2022 manual prints the 70 alone. A nueva creación that marks
+# DP200013 field 92. The percentage is the parameter bin-limite-porcentaje-general (70),
+# replaced by the DA 15ª.1 LIS percentage of the INCN tramo (50 from the tramo medio, 25 from
+# the tramo alto) when the INCN of the 12 months before the period starts reaches it
+# (manuals/sociedades/2022 L12733-12741). A nueva creación that marks
 # casilla 00070 does not apply the límite (art. 26.3 LIS, manuals/sociedades/2022 L2903), so
-# its ceiling is the stock.
+# its ceiling is the stock. The rentas of casillas 00545 (quitas por acuerdo con
+# acreedores, art. 26.1) and 01509 (reversión de deterioros, DT 16ª.8) are taken off
+# 00547 before the límite is applied (manuals/sociedades/2022 L12844-12857, L12879), so
+# they raise the ceiling one for one. An entity that marks casilla 00072 (extinción de
+# la entidad) does not apply the límite in the period of its extinción, unless the
+# extinción comes from a reestructuración under Capítulo VII del Título VII
+# (manuals/sociedades/2022 L3010-3021, L12762-12769); this registry does not tell the
+# two apart, so the ceiling of such an entity is left without a value and the operator
+# states the compensation in casilla 00547 (the second argument of the outcome), never
+# defaulted.
 [[revisions."2022".formulas]]
 id = "modelo-200-bin-aplicada-maxima"
 target_casilla_id = "DP200013:bin-aplicada-maxima"
 expression = { op = "if_then_else", args = [
-    { op = "greater_than", args = [{ casilla_id = "00070" }, { literal = "0" }] },
-    { casilla_id = "00670" },
-    { op = "min", args = [
+    { op = "greater_than", args = [{ casilla_id = "00072" }, { literal = "0" }] },
+    { op = "unresolved_outcome", args = [{ text_literal = "m200-extincion-entidad-unsupported" }, { casilla_id = "DP200013:00547" }] },
+    { op = "if_then_else", args = [
+        { op = "greater_than", args = [{ casilla_id = "00070" }, { literal = "0" }] },
         { casilla_id = "00670" },
-        { op = "max", args = [
-            { parameter = "is.modelo-200.bin-compensacion-importe-minimo" },
-            { op = "percent", args = [{ casilla_id = "DP200013:00550" }, { literal = "70" }] },
+        { op = "min", args = [
+            { casilla_id = "00670" },
+            { op = "add", args = [
+                { op = "max", args = [
+                    { parameter = "is.modelo-200.bin-compensacion-importe-minimo" },
+                    { op = "percent", args = [
+                        { casilla_id = "DP200013:00550" },
+                        { op = "if_then_else", args = [
+                            { op = "greater_equal", args = [
+                                { binding = "modelo-200-profile-incn-prior-12-months" },
+                                { parameter = "is.modelo-200.bin-limite-da15-tramo-alto-incn-minimo" },
+                            ] },
+                            { parameter = "is.modelo-200.bin-limite-da15-tramo-alto-porcentaje" },
+                            { op = "if_then_else", args = [
+                                { op = "greater_equal", args = [
+                                    { binding = "modelo-200-profile-incn-prior-12-months" },
+                                    { parameter = "is.modelo-200.bin-limite-da15-tramo-medio-incn-minimo" },
+                                ] },
+                                { parameter = "is.modelo-200.bin-limite-da15-tramo-medio-porcentaje" },
+                                { parameter = "is.modelo-200.bin-limite-porcentaje-general" },
+                            ] },
+                        ] },
+                    ] },
+                ] },
+                { casilla_id = "DP200014:00545" },
+                { casilla_id = "01509" },
+            ] },
         ] },
     ] },
 ] }

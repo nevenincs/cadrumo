@@ -25,7 +25,7 @@ from collections.abc import Mapping
 from datetime import date
 from decimal import ROUND_CEILING, ROUND_HALF_UP, Decimal
 from enum import StrEnum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
 from ....core.casilla_id import CasillaId
 from ....core.decimal.constants import ONE, ZERO
@@ -77,6 +77,11 @@ class RegistryUnresolvedOutcomeReason(StrEnum):
     AUTONOMIC_DEDUCTION_UNSUMMED_BOX = "autonomic-deduction-unsummed-box"
     JOINT_RETURN_MEMBER_INCOME_UNAVAILABLE = "joint-return-member-income-unavailable"
     M200_TAX_REGIME_UNSUPPORTED = "m200-tax-regime-unsupported"
+    M200_EXTINCION_ENTIDAD_UNSUPPORTED = "m200-extincion-entidad-unsupported"
+
+
+OPERATOR_BOX_CONTEXT_KEY: Final = "operator_box"
+"""The context key of an unresolved outcome that names the box the operator states in its place."""
 
 
 class UnresolvedFormulaOutcomeError(RegistrySnapshotError):
