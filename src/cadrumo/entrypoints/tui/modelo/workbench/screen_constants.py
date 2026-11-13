@@ -13,7 +13,6 @@ from .....application.modelo.operation_shared import (
 )
 from .....application.modelo.work_form_header import ModeloFormDeadlineTone
 from .....application.modelo.work_form_next_step import ModeloFormNextAction
-from .....domain.modelos.verification_report import VerificationCompletenessStatus
 from ...components.theme import CADRUMO_CSS_TOKENS
 from .page_items import WorkbenchFilter
 
@@ -99,11 +98,6 @@ NEXT_KEYS: Final[Mapping[ModeloFormNextAction, str]] = {
 }
 FINDINGS_KEY: Final[str] = NEXT_KEYS[ModeloFormNextAction.RESOLVE]
 """The key the next-action line names when the findings list leads to what is left, whichever step it is."""
-CHECKED_LOCALE_KEYS: Final[Mapping[VerificationCompletenessStatus, str]] = {
-    VerificationCompletenessStatus.COMPLETE: "workspace.modelo.operation.checked.complete",
-    VerificationCompletenessStatus.INCOMPLETE: "workspace.modelo.operation.checked.incomplete",
-    VerificationCompletenessStatus.BLOCKED: "workspace.modelo.operation.checked.blocked",
-}
 DEADLINE_TONE_CLASSES: Final[Mapping[ModeloFormDeadlineTone, str]] = {
     ModeloFormDeadlineTone.NORMAL: "-normal",
     ModeloFormDeadlineTone.SOON: "-soon",

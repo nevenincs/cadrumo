@@ -59,7 +59,7 @@ from .reconciliation_sources import (
 from .verification_report_facts import granting_verification_report
 from .work_form_export_offer import ModeloFormExportOffer, ModeloFormReceipt, form_export_offer, form_receipt
 from .work_form_header import ModeloFormHeader, form_header, form_recorded
-from .work_form_issue_lines import ModeloFormIssueLine, ModeloFormVerdict, form_issue_lines, form_verdict
+from .work_form_issue_lines import ModeloFormIssueLine, ModeloFormVerdict, form_issue_lines
 from .work_form_next_step import ModeloFormNextStep, form_next_step, registry_grade_refusal
 from .work_form_service import ModeloWorkFormLoadV1, load_modelo_work_form, modelo_form_snapshot
 from .work_form_typing_effect import ModeloFormTypingEffect, form_typing_effects
@@ -237,8 +237,7 @@ class ModeloWorkbenchFormReadV1:
     @property
     def verdict(self) -> ModeloFormVerdict:
         """What the last check concluded, in the form's language."""
-        form = self.load.form
-        return form_verdict(form, form.language)
+        return self.load.journey.verdict
 
 
 def _work_unit(work_unit_id: str, *, bucket_id: str, ports: ModeloWorkbenchReadPorts) -> WorkUnit:

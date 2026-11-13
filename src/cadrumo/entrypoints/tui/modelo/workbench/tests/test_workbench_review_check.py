@@ -39,7 +39,11 @@ from ......application.modelo.work_form_models import (
     edit_address,
     revised_field,
 )
-from ......application.modelo.work_form_service import ModeloWorkFormLoadV1, modelo_work_form_changes
+from ......application.modelo.work_form_service import (
+    ModeloWorkFormLoadV1,
+    modelo_work_form_changes,
+    modelo_work_form_load,
+)
 from ......application.modelo.work_form_wording import editability_text
 from ......core.aggregation import BindingSourceKind
 from ......core.config import override_settings
@@ -271,7 +275,7 @@ class _MovingReader(FakeReader):
     def load(self, language: OutputLanguage) -> ModeloWorkFormLoadV1:
         self.loads += 1
         form = self.form if self.loads == 1 else self.later
-        return ModeloWorkFormLoadV1(form=form, verified=False, filed=False)
+        return modelo_work_form_load(form, verified=False, filed=False)
 
 
 @dataclass
