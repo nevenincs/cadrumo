@@ -5493,8 +5493,8 @@ filing:
     records_turnover_source:
       annual_accounts: az éves beszámolód
       corporation_tax_return: a társasági adóbevallásod
+      declaraciones_iva: az áfabevallásaid
       operator_estimate: a saját becslésed
-      vat_returns: az áfabevallásaid
   validation:
     deadline_missed: A benyújtási határidő lejárt.
     formula_divergence: Eltérés a képletszámításban.

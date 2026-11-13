@@ -143,7 +143,7 @@ class Modelo232TurnoverSource(StrEnum):
 
     ANNUAL_ACCOUNTS = "annual_accounts"
     CORPORATION_TAX_RETURN = "corporation_tax_return"
-    VAT_RETURNS = "vat_returns"
+    DECLARACIONES_IVA = "declaraciones_iva"
     OPERATOR_ESTIMATE = "operator_estimate"
 
 
