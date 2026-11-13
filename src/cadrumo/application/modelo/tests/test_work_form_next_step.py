@@ -262,3 +262,19 @@ def test_a_missing_finding_beside_an_ungated_missing_note_still_leads_to_filling
 
     assert step.action is ModeloFormNextAction.FILL
     assert step.findings_lead
+
+
+def test_an_assumed_value_the_editor_withholds_the_file_on_keeps_its_place_ahead_of_the_check(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    assumed = _calculated(built_form(operation, "210", 2025, "0A", held=_HELD, entered=frozenset({_KIND})))
+
+    assert form_next_step(assumed, verified=False, filed=False).action is ModeloFormNextAction.CONFIRM
+    ungated = assumed.model_copy(
+        update={"calculation_notes": (_missing_note("settlement_not_computed", withholds_filing=False),)}
+    )
+    gated = assumed.model_copy(
+        update={"calculation_notes": (_missing_note("household_rows_incomplete", withholds_filing=True),)}
+    )
+    for form in (ungated, gated):
+        assert form_next_step(form, verified=False, filed=False).action is ModeloFormNextAction.CONFIRM
