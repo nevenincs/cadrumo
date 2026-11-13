@@ -208,3 +208,57 @@ def test_a_retained_prerequisite_makes_resolving_it_the_one_step_from_the_findin
             True,
             False,
         ), action
+
+
+def _missing_note(reason: str, *, withholds_filing: bool) -> ModeloFormCalculationNote:
+    assert CALCULATION_NOTE_ATTENTION[reason] is ModeloFormAttention.MISSING
+    return ModeloFormCalculationNote(
+        reason=reason, attention=ModeloFormAttention.MISSING, withholds_filing=withholds_filing
+    )
+
+
+def test_a_missing_note_no_gate_refuses_on_leads_to_the_check_and_stays_in_the_count(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    form = _calculated(
+        _entered(operation), calculation_notes=(_missing_note("settlement_not_computed", withholds_filing=False),)
+    )
+
+    step = form_next_step(form, verified=False, filed=False)
+
+    assert (step.action, step.count, step.findings_lead) == (ModeloFormNextAction.VERIFY, 0, False)
+    assert missing_count(form) == 1
+    assert blocking_count(form) == 0
+
+
+def test_a_missing_note_the_gate_withholds_filing_on_never_leads_to_the_check(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    gated = _missing_note("household_rows_incomplete", withholds_filing=True)
+    ungated = _missing_note("settlement_not_computed", withholds_filing=False)
+
+    for notes in ((gated,), (ungated, gated)):
+        form = _calculated(_entered(operation), calculation_notes=notes)
+        step = form_next_step(form, verified=False, filed=False)
+        assert step.action is not ModeloFormNextAction.VERIFY, notes
+        assert step.action is ModeloFormNextAction.RESOLVE, notes
+
+
+def test_a_missing_finding_beside_an_ungated_missing_note_still_leads_to_filling(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    missing = ModeloVerificationFinding(
+        kind=ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA,
+        severity=ModeloVerificationFindingSeverity.BLOCKING,
+        message_locale_key="application.modelo.findings.missing_required_casilla",
+        legal_refs=("ley-58-2003:art-119",),
+    )
+    form = _calculated(
+        built_form(operation, "210", 2025, "0A", held=_HELD, entered=frozenset(_HELD), findings=(missing,)),
+        calculation_notes=(_missing_note("settlement_not_computed", withholds_filing=False),),
+    )
+
+    step = form_next_step(form, verified=False, filed=False)
+
+    assert step.action is ModeloFormNextAction.FILL
+    assert step.findings_lead
