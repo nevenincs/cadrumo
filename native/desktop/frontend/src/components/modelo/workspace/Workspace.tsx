@@ -332,7 +332,9 @@ export function ModeloWorkspace({
   ) : null;
 
   return (
-    <div className="@container flex h-full min-h-0 flex-col bg-background">
+    // Too short for the header, the tabs and the form's least room, the
+    // workspace scrolls as a whole rather than clipping what does not fit.
+    <div className="@container flex h-full min-h-0 flex-col overflow-y-auto bg-background">
       <header className="flex flex-wrap items-center gap-x-8 gap-y-3 px-6 pt-3 pb-3">
         <div className="flex min-w-0 flex-col gap-1">
           <Button
@@ -464,11 +466,13 @@ export function ModeloWorkspace({
             {slots.rail}
           </aside>
           <div className="flex min-h-0 min-w-0 flex-col @6xl:contents">
-            <div className="flex min-h-0 min-w-0 flex-1 flex-col @6xl:col-start-2 @6xl:row-start-1">
+            {/* Stacked, the details under the form give way to the form's
+                least room: its toolbar, page tabs and a few boxes. */}
+            <div className="flex min-h-60 min-w-0 flex-1 flex-col @6xl:col-start-2 @6xl:row-start-1 @6xl:min-h-0">
               {slots.form}
             </div>
             {detailsOpen && slots.details && (
-              <aside className="h-2/5 min-h-0 min-w-0 flex-none overflow-y-auto border-t border-border bg-card @6xl:col-start-3 @6xl:row-span-2 @6xl:row-start-1 @6xl:h-auto @6xl:border-t-0 @6xl:border-l">
+              <aside className="h-2/5 min-h-0 min-w-0 shrink overflow-y-auto border-t border-border bg-card @6xl:col-start-3 @6xl:row-span-2 @6xl:row-start-1 @6xl:h-auto @6xl:border-t-0 @6xl:border-l">
                 {slots.details}
               </aside>
             )}
