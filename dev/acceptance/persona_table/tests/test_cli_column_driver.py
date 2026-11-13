@@ -110,6 +110,8 @@ class _Scripted:
             return _ok(attachment_id="att-1", sha256="ab" * 32)
         if key == "calculate":
             return _ok(calculation_revision_id=f"rev-{command[4]}", casilla_values={"01": "10.50", "02": "0"})
+        if key == "revision":
+            return _ok(calculation_revision_id=command[4], casilla_values={"01": "10.50", "02": "0"})
         if key == "verify":
             return _ok(granted_verificado_completo=True, findings=[])
         if key == "export":
@@ -434,8 +436,9 @@ def _stated(kind: StatementKind, phase: Phase, target: str = "", value: str = ""
     return Statement(kind, phase, target=target, value=value)
 
 
-def _applying(_command: Sequence[str]) -> Mapping[str, object]:
-    return _ok(applied=True, receipt_id="r-1")
+def _applying(command: Sequence[str]) -> Mapping[str, object]:
+    """An applied statement, whose edit printed the calculation it made, named by the statement's command."""
+    return _ok(applied=True, receipt_id="r-1", calculation_revision_id=f"rev-{command[3]}")
 
 
 _STATEMENT_COMMANDS: dict[str, _Handler] = {
@@ -470,16 +473,20 @@ def test_a_returns_statements_are_made_around_its_calculation_in_the_tables_orde
         "work attest-prior-carries",
         "work attest-prior-value",
         "work set-value",
-        "work calculate",
+        "work revision",
         "work attest-prior-value",
         "work attest-work-income",
-        "work calculate",
+        "work revision",
         "work attest-no-amount",
-        "work calculate",
+        "work revision",
         "work verify",
         "export",
         "work file",
     ]
+    revisions = [command[4] for command in runner.sent if command[3] in {"revision", "verify", "file"}]
+    assert (
+        revisions == ["rev-set-value", "rev-attest-work-income", "rev-attest-no-amount"] + ["rev-attest-no-amount"] * 2
+    )
     (line,) = _lines(tmp_path)
     assert (line["calculate"], line["verify"], line["export"], line["file"]) == ("pass", "pass", "pass", "pass")
     for made in (
@@ -492,7 +499,7 @@ def test_a_returns_statements_are_made_around_its_calculation_in_the_tables_orde
         assert made in str(line["reason"])
 
 
-def test_the_statements_before_the_calculation_precede_a_modelo_303_annual_attestation(tmp_path: Path) -> None:
+def test_a_modelo_303_with_statements_sends_no_calculate_that_would_drop_them(tmp_path: Path) -> None:
     statements = (
         _stated(StatementKind.PRIOR_VALUE, Phase.BEFORE_EVIDENCE, "bind-prior", "5"),
         _stated(StatementKind.WORK_INPUT, Phase.AT_CALCULATION, "00501", "7"),
@@ -502,13 +509,15 @@ def test_the_statements_before_the_calculation_precede_a_modelo_303_annual_attes
 
     run_case(_case(tmp_path, report, runner), select_rows(report))
 
-    assert runner.keys()[:5] == [
+    assert runner.keys() == [
         "work create",
         "work attest-prior-value",
         "work attest-m303-exonerado-390",
         "work set-value",
-        "work calculate",
     ]
+    (line,) = _lines(tmp_path)
+    assert line["calculate"] == "error"
+    assert "calculate carries the Modelo 303 evidence but drops the statements made" in str(line["reason"])
 
 
 def test_a_return_is_calculated_again_only_after_a_phase_that_applied_a_statement(tmp_path: Path) -> None:

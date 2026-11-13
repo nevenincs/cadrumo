@@ -33,6 +33,14 @@ from .intake import (
 from .world_report import Phase, ReturnKey, RowPlan, Statement, StatementKind, WorldReport
 
 FILING_NOTE = "Synthetic local pending filing only; not sent to AEAT"
+READ_BACK = "revision"
+"""The step that reads the calculation a statement's own edit made, where the table calculates again after it.
+
+The table's calculation replays the head (``caller_context`` ``replay_head``, the request's default), so the
+statements the edits recorded stay in it. ``aeat app modelo work calculate`` always sends ``explicit`` with the inputs
+on its command line, which replaces those statements with none; the edit that made the last statement already
+calculated the declaration with every statement in force, so its revision is read instead.
+"""
 _M303 = "303"
 _WORK = ("app", "modelo", "work")
 
@@ -195,10 +203,15 @@ def _created(case: Case, plan: RowPlan) -> str | StageResult:
 
 @dataclass(slots=True)
 class _Stated:
-    """What the statements of one return did: the words that report them, and whether the latest phase applied any."""
+    """What the statements of one return did: the words that report them, and what the last applied one calculated.
+
+    ``applied`` holds whether a statement was applied since the return was last calculated, and ``revision`` the
+    calculation the last applied statement's edit printed.
+    """
 
     notes: list[str] = field(default_factory=list)
     applied: bool = False
+    revision: str | None = None
 
     def noted(self, stage: StageResult) -> StageResult:
         """``stage`` with the statements made named in its reason."""
@@ -225,7 +238,8 @@ def _made(case: Case, statement: Statement, work_unit_id: str, stated: _Stated) 
     outcome = _step(case, label, statement_args(statement, work_unit_id))
     if outcome.kind is Kind.OK:
         applied = outcome.result.get("applied") is True
-        stated.applied = stated.applied or applied
+        if applied:
+            stated.applied, stated.revision = True, _printed(outcome, "calculation_revision_id")
         stated.notes.append(f"{label} {'applied' if applied else 'not applied'}")
         return None
     if outcome.kind is Kind.REFUSED and not DOORS[statement.kind].required:
@@ -236,7 +250,6 @@ def _made(case: Case, statement: Statement, work_unit_id: str, stated: _Stated) 
 
 def _state(case: Case, plan: RowPlan, work_unit_id: str, phase: Phase, stated: _Stated) -> StageResult | None:
     """Make the statements of ``phase`` in the table's order; the stage that ended the return, or ``None``."""
-    stated.applied = False
     for statement in plan.statements:
         if statement.phase is phase and (ended := _made(case, statement, work_unit_id, stated)) is not None:
             return ended
@@ -252,19 +265,36 @@ def _prepared(case: Case, plan: RowPlan, work_unit_id: str, stated: _Stated) -> 
     return _state(case, plan, work_unit_id, Phase.AT_CALCULATION, stated) or evidence
 
 
+def _calculation(case: Case, work_unit_id: str, evidence: list[str], stated: _Stated) -> Outcome | StageResult:
+    """Where the table calculates: the ``calculate`` command, or the calculation the last applied statement made.
+
+    ``calculate`` keeps no statement an edit recorded (see :data:`READ_BACK`), so once a statement was applied the
+    revision its edit printed is read instead. The Modelo 303 evidence travels only on ``calculate``, so a return that
+    needs it and holds an applied statement cannot be calculated the table's way and ends here.
+    """
+    if not stated.applied:
+        return _step(case, "calculate", [*_WORK, "calculate", work_unit_id, *evidence, "--by", case.report.actor])
+    stated.applied = False
+    if evidence:
+        return StageResult("error", reason="calculate carries the Modelo 303 evidence but drops the statements made")
+    if stated.revision is None:
+        return StageResult("error", reason="the statement applied printed no calculation_revision_id")
+    stated.notes.append(f"calculation read with {READ_BACK}: calculate keeps no statement")
+    return _step(case, READ_BACK, [*_WORK, READ_BACK, stated.revision])
+
+
 def _calculated(
     case: Case, plan: RowPlan, work_unit_id: str, evidence: list[str], stated: _Stated
 ) -> Outcome | StageResult:
     """Calculate, state what follows the calculation, and calculate again after each phase that applied a statement."""
-    args = [*_WORK, "calculate", work_unit_id, *evidence, "--by", case.report.actor]
-    outcome = _step(case, "calculate", args)
+    outcome = _calculation(case, work_unit_id, evidence, stated)
     for phase in (Phase.AFTER_CALCULATION, Phase.AFTER_RECALCULATION):
-        if outcome.kind is not Kind.OK:
+        if isinstance(outcome, StageResult) or outcome.kind is not Kind.OK:
             return outcome
         if (ended := _state(case, plan, work_unit_id, phase, stated)) is not None:
             return ended
         if stated.applied:
-            outcome = _step(case, "calculate", args)
+            outcome = _calculation(case, work_unit_id, evidence, stated)
     return outcome
 
 
