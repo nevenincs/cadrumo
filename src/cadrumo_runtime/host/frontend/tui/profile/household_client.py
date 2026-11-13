@@ -1,7 +1,9 @@
 """The household doors of the profile manager over one exact authenticated client session.
 
 The household is read from the ``family_rows`` stream of the profile view and
-assembled as served: each group followed by the rows that belong to it. A change
+assembled as served: each group followed by the rows that belong to it. The asks of
+a new person's unsaved answers are read from the same view, resolved by the
+backend, never by the screen. A change
 is one served add or remove control's registered operation: the add states one
 new person and the remove the ``row_index`` a read served, each against the
 revision the screen read, and neither resends anyone else.
@@ -16,7 +18,11 @@ from uuid import UUID
 from cadrumo.application.user_profile.ascendant_rows import ProfileAscendantFact, ProfileAscendantRow
 from cadrumo.application.user_profile.descendant_rows import ProfileDescendantFact, ProfileDescendantRow
 from cadrumo.application.user_profile.family_question import ProfileViewFamilyQuestionItem
-from cadrumo.application.user_profile.family_rows import ProfileViewFamilyGroupItem, ProfileViewFamilyRowItem
+from cadrumo.application.user_profile.family_rows import (
+    ProfileFamilyLeafAskEntry,
+    ProfileViewFamilyGroupItem,
+    ProfileViewFamilyRowItem,
+)
 from cadrumo.application.user_profile.profile_operation_contracts import (
     PROFILE_ASCENDANTS_OPERATION_DEFINITION_ID,
     PROFILE_DESCENDANTS_OPERATION_DEFINITION_ID,
@@ -139,6 +145,15 @@ class HouseholdClient:
         if collection.profile_id != self._client.profile_id:
             raise RefusalError(RefusalCode.INVALID_FRAME)
         return household_from_collection(collection)
+
+    def read_draft(self, group_key: str, answers: Mapping[str, str], /) -> tuple[ProfileFamilyLeafAskEntry, ...]:
+        """Read which leaves one unsaved row of ``group_key`` is asked, as the backend resolves them."""
+        self._pin()
+        item = self._client.read_household_draft(group_key, answers, output_language=self._language())
+        self._pin()
+        if item.group_key != group_key:
+            raise RefusalError(RefusalCode.INVALID_FRAME)
+        return item.leaf_asks
 
     def change(self, change: HouseholdRowChange, /) -> HouseholdView:
         """Submit one served add or remove, then read the household as storage now holds it.

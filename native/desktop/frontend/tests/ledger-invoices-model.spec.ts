@@ -7,10 +7,10 @@ import { expect, test } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { readLocaleDecimal } from "../src/shared/numbers";
 import type {
-  CatalogueInvoice,
   InvoicePreviewRequest,
   InvoicePreviewResult,
 } from "../src/shell/ledgerInvoiceOperations";
+import type { CatalogueInvoiceSnapshot } from "../src/shell/ledgerInvoiceContract";
 import {
   InvoicePreviewSession,
   type PreviewReply,
@@ -59,7 +59,9 @@ const answer = (name: string) => recorded[name]!.result;
 /** The counterparty's tax id the recorded drafts were asked with. */
 const RECORDED_TAX_ID = recorded.two_lines!.request.counterparty_tax_id!;
 
-function invoice(facts: Partial<CatalogueInvoice> = {}): CatalogueInvoice {
+function invoice(
+  facts: Partial<CatalogueInvoiceSnapshot> = {},
+): CatalogueInvoiceSnapshot {
   return {
     invoice_id: "a".repeat(64),
     bucket_id: null,
@@ -98,6 +100,7 @@ function invoice(facts: Partial<CatalogueInvoice> = {}): CatalogueInvoice {
     grand_total_eur: null,
     referencia_catastral: null,
     settlement_amount: { decimal: "1210.00" },
+    documents: [],
     ...facts,
   };
 }
@@ -947,7 +950,7 @@ test("the catalogue filters by kind, class, payment, links, period and words", (
       linked_transaction_ids: ["f".repeat(64)],
     }),
   ];
-  const ids = (found: CatalogueInvoice[]) =>
+  const ids = (found: CatalogueInvoiceSnapshot[]) =>
     found.map((item) => item.invoice_number);
   expect(
     ids(filterCatalogue(catalogue, { ...NO_FILTER, kind: "received" })),

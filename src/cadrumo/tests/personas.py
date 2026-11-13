@@ -554,6 +554,12 @@ class AttestedPriorValue:
     value per binding naming each source it stands in for. ``derivation`` and
     ``legal_ref`` record where the figure comes from; the operation does not
     receive them.
+
+    A binding the return's selected edition does not declare is refused as a
+    stale or misspelt statement. ``where_declared`` states the figure only for
+    the returns whose edition declares the binding, for a figure the persona
+    holds across editions of which only some read it; the other editions skip
+    the entry without a refusal.
     """
 
     modelo: str
@@ -564,6 +570,7 @@ class AttestedPriorValue:
     sources: tuple[PriorValueSource, ...]
     derivation: str
     legal_ref: tuple[str, ...]
+    where_declared: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -1641,6 +1648,7 @@ def _attested_prior_value(table: _Table, where: str) -> AttestedPriorValue:
         table,
         where,
         required=frozenset({"modelo", "period", "year", "binding", "value", "sources", "derivation", "legal_ref"}),
+        optional=frozenset({"where_declared"}),
     )
     sources = tuple(
         _prior_value_source(source, f"{where}.sources[{index}]")
@@ -1665,6 +1673,7 @@ def _attested_prior_value(table: _Table, where: str) -> AttestedPriorValue:
         sources=sources,
         derivation=_string(table, "derivation", where),
         legal_ref=legal_ref,
+        where_declared=_bool(table, "where_declared", where) if "where_declared" in table else False,
     )
 
 

@@ -10,9 +10,9 @@
 // that was not recorded is answered as incomplete.
 
 import type {
-  CatalogueInvoice,
-  CatalogueInvoiceLine,
-} from "../shell/ledgerInvoiceOperations";
+  CatalogueInvoiceSnapshot,
+  InvoiceLineSnapshot,
+} from "../shell/ledgerInvoiceContract";
 import type { JsonObject, JsonValue } from "../shell/ledger";
 import {
   INVOICE_UPDATE_FIELDS,
@@ -290,7 +290,7 @@ export function invoiceOperations(ledger: FixtureLedger, tools: Tools) {
   function lookup(
     selector: string,
   ):
-    | { kind: "found"; invoice: CatalogueInvoice }
+    | { kind: "found"; invoice: CatalogueInvoiceSnapshot }
     | { kind: "refused"; reason: string; candidates: string[] } {
     const prefix = selector.trim().toLowerCase();
     if (!prefix) return { kind: "refused", reason: "required", candidates: [] };
@@ -309,7 +309,7 @@ export function invoiceOperations(ledger: FixtureLedger, tools: Tools) {
 
   /** What the invoice model refuses: totals, retención, recargo and the
    * class's own facts. */
-  function holds(invoice: CatalogueInvoice): boolean {
+  function holds(invoice: CatalogueInvoiceSnapshot): boolean {
     const base = units(invoice.base_total.decimal);
     const iva = units(invoice.iva_total.decimal);
     const rectificativa = invoice.invoice_class === "RECTIFICATIVA";
@@ -355,12 +355,9 @@ export function invoiceOperations(ledger: FixtureLedger, tools: Tools) {
     if (!currency || currency.length > 16) invalid();
     const operationDate = text(request.operation_date);
     if (operationDate !== null && !DATE.test(operationDate)) invalid();
-    const operationType = text(request.operation_type);
-    if (
-      operationType !== null &&
-      !(OPERATION_TYPES as readonly string[]).includes(operationType)
-    )
-      invalid();
+    const stated = text(request.operation_type);
+    const operationType = OPERATION_TYPES.find((key) => key === stated) ?? null;
+    if (stated !== null && operationType === null) invalid();
     const lines = request.lines ?? [];
     if (!Array.isArray(lines)) invalid();
     const base = decimal(request.taxable_base);
@@ -370,7 +367,7 @@ export function invoiceOperations(ledger: FixtureLedger, tools: Tools) {
     )
       invalid();
     if ((lines as JsonValue[]).length === 0 && base === null) invalid();
-    const parsed = (lines as JsonValue[]).map((raw): CatalogueInvoiceLine => {
+    const parsed = (lines as JsonValue[]).map((raw): InvoiceLineSnapshot => {
       if (
         !isObject(raw) ||
         Object.keys(raw).some((key) => !LINE_FIELDS.has(key))
@@ -419,7 +416,7 @@ export function invoiceOperations(ledger: FixtureLedger, tools: Tools) {
     const referencia = isObject(lease)
       ? text(lease.referencia_catastral)?.trim().toUpperCase()
       : undefined;
-    const invoice: CatalogueInvoice = {
+    const invoice: CatalogueInvoiceSnapshot = {
       invoice_id:
         previewedIds.get(identity(kind, number, issued)) ??
         hex64(
@@ -433,7 +430,7 @@ export function invoiceOperations(ledger: FixtureLedger, tools: Tools) {
           ]),
         ),
       bucket_id: profileId,
-      kind: kind as CatalogueInvoice["kind"],
+      kind: kind as CatalogueInvoiceSnapshot["kind"],
       invoice_number: number,
       issued_at: issued,
       counterparty_name: name,
@@ -475,6 +472,7 @@ export function invoiceOperations(ledger: FixtureLedger, tools: Tools) {
         textOf(total),
         request.retention_amount ? decimal(request.retention_amount)! : null,
       ),
+      documents: [],
     };
     if (!holds(invoice)) refuseAdd("invalid_invoice");
     // The identity is the kind, number, issue date, tax id, currency and
@@ -546,7 +544,7 @@ export function invoiceOperations(ledger: FixtureLedger, tools: Tools) {
       found.invoice.grand_total.decimal,
       (next.retention_amount as { decimal: string } | null)?.decimal ?? null,
     );
-    const corrected = next as unknown as CatalogueInvoice;
+    const corrected = next as unknown as CatalogueInvoiceSnapshot;
     if (
       corrected.counterparty_name === null ||
       corrected.counterparty_country === null ||

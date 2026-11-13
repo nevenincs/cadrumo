@@ -8,7 +8,7 @@
 import type { Suggestion } from "@/components/ui/suggestions";
 import { countryName, currencyName } from "../../../shared/codeNames";
 import { formatDay } from "../../../shared/dateFormats";
-import type { CatalogueInvoice } from "../../../shell/ledgerInvoiceOperations";
+import type { CatalogueInvoiceSnapshot } from "../../../shell/ledgerInvoiceContract";
 import type {
   KnownCounterparty,
   KnownText,
@@ -27,7 +27,7 @@ const fold = (text: string) =>
     .replace(/\s+/g, " ")
     .trim();
 
-const newestFirst = (invoices: readonly CatalogueInvoice[]) =>
+const newestFirst = (invoices: readonly CatalogueInvoiceSnapshot[]) =>
   [...invoices].sort((left, right) =>
     right.issued_at.localeCompare(left.issued_at),
   );
@@ -60,7 +60,7 @@ type Party = {
 
 /** The catalogue's parties, one per tax id, or per name where none is held. A
  * name under two tax ids stays two parties: they are never merged. */
-function parties(invoices: readonly CatalogueInvoice[]): Party[] {
+function parties(invoices: readonly CatalogueInvoiceSnapshot[]): Party[] {
   const seen = new Map<string, Party>();
   for (const invoice of invoices) {
     const taxId = invoice.counterparty_tax_id?.trim().toUpperCase() || null;
@@ -88,8 +88,8 @@ const partyNote = (party: Party) =>
 
 /** Counterparty names; the tax id finds one too, and tells two apart. */
 export function partyNameOptions(
-  invoices: readonly CatalogueInvoice[],
-  scope: { kind?: CatalogueInvoice["kind"] | null } = {},
+  invoices: readonly CatalogueInvoiceSnapshot[],
+  scope: { kind?: CatalogueInvoiceSnapshot["kind"] | null } = {},
 ): Suggestion[] {
   const pool = firstThose(
     newestFirst(invoices),
@@ -112,8 +112,8 @@ export function partyNameOptions(
 
 /** Counterparty tax ids; the name finds one too. */
 export function partyTaxIdOptions(
-  invoices: readonly CatalogueInvoice[],
-  scope: { kind?: CatalogueInvoice["kind"] | null } = {},
+  invoices: readonly CatalogueInvoiceSnapshot[],
+  scope: { kind?: CatalogueInvoiceSnapshot["kind"] | null } = {},
 ): Suggestion[] {
   const pool = firstThose(
     newestFirst(invoices),
@@ -136,7 +136,7 @@ export function partyTaxIdOptions(
 
 /** Invoice line descriptions, this party's first. */
 export function lineDescriptionOptions(
-  invoices: readonly CatalogueInvoice[],
+  invoices: readonly CatalogueInvoiceSnapshot[],
   party = "",
 ): Suggestion[] {
   const wanted = fold(party);
@@ -153,8 +153,11 @@ export function lineDescriptionOptions(
 
 /** Series in use, of the same kind and class first. */
 export function seriesOptions(
-  invoices: readonly CatalogueInvoice[],
-  scope: { kind?: CatalogueInvoice["kind"] | null; invoiceClass?: string },
+  invoices: readonly CatalogueInvoiceSnapshot[],
+  scope: {
+    kind?: CatalogueInvoiceSnapshot["kind"] | null;
+    invoiceClass?: string;
+  },
 ): Suggestion[] {
   const pool = firstThose(
     newestFirst(invoices),
@@ -165,7 +168,7 @@ export function seriesOptions(
   return plainOptions(distinctText(pool.map((invoice) => invoice.series)));
 }
 
-const invoiceNote = (invoice: CatalogueInvoice, locale: string) =>
+const invoiceNote = (invoice: CatalogueInvoiceSnapshot, locale: string) =>
   [
     invoice.issued_at && formatDay(locale, invoice.issued_at),
     invoice.counterparty_name,
@@ -177,12 +180,12 @@ const invoiceNote = (invoice: CatalogueInvoice, locale: string) =>
  * the invoice's party; a rectificativa keeps its own series, so none is
  * offered. */
 export function invoiceNumberOptions(
-  invoices: readonly CatalogueInvoice[],
-  scope: { kind?: CatalogueInvoice["kind"] | null; party?: string },
+  invoices: readonly CatalogueInvoiceSnapshot[],
+  scope: { kind?: CatalogueInvoiceSnapshot["kind"] | null; party?: string },
   locale: string,
 ): Suggestion[] {
   const wanted = fold(scope.party ?? "");
-  const sameParty = (invoice: CatalogueInvoice) =>
+  const sameParty = (invoice: CatalogueInvoiceSnapshot) =>
     wanted !== "" && fold(invoice.counterparty_name) === wanted;
   const pool = firstThose(
     firstThose(newestFirst(invoices), (invoice) => invoice.kind === scope.kind),
@@ -276,7 +279,7 @@ export function descriptionOptions(
  * along as fills; a tax id only tells two apart, as a movement states none. */
 export function counterpartyOptions(
   rows: readonly LedgerRow[],
-  invoices: readonly CatalogueInvoice[] | null,
+  invoices: readonly CatalogueInvoiceSnapshot[] | null,
   staged: readonly string[] = [],
   known: readonly KnownCounterparty[] = [],
 ): Suggestion[] {
@@ -395,8 +398,8 @@ export function emptyFills<Field extends string>(
 
 /** Series in use, this party's first and then those of the same kind. */
 export function partySeriesOptions(
-  invoices: readonly CatalogueInvoice[],
-  scope: { kind?: CatalogueInvoice["kind"] | null; party?: string },
+  invoices: readonly CatalogueInvoiceSnapshot[],
+  scope: { kind?: CatalogueInvoiceSnapshot["kind"] | null; party?: string },
 ): Suggestion[] {
   const wanted = fold(scope.party ?? "");
   const pool = firstThose(
@@ -408,7 +411,7 @@ export function partySeriesOptions(
 
 /** Countries named by the catalogue, the most used first. */
 export const invoiceCountryOptions = (
-  invoices: readonly CatalogueInvoice[],
+  invoices: readonly CatalogueInvoiceSnapshot[],
   locale: string,
   served?: readonly string[] | null,
 ): Suggestion[] =>
@@ -420,7 +423,7 @@ export const invoiceCountryOptions = (
 
 /** Currencies named by the catalogue, the most used first. */
 export const invoiceCurrencyOptions = (
-  invoices: readonly CatalogueInvoice[],
+  invoices: readonly CatalogueInvoiceSnapshot[],
   locale: string,
   served?: readonly string[] | null,
 ): Suggestion[] =>
@@ -432,7 +435,7 @@ export const invoiceCurrencyOptions = (
 
 /** Cadastral references the catalogue's leases already record, newest first. */
 export const referenciaCatastralOptions = (
-  invoices: readonly CatalogueInvoice[],
+  invoices: readonly CatalogueInvoiceSnapshot[],
 ): Suggestion[] =>
   plainOptions(
     distinctText(newestFirst(invoices).map((i) => i.referencia_catastral)),

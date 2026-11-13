@@ -6,10 +6,10 @@
 // NIF-shaped value is invented.
 
 import type {
-  CatalogueInvoice,
-  CatalogueInvoiceLine,
+  CatalogueInvoiceSnapshot,
+  InvoiceLineSnapshot,
   InvoiceKind,
-} from "../../shell/ledgerInvoiceOperations";
+} from "../../shell/ledgerInvoiceContract";
 import type { PaymentStatus } from "../../shell/ledgerContract";
 import { settlementOf } from "../ledgerSettlement";
 import { fixtureDay } from "@/dev/fixtureDates";
@@ -41,7 +41,7 @@ const line = ([
   subtotal,
   rate,
   category,
-]: Example["lines"][number]): CatalogueInvoiceLine => {
+]: Example["lines"][number]): InvoiceLineSnapshot => {
   const fraction = rate === "RATE_21" ? 21n : rate === "RATE_10" ? 10n : 0n;
   const ivaCents = (BigInt(subtotal.replace(".", "")) * fraction + 50n) / 100n;
   return {
@@ -183,7 +183,7 @@ const EXAMPLES: Example[] = [
 /** The examples, as the catalogue snapshots them. */
 export function exampleInvoices(
   hex64: (text: string) => string,
-): CatalogueInvoice[] {
+): CatalogueInvoiceSnapshot[] {
   return EXAMPLES.map((example) => {
     const lines = example.lines.map(line);
     const base = sum(lines.map((found) => found.subtotal.decimal));
@@ -233,6 +233,7 @@ export function exampleInvoices(
         sum([base, iva]),
         example.retention ? example.retention[1] : null,
       ),
+      documents: [],
     };
   });
 }

@@ -6,16 +6,16 @@
 
 import { sameDecimal } from "../shell/ledgerGrammar";
 import type {
-  CatalogueInvoice,
   LedgerInvoiceDuplicateRequest,
   LedgerInvoiceDuplicateResult,
 } from "../shell/ledgerInvoiceOperations";
+import type { CatalogueInvoiceSnapshot } from "../shell/ledgerInvoiceContract";
 
 const folded = (text: string | null | undefined) =>
   (text ?? "").toUpperCase().replace(/[^A-Z0-9]+/g, "");
 
 type Stored = Pick<
-  CatalogueInvoice,
+  CatalogueInvoiceSnapshot,
   "invoice_id" | "kind" | "invoice_number" | "counterparty_tax_id" | "issued_at"
 > & { grand_total: { decimal: string } };
 

@@ -15,11 +15,16 @@ import type {
   ModeloVerificationFindingKind,
   ModeloVerificationFindingSeverity,
   OutputLanguage,
+  PreconditionVerdictSnapshot,
   PublicPeriod,
   RegistryAuthorityGrade,
   ResultDisposition,
   VerificationCompletenessStatus,
 } from "./modelo";
+import type {
+  ModeloEditBindingIntentKind,
+  ModeloFormBindingAddressV1,
+} from "./modeloEditWork";
 import type { SourceSurface } from "./modeloWork";
 import type {
   FormLayoutSeedSource,
@@ -33,9 +38,14 @@ import type {
   ModeloFormEditClosure,
   ModeloFormExport,
   ModeloFormFiling,
+  ModeloFormGridColumn,
   ModeloFormInspectionReason,
+  ModeloFormJourney,
   ModeloFormLayoutProvenance,
   ModeloFormOutlineGroup,
+  ModeloFormPriorValueRefusal,
+  ModeloFormPriorValueWithdrawal,
+  ModeloFormRateUnit,
   ModeloFormResultDirection,
   ModeloFormSourceGroup,
   ModeloFormText,
@@ -48,8 +58,62 @@ import type {
   PublicModeloFormField,
   PublicModeloFormIssue,
   PublicModeloFormPage,
-  PublicModeloFormPriorValueAttestation,
 } from "./modeloWorkForm";
+
+/**
+ * Typed local-human workbench view of ModeloFormPriorValueAttestation.
+ */
+export type PublicModeloFormPriorValueAttestation = {
+  binding_id: string;
+  edit_address: ModeloFormBindingAddressV1;
+  intent: ModeloEditBindingIntentKind;
+  family_id: string;
+  earlier_filings: PublicModeloFormEarlierFiling[];
+  source_words: string;
+  action_words: string;
+  statement_words: string;
+  effect_words: string;
+  stated: boolean;
+  admitted: boolean;
+  refusal_reason: ModeloFormPriorValueRefusal | null;
+  refusal_words: string | null;
+  refusal: PreconditionVerdictSnapshot | null;
+  withdrawal: ModeloFormPriorValueWithdrawal | null;
+};
+
+/**
+ * Typed local-human workbench view of ModeloFormRate; the ratio keeps its
+ * exact decimal text.
+ */
+export type PublicModeloFormRate = {
+  ratio: string;
+  unit: ModeloFormRateUnit;
+  binding_id: string;
+};
+
+/**
+ * Typed local-human workbench view of ModeloFormRepeatingBlock.
+ */
+export type PublicModeloFormRepeatingBlock = {
+  kind: "repeating";
+  id: string;
+  columns: ModeloFormGridColumn[];
+  column_casilla_ids: (string | null)[];
+  column_data_types: string[];
+  min_rows: number;
+  max_rows: number | null;
+  rows_known: boolean;
+  rows: PublicModeloFormRepeatingRow[];
+};
+
+/**
+ * Typed local-human workbench view of ModeloFormRepeatingRow.
+ */
+export type PublicModeloFormRepeatingRow = {
+  index: number;
+  values: (PublicScalarValueV1 | null)[];
+  value_texts: (string | null)[];
+};
 
 /**
  * Typed local-human workbench view of ModeloFormResult; the value keeps its
@@ -170,6 +234,7 @@ export type PublicModeloWorkFormLoadV1 = {
   form: PublicModeloWorkForm;
   verified: boolean;
   filed: boolean;
+  journey: ModeloFormJourney;
 };
 
 /**

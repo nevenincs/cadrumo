@@ -9,10 +9,8 @@ import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Icon } from "@/components/ui/icon";
 import { Spinner } from "@/components/ui/spinner";
 import { facts } from "../../../shell/compose";
-import type {
-  EvidenceRecord,
-  EvidenceUpdateRequest,
-} from "../../../shell/ledgerDocumentOperations";
+import type { EvidenceUpdateRequest } from "../../../shell/ledgerDocumentOperations";
+import type { LedgerEvidenceRecordProjection } from "../../../shell/ledgerDocumentContract";
 import {
   servedNextStep,
   servedRefusalWords,
@@ -41,7 +39,7 @@ import {
 import { extractionLanding, recordLanding } from "./documentLanding";
 import { ServedStep } from "./ServedStep";
 import { chordAria, chordMatches } from "@/shared/chords";
-import type { EvidenceReviewRow } from "../../../shell/ledgerDocumentOperations";
+import type { EvidenceReviewQueueRowProjection } from "../../../shell/ledgerDocumentReviewContract";
 import { ContextMenu, type MenuAnchor } from "../../ContextMenu";
 import { OVERVIEW_CHORD, OVERVIEW_CHORDS } from "../ledgerChords";
 import { EntryOverview } from "../overview/EntryOverview";
@@ -84,7 +82,7 @@ function RecordDetail({
 }: {
   port: LedgerPort;
   locale: string;
-  record: EvidenceRecord;
+  record: LedgerEvidenceRecordProjection;
   attachedTo: LedgerRow | null;
   inReview: boolean;
   /** When this record's reading waiting for review was drafted, if one
@@ -450,10 +448,10 @@ export function EvidenceRecords({
 }: {
   port: LedgerPort;
   locale: string;
-  records: EvidenceRecord[];
+  records: LedgerEvidenceRecordProjection[];
   /** The readings waiting for review, for a record's overview; null where
    * the queue could not be read. */
-  readings?: readonly EvidenceReviewRow[] | null;
+  readings?: readonly EvidenceReviewQueueRowProjection[] | null;
   rows: LedgerRow[] | null;
   inReview: ReadonlySet<string>;
   /** When each reading waiting for review was drafted, by reference. */

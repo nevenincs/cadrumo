@@ -2,10 +2,10 @@ import { servedLimits } from "./support/servedLimits";
 import { holdLedgerLimits } from "../src/shell/ledgerLimits";
 import { expect, test } from "@playwright/test";
 import type {
-  ConfirmationBlocker,
-  EvidenceDraft,
-  EvidenceRecord,
-} from "../src/shell/ledgerDocumentOperations";
+  ConfirmationBlockerProjectionV1,
+  InvoiceDraftProjectionV1,
+} from "../src/shell/ledgerDocumentReviewContract";
+import type { LedgerEvidenceRecordProjection } from "../src/shell/ledgerDocumentContract";
 import {
   confirmation,
   correctionValues,
@@ -17,6 +17,7 @@ import {
   resolutionOf,
   sameReading,
 } from "../src/components/ledger/documents/documentsModel";
+import { EMPTY_DRAFT } from "../src/dev/ledgerEvidenceSeed";
 import { hexId } from "./support/ledger";
 
 // The Documents section's rules: a confirmation always names its kind and
@@ -25,7 +26,8 @@ import { hexId } from "./support/ledger";
 // duplicate is found by number first; a record's correction sends what
 // changed. Every value is invented.
 
-const draft: EvidenceDraft = {
+const draft: InvoiceDraftProjectionV1 = {
+  ...EMPTY_DRAFT,
   supplier_name: "Papelería Trazo SL",
   supplier_tax_id: "B12000045",
   supplier_country_code: "ES",
@@ -38,12 +40,20 @@ const draft: EvidenceDraft = {
   currency: "EUR",
   provenance: [],
 };
-const blocker: ConfirmationBlocker = {
+const blocker: ConfirmationBlockerProjectionV1 = {
   blocker_id: "0123456789abcdef",
   reason: "ambiguous_identity",
   field: "supplier_tax_id",
   detail: "Two tax ids.",
-  candidates: [{ value: "B12000045" }, { value: "B12000046" }],
+  candidates: [
+    { value: "B12000045", anchor: null, note: "" },
+    { value: "B12000046", anchor: null, note: "" },
+  ],
+  reason_words: null,
+  reason_words_language: null,
+  words: null,
+  detail_words: null,
+  detail_words_language: null,
 };
 const binding = {
   sourceSha256: hexId("source"),
@@ -254,7 +264,7 @@ test("a fresh reading equal to the one shown is the reading reviewed", () => {
 });
 
 test("a record's correction sends only what changed and clears with a blank", () => {
-  const record: EvidenceRecord = {
+  const record: LedgerEvidenceRecordProjection = {
     evidence_id: "e1",
     bucket_id: "b",
     source_sha256: hexId("s"),

@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import type {
-  CatalogueInvoice,
   InvoiceAddRequest,
   InvoiceAddResult,
   InvoiceUpdateRequest,
 } from "../../../shell/ledgerInvoiceOperations";
+import type { CatalogueInvoiceSnapshot } from "../../../shell/ledgerInvoiceContract";
 import { type LedgerPort, servedRefusalWords } from "../../../shell/ledger";
 import { useStrings } from "../../../shell/strings";
 import { useWritePause } from "../WritePause";
@@ -29,7 +29,7 @@ export type Outcome =
   | { kind: "unknown"; pending: Pending; checked: boolean }
   | { kind: "not_saved" };
 
-const numberOf = (invoice: CatalogueInvoice | null) =>
+const numberOf = (invoice: CatalogueInvoiceSnapshot | null) =>
   invoice ? seriesAndNumber(invoice) : "";
 
 /** Sends each reviewed write once and settles unread outcomes through the page hold. */
@@ -43,9 +43,9 @@ export function useInvoiceEditorWrites({
   setDuplicate,
 }: {
   port: LedgerPort;
-  stored: CatalogueInvoice | null;
+  stored: CatalogueInvoiceSnapshot | null;
   onClose(): void;
-  onWritten(invoice: CatalogueInvoice | null, removed?: string): void;
+  onWritten(invoice: CatalogueInvoiceSnapshot | null, removed?: string): void;
   say(text: string): void;
   backToEdit(): void;
   setDuplicate(value: string | null): void;

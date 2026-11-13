@@ -8,12 +8,12 @@ import { NativeSelect } from "@/components/ui/native-select";
 import type { Suggestion } from "@/components/ui/suggestions";
 import { useTableView, type ViewColumn } from "@/components/ui/table-view";
 import type {
-  CatalogueInvoiceLine,
+  InvoiceLineSnapshot,
   InvoiceKind,
-  InvoicePreviewFigure,
-  InvoicePreviewLineResult,
-  InvoicePreviewRateSlot,
-} from "../../../shell/ledgerInvoiceOperations";
+  InvoiceFiguresPreviewFigure,
+  InvoiceFiguresPreviewLineResult,
+  InvoiceFiguresPreviewRateSlot,
+} from "../../../shell/ledgerInvoiceContract";
 import { useStrings, type Translate } from "../../../shell/strings";
 import { wordOrToken } from "../../../shell/tokenWords";
 import { formatAmount, formatDecimal } from "../../../shared/numbers";
@@ -75,9 +75,9 @@ export function DraftLines({
   descriptions: readonly Suggestion[];
   lines: readonly LineDraft[];
   /** The ledger's figures, by line key. */
-  figures: readonly InvoicePreviewLineResult[];
+  figures: readonly InvoiceFiguresPreviewLineResult[];
   /** The ledger's rate slots on the draft's date. */
-  slots: readonly InvoicePreviewRateSlot[];
+  slots: readonly InvoiceFiguresPreviewRateSlot[];
   kind: InvoiceKind | null;
   locale: string;
   /** Problems by `line:<key>:<field>`. */
@@ -366,7 +366,7 @@ function FigureEditor({
   onChange,
 }: {
   locale: string;
-  figure: InvoicePreviewFigure | null;
+  figure: InvoiceFiguresPreviewFigure | null;
   value: string;
   label: string;
   invalid: boolean;
@@ -404,15 +404,15 @@ export function StoredLines({
   kind,
   locale,
 }: {
-  lines: readonly CatalogueInvoiceLine[];
+  lines: readonly InvoiceLineSnapshot[];
   /** The ledger's words for the rates, when it has answered. */
-  slots: readonly InvoicePreviewRateSlot[];
+  slots: readonly InvoiceFiguresPreviewRateSlot[];
   kind: InvoiceKind;
   locale: string;
 }) {
   const t = useStrings();
   const received = kind === "received";
-  const columns: ViewColumn<CatalogueInvoiceLine>[] = [
+  const columns: ViewColumn<InvoiceLineSnapshot>[] = [
     column("description", t("desktop.ledger.invoices.line.description")),
     column("quantity", t("desktop.ledger.invoices.line.quantity"), "end"),
     column("unit_price", t("desktop.ledger.invoices.line.unit_price"), "end"),

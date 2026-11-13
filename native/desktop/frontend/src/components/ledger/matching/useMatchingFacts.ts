@@ -6,10 +6,8 @@
 // goes with the profile.
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import type {
-  CatalogueInvoice,
-  LedgerCheckResult,
-} from "../../../shell/ledgerInvoiceOperations";
+import type { LedgerCheckResult } from "../../../shell/ledgerInvoiceOperations";
+import type { CatalogueInvoiceSnapshot } from "../../../shell/ledgerInvoiceContract";
 import type { LedgerPort, LedgerStatusResult } from "../../../shell/ledger";
 import {
   readAnswer,
@@ -23,7 +21,7 @@ export type Facts<T> =
   | { phase: "failed"; failure: LedgerReadFailure; value: null };
 
 export type MatchingFacts = {
-  invoices: Facts<CatalogueInvoice[]>;
+  invoices: Facts<CatalogueInvoiceSnapshot[]>;
   inconsistencies: Facts<LedgerCheckResult["link_inconsistencies"]>;
   affected: Facts<LedgerStatusResult["stale_filings"]>;
 };
@@ -89,7 +87,7 @@ export function useMatchingFacts(
       };
     void read(
       () => port.submit("ledger.invoice.list", {}),
-      (result: { invoices: CatalogueInvoice[] }) => result.invoices,
+      (result: { invoices: CatalogueInvoiceSnapshot[] }) => result.invoices,
     ).then(settle("invoices"));
     void read(
       () => port.submit("ledger.check", {}),

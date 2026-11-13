@@ -5,14 +5,13 @@
 
 import type {
   InvoiceKind,
-  InvoicePreviewFinding,
-  InvoicePreviewRateSlot,
-} from "../../../shell/ledgerInvoiceOperations";
+  InvoiceFiguresPreviewRateSlot,
+} from "../../../shell/ledgerInvoiceContract";
 import type { Translate } from "../../../shell/strings";
 import { formatDay } from "../../../shared/dateFormats";
 import { formatDecimal } from "../../../shared/numbers";
 import { isPaymentStatus } from "../../../shell/ledgerContract";
-import type { Problem } from "./invoiceModel";
+import type { PreviewFinding, Problem } from "./invoiceModel";
 
 const lower = (token: string) => token.toLowerCase();
 
@@ -36,7 +35,7 @@ export const paymentLabel = (t: Translate, status: string) =>
 /** A rate slot in the word the ledger serves for it. */
 export function rateLabel(
   t: Translate,
-  slots: readonly InvoicePreviewRateSlot[],
+  slots: readonly InvoiceFiguresPreviewRateSlot[],
   token: string,
 ): string {
   const served = slots.find((found) => found.slot === token);
@@ -46,8 +45,8 @@ export function rateLabel(
 /** What the ledger found, in its catalogue's words and with its values. */
 export function findingText(
   t: Translate,
-  finding: InvoicePreviewFinding,
-  slots: readonly InvoicePreviewRateSlot[],
+  finding: PreviewFinding,
+  slots: readonly InvoiceFiguresPreviewRateSlot[],
 ): string {
   const locale = t.locale ?? "en";
   const values: Record<string, string | number> = {};

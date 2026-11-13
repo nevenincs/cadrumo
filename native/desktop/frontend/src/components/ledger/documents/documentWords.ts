@@ -4,11 +4,13 @@
 
 import type {
   AttachmentSource,
-  EvidenceBatchItemStatus,
-  FieldGrounding,
+  LedgerEvidenceBatchItemSnapshot,
+} from "../../../shell/ledgerDocumentContract";
+import type {
+  FieldGroundingOutcome,
   FieldOrigin,
-  FieldProvenance,
-} from "../../../shell/ledgerDocumentOperations";
+  FieldProvenanceProjectionV1,
+} from "../../../shell/ledgerDocumentReviewContract";
 import type { Translate } from "../../../shell/strings";
 import type {
   ConfirmHold,
@@ -59,7 +61,7 @@ const ORIGINS: readonly FieldOrigin[] = [
   "operator",
   "derived",
 ];
-const GROUNDINGS: readonly FieldGrounding[] = [
+const GROUNDINGS: readonly FieldGroundingOutcome[] = [
   "reconciled",
   "anchored",
   "unanchored",
@@ -69,7 +71,10 @@ const GROUNDINGS: readonly FieldGrounding[] = [
 
 /** Where a value came from and whether the page agrees, in plain words:
  * "Read from the PDF, totals agree". */
-export function provenanceText(t: Translate, found: FieldProvenance): string {
+export function provenanceText(
+  t: Translate,
+  found: FieldProvenanceProjectionV1,
+): string {
   const origin = ORIGINS.includes(found.origin)
     ? t(`desktop.ledger.documents.origin.${found.origin}`)
     : found.origin;
@@ -79,7 +84,7 @@ export function provenanceText(t: Translate, found: FieldProvenance): string {
   return t("desktop.ledger.documents.provenance", { origin, grounding });
 }
 /** Whether a value's grounding asks the person to look again. */
-export const doubtful = (found: FieldProvenance | null) =>
+export const doubtful = (found: FieldProvenanceProjectionV1 | null) =>
   found !== null &&
   (found.grounding === "ambiguous" ||
     found.grounding === "contradicted" ||
@@ -89,6 +94,8 @@ export const doubtful = (found: FieldProvenance | null) =>
  * the generic line for a question to answer. */
 export const reasonLabel = (t: Translate, served: string | null | undefined) =>
   served || t("desktop.ledger.documents.findings");
+
+type EvidenceBatchItemStatus = LedgerEvidenceBatchItemSnapshot["status"];
 
 const STATUSES: readonly EvidenceBatchItemStatus[] = [
   "ingested",

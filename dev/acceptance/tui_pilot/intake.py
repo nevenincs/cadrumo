@@ -9,6 +9,7 @@ import json
 import os
 from collections.abc import Iterable
 from dataclasses import dataclass, field
+from functools import cache
 from pathlib import Path
 from typing import Final
 
@@ -56,6 +57,9 @@ class PilotRow:
     cause: str | None = None
     """The one cause key of a row that differs from the table's; ``None`` for a matched row."""
     cause_words: str = ""
+    export_served: bool | None = None
+    """Whether the form served an export door for the return once its check had run; ``None`` when the drive never
+    reached that question. Served state, not a pilot choice."""
 
     @property
     def label(self) -> str:
@@ -72,7 +76,7 @@ class PilotRow:
 
     def document(self, *, tree: str, log: str) -> dict[str, object]:
         """The row as the intake's object, with exactly its keys."""
-        return {
+        document: dict[str, object] = {
             "surface": SURFACE,
             "tree": tree,
             "persona": self.persona,
@@ -88,6 +92,9 @@ class PilotRow:
             "reason": self.reason(),
             "log": log,
         }
+        if self.export_served is not None and _schema_takes_export_served():
+            document["export_served"] = self.export_served
+        return document
 
     def line(self, *, tree: str, log: str) -> str:
         """The row as one JSON line of the intake."""
@@ -96,6 +103,18 @@ class PilotRow:
     def result(self, *, tree: str = "-") -> SurfaceResult:
         """The row as the persona table reads a surface result, through its own schema."""
         return parse_result(self.line(tree=tree, log=""))
+
+
+@cache
+def _schema_takes_export_served() -> bool:
+    """Whether the persona table's intake schema already knows the served-export field; older ones refuse it."""
+    probe = json.loads(PilotRow(persona="probe").line(tree="-", log=""))
+    probe["export_served"] = False
+    try:
+        parse_result(json.dumps(probe))
+    except ValueError:
+        return False
+    return True
 
 
 def write_rows(rows: Iterable[PilotRow]) -> None:

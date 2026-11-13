@@ -16,9 +16,9 @@ import {
 import type { Suggestion } from "@/components/ui/suggestions";
 import { localDay } from "../../../shared/dates";
 import type {
-  CatalogueInvoice,
+  CatalogueInvoiceSnapshot,
   InvoiceKind,
-} from "../../../shell/ledgerInvoiceOperations";
+} from "../../../shell/ledgerInvoiceContract";
 import { useStrings } from "../../../shell/strings";
 import { wordOrToken } from "../../../shell/tokenWords";
 import { ServedOptions } from "../suggestions/ServedOptions";
@@ -76,7 +76,7 @@ export function NewInvoice({
   draft: InvoiceDraft;
   check: ReturnType<typeof checkDraft>;
   preview: PreviewView;
-  invoices: readonly CatalogueInvoice[];
+  invoices: readonly CatalogueInvoiceSnapshot[];
   locale: string;
   shown(field: string): string | null;
   touch(field: string): void;

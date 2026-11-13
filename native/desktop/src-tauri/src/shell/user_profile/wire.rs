@@ -168,6 +168,12 @@ impl Pin {
     /// takes the items, then calls [`Pin::advance`] with that cursor.
     pub(super) fn check<I>(&mut self, page: &Page<I>) -> Result<usize> {
         if page.outcome == "refused" {
+            if page.refusal_code.as_deref() == Some("invalid_household_draft") {
+                // The window renders the served code as served.
+                let mut refused = Failure::new("refused");
+                refused.reason = page.refusal_code.clone();
+                return Err(refused);
+            }
             return Err(Failure::new(
                 if page.refusal_code.as_deref() == Some("stale_revision") {
                     "conflict"

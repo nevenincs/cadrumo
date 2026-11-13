@@ -18,7 +18,7 @@ import {
   SegmentedControlItem,
 } from "@/components/ui/segmented-control";
 import { Toast } from "@/components/ui/toast";
-import type { CatalogueInvoice } from "../../../shell/ledgerInvoiceOperations";
+import type { CatalogueInvoiceSnapshot } from "../../../shell/ledgerInvoiceContract";
 import type { LedgerPort } from "../../../shell/ledger";
 import type { LedgerPeriod } from "../../../shell/ledgerGrammar";
 import { useFocusTarget } from "../../../shell/navigation/hooks";
@@ -59,7 +59,7 @@ type Column = {
   minWidth?: number;
   sticky?: "start" | "end";
   align?: "end";
-  cell: (invoice: CatalogueInvoice) => ReactNode;
+  cell: (invoice: CatalogueInvoiceSnapshot) => ReactNode;
 };
 
 const quiet = (text: string) => (
@@ -288,7 +288,7 @@ export function InvoicesSection({
         : sortCatalogue(filterCatalogue(invoices, { ...filter, period }), sort),
     [invoices, periodUnknown, filter, period, sort],
   );
-  const columns = useMemo<GridColumn<CatalogueInvoice>[]>(
+  const columns = useMemo<GridColumn<CatalogueInvoiceSnapshot>[]>(
     () =>
       catalogueColumns(t, locale).map((column) => ({
         id: column.id,
@@ -304,7 +304,7 @@ export function InvoicesSection({
       })),
     [t, locale],
   );
-  const gridRows = useMemo<GridRow<CatalogueInvoice>[]>(
+  const gridRows = useMemo<GridRow<CatalogueInvoiceSnapshot>[]>(
     () =>
       rows.map((invoice) => ({
         kind: "data",

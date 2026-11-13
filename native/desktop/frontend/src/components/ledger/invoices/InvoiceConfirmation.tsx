@@ -4,10 +4,8 @@ import { Icon } from "@/components/ui/icon";
 import { formatDay } from "../../../shared/dateFormats";
 import { formatAmount, formatPercent } from "../../../shared/numbers";
 import { facts, labelGap } from "../../../shell/compose";
-import type {
-  CatalogueInvoice,
-  InvoiceAddRequest,
-} from "../../../shell/ledgerInvoiceOperations";
+import type { InvoiceAddRequest } from "../../../shell/ledgerInvoiceOperations";
+import type { CatalogueInvoiceSnapshot } from "../../../shell/ledgerInvoiceContract";
 import type { InvoiceUpdateField } from "../../../shell/ledgerContract";
 import { useStrings } from "../../../shell/strings";
 import { ivaCategoryLabel } from "../movements/movementWords";
@@ -49,7 +47,7 @@ export function Confirmation({
   isNew: boolean;
   draftRequest: InvoiceAddRequest | null;
   total: string;
-  stored: CatalogueInvoice | null;
+  stored: CatalogueInvoiceSnapshot | null;
   correction: CorrectionDraft | null;
   changed: readonly InvoiceUpdateField[];
   locale: string;
@@ -146,7 +144,11 @@ export function Confirmation({
   );
 }
 
-export function RemoveConfirmation({ invoice }: { invoice: CatalogueInvoice }) {
+export function RemoveConfirmation({
+  invoice,
+}: {
+  invoice: CatalogueInvoiceSnapshot;
+}) {
   const t = useStrings();
   const linked = invoice.linked_transaction_ids.length;
   return linked > 0 ? (

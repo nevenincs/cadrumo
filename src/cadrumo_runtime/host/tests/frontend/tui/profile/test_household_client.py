@@ -11,8 +11,11 @@ import pytest
 from cadrumo.application.user_profile.ascendant_rows import ProfileAscendantFact, ProfileAscendantRow
 from cadrumo.application.user_profile.descendant_rows import ProfileDescendantFact, ProfileDescendantRow
 from cadrumo.application.user_profile.family_rows import (
+    ProfileFamilyLeafAsk,
+    ProfileViewFamilyDraftItem,
     ProfileViewFamilyGroupItem,
     ProfileViewFamilyRowItem,
+    family_draft_item,
     family_row_items,
 )
 from cadrumo.application.user_profile.profile_operation_contracts import (
@@ -26,6 +29,7 @@ from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.identity.digest import ContentDigest
 from cadrumo.core.operations import OperationEffect, OperationFrontendProjection
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.descendant_relacion_catalogue import descendant_relacion_adoption_token
 from cadrumo.domain.user_profile.values import ProfileSetupState
 from cadrumo.entrypoints.tui.profile.client_errors import ProfileManagerCompletedViewUnavailableError
 from cadrumo.entrypoints.tui.profile.household import HouseholdRowChange
@@ -95,6 +99,8 @@ class _Client(FrontendClient):
         self.items = items
         self.revision = revision
         self.languages: list[OutputLanguage] = []
+        self.drafts: list[tuple[str, dict[str, str]]] = []
+        self.draft_group: str | None = None
 
     @override
     def read_profile_view(
@@ -110,6 +116,22 @@ class _Client(FrontendClient):
         assert page_kinds == (ProfileViewPageKind.FAMILY_ROWS,)
         self.languages.append(output_language)
         return _collection(self.profile_id, self.items, revision=self.revision)
+
+    @override
+    def read_household_draft(
+        self,
+        group: str,
+        answers: Mapping[str, str],
+        *,
+        output_language: OutputLanguage = OutputLanguage.ES,
+        timeout: float = 15,
+    ) -> ProfileViewFamilyDraftItem:
+        self.languages.append(output_language)
+        self.drafts.append((group, dict(answers)))
+        with bundled_indexed_authority().operation() as authority:
+            item = family_draft_item(self.draft_group or group, answers, operation=authority)
+        assert item is not None
+        return item
 
 
 def test_the_household_is_assembled_as_served_group_by_group() -> None:
@@ -246,3 +268,30 @@ def test_a_settled_change_whose_projection_is_not_its_own_is_completed_not_faile
             )
         )
     assert raised.value.effect is OperationEffect.UPDATED
+
+
+def test_the_asks_of_unsaved_answers_are_the_ones_the_backend_resolves_in_the_current_language() -> None:
+    client = _Client(_served({}))
+    doors = HouseholdClient(client, language=lambda: OutputLanguage.HU, pin=lambda: None, mutation_runner=_never_run)
+    with bundled_indexed_authority().operation() as authority:
+        adoption = descendant_relacion_adoption_token(authority=authority).value
+    asks = {
+        entry.leaf: entry.ask
+        for entry in doors.read_draft("renta_family.descendiente", {"relacion": adoption, "convivencia": "true"})
+    }
+    assert asks["inscripcion_registro_civil"] is ProfileFamilyLeafAsk.ASKED
+    assert asks["dependencia_economica"] is ProfileFamilyLeafAsk.NOT_ASKED
+    assert client.drafts == [("renta_family.descendiente", {"relacion": adoption, "convivencia": "true"})]
+    assert client.languages == [OutputLanguage.HU]
+
+
+def test_asks_served_for_another_group_than_the_one_asked_are_refused() -> None:
+    client = _Client(_served({}))
+    client.draft_group = "renta_family.ascendiente"
+    doors = HouseholdClient(client, language=lambda: OutputLanguage.ES, pin=lambda: None, mutation_runner=_never_run)
+    with pytest.raises(RefusalError):
+        doors.read_draft("renta_family.descendiente", {})
+
+
+def _never_run(_client: FrontendClient, _request: ProfileMutationRequest) -> ProfileMutationCompletion:
+    raise AssertionError("reading the asks submits no change")

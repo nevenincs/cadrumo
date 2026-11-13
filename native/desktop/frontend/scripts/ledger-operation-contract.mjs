@@ -21,6 +21,9 @@ const { values } = parseArgs({
 // The module of each family the producer writes, by family name.
 const outputs = {
   classification: "src/shell/ledgerClassificationContract.ts",
+  invoice: "src/shell/ledgerInvoiceContract.ts",
+  document: "src/shell/ledgerDocumentContract.ts",
+  documentReview: "src/shell/ledgerDocumentReviewContract.ts",
 };
 
 const frontend = fileURLToPath(new URL("..", import.meta.url));

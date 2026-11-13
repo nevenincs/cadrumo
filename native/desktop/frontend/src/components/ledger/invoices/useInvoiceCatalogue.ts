@@ -4,7 +4,7 @@
 // reads lives in this hook's memory and goes with the profile.
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { CatalogueInvoice } from "../../../shell/ledgerInvoiceOperations";
+import type { CatalogueInvoiceSnapshot } from "../../../shell/ledgerInvoiceContract";
 import type { LedgerPort } from "../../../shell/ledger";
 import {
   readAnswer,
@@ -14,8 +14,8 @@ import {
 import { useWritePause } from "../WritePause";
 
 export type CatalogueRead =
-  | { phase: "reading"; invoices: CatalogueInvoice[] | null }
-  | { phase: "ready"; invoices: CatalogueInvoice[] }
+  | { phase: "reading"; invoices: CatalogueInvoiceSnapshot[] | null }
+  | { phase: "ready"; invoices: CatalogueInvoiceSnapshot[] }
   | { phase: "failed"; failure: LedgerReadFailure; invoices: null };
 
 export function useInvoiceCatalogue(
@@ -70,7 +70,7 @@ export function useInvoiceCatalogue(
   const reread = useCallback(() => setWanted((count) => count + 1), []);
   /** Puts one invoice the ledger returned in place of its stored copy. */
   const settle = useCallback(
-    (invoice: CatalogueInvoice | null, removed?: string) =>
+    (invoice: CatalogueInvoiceSnapshot | null, removed?: string) =>
       setRead((held) => {
         if (held.invoices === null) return held;
         const rest = held.invoices.filter(

@@ -5,7 +5,8 @@ definition of one family the window reads, as the production operation registry 
 schemas, written with ``dev.fixture_projections.operation_contract_module``: field names, nullity and
 closed vocabularies as the application serialises them. A result field is always present unless the
 model leaves it out while absent or empty; a field of what the window sends may be left out where the
-model gives it a default. A family is added here when its hand-written shapes are retired.
+model gives it a default. A path the window holds only as the host's file token is written with that
+token's type (``FIELD_TYPES``). A family is added here when its hand-written shapes are retired.
 
 ``scripts/ledger-operation-contract.mjs`` drives this module and formats what it writes; run that, not
 this. This module writes one JSON object to standard output: the repository's TypeScript module bound as
@@ -18,7 +19,7 @@ from __future__ import annotations
 import json
 import sys
 
-from dev.fixture_projections.operation_contract_module import render_contract_module
+from dev.fixture_projections.operation_contract_module import EarlierModule, WindowType, render_contract_module
 from dev.quality.typescript_module_size import MAX_PHYSICAL_LINES
 
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
@@ -46,7 +47,76 @@ FAMILIES: dict[str, tuple[str, tuple[str, ...]]] = {
             "ledger.rule.list",
         ),
     ),
+    "invoice": (
+        "LedgerInvoiceContracts",
+        (
+            "ledger.attach",
+            "ledger.check",
+            "ledger.detach",
+            "ledger.invoice.add",
+            "ledger.invoice.attach_document",
+            "ledger.invoice.duplicate",
+            "ledger.invoice.import",
+            "ledger.invoice.list",
+            "ledger.invoice.match",
+            "ledger.invoice.preview",
+            "ledger.invoice.remove",
+            "ledger.invoice.update",
+            "ledger.invoice.view",
+            "ledger.link",
+        ),
+    ),
+    "document": (
+        "LedgerDocumentContracts",
+        (
+            "ledger.evidence.add",
+            "ledger.evidence.attachment_queue",
+            "ledger.evidence.attachment_view",
+            "ledger.evidence.batch",
+            "ledger.evidence.consent.list",
+            "ledger.evidence.list",
+            "ledger.evidence.page",
+            "ledger.evidence.remove",
+            "ledger.evidence.update",
+            "ledger.evidence.view",
+        ),
+    ),
+    "documentReview": (
+        "LedgerDocumentReviewContracts",
+        (
+            "ledger.evidence.confirm",
+            "ledger.evidence.extract",
+            "ledger.evidence.review.list",
+            "ledger.evidence.review.view",
+        ),
+    ),
 }
+
+#: The families whose modules a family imports its types from rather than writing them again, in the order
+#: they are written; a family's types are in the first of these that reaches them.
+EARLIER: dict[str, tuple[str, ...]] = {
+    "document": ("invoice",),
+    "documentReview": ("invoice", "document"),
+}
+
+_FILE_TOKEN = WindowType("FileToken", "./ledger")
+
+#: Each family's strings the window types with a name of its own, as ``(schema definition, property)``.
+FIELD_TYPES: dict[str, dict[tuple[str, str], WindowType]] = {
+    "invoice": {
+        ("InvoiceDocumentAttachRequest", "source_path"): _FILE_TOKEN,
+        ("InvoiceImportRequest", "source_path"): _FILE_TOKEN,
+    },
+    "document": {
+        ("LedgerEvidenceAddRequest", "source_path"): _FILE_TOKEN,
+        ("LedgerEvidenceBatchRequest", "sources"): _FILE_TOKEN,
+    },
+}
+
+
+def module_of(family: str) -> str:
+    """The specifier by which a module imports the generated module of ``family``."""
+    return f"./ledger{family[:1].upper()}{family[1:]}Contract"
 
 
 def render(family: str) -> str:
@@ -58,6 +128,8 @@ def render(family: str) -> str:
         definitions=definitions,
         contracts_name=contracts_name,
         subject="ledger",
+        field_types=FIELD_TYPES.get(family),
+        earlier=[EarlierModule(module_of(each), FAMILIES[each][1]) for each in EARLIER.get(family, ())],
     )
 
 
