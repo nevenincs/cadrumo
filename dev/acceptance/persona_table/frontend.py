@@ -17,6 +17,13 @@ export operation raises for a revision that is not sealed, read from the table r
 (refused | not served)`` followed by the code, the persona cell counts the rows as ``N rows matched by gating`` and
 the report lists them. Every other stage difference stays a difference, and the rule reads stage words and that
 code only. The file stage is not compared with the table, so the rule has no file case.
+
+A persona-level line (``modelo`` null) may state the integer ``horizon`` it was run at; producers that write one
+persona line per horizon use it so a load failure at one horizon fails only the table rows of that horizon. When the
+field is absent or null the horizon is read from the start of ``reason`` (``horizon <year>`` or ``<persona>@<year>``);
+if neither matches the line has no horizon and speaks for every row of the persona that no horizon line answers for.
+A table row that has a result line of its own on a surface is judged by that line and never load-failed by a persona
+line.
 """
 
 from __future__ import annotations
@@ -43,6 +50,7 @@ EXPORT_WITHHELD_UNVERIFIED = ("REFUSED_MODELO_REVISION_NOT_SEALED",)
 EXPORT_UNAVAILABLE = "export unavailable (refused | not served)"
 """How the comparison of a not-served export door with the table's withheld export is recorded."""
 _EXPORT_CODE = re.compile(r"\bexport:.*?\b((?:REFUSED|ERROR)_[A-Z0-9_]+)")
+_HORIZON_PREFIX = re.compile(r"horizon (\d{4})\b")
 
 STAGE_OF: Mapping[Stage, str | None] = {
     Stage.PASSED: "pass",
@@ -84,7 +92,9 @@ CELL_WORDS = {
 
 type RowKey = tuple[str, str, int, str]
 type ResultKey = tuple[str, str, str | None, int | None, str | None]
-"""``(surface, persona, modelo, year, period)``; a persona-level line has no modelo, year or period."""
+"""``(surface, persona, modelo, year, period)``.
+
+A persona-level line has no modelo, year or period; its year slot holds its horizon (``None`` without one)."""
 
 _FIELDS = frozenset(
     {
@@ -104,6 +114,7 @@ _FIELDS = frozenset(
         "figures",
         "reason",
         "log",
+        "horizon",
     }
 )
 _REQUIRED = frozenset({"surface", "tree", "persona", "modelo", "year", "period", "loads"})
@@ -136,11 +147,19 @@ class SurfaceResult:
     figures: tuple[tuple[str, str], ...] = ()
     reason: str = ""
     log: str = ""
+    horizon: int | None = None
+    """The horizon a persona-level line was run at, stated or read from its reason; ``None`` on a return line."""
 
     @property
     def key(self) -> ResultKey:
-        """The result key ``(surface, persona, modelo, year, period)``."""
-        return (self.surface, self.persona, self.modelo, self.year, self.period)
+        """The result key ``(surface, persona, modelo, year, period)``; a persona line holds its horizon as year."""
+        return (
+            self.surface,
+            self.persona,
+            self.modelo,
+            self.horizon if self.modelo is None else self.year,
+            self.period,
+        )
 
 
 def read_results(directory: Path) -> dict[ResultKey, SurfaceResult]:
@@ -158,6 +177,8 @@ def read_results(directory: Path) -> dict[ResultKey, SurfaceResult]:
     ``log`` are optional text;
     ``figures`` is an optional object of every non-zero casilla value the surface displayed, as text; the table
     row is compared on the casillas of its form only, never on its internal figures.
+    The optional ``horizon`` (an integer or null, persona-level lines only) names the horizon a persona line was run
+    at; absent, it is read from the reason's ``horizon <year>`` or ``<persona>@<year>`` prefix.
     Unknown keys and bad values are refused.
     """
     if not directory.is_dir():
@@ -194,10 +215,12 @@ def parse_result(line: str) -> SurfaceResult:
     loads = data["loads"]
     if not isinstance(loads, bool):
         raise ValueError("loads must be true or false")
+    persona = _text(data, "persona")
+    reason = _optional_text(data, "reason") or ""
     return SurfaceResult(
         surface=surface,
         tree=_text(data, "tree"),
-        persona=_text(data, "persona"),
+        persona=persona,
         modelo=modelo,
         year=year,
         period=period,
@@ -209,9 +232,25 @@ def parse_result(line: str) -> SurfaceResult:
         file=_optional_stage(data, "file"),
         refusal_code=_optional_text(data, "refusal_code"),
         figures=_figures(data.get("figures", {})),
-        reason=_optional_text(data, "reason") or "",
+        reason=reason,
         log=_optional_text(data, "log") or "",
+        horizon=_line_horizon(data, persona, modelo, reason),
     )
+
+
+def _line_horizon(data: Mapping[str, object], persona: str, modelo: str | None, reason: str) -> int | None:
+    """The horizon of a persona-level line: the stated one, else the one its reason starts with, else ``None``."""
+    value = data.get("horizon")
+    if modelo is not None:
+        if value is not None:
+            raise ValueError("a line with a modelo has no horizon")
+        return None
+    if value is not None:
+        if not isinstance(value, int) or isinstance(value, bool):
+            raise ValueError("horizon must be an integer or null")
+        return value
+    match = _HORIZON_PREFIX.match(reason) or re.match(rf"{re.escape(persona)}@(\d{{4}})\b", reason)
+    return None if match is None else int(match.group(1))
 
 
 def _return_scope(data: Mapping[str, object]) -> tuple[str | None, int | None, str | None]:
@@ -493,13 +532,12 @@ def compare_frontend(rows: Iterable[TableRow], results: Mapping[ResultKey, Surfa
     cells: dict[tuple[str, str], PersonaCell] = {}
     for surface in SURFACES:
         held = {key: result for key, result in results.items() if key[0] == surface}
-        loads = {persona: _loads(held, persona) for persona in personas}
-        found = _surface_parities(ordered, surface, held, loads)
+        lines = {persona: _persona_lines(held, persona) for persona in personas}
+        found = _surface_parities(ordered, surface, held, lines)
         parities[surface] = found
         extras[surface] = _surface_extras(surface, held, keys)
         for persona in personas:
-            line = _persona_line(held, persona)
-            cells[persona, surface] = _persona_cell(found, persona, loads[persona], None if line is None else line.tree)
+            cells[persona, surface] = _persona_cell(found, persona, lines[persona], _results_load(held, persona))
     return FrontendComparison(ordered, parities, extras, cells)
 
 
@@ -507,19 +545,31 @@ def _surface_parities(
     ordered: Iterable[TableRow],
     surface: str,
     held: Mapping[ResultKey, SurfaceResult],
-    loads: Mapping[str, bool | None],
+    lines: Mapping[str, Mapping[int | None, SurfaceResult]],
 ) -> tuple[RowParity, ...]:
-    """One parity per table row for ``surface``, given the results it ``held`` and each persona's load state."""
-    return tuple(
-        parity(
-            row,
-            surface,
-            held.get((surface, row.persona, row.modelo, row.year, row.period)),
-            loads=loads[row.persona],
-            load_reason=_load_reason(held, row.persona),
-        )
-        for row in ordered
-    )
+    """One parity per table row for ``surface``, given the results it ``held`` and each persona's own lines."""
+    found: list[RowParity] = []
+    for row in ordered:
+        result = held.get((surface, row.persona, row.modelo, row.year, row.period))
+        loads, reason = (None, "") if result is not None else _row_load(lines[row.persona], held, row)
+        found.append(parity(row, surface, result, loads=loads, load_reason=reason))
+    return tuple(found)
+
+
+def _row_load(
+    lines: Mapping[int | None, SurfaceResult], held: Mapping[ResultKey, SurfaceResult], row: TableRow
+) -> tuple[bool | None, str]:
+    """Whether the persona loaded for a row that has no result line, and the reason when it did not.
+
+    The persona line of the row's horizon speaks for it, else the horizon-less persona line; with no persona line at
+    all the return lines of the persona do, and a persona with only other horizons' lines loaded by default.
+    """
+    if not lines:
+        return _results_load(held, row.persona), ""
+    line = lines.get(row.horizon, lines.get(None))
+    if line is None or line.loads:
+        return None, ""
+    return False, line.reason
 
 
 def _surface_extras(surface: str, held: Mapping[ResultKey, SurfaceResult], keys: set[RowKey]) -> tuple[RowParity, ...]:
@@ -535,41 +585,49 @@ def _surface_extras(surface: str, held: Mapping[ResultKey, SurfaceResult], keys:
 
 
 def _persona_cell(
-    found: Iterable[RowParity], persona: str, loads: bool | None, line_tree: str | None = None
+    found: Iterable[RowParity],
+    persona: str,
+    lines: Mapping[int | None, SurfaceResult],
+    results_load: bool | None,
 ) -> PersonaCell:
-    """``persona``'s cell on one surface from the parities of that surface's rows and its own line's tree."""
+    """``persona``'s cell on one surface from the parities of that surface's rows and its own lines' trees.
+
+    The persona does not load only when every one of its table rows failed to load; without rows the cell follows
+    its lines (none loaded), else the return lines.
+    """
     mine = [item for item in found if item.key[0] == persona]
-    trees = {item.tree for item in mine if item.tree is not None} | ({line_tree} if line_tree is not None else set())
+    counts = Counter(item.outcome for item in mine)
+    trees = {item.tree for item in mine if item.tree is not None} | {line.tree for line in lines.values()}
     return PersonaCell(
-        loads,
+        _cell_loads(counts, len(mine), lines, results_load),
         len(mine),
-        Counter(item.outcome for item in mine),
+        counts,
         sum(item.extra_casillas > 0 for item in mine),
         tuple(sorted(trees)),
         sum(bool(item.gated_stages) for item in mine),
     )
 
 
-def _persona_line(held: Mapping[ResultKey, SurfaceResult], persona: str) -> SurfaceResult | None:
-    return next((result for key, result in held.items() if key[1] == persona and key[2] is None), None)
-
-
-def _loads(held: Mapping[ResultKey, SurfaceResult], persona: str) -> bool | None:
-    """Whether the persona's profile loaded on a surface: its own line, else any line's, else not yet run."""
-    line = _persona_line(held, persona)
-    if line is not None:
-        return line.loads
-    mine = [result for key, result in held.items() if key[1] == persona]
-    if not mine:
+def _cell_loads(
+    counts: Mapping[str, int], rows: int, lines: Mapping[int | None, SurfaceResult], results_load: bool | None
+) -> bool | None:
+    """The cell's load state: ``None`` when nothing was read for the persona, ``False`` only when no row loaded."""
+    if not lines and results_load is None:
         return None
-    return all(result.loads for result in mine)
+    if rows:
+        return counts.get(LOAD_FAILED, 0) < rows
+    return any(line.loads for line in lines.values()) if lines else results_load
 
 
-def _load_reason(held: Mapping[ResultKey, SurfaceResult], persona: str) -> str:
-    line = _persona_line(held, persona)
-    if line is not None and not line.loads:
-        return line.reason
-    return ""
+def _persona_lines(held: Mapping[ResultKey, SurfaceResult], persona: str) -> dict[int | None, SurfaceResult]:
+    """The persona-level lines of ``persona`` by horizon (``None`` for a line without one), the latest of each."""
+    return {key[3]: result for key, result in held.items() if key[1] == persona and key[2] is None}
+
+
+def _results_load(held: Mapping[ResultKey, SurfaceResult], persona: str) -> bool | None:
+    """Whether the persona's lines all loaded; ``None`` when the surface has no line of the persona."""
+    mine = [result for key, result in held.items() if key[1] == persona]
+    return all(result.loads for result in mine) if mine else None
 
 
 def cell_text(cell: PersonaCell, head: str | None = None) -> str:

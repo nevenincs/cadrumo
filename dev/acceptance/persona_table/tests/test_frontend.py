@@ -44,6 +44,7 @@ def _row(
     export: Stage = Stage.PASSED,
     *,
     persona: str = "persona",
+    horizon: int = _YEAR + 1,
     figures: tuple[tuple[str, str], ...] = _FIGURES,
     internal_figures: tuple[tuple[str, str], ...] = (),
     reason: str = "",
@@ -53,7 +54,7 @@ def _row(
         modelo="303",
         year=_YEAR,
         period=period,
-        horizon=_YEAR + 1,
+        horizon=horizon,
         has_values=True,
         grounding="verified",
         sources=("ley:art-1",),
@@ -634,3 +635,111 @@ def test_the_report_lists_the_rows_matched_as_export_unavailable_only_when_there
     assert text.index("Export unavailable (refused") < text.index("### Rows differing")
     quiet = render_table(rows[1:], head="abc", frontend=compare_frontend(rows[1:], results))
     assert "Export unavailable" not in quiet
+
+
+_H0, _H1, _H2 = _YEAR + 1001, _YEAR + 1002, _YEAR + 1003
+
+
+def _persona_line(horizon: int | None, *, loads: bool = True, reason: str = "") -> dict[str, object]:
+    line = _line(modelo=None, year=None, period=None, loads=loads, reason=reason)
+    for name in ("calculate", "verify", "export", "figures"):
+        del line[name]
+    return line | ({} if horizon is None else {"horizon": horizon})
+
+
+def _fold(rows: list[TableRow], lines: list[dict[str, object]]) -> tuple[PersonaCell, dict[str, str], dict[str, str]]:
+    """The tui cell of ``persona``, each row's outcome by period, and the cause of each row that has one."""
+    parsed = [parse_result(json.dumps(line)) for line in lines]
+    comparison = compare_frontend(rows, {result.key: result for result in parsed})
+    found = comparison.parities["tui"]
+    return (
+        comparison.cells["persona", "tui"],
+        {item.key[3]: item.outcome for item in found},
+        {item.key[3]: item.causes[0] for item in found if item.causes},
+    )
+
+
+def _horizon_rows() -> list[TableRow]:
+    return [_row("1T", horizon=_H0), _row("2T", horizon=_H1), _row("3T", horizon=_H1), _row("4T", horizon=_H2)]
+
+
+def test_a_load_failure_at_one_horizon_fails_only_the_rows_of_that_horizon_without_a_line_of_their_own() -> None:
+    lines = [
+        _persona_line(_H0),
+        _persona_line(_H1, loads=False, reason=f"horizon {_H1}: not loaded officers"),
+        _persona_line(_H2),
+        _line(period="1T"),
+        _line(period="3T"),
+        _line(period="4T"),
+    ]
+    cell, outcomes, causes = _fold(_horizon_rows(), lines)
+    assert outcomes == {"1T": "matched", "2T": "load-failed", "3T": "matched", "4T": "matched"}
+    assert causes == {"2T": f"horizon {_H1}: not loaded officers"}
+    assert cell.loads is True
+    assert cell_text(cell) == "loads, 3/4 matched, 0 differs, 0 not run, 1 load failed"
+
+
+def test_the_cell_says_does_not_load_only_when_every_row_failed_to_load() -> None:
+    reason = "not loaded"
+    failing = [_persona_line(horizon, loads=False, reason=reason) for horizon in (_H0, _H1, _H2)]
+    cell, outcomes, _ = _fold(_horizon_rows(), failing)
+    assert set(outcomes.values()) == {"load-failed"}
+    assert cell_text(cell) == "does not load, 0/4 matched, 0 differs, 0 not run, 4 load failed"
+    cell, _, _ = _fold(_horizon_rows(), [*failing[:2], _persona_line(_H2)])
+    assert cell_text(cell) == "loads, 0/4 matched, 0 differs, 1 not run, 3 load failed"
+
+
+def test_a_persona_line_without_a_horizon_speaks_for_the_horizons_no_line_answers_for() -> None:
+    lines = [_persona_line(None, loads=False, reason="profile locked"), _persona_line(_H1), _line(period="2T")]
+    cell, outcomes, causes = _fold(_horizon_rows(), lines)
+    assert outcomes == {"1T": "load-failed", "2T": "matched", "3T": "not-run", "4T": "load-failed"}
+    assert causes["1T"] == "profile locked"
+    assert cell_text(cell) == "loads, 1/4 matched, 0 differs, 1 not run, 2 load failed"
+
+
+def test_a_persona_with_lines_for_other_horizons_only_loaded_by_default_at_a_horizon_without_one() -> None:
+    cell, outcomes, _ = _fold(_horizon_rows(), [_persona_line(_H1, loads=False, reason="no")])
+    assert outcomes == {"1T": "not-run", "2T": "load-failed", "3T": "load-failed", "4T": "not-run"}
+    assert cell.loads is True
+
+
+def test_without_any_horizon_a_failed_persona_line_fails_every_row_as_before() -> None:
+    rows = [_row("1T"), _row("2T", horizon=_H2)]
+    cell, outcomes, causes = _fold(rows, [_persona_line(None, loads=False, reason="profile locked")])
+    assert outcomes == {"1T": "load-failed", "2T": "load-failed"}
+    assert causes == {"1T": "profile locked", "2T": "profile locked"}
+    assert cell_text(cell) == "does not load, 0/2 matched, 0 differs, 0 not run, 2 load failed"
+
+
+def test_the_latest_persona_line_of_a_horizon_wins_over_an_earlier_one() -> None:
+    lines = [_persona_line(_H1, loads=False, reason="first"), _persona_line(_H1)]
+    _, outcomes, _ = _fold(_horizon_rows(), lines)
+    assert set(outcomes.values()) == {"not-run"}
+
+
+def test_the_horizon_is_read_from_the_field_and_a_bad_one_is_refused() -> None:
+    assert parse_result(json.dumps(_persona_line(_H1))).horizon == _H1
+    assert parse_result(json.dumps(_persona_line(None) | {"horizon": None})).horizon is None
+    assert parse_result(json.dumps(_persona_line(_H1, reason=f"horizon {_H2}: x"))).horizon == _H1
+    for bad in ("text", _H1 + 0.5, True, [_H1]):
+        with pytest.raises(ValueError, match="horizon must be an integer or null"):
+            parse_result(json.dumps(_persona_line(None) | {"horizon": bad}))
+    with pytest.raises(ValueError, match="a line with a modelo has no horizon"):
+        parse_result(json.dumps(_line(horizon=_H1)))
+
+
+@pytest.mark.parametrize(
+    ("reason", "expected"),
+    [
+        (f"horizon {_H1}: not loaded officers", _H1),
+        (f"horizon {_H1}", _H1),
+        (f"persona@{_H2}: not loaded", _H2),
+        (f"other@{_H2}: not loaded", None),
+        (f"horizon {_H1}0: x", None),
+        (f"the horizon {_H1}: x", None),
+        (f"persona@{_H1}9", None),
+        ("", None),
+    ],
+)
+def test_the_horizon_is_read_from_the_reason_prefix_when_the_field_is_absent(reason: str, expected: int | None) -> None:
+    assert parse_result(json.dumps(_persona_line(None, reason=reason))).horizon == expected
