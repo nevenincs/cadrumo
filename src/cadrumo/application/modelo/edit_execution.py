@@ -61,6 +61,7 @@ from ...core.errors.hierarchy import CadrumoError
 from ...core.hashing import content_hash_hex
 from ...core.identity.documents import SpanishTaxIdFormat
 from ...core.secure_object_write import SecureObjectWrite
+from ...domain.calculations.registry.binding_prior_value_rules import set_aside_binding_ids
 from ...domain.calculations.registry.binding_targets import bound_casilla_binding_ids
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.form_codes import form_for_role
@@ -1042,6 +1043,7 @@ def _prepare_edit(
             observation_repository=ports.observation_repository,
             filing_catalogue=ports.filing_repository.load(),
             work_catalogue=work_catalogue,
+            set_aside_binding_ids=set_aside_binding_ids(snapshot.revision, state.decimal_casilla_inputs),
         ),
         revision=snapshot.revision,
         head=head,

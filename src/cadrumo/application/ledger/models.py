@@ -60,6 +60,7 @@ from ...domain.transactions.model_validation import (
     refusable_figures_of,
     validate_business_pct_coupling,
     validate_figures_without_business,
+    validate_iva_rate_is_fraction,
 )
 from ...domain.transactions.models import (
     BucketTransactionRef,
@@ -434,6 +435,12 @@ class ManualLedgerTransactionPatch(ManualLedgerTransactionInput):
     source_jurisdiction: str | None = None
     group_label: _LedgerOptionalGroupLabel = None
     own_account_id: OwnAccountId | None = None
+
+    @field_validator("iva_rate")
+    @classmethod
+    @pydantic_validation_boundary
+    def _iva_rate_is_a_fraction(cls, value: Decimal | None) -> Decimal | None:
+        return validate_iva_rate_is_fraction(value)
 
     @model_validator(mode="after")
     @pydantic_validation_boundary

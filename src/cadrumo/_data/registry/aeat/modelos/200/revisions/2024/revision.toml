@@ -3460,7 +3460,7 @@ sequence_removals = {legal_refs = [0], source_refs = [0]}
 [[revisions."2024".family_overrides]]
 family = "formulas"
 selector = {revision = "2023", id = "modelo-200-base-imponible"}
-sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2024", required_text = ["compensacion de bases imponibles negativas", "reserva de capitalizacion"]}], source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2024", required_text = ["el importe a consignar en la casilla [00552] «Base imponible» de la página 14 del modelo 200", "[00552] = [00550] - [01032] - [00547]"]}], source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]}
 sequence_removals = {source_citations = [0], source_refs = [0, 1]}
 [[revisions."2024".family_overrides]]
 family = "formulas"
@@ -3475,25 +3475,35 @@ sequence_removals = {source_citations = [0], source_refs = [0, 1]}
 # BIN compensation MÁXIMA (LIS art. 26.1): the most of the pending stock (00670)
 # the period may compensate. The límite is a percentage of the base imponible
 # previa a la reserva de capitalización y a su compensación (casilla 00550):
-# 70, replaced by 50 when the INCN of the 12 months before the period starts is
-# at least 20 millones and by 25 when it is at least 60 millones (DA 15ª.1 LIS,
-# manuals/sociedades/2024 L14281-14300); "en todo caso" up to 1 millón
-# (L14305-14306; the parameter holds that same 1.000.000 EUR figure). The rentas
-# of casillas 00545, 00925 and 01509 are taken off 00547 before the límite is
-# applied (L14428-14485), so they raise the ceiling one for one. A nueva
-# creación that marks casilla 00070 does not apply the límite (art. 26.3 LIS,
-# L3183-3192), so its ceiling is the stock. The ceiling bounds the
-# operator-elective applied amount 00547 through a BLOCKING cap_le_when_positive
-# predicate; it never forces 00547 to the cap. A period shorter than a year
-# prorates the 1 millón (L14307-14311); this registry calculates the
-# twelve-month period only. A stock within the 1 millón plus those rentas is
-# within the ceiling whatever the turnover, so the INCN is read only above it.
+# 70, replaced by the DA 15ª.1 LIS percentage of the INCN tramo (50 from the
+# tramo medio, 25 from the tramo alto, parameters bin-limite-da15-*) when the
+# INCN of the 12 months before the period starts reaches the tramo (manuals/
+# sociedades/2024 L14289-14300; the 2023 edition omits them because the Tribunal
+# Constitucional annulled DA 15ª, L575-592 of that manual); "en todo caso" up to
+# 1 millón (L14305-14306; the parameter holds that same 1.000.000 EUR figure).
+# The rentas of casillas 00545 and 01509 (declared from the 2022 edition) and of
+# casilla 00925 are taken off 00547 before the límite is applied (L14428-14485),
+# so they raise the ceiling one for one; 00925 enters this edition because the
+# 2022 and 2023 manuals do not state it. A nueva creación that marks casilla
+# 00070 does not apply the límite (art. 26.3 LIS, L3183-3192), so its ceiling is
+# the stock. An entity that marks casilla 00072 (extinción) does not apply it
+# either, unless the extinción comes from a reestructuración (L3330-3337,
+# L14319-14326); the ceiling of such an entity is left without a value for the
+# operator to enter. The ceiling bounds the operator-elective applied amount
+# 00547 through a BLOCKING cap_le_when_positive predicate; it never forces 00547
+# to the cap. A period shorter than a year prorates the 1 millón (L14307-14311);
+# this registry calculates the twelve-month period only. A stock within the
+# 1 millón plus those rentas is within the ceiling whatever the turnover, so the
+# INCN is read only above it.
 [[revisions."2024".family_overrides]]
 family = "formulas"
 selector = {revision = "2023", id = "modelo-200-bin-aplicada-maxima"}
-sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2024", required_text = ["bases imponibles negativas"]}], source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2024", required_text = ["con el límite del 70 por ciento de la base imponible previa a la aplicación de la reserva de capitalización y a su compensación", "sustituirán el límite del 70 por ciento por los siguientes", "se podrán compensar en el período impositivo bases imponibles negativas hasta el importe de 1 millón de euros"]}], source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]}
 sequence_removals = {source_citations = [0], source_refs = [0, 1]}
 fields = { expression = { args = [
+    { op = "greater_than", args = [{ casilla_id = "00072" }, { literal = "0" }] },
+    { op = "unresolved_outcome", args = [{ text_literal = "m200-extincion-entidad-unsupported" }, { casilla_id = "DP200014:00547" }] },
+    { op = "if_then_else", args = [
     { op = "greater_than", args = [{ casilla_id = "00070" }, { literal = "0" }] },
     { casilla_id = "00670" },
     { op = "if_then_else", args = [
@@ -3501,7 +3511,7 @@ fields = { expression = { args = [
         { casilla_id = "00670" },
         { op = "add", args = [
             { parameter = "is.modelo-200.bin-compensacion-importe-minimo" },
-            { casilla_id = "00545" },
+            { casilla_id = "DP200014:00545" },
             { casilla_id = "00925" },
             { casilla_id = "01509" },
         ] },
@@ -3517,24 +3527,25 @@ fields = { expression = { args = [
                     { op = "if_then_else", args = [
                         { op = "greater_equal", args = [
                             { binding = "modelo-200-profile-incn-prior-12-months" },
-                            { literal = "60000000" },
+                            { parameter = "is.modelo-200.bin-limite-da15-tramo-alto-incn-minimo" },
                         ] },
-                        { literal = "25" },
+                        { parameter = "is.modelo-200.bin-limite-da15-tramo-alto-porcentaje" },
                         { op = "if_then_else", args = [
                             { op = "greater_equal", args = [
                                 { binding = "modelo-200-profile-incn-prior-12-months" },
-                                { literal = "20000000" },
+                                { parameter = "is.modelo-200.bin-limite-da15-tramo-medio-incn-minimo" },
                             ] },
-                            { literal = "50" },
-                            { literal = "70" },
+                            { parameter = "is.modelo-200.bin-limite-da15-tramo-medio-porcentaje" },
+                            { parameter = "is.modelo-200.bin-limite-porcentaje-general" },
                         ] },
                     ] },
                 ] },
             ] },
-            { casilla_id = "00545" },
+            { casilla_id = "DP200014:00545" },
             { casilla_id = "00925" },
             { casilla_id = "01509" },
         ] },
+    ] },
     ] },
     ] },
 ] }}
@@ -3566,7 +3577,7 @@ sequence_removals = {source_citations = [0], source_refs = [0, 1]}
 [[revisions."2024".family_overrides]]
 family = "formulas"
 selector = {revision = "2023", id = "modelo-200-cuota-integra"}
-sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2024", required_text = ["cuota integra (casilla 00562)", "tipo de gravamen"]}], source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2024", required_text = ["el tipo de gravamen de la casilla [00558]", "[00562] = [01330] x [00558]/100", "El contenido de la casilla [00562] «Cuota íntegra» siempre deberá ser una cantidad positiva o cero"]}], source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]}
 sequence_removals = {source_citations = [0], source_refs = [0, 1]}
 [[revisions."2024".family_overrides]]
 family = "formulas"
@@ -3581,7 +3592,7 @@ sequence_removals = {source_citations = [0], source_refs = [0, 1]}
 [[revisions."2024".family_overrides]]
 family = "formulas"
 selector = {revision = "2023", id = "modelo-200-tipo-gravamen-por-forma-juridica"}
-sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2024", required_text = ["tipo de gravamen", "cuota integra (casilla 00562)"]}], source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2024", required_text = ["se hará constar el tipo de gravamen que corresponda de acuerdo con el régimen de tributación aplicable a la entidad declarante", "Tipo general 25 por 100", "Entidades de nueva creación del artículo 29.1 de la LIS que realicen actividades económicas", "Entidades INCN < 1 millón de euros en el período impositivo inmediato anterior"]}], source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]}
 sequence_removals = {source_citations = [0], source_refs = [0, 1]}
 [[revisions."2024".family_overrides]]
 family = "dependency_classifications"
@@ -3632,11 +3643,6 @@ sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-
 sequence_removals = {source_citations = [0], source_refs = [0]}
 [[revisions."2024".family_overrides]]
 family = "parameters"
-selector = {revision = "2023", id = "is.modelo-200.cuota-integra-bracket-erd-art101"}
-sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2024", required_text = ["tipo de gravamen"]}], source_refs = ["aeat-modelo-200-manual-2024"]}
-sequence_removals = {source_citations = [0], source_refs = [0]}
-[[revisions."2024".family_overrides]]
-family = "parameters"
 selector = {revision = "2023", id = "is.modelo-200.cuota-integra-bracket-general"}
 sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2024", required_text = ["tipo de gravamen"]}], source_refs = ["aeat-modelo-200-manual-2024"]}
 sequence_removals = {source_citations = [0], source_refs = [0]}
@@ -3652,11 +3658,6 @@ sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-
 sequence_removals = {source_citations = [0], source_refs = [0]}
 [[revisions."2024".family_overrides]]
 family = "parameters"
-selector = {revision = "2023", id = "is.modelo-200.incn-umbral-erd-art101"}
-sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2024", required_text = ["tipo de gravamen"]}], source_refs = ["aeat-modelo-200-manual-2024"]}
-sequence_removals = {source_citations = [0], source_refs = [0]}
-[[revisions."2024".family_overrides]]
-family = "parameters"
 selector = {revision = "2023", id = "is.modelo-200.incn-umbral-microempresa"}
 sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2024", required_text = ["tipo de gravamen"]}], source_refs = ["aeat-modelo-200-manual-2024"]}
 sequence_removals = {source_citations = [0], source_refs = [0]}
@@ -3667,18 +3668,13 @@ sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-
 sequence_removals = {source_citations = [0], source_refs = [0]}
 [[revisions."2024".family_overrides]]
 family = "parameters"
-selector = {revision = "2023", id = "is.modelo-200.tipo-gravamen-erd"}
-sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2024", required_text = ["tipo de gravamen"]}], source_refs = ["aeat-modelo-200-manual-2024"]}
-sequence_removals = {source_citations = [0], source_refs = [0]}
-[[revisions."2024".family_overrides]]
-family = "parameters"
-selector = {revision = "2023", id = "is.modelo-200.tipo-gravamen-erd-art101"}
-sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2024", required_text = ["tipo de gravamen"]}], source_refs = ["aeat-modelo-200-manual-2024"]}
-sequence_removals = {source_citations = [0], source_refs = [0]}
-[[revisions."2024".family_overrides]]
-family = "parameters"
 selector = {revision = "2023", id = "is.modelo-200.bin-compensacion-importe-minimo"}
 sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2024", required_text = ["se podran compensar en el periodo impositivo bases imponibles negativas hasta el importe de 1 millon de euros"]}], source_refs = ["aeat-modelo-200-manual-2024"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+[[revisions."2024".family_overrides]]
+family = "parameters"
+selector = {revision = "2023", id = "is.modelo-200.bin-limite-porcentaje-general"}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2024", required_text = ["el limite del 70 por ciento de la base imponible previa a la aplicacion de la reserva de capitalizacion y a su compensacion"]}], source_refs = ["aeat-modelo-200-manual-2024"]}
 sequence_removals = {source_citations = [0], source_refs = [0]}
 [[revisions."2024".family_overrides]]
 family = "parameters"
@@ -3752,8 +3748,8 @@ sequence_additions = {source_refs = ["aeat-modelo-200-manual-2024"], source_cita
 sequence_removals = {source_refs = [0], source_citations = [0]}
 [[revisions."2024".family_overrides]]
 family = "bindings"
-selector = {revision = "2023", id = "modelo-200-profile-incn-prior-12-months"}
-sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2024", required_text = ["tipo de gravamen"]}], source_refs = ["aeat-modelo-200-manual-2024"]}
+selector = {revision = "2023", id = "modelo-200-incn-periodo-impositivo-anterior"}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2024", required_text = ["importe neto de la cifra de negocios del período"]}], source_refs = ["aeat-modelo-200-manual-2024"]}
 sequence_removals = {source_citations = [0], source_refs = [0]}
 [[revisions."2024".family_overrides]]
 family = "bindings"
@@ -3788,9 +3784,7 @@ family = "completeness_manifest"
 selector = {revision = "2023", id = "aeat-dr-200-2023"}
 replacement_id = "aeat-dr-200-2024"
 sequence_additions = {source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"], casillas = [
-    {casilla_id = "00545", number = "00545"},
     {casilla_id = "00925", number = "00925"},
-    {casilla_id = "01509", number = "01509"},
 ]}
 sequence_removals = {source_refs = [0, 1]}
 [[revisions."2024".family_positions]]

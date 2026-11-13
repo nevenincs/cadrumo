@@ -142,7 +142,6 @@ _KEPT_REFUSALS: dict[str, tuple[Callable[[Transaction], bool], Callable[[dict[st
     "naive lifecycle timestamp": (_plain, _set("modified_at", "2026-01-01T00:00:00")),
     "non-UTC lifecycle timestamp": (_plain, _set("created_at", "2026-01-01T00:00:00+01:00")),
     "negative tax amount": (_has_tax_substrate, _set("iva_amount", "-21.00")),
-    "percentage IVA rate": (_has_tax_substrate, _set("iva_rate", "21")),
     "unknown field": (_plain, _set("unexpected", "value")),
     "malformed id": (_plain, _set("transaction_id", "not-a-hex-id")),
     "blank foreign key": (_plain, _set("category_id", "   ")),

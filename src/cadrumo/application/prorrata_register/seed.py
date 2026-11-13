@@ -37,7 +37,7 @@ from decimal import Decimal
 from typing import Final
 
 from ...core.authority_grade import RegistryAuthorityGrade
-from ...core.casilla_id import CasillaId, validated_casilla_id
+from ...core.casilla_id import CasillaId
 from ...core.period import Period, StandardPeriodCode
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.binding_targets import casillas_by_binding
@@ -65,11 +65,8 @@ from ..calculations.observations_repository import (
     ObservationEnvelopePayload,
 )
 from ..calculations.revision_carry_gate import revision_carry_outcome
+from .settlement import PRORRATA_PORCENTAJE_CASILLA
 
-_PRORRATA_PORCENTAJE_CASILLA: Final[CasillaId] = validated_casilla_id(
-    "iva.prorrata-porcentaje",
-    surface="prorrata register carried prior definitive seed casilla id",
-)
 _REGULATED_OVERRIDE_DIFFERENCE = "regulated_prorrata_override_difference"
 #: The prior 390 declares more than one activity row, so no single definitive percentage carries.
 PRORRATA_SEVERAL_ACTIVITIES: Final = "prorrata_several_activities"
@@ -138,7 +135,7 @@ class _PriorSettlementObservation:
     stamped_revision_id: RevisionId
     captured_at: datetime
     source_modelo: str = field(default_factory=lambda: form_for_role("iva.periodic"))
-    source_casilla_id: CasillaId = _PRORRATA_PORCENTAJE_CASILLA
+    source_casilla_id: CasillaId = PRORRATA_PORCENTAJE_CASILLA
 
 
 @dataclass(frozen=True, slots=True)
@@ -711,7 +708,7 @@ def _prior_settlement_observations(
         settlement_key = m303_annual_settlement_order_key(period, payload.captured_at, authority=operation)
         if settlement_key is None:
             continue
-        percentage = observation.casilla_values.get(_PRORRATA_PORCENTAJE_CASILLA)
+        percentage = observation.casilla_values.get(PRORRATA_PORCENTAJE_CASILLA)
         if percentage is None:
             continue
         observations.append(

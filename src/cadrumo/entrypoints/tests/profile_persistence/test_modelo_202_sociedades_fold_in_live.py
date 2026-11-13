@@ -116,7 +116,7 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
-from .observation_seeding_support import save_stamped_observation
+from .observation_seeding_support import save_preceding_m200_turnover, save_stamped_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -130,6 +130,8 @@ def bucket_id() -> str:
 
 
 _T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
+# The sociedad-limitada persona's turnover of the twelve months before the period.
+_PRECEDING_TURNOVER = Decimal("28500.00")
 _T1 = datetime(2026, 1, 10, 11, 0, tzinfo=UTC)
 _M202 = "202"
 _M200 = "200"
@@ -146,7 +148,6 @@ _M202_PAGO_OUTPUT_40_2: CasillaId = validated_casilla_id(
 )  # modalidad cuota (art. 40.2); folds alongside casilla 34
 _M200_CUOTA_EJERCICIO: CasillaId = validated_casilla_id("DP200014B:00599", surface="_M200_CUOTA_EJERCICIO")
 _M202_CUOTA_BASE_BINDING = "modelo-202-cuota-base-ejercicio-anterior"
-_M202_PAGOS_ANTERIORES_BINDING = "modelo-202-pagos-fraccionados-anteriores"
 
 # Bound casillas on the M202/2025 revision under test.
 _CASILLA_BASE: CasillaId = validated_casilla_id(
@@ -258,6 +259,11 @@ def _calculate_m200(secure_objects: SecureObjectRepository) -> BucketAggregation
     and ``DP200014B:00611`` (cuota diferencial) == 0 − sum(M202 pagos).
     """
     seed_persona_profile("sociedad-limitada", bucket_id=_BUCKET_ID_M200, at=_T0)
+    # The rate reads the preceding período's turnover from its own Modelo 200, held here at the
+    # persona's stated twelve-month figure, so the two agree.
+    save_preceding_m200_turnover(
+        CalculationObservationRepository(), filing_year=_FILING_YEAR, turnover=_PRECEDING_TURNOVER, captured_at=_T0
+    )
     wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
     snapshot = published_authority_operation().snapshot(
         _M200,
@@ -478,10 +484,10 @@ def test_m202_2p_no_prior_filing_refuses_zero_draft_on_live_calculate(
     assert context is not None
     missing_bindings = context["missing_bindings"]
     assert isinstance(missing_bindings, tuple)
-    assert set(missing_bindings) == {
-        _M202_CUOTA_BASE_BINDING,
-        _M202_PAGOS_ANTERIORES_BINDING,
-    }
+    # The persona pays by the cuota modality (LIS art. 40.2): its instalment is a share of the last
+    # cuota and deducts no earlier instalment, which only the base-imponible modality (art. 40.3)
+    # subtracts, so the absent prior return leaves only the cuota base unresolved.
+    assert set(missing_bindings) == {_M202_CUOTA_BASE_BINDING}
     assert cr_repo.load().revisions == {}
     stored_work_unit = wu_repo.load().get(work_unit.work_unit_id)
     assert stored_work_unit is not None

@@ -13,7 +13,9 @@ from collections.abc import Mapping
 from decimal import Decimal, InvalidOperation
 
 from cadrumo.application.modelo.work_calculation_contracts import ModeloWorkCalculatePublicResultV3
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.renta_inmueble_bindings import renta_inmueble_columns
+from cadrumo.domain.calculations.registry.schema_form_layouts import FormPlacementKind
 from cadrumo.entrypoints.adapter_composition_work_ports import build_calculation_action_ports
 from cadrumo.entrypoints.tests.persona_materialisation import PersonaWorld
 
@@ -66,4 +68,28 @@ def row_figures(world: PersonaWorld, calculated: ModeloWorkCalculatePublicResult
     return single_row_figures(stored.row_binding_values, fed)
 
 
-__all__ = ["merge_row_figures", "row_figures", "single_row_figures"]
+def on_form_casillas(operation: PinnedAuthorityOperation, modelo: str, revision_id: str) -> frozenset[str] | None:
+    """The casillas the revision places at an official position on its form, or ``None`` without a layout.
+
+    The form layout declares for every casilla whether it is ``on_form``, an application ``working_figure`` the
+    official form does not print, or ``unplaced``; only an ``on_form`` casilla is a box a surface can show.
+    """
+    layout = operation.form_layout(modelo, revision_id)
+    if layout is None:
+        return None
+    return frozenset(
+        str(placement.casilla_id) for placement in layout.placements if placement.kind is FormPlacementKind.ON_FORM
+    )
+
+
+def split_figures(
+    figures: tuple[tuple[str, str], ...], on_form: frozenset[str] | None
+) -> tuple[tuple[tuple[str, str], ...], tuple[tuple[str, str], ...]]:
+    """The ``figures`` on the form and, apart, those it does not place; all are on the form without a layout."""
+    if on_form is None:
+        return figures, ()
+    shown = tuple(item for item in figures if item[0] in on_form)
+    return shown, tuple(item for item in figures if item[0] not in on_form)
+
+
+__all__ = ["merge_row_figures", "on_form_casillas", "row_figures", "single_row_figures", "split_figures"]

@@ -109,6 +109,13 @@ class CrossPeriodCleanStateBlocker(StrEnum):
     envelope keeps every reading and its basis. No side is allowed to win, so the
     kind stays unknown until the evidence is reconciled.
     """
+    HELD_SOURCE_SET_ASIDE = "held_source_set_aside"
+    """The current return marks a box under which the held source does not give the figure.
+
+    The registry declares the box on the carry, as the grupo mercantil mark that
+    measures the preceding turnover over the whole group. The held return's own
+    figure is set aside, so only the filer's statement of the figure settles it.
+    """
     REGISTRY_REVISION_DIVERGENCE = "registry_revision_divergence"
     """Stamped revision id does not re-confirm against the law-determined revision for the source.
 
@@ -145,6 +152,7 @@ OPERATOR_ACTION_BY_CROSS_PERIOD_CLEAN_STATE_BLOCKER: Mapping[
     CrossPeriodCleanStateBlocker.MISSING_EXPECTED_GROUP_MEMBER_ROSTER: OperatorActionAxis.CONFIRM_GROUP_MEMBERSHIP,
     CrossPeriodCleanStateBlocker.UNEXPECTED_GROUP_MEMBER_SOURCE: OperatorActionAxis.CONFIRM_GROUP_MEMBERSHIP,
     CrossPeriodCleanStateBlocker.FILING_KIND_DISAGREEMENT: OperatorActionAxis.RESOLVE_VALUE_DIVERGENCE,
+    CrossPeriodCleanStateBlocker.HELD_SOURCE_SET_ASIDE: OperatorActionAxis.SUPPLY_MANUAL_INPUT,
     CrossPeriodCleanStateBlocker.REGISTRY_REVISION_DIVERGENCE: OperatorActionAxis.RESOLVE_REVISION_MISMATCH,
 }
 """Total operator-action projection retaining each native clean-state blocker."""

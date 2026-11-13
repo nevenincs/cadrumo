@@ -50,3 +50,74 @@ value = "21"
 date_axis = "filing_period"
 valid_from = 2026-01-01
 valid_to = 2026-12-31
+
+# Reduced-dimension lane of the tipo de gravamen. LIS art. 29.1 in the wording
+# of Ley 7/2024 DF 8.3 (periods initiated from 2025, ley-27-2014.html.extracted.md
+# L810-L816) taxes at 20 % "las entidades que cumplan las previsiones previstas
+# en el artículo 101", unless another rate of the article applies; DT 44ª fixes
+# the transitional rate for periods initiated in 2025 (24 %, DT 44ª.1.b), 2026
+# (23 %, 2.b), 2027 (22 %, 3) and 2028 (21 %, 4)
+# (ley-27-2014-dt-44.html.extracted.md L1-L22). The Manual práctico de
+# Sociedades 2025 states the 2025 rate: "Entidades de Reducida Dimensión
+# (art. 101 LIS) 24 por 100" (p. 373, source.pdf.extracted.md L14984). The
+# 2023 and 2024 wording of art. 29.1 (Ley 31/2022 art. 39) and the rate tables
+# of the 2023 and 2024 manuals state no reduced-dimension rate.
+[[revisions."2025-y-siguientes".parameters]]
+id = "is.modelo-200.tipo-gravamen-erd-art101"
+data_type = "ratio"
+unit = "percent"
+legal_refs = ["ley-27-2014:art-29", "ley-27-2014:art-29-2025", "ley-27-2014:art-101", "ley-27-2014:dt-44"]
+source_refs = ["aeat-modelo-200-manual-2025"]
+
+[[revisions."2025-y-siguientes".parameters.source_citations]]
+source_ref = "aeat-modelo-200-manual-2025"
+required_text = ["Entidades de Reducida Dimensión (art. 101 LIS) 24 por 100", "régimen de las empresas de reducida dimensión tributarán al tipo del 23 por ciento", "régimen de las empresas de reducida dimensión tributarán al tipo del 22 por ciento", "régimen de las empresas de reducida dimensión tributarán al tipo del 21 por ciento"]
+
+[[revisions."2025-y-siguientes".parameters.values]]
+value = "24"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[revisions."2025-y-siguientes".parameters.values]]
+value = "23"
+date_axis = "filing_period"
+valid_from = 2026-01-01
+valid_to = 2026-12-31
+
+[[revisions."2025-y-siguientes".parameters.values]]
+value = "22"
+date_axis = "filing_period"
+valid_from = 2027-01-01
+valid_to = 2027-12-31
+
+[[revisions."2025-y-siguientes".parameters.values]]
+value = "21"
+date_axis = "filing_period"
+valid_from = 2028-01-01
+valid_to = 2028-12-31
+
+[[revisions."2025-y-siguientes".parameters.values]]
+value = "20"
+date_axis = "filing_period"
+valid_from = 2029-01-01
+
+# Turnover ceiling of the reduced-dimension lane: LIS art. 101.1, "inferior a
+# 10 millones de euros" for the INCN of the período impositivo inmediato
+# anterior (ley-27-2014-art-101.html.extracted.md L3), read by the rate lane of
+# casilla 00558 from the first period that lane exists.
+[[revisions."2025-y-siguientes".parameters]]
+id = "is.modelo-200.incn-umbral-erd-art101"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-27-2014:art-101", "ley-27-2014:art-29", "ley-27-2014:art-29-2025", "ley-27-2014:dt-44"]
+source_refs = ["aeat-modelo-200-manual-2025"]
+
+[[revisions."2025-y-siguientes".parameters.source_citations]]
+source_ref = "aeat-modelo-200-manual-2025"
+required_text = ["importe neto de la cifra de negocios en el período impositivo inmediato anterior sea inferior a 10 millones de euros"]
+
+[[revisions."2025-y-siguientes".parameters.values]]
+value = "10000000"
+date_axis = "filing_period"
+valid_from = 2025-01-01

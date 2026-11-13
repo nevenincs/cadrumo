@@ -226,6 +226,8 @@ def test_modelo_200_micro_empresa_pyme_cuota_under_the_first_dt44_scale(
             "--casilla", "DP200014:01034=0.00",
             "--binding", "modelo-200-profile-legal-entity-form=sl",
             "--binding", "modelo-200-profile-incn-prior-12-months=500000",
+            # The rate reads the preceding período's turnover, a carry of its Modelo 200.
+            "--binding", "modelo-200-incn-periodo-impositivo-anterior=500000",
             # Estado-share porcentaje for IS cuota; 100 means full estado share
             # (no foral/territorial adjustment) which is the common-regime case
             # this oracle fixture covers.
@@ -600,6 +602,8 @@ def test_modelo_200_enum_binding_accepts_non_numeric_value(
             "--casilla", "DP200014:01034=0.00",
             "--binding", "modelo-200-profile-legal-entity-form=sl",
             "--binding", "modelo-200-profile-incn-prior-12-months=500000",
+            # The rate reads the preceding período's turnover, a carry of its Modelo 200.
+            "--binding", "modelo-200-incn-periodo-impositivo-anterior=500000",
             "--binding", "modelo-200-profile-tributacion-estado-porcentaje=100",
             "--binding", "modelo-200-bin-pendiente-ejercicios-anteriores=0",
             "--binding", "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores=0",

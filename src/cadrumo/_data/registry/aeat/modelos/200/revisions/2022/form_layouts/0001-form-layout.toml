@@ -7,7 +7,7 @@ revision_id = "2022"
 seed_source = "design_box_number"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "0dc5f40e56d355d07fd2ae4987cd841ab97db8c9d8144eba677c79de7c07af26"
+source_state_digest = "56e7a06ed08440531d52791a2210371250b86f46b04479ec8a9b9352c0cd5ca7"
 design_sources = [
     { source_ref = "aeat-dr-200-2022", sha256 = "8c9fa09e5713dc19ed9235757c314a1afee24108bccee4e39031f0df9a75fae6" },
 ]
@@ -490,7 +490,6 @@ placements = [
     { casilla_id = "00542", kind = "on_form", box_number = "00542" },
     { casilla_id = "00543", kind = "on_form", box_number = "00543" },
     { casilla_id = "00544", kind = "on_form", box_number = "00544" },
-    { casilla_id = "00545", kind = "on_form", box_number = "00545" },
     { casilla_id = "00546", kind = "on_form", box_number = "00546" },
     { casilla_id = "00548", kind = "on_form", box_number = "00548" },
     { casilla_id = "00549", kind = "on_form", box_number = "00549" },
@@ -1048,6 +1047,7 @@ placements = [
     { casilla_id = "01497", kind = "on_form", box_number = "01497" },
     { casilla_id = "01498", kind = "on_form", box_number = "01498" },
     { casilla_id = "01499", kind = "on_form", box_number = "01499" },
+    { casilla_id = "01509", kind = "on_form", box_number = "01509" },
     { casilla_id = "01511", kind = "on_form", box_number = "01511" },
     { casilla_id = "01512", kind = "on_form", box_number = "01512" },
     { casilla_id = "01513", kind = "on_form", box_number = "01513" },
@@ -2406,6 +2406,7 @@ placements = [
     { casilla_id = "DP200010:00619", kind = "on_form", box_number = "00619" },
     { casilla_id = "DP200011:00417", kind = "on_form", box_number = "00417" },
     { casilla_id = "DP200011:00418", kind = "on_form", box_number = "00418" },
+    { casilla_id = "DP200011:00545", kind = "on_form", box_number = "00545" },
     { casilla_id = "DP200011:00547", kind = "on_form", box_number = "00547" },
     { casilla_id = "DP200011:00558", kind = "on_form", box_number = "00558" },
     { casilla_id = "DP200011:00569", kind = "on_form", box_number = "00569" },
@@ -2446,6 +2447,7 @@ placements = [
     { casilla_id = "DP200013:bin-aplicada-maxima", kind = "working_figure" },
     { casilla_id = "DP200014:00082", kind = "on_form", box_number = "00082" },
     { casilla_id = "DP200014:00399", kind = "on_form", box_number = "00399" },
+    { casilla_id = "DP200014:00545", kind = "on_form", box_number = "00545" },
     { casilla_id = "DP200014:00558", kind = "on_form", box_number = "00558" },
     { casilla_id = "DP200014:00562", kind = "on_form", box_number = "00562" },
     { casilla_id = "DP200014:00563", kind = "on_form", box_number = "00563" },
@@ -2526,6 +2528,7 @@ placements = [
     { casilla_id = "DP200041:00399", kind = "on_form", box_number = "00399" },
     { casilla_id = "DP200042:00417", kind = "on_form", box_number = "00417" },
     { casilla_id = "DP200042:00418", kind = "on_form", box_number = "00418" },
+    { casilla_id = "DP200042:00545", kind = "on_form", box_number = "00545" },
     { casilla_id = "DP200042:00547", kind = "on_form", box_number = "00547" },
     { casilla_id = "DP200042:00558", kind = "on_form", box_number = "00558" },
     { casilla_id = "DP200042:00562", kind = "on_form", box_number = "00562" },
@@ -3607,7 +3610,7 @@ id = "estado-de-cambios-patrimonio-neto-iii-ope-f4fd28"
 heading_key = "modelo.schema.200.form.section.estado-de-cambios-patrimonio-neto-iii-ope-f4fd28.heading"
 official_heading = "Estado de cambios patrimonio neto (III) - Operaciones con socios o propietarios"
 blocks = [
-    { kind = "grid", id = "grid", columns = [{ key = "dividendo-a-cuenta", heading_key = "modelo.schema.200.form.column.dividendo-a-cuenta.heading", official_heading = "Dividendo a cuenta" }, { key = "otros-instrumentos-patrimonio-neto", heading_key = "modelo.schema.200.form.column.otros-instrumentos-patrimonio-neto.heading", official_heading = "Otros instrumentos patrimonio neto" }, { key = "ajustes-por-cambios-de-valor", heading_key = "modelo.schema.200.form.column.ajustes-por-cambios-de-valor.heading", official_heading = "Ajustes por cambios de valor" }, { key = "ajustes-en-patrimonio-neto", heading_key = "modelo.schema.200.form.column.ajustes-en-patrimonio-neto.heading", official_heading = "Ajustes en patrimonio neto" }, { key = "subvenciones-donaciones-y-legados-recibidos", heading_key = "modelo.schema.200.form.column.subvenciones-donaciones-y-legados-recibidos.heading", official_heading = "Subvenciones, donaciones y legados recibidos" }, { key = "total", heading_key = "modelo.form.column.total", official_heading = "Total" }], rows = [{ key = "aumentos-de-capital", heading_key = "modelo.schema.200.form.row.aumentos-de-capital.heading", official_heading = "Aumentos de capital", cells = [{ kind = "casilla", casilla_id = "00528" }, { kind = "casilla", casilla_id = "00529" }, { kind = "casilla", casilla_id = "00530" }, { kind = "casilla", casilla_id = "00531" }, { kind = "casilla", casilla_id = "00532" }, { kind = "casilla", casilla_id = "00533" }] }, { key = "reducciones-de-capital", heading_key = "modelo.schema.200.form.row.reducciones-de-capital.heading", official_heading = "(-) Reducciones de capital", cells = [{ kind = "casilla", casilla_id = "00542" }, { kind = "casilla", casilla_id = "00543" }, { kind = "casilla", casilla_id = "00544" }, { kind = "casilla", casilla_id = "00545" }, { kind = "casilla", casilla_id = "00546" }, { kind = "casilla", casilla_id = "DP200011:00547" }] }] },
+    { kind = "grid", id = "grid", columns = [{ key = "dividendo-a-cuenta", heading_key = "modelo.schema.200.form.column.dividendo-a-cuenta.heading", official_heading = "Dividendo a cuenta" }, { key = "otros-instrumentos-patrimonio-neto", heading_key = "modelo.schema.200.form.column.otros-instrumentos-patrimonio-neto.heading", official_heading = "Otros instrumentos patrimonio neto" }, { key = "ajustes-por-cambios-de-valor", heading_key = "modelo.schema.200.form.column.ajustes-por-cambios-de-valor.heading", official_heading = "Ajustes por cambios de valor" }, { key = "ajustes-en-patrimonio-neto", heading_key = "modelo.schema.200.form.column.ajustes-en-patrimonio-neto.heading", official_heading = "Ajustes en patrimonio neto" }, { key = "subvenciones-donaciones-y-legados-recibidos", heading_key = "modelo.schema.200.form.column.subvenciones-donaciones-y-legados-recibidos.heading", official_heading = "Subvenciones, donaciones y legados recibidos" }, { key = "total", heading_key = "modelo.form.column.total", official_heading = "Total" }], rows = [{ key = "aumentos-de-capital", heading_key = "modelo.schema.200.form.row.aumentos-de-capital.heading", official_heading = "Aumentos de capital", cells = [{ kind = "casilla", casilla_id = "00528" }, { kind = "casilla", casilla_id = "00529" }, { kind = "casilla", casilla_id = "00530" }, { kind = "casilla", casilla_id = "00531" }, { kind = "casilla", casilla_id = "00532" }, { kind = "casilla", casilla_id = "00533" }] }, { key = "reducciones-de-capital", heading_key = "modelo.schema.200.form.row.reducciones-de-capital.heading", official_heading = "(-) Reducciones de capital", cells = [{ kind = "casilla", casilla_id = "00542" }, { kind = "casilla", casilla_id = "00543" }, { kind = "casilla", casilla_id = "00544" }, { kind = "casilla", casilla_id = "DP200011:00545" }, { kind = "casilla", casilla_id = "00546" }, { kind = "casilla", casilla_id = "DP200011:00547" }] }] },
     { kind = "grid", id = "grid-2", columns = [{ key = "resultado-del-ejercicio", heading_key = "modelo.schema.200.form.column.resultado-del-ejercicio.heading", official_heading = "Resultado del ejercicio" }, { key = "dividendo-a-cuenta", heading_key = "modelo.schema.200.form.column.dividendo-a-cuenta.heading", official_heading = "Dividendo a cuenta" }, { key = "otros-instrumentos-patrimonio-neto", heading_key = "modelo.schema.200.form.column.otros-instrumentos-patrimonio-neto.heading", official_heading = "Otros instrumentos patrimonio neto" }, { key = "ajustes-por-cambios-de-valor", heading_key = "modelo.schema.200.form.column.ajustes-por-cambios-de-valor.heading", official_heading = "Ajustes por cambios de valor" }, { key = "subvenciones-donaciones-y-legados-recibidos", heading_key = "modelo.schema.200.form.column.subvenciones-donaciones-y-legados-recibidos.heading", official_heading = "Subvenciones, donaciones y legados recibidos" }, { key = "total", heading_key = "modelo.form.column.total", official_heading = "Total" }], rows = [{ key = "conversion-de-pasivos-en-patrim-neto", heading_key = "modelo.schema.200.form.row.conversion-de-pasivos-en-patrim-neto.heading", official_heading = "Conversión de pasivos en patrim. neto", cells = [{ kind = "casilla", casilla_id = "00555" }, { kind = "casilla", casilla_id = "00556" }, { kind = "casilla", casilla_id = "00557" }, { kind = "casilla", casilla_id = "DP200011:00558" }, { kind = "casilla", casilla_id = "00560" }, { kind = "casilla", casilla_id = "00561" }] }] },
     { kind = "grid", id = "grid-3", columns = [{ key = "resultado-del-ejercicio", heading_key = "modelo.schema.200.form.column.resultado-del-ejercicio.heading", official_heading = "Resultado del ejercicio" }, { key = "dividendo-a-cuenta", heading_key = "modelo.schema.200.form.column.dividendo-a-cuenta.heading", official_heading = "Dividendo a cuenta" }, { key = "otros-instrumentos-patrimonio-neto", heading_key = "modelo.schema.200.form.column.otros-instrumentos-patrimonio-neto.heading", official_heading = "Otros instrumentos patrimonio neto" }, { key = "ajustes-por-cambio-de-valor", heading_key = "modelo.schema.200.form.column.ajustes-por-cambio-de-valor.heading", official_heading = "Ajustes por cambio de valor" }, { key = "subvenciones-donaciones-y-legados-recibidos", heading_key = "modelo.schema.200.form.column.subvenciones-donaciones-y-legados-recibidos.heading", official_heading = "Subvenciones, donaciones y legados recibidos" }, { key = "total", heading_key = "modelo.form.column.total", official_heading = "Total" }], rows = [{ key = "distribucion-de-dividendos", heading_key = "modelo.schema.200.form.row.distribucion-de-dividendos.heading", official_heading = "(-) Distribución de dividendos", cells = [{ kind = "casilla", casilla_id = "DP200011:00569" }, { kind = "casilla", casilla_id = "DP200011:00570" }, { kind = "casilla", casilla_id = "DP200011:00571" }, { kind = "casilla", casilla_id = "DP200011:00572" }, { kind = "casilla", casilla_id = "00574" }, { kind = "casilla", casilla_id = "DP200011:00575" }] }, { key = "operaciones-con-acciones-o-participacione-0dd8aa", heading_key = "modelo.schema.200.form.row.operaciones-con-acciones-o-participacione-0dd8aa.heading", official_heading = "Operaciones con acciones o participaciones propias", cells = [{ kind = "casilla", casilla_id = "DP200011:00583" }, { kind = "casilla", casilla_id = "DP200011:00584" }, { kind = "casilla", casilla_id = "DP200011:00585" }, { kind = "casilla", casilla_id = "00586" }, { kind = "casilla", casilla_id = "DP200011:00588" }, { kind = "casilla", casilla_id = "00589" }] }] },
     { kind = "grid", id = "grid-4", columns = [{ key = "resultado-del-ejercicio", heading_key = "modelo.schema.200.form.column.resultado-del-ejercicio.heading", official_heading = "Resultado del ejercicio" }, { key = "dividendo-a-cuenta", heading_key = "modelo.schema.200.form.column.dividendo-a-cuenta.heading", official_heading = "Dividendo a cuenta" }, { key = "otros-instrumentos-patrimonio-neto", heading_key = "modelo.schema.200.form.column.otros-instrumentos-patrimonio-neto.heading", official_heading = "Otros instrumentos patrimonio neto" }, { key = "ajustes-por-cambios-de-valor", heading_key = "modelo.schema.200.form.column.ajustes-por-cambios-de-valor.heading", official_heading = "Ajustes por cambios de valor" }, { key = "subvenciones-donaciones-y-legados-recibidos", heading_key = "modelo.schema.200.form.column.subvenciones-donaciones-y-legados-recibidos.heading", official_heading = "Subvenciones, donaciones y legados recibidos" }, { key = "total", heading_key = "modelo.form.column.total", official_heading = "Total" }], rows = [{ key = "incremento-reduccion-de-patr-neto-de-comb-420c33", heading_key = "modelo.schema.200.form.row.incremento-reduccion-de-patr-neto-de-comb-420c33.heading", official_heading = "Incremento (reducción) de patr. neto de combinación de negocios", cells = [{ kind = "casilla", casilla_id = "00597" }, { kind = "casilla", casilla_id = "00598" }, { kind = "casilla", casilla_id = "DP200011:00599" }, { kind = "casilla", casilla_id = "00600" }, { kind = "casilla", casilla_id = "00602" }, { kind = "casilla", casilla_id = "DP200011:00603" }] }] },
@@ -3760,6 +3763,15 @@ heading_key = "modelo.schema.200.form.section.liquidacion-iii-base-imponible-sol
 official_heading = "Liquidación III - Base imponible - Sólo entidades ZEC"
 blocks = [
     { kind = "field", id = "field", casilla_id = "00559" },
+]
+
+[[revisions.2022.form_layouts.pages.sections]]
+id = "liquidacion-iii-base-imponible"
+heading_key = "modelo.schema.200.form.section.liquidacion-iii-base-imponible.heading"
+official_heading = "Liquidación III - Base imponible"
+blocks = [
+    { kind = "field", id = "field", casilla_id = "DP200014:00545" },
+    { kind = "field", id = "field-2", casilla_id = "01509" },
 ]
 
 [[revisions.2022.form_layouts.pages.sections]]
@@ -8742,20 +8754,21 @@ official_heading = "Entidades aseguradoras - Estado cambios patrimonio propio (I
 blocks = [
     { kind = "field", id = "field", casilla_id = "DP200042:00417" },
     { kind = "field", id = "field-2", casilla_id = "DP200042:00418" },
-    { kind = "field", id = "field-3", casilla_id = "DP200042:00547" },
-    { kind = "field", id = "field-4", casilla_id = "DP200042:00558" },
-    { kind = "field", id = "field-5", casilla_id = "DP200042:00562" },
-    { kind = "field", id = "field-6", casilla_id = "DP200042:00569" },
-    { kind = "field", id = "field-7", casilla_id = "DP200042:00570" },
-    { kind = "field", id = "field-8", casilla_id = "DP200042:00571" },
-    { kind = "field", id = "field-9", casilla_id = "DP200042:00572" },
-    { kind = "field", id = "field-10", casilla_id = "DP200042:00573" },
-    { kind = "field", id = "field-11", casilla_id = "DP200042:00575" },
-    { kind = "field", id = "field-12", casilla_id = "DP200042:00582" },
-    { kind = "field", id = "field-13", casilla_id = "DP200042:00583" },
-    { kind = "field", id = "field-14", casilla_id = "DP200042:00584" },
-    { kind = "field", id = "field-15", casilla_id = "DP200042:00585" },
-    { kind = "field", id = "field-16", casilla_id = "DP200042:00588" },
+    { kind = "field", id = "field-3", casilla_id = "DP200042:00545" },
+    { kind = "field", id = "field-4", casilla_id = "DP200042:00547" },
+    { kind = "field", id = "field-5", casilla_id = "DP200042:00558" },
+    { kind = "field", id = "field-6", casilla_id = "DP200042:00562" },
+    { kind = "field", id = "field-7", casilla_id = "DP200042:00569" },
+    { kind = "field", id = "field-8", casilla_id = "DP200042:00570" },
+    { kind = "field", id = "field-9", casilla_id = "DP200042:00571" },
+    { kind = "field", id = "field-10", casilla_id = "DP200042:00572" },
+    { kind = "field", id = "field-11", casilla_id = "DP200042:00573" },
+    { kind = "field", id = "field-12", casilla_id = "DP200042:00575" },
+    { kind = "field", id = "field-13", casilla_id = "DP200042:00582" },
+    { kind = "field", id = "field-14", casilla_id = "DP200042:00583" },
+    { kind = "field", id = "field-15", casilla_id = "DP200042:00584" },
+    { kind = "field", id = "field-16", casilla_id = "DP200042:00585" },
+    { kind = "field", id = "field-17", casilla_id = "DP200042:00588" },
 ]
 
 [[revisions.2022.form_layouts.pages.sections]]

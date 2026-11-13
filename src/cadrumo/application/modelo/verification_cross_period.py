@@ -18,12 +18,14 @@ from typing import TYPE_CHECKING, Final, Literal, NamedTuple
 from cadrumo.application.calculations.observations_repository import CalculationObservationRepositoryProtocol
 
 from ...core.authority_grade import RegistryAuthorityGrade
+from ...core.casilla_id import CasillaId
 from ...core.decimal.coercion import coerce_decimal_strict
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...domain.calculations.registry.applicability import derive_modelo_applicability
 from ...domain.calculations.registry.applicability_modelo202 import Modelo202Modality
 from ...domain.calculations.registry.applicability_models import ApplicabilityVerdict
 from ...domain.calculations.registry.authority import bundled_indexed_authority
+from ...domain.calculations.registry.binding_prior_value_rules import set_aside_binding_ids
 from ...domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
 from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.ids import LegalRefId, SourceRefId
@@ -142,6 +144,7 @@ def cross_period_clean_state_verdict_for_work_unit(
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
     operation: PinnedAuthorityOperation | None = None,
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
+    target_casilla_values: Mapping[CasillaId, Decimal] | None = None,
 ) -> CrossPeriodCleanStateVerdict | None:
     """Evaluate the registry-declared cross-period dependencies of one work unit.
 
@@ -186,6 +189,7 @@ def cross_period_clean_state_verdict_for_work_unit(
                 work_unit_repository=work_unit_repository,
                 operation=indexed_operation,
                 transaction_repository=transaction_repository,
+                target_casilla_values=target_casilla_values,
             )
     try:
         snapshot = operation.snapshot(
@@ -229,6 +233,7 @@ def cross_period_clean_state_verdict_for_work_unit(
         zero_value_previous_filing_binding_ids=zero_value_previous_filing_binding_ids,
         m111_no_retenciones_periods=m111_no_retenciones_periods,
         operator_value_attestations=operator_value_attestations,
+        set_aside_binding_ids=set_aside_binding_ids(snapshot.revision, target_casilla_values or {}),
         work_catalogue=(
             work_unit_repository.load()
             if operator_value_attestations is not None
@@ -859,7 +864,10 @@ def cross_period_door(
     requirement = evidence.requirement
     if not evidence.blockers or requirement.requires_member_fan_in:
         return CrossPeriodDoor(_UNROUTED_SCENARIO, None)
-    if target is not None and _outside_envelope_previous_filing(requirement):
+    if target is not None and (
+        _outside_envelope_previous_filing(requirement)
+        or evidence.blockers[0] is CrossPeriodCleanStateBlocker.HELD_SOURCE_SET_ASIDE
+    ):
         return CrossPeriodDoor(_ATTEST_PRIOR_VALUE_SCENARIO, _attest_prior_value_arguments(target, requirement))
     door = _source_door(
         evidence,
@@ -1078,6 +1086,7 @@ def require_cross_period_clean_state(
         operator_value_attestations=operator_value_attestations(target_revision),
         work_unit_repository=work_unit_repository,
         operation=operation,
+        target_casilla_values=None if target_revision is None else target_revision.casilla_values,
     )
     failures_by_finding_id: dict[int, ModeloPreconditionFailure] = {}
     door_of = cross_period_door_reader(

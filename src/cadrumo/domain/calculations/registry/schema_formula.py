@@ -227,13 +227,21 @@ class FormulaExpression(RegistryModel):
     def _validate_text_operands(self) -> None:
         """Restrict text operands to text_equal and unresolved_outcome and require their admitted leaf sources."""
         if self.op == "text_equal":
-            if any(arg.binding is None and arg.casilla_id is None and arg.text_literal is None for arg in self.args):
-                raise RegistryValidationError("text_equal requires binding, casilla, or text_literal leaves")
+            self._validate_text_equal_operands()
         elif self.op == "unresolved_outcome":
-            if self.args[0].text_literal is None:
-                raise RegistryValidationError("unresolved_outcome requires one text_literal leaf naming its reason")
+            self._validate_unresolved_outcome_operands()
         elif any(arg.text_literal is not None for arg in self.args):
             raise RegistryValidationError("text_literal may only be an operand of text_equal or unresolved_outcome")
+
+    def _validate_text_equal_operands(self) -> None:
+        if any(arg.binding is None and arg.casilla_id is None and arg.text_literal is None for arg in self.args):
+            raise RegistryValidationError("text_equal requires binding, casilla, or text_literal leaves")
+
+    def _validate_unresolved_outcome_operands(self) -> None:
+        if self.args[0].text_literal is None:
+            raise RegistryValidationError("unresolved_outcome requires one text_literal leaf naming its reason")
+        if len(self.args) == 2 and self.args[1].casilla_id is None:
+            raise RegistryValidationError("unresolved_outcome names the box the operator states as a casilla leaf")
 
 
 class DatedValue(RegistryModel):

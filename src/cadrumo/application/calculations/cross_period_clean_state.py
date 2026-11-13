@@ -15,9 +15,10 @@ the authority surface that produces the snapshots evaluated here.
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from datetime import date
 from decimal import Decimal
+from functools import cache
 from typing import Final, NamedTuple
 
 from ...core.aggregation import BindingSourceKind
@@ -27,7 +28,6 @@ from ...domain.calculations.registry.applicability_modelo202 import Modelo202Mod
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.binding_value_contract import BindingValueChannel
 from ...domain.calculations.registry.bindings_previous_filing import previous_filing_observation_requirements
-from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.relations import (
     RegistryFoldRequirement,
@@ -58,13 +58,20 @@ from .cross_period_models import (
     CrossPeriodDependencyRequirement,
     CrossPeriodExpectedMemberSet,
     Modelo202InstalmentNotOwedProvenance,
-    NoPriorObligationProvenance,
-    NoPriorObligationProvenanceKind,
     OperatorAttestedValue,
     period_strictly_before_activity_start,
 )
+from .cross_period_suppressed_evidence import (
+    qualifies_for_first_year_fractional_suppression,
+    relax_same_year_local_chain,
+    suppressed_first_year_fractional_evidence,
+    suppressed_m111_no_retenciones_evidence,
+    suppressed_modelo_not_applicable_evidence,
+    suppressed_pre_activity_evidence,
+    suppressed_zero_value_previous_filing_evidence,
+)
 from .m111_no_retenciones import is_m111_no_retenciones_period
-from .modelo_202_base_source import is_modelo_202, modelo_202_instalment_has_no_prior_return
+from .modelo_202_base_source import is_modelo_202
 from .modelo_202_instalment_resolution import (
     Modelo202InstalmentResolution,
     Modelo202InstalmentResolutionKind,
@@ -153,6 +160,7 @@ def partition_cross_period_requirements_by_activity_start(
     requirements: Iterable[CrossPeriodDependencyRequirement],
     *,
     activity_start_date: date | None,
+    before_activity_unresolved_binding_ids: frozenset[str] = frozenset(),
 ) -> _RequirementPartition:
     """Split registry-derived requirements into in-scope and pre-activity-suppressed.
 
@@ -171,13 +179,20 @@ def partition_cross_period_requirements_by_activity_start(
 
     When ``activity_start_date`` is ``None`` every requirement stays in scope; the
     caller decides whether a missing declared date should fail closed.
+
+    A requirement fed by a binding in ``before_activity_unresolved_binding_ids``
+    stays in scope however early its period: the registry declares that the law
+    gives such a period a figure of its own, so it is proven or stated, never
+    scoped out.
     """
     if activity_start_date is None:
         return _RequirementPartition(tuple(requirements), ())
     in_scope: list[CrossPeriodDependencyRequirement] = []
     suppressed: list[CrossPeriodDependencyRequirement] = []
     for requirement in requirements:
-        if period_strictly_before_activity_start(requirement.period, activity_start_date):
+        if period_strictly_before_activity_start(requirement.period, activity_start_date) and not any(
+            origin_id in before_activity_unresolved_binding_ids for origin_id in requirement.origin_ids
+        ):
             suppressed.append(requirement)
         else:
             in_scope.append(requirement)
@@ -271,160 +286,6 @@ def cross_period_dependency_inventory(
     )
 
 
-def suppressed_pre_activity_evidence(
-    requirement: CrossPeriodDependencyRequirement,
-    *,
-    activity_start_date: date,
-) -> CrossPeriodDependencyEvidence:
-    """Build the clean, facet-stamped evidence row for a pre-activity dependency.
-
-    The requirement's period is strictly before the recorded activity-start
-    date, so no prior obligation could have legally existed. There is no
-    observation to load and nothing to stamp; the
-    binding value resolves to a provenance-marked ``Decimal`` zero through the
-    existing absent-by-design path, recorded here as an explicit, auditable
-    no-prior-obligation outcome with NO blockers (the row is :attr:`clean`).
-    """
-    return CrossPeriodDependencyEvidence(
-        requirement=requirement,
-        no_prior_obligation=NoPriorObligationProvenance(
-            activity_start_date=activity_start_date,
-            provenance_kind=NoPriorObligationProvenanceKind.OPERATOR_DECLARED,
-        ),
-    )
-
-
-OFFICIAL_EVIDENCE_DELTA_BLOCKERS: Final = frozenset(
-    {
-        CrossPeriodCleanStateBlocker.MISSING_AEAT_ACCEPTANCE,
-        CrossPeriodCleanStateBlocker.MISSING_EXTERNAL_EVIDENCE,
-        CrossPeriodCleanStateBlocker.LOCAL_FILING_MISSING_EXTERNAL_EVIDENCE,
-    },
-)
-"""The blocker set that distinguishes a locally-evidenced chain from an AEAT-evidenced one."""
-
-
-def relax_same_year_local_chain(
-    evidence: CrossPeriodDependencyEvidence,
-    *,
-    target_filing_year: int,
-) -> CrossPeriodDependencyEvidence:
-    """Admit a same-year ``app_filing`` chain (only official-evidence-delta blockers) to verify/export with an advisory.
-
-    Cross-year deps, operator_manual sources, value/revision divergence, and missing
-    observation/filing keep their blockers (stay blocking); the source stays non-official.
-    """
-    if evidence.requirement.filing_year != target_filing_year:
-        return evidence
-    if evidence.observation_source_kind != "app_filing":
-        return evidence
-    if not evidence.blockers:
-        return evidence
-    if not set(evidence.blockers) <= OFFICIAL_EVIDENCE_DELTA_BLOCKERS:
-        return evidence
-    return evidence.model_copy(
-        update={"blockers": (), "non_official_local_chain_advisory": True},
-    )
-
-
-def _suppressed_modelo_not_applicable_evidence(
-    requirement: CrossPeriodDependencyRequirement,
-) -> CrossPeriodDependencyEvidence:
-    """Clean, advisory-stamped row for a not-applicable dependency (taxpayer suffers, does not file)."""
-    return CrossPeriodDependencyEvidence(
-        requirement=requirement,
-        modelo_not_applicable_advisory=True,
-    )
-
-
-def _suppressed_zero_value_previous_filing_evidence(
-    requirement: CrossPeriodDependencyRequirement,
-) -> CrossPeriodDependencyEvidence:
-    """Clean, advisory-stamped row for an explicit zero previous-filing carry."""
-    return CrossPeriodDependencyEvidence(
-        requirement=requirement,
-        zero_value_previous_filing_advisory=True,
-    )
-
-
-def _suppressed_m111_no_retenciones_evidence(
-    requirement: CrossPeriodDependencyRequirement,
-) -> CrossPeriodDependencyEvidence:
-    """Clean advisory row for an explicit M111 no-retenciones/no-obligation period."""
-    return CrossPeriodDependencyEvidence(
-        requirement=requirement,
-        m111_no_retenciones_no_obligation_advisory=True,
-    )
-
-
-def suppressed_first_year_fractional_evidence(
-    requirement: CrossPeriodDependencyRequirement,
-    *,
-    activity_start_date: date,
-) -> CrossPeriodDependencyEvidence:
-    """Build the clean, facet-stamped evidence row for a first-year Modelo 202 modalidad-cuota dependency.
-
-    The taxpayer is a first-year Impuesto sobre Sociedades filer under
-    modalidad cuota (LIS art. 40.2), whose
-    pago fraccionado is a percentage of the cuota íntegra of the LAST IS return
-    whose deadline has elapsed. A first-year IS company has no such prior return,
-    so the art. 40.2 modality produces no Modelo 202 obligation. There is no
-    observation to load and nothing to stamp; the requirement is scoped out and
-    recorded here as an explicit, auditable no-fractional-payment-obligation
-    outcome with NO blockers (the row's ``clean`` property is true).
-
-    The provenance kind stays ``OPERATOR_DECLARED`` — the determination rests on the
-    operator-declared INCN (driving the derived modality) and the operator-declared
-    ``activity_start_date`` (proving the first IS year), neither corroborated against
-    an AEAT censo snapshot — so the suppression carries the operator-declared
-    advisory, never silently. The ``facet_kind`` records that this is the
-    modalidad-cuota first-year facet, distinct from the pre-activity facet.
-    """
-    return CrossPeriodDependencyEvidence(
-        requirement=requirement,
-        no_prior_obligation=NoPriorObligationProvenance(
-            facet_kind=NoPriorObligationProvenanceKind.NO_FRACTIONAL_PAYMENT_OBLIGATION_FIRST_YEAR,
-            activity_start_date=activity_start_date,
-            provenance_kind=NoPriorObligationProvenanceKind.OPERATOR_DECLARED,
-        ),
-    )
-
-
-def qualifies_for_first_year_fractional_suppression(
-    requirement: CrossPeriodDependencyRequirement,
-    *,
-    modelo_202_modality: Modelo202Modality | None,
-    activity_start_date: date | None,
-    operation: PinnedAuthorityOperation,
-) -> bool:
-    """Return whether ``requirement`` is a Modelo 202 instalment with no art. 40.2 base to scope out.
-
-    A requirement qualifies IFF ALL hold (fail-closed — any unmet condition
-    keeps the requirement in scope):
-
-    * the cross-period source is the Impuesto sobre Sociedades instalment
-      (Modelo 202);
-    * the derived Modelo 202 modality is ``ART_40_2_OPTIONAL`` (modalidad cuota,
-      INCN ≤ 6.000.000 €) — under ``ART_40_3_MANDATORY`` (base imponible) the pago
-      fraccionado IS owed in the first year, and ``INCOMPLETE`` / ``None`` means the
-      modality could not be derived, so neither is suppressed;
-    * an ``activity_start_date`` is recorded AND every earlier period the
-      instalment's art. 40.2 base binding reads, by its declared per-instalment
-      offsets, ended before it. That covers every instalment of the first IS
-      year and the first instalment of the second, whose window opens before the
-      first year's Modelo 200 deadline has passed.
-    """
-    if requirement.source_modelo != form_for_role("sociedades.instalment"):
-        return False
-    if modelo_202_modality is not Modelo202Modality.ART_40_2_OPTIONAL:
-        return False
-    return modelo_202_instalment_has_no_prior_return(
-        requirement.period,
-        activity_start_date=activity_start_date,
-        operation=operation,
-    )
-
-
 def cross_period_clean_state_non_filer_modelos(
     snapshot: RegistrySnapshot,
     *,
@@ -453,7 +314,7 @@ def _not_applicable_dependencies(
     non_filer_modelos: frozenset[str],
 ) -> tuple[CrossPeriodDependencyEvidence, ...]:
     return tuple(
-        _suppressed_modelo_not_applicable_evidence(requirement)
+        suppressed_modelo_not_applicable_evidence(requirement)
         for requirement in all_requirements
         if requirement.source_modelo in non_filer_modelos
     )
@@ -510,6 +371,20 @@ def _first_year_fractional_requirements(
             operation=operation,
         )
     )
+
+
+def _zero_exemptible_binding_ids(
+    snapshot: RegistrySnapshot, zero_value_previous_filing_binding_ids: frozenset[str] | None
+) -> frozenset[str] | None:
+    """The zero-valued carries a typed zero may exempt: never one whose zero the registry says must be attested.
+
+    Where a zero is the figure that benefits the taxpayer, a typed zero proves
+    nothing, so only an attestation or the earlier return makes it clean.
+    """
+    if zero_value_previous_filing_binding_ids is None:
+        return None
+    attested_only = {binding.id for binding in snapshot.revision.bindings if binding.zero_needs_attestation}
+    return frozenset(item for item in zero_value_previous_filing_binding_ids if item not in attested_only)
 
 
 def _zero_value_previous_filing_requirements(
@@ -622,6 +497,7 @@ def attestable_carry_sources(
     observation_repository: CalculationObservationRepositoryProtocol,
     filing_catalogue: ModeloRecordCatalogue,
     work_catalogue: WorkUnitCatalogue,
+    set_aside_binding_ids: frozenset[BindingId] = frozenset(),
 ) -> dict[BindingId, tuple[CrossPeriodDependencyRequirement, ...]]:
     """Return, per scalar carry binding, the source requirements the application holds nothing of.
 
@@ -629,13 +505,16 @@ def attestable_carry_sources(
     binding folds several source periods. A binding is offered only when
     *every* one of its sources is absent: where any is held the carry follows
     the sources, and a partial statement is not admitted. Row-set bindings stay
-    sourced from records and are never offered.
+    sourced from records and are never offered. A binding in
+    ``set_aside_binding_ids``, whose held return the current return's marks set
+    aside, is offered whether or not its sources are held.
     """
     by_binding = _attestable_requirements_by_binding(snapshot, support=operation.supported_filing_years())
     return {
         binding_id: tuple(requirements)
         for binding_id, requirements in by_binding.items()
-        if all(
+        if binding_id in set_aside_binding_ids
+        or all(
             upstream_source_absent(
                 requirement,
                 observation_repository=observation_repository,
@@ -654,6 +533,7 @@ def attestable_carry_binding_ids(
     observation_repository: CalculationObservationRepositoryProtocol,
     filing_catalogue: ModeloRecordCatalogue,
     work_catalogue: WorkUnitCatalogue,
+    set_aside_binding_ids: frozenset[BindingId] = frozenset(),
 ) -> frozenset[BindingId]:
     """Return the bindings an operator may state a figure for."""
     return frozenset(
@@ -663,6 +543,7 @@ def attestable_carry_binding_ids(
             observation_repository=observation_repository,
             filing_catalogue=filing_catalogue,
             work_catalogue=work_catalogue,
+            set_aside_binding_ids=set_aside_binding_ids,
         )
     )
 
@@ -850,6 +731,9 @@ def _clean_state_requirement_scope(
     partition = partition_cross_period_requirements_by_activity_start(
         _requirements_outside_non_filer_modelos(all_requirements, non_filer_modelos),
         activity_start_date=activity_start_date,
+        before_activity_unresolved_binding_ids=frozenset(
+            binding.id for binding in snapshot.revision.bindings if binding.before_activity_unresolved
+        ),
     )
     attested_keys = {
         requirement.key
@@ -871,7 +755,7 @@ def _clean_state_requirement_scope(
             requirement
             for requirement in _zero_value_previous_filing_requirements(
                 partition.in_scope,
-                zero_value_previous_filing_binding_ids,
+                _zero_exemptible_binding_ids(snapshot, zero_value_previous_filing_binding_ids),
             )
             if requirement.key not in attested_keys
         ),
@@ -904,6 +788,60 @@ def _scoped_out_keys(
     )
 
 
+def _evaluate_in_scope_requirement(
+    requirement: CrossPeriodDependencyRequirement,
+    *,
+    operation: PinnedAuthorityOperation,
+    bucket_id: str,
+    observation_repository: CalculationObservationRepositoryProtocol,
+    repositories: _CleanStateRepositories,
+    taxpayer_tax_id: str | None,
+    expected_member_sets_by_key: Mapping[
+        tuple[str, int, str],
+        CrossPeriodExpectedMemberSet,
+    ],
+    target_filing_year: int,
+    operator_value_attestations: Mapping[str, OperatorAttestedValue] | None,
+    work_catalogue: WorkUnitCatalogue,
+    attestable_binding_ids: Callable[[], frozenset[BindingId]],
+    set_aside_binding_ids: frozenset[BindingId],
+) -> CrossPeriodDependencyEvidence:
+    """Evaluate one requirement against its sources, then apply the filer's statement and the chain relaxation."""
+    stated = _stated_values_for(requirement, operator_value_attestations)
+    if requirement.origin_ids and all(origin_id in set_aside_binding_ids for origin_id in requirement.origin_ids):
+        return _set_aside_evidence(requirement, stated)
+    evidence = evaluate_requirement(
+        requirement,
+        operation=operation,
+        bucket_id=bucket_id,
+        observation_repository=observation_repository,
+        filing_catalogue=repositories.filing_catalogue,
+        calculation_catalogue=repositories.calculation_catalogue,
+        verification_catalogue=repositories.verification_catalogue,
+        justificante_repository=repositories.justificante_repository,
+        taxpayer_tax_id=taxpayer_tax_id,
+        expected_member_set=expected_member_sets_by_key.get(
+            (requirement.source_modelo, requirement.filing_year, requirement.period.registry_token),
+        ),
+    )
+    if stated:
+        evidence = _operator_attested_disposition(
+            evidence,
+            stated,
+            observation_repository=observation_repository,
+            filing_catalogue=repositories.filing_catalogue,
+            work_catalogue=work_catalogue,
+        )
+    evidence = relax_same_year_local_chain(evidence, target_filing_year=target_filing_year)
+    if (
+        evidence.blockers
+        and not evidence.requirement.requires_member_fan_in
+        and all(origin_id in attestable_binding_ids() for origin_id in requirement.origin_ids)
+    ):
+        evidence = evidence.model_copy(update={"attestation_admitted": True})
+    return evidence
+
+
 def _evaluate_in_scope_dependencies(
     scope: _CleanStateRequirementScope,
     *,
@@ -920,51 +858,54 @@ def _evaluate_in_scope_dependencies(
     operator_value_attestations: Mapping[str, OperatorAttestedValue] | None,
     work_catalogue: WorkUnitCatalogue,
     snapshot: RegistrySnapshot,
+    set_aside_binding_ids: frozenset[BindingId] = frozenset(),
 ) -> tuple[CrossPeriodDependencyEvidence, ...]:
     """Evaluate only requirements that were not explicitly scoped out."""
     suppressed_keys = _scoped_out_keys(scope)
-    dependencies: list[CrossPeriodDependencyEvidence] = []
-    attestable: frozenset[BindingId] | None = None
-    for requirement in scope.partition.in_scope:
-        if requirement.key in suppressed_keys:
-            continue
-        evidence = evaluate_requirement(
+
+    @cache
+    def attestable_binding_ids() -> frozenset[BindingId]:
+        return attestable_carry_binding_ids(
+            snapshot,
+            operation=operation,
+            observation_repository=observation_repository,
+            filing_catalogue=repositories.filing_catalogue,
+            work_catalogue=work_catalogue,
+            set_aside_binding_ids=set_aside_binding_ids,
+        )
+
+    return tuple(
+        _evaluate_in_scope_requirement(
             requirement,
             operation=operation,
             bucket_id=bucket_id,
             observation_repository=observation_repository,
-            filing_catalogue=repositories.filing_catalogue,
-            calculation_catalogue=repositories.calculation_catalogue,
-            verification_catalogue=repositories.verification_catalogue,
-            justificante_repository=repositories.justificante_repository,
+            repositories=repositories,
             taxpayer_tax_id=taxpayer_tax_id,
-            expected_member_set=expected_member_sets_by_key.get(
-                (requirement.source_modelo, requirement.filing_year, requirement.period.registry_token),
-            ),
+            expected_member_sets_by_key=expected_member_sets_by_key,
+            target_filing_year=target_filing_year,
+            operator_value_attestations=operator_value_attestations,
+            work_catalogue=work_catalogue,
+            attestable_binding_ids=attestable_binding_ids,
+            set_aside_binding_ids=set_aside_binding_ids,
         )
-        stated = _stated_values_for(requirement, operator_value_attestations)
-        if stated:
-            evidence = _operator_attested_disposition(
-                evidence,
-                stated,
-                observation_repository=observation_repository,
-                filing_catalogue=repositories.filing_catalogue,
-                work_catalogue=work_catalogue,
-            )
-        evidence = relax_same_year_local_chain(evidence, target_filing_year=target_filing_year)
-        if evidence.blockers and not evidence.requirement.requires_member_fan_in:
-            if attestable is None:
-                attestable = attestable_carry_binding_ids(
-                    snapshot,
-                    operation=operation,
-                    observation_repository=observation_repository,
-                    filing_catalogue=repositories.filing_catalogue,
-                    work_catalogue=work_catalogue,
-                )
-            if all(origin_id in attestable for origin_id in requirement.origin_ids):
-                evidence = evidence.model_copy(update={"attestation_admitted": True})
-        dependencies.append(evidence)
-    return tuple(dependencies)
+        for requirement in scope.partition.in_scope
+        if requirement.key not in suppressed_keys
+    )
+
+
+def _set_aside_evidence(
+    requirement: CrossPeriodDependencyRequirement,
+    stated: tuple[OperatorAttestedValue, ...],
+) -> CrossPeriodDependencyEvidence:
+    """A carry whose held return the current return's marks set aside: only the filer's statement settles it."""
+    if stated:
+        return CrossPeriodDependencyEvidence(requirement=requirement, operator_attested_absent_upstream=stated)
+    return CrossPeriodDependencyEvidence(
+        requirement=requirement,
+        blockers=(CrossPeriodCleanStateBlocker.HELD_SOURCE_SET_ASIDE,),
+        attestation_admitted=True,
+    )
 
 
 def _pre_activity_dependencies(
@@ -996,10 +937,10 @@ def _scoped_advisory_dependencies(
 ) -> tuple[CrossPeriodDependencyEvidence, ...]:
     return (
         *tuple(
-            _suppressed_zero_value_previous_filing_evidence(requirement)
+            suppressed_zero_value_previous_filing_evidence(requirement)
             for requirement in scope.zero_value_previous_filing
         ),
-        *tuple(_suppressed_m111_no_retenciones_evidence(requirement) for requirement in scope.m111_no_retenciones),
+        *tuple(suppressed_m111_no_retenciones_evidence(requirement) for requirement in scope.m111_no_retenciones),
     )
 
 
@@ -1043,11 +984,9 @@ def evaluate_cross_period_clean_state(
     operator_value_attestations: Mapping[str, OperatorAttestedValue] | None = None,
     work_catalogue: WorkUnitCatalogue | None = None,
     modelo_202_instalment_resolver: Modelo202InstalmentResolver | None = None,
+    set_aside_binding_ids: frozenset[BindingId] = frozenset(),
 ) -> CrossPeriodCleanStateVerdict:
     """Evaluate cross-period dependencies and return a clean-state verdict.
-
-    Returns a
-    :class:`~application.calculations.cross_period_models.CrossPeriodCleanStateVerdict`.
 
     The supplied :class:`RegistrySnapshot` is
     the authority for target revision, filing period, and dependency
@@ -1117,6 +1056,12 @@ def evaluate_cross_period_clean_state(
     and contributes 0.00. A filed instalment, and one whose verdict is unknown,
     incomplete or owed, is evaluated as before. ``None`` resolves nothing, so
     every unfiled instalment keeps blocking.
+
+    ``set_aside_binding_ids`` names the carries whose held earlier return the
+    target's marked boxes set aside (see
+    :func:`~domain.calculations.registry.binding_prior_value_rules.set_aside_binding_ids`).
+    Their requirements are not read from any source: the filer's statement makes
+    them clean, and without one they block with the statement admitted.
     """
     repositories = _load_clean_state_repositories(
         operation=operation,
@@ -1128,7 +1073,6 @@ def evaluate_cross_period_clean_state(
         filing_catalogue=filing_catalogue,
         verification_catalogue=verification_catalogue,
     )
-    expected_member_sets_by_key = _expected_member_sets_by_key(expected_member_sets)
     scope = _clean_state_requirement_scope(
         snapshot,
         operation=operation,
@@ -1156,11 +1100,12 @@ def evaluate_cross_period_clean_state(
                 observation_repository=observation_repository,
                 repositories=repositories,
                 taxpayer_tax_id=taxpayer_tax_id,
-                expected_member_sets_by_key=expected_member_sets_by_key,
+                expected_member_sets_by_key=_expected_member_sets_by_key(expected_member_sets),
                 target_filing_year=snapshot.filing_year,
                 operator_value_attestations=operator_value_attestations,
                 work_catalogue=WorkUnitCatalogue() if work_catalogue is None else work_catalogue,
                 snapshot=snapshot,
+                set_aside_binding_ids=set_aside_binding_ids,
             ),
             activity_start_date=activity_start_date,
         ),

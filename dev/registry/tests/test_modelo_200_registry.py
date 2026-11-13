@@ -545,6 +545,7 @@ def test_modelo_200_page_14_cuota_chain_matches_aeat_manual_worked_example() -> 
         binding_values={
             "modelo-200-profile-new-entity-flag": Decimal("0"),
             "modelo-200-profile-incn-prior-12-months": Decimal("10000000"),
+            "modelo-200-incn-periodo-impositivo-anterior": Decimal("10000000"),
             "modelo-200-profile-tributacion-estado-porcentaje": Decimal("100"),
             "modelo-200-bin-pendiente-ejercicios-anteriores": Decimal("0"),
             "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
@@ -558,7 +559,7 @@ def test_modelo_200_page_14_cuota_chain_matches_aeat_manual_worked_example() -> 
             "modelo-200-pago-fraccionado-tercero-40-2": Decimal("0"),
             "modelo-200-pago-fraccionado-tercero-40-3": Decimal("0"),
         },
-        date_context={"filing_period": date(_ORACLE_EXERCISE, 12, 31)},
+        date_context={"filing_period": date(_CURRENT_EXERCISE, 12, 31)},
     )
 
     assert result.values[_M200_CUOTA_EJERCICIO_CASILLA] == Decimal("-20000.00"), (
@@ -646,6 +647,7 @@ def test_modelo_200_cuota_liquida_is_computed_and_rejects_direct_input() -> None
             binding_values={
                 "modelo-200-profile-new-entity-flag": Decimal("0"),
                 "modelo-200-profile-incn-prior-12-months": Decimal("10000000"),
+                "modelo-200-incn-periodo-impositivo-anterior": Decimal("10000000"),
                 "modelo-200-profile-tributacion-estado-porcentaje": Decimal("100"),
             },
             relation_values={
@@ -708,6 +710,7 @@ def test_modelo_200_cuota_integra_chain_applies_dispatched_rate_to_post_nivelaci
         binding_values={
             "modelo-200-profile-new-entity-flag": Decimal("0"),
             "modelo-200-profile-incn-prior-12-months": Decimal("10000000"),
+            "modelo-200-incn-periodo-impositivo-anterior": Decimal("10000000"),
             "modelo-200-profile-tributacion-estado-porcentaje": Decimal("100"),
             "modelo-200-bin-pendiente-ejercicios-anteriores": Decimal("0"),
             "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
@@ -721,7 +724,7 @@ def test_modelo_200_cuota_integra_chain_applies_dispatched_rate_to_post_nivelaci
             "modelo-200-pago-fraccionado-tercero-40-2": Decimal("0"),
             "modelo-200-pago-fraccionado-tercero-40-3": Decimal("0"),
         },
-        date_context={"filing_period": date(_ORACLE_EXERCISE, 12, 31)},
+        date_context={"filing_period": date(_CURRENT_EXERCISE, 12, 31)},
     )
 
     assert result.values[_M200_TIPO_GRAVAMEN_CASILLA] == Decimal("2500"), (

@@ -68,6 +68,7 @@ def _create_lorentz_irene_profile() -> None:
                 "activities.description": "IVA corporate run",
                 "taxpayer_type.incn_prior_12_months": "500000",
                 "taxpayer_type.regimen_entidades_navieras_tonelaje": "false",
+                "taxpayer_type.pago_fraccionado_art_40_3_elected": "true",
                 "censo.activity_start_date": "2024-01-15",
                 "tax_residence.ccaa": "madrid",
                 "iva.regime": "GENERAL",

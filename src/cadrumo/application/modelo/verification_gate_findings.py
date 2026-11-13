@@ -81,6 +81,7 @@ from ..calculations.cross_period_models import (
 )
 from ..calculations.iva_compensation_history_ports import IvaCompensationHistoryRepositoryProtocol
 from .imputation_filings import imputation_filings_from_repositories
+from .incn_periodo_anterior_finding import incn_periodo_anterior_disagreement_finding
 from .invoice_drift_gate import invoice_drift_findings
 from .iva_wallet_gate import require_persisted_iva_compensation_decision_matches_revision
 from .iva_wallet_refusal import ModeloIvaWalletReconciliationBlocked
@@ -758,6 +759,105 @@ def _renta_inmueble_drift_findings(
     return (finding,)
 
 
+def _append_incn_periodo_anterior_finding(
+    findings: list[ModeloVerificationFinding],
+    failures_by_finding_id: dict[int, ModeloPreconditionFailure],
+    *,
+    work_unit: WorkUnit,
+    target: CalculationRevision,
+    workflow_profile: TaxpayerProfile,
+    operation: PinnedAuthorityOperation,
+    observation_repository: CalculationObservationRepositoryProtocol,
+    iva_compensation_history_repository: IvaCompensationHistoryRepositoryProtocol,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None,
+    filing_repository: ModeloRecordCatalogueRepositoryProtocol,
+) -> None:
+    """Append the preceding-turnover disagreement finding, with its precondition failure, when there is one."""
+    turnover_finding = incn_periodo_anterior_disagreement_finding(
+        work_unit=work_unit,
+        workflow_profile=workflow_profile,
+        operation=operation,
+        observation_repository=observation_repository,
+        iva_compensation_history_repository=iva_compensation_history_repository,
+        calculation_repository=calculation_repository,
+        work_unit_repository=work_unit_repository,
+        filing_repository=filing_repository,
+    )
+    if turnover_finding is not None:
+        findings.append(turnover_finding)
+        failures_by_finding_id[id(turnover_finding)] = build_verification_precondition_failure(
+            calculation_revision_id=target.calculation_revision_id,
+            work_unit_id=target.work_unit_id,
+            condition_id="modelo.work.verify.m200.incn_periodo_anterior.agrees",
+            scenario_id="modelo.work.verify.m200.incn_periodo_anterior.disagrees",
+            evidence_id="modelo.work.verify.m200.incn_periodo_anterior",
+            evidence_values={
+                "modelo": str(work_unit.modelo),
+                "year": work_unit.filing_year,
+                "period": work_unit.period.registry_token,
+                "profile_fact_id": "taxpayer_type.incn_prior_12_months",
+            },
+            provenance=ActionEvidenceProvenance.DOMAIN_EVALUATION,
+        )
+
+
+def _append_stored_draft_gate_findings(
+    findings: list[ModeloVerificationFinding],
+    failures_by_finding_id: dict[int, ModeloPreconditionFailure],
+    *,
+    target: CalculationRevision,
+    work_unit: WorkUnit,
+    operation: PinnedAuthorityOperation,
+    invoice_repository: InvoiceCatalogueRepositoryProtocol,
+    transaction_repository: TransactionCatalogueRepositoryProtocol,
+    attachment_store: AttachmentStoreProtocol,
+    observation_repository: CalculationObservationRepositoryProtocol,
+    filing_repository: ModeloRecordCatalogueRepositoryProtocol,
+    work_profile: ModeloWorkProfile,
+    ledger_membership_ports: LedgerMembershipPorts,
+) -> None:
+    """Append the gates that compare the stored draft with the invoices, ledger and profile it was calculated from."""
+    _append_invoice_source_document_findings(
+        target,
+        work_unit,
+        operation,
+        invoice_repository,
+        transaction_repository,
+        attachment_store,
+        findings,
+        failures_by_finding_id,
+    )
+    # Runs beside the evidence gate, not inside it: that gate reads the live
+    # ledger while the casilla values come from the stored draft, and this is
+    # what refuses the case where those two views have drifted apart.
+    findings.extend(
+        _ledger_snapshot_findings(
+            target=target,
+            work_unit=work_unit,
+            transaction_repository=transaction_repository,
+            observation_repository=observation_repository,
+            filing_repository=filing_repository,
+            operation=operation,
+            work_profile=work_profile,
+            ledger_membership_ports=ledger_membership_ports,
+            failures_by_finding_id=failures_by_finding_id,
+        ),
+    )
+    # The profile counterpart of the ledger comparison above: a profile fact the
+    # draft read was edited after it was calculated.
+    findings.extend(
+        profile_drift_findings(
+            target=target,
+            work_unit=work_unit,
+            profile_record=work_profile.record,
+            operation=operation,
+            source_refs=optional_observation_refs(target.observations, "source_refs"),
+            failure_observer=lambda finding, failure: failures_by_finding_id.__setitem__(id(finding), failure),
+        ),
+    )
+
+
 def collect_verification_gate_findings(
     *,
     work_unit: WorkUnit,
@@ -843,6 +943,7 @@ def collect_verification_gate_findings(
         work_unit_repository=work_unit_repository,
         operation=operation,
         transaction_repository=transaction_repository,
+        target_casilla_values=target.casilla_values,
     )
 
     _append_cross_period_findings(
@@ -865,47 +966,36 @@ def collect_verification_gate_findings(
     _append_ledger_evidence_findings(
         target, work_unit, transaction_repository, operation, findings, failures_by_finding_id
     )
+    _append_incn_periodo_anterior_finding(
+        findings,
+        failures_by_finding_id,
+        work_unit=work_unit,
+        target=target,
+        workflow_profile=workflow_profile,
+        operation=operation,
+        observation_repository=observation_repository,
+        iva_compensation_history_repository=iva_compensation_history_repository,
+        calculation_repository=calculation_repository,
+        work_unit_repository=work_unit_repository,
+        filing_repository=filing_repository,
+    )
     # A refused registry snapshot is the verdict: the gates below read that same
     # snapshot, so they would only raise the refusal again instead of reporting it.
     if any(failure.scenario_id in REGISTRY_SNAPSHOT_REFUSAL_SCENARIOS for failure in failures_by_finding_id.values()):
         return findings, resolved_casilla_ids, missing_required_casilla_ids, failures_by_finding_id
-    _append_invoice_source_document_findings(
-        target,
-        work_unit,
-        operation,
-        invoice_repository,
-        transaction_repository,
-        attachment_store,
+    _append_stored_draft_gate_findings(
         findings,
         failures_by_finding_id,
-    )
-    # Runs beside the evidence gate, not inside it: that gate reads the live
-    # ledger while the casilla values come from the stored draft, and this is
-    # what refuses the case where those two views have drifted apart.
-    findings.extend(
-        _ledger_snapshot_findings(
-            target=target,
-            work_unit=work_unit,
-            transaction_repository=transaction_repository,
-            observation_repository=observation_repository,
-            filing_repository=filing_repository,
-            operation=operation,
-            work_profile=work_profile,
-            ledger_membership_ports=ledger_membership_ports,
-            failures_by_finding_id=failures_by_finding_id,
-        ),
-    )
-    # The profile counterpart of the ledger comparison above: a profile fact the
-    # draft read was edited after it was calculated.
-    findings.extend(
-        profile_drift_findings(
-            target=target,
-            work_unit=work_unit,
-            profile_record=work_profile.record,
-            operation=operation,
-            source_refs=optional_observation_refs(target.observations, "source_refs"),
-            failure_observer=lambda finding, failure: failures_by_finding_id.__setitem__(id(finding), failure),
-        ),
+        target=target,
+        work_unit=work_unit,
+        operation=operation,
+        invoice_repository=invoice_repository,
+        transaction_repository=transaction_repository,
+        attachment_store=attachment_store,
+        observation_repository=observation_repository,
+        filing_repository=filing_repository,
+        work_profile=work_profile,
+        ledger_membership_ports=ledger_membership_ports,
     )
     return findings, resolved_casilla_ids, missing_required_casilla_ids, failures_by_finding_id
 

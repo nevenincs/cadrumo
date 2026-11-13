@@ -53,6 +53,7 @@ from ..export_accounts import _producer_facts_refusal
 from ..export_contracts import ModeloExportCommand
 from ..export_m202_profile import modelo_202_producer_profile
 from ..export_periodo_impositivo import PeriodoImpositivo, periodo_impositivo_from_facts
+from .incn_periodo_anterior_support import nothing_held
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -159,6 +160,7 @@ def _resolve(
         filing_year=year,
         art_40_3_elected=elected,
         operation=operation,
+        incn_periodo_anterior=nothing_held(operation, _periodo(year).start.year),
     )
     snapshot = build_filing_producer_snapshot(
         modelo=Modelo("202"),

@@ -5525,8 +5525,8 @@ filing:
     records_turnover_source:
       annual_accounts: tus cuentas anuales
       corporation_tax_return: tu declaración del Impuesto sobre Sociedades
+      declaraciones_iva: tus declaraciones de IVA
       operator_estimate: tu propia estimación
-      vat_returns: tus declaraciones de IVA
   validation:
     deadline_missed: Plazo de presentación vencido
     formula_divergence: Divergencia en el cálculo de la fórmula

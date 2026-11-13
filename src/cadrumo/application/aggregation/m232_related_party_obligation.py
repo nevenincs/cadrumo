@@ -41,7 +41,7 @@ M232_TURNOVER_SOURCE_LOCALE_KEYS: Final[dict[Modelo232TurnoverSource, str]] = {
     Modelo232TurnoverSource.CORPORATION_TAX_RETURN: (
         "filing.applicability.records_turnover_source.corporation_tax_return"
     ),
-    Modelo232TurnoverSource.VAT_RETURNS: "filing.applicability.records_turnover_source.vat_returns",
+    Modelo232TurnoverSource.DECLARACIONES_IVA: "filing.applicability.records_turnover_source.declaraciones_iva",
     Modelo232TurnoverSource.OPERATOR_ESTIMATE: "filing.applicability.records_turnover_source.operator_estimate",
 }
 """Locale keys naming where a stated turnover came from, one per source."""

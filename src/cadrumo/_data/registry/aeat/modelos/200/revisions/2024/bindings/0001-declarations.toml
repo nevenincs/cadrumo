@@ -1,0 +1,20 @@
+# Modelo 200 bindings stated at the 2024 edition. The other bindings are inherited.
+
+# The importe neto de la cifra de negocios of the twelve months before the tax
+# period began (LIS DA 15ª, restored for periods from 2024): it selects the 50 %
+# and 25 % limits on the compensation of bases imponibles negativas for a
+# turnover of at least 20 and 60 million euros. Declared at 2022 too; the 2023
+# edition removes it because DA 15ª was annulled for that year. It is not the
+# preceding period's turnover the rate reads
+# (modelo-200-incn-periodo-impositivo-anterior). Sourced from the Decimal
+# profile fact `incn_prior_12_months`; undeclared, the limit refuses.
+[[revisions."2024".bindings]]
+id = "modelo-200-profile-incn-prior-12-months"
+provider = { kind = "profile", profile_model = "taxpayer", field = "incn_prior_12_months" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "copy" }
+legal_refs = ["ley-27-2014:da-15"]
+
+[[revisions."2024".bindings.source_citations]]
+source_ref = "aeat-modelo-200-manual-2024"
+required_text = ["disposición adicional decimoquinta de la LIS", "doce meses anteriores a la fecha de inicio del período impositivo"]

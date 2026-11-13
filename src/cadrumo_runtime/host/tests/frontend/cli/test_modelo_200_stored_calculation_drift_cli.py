@@ -24,6 +24,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
 _FILING_AUTHORITY_CONDITION = "modelo.work.verify.registry_snapshot.filing_authority"
+_PRECEDING_TURNOVER_CARRY = "modelo-200-incn-periodo-impositivo-anterior"
 
 
 def _invoke(arguments: list[str]):
@@ -81,6 +82,8 @@ def test_verify_after_profile_activity_start_change_reports_scoped_advisories_wi
             "--casilla", "DP200014:01034=0",
             "--binding", "modelo-200-profile-legal-entity-form=sa",
             "--binding", "modelo-200-profile-incn-prior-12-months=500000",
+            # The rate reads the preceding período's turnover, a carry of its Modelo 200.
+            "--binding", "modelo-200-incn-periodo-impositivo-anterior=500000",
             "--binding", "modelo-200-profile-tributacion-estado-porcentaje=100",
             "--binding", "modelo-200-bin-pendiente-ejercicios-anteriores=0",
             "--binding", "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores=0",
@@ -113,17 +116,23 @@ def test_verify_after_profile_activity_start_change_reports_scoped_advisories_wi
     assert any(finding["kind"] == "advisory" and "2026-01-01" in finding["message"] for finding in findings), (
         "the activity-start change is not reported as a scoped advisory"
     )
-    blocking = [finding for finding in findings if finding["kind"] != "advisory"]
+    # Starting the activity on 2026-01-01 puts the preceding período before it, so the turnover the
+    # rate read from that período's Modelo 200 stays unresolved there (never zero) and its carry is unclean.
+    turnover_carry = [
+        finding
+        for finding in findings
+        if finding["kind"] == "cross_period_dependency_unclean" and _PRECEDING_TURNOVER_CARRY in json.dumps(finding)
+    ]
+    assert len(turnover_carry) == 1, findings
+    blocking = [finding for finding in findings if finding["kind"] != "advisory" and finding not in turnover_carry]
+    # The unresolved turnover blocks at any grade; the drift itself still surfaces
+    # as advisories, never as a traceback.
+    assert verification.exit_code != 0, verification.output
+    assert report["completeness_status"] == "blocked"
+    assert report["granted_verificado_completo"] is False
     snapshot = report["registry_snapshot_ref"]
     if _reaches_filing_grade(snapshot["modelo"], filing_year=snapshot["modelo_year"], period=snapshot["period"]):
-        assert verification.exit_code == 0, verification.output
-        assert report["completeness_status"] == "complete"
-        assert report["granted_verificado_completo"] is True
         assert blocking == []
     else:
-        # Below filing grade the only blocker is the typed grade refusal; the
-        # drift itself still surfaces as advisories, never as a traceback.
-        assert verification.exit_code != 0, verification.output
-        assert report["completeness_status"] == "blocked"
-        assert report["granted_verificado_completo"] is False
+        # Below filing grade the only other blocker is the typed grade refusal.
         assert [finding["action"]["failed_condition_id"] for finding in blocking] == [_FILING_AUTHORITY_CONDITION]

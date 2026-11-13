@@ -179,3 +179,91 @@ required_text = ["se podran compensar en el periodo impositivo bases imponibles 
 value = "1000000"
 date_axis = "filing_period"
 valid_from = 2022-01-01
+
+# LIS art. 26.1: "las bases imponibles negativas ... podrán ser compensadas con las rentas
+# positivas de los períodos impositivos siguientes con el límite del 70 por ciento de la base
+# imponible previa a la aplicación de la reserva de capitalización y a su compensación"
+# (Manual práctico de Sociedades 2022, cap. 5, manuals/sociedades/2022 L12726-12731).
+
+[[revisions."2022".parameters]]
+id = "is.modelo-200.bin-limite-porcentaje-general"
+data_type = "ratio"
+unit = "percent"
+legal_refs = ["ley-27-2014:art-26"]
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-modelo-200-manual-2022"
+required_text = ["el limite del 70 por ciento de la base imponible previa a la aplicacion de la reserva de capitalizacion y a su compensacion"]
+
+[[revisions."2022".parameters.values]]
+value = "70"
+date_axis = "filing_period"
+valid_from = 2022-01-01
+
+# LIS DA 15ª.1 limits on the BIN compensation of a contribuyente whose INCN of the 12
+# months before the period starts is at least 20 millones de euros: 50 per cent below 60
+# millones and 25 per cent from 60 millones, in place of the 70 per cent of art. 26.1
+# (manuals/sociedades/2022 L12733-12741, L3115-3121). The 2023 edition removes these
+# members because its manual prints the 70 alone, the Tribunal Constitucional having annulled
+# DA 15ª (manuals/sociedades/2023 L575-592, L13273-13277); the 2024 edition declares them
+# again for the DA 15ª that Ley 7/2024 added back (manuals/sociedades/2024 L14289-14300).
+
+[[revisions."2022".parameters]]
+id = "is.modelo-200.bin-limite-da15-tramo-medio-incn-minimo"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-27-2014:art-26", "ley-27-2014:da-15"]
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-modelo-200-manual-2022"
+required_text = ["pero inferior a 60 millones de euros"]
+
+[[revisions."2022".parameters.values]]
+value = "20000000"
+date_axis = "filing_period"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters]]
+id = "is.modelo-200.bin-limite-da15-tramo-medio-porcentaje"
+data_type = "ratio"
+unit = "percent"
+legal_refs = ["ley-27-2014:art-26", "ley-27-2014:da-15"]
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-modelo-200-manual-2022"
+required_text = ["el limite del 70 por ciento se sustituira por los siguientes"]
+
+[[revisions."2022".parameters.values]]
+value = "50"
+date_axis = "filing_period"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters]]
+id = "is.modelo-200.bin-limite-da15-tramo-alto-incn-minimo"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-27-2014:art-26", "ley-27-2014:da-15"]
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-modelo-200-manual-2022"
+required_text = ["al menos de 60 millones de euros"]
+
+[[revisions."2022".parameters.values]]
+value = "60000000"
+date_axis = "filing_period"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters]]
+id = "is.modelo-200.bin-limite-da15-tramo-alto-porcentaje"
+data_type = "ratio"
+unit = "percent"
+legal_refs = ["ley-27-2014:art-26", "ley-27-2014:da-15"]
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-modelo-200-manual-2022"
+required_text = ["el limite del 70 por ciento se sustituira por los siguientes"]
+
+[[revisions."2022".parameters.values]]
+value = "25"
+date_axis = "filing_period"
+valid_from = 2022-01-01

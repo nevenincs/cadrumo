@@ -17,7 +17,9 @@ the authority of this tree when stale, proves the published generation records t
 tree's legal sources, and exits 2 otherwise. ``--tree`` is the commit of the tree under
 test (the tool never runs git); with the generation and database digest it is written
 to ``<out>.meta.json``, which ``render`` prints in the table header (``--meta`` names
-another sidecar). ``run`` appends to ``--out``; a filtered run writes only its rows. ``check``
+another sidecar). ``--stage-order {legacy,lifecycle}`` (default ``legacy``, set in ``planner``) picks whether a
+granted verification is filed inside the verify stage or after the export; it is written to the sidecar as
+``stage_order``. ``run`` appends to ``--out``; a filtered run writes only its rows. ``check``
 exits 1 when a row the baseline holds green is not green in the rows given.
 
 Audit which returns the application's calendar marks applicable that the table does not run,
@@ -29,25 +31,41 @@ at the registry's own horizon only::
 suppressed obligations shown for every envelope year, writes the comparison as JSON to ``--out``
 and prints a Markdown summary grouped by persona.
 
-Compare the same returns as the TUI and the desktop window displayed them. The surfaces' pilots write one JSON
+Check that verify answers typed before anything is stated. The table enters a persona's work inputs, prior
+attestations and statements before its first verify, so a crash only the unstated state meets cannot show in a row;
+``probe`` calculates each selected owed return without them, verifies it once and requires findings or a registered
+refusal::
+
+    python -m dev.acceptance.persona_table probe --tree <sha> --persona <id> --modelo 100 --out .tmp/table/probe.jsonl
+
+It takes the filters of ``run``, replaces ``--out`` with one JSON line per probed return (persona, modelo, year,
+period, horizon, stage, outcome in ``typed-findings``, ``typed-refusal``, ``untyped-exception`` and
+``unknown-settlement``, code, message, raised_in, owner), writes no table row and prints a Markdown summary of the
+failures with their owner. It exits 1 when a return failed or a case broke, and 2 on the provenance refusal of ``run``.
+
+Compare the same returns as the TUI, the desktop window and the CLI displayed them. The surfaces' pilots write one JSON
 object per line into ``*.jsonl`` files of one directory (latest line wins per surface, persona, modelo, year and
 period, in file-name then line order)::
 
     python -m dev.acceptance.persona_table render .tmp/table/rows.jsonl --head <sha> --frontend .tmp/table/frontend
 
-    {"surface": "tui" | "window", "tree": "<commit the surface ran>", "persona": "<id>",
+    {"surface": "tui" | "window" | "cli", "tree": "<commit the surface ran>", "persona": "<id>",
      "modelo": "<modelo>" | null, "year": <int> | null, "period": "<period>" | null, "loads": true | false,
-     "calculate": STAGE, "verify": STAGE, "export": STAGE,
+     "calculate": STAGE, "verify": STAGE, "export": STAGE, "file": STAGE (optional),
      "refusal_code": "<code>" | null, "figures": {"<casilla>": "<value>"}, "reason": "...", "log": "..."}
 
 A null ``modelo`` line (null year and period) reports whether the persona's profile loaded. Every other line needs the
 three stages, each ``pass``, ``incomplete``, ``refused``, ``not-owed``, ``not-reached`` or ``error``; ``figures``
-holds every non-zero casilla value the surface displayed, as text. Unknown keys and bad values are refused.
-The table gains a ``tui`` and a ``window`` column (``@<tree>`` when the surface ran another tree than ``--head``),
-a Frontend line in the summary, and a ``Frontend matrix`` section with the rows that differ and why. A row
+holds every non-zero casilla value the surface displayed, as text. The optional ``file`` is a fifth stage in the same
+vocabulary (absent means not stated); it is read and kept but not compared with the table. Unknown keys and bad
+values are refused.
+The table gains a ``tui``, a ``window`` and a ``cli`` column (``@<tree>`` when the surface ran another tree than
+``--head``), a Frontend line in the summary, and a ``Frontend matrix`` section with the rows that differ and why. A row
 matches when each stage equals the Python row's and every figure of the table row is shown with an equal value
-(the table row is the oracle for calculated values); casillas shown beyond the row's figures do not fail a row
-and are counted in the matrix cell; a row that recorded no figures cannot be compared.
+(the table row is the oracle for calculated values; its figures are the casillas the revision's form places, and
+its internal figures, the working figures and unplaced casillas, are not compared); casillas shown beyond the
+row's figures do not fail a row and are counted in the matrix cell; a row that recorded no figures cannot be
+compared.
 Without ``--frontend`` the output is unchanged.
 """
 
@@ -70,6 +88,9 @@ from cadrumo.tests.personas import YearEnvelope, persona_ids
 from .coverage import OUT_ENV, PERSONAS_ENV, compare, read_observations, render_markdown
 from .diff import diff_tables, render_diff, row_id
 from .frontend import FrontendResultError, compare_frontend, read_results
+from .planner import DEFAULT_STAGE_ORDER, STAGE_ORDER_ENV, STAGE_ORDERS
+from .probe import PROBE_OUT_ENV, read_probes
+from .probe import render_markdown as render_markdown_probes
 from .provenance import ProvenanceError, meta_path, prepare_authority, read_meta, write_meta
 from .render import load_coverage_gaps, load_coverage_undecided, render_table, summary_line
 from .rows import GREEN, TableRow, latest_rows, owed_rows, read_rows, with_unchecked
@@ -78,6 +99,11 @@ from .unchecked import persona_at
 BASELINE = Path(__file__).with_name("baseline")
 _SWEEP = Path(__file__).with_name("sweep.py")
 _CALENDAR_SWEEP = Path(__file__).with_name("calendar_sweep.py")
+_PROBE_SWEEP = Path(__file__).with_name("probe_sweep.py")
+_STAGE_ORDER_HELP = (
+    "legacy files a granted verification inside the verify stage, before the export; lifecycle files it after the "
+    "export (recorded in the rows' .meta.json as stage_order)"
+)
 
 
 @cache
@@ -112,27 +138,44 @@ def _run(args: argparse.Namespace) -> int:
     except ProvenanceError as refusal:
         sys.stderr.write(f"persona table not run: {refusal}\n")
         return 2
-    write_meta(out, provenance)
-    environment = dict(os.environ)
-    environment |= {
-        "PERSONA_TABLE_OUT": str(out),
+    write_meta(out, provenance, stage_order=args.stage_order)
+    os.environ.update({"PERSONA_TABLE_OUT": str(out), **_selection(args)})
+    return _collect(_SWEEP, args.workers)
+
+
+def _selection(args: argparse.Namespace) -> dict[str, str]:
+    """The environment that restricts a collector to the personas, modelos and years the command line names."""
+    return {
         "PERSONA_TABLE_PERSONAS": ",".join(args.persona),
         "PERSONA_TABLE_MODELOS": ",".join(args.modelo),
         "PERSONA_TABLE_YEARS": ",".join(str(year) for year in args.year),
+        STAGE_ORDER_ENV: args.stage_order,
     }
-    os.environ.update(environment)
-    command = [
-        str(_SWEEP),
-        "-m",
-        "integration",
-        "-n",
-        str(args.workers),
-        "--dist=load",
-        "-q",
-        "-p",
-        "no:cacheprovider",
-    ]
+
+
+def _collect(collector: Path, workers: str) -> int:
+    """Run ``collector`` under pytest with ``workers`` workers; the status pytest exits with."""
+    command = [str(collector), "-m", "integration", "-n", str(workers), "--dist=load", "-q", "-p", "no:cacheprovider"]
     return int(pytest.main(command))
+
+
+def _probe(args: argparse.Namespace) -> int:
+    out = args.out.resolve()
+    try:
+        provenance = prepare_authority(os.environ, tree=args.tree)
+    except ProvenanceError as refusal:
+        sys.stderr.write(f"verify probe not run: {refusal}\n")
+        return 2
+    write_meta(out, provenance, stage_order=args.stage_order)
+    out.unlink(missing_ok=True)
+    os.environ.update({PROBE_OUT_ENV: str(out), **_selection(args)})
+    status = _collect(_PROBE_SWEEP, args.workers)
+    if not out.exists():
+        sys.stderr.write(f"verify probe: the collector wrote no line (pytest {status})\n")
+        return 1
+    probes = read_probes(out)
+    sys.stdout.write(render_markdown_probes(probes))
+    return 1 if status != 0 or any(line.failed for line in probes) else 0
 
 
 def _coverage(args: argparse.Namespace) -> int:
@@ -246,7 +289,20 @@ def main(argv: Sequence[str] | None = None) -> int:
     run.add_argument("--modelo", action="append", default=[])
     run.add_argument("--year", action="append", type=int, default=[])
     run.add_argument("--workers", default="auto")
+    run.add_argument("--stage-order", choices=STAGE_ORDERS, default=DEFAULT_STAGE_ORDER, help=_STAGE_ORDER_HELP)
     run.set_defaults(handler=_run)
+
+    probe = commands.add_parser(
+        "probe", help="verify each owed return before its statements and require typed findings"
+    )
+    probe.add_argument("--out", type=Path, required=True)
+    probe.add_argument("--tree", required=True, help="commit SHA of the tree under test")
+    probe.add_argument("--persona", action="append", default=[])
+    probe.add_argument("--modelo", action="append", default=[])
+    probe.add_argument("--year", action="append", type=int, default=[])
+    probe.add_argument("--workers", default="auto")
+    probe.add_argument("--stage-order", choices=STAGE_ORDERS, default=DEFAULT_STAGE_ORDER, help=_STAGE_ORDER_HELP)
+    probe.set_defaults(handler=_probe)
 
     coverage = commands.add_parser(
         "coverage", help="compare the returns the calendar marks applicable with the rows the table runs"
@@ -263,7 +319,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     render.add_argument("--meta", type=Path, help="run provenance sidecar; defaults to the first rows file's")
     render.add_argument("--lanes", type=Path, help="TOML mapping each lane to its modelo codes")
     render.add_argument("--coverage", type=Path, help="coverage JSON whose gaps and undecided returns the table lists")
-    render.add_argument("--frontend", type=Path, help="directory of TUI and window result lines (*.jsonl) to compare")
+    render.add_argument(
+        "--frontend", type=Path, help="directory of TUI, window and CLI result lines (*.jsonl) to compare"
+    )
     render.set_defaults(handler=_render)
 
     baseline = commands.add_parser("baseline", help="write the rows as the committed baseline, one file per persona")

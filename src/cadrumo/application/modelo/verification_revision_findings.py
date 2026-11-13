@@ -48,6 +48,10 @@ from .verification_iva_evidence import (
     append_iva_compensation_annual_source_evidence_finding,
     append_iva_selected_scope_evidence_finding,
 )
+from .verification_operator_stated_outcomes import (
+    append_operator_stated_outcome_findings,
+    values_with_operator_stated_figures,
+)
 from .verification_oss_evidence import NO_ACTIVITY_CONTRADICTED_KEY, m369_unresolved_oss_source_finding
 from .verification_preconditions import (
     build_verification_precondition_failure,
@@ -378,7 +382,7 @@ def append_registry_predicate_findings(
     findings.extend(
         evaluate_verification_predicates(
             snapshot.revision.verification_predicates,
-            target.casilla_values,
+            values_with_operator_stated_figures(target),
             predicate_profile,
             target.input_values_by_casilla_id,
             declared_casilla_ids=frozenset(casilla.id for casilla in snapshot.revision.casillas),
@@ -468,6 +472,9 @@ def append_unresolved_outcome_findings(
     ``snapshot`` (:class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`), ``predicate_profile``
     (:class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`).
     """
+    append_operator_stated_outcome_findings(
+        target=target, findings=findings, failures_by_finding_id=failures_by_finding_id
+    )
     findings.extend(
         m210_unresolved_outcome_findings(
             target.unresolved_outcomes,

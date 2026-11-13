@@ -137,7 +137,8 @@ def test_legal_entity_route_has_is_rate_schedule_by_entity_form() -> None:
     )
     assert {"ley-27-2014:art-29", "ley-27-2014:art-30"} <= set(dispatch_formula.legal_refs)
     # The rate is chosen by the legal entity form, the new-entity flag and the
-    # INCN of the prior 12 months, in whatever lane order the edition's design
+    # INCN of the preceding período impositivo (LIS art. 29.1 and art. 101), in
+    # whatever lane order the edition's design
     # sets; the per-lane rates are proved by evaluation in the cuota-integra lane
     # tests. Here the formula must reach every LIS art. 29 rate and both INCN
     # thresholds, read each axis, and keep sal and sll on the legal-entity axis.
@@ -154,7 +155,7 @@ def test_legal_entity_route_has_is_rate_schedule_by_entity_form() -> None:
     assert {
         "modelo-200-profile-legal-entity-form",
         "modelo-200-profile-new-entity-flag",
-        "modelo-200-profile-incn-prior-12-months",
+        "modelo-200-incn-periodo-impositivo-anterior",
     } <= read
     form_binding = "modelo-200-profile-legal-entity-form"
     compared = (node.args for node in nodes if any(str(argument.binding) == form_binding for argument in node.args))

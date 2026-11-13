@@ -9303,6 +9303,10 @@ modelo:
             label: Biztosítók - Saját vagyon változásainak kimutatása (II) - Tagokkal
               vagy kölcsönös egyesületi tagokkal folytatott ügyletek - Saját részvényekkel
               vagy üzletrészekkel végzett műveletek (nettó). (Saját részvények) [00547]
+          is-ecpp-aseguradoras-ii-acciones-propias-netas-prima-emision:
+            label: Biztosítók - Saját vagyon változásainak kimutatása (II) - Tagokkal
+              vagy kölcsönös egyesületi tagokkal folytatott ügyletek - Saját részvényekkel
+              vagy üzletrészekkel végzett műveletek (nettó). Ázsió [00545]
           is-ecpp-aseguradoras-ii-combinacion-negocios-otras-aportaciones-socios-mutualistas:
             label: Biztosítók - Saját vagyon változásainak kimutatása (II) -Tagokkal
               vagy kölcsönös egyesületi tagokkal folytatott ügyletek - Üzleti kombinációból
@@ -9708,6 +9712,10 @@ modelo:
             label: Elszámolás III - Kedvezmények/Kettős adóztatás levonásai - Kettős
               adóztatás levonásai - A tárgyidőszakban keletkezett és alkalmazott nemzetközi
               kettős adóztatási levonás (LIS 31. és 32. cikk) [00573]
+          is-liquidacion-iii-quitas-acuerdo-acreedores:
+            label: Elszámolás III - adóalap - A hitelezőkkel kötött megállapodás szerinti
+              követelésengedésből származó bevételek (LIS 26. cikk 1. pont) - Csökkentések
+              [00545]
           is-liquidacion-iii-reserva-nivelacion-aumentos:
             label: Elszámolás III - Adóalap - Kis méretű vállalkozások - Kiegyenlítési
               tartalék - Növelések [01033]

@@ -112,9 +112,11 @@ with isolated_runtime_profile(tmp_path=tmp, bucket_id=_BUCKET) as profile:
         operation=operation,
         clock=_T0,
     )
+    # A first ejercicio has no preceding period whose turnover the rate reads;
+    # LIS art. 101.2 refers it to the first period, so the filer states it.
     result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         work_unit.work_unit_id,
-        binding_values={},
+        binding_values={"modelo-200-incn-periodo-impositivo-anterior": Decimal("500000")},
         ports=ports,
         clock=_T0,
     )

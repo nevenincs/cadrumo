@@ -557,7 +557,7 @@ cli:
           with --parent-name.
         participation_help: Percentage of the issuer you hold. Only for tax_haven_holding.
         source_help: 'Where the figure comes from: annual_accounts, corporation_tax_return,
-          vat_returns or operator_estimate.'
+          declaraciones_iva or operator_estimate.'
         source_reference_help: Reference to the document or return you took the figure
           from.
         specific_help: The operation is a specific operation (Orden HFP/816/2017 art.

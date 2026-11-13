@@ -117,6 +117,22 @@ class TransactionFiguresWithoutBusinessError(TransactionValidationError):
         )
 
 
+class TransactionIvaRateNotFractionError(TransactionValidationError):
+    """Raised when an IVA rate above one is written where a fraction is kept.
+
+    ``context["value"]`` carries the refused figure so the served sentence can
+    name it; the untranslated message stays for logs.
+    """
+
+    def __init__(self, message: str, *, context: Mapping[str, object]) -> None:
+        """Keep the untranslated detail for logs while a person reads the registered sentence."""
+        super().__init__(
+            message,
+            context=context,
+            translated_message=get_registered_error_code(type(self)).message_key,
+        )
+
+
 class LedgerLinkError(TransactionError):
     """Raised when linking a ledger transaction to a modelo binding fails."""
 

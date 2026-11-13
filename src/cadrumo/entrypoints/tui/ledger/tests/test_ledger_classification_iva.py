@@ -14,6 +14,7 @@ from .....application.ledger import models as ledger_models
 from .....application.ledger.models import ManualLedgerTransactionPatch, ManualLedgerTransactionResult
 from .....application.operator_actions.catalogue import lookup_action
 from .....application.operator_actions.models import ActionReference
+from .....core.i18n.render import tr
 from .....core.iva_deduction_fact import IvaDeductionFactKind
 from .....domain.iva.schema import IvaCategory
 from .....domain.transactions.enums import BusinessClassification
@@ -168,7 +169,6 @@ async def test_blank_iva_and_prorrata_inputs_remain_unset() -> None:
 @pytest.mark.parametrize(
     ("field_name", "value", "row", "message"),
     (
-        ("iva_rate", "21", 0, "decimal fraction"),
         ("business_pct", "1.01", 2, "business_pct must be within"),
         # Shapes the command line refuses through the same canonical grammar.
         ("taxable_base", "1e3", 0, "taxable_base must be a decimal"),
@@ -199,6 +199,24 @@ async def test_invalid_rate_or_percentage_refuses_before_submit(
         assert screen.flow_state is LedgerFlowState.CONFIRMING
         assert not door.calls
         assert message in str(screen.query_one("#ledger-refusal", Static).render())
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("rate", ["21", "1.01"])
+async def test_a_percentage_like_rate_shows_the_words_the_backend_serves(rate: str) -> None:
+    door = _ClassificationDoor()
+    screen = LedgerClassificationScreen(_action_controller(door))
+    app = ScreenHostApp[None](screen)
+    async with app.run_test(size=(120, 60)) as pilot:
+        await settle(pilot)
+        _set_input(screen, "iva_rate", rate)
+        await pilot.press("enter")
+        screen.query_one("#ledger-classification-confirm", Button).press()
+        await settle(pilot)
+        assert screen.flow_state is LedgerFlowState.CONFIRMING
+        assert not door.calls
+        served = tr("errors.refused.transaction_iva_rate_not_fraction", value=rate)
+        assert str(screen.query_one("#ledger-refusal", Static).render()) == served
 
 
 @pytest.mark.asyncio

@@ -13,6 +13,7 @@ from . import formula_runtime_irnr, formula_runtime_m100, formula_runtime_m131
 from .errors import RegistryValidationError
 from .formula_operator_contracts import require_formula_operator_arity
 from .formula_runtime_ops import (
+    OPERATOR_BOX_CONTEXT_KEY,
     RegistryUnresolvedOutcomeReason,
     UnresolvedFormulaDependencyError,
     UnresolvedFormulaOutcomeError,
@@ -445,7 +446,11 @@ def _evaluate_unresolved_outcome(expression: FormulaExpression, ctx: EvalContext
             f"formula op 'unresolved_outcome' names unknown reason {token!r}",
             context={"reason": str(token)},
         ) from None
-    raise UnresolvedFormulaOutcomeError(reason, context={"filing_year": str(ctx.filing_year)})
+    context = {"filing_year": str(ctx.filing_year)}
+    if len(expression.args) == 2:
+        # The box the operator states in place of the value the registry leaves out.
+        context[OPERATOR_BOX_CONTEXT_KEY] = str(expression.args[1].casilla_id)
+    raise UnresolvedFormulaOutcomeError(reason, context=context)
 
 
 def _evaluate_age_at_year_end(expression: FormulaExpression, ctx: EvalContext) -> Decimal:

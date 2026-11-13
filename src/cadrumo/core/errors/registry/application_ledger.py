@@ -169,6 +169,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.prorrata_register.settlement.ProrrataSettlementEspecialContinuationError",
+        ErrorCode(
+            code="REFUSED_PROFILE_PRORRATA_SETTLEMENT_ESPECIAL_CONTINUATION",
+            category=ErrorCategory.REFUSED,
+            message_key="application.modelo.findings.prorrata_settlement_especial_continuation",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.prorrata_register.service.ProrrataWholeSeedUnavailableError",
         ErrorCode(
             code="REFUSED_PROFILE_PRORRATA_WHOLE_SEED",

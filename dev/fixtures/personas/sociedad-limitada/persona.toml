@@ -134,6 +134,20 @@ sources = [{ modelo = "200", year = "horizon-2", period = "0A" }]
 derivation = "Casilla 01499 del Modelo 200 del ejercicio anterior: sin dotación por deterioro de créditos en ningún ejercicio, no queda saldo pendiente que cumpla las condiciones del art. 13.1 LIS."
 legal_ref = ["ley-27-2014:art-13"]
 
+# The reduced rate of LIS art. 29.1 reads the importe neto de la cifra de negocios of the immediately
+# preceding tax period: casilla 00255 of the horizon-2 Modelo 200. The persona holds no prior Modelo 200
+# return (synthetic history), so no held 00255 competes and the operator states it. Horizon-2 was a
+# twelve-month period, so its INCN is the profile's incn-prior-12-months and no disagreement arises.
+[[attested_prior_values]]
+modelo = "200"
+period = "0A"
+year = "horizon-1"
+binding = "modelo-200-incn-periodo-impositivo-anterior"
+value = "28500.00"
+sources = [{ modelo = "200", year = "horizon-2", period = "0A" }]
+derivation = "Casilla 00255 (importe neto de la cifra de negocios) del Modelo 200 del período impositivo inmediato anterior, el de horizon-2: el operador declara 28500.00 (historia sintética: la persona no conserva ningún Modelo 200 anterior, así que ninguna casilla 00255 conservada compite). Horizon-2 fue un período de doce meses, por lo que coincide con el importe neto de la cifra de negocios de los doce meses anteriores del perfil. La casilla 00255 de 30800.00 de las expectativas es la del propio período declarado (horizon-1), no la del anterior."
+legal_ref = ["ley-27-2014:art-29"]
+
 # Each art. 40.2 instalment (casilla 03 of the 202) is 18 % of the cuota íntegra, less deducciones,
 # bonificaciones, retenciones e ingresos a cuenta, of the last return whose deadline had passed on the
 # first day of the payment month: horizon-3 for April (300.00), horizon-2 for October and December (0.00).
