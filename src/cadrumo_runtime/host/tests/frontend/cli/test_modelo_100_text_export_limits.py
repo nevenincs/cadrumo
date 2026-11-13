@@ -41,8 +41,6 @@ _XSD = "{http://www.w3.org/2001/XMLSchema}"
 _XSD_FILE = "03-100-esquema-xsd-ejercicio-2025-actualizado-24-06-2026-793-kb-ejecutable.xsd"
 _NAME_PATH = "./DatosIdentificativos/Declarante/DP_APENOM_D"
 _CALCULATE_FLAGS: tuple[str, ...] = (
-    "--casilla",
-    "0003=24000",
     "--binding",
     "renta-base-liquidable-negativa-general-anterior=0",
     "--binding",
