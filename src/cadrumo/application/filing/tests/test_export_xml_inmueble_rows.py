@@ -175,7 +175,10 @@ def test_each_let_property_is_one_inmueble_element_with_its_own_net_chain_in_eve
         fields = {
             entry.casilla_id: entry.field_id
             for entry in xml_dictionary_entries(
-                layout, sources=provider.sources, source_payloads=provider.source_payloads
+                layout,
+                sources=provider.sources,
+                source_payloads=provider.source_payloads,
+                casillas=provider.get_snapshot("100").revision.casillas,
             )
             if f"/{_INMUEBLE}/" in entry.path
         }
