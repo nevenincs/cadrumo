@@ -220,6 +220,13 @@ ACTION_TARGETS: Final[tuple[ActionTarget, ...]] = (
     ),
     ActionTarget("ledger.prorrata.list", ("app", "ledger", "prorrata", "list"), "ProrrataListResult"),
     ActionTarget(
+        "ledger.prorrata.seed",
+        ("app", "ledger", "prorrata", "seed"),
+        "ProrrataSeedResult",
+        required_inputs=("ejercicio",),
+        profile_bound_write=True,
+    ),
+    ActionTarget(
         "ledger.evidence.review.list", ("app", "ledger", "evidence", "review", "list"), "EvidenceReviewListResult"
     ),
     ActionTarget(
@@ -272,6 +279,13 @@ ACTION_TARGETS: Final[tuple[ActionTarget, ...]] = (
         "VerificationReportListResult",
     ),
     ActionTarget("modelo.work.amend", ("app", "modelo", "work", "amend"), "WorkAmendResult", profile_bound_write=True),
+    ActionTarget(
+        "modelo.work.amend_wizard",
+        ("app", "modelo", "work", "amend-wizard"),
+        "WorkAmendWizardResult",
+        required_inputs=("work_unit_id",),
+        profile_bound_write=True,
+    ),
     ActionTarget(
         "modelo.work.attest_m303_exonerado_390",
         ("app", "modelo", "work", "attest-m303-exonerado-390"),

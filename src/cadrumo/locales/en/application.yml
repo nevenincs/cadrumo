@@ -3435,6 +3435,23 @@ application:
       printed_total_mismatch: Box [%{box}] does not match the sum of the printed lines
         that make it up (%{printed_sum}), so the file would not add up and AEAT may
         reject it.
+      prorrata_seed_changed: The provisional prorrata in your register changed after
+        modelo %{modelo} %{filing_year}, %{period} was calculated. Calculate it again
+        before verifying.
+      prorrata_seed_contradicted: The %{source_filing_year} Modelo %{source_modelo}
+        you hold states another definitive prorrata than the provisional percentage
+        your register carries into %{filing_year}. Seed %{filing_year} again from
+        that return.
+      prorrata_seed_operator_stated: The provisional prorrata of %{percentage} for
+        %{filing_year} is your own statement of the %{prior_filing_year} definitive
+        percentage, because no %{prior_filing_year} return holding it is stored.
+      prorrata_seed_unseeded: In %{filing_year} you perform operations exempt without
+        the right to deduct, so the prorrata applies (LIVA art. 102), but your prorrata
+        register holds no prorrata for %{filing_year}, so the deductible IVA cannot
+        be computed. Seed %{filing_year} from the prior year's definitive percentage.
+      prorrata_seed_unsourced: Your prorrata register applies a prorrata for %{filing_year}
+        but holds no provisional percentage, so the deductible IVA cannot be computed.
+        Seed %{filing_year} from the prior year's definitive percentage.
       pulled_filing_casilla_mismatch: 'Box [%{casilla_number}] for period %{period_code}
         %{filing_year}: the calculation gives %{computed_value}, but the declaration
         submitted to AEAT shows %{filed_value}.'
@@ -3934,6 +3951,7 @@ application:
         ledger_link: Link the invoice to its payment
         ledger_preflight: Check the ledger for this period
         ledger_prorrata_list: Review the prorrata register
+        ledger_prorrata_seed: Carry the provisional prorrata into the ejercicio
         ledger_review: Review the ledger
         live_filed_pull: Fetch the filed declaration from the AEAT
         live_filed_pull_all: Fetch all filed declarations from the AEAT
@@ -3948,6 +3966,7 @@ application:
         modelo_iva_wallet_seed: State the opening IVA balance to carry forward
         modelo_verification_report_list: Review the verification reports
         modelo_work_amend: Amend the filed declaration
+        modelo_work_amend_wizard: Correct the filed declaration step by step
         modelo_work_attest_m303_exonerado_390: Confirm you are exempt from Modelo
           390
         modelo_work_attest_prior_carries: State the amounts carried from earlier years

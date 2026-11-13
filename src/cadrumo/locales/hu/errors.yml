@@ -1904,6 +1904,9 @@ errors:
       hogy az adóügyi illetőség országa az EU vagy az EGT tagja volt-e, ez pedig a
       benyújtási időszak dátumától függ. Az ellenőrzés nem adta meg a dátumot. Ez
       a program hibája, nem te okoztad azzal, amit megadtál.
+    refused_modelo_prorrata_seed_superseded: A(z) %{modelo} %{filing_year}, %{period}
+      bevallás olyan ideiglenes arányosítási százalékkal vont le adót, amely már nem
+      szerepel a nyilvántartásodban. Javítsd önellenőrzéssel.
     refused_modelo_refund_account_missing: Visszatérítést kértek, de nincs visszatérítési
       számla rögzítve; az AEAT nem tud visszatérítést fizetni számla nélkül. Állíts
       be visszatérítési számlát, vagy vidd tovább a kreditet (compensar).

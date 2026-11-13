@@ -915,6 +915,7 @@ DESKTOP_LEDGER_WORKFLOW_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.ledger.prorrata.provenance.carried_prior_definitiva",
         "desktop.ledger.prorrata.provenance.inicio_actividad",
         "desktop.ledger.prorrata.provenance.interrumpida_tres_ultimos",
+        "desktop.ledger.prorrata.provenance.operator_stated_prior_definitiva",
         "desktop.ledger.prorrata.provenance_label",
         "desktop.ledger.prorrata.reference",
         "desktop.ledger.prorrata.reference_hint",

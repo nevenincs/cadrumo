@@ -545,11 +545,19 @@ def _seed_notices(
     origin = Notice(
         severity=NoticeSeverity.INFO,
         code=_SEED_LOCAL_AUTHORITY_NOTICE_CODE,
-        message=tr(
-            "cli.app.ledger.prorrata.seed_local_authority",
-            modelo=seed.modelo,
-            filing_year=seed.filing_year,
-            period=seed.period,
+        message=(
+            tr(
+                "cli.app.ledger.prorrata.seed_operator_stated",
+                modelo=seed.modelo,
+                filing_year=seed.filing_year,
+            )
+            if seed.authority == "operator_stated"
+            else tr(
+                "cli.app.ledger.prorrata.seed_local_authority",
+                modelo=seed.modelo,
+                filing_year=seed.filing_year,
+                period=seed.period,
+            )
         ),
         context={
             "source_modelo": seed.modelo,
@@ -571,8 +579,17 @@ def _seed_notices(
     return (origin, *advisory_notices)
 
 
-def prorrata_seed(ctx: typer.Context, ejercicio: int, sector: str | None = None) -> None:
-    """Carry only the whole-entity prior definitive into an ejercicio."""
+def prorrata_seed(
+    ctx: typer.Context,
+    ejercicio: int,
+    sector: str | None = None,
+    percentage: str | None = None,
+) -> None:
+    """Carry only the whole-entity prior definitive into an ejercicio.
+
+    ``percentage`` is the taxpayer's statement of the prior definitive, used
+    only when neither the prior 390 nor the final-period 303 is held.
+    """
     if sector is not None:
         raise CliRefusedBoundaryError(
             translated_message="cli.app.ledger.prorrata.seed_sector_requires_route",
@@ -583,7 +600,11 @@ def prorrata_seed(ctx: typer.Context, ejercicio: int, sector: str | None = None)
             },
         )
     profile_id = _profile_id()
-    request = ProrrataSeedRequest(profile_id=profile_id, ejercicio=ejercicio)
+    request = ProrrataSeedRequest(
+        profile_id=profile_id,
+        ejercicio=ejercicio,
+        percentage=None if percentage is None else _unsigned_amount(percentage, label="percentage"),
+    )
     completed, projection = _run_mutation(
         ctx,
         request,

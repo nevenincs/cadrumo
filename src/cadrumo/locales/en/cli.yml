@@ -593,11 +593,19 @@ cli:
         seed_ejercicio_help: Filing year whose provisional percentage is being seeded
           or settled.
         seed_help: Seed the ejercicio's provisional prorrata from the prior year's
-          definitive percentage (LIVA art. 105.Uno), read from the stamped prior Modelo
-          303 settlement observation.
+          definitive percentage (LIVA art. 105.Uno), read from the stored prior Modelo
+          390 or, when you are exempt from it, the prior final-period Modelo 303.
         seed_local_authority: The provisional percentage was carried locally from
           your stored {modelo} {period} {filing_year} settlement observation (LIVA
           art. 105.Uno). It is not a percentage AEAT issued for this ejercicio.
+        seed_operator_stated: The provisional percentage is your own statement of
+          the {filing_year} definitive prorrata, standing in for the {filing_year}
+          Modelo {modelo}, which is not stored (LIVA art. 105.Uno). It is not a figure
+          read from a return.
+        seed_percentage_help: The prior year's definitive prorrata percentage (0-100),
+          as you state it. Used only when neither the prior Modelo 390 nor the prior
+          final-period Modelo 303 is stored; a stored return that states another figure
+          refuses it.
         seed_regulated_override_standing: Filing year {ejercicio} already carries
           a {provenance} provisional prorrata, which outranks the art. 105.Uno carry.
           Nothing was written; replace that declaration explicitly before seeding.

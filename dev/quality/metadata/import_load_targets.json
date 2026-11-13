@@ -1459,6 +1459,7 @@
         "cadrumo.application.modelo.projection_unresolved",
         "cadrumo.application.modelo.projection_words",
         "cadrumo.application.modelo.prorrata_regularizacion_advisory",
+        "cadrumo.application.modelo.prorrata_seed_gate",
         "cadrumo.application.modelo.pulled_filing_reconcile",
         "cadrumo.application.modelo.query_read_contracts",
         "cadrumo.application.modelo.query_read_operation",

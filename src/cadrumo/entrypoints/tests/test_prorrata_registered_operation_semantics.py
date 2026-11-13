@@ -174,6 +174,7 @@ def _seed_refusal_case(
     authority_operation: PinnedAuthorityOperation,
     *,
     refusal_reason: Literal["regulated_override_standing", "seed_existing_blocked"],
+    contradicted_entry_settled: bool = True,
 ) -> ProrrataWholeSeedRefusalCase:
     observations = CalculationObservationRepository(bucket_id=str(_PROFILE_ID))
     return prepare_prorrata_whole_seed_refusal_case(
@@ -182,6 +183,7 @@ def _seed_refusal_case(
         operation=authority_operation,
         observation_repository=observations,
         refusal_reason=refusal_reason,
+        contradicted_entry_settled=contradicted_entry_settled,
     )
 
 
@@ -236,7 +238,7 @@ def test_standing_override_refusal_preserves_exact_provenance_and_writes_nothing
     assert after == before == case.expected_register
 
 
-def test_carried_observation_contradiction_refuses_without_overwriting_register(
+def test_a_settled_year_contradicted_by_its_source_refuses_without_overwriting_register(
     authority_operation: PinnedAuthorityOperation,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -268,6 +270,43 @@ def test_carried_observation_contradiction_refuses_without_overwriting_register(
         operation=authority_operation,
     )
     assert after == before == case.expected_register
+
+
+def test_reseeding_an_unsettled_contradicted_carry_replaces_it_with_the_held_return(
+    authority_operation: PinnedAuthorityOperation,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    case = _seed_refusal_case(
+        authority_operation,
+        refusal_reason="seed_existing_blocked",
+        contradicted_entry_settled=False,
+    )
+    contradicted = case.expected_register.entry_for(case.request.ejercicio)
+    assert contradicted is not None
+
+    returned, execution, events, identity = _run_executor(
+        case.request,
+        definition_id=PRORRATA_SEED_OPERATION_DEFINITION_ID,
+        authority_operation=authority_operation,
+        monkeypatch=monkeypatch,
+        operation_number=5,
+    )
+
+    projection = project_prorrata_mutation_result(execution, _receipt(identity, refused=False))
+    after = read_prorrata_operation_conformance_register(
+        _PROFILE_ID,
+        repository_factory=_repository_factory,
+        operation=authority_operation,
+    )
+    reseeded = after.entry_for(case.request.ejercicio)
+    assert isinstance(returned, str)
+    assert events.effects == [OperationEffect.UNKNOWN, OperationEffect.UPDATED]
+    assert projection.refusal is None
+    assert reseeded is not None
+    assert reseeded.provisional_provenance == contradicted.provisional_provenance
+    assert reseeded.provisional_percentage != contradicted.provisional_percentage
+    assert reseeded.source_observation_ref == contradicted.source_observation_ref
+    assert len(after.entries) == 1
 
 
 def test_repeating_a_whole_seed_keeps_one_canonical_entry(

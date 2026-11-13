@@ -2009,6 +2009,9 @@ errors:
       si el país de residencia fiscal pertenecía a la UE o al EEE, y eso depende de
       la fecha del periodo de presentación. La comprobación no aportó esa fecha. Es
       un fallo del programa y nada de lo que has introducido lo ha causado.
+    refused_modelo_prorrata_seed_superseded: El modelo %{modelo} %{filing_year}, %{period}
+      se presentó deduciendo con una prorrata provisional que tu registro ya no contiene.
+      Corrígelo con una declaración complementaria o rectificativa.
     refused_modelo_refund_account_missing: Se solicitó una devolución pero no hay
       ninguna cuenta de devolución configurada; la AEAT no puede pagar una devolución
       sin una cuenta. Configura una cuenta de devolución o compensa el crédito (compensar).
