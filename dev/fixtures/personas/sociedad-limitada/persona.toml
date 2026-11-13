@@ -144,6 +144,7 @@ period = "0A"
 year = "horizon-1"
 binding = "modelo-200-incn-periodo-impositivo-anterior"
 value = "28500.00"
+where_declared = true
 sources = [{ modelo = "200", year = "horizon-2", period = "0A" }]
 derivation = "Casilla 00255 (importe neto de la cifra de negocios) del Modelo 200 del período impositivo inmediato anterior, el de horizon-2: el operador declara 28500.00 (historia sintética: la persona no conserva ningún Modelo 200 anterior, así que ninguna casilla 00255 conservada compite). Horizon-2 fue un período de doce meses, por lo que coincide con el importe neto de la cifra de negocios de los doce meses anteriores del perfil. La casilla 00255 de 30800.00 de las expectativas es la del propio período declarado (horizon-1), no la del anterior."
 legal_ref = ["ley-27-2014:art-29"]
