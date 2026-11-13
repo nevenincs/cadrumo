@@ -542,6 +542,7 @@ async function main() {
   const harness = [];
   const worker = async () => {
     for (let group = queue.shift(); group && !halted; group = queue.shift()) {
+      let personaLine = false;
       for (const item of group) {
         if (halted) break;
         console.error(`case ${item.id} start`);
@@ -569,12 +570,25 @@ async function main() {
               : {
                   ...line,
                   reason: line.reason.replace(
-                    /^(S+?: )?/,
+                    /^(\S+?: )?/,
                     (head) => `${head}cause harness: `,
                   ),
                 },
           );
           if (unloaded && harnessLines.includes(unloaded)) unloaded = undefined;
+        }
+        // Append this case's validated lines now, so an interrupted run keeps
+        // every case that finished; the persona-level line goes in once.
+        if (done.ok) {
+          const lines = done.lines.filter(
+            (line) => line.modelo !== null || !personaLine,
+          );
+          personaLine ||= lines.some((line) => line.modelo === null);
+          if (lines.length)
+            appendFileSync(
+              out,
+              lines.map((line) => `${JSON.stringify(line)}\n`).join(""),
+            );
         }
         if (
           !loadsOnly &&
@@ -587,23 +601,6 @@ async function main() {
           );
         }
       }
-      // This persona is finished: append its validated lines now.
-      const lines = [];
-      for (const item of group) {
-        const done = results.get(item.id);
-        if (!done?.ok) continue;
-        for (const line of done.lines)
-          if (
-            line.modelo !== null ||
-            !lines.some((have) => have.modelo === null)
-          )
-            lines.push(line);
-      }
-      if (lines.length)
-        appendFileSync(
-          out,
-          lines.map((line) => `${JSON.stringify(line)}\n`).join(""),
-        );
     }
   };
   await Promise.all(
