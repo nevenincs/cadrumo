@@ -24,8 +24,9 @@ Core types:
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
+from functools import partial
 from typing import TYPE_CHECKING
 
 from ...domain.contribuyente.inmueble_facts import rows_from_facts
@@ -41,8 +42,10 @@ from .rental_records import (
     RentalLedgerReferenceReader,
     admit_rental_row,
     is_rental_section,
+    refuse_incoherent_rental_row,
     require_rental_row_removable,
 )
+from .row_parts import ProfileRowPartInput, packed_text_of_parts
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -132,6 +135,37 @@ def _admit_record_row(
     return admit_rental_row(
         section_key, row_key=row_key, row=row, path_values=path_values, authority=authority, mutation=mutation
     )
+
+
+def _stated_values(
+    section_key: str,
+    values: Mapping[str, str],
+    parts: Mapping[str, Sequence[ProfileRowPartInput]] | None,
+    *,
+    mutation: ProfileRecordRowMutation,
+) -> dict[str, str]:
+    """Return the text of every stated field, a packed field's parts rendered by the canonical serialiser.
+
+    A packed field is stated as its text or as parts, not both. A rental part the grammar refuses is
+    refused as the same entry stated as text is: with the sentence that names the leaf and the door.
+    """
+    stated = dict(values)
+    if parts is None or len(parts) == 0:
+        return stated
+    both = sorted(set(values) & set(parts))
+    if both:
+        raise ProfileSchemaValidationError(
+            "a packed field is stated as text or as parts, not both",
+            context={"section": section_key, "fields": ", ".join(both)},
+        )
+    for field_key, items in parts.items():
+        render = partial(packed_text_of_parts, section_key, field_key, items)
+        stated[field_key] = (
+            refuse_incoherent_rental_row(render, section_key=section_key, mutation=mutation)
+            if is_rental_section(section_key)
+            else render()
+        )
+    return stated
 
 
 def validate_profile_repeatable_row_fields(
@@ -253,6 +287,7 @@ def add_profile_repeatable_section_row(
     profile_id: str,
     section_key: str,
     values: Mapping[str, str],
+    parts: Mapping[str, Sequence[ProfileRowPartInput]] | None = None,
     expected_revision: int | None = None,
     expected_content_digest: str | None = None,
     schema: ProfileSchemaDefinition,
@@ -264,12 +299,14 @@ def add_profile_repeatable_section_row(
     The schema selects the section, the current encrypted record determines the
     next stable index, and the shared profile-fact writer owns the one atomic
     publication and bucket event. A frontend must supply only the field-keyed
-    values it collected. ``schema`` and ``authority`` must come from the
-    enclosing pinned authority operation; this operation does not consult
+    values it collected; a packed field may be supplied as ``parts`` instead of its
+    text. ``schema`` and ``authority`` must come from the enclosing pinned
+    authority operation; this operation does not consult
     bundled authoring data. A section that carries record-level admission (the
     rental and position sections) is judged here, once, for every door.
     """
     section = _repeatable_section(schema, section_key)
+    values = _stated_values(section_key, values, parts, mutation=ProfileRecordRowMutation.ADD)
     # Two different mistakes, refused apart. section_row_facts deliberately
     # ignores keys it does not declare, so a mistyped field used to arrive here
     # as "no populated field" -- which told an operator who had populated one
@@ -317,6 +354,7 @@ def update_profile_repeatable_section_row(
     section_key: str,
     row_key: str,
     values: Mapping[str, str],
+    parts: Mapping[str, Sequence[ProfileRowPartInput]] | None = None,
     clear_fields: Iterable[str],
     expected_revision: int | None = None,
     expected_content_digest: str | None = None,
@@ -327,9 +365,11 @@ def update_profile_repeatable_section_row(
     """Modify one stable row, retaining omissions and clearing only explicit fields.
 
     A record row is judged whole as the edit would leave it, and only the leaves
-    that differ from the stored row are written.
+    that differ from the stored row are written. A packed field may be replaced by ``parts``
+    instead of its text.
     """
     section = _repeatable_section(schema, section_key)
+    values = _stated_values(section_key, values, parts, mutation=ProfileRecordRowMutation.EDIT)
     clears = validate_profile_repeatable_row_fields(section, values=values, clear_fields=clear_fields)
     if not values and not clears:
         raise ProfileSchemaValidationError("repeatable-row update requires a value or explicit clear")

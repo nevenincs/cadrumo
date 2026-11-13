@@ -5008,6 +5008,67 @@ application:
         summary_open: 'Bérlet %{row}, kezdete: %{start}'
       renta_inmueble:
         summary: 'Ingatlan %{row}: %{place}'
+    row_parts:
+      choice:
+        uso:
+          tipo:
+            actividad_economica: Gazdasági tevékenység
+            disposicion_propietario: A tulajdonos rendelkezésére áll
+            vivienda_habitual: Állandó lakóhely
+      field:
+        inquilino:
+          extranjero:
+            help: Jelöld meg, hogy az azonosító külföldi, nem spanyol.
+            label: Külföldi azonosító
+          franja_edad:
+            help: Az életkori sáv a szerződéskötés napján, vagy hogy nem természetes
+              személy.
+            label: A bérlő életkora
+          nif:
+            help: A bérlő NIF-je, NIE-je vagy külföldi azonosítója, szóközök és kötőjelek
+              nélkül.
+            label: A bérlő adóazonosítója
+        mejora:
+          fecha:
+            help: A felújítás befejezésének napja (ÉÉÉÉ-HH-NN).
+            label: A felújítás dátuma
+          importe:
+            help: A felújítás összege tizedesponttal és legfeljebb két tizedesjeggyel,
+              például 1500.00.
+            label: Összeg (euró)
+        uso:
+          desde:
+            help: Ennek a használatnak az első napja (ÉÉÉÉ-HH-NN).
+            label: Kezdete
+          hasta:
+            help: Ennek a használatnak az utolsó napja (ÉÉÉÉ-HH-NN). Hagyd üresen,
+              ha a használat folytatódik.
+            label: Vége
+          tipo:
+            help: Mire használod az ingatlant ebben az időszakban a bérbeadás helyett.
+            label: A használat típusa
+        valor_catastral:
+          construccion:
+            help: A kataszteri érték épületre eső része, ugyanebben a formában.
+            label: Az épület kataszteri értéke (euró)
+          total:
+            help: Az ingatlan teljes kataszteri értéke abban az évben, tizedesponttal
+              és legfeljebb két tizedesjeggyel, például 85000.00.
+            label: Teljes kataszteri érték (euró)
+          vigor:
+            help: Az az év, amikor hatályba lépett az értékeket megállapító általános
+              kataszteri értékelés. Hagyd üresen, ha nem tudod.
+            label: Az általános értékelés éve
+          year:
+            help: Az IBI-számla éve, amelyhez ez az érték tartozik (négy számjegy).
+            label: IBI-év
+      invalid: A mentett érték nem a várt alakú, ezért nem jeleníthető meg részenként.
+        Javítsd szövegként, vagy töröld, és add meg újra.
+      kind:
+        inquilino: Bérlő
+        mejora: Felújítás
+        uso: Használat
+        valor_catastral: Kataszteri érték
   wizard:
     errors:
       command_input_invalid: 'A profiladatok érvényesítése sikertelen: %{details}'

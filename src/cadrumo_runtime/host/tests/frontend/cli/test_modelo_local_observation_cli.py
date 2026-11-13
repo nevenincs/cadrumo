@@ -39,6 +39,7 @@ from cadrumo.domain.user_profile.values import (
 from cadrumo.tests.cli_envelope import unwrap_envelope_notices, unwrap_schema_envelope
 
 from .cli_runner import invoke_cached_cli
+from .prior_savings_remainders import prior_savings_remainder_bindings, prior_savings_remainder_boxes
 from .runtime_profile_backend import runtime_cli_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -120,6 +121,8 @@ def _record_local_prior_observation() -> None:
             "1553=0",
             "--set",
             "1577=0",
+            # The savings carries (LIRPF art. 49) the next return opens from this one are stated, never read as zero.
+            *(argument for box in prior_savings_remainder_boxes() for argument in ("--set", f"{box}=0")),
         ],
     )
     assert result.exit_code == 0, result.output
@@ -147,6 +150,7 @@ def _record_local_prior_observation() -> None:
         "1479": "0",
         "1553": "0",
         "1577": "0",
+        **dict.fromkeys(prior_savings_remainder_boxes(), "0"),
     }
     notices = unwrap_envelope_notices(result.output)
     # The operator was admitted with the password for this command alone, which it says.
@@ -180,6 +184,7 @@ def _assert_prior_filing_prefills(runtime_profile: TestRuntimeProfile, operation
             "renta-base-liquidable-negativa-general-em3-pendiente-inicio",
             "renta-base-liquidable-negativa-general-em2-pendiente-inicio",
             "renta-base-liquidable-negativa-general-anterior",
+            *prior_savings_remainder_bindings(),
         ):
             assert m100_prefill.binding_values[binding_id] == Decimal("0")
 

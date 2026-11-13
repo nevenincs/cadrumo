@@ -418,7 +418,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.modelos.calculation_revision.LedgerFilingCoverageError",
+        "cadrumo.domain.modelos.errors.LedgerFilingCoverageError",
         ErrorCode(
             code="FAIL_MODELO_LEDGER_FILING_COVERAGE",
             category=ErrorCategory.FAIL,

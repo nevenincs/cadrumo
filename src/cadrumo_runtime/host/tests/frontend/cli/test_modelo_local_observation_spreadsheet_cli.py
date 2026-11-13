@@ -26,6 +26,7 @@ from cadrumo.domain.calculations.registry.tests.published_authority import publi
 from cadrumo.tests.cli_envelope import unwrap_envelope_notices, unwrap_schema_envelope
 
 from .cli_runner import invoke_cached_cli
+from .prior_savings_remainders import prior_savings_remainder_bindings, prior_savings_remainder_boxes
 from .runtime_profile_backend import runtime_cli_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -53,7 +54,8 @@ def test_observe_local_from_csv_spreadsheet_persists_non_official_observation(
     """
     sheet = tmp_path / "m100-2024.csv"
     sheet.write_text(
-        "casilla_code,value\n1384,0\n1387,0\n1390,0\n1391,0\n0224,0\n1479,0\n1553,0\n1577,0\n",
+        "casilla_code,value\n1384,0\n1387,0\n1390,0\n1391,0\n0224,0\n1479,0\n1553,0\n1577,0\n"
+        + "".join(f"{box},0\n" for box in prior_savings_remainder_boxes()),
         encoding="utf-8",
     )
 
@@ -99,6 +101,7 @@ def test_observe_local_from_csv_spreadsheet_persists_non_official_observation(
         "1479": "0",
         "1553": "0",
         "1577": "0",
+        **dict.fromkeys(prior_savings_remainder_boxes(), "0"),
     }
     notices = unwrap_envelope_notices(result.output)
     # The operator was admitted with the password for this command alone, which it says.
@@ -127,6 +130,7 @@ def test_observe_local_from_csv_spreadsheet_persists_non_official_observation(
             "renta-base-liquidable-negativa-general-em3-pendiente-inicio",
             "renta-base-liquidable-negativa-general-em2-pendiente-inicio",
             "renta-base-liquidable-negativa-general-anterior",
+            *prior_savings_remainder_bindings(),
         ):
             assert m100_prefill.binding_values[binding_id] == Decimal("0")
 

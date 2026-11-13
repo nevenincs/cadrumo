@@ -105,6 +105,13 @@ def _refusing_incoherent[RecordT](build: Callable[[], RecordT], *, door: str) ->
         ) from error
 
 
+def refuse_incoherent_rental_row[RecordT](
+    build: Callable[[], RecordT], *, section_key: str, mutation: ProfileRecordRowMutation
+) -> RecordT:
+    """Run a build of a rental row's facts, serving its refusal as the row admission serves it for that door."""
+    return _refusing_incoherent(build, door=_door(section_key, mutation))
+
+
 def _tenant_capacity(authority: PinnedAuthorityOperation) -> int:
     """Count the tenant identification slots the newest annual-return layout gives one property."""
     directory = authority.modelo_directory(Modelo("100"))
@@ -294,6 +301,7 @@ __all__ = [
     "admit_rental_row",
     "canonical_rental_ref",
     "is_rental_section",
+    "refuse_incoherent_rental_row",
     "rental_row_keys",
     "require_rental_row_removable",
     "unreadable_rental_ledger_references",

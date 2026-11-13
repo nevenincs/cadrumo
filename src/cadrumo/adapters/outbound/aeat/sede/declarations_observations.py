@@ -322,6 +322,7 @@ def observed_header_facts_from_submitted_file(
             body,
             sources=snapshot.sources,
             source_payloads=source_payloads,
+            casillas=snapshot.revision.casillas,
         )
     except RegistryValidationError:
         return ()
@@ -376,6 +377,7 @@ def observed_filing_kind_marker_from_submitted_file(
             body,
             sources=snapshot.sources,
             source_payloads=source_payloads,
+            casillas=snapshot.revision.casillas,
         )
     except RegistryValidationError:
         return None
@@ -416,6 +418,7 @@ def observed_casillas_from_submitted_file(
             body,
             sources=snapshot.sources,
             source_payloads=published_layout_source_payloads(snapshot=snapshot, operation=operation),
+            casillas=snapshot.revision.casillas,
         )
     except RegistryValidationError as exc:
         raise submitted_file_layout_refusal(

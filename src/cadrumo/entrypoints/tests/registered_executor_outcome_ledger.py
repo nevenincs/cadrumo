@@ -52,11 +52,8 @@ from ...application.ledger.check_operation import LedgerCheckProjection, LedgerC
 from ...application.ledger.classify_requests import LedgerClassifyRequest
 from ...application.ledger.classify_result_contracts import LedgerClassifyOperationResult
 from ...application.ledger.counterparty_operation import LedgerCounterpartyRequest, LedgerCounterpartyResult
-from ...application.ledger.entry_options_operation import (
-    EntryOptionFamily,
-    LedgerEntryOptionsProjection,
-    LedgerEntryOptionsRequest,
-)
+from ...application.ledger.entry_option_families import EntryOptionFamily
+from ...application.ledger.entry_options_operation import LedgerEntryOptionsProjection, LedgerEntryOptionsRequest
 from ...application.ledger.evidence_add_operation import LedgerEvidenceAddProjection, LedgerEvidenceAddRequest
 from ...application.ledger.evidence_mutation_operation import (
     LedgerEvidenceRemoveProjection,

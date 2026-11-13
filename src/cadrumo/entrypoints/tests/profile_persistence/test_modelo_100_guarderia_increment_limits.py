@@ -83,10 +83,17 @@ _CALENDAR_MONTHS = 12
 _STATUTORY_ANNUAL_CAP = Decimal("1000")
 """Art. 81.2 LIRPF as rewritten by Ley 31/2022 art. 64: "hasta en 1.000 euros adicionales"."""
 _NO_PENDING_NEGATIVE_BASES: dict[BindingId, Decimal] = {
-    f"renta-base-liquidable-negativa-general-{origin}": Decimal("0")
-    for origin in ("em4-pendiente-inicio", "em3-pendiente-inicio", "em2-pendiente-inicio", "anterior")
+    **{
+        f"renta-base-liquidable-negativa-general-{origin}": Decimal("0")
+        for origin in ("em4-pendiente-inicio", "em3-pendiente-inicio", "em2-pendiente-inicio", "anterior")
+    },
+    **{
+        f"renta-saldo-negativo-{kind}-ahorro-{origin}-pendiente-inicio": Decimal("0")
+        for kind in ("rcm", "gyp")
+        for origin in ("em1", "em2", "em3", "em4")
+    },
 }
-"""The pending negative general bases a filer states as none (LIRPF art. 50.3)."""
+"""The pending negative general bases (LIRPF art. 50.3) and savings balances (art. 49) a filer states as none."""
 
 
 def _supported_years() -> tuple[int, ...]:

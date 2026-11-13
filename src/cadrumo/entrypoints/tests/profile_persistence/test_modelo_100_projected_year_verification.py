@@ -74,10 +74,17 @@ _TAXPAYER_TAX_ID = "12345678Z"
 _PROFILE_ID = "10010000-0000-4100-8100-000000000504"
 _CLOCK = datetime(2026, 6, 30, 9, 0, 0, tzinfo=UTC)
 _NO_PENDING_NEGATIVE_BASES: dict[BindingId, Decimal] = {
-    f"renta-base-liquidable-negativa-general-{origin}": Decimal("0")
-    for origin in ("em4-pendiente-inicio", "em3-pendiente-inicio", "em2-pendiente-inicio", "anterior")
+    **{
+        f"renta-base-liquidable-negativa-general-{origin}": Decimal("0")
+        for origin in ("em4-pendiente-inicio", "em3-pendiente-inicio", "em2-pendiente-inicio", "anterior")
+    },
+    **{
+        f"renta-saldo-negativo-{kind}-ahorro-{origin}-pendiente-inicio": Decimal("0")
+        for kind in ("rcm", "gyp")
+        for origin in ("em1", "em2", "em3", "em4")
+    },
 }
-"""The pending negative general bases a single employee states as none (LIRPF art. 50.3)."""
+"""The pending negative general bases (LIRPF art. 50.3) and savings balances (art. 49) a single employee states as none."""
 
 
 def _seed_profile(filing_year: int) -> None:
