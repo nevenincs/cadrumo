@@ -166,18 +166,27 @@ _DERIVED_TRANSACTION_ID_CHECK = "derived_transaction_id"
 
 _FIGURES_WITHOUT_BUSINESS_CHECK = "figures_without_business"
 
+_IVA_RATE_FRACTION_CHECK = "iva_rate_fraction"
+
 #: A row written before personal rows were refused business figures may still
 #: hold them. Reading it never refuses: the reader withholds those figures
 #: (:func:`~.withheld_figures.withhold_figures_without_business`) and the row's next write drops
 #: them, so only a new write meets the refusal.
-_STORED_ROW = _StoredRow(frozenset({_FIGURES_WITHOUT_BUSINESS_CHECK}))
+#:
+#: A row written before an IVA rate above one was refused may hold a percentage
+#: such as ``21``. Reading it never refuses either: the row loads as stored, the
+#: IVA aggregation gate refuses that rate as unsupported and names the row, and
+#: the operator corrects it through the ledger edit, whose patch states a fraction.
+_STORED_ROW = _StoredRow(frozenset({_FIGURES_WITHOUT_BUSINESS_CHECK, _IVA_RATE_FRACTION_CHECK}))
 
 #: The derived-id re-hash re-proves what the store's binding already proves:
 #: the transaction id is the object key the AEAD authenticates, and the
 #: repository asserts the decoded id equals the addressed key. Every dated
 #: registry rule stays, because a stored row does not record the authority
 #: generation it was admitted under.
-_AUTHENTICATED_STORED_ROW = _StoredRow(frozenset({_DERIVED_TRANSACTION_ID_CHECK, _FIGURES_WITHOUT_BUSINESS_CHECK}))
+_AUTHENTICATED_STORED_ROW = _StoredRow(
+    frozenset({_DERIVED_TRANSACTION_ID_CHECK, _FIGURES_WITHOUT_BUSINESS_CHECK, _IVA_RATE_FRACTION_CHECK})
+)
 
 
 def _skips_admission_check(info: core_schema.ValidationInfo, check: str) -> bool:
@@ -706,8 +715,15 @@ class Transaction(BaseModel):
     @field_validator("iva_rate")
     @classmethod
     @pydantic_validation_boundary
-    def _iva_rate_is_a_fraction_not_a_percentage(cls, value: Decimal | None) -> Decimal | None:
-        """Refuse an IVA rate supplied as a percentage, with the words the backend serves."""
+    def _iva_rate_is_a_fraction_not_a_percentage(
+        cls, value: Decimal | None, info: core_schema.ValidationInfo
+    ) -> Decimal | None:
+        """Refuse an IVA rate supplied as a percentage, with the words the backend serves.
+
+        A row read back from the secure store is not refused: it may predate the refusal.
+        """
+        if _skips_admission_check(info, _IVA_RATE_FRACTION_CHECK):
+            return value
         return validate_iva_rate_is_fraction(value)
 
     @field_validator(
