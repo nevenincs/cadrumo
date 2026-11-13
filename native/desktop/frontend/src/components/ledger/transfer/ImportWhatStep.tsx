@@ -21,7 +21,7 @@ import type {
   LedgerProvider,
   PickedFile,
 } from "../../../shell/ledger";
-import type { InvoiceKind } from "../../../shell/ledgerInvoiceOperations";
+import type { InvoiceKind } from "../../../shell/ledgerInvoiceContract";
 import type { LedgerPeriod } from "../../../shell/ledgerGrammar";
 import { periodsHoldingToday, usePeriods } from "../../../shell/ledgerPeriods";
 import type { Translate } from "../../../shell/strings";

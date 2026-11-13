@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { listed } from "../../../shell/compose";
 import { servedNextStep, type LedgerNextStep } from "../../../shell/ledger";
-import type { LabelReadingFallback } from "../../../shell/ledgerDocumentOperations";
+import type { LabelReadingFallbackProjectionV1 } from "../../../shell/ledgerDocumentContract";
 import { provisionActionOf } from "../../../shell/provisioningRecovery";
 import { useStrings } from "../../../shell/strings";
 import { SetupOffer } from "../../setup/SetupOffer";
@@ -41,7 +41,7 @@ export function ReviewNotices({
   notice: ReviewNotice | null;
   /** A read, confirmation or check is in flight. */
   busy: boolean;
-  fallback: LabelReadingFallback | null | undefined;
+  fallback: LabelReadingFallbackProjectionV1 | null | undefined;
   /** Learns what an unknown outcome came to. */
   onCheck(): void;
 }) {

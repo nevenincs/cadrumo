@@ -4,15 +4,22 @@ import {
   movementDocuments,
 } from "../src/components/ledger/inspector/movementDocuments";
 import { effectiveFacts, storedFieldValue } from "../src/shell/ledgerStage";
-import type { EvidenceRecord } from "../src/shell/ledgerDocumentOperations";
+import type { LedgerEvidenceRecordProjection } from "../src/shell/ledgerDocumentContract";
 import { hexId, movement } from "./support/ledger";
 
-const record: EvidenceRecord = {
+const record: LedgerEvidenceRecordProjection = {
   evidence_id: hexId("e"),
   bucket_id: "synthetic-profile",
   source_sha256: hexId("b"),
   attachment_id: hexId("b"),
   media_kind: "pdf",
+  supplier: null,
+  invoice_number: null,
+  invoice_date: null,
+  taxable_base: null,
+  iva_rate: null,
+  iva_amount: null,
+  notes: "",
   source_path: "synthetic-purchase.pdf",
   created_at: "2026-02-20T12:00:00Z",
   updated_at: "2026-02-20T12:00:00Z",

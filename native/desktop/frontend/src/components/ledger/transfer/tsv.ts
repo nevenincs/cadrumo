@@ -4,7 +4,7 @@
 // decimal stays a number. Tabs and line breaks inside a cell become spaces,
 // so a value never spills into the next cell or row.
 
-import type { CatalogueInvoice } from "../../../shell/ledgerInvoiceOperations";
+import type { CatalogueInvoiceSnapshot } from "../../../shell/ledgerInvoiceContract";
 import type { LedgerRow, PublicDecimal } from "../../../shell/ledger";
 
 const FORMULA = /^\s*[=+\-@\t\r]/;
@@ -26,7 +26,7 @@ const decimal = (value: PublicDecimal | null) => value?.decimal ?? "";
 /** The invoices' identity and totals, in canonical decimals. */
 export function invoicesTsv(
   header: readonly string[],
-  invoices: readonly CatalogueInvoice[],
+  invoices: readonly CatalogueInvoiceSnapshot[],
 ): string {
   return tsvText(
     header,

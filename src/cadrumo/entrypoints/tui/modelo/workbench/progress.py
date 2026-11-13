@@ -1,100 +1,44 @@
-"""Where a declaration stands in the filing journey, and the one thing to do next.
+"""Draws where a declaration stands on the filing journey, and the one thing to do next.
 
-Four steps, each decided from facts the form and the lifecycle already carry:
-fill in (no field still needs the filer, no value is still assumed and no
-change is left unapplied), calculate (a calculation exists and nothing changed
-since, neither a staged change nor the filer's records), check (the current
-calculation is verified and nothing blocks filing) and record filing (the
-declaration is recorded as filed). The first step not
-done is the current one, and the next-action line names it with the key that
-performs it, so the filer is never left to guess what comes next.
-
-An assumed value, one the calculation holds that nobody is recorded as having
-entered, keeps filling in open and withholds both the file for the AEAT and
-recording the filing until the filer confirms it or types another: an
-unentered value in a box the declaration files is exactly the suspicious zero
-that must be surfaced before filing, and the file is what reaches the AEAT.
-Anything that blocks filing, whether the check or the calculation found it,
-withholds both in the same way. A calculation note the check decides on its own
-evidence (an empty withholdings detail the filer may attest, say) waits for the
-check: while it is all that blocks and the current calculation is unchecked,
-the next action is the check, never "resolve", since only the check can say
-whether it stands; the check also judges any value still missing. Recording a filing only records it in Cadrumo,
-so a verified declaration is offered the file to take to the AEAT first, and
-recording the filing once a file made from the current calculation exists: the
-next-action line carries one action at a time. A file made from an earlier
-calculation no longer matches the declaration, so it is to be created again,
-never recorded.
-
-Nothing here is inferred beyond those facts. In particular a step is never
-shown done because its signal is missing: an unverified calculation is simply
-not checked, and a verification that found something to resolve sends the
-filer to what it found rather than back to verifying. The count beside a step
-counts what that step resolves, as the header's chips count it: filling in
-counts the values still missing, boxes and findings alike, and resolving
-counts what blocks filing and any missing value only a finding names. What a
-page that does not apply this period holds is never to do, so it neither
-keeps filling in open nor is counted on the next-action line. A blocked
-step's mark is drawn in the error colour, as every blocker mark is.
+The steps, their order, which are done and which is current, the action offered
+next and the count it names are all served with the form (see
+:mod:`~cadrumo.application.modelo.work_form_journey`); this module only picks
+among the served alternatives the workbench's own session calls for and renders
+them. Changes held here and not yet applied come before everything the form
+offers, so the served steps for that case and the apply action are shown.
 
 The next-action line always fits one line: it keeps its key and, when the
-words run out of room, shortens the words rather than wrapping.
+words run out of room, shortens the words rather than wrapping. A blocked
+step's mark is drawn in the error colour, as every blocker mark is.
 """
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime
-from enum import StrEnum
 from typing import Final
 
 from rich.cells import cell_len
 from textual.content import Content
 
-from .....application.modelo.work_form_models import ModeloWorkForm
-from .....application.modelo.work_form_next_step import (
-    ModeloFormNextAction,
-    awaiting_the_check,
-    blocking_count,
-    form_next_step,
-    to_do_counts,
-)
+from .....application.modelo.work_form_journey import ModeloFormStep, ModeloFormStepState, ModeloFormStepStatus
+from .....application.modelo.work_form_next_step import ModeloFormNextAction
+from .....application.modelo.work_form_service import ModeloWorkFormLoadV1
 from .....application.modelo.work_form_wording import date_text, day_text
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import tr
-from .....domain.modelos.verification_report import VerificationCompletenessStatus
 from ...components.cell_text import ellipsize
 from .issue_scale import blocks_marked
 from .vocabulary import BLOCKS_MARK, DONE_MARK, HERE_MARK, WorkbenchMark
 
-
-class WorkbenchStep(StrEnum):
-    """The steps of filing one declaration, in order."""
-
-    FILL = "fill"
-    CALCULATE = "calculate"
-    REVIEW = "review"
-    FILE = "file"
-
-
-class StepStatus(StrEnum):
-    """How far one step has got."""
-
-    DONE = "done"
-    CURRENT = "current"
-    BLOCKED = "blocked"
-    PENDING = "pending"
-
-
 _STEP_SEPARATOR: Final[str] = " ── "
-_STATUS_MARKS: Final[dict[StepStatus, WorkbenchMark | None]] = {
-    StepStatus.DONE: DONE_MARK,
-    StepStatus.CURRENT: HERE_MARK,
-    StepStatus.BLOCKED: BLOCKS_MARK,
+_STATUS_MARKS: Final[dict[ModeloFormStepStatus, WorkbenchMark | None]] = {
+    ModeloFormStepStatus.DONE: DONE_MARK,
+    ModeloFormStepStatus.CURRENT: HERE_MARK,
+    ModeloFormStepStatus.BLOCKED: BLOCKS_MARK,
     # A step not started carries no mark and is dimmed, so it reads as not
     # done in greyscale without a glyph of its own.
-    StepStatus.PENDING: None,
+    ModeloFormStepStatus.PENDING: None,
 }
 _PENDING_STYLE: Final[str] = "dim"
 _NEXT_LINE_LOCALE_KEY: Final[str] = "tui.modelo.next_line"
@@ -105,29 +49,13 @@ _DATED_ACTIONS: Final[frozenset[ModeloFormNextAction]] = frozenset(
 
 
 @dataclass(frozen=True, slots=True)
-class StepState:
-    """One step and how far it has got."""
-
-    step: WorkbenchStep
-    status: StepStatus
-
-
-@dataclass(frozen=True, slots=True)
 class WorkbenchProgress:
-    """The journey's state, the next action it offers, and when the filing was recorded, once it is.
+    """The journey's state, the next action it offers, and when the filing was recorded, once it is."""
 
-    ``assumed`` counts the assumed values on pages that apply this period and
-    ``blocking`` what blocks filing, as the header's chip counts it; while
-    either is not zero, neither the file for the AEAT nor recording the filing
-    is offered.
-    """
-
-    steps: tuple[StepState, ...]
+    steps: tuple[ModeloFormStepState, ...]
     next_action: ModeloFormNextAction
     count: int
     recorded_at: datetime | None = None
-    assumed: int = 0
-    blocking: int = 0
     #: When the latest file for the AEAT was created, once one was; the next-action line names that day.
     file_created_at: datetime | None = None
     #: Whether the values still to fill in are named only by findings, such as a table's record values,
@@ -135,89 +63,28 @@ class WorkbenchProgress:
     findings_lead: bool = False
 
 
-def workbench_progress(form: ModeloWorkForm, *, staged: int, verified: bool, filed: bool) -> WorkbenchProgress:
-    """Place a declaration on the filing journey from its form and lifecycle facts.
-
-    Once nothing withholds it, a verified declaration is offered the file for
-    the AEAT, then recording the filing once a file made from the current
-    calculation exists, and the file again when the only one is from an
-    earlier calculation.
-
-    A declaration recorded as filed is done whatever its form still marks. A
-    verified one is not sent back to filing in the boxes verification already
-    accepted, but an assumed value still keeps filling in open: only the filer
-    can say it is right. Every step shows whether it is done, wherever it sits;
-    the first step not done is the current one.
-
-    When nothing blocks and only values are missing, the next action is
-    filling them in, never resolving what blocks; where findings alone name
-    those values, the findings list leads to them (``findings_lead``).
-    """
-    counts = to_do_counts(form)
-    assumed = counts.default_to_confirm
-    blocked = counts.blocked
-    blocking = blocking_count(form)
-    clean = staged == 0
-    done = {
-        WorkbenchStep.FILL: clean and _filling_is_done(filed, verified, counts.needs_input, assumed),
-        WorkbenchStep.CALCULATE: clean and _calculation_is_done(form, filed),
-        WorkbenchStep.REVIEW: clean and _review_is_done(filed, verified, blocked, blocking),
-        WorkbenchStep.FILE: clean and filed,
-    }
-    steps = _step_states(done, blocked=blocked, blocking=blocking, awaiting=awaiting_the_check(form), form=form)
-    step = form_next_step(form, verified=verified, filed=filed)
+def workbench_progress(load: ModeloWorkFormLoadV1, *, staged: int) -> WorkbenchProgress:
+    """The served journey, with the changes staged here, which come before anything the form offers."""
+    journey = load.journey
+    step = journey.next_step
     if staged:
-        # Changes held here come before anything the form offers.
-        step = step.model_copy(update={"action": ModeloFormNextAction.APPLY, "count": staged, "findings_lead": False})
+        return WorkbenchProgress(
+            steps=journey.steps_while_changes_held,
+            next_action=ModeloFormNextAction.APPLY,
+            count=staged,
+            file_created_at=step.file_created_at,
+        )
     return WorkbenchProgress(
-        steps=steps,
+        steps=journey.steps,
         next_action=step.action,
         count=step.count,
         recorded_at=step.recorded_at if step.action is ModeloFormNextAction.RECORDED else None,
-        assumed=0 if filed else assumed,
-        blocking=0 if filed else blocking,
         file_created_at=step.file_created_at,
         findings_lead=step.findings_lead,
     )
 
 
-def _filling_is_done(filed: bool, verified: bool, to_fill: int, assumed: int) -> bool:
-    return filed or ((verified or to_fill == 0) and assumed == 0)
-
-
-def _calculation_is_done(form: ModeloWorkForm, filed: bool) -> bool:
-    return form.calculation_revision_id is not None and (filed or not form.calculation_out_of_date)
-
-
-def _review_is_done(filed: bool, verified: bool, blocked: int, blocking: int) -> bool:
-    return filed or (verified and blocked == 0 and blocking == 0)
-
-
-def _step_states(
-    done: Mapping[WorkbenchStep, bool],
-    *,
-    blocked: int,
-    blocking: int,
-    awaiting: int,
-    form: ModeloWorkForm,
-) -> tuple[StepState, ...]:
-    steps: list[StepState] = []
-    current_found = False
-    for step in WorkbenchStep:
-        if done[step]:
-            steps.append(StepState(step, StepStatus.DONE))
-        elif not current_found:
-            current_found = True
-            is_blocked = step is WorkbenchStep.REVIEW and (
-                blocked > 0 or blocking > awaiting or form.verification is VerificationCompletenessStatus.BLOCKED
-            )
-            steps.append(StepState(step, StepStatus.BLOCKED if is_blocked else StepStatus.CURRENT))
-        else:
-            steps.append(StepState(step, StepStatus.PENDING))
-    return tuple(steps)
-
-
-def _step_name(step: WorkbenchStep) -> str:
+def _step_name(step: ModeloFormStep) -> str:
     return tr(f"workspace.modelo.step.{step.value}")
 
 
@@ -247,7 +114,7 @@ def next_action_text(progress: WorkbenchProgress, language: OutputLanguage) -> s
     action = progress.next_action
     if action is ModeloFormNextAction.RECORDED:
         if progress.recorded_at is None:
-            return f"{DONE_MARK.glyph} {_step_name(WorkbenchStep.FILE)}"
+            return f"{DONE_MARK.glyph} {_step_name(ModeloFormStep.FILE)}"
         return tr("workspace.modelo.next.recorded", date=date_text(progress.recorded_at.date(), language))
     if action in _DATED_ACTIONS and progress.file_created_at is not None:
         return tr(f"workspace.modelo.next.{action.value}", date=day_text(progress.file_created_at, language))
@@ -270,10 +137,7 @@ def fit_next_line(action: str, key: str, width: int) -> str:
 
 
 __all__ = [
-    "StepState",
-    "StepStatus",
     "WorkbenchProgress",
-    "WorkbenchStep",
     "fit_next_line",
     "next_action_text",
     "stepper_marks",

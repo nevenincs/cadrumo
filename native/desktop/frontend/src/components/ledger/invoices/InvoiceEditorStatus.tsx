@@ -1,12 +1,9 @@
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
-import type {
-  InvoicePreviewFinding,
-  InvoicePreviewRateSlot,
-} from "../../../shell/ledgerInvoiceOperations";
+import type { InvoiceFiguresPreviewRateSlot } from "../../../shell/ledgerInvoiceContract";
 import { useStrings } from "../../../shell/strings";
-import type { PlacedFindings } from "./invoiceModel";
+import type { PlacedFindings, PreviewFinding } from "./invoiceModel";
 import { findingText } from "./invoiceWords";
 import type { Outcome } from "./useInvoiceEditorWrites";
 
@@ -22,10 +19,10 @@ export function PreviewNotes({
   onRetry(): void;
   refusedUnsaid: boolean;
   findings: PlacedFindings;
-  slots: readonly InvoicePreviewRateSlot[];
+  slots: readonly InvoiceFiguresPreviewRateSlot[];
 }) {
   const t = useStrings();
-  const lineWarnings: InvoicePreviewFinding[] = Object.entries(
+  const lineWarnings: PreviewFinding[] = Object.entries(
     findings.warnings,
   ).flatMap(([place, finding]) => (place.startsWith("line:") ? [finding] : []));
   const notes = [...findings.general, ...lineWarnings];

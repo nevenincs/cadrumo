@@ -38,6 +38,7 @@ from ..engine import (
     jump_to,
     next_page,
     page_status,
+    page_visible,
     reset_page,
     restart_flow,
     start_flow,
@@ -423,3 +424,23 @@ def test_derived_review_projection_round_trips() -> None:
     projection = review(definition, state)
 
     assert ReviewProjection.model_validate_json(projection.model_dump_json()) == projection
+
+
+def test_a_gated_page_in_an_instance_holds_on_its_own_sibling_and_fails_without_the_parent_answer() -> None:
+    gated = flow_page("p_detail", visible_when=FlowCondition(page_id="p_kind", equals="alpha"))
+    prefix = "grp#1"
+    assert page_visible(gated, {"grp#1.p_kind": "alpha"}, instance_prefix=prefix)
+    # Another instance's answer is not this instance's sibling.
+    assert not page_visible(gated, {"grp#0.p_kind": "alpha"}, instance_prefix=prefix)
+    assert not page_visible(gated, {"grp#1.p_kind": "beta"}, instance_prefix=prefix)
+    assert not page_visible(gated, {}, instance_prefix=prefix)
+    # A top-level answer is the fallback only when the instance states none.
+    assert page_visible(gated, {"p_kind": "alpha"}, instance_prefix=prefix)
+    assert not page_visible(gated, {"p_kind": "alpha", "grp#1.p_kind": "beta"}, instance_prefix=prefix)
+
+
+def test_an_ungated_page_is_visible_and_a_contains_clause_reads_the_comma_joined_tokens() -> None:
+    assert page_visible(flow_page("p_free"), {}, instance_prefix=None)
+    tagged = flow_page("p_tagged", visible_when=FlowCondition(page_id="p_tags", contains="y"))
+    assert page_visible(tagged, {"p_tags": "x, y"}, instance_prefix=None)
+    assert not page_visible(tagged, {"p_tags": "x,z"}, instance_prefix=None)

@@ -1,4 +1,4 @@
-import type { CatalogueInvoice } from "../../src/shell/ledgerInvoiceOperations";
+import type { CatalogueInvoiceSnapshot } from "../../src/shell/ledgerInvoiceContract";
 import type {
   JsonObject,
   LedgerDecision,
@@ -85,8 +85,8 @@ export function movement(
  * unless `facts` says otherwise. Every value is invented. */
 export function catalogueInvoice(
   number: string,
-  facts: Partial<CatalogueInvoice> = {},
-): CatalogueInvoice {
+  facts: Partial<CatalogueInvoiceSnapshot> = {},
+): CatalogueInvoiceSnapshot {
   return {
     invoice_id: hexId(`inv-${number}`),
     bucket_id: null,
@@ -125,6 +125,7 @@ export function catalogueInvoice(
     grand_total_eur: null,
     referencia_catastral: null,
     settlement_amount: { decimal: "36.30" },
+    documents: [],
     ...facts,
   };
 }

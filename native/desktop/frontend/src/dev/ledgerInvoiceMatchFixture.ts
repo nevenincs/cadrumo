@@ -11,13 +11,15 @@ import {
   takesInvoice,
 } from "../shell/ledgerContract";
 import type {
-  CatalogueInvoice,
-  LedgerInvoiceMatchMismatch,
-  LedgerInvoiceMatchPair,
   LedgerInvoiceMatchRequest,
   LedgerInvoiceMatchResult,
-  LedgerInvoiceMatchSuggestion,
 } from "../shell/ledgerInvoiceOperations";
+import type {
+  CatalogueInvoiceSnapshot,
+  LedgerInvoiceMatchMismatch,
+  LedgerInvoiceMatchPair,
+  LedgerInvoiceMatchSuggestion,
+} from "../shell/ledgerInvoiceContract";
 import type { LedgerRow } from "../shell/ledger";
 
 /** The movements the stand-in reads need nothing of a row but the movement. */
@@ -38,7 +40,8 @@ function units(text: string): bigint {
 const distance = (left: bigint, right: bigint) =>
   left > right ? left - right : right - left;
 const folded = (text: string) => text.toUpperCase().replace(/[^A-Z0-9]+/g, "");
-const flowOf = (invoice: CatalogueInvoice) => SETTLING_DIRECTION[invoice.kind];
+const flowOf = (invoice: CatalogueInvoiceSnapshot) =>
+  SETTLING_DIRECTION[invoice.kind];
 const days = (from: string, to: string) =>
   Math.round(
     (Date.parse(`${to.slice(0, 10)}T12:00:00Z`) -
@@ -108,7 +111,7 @@ function spelledDistance(left: string, right: string): string {
 /** Where a movement and an invoice to be linked do not agree. */
 function mismatchesOf(
   row: HeldRow,
-  invoice: CatalogueInvoice,
+  invoice: CatalogueInvoiceSnapshot,
 ): LedgerInvoiceMatchMismatch[] {
   const found: LedgerInvoiceMatchMismatch[] = [];
   const none = { difference: null, movement: null, invoice: null, count: null };
@@ -150,7 +153,7 @@ function mismatchesOf(
   return found;
 }
 
-function settles(row: HeldRow, invoice: CatalogueInvoice): boolean {
+function settles(row: HeldRow, invoice: CatalogueInvoiceSnapshot): boolean {
   return (
     row.transaction.direction === flowOf(invoice) &&
     row.transaction.currency === invoice.currency &&
@@ -163,12 +166,15 @@ function settles(row: HeldRow, invoice: CatalogueInvoice): boolean {
 
 type Candidate = {
   row: HeldRow;
-  invoice: CatalogueInvoice;
+  invoice: CatalogueInvoiceSnapshot;
   served: LedgerInvoiceMatchPair;
   rank: [number, number, number, bigint];
 };
 
-function candidate(row: HeldRow, invoice: CatalogueInvoice): Candidate | null {
+function candidate(
+  row: HeldRow,
+  invoice: CatalogueInvoiceSnapshot,
+): Candidate | null {
   if (!settles(row, invoice)) return null;
   const number = folded(invoice.invoice_number);
   const named =
@@ -216,11 +222,14 @@ const order = (a: Candidate, b: Candidate) =>
 export function answerInvoiceMatch(
   request: LedgerInvoiceMatchRequest,
   rows: readonly HeldRow[],
-  invoices: readonly CatalogueInvoice[],
+  invoices: readonly CatalogueInvoiceSnapshot[],
   profileId: string,
 ): LedgerInvoiceMatchResult {
   const stagedRows = new Map(
-    request.staged.map((link) => [link.transaction_id, link.invoice_id]),
+    (request.staged ?? []).map((link) => [
+      link.transaction_id,
+      link.invoice_id,
+    ]),
   );
   const stagedInvoices = new Map(
     [...stagedRows].map(([transactionId, invoiceId]) => [

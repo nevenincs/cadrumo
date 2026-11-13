@@ -32,7 +32,7 @@ from ..workflow.profile_bucket_scan import read_profile_bucket_by_id
 from ..workflow.profile_health import ProfileHealthStatus, assess_profile_record_health
 from .commands import ProfileValidationIssue, ProfileValidationReport
 from .family_question import family_question_items
-from .family_rows import family_row_items
+from .family_rows import family_draft_item, family_row_items
 from .overview import ProfileFieldChoice, ProfileOverview, build_profile_overview
 from .password_kdf_notice import profile_kdf_floor_notice
 from .profile_record_repository import ProfileRecordRepository
@@ -290,6 +290,32 @@ def _build_overview_source(
     return (*_overview_section_items(overview), *missing_items, *notice_items)
 
 
+def _build_family_source(
+    request: ProfileViewOperationRequest,
+    record: UserProfileRecord,
+    authority_operation: PinnedAuthorityOperation,
+    common: ProfileViewCommon,
+    schema: ProfileSchemaDefinition,
+) -> tuple[ProfileViewItem, ...] | ProfileViewOperationResult:
+    """The stored household, or the asks of one unsaved row when the request carries a draft."""
+    draft = request.household_draft
+    if draft is not None:
+        answers = {fact.leaf: fact.value for fact in draft.facts}
+        item = (
+            family_draft_item(draft.group, answers, operation=authority_operation)
+            if len(answers) == len(draft.facts)
+            else None
+        )
+        if item is None:
+            return _refused_page(common, ProfileViewRefusalCode.INVALID_HOUSEHOLD_DRAFT)
+        return (item,)
+    values = record_to_path_values(record)
+    return (
+        *family_row_items(values, schema=schema, operation=authority_operation),
+        *family_question_items(values, operation=authority_operation),
+    )
+
+
 def _build_page_source(
     request: ProfileViewOperationRequest,
     record: UserProfileRecord,
@@ -306,11 +332,7 @@ def _build_page_source(
     if request.page_kind is ProfileViewPageKind.QUESTIONS:
         return profile_question_items(build_setup_flow(authority_operation), record_to_path_values(record))
     if request.page_kind is ProfileViewPageKind.FAMILY_ROWS:
-        values = record_to_path_values(record)
-        return (
-            *family_row_items(values, schema=schema, operation=authority_operation),
-            *family_question_items(values, operation=authority_operation),
-        )
+        return _build_family_source(request, record, authority_operation, common, schema)
     if request.page_kind in {ProfileViewPageKind.ISSUES, ProfileViewPageKind.READINESS_ISSUES}:
         return _build_issue_source(request, record, report)
     if request.page_kind is ProfileViewPageKind.STATUS:

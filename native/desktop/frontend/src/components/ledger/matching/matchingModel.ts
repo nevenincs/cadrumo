@@ -6,11 +6,13 @@
 // link is permanent. Nothing here decides which pair is best.
 
 import type {
-  CatalogueInvoice,
   LedgerCheckResult,
-  LedgerInvoiceMatchPair,
   LedgerInvoiceMatchResult,
 } from "../../../shell/ledgerInvoiceOperations";
+import type {
+  CatalogueInvoiceSnapshot,
+  LedgerInvoiceMatchPair,
+} from "../../../shell/ledgerInvoiceContract";
 import type { LedgerRow } from "../../../shell/ledger";
 import type { StageEvent, StagedAction } from "../../../shell/ledgerStage";
 
@@ -24,7 +26,7 @@ export type MatchChip =
 /** One movement and one invoice that settle each other. */
 export type MatchPair = {
   row: LedgerRow;
-  invoice: CatalogueInvoice;
+  invoice: CatalogueInvoiceSnapshot;
   /** What the invoice settles, as the ledger states it. */
   settles: string;
   number: boolean;
@@ -73,7 +75,7 @@ export function stagedLinks(actions: readonly StagedAction[]): {
 export function remapMatches(
   result: Pick<LedgerInvoiceMatchResult, "suggestions">,
   rows: readonly LedgerRow[],
-  invoices: readonly CatalogueInvoice[],
+  invoices: readonly CatalogueInvoiceSnapshot[],
 ): Reconciliation {
   const rowById = new Map(
     rows.map((row) => [row.transaction.transaction_id, row]),
@@ -163,7 +165,7 @@ export const stageLink = (
 
 /** One invoice the manual picker offers a movement. */
 export type PickerOption = {
-  invoice: CatalogueInvoice;
+  invoice: CatalogueInvoiceSnapshot;
   /** The movement a staged link already gives this invoice to: the option
    * is shown disabled. */
   stagedFor: string | null;
@@ -175,7 +177,7 @@ export type PickerOption = {
  * window holds them: those that settle its amount, and the rest. */
 export function remapInvoiceChoices(
   choices: NonNullable<LedgerInvoiceMatchResult["invoice_choices"]>,
-  invoices: readonly CatalogueInvoice[],
+  invoices: readonly CatalogueInvoiceSnapshot[],
 ): { settles: PickerOption[]; other: PickerOption[] } {
   const invoiceById = new Map(
     invoices.map((invoice) => [invoice.invoice_id, invoice]),
@@ -229,7 +231,7 @@ export type LinkInconsistency = {
   invoiceId: string;
   transactionId: string;
   direction: "invoice-only" | "transaction-only";
-  invoice: CatalogueInvoice | null;
+  invoice: CatalogueInvoiceSnapshot | null;
   row: LedgerRow | null;
   /** The link that makes both sides cite each other, or why there is
    * none here. */
@@ -253,7 +255,7 @@ export type LinkInconsistency = {
 export function inconsistencies(
   found: LedgerCheckResult["link_inconsistencies"],
   rows: readonly LedgerRow[] | null,
-  invoices: readonly CatalogueInvoice[],
+  invoices: readonly CatalogueInvoiceSnapshot[],
 ): LinkInconsistency[] {
   const byRow = new Map(
     (rows ?? []).map((row) => [row.transaction.transaction_id, row]),
