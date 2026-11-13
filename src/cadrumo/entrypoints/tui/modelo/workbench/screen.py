@@ -49,6 +49,7 @@ from .....application.modelo.work_form_field_vocabulary import (
     ModeloFormCasillaAddressV1,
     address_key,
 )
+from .....application.modelo.work_form_header import form_recorded
 from .....application.modelo.work_form_models import (
     ModeloWorkForm,
     section_fields,
@@ -579,7 +580,7 @@ class ModeloWorkbenchScreen(
     def recorded(self) -> bool:
         """Whether the declaration is recorded as filed, so it is only read here."""
         load = self._load
-        return load is not None and (load.filed or load.form.filing is not None)
+        return load is not None and form_recorded(load.form, filed=load.filed)
 
     @property
     def pages_shown(self) -> tuple[WorkbenchPage, ...]:

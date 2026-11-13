@@ -32,7 +32,7 @@ from ..issues import WorkbenchIssuesScreen
 from ..sources import OpenSourceSurface
 from .declaration_states import recorded_as_filed
 from .form_edits import replace_fields
-from .workbench_fixture import synthetic_form
+from .workbench_fixture import served_load, synthetic_form
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -62,7 +62,7 @@ def _form(*issues: ModeloFormIssue, assumed: bool = False) -> ModeloWorkForm:
 
 async def _choose(form: ModeloWorkForm, *keys: str) -> object:
     with override_settings(cadrumo_output_language="en"):
-        screen = WorkbenchIssuesScreen(form)
+        screen = WorkbenchIssuesScreen(served_load(form))
         app = ScreenHostApp(screen)
         async with app.run_test(size=(120, 40)) as pilot:
             await settle(pilot)

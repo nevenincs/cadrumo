@@ -12,6 +12,7 @@ from typing import cast
 from .diff import row_id
 from .frontend import (
     DIFFERS,
+    EXPORT_UNAVAILABLE,
     EXTRA,
     NOT_COMPARABLE,
     SURFACE_LABELS,
@@ -332,8 +333,22 @@ def _frontend_section(frontend: FrontendComparison, head: str) -> list[str]:
     for persona in frontend.personas():
         cells = [persona, *(cell_text(frontend.cells[persona, surface], head) for surface in SURFACES)]
         lines.append("| " + " | ".join(_cell(item) for item in cells) + " |")
-    lines += ["", trees_line(frontend), "", "### Rows differing", "", *_differing_lines(frontend, head)]
+    lines += ["", trees_line(frontend)]
+    if unavailable := unavailable_exports_lines(frontend):
+        lines += ["", *unavailable]
+    lines += ["", "### Rows differing", "", *_differing_lines(frontend, head)]
     return lines
+
+
+def unavailable_exports_lines(frontend: FrontendComparison) -> list[str]:
+    """The block ``Export unavailable (refused | not served), matched: <key code [surface]> ...``; empty when none."""
+    items = [
+        f"{'|'.join(str(part) for part in item.key)} {entry.rsplit(' ', 1)[1]} [{surface}]"
+        for surface in SURFACES
+        for item in frontend.parities[surface]
+        for entry in item.gated_stages
+    ]
+    return [f"{EXPORT_UNAVAILABLE.capitalize()}, matched: " + " ".join(items)] if items else []
 
 
 def _differing_lines(frontend: FrontendComparison, head: str) -> list[str]:
@@ -363,5 +378,6 @@ __all__ = [
     "row_label",
     "rows_line",
     "summary_line",
+    "unavailable_exports_lines",
     "unchecked_causes",
 ]

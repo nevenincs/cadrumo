@@ -63,6 +63,8 @@ class WorkbenchNextStepMixin:
         elif action is ModeloFormNextAction.CONFIRM:
             self._confirm_next()
         elif progress.findings_lead or (
+            # Where resolving leads is decided here until the journey serves it with the step: the findings
+            # once a check or a calculation note names what blocks, else the next box that needs the filer.
             action is ModeloFormNextAction.RESOLVE
             and (load.form.verification is not None or load.form.calculation_notes)
         ):
@@ -151,8 +153,8 @@ class WorkbenchNextStepMixin:
         step for the section, or the page, holding the box chosen there,
         never the whole declaration at once.
         """
-        form = self.form
-        if form is None:
+        load = self._load
+        if load is None:
             return
 
         def closed(choice: IssuesChoice | None) -> None:
@@ -170,7 +172,7 @@ class WorkbenchNextStepMixin:
         prerequisite = self._apply_prerequisite_line()
         self.app.push_screen(
             WorkbenchIssuesScreen(
-                form,
+                load,
                 status_line=self._status_line(),
                 additional_lines=() if prerequisite is None else (prerequisite,),
                 changes_unapplied=self._session.dirty,

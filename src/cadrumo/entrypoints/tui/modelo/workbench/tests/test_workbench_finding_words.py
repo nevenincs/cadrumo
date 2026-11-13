@@ -64,7 +64,7 @@ from ..page_items import WorkbenchPage, page_items, workbench_pages
 from ..vocabulary import BLOCKS_MARK, CHECK_MARK, DONE_MARK, MISSING_MARK
 from .declaration_states import recorded_as_filed
 from .form_edits import replace_fields
-from .workbench_fixture import registry_form, synthetic_form
+from .workbench_fixture import registry_form, served_load, synthetic_form
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -605,7 +605,7 @@ async def test_every_blocking_mark_in_the_findings_list_is_drawn_in_the_error_co
         update={"issues": (ModeloFormIssue(finding=blocking), ModeloFormIssue(finding=warning))}
     )
     with override_settings(cadrumo_output_language="en"):
-        screen = WorkbenchIssuesScreen(form)
+        screen = WorkbenchIssuesScreen(served_load(form))
         app = ScreenHostApp(screen)
         async with app.run_test(size=(100, 40)) as pilot:
             app.theme = theme

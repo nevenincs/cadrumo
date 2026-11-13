@@ -412,37 +412,34 @@ def test_the_reason_a_cent_cannot_be_split_is_worded_in_every_language(
     assert instalment.state_words == _NOTHING_LEFT_FOR_THE_SECOND[language]
 
 
-def test_every_supported_year_without_a_settled_box_offers_the_split_of_its_result_and_refuses_a_suspension(
+def test_every_supported_year_splits_the_amount_its_settled_box_holds_and_refuses_one_that_settles_nothing(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    """A revision that computes no box of the settled role settles from 0670 while 0693, held at nothing, says so."""
+    """Each supported return computes a box of the settled role, so a suspension lowers it and a zero settles nothing."""
     support = operation.supported_filing_years()
     checked = 0
     for year in range(support.floor, support.horizon + 1):
-        snapshot = form_snapshot(operation, "100", year, "0A")
-        if not declaration_settlement_remainder_casilla_ids("100", snapshot.revision):
-            continue
+        revision = form_snapshot(operation, "100", year, "0A").revision
+        settling = declaration_settlement_casilla_id("100", revision)
         blank = built_form(operation, "100", year, "0A", entered=frozenset())
         assert blank.result is not None
-        result = str(blank.result.casilla_id)
-        plain = built_form(
-            operation, "100", year, "0A", held={result: Decimal("1000.00"), "0693": Decimal("0")}, entered=frozenset()
-        ).model_copy(update={"calculation_revision_id": "c" * 64, "deadline": _deadline(30)})
-        suspended = built_form(
-            operation,
-            "100",
-            year,
-            "0A",
-            held={result: Decimal("1000.00"), "0693": Decimal("200.00")},
-            entered=frozenset(),
-        ).model_copy(update={"calculation_revision_id": "c" * 64, "deadline": _deadline(30)})
+        # The result is not the box the return settles, and nothing is left apart from it to refuse a split.
+        assert settling is not None and settling != blank.result.casilla_id, year
+        assert not declaration_settlement_remainder_casilla_ids("100", revision), year
 
-        offered = _questions(operation, plain)[ModeloFormElection.INSTALMENT]
-        refused = _questions(operation, suspended)[ModeloFormElection.INSTALMENT]
+        suspended = _calculated(
+            operation, "100", year, "0A", Decimal("1000.00"), deadline=_deadline(30), settled=Decimal("800.00")
+        )
+        nothing = _calculated(
+            operation, "100", year, "0A", Decimal("1000.00"), deadline=_deadline(30), settled=Decimal("0")
+        )
+
+        offered = _questions(operation, suspended)[ModeloFormElection.INSTALMENT]
+        refused = _questions(operation, nothing)[ModeloFormElection.INSTALMENT]
 
         first, second = offered.figures
         assert offered.state is ModeloFormElectionState.AVAILABLE, year
-        assert (first.amount, second.amount) == ("600.00", "400.00"), year
+        assert (first.amount, second.amount) == ("480.00", "320.00"), year
         assert refused.state is ModeloFormElectionState.UNAVAILABLE, year
         assert refused.reason is ModeloFormElectionReason.SETTLEMENT_UNSUPPORTED, year
         checked += 1

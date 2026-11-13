@@ -5,7 +5,8 @@
 The world is seeded in process, through the registered operations of the production supervisor, under the persona's
 frozen scenario clock, with recorded ECB rates: the same seeding the desktop window's world uses. The process exits
 before any runtime starts, so the profile the CLI runtime then serves is the one this wrote and no direct store write
-touched it. The returns are not prepared: the CLI creates, states and calculates each of them itself.
+touched it. The returns are not prepared: the CLI creates, states and calculates each of them itself, and the report
+lists the statements the table makes about each return so that the CLI can make them through its own doors.
 
 The directory must be absent or empty and lie outside every Git project. One JSON object goes to standard output; the
 passphrase is not in it.
@@ -49,6 +50,8 @@ from ..planner import (
     stated_values,
 )
 from ..rows import PlannedRow
+from .statements import statements_for
+from .world_report import statement_record
 
 
 def _row(
@@ -65,6 +68,7 @@ def _row(
         "history_filed": filing_key(plan.modelo, plan.year, plan.period) in materialised.filings,
         "last_owed_period": last_owed_period(materialised.persona, plan),
         "stated_refusal": None if refusal is None else f"{refusal.refusal} at {refusal.refusal_stage}",
+        "statements": [statement_record(statement) for statement in statements_for(materialised, plan)],
     }
 
 
@@ -101,9 +105,6 @@ def prepare_world(
                 "scope": materialised.scope.value,
                 "actor": PERSONA_ACTOR,
                 "aeat_filings_in_process": bool(materialised.persona.aeat_filings),
-                "needs_statements": bool(
-                    world.attested_prior_values or world.work_inputs or world.work_income_none_statements
-                ),
                 "rows": [_row(materialised, plan, emitted) for plan in plans],
             }
 

@@ -17,14 +17,13 @@ from .....application.modelo.work_form_field_vocabulary import (
     address_key,
 )
 from .....application.modelo.work_form_findings import ModeloFormAttention
-from .....application.modelo.work_form_issue_lines import form_verdict
+from .....application.modelo.work_form_issue_lines import ModeloFormVerdict
 from .....application.modelo.work_form_models import (
     ModeloWorkForm,
     section_fields,
 )
 from .....application.modelo.work_form_next_step import applicable_fields
-from .....core.external_constants import OutputLanguage
-from .....core.i18n.render import output_language, tr
+from .....core.i18n.render import tr
 from .casilla_list_models import AddressKey
 from .navigator import presented_form
 from .page_items import workbench_pages
@@ -306,9 +305,12 @@ def title_text(counts: Mapping[IssueLevel, int], *, recorded: bool = False) -> s
     return f"{title}   {chips}" if chips else title
 
 
-def verdict_text(form: ModeloWorkForm, *, changes_unapplied: bool = False) -> str:
-    """Say what the last check concluded, or that the declaration has not been checked."""
-    verdict = form_verdict(form, OutputLanguage(output_language()))
+def verdict_text(verdict: ModeloFormVerdict, *, changes_unapplied: bool = False) -> str:
+    """Say the served verdict of the last check, or that the declaration has not been checked.
+
+    Changes held here unapplied are only known to the workbench, so it picks the
+    served sentence for that case while it holds them.
+    """
     if changes_unapplied and verdict.unapplied_words is not None:
         return verdict.unapplied_words
     return verdict.words
