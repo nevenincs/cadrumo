@@ -96,51 +96,6 @@ date_axis = "filing_period"
 valid_from = 2026-01-01
 valid_to = 2026-12-31
 
-[[revisions."2023".parameters]]
-id = "is.modelo-200.tipo-gravamen-erd-art101"
-data_type = "ratio"
-unit = "percent"
-legal_refs = ["ley-27-2014:art-29", "ley-27-2014:art-101"]
-
-[[revisions."2023".parameters.source_citations]]
-source_ref = "aeat-modelo-200-manual-2023"
-required_text = ["tipo de gravamen"]
-
-[[revisions."2023".parameters.values]]
-value = "25"
-date_axis = "filing_period"
-valid_from = 2023-01-01
-valid_to = 2024-12-31
-
-[[revisions."2023".parameters.values]]
-value = "24"
-date_axis = "filing_period"
-valid_from = 2025-01-01
-valid_to = 2025-12-31
-
-[[revisions."2023".parameters.values]]
-value = "23"
-date_axis = "filing_period"
-valid_from = 2026-01-01
-valid_to = 2026-12-31
-
-[[revisions."2023".parameters.values]]
-value = "22"
-date_axis = "filing_period"
-valid_from = 2027-01-01
-valid_to = 2027-12-31
-
-[[revisions."2023".parameters.values]]
-value = "21"
-date_axis = "filing_period"
-valid_from = 2028-01-01
-valid_to = 2028-12-31
-
-[[revisions."2023".parameters.values]]
-value = "20"
-date_axis = "filing_period"
-valid_from = 2029-01-01
-
 # INCN thresholds that SELECT the tipo de gravamen, authored as typed parameters
 # because the rates they select already are. The figures previously existed only
 # as inline `literal` strings inside the cuota-integra formula expression, which
@@ -168,20 +123,3 @@ required_text = ["tipo de gravamen"]
 value = "1000000"
 date_axis = "filing_period"
 valid_from = 2023-01-01
-
-[[revisions."2023".parameters]]
-id = "is.modelo-200.incn-umbral-erd-art101"
-data_type = "money"
-unit = "EUR"
-legal_refs = ["ley-27-2014:art-101", "ley-27-2014:art-29"]
-
-[[revisions."2023".parameters.source_citations]]
-source_ref = "aeat-modelo-200-manual-2023"
-required_text = ["tipo de gravamen"]
-
-# The art. 101.1 threshold of the Ley 27/2014 as enacted, in force from its
-# first periods (1 January 2015) and unchanged since.
-[[revisions."2023".parameters.values]]
-value = "10000000"
-date_axis = "filing_period"
-valid_from = 2015-01-01

@@ -3460,7 +3460,7 @@ sequence_removals = {legal_refs = [0], source_refs = [0]}
 [[revisions."2024".family_overrides]]
 family = "formulas"
 selector = {revision = "2023", id = "modelo-200-base-imponible"}
-sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2024", required_text = ["compensacion de bases imponibles negativas", "reserva de capitalizacion"]}], source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2024", required_text = ["el importe a consignar en la casilla [00552] «Base imponible» de la página 14 del modelo 200", "[00552] = [00550] - [01032] - [00547]"]}], source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]}
 sequence_removals = {source_citations = [0], source_refs = [0, 1]}
 [[revisions."2024".family_overrides]]
 family = "formulas"
@@ -3498,7 +3498,7 @@ sequence_removals = {source_citations = [0], source_refs = [0, 1]}
 [[revisions."2024".family_overrides]]
 family = "formulas"
 selector = {revision = "2023", id = "modelo-200-bin-aplicada-maxima"}
-sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2024", required_text = ["bases imponibles negativas"]}], source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2024", required_text = ["con el límite del 70 por ciento de la base imponible previa a la aplicación de la reserva de capitalización y a su compensación", "sustituirán el límite del 70 por ciento por los siguientes", "se podrán compensar en el período impositivo bases imponibles negativas hasta el importe de 1 millón de euros"]}], source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]}
 sequence_removals = {source_citations = [0], source_refs = [0, 1]}
 fields = { expression = { args = [
     { op = "greater_than", args = [{ casilla_id = "00072" }, { literal = "0" }] },
@@ -3577,7 +3577,7 @@ sequence_removals = {source_citations = [0], source_refs = [0, 1]}
 [[revisions."2024".family_overrides]]
 family = "formulas"
 selector = {revision = "2023", id = "modelo-200-cuota-integra"}
-sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2024", required_text = ["cuota integra (casilla 00562)", "tipo de gravamen"]}], source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2024", required_text = ["el tipo de gravamen de la casilla [00558]", "[00562] = [01330] x [00558]/100", "El contenido de la casilla [00562] «Cuota íntegra» siempre deberá ser una cantidad positiva o cero"]}], source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]}
 sequence_removals = {source_citations = [0], source_refs = [0, 1]}
 [[revisions."2024".family_overrides]]
 family = "formulas"
@@ -3592,7 +3592,7 @@ sequence_removals = {source_citations = [0], source_refs = [0, 1]}
 [[revisions."2024".family_overrides]]
 family = "formulas"
 selector = {revision = "2023", id = "modelo-200-tipo-gravamen-por-forma-juridica"}
-sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2024", required_text = ["tipo de gravamen", "cuota integra (casilla 00562)"]}], source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2024", required_text = ["se hará constar el tipo de gravamen que corresponda de acuerdo con el régimen de tributación aplicable a la entidad declarante", "Tipo general 25 por 100", "Entidades de nueva creación del artículo 29.1 de la LIS que realicen actividades económicas", "Entidades INCN < 1 millón de euros en el período impositivo inmediato anterior"]}], source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]}
 sequence_removals = {source_citations = [0], source_refs = [0, 1]}
 [[revisions."2024".family_overrides]]
 family = "dependency_classifications"
@@ -3658,22 +3658,12 @@ sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-
 sequence_removals = {source_citations = [0], source_refs = [0]}
 [[revisions."2024".family_overrides]]
 family = "parameters"
-selector = {revision = "2023", id = "is.modelo-200.incn-umbral-erd-art101"}
-sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2024", required_text = ["tipo de gravamen"]}], source_refs = ["aeat-modelo-200-manual-2024"]}
-sequence_removals = {source_citations = [0], source_refs = [0]}
-[[revisions."2024".family_overrides]]
-family = "parameters"
 selector = {revision = "2023", id = "is.modelo-200.incn-umbral-microempresa"}
 sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2024", required_text = ["tipo de gravamen"]}], source_refs = ["aeat-modelo-200-manual-2024"]}
 sequence_removals = {source_citations = [0], source_refs = [0]}
 [[revisions."2024".family_overrides]]
 family = "parameters"
 selector = {revision = "2023", id = "is.modelo-200.tipo-gravamen-cooperative-protected"}
-sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2024", required_text = ["tipo de gravamen"]}], source_refs = ["aeat-modelo-200-manual-2024"]}
-sequence_removals = {source_citations = [0], source_refs = [0]}
-[[revisions."2024".family_overrides]]
-family = "parameters"
-selector = {revision = "2023", id = "is.modelo-200.tipo-gravamen-erd-art101"}
 sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2024", required_text = ["tipo de gravamen"]}], source_refs = ["aeat-modelo-200-manual-2024"]}
 sequence_removals = {source_citations = [0], source_refs = [0]}
 [[revisions."2024".family_overrides]]

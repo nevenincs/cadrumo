@@ -18,9 +18,14 @@ The figure resolves, in order:
    art. 101.3);
 2. else from the figure the filer stated for that return on the ejercicio's
    Modelo 200 calculation;
-3. else, where the caller establishes that the preceding período lasted twelve
-   months, from the turnover of the twelve months before the período the filer
-   states on the profile, which is that período's own turnover;
+3. else, only where the caller establishes that the preceding período lasted
+   twelve months, from the turnover of the twelve months before the período the
+   filer states on the profile: for a twelve-month período those twelve months
+   are that período itself, so the figure the law reads (art. 29.1 and 101.1,
+   "período impositivo inmediato anterior") is the same. It is never read for a
+   shorter preceding período (art. 101.2 raises that período's turnover to a
+   year, which the twelve-month statement does not state) nor where the held
+   return is set aside as a group member (art. 101.3);
 4. else it stays unresolved.
 
 It never defaults to zero: a zero lowers the rate. Where a held return and the

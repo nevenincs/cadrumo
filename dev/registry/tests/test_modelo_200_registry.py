@@ -559,7 +559,7 @@ def test_modelo_200_page_14_cuota_chain_matches_aeat_manual_worked_example() -> 
             "modelo-200-pago-fraccionado-tercero-40-2": Decimal("0"),
             "modelo-200-pago-fraccionado-tercero-40-3": Decimal("0"),
         },
-        date_context={"filing_period": date(_ORACLE_EXERCISE, 12, 31)},
+        date_context={"filing_period": date(_CURRENT_EXERCISE, 12, 31)},
     )
 
     assert result.values[_M200_CUOTA_EJERCICIO_CASILLA] == Decimal("-20000.00"), (
@@ -724,7 +724,7 @@ def test_modelo_200_cuota_integra_chain_applies_dispatched_rate_to_post_nivelaci
             "modelo-200-pago-fraccionado-tercero-40-2": Decimal("0"),
             "modelo-200-pago-fraccionado-tercero-40-3": Decimal("0"),
         },
-        date_context={"filing_period": date(_ORACLE_EXERCISE, 12, 31)},
+        date_context={"filing_period": date(_CURRENT_EXERCISE, 12, 31)},
     )
 
     assert result.values[_M200_TIPO_GRAVAMEN_CASILLA] == Decimal("2500"), (

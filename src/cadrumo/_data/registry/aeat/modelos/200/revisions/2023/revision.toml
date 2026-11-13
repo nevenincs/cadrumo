@@ -1351,14 +1351,7 @@ fields = { expression = { args = [
                                     { parameter = "is.modelo-200.incn-umbral-microempresa" },
                                 ] },
                                 { parameter = "is.modelo-200.tipo-gravamen-pyme-display" },
-                                { op = "if_then_else", args = [
-                                    { op = "less_than", args = [
-                                        { binding = "modelo-200-incn-periodo-impositivo-anterior" },
-                                        { parameter = "is.modelo-200.incn-umbral-erd-art101" },
-                                    ] },
-                                    { parameter = "is.modelo-200.tipo-gravamen-erd-art101" },
-                                    { parameter = "is.modelo-200.tipo-gravamen-general" },
-                                ] },
+                                { parameter = "is.modelo-200.tipo-gravamen-general" },
                             ] },
                         ] },
                         { op = "unresolved_outcome", args = [{ text_literal = "m200-tax-regime-unsupported" }] },
@@ -1376,14 +1369,7 @@ fields = { expression = { args = [
                                 { parameter = "is.modelo-200.incn-umbral-microempresa" },
                             ] },
                             { parameter = "is.modelo-200.tipo-gravamen-pyme-display" },
-                            { op = "if_then_else", args = [
-                                { op = "less_than", args = [
-                                    { binding = "modelo-200-incn-periodo-impositivo-anterior" },
-                                    { parameter = "is.modelo-200.incn-umbral-erd-art101" },
-                                ] },
-                                { parameter = "is.modelo-200.tipo-gravamen-erd-art101" },
-                                { parameter = "is.modelo-200.tipo-gravamen-general" },
-                            ] },
+                            { parameter = "is.modelo-200.tipo-gravamen-general" },
                         ] },
                     ] },
                 ] },
@@ -1814,11 +1800,6 @@ position = 1
 family = "parameters"
 id = "is.modelo-200.tipo-gravamen-pyme-display"
 position = 2
-
-[[revisions."2023".family_positions]]
-family = "parameters"
-id = "is.modelo-200.tipo-gravamen-erd-art101"
-position = 9
 
 [[revisions."2023".family_overrides]]
 family = "filing_schedules"

@@ -95,7 +95,7 @@ def _base_inputs(base: Decimal) -> dict[CasillaId, Decimal]:
 
 def _snapshot_2024():
     return published_snapshot(
-        "200", filing_year=_FIRST_TRANCHE_EXERCISE, period="0A", grade=RegistryAuthorityGrade.CALCULATION
+        "200", filing_year=_PRE_TRANCHE_PYME_EXERCISE, period="0A", grade=RegistryAuthorityGrade.CALCULATION
     )
 
 

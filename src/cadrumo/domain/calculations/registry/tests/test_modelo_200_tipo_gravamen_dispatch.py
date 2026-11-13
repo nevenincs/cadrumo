@@ -457,10 +457,14 @@ def test_art101_erd_parameter_encodes_the_dt44_transition_schedule() -> None:
     LIS art. 101 defines entidades de reducida dimensión by prior-period
     INCN below 10.000.000 EUR. LIS DT 44ª then phases their general-rate
     transition at 24/23/22/21 for periods initiated in 2025-2028, before
-    the current art. 29 20% rate applies from 2029. The 2024 value stays
-    25% so the dated parameter can be used safely by the shared
-    2024 revision before DT 44ª takes effect.
+    the current art. 29 20% rate applies from 2029. The 2023 and 2024 wording
+    of art. 29.1 states no reduced-dimension rate, so those editions declare no
+    such parameter and the lane first exists in the DT 44ª edition.
     """
+    for exercise in range(_DT44_FIRST_TRANSITIONAL_EXERCISE - 2, _DT44_FIRST_TRANSITIONAL_EXERCISE):
+        earlier = {parameter.id for parameter in _snapshot(exercise).revision.parameters}
+        assert "is.modelo-200.tipo-gravamen-erd-art101" not in earlier
+        assert "is.modelo-200.incn-umbral-erd-art101" not in earlier
     parameters = _parameters()
     assert "is.modelo-200.tipo-gravamen-erd-art101" in parameters
     erd = parameters["is.modelo-200.tipo-gravamen-erd-art101"]
@@ -470,8 +474,8 @@ def test_art101_erd_parameter_encodes_the_dt44_transition_schedule() -> None:
     assert "ley-27-2014:dt-44" in erd.legal_refs
 
     windows = sorted(erd.values, key=lambda value: value.valid_from)
-    assert [value.value for value in windows] == [Decimal(rate) for rate in ("25", "24", "23", "22", "21", "20")]
-    assert windows[1].valid_from.year == _DT44_FIRST_TRANSITIONAL_EXERCISE
+    assert [value.value for value in windows] == [Decimal(rate) for rate in ("24", "23", "22", "21", "20")]
+    assert windows[0].valid_from.year == _DT44_FIRST_TRANSITIONAL_EXERCISE
     _assert_contiguous(windows)
 
 
