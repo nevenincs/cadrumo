@@ -321,7 +321,8 @@ class WorkbenchOperationMixin:
         reporting: str | None = None,
     ) -> None:
         """Read the declaration again, say what a calculation or a check concluded, and show what changed."""
-        await self._read()
+        if not await self._read():
+            return
         after = self._load
         if reporting is not None and after is not None:
             self._notice(self._outcome_text(reporting, after.form))

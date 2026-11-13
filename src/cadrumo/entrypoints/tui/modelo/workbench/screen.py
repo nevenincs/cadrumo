@@ -611,16 +611,24 @@ class ModeloWorkbenchScreen(
             marks.append(HERE_MARK)
         return tuple(marks)
 
-    async def _read(self) -> None:
+    async def _read(self) -> bool:
+        """Read the declaration and show it; say so when it cannot be read, and report whether it was shown."""
         try:
             load = await asyncio.to_thread(self._reader.load, self._language)
         except Exception as failure:
             get_logger(__name__).error(
                 "modelo workbench could not read its declaration: %s", type(failure).__qualname__, exc_info=True
             )
-            self.query_one("#wb-loading", Static).update(tr("workspace.modelo.read_failed"))
-            return
+            # The first successful read removes the loading line; a later read that fails keeps the form held
+            # and says so on the notice line instead.
+            loading = self.query("#wb-loading")
+            if loading:
+                loading.first(Static).update(tr("workspace.modelo.read_failed"))
+            else:
+                self._notice(tr("workspace.modelo.read_failed"))
+            return False
         self.show_load(load)
+        return True
 
     def show_load(self, load: ModeloWorkFormLoadV1) -> None:
         """Show a fresh read, keeping the page and the casilla under the cursor where they still exist."""

@@ -49,6 +49,12 @@ const maskedFirstRow = (group: string) =>
       .facts!.map((fact) => [fact.leaf, fact.value]),
   );
 
+/** The birth dates of a group's served rows, in the order the read served them. */
+const servedBirthDates = (scenario: string, group: string) =>
+  served.reads[scenario]!.items.en!.filter(
+    (item) => item.kind === "family_row" && item.group_key === group,
+  ).map((row) => row.facts!.find((fact) => fact.leaf === "birth_date")!.value);
+
 /** The question the product served for a scenario, in a language. */
 const questionOf = (scenario: string, language: Language) =>
   served.reads[scenario]!.items[language]!.find(
@@ -242,6 +248,76 @@ test.describe("the household in the profile page", () => {
       add_row: { facts: [{ field_key: "birth_date", value: "1950-02-03" }] },
     });
     expect(writes[0]!.expected_revision).toBeGreaterThan(0);
+  });
+
+  test("a leaf is shown while the product asks it, and an answer is read by the product", async ({
+    page,
+  }) => {
+    const household = await open(page, "unknown");
+    await group(household, DESCENDANTS)
+      .getByRole("button", { name: addWords("unknown", 0) })
+      .click();
+    const dialog = page.getByRole("dialog");
+    const leaf = (key: string) =>
+      dialog.locator(`[data-household-leaf="${key}"]`);
+    const leaves = groupsOf("unknown", "en")[0]!.leaves as {
+      leaf: string;
+      label: string;
+      choices?: { value: string; label: string }[];
+    }[];
+    const relation = leaves.find((entry) => entry.leaf === "relacion")!;
+    // Asked: no condition. Awaiting: its governing answer is missing, so
+    // nothing is drawn for it.
+    await expect(leaf("relacion")).toBeVisible();
+    await expect(leaf("inscripcion_registro_civil")).toHaveCount(0);
+    expect(
+      await page.evaluate(() => window.__scenarioHousehold!.drafts()),
+    ).toHaveLength(0);
+    await dialog.getByRole("combobox", { name: relation.label }).selectOption({
+      label: relation.choices!.find((entry) => entry.value === "adoptado")!
+        .label,
+    });
+    await expect(leaf("inscripcion_registro_civil")).toBeVisible();
+    // The answer went to the product as a draft, and nothing else did.
+    expect(
+      await page.evaluate(() => window.__scenarioHousehold!.drafts()),
+    ).toEqual([
+      {
+        group: DESCENDANTS,
+        facts: [{ leaf: "relacion", value: "adoptado" }],
+      },
+    ]);
+    expect(
+      await page.evaluate(() => window.__scenarioHousehold!.writes()),
+    ).toHaveLength(0);
+  });
+
+  test("a refused draft is told in the refusal alert and holds Save until the next answer", async ({
+    page,
+  }) => {
+    const household = await open(page, "unknown");
+    await page.evaluate(() => window.__scenarioHousehold!.refuseNextDraft());
+    await group(household, DESCENDANTS)
+      .getByRole("button", { name: addWords("unknown", 0) })
+      .click();
+    const dialog = page.getByRole("dialog");
+    // Two different dates the product served for its descendants: the draft
+    // read is refused once whatever is typed, so only the change matters.
+    const [first, second] = servedBirthDates("rows", DESCENDANTS).filter(
+      (date, index, dates) => dates.indexOf(date) === index,
+    );
+    const born = groupsOf("unknown", "en")[0]!.leaves!.find(
+      (entry) => entry.leaf === "birth_date",
+    )!.label;
+    await dialog.getByRole("textbox", { name: born }).fill(first!);
+    const save = dialog.getByRole("button", {
+      name: label("desktop.profile.save"),
+    });
+    await expect(dialog.getByRole("alert")).toBeVisible();
+    await expect(save).toBeDisabled();
+    await dialog.getByRole("textbox", { name: born }).fill(second!);
+    await expect(dialog.getByRole("alert")).toHaveCount(0);
+    await expect(save).toBeEnabled();
   });
 
   test("a person is removed by the index the read served, through the served remove control", async ({

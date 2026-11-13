@@ -7,7 +7,7 @@
     "dev": "node scripts/dev.mjs",
     "build": "node scripts/typecheck.mjs && vite build --configLoader runner",
     "preview": "vite preview --configLoader runner",
-    "check": "node scripts/typecheck.mjs && eslint . && node scripts/ledger-contract.mjs --check && node --test dev/eslint/tests/*.test.mjs scripts/tests/*.test.mjs tests/live/*.unit.ts && node --check ../scripts/tauri.mjs && prettier --check . ../scripts ../tests ../CMakeLists.txt --ignore-unknown",
+    "check": "node scripts/typecheck.mjs && eslint . && node scripts/ledger-contract.mjs --check && node scripts/profile-contract.mjs --check && node scripts/calendar-contract.mjs --check && node scripts/ledger-operation-contract.mjs --check && node --test dev/eslint/tests/*.test.mjs scripts/tests/*.test.mjs tests/live/*.unit.ts && node --check ../scripts/tauri.mjs && prettier --check . ../scripts ../tests ../CMakeLists.txt --ignore-unknown",
     "format": "prettier --write . ../scripts ../tests --ignore-unknown",
     "test": "playwright test",
     "storybook": "node scripts/storybook.mjs dev",

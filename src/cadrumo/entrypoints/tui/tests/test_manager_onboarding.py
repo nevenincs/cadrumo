@@ -9,14 +9,17 @@ fails here.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 import pytest
 from textual.widgets import Button, Checkbox, DataTable, Input, OptionList, Static
 
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts,
 )
-from ....application.user_profile.overview import build_profile_overview
+from ....application.user_profile.overview import ProfileOverview, build_profile_overview
 from ....application.user_profile.profile_record_repository import ProfileRecordRepository
+from ....application.user_profile.section_rows import add_profile_repeatable_section_row
 from ....application.wizard.catalogue import build_setup_flow
 from ....core.bucket_pointer import require_active_bucket_id
 from ....core.i18n.render import tr
@@ -25,7 +28,7 @@ from ....domain.user_profile.values import ProfileSetupState
 from ..components.host import ScreenHostApp
 from ..components.status import ProgressLine
 from ..components.widgets import DisclosureGroup
-from ..profile.edit_screens import FieldEditScreen, field_help_text
+from ..profile.edit_screens import FieldEditScreen, RepeatableRowAddScreen, field_help_text
 from ..profile.overview import ProfileManagerScreen
 from ..profile.setup_journey import ProfileSetupStage
 from .manager_pilot import wait_until_settled
@@ -41,6 +44,8 @@ pytestmark = [
 _TERMINAL_SIZE = (160, 60)
 _SYNTHETIC_NIF = "12345678Z"
 """A checksum-valid NIF that belongs to no one."""
+_SYNTHETIC_TEXT = "Synthetic answer"
+"""Free text for a required row field that is not an identifier."""
 
 
 def _complete_setup():
@@ -58,6 +63,35 @@ def _complete_setup():
         return build_profile_overview(
             promoted, label="Manager Subject", schema=decode_context.schema, flow=build_setup_flow(operation)
         )
+
+
+def _add_row(section_key: str, values: Mapping[str, str], revision: int, digest: str) -> ProfileOverview:
+    """The production door that publishes one repeatable row, which a walk reaching a row group needs."""
+    with bundled_indexed_authority().operation() as operation:
+        _create_context, decode_context = profile_authority_contexts()
+        outcome = add_profile_repeatable_section_row(
+            profile_id=require_active_bucket_id(),
+            section_key=section_key,
+            values=values,
+            expected_revision=revision,
+            expected_content_digest=digest,
+            schema=decode_context.schema,
+            profile_decode_context=decode_context,
+            authority=operation,
+        )
+        return build_profile_overview(
+            outcome.record, label="Manager Subject", schema=decode_context.schema, flow=build_setup_flow(operation)
+        )
+
+
+def _manager(overview: ProfileOverview, *, complete: bool = True) -> ProfileManagerScreen:
+    """The manager page wired with every door a setup walk reaches: field writes, row adds and completion."""
+    return ProfileManagerScreen(
+        overview,
+        persist=persist,
+        add_row=_add_row,
+        complete_setup=_complete_setup if complete else None,
+    )
 
 
 def _visible_rows(app: ProfileManagerScreen) -> set[str]:
@@ -79,8 +113,23 @@ def _shown_folds(app: ProfileManagerScreen) -> set[str]:
 
 
 async def _answer(app: ProfileManagerScreen, pilot) -> str:
-    """Answer the open question the way an operator does, and return its path."""
+    """Answer the open question the way an operator does, and return its path.
+
+    A required fact of a repeatable group is asked on the group's row form, so
+    its answer fills the form's required boxes and saves the row.
+    """
     dialog = app.app.screen
+    if isinstance(dialog, RepeatableRowAddScreen):
+        owed = [(index, field) for index, field in enumerate(dialog._fields) if field.required]
+        assert owed, "a row form opened for a walk must owe at least one answer"
+        for index, field in owed:
+            if field.choices:
+                dialog.query_one(f"#row-option-{index}", OptionList).highlighted = 0
+            else:
+                dialog.query_one(f"#row-input-{index}", Input).value = _SYNTHETIC_TEXT
+        await pilot.click("#btn-row-save")
+        await wait_until_settled(app, pilot)
+        return str(owed[0][1].path)
     assert isinstance(dialog, FieldEditScreen)
     field = dialog._field
     if field.choices:
@@ -139,7 +188,7 @@ async def _reach_required(app: ProfileManagerScreen, pilot) -> None:
 async def test_previous_keeps_saved_answers_and_incomplete_review_returns_to_required(tmp_path) -> None:
     """Navigation never clears a saved fact or bypasses the required-answer gate."""
     with registered_manager_subject(tmp_path, label="Manager Subject", passphrase=CREDENTIAL_INPUT):
-        app = ProfileManagerScreen(live_overview(), persist=persist, complete_setup=_complete_setup)
+        app = _manager(live_overview())
         async with ScreenHostApp(app).run_test(size=(80, 24)) as pilot:
             await _reach_required(app, pilot)
             await pilot.click("#onboarding-continue")
@@ -170,7 +219,7 @@ async def test_previous_keeps_saved_answers_and_incomplete_review_returns_to_req
 async def test_a_blank_required_answer_can_be_corrected_without_losing_the_question(tmp_path) -> None:
     """A refused blank stays in the editor and a subsequent valid answer is saved."""
     with registered_manager_subject(tmp_path, label="Manager Subject", passphrase=CREDENTIAL_INPUT):
-        app = ProfileManagerScreen(live_overview(), persist=persist, complete_setup=_complete_setup)
+        app = _manager(live_overview())
         async with ScreenHostApp(app).run_test(size=(80, 24)) as pilot:
             await _reach_required(app, pilot)
             await pilot.click("#onboarding-continue")
@@ -197,7 +246,7 @@ async def test_an_unfinished_profile_opens_on_only_its_required_answers(tmp_path
         assert overview.setup_state is ProfileSetupState.INCOMPLETE
         assert overview.missing_required, "the fixture must owe required answers, or this proves nothing"
 
-        app = ProfileManagerScreen(overview, persist=persist, complete_setup=_complete_setup)
+        app = _manager(overview)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await settle(pilot)
             assert app._setup_stage is ProfileSetupStage.OVERVIEW
@@ -228,7 +277,7 @@ async def test_continue_walks_every_required_answer_then_finishes_setup(tmp_path
     """Pressing Continue and answering each question is enough to finish setup."""
     with registered_manager_subject(tmp_path, label="Manager Subject", passphrase=CREDENTIAL_INPUT):
         overview = live_overview()
-        app = ProfileManagerScreen(overview, persist=persist, complete_setup=_complete_setup)
+        app = _manager(overview)
         async with ScreenHostApp(app).run_test(size=size) as pilot:
             await settle(pilot)
             await _reach_required(app, pilot)
@@ -253,7 +302,7 @@ async def test_continue_walks_every_required_answer_then_finishes_setup(tmp_path
             answered: list[str] = []
             # Each saved answer opens the next question without another press.
             for _ in range(len(overview.missing_required) * 3):
-                if not isinstance(app.app.screen, FieldEditScreen):
+                if not isinstance(app.app.screen, FieldEditScreen | RepeatableRowAddScreen):
                     break
                 answered.append(await _answer(app, pilot))
                 await settle(pilot, workers=False)
@@ -303,7 +352,7 @@ async def test_continue_walks_every_required_answer_then_finishes_setup(tmp_path
 async def test_cancelling_a_question_stops_the_walk(tmp_path) -> None:
     """Escape leaves the walk; nothing reopens until Continue is pressed again."""
     with registered_manager_subject(tmp_path, label="Manager Subject", passphrase=CREDENTIAL_INPUT):
-        app = ProfileManagerScreen(live_overview(), persist=persist, complete_setup=_complete_setup)
+        app = _manager(live_overview())
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await settle(pilot)
             await _reach_required(app, pilot)
@@ -322,7 +371,7 @@ async def test_search_narrows_the_page_and_says_when_nothing_matches(tmp_path) -
     """A search shows the sections it matches, open, and names an empty result."""
     with registered_manager_subject(tmp_path, label="Manager Subject", passphrase=CREDENTIAL_INPUT):
         overview = live_overview()
-        app = ProfileManagerScreen(overview, persist=persist, complete_setup=_complete_setup)
+        app = _manager(overview)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await settle(pilot)
             await _reach_required(app, pilot)
@@ -350,7 +399,7 @@ async def test_a_finished_profile_opens_without_the_walk(tmp_path) -> None:
     """Setup that is already complete shows the plain profile page, every field in reach."""
     with registered_manager_subject(tmp_path, label="Manager Subject", passphrase=CREDENTIAL_INPUT):
         overview = live_overview()
-        app = ProfileManagerScreen(overview, persist=persist)
+        app = _manager(overview, complete=False)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await settle(pilot)
             assert not app.query("#manager-onboarding")
@@ -364,7 +413,7 @@ async def test_a_choice_question_offers_words_and_refuses_an_empty_save(tmp_path
     """Choices read as labels, and Save with nothing picked asks for a pick instead of cancelling."""
     with registered_manager_subject(tmp_path, label="Manager Subject", passphrase=CREDENTIAL_INPUT):
         overview = live_overview()
-        app = ProfileManagerScreen(overview, persist=persist, complete_setup=_complete_setup)
+        app = _manager(overview)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await settle(pilot)
             await _reach_required(app, pilot)
@@ -401,7 +450,7 @@ async def test_every_setup_question_explains_itself_and_the_page_explains_the_cu
     """Each question shows the setup wizard's copy as its help; so does the page."""
     with registered_manager_subject(tmp_path, label="Manager Subject", passphrase=CREDENTIAL_INPUT):
         overview = live_overview()
-        app = ProfileManagerScreen(overview, persist=persist, complete_setup=_complete_setup)
+        app = _manager(overview)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await settle(pilot)
             await _reach_required(app, pilot)
@@ -419,9 +468,18 @@ async def test_every_setup_question_explains_itself_and_the_page_explains_the_cu
 
             await pilot.click("#onboarding-continue")
             await settle(pilot)
+            # A required fact of a repeatable group is asked on the group's row form, which has no help fold.
+            repeatable = {section.key for section in overview.sections if section.repeatable}
+            scalar_questions = [
+                field for field in overview.missing_required_fields if field.path.split(".", 1)[0] not in repeatable
+            ]
             asked = 0
             for _ in range(20):
                 dialog = app.app.screen
+                if isinstance(dialog, RepeatableRowAddScreen):
+                    await _answer(app, pilot)
+                    await settle(pilot, workers=False)
+                    continue
                 if not isinstance(dialog, FieldEditScreen):
                     break
                 help_fold = dialog.query_one("#edit-help-fold", DisclosureGroup)
@@ -435,5 +493,5 @@ async def test_every_setup_question_explains_itself_and_the_page_explains_the_cu
                 asked += 1
                 await _answer(app, pilot)
                 await settle(pilot, workers=False)
-            assert asked >= len(overview.missing_required)
+            assert asked >= len(scalar_questions)
             pilot.app.exit(None)
