@@ -173,6 +173,8 @@ export function FieldRow({ field }: { field: PublicModeloFormField }) {
       role="row"
       aria-selected={selected}
       data-key={key}
+      data-value-kind={field.value?.kind}
+      data-value={field.value?.text}
       tabIndex={selected ? 0 : -1}
       onClick={() => session.select(key)}
       onFocus={(event) => {

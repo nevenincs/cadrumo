@@ -17,9 +17,9 @@ import { Progress } from "@/components/ui/progress";
 import { Spinner } from "@/components/ui/spinner";
 import { facts, factsGap, labelled } from "@/shell/compose";
 import type {
-  CatalogueInvoice,
+  CatalogueInvoiceSnapshot,
   LedgerInvoiceMatchJudgement,
-} from "../../../shell/ledgerInvoiceOperations";
+} from "../../../shell/ledgerInvoiceContract";
 import type {
   LedgerPort,
   LedgerRow,
@@ -283,7 +283,7 @@ function PermanentLinks({
   links: {
     id: string;
     row: LedgerRow | undefined;
-    invoice: CatalogueInvoice | undefined;
+    invoice: CatalogueInvoiceSnapshot | undefined;
     invoiceId: string;
     /** What the ledger found against the link; null until it has said. */
     mismatches: readonly LinkMismatch[] | null;

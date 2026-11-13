@@ -5,10 +5,8 @@
 
 import { facts } from "../../../shell/compose";
 import type { LedgerRow } from "../../../shell/ledger";
-import type {
-  EvidenceRecord,
-  EvidenceReviewRow,
-} from "../../../shell/ledgerDocumentOperations";
+import type { LedgerEvidenceRecordProjection } from "../../../shell/ledgerDocumentContract";
+import type { EvidenceReviewQueueRowProjection } from "../../../shell/ledgerDocumentReviewContract";
 import { EVIDENCE_UPDATE_FIELDS } from "../../../shell/ledgerContract";
 import type { Translate } from "../../../shell/strings";
 import {
@@ -33,7 +31,7 @@ import {
 /** What is known of a record's reading waiting for review: the queue's row
  * for it, none, or that the queue could not be read. */
 export type DocumentReading =
-  | { kind: "waiting"; row: EvidenceReviewRow }
+  | { kind: "waiting"; row: EvidenceReviewQueueRowProjection }
   | { kind: "none" }
   | { kind: "unknown" };
 
@@ -49,7 +47,7 @@ export type DocumentAttachment =
 export type DocumentOverviewInput = {
   t: Translate;
   locale: string;
-  record: EvidenceRecord;
+  record: LedgerEvidenceRecordProjection;
   reading: DocumentReading;
   attachment: DocumentAttachment;
 };
@@ -57,7 +55,7 @@ export type DocumentOverviewInput = {
 function recordFact(
   t: Translate,
   locale: string,
-  record: EvidenceRecord,
+  record: LedgerEvidenceRecordProjection,
   field: (typeof EVIDENCE_UPDATE_FIELDS)[number],
 ): OverviewFact {
   const raw = recordValue(record, field);

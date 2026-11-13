@@ -30,8 +30,7 @@ from ......domain.modelos.verification_report import (
 from ..header import attention_chips
 from ..issue_projection import issue_lines
 from ..issue_scale import IssueLevel
-from ..progress import workbench_progress
-from .workbench_fixture import registry_form
+from .workbench_fixture import registry_form, served_progress
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -64,7 +63,7 @@ def test_missing_record_values_count_in_the_missing_chip_and_on_the_next_line(
     with override_settings(cadrumo_output_language="en"):
         chips = {chip.level: chip.count for chip in attention_chips(form, recorded=False)}
         missing = missing_count(form)
-        progress = workbench_progress(form, staged=0, verified=False, filed=False)
+        progress = served_progress(form, staged=0, verified=False, filed=False)
 
     assert len(form.issues) == len(_RECORD_VALUES)
     assert blocking_count(form) == 0

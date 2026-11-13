@@ -164,6 +164,13 @@ _VERDICT_LOCALE_KEYS: Final[Mapping[VerificationCompletenessStatus, str]] = Mapp
         VerificationCompletenessStatus.BLOCKED: "workspace.modelo.issues.verdict.blocked",
     }
 )
+_CHECKED_LOCALE_KEYS: Final[Mapping[VerificationCompletenessStatus, str]] = MappingProxyType(
+    {
+        VerificationCompletenessStatus.COMPLETE: "workspace.modelo.operation.checked.complete",
+        VerificationCompletenessStatus.INCOMPLETE: "workspace.modelo.operation.checked.incomplete",
+        VerificationCompletenessStatus.BLOCKED: "workspace.modelo.operation.checked.blocked",
+    }
+)
 _NOT_CHECKED_LOCALE_KEY: Final[str] = "workspace.modelo.issues.verdict.none"
 _SAVED_WITH_CHANGES_LOCALE_KEY: Final[str] = "workspace.modelo.issues.verdict.saved_with_changes"
 
@@ -233,6 +240,10 @@ class ModeloFormVerdict(BaseModel):
     status: VerificationCompletenessStatus | None
     words: str = Field(min_length=1)
     unapplied_words: str | None = None
+    #: What a check that has just finished says to the filer; ``None`` when the declaration has not been checked.
+    checked_words: str | None = None
+    #: Whether the findings list leads to what the finished check left to resolve.
+    checked_resolves: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -610,6 +621,8 @@ def form_verdict(form: ModeloWorkForm, language: OutputLanguage) -> ModeloFormVe
     return ModeloFormVerdict(
         status=status,
         words=tr(_VERDICT_LOCALE_KEYS[status], locale=language.value),
+        checked_words=tr(_CHECKED_LOCALE_KEYS[status], locale=language.value),
+        checked_resolves=status is not VerificationCompletenessStatus.COMPLETE,
         unapplied_words=(
             tr(_SAVED_WITH_CHANGES_LOCALE_KEY, locale=language.value)
             if status is VerificationCompletenessStatus.COMPLETE
@@ -623,6 +636,8 @@ def _require_total_tables() -> None:
         raise ValueError("every finding kind needs a detail")
     if set(_VERDICT_LOCALE_KEYS) != set(VerificationCompletenessStatus):
         raise ValueError("every verification verdict needs its words")
+    if set(_CHECKED_LOCALE_KEYS) != set(VerificationCompletenessStatus):
+        raise ValueError("every verification verdict needs its finished-check words")
 
 
 _require_total_tables()

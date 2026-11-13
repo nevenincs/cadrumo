@@ -8,7 +8,7 @@ import type { Suggestion } from "@/components/ui/suggestions";
 import { formatDay } from "../../../shared/dateFormats";
 import { formatAmount } from "../../../shared/numbers";
 import type { LedgerPort } from "../../../shell/ledger";
-import type { CatalogueInvoice } from "../../../shell/ledgerInvoiceOperations";
+import type { CatalogueInvoiceSnapshot } from "../../../shell/ledgerInvoiceContract";
 import {
   PAYMENT_STATUSES,
   type PaymentStatus,
@@ -60,10 +60,10 @@ export function StoredInvoice({
   say,
 }: {
   port: LedgerPort;
-  invoice: CatalogueInvoice;
+  invoice: CatalogueInvoiceSnapshot;
   preview: PreviewView;
   /** The catalogue, for what a field can offer. */
-  invoices: readonly CatalogueInvoice[];
+  invoices: readonly CatalogueInvoiceSnapshot[];
   correction: CorrectionDraft;
   locale: string;
   shown(field: string): string | null;

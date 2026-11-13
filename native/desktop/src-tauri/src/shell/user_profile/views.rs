@@ -168,6 +168,8 @@ struct Coverage {
 struct Snapshot {
     range: Range,
     entries: Vec<EntryIn>,
+    #[serde(default)]
+    suppressed_entries: Vec<Value>,
     events: Vec<Event>,
     warnings: Vec<WarningIn>,
     generated_at: String,
@@ -191,6 +193,8 @@ struct Projection {
 pub struct FilingCalendar {
     range: Range,
     entries: Vec<Entry>,
+    // Rows the calendar holds off its schedule, as the product served them.
+    suppressed: Vec<Value>,
     events: Vec<Event>,
     warnings: Vec<Warning>,
     generated_at: Option<String>,
@@ -315,6 +319,7 @@ fn filing_calendar(
                 justificante_verified: entry.filing_evidence.justificante_verified,
             })
             .collect(),
+        suppressed: snapshot.suppressed_entries,
         events: snapshot.events,
         warnings,
         generated_at: Some(snapshot.generated_at),
@@ -349,6 +354,13 @@ fn admit_record_groups_result(result: Value, profile: &str) -> Result<Value> {
     } else {
         Err(protocol())
     }
+}
+
+/// The overview calendar read, which also asks for the rows it holds off the
+/// schedule so the window can say what it left out.
+fn calendar_request(profile: &str, language: &str, from: &str, to: &str) -> Value {
+    json!({"profile_id":profile, "kind":"calendar", "output_language":language,
+        "from_date":from, "to_date":to, "show_suppressed":true})
 }
 
 impl ProfileHost {
@@ -448,8 +460,7 @@ impl ProfileHost {
                 .run(
                     &person,
                     "overview.calendar",
-                    json!({"profile_id":profile, "kind":"calendar", "output_language":language,
-                        "from_date":from, "to_date":to}),
+                    calendar_request(&profile, &language, &from, &to),
                     false,
                 )
                 .await?;
@@ -524,6 +535,54 @@ mod tests {
             "applicable_window_missing"
         );
         assert!(shown["events"][0].get("source_url").is_none());
+    }
+
+    fn suppressed(modelo: &str, verdict: &str) -> Value {
+        json!({"modelo":modelo, "period":"2026", "opens_on":"2027-04-07", "closes_on":"2027-06-30",
+            "adjusted_closes_on":"2027-06-30", "verdict":verdict,
+            "verdict_words":"Synthetic words", "verdict_words_language":"en",
+            "reason":"synthetic reason", "actions":[]})
+    }
+
+    #[test]
+    fn suppressed_rows_are_carried_unchanged_including_an_undecided_one() {
+        let mut read = projection(true);
+        read["payload"]["calendar"]["suppressed_entries"] = json!([
+            suppressed("100", "not_applicable"),
+            suppressed("347", "incomplete")
+        ]);
+        let calendar = filing_calendar(read, PROFILE, "2026-07-01", "2027-06-30").unwrap();
+        let shown = serde_json::to_value(&calendar).unwrap();
+        let rows = shown["suppressed"].as_array().unwrap();
+        assert_eq!(rows.len(), 2);
+        assert_eq!(rows[0]["modelo"], "100");
+        assert_eq!(rows[0]["verdict"], "not_applicable");
+        assert_eq!(rows[0]["verdict_words"], "Synthetic words");
+        assert_eq!(rows[0]["verdict_words_language"], "en");
+        assert_eq!(rows[0]["opens_on"], "2027-04-07");
+        assert_eq!(rows[0]["adjusted_closes_on"], "2027-06-30");
+        assert_eq!(rows[0]["reason"], "synthetic reason");
+        assert_eq!(rows[1]["modelo"], "347");
+        assert_eq!(rows[1]["verdict"], "incomplete");
+        assert_eq!(rows[0]["actions"], json!([]));
+    }
+
+    #[test]
+    fn a_snapshot_without_suppressed_entries_has_none() {
+        let calendar =
+            filing_calendar(projection(true), PROFILE, "2026-07-01", "2027-06-30").unwrap();
+        assert!(calendar.suppressed.is_empty());
+        let shown = serde_json::to_value(&calendar).unwrap();
+        assert_eq!(shown["suppressed"], json!([]));
+    }
+
+    #[test]
+    fn the_calendar_request_asks_for_the_suppressed_rows() {
+        let request = calendar_request(PROFILE, "es", "2026-07-01", "2027-06-30");
+        assert_eq!(request["show_suppressed"], true);
+        assert_eq!(request["kind"], "calendar");
+        assert_eq!(request["profile_id"], PROFILE);
+        assert_eq!(request["from_date"], "2026-07-01");
     }
 
     #[test]

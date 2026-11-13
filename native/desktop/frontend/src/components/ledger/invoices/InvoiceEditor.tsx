@@ -8,7 +8,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import type { CatalogueInvoice } from "../../../shell/ledgerInvoiceOperations";
+import type { CatalogueInvoiceSnapshot } from "../../../shell/ledgerInvoiceContract";
 import type { LedgerPort } from "../../../shell/ledger";
 import { useStrings } from "../../../shell/strings";
 import {
@@ -42,11 +42,11 @@ export type InvoiceEditorProps = {
   port: LedgerPort;
   locale: string;
   /** The catalogue as read, for the next number and the stored invoice. */
-  invoices: readonly CatalogueInvoice[];
+  invoices: readonly CatalogueInvoiceSnapshot[];
   target: EditorTarget;
   onClose(): void;
   /** An invoice the ledger stored, or null with the id of one it removed. */
-  onWritten(invoice: CatalogueInvoice | null, removed?: string): void;
+  onWritten(invoice: CatalogueInvoiceSnapshot | null, removed?: string): void;
   onOpenInvoice(invoiceId: string): void;
   /** Confirms a write in a toast. */
   say(text: string): void;

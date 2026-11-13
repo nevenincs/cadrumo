@@ -7,8 +7,8 @@ import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import type {
   LedgerInvoiceMatchRequest,
   LedgerInvoiceMatchResult,
-  LedgerInvoiceMatchStagedLink,
 } from "./ledgerInvoiceOperations";
+import type { LedgerInvoiceMatchStagedLink } from "./ledgerInvoiceContract";
 import type { LedgerPort } from "./ledger";
 import { LatestAnswerSession, type LatestAnswer } from "./ledgerLatestAnswer";
 import { readAnswer } from "./ledgerWindow";
@@ -36,7 +36,7 @@ const sameQuestion = (
 ) =>
   (one.invoice_id ?? null) === (other.invoice_id ?? null) &&
   (one.transaction_id ?? null) === (other.transaction_id ?? null) &&
-  sameLinks(one.staged, other.staged) &&
+  sameLinks(one.staged ?? [], other.staged ?? []) &&
   sameLinks(one.judge ?? [], other.judge ?? []);
 
 async function askMatches(

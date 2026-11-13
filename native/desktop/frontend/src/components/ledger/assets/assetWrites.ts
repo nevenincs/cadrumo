@@ -1,5 +1,5 @@
 import { listed } from "../../../shell/compose";
-import type { CatalogueInvoice } from "../../../shell/ledgerInvoiceOperations";
+import type { CatalogueInvoiceSnapshot } from "../../../shell/ledgerInvoiceContract";
 import type { LedgerPort, OutputLanguage } from "../../../shell/ledger";
 import { sameDecimal } from "../../../shell/ledgerGrammar";
 import type {
@@ -86,7 +86,7 @@ export function purchaseOf(revision: ActivityAssetRevision): string | null {
  * received invoice, or more than one, is linked, nothing is stated: the choice
  * is never guessed. */
 export function purchaseInvoiceFacts(
-  invoices: readonly CatalogueInvoice[],
+  invoices: readonly CatalogueInvoiceSnapshot[],
   transactionId: string,
 ): Record<string, string> {
   const linked = invoices.filter(

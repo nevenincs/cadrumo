@@ -23,10 +23,8 @@ import {
   type PublicPeriod,
 } from "../../../shell/ledger";
 import type { EvidenceBatchResult } from "../../../shell/ledgerDocumentOperations";
-import type {
-  InvoiceImportResult,
-  InvoiceKind,
-} from "../../../shell/ledgerInvoiceOperations";
+import type { InvoiceImportResult } from "../../../shell/ledgerInvoiceOperations";
+import type { InvoiceKind } from "../../../shell/ledgerInvoiceContract";
 import { sameDecimal, periodFilters } from "../../../shell/ledgerGrammar";
 import { importBatchFilters } from "../../../shell/ledgerImports";
 import { readPeriodsHolding } from "../../../shell/ledgerPeriods";

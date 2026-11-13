@@ -1,7 +1,8 @@
-import type { CalendarEntry, CalendarUserState } from "./views";
+import type { OverviewPeriodState } from "./calendarContract";
+import type { CalendarEntry } from "./views";
 
 /** The product's readings in the order they need the person. */
-export const STATE_ORDER: readonly CalendarUserState[] = [
+export const STATE_ORDER: readonly OverviewPeriodState[] = [
   "late",
   "due",
   "unknown",

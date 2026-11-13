@@ -1851,6 +1851,10 @@ errors:
     refused_modelo_applicability_filter: Ismeretlen alkalmazhatósági szűrőnév szerepel
       a nyilvántartásban. Ez egy nyilvántartás-szerzői hiba; frissítsd a szűrő diszpécser
       táblázatot.
+    refused_modelo_assumed_value_unconfirmed: 'Ez a bevallás még %{unconfirmed_assumed_values}
+      olyan értéket tartalmaz, amelyet senki sem adott meg, ezért még nem ellenőrizhető,
+      nem rögzíthető benyújtottként és nem exportálható. Erősítsd meg mindegyiket
+      az érték megadásával, vagy add meg a helyeset: %{boxes}.'
     refused_modelo_charge_account_missing: Csoportos beszedési bevallást választottak,
       de nincs rögzített terhelési számla.
     refused_modelo_domiciliation_past_cutoff: Ennél a bevallásnál a csoportos beszedés

@@ -994,6 +994,16 @@ async fn user_profile_household(
 ) -> Result<household::Household> {
     host.household(language).await
 }
+/// Which leaves one unsaved household row is asked, as the product resolves
+/// them from the answers typed so far. Nothing is stored.
+#[tauri::command]
+async fn user_profile_household_draft(
+    host: State<'_, Arc<ProfileHost>>,
+    language: String,
+    draft: household::Draft,
+) -> Result<household::DraftAsks> {
+    host.household_draft(language, draft).await
+}
 /// What `profile` states for the imputation election of `tax_year`, with the
 /// setup wizard's own questions and words in `language`.
 #[tauri::command]
@@ -1084,6 +1094,7 @@ pub fn commands<R: tauri::Runtime>() -> crate::app::Commands<R> {
     crate::app::commands![
         user_profile_read,
         user_profile_household,
+        user_profile_household_draft,
         user_profile_imputation_election,
         user_profile_change,
         user_profile_observe,

@@ -727,6 +727,7 @@ DESKTOP_INTERFACE_KEYS: Final[frozenset[str]] = _PROFILE_AND_ENGINE_KEYS | froze
         "desktop.calendar.state.filed",
         "desktop.calendar.state.late",
         "desktop.calendar.state.unknown",
+        "desktop.calendar.suppressed",
         "desktop.calendar.title",
         "desktop.calendar.to_day",
         "desktop.calendar.view",

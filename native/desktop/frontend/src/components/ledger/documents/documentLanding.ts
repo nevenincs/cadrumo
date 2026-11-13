@@ -4,7 +4,7 @@
 // the write stays held.
 
 import type { EvidenceUpdateRequest } from "../../../shell/ledgerDocumentOperations";
-import type { InvoiceKind } from "../../../shell/ledgerInvoiceOperations";
+import type { InvoiceKind } from "../../../shell/ledgerInvoiceContract";
 import type { LedgerPort } from "../../../shell/ledger";
 import { readAnswer } from "../../../shell/ledgerWindow";
 import type { LandingCheck } from "../WritePause";

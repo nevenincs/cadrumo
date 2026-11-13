@@ -4,7 +4,7 @@
 
 import { facts } from "@/shell/compose";
 import type { GrammarRefusal } from "../../../shell/ledgerGrammar";
-import type { LedgerRuleRow } from "../../../shell/ledgerClassificationSetup";
+import type { LedgerRuleRowProjection } from "../../../shell/ledgerClassificationContract";
 import type { Translate } from "../../../shell/strings";
 import { categoryLabel, classificationLabel } from "../movements/movementWords";
 import { patternWords, type SetupCall } from "./setupModel";
@@ -48,7 +48,7 @@ export function ruleMatchText(t: Translate, pattern: string): string {
 
 /** A rule's name, made from what it matches and what it decides: rules
  * keep no name of their own. */
-export function ruleName(t: Translate, rule: LedgerRuleRow): string {
+export function ruleName(t: Translate, rule: LedgerRuleRowProjection): string {
   const target = facts(t, [
     classificationLabel(t, rule.classification),
     rule.category_id && categoryLabel(t, rule.category_id),

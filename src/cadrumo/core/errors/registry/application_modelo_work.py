@@ -234,6 +234,16 @@ MODELO_WORK_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.modelo.assumed_value_gate.ModeloAssumedValueUnconfirmedError",
+        ErrorCode(
+            code="REFUSED_MODELO_ASSUMED_VALUE_UNCONFIRMED",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_modelo_assumed_value_unconfirmed",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.modelo.m390_prorrata_apartado_gate.Modelo390ProrrataApartadoUnrenderedError",
         ErrorCode(
             code="REFUSED_MODELO_390_PRORRATA_APARTADO_UNRENDERED",

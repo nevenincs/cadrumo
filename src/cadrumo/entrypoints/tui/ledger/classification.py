@@ -23,6 +23,7 @@ from ..components.language import localized
 from ..components.widgets import ContentDataTable
 from ..operations.outcome import unknown_outcome_of
 from .controller import LedgerWorkspaceController
+from .link_picker import LedgerHeldLinksDoorV1, LedgerLinkPickers, held_links
 from .models import LedgerClassificationPatchV1, LedgerFlowState
 from .workspace_presentation import LedgerConfirmationFlowScreen, door_refusal_text, ledger_workspace_page
 
@@ -122,6 +123,12 @@ class LedgerClassificationScreen(LedgerConfirmationFlowScreen):
                     f"tui.ledger.classification.field.{field_name}",
                 )
                 yield Input(id=_input_id(field_name))
+            yield LedgerLinkPickers(
+                "ledger-classification",
+                self.controller.link_options_door,
+                held=self._held_links_door(),
+                id="ledger-classification-links",
+            )
             yield ContentDataTable[str](id="ledger-classifications", cursor_type="row", zebra_stripes=True)
             yield Static("", id="ledger-flow-status", markup=False)
             yield localized(
@@ -137,6 +144,18 @@ class LedgerClassificationScreen(LedgerConfirmationFlowScreen):
                 "tui.ledger.classification.cancel",
             )
             yield Static(id="ledger-refusal", classes="ledger-refusal", markup=False)
+
+    def _held_links_door(self) -> LedgerHeldLinksDoorV1 | None:
+        """The read of the links the entry being classified holds, or ``None`` without the transaction door."""
+        doors = self.controller.record_doors
+        target = self.controller.classification_target
+        if doors is None or target is None:
+            return None
+
+        async def held() -> dict[str, str]:
+            return held_links(await doors.transaction(str(target)))
+
+        return held
 
     def on_mount(self) -> None:
         """Populate explicit authored choices without inferring a classification."""
@@ -256,6 +275,7 @@ class LedgerClassificationScreen(LedgerConfirmationFlowScreen):
             value = self._optional_text(field_name)
             if value is not None:
                 values[field_name] = value
+        values.update(self.query_one("#ledger-classification-links", LedgerLinkPickers).chosen())
         return values
 
     @staticmethod

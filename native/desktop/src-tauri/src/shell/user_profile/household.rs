@@ -9,7 +9,7 @@
 use super::wire::{Page, Pin};
 use super::{Failure, PROFILE_READ_LIMIT, ProfileHost, Result, protocol};
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
+use serde_json::{Value, json};
 use std::collections::BTreeSet;
 
 /// The page stream the household is read from.
@@ -53,8 +53,8 @@ struct Condition {
 }
 
 /// One fact a row can state: its stored key, its words and its answer set.
-/// The leaf is asked only where one of its `shown_when` conditions holds; none
-/// means it is always asked.
+/// `shown_when` is carried for the window and decides nothing here: the served
+/// [`LeafAsk`]s say which leaves a row is asked.
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 struct Leaf {
@@ -66,6 +66,34 @@ struct Leaf {
     choices: Vec<Choice>,
     #[serde(default)]
     shown_when: Vec<Condition>,
+}
+
+/// Whether a row is asked one leaf now, as the product resolved it:
+/// `awaits_answer` is not asked yet because a leaf it depends on has no answer.
+/// A fact stored under a leaf that is not asked stays stored.
+#[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+enum Ask {
+    Asked,
+    NotAsked,
+    AwaitsAnswer,
+}
+
+/// The ask the product resolved for one leaf of a row.
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+struct LeafAsk {
+    leaf: String,
+    ask: Ask,
+}
+
+/// The asks name exactly the group's leaves, in the group's order.
+fn names_leaves(asks: &[LeafAsk], leaves: &[Leaf]) -> bool {
+    asks.len() == leaves.len()
+        && asks
+            .iter()
+            .zip(leaves)
+            .all(|(ask, leaf)| ask.leaf == leaf.leaf)
 }
 
 /// A control that changes a group's rows: its words and the registered
@@ -105,6 +133,7 @@ enum Item {
         incomplete_words: Option<String>,
         max_rows: Option<usize>,
         leaves: Vec<Leaf>,
+        new_row_leaves: Vec<LeafAsk>,
         #[serde(default)]
         add_row_action: Option<RowAction>,
         #[serde(default)]
@@ -115,6 +144,7 @@ enum Item {
         group_key: String,
         row_index: String,
         facts: Vec<Fact>,
+        leaf_asks: Vec<LeafAsk>,
     },
     #[serde(rename = "family_question")]
     Question {
@@ -144,6 +174,7 @@ pub struct Question {
 pub struct Row {
     row_index: String,
     facts: Vec<Fact>,
+    leaf_asks: Vec<LeafAsk>,
 }
 
 #[derive(Debug, Serialize)]
@@ -157,6 +188,8 @@ pub struct Group {
     /// The most people the declaration's design lets the group hold.
     max_rows: Option<usize>,
     leaves: Vec<Leaf>,
+    /// The ask of every leaf for a blank new row, in `leaves` order.
+    new_row_leaves: Vec<LeafAsk>,
     /// Adds one row built from `leaves`; none where the group takes no more.
     add_row_action: Option<RowAction>,
     /// Removes one served row named by its `row_index`; none where no row is
@@ -221,17 +254,13 @@ impl Family {
                     incomplete_words,
                     max_rows,
                     leaves,
+                    new_row_leaves,
                     add_row_action,
                     remove_row_action,
                 } if self.keys.insert(group_key.clone()) => {
                     let leaf_keys: BTreeSet<_> = leaves.iter().map(|leaf| &leaf.leaf).collect();
                     if leaf_keys.len() != leaves.len()
-                        || leaves
-                            .iter()
-                            .flat_map(|leaf| &leaf.shown_when)
-                            .any(|condition| {
-                                condition.equals.is_some() == condition.contains.is_some()
-                            })
+                        || !names_leaves(&new_row_leaves, &leaves)
                         || (state == GroupState::NotServed
                             && (!leaves.is_empty() || row_count != 0 || stated_count.is_some()))
                         || max_rows == Some(0)
@@ -251,6 +280,7 @@ impl Family {
                         incomplete_words,
                         max_rows,
                         leaves,
+                        new_row_leaves,
                         add_row_action,
                         remove_row_action,
                         rows: vec![],
@@ -260,11 +290,13 @@ impl Family {
                     group_key,
                     row_index,
                     mut facts,
+                    leaf_asks,
                 } => {
                     let group = self.groups.last_mut().ok_or_else(protocol)?;
                     let leaves: BTreeSet<_> = group.leaves.iter().map(|leaf| &leaf.leaf).collect();
                     let mut stated = BTreeSet::new();
                     if group.group_key != group_key
+                        || !names_leaves(&leaf_asks, &group.leaves)
                         || !canonical_index(&row_index)
                         || group.rows.iter().any(|row| row.row_index == row_index)
                         || facts.is_empty()
@@ -281,7 +313,11 @@ impl Family {
                             fact.value = MASK.into();
                         }
                     }
-                    group.rows.push(Row { row_index, facts });
+                    group.rows.push(Row {
+                        row_index,
+                        facts,
+                        leaf_asks,
+                    });
                 }
                 Item::Question {
                     question_id,
@@ -350,7 +386,122 @@ impl Family {
     }
 }
 
+/// One answer an unsaved household row holds, by the leaf it answers.
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct DraftFact {
+    leaf: String,
+    value: String,
+}
+
+/// The answers of one household row typed and not saved. The product resolves
+/// from them which leaves the row asks; the host forwards them for that one
+/// read. It has no `Debug`: the answers are private and are never logged.
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Draft {
+    group: String,
+    facts: Vec<DraftFact>,
+}
+
+/// The bounds the product puts on a draft; a larger one is refused before it
+/// is submitted.
+const DRAFT_FACTS_LIMIT: usize = 64;
+const DRAFT_GROUP_LIMIT: usize = 64;
+const DRAFT_VALUE_LIMIT: usize = 256;
+
+/// The asks the product resolved for a draft row; no value is served back.
+#[derive(Debug, Serialize)]
+pub struct DraftAsks {
+    group_key: String,
+    leaf_asks: Vec<LeafAsk>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
+enum DraftItem {
+    FamilyDraft {
+        group_key: String,
+        leaf_asks: Vec<LeafAsk>,
+    },
+}
+
+impl Draft {
+    /// The `family_rows` read that asks for the draft's asks, in one page.
+    fn request(&self, profile_id: &str, language: &str) -> Result<Value> {
+        if self.group.is_empty()
+            || self.group.len() > DRAFT_GROUP_LIMIT
+            || self.facts.len() > DRAFT_FACTS_LIMIT
+            || self
+                .facts
+                .iter()
+                .any(|fact| fact.leaf.is_empty() || fact.value.len() > DRAFT_VALUE_LIMIT)
+        {
+            // The product's own refusal, as it serves it, for a draft it would refuse.
+            let mut refused = Failure::new("refused");
+            refused.reason = Some("invalid_household_draft".into());
+            return Err(refused);
+        }
+        let facts: Vec<Value> = self
+            .facts
+            .iter()
+            .map(|fact| json!({"leaf":fact.leaf,"value":fact.value}))
+            .collect();
+        let mut request = Pin::new(PAGE_KIND, profile_id.to_owned()).request(language);
+        request["household_draft"] = json!({"group":self.group,"facts":facts});
+        Ok(request)
+    }
+    /// The asks of the one `family_draft` item the page serves for this
+    /// draft's group; anything else is an unreadable answer.
+    fn accept(&self, profile_id: &str, value: Value) -> Result<DraftAsks> {
+        let mut page: Page<DraftItem> = serde_json::from_value(value).map_err(|_| protocol())?;
+        Pin::new(PAGE_KIND, profile_id.to_owned()).check(&page)?;
+        if page.items.len() != 1 || !page.is_last() {
+            return Err(protocol());
+        }
+        let Some(DraftItem::FamilyDraft {
+            group_key,
+            leaf_asks,
+        }) = page.items.pop()
+        else {
+            return Err(protocol());
+        };
+        if group_key != self.group || leaf_asks.is_empty() {
+            return Err(protocol());
+        }
+        Ok(DraftAsks {
+            group_key,
+            leaf_asks,
+        })
+    }
+}
+
 impl ProfileHost {
+    /// Which leaves one unsaved row of a group is asked, as the product
+    /// resolves them from the answers it holds so far; stores nothing.
+    pub(super) async fn household_draft(
+        &self,
+        language: String,
+        draft: Draft,
+    ) -> Result<DraftAsks> {
+        if !super::super::language::supported(&language) {
+            return Err(protocol());
+        }
+        tokio::time::timeout(PROFILE_READ_LIMIT, async {
+            let _serial = self.operation.lock().await;
+            let person = self.person(None).await?;
+            let profile = Self::profile_of(&person).await?;
+            let request = draft.request(&profile, &language)?;
+            let page = self
+                .run(&person, "user-profile.view", request, false)
+                .await?;
+            let asks = draft.accept(&profile, page)?;
+            self.still_held(&person, &profile).await?;
+            Ok(asks)
+        })
+        .await
+        .unwrap_or_else(|_| Err(Failure::new("unavailable")))
+    }
     pub(super) async fn household(&self, language: String) -> Result<Household> {
         if !super::super::language::supported(&language) {
             return Err(protocol());
@@ -392,10 +543,19 @@ mod tests {
     fn leaf(key: &str) -> Value {
         json!({"leaf":key,"label":"Words","help":null,"field_type":"string","required":false,"choices":[]})
     }
+    fn asks(leaves: &[&str], ask: &str) -> Value {
+        Value::Array(
+            leaves
+                .iter()
+                .map(|leaf| json!({"leaf":leaf,"ask":ask}))
+                .collect(),
+        )
+    }
     fn group(state: &str, rows: usize) -> Value {
         json!({"kind":"family_group","group_key":GROUP,"label":"Descendants","state":state,
             "stated_count":null,"row_count":rows,"incomplete_words":null,
-            "leaves":[leaf("nombre"),leaf("fecha_nacimiento")]})
+            "leaves":[leaf("nombre"),leaf("fecha_nacimiento")],
+            "new_row_leaves":asks(&["nombre","fecha_nacimiento"],"asked")})
     }
     fn incomplete(rows: usize) -> Value {
         let mut stated = group("incomplete", rows);
@@ -405,11 +565,13 @@ mod tests {
     }
     fn row(index: &str, leaf: &str) -> Value {
         json!({"kind":"family_row","group_key":GROUP,"row_index":index,
-            "facts":[{"leaf":leaf,"path":format!("{GROUP}.{index}.{leaf}"),"value":"x","masked":false}]})
+            "facts":[{"leaf":leaf,"path":format!("{GROUP}.{index}.{leaf}"),"value":"x","masked":false}],
+            "leaf_asks":asks(&["nombre","fecha_nacimiento"],"asked")})
     }
     fn not_served() -> Value {
         json!({"kind":"family_group","group_key":"renta_family.ascendiente","label":"Ascendants",
-            "state":"not_served","stated_count":null,"row_count":0,"incomplete_words":null,"leaves":[]})
+            "state":"not_served","stated_count":null,"row_count":0,"incomplete_words":null,"leaves":[],
+            "new_row_leaves":[]})
     }
     fn question(saved: Value) -> Value {
         json!({"kind":"family_question","question_id":"family-convive-con-otro-progenitor",
@@ -625,11 +787,10 @@ mod tests {
     }
 
     #[test]
-    fn a_leaf_keeps_the_conditions_it_is_asked_under_and_one_without_any_is_always_asked() {
+    fn a_leaf_keeps_the_conditions_it_is_served_with_and_the_host_decides_nothing_from_them() {
         let mut conditional = group("unknown", 0);
         conditional["leaves"][0]["shown_when"] = json!([
-            {"leaf":"fecha_nacimiento","equals":"true"},
-            {"leaf":"fecha_nacimiento","contains":"a","equals":null},
+            {"leaf":"fecha_nacimiento","equals":"true","contains":null},
             {"leaf":"fecha_nacimiento","equals":null,"contains":"b,c"}
         ]);
         let shown = serde_json::to_value(read(vec![conditional]).unwrap()).unwrap();
@@ -637,35 +798,179 @@ mod tests {
             shown["groups"][0]["leaves"][0]["shown_when"],
             json!([
                 {"leaf":"fecha_nacimiento","equals":"true","contains":null},
-                {"leaf":"fecha_nacimiento","equals":null,"contains":"a"},
                 {"leaf":"fecha_nacimiento","equals":null,"contains":"b,c"}
             ])
         );
-        // A leaf that states none, or an empty list, is asked always.
         assert_eq!(shown["groups"][0]["leaves"][1]["shown_when"], json!([]));
-        let mut empty = group("unknown", 0);
-        empty["leaves"][0]["shown_when"] = json!([]);
-        let shown = serde_json::to_value(read(vec![empty]).unwrap()).unwrap();
-        assert_eq!(shown["groups"][0]["leaves"][0]["shown_when"], json!([]));
+        // The host holds no visibility rule: a condition is carried, not judged.
+        let mut odd = group("unknown", 0);
+        odd["leaves"][1]["shown_when"] = json!([{"leaf":"nombre","equals":"a","contains":"b"}]);
+        assert!(read(vec![odd]).is_ok());
     }
 
     #[test]
-    fn a_condition_states_exactly_one_answer_and_nothing_else() {
-        for condition in [
-            json!({"leaf":"nombre","equals":"a","contains":"b"}),
-            json!({"leaf":"nombre"}),
-            json!({"leaf":"nombre","equals":null,"contains":null}),
-            json!({"leaf":"nombre","equals":"a","tip":"x"}),
-            json!({"equals":"a"}),
-            json!({"leaf":"nombre","equals":1}),
-        ] {
+    fn the_served_asks_are_kept_per_leaf_for_a_new_row_and_for_each_stored_row() {
+        let mut stated = group("rows", 1);
+        stated["new_row_leaves"] = json!([
+            {"leaf":"nombre","ask":"asked"},
+            {"leaf":"fecha_nacimiento","ask":"not_asked"}
+        ]);
+        let mut stored = row("0", "nombre");
+        stored["leaf_asks"] = json!([
+            {"leaf":"nombre","ask":"asked"},
+            {"leaf":"fecha_nacimiento","ask":"awaits_answer"}
+        ]);
+        let shown = serde_json::to_value(read(vec![stated, stored]).unwrap()).unwrap();
+        assert_eq!(
+            shown["groups"][0]["new_row_leaves"],
+            json!([
+                {"leaf":"nombre","ask":"asked"},
+                {"leaf":"fecha_nacimiento","ask":"not_asked"}
+            ])
+        );
+        assert_eq!(
+            shown["groups"][0]["rows"][0]["leaf_asks"][1],
+            json!({"leaf":"fecha_nacimiento","ask":"awaits_answer"})
+        );
+    }
+
+    #[test]
+    fn an_ask_outside_the_three_or_not_naming_the_groups_leaves_is_refused() {
+        for ask in ["maybe", "ASKED", "", "shown"] {
             let mut stated = group("unknown", 0);
-            stated["leaves"][1]["shown_when"] = json!([condition.clone()]);
-            assert!(read(vec![stated]).is_err(), "{condition}");
+            stated["new_row_leaves"][0]["ask"] = ask.into();
+            assert!(read(vec![stated]).is_err(), "{ask:?}");
+            let mut stored = row("0", "nombre");
+            stored["leaf_asks"][0]["ask"] = ask.into();
+            assert!(read(vec![group("rows", 1), stored]).is_err(), "{ask:?}");
         }
-        let mut listless = group("unknown", 0);
-        listless["leaves"][0]["shown_when"] = Value::Null;
-        assert!(read(vec![listless]).is_err());
+        let mut missing = group("unknown", 0);
+        missing.as_object_mut().unwrap().remove("new_row_leaves");
+        assert!(read(vec![missing]).is_err());
+        let mut absent = row("0", "nombre");
+        absent.as_object_mut().unwrap().remove("leaf_asks");
+        assert!(read(vec![group("rows", 1), absent]).is_err());
+        let mut short = group("unknown", 0);
+        short["new_row_leaves"] = asks(&["nombre"], "asked");
+        assert!(read(vec![short]).is_err());
+        let mut swapped = row("0", "nombre");
+        swapped["leaf_asks"] = asks(&["fecha_nacimiento", "nombre"], "asked");
+        assert!(read(vec![group("rows", 1), swapped]).is_err());
+        let mut stranger = row("0", "nombre");
+        stranger["leaf_asks"] = asks(&["nombre", "peso"], "asked");
+        assert!(read(vec![group("rows", 1), stranger]).is_err());
+        let mut extra = group("unknown", 0);
+        extra["new_row_leaves"][0]["why"] = "x".into();
+        assert!(read(vec![extra]).is_err());
+    }
+
+    fn draft(group: &str) -> Draft {
+        serde_json::from_value(json!({"group":group,"facts":[{"leaf":"nombre","value":"private"}]}))
+            .unwrap()
+    }
+    fn draft_page(items: Vec<Value>) -> Value {
+        let mut stated = page(items, 0, 1);
+        stated["total_items"] = 1.into();
+        stated
+    }
+    fn draft_item(group: &str) -> Value {
+        json!({"kind":"family_draft","group_key":group,
+            "leaf_asks":[{"leaf":"nombre","ask":"asked"},{"leaf":"fecha_nacimiento","ask":"awaits_answer"}]})
+    }
+
+    #[test]
+    fn a_draft_is_forwarded_as_the_hidden_household_draft_of_the_family_rows_read() {
+        let request = draft(GROUP).request(PROFILE, "es").unwrap();
+        assert_eq!(request["page_kind"], "family_rows");
+        assert_eq!(request["profile_id"], PROFILE);
+        assert_eq!(
+            request["household_draft"],
+            json!({"group":GROUP,"facts":[{"leaf":"nombre","value":"private"}]})
+        );
+        let none: Draft = serde_json::from_value(json!({"group":GROUP,"facts":[]})).unwrap();
+        assert_eq!(
+            none.request(PROFILE, "es").unwrap()["household_draft"]["facts"],
+            json!([])
+        );
+    }
+
+    #[test]
+    fn a_draft_past_the_products_bounds_or_with_a_foreign_member_is_not_submitted() {
+        let bounded = |value: Value| serde_json::from_value::<Draft>(value).unwrap();
+        for stated in [
+            json!({"group":"","facts":[]}),
+            json!({"group":"g".repeat(65),"facts":[]}),
+            json!({"group":GROUP,"facts":[{"leaf":"","value":"x"}]}),
+            json!({"group":GROUP,"facts":[{"leaf":"nombre","value":"v".repeat(257)}]}),
+            json!({"group":GROUP,"facts":vec![json!({"leaf":"nombre","value":"x"}); 65]}),
+        ] {
+            let failure = bounded(stated).request(PROFILE, "es").unwrap_err();
+            assert_eq!(
+                (failure.code, failure.reason.as_deref()),
+                ("refused", Some("invalid_household_draft"))
+            );
+        }
+        for stated in [
+            json!({"group":GROUP,"facts":[],"note":"x"}),
+            json!({"group":GROUP,"facts":[{"leaf":"nombre","value":"x","masked":true}]}),
+            json!({"group":GROUP}),
+        ] {
+            assert!(serde_json::from_value::<Draft>(stated).is_err());
+        }
+    }
+
+    #[test]
+    fn a_draft_answer_is_the_one_family_draft_item_of_its_group_and_serves_no_value() {
+        let asks = draft(GROUP)
+            .accept(PROFILE, draft_page(vec![draft_item(GROUP)]))
+            .unwrap();
+        let shown = serde_json::to_value(&asks).unwrap();
+        assert_eq!(shown["group_key"], GROUP);
+        assert_eq!(shown["leaf_asks"][1]["ask"], "awaits_answer");
+        assert!(!shown.to_string().contains("private"));
+        for items in [
+            vec![],
+            vec![draft_item(GROUP), draft_item(GROUP)],
+            vec![draft_item("renta_family.ascendiente")],
+            vec![group("unknown", 0)],
+        ] {
+            assert!(draft(GROUP).accept(PROFILE, draft_page(items)).is_err());
+        }
+        let mut unknown = draft_item(GROUP);
+        unknown["leaf_asks"][0]["ask"] = "maybe".into();
+        assert!(
+            draft(GROUP)
+                .accept(PROFILE, draft_page(vec![unknown]))
+                .is_err()
+        );
+        let mut echoed = draft_item(GROUP);
+        echoed["facts"] = json!([{"leaf":"nombre","value":"private"}]);
+        assert!(
+            draft(GROUP)
+                .accept(PROFILE, draft_page(vec![echoed]))
+                .is_err()
+        );
+        let mut elsewhere = draft_page(vec![draft_item(GROUP)]);
+        elsewhere["profile_id"] = "another".into();
+        assert!(draft(GROUP).accept(PROFILE, elsewhere).is_err());
+    }
+
+    #[test]
+    fn an_invalid_household_draft_refusal_is_invalid_and_a_family_draft_is_no_household_item() {
+        let mut refused = page(vec![], 0, 0);
+        refused["outcome"] = "refused".into();
+        refused["refusal_code"] = "invalid_household_draft".into();
+        let failure = draft(GROUP).accept(PROFILE, refused.clone()).unwrap_err();
+        assert_eq!(
+            (failure.code, failure.reason.as_deref()),
+            ("refused", Some("invalid_household_draft"))
+        );
+        let failure = Family::new(PROFILE.into()).accept(refused).unwrap_err();
+        assert_eq!(
+            (failure.code, failure.reason.as_deref()),
+            ("refused", Some("invalid_household_draft"))
+        );
+        assert!(read(vec![group("unknown", 0), draft_item(GROUP)]).is_err());
     }
 
     #[test]

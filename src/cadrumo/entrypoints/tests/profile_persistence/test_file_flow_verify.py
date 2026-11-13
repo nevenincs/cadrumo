@@ -92,6 +92,7 @@ from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import
     workflow_gate,
     workflow_profile,
 )
+from cadrumo.entrypoints.tests.profile_persistence.registered_calculate_support import calculate_as_filer_enters
 from cadrumo.entrypoints.tests.profile_persistence.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
     build_test_verification_repository_bundle,
@@ -270,8 +271,9 @@ def test_verify_does_not_overwrite_different_current_revision(repos: Repos) -> N
     baseline_inputs = dict(DEFAULT_130_BASELINE_INPUTS)
     baseline_inputs.pop(M130_CARRY_FORWARD_CASILLA, None)
     with bundled_indexed_authority().operation() as operation:
-        first = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+        first = calculate_as_filer_enters(
             work_unit.work_unit_id,
+            actor="system",
             ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
             casilla_inputs=baseline_inputs,
             binding_values=DEFAULT_130_BINDING_VALUES,
@@ -280,8 +282,9 @@ def test_verify_does_not_overwrite_different_current_revision(repos: Repos) -> N
     second_inputs = dict(baseline_inputs)
     second_inputs[M130_HOME_DEDUCTION_CASILLA] = second_inputs[M130_HOME_DEDUCTION_CASILLA] + Decimal("1")
     with bundled_indexed_authority().operation() as operation:
-        second = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+        second = calculate_as_filer_enters(
             work_unit.work_unit_id,
+            actor="system",
             ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
             casilla_inputs=second_inputs,
             binding_values=DEFAULT_130_BINDING_VALUES,

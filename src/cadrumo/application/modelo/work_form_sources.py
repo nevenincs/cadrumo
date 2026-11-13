@@ -28,6 +28,7 @@ from ...domain.calculations.registry.m303_regimen_simplificado_annual_summary_bi
 )
 from ...domain.calculations.registry.relation_prefill_bindings import RelationPrefillProvider
 from ...domain.calculations.registry.schema import BindingDefinition
+from ...domain.modelos.calculation_revision_sources import CalculationSourceRef
 from .source_policy import SourceFamily, source_policy
 from .work_form_field_vocabulary import (
     ModeloFormEarlierFiling,
@@ -90,8 +91,15 @@ def bound_value_source(
     )
 
 
+def resolver_value_source(supplied: CalculationSourceRef) -> ModeloFormValueSource:
+    """Describe where a value a resolver supplied to a box no binding feeds comes from, by that resolver's source."""
+    return ModeloFormValueSource(
+        family=source_policy(supplied.resolved_binding_source).family, source_kind=supplied.resolved_binding_source
+    )
+
+
 FIXED_BY_THE_FORM: Final[ModeloFormValueSource] = ModeloFormValueSource(family=SourceFamily.FIXED_BY_DESIGN)
 """The source of a value the declared layout fixes as a design constant, with no binding behind it."""
 
 
-__all__ = ["FIXED_BY_THE_FORM", "bound_value_source", "earlier_filings"]
+__all__ = ["FIXED_BY_THE_FORM", "bound_value_source", "earlier_filings", "resolver_value_source"]

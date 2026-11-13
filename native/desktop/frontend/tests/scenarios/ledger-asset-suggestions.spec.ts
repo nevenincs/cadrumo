@@ -4,7 +4,7 @@ import {
   purchaseOf,
 } from "../../src/components/ledger/assets/assetWrites";
 import { exampleInvoices } from "../../src/dev/fixtures/ledgerInvoices";
-import type { CatalogueInvoice } from "../../src/shell/ledgerInvoiceOperations";
+import type { CatalogueInvoiceSnapshot } from "../../src/shell/ledgerInvoiceContract";
 import type { ActivityAssetRevision } from "../../src/shell/ledgerSetup";
 import { label } from "../support/strings";
 
@@ -150,7 +150,10 @@ const MOVEMENT = "movement-1";
 const received = exampleInvoices((text) => text.padEnd(64, "0")).filter(
   (invoice) => invoice.kind === "received",
 );
-const linked = (invoice: CatalogueInvoice, to: string[]): CatalogueInvoice => ({
+const linked = (
+  invoice: CatalogueInvoiceSnapshot,
+  to: string[],
+): CatalogueInvoiceSnapshot => ({
   ...invoice,
   linked_transaction_ids: to,
 });

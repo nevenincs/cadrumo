@@ -1,4 +1,4 @@
-import type { EvidenceRecord } from "../../../shell/ledgerDocumentOperations";
+import type { LedgerEvidenceRecordProjection } from "../../../shell/ledgerDocumentContract";
 import type { LedgerTransaction } from "../../../shell/ledger";
 
 /** A purchase evidence reference and supplementary blob references are
@@ -8,7 +8,7 @@ export function movementDocuments(
     LedgerTransaction,
     "purchase_invoice_evidence_id" | "attachment_ids"
   >,
-  records: readonly EvidenceRecord[],
+  records: readonly LedgerEvidenceRecordProjection[],
 ) {
   const purchase = transaction.purchase_invoice_evidence_id
     ? {
@@ -32,7 +32,7 @@ export function movementDocuments(
  * supplementary, so its blob is attached without replacing that reference. */
 export function documentAttachmentReference(
   transaction: Pick<LedgerTransaction, "purchase_invoice_evidence_id">,
-  record: EvidenceRecord,
+  record: LedgerEvidenceRecordProjection,
 ) {
   return transaction.purchase_invoice_evidence_id
     ? { evidenceId: null, attachmentIds: [record.attachment_id] }

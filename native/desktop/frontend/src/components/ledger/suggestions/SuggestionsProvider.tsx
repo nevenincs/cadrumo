@@ -19,7 +19,7 @@ import type { Suggestion } from "@/components/ui/suggestions";
 import { countryName, currencyName } from "../../../shared/codeNames";
 import { formatPercent } from "../../../shared/numbers";
 import { facts } from "../../../shell/compose";
-import type { CatalogueInvoice } from "../../../shell/ledgerInvoiceOperations";
+import type { CatalogueInvoiceSnapshot } from "../../../shell/ledgerInvoiceContract";
 import type {
   LedgerKnownValueKind,
   LedgerKnownValuesResult,
@@ -83,7 +83,7 @@ export type SuggestionKind =
 
 export type SuggestionScope = {
   /** Same kind ranks first. */
-  invoiceKind?: CatalogueInvoice["kind"] | null;
+  invoiceKind?: CatalogueInvoiceSnapshot["kind"] | null;
   /** This party's records rank first. */
   party?: string;
   /** This year's register entries rank first. */
@@ -96,7 +96,7 @@ type Held = {
   /** Values staged, and those saved since the page opened, by field. */
   staged: (field: string) => string[];
   /** Null until read, or where the read failed. */
-  invoices: readonly CatalogueInvoice[] | null;
+  invoices: readonly CatalogueInvoiceSnapshot[] | null;
   /** The served entry vocabularies, by family; null likewise. */
   served: ReadonlyMap<string, ServedOptions> | null;
   /** Whether the entry vocabularies are being read, were read, or could not
@@ -582,7 +582,7 @@ export function useServedChoices(
  * failed, or outside the page. While `wanted`, using it asks for the read. */
 export function useHeldInvoices(
   wanted = true,
-): readonly CatalogueInvoice[] | null {
+): readonly CatalogueInvoiceSnapshot[] | null {
   const held = useContext(HeldContext);
   const want = held?.want;
   useEffect(() => {

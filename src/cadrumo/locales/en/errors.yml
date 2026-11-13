@@ -1811,6 +1811,9 @@ errors:
     refused_modelo_applicability_filter: An unknown applicability filter name was
       encountered in the registry. This is a registry-authoring error; update the
       filter dispatch table.
+    refused_modelo_assumed_value_unconfirmed: 'This declaration still holds %{unconfirmed_assumed_values}
+      value(s) nobody entered, so it cannot be verified, recorded as filed or exported
+      yet. Confirm each one by stating it, or enter the right value: %{boxes}.'
     refused_modelo_charge_account_missing: A direct-debit filing was selected but
       no charge account is recorded.
     refused_modelo_domiciliation_past_cutoff: Direct debit for this filing closed

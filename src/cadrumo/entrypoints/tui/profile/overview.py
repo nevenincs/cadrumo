@@ -71,6 +71,7 @@ from .overview_setup import (
     ProfileOverviewSetupWalkMixin,
 )
 from .overview_writes import ProfileOverviewWriteMixin
+from .record_groups import RecordGroupsPort
 from .setup_journey import SETUP_STAGES, ProfileSetupStage
 
 if TYPE_CHECKING:
@@ -205,6 +206,7 @@ class ProfileManagerScreen(
         remove_plantilla_media: Callable[[int], ProfileOverview] | None = None,
         refresh_overview_language: Callable[[], ProfileOverview] | None = None,
         household: HouseholdPort | None = None,
+        record_groups: RecordGroupsPort | None = None,
     ) -> None:
         """Initialize the overview with injected projection and write doors."""
         super().__init__()
@@ -266,6 +268,10 @@ class ProfileManagerScreen(
         """The household's doors, bound by composition to one profile, or ``None``.
 
         A host that supplies none offers no household destination."""
+        self._record_groups = record_groups
+        """The read of the profile's record groups, bound by composition to one profile, or ``None``.
+
+        A host that supplies none offers no record-group destination."""
         self._list_plantilla_media = list_plantilla_media
         self._set_plantilla_media = set_plantilla_media
         self._remove_plantilla_media = remove_plantilla_media

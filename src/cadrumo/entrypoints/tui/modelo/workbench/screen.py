@@ -53,7 +53,7 @@ from .....application.modelo.work_form_models import (
     ModeloWorkForm,
     section_fields,
 )
-from .....application.modelo.work_form_next_step import ModeloFormNextAction, inapplicable_pages
+from .....application.modelo.work_form_next_step import ModeloFormNextAction
 from .....application.modelo.work_form_service import ModeloWorkFormLoadV1
 from .....application.modelo.work_form_wording import does_not_apply_words
 from .....core.external_constants import OutputLanguage
@@ -83,7 +83,6 @@ from .navigator import NavigatorState, presented_form
 from .page_items import (
     WorkbenchFilter,
     WorkbenchPage,
-    page_items,
     page_of,
     workbench_pages,
 )
@@ -428,7 +427,6 @@ class ModeloWorkbenchScreen(
         self._apply_prerequisite: WorkbenchApplyPrerequisite | None = None
         self._load: ModeloWorkFormLoadV1 | None = None
         self._pages: tuple[WorkbenchPage, ...] = ()
-        self._inapplicable: frozenset[str] = frozenset()
         self._density_chosen: Density | None = None
         self._explained: CasillaListEntry | None = None
         self._page_index = 0
@@ -523,7 +521,6 @@ class ModeloWorkbenchScreen(
                 if translated is not None:
                     self._load = translated
                     self._pages = workbench_pages(presented_form(translated.form, recorded=self.recorded))
-                    self._inapplicable = inapplicable_pages(translated.form)
         served = () if self._load is None else self._load.form.carry_attestations
         self._session.refresh_language(self._language, served)
         self._help_generation += 1
@@ -611,16 +608,24 @@ class ModeloWorkbenchScreen(
             marks.append(HERE_MARK)
         return tuple(marks)
 
-    async def _read(self) -> None:
+    async def _read(self) -> bool:
+        """Read the declaration and show it; say so when it cannot be read, and report whether it was shown."""
         try:
             load = await asyncio.to_thread(self._reader.load, self._language)
         except Exception as failure:
             get_logger(__name__).error(
                 "modelo workbench could not read its declaration: %s", type(failure).__qualname__, exc_info=True
             )
-            self.query_one("#wb-loading", Static).update(tr("workspace.modelo.read_failed"))
-            return
+            # The first successful read removes the loading line; a later read that fails keeps the form held
+            # and says so on the notice line instead.
+            loading = self.query("#wb-loading")
+            if loading:
+                loading.first(Static).update(tr("workspace.modelo.read_failed"))
+            else:
+                self._notice(tr("workspace.modelo.read_failed"))
+            return False
         self.show_load(load)
+        return True
 
     def show_load(self, load: ModeloWorkFormLoadV1) -> None:
         """Show a fresh read, keeping the page and the casilla under the cursor where they still exist."""
@@ -629,7 +634,6 @@ class ModeloWorkbenchScreen(
         self._cards.clear()
         self._load = load
         self._pages = workbench_pages(presented_form(load.form, recorded=self.recorded))
-        self._inapplicable = inapplicable_pages(load.form)
         page_ids = [page.id for page in self._pages]
         if previous_page in page_ids:
             self._page_index = page_ids.index(previous_page)
@@ -652,24 +656,24 @@ class ModeloWorkbenchScreen(
 
     def _applies(self, index: int) -> bool:
         """Whether the page at ``index`` applies this period; the calculation details always do."""
-        return self._pages[index].id not in self._inapplicable
+        return self._pages[index].applies
 
     def _not_applying_text(self) -> str:
         form = self.form
         return "" if form is None else does_not_apply_words(form.period, self._language)
 
     def _first_attention(self) -> tuple[int, AddressKey] | None:
-        """The first box that needs the filer, on a page that applies this period; none once recorded as filed."""
-        if self.recorded:
+        """The page and box the form serves as the first that needs the filer; none once recorded as filed."""
+        load = self._load
+        served = None if load is None else load.journey.first_attention
+        if served is None:
             return None
-        staged = self._session.display()
-        for index, page in enumerate(self._pages):
-            if not self._applies(index):
-                continue
-            for item in page_items(page, staged=staged):
-                if isinstance(item, CasillaListEntry) and item.needs_filer:
-                    return index, item.key
-        return None
+        key = address_key(served.address)
+        if served.page_id is None:
+            index = page_of(self._pages, key)
+        else:
+            index = next((i for i, page in enumerate(self._pages) if page.id == served.page_id), None)
+        return None if index is None else (index, key)
 
     def _greet(self) -> None:
         """Say once per session, on the notice line, where to find what the symbols mean.

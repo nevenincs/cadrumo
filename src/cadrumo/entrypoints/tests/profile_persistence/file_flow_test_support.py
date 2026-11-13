@@ -76,9 +76,6 @@ from cadrumo.application.invoices.catalogue_reads_ports import InvoiceCatalogueR
 from cadrumo.application.invoices.source_resolver_ports import InvoiceSourceResolverPorts
 from cadrumo.application.live.borrador_100 import Borrador100SnapshotRepository
 from cadrumo.application.modelo.calculation_action_ports import CalculationActionPorts
-from cadrumo.application.modelo.calculation_bucket_actions import (
-    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
-)
 from cadrumo.application.modelo.filing_actions import (
     ModeloFilingResult,
     file_modelo_revision,
@@ -114,6 +111,7 @@ from cadrumo.domain.user_profile.tests.profile_creation_authority import (
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from cadrumo.entrypoints.adapter_composition_ports import build_borrador_100_snapshot_repository
 from cadrumo.entrypoints.adapter_composition_work_ports import build_calculation_action_ports, build_filing_action_ports
+from cadrumo.entrypoints.tests.profile_persistence.registered_calculate_support import calculate_as_filer_enters
 from cadrumo.entrypoints.tests.profile_persistence.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
     build_test_verification_repository_bundle,
@@ -774,8 +772,9 @@ def file_flow_verify_revision(
 def calculate_baseline_130_revision(work_unit: WorkUnit) -> CalculationRevision:
     """Calculate the work unit's Modelo 130 revision from the default baseline inputs and bindings at T1."""
     with bundled_indexed_authority().operation() as operation:
-        return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+        return calculate_as_filer_enters(
             work_unit.work_unit_id,
+            actor="system",
             ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
             casilla_inputs=_DEFAULT_130_BASELINE_INPUTS,
             binding_values=FILE_FLOW_DEFAULT_130_BINDING_VALUES,

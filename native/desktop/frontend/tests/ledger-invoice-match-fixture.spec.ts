@@ -2,9 +2,9 @@ import { expect, test } from "@playwright/test";
 import { answerInvoiceMatch } from "../src/dev/ledgerInvoiceMatchFixture";
 import { settlementOf } from "../src/dev/ledgerSettlement";
 import type {
-  CatalogueInvoice,
+  CatalogueInvoiceSnapshot,
   LedgerInvoiceMatchPair,
-} from "../src/shell/ledgerInvoiceOperations";
+} from "../src/shell/ledgerInvoiceContract";
 import type { LedgerRow } from "../src/shell/ledger";
 import recorded from "@fixtures/ledger-recordings/ledgerInvoiceMatch.json" with { type: "json" };
 import { catalogueInvoice, hexId, movement } from "./support/ledger";
@@ -33,7 +33,7 @@ function answeredOrder(scenario: Scenario): Map<string, number> {
 
 function recordsOf(scenario: Scenario): {
   rows: LedgerRow[];
-  invoices: CatalogueInvoice[];
+  invoices: CatalogueInvoiceSnapshot[];
   numberOf: Map<string, string>;
 } {
   const answered = answeredOrder(scenario);
@@ -44,7 +44,7 @@ function recordsOf(scenario: Scenario): {
       invoice_id: hexId(
         `${String(answered.get(number) ?? answered.size).padStart(3, "0")}-${number}`,
       ),
-      kind: entry.kind as CatalogueInvoice["kind"],
+      kind: entry.kind as CatalogueInvoiceSnapshot["kind"],
       issued_at: entry.issued as string,
       counterparty_name: entry.party as string,
       currency: (entry.currency as string | undefined) ?? "EUR",

@@ -6,7 +6,7 @@
 // is retried.
 
 import { useCallback, useRef, useState } from "react";
-import type { CatalogueInvoice } from "../../../shell/ledgerInvoiceOperations";
+import type { CatalogueInvoiceSnapshot } from "../../../shell/ledgerInvoiceContract";
 import type { LedgerPort, LedgerRow } from "../../../shell/ledger";
 import {
   changedSinceRead,
@@ -61,7 +61,7 @@ export type ReviewState =
       conflicts: AskedConflict[];
       /** The invoices staged links name, read for the review; null where
        * the catalogue could not be read. */
-      invoices: CatalogueInvoice[] | null;
+      invoices: CatalogueInvoiceSnapshot[] | null;
       /** The staged movements a finalized declaration cites, as read. */
       sealed: ReadonlySet<string>;
       /** The staged movements whose sealed state could not be read: held
@@ -125,7 +125,7 @@ function stepName(
  * could not be read. */
 async function readInvoices(
   port: LedgerPort,
-): Promise<CatalogueInvoice[] | null> {
+): Promise<CatalogueInvoiceSnapshot[] | null> {
   try {
     const listed = readAnswer(await port.submit("ledger.invoice.list", {}));
     return listed.kind === "answer" ? listed.result.invoices : null;

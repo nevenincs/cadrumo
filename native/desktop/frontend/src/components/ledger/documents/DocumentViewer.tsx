@@ -10,11 +10,11 @@ import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { IconButton } from "@/components/ui/icon-button";
 import { Spinner } from "@/components/ui/spinner";
+import type { EvidencePageResult } from "../../../shell/ledgerDocumentOperations";
 import type {
-  EvidencePageResult,
-  EvidenceStructuredFact,
-  EvidenceStructuredInvoice,
-} from "../../../shell/ledgerDocumentOperations";
+  EvidenceStructuredFactV1,
+  EvidenceStructuredInvoiceV1,
+} from "../../../shell/ledgerDocumentContract";
 import type { LedgerPort } from "../../../shell/ledger";
 import type { LedgerReadFailure } from "../../../shell/ledgerWindow";
 import { formatDecimal } from "../../../shared/numbers";
@@ -70,13 +70,18 @@ function refusalText(t: Translate, failure: LedgerReadFailure): string | null {
 
 /** A fact's value as the record states it: its text as it stands, or its
  * figure in the locale's marks. */
-function factValue(t: Translate, fact: EvidenceStructuredFact): string {
-  return fact.text ?? formatDecimal(t.locale ?? SOURCE_LOCALE, fact.number);
+function factValue(t: Translate, fact: EvidenceStructuredFactV1): string {
+  return (
+    fact.text ??
+    (fact.number
+      ? formatDecimal(t.locale ?? SOURCE_LOCALE, fact.number.decimal)
+      : "")
+  );
 }
 
 /** The columns of the lines table: each served label once, in the order the
  * lines first state it. */
-function lineColumns(invoice: EvidenceStructuredInvoice): string[] {
+function lineColumns(invoice: EvidenceStructuredInvoiceV1): string[] {
   const columns: string[] = [];
   for (const line of invoice.lines)
     for (const fact of line.facts)
@@ -91,7 +96,7 @@ function StructuredInvoice({
   invoice,
 }: {
   t: Translate;
-  invoice: EvidenceStructuredInvoice;
+  invoice: EvidenceStructuredInvoiceV1;
 }) {
   const columns = lineColumns(invoice);
   return (
@@ -281,7 +286,7 @@ export function DocumentViewer({
           <img
             className="ledger-document-image block max-w-none"
             style={{ width: `${scale * 100}%` }}
-            src={shown.image_data_url}
+            src={shown.image_data_url ?? undefined}
             alt={t("desktop.ledger.documents.viewer.image", {
               file: shown.file_name ?? fileName,
               page: shown.page,

@@ -36,7 +36,14 @@ type Scope = {
   reloadHold?: (hold: ModeloWriteHold) => Promise<boolean>;
   onOpenOwner?: (owner: ModeloWriteOwner) => void;
 };
-const Context = createContext<Scope | null>(null);
+/** What a writer reads from its scope. `epoch` and `readLatest` outlive the
+ * writer's own view: a settled write whose view has gone can still ask the
+ * scope, if it has not changed, to read with its current door. */
+type ScopeValue = Scope & {
+  epoch: () => number;
+  readLatest: (hold: ModeloWriteHold) => Promise<boolean>;
+};
+const Context = createContext<ScopeValue | null>(null);
 
 export function ModeloWriteScope({
   holds,
@@ -49,6 +56,20 @@ export function ModeloWriteScope({
   onOpenOwner,
   children,
 }: Scope & { children: ReactNode }) {
+  const current = useRef<Scope | null>(null);
+  const generation = useRef(0);
+  useLayoutEffect(
+    () => () => {
+      ++generation.current;
+    },
+    [holds, target, port],
+  );
+  const epoch = useCallback(() => generation.current, []);
+  const readLatest = useCallback(
+    async (hold: ModeloWriteHold) =>
+      current.current ? readHold(current.current, hold) : false,
+    [],
+  );
   const value = useMemo(
     () => ({
       holds,
@@ -59,10 +80,33 @@ export function ModeloWriteScope({
       owner,
       reloadHold,
       onOpenOwner,
+      epoch,
+      readLatest,
     }),
-    [holds, target, port, onWritten, reload, owner, reloadHold, onOpenOwner],
+    [
+      holds,
+      target,
+      port,
+      onWritten,
+      reload,
+      owner,
+      reloadHold,
+      onOpenOwner,
+      epoch,
+      readLatest,
+    ],
   );
+  useLayoutEffect(() => {
+    current.current = value;
+  });
   return <Context.Provider value={value}>{children}</Context.Provider>;
+}
+
+/** The one read that releases a refresh hold, shared by the person's manual
+ * control and by the read a settled write of this window triggers itself. */
+async function readHold(scope: Scope, hold: ModeloWriteHold): Promise<boolean> {
+  if (scope.reloadHold) return scope.reloadHold(hold);
+  return hold.key === scope.target ? scope.reload() : false;
 }
 
 /** Modal writers need the same notice inside their active focus layer. */
@@ -92,8 +136,7 @@ function ScopeNotices({
     pending.current = true;
     setRefreshing(true);
     try {
-      if (scope.reloadHold) await scope.reloadHold(hold);
-      else if (hold.key === scope.target) await scope.reload();
+      await readHold(scope, hold);
     } finally {
       pending.current = false;
       setRefreshing(false);
@@ -169,7 +212,7 @@ export function useModeloWriteScope() {
  * including writers whose original dialog or view has since gone away. */
 export function useModeloOperation() {
   const scope = useModeloWriteScope();
-  const { holds, target, port, onWritten, owner } = scope;
+  const { holds, target, port, onWritten, owner, epoch, readLatest } = scope;
   const hold = useModeloBlockingWriteHold(holds, target);
   const reviewedFailure = useModeloReviewedFailure(holds, target);
   const generation = useRef(0);
@@ -186,6 +229,7 @@ export function useModeloOperation() {
     ): Promise<OperationRun<Result> | null> => {
       if (!alive()) return null;
       const mine = generation.current;
+      const scopeEpoch = epoch();
       const current = () => alive() && mine === generation.current;
       const lease = holds.begin(target, owner);
       if (!lease) return null;
@@ -199,9 +243,22 @@ export function useModeloOperation() {
       // A list may have been read while the operation was pending. Completion
       // invalidates that old read even when the originating view is now gone.
       onWritten?.();
+      // The view that sent a settled write reads the declaration itself. When
+      // it has gone (a closed dialog) while the scope still stands, nobody
+      // else will, so the scope reads once. A failed read leaves the hold and
+      // its manual control; an unknown outcome is never read here.
+      if (outcome.kind === "settled" && !current() && scopeEpoch === epoch()) {
+        const held = holds.get(lease.key);
+        if (held?.id === lease.id && held.phase === "refresh")
+          try {
+            await readLatest(held);
+          } catch {
+            // The hold stays, and the person can read again.
+          }
+      }
       return current() ? outcome : null;
     },
-    [holds, target, port, onWritten, owner],
+    [holds, target, port, onWritten, owner, epoch, readLatest],
   );
   return { ...scope, hold, reviewedFailure, run };
 }

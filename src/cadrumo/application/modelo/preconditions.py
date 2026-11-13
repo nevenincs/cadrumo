@@ -96,6 +96,9 @@ _SOURCE_STANDING_DOORS: tuple[tuple[str, str], ...] = (
 ATTEST_PRIOR_VALUE_ACTION_ID: Final[str] = "operator.modelo.work.attest_prior_value"
 """The catalogue action by which the filer states the figure a declaration reads from an earlier return."""
 
+ATTEST_WORK_INCOME_ACTION_ID: Final[str] = "operator.modelo.work.attest_work_income"
+"""The catalogue action by which the filer states that the work-income boxes no payer certificate fills hold nothing."""
+
 # An absent earlier return whose figure the filer may state: its own door first, then the statement.
 _ATTESTABLE_SOURCE_DOORS: tuple[tuple[str, str], ...] = (
     ("source_absent_attestable", "operator.modelo.work.create"),
@@ -424,22 +427,53 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
     ),
     # A work-income box only the filer can state, a stated disability's increase left
     # unanswered, or an expense above its legal limit: the filer states the box, through
-    # the override of the binding it reads or else its own value.
+    # the override of the binding it reads or else its own value. An unstated income box
+    # is first offered the single statement that the boxes no payer certificate fills hold
+    # nothing, and each box's own door stays beside it.
     *(
         _profile(
             "modelo.work.verify",
             f"modelo.work.verify.trabajo_income.{condition}",
             f"modelo.work.verify.trabajo_income.{scenario}",
-            action_id=(
-                "operator.modelo.work.override" if scenario.endswith("_source") else "operator.modelo.work.set_value"
-            ),
+            action_id=action_id,
+            alternative_action_ids=alternative_action_ids,
         )
-        for condition, scenario in (
-            ("stated", "unstated"),
-            ("stated", "unstated_source"),
-            ("disability_increase_stated", "disability_increase_unstated"),
-            ("expense_within_limit", "expense_above_limit"),
-            ("expense_within_limit", "expense_above_limit_source"),
+        for condition, scenario, action_id, alternative_action_ids in (
+            (
+                "stated",
+                "unstated",
+                ATTEST_WORK_INCOME_ACTION_ID,
+                ("operator.modelo.work.set_value",),
+            ),
+            (
+                "stated",
+                "unstated_source",
+                ATTEST_WORK_INCOME_ACTION_ID,
+                ("operator.modelo.work.override",),
+            ),
+            (
+                "disability_increase_stated",
+                "disability_increase_unstated",
+                "operator.modelo.work.set_value",
+                (),
+            ),
+            ("expense_within_limit", "expense_above_limit", "operator.modelo.work.set_value", ()),
+            ("expense_within_limit", "expense_above_limit_source", "operator.modelo.work.override", ()),
+        )
+    ),
+    # An assumed value waits for the filer: stating the box again confirms it, and a box read
+    # from a source the filer may state over is confirmed by the override bound to it.
+    *(
+        _profile(
+            leaf,
+            f"{leaf}.assumed_value.confirmed",
+            f"{leaf}.assumed_value.{scenario}",
+            action_id=action_id,
+        )
+        for leaf in ("modelo.work.verify", "modelo.work.file", "modelo.export")
+        for scenario, action_id in (
+            ("unconfirmed", "operator.modelo.work.set_value"),
+            ("unconfirmed_source", "operator.modelo.work.override"),
         )
     ),
     # The profile door that states a household row's required fact: the fact is the
@@ -1236,6 +1270,7 @@ def build_modelo_work_file_unverified_revision_failure(
 
 __all__ = [
     "ATTEST_PRIOR_VALUE_ACTION_ID",
+    "ATTEST_WORK_INCOME_ACTION_ID",
     "MODELO_PRECONDITION_PROFILES",
     "MODELO_PRECONDITION_PROFILE_REGISTRY",
     "ModeloPreconditionFailure",

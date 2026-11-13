@@ -208,16 +208,19 @@ class RepeatableRowAddScreen(ModalScreen[dict[str, str] | None]):
     @override
     def compose(self) -> ComposeResult:
         with Vertical(id="edit-dialog"):
-            yield localized(Label(tr("flows.manager.rows.add"), id="edit-label"), "flows.manager.rows.add")
-            for index, field in enumerate(self._fields):
-                yield Label(f"{field.label}{REQUIRED_MARK if field.required else ''}", id=f"row-label-{index}")
-                if field.choices:
-                    yield OptionList(*(choice.label for choice in field.choices), id=f"row-option-{index}")
-                else:
-                    yield Input(
-                        placeholder=profile_field_shape_hint(field.field_type) or "",
-                        id=f"row-input-{index}",
-                    )
+            # The boxes scroll inside the dialog, so Save and Cancel stay on a short terminal however
+            # many boxes or choices the row declares.
+            with ContentScroll(id="edit-body"):
+                yield localized(Label(tr("flows.manager.rows.add"), id="edit-label"), "flows.manager.rows.add")
+                for index, field in enumerate(self._fields):
+                    yield Label(f"{field.label}{REQUIRED_MARK if field.required else ''}", id=f"row-label-{index}")
+                    if field.choices:
+                        yield OptionList(*(choice.label for choice in field.choices), id=f"row-option-{index}")
+                    else:
+                        yield Input(
+                            placeholder=profile_field_shape_hint(field.field_type) or "",
+                            id=f"row-input-{index}",
+                        )
             with Horizontal(id="edit-actions"):
                 yield localized(
                     Button(tr("flows.manager.edit.cancel"), id="btn-row-cancel"), "flows.manager.edit.cancel"

@@ -1297,21 +1297,37 @@ export function WorkspaceScreen({
   // filer staged on it, and says so to the caller; with nothing shown yet,
   // the failure is the page.
   const shown = useRef(false);
-  const reread = useCallback(async () => {
+  // The newest read begun. A read that a newer one overtakes does not report
+  // a failure of its own: the newer read answers for it, and releases the
+  // hold it captured. A read retired with no newer one (the declaration or
+  // language changed away) has nothing to answer with.
+  const newest = useRef<{ ticket: number; result: Promise<boolean> } | null>(
+    null,
+  );
+  const reread = useCallback(() => {
     const ticket = ++latest.current;
     const before = holds.get(target);
-    try {
-      const envelope = await port.form(workUnitId, language);
-      if (ticket !== latest.current) return false;
-      shown.current = true;
-      setRead({ phase: "ready", envelope });
-      if (before) holds.readCompleted(before);
-      return true;
-    } catch (error) {
-      if (ticket === latest.current && !shown.current)
-        setRead({ phase: "failed", code: ledgerFailure(error).code });
-      return false;
-    }
+    const overtaken = () =>
+      newest.current !== null && newest.current.ticket > ticket
+        ? newest.current.result
+        : false;
+    const result = (async () => {
+      try {
+        const envelope = await port.form(workUnitId, language);
+        if (ticket !== latest.current) return overtaken();
+        shown.current = true;
+        setRead({ phase: "ready", envelope });
+        if (before) holds.readCompleted(before);
+        return true;
+      } catch (error) {
+        if (ticket !== latest.current) return overtaken();
+        if (!shown.current)
+          setRead({ phase: "failed", code: ledgerFailure(error).code });
+        return false;
+      }
+    })();
+    newest.current = { ticket, result };
+    return result;
   }, [port, workUnitId, language, holds, target]);
   const reloadHold = useCallback(
     async (hold: ModeloWriteHold) => {
