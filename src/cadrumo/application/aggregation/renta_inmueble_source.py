@@ -36,6 +36,11 @@ from typing import Final
 from ...core.money.rounding import round_to_cents
 from ...core.retencion_soportada import RetencionSoportadaClase
 from ...domain.calculations.registry.gasto_capital_inmobiliario import GastoCapitalInmobiliarioCatalogue
+from ...domain.calculations.registry.renta_inmueble_bindings import (
+    ORIGIN_ROW_FIELD,
+    RentaInmuebleOrigin,
+    RentaInmuebleOriginPart,
+)
 from ...domain.contribuyente.arrendamiento_record import ArrendamientoRecord
 from ...domain.contribuyente.inmueble_record import (
     AdquisicionTitulo,
@@ -49,6 +54,7 @@ from ...domain.contribuyente.inmueble_record import (
 from ...domain.renta.retencion_soportada import RetencionSoportadaRecord
 from ...domain.transactions.models import Transaction
 from .currency_predicates import effective_eur_amount, effective_eur_taxable_base
+from .renta_inmueble_carry import PendingStatements, carry_window, pending_carry
 from .renta_inmueble_findings import RentaInmuebleCause, RentaInmuebleFinding, RentaInmuebleFindingKind
 from .renta_inmueble_links import Links, Records, link_rows, read_records, row_due_date
 from .renta_inmueble_net import RentaInmuebleNet, RentaInmuebleNetInputs, RentaInmuebleTerms, renta_inmueble_net
@@ -97,6 +103,10 @@ class RentaInmuebleRowField(StrEnum):
     INTERESES_REPARACION_PENDIENTES = "intereses_reparacion_pendientes"
     INTERESES_REPARACION_PENDIENTES_FUTUROS = "intereses_reparacion_pendientes_futuros"
     """The anexo C.1 restatement of the ejercicio's own excess carried forward: the row's 0108 again."""
+    GASTOS_PENDIENTES_ORIGEN = ORIGIN_ROW_FIELD
+    """An anexo C.1 amount of one origin year; the binding's declared origin says which year and which amount."""
+    ANEXO_C1_TITULAR = "anexo_c1_titular"
+    ANEXO_C1_REFERENCIA_CATASTRAL = "anexo_c1_referencia_catastral"
     RENDIMIENTO_NETO = "rendimiento_neto"
     REDUCCION_APLICABLE = "reduccion_aplicable"
     REDUCCION = "reduccion"
@@ -133,6 +143,18 @@ class RentaInmuebleOccurrence:
     def source_identity(self) -> str:
         """Identify the property this occurrence comes from, stable across ejercicios."""
         return _source_identity(self.inmueble.clave)
+
+    def origin(self, origin: RentaInmuebleOrigin) -> Decimal | None:
+        """Return one anexo C.1 amount of one origin year; ``None`` leaves the box off when it holds nothing."""
+        if self.net is None:
+            return None
+        amounts = {
+            RentaInmuebleOriginPart.OPENING: self.net.origen_pendiente,
+            RentaInmuebleOriginPart.APPLIED: self.net.origen_aplicado,
+            RentaInmuebleOriginPart.CARRIED: self.net.origen_futuro,
+        }[origin.part]
+        amount = amounts.get(origin.back)
+        return None if amount is None or amount == 0 else amount
 
     def gasto(self, concept: str) -> Decimal | None:
         """Return the taxpayer's part of one expense concept; ``None`` when no row states it."""
@@ -235,6 +257,8 @@ _NET_COLUMNS: Final[dict[RentaInmuebleRowField, Callable[[RentaInmuebleNet], Ren
     RentaInmuebleRowField.INTERESES_REPARACION_APLICADOS: lambda net: net.intereses_reparacion_aplicados,
     RentaInmuebleRowField.INTERESES_REPARACION_PENDIENTES: lambda net: net.intereses_reparacion_pendientes,
     RentaInmuebleRowField.INTERESES_REPARACION_PENDIENTES_FUTUROS: lambda net: net.intereses_reparacion_pendientes,
+    RentaInmuebleRowField.ANEXO_C1_TITULAR: lambda net: net.anexo_c1_titular,
+    RentaInmuebleRowField.ANEXO_C1_REFERENCIA_CATASTRAL: lambda net: net.anexo_c1_referencia_catastral,
     RentaInmuebleRowField.RENDIMIENTO_NETO: lambda net: net.rendimiento_neto,
     RentaInmuebleRowField.REDUCCION_APLICABLE: lambda net: net.reduccion_aplicable,
     RentaInmuebleRowField.REDUCCION: lambda net: net.reduccion,
@@ -472,8 +496,7 @@ def _net(
     figures: tuple[Decimal | None, dict[str, Decimal]],
     withholding: tuple[RetencionSoportadaRecord, ...],
     rules: tuple[RentaInmuebleTerms, GastoCapitalInmobiliarioCatalogue],
-    pendiente: Decimal | None,
-    prior_return_held: bool,
+    pendientes: Mapping[int, Decimal] | None,
 ) -> RentaInmuebleNet | None:
     occupancy, (ingresos, gastos) = inputs.occupancy, figures
     if occupancy is None or not occupancy.leases or ingresos is None:
@@ -494,27 +517,11 @@ def _net(
             improvements_before=_total(inputs.prior_improvements) * share,
             improvements_in=_total(inputs.improvements) * share,
             withholding=withholding,
-            pendiente=pendiente,
-            prior_return_held=prior_return_held,
+            pendientes=pendientes,
         ),
         terms=terms,
         concepts=concepts,
     )
-
-
-def _pendiente(record: InmuebleRecord, ejercicio: Ejercicio, stated: Mapping[str, Decimal]) -> Decimal | None:
-    """Return what earlier ejercicios left pending on the property, or ``None`` while it is unknown.
-
-    The filer's statement for the property decides it. Without one, a property
-    acquired inside the ejercicio has no earlier year to leave anything pending;
-    for any other, no earlier return is read here, so the net chain stops short
-    of the net yield.
-    """
-    statement = stated.get(_source_identity(record.clave))
-    if statement is not None:
-        return statement
-    acquired = record.fecha_adquisicion
-    return _ZERO if acquired is not None and acquired >= ejercicio.first else None
 
 
 def _source_identity(clave: int) -> str:
@@ -560,7 +567,7 @@ def renta_inmueble_occurrences(
     concepts: GastoCapitalInmobiliarioCatalogue,
     terms: RentaInmuebleTerms,
     withholding: Iterable[RetencionSoportadaRecord] = (),
-    pending_stated: Mapping[str, Decimal] | None = None,
+    pending_stated: PendingStatements | None = None,
     prior_return_held: bool = False,
 ) -> RentaInmuebleOccurrences:
     """Build one occurrence per property held on at least one day of ``ejercicio``, in row-key order.
@@ -573,10 +580,10 @@ def renta_inmueble_occurrences(
         concepts: The rental-expense concept vocabulary in force for the ejercicio.
         terms: The dated registry data of the net chain.
         withholding: The ejercicio's suffered-withholding records, of every income class.
-        pending_stated: The filer's statement of what earlier ejercicios left pending, by the
-            source identity of the property it speaks of; zero where nothing is pending.
+        pending_stated: The filer's statements of what earlier ejercicios left pending, per
+            origin year and property row; zero where nothing is pending.
         prior_return_held: Whether the profile holds the return of the previous ejercicio,
-            whose pending amounts no path matches to a property.
+            which is not read for the pending amounts of a property.
 
     Returns:
         The occurrences and every finding, those of a property and those no property owns.
@@ -596,11 +603,16 @@ def renta_inmueble_occurrences(
     for clave, inputs in held.items():
         own = _occurrence_findings(inputs, period)
         ingresos, gastos, read = _figures(inputs, period)
-        pendiente = _pendiente(inputs.record, period, pending_stated or {})
-        net = _net(
-            inputs, period, (ingresos, gastos), placed.get(clave, ()), (terms, concepts), pendiente, prior_return_held
+        carry = pending_carry(
+            subject=_source_identity(clave),
+            carry=carry_window(inputs.record, inputs.leases, period, terms.carry_years),
+            window=terms.carry_years,
+            stated=pending_stated or PendingStatements(),
+            prior_return_held=prior_return_held,
         )
+        net = _net(inputs, period, (ingresos, gastos), placed.get(clave, ()), (terms, concepts), carry.pendientes)
         if net is not None:
+            own.extend(carry.findings)
             own.extend(RentaInmuebleFinding(cause, _source_identity(clave)) for cause in net.causes)
         occurrences.append(
             RentaInmuebleOccurrence(

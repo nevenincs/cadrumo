@@ -13,7 +13,9 @@ from datetime import date
 from typing import Final, Literal, get_args, get_origin
 
 from pydantic import BaseModel
+from pydantic.fields import FieldInfo
 
+from .binding_temporal import RelativeToFilingYear
 from .ids import RevisionId
 
 __all__ = [
@@ -29,7 +31,8 @@ AUTHORED_LAYOUT_INTEGER_FIELD_NAMES: Final[frozenset[str]] = frozenset({"offset"
 official fixed-width record and how it is written, which is authored design data
 that does not change with the filing context. Every other integer on a provider
 member would pin the declaration to one concrete year, revision, or date, and is
-refused. The list is explicit so that adding a fourth is a deliberate decision
+refused, unless its type carries the :class:`RelativeToFilingYear` marker, which
+states a count of ejercicios before the one filed. The list is explicit so that adding a fourth is a deliberate decision
 with a stated reason rather than a field that slipped through.
 """
 
@@ -108,6 +111,13 @@ def absolute_coordinate_offenders(label: str, model: type[BaseModel]) -> tuple[s
     return _absolute_coordinate_offenders(label, model, seen=frozenset(), top_level=True)
 
 
+def _coordinate_exempt(name: str, field_info: FieldInfo, *, top_level: bool) -> bool:
+    """Whether an integer field is an authored layout address or a count marked relative to the filing year."""
+    if top_level and name in AUTHORED_LAYOUT_INTEGER_FIELD_NAMES:
+        return True
+    return any(isinstance(marker, RelativeToFilingYear) for marker in field_info.metadata)
+
+
 def _absolute_coordinate_offenders(
     label: str,
     model: type[BaseModel],
@@ -123,8 +133,9 @@ def _absolute_coordinate_offenders(
     for name, field_info in sorted(model.model_fields.items()):
         if top_level and name == TEMPORAL_PROVIDER_FIELD_NAME:
             continue
-        exempt = top_level and name in AUTHORED_LAYOUT_INTEGER_FIELD_NAMES
-        if not exempt and _absolute_coordinate_leaves(field_info.annotation):
+        if not _coordinate_exempt(name, field_info, top_level=top_level) and _absolute_coordinate_leaves(
+            field_info.annotation
+        ):
             offenders.append(f"{label} declares absolute coordinate field {name!r}")
         for nested in _nested_models(field_info.annotation):
             offenders.extend(

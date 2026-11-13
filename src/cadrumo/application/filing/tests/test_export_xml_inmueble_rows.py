@@ -22,18 +22,31 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from ....domain.calculations.registry.export_xml_dictionary import xml_dictionary_entries
+from ....domain.calculations.registry.renta_inmueble_bindings import (
+    RentaInmuebleOriginPart,
+    renta_inmueble_columns,
+    renta_inmueble_origin_columns,
+)
 from ....domain.contribuyente.arrendamiento_record import Inquilino, InquilinoEdad
 from ....domain.contribuyente.inmueble_record import AdquisicionTitulo, InmuebleRecord, ValorCatastral
 from ....domain.filing.protocols import ModeloInputScalar, ModeloInputValue
 from ....domain.filing.schema import ModeloDraft
+from ....domain.modelos.calculation_revision_operator_layer import ATTESTED_ZERO, RowCarryAttestation
 from ....domain.submission.models import ModeloDraftStatus
-from ....domain.transactions.models import TransactionCatalogue
+from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from ...aggregation.renta_inmueble_resolver import RentaInmuebleSourceResolver, resolve_renta_inmueble_terms
 from ...aggregation.retencion_soportada_repository import RetencionSoportadaPorts
 from ...aggregation.source_mesh import CalculationSourceContext, CalculationSourceResolution
 from ...aggregation.tests.ledger_source_mesh_support import BUCKET_ID, InMemoryTransactionCatalogueRepository
-from ...aggregation.tests.renta_inmueble_support import expense, inmueble, lease, monthly_rent, profile_facts
+from ...aggregation.tests.renta_inmueble_support import (
+    REFERENCIA_CATASTRAL,
+    expense,
+    inmueble,
+    lease,
+    monthly_rent,
+    profile_facts,
+)
 from ...modelo.work_profile import ModeloWorkProfile
 from ..draft_construction import build_draft
 from ..export_xml_dictionary import render_xml_dictionary_layout
@@ -103,16 +116,24 @@ def _resolve(
             ),
         ),
     )
-    repository = InMemoryTransactionCatalogueRepository(bucket_id=BUCKET_ID)
-    repository.save(
-        TransactionCatalogue.from_transactions(
-            (
-                *monthly_rent(year, amount=_RENT),
-                *monthly_rent(year, amount=_SECOND_RENT, lease_clave=1),
-                expense("comunidad", concept="comunidad", amount=_COMUNIDAD, booked=date(year, 3, 10)),
-            )
-        )
+    transactions = (
+        *monthly_rent(year, amount=_RENT),
+        *monthly_rent(year, amount=_SECOND_RENT, lease_clave=1),
+        expense("comunidad", concept="comunidad", amount=_COMUNIDAD, booked=date(year, 3, 10)),
     )
+    return _resolution(operation, provider, year, facts, transactions)
+
+
+def _resolution(
+    operation: PinnedAuthorityOperation,
+    provider: RegistrySchemaAccessor,
+    year: int,
+    facts: dict[str, str],
+    transactions: tuple[Transaction, ...],
+    statements: tuple[RowCarryAttestation, ...] = (),
+) -> CalculationSourceResolution:
+    repository = InMemoryTransactionCatalogueRepository(bucket_id=BUCKET_ID)
+    repository.save(TransactionCatalogue.from_transactions(transactions))
     profile = ModeloWorkProfile(
         record=create_user_profile_record(
             setup_state=ProfileSetupState.COMPLETE,
@@ -136,6 +157,7 @@ def _resolve(
             period=Period.from_year_and_code(year, "0A"),
             revision=provider.get_snapshot("100").revision,
             profile=profile,
+            caller_row_attestations=statements,
         )
     )
 
@@ -175,7 +197,10 @@ def test_each_let_property_is_one_inmueble_element_with_its_own_net_chain_in_eve
         fields = {
             entry.casilla_id: entry.field_id
             for entry in xml_dictionary_entries(
-                layout, sources=provider.sources, source_payloads=provider.source_payloads
+                layout,
+                sources=provider.sources,
+                source_payloads=provider.source_payloads,
+                casillas=provider.get_snapshot("100").revision.casillas,
             )
             if f"/{_INMUEBLE}/" in entry.path
         }
@@ -212,3 +237,69 @@ def test_each_let_property_is_one_inmueble_element_with_its_own_net_chain_in_eve
         assert _field(second, fields, "0154") == str(second_reduced), year
         values = {value.casilla_id: value.value for value in draft.values}
         assert values["0156"] == first_reduced + second_reduced, year
+
+
+def test_an_earlier_excess_reaches_anexo_c1_of_its_inmueble_with_the_holder_code_in_every_supported_year(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    years = _filing_years(operation)
+    assert years
+    for year in years:
+        provider = _provider(operation, year)
+        revision = provider.get_snapshot("100").revision
+        layout = revision.export_layouts[0]
+        paths = {
+            entry.casilla_id: entry.path.split(f"/{_INMUEBLE}/", 1)[1]
+            for entry in xml_dictionary_entries(
+                layout, sources=provider.sources, source_payloads=provider.source_payloads, casillas=revision.casillas
+            )
+            if f"/{_INMUEBLE}/" in entry.path
+        }
+        boxes = {binding.id: str(column.target_casilla_id) for binding, column in renta_inmueble_columns(revision)}
+        origins = renta_inmueble_origin_columns(revision)
+        start = date(year - 2, 1, 1)
+        record = inmueble(
+            0,
+            ejercicio=year,
+            fecha_adquisicion=date(year - 3, 6, 1),
+            importe_adquisicion=Decimal(99000),
+            gastos_tributos_adquisicion=Decimal(1000),
+            valores_catastrales=(ValorCatastral(year=year, total=Decimal(80000), construccion=Decimal(64000)),),
+            arrendado_desde=start,
+        )
+        facts = profile_facts((record,), (lease(0, start=start, zona_tensionada=False),))
+        # Let since two ejercicios back: the newest origin year left 300 pending, the one before it nothing.
+        newest, older = origins[RentaInmuebleOriginPart.OPENING][1], origins[RentaInmuebleOriginPart.OPENING][2]
+        statements = (
+            RowCarryAttestation(binding_id=newest.id, source_row_identity="inmueble:0", amount="300"),
+            RowCarryAttestation(
+                binding_id=older.id, source_row_identity="inmueble:0", amount=ATTESTED_ZERO, absent=True
+            ),
+        )
+        resolution = _resolution(operation, provider, year, facts, monthly_rent(year, amount=_RENT), statements)
+        payload = render_xml_dictionary_layout(
+            layout, draft=_draft(provider, year, resolution), headers={}, aux_version="001", schema_provider=provider
+        )
+        (element,) = ElementTree.fromstring(payload).findall(_INMUEBLE)
+
+        filed = {binding_id: element.findtext(paths[casilla]) for binding_id, casilla in boxes.items()}
+
+        applied = origins[RentaInmuebleOriginPart.APPLIED][1].id
+        carried = origins[RentaInmuebleOriginPart.CARRIED][1].id
+        holder = next(
+            binding.id for binding, column in renta_inmueble_columns(revision) if column.row_field == "anexo_c1_titular"
+        )
+        reference = next(
+            binding.id
+            for binding, column in renta_inmueble_columns(revision)
+            if column.row_field == "anexo_c1_referencia_catastral"
+        )
+        # The XSD's tipo_Titular codes the declarant 2; the 300 applies whole, within the rent, and carries nothing on.
+        assert filed[holder] == "2", year
+        assert filed[reference] == REFERENCIA_CATASTRAL, year
+        assert filed[newest.id] == "300.00", year
+        assert filed[applied] == "300.00", year
+        assert filed[carried] is None, year
+        assert filed[older.id] is None, year
+        assert element.findtext(paths["0103"]) == "300.00", year
+        assert element.findtext(paths["0104"]) == "300.00", year

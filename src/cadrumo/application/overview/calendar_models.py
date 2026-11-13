@@ -514,9 +514,19 @@ class SuppressedCalendarEntry(BaseModel):
 
     modelo: str = Field(min_length=1, max_length=16)
     period: _CalendarPeriod
+    opens_on: date
+    closes_on: date
+    adjusted_closes_on: date
     verdict: ApplicabilityVerdict
     reason: str = Field(min_length=1)
     actions: tuple[DeclaredNextAction, ...] = Field(default=(), exclude=True)
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _window_is_ordered(self) -> Self:
+        if self.opens_on > self.adjusted_closes_on or self.closes_on > self.adjusted_closes_on:
+            raise ValueError("a suppressed obligation's window closes before it opens")
+        return self
 
 
 class OverviewCalendar(BaseModel):

@@ -670,6 +670,8 @@ profile:
           label: Attested cumulative amortisation
         amortizacion_acumulada_desde:
           label: Date the cumulative amortisation refers to
+        arrendado_desde:
+          label: Date the property was first let
         direccion:
           label: Property address
         fecha_adquisicion:
@@ -700,6 +702,8 @@ profile:
           label: Usufruct percentage
         referencia_catastral:
           label: Cadastral reference
+        sin_arrendar:
+          label: Property never let
         situacion:
           choices:
             '1': With cadastral reference, in common territory

@@ -182,7 +182,7 @@ def test_the_two_contract_dwelling_states_the_manual_amortisation_figures() -> N
 
 
 def _inputs(occurrence: RentaInmuebleOccurrence, *, pendiente: Decimal, year: int) -> RentaInmuebleNetInputs:
-    """Restate the occurrence as the chain's inputs, the earlier ejercicios' pending amount stated by the test."""
+    """Restate the occurrence as the chain's inputs, the previous ejercicio's pending amount stated by the test."""
     first, last = date(year, 1, 1), date(year, 12, 31)
     lease_days = {
         item.clave: _days(max(first, item.fecha_inicio), min(last, item.fecha_fin or last))
@@ -203,7 +203,7 @@ def _inputs(occurrence: RentaInmuebleOccurrence, *, pendiente: Decimal, year: in
         improvements_before=Decimal(0),
         improvements_in=Decimal(0),
         withholding=(),
-        pendiente=pendiente,
+        pendientes={1: pendiente},
     )
 
 
@@ -388,7 +388,7 @@ def _one_lease_net(year: int, contract: date, **lease_fields: object) -> tuple[R
         improvements_before=Decimal(0),
         improvements_in=Decimal(0),
         withholding=(),
-        pendiente=Decimal(0),
+        pendientes={},
     )
     net = renta_inmueble_net(inputs, terms=_terms(year), concepts=_concepts(year))
     amortizacion = _cents(Decimal("81600.00") * _RATE_BUILDING * days / _days(first, last))
