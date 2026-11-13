@@ -14,7 +14,9 @@ from __future__ import annotations
 import os
 import re
 from collections.abc import Mapping
+from dataclasses import dataclass
 from datetime import UTC, date, datetime
+from decimal import Decimal, InvalidOperation
 from functools import cache
 from pathlib import Path
 
@@ -95,6 +97,7 @@ from .rows import (
     PlannedRow,
     Stage,
     TableRow,
+    canonical_figures,
     in_force,
     is_unsupported,
     not_owed_stage,
@@ -163,7 +166,7 @@ def _sources(modelo: str) -> frozenset[str]:
     )
 
 
-def _plan(persona_id: str, horizon: int) -> tuple[list[PlannedRow], frozenset[tuple[str, str, int, str]]]:
+def plan_rows(persona_id: str, horizon: int) -> tuple[list[PlannedRow], frozenset[tuple[str, str, int, str]]]:
     """The rows the replay runs, in chain order, and the keys of the selected rows it writes."""
     rows = owed_rows(_persona_at(persona_id, horizon), horizon, _envelope())
     selected = select(rows, modelos=_listed(MODELOS_ENV), years=tuple(int(year) for year in _listed(YEARS_ENV)))
@@ -177,7 +180,7 @@ def _cases() -> list[pytest.ParameterSet]:
         for persona_id in persona_ids()
         if not wanted or persona_id in wanted
         for horizon in replay_horizons(_envelope())
-        if _plan(persona_id, horizon)[1]
+        if plan_rows(persona_id, horizon)[1]
     ]
 
 
@@ -195,7 +198,7 @@ def _short(error: BaseException) -> str:
     return (head if detail == "no detail" else f"{head} :: {detail}")[:_REASON_LIMIT]
 
 
-def _values(persona: Persona, envelope: YearEnvelope, plan: PlannedRow) -> list[ExpectedValue]:
+def stated_values(persona: Persona, envelope: YearEnvelope, plan: PlannedRow) -> list[ExpectedValue]:
     """The persona's stated values in force for the planned return, under the replay's envelope.
 
     A value stated per counterparty is taken only for a return whose type-2 record is compared.
@@ -254,23 +257,25 @@ def _run_return(
     instead of being verified, exported and filed.
     """
     world = materialised.world
-    if filing_key(plan.modelo, plan.year, plan.period) in materialised.filings:
-        return TableRow.from_plan(plan, Stage.HISTORY_FILED, verify=Stage.HISTORY_FILED)
-    stating = next((value for value in values if value.refusal is not None), None)
+    prepared = prepare_return(materialised, plan, values)
+    if isinstance(prepared, TableRow):
+        return prepared
+    work_unit_id = prepared.work_unit_id
+    stating = _stated_refusal(values)
     at_calculate = _refusal_at_calculate(stating)
     try:
-        work_unit_id = _create(world, plan)
-        if isinstance(work_unit_id, TableRow):
-            return work_unit_id
-        calculated = _calculate(materialised, plan, work_unit_id)
+        calculated = _calculate(materialised, plan, prepared)
     except PersonaMaterialisationError as error:
         return _refused(plan, at_calculate, error)
     rows = row_figures(world, calculated)
+    figures = _figures(calculated, rows)
     calculate, reasons = _compare(plan, values, at_calculate, calculated, rows)
     if not plan.owed:
         verify, not_owed_reason = _not_owed(materialised, plan)
         reasons += [not_owed_reason] if not_owed_reason else []
-        return TableRow.from_plan(plan, calculate, verify=verify, reason=" | ".join(reasons)[:_REASON_LIMIT])
+        return TableRow.from_plan(
+            plan, calculate, verify=verify, reason=" | ".join(reasons)[:_REASON_LIMIT], figures=figures
+        )
     revision_id = calculated.calculation_revision_id
     verify, verify_reason = _verify(world, work_unit_id, revision_id)
     export, export_detail, export_reason = _export(world, plan, values, exports, work_unit_id, revision_id)
@@ -285,7 +290,62 @@ def _run_return(
         export=export,
         reason=" | ".join(reasons)[:_REASON_LIMIT],
         export_detail=export_detail,
+        figures=figures,
     )
+
+
+@dataclass(frozen=True, slots=True)
+class PreparedReturn:
+    """A return the table has created and readied for its first calculation."""
+
+    work_unit_id: str
+    request: ModeloWorkCalculateRequest
+    """The calculate request the table submits, carrying a Modelo 303's joint-return and annual-summary evidence."""
+
+
+def prepare_return(
+    materialised: MaterialisedPersona, plan: PlannedRow, values: list[ExpectedValue]
+) -> PreparedReturn | TableRow:
+    """Create one return and state everything the table states before its first calculation.
+
+    The result is the world the calculate operation meets, or the row of a return that stopped first: one the
+    history already filed, one whose create or whose statements were refused, or one whose refusal the persona
+    states. A caller that does not calculate takes the prepared return and its request from here.
+    """
+    world = materialised.world
+    if filing_key(plan.modelo, plan.year, plan.period) in materialised.filings:
+        return TableRow.from_plan(plan, Stage.HISTORY_FILED, verify=Stage.HISTORY_FILED)
+    at_calculate = _refusal_at_calculate(_stated_refusal(values))
+    try:
+        work_unit_id = _create(world, plan)
+        if isinstance(work_unit_id, TableRow):
+            return work_unit_id
+        request = _calculation_request(materialised, plan, work_unit_id)
+    except PersonaMaterialisationError as error:
+        return _refused(plan, at_calculate, error)
+    return PreparedReturn(work_unit_id=work_unit_id, request=request)
+
+
+def _stated_refusal(values: list[ExpectedValue]) -> ExpectedValue | None:
+    """The first stated value that names a refusal, if the persona states one for the return."""
+    return next((value for value in values if value.refusal is not None), None)
+
+
+def _figures(calculated: ModeloWorkCalculatePublicResultV3, rows: Mapping[str, str]) -> tuple[tuple[str, str], ...]:
+    """The non-zero casilla values the comparison reads: the public scalars with each single row's figure merged in."""
+    scalars = {item.key: restore_scalar(item.value) for item in calculated.calculation.casilla_values}
+    merged, _conflicts = merge_row_figures(scalars, rows)
+    return canonical_figures(
+        {key: _row_amount(value) if rows.get(key) is value else value for key, value in merged.items()}
+    )
+
+
+def _row_amount(figure: object) -> object:
+    """A row figure as the number it prints, so it is canonical text like a public scalar's amount."""
+    try:
+        return Decimal(str(figure))
+    except InvalidOperation:
+        return figure
 
 
 def _refusal_at_calculate(stating: ExpectedValue | None) -> str | None:
@@ -342,15 +402,15 @@ def _create(world: PersonaWorld, plan: PlannedRow) -> str | TableRow:
     return outcome.unit.work_unit_id
 
 
-def _calculate(
+def _calculation_request(
     materialised: MaterialisedPersona, plan: PlannedRow, work_unit_id: str
-) -> ModeloWorkCalculatePublicResultV3:
-    """Calculate the work unit; a Modelo 303 carries its joint-return and annual-summary evidence.
+) -> ModeloWorkCalculateRequest:
+    """State what the calculation of a return needs beforehand, and return the request that calculates it.
 
     A Modelo 100 first states the persona's pending carries of earlier ejercicios that no earlier return in the
     profile supplies, through the operations the calculation's refusal names. A return the operator enters nothing on
     first states the prior figures the persona attests for it, since its calculation refuses while a required source
-    return is neither held nor stated.
+    return is neither held nor stated. A Modelo 303 carries its joint-return and annual-summary evidence.
     """
     world = materialised.world
     if plan.modelo == "100":
@@ -366,23 +426,33 @@ def _calculate(
         evidence = _m303_evidence(
             world, work_unit_id=work_unit_id, year=plan.year, period=plan.period, last_period=last_period
         )
-    request = ModeloWorkCalculateRequest(
+    return ModeloWorkCalculateRequest(
         work_unit_id=work_unit_id, actor=PERSONA_ACTOR, ordinary_m303_filing_evidence=evidence
     )
+
+
+def _calculate(
+    materialised: MaterialisedPersona, plan: PlannedRow, prepared: PreparedReturn
+) -> ModeloWorkCalculatePublicResultV3:
+    """Calculate the prepared return.
+
+    A let property's row stands with its net yield withheld until its pending carry is stated; the statement
+    is kept on the revision, so calculating again reads it.
+    """
+    world = materialised.world
+    work_unit_id = prepared.work_unit_id
     calculated = run_operation(
         world,
         MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
-        request,
+        prepared.request,
         ModeloWorkCalculatePublicResultV3,
         subject=work_unit_id,
     )
-    # A let property's row stands with its net yield withheld until its pending carry is stated; the statement
-    # is kept on the revision, so calculating again reads it.
     if plan.modelo == "100" and attest_pending_rental_carries(materialised.persona, world, work_unit_id, plan.year):
         calculated = run_operation(
             world,
             MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
-            request,
+            prepared.request,
             ModeloWorkCalculatePublicResultV3,
             subject=work_unit_id,
         )
@@ -648,7 +718,7 @@ def _owed_periods(persona: Persona, plan: PlannedRow) -> set[str]:
     return periods or {plan.period}
 
 
-def _scope(persona: Persona) -> ReplayScope:
+def replay_scope(persona: Persona) -> ReplayScope:
     """The records scope when the persona holds a return history, else the full ledger.
 
     The table takes every return of the history through calculate, verify,
@@ -664,13 +734,15 @@ def _scope(persona: Persona) -> ReplayScope:
 def test_persona_returns(tmp_path: Path, persona_id: str, horizon: int) -> None:
     """Replay one persona under one horizon and append a row for every return it owes there."""
     out = Path(os.environ[OUT_ENV])
-    plans, emitted = _plan(persona_id, horizon)
+    plans, emitted = plan_rows(persona_id, horizon)
     persona = _persona(persona_id)
     try:
-        with materialised_persona(persona_id, tmp_path, _scope(persona), reuse=True, horizon=horizon) as materialised:
+        with materialised_persona(
+            persona_id, tmp_path, replay_scope(persona), reuse=True, horizon=horizon
+        ) as materialised:
             envelope = materialised.world.envelope
             for plan in plans:
-                values = _values(materialised.persona, envelope, plan)
+                values = stated_values(materialised.persona, envelope, plan)
                 row = _run_return(materialised, plan, values, tmp_path / "exports")
                 if plan.key in emitted:
                     write_rows(out, [row])
