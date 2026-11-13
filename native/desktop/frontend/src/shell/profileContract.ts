@@ -68,6 +68,7 @@ export type ProfileRecordAction = {
   operation_definition_id: string;
   label_words: string;
   label_words_language: OutputLanguage;
+  field_key: string | null;
 };
 
 /**
@@ -184,7 +185,61 @@ export type ProfileRecordMemberItem = {
   kind_words: string;
   kind_words_language: OutputLanguage;
   actions: ProfileRecordAction[];
+  reduction: ProfileRecordReduction | null;
   contribution: PrevisionSocialRowProjection | null;
+};
+
+/**
+ * The fact that keeps a reduction from being derived and the door that states
+ * it.
+ */
+export type ProfileRecordMissingFact = {
+  field_key: string;
+  fact_words: string;
+  fact_words_language: OutputLanguage;
+  way_out: ProfileRecordAction;
+};
+
+/**
+ * The art. 23.2 LIRPF reduction of one lease: the facts it reads and its
+ * outcome per ejercicio.
+ */
+export type ProfileRecordReduction = {
+  title_words: string;
+  title_words_language: OutputLanguage;
+  facts: ProfileRecordReductionFact[];
+  years: ProfileRecordReductionYear[];
+};
+
+/**
+ * One stored fact of a lease as the reduction's derivation read it.
+ */
+export type ProfileRecordReductionFact = {
+  field_key: string;
+  fact_words: string;
+  fact_words_language: OutputLanguage;
+  stated: boolean;
+};
+
+/**
+ * What the art. 23.2 LIRPF reduction does to one lease in one ejercicio.
+ */
+export type ProfileRecordReductionOutcome =
+  "applies" | "does_not_apply" | "not_determinable";
+
+/**
+ * The reduction of one lease for one ejercicio, or why none can be stated.
+ */
+export type ProfileRecordReductionYear = {
+  ejercicio: number | null;
+  outcome: ProfileRecordReductionOutcome;
+  tier: string | null;
+  tier_words: string | null;
+  tier_words_language: OutputLanguage | null;
+  refusal_code: RentalReductionRefusal | null;
+  outcome_words: string;
+  outcome_words_language: OutputLanguage;
+  missing_fact: ProfileRecordMissingFact | null;
 };
 
 /**
@@ -193,6 +248,18 @@ export type ProfileRecordMemberItem = {
 export type PublicDecimal = {
   decimal: string;
 };
+
+/**
+ * Why the reduction of a profile's rental income cannot be derived.
+ */
+export type RentalReductionRefusal =
+  | "no_lease"
+  | "several_leases"
+  | "lease_unreadable"
+  | "uso_vivienda_unstated"
+  | "zona_tensionada_unstated"
+  | "lau_17_6_unstated"
+  | "mixed_tenant_ages";
 
 /**
  * Supported transaction directions.

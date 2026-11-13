@@ -79,6 +79,8 @@ DESKTOP_PROFILE_INTERFACE_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.profile.record_groups.linked_rows_none",
         "desktop.profile.record_groups.linked_rows_shown",
         "desktop.profile.record_groups.more",
+        "desktop.profile.record_groups.reduction.fact_stated",
+        "desktop.profile.record_groups.reduction.fact_not_stated",
         "desktop.profile.open_from_form",
         "desktop.profile.add",
         "desktop.profile.maximize",

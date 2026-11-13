@@ -4904,6 +4904,9 @@ desktop:
       read_again: Read again
       read_failed: The related records could not be read.
       reading: Reading the related records…
+      reduction:
+        fact_not_stated: Not stated
+        fact_stated: Stated
       title: Related records
     refresh: Refresh
     refused: These changes could not be saved. Check the field guidance and refresh

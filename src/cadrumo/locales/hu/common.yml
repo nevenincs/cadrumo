@@ -4976,6 +4976,9 @@ desktop:
       read_again: Újraolvasás
       read_failed: A kapcsolódó rekordokat nem sikerült beolvasni.
       reading: A kapcsolódó rekordok beolvasása…
+      reduction:
+        fact_not_stated: Nincs megadva
+        fact_stated: Megadva
       title: Kapcsolódó rekordok
     refresh: Frissítés
     refused: Nem sikerült menteni a módosításokat. Ellenőrizd a mezők útmutatóját,

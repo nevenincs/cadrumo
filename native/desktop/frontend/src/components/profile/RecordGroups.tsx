@@ -7,6 +7,9 @@ import { formatAmount } from "@/shared/numbers";
 import type {
   ProfileRecordAction,
   ProfileRecordLedgerRowItem,
+  ProfileRecordMemberItem,
+  ProfileRecordReduction,
+  ProfileRecordReductionYear,
 } from "../../shell/profileContract";
 import type {
   RecordGroupBlock,
@@ -22,11 +25,16 @@ import { directionLabel } from "../ledger/movements/movementWords";
 // it indented under the row their served `parent_ref` names with their served
 // relation words, and the ledger rows linked to it with the served words of
 // their expense concept. Every kind is drawn the same way, so the element
-// takes any family of related rows. Every door is a served registered
-// operation with its served label, handed to the owner; a refusal the owner
+// takes any family of related rows. A member that states a reduction draws it
+// as served: its title, each fact with its served words and whether it is
+// stated, and each year's outcome and tier words, with the fact that keeps a
+// year from being determined and the door that states it. Every door is a
+// served registered operation with its served label, handed to the owner with
+// the field it opens on (none opens the row as a whole); a refusal the owner
 // holds is drawn on the row it names through the window's one refusal notice.
 
-/** A door chosen on a stored row: the row's identity and the served door. */
+/** A door chosen on a stored row: the row's identity and the served door,
+ * whose `field_key` names the field it opens on, or none for the whole row. */
 export type RecordDoorChoice = {
   /** The row's identity, `section.row`, as the read serves it. */
   rowRef: string;
@@ -74,12 +82,13 @@ function Doors({
     <span className="flex shrink-0 flex-wrap gap-1">
       {actions.map((action) => (
         <Button
-          key={action.door}
+          key={`${action.door}:${action.field_key ?? ""}`}
           size="xs"
           variant="ghost"
           lang={action.label_words_language}
           disabled={props.writable === false}
           data-record-door={action.operation_definition_id}
+          data-record-door-field={action.field_key ?? ""}
           onClick={() => onDoor({ rowRef, sectionKey, rowKey, action })}
         >
           <Icon name={action.door === "remove" ? "trash" : "edit"} size="xs" />
@@ -104,6 +113,134 @@ function Refused({
       refusal={refusal.refusal}
       onAction={(intent) => props.onRefusalAction?.(intent)}
     />
+  );
+}
+
+function ReductionYear({
+  year,
+  member,
+  props,
+}: {
+  year: ProfileRecordReductionYear;
+  member: ProfileRecordMemberItem;
+  props: RecordGroupsProps;
+}) {
+  const missing = year.missing_fact;
+  return (
+    <li
+      data-record-reduction-year={year.ejercicio ?? ""}
+      data-record-reduction-outcome={year.outcome}
+      className="flex flex-col gap-1"
+    >
+      <div className="flex flex-wrap items-baseline gap-x-2 text-sm">
+        {year.ejercicio !== null && (
+          <span className="font-medium tabular-nums text-foreground">
+            {year.ejercicio}
+          </span>
+        )}
+        <span
+          lang={year.outcome_words_language}
+          className="min-w-0 break-words text-foreground"
+        >
+          {year.outcome_words}
+        </span>
+        {year.tier_words !== null && (
+          <span
+            data-record-reduction-tier=""
+            lang={year.tier_words_language ?? undefined}
+            className="text-muted-foreground"
+          >
+            {year.tier_words}
+          </span>
+        )}
+      </div>
+      {missing !== null && (
+        <div
+          data-record-reduction-missing={missing.field_key}
+          className="flex items-start gap-3"
+        >
+          <span
+            lang={missing.fact_words_language}
+            className="min-w-0 flex-1 break-words text-sm text-warning"
+          >
+            {missing.fact_words}
+          </span>
+          <Doors
+            actions={[missing.way_out]}
+            rowRef={member.row_ref}
+            sectionKey={member.section_key}
+            rowKey={member.row_key}
+            props={props}
+          />
+        </div>
+      )}
+    </li>
+  );
+}
+
+function Reduction({
+  reduction,
+  member,
+  props,
+}: {
+  reduction: ProfileRecordReduction;
+  member: ProfileRecordMemberItem;
+  props: RecordGroupsProps;
+}) {
+  const t = useStrings();
+  const heading = useId();
+  return (
+    <section
+      aria-labelledby={heading}
+      data-record-reduction=""
+      className="flex flex-col gap-1.5 border-t border-border pt-2"
+    >
+      <h5
+        id={heading}
+        lang={reduction.title_words_language}
+        className="text-sm font-medium text-foreground"
+      >
+        {reduction.title_words}
+      </h5>
+      {reduction.facts.length > 0 && (
+        <ul className="flex flex-col gap-0.5">
+          {reduction.facts.map((fact) => (
+            <li
+              key={fact.field_key}
+              data-record-reduction-fact={fact.field_key}
+              data-stated={fact.stated}
+              className="flex flex-wrap items-baseline gap-x-2 text-sm"
+            >
+              <span
+                lang={fact.fact_words_language}
+                className="min-w-0 break-words text-foreground"
+              >
+                {fact.fact_words}
+              </span>
+              <span className="text-muted-foreground">
+                {t(
+                  fact.stated
+                    ? "desktop.profile.record_groups.reduction.fact_stated"
+                    : "desktop.profile.record_groups.reduction.fact_not_stated",
+                )}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+      {reduction.years.length > 0 && (
+        <ul className="flex flex-col gap-1.5">
+          {reduction.years.map((year, index) => (
+            <ReductionYear
+              key={`${year.ejercicio ?? ""}:${index}`}
+              year={year}
+              member={member}
+              props={props}
+            />
+          ))}
+        </ul>
+      )}
+    </section>
   );
 }
 
@@ -256,6 +393,13 @@ function GroupCard({
                   props={props}
                 />
               </div>
+              {item.reduction !== null && (
+                <Reduction
+                  reduction={item.reduction}
+                  member={item}
+                  props={props}
+                />
+              )}
               <Refused rowRef={item.row_ref} props={props} />
             </li>
           ))}

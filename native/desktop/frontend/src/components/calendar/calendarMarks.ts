@@ -1,14 +1,11 @@
 import type { IconName } from "@/components/ui/icon";
 import { closeUnknown } from "@/shell/calendarEntries";
 import type { Translate } from "@/shell/strings";
-import type {
-  CalendarEntry,
-  CalendarEvent,
-  CalendarUserState,
-} from "@/shell/views";
+import type { OverviewPeriodState } from "@/shell/calendarContract";
+import type { CalendarEntry, CalendarEvent } from "@/shell/views";
 
 export const STATE_TONE: Record<
-  CalendarUserState,
+  OverviewPeriodState,
   "neutral" | "danger" | "success" | "warning"
 > = { due: "neutral", late: "danger", filed: "success", unknown: "warning" };
 
@@ -27,7 +24,7 @@ export const EVENT_MARK: Record<CalendarEvent["event_type"], string> = {
  * it is drawn, so that it is never told by colour alone. What is simply due
  * carries none: it is the reading the others are set against.
  */
-export const STATE_MARK: Record<CalendarUserState, IconName | null> = {
+export const STATE_MARK: Record<OverviewPeriodState, IconName | null> = {
   due: null,
   late: "alert",
   filed: "check",

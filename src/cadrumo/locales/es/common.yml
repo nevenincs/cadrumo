@@ -5002,6 +5002,9 @@ desktop:
       read_again: Volver a leer
       read_failed: No se han podido leer los registros relacionados.
       reading: Leyendo los registros relacionados…
+      reduction:
+        fact_not_stated: Sin indicar
+        fact_stated: Indicado
       title: Registros relacionados
     refresh: Actualizar
     refused: No se han podido guardar estos cambios. Revisa las indicaciones de los

@@ -4996,6 +4996,9 @@ desktop:
       read_again: Torna a llegir
       read_failed: No s'han pogut llegir els registres relacionats.
       reading: S'estan llegint els registres relacionats…
+      reduction:
+        fact_not_stated: Sense indicar
+        fact_stated: Indicat
       title: Registres relacionats
     refresh: Actualitza
     refused: No s’han pogut desar aquests canvis. Revisa les indicacions dels camps

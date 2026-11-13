@@ -2,7 +2,11 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 import {
+  FIXTURE_END_FIELD,
   FIXTURE_GROUP_KINDS,
+  FIXTURE_MISSING_FIELD,
+  FIXTURE_REDUCTION_OUTCOMES,
+  fixtureOperationId,
   fixtureRecordGroupsPage,
   REMOVAL_REFUSED,
   type RecordGroupScenario,
@@ -13,6 +17,7 @@ import {
   type RecordGroupStream,
 } from "../../shell/profileRecordGroups";
 import {
+  type RecordDoorChoice,
   RecordGroups,
   type RecordGroupsState,
   type RecordRefusal,
@@ -47,6 +52,7 @@ function Owner({
     state === "ready" ? firstPages(scenario) : [],
   );
   const [refusal, setRefusal] = useState<RecordRefusal | null>(null);
+  const [chosen, setChosen] = useState<RecordDoorChoice | null>(null);
   const more = () =>
     setStreams((now) => {
       const at = now.findIndex((stream) => stream.nextCursor !== null);
@@ -67,12 +73,20 @@ function Owner({
         onMore={more}
         onReadAgain={() => setStreams(firstPages(scenario))}
         onDoor={(choice) => {
+          setChosen(choice);
           if (refuseRemoval && choice.action.door === "remove")
             setRefusal({ rowRef: choice.rowRef, refusal: REMOVAL_REFUSED });
         }}
         refusal={refusal}
         onRefusalAction={fn()}
       />
+      {chosen !== null && (
+        <output
+          data-chosen-row={chosen.rowRef}
+          data-chosen-operation={chosen.action.operation_definition_id}
+          data-chosen-field={chosen.action.field_key ?? ""}
+        />
+      )}
     </div>
   );
 }
@@ -136,7 +150,7 @@ export const OneGroup: Story = {
     expect(group.querySelectorAll("[data-record-concept]")).toHaveLength(1);
     expect(
       group.querySelectorAll(
-        '[data-record-door="user-profile.repeatable-row-update"]',
+        `[data-record-door="${fixtureOperationId("edit")}"]`,
       ),
     ).toHaveLength(4);
   },
@@ -213,7 +227,7 @@ export const RemovalRefused: Story = {
       '[data-record-member="fixture_head.1"]',
     )!;
     const remove = member.querySelector(
-      '[data-record-door="user-profile.repeatable-row-remove"]',
+      `[data-record-door="${fixtureOperationId("remove")}"]`,
     ) as HTMLElement;
     await userEvent.click(remove);
     await waitFor(() =>
@@ -234,5 +248,122 @@ export const Locked: Story = {
     const doors = canvasElement.querySelectorAll("[data-record-door]");
     expect(doors.length).toBeGreaterThan(0);
     doors.forEach((door) => expect(door).toBeDisabled());
+  },
+};
+
+const reductionOf = (root: ParentNode, row: string): HTMLElement =>
+  root.querySelector(`[data-record-member="${row}"] [data-record-reduction]`)!;
+
+export const ReductionDetermined: Story = {
+  name: "Reduction: each year's served outcome and tier words, each fact's mark",
+  render: () => <Owner scenario="reductions" />,
+  play: async ({ canvasElement }) => {
+    const [applies, doesNotApply] = FIXTURE_REDUCTION_OUTCOMES;
+    expect(
+      canvasElement.querySelectorAll("[data-record-reduction]"),
+    ).toHaveLength(3);
+    const lease = reductionOf(canvasElement, "fixture_lease.0");
+    expect(lease.querySelector("h5")).toHaveTextContent(
+      "Fixture reduction of the lease",
+    );
+    expect(lease.querySelectorAll("[data-record-reduction-year]")).toHaveLength(
+      2,
+    );
+    expect(
+      lease.querySelector(`[data-record-reduction-outcome="${applies}"]`),
+    ).not.toBe(null);
+    expect(
+      lease.querySelector(`[data-record-reduction-outcome="${doesNotApply}"]`),
+    ).not.toBe(null);
+    expect(lease.querySelectorAll("[data-record-reduction-tier]")).toHaveLength(
+      1,
+    );
+    expect(
+      lease.querySelectorAll(
+        '[data-record-reduction-fact][data-stated="true"]',
+      ),
+    ).toHaveLength(2);
+    expect(lease.querySelector("[data-record-reduction-missing]")).toBe(null);
+  },
+};
+
+export const ReductionNotDeterminable: Story = {
+  name: "Reduction not determinable: the missing fact and its way out",
+  render: () => <Owner scenario="reductions" />,
+  play: async ({ canvasElement }) => {
+    const lease = reductionOf(canvasElement, "fixture_lease.1");
+    expect(
+      lease.querySelectorAll(
+        '[data-record-reduction-fact][data-stated="false"]',
+      ),
+    ).toHaveLength(1);
+    const missing = lease.querySelector(
+      `[data-record-reduction-missing="${FIXTURE_MISSING_FIELD}"]`,
+    )!;
+    expect(missing).toHaveTextContent("Fixture fact the lease does not state");
+    expect(missing.querySelector("[data-record-door]")).toHaveTextContent(
+      "Fixture state lease",
+    );
+    expect(lease.querySelector("[data-record-reduction-tier]")).toBe(null);
+  },
+};
+
+export const WayOutSubmitsItsField: Story = {
+  name: "Way out: the owner receives the served door with the field it opens",
+  render: () => <Owner scenario="reductions" />,
+  play: async ({ canvasElement }) => {
+    await userEvent.click(
+      canvasElement.querySelector(
+        `[data-record-reduction-missing="${FIXTURE_MISSING_FIELD}"] [data-record-door]`,
+      ) as HTMLElement,
+    );
+    await waitFor(() =>
+      expect(canvasElement.querySelector("[data-chosen-row]")).not.toBe(null),
+    );
+    const chosen = canvasElement.querySelector("[data-chosen-row]")!;
+    expect(chosen).toHaveAttribute("data-chosen-field", FIXTURE_MISSING_FIELD);
+    expect(chosen).toHaveAttribute("data-chosen-row", "fixture_lease.1");
+    expect(chosen).toHaveAttribute(
+      "data-chosen-operation",
+      fixtureOperationId("edit"),
+    );
+  },
+};
+
+export const OpenLeaseEndDoor: Story = {
+  name: "Open lease: its served end door beside the row's own doors",
+  render: () => <Owner scenario="reductions" />,
+  play: async ({ canvasElement }) => {
+    const open = canvasElement.querySelector(
+      '[data-record-member="fixture_lease.2"]',
+    )!;
+    const end = open.querySelector(
+      `[data-record-door-field="${FIXTURE_END_FIELD}"]`,
+    ) as HTMLElement;
+    expect(end).toHaveTextContent("Fixture end lease");
+    const closed = canvasElement.querySelector(
+      '[data-record-member="fixture_lease.0"]',
+    )!;
+    expect(
+      closed.querySelector(`[data-record-door-field="${FIXTURE_END_FIELD}"]`),
+    ).toBe(null);
+    await userEvent.click(end);
+    await waitFor(() =>
+      expect(
+        canvasElement.querySelector("[data-chosen-field]"),
+      ).toHaveAttribute("data-chosen-field", FIXTURE_END_FIELD),
+    );
+  },
+};
+
+export const ReductionLocked: Story = {
+  name: "Reduction locked: the way out and end doors are not usable",
+  render: () => <Owner scenario="reductions" writable={false} />,
+  play: async ({ canvasElement }) => {
+    const fielded = canvasElement.querySelectorAll(
+      '[data-record-door-field]:not([data-record-door-field=""])',
+    );
+    expect(fielded.length).toBeGreaterThan(0);
+    fielded.forEach((door) => expect(door).toBeDisabled());
   },
 };
