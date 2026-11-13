@@ -153,6 +153,10 @@ def _report_session(
             "activities.description": "consulting",
             "censo.activity_start_date": "2026-01-01",
             "withholding.colegio_concertado": "false",
+            # Modelo 111 files quarterly only for a filer stated as neither a gran empresa nor a public
+            # administration above the budget threshold; an unstated filer has no quarterly window.
+            "censo.large_company": "false",
+            "censo.public_administration_budget_gt_6000000": "false",
             # The Modelo 111 report seeds the retención withheld from a professional's invoice,
             # and Modelo 111 applies only to a payer of income subject to retención.
             "withholding.pays_professionals_with_retencion": "true",
