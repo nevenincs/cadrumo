@@ -2,10 +2,8 @@ import { useId } from "react";
 import { cn } from "@/components/ui/cn";
 import { Icon } from "@/components/ui/icon";
 import { useTableView, type ViewColumn } from "@/components/ui/table-view";
-import type {
-  PublicModeloFormContextFieldBlock,
-  PublicModeloFormRepeatingBlock,
-} from "../../../shell/modeloContract/modeloWorkForm";
+import type { PublicModeloFormContextFieldBlock } from "../../../shell/modeloContract/modeloWorkForm";
+import type { PublicModeloFormRepeatingBlock } from "../../../shell/modeloContract/modeloWorkFormPart2";
 import { useStrings } from "../../../shell/strings";
 import { calm, Label } from "./FieldRow";
 import { BoxNumber } from "./BoxNumber";

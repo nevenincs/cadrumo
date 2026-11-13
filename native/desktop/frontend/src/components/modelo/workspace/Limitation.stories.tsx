@@ -86,6 +86,8 @@ export const LimitationInCheck: Story = {
         status: null,
         words: "Synthetic verdict.",
         unapplied_words: null,
+        checked_words: null,
+        checked_resolves: false,
       }}
       lines={[line("check", CHECK), line("limitation", LIMIT)]}
       stagedCount={0}
