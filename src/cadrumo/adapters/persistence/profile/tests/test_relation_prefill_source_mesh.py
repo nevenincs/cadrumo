@@ -27,6 +27,7 @@ from .....application.calculations.relation_prefill import (
     scoped_relation_source_requirements,
 )
 from .....core.aggregation import BindingSourceKind
+from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.period import Period
 from .....domain.calculations.registry.authority import bundled_indexed_authority
@@ -57,8 +58,10 @@ _M202_2023_2024_PRIOR_PAYMENTS_BINDING = "modelo-202-pagos-fraccionados-anterior
 
 
 @cache
-def _snapshot(modelo: str, filing_year: int, period: str) -> RegistrySnapshot:
-    return published_authority_operation().snapshot(modelo, filing_year=filing_year, period=period)
+def _snapshot(
+    modelo: str, filing_year: int, period: str, grade: RegistryAuthorityGrade = RegistryAuthorityGrade.FILING
+) -> RegistrySnapshot:
+    return published_authority_operation().snapshot(modelo, filing_year=filing_year, period=period, grade=grade)
 
 
 def _modelo_115_observations() -> tuple[RegistryModeloObservation, ...]:
@@ -523,31 +526,39 @@ def test_orphaned_non_formula_binding_surfaces_advisory_diagnostic(tmp_path: Pat
     )
 
 
-# The newest Modelo 190 annual resumen the registry authors, and the projecting
-# horizon that carries it forward; both exercises read the same Modelo 111 relations.
+# The newest Modelo 714 edition the registry authors, and the projecting horizon that
+# carries it forward; both exercises read the same Modelo 100 annual relations. A
+# projected year reaches calculation grade at most, so both are read at that grade.
 _SUPPORT = PublishedGovernedFactSource().supported_filing_years()
-_ANNUAL_RESUMEN_YEARS = (newest_authored_edition("190"), _SUPPORT.horizon)
+_M714_YEARS = (newest_authored_edition("714"), _SUPPORT.horizon)
 
 
-@pytest.mark.parametrize("filing_year", _ANNUAL_RESUMEN_YEARS)
-def test_modelo_190_empty_store_collapses_absent_m111_source_to_one_diagnostic(
+@pytest.mark.parametrize("filing_year", _M714_YEARS)
+def test_modelo_714_empty_store_collapses_absent_m100_source_to_one_diagnostic(
     tmp_path: Path, filing_year: int
 ) -> None:
-    """Ten Modelo 190 relations reading the same absent Modelo 111 quarter fold to one advisory.
+    """Every Modelo 714 formula-fed relation reading the same absent Modelo 100 return folds to one advisory.
 
-    The real-corpus measurement the grouping change was built against: an
-    empty local store leaves every one of the annual resumen's monetary
-    relations unresolved, each reading a different Modelo 111 casilla (02,
-    05, 08, ..., 28) off the SAME absent 1T-4T filing. Un-grouped, that is
-    ten diagnostics naming one root cause; grouped by
-    ``(source_modelo, filing_year, periods)``, it must be exactly one.
+    An empty local store leaves each of the patrimonio return's Modelo 100
+    relations (the general and savings tax bases and the two gross cuotas)
+    unresolved, all reading the SAME absent annual Modelo 100 filing. Un-grouped,
+    that is one diagnostic per relation naming one root cause; grouped by
+    ``(source_modelo, filing_year, periods)``, it must be exactly one, whose
+    ``relation_ids`` name every one of them.
     """
     with (
         bundled_indexed_authority().operation() as _authority_operation_for_test,
         isolated_runtime_profile(tmp_path=tmp_path),
     ):
         repository = CalculationObservationRepository()  # empty store — nothing to resolve
-        snapshot = _snapshot("190", filing_year, "0A")
+        snapshot = _snapshot("714", filing_year, "0A", RegistryAuthorityGrade.CALCULATION)
+        consumption_index = relation_consumption_index(snapshot.revision)
+        m100_formula_fed = {
+            binding.id
+            for binding, provider in relation_prefill_bindings_for_period(snapshot.revision, period="0A")
+            if provider.source_modelo == "100"
+            and "formula_binding" in relation_consumption_channels(binding.id, consumption_index)
+        }
         source_resolution = RelationPrefillSourceResolver(
             repository=repository,
             profile_read_ports=empty_profile_read_ports(),
@@ -556,27 +567,27 @@ def test_modelo_190_empty_store_collapses_absent_m111_source_to_one_diagnostic(
         ).resolve(
             CalculationSourceContext(
                 bucket_id="operator",
-                modelo="190",
+                modelo="714",
                 filing_year=filing_year,
                 period=Period.from_year_and_code(filing_year, "0A"),
                 revision=snapshot.revision,
             ),
         )
 
-    m111_diagnostics = [
+    assert len(m100_formula_fed) >= 2, "the fixture needs at least two relations to show a fold"
+    m100_diagnostics = [
         diagnostic
         for diagnostic in source_resolution.diagnostics
-        if diagnostic.message.startswith(f"modelo 111 {filing_year}")
+        if diagnostic.message.startswith(f"modelo 100 {filing_year}")
     ]
-    assert len(m111_diagnostics) == 1, (
-        "one absent Modelo 111 source filing must fold to one diagnostic, not one per relation "
-        f"(got {len(m111_diagnostics)} diagnostics naming it)"
+    assert len(m100_diagnostics) == 1, (
+        "one absent Modelo 100 source filing must fold to one diagnostic, not one per relation "
+        f"(got {len(m100_diagnostics)} diagnostics naming it)"
     )
-    diagnostic = m111_diagnostics[0]
-    # The row's own measurement: ten annual-summary relations share this absent
-    # source. The structured field carries every one, machine-readable, whatever
-    # the length-capped prose message elides.
-    assert len(diagnostic.relation_ids) >= 9
+    diagnostic = m100_diagnostics[0]
+    # The structured field carries every relation sharing the absent source,
+    # machine-readable, whatever the length-capped prose message elides.
+    assert set(diagnostic.relation_ids) == m100_formula_fed
     assert set(diagnostic.relation_ids) <= set(source_resolution.unresolved_relation_ids)
 
 
