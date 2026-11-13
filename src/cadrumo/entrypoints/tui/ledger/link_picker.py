@@ -7,8 +7,10 @@ catalogue key. A picker offers exactly those choices and yields the served value
 chosen, never a position, and the operation that takes it refuses one that does
 not apply. Left unchosen, a picker sends nothing, so the row keeps what it holds.
 
-The ledger list does not serve a row's current link, so a picker starts
-unchosen rather than guessing what the row holds.
+A row's transaction read serves the links it holds, so a picker for an existing
+row starts at the choice that read names and shows that choice's served words; a
+link the options do not offer, or a row whose read fails, starts a picker unchosen
+rather than guessing what the row holds.
 """
 
 from __future__ import annotations
@@ -27,6 +29,7 @@ from ....application.ledger.entry_options_operation import (
     LedgerEntryOptionProjection,
     LedgerEntryOptionsProjection,
 )
+from ....application.ledger.transaction_projection import LedgerTransactionProjection
 from ....core.i18n.render import tr
 from ..components.language import localized
 from ..components.theme import tokenised
@@ -44,6 +47,7 @@ _LABEL_KEY_PREFIX: Final = "tui.ledger.link_picker.field."
 _NONE_SERVED_LOCALE_KEY: Final = "tui.ledger.link_picker.none_served"
 _UNCHANGED_LOCALE_KEY: Final = "tui.ledger.link_picker.unchanged"
 _UNAVAILABLE_LOCALE_KEY: Final = "tui.ledger.link_picker.unavailable"
+_HELD_UNAVAILABLE_LOCALE_KEY: Final = "tui.ledger.link_picker.held_unavailable"
 
 
 class LedgerLinkOptionsDoorV1(Protocol):
@@ -52,6 +56,19 @@ class LedgerLinkOptionsDoorV1(Protocol):
     async def __call__(self) -> LedgerEntryOptionsProjection:
         """Return the served entry options."""
         ...
+
+
+class LedgerHeldLinksDoorV1(Protocol):
+    """Read the links the row being edited holds now, by link field."""
+
+    async def __call__(self) -> Mapping[str, str]:
+        """Return the served value each held link field names; a field the row does not link is absent."""
+        ...
+
+
+def held_links(transaction: LedgerTransactionProjection) -> dict[str, str]:
+    """The links a served transaction holds, by field, exactly as it serves them."""
+    return {field: value for field in LINK_FAMILY_BY_FIELD if (value := getattr(transaction, field)) is not None}
 
 
 def option_words(option: LedgerEntryOptionProjection) -> str:
@@ -159,13 +176,15 @@ class LedgerLinkPickers(Vertical):
         door: LedgerLinkOptionsDoorV1 | None,
         *,
         initial: Mapping[str, str] | None = None,
+        held: LedgerHeldLinksDoorV1 | None = None,
         id: str | None = None,
     ) -> None:
-        """Bind the form's scope, the read the pickers are offered from and the values the operator chose before."""
+        """Bind the scope, the options read, what the operator chose before and the read of the links the row holds."""
         super().__init__(id=id)
         self._scope = scope
         self._door = door
         self._initial = dict(initial or {})
+        self._held = held
 
     def on_mount(self) -> None:
         """Read the served options off the event loop's input handling."""
@@ -180,7 +199,20 @@ class LedgerLinkPickers(Vertical):
                 localized(Static(tr(_UNAVAILABLE_LOCALE_KEY), classes="ledger-link-note"), _UNAVAILABLE_LOCALE_KEY)
             )
             raise
-        await self.mount_all(link_pickers(self._scope, options, self._initial))
+        held: dict[str, str] = {}
+        if self._held is not None:
+            try:
+                held = dict(await self._held())
+            except Exception:
+                # Pickers left unchosen send nothing, so the row keeps what it holds; say so rather than guess.
+                await self.mount(
+                    localized(
+                        Static(tr(_HELD_UNAVAILABLE_LOCALE_KEY), classes="ledger-link-note"),
+                        _HELD_UNAVAILABLE_LOCALE_KEY,
+                    )
+                )
+        # What the operator chose before wins over what the row held.
+        await self.mount_all(link_pickers(self._scope, options, {**held, **self._initial}))
 
     def chosen(self) -> dict[str, str]:
         """The served value chosen in each mounted picker, by field."""
@@ -202,10 +234,12 @@ def chosen_links(pickers: Iterable[LedgerLinkPicker]) -> dict[str, str]:
 
 __all__ = [
     "LINK_FAMILY_BY_FIELD",
+    "LedgerHeldLinksDoorV1",
     "LedgerLinkOptionsDoorV1",
     "LedgerLinkPicker",
     "LedgerLinkPickers",
     "chosen_links",
+    "held_links",
     "link_families",
     "link_picker_id",
     "link_pickers",

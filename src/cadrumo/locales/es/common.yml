@@ -1475,6 +1475,7 @@ desktop:
       filed: Presentado
       late: Fuera de plazo
       unknown: Desconocido
+    suppressed: Fuera de tu calendario
     title: Calendario de presentaciones
     to_day: Ir al {date}
     view: Vista
@@ -8805,6 +8806,8 @@ tui:
         arrendamiento_ref: Arrendamiento vinculado
         gasto_capital_inmobiliario: Concepto de gasto del inmueble
         inmueble_ref: Inmueble vinculado
+      held_unavailable: No se han podido leer los vínculos que tiene ahora este movimiento.
+        No cambia nada si no eliges un vínculo.
       none_served: Aún no hay nada que vincular.
       unavailable: No se han podido leer los registros que vincular.
       unchanged: Sin elegir
@@ -9525,7 +9528,11 @@ tui:
   profile:
     record_groups:
       close: Cerrar
+      door_unavailable: Ese registro ya no está en tu perfil. Vuelve a leer los registros
+        relacionados.
       empty: Tu perfil aún no tiene registros relacionados.
+      fact_stated: '[x] {words}'
+      fact_unstated: '[ ] {words}'
       ledger_row: '{date} · {direction} {amount} {currency} · {description}'
       linked_rows: Movimientos del libro vinculados
       linked_rows_none: No hay ningún movimiento del libro vinculado.

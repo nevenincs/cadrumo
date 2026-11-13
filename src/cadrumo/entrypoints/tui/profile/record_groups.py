@@ -18,6 +18,7 @@ from dataclasses import dataclass, field
 from typing import Protocol
 
 from ....application.user_profile.record_group_contracts import (
+    ProfileRecordAction,
     ProfileRecordGroupItem,
     ProfileRecordGroupKind,
     ProfileRecordGroupsResult,
@@ -46,6 +47,41 @@ class RecordGroupsPort(Protocol):
     ) -> ProfileRecordGroupsResult:
         """Read the page starting at ``cursor``; a continuation passes the first page's ``pin``."""
         ...
+
+
+@dataclass(frozen=True, slots=True)
+class RecordGroupDoor:
+    """A door the read serves on one stored row: the row it belongs to and the door itself.
+
+    The screen offers the door under its served label and hands it back to the page that
+    owns the row's edit routes; it names no operation and composes no label.
+    """
+
+    row_ref: str
+    action: ProfileRecordAction
+
+
+def field_doors(member: ProfileRecordMemberItem) -> tuple[RecordGroupDoor, ...]:
+    """The doors of a member that open on one of its fields, in served order and each once.
+
+    These are the way out of a fact the reduction cannot be derived without, per ejercicio,
+    and the member's own doors that open on a field. A door that opens the row as a whole is
+    edited or removed through the section's generic row screens, so it is not among them.
+    """
+    served = [
+        *(
+            year.missing_fact.way_out
+            for year in (() if member.reduction is None else member.reduction.years)
+            if year.missing_fact is not None
+        ),
+        *(action for action in member.actions if action.field_key is not None),
+    ]
+    doors: list[RecordGroupDoor] = []
+    for action in served:
+        door = RecordGroupDoor(member.row_ref, action)
+        if door not in doors:
+            doors.append(door)
+    return tuple(doors)
 
 
 class MalformedRecordGroupPageError(ValueError):
@@ -144,8 +180,10 @@ class RecordGroupStream:
 __all__ = [
     "MalformedRecordGroupPageError",
     "RecordGroupBlock",
+    "RecordGroupDoor",
     "RecordGroupMember",
     "RecordGroupStream",
     "RecordGroupsPin",
     "RecordGroupsPort",
+    "field_doors",
 ]

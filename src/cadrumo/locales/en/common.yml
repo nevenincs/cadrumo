@@ -1411,6 +1411,7 @@ desktop:
       filed: Filed
       late: Late
       unknown: Unknown
+    suppressed: Not in your calendar
     title: Filing calendar
     to_day: Go to {date}
     view: View
@@ -8597,6 +8598,8 @@ tui:
         arrendamiento_ref: Linked lease
         gasto_capital_inmobiliario: Rental expense concept
         inmueble_ref: Linked property
+      held_unavailable: The links this entry holds now could not be read. Nothing
+        changes unless you choose a link.
       none_served: There is nothing to link to yet.
       unavailable: The records to link to could not be read.
       unchanged: Not chosen
@@ -9310,7 +9313,11 @@ tui:
   profile:
     record_groups:
       close: Close
+      door_unavailable: That record is no longer in your profile. Read the related
+        records again.
       empty: Your profile has no related records yet.
+      fact_stated: '[x] {words}'
+      fact_unstated: '[ ] {words}'
       ledger_row: '{date} · {direction} {amount} {currency} · {description}'
       linked_rows: Linked ledger entries
       linked_rows_none: No ledger entry is linked.

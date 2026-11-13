@@ -37,6 +37,7 @@ from .plantilla_media import (
     PlantillaMediaScreen,
     PlantillaMediaSetRequest,
 )
+from .record_groups import RecordGroupDoor
 from .record_groups_panel import RecordGroupsScreen
 from .setup_journey import SETUP_STAGES, ProfileSetupStage
 
@@ -197,10 +198,29 @@ class ProfileOverviewInteractionMixin:
         self.app.push_screen(HouseholdScreen(port), self._household_closed)
 
     def _open_record_groups(self: ProfileManagerScreen) -> None:
-        """Open the profile's record groups read-only on the host's read."""
+        """Open the profile's record groups on the host's read; a door pressed there opens its field here."""
         port = self._record_groups
         if port is not None:
-            self.app.push_screen(RecordGroupsScreen(port))
+            self.app.push_screen(RecordGroupsScreen(port), self._record_group_door_chosen)
+
+    def _record_group_door_chosen(self: ProfileManagerScreen, door: RecordGroupDoor | None) -> None:
+        """Open the editor of the field a served door opens on, as selecting that field in its table does.
+
+        The door names the row and the field; the page holds the field as the profile stores it, so the
+        value edited and the write door are the ones every other edit of that field uses.
+        """
+        if door is None:
+            return
+        action = door.action
+        field = None if action.field_key is None else self._field_by_key.get(f"{door.row_ref}.{action.field_key}")
+        if field is None:
+            self._refuse(tr("tui.profile.record_groups.door_unavailable"))
+            return
+        if self._pending_write is not None:
+            self._refuse(tr("flows.manager.edit.write_in_flight"))
+            return
+        self._walking = False
+        self._open_field_editor(field)
 
     async def _household_closed(self: ProfileManagerScreen, touched: bool | None) -> None:
         """Read the profile again when a household change landed or may have landed."""

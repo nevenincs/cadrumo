@@ -1,8 +1,9 @@
 """The record-group screen draws the stream the real record-group resolver builds, page by page.
 
 The profile rows and ledger rows are synthetic; the stream, the page model, its
-digests and the refusal words are the backend's own, so the screen is checked
-against what the read actually serves. Only the runtime transport is replaced.
+digests, the art. 23.2 reductions of the leases and the refusal words are the
+backend's own, so the screen is checked against what the read actually serves.
+Only the runtime transport is replaced.
 """
 
 from __future__ import annotations
@@ -25,23 +26,34 @@ from .....application.user_profile.record_group_contracts import (
     ProfileRecordGroupsResult,
     ProfileRecordGroupStreamItem,
     ProfileRecordLedgerRowItem,
+    ProfileRecordMemberItem,
+    ProfileRecordReductionOutcome,
 )
-from .....application.user_profile.record_group_words import refusal_words
+from .....application.user_profile.record_group_reduction import (
+    LeaseReductionServer,
+    ReductionWork,
+    reduction_works,
+)
+from .....application.user_profile.record_group_words import LEASE_END_FIELD, refusal_words
 from .....application.user_profile.record_groups import ledger_rows_digest, record_group_items
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import tr
+from .....core.period import Period
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.contribuyente.inmueble_facts import ARRENDAMIENTO_SECTION, INMUEBLE_SECTION
+from .....domain.modelos.codes import ModeloCode
+from .....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from .....domain.transactions.enums import BusinessClassification, TransactionDirection
 from .....domain.transactions.models import Transaction
 from .....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from .....domain.user_profile.values import ProfileSetupState
 from ...components.host import ScreenHostApp
 from ...tests.settling import settle, settle_until
+from ..edit_screens import FieldEditScreen
 from ..overview import ProfileManagerScreen
-from ..record_groups import MalformedRecordGroupPageError, RecordGroupsPin, RecordGroupStream
-from ..record_groups_panel import RecordGroupsScreen, block_lines, ledger_row_text
+from ..record_groups import MalformedRecordGroupPageError, RecordGroupDoor, RecordGroupsPin, RecordGroupStream
+from ..record_groups_panel import RecordGroupsScreen, block_lines, block_rows, fact_text, ledger_row_text
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -102,16 +114,45 @@ def _ledger_row(provider_id: str, day: int, *, links: dict[str, str]) -> Transac
     )
 
 
-def _stream(operation: PinnedAuthorityOperation) -> tuple[ProfileRecordGroupStreamItem, ...]:
+def _started_return(operation: PinnedAuthorityOperation, year: int) -> WorkUnit:
+    """The Modelo 100 return of ``year`` the profile has started, pinned to the edition the registry selects."""
+    period = Period.from_year_and_code(year, "0A")
+    revision_id = operation.revision_for_context("100", filing_year=year, period=period.registry_token).id
+    stamp = datetime.now(UTC)
+    bucket_id = str(_PROFILE)
+    return WorkUnit(
+        work_unit_id=derive_work_unit_id(
+            bucket_id=bucket_id, modelo="100", filing_year=year, period=period, revision_id=revision_id
+        ),
+        bucket_id=bucket_id,
+        modelo=ModeloCode("100"),
+        filing_year=year,
+        period=period,
+        revision_id=revision_id,
+        name=f"100-{year}",
+        created_at=stamp,
+        updated_at=stamp,
+    )
+
+
+def _stream(
+    operation: PinnedAuthorityOperation,
+    *,
+    values: dict[str, str] | None = None,
+    works: tuple[ReductionWork, ...] = (),
+) -> tuple[ProfileRecordGroupStreamItem, ...]:
+    """The stream the real resolver builds over ``values``, the reductions served over the started returns ``works``."""
+    schema = operation.profile_decode_context().schema
     return record_group_items(
-        _path_values(),
-        schema=operation.profile_decode_context().schema,
+        _path_values() if values is None else values,
+        schema=schema,
         kind=ProfileRecordGroupKind.RENTAL_PROPERTY,
         ledger_rows=(
             _ledger_row("row-a", 3, links={"inmueble_ref": "0", "gasto_capital_inmobiliario": "comunidad"}),
             _ledger_row("row-b", 5, links={"arrendamiento_ref": "1"}),
         ),
         language=OutputLanguage.EN,
+        reductions=LeaseReductionServer(works, operation=operation, schema=schema, language=OutputLanguage.EN),
     )
 
 
@@ -240,9 +281,10 @@ class _Host(App[None]):
     def __init__(self, port: _Port) -> None:
         super().__init__()
         self.port = port
+        self.closed_with: list[RecordGroupDoor | None] = []
 
     def on_mount(self) -> None:
-        self.push_screen(RecordGroupsScreen(self.port))
+        self.push_screen(RecordGroupsScreen(self.port), self.closed_with.append)
 
 
 def _continues(more: Button) -> bool:
@@ -360,3 +402,180 @@ async def test_the_profile_page_opens_the_groups_from_the_section_another_field_
         manager.query_one("#manager-record-groups-synthetic_head", Button).press()
         await settle_until(pilot, lambda: isinstance(pilot.app.screen, RecordGroupsScreen), "the groups opened")
         await settle_until(pilot, lambda: bool(port.calls), "the groups read")
+
+
+def _label(button: Button) -> str:
+    return str(button.label)
+
+
+def _reduction_values() -> dict[str, str]:
+    """The properties of the stream, an open lease whose deciding facts are stated and a lease missing them."""
+    values = _path_values()
+    values.update(
+        {
+            f"{ARRENDAMIENTO_SECTION}.0.fecha_contrato": f"{_YEAR}-01-10",
+            f"{ARRENDAMIENTO_SECTION}.0.uso_vivienda": "true",
+            f"{ARRENDAMIENTO_SECTION}.0.zona_tensionada": "false",
+            f"{ARRENDAMIENTO_SECTION}.0.inquilinos": "12345678z:otra:no",
+            f"{ARRENDAMIENTO_SECTION}.1.fecha_contrato": f"{_YEAR}-01-20",
+            f"{ARRENDAMIENTO_SECTION}.1.inquilinos": "12345678z:otra:no",
+        }
+    )
+    return values
+
+
+def _served_leases(
+    items: tuple[ProfileRecordGroupStreamItem, ...],
+) -> dict[str, ProfileRecordMemberItem]:
+    return {
+        item.row_ref: item
+        for item in items
+        if isinstance(item, ProfileRecordMemberItem) and item.section_key == ARRENDAMIENTO_SECTION
+    }
+
+
+def _reduced_stream(operation: PinnedAuthorityOperation) -> tuple[ProfileRecordGroupStreamItem, ...]:
+    return _stream(operation, values=_reduction_values(), works=reduction_works((_started_return(operation, _YEAR),)))
+
+
+def test_a_lease_whose_reduction_applies_is_drawn_in_the_words_it_is_served(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    items = _reduced_stream(authority_operation)
+    lease = _served_leases(items)[f"{ARRENDAMIENTO_SECTION}.0"]
+    reduction = lease.reduction
+    assert reduction is not None
+    (year,) = reduction.years
+    assert (year.ejercicio, year.outcome) == (_YEAR, ProfileRecordReductionOutcome.APPLIES)
+    assert year.tier_words is not None and year.tier_words in year.outcome_words
+    stream = RecordGroupStream(ProfileRecordGroupKind.RENTAL_PROPERTY)
+    stream.accept(_page(items, 0, len(items)))
+    lines = [line.text.strip() for line in block_rows(stream.blocks[0])]
+    assert reduction.title_words in lines
+    for fact in reduction.facts:
+        assert fact_text(fact.fact_words, stated=fact.stated) in lines
+    assert year.outcome_words in lines
+    # The mark differs by whether the lease states the fact, and the words are the served ones in both.
+    stated = next(fact for fact in reduction.facts if fact.stated)
+    unstated = next(fact for fact in reduction.facts if not fact.stated)
+    assert fact_text(stated.fact_words, stated=True) != fact_text(stated.fact_words, stated=False)
+    assert stated.fact_words in fact_text(stated.fact_words, stated=True)
+    assert unstated.fact_words in fact_text(unstated.fact_words, stated=False)
+
+
+@pytest.mark.asyncio
+async def test_a_lease_that_cannot_be_derived_offers_the_way_out_of_its_missing_fact_and_routes_it(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    items = _reduced_stream(authority_operation)
+    ended = _served_leases(items)[f"{ARRENDAMIENTO_SECTION}.1"]
+    assert ended.reduction is not None
+    (year,) = ended.reduction.years
+    assert year.outcome is ProfileRecordReductionOutcome.NOT_DETERMINABLE
+    assert year.missing_fact is not None and year.refusal_code is not None
+    way_out = year.missing_fact.way_out
+    assert way_out.field_key == year.missing_fact.field_key
+    app = _Host(_Port(items, size=len(items), refuse_after=None))
+    async with app.run_test(size=(140, 60)) as pilot:
+        await settle(pilot)
+        texts = _texts(app)
+        assert year.outcome_words in [text.strip() for text in texts]
+        doors = [button for button in app.screen.query(Button) if button.has_class("record-group-door")]
+        assert [_label(button) for button in doors if _label(button) == way_out.label_words] == [way_out.label_words]
+        next(button for button in doors if _label(button) == way_out.label_words).press()
+        await settle(pilot)
+        assert app.closed_with == [RecordGroupDoor(ended.row_ref, way_out)]
+
+
+@pytest.mark.asyncio
+async def test_a_lease_without_an_end_date_offers_its_served_end_door_and_an_ended_one_does_not(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    items = _reduced_stream(authority_operation)
+    leases = _served_leases(items)
+    open_lease = leases[f"{ARRENDAMIENTO_SECTION}.0"]
+    ended = leases[f"{ARRENDAMIENTO_SECTION}.1"]
+    (end,) = [action for action in open_lease.actions if action.field_key == LEASE_END_FIELD]
+    assert all(action.field_key != LEASE_END_FIELD for action in ended.actions)
+    app = _Host(_Port(items, size=len(items), refuse_after=None))
+    async with app.run_test(size=(140, 60)) as pilot:
+        await settle(pilot)
+        labels = [_label(button) for button in app.screen.query(Button) if button.has_class("record-group-door")]
+        assert labels.count(end.label_words) == 1
+        next(
+            button
+            for button in app.screen.query(Button)
+            if button.has_class("record-group-door") and _label(button) == end.label_words
+        ).press()
+        await settle(pilot)
+        assert app.closed_with == [RecordGroupDoor(open_lease.row_ref, end)]
+
+
+def _lease_section(*, with_end: bool) -> ProfileSectionView:
+    """A repeatable lease section holding row 0 whose end date is not stated."""
+    key = ARRENDAMIENTO_SECTION
+    return ProfileSectionView(
+        key=key,
+        title="Synthetic lease",
+        summary="",
+        repeatable=True,
+        fields=(
+            ProfileFieldView(
+                path=f"{key}.0.inmueble",
+                label="Synthetic property",
+                value="0",
+                masked=False,
+                required=False,
+                row_index="0",
+                references_section=INMUEBLE_SECTION,
+            ),
+            ProfileFieldView(
+                path=f"{key}.0.{LEASE_END_FIELD}",
+                label="Synthetic end",
+                value=f"{_YEAR}-11-30" if with_end else None,
+                masked=False,
+                required=False,
+                row_index="0",
+            ),
+        ),
+    )
+
+
+@pytest.mark.asyncio
+async def test_the_profile_page_opens_the_editor_of_the_field_a_pressed_door_names(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    items = _reduced_stream(authority_operation)
+    open_lease = _served_leases(items)[f"{ARRENDAMIENTO_SECTION}.0"]
+    (end,) = [action for action in open_lease.actions if action.field_key == LEASE_END_FIELD]
+    overview = ProfileOverview(
+        profile_id=str(_PROFILE),
+        record_revision=3,
+        content_digest=_DIGEST,
+        label="Synthetic profile",
+        setup_state=ProfileSetupState.COMPLETE,
+        sections=(_section(INMUEBLE_SECTION, references=None), _lease_section(with_end=False)),
+    )
+
+    def unreachable(_path: str, _value: str, _revision: int, _digest: str) -> ProfileOverview:
+        raise AssertionError("opening the editor writes nothing")
+
+    port = _Port(items, size=len(items), refuse_after=None)
+    manager = ProfileManagerScreen(overview, persist=unreachable, record_groups=port)
+    async with ScreenHostApp(manager).run_test(size=(140, 60)) as pilot:
+        await settle(pilot)
+        manager.query_one(f"#manager-record-groups-{INMUEBLE_SECTION}", Button).press()
+        await settle_until(pilot, lambda: isinstance(pilot.app.screen, RecordGroupsScreen), "the groups opened")
+        await settle_until(pilot, lambda: bool(port.calls), "the groups read")
+        await settle(pilot)
+        door = next(
+            button
+            for button in pilot.app.screen.query(Button)
+            if button.has_class("record-group-door") and _label(button) == end.label_words
+        )
+        door.press()
+        await settle_until(pilot, lambda: isinstance(pilot.app.screen, FieldEditScreen), "the field editor opened")
+        editor = pilot.app.screen
+        assert isinstance(editor, FieldEditScreen)
+        # The editor is the one of the field the door names: it asks for that field's label.
+        assert any("Synthetic end" in str(widget.render()) for widget in editor.query(Static))
