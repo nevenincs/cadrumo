@@ -47,6 +47,7 @@ from ...core.i18n.render import tr
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.iva.refund_eligibility import RefundEligibility, RefundEligibilityOutcome
 from .value_presentation import format_casilla_value
+from .work_form_assumed import assumed_fields
 from .work_form_declaration_facts import AMOUNTLESS_RESULT_DIRECTIONS, ModeloFormResultDirection
 from .work_form_field_vocabulary import ModeloFormOrigin
 from .work_form_findings import ModeloFormAttention
@@ -421,7 +422,7 @@ def export_hold(
     blocking = blocking_count(form)
     if blocking:
         return _hold(ModeloFormExportHoldReason.BLOCKS, blocking, language)
-    assumed = confirm_count(form)
+    assumed = len(assumed_fields(form))
     if assumed:
         return _hold(ModeloFormExportHoldReason.CONFIRM, assumed, language)
     if not verified or form.calculation_revision_id is None:

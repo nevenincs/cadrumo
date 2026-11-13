@@ -1980,6 +1980,10 @@ errors:
     refused_modelo_applicability_filter: S’ha trobat al registre un nom de filtre
       d’aplicabilitat desconegut. És un error d’autoria del registre; actualitza la
       taula de despatx dels filtres.
+    refused_modelo_assumed_value_unconfirmed: 'Aquesta declaració encara té %{unconfirmed_assumed_values}
+      valor(s) que ningú no ha introduït, així que encara no es pot verificar, registrar
+      com a presentada ni exportar. Confirma cadascun indicant-lo, o introdueix el
+      valor correcte: %{boxes}.'
     refused_modelo_charge_account_missing: S’ha triat la domiciliació, però no hi
       ha cap compte de càrrec registrat.
     refused_modelo_domiciliation_past_cutoff: La domiciliació d'aquesta declaració

@@ -3414,6 +3414,9 @@ application:
         pension plan (previsión social) reduction of %{reduccion_value} EUR, above
         the individual limit of %{sublimit} EUR in Art. 52 LIRPF, and no employer
         contributions are declared. Check that the individual limit was applied.
+      assumed_value_unconfirmed: Box [%{box}] holds a value nobody entered, so it
+        is only assumed. Confirm it by stating the value, or enter the right one,
+        before this declaration can be verified.
       attribution_received_uncaptured: Box [%{casilla_id}] for %{filing_year} shows
         %{casilla_value} EUR of attributed income, but your profile does not record
         where it comes from. Add it to your profile.

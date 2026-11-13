@@ -21,6 +21,7 @@ from ...domain.modelos.verification_report import (
 from ...domain.modelos.work_unit import WorkUnit
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ..calculations.iva_compensation_history_ports import IvaCompensationHistoryRepositoryProtocol
+from .assumed_value_gate import assumed_value_verification_findings, unconfirmed_assumed_fields
 from .m193_settled_row_gate import modelo_193_settled_row_verification_finding
 from .m210_agrupacion_renta import m210_agrupacion_renta_verification_findings
 from .m303_m349_reconcile import m303_m349_intracom_reconcile_findings
@@ -157,6 +158,19 @@ def append_readable_model_findings(
         failure.scenario_id in REGISTRY_SNAPSHOT_REFUSAL_SCENARIOS for failure in failures_by_finding_id.values()
     )
     if not registry_snapshot_refused:
+        for assumed_finding, assumed_failure in assumed_value_verification_findings(
+            work_unit,
+            unconfirmed_assumed_fields(
+                work_unit,
+                work_unit_repository=repos.work_unit,
+                calculation_repository=repos.calculation,
+                verification_repository=repos.verification,
+                credit_resolutions=repos.credit_resolution,
+                operation=operation,
+            ),
+        ):
+            findings.append(assumed_finding)
+            failures_by_finding_id[id(assumed_finding)] = assumed_failure
         append_withholding_count_reconciliation_findings(
             work_unit=work_unit,
             target_calculation_revision_id=target.calculation_revision_id,
