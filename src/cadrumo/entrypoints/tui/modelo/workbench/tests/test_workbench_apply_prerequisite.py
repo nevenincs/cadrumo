@@ -37,7 +37,7 @@ from ..screen import ModeloWorkbenchScreen
 from ..session import WorkbenchEditSession
 from .editor_panel import open_panel
 from .form_edits import replace_fields
-from .workbench_fixture import FakeActions, FakeReader, fed_by, form_field, synthetic_form
+from .workbench_fixture import FakeActions, FakeReader, fed_by, form_field, served_load, synthetic_form
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -202,10 +202,11 @@ async def test_reentering_a_staged_value_shows_and_prefills_the_draft_in_both_ed
 def test_only_a_saved_complete_check_gets_the_unapplied_changes_qualifier(
     language: OutputLanguage, verdict: VerificationCompletenessStatus | None
 ) -> None:
-    form = synthetic_form().model_copy(update={"verification": verdict})
+    form = synthetic_form().model_copy(update={"verification": verdict, "language": language})
+    served = served_load(form).journey.verdict
     with override_settings(cadrumo_output_language=language.value):
-        original = verdict_text(form)
-        changed = verdict_text(form, changes_unapplied=True)
+        original = verdict_text(served)
+        changed = verdict_text(served, changes_unapplied=True)
         if verdict is VerificationCompletenessStatus.COMPLETE:
             assert changed == tr("workspace.modelo.issues.verdict.saved_with_changes")
             assert original != changed
