@@ -54,9 +54,30 @@ as_of = { year = "horizon", month = 2, day = 16 }
 # company falls under neither the Concierto Económico (Ley 12/2002 art. 15) nor
 # the Convenio Económico (Ley 28/1990 art. 19): the State levies its whole
 # Impuesto sobre Sociedades.
+#
+# Entity facts the Modelo 202 page 01 states (synthetic). The company closes its ejercicio on
+# 31 December (a calendar-year período impositivo, LIS art. 27.1). It was constituted on 2 January of
+# horizon-6, thirteen days before its activity began (activity-start-date), so its first período
+# impositivo is horizon-6 and none began before it. Its principal activity is the web development of
+# its epigraph, CNAE-2009 code 6201 (programación informática). It holds none of the special régimenes
+# (Ley 49/2002, SOCIMI, entidad de capital riesgo, navieras en tonelaje), is not a cooperativa
+# fiscalmente protegida, and has no art. 101 LIS reduced-size rate or instrumental mark. Its modalidad
+# is the art. 40.2 election stated above.
 [fields]
 "taxpayer_type.tributacion_estado_porcentaje" = "100"
 "taxpayer_type.pago_fraccionado_art_40_3_elected" = "false"
+"taxpayer_type.fecha_constitucion" = "2020-01-02"
+"taxpayer_type.cierre_ejercicio_dia" = "31"
+"taxpayer_type.cierre_ejercicio_mes" = "12"
+"taxpayer_type.principal_cnae" = "6201"
+"taxpayer_type.principal_cnae_classification" = "cnae-2009"
+"taxpayer_type.regimen_ley_49_2002" = "false"
+"taxpayer_type.regimen_socimi" = "false"
+"taxpayer_type.regimen_entidad_capital_riesgo" = "false"
+"taxpayer_type.regimen_entidades_navieras_tonelaje" = "false"
+"taxpayer_type.erd_tipo_gravamen_especifico" = "false"
+"taxpayer_type.cooperativa_fiscalmente_protegida" = "false"
+"taxpayer_type.marca_instrumental" = "false"
 
 [[activities]]
 description = "Desarrollo y mantenimiento de aplicaciones y plataformas web"
