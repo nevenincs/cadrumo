@@ -67,6 +67,7 @@ from cadrumo.domain.calculations.registry.binding_temporal import BindingApplica
 from cadrumo.domain.calculations.registry.credit_reconciliation_checks import credit_reconciliation_revision_failures
 from cadrumo.domain.calculations.registry.ledger_iva_screen_bindings import deducible_deduction_kind_overlaps
 from cadrumo.domain.calculations.registry.prorrata_regularizacion_bindings import ProrrataRegularizacionProvider
+from cadrumo.domain.calculations.registry.renta_inmueble_bindings import renta_inmueble_origin_failures
 from cadrumo.domain.calculations.registry.retencion_soportada_bindings import (
     credit_borrador_participation_failures,
     retencion_soportada_revision_failures,
@@ -163,6 +164,7 @@ def validate_binding_registration_section(*, prefix: str, revision: ModeloRevisi
     failures.extend(_duplicate_row_field_failures(prefix=prefix, revision=revision))
     failures.extend(_deduction_kind_overlap_failures(prefix=prefix, revision=revision))
     failures.extend(f"{prefix}: {failure}" for failure in retencion_soportada_revision_failures(revision))
+    failures.extend(f"{prefix}: {failure}" for failure in renta_inmueble_origin_failures(revision))
     failures.extend(f"{prefix}: {failure}" for failure in credit_borrador_participation_failures(revision))
     failures.extend(f"{prefix}: {failure}" for failure in credit_reconciliation_revision_failures(revision))
     failures.extend(unreferenced_binding_failures(prefix=prefix, revision=revision))
@@ -264,7 +266,7 @@ def _duplicate_row_field_failures(*, prefix: str, revision: ModeloRevision) -> l
     check corpus-wide and it would pass vacuously.
     """
     failures: list[str] = []
-    claimants: dict[tuple[str, str], list[BindingId]] = {}
+    claimants: dict[tuple[str, str, str], list[BindingId]] = {}
     for binding in revision.bindings:
         if binding_aggregation_op(binding) is not BindingAggregationOp.ROWS:
             continue
@@ -283,15 +285,26 @@ def _duplicate_row_field_failures(*, prefix: str, revision: ModeloRevision) -> l
             continue
         if not isinstance(record, str) or not isinstance(row_field, str):
             continue
-        claimants.setdefault((record, row_field), []).append(binding.id)
+        claimants.setdefault((record, row_field, _row_origin(selector.get("origin"))), []).append(binding.id)
     failures.extend(
-        f"{prefix}: record {record!r} row field {row_field!r} is claimed by {len(ids)} row bindings "
+        f"{prefix}: record {record!r} row field {row_field!r}{origin} is claimed by {len(ids)} row bindings "
         f"({sorted(ids)}); only the first in binding order contributes a derived export field, so the "
         f"emitted record depends on binding fragment merge order"
-        for (record, row_field), ids in sorted(claimants.items())
+        for (record, row_field, origin), ids in sorted(claimants.items())
         if len(ids) > 1
     )
     return failures
+
+
+def _row_origin(origin: object) -> str:
+    """Name the origin a row column of one origin year declares, empty for a column with none.
+
+    An anexo C.1 column shares its row field with the other origin years and names which one
+    it is in ``origin``; that pair, not the row field alone, is the slot it claims.
+    """
+    if not isinstance(origin, dict):
+        return ""
+    return " origin " + ", ".join(f"{key}={value}" for key, value in sorted(origin.items()))
 
 
 def _unreadable(value: object) -> bool:

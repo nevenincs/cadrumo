@@ -108,6 +108,7 @@ from .edit_models import (
     ModeloDetailRowEditIntentV1,
     ModeloEditAddressV1,
     ModeloEditApplyRequestV1,
+    ModeloEditBindingAddressV1,
     ModeloEditBindingIntentKind,
     ModeloEditDetailRowIntentKind,
     ModeloEditDomainRefusalV1,
@@ -441,6 +442,26 @@ def _calculated_rows(
     )
 
 
+def _withdraw_superseded_row_statements(
+    state: _OperatorState, revision: ModeloRevision, address: ModeloEditBindingAddressV1
+) -> None:
+    """Drop the row's statements on a column of the same source that no longer takes one.
+
+    A carry once stated on one column may now be stated on others: a let
+    property's pending expenses were one total before they were stated per
+    origin year. The new statement replaces the old one on its row, and the
+    revision this edit records keeps that history.
+    """
+    bindings = {binding.id: binding for binding in revision.bindings}
+    source = bindings[address.binding_id].source
+    for binding_id, row in tuple(state.row_attestations):
+        if row != address.row_identity or _row_stated(revision, binding_id):
+            continue
+        stale = bindings.get(binding_id)
+        if stale is None or stale.source is source:
+            del state.row_attestations[(binding_id, row)]
+
+
 def _row_stated(revision: ModeloRevision, binding_id: BindingId) -> bool:
     family = next((item.absence_attestation for item in revision.bindings if item.id == binding_id), None)
     return family is not None and family.row_grain
@@ -496,13 +517,16 @@ def _apply_binding_intent(
             condition="name a row exactly when the binding's carry is stated row by row",
         )
     if row_stated:
-        return _state_row_carry(
+        refusal = _state_row_carry(
             state,
             intent,
             rows=_calculated_rows(head, revision, binding_id),
             grammar=modelo_edit_address_grammar(submission.baseline, intent.address),
             tax_id_format=tax_id_format,
         )
+        if refusal is None:
+            _withdraw_superseded_row_statements(state, revision, intent.address)
+        return refusal
     # Whatever the intent, an earlier statement on the binding gives way to it.
     state.attested_binding_ids.discard(binding_id)
     state.value_attestations.pop(binding_id, None)

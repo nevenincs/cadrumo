@@ -80,9 +80,10 @@ class RentaInmuebleCause(StrEnum):
     ACQUISITION_COST_UNSTATED = "acquisition_cost_unstated"
     CADASTRAL_VALUES_UNSTATED = "cadastral_values_unstated"
     CUMULATIVE_AMORTISATION_UNSTATED = "cumulative_amortisation_unstated"
+    LETTING_START_UNSTATED = "letting_start_unstated"
     PENDING_EXPENSES_UNSTATED = "pending_expenses_unstated"
     PENDING_EXPENSES_HELD_RETURN_UNSTATED = "pending_expenses_held_return_unstated"
-    PENDING_EXPENSES_ORIGIN_UNSPLIT = "pending_expenses_origin_unsplit"
+    PENDING_EXPENSES_TOTAL_UNSPLIT = "pending_expenses_total_unsplit"
     REDUCTION_FACT_UNSTATED = "reduction_fact_unstated"
     REDUCTION_TENANTS_MIXED = "reduction_tenants_mixed"
     WITHHOLDING_PAYER_NO_TENANT = "withholding_payer_no_tenant"
@@ -243,23 +244,32 @@ _CAUSE_TERMS: Final[dict[RentaInmuebleCause, tuple[RentaInmuebleFindingKind, Ren
         "the amortisation of the let property may reach its acquisition value, and the cumulative "
         "amortisation at the first day of the ejercicio is not stated",
     ),
+    RentaInmuebleCause.LETTING_START_UNSTATED: (
+        _BLOCKING,
+        RentaInmuebleDoor.INMUEBLE_EDIT,
+        "the let property does not state when it was first let, so the earlier ejercicios whose interest "
+        "and repair excess it may still carry (LIRPF art. 23.1.a.1.º) are unknown",
+    ),
     RentaInmuebleCause.PENDING_EXPENSES_UNSTATED: (
         _BLOCKING,
         RentaInmuebleDoor.ATTEST_NO_AMOUNT,
-        "the interest and repair expenses of earlier ejercicios still pending on the let property are "
-        "not stated, and no earlier return the application holds states them",
+        "the property was let before the ejercicio, and the interest and repair expenses one earlier "
+        "ejercicio of the carry window left pending on it are not stated, and no earlier return the "
+        "application holds states them",
     ),
     RentaInmuebleCause.PENDING_EXPENSES_HELD_RETURN_UNSTATED: (
         _BLOCKING,
         RentaInmuebleDoor.ATTEST_NO_AMOUNT,
-        "the return of the previous ejercicio is held, but nothing matches the interest and repair expenses "
-        "it left pending to the let property, so they must be stated per property",
+        "the property was let before the ejercicio and the return of the previous ejercicio is held, but it "
+        "is not read for the interest and repair expenses one earlier ejercicio left pending on the "
+        "property, so they must be stated",
     ),
-    RentaInmuebleCause.PENDING_EXPENSES_ORIGIN_UNSPLIT: (
+    RentaInmuebleCause.PENDING_EXPENSES_TOTAL_UNSPLIT: (
         _BLOCKING,
         RentaInmuebleDoor.ATTEST_NO_AMOUNT,
-        "interest and repair expenses are pending on the let property, and the annex that splits them by the "
-        "ejercicio they arose in (LIRPF art. 23.1.a.1.º; RIRPF art. 13.a) cannot be filed yet",
+        "an amount still pending on the let property was stated as one total, and anexo C.1 needs it split "
+        "by the ejercicio it arose in (LIRPF art. 23.1.a.1.º; RIRPF art. 13.a), so each origin year's "
+        "amount must be stated",
     ),
     RentaInmuebleCause.REDUCTION_FACT_UNSTATED: (
         _BLOCKING,
@@ -299,6 +309,8 @@ class RentaInmuebleFinding:
     cause: RentaInmuebleCause
     subject: str
     """The record the finding speaks of: ``inmueble:{n}``, ``arrendamiento:{n}`` or ``transaction:{id}``."""
+    back: int | None = None
+    """The origin year a pending-expense finding speaks of, counted back from the ejercicio filed."""
 
     @property
     def kind(self) -> RentaInmuebleFindingKind:
@@ -313,7 +325,8 @@ class RentaInmuebleFinding:
     @property
     def message(self) -> str:
         """Return the technical account of the finding, naming its subject."""
-        return f"{self.subject}: {_CAUSE_TERMS[self.cause][2]}"
+        origin = "" if self.back is None else f" (origin {self.back} ejercicios back)"
+        return f"{self.subject}{origin}: {_CAUSE_TERMS[self.cause][2]}"
 
 
 __all__ = [
