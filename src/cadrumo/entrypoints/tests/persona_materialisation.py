@@ -288,7 +288,9 @@ PERSONA_ACTOR = "operator:persona"
 SCENARIO_TIME = time(9, 0, tzinfo=UTC)
 """The time of day of every persona's scenario instant; the date is the persona's ``[clock].as_of``."""
 
-_PROFILE_CREDENTIAL = "persona-materialisation-passphrase"
+PERSONA_PROFILE_CREDENTIAL = "persona-materialisation-passphrase"
+"""The synthetic passphrase of every persona profile; a harness that signs in to a persona's profile reads it here."""
+
 _STATEMENT_HEADER = "Fecha operación;Fecha valor;Concepto;Importe;Saldo;Moneda;Referencia"
 
 
@@ -425,7 +427,7 @@ def _registered_world(persona: Persona, as_of: datetime) -> SealedProfileWorld:
         return create_registered_profile(
             profile_id=profile_id,
             label="persona",
-            passphrase=_PROFILE_CREDENTIAL,
+            passphrase=PERSONA_PROFILE_CREDENTIAL,
             profile_create_context=create_context,
             profile_decode_context=decode_context,
         ).profile_id
@@ -2302,6 +2304,7 @@ def materialised_persona(
 
 __all__ = [
     "PERSONA_ACTOR",
+    "PERSONA_PROFILE_CREDENTIAL",
     "SCENARIO_TIME",
     "MaterialisedPersona",
     "NotLoaded",

@@ -1,4 +1,4 @@
-"""The frontend column of the persona table: the same returns driven through the TUI and the desktop window.
+"""The frontend column of the persona table: the same returns driven through the TUI, the desktop window and the CLI.
 
 Each surface's pilot writes one JSON object per line into ``*.jsonl`` files of one directory (``read_results``
 documents and enforces the schema). This module reads them, normalises a Python row's stages to the surface
@@ -21,8 +21,8 @@ from typing import cast
 
 from .rows import Stage, TableRow
 
-SURFACES = ("tui", "window")
-SURFACE_LABELS = {"tui": "TUI", "window": "window"}
+SURFACES = ("tui", "window", "cli")
+SURFACE_LABELS = {"tui": "TUI", "window": "window", "cli": "CLI"}
 NOT_REACHED = "not-reached"
 STAGE_WORDS = ("pass", "incomplete", "refused", "not-owed", NOT_REACHED, "error")
 """The stage vocabulary of a surface result."""
@@ -81,6 +81,7 @@ _FIELDS = frozenset(
         "calculate",
         "verify",
         "export",
+        "file",
         "refusal_code",
         "figures",
         "reason",
@@ -109,6 +110,8 @@ class SurfaceResult:
     calculate: str = NOT_REACHED
     verify: str = NOT_REACHED
     export: str = NOT_REACHED
+    file: str | None = None
+    """The file stage in the stage vocabulary; ``None`` when the line does not state it. Not compared with the table."""
     refusal_code: str | None = None
     figures: tuple[tuple[str, str], ...] = ()
     reason: str = ""
@@ -125,11 +128,14 @@ def read_results(directory: Path) -> dict[ResultKey, SurfaceResult]:
 
     Files are read oldest first (by modification time, then name), each in line order.
 
-    A line is a JSON object with ``surface`` (``tui`` or ``window``), ``tree`` (the commit the surface ran),
+    A line is a JSON object with ``surface`` (``tui``, ``window`` or ``cli``), ``tree`` (the commit the surface ran),
     ``persona``, ``modelo`` (null on a persona-level line, which reports whether the profile loaded), ``year``,
     ``period`` (null with a null ``modelo``), ``loads``, and, when ``modelo`` is set, ``calculate``, ``verify``
-    and ``export`` in the stage vocabulary. ``refusal_code``, ``reason`` and ``log`` are optional text;
-    ``figures`` is an optional object of every non-zero casilla value the surface displayed, as text.
+    and ``export`` in the stage vocabulary; the optional ``file`` states a fifth stage in the same vocabulary (absent
+    means not stated; the table row has no file stage yet, so parity ignores it). ``refusal_code``, ``reason`` and
+    ``log`` are optional text;
+    ``figures`` is an optional object of every non-zero casilla value the surface displayed, as text; the table
+    row is compared on the casillas of its form only, never on its internal figures.
     Unknown keys and bad values are refused.
     """
     if not directory.is_dir():
@@ -177,6 +183,7 @@ def parse_result(line: str) -> SurfaceResult:
         calculate=stages.get("calculate", NOT_REACHED),
         verify=stages.get("verify", NOT_REACHED),
         export=stages.get("export", NOT_REACHED),
+        file=_optional_stage(data, "file"),
         refusal_code=_optional_text(data, "refusal_code"),
         figures=_figures(data.get("figures", {})),
         reason=_optional_text(data, "reason") or "",
@@ -203,6 +210,11 @@ def _stage_words(data: Mapping[str, object], modelo: str | None) -> dict[str, st
         _require_all_stages(data)
         stated = {name: data[name] for name in _STAGE_FIELDS}
     return {name: _choice(stated, name, STAGE_WORDS) for name in stated}
+
+
+def _optional_stage(data: Mapping[str, object], name: str) -> str | None:
+    """The stage word of an optional stage field, ``None`` when absent or null."""
+    return None if data.get(name) is None else _choice(data, name, STAGE_WORDS)
 
 
 def _require_all_stages(data: Mapping[str, object]) -> None:
@@ -284,6 +296,8 @@ class PersonaCell:
     counts: Mapping[str, int]
     extra_rows: int = 0
     """The rows on which the surface showed casillas the table row has no figure for."""
+    trees: tuple[str, ...] = ()
+    """The trees of the results the cell summarises (rows and the persona's own line), sorted and distinct."""
 
 
 def _number(text: str) -> Decimal | None:
@@ -309,6 +323,8 @@ def figure_causes(surface: str, table: Mapping[str, str], shown: Mapping[str, st
     """Each way the figures ``shown`` by a surface miss or disagree with the table row's ``table`` figures.
 
     The table row is the oracle for calculated values, so a casilla shown beyond ``table`` is not a cause.
+    ``table`` holds only the casillas the revision's form places; the row's internal figures (working figures and
+    unplaced casillas, which no surface is held to show) are never compared and are not extras when shown.
     """
     causes: list[str] = []
     for casilla in sorted(table):
@@ -349,7 +365,8 @@ def parity(
     table, shown = dict(row.figures), dict(result.figures)
     causes = _stage_causes(surface, stages, result) + figure_causes(surface, table, shown)
     outcome = DIFFERS if causes else MATCHED
-    return RowParity(row.key, surface, outcome, tuple(causes), tree, extra_figures(table, shown))
+    extras = extra_figures(table | dict(row.internal_figures), shown)
+    return RowParity(row.key, surface, outcome, tuple(causes), tree, extras)
 
 
 def _load_failure_reason(result: SurfaceResult | None, load_reason: str) -> str:
@@ -397,6 +414,10 @@ class FrontendComparison:
         """The table rows ``surface`` matched."""
         return sum(item.outcome == MATCHED for item in self.parities[surface])
 
+    def trees_folded(self, surface: str) -> Counter[str]:
+        """Per tree, the table rows whose result on ``surface`` came from it."""
+        return Counter(item.tree for item in self.parities[surface] if item.tree is not None)
+
 
 def compare_frontend(rows: Iterable[TableRow], results: Mapping[ResultKey, SurfaceResult]) -> FrontendComparison:
     """Compare ``results`` with the table's ``rows`` on every surface."""
@@ -413,7 +434,8 @@ def compare_frontend(rows: Iterable[TableRow], results: Mapping[ResultKey, Surfa
         parities[surface] = found
         extras[surface] = _surface_extras(surface, held, keys)
         for persona in personas:
-            cells[persona, surface] = _persona_cell(found, persona, loads[persona])
+            line = _persona_line(held, persona)
+            cells[persona, surface] = _persona_cell(found, persona, loads[persona], None if line is None else line.tree)
     return FrontendComparison(ordered, parities, extras, cells)
 
 
@@ -448,11 +470,18 @@ def _surface_extras(surface: str, held: Mapping[ResultKey, SurfaceResult], keys:
     return tuple(extras)
 
 
-def _persona_cell(found: Iterable[RowParity], persona: str, loads: bool | None) -> PersonaCell:
-    """``persona``'s cell on one surface from the parities of that surface's rows."""
+def _persona_cell(
+    found: Iterable[RowParity], persona: str, loads: bool | None, line_tree: str | None = None
+) -> PersonaCell:
+    """``persona``'s cell on one surface from the parities of that surface's rows and its own line's tree."""
     mine = [item for item in found if item.key[0] == persona]
+    trees = {item.tree for item in mine if item.tree is not None} | ({line_tree} if line_tree is not None else set())
     return PersonaCell(
-        loads, len(mine), Counter(item.outcome for item in mine), sum(item.extra_casillas > 0 for item in mine)
+        loads,
+        len(mine),
+        Counter(item.outcome for item in mine),
+        sum(item.extra_casillas > 0 for item in mine),
+        tuple(sorted(trees)),
     )
 
 
@@ -478,17 +507,24 @@ def _load_reason(held: Mapping[ResultKey, SurfaceResult], persona: str) -> str:
     return ""
 
 
-def cell_text(cell: PersonaCell) -> str:
+def cell_text(cell: PersonaCell, head: str | None = None) -> str:
     """The persona cell summary, ``loads, 5/7 matched, 1 differs, 1 not run``, or ``not yet run``.
 
     Rows that could not be compared, rows lost to a failed load and rows that show extra casillas are named after
-    the three counts when there are any.
+    the three counts when there are any. With ``head`` given, the sorted trees of the cell's results that are not
+    ``head`` close it as `` @<tree>,<tree>``.
     """
     if cell.loads is None:
         return "not yet run"
+    others = [tree for tree in cell.trees if head is not None and tree != head]
+    return ", ".join(_cell_parts(cell)) + (f" @{','.join(others)}" if others else "")
+
+
+def _cell_parts(cell: PersonaCell) -> list[str]:
+    """The comma-separated parts of a persona cell that has a surface line."""
     counts = cell.counts
     parts = [
-        "loads" if cell.loads else "does not load",
+        "loads" if cell.loads is True else "does not load",
         f"{counts.get(MATCHED, 0)}/{cell.rows} matched",
         f"{counts.get(DIFFERS, 0)} differs",
         f"{counts.get(NOT_RUN, 0)} not run",
@@ -499,7 +535,7 @@ def cell_text(cell: PersonaCell) -> str:
         parts.append(f"{counts.get(LOAD_FAILED, 0)} load failed")
     if cell.extra_rows:
         parts.append(f"{cell.extra_rows} rows show extra casillas")
-    return ", ".join(parts)
+    return parts
 
 
 def row_cell(item: RowParity, head: str) -> str:
@@ -509,12 +545,25 @@ def row_cell(item: RowParity, head: str) -> str:
 
 
 def frontend_line(comparison: FrontendComparison) -> str:
-    """The summary sentence, ``Frontend: TUI matched a / N, window matched b / N (N rows)``."""
+    """The summary sentence, ``Frontend: TUI matched a / N, window matched b / N, CLI matched c / N (N rows)``."""
     total = len(comparison.rows)
     matched = ", ".join(
         f"{SURFACE_LABELS[surface]} matched {comparison.matched(surface)} / {total}" for surface in SURFACES
     )
     return f"Frontend: {matched} ({total} rows)"
+
+
+def trees_line(comparison: FrontendComparison) -> str:
+    """``Trees folded: tui abc (5), def (2); window abc (3)``: per surface, each tree and the table rows it covers.
+
+    A surface with no result is omitted; ``none`` stands when no surface has one.
+    """
+    groups = []
+    for surface in SURFACES:
+        folded = comparison.trees_folded(surface)
+        if folded:
+            groups.append(f"{surface} " + ", ".join(f"{tree} ({count})" for tree, count in sorted(folded.items())))
+    return "Trees folded: " + ("; ".join(groups) or "none")
 
 
 __all__ = [
@@ -537,4 +586,5 @@ __all__ = [
     "parse_result",
     "read_results",
     "row_cell",
+    "trees_line",
 ]
