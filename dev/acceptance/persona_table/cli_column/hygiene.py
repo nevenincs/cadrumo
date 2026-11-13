@@ -71,6 +71,13 @@ class Redactor:
                 found.extend(_client_values(json.loads(client)))
         return cls(found)
 
+    def with_client(self, client: str) -> Redactor:
+        """This redactor and an OAuth client read after it was made, with the client's identifying leaves."""
+        found = [client]
+        with contextlib.suppress(ValueError):
+            found.extend(_client_values(json.loads(client)))
+        return Redactor([*self._secrets, *found])
+
     def text(self, text: str) -> str:
         """``text`` with every secret replaced."""
         for secret in self._secrets:
