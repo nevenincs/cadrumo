@@ -18,6 +18,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, Final
 
 from ...core.casilla_id import CasillaId
+from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...core.retencion_soportada import RetencionSoportadaClase
 from ...domain.calculations.registry.trabajo_expense_limits import TrabajoExpenseLimits, trabajo_expense_limits
 from ...domain.modelos.verification_report import (
@@ -26,6 +27,7 @@ from ...domain.modelos.verification_report import (
     ModeloVerificationFindingSeverity,
 )
 from ..aggregation.retencion_soportada_source import recorded_income_classes
+from .preconditions import ModeloPreconditionFailure, build_modelo_precondition_failure_for_scenario
 from .semantic_role_resolution import casilla_id_for_unique_revision_semantic_role
 
 if TYPE_CHECKING:
@@ -35,6 +37,7 @@ if TYPE_CHECKING:
 
 __all__ = [
     "TRABAJO_INCOME_STATEMENT_ROLES",
+    "TrabajoIncomeFinding",
     "trabajo_income_findings",
     "trabajo_recorded",
 ]
@@ -70,9 +73,51 @@ def _casilla(revision: ModeloRevision, role: str) -> CasillaId | None:
     return casilla_id_for_unique_revision_semantic_role(revision, role)
 
 
-def _unstated_findings(revision: ModeloRevision, target: CalculationRevision) -> list[ModeloVerificationFinding]:
+TrabajoIncomeFinding = tuple[ModeloVerificationFinding, ModeloPreconditionFailure | None]
+"""One work-income finding with the verify verdict a blocking one carries; a warning carries none."""
+
+
+def _blocking(
+    finding: ModeloVerificationFinding,
+    target: CalculationRevision,
+    *,
+    scenario: str,
+    binding_id: str | None,
+) -> TrabajoIncomeFinding:
+    """Pair a blocking finding with the door that states its box.
+
+    A box read from a binding is stated by the override bound to it, any other
+    box by its own value. The verdict knows the declaration and the box; the
+    filer supplies the figure.
+    """
+    casilla_id = finding.casilla_id
+    if casilla_id is None:
+        raise ValueError("a work-income finding names its box")
+    door_arguments: dict[str, str] = {"work_unit_id": target.work_unit_id}
+    if binding_id is not None:
+        scenario = f"{scenario}_source"
+        door_arguments["binding_id"] = binding_id
+    else:
+        door_arguments["casilla_id"] = str(casilla_id)
+    failure = build_modelo_precondition_failure_for_scenario(
+        subject_leaf_key="modelo.work.verify",
+        scenario_id=f"modelo.work.verify.trabajo_income.{scenario}",
+        evidence_id="modelo.work.verify.trabajo_income",
+        evidence_values={
+            "calculation_revision_id": target.calculation_revision_id,
+            "work_unit_id": target.work_unit_id,
+            "casilla_id": str(casilla_id),
+        },
+        provenance=ActionEvidenceProvenance.PERSISTED_STATE,
+        action_argument_values=door_arguments,
+        missing_action_arguments=("value",),
+    )
+    return (finding, failure)
+
+
+def _unstated_findings(revision: ModeloRevision, target: CalculationRevision) -> list[TrabajoIncomeFinding]:
     bindings = {casilla.id: casilla.binding for casilla in revision.casillas}
-    findings: list[ModeloVerificationFinding] = []
+    findings: list[TrabajoIncomeFinding] = []
     for role, suffix in TRABAJO_INCOME_STATEMENT_ROLES.items():
         casilla_id = _casilla(revision, role)
         if casilla_id is None:
@@ -82,36 +127,37 @@ def _unstated_findings(revision: ModeloRevision, target: CalculationRevision) ->
             target.input_values_by_casilla_id
         )
         if not stated:
-            findings.append(
-                ModeloVerificationFinding(
-                    kind=ModeloVerificationFindingKind.BLOCKING_RULE,
-                    severity=ModeloVerificationFindingSeverity.BLOCKING,
-                    casilla_id=casilla_id,
-                    message_locale_key=(
-                        "application.modelo.findings.trabajo_income_unstated.prevision"
-                        if suffix == "prevision"
-                        else "application.modelo.findings.trabajo_income_unstated.dependencia"
-                        if suffix == "dependencia"
-                        else "application.modelo.findings.trabajo_income_unstated.patrimonio_protegido"
-                        if suffix == "patrimonio_protegido"
-                        else "application.modelo.findings.trabajo_income_unstated.decision_trabajador"
-                    ),
-                    message_facts={"casilla_id": casilla_id},
-                    legal_refs=("ley-35-2006:art-17",),
+            finding = ModeloVerificationFinding(
+                kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+                severity=ModeloVerificationFindingSeverity.BLOCKING,
+                casilla_id=casilla_id,
+                message_locale_key=(
+                    "application.modelo.findings.trabajo_income_unstated.prevision"
+                    if suffix == "prevision"
+                    else "application.modelo.findings.trabajo_income_unstated.dependencia"
+                    if suffix == "dependencia"
+                    else "application.modelo.findings.trabajo_income_unstated.patrimonio_protegido"
+                    if suffix == "patrimonio_protegido"
+                    else "application.modelo.findings.trabajo_income_unstated.decision_trabajador"
                 ),
+                message_facts={"casilla_id": casilla_id},
+                legal_refs=("ley-35-2006:art-17",),
+            )
+            findings.append(
+                _blocking(finding, target, scenario="unstated", binding_id=None if binding is None else str(binding))
             )
     return findings
 
 
 def _disability_finding(
     revision: ModeloRevision, target: CalculationRevision, profile_values: Mapping[str, str]
-) -> ModeloVerificationFinding | None:
+) -> TrabajoIncomeFinding | None:
     if not (profile_values.get(_DISABILITY_PROFILE_PATH) or "").strip():
         return None
     casilla_id = _casilla(revision, _DISABILITY_INCREASE_ROLE)
     if casilla_id is None or casilla_id in target.input_values_by_casilla_id:
         return None
-    return ModeloVerificationFinding(
+    finding = ModeloVerificationFinding(
         kind=ModeloVerificationFindingKind.BLOCKING_RULE,
         severity=ModeloVerificationFindingSeverity.BLOCKING,
         casilla_id=casilla_id,
@@ -119,12 +165,15 @@ def _disability_finding(
         message_facts={"casilla_id": casilla_id},
         legal_refs=("ley-35-2006:art-19",),
     )
+    # Only the box's own typed value answers the increase, so that value is the door.
+    return _blocking(finding, target, scenario="disability_increase_unstated", binding_id=None)
 
 
 def _limit_findings(
     revision: ModeloRevision, target: CalculationRevision, limits: TrabajoExpenseLimits
-) -> list[ModeloVerificationFinding]:
-    findings: list[ModeloVerificationFinding] = []
+) -> list[TrabajoIncomeFinding]:
+    bindings = {casilla.id: casilla.binding for casilla in revision.casillas}
+    findings: list[TrabajoIncomeFinding] = []
     for role, suffix, legal_ref in _EXPENSE_LIMITS:
         casilla_id = _casilla(revision, role)
         limit = limits.colegio_profesional if suffix == "colegio_profesional" else limits.defensa_juridica
@@ -132,19 +181,26 @@ def _limit_findings(
             continue
         stated = target.casilla_values.get(casilla_id, Decimal(0))
         if stated > limit:
-            findings.append(
-                ModeloVerificationFinding(
-                    kind=ModeloVerificationFindingKind.BLOCKING_RULE,
-                    severity=ModeloVerificationFindingSeverity.BLOCKING,
-                    casilla_id=casilla_id,
-                    message_locale_key=(
-                        "application.modelo.findings.trabajo_expense_above_limit.colegio_profesional"
-                        if suffix == "colegio_profesional"
-                        else "application.modelo.findings.trabajo_expense_above_limit.defensa_juridica"
-                    ),
-                    message_facts={"casilla_id": casilla_id, "stated": stated, "limit": limit},
-                    legal_refs=(legal_ref,),
+            binding = bindings.get(casilla_id)
+            finding = ModeloVerificationFinding(
+                kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+                severity=ModeloVerificationFindingSeverity.BLOCKING,
+                casilla_id=casilla_id,
+                message_locale_key=(
+                    "application.modelo.findings.trabajo_expense_above_limit.colegio_profesional"
+                    if suffix == "colegio_profesional"
+                    else "application.modelo.findings.trabajo_expense_above_limit.defensa_juridica"
                 ),
+                message_facts={"casilla_id": casilla_id, "stated": stated, "limit": limit},
+                legal_refs=(legal_ref,),
+            )
+            findings.append(
+                _blocking(
+                    finding,
+                    target,
+                    scenario="expense_above_limit",
+                    binding_id=None if binding is None else str(binding),
+                )
             )
     return findings
 
@@ -157,13 +213,15 @@ def trabajo_income_findings(
     profile_values: Mapping[str, str],
     effective_date: date,
     operation: PinnedAuthorityOperation,
-) -> tuple[ModeloVerificationFinding, ...]:
+) -> tuple[TrabajoIncomeFinding, ...]:
     """Return the work-income findings of ``target`` against the ``modelo_id`` registry ``revision`` it rests on.
 
+    Each blocking finding is built with its verify verdict and the door that
+    states its box; the served limitation is a warning and carries none.
     ``profile_values`` are the path-keyed profile facts in force at the end of the ejercicio.
     A revision that declares none of the roles earns nothing here.
     """
-    findings: list[ModeloVerificationFinding] = []
+    findings: list[TrabajoIncomeFinding] = []
     recorded = trabajo_recorded(target)
     if recorded:
         findings.extend(_unstated_findings(revision, target))
@@ -171,13 +229,16 @@ def trabajo_income_findings(
     has_work_income = recorded or (total_id is not None and target.casilla_values.get(total_id, Decimal(0)) > 0)
     if has_work_income and total_id is not None:
         findings.append(
-            ModeloVerificationFinding(
-                kind=ModeloVerificationFindingKind.ADVISORY,
-                severity=ModeloVerificationFindingSeverity.WARNING,
-                casilla_id=total_id,
-                message_locale_key="application.modelo.findings.trabajo_deduction_not_computed",
-                legal_refs=("ley-35-2006:art-19",),
-                disclosed_limitation=True,
+            (
+                ModeloVerificationFinding(
+                    kind=ModeloVerificationFindingKind.ADVISORY,
+                    severity=ModeloVerificationFindingSeverity.WARNING,
+                    casilla_id=total_id,
+                    message_locale_key="application.modelo.findings.trabajo_deduction_not_computed",
+                    legal_refs=("ley-35-2006:art-19",),
+                    disclosed_limitation=True,
+                ),
+                None,
             ),
         )
         disability = _disability_finding(revision, target, profile_values)
