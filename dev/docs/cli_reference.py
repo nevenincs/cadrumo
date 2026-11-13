@@ -173,6 +173,7 @@ def reference_subprocess_environment(storage_root: Path) -> dict[str, str]:
     authority_root = os.environ.get(AUTHORITY_ROOT_ENV, "").strip()
     environment = ambient_product_settings_removed()
     environment["CADRUMO_OUTPUT_LANGUAGE"] = "en"
+    environment["PYTHONIOENCODING"] = UTF_8_ENCODING
     environment["CADRUMO_STORAGE_ROOT"] = str(storage_root)
     if authority_root:
         environment[AUTHORITY_ROOT_ENV] = authority_root
@@ -616,7 +617,7 @@ def generate_cli_reference_in_subprocess(docs_root: Path) -> dict[str, str]:
             [sys.executable, "-c", code],
             env=reference_subprocess_environment(Path(storage_root)),
             capture_output=True,
-            text=True,
+            encoding=UTF_8_ENCODING,
             timeout=300,
             check=False,
         )
@@ -667,7 +668,7 @@ def collect_live_leaf_paths_in_subprocess() -> list[str]:
             [sys.executable, "-c", code],
             env=reference_subprocess_environment(Path(storage_root)),
             capture_output=True,
-            text=True,
+            encoding=UTF_8_ENCODING,
             timeout=120,
             check=False,
         )
