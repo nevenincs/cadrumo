@@ -672,11 +672,20 @@ async function runAction(action, before, timeout, row) {
       if (!reread) return { state, notes, declined: null };
       notes.push("read the declaration again after the write");
       log("read-again", { action });
+      // The notice stays while the read runs; the stage is read once it is gone.
+      const read = await waitFor(
+        async () => !(await exec(pageVisible, ".modelo-write-hold")),
+        {
+          timeout: Math.max(timeout - (Date.now() - started), 1000),
+          what: "the declaration to be read again",
+          soft: true,
+          interval: 400,
+        },
+      );
+      await sleep(800);
+      const after = await readState();
       return {
-        state: await settle(
-          before,
-          Math.max(timeout - (Date.now() - started), 1000),
-        ),
+        state: read ? after : { ...after, timedOut: true },
         notes,
         declined: null,
       };
