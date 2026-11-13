@@ -47,13 +47,9 @@ if TYPE_CHECKING:
     from ...domain.modelos.calculation_revision import CalculationRevision
     from ...domain.modelos.work_unit import WorkUnit
 
-#: The filer must present correct declaraciones and autoliquidaciones (LGT art.
-#: 29.2.c, art. 120); figures resting on profile facts since corrected are not
-#: the filer's figures, and a filed one is corrected through art. 120.3.
-PROFILE_DRIFT_LEGAL_REFS: tuple[str, ...] = (
-    "ley-58-2003:art-29",
-    "ley-58-2003:art-120",
-)
+#: Figures resting on profile facts since corrected are not the filer's
+#: figures, and a filed one is corrected through the LGT art. 120 amendment.
+PROFILE_DRIFT_LEGAL_REFS: tuple[str, ...] = ("ley-58-2003:art-120",)
 
 PROFILE_DRIFT_KEY = "application.modelo.findings.profile_read_drift"
 PROFILE_READS_UNKNOWN_KEY = "application.modelo.findings.profile_read_fingerprint_absent"
