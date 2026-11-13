@@ -30,7 +30,7 @@ from ....refusal.tests.refusal_fixtures import destinations, operations
 from ....tests.settling import settle
 from ..issue_scale import IssuesChoice
 from ..issues import WorkbenchIssuesScreen
-from .workbench_fixture import synthetic_form
+from .workbench_fixture import served_load, synthetic_form
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -87,7 +87,7 @@ class _Host(ScreenHostApp[IssuesChoice]):
 
 @pytest.mark.asyncio
 async def test_a_note_with_a_way_out_offers_its_served_action_and_opens_the_destination() -> None:
-    screen = WorkbenchIssuesScreen(_form(door=True))
+    screen = WorkbenchIssuesScreen(served_load(_form(door=True)))
     app = _Host(screen)
     expected = note_recovery(_UNCLASSIFIED, _fact(), OutputLanguage.EN)
     assert expected is not None and expected.action_words is not None
@@ -108,7 +108,7 @@ async def test_a_note_with_a_way_out_offers_its_served_action_and_opens_the_dest
 
 @pytest.mark.asyncio
 async def test_a_host_that_admits_no_destination_shows_the_served_action_disabled() -> None:
-    screen = WorkbenchIssuesScreen(_form(door=True))
+    screen = WorkbenchIssuesScreen(served_load(_form(door=True)))
     app = ScreenHostApp(screen)
     async with app.run_test(size=(120, 40)) as pilot:
         await settle(pilot)
@@ -119,7 +119,7 @@ async def test_a_host_that_admits_no_destination_shows_the_served_action_disable
 
 @pytest.mark.asyncio
 async def test_a_note_without_a_way_out_draws_no_recovery_area() -> None:
-    screen = WorkbenchIssuesScreen(_form(door=False))
+    screen = WorkbenchIssuesScreen(served_load(_form(door=False)))
     app = ScreenHostApp(screen)
     async with app.run_test(size=(120, 40)) as pilot:
         await settle(pilot)

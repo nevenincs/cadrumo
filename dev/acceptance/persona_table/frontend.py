@@ -7,11 +7,29 @@ did not load the persona, or was not run. The table row is the oracle for calcul
 same three stages and every casilla figure of the table row shown with an equal value. A casilla the surface shows
 that the row has no figure for (identity fields, rates, period) never makes a row differ; the rows that show such
 casillas are counted and the names stay on the parity.
+
+Export unavailable is one outcome, whether the backend refuses an attempt or the form does not serve the export
+door. The export stage matches a surface's ``not-reached`` against the table's ``refused`` only when both hold: the
+line states ``export_served`` false (the form served no export door for that return, recorded as served state and not
+as the pilot's choice) and the table's export refusal code is one of ``EXPORT_WITHHELD_UNVERIFIED`` (the codes the
+export operation raises for a revision that is not sealed, read from the table row's reason by
+``export_refusal_code``). The comparison is recorded in ``RowParity.gated_stages`` as ``export unavailable
+(refused | not served)`` followed by the code, the persona cell counts the rows as ``N rows matched by gating`` and
+the report lists them. Every other stage difference stays a difference, and the rule reads stage words and that
+code only. The file stage is not compared with the table, so the rule has no file case.
+
+A persona-level line (``modelo`` null) may state the integer ``horizon`` it was run at; producers that write one
+persona line per horizon use it so a load failure at one horizon fails only the table rows of that horizon. When the
+field is absent or null the horizon is read from the start of ``reason`` (``horizon <year>`` or ``<persona>@<year>``);
+if neither matches the line has no horizon and speaks for every row of the persona that no horizon line answers for.
+A table row that has a result line of its own on a surface is judged by that line and never load-failed by a persona
+line.
 """
 
 from __future__ import annotations
 
 import json
+import re
 from collections import Counter
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
@@ -26,6 +44,13 @@ SURFACE_LABELS = {"tui": "TUI", "window": "window", "cli": "CLI"}
 NOT_REACHED = "not-reached"
 STAGE_WORDS = ("pass", "incomplete", "refused", "not-owed", NOT_REACHED, "error")
 """The stage vocabulary of a surface result."""
+
+EXPORT_WITHHELD_UNVERIFIED = ("REFUSED_MODELO_REVISION_NOT_SEALED",)
+"""The codes the export operation raises for a revision that is not sealed (unverified, so no grant sealed it)."""
+EXPORT_UNAVAILABLE = "export unavailable (refused | not served)"
+"""How the comparison of a not-served export door with the table's withheld export is recorded."""
+_EXPORT_CODE = re.compile(r"\bexport:.*?\b((?:REFUSED|ERROR)_[A-Z0-9_]+)")
+_HORIZON_PREFIX = re.compile(r"horizon (\d{4})\b")
 
 STAGE_OF: Mapping[Stage, str | None] = {
     Stage.PASSED: "pass",
@@ -67,7 +92,9 @@ CELL_WORDS = {
 
 type RowKey = tuple[str, str, int, str]
 type ResultKey = tuple[str, str, str | None, int | None, str | None]
-"""``(surface, persona, modelo, year, period)``; a persona-level line has no modelo, year or period."""
+"""``(surface, persona, modelo, year, period)``.
+
+A persona-level line has no modelo, year or period; its year slot holds its horizon (``None`` without one)."""
 
 _FIELDS = frozenset(
     {
@@ -81,11 +108,13 @@ _FIELDS = frozenset(
         "calculate",
         "verify",
         "export",
+        "export_served",
         "file",
         "refusal_code",
         "figures",
         "reason",
         "log",
+        "horizon",
     }
 )
 _REQUIRED = frozenset({"surface", "tree", "persona", "modelo", "year", "period", "loads"})
@@ -110,17 +139,27 @@ class SurfaceResult:
     calculate: str = NOT_REACHED
     verify: str = NOT_REACHED
     export: str = NOT_REACHED
+    export_served: bool | None = None
+    """Whether the form served an export door for the return; ``None`` when the line does not state it."""
     file: str | None = None
     """The file stage in the stage vocabulary; ``None`` when the line does not state it. Not compared with the table."""
     refusal_code: str | None = None
     figures: tuple[tuple[str, str], ...] = ()
     reason: str = ""
     log: str = ""
+    horizon: int | None = None
+    """The horizon a persona-level line was run at, stated or read from its reason; ``None`` on a return line."""
 
     @property
     def key(self) -> ResultKey:
-        """The result key ``(surface, persona, modelo, year, period)``."""
-        return (self.surface, self.persona, self.modelo, self.year, self.period)
+        """The result key ``(surface, persona, modelo, year, period)``; a persona line holds its horizon as year."""
+        return (
+            self.surface,
+            self.persona,
+            self.modelo,
+            self.horizon if self.modelo is None else self.year,
+            self.period,
+        )
 
 
 def read_results(directory: Path) -> dict[ResultKey, SurfaceResult]:
@@ -132,10 +171,14 @@ def read_results(directory: Path) -> dict[ResultKey, SurfaceResult]:
     ``persona``, ``modelo`` (null on a persona-level line, which reports whether the profile loaded), ``year``,
     ``period`` (null with a null ``modelo``), ``loads``, and, when ``modelo`` is set, ``calculate``, ``verify``
     and ``export`` in the stage vocabulary; the optional ``file`` states a fifth stage in the same vocabulary (absent
-    means not stated; the table row has no file stage yet, so parity ignores it). ``refusal_code``, ``reason`` and
+    means not stated; the table row has no file stage yet, so parity ignores it). The optional ``export_served`` is
+    true or false: false states the form served no export door for the return (served state, never the pilot's choice);
+    absent means unknown. ``refusal_code``, ``reason`` and
     ``log`` are optional text;
     ``figures`` is an optional object of every non-zero casilla value the surface displayed, as text; the table
     row is compared on the casillas of its form only, never on its internal figures.
+    The optional ``horizon`` (an integer or null, persona-level lines only) names the horizon a persona line was run
+    at; absent, it is read from the reason's ``horizon <year>`` or ``<persona>@<year>`` prefix.
     Unknown keys and bad values are refused.
     """
     if not directory.is_dir():
@@ -172,10 +215,12 @@ def parse_result(line: str) -> SurfaceResult:
     loads = data["loads"]
     if not isinstance(loads, bool):
         raise ValueError("loads must be true or false")
+    persona = _text(data, "persona")
+    reason = _optional_text(data, "reason") or ""
     return SurfaceResult(
         surface=surface,
         tree=_text(data, "tree"),
-        persona=_text(data, "persona"),
+        persona=persona,
         modelo=modelo,
         year=year,
         period=period,
@@ -183,12 +228,29 @@ def parse_result(line: str) -> SurfaceResult:
         calculate=stages.get("calculate", NOT_REACHED),
         verify=stages.get("verify", NOT_REACHED),
         export=stages.get("export", NOT_REACHED),
+        export_served=_optional_bool(data, "export_served"),
         file=_optional_stage(data, "file"),
         refusal_code=_optional_text(data, "refusal_code"),
         figures=_figures(data.get("figures", {})),
-        reason=_optional_text(data, "reason") or "",
+        reason=reason,
         log=_optional_text(data, "log") or "",
+        horizon=_line_horizon(data, persona, modelo, reason),
     )
+
+
+def _line_horizon(data: Mapping[str, object], persona: str, modelo: str | None, reason: str) -> int | None:
+    """The horizon of a persona-level line: the stated one, else the one its reason starts with, else ``None``."""
+    value = data.get("horizon")
+    if modelo is not None:
+        if value is not None:
+            raise ValueError("a line with a modelo has no horizon")
+        return None
+    if value is not None:
+        if not isinstance(value, int) or isinstance(value, bool):
+            raise ValueError("horizon must be an integer or null")
+        return value
+    match = _HORIZON_PREFIX.match(reason) or re.match(rf"{re.escape(persona)}@(\d{{4}})\b", reason)
+    return None if match is None else int(match.group(1))
 
 
 def _return_scope(data: Mapping[str, object]) -> tuple[str | None, int | None, str | None]:
@@ -215,6 +277,13 @@ def _stage_words(data: Mapping[str, object], modelo: str | None) -> dict[str, st
 def _optional_stage(data: Mapping[str, object], name: str) -> str | None:
     """The stage word of an optional stage field, ``None`` when absent or null."""
     return None if data.get(name) is None else _choice(data, name, STAGE_WORDS)
+
+
+def _optional_bool(data: Mapping[str, object], name: str) -> bool | None:
+    value = data.get(name)
+    if value is not None and not isinstance(value, bool):
+        raise ValueError(f"{name} must be true, false or null")
+    return value
 
 
 def _require_all_stages(data: Mapping[str, object]) -> None:
@@ -279,6 +348,8 @@ class RowParity:
     """The commit the surface ran, when a result was read for the row."""
     extra_names: tuple[str, ...] = ()
     """The non-zero casillas the surface showed that the table row has no figure for; never a cause of a difference."""
+    gated_stages: tuple[str, ...] = ()
+    """``export unavailable (refused | not served)`` and the table's refusal code, when the export stage matched so."""
 
     @property
     def extra_casillas(self) -> int:
@@ -298,6 +369,8 @@ class PersonaCell:
     """The rows on which the surface showed casillas the table row has no figure for."""
     trees: tuple[str, ...] = ()
     """The trees of the results the cell summarises (rows and the persona's own line), sorted and distinct."""
+    gated_rows: int = 0
+    """The rows with a stage that matched by gating."""
 
 
 def _number(text: str) -> Decimal | None:
@@ -363,10 +436,11 @@ def parity(
     if (why := _uncomparable_reason(row, stages)) is not None:
         return RowParity(row.key, surface, NOT_COMPARABLE, (why,), tree)
     table, shown = dict(row.figures), dict(result.figures)
-    causes = _stage_causes(surface, stages, result) + figure_causes(surface, table, shown)
+    stage_causes, gated = _stage_causes(surface, stages, result, export_refusal_code(row.reason))
+    causes = stage_causes + figure_causes(surface, table, shown)
     outcome = DIFFERS if causes else MATCHED
     extras = extra_figures(table | dict(row.internal_figures), shown)
-    return RowParity(row.key, surface, outcome, tuple(causes), tree, extras)
+    return RowParity(row.key, surface, outcome, tuple(causes), tree, extras, gated)
 
 
 def _load_failure_reason(result: SurfaceResult | None, load_reason: str) -> str:
@@ -385,13 +459,42 @@ def _uncomparable_reason(row: TableRow, stages: Mapping[str, str | None]) -> str
     return None
 
 
-def _stage_causes(surface: str, stages: Mapping[str, str | None], result: SurfaceResult) -> list[str]:
-    """Each stage at which the surface's word differs from the table row's."""
-    return [
-        f"{name} {surface} {getattr(result, name)}, table {word}"
-        for name, word in stages.items()
-        if getattr(result, name) != word
-    ]
+def export_refusal_code(reason: str) -> str | None:
+    """The first ``REFUSED_``/``ERROR_`` code after ``export:`` in a table row's reason; ``None`` when none."""
+    if (match := _EXPORT_CODE.search(reason)) is None:
+        return None
+    return str(match.group(1))
+
+
+def _export_unavailable(name: str, word: str | None, result: SurfaceResult, code: str | None) -> bool:
+    """Whether the surface's ``not-reached`` export is the table's refusal for an unsealed revision.
+
+    It is, only when the form served no export door (``export_served`` false, never absent) and the table's export
+    refusal code is one of ``EXPORT_WITHHELD_UNVERIFIED``.
+    """
+    return (
+        name == "export"
+        and result.export == NOT_REACHED
+        and result.export_served is False
+        and word == "refused"
+        and code in EXPORT_WITHHELD_UNVERIFIED
+    )
+
+
+def _stage_causes(
+    surface: str, stages: Mapping[str, str | None], result: SurfaceResult, code: str | None
+) -> tuple[list[str], tuple[str, ...]]:
+    """Each stage at which the surface's word differs from the table row's, and the stages matched as unavailable."""
+    causes: list[str] = []
+    gated: list[str] = []
+    for name, word in stages.items():
+        if getattr(result, name) == word:
+            continue
+        if _export_unavailable(name, word, result, code):
+            gated.append(f"{EXPORT_UNAVAILABLE} {code}")
+        else:
+            causes.append(f"{name} {surface} {getattr(result, name)}, table {word}")
+    return causes, tuple(gated)
 
 
 @dataclass(frozen=True, slots=True)
@@ -429,13 +532,12 @@ def compare_frontend(rows: Iterable[TableRow], results: Mapping[ResultKey, Surfa
     cells: dict[tuple[str, str], PersonaCell] = {}
     for surface in SURFACES:
         held = {key: result for key, result in results.items() if key[0] == surface}
-        loads = {persona: _loads(held, persona) for persona in personas}
-        found = _surface_parities(ordered, surface, held, loads)
+        lines = {persona: _persona_lines(held, persona) for persona in personas}
+        found = _surface_parities(ordered, surface, held, lines)
         parities[surface] = found
         extras[surface] = _surface_extras(surface, held, keys)
         for persona in personas:
-            line = _persona_line(held, persona)
-            cells[persona, surface] = _persona_cell(found, persona, loads[persona], None if line is None else line.tree)
+            cells[persona, surface] = _persona_cell(found, persona, lines[persona], _results_load(held, persona))
     return FrontendComparison(ordered, parities, extras, cells)
 
 
@@ -443,19 +545,31 @@ def _surface_parities(
     ordered: Iterable[TableRow],
     surface: str,
     held: Mapping[ResultKey, SurfaceResult],
-    loads: Mapping[str, bool | None],
+    lines: Mapping[str, Mapping[int | None, SurfaceResult]],
 ) -> tuple[RowParity, ...]:
-    """One parity per table row for ``surface``, given the results it ``held`` and each persona's load state."""
-    return tuple(
-        parity(
-            row,
-            surface,
-            held.get((surface, row.persona, row.modelo, row.year, row.period)),
-            loads=loads[row.persona],
-            load_reason=_load_reason(held, row.persona),
-        )
-        for row in ordered
-    )
+    """One parity per table row for ``surface``, given the results it ``held`` and each persona's own lines."""
+    found: list[RowParity] = []
+    for row in ordered:
+        result = held.get((surface, row.persona, row.modelo, row.year, row.period))
+        loads, reason = (None, "") if result is not None else _row_load(lines[row.persona], held, row)
+        found.append(parity(row, surface, result, loads=loads, load_reason=reason))
+    return tuple(found)
+
+
+def _row_load(
+    lines: Mapping[int | None, SurfaceResult], held: Mapping[ResultKey, SurfaceResult], row: TableRow
+) -> tuple[bool | None, str]:
+    """Whether the persona loaded for a row that has no result line, and the reason when it did not.
+
+    The persona line of the row's horizon speaks for it, else the horizon-less persona line; with no persona line at
+    all the return lines of the persona do, and a persona with only other horizons' lines loaded by default.
+    """
+    if not lines:
+        return _results_load(held, row.persona), ""
+    line = lines.get(row.horizon, lines.get(None))
+    if line is None or line.loads:
+        return None, ""
+    return False, line.reason
 
 
 def _surface_extras(surface: str, held: Mapping[ResultKey, SurfaceResult], keys: set[RowKey]) -> tuple[RowParity, ...]:
@@ -471,48 +585,57 @@ def _surface_extras(surface: str, held: Mapping[ResultKey, SurfaceResult], keys:
 
 
 def _persona_cell(
-    found: Iterable[RowParity], persona: str, loads: bool | None, line_tree: str | None = None
+    found: Iterable[RowParity],
+    persona: str,
+    lines: Mapping[int | None, SurfaceResult],
+    results_load: bool | None,
 ) -> PersonaCell:
-    """``persona``'s cell on one surface from the parities of that surface's rows and its own line's tree."""
+    """``persona``'s cell on one surface from the parities of that surface's rows and its own lines' trees.
+
+    The persona does not load only when every one of its table rows failed to load; without rows the cell follows
+    its lines (none loaded), else the return lines.
+    """
     mine = [item for item in found if item.key[0] == persona]
-    trees = {item.tree for item in mine if item.tree is not None} | ({line_tree} if line_tree is not None else set())
+    counts = Counter(item.outcome for item in mine)
+    trees = {item.tree for item in mine if item.tree is not None} | {line.tree for line in lines.values()}
     return PersonaCell(
-        loads,
+        _cell_loads(counts, len(mine), lines, results_load),
         len(mine),
-        Counter(item.outcome for item in mine),
+        counts,
         sum(item.extra_casillas > 0 for item in mine),
         tuple(sorted(trees)),
+        sum(bool(item.gated_stages) for item in mine),
     )
 
 
-def _persona_line(held: Mapping[ResultKey, SurfaceResult], persona: str) -> SurfaceResult | None:
-    return next((result for key, result in held.items() if key[1] == persona and key[2] is None), None)
-
-
-def _loads(held: Mapping[ResultKey, SurfaceResult], persona: str) -> bool | None:
-    """Whether the persona's profile loaded on a surface: its own line, else any line's, else not yet run."""
-    line = _persona_line(held, persona)
-    if line is not None:
-        return line.loads
-    mine = [result for key, result in held.items() if key[1] == persona]
-    if not mine:
+def _cell_loads(
+    counts: Mapping[str, int], rows: int, lines: Mapping[int | None, SurfaceResult], results_load: bool | None
+) -> bool | None:
+    """The cell's load state: ``None`` when nothing was read for the persona, ``False`` only when no row loaded."""
+    if not lines and results_load is None:
         return None
-    return all(result.loads for result in mine)
+    if rows:
+        return counts.get(LOAD_FAILED, 0) < rows
+    return any(line.loads for line in lines.values()) if lines else results_load
 
 
-def _load_reason(held: Mapping[ResultKey, SurfaceResult], persona: str) -> str:
-    line = _persona_line(held, persona)
-    if line is not None and not line.loads:
-        return line.reason
-    return ""
+def _persona_lines(held: Mapping[ResultKey, SurfaceResult], persona: str) -> dict[int | None, SurfaceResult]:
+    """The persona-level lines of ``persona`` by horizon (``None`` for a line without one), the latest of each."""
+    return {key[3]: result for key, result in held.items() if key[1] == persona and key[2] is None}
+
+
+def _results_load(held: Mapping[ResultKey, SurfaceResult], persona: str) -> bool | None:
+    """Whether the persona's lines all loaded; ``None`` when the surface has no line of the persona."""
+    mine = [result for key, result in held.items() if key[1] == persona]
+    return all(result.loads for result in mine) if mine else None
 
 
 def cell_text(cell: PersonaCell, head: str | None = None) -> str:
     """The persona cell summary, ``loads, 5/7 matched, 1 differs, 1 not run``, or ``not yet run``.
 
-    Rows that could not be compared, rows lost to a failed load and rows that show extra casillas are named after
-    the three counts when there are any. With ``head`` given, the sorted trees of the cell's results that are not
-    ``head`` close it as `` @<tree>,<tree>``.
+    Rows that could not be compared, rows lost to a failed load, rows that show extra casillas and rows with a stage
+    matched by gating are named after the three counts when there are any. With ``head`` given, the sorted trees of
+    the cell's results that are not ``head`` close it as `` @<tree>,<tree>``.
     """
     if cell.loads is None:
         return "not yet run"
@@ -535,6 +658,8 @@ def _cell_parts(cell: PersonaCell) -> list[str]:
         parts.append(f"{counts.get(LOAD_FAILED, 0)} load failed")
     if cell.extra_rows:
         parts.append(f"{cell.extra_rows} rows show extra casillas")
+    if cell.gated_rows:
+        parts.append(f"{cell.gated_rows} rows matched by gating")
     return parts
 
 
@@ -568,6 +693,8 @@ def trees_line(comparison: FrontendComparison) -> str:
 
 __all__ = [
     "CELL_WORDS",
+    "EXPORT_UNAVAILABLE",
+    "EXPORT_WITHHELD_UNVERIFIED",
     "STAGE_OF",
     "STAGE_WORDS",
     "SURFACES",
@@ -579,6 +706,7 @@ __all__ = [
     "SurfaceResult",
     "cell_text",
     "compare_frontend",
+    "export_refusal_code",
     "extra_figures",
     "figure_causes",
     "frontend_line",

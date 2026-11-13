@@ -16,9 +16,8 @@ from textual.widgets import Button, Footer, OptionList, Static
 from textual.widgets.option_list import Option
 
 from .....application.modelo.source_policy import SourceSurface
-from .....application.modelo.work_form_models import (
-    ModeloWorkForm,
-)
+from .....application.modelo.work_form_header import form_recorded
+from .....application.modelo.work_form_service import ModeloWorkFormLoadV1
 from .....core.i18n.render import tr
 from ...components.language import localized, refresh_localized_widgets
 from ...components.theme import tokenised
@@ -173,23 +172,27 @@ class WorkbenchIssuesScreen(ModalScreen[IssuesChoice | None]):
 
     def __init__(
         self,
-        form: ModeloWorkForm,
+        load: ModeloWorkFormLoadV1,
         *,
         status_line: StatusLine | None = None,
         additional_lines: tuple[IssueLine, ...] = (),
         changes_unapplied: bool = False,
     ) -> None:
-        """Hold the form whose findings and missing and assumed values are listed.
+        """Hold the served declaration whose findings and missing and assumed values are listed.
+
+        The verdict line says the check's verdict served with ``load``.
 
         ``status_line`` is shown above everything else when given, so the
         declaration's result and deadline stay in view while the dialog covers
         the workbench's header.
         """
         super().__init__()
+        form = load.form
         self._form = form
+        self._verdict = load.journey.verdict
         self._status_line = status_line
         self._changes_unapplied = changes_unapplied
-        self._recorded = form.filing is not None
+        self._recorded = form_recorded(form, filed=load.filed)
         self._lines = (*additional_lines, *issue_lines(form))
         self._unentered = {boxes.level: boxes for boxes in unentered_levels(form)}
         self._expanded: set[int] = set()
@@ -211,7 +214,9 @@ class WorkbenchIssuesScreen(ModalScreen[IssuesChoice | None]):
             title = title_text(level_counts(self._lines, tuple(self._unentered.values())), recorded=self._recorded)
             yield Static(levels_marked(title), id="issues-title", markup=False)
             yield Static(
-                verdict_text(self._form, changes_unapplied=self._changes_unapplied), id="issues-verdict", markup=False
+                verdict_text(self._verdict, changes_unapplied=self._changes_unapplied),
+                id="issues-verdict",
+                markup=False,
             )
             yield IssueList(*self._options(), id="issues-list")
             if self._recoveries:

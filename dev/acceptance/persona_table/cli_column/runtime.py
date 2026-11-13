@@ -146,7 +146,7 @@ def build_tree_venv(snapshot: Path, authority: Path, client_root: Path | None, r
         raise RuntimeSetupError(f"no Google OAuth client for the build: {redactor.text(str(error))}") from None
     environment = build_environment(snapshot, client, os.environ)
     completed = _run([sys.executable, "-c", _BUILD_SNIPPET], snapshot, environment, BUILD_SECONDS)
-    output = redactor.text(f"{completed.stdout}\n{completed.stderr}")
+    output = redactor.with_client(client).text(f"{completed.stdout}\n{completed.stderr}")
     log.parent.mkdir(parents=True, exist_ok=True)
     log.write_text(output, encoding="utf-8", newline="\n")
     lines = [line for line in completed.stdout.splitlines() if line.strip()]
