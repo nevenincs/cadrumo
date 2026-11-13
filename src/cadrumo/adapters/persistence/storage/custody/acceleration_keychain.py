@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import binascii
 import sys
+from contextlib import suppress
 from dataclasses import dataclass
 from typing import Final, Protocol, cast
 from uuid import UUID
@@ -26,6 +27,9 @@ entry: deleting the storage root cannot reap them, and code that deleted under
 the old token first would be exactly the migration path this project forbids.
 Permanent credential residue on real machines is the worse outcome, so the
 wire identifier stays fixed while the code name says what the artefact is.
+
+On Windows each account is stored under its own target derived from this
+token; see :class:`_AccountTargetKeyring`.
 """
 
 _KEYCHAIN_PROBE_ACCOUNT: Final[str] = "availability-probe"
@@ -70,6 +74,75 @@ class _NoninteractiveKeyring:
             self.backend.delete_password(service_name, username)
 
 
+def _account_target(service_name: str, username: str) -> str:
+    """Return the Windows target that holds one account's key alone.
+
+    The spelling is the keyring Windows backend's own compound target
+    (``<username>@<service>``), where that backend already looks for an
+    account the shared target does not hold. A reader that still asks for
+    the shared service through keyring therefore finds the same entry, and a
+    key the backend had moved aside before this layout existed is already in
+    place.
+    """
+    return f"{username}@{service_name}"
+
+
+@dataclass(frozen=True, slots=True)
+class _AccountTargetKeyring:
+    """Give every account its own Windows Credential Manager target.
+
+    The Windows credential store addresses a generic credential by target
+    name alone, and the keyring backend writes a service by reading its target,
+    moving the previous holder to a compound target and then overwriting it.
+    Two processes storing different accounts under one service can both move
+    the same holder, and one new key is lost. Writing each account under the
+    service ``<account>@<service>`` makes that target the only one its writes
+    touch, so writes for different accounts never meet.
+
+    A key the released layout left on the shared target is copied, never
+    moved: the copy is read back before it is used, and the shared entry is
+    removed only when its own account is deleted and it still holds the same
+    secret as the account's own target.
+    """
+
+    backend: _ProfileSessionKeyring
+    keyring_error: type[BaseException]
+    password_delete_error: type[BaseException]
+
+    def set_password(self, service_name: str, username: str, password: str) -> None:
+        self.backend.set_password(_account_target(service_name, username), username, password)
+
+    def get_password(self, service_name: str, username: str) -> str | None:
+        target = _account_target(service_name, username)
+        stored = self.backend.get_password(target, username)
+        if stored is not None:
+            return stored
+        # The backend reads the shared target only for an entry that names
+        # this account; otherwise it falls back to the account target just read.
+        legacy = self.backend.get_password(service_name, username)
+        if legacy is None:
+            return None
+        self.backend.set_password(target, username, legacy)
+        if self.backend.get_password(target, username) != legacy:
+            raise self.keyring_error("the profile-session key copied from the shared target did not read back")
+        return legacy
+
+    def delete_password(self, service_name: str, username: str) -> None:
+        current = self.get_password(service_name, username)
+        if current is None:
+            raise self.password_delete_error(service_name)
+        # A concurrent owner may delete it after the read above; the caller's
+        # confirmation read decides the outcome.
+        with suppress(self.password_delete_error):
+            self.backend.delete_password(_account_target(service_name, username), username)
+        legacy = self.backend.get_password(service_name, username)
+        if legacy is None:
+            return
+        if legacy != current:
+            raise self.keyring_error("the shared target holds a different profile-session key for this account")
+        self.backend.delete_password(service_name, username)
+
+
 def acceleration_keychain_keyring() -> tuple[_ProfileSessionKeyring, type[BaseException], type[BaseException]]:
     """Return the direct OS-keychain capability without master/provider reuse."""
     try:
@@ -93,6 +166,8 @@ def acceleration_keychain_keyring() -> tuple[_ProfileSessionKeyring, type[BaseEx
     backend = cast(_ProfileSessionKeyring, keyring)
     if sys.platform == "darwin":
         backend = _NoninteractiveKeyring(backend)
+    elif sys.platform == "win32":
+        backend = _AccountTargetKeyring(backend, KeyringError, PasswordDeleteError)
     return backend, KeyringError, PasswordDeleteError
 
 
