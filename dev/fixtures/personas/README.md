@@ -362,6 +362,10 @@ The tenant's age band is derived at the contract date from the tenant identity's
 expectation inputs and reach no record: the rent comes from the ledger rows and the amortisation from the stored
 acquisition and cadastral values.
 
+`arrendado_desde` optionally states the date from which the dwelling is let, the property row's `arrendado_desde`
+fact. It must not be later than any lease start of the property; a let dwelling states it, and the replay records
+it on the property row only when stated.
+
 `pendiente_intereses_reparacion` states what earlier years left pending of the dwelling's interest and
 repairs under LIRPF art. 23.1.a.1; the table runner makes that statement on the property's row after the first
 calculation, as the operator does, and a persona that omits it states nothing.

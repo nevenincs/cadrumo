@@ -163,6 +163,16 @@ aggregation:
       supplier_regime_observations_outside_period: Az áfa-összesítés a kért bevallási
         időszakon kívüli keltezésű megfigyeléseket tartalmaz.
   modelo_232_related_party:
+    basis:
+      contradiction: Az ügyletek hiányáról szóló nyilatkozat egy érvényes ügylet mellett
+        áll, ezért semmi sem dönthető el.
+      none_stated: Kijelentetted, hogy ebben az évben nem volt kapcsolt felekkel vagy
+        adóparadicsommal végzett ügyleted.
+      nothing_stated: Erre az évre még semmit nem adtál meg.
+      operations_stated: Erre az évre ügyleteket adtál meg.
+    direction:
+      ingreso: Bevétel (I)
+      pago: Kifizetés (P)
     errors:
       already_stated: Ez a nyilatkozat már érvényben van arra az évre. Vond vissza,
         mielőtt újra megteszed.
@@ -177,8 +187,61 @@ aggregation:
         nincs érvényben.
       operations_present: Ebben az évben érvényes ügyletek vannak. Vond vissza őket,
         mielőtt kijelented, hogy nem volt egy sem.
+      specific_operation_required: Ez az ügylettípus a 232-es modell szabályai szerint
+        mindig különleges ügylet. Add meg ezt az ügyletet különleges ügyletként.
       stale_revision: A 232-es modell nyilatkozata megváltozott, amióta elolvastad.
         Olvasd be újra, és próbáld újra.
+      validation: Az adatok nem alkotnak ilyen típusú 232-es nyilatkozatot. Ellenőrizd,
+        mely opciókat kéri ez a típus, és melyeket nem fogad el.
+    exclusion:
+      aie_or_registered_ute: AIE vagy nyilvántartott UTE a tagjaival (2.2.b cikk)
+      consolidation_group: Adócsoporton belül (2.2.a cikk)
+      public_offer: Nyilvános értékpapír-ajánlat keretében (2.2.c cikk)
+    ground:
+      intangibles_reduction: Immateriális javak átengedése utáni csökkentés (2.4 cikk)
+      same_related_party: Ügyletek ugyanazzal a kapcsolt személlyel vagy szervezettel
+        (2.1.a cikk)
+      specific_operation_type: Azonos típusú különleges ügyletek (2.1.b cikk)
+      tax_haven: Ügyletek vagy értékpapírok adóparadicsomban (2.5 cikk)
+      turnover_share: Azonos típusú és értékelési módszerű ügyletek a nettó árbevételhez
+        mérve (2.3 cikk)
+    ground_state:
+      met: Teljesül
+      not_met: Nem teljesül
+      undecided: Eldöntetlen
+    obligation:
+      not_owed: A nyilvántartásaid szerint nem kell benyújtanod a 232-es modellt.
+      owed: A nyilvántartásaid szerint be kell nyújtanod a 232-es modellt.
+      undecided: A nyilvántartásaid alapján még nem dönthető el, hogy be kell-e nyújtanod
+        a 232-es modellt.
+    operation_kind:
+      intangibles_reduction: Immateriális javak átengedéséből származó, csökkentett
+        jövedelem (LIS 23. cikk)
+      related_party: Ügylet kapcsolt személlyel vagy szervezettel
+      tax_haven_holding: Adóparadicsomban tartott értékpapírok
+      tax_haven_operation: Ügylet adóparadicsommal
+    served:
+      already_stated: Erre az évre már érvényben van ilyen nyilatkozat. Vond vissza,
+        mielőtt újra megteszed.
+      code_unknown: A kapcsolat típusa, az ügylet típusa vagy az értékelési módszer
+        nem szerepel a 232-es modell erre az évre közzétett tervében.
+      ejercicio_unsupported: Ez az év kívül esik a Cadrumo által támogatott bevallási
+        éveken.
+      none_stated: Kijelentetted, hogy ebben az évben nem volt kapcsolt felekkel vagy
+        adóparadicsommal végzett ügyleted. Vond vissza ezt a nyilatkozatot, mielőtt
+        ügyletet adsz hozzá.
+      not_stated: Itt nincs visszavonható, érvényben lévő nyilatkozat.
+      operations_present: Ebben az évben érvényes ügyletek vannak. Vond vissza őket,
+        mielőtt kijelented, hogy nem volt egy sem.
+      specific_operation_required: Ez az ügylettípus a 232-es modell szabályai szerint
+        mindig különleges ügylet, ezért különlegesként kell megadnod.
+      stale_revision: Ezek a 232-es nyilvántartások megváltoztak, amióta elolvastad
+        őket. Olvasd be újra, és próbáld újra.
+      validation: A megadott adatok nem alkotnak ilyen típusú 232-es nyilatkozatot.
+        Nézd meg, milyen adatok kellenek ehhez a típushoz.
+    state:
+      active: Hatályos
+      withdrawn: Visszavont
   modelo_bindings:
     errors:
       invoice_advance_payment_partially_collected: Egy számla előleget rögzít olyan
@@ -5426,6 +5489,22 @@ filing:
       pays_rent_with_retencion: adóelőleg-levonás alá eső bérleti díjat fizet
       pays_withheld_income: adóelőleg-levonás alá eső jövedelmet fizet
       trades_intracommunity: Közösségen belüli ügyleteket végez
+    records_derived_basis: 'Ez a 232-es modellhez megadott ügyleteidből készült helyi
+      levezetés, nem hivatalos AEAT-adat: ebben az évben azt mutatják, hogy az adózóra
+      igaz: %{fact}.'
+    records_derived_basis_not_met: 'Ez a 232-es modellhez megadott ügyleteidből készült
+      helyi levezetés, nem hivatalos AEAT-adat: ebben az évben nem mutatják, hogy
+      az adózóra igaz: %{fact}.'
+    records_excluded_operations: 'A megadott ügyletek közül az Orden HFP/816/2017
+      2.2. cikke által kizártak kimaradtak minden összegből: %{count} darab, összesen
+      %{amount} EUR.'
+    records_turnover_considered: 'Az erre az évre figyelembe vett árbevétel %{amount}
+      EUR, forrása: %{source}.'
+    records_turnover_source:
+      annual_accounts: az éves beszámolód
+      corporation_tax_return: a társasági adóbevallásod
+      operator_estimate: a saját becslésed
+      vat_returns: az áfabevallásaid
   validation:
     deadline_missed: A benyújtási határidő lejárt.
     formula_divergence: Eltérés a képletszámításban.
@@ -6431,6 +6510,8 @@ sheets:
       amortizacion: Értékcsökkenés
       amount: Összeg
       amount_donated: Adományozott összeg
+      anexo_c1_referencia_catastral: Ingatlan-nyilvántartási hivatkozás (C.1 melléklet)
+      anexo_c1_titular: Az ingatlan tulajdonosa (C.1 melléklet)
       anualidades_alimentos: Tartásdíj-járadék
       arrendado: Bérbe adva
       ascendants_75_plus_total: Felmenők 75+ (összes)
@@ -6563,6 +6644,8 @@ sheets:
         javítási kiadások
       gastos_pendientes_aplicados: Korábbi adóévekből levonásra váró, ebben az adóévben
         levont összeg
+      gastos_pendientes_origen: Levonásra váró kamatok, javítási és karbantartási
+        költségek a keletkezés adóéve szerint
       geographic_mobility_clave: Földrajzi mobilitás
       house_number: Házszám
       housing_loan_communication_clave: Lakáshitel-bevallás
@@ -9798,6 +9881,12 @@ workspace:
         local:
           filing: Helyi benyújtás
         schedule: Jogi ütemezés
+      suppressed:
+        verdict:
+          attribution_pass_through: 'Magának az entitásnak nem kell benyújtania: a
+            jövedelem a tagjaira hárul, akik a saját bevallásukban vallják be.'
+          not_applicable: 'Rád nem vonatkozik: a profilod alapján ebben az időszakban
+            nem kell ezt a bevallást benyújtanod.'
       title: Bevallási naptár
       user:
         due: Esedékes

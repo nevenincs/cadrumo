@@ -14,7 +14,7 @@ from cadrumo.application.user_profile.automation_operations import (
 )
 from cadrumo.core.diagnostic_log import diagnostic_timing_event
 from cadrumo.core.logging import get_logger
-from cadrumo.core.time.clock import now
+from cadrumo.core.time.clock import wall_now
 from cadrumo_client.contracts.access_vocabulary import AccessAction
 from cadrumo_client.contracts.contracts import ByteChannel, RefusalCode, RefusalError
 from cadrumo_client.contracts.deadline_budget import exchange_deadline
@@ -383,6 +383,6 @@ def _validated_authority_permit(
     ):
         raise RefusalError(RefusalCode.INVALID_FRAME)
     # Admission is checked as the stage starts; a lease already ended admits nothing.
-    if reply.expires_at <= now():
+    if reply.expires_at <= wall_now():
         raise RefusalError(RefusalCode.TIMEOUT)
     return reply

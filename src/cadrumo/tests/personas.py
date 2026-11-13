@@ -453,6 +453,8 @@ class RentalProperty:
     arrendatario_pariente_art24: bool
     incumple_lau_17_6: bool
     ledger_links: tuple[RentalLedgerLink, ...]
+    arrendado_desde: PersonaDate | None
+    """The date the property was first let; ``None`` when the persona leaves the start unstated."""
     pendiente_intereses_reparacion: Decimal | None
     """What earlier years left pending of the interest and repairs that exceeded the rents; ``None`` when unstated."""
 
@@ -1454,7 +1456,7 @@ def _rental(table: _Table, where: str, roles: _Roles) -> RentalProperty:
                 "ledger_links",
             }
         ),
-        optional=frozenset({"amortization_base_note", "pendiente_intereses_reparacion"}),
+        optional=frozenset({"amortization_base_note", "arrendado_desde", "pendiente_intereses_reparacion"}),
     )
     contract_start = _date(table["contract_start"], f"{where}.contract_start", biographical=True)
     fecha_contrato = _date(table["fecha_contrato"], f"{where}.fecha_contrato", biographical=True)
@@ -1492,6 +1494,11 @@ def _rental(table: _Table, where: str, roles: _Roles) -> RentalProperty:
         arrendatario_pariente_art24=_bool(table, "arrendatario_pariente_art24", where),
         incumple_lau_17_6=_bool(table, "incumple_lau_17_6", where),
         ledger_links=_ledger_links(table["ledger_links"], f"{where}.ledger_links"),
+        arrendado_desde=(
+            _date(table["arrendado_desde"], f"{where}.arrendado_desde", biographical=True)
+            if "arrendado_desde" in table
+            else None
+        ),
         pendiente_intereses_reparacion=(
             _amount(table["pendiente_intereses_reparacion"], f"{where}.pendiente_intereses_reparacion")
             if "pendiente_intereses_reparacion" in table
@@ -2566,6 +2573,7 @@ def _dates(persona: Persona) -> list[PersonaDate]:
         found.extend(value for _key, value in row.values if isinstance(value, PersonaDate))
     found.extend(rental.contract_start for rental in persona.rental_properties)
     found.extend(rental.fecha_adquisicion for rental in persona.rental_properties)
+    found.extend(rental.arrendado_desde for rental in persona.rental_properties if rental.arrendado_desde is not None)
     found.extend(identity.birth_date for identity in persona.identities.identities if identity.birth_date is not None)
     found.extend(filing.presented for filing in persona.aeat_filings)
     found.extend(deadline.statutory_end for deadline in persona.expectations.deadlines)

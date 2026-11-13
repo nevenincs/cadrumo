@@ -550,6 +550,63 @@ cli:
           (%{invoice_id}); semmi sem jött létre.'
         yes_help: Üzleti számla törlésének megerősítése.
         yes_required: Add meg a --yes kapcsolót az üzleti számla törléséhez.
+      operaciones_vinculadas:
+        amount_help: Az ellenérték piaci értéken, euróban, legfeljebb két tizedesjeggyel;
+          értékpapírnál a beszerzési érték.
+        cifra_negocios_help: Az adóév nettó árbevétele (cifra de negocios) euróban,
+          legfeljebb két tizedesjeggyel.
+        counterparty_country_help: A másik fél kétbetűs országkódja, például ES.
+        counterparty_name_help: A másik fél neve vagy cégneve.
+        counterparty_tax_id_help: A kapcsolt személy vagy szervezet adóazonosítója,
+          külföldi is lehet. A két kapcsolt személyes fajtánál kötelező.
+        description_help: Mi volt az adóparadicsommal végzett ügylet. Csak tax_haven_operation
+          esetén.
+        direction_help: I, ha te kaptad az ellenértéket, P, ha te fizetted.
+        ejercicio_help: Az adóév (`ejercicio`), amelyhez a rekordok tartoznak.
+        exclusion_help: 'A 2.2 cikk szerinti kizáró ok: consolidation_group, aie_or_registered_ute
+          vagy public_offer.'
+        expected_guard_revision_help: A lista által az évre mutatott védőrevízió;
+          ha megadod, a nyilatkozatot elutasítja, ha az év azóta megváltozott.
+        expected_revision_help: A lista által a visszavont rekordhoz mutatott revízió.
+        group_help: A 232-es modell kapcsolt felekkel és adóparadicsommal végzett
+          ügyleteinek megadása, listázása és visszavonása.
+        invalid_input: 'Egy érték érvénytelen: ellenőrizd az adóévet, az összegeket,
+          az ügylet azonosítóját és a revíziót.'
+        kind_help: 'Az ügylet fajtája: related_party, intangibles_reduction, tax_haven_operation
+          vagy tax_haven_holding.'
+        list_help: Kilistázza, mit adtál meg egy adóévre, az egyes rekordok revíziójával
+          és azzal, mit döntenek a 232-es modellről.
+        metodo_valoracion_help: Az értékelési módszer kódja (a 232-es modell tervének
+          B táblája).
+        note_help: Miért nem volt ilyen ügylet az évben. Kötelező.
+        operation_id_help: Az ügylet listában látható azonosítója (operation_id).
+        parent_name_help: Az anyavállalat neve. Csak intangibles_reduction esetén,
+          a --parent-tax-id opcióval együtt.
+        parent_tax_id_help: Az anyavállalat adóazonosítója. Csak intangibles_reduction
+          esetén, a --parent-name opcióval együtt.
+        participation_help: A kibocsátóban birtokolt részesedésed százalékban. Csak
+          tax_haven_holding esetén.
+        source_help: 'Honnan származik az adat: annual_accounts, corporation_tax_return,
+          vat_returns vagy operator_estimate.'
+        source_reference_help: Hivatkozás arra a dokumentumra vagy bevallásra, amelyből
+          az adatot vetted.
+        specific_help: Az ügylet különleges ügylet (Orden HFP/816/2017 2.1.b cikk).
+        state_none_help: Kijelenti, hogy egy adóévben nem volt kapcsolt felekkel vagy
+          adóparadicsommal végzett ügylet.
+        state_operation_help: Megad egy adóévre egy kapcsolt féllel vagy adóparadicsommal
+          végzett ügyletet. Ez a saját nyilatkozatod.
+        state_turnover_help: Megadja egy adóév nettó árbevételét (cifra de negocios)
+          és annak forrását.
+        tipo_operacion_help: Az ügylet típusának kódja (a 232-es modell tervének C
+          táblája).
+        tipo_vinculacion_help: A kapcsolat típusának kódja (a 232-es modell tervének
+          A táblája).
+        withdraw_none_help: Visszavonja az ügyletek hiányáról szóló nyilatkozatot
+          a lista által mutatott revízió védelmében.
+        withdraw_operation_help: Visszavon egy megadott ügyletet a lista által mutatott
+          revízió védelmében.
+        withdraw_turnover_help: Visszavonja a megadott nettó árbevételt a lista által
+          mutatott revízió védelmében.
       prevision_social:
         amount_help: Az igazoláson szereplő hozzájárulás összege euróban, például
           1500.00.

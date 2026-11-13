@@ -309,6 +309,9 @@ class OverviewSuppressedEntrySnapshot(BaseModel):
 
     modelo: str
     period: str
+    opens_on: date
+    closes_on: date
+    adjusted_closes_on: date
     verdict: ApplicabilityVerdict
     reason: str
     actions: tuple[PipelineNextActionSnapshot, ...] = ()
@@ -319,6 +322,9 @@ class OverviewSuppressedEntrySnapshot(BaseModel):
         return cls(
             modelo=value.modelo,
             period=str(value.period),
+            opens_on=value.opens_on,
+            closes_on=value.closes_on,
+            adjusted_closes_on=value.adjusted_closes_on,
             verdict=value.verdict,
             reason=value.reason,
             actions=tuple(PipelineNextActionSnapshot.from_action(action) for action in value.actions),
@@ -329,6 +335,9 @@ class OverviewSuppressedEntrySnapshot(BaseModel):
         return SuppressedCalendarEntry(
             modelo=self.modelo,
             period=_period(self.period),
+            opens_on=self.opens_on,
+            closes_on=self.closes_on,
+            adjusted_closes_on=self.adjusted_closes_on,
             verdict=self.verdict,
             reason=self.reason,
             actions=tuple(action.to_action() for action in self.actions),

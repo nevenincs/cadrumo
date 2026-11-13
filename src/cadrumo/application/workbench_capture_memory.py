@@ -93,6 +93,8 @@ class WorkbenchCalendarMemoKey:
     aeat_evidence_revision: str = "unbound"
     invoice_catalogue_revision: str = "unbound"
     """The invoice catalogue the ledger obligation signals are derived from."""
+    related_party_revision: str = "unbound"
+    """The Modelo 232 statements the related-party obligation fact is derived from."""
 
 
 @dataclass(frozen=True, slots=True)

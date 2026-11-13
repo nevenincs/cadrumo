@@ -20,12 +20,13 @@ merely to be present.
 from __future__ import annotations
 
 from datetime import date
-from typing import Literal
+from typing import Annotated, Literal
 
 import pytest
 from pydantic import BaseModel
 
 from ..binding_provider_coordinates import absolute_coordinate_offenders
+from ..binding_temporal import RelativeToFilingYear
 from ..ids import RevisionId
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -129,6 +130,29 @@ class _NestedTemporalNameProvider(BaseModel):
     row: _TemporalNamedRow
 
 
+class _RelativeOrigin(BaseModel):
+    """A nested shape counting ejercicios back from the one filed, marked as relative."""
+
+    back: Annotated[int, RelativeToFilingYear()]
+
+
+class _RelativeOriginProvider(BaseModel):
+    kind: Literal["relative_origin"] = "relative_origin"
+    origin: _RelativeOrigin
+    lag: Annotated[int, RelativeToFilingYear()] = 1
+
+
+class _UnmarkedOrigin(BaseModel):
+    """The same count without the marker, which the guard cannot tell from a year."""
+
+    back: int
+
+
+class _UnmarkedOriginProvider(BaseModel):
+    kind: Literal["unmarked_origin"] = "unmarked_origin"
+    origin: _UnmarkedOrigin
+
+
 class _SelfReferentialProvider(BaseModel):
     kind: Literal["self_referential"] = "self_referential"
     parent: _SelfReferentialProvider | None = None
@@ -194,3 +218,15 @@ def test_the_exemptions_do_not_follow_their_names_into_a_nested_model(
 def test_self_referential_provider_terminates() -> None:
     """A model reachable from itself is visited once rather than forever."""
     assert absolute_coordinate_offenders("provider", _SelfReferentialProvider) == ()
+
+
+def test_an_integer_marked_relative_to_the_filing_year_is_accepted_at_any_depth() -> None:
+    """A count of ejercicios before the one filed moves with the context, so the marker admits it."""
+    assert absolute_coordinate_offenders("provider", _RelativeOriginProvider) == ()
+
+
+def test_the_same_integer_without_the_marker_is_refused() -> None:
+    """Only the marker admits the count; the field name or its nesting does not."""
+    offenders = absolute_coordinate_offenders("provider", _UnmarkedOriginProvider)
+
+    assert offenders == ("provider.origin declares absolute coordinate field 'back'",)
