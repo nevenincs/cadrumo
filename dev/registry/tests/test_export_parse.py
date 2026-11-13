@@ -60,6 +60,7 @@ def test_m100_dictionary_preserves_published_letter_casilla_identities(
         source_payloads={
             str(source.id): (source_root() / source.corpus_path).read_bytes() for source in catalogues.sources.values()
         },
+        casillas=modelos_by_id["100"].revisions[_revision_id(filing_year)].casillas,
     )
     entry = next(item for item in entries if item.field_id == field_id)
 
@@ -80,6 +81,7 @@ def test_m100_dictionary_preserves_published_numeric_casilla_identities(filing_y
         source_payloads={
             str(source.id): (source_root() / source.corpus_path).read_bytes() for source in catalogues.sources.values()
         },
+        casillas=modelos_by_id["100"].revisions[_revision_id(filing_year)].casillas,
     )
     entry = next(item for item in entries if item.field_id == "TITA")
 
@@ -111,7 +113,9 @@ def test_m100_letter_casilla_grammar_is_declared_by_the_bound_source() -> None:
 def test_m100_letter_casilla_parsing_refuses_when_source_capability_is_removed() -> None:
     """The same published dictionary row becomes non-casilla without its capability."""
     modelos_by_id, catalogues = loaded_registry()
-    layout = modelos_by_id["100"].revisions[_revision_id(_LETTER_EDITIONS[0])].export_layouts[0]
+    revision = modelos_by_id["100"].revisions[_revision_id(_LETTER_EDITIONS[0])]
+    layout = revision.export_layouts[0]
+    casillas = revision.casillas
     source = catalogues.sources[str(layout.dictionary_source_ref)]
     dictionary_path = source_root() / source.corpus_path
     removed_capability = SourceReference.model_validate(
@@ -122,11 +126,13 @@ def test_m100_letter_casilla_parsing_refuses_when_source_capability_is_removed()
         layout,
         sources={str(source.id): source},
         source_payloads={str(source.id): dictionary_payload},
+        casillas=casillas,
     )
     refused = xml_dictionary_entries(
         layout,
         sources={str(removed_capability.id): removed_capability},
         source_payloads={str(removed_capability.id): dictionary_payload},
+        casillas=casillas,
     )
 
     assert next(item for item in admitted if item.field_id == "VHADQ").casilla_id == "A"

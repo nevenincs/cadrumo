@@ -2215,7 +2215,7 @@ fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-
 selector = { revision = "2024", id = "0699" }
 fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2024-dictionary:1031 y aeat-dr-100-2025-dictionary:1058: ADQA, ruta /DatosEconomicos/Resultados/AnexoARes/DeduccionViviendaHabitualRes/ADQA, tipo P102; descripcion oficial equivalente salvo formato, abreviatura DT, marcador de nota, localizacion del anexo C y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"] }
 [[revisions."2025".casilla_overrides]]
-selector = { revision = "2024", id = "0700" }
+selector = { revision = "2024", id = "RESINGDEV" }
 fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2024-dictionary:2380 y aeat-dr-100-2025-dictionary:2524: RESINGDEV, ruta /DatosEconomicos/Resultados/IngresoDevolucionRes/RESINGDEV, tipo N102; descripcion oficial equivalente salvo formato, abreviatura DT, marcador de nota, localizacion del anexo C y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"] }
 [[revisions."2025".casilla_overrides]]
 selector = { revision = "2024", id = "0701" }
@@ -6674,163 +6674,163 @@ position = 409
 
 [[revisions."2025".casilla_positions]]
 id = "0757"
-position = 737
+position = 736
 
 [[revisions."2025".casilla_positions]]
 id = "0760"
-position = 740
+position = 739
 
 [[revisions."2025".casilla_positions]]
 id = "0765"
-position = 745
+position = 744
 
 [[revisions."2025".casilla_positions]]
 id = "0767"
-position = 747
+position = 746
 
 [[revisions."2025".casilla_positions]]
 id = "0769"
-position = 749
+position = 748
 
 [[revisions."2025".casilla_positions]]
 id = "0776"
-position = 755
+position = 754
 
 [[revisions."2025".casilla_positions]]
 id = "0780"
-position = 759
+position = 758
 
 [[revisions."2025".casilla_positions]]
 id = "0785"
-position = 763
+position = 762
 
 [[revisions."2025".casilla_positions]]
 id = "0795"
-position = 773
+position = 772
 
 [[revisions."2025".casilla_positions]]
 id = "0798"
-position = 776
+position = 775
 
 [[revisions."2025".casilla_positions]]
 id = "0829"
-position = 807
+position = 806
 
 [[revisions."2025".casilla_positions]]
 id = "0969"
-position = 942
+position = 941
 
 [[revisions."2025".casilla_positions]]
 id = "0981"
-position = 954
+position = 953
 
 [[revisions."2025".casilla_positions]]
 id = "0995"
-position = 968
+position = 967
 
 [[revisions."2025".casilla_positions]]
 id = "1121"
-position = 1086
+position = 1085
 
 [[revisions."2025".casilla_positions]]
 id = "2002"
-position = 1968
-
-[[revisions."2025".casilla_positions]]
-id = "2003"
 position = 1969
 
 [[revisions."2025".casilla_positions]]
-id = "2004"
+id = "2003"
 position = 1970
 
 [[revisions."2025".casilla_positions]]
-id = "2005"
+id = "2004"
 position = 1971
 
 [[revisions."2025".casilla_positions]]
-id = "2006"
+id = "2005"
 position = 1972
 
 [[revisions."2025".casilla_positions]]
-id = "2007"
+id = "2006"
 position = 1973
 
 [[revisions."2025".casilla_positions]]
-id = "2008"
+id = "2007"
 position = 1974
 
 [[revisions."2025".casilla_positions]]
-id = "2009"
+id = "2008"
 position = 1975
 
 [[revisions."2025".casilla_positions]]
-id = "2010"
+id = "2009"
 position = 1976
 
 [[revisions."2025".casilla_positions]]
-id = "2011"
+id = "2010"
 position = 1977
 
 [[revisions."2025".casilla_positions]]
-id = "2012"
+id = "2011"
 position = 1978
 
 [[revisions."2025".casilla_positions]]
-id = "2013"
+id = "2012"
 position = 1979
 
 [[revisions."2025".casilla_positions]]
-id = "2014"
+id = "2013"
 position = 1980
 
 [[revisions."2025".casilla_positions]]
-id = "2015"
+id = "2014"
 position = 1981
 
 [[revisions."2025".casilla_positions]]
-id = "2022"
-position = 1988
+id = "2015"
+position = 1982
 
 [[revisions."2025".casilla_positions]]
-id = "2023"
+id = "2022"
 position = 1989
 
 [[revisions."2025".casilla_positions]]
-id = "2024"
+id = "2023"
 position = 1990
 
 [[revisions."2025".casilla_positions]]
-id = "2025"
+id = "2024"
 position = 1991
 
 [[revisions."2025".casilla_positions]]
+id = "2025"
+position = 1992
+
+[[revisions."2025".casilla_positions]]
 id = "2048"
-position = 2014
+position = 2015
 
 [[revisions."2025".casilla_positions]]
 id = "2056"
-position = 2022
-
-[[revisions."2025".casilla_positions]]
-id = "2057"
 position = 2023
 
 [[revisions."2025".casilla_positions]]
-id = "2058"
+id = "2057"
 position = 2024
 
 [[revisions."2025".casilla_positions]]
-id = "2059"
+id = "2058"
 position = 2025
 
 [[revisions."2025".casilla_positions]]
-id = "2060"
+id = "2059"
 position = 2026
 
 [[revisions."2025".casilla_positions]]
-id = "2061"
+id = "2060"
 position = 2027
+
+[[revisions."2025".casilla_positions]]
+id = "2061"
+position = 2028
 
 [[revisions."2025".casilla_positions]]
 id = "A"
@@ -7615,6 +7615,11 @@ sequence_order = {legal_refs = [0, 2, 1]}
 
 [[revisions."2025".family_overrides]]
 family = "constructs"
+selector = {revision = "2024", id = "renta-mini-model-minimo-ascendientes-y-deducciones-autonomicas"}
+sequence_additions = {source_refs = ["aeat-dr-100-2025-dictionary"]}
+
+[[revisions."2025".family_overrides]]
+family = "constructs"
 selector = {revision = "2024", id = "renta-anexo-c-base-liquidable-negativa-general"}
 sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]}
 sequence_removals = {source_refs = [1, 2, 3, 4, 5]}
@@ -7661,7 +7666,7 @@ sequence_order = {legal_refs = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14
 family = "constructs"
 selector = {revision = "2024", id = "renta-mini-model-capital-inmobiliario"}
 sequence_additions = {legal_refs = ["ley-35-2006:art-86", "ley-35-2006:art-87", "ley-35-2006:art-88", "ley-35-2006:art-89", "orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3"]}
-sequence_removals = {formulas = [2, 3, 4], legal_refs = [2, 3], source_refs = [0, 1, 2]}
+sequence_removals = {formulas = [2, 3], legal_refs = [2, 3], source_refs = [0, 1, 2]}
 
 [[revisions."2025".family_overrides]]
 family = "constructs"

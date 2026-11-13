@@ -1,0 +1,10 @@
+[[revisions."2023".constructs]]
+id = "renta-mini-model-deduccion-madrid-cuidado-ascendientes"
+legal_refs = [
+    "ley-35-2006:art-77",
+    "madrid-dl-1-2010:art-7-bis",
+]
+source_refs = [
+    "aeat-renta-2023-manual-parte1",
+]
+formulas = ["renta-deduccion-madrid-cuidado-ascendientes"]

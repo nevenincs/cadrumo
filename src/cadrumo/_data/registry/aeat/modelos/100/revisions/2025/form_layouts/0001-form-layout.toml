@@ -7,7 +7,7 @@ revision_id = "2025"
 seed_source = "xml_dictionary"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "3c9d93fc00582e68575473d3c382dcf6c85fa4d75e68ee35076d20add45f7942"
+source_state_digest = "fce79744c04702dfd4c1d49b23d399610f43a905200e30e61c9e8e21caf83160"
 design_sources = [
     { source_ref = "aeat-dr-100-2025-dictionary", sha256 = "67409ad3027f2548d90bd64ea5eeff7fa344ace87377a048527d2c7de92fe93b" },
     { source_ref = "aeat-dr-100-2025-input-dictionary", sha256 = "ef63737b6d52e22a4c1c4b7934975488b93b0f37f9a8bc10f6c365219b6ecade" },
@@ -693,7 +693,6 @@ placements = [
     { casilla_id = "0695", kind = "on_form", box_number = "0695" },
     { casilla_id = "0698", kind = "on_form", box_number = "0698" },
     { casilla_id = "0699", kind = "on_form", box_number = "0699" },
-    { casilla_id = "0700", kind = "on_form", box_number = "0700" },
     { casilla_id = "0701", kind = "on_form", box_number = "0701" },
     { casilla_id = "0702", kind = "on_form", box_number = "0702" },
     { casilla_id = "0703", kind = "on_form", box_number = "0703" },
@@ -2254,6 +2253,7 @@ placements = [
     { casilla_id = "PCTMINASDLG", kind = "on_form" },
     { casilla_id = "PH18", kind = "working_figure" },
     { casilla_id = "RESIDENTEUE", kind = "on_form" },
+    { casilla_id = "RESINGDEV", kind = "on_form", box_number = "0700" },
     { casilla_id = "SEXO_C", kind = "on_form" },
     { casilla_id = "SEXO_D", kind = "on_form" },
     { casilla_id = "TIPOTRIBUTACION", kind = "on_form" },
@@ -4092,7 +4092,7 @@ blocks = [
 id = "ingresodevolucionres"
 heading_key = "modelo.schema.100.form.section.ingresodevolucionres.heading"
 blocks = [
-    { kind = "field", id = "field", casilla_id = "0700" },
+    { kind = "field", id = "field", casilla_id = "RESINGDEV" },
 ]
 
 [[revisions.2025.form_layouts.pages.sections]]

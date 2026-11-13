@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import re
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
 from xml.etree.ElementTree import Element
@@ -14,8 +14,9 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.decimal.coercion import normalize_decimal_separators
 from .errors import RegistryValidationError
 from .export_parse_models import ParsedExportFieldValue, ParsedExportPayload
-from .schema_exports import ExportLayoutDefinition
+from .schema_exports import ExportLayoutDefinition, XmlDictionaryRowTarget
 from .schema_references import SourceReference
+from .schema_surfaces import CasillaDefinition
 
 # The dictionary's two boolean row types. ``LGC`` resolves to the XSD's
 # ``tipo_logico`` (``0``/``1``) and ``S_N`` to ``tipo_SINO_Exclusivo``
@@ -44,6 +45,14 @@ class XmlDictionaryEntry:
     path: str
     data_type: str
     casilla_id: CasillaId | None
+    """The casilla this row reads: the one the edition's registry declares for the row.
+
+    It is the printed number only when the registry holds no casilla under that
+    number; see :func:`xml_dictionary_entries` for how the rest are resolved.
+    """
+
+    printed_number: CasillaId | None = None
+    """The box number the dictionary prints on this row, unresolved."""
 
 
 def parse_xml_dictionary_payload(
@@ -52,9 +61,10 @@ def parse_xml_dictionary_payload(
     *,
     sources: Mapping[str, SourceReference] | None,
     source_payloads: Mapping[str, bytes] | None,
+    casillas: Iterable[CasillaDefinition],
 ) -> ParsedExportPayload:
     """Parse the payload values named by the official dictionary and published overrides."""
-    entries = xml_dictionary_entries(layout, sources=sources, source_payloads=source_payloads)
+    entries = xml_dictionary_entries(layout, sources=sources, source_payloads=source_payloads, casillas=casillas)
     try:
         root = ElementTree.fromstring(payload)
     except ElementTree.ParseError as exc:
@@ -76,8 +86,8 @@ def parse_xml_dictionary_payload(
                     source_locator=f"{layout.id}:{entry.path}:{index}",
                 ),
             )
-    casillas = tuple(value for value in parsed if value.casilla_id is not None)
-    return ParsedExportPayload(layout_id=layout.id, fields=tuple(parsed), casillas=casillas)
+    casilla_values = tuple(value for value in parsed if value.casilla_id is not None)
+    return ParsedExportPayload(layout_id=layout.id, fields=tuple(parsed), casillas=casilla_values)
 
 
 def _xml_dictionary_source(
@@ -125,6 +135,7 @@ def _parse_xml_dictionary_line(
         path=overrides.get(field_id, match["path"].strip()),
         data_type=match["type"].strip(),
         casilla_id=casilla_id,
+        printed_number=casilla_id,
     )
 
 
@@ -133,23 +144,163 @@ def xml_dictionary_entries(
     *,
     sources: Mapping[str, SourceReference] | None,
     source_payloads: Mapping[str, bytes] | None,
+    casillas: Iterable[CasillaDefinition],
 ) -> tuple[XmlDictionaryEntry, ...]:
-    """Resolve official AEAT XML dictionary :class:`XmlDictionaryEntry` rows for ``layout``."""
+    """Resolve official AEAT XML dictionary :class:`XmlDictionaryEntry` rows for ``layout``.
+
+    Each row reads the one casilla of ``casillas`` whose ``number`` equals the
+    number the dictionary prints, with ``segmento`` unset. A declared
+    :class:`XmlDictionaryRowTarget` overrides that lookup for its row. A printed
+    number the registry holds under more than one casilla, on a row with no
+    target, is refused rather than resolved by order or by id. A number the
+    registry holds under no casilla is kept as printed.
+    """
     source, dictionary_payload = _xml_dictionary_source(layout, sources=sources, source_payloads=source_payloads)
     # Applied here rather than at either consumer: the renderer and
     # :func:`parse_export_payload` both resolve their rows from this call, so a
     # correction reaching only one of them would make an exported artefact
     # verify as drift against itself.
     overrides = {override.field_id: override.path for override in layout.dictionary_path_overrides}
+    targets = {target.field_id: target for target in layout.dictionary_row_targets}
+    declared = tuple(casillas)
+    casilla_ids_by_number = _casilla_ids_by_printed_number(declared)
     entries: list[XmlDictionaryEntry] = []
-    for line in decode_dictionary_text(dictionary_payload).splitlines():
-        entry = _parse_xml_dictionary_line(line, source=source, overrides=overrides)
-        if entry is not None:
-            entries.append(entry)
+    line_fields: dict[int, str] = {}
+    for line_number, line in enumerate(decode_dictionary_text(dictionary_payload).splitlines(), start=1):
+        row = _parse_xml_dictionary_line(line, source=source, overrides=overrides)
+        if row is None:
+            continue
+        line_fields[line_number] = row.field_id
+        entries.append(
+            _resolve_row_casilla(
+                layout,
+                row,
+                target=targets.get(row.field_id),
+                casilla_ids_by_number=casilla_ids_by_number,
+            ),
+        )
     if not entries:
         raise RegistryValidationError(f"XML export layout {layout.id!r} dictionary has no parseable entries")
     _assert_every_override_was_applied(layout, entries)
+    _assert_every_row_target_is_grounded(
+        layout,
+        entries,
+        line_fields=line_fields,
+        declared_casillas={casilla.id: casilla for casilla in declared},
+        sources=sources,
+        source_payloads=source_payloads,
+    )
     return tuple(entries)
+
+
+def _casilla_ids_by_printed_number(casillas: Iterable[CasillaDefinition]) -> Mapping[str, tuple[CasillaId, ...]]:
+    """Index the ids of segment-less casillas by the number the dictionary prints for them."""
+    by_number: dict[str, list[CasillaId]] = {}
+    for casilla in casillas:
+        if casilla.segmento is None:
+            by_number.setdefault(casilla.number, []).append(casilla.id)
+    return {number: tuple(ids) for number, ids in by_number.items()}
+
+
+def _resolve_row_casilla(
+    layout: ExportLayoutDefinition,
+    row: XmlDictionaryEntry,
+    *,
+    target: XmlDictionaryRowTarget | None,
+    casilla_ids_by_number: Mapping[str, tuple[CasillaId, ...]],
+) -> XmlDictionaryEntry:
+    """Return ``row`` reading the casilla its target or its printed number names."""
+    printed = row.printed_number
+    if target is not None:
+        resolved: CasillaId | None = target.casilla_id
+    elif printed is None:
+        resolved = None
+    else:
+        holders = casilla_ids_by_number.get(printed, ())
+        if len(holders) > 1:
+            raise RegistryValidationError(
+                f"XML export layout {layout.id!r} dictionary row {row.field_id!r} prints box {printed!r}, "
+                f"which the registry holds under {sorted(holders)!r}; declare the casilla the row reads "
+                "as a dictionary row target",
+            )
+        resolved = holders[0] if holders else printed
+    return XmlDictionaryEntry(
+        field_id=row.field_id,
+        path=row.path,
+        data_type=row.data_type,
+        casilla_id=resolved,
+        printed_number=printed,
+    )
+
+
+def _assert_every_row_target_is_grounded(
+    layout: ExportLayoutDefinition,
+    entries: list[XmlDictionaryEntry],
+    *,
+    line_fields: Mapping[int, str],
+    declared_casillas: Mapping[CasillaId, CasillaDefinition],
+    sources: Mapping[str, SourceReference] | None,
+    source_payloads: Mapping[str, bytes] | None,
+) -> None:
+    """Refuse a row target its dictionary, its casilla or its XSD does not bear out.
+
+    A target is a claim that a specific published row reads a specific casilla.
+    It is held to the row it names: the row must exist at the cited line, print
+    the number of the casilla it targets, and its XSD element must exist.
+    """
+    rows = {entry.field_id: entry for entry in entries}
+    for target in layout.dictionary_row_targets:
+        row = rows.get(target.field_id)
+        if row is None:
+            raise RegistryValidationError(
+                f"XML export layout {layout.id!r} declares a dictionary row target for {target.field_id!r}, "
+                "which the official dictionary does not declare, so the target would apply to nothing",
+            )
+        if line_fields.get(target.dictionary_line) != target.field_id:
+            raise RegistryValidationError(
+                f"XML export layout {layout.id!r} row target {target.field_id!r} cites dictionary line "
+                f"{target.dictionary_line}, which does not hold that row",
+            )
+        casilla = declared_casillas.get(target.casilla_id)
+        if casilla is None:
+            raise RegistryValidationError(
+                f"XML export layout {layout.id!r} row target {target.field_id!r} names casilla "
+                f"{target.casilla_id!r}, which the edition does not declare",
+            )
+        if casilla.segmento is not None or casilla.number != row.printed_number:
+            raise RegistryValidationError(
+                f"XML export layout {layout.id!r} row target {target.field_id!r} prints box "
+                f"{row.printed_number!r}, which is not the number of casilla {target.casilla_id!r} "
+                f"({casilla.number!r})",
+            )
+        _assert_xsd_declares_element(layout, target, sources=sources, source_payloads=source_payloads)
+
+
+def _assert_xsd_declares_element(
+    layout: ExportLayoutDefinition,
+    target: XmlDictionaryRowTarget,
+    *,
+    sources: Mapping[str, SourceReference] | None,
+    source_payloads: Mapping[str, bytes] | None,
+) -> None:
+    """Refuse a target whose cited XSD declares no such element.
+
+    A reader holding only the dictionary (the form-layout generator) cannot
+    judge the XSD, so the element is checked wherever the XSD payload is
+    supplied, which every export and verification path does.
+    """
+    if sources is None or source_payloads is None:
+        return
+    source = sources.get(target.xsd_source_ref)
+    payload = source_payloads.get(source.id) if source is not None else None
+    if payload is None:
+        return
+    declaration = f'name="{target.xsd_element}"'.encode()
+    if declaration not in payload:
+        raise RegistryValidationError(
+            f"XML export layout {layout.id!r} row target {target.field_id!r} cites XSD element "
+            f"{target.xsd_element!r}, which {target.xsd_source_ref!r} does not declare",
+        )
 
 
 def _assert_every_override_was_applied(

@@ -66,6 +66,7 @@ __all__ = [
     "OneBasedExportOffset",
     "ProjectionEndpointDeclaration",
     "RecordDiscriminator",
+    "XmlDictionaryRowTarget",
 ]
 
 type OneBasedExportOffset = Annotated[int, Field(ge=1)]
@@ -903,6 +904,29 @@ class XmlDictionaryPathOverride(RegistryModel):
     reason: str = Field(min_length=1, max_length=1024)
 
 
+class XmlDictionaryRowTarget(RegistryModel):
+    """One official dictionary row whose printed number is shared, with the casilla it reads.
+
+    An AEAT dictionary may print one box number on several rows, and the
+    registry keeps one casilla per concept, so the printed number alone cannot
+    say which casilla a row reads. The edition whose dictionary prints such a
+    row declares the casilla it reads here, with the row's own evidence: the
+    dictionary line that prints it and the XSD element that settles it.
+
+    The evidence belongs to the edition that states it. A target citing a
+    dictionary other than the layout's current one is refused, so a later
+    edition whose dictionary still repeats the number states its own targets
+    instead of inheriting a claim made about another publication.
+    """
+
+    field_id: str = Field(min_length=1, max_length=64)
+    casilla_id: CasillaId
+    dictionary_source_ref: SourceRefId
+    dictionary_line: int = Field(ge=1)
+    xsd_source_ref: SourceRefId
+    xsd_element: str = Field(min_length=1, max_length=128)
+
+
 class ExportLayoutDefinition(RegistryModel):
     """Declare the complete wire layout used to render an official export."""
 
@@ -937,6 +961,14 @@ class ExportLayoutDefinition(RegistryModel):
     because the writer and the export parser resolve their rows from the same
     call: a correction applied to only one of them would make an artefact verify
     as drift against itself.
+    """
+
+    dictionary_row_targets: tuple[XmlDictionaryRowTarget, ...] = Field(default_factory=tuple)
+    """Dictionary rows that read a casilla other than the one their printed number names.
+
+    Declared only where this edition's dictionary prints one number on several
+    rows. Applied where the dictionary is read, with the path overrides, so the
+    renderer and the export parser resolve one row set.
     """
 
     aux_idioma: DeclaracionIdiomaValue = None
@@ -1019,6 +1051,30 @@ def _validate_xml_dictionary_layout(layout: ExportLayoutDefinition) -> None:
             f"export layout {layout.id!r} declares more than one dictionary path override for "
             f"{duplicates!r}, so which correction applies is ambiguous",
         )
+    _validate_dictionary_row_targets(layout)
+
+
+def _validate_dictionary_row_targets(layout: ExportLayoutDefinition) -> None:
+    """Hold each row target to this layout's own dictionary and XSD."""
+    target_fields = [target.field_id for target in layout.dictionary_row_targets]
+    repeated = sorted({name for name in target_fields if target_fields.count(name) > 1})
+    if repeated:
+        raise RegistryValidationError(
+            f"export layout {layout.id!r} declares more than one dictionary row target for "
+            f"{repeated!r}, so which casilla the row reads is ambiguous",
+        )
+    for target in layout.dictionary_row_targets:
+        if target.dictionary_source_ref != layout.dictionary_source_ref:
+            raise RegistryValidationError(
+                f"export layout {layout.id!r} row target {target.field_id!r} cites dictionary "
+                f"{target.dictionary_source_ref!r}, which is not the layout's dictionary "
+                f"{layout.dictionary_source_ref!r}; a target's evidence is never inherited",
+            )
+        if target.xsd_source_ref not in layout.source_refs:
+            raise RegistryValidationError(
+                f"export layout {layout.id!r} row target {target.field_id!r} XSD source "
+                f"{target.xsd_source_ref!r} must be included in source_refs",
+            )
 
 
 def _validate_non_xml_layout(layout: ExportLayoutDefinition) -> None:
@@ -1047,6 +1103,11 @@ def _validate_non_xml_metadata(layout: ExportLayoutDefinition) -> None:
     if layout.dictionary_path_overrides:
         raise RegistryValidationError(
             f"export layout {layout.id!r} declares dictionary path overrides on a {layout.format} layout, "
+            "which reads no dictionary",
+        )
+    if layout.dictionary_row_targets:
+        raise RegistryValidationError(
+            f"export layout {layout.id!r} declares dictionary row targets on a {layout.format} layout, "
             "which reads no dictionary",
         )
 

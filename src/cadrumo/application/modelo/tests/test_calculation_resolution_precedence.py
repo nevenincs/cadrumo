@@ -206,7 +206,9 @@ def test_the_published_modelo_100_dictionary_makes_its_boxes_exported_without_ex
     declared = {casilla.id for casilla in revision.casillas}
     emitted = {
         entry.casilla_id
-        for entry in xml_dictionary_entries(layout, sources=snapshot.sources, source_payloads=payloads)
+        for entry in xml_dictionary_entries(
+            layout, sources=snapshot.sources, source_payloads=payloads, casillas=revision.casillas
+        )
         if entry.casilla_id is not None and entry.casilla_id in declared
     }
     exported = official_export_casilla_ids(revision, sources=snapshot.sources, source_payloads=payloads)

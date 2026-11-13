@@ -20,6 +20,7 @@ from cadrumo.domain.calculations.registry.ids import ModeloId, RevisionId
 from cadrumo.domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
 from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
+from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 
 from .coverage import CoverageAuthorityScope
 from .model import ConformanceModel
@@ -224,6 +225,7 @@ def _compare_annual_population(
     comparisons = tuple(
         _compare_dictionary_layout(
             layout,
+            casillas=selected.revision.casillas,
             registry_ids=registry_ids,
             registry_internal_only_count=len(selected.revision.casillas) - len(registry_casillas),
             printed_form_status=printed_form_status,
@@ -253,6 +255,7 @@ def _compare_annual_population(
 def _compare_dictionary_layout(
     layout: ExportLayoutDefinition,
     *,
+    casillas: Sequence[CasillaDefinition],
     registry_ids: frozenset[str],
     registry_internal_only_count: int,
     printed_form_status: _MeasurementStatus,
@@ -294,6 +297,7 @@ def _compare_dictionary_layout(
                 if source_root is None
                 else {str(source.id): (source_root / source.corpus_path).read_bytes() for source in sources.values()}
             ),
+            casillas=casillas,
         )
     except (RegistryValidationError, OSError) as exc:
         return measured(

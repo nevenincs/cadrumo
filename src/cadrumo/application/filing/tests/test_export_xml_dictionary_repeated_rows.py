@@ -195,7 +195,12 @@ def test_every_edition_places_the_declared_columns_in_the_schema_order(
     layout = provider.get_snapshot("100").revision.export_layouts[0]
     dictionary = {
         entry.casilla_id: entry.field_id
-        for entry in xml_dictionary_entries(layout, sources=provider.sources, source_payloads=provider.source_payloads)
+        for entry in xml_dictionary_entries(
+            layout,
+            sources=provider.sources,
+            source_payloads=provider.source_payloads,
+            casillas=provider.get_snapshot("100").revision.casillas,
+        )
         if f"/{_ELEMENT_PATH}/" in entry.path
     }
     columns = ("1626", "1612", "1631", "1632", "1633", "1637", "1638", "1639", "1640", "1654")
@@ -274,7 +279,9 @@ def test_a_value_on_another_box_of_a_lone_sale_refuses_rather_than_landing_on_it
     provider = _provider(operation, year)
     revision = provider.get_snapshot("100").revision
     layout = revision.export_layouts[0]
-    entries = xml_dictionary_entries(layout, sources=provider.sources, source_payloads=provider.source_payloads)
+    entries = xml_dictionary_entries(
+        layout, sources=provider.sources, source_payloads=provider.source_payloads, casillas=revision.casillas
+    )
     element = f"/{_ELEMENT_PATH}"
     stray = next(entry for entry in entries if entry.casilla_id == "1652")
     column = next(

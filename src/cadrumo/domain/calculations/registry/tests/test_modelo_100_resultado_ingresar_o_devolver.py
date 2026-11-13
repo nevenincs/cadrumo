@@ -1,4 +1,4 @@
-"""Box 0700 of the newest authored Modelo 100 is the declared amount payable or refundable, derived from 0670 or 0695.
+"""RESINGDEV of the newest authored Modelo 100 is the declared amount payable or refundable, derived from 0670 or 0695.
 
 The official record design names the element RESINGDEV "Resultado a ingresar o
 a devolver (casilla [0670] o casilla [0695] de la declaración)". The box is the
@@ -37,7 +37,7 @@ _RESULT_OF_THE_RETURN: CasillaId = validated_casilla_id("0670", surface="_RESULT
 _SUSPENDED_PAYABLE: CasillaId = validated_casilla_id("0693", surface="_SUSPENDED_PAYABLE")
 _WAIVED_REFUND: CasillaId = validated_casilla_id("0694", surface="_WAIVED_REFUND")
 _REMAINDER: CasillaId = validated_casilla_id("0695", surface="_REMAINDER")
-_AMOUNT_PAYABLE_OR_REFUNDABLE: CasillaId = validated_casilla_id("0700", surface="_AMOUNT_PAYABLE_OR_REFUNDABLE")
+_AMOUNT_PAYABLE_OR_REFUNDABLE: CasillaId = validated_casilla_id("RESINGDEV", surface="_AMOUNT_PAYABLE_OR_REFUNDABLE")
 _WITHHELD_ON_EMPLOYMENT: BindingId = "renta-retencion-soportada-trabajo"
 # Casilla 0003 reads the payer withholding record's gross cash amount, so the salary is stated through
 # the binding. 30,000 EUR lies above the art. 20 LIRPF phase-out bound of the edition, so casilla 0023 is 0.

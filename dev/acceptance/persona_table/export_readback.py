@@ -70,7 +70,11 @@ def read_fields(
         operation=operation,
     )
     return parse_export_payload(
-        layout, payload, sources=provider.sources, source_payloads=provider.source_payloads
+        layout,
+        payload,
+        sources=provider.sources,
+        source_payloads=provider.source_payloads,
+        casillas=provider.get_snapshot(modelo).revision.casillas,
     ).fields
 
 

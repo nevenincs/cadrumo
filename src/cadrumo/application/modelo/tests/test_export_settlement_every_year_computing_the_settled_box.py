@@ -1,7 +1,7 @@
-"""Every supported Modelo 100 ejercicio that computes RESINGDEV (0700) settles from it, through the real export.
+"""Every supported Modelo 100 ejercicio that computes RESINGDEV settles from it, through the real export.
 
 The two newest dictionaries both state "Resultado a ingresar o a devolver
-(casilla [0670] o casilla [0695])" for 0700: the remainder 0695 once the spouse
+(casilla [0670] o casilla [0695])" for RESINGDEV: the remainder 0695 once the spouse
 compensation suspends part of an amount to pay (0693), otherwise the result
 0670; a waived refund (0694) leaves it without a value. The years come from
 what each revision computes, never from a list here. Each draft is calculated
@@ -51,7 +51,7 @@ _RESULT: CasillaId = validated_casilla_id("0670")
 _SUSPENDED = "0693"
 _WAIVED = "0694"
 _REMAINDER: CasillaId = validated_casilla_id("0695")
-_SETTLED: CasillaId = validated_casilla_id("0700")
+_SETTLED: CasillaId = validated_casilla_id("RESINGDEV")
 _WITHHELD = "renta-retencion-soportada-trabajo"
 _REFUND_IBAN = "ES9121000418450200051332"
 

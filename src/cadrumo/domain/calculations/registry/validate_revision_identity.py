@@ -6,12 +6,15 @@ empty-payload violations within a single :class:`ModeloRevision`.
 
 from __future__ import annotations
 
+from collections import Counter
 from collections.abc import Iterable, Mapping
 from typing import TYPE_CHECKING
 
+from ....core.export_layout_format import ExportLayoutFormat
+
 if TYPE_CHECKING:
     from .schema import ModeloRevision
-    from .schema_surfaces import CasillaDefinition
+    from .schema_surfaces import CalculationCompletenessManifest, CasillaDefinition
 
 
 def _duplicates(values: Iterable[str]) -> set[str]:
@@ -109,9 +112,73 @@ def revision_reference_identity_failures(prefix: str, revision: ModeloRevision) 
     return tuple(failures)
 
 
+def declared_repeated_casilla_numbers(revision: ModeloRevision) -> frozenset[str]:
+    """Return the segment-less casilla numbers whose repetition an XML layout declares.
+
+    A number is declared repeated only when the official dictionary prints it
+    on several rows and every casilla holding it is the declared target of a
+    dictionary row in an XML layout of ``revision``. The target itself is held
+    to its dictionary row, line and XSD element where the dictionary is read.
+    """
+    targeted = {
+        target.casilla_id
+        for layout in revision.export_layouts
+        if layout.format is ExportLayoutFormat.XML_DICTIONARY
+        for target in layout.dictionary_row_targets
+    }
+    holders: dict[str, list[str]] = {}
+    for casilla in revision.casillas:
+        if casilla.segmento is None:
+            holders.setdefault(casilla.number, []).append(casilla.id)
+    return frozenset(
+        number for number, ids in holders.items() if len(ids) > 1 and all(casilla_id in targeted for casilla_id in ids)
+    )
+
+
+def manifest_record_design_metadata_failures(
+    prefix: str,
+    manifest: CalculationCompletenessManifest,
+    *,
+    declared_repeats: frozenset[str],
+) -> tuple[str, ...]:
+    """Return the duplicate reviewed segment/number metadata a manifest declares.
+
+    The manifest cannot tell a number the official dictionary prints on several
+    rows from a mistake, so the judgement belongs here, where the revision's
+    declared repeats are known. A manifest entry is checked against the casilla
+    it references, so a number repeated only by a declared repeat is not a
+    duplicate.
+    """
+    metadata_pairs = Counter(
+        casilla.record_design_metadata()
+        for casilla in manifest.casillas
+        if casilla.segmento is not None or casilla.number not in declared_repeats
+    )
+    duplicates = sorted(
+        (pair for pair, count in metadata_pairs.items() if count > 1), key=lambda pair: (pair[0] or "", pair[1])
+    )
+    if not duplicates:
+        return ()
+    rendered = ", ".join(
+        f"{number!r}" if segmento is None else f"{number!r} within segmento {segmento!r}"
+        for segmento, number in duplicates
+    )
+    return (
+        f"{prefix}: calculation-completeness manifest declares duplicate casilla record-design metadata: {rendered}",
+    )
+
+
 def revision_casilla_identity_failures(prefix: str, revision: ModeloRevision) -> tuple[str, ...]:
     """Return :class:`ModeloRevision` casilla identity failures."""
     failures: list[str] = []
+    if revision.completeness_manifest is not None:
+        failures.extend(
+            manifest_record_design_metadata_failures(
+                prefix,
+                revision.completeness_manifest,
+                declared_repeats=declared_repeated_casilla_numbers(revision),
+            ),
+        )
     _emit_casilla_metadata_uniqueness_failures(failures, prefix, revision)
     _emit_ambiguous_bare_casilla_id_failures(failures, prefix, revision)
     _emit_ambiguous_casilla_reference_token_failures(failures, prefix, revision)
@@ -127,9 +194,10 @@ def _emit_ambiguous_bare_casilla_id_failures(
     owners_by_printed_number: dict[str, list[tuple[str, str | None]]] = {}
     for casilla in revision.casillas:
         owners_by_printed_number.setdefault(casilla.number, []).append((casilla.id, casilla.segmento))
+    declared_repeats = declared_repeated_casilla_numbers(revision)
 
     for number, owners in sorted(owners_by_printed_number.items()):
-        if len(owners) <= 1:
+        if len(owners) <= 1 or number in declared_repeats:
             continue
         ambiguous_owner_ids = sorted(
             casilla_id for casilla_id, segmento in owners if segmento is None or casilla_id == number
@@ -169,9 +237,12 @@ def _casilla_metadata_tokens(casilla: CasillaDefinition) -> list[tuple[str, str 
 def _casilla_metadata_owners(revision: ModeloRevision) -> dict[str, list[str]]:
     """Index non-canonical casilla metadata tokens by their owning casilla."""
     metadata_owners: dict[str, list[str]] = {}
+    declared_repeats = declared_repeated_casilla_numbers(revision)
     for casilla in revision.casillas:
         for kind, token in _casilla_metadata_tokens(casilla):
             if token is None or token == casilla.id:
+                continue
+            if kind == "number" and casilla.segmento is None and token in declared_repeats:
                 continue
             metadata_owners.setdefault(token, []).append(f"{kind} metadata for casilla {casilla.id!r}")
     return metadata_owners
@@ -205,9 +276,16 @@ def _emit_casilla_metadata_uniqueness_failures(
 
     ``casilla.id`` is canonical; ``number`` is AEAT/display metadata.
     With ``segmento`` unset, the pair preserves single-segment
-    duplicate-number failures.
+    duplicate-number failures, except for a number the official dictionary
+    prints on several rows, whose every casilla is the declared target of a
+    row (see :func:`declared_repeated_casilla_numbers`).
     """
-    pairs = [(casilla.segmento, casilla.number) for casilla in revision.casillas]
+    declared_repeats = declared_repeated_casilla_numbers(revision)
+    pairs = [
+        (casilla.segmento, casilla.number)
+        for casilla in revision.casillas
+        if casilla.segmento is not None or casilla.number not in declared_repeats
+    ]
     seen: set[tuple[str | None, str]] = set()
     reported: set[tuple[str | None, str]] = set()
     for pair in pairs:

@@ -88,8 +88,8 @@ _MULTI_REVISION_MODELO = "100"
 _M100_DICTIONARY_CASILLA_COUNTS = {
     "b7639e957131063c48e3774061b8c5c9005b720fb638ab951093833fda9e595f": 1531,
     "2aaf5c7fe7df35458dc50c0b9fe1925853b2778a26f493baee524a926ae6d817": 1693,
-    "081d872040b3e7690a0b38f5da49ff1ade390dc806bef72560d00ee0fdb858dc": 1852,
-    "a9b8d0e24878b550870666870107b66af2df3eb7d341739e59accce6f1108024": 1929,
+    "081d872040b3e7690a0b38f5da49ff1ade390dc806bef72560d00ee0fdb858dc": 1853,
+    "a9b8d0e24878b550870666870107b66af2df3eb7d341739e59accce6f1108024": 1930,
     "0e190a5b1fe95047785832797ff15d5070441e37d49e4062d20ca95b65e37884": 2072,
     "67409ad3027f2548d90bd64ea5eeff7fa344ace87377a048527d2c7de92fe93b": 2215,
 }
@@ -581,6 +581,7 @@ def _assert_comparison_matches_the_parsed_dictionary(
         source_payloads={
             str(source.id): (bundled_path() / source.corpus_path).read_bytes() for source in snapshot.sources.values()
         },
+        casillas=snapshot.revision.casillas,
     )
     dictionary_ids = {str(entry.casilla_id) for entry in entries if entry.casilla_id is not None}
     registry_ids = {str(casilla.id) for casilla in snapshot.revision.casillas if not casilla.internal_only}
