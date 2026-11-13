@@ -5,9 +5,10 @@ fraccionado in casilla 03; modalidad base imponible (art. 40.3 LIS) reports it i
 casilla 34. The two are mutually exclusive per filing. The Modelo 200 fold-in must
 credit whichever modality the taxpayer used. Before the fix it read only casilla 34,
 so a 40.2 filer's instalments folded in as 0 — the annual cuota diferencial omitted
-payments already made (over-payment). This verifies each modality's relation resolves
-to the persisted M202 quarterly amounts, against an external oracle (the sum the test
-persists), not the formula under test.
+payments already made (over-payment). The Modelo 200 reads each instalment through its
+own relation per modality (casillas 00601, 00603 and 00605). This verifies each
+relation resolves to the persisted M202 amount of its instalment, against an external
+oracle (the amount the test persists), not the formula under test.
 """
 
 from __future__ import annotations
@@ -35,8 +36,13 @@ from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_REL_40_2: RelationId = "modelo-200-pagos-fraccionados-anuales-40-2"
-_REL_40_3: RelationId = "modelo-200-pagos-fraccionados-anuales"
+_INSTALMENT_ORDINAL = {"1P": "primero", "2P": "segundo", "3P": "tercero"}
+_REL_40_2: dict[str, RelationId] = {
+    period: f"modelo-200-pago-fraccionado-{ordinal}-40-2" for period, ordinal in _INSTALMENT_ORDINAL.items()
+}
+_REL_40_3: dict[str, RelationId] = {
+    period: f"modelo-200-pago-fraccionado-{ordinal}-40-3" for period, ordinal in _INSTALMENT_ORDINAL.items()
+}
 
 
 _M202_MODALIDAD_CUOTA_PAGO_CASILLA: CasillaId = validated_casilla_id("03")
@@ -92,12 +98,11 @@ def test_m200_fold_in_credits_modalidad_40_2_instalments(tmp_path: Path) -> None
                 )
             )
         values = _resolve_m200_pagos_fraccionados(repository)
-        # The 40.2 relation captures the modalidad-cuota instalments — the sum of the
-        # quarterly casilla-03 values the relation aggregated (computed from the inputs,
-        # not a hand-summed literal, so the assertion proves the aggregation wiring).
-        assert values.get(_REL_40_2) == sum(amounts.values(), Decimal("0"))
-        # The 40.3 relation is 0 for a 40.2 filer (casilla 34 = 0 every quarter).
-        assert values.get(_REL_40_3) == Decimal("0")
+        # Each 40.2 relation captures its modalidad-cuota instalment: the casilla-03
+        # value persisted for that period.
+        assert {period: values.get(_REL_40_2[period]) for period in amounts} == amounts
+        # The 40.3 relations are 0 for a 40.2 filer (casilla 34 = 0 every quarter).
+        assert {values.get(_REL_40_3[period]) for period in amounts} == {Decimal("0")}
 
 
 def test_m200_fold_in_credits_modalidad_40_3_instalments(tmp_path: Path) -> None:
@@ -121,8 +126,8 @@ def test_m200_fold_in_credits_modalidad_40_3_instalments(tmp_path: Path) -> None
                 )
             )
         values = _resolve_m200_pagos_fraccionados(repository)
-        assert values.get(_REL_40_3) == sum(amounts.values(), Decimal("0"))
-        assert values.get(_REL_40_2) == Decimal("0")
+        assert {period: values.get(_REL_40_3[period]) for period in amounts} == amounts
+        assert {values.get(_REL_40_2[period]) for period in amounts} == {Decimal("0")}
 
 
 def _all_m202_relation_values(
@@ -150,8 +155,8 @@ def test_is3_first_year_cuota_resolves_unfiled_m202_relations_to_zero(tmp_path: 
     with isolated_runtime_profile(tmp_path=tmp_path):
         repository = CalculationObservationRepository()  # no M202 observations persisted
         values = _all_m202_relation_values(repository, no_base_periods=("1P", "2P", "3P"))
-        assert values.get(_REL_40_3) == Decimal("0")
-        assert values.get(_REL_40_2) == Decimal("0")
+        relations = (*_REL_40_3.values(), *_REL_40_2.values())
+        assert {values.get(relation) for relation in relations} == {Decimal("0")}
 
 
 def test_is3_flag_off_leaves_unfiled_m202_relations_unresolved(tmp_path: Path) -> None:
@@ -160,8 +165,8 @@ def test_is3_flag_off_leaves_unfiled_m202_relations_unresolved(tmp_path: Path) -
     with isolated_runtime_profile(tmp_path=tmp_path):
         repository = CalculationObservationRepository()
         values = _all_m202_relation_values(repository, no_base_periods=())
-        assert values.get(_REL_40_3) is None
-        assert values.get(_REL_40_2) is None
+        relations = (*_REL_40_3.values(), *_REL_40_2.values())
+        assert {values.get(relation) for relation in relations} == {None}
 
 
 def test_is3_first_year_flag_never_overrides_a_filed_m202_value(tmp_path: Path) -> None:
@@ -186,9 +191,10 @@ def test_is3_first_year_flag_never_overrides_a_filed_m202_value(tmp_path: Path) 
                 )
             )
         values = _all_m202_relation_values(repository, no_base_periods=("1P", "2P", "3P"))
-        # filed value preserved (the sum of the quarterly casilla-03 inputs), NOT zeroed
-        assert values.get(_REL_40_2) == sum(amounts.values(), Decimal("0"))
-        assert values.get(_REL_40_3) == Decimal("0")  # casilla 34 = 0 each quarter (genuinely 0)
+        # filed values preserved (each quarter's casilla-03 input), NOT zeroed
+        assert {period: values.get(_REL_40_2[period]) for period in amounts} == amounts
+        # casilla 34 = 0 each quarter (genuinely 0)
+        assert {values.get(_REL_40_3[period]) for period in amounts} == {Decimal("0")}
 
 
 def test_second_year_first_instalment_without_base_folds_the_filed_later_instalments(tmp_path: Path) -> None:
@@ -212,6 +218,7 @@ def test_second_year_first_instalment_without_base_folds_the_filed_later_instalm
                     stamped_revision_id=revision_id_for_observation(observation),
                 )
             )
-        assert _all_m202_relation_values(repository, no_base_periods=()).get(_REL_40_2) is None
+        assert _all_m202_relation_values(repository, no_base_periods=()).get(_REL_40_2["1P"]) is None
         values = _all_m202_relation_values(repository, no_base_periods=("1P",))
-        assert values.get(_REL_40_2) == sum(amounts.values(), Decimal("0"))
+        assert values.get(_REL_40_2["1P"]) == Decimal("0")
+        assert {period: values.get(_REL_40_2[period]) for period in amounts} == amounts

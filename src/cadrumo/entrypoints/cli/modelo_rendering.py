@@ -22,6 +22,7 @@ from decimal import Decimal
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Final
 
+from ...application.modelo.finding_message_text import with_below_filing_grade_notice
 from ...application.modelo.lifecycle_advisories import Modelo184SocioHandoffV1
 from ...application.modelo.verification_preconditions import VerificationFindingPreconditionProjection
 from ...application.modelo.work_plazo import (
@@ -840,6 +841,7 @@ def verification_report_payload(
                 action=action,
                 legal_refs=tuple(finding.legal_refs),
                 source_refs=list(finding.source_refs),
+                below_filing_grade=finding.below_filing_grade,
             ),
         )
     return VerificationReportPayload(
@@ -908,5 +910,8 @@ def verification_report_lines(
 
 
 def render_verification_finding_message(finding: ModeloVerificationFinding) -> str:
-    """Render one persisted locale key and its typed facts at the CLI boundary."""
-    return tr(finding.message_locale_key, **finding.message_facts)
+    """Render one persisted locale key and its typed facts at the CLI boundary.
+
+    A finding checked against an edition below filing grade is followed by the words that say so.
+    """
+    return with_below_filing_grade_notice(tr(finding.message_locale_key, **finding.message_facts), finding, locale=None)

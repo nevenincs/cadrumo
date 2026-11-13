@@ -65,15 +65,16 @@ Coverage map for the sociedades fold surface
 * **M200 <- M202 pagos fraccionados anuales (casilla DP200014B:00611)** —
   proven LIVE here (see
   :func:`test_m200_0a_folds_m202_pagos_fraccionados_into_cuota_diferencial_live`).
-  The fold reaches casilla ``DP200014B:00611`` ("cuota diferencial") via the
+  Each M202 instalment reaches its own computed casilla, the primer, segundo and
+  tercer pago fraccionado ``DP200014B:00601``, ``00603`` and ``00605``, through one
+  relation per instalment and modalidad
+  (``modelo-200-pago-fraccionado-<ordinal>-40-2`` reads c03,
+  ``...-40-3`` reads c34) resolved by the enrolled
+  :class:`RelationPrefillSourceResolver`. ``00611`` ("cuota diferencial") is the
   formula ``modelo-200-cuota-diferencial``:
-  ``00611 = subtract(DP200014B:00599, relation["modelo-200-pagos-fraccionados-anuales"])``.
-  The relation resolves the sum of the three M202 c34 instalments (1P + 2P + 3P)
-  through the enrolled :class:`RelationPrefillSourceResolver`; ``00611`` is a
-  *computed* casilla whose formula consumes the resolved relation value directly
-  — not via a *bound* casilla. With all manual M200 inputs at zero (``00599 =
-  0``), the formula produces ``00611 = 0 - sum(M202 1P+2P+3P c34)`` and the
-  three DISTINCT seeded values make the subtraction unmistakable.
+  ``00611 = 00599 - (00601 + 00603 + 00605)``. With all manual M200 inputs at zero
+  (``00599 = 0``), it produces ``00611 = 0 - sum(M202 1P+2P+3P c34)`` and the
+  three DISTINCT seeded values make each instalment and the subtraction unmistakable.
 * **M390 <- M303 iva** — already proven LIVE by
   ``test_modelo_390_303_fold_in_live``; not duplicated here.
 """
@@ -171,11 +172,16 @@ _M200_PRIOR_CUOTA = Decimal("48000.00")
 _RELATION_PREFILL_SOURCE = "relation_prefill"
 #: The M200 relations that fold the same-year M202 pagos fraccionados.
 _M202_PAGO_RELATIONS = frozenset(
-    {
-        "modelo-200-pagos-fraccionados-anuales",
-        "modelo-200-pagos-fraccionados-anuales-40-2",
-    },
+    f"modelo-200-pago-fraccionado-{instalment}-{modalidad}"
+    for instalment in ("primero", "segundo", "tercero")
+    for modalidad in ("40-2", "40-3")
 )
+#: The Modelo 200 casilla of each Modelo 202 instalment: primer, segundo and tercer pago fraccionado.
+_M200_PAGO_CASILLA_BY_PERIOD: dict[str, CasillaId] = {
+    "1P": validated_casilla_id("DP200014B:00601", surface="_M200_PAGO_CASILLA_BY_PERIOD"),
+    "2P": validated_casilla_id("DP200014B:00603", surface="_M200_PAGO_CASILLA_BY_PERIOD"),
+    "3P": validated_casilla_id("DP200014B:00605", surface="_M200_PAGO_CASILLA_BY_PERIOD"),
+}
 #: The M200 cross-year self-carries, absent for this pagos-only persona.
 _M200_SELF_CARRY_RELATIONS = frozenset(
     {
@@ -192,7 +198,7 @@ _M200_SELF_CARRY_RELATIONS = frozenset(
 _BUCKET_ID_M200 = "8ebc9e26-9e28-48aa-946f-f34d71807ad3"
 
 # The *computed* casilla that the formula ``modelo-200-cuota-diferencial``
-# targets: 00611 = subtract(DP200014B:00599, relation[pagos-fraccionados]).
+# targets: 00611 = 00599 - (00601 + 00603 + 00605).
 # ``DP200014B`` is the xsd-group prefix for the Apartado B liquidación block.
 _CASILLA_CUOTA_DIFERENCIAL: CasillaId = validated_casilla_id(
     "DP200014B:00611",
@@ -498,14 +504,12 @@ def test_m200_0a_folds_m202_pagos_fraccionados_into_cuota_diferencial_live(
     """E2E: the three filed M202 instalments fold into M200 casilla DP200014B:00611.
 
     Reconciles a prior dead-wiring false-alarm: the M200 <- M202 pagos fold is NOT dead — it
-    reaches the *computed* casilla ``DP200014B:00611`` ("cuota diferencial") via
-    the formula ``00611 = subtract(DP200014B:00599, relation[
-    modelo-200-pagos-fraccionados-anuales])`` through the enrolled
-    ``RelationPrefillSourceResolver`` (source_modelo 202, output 34, periods
-    1P/2P/3P, sum). It does NOT flow through the manual ``is_pagos_fraccionados``
-    casillas 00601/00447, which an earlier test exercised by mistake. The three DISTINCT seeded
-    pagos make the fold unmistakable: the cuota-diferencial subtraction must drop
-    by exactly the seeded sum.
+    reaches the *computed* casillas 00601, 00603 and 00605 (one per instalment,
+    each read through the enrolled ``RelationPrefillSourceResolver`` from its own
+    M202 filing, c03 plus c34) and the cuota diferencial
+    ``00611 = 00599 - (00601 + 00603 + 00605)``. The three DISTINCT seeded pagos make
+    the fold unmistakable: each instalment casilla holds its own filing's pago and
+    the cuota-diferencial subtraction drops by exactly the seeded sum.
     """
     obs_repo = CalculationObservationRepository()
     for period, value in _M202_C34_PAGOS.items():
@@ -522,6 +526,10 @@ def test_m200_0a_folds_m202_pagos_fraccionados_into_cuota_diferencial_live(
     values = result.revision.casilla_values
     cuota_a_ingresar = Decimal(values[_CASILLA_CUOTA_A_INGRESAR])
     cuota_diferencial = Decimal(values[_CASILLA_CUOTA_DIFERENCIAL])
+    # Each instalment casilla holds the pago of its own M202 filing.
+    assert {period: Decimal(values[casilla]) for period, casilla in _M200_PAGO_CASILLA_BY_PERIOD.items()} == (
+        _M202_C34_PAGOS
+    )
     # Fold-wiring invariant: cuota diferencial == cuota a ingresar - sum(M202 pagos).
     assert cuota_diferencial == cuota_a_ingresar - expected_pagos_sum, (
         f"M200 00611 must fold the three M202 pagos (sum {expected_pagos_sum}) out of "

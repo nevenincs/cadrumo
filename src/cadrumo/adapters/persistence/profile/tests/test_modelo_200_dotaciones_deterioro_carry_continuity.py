@@ -89,8 +89,11 @@ _STOCK_BY_SOURCE_YEAR: dict[int, dict[CasillaId, Decimal]] = {
     2025: {_SALDO_FINAL_NO_CUMPLIDO: Decimal("3000.00"), _SALDO_FINAL_CUMPLIDO: Decimal("12000.00")},
 }
 
-_M200_PAGOS_RELATION = "modelo-200-pagos-fraccionados-anuales"
-_M200_PAGOS_RELATION_40_2 = "modelo-200-pagos-fraccionados-anuales-40-2"
+_M200_PAGOS_RELATIONS = tuple(
+    f"modelo-200-pago-fraccionado-{instalment}-{modalidad}"
+    for instalment in ("primero", "segundo", "tercero")
+    for modalidad in ("40-2", "40-3")
+)
 
 _PROFILE_DECIMAL_BINDINGS: dict[str, Decimal] = {
     "modelo-200-profile-new-entity-flag": Decimal("0"),
@@ -195,8 +198,8 @@ def _resolve_relations(*, filing_year: int, obs_repo: CalculationObservationRepo
             for item in resolve_relations_from_local_store(snapshot, operation=operation, repository=obs_repo).values
             if item.value is not None
         }
-    resolved.setdefault(_M200_PAGOS_RELATION, Decimal("0"))
-    resolved.setdefault(_M200_PAGOS_RELATION_40_2, Decimal("0"))
+    for pagos_relation in _M200_PAGOS_RELATIONS:
+        resolved.setdefault(pagos_relation, Decimal("0"))
     return resolved
 
 

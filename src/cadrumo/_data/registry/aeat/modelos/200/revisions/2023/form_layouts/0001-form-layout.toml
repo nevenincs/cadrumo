@@ -7,7 +7,7 @@ revision_id = "2023"
 seed_source = "design_box_number"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "14c6ea3622b4828d74becea571e1a35c4296901754782b0dcb962e3819511cd5"
+source_state_digest = "7859d3bdb2ca912e045b5e45e9dc00c369e1de7ad2dc10e7f9e67771735ed8ec"
 design_sources = [
     { source_ref = "aeat-dr-200-2023", sha256 = "60ee0cb4ab7aa4fa2ae3dc61cb22f6a1a0797d1626a28d7bba013b44375a19aa" },
 ]

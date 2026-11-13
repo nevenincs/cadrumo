@@ -2,12 +2,18 @@ modelo:
   schema:
     '200':
       binding:
-        modelo-200-pagos-fraccionados-anuales:
-          label: Pagaments fraccionats de l’any · Model 202, article 40.3, casella
-            34
-        modelo-200-pagos-fraccionados-anuales-40-2:
-          label: Pagaments fraccionats de l’any · Model 202, article 40.2, casella
-            03
+        modelo-200-pago-fraccionado-primero-40-2:
+          label: Primer pagament fraccionat · Model 202, article 40.2, casella 03
+        modelo-200-pago-fraccionado-primero-40-3:
+          label: Primer pagament fraccionat · Model 202, article 40.3, casella 34
+        modelo-200-pago-fraccionado-segundo-40-2:
+          label: Segon pagament fraccionat · Model 202, article 40.2, casella 03
+        modelo-200-pago-fraccionado-segundo-40-3:
+          label: Segon pagament fraccionat · Model 202, article 40.3, casella 34
+        modelo-200-pago-fraccionado-tercero-40-2:
+          label: Tercer pagament fraccionat · Model 202, article 40.2, casella 03
+        modelo-200-pago-fraccionado-tercero-40-3:
+          label: Tercer pagament fraccionat · Model 202, article 40.3, casella 34
         modelo-200-profile-incn-prior-12-months:
           label: Import net de la xifra de negocis dels 12 mesos anteriors
         modelo-200-profile-legal-entity-form:

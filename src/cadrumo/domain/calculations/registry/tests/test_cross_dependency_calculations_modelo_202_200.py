@@ -225,9 +225,12 @@ def test_modelo_200_cuota_a_ingresar_aggregates_modelo_202_pagos_fraccionados(
     snapshot = registry_snapshot("200", filing_year, "0A", grade=RegistryAuthorityGrade.CALCULATION)
     revision = snapshot.revision
     relation_ids = {binding.id for binding, _ in relation_prefill_bindings_for_period(revision, period="0A")}
+    instalment_ids = {
+        period: (f"modelo-200-pago-fraccionado-{ordinal}-40-2", f"modelo-200-pago-fraccionado-{ordinal}-40-3")
+        for period, ordinal in (("1P", "primero"), ("2P", "segundo"), ("3P", "tercero"))
+    }
     assert relation_ids == {
-        "modelo-200-pagos-fraccionados-anuales",
-        "modelo-200-pagos-fraccionados-anuales-40-2",
+        *(binding_id for pair in instalment_ids.values() for binding_id in pair),
         "modelo-200-bin-pendiente-ejercicios-anteriores",
         "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores",
         "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores",
@@ -239,13 +242,10 @@ def test_modelo_200_cuota_a_ingresar_aggregates_modelo_202_pagos_fraccionados(
     assert classifications["200"].treatment == "factual_evidence"
 
     requirements = relation_source_requirements(revision, filing_year=filing_year, period="0A")
+    instalment_amounts = {"1P": Decimal("1200"), "2P": Decimal("1500"), "3P": Decimal("1800")}
     observations = observations_from_requirements(
         requirements,
-        lambda _requirement, period_index: (
-            Decimal("1200"),
-            Decimal("1500"),
-            Decimal("1800"),
-        )[period_index],
+        lambda requirement, period_index: instalment_amounts.get(requirement.periods[period_index], Decimal("1200")),
         target_modelo="200",
         fallback_revision=revision,
     )
@@ -293,15 +293,10 @@ def test_modelo_200_cuota_a_ingresar_aggregates_modelo_202_pagos_fraccionados(
     diferencial_entry = entries["DP200014B:00611"]
     assert diferencial_entry.formula_id == "modelo-200-cuota-diferencial"
     assert diferencial_entry.op == "subtract"
-    assert set(diferencial_entry.operand_refs) == {
-        "DP200014B:00599",
-        "modelo-200-pagos-fraccionados-anuales",
-        "modelo-200-pagos-fraccionados-anuales-40-2",
-    }
-    assert diferencial_entry.operand_refs == (
-        "DP200014B:00599",
-        "modelo-200-pagos-fraccionados-anuales",
-        "modelo-200-pagos-fraccionados-anuales-40-2",
-    )
-    assert diferencial_entry.operand_values[1] == relation_values["modelo-200-pagos-fraccionados-anuales"]
-    assert diferencial_entry.operand_values[2] == relation_values["modelo-200-pagos-fraccionados-anuales-40-2"]
+    instalment_casillas = {"1P": "DP200014B:00601", "2P": "DP200014B:00603", "3P": "DP200014B:00605"}
+    assert diferencial_entry.operand_refs == ("DP200014B:00599", *instalment_casillas.values())
+    for position, (period, casilla_id) in enumerate(instalment_casillas.items(), start=1):
+        cuota_40_2, base_40_3 = (relation_values[binding_id] for binding_id in instalment_ids[period])
+        assert entries[casilla_id].operand_refs == instalment_ids[period]
+        assert result.values[casilla_id] == cuota_40_2 + base_40_3
+        assert diferencial_entry.operand_values[position] == result.values[casilla_id]

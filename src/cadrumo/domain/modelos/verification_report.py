@@ -29,6 +29,7 @@ from typing import Annotated, override
 
 from pydantic import BaseModel, Field, StringConstraints, field_serializer, field_validator, model_validator
 
+from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import InternalInvariantError, pydantic_validation_boundary
 from ...core.hashing import content_hash_hex
@@ -171,6 +172,18 @@ DisclosedLimitationFlag = Annotated[bool, Field(exclude_if=_omitted_when_false)]
 """A finding's disclosed-limitation marker, left out of every serialized form while it is false."""
 
 
+def _omitted_when_absent(value: RegistryAuthorityGrade | None) -> bool:
+    return value is None
+
+
+BelowFilingGradeField = Annotated[RegistryAuthorityGrade | None, Field(exclude_if=_omitted_when_absent)]
+"""The grade of the edition a registry check ran against when that edition is below filing grade.
+
+Left out of every serialized form while absent, so a finding checked against a
+filing-grade edition keeps the identity it was published with.
+"""
+
+
 class ModeloVerificationFinding(BaseModel):
     """One verification finding.
 
@@ -201,11 +214,31 @@ class ModeloVerificationFinding(BaseModel):
     is served so the filer can add what only they hold, which can only raise the tax. It is
     left out of the serialized finding when false, so an ordinary check keeps its identity.
     """
+    below_filing_grade: BelowFilingGradeField = None
+    """The edition's own grade when this advisory was checked against an edition below filing grade.
+
+    Such an edition is refused for filing, so only its advisory checks run, against the
+    snapshot of its own grade. The grade is provenance: it never lowers or raises the
+    verification outcome, which the grade refusal beside it keeps blocked.
+    """
 
     @model_validator(mode="after")
     def _limitation_never_blocks(self) -> ModeloVerificationFinding:
         if self.disclosed_limitation and self.severity is not ModeloVerificationFindingSeverity.WARNING:
             raise ValueError("a disclosed limitation is a warning, never a blocking finding")
+        return self
+
+    @model_validator(mode="after")
+    def _below_filing_grade_is_an_advisory(self) -> ModeloVerificationFinding:
+        if self.below_filing_grade is None:
+            return self
+        if self.below_filing_grade is RegistryAuthorityGrade.FILING:
+            raise ValueError("a finding checked at filing grade carries no below-filing grade")
+        if (
+            self.kind is not ModeloVerificationFindingKind.ADVISORY
+            or self.severity is not ModeloVerificationFindingSeverity.WARNING
+        ):
+            raise ValueError("only an advisory warning is checked against an edition below filing grade")
         return self
 
     @field_validator("message_facts")

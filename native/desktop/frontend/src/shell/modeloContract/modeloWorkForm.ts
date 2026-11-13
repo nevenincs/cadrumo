@@ -18,6 +18,7 @@ import type {
   OutputLanguage,
   PreconditionVerdictSnapshot,
   PublicPeriod,
+  RegistryAuthorityGrade,
   RevisionId,
   SourceRefId,
   TransactionId,
@@ -47,7 +48,6 @@ import type {
   PublicScalarValueV1,
   PublicSpanishTaxIdFormat,
   ReconciliationSourceRequirementV1,
-  RegistryAuthorityGrade,
   SourcePolicyV1,
   TemporalProjectionDirection,
 } from "./modeloWorkFormPart2";

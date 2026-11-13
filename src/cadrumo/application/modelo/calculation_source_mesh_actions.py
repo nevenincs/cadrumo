@@ -64,6 +64,7 @@ if TYPE_CHECKING:
         CalculationSourceContext,
         CalculationSourceResolution,
     )
+    from ..calculations.modelo_202_instalment_resolution import Modelo202InstalmentResolver
     from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
     from ..prorrata_register.ports import ProrrataRegisterServiceRepositoryProtocol
 
@@ -528,7 +529,7 @@ def _resolve_mesh_families(
             foreign_asset_row_observations,
         ),
         *inventory_resolutions,
-        *_resolve_cross_period_families(resolve_declared, snapshot, ports, profile_read_ports),
+        *_resolve_cross_period_families(resolve_declared, snapshot, ports, profile_read_ports, work_unit.bucket_id),
         *annual_summary_resolutions,
     )
 
@@ -681,11 +682,58 @@ def _resolve_observation_families(
     )
 
 
+def _modelo_202_instalment_resolver(
+    snapshot: RegistrySnapshot,
+    ports: CalculationActionPorts,
+    profile_read_ports: ProfileReadPorts,
+    bucket_id: str,
+) -> Modelo202InstalmentResolver | None:
+    """Bind the Modelo 202 instalment resolution where the revision credits a single instalment.
+
+    The decision is the one the cross-period gate reads, bound to this
+    calculation's stores and the ejercicio's derived modality.
+    """
+    from ..calculations.modelo_202_instalment_relation import (
+        modelo_202_modality_for_bucket,
+        reads_modelo_202_instalment,
+    )
+    from ..calculations.relation_prefill import activity_start_date_for_bucket
+    from ..overview.modelo202_instalment_evidence import (
+        Modelo202InstalmentStores,
+        art_40_3_election_reader_for_bucket,
+        bind_modelo_202_instalment_resolver,
+    )
+
+    operation = ports.operation
+    if not reads_modelo_202_instalment(snapshot, operation=operation):
+        return None
+    path_values = profile_read_ports.path_values
+    return bind_modelo_202_instalment_resolver(
+        Modelo202InstalmentStores(
+            bucket_id=bucket_id,
+            observations=ports.observation_repository,
+            work_units=ports.work_unit_repository.load,
+            calculations=ports.calculation_repository,
+            transactions=ports.transaction_repository.load,
+            activity_start_date=activity_start_date_for_bucket(bucket_id, profile_path_values_reader=path_values),
+            election_for=art_40_3_election_reader_for_bucket(bucket_id, operation=operation),
+        ),
+        modality=modelo_202_modality_for_bucket(
+            bucket_id,
+            filing_year=snapshot.filing_year,
+            operation=operation,
+            profile_path_values_reader=path_values,
+        ),
+        operation=operation,
+    )
+
+
 def _resolve_cross_period_families(
     resolve_declared: Callable[..., CalculationSourceResolution],
     snapshot: RegistrySnapshot,
     ports: CalculationActionPorts,
     profile_read_ports: ProfileReadPorts,
+    bucket_id: str,
 ) -> tuple[CalculationSourceResolution, ...]:
     """Resolve the previous-filing, relation-prefill and IVA compensation partition families."""
     from ..calculations.iva_compensation_annual_partition import IvaCompensationAnnualPartitionSourceResolver
@@ -712,6 +760,9 @@ def _resolve_cross_period_families(
                 repository=ports.observation_repository,
                 profile_read_ports=profile_read_ports,
                 operation=ports.operation,
+                modelo_202_instalment_resolver=_modelo_202_instalment_resolver(
+                    snapshot, ports, profile_read_ports, bucket_id
+                ),
             )
         ),
         resolve_declared(

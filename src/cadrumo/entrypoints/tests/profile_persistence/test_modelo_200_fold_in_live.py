@@ -110,11 +110,12 @@ _T1 = datetime(2026, 1, 10, 11, 0, tzinfo=UTC)
 _M200 = "200"
 _M202 = "202"
 
-# The same-year M202 pagos-fraccionados c34 output the M200 cuota-diferencial
-# formula folds via relation ``modelo-200-pagos-fraccionados-anuales``
-# (filing_year_delta = 0). That relation is consumed DIRECTLY by a formula operand
-# (the cuota-diferencial subtraction), so an absent value RAISES on the live path
-# rather than resolving present-or-zero. It is NOT the cross-year
+# The same-year M202 pagos-fraccionados c34 output the M200 pago-fraccionado
+# formulas (casillas 00601, 00603, 00605, then the cuota diferencial) fold through
+# one relation per instalment, ``modelo-200-pago-fraccionado-<ordinal>-40-3``
+# (filing_year_delta = 0). Those relations are consumed DIRECTLY by formula operands,
+# so an absent value leaves the cuota diferencial unresolved rather than resolving
+# present-or-zero. It is NOT the cross-year
 # carry under test, so seed it as zero (no instalments this scenario) to keep the
 # live calculate focused on the BIN / dotaciones self-carries.
 _M202_PAGO_OUTPUT: CasillaId = validated_casilla_id("34", surface="_M202_PAGO_OUTPUT")
@@ -123,7 +124,10 @@ _M202_PAGO_OUTPUT_40_2: CasillaId = validated_casilla_id(
     surface="_M202_PAGO_OUTPUT_40_2",
 )  # modalidad cuota (art. 40.2); folds alongside casilla 34
 _M202_PAGO_PERIODS = ("1P", "2P", "3P")
-_M202_PAGO_RELATION = "modelo-200-pagos-fraccionados-anuales"
+_M202_PAGO_RELATIONS = {
+    period: f"modelo-200-pago-fraccionado-{ordinal}-40-3"
+    for period, ordinal in zip(_M202_PAGO_PERIODS, ("primero", "segundo", "tercero"), strict=True)
+}
 _CASILLA_CUOTA_DIFERENCIAL: CasillaId = validated_casilla_id(
     "DP200014B:00611",
     surface="_CASILLA_CUOTA_DIFERENCIAL",
@@ -254,9 +258,9 @@ def _seed_prior_m200_closing_stock(*, obs_repo: CalculationObservationRepository
 def _seed_zero_m202_pagos(*, obs_repo: CalculationObservationRepository) -> None:
     """Seed same-year M202 instalments as zero c34 so the pagos relation resolves.
 
-    The M200 cuota-diferencial formula folds ``modelo-200-pagos-fraccionados-anuales``
-    (a same-year M202 pagos relation) as a DIRECT formula operand, which raises if
-    unsupplied. This scenario declares no instalments, so each period's c34 is filed
+    The M200 pago-fraccionado formulas fold one same-year M202 relation per
+    instalment as a DIRECT formula operand, which leaves the cuota diferencial
+    unresolved if unsupplied. This scenario declares no instalments, so each period's c34 is filed
     zero — the relation resolves to zero and the live calculate proceeds, leaving
     the cross-year BIN / dotaciones carries the sole subject of the assertions.
     """
@@ -489,13 +493,16 @@ def test_m200_missing_m202_relation_becomes_unresolved_advisory_on_live_calculat
     assert Decimal(values[_SALDO_INICIAL_NO_CUMPLIDO]) == Decimal("0")
     assert Decimal(values[_SALDO_INICIAL_CUMPLIDO]) == Decimal("0")
 
-    diagnostics = tuple(diag for diag in result.source_diagnostics if diag.relation_id == _M202_PAGO_RELATION)
-    assert len(diagnostics) == 1
-    diagnostic = diagnostics[0]
-    assert diagnostic.reason == "source_issue"
-    assert diagnostic.source_kind == _RELATION_PREFILL_SOURCE
-    assert diagnostic.resolver_id == _RELATION_PREFILL_SOURCE
-    assert "modelo 202" in diagnostic.message
-    assert str(_FILING_YEAR) in diagnostic.message
-    for period in _M202_PAGO_PERIODS:
+    for period, relation in _M202_PAGO_RELATIONS.items():
+        # Both modalidad readings of one instalment share its absent filing, so one advisory names them.
+        relations = {relation, relation.removesuffix("-40-3") + "-40-2"}
+        diagnostics = tuple(diag for diag in result.source_diagnostics if relation in diag.relation_ids)
+        assert len(diagnostics) == 1
+        assert relations <= set(diagnostics[0].relation_ids)
+        diagnostic = diagnostics[0]
+        assert diagnostic.reason == "source_issue"
+        assert diagnostic.source_kind == _RELATION_PREFILL_SOURCE
+        assert diagnostic.resolver_id == _RELATION_PREFILL_SOURCE
+        assert "modelo 202" in diagnostic.message
+        assert str(_FILING_YEAR) in diagnostic.message
         assert period in diagnostic.message

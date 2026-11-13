@@ -2,10 +2,18 @@ modelo:
   schema:
     '200':
       binding:
-        modelo-200-pagos-fraccionados-anuales:
-          label: Annual instalment payments · Form 202, Article 40.3, box 34
-        modelo-200-pagos-fraccionados-anuales-40-2:
-          label: Annual instalment payments · Form 202, Article 40.2, box 03
+        modelo-200-pago-fraccionado-primero-40-2:
+          label: First instalment payment · Form 202, Article 40.2, box 03
+        modelo-200-pago-fraccionado-primero-40-3:
+          label: First instalment payment · Form 202, Article 40.3, box 34
+        modelo-200-pago-fraccionado-segundo-40-2:
+          label: Second instalment payment · Form 202, Article 40.2, box 03
+        modelo-200-pago-fraccionado-segundo-40-3:
+          label: Second instalment payment · Form 202, Article 40.3, box 34
+        modelo-200-pago-fraccionado-tercero-40-2:
+          label: Third instalment payment · Form 202, Article 40.2, box 03
+        modelo-200-pago-fraccionado-tercero-40-3:
+          label: Third instalment payment · Form 202, Article 40.3, box 34
         modelo-200-profile-incn-prior-12-months:
           label: Net turnover in the preceding 12 months
         modelo-200-profile-legal-entity-form:

@@ -58,7 +58,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import date, datetime
 from decimal import Decimal
-from typing import ClassVar, Final, NamedTuple, TypedDict
+from typing import TYPE_CHECKING, ClassVar, Final, NamedTuple, TypedDict
 
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.casilla_id import CasillaId
@@ -114,6 +114,7 @@ from .m111_no_retenciones import (
     m111_no_retenciones_periods_for_bucket,
 )
 from .modelo_202_base_source import is_modelo_202, modelo_202_form, modelo_202_instalment_has_no_prior_return
+from .modelo_202_instalment_relation import instalment_relation_value, modelo_202_modality_for_bucket
 from .observations_repository import CalculationObservationRepositoryProtocol
 from .relation_prefill_diagnostics import (
     absent_bound_carry_diagnostics,
@@ -125,6 +126,9 @@ from .relation_prefill_m202 import (
 )
 from .revision_carry_gate import revision_carry_outcome
 from .source_filing_kind import source_filing_kind_evidence
+
+if TYPE_CHECKING:
+    from .modelo_202_instalment_resolution import Modelo202InstalmentResolver
 
 _ECONOMIC_ACTIVITY_CATEGORY: Final = "actividad_economica"
 _log = get_logger(__name__)
@@ -402,10 +406,7 @@ def _modelo_202_no_base_instalments(
     activity-start date or any modality other than ``ART_40_2_OPTIONAL`` names
     no instalment, so the relation keeps demanding the filings.
     """
-    from ...domain.calculations.registry.applicability_modelo202 import (
-        Modelo202Modality,
-        modelo_202_modality_from_path_values,
-    )
+    from ...domain.calculations.registry.applicability_modelo202 import Modelo202Modality
 
     if activity_start_date is None:
         return frozenset[tuple[int, str]]()
@@ -421,10 +422,12 @@ def _modelo_202_no_base_instalments(
     )
     if not instalments:
         return frozenset[tuple[int, str]]()
-    values = profile_path_values_reader.load_path_values(bucket_id=bucket_id)
-    if values is None:
-        return frozenset[tuple[int, str]]()
-    modality = modelo_202_modality_from_path_values(values, filing_year=snapshot.filing_year, authority=operation)
+    modality = modelo_202_modality_for_bucket(
+        bucket_id,
+        filing_year=snapshot.filing_year,
+        operation=operation,
+        profile_path_values_reader=profile_path_values_reader,
+    )
     if modality is not Modelo202Modality.ART_40_2_OPTIONAL:
         return frozenset[tuple[int, str]]()
     return frozenset(
@@ -734,6 +737,7 @@ def _relation_value_for_relation(
     pre_activity_requirements: Mapping[RelationId, RegistryFoldRequirement],
     filing_year: int,
     operation: PinnedAuthorityOperation,
+    instalment_resolver: Modelo202InstalmentResolver | None = None,
 ) -> RelationValue:
     requirement = requirements_by_relation.get(binding.id)
     pre_activity_requirement = pre_activity_requirements.get(binding.id) if requirement is None else None
@@ -743,7 +747,7 @@ def _relation_value_for_relation(
     grounding = relation_value_grounding(binding, provider, described)
     resolved = resolved_map.get(binding.id)
     if resolved is None:
-        return _unresolved_relation_value(
+        unresolved = _unresolved_relation_value(
             binding,
             requirement=requirement,
             grounding=grounding,
@@ -756,6 +760,17 @@ def _relation_value_for_relation(
             pre_activity_requirement=pre_activity_requirement,
             operation=operation,
         )
+        if unresolved.value is not None:
+            return unresolved
+        instalment_value = instalment_relation_value(
+            unresolved,
+            provider,
+            filing_year=filing_year,
+            resolved_at=resolved_at,
+            instalment_resolver=instalment_resolver,
+            operation=operation,
+        )
+        return unresolved if instalment_value is None else instalment_value
     return RelationValue(
         relation=binding.id,
         value=Decimal(resolved.value),
@@ -793,6 +808,7 @@ def _relation_values_for_snapshot(
     not_applicable_source_modelos: frozenset[str],
     pre_activity_requirements: Mapping[RelationId, RegistryFoldRequirement],
     operation: PinnedAuthorityOperation,
+    instalment_resolver: Modelo202InstalmentResolver | None = None,
 ) -> tuple[RelationValue, ...]:
     return tuple(
         _relation_value_for_relation(
@@ -806,6 +822,7 @@ def _relation_values_for_snapshot(
             pre_activity_requirements=pre_activity_requirements,
             filing_year=snapshot.filing_year,
             operation=operation,
+            instalment_resolver=instalment_resolver,
         )
         for binding, provider in relation_prefill_bindings_for_period(snapshot.revision, period=snapshot.period)
     )
@@ -821,6 +838,7 @@ def resolve_relations_from_local_store(
     activity_start_date: date | None = None,
     m111_no_retenciones_periods: frozenset[tuple[int, str]] | None = None,
     not_applicable_source_modelos: frozenset[str] | None = None,
+    modelo_202_instalment_resolver: Modelo202InstalmentResolver | None = None,
 ) -> RelationValues:
     """Build a relation-value record from the local observation store.
 
@@ -851,6 +869,12 @@ def resolve_relations_from_local_store(
             not applicable for this bucket profile. M100's mutually exclusive
             M130/M131 pagos-fraccionados relations use this to resolve the absent
             leg to explicit zero instead of requiring fake zero filings.
+        modelo_202_instalment_resolver: Resolves one Modelo 202 instalment of
+            the ejercicio. A binding that reads a single instalment and that
+            neither the fold nor a rule above resolves takes ``0.00`` when the instalment's own
+            verdict says nothing was owed, with that verdict as its grounds,
+            and otherwise stays unresolved with the instalment's reason.
+            ``None`` leaves every unfolded instalment to the rules above.
 
     Returns a
     :class:`~application.storage.calc_sheets.records.RelationValues`
@@ -912,6 +936,7 @@ def resolve_relations_from_local_store(
             operation=operation,
         ),
         operation=operation,
+        instalment_resolver=modelo_202_instalment_resolver,
     )
     return RelationValues(values=values)
 
@@ -1024,6 +1049,7 @@ def _resolve_context_relation_values(
     captured_at: datetime | None,
     inputs: _RelationPrefillContextInputs,
     operation: PinnedAuthorityOperation,
+    modelo_202_instalment_resolver: Modelo202InstalmentResolver | None,
 ) -> RelationValues:
     return resolve_relations_from_local_store(
         snapshot,
@@ -1034,6 +1060,7 @@ def _resolve_context_relation_values(
         activity_start_date=inputs.activity_start_date,
         m111_no_retenciones_periods=inputs.m111_no_retenciones_periods,
         not_applicable_source_modelos=inputs.not_applicable_source_modelos,
+        modelo_202_instalment_resolver=modelo_202_instalment_resolver,
     )
 
 
@@ -1147,9 +1174,11 @@ class RelationPrefillSourceResolver:
         operation: PinnedAuthorityOperation,
         registry_snapshot: RegistrySnapshot | None = None,
         captured_at: datetime | None = None,
+        modelo_202_instalment_resolver: Modelo202InstalmentResolver | None = None,
     ) -> None:
-        """Initialize the resolver with its composed repositories and profile projection."""
+        """Initialize the resolver with its composed repositories, profile projection and instalment port."""
         self._repository = repository
+        self._modelo_202_instalment_resolver = modelo_202_instalment_resolver
         self._operation = operation
         self._profile_read_ports = profile_read_ports
         self._registry_snapshot = registry_snapshot
@@ -1178,6 +1207,7 @@ class RelationPrefillSourceResolver:
                 captured_at=self._captured_at,
                 inputs=inputs,
                 operation=self._operation,
+                modelo_202_instalment_resolver=self._modelo_202_instalment_resolver,
             )
         except PersistenceDegradationError as exc:
             return storage_degradation_resolution(

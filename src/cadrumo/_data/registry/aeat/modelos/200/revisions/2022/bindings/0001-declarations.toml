@@ -4,41 +4,104 @@
 # 2023 design prints it (00670, 01494, 01495, DP200026:00625). Later editions
 # inherit them.
 
+# The three Modelo 202 instalments of the ejercicio, one binding per instalment and modalidad.
+# Manual práctico de Sociedades 2022 ("Pagos fraccionados", manuals/sociedades/2022
+# source.pdf.extracted.md:18741-18749) puts the primer, segundo and tercer pago fraccionado
+# in casillas 00601, 00603 and 00605; the Modelo 202 chapter (:28525-28526) names the amount
+# paid as "la cantidad a ingresar (casilla 03 o casilla 34)": casilla 03 under modalidad
+# cuota (art. 40.2 LIS), casilla 34 under modalidad base imponible (art. 40.3 LIS). A filing
+# carries one modalidad, and the other casilla is 0. aeat-dr-200-2022 prints the three boxes on
+# DP200014B (fields 26, 28 and 30), as every later design does, so later editions inherit them.
+
 [[revisions."2022".bindings]]
-id = "modelo-200-pagos-fraccionados-anuales"
-provider = { kind = "relation_prefill", relation_kind = "cross_model_output", dependency_role = "instalment_to_final_settlement", source_modelo = "202", source_casilla_id = "34", temporal = { kind = "same_filing_year_periods", source_periods = ["1P", "2P", "3P"] } }
+id = "modelo-200-pago-fraccionado-primero-40-2"
+provider = { kind = "relation_prefill", relation_kind = "cross_model_output", dependency_role = "instalment_to_final_settlement", source_modelo = "202", source_casilla_id = "03", temporal = { kind = "same_filing_year_periods", source_periods = ["1P"] } }
 applicability = { kind = "target_periods", periods = ["0A"] }
 value = { data_type = "money", channel = "decimal" }
-aggregation = { op = "sum" }
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26", "ley-27-2014:art-40"]
+aggregation = { op = "copy" }
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41"]
 
 [[revisions."2022".bindings.source_citations]]
 source_ref = "aeat-modelo-200-manual-2022"
 required_text = [
-    "modelo 202 de pago fraccionado",
-    "pagos fraccionados",
+    "los importes correspondientes al primer, segundo y tercer pago fraccionado",
+    "la cantidad a ingresar (casilla 03 o casilla 34)",
 ]
 
-# Companion to the binding above for the OTHER M202 modality. The fold-in above
-# reads M202 casilla 34 (modalidad base imponible, art. 40.3 LIS); this one reads
-# casilla 03 (modalidad cuota, art. 40.2 LIS). The two modalidades are mutually
-# exclusive per filing (the non-elected one computes 0), so the cuota-diferencial
-# formula subtracts BOTH relations and a 40.2 filer's instalments are now credited.
 [[revisions."2022".bindings]]
-id = "modelo-200-pagos-fraccionados-anuales-40-2"
-provider = { kind = "relation_prefill", relation_kind = "cross_model_output", dependency_role = "instalment_to_final_settlement", source_modelo = "202", source_casilla_id = "03", temporal = { kind = "same_filing_year_periods", source_periods = ["1P", "2P", "3P"] } }
+id = "modelo-200-pago-fraccionado-primero-40-3"
+provider = { kind = "relation_prefill", relation_kind = "cross_model_output", dependency_role = "instalment_to_final_settlement", source_modelo = "202", source_casilla_id = "34", temporal = { kind = "same_filing_year_periods", source_periods = ["1P"] } }
 applicability = { kind = "target_periods", periods = ["0A"] }
 value = { data_type = "money", channel = "decimal" }
-aggregation = { op = "sum" }
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26", "ley-27-2014:art-40"]
+aggregation = { op = "copy" }
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41"]
 
 [[revisions."2022".bindings.source_citations]]
 source_ref = "aeat-modelo-200-manual-2022"
 required_text = [
-    "modelo 202 de pago fraccionado",
-    "pagos fraccionados",
+    "los importes correspondientes al primer, segundo y tercer pago fraccionado",
+    "la cantidad a ingresar (casilla 03 o casilla 34)",
 ]
 
+[[revisions."2022".bindings]]
+id = "modelo-200-pago-fraccionado-segundo-40-2"
+provider = { kind = "relation_prefill", relation_kind = "cross_model_output", dependency_role = "instalment_to_final_settlement", source_modelo = "202", source_casilla_id = "03", temporal = { kind = "same_filing_year_periods", source_periods = ["2P"] } }
+applicability = { kind = "target_periods", periods = ["0A"] }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "copy" }
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-200-manual-2022"
+required_text = [
+    "los importes correspondientes al primer, segundo y tercer pago fraccionado",
+    "la cantidad a ingresar (casilla 03 o casilla 34)",
+]
+
+[[revisions."2022".bindings]]
+id = "modelo-200-pago-fraccionado-segundo-40-3"
+provider = { kind = "relation_prefill", relation_kind = "cross_model_output", dependency_role = "instalment_to_final_settlement", source_modelo = "202", source_casilla_id = "34", temporal = { kind = "same_filing_year_periods", source_periods = ["2P"] } }
+applicability = { kind = "target_periods", periods = ["0A"] }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "copy" }
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-200-manual-2022"
+required_text = [
+    "los importes correspondientes al primer, segundo y tercer pago fraccionado",
+    "la cantidad a ingresar (casilla 03 o casilla 34)",
+]
+
+[[revisions."2022".bindings]]
+id = "modelo-200-pago-fraccionado-tercero-40-2"
+provider = { kind = "relation_prefill", relation_kind = "cross_model_output", dependency_role = "instalment_to_final_settlement", source_modelo = "202", source_casilla_id = "03", temporal = { kind = "same_filing_year_periods", source_periods = ["3P"] } }
+applicability = { kind = "target_periods", periods = ["0A"] }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "copy" }
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-200-manual-2022"
+required_text = [
+    "los importes correspondientes al primer, segundo y tercer pago fraccionado",
+    "la cantidad a ingresar (casilla 03 o casilla 34)",
+]
+
+[[revisions."2022".bindings]]
+id = "modelo-200-pago-fraccionado-tercero-40-3"
+provider = { kind = "relation_prefill", relation_kind = "cross_model_output", dependency_role = "instalment_to_final_settlement", source_modelo = "202", source_casilla_id = "34", temporal = { kind = "same_filing_year_periods", source_periods = ["3P"] } }
+applicability = { kind = "target_periods", periods = ["0A"] }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "copy" }
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-200-manual-2022"
+required_text = [
+    "los importes correspondientes al primer, segundo y tercer pago fraccionado",
+    "la cantidad a ingresar (casilla 03 o casilla 34)",
+]
 # Calculation-only enum binding: carries the taxpayer's recognised
 # legal form (sociedad limitada / anonima / cooperativa / sociedad
 # civil mercantil / sin fines lucrativos / other) so the cuota-integra

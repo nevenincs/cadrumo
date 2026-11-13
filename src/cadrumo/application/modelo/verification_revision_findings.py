@@ -6,10 +6,12 @@ from datetime import date
 from typing import TYPE_CHECKING
 
 from ...core.aggregation import BindingSourceKind
+from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.casilla_id import CasillaId
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...domain.calculations.registry.export_scheme_period import contradicts_scheme_period, scheme_period_value
 from ...domain.calculations.registry.schema import RegistrySnapshot
+from ...domain.calculations.registry.schema_verification import VerificationFindingKind
 from ...domain.deadlines.models import TaxpayerProfile
 from ...domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -392,6 +394,60 @@ def append_registry_predicate_findings(
     )
 
 
+def append_below_filing_grade_advisory_findings(
+    *,
+    work_unit: WorkUnit,
+    target: CalculationRevision,
+    predicate_profile: TaxpayerProfile,
+    operation: PinnedAuthorityOperation,
+    findings: list[ModeloVerificationFinding],
+) -> None:
+    """Append the advisory registry checks of an edition that is refused for filing.
+
+    An edition below filing grade cannot be verified for filing, and the grade
+    refusal already appended keeps the outcome blocked. Its advisory checks
+    still say something the filer should see, such as a positive result that
+    cascades to a zero base, so they run against the snapshot of the grade the
+    edition reaches. Only checks of advisory severity run: a blocking check of
+    an edition below filing grade is not evaluated, so none is reported. Each
+    finding carries that grade. A coordinate the registry cannot resolve at
+    any grade adds nothing beside its own refusal.
+
+    Parameter types: ``target`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`),
+    ``predicate_profile`` (:class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`).
+    """
+    from ...domain.calculations.registry.errors import (
+        RegistrySnapshotError,
+        RegistryValidationError,
+    )
+
+    period = work_unit.period.registry_token
+    try:
+        grade = operation.reachable_authority_grade(work_unit.modelo, filing_year=work_unit.filing_year, period=period)
+        if grade is RegistryAuthorityGrade.FILING:
+            return
+        snapshot = operation.snapshot(work_unit.modelo, filing_year=work_unit.filing_year, period=period, grade=grade)
+    except (FileNotFoundError, RegistrySnapshotError, RegistryValidationError):
+        # The caller reaches this only after a blocking snapshot finding (the grade refusal)
+        # was appended, so an unreadable own-grade snapshot only means no advisory checks.
+        return
+    advisory_predicates = tuple(
+        predicate
+        for predicate in snapshot.revision.verification_predicates
+        if predicate.finding_kind is VerificationFindingKind.ADVISORY
+    )
+    findings.extend(
+        ModeloVerificationFinding.model_validate(finding.model_dump(mode="python") | {"below_filing_grade": grade})
+        for finding in evaluate_verification_predicates(
+            advisory_predicates,
+            target.casilla_values,
+            predicate_profile,
+            target.input_values_by_casilla_id,
+            fact_date=calculation_filing_date(work_unit.period),
+        )
+    )
+
+
 def append_unresolved_outcome_findings(
     *,
     work_unit: WorkUnit,
@@ -435,67 +491,20 @@ def append_unresolved_outcome_findings(
     )
 
 
-def collect_revision_verification_findings(
+def _append_source_evidence_findings(
     *,
     work_unit: WorkUnit,
     target: CalculationRevision,
+    snapshot: RegistrySnapshot,
     profile: TaxpayerProfile,
     transaction_repository: TransactionCatalogueRepositoryProtocol,
     invoice_repository: InvoiceCatalogueRepositoryProtocol,
     operation: PinnedAuthorityOperation,
     work_profile: ModeloWorkProfile | None,
-) -> tuple[
-    list[ModeloVerificationFinding],
-    list[CasillaId],
-    list[CasillaId],
-    dict[int, ModeloPreconditionFailure],
-]:
-    """Build the verification finding list for one calculation revision.
-
-    Returns ``(findings, resolved_casilla_ids, missing_required_casilla_ids)``. A
-    revision whose ``(modelo, year, period)`` triple does not resolve
-    against the registry yields a single BLOCKING_RULE finding and
-    empty resolved/missing lists — there is no per-casilla check to
-    perform without a registry snapshot.
-
-    With a snapshot present, the operator-supplied
-    ``input_values_by_casilla_id`` keys are compared against the registry's
-    required-input casilla set. Each missing required casilla
-    produces a MISSING_REQUIRED_CASILLA finding plus an entry in the
-    missing-required list; each present required casilla lands in
-    the resolved-casilla-ids list.
-
-    Registry-authored predicates are evaluated after required-input checks.
-    ADVISORY findings are returned beside blocking findings so the report can
-    expose non-silent under-declaration warnings without changing the grant rule.
-
-    Parameter types: ``target`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`), ``profile``
-    (:class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`).
-    """
-    findings: list[ModeloVerificationFinding] = []
-    resolved_casilla_ids: list[CasillaId] = []
-    missing_required_casilla_ids: list[CasillaId] = []
-    failures_by_finding_id: dict[int, ModeloPreconditionFailure] = {}
-    snapshot = resolve_verification_snapshot(
-        work_unit=work_unit,
-        target=target,
-        findings=findings,
-        failures_by_finding_id=failures_by_finding_id,
-        operation=operation,
-    )
-    if snapshot is None:
-        return findings, resolved_casilla_ids, missing_required_casilla_ids, failures_by_finding_id
-
-    append_required_casilla_findings(
-        work_unit=work_unit,
-        target=target,
-        snapshot=snapshot,
-        findings=findings,
-        resolved_casilla_ids=resolved_casilla_ids,
-        missing_required_casilla_ids=missing_required_casilla_ids,
-        failures_by_finding_id=failures_by_finding_id,
-        clave_scope=perceptor_clave_scope(work_unit, operation=operation),
-    )
+    findings: list[ModeloVerificationFinding],
+    failures_by_finding_id: dict[int, ModeloPreconditionFailure],
+) -> None:
+    """Append the export-content, IVA, scheme, OSS and withholding evidence findings of a resolved revision."""
     append_shared_casilla_cells_findings(
         target=target,
         snapshot=snapshot,
@@ -546,6 +555,95 @@ def collect_revision_verification_findings(
         transaction_repository=transaction_repository,
         profile_path_values=record_to_path_values(work_profile.record) if work_profile is not None else None,
         operation=operation,
+        findings=findings,
+        failures_by_finding_id=failures_by_finding_id,
+    )
+
+
+def collect_revision_verification_findings(
+    *,
+    work_unit: WorkUnit,
+    target: CalculationRevision,
+    profile: TaxpayerProfile,
+    transaction_repository: TransactionCatalogueRepositoryProtocol,
+    invoice_repository: InvoiceCatalogueRepositoryProtocol,
+    operation: PinnedAuthorityOperation,
+    work_profile: ModeloWorkProfile | None,
+) -> tuple[
+    list[ModeloVerificationFinding],
+    list[CasillaId],
+    list[CasillaId],
+    dict[int, ModeloPreconditionFailure],
+]:
+    """Build the verification finding list for one calculation revision.
+
+    Returns ``(findings, resolved_casilla_ids, missing_required_casilla_ids)``. A
+    revision whose ``(modelo, year, period)`` triple does not resolve
+    against the registry yields a single BLOCKING_RULE finding and
+    empty resolved/missing lists — there is no per-casilla check to
+    perform without a registry snapshot. A revision that resolves below filing
+    grade adds only its fired advisory checks beside that refusal, each carrying
+    the grade it was checked at.
+
+    With a snapshot present, the operator-supplied
+    ``input_values_by_casilla_id`` keys are compared against the registry's
+    required-input casilla set. Each missing required casilla
+    produces a MISSING_REQUIRED_CASILLA finding plus an entry in the
+    missing-required list; each present required casilla lands in
+    the resolved-casilla-ids list.
+
+    Registry-authored predicates are evaluated after required-input checks.
+    ADVISORY findings are returned beside blocking findings so the report can
+    expose non-silent under-declaration warnings without changing the grant rule.
+
+    Parameter types: ``target`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`), ``profile``
+    (:class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`).
+    """
+    findings: list[ModeloVerificationFinding] = []
+    resolved_casilla_ids: list[CasillaId] = []
+    missing_required_casilla_ids: list[CasillaId] = []
+    failures_by_finding_id: dict[int, ModeloPreconditionFailure] = {}
+    snapshot = resolve_verification_snapshot(
+        work_unit=work_unit,
+        target=target,
+        findings=findings,
+        failures_by_finding_id=failures_by_finding_id,
+        operation=operation,
+    )
+    if snapshot is None:
+        append_below_filing_grade_advisory_findings(
+            work_unit=work_unit,
+            target=target,
+            predicate_profile=profile_with_art109_period_evidence(
+                work_unit=work_unit,
+                profile=profile,
+                transaction_repository=transaction_repository,
+                operation=operation,
+            ),
+            operation=operation,
+            findings=findings,
+        )
+        return findings, resolved_casilla_ids, missing_required_casilla_ids, failures_by_finding_id
+
+    append_required_casilla_findings(
+        work_unit=work_unit,
+        target=target,
+        snapshot=snapshot,
+        findings=findings,
+        resolved_casilla_ids=resolved_casilla_ids,
+        missing_required_casilla_ids=missing_required_casilla_ids,
+        failures_by_finding_id=failures_by_finding_id,
+        clave_scope=perceptor_clave_scope(work_unit, operation=operation),
+    )
+    _append_source_evidence_findings(
+        work_unit=work_unit,
+        target=target,
+        snapshot=snapshot,
+        profile=profile,
+        transaction_repository=transaction_repository,
+        invoice_repository=invoice_repository,
+        operation=operation,
+        work_profile=work_profile,
         findings=findings,
         failures_by_finding_id=failures_by_finding_id,
     )

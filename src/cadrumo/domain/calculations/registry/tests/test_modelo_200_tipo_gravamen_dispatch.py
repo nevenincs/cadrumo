@@ -74,8 +74,12 @@ _REGIMEN_LEY_49_2002: CasillaId = validated_casilla_id("00001", surface="_REGIME
 # Both M202 pagos-fraccionados fold relations (modalidad 40.2 casilla 03 + 40.3 casilla 34)
 # must be supplied to the M200 cuota-diferencial formula; default both to zero here.
 _M200_PAGOS_RELATIONS_ZERO = {
-    "modelo-200-pagos-fraccionados-anuales": Decimal("0"),
-    "modelo-200-pagos-fraccionados-anuales-40-2": Decimal("0"),
+    "modelo-200-pago-fraccionado-primero-40-2": Decimal("0"),
+    "modelo-200-pago-fraccionado-primero-40-3": Decimal("0"),
+    "modelo-200-pago-fraccionado-segundo-40-2": Decimal("0"),
+    "modelo-200-pago-fraccionado-segundo-40-3": Decimal("0"),
+    "modelo-200-pago-fraccionado-tercero-40-2": Decimal("0"),
+    "modelo-200-pago-fraccionado-tercero-40-3": Decimal("0"),
 }
 
 

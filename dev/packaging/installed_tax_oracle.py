@@ -89,8 +89,12 @@ RELATIONS = (
     "modelo-200-bin-pendiente-ejercicios-anteriores=0",
     "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores=0",
     "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores=0",
-    "modelo-200-pagos-fraccionados-anuales=0",
-    "modelo-200-pagos-fraccionados-anuales-40-2=0",
+    "modelo-200-pago-fraccionado-primero-40-2=0",
+    "modelo-200-pago-fraccionado-primero-40-3=0",
+    "modelo-200-pago-fraccionado-segundo-40-2=0",
+    "modelo-200-pago-fraccionado-segundo-40-3=0",
+    "modelo-200-pago-fraccionado-tercero-40-2=0",
+    "modelo-200-pago-fraccionado-tercero-40-3=0",
 )
 
 

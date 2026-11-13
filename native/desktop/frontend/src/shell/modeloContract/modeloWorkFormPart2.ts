@@ -16,6 +16,7 @@ import type {
   ModeloVerificationFindingSeverity,
   OutputLanguage,
   PublicPeriod,
+  RegistryAuthorityGrade,
   ResultDisposition,
   VerificationCompletenessStatus,
 } from "./modelo";
@@ -107,6 +108,7 @@ export type PublicModeloVerificationFinding = {
   legal_refs: string[];
   source_refs: string[];
   disclosed_limitation?: boolean;
+  below_filing_grade?: RegistryAuthorityGrade | null;
 };
 
 /**
@@ -231,19 +233,6 @@ export type RefundEligibilityBasis =
  */
 export type RefundEligibilityOutcome =
   "refund_allowed" | "carry_forward_only" | "undetermined_redeme_unstated";
-
-/**
- * How far one modelo registry revision's declared authority reaches.
- *
- * The members form a ladder of increasing claim, each rung requiring
- * everything the rung below it requires. Which families a rung demands is a
- * question about *dispositions*, not raw population - a family may be honestly
- * resolved as not applicable, with a reason and legal references - so an
- * informative modelo carrying export layouts and no formulas can legitimately
- * reach `FILING`. Registry build validation owns that rule; this enum owns
- * only the vocabulary.
- */
-export type RegistryAuthorityGrade = "applicability" | "calculation" | "filing";
 
 /**
  * The kind of place a value comes from, as a filer thinks of it.

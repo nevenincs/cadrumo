@@ -26,11 +26,11 @@ handoff with the ADVISORY predicate
 ``domain/calculations/registry/tests/test_modelo_200_registry.py::
 test_modelo_200_carries_manual_handoff_under_declaration_advisory_predicates``.
 
-The scenario runs at ejercicio 2025 (revision ``2025-y-siguientes``), which
-inherits that predicate from its 2024 storage baseline and declares filing
-authority. Verify evaluates registry predicates only against a filing-grade
-snapshot; the 2024 revision declares calculation authority, so a 2024 draft
-stops at the authority-grade refusal and never reaches the predicate.
+The scenario runs at the newest authored Modelo 200 edition, which inherits
+that predicate from its storage baseline. An edition below filing grade is
+refused for filing, but verify still evaluates its advisory predicates, and
+only those, against the snapshot of the grade it reaches; the advisory then
+sits beside the authority-grade refusal and carries that grade.
 
 This module dispatches the REAL CLI (``modelo work create`` -> ``calculate`` ->
 ``verify``) and proves the real dispatched response surfaces that ADVISORY finding -
@@ -166,7 +166,9 @@ def _dispatch_m200_calculate_positive_resultado_zero_base(runtime_profile: TestR
             "--binding", "modelo-200-bin-pendiente-ejercicios-anteriores=0",
             "--binding", "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores=0",
             "--binding", "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores=0",
-            "--relation", "modelo-200-pagos-fraccionados-anuales=0",
+            "--relation", "modelo-200-pago-fraccionado-primero-40-3=0",
+            "--relation", "modelo-200-pago-fraccionado-segundo-40-3=0",
+            "--relation", "modelo-200-pago-fraccionado-tercero-40-3=0",
         ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output

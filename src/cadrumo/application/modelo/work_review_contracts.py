@@ -18,6 +18,7 @@ from ...domain.calculations.registry.ids import LegalRefId, RevisionId, SourceRe
 from ...domain.modelos.calculation_revision import CalculationRevisionState
 from ...domain.modelos.codes import ModeloCodeText
 from ...domain.modelos.verification_report import (
+    BelowFilingGradeField,
     DisclosedLimitationFlag,
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
@@ -109,6 +110,7 @@ class ModeloWorkReviewFindingSnapshot(BaseModel):
     legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
     source_refs: tuple[SourceRefId, ...] = ()
     disclosed_limitation: DisclosedLimitationFlag = False
+    below_filing_grade: BelowFilingGradeField = None
 
     @classmethod
     def from_finding(cls, finding: ModeloVerificationFinding) -> Self:

@@ -67,6 +67,7 @@ from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.filing.schema import ModeloValueKind
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
 from cadrumo.domain.modelos.verification_report import (
+    BelowFilingGradeField,
     DisclosedLimitationFlag,
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
@@ -512,6 +513,7 @@ class PublicModeloVerificationFinding(BaseModel):
     legal_refs: tuple[str, ...]
     source_refs: tuple[str, ...]
     disclosed_limitation: DisclosedLimitationFlag = False
+    below_filing_grade: BelowFilingGradeField = None
 
     @model_validator(mode="after")
     def _distinct_message_facts(self) -> Self:
