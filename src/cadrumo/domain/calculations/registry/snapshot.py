@@ -710,12 +710,15 @@ def legal_window_covers_devengo(revision: ModeloRevision, reference: LegalRefere
     already draws for the ``orden_aplicabilidad`` field:
 
     - A substantive-law reference (``kind`` in :data:`SUBSTANTIVE_LAW_KINDS` --
-      a rate scale, a deduction limit, a threshold) must be in force AT THE
-      REVISION'S OWN DEVENGO DATE (``revision.valid_to``, the 31 December the
-      tax period closes on -- IRPF art. 12). A redaction that only starts
-      partway through the following calendar year, while the return is still
-      being filed, did NOT govern the tax period and must not ground it, even
-      though it overlaps the presentation-extended window below.
+      a rate scale, a deduction limit, a threshold) must be in force at some
+      point of the revision's covered period (``revision.valid_from`` to
+      ``revision.valid_to``, the devengo date the period closes on). An
+      edition still partly inside the provision's window keeps it; the
+      provision is removed at the first edition whose period starts after its
+      ``effective_to``. A redaction that only starts after the period closes,
+      while the return is still being filed, did NOT govern the tax period and
+      must not ground it, even though it overlaps the presentation-extended
+      window below.
     - Every other kind (``orden``, ``manual``, ``resolucion``,
       ``acuerdo_parlamentario`` -- procedural, interpretive or parliamentary
       instruments) keeps the existing presentation-window-tolerant
@@ -742,9 +745,7 @@ def legal_window_covers_devengo(revision: ModeloRevision, reference: LegalRefere
         # Open-ended (*-y-siguientes) revision: no fixed devengo date to
         # anchor to. Mirrors the orden gate's own open-ended carve-out.
         return True
-    if governs_from > revision.valid_to:
-        return False
-    return governs_to is None or governs_to >= revision.valid_to
+    return governs_from <= revision.valid_to
 
 
 def check_revision_scoped_legal_windows(
@@ -891,7 +892,7 @@ def _substantive_legal_window_failure(
     return (
         f"legal reference {legal_id!r} (kind {reference.kind!r}, effective_from "
         f"{reference.effective_from.isoformat()}{effective_to_text}) does not cover revision "
-        f"{revision.id!r}'s devengo date {revision.valid_to.isoformat()}"
+        f"{revision.id!r}'s covered period ending {revision.valid_to.isoformat()}"
     )
 
 

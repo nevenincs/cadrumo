@@ -92,6 +92,9 @@ _CURATED_DEV_DESTINATIONS: Final[dict[str, str]] = {
     "dev/registry/analysis/year_independence_baseline.txt": (
         "the shrink-only year-independence baseline; its diff is the artefact"
     ),
+    "dev/registry/conformance_vectors/modelo_165_2026_y_siguientes.toml": (
+        "a pinned vector the export proof compares against"
+    ),
     "dev/registry/conformance_vectors/modelo_200_2025_y_siguientes.toml": (
         "a pinned vector the export proof compares against"
     ),

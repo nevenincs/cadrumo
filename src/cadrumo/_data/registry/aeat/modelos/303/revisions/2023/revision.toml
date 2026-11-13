@@ -1540,11 +1540,13 @@ filing_schedules = ['modelo-303-mensual']
 formulas = [
     'modelo-303-dr303-154-rate',
     'modelo-303-dr303-155-projection',
+    'modelo-303-dr303-18-projection',
 ]
 legal_refs = [
     'ley-37-1992:art-121',
     'rd-596-2016',
     'orden-hfp-1172-2022:art-4',
+    'real-decreto-ley-20-2022:art-72',
 ]
 source_refs = [
     'aeat-dr-303-2023',
@@ -1705,6 +1707,7 @@ formulas = [
     23,
     26,
     27,
+    37,
 ]
 legal_refs = [
     0,
@@ -1750,6 +1753,7 @@ legal_refs = [
     23,
     24,
     42,
+    43,
 ]
 source_refs = [
     3,

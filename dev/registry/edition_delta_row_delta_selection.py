@@ -200,14 +200,15 @@ def _process_row(
         return
     result.matched_storage_ids.add(edition_delta_source.row_id(candidate.row))
     baseline = edition_delta_source.as_row(without_lineage_claims(candidate.row))
-    materialised = edition_delta_source.edition_delta_source_effective(
+    payload_row = edition_delta_source.as_row(without_lineage_claims(row))
+    materialised = edition_delta_source.edition_delta_source_effective_restating_references(
         baseline,
+        payload_row,
         origin=candidate.origin,
         revision_id=context.revision_id,
         defaults=context.defaults,
         declarations=context.source.declarations,
     )
-    payload_row = edition_delta_source.as_row(without_lineage_claims(row))
     if materialised is None:
         result.kept[edition_delta_types.KeptReason.NOT_EXACT] += 1
         result.not_exact.append(f"{row_id}: inherited references do not resolve in the successor")

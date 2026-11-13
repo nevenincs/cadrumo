@@ -33,7 +33,8 @@ from .authored_editions import filing_year_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-# The fixture timeline is anchored on the first exercise after the repealed wording left
+# A wording that overlaps an edition keeps grounding it, so the wordings the carrier
+# defends sit wholly before the edition. The fixture timeline is anchored on the first exercise after the repealed wording left
 # force; every other date is written as a whole number of years from it, so the
 # containment relations under test hold wherever the support floor sits.
 _FIRST_YEAR = filing_year_envelope().floor
@@ -179,8 +180,8 @@ def _catalogues() -> RegistryCatalogues:
     return RegistryCatalogues(
         legal={
             _CURRENT_WORDING: _wording(_CURRENT_WORDING, _on(-8, 1, 1), None),
-            _WORDING_MIDDLE: _wording(_WORDING_MIDDLE, _on(0, 1, 1), _on(5, 12, 31)),
-            _WORDING_FIRST_YEAR: _wording(_WORDING_FIRST_YEAR, _on(0, 1, 1), _on(0, 12, 31)),
+            _WORDING_MIDDLE: _wording(_WORDING_MIDDLE, _on(-2, 1, 1), _on(-1, 12, 31)),
+            _WORDING_FIRST_YEAR: _wording(_WORDING_FIRST_YEAR, _on(-3, 1, 1), _on(-3, 12, 31)),
         },
         sources={},
     )
@@ -249,9 +250,9 @@ def test_bracket_rows_inside_each_wording_admit_their_citations() -> None:
     modelo, revision = _closed_revision(
         scale_refs=(_CURRENT_WORDING, _WORDING_MIDDLE, _WORDING_FIRST_YEAR),
         top_rows=(
-            _top_row("0.47", _on(0, 1, 1), _on(0, 12, 31)),
-            _top_row("0.45", _on(1, 1, 1), _on(5, 12, 31)),
-            _top_row("0.47", _on(6, 1, 1), None),
+            _top_row("0.47", _on(-3, 1, 1), _on(-3, 12, 31)),
+            _top_row("0.45", _on(-2, 1, 1), _on(-1, 12, 31)),
+            _top_row("0.47", _on(0, 1, 1), None),
         ),
     )
 
@@ -277,8 +278,8 @@ def test_a_bracket_row_straddling_the_wording_is_refused() -> None:
     modelo, revision = _closed_revision(
         scale_refs=(_CURRENT_WORDING, _WORDING_FIRST_YEAR),
         top_rows=(
-            _top_row("0.47", _on(0, 1, 1), _on(1, 12, 31)),
-            _top_row("0.45", _on(2, 1, 1), None),
+            _top_row("0.47", _on(-3, 1, 1), _on(-2, 12, 31)),
+            _top_row("0.45", _on(0, 1, 1), None),
         ),
     )
 
@@ -307,8 +308,8 @@ def test_a_wording_the_edition_also_cites_earns_no_bracket_carrier() -> None:
     modelo, revision = _closed_revision(
         scale_refs=(_CURRENT_WORDING, _WORDING_MIDDLE),
         top_rows=(
-            _top_row("0.45", _on(0, 1, 1), _on(5, 12, 31)),
-            _top_row("0.47", _on(6, 1, 1), None),
+            _top_row("0.45", _on(-2, 1, 1), _on(-1, 12, 31)),
+            _top_row("0.47", _on(0, 1, 1), None),
         ),
         edition_refs=(_CURRENT_WORDING, _WORDING_MIDDLE),
     )

@@ -90,8 +90,9 @@ def _process_authored_row(
         result.kept[edition_delta_types.KeptReason.NEW_LINEAGE] += 1
         return
     baseline = edition_delta_source.as_row(without_lineage_claims(candidate.row))
-    effective = edition_delta_source.edition_delta_source_effective(
+    effective = edition_delta_source.edition_delta_source_effective_restating_references(
         baseline,
+        edition_delta_source.as_row(without_lineage_claims(row)),
         origin=candidate.origin,
         revision_id=context.revision_id,
         defaults=context.defaults,

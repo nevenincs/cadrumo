@@ -166,19 +166,46 @@ def test_the_rate_row_cuotas_are_derived_wherever_their_row_base_is() -> None:
             )
 
 
+def _bound_leaves(revision: ModeloRevision, formula_id: str) -> tuple[str, ...]:
+    """The input kind of every casilla one formula reads."""
+    (formula,) = (formula for formula in revision.formulas if str(formula.id) == formula_id)
+    pending = [formula.expression]
+    kinds: list[str] = []
+    while pending:
+        node = pending.pop()
+        pending.extend(node.args)
+        if node.casilla_id is not None:
+            kinds.append(_derived_state(revision, str(node.casilla_id))[0])
+    return tuple(kinds)
+
+
 def test_box_18_follows_design_constraints_and_the_2022_statutory_population() -> None:
-    """Free wire syntax does not erase the population defined by LIVA art. 161.3."""
-    observed = {revision_id: _derived_state(_revision(revision_id), "18")[0] for revision_id in _REVISIONS}
+    """Free wire syntax does not erase the population defined by LIVA art. 161.3.
+
+    The design's [17] decides [18]: the floor edition's free field keeps the
+    statutory super-reducido population on one binding; a design that enumerates
+    the 0, 0,5 and 0,62 tiers, or that pins the transitional tier by its Nota 9,
+    makes [18] the sum of ledger-bound working figures, one per tier; a design that
+    fixes the Tipo at the constant "00000" leaves no recargo cuota to derive.
+    """
     enumerated = {
         revision_id for revision_id in _REVISIONS if '"00000", "00050", "00062"' in _design_row(revision_id, "17")
     }
     assert enumerated, "no design enumerates the recargo tiers; the premise of this test is gone"
     for revision_id in _REVISIONS:
-        expected = "bound" if revision_id == _FLOOR_REVISION or revision_id in enumerated else "manual"
-        assert observed[revision_id] == expected, (
-            f"{revision_id}: [18] is {observed[revision_id]} while its design "
-            f"{'enumerates' if revision_id in enumerated else 'does not enumerate'} the tiers"
-        )
+        tipo = _design_row(revision_id, "17")
+        kind, source = _derived_state(_revision(revision_id), "18")
+        if revision_id == _FLOOR_REVISION:
+            assert kind == "bound", f"{revision_id}: [18] is {kind} while LIVA art. 161.3 fixes its population"
+        elif revision_id in enumerated or "Nota 9" in tipo:
+            assert kind == "computed", f"{revision_id}: [18] is {kind} while its design pins the recargo tiers"
+            assert source is not None
+            leaves = _bound_leaves(_revision(revision_id), source)
+            assert leaves, f"{revision_id}: [18] reads no working figure"
+            assert set(leaves) == {"bound"}, f"{revision_id}: [18] reads {leaves}, not only ledger-bound figures"
+        else:
+            assert 'Constante "00000"' in tipo, f"{revision_id}: [17] is printed as {tipo!r}, which no branch reads"
+            assert kind == "manual", f"{revision_id}: [18] is {kind} while its design fixes the Tipo at 0"
 
 
 @pytest.mark.parametrize(("filing_year", "revision_id"), _ANNUAL_COORDINATES)

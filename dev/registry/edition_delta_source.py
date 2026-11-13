@@ -15,6 +15,7 @@ from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 from . import edition_delta_errors, edition_delta_fields, edition_delta_payload, edition_delta_types
 from .compiler.casilla_inheritance import retired_lineages
 from .compiler.edition_materialisation import resolve_edition
+from .compiler.loader_fields import REFERENCE_SECTIONS
 from .compiler.reference_defaults import default_row_references
 from .compiler.reference_resolution import edition_reference_declarations, resolve_row_references
 from .edition_round_trip import RowKey
@@ -198,6 +199,44 @@ def edition_delta_source_effective(
     return as_row(
         default_row_references(context, frozen, source_default=defaults.source_refs or (), orden_default=defaults.orden)
     )
+
+
+def edition_delta_source_effective_restating_references(
+    row: Row,
+    successor: Row,
+    *,
+    origin: str | None,
+    revision_id: str,
+    defaults: Defaults,
+    declarations: Declarations,
+) -> Row | None:
+    """The inherited row's effective form where the successor states the references it cannot inherit.
+
+    A successor that removes or replaces a formula or binding its predecessor's
+    row names cannot inherit that reference, so it must state the row's
+    reference fields itself; the loader applies that override before it
+    resolves references. When the predecessor's references resolve, this is
+    :func:`edition_delta_source_effective`. Otherwise the successor's reference
+    fields stand in for resolution only, and the returned row carries the
+    predecessor's own reference values back, so a difference against the
+    successor still states each reference it changes or removes. ``None`` when
+    even the successor's references do not resolve.
+    """
+    effective = edition_delta_source_effective(
+        row, origin=origin, revision_id=revision_id, defaults=defaults, declarations=declarations
+    )
+    if effective is not None:
+        return effective
+    stand_in: Row = {key: value for key, value in row.items() if key not in REFERENCE_SECTIONS}
+    stand_in.update({key: successor[key] for key in REFERENCE_SECTIONS if key in successor})
+    resolved = edition_delta_source_effective(
+        stand_in, origin=origin, revision_id=revision_id, defaults=defaults, declarations=declarations
+    )
+    if resolved is None:
+        return None
+    restored: Row = {key: value for key, value in resolved.items() if key not in REFERENCE_SECTIONS}
+    restored.update({key: row[key] for key in REFERENCE_SECTIONS if key in row})
+    return restored
 
 
 def lineage(row: Mapping[str, object]) -> str | None:

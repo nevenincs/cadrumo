@@ -7,7 +7,7 @@ revision_id = "2022"
 seed_source = "design_box_number"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "99272e7a29529eee3ed1e6c90db0dd49e9e95c0f1536be0ae71a1ee25aa9e18f"
+source_state_digest = "0dc5f40e56d355d07fd2ae4987cd841ab97db8c9d8144eba677c79de7c07af26"
 design_sources = [
     { source_ref = "aeat-dr-200-2022", sha256 = "8c9fa09e5713dc19ed9235757c314a1afee24108bccee4e39031f0df9a75fae6" },
 ]
@@ -819,10 +819,14 @@ placements = [
     { casilla_id = "01029", kind = "on_form", box_number = "01029" },
     { casilla_id = "01030", kind = "on_form", box_number = "01030" },
     { casilla_id = "01031", kind = "on_form", box_number = "01031" },
+    { casilla_id = "01032", kind = "on_form", box_number = "01032" },
     { casilla_id = "01035", kind = "on_form", box_number = "01035" },
     { casilla_id = "01036", kind = "on_form", box_number = "01036" },
     { casilla_id = "01037", kind = "on_form", box_number = "01037" },
     { casilla_id = "01038", kind = "on_form", box_number = "01038" },
+    { casilla_id = "01039", kind = "on_form", box_number = "01039" },
+    { casilla_id = "01040", kind = "on_form", box_number = "01040" },
+    { casilla_id = "01041", kind = "on_form", box_number = "01041" },
     { casilla_id = "01042", kind = "on_form", box_number = "01042" },
     { casilla_id = "01045", kind = "on_form", box_number = "01045" },
     { casilla_id = "01046", kind = "on_form", box_number = "01046" },
@@ -1542,6 +1546,8 @@ placements = [
     { casilla_id = "02309", kind = "on_form", box_number = "02309" },
     { casilla_id = "02310", kind = "on_form", box_number = "02310" },
     { casilla_id = "02311", kind = "on_form", box_number = "02311" },
+    { casilla_id = "02314", kind = "on_form", box_number = "02314" },
+    { casilla_id = "02315", kind = "on_form", box_number = "02315" },
     { casilla_id = "02319", kind = "on_form", box_number = "02319" },
     { casilla_id = "02320", kind = "on_form", box_number = "02320" },
     { casilla_id = "02322", kind = "on_form", box_number = "02322" },
@@ -2435,7 +2441,6 @@ placements = [
     { casilla_id = "DP200013:00547", kind = "on_form", box_number = "00547" },
     { casilla_id = "DP200013:00550", kind = "on_form", box_number = "00550" },
     { casilla_id = "DP200013:00552", kind = "on_form", box_number = "00552" },
-    { casilla_id = "DP200013:01032", kind = "on_form", box_number = "01032" },
     { casilla_id = "DP200013:01033", kind = "on_form", box_number = "01033" },
     { casilla_id = "DP200013:01034", kind = "on_form", box_number = "01034" },
     { casilla_id = "DP200013:bin-aplicada-maxima", kind = "working_figure" },
@@ -2465,12 +2470,7 @@ placements = [
     { casilla_id = "DP200014:00590", kind = "on_form", box_number = "00590" },
     { casilla_id = "DP200014:00592", kind = "on_form", box_number = "00592" },
     { casilla_id = "DP200014:00619", kind = "on_form", box_number = "00619" },
-    { casilla_id = "DP200014:01039", kind = "on_form", box_number = "01039" },
-    { casilla_id = "DP200014:01040", kind = "on_form", box_number = "01040" },
-    { casilla_id = "DP200014:01041", kind = "on_form", box_number = "01041" },
     { casilla_id = "DP200014:01330", kind = "on_form", box_number = "01330" },
-    { casilla_id = "DP200014:02314", kind = "on_form", box_number = "02314" },
-    { casilla_id = "DP200014:02315", kind = "on_form", box_number = "02315" },
     { casilla_id = "DP200014B:00083", kind = "on_form", box_number = "00083" },
     { casilla_id = "DP200014B:00599", kind = "on_form", box_number = "00599" },
     { casilla_id = "DP200014B:00601", kind = "on_form", box_number = "00601" },
@@ -3728,7 +3728,7 @@ blocks = [
     { kind = "field", id = "field-2", casilla_id = "01030" },
     { kind = "field", id = "field-3", casilla_id = "01031" },
     { kind = "field", id = "field-4", casilla_id = "DP200013:00550" },
-    { kind = "field", id = "field-5", casilla_id = "DP200013:01032" },
+    { kind = "field", id = "field-5", casilla_id = "01032" },
     { kind = "field", id = "field-6", casilla_id = "DP200013:00547" },
     { kind = "field", id = "field-7", casilla_id = "DP200013:00552" },
 ]
@@ -3820,15 +3820,15 @@ blocks = [
     { kind = "field", id = "field-4", casilla_id = "DP200014:00585" },
     { kind = "field", id = "field-5", casilla_id = "DP200014:00584" },
     { kind = "field", id = "field-6", casilla_id = "DP200014:00588" },
-    { kind = "field", id = "field-7", casilla_id = "DP200014:01039" },
-    { kind = "field", id = "field-8", casilla_id = "DP200014:02314" },
-    { kind = "field", id = "field-9", casilla_id = "DP200014:02315" },
+    { kind = "field", id = "field-7", casilla_id = "01039" },
+    { kind = "field", id = "field-8", casilla_id = "02314" },
+    { kind = "field", id = "field-9", casilla_id = "02315" },
     { kind = "field", id = "field-10", casilla_id = "DP200014:00565" },
     { kind = "field", id = "field-11", casilla_id = "DP200014:00590" },
     { kind = "field", id = "field-12", casilla_id = "DP200014:00399" },
     { kind = "field", id = "field-13", casilla_id = "DP200014:00082" },
-    { kind = "field", id = "field-14", casilla_id = "DP200014:01040" },
-    { kind = "field", id = "field-15", casilla_id = "DP200014:01041" },
+    { kind = "field", id = "field-14", casilla_id = "01040" },
+    { kind = "field", id = "field-15", casilla_id = "01041" },
     { kind = "field", id = "field-16", casilla_id = "DP200014:00619" },
     { kind = "field", id = "field-17", casilla_id = "DP200014:00592" },
 ]

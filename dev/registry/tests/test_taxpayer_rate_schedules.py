@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Iterator, Mapping
 
 import pytest
 
@@ -136,46 +136,35 @@ def test_legal_entity_route_has_is_rate_schedule_by_entity_form() -> None:
         formula for formula in revision.formulas if formula.id == "modelo-200-tipo-gravamen-por-forma-juridica"
     )
     assert {"ley-27-2014:art-29", "ley-27-2014:art-30"} <= set(dispatch_formula.legal_refs)
-    general_form_dispatch = {
-        "sl": "is.modelo-200.tipo-gravamen-general",
-        "sa": "is.modelo-200.tipo-gravamen-general",
-        "sal": "is.modelo-200.tipo-gravamen-general",
-        "sll": "is.modelo-200.tipo-gravamen-general",
-        "sociedad_civil_mercantil": "is.modelo-200.tipo-gravamen-general",
-        "other": "is.modelo-200.tipo-gravamen-general",
-        "cooperativa": "is.modelo-200.tipo-gravamen-cooperative-protected",
-        "sin_fines_lucrativos": "is.modelo-200.tipo-gravamen-non-profit-special-regime",
+    # The rate is chosen by the legal entity form, the new-entity flag and the
+    # INCN of the prior 12 months, in whatever lane order the edition's design
+    # sets; the per-lane rates are proved by evaluation in the cuota-integra lane
+    # tests. Here the formula must reach every LIS art. 29 rate and both INCN
+    # thresholds, read each axis, and keep sal and sll on the legal-entity axis.
+    nodes = tuple(_expression_nodes(dispatch_formula.expression))
+    reached = {str(node.parameter) for node in nodes if node.parameter is not None}
+    reached |= {
+        str(parameter)
+        for node in nodes
+        if node.dispatch_table is not None
+        for parameter in node.dispatch_table.values()
     }
-    micro_form_dispatch = {
-        **general_form_dispatch,
-        "sl": "is.modelo-200.tipo-gravamen-pyme-display",
-        "sa": "is.modelo-200.tipo-gravamen-pyme-display",
-        "sal": "is.modelo-200.tipo-gravamen-pyme-display",
-        "sll": "is.modelo-200.tipo-gravamen-pyme-display",
-        "sociedad_civil_mercantil": "is.modelo-200.tipo-gravamen-pyme-display",
-        "other": "is.modelo-200.tipo-gravamen-pyme-display",
-    }
-    erd_form_dispatch = {
-        **general_form_dispatch,
-        "sl": "is.modelo-200.tipo-gravamen-erd-art101",
-        "sa": "is.modelo-200.tipo-gravamen-erd-art101",
-        "sal": "is.modelo-200.tipo-gravamen-erd-art101",
-        "sll": "is.modelo-200.tipo-gravamen-erd-art101",
-        "sociedad_civil_mercantil": "is.modelo-200.tipo-gravamen-erd-art101",
-        "other": "is.modelo-200.tipo-gravamen-erd-art101",
-    }
+    assert scalar_rates | {"is.modelo-200.incn-umbral-microempresa", "is.modelo-200.incn-umbral-erd-art101"} <= reached
+    read = {str(node.binding) for node in nodes if node.binding is not None}
+    assert {
+        "modelo-200-profile-legal-entity-form",
+        "modelo-200-profile-new-entity-flag",
+        "modelo-200-profile-incn-prior-12-months",
+    } <= read
+    form_binding = "modelo-200-profile-legal-entity-form"
+    compared = (node.args for node in nodes if any(str(argument.binding) == form_binding for argument in node.args))
+    forms = {str(argument.text_literal) for args in compared for argument in args if argument.text_literal is not None}
+    forms |= {key for node in nodes if node.dispatch_table is not None for key in node.dispatch_table}
+    assert {"sl", "sa", "sal", "sll", "cooperativa", "sociedad_civil_mercantil", "other"} <= forms
 
-    # The formula is a four-lane nested if_then_else:
-    # new-entity override -> micro-empresa -> ERD art.101 -> general sub-form.
-    # Each lane keeps sal/sll on the legal-entity axis.
-    new_entity_dispatch = dispatch_formula.expression.args[1].args[2].dispatch_table
-    micro_dispatch = dispatch_formula.expression.args[2].args[1].args[2].dispatch_table
-    erd_dispatch = dispatch_formula.expression.args[2].args[2].args[1].args[2].dispatch_table
-    general_dispatch = dispatch_formula.expression.args[2].args[2].args[2].args[2].dispatch_table
 
-    assert new_entity_dispatch == {
-        key: "is.modelo-200.tipo-gravamen-new-entity-first-2-years" for key in general_form_dispatch
-    }
-    assert micro_dispatch == micro_form_dispatch
-    assert erd_dispatch == erd_form_dispatch
-    assert general_dispatch == general_form_dispatch
+def _expression_nodes(expression: FormulaExpression) -> Iterator[FormulaExpression]:
+    """Every node of one formula expression, depth first."""
+    yield expression
+    for argument in expression.args:
+        yield from _expression_nodes(argument)

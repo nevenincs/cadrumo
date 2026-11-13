@@ -19,13 +19,15 @@ from cadrumo.domain.calculations.registry.amendment_regime_policy import (
     permitted_amendment_kind_values_for_period,
     resolve_amendment_regime_policy,
 )
+from cadrumo.domain.calculations.registry.errors import RegistryFailureCondition, RegistryValidationError
 from cadrumo.domain.calculations.registry.facts.payloads import MappingFactPayload
 from cadrumo.domain.calculations.registry.facts.resolution import reading_dated_facts_below_support
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalogue
 from cadrumo.domain.calculations.registry.governed_fact_scope import CandidateFactAuthority, validating_governed_facts
-from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision, revision_covering
+from cadrumo.domain.calculations.registry.tests.authored_editions import revision_covering
 from cadrumo.domain.modelos.filing_record import FilingDeclarationKind
 
+from ..compiler.authority import compiled_bundled_authority
 from ..compiler.fact_loader import load_governed_fact_file
 from ..compiler.loader import load_modelo_directory, load_shared_catalogues
 from ..compiler.validate_evidence import EvidenceValidator
@@ -174,10 +176,20 @@ def test_every_supported_year_intersects_the_dated_rectificativa_regime() -> Non
 
 
 def test_sociedades_procedure_evidence_does_not_promote_the_boundary_year_revision() -> None:
+    """The boundary year keeps its own edition's grade: a filing-grade snapshot of it is refused, typed."""
     modelo = load_modelo_directory(bundled_path("registry", "aeat", "modelos", "200"))
     boundary_revision = revision_covering("200", _BOUNDARY_200.year)
     assert modelo.revisions[boundary_revision.id].authority_grade is RegistryAuthorityGrade.CALCULATION
-    assert modelo.revisions[open_ended_revision("200").id].authority_grade is RegistryAuthorityGrade.FILING
+    authority = compiled_bundled_authority()
+    calculated = authority.snapshot(
+        "200", filing_year=_BOUNDARY_200.year, period="0A", grade=RegistryAuthorityGrade.CALCULATION
+    )
+    assert str(calculated.revision.id) == str(boundary_revision.id)
+    with pytest.raises(RegistryValidationError) as refusal:
+        authority.snapshot("200", filing_year=_BOUNDARY_200.year, period="0A", grade=RegistryAuthorityGrade.FILING)
+    failure = refusal.value.registry_failure
+    assert failure is not None
+    assert failure.condition is RegistryFailureCondition.SNAPSHOT_AUTHORITY_GRADE_SUFFICIENT
 
 
 @pytest.mark.parametrize(
