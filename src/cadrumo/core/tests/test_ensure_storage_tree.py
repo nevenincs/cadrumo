@@ -102,6 +102,7 @@ def test_the_runtime_owned_members_are_declared_and_left_out_of_the_client_tree(
         StorageCategory.RUNTIME_COORDINATION,
         StorageCategory.RUNTIME_INSTALLATION_RECORD,
         StorageCategory.RUNTIME_INSTALLATION_LOCK,
+        StorageCategory.RUNTIME_FIXED_CLOCK_MARKER,
     }
     settings = load_settings()
     assert storage_path(StorageCategory.CONNECTION_SOCKETS, settings=settings) not in storage_tree_targets(settings)

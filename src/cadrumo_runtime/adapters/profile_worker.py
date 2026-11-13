@@ -17,8 +17,13 @@ from cadrumo.core.diagnostic_log import diagnostic_event
 from cadrumo.core.logging import get_logger
 from cadrumo.core.package_interpreter import interpreter_command
 from cadrumo.core.pydantic_plugins import PYDANTIC_PLUGINS_DISABLED, PYDANTIC_PLUGINS_VARIABLE
-from cadrumo.core.storage_environment import ChildEnvironmentProfile, child_environment
+from cadrumo.core.storage_environment import (
+    ChildEnvironmentProfile,
+    child_environment,
+    fixed_clock_child_environment,
+)
 from cadrumo.core.time.clock import wall_now
+from cadrumo.core.time.fixed_clock import FixedClock
 from cadrumo_client.contracts.contracts import ChannelWake, RefusalCode, RefusalError, ServerHello
 from cadrumo_client.contracts.deadline_budget import (
     DEFAULT_TIMEOUT_POLICY,
@@ -81,11 +86,14 @@ class ProfileWorkerProcess(ProfileWorkerHumanAdmission):
         wall_clock: Callable[[], datetime] = wall_now,
         exited: Callable[[ProfileWorkerProcess], None] | None = None,
         stopping: ChannelWake | None = None,
+        fixed_clock: FixedClock | None = None,
     ) -> None:
         """Launch and authenticate a contained installed worker before key access.
 
         ``exited`` hears, from a watch thread, that the worker exited before
         anything stopped it; an exit after ``close`` began is not reported.
+        ``fixed_clock`` is the fixed clock the runtime admitted at its own
+        start, which the worker is told; ``None`` when the runtime runs on wall time.
         """
         if sys.platform not in {"win32", "linux", "darwin"}:
             raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
@@ -113,6 +121,7 @@ class ProfileWorkerProcess(ProfileWorkerHumanAdmission):
         self._exit_report_lock = Lock()
         self._exit_reported = False
         self._started = False
+        self._fixed_clock = fixed_clock
         launched = False
         endpoint = worker_endpoint(storage_root=storage_root, worker_namespace=identity.worker_id)
         operation_endpoint = worker_endpoint(
@@ -202,7 +211,9 @@ class ProfileWorkerProcess(ProfileWorkerHumanAdmission):
 
     def _launch_worker(self, identity: ProfileWorkerIdentity, *, storage_root: Path, worker_script: Path | None) -> str:
         """Launch the isolated worker interpreter inside the scope and return the expected product version."""
-        environment = worker_launch_environment(storage_root=storage_root, profile_id=identity.binding.profile_id)
+        environment = worker_launch_environment(
+            storage_root=storage_root, profile_id=identity.binding.profile_id, fixed_clock=self._fixed_clock
+        )
         environment[PYDANTIC_PLUGINS_VARIABLE] = PYDANTIC_PLUGINS_DISABLED
         product_version = version("cadrumo")
         worker_entrypoint = (
@@ -473,12 +484,16 @@ def _direct_windows_interpreter(interpreter: str, environment: dict[str, str]) -
     return base
 
 
-def worker_launch_environment(*, storage_root: Path, profile_id: UUID) -> dict[str, str]:
+def worker_launch_environment(
+    *, storage_root: Path, profile_id: UUID, fixed_clock: FixedClock | None = None
+) -> dict[str, str]:
     """Pin the storage root and keep operator storage controls across the isolated worker boundary.
 
     POSIX workers start from a fixed noncredential environment; Windows workers
     keep the ambient environment minus the declared cleared classes. A worker
-    serves exactly one profile, and is told that profile's folder.
+    serves exactly one profile, and is told that profile's folder. The fixed
+    clock slots come only from ``fixed_clock``, the runtime's admitted state;
+    a value in the environment this runtime received is stripped, never relayed.
     """
     posix_base = {"PATH": "/usr/bin:/bin", "LANG": "C", "LC_ALL": "C"}
     environment = child_environment(
@@ -488,4 +503,5 @@ def worker_launch_environment(*, storage_root: Path, profile_id: UUID) -> dict[s
         sys_platform=sys.platform,
         profile_id=profile_id,
     )
+    environment.update(fixed_clock_child_environment(fixed_clock))
     return environment

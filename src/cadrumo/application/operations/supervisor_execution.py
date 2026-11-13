@@ -25,6 +25,7 @@ from ...core.operations import (
     OperationTerminalCondition,
 )
 from ...core.operator_progress import OperatorProgress, operator_progress_sink
+from ...core.time.clock import frozen_clock
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from . import supervisor_context, supervisor_snapshot
@@ -67,6 +68,21 @@ _log = get_logger(__name__)
 
 _AWAIT_TERMINAL_INITIAL_BACKOFF_SECONDS = 0.025
 _AWAIT_TERMINAL_MAX_BACKOFF_SECONDS = 0.25
+
+
+async def fixed_clock_application_work(
+    instant: datetime | None, handler: Coroutine[None, None, OperationExecutorResult]
+) -> OperationExecutorResult:
+    """Await one registered executor's application work, at the admitted fixed instant when there is one.
+
+    This is the whole fixed-clock scope. It opens at the handler's invocation
+    and closes when the handler returns, so the start, journal, lease and
+    receipt stamps the supervisor writes around it stay on wall time.
+    """
+    if instant is None:
+        return await handler
+    with frozen_clock(instant):
+        return await handler
 
 
 async def _forwarding_operator_progress(
@@ -249,7 +265,9 @@ class SupervisorExecutionMixin(SupervisorHost):
                         action=AccessAction.START,
                         executor=lambda: run_with_model_runs(
                             operation_model_run_port(self._execution_authority, running.identity),
-                            executor.execute(request, executor_context),
+                            fixed_clock_application_work(
+                                self._fixed_clock_instant, executor.execute(request, executor_context)
+                            ),
                         ),
                     ),
                 ),

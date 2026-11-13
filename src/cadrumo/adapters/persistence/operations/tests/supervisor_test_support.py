@@ -740,6 +740,7 @@ def operation_supervisor(
     cleanup_timeout: timedelta | None = timedelta(minutes=1),
     execution_authority: OperationExecutionAuthority | None = None,
     authority_operation: PinnedAuthorityOperation | None = None,
+    fixed_clock_instant: datetime | None = None,
 ) -> OperationSupervisor:
     return OperationSupervisor(
         authority_operation=unread_authority_operation() if authority_operation is None else authority_operation,
@@ -756,6 +757,7 @@ def operation_supervisor(
         cleanup_timeout=cleanup_timeout,
         response_token_factory=lambda: RESPONSE_TOKEN,
         execution_authority=execution_authority,
+        fixed_clock_instant=fixed_clock_instant,
     )
 
 
