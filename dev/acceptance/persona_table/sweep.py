@@ -4,7 +4,7 @@ This module is not a test of the suite. ``python -m dev.acceptance.persona_table
 names it explicitly to pytest, which collects it in spite of its name; the
 suite never does. Each case replays one persona with the registry horizon
 moved to one supported year and takes every return it owes through create,
-calculate, verify and fichero-BOE export, appending one JSON row per return
+calculate, verify, fichero-BOE export and local filing, appending one JSON row per return
 to the file ``PERSONA_TABLE_OUT`` names. A case fails only when the runner
 itself breaks; a red return is a row, not a failed case.
 """
@@ -251,7 +251,7 @@ def _blocking_findings(verified: ModeloWorkVerifyPublicResultV2) -> str:
 def _run_return(
     materialised: MaterialisedPersona, plan: PlannedRow, values: list[ExpectedValue], exports: Path
 ) -> TableRow:
-    """Create, calculate, verify and export one return; the row records where it stopped and why.
+    """Create, calculate, verify, export and file one return; the row records where it stopped and why.
 
     A return stated not owed is created, calculated and compared, then checked against the overview calendar
     instead of being verified, exported and filed.
@@ -277,21 +277,56 @@ def _run_return(
             plan, calculate, verify=verify, reason=" | ".join(reasons)[:_REASON_LIMIT], figures=figures
         )
     revision_id = calculated.calculation_revision_id
-    verify, verify_reason = _verify(world, work_unit_id, revision_id)
-    export, export_detail, export_reason = _export(world, plan, values, exports, work_unit_id, revision_id)
-    calculate, reasons = _with_counterparties(calculate, reasons, values, materialised.persona, plan, exports, export)
-    reasons += [reason for reason in (verify_reason, export_reason) if reason]
-    stage_reasons = {"verify": verify_reason, "export": export_reason}
+    lifecycle = run_lifecycle(world, plan, values, exports, work_unit_id, revision_id)
+    calculate, reasons = _with_counterparties(
+        calculate, reasons, values, materialised.persona, plan, exports, lifecycle.export
+    )
+    reasons += [
+        reason for reason in (lifecycle.verify_reason, lifecycle.export_reason, lifecycle.file_reason) if reason
+    ]
+    stage_reasons = {"verify": lifecycle.verify_reason or lifecycle.file_reason, "export": lifecycle.export_reason}
     calculate = _at_stated_stage(stating, calculate, reasons, stage_reasons)
     return TableRow.from_plan(
         plan,
         calculate,
-        verify=verify,
-        export=export,
+        verify=lifecycle.verify,
+        export=lifecycle.export,
         reason=" | ".join(reasons)[:_REASON_LIMIT],
-        export_detail=export_detail,
+        export_detail=lifecycle.export_detail,
         figures=figures,
     )
+
+
+@dataclass(frozen=True, slots=True)
+class Lifecycle:
+    """What verify, export and local filing settled for one calculated return."""
+
+    verify: Stage
+    verify_reason: str
+    export: Stage
+    export_detail: str
+    export_reason: str
+    file_reason: str
+    """The local filing outcome, empty when the verification did not pass and nothing was filed."""
+
+
+def run_lifecycle(
+    world: PersonaWorld,
+    plan: PlannedRow,
+    values: list[ExpectedValue],
+    exports: Path,
+    work_unit_id: str,
+    revision_id: str,
+) -> Lifecycle:
+    """Run verify, then export, then local filing, the order the lifecycle takes.
+
+    Filing waits for the export so that an export defect of a return is seen before the return is filed; it
+    depends only on the verification, whatever the export settled, so the quarterly chain still builds on it.
+    """
+    verify, verify_reason, verified = _verify(world, work_unit_id, revision_id)
+    export, export_detail, export_reason = _export(world, plan, values, exports, work_unit_id, revision_id)
+    file_reason = _file_locally(world, work_unit_id, revision_id, verified) if verified is not None else ""
+    return Lifecycle(verify, verify_reason, export, export_detail, export_reason, file_reason)
 
 
 @dataclass(frozen=True, slots=True)
@@ -554,8 +589,10 @@ def _not_owed(materialised: MaterialisedPersona, plan: PlannedRow) -> tuple[Stag
     return not_owed_stage(observations, (plan.modelo, plan.year, plan.period))
 
 
-def _verify(world: PersonaWorld, work_unit_id: str, revision_id: str) -> tuple[Stage, str]:
-    """The verify stage and its reason; a granted verification is then filed locally."""
+def _verify(
+    world: PersonaWorld, work_unit_id: str, revision_id: str
+) -> tuple[Stage, str, ModeloWorkVerifyPublicResultV2 | None]:
+    """The verify stage, its reason, and the granted verification the return is filed on, else none."""
     try:
         verified = run_operation(
             world,
@@ -565,12 +602,14 @@ def _verify(world: PersonaWorld, work_unit_id: str, revision_id: str) -> tuple[S
             subject=work_unit_id,
         )
     except PersonaMaterialisationError as error:
-        return Stage.REFUSED, f"verify: {_short(error)}"
+        return Stage.REFUSED, f"verify: {_short(error)}", None
     if verified.granted_verificado_completo:
-        return Stage.PASSED, _file_locally(world, work_unit_id, revision_id, verified)
-    return Stage.INCOMPLETE, (
+        return Stage.PASSED, "", verified
+    return (
+        Stage.INCOMPLETE,
         f"verify: {verified.completeness_status}; {verified.finding_count} findings; "
-        f"blocking: {_blocking_findings(verified) or 'none'}"
+        f"blocking: {_blocking_findings(verified) or 'none'}",
+        None,
     )
 
 
