@@ -598,19 +598,33 @@ def test_report_rows_ground_every_casilla_without_inventing_a_source_trace(repos
     }
 
     assert consumed_profile_bindings
-    assert {ref.source_ref for ref in revision.source_provenance} == {
+    # Box 06 (retenciones) is handed to the calculation by the ledger renta resolver, so the
+    # revision records that resolver for it; every other trace is a consumed profile binding.
+    (supplied,) = [ref for ref in revision.source_provenance if ref.source_casilla_ids]
+    assert supplied.source_ref == "bound_input:06"
+    assert supplied.source_casilla_ids == ("06",)
+    assert supplied.resolved_binding_source is BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION
+    assert supplied.lineage_role is CalculationSourceLineageRole.PRIMARY
+    profile_refs = [ref for ref in revision.source_provenance if ref is not supplied]
+    assert {ref.source_ref for ref in profile_refs} == {
         f"profile:{work_unit.bucket_id}:binding:{binding_id}" for binding_id in consumed_profile_bindings
     }
-    assert len(revision.source_provenance) == len(consumed_profile_bindings)
+    assert len(profile_refs) == len(consumed_profile_bindings)
     assert all(
         ref.resolved_binding_source is BindingSourceKind.PROFILE
         and ref.contributor_binding_source is BindingSourceKind.PROFILE
         and ref.lineage_role is CalculationSourceLineageRole.PRIMARY
         and ref.parent_source_ref is None
         and ref.source_casilla_ids == ()
-        for ref in revision.source_provenance
+        for ref in profile_refs
     )
-    assert all(row.source_provenance == () for row in report.rows)
+    assert [
+        (ref.resolved_binding_source, ref.lineage_role)
+        for row in report.rows
+        if row.casilla_id == "06"
+        for ref in row.source_provenance
+    ] == [(supplied.resolved_binding_source, supplied.lineage_role)]
+    assert all(row.source_provenance == () for row in report.rows if row.casilla_id != "06")
     assert all(row.legal_refs and row.source_refs for row in report.rows)
     assert all(row.label and row.section_path and row.number for row in report.rows)
 
