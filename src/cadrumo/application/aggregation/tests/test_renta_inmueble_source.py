@@ -142,12 +142,13 @@ def test_one_property_let_all_year_states_its_rent_expenses_and_days() -> None:
     assert occurrence.column(RentaInmuebleRowField.RUSTICA) is None
     assert occurrence.column(RentaInmuebleRowField.PORCENTAJE_PROPIEDAD) == Decimal(100)
     assert occurrence.column(RentaInmuebleRowField.FECHA_TRANSMISION) is None
-    # The fixture states no acquisition cost, nothing about what earlier years left pending, and
-    # not whether its contract signed after May 2023 lies in a stressed-market zone; each withholds
-    # the net chain.
+    # The fixture states no acquisition cost, not when the property was first let, nothing about
+    # what earlier years left pending, and not whether its contract signed after May 2023 lies in a
+    # stressed-market zone; each withholds the net chain.
     assert _causes(built) == {
         RentaInmuebleCause.BOXES_NOT_OFFERED,
         RentaInmuebleCause.ACQUISITION_COST_UNSTATED,
+        RentaInmuebleCause.LETTING_START_UNSTATED,
         RentaInmuebleCause.PENDING_EXPENSES_UNSTATED,
         RentaInmuebleCause.REDUCTION_FACT_UNSTATED,
     }

@@ -18,6 +18,7 @@ the same property after other properties are removed.
 from __future__ import annotations
 
 import re
+from collections.abc import Iterable
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
@@ -233,6 +234,9 @@ class InmuebleRecord(BaseModel):
     importes_movimientos: ImportesMovimientos | None = None
     amortizacion_acumulada: Decimal | None = Field(default=None, ge=0)
     amortizacion_acumulada_desde: date | None = None
+    arrendado_desde: date | None = None
+    sin_arrendar: bool = False
+    """With ``arrendado_desde``: unstated (no date, ``False``), first let on a date, or never let (``True``)."""
 
     @field_validator("referencia_catastral")
     @classmethod
@@ -253,7 +257,22 @@ class InmuebleRecord(BaseModel):
                 "the attested cumulative amortisation and the date it is attested to travel together",
                 field="amortizacion_acumulada",
             )
+        if self.sin_arrendar and self.arrendado_desde is not None:
+            raise _refuse("a property never let has no date it was first let", field="arrendado_desde")
         return self
+
+
+def require_letting_start_before_leases(record: InmuebleRecord, lease_starts: Iterable[date]) -> None:
+    """Refuse a letting start later than the start of any lease of the property, and a lease of a property never let.
+
+    The earliest lease start never stands in for an unstated ``arrendado_desde``;
+    this only judges two stated facts against each other.
+    """
+    starts = tuple(lease_starts)
+    if record.sin_arrendar and starts:
+        raise _refuse("a property with a lease has been let", field="sin_arrendar")
+    if record.arrendado_desde is not None and any(start < record.arrendado_desde for start in starts):
+        raise _refuse("the property cannot be first let after one of its leases starts", field="arrendado_desde")
 
 
 def _require_reference_matches_situacion(record: InmuebleRecord) -> None:
@@ -309,4 +328,5 @@ __all__ = [
     "UsoInmuebleTipo",
     "ValorCatastral",
     "canonical_referencia_catastral",
+    "require_letting_start_before_leases",
 ]

@@ -289,6 +289,8 @@ def inmueble_from_row(clave: int, row: RowValues) -> InmuebleRecord:
             "importes_movimientos": row.get("importes_movimientos"),
             "amortizacion_acumulada": money_of("amortizacion_acumulada"),
             "amortizacion_acumulada_desde": date_of("amortizacion_acumulada_desde"),
+            "arrendado_desde": date_of("arrendado_desde"),
+            "sin_arrendar": _optional(row, "sin_arrendar", lambda raw: _boolean(raw, leaf="sin_arrendar")) or False,
         },
     )
 
@@ -349,6 +351,8 @@ def inmueble_row_values(record: InmuebleRecord) -> dict[str, str]:
         "usos": serialise_usos(record.usos) or None,
         "amortizacion_acumulada": _amount(record.amortizacion_acumulada),
         "amortizacion_acumulada_desde": record.amortizacion_acumulada_desde,
+        "arrendado_desde": record.arrendado_desde,
+        "sin_arrendar": True if record.sin_arrendar else None,
         "inmueble_principal": record.inmueble_principal,
         "importes_movimientos": record.importes_movimientos,
     }

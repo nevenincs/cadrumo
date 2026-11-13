@@ -670,6 +670,8 @@ profile:
           label: Amortització acumulada atestada
         amortizacion_acumulada_desde:
           label: Data a la qual es refereix l'amortització acumulada
+        arrendado_desde:
+          label: Data des de la qual l'immoble està arrendat
         direccion:
           label: Adreça de l'immoble
         fecha_adquisicion:
@@ -700,6 +702,8 @@ profile:
           label: Percentatge d'usdefruit
         referencia_catastral:
           label: Referència cadastral
+        sin_arrendar:
+          label: Immoble que no s'ha arrendat mai
         situacion:
           choices:
             '1': Amb referència cadastral, en territori comú

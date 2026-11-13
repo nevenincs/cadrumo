@@ -27,7 +27,7 @@ Core types:
 from __future__ import annotations
 
 import json
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from typing import ClassVar, Final, override
 
 from pydantic import BaseModel
@@ -230,6 +230,15 @@ class Modelo232RelatedPartyStoreAdapter(Modelo232RelatedPartyStore):
     def load_turnover_statements(self, ejercicio: int) -> tuple[Modelo232TurnoverStatement, ...]:
         """Return every turnover statement of ``ejercicio``, the withdrawn ones included."""
         return tuple(item for item, _revision in self._turnovers.list_revisioned(ejercicio))
+
+    @override
+    def revision_marker(self, ejercicios: Sequence[int]) -> str:
+        """Return the guard revision of every ejercicio, so any write of any of them changes the marker."""
+        parts = []
+        for ejercicio in ejercicios:
+            guards = self._guards.list_revisioned(ejercicio)
+            parts.append(f"{ejercicio}:{guards[0][1] if guards else ABSENT_SECURE_OBJECT_REVISION_ID}")
+        return ",".join(parts)
 
     @override
     def read_year(self, ejercicio: int) -> Modelo232YearView:
