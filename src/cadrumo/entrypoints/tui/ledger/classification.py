@@ -11,7 +11,6 @@ from textual.widgets import Button, DataTable, Input, Static
 
 from ....application.ledger.models import ManualLedgerTransactionPatch
 from ....application.ledger.workspace import LedgerWorkspaceArea
-from ....core.decimal.constants import ONE
 from ....core.decimal.grammar import try_parse_canonical_decimal
 from ....core.errors.hierarchy import CadrumoError, InternalInvariantError
 from ....core.i18n.render import tr
@@ -68,15 +67,6 @@ def _optional_decimal(field_name: str, raw: str) -> Decimal | None:
     if field_name != "business_pct":
         validate_non_negative_decimal(parsed, field_name=field_name)
     return parsed
-
-
-def _validate_iva_rate(value: Decimal | None) -> Decimal | None:
-    """Apply the domain rate convention before the submitter is called."""
-    if value is not None and value > ONE:
-        raise TransactionValidationError(
-            f"iva_rate is a decimal fraction, not a percentage: got {value}. Express 21% IVA as 0.21.",
-        )
-    return value
 
 
 class LedgerClassificationScreen(LedgerConfirmationFlowScreen):
@@ -266,7 +256,7 @@ class LedgerClassificationScreen(LedgerConfirmationFlowScreen):
     def _decimal_patch_values(self, selected: BusinessClassification) -> dict[str, Decimal]:
         decimals: dict[str, Decimal | None] = {
             "taxable_base": _optional_decimal("taxable_base", self._field_value("taxable_base")),
-            "iva_rate": _validate_iva_rate(_optional_decimal("iva_rate", self._field_value("iva_rate"))),
+            "iva_rate": _optional_decimal("iva_rate", self._field_value("iva_rate")),
             "iva_amount": _optional_decimal("iva_amount", self._field_value("iva_amount")),
             "business_pct": _optional_decimal("business_pct", self._field_value("business_pct")),
         }

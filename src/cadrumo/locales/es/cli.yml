@@ -599,7 +599,7 @@ cli:
           intangibles_reduction, junto con --parent-name.
         participation_help: Porcentaje del emisor que posees. Solo para tax_haven_holding.
         source_help: 'De dónde sale la cifra: annual_accounts, corporation_tax_return,
-          vat_returns u operator_estimate.'
+          declaraciones_iva u operator_estimate.'
         source_reference_help: Referencia del documento o declaración del que tomaste
           la cifra.
         specific_help: La operación es una operación específica (art. 2.1.b de la

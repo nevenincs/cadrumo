@@ -128,7 +128,7 @@ def counterparty_filing_name(
             no_second_surname=no_second_surname,
             nombre=nombre,
             razon_social=razon_social,
-            renderings=rendering,
+            renderings=tuple(rendering),
         ),
     )
     result = completed.projection

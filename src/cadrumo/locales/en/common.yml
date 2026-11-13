@@ -5419,8 +5419,8 @@ filing:
     records_turnover_source:
       annual_accounts: your annual accounts
       corporation_tax_return: your corporation tax return
+      declaraciones_iva: your VAT returns
       operator_estimate: your own estimate
-      vat_returns: your VAT returns
   validation:
     deadline_missed: Submission deadline has passed
     formula_divergence: Divergence in formula calculation

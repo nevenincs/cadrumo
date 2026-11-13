@@ -20,6 +20,7 @@ from .frontend import (
     cell_text,
     frontend_line,
     row_cell,
+    trees_line,
 )
 from .rows import GREEN, VERDICT_MEANING, Stage, TableRow, Verdict
 
@@ -259,7 +260,7 @@ def render_table(
     cells = _frontend_cells(frontend, head)
     lines += [_row_line(row, cells.get(row.key, ())) for row in ordered]
     if frontend is not None:
-        lines += _frontend_section(frontend)
+        lines += _frontend_section(frontend, head)
     return "\n".join(lines) + "\n"
 
 
@@ -316,8 +317,11 @@ def _frontend_cells(frontend: FrontendComparison | None, head: str) -> dict[tupl
     return cells
 
 
-def _frontend_section(frontend: FrontendComparison) -> list[str]:
-    """The matrix of each persona on each surface, then the rows that did not match with their causes."""
+def _frontend_section(frontend: FrontendComparison, head: str) -> list[str]:
+    """The matrix of each persona on each surface, the trees folded, then the rows that did not match with causes.
+
+    A cell and a cause name the tree of its results when it is not ``head``.
+    """
     lines = [
         "",
         "## Frontend matrix",
@@ -326,16 +330,24 @@ def _frontend_section(frontend: FrontendComparison) -> list[str]:
         "|---|" + "---|" * len(SURFACES),
     ]
     for persona in frontend.personas():
-        cells = [persona, *(cell_text(frontend.cells[persona, surface]) for surface in SURFACES)]
+        cells = [persona, *(cell_text(frontend.cells[persona, surface], head) for surface in SURFACES)]
         lines.append("| " + " | ".join(_cell(item) for item in cells) + " |")
-    lines += ["", "### Rows differing", ""]
+    lines += ["", trees_line(frontend), "", "### Rows differing", "", *_differing_lines(frontend, head)]
+    return lines
+
+
+def _differing_lines(frontend: FrontendComparison, head: str) -> list[str]:
+    """One line per table row a surface differs on, cannot compare or has no row for, with each surface's cause.
+
+    A surface is named ``tui@<tree>`` when its result ran on a tree other than ``head``.
+    """
     causes: dict[tuple[str, str, int, str], list[str]] = {}
     for surface in SURFACES:
         for item in (*frontend.parities[surface], *frontend.extras[surface]):
             if item.outcome in (DIFFERS, NOT_COMPARABLE, EXTRA):
-                causes.setdefault(item.key, []).append(f"{surface} {item.outcome}: {'; '.join(item.causes)}")
-    lines += [f"- {row_id(key)}: {' / '.join(found)}" for key, found in sorted(causes.items())] or ["- none"]
-    return lines
+                named = surface if item.tree is None or item.tree == head else f"{surface}@{item.tree}"
+                causes.setdefault(item.key, []).append(f"{named} {item.outcome}: {'; '.join(item.causes)}")
+    return [f"- {row_id(key)}: {' / '.join(found)}" for key, found in sorted(causes.items())] or ["- none"]
 
 
 __all__ = [

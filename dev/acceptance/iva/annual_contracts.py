@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass
 from decimal import Decimal
+from enum import StrEnum
 from typing import Final, cast
 
 from .cli_journey import (
@@ -114,6 +115,47 @@ class IvaAnnualM390CliJourneyReceipt:
     annual_devengada: str
     annual_deducible: str
     annual_resultado: str
+    commands: tuple[SanitizedCommandReceipt, ...]
+
+    def to_dict(self) -> dict[str, object]:
+        """Return receipt metadata without source bytes, paths, or secrets."""
+        return cast(dict[str, object], asdict(self))
+
+
+class IvaProrrataSettlementScenario(StrEnum):
+    """The register state a fourth quarter's export meets."""
+
+    SETTLED = "settled"
+    """No declaration for the year: the export reads the register as filing will leave it."""
+    UNDECLARED_SECTOR = "undeclared-sector"
+    """A declared differentiated sector with no entry for the year: the export refuses."""
+    PRIOR_YEAR_ESPECIAL = "prior-year-especial"
+    """An especial year before and no declaration for this one: the export refuses."""
+
+
+@dataclass(frozen=True, slots=True)
+class IvaAnnualProrrataSettlementCliJourneyReceipt:
+    """Sanitized evidence for the year's last Modelo 303 meeting one register state at export."""
+
+    schema_version: str
+    acceptance_ids: tuple[str, ...]
+    filing_year: int
+    scenario: str
+    executable: str
+    executable_sha256: str
+    source_identity: str
+    package_identity: str
+    authority_generation: str
+    authority_descriptor_sha256: str
+    storage_root: str
+    work_unit_id: str
+    calculation_revision_id: str
+    definitive_percentage: str
+    exported_opcion: str
+    exported_revocacion: str
+    refusal_code: str
+    filing_record_id: str
+    next_year_provisional_percentage: str
     commands: tuple[SanitizedCommandReceipt, ...]
 
     def to_dict(self) -> dict[str, object]:

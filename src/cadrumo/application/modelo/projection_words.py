@@ -54,6 +54,9 @@ _CASILLA_REASON_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
         RegistryUnresolvedOutcomeReason.M200_TAX_REGIME_UNSUPPORTED.value: (
             "application.modelo.projection_words.casilla_reason.m200_tax_regime_unsupported"
         ),
+        RegistryUnresolvedOutcomeReason.M200_EXTINCION_ENTIDAD_UNSUPPORTED.value: (
+            "application.modelo.projection_words.casilla_reason.m200_extincion_entidad_unsupported"
+        ),
     }
 )
 """The sentence of each reason a computed box can be left without a value."""
@@ -110,9 +113,14 @@ def binding_source_words(source_kind: str, *, language: OutputLanguage) -> str |
     return tr(source_policy(kind).label_key, locale=language.value)
 
 
+def casilla_reason_locale_key(reason: str) -> str:
+    """The locale key of the sentence that states why a computed box has no value."""
+    return _CASILLA_REASON_LOCALE_KEYS.get(reason, _OTHER_CASILLA_REASON_LOCALE_KEY)
+
+
 def unresolved_casilla_reason_words(reason: str, *, language: OutputLanguage) -> str:
     """State why a computed box has no value, in ``language``."""
-    return tr(_CASILLA_REASON_LOCALE_KEYS.get(reason, _OTHER_CASILLA_REASON_LOCALE_KEY), locale=language.value)
+    return tr(casilla_reason_locale_key(reason), locale=language.value)
 
 
 def m130_figure_words(figure: str, *, language: OutputLanguage) -> str:

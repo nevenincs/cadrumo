@@ -333,3 +333,16 @@ number = "00625"
 [[revisions."2022".completeness_manifest.casillas]]
 casilla_id = "00070"
 number = "00070"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "00072"
+number = "00072"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "DP200014:00545"
+segmento = "DP200014"
+number = "00545"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "01509"
+number = "01509"

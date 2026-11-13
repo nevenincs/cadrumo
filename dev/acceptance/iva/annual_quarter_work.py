@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from dataclasses import dataclass
 from decimal import Decimal
 from pathlib import Path
 
@@ -114,7 +115,21 @@ def seed_first_period(
     )
 
 
-def file_quarter(
+@dataclass(frozen=True, slots=True)
+class VerifiedQuarter:
+    """One calculated quarter whose saved revision verified complete and is not yet filed."""
+
+    period: str
+    work_unit_id: str
+    calculation_revision_id: str
+    verification_report_id: str
+    verification_status: str
+    resultado: Decimal
+    calculated: dict[str, object]
+    """The public result of the calculation, with its casilla values."""
+
+
+def calculate_and_verify_quarter(
     *,
     cli: InstalledCli,
     receipts: list[SanitizedCommandReceipt],
@@ -122,8 +137,8 @@ def file_quarter(
     journey_year: IvaJourneyYear,
     period: str,
     expected: Decimal,
-) -> IvaQuarterlyLocalFilingReceipt:
-    """File one quarter locally through the CLI and return its receipt for the expected result."""
+) -> VerifiedQuarter:
+    """Create, calculate and verify one quarter through the CLI against its independent oracle."""
     created = result(
         run(
             cli,
@@ -207,6 +222,18 @@ def file_quarter(
         or verified.get("granted_verificado_completo") is not True
     ):
         raise IvaCliJourneyError(f"Modelo 303 {period} verify did not prove its saved revision complete")
+    return VerifiedQuarter(period, work_id, revision_id, report_id, status, resultado, calculated)
+
+
+def file_verified_quarter(
+    *,
+    cli: InstalledCli,
+    receipts: list[SanitizedCommandReceipt],
+    artifact: Path,
+    quarter: VerifiedQuarter,
+) -> IvaQuarterlyLocalFilingReceipt:
+    """File one verified quarter locally through the CLI."""
+    period, work_id, revision_id = quarter.period, quarter.work_unit_id, quarter.calculation_revision_id
     filed = result(
         run(
             cli,
@@ -229,15 +256,31 @@ def file_quarter(
         period,
         work_id,
         revision_id,
-        f"{resultado:.2f}",
-        report_id,
-        status,
+        f"{quarter.resultado:.2f}",
+        quarter.verification_report_id,
+        quarter.verification_status,
         filing_id,
         origin,
         confirmation,
         False,
         False,
     )
+
+
+def file_quarter(
+    *,
+    cli: InstalledCli,
+    receipts: list[SanitizedCommandReceipt],
+    artifact: Path,
+    journey_year: IvaJourneyYear,
+    period: str,
+    expected: Decimal,
+) -> IvaQuarterlyLocalFilingReceipt:
+    """File one quarter locally through the CLI and return its receipt for the expected result."""
+    quarter = calculate_and_verify_quarter(
+        cli=cli, receipts=receipts, artifact=artifact, journey_year=journey_year, period=period, expected=expected
+    )
+    return file_verified_quarter(cli=cli, receipts=receipts, artifact=artifact, quarter=quarter)
 
 
 def _require_local_work_chain(

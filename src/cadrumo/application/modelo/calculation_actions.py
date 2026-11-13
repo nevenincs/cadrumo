@@ -58,6 +58,7 @@ from ...core.casilla_id import CasillaId
 from ...core.irnr import M210GrossIncomeSourceMode
 from ...core.time.clock import now
 from ...domain.calculations.record_row_membership import ClosedRecordRowSet
+from ...domain.calculations.registry.binding_prior_value_rules import set_aside_binding_ids
 from ...domain.calculations.registry.casilla_membership import reject_row_field_template_scalar_inputs
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.formula_runtime import (
@@ -87,6 +88,7 @@ from ...domain.transactions.protocols import TransactionCatalogueRepositoryProto
 from ..aggregation.invoice_filing_fingerprint import capture_invoice_fingerprint, draft_contributor_identities
 from ..aggregation.renta_imputation import declared_imputation_criteria
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
+from ..calculations.cross_period_clean_state import attestable_carry_binding_ids
 from ..calculations.relation_prefill import activity_start_date_for_bucket
 from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPersistenceError
 from ..user_profile.projections import record_to_path_values
@@ -872,6 +874,7 @@ def _refused_missing_input(
     snapshot: RegistrySnapshot,
     ports: CalculationActionPorts,
     unresolved_binding_ids: frozenset[BindingId],
+    current_values: Mapping[CasillaId, Decimal],
 ) -> ModeloWorkMissingInputError:
     """The refusal a binding without a value is served as, with the door to the input it needs.
 
@@ -908,6 +911,15 @@ def _refused_missing_input(
         snapshot=snapshot,
         boxes=boxes,
         overridable=_override_admitted(missing, work_unit=work_unit, snapshot=snapshot, ports=ports),
+        attestable=missing.binding_id
+        in attestable_carry_binding_ids(
+            snapshot,
+            operation=ports.operation,
+            observation_repository=ports.observation_repository,
+            filing_catalogue=ports.filing_repository.load(),
+            work_catalogue=ports.work_unit_repository.load(),
+            set_aside_binding_ids=set_aside_binding_ids(snapshot.revision, current_values),
+        ),
     )
 
 
@@ -1066,6 +1078,7 @@ def _evaluate_prepared_calculation(
             snapshot=snapshot,
             ports=ports,
             unresolved_binding_ids=frozenset(unresolved_binding_ids).difference(prepared.channels.bindings),
+            current_values=resolved_inputs,
         ) from error
 
     replay_payloads = build_calculation_replay_payloads(
