@@ -5,13 +5,36 @@ from __future__ import annotations
 from typing import Any, override
 
 from docutils.statemachine import StringList
-from pydantic import BaseModel
+from pydantic import BaseModel, PydanticUserError
 from sphinx.application import Sphinx
-from sphinx.ext.autodoc import AttributeDocumenter
+from sphinx.ext.autodoc import AttributeDocumenter, ClassDocumenter
+from sphinx.util import logging as sphinx_logging
 from sphinx.util.inspect import signature as sphinx_signature
 from sphinx.util.typing import get_type_hints
 
-from .rendering import attribute_type_components
+from .rendering import attribute_type_components, complete_deferred_model
+
+_LOGGER = sphinx_logging.getLogger(__name__)
+
+
+class ApiClassDocumenter(ClassDocumenter):
+    """Build a ``defer_build`` Pydantic model before autodoc reads its signature."""
+
+    @override
+    def import_object(self, raiseerror: bool = False) -> bool:
+        """Complete a deferred model so its fields and constructor are introspectable."""
+        imported = super().import_object(raiseerror)
+        if imported:
+            try:
+                complete_deferred_model(self.object)
+            except (PydanticUserError, NameError) as error:
+                _LOGGER.warning(
+                    "cannot build deferred Pydantic model %s: %s",
+                    self.fullname,
+                    error,
+                    type="autodoc",
+                )
+        return imported
 
 
 class ApiAttributeDocumenter(AttributeDocumenter):
@@ -128,6 +151,7 @@ def _append_constraints(lines: list[str], constraints: list[tuple[str, str]]) ->
 def setup(app: Sphinx) -> dict[str, bool]:
     """Register the attribute documenter after Sphinx's standard autodoc setup."""
     app.add_autodocumenter(ApiAttributeDocumenter, override=True)
+    app.add_autodocumenter(ApiClassDocumenter, override=True)
     # sphinx-autodoc-typehints records raw signature annotations at priority 500.
     app.connect("autodoc-process-docstring", render_signature_constraints, priority=501)
     return {"parallel_read_safe": True, "parallel_write_safe": True}

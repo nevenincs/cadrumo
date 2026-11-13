@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import inspect
 import re
 from dataclasses import dataclass
 from typing import Annotated, Any, TypeAliasType, get_args, get_origin
+
+from pydantic import BaseModel
 
 _PYDANTIC_ALLOW_INF_NAN_URL = (
     "https://pydantic.dev/docs/validation/latest/api/pydantic/types/#pydantic.types.AllowInfNan"
@@ -202,3 +205,23 @@ def format_type_hint(annotation: Any, config: Any = None) -> str | None:
         return None
     label = text.rsplit(".", 1)[-1]
     return f"`{label} <{url}>`_"
+
+
+def complete_deferred_model(value: object) -> bool:
+    """Build a Pydantic model whose ``defer_build`` schema is still pending.
+
+    A deferred model exposes only the generic ``(**data)`` constructor until its
+    schema is built, so introspecting it earlier documents no fields. Returns
+    whether this call completed a model; any other value is left untouched and
+    an unresolvable annotation propagates to the caller.
+    """
+    if not (isinstance(value, type) and issubclass(value, BaseModel)) or value.__pydantic_complete__:
+        return False
+    value.model_rebuild(raise_errors=True)
+    return True
+
+
+def constructor_signature(model: type[BaseModel]) -> inspect.Signature:
+    """Return a model's real constructor signature, building a deferred schema first."""
+    complete_deferred_model(model)
+    return inspect.signature(model)
