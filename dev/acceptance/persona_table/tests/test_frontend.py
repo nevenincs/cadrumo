@@ -4,6 +4,7 @@ figure, and a surface that was not run, did not load, or has nothing to compare 
 from __future__ import annotations
 
 import json
+import os
 from decimal import Decimal
 from pathlib import Path
 
@@ -77,9 +78,11 @@ def _result(**overrides: object) -> SurfaceResult:
     return parse_result(json.dumps(_line(**overrides)))
 
 
-def _write(directory: Path, name: str, lines: list[dict[str, object]]) -> None:
+def _write(directory: Path, name: str, lines: list[dict[str, object]]) -> Path:
     directory.mkdir(parents=True, exist_ok=True)
-    (directory / name).write_text("".join(json.dumps(line) + "\n" for line in lines), encoding="utf-8")
+    path = directory / name
+    path.write_text("".join(json.dumps(line) + "\n" for line in lines), encoding="utf-8")
+    return path
 
 
 def test_every_python_stage_is_mapped_to_the_surface_vocabulary() -> None:
@@ -161,12 +164,14 @@ def test_a_persona_level_line_may_state_its_stages_as_null() -> None:
         parse_result(json.dumps(_line(calculate=None)))
 
 
-def test_the_latest_line_wins_by_file_name_then_line_order(tmp_path: Path) -> None:
-    _write(tmp_path, "b.jsonl", [_line(calculate="refused")])
-    _write(tmp_path, "a.jsonl", [_line(calculate="error"), _line(calculate="incomplete")])
+def test_the_latest_line_wins_by_file_age_then_line_order(tmp_path: Path) -> None:
+    older = _write(tmp_path, "z.jsonl", [_line(calculate="refused")])
+    newer = _write(tmp_path, "a.jsonl", [_line(calculate="error"), _line(calculate="incomplete")])
     _write(tmp_path, "c.jsonl", [_line(surface="window", calculate="error")])
+    os.utime(older, ns=(1_000_000_000, 1_000_000_000))
+    os.utime(newer, ns=(2_000_000_000, 2_000_000_000))
     found = read_results(tmp_path)
-    assert found[("tui", "persona", "303", _YEAR, "1T")].calculate == "refused"
+    assert found[("tui", "persona", "303", _YEAR, "1T")].calculate == "incomplete"
     assert found[("window", "persona", "303", _YEAR, "1T")].calculate == "error"
     assert len(found) == 2
 

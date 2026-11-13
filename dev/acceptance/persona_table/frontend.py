@@ -121,7 +121,9 @@ class SurfaceResult:
 
 
 def read_results(directory: Path) -> dict[ResultKey, SurfaceResult]:
-    """The latest result per key in the ``*.jsonl`` files of ``directory``, by file name and then line order.
+    """The latest result per key in the ``*.jsonl`` files of ``directory``.
+
+    Files are read oldest first (by modification time, then name), each in line order.
 
     A line is a JSON object with ``surface`` (``tui`` or ``window``), ``tree`` (the commit the surface ran),
     ``persona``, ``modelo`` (null on a persona-level line, which reports whether the profile loaded), ``year``,
@@ -133,7 +135,7 @@ def read_results(directory: Path) -> dict[ResultKey, SurfaceResult]:
     if not directory.is_dir():
         raise FrontendResultError(f"frontend results directory {directory} does not exist")
     found: dict[ResultKey, SurfaceResult] = {}
-    for path in sorted(directory.glob("*.jsonl")):
+    for path in sorted(directory.glob("*.jsonl"), key=lambda path: (path.stat().st_mtime_ns, path.name)):
         for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
             if not line.strip():
                 continue
