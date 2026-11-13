@@ -517,6 +517,7 @@
         "cadrumo.application.aggregation.activity_asset_expense_reconciliation",
         "cadrumo.application.aggregation.activity_asset_ledger_reconciliation",
         "cadrumo.application.aggregation.atribucion_member",
+        "cadrumo.application.aggregation.bound_input_provenance",
         "cadrumo.application.aggregation.business_proportion",
         "cadrumo.application.aggregation.capital_mobiliario_position_join",
         "cadrumo.application.aggregation.capital_mobiliario_position_source",
