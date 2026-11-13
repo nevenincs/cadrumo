@@ -7225,6 +7225,7 @@ tui:
     home: Inicio
     installation: Instalación
     ledger: Registros
+    operaciones_vinculadas: Operaciones vinculadas
     operations: Operaciones
     profile: Perfil
     reference: Referencia
@@ -9422,6 +9423,55 @@ tui:
       refused: Se ha rechazado lo que has indicado.
       sending: Enviando lo que has indicado...
       year_label: Año del periodo
+  operaciones_vinculadas:
+    action:
+      read: Leer
+      state_none: Declarar que no hubo ninguna
+      state_operation: Declarar una operación
+      state_turnover: Declarar la cifra de negocios
+      withdraw_none: Retirar la declaración seleccionada
+      withdraw_operation: Retirar la operación seleccionada
+      withdraw_turnover: Retirar la cifra de negocios seleccionada
+    column:
+      amount: Importe (EUR)
+      counterparty: Contraparte
+      country: País
+      direction: Sentido
+      exclusion: Excluida
+      ground: Supuesto
+      ground_state: Resultado
+      kind: Clase
+      largest_total: Mayor total (EUR)
+      limit: Límite (EUR)
+      note: Nota
+      operation_type: Tipo
+      reference: Referencia
+      source: Origen
+      state: Estado
+      stated_on: Declarada el
+      turnover: Cifra de negocios (EUR)
+    ejercicio: Ejercicio
+    none:
+      title: Declaraciones de ausencia de operaciones
+    operations:
+      title: Operaciones
+    prompt: Escribe un ejercicio y léelo para ver sus registros del Modelo 232 y lo
+      que deciden.
+    status:
+      choose_active: Selecciona primero un registro vigente.
+      ejercicio_invalid: Escribe el ejercicio con cuatro cifras.
+      empty: No hay nada declarado para %{ejercicio}.
+      read_failed: No se han podido leer los registros.
+      read_first: Lee primero un ejercicio.
+      reading: Leyendo…
+    turnover:
+      title: Cifra de negocios
+    verdict:
+      counts: 'Operaciones computadas: %{counted}. Operaciones excluidas: %{excluded},
+        por un total de %{excluded_total} EUR.'
+      title: Lo que deciden tus registros
+      unsupported: Para este ejercicio no se puede deducir de tus registros ninguna
+        decisión sobre el Modelo 232.
   operations:
     action:
       close: Cerrar
@@ -9711,6 +9761,7 @@ tui:
       home: Abrir Inicio
       installation: Abrir Instalación
       ledger: Abrir Registros
+      operaciones_vinculadas: Abrir Operaciones vinculadas
       operations: Abrir Operaciones
       profile: Abrir Perfil
       reference: Abrir Referencia
@@ -9726,6 +9777,8 @@ tui:
       installation: Almacenamiento, reparación, restablecimiento y los perfiles de
         este equipo
       ledger: Apuntes, revisión, clasificación y justificantes
+      operaciones_vinculadas: Declarar, consultar y retirar los registros del Modelo
+        232 de un ejercicio y ver qué deciden
       operations: Todas las operaciones que Cadrumo puede ejecutar, para buscarlas,
         rellenarlas y ejecutarlas
       profile: Los datos de este perfil y los orígenes que los completan
