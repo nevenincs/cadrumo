@@ -90,6 +90,7 @@ from ....domain.modelos.filing_record import (
     derive_filing_record_id,
 )
 from ....domain.modelos.filing_repository import upsert_filing_record
+from ....domain.modelos.repository import upsert_work_unit
 from ....domain.modelos.verification_report import (
     ModeloVerificationFindingKind,
     VerificationCompletenessStatus,
@@ -97,6 +98,7 @@ from ....domain.modelos.verification_report import (
     derive_verification_report_id,
 )
 from ....domain.modelos.verification_repository import upsert_verification_report
+from ....domain.modelos.work_unit import WorkUnit
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ....tests.env_scope import ready_clave_settings
 from ...adapter_composition_work_ports import build_calculation_action_ports, build_filing_action_ports
@@ -137,11 +139,9 @@ _CROSS_PERIOD_353_ROSTER_PROFILE_ID = "35300000-0000-4000-8000-000000000354"
 _DECLARED_CROSS_PERIOD_PROFILE_IDS = {
     ("390", "0A"): "39000000-0000-4000-8000-000000000004",
     ("180", "0A"): "18000000-0000-4000-8000-000000000180",
-    ("190", "0A"): "19000000-0000-4000-8000-000000000190",
     ("193", "0A"): "19300000-0000-4000-8000-000000000193",
     ("100", "0A"): "10000000-0000-4000-8000-000000000102",
     ("202", "2P"): "20200000-0000-4000-8000-000000000202",
-    ("200", "0A"): "20000000-0000-4000-8000-000000000200",
 }
 
 
@@ -228,6 +228,17 @@ def _seed_m100_profile_facts(bucket_id: str, objects: SecureObjectRepository | N
     seed_test_profile_record(record)
 
 
+def _make_current_calculation(work_unit: WorkUnit, revision_id: str) -> None:
+    """Point the work unit at the revision, as persisting a calculation does."""
+    work_units = WorkUnitCatalogueRepository()
+    work_units.save(
+        upsert_work_unit(
+            work_units.load(),
+            work_unit.model_copy(update={"current_calculation_revision_id": revision_id, "updated_at": _CLOCK}),
+        )
+    )
+
+
 def _seed_verified_revision(
     *,
     bucket_id: str,
@@ -304,6 +315,7 @@ def _seed_verified_revision(
     )
     repo = CalculationRevisionCatalogueRepository()
     repo.save(upsert_calculation_revision(repo.load(), revision))
+    _make_current_calculation(work_unit, revision_id)
     # These isolated filing-gate tests start from a synthetically verified
     # revision. Publish the matching prerequisite report explicitly; this
     # fixture does not assert that a verifier would grant this scenario.
@@ -423,6 +435,7 @@ def _seed_draft_revision(
     )
     repo = CalculationRevisionCatalogueRepository()
     repo.save(upsert_calculation_revision(repo.load(), revision))
+    _make_current_calculation(work_unit, revision_id)
     return revision_id
 
 
@@ -496,11 +509,9 @@ def test_file_refuses_verified_cross_period_revision_without_clean_sources(
     (
         ("390", 2025, "0A"),
         ("180", 2026, "0A"),
-        ("190", 2026, "0A"),
         ("193", 2026, "0A"),
         ("100", 2025, "0A"),
         ("202", 2026, "2P"),
-        ("200", 2026, "0A"),
     ),
 )
 def test_file_refuses_declared_cross_period_modelos_without_clean_sources(

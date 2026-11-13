@@ -232,9 +232,7 @@ def test_cross_period_dependency_inventory_covers_declared_horizon_target_modelo
         "130",
         "131",
         "180",
-        "190",
         "193",
-        "200",
         "202",
         "303",
         "353",
@@ -246,6 +244,12 @@ def test_cross_period_dependency_inventory_covers_declared_horizon_target_modelo
     # Modelo 296's horizon edition claims applicability only: AEAT has not
     # published that ejercicio's diseno de registro, so it owns no filing snapshot.
     assert "296" not in inventory.target_modelos
+    # Modelo 190 totals its declarante summary from its own records and declares no
+    # cross-period source, so it owns no dependency.
+    assert "190" not in inventory.target_modelos
+    # Modelo 200's horizon edition declares calculation grade, so it cannot produce
+    # the filing snapshot the inventory reads and owns no filing blocker.
+    assert "200" not in inventory.target_modelos
     assert any(
         item.target_modelo == "353"
         and item.target_period == Period.from_year_and_code(_SUPPORT.horizon, "12")
