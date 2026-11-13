@@ -88,6 +88,9 @@ ACTION_WORDS_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
         "operator.modelo.work.attest_prior_value": (
             "application.operator_actions.served.action.modelo_work_attest_prior_value"
         ),
+        "operator.modelo.work.attest_work_income": (
+            "application.operator_actions.served.action.modelo_work_attest_work_income"
+        ),
         "operator.modelo.work.calculate": "application.operator_actions.served.action.modelo_work_calculate",
         "operator.modelo.work.calculate_joint_return": (
             "application.operator_actions.served.action.modelo_work_calculate_joint_return"

@@ -324,7 +324,9 @@ def verify_modelo_revision_with_preconditions(
     # A registry-snapshot refusal already stands as a blocking finding, and
     # without a valid snapshot the model-specific checks have nothing to compare
     # against; running them would only re-request the refused snapshot.
-    append_readable_model_findings(findings, failures_by_finding_id, work_unit, target, repos, operation)
+    append_readable_model_findings(
+        findings, failures_by_finding_id, work_unit, target, repos, operation, calculation_catalogue=revisions
+    )
     completeness, granted = classify_verification_outcome(
         findings=findings,
         missing_required=missing_required_casilla_ids,

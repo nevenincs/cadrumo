@@ -27,6 +27,7 @@ from ...domain.modelos.verification_report import (
     ModeloVerificationFindingSeverity,
 )
 from ..aggregation.retencion_soportada_source import recorded_income_classes
+from .precondition_action_bindings import AlternativeActionArguments
 from .preconditions import ModeloPreconditionFailure, build_modelo_precondition_failure_for_scenario
 from .semantic_role_resolution import casilla_id_for_unique_revision_semantic_role
 
@@ -53,6 +54,7 @@ TRABAJO_INCOME_STATEMENT_ROLES: Final[Mapping[str, str]] = {
 }
 """The income roles no payer certificate states, with the suffix of the words that name each."""
 
+_UNSTATED_SCENARIO: Final[str] = "unstated"
 _TOTAL_INGRESOS_ROLE: Final[str] = f"{_ROLE_PREFIX}total_ingresos_integros"
 _DISABILITY_INCREASE_ROLE: Final[str] = f"{_ROLE_PREFIX}incremento_discapacitado_activo"
 _DISABILITY_PROFILE_PATH: Final[str] = "renta_taxpayer.disability_grade"
@@ -89,17 +91,34 @@ def _blocking(
 
     A box read from a binding is stated by the override bound to it, any other
     box by its own value. The verdict knows the declaration and the box; the
-    filer supplies the figure.
+    filer supplies the figure. An unstated income box is first served the one
+    statement that the boxes no payer certificate fills hold nothing, and the
+    box's own door stays beside it as an alternative.
     """
     casilla_id = finding.casilla_id
     if casilla_id is None:
         raise ValueError("a work-income finding names its box")
+    income_unstated = scenario == _UNSTATED_SCENARIO
     door_arguments: dict[str, str] = {"work_unit_id": target.work_unit_id}
     if binding_id is not None:
         scenario = f"{scenario}_source"
         door_arguments["binding_id"] = binding_id
     else:
         door_arguments["casilla_id"] = str(casilla_id)
+    primary_arguments: dict[str, str] = door_arguments
+    missing_arguments: tuple[str, ...] = ("value",)
+    alternative_actions: tuple[AlternativeActionArguments, ...] = ()
+    box_door = "operator.modelo.work.set_value" if binding_id is None else "operator.modelo.work.override"
+    if income_unstated:
+        primary_arguments = {"work_unit_id": target.work_unit_id}
+        missing_arguments = ()
+        alternative_actions = (
+            AlternativeActionArguments(
+                action_id=box_door,
+                action_argument_values=door_arguments,
+                missing_action_arguments=("value",),
+            ),
+        )
     failure = build_modelo_precondition_failure_for_scenario(
         subject_leaf_key="modelo.work.verify",
         scenario_id=f"modelo.work.verify.trabajo_income.{scenario}",
@@ -110,8 +129,9 @@ def _blocking(
             "casilla_id": str(casilla_id),
         },
         provenance=ActionEvidenceProvenance.PERSISTED_STATE,
-        action_argument_values=door_arguments,
-        missing_action_arguments=("value",),
+        action_argument_values=primary_arguments,
+        missing_action_arguments=missing_arguments,
+        alternative_actions=alternative_actions,
     )
     return (finding, failure)
 
