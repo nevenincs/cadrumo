@@ -110,6 +110,7 @@ def test_catalogue_is_closed_and_uses_only_locale_keys() -> None:
         "workbench.ledger",
         "workbench.withholding",
         "workbench.censo",
+        "workbench.operaciones_vinculadas",
         "workbench.declarations",
         "workbench.aeat_sync",
         "workbench.operations",

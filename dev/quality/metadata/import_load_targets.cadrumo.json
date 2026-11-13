@@ -3792,6 +3792,8 @@
         "cadrumo.entrypoints.tui.modelo.workbench.vocabulary",
         "cadrumo.entrypoints.tui.module_arguments",
         "cadrumo.entrypoints.tui.navigation",
+        "cadrumo.entrypoints.tui.operaciones_vinculadas",
+        "cadrumo.entrypoints.tui.operaciones_vinculadas.screen",
         "cadrumo.entrypoints.tui.operations",
         "cadrumo.entrypoints.tui.operations.catalogue",
         "cadrumo.entrypoints.tui.operations.controller_port",
