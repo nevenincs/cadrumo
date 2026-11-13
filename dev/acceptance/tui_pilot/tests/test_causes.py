@@ -74,6 +74,48 @@ def test_a_served_confirmation_before_the_check_is_an_unconfirmed_assumed_value(
     assert row_cause(row, _table("1T"), [])[0] == "assumed_value_unconfirmed"
 
 
+def test_a_served_confirmation_before_calculate_is_an_unconfirmed_assumed_value_not_a_calculate_gap() -> None:
+    row = _row(calculate="not-reached", verify="not-reached", export="not-reached", figures={}, stopped_at="confirm")
+
+    assert row_cause(row, _table("1T"), [])[0] == "assumed_value_unconfirmed"
+
+
+def test_a_served_step_before_calculate_is_named_by_the_step_the_form_served() -> None:
+    unreached = {"calculate": "not-reached", "verify": "not-reached", "export": "not-reached", "figures": {}}
+
+    assert row_cause(_row(stopped_at="fill", **unreached), _table("1T"), [])[0] == "next_step_fill_before_calculate"
+    assert row_cause(_row(stopped_at="resolve", **unreached), _table("1T"), [])[0] == "other:next_step_resolve"
+    assert row_cause(_row(stopped_at="apply", **unreached), _table("1T"), [])[0] == "other:next_step_apply"
+
+
+def test_a_served_step_after_calculate_is_named_by_the_step_the_form_served() -> None:
+    after = {"verify": "not-reached", "export": "not-reached"}
+
+    assert row_cause(_row(stopped_at="fill", **after), _table("1T"), [])[0] == "next_step_fill_before_verify"
+    assert row_cause(_row(stopped_at="resolve", **after), _table("1T"), [])[0] == "other:next_step_resolve"
+    assert row_cause(_row(stopped_at="apply", **after), _table("1T"), [])[0] == "other:next_step_apply"
+
+
+def test_a_refused_calculate_keeps_its_refusal_even_when_a_step_was_served() -> None:
+    row = _row(
+        calculate="refused", refusal_code="REFUSED_X", verify="not-reached", export="not-reached", stopped_at="fill"
+    )
+
+    assert row_cause(row, _table("1T"), [])[0] == "other:calculate_refused_x"
+
+
+def test_a_chain_refusal_reads_an_unconfirmed_assumed_value_upstream_whichever_stage_was_reached() -> None:
+    before = _row(calculate="not-reached", verify="not-reached", export="not-reached", figures={}, stopped_at="confirm")
+    before.cause, before.cause_words = row_cause(before, _table("1T"), [])
+    after = _row(period="2T", verify="not-reached", export="not-reached", stopped_at="confirm")
+    after.cause, after.cause_words = row_cause(after, _table("2T"), [before])
+    later = _row(period="3T", calculate="refused", refusal_code="REFUSED_MODELO_PRIOR_PERIOD_UNFILED", figures={})
+
+    assert before.cause == after.cause == "assumed_value_unconfirmed"
+    assert row_cause(later, _table("3T"), [before, after])[0] == "upstream:assumed_value_unconfirmed"
+    assert row_cause(later, _table("3T"), [after])[0] == "upstream:assumed_value_unconfirmed"
+
+
 def test_a_chain_refusal_names_the_earlier_unfiled_returns_own_cause_upstream() -> None:
     first = _row(verify="not-reached", export="not-reached", stopped_at="fill")
     first.cause, first.cause_words = row_cause(first, _table("1T"), [])

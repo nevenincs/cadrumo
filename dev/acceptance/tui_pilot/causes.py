@@ -8,9 +8,9 @@ the table row shown with an equal value. A differing row gets one cause key, the
 - ``upstream:<key>``: the return was refused because an earlier return of its chain is not filed or not checked,
   and an earlier return of the same run that the workbench did not file differs with ``<key>``;
 - ``tui_calendar_omits_not_applicable_verdict``: the table holds the return not owed, a verdict the TUI never shows;
+- ``assumed_value_unconfirmed``, ``next_step_fill_before_<stage>`` or ``other:next_step_<action>``: the form served a
+  step the pilot cannot take (it asks the filer to confirm, fill in, resolve or apply), before or after calculate;
 - ``other:calculate_<code or stage>``: the return did not calculate;
-- ``assumed_value_unconfirmed`` or ``next_step_<action>_before_<stage>``: the form served a step the pilot cannot
-  take (it asks the filer to confirm or fill in) before that stage;
 - ``other:figures_differ``, ``other:verify_<stage>``, ``export_<code or stage>``: the first remaining difference.
 """
 
@@ -29,6 +29,7 @@ UPSTREAM: Final = "upstream:"
 CHAIN_REFUSALS: Final = frozenset({"REFUSED_MODELO_PRIOR_PERIOD_UNFILED", "REFUSED_MODELO_CROSS_PERIOD_CLEAN_STATE"})
 _EDIT_REFUSED: Final = "REFUSED_MODELO_EDIT_REFUSED"
 _CONFIRM: Final = "confirm"
+_FILL: Final = "fill"
 _STAGES: Final = ("calculate", "verify", "export")
 
 
@@ -103,10 +104,11 @@ def unreported_cause(row: PilotRow, earlier: Sequence[PilotRow]) -> tuple[str | 
 
 def _first_step_missed(row: PilotRow, verify: str | None) -> str:
     """The key of the first step the row did not take as ``verify`` expects its check, then its export."""
+    if row.stopped_at is not None and row.calculate in (PASSED, NOT_REACHED):
+        # The pilot stopped at a served step; a return it never calculated for that reason did not fail to calculate.
+        return _stopped_key(row, row.stopped_at)
     if row.calculate != PASSED:
         return f"other:calculate_{(row.refusal_code or row.calculate or ERROR).lower()}"
-    if row.stopped_at is not None:
-        return _stopped_key(row, row.stopped_at)
     if row.verify != verify:
         return f"other:verify_{row.verify}"
     return f"export_{(row.refusal_code or row.export or ERROR).lower()}"
@@ -117,6 +119,8 @@ def _stopped_key(row: PilotRow, stopped_at: str) -> str:
     if stopped_at == _CONFIRM:
         # An unconfirmed assumed value withholds filing; the form rightly asks for the confirmation first.
         return "assumed_value_unconfirmed"
+    if stopped_at != _FILL:
+        return f"other:next_step_{stopped_at}"
     stage = next((name for name in _STAGES if getattr(row, name) == NOT_REACHED), "export")
     return f"next_step_{stopped_at}_before_{stage}"
 
