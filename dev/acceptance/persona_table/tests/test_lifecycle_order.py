@@ -17,12 +17,14 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _WORLD = cast(PersonaWorld, object())
 _VERIFIED = cast(ModeloWorkVerifyPublicResultV2, object())
+_YEAR = 7
+"""Any year: the sequencer under test does not read the registry envelope."""
 _PLAN = PlannedRow(
     persona="synthetic",
     modelo="130",
-    year=2025,
+    year=_YEAR,
     period="1T",
-    horizon=2025,
+    horizon=_YEAR,
     has_values=False,
     grounding="none",
     sources=(),
