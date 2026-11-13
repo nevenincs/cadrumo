@@ -103,6 +103,7 @@ from .edit_carry_withdrawal import (
     withdraw_current_calculation,
 )
 from .edit_contract import ModeloEditMutationFamily, ModeloEditMutationResultReceiptV1
+from .edit_downstream_models import ModeloEditDownstreamRefusalV1
 from .edit_downstream_refusal import downstream_refusal
 from .edit_models import (
     ModeloBindingEditIntentV1,
@@ -112,7 +113,6 @@ from .edit_models import (
     ModeloEditBindingIntentKind,
     ModeloEditDetailRowIntentKind,
     ModeloEditDomainRefusalV1,
-    ModeloEditDownstreamRefusalV1,
     ModeloEditExecutionNoEffectV1,
     ModeloEditExecutionResultV1,
     ModeloEditExecutionUpdatedV1,

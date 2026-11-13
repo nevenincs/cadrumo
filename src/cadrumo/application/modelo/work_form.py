@@ -224,7 +224,7 @@ def build_modelo_work_form(
         screen_outdated=calculation_screen_outdated,
         filed_before_grade_cap=calculation_filed_before_grade_cap,
     )
-    context = WorkFormContext(
+    context = _work_form_context(
         review=review,
         snapshot=snapshot,
         revision=revision,
@@ -232,11 +232,7 @@ def build_modelo_work_form(
         entered_casilla_ids=entered_casilla_ids,
         overridden_binding_ids=overridden_binding_ids,
         language=language,
-        unworked_casilla_ids=frozenset(
-            casilla_id
-            for reason, casilla_id, *_ in sources
-            if reason in UNWORKED_BOX_REASONS and casilla_id is not None
-        ),
+        sources=sources,
         element_names=element_names,
         known_truths=known_truths,
         resolutions=resolutions,
@@ -257,6 +253,73 @@ def build_modelo_work_form(
         )
     if layout is None:
         raise ValueError("usable form layout is absent")
+    form = _projected_work_form(
+        review=review,
+        snapshot=snapshot,
+        layout=layout,
+        context=context,
+        entered_casilla_ids=entered_casilla_ids,
+        producer_values=producer_values,
+        profile_binding_values=profile_binding_values,
+        deadline=deadline,
+        aeat_data_imported_at=aeat_data_imported_at,
+        sources=sources,
+        held=held,
+        filed_findings=filed_findings,
+    )
+    return _worded(form)
+
+
+def _work_form_context(
+    *,
+    review: ModeloWorkReview,
+    snapshot: RegistrySnapshot,
+    revision: CalculationRevision | None,
+    permitted_surface: tuple[ModeloEditPermittedSurfaceEntryV1, ...] | None,
+    entered_casilla_ids: frozenset[CasillaId] | None,
+    overridden_binding_ids: frozenset[BindingId] | None,
+    language: OutputLanguage,
+    sources: tuple[NoteSource, ...],
+    element_names: Mapping[str, str] | None,
+    known_truths: Mapping[BindingId, bool] | None,
+    resolutions: SourceDisagreementResolutions,
+    redeme: RedemeEnrolmentState,
+) -> WorkFormContext:
+    return WorkFormContext(
+        review=review,
+        snapshot=snapshot,
+        revision=revision,
+        permitted_surface=permitted_surface,
+        entered_casilla_ids=entered_casilla_ids,
+        overridden_binding_ids=overridden_binding_ids,
+        language=language,
+        unworked_casilla_ids=frozenset(
+            casilla_id
+            for reason, casilla_id, *_ in sources
+            if reason in UNWORKED_BOX_REASONS and casilla_id is not None
+        ),
+        element_names=element_names,
+        known_truths=known_truths,
+        resolutions=resolutions,
+        redeme=redeme,
+    )
+
+
+def _projected_work_form(
+    *,
+    review: ModeloWorkReview,
+    snapshot: RegistrySnapshot,
+    layout: FormLayoutDefinition,
+    context: WorkFormContext,
+    producer_values: Mapping[FilingProducerKey, ModeloFormScalar] | None,
+    profile_binding_values: Mapping[BindingId, ModeloFormScalar] | None,
+    deadline: ModeloFormDeadline | None,
+    aeat_data_imported_at: datetime | None,
+    sources: tuple[NoteSource, ...],
+    held: bool,
+    entered_casilla_ids: frozenset[CasillaId] | None,
+    filed_findings: tuple[ModeloVerificationFinding, ...],
+) -> ModeloWorkForm:
     usable_layout = layout
     pages, working, unplaced = _project_layout(
         usable_layout, context, producer_values=producer_values, profile_binding_values=profile_binding_values
@@ -265,7 +328,7 @@ def build_modelo_work_form(
     laid_out = [*form_fields, *working, *(item.field for item in unplaced)]
     answers = list(answer_fields(usable_layout, context, laid_out))
     every_field = [*laid_out, *answers]
-    form = _assemble_work_form(
+    return _assemble_work_form(
         review=review,
         snapshot=snapshot,
         layout=usable_layout,
@@ -275,7 +338,7 @@ def build_modelo_work_form(
         unplaced=unplaced,
         answers=answers,
         every_field=every_field,
-        language=language,
+        language=context.language,
         entered_casilla_ids=entered_casilla_ids,
         deadline=deadline,
         aeat_data_imported_at=aeat_data_imported_at,
@@ -283,7 +346,6 @@ def build_modelo_work_form(
         held=held,
         filed_findings=filed_findings,
     )
-    return _worded(form)
 
 
 def _inspection_only_for_unusable_layout(

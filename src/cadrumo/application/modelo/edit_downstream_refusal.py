@@ -27,7 +27,7 @@ from ...core.operator_action_enums import (
 from ..cli_exception_preconditions import nested_terminal_precondition_verdict
 from ..operations.error_detail import UNWORDED_REGISTERED_ERROR_LOCALE_KEY
 from ..operator_actions.models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
-from .edit_models import (
+from .edit_downstream_models import (
     MODELO_EDIT_MESSAGE_KEY_PATTERN,
     ModeloEditDownstreamContextEntryV1,
     ModeloEditDownstreamRefusalV1,
