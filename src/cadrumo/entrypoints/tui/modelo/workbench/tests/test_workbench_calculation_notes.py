@@ -41,7 +41,7 @@ from ....tests.settling import settle
 from ..issue_projection import issue_lines
 from ..issue_scale import IssueLevel
 from ..issues import WorkbenchIssuesScreen
-from .workbench_fixture import synthetic_form
+from .workbench_fixture import served_load, synthetic_form
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -167,7 +167,7 @@ def test_notes_join_the_findings_on_one_scale() -> None:
 
 async def _list_text(form: ModeloWorkForm) -> str:
     with override_settings(cadrumo_output_language="en"):
-        screen = WorkbenchIssuesScreen(form)
+        screen = WorkbenchIssuesScreen(served_load(form))
         app = ScreenHostApp(screen)
         async with app.run_test(size=(120, 40)) as pilot:
             await settle(pilot)
@@ -219,7 +219,7 @@ async def test_a_note_opened_in_place_reads_what_its_calculation_worded_after_it
     note = ModeloFormCalculationNote(reason="source_issue", attention=ModeloFormAttention.MISSING, message=written)
     form = synthetic_form(needs_input=False).model_copy(update={"calculation_notes": (note,)})
     with override_settings(cadrumo_output_language="en"):
-        screen = WorkbenchIssuesScreen(form)
+        screen = WorkbenchIssuesScreen(served_load(form))
         app = ScreenHostApp(screen)
         async with app.run_test(size=(120, 40)) as pilot:
             await settle(pilot)

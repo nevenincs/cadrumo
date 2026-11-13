@@ -99,7 +99,7 @@ import {
 import { SourcesView } from "./SourcesView";
 import { BoxName } from "./BoxName";
 import { languageName, UnresolvedFindings } from "./UnresolvedFindings";
-import { ModeloWorkspace, type WorkspaceView } from "./Workspace";
+import { ACTION_VIEW, ModeloWorkspace, type WorkspaceView } from "./Workspace";
 
 type Read =
   | { phase: "reading" }
@@ -231,7 +231,23 @@ function Ready({
   const operation = useModeloOperation();
   const held = operation.hold !== undefined;
   const busy = operation.hold?.phase === "running";
-  const [notice, setNotice] = useState<HistoryNotice>(null);
+  const [said, setNotice] = useState<HistoryNotice>(null);
+  // A check this window ran has finished: what it concluded is the read
+  // model's, taken from the declaration read after it.
+  const [checkFinished, setCheckFinished] = useState(false);
+  const checked = envelope.verdict;
+  const notice: HistoryNotice =
+    said ??
+    (checkFinished && checked.checked_words !== null
+      ? {
+          tone: checked.checked_resolves ? "warning" : "success",
+          words: checked.checked_words,
+        }
+      : null);
+  const clearNotice = () => {
+    setNotice(null);
+    setCheckFinished(false);
+  };
   // Counts the times the opening-balance door was taken, so the IVA balance
   // opens its entry again each time rather than once.
   const [openingBalanceAsk, setOpeningBalanceAsk] =
@@ -297,7 +313,7 @@ function Ready({
     if (held || busy) return null;
     const mine = generation.current;
     const current = () => alive.current && mine === generation.current;
-    setNotice(null);
+    clearNotice();
     const outcome = await operation.run(send, current);
     if (!outcome || !current()) return null;
     setNotice(runNotice(t, outcome));
@@ -599,7 +615,7 @@ function Ready({
       mine === generation.current &&
       sameCalculation(shown) &&
       operation.holds.admissionVersion(operation.target) === writeVersion;
-    setNotice(null);
+    clearNotice();
     setUnresolved(null);
     try {
       const outcome = await calculateWithEvidence({
@@ -652,7 +668,7 @@ function Ready({
     if (operation.holds.blocking(operation.target)) return;
     // A new attempt: what the earlier one said no longer stands.
     operation.holds.newAttempt(operation.target);
-    setNotice(null);
+    clearNotice();
     setUnresolved(null);
     if (!sameCalculation(shown)) {
       setNotice({
@@ -677,7 +693,20 @@ function Ready({
           { calculation_revision_id: revision, actor: MODELO_ACTOR },
           workUnit,
         ),
-      );
+      ).then((settled) => {
+        if (settled && alive.current) setCheckFinished(true);
+      });
+    }
+  };
+
+  /** Takes an action the read model names, as its next action does: in the
+   * view that holds it, at the box it starts on, or by running it. */
+  const takeAction = (action: ModeloFormNextAction) => {
+    const target = ACTION_VIEW[action];
+    if (!target) onRun(action);
+    else {
+      setView(target);
+      if (target === "form") session.selectFirstAttention();
     }
   };
 
@@ -741,7 +770,10 @@ function Ready({
     <>
       {notice && (
         <div className="px-6 pt-3">
-          <Alert tone={notice.tone} icon={<Icon name="alert" />}>
+          <Alert
+            tone={notice.tone}
+            icon={<Icon name={notice.tone === "success" ? "check" : "alert"} />}
+          >
             <span>{notice.words}</span>
             {notice.movement && onOpenMovement && (
               <Button
@@ -855,7 +887,7 @@ function Ready({
       onRun={onRun}
       onReview={() => setReviewing(true)}
       onDiscardStaged={session.discardAll}
-      onJumpToNext={() => session.jumpToNext("todo")}
+      onJumpToFirstAttention={session.selectFirstAttention}
       onCorrect={() => {
         setView("history");
         setCorrecting(true);
@@ -915,7 +947,7 @@ function Ready({
             language={language}
             session={session}
             openLink={openLink}
-            onOpenCheck={() => setView("check")}
+            onTakeAction={takeAction}
             onReread={reread}
           />
         ),

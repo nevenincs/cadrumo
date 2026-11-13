@@ -899,6 +899,10 @@ export type FormSession = {
   /** Chooses the next box after the chosen one that needs the filer, or
    * whose calculation failed, and brings it into view. */
   jumpToNext(kind: "todo" | "failed"): boolean;
+  /** Chooses the box the application serves as the first that needs the
+   * filer, and brings it into view; false where it serves none or the form
+   * draws no box there. */
+  selectFirstAttention(): boolean;
   goSection(sectionId: string): void;
   pageId: string | null;
   setPageId(id: string): void;
@@ -1342,6 +1346,13 @@ export function useFormSession({
     },
     [bring, placed, selectedKey, staged],
   );
+  const firstAttention = envelope.form.journey.first_attention;
+  const selectFirstAttention = useCallback(
+    () =>
+      firstAttention !== null &&
+      bring(byKey.get(addressKey(firstAttention.address))),
+    [bring, byKey, firstAttention],
+  );
   const goSection = useCallback(
     (sectionId: string) => {
       const page =
@@ -1386,6 +1397,7 @@ export function useFormSession({
     selectAddress,
     fieldAt,
     jumpToNext,
+    selectFirstAttention,
     goSection,
     pageId,
     setPageId,

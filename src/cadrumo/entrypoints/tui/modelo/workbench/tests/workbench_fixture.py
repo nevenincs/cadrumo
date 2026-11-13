@@ -396,11 +396,16 @@ def served_elections() -> tuple[ModeloFormElectionQuestion, ...]:
     )
 
 
+def served_load(form: ModeloWorkForm, *, verified: bool = False, filed: bool = False) -> ModeloWorkFormLoadV1:
+    """The load the application serves for ``form``, with the journey it places the declaration on."""
+    return modelo_work_form_load(form, verified=verified, filed=filed)
+
+
 def served_progress(
     form: ModeloWorkForm, *, staged: int = 0, verified: bool = False, filed: bool = False
 ) -> WorkbenchProgress:
     """The progress the workbench draws for ``form``, from the journey the application serves with it."""
-    return workbench_progress(modelo_work_form_load(form, verified=verified, filed=filed), staged=staged)
+    return workbench_progress(served_load(form, verified=verified, filed=filed), staged=staged)
 
 
 @dataclass

@@ -34,7 +34,7 @@ export type HistoryUnit = {
 /** What an operation the view started answered, in the product's words;
  * null while nothing is pending. */
 export type HistoryNotice = {
-  tone: "warning" | "danger";
+  tone: "success" | "warning" | "danger";
   words: string;
   /** The movement a refusal names for putting it right, and the words that
    * offer opening it. */
@@ -236,7 +236,10 @@ export function HistoryView({
         lead={t("workspace.modelo.history.lead")}
       />
       {notice && (
-        <Alert tone={notice.tone} icon={<Icon name="alert" />}>
+        <Alert
+          tone={notice.tone}
+          icon={<Icon name={notice.tone === "success" ? "check" : "alert"} />}
+        >
           {notice.words}
         </Alert>
       )}
