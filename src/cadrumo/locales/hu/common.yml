@@ -5421,6 +5421,19 @@ filing:
     records_derived_basis: 'Ez a 232-es modellhez megadott ügyleteidből készült helyi
       levezetés, nem hivatalos AEAT-adat: ebben az évben azt mutatják, hogy az adózóra
       igaz: %{fact}.'
+    records_derived_basis_not_met: 'Ez a 232-es modellhez megadott ügyleteidből készült
+      helyi levezetés, nem hivatalos AEAT-adat: ebben az évben nem mutatják, hogy
+      az adózóra igaz: %{fact}.'
+    records_excluded_operations: 'A megadott ügyletek közül az Orden HFP/816/2017
+      2.2. cikke által kizártak kimaradtak minden összegből: %{count} darab, összesen
+      %{amount} EUR.'
+    records_turnover_considered: 'Az erre az évre figyelembe vett árbevétel %{amount}
+      EUR, forrása: %{source}.'
+    records_turnover_source:
+      annual_accounts: az éves beszámolód
+      corporation_tax_return: a társasági adóbevallásod
+      operator_estimate: a saját becslésed
+      vat_returns: az áfabevallásaid
   validation:
     deadline_missed: A benyújtási határidő lejárt.
     formula_divergence: Eltérés a képletszámításban.

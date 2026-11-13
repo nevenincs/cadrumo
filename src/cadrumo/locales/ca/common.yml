@@ -5444,6 +5444,19 @@ filing:
     records_derived_basis: 'És una derivació local a partir de les operacions del
       model 232 que vas indicar, no una dada oficial de l''AEAT: per a aquest any
       mostren que el contribuent %{fact}.'
+    records_derived_basis_not_met: 'És una derivació local a partir de les operacions
+      del model 232 que vas indicar, no una dada oficial de l''AEAT: per a aquest
+      any no mostren que el contribuent %{fact}.'
+    records_excluded_operations: 'Es van deixar fora de tots els totals les operacions
+      que vas indicar i que exclou l''article 2.2 de l''Ordre HFP/816/2017: %{count},
+      per un total de %{amount} EUR.'
+    records_turnover_considered: La xifra de negocis considerada per a aquest any
+      és %{amount} EUR, presa de %{source}.
+    records_turnover_source:
+      annual_accounts: els teus comptes anuals
+      corporation_tax_return: la teva declaració de l'Impost sobre Societats
+      operator_estimate: la teva pròpia estimació
+      vat_returns: les teves declaracions d'IVA
   validation:
     deadline_missed: Termini de presentació vençut
     formula_divergence: Divergència en el càlcul de la fórmula

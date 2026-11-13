@@ -41,7 +41,7 @@ from ....domain.modelos.m232_related_party import (
     Modelo232TurnoverStatement,
 )
 from ..m232_registry_parameters import always_specific_operation_types, modelo_232_thresholds
-from ..m232_related_party_obligation import ledger_payer_fact_derivation
+from ..m232_related_party_obligation import stated_records_derivation
 from ..m232_related_party_repository import Modelo232RelatedPartyPersistenceError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
@@ -392,7 +392,8 @@ class _UnreadableStatements:
 
 def test_unreadable_statements_leave_the_fact_unknown(operation: PinnedAuthorityOperation) -> None:
     ejercicio = filing_year_envelope().horizon
-    derived = ledger_payer_fact_derivation(
+    derived = stated_records_derivation(
         _UnreadableStatements(), ejercicio, operation=operation, modelo=_MODELO, period=_PERIOD
     )
-    assert derived is LedgerPayerFactDerivation.UNKNOWN
+    assert derived.derivation is LedgerPayerFactDerivation.UNKNOWN
+    assert derived.note is None

@@ -12,6 +12,7 @@ from datetime import date
 
 import pytest
 
+from cadrumo.core.i18n.render import tr
 from cadrumo.core.modelo import Modelo
 from cadrumo.domain.contribuyente.entity_type import EntityType
 from cadrumo.domain.contribuyente.renta_codes import FiscalResidency
@@ -119,6 +120,47 @@ def test_a_derived_yes_is_applicable_and_a_derived_no_is_not_applicable_from_the
         assert "Modelo 232" in owed.reason, year
         assert not_owed.verdict is ApplicabilityVerdict.NOT_APPLICABLE, year
         assert not_owed.provenance is ApplicabilityProvenance.LEDGER_DERIVED, year
+
+
+def test_a_derived_no_carries_the_records_basis_and_the_derivation_notes_only_when_derived(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    note = "Synthetic detail behind the derivation."
+    for year in _YEARS:
+        label = _fact(operation, year).label
+        reference = date(year, 12, 31)
+        facts = {_PAYER_FACT: LedgerPayerFactDerivation.DERIVED_NO}
+        not_owed = derive_modelo_applicability(
+            _company(),
+            _MODELO,
+            reference_date=reference,
+            operation=operation,
+            ledger_payer_facts=facts,
+            records_derivation_notes={_PAYER_FACT: note},
+        )
+        owed = derive_modelo_applicability(
+            _company(),
+            _MODELO,
+            reference_date=reference,
+            operation=operation,
+            ledger_payer_facts={_PAYER_FACT: LedgerPayerFactDerivation.DERIVED_YES},
+            records_derivation_notes={_PAYER_FACT: note},
+        )
+        unknown = derive_modelo_applicability(
+            _company(),
+            _MODELO,
+            reference_date=reference,
+            operation=operation,
+            ledger_payer_facts={_PAYER_FACT: LedgerPayerFactDerivation.UNKNOWN},
+            records_derivation_notes={_PAYER_FACT: note},
+        )
+        assert not_owed.verdict is ApplicabilityVerdict.NOT_APPLICABLE, year
+        assert tr("filing.applicability.records_derived_basis_not_met", fact=label) in not_owed.reason, year
+        assert tr("filing.applicability.records_derived_basis", fact=label) not in not_owed.reason, year
+        assert not_owed.reason.endswith(note), year
+        assert owed.reason.endswith(note), year
+        assert tr("filing.applicability.records_derived_basis", fact=label) in owed.reason, year
+        assert note not in unknown.reason, year
 
 
 _RECORDS = {

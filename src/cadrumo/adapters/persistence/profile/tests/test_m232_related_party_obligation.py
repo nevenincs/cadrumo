@@ -20,7 +20,7 @@ import pytest
 from .....application.aggregation.m232_registry_parameters import modelo_232_thresholds
 from .....application.aggregation.m232_related_party_obligation import (
     derive_modelo_232_obligation,
-    ledger_payer_fact_derivation,
+    stated_records_derivation,
 )
 from .....application.aggregation.m232_related_party_repository import (
     Modelo232PinnedWriteAuthority,
@@ -43,6 +43,8 @@ from .....application.overview.calendar import build_overview_calendar
 from .....application.overview.calendar_models import OverviewCalendarEntry, OverviewCalendarRange
 from .....application.overview.explain import build_overview_explain
 from .....application.user_profile.tests.persona_profile_facts import persona_facts_beneath
+from .....core.decimal.formatting import format_decimal
+from .....core.i18n.render import tr
 from .....core.modelo import Modelo
 from .....domain.calculations.registry.applicability import derive_modelo_applicability
 from .....domain.calculations.registry.applicability_models import (
@@ -50,6 +52,7 @@ from .....domain.calculations.registry.applicability_models import (
     ApplicabilityVerdict,
     LedgerPayerFactDerivation,
 )
+from .....domain.calculations.registry.applicability_payer_facts import resolve_payer_fact_catalogue
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.contribuyente.entity_type import EntityType
@@ -151,7 +154,9 @@ def _finding(operation: PinnedAuthorityOperation, ejercicio: int) -> Modelo232Ob
 
 
 def _derived(operation: PinnedAuthorityOperation, ejercicio: int) -> LedgerPayerFactDerivation:
-    return ledger_payer_fact_derivation(_store(), ejercicio, operation=operation, modelo=_MODELO, period=_PERIOD)
+    return stated_records_derivation(
+        _store(), ejercicio, operation=operation, modelo=_MODELO, period=_PERIOD
+    ).derivation
 
 
 def _ground(finding: Modelo232ObligationFinding, ground: Modelo232Ground) -> Modelo232GroundState:
@@ -583,3 +588,129 @@ def _haven_fields() -> dict[str, object]:
 class _EmptyCatalogue:
     def load(self) -> InvoiceCatalogue:
         return build_invoice_catalogue(())
+
+
+def _bound_evidence(operation: PinnedAuthorityOperation, year: int) -> FilingYearApplicabilityEvidence:
+    record = create_user_profile_record(
+        context=operation.profile_create_context(),
+        profile_id=_BUCKET_ID,
+        facts=persona_facts_beneath((UserProfileFact(path="identity.tax_id", value="X0001500M"),)),
+        setup_state=ProfileSetupState.COMPLETE,
+    )
+    evidence = bind_filing_year_applicability_evidence(
+        record=record,
+        schema=operation.profile_decode_context().schema,
+        bucket_id=_BUCKET_ID,
+        invoice_source_ports=InvoiceSourceResolverPorts(catalogue_reader=_EmptyCatalogue()),
+        operation=operation,
+        today=date(year + 1, 3, 1),
+        related_party_records=_store(),
+    )
+    return FilingYearApplicabilityEvidence(
+        profile_for_year=lambda _year: _company(),
+        ledger_payer_facts_for_year=evidence.ledger_payer_facts_for_year,
+        records_derivation_notes_for_year=evidence.records_derivation_notes_for_year,
+    )
+
+
+def _explained_reason(operation: PinnedAuthorityOperation, year: int) -> str:
+    return build_overview_explain(
+        _company(),
+        modelo=_MODELO.value,
+        year=year,
+        today=date(year + 1, 3, 1),
+        operation=operation,
+        applicability_evidence=_bound_evidence(operation, year),
+    ).rationale
+
+
+def _stated_turnover(ejercicio: int, amount: Decimal, source: Modelo232TurnoverSource) -> Modelo232TurnoverStatement:
+    return _turnover(ejercicio, amount).model_copy(update={"source": source})
+
+
+def test_a_derived_yes_names_the_turnover_estimate_it_was_tested_against_as_its_source(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
+    year = filing_year_envelope().horizon
+    turnover = Decimal("100000.00")
+    sixty = Decimal("60000.00")
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        ports = _ports(operation)
+        state_m232_operation(_operation(year, tipo_operacion="01", amount_eur=sixty), ports=ports)
+        state_m232_turnover(_stated_turnover(year, turnover, Modelo232TurnoverSource.OPERATOR_ESTIMATE), ports=ports)
+        finding = _finding(operation, year)
+        estimate_reason = _explained_reason(operation, year)
+    expected = tr(
+        "filing.applicability.records_turnover_considered",
+        amount=format_decimal(turnover),
+        source=tr("filing.applicability.records_turnover_source.operator_estimate"),
+    )
+    assert finding.obligation is Modelo232Obligation.OWED
+    assert _ground(finding, Modelo232Ground.TURNOVER_SHARE) is Modelo232GroundState.MET
+    assert expected in estimate_reason
+    assert "100000.00" in estimate_reason
+    assert tr("filing.applicability.records_turnover_source.annual_accounts") not in estimate_reason
+    assert _TAX_ID_ONE not in estimate_reason
+    assert _NAME not in estimate_reason
+
+
+def test_each_turnover_source_is_named_by_its_own_wording(tmp_path: Path, operation: PinnedAuthorityOperation) -> None:
+    year = filing_year_envelope().horizon
+    reasons: dict[Modelo232TurnoverSource, str] = {}
+    for source in Modelo232TurnoverSource:
+        with isolated_runtime_profile(tmp_path=tmp_path / source.value):
+            ports = _ports(operation)
+            state_m232_operation(_operation(year, tipo_operacion="01", amount_eur=Decimal("60000.00")), ports=ports)
+            state_m232_turnover(_stated_turnover(year, Decimal("100000.00"), source), ports=ports)
+            reasons[source] = _explained_reason(operation, year)
+    wording = {source: tr(f"filing.applicability.records_turnover_source.{source.value}") for source in reasons}
+    assert len(set(wording.values())) == len(wording)
+    for source, reason in reasons.items():
+        assert wording[source] in reason, source
+        assert all(other not in reason for other_source, other in wording.items() if other_source is not source), source
+
+
+def test_excluded_operations_are_shown_as_left_out_and_never_dropped_silently(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
+    year = filing_year_envelope().horizon
+    big = _thresholds(operation, year).same_related_party_eur * 2
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        ports = _ports(operation)
+        state_m232_operation(_operation(year, amount_eur=big, exclusion=Modelo232Exclusion.PUBLIC_OFFER), ports=ports)
+        state_m232_operation(_operation(year, amount_eur=_CENT), ports=ports)
+        state_m232_turnover(_turnover(year, _ample_turnover(operation, year, _CENT)), ports=ports)
+        finding = _finding(operation, year)
+        reason = _explained_reason(operation, year)
+    assert finding.obligation is Modelo232Obligation.NOT_OWED
+    assert (finding.excluded_operations, finding.excluded_total_eur) == (1, big)
+    assert tr("filing.applicability.records_excluded_operations", count=1, amount=format_decimal(big)) in reason
+
+
+def test_a_derived_no_from_a_none_statement_carries_the_same_records_basis_wording(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
+    year = filing_year_envelope().horizon
+    label = next(
+        item.label
+        for item in resolve_payer_fact_catalogue(effective_date=date(year, 12, 31))
+        if item.token == _PAYER_FACT
+    )
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        state_m232_none(_none(year), ports=_ports(operation))
+        evidence = _bound_evidence(operation, year)
+        verdict = derive_modelo_applicability(
+            _company(),
+            _MODELO.value,
+            reference_date=date(year, 12, 31),
+            operation=operation,
+            ledger_payer_facts=evidence.ledger_payer_facts_for_year(year),
+            records_derivation_notes=evidence.records_derivation_notes_for_year(year),
+        )
+        explained = _explained_reason(operation, year)
+    basis = tr("filing.applicability.records_derived_basis_not_met", fact=label)
+    assert verdict.verdict is ApplicabilityVerdict.NOT_APPLICABLE
+    assert verdict.provenance is ApplicabilityProvenance.LEDGER_DERIVED
+    assert basis in verdict.reason
+    assert explained == verdict.reason
+    assert tr("filing.applicability.records_derived_basis", fact=label) not in verdict.reason

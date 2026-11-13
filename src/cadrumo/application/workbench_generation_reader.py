@@ -67,7 +67,10 @@ from ..domain.transactions.models import TransactionCatalogue
 from ..domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..domain.user_profile.values import UserProfileRecord
 from .aeat_sync.workspace import AeatSyncWorkspaceProjectionError, AeatSyncWorkspaceProjectionV1
-from .aggregation.m232_related_party_repository import Modelo232RelatedPartyReader
+from .aggregation.m232_related_party_repository import (
+    Modelo232RelatedPartyPersistenceError,
+    Modelo232RelatedPartyReader,
+)
 from .calculations.verification_report_gate import require_verification_report_coordinates_current
 from .ledger.workspace import (
     LedgerWorkspaceProjectionV1,
@@ -124,6 +127,8 @@ from .workbench_generation_home import build_workbench_generation_inputs
 
 _LOGGER = get_logger(__name__)
 _CAPTURE_PHASE_EVENT: Final = "workbench_capture_phase"
+_RELATED_PARTY_UNREADABLE: Final = "unreadable"
+"""The Modelo 232 revision when the store cannot state one; a revision marker never takes this form."""
 _AEAT_SYNC_READER_UNAVAILABLE: Final[str] = "workbench.aeat_sync.reader_unavailable"
 _AEAT_SYNC_SNAPSHOT_PROJECTOR_UNAVAILABLE: Final[str] = "workbench.aeat_sync.snapshot_projector_unavailable"
 
@@ -725,9 +730,12 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         ledger_sources: tuple[TransactionCatalogue, InvoiceCatalogue] | None,
         related_party_revision: str,
     ) -> WorkbenchCalendarInputs:
+        # Records whose revision cannot be stated are neither trusted nor remembered: the
+        # calendar is built without them, so Modelo 232 stays undecided, and nothing is reused.
+        records_readable = related_party_revision != _RELATED_PARTY_UNREADABLE
         with _capture_phase("calendar_memo_key"):
             memo = CalendarMemo(
-                memory=self.capture_memory,
+                memory=self.capture_memory if records_readable else None,
                 key=WorkbenchCalendarMemoKey(
                     profile_content_digest=record.content_digest,
                     work_units_revision=work_units_revision,
@@ -757,7 +765,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
                 aeat_evidence=aeat_evidence,
                 invoice_source_ports=loaded_invoice_source_ports(None if ledger_sources is None else ledger_sources[1]),
                 memo=memo,
-                related_party_records=self.related_party_records,
+                related_party_records=self.related_party_records if records_readable else None,
             ),
         )
 
@@ -891,10 +899,18 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         return transaction_revision, invoice_revision
 
     def _related_party_revision(self) -> str:
-        """Name the stated Modelo 232 records the calendar was derived from; ``unbound`` when no store is bound."""
+        """Name the stated Modelo 232 records the calendar was derived from.
+
+        ``unbound`` when no store is bound; ``unreadable`` when the store cannot
+        state a revision, which leaves the Modelo 232 verdict unknown the way the
+        derivation does when it cannot read the statements.
+        """
         if self.related_party_records is None:
             return "unbound"
-        return self.related_party_records.revision_marker(tuple(self.operation.supported_filing_years().years))
+        try:
+            return self.related_party_records.revision_marker(tuple(self.operation.supported_filing_years().years))
+        except Modelo232RelatedPartyPersistenceError:
+            return _RELATED_PARTY_UNREADABLE
 
     def _ledger_is_unchanged(
         self,

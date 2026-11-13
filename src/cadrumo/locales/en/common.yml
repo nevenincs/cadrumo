@@ -5339,6 +5339,18 @@ filing:
     records_derived_basis: 'This is a local derivation from the Modelo 232 operations
       you stated, not an official AEAT value: for this year they show that the taxpayer
       %{fact}.'
+    records_derived_basis_not_met: 'This is a local derivation from the Modelo 232
+      operations you stated, not an official AEAT value: for this year they do not
+      show that the taxpayer %{fact}.'
+    records_excluded_operations: 'Operations you stated that Orden HFP/816/2017 art.
+      2.2 excludes were left out of every total: %{count}, together %{amount} EUR.'
+    records_turnover_considered: The turnover considered for this year is %{amount}
+      EUR, taken from %{source}.
+    records_turnover_source:
+      annual_accounts: your annual accounts
+      corporation_tax_return: your corporation tax return
+      operator_estimate: your own estimate
+      vat_returns: your VAT returns
   validation:
     deadline_missed: Submission deadline has passed
     formula_divergence: Divergence in formula calculation

@@ -20,6 +20,7 @@ import pytest
 from .....application.aggregation.m232_registry_parameters import modelo_232_thresholds
 from .....application.aggregation.m232_related_party_repository import (
     Modelo232PinnedWriteAuthority,
+    Modelo232RelatedPartyPersistenceError,
     Modelo232RelatedPartyWritePorts,
     state_m232_none,
     state_m232_operation,
@@ -50,6 +51,7 @@ from .....domain.modelos.m232_related_party import (
     Modelo232OperationKind,
     Modelo232TurnoverSource,
     Modelo232TurnoverStatement,
+    Modelo232YearGuard,
 )
 from .....domain.modelos.work_unit import WorkUnitCatalogue
 from .....domain.user_profile.values import (
@@ -60,7 +62,7 @@ from .....domain.user_profile.values import (
 )
 from ...storage.runtime_repository import secure_object_repository_for_active_bucket
 from ...storage.tests.secure_sql import isolated_runtime_profile
-from ..m232_related_party_records import Modelo232RelatedPartyStoreAdapter
+from ..m232_related_party_records import Modelo232GuardRepositoryAdapter, Modelo232RelatedPartyStoreAdapter
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -237,3 +239,35 @@ def test_the_workbench_decides_232_as_the_cli_overview_does_and_a_new_statement_
     assert _YEAR in owed[0]
     assert after_none > 0, "a new none statement must invalidate the cached calendar"
     assert after_withdrawal > 0, "a withdrawn statement must invalidate the cached calendar"
+
+
+def test_an_unreadable_guard_row_leaves_232_undecided_without_failing_the_capture_or_reusing_the_cache(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
+    """A guard row stored under another row's key fails the revision marker the way a corrupt row does."""
+    record = _company_record(operation)
+    thresholds = modelo_232_thresholds(_YEAR, operation=operation, modelo=_MODELO, period="0A")
+    over = thresholds.same_related_party_eur + Decimal("0.01")
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID):
+        ports = _ports(operation)
+        memory = WorkbenchCaptureMemory()
+        state_m232_operation(_operation(_YEAR, over), ports=ports)
+        state_m232_turnover(_turnover(_YEAR, over * 4), ports=ports)
+        owed = _workbench_view(_door(operation, record, memory))
+
+        objects = secure_object_repository_for_active_bucket()
+        store = Modelo232RelatedPartyStoreAdapter(objects=objects)
+        guard_write = Modelo232GuardRepositoryAdapter(objects=objects).to_secure_object_write(
+            Modelo232YearGuard(ejercicio=_YEAR - 1, counter=1)
+        )
+        objects.save_many((guard_write.model_copy(update={"object_key": "misplaced-guard"}),))
+        with pytest.raises(Modelo232RelatedPartyPersistenceError):
+            store.revision_marker((_YEAR - 1,))
+
+        damaged = _workbench_view(_door(operation, record, memory))
+        repeated_builds = calendar_builds(lambda: _door(operation, record, memory).read_declaration_list_inputs())
+
+    assert _YEAR in owed[0]
+    assert damaged[0] == set()
+    assert damaged[1] is True
+    assert repeated_builds > 0, "an unreadable record store must not serve a cached calendar"
