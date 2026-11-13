@@ -21835,6 +21835,18 @@ selector = {revision = "2024", id = "modelo-200-cuota-ejercicio-a-ingresar-devol
 sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["cuota del ejercicio a ingresar o a devolver (casilla 00599)", "[00599] = ([00625]/100", "retenciones e ingresos a cuenta"]}], source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]}
 sequence_removals = {source_citations = [0], source_refs = [0, 1]}
 
+# Cooperativas: 00562 refuses them while 00558 states a rate, and both follow the
+# manual. Nota (1) of the tipo de gravamen table says that "A los únicos efectos
+# de cumplimentar la casilla [00558] «Tipo de gravamen», el tipo de gravamen a
+# consignar por las sociedades cooperativas fiscalmente protegidas en la misma
+# será el que corresponda a los resultados cooperativos: 20 por ciento"
+# (manuals/sociedades/2025 L15079-15080), so 00558 holds a rate for them. But
+# the cuota of a protegida is not [01330] x [00558] / 100 (L14952-14955): the
+# table taxes resultados cooperativos and extracooperativos at different rates
+# (20 and 25 por 100, L15005-15018), and this registry does not split the base
+# by kind of result, so the cuota íntegra of a cooperativa stays unresolved.
+# The refusal is the cuota's, not a reason to withhold the 00558 rate the
+# manual prints.
 # 2025 differs from 2024 in two ways. The microempresa lane applies the 21 /
 # 22 scale to the base (manuals/sociedades/2025 L14980-14983, L3231-3237;
 # LIS DT 44ª.1), because a scale has no single rate. And casilla 00558 holds
@@ -22258,13 +22270,13 @@ sequence_removals = {source_citations = [0], source_refs = [0]}
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "parameters"
 selector = {revision = "2024", id = "is.modelo-200.tipo-gravamen-pyme"}
-sequence_additions = {legal_refs = ["ley-27-2014:dt-44"], source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["Hasta 50.000 euros 21 por 100", "Resto Base Imponible 22 por 100", "Por la parte de base imponible comprendida entre 0 y 50.000 euros, al tipo del 19", "Por la parte de base imponible restante, al tipo del 21 por ciento."]}], source_refs = ["aeat-modelo-200-manual-2025"]}
+sequence_additions = {legal_refs = ["ley-27-2014:dt-44"], brackets = [{lower_bound = "0", upper_bound = "50000", fixed_addition = "0", marginal_rate = "0.21", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "50000", fixed_addition = "10500", marginal_rate = "0.22", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "0", upper_bound = "50000", fixed_addition = "0", marginal_rate = "0.19", valid_from = 2026-01-01, valid_to = 2026-12-31}, {lower_bound = "50000", fixed_addition = "9500", marginal_rate = "0.21", valid_from = 2026-01-01, valid_to = 2026-12-31}], source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["Hasta 50.000 euros 21 por 100", "Resto Base Imponible 22 por 100", "Por la parte de base imponible comprendida entre 0 y 50.000 euros, al tipo del 19", "Por la parte de base imponible restante, al tipo del 21 por ciento."]}], source_refs = ["aeat-modelo-200-manual-2025"]}
 sequence_removals = {source_citations = [0], source_refs = [0]}
 
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "parameters"
 selector = {revision = "2024", id = "is.modelo-200.tipo-gravamen-pyme-display"}
-sequence_additions = {legal_refs = ["ley-27-2014:dt-44"], source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["Hasta 50.000 euros 21 por 100", "Por la parte de base imponible comprendida entre 0 y 50.000 euros, al tipo del 19"]}], source_refs = ["aeat-modelo-200-manual-2025"]}
+sequence_additions = {legal_refs = ["ley-27-2014:dt-44"], values = [{value = "21", date_axis = "filing_period", valid_from = 2025-01-01, valid_to = 2025-12-31}, {value = "19", date_axis = "filing_period", valid_from = 2026-01-01, valid_to = 2026-12-31}], source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["Hasta 50.000 euros 21 por 100", "Por la parte de base imponible comprendida entre 0 y 50.000 euros, al tipo del 19"]}], source_refs = ["aeat-modelo-200-manual-2025"]}
 sequence_removals = {source_citations = [0], source_refs = [0]}
 sequence_order = {legal_refs = [0, 2, 1]}
 
