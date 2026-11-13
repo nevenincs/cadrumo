@@ -8,7 +8,7 @@ entry options read draws its rental choices through the production profile read.
 from __future__ import annotations
 
 from collections.abc import Iterator
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
 from typing import NamedTuple
@@ -20,6 +20,7 @@ from pydantic import BaseModel
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
+from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 from ...adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ...application.aggregation.prevision_social_contribution_repository import (
@@ -45,7 +46,9 @@ from ...application.user_profile.profile_operation_contracts import (
 )
 from ...application.user_profile.record_group_contracts import (
     PENSION_CONTRIBUTION_SECTION_KEY,
+    PROFILE_RECORD_GROUPS_MAX_RESULT_BYTES,
     PROFILE_RECORD_GROUPS_OPERATION_DEFINITION_ID,
+    ProfileRecordAction,
     ProfileRecordDoor,
     ProfileRecordGroupItem,
     ProfileRecordGroupKind,
@@ -54,14 +57,26 @@ from ...application.user_profile.record_group_contracts import (
     ProfileRecordGroupsResult,
     ProfileRecordLedgerRowItem,
     ProfileRecordMemberItem,
+    ProfileRecordReductionOutcome,
 )
 from ...application.user_profile.record_group_operation import (
     build_record_groups_definition,
     build_record_groups_registration,
 )
+from ...application.user_profile.record_group_reduction import LeaseReductionServer, reduction_works
+from ...application.user_profile.record_group_reduction_words import (
+    LEGACY_TIER_WORDS_LOCALE_KEY,
+    REFUSAL_FIELDS,
+    TIER_WORDS_LOCALE_KEYS,
+)
+from ...application.user_profile.record_group_reduction_words import (
+    REFUSAL_WORDS_LOCALE_KEYS as REDUCTION_REFUSAL_WORDS_LOCALE_KEYS,
+)
 from ...application.user_profile.record_group_words import (
     EDIT_DOOR_LABEL_LOCALE_KEYS,
+    END_LEASE_LABEL_LOCALE_KEY,
     GROUP_KIND_WORDS_LOCALE_KEYS,
+    LEASE_END_FIELD,
     LEDGER_ROW_KIND_WORDS_LOCALE_KEY,
     REFUSAL_WORDS_LOCALE_KEYS,
     REMOVE_DOOR_LABEL_LOCALE_KEYS,
@@ -80,20 +95,31 @@ from ...core.config import override_settings
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import lookup_translation
 from ...core.operations import OperationFrontendProjection, profile_operation_subject
+from ...core.period import Period
 from ...core.prevision_social import PrevisionSocialBeneficiario, PrevisionSocialClave, PrevisionSocialSubclave
 from ...core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.gasto_capital_inmobiliario import require_gasto_capital_inmobiliario
+from ...domain.calculations.registry.rental_reduction import (
+    resolve_rental_reduction_art232_rates,
+    resolve_rental_reduction_art232_rules,
+)
 from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...domain.contribuyente.inmueble_facts import ARRENDAMIENTO_SECTION, INMUEBLE_SECTION
+from ...domain.modelos.codes import ModeloCode
+from ...domain.modelos.repository import upsert_work_unit
+from ...domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ...domain.renta.prevision_social_contribution import PrevisionSocialContribution
+from ...domain.renta.rental_reduction_derivation import TIER_50, RentalReductionRefusal
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection
 from ...domain.transactions.models import Transaction
 from ...domain.transactions.rental_link import RENTAL_LINK_IRPF_CATEGORY
+from ...domain.user_profile.labels import profile_field_label_key
 from ..ledger_action_composition import (
     compose_ledger_action_ports,
     load_entry_option_profile_facts,
     load_ledger_rows_for_rental_references,
+    load_work_units_for_record_groups,
 )
 from ..prevision_social_contribution_composition import build_prevision_social_contribution_ports
 
@@ -210,6 +236,7 @@ def _read(world: _World, **request: object) -> ProfileRecordGroupsResult:
         ),
         authority_operation=world.operation,
         ledger_rows=load_ledger_rows_for_rental_references,
+        work_units=load_work_units_for_record_groups,
         contribution_ports=build_prevision_social_contribution_ports,
     )
 
@@ -324,7 +351,7 @@ def test_each_stored_row_carries_its_edit_and_remove_doors_routed_to_the_registe
             assert [
                 (action.door, action.operation_definition_id, action.label_words, action.label_words_language)
                 for action in row.actions
-            ] == [
+            ][:2] == [
                 (
                     ProfileRecordDoor.EDIT,
                     PROFILE_REPEATABLE_ROW_UPDATE_OPERATION_DEFINITION_ID,
@@ -338,6 +365,7 @@ def test_each_stored_row_carries_its_edit_and_remove_doors_routed_to_the_registe
                     language,
                 ),
             ]
+            assert len(row.actions) == (3 if row.section_key == ARRENDAMIENTO_SECTION else 2)
     head = _read(world, output_language=OutputLanguage.EN).items[0]
     assert isinstance(head, ProfileRecordGroupItem)
     # The group's own doors are its head row's: a property is edited and removed as a property.
@@ -469,7 +497,9 @@ def test_the_profile_field_view_marks_each_field_that_names_another_sections_row
 
 def _access(context_profile: UUID, payload_profile: UUID, subject_profile: UUID) -> object:
     definition = build_record_groups_definition(
-        load_ledger_rows_for_rental_references, build_prevision_social_contribution_ports
+        load_ledger_rows_for_rental_references,
+        load_work_units_for_record_groups,
+        build_prevision_social_contribution_ports,
     )
     registration = build_record_groups_registration(definition)
     registry = OperationRegistry(definitions=(definition,), public_registrations=(registration,))
@@ -645,3 +675,302 @@ def test_pension_certificates_are_worded_in_every_language_and_pinned_to_their_r
 def test_a_profile_without_certificates_serves_no_pension_group(world: _World) -> None:
     page = _read_pension(world)
     assert page.outcome == "page" and page.items == () and page.total_items == 0
+
+
+# -- the art. 23.2 LIRPF reduction and the end-lease door ----------------------------------------------------------------
+
+
+def _start_annual_return(world: _World, year: int) -> None:
+    """Start the Modelo 100 return of ``year`` for the profile, pinned to the edition the registry selects."""
+    period = Period.from_year_and_code(year, "0A")
+    revision_id = world.operation.revision_for_context("100", filing_year=year, period=period.registry_token).id
+    stamp = datetime.now(UTC)
+    unit = WorkUnit(
+        work_unit_id=derive_work_unit_id(
+            bucket_id=world.profile_id, modelo="100", filing_year=year, period=period, revision_id=revision_id
+        ),
+        bucket_id=world.profile_id,
+        modelo=ModeloCode("100"),
+        filing_year=year,
+        period=period,
+        revision_id=revision_id,
+        name=f"100-{year}",
+        created_at=stamp,
+        updated_at=stamp,
+    )
+    repository = WorkUnitCatalogueRepository(bucket_id=world.profile_id)
+    repository.save(upsert_work_unit(repository.load(), unit))
+
+
+def _lease(world: _World, **facts: str) -> str:
+    """Add a lease of the principal property starting in the horizon year; return its row identity."""
+    values = {
+        "inmueble": str(world.principal),
+        "fecha_contrato": date(_YEAR, 1, 10).isoformat(),
+        "fecha_inicio": date(_YEAR, 2, 1).isoformat(),
+        "inquilinos": "12345678z:otra:no",
+        **facts,
+    }
+    return f"{ARRENDAMIENTO_SECTION}.{_add(world.profile_id, world.operation, ARRENDAMIENTO_SECTION, values)}"
+
+
+def _leases(page: ProfileRecordGroupsResult) -> dict[str, ProfileRecordMemberItem]:
+    return {
+        item.row_ref: item
+        for item in page.items
+        if isinstance(item, ProfileRecordMemberItem) and item.section_key == ARRENDAMIENTO_SECTION
+    }
+
+
+def _stated(language: OutputLanguage, field: str, value: str) -> str:
+    """The sentence a fact of a lease is served as, written from the catalogue."""
+    return f"{_words(profile_field_label_key(ARRENDAMIENTO_SECTION, field), language)}: {value}"
+
+
+_FULL_FACTS = {"uso_vivienda": "true", "zona_tensionada": "false"}
+
+
+def test_a_lease_with_its_deciding_facts_serves_its_tier_words_the_facts_and_the_ejercicio(world: _World) -> None:
+    _start_annual_return(world, _YEAR)
+    rules = resolve_rental_reduction_art232_rules(
+        modelo_id="100",
+        revision_id=world.operation.revision_for_context("100", filing_year=_YEAR, period="0A").id,
+        devengo=date(_YEAR, 12, 31),
+        operation=world.operation,
+    )
+    assert date(_YEAR, 12, 31) >= rules.regime_start and date(_YEAR, 1, 10) >= rules.contract_cut_off
+    key = _lease(world, **_FULL_FACTS)
+
+    page = _read(world, output_language=OutputLanguage.EN)
+
+    reduction = _leases(page)[key].reduction
+    assert reduction is not None
+    (year,) = reduction.years
+    assert (year.ejercicio, year.outcome, year.tier, year.refusal_code, year.missing_fact) == (
+        _YEAR,
+        ProfileRecordReductionOutcome.APPLIES,
+        str(TIER_50),
+        None,
+        None,
+    )
+    rate = resolve_rental_reduction_art232_rates(
+        modelo_id="100",
+        revision_id=world.operation.revision_for_context("100", filing_year=_YEAR, period="0A").id,
+        devengo=date(_YEAR, 12, 31),
+        operation=world.operation,
+    )[TIER_50]
+    expected_tier = _words(TIER_WORDS_LOCALE_KEYS[TIER_50], OutputLanguage.EN).replace("%{rate}", f"{rate * 100:.0f}")
+    assert year.tier_words == expected_tier and f"{rate * 100:.0f} %" in expected_tier
+    assert year.outcome_words == f"Tax year {_YEAR}: {expected_tier}"
+    assert (reduction.title_words_language, year.outcome_words_language) == (OutputLanguage.EN, OutputLanguage.EN)
+    facts = {fact.field_key: fact for fact in reduction.facts}
+    assert facts["uso_vivienda"].fact_words == _stated(OutputLanguage.EN, "uso_vivienda", "yes")
+    assert facts["zona_tensionada"].fact_words == _stated(OutputLanguage.EN, "zona_tensionada", "no")
+    assert facts["fecha_contrato"].fact_words == _stated(
+        OutputLanguage.EN, "fecha_contrato", date(_YEAR, 1, 10).isoformat()
+    )
+    assert facts["incumple_lau_17_6"].fact_words == _stated(OutputLanguage.EN, "incumple_lau_17_6", "not stated")
+    assert not facts["incumple_lau_17_6"].stated and facts["uso_vivienda"].stated
+    # A tenant is served by the age band only; the identifier never leaves the record.
+    assert facts["inquilinos"].fact_words == _stated(OutputLanguage.EN, "inquilinos", "another age")
+    assert "12345678Z" not in page.model_dump_json().upper()
+    assert len(_leases(page)[key].model_dump_json().encode("utf-8")) < PROFILE_RECORD_GROUPS_MAX_RESULT_BYTES // 4
+
+
+def test_a_contract_before_the_cut_off_is_served_the_registry_named_legacy_tier(world: _World) -> None:
+    _start_annual_return(world, _YEAR)
+    revision_id = world.operation.revision_for_context("100", filing_year=_YEAR, period="0A").id
+    rules = resolve_rental_reduction_art232_rules(
+        modelo_id="100", revision_id=revision_id, devengo=date(_YEAR, 12, 31), operation=world.operation
+    )
+    signed = rules.contract_cut_off - timedelta(days=1)
+    key = _lease(world, fecha_contrato=signed.isoformat(), fecha_inicio=signed.isoformat(), **_FULL_FACTS)
+
+    reduction = _leases(_read(world, output_language=OutputLanguage.EN))[key].reduction
+
+    assert reduction is not None
+    (year,) = reduction.years
+    rate = resolve_rental_reduction_art232_rates(
+        modelo_id="100", revision_id=revision_id, devengo=date(_YEAR, 12, 31), operation=world.operation
+    )[rules.legacy_tier]
+    assert year.tier == str(rules.legacy_tier)
+    assert year.tier_words == _words(LEGACY_TIER_WORDS_LOCALE_KEY, OutputLanguage.EN).replace(
+        "%{rate}", f"{rate * 100:.0f}"
+    )
+
+
+def test_a_lease_that_does_not_take_the_reduction_is_served_as_not_reached(world: _World) -> None:
+    _start_annual_return(world, _YEAR)
+    key = _lease(world, uso_vivienda="false")
+
+    reduction = _leases(_read(world, output_language=OutputLanguage.EN))[key].reduction
+
+    assert reduction is not None
+    (year,) = reduction.years
+    assert (year.outcome, year.tier, year.tier_words, year.refusal_code) == (
+        ProfileRecordReductionOutcome.DOES_NOT_APPLY,
+        None,
+        None,
+        None,
+    )
+    assert year.outcome_words.startswith(f"Tax year {_YEAR}:")
+
+
+@pytest.mark.parametrize(
+    ("facts", "refusal", "field"),
+    [
+        ({}, RentalReductionRefusal.USO_VIVIENDA_UNSTATED, "uso_vivienda"),
+        ({"uso_vivienda": "true"}, RentalReductionRefusal.ZONA_TENSIONADA_UNSTATED, "zona_tensionada"),
+        (
+            {"uso_vivienda": "true", "zona_tensionada": "true"},
+            RentalReductionRefusal.LAU_17_6_UNSTATED,
+            "incumple_lau_17_6",
+        ),
+        (
+            {
+                "uso_vivienda": "true",
+                "zona_tensionada": "true",
+                "incumple_lau_17_6": "false",
+                "primer_arrendamiento_vivienda": "true",
+                "inquilinos": "12345678z:18_35:no;87654321x:otra:no",
+            },
+            RentalReductionRefusal.MIXED_TENANT_AGES,
+            "inquilinos",
+        ),
+    ],
+)
+def test_a_lease_missing_a_deciding_fact_is_served_not_determinable_with_the_door_to_that_field(
+    world: _World, facts: dict[str, str], refusal: RentalReductionRefusal, field: str
+) -> None:
+    _start_annual_return(world, _YEAR)
+    key = _lease(world, **facts)
+
+    for language in OutputLanguage:
+        reduction = _leases(_read(world, output_language=language))[key].reduction
+
+        assert reduction is not None
+        (year,) = reduction.years
+        assert (year.ejercicio, year.outcome, year.refusal_code, year.tier) == (
+            _YEAR,
+            ProfileRecordReductionOutcome.NOT_DETERMINABLE,
+            refusal,
+            None,
+        )
+        name = _words(profile_field_label_key(ARRENDAMIENTO_SECTION, field), language)
+        assert year.outcome_words == _words(REDUCTION_REFUSAL_WORDS_LOCALE_KEYS[refusal], language).replace(
+            "%{ejercicio}", str(_YEAR)
+        ).replace("%{fact}", name)
+        assert year.missing_fact is not None and year.missing_fact.fact_words == name
+        assert year.missing_fact.way_out == ProfileRecordAction(
+            door=ProfileRecordDoor.EDIT,
+            operation_definition_id=PROFILE_REPEATABLE_ROW_UPDATE_OPERATION_DEFINITION_ID,
+            label_words=_words("application.user_profile.record_groups.reduction.fill_in", language).replace(
+                "%{fact}", name
+            ),
+            label_words_language=language,
+            field_key=field,
+        )
+        assert REFUSAL_FIELDS[refusal] == field
+
+
+def test_every_refusal_of_the_derivation_has_its_words_in_every_language() -> None:
+    for refusal in RentalReductionRefusal:
+        for language in OutputLanguage:
+            words = _words(REDUCTION_REFUSAL_WORDS_LOCALE_KEYS[refusal], language)
+            assert "%{ejercicio}" in words and "record_groups" not in words
+
+
+def test_several_leases_running_in_one_ejercicio_are_each_derived_as_the_rental_chain_derives_them(
+    world: _World,
+) -> None:
+    _start_annual_return(world, _YEAR)
+    first = _lease(world, **_FULL_FACTS)
+    second = _lease(world, **_FULL_FACTS)
+
+    leases = _leases(_read(world))
+
+    served = [leases[key].reduction for key in (first, second)]
+    assert all(reduction is not None for reduction in served)
+    assert [year.tier for reduction in served if reduction for year in reduction.years] == [str(TIER_50)] * 2
+
+
+def test_without_a_started_return_that_the_lease_runs_in_no_ejercicio_is_spoken_of(world: _World) -> None:
+    key = f"{ARRENDAMIENTO_SECTION}.{world.lease}"
+    for language in OutputLanguage:
+        reduction = _leases(_read(world, output_language=language))[key].reduction
+        assert reduction is not None
+        (year,) = reduction.years
+        assert (year.ejercicio, year.outcome, year.refusal_code, year.missing_fact) == (
+            None,
+            ProfileRecordReductionOutcome.NOT_DETERMINABLE,
+            None,
+            None,
+        )
+        assert year.outcome_words == _words("application.user_profile.record_groups.reduction.no_ejercicio", language)
+
+    # A return of a year in which the lease does not run does not date it.
+    _start_annual_return(world, filing_year_envelope().floor)
+    (year,) = (_leases(_read(world))[key].reduction or pytest.fail("a lease is served its reduction")).years
+    assert year.ejercicio is None
+
+
+def test_a_lease_whose_facts_cannot_be_read_is_served_not_determinable_naming_the_unreadable_field(
+    world: _World,
+) -> None:
+    _start_annual_return(world, _YEAR)
+    server = LeaseReductionServer(
+        reduction_works(load_work_units_for_record_groups(world.profile_id)),
+        operation=world.operation,
+        schema=world.operation.profile_decode_context().schema,
+        language=OutputLanguage.EN,
+    )
+
+    reduction = server.serve(0, {"inmueble": "0", "fecha_contrato": date(_YEAR, 1, 10).isoformat()})
+
+    (year,) = reduction.years
+    assert (year.ejercicio, year.refusal_code) == (_YEAR, RentalReductionRefusal.LEASE_UNREADABLE)
+    assert year.missing_fact is not None and year.missing_fact.field_key == "fecha_inicio"
+    assert year.missing_fact.way_out.field_key == "fecha_inicio"
+
+
+def test_a_continuation_is_refused_once_the_returns_that_date_a_reduction_move(world: _World) -> None:
+    first = _read(world, limit=1)
+    pin = {
+        "expected_revision": first.record_revision,
+        "expected_content_digest": first.content_digest,
+        "expected_ledger_digest": first.ledger_digest,
+    }
+    assert _read(world, cursor=1, limit=1, **pin).outcome == "page"
+
+    _start_annual_return(world, _YEAR)
+
+    stale = _read(world, cursor=1, limit=1, **pin)
+    assert stale.outcome == "refused" and stale.refusal_code is ProfileRecordGroupsRefusalCode.STALE_REVISION
+
+
+def test_a_lease_without_an_end_date_carries_the_edit_door_opened_on_that_field(world: _World) -> None:
+    ended = _lease(world, fecha_fin=date(_YEAR, 11, 30).isoformat())
+    for language in OutputLanguage:
+        page = _read(world, output_language=language)
+        leases = _leases(page)
+        open_lease = leases[f"{ARRENDAMIENTO_SECTION}.{world.lease}"]
+        end = [action for action in open_lease.actions if action.field_key == LEASE_END_FIELD]
+        assert end == [
+            ProfileRecordAction(
+                door=ProfileRecordDoor.EDIT,
+                operation_definition_id=PROFILE_REPEATABLE_ROW_UPDATE_OPERATION_DEFINITION_ID,
+                label_words=_words(END_LEASE_LABEL_LOCALE_KEY, language),
+                label_words_language=language,
+                field_key=LEASE_END_FIELD,
+            )
+        ]
+        # The whole-row doors stay as they were, and an ended lease or a property has no end door.
+        assert [action.field_key for action in open_lease.actions].count(None) == 2
+        assert all(action.field_key is None for action in leases[ended].actions)
+        assert all(
+            action.field_key is None
+            for item in page.items
+            if isinstance(item, ProfileRecordGroupItem)
+            or (isinstance(item, ProfileRecordMemberItem) and item.section_key == INMUEBLE_SECTION)
+            for action in item.actions
+        )

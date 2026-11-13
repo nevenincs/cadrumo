@@ -52,7 +52,7 @@ def test_formula_schema_refuses_runtime_invalid_operator_arity(
         pytest.param("subtract", 2, id="binary"),
         pytest.param("clamp", 3, id="ternary"),
         pytest.param("add", 13, id="variadic"),
-        pytest.param("m100_resolve_renta_inmobiliaria_imputada", 9, id="domain-op"),
+        pytest.param("m210_resolve_base_imponible", 12, id="domain-op"),
     ],
 )
 def test_formula_schema_accepts_runtime_valid_operator_arity(op: FormulaOperator, arg_count: int) -> None:

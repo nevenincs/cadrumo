@@ -1049,6 +1049,13 @@ async fn profile_views_calendar(
     host.filing_calendar(from, to, language).await
 }
 #[tauri::command]
+async fn profile_views_record_groups(
+    host: State<'_, Arc<ProfileHost>>,
+    request: Value,
+) -> Result<Value> {
+    host.record_groups(request).await
+}
+#[tauri::command]
 fn user_profile_observe(host: State<'_, Arc<ProfileHost>>, updates: Channel<()>) -> u32 {
     let owner = host.sign_in.clone();
     let mut events = owner.person_events();
@@ -1084,7 +1091,8 @@ pub fn commands<R: tauri::Runtime>() -> crate::app::Commands<R> {
         profile_aeat_certificate_pick,
         profile_aeat_credential_save,
         profile_views_notifications,
-        profile_views_calendar
+        profile_views_calendar,
+        profile_views_record_groups
     ]
 }
 

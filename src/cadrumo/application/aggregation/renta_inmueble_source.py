@@ -17,7 +17,8 @@ cent.
 A let property's net yield, its art. 23.2 reduction and the withholding its
 tenants suffered on it come from the chain in ``renta_inmueble_net``; a
 withholding on urban rent is placed on the property whose lease names its payer
-as a tenant.
+as a tenant. The income art. 85 imputes for the days a property stood at its
+owner's disposal comes from ``renta_inmueble_imputacion``.
 
 A join that cannot be made or a fact that is not stated is a typed finding with
 the command that settles it; it is never read as zero. An occurrence is ordered
@@ -34,7 +35,6 @@ from enum import StrEnum
 from typing import Final
 
 from ...core.money.rounding import round_to_cents
-from ...core.retencion_soportada import RetencionSoportadaClase
 from ...domain.calculations.registry.gasto_capital_inmobiliario import GastoCapitalInmobiliarioCatalogue
 from ...domain.calculations.registry.renta_inmueble_bindings import (
     ORIGIN_ROW_FIELD,
@@ -54,9 +54,10 @@ from ...domain.contribuyente.inmueble_record import (
 from ...domain.renta.retencion_soportada import RetencionSoportadaRecord
 from ...domain.transactions.models import Transaction
 from .currency_predicates import effective_eur_amount, effective_eur_taxable_base
-from .renta_inmueble_carry import PendingStatements, carry_window, pending_carry
+from .renta_inmueble_carry import PendingCarry, PendingStatements, carry_window, pending_carry
 from .renta_inmueble_findings import RentaInmuebleCause, RentaInmuebleFinding, RentaInmuebleFindingKind
-from .renta_inmueble_links import Links, Records, link_rows, read_records, row_due_date
+from .renta_inmueble_imputacion import RentaInmuebleImputacion, property_imputacion
+from .renta_inmueble_links import Links, Records, link_rows, place_withholding, read_records, row_due_date
 from .renta_inmueble_net import RentaInmuebleNet, RentaInmuebleNetInputs, RentaInmuebleTerms, renta_inmueble_net
 from .renta_inmueble_period import Ejercicio, Occupancy, held_interval, occupancy, within_lease
 
@@ -112,6 +113,12 @@ class RentaInmuebleRowField(StrEnum):
     REDUCCION = "reduccion"
     RETENCIONES = "retenciones"
     RENDIMIENTO_NETO_REDUCIDO = "rendimiento_neto_reducido"
+    DISPOSICION = "disposicion"
+    IMPUTACION_VALOR_CATASTRAL = "imputacion_valor_catastral"
+    IMPUTACION_VALOR_CATASTRAL_REVISADO = "imputacion_valor_catastral_revisado"
+    IMPUTACION_DIAS = "imputacion_dias"
+    IMPUTACION_PORCENTAJE_DISPOSICION = "imputacion_porcentaje_disposicion"
+    RENTA_IMPUTADA = "renta_imputada"
 
 
 type RentaInmuebleColumnValue = str | Decimal | int | bool
@@ -138,6 +145,8 @@ class RentaInmuebleOccurrence:
     """The chain from the gross income to the reduced net yield, or ``None`` when the property was not let."""
     withholding: tuple[RetencionSoportadaRecord, ...] = ()
     """The suffered-withholding records placed on this property."""
+    imputacion: RentaInmuebleImputacion | None = None
+    """The art. 85 boxes of the days at the owner's disposal, or ``None`` when no day stood at disposal."""
 
     @property
     def source_identity(self) -> str:
@@ -160,8 +169,16 @@ class RentaInmuebleOccurrence:
         """Return the taxpayer's part of one expense concept; ``None`` when no row states it."""
         return self.gastos.get(concept)
 
+    def carries(self, row_field: RentaInmuebleRowField) -> bool:
+        """Report whether this occurrence counts towards the total of one column: imputing or let."""
+        if row_field in _IMPUTACION_COLUMNS:
+            return self.imputacion is not None
+        return self.net is not None
+
     def column(self, row_field: RentaInmuebleRowField) -> RentaInmuebleColumnValue | None:
         """Return this occurrence's value for one column; ``None`` leaves the box off the row."""
+        if row_field in _IMPUTACION_COLUMNS:
+            return None if self.imputacion is None else _IMPUTACION_COLUMNS[row_field](self.imputacion)
         if row_field in _LEASE_COLUMNS:
             return self._lease_column(row_field)
         if row_field in _AMOUNT_COLUMNS:
@@ -266,6 +283,17 @@ _NET_COLUMNS: Final[dict[RentaInmuebleRowField, Callable[[RentaInmuebleNet], Ren
     RentaInmuebleRowField.RENDIMIENTO_NETO_REDUCIDO: lambda net: net.rendimiento_neto_reducido,
 }
 """Each column the net chain states, read from the occurrence's chain."""
+_IMPUTACION_COLUMNS: Final[
+    dict[RentaInmuebleRowField, Callable[[RentaInmuebleImputacion], RentaInmuebleColumnValue | None]]
+] = {
+    RentaInmuebleRowField.DISPOSICION: lambda imputacion: True,
+    RentaInmuebleRowField.IMPUTACION_VALOR_CATASTRAL: lambda imputacion: imputacion.valor_catastral,
+    RentaInmuebleRowField.IMPUTACION_VALOR_CATASTRAL_REVISADO: lambda imputacion: imputacion.revisado,
+    RentaInmuebleRowField.IMPUTACION_DIAS: lambda imputacion: imputacion.dias,
+    RentaInmuebleRowField.IMPUTACION_PORCENTAJE_DISPOSICION: lambda imputacion: imputacion.porcentaje,
+    RentaInmuebleRowField.RENTA_IMPUTADA: lambda imputacion: imputacion.importe,
+}
+"""Each column of the days at the owner's disposal, read from the occurrence's art. 85 boxes."""
 SUMMABLE_COLUMNS: Final = frozenset(
     {
         RentaInmuebleRowField.INGRESOS_INTEGROS,
@@ -277,9 +305,10 @@ SUMMABLE_COLUMNS: Final = frozenset(
         RentaInmuebleRowField.REDUCCION,
         RentaInmuebleRowField.RETENCIONES,
         RentaInmuebleRowField.RENDIMIENTO_NETO_REDUCIDO,
+        RentaInmuebleRowField.RENTA_IMPUTADA,
     }
 )
-"""The amount columns a results box may total over the let properties."""
+"""The amount columns a results box may total over the properties that carry them."""
 GASTO_COLUMN_PREFIX: Final = "gasto_"
 """The prefix of an expense column, followed by the concept token whose rows it states."""
 
@@ -346,8 +375,6 @@ def _occupancy_findings(occupancy: Occupancy, ejercicio: Ejercicio) -> list[Rent
     causes: list[RentaInmuebleCause] = []
     if occupancy.days_held < ejercicio.days:
         causes.append(RentaInmuebleCause.HELD_PART_OF_EJERCICIO)
-    if occupancy.days_let < occupancy.days_held:
-        causes.append(RentaInmuebleCause.DAYS_NOT_LET)
     if occupancy.concurrent:
         causes.append(RentaInmuebleCause.CONCURRENT_LEASES)
     if len(occupancy.leases) > 1:
@@ -524,39 +551,48 @@ def _net(
     )
 
 
+def _occurrence(
+    index: int,
+    clave: int,
+    inputs: _OccurrenceInputs,
+    period: Ejercicio,
+    carry: PendingCarry,
+    withholding: tuple[RetencionSoportadaRecord, ...],
+    rules: tuple[RentaInmuebleTerms, GastoCapitalInmobiliarioCatalogue],
+) -> RentaInmuebleOccurrence:
+    """Build the occurrence of one held property, its rental chain and its days at the owner's disposal."""
+    terms = rules[0]
+    subject = _source_identity(clave)
+    own = _occurrence_findings(inputs, period)
+    ingresos, gastos, read = _figures(inputs, period)
+    net = _net(inputs, period, (ingresos, gastos), withholding, rules, carry.pendientes)
+    if net is not None:
+        own.extend(carry.findings)
+        own.extend(RentaInmuebleFinding(cause, subject) for cause in net.causes)
+    occupied = inputs.occupancy
+    imputacion = (
+        None if occupied is None else property_imputacion(inputs.record, period, occupied.leases, terms.imputacion)
+    )
+    if imputacion is not None:
+        own.extend(RentaInmuebleFinding(cause, subject) for cause in imputacion.causes)
+    return RentaInmuebleOccurrence(
+        index=index,
+        inmueble=inputs.record,
+        leases=() if occupied is None else occupied.leases,
+        ejercicio_last=period.last,
+        dias_arrendado=0 if occupied is None else occupied.days_let,
+        ingresos=ingresos,
+        gastos=gastos,
+        transaction_ids=read,
+        findings=tuple(own),
+        net=net,
+        withholding=withholding,
+        imputacion=None if imputacion is None else imputacion.boxes,
+    )
+
+
 def _source_identity(clave: int) -> str:
     return f"inmueble:{clave}"
-
-
-def _tenant_key(identifier: str) -> str:
-    return identifier.strip().upper()
-
-
-def _place_withholding(
-    records: Iterable[RetencionSoportadaRecord], occupied: Mapping[int, Occupancy | None]
-) -> tuple[dict[int, tuple[RetencionSoportadaRecord, ...]], list[RentaInmuebleFinding]]:
-    """Place each urban-rent withholding on the let property whose lease names its payer as a tenant."""
-    tenants: dict[str, set[int]] = {}
-    for clave, occupied_as in occupied.items():
-        for lease in () if occupied_as is None else occupied_as.leases:
-            for tenant in lease.inquilinos:
-                tenants.setdefault(_tenant_key(tenant.nif), set()).add(clave)
-    placed: dict[int, list[RetencionSoportadaRecord]] = {}
-    findings: list[RentaInmuebleFinding] = []
-    for record in records:
-        if record.income_class is not RetencionSoportadaClase.ARRENDAMIENTO_INMUEBLE_URBANO:
-            continue
-        properties = tenants.get(_tenant_key(record.payer_tax_id), set())
-        if len(properties) == 1:
-            placed.setdefault(next(iter(properties)), []).append(record)
-            continue
-        cause = (
-            RentaInmuebleCause.WITHHOLDING_PAYER_NO_TENANT
-            if not properties
-            else RentaInmuebleCause.WITHHOLDING_PAYER_SEVERAL_PROPERTIES
-        )
-        findings.append(RentaInmuebleFinding(cause, f"retencion:{record.payer_ref}"))
-    return {clave: tuple(items) for clave, items in placed.items()}, findings
 
 
 def renta_inmueble_occurrences(
@@ -597,39 +633,23 @@ def renta_inmueble_occurrences(
         for clave, record in sorted(records.inmuebles.items())
         if _is_held(record, period)
     }
-    placed, unplaced = _place_withholding(withholding, {clave: inputs.occupancy for clave, inputs in held.items()})
+    placed, unplaced = place_withholding(withholding, {clave: inputs.occupancy for clave, inputs in held.items()})
     findings.extend(unplaced)
+    stated = pending_stated or PendingStatements()
     occurrences: list[RentaInmuebleOccurrence] = []
     for clave, inputs in held.items():
-        own = _occurrence_findings(inputs, period)
-        ingresos, gastos, read = _figures(inputs, period)
         carry = pending_carry(
             subject=_source_identity(clave),
             carry=carry_window(inputs.record, inputs.leases, period, terms.carry_years),
             window=terms.carry_years,
-            stated=pending_stated or PendingStatements(),
+            stated=stated,
             prior_return_held=prior_return_held,
         )
-        net = _net(inputs, period, (ingresos, gastos), placed.get(clave, ()), (terms, concepts), carry.pendientes)
-        if net is not None:
-            own.extend(carry.findings)
-            own.extend(RentaInmuebleFinding(cause, _source_identity(clave)) for cause in net.causes)
-        occurrences.append(
-            RentaInmuebleOccurrence(
-                index=len(occurrences) + 1,
-                inmueble=inputs.record,
-                leases=() if inputs.occupancy is None else inputs.occupancy.leases,
-                ejercicio_last=period.last,
-                dias_arrendado=0 if inputs.occupancy is None else inputs.occupancy.days_let,
-                ingresos=ingresos,
-                gastos=gastos,
-                transaction_ids=read,
-                findings=tuple(own),
-                net=net,
-                withholding=placed.get(clave, ()),
-            )
+        occurrence = _occurrence(
+            len(occurrences) + 1, clave, inputs, period, carry, placed.get(clave, ()), (terms, concepts)
         )
-        findings.extend(own)
+        occurrences.append(occurrence)
+        findings.extend(occurrence.findings)
     return RentaInmuebleOccurrences(occurrences=tuple(occurrences), findings=tuple(findings))
 
 

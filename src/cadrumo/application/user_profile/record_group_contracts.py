@@ -8,6 +8,11 @@ encrypted store, a group is one year, and each certificate is a member of its ye
 The read serves the relation, the row identities and the words
 of every row, so a surface iterates the stream by item kind and joins nothing.
 
+A lease member also serves its art. 23.2 LIRPF reduction: the facts the derivation reads, and per
+ejercicio of a Modelo 100 return the profile has started the tier, that it does not apply, or the
+stored fact that keeps it from being derived with the edit door opened on that field. A lease with
+no end date carries a further edit door opened on its end date.
+
 The stream is paged. A continuation names the profile revision and the digest of
 the linked ledger rows it started from, and is refused when either has moved.
 """
@@ -26,6 +31,7 @@ from ...core.external_constants import OutputLanguage
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operations import profile_operation_subject
+from ...domain.renta.rental_reduction_derivation import RentalReductionRefusal
 from ...domain.transactions.enums import TransactionDirection, TransactionLifecycleState
 from ..operations.models import CredentialFreeOperationRequest, OperationTerminalReceipt
 from ..operations.public_scalar import PublicDecimal
@@ -68,6 +74,108 @@ class ProfileRecordAction(BaseModel):
     operation_definition_id: str = Field(min_length=1)
     label_words: str
     label_words_language: OutputLanguage
+    #: The field of the row the door opens on; ``None`` opens the row as a whole.
+    field_key: str | None = Field(default=None, min_length=1)
+
+
+class ProfileRecordReductionOutcome(StrEnum):
+    """What the art. 23.2 LIRPF reduction does to one lease in one ejercicio."""
+
+    APPLIES = "applies"
+    DOES_NOT_APPLY = "does_not_apply"
+    NOT_DETERMINABLE = "not_determinable"
+
+
+class ProfileRecordReductionFact(BaseModel):
+    """One stored fact of a lease as the reduction's derivation read it."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    field_key: str = Field(min_length=1)
+    #: The fact's name and the value the lease states for it, or that it states none.
+    fact_words: str
+    fact_words_language: OutputLanguage
+    stated: bool
+
+
+class ProfileRecordMissingFact(BaseModel):
+    """The fact that keeps a reduction from being derived and the door that states it."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    field_key: str = Field(min_length=1)
+    #: The name of the fact.
+    fact_words: str
+    fact_words_language: OutputLanguage
+    #: The edit door of the lease row, opened on this fact's field.
+    way_out: ProfileRecordAction
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _door_opens_on_the_fact(self) -> Self:
+        if self.way_out.door is not ProfileRecordDoor.EDIT or self.way_out.field_key != self.field_key:
+            raise ValueError("the way out of a missing fact is the edit door opened on its field")
+        return self
+
+
+def _require_tier_with_application(
+    outcome: ProfileRecordReductionOutcome, tier: str | None, words: str | None, language: object
+) -> None:
+    applies = outcome is ProfileRecordReductionOutcome.APPLIES
+    if (tier is not None) != applies or (tier is None) != (words is None) or (words is None) != (language is None):
+        raise ValueError("a reduction that applies names its tier with its words and their language, and no other does")
+
+
+def _require_refusal_with_undetermined_ejercicio(
+    outcome: ProfileRecordReductionOutcome, ejercicio: int | None, refusal: object, has_missing_fact: bool
+) -> None:
+    undetermined = outcome is ProfileRecordReductionOutcome.NOT_DETERMINABLE
+    if (refusal is not None) != (undetermined and ejercicio is not None):
+        raise ValueError("a refusal is served exactly for an ejercicio whose reduction cannot be derived")
+    if has_missing_fact and refusal is None:
+        raise ValueError("a missing fact belongs to a refused derivation")
+    if ejercicio is None and not undetermined:
+        raise ValueError("an outcome without an ejercicio cannot be determined")
+
+
+class ProfileRecordReductionYear(BaseModel):
+    """The reduction of one lease for one ejercicio, or why none can be stated."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    #: The ejercicio of a Modelo 100 return the profile has started; ``None`` when there is none to speak of.
+    ejercicio: int | None = Field(default=None, ge=1)
+    outcome: ProfileRecordReductionOutcome
+    #: The derived tier's token, for an outcome of ``applies``.
+    tier: str | None = Field(default=None, min_length=1)
+    tier_words: str | None = None
+    tier_words_language: OutputLanguage | None = None
+    #: The derivation's refusal, for an outcome of ``not_determinable`` in an ejercicio.
+    refusal_code: RentalReductionRefusal | None = None
+    #: The sentence that says the outcome, and for a refusal what the operator does next.
+    outcome_words: str
+    outcome_words_language: OutputLanguage
+    missing_fact: ProfileRecordMissingFact | None = None
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _outcome_carries_what_it_needs(self) -> Self:
+        _require_tier_with_application(self.outcome, self.tier, self.tier_words, self.tier_words_language)
+        _require_refusal_with_undetermined_ejercicio(
+            self.outcome, self.ejercicio, self.refusal_code, self.missing_fact is not None
+        )
+        return self
+
+
+class ProfileRecordReduction(BaseModel):
+    """The art. 23.2 LIRPF reduction of one lease: the facts it reads and its outcome per ejercicio."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    title_words: str
+    title_words_language: OutputLanguage
+    facts: tuple[ProfileRecordReductionFact, ...]
+    years: tuple[ProfileRecordReductionYear, ...] = Field(min_length=1)
 
 
 class ProfileRecordGroupsRequest(CredentialFreeOperationRequest):
@@ -141,6 +249,8 @@ class ProfileRecordMemberItem(BaseModel):
     kind_words_language: OutputLanguage
     #: The doors of this member's own row.
     actions: tuple[ProfileRecordAction, ...]
+    #: The art. 23.2 LIRPF reduction, for a lease.
+    reduction: ProfileRecordReduction | None = None
     #: The stored certificate, with the revision its correct and remove doors submit, for a pension member.
     #: It carries keyed references and names, never a tax identifier.
     contribution: PrevisionSocialRowProjection | None = None
@@ -284,5 +394,10 @@ __all__ = [
     "ProfileRecordGroupsResult",
     "ProfileRecordLedgerRowItem",
     "ProfileRecordMemberItem",
+    "ProfileRecordMissingFact",
+    "ProfileRecordReduction",
+    "ProfileRecordReductionFact",
+    "ProfileRecordReductionOutcome",
+    "ProfileRecordReductionYear",
     "project_record_groups_result",
 ]

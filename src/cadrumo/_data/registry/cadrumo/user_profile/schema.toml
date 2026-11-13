@@ -2440,7 +2440,7 @@ type = "string"
 required = false
 sensitivity = "identity"
 effective_dated = true
-description = "Valores catastrales por ejercicio del IBI: ANO:TOTAL:CONSTRUCCION separados por punto y coma (casillas 0123 y 0124)."
+description = "Valores catastrales por ejercicio del IBI: ANO:TOTAL:CONSTRUCCION[:VIGOR] separados por punto y coma (casillas 0123 y 0124); VIGOR es el ano de entrada en vigor de la valoracion colectiva de caracter general que fijo esos valores, que decide el porcentaje de la renta imputada del art. 85 (casillas 0083 y 0084)."
 legal_refs = ["ley-35-2006:art-23", "rd-439-2007:art-14"]
 
 [[sections.fields]]

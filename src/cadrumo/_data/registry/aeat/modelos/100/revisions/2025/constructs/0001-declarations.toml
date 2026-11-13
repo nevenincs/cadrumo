@@ -226,7 +226,6 @@ casilla_ids = [
     "0598",
 ]
 formulas = [
-    "renta-inmobiliario-renta-imputada-art-85",
     "renta-inmobiliario-suma-rentas-imputadas",
     "renta-retenciones-arrendamientos-urbanos",
 ]

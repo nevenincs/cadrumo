@@ -106,20 +106,6 @@ errors:
     lookup_dispatch_arg_count: Formula op {op} expects {expected} arguments.
     lookup_dispatch_arg_kind: Formula op {op} requires {position} to be a {expected_kind}
       leaf.
-    m100_art85_boolean_invalid: Modelo 100 Art. 85 boolean box must be 0 or 1.
-    m100_art85_catastral_value_negative: Modelo 100 Art. 85 cadastral value must be
-      non-negative.
-    m100_art85_disposal_percentage_invalid: Modelo 100 Art. 85 mixed-use percentage
-      must be greater than 0 and at most 100.
-    m100_art85_imputation_days_invalid: Modelo 100 Art. 85 imputation days must be
-      an integer between 1 and 365.
-    m100_art85_input_negative: Modelo 100 Art. 85 numeric inputs must be non-negative.
-    m100_art85_mixed_use_inputs_without_flag: Modelo 100 Art. 85 mixed-use days or
-      percentage require the mixed-use box to be checked.
-    m100_art85_no_catastral_base_missing: Modelo 100 Art. 85 imputation without a
-      cadastral value requires substitute-base boxes that are not present.
-    m100_art85_revision_flag_invalid: Modelo 100 Art. 85 revised cadastral value flag
-      must be the official X checkbox value.
     m184_days_past_the_year: '{days} days do not fit in {filing_year}.'
     m210_gastos_deducibles_negative: M210 gastos_deducibles %{casilla_id} must be
       non-negative; got %{value}.

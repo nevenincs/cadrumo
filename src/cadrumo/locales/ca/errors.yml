@@ -111,22 +111,6 @@ errors:
     lookup_dispatch_arg_count: L'operador {op} de la fórmula espera {expected} arguments.
     lookup_dispatch_arg_kind: L'operador {op} de la fórmula requereix que {position}
       sigui una fulla de tipus {expected_kind}.
-    m100_art85_boolean_invalid: La casella booleana de l'article 85 del Model 100
-      ha de ser 0 o 1.
-    m100_art85_catastral_value_negative: El valor cadastral de l'article 85 del Model
-      100 no pot ser negatiu.
-    m100_art85_disposal_percentage_invalid: El percentatge d'ús mixt de l'article
-      85 del Model 100 ha de ser superior a 0 i com a màxim 100.
-    m100_art85_imputation_days_invalid: Els dies d'imputació de l'article 85 del Model
-      100 han de ser un nombre enter entre 1 i 365.
-    m100_art85_input_negative: Les entrades numèriques de l'article 85 del Model 100
-      no poden ser negatives.
-    m100_art85_mixed_use_inputs_without_flag: Els dies o el percentatge d'ús mixt
-      de l'article 85 del Model 100 requereixen que la casella d'ús mixt estigui marcada.
-    m100_art85_no_catastral_base_missing: La imputació de l'article 85 del Model 100
-      sense valor cadastral requereix caselles de base substitutiva que no hi són.
-    m100_art85_revision_flag_invalid: L'indicador de valor cadastral revisat de l'article
-      85 del Model 100 ha de ser el valor oficial X de la casella.
     m184_days_past_the_year: '{days} dies no caben a {filing_year}.'
     m210_gastos_deducibles_negative: Les gastos_deducibles M210 %{casilla_id} no poden
       ser negatives; valor rebut %{value}.

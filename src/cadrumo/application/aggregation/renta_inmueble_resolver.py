@@ -7,8 +7,9 @@ and leaving one property out would move the others to rows that are not theirs.
 A blocking finding keeps the rows and withholds checking, export and filing; a
 limitation is shown and withholds nothing.
 
-A results box the rows account for is the total of one column over every let
-property; it is unresolved while any let property's value of that column is.
+A results box the rows account for is the total of one column over every
+property that carries it, let or imputing; it is unresolved while any such
+property's value of that column is.
 """
 
 from __future__ import annotations
@@ -54,6 +55,7 @@ from ..user_profile.projections import record_to_path_values
 from .modelo_bindings_support import STORAGE_DEGRADATION_ERRORS
 from .renta_inmueble_carry import PendingStatements
 from .renta_inmueble_findings import RentaInmuebleCause, RentaInmuebleFinding, RentaInmuebleFindingKind
+from .renta_inmueble_imputacion import ImputacionTerms
 from .renta_inmueble_net import RentaInmuebleTerms
 from .renta_inmueble_source import (
     GASTO_COLUMN_PREFIX,
@@ -77,6 +79,11 @@ from .source_resolution_operations import source_context_operation, storage_degr
 _SOURCE: Final = BindingSourceKind.RENTA_INMUEBLE
 _TRANSACTION_CONTRIBUTOR: Final = "transaction"
 _AMORTISATION_RATE: Final = "renta-rental-amortizacion-rate"
+_IMPUTACION_RATE_GENERAL: Final = "renta-imputacion-inmobiliaria-rate-old-or-no-revision"
+_IMPUTACION_RATE_REDUCED: Final = "renta-imputacion-inmobiliaria-rate-recent-revision"
+_IMPUTACION_YEAR_DAYS: Final = "renta-imputacion-inmobiliaria-year-days"
+_IMPUTACION_REVISION_PERIODS: Final = "renta-imputacion-inmobiliaria-revision-periodos-anteriores"
+_IMPUTACION_REVISION_FROM_YEAR: Final = "renta-imputacion-inmobiliaria-revision-vigor-desde"
 _NO_AMOUNT: Final = Decimal("0.00")
 
 
@@ -277,13 +284,12 @@ def _rows(
 def _totals(
     built: RentaInmuebleOccurrences, totals: Iterable[tuple[BindingDefinition, RentaInmuebleProvider]]
 ) -> tuple[dict[BindingId, Decimal], tuple[BindingId, ...]]:
-    """Sum each total's column over the let properties; leave a total unresolved while one value is unknown."""
+    """Sum each total's column over the properties that carry it; leave it unresolved while one value is unknown."""
     values: dict[BindingId, Decimal] = {}
     unresolved: list[BindingId] = []
-    let = tuple(occurrence for occurrence in built.occurrences if occurrence.net is not None)
     for binding, provider in totals:
         column = RentaInmuebleRowField(provider.row_field)
-        amounts = [occurrence.column(column) for occurrence in let]
+        amounts = [occurrence.column(column) for occurrence in built.occurrences if occurrence.carries(column)]
         if all(isinstance(amount, Decimal) for amount in amounts):
             values[binding.id] = sum((amount for amount in amounts if isinstance(amount, Decimal)), _NO_AMOUNT)
         else:
@@ -330,10 +336,41 @@ def _whole_years(value: Decimal) -> int:
     return int(value)
 
 
+def _whole_number(parameter: str, value: Decimal) -> int:
+    if value != value.to_integral_value() or value < 1:
+        raise ValueError(f"{parameter} must be a whole number of at least one, got {value}")
+    return int(value)
+
+
+def _imputacion_terms(
+    *, modelo: str, revision_id: RevisionId, devengo: date, operation: PinnedAuthorityOperation
+) -> ImputacionTerms:
+    """Resolve the art. 85 data at the devengo; the fixed-year rule holds only where the edition declares it."""
+
+    def read(parameter: str) -> Decimal:
+        return read_parameter(
+            modelo,
+            revision_id,
+            parameter,
+            date_context={DateAxis.FILING_PERIOD.value: devengo},
+            operation=operation,
+        )
+
+    declared = {parameter.id for parameter in operation.revision(modelo, revision_id).parameters}
+    from_year = _IMPUTACION_REVISION_FROM_YEAR
+    return ImputacionTerms(
+        rate_general=read(_IMPUTACION_RATE_GENERAL),
+        rate_reduced=read(_IMPUTACION_RATE_REDUCED),
+        year_days=_whole_number(_IMPUTACION_YEAR_DAYS, read(_IMPUTACION_YEAR_DAYS)),
+        revision_periods=_whole_number(_IMPUTACION_REVISION_PERIODS, read(_IMPUTACION_REVISION_PERIODS)),
+        revision_from_year=_whole_number(from_year, read(from_year)) if from_year in declared else None,
+    )
+
+
 def resolve_renta_inmueble_terms(
     *, modelo: str, revision_id: RevisionId, devengo: date, operation: PinnedAuthorityOperation
 ) -> RentaInmuebleTerms:
-    """Resolve the dated registry data the net chain reads at the ejercicio's devengo."""
+    """Resolve the dated registry data the net chain and the art. 85 imputation read at the ejercicio's devengo."""
     return RentaInmuebleTerms(
         amortizacion_rate=read_parameter(
             modelo,
@@ -357,6 +394,7 @@ def resolve_renta_inmueble_terms(
         reduction_rates=resolve_rental_reduction_art232_rates(
             modelo_id=modelo, revision_id=revision_id, devengo=devengo, operation=operation
         ),
+        imputacion=_imputacion_terms(modelo=modelo, revision_id=revision_id, devengo=devengo, operation=operation),
     )
 
 

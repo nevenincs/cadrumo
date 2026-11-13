@@ -103,6 +103,23 @@ required_text = ["62 ÷ 365", "valor catastral"]
 value = "365"
 date_axis = "filing_period"
 valid_from = 2022-01-01
+# LIRPF art. 85.1, second paragraph: the reduced rate applies where the general
+# collective valuation entered into force in the period or in the ten periods
+# before it.
+[[revisions."2022".parameters]]
+id = "renta-imputacion-inmobiliaria-revision-periodos-anteriores"
+data_type = "integer"
+unit = "periods"
+legal_refs = ["ley-35-2006:art-85"]
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["hayan entrado en vigor en el período impositivo o en el plazo de los diez"]
+
+[[revisions."2022".parameters.values]]
+value = "10"
+date_axis = "filing_period"
+valid_from = 2022-01-01
 [[revisions."2022".parameters]]
 id = "renta-actividad-inmovilizado-amortizacion-normal-coeficiente-lineal-maximo"
 data_type = "keyed_bracket_table"

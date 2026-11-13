@@ -345,6 +345,7 @@
         "dev.desktop_automation_stage",
         "dev.desktop_household_fixture",
         "dev.desktop_imputation_election_fixture",
+        "dev.desktop_persona_world",
         "dev.desktop_profile_fixture",
         "dev.desktop_withholding_refusal_words_fixture",
         "dev.desktop_year_authority_fixture",

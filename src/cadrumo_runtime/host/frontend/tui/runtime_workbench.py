@@ -50,6 +50,7 @@ from cadrumo.entrypoints.tui.navigation import (
     TuiScreenFactoryV1,
     build_destination_catalogue,
 )
+from cadrumo.entrypoints.tui.operaciones_vinculadas.screen import operaciones_vinculadas_screen_factory
 from cadrumo.entrypoints.tui.operations.catalogue import OperationCatalogueSourceV1
 from cadrumo.entrypoints.tui.operations.destination import OperationsDestinationV1
 from cadrumo.entrypoints.tui.reconciliation_export import ReconciliationExportScreen
@@ -87,6 +88,7 @@ from .runtime_ledger_import import compose_runtime_ledger_import_door
 from .runtime_ledger_records import compose_runtime_ledger_link_submitter, compose_runtime_ledger_record_doors
 from .runtime_ledger_review import compose_runtime_ledger_review_doors
 from .runtime_ledger_tools import compose_runtime_ledger_tools
+from .runtime_operaciones_vinculadas import compose_runtime_operaciones_vinculadas_door
 from .runtime_own_accounts import compose_runtime_own_account_door
 from .runtime_profile_language import RuntimeProfileLanguage
 from .runtime_withholding import compose_runtime_withholding_door
@@ -115,6 +117,25 @@ def _action(action_id: str) -> ActionReference:
 
 def _available(destination: str) -> WorkbenchDestinationAdmission:
     return WorkbenchDestinationAdmission(destination=destination, state=WorkbenchDestinationAdmissionState.AVAILABLE)
+
+
+def _admit_door_destination[DoorT](
+    admissions: dict[str, WorkbenchDestinationAdmission],
+    factories: dict[str, TuiScreenFactoryV1],
+    destination: str,
+    door: DoorT | None,
+    screen_factory: Callable[[DoorT], TuiScreenFactoryV1],
+) -> None:
+    """Admit ``destination`` with its screen when its door was composed, else leave it unavailable."""
+    if door is None:
+        admissions[destination] = WorkbenchDestinationAdmission(
+            destination=destination,
+            state=WorkbenchDestinationAdmissionState.UNAVAILABLE,
+            reason_code=f"{destination}.runtime_unavailable",
+        )
+        return
+    admissions[destination] = _available(destination)
+    factories[destination] = screen_factory(door)
 
 
 @dataclass(frozen=True, slots=True)
@@ -394,6 +415,14 @@ class RuntimeWorkbenchRoot(RuntimeProfileLanguage):
         factories["workbench.operations"] = self._operations
         factories["workbench.installation"] = installation_screen_factory
         factories["workbench.reference"] = reference_screen_factory
+        # Admitted only when the runtime serves every Modelo 232 related-party operation under this session.
+        _admit_door_destination(
+            admissions,
+            factories,
+            "workbench.operaciones_vinculadas",
+            compose_runtime_operaciones_vinculadas_door(self._client, profile_label=self._label),
+            operaciones_vinculadas_screen_factory,
+        )
         ledger = self._ledger_factory(generation)
         # The ways out a Ledger tool performs are admitted where the Ledger is,
         # so a served way out opens that tool rather than showing disabled.

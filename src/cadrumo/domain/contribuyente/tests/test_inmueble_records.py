@@ -250,10 +250,28 @@ def test_the_list_grammar_stores_one_canonical_form_whatever_order_was_typed() -
     assert parse_inquilinos(f"{TENANT.lower()}:otra:no", leaf="inquilinos")[0].nif == TENANT
 
 
-@pytest.mark.parametrize("raw", ["", f"{YEAR}:1:1;", ";", f"{YEAR}:1", "twenty:1:1"])
+@pytest.mark.parametrize(
+    "raw", ["", f"{YEAR}:1:1;", ";", f"{YEAR}:1", "twenty:1:1", f"{YEAR}:1:1:{YEAR}:1", f"{YEAR}:1:1:twenty"]
+)
 def test_the_list_grammar_refuses_a_blank_or_malformed_entry_instead_of_dropping_it(raw: str) -> None:
     with pytest.raises(ProfileAnswerTypeError):
         parse_valores_catastrales(raw, leaf="valores_catastrales")
+
+
+def test_a_cadastral_value_keeps_the_year_its_collective_valuation_entered_into_force() -> None:
+    typed = f"{YEAR}:90000:54000:{YEAR - 9};{YEAR - 1}:88000:52800"
+
+    parsed = parse_valores_catastrales(typed, leaf="valores_catastrales")
+
+    assert [valor.vigor for valor in parsed] == [None, YEAR - 9]
+    assert serialise_valores_catastrales(parsed) == f"{YEAR - 1}:88000.00:52800.00;{YEAR}:90000.00:54000.00:{YEAR - 9}"
+
+
+def test_a_collective_valuation_cannot_enter_into_force_after_the_ibi_year_it_sets() -> None:
+    with pytest.raises(ProfileAnswerTypeError) as refusal:
+        parse_valores_catastrales(f"{YEAR}:90000:54000:{YEAR + 1}", leaf="valores_catastrales")
+
+    assert (refusal.value.context or {}).get("key") == "valores_catastrales"
 
 
 def test_a_fact_outside_a_row_position_is_refused_and_not_ignored() -> None:

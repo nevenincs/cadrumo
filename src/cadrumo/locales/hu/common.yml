@@ -6591,6 +6591,7 @@ sheets:
       dias_miembro: Tagsági napok száma
       direccion: Cím
       disability_clave: Fogyatékosság
+      disposicion: Rendelkezésre áll
       domicilio_fiscal: A tag adóügyi lakóhelye
       donor_legal_name: Adományozó neve
       donor_tax_id: Adományozó adóazonosítója
@@ -6646,6 +6647,10 @@ sheets:
       importe_q3: 3. negyedévi összeg
       importe_q4: 4. negyedévi összeg
       importe_total: Teljes összeg
+      imputacion_dias: Rendelkezésre állás napjai
+      imputacion_porcentaje_disposicion: Rendelkezésre állás (%)
+      imputacion_valor_catastral: Kataszteri érték (vélelmezés)
+      imputacion_valor_catastral_revisado: Felülvizsgált kataszteri érték
       incapacity_cash_perception: Munkaképtelenségi készpénzes bevétel
       incapacity_cash_withholding: Munkaképtelenségi ellátás visszatartása
       incapacity_kind_ingreso_a_cuenta: Munkaképtelenségi természetbeni ellátás előlege
@@ -6737,6 +6742,7 @@ sheets:
         (objektív becslés)
       rendimiento_neto_previo_eo: Előzetes nettó jövedelem (objektív becslés)
       rendimiento_neto_reducido: Csökkentett nettó jövedelem
+      renta_imputada: Vélelmezett jövedelem
       representative_nif: Képviselő NIF-je
       representative_tax_id: Törvényes képviselő adóazonosítója
       residence_country_code: Lakóhely országkódja
@@ -7184,6 +7190,7 @@ tui:
     home: Kezdőlap
     installation: Telepítés
     ledger: Nyilvántartás
+    operaciones_vinculadas: Kapcsolt felekkel kötött ügyletek
     operations: Műveletek
     profile: Profil
     reference: Kézikönyv
@@ -9368,6 +9375,55 @@ tui:
       refused: A megadott adatot elutasították.
       sending: A megadott adatok küldése...
       year_label: Az időszak éve
+  operaciones_vinculadas:
+    action:
+      read: Beolvasás
+      state_none: Nyilatkozat, hogy nem volt ilyen ügylet
+      state_operation: Ügylet rögzítése
+      state_turnover: Nettó árbevétel rögzítése
+      withdraw_none: A kijelölt nyilatkozat visszavonása
+      withdraw_operation: A kijelölt ügylet visszavonása
+      withdraw_turnover: A kijelölt nettó árbevétel visszavonása
+    column:
+      amount: Összeg (EUR)
+      counterparty: Partner
+      country: Ország
+      direction: Irány
+      exclusion: Kihagyva
+      ground: Eset
+      ground_state: Eredmény
+      kind: Fajta
+      largest_total: Legnagyobb összeg (EUR)
+      limit: Határérték (EUR)
+      note: Megjegyzés
+      operation_type: Típus
+      reference: Hivatkozás
+      source: Forrás
+      state: Állapot
+      stated_on: Rögzítés napja
+      turnover: Nettó árbevétel (EUR)
+    ejercicio: Év
+    none:
+      title: Nyilatkozatok az ügyletek hiányáról
+    operations:
+      title: Ügyletek
+    prompt: Írj be egy évet, és olvasd be, hogy lásd a 232-es modellhez tartozó nyilvántartásait,
+      és hogy mit döntenek el.
+    status:
+      choose_active: Előbb jelölj ki egy hatályos nyilvántartást.
+      ejercicio_invalid: Az évet négy számjeggyel írd be.
+      empty: '%{ejercicio} évre nincs semmi rögzítve.'
+      read_failed: A nyilvántartásokat nem sikerült beolvasni.
+      read_first: Előbb olvass be egy évet.
+      reading: Beolvasás…
+    turnover:
+      title: Nettó árbevétel
+    verdict:
+      counts: 'Figyelembe vett ügyletek: %{counted}. Kihagyott ügyletek: %{excluded},
+        összesen %{excluded_total} EUR.'
+      title: Mit döntenek el a nyilvántartásaid
+      unsupported: Erre az évre a nyilvántartásaidból nem vezethető le döntés a 232-es
+        modellről.
   operations:
     action:
       close: Bezárás
@@ -9655,6 +9711,7 @@ tui:
       home: Kezdőlap megnyitása
       installation: Telepítés megnyitása
       ledger: Nyilvántartás megnyitása
+      operaciones_vinculadas: Kapcsolt felekkel kötött ügyletek megnyitása
       operations: Műveletek megnyitása
       profile: Profil megnyitása
       reference: Kézikönyv megnyitása
@@ -9668,6 +9725,8 @@ tui:
       home: Következő teendők, bevallások és határidők egy pillantással
       installation: Tárhely, javítás, visszaállítás és a számítógépen lévő profilok
       ledger: Tételek, ellenőrzés, besorolás és bizonylatok
+      operaciones_vinculadas: Egy év 232-es modellhez tartozó nyilvántartásainak rögzítése,
+        megtekintése és visszavonása, és annak megtekintése, mit döntenek el
       operations: 'A Cadrumo minden futtatható művelete: kereshető, kitölthető és
         futtatható'
       profile: A profil adatai és az azokat kitöltő források
@@ -9854,6 +9913,9 @@ workspace:
         verdict:
           attribution_pass_through: 'Magának az entitásnak nem kell benyújtania: a
             jövedelem a tagjaira hárul, akik a saját bevallásukban vallják be.'
+          incomplete: 'Még nincs eldöntve: a tárolt adatokból nem állapítható meg,
+            hogy ezt a bevallást be kell-e nyújtanod. Addig sem kötelezőnek, sem kizártnak
+            nem számít, amíg ki nem egészíted ezeket az adatokat.'
           not_applicable: 'Rád nem vonatkozik: a profilod alapján ebben az időszakban
             nem kell ezt a bevallást benyújtanod.'
       title: Bevallási naptár

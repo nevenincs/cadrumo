@@ -111,23 +111,6 @@ errors:
     lookup_dispatch_arg_count: A(z) {op} képletoperátor {expected} argumentumot vár.
     lookup_dispatch_arg_kind: A(z) {op} képletoperátornál a(z) {position}. pozíciónak
       {expected_kind} levélnek kell lennie.
-    m100_art85_boolean_invalid: A Modelo 100 85. cikke szerinti logikai rovat értéke
-      0 vagy 1 lehet.
-    m100_art85_catastral_value_negative: A Modelo 100 85. cikke szerinti kataszteri
-      értéknek nem negatívnak kell lennie.
-    m100_art85_disposal_percentage_invalid: A Modelo 100 85. cikke szerinti vegyes
-      használatú százaléknak 0-nál nagyobbnak és legfeljebb 100-nak kell lennie.
-    m100_art85_imputation_days_invalid: A Modelo 100 85. cikke szerinti hozzászámítási
-      napok számának 1 és 365 közötti egész számnak kell lennie.
-    m100_art85_input_negative: A Modelo 100 85. cikke szerinti számértékek nem lehetnek
-      negatívak.
-    m100_art85_mixed_use_inputs_without_flag: A Modelo 100 85. cikke szerinti vegyes
-      használatú napok vagy százalék megköveteli a vegyes használat rovat bejelölését.
-    m100_art85_no_catastral_base_missing: A Modelo 100 85. cikke szerinti, kataszteri
-      érték nélküli jövedelemhozzászámítás helyettesítő alaprovatokat igényel, amelyek
-      hiányoznak.
-    m100_art85_revision_flag_invalid: A Modelo 100 85. cikke szerinti felülvizsgált
-      kataszteri érték jelölőjének a hivatalos X jelölőnégyzet-értéknek kell lennie.
     m184_days_past_the_year: '{days} nap nem fér bele a(z) {filing_year}. évbe.'
     m210_gastos_deducibles_negative: A(z) M210 gastos_deducibles %{casilla_id} nem
       lehet negatív; kapott érték %{value}.

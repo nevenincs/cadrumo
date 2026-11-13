@@ -6,7 +6,9 @@ language, so a surface renders served words and routes a door by the registered
 operation it names without naming one itself.
 
 The doors submit the registered repeatable-row operations that already edit and
-remove these rows; their identities are imported from the defining contract.
+remove these rows; their identities are imported from the defining contract. A
+lease that states no end date also carries the edit door opened on that field, so
+ending it is a served edit target and not a path of its own.
 """
 
 from __future__ import annotations
@@ -79,6 +81,12 @@ REMOVE_DOOR_LABEL_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
 )
 """The short label of the remove door of a row of each listed section."""
 
+END_LEASE_LABEL_LOCALE_KEY: Final = "application.user_profile.record_groups.door.renta_arrendamiento.end"
+"""The short label of the edit door opened on the end date of a lease that has none."""
+
+LEASE_END_FIELD: Final = "fecha_fin"
+"""The field of a lease that holds the day it ends; absent while it continues."""
+
 REFUSAL_WORDS_LOCALE_KEYS: Final[Mapping[ProfileRecordGroupsRefusalCode, str]] = MappingProxyType(
     {
         ProfileRecordGroupsRefusalCode.STALE_REVISION: "application.user_profile.record_groups.refusal.stale_revision",
@@ -139,9 +147,26 @@ def refusal_words(code: ProfileRecordGroupsRefusalCode) -> str:
     return tr(REFUSAL_WORDS_LOCALE_KEYS[code])
 
 
-def row_actions(section_key: str, language: OutputLanguage) -> tuple[ProfileRecordAction, ...]:
-    """Return the edit and remove doors of one stored row of ``section_key``, labelled in the output language."""
-    return tuple(
+def field_door(section_key: str, field_key: str, label_words: str, language: OutputLanguage) -> ProfileRecordAction:
+    """Return the edit door of a row of ``section_key`` opened on ``field_key`` and labelled ``label_words``."""
+    (operations,) = (operations for door, operations, _labels in _DOORS if door is ProfileRecordDoor.EDIT)
+    return ProfileRecordAction(
+        door=ProfileRecordDoor.EDIT,
+        operation_definition_id=operations[section_key],
+        label_words=label_words,
+        label_words_language=language,
+        field_key=field_key,
+    )
+
+
+def row_actions(
+    section_key: str, language: OutputLanguage, *, stated: Mapping[str, str] | None = None
+) -> tuple[ProfileRecordAction, ...]:
+    """Return the edit and remove doors of one stored row of ``section_key``, labelled in the output language.
+
+    Given the leaves the row ``stated``, a lease that states no end date also gets the edit door opened on that field.
+    """
+    doors = tuple(
         ProfileRecordAction(
             door=door,
             operation_definition_id=operations[section_key],
@@ -150,6 +175,9 @@ def row_actions(section_key: str, language: OutputLanguage) -> tuple[ProfileReco
         )
         for door, operations, labels in _DOORS
     )
+    if section_key != ARRENDAMIENTO_SECTION or stated is None or LEASE_END_FIELD in stated:
+        return doors
+    return (*doors, field_door(section_key, LEASE_END_FIELD, tr(END_LEASE_LABEL_LOCALE_KEY), language))
 
 
 def _require_total_tables() -> None:
@@ -170,11 +198,14 @@ _require_total_tables()
 
 __all__ = [
     "EDIT_DOOR_LABEL_LOCALE_KEYS",
+    "END_LEASE_LABEL_LOCALE_KEY",
     "GROUP_KIND_WORDS_LOCALE_KEYS",
+    "LEASE_END_FIELD",
     "LEDGER_ROW_KIND_WORDS_LOCALE_KEY",
     "REFUSAL_WORDS_LOCALE_KEYS",
     "REMOVE_DOOR_LABEL_LOCALE_KEYS",
     "SECTION_KIND_WORDS_LOCALE_KEYS",
+    "field_door",
     "group_kind_words",
     "ledger_row_kind_words",
     "member_kind_words",
