@@ -4,8 +4,10 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass, field
+from datetime import date, timedelta
 
 import pytest
+from textual.containers import Vertical
 from textual.pilot import Pilot
 from textual.widgets import Button, Input, OptionList, Static
 
@@ -13,18 +15,23 @@ from cadrumo_client.transport.profile_mutations import ProfileMutationRunError
 
 from .....application.operations.error_detail import build_operation_error_detail
 from .....application.user_profile.family_rows import (
-    ProfileFamilyLeaf,
-    ProfileFamilyLeafCondition,
+    ProfileFamilyLeafAsk,
+    ProfileFamilyLeafAskEntry,
     ProfileViewFamilyGroupItem,
     ProfileViewFamilyRowItem,
+    family_draft_item,
     family_row_items,
 )
 from .....application.user_profile.overview import ProfileFieldView, ProfileOverview, ProfileSectionView
 from .....core.i18n.render import tr
 from .....core.operations import OperationEffect, OperationTerminalCondition
 from .....domain.calculations.registry.authority import bundled_indexed_authority
+from .....domain.calculations.registry.descendant_relacion_catalogue import (
+    descendant_relacion_adoption_token,
+    descendant_relacion_entitling_tokens,
+    descendant_relacion_tokens,
+)
 from .....domain.user_profile.errors import UserProfileValidationError
-from .....domain.user_profile.schema import ProfileFieldType
 from .....domain.user_profile.values import ProfileSetupState
 from ...components.host import ScreenHostApp
 from ...refusal.panel import RefusalSlot
@@ -38,12 +45,13 @@ from ..household import (
     HouseholdScreen,
     HouseholdView,
     household_change_outcome,
-    shown_leaves,
 )
 from ..overview import ProfileManagerScreen
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
+_BORN = (date.today() - timedelta(days=1800)).isoformat()
+_ENTRY = (date.today() - timedelta(days=1700)).isoformat()
 _PROFILE = "6f1d1c9e-1f0b-4b8e-9d4c-2a0d7f3e5b11"
 _DIGEST = "c" * 64
 _OPERATION = "e" * 64
@@ -87,6 +95,8 @@ class _Port:
     error: BaseException | None = None
     read_error: BaseException | None = None
     changes: list[HouseholdRowChange] = field(default_factory=list)
+    drafts: list[dict[str, str]] = field(default_factory=list)
+    draft_error: BaseException | None = None
     reads: int = 0
 
     def read(self) -> HouseholdView:
@@ -102,6 +112,16 @@ class _Port:
         assert self.after is not None
         self.current = self.after
         return self.after
+
+    def read_draft(self, group_key: str, answers: Mapping[str, str], /) -> tuple[ProfileFamilyLeafAskEntry, ...]:
+        self.drafts.append(dict(answers))
+        if self.draft_error is not None:
+            raise self.draft_error
+        # The backend's own resolver, as the profile view serves it for an unsaved row.
+        with bundled_indexed_authority().operation() as authority:
+            item = family_draft_item(group_key, answers, operation=authority)
+        assert item is not None
+        return item.leaf_asks
 
     def accepts(self, operation_id: str, /) -> bool:
         return operation_id in {"user-profile.descendants", "user-profile.ascendants"}
@@ -120,36 +140,6 @@ def _run_error(effect: OperationEffect | None, condition: OperationTerminalCondi
 
 def _buttons(screen: HouseholdScreen) -> dict[str, Button]:
     return {str(button.label): button for button in screen.query(Button).results(Button)}
-
-
-def test_a_leaf_is_asked_only_while_an_answer_it_is_served_after_holds() -> None:
-    def leaf(key: str, *conditions: ProfileFamilyLeafCondition) -> ProfileFamilyLeaf:
-        return ProfileFamilyLeaf(
-            leaf=key,
-            label=key,
-            help=None,
-            field_type=ProfileFieldType.STRING,
-            required=False,
-            choices=(),
-            shown_when=conditions,
-        )
-
-    leaves = (
-        leaf("relacion"),
-        leaf("inscripcion", ProfileFamilyLeafCondition(leaf="relacion", equals="adoptado")),
-        leaf("meses", ProfileFamilyLeafCondition(leaf="relacion", contains="b")),
-        leaf("nested", ProfileFamilyLeafCondition(leaf="inscripcion", equals="x")),
-    )
-
-    def asked(answers: Mapping[str, str]) -> list[str]:
-        return [item.leaf for item in shown_leaves(leaves, answers)]
-
-    assert asked({}) == ["relacion"]
-    assert asked({"relacion": "adoptado"}) == ["relacion", "inscripcion"]
-    assert asked({"relacion": "a, b"}) == ["relacion", "meses"]
-    assert asked({"relacion": "adoptado", "inscripcion": "x"}) == ["relacion", "inscripcion", "nested"]
-    # An answer to a leaf no longer asked counts for nothing.
-    assert asked({"relacion": "other", "inscripcion": "x"}) == ["relacion"]
 
 
 @pytest.mark.parametrize(
@@ -211,34 +201,70 @@ async def test_a_group_at_its_design_limit_serves_no_add_and_says_it_is_full() -
         assert tr("flows.manager.household.full") in text
 
 
+def _relation_tokens() -> tuple[str, str]:
+    """The adoption token, which asks for the registry date, and one relation that asks for no date."""
+    with bundled_indexed_authority().operation() as authority:
+        adoption = descendant_relacion_adoption_token(authority=authority).value
+        entitling = {token.value for token in descendant_relacion_entitling_tokens(authority=authority)}
+        plain = next(
+            token.value for token in descendant_relacion_tokens(authority=authority) if token.value not in entitling
+        )
+    return adoption, plain
+
+
+async def _open_descendant_form(pilot: Pilot[bool | None], screen: HouseholdScreen) -> HouseholdPersonScreen:
+    await settle_until(pilot, lambda: screen.view is not None, "the household read")
+    assert screen.view is not None
+    group = _group(screen.view, _DESCENDANTS).group
+    assert group.add_row_action is not None
+    _buttons(screen)[group.add_row_action.action_words].press()
+    await settle_until(pilot, lambda: isinstance(pilot.app.screen, HouseholdPersonScreen), "the new-person form")
+    form = pilot.app.screen
+    assert isinstance(form, HouseholdPersonScreen)
+    return form
+
+
+def _choose(form: HouseholdPersonScreen, group: ProfileViewFamilyGroupItem, leaf: str, value: str) -> None:
+    keys = [item.leaf for item in group.leaves]
+    choices = [choice.value for choice in group.leaves[keys.index(leaf)].choices]
+    form.query_one(f"#household-option-{keys.index(leaf)}", OptionList).highlighted = choices.index(value)
+
+
+def _type(form: HouseholdPersonScreen, group: ProfileViewFamilyGroupItem, leaf: str, text: str) -> None:
+    form.query_one(f"#household-input-{[item.leaf for item in group.leaves].index(leaf)}", Input).value = text
+
+
+def _shown(form: HouseholdPersonScreen, group: ProfileViewFamilyGroupItem) -> set[str]:
+    return {
+        leaf.leaf
+        for index, leaf in enumerate(group.leaves)
+        if form.query_one(f"#household-leaf-{index}", Vertical).display
+    }
+
+
 @pytest.mark.asyncio
-async def test_a_new_person_states_only_the_asked_leaves_through_the_served_add() -> None:
+async def test_a_new_person_states_only_the_leaves_the_backend_serves_as_asked_through_the_served_add() -> None:
     view = _view({})
     descendants = _group(view, _DESCENDANTS).group
-    assert descendants.add_row_action is not None
+    adoption, _plain = _relation_tokens()
     after = _view(
         {"renta_family.descendientes_count": "1", "renta_family.descendiente.0.birth_date": "2020-01-02"}, revision=4
     )
     port = _Port(view, after=after)
     screen = HouseholdScreen(port)
     async with ScreenHostApp(screen).run_test(size=(140, 60)) as pilot:
-        await settle_until(pilot, lambda: screen.view is not None, "the household read")
-        _buttons(screen)[descendants.add_row_action.action_words].press()
-        await settle_until(pilot, lambda: isinstance(pilot.app.screen, HouseholdPersonScreen), "the new-person form")
-        form = pilot.app.screen
-        assert isinstance(form, HouseholdPersonScreen)
-        conditional = next(leaf for leaf in descendants.leaves if leaf.shown_when)
-        condition = conditional.shown_when[0]
-        assert condition.equals is not None
-        assert conditional.leaf not in {leaf.leaf for leaf in form.asked()}
-        leaves = [leaf.leaf for leaf in descendants.leaves]
-        on = descendants.leaves[leaves.index(condition.leaf)]
-        options = form.query_one(f"#household-option-{leaves.index(condition.leaf)}", OptionList)
-        options.highlighted = [choice.value for choice in on.choices].index(condition.equals)
+        form = await _open_descendant_form(pilot, screen)
+        # A blank person is shown as the group served it: nothing waits on an answer that is not given.
+        asked_blank = {entry.leaf for entry in descendants.new_row_leaves if entry.ask is ProfileFamilyLeafAsk.ASKED}
+        assert _shown(form, descendants) == asked_blank
+        assert "inscripcion_registro_civil" not in asked_blank and port.drafts == []
+        _choose(form, descendants, "relacion", adoption)
         await settle_until(
-            pilot, lambda: conditional.leaf in {leaf.leaf for leaf in form.asked()}, "the conditional leaf asked"
+            pilot, lambda: "inscripcion_registro_civil" in _shown(form, descendants), "the registry date asked"
         )
-        form.query_one(f"#household-input-{leaves.index('birth_date')}", Input).value = "2020-01-02"
+        assert port.drafts == [{"relacion": adoption}]
+        _type(form, descendants, "birth_date", _BORN)
+        await settle_until(pilot, lambda: len(port.drafts) == 2, "the asks read again")
         form.query_one("#household-person-save", Button).press()
         await settle_until(pilot, lambda: bool(port.changes) and screen.view is after, "the person added")
     assert port.changes == [
@@ -246,9 +272,67 @@ async def test_a_new_person_states_only_the_asked_leaves_through_the_served_add(
             operation_id="user-profile.descendants",
             expected_revision=3,
             expected_content_digest=_DIGEST,
-            add_row={"birth_date": "2020-01-02", condition.leaf: condition.equals or ""},
+            add_row={"birth_date": _BORN, "relacion": adoption},
         )
     ]
+
+
+@pytest.mark.asyncio
+async def test_a_dependent_leaf_is_asked_again_once_the_answer_it_waits_on_is_given() -> None:
+    view = _view({})
+    descendants = _group(view, _DESCENDANTS).group
+    port = _Port(view)
+    screen = HouseholdScreen(port)
+    async with ScreenHostApp(screen).run_test(size=(140, 60)) as pilot:
+        form = await _open_descendant_form(pilot, screen)
+        assert "dependencia_economica" not in _shown(form, descendants)
+        _choose(form, descendants, "convivencia", "false")
+        await settle_until(pilot, lambda: "dependencia_economica" in _shown(form, descendants), "dependence asked")
+        _choose(form, descendants, "convivencia", "true")
+        await settle_until(pilot, lambda: "dependencia_economica" not in _shown(form, descendants), "dependence gone")
+    assert port.drafts == [{"convivencia": "false"}, {"convivencia": "true"}]
+
+
+@pytest.mark.asyncio
+async def test_save_pressed_before_the_asks_are_read_waits_for_them_and_drops_a_leaf_not_asked() -> None:
+    view = _view({})
+    descendants = _group(view, _DESCENDANTS).group
+    _adoption, plain = _relation_tokens()
+    after = _view(
+        {"renta_family.descendientes_count": "1", "renta_family.descendiente.0.birth_date": _BORN}, revision=4
+    )
+    port = _Port(view, after=after)
+    screen = HouseholdScreen(port)
+    async with ScreenHostApp(screen).run_test(size=(140, 60)) as pilot:
+        form = await _open_descendant_form(pilot, screen)
+        _type(form, descendants, "birth_date", _BORN)
+        # Typed while the leaf was hidden: the backend, not the form, decides it counts for nothing.
+        _type(form, descendants, "inscripcion_registro_civil", _ENTRY)
+        _choose(form, descendants, "relacion", plain)
+        form.query_one("#household-person-save", Button).press()
+        await settle_until(pilot, lambda: bool(port.changes) and screen.view is after, "the person added")
+    assert port.drafts
+    assert port.changes[0].add_row == {"birth_date": _BORN, "relacion": plain}
+
+
+@pytest.mark.asyncio
+async def test_asks_that_cannot_be_read_are_told_and_nothing_is_sent() -> None:
+    view = _view({})
+    descendants = _group(view, _DESCENDANTS).group
+    adoption, _plain = _relation_tokens()
+    port = _Port(view, draft_error=RuntimeError("runtime unavailable"))
+    screen = HouseholdScreen(port)
+    async with ScreenHostApp(screen).run_test(size=(140, 60)) as pilot:
+        form = await _open_descendant_form(pilot, screen)
+        refusal = form.query_one("#household-person-refusal", Static)
+        _type(form, descendants, "birth_date", _BORN)
+        _choose(form, descendants, "relacion", adoption)
+        await settle_until(
+            pilot, lambda: str(refusal.render()) == tr("flows.manager.household.read_failed"), "the read failure told"
+        )
+        form.query_one("#household-person-save", Button).press()
+        await settle_until(pilot, lambda: len(port.drafts) >= 2, "the asks read once more")
+    assert port.changes == []
 
 
 @pytest.mark.asyncio

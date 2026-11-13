@@ -117,7 +117,7 @@ def visible_sequence(definition: FlowDefinition, state: FlowState) -> tuple[Visi
     for section in definition.sections:
         for item in section.items:
             if isinstance(item, FlowPage):
-                if _page_visible(item, state.answers, instance_prefix=None):
+                if page_visible(item, state.answers, instance_prefix=None):
                     result.append(VisiblePage(key=item.id, page=item, section_id=section.id))
                 continue
             result.extend(_visible_group_pages(item, state, section_id=section.id))
@@ -148,7 +148,7 @@ def _visible_group_pages(
                 instance_index=index,
             )
             for page in group.pages
-            if _page_visible(page, state.answers, instance_prefix=prefix)
+            if page_visible(page, state.answers, instance_prefix=prefix)
         )
     return pages
 
@@ -294,7 +294,7 @@ def page_status(state: FlowState, page_key: str) -> PageStatus:
     return PageStatus.ANSWERED
 
 
-def _page_visible(
+def page_visible(
     page: FlowPage,
     answers: Mapping[str, str],
     *,

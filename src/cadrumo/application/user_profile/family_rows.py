@@ -32,7 +32,10 @@ so a surface offers no more people than the declaration can carry.
 
 ``leaves`` is also the form of a new row: a surface adding a person offers exactly
 those leaves, with their words, types, answer sets and the answers of other leaves
-each one is asked after (``shown_when``). ``add_row_action`` and ``remove_row_action``
+each one is asked after (``shown_when``). ``new_row_leaves`` and each row's ``leaf_asks``
+say, per leaf, whether that row is asked it now: the flow engine's own visibility rule
+resolved on the row's stated answers, where a leaf whose governing leaf is itself not asked
+is never asked, so a surface renders the answer and evaluates no condition. ``add_row_action`` and ``remove_row_action``
 serve the words of the two controls and the registered operation that composes the
 change against the read's revision: the group's replacement operation takes one new
 row (``add_row``) or the ``row_index`` of a served row to remove (``remove_row_index``),
@@ -48,7 +51,7 @@ contributions after the child's birth, which a descendant row stores and the Mod
 from __future__ import annotations
 
 import re
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from decimal import Decimal, InvalidOperation
 from enum import StrEnum
 from typing import TYPE_CHECKING, Final, Literal
@@ -62,7 +65,8 @@ from ...domain.calculations.registry.descendant_disability_catalogue import acce
 from ...domain.user_profile.labels import profile_field_label_key
 from ...domain.user_profile.schema import ProfileFieldType
 from ..flows.copy import resolve_copy, resolve_optional_copy
-from ..flows.definition import FlowCondition, FlowPage, FlowVisibility
+from ..flows.definition import FlowCondition, FlowPage, FlowVisibility, iter_flow_conditions
+from ..flows.engine import page_visible
 from ..wizard.descendant_group import build_descendant_group
 from .completeness import profile_value_is_present
 from .household_row_limit import declared_household_row_limit
@@ -168,6 +172,29 @@ class ProfileFamilyLeafCondition(BaseModel):
     contains: str | None = None
 
 
+class ProfileFamilyLeafAsk(StrEnum):
+    """Whether a row is asked one leaf now.
+
+    ``asked``: the leaf has no condition, or its condition holds and its governing leaves
+    are asked. ``not_asked``: every governing leaf is answered and the condition fails, or a
+    governing leaf is not asked. ``awaits_answer``: the condition does not hold and a
+    governing leaf has no answer yet. A fact stored on a ``not_asked`` leaf stays stored.
+    """
+
+    ASKED = "asked"
+    NOT_ASKED = "not_asked"
+    AWAITS_ANSWER = "awaits_answer"
+
+
+class ProfileFamilyLeafAskEntry(BaseModel):
+    """The ask resolved for one leaf of a row."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    leaf: str
+    ask: ProfileFamilyLeafAsk
+
+
 class ProfileFamilyLeaf(BaseModel):
     """One fact a row can state: its stored key, its words and its answer set."""
 
@@ -223,6 +250,8 @@ class ProfileViewFamilyGroupItem(BaseModel):
     add_row_action: ProfileFamilyRowAction | None = None
     #: Removes one served row named by its ``row_index``; absent when no row is stored.
     remove_row_action: ProfileFamilyRowAction | None = None
+    #: The ask of every leaf for a blank new row, in ``leaves`` order.
+    new_row_leaves: tuple[ProfileFamilyLeafAskEntry, ...] = ()
 
 
 class ProfileViewFamilyRowItem(BaseModel):
@@ -234,6 +263,18 @@ class ProfileViewFamilyRowItem(BaseModel):
     group_key: str
     row_index: str
     facts: tuple[ProfileFamilyRowFact, ...]
+    #: The ask of every leaf of the group for this row's stored answers, in ``leaves`` order.
+    leaf_asks: tuple[ProfileFamilyLeafAskEntry, ...] = ()
+
+
+class ProfileViewFamilyDraftItem(BaseModel):
+    """The asks of one row as an unsaved edit states it; no value the edit holds is served back."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    kind: Literal["family_draft"] = "family_draft"
+    group_key: str
+    leaf_asks: tuple[ProfileFamilyLeafAskEntry, ...]
 
 
 type ProfileFamilyItem = ProfileViewFamilyGroupItem | ProfileViewFamilyRowItem
@@ -270,9 +311,52 @@ def _leaf(page: FlowPage) -> ProfileFamilyLeaf:
     )
 
 
-def _descendant_leaves(operation: PinnedAuthorityOperation) -> tuple[ProfileFamilyLeaf, ...]:
+def _parent_unanswered(page_id: str, answers: Mapping[str, str], asks: Mapping[str, ProfileFamilyLeafAsk]) -> bool:
+    ask = asks.get(page_id)
+    return ask is ProfileFamilyLeafAsk.AWAITS_ANSWER or (ask is ProfileFamilyLeafAsk.ASKED and page_id not in answers)
+
+
+def _page_ask(
+    page: FlowPage, answers: Mapping[str, str], asks: Mapping[str, ProfileFamilyLeafAsk]
+) -> ProfileFamilyLeafAsk:
+    """One page's ask: the engine's gate over the answers of the leaves that are themselves asked."""
+    if page.visible_when is None:
+        return ProfileFamilyLeafAsk.ASKED
+    asked_answers = {
+        page_id: value for page_id, value in answers.items() if asks.get(page_id) is ProfileFamilyLeafAsk.ASKED
+    }
+    if page_visible(page, asked_answers, instance_prefix=None):
+        return ProfileFamilyLeafAsk.ASKED
+    parents = {clause.page_id for clause in iter_flow_conditions(page.visible_when)}
+    if any(_parent_unanswered(parent, answers, asks) for parent in parents):
+        return ProfileFamilyLeafAsk.AWAITS_ANSWER
+    return ProfileFamilyLeafAsk.NOT_ASKED
+
+
+def resolve_leaf_asks(
+    pages: tuple[FlowPage, ...], leaf_keys: Sequence[str], row: Mapping[str, str]
+) -> tuple[ProfileFamilyLeafAskEntry, ...]:
+    """Resolve the ask of each of ``leaf_keys`` for one row's answers; a page with no page is always asked.
+
+    ``pages`` come in dependency order: a page is resolved after the pages it is gated on.
+    """
+    answers = {
+        page.id: row[_leaf_key(page.id)]
+        for page in pages
+        if _leaf_key(page.id) in row and profile_value_is_present(row[_leaf_key(page.id)])
+    }
+    asks: dict[str, ProfileFamilyLeafAsk] = {}
+    for page in pages:
+        asks[page.id] = _page_ask(page, answers, asks)
+    by_leaf = {_leaf_key(page_id): ask for page_id, ask in asks.items()}
+    return tuple(
+        ProfileFamilyLeafAskEntry(leaf=leaf, ask=by_leaf.get(leaf, ProfileFamilyLeafAsk.ASKED)) for leaf in leaf_keys
+    )
+
+
+def _descendant_leaves(pages: tuple[FlowPage, ...]) -> tuple[ProfileFamilyLeaf, ...]:
     """The wizard's descendant pages, with the stored contributions leaf after the nursery spend."""
-    wizard = [_leaf(page) for page in build_descendant_group(operation).pages]
+    wizard = [_leaf(page) for page in pages]
     cotizaciones = ProfileFamilyLeaf(
         leaf=_DESCENDANT_COTIZACIONES_LEAF,
         label=tr(_DESCENDANT_COTIZACIONES_LABEL_LOCALE_KEY),
@@ -420,6 +504,7 @@ def _row_items(
     stored: Mapping[int, Mapping[str, str]],
     *,
     group_key: str,
+    pages: tuple[FlowPage, ...],
     leaves: tuple[ProfileFamilyLeaf, ...],
     declared: ProfileFieldDefinition,
 ) -> tuple[ProfileViewFamilyRowItem, ...]:
@@ -440,6 +525,7 @@ def _row_items(
                 for leaf in order
                 if leaf in row
             ),
+            leaf_asks=resolve_leaf_asks(pages, order, {leaf: values[path] for leaf, path in row.items()}),
         )
         for index, row in sorted(stored.items())
     )
@@ -465,6 +551,7 @@ def _group_items(
     *,
     field_key: str,
     count_path: str,
+    pages: tuple[FlowPage, ...],
     leaves: tuple[ProfileFamilyLeaf, ...],
     operation: PinnedAuthorityOperation,
     actions: tuple[str, str, str],
@@ -495,8 +582,9 @@ def _group_items(
         leaves=leaves,
         add_row_action=add_row_action,
         remove_row_action=remove_row_action,
+        new_row_leaves=resolve_leaf_asks(pages, [leaf.leaf for leaf in leaves], {}),
     )
-    rows = _row_items(values, stored, group_key=group.group_key, leaves=leaves, declared=declared)
+    rows = _row_items(values, stored, group_key=group.group_key, pages=pages, leaves=leaves, declared=declared)
     return (group, *rows)
 
 
@@ -507,13 +595,15 @@ def family_row_items(
     operation: PinnedAuthorityOperation,
 ) -> tuple[ProfileFamilyItem, ...]:
     """Return every household group, each followed by its stored rows, in a fixed order."""
+    descendant_pages = build_descendant_group(operation).pages
     return (
         *_group_items(
             values,
             schema,
             field_key=_DESCENDANT_FIELD_KEY,
             count_path=_DESCENDANT_COUNT_PATH,
-            leaves=_descendant_leaves(operation),
+            pages=descendant_pages,
+            leaves=_descendant_leaves(descendant_pages),
             operation=operation,
             actions=(
                 PROFILE_DESCENDANTS_OPERATION_DEFINITION_ID,
@@ -526,6 +616,7 @@ def family_row_items(
             schema,
             field_key=_ASCENDANT_FIELD_KEY,
             count_path=_ASCENDANT_COUNT_PATH,
+            pages=(),
             leaves=_ascendant_leaves(operation),
             operation=operation,
             actions=(
@@ -534,4 +625,26 @@ def family_row_items(
                 _REMOVE_ASCENDANT_LOCALE_KEY,
             ),
         ),
+    )
+
+
+def family_draft_item(
+    group_key: str, answers: Mapping[str, str], *, operation: PinnedAuthorityOperation
+) -> ProfileViewFamilyDraftItem | None:
+    """Resolve the asks of one row as an unsaved edit states it; ``None`` for a group or leaf not served.
+
+    ``answers`` maps leaf keys to the values the edit holds. No stored profile is read or
+    written, and no value is returned: only the asks the values resolve to.
+    """
+    descendant_pages = build_descendant_group(operation).pages
+    served: dict[str, tuple[tuple[FlowPage, ...], tuple[ProfileFamilyLeaf, ...]]] = {
+        f"{_SECTION_KEY}.{_DESCENDANT_FIELD_KEY}": (descendant_pages, _descendant_leaves(descendant_pages)),
+        f"{_SECTION_KEY}.{_ASCENDANT_FIELD_KEY}": ((), _ascendant_leaves(operation)),
+    }
+    group = served.get(group_key)
+    if group is None or not set(answers) <= {leaf.leaf for leaf in group[1]}:
+        return None
+    pages, leaves = group
+    return ProfileViewFamilyDraftItem(
+        group_key=group_key, leaf_asks=resolve_leaf_asks(pages, [leaf.leaf for leaf in leaves], answers)
     )
