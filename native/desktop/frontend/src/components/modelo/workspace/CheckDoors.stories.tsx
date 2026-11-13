@@ -51,6 +51,8 @@ function Doors({
         status: null,
         words: "Synthetic verdict.",
         unapplied_words: null,
+        checked_words: null,
+        checked_resolves: false,
       }}
       lines={lines}
       stagedCount={0}

@@ -26,9 +26,11 @@ import type {
   ModeloFormBindingStatement,
   ModeloFormCarryAttestation,
   ModeloFormPriorValueWithdrawal,
-  PublicModeloFormPriorValueAttestation,
 } from "../../../shell/modeloContract/modeloWorkForm";
-import type { PublicModeloWorkForm } from "../../../shell/modeloContract/modeloWorkFormPart2";
+import type {
+  PublicModeloFormPriorValueAttestation,
+  PublicModeloWorkForm,
+} from "../../../shell/modeloContract/modeloWorkFormPart2";
 import { takesEntry } from "./entryField";
 
 // The form's working state: the edits staged on it and the box chosen. It
