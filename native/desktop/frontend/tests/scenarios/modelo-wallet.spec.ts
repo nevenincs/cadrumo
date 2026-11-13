@@ -376,13 +376,14 @@ test("closing a pending wallet dialog keeps its owner visible and does not imply
   await page.evaluate(() => {
     window.__walletTest!.release!();
   });
-  const notice = page.locator(".modelo-write-hold");
-  await expect(notice).toBeVisible();
-  await notice
-    .getByRole("button", { name: label("workspace.modelo.read_again") })
-    .click();
-  await expect(notice).toHaveCount(0);
+  // The window's own write settled after its dialog had gone: it reads the
+  // balance and the declaration itself, with no control to press.
   await expect(fact(wallet(page), "lot_count")).toHaveText("1");
+  await expect(page.locator(".modelo-write-hold")).toHaveCount(0);
+  const sent = await page.evaluate(() => window.__walletTest!.sent);
+  expect(
+    sent.filter((call) => call.definition === "modelo.iva-wallet.seed"),
+  ).toHaveLength(1);
 });
 
 test("an unknown wallet write survives dialog close and requires both balance and declaration recovery", async ({
