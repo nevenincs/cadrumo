@@ -148,7 +148,6 @@ _M202_PAGO_OUTPUT_40_2: CasillaId = validated_casilla_id(
 )  # modalidad cuota (art. 40.2); folds alongside casilla 34
 _M200_CUOTA_EJERCICIO: CasillaId = validated_casilla_id("DP200014B:00599", surface="_M200_CUOTA_EJERCICIO")
 _M202_CUOTA_BASE_BINDING = "modelo-202-cuota-base-ejercicio-anterior"
-_M202_PAGOS_ANTERIORES_BINDING = "modelo-202-pagos-fraccionados-anteriores"
 
 # Bound casillas on the M202/2025 revision under test.
 _CASILLA_BASE: CasillaId = validated_casilla_id(
@@ -485,10 +484,10 @@ def test_m202_2p_no_prior_filing_refuses_zero_draft_on_live_calculate(
     assert context is not None
     missing_bindings = context["missing_bindings"]
     assert isinstance(missing_bindings, tuple)
-    assert set(missing_bindings) == {
-        _M202_CUOTA_BASE_BINDING,
-        _M202_PAGOS_ANTERIORES_BINDING,
-    }
+    # The persona pays by the cuota modality (LIS art. 40.2): its instalment is a share of the last
+    # cuota and deducts no earlier instalment, which only the base-imponible modality (art. 40.3)
+    # subtracts, so the absent prior return leaves only the cuota base unresolved.
+    assert set(missing_bindings) == {_M202_CUOTA_BASE_BINDING}
     assert cr_repo.load().revisions == {}
     stored_work_unit = wu_repo.load().get(work_unit.work_unit_id)
     assert stored_work_unit is not None
