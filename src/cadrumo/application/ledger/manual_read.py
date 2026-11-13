@@ -218,6 +218,11 @@ def ledger_transaction_payload(transaction: Transaction) -> LedgerTransactionPay
         m210_income_classification=transaction.m210_income_classification,
         usage_ratio_id=transaction.usage_ratio_id,
         prorrata_reference=transaction.prorrata_reference,
+        arrendamiento_ref=transaction.arrendamiento_ref,
+        inmueble_ref=transaction.inmueble_ref,
+        gasto_capital_inmobiliario=(
+            None if transaction.gasto_capital_inmobiliario is None else str(transaction.gasto_capital_inmobiliario)
+        ),
         purchase_invoice_evidence_id=transaction.purchase_invoice_evidence_id,
         invoice_id=transaction.invoice_id,
         attachment_ids=transaction.attachment_ids,

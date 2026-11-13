@@ -507,6 +507,11 @@ class LedgerTransactionPayload(_LedgerCountryCodeModel):
     m210_income_classification: M210IncomeClassification | None = None
     usage_ratio_id: str | None = None
     prorrata_reference: str | None = None
+    # The rental links the row stores: the stable key of the lease an income row belongs to, or of the
+    # property an expense row belongs to with the expense concept token it is routed by. Never row indexes.
+    arrendamiento_ref: str | None = None
+    inmueble_ref: str | None = None
+    gasto_capital_inmobiliario: str | None = None
     purchase_invoice_evidence_id: str | None = None
     invoice_id: str | None = None
     attachment_ids: tuple[str, ...] = ()

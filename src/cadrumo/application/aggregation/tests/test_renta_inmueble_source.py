@@ -174,7 +174,7 @@ def test_a_part_year_lease_counts_its_days_and_prorates_the_expenses_by_them() -
     assert occurrence.dias_arrendado == let
     assert occurrence.ingresos == _RENT * 6
     assert occurrence.gasto("comunidad") == _cents(_COMUNIDAD * let / in_year)
-    assert RentaInmuebleCause.DAYS_NOT_LET in _causes(built)
+    assert RentaInmuebleCause.DAYS_UNACCOUNTED in _causes(built)
     assert not built.refused
 
 
@@ -457,7 +457,7 @@ def test_each_deferred_case_keeps_its_rows_and_blocks_filing() -> None:
             [lease(start=start), lease(1, start=date(year, 6, 1))],
             (*rows, *monthly_rent(year, amount=_RENT, lease_clave=1, months=range(6, 13))),
         ),
-        RentaInmuebleCause.DAYS_NOT_LET: ([inmueble(ejercicio=year)], [], ()),
+        RentaInmuebleCause.DAYS_UNACCOUNTED: ([inmueble(ejercicio=year)], [], ()),
     }
     for cause, (inmuebles, leases, case_rows) in cases.items():
         assert cause in _blocking(year, inmuebles, leases, case_rows), cause

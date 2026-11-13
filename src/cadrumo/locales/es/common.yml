@@ -6620,6 +6620,7 @@ sheets:
       dias_miembro: Número de días como miembro
       direccion: Dirección
       disability_clave: Discapacidad
+      disposicion: A disposición
       domicilio_fiscal: Domicilio fiscal del miembro
       donor_legal_name: Nombre o razón social del donante
       donor_tax_id: NIF del donante
@@ -6675,6 +6676,10 @@ sheets:
       importe_q3: Importe 3T
       importe_q4: Importe 4T
       importe_total: Importe total
+      imputacion_dias: Días a disposición
+      imputacion_porcentaje_disposicion: Disposición (%)
+      imputacion_valor_catastral: Valor catastral (imputación)
+      imputacion_valor_catastral_revisado: Valor catastral revisado
       incapacity_cash_perception: Percepción dineraria derivada de incapacidad laboral
       incapacity_cash_withholding: Retención sobre prestaciones de incapacidad laboral
       incapacity_kind_ingreso_a_cuenta: Ingresos a cuenta por prestaciones en especie
@@ -6770,6 +6775,7 @@ sheets:
         objetiva)
       rendimiento_neto_previo_eo: Rendimiento neto previo (estimación objetiva)
       rendimiento_neto_reducido: Rendimiento neto reducido
+      renta_imputada: Renta imputada
       representative_nif: NIF del representante
       representative_tax_id: NIF del representante legal
       residence_country_code: Código de país de residencia
@@ -7219,6 +7225,7 @@ tui:
     home: Inicio
     installation: Instalación
     ledger: Registros
+    operaciones_vinculadas: Operaciones vinculadas
     operations: Operaciones
     profile: Perfil
     reference: Referencia
@@ -9416,6 +9423,55 @@ tui:
       refused: Se ha rechazado lo que has indicado.
       sending: Enviando lo que has indicado...
       year_label: Año del periodo
+  operaciones_vinculadas:
+    action:
+      read: Leer
+      state_none: Declarar que no hubo ninguna
+      state_operation: Declarar una operación
+      state_turnover: Declarar la cifra de negocios
+      withdraw_none: Retirar la declaración seleccionada
+      withdraw_operation: Retirar la operación seleccionada
+      withdraw_turnover: Retirar la cifra de negocios seleccionada
+    column:
+      amount: Importe (EUR)
+      counterparty: Contraparte
+      country: País
+      direction: Sentido
+      exclusion: Excluida
+      ground: Supuesto
+      ground_state: Resultado
+      kind: Clase
+      largest_total: Mayor total (EUR)
+      limit: Límite (EUR)
+      note: Nota
+      operation_type: Tipo
+      reference: Referencia
+      source: Origen
+      state: Estado
+      stated_on: Declarada el
+      turnover: Cifra de negocios (EUR)
+    ejercicio: Ejercicio
+    none:
+      title: Declaraciones de ausencia de operaciones
+    operations:
+      title: Operaciones
+    prompt: Escribe un ejercicio y léelo para ver sus registros del Modelo 232 y lo
+      que deciden.
+    status:
+      choose_active: Selecciona primero un registro vigente.
+      ejercicio_invalid: Escribe el ejercicio con cuatro cifras.
+      empty: No hay nada declarado para %{ejercicio}.
+      read_failed: No se han podido leer los registros.
+      read_first: Lee primero un ejercicio.
+      reading: Leyendo…
+    turnover:
+      title: Cifra de negocios
+    verdict:
+      counts: 'Operaciones computadas: %{counted}. Operaciones excluidas: %{excluded},
+        por un total de %{excluded_total} EUR.'
+      title: Lo que deciden tus registros
+      unsupported: Para este ejercicio no se puede deducir de tus registros ninguna
+        decisión sobre el Modelo 232.
   operations:
     action:
       close: Cerrar
@@ -9705,6 +9761,7 @@ tui:
       home: Abrir Inicio
       installation: Abrir Instalación
       ledger: Abrir Registros
+      operaciones_vinculadas: Abrir Operaciones vinculadas
       operations: Abrir Operaciones
       profile: Abrir Perfil
       reference: Abrir Referencia
@@ -9720,6 +9777,8 @@ tui:
       installation: Almacenamiento, reparación, restablecimiento y los perfiles de
         este equipo
       ledger: Apuntes, revisión, clasificación y justificantes
+      operaciones_vinculadas: Declarar, consultar y retirar los registros del Modelo
+        232 de un ejercicio y ver qué deciden
       operations: Todas las operaciones que Cadrumo puede ejecutar, para buscarlas,
         rellenarlas y ejecutarlas
       profile: Los datos de este perfil y los orígenes que los completan
@@ -9905,6 +9964,9 @@ workspace:
         verdict:
           attribution_pass_through: 'No la presenta la propia entidad: las rentas
             se atribuyen a sus miembros, que las declaran en sus propias declaraciones.'
+          incomplete: 'Sin decidir: con los datos guardados no se puede saber si esta
+            declaración te corresponde. No cuenta como obligatoria ni como excluida
+            hasta que completes esos datos.'
           not_applicable: 'No te corresponde: tu perfil no exige esta declaración
             en este periodo.'
       title: Calendario fiscal
