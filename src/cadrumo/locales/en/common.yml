@@ -156,6 +156,15 @@ aggregation:
       supplier_regime_observations_outside_period: The IVA aggregation carries observations
         dated outside the requested filing period.
   modelo_232_related_party:
+    basis:
+      contradiction: A statement of no operations stands beside an operation in force,
+        so nothing is decided.
+      none_stated: You stated that this year had no related-party or tax-haven operations.
+      nothing_stated: You have stated nothing for this year.
+      operations_stated: You stated operations for this year.
+    direction:
+      ingreso: Income (I)
+      pago: Payment (P)
     errors:
       already_stated: This statement is already in force for that year. Withdraw it
         before you state it again.
@@ -169,8 +178,57 @@ aggregation:
         is not in force.
       operations_present: This year has operations in force. Withdraw them before
         you state that there were none.
+      specific_operation_required: This operation type is always a specific operation
+        under the Modelo 232 rules. State this operation as specific.
       stale_revision: This Modelo 232 statement changed since you read it. Read it
         again and retry.
+      validation: The statement's fields do not form a Modelo 232 statement of that
+        kind. Check the options that kind needs and the ones it does not take.
+    exclusion:
+      aie_or_registered_ute: AIE or registered UTE with its members (art. 2.2.b)
+      consolidation_group: Within a tax consolidation group (art. 2.2.a)
+      public_offer: Within a public offer of securities (art. 2.2.c)
+    ground:
+      intangibles_reduction: Reduction for assigning intangible assets (art. 2.4)
+      same_related_party: Operations with one related person or entity (art. 2.1.a)
+      specific_operation_type: Specific operations of one type (art. 2.1.b)
+      tax_haven: Operations or securities in a tax haven (art. 2.5)
+      turnover_share: Operations of one type and valuation method against turnover
+        (art. 2.3)
+    ground_state:
+      met: Met
+      not_met: Not met
+      undecided: Undecided
+    obligation:
+      not_owed: Your records show that you do not have to file Modelo 232.
+      owed: Your records show that you must file Modelo 232.
+      undecided: Your records do not yet decide whether you must file Modelo 232.
+    operation_kind:
+      intangibles_reduction: Income with the reduction for assigning intangible assets
+        (LIS art. 23)
+      related_party: Operation with a related person or entity
+      tax_haven_holding: Securities held in a tax haven
+      tax_haven_operation: Operation with a tax haven
+    served:
+      already_stated: A statement of this kind is already in force for this year.
+        Withdraw it before you state it again.
+      code_unknown: A relationship type, operation type or valuation method is not
+        one the Modelo 232 design publishes for this year.
+      ejercicio_unsupported: This year is outside the filing years Cadrumo supports.
+      none_stated: You stated that this year had no related-party or tax-haven operations.
+        Withdraw that statement before you add an operation.
+      not_stated: There is no statement in force here to withdraw.
+      operations_present: This year has operations in force. Withdraw them before
+        you state that there were none.
+      specific_operation_required: This operation type is always a specific operation
+        under the Modelo 232 rules, so it must be stated as specific.
+      stale_revision: These Modelo 232 records changed since you read them. Read them
+        again and retry.
+      validation: The details given do not form a Modelo 232 statement of this kind.
+        Check which details this kind needs.
+    state:
+      active: In force
+      withdrawn: Withdrawn
   modelo_bindings:
     errors:
       invoice_advance_payment_partially_collected: An invoice records an advance payment
@@ -5334,6 +5392,21 @@ filing:
       pays_rent_with_retencion: pays rent subject to withholding
       pays_withheld_income: pays income subject to withholding
       trades_intracommunity: carries out intra-community transactions
+    records_derived_basis: 'This is a local derivation from the Modelo 232 operations
+      you stated, not an official AEAT value: for this year they show that the taxpayer
+      %{fact}.'
+    records_derived_basis_not_met: 'This is a local derivation from the Modelo 232
+      operations you stated, not an official AEAT value: for this year they do not
+      show that the taxpayer %{fact}.'
+    records_excluded_operations: 'Operations you stated that Orden HFP/816/2017 art.
+      2.2 excludes were left out of every total: %{count}, together %{amount} EUR.'
+    records_turnover_considered: The turnover considered for this year is %{amount}
+      EUR, taken from %{source}.
+    records_turnover_source:
+      annual_accounts: your annual accounts
+      corporation_tax_return: your corporation tax return
+      operator_estimate: your own estimate
+      vat_returns: your VAT returns
   validation:
     deadline_missed: Submission deadline has passed
     formula_divergence: Divergence in formula calculation
@@ -6307,6 +6380,8 @@ sheets:
       amortizacion: Depreciation
       amount: Amount
       amount_donated: Amount donated
+      anexo_c1_referencia_catastral: Cadastral reference (annex C.1)
+      anexo_c1_titular: Property holder (annex C.1)
       anualidades_alimentos: Food annuities
       arrendado: Let
       ascendants_75_plus_total: Ascendants 75+ (total)
@@ -6437,6 +6512,8 @@ sheets:
         four previous years
       gastos_pendientes_aplicados: Pending amount from previous years applied this
         year
+      gastos_pendientes_origen: Pending interest and repair and maintenance expenses,
+        by year of origin
       geographic_mobility_clave: Geographic mobility
       house_number: House number
       housing_loan_communication_clave: Home loan communication
@@ -9604,6 +9681,12 @@ workspace:
         local:
           filing: Local filing
         schedule: Legal schedule
+      suppressed:
+        verdict:
+          attribution_pass_through: 'Not filed by the entity itself: the income is
+            attributed to its members, who declare it in their own returns.'
+          not_applicable: 'Does not apply to you: your profile does not call for this
+            declaration in this period.'
       title: Filing calendar
       user:
         due: Due

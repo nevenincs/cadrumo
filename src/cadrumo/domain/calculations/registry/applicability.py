@@ -97,6 +97,7 @@ from ...deadlines.models import (
 from .applicability_modelo202 import modelo_202_filing_obligation
 from .applicability_models import (
     NO_LEDGER_PAYER_FACTS,
+    NO_RECORDS_DERIVATION_NOTES,
     ApplicabilityEvidenceDisagreement,
     ApplicabilityProvenance,
     ApplicabilityVerdict,
@@ -504,6 +505,7 @@ def derive_modelo_applicability(
     authority: ValidatedRegistryAuthority | None = None,
     operation: PinnedAuthorityOperation | None = None,
     ledger_payer_facts: Mapping[str, LedgerPayerFactDerivation] = NO_LEDGER_PAYER_FACTS,
+    records_derivation_notes: Mapping[str, str] = NO_RECORDS_DERIVATION_NOTES,
 ) -> ModeloApplicability:
     """Derive a modelo's applicability from the taxpayer model.
 
@@ -532,6 +534,9 @@ def derive_modelo_applicability(
             filing year ``profile`` was projected for. A derivation of the
             rule's payer fact is combined with the profile answer as
             :meth:`ModeloApplicabilityRule.evaluate` describes.
+        records_derivation_notes: The detail behind a derivation read from the
+            taxpayer's stated records, keyed by payer fact token, which a
+            verdict those records decided carries in its reason.
 
     Returns:
         The :class:`ModeloApplicability` for ``modelo`` and ``profile``.
@@ -587,7 +592,12 @@ def derive_modelo_applicability(
     rule = _modelo_applicability_rule(modelo, authority=authority, operation=operation)
     if rule is None:
         return incomplete_applicability(modelo, unruled=True)
-    applicability = rule.evaluate(profile, ledger_payer_facts=ledger_payer_facts, operation=operation)
+    applicability = rule.evaluate(
+        profile,
+        ledger_payer_facts=ledger_payer_facts,
+        records_derivation_notes=records_derivation_notes,
+        operation=operation,
+    )
     # The IS instalment's filing obligation turns on the INCN modality and on
     # whether the period yields an ingreso, not on the entity type alone.
     if modelo == form_for_role(_IS_INSTALMENT_ROLE, authority=operation):

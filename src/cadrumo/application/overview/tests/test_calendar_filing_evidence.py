@@ -294,6 +294,9 @@ def test_period_bearing_calendar_models_roundtrip_through_json() -> None:
     suppressed = SuppressedCalendarEntry(
         modelo="390",
         period=Period.from_year_and_code(_YEAR, "0A"),
+        opens_on=date(_YEAR + 1, 4, 1),
+        closes_on=date(_YEAR + 1, 6, 30),
+        adjusted_closes_on=date(_YEAR + 1, 6, 30),
         verdict=ApplicabilityVerdict.NOT_APPLICABLE,
         reason="not enrolled",
     )

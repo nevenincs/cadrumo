@@ -27,6 +27,8 @@ Every write is refused, before anything is stored, when:
 * the ejercicio is outside the filing years the pinned authority supports;
 * an operation's relationship, type or valuation code is not published by the
   record design pinned for its ejercicio;
+* a related-party operation of a type the registry lists as always specific
+  (the operations on intangibles, LIS art. 18.3) is stated as not specific;
 * the payload is not an active one, or a statement of that kind already stands;
 * an operation is stated while a "none" statement stands, or the "none"
   statement is made while the ejercicio holds an active operation;
@@ -36,7 +38,7 @@ Every write is refused, before anything is stored, when:
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import date
 from typing import TYPE_CHECKING, Final, Literal, Protocol
@@ -47,9 +49,11 @@ from ...domain.calculations.registry.form_codes import resolve_form_codes
 from ...domain.modelos.m232_related_party import (
     Modelo232NoneStatement,
     Modelo232Operation,
+    Modelo232OperationKind,
     Modelo232TurnoverStatement,
     Modelo232YearGuard,
 )
+from .m232_registry_parameters import always_specific_operation_types
 
 if TYPE_CHECKING:
     from ...core.time.utc import UtcInstant
@@ -129,6 +133,7 @@ type Modelo232RefusalReason = Literal[
     "not_stated",
     "none_stated",
     "operations_present",
+    "specific_operation_required",
 ]
 """Why a statement or its withdrawal was refused before it reached storage."""
 
@@ -139,6 +144,7 @@ M232_RELATED_PARTY_MESSAGE_LOCALE_KEYS: Final[Mapping[str, str]] = {
     "not_stated": "aggregation.modelo_232_related_party.errors.not_stated",
     "none_stated": "aggregation.modelo_232_related_party.errors.none_stated",
     "operations_present": "aggregation.modelo_232_related_party.errors.operations_present",
+    "specific_operation_required": "aggregation.modelo_232_related_party.errors.specific_operation_required",
     "stale_revision": "aggregation.modelo_232_related_party.errors.stale_revision",
 }
 """The worded message of each refusal reason, the stale revision of a guarded write included."""
@@ -192,6 +198,14 @@ class Modelo232RelatedPartyReader(Protocol):
         """Return every turnover statement of ``ejercicio``, the withdrawn ones included."""
         ...
 
+    def revision_marker(self, ejercicios: Sequence[int]) -> str:
+        """Return a value that changes whenever any statement of ``ejercicios`` is stated or withdrawn.
+
+        Every write advances its ejercicio's guard row, so the guard revisions
+        state whether anything changed without reading a statement.
+        """
+        ...
+
 
 @dataclass(frozen=True, slots=True)
 class Modelo232YearView:
@@ -233,6 +247,10 @@ class Modelo232WriteAuthority(Protocol):
         """Return the record design's codes under ``key`` for the edition that governs ``ejercicio``."""
         ...
 
+    def always_specific_types(self, ejercicio: int) -> frozenset[str]:
+        """Return the operation types the registry lists as specific whatever the filer states."""
+        ...
+
 
 @dataclass(frozen=True, slots=True)
 class Modelo232PinnedWriteAuthority:
@@ -251,6 +269,10 @@ class Modelo232PinnedWriteAuthority:
             effective_date=date(ejercicio, 12, 31),
             authority=self.operation,
         ).codes(key)
+
+    def always_specific_types(self, ejercicio: int) -> frozenset[str]:
+        """Return the types the pinned registry lists as always specific at the end of ``ejercicio``."""
+        return always_specific_operation_types(ejercicio, operation=self.operation)
 
 
 @dataclass(frozen=True, slots=True)
@@ -287,6 +309,21 @@ def _require_codes(operation: Modelo232Operation, authority: Modelo232WriteAutho
             raise Modelo232RelatedPartyRefusedError("code_unknown", ejercicio=operation.ejercicio)
 
 
+def _require_specific_where_always(operation: Modelo232Operation, authority: Modelo232WriteAuthority) -> None:
+    """Refuse a related-party operation of an always-specific type that is stated as not specific.
+
+    LIS art. 18.3 never lets the simplified documentation apply to the operations
+    on intangibles, and Orden HFP/816/2017 art. 2.1.b makes exactly those
+    operations specific, so the filer's boolean cannot say otherwise.
+    """
+    if (
+        operation.operation_kind is Modelo232OperationKind.RELATED_PARTY
+        and not operation.specific_operation
+        and operation.tipo_operacion in authority.always_specific_types(operation.ejercicio)
+    ):
+        raise Modelo232RelatedPartyRefusedError("specific_operation_required", ejercicio=operation.ejercicio)
+
+
 def state_m232_operation(
     operation: Modelo232Operation,
     *,
@@ -309,6 +346,7 @@ def state_m232_operation(
     view = _read_admitted(ports, ejercicio)
     _require_guard_current(view, expected_guard_revision_id)
     _require_codes(operation, ports.authority)
+    _require_specific_where_always(operation, ports.authority)
     if any(stored.operation_id == operation.operation_id for stored, _revision in view.operations):
         raise Modelo232RelatedPartyRefusedError("already_stated", ejercicio=ejercicio)
     if any(statement.active for statement, _revision in view.nones):

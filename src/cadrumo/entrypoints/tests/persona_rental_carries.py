@@ -1,18 +1,18 @@
 """State what earlier years left pending of a let property's interest and repairs, through the guarded edit.
 
 LIRPF art. 23.1.a.1 carries the excess of interest and repairs over a property's rents to the four
-following years. The Modelo 100 keeps the property's row and withholds its net yield until the filer states
-that carry on the row the calculation emitted. A persona that states it in ``pendiente_intereses_reparacion``
-makes the same statement here, through the registered form read, edit check and edit apply the operator uses:
-nothing pending is the statement of no amount, a positive amount is a stated prior value. A persona that
-omits the fact states nothing.
+following years, and anexo C.1 follows it by the ejercicio it arose in. The Modelo 100 keeps the property's
+row and withholds its net yield until the filer states each origin year's carry on its opening column of the
+row the calculation emitted. A persona states one total in ``pendiente_intereses_reparacion``: nothing
+pending is the statement of no amount on every origin year's opening, made here through the registered form
+read, edit check and edit apply the operator uses. An amount cannot be split by origin year, so it is
+refused until the persona states it per origin year. A persona that omits the fact states nothing.
 """
 
 from __future__ import annotations
 
 from decimal import Decimal
 
-from ...application.aggregation.renta_inmueble_source import RentaInmuebleRowField
 from ...application.modelo.edit_apply_contracts import ModeloEditApplyPublicResultV1, ModeloEditApplySubmissionV1
 from ...application.modelo.edit_contract import ModeloEditMutationFamily
 from ...application.modelo.edit_models import (
@@ -34,7 +34,10 @@ from ...application.modelo.workbench_projection import ModeloWorkbenchFormProjec
 from ...application.user_profile.projections import record_to_path_values
 from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.external_constants import OutputLanguage
-from ...domain.calculations.registry.renta_inmueble_bindings import renta_inmueble_columns
+from ...domain.calculations.registry.renta_inmueble_bindings import (
+    RentaInmuebleOriginPart,
+    renta_inmueble_origin_columns,
+)
 from ...domain.contribuyente.inmueble_facts import inmuebles_from_facts
 from ...tests.personas import Persona, RentalProperty
 from .persona_materialisation import PersonaMaterialisationError, PersonaWorld, load_profile_record, run_operation
@@ -53,20 +56,25 @@ def _row_identity(rental: RentalProperty, world: PersonaWorld) -> str:
     return f"inmueble:{keys[0]}"
 
 
-def _intent(rental: RentalProperty, world: PersonaWorld, year: int) -> ModeloBindingEditIntentV1:
+def _intents(rental: RentalProperty, world: PersonaWorld, year: int) -> tuple[ModeloBindingEditIntentV1, ...]:
     stated = rental.pendiente_intereses_reparacion
+    if stated != Decimal(0):
+        raise PersonaMaterialisationError(
+            f"{rental.id}: pendiente_intereses_reparacion states {stated} as one total; anexo C.1 needs the "
+            "pending amount stated per origin year, which this persona does not state"
+        )
     revision = world.operation.snapshot(
         _MODELO, filing_year=year, period=_PERIOD, grade=RegistryAuthorityGrade.CALCULATION
     ).revision
-    binding = next(
-        item.id
-        for item, provider in renta_inmueble_columns(revision)
-        if provider.row_field == RentaInmuebleRowField.GASTOS_PENDIENTES_ANTERIORES.value
+    row = _row_identity(rental, world)
+    openings = renta_inmueble_origin_columns(revision)[RentaInmuebleOriginPart.OPENING]
+    return tuple(
+        ModeloBindingEditIntentV1(
+            address=ModeloEditBindingAddressV1(binding_id=binding.id, row_identity=row),
+            kind=ModeloEditBindingIntentKind.ATTEST_NO_AMOUNT,
+        )
+        for _back, binding in sorted(openings.items())
     )
-    address = ModeloEditBindingAddressV1(binding_id=binding, row_identity=_row_identity(rental, world))
-    if stated == Decimal(0):
-        return ModeloBindingEditIntentV1(address=address, kind=ModeloEditBindingIntentKind.ATTEST_NO_AMOUNT)
-    return ModeloBindingEditIntentV1(address=address, kind=ModeloEditBindingIntentKind.ATTEST_PRIOR_VALUE, value=stated)
 
 
 def attest_pending_rental_carries(persona: Persona, world: PersonaWorld, work_unit_id: str, year: int) -> bool:
@@ -90,7 +98,7 @@ def attest_pending_rental_carries(persona: Persona, world: PersonaWorld, work_un
     submission = ModeloEditSubmissionV1(
         baseline=form_read.admitted_baseline.to_baseline(),
         mutation_family=ModeloEditMutationFamily.CALCULATE,
-        binding_intents=tuple(_intent(rental, world, year) for rental in stated),
+        binding_intents=tuple(intent for rental in stated for intent in _intents(rental, world, year)),
     )
     staged = ModeloEditOperatorInputV2(
         submission=ModeloEditApplySubmissionV1.from_submission(submission), output_language=_LANGUAGE

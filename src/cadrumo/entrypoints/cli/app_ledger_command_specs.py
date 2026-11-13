@@ -18,6 +18,7 @@ from .app_ledger_invoice_intake_command_specs import LEDGER_INVOICE_INTAKE_COMMA
 from .app_ledger_invoice_lifecycle_command_specs import LEDGER_INVOICE_LIFECYCLE_COMMAND_SPECS
 from .app_ledger_known_values_command_specs import LEDGER_KNOWN_VALUES_COMMAND_SPECS
 from .app_ledger_lifecycle_command_specs import LEDGER_LIFECYCLE_COMMAND_SPECS
+from .app_ledger_m232_related_party_command_specs import LEDGER_M232_RELATED_PARTY_COMMAND_SPECS
 from .app_ledger_management_command_specs import LEDGER_MANAGEMENT_COMMAND_SPECS
 from .app_ledger_operations_command_specs import LEDGER_OPERATIONS_COMMAND_SPECS
 from .app_ledger_participation_command_specs import LEDGER_PARTICIPATION_COMMAND_SPECS
@@ -51,6 +52,7 @@ LEDGER_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     *LEDGER_PREVISION_SOCIAL_COMMAND_SPECS,
     *LEDGER_RETENCION_SOPORTADA_COMMAND_SPECS,
     *LEDGER_RETENCION_SOPORTADA_ABSENCE_COMMAND_SPECS,
+    *LEDGER_M232_RELATED_PARTY_COMMAND_SPECS,
     *LEDGER_RULE_COMMAND_SPECS,
     *LEDGER_EVIDENCE_FOLLOWUP_COMMAND_SPECS,
     *LEDGER_INVENTORY_ANALYSIS_COMMAND_SPECS,

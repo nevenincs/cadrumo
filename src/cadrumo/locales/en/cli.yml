@@ -522,6 +522,60 @@ cli:
           exists (%{invoice_id}); nothing was created.'
         yes_help: Confirm deleting the invoice
         yes_required: Pass --yes to delete an invoice
+      operaciones_vinculadas:
+        amount_help: Consideration at market value in euros, with at most two decimals;
+          for a holding, its acquisition value.
+        cifra_negocios_help: Cifra de negocios of the ejercicio in euros, with at
+          most two decimals.
+        counterparty_country_help: Two-letter country code of the counterparty, for
+          example ES.
+        counterparty_name_help: Name or company name of the counterparty.
+        counterparty_tax_id_help: Tax identifier of the related person or entity,
+          foreign ones included. Required for the two related-person kinds.
+        description_help: What the tax-haven operation was. Only for tax_haven_operation.
+        direction_help: I if you received the consideration, P if you paid it.
+        ejercicio_help: Tax year (`ejercicio`) the records belong to.
+        exclusion_help: 'Ground of art. 2.2 that excludes the operation: consolidation_group,
+          aie_or_registered_ute or public_offer.'
+        expected_guard_revision_help: Guard revision the list showed for the year;
+          given, the statement is refused if the year changed since.
+        expected_revision_help: Revision the list showed for the record you withdraw.
+        group_help: State, list and withdraw your Modelo 232 related-party and tax-haven
+          records.
+        invalid_input: 'A value is not valid: check the ejercicio, the amounts, the
+          operation identifier and the revision.'
+        kind_help: 'Kind of operation: related_party, intangibles_reduction, tax_haven_operation
+          or tax_haven_holding.'
+        list_help: List what you stated for one ejercicio, with each revision and
+          what the records decide about Modelo 232.
+        metodo_valoracion_help: Valuation method code (Tabla B of the Modelo 232 design).
+        note_help: Why the year had no such operations. Required.
+        operation_id_help: Identifier of the operation (operation_id) the list showed.
+        parent_name_help: Name of the parent entity. Only for intangibles_reduction,
+          with --parent-tax-id.
+        parent_tax_id_help: Tax identifier of the parent entity. Only for intangibles_reduction,
+          with --parent-name.
+        participation_help: Percentage of the issuer you hold. Only for tax_haven_holding.
+        source_help: 'Where the figure comes from: annual_accounts, corporation_tax_return,
+          vat_returns or operator_estimate.'
+        source_reference_help: Reference to the document or return you took the figure
+          from.
+        specific_help: The operation is a specific operation (Orden HFP/816/2017 art.
+          2.1.b).
+        state_none_help: State that an ejercicio had no related-party and no tax-haven
+          operations.
+        state_operation_help: State one related-party or tax-haven operation of an
+          ejercicio. This is your own statement.
+        state_turnover_help: State the cifra de negocios of an ejercicio and where
+          you took it from.
+        tipo_operacion_help: Operation type code (Tabla C of the Modelo 232 design).
+        tipo_vinculacion_help: Relationship type code (Tabla A of the Modelo 232 design).
+        withdraw_none_help: Withdraw the statement of no operations, guarded by the
+          revision the list showed.
+        withdraw_operation_help: Withdraw one stated operation, guarded by the revision
+          the list showed.
+        withdraw_turnover_help: Withdraw the stated cifra de negocios, guarded by
+          the revision the list showed.
       prevision_social:
         amount_help: Contribution amount in euros the certificate states, for example
           1500.00.

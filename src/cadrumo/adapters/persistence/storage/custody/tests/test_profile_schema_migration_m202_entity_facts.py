@@ -52,7 +52,8 @@ def test_schema_13_adds_page_01_entity_facts_the_schema_declares() -> None:
     assert declared >= PATHS_INTRODUCED_IN_V13
     assert "taxpayer_type.principal_cnae" in PATHS_INTRODUCED_IN_V13
     assert _PRIOR_VERSION in SUPPORTED_LEGACY_PROFILE_SCHEMA_VERSIONS
-    assert MIGRATED_PROFILE_SCHEMA_VERSION == _PRIOR_VERSION + 1
+    assert MIGRATED_PROFILE_SCHEMA_VERSION > _PRIOR_VERSION + 1
+    assert _PRIOR_VERSION + 1 in SUPPORTED_LEGACY_PROFILE_SCHEMA_VERSIONS
 
 
 def test_a_schema_12_record_opens_with_every_fact_kept_and_nothing_cleared(

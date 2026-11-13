@@ -67,6 +67,10 @@ from ..domain.transactions.models import TransactionCatalogue
 from ..domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..domain.user_profile.values import UserProfileRecord
 from .aeat_sync.workspace import AeatSyncWorkspaceProjectionError, AeatSyncWorkspaceProjectionV1
+from .aggregation.m232_related_party_repository import (
+    Modelo232RelatedPartyPersistenceError,
+    Modelo232RelatedPartyReader,
+)
 from .calculations.verification_report_gate import require_verification_report_coordinates_current
 from .ledger.workspace import (
     LedgerWorkspaceProjectionV1,
@@ -123,6 +127,8 @@ from .workbench_generation_home import build_workbench_generation_inputs
 
 _LOGGER = get_logger(__name__)
 _CAPTURE_PHASE_EVENT: Final = "workbench_capture_phase"
+_RELATED_PARTY_UNREADABLE: Final = "unreadable"
+"""The Modelo 232 revision when the store cannot state one; a revision marker never takes this form."""
 _AEAT_SYNC_READER_UNAVAILABLE: Final[str] = "workbench.aeat_sync.reader_unavailable"
 _AEAT_SYNC_SNAPSHOT_PROJECTOR_UNAVAILABLE: Final[str] = "workbench.aeat_sync.snapshot_projector_unavailable"
 
@@ -378,6 +384,7 @@ class _DeclarationSources(NamedTuple):
     ledger_sources: tuple[TransactionCatalogue, InvoiceCatalogue] | None
     aeat_projection: CalendarEvidenceProjection
     calendar_inputs: WorkbenchCalendarInputs
+    related_party_revision: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -403,6 +410,11 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
     invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None
     verification_repository: VerificationReportCatalogueRepositoryProtocol | None = None
+    related_party_records: Modelo232RelatedPartyReader | None = None
+    """The stated Modelo 232 operations the calendar's related-party obligation fact is derived from.
+
+    Unbound, that fact stays undeclared and Modelo 232 stays undecided, as in a read with no such store.
+    """
     credit_resolution_reader: CreditResolutionReader | None = None
     """The profile's accepted source disagreements, so a declaration's row counts a covered one as the gate does.
 
@@ -496,6 +508,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             filings_revision=capture.catalogues.filings_revision,
             ledger_revision=capture.ledger_revision,
             ledger_sources=capture.ledger_sources,
+            related_party_revision=capture.related_party_revision,
             verification=capture.catalogues.verification,
             bucket_events=capture.catalogues.bucket_events,
             aeat_sync_reads=aeat_sync_reads,
@@ -539,6 +552,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             filings_revision=capture.catalogues.filings_revision,
             ledger_revision=capture.ledger_revision,
             ledger_sources=capture.ledger_sources,
+            related_party_revision=capture.related_party_revision,
             verification=capture.catalogues.verification,
             bucket_events=capture.catalogues.bucket_events,
             aeat_sync_reads=None,
@@ -579,6 +593,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         # ledger-derived obligation signals the calendar decides on.
         ledger_revision = _timed("ledger_revision", self._ledger_revision)
         ledger_sources = self._load_ledger_sources()
+        related_party_revision = _timed("related_party_revision", self._related_party_revision)
         aeat_evidence, aeat_projection = _timed(
             "calendar_aeat_evidence", lambda: self._read_calendar_aeat_evidence(raw_values)
         )
@@ -596,6 +611,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             filings_revision=filings_revision,
             ledger_revision=ledger_revision,
             ledger_sources=ledger_sources,
+            related_party_revision=related_party_revision,
         )
         return _DeclarationSources(
             observed_at=observed_at,
@@ -606,6 +622,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             ledger_sources=ledger_sources,
             aeat_projection=aeat_projection,
             calendar_inputs=calendar_inputs,
+            related_party_revision=related_party_revision,
         )
 
     def _read_declarations_projection(
@@ -711,10 +728,14 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         filings_revision: str,
         ledger_revision: tuple[str, str] | None,
         ledger_sources: tuple[TransactionCatalogue, InvoiceCatalogue] | None,
+        related_party_revision: str,
     ) -> WorkbenchCalendarInputs:
+        # Records whose revision cannot be stated are neither trusted nor remembered: the
+        # calendar is built without them, so Modelo 232 stays undecided, and nothing is reused.
+        records_readable = related_party_revision != _RELATED_PARTY_UNREADABLE
         with _capture_phase("calendar_memo_key"):
             memo = CalendarMemo(
-                memory=self.capture_memory,
+                memory=self.capture_memory if records_readable else None,
                 key=WorkbenchCalendarMemoKey(
                     profile_content_digest=record.content_digest,
                     work_units_revision=work_units_revision,
@@ -728,6 +749,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
                         }
                     ),
                     invoice_catalogue_revision=_invoice_catalogue_revision(ledger_revision, ledger_sources),
+                    related_party_revision=related_party_revision,
                 ),
             )
         return _timed(
@@ -743,6 +765,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
                 aeat_evidence=aeat_evidence,
                 invoice_source_ports=loaded_invoice_source_ports(None if ledger_sources is None else ledger_sources[1]),
                 memo=memo,
+                related_party_records=self.related_party_records if records_readable else None,
             ),
         )
 
@@ -755,6 +778,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         filings_revision: str,
         ledger_revision: tuple[str, str] | None,
         ledger_sources: tuple[TransactionCatalogue, InvoiceCatalogue] | None,
+        related_party_revision: str,
         verification: VerificationReportCatalogue | None,
         bucket_events: BucketEventHistoryCatalogue | None,
         aeat_sync_reads: _AeatSyncSourceReads | None,
@@ -779,19 +803,41 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
                 and final_work_units_revision == work_units_revision
                 and final_calculations_revision == calculations_revision
                 and final_filings_revision == filings_revision
-                and _timed("recheck_ledger", lambda: self._ledger_is_unchanged(ledger_revision, ledger_sources))
-                and _timed("recheck_verification_reports", self._load_verification_reports) == verification
-                and _timed("recheck_bucket_events", self._load_bucket_events) == bucket_events
-                and (
-                    aeat_sync_reads is None
-                    or (
-                        _timed("recheck_custody_count", lambda: self._recount_custody(aeat_sync_reads.custody))
-                        == aeat_sync_reads.custody_count
-                        and _timed("recheck_census_observation", lambda: self._recheck_census(aeat_sync_reads.census))
-                        == aeat_sync_reads.census_observation
-                    )
+                and self._ledger_and_report_sources_are_unchanged(
+                    ledger_revision=ledger_revision,
+                    ledger_sources=ledger_sources,
+                    related_party_revision=related_party_revision,
+                    verification=verification,
+                    bucket_events=bucket_events,
                 )
+                and self._aeat_sync_reads_are_unchanged(aeat_sync_reads)
             )
+
+    def _ledger_and_report_sources_are_unchanged(
+        self,
+        *,
+        ledger_revision: tuple[str, str] | None,
+        ledger_sources: tuple[TransactionCatalogue, InvoiceCatalogue] | None,
+        related_party_revision: str,
+        verification: VerificationReportCatalogue | None,
+        bucket_events: BucketEventHistoryCatalogue | None,
+    ) -> bool:
+        """Say whether the ledger, related-party statements, verification reports and bucket events still match."""
+        return (
+            _timed("recheck_ledger", lambda: self._ledger_is_unchanged(ledger_revision, ledger_sources))
+            and _timed("recheck_related_party", self._related_party_revision) == related_party_revision
+            and _timed("recheck_verification_reports", self._load_verification_reports) == verification
+            and _timed("recheck_bucket_events", self._load_bucket_events) == bucket_events
+        )
+
+    def _aeat_sync_reads_are_unchanged(self, aeat_sync_reads: _AeatSyncSourceReads | None) -> bool:
+        """Say whether the custody count and census observation a generation read for AEAT Sync still match."""
+        return aeat_sync_reads is None or (
+            _timed("recheck_custody_count", lambda: self._recount_custody(aeat_sync_reads.custody))
+            == aeat_sync_reads.custody_count
+            and _timed("recheck_census_observation", lambda: self._recheck_census(aeat_sync_reads.census))
+            == aeat_sync_reads.census_observation
+        )
 
     def _load_stored_catalogues(self) -> _StoredCatalogues:
         """Read the profile record and every catalogue a capture joins, each as its own timed phase."""
@@ -872,6 +918,20 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         if transaction_revision is None or invoice_revision is None:
             return None
         return transaction_revision, invoice_revision
+
+    def _related_party_revision(self) -> str:
+        """Name the stated Modelo 232 records the calendar was derived from.
+
+        ``unbound`` when no store is bound; ``unreadable`` when the store cannot
+        state a revision, which leaves the Modelo 232 verdict unknown the way the
+        derivation does when it cannot read the statements.
+        """
+        if self.related_party_records is None:
+            return "unbound"
+        try:
+            return self.related_party_records.revision_marker(tuple(self.operation.supported_filing_years().years))
+        except Modelo232RelatedPartyPersistenceError:
+            return _RELATED_PARTY_UNREADABLE
 
     def _ledger_is_unchanged(
         self,

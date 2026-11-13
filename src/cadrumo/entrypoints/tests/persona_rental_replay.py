@@ -90,6 +90,11 @@ def property_row(rental: RentalProperty, envelope: YearEnvelope) -> tuple[tuple[
         ("fecha_adquisicion", rental.fecha_adquisicion.resolve(envelope).isoformat()),
         ("gastos_tributos_adquisicion", str(rental.gastos_tributos_adquisicion)),
         ("valores_catastrales", cadastral),
+        *(
+            ()
+            if rental.arrendado_desde is None
+            else (("arrendado_desde", rental.arrendado_desde.resolve(envelope).isoformat()),)
+        ),
     )
 
 

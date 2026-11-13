@@ -18,7 +18,7 @@ from cadrumo.core.logging import get_logger
 from cadrumo.core.package_interpreter import interpreter_command
 from cadrumo.core.pydantic_plugins import PYDANTIC_PLUGINS_DISABLED, PYDANTIC_PLUGINS_VARIABLE
 from cadrumo.core.storage_environment import ChildEnvironmentProfile, child_environment
-from cadrumo.core.time.clock import now
+from cadrumo.core.time.clock import wall_now
 from cadrumo_client.contracts.contracts import ChannelWake, RefusalCode, RefusalError, ServerHello
 from cadrumo_client.contracts.deadline_budget import (
     DEFAULT_TIMEOUT_POLICY,
@@ -78,7 +78,7 @@ class ProfileWorkerProcess(ProfileWorkerHumanAdmission):
         storage_root: Path,
         authorization: WorkerAuthorizationOwner | None = None,
         worker_script: Path | None = None,
-        wall_clock: Callable[[], datetime] = now,
+        wall_clock: Callable[[], datetime] = wall_now,
         exited: Callable[[ProfileWorkerProcess], None] | None = None,
         stopping: ChannelWake | None = None,
     ) -> None:

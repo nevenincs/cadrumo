@@ -643,6 +643,11 @@ def _obligation_applicability(
         ledger_payer_facts=(
             {} if applicability_evidence is None else applicability_evidence.ledger_payer_facts_for_year(filing_year)
         ),
+        records_derivation_notes=(
+            {}
+            if applicability_evidence is None
+            else applicability_evidence.records_derivation_notes_for_year(filing_year)
+        ),
     )
 
 
@@ -655,6 +660,9 @@ def _suppressed_calendar_entry(
     return SuppressedCalendarEntry(
         modelo=obligation.modelo,
         period=obligation.period,
+        opens_on=obligation.opens_on,
+        closes_on=obligation.closes_on,
+        adjusted_closes_on=obligation.adjusted_closes_on,
         verdict=applicability.verdict,
         reason=applicability.reason,
         actions=doors,

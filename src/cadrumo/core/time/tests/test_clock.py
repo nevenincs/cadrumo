@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 
 import pytest
 
 from ...config import override_settings
 from ...errors.hierarchy import CoreValidationError
-from ..clock import MADRID_TZ, frozen_clock, madrid_wall_clock_to_utc, now, today_madrid
+from ..clock import MADRID_TZ, frozen_clock, madrid_wall_clock_to_utc, now, today_madrid, wall_now
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -142,3 +142,16 @@ class TestMadridWallClockToUtc:
 
         assert madrid_wall_clock_to_utc(aware) == aware
         assert madrid_wall_clock_to_utc(datetime(2026, 4, 20, 23, 30, 0, tzinfo=MADRID_TZ)) == aware
+
+
+def test_wall_now_ignores_frozen_clock() -> None:
+    """Authority timing stays on real time inside a frozen scope."""
+    frozen = wall_now() - timedelta(days=3650)
+    with frozen_clock(frozen):
+        before = datetime.now(tz=UTC)
+        wall = wall_now()
+        after = datetime.now(tz=UTC)
+        assert now() == frozen
+    assert before <= wall <= after
+    assert wall > frozen
+    assert wall.tzinfo is UTC

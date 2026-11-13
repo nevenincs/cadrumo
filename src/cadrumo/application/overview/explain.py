@@ -403,11 +403,15 @@ def _applicability_inputs_for_year(
     profile: TaxpayerProfile,
     year: int,
     evidence: FilingYearApplicabilityEvidence | None,
-) -> tuple[TaxpayerProfile, Mapping[str, LedgerPayerFactDerivation]]:
-    """Return the profile and ledger derivations the calendar decides ``year``'s row on."""
+) -> tuple[TaxpayerProfile, Mapping[str, LedgerPayerFactDerivation], Mapping[str, str]]:
+    """Return the profile, ledger derivations and their notes the calendar decides ``year``'s row on."""
     if evidence is None:
-        return profile, dict[str, LedgerPayerFactDerivation]()
-    return evidence.profile_for_year(year), evidence.ledger_payer_facts_for_year(year)
+        return profile, dict[str, LedgerPayerFactDerivation](), dict[str, str]()
+    return (
+        evidence.profile_for_year(year),
+        evidence.ledger_payer_facts_for_year(year),
+        evidence.records_derivation_notes_for_year(year),
+    )
 
 
 def build_overview_explain(
@@ -486,13 +490,16 @@ def build_overview_explain(
 
     _require_registered_modelo(modelo_id, filing_year=resolved_year, operation=operation)
 
-    year_profile, ledger_payer_facts = _applicability_inputs_for_year(profile, resolved_year, applicability_evidence)
+    year_profile, ledger_payer_facts, records_notes = _applicability_inputs_for_year(
+        profile, resolved_year, applicability_evidence
+    )
     applicability = derive_modelo_applicability(
         year_profile,
         modelo_id,
         reference_date=date(resolved_year, 12, 31),
         operation=operation,
         ledger_payer_facts=ledger_payer_facts,
+        records_derivation_notes=records_notes,
     )
     rule = next(
         (rule for rule in iter_modelo_applicability_rules(operation=operation) if rule.modelo == modelo_id),

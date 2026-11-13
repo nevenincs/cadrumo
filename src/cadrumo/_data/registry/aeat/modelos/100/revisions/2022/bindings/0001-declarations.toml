@@ -1872,15 +1872,13 @@ source_refs = ["aeat-renta-2022-manual-parte1"]
 source_ref = "aeat-renta-2022-manual-parte1"
 required_text = ["Reducción por arrendamiento"]
 
-# 0103 is what the property still carries from the four previous ejercicios. No earlier
-# return the application holds states it, so the filer states it per property: nothing
-# pending, or the amount; until then the box stays open.
+# 0103 is what the property still carries from the four previous ejercicios: the sum of the
+# anexo C.1 openings of each origin year, which the filer states per property and origin year.
 [[revisions."2022".bindings]]
 id = "renta-inmueble-gastos-pendientes-anteriores-0103"
 provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "row_field", record = "inmueble", grouping = "per_inmueble", row_field = "gastos_pendientes_anteriores", target_casilla_id = "0103" }
 value = { data_type = "money", channel = "row_set" }
 aggregation = { op = "rows" }
-absence_attestation = "renta_capital_inmobiliario_gastos_pendientes"
 legal_refs = ["ley-35-2006:art-23", "rd-439-2007:art-13"]
 source_refs = ["aeat-renta-2022-manual-parte1"]
 
@@ -1936,6 +1934,172 @@ source_refs = ["aeat-renta-2022-manual-parte1"]
 [[revisions."2022".bindings.source_citations]]
 source_ref = "aeat-renta-2022-manual-parte1"
 required_text = ["pendientes de deducir", "ejercicios siguientes"]
+
+# Anexo C.1 follows each property's excess by the ejercicio it arose in, counted back from the
+# ejercicio filed: what was pending at the start of the period, which the filer states per
+# property and origin year as a carry of earlier returns; what this return applies, oldest
+# origin first and before the year's own amounts; and what still carries on. The oldest origin
+# of the carry window has no box for what carries on: its excess expires with this return.
+
+[[revisions."2022".bindings]]
+id = "renta-inmueble-anexo-c1-titular-1211"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "row_field", record = "inmueble", grouping = "per_inmueble", row_field = "anexo_c1_titular", target_casilla_id = "1211" }
+value = { data_type = "text", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["pendientes de deducir"]
+
+[[revisions."2022".bindings]]
+id = "renta-inmueble-anexo-c1-referencia-catastral-1212"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "row_field", record = "inmueble", grouping = "per_inmueble", row_field = "anexo_c1_referencia_catastral", target_casilla_id = "1212" }
+value = { data_type = "text", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["referencia catastral"]
+
+[[revisions."2022".bindings]]
+id = "renta-inmueble-anexo-c1-pendiente-inicio-1213"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "row_field", record = "inmueble", grouping = "per_inmueble", row_field = "gastos_pendientes_origen", target_casilla_id = "1213", origin = { back = 4, part = "opening" } }
+value = { data_type = "money", channel = "row_set" }
+aggregation = { op = "rows" }
+absence_attestation = "renta_capital_inmobiliario_gastos_pendientes"
+legal_refs = ["ley-35-2006:art-23", "rd-439-2007:art-13"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["pendiente de deducir", "con prioridad a los importes que correspondan al propio ejercicio"]
+
+[[revisions."2022".bindings]]
+id = "renta-inmueble-anexo-c1-aplicado-1214"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "row_field", record = "inmueble", grouping = "per_inmueble", row_field = "gastos_pendientes_origen", target_casilla_id = "1214", origin = { back = 4, part = "applied" } }
+value = { data_type = "money", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-23", "rd-439-2007:art-13"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["con prioridad a los importes que correspondan al propio ejercicio", "casilla"]
+
+[[revisions."2022".bindings]]
+id = "renta-inmueble-anexo-c1-pendiente-inicio-1215"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "row_field", record = "inmueble", grouping = "per_inmueble", row_field = "gastos_pendientes_origen", target_casilla_id = "1215", origin = { back = 3, part = "opening" } }
+value = { data_type = "money", channel = "row_set" }
+aggregation = { op = "rows" }
+absence_attestation = "renta_capital_inmobiliario_gastos_pendientes"
+legal_refs = ["ley-35-2006:art-23", "rd-439-2007:art-13"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["pendiente de deducir", "con prioridad a los importes que correspondan al propio ejercicio"]
+
+[[revisions."2022".bindings]]
+id = "renta-inmueble-anexo-c1-aplicado-1216"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "row_field", record = "inmueble", grouping = "per_inmueble", row_field = "gastos_pendientes_origen", target_casilla_id = "1216", origin = { back = 3, part = "applied" } }
+value = { data_type = "money", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-23", "rd-439-2007:art-13"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["con prioridad a los importes que correspondan al propio ejercicio", "casilla"]
+
+[[revisions."2022".bindings]]
+id = "renta-inmueble-anexo-c1-pendiente-futuro-1217"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "row_field", record = "inmueble", grouping = "per_inmueble", row_field = "gastos_pendientes_origen", target_casilla_id = "1217", origin = { back = 3, part = "carried" } }
+value = { data_type = "money", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-23", "rd-439-2007:art-13"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["El exceso se podrá deducir en los cuatro años siguientes"]
+
+[[revisions."2022".bindings]]
+id = "renta-inmueble-anexo-c1-pendiente-inicio-1218"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "row_field", record = "inmueble", grouping = "per_inmueble", row_field = "gastos_pendientes_origen", target_casilla_id = "1218", origin = { back = 2, part = "opening" } }
+value = { data_type = "money", channel = "row_set" }
+aggregation = { op = "rows" }
+absence_attestation = "renta_capital_inmobiliario_gastos_pendientes"
+legal_refs = ["ley-35-2006:art-23", "rd-439-2007:art-13"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["pendiente de deducir", "con prioridad a los importes que correspondan al propio ejercicio"]
+
+[[revisions."2022".bindings]]
+id = "renta-inmueble-anexo-c1-aplicado-1219"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "row_field", record = "inmueble", grouping = "per_inmueble", row_field = "gastos_pendientes_origen", target_casilla_id = "1219", origin = { back = 2, part = "applied" } }
+value = { data_type = "money", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-23", "rd-439-2007:art-13"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["con prioridad a los importes que correspondan al propio ejercicio", "casilla"]
+
+[[revisions."2022".bindings]]
+id = "renta-inmueble-anexo-c1-pendiente-futuro-1220"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "row_field", record = "inmueble", grouping = "per_inmueble", row_field = "gastos_pendientes_origen", target_casilla_id = "1220", origin = { back = 2, part = "carried" } }
+value = { data_type = "money", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-23", "rd-439-2007:art-13"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["El exceso se podrá deducir en los cuatro años siguientes"]
+
+[[revisions."2022".bindings]]
+id = "renta-inmueble-anexo-c1-pendiente-inicio-1221"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "row_field", record = "inmueble", grouping = "per_inmueble", row_field = "gastos_pendientes_origen", target_casilla_id = "1221", origin = { back = 1, part = "opening" } }
+value = { data_type = "money", channel = "row_set" }
+aggregation = { op = "rows" }
+absence_attestation = "renta_capital_inmobiliario_gastos_pendientes"
+legal_refs = ["ley-35-2006:art-23", "rd-439-2007:art-13"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["pendiente de deducir", "con prioridad a los importes que correspondan al propio ejercicio"]
+
+[[revisions."2022".bindings]]
+id = "renta-inmueble-anexo-c1-aplicado-1222"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "row_field", record = "inmueble", grouping = "per_inmueble", row_field = "gastos_pendientes_origen", target_casilla_id = "1222", origin = { back = 1, part = "applied" } }
+value = { data_type = "money", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-23", "rd-439-2007:art-13"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["con prioridad a los importes que correspondan al propio ejercicio", "casilla"]
+
+[[revisions."2022".bindings]]
+id = "renta-inmueble-anexo-c1-pendiente-futuro-1223"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "row_field", record = "inmueble", grouping = "per_inmueble", row_field = "gastos_pendientes_origen", target_casilla_id = "1223", origin = { back = 1, part = "carried" } }
+value = { data_type = "money", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-23", "rd-439-2007:art-13"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["El exceso se podrá deducir en los cuatro años siguientes"]
 
 [[revisions."2022".bindings]]
 id = "renta-inmueble-valor-catastral-0123"

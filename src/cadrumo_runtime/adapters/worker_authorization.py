@@ -19,7 +19,7 @@ from cadrumo.application.user_profile.automation_enrollment import AutomationInv
 from cadrumo.core.diagnostic_log import diagnostic_error_fields, diagnostic_event
 from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
 from cadrumo.core.logging import get_logger
-from cadrumo.core.time.clock import now
+from cadrumo.core.time.clock import wall_now
 from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDenialCode, OperationResponseScopeAllowed
 from cadrumo_client.contracts.access_vocabulary import AccessAction
 from cadrumo_client.contracts.automation_codes import AutomationCustodyError
@@ -120,7 +120,7 @@ class WorkerAuthorizationServer:
         owns_process: Callable[[int], bool],
         contain: Callable[[], None],
         owner: WorkerAuthorizationOwner | None,
-        wall_clock: Callable[[], datetime] = now,
+        wall_clock: Callable[[], datetime] = wall_now,
     ) -> None:
         """Claim a private worker namespace before any operation can request authority."""
         self.identity, self._pid = identity, process_id

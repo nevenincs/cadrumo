@@ -38,6 +38,7 @@ from ..domain.modelos.filing_record import ModeloRecord, ModeloRecordCatalogue
 from ..domain.modelos.work_unit import WorkUnitCatalogue
 from ..domain.user_profile.errors import UserProfileValidationError
 from ..domain.user_profile.values import UserProfileRecord
+from .aggregation.m232_related_party_repository import Modelo232RelatedPartyReader
 from .invoices.source_resolver_ports import InvoiceSourceResolverPorts
 from .modelo.declarations_calendar import (
     DeclarationsCalendarProjectionV1,
@@ -222,6 +223,7 @@ def read_workbench_calendar_inputs(
     memo: CalendarMemo,
     invoice_source_ports: InvoiceSourceResolverPorts,
     aeat_evidence: CalendarEvidenceReadOutcome[AeatCalendarEvidenceSources] | None = None,
+    related_party_records: Modelo232RelatedPartyReader | None = None,
 ) -> WorkbenchCalendarInputs:
     """Project the taxpayer once and build every calendar-derived input from it.
 
@@ -232,8 +234,9 @@ def read_workbench_calendar_inputs(
 
     Each obligation is decided on the per-filing-year evidence the overview
     reads bind: the profile as of the year and the ledger's own derivations
-    from ``invoice_source_ports``, so the workbench and the CLI reach the same
-    verdict for the same records.
+    from ``invoice_source_ports``, and the related-party obligation fact from
+    the stated Modelo 232 records in ``related_party_records``, so the workbench
+    and the CLI reach the same verdict for the same records.
 
     Parameter types: ``record`` (:class:`~cadrumo.domain.user_profile.values.UserProfileRecord`).
     """
@@ -272,6 +275,7 @@ def read_workbench_calendar_inputs(
             invoice_source_ports=invoice_source_ports,
             operation=operation,
             today=as_of,
+            related_party_records=related_party_records,
         ),
     )
     if not model_declared:
@@ -450,6 +454,9 @@ def _build_workbench_calendar_inputs(
                 query_range,
                 today=as_of,
                 raw_values=raw_values,
+                # Only this calendar is projected to the frontends; the held-back
+                # obligations ride beside its entries and never inside them.
+                show_suppressed=True,
                 filing_evidence=evidence_for(schedule_calendar).evidence,
                 work_units=tuple(work_units.values()),
                 operation=operation,
