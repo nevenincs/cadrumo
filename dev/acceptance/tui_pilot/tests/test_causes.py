@@ -210,3 +210,12 @@ def test_the_export_note_needs_the_check_to_end_the_same_ungranted_way_on_both_s
         export_unavailable_note(_row(period="1T", calculate="pass", verify="pass", export="not-reached"), passed)
         is None
     )
+
+
+def test_export_served_is_written_only_when_the_schema_knows_the_field() -> None:
+    from ..intake import _schema_takes_export_served
+
+    document = _row(export="not-reached", export_served=False).document(tree="t", log="")
+
+    assert ("export_served" in document) == _schema_takes_export_served()
+    assert "export_served" not in _row().document(tree="t", log="")
