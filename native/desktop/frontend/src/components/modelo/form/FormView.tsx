@@ -7,9 +7,7 @@ import {
   useState,
   type KeyboardEvent,
 } from "react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/components/ui/cn";
 import {
   exactly,
   isPrintable,
@@ -24,10 +22,11 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList } from "@/components/ui/tabs";
 import type { SourceSurface } from "../../../shell/modeloContract/modeloWork";
 import type {
   ModeloFormCounts,
+  ModeloFormText,
   ModeloWorkbenchFormProjectionV1,
   PublicModeloFormField,
 } from "../../../shell/modeloContract/modeloWorkForm";
@@ -35,13 +34,13 @@ import type { PublicModeloWorkForm } from "../../../shell/modeloContract/modeloW
 import type { RefusalIntent, WindowPlace } from "../../../shell/refusal";
 import { useStrings, type Translate } from "../../../shell/strings";
 import { boxNotes } from "./boxNotes";
-import { calm } from "./FieldRow";
 import {
   FormContext,
   type FormContextValue,
   type OpenableSurface,
 } from "./formContext";
 import { SectionView, type DrawnSection, type Shown } from "./SectionView";
+import { PageTab } from "./PageTab";
 import { PriorValuesOffer } from "./PriorValuesOffer";
 import { StatementsOffer } from "./StatementsOffer";
 import {
@@ -68,7 +67,7 @@ import type { EditRequest } from "./ValueCell";
  * read keeps apart from the pages. */
 type DrawnPage = {
   id: string;
-  heading: string;
+  heading: ModeloFormText;
   applies: boolean | null;
   appliesWords: string | null;
   sections: DrawnSection[];
@@ -78,7 +77,7 @@ type DrawnPage = {
 function drawnPages(form: PublicModeloWorkForm, t: Translate): DrawnPage[] {
   const pages: DrawnPage[] = form.pages.map((page) => ({
     id: page.id,
-    heading: page.heading.text,
+    heading: page.heading,
     applies: page.applies,
     appliesWords: page.applicability_words,
     sections: page.sections.map((section) => ({
@@ -97,7 +96,7 @@ function drawnPages(form: PublicModeloWorkForm, t: Translate): DrawnPage[] {
   ): DrawnPage => {
     return {
       id,
-      heading,
+      heading: { text: heading, disclosure: "localized" },
       applies: true,
       appliesWords: null,
       sections: [
@@ -171,25 +170,6 @@ function Keys() {
         ))}
       </PopoverContent>
     </Popover>
-  );
-}
-
-function PageTab({ page, panel }: { page: DrawnPage; panel: string }) {
-  const todo = page.counts?.needs_you ?? 0;
-  return (
-    <TabsTrigger
-      value={page.id}
-      aria-controls={panel}
-      className={cn("shrink-0", page.applies === false && "text-faint")}
-    >
-      {calm(page.heading)}
-      {todo > 0 && page.applies !== false && (
-        <Badge variant="warning">
-          <Icon name="alert" size="xs" />
-          {todo}
-        </Badge>
-      )}
-    </TabsTrigger>
   );
 }
 
@@ -518,7 +498,7 @@ export function FormView({
           id={panel}
           data-modelo-form=""
           role="region"
-          aria-label={page?.heading ?? t("desktop.modelo.view.form")}
+          aria-label={page?.heading.text ?? t("desktop.modelo.view.form")}
           tabIndex={session.selectedKey ? -1 : 0}
           onKeyDown={onKeyDown}
           className="@container min-h-0 flex-1 overflow-y-auto px-6 py-5 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
