@@ -130,11 +130,14 @@ def with_grounded_grid_rates(
 
     The row must print exactly one rate box, and its other boxes must be
     grounded on exactly one rate between them; any other row is left as it is,
-    with no rate claimed for its rate box.
+    with no rate claimed for its rate box. A rate box the design fixes keeps its
+    printed literal: the base's applied rate is the rate of the tax the base
+    carries, which is not the rate the row applies to it (a recargo row's base
+    is an IVA base, its rate the recargo).
     """
     rate_index = _rate_cell_index(cells)
-    if rate_index is None or _placeholder_literal(cells[rate_index]):
-        # The design prints zeros where this row's rate would stand: it prints no rate, so none is claimed.
+    if rate_index is None or _rate_literal(cells[rate_index]) is not None:
+        # A rate the design fixes, or zeros where it prints none, is the design's own: no rate is grounded over it.
         return cells
     grounded = _grounded_rates(cells, rate_index, context)
     if len(grounded) != 1:
