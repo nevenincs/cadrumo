@@ -39,7 +39,7 @@ from ...domain.calculations.registry.capital_mobiliario_position_bindings import
     resolve_capital_mobiliario_row_values,
     revision_declares_capital_mobiliario_position,
 )
-from ...domain.contribuyente.posicion_facts import posiciones_from_facts
+from ...domain.contribuyente.posicion_facts import POSICION_SECTION, posiciones_from_facts
 from ...domain.contribuyente.posicion_record import PosicionRecord
 from ...domain.modelos.calculation_revision_sources import (
     CAPITAL_MOBILIARIO_POSITION_REF_PREFIX,
@@ -439,6 +439,8 @@ def profile_positions(context: CalculationSourceContext) -> tuple[PosicionRecord
     """
     if context.profile is None:
         return ()
+    from ..user_profile.profile_read_recorder import profile_view_under
     from ..user_profile.projections import record_to_path_values
 
-    return posiciones_from_facts(record_to_path_values(context.profile.record, as_of=context.period.end_date))
+    values = record_to_path_values(context.profile.record, as_of=context.period.end_date)
+    return posiciones_from_facts(profile_view_under(values, f"{POSICION_SECTION}."))

@@ -2969,6 +2969,9 @@ application:
         {output_path} ({reason}).'
       export_period_unmappable: La declaració %{work_unit_id} conté el període %{period},
         que no es pot assignar a un període de presentació del model.
+      export_profile_read_drift: El càlcul desat %{calculation_revision_id} es basa
+        en dades del perfil que has canviat des d'aleshores (%{changed_count} canviades).
+        Torna a calcular-lo i verifica'l abans d'exportar-lo.
       export_revision_state_refused: El càlcul desat %{calculation_revision_id} no
         està comprovat i complet, ni registrat com a presentat, i no es pot exportar.
       export_settlement_unknown: L'exportació no pot indicar com es liquida la declaració
@@ -3763,6 +3766,17 @@ application:
       printed_total_mismatch: La casella [%{box}] no coincideix amb la suma de les
         línies impreses que la componen (%{printed_sum}), així que el fitxer no quadraria
         i l'AEAT podria rebutjar-lo.
+      profile_read_drift: El teu perfil ha canviat després de calcular el model %{modelo}
+        %{filing_year}, %{period} (%{changed_count} dades que va fer servir han canviat).
+        Torna a calcular-lo abans de verificar-lo.
+      profile_read_fingerprint_absent: Aquest càlcul del model %{modelo} %{filing_year},
+        %{period} és anterior al seguiment del perfil, així que no es pot saber si
+        les dades del perfil que va fer servir han canviat des d'aleshores. Torna
+        a calcular-lo per començar a seguir-les.
+      profile_read_superseded_filed: El model %{modelo} %{filing_year}, %{period}
+        consta com a presentat, però %{changed_count} dades del perfil que va fer
+        servir han canviat des d'aleshores. La declaració presentada es queda tal
+        com es va presentar; si el canvi l'afecta, presenta una complementària o rectificació.
       prorrata_seed_changed: La prorrata provisional del teu registre ha canviat després
         de calcular el model %{modelo} %{filing_year}, %{period}. Torna a calcular-lo
         abans de verificar-lo.
@@ -4236,6 +4250,8 @@ application:
           i torna a calcular.
         add_base_to_entry: Afegeix la base imposable a l'apunt dels teus registres
           i torna a calcular.
+        amend_filed_declaration: Comprova si el canvi del perfil afecta la declaració
+          presentada i, si l'afecta, inicia una complementària o rectificació.
         attach_document: Adjunta el justificant a l'apunt dels teus registres.
         await_update: Encara no es pot resoldre aquí. Actualitza l'aplicació quan
           hi hagi una versió que ho cobreixi.

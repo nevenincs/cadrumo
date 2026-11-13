@@ -21,8 +21,11 @@ from ....domain.calculations.registry.capital_mobiliario_position_bindings impor
     capital_mobiliario_position_bindings,
 )
 from ....domain.calculations.registry.tests.authored_editions import supported_exercises_with_projection
+from ....domain.contribuyente.posicion_facts import POSICION_SECTION
 from ....domain.modelos.calculation_revision_sources import CalculationNoteSentence
+from ....domain.modelos.profile_read_fingerprint import ProfileReadScope
 from ....domain.transactions.enums import TransactionDirection
+from ...user_profile.profile_read_recorder import recording_profile_reads
 from ..source_mesh import CalculationSourceResolution
 from .capital_mobiliario_position_support import (
     BROKER_PAYER,
@@ -37,10 +40,11 @@ from .capital_mobiliario_position_support import (
     SavingsPosition,
     linked_row,
     payer_record,
+    position_facts,
     resolve_savings,
     savings_boxes,
 )
-from .ledger_source_mesh_support import m100_revision
+from .ledger_source_mesh_support import cash_criterion_profile, m100_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -236,3 +240,14 @@ def test_income_in_kind_leaves_its_payers_box_open() -> None:
 
     assert savings_boxes(resolution)[INTEREST] is None
     assert _notes(resolution)[INTEREST] == {CalculationNoteSentence.CAPITAL_MOBILIARIO_INCOME_IN_KIND}
+
+
+def test_reading_the_positions_records_their_section_and_not_the_whole_profile() -> None:
+    with recording_profile_reads() as recorder:
+        resolve_savings(())
+    facts = cash_criterion_profile(YEAR, extra_facts=position_facts({DEPOSIT: DEPOSIT_POSITION})).record.facts
+
+    prefixes = {entry.selector for entry in recorder.entries(facts) if entry.scope is ProfileReadScope.PREFIX}
+
+    assert f"{POSICION_SECTION}." in prefixes
+    assert "" not in prefixes

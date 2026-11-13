@@ -26,6 +26,7 @@ from ...domain.renta.retencion_soportada import RetencionSoportadaRecord
 from ...domain.transactions.dates import transaction_filing_date
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ...domain.transactions.models import Transaction
+from ..user_profile.profile_read_recorder import profile_values_under
 from .currency_predicates import is_non_eur_without_conversion
 from .renta_inmueble_findings import RentaInmuebleCause, RentaInmuebleFinding
 from .renta_inmueble_period import Ejercicio, Occupancy
@@ -47,7 +48,7 @@ def read_section[RecordT](
     records: Records,
 ) -> dict[int, RecordT]:
     try:
-        rows = rows_from_facts(section, path_values)
+        rows = rows_from_facts(section, profile_values_under(path_values, f"{section}."))
     except ProfileAnswerTypeError:
         records.findings.append(RentaInmuebleFinding(RentaInmuebleCause.RECORD_UNREADABLE, section))
         return {}

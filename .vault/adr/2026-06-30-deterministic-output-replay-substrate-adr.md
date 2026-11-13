@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#deterministic-output-replay-substrate'
 date: '2026-06-30'
-modified: '2026-07-17'
-body_hash: 'sha256:dccebbaff9321784b7031e7f082b3d94a17a72cb7d25e84e21d99a88c92afbe3'
+modified: '2026-11-13'
+body_hash: 'sha256:158f52ac78ab014d4fa6b855ade1ae7f14e8233afd8007b60263ef34c9d50bd6'
 related:
   - "[[2026-06-30-deterministic-output-replay-substrate-research]]"
 ---
@@ -50,7 +50,7 @@ The honesty risk is concentrated in the masking layer; its mitigation (an anti-t
 
 A single substrate, built additively, with two consumers standing on it.
 
-**Clock seam.** `core/time` gains a contextvar holding an optional frozen instant and a replay/test-scoped context manager that sets and restores it. `now()` returns the frozen instant when the contextvar is set and the real UTC time otherwise; the contextvar is never set in any production path. The manager is guarded so it refuses to activate under the live-test opt-in, keeping live-marked tests on real wall-clock plus explicit injection exactly as today. The calc-sheets `_utc_now()` helper is reconciled to route through the same seam so there is one consulted clock, not two. The four non-isolatable sites and the run-trace `started_at`/`finished_at` need no per-site change — they consult the seam through their existing `now()` call. Sites that already accept `clock=`/`occurred_at=` are left untouched.
+**Clock seam.** `core/time` gains a contextvar holding an optional frozen instant and a replay/test-scoped context manager that sets and restores it. `now()` returns the frozen instant when the contextvar is set and the real UTC time otherwise; the contextvar is never set in any production path. The one exception is the test-host fixed clock of `2026-11-13-desktop-test-host-clock-adr`: a profile worker of a runtime started by a `native-automation` test host for an e2e storage root sets it around a registered operation's application work. Authority timing reads the wall clock, never the seam. The manager is guarded so it refuses to activate under the live-test opt-in, keeping live-marked tests on real wall-clock plus explicit injection exactly as today. The calc-sheets `_utc_now()` helper is reconciled to route through the same seam so there is one consulted clock, not two. The four non-isolatable sites and the run-trace `started_at`/`finished_at` need no per-site change — they consult the seam through their existing `now()` call. Sites that already accept `clock=`/`occurred_at=` are left untouched.
 
 **Identity levers.** Golden scenarios mint a fixed `profile_id` and pass it through the existing `register_active_profile(profile_id=...)` path. `snapshot_id` is left to its natural construction and enrolled in the compare mask as an opaque-key JSON path.
 
@@ -68,7 +68,7 @@ Each decision is the production-safe application of a constraint the research su
 
 The substrate turns the observability replay from "the same argv re-runs" into "the same JSON came out", and gives the harness Q5 gate the deterministic, assertable foundation it was promised — both the harness-regression and the non-determinism failure modes become catchable. The clock seam additionally makes the four non-isolatable export/overview/run-trace timestamps deterministic for any test, not only the golden gate.
 
-Honest difficulties. The clock seam is global state by nature; its production-off and live-test-forbidden guards are load-bearing and must be defended by test, or the seam rots into a backdoor. The masking layer is the standing honesty hazard: every new nondeterministic field must be added to the declared allowlist deliberately and proven minimal, never widened to silence a diff. Capturing the result envelope per run grows the per-run trace footprint and brings the captured payload under the same sensitive-data discipline as the rest of the trace, so the synthetic-only rule for committed fixtures must hold. Reconciling `_utc_now()` onto the single seam touches calc-sheets and must preserve its existing behaviour.
+Honest difficulties. The clock seam is global state by nature; its production-off and live-test-forbidden guards are load-bearing and must be defended by test, or the seam rots into a backdoor. The test-host exception keeps this guard structural: no released native image fills the fixed-clock launch slot. The masking layer is the standing honesty hazard: every new nondeterministic field must be added to the declared allowlist deliberately and proven minimal, never widened to silence a diff. Capturing the result envelope per run grows the per-run trace footprint and brings the captured payload under the same sensitive-data discipline as the rest of the trace, so the synthetic-only rule for committed fixtures must hold. Reconciling `_utc_now()` onto the single seam touches calc-sheets and must preserve its existing behaviour.
 
 Pathways opened. Once any `--format json` run is deterministic and assertable, the same primitive serves the operator golden gate, future regression snapshots for any command, and the ledger-add idempotency proof — without re-deriving capture or compare. The substrate is the reusable floor the harness vertical-slice proof, and later operator personas, stand on.
 

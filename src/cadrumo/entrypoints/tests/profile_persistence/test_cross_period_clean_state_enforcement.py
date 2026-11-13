@@ -179,6 +179,7 @@ def _seed_ready_profile(bucket_id: str, objects: SecureObjectRepository | None =
                 UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),
                 UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),
                 UserProfileFact(path="taxpayer_type.incn_prior_12_months", value="7000000"),
+                UserProfileFact(path="taxpayer_type.regimen_entidades_navieras_tonelaje", value=False),
             ),
         )
     else:

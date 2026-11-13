@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#determinism-replay-residual'
 date: '2026-07-01'
-modified: '2026-07-17'
-body_hash: 'sha256:86318aa04e75ff96040f7f169be2ba009aa2a43c136d9ebecf966833bbbace9f'
+modified: '2026-11-13'
+body_hash: 'sha256:f9e293049a2326a43458ab66f44483012238365df0ae0f1d456e1790322200cd'
 related:
   - "[[2026-07-01-determinism-replay-residual-research]]"
   - "[[2026-06-30-deterministic-output-replay-substrate-adr]]"
@@ -152,7 +152,7 @@ single-command-golden opaque leaf remains, add it to `GOLDEN_MASK_FIELDS` and re
 anti-tautology proof so the set stays exactly residual.
 
 **Seam-coverage gate (decision 2).** Add a static AST conformance test under the core test surface
-that walks `src/cadrumo` production modules and fails on a bare `datetime.now(...)` /
+that walks `src/cadrumo` production modules (and, under `2026-11-13-desktop-test-host-clock-adr`, classifies every clock read in `src/cadrumo_runtime` as seam or wall) and fails on a bare `datetime.now(...)` /
 `datetime.utcnow(...)` call, directing the author to `core.time.now()`. It carries a named
 allowlist recording, per entry with a reason, the injectable live-AEAT sites (auth acquisition
 lock, certificate evaluators, authenticator types, browser site-health parser). Structure the gate
