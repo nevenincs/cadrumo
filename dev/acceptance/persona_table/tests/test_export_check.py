@@ -179,7 +179,6 @@ def test_the_cli_column_hands_the_driver_the_tables_export_check(tmp_path: Path)
         scope="full",
         actor="operator:test",
         aeat_filings_in_process=False,
-        needs_statements=False,
         rows=(),
     )
     writer = LineWriter(tmp_path / "cli-t.jsonl", Redactor(["synthetic-persona-passphrase"]))

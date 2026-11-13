@@ -75,7 +75,7 @@ def _lines_file(tmp_path: Path, *lines: str) -> Path:
 
 
 def _report(horizon: int) -> WorldReport:
-    return WorldReport(_PERSONA, horizon, "root", "id", "gen", "instant", "full", "actor", False, False, ())
+    return WorldReport(_PERSONA, horizon, "root", "id", "gen", "instant", "full", "actor", False, ())
 
 
 def test_the_horizons_and_returns_come_from_the_planner() -> None:
@@ -118,7 +118,10 @@ def test_progress_holds_only_the_trees_return_lines_and_skips_damaged_ones(tmp_p
 
 def test_the_returns_a_persona_line_names_undriven_are_read_back_from_the_line_the_writer_wrote(tmp_path: Path) -> None:
     _newest, middle, _oldest = _years()
-    skipped = ((("130", middle, "1T"), "stated not owed"), (("100", middle, "0A"), "Modelo 100 is not driven yet"))
+    skipped = (
+        (("130", middle, "1T"), "stated not owed"),
+        (("100", middle, "0A"), "no CLI door for modelo.edit.apply (prior_carries)"),
+    )
     reason = seeding_reason(_report(middle), "persona", "gen", Selection((), frozenset(), skipped))
     assert NOT_DRIVEN in reason
     writer = LineWriter(tmp_path / "cli-t.jsonl", _redactor())

@@ -1,18 +1,20 @@
-"""Drive a persona's returns through the installed ``aeat`` command line: create, calculate, verify, export, file.
+"""Drive a persona's returns through the installed ``aeat`` CLI: create, state, calculate, verify, export, file.
 
 Every step is one fresh ``aeat`` process; the driver reads the envelope it printed, maps it to the intake vocabulary
-(``intake``) and goes on. It states no tax fact: the arguments it sends are the report's coordinates and the ids the
-previous command printed. A command whose effect is not settled stops the chain, because the filed state of the
-persona is then not known, and a mutation is never sent twice.
+(``intake``) and goes on. It states no tax fact: the arguments it sends are the report's coordinates, the statements
+the world report lists (``doors`` turns each into the command that makes it) and the ids the previous command printed.
+A command whose effect is not settled stops the chain, because the filed state of the persona is then not known, and
+a mutation is never sent twice.
 """
 
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Protocol
 
+from .doors import DOORS, Door, statement_args, statement_gap
 from .intake import (
     Kind,
     LineWriter,
@@ -28,10 +30,8 @@ from .intake import (
     return_line,
     verify_stage,
 )
-from .world_report import ReturnKey, RowPlan, WorldReport
+from .world_report import Phase, ReturnKey, RowPlan, Statement, StatementKind, WorldReport
 
-SUPPORTED_MODELOS = frozenset({"130", "303"})
-"""The returns this driver runs end to end; the others need the pre-calculation statements or the calendar read."""
 FILING_NOTE = "Synthetic local pending filing only; not sent to AEAT"
 _M303 = "303"
 _WORK = ("app", "modelo", "work")
@@ -89,15 +89,15 @@ class CaseSummary:
     notes: tuple[str, ...] = field(default=())
 
 
-def unsupported_reason(plan: RowPlan, report: WorldReport) -> str | None:
-    """Why the driver cannot run ``plan`` yet, or ``None`` when it can."""
+def unsupported_reason(plan: RowPlan, doors: Mapping[StatementKind, Door] = DOORS) -> str | None:
+    """Why the driver cannot run ``plan`` yet, or ``None`` when it can.
+
+    A return is run whatever its modelo; it is left out when the table states it not owed (the calendar read is not
+    driven yet) or makes a statement no command line can say the way the table does.
+    """
     if not plan.owed:
         return "stated not owed: needs the overview calendar read"
-    if report.needs_statements:
-        return "the persona states values the table enters before it calculates"
-    if plan.modelo not in SUPPORTED_MODELOS:
-        return f"Modelo {plan.modelo} is not driven yet"
-    return None
+    return statement_gap(plan.statements, doors)
 
 
 def _wanted(report: WorldReport, modelos: Sequence[str], periods: Sequence[str]) -> frozenset[ReturnKey]:
@@ -108,16 +108,23 @@ def _wanted(report: WorldReport, modelos: Sequence[str], periods: Sequence[str])
     )
 
 
-def select_rows(report: WorldReport, *, modelos: Sequence[str] = (), periods: Sequence[str] = ()) -> Selection:
+def select_rows(
+    report: WorldReport,
+    *,
+    modelos: Sequence[str] = (),
+    periods: Sequence[str] = (),
+    doors: Mapping[StatementKind, Door] = DOORS,
+) -> Selection:
     """The returns to run: every wanted return and the supported replayed ones before the last of them.
 
     A return is wanted when the table writes a row for it and it passes the ``modelos`` and ``periods`` filters. A
-    history-filed return is neither run nor reported; a return the driver cannot run is left out with the reason.
+    history-filed return is neither run nor reported; a return the driver cannot run is left out with the reason,
+    which names the statement that has no CLI door.
     """
     wanted = _wanted(report, modelos, periods)
     last = max((index for index, plan in enumerate(report.rows) if plan.key in wanted), default=-1)
     candidates = [plan for plan in report.rows[: last + 1] if not plan.history_filed]
-    reasons = [(plan, unsupported_reason(plan, report)) for plan in candidates]
+    reasons = [(plan, unsupported_reason(plan, doors)) for plan in candidates]
     run = tuple(plan for plan, reason in reasons if reason is None)
     skipped = tuple((plan.key, reason) for plan, reason in reasons if reason is not None)
     return Selection(run, wanted, skipped)
@@ -186,22 +193,101 @@ def _created(case: Case, plan: RowPlan) -> str | StageResult:
     return work_unit_id or StageResult("error", reason="create printed no work_unit_id")
 
 
+@dataclass(slots=True)
+class _Stated:
+    """What the statements of one return did: the words that report them, and whether the latest phase applied any."""
+
+    notes: list[str] = field(default_factory=list)
+    applied: bool = False
+
+    def noted(self, stage: StageResult) -> StageResult:
+        """``stage`` with the statements made named in its reason."""
+        if not self.notes:
+            return stage
+        made = "statements: " + ", ".join(self.notes)
+        return replace(stage, reason=f"{stage.reason} | {made}" if stage.reason else made)
+
+
+def _statement_label(statement: Statement) -> str:
+    return f"state {statement.kind.value} {statement.target or ','.join(statement.families)}".strip()
+
+
+def _made(case: Case, statement: Statement, work_unit_id: str, stated: _Stated) -> StageResult | None:
+    """Make one statement; the calculate stage that ends the return when it cannot go on, else ``None``.
+
+    A refused statement is named and the return goes on when its door is optional, as the table leaves a statement
+    the application does not offer; the calculation then meets the state and answers for it. Anything else ends the
+    return, an unsettled effect above all.
+    """
+    label = _statement_label(statement)
+    if statement.refusal is not None:
+        return StageResult("refused", reason=f"{label}: {statement.refusal}")
+    outcome = _step(case, label, statement_args(statement, work_unit_id))
+    if outcome.kind is Kind.OK:
+        applied = outcome.result.get("applied") is True
+        stated.applied = stated.applied or applied
+        stated.notes.append(f"{label} {'applied' if applied else 'not applied'}")
+        return None
+    if outcome.kind is Kind.REFUSED and not DOORS[statement.kind].required:
+        stated.notes.append(f"{label} refused {outcome.code}")
+        return None
+    return failed(outcome, label)
+
+
+def _state(case: Case, plan: RowPlan, work_unit_id: str, phase: Phase, stated: _Stated) -> StageResult | None:
+    """Make the statements of ``phase`` in the table's order; the stage that ended the return, or ``None``."""
+    stated.applied = False
+    for statement in plan.statements:
+        if statement.phase is phase and (ended := _made(case, statement, work_unit_id, stated)) is not None:
+            return ended
+    return None
+
+
+def _prepared(case: Case, plan: RowPlan, work_unit_id: str, stated: _Stated) -> list[str] | StageResult:
+    """The calculate arguments once the statements the table makes before its first calculation are made."""
+    ended = _state(case, plan, work_unit_id, Phase.BEFORE_EVIDENCE, stated)
+    evidence = _evidence_args(case, plan) if ended is None else ended
+    if isinstance(evidence, StageResult):
+        return evidence
+    return _state(case, plan, work_unit_id, Phase.AT_CALCULATION, stated) or evidence
+
+
+def _calculated(
+    case: Case, plan: RowPlan, work_unit_id: str, evidence: list[str], stated: _Stated
+) -> Outcome | StageResult:
+    """Calculate, state what follows the calculation, and calculate again after each phase that applied a statement."""
+    args = [*_WORK, "calculate", work_unit_id, *evidence, "--by", case.report.actor]
+    outcome = _step(case, "calculate", args)
+    for phase in (Phase.AFTER_CALCULATION, Phase.AFTER_RECALCULATION):
+        if outcome.kind is not Kind.OK:
+            return outcome
+        if (ended := _state(case, plan, work_unit_id, phase, stated)) is not None:
+            return ended
+        if stated.applied:
+            outcome = _step(case, "calculate", args)
+    return outcome
+
+
 def run_return(case: Case, plan: RowPlan) -> RowResult:
-    """Create, calculate, verify, export and file one return; the result records where it stopped and why."""
+    """Create, state, calculate, verify, export and file one return; the result records where it stopped and why."""
     work_unit_id = _created(case, plan)
     if isinstance(work_unit_id, StageResult):
         return RowResult(work_unit_id)
-    evidence = _evidence_args(case, plan)
+    stated = _Stated()
+    evidence = _prepared(case, plan, work_unit_id, stated)
     if isinstance(evidence, StageResult):
-        return RowResult(evidence)
-    calculated = _step(case, "calculate", [*_WORK, "calculate", work_unit_id, *evidence, "--by", case.report.actor])
+        return RowResult(stated.noted(evidence))
+    calculated = _calculated(case, plan, work_unit_id, evidence, stated)
+    if isinstance(calculated, StageResult):
+        return RowResult(stated.noted(calculated))
     calculate, figures = calculate_stage(calculated)
+    result = RowResult(stated.noted(calculate), figures=figures)
     revision_id = _printed(calculated, "calculation_revision_id")
     if calculated.kind is not Kind.OK:
-        return RowResult(calculate, figures=figures)
+        return result
     if revision_id is None:
         return RowResult(StageResult("error", reason="calculate printed no calculation_revision_id"), figures=figures)
-    return _lifecycle(case, plan, work_unit_id, revision_id, RowResult(calculate, figures=figures))
+    return _lifecycle(case, plan, work_unit_id, revision_id, result)
 
 
 def _lifecycle(case: Case, plan: RowPlan, work_unit_id: str, revision_id: str, calculated: RowResult) -> RowResult:

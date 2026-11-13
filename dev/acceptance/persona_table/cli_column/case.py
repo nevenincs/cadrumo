@@ -40,7 +40,7 @@ from .intake import LineWriter, Outcome, persona_line
 from .runtime import RuntimeSetupError, e2e_parent, remove_snapshot, run_world, served_root, teardown_root
 from .world_report import ReturnKey, RowPlan, WorldReport
 
-NOT_DRIVEN = "not driven: U2/U3"
+NOT_DRIVEN = "not driven"
 """The words that name the returns the driver cannot run yet; the sweep reads the keys that follow them back."""
 _STORAGE = "runtime"
 _EXPORTS = "exports"
