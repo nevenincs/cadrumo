@@ -95,6 +95,10 @@ HOUSEHOLD_SECTION = "renta_family"
 
 HOUSEHOLD_BUTTON_ID = "manager-household"
 
+RECORD_GROUPS_BUTTON_ID_PREFIX = "manager-record-groups-"
+
+"""Opens the record groups from the panel of a section whose rows another field names; the section key follows."""
+
 CONTINUE_BUTTON_ID = "onboarding-continue"
 
 SETUP_TITLE_LOCALE_KEYS = {

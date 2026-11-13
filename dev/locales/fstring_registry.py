@@ -290,6 +290,13 @@ def _ledger_finding_registrations() -> tuple[FStringKeyRegistration, ...]:
     )
 
 
+def _ledger_link_fields() -> tuple[str, ...]:
+    """The ledger fields the TUI's link pickers label, in form order."""
+    from cadrumo.entrypoints.tui.ledger.link_picker import LINK_FAMILY_BY_FIELD
+
+    return tuple(LINK_FAMILY_BY_FIELD)
+
+
 def _runtime_registrations(
     descendant_relations: tuple[str, ...],
     descendant_disability_grades: tuple[str, ...],
@@ -1022,6 +1029,11 @@ def _dynamic_family_registrations(
             description="tui.ledger.classification.field.* (CLASSIFICATION_FIELD_NAMES)",
             key_factory=lambda v: f"tui.ledger.classification.field.{v}",
             values=tuple(ledger_classification_fields),
+        ),
+        FStringKeyRegistration(
+            description="tui.ledger.link_picker.field.* (LINK_FAMILY_BY_FIELD)",
+            key_factory=lambda v: f"tui.ledger.link_picker.field.{v}",
+            values=tuple(_ledger_link_fields()),
         ),
         FStringKeyRegistration(
             description="tui.home.reason.* (HOME_ACTION_REASON_CODES)",

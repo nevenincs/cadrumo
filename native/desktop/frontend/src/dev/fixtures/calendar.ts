@@ -1,8 +1,10 @@
 import type {
+  ObligationStatus,
+  OverviewPeriodState,
+} from "../../shell/calendarContract";
+import type {
   CalendarEntry,
   CalendarEvent,
-  CalendarObligationStatus,
-  CalendarUserState,
   FilingCalendar,
   NotificationsSummary,
 } from "../../shell/views";
@@ -25,10 +27,7 @@ const FIXTURE_YEAR = String(fixtureYear);
 /** The deadline status a fixture row carries with each reading, unless the
  * row names its own. A reading the product could not place is reported as
  * not applicable; a close it could not work out is set row by row. */
-export const FIXTURE_STATUS: Record<
-  CalendarUserState,
-  CalendarObligationStatus
-> = {
+export const FIXTURE_STATUS: Record<OverviewPeriodState, ObligationStatus> = {
   due: "UPCOMING",
   late: "OVERDUE",
   filed: "FILED",

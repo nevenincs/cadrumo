@@ -1411,6 +1411,7 @@ desktop:
       filed: Filed
       late: Late
       unknown: Unknown
+    suppressed: Not in your calendar
     title: Filing calendar
     to_day: Go to {date}
     view: View
@@ -4894,6 +4895,19 @@ desktop:
       unknown: We could not confirm whether the password changed. Next time, sign
         in with the new password and, if that fails, with the old one.
     progress: '{filled} of {total} details filled'
+    record_groups:
+      empty: Your profile has no related records yet.
+      linked_rows: Linked ledger entries
+      linked_rows_none: No ledger entry is linked.
+      linked_rows_shown: '{shown} of {total} shown'
+      more: Show more
+      read_again: Read again
+      read_failed: The related records could not be read.
+      reading: Reading the related records…
+      reduction:
+        fact_not_stated: Not stated
+        fact_stated: Stated
+      title: Related records
     refresh: Refresh
     refused: These changes could not be saved. Check the field guidance and refresh
       your profile before trying again.
@@ -8583,6 +8597,16 @@ tui:
           linked.
         transaction_takes_no_invoice: 'This movement cannot take an invoice: only
           an active movement of money in or out can.'
+    link_picker:
+      field:
+        arrendamiento_ref: Linked lease
+        gasto_capital_inmobiliario: Rental expense concept
+        inmueble_ref: Linked property
+      held_unavailable: The links this entry holds now could not be read. Nothing
+        changes unless you choose a link.
+      none_served: There is nothing to link to yet.
+      unavailable: The records to link to could not be read.
+      unchanged: Not chosen
     overview:
       affected_declarations: Affected declarations
       areas: Areas of Records
@@ -9338,6 +9362,23 @@ tui:
     stopped:
       code: Code
     title: Operations
+  profile:
+    record_groups:
+      close: Close
+      door_unavailable: That record is no longer in your profile. Read the related
+        records again.
+      empty: Your profile has no related records yet.
+      fact_stated: '[x] {words}'
+      fact_unstated: '[ ] {words}'
+      ledger_row: '{date} · {direction} {amount} {currency} · {description}'
+      linked_rows: Linked ledger entries
+      linked_rows_none: No ledger entry is linked.
+      linked_rows_shown: '{shown} of {total} shown'
+      more: Show more
+      read_again: Read again
+      read_failed: The related records could not be read.
+      reading: Reading the related records…
+      title: Related records
   reference:
     action:
       close: Back

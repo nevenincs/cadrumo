@@ -6,10 +6,8 @@ import { IconButton } from "@/components/ui/icon-button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { facts, factsGap } from "@/shell/compose";
-import type {
-  LedgerRuleApplyResult,
-  LedgerRuleRow,
-} from "../../../shell/ledgerClassificationSetup";
+import type { LedgerRuleRowProjection } from "../../../shell/ledgerClassificationContract";
+import type { LedgerRuleApplyResult } from "../../../shell/ledgerClassificationSetup";
 import { useStrings } from "../../../shell/strings";
 import { WriteHold } from "../WritePause";
 import { categoryLabel, classificationLabel } from "../movements/movementWords";
@@ -196,7 +194,7 @@ function RulesPane({
     setPreview(null);
   };
 
-  const columns: Column<LedgerRuleRow>[] = [
+  const columns: Column<LedgerRuleRowProjection>[] = [
     {
       key: "order",
       label: t("desktop.ledger.rules.column.order"),

@@ -1,346 +1,41 @@
-// The request and result shapes of the ledger operations that teach the
-// ledger how to classify: the stored rules, the declared ratios, the
-// counterparties and the model diagnostics. Field names are the registered
-// Python contracts' own, and a request leaves out the profile, which the
-// host fills.
+// The window's names for the request and result of the ledger operations that
+// teach the ledger how to classify: the stored rules, the declared ratios, the
+// counterparties and the model diagnostics. Each is the registered Python
+// contract's own type, taken from the generated module by definition id, so no
+// field is written here. A request leaves out the profile, which the host
+// fills.
 
-import type { OutputLanguage, PublicDecimal } from "./ledger";
+import type { LedgerClassificationContracts } from "./ledgerClassificationContract";
 
-// ---- Rules ---------------------------------------------------------------
+type Definition = keyof LedgerClassificationContracts;
 
-/** One stored rule. Its id is made of its pattern, classification and
- * category, so adding the same three again changes only its order. */
-export type LedgerRuleRow = {
-  rule_id: string;
-  /** A regular expression matched, ignoring case, anywhere in a
-   * movement's description. */
-  description_pattern: string;
-  classification: string;
-  category_id: string | null;
-  /** The lower number runs first; equal ones run oldest first. */
-  priority: number;
-  actor: string;
-  created_at: string;
-};
+/** What the window sends: the registered request without the profile. */
+type Sent<D extends Definition> = Omit<
+  LedgerClassificationContracts[D]["request"],
+  "profile_id"
+>;
 
-export type LedgerRuleListResult = {
-  profile_id: string;
-  rules: LedgerRuleRow[];
-};
+/** What the operation serves. */
+type Served<D extends Definition> = LedgerClassificationContracts[D]["result"];
 
-export type LedgerRuleAddRequest = {
-  description_pattern: string;
-  classification: string;
-  category_id?: string | null;
-  priority?: number;
-  actor?: string | null;
-};
+export type LedgerRuleListResult = Served<"ledger.rule.list">;
+export type LedgerRuleAddRequest = Sent<"ledger.rule.add">;
+export type LedgerRuleAddResult = Served<"ledger.rule.add">;
+export type LedgerRuleApplyRequest = Sent<"ledger.rule.apply">;
+export type LedgerRuleApplyResult = Served<"ledger.rule.apply">;
 
-export type LedgerRuleValidation =
-  | "empty_pattern"
-  | "invalid_pattern"
-  | "pattern_too_long"
-  | "pattern_overrun"
-  | "category"
-  | "invalid_command";
+export type LedgerRatiosYearRequest = Sent<"ledger.ratios.list">;
+export type LedgerRatiosListResult = Served<"ledger.ratios.list">;
+export type LedgerRatiosEligibleRequest = Sent<"ledger.ratios.eligible">;
+export type LedgerRatiosEligibleResult = Served<"ledger.ratios.eligible">;
+export type LedgerRatiosValidateResult = Served<"ledger.ratios.validate">;
+export type LedgerRatiosSetRequest = Sent<"ledger.ratios.set">;
+export type LedgerRatiosSetResult = Served<"ledger.ratios.set">;
+export type LedgerRatiosUnsetRequest = Sent<"ledger.ratios.unset">;
+export type LedgerRatiosUnsetResult = Served<"ledger.ratios.unset">;
 
-export type LedgerRuleAddResult = {
-  profile_id: string;
-  outcome: "added" | "validation_error";
-  rule: LedgerRuleRow | null;
-  validation_code: LedgerRuleValidation | null;
-  validation_messages: string[];
-  category_example: string | null;
-};
+export type LedgerCounterpartyRequest = Sent<"ledger.counterparty">;
+export type LedgerCounterpartyResult = Served<"ledger.counterparty">;
 
-/** Runs every rule over the movements still to classify, or with
- * `reaffirm` over those a rule classified as well. A dry run writes
- * nothing and names what it would classify. */
-export type LedgerRuleApplyRequest = {
-  reaffirm?: boolean;
-  dry_run?: boolean;
-  actor?: string | null;
-};
-
-export type LedgerRuleApplyResult = {
-  profile_id: string;
-  outcome: "dry_run" | "applied" | "validation_error";
-  dry_run: true | null;
-  would_match:
-    | {
-        transaction_id: string;
-        description: string;
-        matched_rule_id: string;
-        classification: string;
-      }[]
-    | null;
-  count: number | null;
-  rules_evaluated: number | null;
-  transactions_scanned: number | null;
-  matched: number | null;
-  skipped_already_classified: number | null;
-  no_match: number | null;
-  applied:
-    | {
-        transaction_id: string;
-        matched_rule_id: string;
-        classification: string;
-      }[]
-    | null;
-  bucket_event_count: number;
-  validation_code: LedgerRuleValidation | null;
-  validation_messages: string[];
-  refused_rule_id: string | null;
-};
-
-// ---- Business-use ratios -------------------------------------------------
-
-export type LedgerRatiosYearRequest = { year: number };
-
-/** The eligible categories of a year, their wording said in the language
- * the window shows. */
-export type LedgerRatiosEligibleRequest = {
-  year: number;
-  output_language: OutputLanguage;
-};
-
-export type LedgerRatiosListResult = {
-  profile_id: string;
-  year: number;
-  /** A mismatch with the censo withholds the ratios rather than show stale
-   * ones. */
-  outcome: "available" | "censo_mismatch";
-  rows: { category: string; ratio: string }[];
-  count: number;
-};
-
-export type LedgerRatiosEligibleResult = {
-  profile_id: string;
-  year: number;
-  rows: {
-    category: string;
-    /** The registry's name for the category, in the requested language. */
-    label: string;
-    /** The registry's notes on how the category is deducted, in the
-     * requested language. */
-    notes: string;
-    proportionality_kind: string;
-    override_present: boolean;
-  }[];
-  count: number;
-};
-
-export type LedgerRatiosValidateResult = {
-  profile_id: string;
-  profile_present: boolean;
-  eligible_count: number;
-  overrides_count: number;
-  missing_overrides: string[];
-  findings: { category: string; kind: string; detail: string }[];
-};
-
-/** A ratio is a canonical fraction from 0 to 1. */
-export type LedgerRatiosSetRequest = {
-  category: string;
-  ratio: string;
-  year: number;
-};
-
-export type LedgerRatiosSetResult = {
-  profile_id: string;
-  requested_category: string;
-  category: string;
-  ratio: string;
-  prior_ratio: string | null;
-};
-
-/** Clears a category's override; one that has none is refused, with this
- * result as its detail. */
-export type LedgerRatiosUnsetRequest = { category: string };
-
-export type LedgerRatiosUnsetResult = {
-  profile_id: string;
-  requested_category: string;
-  category: string;
-  outcome: "cleared" | "no_override";
-  prior_ratio: string | null;
-};
-
-// ---- Counterparties ------------------------------------------------------
-
-export type LedgerCounterpartyRequest = {
-  action: "view" | "confirm" | "withdraw" | "provincia" | "filing_name";
-  tax_identifier: string;
-  country_code?: string | null;
-  territorial_scope?: string | null;
-  identification_state?: string | null;
-  evidenced_scope?: string | null;
-  note?: string;
-  asserted_by?: string | null;
-  /** The INE code of the province of its domicilio fiscal; only with the provincia action. */
-  provincia_code?: string | null;
-  /** Only with the filing_name action: `natural_person` or `entity`. */
-  party_kind?: string | null;
-  primer_apellido?: string | null;
-  segundo_apellido?: string | null;
-  /** The person states there is no second surname; refused with a second surname. */
-  no_second_surname?: boolean;
-  nombre?: string | null;
-  razon_social?: string | null;
-  /** Shorter renderings, at most 16, one per width, each text fitting its width. */
-  renderings?: CounterpartyFilingNameRendering[];
-};
-
-/** A shorter rendering of the filing name for a field of `width` characters. */
-export type CounterpartyFilingNameRendering = { width: number; text: string };
-
-/** The name stated for a counterparty, and who stated it and when. */
-export type CounterpartyFilingName = {
-  party_kind: string;
-  primer_apellido: string | null;
-  segundo_apellido: string | null;
-  no_second_surname: boolean;
-  nombre: string | null;
-  razon_social: string | null;
-  renderings: CounterpartyFilingNameRendering[];
-  asserted_by: string;
-  asserted_at: string;
-};
-
-/** The declared kind disagrees with the form of the identifier: the two
- * kinds, and the sentence the backend served for them in `words_language`. */
-export type CounterpartyFilingNameFinding = {
-  code: "counterparty_filing_name_kind_contradicts_identifier_form";
-  declared_kind: "natural_person" | "entity";
-  observed_form: "natural_person" | "entity";
-  words?: string | null;
-  words_language?: OutputLanguage | null;
-};
-
-/** Why an export would refuse a party-name slot: no name stated, a natural
- * person stated with one surname, or a full name wider than the slot with no
- * rendering stated for its width. */
-export type CounterpartyFilingNameSlotRefusal =
-  "missing" | "single_surname" | "too_wide";
-
-/** One export field the pinned authority files a party name into, and
- * whether the stated name fills it, as the export's own composition judges.
- * `edition_words` name the slot's edition in `edition_words_language`. */
-export type CounterpartyFilingNameSlot = {
-  modelo: string;
-  revision_id: string;
-  edition_words: string;
-  edition_words_language: OutputLanguage;
-  layout_id: string;
-  export_record_id: string;
-  export_field_id: string;
-  width: number;
-  fits: boolean;
-  refusal: CounterpartyFilingNameSlotRefusal | null;
-  composed_length: number | null;
-  uses_rendering: boolean;
-};
-
-/** A stated name part. */
-export type CounterpartyFilingNamePart =
-  "primer_apellido" | "segundo_apellido" | "nombre" | "razon_social";
-
-/** The longest a part can be for the full name to fit some slot whole. */
-export type CounterpartyFilingNamePartLimit = {
-  part: CounterpartyFilingNamePart;
-  max_length: number;
-};
-
-/** One province or autonomous city, by its INE code and the name INE prints. */
-export type CounterpartyProvinciaChoice = { code: string; name: string };
-
-export type LedgerCounterpartyResult = {
-  profile_id: string;
-  action: "view" | "confirm" | "withdraw" | "provincia" | "filing_name";
-  tax_identifier: string;
-  country_code: string | null;
-  evidenced_scope: string | null;
-  /** What the person confirmed, where anything stands. */
-  facts: {
-    counterparty_key: string;
-    canonical_tax_identifier: string;
-    territorial_scope: string | null;
-    identification_state: string | null;
-    asserted_by: string;
-    asserted_at: string;
-    note: string;
-    provincia_code: string | null;
-  } | null;
-  /** What the ledger answers for it now, and where each answer comes from. */
-  resolution: {
-    territorial_scope: string | null;
-    territorial_source: string | null;
-    identification_state: string | null;
-    identification_source: string | null;
-    confirmed_scope: string | null;
-    evidenced_scope: string | null;
-    contradiction_detail: string | null;
-  } | null;
-  recorded: boolean | null;
-  withdrawn: boolean | null;
-  changed: boolean;
-  conflict_context: [string, string][] | null;
-  /** The provincia stated for the counterparty, served by a view. */
-  provincia_code: string | null;
-  /** The provinces it can be stated as, in INE code order; empty on a confirm or withdraw. */
-  provincia_choices: CounterpartyProvinciaChoice[];
-  /** The name stated for the counterparty, served by a view and a filing-name statement. */
-  filing_name?: CounterpartyFilingName | null;
-  findings?: CounterpartyFilingNameFinding[];
-  /** Every party-name export slot of the pinned authority with the stated
-   * name's fit; served by a view. */
-  filing_name_slots?: CounterpartyFilingNameSlot[];
-  /** The longest each part can be for the full name to fit a slot whole;
-   * served by a view. */
-  filing_name_part_limits?: CounterpartyFilingNamePartLimit[];
-};
-
-// ---- Model diagnostics ---------------------------------------------------
-
-export type LedgerLlmDiagnosticsRequest = {
-  since?: string | null;
-  until?: string | null;
-  low_confidence_threshold: PublicDecimal;
-};
-
-export type LedgerLlmDiagnosticsResult = {
-  profile_id: string;
-  since: string | null;
-  until: string | null;
-  low_confidence_threshold: PublicDecimal;
-  report: {
-    usage_providers: {
-      provider: string;
-      calls: number;
-      cache_hits: number;
-      input_tokens: number;
-      output_tokens: number;
-      total_tokens: number;
-      cost_estimate_usd: PublicDecimal | null;
-      unpriced_calls: number;
-    }[];
-    total_calls: number;
-    total_cache_hits: number;
-    total_input_tokens: number;
-    total_output_tokens: number;
-    total_cost_estimate_usd: PublicDecimal | null;
-    total_unpriced_calls: number;
-    confidence_providers: {
-      provider: string;
-      classified_count: number;
-      low_confidence_count: number;
-      medium_confidence_count: number;
-      high_confidence_count: number;
-      min_confidence: PublicDecimal | null;
-      max_confidence: PublicDecimal | null;
-      mean_confidence: PublicDecimal | null;
-    }[];
-    total_classified: number;
-    total_low_confidence: number;
-  };
-};
+export type LedgerLlmDiagnosticsRequest = Sent<"ledger.llm-diagnostics">;
+export type LedgerLlmDiagnosticsResult = Served<"ledger.llm-diagnostics">;

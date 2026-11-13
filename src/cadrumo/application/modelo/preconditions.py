@@ -425,21 +425,6 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         )
         for leaf in ("modelo.work.verify", "modelo.work.file", "modelo.export")
     ),
-    # An assumed value waits for the filer: stating the box again confirms it, and a box read
-    # from a source the filer may state over is confirmed by the override bound to it.
-    *(
-        _profile(
-            leaf,
-            f"{leaf}.assumed_value.confirmed",
-            f"{leaf}.assumed_value.{scenario}",
-            action_id=action_id,
-        )
-        for leaf in ("modelo.work.verify", "modelo.work.file", "modelo.export")
-        for scenario, action_id in (
-            ("unconfirmed", "operator.modelo.work.set_value"),
-            ("unconfirmed_source", "operator.modelo.work.override"),
-        )
-    ),
     # A work-income box only the filer can state, a stated disability's increase left
     # unanswered, or an expense above its legal limit: the filer states the box, through
     # the override of the binding it reads or else its own value. An unstated income box
@@ -474,6 +459,21 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
             ),
             ("expense_within_limit", "expense_above_limit", "operator.modelo.work.set_value", ()),
             ("expense_within_limit", "expense_above_limit_source", "operator.modelo.work.override", ()),
+        )
+    ),
+    # An assumed value waits for the filer: stating the box again confirms it, and a box read
+    # from a source the filer may state over is confirmed by the override bound to it.
+    *(
+        _profile(
+            leaf,
+            f"{leaf}.assumed_value.confirmed",
+            f"{leaf}.assumed_value.{scenario}",
+            action_id=action_id,
+        )
+        for leaf in ("modelo.work.verify", "modelo.work.file", "modelo.export")
+        for scenario, action_id in (
+            ("unconfirmed", "operator.modelo.work.set_value"),
+            ("unconfirmed_source", "operator.modelo.work.override"),
         )
     ),
     # The profile door that states a household row's required fact: the fact is the

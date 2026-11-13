@@ -9,10 +9,11 @@ import {
 import type { CounterpartyAsk } from "../../../shell/counterpartyAsk";
 import type { LedgerPort } from "../../../shell/ledger";
 import type {
-  CounterpartyFilingName as StatedFilingName,
+  CounterpartyFilingNamePartLimit,
+  CounterpartyFilingNameProjection as StatedFilingName,
   CounterpartyFilingNameSlot,
-  LedgerCounterpartyResult,
-} from "../../../shell/ledgerClassificationSetup";
+} from "../../../shell/ledgerClassificationContract";
+import type { LedgerCounterpartyResult } from "../../../shell/ledgerClassificationSetup";
 import { usePagePause, WritePauseContext } from "../WritePause";
 import { CounterpartiesPane } from "./CounterpartiesPane";
 import { CounterpartyFilingName } from "./CounterpartyFilingName";
@@ -42,21 +43,68 @@ const slot = (
   at: number,
   edition: string,
   width: number,
-  state: Partial<CounterpartyFilingNameSlot>,
-): CounterpartyFilingNameSlot => ({
-  modelo: "synthetic",
-  revision_id: `synthetic-${at}`,
-  edition_words: edition,
-  edition_words_language: "en",
-  layout_id: "synthetic",
-  export_record_id: "synthetic",
-  export_field_id: `synthetic-${at}`,
-  width,
-  fits: false,
-  refusal: "missing",
-  composed_length: null,
-  uses_rendering: false,
-  ...state,
+  stated: Partial<CounterpartyFilingNameSlot>,
+): CounterpartyFilingNameSlot => {
+  const held = {
+    fits: false,
+    refusal: "missing" as CounterpartyFilingNameSlot["refusal"],
+    composed_length: null,
+    uses_rendering: false,
+    ...stated,
+  };
+  // The state the backend serves for the fields above, as a synthetic word.
+  const state: CounterpartyFilingNameSlot["state"] = held.fits
+    ? held.uses_rendering
+      ? "fits_by_rendering"
+      : "fits"
+    : (held.refusal ?? "missing");
+  return {
+    modelo: "synthetic",
+    revision_id: `synthetic-${at}`,
+    edition_words: edition,
+    edition_words_language: "en",
+    layout_id: "synthetic",
+    export_record_id: "synthetic",
+    export_field_id: `synthetic-${at}`,
+    width,
+    ...held,
+    state,
+    state_words: `Synthetic: ${state}`,
+  };
+};
+
+const PART_LIMIT_WORDS = {
+  primer_apellido: "Synthetic: first surname",
+  segundo_apellido: "Synthetic: second surname",
+  nombre: "Synthetic: given name",
+  razon_social: "Synthetic: company name",
+} as const;
+
+const partLimit = (
+  part: keyof typeof PART_LIMIT_WORDS,
+  max_length: number,
+): CounterpartyFilingNamePartLimit => ({
+  part,
+  part_words: PART_LIMIT_WORDS[part],
+  words_language: "en",
+  max_length,
+});
+
+const KIND_WORDS = {
+  natural_person: "Synthetic: natural person",
+  entity: "Synthetic: entity",
+} as const;
+
+/** A stated name with the kind's served words. */
+const stating = (
+  held: Omit<
+    StatedFilingName,
+    "party_kind_words" | "party_kind_words_language"
+  >,
+): StatedFilingName => ({
+  ...held,
+  party_kind_words: `Synthetic: ${held.party_kind}`,
+  party_kind_words_language: "en",
 });
 
 const UNSTATED_SLOTS = [
@@ -83,9 +131,17 @@ const resultOf = (args: Args): LedgerCounterpartyResult => ({
   findings: args.findings ?? [],
   filing_name_slots: args.slots ?? UNSTATED_SLOTS,
   filing_name_part_limits: [
-    { part: "primer_apellido", max_length: 36 },
-    { part: "nombre", max_length: 36 },
-    { part: "razon_social", max_length: 40 },
+    partLimit("primer_apellido", 36),
+    partLimit("nombre", 36),
+    partLimit("razon_social", 40),
+  ],
+  party_kinds: [
+    {
+      kind: "natural_person",
+      words: KIND_WORDS.natural_person,
+      words_language: "en",
+    },
+    { kind: "entity", words: KIND_WORDS.entity, words_language: "en" },
   ],
 });
 
@@ -165,7 +221,7 @@ type Story = StoryObj<Args>;
 
 const STATED_AT = "2026-11-10T09:30:00Z";
 
-const ENTITY: StatedFilingName = {
+const ENTITY: StatedFilingName = stating({
   party_kind: "entity",
   primer_apellido: null,
   segundo_apellido: null,
@@ -178,7 +234,7 @@ const ENTITY: StatedFilingName = {
   ],
   asserted_by: "Ana",
   asserted_at: STATED_AT,
-};
+});
 
 /** Each served slot as the window shows it: the edition words, then the
  * served fields as tokens and numbers. */
@@ -233,7 +289,7 @@ export const NoneStated: Story = {
 export const NaturalPersonStated: Story = {
   name: "Natural person stated",
   args: {
-    stated: {
+    stated: stating({
       party_kind: "natural_person",
       primer_apellido: "García",
       segundo_apellido: "López",
@@ -243,7 +299,7 @@ export const NaturalPersonStated: Story = {
       renderings: [],
       asserted_by: "Ana",
       asserted_at: STATED_AT,
-    },
+    }),
     slots: [
       slot(0, "Synthetic edition A", 40, {
         fits: true,
@@ -330,7 +386,7 @@ export const KindContradictsIdentifier: Story = {
   name: "Kind contradicts the identifier",
   args: {
     tax_identifier: "B12345674",
-    stated: {
+    stated: stating({
       party_kind: "natural_person",
       primer_apellido: "García",
       segundo_apellido: null,
@@ -340,7 +396,7 @@ export const KindContradictsIdentifier: Story = {
       renderings: [],
       asserted_by: "Ana",
       asserted_at: STATED_AT,
-    },
+    }),
     slots: [slot(0, "Synthetic edition A", 40, { refusal: "single_surname" })],
     findings: [
       {

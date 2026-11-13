@@ -36,6 +36,7 @@ from .tools import require_unique_tool_keys
 
 if TYPE_CHECKING:
     from .evidence import LedgerEvidenceReviewListDoorV1
+    from .link_picker import LedgerLinkOptionsDoorV1
     from .models import LedgerRecordDoorsV1
     from .models_actividad_asset import ActivityAssetTuiActionsV1
     from .own_accounts import LedgerOwnAccountDoorV1
@@ -70,6 +71,8 @@ class LedgerWorkspaceInjection:
     classification_submitter: LedgerClassificationSubmitterV1 | None = None
     classification_patch_builder: LedgerClassificationPatchBuilderV1 | None = None
     """Pure bounded request construction; absent retains the direct application's typed patch."""
+    link_options_door: LedgerLinkOptionsDoorV1 | None = None
+    """The served entry options a form's link pickers offer; absent means no link picker is offered."""
     import_door: LedgerImportDoorV1 | None = None
     evidence_action: ActionReference | None = None
     evidence_items: tuple[AttachmentReviewItem, ...] | None = None

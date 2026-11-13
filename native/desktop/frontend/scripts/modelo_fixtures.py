@@ -39,18 +39,24 @@ import hashlib
 import json
 import re
 import sys
-import textwrap
-from collections.abc import AsyncGenerator, Generator, Iterable, Iterator, Mapping
+from collections.abc import AsyncGenerator, Generator, Iterable, Mapping
 from contextlib import asynccontextmanager, contextmanager
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from functools import cache
 from pathlib import Path
-from typing import TYPE_CHECKING, Annotated, Any, TypeAliasType, cast, get_args, get_origin
+from typing import TYPE_CHECKING, Any, cast
 from uuid import UUID
 
 from dev.fixture_projections.location import family_directory, scratch_tree
+from dev.fixture_projections.typescript_wire_types import (
+    TypeScriptWriter,
+    literal,
+    omittable_fields,
+    reach,
+    ts_name,
+)
 from dev.quality.typescript_module_size import MAX_PHYSICAL_LINES
 from pydantic import BaseModel
 from pydantic.json_schema import models_json_schema
@@ -359,7 +365,7 @@ def render_bounds() -> str:
 
 
 def _constant_list(doc: str, name: str, items: Iterable[str]) -> str:
-    values = "\n".join(f"  {_literal(item)}," for item in items)
+    values = "\n".join(f"  {literal(item)}," for item in items)
     return f"/** {doc} */\nexport const {name} = [\n{values}\n] as const;"
 
 
@@ -386,177 +392,6 @@ def _model_roots() -> tuple[list[tuple[str, str, type[BaseModel]]], list[type[Ba
             if identity is not None:
                 roots.append((definition_id, role, registry.lookup_public_schema_binding(identity).model_type))
     return roots, sent
-
-
-def _models_in(annotation: object) -> Iterator[type[BaseModel]]:
-    """The Pydantic models an annotation names, through unions, containers, ``Annotated`` and ``type`` aliases."""
-    if isinstance(annotation, type) and issubclass(annotation, BaseModel):
-        yield annotation
-        return
-    if isinstance(annotation, TypeAliasType):
-        yield from _models_in(annotation.__value__)
-        return
-    origin = get_origin(annotation)
-    if isinstance(origin, TypeAliasType):
-        yield from _models_in(origin.__value__)
-    if get_origin(annotation) is Annotated:
-        yield from _models_in(get_args(annotation)[0])
-        return
-    for argument in get_args(annotation):
-        yield from _models_in(argument)
-
-
-def omittable_fields(roots: Iterable[type[BaseModel]], defs: Mapping[str, Any]) -> dict[str, frozenset[str]]:
-    """Each definition's fields the wire can leave out, from the models' own serialisation config.
-
-    A field with an ``exclude_if`` predicate is left out of the serialised record whenever the predicate
-    holds, so its generated property is optional whatever its default. The definition is named as the
-    JSON schema names it: the class name, with a parametrised generic's brackets read as underscores. A model
-    carrying such a field that the schema does not define is refused rather than left required.
-    """
-    seen: dict[str, type[BaseModel]] = {}
-    pending = list(roots)
-    while pending:
-        model = pending.pop()
-        name = re.sub(r"[^A-Za-z0-9_]", "_", model.__name__)
-        if name in seen:
-            if seen[name] is not model:
-                raise SystemExit(f"two models are both named {name}")
-            continue
-        seen[name] = model
-        for found in model.model_fields.values():
-            pending.extend(_models_in(found.annotation))
-    omittable: dict[str, frozenset[str]] = {}
-    for name, model in seen.items():
-        fields = frozenset(key for key, found in model.model_fields.items() if found.exclude_if is not None)
-        if not fields:
-            continue
-        if name not in defs:
-            raise SystemExit(f"{name} leaves out {sorted(fields)} but the schema does not define it")
-        omittable[name] = fields
-    return omittable
-
-
-def _ts_name(name: str) -> str:
-    return name.lstrip("_")
-
-
-def _refs(node: object) -> Iterator[str]:
-    if isinstance(node, dict):
-        mapping = cast(dict[str, object], node)
-        ref = mapping.get("$ref")
-        if isinstance(ref, str):
-            yield ref.rsplit("/", 1)[-1]
-        for value in mapping.values():
-            yield from _refs(value)
-    elif isinstance(node, list):
-        for value in cast(list[object], node):
-            yield from _refs(value)
-
-
-def _reach(defs: Mapping[str, Any], start: Iterable[str]) -> set[str]:
-    seen: set[str] = set()
-    pending = list(start)
-    while pending:
-        name = pending.pop()
-        if name in seen:
-            continue
-        seen.add(name)
-        pending.extend(_refs(defs[name]))
-    return seen
-
-
-def _literal(value: object) -> str:
-    return json.dumps(value, ensure_ascii=False)
-
-
-class _Writer:
-    """Render JSON-schema definitions as TypeScript types, one per definition."""
-
-    def __init__(
-        self, defs: Mapping[str, Any], *, sent_only: set[str], omittable: Mapping[str, frozenset[str]]
-    ) -> None:
-        self._defs = defs
-        self._sent_only = sent_only
-        self._omittable = omittable
-        #: The definitions named by what was written since the last ``definition`` call began.
-        self.named: set[str] = set()
-
-    def inlined(self, name: str) -> bool:
-        """A private constrained scalar is written where it is used."""
-        node = self._defs[name]
-        return name.startswith("_") and "properties" not in node and "enum" not in node
-
-    def type_of(self, node: Mapping[str, Any]) -> str:
-        if "$ref" in node:
-            name = node["$ref"].rsplit("/", 1)[-1]
-            if self.inlined(name):
-                return self.type_of(self._defs[name])
-            self.named.add(name)
-            return _ts_name(name)
-        if "const" in node:
-            return _literal(node["const"])
-        if "enum" in node:
-            return " | ".join(_literal(value) for value in node["enum"])
-        for key in ("anyOf", "oneOf"):
-            if key in node:
-                members: list[str] = []
-                for member in node[key]:
-                    rendered = self.type_of(member)
-                    if rendered not in members:
-                        members.append(rendered)
-                return " | ".join(members)
-        kind = node.get("type")
-        if kind == "array":
-            if "prefixItems" in node:
-                return "[" + ", ".join(self.type_of(item) for item in node["prefixItems"]) + "]"
-            item = self.type_of(node.get("items", {}))
-            return f"({item})[]" if " | " in item else f"{item}[]"
-        if kind == "object":
-            values = node.get("additionalProperties")
-            value = self.type_of(values) if isinstance(values, dict) else "unknown"
-            return f"{{ [key: string]: {value} }}"
-        if isinstance(kind, list):
-            return " | ".join(self.type_of({"type": each}) for each in cast(list[str], kind))
-        return {"string": "string", "integer": "number", "number": "number", "boolean": "boolean", "null": "null"}.get(
-            cast(str, kind), "unknown"
-        )
-
-    def definition(self, name: str) -> str:
-        self.named = set()
-        node = self._defs[name]
-        lines = _doc(node.get("description"), indent="")
-        if "properties" not in node:
-            lines.append(f"export type {_ts_name(name)} = {self.type_of(node)};")
-            return "\n".join(lines)
-        required = set(node.get("required", ()))
-        optional_absent = name in self._sent_only
-        lines.append(f"export type {_ts_name(name)} = {{")
-        for prop, schema in node["properties"].items():
-            lines.extend(_doc(schema.get("description"), indent="  "))
-            absent = (optional_absent and prop not in required) or prop in self._omittable.get(name, ())
-            mark = "?" if absent else ""
-            lines.append(f"  {prop}{mark}: {self.type_of(schema)};")
-        lines.append("};")
-        return "\n".join(lines)
-
-
-_ROLE = re.compile(r":[a-z]+:`~?\.?([^`]+)`")
-
-
-def _doc(text: object, *, indent: str) -> list[str]:
-    """A Python docstring as a JSDoc block: roles and double backticks read as plain code spans."""
-    if not isinstance(text, str) or not text.strip():
-        return []
-    plain = _ROLE.sub(lambda found: "`" + found.group(1).rsplit(".", 1)[-1] + "`", text).replace("``", "`")
-    plain = plain.replace("*/", "*\\/")
-    paragraphs = [" ".join(part.split()) for part in plain.strip().split("\n\n") if part.strip()]
-    body: list[str] = []
-    for index, paragraph in enumerate(paragraphs):
-        if index:
-            body.append("")
-        body.extend(textwrap.wrap(paragraph, width=76 - len(indent)))
-    return [f"{indent}/**", *(f"{indent} * {line}".rstrip() for line in body), f"{indent} */"]
 
 
 _HEADER = """\
@@ -625,13 +460,13 @@ def _owners(
     """
     owners: dict[str, set[str]] = {name: set() for name in defs}
     for definition_id, _, model in roots:
-        for name in _reach(defs, (model.__name__,)):
+        for name in reach(defs, (model.__name__,)):
             owners[name].add(definition_id)
     registered = {model for _, _, model in roots}
     financial = {key for key, facts in host_operations().items() if facts["financial"]}
     for model in sent:
         if model not in registered:
-            for name in _reach(defs, (model.__name__,)):
+            for name in reach(defs, (model.__name__,)):
                 owners[name].update(financial)
     unowned = sorted(name for name, found in owners.items() if not found)
     if unowned:
@@ -744,14 +579,14 @@ def render_contract() -> dict[str, str]:
     models = [(model, "serialization") for _, _, model in roots] + [(model, "validation") for model in sent]
     _, schema = models_json_schema(cast(Any, list(dict.fromkeys(models))), ref_template="#/$defs/{model}")
     defs: dict[str, Any] = schema["$defs"]
-    received = _reach(defs, (model.__name__ for _, role, model in roots if role != "request"))
-    sent_reach = _reach(defs, (model.__name__ for model in sent))
-    writer = _Writer(
+    received = reach(defs, (model.__name__ for _, role, model in roots if role != "request"))
+    sent_reach = reach(defs, (model.__name__ for model in sent))
+    writer = TypeScriptWriter(
         defs,
         sent_only=sent_reach - received,
         omittable=omittable_fields([model for _, _, model in roots], defs),
     )
-    names = sorted((name for name in defs if not writer.inlined(name)), key=_ts_name)
+    names = sorted((name for name in defs if not writer.inlined(name)), key=ts_name)
     rendered: dict[str, str] = {}
     sized: dict[str, WrittenDefinition] = {}
     for name in names:
@@ -771,7 +606,7 @@ def render_contract() -> dict[str, str]:
         used = {named for name in module.names for named in sized[name].named}
         named: dict[str, set[str]] = {}
         for name in used:
-            named.setdefault(home[name], set()).add(_ts_name(name))
+            named.setdefault(home[name], set()).add(ts_name(name))
         imports = _imports(named, stem)
         written[f"{stem}.ts"] = "\n\n".join([_HEADER, *(["\n".join(imports)] if imports else []), *blocks]) + "\n"
     # The definition-keyed map names types from every module, so it lives in a module of its own: kept beside
@@ -780,8 +615,8 @@ def render_contract() -> dict[str, str]:
         f"/** The `modelo.{family}` definitions' share of `ModeloContracts`. */\n"
         f"type {_family_map_name(family)} = {{\n"
         + "\n".join(
-            f"  {_literal(definition_id)}: {{ "
-            + " ".join(f"{role}: {_ts_name(model_name)};" for role, model_name in parts)
+            f"  {literal(definition_id)}: {{ "
+            + " ".join(f"{role}: {ts_name(model_name)};" for role, model_name in parts)
             + " };"
             for definition_id, parts in sorted(by_family[family].items())
         )
@@ -792,7 +627,7 @@ def render_contract() -> dict[str, str]:
     for entries in by_family.values():
         for parts in entries.values():
             for _, model_name in parts:
-                mapped.setdefault(home[model_name], set()).add(_ts_name(model_name))
+                mapped.setdefault(home[model_name], set()).add(ts_name(model_name))
     operations = host_operations()
     written[f"{CONTRACTS_MODULE}.ts"] = (
         "\n\n".join(

@@ -67,6 +67,7 @@ from .aeat_auth_client import AeatAuthClient
 from .auth_configuration_client import configure_profile_authentication
 from .household_client import HouseholdClient
 from .overview_client import read_profile_overview
+from .record_groups_client import RecordGroupsClient
 
 type _MutationRunner = Callable[[FrontendClient, ProfileMutationRequest], ProfileMutationCompletion]
 type _OverviewReader = Callable[[FrontendClient, str, OutputLanguage], ProfileOverview]
@@ -496,6 +497,11 @@ class ProfileManagerClientComposition:
             aeat_auth_setup=self.auth_setup(),
             refresh_overview_language=self._refresh_overview_language,
             household=self.household(),
+            record_groups=RecordGroupsClient(
+                self.client,
+                profile_label=self.profile_label,
+                language=lambda: OutputLanguage(output_language()),
+            ),
         )
         self.screen = screen
         return screen

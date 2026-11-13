@@ -1445,6 +1445,7 @@ desktop:
       filed: Benyújtva
       late: Lejárt
       unknown: Ismeretlen
+    suppressed: Nem szerepel a naptáradban
     title: Bevallási naptár
     to_day: 'Ugrás ide: {date}'
     view: Nézet
@@ -4966,6 +4967,19 @@ desktop:
       unknown: Nem sikerült megerősíteni, hogy a jelszó megváltozott-e. Legközelebb
         az új jelszóval jelentkezz be, és ha az nem működik, a régivel.
     progress: '{total} adatból {filled} kitöltve'
+    record_groups:
+      empty: A profilodban még nincsenek kapcsolódó rekordok.
+      linked_rows: Kapcsolt főkönyvi tételek
+      linked_rows_none: Nincs kapcsolt főkönyvi tétel.
+      linked_rows_shown: '{total} közül {shown} látható'
+      more: Továbbiak
+      read_again: Újraolvasás
+      read_failed: A kapcsolódó rekordokat nem sikerült beolvasni.
+      reading: A kapcsolódó rekordok beolvasása…
+      reduction:
+        fact_not_stated: Nincs megadva
+        fact_stated: Megadva
+      title: Kapcsolódó rekordok
     refresh: Frissítés
     refused: Nem sikerült menteni a módosításokat. Ellenőrizd a mezők útmutatóját,
       és frissítsd a profilt az újabb próbálkozás előtt.
@@ -8738,6 +8752,16 @@ tui:
           össze.
         transaction_takes_no_invoice: 'Ehhez a tételhez nem kapcsolható számla: csak
           aktív, pénzbevételi vagy pénzkiadási tételhez lehet.'
+    link_picker:
+      field:
+        arrendamiento_ref: Kapcsolt bérleti szerződés
+        gasto_capital_inmobiliario: Ingatlanköltség jogcíme
+        inmueble_ref: Kapcsolt ingatlan
+      held_unavailable: A tétel jelenlegi kapcsolatait nem sikerült beolvasni. Semmi
+        sem változik, amíg nem választasz kapcsolatot.
+      none_served: Még nincs mihez kapcsolni.
+      unavailable: A kapcsolható rekordokat nem sikerült beolvasni.
+      unchanged: Nincs kiválasztva
     overview:
       affected_declarations: Érintett bevallások
       areas: A Nyilvántartás területei
@@ -9505,6 +9529,23 @@ tui:
     stopped:
       code: Kód
     title: Műveletek
+  profile:
+    record_groups:
+      close: Bezárás
+      door_unavailable: Ez a rekord már nincs a profilodban. Olvasd be újra a kapcsolódó
+        rekordokat.
+      empty: A profilodban még nincsenek kapcsolódó rekordok.
+      fact_stated: '[x] {words}'
+      fact_unstated: '[ ] {words}'
+      ledger_row: '{date} · {direction} {amount} {currency} · {description}'
+      linked_rows: Kapcsolt főkönyvi tételek
+      linked_rows_none: Nincs kapcsolt főkönyvi tétel.
+      linked_rows_shown: '{total} közül {shown} látható'
+      more: Továbbiak
+      read_again: Újraolvasás
+      read_failed: A kapcsolódó rekordokat nem sikerült beolvasni.
+      reading: A kapcsolódó rekordok beolvasása…
+      title: Kapcsolódó rekordok
   reference:
     action:
       close: Vissza

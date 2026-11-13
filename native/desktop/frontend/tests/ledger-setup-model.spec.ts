@@ -1,6 +1,6 @@
 import "./support/servedLimits";
 import { expect, test } from "@playwright/test";
-import type { LedgerRuleRow } from "../src/shell/ledgerClassificationSetup";
+import type { LedgerRuleRowProjection } from "../src/shell/ledgerClassificationContract";
 import { ruleApplyClashes } from "../src/shell/ledgerPlan";
 import {
   actionRows,
@@ -36,7 +36,7 @@ const rule = (
   priority: number,
   created: string,
   pattern = name.toUpperCase(),
-): LedgerRuleRow => ({
+): LedgerRuleRowProjection => ({
   rule_id: hexId(name),
   description_pattern: pattern,
   classification: "BUSINESS",

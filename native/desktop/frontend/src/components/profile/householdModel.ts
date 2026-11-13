@@ -1,6 +1,8 @@
 import type {
+  HouseholdDraft,
   HouseholdGroup,
   HouseholdLeaf,
+  HouseholdLeafAsk,
   HouseholdPersonEdit,
   HouseholdQuestion,
   HouseholdRow,
@@ -13,8 +15,8 @@ import type {
 } from "../../shell/userProfile";
 
 // What the household element does with the groups it is served, and nothing
-// the product owns: which leaves exist, their words, answer sets, the answers
-// each leaf is asked after, limits, states and the controls that add or
+// the product owns: which leaves exist, their words, answer sets, whether
+// each leaf is asked now, limits, states and the controls that add or
 // remove a person are all served. The window only turns what a person typed
 // into the change the product takes, and says which groups it can send.
 
@@ -90,49 +92,42 @@ export function removal(
     : householdEdit(kind, { remove_row_index: row.row_index });
 }
 
-/** Whether a served condition holds for what the person has answered. */
-function holds(
-  condition: HouseholdLeaf["shown_when"][number],
-  answer: string,
-): boolean {
-  if (condition.equals !== null) return answer === condition.equals;
-  if (condition.contains !== null)
-    return answer
-      .split(",")
-      .map((token) => token.trim())
-      .includes(condition.contains);
-  return false;
+/** The asks a person's form starts from: a stored person's, as served with
+ * the person, or a new person's, as served with the group. */
+export const startingAsks = (
+  group: HouseholdGroup,
+  row: HouseholdRow | null,
+): HouseholdLeafAsk[] => (row ? row.leaf_asks : group.new_row_leaves);
+
+/** The leaves the product asks now, in served order: those whose served ask is
+ * `asked`. A leaf with no served ask is not asked. */
+export function askedLeaves(
+  leaves: HouseholdLeaf[],
+  asks: readonly HouseholdLeafAsk[],
+): HouseholdLeaf[] {
+  const asked = new Set(
+    asks.filter((entry) => entry.ask === "asked").map((entry) => entry.leaf),
+  );
+  return leaves.filter((leaf) => asked.has(leaf.leaf));
 }
 
-/** The leaves asked of a person with these answers, in served order: a leaf
- * with no condition always, any other while one of its conditions holds on a
- * leaf that is itself asked. An answer to a leaf no longer asked counts for
- * nothing. */
-export function shownLeaves(
-  leaves: HouseholdLeaf[],
+/** The leaves whose ask is `awaits_answer`, in served order. */
+export const awaitingLeaves = (asks: readonly HouseholdLeafAsk[]): string[] =>
+  asks.filter((entry) => entry.ask === "awaits_answer").map((e) => e.leaf);
+
+/** The draft the product resolves the asks of: every answer typed so far, by
+ * leaf. A leaf left empty is not stated. */
+export function draftOf(
+  group: HouseholdGroup,
   values: Readonly<Record<string, string>>,
-): HouseholdLeaf[] {
-  const byKey = new Map(leaves.map((leaf) => [leaf.leaf, leaf]));
-  const asked = new Map<string, boolean>();
-  const isAsked = (leaf: HouseholdLeaf, seen: Set<string>): boolean => {
-    const known = asked.get(leaf.leaf);
-    if (known !== undefined) return known;
-    if (seen.has(leaf.leaf)) return false;
-    seen.add(leaf.leaf);
-    const shown =
-      leaf.shown_when.length === 0 ||
-      leaf.shown_when.some((condition) => {
-        const other = byKey.get(condition.leaf);
-        return (
-          other !== undefined &&
-          isAsked(other, seen) &&
-          holds(condition, (values[condition.leaf] ?? "").trim())
-        );
-      });
-    asked.set(leaf.leaf, shown);
-    return shown;
+): HouseholdDraft {
+  return {
+    group: group.group_key,
+    facts: group.leaves.flatMap((leaf) => {
+      const value = (values[leaf.leaf] ?? "").trim();
+      return value === "" ? [] : [{ leaf: leaf.leaf, value }];
+    }),
   };
-  return leaves.filter((leaf) => isAsked(leaf, new Set()));
 }
 
 /** Whether the group already holds as many people as its design does. A

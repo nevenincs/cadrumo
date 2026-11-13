@@ -223,6 +223,7 @@ function Sources({ locale }: { locale: OutputLanguage }) {
         profileCompanions={{
           reads: {
             household: () => Promise.reject({ code: "unavailable" }),
+            householdDraft: () => Promise.reject({ code: "unavailable" }),
             imputationElection: election.current.reads.imputationElection,
           },
           change: election.current.change,
