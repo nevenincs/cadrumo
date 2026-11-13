@@ -32,6 +32,7 @@ from .semantic_role_resolution import casilla_id_for_unique_revision_semantic_ro
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+    from ...domain.calculations.registry.ids import BindingId
     from ...domain.calculations.registry.schema import ModeloRevision
     from ...domain.modelos.calculation_revision import CalculationRevision
 
@@ -115,6 +116,12 @@ def _blocking(
     return (finding, failure)
 
 
+def _stated(target: CalculationRevision, casilla_id: CasillaId, binding: BindingId | None) -> bool:
+    if binding is not None and binding in target.binding_overrides:
+        return True
+    return casilla_id in target.input_values_by_casilla_id
+
+
 def _unstated_findings(revision: ModeloRevision, target: CalculationRevision) -> list[TrabajoIncomeFinding]:
     bindings = {casilla.id: casilla.binding for casilla in revision.casillas}
     findings: list[TrabajoIncomeFinding] = []
@@ -123,10 +130,7 @@ def _unstated_findings(revision: ModeloRevision, target: CalculationRevision) ->
         if casilla_id is None:
             continue
         binding = bindings.get(casilla_id)
-        stated = (binding is not None and binding in target.binding_overrides) or casilla_id in (
-            target.input_values_by_casilla_id
-        )
-        if not stated:
+        if not _stated(target, casilla_id, binding):
             finding = ModeloVerificationFinding(
                 kind=ModeloVerificationFindingKind.BLOCKING_RULE,
                 severity=ModeloVerificationFindingSeverity.BLOCKING,
