@@ -18,7 +18,6 @@ from ..core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOut
 from ..domain.filing.errors import FilingExportIntegrityError, FilingValidationError
 from ..domain.modelos.errors import (
     CalculationRevisionIntegrityError,
-    LedgerFilingCoverageError,
     ModeloOperatorLayerIntegrityError,
     ModeloValidationError,
     PensionReduccionError,
@@ -59,7 +58,12 @@ def _registered_terminal_precondition_verdict(current: BaseException) -> Precond
 
 def _terminal_integrity_verdict(current: BaseException) -> PreconditionVerdict | None:
     """Return the terminal verdict of a stored record that failed its integrity check."""
-    for integrity_class, (precondition, record) in _TERMINAL_INTEGRITY_RECORDS.items():
+    # Imported here: the revision module pulls in the typed registry, which the
+    # runtime client reaches through this module's importers but never evaluates.
+    from ..domain.modelos.calculation_revision import LedgerFilingCoverageError
+
+    records = {**_TERMINAL_INTEGRITY_RECORDS, LedgerFilingCoverageError: _LEDGER_FILING_COVERAGE_RECORD}
+    for integrity_class, (precondition, record) in records.items():
         if isinstance(current, integrity_class):
             return cli_exception_no_recovery_verdict(
                 precondition,
@@ -287,8 +291,8 @@ _TERMINAL_INTEGRITY_RECORDS: Final[dict[type[Exception], tuple[CliExceptionPreco
     CalculationRevisionIntegrityError: (CliExceptionPrecondition.STORED_DATA_VALID, "calculation_revision"),
     FilingExportIntegrityError: (CliExceptionPrecondition.EXPORT_DESIGN_CONSISTENT, "filing_export_design"),
     FilingValidationError: (CliExceptionPrecondition.STORED_DATA_VALID, "filing_draft"),
-    LedgerFilingCoverageError: (CliExceptionPrecondition.STORED_DATA_VALID, "ledger_filing_evidence"),
 }
+_LEDGER_FILING_COVERAGE_RECORD: Final = (CliExceptionPrecondition.STORED_DATA_VALID, "ledger_filing_evidence")
 
 
 def cli_exception_no_recovery_verdict(
