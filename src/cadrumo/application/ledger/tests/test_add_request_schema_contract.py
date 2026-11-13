@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import date
 from uuid import UUID
 
 import pytest
@@ -13,6 +14,8 @@ from ....domain.transactions.errors import TransactionValidationError
 from ..ledger_add_command import resolve_ledger_add_flow
 from ..ledger_add_contracts import LedgerAddRequest
 from .add_request_description_support import ledger_add_description
+
+_BOOKED_DATE = date.today().isoformat()
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -32,7 +35,7 @@ def _property(name: str) -> dict[str, object]:
 def _request_values(direction: str = "OUTGOING", classification: str = "NOT_YET_PROCESSED") -> dict[str, object]:
     return {
         "profile_id": _PROFILE,
-        "booked_date": "2026-04-15",
+        "booked_date": _BOOKED_DATE,
         "amount": "10.00",
         "direction": direction,
         "description": "Office materials",
@@ -77,7 +80,7 @@ def test_the_operation_accepts_each_served_classification_and_refuses_every_othe
         LedgerAddRequest.model_validate(values)
     unvalidated = LedgerAddRequest.model_construct(
         profile_id=_PROFILE,
-        booked_date="2026-04-15",
+        booked_date=_BOOKED_DATE,
         amount="10.00",
         direction="OUTGOING",
         description="Office materials",

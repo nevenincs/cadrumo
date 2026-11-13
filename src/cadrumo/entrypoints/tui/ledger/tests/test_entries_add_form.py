@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
+from datetime import date
 from typing import cast
 
 import pytest
@@ -18,6 +19,8 @@ from ..entries_add_form import LedgerAddFormUnavailableError, LedgerAddFormV1, r
 from ..models import LedgerFlowState
 from .entries_door_fixtures import MemoryEntriesLedger, entries_controller, served_add_form
 from .workspace_fixtures import WorkspaceHostApp
+
+_BOOKED_DATE = date.today().isoformat()
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -134,7 +137,7 @@ async def test_a_review_without_a_required_choice_is_refused_by_the_request_and_
     with override_settings(cadrumo_output_language="en"):
         async with WorkspaceHostApp(screen).run_test(size=(120, 40)) as pilot:
             await settle(pilot)
-            screen.query_one("#entries-add-booked-date", Input).value = "2026-03-14"
+            screen.query_one("#entries-add-booked-date", Input).value = _BOOKED_DATE
             screen.query_one("#entries-add-amount", Input).value = "10.00"
             screen.query_one("#entries-add-description", Input).value = "Synthetic"
             screen.query_one("#entries-add-review", Button).press()
