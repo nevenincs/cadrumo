@@ -925,6 +925,16 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.work.verify.prorrata_seed.superseded",
         action_id="operator.modelo.work.amend_wizard",
     ),
+    # The year's last return settles the register as its filing will leave it (LIVA art. 105.Cuatro); a
+    # register that stays uncovered, or would continue an especial regime nobody declared again, is declared first.
+    *(
+        _profile(
+            "modelo.work.verify",
+            "modelo.work.verify.prorrata_settlement.covered",
+            f"modelo.work.verify.prorrata_settlement.{scenario}",
+        )
+        for scenario in ("especial_continuation", "sector_entries")
+    ),
     _profile(
         "modelo.work.verify",
         "modelo.work.verify.shared_casilla_cells.adjudicated",

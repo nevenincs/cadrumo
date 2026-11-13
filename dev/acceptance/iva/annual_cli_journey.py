@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 from contextlib import AbstractContextManager, ExitStack
+from dataclasses import dataclass
 from decimal import Decimal
 from pathlib import Path
 
 from cadrumo.domain.calculations.registry.authority_store import AUTHORITY_DESCRIPTOR_FILENAME
 from dev.acceptance.installed_cli import InstalledCli, authority_generation
 
+from . import annual_prorrata_settlement as settlement
 from .annual_capture import add_documented_ledger_facts, add_issued_invoice
 from .annual_contracts import (
     ANNUAL_PERIOD,
@@ -20,6 +22,8 @@ from .annual_contracts import (
     QUARTERS,
     IvaAnnualFoundationCliJourneyReceipt,
     IvaAnnualM390CliJourneyReceipt,
+    IvaAnnualProrrataSettlementCliJourneyReceipt,
+    IvaProrrataSettlementScenario,
 )
 from .annual_m390 import calculate_and_verify_m390
 from .annual_projection import decimal_casilla
@@ -369,3 +373,106 @@ def run_iva_annual_m390_cli_journey(
             annual_resultado=f"{annual_values['resultado']:.2f}",
             commands=tuple(receipts),
         )
+
+
+def run_iva_annual_prorrata_settlement_cli_journey(
+    *,
+    executable: Path,
+    authority_root: Path,
+    storage_root: Path,
+    artifact_root: Path,
+    year: int,
+    scenario: IvaProrrataSettlementScenario,
+    runtime_scope: AbstractContextManager[object] | None = None,
+) -> IvaAnnualProrrataSettlementCliJourneyReceipt:
+    """Take the last Modelo 303 of ``year`` through calculate, verify and export before its filing.
+
+    ``SETTLED`` exports with no register declaration for the year, proves the export wrote nothing,
+    files the same revision and reads the filed definitive back as the register's and, for the next
+    year, as its provisional percentage. The other scenarios declare, after the 4T verified, a register
+    that cannot cover the year and prove the export of that revision refuses and writes nothing.
+
+    Raises:
+        IvaFilingYearUnsupportedError: Before any side effect, when the published authority has no
+            Modelo 303 quarter authored for ``year``.
+    """
+    with ExitStack() as resources:
+        session = settlement.open_final_quarter(
+            resources=resources,
+            executable=executable,
+            authority_root=authority_root,
+            storage_root=storage_root,
+            artifact_root=artifact_root,
+            year=year,
+            runtime_scope=runtime_scope,
+        )
+        percentage = settlement.final_quarter_percentage(session.quarter)
+        outcome = _meet_register_state(session, scenario, percentage)
+        descriptor = authority_root.resolve(strict=True) / AUTHORITY_DESCRIPTOR_FILENAME
+        return IvaAnnualProrrataSettlementCliJourneyReceipt(
+            schema_version="iva-01-annual-prorrata-settlement-installed-cli-journey-v1",
+            acceptance_ids=(f"IVA-01-PRORRATA-SETTLEMENT-{year}-{scenario.value}",),
+            filing_year=year,
+            scenario=scenario.value,
+            executable=str(session.cli.executable),
+            executable_sha256=sha256_path(session.cli.executable),
+            source_identity=checkout_source_identity(),
+            package_identity=installed_package_identity(),
+            authority_generation=authority_generation(authority_root),
+            authority_descriptor_sha256=sha256_path(descriptor),
+            storage_root=str(storage_root.resolve()),
+            work_unit_id=session.quarter.work_unit_id,
+            calculation_revision_id=session.quarter.calculation_revision_id,
+            definitive_percentage=f"{percentage:.2f}",
+            exported_opcion=outcome.opcion,
+            exported_revocacion=outcome.revocacion,
+            refusal_code=outcome.refusal_code,
+            filing_record_id=outcome.filing_record_id,
+            next_year_provisional_percentage=outcome.next_year_provisional,
+            commands=tuple(session.receipts),
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class _RegisterOutcome:
+    opcion: str = ""
+    revocacion: str = ""
+    refusal_code: str = ""
+    filing_record_id: str = ""
+    next_year_provisional: str = ""
+
+
+def _meet_register_state(
+    session: settlement.FinalQuarterSession, scenario: IvaProrrataSettlementScenario, percentage: Decimal
+) -> _RegisterOutcome:
+    """Run the scenario's export, and for the settled one the filing and next year's reading, against the register."""
+    year = session.journey_year.year
+    if scenario is IvaProrrataSettlementScenario.SETTLED:
+        if settlement.register_entry(session, year) is not None:
+            raise IvaCliJourneyError("the register already holds the year before the 4T export")
+        fichero = settlement.export_final_quarter(session, f"m303-{year}-4t.fichero-boe")
+        if settlement.register_entry(session, year) is not None:
+            raise IvaCliJourneyError("the 4T export wrote the register")
+        fields = settlement.exported_election_fields(session, fichero)
+        settlement.require_election_fields(fields, option="2", revocation="2")
+        filing_record_id = settlement.file_final_quarter(session)
+        settlement.require_entry_percentage(
+            settlement.register_entry(session, year), percentage, field="definitive_percentage"
+        )
+        seeded = settlement.seed_next_year(session)
+        settlement.require_entry_percentage(seeded, percentage, field="provisional_percentage")
+        provisional = seeded.get("provisional_percentage")
+        return _RegisterOutcome(
+            opcion=fields["opcion-prorrata"],
+            revocacion=fields["revocacion-prorrata"],
+            filing_record_id=filing_record_id,
+            next_year_provisional=str(provisional),
+        )
+    declaration = (
+        settlement.declare_sector_command()
+        if scenario is IvaProrrataSettlementScenario.UNDECLARED_SECTOR
+        else settlement.elect_especial_command(year - 1)
+    )
+    run(session.cli, session.receipts, session.artifact, declaration, result_keys=())
+    error = settlement.refused_export(session, f"m303-{year}-4t-refused.fichero-boe")
+    return _RegisterOutcome(refusal_code=str(error.get("code")))

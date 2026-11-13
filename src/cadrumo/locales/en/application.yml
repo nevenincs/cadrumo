@@ -3593,6 +3593,17 @@ application:
       prorrata_seed_unsourced: Your prorrata register applies a prorrata for %{filing_year}
         but holds no provisional percentage, so the deductible IVA cannot be computed.
         Seed %{filing_year} from the prior year's definitive percentage.
+      prorrata_settlement_especial_continuation: Your prorrata register holds the
+        special prorrata for %{prior_filing_year} and no declaration for %{filing_year},
+        so it is not known whether you continue it or revoke it (RIVA art. 28). State
+        the %{filing_year} regime in your prorrata register before verifying or exporting
+        this modelo.
+      prorrata_settlement_sector_entries: 'Your prorrata register has differentiated
+        sectors and no %{filing_year} prorrata for these: %{sector_ids}. The definitive
+        prorrata is calculated in the last return of the year (LIVA art. 105) and
+        cannot be declared without each sector''s percentage. State the %{filing_year}
+        prorrata of each sector in your prorrata register before verifying or exporting
+        this modelo.'
       pulled_filing_casilla_mismatch: 'Box [%{casilla_number}] for period %{period_code}
         %{filing_year}: the calculation gives %{computed_value}, but the declaration
         submitted to AEAT shows %{filed_value}.'

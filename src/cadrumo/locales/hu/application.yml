@@ -3732,6 +3732,17 @@ application:
         arányosítást alkalmaz, de nincs benne ideiglenes százalék, ezért a levonható
         IVA nem számítható ki. Vezesd át %{filing_year} évre az előző év végleges
         százalékát.
+      prorrata_settlement_especial_continuation: Az arányosítási nyilvántartásodban
+        a(z) %{prior_filing_year}. évre különleges áfa-arányosítás szerepel, a(z)
+        %{filing_year}. évre viszont nincs nyilatkozat, ezért nem tudni, hogy folytatod-e
+        vagy visszavonod (RIVA 28. cikk). A modell ellenőrzése vagy exportálása előtt
+        add meg a nyilvántartásodban a(z) %{filing_year}. év rendszerét.
+      prorrata_settlement_sector_entries: 'Az arányosítási nyilvántartásodban elkülönült
+        ágazatok vannak, és ezeknek nincs a(z) %{filing_year}. évi arányosítása: %{sector_ids}.
+        A végleges arányosítást az év utolsó bevallásában kell kiszámítani (LIVA 105.
+        cikk), és az egyes ágazatok százaléka nélkül nem adható meg. A modell ellenőrzése
+        vagy exportálása előtt add meg a nyilvántartásodban mindegyik ágazat a(z)
+        %{filing_year}. évi arányosítását.'
       pulled_filing_casilla_mismatch: '[%{casilla_number}] rovat, %{filing_year} %{period_code}
         időszak: a számítás eredménye %{computed_value}, de az AEAT-hez benyújtott
         bevallásban %{filed_value} szerepel.'

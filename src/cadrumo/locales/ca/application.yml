@@ -3785,6 +3785,17 @@ application:
         %{filing_year} però no té percentatge provisional, de manera que no es pot
         calcular l'IVA deduïble. Arrossega al %{filing_year} el percentatge definitiu
         de l'any anterior.
+      prorrata_settlement_especial_continuation: El teu registre de prorrata té la
+        prorrata especial el %{prior_filing_year} i cap declaració per al %{filing_year},
+        de manera que no se sap si la continues o la revoques (art. 28 RIVA). Declara
+        al teu registre de prorrata el règim del %{filing_year} abans de verificar
+        o exportar aquest model.
+      prorrata_settlement_sector_entries: 'El teu registre de prorrata té sectors
+        diferenciats i no té la prorrata del %{filing_year} d''aquests: %{sector_ids}.
+        La prorrata definitiva es calcula a l''última declaració de l''any (art. 105
+        LIVA) i no es pot declarar sense el percentatge de cada sector. Declara al
+        teu registre de prorrata la del %{filing_year} de cada sector abans de verificar
+        o exportar aquest model.'
       pulled_filing_casilla_mismatch: 'Casella [%{casilla_number}] del període %{period_code}
         de %{filing_year}: el càlcul dona %{computed_value}, però la declaració presentada
         a l''AEAT mostra %{filed_value}.'

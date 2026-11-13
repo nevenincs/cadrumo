@@ -114,6 +114,7 @@ from ..filing.runtime import RegistrySchemaAccessor
 from ..operator_actions.models import PreconditionVerdict
 from ..overview.modelo202_instalment_evidence import art_40_3_election_reader_for_bucket
 from ..prorrata_register.service import require_prorrata_register_coordinates_current
+from ..prorrata_register.settlement import settled_prorrata_register
 from ..user_profile.completeness import pinned_registry_scope
 from ..user_profile.modelo_scoped_conditions import (
     ModeloScopedRequirementState,
@@ -974,6 +975,8 @@ def _resolve_m303_filing_facts_for_export(
         period=work_unit.period,
         evidence=filing_instance_evidence,
         arrivals=export_ports.m303_arrivals(),
+        revision=revision,
+        work_unit=work_unit,
         operation=operation,
     )
     require_m303_regimen_simplificado_scope_matches_profile(
@@ -989,18 +992,28 @@ def resolve_m303_filing_facts_from_arrivals(
     period: Period,
     evidence: FilingInstanceEvidence,
     arrivals: M303ArrivalPorts,
+    revision: CalculationRevision,
+    work_unit: WorkUnit,
     operation: PinnedAuthorityOperation,
 ) -> M303FilingFacts:
     """Fold the saved filing evidence with the ledger and register arrivals into the export's filing facts.
 
     The export and the declaration's form both resolve a Modelo 303's period
     facts here, so the form can show nothing the exported file does not carry.
+    The last return of the year reads the register as filing ``revision`` will
+    leave it (LIVA art. 105.Cuatro), derived in memory from its own casillas;
+    nothing is written before the filing exists.
     """
     prorrata_register_repository = arrivals.prorrata_register
     prorrata_register = require_prorrata_register_coordinates_current(
         prorrata_register_repository.load(),
         operation=operation,
     )
+    settled_register = settled_prorrata_register(
+        prorrata_register, revision=revision, work_unit=work_unit, operation=operation
+    )
+    if settled_register is not None:
+        prorrata_register = settled_register
     bienes_register = arrivals.bienes_inversion.load()
     iva_aggregation = aggregate_iva_ledger_observations_from_repositories(
         bucket_id=bucket_id,
