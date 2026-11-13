@@ -279,6 +279,17 @@ function pageBoxes() {
   const norm = (text) => (text ?? "").replace(/\s+/g, " ").trim();
   const root = document.querySelector("[data-modelo-form]");
   if (!root) return null;
+  // The field's typed value, when the form serves it on the element
+  // (`data-value-kind` and `data-value` carry the application's own scalar
+  // kind and text); null when the form serves only its display words.
+  const typedOf = (element) =>
+    element?.hasAttribute("data-value-kind") &&
+    element.hasAttribute("data-value")
+      ? {
+          kind: element.getAttribute("data-value-kind"),
+          text: element.getAttribute("data-value"),
+        }
+      : null;
   const boxes = [];
   for (const row of root.querySelectorAll('div[role="row"][data-key]')) {
     const cells = [...row.children].filter(
@@ -288,6 +299,7 @@ function pageBoxes() {
       key: row.getAttribute("data-key"),
       box: norm(cells[0]?.textContent),
       value: norm((cells[2]?.querySelector("button") ?? cells[2])?.textContent),
+      typed: typedOf(row),
     });
   }
   for (const cell of root.querySelectorAll("td[data-key]")) {
@@ -298,9 +310,44 @@ function pageBoxes() {
       key: cell.getAttribute("data-key"),
       box: norm(cell.querySelector('[class*="font-mono"]')?.textContent),
       value: values.at(-1) ?? "",
+      typed: typedOf(cell),
     });
   }
+  // Repeating-record tables: a cell is a casilla only where the form names
+  // its column's casilla (`data-casilla`); unnamed cells are not boxes.
+  let table = 0;
+  for (const scroll of root.querySelectorAll("[data-records-scroll]")) {
+    table += 1;
+    let line = 0;
+    for (const tr of scroll.querySelectorAll("tbody tr")) {
+      line += 1;
+      for (const [index, cell] of [...tr.children].entries()) {
+        const casilla = cell.getAttribute("data-casilla");
+        if (!casilla) continue;
+        boxes.push({
+          key: `r:${table}:${line}:${index}:${casilla}`,
+          box: casilla,
+          value: norm(cell.textContent),
+          typed: typedOf(cell),
+        });
+      }
+    }
+  }
   return boxes;
+}
+
+/** What the window's records tables name, for the run log only. */
+function pageRecordsProbe() {
+  const norm = (text) => (text ?? "").replace(/\s+/g, " ").trim();
+  return [...document.querySelectorAll("[data-records-scroll]")].map(
+    (scroll) => ({
+      heads: [...scroll.querySelectorAll("thead th")].map((th) =>
+        norm(th.textContent).slice(0, 40),
+      ),
+      rows: scroll.querySelectorAll("tbody tr").length,
+      named: scroll.querySelectorAll("td[data-casilla]").length,
+    }),
+  );
 }
 
 /** What the page shows when an expected pane does not: for the run log only. */
@@ -634,7 +681,11 @@ async function readFigures() {
   );
   const seen = new Map();
   const readPage = async (name) => {
-    log("form-page", { name, probe: await exec(pageFormProbe) });
+    log("form-page", {
+      name,
+      probe: await exec(pageFormProbe),
+      records: await exec(pageRecordsProbe),
+    });
     const before = seen.size;
     await exec(pageScroll, "top");
     let atEnd = 0;
@@ -663,13 +714,20 @@ async function readFigures() {
   }
   const figures = {};
   const conflicts = [];
-  for (const { box, value } of seen.values()) {
+  const language = await exec(() => document.documentElement.lang);
+  let typedBoxes = 0;
+  for (const { box, value, typed } of seen.values()) {
     if (!box || !value || value === "—" || isZeroText(value)) continue;
-    if (box in figures && figures[box] !== value)
-      conflicts.push({ box, kept: figures[box], other: value });
-    else figures[box] ??= value;
+    // The typed scalar the form serves wins; without one, a number is
+    // written as a plain decimal and any other text stays as displayed.
+    const figure = typed ? typed.text : plainDecimal(value, language);
+    if (typed) typedBoxes += 1;
+    if (box in figures && figures[box] !== figure)
+      conflicts.push({ box, kept: figures[box], other: figure });
+    else figures[box] ??= figure;
   }
   log("figures", {
+    typedBoxes,
     pages,
     boxes: seen.size,
     shown: Object.keys(figures).length,
@@ -1187,6 +1245,28 @@ function profileCredential() {
 const isZeroText = (value) => {
   const bare = value.replace(/[\s €%$]/g, "");
   return /\d/.test(bare) && /^[-+]?[0.,]*$/.test(bare);
+};
+
+/**
+ * A displayed number as a plain decimal string ("−2.158,99 €" -> "-2158.99").
+ * Used only where the form serves no typed value. The grouping and decimal
+ * marks are read from the shape of the text under the window's language
+ * (Spanish, Catalan and Hungarian write a decimal comma; English a point);
+ * text that is not wholly a number is returned unchanged.
+ */
+const plainDecimal = (value, language) => {
+  const bare = value
+    .replace(/[\s  ]/g, "")
+    .replace(/[€%$]$/, "")
+    .replace(/^[−‒–]/, "-");
+  if (!/^[-+]?\d[\d.,]*$/.test(bare)) return value;
+  const comma = !(language ?? "").toLowerCase().startsWith("en");
+  const [group, decimal] = comma ? [".", ","] : [",", "."];
+  const pattern = new RegExp(
+    `^[-+]?(\\d+|\\d{1,3}(\\${group}\\d{3})+)(\\${decimal}\\d+)?$`,
+  );
+  if (!pattern.test(bare)) return value;
+  return bare.split(group).join("").replace(decimal, ".").replace(/^\+/, "");
 };
 
 const STAGES = [
