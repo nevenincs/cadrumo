@@ -177,6 +177,9 @@ aggregation:
         no és vigent.
       operations_present: Aquest any té operacions vigents. Retira-les abans de declarar
         que no n'hi va haver cap.
+      specific_operation_required: Aquest tipus d'operació és sempre una operació
+        específica segons les regles del model 232. Indica aquesta operació com a
+        específica.
       stale_revision: Aquesta declaració del model 232 ha canviat des que la vas llegir.
         Torna-la a llegir i reintenta-ho.
   modelo_bindings:
@@ -5438,6 +5441,9 @@ filing:
       pays_rent_with_retencion: paga lloguers subjectes a retenció
       pays_withheld_income: paga retribucions subjectes a retenció
       trades_intracommunity: realitza operacions intracomunitàries
+    records_derived_basis: 'És una derivació local a partir de les operacions del
+      model 232 que vas indicar, no una dada oficial de l''AEAT: per a aquest any
+      mostren que el contribuent %{fact}.'
   validation:
     deadline_missed: Termini de presentació vençut
     formula_divergence: Divergència en el càlcul de la fórmula

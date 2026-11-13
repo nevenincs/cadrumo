@@ -169,6 +169,8 @@ aggregation:
         is not in force.
       operations_present: This year has operations in force. Withdraw them before
         you state that there were none.
+      specific_operation_required: This operation type is always a specific operation
+        under the Modelo 232 rules. State this operation as specific.
       stale_revision: This Modelo 232 statement changed since you read it. Read it
         again and retry.
   modelo_bindings:
@@ -5334,6 +5336,9 @@ filing:
       pays_rent_with_retencion: pays rent subject to withholding
       pays_withheld_income: pays income subject to withholding
       trades_intracommunity: carries out intra-community transactions
+    records_derived_basis: 'This is a local derivation from the Modelo 232 operations
+      you stated, not an official AEAT value: for this year they show that the taxpayer
+      %{fact}.'
   validation:
     deadline_missed: Submission deadline has passed
     formula_divergence: Divergence in formula calculation

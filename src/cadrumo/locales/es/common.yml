@@ -182,6 +182,8 @@ aggregation:
         no está vigente.
       operations_present: Este año tiene operaciones vigentes. Retíralas antes de
         declarar que no hubo ninguna.
+      specific_operation_required: Este tipo de operación es siempre una operación
+        específica según las reglas del Modelo 232. Indica esta operación como específica.
       stale_revision: Esta declaración del modelo 232 cambió desde que la leíste.
         Léela de nuevo y reinténtalo.
   modelo_bindings:
@@ -5449,6 +5451,9 @@ filing:
       pays_rent_with_retencion: paga alquileres sujetos a retención
       pays_withheld_income: paga retribuciones sujetas a retención
       trades_intracommunity: realiza operaciones intracomunitarias
+    records_derived_basis: 'Es una derivación local a partir de las operaciones del
+      Modelo 232 que indicaste, no un dato oficial de la AEAT: para este año muestran
+      que el contribuyente %{fact}.'
   validation:
     deadline_missed: Plazo de presentación vencido
     formula_divergence: Divergencia en el cálculo de la fórmula

@@ -177,6 +177,8 @@ aggregation:
         nincs érvényben.
       operations_present: Ebben az évben érvényes ügyletek vannak. Vond vissza őket,
         mielőtt kijelented, hogy nem volt egy sem.
+      specific_operation_required: Ez az ügylettípus a 232-es modell szabályai szerint
+        mindig különleges ügylet. Add meg ezt az ügyletet különleges ügyletként.
       stale_revision: A 232-es modell nyilatkozata megváltozott, amióta elolvastad.
         Olvasd be újra, és próbáld újra.
   modelo_bindings:
@@ -5416,6 +5418,9 @@ filing:
       pays_rent_with_retencion: adóelőleg-levonás alá eső bérleti díjat fizet
       pays_withheld_income: adóelőleg-levonás alá eső jövedelmet fizet
       trades_intracommunity: Közösségen belüli ügyleteket végez
+    records_derived_basis: 'Ez a 232-es modellhez megadott ügyleteidből készült helyi
+      levezetés, nem hivatalos AEAT-adat: ebben az évben azt mutatják, hogy az adózóra
+      igaz: %{fact}.'
   validation:
     deadline_missed: A benyújtási határidő lejárt.
     formula_divergence: Eltérés a képletszámításban.
