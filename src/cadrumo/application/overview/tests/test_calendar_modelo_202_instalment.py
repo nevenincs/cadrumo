@@ -109,6 +109,7 @@ def _legal_entity(operation: PinnedAuthorityOperation) -> TaxpayerProfile:
         fiscal_residency=FiscalResidency.from_registry("resident_irpf"),
         enrollment=ModeloEnrollment(large_company=False),
         incn_prior_12_months=threshold,
+        regimen_entidades_navieras_tonelaje=False,
     )
 
 

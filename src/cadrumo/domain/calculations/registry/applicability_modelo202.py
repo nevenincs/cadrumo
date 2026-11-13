@@ -17,6 +17,7 @@ from pydantic import BaseModel, Field, StringConstraints
 from ....core.decimal.grammar import try_parse_canonical_decimal
 from ....core.modelo import Modelo
 from ....core.models import STRICT_FROZEN_CONFIG
+from ....core.parsing.utils import parse_bool
 from ...contribuyente.entity_type import EntityType
 from ...deadlines.models import TaxpayerProfile
 from .applicability_models import ApplicabilityVerdict, ModeloApplicability
@@ -41,6 +42,13 @@ class Modelo202Modality(StrEnum):
 
     ART_40_2_OPTIONAL = "art_40_2_optional"
     ART_40_3_MANDATORY = "art_40_3_mandatory"
+    ART_40_3_MANDATORY_REGIME = "art_40_3_mandatory_regime"
+    """Art. 40.3 is mandatory because the entity applies the navieras tonelaje regime.
+
+    The stated turnover does not exceed the threshold, so unlike
+    ``ART_40_3_MANDATORY`` this does not make the Modelo 202 owed in every
+    instalment (Orden HFP/227/2017 art. 1.3).
+    """
     INCOMPLETE = "incomplete"
 
 
@@ -133,11 +141,15 @@ def _modelo_202_applicability_declarations(
         "threshold.fact_id",
         "reason.not_applicable",
         "reason.incomplete",
+        "reason.navieras_unstated",
         f"reason.{Modelo202Modality.ART_40_3_MANDATORY.value}",
+        f"reason.{Modelo202Modality.ART_40_3_MANDATORY_REGIME.value}",
         f"reason.{Modelo202Modality.ART_40_2_OPTIONAL.value}",
         "legal_refs.not_applicable",
         "legal_refs.incomplete",
+        "legal_refs.navieras_unstated",
         f"legal_refs.{Modelo202Modality.ART_40_3_MANDATORY.value}",
+        f"legal_refs.{Modelo202Modality.ART_40_3_MANDATORY_REGIME.value}",
         f"legal_refs.{Modelo202Modality.ART_40_2_OPTIONAL.value}",
         "reason.filing_mandatory",
         "reason.filing_depends_on_ingreso",
@@ -230,9 +242,19 @@ def modelo_202_modality_from_inputs(
     entity_type: EntityType | None,
     incn_prior_12_months: Decimal | None,
     effective_date: date,
+    regimen_entidades_navieras_tonelaje: bool | None = None,
     authority: GovernedFactSource | None = None,
 ) -> Modelo202ModalityVerdict:
-    """Derive the Modelo 202 modality from the two raw inputs (entity type + INCN).
+    """Derive the Modelo 202 modality from the raw inputs (entity type, INCN, navieras regime).
+
+    The Modelo 202 instructions make art. 40.3 mandatory for two cases: a
+    cifra de negocios above the threshold in the twelve months before the
+    período, and an entity that applies the navieras tonelaje regime. Below the
+    threshold an unstated navieras regime leaves the modality incomplete, since
+    assuming it away would assume the entity is not a naviera. An unstated
+    turnover leaves it incomplete even for a naviera: the method is then known,
+    but whether the Modelo 202 is owed in every instalment or only where an
+    ingreso results (Orden HFP/227/2017 art. 1.3) turns on that turnover.
 
     The SINGLE modality definition, callable WITHOUT a full
     :class:`TaxpayerProfile` so the calculation engine can evaluate it off the
@@ -283,10 +305,42 @@ def modelo_202_modality_from_inputs(
             ),
             threshold_fact=threshold_fact,
         )
+    if regimen_entidades_navieras_tonelaje is True:
+        return _regime_mandatory_verdict(declarations, threshold_fact=threshold_fact)
+    if regimen_entidades_navieras_tonelaje is None:
+        return Modelo202ModalityVerdict(
+            modality=Modelo202Modality.INCOMPLETE,
+            reason=declarations["reason.navieras_unstated"],
+            legal_refs=_modelo_202_legal_refs(declarations, "navieras_unstated"),
+            failure=RegistryFailureClassification(
+                condition=RegistryFailureCondition.MODELO_202_NAVIERAS_DECLARED,
+                facts={
+                    "modelo": Modelo("202").value,
+                    "regimen_entidades_navieras_tonelaje_declared": False,
+                    "entity_type_legal": True,
+                },
+            ),
+            threshold_fact=threshold_fact,
+        )
     return Modelo202ModalityVerdict(
         modality=Modelo202Modality.ART_40_2_OPTIONAL,
         reason=declarations[f"reason.{Modelo202Modality.ART_40_2_OPTIONAL.value}"],
         legal_refs=_modelo_202_legal_refs(declarations, Modelo202Modality.ART_40_2_OPTIONAL.value),
+        threshold_fact=threshold_fact,
+    )
+
+
+def _regime_mandatory_verdict(
+    declarations: dict[str, str],
+    *,
+    threshold_fact: ResolvedScalarFact,
+) -> Modelo202ModalityVerdict:
+    """Return art. 40.3 as mandatory for the navieras tonelaje regime."""
+    modality = Modelo202Modality.ART_40_3_MANDATORY_REGIME
+    return Modelo202ModalityVerdict(
+        modality=modality,
+        reason=declarations[f"reason.{modality.value}"],
+        legal_refs=_modelo_202_legal_refs(declarations, modality.value),
         threshold_fact=threshold_fact,
     )
 
@@ -306,12 +360,14 @@ def derive_modelo_202_modality(
         entity_type=profile.entity_type,
         incn_prior_12_months=profile.incn_prior_12_months,
         effective_date=effective_date,
+        regimen_entidades_navieras_tonelaje=profile.regimen_entidades_navieras_tonelaje,
         authority=authority,
     )
 
 
 _ENTITY_TYPE_PATH = "taxpayer_type.entity_type"
 _INCN_PATH = "taxpayer_type.incn_prior_12_months"
+NAVIERAS_TONELAJE_PATH = "taxpayer_type.regimen_entidades_navieras_tonelaje"
 
 
 def _entity_type_from_token(raw: str | None) -> EntityType | None:
@@ -333,13 +389,15 @@ def modelo_202_modality_from_path_values(
     """Derive the ejercicio's Modelo 202 modality from the wizard-free profile projection.
 
     An absent or unreadable entity type or INCN leaves the modality incomplete;
-    a malformed decimal never stands for a value.
+    a malformed decimal never stands for a value. An unstated or unreadable
+    navieras regime is unknown, never no.
     """
     incn = values.get(_INCN_PATH)
     return modelo_202_modality_from_inputs(
         entity_type=_entity_type_from_token(values.get(_ENTITY_TYPE_PATH)),
         incn_prior_12_months=None if incn is None or not incn else try_parse_canonical_decimal(incn),
         effective_date=date(filing_year, 12, 31),
+        regimen_entidades_navieras_tonelaje=parse_bool(values.get(NAVIERAS_TONELAJE_PATH)),
         authority=authority,
     ).modality
 
@@ -347,10 +405,11 @@ def modelo_202_modality_from_path_values(
 def art_40_3_method_applies(modality: Modelo202Modality, *, elected: bool | None) -> bool | None:
     """Return whether LIS art. 40.3 calculates the instalment, or ``None`` when that is not known.
 
-    Above the threshold art. 40.3 is mandatory; below it the declaración censal
-    election decides, and an unstated election decides nothing.
+    Above the threshold, or for an entity under the navieras tonelaje regime,
+    art. 40.3 is mandatory; otherwise the declaración censal election decides,
+    and an unstated election decides nothing.
     """
-    if modality is Modelo202Modality.ART_40_3_MANDATORY:
+    if modality in (Modelo202Modality.ART_40_3_MANDATORY, Modelo202Modality.ART_40_3_MANDATORY_REGIME):
         return True
     if modality is Modelo202Modality.ART_40_2_OPTIONAL:
         return elected
@@ -420,6 +479,15 @@ def modelo_202_filing_obligation(
             failure=modality.failure,
         )
     declarations = _modelo_202_applicability_declarations(effective_date=effective_date, authority=authority)
+    if modality.modality is Modelo202Modality.ART_40_3_MANDATORY_REGIME:
+        # Art. 40.3 is forced, but filing is unconditional only above the threshold.
+        return ModeloApplicability(
+            modelo=entity_applicability.modelo,
+            verdict=ApplicabilityVerdict.INCOMPLETE,
+            reason=modality.reason,
+            legal_refs=modality.legal_refs,
+            provenance=entity_applicability.provenance,
+        )
     if modality.modality is Modelo202Modality.ART_40_3_MANDATORY:
         return ModeloApplicability(
             modelo=entity_applicability.modelo,
