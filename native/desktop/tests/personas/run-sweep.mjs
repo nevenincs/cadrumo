@@ -20,7 +20,7 @@
 //     --build <CMake binary dir of the packaged host> [--rows <rows-<sha>.jsonl>] \
 //     [--config Release] [--jobs 1] [--persona <id>[,<id>]] [--out <file>] \
 //     [--case-timeout-min 30] [--logs <dir>] [--fresh] [--no-stop-on-load-failure]
-//     [--loads-only] [--dry-run]
+//     [--loads-only] [--world-tree <dir>] [--staged-package <dir>] [--dry-run]
 //
 //   --rows       default: the newest rows-*.jsonl in the table directory; the
 //                tree defaults to the sha in that file name.
@@ -31,6 +31,11 @@
 //   By default no further case starts once a case's window did not load the
 //   profile (loads false) or its world was not prepared;
 //   --no-stop-on-load-failure runs on.
+//   --world-tree materialise worlds from this source tree (src and dev) instead
+//                of the repository, so a world matches an older packaged build.
+//   --staged-package reuse an automation package mirror an earlier run staged
+//                (its app directory) instead of staging, when the build records
+//                have since moved past the package under test.
 //   --loads-only plan one case per persona (the newest horizon of the rows
 //                file) and only sign in and wait for the declarations list
 //                (CADRUMO_PERSONA_LOADS_ONLY=1); a load failure does not stop
@@ -356,10 +361,12 @@ async function runCase(item, context) {
         join(root, "world"),
       ],
       {
-        cwd: repository,
+        cwd: context.worldTree,
         env: {
           ...process.env,
-          PYTHONPATH: [join(repository, "src"), repository].join(delimiter),
+          PYTHONPATH: [join(context.worldTree, "src"), context.worldTree].join(
+            delimiter,
+          ),
         },
       },
       timeoutMs,
@@ -485,25 +492,33 @@ async function main() {
       : ".venv/bin/python",
   );
   const config = args.config ?? process.env.CADRUMO_BUILD_CONFIG ?? "Release";
-  const staged = await run(
-    python,
-    [
-      "-m",
-      "dev.desktop_automation_stage",
-      "--build",
-      resolve(args.build),
-      "--config",
-      config,
-    ],
-    {
-      cwd: repository,
-      env: {
-        ...process.env,
-        PYTHONPATH: [join(repository, "src"), repository].join(delimiter),
-      },
-    },
-    10 * 60_000,
-  );
+  const staged = args["staged-package"]
+    ? {
+        status: 0,
+        stdout: JSON.stringify({
+          package: resolve(args["staged-package"]),
+          executable: join(resolve(args["staged-package"]), "cadrumo.exe"),
+        }),
+      }
+    : await run(
+        python,
+        [
+          "-m",
+          "dev.desktop_automation_stage",
+          "--build",
+          resolve(args.build),
+          "--config",
+          config,
+        ],
+        {
+          cwd: repository,
+          env: {
+            ...process.env,
+            PYTHONPATH: [join(repository, "src"), repository].join(delimiter),
+          },
+        },
+        10 * 60_000,
+      );
   if (staged.status !== 0)
     throw new Error(
       `staging the packaged host failed: ${(staged.stdout || staged.stderr).trim().slice(-400)}`,
@@ -518,6 +533,7 @@ async function main() {
     logsDir,
     timeoutMs: Number(args["case-timeout-min"] ?? 30) * 60_000,
     loadsOnly,
+    worldTree: args["world-tree"] ? resolve(args["world-tree"]) : repository,
   };
   const ordinals = new Map(cases.map((item, index) => [item.id, index + 1]));
   const results = new Map();
