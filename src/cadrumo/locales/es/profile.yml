@@ -672,6 +672,8 @@ profile:
           label: Amortización acumulada atestada
         amortizacion_acumulada_desde:
           label: Fecha a la que se refiere la amortización acumulada
+        arrendado_desde:
+          label: Fecha desde la que el inmueble está arrendado
         direccion:
           label: Dirección del inmueble
         fecha_adquisicion:
@@ -702,6 +704,8 @@ profile:
           label: Porcentaje de usufructo
         referencia_catastral:
           label: Referencia catastral
+        sin_arrendar:
+          label: Inmueble que nunca se ha arrendado
         situacion:
           choices:
             '1': Con referencia catastral, en territorio común

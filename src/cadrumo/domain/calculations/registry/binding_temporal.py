@@ -24,6 +24,7 @@ make the row reproducible.
 from __future__ import annotations
 
 from collections.abc import Mapping
+from dataclasses import dataclass
 from enum import StrEnum
 from typing import Annotated, Literal
 
@@ -54,6 +55,7 @@ __all__ = [
     "NonCalculation",
     "NonCalculationReason",
     "PriorQuarterExpandingSpan",
+    "RelativeToFilingYear",
     "SameFilingYearPeriods",
     "SameTargetContext",
     "TargetPeriodOffset",
@@ -62,6 +64,16 @@ __all__ = [
     "temporal_max_year_delta",
     "temporal_period_anchors",
 ]
+
+
+@dataclass(frozen=True, slots=True)
+class RelativeToFilingYear:
+    """Mark a provider integer as a count of ejercicios before the one filed, never a year.
+
+    Carried as ``Annotated`` metadata on the field. The provider registration's
+    coordinate guard admits an integer so marked, because it moves with the
+    target filing context instead of pinning one.
+    """
 
 
 @pydantic_validation_boundary

@@ -37,6 +37,10 @@ from ..overview.calendar_models import (
 from ..overview.coverage import ObligationCoverageReport
 from ..overview.evidence import CalendarEvidenceProjection
 from ..overview.home import HomeAvailability, HomeZoneState
+from .declarations_calendar_suppressed import (
+    DeclarationsCalendarSuppressedEntryV1,
+    project_suppressed_calendar_entries,
+)
 from .stored_data_integrity import StoredDataIntegrityMixin
 from .work_plazo import ModeloWorkConditionalRecargoPreview, conditional_recargo_preview_from_recovery
 
@@ -231,6 +235,13 @@ class DeclarationsCalendarProjectionV1(BaseModel):
     sources: tuple[DeclarationsCalendarSourceStateV1, ...]
     entries: tuple[DeclarationsCalendarEntryRefV1, ...]
     coverage: ObligationCoverageReport = Field(default_factory=ObligationCoverageReport)
+    suppressed_entries: tuple[DeclarationsCalendarSuppressedEntryV1, ...] = ()
+    """Scheduled obligations the calendar positively held back, each with its verdict and words.
+
+    These are never part of ``entries``: an entry is an obligation the calendar
+    positively found applicable. An obligation the calendar could not decide is
+    in neither list; ``coverage`` names it as undetermined.
+    """
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -262,6 +273,7 @@ def project_declarations_calendar(
         sources=sources,
         entries=tuple(rows),
         coverage=calendar.coverage,
+        suppressed_entries=project_suppressed_calendar_entries(calendar.suppressed_entries),
     )
 
 
@@ -441,6 +453,7 @@ def _validate_projection_model(projection: DeclarationsCalendarProjectionV1) -> 
     if not projection.query_range.covers(projection.as_of):
         raise ValueError("calendar as_of must fall inside its query range")
     _validate_unique_projection_entries(projection.entries)
+    _validate_unique_suppressed_entries(projection.suppressed_entries)
     by_source = {item.source: item for item in projection.sources}
     _validate_schedule_projection_count(by_source[DeclarationsCalendarSource.SCHEDULE], len(projection.entries))
     _validate_local_projection_rows(by_source[DeclarationsCalendarSource.LOCAL_FILING], projection.entries)
@@ -456,6 +469,12 @@ def _validate_unique_projection_entries(entries: tuple[DeclarationsCalendarEntry
     keys = tuple(item.semantic_key() for item in entries)
     if len(keys) != len(set(keys)):
         raise ValueError("calendar entries require unique natural legal identities")
+
+
+def _validate_unique_suppressed_entries(entries: tuple[DeclarationsCalendarSuppressedEntryV1, ...]) -> None:
+    keys = tuple(item.semantic_key() for item in entries)
+    if len(keys) != len(set(keys)):
+        raise ValueError("suppressed calendar entries require unique natural legal identities")
 
 
 def _validate_schedule_projection_count(
@@ -563,5 +582,6 @@ __all__ = [
     "DeclarationsCalendarSource",
     "DeclarationsCalendarSourceObservationV1",
     "DeclarationsCalendarSourceStateV1",
+    "DeclarationsCalendarSuppressedEntryV1",
     "project_declarations_calendar",
 ]

@@ -6443,6 +6443,8 @@ sheets:
       amortizacion: Amortització
       amount: Import
       amount_donated: Import donat
+      anexo_c1_referencia_catastral: Referència cadastral (annex C.1)
+      anexo_c1_titular: Titular de l'immoble (annex C.1)
       anualidades_alimentos: Anualitats per aliments
       arrendado: Arrendament
       ascendants_75_plus_total: Ascendents ≥ 75 anys (total)
@@ -6575,6 +6577,8 @@ sheets:
         pendents dels quatre exercicis anteriors
       gastos_pendientes_aplicados: Import pendent d'exercicis anteriors aplicat en
         aquest exercici
+      gastos_pendientes_origen: Interessos i despeses de reparació i conservació pendents,
+        per exercici d'origen
       geographic_mobility_clave: Mobilitat geogràfica
       house_number: Número de casa
       housing_loan_communication_clave: Comunicació de préstecs d'habitatge habitual
@@ -9798,6 +9802,13 @@ workspace:
         local:
           filing: Presentació local
         schedule: Calendari legal
+      suppressed:
+        verdict:
+          attribution_pass_through: 'No la presenta l''entitat mateixa: les rendes
+            s''atribueixen als seus membres, que les declaren en les seves pròpies
+            declaracions.'
+          not_applicable: 'No et correspon: el teu perfil no exigeix aquesta declaració
+            en aquest període.'
       title: Calendari fiscal
       user:
         due: Pendent

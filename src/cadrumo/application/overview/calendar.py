@@ -655,6 +655,9 @@ def _suppressed_calendar_entry(
     return SuppressedCalendarEntry(
         modelo=obligation.modelo,
         period=obligation.period,
+        opens_on=obligation.opens_on,
+        closes_on=obligation.closes_on,
+        adjusted_closes_on=obligation.adjusted_closes_on,
         verdict=applicability.verdict,
         reason=applicability.reason,
         actions=doors,
