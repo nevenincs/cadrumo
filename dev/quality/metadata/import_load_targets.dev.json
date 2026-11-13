@@ -164,6 +164,7 @@
         "dev.acceptance.persona_table.diff",
         "dev.acceptance.persona_table.export_readback",
         "dev.acceptance.persona_table.export_text",
+        "dev.acceptance.persona_table.frontend",
         "dev.acceptance.persona_table.provenance",
         "dev.acceptance.persona_table.render",
         "dev.acceptance.persona_table.roles",

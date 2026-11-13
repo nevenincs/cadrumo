@@ -12,11 +12,13 @@ from __future__ import annotations
 import dataclasses
 import json
 import re
-from collections.abc import Callable, Iterable, Iterator, Sequence
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import asdict, dataclass, field
 from datetime import date
+from decimal import Decimal
 from enum import StrEnum
 from pathlib import Path
+from typing import cast
 
 from cadrumo.domain.calculations.registry.applicability_models import ApplicabilityVerdict
 from cadrumo.tests.personas import (
@@ -157,6 +159,9 @@ class TableRow:
     floor_source_dropped: bool = False
     unchecked: tuple[str, ...] = ()
     """What the persona states for the return that the table cannot compare; see ``unchecked.unchecked_items``."""
+    figures: tuple[tuple[str, str], ...] = ()
+    """The calculated casilla values of the return, every non-zero one, by casilla id; see :func:`canonical_figures`.
+    Empty for a return that never calculated, and for a row written before figures were recorded."""
     verdict: Verdict = field(init=False)
 
     def __post_init__(self) -> None:
@@ -178,8 +183,9 @@ class TableRow:
         export: Stage = Stage.NOT_REACHED,
         reason: str = "",
         export_detail: str = "",
+        figures: tuple[tuple[str, str], ...] = (),
     ) -> TableRow:
-        """The row of ``plan`` with the stages it reached."""
+        """The row of ``plan`` with the stages it reached and the figures its calculation produced."""
         return cls(
             persona=plan.persona,
             modelo=plan.modelo,
@@ -196,6 +202,7 @@ class TableRow:
             export_detail=export_detail,
             floor_source_dropped=plan.floor_source_dropped,
             unchecked=plan.unchecked,
+            figures=figures,
         )
 
     def to_json(self) -> str:
@@ -203,6 +210,7 @@ class TableRow:
         data = asdict(self)
         data["sources"] = list(self.sources)
         data["unchecked"] = list(self.unchecked)
+        data["figures"] = dict(self.figures)
         return json.dumps(data, ensure_ascii=False, sort_keys=True)
 
     def to_baseline_json(self, horizon: int) -> str:
@@ -239,9 +247,46 @@ class TableRow:
                 data[name] = _resolved(data[name], horizon)
         data["sources"] = tuple(data["sources"])
         data["unchecked"] = tuple(data.get("unchecked", ()))
+        data["figures"] = _read_figures(data.get("figures", {}))
         for name in ("calculate", "verify", "export"):
             data[name] = Stage(data[name])
         return cls(**data)
+
+
+def canonical_figures(values: Mapping[str, object]) -> tuple[tuple[str, str], ...]:
+    """Every non-zero value of ``values`` as ``(casilla id, canonical text)``, sorted by casilla id.
+
+    A number (a ``Decimal`` or an integer) is written without exponent and without trailing zeros; any other value
+    is its ``str``. Zero, ``False`` and empty text are not figures.
+    """
+    figures: list[tuple[str, str]] = []
+    for casilla, value in values.items():
+        text = _figure_text(value)
+        if text is not None:
+            figures.append((casilla, text))
+    return tuple(sorted(figures))
+
+
+def _figure_text(value: object) -> str | None:
+    if isinstance(value, bool):
+        return "True" if value else None
+    if isinstance(value, int | Decimal):
+        number = Decimal(value)
+        return None if number == 0 else format(number.normalize(), "f")
+    text = str(value)
+    return text or None
+
+
+def _read_figures(raw: object) -> tuple[tuple[str, str], ...]:
+    """The figures of a row line: an object of casilla id to text, or nothing for a line written without them."""
+    if not isinstance(raw, dict):
+        raise ValueError("a row's figures must be an object of casilla id to text")
+    figures: dict[str, str] = {}
+    for key, value in cast("dict[object, object]", raw).items():
+        if not isinstance(key, str) or not isinstance(value, str):
+            raise ValueError("a row's figures must be an object of casilla id to text")
+        figures[key] = value
+    return tuple(sorted(figures.items()))
 
 
 def _token(year: int, horizon: int) -> str:
@@ -629,6 +674,7 @@ __all__ = [
     "Stage",
     "TableRow",
     "Verdict",
+    "canonical_figures",
     "chain_order",
     "classify",
     "in_force",

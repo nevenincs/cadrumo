@@ -28,6 +28,25 @@ at the registry's own horizon only::
 ``coverage`` materialises each persona as the obligation tests do, reads its overview calendar with
 suppressed obligations shown for every envelope year, writes the comparison as JSON to ``--out``
 and prints a Markdown summary grouped by persona.
+
+Compare the same returns as the TUI and the desktop window displayed them. The surfaces' pilots write one JSON
+object per line into ``*.jsonl`` files of one directory (latest line wins per surface, persona, modelo, year and
+period, in file-name then line order)::
+
+    python -m dev.acceptance.persona_table render .tmp/table/rows.jsonl --head <sha> --frontend .tmp/table/frontend
+
+    {"surface": "tui" | "window", "tree": "<commit the surface ran>", "persona": "<id>",
+     "modelo": "<modelo>" | null, "year": <int> | null, "period": "<period>" | null, "loads": true | false,
+     "calculate": STAGE, "verify": STAGE, "export": STAGE,
+     "refusal_code": "<code>" | null, "figures": {"<casilla>": "<value>"}, "reason": "...", "log": "..."}
+
+A null ``modelo`` line (null year and period) reports whether the persona's profile loaded. Every other line needs the
+three stages, each ``pass``, ``incomplete``, ``refused``, ``not-owed``, ``not-reached`` or ``error``; ``figures``
+holds every non-zero casilla value the surface displayed, as text. Unknown keys and bad values are refused.
+The table gains a ``tui`` and a ``window`` column (``@<tree>`` when the surface ran another tree than ``--head``),
+a Frontend line in the summary, and a ``Frontend matrix`` section with the rows that differ and why. A row
+matches when each stage equals the Python row's and the non-zero figures agree; a row that recorded no figures
+cannot be compared. Without ``--frontend`` the output is unchanged.
 """
 
 from __future__ import annotations
@@ -48,6 +67,7 @@ from cadrumo.tests.personas import YearEnvelope, persona_ids
 
 from .coverage import OUT_ENV, PERSONAS_ENV, compare, read_observations, render_markdown
 from .diff import diff_tables, render_diff, row_id
+from .frontend import FrontendResultError, compare_frontend, read_results
 from .provenance import ProvenanceError, meta_path, prepare_authority, read_meta, write_meta
 from .render import load_coverage_gaps, load_coverage_undecided, render_table, summary_line
 from .rows import GREEN, TableRow, latest_rows, owed_rows, read_rows, with_unchecked
@@ -143,21 +163,42 @@ def _coverage(args: argparse.Namespace) -> int:
 
 def _render(args: argparse.Namespace) -> int:
     rows = _rows_from(args.rows)
-    lanes = tomllib.loads(args.lanes.read_text(encoding="utf-8")) if args.lanes else None
-    lane_of = {str(modelo): lane for lane, modelos in (lanes or {}).items() for modelo in modelos}
+    lane_of = _lane_of_modelo(args.lanes)
     meta = read_meta(args.meta or meta_path(args.rows[0]))
     gaps = None if args.coverage is None else load_coverage_gaps(args.coverage)
     undecided = None if args.coverage is None else load_coverage_undecided(args.coverage)
+    try:
+        frontend = None if args.frontend is None else compare_frontend(rows.values(), read_results(args.frontend))
+    except FrontendResultError as refusal:
+        sys.stderr.write(f"persona table not rendered: {refusal}\n")
+        return 2
     text = render_table(
-        rows.values(), head=args.head, lanes=lane_of or None, provenance=meta, coverage_gaps=gaps, undecided=undecided
+        rows.values(),
+        head=args.head,
+        lanes=lane_of or None,
+        provenance=meta,
+        coverage_gaps=gaps,
+        undecided=undecided,
+        frontend=frontend,
     )
-    if args.out is None:
-        sys.stdout.write(text)
-    else:
-        args.out.parent.mkdir(parents=True, exist_ok=True)
-        args.out.write_text(text, encoding="utf-8")
-        sys.stderr.write(summary_line(list(rows.values())) + "\n")
+    _publish_table(text, args.out, list(rows.values()))
     return 0
+
+
+def _lane_of_modelo(lanes_file: Path | None) -> dict[str, str]:
+    """The lane of each modelo code from a TOML mapping each lane to its codes; empty without a file."""
+    lanes = tomllib.loads(lanes_file.read_text(encoding="utf-8")) if lanes_file else {}
+    return {str(modelo): lane for lane, modelos in lanes.items() for modelo in modelos}
+
+
+def _publish_table(text: str, out: Path | None, rows: list[TableRow]) -> None:
+    """Write the table to ``out`` and its summary line to stderr, or the table to stdout without ``out``."""
+    if out is None:
+        sys.stdout.write(text)
+        return
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(text, encoding="utf-8")
+    sys.stderr.write(summary_line(rows) + "\n")
 
 
 def _baseline(args: argparse.Namespace) -> int:
@@ -220,6 +261,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     render.add_argument("--meta", type=Path, help="run provenance sidecar; defaults to the first rows file's")
     render.add_argument("--lanes", type=Path, help="TOML mapping each lane to its modelo codes")
     render.add_argument("--coverage", type=Path, help="coverage JSON whose gaps and undecided returns the table lists")
+    render.add_argument("--frontend", type=Path, help="directory of TUI and window result lines (*.jsonl) to compare")
     render.set_defaults(handler=_render)
 
     baseline = commands.add_parser("baseline", help="write the rows as the committed baseline, one file per persona")
