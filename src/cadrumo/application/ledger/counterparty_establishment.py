@@ -764,6 +764,42 @@ def stated_counterparty_filing_name(
     return stored if stored is not None and stored.declared_filing_name is not None else None
 
 
+def withdraw_counterparty_filing_name(
+    *,
+    bucket_id: str,
+    tax_identifier: str,
+    country_code: str | None = None,
+    repository: CounterpartyEstablishmentRepositoryProtocol,
+) -> tuple[bool, ConfirmedCounterpartyFacts | None]:
+    """Withdraw only the filing name stated for a counterparty, keeping every other answer.
+
+    Returns whether a name was held and removed, and the record that remains.
+    A record whose only answer was the name has nothing left to confirm, so it
+    is deleted with the name; any establishment or provincia answer, with its own
+    attribution, stays exactly as stated. Withdrawing where no name is stated,
+    or for an identifier that does not verify, writes nothing.
+    """
+    key = confirmed_counterparty_facts_key(tax_identifier, country_code=country_code)
+    if key is None:
+        return False, None
+    existing = repository.load(key)
+    if existing is None or existing.declared_filing_name is None:
+        return False, existing
+    keeps_other_answers = (
+        existing.territorial_scope is not None
+        or existing.identification_state is not None
+        or existing.provincia_code is not None
+    )
+    if not keeps_other_answers:
+        repository.delete(key)
+        return True, None
+    remaining = existing.model_copy(
+        update={"declared_filing_name": None, "filing_name_asserted_by": None, "filing_name_asserted_at": None}
+    )
+    repository.save(remaining)
+    return True, remaining
+
+
 def stated_counterparty_provincia(
     tax_identifier: str,
     *,

@@ -110,6 +110,8 @@ cli:
         tax_identifier_help: Az ügyfél adóazonosítója a bizonylaton nyomtatott formában.
         view_help: Megmutatja, mit válaszolna az áfa-azonosítási létra erre az üzleti
           partnerre az eddig megerősített adatok alapján.
+        withdraw_filing_name_help: Csak az ügyfélhez megadott bevallási nevet vonja
+          vissza. Minden más, amit róla megadtál, megmarad.
         withdraw_help: Vonja vissza az ügyfélről rögzített megerősítést, kijelentve,
           hogy a korábbi válasz téves volt.
       evidence:
@@ -3663,6 +3665,7 @@ cli:
       lines:
         filing_name_stated: '{identifier}: bevallási név megadva'
         filing_name_unchanged: '{identifier}: a bevallási név már meg volt adva'
+        filing_name_withdrawn: '{identifier}: a bevallási név visszavonva'
       notices:
         already_confirmed: A(z) '{identifier}' azonosítót '{asserted_by}' már megerősítette
           mint '{answered}'; ez a hívás nem hozott létre új megerősítést, és az eredeti
@@ -3678,6 +3681,9 @@ cli:
           számára adtad meg, de ennek a spanyol adóazonosítónak a formája {observed}
           formája. A nevet úgy tároltuk, ahogy megadtad, és semmi sem változott; ellenőrizd,
           melyik a helyes.
+        no_filing_name_to_withdraw: A(z) '{identifier}' esetében nem volt megadva
+          bevallási név, ezért semmi nem került visszavonásra, és a tároló már a kért
+          állapotban van.
         not_confirmed: A(z) '{identifier}' esetében nincs megerősített letelepedés,
           ezért ez a fokozat semmit nem dönt el, és egy nem egyértelmű bizonylat felveti
           a kérdést.

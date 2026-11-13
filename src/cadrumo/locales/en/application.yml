@@ -1121,6 +1121,24 @@ application:
       party_kinds:
         entity: an entity
         natural_person: a natural person
+      served:
+        part:
+          nombre: Given name
+          primer_apellido: First surname
+          razon_social: Company name (razón social)
+          segundo_apellido: Second surname
+        party_kind:
+          entity: Entity
+          natural_person: Natural person
+        slot_state:
+          fits: The stated name fits this field whole
+          fits_by_rendering: Filed with the shorter rendering you stated for this
+            width
+          missing: No name stated, so this field cannot be filed
+          single_surname: A natural person with one surname has no composition rule
+            in this field
+          too_wide: The stated name is wider than this field and has no rendering
+            for its width
     draft_finding:
       breakdown_bases_disagree: The per-rate bases sum to {summed}, but the document
         states a taxable base of {base}. These are two readings of one document, and

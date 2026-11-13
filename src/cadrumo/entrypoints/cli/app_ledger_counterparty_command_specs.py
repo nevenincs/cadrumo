@@ -228,6 +228,30 @@ LEDGER_COUNTERPARTY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             identity="ledger.counterparty.filing_name",
         ),
     ),
+    CommandSpec(
+        "app_ledger_counterparty_withdraw_filing_name",
+        "app_ledger_counterparty",
+        "withdraw-filing-name",
+        kind=CommandNodeKind.LEAF,
+        help_key=TranslationKey("cli.app.ledger.counterparty.withdraw_filing_name_help"),
+        short_help_key=None,
+        invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter="ctx"),
+        parameters=(
+            required_text_argument("tax_identifier", "cli.app.ledger.counterparty.tax_identifier_help"),
+            optional_text_option("country_code", ("--country-code",), "cli.app.ledger.counterparty.country_code_help"),
+        ),
+        policy=POLICY_4,
+        handler=LazyBinding.available(
+            DeferredTarget(
+                ".ledger_counterparty_filing_name_commands", "counterparty_withdraw_filing_name", __package__
+            )
+        ),
+        result_schema=ResultSchemaSpec(
+            SchemaState.TARGET,
+            target=DeferredTarget(".ledger_counterparty_results", "CounterpartyWithdrawFilingNameResult", __package__),
+            identity="ledger.counterparty.withdraw_filing_name",
+        ),
+    ),
 )
 
 __all__ = ["LEDGER_COUNTERPARTY_COMMAND_SPECS"]

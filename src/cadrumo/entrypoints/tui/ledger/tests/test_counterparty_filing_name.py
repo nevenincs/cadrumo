@@ -8,11 +8,11 @@ import pytest
 from textual.pilot import Pilot
 from textual.widgets import Checkbox, Input, Select, Static
 
+from .....application.ledger.counterparty_filing_name_kind_findings import served_kind_finding_words
 from .....application.ledger.counterparty_operation import (
     CounterpartyFilingNameRendering,
     LedgerCounterpartyRequest,
     LedgerCounterpartyResult,
-    served_kind_finding_words,
 )
 from .....application.ledger.workspace import LedgerWorkspaceArea
 from .....application.operator_actions.projection import ActionArgumentSnapshot

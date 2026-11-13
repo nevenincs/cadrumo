@@ -1191,6 +1191,24 @@ application:
       party_kinds:
         entity: una entidad
         natural_person: una persona física
+      served:
+        part:
+          nombre: Nombre
+          primer_apellido: Primer apellido
+          razon_social: Razón social
+          segundo_apellido: Segundo apellido
+        party_kind:
+          entity: Entidad
+          natural_person: Persona física
+        slot_state:
+          fits: El nombre indicado cabe entero en este campo
+          fits_by_rendering: Se declara con la versión más corta que indicaste para
+            este ancho
+          missing: No hay nombre indicado, así que este campo no se puede declarar
+          single_surname: Una persona física con un solo apellido no tiene regla de
+            composición en este campo
+          too_wide: El nombre indicado es más ancho que este campo y no tiene versión
+            para su ancho
     draft_finding:
       breakdown_bases_disagree: Las bases por tipo suman {summed}, pero el documento
         indica una base imponible de {base}. Son dos lecturas del mismo documento

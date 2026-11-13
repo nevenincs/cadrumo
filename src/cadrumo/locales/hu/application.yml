@@ -1173,6 +1173,24 @@ application:
       party_kinds:
         entity: szervezet
         natural_person: természetes személy
+      served:
+        part:
+          nombre: Utónév
+          primer_apellido: Első vezetéknév
+          razon_social: Cégnév (razón social)
+          segundo_apellido: Második vezetéknév
+        party_kind:
+          entity: Szervezet
+          natural_person: Természetes személy
+        slot_state:
+          fits: A megadott név egészben elfér ebben a mezőben
+          fits_by_rendering: Az ehhez a szélességhez megadott rövidebb alakkal kerül
+            be a bevallásba
+          missing: Nincs megadott név, ezért ez a mező nem tölthető ki
+          single_surname: Az egyetlen vezetéknévvel megadott természetes személyre
+            ebben a mezőben nincs összeállítási szabály
+          too_wide: A megadott név szélesebb ennél a mezőnél, és nincs hozzá a szélességének
+            megfelelő alak
     draft_finding:
       breakdown_bases_disagree: A kulcsonkénti alapok összege {summed}, a dokumentum
         viszont {base} adóalapot tüntet fel. Ez ugyanannak a dokumentumnak két olvasata,
