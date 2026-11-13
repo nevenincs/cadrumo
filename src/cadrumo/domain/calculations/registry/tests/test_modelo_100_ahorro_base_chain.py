@@ -82,6 +82,12 @@ _BINDINGS: dict[str, Decimal] = {
     **M100_NO_DESCENDANT_MATERNIDAD_BINDINGS,
     "renta-profile-minimo-descendientes-estatal": Decimal("0"),
     "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
+    # No ascendant rows: the art. 59/61 LIRPF mínimo por ascendientes
+    # aggregates that casillas 0515 and 0516 project, and the Madrid
+    # cuidado de ascendientes count, are zero.
+    "renta-profile-minimo-ascendientes-estatal": Decimal("0"),
+    "renta-profile-minimo-ascendientes-autonomico": Decimal("0"),
+    "renta-profile-deduccion-madrid-cuidado-ascendientes-count": Decimal("0"),
     # matrimonio-sobrevenido bindings (81feae7b0): zero = marriage pre-dates filing year.
     "renta-profile-marriage-full-year": Decimal("0"),
     "renta-profile-marriage-month-start": Decimal("0"),
@@ -320,6 +326,11 @@ def _run_reviewed_edition(
         "renta-profile-unidad-familiar-otros-miembros-base": Decimal("0"),
         "renta-profile-minimo-descendientes-estatal": Decimal("0"),
         "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
+        # No ascendant rows: the mínimo por ascendientes aggregates and the
+        # Madrid cuidado de ascendientes count are zero.
+        "renta-profile-minimo-ascendientes-estatal": Decimal("0"),
+        "renta-profile-minimo-ascendientes-autonomico": Decimal("0"),
+        "renta-profile-deduccion-madrid-cuidado-ascendientes-count": Decimal("0"),
         # Art. 75 Ley 19/1994 maritime-worker exemption operands; neutral zero
         # when the chain under test is unrelated (path itself is false).
         "renta-maritime-gross-navigation-income": Decimal("0"),

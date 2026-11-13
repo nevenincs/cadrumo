@@ -27,23 +27,20 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.adapters.persistence.profile.inventory import InventoryLedgerRepository
 from cadrumo.adapters.persistence.profile.retencion_observations import RetencionObservationRepositoryAdapter
 from cadrumo.adapters.persistence.profile.tests.retencion_observation_authoring import replace_retencion_observations
 from cadrumo.adapters.persistence.profile.tests.secure_objects_fixture import secure_objects
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.application.aggregation.retenciones import RetencionObservation
-from cadrumo.application.aggregation.tests.inventory_source_support import closed_no_stock_ledger
 from cadrumo.application.modelo.calculation_note_gate import ModeloCalculationBlockedError, blocking_calculation_issues
 from cadrumo.core.aggregation import AggregationCaptureKind, BindingSourceKind, RetencionScheme
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.core.retencion_soportada import RetencionSoportadaClase
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.contribuyente.inventory.records import InventoryLedgerDocument
 from cadrumo.domain.modelos.calculation_revision import CalculationRevision
 
-from .m130_m100_annual_support import BUCKET_ID, YEAR, import_official_m130_result_observation, seed_prior_year_m100
+from .m130_m100_annual_support import BUCKET_ID, import_official_m130_result_observation, seed_prior_year_m100
 from .renta_persona_support import (
     ACTIVITY_KEY,
     ACTIVITY_KEY_CASILLA,
@@ -294,13 +291,6 @@ def _record_employer(operation: PinnedAuthorityOperation, directory: Path) -> No
     )
 
 
-def _seed_inventory_book(secure_objects: SecureObjectRepository) -> None:
-    """Open the activity's inventory book with no stock held, which the Anexo D inventory rows read."""
-    InventoryLedgerRepository(objects=secure_objects).save(
-        InventoryLedgerDocument(ledgers=(closed_no_stock_ledger(YEAR),))
-    )
-
-
 def _calculate_autonomo_annual(secure_objects: SecureObjectRepository) -> CalculationRevision:
     return calculate_annual(secure_objects, text_casilla_inputs=_ACTIVITY_INPUTS)
 
@@ -311,7 +301,6 @@ def test_employee_autonomo_files_credits_equal_to_their_oracles_and_the_fourth_q
     seed_profile(_AUTONOMO)
     seed_prior_year_m100(secure_objects)
     seed_activity_ledger(secure_objects, _INVOICES, _EXPENSES)
-    _seed_inventory_book(secure_objects)
     _record_employer(operation, tmp_path)
     _import_filed_quarters(secure_objects, fourth_quarter_retenciones=_D("1440.00"))
     register_refund_account(secure_objects)
@@ -346,7 +335,7 @@ def test_without_an_inventory_book_the_activity_net_income_stays_unresolved(
     """The same taxpayer with no inventory book has no casilla 0224: the book's rows are unread, not zero."""
     seed_profile(_AUTONOMO)
     seed_prior_year_m100(secure_objects)
-    seed_activity_ledger(secure_objects, _INVOICES, _EXPENSES)
+    seed_activity_ledger(secure_objects, _INVOICES, _EXPENSES, inventory_book=False)
     _record_employer(operation, tmp_path)
     _import_filed_quarters(secure_objects, fourth_quarter_retenciones=_D("1440.00"))
     register_refund_account(secure_objects)
@@ -491,7 +480,6 @@ def test_a_payer_persona_keeps_every_credit_and_still_verifies_and_exports(
     seed_profile(_AUTONOMO)
     seed_prior_year_m100(secure_objects)
     seed_activity_ledger(secure_objects, _INVOICES, _EXPENSES)
-    _seed_inventory_book(secure_objects)
     _record_employer(operation, tmp_path)
     _import_filed_quarters(secure_objects, fourth_quarter_retenciones=_D("1440.00"))
     _seed_payer_side_store(secure_objects)

@@ -407,12 +407,17 @@ def _expense(expense: ActivityExpense) -> Transaction:
 
 
 def seed_activity_ledger(
-    objects: SecureObjectRepository, invoices: Iterable[ActivityInvoice], expenses: Iterable[ActivityExpense]
+    objects: SecureObjectRepository,
+    invoices: Iterable[ActivityInvoice],
+    expenses: Iterable[ActivityExpense],
+    *,
+    inventory_book: bool = True,
 ) -> None:
     """Persist the activity's issued invoices with their linked receipts, its expense rows and its inventory book.
 
     The persona's activity sells services and held no existencias, which it states as a book opened with no
-    stock and closed at zero, so the Modelo 100 Anexo D rows of its estimacion directa block read zero.
+    stock and closed at zero, so the Modelo 100 Anexo D rows of its estimacion directa block read zero. A
+    scenario that keeps no book passes ``inventory_book=False``.
     """
     rows: list[Transaction] = []
     issued: list[Invoice] = []
@@ -426,7 +431,10 @@ def seed_activity_ledger(
         TransactionCatalogue.from_transactions(rows)
     )
     InvoiceCatalogueRepository(bucket_id=BUCKET_ID, objects=objects).save(build_invoice_catalogue(issued))
-    InventoryLedgerRepository(objects=objects).save(InventoryLedgerDocument(ledgers=(closed_no_stock_ledger(YEAR),)))
+    if inventory_book:
+        InventoryLedgerRepository(objects=objects).save(
+            InventoryLedgerDocument(ledgers=(closed_no_stock_ledger(YEAR),))
+        )
 
 
 def create_work(objects: SecureObjectRepository, *, modelo: str, period: str, revision_id: str | None = None) -> str:
