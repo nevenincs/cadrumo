@@ -119,6 +119,14 @@ _UNSWEPT_MODULE_RATIONALES: dict[str, str] = {
         "XSD source, structure and version invariants feed export_xml_dictionary.py, "
         "then export.py's public export/verification boundary."
     ),
+    "export_xml_input_dictionary.py": (
+        "Input-dictionary field and layout design invariants carry their own locale key and feed "
+        "export_xml_dictionary.py, then export.py's public export/verification boundary."
+    ),
+    "export_xml_row_columns.py": (
+        "Row-column occurrence and total-box design invariants carry their own locale key and feed "
+        "export_xml_input_dictionary.py/export_verification.py, then export.py's export/verification boundary."
+    ),
     "projection.py": (
         "Projection-plan and value-address invariants are consumed by export.py's render-request boundary."
     ),
