@@ -65,7 +65,7 @@ from cadrumo.tests.personas import Persona, PersonaCatalogueError, read_persona
 
 from ..persona_table.frontend import DIFFERS, NOT_REACHED
 from ..persona_table.rows import PlannedRow, TableRow
-from .causes import CRASH_CAUSE, outcome, row_cause, unreported_cause
+from .causes import CRASH_CAUSE, export_unavailable_note, outcome, row_cause, unreported_cause
 from .intake import ERROR, INCOMPLETE, NOT_OWED, PASSED, REFUSED, PilotRow, write_rows
 from .plan import pilot_envelope, pilot_plan, table_rows_path
 
@@ -204,6 +204,7 @@ def _verified(shown: ShownOutcome, row: PilotRow) -> bool:
 
 
 def _exported(shown: ShownOutcome, row: PilotRow) -> bool:
+    row.export_served = shown.submitted
     if not shown.submitted:
         row.export = REFUSED
         withheld = f"the export dialog offers only {', '.join(shown.export_offered)}" if shown.export_offered else ""
@@ -250,6 +251,18 @@ def _stop(driver: WorkbenchDriver, row: PilotRow, action: ModeloFormNextAction |
     )
 
 
+def _note_export_served(row: PilotRow, action: ModeloFormNextAction | None) -> None:
+    """Record that the form served no export door once the check had run and the drive had nothing left to take.
+
+    This is the form's served state: the drive presses only what is served, so an export it never pressed because
+    the form offered none reads ``export_served`` false, and an export that was pressed reads true in ``_exported``.
+    """
+    if row.verify in (None, NOT_REACHED, NOT_OWED) or row.export not in (None, NOT_REACHED):
+        return
+    if action is None or action not in _EXPORT:
+        row.export_served = False
+
+
 def stop_when_not_owed(row: PilotRow, *, owed: bool, calculated: bool, served: ModeloFormNextAction | None) -> bool:
     """Stop a return the table holds not owed once it calculated: it is neither checked, exported nor recorded.
 
@@ -294,6 +307,7 @@ async def _drive(driver: WorkbenchDriver, statements: _Statements, row: PilotRow
     while True:
         stage = None if action is None else _STAGE_OF_ACTION.get(action)
         if action is None or stage is None or stage in taken:
+            _note_export_served(row, action)
             _stop(driver, row, action)
             return
         taken.add(stage)
@@ -484,6 +498,9 @@ def run_persona(persona_id: str, tmp_path: Path) -> PersonaRun:
                     if planned.key in replay.reported:
                         table = plan.expected[planned.key]
                         row.cause, row.cause_words = row_cause(row, table, ran)
+                        note = export_unavailable_note(row, table)
+                        if note is not None:
+                            row.reasons.append(note)
                         done.add(planned.key)
                         reported.append(_reported(table, row))
                     else:

@@ -56,6 +56,21 @@ def row_cause(row: PilotRow, table: TableRow, earlier: Sequence[PilotRow]) -> tu
     return _differing_cause(row, table, earlier, words)
 
 
+def export_unavailable_note(row: PilotRow, table: TableRow) -> str | None:
+    """The comparison words for an export the form did not serve against an export the table's direct operation refused.
+
+    Export unavailable is one outcome whether the backend refuses the attempt or the form serves no export door; the
+    note keeps both and the table's refusal in the row, so nothing is hidden. It applies only when the check ended
+    the same ungranted way on both sides.
+    """
+    if row.export != NOT_REACHED or STAGE_OF[table.export] != "refused":
+        return None
+    if row.verify == PASSED or row.verify != STAGE_OF[table.verify]:
+        return None
+    detail = " ".join((table.export_detail or table.reason).split())[:200]
+    return f"export unavailable (refused | not served): the form served no export door; the table's export: {detail}"
+
+
 def _crash(row: PilotRow) -> tuple[str, str] | None:
     """The crash cause the pilot set on ``row`` with its words, else ``None``."""
     if row.cause is not None and row.cause.startswith(CRASH_CAUSE):
