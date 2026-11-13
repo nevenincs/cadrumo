@@ -59,7 +59,6 @@ from ..prorrata_register.seed import (
 )
 from ..prorrata_register.service import require_prorrata_register_coordinates_current
 from ..prorrata_register.settlement import (
-    PRORRATA_SETTLEMENT_ESPECIAL_CONTINUATION_KEY,
     ProrrataSettlementEspecialContinuationError,
     settled_prorrata_register,
 )
@@ -83,7 +82,10 @@ _EVIDENCE_ID: Final = "modelo.work.verify.prorrata_seed"
 _PRORRATA_SEED_LEGAL_REFS: Final[tuple[str, ...]] = ("ley-37-1992:art-104", "ley-37-1992:art-105")
 _PRORRATA_UNSEEDED_LEGAL_REFS: Final[tuple[str, ...]] = ("ley-37-1992:art-102", *_PRORRATA_SEED_LEGAL_REFS)
 _PRORRATA_SETTLEMENT_LEGAL_REFS: Final[tuple[str, ...]] = ("ley-37-1992:art-105",)
-_PRORRATA_SETTLEMENT_SECTORS_KEY: Final = "application.modelo.findings.prorrata_settlement_sector_entries"
+_PRORRATA_SETTLEMENT_SECTORS_LOCALE_KEY: Final = "application.modelo.findings.prorrata_settlement_sector_entries"
+_PRORRATA_SETTLEMENT_ESPECIAL_CONTINUATION_LOCALE_KEY: Final = (
+    "application.modelo.findings.prorrata_settlement_especial_continuation"
+)
 
 
 class ModeloProrrataSeedSupersededError(ModeloPreconditionErrorMixin, ModeloError):
@@ -141,8 +143,16 @@ def _settlement_coverage_finding(
                 work_unit,
                 target,
                 scenario="especial_continuation",
-                message_locale_key=PRORRATA_SETTLEMENT_ESPECIAL_CONTINUATION_KEY,
-                message_facts={"filing_year": work_unit.filing_year, "prior_filing_year": work_unit.filing_year - 1},
+                finding=ModeloVerificationFinding(
+                    kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+                    severity=ModeloVerificationFindingSeverity.BLOCKING,
+                    message_locale_key=_PRORRATA_SETTLEMENT_ESPECIAL_CONTINUATION_LOCALE_KEY,
+                    message_facts={
+                        "filing_year": work_unit.filing_year,
+                        "prior_filing_year": work_unit.filing_year - 1,
+                    },
+                    legal_refs=_PRORRATA_SETTLEMENT_LEGAL_REFS,
+                ),
             ),
         )
     ejercicio = work_unit.filing_year
@@ -156,8 +166,13 @@ def _settlement_coverage_finding(
             work_unit,
             target,
             scenario="sector_entries",
-            message_locale_key=_PRORRATA_SETTLEMENT_SECTORS_KEY,
-            message_facts={"filing_year": ejercicio, "sector_ids": ", ".join(missing)},
+            finding=ModeloVerificationFinding(
+                kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+                severity=ModeloVerificationFindingSeverity.BLOCKING,
+                message_locale_key=_PRORRATA_SETTLEMENT_SECTORS_LOCALE_KEY,
+                message_facts={"filing_year": ejercicio, "sector_ids": ", ".join(missing)},
+                legal_refs=_PRORRATA_SETTLEMENT_LEGAL_REFS,
+            ),
         ),
     )
 
@@ -167,17 +182,10 @@ def _settlement_finding(
     target: CalculationRevision,
     *,
     scenario: str,
-    message_locale_key: str,
-    message_facts: dict[str, str | int],
+    finding: ModeloVerificationFinding,
 ) -> ProrrataSeedVerificationFinding:
     return ProrrataSeedVerificationFinding(
-        finding=ModeloVerificationFinding(
-            kind=ModeloVerificationFindingKind.BLOCKING_RULE,
-            severity=ModeloVerificationFindingSeverity.BLOCKING,
-            message_locale_key=message_locale_key,
-            message_facts=message_facts,
-            legal_refs=_PRORRATA_SETTLEMENT_LEGAL_REFS,
-        ),
+        finding=finding,
         failure=build_modelo_precondition_failure_for_scenario(
             subject_leaf_key=_VERIFY_LEAF,
             scenario_id=f"{_VERIFY_LEAF}.prorrata_settlement.{scenario}",

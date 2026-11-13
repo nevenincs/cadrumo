@@ -40,7 +40,7 @@ from ....domain.prorrata_register.register import (
 )
 from ..settlement import (
     PRORRATA_PORCENTAJE_CASILLA,
-    PRORRATA_SETTLEMENT_ESPECIAL_CONTINUATION_KEY,
+    PRORRATA_SETTLEMENT_ESPECIAL_CONTINUATION_LOCALE_KEY,
     PRORRATA_VOLUMEN_CON_DERECHO_CASILLA,
     PRORRATA_VOLUMEN_TOTAL_CASILLA,
     ProrrataSettlementEspecialContinuationError,
@@ -207,7 +207,7 @@ def test_a_year_after_an_especial_year_is_not_settled_into_an_undeclared_general
     with pytest.raises(ProrrataSettlementEspecialContinuationError) as refusal:
         settled_prorrata_register(register, revision=revision, work_unit=unit, operation=operation)
 
-    assert str(refusal.value) == PRORRATA_SETTLEMENT_ESPECIAL_CONTINUATION_KEY
+    assert str(refusal.value) == PRORRATA_SETTLEMENT_ESPECIAL_CONTINUATION_LOCALE_KEY
     assert refusal.value.context == {"filing_year": _YEAR, "prior_filing_year": _YEAR - 1}
 
     declared = ProrrataRegister(entries=(*register.entries, _entry(_YEAR, "especial")))
