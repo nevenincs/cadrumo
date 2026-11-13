@@ -31,6 +31,22 @@ type ServedGroup = {
   remove_row_action?: { action_words: string } | null;
 };
 
+/** Distinct birth dates the product served for its descendants in the `rows`
+ * scenario, in the order served: dates to type that need no year of their own. */
+const servedDates = (
+  fixtures.reads.rows.items.en as unknown as {
+    kind: string;
+    group_key: string;
+    facts?: { leaf: string; value: string }[];
+  }[]
+)
+  .filter((item) => item.kind === "family_row")
+  .map((row) => row.facts?.find((fact) => fact.leaf === "birth_date")?.value)
+  .filter(
+    (date, index, dates): date is string =>
+      date !== undefined && dates.indexOf(date) === index,
+  );
+
 /** The group the product serves at `group` of a scenario, in a language. */
 function servedGroup(
   scenario: HouseholdScenario,
@@ -507,7 +523,7 @@ export const SubmitsOnlyAskedLeaves: Story = {
       dialog.getByRole("textbox", {
         name: new RegExp(servedLabel("unknown", locale, 0, "birth_date")),
       }),
-      "2020-01-02",
+      servedDates[0]!,
     );
     await choose("adoptado");
     await waitFor(() =>
@@ -517,7 +533,7 @@ export const SubmitsOnlyAskedLeaves: Story = {
       dialog.getByRole("textbox", {
         name: new RegExp(leaf("inscripcion_registro_civil").label),
       }),
-      "2021-03-04",
+      servedDates[1]!,
     );
     await choose("tutela");
     await waitFor(() =>
@@ -533,7 +549,7 @@ export const SubmitsOnlyAskedLeaves: Story = {
       kind: "descendants",
       add_row: {
         facts: [
-          { field_key: "birth_date", value: "2020-01-02" },
+          { field_key: "birth_date", value: servedDates[0]! },
           { field_key: "relacion", value: "tutela" },
         ],
       },
@@ -562,7 +578,7 @@ export const InvalidDraftRefused: Story = {
       dialog.getByRole("textbox", {
         name: new RegExp(servedLabel("unknown", locale, 0, "birth_date")),
       }),
-      "2020-01-02",
+      servedDates[0]!,
     );
     // The sentence is the one the draft read was refused with, in the
     // existing refusal alert; every required answer is given, so only the
