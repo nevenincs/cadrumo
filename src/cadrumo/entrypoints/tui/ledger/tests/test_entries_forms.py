@@ -32,7 +32,7 @@ from ..entries_export import LedgerEntriesExportScreen
 from ..entries_health import LedgerHealthScreen
 from ..entries_reset import LedgerResetScreen
 from ..models import LedgerFlowState
-from .entries_door_fixtures import REFUSED_ADD_AMOUNT, MemoryEntriesLedger, entries_controller
+from .entries_door_fixtures import REFUSED_ADD_AMOUNT, MemoryEntriesLedger, entries_controller, served_add_form
 from .workspace_fixtures import WorkspaceHostApp
 
 _FIRST_YEAR = filing_year_envelope().floor
@@ -56,6 +56,10 @@ def _type(screen: Screen[None], values: dict[str, str]) -> None:
         screen.query_one(selector, Input).value = value
 
 
+def _choose(screen: Screen[None], selector: str, token: str) -> None:
+    cast("Select[str]", screen.query_one(selector, Select)).value = token
+
+
 _REQUIRED = {
     "#entries-add-booked-date": date(_YEAR, 3, 14).isoformat(),
     "#entries-add-amount": "120.50",
@@ -66,12 +70,13 @@ _REQUIRED = {
 @pytest.mark.asyncio
 async def test_an_entry_with_only_the_required_facts_is_reviewed_then_added() -> None:
     ledger = MemoryEntriesLedger.with_entries(2)
-    screen = LedgerEntryAddScreen(entries_controller(), ledger.doors())
+    screen = LedgerEntryAddScreen(entries_controller(), ledger.doors(), served_add_form())
     app = WorkspaceHostApp(screen)
     with override_settings(cadrumo_output_language="en"):
         async with app.run_test(size=(120, 40)) as pilot:
             await settle(pilot)
             _type(screen, _REQUIRED)
+            _choose(screen, "#entries-add-direction", "OUTGOING")
             await _press(pilot, screen, "entries-add-review")
             assert screen.flow_state is LedgerFlowState.CONFIRMING
             assert ledger.requested("add") == []
@@ -101,11 +106,12 @@ async def test_an_entry_with_only_the_required_facts_is_reviewed_then_added() ->
 @pytest.mark.asyncio
 async def test_a_negative_amount_is_refused_by_the_request_before_review() -> None:
     ledger = MemoryEntriesLedger()
-    screen = LedgerEntryAddScreen(entries_controller(), ledger.doors())
+    screen = LedgerEntryAddScreen(entries_controller(), ledger.doors(), served_add_form())
     with override_settings(cadrumo_output_language="en"):
         async with WorkspaceHostApp(screen).run_test(size=(120, 40)) as pilot:
             await settle(pilot)
             _type(screen, {**_REQUIRED, "#entries-add-amount": "-120.50"})
+            _choose(screen, "#entries-add-direction", "OUTGOING")
             await _press(pilot, screen, "entries-add-review")
             assert screen.flow_state is LedgerFlowState.EDITING
             assert "non-negative magnitude" in _text(screen, "#ledger-refusal")
@@ -115,12 +121,13 @@ async def test_a_negative_amount_is_refused_by_the_request_before_review() -> No
 @pytest.mark.asyncio
 async def test_the_workers_refusal_is_shown_and_the_entry_can_be_edited_again() -> None:
     ledger = MemoryEntriesLedger()
-    screen = LedgerEntryAddScreen(entries_controller(), ledger.doors())
+    screen = LedgerEntryAddScreen(entries_controller(), ledger.doors(), served_add_form())
     app = WorkspaceHostApp(screen)
     with override_settings(cadrumo_output_language="en"):
         async with app.run_test(size=(120, 40)) as pilot:
             await settle(pilot)
             _type(screen, {**_REQUIRED, "#entries-add-amount": REFUSED_ADD_AMOUNT})
+            _choose(screen, "#entries-add-direction", "OUTGOING")
             await _press(pilot, screen, "entries-add-review")
             await _press(pilot, screen, "entries-add-confirm")
             assert screen.flow_state is LedgerFlowState.FAILED
@@ -140,11 +147,12 @@ async def test_the_workers_refusal_is_shown_and_the_entry_can_be_edited_again() 
 @pytest.mark.asyncio
 async def test_a_cancelled_entry_writes_nothing() -> None:
     ledger = MemoryEntriesLedger()
-    screen = LedgerEntryAddScreen(entries_controller(), ledger.doors())
+    screen = LedgerEntryAddScreen(entries_controller(), ledger.doors(), served_add_form())
     with override_settings(cadrumo_output_language="en"):
         async with WorkspaceHostApp(screen).run_test(size=(120, 40)) as pilot:
             await settle(pilot)
             _type(screen, _REQUIRED)
+            _choose(screen, "#entries-add-direction", "OUTGOING")
             await _press(pilot, screen, "entries-add-review")
             await _press(pilot, screen, "entries-add-cancel")
             assert screen.flow_state is LedgerFlowState.CANCELLED
@@ -154,7 +162,7 @@ async def test_a_cancelled_entry_writes_nothing() -> None:
 @pytest.mark.asyncio
 async def test_optional_tax_facts_reach_the_request_only_when_typed() -> None:
     ledger = MemoryEntriesLedger()
-    screen = LedgerEntryAddScreen(entries_controller(), ledger.doors())
+    screen = LedgerEntryAddScreen(entries_controller(), ledger.doors(), served_add_form())
     with override_settings(cadrumo_output_language="en"):
         async with WorkspaceHostApp(screen).run_test(size=(120, 40)) as pilot:
             await settle(pilot)

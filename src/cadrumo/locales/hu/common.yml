@@ -7930,7 +7930,7 @@ tui:
         input_classification_inert: A bemeneti besorolás nem hat a tétel prorratájára.
         open_in_browse: Megnyitás a Tételek böngészésében
         optional: Adóadatok (nem kötelező)
-        prompt: Add meg a négy adatot, amely minden tételhez kell. Az adóadatokat
+        prompt: Add meg az adatokat, amelyek minden tételhez kellenek. Az adóadatokat
           csak akkor nyisd meg, ha megvannak.
         refused: 'A napló elutasította a tételt:'
         review: Tétel áttekintése

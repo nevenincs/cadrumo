@@ -7789,8 +7789,8 @@ tui:
           entry's prorrata.
         open_in_browse: Open it in Browse entries
         optional: Tax details (optional)
-        prompt: Enter the four facts every entry needs. Open the tax details only
-          if you have them.
+        prompt: Enter the facts every entry needs. Open the tax details only if you
+          have them.
         refused: 'The ledger refused this entry:'
         review: Review entry
         sector_unmatched: The prorrata sector matches no sector in your register.

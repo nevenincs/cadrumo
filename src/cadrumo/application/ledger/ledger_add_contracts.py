@@ -12,7 +12,11 @@ from ...core.decimal.grammar import CENT_FRACTION_DIGITS, DECIMAL_TEXT_MAX_LENGT
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.parsing.dates import require_iso8601_date
 from ...domain.iva.prorrata import ProrrataReferenceText
-from ...domain.transactions.enums import BusinessClassification
+from ...domain.transactions.enums import (
+    BusinessClassification,
+    ManualEntryClassificationToken,
+    TransactionDirectionToken,
+)
 from ...domain.transactions.own_accounts import OwnAccountId
 from ..review.filter import LedgerReviewStatus
 from .transaction_projection import LedgerTransactionProjection
@@ -30,8 +34,8 @@ _AddDateText = Annotated[str, Field(min_length=1, max_length=16)]
 _AddOptionalDateText = _AddDateText | None
 _AddId = Annotated[str, Field(min_length=1, max_length=256)]
 _AddOptionalId = _AddId | None
-_AddDirection = Annotated[str, Field(min_length=1, max_length=32)]
-_AddClassification = Annotated[str, Field(min_length=1, max_length=64)]
+_AddDirection = TransactionDirectionToken
+_AddClassification = ManualEntryClassificationToken
 _AddIvaCategory = Annotated[str, Field(min_length=1, max_length=128)] | None
 _AddEUMemberState = CountryCodeAlpha2 | None
 _AddAttachmentIds = Annotated[

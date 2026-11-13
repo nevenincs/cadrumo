@@ -7961,8 +7961,8 @@ tui:
           d'aquest apunt.
         open_in_browse: Obre'l a Explora els apunts
         optional: Dades fiscals (opcional)
-        prompt: Introdueix les quatre dades que necessita tot apunt. Obre les dades
-          fiscals només si les tens.
+        prompt: Introdueix les dades que necessita tot apunt. Obre les dades fiscals
+          només si les tens.
         refused: 'El llibre ha rebutjat aquest apunt:'
         review: Revisa l'apunt
         sector_unmatched: El sector de prorrata no coincideix amb cap sector del teu

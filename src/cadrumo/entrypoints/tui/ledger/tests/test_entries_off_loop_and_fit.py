@@ -35,6 +35,7 @@ from .entries_door_fixtures import (
     MemoryEntriesLedger,
     entries_controller,
     entry_id,
+    served_add_form,
     synthetic_entry,
 )
 from .workspace_fixtures import WorkspaceHostApp
@@ -131,12 +132,13 @@ async def _drive_browse(ledger: _Reached) -> None:
 
 async def _drive_forms(ledger: _Reached, export_path: str) -> None:
     doors = ledger.doors()
-    add = LedgerEntryAddScreen(entries_controller(), doors)
+    add = LedgerEntryAddScreen(entries_controller(), doors, served_add_form())
     async with WorkspaceHostApp(add).run_test(size=(120, 40)) as pilot:
         await settle(pilot)
         add.query_one("#entries-add-booked-date", Input).value = date(_YEAR, 3, 14).isoformat()
         add.query_one("#entries-add-amount", Input).value = "10.00"
         add.query_one("#entries-add-description", Input).value = "Synthetic"
+        cast("Select[str]", add.query_one("#entries-add-direction", Select)).value = "OUTGOING"
         await _press(pilot, add, "entries-add-review")
         await _press(pilot, add, "entries-add-confirm")
     export = LedgerEntriesExportScreen(entries_controller(), doors)
@@ -189,7 +191,7 @@ def _trace(controller: LedgerWorkspaceController, ledger: MemoryEntriesLedger) -
 
 
 def _add(controller: LedgerWorkspaceController, ledger: MemoryEntriesLedger) -> LedgerWorkspaceScreen:
-    return LedgerEntryAddScreen(controller, ledger.doors())
+    return LedgerEntryAddScreen(controller, ledger.doors(), served_add_form())
 
 
 def _export(controller: LedgerWorkspaceController, ledger: MemoryEntriesLedger) -> LedgerWorkspaceScreen:

@@ -21,7 +21,7 @@ from uuid import UUID
 
 import pytest
 from textual.pilot import Pilot
-from textual.widgets import Button, DataTable, Input, Static
+from textual.widgets import Button, DataTable, Input, Select, Static
 
 from .....application.bienes_inversion.registered_requests import BienesInversionDeclareRequest
 from .....application.bienes_inversion.registered_result_contracts import BienesInversionDeclareProjection
@@ -100,7 +100,7 @@ from ..workspace_screen import LedgerWorkspaceScreen
 from .categorisation_fixtures import MemoryDoor, MemoryRuleBook, synthetic_id
 from .categorisation_memory_doors import MemoryCategorisationProfile, categorisation_controller
 from .categorisation_review_fixtures import MemoryReviewController, MemoryReviewDoor
-from .entries_door_fixtures import MemoryEntriesLedger, entries_controller, entry_id
+from .entries_door_fixtures import MemoryEntriesLedger, entries_controller, entry_id, served_add_form
 from .evidence_files_fixtures import MemoryEvidenceFilesStore
 from .invoices_fixtures import (
     MemoryInvoiceImportDoor,
@@ -490,12 +490,13 @@ def _entry_add(gate: Gate, _tmp_path: Path) -> _Flow:
     ledger = MemoryEntriesLedger.with_entries(2)
     doors = ledger.doors()
     held = replace(doors, add=cast(LedgerAddDoorV1, _HeldDoor[LedgerAddRequest, object](doors.add, gate)))
-    body = LedgerEntryAddScreen(entries_controller(), held)
+    body = LedgerEntryAddScreen(entries_controller(), held, served_add_form())
 
     async def submit(pilot: Pilot[None]) -> LedgerWorkspaceScreen:
         body.query_one("#entries-add-booked-date", Input).value = "2026-03-14"
         body.query_one("#entries-add-amount", Input).value = "120.50"
         body.query_one("#entries-add-description", Input).value = "Material de oficina"
+        cast("Select[str]", body.query_one("#entries-add-direction", Select)).value = "OUTGOING"
         await _press(pilot, body, "entries-add-review")
         await click(pilot, body, "entries-add-confirm")
         return body
