@@ -21,6 +21,7 @@ from .bundle_export_contracts import (
     ProfileBundleExportResult,
 )
 from .descendant_rows import ProfileDescendantRow
+from .row_parts import ProfileRowPartInput
 
 PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID = "user-profile.field-mutation"
 
@@ -255,8 +256,39 @@ class ProfileRepeatableRowValue(BaseModel):
     value: str
 
 
+class ProfileRepeatableRowPartsValue(BaseModel):
+    """The structured parts of one packed field, stated in place of its text value.
+
+    The parts are judged by the grammar of the text form and stored as its one canonical text.
+    """
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    field_key: str = Field(min_length=1, max_length=128)
+    parts: tuple[ProfileRowPartInput, ...] = Field(max_length=256)
+
+
+def _require_distinct_part_fields(part_values: tuple[ProfileRepeatableRowPartsValue, ...]) -> None:
+    keys = tuple(item.field_key for item in part_values)
+    if len(set(keys)) != len(keys):
+        raise ValueError("repeatable-row operation parts must not repeat a field key")
+
+
+def _require_one_form_per_field(
+    values: tuple[ProfileRepeatableRowValue, ...], part_values: tuple[ProfileRepeatableRowPartsValue, ...]
+) -> None:
+    """Refuse a field stated both as text and as parts: the two forms are alternatives."""
+    both = {item.field_key for item in values} & {item.field_key for item in part_values}
+    if both:
+        raise ValueError("a packed field is stated as text or as parts, not both")
+
+
 class ProfileRepeatableRowMutationOperationRequest(BaseModel):
-    """One atomic new-row request for a schema-declared repeatable section."""
+    """One atomic new-row request for a schema-declared repeatable section.
+
+    A packed field (``usos``, ``valores_catastrales``, ``mejoras``, ``inquilinos``) is stated either
+    as its text in ``values`` or as ``part_values``; stating one field in both is refused.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -264,7 +296,8 @@ class ProfileRepeatableRowMutationOperationRequest(BaseModel):
     expected_revision: int = Field(ge=1)
     expected_content_digest: ContentDigest
     section_key: str = Field(min_length=1, max_length=128)
-    values: tuple[ProfileRepeatableRowValue, ...] = Field(min_length=1)
+    values: tuple[ProfileRepeatableRowValue, ...] = ()
+    part_values: tuple[ProfileRepeatableRowPartsValue, ...] = ()
 
     @field_validator("values")
     @classmethod
@@ -275,9 +308,16 @@ class ProfileRepeatableRowMutationOperationRequest(BaseModel):
         keys = tuple(item.field_key for item in value)
         if len(set(keys)) != len(keys):
             raise ValueError("repeatable-row operation values must not repeat a field key")
-        if not any(item.value.strip() for item in value):
-            raise ValueError("repeatable-row operation must include at least one non-blank value")
         return value
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _require_one_form_and_some_value(self) -> Self:
+        _require_distinct_part_fields(self.part_values)
+        _require_one_form_per_field(self.values, self.part_values)
+        if not self.part_values and not any(item.value.strip() for item in self.values):
+            raise ValueError("repeatable-row operation must include at least one non-blank value")
+        return self
 
 
 class ProfileRepeatableRowTargetOperationRequest(BaseModel):
@@ -301,10 +341,22 @@ class ProfileRepeatableRowTargetOperationRequest(BaseModel):
 
 
 class ProfileRepeatableRowUpdateOperationRequest(ProfileRepeatableRowTargetOperationRequest):
-    """Replace only named row fields and explicitly clear named fields."""
+    """Replace only named row fields and explicitly clear named fields.
+
+    A packed field is replaced either by its text in ``values`` or by ``part_values``; stating
+    one field in both is refused.
+    """
 
     values: tuple[ProfileRepeatableRowValue, ...] = ()
+    part_values: tuple[ProfileRepeatableRowPartsValue, ...] = ()
     clear_fields: tuple[str, ...] = ()
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _require_one_form(self) -> Self:
+        _require_distinct_part_fields(self.part_values)
+        _require_one_form_per_field(self.values, self.part_values)
+        return self
 
     @field_validator("values")
     @classmethod

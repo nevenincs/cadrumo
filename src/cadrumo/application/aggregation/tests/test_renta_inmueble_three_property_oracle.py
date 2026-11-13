@@ -5,25 +5,25 @@ names, never read back from the code under test. The texts are the bundled
 corpus copies:
 
 * LIRPF art. 23.1.a.1.º (``normatives/html/ley-35-2006.html.extracted.md``
-  line 368) and RIRPF art. 13.a (``rd-439-2007.html.extracted.md`` lines 391
+  line 372) and RIRPF art. 13.a (``rd-439-2007.html.extracted.md`` lines 391
   and 392): financing interest and repairs, together with what earlier years
   left pending, are limited per property to its gross income; earlier pending
   amounts are applied in the years that follow.
-* LIRPF art. 23.1.a.2.º (line 369), RIRPF art. 13.b and 13.g (lines 393 and
+* LIRPF art. 23.1.a.2.º (line 373), RIRPF art. 13.b and 13.g (lines 393 and
   401): taxes and community fees are deductible without that limit.
-* LIRPF art. 23.1.b (line 372) and RIRPF art. 14.2.a (lines 409 and 410): the
+* LIRPF art. 23.1.b (line 376) and RIRPF art. 14.2.a (lines 409 and 410): the
   building is amortised at 3 per 100 of the greater of the acquisition cost and
   the cadastral value, the land excluded; without a stated land value the cost
   is split by the year's cadastral values.
 * Manual práctico de Renta 2024, parte 1 (``manuals/renta/2024/part1/
   source.pdf.extracted.md`` lines 11312 to 11314): for a property let part of
   the year, the yield is determined in proportion to the days it was let.
-* LIRPF art. 11.3 (line 150): a co-owner declares the yield of the share the
+* LIRPF art. 11.3 (line 154): a co-owner declares the yield of the share the
   title gives.
 * LIRPF art. 23.2 as worded at 31 December 2021
   (``ley-35-2006-art-23-2021.html.extracted.md`` line 11), kept for contracts
   made before Ley 12/2023 came into force by disposición transitoria
-  trigésima octava (``ley-35-2006.html.extracted.md`` line 3699): the positive
+  trigésima octava (``ley-35-2006.html.extracted.md`` line 3918): the positive
   net yield of a dwelling lease is reduced by 60 per 100.
 
 Every lease here was made before that law, so the 60 per 100 holds in every

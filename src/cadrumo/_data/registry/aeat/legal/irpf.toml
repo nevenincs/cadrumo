@@ -4682,12 +4682,11 @@ effective_from = 2015-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-review"
-notes = "LIRPF art 67: defines the cuota liquida estatal by reducing the prior state tax amount through the art 68.1 new/recent company investment deduction and 50 percent of the art 68.2-68.5 deductions, with a non-negative floor. Base legal para Modelo 100 casillas 0570 and 0585."
+notes = "LIRPF art 67: defines the cuota liquida estatal by reducing the prior state tax amount through the art 68.1 new/recent company investment deduction and 50 percent of the art 68.2-68.5 deductions, with a non-negative floor. Base legal para Modelo 100 casillas 0570 and 0585. The bundled consolidated text (BOE update of 2026-11-11) shows letra a) reworded by art. 6.2.3 of Real Decreto-ley 29/2026 (BOE-A-2026-20823, in force from 2026-10-08): it now reads 'Las deducciones previstas en el apartado 1 y 6 del artículo 68 de esta ley' where the earlier wording named the art. 68.1 deduction alone. The required text keeps the wording common to both redactions; which redaction governs a given período impositivo is not decided here."
 required_text = [
     "Cuota líquida estatal.",
     "La cuota líquida estatal del Impuesto será el resultado de disminuir la cuota íntegra estatal",
-    "deducción por inversión en empresas de nueva o reciente creación",
-    "50 por ciento del importe total de las deducciones",
+    "50 por ciento del importe total de las deducciones previstas en los apartados 2, 3, 4 y 5 del artículo 68",
     "no podrá ser negativo",
 ]
 
@@ -6502,12 +6501,12 @@ effective_from = 2007-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-review"
-notes = "LIRPF art 24: sets the minimum computable real-estate capital income when the tenant, assignee, lessee or sublessee is the taxpayer's spouse or a relative up to the third degree, tying the minimum to the art 85 imputed-rent rules."
+notes = "LIRPF art 24: sets the minimum computable real-estate capital income when the tenant, assignee, lessee or sublessee is the taxpayer's spouse or a relative up to the third degree, tying the minimum to the art 85 imputed-rent rules. The bundled consolidated text (BOE update of 2026-11-11) shows the first paragraph reworded with effect from 2027-01-01 by art. 6.3.1 of Real Decreto-ley 29/2026 (BOE-A-2026-20823, not yet in force): the minimum becomes the average effective percentage (renta imputada under art. 85 divided by the sum of the cadastral values, the art. 24 properties included) applied to the cadastral value, instead of 'las reglas del artículo 85'. The required text keeps the wording common to both redactions."
 required_text = [
     "Rendimiento en caso de parentesco.",
     "sea el cónyuge o un pariente",
     "hasta el tercer grado inclusive",
-    "no podrá ser inferior al que resulte de las reglas del artículo 85",
+    "el rendimiento neto total no podrá ser inferior al que resulte de",
 ]
 
 [legal."ley-35-2006:art-25"]
@@ -7176,9 +7175,9 @@ evidence_tier = "official_source_guidance"
 authority = "boe"
 kind = "instructions"
 corpus_path = "corpus/normatives/html/ley-35-2006.html"
-sha256 = "b55ba6f2ee97c045290277acd5be1e6493e95b8e5ba7cb7e5e776ff5a572d9f0"
-bytes = 1921157
-retrieved_at = 2026-05-06
+sha256 = "931aa9c5e55e61c2b52b85f553e39416177f0188541dc1ddfa5c8936cfe75e9a"
+bytes = 2036413
+retrieved_at = 2026-11-13
 applies_from = 2007-01-01
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 review_status = "pending_review"
@@ -7188,9 +7187,9 @@ evidence_tier = "official_source_guidance"
 authority = "boe"
 kind = "instructions"
 corpus_path = "corpus/normatives/html/ley-35-2006.html"
-sha256 = "b55ba6f2ee97c045290277acd5be1e6493e95b8e5ba7cb7e5e776ff5a572d9f0"
-bytes = 1921157
-retrieved_at = 2026-05-06
+sha256 = "931aa9c5e55e61c2b52b85f553e39416177f0188541dc1ddfa5c8936cfe75e9a"
+bytes = 2036413
+retrieved_at = 2026-11-13
 applies_from = 2007-01-01
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a7"
 review_status = "pending_review"

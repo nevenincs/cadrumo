@@ -13,13 +13,10 @@ quarterly source filings (1T-4T) through the enrolled
   ``decl.retenciones-total`` via ``copy``-from-relation formulas.
   ``decl.total-perceptores`` comes from the dedicated per-perceptor retención
   store, because quarterly perceptor counts double-count recurring perceptors.
-* **Modelo 190** (revision ``2025-y-siguientes``) folds **Modelo 111** quarterly
-  retención-rendimientos-del-trabajo monetary filings. Nine importe casilla ids
-  sum into ``decl.percepciones-total``, output ``28`` copies into
-  ``decl.retenciones-total``, and ``decl.total-percepciones`` comes from the
-  withholding detalle source because quarterly perceptor counts double-count
-  recurring percepciones. The 2024 edition totals its own type-2 records, so
-  the Modelo 111 fold is proven on the first exercise that routes through it.
+* **Modelo 190** is the counter-case: every edition totals its declarante
+  summary over its own type-2 records, as the designs and the 2025
+  instrucciones define it, so **Modelo 111** quarters never fold into it. They
+  remain a reconciliation check whose difference is a warning.
 * **Modelo 193** (revision ``2024``) folds **Modelo 123** quarterly
   retención-capital-mobiliario monetary filings. Source casilla ids ``06``
   (base), ``09`` (retenciones) feed the monetary declarante casillas; the
@@ -69,6 +66,7 @@ from cadrumo.tests.withholding_zero_blocks import zeroed_withholding_blocks
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+from ....adapters.persistence.profile.counterparty_establishment import CounterpartyEstablishmentRepository
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -101,6 +99,7 @@ from ....application.aggregation.retenciones import (
     RetencionObservation,
 )
 from ....application.calculations.observations_repository import APP_FILING_SOURCE_KIND
+from ....application.ledger.counterparty_establishment import record_counterparty_filing_name
 from ....application.modelo.calculation_bucket_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
@@ -127,6 +126,7 @@ from ....domain.calculations.registry.tests.registry_observations import (
 )
 from ....domain.calculations.registry.withholding_bindings import WithholdingObservation
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
+from ....domain.filing.declared_party_name import DeclaredPartyFilingName, DeclaredPartyKind
 from ....domain.user_profile.values import UserProfileFact
 from ....tests.env_scope import ready_clave_settings
 from .file_flow_test_support import calculation_ports_for_test
@@ -323,6 +323,28 @@ def _calculate_periodic(
         )
 
 
+def _state_perceptor_filing_name(secure_objects: SecureObjectRepository, *, tax_id: str, nombre: str) -> None:
+    """State the name a perceptor is filed under, as the operator does before an informative return.
+
+    The record designs prescribe surnames then name for a natural person and give
+    no rule for deriving it from a free-text name, so an unstated filing name
+    leaves the perceptor's name field without content.
+    """
+    record_counterparty_filing_name(
+        bucket_id=_BUCKET_ID,
+        tax_identifier=tax_id,
+        filing_name=DeclaredPartyFilingName(
+            kind=DeclaredPartyKind.NATURAL_PERSON,
+            primer_apellido="Ejemplo",
+            segundo_apellido="Ficticio",
+            nombre=nombre,
+        ),
+        asserted_by="test-operator",
+        asserted_at=_T0,
+        repository=CounterpartyEstablishmentRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
+    )
+
+
 def _assert_empty_withholding_store_source_issue(result: BucketAggregationCalculationResult, *, modelo: str) -> None:
     """Assert enrolled withholding resolver reports an empty detail store loudly."""
     assert not any(
@@ -429,7 +451,7 @@ def _seed_retencion_perceptors(
     period_code: str,
     observations: tuple[RetencionObservation, ...],
 ) -> None:
-    """Persist one complete retenciones observation window."""
+    """Persist one complete retenciones observation window and state each perceptor's filing name."""
     period = Period.from_year_and_code(_YEAR, period_code)
     assert period.contains(_RETENCION_ACCRUED_ON), (period_code, _RETENCION_ACCRUED_ON)
     replace_retencion_observations(
@@ -440,6 +462,8 @@ def _seed_retencion_perceptors(
         observations=list(observations),
         source_kind=AggregationCaptureKind.AGGREGATE_PULL,
     )
+    for observation in observations:
+        _state_perceptor_filing_name(secure_objects, tax_id=observation.perceptor_nif, nombre="Perceptor")
 
 
 def workflow_profile() -> TaxpayerProfile:
@@ -527,6 +551,8 @@ _M190_RETENCIONES_OUTPUT: CasillaId = validated_casilla_id("28", surface="_M190_
 _M190_DETAIL_SOURCE_MODELO = "111"
 _M190_DETAIL_QUARTER = "1T"
 _M190_DETAIL_TRANSACTION_DATE = date(_M190_YEAR, 3, 15)
+_M190_DETAIL_PERCIBIDO = Decimal("1000.00")
+_M190_DETAIL_RETENCION = Decimal("150.00")
 
 
 def _m190_seed_value(output: CasillaId, period: str) -> Decimal:
@@ -549,7 +575,7 @@ def _seed_m190_withholding_detail(
     clave: str = "G",
     subclave: str = "01",
 ) -> None:
-    """Persist one per-perceptor-clave row as quarterly M111 detail, the M190 count's source."""
+    """Persist one per-perceptor-clave row as quarterly M111 detail, the M190 records' source, with its filing name."""
     period = Period.from_year_and_code(_M190_YEAR, _M190_DETAIL_QUARTER)
     assert period.contains(_M190_DETAIL_TRANSACTION_DATE), (_M190_DETAIL_QUARTER, _M190_DETAIL_TRANSACTION_DATE)
     replace_percepcion_observations(
@@ -567,14 +593,15 @@ def _seed_m190_withholding_detail(
                 transaction_date=_M190_DETAIL_TRANSACTION_DATE,
                 clave=RetencionClave.from_registry(clave),
                 subclave=subclave,
-                percibido_dinerario=Decimal("1000.00"),
-                retencion_practicada=Decimal("150.00"),
+                percibido_dinerario=_M190_DETAIL_PERCIBIDO,
+                retencion_practicada=_M190_DETAIL_RETENCION,
                 **zeroed_withholding_blocks(),
                 base_retenciones=Decimal("0"),
             )
         ],
         source_kind=AggregationCaptureKind.AGGREGATE_PULL,
     )
+    _state_perceptor_filing_name(secure_objects, tax_id="12345678Z", nombre="Profesional")
 
 
 def _seed_m111_quarterly_m190_evidence() -> None:
@@ -688,67 +715,41 @@ def _seed_and_file_m111_1t(
     return result
 
 
-def test_m190_folds_in_four_m111_quarters_with_withholding_advisory(
+def test_m190_totals_its_own_records_and_never_the_m111_quarters(
     withholding_payer_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
-    """E2E: four filed M111 quarters fold into M190 monetary totals; withholding advisory present.
+    """The M190 declarante summary totals the declaration's own type-2 records, whatever M111 quarters hold.
 
-    The nine importe relations sum into ``decl.percepciones-total`` and the
-    retenciones relation (output ``28``) into ``decl.retenciones-total``. The
-    annual count ``decl.total-percepciones`` is withholding-backed; with an empty
-    detail store the enrolled resolver materialises an explicit zero and emits a
-    ``source_issue`` advisory.
+    Every design and the 2025 instrucciones define ``decl.total-percepciones``,
+    ``decl.percepciones-total`` and ``decl.retenciones-total`` over the type-2
+    records of the declaration itself. Four filed M111 quarters with distinct
+    positive values are seeded beside an empty detail store, so a summary that
+    still folded them would show their sums; with no record every total is an
+    explicit zero and the enrolled withholding resolver reports the empty store.
     """
-    obs_repo = CalculationObservationRepository()
-    all_outputs = (*_M190_IMPORTE_OUTPUTS, _M190_RETENCIONES_OUTPUT)
-    for period in _QUARTERS:
-        _seed_quarterly_filing(
-            obs_repo=obs_repo,
-            source_modelo="111",
-            period=period,
-            casilla_values={output: _m190_seed_value(output, period) for output in all_outputs},
-            year=_M190_YEAR,
-        )
-
-    expected_percepciones_amount = sum(
-        (_m190_seed_value(output, period) for output in _M190_IMPORTE_OUTPUTS for period in _QUARTERS),
-        Decimal("0"),
-    )
-    expected_retenciones = sum(
-        (_m190_seed_value(_M190_RETENCIONES_OUTPUT, period) for period in _QUARTERS),
-        Decimal("0"),
-    )
-    # Sanity: the monetary expected totals are strictly positive and distinct, so
-    # a cross-wired fold would red the per-casilla assertions below.
-    assert expected_percepciones_amount > Decimal("0")
-    assert expected_retenciones > Decimal("0")
-    assert expected_percepciones_amount != expected_retenciones
+    _seed_m111_quarterly_m190_evidence()
 
     result = _calculate_annual(withholding_payer_objects, modelo="190", operation=operation, year=_M190_YEAR)
 
     values = result.revision.casilla_values
-    assert Decimal(values[_DECL_PERCEPCIONES_COUNT]) == Decimal("0"), (
-        f"M190 {_DECL_PERCEPCIONES_COUNT} must come from withholding detalle and materialise zero "
-        f"when the detail store is empty; got {values[_DECL_PERCEPCIONES_COUNT]}"
-    )
-    assert Decimal(values[_DECL_PERCEPCIONES_AMOUNT]) == expected_percepciones_amount, (
-        f"M190 {_DECL_PERCEPCIONES_AMOUNT} must fold the nine importe outputs over four quarters "
-        f"(sum {expected_percepciones_amount}); got {values[_DECL_PERCEPCIONES_AMOUNT]}"
-    )
-    assert Decimal(values[_DECL_RETENCIONES]) == expected_retenciones, (
-        f"M190 {_DECL_RETENCIONES} must fold the retenciones output (28) over four quarters "
-        f"(sum {expected_retenciones}); got {values[_DECL_RETENCIONES]}"
-    )
-
-    # The relation fold is clean (claimed source, no diagnostic names it)...
+    for casilla_id in (_DECL_PERCEPCIONES_COUNT, _DECL_PERCEPCIONES_AMOUNT, _DECL_RETENCIONES):
+        assert Decimal(values[casilla_id]) == Decimal("0"), (
+            f"M190 {casilla_id} must total the declaration's own records, of which there are none; "
+            f"got {values[casilla_id]}"
+        )
     assert not any(diag.source_kind == _RELATION_PREFILL_SOURCE for diag in result.source_diagnostics)
     _assert_empty_withholding_store_source_issue(result, modelo="190")
 
 
-def test_m190_verify_accepts_observation_backed_m111_cross_period_evidence(
+def test_m190_verify_compares_observed_m111_quarters_with_its_records_without_depending_on_them(
     withholding_payer_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
-    """M190 verify recognizes observed M111 values and names the missing filing-grade quarterly evidence."""
+    """Observed M111 quarters are a reconciliation check on the M190 summary, not a source it waits for.
+
+    The summary totals its own records, so unfiled M111 quarters raise no
+    cross-period blocker. Their retenciones are still compared with the summary,
+    and a difference is a warning naming both totals and the quarters checked.
+    """
     _seed_m111_quarterly_m190_evidence()
     _seed_m190_withholding_detail(withholding_payer_objects)
 
@@ -767,49 +768,43 @@ def test_m190_verify_accepts_observation_backed_m111_cross_period_evidence(
         ).report
 
     assert Decimal(result.revision.casilla_values[_DECL_PERCEPCIONES_COUNT]) == Decimal("1")
-    assert report.granted_verificado_completo is False
-    cross_period_findings = tuple(
+    assert Decimal(result.revision.casilla_values[_DECL_RETENCIONES]) == _M190_DETAIL_RETENCION
+    assert not any(
+        finding.kind.value == "cross_period_dependency_unclean" and finding.message_facts.get("source_modelo") == "111"
+        for finding in report.findings
+    ), report.findings
+    mismatches = tuple(
         finding
         for finding in report.findings
-        if finding.kind.value == "cross_period_dependency_unclean" and finding.severity.value == "blocking"
+        if finding.message_locale_key == "application.modelo.findings.withholding_total_differs_from_periodic_returns"
     )
-    assert cross_period_findings, report.findings
-    m111_findings = tuple(
-        finding
-        for finding in cross_period_findings
-        if finding.message_facts.get("source_modelo") == "111"
-        and finding.message_facts.get("source_filing_year") == _M190_YEAR
-    )
-    assert m111_findings, cross_period_findings
-    assert all(
-        "missing_current_filing_record" in str(finding.message_facts["blocker_codes"]).split("|")
-        for finding in m111_findings
-    )
-    assert not any(
-        "missing_observation" in str(finding.message_facts["blocker_codes"]).split("|") for finding in m111_findings
-    )
-    assert not any(
-        "missing_observed_casilla" in str(finding.message_facts["blocker_codes"]).split("|")
-        for finding in m111_findings
+    assert len(mismatches) == 1, report.findings
+    (mismatch,) = mismatches
+    assert mismatch.severity.value == "warning"
+    assert mismatch.message_facts["source_modelo"] == "111"
+    assert mismatch.message_facts["checked_periods"] == "|".join(_QUARTERS)
+    assert mismatch.message_facts["summary_total"] == _M190_DETAIL_RETENCION
+    assert mismatch.message_facts["periodic_total"] == sum(
+        (_m190_seed_value(_M190_RETENCIONES_OUTPUT, period) for period in _QUARTERS),
+        Decimal("0"),
     )
 
 
 def test_m190_verify_accepts_filed_1t_m111_and_attested_no_obligation_zero_quarters(
     withholding_payer_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
-    """M190 verify accepts a clean filed M111 1T plus explicit 2T-4T no-obligation evidence."""
-    m111_result = _seed_and_file_m111_1t(withholding_payer_objects, operation=operation)
+    """M190 verify accepts a clean filed M111 1T plus explicit 2T-4T no-obligation evidence.
+
+    The summary totals the declaration's one record, so its figures are that
+    record's percibido and retención.
+    """
+    _seed_and_file_m111_1t(withholding_payer_objects, operation=operation)
     _attest_m111_no_retenciones_periods(withholding_payer_objects, periods=("2T", "3T", "4T"))
     _seed_m190_withholding_detail(withholding_payer_objects)
 
     result = _calculate_annual(withholding_payer_objects, modelo="190", operation=operation, year=_M190_YEAR)
-    expected_percepciones_amount = sum(
-        (Decimal(m111_result.revision.casilla_values[output]) for output in _M190_IMPORTE_OUTPUTS),
-        Decimal("0"),
-    )
-    expected_retenciones = Decimal(m111_result.revision.casilla_values[_M190_RETENCIONES_OUTPUT])
-    assert Decimal(result.revision.casilla_values[_DECL_PERCEPCIONES_AMOUNT]) == expected_percepciones_amount
-    assert Decimal(result.revision.casilla_values[_DECL_RETENCIONES]) == expected_retenciones
+    assert Decimal(result.revision.casilla_values[_DECL_PERCEPCIONES_AMOUNT]) == _M190_DETAIL_PERCIBIDO
+    assert Decimal(result.revision.casilla_values[_DECL_RETENCIONES]) == _M190_DETAIL_RETENCION
     assert not any(diag.source_kind == _RELATION_PREFILL_SOURCE for diag in result.source_diagnostics)
 
     with bundled_indexed_authority().operation() as operation:
@@ -832,12 +827,6 @@ def test_m190_verify_accepts_filed_1t_m111_and_attested_no_obligation_zero_quart
         if finding.kind.value == "cross_period_dependency_unclean" and finding.severity.value == "blocking"
     )
     assert not blocking_cross_period
-    m111_advisories = tuple(
-        finding
-        for finding in report.findings
-        if finding.message_locale_key == "application.modelo.findings.cross_period_m111_no_retenciones"
-    )
-    assert {finding.message_facts["source_period"] for finding in m111_advisories} == {"2T", "3T", "4T"}
     assert not any(
         finding.message_facts.get("source_modelo") == "111"
         and "missing_current_filing_record" in str(finding.message_facts.get("blocker_codes", "")).split("|")

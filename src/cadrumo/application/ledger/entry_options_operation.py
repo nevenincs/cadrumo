@@ -25,6 +25,11 @@ names them by: each lease and each property, valued by the row key a ledger row
 stores and worded by the row's summary in ``output_language``. They are read from
 the exact profile's record, so a form offers only rows the profile holds.
 
+The fields a ledger row names those families by are served beside them, in form
+order, each with its family and its name in ``output_language``: the one list a
+form and a transaction projection both read, so no frontend holds a field-to-family
+table of its own.
+
 The figures a payer's withholding certificate states are served per income
 class, from the declaration the record writer enforces, so a withholding form
 asks for each figure exactly where the record takes it.
@@ -35,7 +40,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable, Iterable, Mapping
 from datetime import date
-from typing import Final, Literal, Self
+from typing import Final, Self
 from uuid import UUID
 
 from pydantic import BaseModel, model_validator
@@ -91,6 +96,7 @@ from ..user_profile.record_row_words import record_row_summary_words
 from ..user_profile.rental_records import canonical_rental_ref
 from .actions_import import installed_ledger_providers
 from .entry_limits import LedgerEntryLimitsProjection, ledger_entry_limits
+from .entry_option_families import EntryOptionFamily, LedgerLinkFieldProjection, served_link_fields
 from .invoice_label_vocabulary import CURRENCY_CODES
 from .period_options import LedgerPeriodsProjection, LedgerPeriodsQuery, PeriodDay, ledger_periods
 from .read_access import resolve_ledger_request_read_access
@@ -99,30 +105,6 @@ LEDGER_ENTRY_OPTIONS_OPERATION_DEFINITION_ID: Final = "ledger.entry-options"
 
 ENTRY_OPTION_LABEL_PREFIX: Final = "application.ledger.entry_options."
 """Where the words of the served tokens live, one family under it per kind of word."""
-
-type EntryOptionFamily = Literal[
-    "country",
-    "currency",
-    "deduction_fact_kind",
-    "m210_payer_mode",
-    "m210_tipo_renta",
-    "iva_category",
-    "irpf_category",
-    "spending_category",
-    "usage_ratio_category",
-    "invoice_class",
-    "premises_situation",
-    "prorrata_provenance",
-    "prorrata_sector_letter",
-    "capital_good_kind",
-    "capital_good_disposal",
-    "import_format",
-    "export_format",
-    "gasto_capital_inmobiliario",
-    "rental_lease",
-    "rental_property",
-    "withholding_certificate_figure",
-]
 
 type EntryOptionProfileFacts = Callable[[str, PinnedAuthorityOperation], Mapping[str, str] | None]
 """Read the path-keyed facts of one profile under the operation's pinned authority; ``None`` when it holds none."""
@@ -203,6 +185,7 @@ class LedgerEntryOptionsProjection(BaseModel):
     profile_id: UUID
     default_currency: str
     families: tuple[LedgerEntryOptionFamilyProjection, ...]
+    link_fields: tuple[LedgerLinkFieldProjection, ...]
     classifications: tuple[LedgerEntryClassificationProjection, ...]
     limits: LedgerEntryLimitsProjection
     periods: LedgerPeriodsProjection
@@ -412,6 +395,7 @@ def ledger_entry_options(
         families=tuple(
             LedgerEntryOptionFamilyProjection(family=family, options=options) for family, options in families
         ),
+        link_fields=served_link_fields(language),
         classifications=_classification_rules(),
         limits=ledger_entry_limits(),
         periods=ledger_periods(periods or LedgerPeriodsQuery(), reference_day=on_date, language=language),
@@ -506,7 +490,6 @@ def build_ledger_entry_options_registration(definition: OperationDefinition) -> 
 __all__ = [
     "ENTRY_OPTION_LABEL_PREFIX",
     "LEDGER_ENTRY_OPTIONS_OPERATION_DEFINITION_ID",
-    "EntryOptionFamily",
     "EntryOptionProfileFacts",
     "LedgerEntryClassificationProjection",
     "LedgerEntryOptionFamilyProjection",

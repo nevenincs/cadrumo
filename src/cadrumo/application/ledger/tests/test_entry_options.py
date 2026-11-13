@@ -19,6 +19,7 @@ from cadrumo.domain.calculations.registry.tests.authored_editions import filing_
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
+from ....core.external_constants import OutputLanguage
 from ....core.operations import OperationFrontendProjection, profile_operation_subject
 from ....core.retencion_soportada import RetencionSoportadaCantidad, RetencionSoportadaClase
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
@@ -781,3 +782,44 @@ def test_export_formats_are_the_serializations_an_export_writes(
 ) -> None:
     assert _values(served, "export_format") == [str(item) for item in ExportSerializationFormat]
     assert all(label is None for _, label in served["export_format"])
+
+
+def test_the_link_fields_are_served_in_form_order_each_with_the_family_its_choices_come_from(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    options = ledger_entry_options(_PROFILE, operation=operation)
+    served_families = {family.family for family in options.families}
+
+    assert [(item.field, item.family) for item in options.link_fields] == [
+        ("arrendamiento_ref", "rental_lease"),
+        ("inmueble_ref", "rental_property"),
+        ("gasto_capital_inmobiliario", "gasto_capital_inmobiliario"),
+    ]
+    assert {item.family for item in options.link_fields} <= served_families
+
+
+@pytest.mark.parametrize(
+    ("language", "expected"),
+    [
+        (
+            OutputLanguage.ES,
+            ["Arrendamiento vinculado", "Inmueble vinculado", "Concepto de gasto del inmueble"],
+        ),
+        (OutputLanguage.EN, ["Linked lease", "Linked property", "Rental expense concept"]),
+        (
+            OutputLanguage.CA,
+            ["Arrendament vinculat", "Immoble vinculat", "Concepte de despesa de l'immoble"],
+        ),
+        (
+            OutputLanguage.HU,
+            ["Kapcsolt bérleti szerződés", "Kapcsolt ingatlan", "Ingatlanköltség jogcíme"],
+        ),
+    ],
+)
+def test_the_link_field_words_are_said_in_the_asked_language(
+    operation: PinnedAuthorityOperation, language: OutputLanguage, expected: list[str]
+) -> None:
+    options = ledger_entry_options(_PROFILE, operation=operation, language=language)
+
+    assert [item.field_words for item in options.link_fields] == expected
+    assert {item.field_words_language for item in options.link_fields} == {language}
