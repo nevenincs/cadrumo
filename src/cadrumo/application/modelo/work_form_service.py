@@ -68,6 +68,7 @@ from ...domain.modelos.protocols import (
     VerificationReportCatalogueRepositoryProtocol,
 )
 from ...domain.modelos.verification_report import ModeloVerificationFinding
+from ...domain.modelos.work_unit import WorkUnit
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.user_profile.errors import ProfileSchemaValidationError
 from ..actividad_asset.ports import ActivityAssetHistoryRepository
@@ -290,6 +291,7 @@ def _profile_context_values(
     bucket_id: BucketId,
     operation: PinnedAuthorityOperation,
     m303_arrivals: M303ArrivalPorts | None,
+    work_unit: WorkUnit | None,
 ) -> Mapping[FilingProducerKey, ModeloFormScalar]:
     """Resolve the producer context a layout declares, as the export resolves it.
 
@@ -319,6 +321,7 @@ def _profile_context_values(
                 operation=operation,
                 read_profile=current,
                 arrivals=m303_arrivals,
+                work_unit=work_unit,
             )
         )
     return values
@@ -336,6 +339,38 @@ def _profile_identity_values(
         return dict[FilingProducerKey, ModeloFormScalar]()
 
 
+def _m303_filing_lexicals(
+    snapshot: RegistrySnapshot,
+    revision: CalculationRevision | None,
+    *,
+    bucket_id: BucketId,
+    operation: PinnedAuthorityOperation,
+    arrivals: M303ArrivalPorts | None,
+    work_unit: WorkUnit | None,
+) -> M303FilingLexicals:
+    """The filer's saved answers, folded with the ledger and register arrivals when the export can fold them."""
+    if revision is None or revision.filing_instance_evidence is None:
+        return M303FilingLexicals()
+    evidence = revision.filing_instance_evidence
+    filing = m303_evidence_lexicals(evidence.m303)
+    period = snapshot.filing_period
+    if arrivals is None or period is None or work_unit is None:
+        return filing
+    with contextlib.suppress(CadrumoError):
+        return m303_filing_lexicals(
+            resolve_m303_filing_facts_from_arrivals(
+                bucket_id=str(bucket_id),
+                period=period,
+                evidence=evidence,
+                arrivals=arrivals,
+                revision=revision,
+                work_unit=work_unit,
+                operation=operation,
+            )
+        )
+    return filing
+
+
 def _m303_context_values(
     snapshot: RegistrySnapshot,
     revision: CalculationRevision | None,
@@ -344,6 +379,7 @@ def _m303_context_values(
     operation: PinnedAuthorityOperation,
     read_profile: bool,
     arrivals: M303ArrivalPorts | None,
+    work_unit: WorkUnit | None,
 ) -> Mapping[FilingProducerKey, ModeloFormScalar]:
     """The Modelo 303 identification answers, through the export's own lexical projection.
 
@@ -358,16 +394,9 @@ def _m303_context_values(
         if read_profile
         else M303ProfileLexicals()
     )
-    evidence = None if revision is None else revision.filing_instance_evidence
-    filing = M303FilingLexicals() if evidence is None else m303_evidence_lexicals(evidence.m303)
-    period = snapshot.filing_period
-    if evidence is not None and arrivals is not None and period is not None:
-        with contextlib.suppress(CadrumoError):
-            filing = m303_filing_lexicals(
-                resolve_m303_filing_facts_from_arrivals(
-                    bucket_id=str(bucket_id), period=period, evidence=evidence, arrivals=arrivals, operation=operation
-                )
-            )
+    filing = _m303_filing_lexicals(
+        snapshot, revision, bucket_id=bucket_id, operation=operation, arrivals=arrivals, work_unit=work_unit
+    )
     values: dict[FilingProducerKey, ModeloFormScalar] = {}
     for key, value in m303_context_producer_values(profile, filing).items():
         if value is not None and not isinstance(value, str):
@@ -475,9 +504,8 @@ def load_modelo_work_form(
     movements the last check read have changed since; without it the form
     never says the check is out of date.
 
-    ``m303_arrivals`` are the ledger and register repositories a Modelo 303 period
-    facts are folded from, exactly as its export folds them. Without them the
-    facts that come from those arrivals stay unknown on the form.
+    ``m303_arrivals`` are the ledger and register repositories a Modelo 303's period
+    facts are folded from, as its export folds them; without them those facts stay unknown.
     """
     resolutions = (
         NO_SOURCE_DISAGREEMENT_RESOLUTIONS
@@ -544,6 +572,7 @@ def load_modelo_work_form(
             bucket_id=bucket_id,
             operation=operation,
             m303_arrivals=m303_arrivals,
+            work_unit=work_unit_repository.load().get(review.work_unit_id),
         ),
         profile_binding_values=_profile_binding_context_values(
             layout, snapshot, head, review.lifecycle_state, bucket_id=bucket_id, operation=operation

@@ -391,12 +391,14 @@ def calculate_m303_quarter(
         published_authority_operation().snapshot("303", filing_year=filing_year, period=typed_period.registry_token)
     ).revision
     # Only casillas the selected revision leaves manual take the fixture zeros;
-    # a revision that binds one of them owns its value through the bucket.
+    # a revision that binds one of them owns its value through the bucket, and
+    # one it computes by formula refuses a supplied input.
     bound_casilla_ids = {casilla.id for casilla in source_revision.casillas if casilla.input_kind == InputKind.BOUND}
+    computed_casilla_ids = {formula.target_casilla_id for formula in source_revision.formulas}
     manual_zeros = {
         casilla_id: value
         for casilla_id, value in MODELO_303_MANUAL_RESULTADO_CASILLA_ZEROS.items()
-        if casilla_id not in bound_casilla_ids
+        if casilla_id not in bound_casilla_ids and casilla_id not in computed_casilla_ids
     }
     work_unit = create_work_unit(
         bucket_id=BUCKET_ID,

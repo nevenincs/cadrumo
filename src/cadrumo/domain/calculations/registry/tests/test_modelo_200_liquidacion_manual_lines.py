@@ -57,6 +57,7 @@ from .modelo_200_casilla_ids import (
     M200_RESERVA_CAPITALIZACION_CASILLA,
     M200_RESULTADO_CONTABLE_CASILLA,
 )
+from .modelo_200_turnover import turnover_binding_values
 from .published_authority import published_snapshot, published_source_reference
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
@@ -77,7 +78,6 @@ _BIN_MAXIMA = _casilla("DP200014:bin-aplicada-maxima")
 
 _FORM = "modelo-200-profile-legal-entity-form"
 _NEW_ENTITY = "modelo-200-profile-new-entity-flag"
-_INCN = "modelo-200-profile-incn-prior-12-months"
 _BIN_STOCK = "modelo-200-bin-pendiente-ejercicios-anteriores"
 
 _MARKED = Decimal("1")
@@ -155,13 +155,14 @@ def _calculate(
     }
     casilla_inputs.update({_casilla(raw): _MARKED for raw in marked})
     casilla_inputs.update(inputs or {})
+    snapshot = published_snapshot(_M200, filing_year=exercise, period="0A", grade=RegistryAuthorityGrade.CALCULATION)
     return calculate_registry_snapshot(
-        published_snapshot(_M200, filing_year=exercise, period="0A", grade=RegistryAuthorityGrade.CALCULATION),
+        snapshot,
         inputs=casilla_inputs,
         enum_binding_values={_FORM: form},
         binding_values={
             _NEW_ENTITY: new_entity,
-            _INCN: incn,
+            **turnover_binding_values(snapshot, incn),
             "modelo-200-profile-tributacion-estado-porcentaje": Decimal("100"),
             _BIN_STOCK: bin_stock,
             "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
@@ -385,7 +386,7 @@ def test_bin_ceiling_rises_by_the_rentas_outside_the_limit(exercise: int) -> Non
         exercise,
         resultado=_BIN_BASE_PREVIA,
         bin_stock=_BIN_STOCK_HELD,
-        inputs={_casilla("00545"): Decimal("200000"), _casilla("01509"): Decimal("50000")},
+        inputs={_casilla("DP200014:00545"): Decimal("200000"), _casilla("01509"): Decimal("50000")},
     ).values
 
     assert values[_BIN_MAXIMA] == Decimal("7250000.00")

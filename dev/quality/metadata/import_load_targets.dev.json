@@ -104,6 +104,7 @@
         "dev.acceptance.iva.annual_contracts",
         "dev.acceptance.iva.annual_m390",
         "dev.acceptance.iva.annual_projection",
+        "dev.acceptance.iva.annual_prorrata_settlement",
         "dev.acceptance.iva.annual_quarter_work",
         "dev.acceptance.iva.annual_runtime",
         "dev.acceptance.iva.cli_journey",

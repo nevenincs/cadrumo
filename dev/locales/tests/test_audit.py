@@ -354,6 +354,7 @@ _PROSE_KEYS = {
         "application.modelo.findings.iva_rectification_document_unrecordable",
         "application.modelo.findings.ledger_snapshot_membership_unavailable",
         "application.modelo.lifecycle.file_confirm_message",
+        "application.modelo.projection_words.casilla_reason.m200_extincion_entidad_unsupported",
         "application.modelo.work_form.finding_action.file_another_way",
         "application.modelo.work_form.finding_action.shared_box_awaits_review",
         "application.operations.error_detail.record_fault",

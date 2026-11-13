@@ -2233,6 +2233,8 @@ errors:
     transaction_figures_without_business: Un moviment Personal no té part professional,
       així que no pot portar dades de l'activitat com una categoria de despesa, una
       base imposable o l'IVA. Classifica'l com a Professional o Mixt per registrar-les.
+    transaction_iva_rate_not_fraction: 'El tipus d''IVA s''escriu com a fracció decimal,
+      no com a percentatge: has introduït {value}. Escriu el 21 % d''IVA com a 0.21.'
     tui_modelo_lifecycle_action_unavailable: L'acció seleccionada del cicle de vida
       del model no està disponible.
     unsupported_currency: El codi de moneda indicat no és compatible.

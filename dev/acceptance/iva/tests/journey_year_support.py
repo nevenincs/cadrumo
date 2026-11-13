@@ -13,6 +13,8 @@ from pathlib import Path
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.domain.calculations.registry.authority import IndexedRegistryAuthority
 
+from ..filing_year import IvaFilingYearUnsupportedError, require_journey_year
+
 
 def newest_fully_authored_journey_year(authority_root: Path) -> int:
     """Return the exercise of the newest Modelo 390 edition the published authority authors at filing grade.
@@ -35,3 +37,25 @@ def newest_fully_authored_journey_year(authority_root: Path) -> int:
             )
     finally:
         authority.close()
+
+
+def supported_journey_years(authority_root: Path, coordinates: tuple[tuple[str, str], ...]) -> tuple[int, ...]:
+    """Return every year of the published support envelope the authority authors for each of ``coordinates``.
+
+    The envelope decides which years exist and the journey's own admission decides which of them it can
+    run, so no year list is kept here.
+    """
+    authority = IndexedRegistryAuthority(authority_root.resolve(strict=True) / "authority.current.json")
+    try:
+        with authority.operation() as operation:
+            envelope_years = tuple(operation.supported_filing_years().years)
+    finally:
+        authority.close()
+    supported: list[int] = []
+    for year in envelope_years:
+        try:
+            require_journey_year(authority_root=authority_root, year=year, coordinates=coordinates)
+        except IvaFilingYearUnsupportedError:
+            continue
+        supported.append(year)
+    return tuple(supported)

@@ -174,6 +174,10 @@ _SALDO_INICIAL_CUMPLIDO: CasillaId = validated_casilla_id(
 _PRIOR_BIN_STOCK = Decimal("30000.00")
 _PRIOR_DOTACIONES_NO_CUMPLIDO = Decimal("8000.00")
 _PRIOR_DOTACIONES_CUMPLIDO = Decimal("5000.00")
+# A filed prior return states its net turnover, which the current rate reads.
+_PRIOR_TURNOVER: CasillaId = validated_casilla_id("00255", surface="_PRIOR_TURNOVER")
+_PRIOR_TURNOVER_AMOUNT = Decimal("500000")
+_PRECEDING_TURNOVER_CARRY = "modelo-200-incn-periodo-impositivo-anterior"
 
 _RELATION_PREFILL_SOURCE = "relation_prefill"
 #: The three cross-year self-carries whose absence declares a zero opening stock.
@@ -246,6 +250,7 @@ def _seed_prior_m200_closing_stock(*, obs_repo: CalculationObservationRepository
                     _PRIOR_BIN_PENDIENTE_FUTUROS: _PRIOR_BIN_STOCK,
                     _PRIOR_SALDO_FINAL_NO_CUMPLIDO: _PRIOR_DOTACIONES_NO_CUMPLIDO,
                     _PRIOR_SALDO_FINAL_CUMPLIDO: _PRIOR_DOTACIONES_CUMPLIDO,
+                    _PRIOR_TURNOVER: _PRIOR_TURNOVER_AMOUNT,
                 },
                 grade=RegistryAuthorityGrade.CALCULATION,
             ),
@@ -433,7 +438,21 @@ def test_m200_self_carries_resolve_zero_with_no_prior_filing_on_live_calculate(
         f"each absent self-carry must be advised; missing {_M200_SELF_CARRY_RELATIONS - advised}"
     )
     for diagnostic in result.source_diagnostics:
-        assert diagnostic.reason == "source_issue"
+        if diagnostic.source_kind == _RELATION_PREFILL_SOURCE:
+            assert diagnostic.reason == "source_issue"
+    # The rate reads the preceding period's turnover, which nothing held states
+    # and no declared fact replaces, so it stays unresolved rather than zero.
+    unresolved = {
+        diagnostic.binding_id
+        for diagnostic in result.source_diagnostics
+        if diagnostic.source_kind != _RELATION_PREFILL_SOURCE
+    }
+    assert unresolved == {_PRECEDING_TURNOVER_CARRY}
+    assert all(
+        diagnostic.reason == "unresolved_binding"
+        for diagnostic in result.source_diagnostics
+        if diagnostic.binding_id == _PRECEDING_TURNOVER_CARRY
+    )
 
 
 def test_m200_first_ejercicio_filer_carries_zero_without_an_advisory(

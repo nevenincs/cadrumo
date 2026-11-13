@@ -319,7 +319,7 @@ Pagos fraccionados (art. 40.2; art. 40.3 never elected): 00601 = 18 % x 300.00 =
 cuota (00599) of the horizon-3 Modelo 200, the company's first positive base at the nueva creación 15 % (LIS art. 29.1);
 00603 = 00605 = 18 % x 0.00 = 0.00, the October and December instalments on the cuota of the horizon-2 Modelo 200, which
 compensated its whole base (persona.toml history; the Modelo 202 horizon-1 values above). Horizon-1 is the third period with
-a positive base, so the general rate below applies.
+a positive base, so the nueva creación 15 % no longer applies and the tipo general 25 % stated above does.
 No deducciones or bonificaciones, so cuota líquida 00592 = cuota íntegra. No retenciones or
 ingresos a cuenta (01766, 01784) and the State levies 100 % (00625), so 00599 = (00625 / 100) x (00592 - 01766 - 01784) = 00592
 (manual 2024 :20345; 2025 :20653). 00611 is "Cuota diferencial (Estado)" in both designs, the State share before retenciones are
@@ -365,7 +365,7 @@ Pagos fraccionados (art. 40.2; art. 40.3 never elected): 00601 = 18 % x 300.00 =
 cuota (00599) of the horizon-3 Modelo 200, the company's first positive base at the nueva creación 15 % (LIS art. 29.1);
 00603 = 00605 = 18 % x 0.00 = 0.00, the October and December instalments on the cuota of the horizon-2 Modelo 200, which
 compensated its whole base (persona.toml history; the Modelo 202 horizon-1 values above). Horizon-1 is the third period with
-a positive base, so the general rate below applies.
+a positive base, so the nueva creación 15 % no longer applies and the reduced 23 % stated above does.
 No deducciones or bonificaciones, so cuota líquida 00592 = cuota íntegra. No retenciones or
 ingresos a cuenta (01766, 01784) and the State levies 100 % (00625), so 00599 = (00625 / 100) x (00592 - 01766 - 01784) = 00592
 (manual 2024 :20345; 2025 :20653). 00611 is "Cuota diferencial (Estado)" in both designs, the State share before retenciones are
@@ -415,7 +415,7 @@ Pagos fraccionados (art. 40.2; art. 40.3 never elected): 00601 = 18 % x 300.00 =
 cuota (00599) of the horizon-3 Modelo 200, the company's first positive base at the nueva creación 15 % (LIS art. 29.1);
 00603 = 00605 = 18 % x 0.00 = 0.00, the October and December instalments on the cuota of the horizon-2 Modelo 200, which
 compensated its whole base (persona.toml history; the Modelo 202 horizon-1 values above). Horizon-1 is the third period with
-a positive base, so the general rate below applies.
+a positive base, so the nueva creación 15 % no longer applies and the DT 44.1.a 21 % / 22 % scale stated above does.
 No deducciones or bonificaciones, so cuota líquida 00592 = cuota íntegra. No retenciones or
 ingresos a cuenta (01766, 01784) and the State levies 100 % (00625), so 00599 = (00625 / 100) x (00592 - 01766 - 01784) = 00592
 (manual 2024 :20345; 2025 :20653). 00611 is "Cuota diferencial (Estado)" in both designs, the State share before retenciones are

@@ -121,6 +121,26 @@ legal_refs = ["ley-27-2014:art-29"]
 source_ref = "aeat-modelo-200-manual-2022"
 required_text = ["tipo de gravamen"]
 
+# The importe neto de la cifra de negocios of the twelve months before the tax
+# period began (LIS DA 15ª): it selects the 50 % and 25 % limits on the
+# compensation of bases imponibles negativas for a turnover of at least 20 and
+# 60 million euros. The Manual práctico de Sociedades 2022 states those limits
+# and the three INCN situations the filer indicates ("durante los doce meses
+# anteriores a la fecha de inicio del período impositivo"), so the 2022 edition
+# is the earliest that reads it. It is not the preceding period's turnover the
+# rate reads (modelo-200-incn-periodo-impositivo-anterior). Sourced from the
+# Decimal profile fact `incn_prior_12_months`; undeclared, the limit refuses.
+[[revisions."2022".bindings]]
+id = "modelo-200-profile-incn-prior-12-months"
+provider = { kind = "profile", profile_model = "taxpayer", field = "incn_prior_12_months" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "copy" }
+legal_refs = ["ley-27-2014:da-15"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-200-manual-2022"
+required_text = ["disposición adicional decimoquinta", "doce meses anteriores a la fecha de inicio del período impositivo"]
+
 # Calculation-only Decimal binding: carries the newly-created-entity
 # 15 % rate eligibility (LIS Art. 29: first two profit-making tax
 # periods). Sourced from the boolean profile fact

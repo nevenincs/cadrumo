@@ -33,17 +33,17 @@ from ....core.period import Period
 from ....domain.calculations.registry.applicability_modelo202 import Modelo202Modality
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
-from ..cross_period_clean_state import (
-    qualifies_for_first_year_fractional_suppression,
-    suppressed_first_year_fractional_evidence,
-    suppressed_pre_activity_evidence,
-)
 from ..cross_period_models import (
     CrossPeriodCleanStateVerdict,
     CrossPeriodDependencyEvidence,
     CrossPeriodDependencyOrigin,
     CrossPeriodDependencyRequirement,
     NoPriorObligationProvenanceKind,
+)
+from ..cross_period_suppressed_evidence import (
+    qualifies_for_first_year_fractional_suppression,
+    suppressed_first_year_fractional_evidence,
+    suppressed_pre_activity_evidence,
 )
 
 pytestmark = [pytest.mark.usefixtures("authority_operation"), pytest.mark.unit, pytest.mark.hex_application]
