@@ -16,7 +16,7 @@ from pydantic import SecretBytes
 from cadrumo.application.operations.models import OperationId
 from cadrumo.application.user_profile.automation_enrollment import AutomationInventory
 from cadrumo.core.async_cleanup import await_cancellation_complete, close_async_resources
-from cadrumo.core.time.clock import now
+from cadrumo.core.time.clock import wall_now
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.deadline_budget import exchange_deadline
 from cadrumo_client.contracts.profile_access import AccessRefusal
@@ -133,7 +133,7 @@ class WorkerAuthorizationClient:
                 raise_worker_access_refusal(reply)
             clean = True
             # Admission is checked as the stage starts; a lease already ended admits nothing.
-            if reply.expires_at <= now():
+            if reply.expires_at <= wall_now():
                 raise RefusalError(RefusalCode.TIMEOUT)
         finally:
             self.connections.checkin(channel, reusable=clean)
