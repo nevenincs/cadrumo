@@ -310,7 +310,7 @@ def build_cli_tree_in_subprocess() -> CliTree:
             [sys.executable, "-c", code],
             env=reference_subprocess_environment(Path(storage_root)),
             capture_output=True,
-            text=True,
+            encoding=UTF_8_ENCODING,
             timeout=300,
             check=False,
         )

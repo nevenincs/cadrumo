@@ -203,7 +203,8 @@ def test_machine_secret_and_profile_authentication_metadata_matches_live_project
             assert projected.profile_authentication_contract == expected_contract
 
     rendered = serialise_cli_tree(cli_tree).lower()
-    assert all(token not in rendered for token in ('"value"', '"example"', "secretstr"))
+    # No member carries a value or an example; an argument may still be named ``value``.
+    assert all(token not in rendered for token in ('"value":', '"example":', "secretstr"))
 
 
 def test_round_trip_through_serialised_form(cli_tree: CliTree, tmp_path: Path) -> None:
