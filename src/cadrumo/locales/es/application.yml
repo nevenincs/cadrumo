@@ -3609,6 +3609,9 @@ application:
         %{reduccion_value} EUR de reducción por previsión social, por encima del sublímite
         individual de %{sublimit} EUR del art. 52 LIRPF, y no has declarado aportaciones
         con contribución empresarial. Comprueba que se aplicó el sublímite individual.
+      assumed_value_unconfirmed: La casilla [%{box}] tiene un valor que nadie ha introducido,
+        así que solo está supuesto. Confírmalo indicando el valor, o introduce el
+        correcto, antes de poder verificar esta declaración.
       attribution_received_uncaptured: La casilla [%{casilla_id}] de %{filing_year}
         recoge %{casilla_value} EUR de renta atribuida, pero tu perfil no indica de
         dónde sale. Añádela a tu perfil.
@@ -4410,6 +4413,8 @@ application:
         modelo_work_attest_prior_carries: Indica los importes pendientes de ejercicios
           anteriores
         modelo_work_attest_prior_value: Indica el importe de la declaración anterior
+        modelo_work_attest_work_income: Indica que no tienes otros rendimientos del
+          trabajo que declarar
         modelo_work_calculate: Calcula esta declaración
         modelo_work_calculate_joint_return: Calcúlala como declaración conjunta
         modelo_work_create: Empieza esta declaración

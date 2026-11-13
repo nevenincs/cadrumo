@@ -190,7 +190,6 @@ class WorkbenchPresentationMixin:
             checked=checked_boxes(form),
             width=label_width,
             show_attention=not self.recorded,
-            inapplicable=self._inapplicable,
             not_applying=self._not_applying_text(),
         )
         self._replace_navigator_rows(navigator, rows, kept)

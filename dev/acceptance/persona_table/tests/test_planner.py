@@ -15,6 +15,8 @@ from uuid import UUID
 import pytest
 
 from cadrumo.application.modelo.work_calculation_contracts import ModeloWorkCalculateRequest
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.binding_targets import revision_bindings_by_id
 from cadrumo.entrypoints.tests.persona_materialisation import PERSONA_ACTOR, MaterialisedPersona, PersonaWorld
 
 from .. import planner, sweep
@@ -213,3 +215,21 @@ def test_the_sweep_still_exports_the_planner_names_it_moved() -> None:
         assert getattr(sweep, name) is getattr(planner, name), name
     for name in ("cases", "run_return", "run_lifecycle", "Lifecycle", "MODELOS_ENV", "YEARS_ENV", "PERSONAS_ENV"):
         assert hasattr(sweep, name), name
+
+
+def test_the_sociedad_limitada_plan_builds_at_a_horizon_whose_prior_year_edition_lacks_the_incn_binding() -> None:
+    envelope = planner.registry_envelope()
+    persona = planner.persona_under_horizon("sociedad-limitada", envelope.horizon)
+    (entry,) = (item for item in persona.attested_prior_values if item.where_declared)
+    with bundled_indexed_authority().operation() as operation:
+        lacking = [
+            year
+            for year in range(envelope.floor, envelope.horizon + 1)
+            if entry.binding
+            not in revision_bindings_by_id(
+                operation.revision_for_context(entry.modelo, filing_year=year, period=entry.period)
+            )
+        ]
+    assert lacking
+    plans, _emitted = planner.plan_rows("sociedad-limitada", max(lacking) + 1)
+    assert plans

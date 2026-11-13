@@ -16,7 +16,8 @@ from uuid import uuid4
 import pytest
 from pydantic import BaseModel
 
-from ...domain.calculations.registry.authority import bundled_indexed_authority
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ...domain.calculations.registry.binding_targets import revision_bindings_by_id
 from ...tests.personas import (
     AttestedPriorValue,
     PriorValueSource,
@@ -95,3 +96,59 @@ def test_a_binding_the_returns_edition_does_not_declare_is_refused_by_name() -> 
     message = str(refused.value)
     assert "no-such-binding-in-any-edition" in message
     assert f"Modelo {entry.modelo}" in message
+
+
+def _incn_entry(envelope: YearEnvelope) -> AttestedPriorValue:
+    (entry, *_) = (
+        item
+        for item in read_persona("sociedad-limitada", envelope=envelope).attested_prior_values
+        if item.binding == "modelo-200-incn-periodo-impositivo-anterior"
+    )
+    return entry
+
+
+def _editions_declaring(
+    operation: PinnedAuthorityOperation, envelope: YearEnvelope, entry: AttestedPriorValue
+) -> dict[int, bool]:
+    """Per supported filing year, whether the entry's return edition declares its binding."""
+    return {
+        year: entry.binding
+        in revision_bindings_by_id(operation.revision_for_context(entry.modelo, filing_year=year, period=entry.period))
+        for year in range(envelope.floor, envelope.horizon + 1)
+    }
+
+
+def _in_year(entry: AttestedPriorValue, envelope: YearEnvelope, year: int) -> AttestedPriorValue:
+    return dataclasses.replace(entry, year=YearToken(anchor="horizon", offset=year - envelope.horizon))
+
+
+def test_a_where_declared_entry_is_never_refused_and_a_strict_one_only_where_the_edition_lacks_the_binding() -> None:
+    envelope = _envelope()
+    entry = _incn_entry(envelope)
+    strict = dataclasses.replace(entry, where_declared=False)
+    assert entry.where_declared
+    with bundled_indexed_authority().operation() as operation:
+        declaring = _editions_declaring(operation, envelope, entry)
+        undeclared = [year for year, declared in declaring.items() if not declared]
+        declared = [year for year, declared in declaring.items() if declared]
+        assert undeclared
+        assert declared
+        for year in (*undeclared, *declared):
+            check_prior_value_bindings((_in_year(entry, envelope, year),), envelope, operation)
+        for year in declared:
+            check_prior_value_bindings((_in_year(strict, envelope, year),), envelope, operation)
+        for year in undeclared:
+            with pytest.raises(PriorValueAttestationError, match="is not a binding of edition"):
+                check_prior_value_bindings((_in_year(strict, envelope, year),), envelope, operation)
+
+
+def test_sociedad_limitada_passes_the_binding_check_at_a_horizon_whose_prior_year_lacks_the_incn_binding() -> None:
+    envelope = _envelope()
+    entry = _incn_entry(envelope)
+    with bundled_indexed_authority().operation() as operation:
+        declaring = _editions_declaring(operation, envelope, entry)
+        lacking = max(year for year, declared in declaring.items() if not declared)
+        lowered = dataclasses.replace(envelope, horizon=lacking + 1)
+        persona = read_persona("sociedad-limitada", envelope=lowered, omit_below_floor=True)
+        assert any(item.binding == entry.binding for item in persona.attested_prior_values)
+        check_prior_value_bindings(persona.attested_prior_values, lowered, operation)

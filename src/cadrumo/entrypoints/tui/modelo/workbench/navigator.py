@@ -361,12 +361,11 @@ def navigator_rows(
     checked: Mapping[str, int],
     width: int,
     show_attention: bool,
-    inapplicable: frozenset[str] = frozenset(),
     not_applying: str = "",
 ) -> tuple[NavigatorRow, ...]:
     """Lay the pages and their sections out as navigator lines, closed pages without their sections.
 
-    A page in ``inapplicable`` is dimmed and says ``not_applying`` in place of
+    A page the form serves as not applying is dimmed and says ``not_applying`` in place of
     its counts; it counts nothing as to do and starts closed. Without
     ``show_attention``, as on a declaration recorded as filed, no page counts
     anything, so none opens for something to do.
@@ -380,7 +379,6 @@ def navigator_rows(
             state=state,
             checked=checked,
             show_attention=show_attention,
-            inapplicable=inapplicable,
         )
         rows.append(
             _page_row(
@@ -410,9 +408,8 @@ def _navigator_page_state(
     state: NavigatorState,
     checked: Mapping[str, int],
     show_attention: bool,
-    inapplicable: frozenset[str],
 ) -> tuple[bool, AttentionCounts, bool]:
-    applies = page.id not in inapplicable
+    applies = page.applies
     # Nothing counts on an inapplicable page or when attention is hidden for a filed declaration.
     counts = page_counts(page, checked) if applies and show_attention else AttentionCounts()
     expanded = (

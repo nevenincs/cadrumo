@@ -47,6 +47,7 @@ from ...core.i18n.render import tr
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.iva.refund_eligibility import RefundEligibility, RefundEligibilityOutcome
 from .value_presentation import format_casilla_value
+from .work_form_assumed import assumed_fields
 from .work_form_declaration_facts import AMOUNTLESS_RESULT_DIRECTIONS, ModeloFormResultDirection
 from .work_form_field_vocabulary import ModeloFormOrigin
 from .work_form_findings import ModeloFormAttention
@@ -55,6 +56,7 @@ from .work_form_models import (
     ModeloWorkForm,
 )
 from .work_form_next_step import (
+    ModeloFormNextAction,
     blocking_count,
     check_count,
     confirm_count,
@@ -250,6 +252,15 @@ _HOLD_LOCALE_KEYS: Final[Mapping[ModeloFormExportHoldReason, str]] = MappingProx
 )
 
 
+_HOLD_ACTIONS: Final[Mapping[ModeloFormExportHoldReason, ModeloFormNextAction]] = MappingProxyType(
+    {
+        ModeloFormExportHoldReason.BLOCKS: ModeloFormNextAction.RESOLVE,
+        ModeloFormExportHoldReason.CONFIRM: ModeloFormNextAction.CONFIRM,
+        ModeloFormExportHoldReason.VERIFY: ModeloFormNextAction.VERIFY,
+    }
+)
+
+
 class ModeloFormExportHold(BaseModel):
     """Why the file for the AEAT, and recording the filing, are withheld, with what the reason counts."""
 
@@ -260,6 +271,8 @@ class ModeloFormExportHold(BaseModel):
     count: int = Field(ge=0)
     #: Why, in the filer's language.
     words: str = Field(min_length=1)
+    #: The action that lifts the hold, so a frontend names the key that performs it.
+    action: ModeloFormNextAction
 
 
 class ModeloFormHeader(BaseModel):
@@ -421,7 +434,7 @@ def export_hold(
     blocking = blocking_count(form)
     if blocking:
         return _hold(ModeloFormExportHoldReason.BLOCKS, blocking, language)
-    assumed = confirm_count(form)
+    assumed = len(assumed_fields(form))
     if assumed:
         return _hold(ModeloFormExportHoldReason.CONFIRM, assumed, language)
     if not verified or form.calculation_revision_id is None:
@@ -431,7 +444,7 @@ def export_hold(
 
 def _hold(reason: ModeloFormExportHoldReason, count: int, language: OutputLanguage) -> ModeloFormExportHold:
     words = tr(_HOLD_LOCALE_KEYS[reason], count=count, locale=language.value)
-    return ModeloFormExportHold(reason=reason, count=count, words=words)
+    return ModeloFormExportHold(reason=reason, count=count, words=words, action=_HOLD_ACTIONS[reason])
 
 
 @dataclass(frozen=True, slots=True)

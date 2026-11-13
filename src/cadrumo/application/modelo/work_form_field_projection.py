@@ -39,6 +39,7 @@ from .work_form_field_vocabulary import (
     ModeloFormOrigin,
     ModeloFormScalar,
     ModeloFormText,
+    ModeloFormValueSource,
     field_standing,
 )
 from .work_form_localization import (
@@ -50,7 +51,7 @@ from .work_form_localization import (
 )
 from .work_form_models import ModeloFormField
 from .work_form_rates import parse_form_number
-from .work_form_sources import bound_value_source
+from .work_form_sources import bound_value_source, resolver_value_source
 from .work_review import ModeloWorkReviewCasilla
 
 
@@ -82,12 +83,7 @@ def project_casilla_field(
         unattributed=_unattributed(origin, row),
         role=casilla_field_role(row),
         bindings=summarize_bindings(row),
-        source=bound_value_source(
-            tuple(origin.binding_id for origin in row.concrete_bindings),
-            bindings=context.bindings,
-            aeat_data_binding_ids=context.aeat_data_bindings,
-            target=context.review.period,
-        ),
+        source=_value_source(row, context),
         formula_id=row.formula_id,
         formula_operands=() if row.concrete_formula is None else row.concrete_formula.operand_refs,
         blockers=blockers,
@@ -98,6 +94,20 @@ def project_casilla_field(
         stated_absent=_stated_absence(origin, row, context),
     )
     return with_binding_statements(field, context)
+
+
+def _value_source(row: ModeloWorkReviewCasilla, context: WorkFormContext) -> ModeloFormValueSource | None:
+    """Name where a box's value comes from: its bindings, else the resolver that supplied the box directly."""
+    from_bindings = bound_value_source(
+        tuple(origin.binding_id for origin in row.concrete_bindings),
+        bindings=context.bindings,
+        aeat_data_binding_ids=context.aeat_data_bindings,
+        target=context.review.period,
+    )
+    supplied = context.source_supplied.get(row.casilla_id)
+    if from_bindings is None and supplied is not None:
+        return resolver_value_source(supplied)
+    return from_bindings
 
 
 def _unworked_origin(

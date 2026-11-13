@@ -86,7 +86,8 @@ def check_prior_value_bindings(
     unsubmitted by the replay; a binding id the edition does not declare at all
     can never be offered, so it is a stale or misspelt statement and is refused
     here, before any calculation. A return the registry selects no edition for
-    is left to its own calculation refusal.
+    is left to its own calculation refusal. An entry that states ``where_declared``
+    is skipped, without a refusal, for an edition that does not declare its binding.
     """
     for entry in entries:
         year = entry.year.resolve(envelope)
@@ -94,7 +95,7 @@ def check_prior_value_bindings(
             revision = operation.revision_for_context(entry.modelo, filing_year=year, period=entry.period)
         except RegistryError:
             continue
-        if entry.binding not in revision_bindings_by_id(revision):
+        if entry.binding not in revision_bindings_by_id(revision) and not entry.where_declared:
             raise PriorValueAttestationError(
                 f"Modelo {entry.modelo} {year} {entry.period}: attested binding {entry.binding} "
                 f"is not a binding of edition {revision.id}"
