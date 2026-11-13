@@ -74,6 +74,7 @@ from ...domain.filing.software_identity import (
 )
 from ...domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 from ...domain.modelos.calculation_revision import (
+    FILED_REVISION_STATES,
     CalculationRevision,
 )
 from ...domain.modelos.errors import (
@@ -109,6 +110,11 @@ from ..filing.runtime import RegistryModeloSubview, RegistrySchemaAccessor, buil
 from .action_errors import (
     CalculationRevisionNotFoundError,
     WorkUnitNotFoundError,
+)
+from .assumed_value_gate import (
+    ModeloAssumedValueStage,
+    require_assumed_values_confirmed,
+    unconfirmed_assumed_fields,
 )
 from .calculation_note_gate import SourceDisagreementResolutions, require_work_unit_calculation_unblocked
 from .calculation_notes import read_recorded_notes
@@ -1060,6 +1066,20 @@ def _prepare_modelo_export(
         stage=Modelo123CountAuthorityStage.EXPORT,
     )
     require_modelo_193_settled_row_amount_authority(work_unit, revision, stage=Modelo193SettledRowStage.EXPORT)
+    # A filed revision is already declared: only a declaration still being prepared holds assumed values.
+    if revision.state not in FILED_REVISION_STATES:
+        require_assumed_values_confirmed(
+            work_unit,
+            unconfirmed_assumed_fields(
+                work_unit,
+                work_unit_repository=export_ports.work_unit,
+                calculation_repository=export_ports.calculation,
+                verification_repository=export_ports.verification,
+                credit_resolutions=export_ports.credit_resolution,
+                operation=operation,
+            ),
+            stage=ModeloAssumedValueStage.EXPORT,
+        )
     require_modelo_390_prorrata_apartado_rendered(
         work_unit,
         registry_revision_id=revision.registry_snapshot_ref.revision_id,
