@@ -33,21 +33,22 @@ from cadrumo.entrypoints.tests.persona_materialisation import (
     materialised_persona,
 )
 from cadrumo.tests.env_scope import scoped_env_var
-from cadrumo.tests.personas import Persona, PersonaCatalogueError, persona_ids, read_persona
+from cadrumo.tests.personas import PersonaCatalogueError, persona_ids, read_persona
 from dev.desktop_persona_world import refuse_storage_root
 from dev.exit_codes import FAILED, OK
 from dev.paths import STORAGE_ROOT_ENV
 
-from ..planner import MODELOS_ENV, YEARS_ENV, plan_rows, registry_envelope, replay_scope, stated_refusal, stated_values
+from ..planner import (
+    MODELOS_ENV,
+    YEARS_ENV,
+    last_owed_period,
+    plan_rows,
+    registry_envelope,
+    replay_scope,
+    stated_refusal,
+    stated_values,
+)
 from ..rows import PlannedRow
-
-
-def last_owed_period(persona: Persona, plan: PlannedRow) -> str:
-    """The year's last quarterly period the persona owes of the planned return's modelo, else the return's own."""
-    periods = {
-        period for item in persona.expectations.obligations if item.modelo == plan.modelo for period in item.periods
-    }
-    return max((period for period in periods if period.endswith("T")), default=plan.period)
 
 
 def _row(

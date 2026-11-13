@@ -22,13 +22,19 @@ import json
 import os
 import sys
 from collections.abc import Sequence
+from contextlib import ExitStack
+from functools import cache
 from pathlib import Path
 
 from cadrumo.entrypoints.tests.persona_materialisation import PERSONA_PROFILE_CREDENTIAL
+from cadrumo.tests.env_scope import scoped_env_var
 from dev.acceptance.installed_cli import InstalledCliError, authority_generation
 from dev.exit_codes import FAILED, OK
 
-from .driver import Case, CaseSummary, Selection, profile_check, run_case, select_rows
+from ..export_check import export_reason
+from ..planner import MODELOS_ENV, YEARS_ENV, persona_under_horizon, plan_rows, registry_envelope, stated_values
+from ..rows import PlannedRow
+from .driver import Case, CaseSummary, ExportCheck, Runner, Selection, Trace, profile_check, run_case, select_rows
 from .hygiene import Redactor, SecretLeakError, remove_secret_bearing
 from .intake import LineWriter, Outcome, persona_line
 from .runtime import (
@@ -41,7 +47,7 @@ from .runtime import (
     served_root,
     teardown_root,
 )
-from .world_report import WorldReport
+from .world_report import RowPlan, WorldReport
 
 _STORAGE = "runtime"
 _EXPORTS = "exports"
@@ -76,6 +82,57 @@ class _Trace:
         text = self._redactor.text(json.dumps(record, ensure_ascii=False))
         with self._path.open("a", encoding="utf-8", newline="\n") as handle:
             handle.write(text + "\n")
+
+
+def export_check_for(persona_id: str, horizon: int) -> ExportCheck:
+    """The table's own checks of a written fichero for ``persona_id`` under ``horizon``: text rules, then readback.
+
+    The check finds the planned return the driver named, takes the persona's stated values in force for it under the
+    registry envelope and returns the first defect of the file, or an empty string when it is clean. It returns
+    ``None`` when the replay plans no such return, which leaves the export stage an ``error`` rather than a ``pass``.
+    Nothing is planned until the first file is checked.
+    """
+
+    @cache
+    def planned() -> dict[tuple[str, int, str], PlannedRow]:
+        # The environment's table filters narrow the replay's rows; the check needs the full plan of the persona.
+        with ExitStack() as scope:
+            scope.enter_context(scoped_env_var(MODELOS_ENV, None))
+            scope.enter_context(scoped_env_var(YEARS_ENV, None))
+            rows, _emitted = plan_rows(persona_id, horizon)
+        return {(row.modelo, row.year, row.period): row for row in rows}
+
+    def check(plan: RowPlan, output: Path) -> str | None:
+        row = planned().get(plan.key)
+        if row is None:
+            return None
+        values = stated_values(persona_under_horizon(persona_id, horizon), registry_envelope(), row)
+        return export_reason(row, values, output)
+
+    return check
+
+
+def build_case(
+    args: argparse.Namespace,
+    *,
+    report: WorldReport,
+    runner: Runner,
+    exports: Path,
+    writer: LineWriter,
+    log: str,
+    trace: Trace,
+) -> Case:
+    """The case to run: the world, the runner, where files and lines go, and the table's export checks."""
+    return Case(
+        args.tree,
+        report,
+        runner,
+        exports,
+        writer,
+        log,
+        export_check=export_check_for(args.persona, args.horizon),
+        trace=trace,
+    )
 
 
 def seeding_reason(report: WorldReport, profile: str | None, generation: str, selection: Selection) -> str:
@@ -117,7 +174,8 @@ def _drive(args: argparse.Namespace, redactor: Redactor, root: Path, log_dir: Pa
             return CaseSummary()
         exports = root / _EXPORTS
         exports.mkdir()
-        case = Case(args.tree, report, runner, exports, writer, log, trace=_Trace(log_dir / "case.log", redactor))
+        trace = _Trace(log_dir / "case.log", redactor)
+        case = build_case(args, report=report, runner=runner, exports=exports, writer=writer, log=log, trace=trace)
         return run_case(case, selection)
 
 

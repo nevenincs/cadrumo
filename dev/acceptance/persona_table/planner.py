@@ -206,11 +206,12 @@ def build_calculation_request(
     """
     evidence = None
     if plan.modelo == "303":
-        last_period = max(
-            (p for p in _owed_periods(materialised.persona, plan) if p.endswith("T")), default=plan.period
-        )
         evidence = _m303_evidence(
-            materialised.world, work_unit_id=work_unit_id, year=plan.year, period=plan.period, last_period=last_period
+            materialised.world,
+            work_unit_id=work_unit_id,
+            year=plan.year,
+            period=plan.period,
+            last_period=last_owed_period(materialised.persona, plan),
         )
     return ModeloWorkCalculateRequest(
         work_unit_id=work_unit_id, actor=PERSONA_ACTOR, ordinary_m303_filing_evidence=evidence
@@ -298,7 +299,7 @@ def _m303_evidence(
     )
 
 
-def _owed_periods(persona: Persona, plan: PlannedRow) -> set[str]:
+def owed_periods(persona: Persona, plan: PlannedRow) -> set[str]:
     """Every period the persona owes of the planned return's modelo; the year's last one carries the annual facts."""
     periods = {
         item_period
@@ -307,3 +308,8 @@ def _owed_periods(persona: Persona, plan: PlannedRow) -> set[str]:
         for item_period in item.periods
     }
     return periods or {plan.period}
+
+
+def last_owed_period(persona: Persona, plan: PlannedRow) -> str:
+    """The year's last quarterly period the persona owes of the planned return's modelo, else the return's own."""
+    return max((period for period in owed_periods(persona, plan) if period.endswith("T")), default=plan.period)

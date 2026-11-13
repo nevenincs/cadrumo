@@ -170,6 +170,7 @@
         "dev.acceptance.persona_table.counterparties",
         "dev.acceptance.persona_table.coverage",
         "dev.acceptance.persona_table.diff",
+        "dev.acceptance.persona_table.export_check",
         "dev.acceptance.persona_table.export_readback",
         "dev.acceptance.persona_table.export_text",
         "dev.acceptance.persona_table.frontend",
