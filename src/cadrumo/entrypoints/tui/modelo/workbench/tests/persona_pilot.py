@@ -89,6 +89,7 @@ from ......application.operations.frontend_requests import (
 from ......application.operations.models import OperationId, OperationRequest, OperationRevision
 from ......application.operations.public_period import PublicPeriod
 from ......core.config import override_settings
+from ......core.logging import get_logger
 from ......core.modelo_export_artefact import ModeloExportArtefact
 from ......core.operations import OperationTerminalCondition
 from ......core.period import Period
@@ -1026,7 +1027,37 @@ def _hooks(materialised: MaterialisedPersona, plan: PilotReturn, work_unit_id: s
     )
 
 
+_CRASH_CAUSE: Final = "other:pilot_crash_"
+
+
+def _crashed(plan: PilotReturn, crash: Exception, seconds: float) -> PilotRow:
+    """The row of a return the pilot itself crashed on: every stage an error, the cause naming the exception."""
+    lines = str(crash).splitlines()
+    return PilotRow(
+        persona=plan.persona,
+        modelo=plan.modelo,
+        year=plan.year,
+        period=plan.period,
+        calculate=ERROR,
+        verify=ERROR,
+        export=ERROR,
+        seconds=seconds,
+        cause=f"{_CRASH_CAUSE}{type(crash).__qualname__}",
+        cause_words=lines[0][:300] if lines else "",
+    )
+
+
 def run_return(materialised: MaterialisedPersona, plan: PilotReturn, exports: Path) -> PilotRow:
+    """Drive one return through the workbench; a crash inside it is the return's own row, not the persona's end."""
+    started = time.monotonic()
+    try:
+        return _run_return(materialised, plan, exports)
+    except Exception as crash:
+        get_logger(__name__).error("persona pilot crashed on %s: %s", plan.key, type(crash).__qualname__, exc_info=True)
+        return _crashed(plan, crash, time.monotonic() - started)
+
+
+def _run_return(materialised: MaterialisedPersona, plan: PilotReturn, exports: Path) -> PilotRow:
     """Create the return, state what the persona states before calculating it, then drive it through the workbench."""
     started = time.monotonic()
     world = materialised.world
@@ -1114,6 +1145,8 @@ def row_cause(plan: PilotReturn, row: PilotRow, earlier: Sequence[tuple[PilotRet
     """
     if _matched(plan, row):
         return None
+    if row.cause is not None and row.cause.startswith(_CRASH_CAUSE):
+        return row.cause
     if row.refusal_code == _EDIT_REFUSED and row.calculate != PASSED:
         return "edit_refused_no_detail"
     upstream = _upstream(plan, row, earlier)
@@ -1138,12 +1171,16 @@ def row_cause(plan: PilotReturn, row: PilotRow, earlier: Sequence[tuple[PilotRet
 def run_persona(persona_id: str, tmp_path: Path) -> tuple[PilotRow, list[tuple[PilotReturn, PilotRow]]]:
     """Replay the persona at each horizon its returns are reported at, and drive every return through the workbench.
 
-    Returns the persona-level row, whether every replay loaded, and each reported return with its row.
+    Returns the persona-level row, whether every replay loaded, and each reported return with its row. With
+    :data:`OUT_ENV` set, the persona's line is appended first and each reported return's row as soon as it finishes,
+    so nothing a crash comes after is lost; the persona's line is appended again when the replays then changed it.
     """
     envelope = pilot_envelope()
     persona = read_persona(persona_id, envelope=envelope)
     scope = replay_scope(persona)
     loaded = PilotRow(persona=persona_id)
+    write_rows([dataclasses.replace(loaded)])
+    announced = (loaded.loads, list(loaded.reasons))
     reported: list[tuple[PilotReturn, PilotRow]] = []
     for replay in pilot_replays(persona_id, envelope):
         root = tmp_path / f"horizon-{replay.horizon}"
@@ -1158,28 +1195,28 @@ def run_persona(persona_id: str, tmp_path: Path) -> tuple[PilotRow, list[tuple[P
                     ran.append((plan, row))
                     if plan.key in replay.reported:
                         reported.append((plan, row))
+                        write_rows([row])
         except (PersonaMaterialisationError, PersonaCatalogueError) as error:
             loaded.loads = False
             loaded.reasons.append(f"horizon {replay.horizon}: {' '.join(str(error).split())[:600]}")
             done = {(plan.key) for plan, _ in reported}
             for plan in replay.returns:
                 if plan.key in replay.reported and plan.key not in done:
-                    reported.append(
-                        (
-                            plan,
-                            PilotRow(
-                                persona=persona_id,
-                                modelo=plan.modelo,
-                                year=plan.year,
-                                period=plan.period,
-                                calculate=ERROR,
-                                verify=NOT_REACHED,
-                                export=NOT_REACHED,
-                                reasons=[f"replay under horizon {replay.horizon} failed"],
-                                cause="other:replay_failed",
-                            ),
-                        )
+                    failed = PilotRow(
+                        persona=persona_id,
+                        modelo=plan.modelo,
+                        year=plan.year,
+                        period=plan.period,
+                        calculate=ERROR,
+                        verify=NOT_REACHED,
+                        export=NOT_REACHED,
+                        reasons=[f"replay under horizon {replay.horizon} failed"],
+                        cause="other:replay_failed",
                     )
+                    reported.append((plan, failed))
+                    write_rows([failed])
+    if (loaded.loads, loaded.reasons) != announced:
+        write_rows([loaded])
     return loaded, reported
 
 
