@@ -22,6 +22,8 @@ const { values } = parseArgs({
 const outputs = {
   classification: "src/shell/ledgerClassificationContract.ts",
   invoice: "src/shell/ledgerInvoiceContract.ts",
+  document: "src/shell/ledgerDocumentContract.ts",
+  documentReview: "src/shell/ledgerDocumentReviewContract.ts",
 };
 
 const frontend = fileURLToPath(new URL("..", import.meta.url));

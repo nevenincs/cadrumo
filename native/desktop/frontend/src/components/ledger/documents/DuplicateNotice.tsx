@@ -1,7 +1,7 @@
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
-import type { EvidenceRecord } from "../../../shell/ledgerDocumentOperations";
+import type { LedgerEvidenceRecordProjection } from "../../../shell/ledgerDocumentContract";
 import type { CatalogueInvoiceSnapshot } from "../../../shell/ledgerInvoiceContract";
 import type { InvoiceDuplicateView } from "../../../shell/ledgerInvoiceDuplicate";
 import type { StageEvent, StagedAction } from "../../../shell/ledgerStage";
@@ -32,7 +32,7 @@ export function DuplicateNotice({
   /** The reading states enough to ask about a duplicate. */
   asked: boolean;
   duplicate: CatalogueInvoiceSnapshot | null;
-  record: EvidenceRecord | null;
+  record: LedgerEvidenceRecordProjection | null;
   reference: DocumentReference;
   actions: StagedAction[];
   anyway: boolean;

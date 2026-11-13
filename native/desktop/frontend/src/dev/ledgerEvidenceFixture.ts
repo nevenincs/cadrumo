@@ -16,11 +16,16 @@
 
 import type {
   AttachmentReviewItem,
-  ConfirmationBlocker,
-  EvidenceDraft,
-  LabelReadingFallback,
-} from "../shell/ledgerDocumentOperations";
-import type { InvoiceKind } from "../shell/ledgerInvoiceContract";
+  LabelReadingFallbackProjectionV1,
+} from "../shell/ledgerDocumentContract";
+import type {
+  ConfirmationBlockerProjectionV1,
+  InvoiceDraftProjectionV1,
+} from "../shell/ledgerDocumentReviewContract";
+import type {
+  InvoiceKind,
+  OutputLanguage,
+} from "../shell/ledgerInvoiceContract";
 import type { JsonObject, JsonValue } from "../shell/ledger";
 import type {
   FixtureEvidence,
@@ -43,6 +48,8 @@ import {
   agreeing,
   catalogueInvoice,
   decimal,
+  EMPTY_DRAFT,
+  fallbackReading,
   read,
   ticketPage,
   type SeedBlocker,
@@ -95,9 +102,9 @@ type Tools = {
 };
 
 type Reading = {
-  draft: EvidenceDraft;
-  blockers: ConfirmationBlocker[];
-  fallback: LabelReadingFallback | null;
+  draft: InvoiceDraftProjectionV1;
+  blockers: ConfirmationBlockerProjectionV1[];
+  fallback: LabelReadingFallbackProjectionV1 | null;
   extractor: string;
   drafted_at: string;
   confirmed: boolean;
@@ -116,18 +123,32 @@ const text = (value: JsonValue | undefined): string | null =>
 const fileName = (path: string) => path.split(/[\\/]/).pop() || path;
 
 /** A label reading that stood without the model fill the local AI gives. */
-const withoutReader = (unread: string[]): LabelReadingFallback => ({
-  cause: "reader_unavailable",
-  unread_fields: unread,
-  reader_error_type: "InvoiceDraftReaderUnavailableError",
-});
+const withoutReader = (unread: string[]): LabelReadingFallbackProjectionV1 =>
+  fallbackReading({
+    cause: "reader_unavailable",
+    unread_fields: unread,
+    reader_error_type: "InvoiceDraftReaderUnavailableError",
+  });
+
+type ServedLanguage = keyof typeof servedWords.reading_model.refusal;
+
+const isServedLanguage = (language: string): language is ServedLanguage =>
+  language in servedWords.reading_model.refusal;
+
+/** The language `byLanguage` serves a sentence in: the one asked for, else
+ * English. */
+const servedLanguage = (
+  byLanguage: Record<string, string>,
+  asked: string,
+): OutputLanguage =>
+  byLanguage[asked] && isServedLanguage(asked) ? asked : "en";
 
 /** What the backend serves for a role with no picked reading model: the
  * refusal's sentence and the step that leads to the choice, in `language`. */
 const noReadingModel = (language: string) => {
   const sentences: Record<string, string> = servedWords.reading_model.refusal;
   const steps: Record<string, string> = servedWords.reading_model.step;
-  const served = sentences[language] ? language : "en";
+  const served = servedLanguage(sentences, language);
   return {
     words: sentences[served]!,
     language: served,
@@ -139,9 +160,9 @@ const noReadingModel = (language: string) => {
 const withoutModel = (
   unread: string[],
   language: string,
-): LabelReadingFallback => {
+): LabelReadingFallbackProjectionV1 => {
   const served = noReadingModel(language);
-  return {
+  return fallbackReading({
     cause: "reader_unavailable",
     unread_fields: unread,
     reader_error_type: "InvoiceDraftReaderUnavailableError",
@@ -150,7 +171,7 @@ const withoutModel = (
     refusal_words: served.words,
     refusal_words_language: served.language,
     next_step: served.step,
-  };
+  });
 };
 
 /** The registered refusal of a read that needed a model no one has picked. */
@@ -268,10 +289,10 @@ export function evidenceOperations(ledger: FixtureLedger, tools: Tools) {
 
   /** The sentence the backend serves for a confirmation block, in the
    * window's language, or English where none is recorded. */
-  const blockWords = (reason: ConfirmationBlocker["reason"]) => {
+  const blockWords = (reason: ConfirmationBlockerProjectionV1["reason"]) => {
     const byLanguage: Record<string, string> =
       servedWords.confirmation_block[reason];
-    const language = byLanguage[tools.language] ? tools.language : "en";
+    const language = servedLanguage(byLanguage, tools.language);
     return { words: byLanguage[language]!, language };
   };
 
@@ -281,7 +302,7 @@ export function evidenceOperations(ledger: FixtureLedger, tools: Tools) {
     const byLanguage: Record<string, string> = (
       servedWords.draft_finding as Record<string, Record<string, string>>
     )[blocker.wording]!;
-    const language = byLanguage[tools.language] ? tools.language : "en";
+    const language = servedLanguage(byLanguage, tools.language);
     const words = byLanguage[language]!.replace(
       /\{(\w+)\}/g,
       (placeholder, name: string) => blocker.params[name] ?? placeholder,
@@ -292,6 +313,7 @@ export function evidenceOperations(ledger: FixtureLedger, tools: Tools) {
   function specReading(spec: Spec): Reading {
     return {
       draft: {
+        ...EMPTY_DRAFT,
         supplier_name: spec.kind === "issued" ? null : spec.party,
         supplier_tax_id: spec.kind === "issued" ? null : spec.taxId,
         customer_name: spec.kind === "issued" ? spec.party : null,
@@ -313,6 +335,7 @@ export function evidenceOperations(ledger: FixtureLedger, tools: Tools) {
       blockers: (spec.blockers ?? []).map(
         ({ wording, params, ...blocker }) => ({
           blocker_id: blockerId({ wording, params, ...blocker }),
+          detail: "",
           reason_words: blockWords(blocker.reason).words,
           reason_words_language: blockWords(blocker.reason).language,
           words: {
@@ -350,6 +373,7 @@ export function evidenceOperations(ledger: FixtureLedger, tools: Tools) {
     const image = record.media_kind === "image";
     return {
       draft: {
+        ...EMPTY_DRAFT,
         supplier_name: party || null,
         invoice_number: image
           ? null
@@ -379,11 +403,11 @@ export function evidenceOperations(ledger: FixtureLedger, tools: Tools) {
       },
       blockers: [],
       fallback: image
-        ? {
+        ? fallbackReading({
             cause: "load_headroom_refused",
             unread_fields: ["invoice_number", "grand_total", "invoice_date"],
             reader_error_type: "LLMContentionError",
-          }
+          })
         : tools.readerMissing
           ? withoutReader(["retencion_rate", "retencion_amount"])
           : tools.noReadingModel
@@ -559,7 +583,7 @@ export function evidenceOperations(ledger: FixtureLedger, tools: Tools) {
     return null;
   }
   /** The reading as the reader gives it now. */
-  const current = (reading: Reading): EvidenceDraft =>
+  const current = (reading: Reading): InvoiceDraftProjectionV1 =>
     reading.version === 0
       ? reading.draft
       : {

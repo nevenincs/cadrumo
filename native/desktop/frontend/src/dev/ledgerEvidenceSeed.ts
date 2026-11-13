@@ -4,9 +4,14 @@
 
 import type {
   AttachmentReviewItem,
-  ConfirmationBlocker,
-  FieldProvenance,
-} from "../shell/ledgerDocumentOperations";
+  LabelReadingFallbackProjectionV1,
+} from "../shell/ledgerDocumentContract";
+import type {
+  ConfirmationBlockerProjectionV1,
+  DraftFindingWording,
+  FieldProvenanceProjectionV1,
+  InvoiceDraftProjectionV1,
+} from "../shell/ledgerDocumentReviewContract";
 import type {
   CatalogueInvoiceSnapshot,
   InvoiceKind,
@@ -17,16 +22,90 @@ import { fixtureDay, fixtureInstant } from "@/dev/fixtureDates";
 export const decimal = (value: string | null): PublicDecimal | null =>
   value === null ? null : { decimal: value };
 
+/** A reading that read nothing: every field absent, as the backend serves
+ * an empty draft. A fixture reading states the fields it read over this. */
+export const EMPTY_DRAFT: InvoiceDraftProjectionV1 = {
+  supplier_tax_id: null,
+  supplier_name: null,
+  customer_tax_id: null,
+  customer_name: null,
+  supplier_postal_code: null,
+  customer_postal_code: null,
+  supplier_country: null,
+  customer_country: null,
+  supplier_country_code: null,
+  customer_country_code: null,
+  supplier_stated_country_code: null,
+  customer_stated_country_code: null,
+  invoice_number: null,
+  invoice_series: null,
+  rectifies_invoice_number: null,
+  proposed_supply_nature: null,
+  invoice_date: null,
+  taxable_base: null,
+  iva_rate: null,
+  iva_amount: null,
+  grand_total: null,
+  currency: null,
+  regime_legend: null,
+  recargo_amount: null,
+  retencion_rate: null,
+  retencion_amount: null,
+  suplidos_amount: null,
+  lines: [],
+  iva_breakdown: [],
+  iva_category: null,
+  suggested_kind: null,
+  transcription_sha256: null,
+  provenance: [],
+  discrepancies: [],
+  raw_text_length: 0,
+  facturae_invoice_class: null,
+};
+
+/** A label reading that stood without the model fill: the cause and the
+ * fields left unread, and a refusal's facts only where the reader gave one. */
+export const fallbackReading = (
+  stated: Pick<
+    LabelReadingFallbackProjectionV1,
+    "cause" | "unread_fields" | "reader_error_type"
+  > &
+    Partial<LabelReadingFallbackProjectionV1>,
+): LabelReadingFallbackProjectionV1 => ({
+  failed_condition_id: null,
+  refusal_code: null,
+  refusal_words: null,
+  refusal_words_language: null,
+  next_step: null,
+  ...stated,
+});
+
 /** One field read, and where it was read from. */
 export const read = (
   field: string,
-  origin: FieldProvenance["origin"],
-  grounding: FieldProvenance["grounding"],
-  extra: Partial<FieldProvenance> = {},
-): FieldProvenance => ({ field, origin, grounding, ...extra });
+  origin: FieldProvenanceProjectionV1["origin"],
+  grounding: FieldProvenanceProjectionV1["grounding"],
+  extra: Partial<FieldProvenanceProjectionV1> = {},
+): FieldProvenanceProjectionV1 => ({
+  field,
+  origin,
+  grounding,
+  anchor: null,
+  refused_anchor: null,
+  candidates: [],
+  anchor_self_reported: false,
+  derived_from: [],
+  role_evidence: null,
+  attribution_unverified: false,
+  note: "",
+  ...extra,
+});
 
 /** The fields a plain reading read, all agreeing with the page. */
-export const agreeing = (origin: FieldProvenance["origin"], fields: string[]) =>
+export const agreeing = (
+  origin: FieldProvenanceProjectionV1["origin"],
+  fields: string[],
+) =>
   fields.map((field) =>
     read(field, origin, field === "grand_total" ? "reconciled" : "anchored"),
   );
@@ -43,7 +122,7 @@ export type Spec = {
   rate: string;
   iva: string;
   total: string;
-  provenance: FieldProvenance[];
+  provenance: FieldProvenanceProjectionV1[];
   blockers?: SeedBlocker[];
 };
 
@@ -51,10 +130,10 @@ export type Spec = {
  * the values that sentence quotes, worded by the fixture from the backend's
  * served words. */
 export type SeedBlocker = Pick<
-  ConfirmationBlocker,
+  ConfirmationBlockerProjectionV1,
   "reason" | "field" | "candidates"
 > & {
-  wording: string;
+  wording: DraftFindingWording;
   params: Record<string, string>;
 };
 
@@ -136,8 +215,8 @@ export const DOCUMENTS: Spec[] = [
       read("supplier_name", "vision", "anchored"),
       read("supplier_tax_id", "vision", "ambiguous", {
         candidates: [
-          { value: "B87000001", note: "top of the ticket" },
-          { value: "B87000007", note: "footer" },
+          { value: "B87000001", anchor: null, note: "top of the ticket" },
+          { value: "B87000007", anchor: null, note: "footer" },
         ],
       }),
       read("invoice_number", "vision", "anchored"),
@@ -155,8 +234,8 @@ export const DOCUMENTS: Spec[] = [
         wording: "identity_readings_compete",
         params: { count: "2", field: "supplier_tax_id" },
         candidates: [
-          { value: "B87000001", note: "top of the ticket" },
-          { value: "B87000007", note: "footer" },
+          { value: "B87000001", anchor: null, note: "top of the ticket" },
+          { value: "B87000007", anchor: null, note: "footer" },
         ],
       },
       {

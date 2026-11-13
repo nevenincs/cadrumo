@@ -40,11 +40,9 @@ import {
   type LedgerPort,
   type LedgerRow,
 } from "../../../shell/ledger";
-import type {
-  EvidenceConfirmResult,
-  EvidenceDraft,
-  EvidenceRecord,
-} from "../../../shell/ledgerDocumentOperations";
+import type { EvidenceConfirmResult } from "../../../shell/ledgerDocumentOperations";
+import type { InvoiceDraftProjectionV1 } from "../../../shell/ledgerDocumentReviewContract";
+import type { LedgerEvidenceRecordProjection } from "../../../shell/ledgerDocumentContract";
 import type {
   CatalogueInvoiceSnapshot,
   InvoiceKind,
@@ -139,7 +137,7 @@ export function DraftReview({
   locale: string;
   evidenceReference: string;
   reference: DocumentReference;
-  record: EvidenceRecord | null;
+  record: LedgerEvidenceRecordProjection | null;
   fileName: string;
   invoices: CatalogueInvoiceSnapshot[] | null;
   rows: LedgerRow[] | null;
@@ -168,7 +166,7 @@ export function DraftReview({
     evidenceReference,
   );
   const [binding, setBinding] = useState<
-    (ReadingBinding & { draft: EvidenceDraft }) | null
+    (ReadingBinding & { draft: InvoiceDraftProjectionV1 }) | null
   >(null);
   const [kind, setKind] = useState<InvoiceKind | null>(null);
   const [country, setCountry] = useState("");

@@ -58,3 +58,18 @@ def test_the_driver_names_the_module_of_each_family(producer: ModuleType) -> Non
 
 def test_window_types_are_named_only_for_a_family_the_producer_writes(producer: ModuleType) -> None:
     assert set(cast("dict[str, object]", producer.FIELD_TYPES)) <= set(producer.FAMILIES)
+
+
+def test_a_family_imports_only_from_families_written_before_it(producer: ModuleType) -> None:
+    families = list(cast("dict[str, object]", producer.FAMILIES))
+    earlier = cast("dict[str, tuple[str, ...]]", producer.EARLIER)
+    assert set(earlier) <= set(families)
+    for family, sources in earlier.items():
+        assert set(sources) <= set(families[: families.index(family)])
+
+
+def test_the_module_a_family_is_imported_by_is_the_one_the_driver_writes(producer: ModuleType) -> None:
+    text = _DRIVER.read_text(encoding="utf-8")
+    for family in producer.FAMILIES:
+        stem = producer.module_of(family).removeprefix("./")
+        assert f'{family}: "src/shell/{stem}.ts"' in text

@@ -13,7 +13,7 @@ from dataclasses import dataclass
 import pytest
 from pydantic import BaseModel
 
-from ..operation_contract_module import WindowType, render_contract_module
+from ..operation_contract_module import EarlierModule, WindowType, render_contract_module
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -54,6 +54,16 @@ class _OpenResult(BaseModel):
     opened: bool
 
 
+class _BatchRequest(BaseModel):
+    profile_id: str
+    sources: list[str]
+    labels: list[str] | None = None
+
+
+class _BatchResult(BaseModel):
+    rows: tuple[_Row, ...]
+
+
 @dataclass(frozen=True)
 class _Contract:
     request_schema: str
@@ -73,6 +83,7 @@ class _Registry:
         "ledger.add": _Contract("add-request", "add-result"),
         "ledger.silent": _Contract("add-request", None),
         "ledger.open": _Contract("open-request", "open-result"),
+        "ledger.batch": _Contract("batch-request", "batch-result"),
     }
     _bindings = {
         "list-request": _Binding(_ListRequest),
@@ -81,6 +92,8 @@ class _Registry:
         "add-result": _Binding(_AddResult),
         "open-request": _Binding(_OpenRequest),
         "open-result": _Binding(_OpenResult),
+        "batch-request": _Binding(_BatchRequest),
+        "batch-result": _Binding(_BatchResult),
     }
 
     def lookup_public_contract(self, definition_id: str, /) -> _Contract:
@@ -93,7 +106,11 @@ class _Registry:
 _TOKEN = WindowType("FileToken", "./files")
 
 
-def _module(*definitions: str, field_types: dict[tuple[str, str], WindowType] | None = None) -> str:
+def _module(
+    *definitions: str,
+    field_types: dict[tuple[str, str], WindowType] | None = None,
+    earlier: tuple[EarlierModule, ...] = (),
+) -> str:
     return render_contract_module(
         _Registry(),
         header="// header\n",
@@ -101,6 +118,7 @@ def _module(*definitions: str, field_types: dict[tuple[str, str], WindowType] | 
         contracts_name="DemoContracts",
         subject="demo",
         field_types=field_types,
+        earlier=earlier,
     )
 
 
@@ -156,3 +174,48 @@ def test_a_window_type_for_a_property_the_schema_lacks_is_refused() -> None:
 def test_a_window_type_for_a_property_that_is_no_string_is_refused() -> None:
     with pytest.raises(SystemExit, match=r"FileToken stands for a string but the schema writes number"):
         _module("ledger.open", field_types={("_OpenRequest", "count"): _TOKEN})
+
+
+def test_each_item_of_a_list_is_written_with_the_window_type() -> None:
+    module = _module("ledger.batch", field_types={("_BatchRequest", "sources"): _TOKEN})
+    assert 'import type { FileToken } from "./files";' in module
+    assert "  sources: FileToken[];\n  labels?: string[] | null;\n" in module
+
+
+def test_a_type_an_earlier_module_writes_is_imported_and_not_written_again() -> None:
+    earlier = (EarlierModule("./demoList", ("ledger.list",)),)
+    module = _module("ledger.add", earlier=earlier)
+    assert 'import type { Row } from "./demoList";\n' in module
+    assert "export type Row =" not in module
+    assert "export type AddResult = {\n  row: Row;\n};" in module
+    assert "export type DemoContracts" in module
+
+
+def test_a_type_no_earlier_module_writes_is_still_written() -> None:
+    earlier = (EarlierModule("./demoList", ("ledger.list",)),)
+    module = _module("ledger.batch", earlier=earlier)
+    assert "export type BatchRequest =" in module
+    assert 'from "./demoList"' in module
+    assert "export type Row =" not in module
+    assert "export type BatchResult =" in module
+
+
+def test_a_request_or_result_model_an_earlier_module_writes_is_imported_for_the_map() -> None:
+    earlier = (EarlierModule("./demoList", ("ledger.add",)),)
+    module = _module("ledger.add", earlier=earlier)
+    assert 'import type { AddRequest, AddResult } from "./demoList";\n' in module
+    assert "export type AddRequest =" not in module
+    assert '"ledger.add": { request: AddRequest; result: AddResult; };' in module
+
+
+def test_a_type_is_imported_from_the_first_earlier_module_that_writes_it() -> None:
+    earlier = (EarlierModule("./first", ("ledger.list",)), EarlierModule("./second", ("ledger.add",)))
+    module = _module("ledger.batch", earlier=earlier)
+    assert 'import type { Row } from "./first";\n' in module
+    assert "./second" not in module
+
+
+def test_a_window_type_on_a_definition_an_earlier_module_writes_is_not_imported() -> None:
+    earlier = (EarlierModule("./demoOpen", ("ledger.open",)),)
+    module = _module("ledger.open", earlier=earlier, field_types={("_OpenRequest", "source_path"): _TOKEN})
+    assert 'from "./files"' not in module

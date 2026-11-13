@@ -16,11 +16,11 @@ import {
   provisionActionOf,
   setupActionOf,
 } from "../../../shell/provisioningRecovery";
+import type { EvidenceConsentListResult } from "../../../shell/ledgerDocumentOperations";
 import type {
   AttachmentReviewItem,
-  EvidenceConsentListResult,
-  EvidenceRecord,
-} from "../../../shell/ledgerDocumentOperations";
+  LedgerEvidenceRecordProjection,
+} from "../../../shell/ledgerDocumentContract";
 import {
   servedNextStep,
   servedRefusalWords,
@@ -621,7 +621,7 @@ export function ConsentHistory({
 }: {
   locale: string;
   read: Read<EvidenceConsentListResult>;
-  records: EvidenceRecord[];
+  records: LedgerEvidenceRecordProjection[];
   onRetry(): void;
 }) {
   const t = useStrings();

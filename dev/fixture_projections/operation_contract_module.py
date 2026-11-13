@@ -7,7 +7,7 @@ map keyed by definition id closes it, so the window derives the type it needs fr
 and not from a class name. A request is rendered as it is validated, so a field the model gives a
 default may be left out of what the window sends. A property the window types with a name of its own,
 such as a branded file token the host exchanges for a path, is named once in ``field_types`` and written
-with that name in place of the wire's ``string``.
+with that name in place of the wire's ``string``; for a list it is the name of each item.
 """
 
 from __future__ import annotations
@@ -49,23 +49,31 @@ class _WindowTypeWriter(TypeScriptWriter):
 
 
 def mark_window_types(defs: Mapping[str, Any], field_types: Mapping[tuple[str, str], WindowType]) -> None:
-    """Mark each ``(definition, property)`` of ``field_types`` in ``defs``; one the schema lacks is refused."""
+    """Mark each ``(definition, property)`` of ``field_types`` in ``defs``; one the schema lacks is refused.
+
+    A property that is an array is marked on its items, so each item is written with the name.
+    """
     for (definition, name), window_type in field_types.items():
         schema = defs.get(definition, {}).get("properties", {}).get(name)
         if schema is None:
             raise SystemExit(f"{window_type.name} is named for {definition}.{name}, which the schema does not define")
-        schema[_WINDOW_TYPE] = window_type.name
+        schema.get("items", schema)[_WINDOW_TYPE] = window_type.name
 
 
-def type_imports(field_types: Mapping[tuple[str, str], WindowType]) -> str:
-    """The type-only import line of each module the window types come from, in module order."""
-    named: dict[str, set[str]] = {}
-    for window_type in field_types.values():
-        named.setdefault(window_type.module, set()).add(window_type.name)
+def import_lines(named: Mapping[str, set[str]]) -> str:
+    """The type-only import line of each module that names a type, in module order."""
     return "".join(
         f"import type {{ {', '.join(sorted(names))} }} from {literal(module)};\n"
         for module, names in sorted(named.items())
     )
+
+
+@dataclass(frozen=True)
+class EarlierModule:
+    """A module written before another, which imports from it each type both reach instead of writing it again."""
+
+    module: str
+    definitions: Sequence[str]
 
 
 class PublicOperationRegistry(Protocol):
@@ -139,6 +147,16 @@ def _contracts_type(roots: list[tuple[str, str, type[BaseModel]]], *, contracts_
     )
 
 
+def _named_by(registry: PublicOperationRegistry, earlier: Sequence[EarlierModule]) -> dict[str, str]:
+    """Each schema definition an ``earlier`` module writes, with the first module that does."""
+    homes: dict[str, str] = {}
+    for found in earlier:
+        _, names = _writer_for(contract_roots(registry, found.definitions), {})
+        for name in names:
+            homes.setdefault(name, found.module)
+    return homes
+
+
 def render_contract_module(
     registry: PublicOperationRegistry,
     *,
@@ -147,16 +165,33 @@ def render_contract_module(
     contracts_name: str,
     subject: str,
     field_types: Mapping[tuple[str, str], WindowType] | None = None,
+    earlier: Sequence[EarlierModule] = (),
 ) -> str:
     """The module of ``definitions``: ``header``, one type per schema definition, then ``contracts_name``.
 
     ``contracts_name`` is the exported type map from each definition id to its ``request`` and ``result``
     types; ``subject`` names the family in that map's documentation. ``field_types`` names, by schema
-    definition and property, each string the window types with a name of its own.
+    definition and property, each string the window types with a name of its own. A type that a module
+    of ``earlier`` already writes is imported from the first that does, so a family too long for one module
+    is cut into modules that share their types, each importing only from those before it.
     """
     window_types = field_types or {}
     roots = contract_roots(registry, definitions)
     writer, names = _writer_for(roots, window_types)
-    blocks = [writer.definition(name) for name in names]
+    homes = _named_by(registry, earlier)
+    blocks: list[str] = []
+    named: dict[str, set[str]] = {}
+    for name in names:
+        if name in homes:
+            continue
+        blocks.append(writer.definition(name))
+        for used in writer.named & homes.keys():
+            named.setdefault(homes[used], set()).add(ts_name(used))
+    for _, _, model in roots:
+        if model.__name__ in homes:
+            named.setdefault(homes[model.__name__], set()).add(ts_name(model.__name__))
+    for (definition, _), window_type in window_types.items():
+        if definition not in homes:
+            named.setdefault(window_type.module, set()).add(window_type.name)
     blocks.append(_contracts_type(roots, contracts_name=contracts_name, subject=subject))
-    return header + type_imports(window_types) + "\n" + "\n\n".join(blocks) + "\n"
+    return header + import_lines(named) + "\n" + "\n\n".join(blocks) + "\n"
