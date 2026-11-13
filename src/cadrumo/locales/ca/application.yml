@@ -5032,6 +5032,66 @@ application:
         summary_open: Arrendament %{row}, des del %{start}
       renta_inmueble:
         summary: 'Immoble %{row}: %{place}'
+    row_parts:
+      choice:
+        uso:
+          tipo:
+            actividad_economica: Activitat econòmica
+            disposicion_propietario: A disposició del propietari
+            vivienda_habitual: Habitatge habitual
+      field:
+        inquilino:
+          extranjero:
+            help: Indica si l'identificador és estranger i no espanyol.
+            label: Identificador estranger
+          franja_edad:
+            help: La franja d'edat en la data del contracte, o que no és persona física.
+            label: Edat de l'arrendatari
+          nif:
+            help: NIF, NIE o identificador estranger de l'arrendatari, sense espais
+              ni guions.
+            label: NIF de l'arrendatari
+        mejora:
+          fecha:
+            help: Dia en què va acabar la millora (AAAA-MM-DD).
+            label: Data de la millora
+          importe:
+            help: Import de la millora amb punt decimal i com a màxim dos decimals,
+              per exemple 1500.00.
+            label: Import (euros)
+        uso:
+          desde:
+            help: Primer dia d'aquest ús (AAAA-MM-DD).
+            label: Des de
+          hasta:
+            help: Últim dia d'aquest ús (AAAA-MM-DD). Deixa-ho en blanc si l'ús continua.
+            label: Fins a
+          tipo:
+            help: Per a què fas servir l'immoble en aquest període en lloc d'arrendar-lo.
+            label: Tipus d'ús
+        valor_catastral:
+          construccion:
+            help: Part del valor cadastral que correspon a la construcció, amb el
+              mateix format.
+            label: Valor cadastral de la construcció (euros)
+          total:
+            help: Valor cadastral total de l'immoble en aquest exercici, amb punt
+              decimal i com a màxim dos decimals, per exemple 85000.00.
+            label: Valor cadastral total (euros)
+          vigor:
+            help: Any en què va entrar en vigor la valoració col·lectiva de caràcter
+              general que va fixar aquests valors. Deixa-ho en blanc si no el saps.
+            label: Any de la valoració col·lectiva
+          year:
+            help: Any del rebut de l'IBI al qual correspon aquest valor (quatre xifres).
+            label: Exercici de l'IBI
+      invalid: El valor desat no té la forma esperada, així que no es pot mostrar
+        per parts. Corregeix-lo com a text o esborra'l i torna a indicar-lo.
+      kind:
+        inquilino: Arrendatari
+        mejora: Millora
+        uso: Ús
+        valor_catastral: Valor cadastral
   wizard:
     errors:
       command_input_invalid: 'Les dades del perfil no han superat la validació: %{details}'

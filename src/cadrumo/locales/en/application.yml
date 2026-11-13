@@ -4794,6 +4794,67 @@ application:
         summary_open: Lease %{row}, from %{start}
       renta_inmueble:
         summary: 'Property %{row}: %{place}'
+    row_parts:
+      choice:
+        uso:
+          tipo:
+            actividad_economica: Economic activity
+            disposicion_propietario: At the owner's disposal
+            vivienda_habitual: Main home
+      field:
+        inquilino:
+          extranjero:
+            help: Say whether the identifier is foreign rather than Spanish.
+            label: Foreign identifier
+          franja_edad:
+            help: The age band on the date of the contract, or that the tenant is
+              not a natural person.
+            label: Tenant's age
+          nif:
+            help: The tenant's NIF, NIE or foreign identifier, without spaces or hyphens.
+            label: Tenant's tax ID
+        mejora:
+          fecha:
+            help: Day the improvement was finished (YYYY-MM-DD).
+            label: Date of the improvement
+          importe:
+            help: Amount of the improvement with a decimal point and at most two decimals,
+              for example 1500.00.
+            label: Amount (euros)
+        uso:
+          desde:
+            help: First day of this use (YYYY-MM-DD).
+            label: From
+          hasta:
+            help: Last day of this use (YYYY-MM-DD). Leave it blank if the use continues.
+            label: Until
+          tipo:
+            help: What you use the property for in that period instead of letting
+              it.
+            label: Type of use
+        valor_catastral:
+          construccion:
+            help: The part of the cadastral value that belongs to the construction,
+              in the same format.
+            label: Cadastral value of the construction (euros)
+          total:
+            help: Total cadastral value of the property in that year, with a decimal
+              point and at most two decimals, for example 85000.00.
+            label: Total cadastral value (euros)
+          vigor:
+            help: Year in which the general collective valuation that set these values
+              came into force. Leave it blank if you do not know it.
+            label: Year of the collective valuation
+          year:
+            help: Year of the IBI bill this value belongs to (four digits).
+            label: IBI year
+      invalid: The stored value does not have the expected form, so it cannot be shown
+        in parts. Correct it as text, or delete it and state it again.
+      kind:
+        inquilino: Tenant
+        mejora: Improvement
+        uso: Use
+        valor_catastral: Cadastral value
   wizard:
     errors:
       command_input_invalid: 'The profile details are invalid: %{details}'
