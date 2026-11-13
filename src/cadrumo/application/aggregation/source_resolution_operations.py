@@ -48,6 +48,7 @@ from ...domain.modelos.source_disagreement import (
     SourceDisagreementEntry,
     SourceDisagreementRole,
 )
+from .bound_input_provenance import bound_input_source_nodes
 from .errors import AggregationValidationError
 from .source_diagnostic_reason import CalculationSourceDiagnosticReason
 from .source_mesh import (
@@ -454,6 +455,7 @@ class _SourceResolutionMergeState:
     row_casilla_owners: dict[RowCasillaKey, str] = field(default_factory=dict)
     relation_owners: dict[RelationId, str] = field(default_factory=dict)
     casilla_owners: dict[CasillaId, str] = field(default_factory=dict)
+    bound_input_provenance: dict[CasillaId, CalculationSourceProvenance] = field(default_factory=dict)
     borrador_provenance: BorradorSourceProvenance | None = None
     m303_regimen_simplificado_annual_summary_handoff: M303RegimenSimplificadoAnnualSummaryHandoff | None = None
     value_outcomes: dict[BindingId, BindingValueOutcome] = field(default_factory=dict)
@@ -481,6 +483,7 @@ class _SourceResolutionMergeState:
         self._absorb_precedence_row_casillas(resolution)
         self._absorb_precedence_relations(resolution)
         self.bound_inputs_by_casilla_id.update(resolution.bound_inputs_by_casilla_id)
+        self.bound_input_provenance.update(bound_input_source_nodes(resolution))
 
     def _absorb_closed_record_rows(self, resolution: CalculationSourceResolution) -> None:
         """A source's membership and values cannot be overlaid independently."""
@@ -625,6 +628,7 @@ class _SourceResolutionMergeState:
         for casilla_id, value in resolution.bound_inputs_by_casilla_id.items():
             _claim_bound_casilla(self.casilla_owners, casilla_id, resolution.resolver_id)
             self.bound_inputs_by_casilla_id[casilla_id] = value
+        self.bound_input_provenance.update(bound_input_source_nodes(resolution))
 
     def _unresolved_binding_ids(self) -> tuple[BindingId, ...]:
         row_binding_ids = {binding_id for binding_id, _row_index in self.row_binding_values}
@@ -663,7 +667,7 @@ class _SourceResolutionMergeState:
             borrador_provenance=self.borrador_provenance,
             m303_regimen_simplificado_annual_summary_handoff=self.m303_regimen_simplificado_annual_summary_handoff,
             diagnostics=tuple(self.diagnostics),
-            provenance=tuple(self.provenance),
+            provenance=(*self.provenance, *(row for _, row in sorted(self.bound_input_provenance.items()))),
             value_outcomes=self.value_outcomes,
             payment_year_binding_values=self.payment_year_binding_values,
             instalment_basis_binding_values=self.instalment_basis_binding_values,

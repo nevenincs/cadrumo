@@ -316,6 +316,7 @@ def _calculate(work_unit: WorkUnit, operation: PinnedAuthorityOperation) -> Calc
         ports=build_calculation_action_ports(bucket_id=_BUCKET_ID, operation=operation),
         casilla_inputs=_ZERO_MANUAL_INPUTS,
         binding_values=_PRIOR_BINDINGS,
+        record_operator_layer=True,
         clock=_T0,
     ).revision
 

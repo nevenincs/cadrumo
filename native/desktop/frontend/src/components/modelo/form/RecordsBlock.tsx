@@ -83,6 +83,11 @@ export function RepeatingBlock({
                     {block.columns.map((column, index) => (
                       <td
                         key={column.key}
+                        data-casilla={
+                          block.column_casilla_ids[index] ?? undefined
+                        }
+                        data-value-kind={row.values[index]?.kind}
+                        data-value={row.values[index]?.text}
                         className={cn(
                           "px-2 py-2 text-sm whitespace-nowrap tabular-nums",
                           columns[index]?.align === "end" && "text-end",

@@ -254,8 +254,9 @@ class ModeloFormValueSource(ModeloFormBase):
     an imported AEAT draft reads as AEAT data, whatever its binding would
     otherwise fetch. ``earlier_filings`` names the declarations a carried value
     is read from when the binding identifies them, and is empty otherwise; it
-    never guesses one. ``binding_id`` and ``source_kind`` are ``None`` only for a
-    value the declared layout fixes without any binding.
+    never guesses one. ``binding_id`` is ``None`` for a value no binding feeds: one the
+    declared layout fixes, or one a resolver supplied to the box directly, which
+    names that resolver's ``source_kind``. Both are ``None`` for the fixed value.
     """
 
     family: SourceFamily

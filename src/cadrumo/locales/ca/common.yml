@@ -1466,6 +1466,7 @@ desktop:
       filed: Presentat
       late: Fora de termini
       unknown: Desconegut
+    suppressed: Fora del teu calendari
     title: Calendari de presentacions
     to_day: Ves al {date}
     view: Vista
@@ -4986,6 +4987,19 @@ desktop:
       unknown: No hem pogut confirmar si la contrasenya ha canviat. La propera vegada
         entra amb la contrasenya nova i, si no funciona, amb l’anterior.
     progress: '{filled} de {total} dades emplenades'
+    record_groups:
+      empty: El teu perfil encara no té registres relacionats.
+      linked_rows: Moviments del llibre vinculats
+      linked_rows_none: No hi ha cap moviment del llibre vinculat.
+      linked_rows_shown: Se'n mostren {shown} de {total}
+      more: Mostra'n més
+      read_again: Torna a llegir
+      read_failed: No s'han pogut llegir els registres relacionats.
+      reading: S'estan llegint els registres relacionats…
+      reduction:
+        fact_not_stated: Sense indicar
+        fact_stated: Indicat
+      title: Registres relacionats
     refresh: Actualitza
     refused: No s’han pogut desar aquests canvis. Revisa les indicacions dels camps
       i actualitza el perfil abans de tornar-ho a provar.
@@ -8771,6 +8785,16 @@ tui:
         missing_invoice: La factura ja no és al catàleg, així que no es pot vincular.
         transaction_takes_no_invoice: 'Aquest moviment no admet factura: només en
           pot tenir un moviment actiu d''entrada o sortida de diners.'
+    link_picker:
+      field:
+        arrendamiento_ref: Arrendament vinculat
+        gasto_capital_inmobiliario: Concepte de despesa de l'immoble
+        inmueble_ref: Immoble vinculat
+      held_unavailable: No s'han pogut llegir els vincles que té ara aquest moviment.
+        No canvia res si no tries un vincle.
+      none_served: Encara no hi ha res per vincular.
+      unavailable: No s'han pogut llegir els registres per vincular.
+      unchanged: Sense triar
     overview:
       affected_declarations: Declaracions afectades
       areas: Àrees de Registres
@@ -9536,6 +9560,23 @@ tui:
     stopped:
       code: Codi
     title: Operacions
+  profile:
+    record_groups:
+      close: Tanca
+      door_unavailable: Aquest registre ja no és al teu perfil. Torna a llegir els
+        registres relacionats.
+      empty: El teu perfil encara no té registres relacionats.
+      fact_stated: '[x] {words}'
+      fact_unstated: '[ ] {words}'
+      ledger_row: '{date} · {direction} {amount} {currency} · {description}'
+      linked_rows: Moviments del llibre vinculats
+      linked_rows_none: No hi ha cap moviment del llibre vinculat.
+      linked_rows_shown: Se'n mostren {shown} de {total}
+      more: Mostra'n més
+      read_again: Torna a llegir
+      read_failed: No s'han pogut llegir els registres relacionats.
+      reading: S'estan llegint els registres relacionats…
+      title: Registres relacionats
   reference:
     action:
       close: Torna

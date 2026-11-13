@@ -24,7 +24,7 @@ import {
   type Parsed,
 } from "../../../shell/ledgerGrammar";
 import type { RuleSeed } from "../../../shell/ledgerCommands";
-import type { LedgerRuleRow } from "../../../shell/ledgerClassificationSetup";
+import type { LedgerRuleRowProjection } from "../../../shell/ledgerClassificationContract";
 import { normalisedDescription } from "../movements/movementsModel";
 
 // ---- Calls ---------------------------------------------------------------
@@ -202,7 +202,9 @@ export function rulePrefill(
 
 /** The rules in the order they run: the lower priority first, and the
  * older first where two share one. */
-export function ruleOrder(rules: readonly LedgerRuleRow[]): LedgerRuleRow[] {
+export function ruleOrder(
+  rules: readonly LedgerRuleRowProjection[],
+): LedgerRuleRowProjection[] {
   return [...rules].sort(
     (a, b) =>
       a.priority - b.priority ||
@@ -216,7 +218,7 @@ const STEP = 10;
  * `others`, already in order: written now, it runs after every rule of
  * the same priority. Null where no number fits between its neighbours. */
 export function priorityAt(
-  others: readonly LedgerRuleRow[],
+  others: readonly LedgerRuleRowProjection[],
   position: number,
 ): number | null {
   const before = others[position - 1];
@@ -236,7 +238,7 @@ export function priorityAt(
  * priority it sent: its pattern, classification and category are its id,
  * so adding the same three again only moves it. */
 export function ruleStored(
-  rules: readonly LedgerRuleRow[],
+  rules: readonly LedgerRuleRowProjection[],
   sent: {
     description_pattern: string;
     classification: string;
@@ -255,13 +257,13 @@ export function ruleStored(
 
 /** One rule written again with a new priority: the same pattern,
  * classification and category, so the same rule. */
-export type RuleWrite = { rule: LedgerRuleRow; priority: number };
+export type RuleWrite = { rule: LedgerRuleRowProjection; priority: number };
 
 /** The writes that move the rule at `from` to `to` in `ordered`: one where
  * a number fits, otherwise every rule numbered again in steps of ten,
  * leaving out those already on their number. */
 export function reorderWrites(
-  ordered: readonly LedgerRuleRow[],
+  ordered: readonly LedgerRuleRowProjection[],
   from: number,
   to: number,
 ): RuleWrite[] {

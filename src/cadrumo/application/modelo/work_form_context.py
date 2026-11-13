@@ -21,6 +21,7 @@ from ...domain.calculations.registry.schema import BindingDefinition, RegistrySn
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.iva.refund_eligibility import RedemeEnrolmentState
 from ...domain.modelos.calculation_revision import FILED_REVISION_STATES, CalculationRevision
+from ...domain.modelos.calculation_revision_sources import CalculationSourceRef, bound_input_source_refs
 from .calculation_note_gate import NO_SOURCE_DISAGREEMENT_RESOLUTIONS, SourceDisagreementResolutions
 from .calculation_required_inputs import calculation_required_inputs
 from .caller_context import caller_context_of
@@ -164,6 +165,10 @@ class WorkFormContext:
         self.entered = entered_casilla_ids
         self.overridden = overridden_binding_ids
         self.cleared: frozenset[str] = frozenset(() if revision is None else revision.cleared_casilla_ids)
+        # The boxes a source resolver handed the calculation a value for, apart from any binding.
+        self.source_supplied: Mapping[CasillaId, CalculationSourceRef] = (
+            {} if revision is None else bound_input_source_refs(revision.source_provenance)
+        )
         self.stated = _stated_absences(revision, self.bindings)
         self.placed_boxes: dict[str, str] = {}
         self.casillas_by_export_position = _export_position_index(snapshot, self.bindings)

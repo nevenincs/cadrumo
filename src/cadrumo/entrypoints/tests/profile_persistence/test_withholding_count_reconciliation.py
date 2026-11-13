@@ -41,6 +41,7 @@ from cadrumo.domain.modelos.calculation_revision import (
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
+from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.modelos.verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
@@ -356,13 +357,17 @@ def test_verification_reaches_the_comparison_through_its_real_repository_bundle(
     findings: list[ModeloVerificationFinding] = []
     failures: dict[int, ModeloPreconditionFailure] = {}
 
+    repos = build_test_verification_repository_bundle()
+    # Verification reads the declaration's work form, which finds its work unit in the store.
+    repos.work_unit.save(upsert_work_unit(repos.work_unit.load(), work_unit))
     append_readable_model_findings(
         findings,
         failures,
         work_unit,
         target,
-        build_test_verification_repository_bundle(),
+        repos,
         authority_operation,
+        calculation_catalogue=repos.calculation.load_revisioned(operation=authority_operation)[0],
     )
 
     excess = [finding for finding in findings if finding.message_locale_key == _EXCEEDS_KEY]
@@ -409,8 +414,17 @@ def test_verification_warns_when_the_summary_withholding_differs_from_its_quarte
     findings: list[ModeloVerificationFinding] = []
     failures: dict[int, ModeloPreconditionFailure] = {}
 
+    repos = build_test_verification_repository_bundle()
+    # Verification reads the declaration's work form, which finds its work unit in the store.
+    repos.work_unit.save(upsert_work_unit(repos.work_unit.load(), work_unit))
     append_readable_model_findings(
-        findings, failures, work_unit, target, build_test_verification_repository_bundle(), authority_operation
+        findings,
+        failures,
+        work_unit,
+        target,
+        repos,
+        authority_operation,
+        calculation_catalogue=repos.calculation.load_revisioned(operation=authority_operation)[0],
     )
 
     (mismatch,) = [finding for finding in findings if finding.message_locale_key == WITHHOLDING_TOTAL_MISMATCH_KEY]
