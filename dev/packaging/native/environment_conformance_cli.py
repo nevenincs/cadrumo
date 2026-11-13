@@ -79,11 +79,17 @@ def _check_fixed_cli_name(
 
 
 def _slot_is_read(reference: Reference, name: str, cli: Mapping[str, object]) -> bool:
-    """Whether an installed component reads the slot: the command line its profile folder, the agent service its own.
+    """Whether an installed component reads the slot.
 
-    The service's own slots are held to what it reads by the runtime's launch check.
+    The command line reads its profile folder and the test-host fixed clock; the
+    agent service reads its own slots, which the runtime's launch check holds to
+    what it reads.
     """
-    return name in cast(Sequence[str], cli.get("profile_variables", ())) or name in service_slots(reference)
+    return (
+        name in cast(Sequence[str], cli.get("profile_variables", ()))
+        or name in cast(Sequence[str], cli.get("fixed_clock_variables", ()))
+        or name in service_slots(reference)
+    )
 
 
 def _check_command_line_entry(

@@ -59,6 +59,7 @@ from cadrumo.application.user_profile.custody_ports import bind_profile_custody_
 from cadrumo.application.user_profile.session_retirement import SessionRetirement, SessionRetirementKind
 from cadrumo.core.operations import profile_operation_subject
 from cadrumo.core.time.clock import now
+from cadrumo.core.time.fixed_clock import FixedClock
 from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDenialCode, OperationResponseScopeAllowed
 from cadrumo_client.contracts.access_vocabulary import (
     AccessAction,
@@ -123,6 +124,7 @@ class RuntimeProfileHost:
         rebound: Callable[[tuple[AccessSession, ...]], None] | None = None,
         recovery: CustodyRecoveryPolicy | None = None,
         worker_lost: Callable[[], None] | None = None,
+        fixed_clock: FixedClock | None = None,
     ) -> None:
         """Compose existing authorities without opening keys or selecting a profile.
 
@@ -154,6 +156,7 @@ class RuntimeProfileHost:
         self.issuer = CustodyAutomationKeyIssuer()
         self._runtime_boot_id, self._worker_script = runtime_boot_id, worker_script
         self._worker_lost = worker_lost
+        self._fixed_clock = fixed_clock
         # Owners of lost workers, kept until their containment and callbacks settle.
         self._lost_owners: list[ProfileWorkerSessionOwner] = []
         self._owner = self._new_owner()
@@ -187,6 +190,7 @@ class RuntimeProfileHost:
             worker_script=self._worker_script,
             wall_clock=self._wall_clock,
             lost=self._worker_lost,
+            fixed_clock=self._fixed_clock,
         )
 
     def _replace_lost_owner(self) -> ProfileWorkerSessionOwner:

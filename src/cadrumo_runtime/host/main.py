@@ -18,9 +18,11 @@ from cadrumo.core.async_cleanup import AsyncResourceCleanupError, async_cleanup_
 from cadrumo.core.child_console import isolate_child_consoles
 from cadrumo.core.config import override_settings
 from cadrumo.core.diagnostic_log import diagnostic_error_fields, diagnostic_event, diagnostic_process, diagnostic_scope
+from cadrumo.core.errors.hierarchy import CoreValidationError
 from cadrumo.core.logging import configure_logging, flush_logging, get_logger, register_first_party_logger
 from cadrumo.core.startup_phase_log import startup_phase
 from cadrumo.core.terminal_encoding import encode_terminal_text
+from cadrumo.core.time.fixed_clock import FixedClock, admit_fixed_clock_from_environment, fixed_clock_refusal
 from cadrumo.domain.calculations.registry.authority_location import published_authority_generation
 from cadrumo_client.contracts.contracts import (
     ExitReason,
@@ -88,6 +90,22 @@ def _runtime_login_inventory(
     return None
 
 
+def admitted_fixed_clock(root: Path, environ: Mapping[str, str]) -> FixedClock | None:
+    """Read the fixed-clock launch slots once at process entry, refusing an unbound value.
+
+    A refusal is the runtime's root-mismatch refusal: the slots name a clock
+    for a root this runtime may not run on that way, and the window reports it
+    as the runtime being unavailable. The check names the exact cause.
+    """
+    try:
+        return admit_fixed_clock_from_environment(environ, pinned_root=root)
+    except CoreValidationError as error:
+        refusal = fixed_clock_refusal(error)
+        if refusal is None:
+            raise
+        raise RefusalError(RefusalCode.ROOT_MISMATCH, check=refusal.value) from error
+
+
 def _serve_transport(
     endpoint: WindowsEndpoint | PosixEndpoint,
     installed_version: str,
@@ -96,6 +114,7 @@ def _serve_transport(
     boot_id: UUID,
     attach: Callable[[RuntimeTransportServer], None] | None = None,
 ) -> None:
+    fixed_clock = profiles.fixed_clock
     try:
         server = RuntimeTransportServer(
             endpoint,
@@ -104,6 +123,7 @@ def _serve_transport(
             profiles=profiles,
             boot_id=boot_id,
             authority_generation=published_authority_generation(),
+            fixed_clock_instant=None if fixed_clock is None else fixed_clock.instant,
         )
         if attach is not None:
             attach(server)
@@ -122,6 +142,7 @@ def _serve_runtime_endpoint(
     stop: RuntimeStop,
     previous: Mapping[signal.Signals, Any],
     supervision: SupervisedRuntime | CallerOwnedRuntime | None,
+    fixed_clock: FixedClock | None,
 ) -> None:
     if options.storage_identity is not None and endpoint.storage_identity != options.storage_identity:
         raise RefusalError(RefusalCode.ROOT_MISMATCH)
@@ -143,6 +164,7 @@ def _serve_runtime_endpoint(
         capture_login=login_policy.capture,
         login_inventory=login_policy.inventory,
         os_owner_id=endpoint.os_owner_id if isinstance(endpoint, WindowsEndpoint) else str(posix_owner_uid()),
+        fixed_clock=fixed_clock,
     )
     attach = None
     publication = None
@@ -227,11 +249,13 @@ def _run_runtime_owner(
     root = configured_storage_root() if options.configured_root else Path(options.storage_root)
     if not root.is_absolute():
         raise RefusalError(RefusalCode.ROOT_MISMATCH)
+    # Once, before the endpoint exists: the instant is fixed for this runtime's lifetime.
+    fixed_clock = admitted_fixed_clock(root, os.environ)
     endpoint = WindowsEndpoint(storage_root=root) if sys.platform == "win32" else PosixEndpoint(storage_root=root)
     owner = TransportCleanup(endpoint)
     primary_errors: list[BaseException] = []
     try:
-        _serve_runtime_endpoint(options, root, endpoint, installed_version, stop, previous, supervision)
+        _serve_runtime_endpoint(options, root, endpoint, installed_version, stop, previous, supervision, fixed_clock)
     except BaseException as error:
         primary_errors.append(error)
         raise

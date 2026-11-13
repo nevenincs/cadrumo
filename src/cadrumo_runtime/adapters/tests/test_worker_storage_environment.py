@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
 from pathlib import Path
 from types import SimpleNamespace
 from uuid import UUID
@@ -9,6 +10,9 @@ from uuid import UUID
 import pytest
 
 from cadrumo.core.profile_root_environment import PROFILE_ROOT_VARIABLE, profile_root
+from cadrumo.core.storage_environment import ChildEnvironmentProfile, child_environment
+from cadrumo.core.time.clock import wall_now
+from cadrumo.core.time.fixed_clock import FIXED_CLOCK_INSTANT_VARIABLE, FIXED_CLOCK_ROOT_VARIABLE, FixedClock
 
 from .. import profile_worker
 from ..worker_environment import worker_path_environment_names
@@ -100,3 +104,41 @@ def test_the_launch_environment_of_a_profile_worker_passes_its_isolated_scope(
     environment["PYDANTIC_DISABLE_PLUGINS"] = "__all__"
     assert PROFILE_ROOT_VARIABLE in environment
     assert validated_environment(environment) == environment
+
+
+def _inherited_fixed_clock(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """Put a fixed clock in the runtime's own environment, which no child may relay."""
+    monkeypatch.setenv(FIXED_CLOCK_INSTANT_VARIABLE, (wall_now() - timedelta(days=30)).isoformat())
+    monkeypatch.setenv(FIXED_CLOCK_ROOT_VARIABLE, str(tmp_path / "inherited-root"))
+
+
+@pytest.mark.parametrize("platform", ["linux", "win32"])
+def test_worker_is_told_the_admitted_fixed_clock_and_never_the_inherited_one(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, platform: str
+) -> None:
+    monkeypatch.setattr(profile_worker, "sys", SimpleNamespace(platform=platform))
+    _inherited_fixed_clock(monkeypatch, tmp_path)
+    storage_root = tmp_path / "worker-storage"
+    admitted = FixedClock(instant=(wall_now() - timedelta(days=400)).replace(microsecond=0), root=storage_root)
+
+    relayed = profile_worker.worker_launch_environment(
+        storage_root=storage_root, profile_id=_PROFILE, fixed_clock=admitted
+    )
+    unfixed = profile_worker.worker_launch_environment(storage_root=storage_root, profile_id=_PROFILE)
+
+    assert relayed[FIXED_CLOCK_INSTANT_VARIABLE] == admitted.instant.isoformat()
+    assert relayed[FIXED_CLOCK_ROOT_VARIABLE] == str(storage_root)
+    assert FIXED_CLOCK_INSTANT_VARIABLE not in unfixed
+    assert FIXED_CLOCK_ROOT_VARIABLE not in unfixed
+
+
+@pytest.mark.parametrize("platform", ["linux", "win32"])
+def test_an_operator_child_never_carries_the_fixed_clock(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, platform: str
+) -> None:
+    _inherited_fixed_clock(monkeypatch, tmp_path)
+
+    environment = child_environment(ChildEnvironmentProfile.OPERATOR, tmp_path / "child-storage", sys_platform=platform)
+
+    assert FIXED_CLOCK_INSTANT_VARIABLE not in environment
+    assert FIXED_CLOCK_ROOT_VARIABLE not in environment

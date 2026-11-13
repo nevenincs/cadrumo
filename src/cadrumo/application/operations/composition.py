@@ -257,6 +257,7 @@ def compose_operation_services(
     execution_authority: OperationExecutionAuthority | None = None,
     ephemeral: OperationEphemeralRouting | None = None,
     session_reads_end: Callable[[], None] | None = None,
+    fixed_clock_instant: datetime | None = None,
 ) -> OperationComposedServices:
     """Bind one immutable registry to real runtime adapters and safe services.
 
@@ -287,6 +288,7 @@ def compose_operation_services(
         typed_financial_operand_custody=typed_financial_operand_custody,
         execution_authority=execution_authority,
         ephemeral=ephemeral,
+        fixed_clock_instant=fixed_clock_instant,
     )
     observation = OperationObservationService(reader=reader, registry=registry)
 

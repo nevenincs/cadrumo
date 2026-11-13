@@ -607,6 +607,16 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
             (StorageCategory.RUNTIME_INSTALLATION_LOCK, ".runtime/installation.lock", StorageNodeKind.FILE),
         )
     ),
+    _location(
+        StorageCategory.RUNTIME_FIXED_CLOCK_MARKER,
+        ".runtime/fixed-clock.json",
+        consumer_module="core/time/fixed_clock.py",
+        node_kind=StorageNodeKind.FILE,
+        runtime_owned=True,
+        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
+        grouping=StorageGrouping.STATE,
+        fingerprint_participation=FingerprintParticipation.EXCLUDED,
+    ),
 )
 
 
