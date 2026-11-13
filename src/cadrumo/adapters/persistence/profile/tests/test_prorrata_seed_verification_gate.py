@@ -422,8 +422,9 @@ def test_a_last_return_after_an_especial_year_with_no_declaration_blocks_before_
     assert item.finding.message_locale_key == PRORRATA_SETTLEMENT_ESPECIAL_CONTINUATION_KEY
     assert item.finding.severity is ModeloVerificationFindingSeverity.BLOCKING
     assert dict(item.finding.message_facts) == {"filing_year": _YEAR, "prior_filing_year": _YEAR - 1}
-    assert item.finding.legal_refs == ("ley-37-1992:art-105", "rd-1624-1992:art-28")
-    assert item.failure is None
+    assert item.finding.legal_refs == ("ley-37-1992:art-105",)
+    assert item.failure is not None
+    assert item.failure.scenario_id == "modelo.work.verify.prorrata_settlement.especial_continuation"
     assert ProrrataRegisterRepository().load().entry_for(_YEAR) is None
 
 
@@ -441,7 +442,8 @@ def test_a_last_return_with_an_undeclared_sector_blocks_before_export() -> None:
     assert item.finding.message_locale_key == "application.modelo.findings.prorrata_settlement_sector_entries"
     assert item.finding.severity is ModeloVerificationFindingSeverity.BLOCKING
     assert dict(item.finding.message_facts) == {"filing_year": _YEAR, "sector_ids": "comercio"}
-    assert item.failure is None
+    assert item.failure is not None
+    assert item.failure.scenario_id == "modelo.work.verify.prorrata_settlement.sector_entries"
     assert _findings(_draft(CalculationRevisionState.BORRADOR, casilla_values=_SETTLEMENT)) == ()
 
 

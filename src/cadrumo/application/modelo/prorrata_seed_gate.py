@@ -82,7 +82,7 @@ _VERIFY_LEAF: Final = "modelo.work.verify"
 _EVIDENCE_ID: Final = "modelo.work.verify.prorrata_seed"
 _PRORRATA_SEED_LEGAL_REFS: Final[tuple[str, ...]] = ("ley-37-1992:art-104", "ley-37-1992:art-105")
 _PRORRATA_UNSEEDED_LEGAL_REFS: Final[tuple[str, ...]] = ("ley-37-1992:art-102", *_PRORRATA_SEED_LEGAL_REFS)
-_PRORRATA_SETTLEMENT_LEGAL_REFS: Final[tuple[str, ...]] = ("ley-37-1992:art-105", "rd-1624-1992:art-28")
+_PRORRATA_SETTLEMENT_LEGAL_REFS: Final[tuple[str, ...]] = ("ley-37-1992:art-105",)
 _PRORRATA_SETTLEMENT_SECTORS_KEY: Final = "application.modelo.findings.prorrata_settlement_sector_entries"
 
 
@@ -138,8 +138,11 @@ def _settlement_coverage_finding(
     except ProrrataSettlementEspecialContinuationError:
         return (
             _settlement_finding(
-                PRORRATA_SETTLEMENT_ESPECIAL_CONTINUATION_KEY,
-                {"filing_year": work_unit.filing_year, "prior_filing_year": work_unit.filing_year - 1},
+                work_unit,
+                target,
+                scenario="especial_continuation",
+                message_locale_key=PRORRATA_SETTLEMENT_ESPECIAL_CONTINUATION_KEY,
+                message_facts={"filing_year": work_unit.filing_year, "prior_filing_year": work_unit.filing_year - 1},
             ),
         )
     ejercicio = work_unit.filing_year
@@ -150,13 +153,22 @@ def _settlement_coverage_finding(
     )
     return (
         _settlement_finding(
-            _PRORRATA_SETTLEMENT_SECTORS_KEY, {"filing_year": ejercicio, "sector_ids": ", ".join(missing)}
+            work_unit,
+            target,
+            scenario="sector_entries",
+            message_locale_key=_PRORRATA_SETTLEMENT_SECTORS_KEY,
+            message_facts={"filing_year": ejercicio, "sector_ids": ", ".join(missing)},
         ),
     )
 
 
 def _settlement_finding(
-    message_locale_key: str, message_facts: dict[str, str | int]
+    work_unit: WorkUnit,
+    target: CalculationRevision,
+    *,
+    scenario: str,
+    message_locale_key: str,
+    message_facts: dict[str, str | int],
 ) -> ProrrataSeedVerificationFinding:
     return ProrrataSeedVerificationFinding(
         finding=ModeloVerificationFinding(
@@ -166,7 +178,17 @@ def _settlement_finding(
             message_facts=message_facts,
             legal_refs=_PRORRATA_SETTLEMENT_LEGAL_REFS,
         ),
-        failure=None,
+        failure=build_modelo_precondition_failure_for_scenario(
+            subject_leaf_key=_VERIFY_LEAF,
+            scenario_id=f"{_VERIFY_LEAF}.prorrata_settlement.{scenario}",
+            evidence_id="modelo.work.verify.prorrata_settlement",
+            evidence_values={
+                "calculation_revision_id": target.calculation_revision_id,
+                "work_unit_id": work_unit.work_unit_id,
+                "ejercicio": work_unit.filing_year,
+            },
+            provenance=ActionEvidenceProvenance.PERSISTED_STATE,
+        ),
     )
 
 
