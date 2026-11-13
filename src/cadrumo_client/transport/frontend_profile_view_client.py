@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from time import monotonic
 from typing import TYPE_CHECKING
 from uuid import uuid4
@@ -43,6 +44,7 @@ from .frontend_operation_client import OperationFrontend
 from .operation_changes import OperationChanges
 
 if TYPE_CHECKING:
+    from cadrumo.application.user_profile.family_rows import ProfileViewFamilyDraftItem
     from cadrumo.application.user_profile.view_operation import (
         ProfileViewOperationProjection,
         ProfileViewOperationRequest,
@@ -239,6 +241,50 @@ class ProfileViewFrontend(OperationFrontend):
             page_kinds=page_kinds,
             pages=tuple(pages),
         )
+
+    def read_household_draft(
+        self,
+        group: str,
+        answers: Mapping[str, str],
+        *,
+        output_language: OutputLanguage = OutputLanguage.ES,
+        timeout: float = 15,
+    ) -> ProfileViewFamilyDraftItem:
+        """Read which leaves one unsaved household row is asked, resolved by the backend.
+
+        The answers ride one no-effect read and are never stored; the single
+        served item states asks only, never a value.
+        """
+        from cadrumo.application.user_profile.family_rows import ProfileViewFamilyDraftItem
+        from cadrumo.application.user_profile.view_operation import (
+            PROFILE_VIEW_OPERATION_DEFINITION_ID,
+            ProfileViewHouseholdDraft,
+            ProfileViewHouseholdDraftFact,
+            ProfileViewOperationRequest,
+            ProfileViewPageKind,
+        )
+
+        deadline = deadline_after(timeout)
+        contract = self.contract(PROFILE_VIEW_OPERATION_DEFINITION_ID, deadline=exchange_deadline(deadline))
+        request = ProfileViewOperationRequest(
+            profile_id=self.profile_id,
+            page_kind=ProfileViewPageKind.FAMILY_ROWS,
+            output_language=output_language,
+            household_draft=ProfileViewHouseholdDraft(
+                group=group,
+                facts=tuple(
+                    ProfileViewHouseholdDraftFact(leaf=leaf, value=value) for leaf, value in sorted(answers.items())
+                ),
+            ),
+        )
+        page = self._collect_profile_view_page(request, contract, deadline)
+        if (
+            page.next_cursor is not None
+            or len(page.items) != 1
+            or not isinstance(page.items[0], ProfileViewFamilyDraftItem)
+        ):
+            raise RefusalError(RefusalCode.INVALID_FRAME)
+        return page.items[0]
 
     def _collect_profile_view_page(
         self, request: ProfileViewOperationRequest, contract: OperationPublicDefinitionContractV1, deadline: float

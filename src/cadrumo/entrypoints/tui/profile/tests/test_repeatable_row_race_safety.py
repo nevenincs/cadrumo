@@ -548,6 +548,38 @@ async def test_empty_repeatable_section_opens_an_add_modal_and_refreshes_after_s
 
 
 @pytest.mark.asyncio
+async def test_a_row_form_taller_than_the_terminal_keeps_save_and_cancel_in_view() -> None:
+    """A long choice list scrolls inside the form; the buttons that submit or leave it stay on the screen."""
+    choices = tuple(ProfileFieldChoice(value=f"kind-{index}", label=f"Kind {index}") for index in range(12))
+    fields = (
+        ProfileFieldView(path=f"{_SECTION}.description", label="Description", value=None, masked=False, required=True),
+        ProfileFieldView(path=f"{_SECTION}.reference", label="Reference", value=None, masked=False, required=False),
+        ProfileFieldView(
+            path=f"{_SECTION}.classification",
+            label="Classification",
+            value=None,
+            masked=False,
+            required=False,
+            field_type=ProfileFieldType.ENUM,
+            choices=choices,
+        ),
+    )
+    screen = _screen(_empty_repeatable_overview(fields=fields), add=lambda *_: _overview())
+    async with ScreenHostApp(screen).run_test(size=(80, 24)) as pilot:
+        await settle(pilot)
+        screen._open_add_row(_SECTION)
+        await settle(pilot)
+
+        dialog = pilot.app.screen
+        assert isinstance(dialog, RepeatableRowAddScreen)
+        assert dialog.query_one("#row-option-2", OptionList).option_count == len(choices)
+        for button in ("#btn-row-save", "#btn-row-cancel"):
+            region = dialog.query_one(button, Button).region
+            assert region.bottom <= dialog.size.height, (button, region, dialog.size)
+        pilot.app.exit(None)
+
+
+@pytest.mark.asyncio
 async def test_empty_row_add_uses_choice_lists_and_submits_their_stored_tokens() -> None:
     """Boolean and enum labels are display-only; the row door receives canonical tokens."""
     fields = (

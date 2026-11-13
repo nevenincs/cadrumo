@@ -24,7 +24,7 @@ import {
   type ChoiceLabels,
   type EditSubject,
 } from "../src/components/ledger/editing/editingModel";
-import type { LedgerInvoiceMatchMismatch } from "../src/shell/ledgerInvoiceOperations";
+import type { LedgerInvoiceMatchMismatch } from "../src/shell/ledgerInvoiceContract";
 import type { LedgerRow } from "../src/shell/ledger";
 import type { StepReport } from "../src/shell/ledgerApply";
 import {

@@ -1,9 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { answerInvoiceDuplicate } from "../src/dev/ledgerDuplicateFixture";
-import type {
-  CatalogueInvoice,
-  LedgerInvoiceDuplicateRequest,
-} from "../src/shell/ledgerInvoiceOperations";
+import type { LedgerInvoiceDuplicateRequest } from "../src/shell/ledgerInvoiceOperations";
+import type { CatalogueInvoiceSnapshot } from "../src/shell/ledgerInvoiceContract";
 import recorded from "@fixtures/ledger-recordings/ledgerInvoiceDuplicate.json" with { type: "json" };
 
 // The stand-in stories use for `ledger.invoice.duplicate`, held to what the real
@@ -12,7 +10,7 @@ import recorded from "@fixtures/ledger-recordings/ledgerInvoiceDuplicate.json" w
 
 const stored = recorded.invoices.map((invoice) => ({
   ...invoice,
-  kind: invoice.kind as CatalogueInvoice["kind"],
+  kind: invoice.kind as CatalogueInvoiceSnapshot["kind"],
   grand_total: { decimal: invoice.grand_total },
 }));
 

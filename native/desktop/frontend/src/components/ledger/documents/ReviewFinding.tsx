@@ -9,7 +9,7 @@ import {
   SegmentedControl,
   SegmentedControlItem,
 } from "@/components/ui/segmented-control";
-import type { ConfirmationBlocker } from "../../../shell/ledgerDocumentOperations";
+import type { ConfirmationBlockerProjectionV1 } from "../../../shell/ledgerDocumentReviewContract";
 import { useTextLimit } from "../../../shell/ledgerLimits";
 import type { Translate } from "../../../shell/strings";
 import {
@@ -33,7 +33,7 @@ export function Finding({
   /** Where a flagged field's glyph goes. */
   id: string;
   t: Translate;
-  blocker: ConfirmationBlocker;
+  blocker: ConfirmationBlockerProjectionV1;
   answer: FindingAnswer | undefined;
   onAnswer(answer: FindingAnswer): void;
   /** The value printed for a field the catalogue works out itself, as

@@ -5,7 +5,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import type { EvidenceDraft } from "../../../shell/ledgerDocumentOperations";
+import type { InvoiceDraftProjectionV1 } from "../../../shell/ledgerDocumentReviewContract";
 import type { Translate } from "../../../shell/strings";
 import { provenanceOf, readValue, type ReadingField } from "./documentsModel";
 import { doubtful, provenanceText, reasonLabel } from "./documentWords";
@@ -26,7 +26,7 @@ export function Provenance({
   question,
 }: {
   t: Translate;
-  draft: EvidenceDraft;
+  draft: InvoiceDraftProjectionV1;
   field: ReadingField;
   edited: boolean;
   question: Question | null;

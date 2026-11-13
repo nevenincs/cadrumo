@@ -1044,6 +1044,20 @@ def test_a_malformed_attested_prior_value_is_refused(changes: dict[str, object],
         _parse(_with_attested_prior_value(**changes))
 
 
+def test_an_attested_prior_value_is_strict_unless_it_states_where_declared() -> None:
+    (strict,) = _parse(_with_attested_prior_value()).attested_prior_values
+    (flagged,) = _parse(_with_attested_prior_value(where_declared=True)).attested_prior_values
+    (unflagged,) = _parse(_with_attested_prior_value(where_declared=False)).attested_prior_values
+
+    assert (strict.where_declared, flagged.where_declared, unflagged.where_declared) == (False, True, False)
+
+
+@pytest.mark.parametrize("value", ["true", 1, 0, None])
+def test_where_declared_of_an_attested_prior_value_must_be_a_boolean(value: object) -> None:
+    with pytest.raises(PersonaCatalogueError, match="where_declared must be a boolean"):
+        _parse(_with_attested_prior_value(where_declared=value))
+
+
 def test_an_annual_return_may_attest_one_figure_for_the_instalments_of_its_own_year() -> None:
     sources = [{"modelo": "202", "year": "horizon-1", "period": period} for period in ("1P", "2P", "3P")]
     (item,) = _parse(

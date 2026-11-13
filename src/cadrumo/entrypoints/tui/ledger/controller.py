@@ -142,6 +142,7 @@ class LedgerWorkspaceController:
         self.review_door = injection.review_door
         self.classify_action = injection.classify_action
         self.classification_submitter = injection.classification_submitter
+        self.link_options_door = injection.link_options_door
         self.import_door = injection.import_door
         self.invoice_add_door = injection.invoice_add_door
         self.exclusion_submitter = injection.exclusion_submitter

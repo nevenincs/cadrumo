@@ -11,10 +11,8 @@ import {
   type LedgerRequest,
   type LedgerResult,
 } from "../../../shell/ledger";
-import type {
-  CatalogueInvoice,
-  InvoiceUpdateRequest,
-} from "../../../shell/ledgerInvoiceOperations";
+import type { InvoiceUpdateRequest } from "../../../shell/ledgerInvoiceOperations";
+import type { CatalogueInvoiceSnapshot } from "../../../shell/ledgerInvoiceContract";
 import { holdsCorrection } from "./invoiceModel";
 
 export type WriteAnswer<Result> =
@@ -56,14 +54,14 @@ export async function write<D extends LedgerDefinitionId>(
 /** What a read-back found: the write landed, it did not, or the ledger
  * could not be read, in which case the outcome stays unknown. */
 export type Landed =
-  | { kind: "saved"; invoice: CatalogueInvoice | null }
+  | { kind: "saved"; invoice: CatalogueInvoiceSnapshot | null }
   | { kind: "not_saved" }
   | { kind: "unreadable" };
 
 async function view(
   port: LedgerPort,
   invoiceId: string,
-): Promise<CatalogueInvoice | null | "unreadable"> {
+): Promise<CatalogueInvoiceSnapshot | null | "unreadable"> {
   try {
     const outcome = await port.submit("ledger.invoice.view", {
       invoice_id: invoiceId,

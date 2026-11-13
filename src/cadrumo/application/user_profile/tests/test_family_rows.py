@@ -2,26 +2,34 @@
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 
 import pytest
 
+from ....core.flows import FlowWidgetKind
 from ....core.i18n.render import tr
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.descendant_disability_catalogue import accepted_descendant_disability_grades
-from ....domain.calculations.registry.descendant_relacion_catalogue import descendant_relacion_adoption_token
+from ....domain.calculations.registry.descendant_relacion_catalogue import (
+    descendant_relacion_adoption_token,
+    descendant_relacion_entitling_tokens,
+    descendant_relacion_tokens,
+)
 from ....domain.calculations.registry.tests.modelo_100_profile_binding_tables import FAMILY_ROW_BINDINGS
 from ....domain.contribuyente.descendant import DescendantInfo
 from ....domain.contribuyente.descendant_facts import descendant_facts_from_list
 from ....domain.contribuyente.family_types import GuarderiaMonthSpend
 from ....domain.user_profile.schema import ProfileFieldType
+from ...flows.definition import FlowCondition, FlowPage, locale_copy_ref
 from ..family_rows import (
     ProfileFamilyGroupState,
     ProfileFamilyLeaf,
+    ProfileFamilyLeafAsk,
     ProfileViewFamilyGroupItem,
     ProfileViewFamilyRowItem,
     family_row_items,
+    resolve_leaf_asks,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -283,3 +291,124 @@ def test_each_group_serves_the_most_rows_the_design_holds() -> None:
         descendants, _ = _descendant_group(values)
         ascendants, _ = _ascendant_group(values)
         assert (descendants.max_rows, ascendants.max_rows) == (15, 4)
+
+
+_BORN = (date.today() - timedelta(days=1500)).isoformat()
+_DESCENDANT_PREFIX = "renta_family.descendiente.0."
+
+
+def _descendant_row_asks(stated: dict[str, str]) -> dict[str, ProfileFamilyLeafAsk]:
+    values = {f"{_DESCENDANT_PREFIX}{leaf}": value for leaf, value in stated.items()}
+    with bundled_indexed_authority().operation() as authority:
+        items = family_row_items(values, schema=authority.profile_schema(), operation=authority)
+    row = next(item for item in items if isinstance(item, ProfileViewFamilyRowItem))
+    return {entry.leaf: entry.ask for entry in row.leaf_asks}
+
+
+def _relacion_tokens() -> tuple[str, frozenset[str], str]:
+    """The adoption token, the entitling tokens and one token that entitles to nothing."""
+    with bundled_indexed_authority().operation() as authority:
+        adoption = descendant_relacion_adoption_token(authority=authority).value
+        entitling = frozenset(token.value for token in descendant_relacion_entitling_tokens(authority=authority))
+        plain = next(
+            token.value for token in descendant_relacion_tokens(authority=authority) if token.value not in entitling
+        )
+    return adoption, entitling, plain
+
+
+def test_an_adoption_asks_for_its_registry_date_and_every_entitling_relation_for_its_resolution() -> None:
+    adoption, entitling, _plain = _relacion_tokens()
+    asks = _descendant_row_asks({"birth_date": _BORN, "relacion": adoption})
+    assert asks["inscripcion_registro_civil"] is ProfileFamilyLeafAsk.ASKED
+    assert adoption in entitling and asks["acogimiento_resolucion"] is ProfileFamilyLeafAsk.ASKED
+    assert asks["birth_date"] is ProfileFamilyLeafAsk.ASKED and asks["relacion"] is ProfileFamilyLeafAsk.ASKED
+
+
+def test_an_answered_relation_that_is_not_adoption_does_not_ask_for_the_registry_date() -> None:
+    adoption, entitling, plain = _relacion_tokens()
+    assert plain != adoption
+    asks = _descendant_row_asks({"birth_date": _BORN, "relacion": plain})
+    assert asks["inscripcion_registro_civil"] is ProfileFamilyLeafAsk.NOT_ASKED
+    assert asks["acogimiento_resolucion"] is ProfileFamilyLeafAsk.NOT_ASKED
+    assert plain not in entitling
+
+
+def test_a_row_with_no_relation_waits_for_it_before_asking_what_depends_on_it() -> None:
+    asks = _descendant_row_asks({"birth_date": _BORN})
+    assert asks["inscripcion_registro_civil"] is ProfileFamilyLeafAsk.AWAITS_ANSWER
+    assert asks["acogimiento_resolucion"] is ProfileFamilyLeafAsk.AWAITS_ANSWER
+    assert asks["relacion"] is ProfileFamilyLeafAsk.ASKED
+
+
+def test_economic_dependence_is_asked_only_of_a_descendant_who_does_not_live_with_the_taxpayer() -> None:
+    base = {"birth_date": _BORN}
+    assert _descendant_row_asks(base)["dependencia_economica"] is ProfileFamilyLeafAsk.AWAITS_ANSWER
+    away = _descendant_row_asks({**base, "convivencia": "false"})
+    assert away["dependencia_economica"] is ProfileFamilyLeafAsk.ASKED
+    home = _descendant_row_asks({**base, "convivencia": "true"})
+    assert home["dependencia_economica"] is ProfileFamilyLeafAsk.NOT_ASKED
+
+
+def test_a_fact_stored_on_a_leaf_that_is_not_asked_stays_in_the_served_row() -> None:
+    values = {
+        f"{_DESCENDANT_PREFIX}birth_date": _BORN,
+        f"{_DESCENDANT_PREFIX}convivencia": "true",
+        f"{_DESCENDANT_PREFIX}dependencia_economica": "true",
+    }
+    with bundled_indexed_authority().operation() as authority:
+        items = family_row_items(values, schema=authority.profile_schema(), operation=authority)
+    row = next(item for item in items if isinstance(item, ProfileViewFamilyRowItem))
+    assert {entry.leaf: entry.ask for entry in row.leaf_asks}["dependencia_economica"] is ProfileFamilyLeafAsk.NOT_ASKED
+    assert {fact.leaf: fact.value for fact in row.facts}["dependencia_economica"] == "true"
+
+
+def test_a_blank_new_row_asks_what_is_unconditional_and_waits_on_what_is_gated() -> None:
+    with bundled_indexed_authority().operation() as authority:
+        items = family_row_items({}, schema=authority.profile_schema(), operation=authority)
+    descendants, ascendants = (item for item in items if isinstance(item, ProfileViewFamilyGroupItem))
+    assert [entry.leaf for entry in descendants.new_row_leaves] == [leaf.leaf for leaf in descendants.leaves]
+    asks = {entry.leaf: entry.ask for entry in descendants.new_row_leaves}
+    gated = {leaf.leaf for leaf in descendants.leaves if leaf.shown_when}
+    assert gated == {"inscripcion_registro_civil", "acogimiento_resolucion", "dependencia_economica"}
+    assert {leaf for leaf, ask in asks.items() if ask is ProfileFamilyLeafAsk.AWAITS_ANSWER} == gated
+    assert all(ask is ProfileFamilyLeafAsk.ASKED for leaf, ask in asks.items() if leaf not in gated)
+    assert all(entry.ask is ProfileFamilyLeafAsk.ASKED for entry in ascendants.new_row_leaves)
+
+
+def _gated_page(page_id: str, gate: FlowCondition | None = None) -> FlowPage:
+    return FlowPage(
+        id=page_id,
+        widget=FlowWidgetKind.TEXT,
+        prompt=locale_copy_ref("wizard.setup.title"),
+        visible_when=gate,
+        required=False,
+        answer_type=str,
+    )
+
+
+def test_a_leaf_gated_on_a_leaf_that_is_not_asked_is_not_asked_whatever_is_stored() -> None:
+    pages = (
+        _gated_page("first"),
+        _gated_page("second", FlowCondition(page_id="first", equals="x")),
+        _gated_page("third", FlowCondition(page_id="second", equals="y")),
+    )
+    keys = ("first", "second", "third", "free")
+
+    def asks(row: dict[str, str]) -> dict[str, ProfileFamilyLeafAsk]:
+        return {entry.leaf: entry.ask for entry in resolve_leaf_asks(pages, keys, row)}
+
+    hidden_parent = asks({"first": "z", "second": "y", "third": "w"})
+    assert hidden_parent["second"] is ProfileFamilyLeafAsk.NOT_ASKED
+    assert hidden_parent["third"] is ProfileFamilyLeafAsk.NOT_ASKED
+    assert hidden_parent["free"] is ProfileFamilyLeafAsk.ASKED
+    assert asks({"first": "x"})["third"] is ProfileFamilyLeafAsk.AWAITS_ANSWER
+    assert asks({"first": "x", "second": "y"})["third"] is ProfileFamilyLeafAsk.ASKED
+    assert asks({"first": "x", "second": "n"})["third"] is ProfileFamilyLeafAsk.NOT_ASKED
+    assert asks({})["second"] is ProfileFamilyLeafAsk.AWAITS_ANSWER
+    assert asks({"first": "  "})["second"] is ProfileFamilyLeafAsk.AWAITS_ANSWER
+
+
+def test_a_gate_on_a_page_the_group_does_not_ask_can_never_be_met() -> None:
+    orphan = _gated_page("orphan", FlowCondition(page_id="elsewhere", equals="x"))
+    (entry,) = resolve_leaf_asks((orphan,), ("orphan",), {"orphan": "kept", "elsewhere": "x"})
+    assert entry.ask is ProfileFamilyLeafAsk.NOT_ASKED

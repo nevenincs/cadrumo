@@ -2,16 +2,21 @@
 
 from __future__ import annotations
 
-from datetime import date
+import logging
+from datetime import date, timedelta
 from decimal import Decimal
 from pathlib import Path
 from uuid import UUID
 
 import pytest
+from pydantic import ValidationError
 
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.user_profile.family_rows import (
     ProfileFamilyGroupState,
+    ProfileFamilyLeafAsk,
+    ProfileFamilyLeafAskEntry,
+    ProfileViewFamilyDraftItem,
     ProfileViewFamilyGroupItem,
     ProfileViewFamilyRowItem,
 )
@@ -20,6 +25,8 @@ from cadrumo.application.user_profile.registration import register_profile_with_
 from cadrumo.application.user_profile.view_operation import (
     PROFILE_VIEW_MAX_RESULT_BYTES,
     ProfileViewFieldItem,
+    ProfileViewHouseholdDraft,
+    ProfileViewHouseholdDraftFact,
     ProfileViewOperationRequest,
     ProfileViewPageKind,
     ProfileViewRefusalCode,
@@ -29,6 +36,11 @@ from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES, OutputLa
 from cadrumo.core.i18n.render import tr
 from cadrumo.core.identity.digest import ContentDigest
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.descendant_relacion_catalogue import (
+    descendant_relacion_adoption_token,
+    descendant_relacion_entitling_tokens,
+    descendant_relacion_tokens,
+)
 from cadrumo.domain.contribuyente.descendant import DescendantInfo
 from cadrumo.domain.contribuyente.descendant_facts import descendant_facts_from_list
 from cadrumo.domain.contribuyente.renta_codes import RentaDeclaracionType, RentaDisabilityGrade
@@ -292,3 +304,147 @@ def test_declaration_type_and_disability_grade_serve_the_registry_codes_with_wiz
     assert [choice.value for choice in sex.choices] == ["H", "M"]
     # A multi-select wizard question is not a pick-one answer for its string field.
     assert not fields["taxpayer_type.irpf_income_categories"].choices
+
+
+_DESCENDANT_GROUP = "renta_family.descendiente"
+_DRAFT_BIRTH_DATE = (date.today() - timedelta(days=2000)).isoformat()
+
+
+def _asks(entries: tuple[ProfileFamilyLeafAskEntry, ...]) -> dict[str, ProfileFamilyLeafAsk]:
+    return {entry.leaf: entry.ask for entry in entries}
+
+
+def _draft_request(
+    profile_id: UUID,
+    group: str,
+    facts: dict[str, str],
+    *,
+    page_kind: ProfileViewPageKind = ProfileViewPageKind.FAMILY_ROWS,
+) -> ProfileViewOperationRequest:
+    return ProfileViewOperationRequest(
+        profile_id=profile_id,
+        page_kind=page_kind,
+        household_draft=ProfileViewHouseholdDraft(
+            group=group,
+            facts=tuple(ProfileViewHouseholdDraftFact(leaf=leaf, value=value) for leaf, value in facts.items()),
+        ),
+    )
+
+
+def test_stored_rows_and_the_new_row_serve_the_asks_their_answers_resolve_to(tmp_path: Path) -> None:
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        profile_id = _register_profile(facts=_descendant_facts())
+        items = _read(profile_id, ProfileViewPageKind.FAMILY_ROWS, "en")
+    descendants = next(item for item in items if isinstance(item, ProfileViewFamilyGroupItem))
+    first, second = (item for item in items if isinstance(item, ProfileViewFamilyRowItem) and item.row_index in "01")
+    assert [entry.leaf for entry in descendants.new_row_leaves] == [leaf.leaf for leaf in descendants.leaves]
+    assert _asks(descendants.new_row_leaves)["dependencia_economica"] is ProfileFamilyLeafAsk.AWAITS_ANSWER
+    # The first descendant does not live with the taxpayer; the second is stored as living with them.
+    assert _asks(first.leaf_asks)["dependencia_economica"] is ProfileFamilyLeafAsk.ASKED
+    assert _asks(first.leaf_asks)["inscripcion_registro_civil"] is ProfileFamilyLeafAsk.AWAITS_ANSWER
+    assert _asks(second.leaf_asks)["dependencia_economica"] is ProfileFamilyLeafAsk.NOT_ASKED
+
+
+def test_a_household_draft_resolves_the_asks_of_the_unsaved_row_and_writes_nothing(tmp_path: Path) -> None:
+    with isolated_profile_storage_root(tmp_path=tmp_path), bundled_indexed_authority().operation() as authority:
+        profile_id = _register_profile(facts=_descendant_facts())
+        adoption = descendant_relacion_adoption_token(authority=authority).value
+        before = read_profile_view_page(
+            ProfileViewOperationRequest(profile_id=profile_id, page_kind=ProfileViewPageKind.FAMILY_ROWS),
+            authority_operation=authority,
+        )
+        adopted = read_profile_view_page(
+            _draft_request(profile_id, _DESCENDANT_GROUP, {"relacion": adoption, "convivencia": "true"}),
+            authority_operation=authority,
+        )
+        plain_relation = next(
+            token.value
+            for token in descendant_relacion_tokens(authority=authority)
+            if token.value not in {t.value for t in descendant_relacion_entitling_tokens(authority=authority)}
+        )
+        other = read_profile_view_page(
+            _draft_request(profile_id, _DESCENDANT_GROUP, {"relacion": plain_relation, "convivencia": "false"}),
+            authority_operation=authority,
+        )
+        empty = read_profile_view_page(_draft_request(profile_id, _DESCENDANT_GROUP, {}), authority_operation=authority)
+        after = read_profile_view_page(
+            ProfileViewOperationRequest(profile_id=profile_id, page_kind=ProfileViewPageKind.FAMILY_ROWS),
+            authority_operation=authority,
+        )
+    (adopted_item,) = adopted.items
+    assert isinstance(adopted_item, ProfileViewFamilyDraftItem) and adopted_item.group_key == _DESCENDANT_GROUP
+    asked = _asks(adopted_item.leaf_asks)
+    assert asked["inscripcion_registro_civil"] is ProfileFamilyLeafAsk.ASKED
+    assert asked["dependencia_economica"] is ProfileFamilyLeafAsk.NOT_ASKED
+    (other_item,) = other.items
+    assert isinstance(other_item, ProfileViewFamilyDraftItem)
+    assert _asks(other_item.leaf_asks)["inscripcion_registro_civil"] is ProfileFamilyLeafAsk.NOT_ASKED
+    assert _asks(other_item.leaf_asks)["dependencia_economica"] is ProfileFamilyLeafAsk.ASKED
+    (empty_item,) = empty.items
+    assert isinstance(empty_item, ProfileViewFamilyDraftItem)
+    assert _asks(empty_item.leaf_asks)["inscripcion_registro_civil"] is ProfileFamilyLeafAsk.AWAITS_ANSWER
+    assert adopted.total_items == 1 and adopted.next_cursor is None
+    # A no-effect read: the profile is the same record before and after, and the stored page is unchanged.
+    for draft_page in (adopted, other, empty):
+        assert (draft_page.record_revision, draft_page.content_digest) == (
+            before.record_revision,
+            before.content_digest,
+        )
+    assert (after.record_revision, after.content_digest) == (before.record_revision, before.content_digest)
+    assert after.items == before.items
+
+
+@pytest.mark.parametrize(
+    ("group", "facts"),
+    [
+        (_DESCENDANT_GROUP, {"birth_date": _DRAFT_BIRTH_DATE, "not_a_leaf": "kept-secret-value"}),
+        ("renta_family.dependiente", {"birth_date": _DRAFT_BIRTH_DATE}),
+        ("renta_family.ascendiente", {"relacion": _DRAFT_BIRTH_DATE}),
+    ],
+)
+def test_a_draft_for_an_unknown_group_or_leaf_is_refused_without_echoing_what_it_held(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture, group: str, facts: dict[str, str]
+) -> None:
+    with isolated_profile_storage_root(tmp_path=tmp_path), bundled_indexed_authority().operation() as authority:
+        profile_id = _register_profile(facts=_descendant_facts())
+        request = _draft_request(profile_id, group, facts)
+        with caplog.at_level(logging.DEBUG):
+            refused = read_profile_view_page(request, authority_operation=authority)
+    assert refused.outcome == "refused" and refused.refusal_code is ProfileViewRefusalCode.INVALID_HOUSEHOLD_DRAFT
+    assert not refused.items
+    for value in (*facts.values(), _DRAFT_BIRTH_DATE):
+        assert value not in refused.model_dump_json()
+        assert value not in repr(request)
+        assert value not in caplog.text
+
+
+def test_a_draft_that_names_a_leaf_twice_is_refused(tmp_path: Path) -> None:
+    with isolated_profile_storage_root(tmp_path=tmp_path), bundled_indexed_authority().operation() as authority:
+        profile_id = _register_profile()
+        request = ProfileViewOperationRequest(
+            profile_id=profile_id,
+            page_kind=ProfileViewPageKind.FAMILY_ROWS,
+            household_draft=ProfileViewHouseholdDraft(
+                group=_DESCENDANT_GROUP,
+                facts=(
+                    ProfileViewHouseholdDraftFact(leaf="convivencia", value="true"),
+                    ProfileViewHouseholdDraftFact(leaf="convivencia", value="false"),
+                ),
+            ),
+        )
+        refused = read_profile_view_page(request, authority_operation=authority)
+    assert refused.refusal_code is ProfileViewRefusalCode.INVALID_HOUSEHOLD_DRAFT
+
+
+def test_a_draft_outside_the_family_rows_page_is_refused_by_the_request_without_echoing_it(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    with caplog.at_level(logging.DEBUG), pytest.raises(ValidationError) as refusal:
+        _draft_request(
+            UUID(int=1), _DESCENDANT_GROUP, {"birth_date": _DRAFT_BIRTH_DATE}, page_kind=ProfileViewPageKind.FACTS
+        )
+    assert _DRAFT_BIRTH_DATE not in str(refusal.value)
+    assert _DRAFT_BIRTH_DATE not in caplog.text
+    with pytest.raises(ValidationError) as malformed:
+        ProfileViewHouseholdDraftFact(leaf="Birth Date", value=_DRAFT_BIRTH_DATE)
+    assert _DRAFT_BIRTH_DATE not in str(malformed.value)

@@ -12,7 +12,7 @@ import {
 } from "@/dev/LedgerStage";
 import type { LedgerShape } from "@/dev/ledgerFixture";
 import type { LedgerPort, OutputLanguage } from "../../../shell/ledger";
-import type { CatalogueInvoice } from "../../../shell/ledgerInvoiceOperations";
+import type { CatalogueInvoiceSnapshot } from "../../../shell/ledgerInvoiceContract";
 import { useOwnAccounts } from "../../../shell/ledgerMovementReads";
 import { useStrings } from "../../../shell/strings";
 import { useLedgerRead as useDocumentRead } from "../documents/useLedgerRead";
@@ -151,9 +151,9 @@ export const MovementUnknown = movementStory(
 );
 
 type InvoiceArgs = {
-  pick: (invoice: CatalogueInvoice) => boolean;
+  pick: (invoice: CatalogueInvoiceSnapshot) => boolean;
   /** What the overview is given in place of the stored invoice. */
-  change?: (invoice: CatalogueInvoice) => CatalogueInvoice;
+  change?: (invoice: CatalogueInvoiceSnapshot) => CatalogueInvoiceSnapshot;
   locale: string;
 };
 

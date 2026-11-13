@@ -40,15 +40,13 @@ import {
   type LedgerPort,
   type LedgerRow,
 } from "../../../shell/ledger";
+import type { EvidenceConfirmResult } from "../../../shell/ledgerDocumentOperations";
+import type { InvoiceDraftProjectionV1 } from "../../../shell/ledgerDocumentReviewContract";
+import type { LedgerEvidenceRecordProjection } from "../../../shell/ledgerDocumentContract";
 import type {
-  EvidenceConfirmResult,
-  EvidenceDraft,
-  EvidenceRecord,
-} from "../../../shell/ledgerDocumentOperations";
-import type {
-  CatalogueInvoice,
+  CatalogueInvoiceSnapshot,
   InvoiceKind,
-} from "../../../shell/ledgerInvoiceOperations";
+} from "../../../shell/ledgerInvoiceContract";
 import type { StageEvent, StageState } from "../../../shell/ledgerStage";
 import { readAnswer } from "../../../shell/ledgerWindow";
 import { useNavigationGuard } from "../../../shell/navigation/hooks";
@@ -139,9 +137,9 @@ export function DraftReview({
   locale: string;
   evidenceReference: string;
   reference: DocumentReference;
-  record: EvidenceRecord | null;
+  record: LedgerEvidenceRecordProjection | null;
   fileName: string;
-  invoices: CatalogueInvoice[] | null;
+  invoices: CatalogueInvoiceSnapshot[] | null;
   rows: LedgerRow[] | null;
   stage: StageState;
   onStage(event: StageEvent): void;
@@ -168,7 +166,7 @@ export function DraftReview({
     evidenceReference,
   );
   const [binding, setBinding] = useState<
-    (ReadingBinding & { draft: EvidenceDraft }) | null
+    (ReadingBinding & { draft: InvoiceDraftProjectionV1 }) | null
   >(null);
   const [kind, setKind] = useState<InvoiceKind | null>(null);
   const [country, setCountry] = useState("");

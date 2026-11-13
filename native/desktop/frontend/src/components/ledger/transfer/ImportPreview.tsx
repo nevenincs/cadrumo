@@ -11,7 +11,7 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 import { facts } from "../../../shell/compose";
 import type { LedgerImportResult, PickedFile } from "../../../shell/ledger";
-import type { InvoiceKind } from "../../../shell/ledgerInvoiceOperations";
+import type { InvoiceKind } from "../../../shell/ledgerInvoiceContract";
 import type { Translate } from "../../../shell/strings";
 import { formatSize } from "../../../shared/numbers";
 import { SetupOffer } from "../../setup/SetupOffer";

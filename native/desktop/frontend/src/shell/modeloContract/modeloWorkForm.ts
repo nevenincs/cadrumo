@@ -32,7 +32,6 @@ import type {
   ModeloEditRefusedV1,
   ModeloEditWireScalar,
   ModeloFormAddressV1,
-  ModeloFormBindingAddressV1,
   ModeloFormCasillaAddressV1,
 } from "./modeloEditWork";
 import type {
@@ -41,6 +40,8 @@ import type {
   SourceSurface,
 } from "./modeloWork";
 import type {
+  PublicModeloFormRate,
+  PublicModeloFormRepeatingBlock,
   PublicModeloFormSection,
   PublicModeloFormValueSource,
   PublicModeloVerificationFinding,
@@ -462,6 +463,7 @@ export type ModeloFormExportHold = {
   reason: ModeloFormExportHoldReason;
   count: number;
   words: string;
+  action: ModeloFormNextAction;
 };
 
 /**
@@ -489,6 +491,14 @@ export type ModeloFormFileView = {
  */
 export type ModeloFormFiling = {
   recorded_at: string | null;
+};
+
+/**
+ * The first box that needs the filer, on a page that applies this period.
+ */
+export type ModeloFormFirstAttention = {
+  address: ModeloFormAddressV1;
+  page_id: string | null;
 };
 
 /**
@@ -553,6 +563,18 @@ export type ModeloFormIssueLine = {
   answer_lead_words: string | null;
   answer_lead_words_language: OutputLanguage | null;
   invoice_id: InvoiceId | null;
+};
+
+/**
+ * The journey's state, the next action it offers, and where the filer starts.
+ */
+export type ModeloFormJourney = {
+  steps: ModeloFormStepState[];
+  steps_while_changes_held: ModeloFormStepState[];
+  next_step: ModeloFormNextStep;
+  held_prerequisite_next_step: ModeloFormNextStep;
+  first_attention: ModeloFormFirstAttention | null;
+  verdict: ModeloFormVerdict;
 };
 
 /**
@@ -822,6 +844,24 @@ export type ModeloFormStatedPriorValue = {
 };
 
 /**
+ * The steps of filing one declaration, in order.
+ */
+export type ModeloFormStep = "fill" | "calculate" | "review" | "file";
+
+/**
+ * One step and how far it has got.
+ */
+export type ModeloFormStepState = {
+  step: ModeloFormStep;
+  status: ModeloFormStepStatus;
+};
+
+/**
+ * How far one step has got.
+ */
+export type ModeloFormStepStatus = "done" | "current" | "blocked" | "pending";
+
+/**
  * One displayed text and the honest account of where it came from.
  */
 export type ModeloFormText = {
@@ -874,6 +914,8 @@ export type ModeloFormVerdict = {
   status: VerificationCompletenessStatus | null;
   words: string;
   unapplied_words: string | null;
+  checked_words: string | null;
+  checked_resolves: boolean;
 };
 
 /**
@@ -1300,59 +1342,4 @@ export type PublicModeloFormPrintedRate = {
   ratio: string;
   unit: ModeloFormRateUnit;
   literal: string;
-};
-
-/**
- * Typed local-human workbench view of ModeloFormPriorValueAttestation.
- */
-export type PublicModeloFormPriorValueAttestation = {
-  binding_id: string;
-  edit_address: ModeloFormBindingAddressV1;
-  intent: ModeloEditBindingIntentKind;
-  family_id: string;
-  earlier_filings: PublicModeloFormEarlierFiling[];
-  source_words: string;
-  action_words: string;
-  statement_words: string;
-  effect_words: string;
-  stated: boolean;
-  admitted: boolean;
-  refusal_reason: ModeloFormPriorValueRefusal | null;
-  refusal_words: string | null;
-  refusal: PreconditionVerdictSnapshot | null;
-  withdrawal: ModeloFormPriorValueWithdrawal | null;
-};
-
-/**
- * Typed local-human workbench view of ModeloFormRate; the ratio keeps its
- * exact decimal text.
- */
-export type PublicModeloFormRate = {
-  ratio: string;
-  unit: ModeloFormRateUnit;
-  binding_id: string;
-};
-
-/**
- * Typed local-human workbench view of ModeloFormRepeatingBlock.
- */
-export type PublicModeloFormRepeatingBlock = {
-  kind: "repeating";
-  id: string;
-  columns: ModeloFormGridColumn[];
-  column_casilla_ids: (string | null)[];
-  column_data_types: string[];
-  min_rows: number;
-  max_rows: number | null;
-  rows_known: boolean;
-  rows: PublicModeloFormRepeatingRow[];
-};
-
-/**
- * Typed local-human workbench view of ModeloFormRepeatingRow.
- */
-export type PublicModeloFormRepeatingRow = {
-  index: number;
-  values: (PublicScalarValueV1 | null)[];
-  value_texts: (string | null)[];
 };

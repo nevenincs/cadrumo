@@ -11,10 +11,8 @@ import {
   servedRefusalWords,
   type LedgerErrorDetail,
 } from "../../../shell/ledger";
-import type {
-  CounterpartyFilingName as StatedFilingName,
-  LedgerCounterpartyResult,
-} from "../../../shell/ledgerClassificationSetup";
+import type { CounterpartyFilingNameProjection as StatedFilingName } from "../../../shell/ledgerClassificationContract";
+import type { LedgerCounterpartyResult } from "../../../shell/ledgerClassificationSetup";
 import {
   COUNTERPARTY_KINDS,
   type CounterpartyKind,
@@ -181,7 +179,7 @@ export function CounterpartyFilingName({
       )}
     </EditorField>
   );
-  // The party kinds are shown as the backend names them; it serves no words for them.
+  // The party kinds are shown by their tokens.
   const kindWords = (kind: string) => kind;
   const setRendering = (at: number, change: Partial<RenderingDraft>) =>
     patch({

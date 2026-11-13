@@ -1958,6 +1958,10 @@ errors:
     refused_modelo_applicability_filter: Se encontró un nombre de filtro de aplicabilidad
       desconocido en el registro. Se trata de un error de autoría del registro; actualiza
       la tabla de despacho de filtros.
+    refused_modelo_assumed_value_unconfirmed: 'Esta declaración aún tiene %{unconfirmed_assumed_values}
+      valor(es) que nadie ha introducido, así que todavía no se puede verificar, registrar
+      como presentada ni exportar. Confirma cada uno indicándolo, o introduce el valor
+      correcto: %{boxes}.'
     refused_modelo_charge_account_missing: Se ha elegido una domiciliación pero no
       hay una cuenta de cargo registrada.
     refused_modelo_domiciliation_past_cutoff: La domiciliación de esta declaración

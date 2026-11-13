@@ -5,23 +5,28 @@
 // an add sends the figures of the answer to the very draft on the page.
 
 import type {
-  CatalogueInvoice,
-  InvoiceAddLine,
   InvoiceAddRequest,
-  InvoiceKind,
-  InvoicePreviewFinding,
-  InvoicePreviewLine,
-  InvoicePreviewRateSlot,
   InvoicePreviewRequest,
   InvoicePreviewResult,
   InvoiceUpdateRequest,
-  InvoiceUpdateValues,
 } from "../../../shell/ledgerInvoiceOperations";
+import type {
+  CatalogueInvoiceSnapshot,
+  InvoiceAddLine,
+  InvoiceKind,
+  InvoiceFiguresPreviewFinding,
+  InvoiceFiguresPreviewLine,
+  InvoiceFiguresPreviewRateSlot,
+  InvoiceFiguresPreviewRuleFinding,
+  InvoiceUpdateValues,
+} from "../../../shell/ledgerInvoiceContract";
 import type { PublicDecimal } from "../../../shell/ledger";
 import {
   INVOICE_UPDATE_FIELDS,
+  OPERATION_TYPES,
   isCorrectionJudged,
   type InvoiceUpdateField,
+  type OperationType,
   type PaymentStatus,
 } from "../../../shell/ledgerContract";
 import {
@@ -74,6 +79,11 @@ export const emptyLine = (key: string): LineDraft => ({
   statedIva: "",
 });
 
+/** What the ledger's preview found: a finding of a figure or of a document
+ * rule outside the figures, which share their shape. */
+export type PreviewFinding =
+  InvoiceFiguresPreviewFinding | InvoiceFiguresPreviewRuleFinding;
+
 /** Why a value was not taken: the grammar's refusal, a missing fact, a rule,
  * or what the ledger's preview found. */
 export type Problem =
@@ -82,8 +92,8 @@ export type Problem =
   | { kind: "rule"; rule: RuleProblem; values?: Record<string, string> }
   | {
       kind: "finding";
-      finding: InvoicePreviewFinding;
-      slots: readonly InvoicePreviewRateSlot[];
+      finding: PreviewFinding;
+      slots: readonly InvoiceFiguresPreviewRateSlot[];
       /** A document rule waits for the field to be left or the add to be
        * tried, so a form being filled in is not told off for what it lacks. */
       quiet?: boolean;
@@ -102,6 +112,11 @@ const grammar = (refusal: GrammarRefusal): Problem => ({
 });
 const decimal = (value: string): PublicDecimal => ({ decimal: value });
 const blankOr = (value: string) => (value === "" ? null : value);
+
+/** The Modelo 349 operation key a draft's text names, null where it names
+ * none. */
+const operationKey = (value: string): OperationType | null =>
+  OPERATION_TYPES.find((key) => key === value) ?? null;
 
 /** A decimal field: its value on the wire, or what keeps it off. */
 function decimalField(
@@ -146,7 +161,7 @@ function readLine(
   line: LineDraft,
   received: boolean,
   problems: Record<string, Problem>,
-): InvoicePreviewLine {
+): InvoiceFiguresPreviewLine {
   const note = (field: string, problem: Problem | null) => {
     if (problem) problems[`line:${line.key}:${field}`] = problem;
   };
@@ -207,7 +222,7 @@ const LINE_PLACES: Record<string, string> = {
 
 /** The field a finding is shown on, if the form has one. */
 function placeOf(
-  finding: InvoicePreviewFinding,
+  finding: PreviewFinding,
   invoicePlaces: Record<string, string>,
 ): string | null {
   const places = finding.line_key ? LINE_PLACES : invoicePlaces;
@@ -220,9 +235,9 @@ function placeOf(
 
 export type PlacedFindings = {
   /** Warnings by field: they inform, and never stop anything. */
-  warnings: Record<string, InvoicePreviewFinding>;
+  warnings: Record<string, PreviewFinding>;
   /** Findings with no field of their own. */
-  general: InvoicePreviewFinding[];
+  general: PreviewFinding[];
 };
 
 /** Puts each finding on its field. A refusal becomes that field's problem,
@@ -419,7 +434,7 @@ export function readDraft(
         : null,
       currency: CURRENCY.test(currency) ? currency.toUpperCase() : null,
       iva_category: blankOr(draft.ivaCategory),
-      operation_type: blankOr(draft.operationType),
+      operation_type: operationKey(draft.operationType),
       rectifies_invoice_number:
         draft.invoiceClass === correctiveClass ? rectifies.value : null,
       recargo_amount: recargo.value,
@@ -608,7 +623,7 @@ const SUFFIX = /^(.*?)(\d+)$/;
  * that year gets none: there is nothing to follow.
  */
 export function suggestNumber(
-  invoices: readonly CatalogueInvoice[],
+  invoices: readonly CatalogueInvoiceSnapshot[],
   want: {
     kind: InvoiceKind | null;
     invoiceClass: InvoiceClass;
@@ -672,7 +687,9 @@ export type CorrectionDraft = {
   paymentId: string;
 };
 
-export function correctionOf(invoice: CatalogueInvoice): CorrectionDraft {
+export function correctionOf(
+  invoice: CatalogueInvoiceSnapshot,
+): CorrectionDraft {
   const rate = invoice.retention_rate?.decimal ?? null;
   return {
     counterpartyName: invoice.counterparty_name,
@@ -695,7 +712,7 @@ export function correctionOf(invoice: CatalogueInvoice): CorrectionDraft {
 /** A correction's retención. A stored rate finer than a person types is seeded
  * in full and stands as stored until retyped: it is neither refused nor sent. */
 function correctionRetention(
-  invoice: CatalogueInvoice,
+  invoice: CatalogueInvoiceSnapshot,
   draft: CorrectionDraft,
 ) {
   const read = readRetention(draft.retentionRate, draft.retentionAmount);
@@ -721,7 +738,7 @@ function percentText(fraction: string): string | null {
 /** A correction as the ledger is asked about it: its lines are fixed, so the
  * stored base and total stand in for them, and `stored` says so. */
 export function correctionPreview(
-  invoice: CatalogueInvoice,
+  invoice: CatalogueInvoiceSnapshot,
   draft: CorrectionDraft,
   correctiveClass: string | null,
 ): InvoicePreviewRequest {
@@ -774,7 +791,7 @@ export const isPaymentId = (text: string): boolean | null => {
  * the ledger judges goes only once its answer, `current`, refuses nothing;
  * that answer covers the stated facts, and the update checks the whole record. */
 export function checkCorrection(
-  invoice: CatalogueInvoice,
+  invoice: CatalogueInvoiceSnapshot,
   draft: CorrectionDraft,
   current: InvoicePreviewResult | null,
   correctiveClass: string | null,
@@ -813,8 +830,9 @@ export function checkCorrection(
     set("payment_status", draft.paymentStatus);
   if ((draft.ivaCategory || null) !== invoice.iva_category)
     set("iva_category", draft.ivaCategory || null);
-  if ((draft.operationType || null) !== invoice.operation_type)
-    set("operation_type", draft.operationType || null);
+  const operationType = operationKey(draft.operationType);
+  if (operationType !== invoice.operation_type)
+    set("operation_type", operationType);
   const operation = parseIsoDate(draft.operationDate);
   if (operation.kind === "refused")
     problems.operation_date = grammar(operation.refusal);
@@ -899,12 +917,13 @@ export function checkCorrection(
 /** Whether `invoice` now holds what `request` asked for: a correction read
  * back after its outcome was not seen. */
 export function holdsCorrection(
-  invoice: CatalogueInvoice,
+  invoice: CatalogueInvoiceSnapshot,
   request: InvoiceUpdateRequest,
 ): boolean {
   const { values, fields } = request.patch;
+  const named: Readonly<Record<string, unknown>> = values;
   return fields.every((field) => {
-    const wanted = values[field] ?? null;
+    const wanted = named[field] ?? null;
     if (field === "payment_id") return true;
     const stored =
       (invoice as unknown as Record<string, unknown>)[field] ?? null;
@@ -973,7 +992,7 @@ const fold = (text: string) =>
 
 /** An invoice's number as the catalogue writes it, with its series where
  * the number does not already start with it. */
-export function seriesAndNumber(invoice: CatalogueInvoice): string {
+export function seriesAndNumber(invoice: CatalogueInvoiceSnapshot): string {
   const series = invoice.series;
   return series && !invoice.invoice_number.startsWith(series)
     ? `${series} ${invoice.invoice_number}`
@@ -984,9 +1003,9 @@ export function seriesAndNumber(invoice: CatalogueInvoice): string {
  * number, series, counterparty, tax id and notes, and amounts written
  * either way. */
 export function filterCatalogue(
-  invoices: readonly CatalogueInvoice[],
+  invoices: readonly CatalogueInvoiceSnapshot[],
   filter: CatalogueFilter,
-): CatalogueInvoice[] {
+): CatalogueInvoiceSnapshot[] {
   const span = filter.period ? periodBounds(filter.period) : null;
   // A period whose days are not served keeps nothing: it is not known to hold
   // any invoice, and no span is made up for it.
@@ -1021,7 +1040,7 @@ export function filterCatalogue(
 }
 
 function sortValue(
-  invoice: CatalogueInvoice,
+  invoice: CatalogueInvoiceSnapshot,
   key: CatalogueSortKey,
 ): string | number | null {
   switch (key) {
@@ -1072,11 +1091,14 @@ const DECIMAL_KEYS: ReadonlySet<CatalogueSortKey> = new Set([
 /** The invoices in `sort`'s order. Empty values go last either way, and
  * ties keep the issue date, newest first, then the number. */
 export function sortCatalogue(
-  invoices: readonly CatalogueInvoice[],
+  invoices: readonly CatalogueInvoiceSnapshot[],
   sort: CatalogueSort,
-): CatalogueInvoice[] {
+): CatalogueInvoiceSnapshot[] {
   const sign = sort.direction === "asc" ? 1 : -1;
-  const compare = (left: CatalogueInvoice, right: CatalogueInvoice) => {
+  const compare = (
+    left: CatalogueInvoiceSnapshot,
+    right: CatalogueInvoiceSnapshot,
+  ) => {
     const a = sortValue(left, sort.key);
     const b = sortValue(right, sort.key);
     if (a === null || b === null) return a === b ? 0 : a === null ? 1 : -1;

@@ -135,6 +135,28 @@ class CalculationSourceRef(BaseModel):
         return self
 
 
+BOUND_INPUT_SOURCE_REF_PREFIX: Final[str] = "bound_input:"
+"""Marks a source node that names one casilla value a resolver supplied directly rather than through a binding."""
+
+
+def bound_input_source_ref(casilla_id: CasillaId) -> str:
+    """Return the source reference of the node recording that a resolver supplied ``casilla_id``."""
+    return f"{BOUND_INPUT_SOURCE_REF_PREFIX}{casilla_id}"
+
+
+def bound_input_source_refs(rows: Iterable[CalculationSourceRef]) -> Mapping[CasillaId, CalculationSourceRef]:
+    """Index the nodes recording a resolver-supplied casilla value by that casilla, without reading any value."""
+    return MappingProxyType(
+        {
+            casilla_id: row
+            for row in rows
+            if row.lineage_role is CalculationSourceLineageRole.PRIMARY
+            and row.source_ref.startswith(BOUND_INPUT_SOURCE_REF_PREFIX)
+            for casilla_id in row.source_casilla_ids
+        }
+    )
+
+
 CALCULATION_SOURCE_ISSUE_MESSAGE_LIMIT: Final[int] = 512
 """A durable issue's technical account stops here, so a long one cannot fail the calculation it describes."""
 
