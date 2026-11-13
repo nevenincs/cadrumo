@@ -13,9 +13,11 @@ import { Household } from "./Household";
 
 // The household element on what the application served for synthetic profiles
 // through the `family_rows` stream of `user-profile.view`: every group, state,
-// leaf, the answers a leaf is asked after, limit, add and remove control and
-// refusal sentence is its served text in the story's language. A write lands
-// in the fixture and the element reads it again.
+// leaf, limit, add and remove control and refusal sentence is its served text
+// in the story's language. Which leaves a person is asked is the product's ask
+// for each, served with the group or the person and, after an answer changes,
+// read again for the answers typed so far (the fixture answers the draft
+// read). A write lands in the fixture and the element reads it again.
 
 type ServedGroup = {
   kind: string;
@@ -98,11 +100,15 @@ function Element({
   locale,
   refuse,
   lose,
+  refuseDraft,
 }: {
   scenario: HouseholdScenario;
   locale: string;
   refuse?: HouseholdRefusal;
   lose?: boolean;
+  /** The first draft read is refused as the product refuses an invalid
+   * draft. */
+  refuseDraft?: boolean;
 }) {
   const fixture = useRef<HouseholdFixture | null>(null);
   if (fixture.current === null) {
@@ -110,6 +116,7 @@ function Element({
     fixture.current = householdFixture(scenario, locale);
     if (refuse) fixture.current.refuseNext(refuse);
     if (lose) fixture.current.loseNextAnswer();
+    if (refuseDraft) fixture.current.refuseNextDraft();
   }
   const served = fixture.current.reads;
   const reads: typeof served = {
@@ -117,6 +124,7 @@ function Element({
       if (readsFail) return Promise.reject({ code: "unavailable" });
       return served.household(...asked);
     },
+    householdDraft: served.householdDraft,
   };
   return (
     <div className="max-w-3xl">
@@ -292,55 +300,287 @@ export const AtTheCap: Story = {
   },
 };
 
+/** The leaves a dialog asks now, in the order drawn. */
+const askedIn = (dialog: HTMLElement) =>
+  [...dialog.querySelectorAll("[data-household-leaf]")].map((field) =>
+    field.getAttribute("data-household-leaf"),
+  );
+
+/** The leaves a dialog holds back until an answer is given, as it notes
+ * them. */
+const awaitingIn = (dialog: HTMLElement) =>
+  dialog
+    .querySelector("[data-household-awaiting]")
+    ?.getAttribute("data-household-awaiting")
+    ?.split(" ") ?? [];
+
+/** The household a scenario serves, read from a fixture of its own so the
+ * controls of the story's fixture stay as they are. */
+async function servedHousehold(scenario: HouseholdScenario, locale: string) {
+  const controls = window.__scenarioHousehold;
+  const household = await householdFixture(scenario, locale).reads.household(
+    locale,
+  );
+  window.__scenarioHousehold = controls;
+  return household;
+}
+
+/** The asks the product serves for a blank descendant. */
+async function servedAsks(scenario: HouseholdScenario, locale: string) {
+  const household = await servedHousehold(scenario, locale);
+  return household.groups.find((group) =>
+    group.group_key.endsWith("descendiente"),
+  )!.new_row_leaves;
+}
+
+async function openNewDescendant(
+  canvasElement: HTMLElement,
+  scenario: HouseholdScenario,
+  locale: string,
+) {
+  const shown = await groups(canvasElement);
+  await userEvent.click(
+    within(shown[0]!.element).getByRole("button", {
+      name: addWords(scenario, locale, 0),
+    }),
+  );
+  return within(document.body).findByRole("dialog");
+}
+
 export const NewPersonForm: Story = {
-  name: "New person: the served leaves, each asked only after the answers it is served after",
+  name: "New person: a leaf is shown only while its served ask is asked",
   render: (_, { globals }) => (
     <Element scenario="unknown" locale={language(globals)} />
   ),
   play: async ({ canvasElement, globals }) => {
     const locale = language(globals);
-    const shown = await groups(canvasElement);
-    const served = servedGroup("unknown", locale, 0);
-    await userEvent.click(
-      within(shown[0]!.element).getByRole("button", {
-        name: addWords("unknown", locale, 0),
-      }),
-    );
-    const dialog = await within(document.body).findByRole("dialog");
+    const dialog = await openNewDescendant(canvasElement, "unknown", locale);
     // The dialog is titled by the served add control.
     expect(
       within(dialog).getByRole("heading", {
         name: addWords("unknown", locale, 0),
       }),
     ).toBeTruthy();
-    const asked = () =>
-      [...dialog.querySelectorAll("[data-household-leaf]")].map((field) =>
-        field.getAttribute("data-household-leaf"),
-      );
-    // Every leaf served with no condition is asked, in served order, and no
-    // leaf served after an answer not yet given.
-    const always = served.leaves!.filter((leaf) => !leaf.shown_when.length);
-    const conditional = served.leaves!.filter((leaf) => leaf.shown_when.length);
-    expect(conditional.length).toBeGreaterThan(0);
-    expect(asked()).toEqual(always.map((leaf) => leaf.leaf));
-    // Answering what a leaf is served after asks it.
-    const leaf = conditional[0]!;
-    const condition = leaf.shown_when[0]!;
-    const on = served.leaves!.find((entry) => entry.leaf === condition.leaf)!;
-    const choice = on.choices.find(
-      (entry) => entry.value === condition.equals,
+    const asks = await servedAsks("unknown", locale);
+    const asked = asks.filter((entry) => entry.ask === "asked");
+    expect(asked.length).toBeGreaterThan(0);
+    expect(asks.length).toBeGreaterThan(asked.length);
+    // Exactly the leaves served as asked are drawn, in served order, and no
+    // draft was read for them.
+    expect(askedIn(dialog)).toEqual(asked.map((entry) => entry.leaf));
+    expect(window.__scenarioHousehold!.drafts()).toHaveLength(0);
+  },
+};
+
+export const AnswerAsksALeaf: Story = {
+  name: "Answer: an answer is read by the product and the leaf it asks appears; taking it back hides it",
+  render: (_, { globals }) => (
+    <Element scenario="unknown" locale={language(globals)} />
+  ),
+  play: async ({ canvasElement, globals }) => {
+    const locale = language(globals);
+    const dialog = await openNewDescendant(canvasElement, "unknown", locale);
+    const served = servedGroup("unknown", locale, 0);
+    const relation = served.leaves!.find((entry) => entry.leaf === "relacion")!;
+    const adopted = relation.choices.find(
+      (entry) => entry.value === "adoptado",
     )!;
-    await userEvent.selectOptions(
-      within(dialog).getByRole("combobox", { name: on.label }),
-      choice.label,
+    const select = () =>
+      within(dialog).getByRole("combobox", { name: relation.label });
+    expect(askedIn(dialog)).not.toContain("inscripcion_registro_civil");
+    await userEvent.selectOptions(select(), adopted.label);
+    await waitFor(() =>
+      expect(askedIn(dialog)).toContain("inscripcion_registro_civil"),
     );
-    await waitFor(() => expect(asked()).toContain(leaf.leaf));
-    // Taking the answer back stops asking it.
+    // The product was asked once, with the answer typed and nothing else.
+    expect(window.__scenarioHousehold!.drafts()).toEqual([
+      {
+        group: "renta_family.descendiente",
+        facts: [{ leaf: "relacion", value: "adoptado" }],
+      },
+    ]);
+    // Taking the answer back asks it no more.
     await userEvent.selectOptions(
-      within(dialog).getByRole("combobox", { name: on.label }),
+      select(),
       translator(locale)("desktop.profile.not_set"),
     );
-    await waitFor(() => expect(asked()).not.toContain(leaf.leaf));
+    await waitFor(() =>
+      expect(askedIn(dialog)).not.toContain("inscripcion_registro_civil"),
+    );
+  },
+};
+
+export const LeafNotAsked: Story = {
+  name: "Not asked: an answered leaf the product no longer asks after is not drawn",
+  render: (_, { globals }) => (
+    <Element scenario="unknown" locale={language(globals)} />
+  ),
+  play: async ({ canvasElement, globals }) => {
+    const locale = language(globals);
+    const dialog = await openNewDescendant(canvasElement, "unknown", locale);
+    const served = servedGroup("unknown", locale, 0);
+    const lives = served.leaves!.find((entry) => entry.leaf === "convivencia")!;
+    const no = lives.choices.find((entry) => entry.value === "false")!;
+    const yes = lives.choices.find((entry) => entry.value === "true")!;
+    const select = () =>
+      within(dialog).getByRole("combobox", { name: lives.label });
+    await userEvent.selectOptions(select(), no.label);
+    await waitFor(() =>
+      expect(askedIn(dialog)).toContain("dependencia_economica"),
+    );
+    await userEvent.selectOptions(select(), yes.label);
+    await waitFor(() =>
+      expect(askedIn(dialog)).not.toContain("dependencia_economica"),
+    );
+    // The product served it as not asked, not as waiting for an answer.
+    expect(awaitingIn(dialog)).not.toContain("dependencia_economica");
+  },
+};
+
+export const LeafAwaitsAnswer: Story = {
+  name: "Awaits answer: a leaf whose governing answer is missing shows nothing, and is noted",
+  render: (_, { globals }) => (
+    <Element scenario="unknown" locale={language(globals)} />
+  ),
+  play: async ({ canvasElement, globals }) => {
+    const locale = language(globals);
+    const dialog = await openNewDescendant(canvasElement, "unknown", locale);
+    const awaiting = (await servedAsks("unknown", locale))
+      .filter((entry) => entry.ask === "awaits_answer")
+      .map((entry) => entry.leaf);
+    expect(awaiting.length).toBeGreaterThan(0);
+    // No field and no words are drawn for them; the dialog only notes them.
+    for (const leaf of awaiting)
+      expect(
+        dialog.querySelector(`[data-household-leaf="${leaf}"]`),
+      ).toBeNull();
+    expect(awaitingIn(dialog)).toEqual(awaiting);
+  },
+};
+
+export const StoredPersonAsks: Story = {
+  name: "Stored person: the form starts from the asks served with the person, without a read",
+  render: (_, { globals }) => (
+    <Element scenario="rows" locale={language(globals)} />
+  ),
+  play: async ({ canvasElement, globals }) => {
+    const locale = language(globals);
+    const t = translator(locale);
+    const shown = await groups(canvasElement);
+    const household = await servedHousehold("rows", locale);
+    const first = household.groups[0]!.rows[0]!.leaf_asks;
+    await userEvent.click(
+      within(shown[0]!.element).getAllByRole("button", {
+        name: t("desktop.profile.household.edit_person", { number: 1 }),
+      })[0]!,
+    );
+    const dialog = await within(document.body).findByRole("dialog");
+    expect(askedIn(dialog)).toEqual(
+      first.filter((entry) => entry.ask === "asked").map((entry) => entry.leaf),
+    );
+    // This person is served a leaf as not asked, which stays out.
+    expect(first.some((entry) => entry.ask === "not_asked")).toBe(true);
+    expect(window.__scenarioHousehold!.drafts()).toHaveLength(0);
+  },
+};
+
+export const SubmitsOnlyAskedLeaves: Story = {
+  name: "Saved: a leaf typed and then no longer asked is not sent",
+  render: (_, { globals }) => (
+    <Element scenario="unknown" locale={language(globals)} />
+  ),
+  play: async ({ canvasElement, globals }) => {
+    const locale = language(globals);
+    const t = translator(locale);
+    const node = await openNewDescendant(canvasElement, "unknown", locale);
+    const dialog = within(node);
+    const served = servedGroup("unknown", locale, 0);
+    const leaf = (key: string) =>
+      served.leaves!.find((entry) => entry.leaf === key)!;
+    const relation = leaf("relacion");
+    const choose = (value: string) =>
+      userEvent.selectOptions(
+        dialog.getByRole("combobox", { name: relation.label }),
+        relation.choices.find((entry) => entry.value === value)!.label,
+      );
+    await userEvent.type(
+      dialog.getByRole("textbox", {
+        name: new RegExp(servedLabel("unknown", locale, 0, "birth_date")),
+      }),
+      "2020-01-02",
+    );
+    await choose("adoptado");
+    await waitFor(() =>
+      expect(askedIn(node)).toContain("inscripcion_registro_civil"),
+    );
+    await userEvent.type(
+      dialog.getByRole("textbox", {
+        name: new RegExp(leaf("inscripcion_registro_civil").label),
+      }),
+      "2021-03-04",
+    );
+    await choose("tutela");
+    await waitFor(() =>
+      expect(askedIn(node)).not.toContain("inscripcion_registro_civil"),
+    );
+    const save = dialog.getByRole("button", {
+      name: t("desktop.profile.save"),
+    });
+    await waitFor(() => expect(save).toBeEnabled());
+    await userEvent.click(save);
+    await waitFor(() => expect(sentEdits()).toHaveLength(1));
+    expect(sentEdits()[0]).toEqual({
+      kind: "descendants",
+      add_row: {
+        facts: [
+          { field_key: "birth_date", value: "2020-01-02" },
+          { field_key: "relacion", value: "tutela" },
+        ],
+      },
+    });
+  },
+};
+
+export const InvalidDraftRefused: Story = {
+  name: "Invalid draft: the refusal is shown in the product's words, Save waits, and the next answer reads again",
+  render: (_, { globals }) => (
+    <Element scenario="unknown" locale={language(globals)} refuseDraft />
+  ),
+  play: async ({ canvasElement, globals }) => {
+    const locale = language(globals);
+    const t = translator(locale);
+    const node = await openNewDescendant(canvasElement, "unknown", locale);
+    const dialog = within(node);
+    const served = servedGroup("unknown", locale, 0);
+    const relation = served.leaves!.find((entry) => entry.leaf === "relacion")!;
+    const choose = (value: string) =>
+      userEvent.selectOptions(
+        dialog.getByRole("combobox", { name: relation.label }),
+        relation.choices.find((entry) => entry.value === value)!.label,
+      );
+    await userEvent.type(
+      dialog.getByRole("textbox", {
+        name: new RegExp(servedLabel("unknown", locale, 0, "birth_date")),
+      }),
+      "2020-01-02",
+    );
+    // The sentence is the one the draft read was refused with, in the
+    // existing refusal alert; every required answer is given, so only the
+    // refused read holds Save.
+    const refusal = await within(document.body).findByRole("alert");
+    expect(refusal).toHaveAttribute("data-household-refusal");
+    expect(refusal.textContent ?? "").not.toBe("");
+    const save = dialog.getByRole("button", {
+      name: t("desktop.profile.save"),
+    });
+    expect(save).toBeDisabled();
+    // The next answer asks the product again; its answer clears the refusal.
+    await choose("tutela");
+    await waitFor(() =>
+      expect(node.querySelector("[data-household-refusal]")).toBeNull(),
+    );
+    await waitFor(() => expect(save).toBeEnabled());
+    expect(window.__scenarioHousehold!.drafts()).toHaveLength(2);
   },
 };
 

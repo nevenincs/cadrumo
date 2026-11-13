@@ -10,6 +10,7 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 import type {
   HouseholdGroup,
+  HouseholdDraft,
   HouseholdGroupState,
   HouseholdPersonEdit,
   HouseholdQuestion,
@@ -34,6 +35,7 @@ import {
 } from "./householdModel";
 import {
   HouseholdPersonDialog,
+  type DraftOutcome,
   type PersonAction,
 } from "./HouseholdPersonDialog";
 
@@ -91,6 +93,7 @@ const STATE: Record<
 const FAILURE_WORDS: Record<string, string> = {
   not_signed_in: "desktop.profile.signed_out",
   refused: "desktop.profile.refused",
+  invalid_household_draft: "desktop.profile.refused",
   conflict: "desktop.profile.conflict",
   unknown: "desktop.profile.unknown",
   saved_unread: "desktop.profile.saved_unread",
@@ -135,7 +138,7 @@ type Opened = Open & { read: ProfileHousehold };
 type Notice = { kind: "saved" } | { kind: "failed"; failure: Failure } | null;
 
 export type HouseholdProps = {
-  reads: Pick<ProfileCompanionPort, "household">;
+  reads: Pick<ProfileCompanionPort, "household" | "householdDraft">;
   change: UserProfilePort["change"];
   /** Told whenever the profile changes elsewhere, where the host reports it. */
   observe?: UserProfilePort["observe"];
@@ -485,6 +488,26 @@ export function Household({
     }
   }, [reads, language]);
 
+  // Which leaves a person with unsaved answers is asked is the product's to
+  // resolve. A refusal or a failed read comes back as the sentence to tell.
+  const readAsks = useCallback(
+    async (draft: HouseholdDraft): Promise<DraftOutcome> => {
+      try {
+        const answer = await reads.householdDraft(language, draft, {
+          sessionEnded: () =>
+            !alive.current || windowEnded.current?.() === true,
+          // The dialog tells this refusal in the product's words.
+          answered: (code) => code === "invalid_household_draft",
+        });
+        if (answer.group_key === draft.group) return { asks: answer.leaf_asks };
+        return { words: t("desktop.profile.unavailable") };
+      } catch (error) {
+        return { words: wordsOf(failureOf(error), t) };
+      }
+    },
+    [reads, language, t],
+  );
+
   useEffect(() => {
     alive.current = true;
     shown.current = false;
@@ -646,6 +669,7 @@ export function Household({
             action={open.action}
             busy={saving}
             words={failure ? wordsOf(failure, t) : null}
+            readAsks={readAsks}
             onClose={() => {
               setOpen(null);
               setNotice(null);

@@ -387,6 +387,17 @@ export interface HostCommands {
     args: { language: string };
     result: import("../shell/profileHousehold").ProfileHousehold;
   };
+  /** Which leaves one person with unsaved answers is asked, resolved by the
+   * product. The draft is a hidden input: no value of it is stored, logged or
+   * echoed. Rejects with `{ code }`: `not_signed_in`, `unavailable` or
+   * `invalid_household_draft` (with `refusal_words`). */
+  user_profile_household_draft: {
+    args: {
+      language: string;
+      draft: import("../shell/profileHousehold").HouseholdDraft;
+    };
+    result: import("../shell/profileHousehold").HouseholdDraftAnswer;
+  };
   /** What `profile` states for the imputation election of `taxYear`, with
    * the setup wizard's own questions and words in `language`. */
   user_profile_imputation_election: {

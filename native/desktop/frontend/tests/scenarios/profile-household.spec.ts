@@ -244,6 +244,71 @@ test.describe("the household in the profile page", () => {
     expect(writes[0]!.expected_revision).toBeGreaterThan(0);
   });
 
+  test("a leaf is shown while the product asks it, and an answer is read by the product", async ({
+    page,
+  }) => {
+    const household = await open(page, "unknown");
+    await group(household, DESCENDANTS)
+      .getByRole("button", { name: addWords("unknown", 0) })
+      .click();
+    const dialog = page.getByRole("dialog");
+    const leaf = (key: string) =>
+      dialog.locator(`[data-household-leaf="${key}"]`);
+    const leaves = groupsOf("unknown", "en")[0]!.leaves as {
+      leaf: string;
+      label: string;
+      choices?: { value: string; label: string }[];
+    }[];
+    const relation = leaves.find((entry) => entry.leaf === "relacion")!;
+    // Asked: no condition. Awaiting: its governing answer is missing, so
+    // nothing is drawn for it.
+    await expect(leaf("relacion")).toBeVisible();
+    await expect(leaf("inscripcion_registro_civil")).toHaveCount(0);
+    expect(
+      await page.evaluate(() => window.__scenarioHousehold!.drafts()),
+    ).toHaveLength(0);
+    await dialog.getByRole("combobox", { name: relation.label }).selectOption({
+      label: relation.choices!.find((entry) => entry.value === "adoptado")!
+        .label,
+    });
+    await expect(leaf("inscripcion_registro_civil")).toBeVisible();
+    // The answer went to the product as a draft, and nothing else did.
+    expect(
+      await page.evaluate(() => window.__scenarioHousehold!.drafts()),
+    ).toEqual([
+      {
+        group: DESCENDANTS,
+        facts: [{ leaf: "relacion", value: "adoptado" }],
+      },
+    ]);
+    expect(
+      await page.evaluate(() => window.__scenarioHousehold!.writes()),
+    ).toHaveLength(0);
+  });
+
+  test("a refused draft is told in the refusal alert and holds Save until the next answer", async ({
+    page,
+  }) => {
+    const household = await open(page, "unknown");
+    await page.evaluate(() => window.__scenarioHousehold!.refuseNextDraft());
+    await group(household, DESCENDANTS)
+      .getByRole("button", { name: addWords("unknown", 0) })
+      .click();
+    const dialog = page.getByRole("dialog");
+    const born = groupsOf("unknown", "en")[0]!.leaves!.find(
+      (entry) => entry.leaf === "birth_date",
+    )!.label;
+    await dialog.getByRole("textbox", { name: born }).fill("2020-01-02");
+    const save = dialog.getByRole("button", {
+      name: label("desktop.profile.save"),
+    });
+    await expect(dialog.getByRole("alert")).toBeVisible();
+    await expect(save).toBeDisabled();
+    await dialog.getByRole("textbox", { name: born }).fill("2020-01-03");
+    await expect(dialog.getByRole("alert")).toHaveCount(0);
+    await expect(save).toBeEnabled();
+  });
+
   test("a person is removed by the index the read served, through the served remove control", async ({
     page,
   }) => {
