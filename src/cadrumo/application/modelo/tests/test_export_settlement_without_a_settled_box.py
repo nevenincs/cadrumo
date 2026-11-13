@@ -1,4 +1,4 @@
-"""A Modelo 100 whose revision computes no settled box pays or refunds its result only while nothing is suspended.
+"""A revision that computes no settled box pays or refunds its result only while nothing is suspended.
 
 The dictionary of every ejercicio states "Resultado a ingresar o a devolver
 (casilla [0670] o casilla [0695])": the remainder 0695 once the spouse
@@ -6,9 +6,13 @@ compensation suspends part of an amount to pay (0693), otherwise the result
 0670. A revision that computes no box of that role has no remainder, so its
 settlement reads the result while the suspended part is nothing and refuses a
 positive part as unsupported rather than pay the result in the remainder's
-place. The years come from the registry's support envelope and from what each
-revision computes, never from a list here. Each expected amount is read from
-the calculated draft's own boxes.
+place. Every supported ejercicio of the shipped registry now computes the
+settled box, so that settlement is no longer reachable from a published
+revision; it stays the rule for a revision that computes none. Each such
+revision here is the published one of a supported ejercicio with its computed
+settled box made a manual one, which is exactly the shape the rule reads. The
+years come from the registry's support envelope, never from a list here. Each
+expected amount is read from the calculated draft's own boxes.
 """
 
 from __future__ import annotations
@@ -25,6 +29,7 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from ....domain.calculations.registry.payment_instalment_split import first_instalment_share
 from ....domain.calculations.registry.result_casillas import derive_result_disposition
+from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.calculations.registry.tests.authored_editions import supported_authored_exercises
 from ....domain.deadlines.models import RefundAccount
@@ -36,7 +41,11 @@ from ...filing.draft_construction import build_draft
 from ...filing.runtime import ModeloOperatorProfile, RegistrySchemaAccessor, build_runtime_schema_provider
 from ...filing.tests.export_support import filer_with_nothing_else
 from ..export_settlement import SettlementRefusal, declared_settlement, settlement_dictionary_values
-from ..settlement_casilla import declaration_settlement_casilla_id, declaration_settlement_remainder_casilla_ids
+from ..settlement_casilla import (
+    declaration_settlement_casilla_id,
+    declaration_settlement_remainder_casilla_ids,
+    settlement_casilla_role,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -48,15 +57,31 @@ _WITHHELD = "renta-retencion-soportada-trabajo"
 _REFUND_IBAN = "ES9121000418450200051332"
 
 
+def _without_the_settled_box(revision: ModeloRevision) -> ModeloRevision:
+    """The revision with every computed box of the settlement role made a manual one, so it computes none."""
+    role = settlement_casilla_role("100")
+    assert role is not None
+    return revision.model_copy(
+        update={
+            "casillas": tuple(
+                casilla.model_copy(update={"input_kind": InputKind.MANUAL})
+                if casilla.semantic_role == role and casilla.input_kind is InputKind.COMPUTED
+                else casilla
+                for casilla in revision.casillas
+            )
+        }
+    )
+
+
 def _years_settled_from_the_result(operation: PinnedAuthorityOperation) -> list[int]:
-    """The supported ejercicios whose revision computes no settled box, so it settles from its result."""
-    years = []
-    for year in supported_authored_exercises("100"):
-        provider = _provider(operation, year)
-        revision = provider.get_snapshot("100").revision
-        if declaration_settlement_remainder_casilla_ids("100", revision):
-            years.append(year)
+    """The supported ejercicios, each read with its settled box removed so it settles from its result."""
+    years = list(supported_authored_exercises("100"))
+    assert years
     return years
+
+
+def _settling_from_the_result(operation: PinnedAuthorityOperation, year: int) -> ModeloRevision:
+    return _without_the_settled_box(_provider(operation, year).get_snapshot("100").revision)
 
 
 def _provider(operation: PinnedAuthorityOperation, year: int) -> RegistrySchemaAccessor:
@@ -97,7 +122,7 @@ def _money(draft: ModeloDraft, casilla_id: CasillaId) -> Decimal:
 
 def _compose(
     operation: PinnedAuthorityOperation,
-    provider: RegistrySchemaAccessor,
+    revision: ModeloRevision,
     year: int,
     draft: ModeloDraft,
     instalment: PaymentInstalmentElection = PaymentInstalmentElection.SINGLE,
@@ -107,9 +132,7 @@ def _compose(
     disposition = derive_result_disposition("100", {_RESULT: _money(draft, _RESULT)}, period=period)
     return settlement_dictionary_values(
         disposition=disposition,
-        settlement=declared_settlement(
-            "100", provider.get_snapshot("100").revision, _values(draft), disposition=disposition
-        ),
+        settlement=declared_settlement("100", revision, _values(draft), disposition=disposition),
         instalment=instalment,
         first_instalment_share=first_instalment_share("100", period_day=period.end_date, authority=operation),
         charge_account=None,
@@ -117,14 +140,20 @@ def _compose(
     )
 
 
-def test_at_least_one_supported_year_settles_from_its_result(operation: PinnedAuthorityOperation) -> None:
-    """Guards the years below from running over nothing, as the revisions that compute 0700 are not among them."""
+def test_every_supported_year_computes_the_settled_box_so_only_a_revision_without_it_settles_from_the_result(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """The published revisions all compute RESINGDEV; the revision without it has the result as its settled box."""
     years = _years_settled_from_the_result(operation)
 
-    assert years
     for year in years:
-        revision = _provider(operation, year).get_snapshot("100").revision
-        assert declaration_settlement_casilla_id("100", revision) == _RESULT
+        published = _provider(operation, year).get_snapshot("100").revision
+        assert declaration_settlement_remainder_casilla_ids("100", published) == (), year
+        assert declaration_settlement_casilla_id("100", published) != _RESULT, year
+
+        revision = _settling_from_the_result(operation, year)
+        assert declaration_settlement_casilla_id("100", revision) == _RESULT, year
+        assert declaration_settlement_remainder_casilla_ids("100", revision) == (_SUSPENDED, _WAIVED), year
 
 
 def test_a_plain_amount_to_pay_is_paid_and_split_from_the_result(operation: PinnedAuthorityOperation) -> None:
@@ -137,8 +166,14 @@ def test_a_plain_amount_to_pay_is_paid_and_split_from_the_result(operation: Pinn
         result = _money(draft, _RESULT)
         assert result > 0 and _values(draft)[_SUSPENDED] is None, year
 
-        at_once = _compose(operation, provider, year, draft)
-        split = _compose(operation, provider, year, draft, PaymentInstalmentElection.TWO_INSTALMENTS_SECOND_PAID)
+        at_once = _compose(operation, _settling_from_the_result(operation, year), year, draft)
+        split = _compose(
+            operation,
+            _settling_from_the_result(operation, year),
+            year,
+            draft,
+            PaymentInstalmentElection.TWO_INSTALMENTS_SECOND_PAID,
+        )
 
         assert at_once == {"TIPODECLARACION": "I", "ING_IMPORTE": result, "ING_CUENTACORRIENTE": None}, year
         first, second = split["ING_IMPORTE_PF1"], split["ING_IMPORTE_PF2"]
@@ -155,12 +190,12 @@ def test_a_suspended_part_is_refused_because_the_remainder_is_not_computed(
         if not _result_is_calculated(provider):
             inputs[str(_RESULT)] = Decimal("900.00")
         draft = _draft(provider, year, inputs)
-        revision = provider.get_snapshot("100").revision
+        settling = _settling_from_the_result(operation, year)
         assert _money(draft, _SUSPENDED) == Decimal("200.00") and _money(draft, _RESULT) > 0, year
 
-        settled = declared_settlement("100", revision, _values(draft), disposition=None)
+        settled = declared_settlement("100", settling, _values(draft), disposition=None)
         with pytest.raises(ModeloExportError) as refused:
-            _compose(operation, provider, year, draft)
+            _compose(operation, _settling_from_the_result(operation, year), year, draft)
 
         assert settled.refusal is SettlementRefusal.SETTLEMENT_UNSUPPORTED, year
         assert refused.value.context == {"cause": "settlement_unsupported", "result_disposition": "I"}, year
@@ -179,12 +214,12 @@ def test_a_waived_refund_is_refused_because_the_remainder_is_not_computed(
         else:
             inputs[str(_RESULT)] = Decimal("-1000.00")
         draft = _draft(provider, year, inputs)
-        revision = provider.get_snapshot("100").revision
+        settling = _settling_from_the_result(operation, year)
         assert _money(draft, _WAIVED) == Decimal("400.00") and _money(draft, _RESULT) < 0, year
 
-        settled = declared_settlement("100", revision, _values(draft), disposition=None)
+        settled = declared_settlement("100", settling, _values(draft), disposition=None)
         with pytest.raises(ModeloExportError) as refused:
-            _compose(operation, provider, year, draft)
+            _compose(operation, _settling_from_the_result(operation, year), year, draft)
 
         assert settled.refusal is SettlementRefusal.SETTLEMENT_UNSUPPORTED, year
         assert refused.value.context == {"cause": "settlement_unsupported", "result_disposition": "D"}, year
@@ -195,7 +230,7 @@ def test_a_waived_part_left_blank_is_nothing_as_the_calculation_reads_it(
     operation: PinnedAuthorityOperation,
 ) -> None:
     for year in _years_settled_from_the_result(operation):
-        revision = _provider(operation, year).get_snapshot("100").revision
+        revision = _settling_from_the_result(operation, year)
         values: dict[CasillaId, object] = {_RESULT: Decimal("-310.40"), _WAIVED: None}
 
         settled = declared_settlement("100", revision, values, disposition=None)
@@ -209,8 +244,7 @@ def test_a_suspended_part_left_blank_is_nothing_as_the_calculation_reads_it(
     operation: PinnedAuthorityOperation,
 ) -> None:
     for year in _years_settled_from_the_result(operation):
-        provider = _provider(operation, year)
-        revision = provider.get_snapshot("100").revision
+        revision = _settling_from_the_result(operation, year)
         values: dict[CasillaId, object] = {_RESULT: Decimal("900.00"), _SUSPENDED: None}
 
         settled = declared_settlement("100", revision, values, disposition=None)
@@ -230,7 +264,7 @@ def test_a_refund_is_paid_out_from_the_result(operation: PinnedAuthorityOperatio
         result = _money(draft, _RESULT)
         assert result < 0, year
 
-        rows = _compose(operation, provider, year, draft)
+        rows = _compose(operation, _settling_from_the_result(operation, year), year, draft)
 
         assert rows == {
             "TIPODECLARACION": "D",

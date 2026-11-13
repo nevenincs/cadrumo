@@ -1,9 +1,12 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, userEvent, waitFor, within } from "storybook/test";
+import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 import type { ModeloShape } from "../../../dev/modeloFixture";
 import { EXPORT_DISCLOSURE } from "../../../dev/modeloExportDisclosure";
 import { translator } from "../../../shell/strings";
-import type { ModeloWorkbenchFormProjectionV1 } from "../../../shell/modeloContract/modeloWorkForm";
+import type {
+  ModeloFormExportHold,
+  ModeloWorkbenchFormProjectionV1,
+} from "../../../shell/modeloContract/modeloWorkForm";
 import { StorySession, typedAmount } from "../details/Details.stories";
 import { FilingView } from "./FilingView";
 import { ReviewDialog } from "./ReviewDialog";
@@ -139,16 +142,20 @@ const checked = (envelope: ModeloWorkbenchFormProjectionV1) => {
   envelope.calculation_revision_id ??= "e".repeat(64);
 };
 
+const HOLD_TAKEN = fn();
+
 function Filing({
   locale,
   declaration,
   adjust,
   shape,
+  onTakeAction = () => undefined,
 }: {
   locale: unknown;
   declaration: string;
   adjust?: (envelope: ModeloWorkbenchFormProjectionV1) => void;
   shape?: ModeloShape;
+  onTakeAction?: (action: ModeloFormExportHold["action"]) => void;
 }) {
   return (
     <StorySession
@@ -164,7 +171,7 @@ function Filing({
             port={props.port}
             language={props.language}
             session={props.session}
-            onOpenCheck={() => undefined}
+            onTakeAction={onTakeAction}
             onReread={props.reread}
             openLink={() => undefined}
           />
@@ -179,6 +186,39 @@ export const FilingHeld: Story = {
   render: (_, { globals }) => (
     <Filing locale={globals.locale} declaration={M130} />
   ),
+};
+
+// The hold names the action that lifts it, and the view's one door takes
+// that action; it picks none of its own.
+export const FilingHoldNamesItsAction: Story = {
+  name: "Export and record · the hold's door takes the action it names",
+  render: (_, { globals }) => (
+    <Filing
+      locale={globals.locale}
+      declaration={M130}
+      adjust={(envelope) => {
+        envelope.header.export_hold = {
+          reason: "verify",
+          count: 0,
+          words: "Synthetic hold.",
+          action: "verify",
+        };
+      }}
+      onTakeAction={HOLD_TAKEN}
+    />
+  ),
+  play: async ({ canvasElement, globals }) => {
+    HOLD_TAKEN.mockClear();
+    const t = translator(String(globals.locale));
+    const door = await within(canvasElement).findByRole(
+      "button",
+      { name: t("workspace.modelo.next_button.verify") },
+      { timeout: READ_WAIT },
+    );
+    expect(door).toHaveAttribute("data-hold-action", "verify");
+    await userEvent.click(door);
+    await waitFor(() => expect(HOLD_TAKEN).toHaveBeenCalledWith("verify"));
+  },
 };
 
 export const FilingReady: Story = {
