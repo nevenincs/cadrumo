@@ -104,6 +104,9 @@ def literal(value: object) -> str:
     return json.dumps(value, ensure_ascii=False)
 
 
+_SCALAR_TYPES = {"string": "string", "integer": "number", "number": "number", "boolean": "boolean", "null": "null"}
+
+
 class TypeScriptWriter:
     """Render JSON-schema definitions as TypeScript types, one per definition."""
 
@@ -129,38 +132,56 @@ class TypeScriptWriter:
     def type_of(self, node: Mapping[str, Any]) -> str:
         """The TypeScript type of one schema node."""
         if "$ref" in node:
-            name = node["$ref"].rsplit("/", 1)[-1]
-            if self.inlined(name):
-                return self.type_of(self._defs[name])
-            self.named.add(name)
-            return ts_name(name)
+            return self._reference_type(node["$ref"])
         if "const" in node:
             return literal(node["const"])
         if "enum" in node:
             return " | ".join(literal(value) for value in node["enum"])
         for key in ("anyOf", "oneOf"):
             if key in node:
-                members: list[str] = []
-                for member in node[key]:
-                    rendered = self.type_of(member)
-                    if rendered not in members:
-                        members.append(rendered)
-                return " | ".join(members)
+                return self._union_type(node[key])
         kind = node.get("type")
         if kind == "array":
-            if "prefixItems" in node:
-                return "[" + ", ".join(self.type_of(item) for item in node["prefixItems"]) + "]"
-            item = self.type_of(node.get("items", {}))
-            return f"({item})[]" if " | " in item else f"{item}[]"
+            return self._array_type(node)
         if kind == "object":
-            values = node.get("additionalProperties")
-            value = self.type_of(values) if isinstance(values, dict) else "unknown"
-            return f"{{ [key: string]: {value} }}"
+            return self._map_type(node)
+        return self._scalar_type(kind)
+
+    def _scalar_type(self, kind: object) -> str:
+        """A scalar ``type``, or the union of a list of types each written as its own node."""
         if isinstance(kind, list):
             return " | ".join(self.type_of({"type": each}) for each in cast(list[str], kind))
-        return {"string": "string", "integer": "number", "number": "number", "boolean": "boolean", "null": "null"}.get(
-            cast(str, kind), "unknown"
-        )
+        return _SCALAR_TYPES.get(cast(str, kind), "unknown")
+
+    def _reference_type(self, reference: str) -> str:
+        """A ``$ref``: the referenced scalar written in place, else the definition's name."""
+        name = reference.rsplit("/", 1)[-1]
+        if self.inlined(name):
+            return self.type_of(self._defs[name])
+        self.named.add(name)
+        return ts_name(name)
+
+    def _union_type(self, alternatives: Iterable[Mapping[str, Any]]) -> str:
+        """The members of an ``anyOf``/``oneOf``, each written once, in schema order."""
+        members: list[str] = []
+        for member in alternatives:
+            rendered = self.type_of(member)
+            if rendered not in members:
+                members.append(rendered)
+        return " | ".join(members)
+
+    def _array_type(self, node: Mapping[str, Any]) -> str:
+        """A tuple for ``prefixItems``, else an array of the item type, parenthesised when it is a union."""
+        if "prefixItems" in node:
+            return "[" + ", ".join(self.type_of(item) for item in node["prefixItems"]) + "]"
+        item = self.type_of(node.get("items", {}))
+        return f"({item})[]" if " | " in item else f"{item}[]"
+
+    def _map_type(self, node: Mapping[str, Any]) -> str:
+        """A string-keyed record of the ``additionalProperties`` type, ``unknown`` when it is not a schema."""
+        values = node.get("additionalProperties")
+        value = self.type_of(values) if isinstance(values, dict) else "unknown"
+        return f"{{ [key: string]: {value} }}"
 
     def definition(self, name: str) -> str:
         """The exported TypeScript type of definition ``name``, with its docstring as JSDoc."""
