@@ -54,6 +54,10 @@ from .counterparty_establishment_ports import (
     CounterpartyEstablishmentRepositoryProtocol,
 )
 from .counterparty_filing_name_kind_findings import CounterpartyFilingNameFinding, filing_name_kind_findings
+from .counterparty_filing_name_rendering import (
+    LEDGER_COUNTERPARTY_FILING_NAME_PART_MAX,
+    CounterpartyFilingNameRendering,
+)
 from .counterparty_filing_name_slots import (
     CounterpartyFilingNamePartLimit,
     CounterpartyFilingNameSlot,
@@ -71,8 +75,6 @@ LEDGER_COUNTERPARTY_ASSERTED_BY_MAX = 256
 """The longest attribution label a counterparty confirmation takes."""
 LEDGER_COUNTERPARTY_PROVINCIA_LENGTH = 2
 """An INE provincia code is two digits; which codes exist is the registry catalogue's."""
-LEDGER_COUNTERPARTY_FILING_NAME_PART_MAX = 256
-"""The longest stated name part a filing-name statement takes; the field width is the layout's."""
 LEDGER_COUNTERPARTY_FILING_NAME_KIND_MAX = 32
 """The longest party-kind token a filing-name statement takes; which kinds exist is the domain's."""
 LEDGER_COUNTERPARTY_FILING_NAME_RENDERINGS_MAX = 16
@@ -146,14 +148,6 @@ def _require_non_confirmation_action_fields(
         or (action != "view" and evidenced_scope is not None)
     ):
         raise ValueError("counterparty action contains fields outside its declared purpose")
-
-
-class CounterpartyFilingNameRendering(BaseModel):
-    """A shorter rendering the person states for a field of one width."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    width: int = Field(gt=0)
-    text: str = Field(min_length=1, max_length=LEDGER_COUNTERPARTY_FILING_NAME_PART_MAX)
 
 
 class LedgerCounterpartyRequest(BaseModel):

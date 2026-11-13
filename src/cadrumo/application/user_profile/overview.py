@@ -75,6 +75,7 @@ from .completeness import (
 )
 from .field_help import ProfileFieldEjercicioAnswer, profile_field_ejercicio_answers, profile_field_help
 from .projections import profile_schema_for_record, record_to_path_values
+from .row_parts import ProfileFieldPart, ProfileFieldPartsSpec, field_parts
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Mapping
@@ -335,6 +336,16 @@ class ProfileFieldView(BaseModel):
     Declared by the schema, so a generic editor offers the rows of that section
     to pick from instead of asking for a row key.
     """
+    parts: tuple[ProfileFieldPart, ...] | None = Field(default=None)
+    """The typed sub-rows of a packed field's stored text, or ``None``.
+
+    Served beside :attr:`value`, which stays the one stored text. ``None`` for a field that is
+    not packed and for a packed value that does not parse (then :attr:`parts_spec` is marked
+    invalid); an unstated packed field serves an empty list. The parts are read by the one
+    canonical parser, so a surface never parses the text.
+    """
+    parts_spec: ProfileFieldPartsSpec | None = Field(default=None)
+    """What a packed field's part is and its sub-fields in words, or ``None`` for a field that is not packed."""
     row_index: str | None = Field(default=None)
     """Which instance of a repeated fact this row belongs to, if any.
 
@@ -393,7 +404,10 @@ def relocalize_profile_field(view: ProfileFieldView) -> ProfileFieldView:
         )
     elif view.field_type is ProfileFieldType.ENUM:
         choices = _enum_field_choices(tuple(item.value for item in choices), path=f"{section}.{field_key}")
-    return view.model_copy(update={"label": label, "choices": choices})
+    served = field_parts(section, field_key, view.value, masked=view.masked)
+    return view.model_copy(
+        update={"label": label, "choices": choices, "parts": served.parts, "parts_spec": served.spec}
+    )
 
 
 class ProfileSectionView(BaseModel):
@@ -538,6 +552,7 @@ def _field_view(
     choices = profile_field_choices(field, path=f"{section_key}.{field.key}") or wizard_choices.get(
         f"{section_key}.{field.key}", ()
     )
+    served = field_parts(section_key, field.key, raw, masked=masked)
     return ProfileFieldView(
         path=path,
         label=f"{profile_field_label(section_key, field) or tr('flows.manager.field_unavailable')}{label_suffix}",
@@ -553,6 +568,8 @@ def _field_view(
         help=help_lines,
         about=field.description,
         references_section=field.references_section,
+        parts=served.parts,
+        parts_spec=served.spec,
         row_index=row_index,
     )
 

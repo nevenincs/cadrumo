@@ -22,10 +22,10 @@ import typer
 
 from ...application.ledger.counterparty_establishment import confirmed_counterparty_facts_key
 from ...application.ledger.counterparty_filing_name_kind_findings import CounterpartyFilingNameFinding
+from ...application.ledger.counterparty_filing_name_rendering import CounterpartyFilingNameRendering
 from ...application.ledger.counterparty_operation import (
     CounterpartyFactProjection,
     CounterpartyFilingNameProjection,
-    CounterpartyFilingNameRendering,
     LedgerCounterpartyRequest,
 )
 from ...core.i18n.render import tr

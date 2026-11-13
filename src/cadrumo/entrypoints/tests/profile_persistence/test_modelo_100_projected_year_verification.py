@@ -79,12 +79,12 @@ _NO_PENDING_NEGATIVE_BASES: dict[BindingId, Decimal] = {
         for origin in ("em4-pendiente-inicio", "em3-pendiente-inicio", "em2-pendiente-inicio", "anterior")
     },
     **{
-        f"renta-saldo-negativo-{source}-ahorro-em{age}-pendiente-inicio": Decimal("0")
-        for source in ("gyp", "rcm")
-        for age in (1, 2, 3, 4)
+        f"renta-saldo-negativo-{kind}-ahorro-{origin}-pendiente-inicio": Decimal("0")
+        for kind in ("rcm", "gyp")
+        for origin in ("em1", "em2", "em3", "em4")
     },
 }
-"""The pending negative general bases (LIRPF art. 50.3) and savings balances (art. 49.2) a single employee states as none."""
+"""The pending negative general bases (LIRPF art. 50.3) and savings balances (art. 49) a single employee states as none."""
 
 
 def _seed_profile(filing_year: int) -> None:

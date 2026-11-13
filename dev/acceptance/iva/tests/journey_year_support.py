@@ -8,12 +8,22 @@ the newest exercise every journey can prove end to end is that edition's.
 
 from __future__ import annotations
 
+from datetime import UTC, date, datetime
 from pathlib import Path
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.domain.calculations.registry.authority import IndexedRegistryAuthority
 
 from ..filing_year import IvaFilingYearUnsupportedError, require_journey_year
+
+
+def _year_has_ended(year: int) -> bool:
+    """Whether ``year`` has closed today, so its last quarter can be observed and attested.
+
+    The journeys record the fourth quarter's Modelo 390 attestation on 31 December, and the
+    application refuses an observation dated after the moment it is recorded.
+    """
+    return datetime.now(UTC).date() > date(year, 12, 31)
 
 
 def newest_fully_authored_journey_year(authority_root: Path) -> int:
@@ -34,6 +44,7 @@ def newest_fully_authored_journey_year(authority_root: Path) -> int:
                 for revision in operation.modelo_directory("390").revisions
                 if operation.revision("390", str(revision.id)).effective_authority_grade
                 is RegistryAuthorityGrade.FILING
+                and _year_has_ended(revision.valid_from.year)
             )
     finally:
         authority.close()
@@ -53,6 +64,8 @@ def supported_journey_years(authority_root: Path, coordinates: tuple[tuple[str, 
         authority.close()
     supported: list[int] = []
     for year in envelope_years:
+        if not _year_has_ended(year):
+            continue
         try:
             require_journey_year(authority_root=authority_root, year=year, coordinates=coordinates)
         except IvaFilingYearUnsupportedError:

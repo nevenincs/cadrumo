@@ -99,9 +99,9 @@ from ...application.ledger.classify_requests import (
     LedgerClassifyPatchField,
     LedgerClassifyRequest,
 )
+from ...application.ledger.counterparty_filing_name_rendering import CounterpartyFilingNameRendering
 from ...application.ledger.counterparty_operation import (
     LEDGER_COUNTERPARTY_OPERATION_DEFINITION_ID,
-    CounterpartyFilingNameRendering,
     LedgerCounterpartyRequest,
     LedgerCounterpartyResult,
 )

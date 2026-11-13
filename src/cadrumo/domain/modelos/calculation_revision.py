@@ -107,7 +107,7 @@ from .calculation_revision_sources import (
     validate_revision_source_provenance,
 )
 from .calculation_screen_stamp import CalculationScreenStamp
-from .errors import ModeloError, ModeloValidatedRecord, ModeloValidationError
+from .errors import LedgerFilingCoverageError, ModeloValidatedRecord, ModeloValidationError
 from .filing_text import ModeloActorLabel, OperatorReason
 from .invoice_fingerprint import InvoiceFingerprintSnapshot
 from .ledger_filing_snapshot import LedgerFilingEvidence, LedgerFilingSnapshot
@@ -1070,18 +1070,6 @@ class CalculationRevisionCatalogue(BaseModel):
         return isinstance(revision_id, str) and revision_id in self.revisions
 
 
-class LedgerFilingCoverageError(ModeloError):
-    """Raised when a persisted revision's snapshot and evidence contributor sets diverge.
-
-    A ledger-derived revision bundles a ``ledger_filing_snapshot`` (the
-    fingerprinted contributor set) and a ``ledger_filing_evidence`` (the typed
-    fact basis). The two are projected from the same ``source_transaction_ids``
-    and MUST cover the same contributors. A divergence on read-back means a
-    contributor row was silently dropped after persistence; this gate surfaces it
-    on load rather than letting the filing artefact ship an unexplainable casilla.
-    """
-
-
 def assert_revision_snapshot_evidence_coverage(revision: CalculationRevision) -> None:
     """Cross-check a loaded revision's snapshot and evidence contributor coverage.
 
@@ -1121,7 +1109,6 @@ __all__ = [
     "CalculationRevisionCatalogue",
     "CalculationRevisionState",
     "FilingInstanceEvidence",
-    "LedgerFilingCoverageError",
     "M303RegimenSimplificadoAnnualSummaryHandoff",
     "assert_revision_snapshot_evidence_coverage",
     "calculation_revision_identity_inputs",

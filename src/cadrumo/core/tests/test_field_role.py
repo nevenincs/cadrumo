@@ -52,6 +52,11 @@ _EXPECTED_TOKENS = {
     "CATEGORY_ID": "category_id",
     "BUSINESS_PCT": "business_pct",
     "USAGE_RATIO_ID": "usage_ratio_id",
+    "ARRENDAMIENTO_REF": "arrendamiento_ref",
+    "INMUEBLE_REF": "inmueble_ref",
+    "GASTO_CAPITAL_INMOBILIARIO": "gasto_capital_inmobiliario",
+    "POSICION_REF": "posicion_ref",
+    "CONCEPTO_CAPITAL_MOBILIARIO": "concepto_capital_mobiliario",
 }
 
 

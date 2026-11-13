@@ -44,6 +44,11 @@ _CARRIES = (
     "renta-base-liquidable-negativa-general-em2-pendiente-inicio",
     "renta-base-liquidable-negativa-general-em3-pendiente-inicio",
     "renta-base-liquidable-negativa-general-em4-pendiente-inicio",
+    *(
+        f"renta-saldo-negativo-{kind}-ahorro-{origin}-pendiente-inicio"
+        for kind in ("gyp", "rcm")
+        for origin in ("em1", "em2", "em3", "em4")
+    ),
 )
 _LIMITATION_SUFFIX = "trabajo_deduction_not_computed"
 

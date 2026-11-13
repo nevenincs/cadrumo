@@ -142,24 +142,30 @@ def _year(raw: str, *, leaf: str, what: str) -> int:
     return int(raw)
 
 
+def valor_catastral_from_entry(
+    year: str, total: str, construccion: str, vigor: str = "", *, leaf: str
+) -> ValorCatastral:
+    """Judge the parts of one cadastral value; the text parser and a structured write share this."""
+    return _validated(
+        ValorCatastral,
+        {
+            "year": _year(year.strip(), leaf=leaf, what="an IBI year"),
+            "total": _money(total.strip(), leaf=leaf),
+            "construccion": _money(construccion.strip(), leaf=leaf),
+            "vigor": _year(vigor.strip(), leaf=leaf, what="a collective valuation year") if vigor.strip() else None,
+        },
+    )
+
+
 def parse_valores_catastrales(raw: str, *, leaf: str) -> tuple[ValorCatastral, ...]:
     """Read ``ANO:TOTAL:CONSTRUCCION[:VIGOR]`` entries into values ascending by IBI year.
 
     ``VIGOR`` is the year the collective valuation that set the values entered into force.
     """
-    values: list[ValorCatastral] = []
-    for year, total, construccion, vigor in _entries(raw, leaf=leaf, parts=4, optional=1):
-        values.append(
-            _validated(
-                ValorCatastral,
-                {
-                    "year": _year(year, leaf=leaf, what="an IBI year"),
-                    "total": _money(total, leaf=leaf),
-                    "construccion": _money(construccion, leaf=leaf),
-                    "vigor": _year(vigor, leaf=leaf, what="a collective valuation year") if vigor else None,
-                },
-            )
-        )
+    values = [
+        valor_catastral_from_entry(year, total, construccion, vigor, leaf=leaf)
+        for year, total, construccion, vigor in _entries(raw, leaf=leaf, parts=4, optional=1)
+    ]
     return tuple(sorted(values, key=lambda valor: valor.year))
 
 
@@ -172,12 +178,16 @@ def serialise_valores_catastrales(values: tuple[ValorCatastral, ...]) -> str:
     )
 
 
+def mejora_from_entry(fecha: str, importe: str, *, leaf: str) -> MejoraInmueble:
+    """Judge the parts of one improvement; the text parser and a structured write share this."""
+    return _validated(
+        MejoraInmueble, {"fecha": _date(fecha.strip(), leaf=leaf), "importe": _money(importe.strip(), leaf=leaf)}
+    )
+
+
 def parse_mejoras(raw: str, *, leaf: str) -> tuple[MejoraInmueble, ...]:
     """Read ``FECHA:IMPORTE`` entries into improvements ascending by date."""
-    mejoras = [
-        _validated(MejoraInmueble, {"fecha": _date(fecha, leaf=leaf), "importe": _money(importe, leaf=leaf)})
-        for fecha, importe in _entries(raw, leaf=leaf, parts=2)
-    ]
+    mejoras = [mejora_from_entry(fecha, importe, leaf=leaf) for fecha, importe in _entries(raw, leaf=leaf, parts=2)]
     return tuple(sorted(mejoras, key=lambda mejora: (mejora.fecha, mejora.importe)))
 
 
@@ -189,19 +199,21 @@ def serialise_mejoras(mejoras: tuple[MejoraInmueble, ...]) -> str:
     )
 
 
+def uso_from_entry(tipo: str, desde: str, hasta: str = "", *, leaf: str) -> UsoInmueble:
+    """Judge the parts of one use; the text parser and a structured write share this."""
+    return _validated(
+        UsoInmueble,
+        {
+            "tipo": tipo.strip(),
+            "desde": _date(desde.strip(), leaf=leaf),
+            "hasta": _date(hasta.strip(), leaf=leaf) if hasta.strip() else None,
+        },
+    )
+
+
 def parse_usos(raw: str, *, leaf: str) -> tuple[UsoInmueble, ...]:
     """Read ``TIPO:DESDE:HASTA`` entries into uses ascending by start date."""
-    usos = [
-        _validated(
-            UsoInmueble,
-            {
-                "tipo": tipo,
-                "desde": _date(desde, leaf=leaf),
-                "hasta": _date(hasta, leaf=leaf) if hasta else None,
-            },
-        )
-        for tipo, desde, hasta in _entries(raw, leaf=leaf, parts=3)
-    ]
+    usos = [uso_from_entry(tipo, desde, hasta, leaf=leaf) for tipo, desde, hasta in _entries(raw, leaf=leaf, parts=3)]
     return tuple(sorted(usos, key=lambda uso: (uso.desde, uso.tipo.value)))
 
 
@@ -213,14 +225,21 @@ def serialise_usos(usos: tuple[UsoInmueble, ...]) -> str:
     )
 
 
+def inquilino_from_entry(nif: str, franja: str, extranjero: str, *, leaf: str) -> Inquilino:
+    """Judge the parts of one tenant; the text parser and a structured write share this."""
+    if extranjero.strip() not in ("si", "no"):
+        raise _refuse("the foreign-identifier flag is si or no", leaf=leaf)
+    return _validated(
+        Inquilino, {"nif": nif.strip(), "franja_edad": franja.strip(), "extranjero": extranjero.strip() == "si"}
+    )
+
+
 def parse_inquilinos(raw: str, *, leaf: str) -> tuple[Inquilino, ...]:
     """Read ``NIF:FRANJA:EXTRANJERO`` entries into tenants in the order stated."""
-    inquilinos: list[Inquilino] = []
-    for nif, franja, extranjero in _entries(raw, leaf=leaf, parts=3):
-        if extranjero not in ("si", "no"):
-            raise _refuse("the foreign-identifier flag is si or no", leaf=leaf)
-        inquilinos.append(_validated(Inquilino, {"nif": nif, "franja_edad": franja, "extranjero": extranjero == "si"}))
-    return tuple(inquilinos)
+    return tuple(
+        inquilino_from_entry(nif, franja, extranjero, leaf=leaf)
+        for nif, franja, extranjero in _entries(raw, leaf=leaf, parts=3)
+    )
 
 
 def serialise_inquilinos(inquilinos: tuple[Inquilino, ...]) -> str:
@@ -465,6 +484,8 @@ __all__ = [
     "inmueble_from_row",
     "inmueble_row_values",
     "inmuebles_from_facts",
+    "inquilino_from_entry",
+    "mejora_from_entry",
     "money_text",
     "parse_inquilinos",
     "parse_mejoras",
@@ -475,4 +496,6 @@ __all__ = [
     "serialise_mejoras",
     "serialise_usos",
     "serialise_valores_catastrales",
+    "uso_from_entry",
+    "valor_catastral_from_entry",
 ]

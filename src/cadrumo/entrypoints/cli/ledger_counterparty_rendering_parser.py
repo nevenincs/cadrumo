@@ -6,7 +6,7 @@ which resolve every option's parser, load no behaviour target.
 
 from __future__ import annotations
 
-from ...application.ledger.counterparty_operation import CounterpartyFilingNameRendering
+from ...application.ledger.counterparty_filing_name_rendering import CounterpartyFilingNameRendering
 from ...core.cli_value_parsers import refuse_cli_value
 from ...core.i18n.render import tr
 

@@ -27,12 +27,9 @@ from ....domain.calculations.registry.casilla_membership import (
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
-from ....domain.modelos.calculation_revision import (
-    LedgerFilingCoverageError,
-    assert_revision_snapshot_evidence_coverage,
-)
+from ....domain.modelos.calculation_revision import assert_revision_snapshot_evidence_coverage
 from ....domain.modelos.codes import ModeloCode, coerce_modelo_code
-from ....domain.modelos.errors import ModeloValidationError
+from ....domain.modelos.errors import LedgerFilingCoverageError, ModeloValidationError
 from ....domain.modelos.row_models import (
     Modelo184MemberRow,
     Modelo184ShareSumError,

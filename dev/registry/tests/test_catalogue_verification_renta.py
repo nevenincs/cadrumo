@@ -110,7 +110,7 @@ def test_lirpf_work_and_capital_income_foundations_link_to_full_boe_corpus() -> 
                 "Rendimiento en caso de parentesco.",
                 "sea el cónyuge o un pariente",
                 "hasta el tercer grado inclusive",
-                "no podrá ser inferior al que resulte de las reglas del artículo 85",
+                "el rendimiento neto total no podrá ser inferior al que resulte de",
             ),
         ),
         (
@@ -273,8 +273,8 @@ def test_lirpf_state_quota_chain_links_to_full_boe_corpus() -> None:
             (
                 "Cuota líquida estatal.",
                 "La cuota líquida estatal del Impuesto será el resultado de disminuir la cuota íntegra estatal",
-                "deducción por inversión en empresas de nueva o reciente creación",
-                "50 por ciento del importe total de las deducciones",
+                "50 por ciento del importe total de las deducciones previstas en los apartados "
+                "2, 3, 4 y 5 del artículo 68",
                 "no podrá ser negativo",
             ),
         ),

@@ -76,6 +76,7 @@ _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: CasillaId = validated_casilla_id(
 )
 _M100_CASILLA_0180: CasillaId = validated_casilla_id("0180", surface="_M100_CASILLA_0180")
 _M100_CASILLA_0695: CasillaId = validated_casilla_id("0695", surface="_M100_CASILLA_0695")
+_M100_CASILLA_RESINGDEV: CasillaId = validated_casilla_id("RESINGDEV", surface="_M100_CASILLA_RESINGDEV")
 _M100_CASILLA_0067: CasillaId = validated_casilla_id("0067", surface="_M100_CASILLA_0067")
 _M130_PAGOS_FRACCIONADOS_ANTERIORES_CASILLA: CasillaId = validated_casilla_id(
     "05",
@@ -516,7 +517,11 @@ class TestSubmittedFileObservation:
             assert titular.value_kind is CasillaValueKind.TEXT
             assert observed_values[_M100_CASILLA_0180] == "26.26"
             assert observed_values[_M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA] == "37.37"
-            assert observed_values[_M100_CASILLA_0695] == "87.87"
+            # The edition prints [0695] on the RESINGDEV row as well as on the TCPP112 and TCNN112 rows;
+            # each row reads the casilla its edition declares for it, so the settlement result lands on
+            # RESINGDEV and never on the remainder box 0695, which the specimen leaves unprinted.
+            assert observed_values[_M100_CASILLA_RESINGDEV] == "87.87"
+            assert _M100_CASILLA_0695 not in observed_values
             # `0067` (CURBA, "Urbana") is an `LGC` row, so the parser hands back a
             # bool; the observation records the artefact's own token, never a
             # Python repr such as "True".

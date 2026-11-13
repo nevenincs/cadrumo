@@ -220,6 +220,8 @@ formulas = [
     "renta-iic-perdidas-reducidas-suma",
     "renta-saldo-capital-mobiliario-cap-25-base-ahorro",
     "renta-capital-mobiliario-saldo-pendiente-base-ahorro",
+    "renta-capital-mobiliario-ahorro-saldo-positivo",
+    "renta-capital-mobiliario-ahorro-saldo-negativo",
 ]
 [[revisions."2020".constructs]]
 id = "renta-mini-model-ganancias-patrimoniales"

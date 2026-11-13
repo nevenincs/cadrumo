@@ -67,16 +67,17 @@ _ENTITY = (
     UserProfileFact(path="iva.group_dominant_entity_enrolled", value=True),
 )
 _PRIOR_INCOME = "irpf.previous_year_economic_activity_net_income"
+#: The carries of the negative general base (LIRPF art. 50.3) and of the negative savings balances (art. 49) pending
+#: from the four previous ejercicios, which one return of the earlier ejercicios states together.
 _PENDING_BASES = (
     "renta-base-liquidable-negativa-general-anterior",
     "renta-base-liquidable-negativa-general-em2-pendiente-inicio",
     "renta-base-liquidable-negativa-general-em3-pendiente-inicio",
     "renta-base-liquidable-negativa-general-em4-pendiente-inicio",
-    # LIRPF art. 49.2 compensates the pending negative savings balances of the four earlier returns, per source.
     *(
-        f"renta-saldo-negativo-{source}-ahorro-em{age}-pendiente-inicio"
-        for source in ("gyp", "rcm")
-        for age in (1, 2, 3, 4)
+        f"renta-saldo-negativo-{kind}-ahorro-{origin}-pendiente-inicio"
+        for kind in ("gyp", "rcm")
+        for origin in ("em1", "em2", "em3", "em4")
     ),
 )
 _M130_INSTALMENTS = "renta-modelo-130-pagos-fraccionados"
@@ -139,7 +140,6 @@ _DECLARATIONS = (
             "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": "200",
             "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": "200",
             "modelo-200-incn-periodo-impositivo-anterior": "200",
-            # One box per Modelo 202 instalment, each credited from the modality that applied (art. 40.2 or 40.3).
             **dict.fromkeys(
                 (
                     f"modelo-200-pago-fraccionado-{instalment}-{modality}"
