@@ -2,7 +2,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import type { EvidenceRecord } from "../../../shell/ledgerDocumentOperations";
-import type { CatalogueInvoice } from "../../../shell/ledgerInvoiceOperations";
+import type { CatalogueInvoiceSnapshot } from "../../../shell/ledgerInvoiceContract";
 import type { InvoiceDuplicateView } from "../../../shell/ledgerInvoiceDuplicate";
 import type { StageEvent, StagedAction } from "../../../shell/ledgerStage";
 import { useStrings } from "../../../shell/strings";
@@ -31,7 +31,7 @@ export function DuplicateNotice({
   duplicateCheck: InvoiceDuplicateView;
   /** The reading states enough to ask about a duplicate. */
   asked: boolean;
-  duplicate: CatalogueInvoice | null;
+  duplicate: CatalogueInvoiceSnapshot | null;
   record: EvidenceRecord | null;
   reference: DocumentReference;
   actions: StagedAction[];

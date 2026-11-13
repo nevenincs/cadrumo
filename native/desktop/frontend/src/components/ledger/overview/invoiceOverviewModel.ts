@@ -4,7 +4,7 @@
 
 import { facts } from "../../../shell/compose";
 import type { PublicDecimal } from "../../../shell/ledger";
-import type { CatalogueInvoice } from "../../../shell/ledgerInvoiceOperations";
+import type { CatalogueInvoiceSnapshot } from "../../../shell/ledgerInvoiceContract";
 import type { Translate } from "../../../shell/strings";
 import { formatDay } from "../../../shared/dateFormats";
 import { formatAmount, formatPercent } from "../../../shared/numbers";
@@ -37,7 +37,10 @@ const money = (
         },
       );
 
-function chipsOf(t: Translate, invoice: CatalogueInvoice): OverviewChip[] {
+function chipsOf(
+  t: Translate,
+  invoice: CatalogueInvoiceSnapshot,
+): OverviewChip[] {
   const status = invoice.payment_status;
   return [
     {
@@ -59,7 +62,7 @@ function chipsOf(t: Translate, invoice: CatalogueInvoice): OverviewChip[] {
 export function invoiceOverview(
   t: Translate,
   locale: string,
-  invoice: CatalogueInvoice,
+  invoice: CatalogueInvoiceSnapshot,
 ): OverviewModel {
   const notSet = t("desktop.ledger.inspector.not_set");
   const foreign = invoice.currency !== "EUR";

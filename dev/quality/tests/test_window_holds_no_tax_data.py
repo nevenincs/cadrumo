@@ -1742,6 +1742,7 @@ def test_the_generated_outputs_are_read_from_the_drivers_that_write_them(outputs
         "shell/calendarContract.ts",
         "shell/ledgerClassificationContract.ts",
         "shell/ledgerContract.ts",
+        "shell/ledgerInvoiceContract.ts",
         "shell/modeloContract/contracts.ts",
         "shell/profileContract.ts",
     } <= set(outputs)

@@ -54,3 +54,7 @@ def test_the_driver_names_the_module_of_each_family(producer: ModuleType) -> Non
     for family in producer.FAMILIES:
         assert f'{family}: "src/shell/ledger' in text
     assert Path(_PRODUCER).name in text
+
+
+def test_window_types_are_named_only_for_a_family_the_producer_writes(producer: ModuleType) -> None:
+    assert set(cast("dict[str, object]", producer.FIELD_TYPES)) <= set(producer.FAMILIES)

@@ -20,7 +20,7 @@ import type {
   LedgerTransaction,
   PickedFile,
 } from "../../../shell/ledger";
-import type { InvoiceKind } from "../../../shell/ledgerInvoiceOperations";
+import type { InvoiceKind } from "../../../shell/ledgerInvoiceContract";
 import { publicPeriod, type LedgerPeriod } from "../../../shell/ledgerGrammar";
 import type { ShowImportBatch } from "../../../shell/ledgerImports";
 import { useStrings } from "../../../shell/strings";

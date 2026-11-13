@@ -29,7 +29,7 @@ import {
   type LedgerPort,
   type PickedFile,
 } from "../../../shell/ledger";
-import type { InvoiceKind } from "../../../shell/ledgerInvoiceOperations";
+import type { InvoiceKind } from "../../../shell/ledgerInvoiceContract";
 import { useStrings, type Translate } from "../../../shell/strings";
 import { formatTime } from "../../../shared/dateFormats";
 import { formatSize } from "../../../shared/numbers";

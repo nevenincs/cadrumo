@@ -8,11 +8,11 @@
 
 import type { FieldSpec } from "../../../shared/fieldKind";
 import { heldDecimal } from "../../../shared/numbers";
+import type { LedgerInvoiceDuplicateRequest } from "../../../shell/ledgerInvoiceOperations";
 import type {
-  CatalogueInvoice,
+  CatalogueInvoiceSnapshot,
   InvoiceKind,
-  LedgerInvoiceDuplicateRequest,
-} from "../../../shell/ledgerInvoiceOperations";
+} from "../../../shell/ledgerInvoiceContract";
 import type {
   ConfirmationBlocker,
   EvidenceConfirmRequest,
@@ -465,7 +465,7 @@ export function confirmation(input: {
   kind: InvoiceKind | null;
   country: string;
   corrections: Corrections;
-  duplicate: CatalogueInvoice | null;
+  duplicate: CatalogueInvoiceSnapshot | null;
   /** Whether the ledger has yet to say if this reading is in the catalogue. */
   duplicateUnread?: boolean;
   confirmAnyway: boolean;

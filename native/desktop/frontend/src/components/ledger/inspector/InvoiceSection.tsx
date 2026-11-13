@@ -6,10 +6,8 @@ import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 import { Icon } from "@/components/ui/icon";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio";
 import { facts } from "@/shell/compose";
-import type {
-  CatalogueInvoice,
-  InvoiceListResult,
-} from "../../../shell/ledgerInvoiceOperations";
+import type { InvoiceListResult } from "../../../shell/ledgerInvoiceOperations";
+import type { CatalogueInvoiceSnapshot } from "../../../shell/ledgerInvoiceContract";
 import type { LedgerPort, LedgerRow } from "../../../shell/ledger";
 import type { LedgerStagedRowAnswer } from "../../../shell/ledgerMovementOperations";
 import { useInvoiceMatches } from "../../../shell/ledgerInvoiceMatch";
@@ -118,11 +116,14 @@ export function InvoiceSection({
       ? null
       : t("desktop.ledger.inspector.invoice.active_only");
 
-  const link = (invoice: CatalogueInvoice) => {
+  const link = (invoice: CatalogueInvoiceSnapshot) => {
     onStage(stageLink(id, invoice.invoice_id));
     say(t("desktop.ledger.inspector.invoice.link_staged"));
   };
-  const linkButton = (invoice: CatalogueInvoice, size: "sm" | "xs" = "sm") => (
+  const linkButton = (
+    invoice: CatalogueInvoiceSnapshot,
+    size: "sm" | "xs" = "sm",
+  ) => (
     <Button size={size} disabled={lock !== null} onClick={() => link(invoice)}>
       <Icon name="link" />
       {t("desktop.ledger.inspector.invoice.link")}

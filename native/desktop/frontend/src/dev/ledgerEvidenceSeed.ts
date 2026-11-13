@@ -8,9 +8,9 @@ import type {
   FieldProvenance,
 } from "../shell/ledgerDocumentOperations";
 import type {
-  CatalogueInvoice,
+  CatalogueInvoiceSnapshot,
   InvoiceKind,
-} from "../shell/ledgerInvoiceOperations";
+} from "../shell/ledgerInvoiceContract";
 import type { PublicDecimal } from "../shell/ledger";
 import { fixtureDay, fixtureInstant } from "@/dev/fixtureDates";
 
@@ -389,7 +389,7 @@ export function catalogueInvoice(
     sourceName?: string | null;
     sourceSha?: string | null;
   },
-): CatalogueInvoice {
+): CatalogueInvoiceSnapshot {
   const total = facts.total ?? sum(facts.base, facts.iva);
   return {
     invoice_id: hex64(`invoice:${facts.kind}:${facts.number}:${facts.issued}`),
@@ -440,6 +440,7 @@ export function catalogueInvoice(
     grand_total_eur: null,
     referencia_catastral: null,
     settlement_amount: { decimal: total },
+    documents: [],
   };
 }
 

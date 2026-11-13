@@ -46,9 +46,9 @@ import type {
   EvidenceRecord,
 } from "../../../shell/ledgerDocumentOperations";
 import type {
-  CatalogueInvoice,
+  CatalogueInvoiceSnapshot,
   InvoiceKind,
-} from "../../../shell/ledgerInvoiceOperations";
+} from "../../../shell/ledgerInvoiceContract";
 import type { StageEvent, StageState } from "../../../shell/ledgerStage";
 import { readAnswer } from "../../../shell/ledgerWindow";
 import { useNavigationGuard } from "../../../shell/navigation/hooks";
@@ -141,7 +141,7 @@ export function DraftReview({
   reference: DocumentReference;
   record: EvidenceRecord | null;
   fileName: string;
-  invoices: CatalogueInvoice[] | null;
+  invoices: CatalogueInvoiceSnapshot[] | null;
   rows: LedgerRow[] | null;
   stage: StageState;
   onStage(event: StageEvent): void;

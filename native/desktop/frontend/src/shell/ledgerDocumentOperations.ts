@@ -10,7 +10,10 @@ import type {
   PublicDecimal,
 } from "./ledger";
 import type { EvidenceUpdateField } from "./ledgerContract";
-import type { CatalogueInvoice, InvoiceKind } from "./ledgerInvoiceOperations";
+import type {
+  CatalogueInvoiceSnapshot,
+  InvoiceKind,
+} from "./ledgerInvoiceContract";
 
 /** Documents added as evidence in one direction, read on this computer. */
 export type EvidenceBatchRequest = {
@@ -418,7 +421,7 @@ export type EvidenceConfirmResult = {
   source_sha256: string;
   reviewed_draft_sha256: string;
   confirmation: {
-    invoice: CatalogueInvoice;
+    invoice: CatalogueInvoiceSnapshot;
     draft: EvidenceDraft;
     /** False where the catalogue already held this confirmation. */
     created: boolean;

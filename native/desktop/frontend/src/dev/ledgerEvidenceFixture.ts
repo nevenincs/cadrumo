@@ -20,7 +20,7 @@ import type {
   EvidenceDraft,
   LabelReadingFallback,
 } from "../shell/ledgerDocumentOperations";
-import type { InvoiceKind } from "../shell/ledgerInvoiceOperations";
+import type { InvoiceKind } from "../shell/ledgerInvoiceContract";
 import type { JsonObject, JsonValue } from "../shell/ledger";
 import type {
   FixtureEvidence,

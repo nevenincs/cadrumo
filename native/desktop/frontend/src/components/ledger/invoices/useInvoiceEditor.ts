@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import type { CatalogueInvoice } from "../../../shell/ledgerInvoiceOperations";
+import type { CatalogueInvoiceSnapshot } from "../../../shell/ledgerInvoiceContract";
 import { useNavigationGuard } from "../../../shell/navigation/hooks";
 import { useStrings } from "../../../shell/strings";
 import { useVocabulary } from "../suggestions/SuggestionsProvider";
@@ -39,7 +39,7 @@ export function useInvoiceEditor({
         null)
       : null;
   // The stored invoice as it was opened: a write closes the editor.
-  const [stored] = useState<CatalogueInvoice | null>(opened);
+  const [stored] = useState<CatalogueInvoiceSnapshot | null>(opened);
   const draftState = useInvoiceEditorDraft(vocabulary.defaultClass);
   const { draft, setDraft } = draftState;
   const [correction, setCorrection] = useState<CorrectionDraft | null>(() =>
