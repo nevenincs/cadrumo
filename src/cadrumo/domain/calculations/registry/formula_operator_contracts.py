@@ -64,7 +64,6 @@ FORMULA_OPERATOR_ARITIES: Final[dict[FormulaOperator, FormulaOperatorArity]] = {
     "lookup_parameter": _UNARY,
     "lookup_bracket": _BINARY,
     "lookup_bracket_by_ccaa": _TERNARY,
-    "m100_resolve_renta_inmobiliaria_imputada": _exact(9),
     "irnr_resolve_tipo_gravamen": _exact(5),
     "m210_resolve_base_imponible": _exact(12),
     "lookup_parameter_by_entity_type": _TERNARY,

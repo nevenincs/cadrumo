@@ -6613,6 +6613,7 @@ sheets:
       dias_miembro: Nombre de dies com a membre
       direccion: Adreça
       disability_clave: Discapacitat
+      disposicion: A disposició
       domicilio_fiscal: Domicili fiscal del membre
       donor_legal_name: Nom o raó social del donant
       donor_tax_id: NIF del donant
@@ -6668,6 +6669,10 @@ sheets:
       importe_q3: Import 3T
       importe_q4: Import 4T
       importe_total: Import total
+      imputacion_dias: Dies a disposició
+      imputacion_porcentaje_disposicion: Disposició (%)
+      imputacion_valor_catastral: Valor cadastral (imputació)
+      imputacion_valor_catastral_revisado: Valor cadastral revisat
       incapacity_cash_perception: Percepció monetària derivada d'incapacitat laboral
       incapacity_cash_withholding: Retenció sobre prestacions d'incapacitat laboral
       incapacity_kind_ingreso_a_cuenta: Ingressos a compte per prestacions en espècie
@@ -6762,6 +6767,7 @@ sheets:
         objectiva)
       rendimiento_neto_previo_eo: Rendiment net previ (estimació objectiva)
       rendimiento_neto_reducido: Rendiment net reduït
+      renta_imputada: Renda imputada
       representative_nif: NIF del representant
       representative_tax_id: NIF del representant legal
       residence_country_code: Codi del país de residència
@@ -9886,6 +9892,9 @@ workspace:
           attribution_pass_through: 'No la presenta l''entitat mateixa: les rendes
             s''atribueixen als seus membres, que les declaren en les seves pròpies
             declaracions.'
+          incomplete: 'Sense decidir: amb les dades desades no es pot saber si aquesta
+            declaració et correspon. No compta com a obligatòria ni com a exclosa
+            fins que completis aquestes dades.'
           not_applicable: 'No et correspon: el teu perfil no exigeix aquesta declaració
             en aquest període.'
       title: Calendari fiscal

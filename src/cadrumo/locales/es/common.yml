@@ -6620,6 +6620,7 @@ sheets:
       dias_miembro: Número de días como miembro
       direccion: Dirección
       disability_clave: Discapacidad
+      disposicion: A disposición
       domicilio_fiscal: Domicilio fiscal del miembro
       donor_legal_name: Nombre o razón social del donante
       donor_tax_id: NIF del donante
@@ -6675,6 +6676,10 @@ sheets:
       importe_q3: Importe 3T
       importe_q4: Importe 4T
       importe_total: Importe total
+      imputacion_dias: Días a disposición
+      imputacion_porcentaje_disposicion: Disposición (%)
+      imputacion_valor_catastral: Valor catastral (imputación)
+      imputacion_valor_catastral_revisado: Valor catastral revisado
       incapacity_cash_perception: Percepción dineraria derivada de incapacidad laboral
       incapacity_cash_withholding: Retención sobre prestaciones de incapacidad laboral
       incapacity_kind_ingreso_a_cuenta: Ingresos a cuenta por prestaciones en especie
@@ -6770,6 +6775,7 @@ sheets:
         objetiva)
       rendimiento_neto_previo_eo: Rendimiento neto previo (estimación objetiva)
       rendimiento_neto_reducido: Rendimiento neto reducido
+      renta_imputada: Renta imputada
       representative_nif: NIF del representante
       representative_tax_id: NIF del representante legal
       residence_country_code: Código de país de residencia
@@ -9905,6 +9911,9 @@ workspace:
         verdict:
           attribution_pass_through: 'No la presenta la propia entidad: las rentas
             se atribuyen a sus miembros, que las declaran en sus propias declaraciones.'
+          incomplete: 'Sin decidir: con los datos guardados no se puede saber si esta
+            declaración te corresponde. No cuenta como obligatoria ni como excluida
+            hasta que completes esos datos.'
           not_applicable: 'No te corresponde: tu perfil no exige esta declaración
             en este periodo.'
       title: Calendario fiscal

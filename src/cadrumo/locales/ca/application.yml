@@ -2348,8 +2348,9 @@ application:
         acumulada a l''inici de l''exercici.'
       renta_inmueble_currency_unconverted: Un moviment vinculat és en moneda estrangera
         i no té valor en euros.
-      renta_inmueble_days_not_let: 'Immoble {record}: el vas tenir dies en què no
-        estava arrendat, i la renda imputada d''aquests dies no es calcula.'
+      renta_inmueble_days_unaccounted: 'Immoble {record}: el vas tenir dies en què
+        no estava arrendat ni en cap ús indicat; indica''n l''ús aquests dies per
+        calcular la renda imputada.'
       renta_inmueble_expense_row_on_lease: Un moviment de sortida està vinculat a
         un arrendament; vincula la despesa al seu immoble.
       renta_inmueble_expense_row_without_concept: Un moviment vinculat a un immoble
@@ -2358,6 +2359,17 @@ application:
         durant l''exercici, i el prorrateig de les seves despeses no s''ofereix.'
       renta_inmueble_improvement_in_ejercicio: 'Immoble {record}: una millora té data
         dins de l''exercici, i els seus dies d''amortització no es calculen.'
+      renta_inmueble_imputacion_rustica: 'Immoble {record}: és rústic i va estar a
+        la teva disposició; la renda imputada d''un immoble rústic no es calcula.'
+      renta_inmueble_imputacion_uso_simultaneo: 'Immoble {record}: algun dia a la
+        teva disposició coincideix amb un arrendament o un altre ús; la renda imputada
+        d''un ús simultani no es calcula.'
+      renta_inmueble_imputacion_valor_catastral_unstated: 'Immoble {record}: va estar
+        a la teva disposició, però no n''indiques el valor cadastral de l''exercici;
+        afegeix-lo per calcular la renda imputada.'
+      renta_inmueble_imputacion_vigor_unstated: 'Immoble {record}: no indiques l''any
+        d''entrada en vigor de la valoració col·lectiva del seu valor cadastral; afegeix-lo
+        per triar el percentatge de la renda imputada.'
       renta_inmueble_income_outside_lease: Un cobrament de lloguer té una data fora
         del període de l'arrendament al qual està vinculat.
       renta_inmueble_income_row_on_property: Un moviment d'entrada està vinculat a
@@ -4934,6 +4946,7 @@ application:
           remove: Elimina aquest certificat
         renta_arrendamiento:
           edit: Edita l'arrendament
+          end: Finalitza l'arrendament
           remove: Elimina l'arrendament
         renta_inmueble:
           edit: Edita l'immoble
@@ -4953,6 +4966,56 @@ application:
           {box}'
         summary_unplaced: '{holder}: {amount} EUR, clau {clave}, no arriba a cap casella;
           aquest import l''introdueixes tu'
+      reduction:
+        fact: '%{name}: %{value}'
+        fill_in: 'Indica: %{fact}'
+        no_ejercicio: Cap de les declaracions del Model 100 que has iniciat cobreix
+          un any en què aquest arrendament és vigent, per això no es mostra la reducció.
+          Inicia el Model 100 d'un d'aquests anys i torna a llegir-ho.
+        refusal:
+          lau_17_6_unstated: 'Exercici %{ejercicio}: no es pot derivar la reducció
+            perquè l''arrendament és en zona tensionada i falta aquesta dada: %{fact}.
+            Indica-la.'
+          lease_unreadable: 'Exercici %{ejercicio}: les dades d''aquest arrendament
+            no es poden llegir (%{fact}). Corregeix-les.'
+          mixed_tenant_ages: 'Exercici %{ejercicio}: només alguns arrendataris tenen
+            entre 18 i 35 anys, i aleshores la llei redueix només la seva part dels
+            ingressos, que cap dada desada indica. Revisa %{fact}.'
+          no_lease: 'Exercici %{ejercicio}: aquest exercici no té cap arrendament
+            del qual derivar la reducció.'
+          several_leases: 'Exercici %{ejercicio}: en aquest exercici hi ha diversos
+            arrendaments vigents i la reducció no es pot derivar d''ells alhora. Finalitza
+            l''anterior perquè en quedi un de sol.'
+          uso_vivienda_unstated: 'Exercici %{ejercicio}: no es pot derivar la reducció
+            perquè falta aquesta dada: %{fact}. Indica-la.'
+          zona_tensionada_unstated: 'Exercici %{ejercicio}: no es pot derivar la reducció
+            perquè falta aquesta dada: %{fact}. Indica-la.'
+        tenant_band:
+          ages_18_to_35: de 18 a 35 anys
+          not_a_person: no és persona física
+          other_ages: d'una altra edat
+        tier:
+          legacy: reducció del %{rate} % segons la redacció vigent a 31 de desembre
+            de 2021, que s'aplica a aquest arrendament
+          tier_50: 'reducció del %{rate} %: qualsevol altre arrendament d''habitatge'
+          tier_60: 'reducció del %{rate} %: habitatge rehabilitat en els anys anteriors
+            al contracte'
+          tier_70: 'reducció del %{rate} %: primer arrendament en zona tensionada
+            a arrendataris de 18 a 35 anys, o arrendament a una administració pública
+            o entitat sense afany de lucre per a habitatge assequible o social'
+          tier_90: 'reducció del %{rate} %: zona de mercat residencial tensionat i
+            renda inicial rebaixada per sobre del llindar legal respecte de l''última
+            renda del contracte anterior'
+        title: Reducció de l'arrendament (art. 23.2 LIRPF)
+        value:
+          affirmative: sí
+          negative: 'no'
+          not_readable: no es pot llegir
+          not_stated: sense indicar
+        year:
+          applies: 'Exercici %{ejercicio}: %{tier}'
+          does_not_apply: 'Exercici %{ejercicio}: la reducció no arriba a aquest arrendament.
+            Les dades de sota expliquen per què.'
       refusal:
         item_too_large: Una entrada d'aquesta llista és massa gran per mostrar-la
           en una pàgina.

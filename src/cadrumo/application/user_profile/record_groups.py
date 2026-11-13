@@ -7,6 +7,10 @@ the group joins it as a member, under the row it names. A row that names another
 row but is reached from no head (two accessories naming each other) heads a group
 of its own, so no stored row of the kind's section is left out.
 
+A lease member also carries its art. 23.2 LIRPF reduction, derived by the shared derivation
+over the Modelo 100 returns the profile has started (see ``record_group_reduction``). Those
+returns live outside the profile record, so the pin digest covers the served reductions.
+
 Ledger rows join the group whose row they name, through the ledger field that
 carries a reference to that section. Every ledger row is read, in any lifecycle
 state, because a row in any state keeps the rental row it names from removal.
@@ -46,18 +50,23 @@ from .record_group_contracts import (
     ProfileRecordMemberItem,
 )
 from .record_group_pension import read_pension_group_items
+from .record_group_reduction import LeaseReductionServer, reduction_works
 from .record_group_words import group_kind_words, ledger_row_kind_words, member_kind_words, refusal_words, row_actions
 from .record_row_words import record_relation_words, record_row_summary_words, summarised_sections
 
 if TYPE_CHECKING:
     from ...core.external_constants import OutputLanguage
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+    from ...domain.modelos.work_unit import WorkUnit
     from ...domain.transactions.models import Transaction
     from ...domain.user_profile.schema import ProfileSchemaDefinition
     from ..prevision_social_contribution.ports import PrevisionSocialPortsFactory
 
 type LedgerRowsLoader = Callable[[str], Iterable[Transaction]]
 """Read every ledger row of one profile, in any lifecycle state, without writing it."""
+
+type WorkUnitsLoader = Callable[[str], Iterable[WorkUnit]]
+"""Read every Modelo work unit of one profile, without writing any."""
 
 _HEAD_SECTIONS: Final[Mapping[ProfileRecordGroupKind, str]] = {
     ProfileRecordGroupKind.RENTAL_PROPERTY: INMUEBLE_SECTION,
@@ -175,7 +184,9 @@ def _ledger_item(
     )
 
 
-def _member_item(group_key: str, edge: _Edge, row: _Row, language: OutputLanguage) -> ProfileRecordMemberItem:
+def _member_item(
+    group_key: str, edge: _Edge, row: _Row, language: OutputLanguage, reductions: LeaseReductionServer
+) -> ProfileRecordMemberItem:
     return ProfileRecordMemberItem(
         group_key=group_key,
         row_ref=row.ref,
@@ -189,7 +200,8 @@ def _member_item(group_key: str, edge: _Edge, row: _Row, language: OutputLanguag
         summary_words_language=language,
         kind_words=member_kind_words(row.section_key),
         kind_words_language=language,
-        actions=row_actions(row.section_key, language),
+        actions=row_actions(row.section_key, language, stated=row.values),
+        reduction=reductions.serve(row.row_key, row.values) if row.section_key == ARRENDAMIENTO_SECTION else None,
     )
 
 
@@ -199,6 +211,7 @@ def _group_items(
     ledger: Mapping[str, list[Transaction]],
     kind: ProfileRecordGroupKind,
     language: OutputLanguage,
+    reductions: LeaseReductionServer,
 ) -> tuple[ProfileRecordGroupStreamItem, ...]:
     head, edges = rows[group[0]], group[1]
     linked = sorted(
@@ -209,7 +222,7 @@ def _group_items(
         ),
         key=lambda pair: (pair[1].raw.booked_date, pair[1].transaction_id),
     )
-    members = tuple(_member_item(head.ref, edge, rows[edge.child], language) for edge in edges)
+    members = tuple(_member_item(head.ref, edge, rows[edge.child], language, reductions) for edge in edges)
     head_item = ProfileRecordGroupItem(
         group_key=head.ref,
         payload_kind=kind,
@@ -237,6 +250,7 @@ def record_group_items(
     kind: ProfileRecordGroupKind,
     ledger_rows: Iterable[Transaction],
     language: OutputLanguage,
+    reductions: LeaseReductionServer,
 ) -> tuple[ProfileRecordGroupStreamItem, ...]:
     """Return every group of ``kind``: its head, its members and its ledger rows, in group order."""
     rows = _stored_rows(path_values, sorted(summarised_sections()))
@@ -245,19 +259,20 @@ def record_group_items(
     return tuple(
         item
         for group in _group_order(rows, edges, _HEAD_SECTIONS[kind])
-        for item in _group_items(group, rows, ledger, kind, language)
+        for item in _group_items(group, rows, ledger, kind, language, reductions)
     )
 
 
 def ledger_rows_digest(items: Iterable[ProfileRecordGroupStreamItem]) -> str:
     """Fingerprint the rows a stream serves from outside the profile record, so a continuation can tell they moved.
 
-    Those are the ledger rows of a rental group and the stored certificates of a pension group.
+    Those are the ledger rows of a rental group, the reductions its leases are served from the profile's
+    Modelo 100 returns, and the stored certificates of a pension group.
     """
     digest = hashlib.sha256()
     for item in items:
         if isinstance(item, ProfileRecordLedgerRowItem) or (
-            isinstance(item, ProfileRecordMemberItem) and item.contribution is not None
+            isinstance(item, ProfileRecordMemberItem) and (item.contribution is not None or item.reduction is not None)
         ):
             digest.update(json.dumps(item.model_dump(mode="json"), sort_keys=True).encode("utf-8"))
             digest.update(b"\n")
@@ -326,6 +341,7 @@ def _stream(
     *,
     authority_operation: PinnedAuthorityOperation,
     ledger_rows: LedgerRowsLoader,
+    work_units: WorkUnitsLoader,
     contribution_ports: PrevisionSocialPortsFactory,
 ) -> tuple[ProfileRecordGroupStreamItem, ...]:
     """Serve the groups of the kind asked for, from the store that kind lives in."""
@@ -337,12 +353,17 @@ def _stream(
             ports_factory=contribution_ports,
             language=served_words_language(),
         )
+    schema = authority_operation.profile_decode_context().schema
+    language = served_words_language()
     return record_group_items(
         path_values,
-        schema=authority_operation.profile_decode_context().schema,
+        schema=schema,
         kind=request.group_kind,
         ledger_rows=ledger_rows(profile_id),
-        language=served_words_language(),
+        language=language,
+        reductions=LeaseReductionServer(
+            reduction_works(work_units(profile_id)), operation=authority_operation, schema=schema, language=language
+        ),
     )
 
 
@@ -351,6 +372,7 @@ def read_profile_record_groups(
     *,
     authority_operation: PinnedAuthorityOperation,
     ledger_rows: LedgerRowsLoader,
+    work_units: WorkUnitsLoader,
     contribution_ports: PrevisionSocialPortsFactory,
 ) -> ProfileRecordGroupsResult:
     """Build one bounded page of the groups from the exact current encrypted record, its ledger and certificates."""
@@ -363,6 +385,7 @@ def read_profile_record_groups(
             record_to_path_values(record),
             authority_operation=authority_operation,
             ledger_rows=ledger_rows,
+            work_units=work_units,
             contribution_ports=contribution_ports,
         )
         common: dict[str, object] = {
@@ -384,6 +407,7 @@ def read_profile_record_groups(
 
 __all__ = [
     "LedgerRowsLoader",
+    "WorkUnitsLoader",
     "ledger_rows_digest",
     "read_profile_record_groups",
     "record_group_items",

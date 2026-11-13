@@ -6591,6 +6591,7 @@ sheets:
       dias_miembro: Tagsági napok száma
       direccion: Cím
       disability_clave: Fogyatékosság
+      disposicion: Rendelkezésre áll
       domicilio_fiscal: A tag adóügyi lakóhelye
       donor_legal_name: Adományozó neve
       donor_tax_id: Adományozó adóazonosítója
@@ -6646,6 +6647,10 @@ sheets:
       importe_q3: 3. negyedévi összeg
       importe_q4: 4. negyedévi összeg
       importe_total: Teljes összeg
+      imputacion_dias: Rendelkezésre állás napjai
+      imputacion_porcentaje_disposicion: Rendelkezésre állás (%)
+      imputacion_valor_catastral: Kataszteri érték (vélelmezés)
+      imputacion_valor_catastral_revisado: Felülvizsgált kataszteri érték
       incapacity_cash_perception: Munkaképtelenségi készpénzes bevétel
       incapacity_cash_withholding: Munkaképtelenségi ellátás visszatartása
       incapacity_kind_ingreso_a_cuenta: Munkaképtelenségi természetbeni ellátás előlege
@@ -6737,6 +6742,7 @@ sheets:
         (objektív becslés)
       rendimiento_neto_previo_eo: Előzetes nettó jövedelem (objektív becslés)
       rendimiento_neto_reducido: Csökkentett nettó jövedelem
+      renta_imputada: Vélelmezett jövedelem
       representative_nif: Képviselő NIF-je
       representative_tax_id: Törvényes képviselő adóazonosítója
       residence_country_code: Lakóhely országkódja
@@ -9854,6 +9860,9 @@ workspace:
         verdict:
           attribution_pass_through: 'Magának az entitásnak nem kell benyújtania: a
             jövedelem a tagjaira hárul, akik a saját bevallásukban vallják be.'
+          incomplete: 'Még nincs eldöntve: a tárolt adatokból nem állapítható meg,
+            hogy ezt a bevallást be kell-e nyújtanod. Addig sem kötelezőnek, sem kizártnak
+            nem számít, amíg ki nem egészíted ezeket az adatokat.'
           not_applicable: 'Rád nem vonatkozik: a profilod alapján ebben az időszakban
             nem kell ezt a bevallást benyújtanod.'
       title: Bevallási naptár

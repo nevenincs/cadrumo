@@ -9,8 +9,9 @@ from uuid import UUID
 import pytest
 
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
+from cadrumo.application.modelo.export_m202_profile import PRINCIPAL_CNAE_CLASSIFICATION_PATH
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
-from cadrumo.application.user_profile.overview import build_profile_overview
+from cadrumo.application.user_profile.overview import ProfileFieldChoice, build_profile_overview
 from cadrumo.application.user_profile.password_kdf_notice import profile_kdf_floor_notice
 from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
@@ -29,6 +30,7 @@ from cadrumo.core.config import override_settings
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.json_contract import Notice
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.cnae_classification import cnae_classification_names
 from cadrumo.domain.calculations.registry.renta_codes_catalogue import ue_eea_country_codes
 from cadrumo.domain.iva.establishment import catalogued_country_codes
 from cadrumo.domain.user_profile.schema import ProfileFieldCodeList
@@ -146,6 +148,12 @@ def test_real_encrypted_overview_pages_round_trip_every_field(tmp_path: Path) ->
                         ProfileFieldCodeList.COUNTRIES: tuple(sorted(catalogued_country_codes(operation=authority))),
                         ProfileFieldCodeList.EU_EEA_COUNTRIES: tuple(sorted(ue_eea_country_codes(authority=authority))),
                     },
+                    registry_choices={
+                        PRINCIPAL_CNAE_CLASSIFICATION_PATH: tuple(
+                            ProfileFieldChoice(value=identifier, label=name)
+                            for identifier, name in cnae_classification_names(authority=authority).items()
+                        ),
+                    },
                 )
                 floor = profile_kdf_floor_notice(profile_id)
             # The isolated storage declines KDF measurement, so the envelope sits at the fixed fallback and the
@@ -164,6 +172,10 @@ def test_real_encrypted_overview_pages_round_trip_every_field(tmp_path: Path) ->
             assert actual.record_revision == added.record.record_revision
             assert actual.content_digest == added.record.content_digest
             assert any(field.row_index is not None for section in actual.sections for field in section.fields)
+            fields = [field for section in actual.sections for field in section.fields]
+            assert any(field.references_section is not None for field in fields)
+            cnae = next(field for field in fields if field.path == PRINCIPAL_CNAE_CLASSIFICATION_PATH)
+            assert {choice.value for choice in cnae.choices} >= {"cnae-2009", "cnae-2025"}
 
 
 def test_runtime_overview_rejects_broken_page_and_field_membership(tmp_path: Path) -> None:

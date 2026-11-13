@@ -7375,12 +7375,6 @@ sequence_order = {"expression.args" = [0, 1, 12, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
 
 [[revisions."2025".family_overrides]]
 family = "formulas"
-selector = {revision = "2024", id = "renta-inmobiliario-renta-imputada-art-85"}
-sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["1,1 por 100 s/40.800 = 448,80", "2 por 100", "valor catastral", "62 ÷ 365"]}], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
-sequence_removals = {source_citations = [0], source_refs = [0, 1, 2]}
-
-[[revisions."2025".family_overrides]]
-family = "formulas"
 selector = {revision = "2024", id = "renta-inmobiliario-suma-rentas-imputadas"}
 sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["rentas inmobiliarias imputadas", "bienes inmuebles"]}], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
 sequence_removals = {source_citations = [0, 1], source_refs = [0, 1]}
@@ -7730,7 +7724,7 @@ sequence_order = {legal_refs = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14
 family = "constructs"
 selector = {revision = "2024", id = "renta-mini-model-capital-inmobiliario"}
 sequence_additions = {legal_refs = ["ley-35-2006:art-86", "ley-35-2006:art-87", "ley-35-2006:art-88", "ley-35-2006:art-89", "orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3"]}
-sequence_removals = {formulas = [2, 3], legal_refs = [2, 3], source_refs = [0, 1, 2]}
+sequence_removals = {formulas = [2], legal_refs = [2, 3], source_refs = [0, 1, 2]}
 
 [[revisions."2025".family_overrides]]
 family = "constructs"
@@ -10042,3 +10036,9 @@ sequence_additions = { "expression.args" = [
 ], source_refs = ["aeat-dr-100-2025-dictionary"] }
 sequence_order = { "expression.args" = [3, 4, 5, 6, 7, 8, 9, 0, 1, 10, 11, 2, 12, 13, 14], "source_citations" = [0, 4, 5, 6, 7, 8, 9, 10, 1, 2, 11, 12, 3, 13, 14, 15] }
 # END casilla 0564 autonomic deduction sum
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-imputacion-inmobiliaria-revision-vigor-desde"}
+sequence_additions = {legal_refs = ["rdl-16-2025:art-14"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Al igual que en el ejercicio anterior, en 2025", "valoración colectiva de carácter general", "imputación al 1,1 por 100 en 2025"]}, {source_ref = "aeat-nota-efectos-rdl-16-2025-rdl-2-2026", required_text = ["En la fecha de devengo del IRPF para 2025, las modificaciones introducidas por el Real Decreto-ley 16/2025, de 23 de diciembre, estaban en vigor y desplegando sus plenos efectos jurídicos", "Imputación de rentas inmobiliarias (disposición adicional quincuagésima quinta de la LIRPF"]}], source_refs = ["aeat-renta-2025-manual-parte1", "aeat-nota-efectos-rdl-16-2025-rdl-2-2026"]}
+sequence_removals = {legal_refs = [1], source_citations = [0], source_refs = [0]}
