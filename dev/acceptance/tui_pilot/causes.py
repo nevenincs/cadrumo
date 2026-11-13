@@ -21,7 +21,7 @@ from typing import Final
 
 from ..persona_table.frontend import MATCHED, NOT_COMPARABLE, NOT_REACHED, STAGE_OF, figure_causes, parity
 from ..persona_table.rows import TableRow
-from .intake import ERROR, PASSED, SURFACE, PilotRow
+from .intake import ERROR, NOT_OWED, PASSED, SURFACE, PilotRow
 
 CRASH_CAUSE: Final = "other:pilot_crash_"
 UPSTREAM: Final = "upstream:"
@@ -30,7 +30,6 @@ CHAIN_REFUSALS: Final = frozenset({"REFUSED_MODELO_PRIOR_PERIOD_UNFILED", "REFUS
 _EDIT_REFUSED: Final = "REFUSED_MODELO_EDIT_REFUSED"
 _CONFIRM: Final = "confirm"
 _STAGES: Final = ("calculate", "verify", "export")
-NOT_OWED: Final = "not-owed"
 
 
 def outcome(row: PilotRow, table: TableRow) -> str:
@@ -68,11 +67,12 @@ def unreported_cause(row: PilotRow, earlier: Sequence[PilotRow]) -> tuple[str | 
     """The cause a return the run drives but does not report leaves for later returns to name upstream.
 
     The table reports such a return at another horizon, so no table row of this replay is its oracle: it has no
-    cause once the workbench filed it, else the first step it did not take.
+    cause once the workbench filed it or stopped it as not owed, else the first step it did not take.
     """
     if row.cause is not None and row.cause.startswith(CRASH_CAUSE):
         return row.cause, row.cause_words
-    if row.filed:
+    if row.filed or row.verify == NOT_OWED:
+        # A return the table holds not owed is never filed; its successors read the table's world, not a gap.
         return None, ""
     upstream = _upstream(row, earlier)
     if upstream is not None:

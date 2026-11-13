@@ -26,6 +26,7 @@ PASSED: Final = "pass"
 INCOMPLETE: Final = "incomplete"
 REFUSED: Final = "refused"
 ERROR: Final = "error"
+NOT_OWED: Final = "not-owed"
 
 
 class IntakeConfigurationError(RuntimeError):

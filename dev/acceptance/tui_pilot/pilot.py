@@ -7,7 +7,8 @@ workbench names for each next step the form serves, as long as it serves an oper
 export, record the filing); a step that asks the filer to fill in or confirm a value, a refusal, or no further step
 ends the return. What the persona's operator states outside those keys (the values entered before the first
 calculation, the prior carries and figures it attests, the statements a calculation offers) is submitted through
-the same registered operations between the key presses, as the persona table does.
+the same registered operations between the key presses, as the persona table does. A return the table holds not owed
+is driven through calculate only, as the table stops it: its check, export and record are not pressed.
 
 Each row is compared with the table's row for the return (:mod:`.causes`) and appended to the intake
 (:mod:`.intake`) as soon as it is known.
@@ -65,7 +66,7 @@ from cadrumo.tests.personas import Persona, PersonaCatalogueError, read_persona
 from ..persona_table.frontend import DIFFERS, NOT_REACHED
 from ..persona_table.rows import PlannedRow, TableRow
 from .causes import CRASH_CAUSE, outcome, row_cause, unreported_cause
-from .intake import ERROR, INCOMPLETE, PASSED, REFUSED, PilotRow, write_rows
+from .intake import ERROR, INCOMPLETE, NOT_OWED, PASSED, REFUSED, PilotRow, write_rows
 from .plan import pilot_envelope, pilot_plan, table_rows_path
 
 _CALCULATE: Final = frozenset({ModeloFormNextAction.CALCULATE, ModeloFormNextAction.RECALCULATE})
@@ -253,8 +254,30 @@ def _stop(driver: WorkbenchDriver, row: PilotRow, action: ModeloFormNextAction |
     )
 
 
-async def _drive(driver: WorkbenchDriver, statements: _Statements, row: PilotRow) -> None:
-    """Take each operation step the form serves, once per stage, until it serves none, or one does not pass."""
+def stop_when_not_owed(row: PilotRow, *, owed: bool, calculated: bool, served: ModeloFormNextAction | None) -> bool:
+    """Stop a return the table holds not owed once it calculated: it is neither checked, exported nor recorded.
+
+    The table checks that the overview calendar suppresses such a return as not applicable and goes no further, so
+    the pilot leaves it unfiled and its successors read the table's world. The row says what the form served next
+    and was not taken. Returns whether the return stops here.
+    """
+    if owed or not calculated:
+        return False
+    row.verify = NOT_OWED
+    row.export = NOT_REACHED
+    next_step = "no next step" if served is None else f"the next step {served.value}"
+    row.reasons.append(
+        f"not owed: the table holds the return not owed, so the pilot stops after calculate; "
+        f"the form serves {next_step}"
+    )
+    return True
+
+
+async def _drive(driver: WorkbenchDriver, statements: _Statements, row: PilotRow, *, owed: bool = True) -> None:
+    """Take each operation step the form serves, once per stage, until it serves none, or one does not pass.
+
+    A return the table holds not owed (``owed`` false) is taken through calculate only.
+    """
     taken: set[str] = set()
     while True:
         action = driver.served_next_action()
@@ -267,6 +290,8 @@ async def _drive(driver: WorkbenchDriver, statements: _Statements, row: PilotRow
             passed = await _calculate(driver, statements, action, row)
             if driver.calculated():
                 row.figures = driver.shown_figures()
+            if stop_when_not_owed(row, owed=owed, calculated=passed, served=driver.served_next_action()):
+                return
         elif action is ModeloFormNextAction.VERIFY:
             passed = _verified(await driver.press_for(action), row)
         elif action in _EXPORT:
@@ -320,7 +345,7 @@ async def _open_and_drive(
 ) -> None:
     statements = _statements(materialised, plan, work_unit_id)
     async with open_workbench(materialised.world, work_unit_id, _answers(plan, exports)) as driver:
-        await _drive(driver, statements, row)
+        await _drive(driver, statements, row, owed=plan.owed)
 
 
 def _run_return(materialised: MaterialisedPersona, plan: PlannedRow, exports: Path) -> PilotRow:
