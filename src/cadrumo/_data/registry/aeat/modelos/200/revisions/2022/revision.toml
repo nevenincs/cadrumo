@@ -83,3 +83,22 @@ source_refs = [
     "aeat-modelo-200-manual-2022",
 ]
 review_status = "pending_review"
+
+[revisions."2022".family_dispositions.credit_reconciliation]
+reason = """
+The credit reconciliation declares, for each Modelo 100 casilla that credits IRPF withholding suffered against the declarant's own cuota (LIRPF art. 99), which source supplies the credit and which sources cross-check it. This return credits withholding suffered against the Impuesto sobre Sociedades, not IRPF. A credit reconciliation entry names a Modelo 100 credit casilla and the IRPF income classes of payer records, so it cannot state an Impuesto sobre Sociedades credit."""
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2022", "aeat-modelo-200-manual-2022"]
+
+[revisions."2022".family_dispositions.prevision_social_placements]
+reason = """
+The pension contribution placement declares, for each Modelo 345 clave and subclave a contribution certificate states, the Modelo 100 casilla of the reduction for contributions to social-welfare systems it reaches (LIRPF arts. 51 and 52). This modelo is not the annual Renta return and declares no casilla of that reduction, so there is no contribution for an entry to place."""
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2022", "aeat-modelo-200-manual-2022"]
+
+[revisions."2022".family_dispositions.extraction_profiles]
+reason = """
+An extraction profile matches printed labels in a filed artefact, and every label_pattern must be grounded against an AEAT-published document that PRINTS those labels -- never against the registry's own casilla labels. Modelo 200's corpus carries its diseno de registro workbook, which describes the fichero layout rather than the labels the declaracion prints, and no declaracion specimen. The label dictionary that grounds modelo 100's profiles is bundled for modelo 100 alone -- a sweep for \
+.properties field dictionaries across the whole corpus returns that modelo and no other. Authoring patterns without such a document would invent them. Modelo 100's 2020 revision disposes this family on exactly this ground while its 2021-2024 siblings populate theirs, so the family is evidence-scoped by revision rather than absent by nature: acquire a label-printing artefact and it becomes applicable, at which point this disposition must be revisited rather than inherited."""
+legal_refs = ["ley-27-2014:art-124", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2022", "aeat-modelo-200-manual-2022"]
