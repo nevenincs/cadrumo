@@ -69,14 +69,20 @@ remunerated = false
 
 # The company's earlier Modelo 200 returns, which the application does not hold (synthetic history).
 # It began on horizon-6-01-15 and lost money while it built its first platforms: bases imponibles
-# negativas of 34000.00 (horizon-6), 20000.00 (horizon-5) and 6000.00 (horizon-4), 60000.00 in all.
-# It then compensated every pending base it could (LIS art. 26.1: up to 70 % of the base previa, and
-# in any case up to 1000000.00, which covers all of it): horizon-3 base previa 20600.00, compensated in
-# full; horizon-2 base previa 23100.00 (its INCN of 28500.00, the profile's incn-prior-12-months, less
-# the same 5400.00 of equipment and licence rent it pays every year), compensated in full. Both returns
-# therefore had a base imponible and a cuota íntegra of 0.00, and 16300.00 stayed pending at the close of
-# horizon-2 (casilla 00671). It never recorded a deterioro de créditos (its one client has paid every
-# invoice), and it had no deducciones, bonificaciones, retenciones or ingresos a cuenta in any year.
+# negativas of 34000.00 (horizon-6), 20000.00 (horizon-5) and 4000.00 (horizon-4), 58000.00 in all.
+# In horizon-3 (base previa 20600.00) it compensated 18600.00 and kept a base imponible of 2000.00:
+# compensation is its option (LIS art. 26.1, "podrán ser compensadas"), and any amount up to 1000000.00
+# is admitted. That was its first period with a positive base imponible, so as an entidad de nueva
+# creación it paid 15 % (LIS art. 29.1, último párrafo): cuota íntegra 300.00 and, with no deducciones,
+# bonificaciones, retenciones or ingresos a cuenta, casilla 00599 of 300.00. In horizon-2 (base previa
+# 23100.00: its INCN of 28500.00, the profile's incn-prior-12-months, less the same 5400.00 of equipment
+# and licence rent it pays every year) it compensated the whole base: base imponible and cuota 0.00, its
+# second 15 % period whatever the base. 58000.00 - 18600.00 - 23100.00 = 16300.00 stayed pending at the
+# close of horizon-2 (casilla 00671). Horizon-1 is its third period with a positive base, so the general
+# rate applies (new-entity-first-two-profit-periods = false). Its own pagos fraccionados: horizon-3's
+# read loss years and were 0.00; horizon-2's October and December instalments were 18 % of 300.00 = 54.00
+# each, so its Modelo 200 returned 108.00. It never recorded a deterioro de créditos (its one client has
+# paid every invoice).
 [[attested_prior_values]]
 modelo = "200"
 period = "0A"
@@ -84,7 +90,7 @@ year = "horizon-1"
 binding = "modelo-200-bin-pendiente-ejercicios-anteriores"
 value = "16300.00"
 sources = [{ modelo = "200", year = "horizon-2", period = "0A" }]
-derivation = "Casilla 00671 (bases imponibles negativas pendientes de aplicación en períodos futuros) de su Modelo 200 del ejercicio anterior. Pérdidas de los tres primeros ejercicios 34000.00 + 20000.00 + 6000.00 = 60000.00; compensadas 20600.00 en horizon-3 y 23100.00 en horizon-2, toda la base previa de cada año, dentro del límite de 1000000.00 del art. 26.1 LIS; quedan 60000.00 - 20600.00 - 23100.00 = 16300.00."
+derivation = "Casilla 00671 (bases imponibles negativas pendientes de aplicación en períodos futuros) de su Modelo 200 del ejercicio anterior. Pérdidas de los tres primeros ejercicios 34000.00 + 20000.00 + 4000.00 = 58000.00; compensadas 18600.00 en horizon-3 (opción del art. 26.1 LIS, que deja una base de 2000.00) y 23100.00 en horizon-2 (toda su base previa), dentro del límite de 1000000.00 del art. 26.1 LIS; quedan 58000.00 - 18600.00 - 23100.00 = 16300.00."
 legal_ref = ["ley-27-2014:art-26"]
 
 [[attested_prior_values]]
@@ -109,42 +115,46 @@ legal_ref = ["ley-27-2014:art-13"]
 
 # Each art. 40.2 instalment (casilla 03 of the 202) is 18 % of the cuota íntegra, less deducciones,
 # bonificaciones, retenciones e ingresos a cuenta, of the last return whose deadline had passed on the
-# first day of the payment month: horizon-3 for April, horizon-2 for October and December. Both were 0.00,
-# so no instalment was due and, the INCN being below 6000000.00, no 202 was to be filed. The application
-# records one figure for the binding, standing for the three instalments.
+# first day of the payment month: horizon-3 for April (300.00), horizon-2 for October and December (0.00).
+# The replay files each 202 of horizon-1, so its Modelo 200 reads casillas 00601, 00603 and 00605 from those
+# instalments. The three instalments read Modelo 200 returns the application does not hold, so the company
+# states each base on its 202 work unit (LIS art. 40.2; manual práctico de Sociedades, "Casilla 01. Base del
+# pago fraccionado"). The 15 % of horizon-3 is the nueva creación rate, which no general or reduced rate of
+# any supported year undercuts, so the figure holds in every replay year.
 [[attested_prior_values]]
-modelo = "200"
-period = "0A"
+modelo = "202"
+period = "1P"
 year = "horizon-1"
-binding = "modelo-200-pagos-fraccionados-anuales-40-2"
-value = "0.00"
-sources = [
-  { modelo = "202", year = "horizon-1", period = "1P" },
-  { modelo = "202", year = "horizon-1", period = "2P" },
-  { modelo = "202", year = "horizon-1", period = "3P" },
-]
-derivation = "Pagos fraccionados del art. 40.2 LIS: abril, 18 % de la cuota del Modelo 200 de horizon-3 (último con plazo vencido el 1 de abril); octubre y diciembre, 18 % de la cuota del Modelo 200 de horizon-2 (vencido el 25 de julio). Ambas cuotas fueron 0.00 por compensar toda su base con bases imponibles negativas: 0.00 + 0.00 + 0.00 = 0.00; no hubo ingreso ni obligación de presentar el 202."
-legal_ref = ["ley-27-2014:art-40"]
+binding = "modelo-202-cuota-base-ejercicio-anterior"
+value = "300.00"
+sources = [{ modelo = "200", year = "horizon-3", period = "0A" }]
+derivation = "Último Modelo 200 con plazo vencido el 1 de abril de horizon-1: el de horizon-3 (vencido el 25 de julio de horizon-2). Base imponible 20600.00 - 18600.00 = 2000.00, primera base positiva de una entidad de nueva creación, al 15 % (art. 29.1 LIS): cuota íntegra 300.00, sin deducciones, bonificaciones, retenciones ni ingresos a cuenta; casilla 00599 = 300.00."
+legal_ref = ["ley-27-2014:art-40", "ley-27-2014:art-29"]
 
-# The art. 40.3 modality (casilla 34 of the 202) was never elected in a censal declaration, and an INCN
-# below 6000000.00 does not impose it, so it yields nothing in any period.
 [[attested_prior_values]]
-modelo = "200"
-period = "0A"
+modelo = "202"
+period = "2P"
 year = "horizon-1"
-binding = "modelo-200-pagos-fraccionados-anuales"
+binding = "modelo-202-cuota-base-ejercicio-anterior"
 value = "0.00"
-sources = [
-  { modelo = "202", year = "horizon-1", period = "1P" },
-  { modelo = "202", year = "horizon-1", period = "2P" },
-  { modelo = "202", year = "horizon-1", period = "3P" },
-]
-derivation = "Modalidad de base imponible del art. 40.3 LIS: la sociedad nunca la eligió en declaración censal y su INCN no supera 6000000.00, así que no aplica; ningún pago por esta modalidad en abril, octubre ni diciembre: 0.00."
-legal_ref = ["ley-27-2014:art-40-3"]
+sources = [{ modelo = "200", year = "horizon-2", period = "0A" }]
+derivation = "Último Modelo 200 con plazo vencido el 1 de octubre de horizon-1: el de horizon-2 (vencido el 25 de julio de horizon-1). Compensó toda su base previa de 23100.00: base imponible y cuota 0.00; casilla 00599 = 0.00."
+legal_ref = ["ley-27-2014:art-40", "ley-27-2014:art-26"]
+
+[[attested_prior_values]]
+modelo = "202"
+period = "3P"
+year = "horizon-1"
+binding = "modelo-202-cuota-base-ejercicio-anterior"
+value = "0.00"
+sources = [{ modelo = "200", year = "horizon-2", period = "0A" }]
+derivation = "Último Modelo 200 con plazo vencido el 1 de diciembre de horizon-1: el de horizon-2, cuya cuota fue 0.00 al compensar toda su base previa de 23100.00; casilla 00599 = 0.00."
+legal_ref = ["ley-27-2014:art-40", "ley-27-2014:art-26"]
 
 # The April instalment of the current year (art. 40.2 LIS) is 18 % of the cuota of the last Modelo 200
 # whose deadline had passed on 1 April: that of horizon-2, whose cuota was 0.00 (history above). The company
-# never elected the art. 40.3 modality, stated as false in [fields].
+# never elected the art. 40.3 modality (casilla 34 of the 202), stated as false in [fields], and an INCN below
+# 6000000.00 does not impose it.
 [[attested_prior_values]]
 modelo = "202"
 period = "1P"
