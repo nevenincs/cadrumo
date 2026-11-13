@@ -12,6 +12,7 @@ import pytest
 
 from ..__main__ import main
 from ..frontend import (
+    EXPORT_WITHHELD_UNVERIFIED,
     STAGE_OF,
     FrontendResultError,
     PersonaCell,
@@ -19,13 +20,14 @@ from ..frontend import (
     SurfaceResult,
     cell_text,
     compare_frontend,
+    export_refusal_code,
     extra_figures,
     figure_causes,
     parity,
     parse_result,
     read_results,
 )
-from ..render import render_table
+from ..render import render_table, unavailable_exports_lines
 from ..rows import PlannedRow, Stage, TableRow, canonical_figures, write_rows
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -44,6 +46,7 @@ def _row(
     persona: str = "persona",
     figures: tuple[tuple[str, str], ...] = _FIGURES,
     internal_figures: tuple[tuple[str, str], ...] = (),
+    reason: str = "",
 ) -> TableRow:
     plan = PlannedRow(
         persona=persona,
@@ -56,7 +59,7 @@ def _row(
         sources=("ley:art-1",),
     )
     return TableRow.from_plan(
-        plan, calculate, verify=verify, export=export, figures=figures, internal_figures=internal_figures
+        plan, calculate, verify=verify, export=export, figures=figures, internal_figures=internal_figures, reason=reason
     )
 
 
@@ -518,3 +521,116 @@ def test_the_cli_column_is_counted_beside_tui_and_window_and_an_empty_one_is_not
     assert first.endswith("| matched | not run | matched |")
     nothing = compare_frontend(rows, {})
     assert cell_text(nothing.cells["persona", "cli"]) == "not yet run"
+
+
+_NOT_SEALED = "REFUSED_MODELO_REVISION_NOT_SEALED"
+_NOT_SEALED_REASON = f"verify: blocked; 1 findings | export: modelo.export refused {_NOT_SEALED} :: not verified"
+_UNAVAILABLE = f"export unavailable (refused | not served) {_NOT_SEALED}"
+
+
+def _sealed_row(period: str = "1T", reason: str = _NOT_SEALED_REASON, export: Stage = Stage.REFUSED) -> TableRow:
+    return _row(period, verify=Stage.INCOMPLETE, export=export, reason=reason)
+
+
+def _unserved(**overrides: object) -> SurfaceResult:
+    return _result(verify="incomplete", export="not-reached", export_served=False, **overrides)
+
+
+def test_an_export_door_not_served_matches_the_unsealed_refusal_and_records_the_code() -> None:
+    outcome = parity(_sealed_row(), "tui", _unserved())
+    assert (outcome.outcome, outcome.causes, outcome.gated_stages) == ("matched", (), (_UNAVAILABLE,))
+
+
+@pytest.mark.parametrize(
+    ("row", "result", "cause"),
+    [
+        (_sealed_row(), _result(verify="incomplete", export="not-reached"), "export tui not-reached, table refused"),
+        (
+            _sealed_row(),
+            _result(verify="incomplete", export="not-reached", export_served=True),
+            "export tui not-reached, table refused",
+        ),
+        (
+            _sealed_row(reason="export: modelo.export refused REFUSED_MODELO_OTHER :: x"),
+            _unserved(),
+            "export tui not-reached, table refused",
+        ),
+        (_sealed_row(reason=""), _unserved(), "export tui not-reached, table refused"),
+        (_sealed_row(export=Stage.PASSED), _unserved(), "export tui not-reached, table pass"),
+    ],
+)
+def test_every_other_export_difference_stays_a_difference(row: TableRow, result: SurfaceResult, cause: str) -> None:
+    outcome = parity(row, "tui", result)
+    assert (outcome.outcome, cause in outcome.causes, outcome.gated_stages) == ("differs", True, ())
+
+
+def test_a_surface_export_refusal_against_the_table_refusal_is_a_plain_match() -> None:
+    outcome = parity(_sealed_row(), "tui", _result(verify="incomplete", export="refused", export_served=False))
+    assert (outcome.outcome, outcome.gated_stages) == ("matched", ())
+
+
+def test_a_verify_difference_stays_a_difference_even_when_the_export_door_is_not_served() -> None:
+    outcome = parity(_sealed_row(), "tui", _result(verify="pass", export="not-reached", export_served=False))
+    assert outcome.outcome == "differs"
+    assert "verify tui pass, table incomplete" in outcome.causes
+
+
+@pytest.mark.parametrize(
+    ("reason", "code"),
+    [
+        (_NOT_SEALED_REASON, _NOT_SEALED),
+        ("export: modelo.export refused ERROR_MODELO_EXPORT :: x", "ERROR_MODELO_EXPORT"),
+        ("verify: blocked | export: modelo.export refused REFUSED_B :: x", "REFUSED_B"),
+        ("verify: refused REFUSED_VERIFY :: x", None),
+        ("export: modelo.export passed", None),
+        ("", None),
+    ],
+)
+def test_the_export_refusal_code_is_read_after_the_export_marker(reason: str, code: str | None) -> None:
+    assert export_refusal_code(reason) == code
+    assert _NOT_SEALED in EXPORT_WITHHELD_UNVERIFIED
+
+
+@pytest.mark.parametrize(("value", "expected"), [(True, True), (False, False), (None, None)])
+def test_export_served_is_read_as_true_false_or_unknown(value: bool | None, expected: bool | None) -> None:
+    assert _result(export_served=value).export_served is expected
+    line = _line()
+    assert parse_result(json.dumps(line)).export_served is None
+
+
+@pytest.mark.parametrize("value", ["false", 0, 1, []])
+def test_a_non_boolean_export_served_is_refused(value: object) -> None:
+    with pytest.raises(ValueError, match="export_served must be true, false or null"):
+        parse_result(json.dumps(_line(export_served=value)))
+
+
+def test_the_cell_names_rows_matched_by_gating_only_when_there_are_some() -> None:
+    rows = [_sealed_row("1T"), _row("2T"), _row("3T")]
+    lines = [
+        _line(period="1T", verify="incomplete", export="not-reached", export_served=False),
+        _line(period="2T"),
+        _line(period="3T"),
+    ]
+    results = {parse_result(json.dumps(line)).key: parse_result(json.dumps(line)) for line in lines}
+    cell = compare_frontend(rows, results).cells["persona", "tui"]
+    assert cell.gated_rows == 1
+    assert cell_text(cell) == "loads, 3/3 matched, 0 differs, 0 not run, 1 rows matched by gating"
+    plain = compare_frontend(rows[1:], results).cells["persona", "tui"]
+    assert plain.gated_rows == 0
+    assert cell_text(plain) == "loads, 2/2 matched, 0 differs, 0 not run"
+    assert "gating" not in cell_text(PersonaCell(True, 1, {"matched": 1}))
+
+
+def test_the_report_lists_the_rows_matched_as_export_unavailable_only_when_there_are_some() -> None:
+    rows = [_sealed_row("1T"), _row("2T")]
+    lines = [_line(period="1T", verify="incomplete", export="not-reached", export_served=False), _line(period="2T")]
+    results = {parse_result(json.dumps(line)).key: parse_result(json.dumps(line)) for line in lines}
+    comparison = compare_frontend(rows, results)
+    assert unavailable_exports_lines(comparison) == [
+        f"Export unavailable (refused | not served), matched: persona|303|{_YEAR}|1T {_NOT_SEALED} [tui]"
+    ]
+    text = render_table(rows, head="abc", frontend=comparison)
+    assert f"Export unavailable (refused | not served), matched: persona|303|{_YEAR}|1T {_NOT_SEALED} [tui]" in text
+    assert text.index("Export unavailable (refused") < text.index("### Rows differing")
+    quiet = render_table(rows[1:], head="abc", frontend=compare_frontend(rows[1:], results))
+    assert "Export unavailable" not in quiet

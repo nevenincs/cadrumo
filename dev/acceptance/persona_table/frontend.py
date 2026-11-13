@@ -7,11 +7,22 @@ did not load the persona, or was not run. The table row is the oracle for calcul
 same three stages and every casilla figure of the table row shown with an equal value. A casilla the surface shows
 that the row has no figure for (identity fields, rates, period) never makes a row differ; the rows that show such
 casillas are counted and the names stay on the parity.
+
+Export unavailable is one outcome, whether the backend refuses an attempt or the form does not serve the export
+door. The export stage matches a surface's ``not-reached`` against the table's ``refused`` only when both hold: the
+line states ``export_served`` false (the form served no export door for that return, recorded as served state and not
+as the pilot's choice) and the table's export refusal code is one of ``EXPORT_WITHHELD_UNVERIFIED`` (the codes the
+export operation raises for a revision that is not sealed, read from the table row's reason by
+``export_refusal_code``). The comparison is recorded in ``RowParity.gated_stages`` as ``export unavailable
+(refused | not served)`` followed by the code, the persona cell counts the rows as ``N rows matched by gating`` and
+the report lists them. Every other stage difference stays a difference, and the rule reads stage words and that
+code only. The file stage is not compared with the table, so the rule has no file case.
 """
 
 from __future__ import annotations
 
 import json
+import re
 from collections import Counter
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
@@ -26,6 +37,12 @@ SURFACE_LABELS = {"tui": "TUI", "window": "window", "cli": "CLI"}
 NOT_REACHED = "not-reached"
 STAGE_WORDS = ("pass", "incomplete", "refused", "not-owed", NOT_REACHED, "error")
 """The stage vocabulary of a surface result."""
+
+EXPORT_WITHHELD_UNVERIFIED = ("REFUSED_MODELO_REVISION_NOT_SEALED",)
+"""The codes the export operation raises for a revision that is not sealed (unverified, so no grant sealed it)."""
+EXPORT_UNAVAILABLE = "export unavailable (refused | not served)"
+"""How the comparison of a not-served export door with the table's withheld export is recorded."""
+_EXPORT_CODE = re.compile(r"\bexport:.*?\b((?:REFUSED|ERROR)_[A-Z0-9_]+)")
 
 STAGE_OF: Mapping[Stage, str | None] = {
     Stage.PASSED: "pass",
@@ -81,6 +98,7 @@ _FIELDS = frozenset(
         "calculate",
         "verify",
         "export",
+        "export_served",
         "file",
         "refusal_code",
         "figures",
@@ -110,6 +128,8 @@ class SurfaceResult:
     calculate: str = NOT_REACHED
     verify: str = NOT_REACHED
     export: str = NOT_REACHED
+    export_served: bool | None = None
+    """Whether the form served an export door for the return; ``None`` when the line does not state it."""
     file: str | None = None
     """The file stage in the stage vocabulary; ``None`` when the line does not state it. Not compared with the table."""
     refusal_code: str | None = None
@@ -132,7 +152,9 @@ def read_results(directory: Path) -> dict[ResultKey, SurfaceResult]:
     ``persona``, ``modelo`` (null on a persona-level line, which reports whether the profile loaded), ``year``,
     ``period`` (null with a null ``modelo``), ``loads``, and, when ``modelo`` is set, ``calculate``, ``verify``
     and ``export`` in the stage vocabulary; the optional ``file`` states a fifth stage in the same vocabulary (absent
-    means not stated; the table row has no file stage yet, so parity ignores it). ``refusal_code``, ``reason`` and
+    means not stated; the table row has no file stage yet, so parity ignores it). The optional ``export_served`` is
+    true or false: false states the form served no export door for the return (served state, never the pilot's choice);
+    absent means unknown. ``refusal_code``, ``reason`` and
     ``log`` are optional text;
     ``figures`` is an optional object of every non-zero casilla value the surface displayed, as text; the table
     row is compared on the casillas of its form only, never on its internal figures.
@@ -183,6 +205,7 @@ def parse_result(line: str) -> SurfaceResult:
         calculate=stages.get("calculate", NOT_REACHED),
         verify=stages.get("verify", NOT_REACHED),
         export=stages.get("export", NOT_REACHED),
+        export_served=_optional_bool(data, "export_served"),
         file=_optional_stage(data, "file"),
         refusal_code=_optional_text(data, "refusal_code"),
         figures=_figures(data.get("figures", {})),
@@ -215,6 +238,13 @@ def _stage_words(data: Mapping[str, object], modelo: str | None) -> dict[str, st
 def _optional_stage(data: Mapping[str, object], name: str) -> str | None:
     """The stage word of an optional stage field, ``None`` when absent or null."""
     return None if data.get(name) is None else _choice(data, name, STAGE_WORDS)
+
+
+def _optional_bool(data: Mapping[str, object], name: str) -> bool | None:
+    value = data.get(name)
+    if value is not None and not isinstance(value, bool):
+        raise ValueError(f"{name} must be true, false or null")
+    return value
 
 
 def _require_all_stages(data: Mapping[str, object]) -> None:
@@ -279,6 +309,8 @@ class RowParity:
     """The commit the surface ran, when a result was read for the row."""
     extra_names: tuple[str, ...] = ()
     """The non-zero casillas the surface showed that the table row has no figure for; never a cause of a difference."""
+    gated_stages: tuple[str, ...] = ()
+    """``export unavailable (refused | not served)`` and the table's refusal code, when the export stage matched so."""
 
     @property
     def extra_casillas(self) -> int:
@@ -298,6 +330,8 @@ class PersonaCell:
     """The rows on which the surface showed casillas the table row has no figure for."""
     trees: tuple[str, ...] = ()
     """The trees of the results the cell summarises (rows and the persona's own line), sorted and distinct."""
+    gated_rows: int = 0
+    """The rows with a stage that matched by gating."""
 
 
 def _number(text: str) -> Decimal | None:
@@ -363,10 +397,11 @@ def parity(
     if (why := _uncomparable_reason(row, stages)) is not None:
         return RowParity(row.key, surface, NOT_COMPARABLE, (why,), tree)
     table, shown = dict(row.figures), dict(result.figures)
-    causes = _stage_causes(surface, stages, result) + figure_causes(surface, table, shown)
+    stage_causes, gated = _stage_causes(surface, stages, result, export_refusal_code(row.reason))
+    causes = stage_causes + figure_causes(surface, table, shown)
     outcome = DIFFERS if causes else MATCHED
     extras = extra_figures(table | dict(row.internal_figures), shown)
-    return RowParity(row.key, surface, outcome, tuple(causes), tree, extras)
+    return RowParity(row.key, surface, outcome, tuple(causes), tree, extras, gated)
 
 
 def _load_failure_reason(result: SurfaceResult | None, load_reason: str) -> str:
@@ -385,13 +420,42 @@ def _uncomparable_reason(row: TableRow, stages: Mapping[str, str | None]) -> str
     return None
 
 
-def _stage_causes(surface: str, stages: Mapping[str, str | None], result: SurfaceResult) -> list[str]:
-    """Each stage at which the surface's word differs from the table row's."""
-    return [
-        f"{name} {surface} {getattr(result, name)}, table {word}"
-        for name, word in stages.items()
-        if getattr(result, name) != word
-    ]
+def export_refusal_code(reason: str) -> str | None:
+    """The first ``REFUSED_``/``ERROR_`` code after ``export:`` in a table row's reason; ``None`` when none."""
+    if (match := _EXPORT_CODE.search(reason)) is None:
+        return None
+    return str(match.group(1))
+
+
+def _export_unavailable(name: str, word: str | None, result: SurfaceResult, code: str | None) -> bool:
+    """Whether the surface's ``not-reached`` export is the table's refusal for an unsealed revision.
+
+    It is, only when the form served no export door (``export_served`` false, never absent) and the table's export
+    refusal code is one of ``EXPORT_WITHHELD_UNVERIFIED``.
+    """
+    return (
+        name == "export"
+        and result.export == NOT_REACHED
+        and result.export_served is False
+        and word == "refused"
+        and code in EXPORT_WITHHELD_UNVERIFIED
+    )
+
+
+def _stage_causes(
+    surface: str, stages: Mapping[str, str | None], result: SurfaceResult, code: str | None
+) -> tuple[list[str], tuple[str, ...]]:
+    """Each stage at which the surface's word differs from the table row's, and the stages matched as unavailable."""
+    causes: list[str] = []
+    gated: list[str] = []
+    for name, word in stages.items():
+        if getattr(result, name) == word:
+            continue
+        if _export_unavailable(name, word, result, code):
+            gated.append(f"{EXPORT_UNAVAILABLE} {code}")
+        else:
+            causes.append(f"{name} {surface} {getattr(result, name)}, table {word}")
+    return causes, tuple(gated)
 
 
 @dataclass(frozen=True, slots=True)
@@ -482,6 +546,7 @@ def _persona_cell(
         Counter(item.outcome for item in mine),
         sum(item.extra_casillas > 0 for item in mine),
         tuple(sorted(trees)),
+        sum(bool(item.gated_stages) for item in mine),
     )
 
 
@@ -510,9 +575,9 @@ def _load_reason(held: Mapping[ResultKey, SurfaceResult], persona: str) -> str:
 def cell_text(cell: PersonaCell, head: str | None = None) -> str:
     """The persona cell summary, ``loads, 5/7 matched, 1 differs, 1 not run``, or ``not yet run``.
 
-    Rows that could not be compared, rows lost to a failed load and rows that show extra casillas are named after
-    the three counts when there are any. With ``head`` given, the sorted trees of the cell's results that are not
-    ``head`` close it as `` @<tree>,<tree>``.
+    Rows that could not be compared, rows lost to a failed load, rows that show extra casillas and rows with a stage
+    matched by gating are named after the three counts when there are any. With ``head`` given, the sorted trees of
+    the cell's results that are not ``head`` close it as `` @<tree>,<tree>``.
     """
     if cell.loads is None:
         return "not yet run"
@@ -535,6 +600,8 @@ def _cell_parts(cell: PersonaCell) -> list[str]:
         parts.append(f"{counts.get(LOAD_FAILED, 0)} load failed")
     if cell.extra_rows:
         parts.append(f"{cell.extra_rows} rows show extra casillas")
+    if cell.gated_rows:
+        parts.append(f"{cell.gated_rows} rows matched by gating")
     return parts
 
 
@@ -568,6 +635,8 @@ def trees_line(comparison: FrontendComparison) -> str:
 
 __all__ = [
     "CELL_WORDS",
+    "EXPORT_UNAVAILABLE",
+    "EXPORT_WITHHELD_UNVERIFIED",
     "STAGE_OF",
     "STAGE_WORDS",
     "SURFACES",
@@ -579,6 +648,7 @@ __all__ = [
     "SurfaceResult",
     "cell_text",
     "compare_frontend",
+    "export_refusal_code",
     "extra_figures",
     "figure_causes",
     "frontend_line",
