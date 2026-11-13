@@ -450,16 +450,30 @@ def _withdraw_superseded_row_statements(
     A carry once stated on one column may now be stated on others: a let
     property's pending expenses were one total before they were stated per
     origin year. The new statement replaces the old one on its row, and the
-    revision this edit records keeps that history.
+    revision this edit records keeps that history. A withdrawn statement that
+    nothing was pending still says so of every column that now takes the
+    statement, so it is restated there as absence where the row states nothing
+    yet; an amount cannot be split, so it is withdrawn and those columns stay
+    unstated.
     """
     bindings = {binding.id: binding for binding in revision.bindings}
-    source = bindings[address.binding_id].source
+    stated = bindings[address.binding_id]
     for binding_id, row in tuple(state.row_attestations):
         if row != address.row_identity or _row_stated(revision, binding_id):
             continue
         stale = bindings.get(binding_id)
-        if stale is None or stale.source is source:
-            del state.row_attestations[(binding_id, row)]
+        if stale is not None and stale.source is not stated.source:
+            continue
+        withdrawn = state.row_attestations.pop((binding_id, row))
+        if stale is not None and withdrawn.stated_amount == 0:
+            for column in revision.bindings:
+                if column.source is stated.source and column.absence_attestation is stated.absence_attestation:
+                    state.row_attestations.setdefault(
+                        (column.id, row),
+                        RowCarryAttestation(
+                            binding_id=column.id, source_row_identity=row, amount=ATTESTED_ZERO, absent=True
+                        ),
+                    )
 
 
 def _row_stated(revision: ModeloRevision, binding_id: BindingId) -> bool:
