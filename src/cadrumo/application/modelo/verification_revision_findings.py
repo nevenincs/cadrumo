@@ -67,6 +67,7 @@ if TYPE_CHECKING:
 
 def append_revision_advisory_findings(
     findings: list[ModeloVerificationFinding],
+    failures_by_finding_id: dict[int, ModeloPreconditionFailure],
     *,
     work_unit: WorkUnit,
     target: CalculationRevision,
@@ -75,7 +76,10 @@ def append_revision_advisory_findings(
     operation: PinnedAuthorityOperation,
     work_profile: ModeloWorkProfile | None,
 ) -> None:
-    """Append the selected revision’s model advisories without changing grant semantics.
+    """Append the selected revision’s model advisories and its work-income findings.
+
+    A work-income finding that blocks arrives with its verify verdict, and is
+    recorded beside it so the report projects it with its door.
 
     Parameter types: ``target`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`),
     ``snapshot`` (:class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`), ``profile``
@@ -129,18 +133,19 @@ def append_revision_advisory_findings(
             profile_record=work_profile.record if work_profile is not None else None,
         )
     )
-    findings.extend(
-        trabajo_income_findings(
-            str(work_unit.modelo),
-            snapshot.revision,
-            target,
-            profile_values={}
-            if work_profile is None
-            else record_to_path_values(work_profile.record, as_of=fact_coordinate),
-            effective_date=fact_coordinate,
-            operation=operation,
-        )
-    )
+    for finding, failure in trabajo_income_findings(
+        str(work_unit.modelo),
+        snapshot.revision,
+        target,
+        profile_values={}
+        if work_profile is None
+        else record_to_path_values(work_profile.record, as_of=fact_coordinate),
+        effective_date=fact_coordinate,
+        operation=operation,
+    ):
+        findings.append(finding)
+        if failure is not None:
+            failures_by_finding_id[id(finding)] = failure
 
 
 def resolve_verification_snapshot(
@@ -671,6 +676,7 @@ def collect_revision_verification_findings(
     )
     append_revision_advisory_findings(
         findings,
+        failures_by_finding_id,
         work_unit=work_unit,
         target=target,
         profile=profile,

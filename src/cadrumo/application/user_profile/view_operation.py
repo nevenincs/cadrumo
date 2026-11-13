@@ -13,7 +13,7 @@ from ...core.errors.severity import BaseSeverity
 from ...core.external_constants import OutputLanguage
 from ...core.identity.digest import ContentDigest
 from ...core.json_contract import NoticeSeverity
-from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operator_action_enums import (
     ActionArgumentSource,
     ActionArgumentStatus,
@@ -26,7 +26,7 @@ from ..operations.models import CredentialFreeOperationRequest
 from ..operator_actions.models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
 from ..workflow.profile_health import ProfileHealthStatus
 from .family_question import ProfileViewFamilyQuestionItem
-from .family_rows import ProfileViewFamilyGroupItem, ProfileViewFamilyRowItem
+from .family_rows import ProfileViewFamilyDraftItem, ProfileViewFamilyGroupItem, ProfileViewFamilyRowItem
 from .overview import ProfileFieldView
 from .question_view import ProfileViewQuestionItem
 
@@ -54,10 +54,33 @@ class ProfileViewPageKind(StrEnum):
     FAMILY_ROWS = "family_rows"
 
 
-class ProfileViewOperationRequest(CredentialFreeOperationRequest):
-    """Read one page, optionally pinned to a previously observed revision."""
+class ProfileViewHouseholdDraftFact(BaseModel):
+    """One answer an unsaved household row holds, by the leaf it answers."""
 
-    model_config = STRICT_FROZEN_CONFIG
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    leaf: str = Field(min_length=1, max_length=64, pattern=r"^[a-z0-9_]+$")
+    value: str = Field(max_length=256, repr=False)
+
+
+class ProfileViewHouseholdDraft(BaseModel):
+    """The answers of one household row the operator has typed and not saved."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    group: str = Field(min_length=1, max_length=64)
+    facts: tuple[ProfileViewHouseholdDraftFact, ...] = Field(max_length=64, repr=False)
+
+
+class ProfileViewOperationRequest(CredentialFreeOperationRequest):
+    """Read one page, optionally pinned to a previously observed revision.
+
+    ``household_draft`` re-resolves which leaves one household row asks for answers that are
+    not saved. It is read for that resolution alone: never stored, logged or echoed, and the
+    result is the single ``family_draft`` item.
+    """
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     profile_id: UUID
     page_kind: ProfileViewPageKind = Field(
@@ -73,6 +96,7 @@ class ProfileViewOperationRequest(CredentialFreeOperationRequest):
     expected_revision: int | None = Field(default=None, ge=1)
     expected_content_digest: ContentDigest | None = None
     output_language: OutputLanguage = OutputLanguage.ES
+    household_draft: ProfileViewHouseholdDraft | None = Field(default=None, repr=False)
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -81,6 +105,8 @@ class ProfileViewOperationRequest(CredentialFreeOperationRequest):
             raise ValueError("profile view revision and digest must be pinned together")
         if self.cursor and self.expected_revision is None:
             raise ValueError("a continuation requires its exact profile revision and digest")
+        if self.household_draft is not None and self.page_kind is not ProfileViewPageKind.FAMILY_ROWS:
+            raise ValueError("a household draft is read through the family rows page")
         return self
 
 
@@ -335,6 +361,7 @@ type ProfileViewItem = Annotated[
     | ProfileViewQuestionItem
     | ProfileViewFamilyGroupItem
     | ProfileViewFamilyRowItem
+    | ProfileViewFamilyDraftItem
     | ProfileViewFamilyQuestionItem
     | ProfileViewNoticeItem,
     Field(discriminator="kind"),
@@ -347,6 +374,7 @@ class ProfileViewRefusalCode(StrEnum):
     STALE_REVISION = "stale_revision"
     ITEM_TOO_LARGE = "item_too_large"
     PROJECTION_UNAVAILABLE = "projection_unavailable"
+    INVALID_HOUSEHOLD_DRAFT = "invalid_household_draft"
 
 
 def _validate_refused_page(result: ProfileViewOperationResult) -> None:
@@ -363,7 +391,7 @@ def _validate_page_item_kinds(result: ProfileViewOperationResult) -> None:
         ProfileViewPageKind.READINESS_ISSUES: {"issue"},
         ProfileViewPageKind.OVERVIEW: {"section", "field", "missing", "notice"},
         ProfileViewPageKind.STATUS: {"status"},
-        ProfileViewPageKind.FAMILY_ROWS: {"family_group", "family_row", "family_question"},
+        ProfileViewPageKind.FAMILY_ROWS: {"family_group", "family_row", "family_question", "family_draft"},
     }[result.page_kind]
     if any(item.kind not in allowed for item in result.items):
         raise ValueError("profile view page contains another stream's item")
