@@ -56,6 +56,7 @@ from .work_form_models import (
     ModeloWorkForm,
 )
 from .work_form_next_step import (
+    ModeloFormNextAction,
     blocking_count,
     check_count,
     confirm_count,
@@ -251,6 +252,15 @@ _HOLD_LOCALE_KEYS: Final[Mapping[ModeloFormExportHoldReason, str]] = MappingProx
 )
 
 
+_HOLD_ACTIONS: Final[Mapping[ModeloFormExportHoldReason, ModeloFormNextAction]] = MappingProxyType(
+    {
+        ModeloFormExportHoldReason.BLOCKS: ModeloFormNextAction.RESOLVE,
+        ModeloFormExportHoldReason.CONFIRM: ModeloFormNextAction.CONFIRM,
+        ModeloFormExportHoldReason.VERIFY: ModeloFormNextAction.VERIFY,
+    }
+)
+
+
 class ModeloFormExportHold(BaseModel):
     """Why the file for the AEAT, and recording the filing, are withheld, with what the reason counts."""
 
@@ -261,6 +271,8 @@ class ModeloFormExportHold(BaseModel):
     count: int = Field(ge=0)
     #: Why, in the filer's language.
     words: str = Field(min_length=1)
+    #: The action that lifts the hold, so a frontend names the key that performs it.
+    action: ModeloFormNextAction
 
 
 class ModeloFormHeader(BaseModel):
@@ -432,7 +444,7 @@ def export_hold(
 
 def _hold(reason: ModeloFormExportHoldReason, count: int, language: OutputLanguage) -> ModeloFormExportHold:
     words = tr(_HOLD_LOCALE_KEYS[reason], count=count, locale=language.value)
-    return ModeloFormExportHold(reason=reason, count=count, words=words)
+    return ModeloFormExportHold(reason=reason, count=count, words=words, action=_HOLD_ACTIONS[reason])
 
 
 @dataclass(frozen=True, slots=True)

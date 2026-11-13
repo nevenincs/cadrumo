@@ -17,7 +17,7 @@ from ....domain.calculations.registry.tax_id_format import runtime_tax_id_format
 from ..edit_admission import RESPONSIBLE_OWNER
 from ..edit_models import ModeloEditDomainRefusalV1, ModeloEditRefusalCode, ModeloEditRefusedV1
 from ..edit_review_wording import edit_refusal_words
-from ..work_form_service import ModeloWorkFormLoadV1
+from ..work_form_service import modelo_work_form_load
 from ..workbench_projection import (
     ModeloWorkbenchFormProjectionV1,
     project_modelo_workbench_form,
@@ -45,7 +45,7 @@ def _refusal(*facts: str) -> ModeloEditRefusedV1:
 def _read(operation: PinnedAuthorityOperation, admission: ModeloEditRefusedV1, language: OutputLanguage):
     form = built_form(operation, "210", 2025, "0A", entered=frozenset(), language=language)
     return ModeloWorkbenchFormReadV1(
-        load=ModeloWorkFormLoadV1(form=form, verified=False, filed=False),
+        load=modelo_work_form_load(form, verified=False, filed=False),
         admission=admission,
         calculation_revision_id=None,
         verification_report_id=None,

@@ -111,6 +111,7 @@ from .work_form_field_vocabulary import (
     ModeloFormText,
     address_key,
 )
+from .work_form_journey import ModeloFormJourney, form_journey
 from .work_form_models import (
     ModeloFormField,
     ModeloWorkForm,
@@ -132,6 +133,15 @@ class ModeloWorkFormLoadV1(BaseModel):
     form: ModeloWorkForm
     verified: bool
     filed: bool
+    #: Where the declaration stands on the filing journey, decided once for every frontend.
+    journey: ModeloFormJourney
+
+
+def modelo_work_form_load(form: ModeloWorkForm, *, verified: bool, filed: bool) -> ModeloWorkFormLoadV1:
+    """One declaration's form with its lifecycle facts and the journey they place it on."""
+    return ModeloWorkFormLoadV1(
+        form=form, verified=verified, filed=filed, journey=form_journey(form, verified=verified, filed=filed)
+    )
 
 
 class ModeloFormValueChangeV1(BaseModel):
@@ -578,9 +588,7 @@ def load_modelo_work_form(
         }
     )
     state = review.lifecycle_state
-    return ModeloWorkFormLoadV1(
-        form=form, verified=state in SEALED_REVISION_STATES, filed=state in FILED_REVISION_STATES
-    )
+    return modelo_work_form_load(form, verified=state in SEALED_REVISION_STATES, filed=state in FILED_REVISION_STATES)
 
 
 def _filed_findings(
@@ -685,4 +693,5 @@ __all__ = [
     "modelo_form_deadline",
     "modelo_form_snapshot",
     "modelo_work_form_changes",
+    "modelo_work_form_load",
 ]

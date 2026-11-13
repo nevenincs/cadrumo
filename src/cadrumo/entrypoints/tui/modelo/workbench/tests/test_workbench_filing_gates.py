@@ -44,13 +44,13 @@ from ..header import attention_chips
 from ..issue_projection import issue_lines
 from ..issue_scale import IssueLevel
 from ..issues import WorkbenchIssuesScreen
-from ..progress import next_action_text, workbench_progress
+from ..progress import next_action_text
 from ..review import EditReviewScreen, ReviewNote
 from ..screen import ModeloWorkbenchScreen
 from ..vocabulary import BLOCKS_MARK, CHECK_MARK
 from .declaration_states import with_findings
 from .form_edits import replace_fields
-from .workbench_fixture import FakeActions, FakeReader, form_field, synthetic_form
+from .workbench_fixture import FakeActions, FakeReader, form_field, served_progress, synthetic_form
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -149,16 +149,16 @@ def _with_current_file(form: ModeloWorkForm) -> ModeloWorkForm:
 
 def test_recording_comes_after_the_file_and_is_withheld_as_the_file_is() -> None:
     clear = _cause("nothing-withholds")
-    file_first = workbench_progress(clear, staged=0, verified=True, filed=False)
-    record_next = workbench_progress(_with_current_file(clear), staged=0, verified=True, filed=False)
-    assumed = workbench_progress(_with_current_file(_cause("one-assumed")), staged=0, verified=True, filed=False)
-    blocking = workbench_progress(_with_current_file(_cause("one-blocking")), staged=0, verified=True, filed=False)
-    filed = workbench_progress(_cause("one-blocking"), staged=0, verified=True, filed=True)
+    file_first = served_progress(clear, staged=0, verified=True, filed=False)
+    record_next = served_progress(_with_current_file(clear), staged=0, verified=True, filed=False)
+    assumed = served_progress(_with_current_file(_cause("one-assumed")), staged=0, verified=True, filed=False)
+    blocking = served_progress(_with_current_file(_cause("one-blocking")), staged=0, verified=True, filed=False)
+    filed = served_progress(_cause("one-blocking"), staged=0, verified=True, filed=True)
 
     assert file_first.next_action is ModeloFormNextAction.EXPORT
     assert record_next.next_action is ModeloFormNextAction.RECORD_AFTER_FILE
-    assert assumed.assumed == 1 and assumed.next_action is ModeloFormNextAction.CONFIRM
-    assert blocking.blocking == 1 and blocking.next_action is ModeloFormNextAction.RESOLVE
+    assert assumed.count == 1 and assumed.next_action is ModeloFormNextAction.CONFIRM
+    assert blocking.count == 1 and blocking.next_action is ModeloFormNextAction.RESOLVE
     assert filed.next_action is not ModeloFormNextAction.RESOLVE
 
 
@@ -169,7 +169,7 @@ def _blocked() -> ModeloWorkForm:
 
 def test_resolving_counts_what_blocks_filing_as_the_header_chip_does() -> None:
     form = _blocked()
-    progress = workbench_progress(form, staged=0, verified=False, filed=False)
+    progress = served_progress(form, staged=0, verified=False, filed=False)
     with override_settings(cadrumo_output_language="en"):
         chips = {chip.level.value: chip.count for chip in attention_chips(form, recorded=False)}
         line = next_action_text(progress, OutputLanguage.EN)
@@ -292,7 +292,7 @@ def test_a_value_the_calculation_inferred_is_worth_checking_and_never_promised_a
     form = _declaration(assumed=False).model_copy(update={"calculation_notes": (note,)})
     with override_settings(cadrumo_output_language="en"):
         chips = {chip.level.value: chip.count for chip in attention_chips(form, recorded=False)}
-        progress = workbench_progress(form, staged=0, verified=True, filed=False)
+        progress = served_progress(form, staged=0, verified=True, filed=False)
         lines = issue_lines(form)
 
     assert note.attention is ModeloFormAttention.CHECK
@@ -307,7 +307,7 @@ def test_an_assumed_box_is_still_counted_to_confirm_and_offered_next() -> None:
     form = _declaration(assumed=True)
     with override_settings(cadrumo_output_language="en"):
         chips = {chip.level.value: chip.count for chip in attention_chips(form, recorded=False)}
-    progress = workbench_progress(form, staged=0, verified=True, filed=False)
+    progress = served_progress(form, staged=0, verified=True, filed=False)
 
     assert chips["confirm"] == 1
     assert progress.next_action is ModeloFormNextAction.CONFIRM and progress.count == 1

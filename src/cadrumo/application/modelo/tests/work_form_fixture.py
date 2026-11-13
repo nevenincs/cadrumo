@@ -39,7 +39,7 @@ from ..work_form_models import (
     ModeloFormField,
     ModeloWorkForm,
 )
-from ..work_form_service import ModeloWorkFormLoadV1, modelo_form_snapshot
+from ..work_form_service import modelo_form_snapshot, modelo_work_form_load
 from ..work_review import ModeloWorkProgress, ModeloWorkReview, build_modelo_work_review_casillas
 from ..workbench_read import ModeloWorkbenchFormReadV1
 
@@ -166,7 +166,7 @@ def read_before_calculation(
 ) -> ModeloWorkbenchFormReadV1:
     """The public form read of a declaration whose edit door is refused until it is calculated."""
     return ModeloWorkbenchFormReadV1(
-        load=ModeloWorkFormLoadV1(form=form, verified=verified, filed=filed),
+        load=modelo_work_form_load(form, verified=verified, filed=filed),
         admission=ModeloEditRefusedV1(
             refusal=ModeloEditDomainRefusalV1(
                 code=ModeloEditRefusalCode.ADMISSION_DENIED,

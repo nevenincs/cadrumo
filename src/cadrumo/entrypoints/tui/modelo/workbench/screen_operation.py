@@ -20,7 +20,6 @@ from .....application.modelo.work_form_export_offer import (
     record_availability,
 )
 from .....application.modelo.work_form_header import ModeloFormExportHoldReason, export_hold
-from .....application.modelo.work_form_models import ModeloWorkForm
 from .....application.modelo.work_form_next_step import ModeloFormNextAction
 from .....application.modelo.work_form_service import ModeloWorkFormLoadV1, modelo_work_form_changes
 from .....core.errors.error_codes import resolve_error_message
@@ -29,7 +28,6 @@ from .....core.i18n.render import tr
 from .....core.logging import get_logger
 from .....core.modelo_export_artefact import ModeloExportArtefact
 from .....core.operations import OperationEffect, OperationTerminalCondition
-from .....domain.modelos.verification_report import VerificationCompletenessStatus
 from ...components.dialogs import ConfirmScreen
 from ...operations.controller_port import OperationControllerPort
 from ...refusal.panel import RefusalSlot
@@ -40,7 +38,6 @@ from .header import result_view
 from .ports import ModeloWorkbenchActionsV1, WorkbenchExportRequest
 from .result import WorkbenchResultScreen, result_lines
 from .screen_constants import (
-    CHECKED_LOCALE_KEYS,
     NEXT_KEYS,
     SELF_REPORTING_OPERATIONS,
     VALUE_CHANGING_OPERATIONS,
@@ -98,9 +95,7 @@ class WorkbenchOperationMixin:
             self.action_issues()
         elif self._may_confirm():
             self._confirm_next()
-        blocks = hold.reason is ModeloFormExportHoldReason.BLOCKS
-        key = NEXT_KEYS[ModeloFormNextAction.RESOLVE if blocks else ModeloFormNextAction.CONFIRM]
-        self._notice(f"{hold.words} [{key}]")
+        self._notice(f"{hold.words} [{NEXT_KEYS[hold.action]}]")
         return True
 
     def action_export(self: ModeloWorkbenchScreen) -> None:
@@ -324,7 +319,7 @@ class WorkbenchOperationMixin:
         await self._read()
         after = self._load
         if reporting is not None and after is not None:
-            self._notice(self._outcome_text(reporting, after.form))
+            self._notice(self._outcome_text(reporting, after))
         if before is None or after is None or after is before:
             return
         changes = modelo_work_form_changes(before.form, after.form)
@@ -345,17 +340,16 @@ class WorkbenchOperationMixin:
 
         self.app.push_screen(WorkbenchResultScreen(lines), closed)
 
-    def _outcome_text(self: ModeloWorkbenchScreen, definition: str, form: ModeloWorkForm) -> str:
+    def _outcome_text(self: ModeloWorkbenchScreen, definition: str, load: ModeloWorkFormLoadV1) -> str:
         """What a finished calculation or check concluded, in the filer's words."""
         if definition == str(MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID):
-            verdict = form.verification
-            if verdict is None:
+            verdict = load.journey.verdict
+            if verdict.checked_words is None:
                 return tr("workspace.modelo.operation.done")
-            checked = tr(CHECKED_LOCALE_KEYS[verdict])
-            if verdict is VerificationCompletenessStatus.COMPLETE:
-                return checked
-            return f"{checked} [{NEXT_KEYS[ModeloFormNextAction.RESOLVE]}]"
-        view = result_view(form, self._language, staged=0, recorded=self.recorded)
+            if not verdict.checked_resolves:
+                return verdict.checked_words
+            return f"{verdict.checked_words} [{NEXT_KEYS[ModeloFormNextAction.RESOLVE]}]"
+        view = result_view(load.form, self._language, staged=0, recorded=self.recorded)
         if view is None or view.settled is None:
             return tr("workspace.modelo.operation.done")
         direction, value = view.settled
