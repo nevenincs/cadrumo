@@ -15,6 +15,7 @@ from decimal import Decimal
 import pytest
 
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.calculation_revision import CalculationRevisionState
 from ....domain.modelos.verification_report import VerificationCompletenessStatus
 from ..calculation_notes import CHECK_REFUSED_REASONS, GATE_REFUSED_REASONS
@@ -30,6 +31,8 @@ from .work_form_fixture import built_form
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_YEAR = filing_year_envelope().horizon
+
 _INCOME = "rendimientos_integros"
 _KIND = "tipo_renta"
 _HELD: dict[str, Decimal | str] = {_INCOME: Decimal("1200.00"), _KIND: "01"}
@@ -40,11 +43,11 @@ _PENDING = ModeloFormStepStatus.PENDING
 
 
 def _empty(operation: PinnedAuthorityOperation) -> ModeloWorkForm:
-    return built_form(operation, "210", 2025, "0A", entered=frozenset())
+    return built_form(operation, "210", _YEAR, "0A", entered=frozenset())
 
 
 def _entered(operation: PinnedAuthorityOperation) -> ModeloWorkForm:
-    return built_form(operation, "210", 2025, "0A", held=_HELD, entered=frozenset(_HELD))
+    return built_form(operation, "210", _YEAR, "0A", held=_HELD, entered=frozenset(_HELD))
 
 
 def _calculated(form: ModeloWorkForm, **update: object) -> ModeloWorkForm:
@@ -68,9 +71,11 @@ def test_the_steps_are_the_four_of_the_journey_in_order(operation: PinnedAuthori
 
 def test_each_lifecycle_fact_marks_the_steps_it_settles(operation: PinnedAuthorityOperation) -> None:
     entered = _entered(operation)
-    assumed = built_form(operation, "210", 2025, "0A", held=_HELD, entered=frozenset({_KIND}))
+    assumed = built_form(operation, "210", _YEAR, "0A", held=_HELD, entered=frozenset({_KIND}))
     complete = VerificationCompletenessStatus.COMPLETE
-    filed = built_form(operation, "210", 2025, "0A", entered=frozenset(), lifecycle=CalculationRevisionState.PRESENTADO)
+    filed = built_form(
+        operation, "210", _YEAR, "0A", entered=frozenset(), lifecycle=CalculationRevisionState.PRESENTADO
+    )
 
     assert _statuses(_empty(operation)) == [_CURRENT, _PENDING, _PENDING, _PENDING]
     assert _statuses(entered) == [_DONE, _CURRENT, _PENDING, _PENDING]
@@ -211,7 +216,7 @@ def test_a_declaration_not_checked_has_no_finished_check_words(operation: Pinned
 
 def test_each_export_hold_names_the_action_that_lifts_it(operation: PinnedAuthorityOperation) -> None:
     gate_note = sorted(GATE_REFUSED_REASONS)[0]
-    assumed = _calculated(built_form(operation, "210", 2025, "0A", held=_HELD, entered=frozenset({_KIND})))
+    assumed = _calculated(built_form(operation, "210", _YEAR, "0A", held=_HELD, entered=frozenset({_KIND})))
     blocked = _calculated(_entered(operation), calculation_notes=(_note(gate_note),))
     unchecked = _calculated(_entered(operation))
     language = unchecked.language
