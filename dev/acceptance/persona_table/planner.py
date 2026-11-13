@@ -53,6 +53,12 @@ from .unchecked import persona_at
 MODELOS_ENV = "PERSONA_TABLE_MODELOS"
 YEARS_ENV = "PERSONA_TABLE_YEARS"
 
+STAGE_ORDER_ENV = "PERSONA_TABLE_STAGE_ORDER"
+STAGE_ORDERS = ("legacy", "lifecycle")
+"""``legacy`` files a granted verification inside the verify stage, before the export; ``lifecycle`` files after it."""
+DEFAULT_STAGE_ORDER = "legacy"
+"""The order a run takes when none is named; the one place to change to move the table to the lifecycle order."""
+
 REASON_LIMIT = 900
 """The longest reason a row keeps."""
 
@@ -62,6 +68,14 @@ _SETTLED = re.compile(r"^(?P<definition>\S+) settled (?P<condition>\S+) \((?P<co
 def listed(name: str) -> tuple[str, ...]:
     """The comma-separated items the environment variable ``name`` holds, empty when it is unset."""
     return tuple(item.strip() for item in os.environ.get(name, "").split(",") if item.strip())
+
+
+def stage_order_in_use() -> str:
+    """The stage order the run's environment names, or the default; an unknown name is refused."""
+    order = os.environ.get(STAGE_ORDER_ENV, "").strip() or DEFAULT_STAGE_ORDER
+    if order not in STAGE_ORDERS:
+        raise ValueError(f"{STAGE_ORDER_ENV} is {order!r}; expected one of {', '.join(STAGE_ORDERS)}")
+    return order
 
 
 @cache

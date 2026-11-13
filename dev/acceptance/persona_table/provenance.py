@@ -109,11 +109,15 @@ def prepare_authority(
     return verify_current(root, tree=tree)
 
 
-def write_meta(rows_file: Path, provenance: RunProvenance) -> Path:
-    """Write the sidecar beside ``rows_file``, replacing the previous run's."""
+def write_meta(rows_file: Path, provenance: RunProvenance, *, stage_order: str | None = None) -> Path:
+    """Write the sidecar beside ``rows_file``, replacing the previous run's.
+
+    ``stage_order`` is the order the run took its stages in; a sidecar without it belongs to a legacy-order run.
+    """
     path = meta_path(rows_file)
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(asdict(provenance), indent=2, sort_keys=True) + "\n", encoding="utf-8", newline="\n")
+    document = asdict(provenance) | ({} if stage_order is None else {"stage_order": stage_order})
+    path.write_text(json.dumps(document, indent=2, sort_keys=True) + "\n", encoding="utf-8", newline="\n")
     return path
 
 

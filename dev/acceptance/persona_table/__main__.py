@@ -17,7 +17,9 @@ the authority of this tree when stale, proves the published generation records t
 tree's legal sources, and exits 2 otherwise. ``--tree`` is the commit of the tree under
 test (the tool never runs git); with the generation and database digest it is written
 to ``<out>.meta.json``, which ``render`` prints in the table header (``--meta`` names
-another sidecar). ``run`` appends to ``--out``; a filtered run writes only its rows. ``check``
+another sidecar). ``--stage-order {legacy,lifecycle}`` (default ``legacy``, set in ``planner``) picks whether a
+granted verification is filed inside the verify stage or after the export; it is written to the sidecar as
+``stage_order``. ``run`` appends to ``--out``; a filtered run writes only its rows. ``check``
 exits 1 when a row the baseline holds green is not green in the rows given.
 
 Audit which returns the application's calendar marks applicable that the table does not run,
@@ -86,6 +88,7 @@ from cadrumo.tests.personas import YearEnvelope, persona_ids
 from .coverage import OUT_ENV, PERSONAS_ENV, compare, read_observations, render_markdown
 from .diff import diff_tables, render_diff, row_id
 from .frontend import FrontendResultError, compare_frontend, read_results
+from .planner import DEFAULT_STAGE_ORDER, STAGE_ORDER_ENV, STAGE_ORDERS
 from .probe import PROBE_OUT_ENV, read_probes
 from .probe import render_markdown as render_markdown_probes
 from .provenance import ProvenanceError, meta_path, prepare_authority, read_meta, write_meta
@@ -97,6 +100,10 @@ BASELINE = Path(__file__).with_name("baseline")
 _SWEEP = Path(__file__).with_name("sweep.py")
 _CALENDAR_SWEEP = Path(__file__).with_name("calendar_sweep.py")
 _PROBE_SWEEP = Path(__file__).with_name("probe_sweep.py")
+_STAGE_ORDER_HELP = (
+    "legacy files a granted verification inside the verify stage, before the export; lifecycle files it after the "
+    "export (recorded in the rows' .meta.json as stage_order)"
+)
 
 
 @cache
@@ -131,7 +138,7 @@ def _run(args: argparse.Namespace) -> int:
     except ProvenanceError as refusal:
         sys.stderr.write(f"persona table not run: {refusal}\n")
         return 2
-    write_meta(out, provenance)
+    write_meta(out, provenance, stage_order=args.stage_order)
     os.environ.update({"PERSONA_TABLE_OUT": str(out), **_selection(args)})
     return _collect(_SWEEP, args.workers)
 
@@ -142,6 +149,7 @@ def _selection(args: argparse.Namespace) -> dict[str, str]:
         "PERSONA_TABLE_PERSONAS": ",".join(args.persona),
         "PERSONA_TABLE_MODELOS": ",".join(args.modelo),
         "PERSONA_TABLE_YEARS": ",".join(str(year) for year in args.year),
+        STAGE_ORDER_ENV: args.stage_order,
     }
 
 
@@ -158,7 +166,7 @@ def _probe(args: argparse.Namespace) -> int:
     except ProvenanceError as refusal:
         sys.stderr.write(f"verify probe not run: {refusal}\n")
         return 2
-    write_meta(out, provenance)
+    write_meta(out, provenance, stage_order=args.stage_order)
     out.unlink(missing_ok=True)
     os.environ.update({PROBE_OUT_ENV: str(out), **_selection(args)})
     status = _collect(_PROBE_SWEEP, args.workers)
@@ -281,6 +289,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     run.add_argument("--modelo", action="append", default=[])
     run.add_argument("--year", action="append", type=int, default=[])
     run.add_argument("--workers", default="auto")
+    run.add_argument("--stage-order", choices=STAGE_ORDERS, default=DEFAULT_STAGE_ORDER, help=_STAGE_ORDER_HELP)
     run.set_defaults(handler=_run)
 
     probe = commands.add_parser(
@@ -292,6 +301,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     probe.add_argument("--modelo", action="append", default=[])
     probe.add_argument("--year", action="append", type=int, default=[])
     probe.add_argument("--workers", default="auto")
+    probe.add_argument("--stage-order", choices=STAGE_ORDERS, default=DEFAULT_STAGE_ORDER, help=_STAGE_ORDER_HELP)
     probe.set_defaults(handler=_probe)
 
     coverage = commands.add_parser(

@@ -70,6 +70,7 @@ from .planner import (
     refusal_text,
     registry_envelope,
     replay_scope,
+    stage_order_in_use,
     stated_refusal,
     stated_values,
 )
@@ -182,7 +183,7 @@ def run_return(
             internal_figures=internal_figures,
         )
     revision_id = calculated.calculation_revision_id
-    lifecycle = run_lifecycle(world, plan, values, exports, work_unit_id, revision_id)
+    lifecycle = run_lifecycle(world, plan, values, exports, work_unit_id, revision_id, stage_order=stage_order_in_use())
     calculate, reasons = _with_counterparties(
         calculate, reasons, values, materialised.persona, plan, exports, lifecycle.export
     )
@@ -213,7 +214,7 @@ class Lifecycle:
     export_detail: str
     export_reason: str
     file_reason: str
-    """The local filing outcome, empty when the verification did not pass and nothing was filed."""
+    """The local filing outcome after the export; empty when nothing was filed or the legacy order filed in verify."""
 
 
 def run_lifecycle(
@@ -223,13 +224,22 @@ def run_lifecycle(
     exports: Path,
     work_unit_id: str,
     revision_id: str,
+    *,
+    stage_order: str | None = None,
 ) -> Lifecycle:
-    """Run verify, then export, then local filing, the order the lifecycle takes.
+    """Run verify, export and local filing in the ``stage_order`` named, else the one the environment names.
 
-    Filing waits for the export so that an export defect of a return is seen before the return is filed; it
-    depends only on the verification, whatever the export settled, so the quarterly chain still builds on it.
+    ``lifecycle``: verify, then export, then filing, so that an export defect of a return is seen before the
+    return is filed; filing depends only on the verification, whatever the export settled, so the quarterly chain
+    still builds on it. ``legacy``: a granted verification is filed inside the verify stage, before the export
+    runs, and the filing outcome is the verify stage's reason.
     """
+    order = stage_order or stage_order_in_use()
     verify, verify_reason, verified = _verify(world, work_unit_id, revision_id)
+    if order == "legacy":
+        filed = _file_locally(world, work_unit_id, revision_id, verified) if verified is not None else ""
+        export, export_detail, export_reason = _export(world, plan, values, exports, work_unit_id, revision_id)
+        return Lifecycle(verify, verify_reason or filed, export, export_detail, export_reason, "")
     export, export_detail, export_reason = _export(world, plan, values, exports, work_unit_id, revision_id)
     file_reason = _file_locally(world, work_unit_id, revision_id, verified) if verified is not None else ""
     return Lifecycle(verify, verify_reason, export, export_detail, export_reason, file_reason)
