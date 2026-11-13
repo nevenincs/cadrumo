@@ -8,8 +8,8 @@ import type {
   ModeloFormPriorValueWithdrawal,
   ModeloWorkbenchFormProjectionV1,
   PublicModeloFormField,
-  PublicModeloFormPriorValueAttestation,
 } from "../shell/modeloContract/modeloWorkForm";
+import type { PublicModeloFormPriorValueAttestation } from "../shell/modeloContract/modeloWorkFormPart2";
 import { placedFields } from "../components/modelo/form/session";
 
 // What the stories of figures stated for earlier returns need that no seeded

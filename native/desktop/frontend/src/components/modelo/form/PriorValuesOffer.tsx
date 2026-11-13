@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
-import type { PublicModeloFormPriorValueAttestation } from "../../../shell/modeloContract/modeloWorkForm";
+import type { PublicModeloFormPriorValueAttestation } from "../../../shell/modeloContract/modeloWorkFormPart2";
 import type { RefusalIntent, WindowPlace } from "../../../shell/refusal";
 import { useStrings } from "../../../shell/strings";
 import { RefusalNotice } from "../../RefusalNotice";
