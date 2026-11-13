@@ -36,7 +36,7 @@ from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
-from typing import Final
+from typing import Final, Protocol
 
 from pydantic import BaseModel
 
@@ -242,23 +242,11 @@ def resolve_incn_periodo_anterior(
         held_gap: IncnPeriodoAnteriorGap | None = IncnPeriodoAnteriorGap.HELD_RETURN_SET_ASIDE
     else:
         held, held_gap = _held_value(snapshot, stores=stores, activity_start_date=activity_start_date)
-    if held is not None:
-        if twelve_month_statement is not None and twelve_month_statement != held:
-            return located(
-                IncnPeriodoAnteriorOrigin.UNRESOLVED,
-                gap=IncnPeriodoAnteriorGap.TWELVE_MONTH_STATEMENT_DISAGREES,
-                held_value=held,
-            )
-        return located(IncnPeriodoAnteriorOrigin.HELD_RETURN, value=held)
-    if held_gap is IncnPeriodoAnteriorGap.HELD_RETURN_WITHOUT_FIGURE:
-        return located(IncnPeriodoAnteriorOrigin.UNRESOLVED, gap=held_gap)
-    if len(statements.stated) == 1:
-        (value,) = statements.stated
-        return located(IncnPeriodoAnteriorOrigin.OPERATOR_STATEMENT, value=value)
-    if statements.stated:
-        return located(IncnPeriodoAnteriorOrigin.UNRESOLVED, gap=IncnPeriodoAnteriorGap.CONFLICTING_STATEMENTS)
-    if twelve_month_statement is not None and held_gap is None:
-        return located(IncnPeriodoAnteriorOrigin.TWELVE_MONTH_STATEMENT, value=twelve_month_statement)
+    outcome = _outcome_from_held_return(located, held, held_gap, twelve_month_statement)
+    if outcome is None:
+        outcome = _outcome_from_statements(located, statements, held_gap, twelve_month_statement)
+    if outcome is not None:
+        return outcome
     attestable = INCN_PERIODO_ANTERIOR_BINDING_ID in attestable_carry_binding_ids(
         snapshot,
         operation=operation,
@@ -274,6 +262,57 @@ def resolve_incn_periodo_anterior(
         gap=held_gap or IncnPeriodoAnteriorGap.NO_RETURN_HELD,
         door_action_id=ATTEST_PRIOR_VALUE_ACTION_ID if attestable else None,
     )
+
+
+class _LocatedFigure(Protocol):
+    """Builds the figure for one ejercicio, stamped with the preceding return it reads."""
+
+    def __call__(
+        self,
+        origin: IncnPeriodoAnteriorOrigin,
+        *,
+        value: Decimal | None = None,
+        gap: IncnPeriodoAnteriorGap | None = None,
+        door_action_id: str | None = None,
+        held_value: Decimal | None = None,
+    ) -> IncnPeriodoAnterior: ...
+
+
+def _outcome_from_held_return(
+    located: _LocatedFigure,
+    held: Decimal | None,
+    held_gap: IncnPeriodoAnteriorGap | None,
+    twelve_month_statement: Decimal | None,
+) -> IncnPeriodoAnterior | None:
+    """The figure a held return settles, or ``None`` when it settles nothing."""
+    if held is not None:
+        if twelve_month_statement is not None and twelve_month_statement != held:
+            return located(
+                IncnPeriodoAnteriorOrigin.UNRESOLVED,
+                gap=IncnPeriodoAnteriorGap.TWELVE_MONTH_STATEMENT_DISAGREES,
+                held_value=held,
+            )
+        return located(IncnPeriodoAnteriorOrigin.HELD_RETURN, value=held)
+    if held_gap is IncnPeriodoAnteriorGap.HELD_RETURN_WITHOUT_FIGURE:
+        return located(IncnPeriodoAnteriorOrigin.UNRESOLVED, gap=held_gap)
+    return None
+
+
+def _outcome_from_statements(
+    located: _LocatedFigure,
+    statements: _EjercicioStatements,
+    held_gap: IncnPeriodoAnteriorGap | None,
+    twelve_month_statement: Decimal | None,
+) -> IncnPeriodoAnterior | None:
+    """The figure the filer's statements settle once no held return does, or ``None`` when they settle nothing."""
+    if len(statements.stated) == 1:
+        (value,) = statements.stated
+        return located(IncnPeriodoAnteriorOrigin.OPERATOR_STATEMENT, value=value)
+    if statements.stated:
+        return located(IncnPeriodoAnteriorOrigin.UNRESOLVED, gap=IncnPeriodoAnteriorGap.CONFLICTING_STATEMENTS)
+    if twelve_month_statement is not None and held_gap is None:
+        return located(IncnPeriodoAnteriorOrigin.TWELVE_MONTH_STATEMENT, value=twelve_month_statement)
+    return None
 
 
 def incn_periodo_anterior_reader(

@@ -12,6 +12,7 @@ the one that is wrong.
 from __future__ import annotations
 
 from datetime import date
+from decimal import Decimal
 from typing import Final
 
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -70,19 +71,7 @@ def incn_periodo_anterior_disagreement_finding(
     stated = workflow_profile.incn_prior_12_months
     if stated is None:
         return None
-    # The ejercicio of a Modelo 200 is the período that begins in its filing year.
-    last_day = date(work_unit.filing_year, 12, 31)
-    try:
-        periodo = periodo_impositivo_from_facts(
-            modelo=str(work_unit.modelo),
-            on=last_day,
-            profile_values=resolve_profile_path_values(
-                bucket_id=work_unit.bucket_id, operation=operation, as_of=last_day
-            ),
-        )
-    except FilingProducerSnapshotError:
-        return None
-    if not periodo.prior_lasted_twelve_months:
+    if not _prior_lasted_twelve_months(work_unit, operation):
         return None
     located = resolve_incn_periodo_anterior(
         work_unit.bucket_id,
@@ -98,8 +87,44 @@ def incn_periodo_anterior_disagreement_finding(
         activity_start_date=workflow_profile.activity_start_date,
         twelve_month_statement=stated,
     )
-    if located.gap is not IncnPeriodoAnteriorGap.TWELVE_MONTH_STATEMENT_DISAGREES or located.held_value is None:
+    held_value = located.held_value
+    if located.gap is not IncnPeriodoAnteriorGap.TWELVE_MONTH_STATEMENT_DISAGREES or held_value is None:
         return None
+    return _disagreement_finding(
+        work_unit,
+        held_value=held_value,
+        source_filing_year=located.source_filing_year,
+        stated=stated,
+        operation=operation,
+    )
+
+
+def _prior_lasted_twelve_months(work_unit: WorkUnit, operation: PinnedAuthorityOperation) -> bool:
+    """Whether the preceding período lasted twelve months; ``False`` while the período facts are unstated."""
+    # The ejercicio of a Modelo 200 is the período that begins in its filing year.
+    last_day = date(work_unit.filing_year, 12, 31)
+    try:
+        periodo = periodo_impositivo_from_facts(
+            modelo=str(work_unit.modelo),
+            on=last_day,
+            profile_values=resolve_profile_path_values(
+                bucket_id=work_unit.bucket_id, operation=operation, as_of=last_day
+            ),
+        )
+    except FilingProducerSnapshotError:
+        return False
+    return periodo.prior_lasted_twelve_months
+
+
+def _disagreement_finding(
+    work_unit: WorkUnit,
+    *,
+    held_value: Decimal,
+    source_filing_year: int | None,
+    stated: Decimal,
+    operation: PinnedAuthorityOperation,
+) -> ModeloVerificationFinding:
+    """The blocking finding naming both figures, cited to the binding that reads the preceding turnover."""
     snapshot = operation.reading_snapshot(
         work_unit.modelo, filing_year=work_unit.filing_year, period=work_unit.period.registry_token
     )
@@ -111,8 +136,8 @@ def incn_periodo_anterior_disagreement_finding(
         message_facts={
             "modelo": str(work_unit.modelo),
             "filing_year": work_unit.filing_year,
-            "source_filing_year": located.source_filing_year or work_unit.filing_year - 1,
-            "held_turnover": located.held_value,
+            "source_filing_year": source_filing_year or work_unit.filing_year - 1,
+            "held_turnover": held_value,
             "stated_turnover": stated,
             "profile_path": INCN_PRIOR_12_MONTHS_PATH,
         },
