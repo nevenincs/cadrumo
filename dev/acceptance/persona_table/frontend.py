@@ -129,7 +129,8 @@ def read_results(directory: Path) -> dict[ResultKey, SurfaceResult]:
     ``persona``, ``modelo`` (null on a persona-level line, which reports whether the profile loaded), ``year``,
     ``period`` (null with a null ``modelo``), ``loads``, and, when ``modelo`` is set, ``calculate``, ``verify``
     and ``export`` in the stage vocabulary. ``refusal_code``, ``reason`` and ``log`` are optional text;
-    ``figures`` is an optional object of every non-zero casilla value the surface displayed, as text.
+    ``figures`` is an optional object of every non-zero casilla value the surface displayed, as text; the table
+    row is compared on the casillas of its form only, never on its internal figures.
     Unknown keys and bad values are refused.
     """
     if not directory.is_dir():
@@ -309,6 +310,8 @@ def figure_causes(surface: str, table: Mapping[str, str], shown: Mapping[str, st
     """Each way the figures ``shown`` by a surface miss or disagree with the table row's ``table`` figures.
 
     The table row is the oracle for calculated values, so a casilla shown beyond ``table`` is not a cause.
+    ``table`` holds only the casillas the revision's form places; the row's internal figures (working figures and
+    unplaced casillas, which no surface is held to show) are never compared and are not extras when shown.
     """
     causes: list[str] = []
     for casilla in sorted(table):
@@ -349,7 +352,8 @@ def parity(
     table, shown = dict(row.figures), dict(result.figures)
     causes = _stage_causes(surface, stages, result) + figure_causes(surface, table, shown)
     outcome = DIFFERS if causes else MATCHED
-    return RowParity(row.key, surface, outcome, tuple(causes), tree, extra_figures(table, shown))
+    extras = extra_figures(table | dict(row.internal_figures), shown)
+    return RowParity(row.key, surface, outcome, tuple(causes), tree, extras)
 
 
 def _load_failure_reason(result: SurfaceResult | None, load_reason: str) -> str:

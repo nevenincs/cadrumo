@@ -92,7 +92,7 @@ from .counterparties import DESIGNS, counterparty_mismatches, is_compared
 from .export_readback import read_fields, readback_mismatches, readback_reason, unreadable_reason
 from .export_text import check_export_text, violation_reason
 from .roles import StatedCasilla, compared, differing, edition_identities, mismatch_text, revision_identities
-from .row_figures import merge_row_figures, row_figures
+from .row_figures import merge_row_figures, on_form_casillas, row_figures, split_figures
 from .rows import (
     PlannedRow,
     Stage,
@@ -268,13 +268,21 @@ def _run_return(
     except PersonaMaterialisationError as error:
         return _refused(plan, at_calculate, error)
     rows = row_figures(world, calculated)
-    figures = _figures(calculated, rows)
+    figures, internal_figures = split_figures(
+        _figures(calculated, rows),
+        on_form_casillas(world.operation, str(calculated.unit.modelo), calculated.unit.revision_id),
+    )
     calculate, reasons = _compare(plan, values, at_calculate, calculated, rows)
     if not plan.owed:
         verify, not_owed_reason = _not_owed(materialised, plan)
         reasons += [not_owed_reason] if not_owed_reason else []
         return TableRow.from_plan(
-            plan, calculate, verify=verify, reason=" | ".join(reasons)[:_REASON_LIMIT], figures=figures
+            plan,
+            calculate,
+            verify=verify,
+            reason=" | ".join(reasons)[:_REASON_LIMIT],
+            figures=figures,
+            internal_figures=internal_figures,
         )
     revision_id = calculated.calculation_revision_id
     lifecycle = run_lifecycle(world, plan, values, exports, work_unit_id, revision_id)
@@ -294,6 +302,7 @@ def _run_return(
         reason=" | ".join(reasons)[:_REASON_LIMIT],
         export_detail=lifecycle.export_detail,
         figures=figures,
+        internal_figures=internal_figures,
     )
 
 

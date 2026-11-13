@@ -43,6 +43,7 @@ def _row(
     *,
     persona: str = "persona",
     figures: tuple[tuple[str, str], ...] = _FIGURES,
+    internal_figures: tuple[tuple[str, str], ...] = (),
 ) -> TableRow:
     plan = PlannedRow(
         persona=persona,
@@ -54,7 +55,9 @@ def _row(
         grounding="verified",
         sources=("ley:art-1",),
     )
-    return TableRow.from_plan(plan, calculate, verify=verify, export=export, figures=figures)
+    return TableRow.from_plan(
+        plan, calculate, verify=verify, export=export, figures=figures, internal_figures=internal_figures
+    )
 
 
 def _line(**overrides: object) -> dict[str, object]:
@@ -294,6 +297,31 @@ def test_figures_round_trip_through_json_and_an_older_line_has_none(tmp_path: Pa
 def test_a_baseline_line_holds_no_figures() -> None:
     row = _row()
     assert "figures" not in json.loads(row.to_baseline_json(row.horizon))
+    assert "internal_figures" not in json.loads(row.to_baseline_json(row.horizon))
+
+
+_INTERNAL = (("PH18", "1"), ("RESINGDEV", "-2158.99"))
+
+
+def test_internal_figures_round_trip_through_json_and_an_older_line_has_none() -> None:
+    row = _row(internal_figures=_INTERNAL)
+    assert json.loads(row.to_json())["internal_figures"] == dict(_INTERNAL)
+    again = TableRow.from_json(row.to_json())
+    assert (again.figures, again.internal_figures) == (_FIGURES, _INTERNAL)
+    older = json.loads(row.to_json())
+    del older["internal_figures"]
+    assert TableRow.from_json(json.dumps(older)).internal_figures == ()
+    older["internal_figures"] = ["PH18"]
+    with pytest.raises(ValueError, match="figures"):
+        TableRow.from_json(json.dumps(older))
+
+
+def test_a_surface_is_not_held_to_a_rows_internal_figures_and_they_are_not_extras() -> None:
+    row = _row(internal_figures=_INTERNAL)
+    outcome = parity(row, "window", _result(figures=dict(_FIGURES)))
+    assert (outcome.outcome, outcome.causes, outcome.extra_casillas) == ("matched", (), 0)
+    shown = parity(row, "tui", _result(figures={**dict(_FIGURES), "PH18": "1", "0002": "21"}))
+    assert (shown.outcome, shown.extra_names) == ("matched", ("0002",))
 
 
 def _comparison() -> tuple[list[TableRow], dict[ResultKey, SurfaceResult]]:

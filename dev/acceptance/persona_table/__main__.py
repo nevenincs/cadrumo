@@ -46,8 +46,10 @@ holds every non-zero casilla value the surface displayed, as text. Unknown keys 
 The table gains a ``tui`` and a ``window`` column (``@<tree>`` when the surface ran another tree than ``--head``),
 a Frontend line in the summary, and a ``Frontend matrix`` section with the rows that differ and why. A row
 matches when each stage equals the Python row's and every figure of the table row is shown with an equal value
-(the table row is the oracle for calculated values); casillas shown beyond the row's figures do not fail a row
-and are counted in the matrix cell; a row that recorded no figures cannot be compared.
+(the table row is the oracle for calculated values; its figures are the casillas the revision's form places, and
+its internal figures, the working figures and unplaced casillas, are not compared); casillas shown beyond the
+row's figures do not fail a row and are counted in the matrix cell; a row that recorded no figures cannot be
+compared.
 Without ``--frontend`` the output is unchanged.
 """
 

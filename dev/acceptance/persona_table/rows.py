@@ -160,8 +160,13 @@ class TableRow:
     unchecked: tuple[str, ...] = ()
     """What the persona states for the return that the table cannot compare; see ``unchecked.unchecked_items``."""
     figures: tuple[tuple[str, str], ...] = ()
-    """The calculated casilla values of the return, every non-zero one, by casilla id; see :func:`canonical_figures`.
-    Empty for a return that never calculated, and for a row written before figures were recorded."""
+    """The calculated values of the return's casillas on the form, every non-zero one, by casilla id; see
+    :func:`canonical_figures`. Empty for a return that never calculated, and for a row written before figures were
+    recorded. A surface can show exactly these, so the surface comparison reads them."""
+    internal_figures: tuple[tuple[str, str], ...] = ()
+    """The non-zero calculated values the revision's form layout does not place on the form (its working figures
+    and unplaced casillas), same shape as ``figures``. No surface is held to show them. Empty for a row written
+    before they were kept apart."""
     verdict: Verdict = field(init=False)
 
     def __post_init__(self) -> None:
@@ -184,6 +189,7 @@ class TableRow:
         reason: str = "",
         export_detail: str = "",
         figures: tuple[tuple[str, str], ...] = (),
+        internal_figures: tuple[tuple[str, str], ...] = (),
     ) -> TableRow:
         """The row of ``plan`` with the stages it reached and the figures its calculation produced."""
         return cls(
@@ -203,6 +209,7 @@ class TableRow:
             floor_source_dropped=plan.floor_source_dropped,
             unchecked=plan.unchecked,
             figures=figures,
+            internal_figures=internal_figures,
         )
 
     def to_json(self) -> str:
@@ -211,6 +218,7 @@ class TableRow:
         data["sources"] = list(self.sources)
         data["unchecked"] = list(self.unchecked)
         data["figures"] = dict(self.figures)
+        data["internal_figures"] = dict(self.internal_figures)
         return json.dumps(data, ensure_ascii=False, sort_keys=True)
 
     def to_baseline_json(self, horizon: int) -> str:
@@ -248,6 +256,7 @@ class TableRow:
         data["sources"] = tuple(data["sources"])
         data["unchecked"] = tuple(data.get("unchecked", ()))
         data["figures"] = _read_figures(data.get("figures", {}))
+        data["internal_figures"] = _read_figures(data.get("internal_figures", {}))
         for name in ("calculate", "verify", "export"):
             data[name] = Stage(data[name])
         return cls(**data)
