@@ -32,6 +32,7 @@ from ...domain.contribuyente.family_fact_context import FamilyFactResolutionCont
 from ...domain.contribuyente.family_profile import RentaFamilyProfile
 from ...domain.user_profile.errors import ProfileNotFoundError
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
+from ..user_profile.profile_read_recorder import profile_values_under, recorded_profile_view
 from .profile_derived_facts import renta_family_profile_from_facts, second_entitled_filer_indicated
 from .registry_input_refusals import registry_integrity_verdict, request_verdict
 from .semantic_role_resolution import casilla_id_for_unambiguous_revision_semantic_role
@@ -299,7 +300,8 @@ def _profile_fact_strings(
             ).load(bucket_id)
         except ProfileNotFoundError:
             return None
-    return {fact.path: str(fact.value) for fact in record.facts if fact.value is not None}
+    # Each path read from the map is noted; enumerating it reads the whole profile.
+    return recorded_profile_view({fact.path: str(fact.value) for fact in record.facts if fact.value is not None})
 
 
 def collect_minimo_descendientes_prorrata_inferred_diagnostics(
@@ -673,7 +675,7 @@ def _guarderia_descendants(
     return _GuarderiaContext(
         casilla_id=casilla_id,
         filing_year=registry_scope.filing_year,
-        descendants=tuple(descendant_list_from_facts(facts)),
+        descendants=tuple(descendant_list_from_facts(profile_values_under(facts, "renta_family.descendiente."))),
         family_context=_family_fact_context(registry_scope.filing_year, operation=operation),
         registry_scope=registry_scope,
     )

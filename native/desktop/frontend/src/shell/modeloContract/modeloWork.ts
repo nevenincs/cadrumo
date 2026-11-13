@@ -76,6 +76,7 @@ export type CalculationSourceDiagnosticSnapshot = {
     | "iva_row_placed_on_movement_date"
     | "iva_operation_date_after_movement"
     | "oss_no_live_source"
+    | "autonomic_deducciones_not_enrolled"
     | "withholding_detail_absent"
     | "m347_declarado_provincia_unrecorded"
     | "declared_party_name_unresolved"
@@ -134,7 +135,9 @@ export type CalculationSourceDiagnosticSnapshot = {
     | "activity_asset_agrarian_excluded"
     | "activity_asset_activity_undeclared"
     | "household_rows_incomplete"
-    | "household_row_fact_unstated";
+    | "household_row_fact_unstated"
+    | "ascendant_disability_minimum_not_computed"
+    | "income_family_not_computed";
   source_kind: string;
   binding_source: BindingSourceKind | null;
   message: string;

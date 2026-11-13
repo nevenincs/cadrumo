@@ -111,6 +111,7 @@ from .errors import ModeloError, ModeloValidatedRecord, ModeloValidationError
 from .filing_text import ModeloActorLabel, OperatorReason
 from .invoice_fingerprint import InvoiceFingerprintSnapshot
 from .ledger_filing_snapshot import LedgerFilingEvidence, LedgerFilingSnapshot
+from .profile_read_fingerprint import ProfileReadFingerprint
 from .row_models import ModeloDetailRow
 
 
@@ -575,6 +576,11 @@ class CalculationRevision(BaseModel):
     # read rather than an input, and left out of a dump while absent, so a stored
     # revision serializes exactly as it did before the field existed.
     invoice_fingerprint: InvoiceFingerprintSnapshot | None = Field(default=None, repr=False)
+    # The profile facts this draft's calculation read, each with a digest of the
+    # value it saw. ``None`` means UNKNOWN: calculated before reads were recorded.
+    # Outside the revision id and left out of a dump while absent, for the same
+    # reasons as ``invoice_fingerprint``.
+    profile_read_fingerprint: ProfileReadFingerprint | None = Field(default=None, repr=False)
     # Complete filing-instance facts are selected before calculation and take
     # part in the content-addressed revision identity. They are never authored
     # or replaced on an existing BORRADOR. Stated explicitly at every
@@ -934,6 +940,8 @@ class CalculationRevision(BaseModel):
         if self.invoice_fingerprint is None:
             # Left out while absent so a stored revision dumps, and digests, as before.
             payload.pop("invoice_fingerprint", None)
+        if self.profile_read_fingerprint is None:
+            payload.pop("profile_read_fingerprint", None)
         context = _string_keyed_context(getattr(info, "context", None))
         if context is None or context.get("secure_calculation_revision") is not True:
             payload.pop("closed_record_row_sets", None)

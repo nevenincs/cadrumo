@@ -44,6 +44,7 @@ from .profile_binding_refusal_doors import (
     profile_fact_absent_verdict,
     profile_fact_value_refused_verdict,
 )
+from .profile_read_recording import fact_items_under
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -254,7 +255,9 @@ _ACTIVITY_TIPO_FIELD = "tipo_actividad"
 
 def _declared_activity_tipos(fact_index: Mapping[str, UserProfileFactValue]) -> tuple[str | None, ...]:
     """Return each declared activity row's censal tipo de actividad, ``None`` for a row that states none."""
-    present = [path for path, value in fact_index.items() if str(value).strip()]
+    present = [
+        path for path, value in fact_items_under(fact_index, f"{_ACTIVITY_SECTION}.").items() if str(value).strip()
+    ]
     tipos: list[str | None] = []
     for row in profile_section_rows(_ACTIVITY_SECTION, present):
         path = ".".join(part for part in (_ACTIVITY_SECTION, row, _ACTIVITY_TIPO_FIELD) if part)
@@ -521,9 +524,7 @@ def renta_family_profile_from_facts(
             )
         idx += 1
     descendant_facts = {
-        fact_key: str(value)
-        for fact_key, value in fact_index.items()
-        if fact_key.startswith("renta_family.descendiente.")
+        fact_key: str(value) for fact_key, value in fact_items_under(fact_index, "renta_family.descendiente.").items()
     }
     return RentaFamilyProfile(
         descendientes=descendant_list_from_facts(descendant_facts),
@@ -692,8 +693,8 @@ def second_entitled_filer_indicated(fact_index: Mapping[str, UserProfileFactValu
         return True
     return any(
         str(value).strip() != ""
-        for key, value in fact_index.items()
-        if key.startswith("renta_spouse.") and value is not None
+        for value in fact_items_under(fact_index, "renta_spouse.").values()
+        if value is not None
     )
 
 

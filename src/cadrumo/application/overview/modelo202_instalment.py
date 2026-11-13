@@ -3,7 +3,9 @@
 Orden HFP/227/2017 art. 1.3 makes the Modelo 202 owed below the threshold only in
 an instalment where an ingreso results. Whether one results turns on the art. 40.3
 election and, without it, on the art. 40.2 base, so the answer belongs to each
-instalment rather than to the profile. The per-profile modality stays in the
+instalment rather than to the profile. An entity under the navieras tonelaje
+regime has no election to read: LIS art. 116 imposes the art. 40.3 base, so its
+instalment is decided by its own calculation, as an elected one is. The per-profile modality stays in the
 domain; this module turns the facts one read gathered for an instalment into the
 outcome the catalogue serves words for, and into the doors that move an undecided
 instalment on. It reads nothing itself.
@@ -50,6 +52,36 @@ _DESCRIBE_ACTION_ID: Final = "operator.modelo.describe"
 _BASE_DECIDED: Final = frozenset(
     {Modelo202InstalmentOutcome.BASE_POSITIVE, Modelo202InstalmentOutcome.BASE_NOT_POSITIVE}
 )
+#: The modalities under which filing turns on each instalment's ingreso.
+_INGRESO_DECIDED_MODALITIES: Final = frozenset(
+    {Modelo202Modality.ART_40_2_OPTIONAL, Modelo202Modality.ART_40_3_MANDATORY_REGIME}
+)
+
+
+@dataclass(frozen=True, slots=True)
+class _CalculationOutcomes:
+    """The outcomes an instalment decided by its own art. 40.3 calculation can reach."""
+
+    pending_calculation: Modelo202InstalmentOutcome
+    pending_verification: Modelo202InstalmentOutcome
+    positive: Modelo202InstalmentOutcome
+    zero: Modelo202InstalmentOutcome
+
+
+_ELECTED: Final = _CalculationOutcomes(
+    pending_calculation=Modelo202InstalmentOutcome.ELECTED_PENDING_CALCULATION,
+    pending_verification=Modelo202InstalmentOutcome.ELECTED_PENDING_VERIFICATION,
+    positive=Modelo202InstalmentOutcome.ELECTED_CALCULATION_POSITIVE,
+    zero=Modelo202InstalmentOutcome.ELECTED_CALCULATION_ZERO,
+)
+_REGIME: Final = _CalculationOutcomes(
+    pending_calculation=Modelo202InstalmentOutcome.REGIME_PENDING_CALCULATION,
+    pending_verification=Modelo202InstalmentOutcome.REGIME_PENDING_VERIFICATION,
+    positive=Modelo202InstalmentOutcome.REGIME_CALCULATION_POSITIVE,
+    zero=Modelo202InstalmentOutcome.REGIME_CALCULATION_ZERO,
+)
+_PENDING_CALCULATION: Final = frozenset({_ELECTED.pending_calculation, _REGIME.pending_calculation})
+_PENDING_VERIFICATION: Final = frozenset({_ELECTED.pending_verification, _REGIME.pending_verification})
 
 
 @dataclass(frozen=True, slots=True)
@@ -137,32 +169,40 @@ class Modelo202InstalmentVerdict:
     decided_by_facts: bool = False
 
 
-def decide_modelo_202_instalment(facts: Modelo202InstalmentFacts) -> Modelo202InstalmentOutcome:
-    """Return the outcome the facts decide; an undecided instalment stays incomplete.
+def decide_modelo_202_instalment(
+    facts: Modelo202InstalmentFacts, *, modality: Modelo202Modality
+) -> Modelo202InstalmentOutcome:
+    """Return the outcome the facts decide under ``modality``; an undecided instalment stays incomplete.
 
-    Under the election only the instalment's own calculation knows the base
-    imponible of the 3, 9 or 11 months, and only a current calculation that a
-    passing verification sealed shows it still answers the ledger and the
+    Under the art. 40.3 method only the instalment's own calculation knows the
+    base imponible of the 3, 9 or 11 months, and only a current calculation that
+    a passing verification sealed shows it still answers the ledger and the
     invoices: its positive result decides an ingreso and its zero result none.
-    Without the election the art. 40.2 base decides, and a base that was never
-    held stays incomplete rather than read as zero.
+    The navieras tonelaje regime imposes that method (LIS art. 116); otherwise
+    the declaración censal election chooses it. Without the election the
+    art. 40.2 base decides, and a base that was never held stays incomplete
+    rather than read as zero.
     """
+    if modality is Modelo202Modality.ART_40_3_MANDATORY_REGIME:
+        return _decide_from_calculation(facts.calculation, _REGIME)
     if facts.election_stated is None:
         return Modelo202InstalmentOutcome.ELECTION_UNSTATED
     if facts.election_stated:
-        return _decide_elected_instalment(facts.calculation)
+        return _decide_from_calculation(facts.calculation, _ELECTED)
     return _decide_unelected_instalment(facts)
 
 
-def _decide_elected_instalment(calculation: Modelo202CalculationReading | None) -> Modelo202InstalmentOutcome:
-    """Decide an instalment under the art. 40.3 election from its own calculation."""
+def _decide_from_calculation(
+    calculation: Modelo202CalculationReading | None, outcomes: _CalculationOutcomes
+) -> Modelo202InstalmentOutcome:
+    """Decide an instalment under the art. 40.3 method from its own calculation."""
     if calculation is None or not calculation.current:
-        return Modelo202InstalmentOutcome.ELECTED_PENDING_CALCULATION
+        return outcomes.pending_calculation
     if not calculation.verified:
-        return Modelo202InstalmentOutcome.ELECTED_PENDING_VERIFICATION
+        return outcomes.pending_verification
     if calculation.result > 0:
-        return Modelo202InstalmentOutcome.ELECTED_CALCULATION_POSITIVE
-    return Modelo202InstalmentOutcome.ELECTED_CALCULATION_ZERO
+        return outcomes.positive
+    return outcomes.zero
 
 
 def _decide_unelected_instalment(facts: Modelo202InstalmentFacts) -> Modelo202InstalmentOutcome:
@@ -239,9 +279,9 @@ def modelo_202_instalment_doors(
     """
     if outcome is Modelo202InstalmentOutcome.ELECTION_UNSTATED:
         return (declare_next_action(_PROFILE_EDIT_ACTION_ID),)
-    if outcome is Modelo202InstalmentOutcome.ELECTED_PENDING_CALCULATION:
+    if outcome in _PENDING_CALCULATION:
         return (_instalment_work_door(facts, modelo=modelo),)
-    if outcome is Modelo202InstalmentOutcome.ELECTED_PENDING_VERIFICATION and facts.work_unit_id is not None:
+    if outcome in _PENDING_VERIFICATION and facts.work_unit_id is not None:
         return (declare_next_action(_VERIFY_WORK_ACTION_ID, work_unit_id=facts.work_unit_id),)
     if outcome is Modelo202InstalmentOutcome.NO_PRIOR_RETURN:
         return (declare_next_action(_PROFILE_EDIT_ACTION_ID),)
@@ -262,9 +302,10 @@ def modelo_202_instalment_verdict(
 ) -> Modelo202InstalmentVerdict:
     """Decide one Modelo 202 instalment where the profile alone left the obligation open.
 
-    Only an incomplete Modelo 202 verdict under modalidad cuota is decided here:
-    every other verdict, including the incomplete one of an undeclared INCN and
-    the applicable one above the threshold, passes through unchanged.
+    Only an incomplete Modelo 202 verdict below the threshold is decided here,
+    under modalidad cuota or the navieras tonelaje regime: every other verdict,
+    including the incomplete one of an undeclared INCN and the applicable one
+    above the threshold, passes through unchanged.
     """
     if applicability.verdict is not ApplicabilityVerdict.INCOMPLETE or not is_modelo_202(
         str(applicability.modelo), operation=operation
@@ -272,10 +313,10 @@ def modelo_202_instalment_verdict(
         return Modelo202InstalmentVerdict(applicability)
     effective_date = date(instalment.filing_year, 12, 31)
     modality = derive_modelo_202_modality(profile, effective_date=effective_date, authority=operation)
-    if modality.modality is not Modelo202Modality.ART_40_2_OPTIONAL:
+    if modality.modality not in _INGRESO_DECIDED_MODALITIES:
         return Modelo202InstalmentVerdict(applicability)
     facts = facts_reader(instalment)
-    outcome = decide_modelo_202_instalment(facts)
+    outcome = decide_modelo_202_instalment(facts, modality=modality.modality)
     basis = _decided_basis(facts, outcome)
     decided = modelo_202_instalment_applicability(
         applicability,
@@ -324,7 +365,8 @@ def resolve_modelo_202_instalment(
     instalment counts as nothing paid only when its own verdict, decided by
     :func:`decide_modelo_202_instalment` below the art. 40.3 threshold, says no
     Modelo 202 was owed (Orden HFP/227/2017 art. 1.3: below that threshold the
-    declaration is presented only where an ingreso results). Above the threshold
+    declaration is presented only where an ingreso results, for a naviera as
+    for any other sociedad). Above the threshold
     every instalment is owed, and a modality that could not be derived or a
     verdict still incomplete leaves the instalment unresolved, never zero.
     """
@@ -342,13 +384,13 @@ def resolve_modelo_202_instalment(
             kind=Modelo202InstalmentResolutionKind.UNRESOLVED,
             unresolved_reason=Modelo202InstalmentUnresolvedReason.OWED_UNFILED,
         )
-    if modality is not Modelo202Modality.ART_40_2_OPTIONAL:
+    if modality not in _INGRESO_DECIDED_MODALITIES:
         return Modelo202InstalmentResolution(
             instalment=instalment,
             kind=Modelo202InstalmentResolutionKind.UNRESOLVED,
             unresolved_reason=Modelo202InstalmentUnresolvedReason.VERDICT_UNDECIDED,
         )
-    outcome = decide_modelo_202_instalment(facts)
+    outcome = decide_modelo_202_instalment(facts, modality=modality)
     basis = _decided_basis(facts, outcome)
     grounds = modelo_202_instalment_grounds(
         outcome,

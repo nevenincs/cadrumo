@@ -83,6 +83,7 @@ def _legal_entity(operation: PinnedAuthorityOperation) -> TaxpayerProfile:
         bienes_extranjero_above_threshold=False,
         fiscal_residency=FiscalResidency.from_registry("resident_irpf"),
         enrollment=ModeloEnrollment(large_company=False),
+        regimen_entidades_navieras_tonelaje=False,
         incn_prior_12_months=modelo_202_incn_threshold_decimal(
             resolve_modelo_202_art_40_3_incn_threshold(effective_date=date(_year(), 12, 31), authority=operation),
         ),
