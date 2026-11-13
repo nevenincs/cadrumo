@@ -67,11 +67,18 @@ _ENTITY = (
     UserProfileFact(path="iva.group_dominant_entity_enrolled", value=True),
 )
 _PRIOR_INCOME = "irpf.previous_year_economic_activity_net_income"
+#: The carries of the negative general base (LIRPF art. 50.3) and of the negative savings balances (art. 49) pending
+#: from the four previous ejercicios, which one return of the earlier ejercicios states together.
 _PENDING_BASES = (
     "renta-base-liquidable-negativa-general-anterior",
     "renta-base-liquidable-negativa-general-em2-pendiente-inicio",
     "renta-base-liquidable-negativa-general-em3-pendiente-inicio",
     "renta-base-liquidable-negativa-general-em4-pendiente-inicio",
+    *(
+        f"renta-saldo-negativo-{kind}-ahorro-{origin}-pendiente-inicio"
+        for kind in ("gyp", "rcm")
+        for origin in ("em1", "em2", "em3", "em4")
+    ),
 )
 _M130_INSTALMENTS = "renta-modelo-130-pagos-fraccionados"
 _M303_CARRY = "modelo-303-compensacion-pendiente-anteriores"
@@ -123,20 +130,6 @@ _DECLARATIONS = (
         "180", "0A", dict.fromkeys(("modelo-180-115-base-anual", "modelo-180-115-retenciones-anual"), "115"), _PAYER
     ),
     _Declaration(
-        "190",
-        "0A",
-        dict.fromkeys(
-            (
-                f"modelo-190-111-{kind}-{form}-importe-anual"
-                for kind in ("trabajo", "actividades", "premios", "ganancias")
-                for form in ("dinerario", "especie")
-            ),
-            "111",
-        )
-        | {"modelo-190-111-derechos-imagen-importe-anual": "111", "modelo-190-111-retenciones-anual": "111"},
-        _PAYER,
-    ),
-    _Declaration(
         "193", "0A", dict.fromkeys(("modelo-193-123-base-anual", "modelo-193-123-retenciones-anual"), "123"), _PAYER
     ),
     _Declaration(
@@ -146,8 +139,14 @@ _DECLARATIONS = (
             "modelo-200-bin-pendiente-ejercicios-anteriores": "200",
             "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": "200",
             "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": "200",
-            "modelo-200-pagos-fraccionados-anuales-40-2": "202",
-            "modelo-200-pagos-fraccionados-anuales": "202",
+            **dict.fromkeys(
+                (
+                    f"modelo-200-pago-fraccionado-{instalment}-{modality}"
+                    for instalment in ("primero", "segundo", "tercero")
+                    for modality in ("40-2", "40-3")
+                ),
+                "202",
+            ),
         },
         _ENTITY,
         None,
