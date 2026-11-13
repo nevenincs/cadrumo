@@ -9819,6 +9819,12 @@ workspace:
         local:
           filing: Presentación local
         schedule: Calendario legal
+      suppressed:
+        verdict:
+          attribution_pass_through: 'No la presenta la propia entidad: las rentas
+            se atribuyen a sus miembros, que las declaran en sus propias declaraciones.'
+          not_applicable: 'No te corresponde: tu perfil no exige esta declaración
+            en este periodo.'
       title: Calendario fiscal
       user:
         due: Pendiente

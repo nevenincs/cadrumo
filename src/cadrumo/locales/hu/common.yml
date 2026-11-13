@@ -9767,6 +9767,12 @@ workspace:
         local:
           filing: Helyi benyújtás
         schedule: Jogi ütemezés
+      suppressed:
+        verdict:
+          attribution_pass_through: 'Magának az entitásnak nem kell benyújtania: a
+            jövedelem a tagjaira hárul, akik a saját bevallásukban vallják be.'
+          not_applicable: 'Rád nem vonatkozik: a profilod alapján ebben az időszakban
+            nem kell ezt a bevallást benyújtanod.'
       title: Bevallási naptár
       user:
         due: Esedékes

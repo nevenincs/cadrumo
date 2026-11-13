@@ -1282,6 +1282,7 @@
         "cadrumo.application.modelo.declaration_summary",
         "cadrumo.application.modelo.declaration_targets",
         "cadrumo.application.modelo.declarations_calendar",
+        "cadrumo.application.modelo.declarations_calendar_suppressed",
         "cadrumo.application.modelo.declarations_list",
         "cadrumo.application.modelo.declarations_list_operation",
         "cadrumo.application.modelo.declarations_list_projection",

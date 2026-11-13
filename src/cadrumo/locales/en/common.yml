@@ -9604,6 +9604,12 @@ workspace:
         local:
           filing: Local filing
         schedule: Legal schedule
+      suppressed:
+        verdict:
+          attribution_pass_through: 'Not filed by the entity itself: the income is
+            attributed to its members, who declare it in their own returns.'
+          not_applicable: 'Does not apply to you: your profile does not call for this
+            declaration in this period.'
       title: Filing calendar
       user:
         due: Due

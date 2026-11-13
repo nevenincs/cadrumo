@@ -57,7 +57,9 @@ from cadrumo.application.search.workbench import WorkbenchDestinationAdmission
 from cadrumo.application.workbench_generation_contracts import (
     WorkbenchGenerationAvailability,
 )
+from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.result_disposition import ResultDisposition
+from cadrumo.domain.calculations.registry.applicability_models import ApplicabilityVerdict
 from cadrumo.domain.deadlines.festivos import DeadlineHolidayCoverage
 from cadrumo.domain.deadlines.models import ObligationStatus
 from cadrumo.domain.iva.refund_eligibility import RefundEligibilityBasis, RefundEligibilityOutcome
@@ -381,6 +383,7 @@ class PublicDeclarationsCalendarProjectionV1(BaseModel):
     sources: tuple[DeclarationsCalendarSourceStateV1, ...]
     entries: tuple[PublicDeclarationsCalendarEntryRefV1, ...]
     coverage: ObligationCoverageReport
+    suppressed_entries: tuple[PublicDeclarationsCalendarSuppressedEntryV1, ...]
 
 
 class PublicDeclarationsCalendarEntryRefV1(BaseModel):
@@ -411,6 +414,23 @@ class PublicDeclarationsCalendarEntryRefV1(BaseModel):
     source: OverviewCalendarEntrySource
     conditional_recargo_preview: PublicModeloWorkConditionalRecargoPreview | None
     recovery_action: PublicDeclaredNextAction | None
+
+
+class PublicDeclarationsCalendarSuppressedEntryV1(BaseModel):
+    """Typed local-human workbench view of DeclarationsCalendarSuppressedEntryV1."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    modelo: str
+    filing_year: int
+    period: PublicPeriod
+    opens_on: date
+    closes_on: date
+    adjusted_closes_on: date
+    verdict: ApplicabilityVerdict
+    verdict_words: str
+    verdict_words_language: OutputLanguage
+    reason: str
 
 
 class PublicHomeGenerationStateV1(BaseModel):

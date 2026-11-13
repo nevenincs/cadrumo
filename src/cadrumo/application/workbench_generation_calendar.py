@@ -450,6 +450,9 @@ def _build_workbench_calendar_inputs(
                 query_range,
                 today=as_of,
                 raw_values=raw_values,
+                # Only this calendar is projected to the frontends; the held-back
+                # obligations ride beside its entries and never inside them.
+                show_suppressed=True,
                 filing_evidence=evidence_for(schedule_calendar).evidence,
                 work_units=tuple(work_units.values()),
                 operation=operation,

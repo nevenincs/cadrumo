@@ -9798,6 +9798,13 @@ workspace:
         local:
           filing: Presentació local
         schedule: Calendari legal
+      suppressed:
+        verdict:
+          attribution_pass_through: 'No la presenta l''entitat mateixa: les rendes
+            s''atribueixen als seus membres, que les declaren en les seves pròpies
+            declaracions.'
+          not_applicable: 'No et correspon: el teu perfil no exigeix aquesta declaració
+            en aquest període.'
       title: Calendari fiscal
       user:
         due: Pendent
