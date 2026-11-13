@@ -68,12 +68,18 @@ from .verification_repository_support import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-#: The negative general bases pending from earlier ejercicios, which a Modelo 100 refuses to calculate without a statement.
+#: The negative bases and savings balances pending from earlier ejercicios, which a Modelo 100 refuses to calculate
+#: without a statement: the general base, then the net capital income and the net gains and losses of the savings base.
 _PENDING_CARRIES = (
     "renta-base-liquidable-negativa-general-anterior",
     "renta-base-liquidable-negativa-general-em2-pendiente-inicio",
     "renta-base-liquidable-negativa-general-em3-pendiente-inicio",
     "renta-base-liquidable-negativa-general-em4-pendiente-inicio",
+    *(
+        f"renta-saldo-negativo-{kind}-ahorro-{origin}-pendiente-inicio"
+        for kind in ("rcm", "gyp")
+        for origin in ("em1", "em2", "em3", "em4")
+    ),
 )
 _ELDER = "renta_family.descendiente.0.birth_date"
 _YOUNGER = "renta_family.descendiente.1.birth_date"

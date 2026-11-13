@@ -332,7 +332,7 @@ def _inject_disability_keys(
     """
     prefix = f"{_ASCENDANT_GROUP}."
     suffix = f".{ASCENDANT_DISABILITY_KEY_LEAF}"
-    for path in [path for path in fact_index if path.startswith(prefix) and path.endswith(suffix)]:
+    for path in [path for path in fact_items_under(fact_index, prefix) if path.endswith(suffix)]:
         fact_index.pop(path)
     if not _reads_disability_key(snapshot):
         return
