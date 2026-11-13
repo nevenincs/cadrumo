@@ -1301,6 +1301,7 @@
         "cadrumo.application.modelo.edit_baseline_projection",
         "cadrumo.application.modelo.edit_carry_withdrawal",
         "cadrumo.application.modelo.edit_contract",
+        "cadrumo.application.modelo.edit_downstream_models",
         "cadrumo.application.modelo.edit_downstream_refusal",
         "cadrumo.application.modelo.edit_execution",
         "cadrumo.application.modelo.edit_locale_input",

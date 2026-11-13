@@ -432,6 +432,58 @@ def calculate_modelo_revision_with_trusted_mesh_sources(
         m303_regimen_simplificado_annual_summary_handoff=m303_regimen_simplificado_annual_summary_handoff,
         profile=profile,
     )
+    return _persist_trusted_evaluation(
+        evaluation,
+        work_unit_id=work_unit_id,
+        ports=ports,
+        transaction_repository=transaction_repository,
+        actor=actor,
+        now=now,
+        source_issues=source_issues,
+        payment_year_binding_values=payment_year_binding_values,
+        instalment_basis_binding_values=instalment_basis_binding_values,
+        source_transaction_ids=source_transaction_ids,
+        row_source_identities=row_source_identities,
+        closed_record_row_sets=closed_record_row_sets,
+        row_casilla_values=row_casilla_values,
+        row_casilla_provenance=row_casilla_provenance,
+        cleared_casilla_ids=cleared_casilla_ids,
+        operator_layer=operator_layer,
+        m210_official_tipo_renta_code=m210_official_tipo_renta_code,
+        m210_gross_income_source_mode=m210_gross_income_source_mode,
+        source_provenance=source_provenance,
+        m303_regimen_simplificado_annual_summary_handoff=m303_regimen_simplificado_annual_summary_handoff,
+        detail_rows=detail_rows,
+        additional_secure_object_writes_for_revision=additional_secure_object_writes_for_revision,
+    )
+
+
+def _persist_trusted_evaluation(
+    evaluation: TrustedMeshEvaluation,
+    *,
+    work_unit_id: str,
+    ports: CalculationActionPorts,
+    transaction_repository: TransactionCatalogueRepositoryProtocol | None,
+    actor: str,
+    now: datetime,
+    source_issues: tuple[CalculationSourceIssue, ...],
+    payment_year_binding_values: Mapping[BindingId, Decimal] | None,
+    instalment_basis_binding_values: Mapping[BindingId, Decimal] | None,
+    source_transaction_ids: tuple[str, ...],
+    row_source_identities: Mapping[RowBindingKey, RowSourceIdentity] | None,
+    closed_record_row_sets: tuple[ClosedRecordRowSet, ...],
+    row_casilla_values: Mapping[RowCasillaKey, Decimal] | None,
+    row_casilla_provenance: Mapping[RowCasillaKey, DirectRowMaterializationProvenance] | None,
+    cleared_casilla_ids: tuple[CasillaId, ...],
+    operator_layer: CalculationOperatorLayer | None,
+    m210_official_tipo_renta_code: str | None,
+    m210_gross_income_source_mode: M210GrossIncomeSourceMode | None,
+    source_provenance: tuple[CalculationSourceRef, ...],
+    m303_regimen_simplificado_annual_summary_handoff: M303RegimenSimplificadoAnnualSummaryHandoff | None,
+    detail_rows: tuple[ModeloDetailRow, ...],
+    additional_secure_object_writes_for_revision: (Callable[[str, str | None], tuple[SecureObjectWrite, ...]] | None),
+) -> TrustedMeshCalculation:
+    """Persist an evaluated calculation as a revision and project its diagnostics."""
     prepared = evaluation.prepared
     work_unit = prepared.work_unit
     snapshot = prepared.snapshot

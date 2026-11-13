@@ -32,13 +32,10 @@ from ....domain.calculations.registry.tests.published_authority import published
 from ...cli_exception_preconditions import nested_terminal_precondition_verdict
 from ...operations.error_detail import UNWORDED_REGISTERED_ERROR_LOCALE_KEY
 from ..action_errors import ModeloProfileReadinessError, modelo_edit_refusal_error
+from ..edit_downstream_models import ModeloEditDownstreamContextEntryV1, ModeloEditDownstreamRefusalV1
 from ..edit_downstream_refusal import downstream_refusal, downstream_refusal_error
 from ..edit_execution import pre_effect_refusal
-from ..edit_models import (
-    ModeloEditDomainRefusalV1,
-    ModeloEditDownstreamContextEntryV1,
-    ModeloEditDownstreamRefusalV1,
-)
+from ..edit_models import ModeloEditDomainRefusalV1
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
