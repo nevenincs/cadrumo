@@ -43,6 +43,7 @@ import type {
   ModeloExportRequestField,
   ModeloFormArtefactOption,
   ModeloFormElection,
+  ModeloFormNextAction,
   ModeloWorkbenchFormProjectionV1,
 } from "../../../shell/modeloContract/modeloWorkForm";
 import { formatTime } from "../../../shared/dateFormats";
@@ -162,8 +163,8 @@ function Card({
 }
 
 /**
- * The Export and record view of one declaration. `onOpenCheck` shows the
- * Check view; `onReread` reads the declaration again after a write and when
+ * The Export and record view of one declaration. `onTakeAction` takes the
+ * action the read model names as lifting the export hold; `onReread` reads the declaration again after a write and when
  * the filer asks after an unknown outcome; `openLink` opens a public address
  * in the system browser.
  */
@@ -172,7 +173,7 @@ export function FilingView({
   port,
   language,
   session,
-  onOpenCheck,
+  onTakeAction,
   onReread,
   openLink,
 }: {
@@ -180,7 +181,7 @@ export function FilingView({
   port: ModeloPort;
   language: OutputLanguage;
   session: FormSession;
-  onOpenCheck: () => void;
+  onTakeAction: (action: ModeloFormNextAction) => void;
   onReread: () => Promise<boolean>;
   openLink: (url: string) => void;
 }) {
@@ -501,7 +502,8 @@ export function FilingView({
   const recordAvailability = offer?.record ?? null;
   const mayRecord = recordAvailability?.available === true;
   const holdId = useId();
-  const sharedWords = !recorded ? (hold?.words ?? null) : null;
+  const sharedHold = !recorded ? hold : null;
+  const sharedWords = sharedHold?.words ?? null;
   const sharesHold = (
     availability:
       { available: boolean; words: string | null } | null | undefined,
@@ -599,17 +601,19 @@ export function FilingView({
       <ExportLimitations disclosure={disclosure} />
       <CalculationNotes notes={notes} />
 
-      {sharedWords !== null && (
+      {sharedHold && (
         <Alert tone="warning" icon={<Icon name="alert" />}>
           <span className="flex flex-col items-start gap-1">
-            <span id={holdId}>{sharedWords}</span>
+            <span id={holdId}>{sharedHold.words}</span>
             <Button
               size="xs"
               variant="link"
               className="p-0"
-              onClick={onOpenCheck}
+              data-hold-action={sharedHold.action}
+              onClick={() => onTakeAction(sharedHold.action)}
             >
-              {t("workspace.modelo.filing.open_check")}
+              {sharedHold.action !== "recorded" &&
+                t(`workspace.modelo.next_button.${sharedHold.action}`)}
             </Button>
           </span>
         </Alert>

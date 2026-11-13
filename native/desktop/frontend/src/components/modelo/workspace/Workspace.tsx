@@ -23,6 +23,7 @@ import type {
   ModeloWorkbenchFormProjectionV1,
 } from "../../../shell/modeloContract/modeloWorkForm";
 import { useStrings, type Translate } from "../../../shell/strings";
+import { JourneySteps } from "./JourneySteps";
 import { AttentionMark, DEADLINE_TONE, GlyphMark } from "./Marks";
 
 /** The views of one declaration, as its tabs name them. */
@@ -56,14 +57,15 @@ export type WorkspaceSlots = {
 
 /** The view each next action opens; the actions an operation answers open
  * none, and the container runs them. */
-const ACTION_VIEW: Partial<Record<ModeloFormNextAction, WorkspaceView>> = {
-  fill: "form",
-  confirm: "form",
-  resolve: "check",
-  export: "file",
-  export_again: "file",
-  record_after_file: "file",
-};
+export const ACTION_VIEW: Partial<Record<ModeloFormNextAction, WorkspaceView>> =
+  {
+    fill: "form",
+    confirm: "form",
+    resolve: "check",
+    export: "file",
+    export_again: "file",
+    record_after_file: "file",
+  };
 
 /** The attention levels each tab shows, as the read model counted them. */
 const TAB_LEVELS: Partial<Record<WorkspaceView, ModeloFormAttention[]>> = {
@@ -195,7 +197,7 @@ export function ModeloWorkspace({
   onRun,
   onReview,
   onDiscardStaged,
-  onJumpToNext,
+  onJumpToFirstAttention,
   onCorrect,
   onBack,
 }: {
@@ -219,8 +221,9 @@ export function ModeloWorkspace({
   onRun(action: ModeloFormNextAction): void;
   onReview(): void;
   onDiscardStaged(): void;
-  /** Selects the next box that needs the filer, once the form is shown. */
-  onJumpToNext(): void;
+  /** Selects the box the read model serves as the first that needs the
+   * filer, once the form is shown. */
+  onJumpToFirstAttention(): void;
   /** Opens the correction of a declaration recorded as filed. */
   onCorrect(): void;
   onBack(): void;
@@ -230,16 +233,19 @@ export function ModeloWorkspace({
   const panel = useId();
   const form = envelope.form.form;
   const header = envelope.header;
-  const next = envelope.next_step;
-  // Two steps only this window knows: changes it holds unapplied, and an
-  // apply's prerequisite that still stands, which the findings name.
+  const journey = envelope.form.journey;
+  // The read model serves the answer for each state only this window knows:
+  // changes it holds unapplied (the steps while they are held, and applying
+  // them before anything else), and an apply's prerequisite that still
+  // stands (resolving it, from the findings).
+  const next = prerequisiteHeld
+    ? journey.held_prerequisite_next_step
+    : envelope.next_step;
+  const steps =
+    stagedCount > 0 ? journey.steps_while_changes_held : journey.steps;
   const action: ModeloFormNextAction | null =
-    stagedCount > 0
-      ? "apply"
-      : prerequisiteHeld
-        ? "resolve"
-        : (next?.action ?? null);
-  const findingsLead = prerequisiteHeld || (next?.findings_lead ?? false);
+    stagedCount > 0 ? "apply" : (next?.action ?? null);
+  const findingsLead = next?.findings_lead ?? false;
   const target = action ? ACTION_VIEW[action] : undefined;
   const writesNext =
     action === "calculate" || action === "recalculate" || action === "verify";
@@ -260,7 +266,7 @@ export function ModeloWorkspace({
       else onViewChange("check");
     } else if (target) {
       onViewChange(target);
-      if (target === "form") onJumpToNext();
+      if (target === "form") onJumpToFirstAttention();
     } else onRun(action);
   };
   const recorded = action === "recorded" && (
@@ -360,6 +366,7 @@ export function ModeloWorkspace({
             )}
             <AboutForm envelope={envelope} t={t} />
           </div>
+          <JourneySteps steps={steps} />
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
             {header.deadline && (
               <Tooltip>

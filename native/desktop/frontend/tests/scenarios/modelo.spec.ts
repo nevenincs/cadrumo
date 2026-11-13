@@ -436,9 +436,15 @@ test("a file made before a conflicting edit stays out of date until its export h
     }),
   ).not.toHaveAttribute("aria-describedby");
   await target.screenshot({ path: info.outputPath("filing-shared-hold.png") });
+  // The hold names the action that lifts it; resolving what blocks is done
+  // on the check.
+  expect(read.header.export_hold.action).toBe("resolve");
   await target
+    .getByRole("tabpanel")
     .getByRole("button", {
-      name: label("workspace.modelo.filing.open_check"),
+      name: label(
+        `workspace.modelo.next_button.${read.header.export_hold.action}`,
+      ),
       exact: true,
     })
     .click();
