@@ -17,7 +17,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import AsyncGenerator
 from contextlib import AbstractContextManager, ExitStack, asynccontextmanager
-from datetime import timedelta
+from datetime import datetime, timedelta
 from importlib import import_module
 from threading import RLock
 from time import monotonic
@@ -124,13 +124,17 @@ class ProfileWorkerOperationHost:
         *,
         authorization: WorkerAuthorizationClient,
         view_streams: ViewStreamSinks | None = None,
+        fixed_clock_instant: datetime | None = None,
     ) -> None:
         """Defer publication and backend loading until a governed capability needs it.
 
         ``view_streams`` opens the worker's view channel for a running Sede view;
-        without it the view refuses every run.
+        without it the view refuses every run. ``fixed_clock_instant`` is the
+        fixed clock this worker admitted at its entry; its supervisor runs each
+        registered operation's application work at that instant.
         """
         self.custody = custody
+        self._fixed_clock_instant = fixed_clock_instant
         self._view_streams = view_streams
         self._lifetime = ExitStack()
         self._authority: PinnedAuthorityOperation | None = None
@@ -244,6 +248,7 @@ class ProfileWorkerOperationHost:
                 sede_view_stream_opener=None if self._view_streams is None else self._open_sede_view,
                 journal_committed=self._journal_committed,
                 capture_memory=capture_memory,
+                fixed_clock_instant=self._fixed_clock_instant,
             )
 
     def warm_imports(self) -> None:
