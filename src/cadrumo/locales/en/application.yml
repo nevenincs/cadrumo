@@ -524,9 +524,15 @@ application:
           or clear them, and export again.'
         m193_pending_row_has_devengo: 'Nothing was written: a pending row in Modelo
           193 cannot also have an accrual year. Clear one of them and export again.'
-        m202_producer_facts_unsupported: 'Nothing was written: Modelo 202 needs facts
-          this export cannot take from your profile yet (%{missing_fact_ids}). Export
-          it once they are supported.'
+        m202_foral_territory_unstated: 'Nothing was written: your profile states a
+          foral tax territory without saying which one, and the Modelo 202 must name
+          it (Navarra, Gipuzkoa, Bizkaia or Álava). A foral territory cannot be stated
+          in the profile yet, so this instalment cannot be exported.'
+        m202_prior_periodo_turnover_unreadable: 'Nothing was written: the período
+          impositivo before this one lasted less than twelve months, so the turnover
+          that decides the tipo de gravamen is that período''s own, as its Modelo
+          200 declares it. The application cannot read that Modelo 200 yet, so this
+          instalment cannot be exported yet.'
         m280_negative_imputation_key_invalid: 'Nothing was written: a negative imputation
           in Modelo 280 needs key 2 with the negative sign N, or zero fill under any
           other key. Correct the record and export again.'

@@ -26,7 +26,7 @@ they own.
 from __future__ import annotations
 
 import calendar
-from datetime import date
+from datetime import date, timedelta
 from typing import TYPE_CHECKING, Final
 
 from ..core.errors.hierarchy import CadrumoError
@@ -38,6 +38,11 @@ if TYPE_CHECKING:
     from .calculations.registry.governed_fact_scope import GovernedFactSource
 
 _INSTALMENT_MONTHS_FACT: Final = "modelo-202-instalment-payment-months"
+_FEBRUARY: Final = 2
+_LEAP_FEBRUARY_DAYS: Final = 29
+_THIRTY_DAY_MONTHS: Final = frozenset({4, 6, 9, 11})
+_THIRTY_DAYS: Final = 30
+_THIRTY_ONE_DAYS: Final = 31
 
 
 class RegistryPeriodError(CadrumoError):
@@ -137,6 +142,57 @@ def calculation_filing_date(period: Period, *, authority: GovernedFactSource | N
     raise PeriodValidationError(f"calculation filing date is undefined for registry period {code!r}")
 
 
+def instalment_period_in_progress_date(period: Period, *, authority: GovernedFactSource | None = None) -> date | None:
+    """Return the day whose período impositivo an instalment is paid on account of.
+
+    LIS art. 40 makes each pago fraccionado of a contribuyente whose período
+    impositivo is not the calendar year "a cuenta de la liquidación
+    correspondiente al período impositivo que esté en curso el día anterior al
+    inicio de cada uno de los citados períodos de pago". That is the day before
+    the first day of the payment month the ``modelo-202-instalment-payment-months``
+    fact declares. ``None`` when the period is not such an instalment.
+    """
+    month = _instalment_month(period.registry_token, authority=authority)
+    if month is None:
+        return None
+    return date(period.filing_year, month, 1) - timedelta(days=1)
+
+
+def periodo_impositivo_start(*, on: date, closing_day: int, closing_month: int, constitution: date) -> date | None:
+    """Return the first day of the período impositivo in progress on ``on``.
+
+    The período impositivo is the entity's ejercicio económico (LIS art. 27.1),
+    so it starts the day after the latest ejercicio closing strictly before
+    ``on``, and never before the entity was constituted. A closing on 29
+    February closes on the last day of February in a common year.
+
+    Returns:
+        The start date, or ``None`` when the entity was constituted after ``on``
+        and so had no período impositivo in progress that day.
+    """
+    if constitution > on:
+        return None
+    closing = _ejercicio_closing(on.year, closing_month, closing_day)
+    if closing >= on:
+        closing = _ejercicio_closing(on.year - 1, closing_month, closing_day)
+    return max(closing + timedelta(days=1), constitution)
+
+
+def ejercicio_closing_is_valid(*, closing_day: int, closing_month: int) -> bool:
+    """Whether a stated day and month name a day some year has, 29 February included."""
+    if not 1 <= closing_month <= 12:
+        return False
+    if closing_month == _FEBRUARY:
+        longest = _LEAP_FEBRUARY_DAYS
+    else:
+        longest = _THIRTY_DAYS if closing_month in _THIRTY_DAY_MONTHS else _THIRTY_ONE_DAYS
+    return 1 <= closing_day <= longest
+
+
+def _ejercicio_closing(year: int, month: int, day: int) -> date:
+    return date(year, month, min(day, calendar.monthrange(year, month)[1]))
+
+
 def _instalment_month(token: str, *, authority: GovernedFactSource | None = None) -> int | None:
     """Return the payment month the registry declares for an instalment token, if it is one."""
     declared = resolve_form_codes(_INSTALMENT_MONTHS_FACT, authority=authority)
@@ -159,6 +215,9 @@ __all__ = [
     "PeriodValidationError",
     "RegistryPeriodError",
     "calculation_filing_date",
+    "ejercicio_closing_is_valid",
+    "instalment_period_in_progress_date",
     "period_end_date",
     "period_start_date",
+    "periodo_impositivo_start",
 ]

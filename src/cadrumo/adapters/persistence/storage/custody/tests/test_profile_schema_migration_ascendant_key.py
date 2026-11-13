@@ -37,7 +37,8 @@ from .profile_schema_legacy_support import publish_legacy_capsule, record_sessio
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 YEAR = filing_year_envelope().horizon
-_LAST_KEYED_VERSION = MIGRATED_PROFILE_SCHEMA_VERSION - 1
+#: Schema 12 retired the key, so 11 is the last schema a stored key can come from.
+_LAST_KEYED_VERSION = 11
 _GROUP = "renta_family.ascendiente"
 _KEPT = (
     UserProfileFact(path="identity.tax_id", value="X0001500M"),
@@ -61,8 +62,8 @@ def contexts() -> Iterator[tuple[ProfileCreateContext, ProfileDecodeContext]]:
         yield operation.profile_create_context(), operation.profile_decode_context()
 
 
-def test_the_schema_this_build_writes_is_twelve_and_schema_9_10_and_11_records_still_open() -> None:
-    assert MIGRATED_PROFILE_SCHEMA_VERSION == 12
+def test_the_schema_this_build_writes_is_past_twelve_and_schema_9_10_and_11_records_still_open() -> None:
+    assert MIGRATED_PROFILE_SCHEMA_VERSION > 12
     assert {9, 10, 11} <= set(SUPPORTED_LEGACY_PROFILE_SCHEMA_VERSIONS)
     with bundled_indexed_authority().operation() as operation:
         assert operation.profile_schema().version == MIGRATED_PROFILE_SCHEMA_VERSION

@@ -46,6 +46,7 @@ from typing import NamedTuple
 
 from ...core.export_layout_format import ExportLayoutFormat
 from ...core.field_origin import FieldOrigin
+from ...core.filing_producer_key import FilingProducerKey
 from ...core.filing_timeliness import FilingTimeliness
 from ...core.modelo import Modelo
 from ...core.operator_action_enums import NoRecoveryOutcome
@@ -103,7 +104,6 @@ from ..filing.producer_snapshot import (
     GeneralFilingProfileFacts,
     M303FilingFacts,
     Modelo111ProfileFacts,
-    Modelo202ProducerProfile,
     PresenterIdentity,
     TaxpayerIdentityFacts,
     build_filing_producer_snapshot,
@@ -112,6 +112,7 @@ from ..filing.producer_snapshot import (
 from ..filing.producer_snapshot_m360 import Modelo360RepresentanteAccountChoice, Modelo360SolicitudEntry
 from ..filing.runtime import RegistrySchemaAccessor
 from ..operator_actions.models import PreconditionVerdict
+from ..overview.modelo202_instalment_evidence import art_40_3_election_reader_for_bucket
 from ..prorrata_register.service import require_prorrata_register_coordinates_current
 from ..user_profile.completeness import pinned_registry_scope
 from ..user_profile.modelo_scoped_conditions import (
@@ -134,6 +135,8 @@ from .export_contracts import (
     ModeloExportEvidenceMissingError,
 )
 from .export_field_refusal import export_design_fault_refusal, export_operator_decision_refusal
+from .export_m202_profile import modelo_202_producer_profile
+from .export_periodo_impositivo import PeriodoImpositivo, resolve_periodo_impositivo_start
 from .export_ports import M303ArrivalPorts, ModeloExportPorts
 from .export_preparation import (
     require_m303_regimen_simplificado_scope_matches_profile,
@@ -147,6 +150,7 @@ from .profile_export_binding import (
     load_export_profile_record,
     resolve_declaration_contact,
     resolve_export_identity,
+    resolve_profile_path_values,
 )
 from .profile_readiness_gate import open_profile_path_step
 from .refusal_door_verdicts import operator_choice_verdict, stored_defect_verdict
@@ -545,10 +549,16 @@ def build_export_producer_snapshot(
     export_ports: ModeloExportPorts,
     operation: PinnedAuthorityOperation,
     export_layout: ExportLayoutDefinition | None,
+    cited_producer_keys: frozenset[FilingProducerKey],
+    cites_period_start: bool,
 ) -> FilingProducerSnapshot:
     """Build the sole typed producer boundary or refuse before any write.
 
     Takes ``revision`` as a :class:`CalculationRevision` and ``workflow_profile`` as a :class:`TaxpayerProfile`.
+    ``cited_producer_keys`` are the producer keys the selected edition's layout
+    cites, so a modelo asks only for the facts that edition has a position for.
+    ``cites_period_start`` says the layout writes the period's start date, which
+    a period without a calendar span takes from the período impositivo in progress.
     """
     presenter, taxpayer_identity = _require_export_identity(
         command,
@@ -572,6 +582,18 @@ def build_export_producer_snapshot(
             amendment_evidence=amendment_evidence,
             operation=operation,
         )
+        # The devengo leads page 01, so its facts are asked for before the entity facts after it;
+        # a pago fraccionado's rates are those of the same período, so it is resolved for them too.
+        periodo = (
+            resolve_periodo_impositivo_start(
+                modelo=str(modelo),
+                bucket_id=work_unit.bucket_id,
+                period=work_unit.period,
+                operation=operation,
+            )
+            if cites_period_start or modelo == form_for_role("sociedades.instalment")
+            else None
+        )
         model_profile, m303_filing_facts = resolve_export_model_profile(
             modelo=modelo,
             work_unit=work_unit,
@@ -582,6 +604,8 @@ def build_export_producer_snapshot(
             operation=operation,
             m360_solicitud=m360_solicitud,
             export_layout=export_layout,
+            cited_producer_keys=cited_producer_keys,
+            periodo=periodo,
         )
         if m360_solicitud is not None:
             account_page_refund_account = refund_account is not None
@@ -611,6 +635,7 @@ def build_export_producer_snapshot(
                 bucket_id=work_unit.bucket_id,
                 operation=operation,
             ),
+            periodo_impositivo_start=None if periodo is None else periodo.start,
         )
     except FilingProducerSnapshotError as exc:
         raise _producer_facts_refusal(command, exc) from exc
@@ -820,11 +845,15 @@ def resolve_export_model_profile(
     operation: PinnedAuthorityOperation,
     m360_solicitud: Modelo360SolicitudEntry | None,
     export_layout: ExportLayoutDefinition | None,
+    cited_producer_keys: frozenset[FilingProducerKey],
+    periodo: PeriodoImpositivo | None,
 ) -> tuple[FilingModelProfileFacts, M303FilingFacts | None]:
     """Return the model profile facts this modelo's export reads, and the Modelo 303 filing facts for a 303.
 
     ``export_layout`` is the layout the export renders; the annual Impuesto sobre
     Sociedades reads from it how many page 002 rows of each family fit.
+    ``periodo`` is the período impositivo a period without a calendar span is
+    filed for, resolved by the caller; a Modelo 202 reads its rates from it.
     """
     if m360_solicitud is not None:
         return m360_solicitud.facts, None
@@ -856,7 +885,27 @@ def resolve_export_model_profile(
             profile_record=record if isinstance(record, UserProfileRecord) else None,
         ), None
     if modelo == form_for_role("sociedades.instalment"):
-        return Modelo202ProducerProfile(taxpayer_profile=workflow_profile, activities=()), None
+        if periodo is None:
+            # Every pago fraccionado period lacks a calendar span, so the caller resolves its período.
+            raise ValueError("a Modelo 202 export reached its producer view without its período impositivo")
+        # A pago fraccionado has no calendar span; its payment month's end is the day it is filed for.
+        filing_date = calculation_filing_date(work_unit.period, authority=operation)
+        return modelo_202_producer_profile(
+            workflow_profile=workflow_profile,
+            profile_values=resolve_profile_path_values(
+                bucket_id=work_unit.bucket_id,
+                operation=operation,
+                as_of=filing_date,
+            ),
+            cited_producer_keys=cited_producer_keys,
+            effective_date=filing_date,
+            periodo=periodo,
+            filing_year=work_unit.filing_year,
+            art_40_3_elected=art_40_3_election_reader_for_bucket(work_unit.bucket_id, operation=operation)(
+                work_unit.period
+            ),
+            operation=operation,
+        ), None
     if modelo == form_for_role("withholding.work_periodic"):
         return _modelo_111_profile_facts(
             workflow_profile=workflow_profile,

@@ -556,9 +556,15 @@ application:
         m193_pending_row_has_devengo: 'Semmi sem íródott ki: a 193-as modell függő
           sorához nem tartozhat esedékességi év is. Töröld az egyiket, és exportálj
           újra.'
-        m202_producer_facts_unsupported: 'Semmi sem lett kiírva: a 202-es modellhez
-          olyan adatok kellenek, amelyeket ez az export még nem tud a profilodból
-          venni (%{missing_fact_ids}). Exportáld, ha már támogatottak.'
+        m202_foral_territory_unstated: 'Semmi sem íródott ki: a profilod foral adóterületet
+          ad meg, de nem mondja meg, melyiket, pedig a 202-es nyomtatványon fel kell
+          tüntetni (Navarra, Gipuzkoa, Bizkaia vagy Álava). Foral adóterületet még
+          nem adhatsz meg a profilban, ezért ez az előleg nem exportálható.'
+        m202_prior_periodo_turnover_unreadable: 'Semmi sem íródott ki: az ezt megelőző
+          adómegállapítási időszak tizenkét hónapnál rövidebb volt, ezért az adókulcsot
+          meghatározó nettó árbevétel annak az időszaknak a saját árbevétele, ahogy
+          a 200-as nyomtatványa bevallja. Az alkalmazás ezt a 200-as nyomtatványt
+          még nem tudja beolvasni, ezért ez az előleg még nem exportálható.'
         m280_negative_imputation_key_invalid: 'Semmi sem íródott ki: a 280-as modell
           negatív imputációjához a 2-es kulcs és az N negatív előjel kell, vagy bármely
           más kulcs alatt nulla kitöltés. Javítsd a rekordot, és exportálj újra.'

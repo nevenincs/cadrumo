@@ -10,7 +10,7 @@ Core types:
 
 from __future__ import annotations
 
-from enum import StrEnum
+from datetime import date
 from typing import Annotated, Final, Literal, Self
 
 from pydantic import AfterValidator, BaseModel, StringConstraints, ValidationError, model_validator
@@ -352,6 +352,14 @@ _M353GrupoNumber = Annotated[
     str, StringConstraints(min_length=1, max_length=16), AfterValidator(form_fit_validator("m353.numero_grupo_max"))
 ]
 _SiNoMark = Annotated[str, StringConstraints(pattern=r"^[12]$")]
+#: Modelo 202 designs 2019 and 2023, page 01 position 126: "0" No consta, "1" Cooperativa, "2" Otras entidades.
+_M202CooperativaOMultiplesTipos = Annotated[str, StringConstraints(pattern=r"^[012]$")]
+#: Modelo 202 page 01 turnover band (2025 design position 147, 2019 and 2023 position 132): "0" to "3".
+_M202ImporteNetoTramo = Annotated[str, StringConstraints(pattern=r"^[0-3]$")]
+#: Modelo 202 "Liquidación de modalidad A ó B" (2025 design Nota 11, 2023 design Nota 4).
+_M202ModalidadLiquidacion = Annotated[str, StringConstraints(pattern=r"^[AB]$")]
+#: Modelo 202 foral territory (2025 design Nota 9, 2019 and 2023 designs Nota 2); the blank is no value.
+_M202NormativaForal = Annotated[str, StringConstraints(pattern=r"^[1-4]$")]
 _XOrBlankMark = Annotated[str, StringConstraints(pattern=r"^X$")]
 
 
@@ -402,34 +410,14 @@ class Modelo202ActivityFacts(BaseModel):
     cnae: _CnaeCode
 
 
-class M202UnsupportedProducerId(StrEnum):
-    """M202 producer facts that are not yet admitted to the typed substrate."""
-
-    PRINCIPAL_CNAE = "m202.principal_cnae"
-    OFFICIAL_OFFSET_122 = "m202.official_offset_122"
-    OFFICIAL_OFFSET_123 = "m202.official_offset_123"
-    OFFICIAL_OFFSET_124 = "m202.official_offset_124"
-    OFFICIAL_OFFSET_125 = "m202.official_offset_125"
-    OFFICIAL_OFFSET_126 = "m202.official_offset_126"
-    OFFICIAL_OFFSET_127 = "m202.official_offset_127"
-    OFFICIAL_OFFSET_128 = "m202.official_offset_128"
-    OFFICIAL_OFFSET_129 = "m202.official_offset_129"
-    OFFICIAL_OFFSET_130 = "m202.official_offset_130"
-    OFFICIAL_OFFSET_131 = "m202.official_offset_131"
-    OFFICIAL_OFFSET_132 = "m202.official_offset_132"
-    OFFICIAL_OFFSET_147 = "m202.official_offset_147"
-
-
-M202_UNSUPPORTED_PRODUCER_IDS: tuple[M202UnsupportedProducerId, ...] = tuple(M202UnsupportedProducerId)
-
-
 class Modelo202ProducerProfile(BaseModel):
     """M202 producer view referencing the canonical taxpayer profile owner.
 
-    The régimen marks and the principal CNAE below are what modelo 202's export layout
-    cites as header producers. Before they existed the eighteen ``m202.*`` keys were
-    declared in the vocabulary and resolved by nothing, so each one rendered blank on a
-    filed pago fraccionado.
+    The principal CNAE, the datos adicionales marks, the tipo de gravamen and the
+    turnover band below are what modelo 202's page 01 cites as header producers.
+    The export resolves them from the profile facts the selected edition's layout
+    cites and refuses with the profile door before building this view when one
+    it needs is unstated, so a value here is a stated or derived answer.
 
     ``principal_cnae`` is DECLARED, never inferred from ``activities``:
     :class:`Modelo202ActivityFacts` is documented as "one repeatable M202 activity fact,
@@ -437,9 +425,9 @@ class Modelo202ProducerProfile(BaseModel):
     the substrate deliberately does not carry. AEAT asks which activity is principal, so
     the operator answers it.
 
-    Every mark is optional and absent stays absent -- AEAT leaves a régimen mark blank when
-    the régimen does not apply, and a mark that does not apply is genuinely absent rather
-    than unknown.
+    Each "X o blanco" mark is a boolean: ``True`` writes the X and ``False`` the blank
+    the design gives a mark that does not apply. ``None`` is a mark the selected
+    edition does not cite.
     """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -447,28 +435,27 @@ class Modelo202ProducerProfile(BaseModel):
     taxpayer_profile: TaxpayerProfile
     activities: tuple[Modelo202ActivityFacts, ...]
     principal_cnae: _CnaeCode | None = None
-    regimen_ley_49_2002_sin_fines_lucrativos: str | None = None
-    regimen_ley_11_2009_socimi: str | None = None
-    regimen_entidades_navieras_tonelaje: str | None = None
-    regimen_articulo_101_lis_reducida_dimension: str | None = None
-    regimen_entidad_capital_riesgo: str | None = None
-    cifra_negocios_doce_meses_umbral: str | None = None
-    cifra_negocios_periodo_anterior_bajo_umbral: str | None = None
-    cooperativa_o_multiples_tipos: str | None = None
-    cooperativa_fiscalmente_protegida: str | None = None
-    multiples_tipos_impositivos: str | None = None
+    regimen_ley_49_2002_sin_fines_lucrativos: bool | None = None
+    regimen_ley_11_2009_socimi: bool | None = None
+    regimen_entidades_navieras_tonelaje: bool | None = None
+    regimen_articulo_101_lis_reducida_dimension: bool | None = None
+    regimen_entidad_capital_riesgo: bool | None = None
+    cifra_negocios_doce_meses_umbral: bool | None = None
+    cifra_negocios_periodo_anterior_bajo_umbral: bool | None = None
+    cooperativa_o_multiples_tipos: _M202CooperativaOMultiplesTipos | None = None
+    cooperativa_fiscalmente_protegida: bool | None = None
+    multiples_tipos_impositivos: bool | None = None
     tipo_gravamen_impuesto_sociedades: str | None = None
-    importe_neto_cifra_negocios_tramo: str | None = None
-    marca_instrumental: str | None = None
-    discriminante_declaracion_negativa: str | None = None
-    normativa_territorio_foral: str | None = None
+    importe_neto_cifra_negocios_tramo: _M202ImporteNetoTramo | None = None
+    marca_instrumental: bool | None = None
+    #: "A" the LIS art. 40.2 modality, "B" the art. 40.3 one (2025 design Nota 11).
+    modalidad_liquidacion: _M202ModalidadLiquidacion | None = None
+    #: "1" Navarra, "2" Guipúzcoa, "3" Vizcaya, "4" Álava (2025 design Nota 9); ``None``
+    #: writes the design's blank, which is the answer for a contribuyente under the
+    #: common normativa.
+    normativa_territorio_foral: _M202NormativaForal | None = None
     comunicacion_datos_adicionales: str | None = None
     numero_referencia_sociedades: str | None = None
-
-    @property
-    def unsupported_producer_ids(self) -> tuple[M202UnsupportedProducerId, ...]:
-        """Return the exact immutable M202 producer-gap inventory."""
-        return M202_UNSUPPORTED_PRODUCER_IDS
 
 
 class FilingElectionFacts(BaseModel):
@@ -665,6 +652,11 @@ class FilingProducerSnapshot(BaseModel):
     selected_account: SelectedFilingAccount | None
     m303_filing_facts: M303FilingFacts | None
     m390_filing_facts: M390FilingFacts | None = None
+    #: The first day of the período impositivo in progress, resolved from the
+    #: entity's stated facts, for a period with no calendar span of its own (a
+    #: pago fraccionado). ``None`` for a period with a span, whose own start is
+    #: the draft's.
+    periodo_impositivo_start: date | None = None
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -789,17 +781,6 @@ def _validate_modelo_111_snapshot(snapshot: FilingProducerSnapshot) -> None:
 def _validate_modelo_202_snapshot(snapshot: FilingProducerSnapshot) -> None:
     if not isinstance(snapshot.model_profile, Modelo202ProducerProfile):
         raise ValueError("modelo 202 requires Modelo202ProducerProfile")
-    missing_ids = tuple(item.value for item in snapshot.model_profile.unsupported_producer_ids)
-    raise FilingProducerSnapshotError(
-        f"Modelo 202 producer snapshot is incomplete: {', '.join(missing_ids)}",
-        translated_message="application.filing.export.errors.m202_producer_facts_unsupported",
-        context={"missing_fact_ids": missing_ids, "reason": "m202_producer_facts_unsupported"},
-        precondition_verdict=filing_no_recovery_verdict(
-            FilingPreconditionCondition.OPERATION_ADMISSIBLE,
-            facts={"error_type": "FilingProducerSnapshotError", "reason": "m202_producer_facts_unsupported"},
-            outcome=NoRecoveryOutcome.OPERATOR_DECISION,
-        ),
-    )
 
 
 def _validate_modelo_303_snapshot(snapshot: FilingProducerSnapshot) -> None:
@@ -901,6 +882,7 @@ def build_filing_producer_snapshot(
     m303_filing_facts: M303FilingFacts | None,
     declaration_contact: DeclarationContactFacts | None = None,
     account_page_refund_account: bool = False,
+    periodo_impositivo_start: date | None = None,
 ) -> FilingProducerSnapshot:
     """Build a snapshot retaining only the account selected by disposition.
 
@@ -930,6 +912,7 @@ def build_filing_producer_snapshot(
             m303_filing_facts=m303_filing_facts,
             m390_filing_facts=None,
             declaration_contact=declaration_contact or DeclarationContactFacts(),
+            periodo_impositivo_start=periodo_impositivo_start,
         )
     except ValueError as exc:
         raise _registered_snapshot_refusal(exc) or _snapshot_design_fault(
@@ -964,7 +947,6 @@ def _select_filing_account(
 
 
 __all__ = [
-    "M202_UNSUPPORTED_PRODUCER_IDS",
     "AmendmentEvidence",
     "ChargeAccountSelection",
     "FilingElectionFacts",
@@ -972,7 +954,6 @@ __all__ = [
     "FilingProducerSnapshot",
     "FilingProducerSnapshotError",
     "GeneralFilingProfileFacts",
-    "M202UnsupportedProducerId",
     "M303FilingFacts",
     "M303InsolvencyFilingFact",
     "M303InsolvencyFilingSubtype",

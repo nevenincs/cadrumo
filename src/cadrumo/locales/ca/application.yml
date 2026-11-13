@@ -561,9 +561,16 @@ application:
         m193_pending_row_has_devengo: 'No s''ha escrit res: una fila pendent del Modelo
           193 no pot tenir a més exercici de meritació. Treu-ne un dels dos i torna
           a exportar.'
-        m202_producer_facts_unsupported: 'No s''ha escrit res: el model 202 necessita
-          dades que aquesta exportació encara no pot prendre del teu perfil (%{missing_fact_ids}).
-          Exporta''l quan s''admetin.'
+        m202_foral_territory_unstated: 'No s''ha escrit res: el teu perfil indica
+          un territori foral sense dir quin, i el Model 202 l''ha de consignar (Navarra,
+          Guipúscoa, Biscaia o Àlaba). Encara no pots indicar un territori foral al
+          perfil, així que aquest pagament fraccionat no es pot exportar.'
+        m202_prior_periodo_turnover_unreadable: 'No s''ha escrit res: el període impositiu
+          anterior a aquest va durar menys de dotze mesos, així que l''import net
+          de la xifra de negocis que decideix el tipus de gravamen és el d''aquell
+          període, tal com el declara el seu Model 200. L''aplicació encara no pot
+          llegir aquest Model 200, així que aquest pagament fraccionat encara no es
+          pot exportar.'
         m280_negative_imputation_key_invalid: 'No s''ha escrit res: una imputació
           negativa del Modelo 280 necessita la clau 2 amb el signe negatiu N, o farciment
           amb zeros sota qualsevol altra clau. Corregeix el registre i torna a exportar.'

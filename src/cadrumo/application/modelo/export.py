@@ -40,7 +40,7 @@ See Also:
 from __future__ import annotations
 
 import functools
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Callable, Iterable, Iterator, Mapping
 from datetime import date, datetime
 from pathlib import Path
 
@@ -57,9 +57,10 @@ from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry.applicability import derive_taxpayer_files_economic_activity
 from ...domain.calculations.registry.applicability_modelo202 import derive_modelo_202_modality
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.export_semantics import ExportDraftAttribute
 from ...domain.calculations.registry.payment_instalment_split import first_instalment_share
 from ...domain.calculations.registry.schema_base import CasillaDataType
-from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition
+from ...domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportLayoutDefinition
 from ...domain.deadlines.models import ChargeAccount, RefundAccount, TaxpayerProfile
 from ...domain.filing.errors import (
     FilingExportDeclaredPartyNameError,
@@ -187,6 +188,11 @@ from .trabajo_income_findings import trabajo_recorded
 from .verification_cross_period import cross_period_expected_member_sets_from_profile, require_cross_period_clean_state
 
 
+def _layout_fields(subview: RegistryModeloSubview) -> Iterator[ExportFieldDefinition]:
+    """Every field of every export layout the selected edition declares."""
+    return (field for layout in subview.export_layouts for record in layout.records for field in record.fields)
+
+
 def _persist_exported_draft(
     *,
     command: ModeloExportCommand,
@@ -260,6 +266,12 @@ def _persist_exported_draft(
         export_ports=export_ports,
         operation=operation,
         export_layout=export_layout,
+        cited_producer_keys=frozenset(
+            field.producer_key for field in _layout_fields(export_subview) if field.producer_key is not None
+        ),
+        cites_period_start=any(
+            field.draft_attribute is ExportDraftAttribute.PERIOD_START_DATE for field in _layout_fields(export_subview)
+        ),
     )
     selected_account = selected_account_reference(producer_snapshot, accounts=accounts)
     software_identity = envelope_stamped_software_identity(

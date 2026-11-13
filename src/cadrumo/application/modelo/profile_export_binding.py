@@ -23,6 +23,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Collection, Mapping, Sequence
 from dataclasses import dataclass
+from datetime import date
 from decimal import Decimal
 
 from pydantic import ValidationError
@@ -63,7 +64,7 @@ from ..filing.producer_snapshot import DeclarationContactFacts, PresenterIdentit
 
 # Reuse the public defining module's canonical fact-index and scalar resolver;
 # export shaping must not grow a second profile fact authority.
-from ..user_profile.projections import profile_fact_index, projection_for_taxpayer
+from ..user_profile.projections import profile_fact_index, projection_for_taxpayer, record_to_path_values
 from ..user_profile.validation import profile_text_too_long_error
 from .profile_binding import resolve_profile_binding_value
 from .profile_derived_facts import (
@@ -541,6 +542,24 @@ def resolve_declaration_contact(
         return DeclarationContactFacts()
     resolved_schema = operation.profile_schema() if schema is None else schema
     return _declaration_contact_from_profile_facts(profile_fact_index(record, resolved_schema), schema=resolved_schema)
+
+
+def resolve_profile_path_values(
+    *,
+    bucket_id: str,
+    operation: PinnedAuthorityOperation,
+    as_of: date,
+) -> Mapping[str, str]:
+    """Read the active profile's facts in force on ``as_of``, keyed by canonical ``section.field`` path.
+
+    An absent profile answers nothing, so every fact reads as unstated and the
+    caller's own refusal names what to state.
+    """
+    record = load_export_profile_record(bucket_id=bucket_id, operation=operation, profile_record=None)
+    stated: Mapping[str, str] = (
+        record_to_path_values(record, as_of=as_of) if isinstance(record, UserProfileRecord) else dict[str, str]()
+    )
+    return stated
 
 
 def resolve_profile_identity_producer_values(

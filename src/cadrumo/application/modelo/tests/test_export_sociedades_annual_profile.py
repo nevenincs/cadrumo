@@ -74,6 +74,8 @@ def test_the_annual_sociedades_export_refuses_a_profile_with_no_administrador(
             operation=operation,
             m360_solicitud=None,
             export_layout=snapshot.revision.export_layouts[0],
+            cited_producer_keys=frozenset(),
+            periodo=None,
         )
 
     assert raised.value.context is not None

@@ -564,9 +564,15 @@ application:
         m193_pending_row_has_devengo: 'No se ha escrito nada: una fila pendiente del
           Modelo 193 no puede tener además ejercicio de devengo. Quita uno de los
           dos y vuelve a exportar.'
-        m202_producer_facts_unsupported: 'No se ha escrito nada: el modelo 202 necesita
-          datos que esta exportación todavía no puede tomar de tu perfil (%{missing_fact_ids}).
-          Expórtalo cuando se admitan.'
+        m202_foral_territory_unstated: 'No se ha escrito nada: tu perfil indica un
+          territorio foral sin decir cuál, y el Modelo 202 debe consignarlo (Navarra,
+          Gipuzkoa, Bizkaia o Álava). Todavía no puedes indicar un territorio foral
+          en el perfil, así que este pago fraccionado no se puede exportar.'
+        m202_prior_periodo_turnover_unreadable: 'No se ha escrito nada: el período
+          impositivo anterior a este duró menos de doce meses, así que el importe
+          neto de la cifra de negocios que decide el tipo de gravamen es el de ese
+          período, tal como lo declara su Modelo 200. La aplicación todavía no puede
+          leer ese Modelo 200, así que este pago fraccionado aún no se puede exportar.'
         m280_negative_imputation_key_invalid: 'No se ha escrito nada: una imputación
           negativa del Modelo 280 necesita la clave 2 con el signo negativo N, o relleno
           con ceros bajo cualquier otra clave. Corrige el registro y vuelve a exportar.'

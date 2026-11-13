@@ -121,20 +121,39 @@ profile:
       ccaa: Comunidad o ciudad autónoma de residencia fiscal
       jurisdiction_scope: ¿Qué territorio tributario se aplica a este Modelo 303?
     taxpayer_type:
+      cierre_ejercicio_dia: ¿Qué día del mes cierra el ejercicio de la entidad?
+      cierre_ejercicio_mes: ¿En qué mes cierra el ejercicio de la entidad?
+      cooperativa_fiscalmente_protegida: ¿La entidad es una cooperativa fiscalmente
+        protegida?
       country_of_fiscal_residence: País de residencia fiscal (código ISO 3166-1 alfa-2,
         p.ej. GB, DE, FR)
       declaration_roles: ¿La entidad declarante desempeña alguno de estos roles institucionales
         a efectos del Modelo 347 (operaciones con terceros)?
       entity_type: Tipo de entidad
+      erd_tipo_gravamen_especifico: ¿La entidad es de reducida dimensión y tributa
+        al tipo específico del art. 101 LIS?
+      fecha_constitucion: ¿Cuál es la fecha de constitución de la entidad?
       fiscal_residency: Categoría de residencia fiscal
       incn_prior_12_months: ¿Cuál fue su importe neto de la cifra de negocios en los
         últimos 12 meses? (en euros, opcional)
       irpf_income_categories: Categorías de renta IRPF
       legal_entity_form: Forma jurídica
+      marca_instrumental: ¿Se aplica a la entidad la marca instrumental de la Nota
+        7 del diseño?
       new_entity_first_two_profit_periods: ¿Es una entidad de nueva creación en uno
         de sus dos primeros periodos impositivos con beneficios?
       pago_fraccionado_art_40_3_elected: ¿Ejerció la entidad en su declaración censal
         la opción del artículo 40.3 de la LIS para el pago fraccionado?
+      principal_cnae: ¿Cuál es el código CNAE de cuatro dígitos de la actividad principal
+        de la entidad?
+      principal_cnae_classification: ¿En qué clasificación CNAE indicas el código
+        de tu actividad principal?
+      regimen_entidad_capital_riesgo: ¿La entidad es una entidad de capital riesgo
+        del art. 50 LIS?
+      regimen_entidades_navieras_tonelaje: ¿La entidad aplica el régimen de entidades
+        navieras en función del tonelaje?
+      regimen_ley_49_2002: ¿La entidad aplica el régimen de la Ley 49/2002?
+      regimen_socimi: ¿La entidad aplica el régimen SOCIMI (Ley 11/2009)?
       representante_fiscal_nif: NIF/NIE del representante fiscal en España (obligatorio
         fuera UE/EEE)
       representante_fiscal_nombre: Nombre del representante fiscal en España
@@ -763,6 +782,12 @@ profile:
             foral_unsupported: Territorio foral (País Vasco o Navarra) - aún no admitido
           label: Régimen territorial
       taxpayer_type:
+        cierre_ejercicio_dia:
+          label: Día de cierre del ejercicio
+        cierre_ejercicio_mes:
+          label: Mes de cierre del ejercicio
+        cooperativa_fiscalmente_protegida:
+          label: Cooperativa fiscalmente protegida
         country_of_fiscal_residence:
           label: País de residencia fiscal
         declaration_roles:
@@ -773,6 +798,10 @@ profile:
             legal_entity: Persona jurídica (sociedad)
             natural_person: Persona física
           label: Tipo de contribuyente
+        erd_tipo_gravamen_especifico:
+          label: Entidad de reducida dimensión con tipo específico (art. 101 LIS)
+        fecha_constitucion:
+          label: Fecha de constitución
         fiscal_residency:
           choices:
             non_resident_irnr: No residente (IRNR)
@@ -793,10 +822,24 @@ profile:
             sll: Sociedad limitada laboral (S.L.L.)
             sociedad_civil_mercantil: Sociedad civil con objeto mercantil
           label: Forma jurídica
+        marca_instrumental:
+          label: Marca instrumental (Nota 7)
         new_entity_first_two_profit_periods:
           label: En uno de los dos primeros períodos con beneficio
         pago_fraccionado_art_40_3_elected:
           label: Opción del art. 40.3 LIS en el pago fraccionado
+        principal_cnae:
+          label: CNAE de la actividad principal
+        principal_cnae_classification:
+          label: Clasificación CNAE de la actividad principal
+        regimen_entidad_capital_riesgo:
+          label: Entidad de capital riesgo (art. 50 LIS)
+        regimen_entidades_navieras_tonelaje:
+          label: Régimen de entidades navieras en función del tonelaje
+        regimen_ley_49_2002:
+          label: Régimen de la Ley 49/2002
+        regimen_socimi:
+          label: Régimen SOCIMI (Ley 11/2009)
         representante_fiscal_nif:
           label: NIF del representante fiscal
         representante_fiscal_nombre:

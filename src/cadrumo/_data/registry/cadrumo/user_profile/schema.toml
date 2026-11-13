@@ -1,6 +1,6 @@
 [schema]
 id = "cadrumo.user_profile"
-version = 12
+version = 13
 title = "Cadrumo user profile schema"
 snapshot_policy = "immutable_secure_snapshot_hash"
 remove_policy = "live_profile_tombstone_retain_snapshots"
@@ -513,6 +513,142 @@ effective_dated = true
 description = "Opción del art. 40.3 LIS ejercida en la declaración censal: pago fraccionado sobre la base imponible de los 3, 9 u 11 primeros meses. true es la opción ejercida desde el período impositivo indicado en valid_from; false es una respuesta negativa o una renuncia. Sin valor no se ha preguntado y no se presume. Se lee el valor vigente al inicio del período impositivo de cada pago fraccionado y, por debajo del umbral del art. 40.3, decide si resulta ingreso."
 model_selectors = ["taxpayer.pago_fraccionado_art_40_3_elected"]
 legal_refs = ["ley-27-2014:art-40-3"]
+
+[[sections.fields]]
+key = "fecha_constitucion"
+type = "date"
+required = false
+sensitivity = "identity"
+effective_dated = false
+description = "Fecha de constitución de la entidad, como la consigna la declaración censal (Modelo 036, personas jurídicas o entidades, fecha de constitución [B9]). El primer período impositivo de la entidad empieza en ella, por lo que la fecha de inicio del período impositivo que consigna el devengo de la página 01 del Modelo 202 nunca es anterior. Sin valor la exportación del Modelo 202 se rechaza y pide indicarla."
+model_selectors = ["taxpayer.fecha_constitucion"]
+legal_refs = ["ley-27-2014:art-40"]
+source_refs = ["aeat-dr-036-2025", "aeat-modelo-202-instructions"]
+
+[[sections.fields]]
+key = "cierre_ejercicio_dia"
+type = "integer"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Día de la fecha de cierre del ejercicio económico de la entidad, como lo consigna la declaración censal (Modelo 036, apartado del Impuesto sobre Sociedades, casilla [640]). El período impositivo es el ejercicio económico (art. 27.1 LIS); el pago fraccionado es a cuenta del período en curso el día anterior a su período de ingreso (art. 40 LIS), cuyo inicio consigna el devengo del Modelo 202. 31 con mes 12 es el año natural. Sin valor la exportación del Modelo 202 se rechaza."
+minimum = "1"
+maximum = "31"
+model_selectors = ["taxpayer.cierre_ejercicio_dia"]
+legal_refs = ["ley-27-2014:art-40"]
+source_refs = ["aeat-dr-036-2025", "aeat-modelo-202-instructions"]
+
+[[sections.fields]]
+key = "cierre_ejercicio_mes"
+type = "integer"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Mes de la fecha de cierre del ejercicio económico de la entidad, como lo consigna la declaración censal (Modelo 036, apartado del Impuesto sobre Sociedades, casilla [640]). Con cierre_ejercicio_dia fija el período impositivo en curso que consigna el devengo del Modelo 202; 12 con el día 31 es el año natural. Sin valor la exportación del Modelo 202 se rechaza."
+minimum = "1"
+maximum = "12"
+model_selectors = ["taxpayer.cierre_ejercicio_mes"]
+legal_refs = ["ley-27-2014:art-40"]
+source_refs = ["aeat-dr-036-2025", "aeat-modelo-202-instructions"]
+
+[[sections.fields]]
+key = "principal_cnae"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Código C.N.A.E. de cuatro dígitos de la actividad principal que consigna la página 01 del Modelo 202 (diseño 2025 posición 118; diseños 2019 y 2023 posición 117), en la clasificación indicada en principal_cnae_classification. Cada ejercicio exige la clasificación que publica el registro (Nota 12 del diseño 2025), y un código no se convierte nunca de una clasificación a otra. Es declarado, nunca deducido de las actividades. Sin valor la exportación del Modelo 202 se rechaza y pide indicarlo."
+model_selectors = ["taxpayer.principal_cnae"]
+legal_refs = ["orden-hfp-227-2017:art-1"]
+source_refs = ["aeat-dr-202-2025", "aeat-dr-202-2023", "aeat-dr-202-2019"]
+
+[[sections.fields]]
+key = "principal_cnae_classification"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Clasificación de actividades económicas en la que se declara principal_cnae, con el identificador que publica el registro (por ejemplo cnae-2009 o cnae-2025). La exportación del Modelo 202 usa el código solo si esta clasificación es la que el registro exige para el ejercicio del pago fraccionado (Nota 12 del diseño 2025); si no coincide o falta, se rechaza y nombra la clasificación exigida."
+model_selectors = ["taxpayer.principal_cnae_classification"]
+legal_refs = ["orden-hfp-227-2017:art-1"]
+source_refs = ["aeat-dr-202-2025"]
+
+[[sections.fields]]
+key = "regimen_ley_49_2002"
+type = "boolean"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Datos adicionales del Modelo 202: entidad que aplica el régimen fiscal de la Ley 49/2002, de 23 de diciembre (marca X o blanco; diseño 2025 posición 122, diseños 2019 y 2023 posición 121). true escribe la X; false deja la posición en blanco. Sin valor la exportación se rechaza: un blanco afirmaría que no aplica."
+model_selectors = ["taxpayer.regimen_ley_49_2002"]
+legal_refs = ["ley-49-2002:art-14", "orden-hfp-227-2017:art-1"]
+source_refs = ["aeat-dr-202-2025", "aeat-dr-202-2023", "aeat-dr-202-2019"]
+
+[[sections.fields]]
+key = "regimen_socimi"
+type = "boolean"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Datos adicionales del Modelo 202: entidad que aplica el régimen de la Ley 11/2009, de 26 de octubre, de las SOCIMI (marca X o blanco; diseño 2025 posición 123, diseños 2019 y 2023 posición 122). true escribe la X; false deja la posición en blanco. Sin valor la exportación se rechaza."
+model_selectors = ["taxpayer.regimen_socimi"]
+legal_refs = ["orden-hfp-227-2017:art-1"]
+source_refs = ["aeat-dr-202-2025", "aeat-dr-202-2023", "aeat-dr-202-2019"]
+
+[[sections.fields]]
+key = "regimen_entidad_capital_riesgo"
+type = "boolean"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Datos adicionales del Modelo 202: entidad de capital-riesgo que aplica el régimen fiscal especial del art. 50 LIS (marca X o blanco; diseño 2025 posición 124, diseños 2019 y 2023 posición 515). true escribe la X; false deja la posición en blanco. Sin valor la exportación se rechaza."
+model_selectors = ["taxpayer.regimen_entidad_capital_riesgo"]
+legal_refs = ["orden-hfp-227-2017:art-1"]
+source_refs = ["aeat-dr-202-2025", "aeat-dr-202-2023", "aeat-dr-202-2019"]
+
+[[sections.fields]]
+key = "regimen_entidades_navieras_tonelaje"
+type = "boolean"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Datos adicionales del Modelo 202: entidad que aplica el régimen de las entidades navieras en función del tonelaje (marca X o blanco; diseño 2025 posición 125, diseños 2019 y 2023 posición 123). true escribe la X; false deja la posición en blanco. Sin valor la exportación se rechaza."
+model_selectors = ["taxpayer.regimen_entidades_navieras_tonelaje"]
+legal_refs = ["orden-hfp-227-2017:art-1"]
+source_refs = ["aeat-dr-202-2025", "aeat-dr-202-2023", "aeat-dr-202-2019"]
+
+[[sections.fields]]
+key = "erd_tipo_gravamen_especifico"
+type = "boolean"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Datos adicionales del Modelo 202: entidad que cumple los requisitos de los incentivos de empresa de reducida dimensión (art. 101 LIS) y aplica el tipo de gravamen específico previsto para estas entidades (marca X o blanco; diseño 2025 posición 126, diseños 2019 y 2023 posición 124, que lo refieren al art. 29.1 primer párrafo LIS). true escribe la X; false deja la posición en blanco. Sin valor la exportación se rechaza."
+model_selectors = ["taxpayer.erd_tipo_gravamen_especifico"]
+legal_refs = ["ley-27-2014:art-101", "ley-27-2014:art-29", "orden-hfp-227-2017:art-1"]
+source_refs = ["aeat-dr-202-2025", "aeat-dr-202-2023", "aeat-dr-202-2019"]
+
+[[sections.fields]]
+key = "cooperativa_fiscalmente_protegida"
+type = "boolean"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Datos adicionales del Modelo 202: cooperativa fiscalmente protegida (diseño 2025 posición 128, marca X o blanco; diseños 2019 y 2023 posición 126, código \"1\" Cooperativa). true escribe la X, o el código 1 en los diseños 2019 y 2023; con false esos diseños escriben el código \"2\" solo si los tipos de gravamen que la ley fija a la entidad son varios, y si no el código \"0\" No consta. También selecciona el tipo protegido del art. 29 LIS que el Modelo 202 consigna. Sin valor la exportación se rechaza."
+model_selectors = ["taxpayer.cooperativa_fiscalmente_protegida"]
+legal_refs = ["orden-hfp-227-2017:art-1"]
+source_refs = ["aeat-dr-202-2025", "aeat-dr-202-2023", "aeat-dr-202-2019"]
+
+[[sections.fields]]
+key = "marca_instrumental"
+type = "boolean"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Marca de la Nota 7 del diseño del Modelo 202 (2025 posición 129; 2019 y 2023 posición 133): true si la entidad aplica la RIC o la bonificación del art. 26 Ley 19/1994, el régimen ZEC o la bonificación de Ceuta y Melilla (art. 33 LIS), tiene rentas no integradas por el art. 17.2 LIS, está parcialmente exenta (cap. XIV tít. VII LIS) o aplica la bonificación del art. 34 LIS. false deja la posición en blanco. Sin valor la exportación se rechaza."
+model_selectors = ["taxpayer.marca_instrumental"]
+legal_refs = ["orden-hfp-227-2017:art-1"]
+source_refs = ["aeat-dr-202-2025", "aeat-dr-202-2023", "aeat-dr-202-2019"]
 
 [[sections.fields]]
 key = "tributacion_estado_porcentaje"

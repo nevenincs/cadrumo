@@ -18,7 +18,6 @@ from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCata
 from cadrumo.adapters.persistence.profile.tests.filing_report_support import seed_filing_gate_report
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import set_active_test_profile_facts
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_cli_backend
-from cadrumo.application.filing.producer_snapshot import M202_UNSUPPORTED_PRODUCER_IDS
 from cadrumo.application.modelo.calculation_screen import calculation_screen_stamp
 from cadrumo.application.modelo.operation_shared import MODELO_EXPORT_OPERATION_DEFINITION_ID
 from cadrumo.application.modelo.tests.registry_revision import active_registry_revision_id
@@ -275,16 +274,29 @@ def _set_export_profile_name() -> None:
     )
 
 
-def _set_emilio_legal_entity_export_profile(*, activity_start_date: date | None = None) -> None:
+def _set_emilio_legal_entity_export_profile(
+    *, activity_start_date: date | None = None, constitution_date: date | None = None
+) -> None:
     activity_start = (
         (UserProfileFact(path="censo.activity_start_date", value=activity_start_date.isoformat()),)
         if activity_start_date is not None
+        else ()
+    )
+    # A calendar ejercicio: the declaración censal's closing day and month, and the constitution date.
+    periodo_impositivo = (
+        (
+            UserProfileFact(path="taxpayer_type.cierre_ejercicio_dia", value=31),
+            UserProfileFact(path="taxpayer_type.cierre_ejercicio_mes", value=12),
+            UserProfileFact(path="taxpayer_type.fecha_constitucion", value=constitution_date.isoformat()),
+        )
+        if constitution_date is not None
         else ()
     )
     set_active_test_profile_facts(
         persona_facts_beneath(
             (
                 *activity_start,
+                *periodo_impositivo,
                 UserProfileFact(path="identity.tax_id", value="B00015016"),
                 UserProfileFact(path="identity.name", value="Emilio"),
                 UserProfileFact(path="identity.surnames", value="Corporate Persona"),
@@ -669,20 +681,23 @@ def test_export_refuses_an_existing_output_path_without_replace(
     assert out.read_bytes() == b"already here"
 
 
-def test_export_modelo_202_emilio_passes_the_identity_gate_and_stops_at_incomplete_producer_facts(
+def test_export_modelo_202_without_page_01_entity_facts_refuses_with_the_door_to_state_them(
     tmp_path: Path,
     *,
     operation: PinnedAuthorityOperation,
 ) -> None:
-    """The development identity clears the envelope header; missing Modelo 202 producer facts still refuse.
+    """The development identity clears the envelope header; unstated page 01 entity facts still refuse.
 
-    The fixture profile declares no principal CNAE or official offsets, so the
-    export must stop before any byte is written rather than render blanks.
+    The profile states its ejercicio, so the devengo resolves, but no principal
+    CNAE and none of the datos adicionales the official design asks for, so the
+    export stops before any byte is written, names every missing profile fact
+    and opens the first one.
     """
 
     # The company started after the periodo impositivo the 1P art. 40.2 base reads, so that
     # instalment has no earlier Modelo 200 to take a base from and the export reaches the producer.
-    _set_emilio_legal_entity_export_profile(activity_start_date=date(_PRE_B2_LAST_EXERCISE - 1, 1, 1))
+    started = date(_PRE_B2_LAST_EXERCISE - 1, 1, 1)
+    _set_emilio_legal_entity_export_profile(activity_start_date=started, constitution_date=started)
     _, calculation_revision_id = _seed_exportable_modelo_202_pre_b2_revision(operation=operation)
     out = tmp_path / f"modelo-202-{_PRE_B2_LAST_EXERCISE}-1P.boe"
 
@@ -708,10 +723,16 @@ def test_export_modelo_202_emilio_passes_the_identity_gate_and_stops_at_incomple
 
     assert result.exit_code != 0, result.output
     error = json.loads(result.output)["error"]
-    assert error["context"]["calculation_revision_id"] == calculation_revision_id
-    assert error["context"]["cause_type"] == "FilingProducerSnapshotError"
-    assert error["context"]["reason"] == "m202_producer_facts_unsupported"
-    assert error["context"]["missing_fact_ids"] == ", ".join(item.value for item in M202_UNSUPPORTED_PRODUCER_IDS)
+    assert error["code"] == "REFUSED_MODELO_PROFILE_READINESS"
+    context = error["context"]
+    assert context["calculation_revision_id"] == calculation_revision_id
+    assert context["cause_type"] == "FilingProducerSnapshotError"
+    assert context["reason"] == "m202_profile_facts_missing"
+    missing = str(context["missing_profile_paths"]).split(", ")
+    # The code is a code of one classification, so the classification is asked for first.
+    assert missing[:2] == ["taxpayer_type.principal_cnae_classification", "taxpayer_type.principal_cnae"]
+    assert "taxpayer_type.regimen_ley_49_2002" in missing
+    assert context["profile_path"] == "taxpayer_type.principal_cnae_classification"
     assert not out.exists()
 
 
