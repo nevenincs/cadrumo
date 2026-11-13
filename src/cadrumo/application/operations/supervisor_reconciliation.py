@@ -38,6 +38,7 @@ from .persistence.leases import (
 from .registry import OperationReconciliationPolicy
 from .secret_submission import BoundEphemeralSecretAccess
 from .settlement_snapshot import log_settlement, settlement_successor
+from .supervisor_execution import fixed_clock_application_work
 from .supervisor_host import SupervisorHost
 from .supervisor_snapshot import SnapshotAdvance
 
@@ -391,7 +392,10 @@ class SupervisorReconciliationMixin(SupervisorHost):
                         action=AccessAction.RESUME,
                         executor=lambda: run_with_model_runs(
                             operation_model_run_port(self._execution_authority, snapshot.identity),
-                            resumable_executor.resume(request, checkpoint, executor_context),
+                            fixed_clock_application_work(
+                                self._fixed_clock_instant,
+                                resumable_executor.resume(request, checkpoint, executor_context),
+                            ),
                         ),
                     ),
                 )

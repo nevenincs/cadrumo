@@ -38,6 +38,8 @@ from .product_identity import PRODUCT_IDENTITY
 if TYPE_CHECKING:
     from uuid import UUID
 
+    from .time.fixed_clock import FixedClock
+
 
 class StoragePlatform(StrEnum):
     """Operating-system families with a declared installed default root."""
@@ -558,3 +560,22 @@ def child_environment(
 
     environment.update(profile_root_environment(resolved_root, profile_id))
     return environment
+
+
+def fixed_clock_child_environment(fixed_clock: FixedClock | None) -> dict[str, str]:
+    """Return the fixed-clock launch slots for a profile worker, from the runtime's admitted fixed clock only.
+
+    :func:`child_environment` strips both slots with every other prefixed name,
+    and no profile relays them; a launcher that starts a profile worker adds
+    these to that environment. They come from the value the runtime admitted
+    at its own start, never from an environment it received, so no other
+    child ever sees them.
+    """
+    if fixed_clock is None:
+        return {}
+    from .time.fixed_clock import FIXED_CLOCK_INSTANT_VARIABLE, FIXED_CLOCK_ROOT_VARIABLE
+
+    return {
+        FIXED_CLOCK_INSTANT_VARIABLE: fixed_clock.instant.isoformat(),
+        FIXED_CLOCK_ROOT_VARIABLE: str(fixed_clock.root),
+    }

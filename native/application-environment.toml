@@ -103,6 +103,15 @@ CADRUMO_PROFILE_ROOT = { kind = "directory", role = "slot" }
 CADRUMO_LOCAL_AI_DEMAND_PIPE = { kind = "text", role = "slot" }
 CADRUMO_LOCAL_AI_DEMAND_SERVERS = { kind = "text", role = "slot" }
 
+# The test-host fixed clock: a UTC ISO 8601 instant and the absolute storage root it
+# is for. Only a desktop test host built with the automation feature fills them for
+# the runtime, for its own end-to-end root; no released image fills them. The runtime
+# admits them once at its start and tells each profile worker the admitted values,
+# never ones it received; both refuse to start on any unbound value. They are not
+# settings, so no settings path reads them.
+CADRUMO_FIXED_CLOCK_INSTANT = { kind = "text", role = "slot" }
+CADRUMO_FIXED_CLOCK_ROOT = { kind = "directory", role = "slot" }
+
 # The agent's environment prefix. A profile with agent_names = true admits every name
 # under it, except the names listed here, which no profile admits: the agent's
 # settings file and the retired hosted program paths.
@@ -397,7 +406,11 @@ base_groups = ["system", "session", "terminal", "display", "network"]
 pins = true
 operator = ["presentation", "remote", "package"]
 pass = ["CADRUMO_PROXY_URL", "CADRUMO_PROXY_USERNAME", "CADRUMO_PROXY_BYPASS"]
-slots = [{ name = "CADRUMO_PROFILE_ROOT", required = false }]
+slots = [
+  { name = "CADRUMO_PROFILE_ROOT", required = false },
+  { name = "CADRUMO_FIXED_CLOCK_INSTANT", required = false },
+  { name = "CADRUMO_FIXED_CLOCK_ROOT", required = false },
+]
 path = "package"
 
 [profiles.kdf-child]
@@ -437,6 +450,10 @@ pass = [
   "CADRUMO_PROXY_URL",
   "CADRUMO_PROXY_USERNAME",
   "CADRUMO_PROXY_BYPASS",
+]
+slots = [
+  { name = "CADRUMO_FIXED_CLOCK_INSTANT", required = false },
+  { name = "CADRUMO_FIXED_CLOCK_ROOT", required = false },
 ]
 path = "package"
 

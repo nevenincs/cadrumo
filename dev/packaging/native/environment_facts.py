@@ -129,6 +129,7 @@ def collect_cli(request: Mapping[str, Any], scratch: Path) -> dict[str, Any]:
     )
     from cadrumo.core.storage_taxonomy import StorageCategory
     from cadrumo.core.storage_taxonomy_locations import storage_location, storage_path
+    from cadrumo.core.time.fixed_clock import FIXED_CLOCK_VARIABLES
 
     fields = Settings.model_fields
     environment_fields = {
@@ -157,6 +158,7 @@ def collect_cli(request: Mapping[str, Any], scratch: Path) -> dict[str, Any]:
         "authority_variables": sorted(name.upper() for name in AuthorityRootSettings.model_fields),
         "temporary_variables": list(TEMPORARY_VARIABLES),
         "profile_variables": [PROFILE_ROOT_VARIABLE],
+        "fixed_clock_variables": list(FIXED_CLOCK_VARIABLES),
         "log": {
             "default": _relative(default_logs, log_root),
             "file_name": PurePath(storage_location(StorageCategory.LOG_FILE).subpath).name,

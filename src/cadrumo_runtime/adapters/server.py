@@ -5,6 +5,7 @@ from __future__ import annotations
 import math
 import time
 from concurrent.futures import Future, ThreadPoolExecutor, wait
+from datetime import datetime
 from threading import BoundedSemaphore, Event, RLock, Thread
 from typing import Protocol
 from uuid import UUID, uuid4
@@ -71,8 +72,13 @@ class RuntimeTransportServer(RuntimeConnectionHandling):
         profiles: ProfileHandler | None = None,
         boot_id: UUID | None = None,
         authority_generation: str | None = None,
+        fixed_clock_instant: datetime | None = None,
     ) -> None:
-        """Bind one endpoint and a fresh process boot, without claiming ownership yet."""
+        """Bind one endpoint and a fresh process boot, without claiming ownership yet.
+
+        ``fixed_clock_instant`` is the fixed clock this runtime admitted at its
+        start; every client reads it on the hello, absent on wall time.
+        """
         self.listener = listener
         self._listener_owner = TransportCleanup(listener)
         self.stop = stop
@@ -83,6 +89,7 @@ class RuntimeTransportServer(RuntimeConnectionHandling):
             storage_identity=listener.storage_identity,
             boot_id=boot_id or uuid4(),
             authority_generation=authority_generation,
+            fixed_clock_instant=fixed_clock_instant,
         )
         self.ready = Event()
         self._failed = Event()

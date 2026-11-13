@@ -15,7 +15,7 @@ from __future__ import annotations
 import secrets
 from collections.abc import Callable, Mapping
 from dataclasses import replace
-from datetime import timedelta
+from datetime import datetime, timedelta
 from functools import partial
 from typing import TYPE_CHECKING
 
@@ -649,6 +649,7 @@ def compose_operation_dependencies(
     sede_view_stream_opener: SedeViewStreamOpener | None = None,
     journal_committed: Callable[[OperationPersistedSnapshot], None] | None = None,
     capture_memory: WorkbenchCaptureMemoryOwner | None = None,
+    fixed_clock_instant: datetime | None = None,
 ) -> OperationComposedServices:
     """Compose the manifest-backed production registry and all public services.
 
@@ -663,7 +664,10 @@ def compose_operation_dependencies(
     the Sede view refuses every run. ``capture_memory`` is the owner of what
     this graph's reads keep for one session, for a host that reads through it
     as well; without one the graph owns a fresh owner. Either way the services
-    close it whenever a session ends.
+    close it whenever a session ends. ``fixed_clock_instant`` is the test-host
+    fixed clock a profile worker admitted: the supervisor runs each operation's
+    application work at that instant, and the journal then keeps wall time,
+    because a frozen journal stamp would precede the wall stamps around it.
     """
     from ..adapters.persistence.operations.durability_router import DurabilityRoutedOperationPersistence
     from ..adapters.persistence.operations.journal import OperationJournalRepository
@@ -675,7 +679,7 @@ def compose_operation_dependencies(
     from ..application.operations.composition import compose_operation_services
     from ..application.workbench_capture_memory import WorkbenchCaptureMemoryOwner
     from ..core.paths import effective_storage_root
-    from ..core.time.clock import now
+    from ..core.time.clock import now, wall_now
 
     if execution_authority is not None and execution_authority_factory is not None:
         raise ValueError("operation authority must have one owner")
@@ -742,7 +746,7 @@ def compose_operation_dependencies(
         ephemeral=persistence,
         owner_id=secrets.token_hex(32) if operation_owner_id is None else operation_owner_id,
         lease_token_factory=lambda: secrets.token_hex(32),
-        clock=now,
+        clock=now if fixed_clock_instant is None else wall_now,
         lease_duration=_LEASE_DURATION,
         execution_timeout=_EXECUTION_TIMEOUT,
         cleanup_timeout=_CLEANUP_TIMEOUT,
@@ -751,4 +755,5 @@ def compose_operation_dependencies(
         ),
         execution_authority=execution_authority,
         session_reads_end=capture_memory.close,
+        fixed_clock_instant=fixed_clock_instant,
     )
