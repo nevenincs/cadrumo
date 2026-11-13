@@ -46,6 +46,7 @@ export type CrossPeriodCleanStateBlocker =
   | "missing_expected_group_member_roster"
   | "unexpected_group_member_source"
   | "filing_kind_disagreement"
+  | "held_source_set_aside"
   | "registry_revision_divergence";
 
 /**
