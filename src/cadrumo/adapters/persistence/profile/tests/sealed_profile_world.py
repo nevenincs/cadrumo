@@ -53,7 +53,7 @@ from .....core.storage_taxonomy import StorageCategory
 from .....core.storage_taxonomy_locations import storage_location
 from .....core.time.clock import now
 from .....domain.calculations.registry.authority import bundled_indexed_authority
-from .....tests.run_artifact import file_inputs_digest, run_artifact, run_artifact_root
+from .....tests.run_artifact import RunArtifact, file_inputs_digest, run_artifact, run_artifact_root
 from ...storage.custody.tests.portable_password_custody import portable_password_custody
 from ...storage.master_key.active_session import close_active_bucket_session, current_active_bucket_session
 from ...storage.sql.engine import dispose_engine
@@ -86,7 +86,7 @@ _WORLD_TREE = "tree"
 _WORLD_RECORD = "world.json"
 #: Every key is its own world rather than a newer version of one, so a run keeps all it publishes.
 _WORLD_RETAIN = 4096
-_WORLDS: dict[str, SealedProfileWorld] = {}
+_WORLDS: dict[str, tuple[RunArtifact, SealedProfileWorld]] = {}
 
 
 @dataclass(frozen=True, slots=True)
@@ -231,10 +231,15 @@ def derived_profile_world(
 
 
 def _published_world(digest: str, build: Callable[[Path], tuple[str, bytes]]) -> SealedProfileWorld:
-    """Return the run's verified world ``digest``, building it into an empty tree on first use anywhere in the run."""
+    """Return the run's verified world ``digest``, building it into an empty tree on first use anywhere in the run.
+
+    A world this process already holds is marked used again before it is
+    returned, because its caller copies it next and another process may be
+    retiring the run cache's least recently used worlds.
+    """
     known = _WORLDS.get(digest)
-    if known is not None and known.origin.is_dir():
-        return known
+    if known is not None and known[0].mark_used():
+        return known[1]
 
     def publish(staging: Path) -> None:
         tree = staging / _WORLD_TREE
@@ -264,7 +269,7 @@ def _published_world(digest: str, build: Callable[[Path], tuple[str, bytes]]) ->
     world = _read_world(artifact.root)
     if world is None:
         raise CadrumoError(f"the sealed profile world {digest} changed after it was verified")
-    _WORLDS[digest] = world
+    _WORLDS[digest] = (artifact, world)
     return world
 
 
