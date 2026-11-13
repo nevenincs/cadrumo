@@ -24,6 +24,7 @@ from .cross_dependency_calculation_support import (
     observations_from_requirements,
     source_editions_calculate,
 )
+from .modelo_200_turnover import turnover_binding_values
 from .published_authority import (
     PublishedGovernedFactSource,
     published_authored_revision,
@@ -281,7 +282,7 @@ def test_modelo_200_cuota_a_ingresar_aggregates_modelo_202_pagos_fraccionados(
         enum_binding_values={"modelo-200-profile-legal-entity-form": "sl"},
         binding_values={
             "modelo-200-profile-new-entity-flag": Decimal("0"),
-            "modelo-200-profile-incn-prior-12-months": Decimal("10000000"),
+            **turnover_binding_values(snapshot, Decimal("10000000")),
             "modelo-200-profile-tributacion-estado-porcentaje": Decimal("100"),
         },
         date_context={"filing_period": date(filing_year, 12, 31)},

@@ -46,6 +46,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 # 2022 -> explicit post-2022 epoch boundaries, and 2023-2026 all
 # resolve their law-determined revision whose internal-only módulos casillas the
 # workbook must omit for every one of those years.
+# Modelo 200 is absent on purpose: every edition declares calculation grade, and a fichero
+# BOE layout is a filing-grade surface the registry refuses to build for it.
 _COVERED = [
     ("130", 2024, "1T", date(2024, 4, 1)),
     ("130", 2025, "1T", date(2025, 4, 1)),
@@ -58,8 +60,6 @@ _COVERED = [
     ("303", 2024, "1T", date(2024, 4, 1)),
     ("303", 2025, "1T", date(2025, 4, 1)),
     ("303", 2026, "1T", date(2026, 4, 1)),
-    ("200", 2025, "0A", date(2026, 7, 1)),
-    ("200", 2026, "0A", date(2027, 7, 1)),
 ]
 
 

@@ -27,11 +27,19 @@ from .....application.modelo.prorrata_seed_gate import (
 )
 from .....application.prorrata_register.seed import PRORRATA_DIFFERENTIATED_SECTOR
 from .....application.prorrata_register.service import ProrrataRegisterService, ProrrataWholeSeedUnavailableError
+from .....application.prorrata_register.settlement import (
+    PRORRATA_PORCENTAJE_CASILLA,
+    PRORRATA_SETTLEMENT_ESPECIAL_CONTINUATION_LOCALE_KEY,
+    PRORRATA_VOLUMEN_CON_DERECHO_CASILLA,
+    PRORRATA_VOLUMEN_TOTAL_CASILLA,
+)
 from .....core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from .....core.authority_grade import RegistryAuthorityGrade
+from .....core.casilla_id import CasillaId
 from .....core.period import Period, StandardPeriodCode
 from .....core.prorrata_register import SectorDiferenciadoLetra
 from .....domain.calculations.registry.binding_targets import casillas_by_binding
+from .....domain.calculations.registry.bindings import CasillaObservation
 from .....domain.calculations.registry.form_codes import form_for_role
 from .....domain.calculations.registry.prorrata_register_activity_bindings import (
     ProrrataActivityField,
@@ -39,6 +47,7 @@ from .....domain.calculations.registry.prorrata_register_activity_bindings impor
 )
 from .....domain.calculations.registry.prorrata_register_catalogue import (
     carried_prior_definitiva_prorrata_provenance,
+    especial_prorrata_register_regime,
     general_prorrata_register_regime,
 )
 from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
@@ -67,6 +76,12 @@ _BUCKET = "51e351e3-51e3-451e-851e-351e351e351e"
 _runtime_profile = bucket_scoped_runtime_profile_fixture(_BUCKET)
 _YEAR = filing_year_envelope().horizon
 _AT = datetime(_YEAR, 4, 20, 12, 0, tzinfo=UTC)
+_LAST_RETURN_OF_THE_YEAR = StandardPeriodCode.Q4.value
+_SETTLEMENT = {
+    PRORRATA_VOLUMEN_TOTAL_CASILLA: Decimal("200000.00"),
+    PRORRATA_VOLUMEN_CON_DERECHO_CASILLA: Decimal("150000.00"),
+    PRORRATA_PORCENTAJE_CASILLA: Decimal("75"),
+}
 _FIRST = Decimal("58")
 _SECOND = Decimal("61")
 
@@ -94,16 +109,21 @@ def _ledger_iva_ref(source_ref: str) -> CalculationSourceRef:
 
 
 def _draft(
-    state: CalculationRevisionState, *, exempt_output_records: int | None = None
+    state: CalculationRevisionState,
+    *,
+    exempt_output_records: int | None = None,
+    period_code: str = StandardPeriodCode.Q1.value,
+    casilla_values: dict[CasillaId, Decimal] | None = None,
 ) -> tuple[WorkUnit, CalculationRevision]:
     """A 303 calculated under the register's current apportionment, as the IVA binding records it.
 
     ``exempt_output_records`` records, as the binding does when no apportionment
     applied, that the period held that many records of exempt output left to the prorrata.
+    ``casilla_values`` are the calculated casillas the revision holds.
     """
     operation = published_authority_operation()
     modelo = form_for_role("iva.periodic")
-    period = Period.from_year_and_code(_YEAR, StandardPeriodCode.Q1.value)
+    period = Period.from_year_and_code(_YEAR, period_code)
     snapshot = operation.snapshot(
         modelo, filing_year=_YEAR, period=period.registry_token, grade=RegistryAuthorityGrade.CALCULATION
     )
@@ -133,12 +153,13 @@ def _draft(
         else (_ledger_iva_ref(prorrata_only_exempt_output_source_ref(period, exempt_output_records)),)
     )
     filed = state is CalculationRevisionState.PRESENTADO
+    values = {} if casilla_values is None else casilla_values
     revision = CalculationRevision(
         calculation_revision_id=derive_calculation_revision_id(
             work_unit_id=work_unit.work_unit_id,
             input_values_by_casilla_id={},
             binding_overrides={},
-            casilla_values={},
+            casilla_values=values,
             filing_instance_evidence=None,
             source_provenance=provenance,
             source_transaction_ids=(),
@@ -148,8 +169,16 @@ def _draft(
         state=state,
         input_values_by_casilla_id={},
         binding_overrides={},
-        casilla_values={},
-        observations=(),
+        casilla_values=values,
+        observations=tuple(
+            CasillaObservation(
+                casilla_id=casilla_id,
+                value=value,
+                legal_refs=("ley-37-1992:art-105",),
+                source_refs=("modelo-303-prorrata-seed-gate-test",),
+            )
+            for casilla_id, value in values.items()
+        ),
         created_at=_AT,
         updated_at=_AT,
         filing_instance_evidence=None,
@@ -364,6 +393,58 @@ def test_a_register_with_differentiated_sectors_takes_no_whole_entity_carry() ->
     assert refused.value.reason == "source_blocked"
     assert [finding.code for finding in refused.value.findings] == [PRORRATA_DIFFERENTIATED_SECTOR]
     assert ProrrataRegisterRepository().load().entry_for(_YEAR) is None
+
+
+def _last_return_findings() -> tuple[ProrrataSeedVerificationFinding, ...]:
+    return _findings(
+        _draft(CalculationRevisionState.BORRADOR, period_code=_LAST_RETURN_OF_THE_YEAR, casilla_values=_SETTLEMENT)
+    )
+
+
+def test_a_last_return_of_the_year_settles_into_the_register_without_a_prior_declaration() -> None:
+    assert _last_return_findings() == ()
+    assert ProrrataRegisterRepository().load().entry_for(_YEAR) is None
+
+
+def test_a_last_return_after_an_especial_year_with_no_declaration_blocks_before_export() -> None:
+    _service().declare(
+        ProrrataRegisterEntry(
+            ejercicio=_YEAR - 1,
+            regime=especial_prorrata_register_regime(),
+            especial_transition=None,
+            sector_id=None,
+            source_registry_snapshot_refs=(),
+        )
+    )
+
+    (item,) = _last_return_findings()
+
+    assert item.finding.message_locale_key == PRORRATA_SETTLEMENT_ESPECIAL_CONTINUATION_LOCALE_KEY
+    assert item.finding.severity is ModeloVerificationFindingSeverity.BLOCKING
+    assert dict(item.finding.message_facts) == {"filing_year": _YEAR, "prior_filing_year": _YEAR - 1}
+    assert item.finding.legal_refs == ("ley-37-1992:art-105",)
+    assert item.failure is not None
+    assert item.failure.scenario_id == "modelo.work.verify.prorrata_settlement.especial_continuation"
+    assert ProrrataRegisterRepository().load().entry_for(_YEAR) is None
+
+
+def test_a_last_return_with_an_undeclared_sector_blocks_before_export() -> None:
+    _service().declare_sector(
+        SectorDefinition(
+            sector_id="comercio",
+            letra=SectorDiferenciadoLetra.from_registry("a"),
+            member_activity_codes=("4711",),
+        )
+    )
+
+    (item,) = _last_return_findings()
+
+    assert item.finding.message_locale_key == "application.modelo.findings.prorrata_settlement_sector_entries"
+    assert item.finding.severity is ModeloVerificationFindingSeverity.BLOCKING
+    assert dict(item.finding.message_facts) == {"filing_year": _YEAR, "sector_ids": "comercio"}
+    assert item.failure is not None
+    assert item.failure.scenario_id == "modelo.work.verify.prorrata_settlement.sector_entries"
+    assert _findings(_draft(CalculationRevisionState.BORRADOR, casilla_values=_SETTLEMENT)) == ()
 
 
 def test_a_stated_figure_gives_way_to_the_held_prior_return_on_reseeding() -> None:

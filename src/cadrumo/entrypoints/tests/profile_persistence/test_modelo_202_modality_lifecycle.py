@@ -498,7 +498,7 @@ def test_m202_legacy_zero_revision_cannot_verify_file_or_export(
         assert file_context is not None
         file_missing_bindings = file_context["missing_bindings"]
         assert isinstance(file_missing_bindings, tuple)
-        assert _M202_PRIOR_PAYMENTS_BINDING in file_missing_bindings
+        assert _M202_INCN_BINDING in file_missing_bindings
         export_path = tmp_path / "modelo-202-2026-1P.txt"
         with (
             pytest.raises(ModeloRequiredBindingsMissingError) as export_error,
@@ -526,7 +526,7 @@ def test_m202_legacy_zero_revision_cannot_verify_file_or_export(
         assert export_context is not None
         export_missing_bindings = export_context["missing_bindings"]
         assert isinstance(export_missing_bindings, tuple)
-        assert _M202_PRIOR_PAYMENTS_BINDING in export_missing_bindings
+        assert _M202_INCN_BINDING in export_missing_bindings
         assert export_path.exists() is False
 
 

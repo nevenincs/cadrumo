@@ -56,7 +56,7 @@ if TYPE_CHECKING:
     from .acceptance.persona_table.rows import PlannedRow
     from .acceptance.persona_table.sweep import PreparedReturn
 
-CREDENTIAL_SOURCE: Final = "persona_materialisation._PROFILE_CREDENTIAL"
+CREDENTIAL_SOURCE: Final = "persona_materialisation.PERSONA_PROFILE_CREDENTIAL"
 """Where the profile passphrase is defined; the tool never prints the passphrase itself."""
 TABLE_PERSONAS_ENV: Final = "PERSONA_TABLE_PERSONAS"
 """The variable the table's collector reads, at import, to name the personas it collects."""

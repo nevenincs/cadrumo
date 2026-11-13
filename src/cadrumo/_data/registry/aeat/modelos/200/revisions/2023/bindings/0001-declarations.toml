@@ -3,25 +3,31 @@
 # rate formulas read it: Ley 31/2022 art. 39 keys the 23 % rate to the INCN from
 # periods initiated in 2023, and no 2022 rate depends on the INCN.
 
-# Calculation-only Decimal binding: carries the importe neto de la
-# cifra de negocios of the prior 12 months. Gates the LIS Art. 29.1
-# micro-empresa scale: when INCN < 1.000.000 EUR the cuota-integra
-# formula routes the post-nivelacion base 01330 through the
-# `is.modelo-200.tipo-gravamen-pyme` two-tranche bracket scale
-# (23 flat for periods initiated in 2023 and 2024; DT 44ª 21 / 22 in 2025
-# and 19 / 21 in 2026)
-# via `lookup_bracket_by_entity_type`; otherwise the sub-form
-# dispatch applies the general / cooperative-protected / non-profit rate.
-# Sourced from the Decimal profile fact `incn_prior_12_months`. An
-# undeclared INCN raises `binding has no supplied value` so the
-# engine refuses to guess micro-empresa identification.
+# The importe neto de la cifra de negocios of the immediately preceding tax
+# period (LIS art. 29.1; art. 101.1 for the reduced-dimension rate). It is a
+# fact of the preceding period's own Modelo 200: casilla 00255, "Cuenta de
+# pérdidas y ganancias (I) - Operaciones continuadas - Importe neto de la cifra
+# de negocios" (DR200 sheet DP200007, field 6). Where the application holds no
+# preceding return the filer states the figure; unstated, the rate refuses.
+# A typed zero is the figure that lowers the rate, so only an attested zero
+# stands for the earlier return (`zero_needs_attestation`). A preceding period
+# that ended before the activity began has the annualised turnover of the first
+# period of activity (art. 101.2), never zero (`before_activity_unresolved`).
+# An entity that marks 00039 (grupo mercantil, Codigo de Comercio art. 42)
+# measures that turnover over the whole group (art. 101.3), which its own
+# return does not show, so the held return is set aside and the filer states it
+# (`held_source_set_aside_when_marked`).
 [[revisions."2023".bindings]]
-id = "modelo-200-profile-incn-prior-12-months"
-provider = { kind = "profile", profile_model = "taxpayer", field = "incn_prior_12_months" }
+id = "modelo-200-incn-periodo-impositivo-anterior"
+provider = { kind = "previous_filing", source_modelo = "200", source_casilla_id = "00255", temporal = { kind = "filing_year_offset", years = -1, source_periods = ["0A"] } }
+applicability = { kind = "target_periods", periods = ["0A"] }
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "copy" }
-legal_refs = ["ley-27-2014:art-29"]
+zero_needs_attestation = true
+before_activity_unresolved = true
+held_source_set_aside_when_marked = ["00039"]
+legal_refs = ["ley-27-2014:art-29", "ley-27-2014:art-101"]
 
 [[revisions."2023".bindings.source_citations]]
 source_ref = "aeat-modelo-200-manual-2023"
-required_text = ["tipo de gravamen"]
+required_text = ["importe neto de la cifra de negocios del período"]

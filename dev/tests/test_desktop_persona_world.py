@@ -19,7 +19,7 @@ from cadrumo.application.user_profile.profile_record_repository import ProfileRe
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.user_profile.values import ProfileSetupState
 from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
-from cadrumo.entrypoints.tests.persona_materialisation import _PROFILE_CREDENTIAL, year_envelope
+from cadrumo.entrypoints.tests.persona_materialisation import PERSONA_PROFILE_CREDENTIAL, year_envelope
 
 from .. import desktop_persona_world
 from ..desktop_agent_live.disposable_root import create_root, remove_root, temporary_parent
@@ -58,7 +58,7 @@ def _stored_profile(storage_root: Path, profile_id: str) -> tuple[str, ProfileSe
         decode = operation.profile_decode_context()
         try:
             authenticate_profile_for_invocation(
-                name=profile_id, passphrase_callback=lambda: _PROFILE_CREDENTIAL, profile_decode_context=decode
+                name=profile_id, passphrase_callback=lambda: PERSONA_PROFILE_CREDENTIAL, profile_decode_context=decode
             )
             record = ProfileRecordRepository.for_current_session(identity, profile_decode_context=decode).load(identity)
         finally:
@@ -90,7 +90,7 @@ def test_world_holds_the_rows_the_table_plans_and_a_profile_that_signs_in(
     assert report["persona"] == PERSONA
     assert report["horizon"] == horizon
     assert report["passphrase_source"] == desktop_persona_world.CREDENTIAL_SOURCE
-    assert _PROFILE_CREDENTIAL not in json.dumps(report)
+    assert PERSONA_PROFILE_CREDENTIAL not in json.dumps(report)
     assert any(row["prepared"] for row in report["rows"])
     for row in report["rows"]:
         assert "m303_evidence" in row
@@ -105,7 +105,7 @@ def test_world_holds_the_rows_the_table_plans_and_a_profile_that_signs_in(
             assert row["stages"] == []
             assert row["driver_calculate"] is None
     assert any(row["driver_calculate"] == "calculated" for row in report["rows"]), report["rows"]
-    assert _PROFILE_CREDENTIAL not in json.dumps(report)
+    assert PERSONA_PROFILE_CREDENTIAL not in json.dumps(report)
 
     storage_root = Path(report["storage_root"])
     assert storage_root.is_dir()

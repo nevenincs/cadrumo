@@ -9305,6 +9305,10 @@ modelo:
             label: Entidades aseguradoras - Estado cambios patrimonio propio (II)
               - Operaciones con socios o mutualistas - Operaciones con acciones o
               participaciones propias (netas). (Acciones en patrimonio propias) [00547]
+          is-ecpp-aseguradoras-ii-acciones-propias-netas-prima-emision:
+            label: Entidades aseguradoras - Estado cambios patrimonio propio (II)
+              - Operaciones con socios o mutualistas - Operaciones con acciones o
+              participaciones propias (netas). Prima emisión [00545]
           is-ecpp-aseguradoras-ii-combinacion-negocios-otras-aportaciones-socios-mutualistas:
             label: Entidades aseguradoras - Estado cambios patrimonio propio (II)
               -Operaciones con socios o mutualistas - Incremento (reducción) de patr.
@@ -9721,6 +9725,9 @@ modelo:
             label: Liquidación III - Bonificaciones/Deducciones doble imposición -
               Deducciones por doble imposición - D.I. internacional generada y aplicada
               en el ejercicio actual(art. 31 y 32 LIS) [00573]
+          is-liquidacion-iii-quitas-acuerdo-acreedores:
+            label: Liquidación III - Base imponible - Rentas correspondientes a quitas
+              por acuerdo con acreedores (art. 26.1 LIS) - Disminuciones [00545]
           is-liquidacion-iii-reserva-nivelacion-aumentos:
             label: Liquidación III - Base Imponible - Entidades Reducida dimensión
               - Reserva de nivelación - Aumentos [01033]

@@ -7,6 +7,7 @@ from contextlib import contextmanager
 from typing import ClassVar, override
 
 from pydantic import ValidationError
+from pydantic_core import ErrorDetails
 from textual.widgets import DataTable
 
 from ....core.errors.error_codes import resolve_error_message
@@ -42,7 +43,16 @@ def door_refusal_text(error: CadrumoError | ValidationError) -> str:
     """Render an application door's typed refusal in the operator's language."""
     if isinstance(error, CadrumoError):
         return resolve_error_message(error)
-    return "; ".join(str(item.get("msg", "")) for item in error.errors())
+    return "; ".join(_failure_text(item) for item in error.errors())
+
+
+def _failure_text(item: ErrorDetails) -> str:
+    """The backend's served sentence for a failed rule that raised a registered refusal, else its message."""
+    raised = (item.get("ctx") or {}).get("error")
+    cause = getattr(raised, "__cause__", None)
+    if isinstance(cause, CadrumoError):
+        return resolve_error_message(cause)
+    return str(item.get("msg", ""))
 
 
 @contextmanager

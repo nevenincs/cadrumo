@@ -531,6 +531,15 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.work.calculate.input.override_unanswered",
         action_id="operator.modelo.work.override",
     ),
+    # A carry whose earlier return the application does not hold is answered by
+    # the override as well, or by the filer stating the earlier return's figure.
+    _profile(
+        "modelo.work.calculate",
+        "modelo.work.calculate.input.supplied",
+        "modelo.work.calculate.input.override_unanswered_attestable",
+        action_id="operator.modelo.work.override",
+        alternative_action_ids=(ATTEST_PRIOR_VALUE_ACTION_ID,),
+    ),
     # A carry from an earlier period of the same ejercicio is read from that
     # period's filed return; where that return stands names the work that
     # moves it on.
@@ -945,6 +954,16 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.work.verify.prorrata_seed.superseded",
         action_id="operator.modelo.work.amend_wizard",
     ),
+    # The year's last return settles the register as its filing will leave it (LIVA art. 105.Cuatro); a
+    # register that stays uncovered, or would continue an especial regime nobody declared again, is declared first.
+    *(
+        _profile(
+            "modelo.work.verify",
+            "modelo.work.verify.prorrata_settlement.covered",
+            f"modelo.work.verify.prorrata_settlement.{scenario}",
+        )
+        for scenario in ("especial_continuation", "sector_entries")
+    ),
     _profile(
         "modelo.work.verify",
         "modelo.work.verify.shared_casilla_cells.adjudicated",
@@ -965,10 +984,24 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.work.verify.m210.rate.resolved",
         "modelo.work.verify.m210.rate.unresolved",
     ),
+    # A box the registry leaves open names the box the filer states in its place.
+    _profile(
+        "modelo.work.verify",
+        "modelo.work.verify.operator_box.stated",
+        "modelo.work.verify.operator_box.unstated",
+        action_id="operator.modelo.work.set_value",
+    ),
     _profile(
         "modelo.work.verify",
         "modelo.work.verify.m202.modality.complete",
         "modelo.work.verify.m202.modality.incomplete",
+    ),
+    # The held preceding Modelo 200 and the stated twelve-month turnover of a
+    # twelve-month preceding período must agree; neither is taken over the other.
+    _profile(
+        "modelo.work.verify",
+        "modelo.work.verify.m200.incn_periodo_anterior.agrees",
+        "modelo.work.verify.m200.incn_periodo_anterior.disagrees",
     ),
     _profile(
         "modelo.work.verify",

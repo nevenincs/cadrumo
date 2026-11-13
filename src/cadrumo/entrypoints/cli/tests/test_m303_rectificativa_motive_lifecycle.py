@@ -868,6 +868,8 @@ def test_public_export_requires_injected_persisted_justificante_authority(
 ) -> None:
     """Persisted receipt state does not bypass the application port boundary."""
     work_unit, baseline_revision, target, receipt, context, revision = _authorities(operation=operation)
+    # A calculation makes its revision the work unit's current one; export refuses a work unit without one.
+    work_unit = work_unit.model_copy(update={"current_calculation_revision_id": revision.calculation_revision_id})
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID, label="S92 public export") as runtime:
         objects = runtime.repository
         work_repo = WorkUnitCatalogueRepository(objects=objects)
