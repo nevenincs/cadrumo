@@ -1,4 +1,4 @@
-"""The frontend column of the persona table: the same returns driven through the TUI and the desktop window.
+"""The frontend column of the persona table: the same returns driven through the TUI, the desktop window and the CLI.
 
 Each surface's pilot writes one JSON object per line into ``*.jsonl`` files of one directory (``read_results``
 documents and enforces the schema). This module reads them, normalises a Python row's stages to the surface
@@ -21,8 +21,8 @@ from typing import cast
 
 from .rows import Stage, TableRow
 
-SURFACES = ("tui", "window")
-SURFACE_LABELS = {"tui": "TUI", "window": "window"}
+SURFACES = ("tui", "window", "cli")
+SURFACE_LABELS = {"tui": "TUI", "window": "window", "cli": "CLI"}
 NOT_REACHED = "not-reached"
 STAGE_WORDS = ("pass", "incomplete", "refused", "not-owed", NOT_REACHED, "error")
 """The stage vocabulary of a surface result."""
@@ -81,6 +81,7 @@ _FIELDS = frozenset(
         "calculate",
         "verify",
         "export",
+        "file",
         "refusal_code",
         "figures",
         "reason",
@@ -109,6 +110,8 @@ class SurfaceResult:
     calculate: str = NOT_REACHED
     verify: str = NOT_REACHED
     export: str = NOT_REACHED
+    file: str | None = None
+    """The file stage in the stage vocabulary; ``None`` when the line does not state it. Not compared with the table."""
     refusal_code: str | None = None
     figures: tuple[tuple[str, str], ...] = ()
     reason: str = ""
@@ -125,10 +128,12 @@ def read_results(directory: Path) -> dict[ResultKey, SurfaceResult]:
 
     Files are read oldest first (by modification time, then name), each in line order.
 
-    A line is a JSON object with ``surface`` (``tui`` or ``window``), ``tree`` (the commit the surface ran),
+    A line is a JSON object with ``surface`` (``tui``, ``window`` or ``cli``), ``tree`` (the commit the surface ran),
     ``persona``, ``modelo`` (null on a persona-level line, which reports whether the profile loaded), ``year``,
     ``period`` (null with a null ``modelo``), ``loads``, and, when ``modelo`` is set, ``calculate``, ``verify``
-    and ``export`` in the stage vocabulary. ``refusal_code``, ``reason`` and ``log`` are optional text;
+    and ``export`` in the stage vocabulary; the optional ``file`` states a fifth stage in the same vocabulary (absent
+    means not stated; the table row has no file stage yet, so parity ignores it). ``refusal_code``, ``reason`` and
+    ``log`` are optional text;
     ``figures`` is an optional object of every non-zero casilla value the surface displayed, as text; the table
     row is compared on the casillas of its form only, never on its internal figures.
     Unknown keys and bad values are refused.
@@ -178,6 +183,7 @@ def parse_result(line: str) -> SurfaceResult:
         calculate=stages.get("calculate", NOT_REACHED),
         verify=stages.get("verify", NOT_REACHED),
         export=stages.get("export", NOT_REACHED),
+        file=_optional_stage(data, "file"),
         refusal_code=_optional_text(data, "refusal_code"),
         figures=_figures(data.get("figures", {})),
         reason=_optional_text(data, "reason") or "",
@@ -204,6 +210,11 @@ def _stage_words(data: Mapping[str, object], modelo: str | None) -> dict[str, st
         _require_all_stages(data)
         stated = {name: data[name] for name in _STAGE_FIELDS}
     return {name: _choice(stated, name, STAGE_WORDS) for name in stated}
+
+
+def _optional_stage(data: Mapping[str, object], name: str) -> str | None:
+    """The stage word of an optional stage field, ``None`` when absent or null."""
+    return None if data.get(name) is None else _choice(data, name, STAGE_WORDS)
 
 
 def _require_all_stages(data: Mapping[str, object]) -> None:
@@ -513,7 +524,7 @@ def row_cell(item: RowParity, head: str) -> str:
 
 
 def frontend_line(comparison: FrontendComparison) -> str:
-    """The summary sentence, ``Frontend: TUI matched a / N, window matched b / N (N rows)``."""
+    """The summary sentence, ``Frontend: TUI matched a / N, window matched b / N, CLI matched c / N (N rows)``."""
     total = len(comparison.rows)
     matched = ", ".join(
         f"{SURFACE_LABELS[surface]} matched {comparison.matched(surface)} / {total}" for surface in SURFACES

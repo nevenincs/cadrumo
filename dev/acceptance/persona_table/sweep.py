@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import os
 import re
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from decimal import Decimal, InvalidOperation
@@ -173,7 +173,8 @@ def plan_rows(persona_id: str, horizon: int) -> tuple[list[PlannedRow], frozense
     return replayed(rows, selected, _sources), frozenset(row.key for row in selected)
 
 
-def _cases() -> list[pytest.ParameterSet]:
+def cases() -> list[pytest.ParameterSet]:
+    """One case per persona and horizon that has a selected return to run, under the environment's filters."""
     wanted = _listed(PERSONAS_ENV)
     return [
         pytest.param(persona_id, horizon, id=f"{persona_id}@{horizon}")
@@ -248,18 +249,26 @@ def _blocking_findings(verified: ModeloWorkVerifyPublicResultV2) -> str:
     )
 
 
-def _run_return(
-    materialised: MaterialisedPersona, plan: PlannedRow, values: list[ExpectedValue], exports: Path
+def run_return(
+    materialised: MaterialisedPersona,
+    plan: PlannedRow,
+    values: list[ExpectedValue],
+    exports: Path,
+    *,
+    before_calculate: Callable[[PreparedReturn], None] | None = None,
 ) -> TableRow:
     """Create, calculate, verify, export and file one return; the row records where it stopped and why.
 
     A return stated not owed is created, calculated and compared, then checked against the overview calendar
-    instead of being verified, exported and filed.
+    instead of being verified, exported and filed. ``before_calculate`` observes the prepared return before
+    its first calculation, which is how a probe meets the state an operator meets before stating anything more.
     """
     world = materialised.world
     prepared = prepare_return(materialised, plan, values)
     if isinstance(prepared, TableRow):
         return prepared
+    if before_calculate is not None:
+        before_calculate(prepared)
     work_unit_id = prepared.work_unit_id
     stating = _stated_refusal(values)
     at_calculate = _refusal_at_calculate(stating)
@@ -778,7 +787,7 @@ def replay_scope(persona: Persona) -> ReplayScope:
     return ReplayScope.FULL
 
 
-@pytest.mark.parametrize(("persona_id", "horizon"), _cases())
+@pytest.mark.parametrize(("persona_id", "horizon"), cases())
 def test_persona_returns(tmp_path: Path, persona_id: str, horizon: int) -> None:
     """Replay one persona under one horizon and append a row for every return it owes there."""
     out = Path(os.environ[OUT_ENV])
@@ -791,7 +800,7 @@ def test_persona_returns(tmp_path: Path, persona_id: str, horizon: int) -> None:
             envelope = materialised.world.envelope
             for plan in plans:
                 values = stated_values(materialised.persona, envelope, plan)
-                row = _run_return(materialised, plan, values, tmp_path / "exports")
+                row = run_return(materialised, plan, values, tmp_path / "exports")
                 if plan.key in emitted:
                     write_rows(out, [row])
     except (PersonaMaterialisationError, PersonaCatalogueError) as error:

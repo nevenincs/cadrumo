@@ -4589,6 +4589,8 @@
         "dev.acceptance.persona_table.export_readback",
         "dev.acceptance.persona_table.export_text",
         "dev.acceptance.persona_table.frontend",
+        "dev.acceptance.persona_table.probe",
+        "dev.acceptance.persona_table.probe_sweep",
         "dev.acceptance.persona_table.provenance",
         "dev.acceptance.persona_table.render",
         "dev.acceptance.persona_table.roles",

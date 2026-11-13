@@ -1,5 +1,5 @@
-"""The frontend column compares what the TUI and the window displayed with the Python row, stage by stage and figure by
-figure, and a surface that was not run, did not load, or has nothing to compare never counts as matched."""
+"""The frontend column compares what the TUI, the window and the CLI displayed with the Python row, stage by stage and
+figure by figure, and a surface that was not run, did not load, or has nothing to compare never counts as matched."""
 
 from __future__ import annotations
 
@@ -375,17 +375,22 @@ def test_a_render_without_a_frontend_is_unchanged_and_with_one_adds_columns_line
     assert "Frontend" not in plain
     assert plain.count("| tui |") == 0
     text = render_table(rows, head="abc", frontend=compare_frontend(rows, results))
-    assert "Frontend: TUI matched 1 / 7, window matched 0 / 7 (7 rows)\n" in text
-    assert "| grounding | run | reason | tui | window |" in text
+    assert "Frontend: TUI matched 1 / 7, window matched 0 / 7, CLI matched 0 / 7 (7 rows)\n" in text
+    assert "| grounding | run | reason | tui | window | cli |" in text
     lines = text.splitlines()
     first = next(line for line in lines if line.startswith(f"| persona | 303 | {_YEAR} | 1T |"))
     second = next(line for line in lines if line.startswith(f"| persona | 303 | {_YEAR} | 2T |"))
-    assert first.endswith("| matched | not run |")
-    assert second.endswith("| differs | not run |")
+    assert first.endswith("| matched | not run | not run |")
+    assert second.endswith("| differs | not run | not run |")
     matrix = text.split("## Frontend matrix", 1)[1]
-    assert "| persona | TUI | window |" in matrix
-    assert "| persona | loads, 1/4 matched, 1 differs, 1 not run, 1 not comparable | not yet run |" in matrix
-    assert "| locked | does not load, 0/1 matched, 0 differs, 0 not run, 1 load failed | not yet run |" in matrix
+    assert "| persona | TUI | window | CLI |" in matrix
+    assert (
+        "| persona | loads, 1/4 matched, 1 differs, 1 not run, 1 not comparable | not yet run | not yet run |" in matrix
+    )
+    assert (
+        "| locked | does not load, 0/1 matched, 0 differs, 0 not run, 1 load failed | not yet run | not yet run |"
+        in matrix
+    )
     differing = matrix.split("### Rows differing", 1)[1]
     assert f"- persona|303|{_YEAR}|2T: tui differs: verify tui incomplete, table pass" in differing
     assert f"- persona|303|{_YEAR}|0A: tui extra: no table row" in differing
@@ -397,7 +402,7 @@ def test_a_tree_other_than_the_head_is_named_in_the_cell() -> None:
     result = _result(tree="def")
     comparison = compare_frontend(rows[:1], {result.key: result})
     text = render_table(rows[:1], head="abc", frontend=comparison)
-    assert "| matched @def | not run |" in text
+    assert "| matched @def | not run | not run |" in text
 
 
 def test_render_with_frontend_publishes_the_columns_even_when_nothing_was_run(tmp_path: Path) -> None:
@@ -408,9 +413,9 @@ def test_render_with_frontend_publishes_the_columns_even_when_nothing_was_run(tm
     assert main(["render", str(rows_file), "--head", "abc", "--out", str(plain)]) == 0
     assert main(["render", str(rows_file), "--head", "abc", "--frontend", str(empty), "--out", str(with_frontend)]) == 0
     text = with_frontend.read_text(encoding="utf-8")
-    assert "Frontend: TUI matched 0 / 2, window matched 0 / 2 (2 rows)" in text
-    assert "| persona | not yet run | not yet run |" in text
-    assert "not run | not run |" in text
+    assert "Frontend: TUI matched 0 / 2, window matched 0 / 2, CLI matched 0 / 2 (2 rows)" in text
+    assert "| persona | not yet run | not yet run | not yet run |" in text
+    assert "not run | not run | not run |" in text
     assert "Frontend" not in plain.read_text(encoding="utf-8")
 
 
@@ -422,3 +427,40 @@ def test_render_with_a_bad_frontend_line_exits_2_and_names_the_line(
     _write(tmp_path / "frontend", "a.jsonl", [_line(calculate="passed")])
     assert main(["render", str(rows_file), "--head", "abc", "--frontend", str(tmp_path / "frontend")]) == 2
     assert "a.jsonl:1" in capsys.readouterr().err
+
+
+def test_a_cli_line_parses_and_an_unknown_surface_or_key_is_still_refused() -> None:
+    result = _result(surface="cli")
+    assert (result.surface, result.key[0]) == ("cli", "cli")
+    assert result.file is None
+    with pytest.raises(ValueError, match="surface must be one of tui, window, cli"):
+        _result(surface="browser")
+    with pytest.raises(ValueError, match="unknown key extra"):
+        _result(surface="cli", extra=1)
+
+
+def test_the_optional_file_stage_parses_is_kept_and_is_ignored_by_parity() -> None:
+    stated = _result(surface="cli", file="refused")
+    assert stated.file == "refused"
+    assert _result(surface="cli", file=None).file is None
+    persona_level = {"modelo": None, "year": None, "period": None, "calculate": None, "verify": None, "export": None}
+    assert _result(file="pass", **persona_level).file == "pass"
+    with pytest.raises(ValueError, match="file must be one of"):
+        _result(surface="cli", file="saved")
+    row = _row()
+    assert parity(row, "cli", _result(surface="cli")) == parity(row, "cli", stated)
+    assert parity(row, "cli", stated).outcome == "matched"
+
+
+def test_the_cli_column_is_counted_beside_tui_and_window_and_an_empty_one_is_not_yet_run() -> None:
+    rows = [_row("1T"), _row("2T")]
+    results = {result.key: result for result in (_result(surface="cli", period="1T"), _result(period="1T"))}
+    comparison = compare_frontend(rows, results)
+    assert (comparison.matched("tui"), comparison.matched("window"), comparison.matched("cli")) == (1, 0, 1)
+    assert cell_text(comparison.cells["persona", "cli"]) == "loads, 1/2 matched, 0 differs, 1 not run"
+    text = render_table(rows, head="abc", frontend=comparison)
+    assert "TUI matched 1 / 2, window matched 0 / 2, CLI matched 1 / 2 (2 rows)" in text
+    first = next(line for line in text.splitlines() if line.startswith(f"| persona | 303 | {_YEAR} | 1T |"))
+    assert first.endswith("| matched | not run | matched |")
+    nothing = compare_frontend(rows, {})
+    assert cell_text(nothing.cells["persona", "cli"]) == "not yet run"
