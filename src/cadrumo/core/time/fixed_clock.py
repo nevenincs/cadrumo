@@ -160,17 +160,28 @@ def admit_fixed_clock(
     if instant_value is None or root_value is None:
         _refuse(FixedClockRefusal.LONE_VARIABLE)
     instant = _utc_instant(instant_value)
-    root = _admitted_root(root_value, pinned_root)
-    if default_root is not None and _same_root(root, normalize_storage_path(default_root)):
-        _refuse(FixedClockRefusal.DEFAULT_ROOT)
+    root = _test_host_root(root_value, pinned_root, default_root)
     if live_tests_opt_in:
         _refuse(FixedClockRefusal.LIVE_TEST_OPT_IN)
-    if marker is not None:
-        if marker.instant is None:
-            _refuse(FixedClockRefusal.MARKER_UNREADABLE)
-        if marker.instant != instant:
-            _refuse(FixedClockRefusal.MARKER_INSTANT_DIFFERS)
+    _check_marker(marker, instant)
     return FixedClock(instant=instant, root=root)
+
+
+def _test_host_root(text: str, pinned_root: Path, default_root: Path | None) -> Path:
+    root = _admitted_root(text, pinned_root)
+    if default_root is not None and _same_root(root, normalize_storage_path(default_root)):
+        _refuse(FixedClockRefusal.DEFAULT_ROOT)
+    return root
+
+
+def _check_marker(marker: FixedClockMarker | None, instant: datetime) -> None:
+    """A marked root runs only at the one instant its marker records."""
+    if marker is None:
+        return
+    if marker.instant is None:
+        _refuse(FixedClockRefusal.MARKER_UNREADABLE)
+    if marker.instant != instant:
+        _refuse(FixedClockRefusal.MARKER_INSTANT_DIFFERS)
 
 
 def fixed_clock_marker_path(root: Path) -> Path:
