@@ -322,6 +322,35 @@ fn filing_calendar(
     })
 }
 
+/// The registered read the record groups come from.
+pub(super) const RECORD_GROUPS_DEFINITION: &str = "user-profile.record-groups";
+
+fn names_profile(value: &Value, profile: &str) -> bool {
+    value
+        .as_object()
+        .and_then(|fields| fields.get("profile_id"))
+        .and_then(Value::as_str)
+        == Some(profile)
+}
+
+/// The request goes to the product unchanged, but only for the held profile.
+fn admit_record_groups_request(request: &Value, profile: &str) -> Result<()> {
+    if names_profile(request, profile) {
+        Ok(())
+    } else {
+        Err(Failure::new("refused"))
+    }
+}
+
+/// The page comes back unchanged, but only if it is the held profile's.
+fn admit_record_groups_result(result: Value, profile: &str) -> Result<Value> {
+    if names_profile(&result, profile) {
+        Ok(result)
+    } else {
+        Err(protocol())
+    }
+}
+
 impl ProfileHost {
     pub(super) async fn profile_of(person: &crate::agent::person::HeldPerson) -> Result<String> {
         Ok(Self::identity(person).await?["profile_id"]
@@ -379,6 +408,24 @@ impl ProfileHost {
             };
             self.still_held(&person, &profile).await?;
             Ok((latest, shown))
+        })
+        .await
+        .unwrap_or_else(|_| Err(protocol()))
+    }
+    /// One page of the record groups, relayed as the product serialises its
+    /// request and result. The request is refused before submission where it
+    /// names another profile than the one held; so is a result that does.
+    pub(super) async fn record_groups(&self, request: Value) -> Result<Value> {
+        tokio::time::timeout(PROFILE_READ_LIMIT, async {
+            let _serial = self.operation.lock().await;
+            let person = self.person(None).await?;
+            let profile = Self::profile_of(&person).await?;
+            admit_record_groups_request(&request, &profile)?;
+            let result = self
+                .run(&person, RECORD_GROUPS_DEFINITION, request, false)
+                .await?;
+            self.still_held(&person, &profile).await?;
+            admit_record_groups_result(result, &profile)
         })
         .await
         .unwrap_or_else(|_| Err(protocol()))
@@ -578,5 +625,46 @@ mod tests {
         let summary =
             notifications_summary(json!({"bucket_id":PROFILE, "snapshot_id":null}), None).unwrap();
         assert_eq!(summary.captured_at, None);
+    }
+
+    #[test]
+    fn a_record_groups_request_for_the_held_profile_goes_unchanged() {
+        assert_eq!(RECORD_GROUPS_DEFINITION, "user-profile.record-groups");
+        let request = json!({"profile_id":PROFILE, "group_kind":"rental_property", "cursor":0,
+            "limit":128, "expected_revision":null, "expected_content_digest":null,
+            "expected_ledger_digest":null, "output_language":"es"});
+        assert!(admit_record_groups_request(&request, PROFILE).is_ok());
+        assert_eq!(request["limit"], 128);
+        assert_eq!(request["group_kind"], "rental_property");
+    }
+
+    #[test]
+    fn a_record_groups_request_for_another_profile_is_refused_before_submission() {
+        let foreign = json!({"profile_id":"another", "group_kind":"rental_property"});
+        assert_eq!(
+            admit_record_groups_request(&foreign, PROFILE)
+                .unwrap_err()
+                .code,
+            "refused"
+        );
+        for bad in [
+            json!({"group_kind":"rental_property"}),
+            json!("x"),
+            json!(null),
+        ] {
+            assert!(admit_record_groups_request(&bad, PROFILE).is_err());
+        }
+    }
+
+    #[test]
+    fn a_record_groups_result_for_another_profile_is_refused() {
+        let page = json!({"profile_id":PROFILE, "outcome":"page", "items":[{"kind":"future"}]});
+        assert_eq!(
+            admit_record_groups_result(page.clone(), PROFILE).unwrap(),
+            page
+        );
+        let other = json!({"profile_id":"another", "outcome":"page"});
+        assert!(admit_record_groups_result(other, PROFILE).is_err());
+        assert!(admit_record_groups_result(json!({"outcome":"page"}), PROFILE).is_err());
     }
 }

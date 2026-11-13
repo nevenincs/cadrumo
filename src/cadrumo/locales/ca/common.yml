@@ -7228,6 +7228,7 @@ tui:
     home: Inici
     installation: Instal·lació
     ledger: Registres
+    operaciones_vinculadas: Operacions vinculades
     operations: Operacions
     profile: Perfil
     reference: Referència
@@ -9425,6 +9426,55 @@ tui:
       refused: S'ha rebutjat el que has indicat.
       sending: Enviant el que has indicat...
       year_label: Any del període
+  operaciones_vinculadas:
+    action:
+      read: Llegeix
+      state_none: Declara que no n'hi va haver cap
+      state_operation: Declara una operació
+      state_turnover: Declara la xifra de negocis
+      withdraw_none: Retira la declaració seleccionada
+      withdraw_operation: Retira l'operació seleccionada
+      withdraw_turnover: Retira la xifra de negocis seleccionada
+    column:
+      amount: Import (EUR)
+      counterparty: Contrapart
+      country: País
+      direction: Sentit
+      exclusion: Exclosa
+      ground: Supòsit
+      ground_state: Resultat
+      kind: Classe
+      largest_total: Total més alt (EUR)
+      limit: Límit (EUR)
+      note: Nota
+      operation_type: Tipus
+      reference: Referència
+      source: Origen
+      state: Estat
+      stated_on: Declarada el
+      turnover: Xifra de negocis (EUR)
+    ejercicio: Exercici
+    none:
+      title: Declaracions d'absència d'operacions
+    operations:
+      title: Operacions
+    prompt: Escriu un exercici i llegeix-lo per veure'n els registres del Model 232
+      i què decideixen.
+    status:
+      choose_active: Selecciona primer un registre vigent.
+      ejercicio_invalid: Escriu l'exercici amb quatre xifres.
+      empty: No hi ha res declarat per a %{ejercicio}.
+      read_failed: No s'han pogut llegir els registres.
+      read_first: Llegeix primer un exercici.
+      reading: S'està llegint…
+    turnover:
+      title: Xifra de negocis
+    verdict:
+      counts: 'Operacions computades: %{counted}. Operacions excloses: %{excluded},
+        per un total de %{excluded_total} EUR.'
+      title: Què decideixen els teus registres
+      unsupported: Per a aquest exercici no es pot deduir dels teus registres cap
+        decisió sobre el Model 232.
   operations:
     action:
       close: Tanca
@@ -9730,6 +9780,7 @@ tui:
       home: Obre Inici
       installation: Obre Instal·lació
       ledger: Obre Registres
+      operaciones_vinculadas: Obre Operacions vinculades
       operations: Obre Operacions
       profile: Obre Perfil
       reference: Obre Referència
@@ -9745,6 +9796,8 @@ tui:
       installation: Emmagatzematge, reparació, restabliment i els perfils d'aquest
         equip
       ledger: Apunts, revisió, classificació i justificants
+      operaciones_vinculadas: Declara, consulta i retira els registres del Model 232
+        d'un exercici i mira què decideixen
       operations: Totes les operacions que Cadrumo pot executar, per cercar-les, emplenar-les
         i executar-les
       profile: Les dades d'aquest perfil i els orígens que les completen

@@ -7070,6 +7070,7 @@ tui:
     home: Home
     installation: Installation
     ledger: Records
+    operaciones_vinculadas: Related-party operations
     operations: Operations
     profile: Profile
     reference: Reference
@@ -9230,6 +9231,54 @@ tui:
       refused: Your entry was refused.
       sending: Sending your entry...
       year_label: Year of the period
+  operaciones_vinculadas:
+    action:
+      read: Read
+      state_none: State there were none
+      state_operation: State an operation
+      state_turnover: State the turnover
+      withdraw_none: Withdraw selected statement
+      withdraw_operation: Withdraw selected operation
+      withdraw_turnover: Withdraw selected turnover
+    column:
+      amount: Amount (EUR)
+      counterparty: Counterparty
+      country: Country
+      direction: Direction
+      exclusion: Left out
+      ground: Ground
+      ground_state: Result
+      kind: Kind
+      largest_total: Largest total (EUR)
+      limit: Limit (EUR)
+      note: Note
+      operation_type: Type
+      reference: Reference
+      source: Source
+      state: State
+      stated_on: Stated on
+      turnover: Turnover (EUR)
+    ejercicio: Year
+    none:
+      title: Statements of no operations
+    operations:
+      title: Operations
+    prompt: Enter a year and read it to see its Modelo 232 records and what they decide.
+    status:
+      choose_active: Select a record in force first.
+      ejercicio_invalid: Enter the year as four digits.
+      empty: Nothing is stated for %{ejercicio}.
+      read_failed: The records could not be read.
+      read_first: Read a year first.
+      reading: Reading…
+    turnover:
+      title: Turnover
+    verdict:
+      counts: 'Operations counted: %{counted}. Operations left out: %{excluded}, totalling
+        %{excluded_total} EUR.'
+      title: What your records decide
+      unsupported: No Modelo 232 decision can be derived from your records for this
+        year.
   operations:
     action:
       close: Close
@@ -9532,6 +9581,7 @@ tui:
       home: Open Home
       installation: Open Installation
       ledger: Open Records
+      operaciones_vinculadas: Open Related-party operations
       operations: Open Operations
       profile: Open Profile
       reference: Open Reference
@@ -9545,6 +9595,8 @@ tui:
       home: Next actions, declarations and deadlines at a glance
       installation: Storage, repair, reset and the profiles on this computer
       ledger: Entries, review, classification and supporting documents
+      operaciones_vinculadas: State, list and withdraw the Modelo 232 records of a
+        year and see what they decide
       operations: Every operation Cadrumo can run, to search, fill in and run
       profile: This profile's details and the sources that fill them in
       reference: Modelos, casillas, categories, portals and sign-in methods
