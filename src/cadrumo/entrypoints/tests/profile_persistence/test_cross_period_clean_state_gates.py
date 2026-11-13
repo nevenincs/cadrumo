@@ -153,7 +153,6 @@ def _persist_390_draft(
         created_at=_CLOCK,
         updated_at=_CLOCK,
     )
-    work_unit_repository.save(upsert_work_unit(work_unit_repository.load(), work_unit))
     casilla_values: dict[CasillaId, Decimal] = {}
     operation = published_authority_operation()
     screen_stamp = calculation_screen_stamp(
@@ -185,6 +184,9 @@ def _persist_390_draft(
         source_provenance=(),
         screen_stamp=screen_stamp,
     )
+    # The seeded revision stands in for a calculation, which makes it the work unit's current one.
+    work_unit = work_unit.model_copy(update={"current_calculation_revision_id": revision_id})
+    work_unit_repository.save(upsert_work_unit(work_unit_repository.load(), work_unit))
     calculation_repository.save(upsert_calculation_revision(calculation_repository.load(), revision))
     return revision_id
 
