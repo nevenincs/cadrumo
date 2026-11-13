@@ -407,6 +407,16 @@ async function runCase(item, context) {
           .map((text) => JSON.parse(text))
       : [];
     if (window.timedOut) lines = withTimeoutLines(lines, worldJson, tree, item);
+    // Keep the spec's log and test output under --logs before any refusal,
+    // because the root is removed and a failed case is the one to diagnose.
+    const caseName = item.id.replace("@", "-");
+    const kept = join(logsDir, `${caseName}.log`);
+    const logSource = join(dirname(results), `window-${item.persona}.log`);
+    if (existsSync(logSource)) copyFileSync(logSource, kept);
+    writeFileSync(
+      join(logsDir, `${caseName}.test.txt`),
+      `${window.stdout}\n--- stderr ---\n${window.stderr}`,
+    );
     if (lines.length === 0) {
       result.note = `the spec wrote no lines (exit ${window.status})`;
       return result;
@@ -421,11 +431,6 @@ async function runCase(item, context) {
       result.note = problem;
       return result;
     }
-    // Keep the spec's log under --logs; the root is removed.
-    const logName = `window-${item.persona}.log`;
-    const kept = join(logsDir, `${item.id.replace("@", "-")}.log`);
-    const logSource = join(dirname(results), logName);
-    if (existsSync(logSource)) copyFileSync(logSource, kept);
     result.lines = lines.map((line) => ({ ...line, log: kept }));
     result.ok = true;
     result.note = window.status === 0 ? "" : `spec exit ${window.status}`;
