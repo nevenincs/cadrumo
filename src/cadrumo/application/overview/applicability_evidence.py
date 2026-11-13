@@ -37,6 +37,8 @@ from ...domain.calculations.registry.applicability_models import (
     LedgerPayerFactDerivation,
 )
 from ...domain.calculations.registry.applicability_payer_facts import (
+    PayerFactLedgerSource,
+    PayerFactProjection,
     PayerFactRecordsSource,
     resolve_payer_fact_catalogue,
 )
@@ -255,51 +257,101 @@ def derive_ledger_payer_facts(
     derived: dict[str, LedgerPayerFactDerivation] = {}
     if not operation.supported_filing_years().admits_filing_year(filing_year):
         return derived
+    year_ended = filing_year < today.year
     with validating_governed_facts(operation):
         for fact in resolve_payer_fact_catalogue(effective_date=date(filing_year, 12, 31)):
             records = fact.records_source
             if records is not None:
                 if related_party_records is not None:
-                    stated = _stated_records_derivation(
+                    _derive_from_stated_records(
+                        derived,
+                        records_notes,
+                        fact,
                         records,
                         related_party_records,
                         filing_year=filing_year,
                         operation=operation,
-                        year_ended=filing_year < today.year,
+                        year_ended=year_ended,
                     )
-                    if stated is not None:
-                        derived[fact.token] = stated.derivation
-                        if records_notes is not None and stated.note is not None:
-                            records_notes[fact.token] = stated.note
                 continue
             source = fact.ledger_source
             if source is None:
                 continue
-            support = operation.modelo_directory(source.modelo).supported_filing_years
-            if support is not None and not support.admits_filing_year(filing_year):
-                continue
-            revision = operation.revision_for_context(source.modelo, filing_year=filing_year, period=source.period)
-            if all(binding.id != source.record_count_binding for binding in revision.bindings):
-                raise RegistryValidationError(
-                    f"payer fact {fact.token!r} ledger source names binding {source.record_count_binding!r}, which "
-                    f"modelo {source.modelo.value!r} revision {revision.id!r} does not declare",
-                )
-            resolution = resolver.resolve(
-                CalculationSourceContext(
-                    bucket_id=bucket_id,
-                    modelo=source.modelo.value,
-                    filing_year=filing_year,
-                    period=Period.from_year_and_code(filing_year, source.period),
-                    revision=revision,
-                    operation=operation,
-                ),
+            derivation = _ledger_source_derivation(
+                fact,
+                source,
+                resolver,
+                bucket_id=bucket_id,
+                filing_year=filing_year,
+                operation=operation,
+                year_ended=year_ended,
             )
-            derived[fact.token] = declared_record_count_derivation(
-                resolution,
-                record_count_binding=source.record_count_binding,
-                year_ended=filing_year < today.year,
-            )
+            if derivation is not None:
+                derived[fact.token] = derivation
     return derived
+
+
+def _derive_from_stated_records(
+    derived: dict[str, LedgerPayerFactDerivation],
+    records_notes: dict[str, str] | None,
+    fact: PayerFactProjection,
+    records: PayerFactRecordsSource,
+    reader: Modelo232RelatedPartyReader,
+    *,
+    filing_year: int,
+    operation: PinnedAuthorityOperation,
+    year_ended: bool,
+) -> None:
+    """Record the derivation of a fact answered by the stated records, and its note, when the year is supported."""
+    stated = _stated_records_derivation(
+        records,
+        reader,
+        filing_year=filing_year,
+        operation=operation,
+        year_ended=year_ended,
+    )
+    if stated is None:
+        return
+    derived[fact.token] = stated.derivation
+    if records_notes is not None and stated.note is not None:
+        records_notes[fact.token] = stated.note
+
+
+def _ledger_source_derivation(
+    fact: PayerFactProjection,
+    source: PayerFactLedgerSource,
+    resolver: InvoiceCatalogueSourceResolver,
+    *,
+    bucket_id: str,
+    filing_year: int,
+    operation: PinnedAuthorityOperation,
+    year_ended: bool,
+) -> LedgerPayerFactDerivation | None:
+    """Derive a fact from its source modelo's resolved record count; ``None`` outside that modelo's supported years."""
+    support = operation.modelo_directory(source.modelo).supported_filing_years
+    if support is not None and not support.admits_filing_year(filing_year):
+        return None
+    revision = operation.revision_for_context(source.modelo, filing_year=filing_year, period=source.period)
+    if all(binding.id != source.record_count_binding for binding in revision.bindings):
+        raise RegistryValidationError(
+            f"payer fact {fact.token!r} ledger source names binding {source.record_count_binding!r}, which "
+            f"modelo {source.modelo.value!r} revision {revision.id!r} does not declare",
+        )
+    resolution = resolver.resolve(
+        CalculationSourceContext(
+            bucket_id=bucket_id,
+            modelo=source.modelo.value,
+            filing_year=filing_year,
+            period=Period.from_year_and_code(filing_year, source.period),
+            revision=revision,
+            operation=operation,
+        ),
+    )
+    return declared_record_count_derivation(
+        resolution,
+        record_count_binding=source.record_count_binding,
+        year_ended=year_ended,
+    )
 
 
 def _stated_records_derivation(

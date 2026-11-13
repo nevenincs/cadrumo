@@ -332,6 +332,27 @@ def _declares_records_source(entries: Mapping[str, str], prefix: str) -> bool:
     return any(f"{prefix}{field}" in entries for field in _RECORDS_SOURCE_FIELDS)
 
 
+def _hydrated_records_source(raw_kind: str, raw_modelo: str, period: str, *, token: str) -> PayerFactRecordsSource:
+    """Validate the three raw fields of a records source against the closed kinds, modelos and filing periods."""
+    try:
+        kind = PayerFactRecordsKind(raw_kind)
+    except ValueError as exc:
+        raise RegistryValidationError(
+            f"payer applicability fact {token!r} records source names an unknown kind {raw_kind!r}",
+        ) from exc
+    try:
+        modelo = Modelo(raw_modelo)
+    except CoreValidationError as exc:
+        raise RegistryValidationError(
+            f"payer applicability fact {token!r} records source names an invalid modelo {raw_modelo!r}",
+        ) from exc
+    if not is_filing_period_token(period):
+        raise RegistryValidationError(
+            f"payer applicability fact {token!r} records source names {period!r}, which is not a filing period",
+        )
+    return PayerFactRecordsSource(kind=kind, modelo=modelo, period=period)
+
+
 def _records_source(
     entries: Mapping[str, str],
     prefix: str,
@@ -357,23 +378,7 @@ def _records_source(
     raw_kind, raw_modelo, period = (
         required_mapping_entry(entries, f"{prefix}{field}", subject=_ENTRY_SUBJECT) for field in _RECORDS_SOURCE_FIELDS
     )
-    try:
-        kind = PayerFactRecordsKind(raw_kind)
-    except ValueError as exc:
-        raise RegistryValidationError(
-            f"payer applicability fact {token!r} records source names an unknown kind {raw_kind!r}",
-        ) from exc
-    try:
-        modelo = Modelo(raw_modelo)
-    except CoreValidationError as exc:
-        raise RegistryValidationError(
-            f"payer applicability fact {token!r} records source names an invalid modelo {raw_modelo!r}",
-        ) from exc
-    if not is_filing_period_token(period):
-        raise RegistryValidationError(
-            f"payer applicability fact {token!r} records source names {period!r}, which is not a filing period",
-        )
-    return PayerFactRecordsSource(kind=kind, modelo=modelo, period=period)
+    return _hydrated_records_source(raw_kind, raw_modelo, period, token=token)
 
 
 def _catalogue(entries: Mapping[str, str]) -> tuple[PayerFactProjection, ...]:

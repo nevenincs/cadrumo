@@ -656,18 +656,10 @@ class ModeloApplicabilityRule(BaseModel):
         label = payer_fact_incomplete_label(fact)
         reason = verdict.reason
         records_fact = fact if isinstance(fact, PayerFactProjection) and fact.records_source is not None else None
-        if derived and verdict.verdict is ApplicabilityVerdict.APPLICABLE:
-            basis_key = (
-                "filing.applicability.ledger_derived_basis"
-                if records_fact is None
-                else "filing.applicability.records_derived_basis"
+        if derived:
+            reason = _derived_verdict_reason(
+                verdict, label=label, records_fact=records_fact, records_notes=records_notes
             )
-            reason = f"{reason} {tr(basis_key, fact=label)}"
-        elif derived and records_fact is not None and verdict.verdict is ApplicabilityVerdict.NOT_APPLICABLE:
-            reason = f"{reason} {tr('filing.applicability.records_derived_basis_not_met', fact=label)}"
-        note = None if records_fact is None else records_notes.get(records_fact.token)
-        if derived and note is not None:
-            reason = f"{reason} {note}"
         if reading.disagreement is not None:
             reason = f"{reason} {tr('filing.applicability.ledger_profile_disagreement', fact=label)}"
         return verdict.model_copy(
@@ -931,3 +923,27 @@ def _undetermined_applicability(
         reason=reason,
         legal_refs=legal_refs,
     )
+
+
+def _derived_verdict_reason(
+    verdict: ModeloApplicability,
+    *,
+    label: str,
+    records_fact: PayerFactProjection | None,
+    records_notes: Mapping[str, str],
+) -> str:
+    """Append to a ledger-derived verdict's reason the basis it rests on and the derivation's own detail."""
+    reason = verdict.reason
+    if verdict.verdict is ApplicabilityVerdict.APPLICABLE:
+        basis_key = (
+            "filing.applicability.ledger_derived_basis"
+            if records_fact is None
+            else "filing.applicability.records_derived_basis"
+        )
+        reason = f"{reason} {tr(basis_key, fact=label)}"
+    elif records_fact is not None and verdict.verdict is ApplicabilityVerdict.NOT_APPLICABLE:
+        reason = f"{reason} {tr('filing.applicability.records_derived_basis_not_met', fact=label)}"
+    note = None if records_fact is None else records_notes.get(records_fact.token)
+    if note is not None:
+        reason = f"{reason} {note}"
+    return reason

@@ -803,20 +803,41 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
                 and final_work_units_revision == work_units_revision
                 and final_calculations_revision == calculations_revision
                 and final_filings_revision == filings_revision
-                and _timed("recheck_ledger", lambda: self._ledger_is_unchanged(ledger_revision, ledger_sources))
-                and _timed("recheck_related_party", self._related_party_revision) == related_party_revision
-                and _timed("recheck_verification_reports", self._load_verification_reports) == verification
-                and _timed("recheck_bucket_events", self._load_bucket_events) == bucket_events
-                and (
-                    aeat_sync_reads is None
-                    or (
-                        _timed("recheck_custody_count", lambda: self._recount_custody(aeat_sync_reads.custody))
-                        == aeat_sync_reads.custody_count
-                        and _timed("recheck_census_observation", lambda: self._recheck_census(aeat_sync_reads.census))
-                        == aeat_sync_reads.census_observation
-                    )
+                and self._ledger_and_report_sources_are_unchanged(
+                    ledger_revision=ledger_revision,
+                    ledger_sources=ledger_sources,
+                    related_party_revision=related_party_revision,
+                    verification=verification,
+                    bucket_events=bucket_events,
                 )
+                and self._aeat_sync_reads_are_unchanged(aeat_sync_reads)
             )
+
+    def _ledger_and_report_sources_are_unchanged(
+        self,
+        *,
+        ledger_revision: tuple[str, str] | None,
+        ledger_sources: tuple[TransactionCatalogue, InvoiceCatalogue] | None,
+        related_party_revision: str,
+        verification: VerificationReportCatalogue | None,
+        bucket_events: BucketEventHistoryCatalogue | None,
+    ) -> bool:
+        """Say whether the ledger, related-party statements, verification reports and bucket events still match."""
+        return (
+            _timed("recheck_ledger", lambda: self._ledger_is_unchanged(ledger_revision, ledger_sources))
+            and _timed("recheck_related_party", self._related_party_revision) == related_party_revision
+            and _timed("recheck_verification_reports", self._load_verification_reports) == verification
+            and _timed("recheck_bucket_events", self._load_bucket_events) == bucket_events
+        )
+
+    def _aeat_sync_reads_are_unchanged(self, aeat_sync_reads: _AeatSyncSourceReads | None) -> bool:
+        """Say whether the custody count and census observation a generation read for AEAT Sync still match."""
+        return aeat_sync_reads is None or (
+            _timed("recheck_custody_count", lambda: self._recount_custody(aeat_sync_reads.custody))
+            == aeat_sync_reads.custody_count
+            and _timed("recheck_census_observation", lambda: self._recheck_census(aeat_sync_reads.census))
+            == aeat_sync_reads.census_observation
+        )
 
     def _load_stored_catalogues(self) -> _StoredCatalogues:
         """Read the profile record and every catalogue a capture joins, each as its own timed phase."""

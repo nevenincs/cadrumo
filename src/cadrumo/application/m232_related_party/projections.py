@@ -102,6 +102,27 @@ def project_m232_related_party_list_result(
     return Modelo232RelatedPartyListProjection(profile_id=profile_id, ejercicio=private.ejercicio, year=year)
 
 
+def _refused_projection(
+    private: Modelo232RelatedPartyExecutionResult,
+    receipt: OperationTerminalReceipt,
+    profile_id: UUID,
+) -> Modelo232RelatedPartyMutationProjection:
+    refusal = private.refusal
+    if refusal is None or refusal.ejercicio != private.ejercicio or not _refusal_receipt_matches(receipt, refusal.code):
+        raise ValueError(_MESSAGE)
+    return Modelo232RelatedPartyMutationProjection(
+        outcome="refused", profile_id=profile_id, ejercicio=private.ejercicio, refusal=refusal
+    )
+
+
+def _result_matches_receipt_identity(
+    private: Modelo232RelatedPartyExecutionResult,
+    definition_id: str,
+    profile_id: UUID,
+) -> bool:
+    return _DEFINITIONS.get(private.operation_id) == definition_id and private.profile_id == profile_id
+
+
 def project_m232_related_party_result(
     result: BaseModel,
     receipt: OperationTerminalReceipt,
@@ -111,19 +132,10 @@ def project_m232_related_party_result(
     private = _private(result)
     definition_id = receipt.identity.definition_id
     profile_id = _profile_from_receipt(receipt)
-    if _DEFINITIONS.get(private.operation_id) != definition_id or private.profile_id != profile_id:
+    if not _result_matches_receipt_identity(private, definition_id, profile_id):
         raise ValueError(_MESSAGE)
     if private.outcome == "refused":
-        refusal = private.refusal
-        if (
-            refusal is None
-            or refusal.ejercicio != private.ejercicio
-            or not _refusal_receipt_matches(receipt, refusal.code)
-        ):
-            raise ValueError(_MESSAGE)
-        return Modelo232RelatedPartyMutationProjection(
-            outcome="refused", profile_id=profile_id, ejercicio=private.ejercicio, refusal=refusal
-        )
+        return _refused_projection(private, receipt, profile_id)
     stated = private.operation or private.none_statement or private.turnover_statement
     if stated is None or stated.ejercicio != private.ejercicio:
         raise ValueError(_MESSAGE)

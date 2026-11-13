@@ -212,6 +212,55 @@ def _kind_ground(
     return Modelo232GroundFinding(ground, state, sum((o.amount_eur for o in held), Decimal(0)) if held else None)
 
 
+def _stated_basis(*, none_stated: bool, has_active_operations: bool) -> Modelo232Basis:
+    if none_stated and has_active_operations:
+        return Modelo232Basis.CONTRADICTION
+    if none_stated:
+        return Modelo232Basis.NONE_STATED
+    if has_active_operations:
+        return Modelo232Basis.OPERATIONS_STATED
+    return Modelo232Basis.NOTHING_STATED
+
+
+def _active_operations(operations: tuple[Modelo232Operation, ...], ejercicio: int) -> list[Modelo232Operation]:
+    return [operation for operation in operations if operation.active and operation.ejercicio == ejercicio]
+
+
+def _none_is_stated(nones: tuple[Modelo232NoneStatement, ...], ejercicio: int) -> bool:
+    return any(statement.active and statement.ejercicio == ejercicio for statement in nones)
+
+
+def _standing_turnover(
+    turnovers: tuple[Modelo232TurnoverStatement, ...], ejercicio: int
+) -> Modelo232TurnoverStatement | None:
+    active_turnovers = [item for item in turnovers if item.active and item.ejercicio == ejercicio]
+    # The write path allows one standing turnover; more than one would make the share ambiguous.
+    return active_turnovers[0] if len(active_turnovers) == 1 else None
+
+
+def _grounds_of_stated_operations(
+    counted: list[Modelo232Operation],
+    thresholds: Modelo232Thresholds,
+    turnover: Modelo232TurnoverStatement | None,
+) -> tuple[Modelo232GroundFinding, ...]:
+    related = [o for o in counted if o.operation_kind is Modelo232OperationKind.RELATED_PARTY]
+    return (
+        _same_party_ground(related, thresholds),
+        _specific_type_ground(related, thresholds),
+        _turnover_ground(related, thresholds, turnover),
+        _kind_ground(
+            Modelo232Ground.INTANGIBLES_REDUCTION,
+            counted,
+            frozenset({Modelo232OperationKind.INTANGIBLES_REDUCTION}),
+        ),
+        _kind_ground(
+            Modelo232Ground.TAX_HAVEN,
+            counted,
+            frozenset({Modelo232OperationKind.TAX_HAVEN_OPERATION, Modelo232OperationKind.TAX_HAVEN_HOLDING}),
+        ),
+    )
+
+
 def assess_modelo_232_obligation(
     ejercicio: int,
     *,
@@ -226,39 +275,15 @@ def assess_modelo_232_obligation(
     statement beside an active operation is reported as a contradiction and
     decides nothing.
     """
-    active = [operation for operation in operations if operation.active and operation.ejercicio == ejercicio]
-    none_stated = any(statement.active and statement.ejercicio == ejercicio for statement in nones)
-    active_turnovers = [item for item in turnovers if item.active and item.ejercicio == ejercicio]
-    # The write path allows one standing turnover; more than one would make the share ambiguous.
-    turnover = active_turnovers[0] if len(active_turnovers) == 1 else None
+    active = _active_operations(operations, ejercicio)
+    none_stated = _none_is_stated(nones, ejercicio)
+    turnover = _standing_turnover(turnovers, ejercicio)
     counted = [operation for operation in active if not operation.excluded]
     excluded = [operation for operation in active if operation.excluded]
-    if none_stated and active:
-        basis = Modelo232Basis.CONTRADICTION
-    elif none_stated:
-        basis = Modelo232Basis.NONE_STATED
-    elif active:
-        basis = Modelo232Basis.OPERATIONS_STATED
-    else:
-        basis = Modelo232Basis.NOTHING_STATED
+    basis = _stated_basis(none_stated=none_stated, has_active_operations=bool(active))
     grounds: tuple[Modelo232GroundFinding, ...] = ()
     if basis is Modelo232Basis.OPERATIONS_STATED:
-        related = [o for o in counted if o.operation_kind is Modelo232OperationKind.RELATED_PARTY]
-        grounds = (
-            _same_party_ground(related, thresholds),
-            _specific_type_ground(related, thresholds),
-            _turnover_ground(related, thresholds, turnover),
-            _kind_ground(
-                Modelo232Ground.INTANGIBLES_REDUCTION,
-                counted,
-                frozenset({Modelo232OperationKind.INTANGIBLES_REDUCTION}),
-            ),
-            _kind_ground(
-                Modelo232Ground.TAX_HAVEN,
-                counted,
-                frozenset({Modelo232OperationKind.TAX_HAVEN_OPERATION, Modelo232OperationKind.TAX_HAVEN_HOLDING}),
-            ),
-        )
+        grounds = _grounds_of_stated_operations(counted, thresholds, turnover)
     return Modelo232ObligationFinding(
         ejercicio=ejercicio,
         basis=basis,
