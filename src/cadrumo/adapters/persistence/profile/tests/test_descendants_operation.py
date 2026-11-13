@@ -28,6 +28,7 @@ from cadrumo.application.user_profile.descendant_rows import (
     ProfileDescendantRow,
     replace_profile_descendants,
 )
+from cadrumo.application.user_profile.fact_write import apply_manager_profile_field_mutation
 from cadrumo.application.user_profile.family_rows import (
     ProfileFamilyGroupState,
     ProfileViewFamilyGroupItem,
@@ -41,6 +42,11 @@ from cadrumo.application.user_profile.registration import register_profile_with_
 from cadrumo.core.config import override_settings
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.descendant_relacion_catalogue import (
+    descendant_relacion_adoption_token,
+    descendant_relacion_entitling_tokens,
+    descendant_relacion_tokens,
+)
 from cadrumo.domain.contribuyente.household_person_name import household_person_name_limit
 from cadrumo.domain.user_profile.errors import UserProfileValidationError
 from cadrumo.domain.user_profile.values import UserProfileRecord
@@ -53,6 +59,11 @@ _ADULT_NIF = "12345678Z"
 _WRONG_LETTER_NIF = "12345678A"
 _FOREIGN_NIF = "X0001500M"
 _ENTITY_NIF = "B00010157"
+
+
+_BORN = (date.today() - timedelta(days=3650)).isoformat()
+_ENTRY = (date.today() - timedelta(days=3590)).isoformat()
+_SIBLING_BORN = (date.today() - timedelta(days=2800)).isoformat()
 
 
 def _row(**leaves: str) -> ProfileDescendantRow:
@@ -362,3 +373,75 @@ def test_a_stale_baseline_is_refused_and_writes_nothing(world: _World) -> None:
         world.replace(_row(birth_date="2016-04-03"), baseline=stale)
 
     assert world.record().content_digest == after.content_digest
+
+
+def _relation_tokens(operation: PinnedAuthorityOperation) -> tuple[str, str]:
+    """The adoption token and one relation that is neither adoption nor entitling."""
+    entitling = {token.value for token in descendant_relacion_entitling_tokens(authority=operation)}
+    plain = next(
+        token.value for token in descendant_relacion_tokens(authority=operation) if token.value not in entitling
+    )
+    return descendant_relacion_adoption_token(authority=operation).value, plain
+
+
+@pytest.mark.parametrize("leaf", ["inscripcion_registro_civil", "acogimiento_resolucion"])
+def test_a_date_stated_for_a_leaf_the_relation_does_not_ask_is_refused_and_writes_nothing(
+    world: _World, leaf: str
+) -> None:
+    _adoption, plain = _relation_tokens(world.operation)
+    before = world.record()
+
+    with pytest.raises(UserProfileValidationError) as refused:
+        world.replace(_row(birth_date=_BORN, relacion=plain, **{leaf: _ENTRY}))
+
+    # The decoder refuses the incompatible pair as an invalid value; it neither drops nor keeps it.
+    assert refused.value.translated_message == "application.user_profile.errors.descendant_value_invalid"
+    assert refused.value.context is not None and refused.value.context["row"] == 1
+    assert world.record().content_digest == before.content_digest
+    assert world.facts() == {}
+
+
+def test_the_date_an_adoption_asks_for_is_stored_with_it(world: _World) -> None:
+    adoption, _plain = _relation_tokens(world.operation)
+
+    world.replace(_row(birth_date=_BORN, relacion=adoption, inscripcion_registro_civil=_ENTRY))
+
+    assert world.facts()[f"{DESCENDANT_OBJECT_PATH}.0.inscripcion_registro_civil"] == _ENTRY
+
+
+def test_economic_dependence_stated_for_a_descendant_who_lives_with_the_taxpayer_is_stored_as_stated(
+    world: _World,
+) -> None:
+    # Pinned as found: the profile does not refuse or drop a dependence the dependence question did not ask for.
+    world.replace(_row(birth_date=_BORN, convivencia="true", dependencia_economica="true"))
+    assert world.facts()[f"{DESCENDANT_OBJECT_PATH}.0.dependencia_economica"] == "true"
+
+    # Naming the person without the dependence is what clears it: the row states the whole person.
+    world.replace(_row(birth_date=_BORN, convivencia="true"))
+    assert f"{DESCENDANT_OBJECT_PATH}.0.dependencia_economica" not in world.facts()
+
+
+def test_a_stored_dependence_survives_adding_another_person_after_the_answer_it_hangs_on_changed(
+    world: _World,
+) -> None:
+    world.replace(_row(birth_date=_BORN, convivencia="false", dependencia_economica="true"))
+    # The cohabitation answer becomes yes by a one-leaf write; the dependence fact is left standing.
+    apply_manager_profile_field_mutation(
+        profile_id=world.profile_id,
+        path=f"{DESCENDANT_OBJECT_PATH}.0.convivencia",
+        value="true",
+        profile_decode_context=world.operation.profile_decode_context(),
+    )
+    after_change = world.facts()
+    assert after_change[f"{DESCENDANT_OBJECT_PATH}.0.convivencia"] == "true"
+    assert after_change[f"{DESCENDANT_OBJECT_PATH}.0.dependencia_economica"] == "true"
+
+    latest = world.record()
+    replace_profile_descendants(
+        profile_id=world.profile_id,
+        add_row=_row(birth_date=_SIBLING_BORN),
+        expected_revision=latest.record_revision,
+        expected_content_digest=latest.content_digest,
+        operation=world.operation,
+    )
+    assert world.facts()[f"{DESCENDANT_OBJECT_PATH}.0.dependencia_economica"] == "true"

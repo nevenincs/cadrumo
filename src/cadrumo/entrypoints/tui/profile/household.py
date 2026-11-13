@@ -6,8 +6,10 @@ the "stated, recorded" sentence of an incomplete group and the words of the add
 and remove controls. The screen authors only chrome around them.
 
 A person is added through the group's served add control: the new-person form
-offers exactly the group's served leaves, each leaf only while one of the
-answers it is served after holds, and sends only the person typed. A person is
+offers exactly the group's served leaves, each leaf only while the backend serves
+it as asked (the asks of a blank person come with the group; the asks of the
+answers typed are read from the profile view, which evaluates every condition and
+changes nothing), and sends only the person typed. A person is
 removed through the served remove control, named by the ``row_index`` the read
 served it at and bound to that read's revision, so a household that moved in
 between is refused as a conflict rather than losing whoever holds that index
@@ -20,7 +22,7 @@ and further changes wait until the operator reads the household again.
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Mapping
 from contextvars import copy_context
 from dataclasses import dataclass
 from enum import StrEnum
@@ -30,6 +32,7 @@ from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
 from textual.screen import ModalScreen
+from textual.timer import Timer
 from textual.widgets import Button, Input, Label, OptionList, Static
 from textual.worker import Worker, WorkerState
 
@@ -38,7 +41,8 @@ from cadrumo_client.transport.profile_mutations import ProfileMutationRunError
 from ....application.user_profile.family_rows import (
     ProfileFamilyGroupState,
     ProfileFamilyLeaf,
-    ProfileFamilyLeafCondition,
+    ProfileFamilyLeafAsk,
+    ProfileFamilyLeafAskEntry,
     ProfileFamilyRowAction,
     ProfileViewFamilyGroupItem,
     ProfileViewFamilyRowItem,
@@ -77,6 +81,9 @@ _SAVE_LOCALE_KEY: Final = "flows.manager.edit.save"
 
 _MASK: Final = "••••••••"
 """What a hidden fact shows in place of its value: a glyph run, not copy."""
+
+_DRAFT_SETTLE_SECONDS: Final = 0.15
+"""How long answers must rest before the backend is asked which leaves they ask for."""
 
 _FACT_SEPARATOR: Final = "; "
 _LABEL_SEPARATOR: Final = ": "
@@ -171,6 +178,13 @@ class HouseholdPort(Protocol):
         """Submit one served add or remove and read the household again."""
         ...
 
+    def read_draft(self, group_key: str, answers: Mapping[str, str], /) -> tuple[ProfileFamilyLeafAskEntry, ...]:
+        """Read which leaves a person with these unsaved answers is asked, as the backend resolves them.
+
+        Blocks on the runtime and runs off the event loop; no profile is changed.
+        """
+        ...
+
     def accepts(self, operation_id: str, /) -> bool:
         """Whether this host submits the registered operation a served control names."""
         ...
@@ -225,41 +239,6 @@ def submitted_operation(action: ProfileFamilyRowAction | None, accepts: Callable
     return operation_id if accepts(operation_id) else None
 
 
-def _holds(condition: ProfileFamilyLeafCondition, answer: str) -> bool:
-    if condition.equals is not None:
-        return answer == condition.equals
-    if condition.contains is not None:
-        return condition.contains in (token.strip() for token in answer.split(","))
-    return False
-
-
-def shown_leaves(leaves: Sequence[ProfileFamilyLeaf], answers: Mapping[str, str]) -> tuple[ProfileFamilyLeaf, ...]:
-    """The leaves asked of a person with these answers, in served order.
-
-    A leaf served with no condition is always asked; any other while one of its
-    conditions holds on a leaf that is itself asked. An answer to a leaf no
-    longer asked counts for nothing.
-    """
-    by_key = {leaf.leaf: leaf for leaf in leaves}
-    asked: dict[str, bool] = {}
-
-    def is_asked(leaf: ProfileFamilyLeaf, seen: frozenset[str]) -> bool:
-        if leaf.leaf in asked:
-            return asked[leaf.leaf]
-        if leaf.leaf in seen:
-            return False
-        shown = not leaf.shown_when or any(
-            condition.leaf in by_key
-            and is_asked(by_key[condition.leaf], seen | {leaf.leaf})
-            and _holds(condition, answers.get(condition.leaf, "").strip())
-            for condition in leaf.shown_when
-        )
-        asked[leaf.leaf] = shown
-        return shown
-
-    return tuple(leaf for leaf in leaves if is_asked(leaf, frozenset()))
-
-
 def person_text(group: ProfileViewFamilyGroupItem, row: ProfileViewFamilyRowItem, number: int) -> str:
     """One person as a line: its place, then each stated fact under its served label, hidden ones masked."""
     leaves = {leaf.leaf: leaf for leaf in group.leaves}
@@ -290,11 +269,20 @@ class HouseholdPersonScreen(ModalScreen[dict[str, str] | None]):
     DEFAULT_CSS = _PERSON_CSS
     BINDINGS: ClassVar = [Binding("escape", "cancel", "", show=False)]
 
-    def __init__(self, group: ProfileViewFamilyGroupItem, title: str) -> None:
-        """Hold the served group whose leaves are the form, and the served words that title it."""
+    def __init__(self, group: ProfileViewFamilyGroupItem, title: str, port: HouseholdPort) -> None:
+        """Hold the served group whose leaves are the form, the served words that title it and the host's doors."""
         super().__init__()
         self._form_group = group
         self._form_title = title
+        self._port = port
+        self._asks = {entry.leaf: entry.ask for entry in group.new_row_leaves}
+        """What the backend served for the answers in ``_resolved_for``; a blank person's asks until the first read."""
+        self._resolved_for: dict[str, str] = {}
+        self._requested: dict[str, str] = {}
+        self._draft_job: Worker[tuple[ProfileFamilyLeafAskEntry, ...]] | None = None
+        self._draft_timer: Timer | None = None
+        self._save_waiting = False
+        """Save was pressed while the asks were being read again; the person is sent once they are current."""
 
     @override
     def compose(self) -> ComposeResult:
@@ -338,21 +326,71 @@ class HouseholdPersonScreen(ModalScreen[dict[str, str] | None]):
         return answers
 
     def asked(self) -> tuple[ProfileFamilyLeaf, ...]:
-        """The leaves asked of this person with what is answered now."""
-        return shown_leaves(self._form_group.leaves, self.answers())
+        """The leaves the backend last served as asked of this person."""
+        return tuple(
+            leaf for leaf in self._form_group.leaves if self._asks.get(leaf.leaf) is ProfileFamilyLeafAsk.ASKED
+        )
 
     def _show_asked(self) -> None:
         asked = {leaf.leaf for leaf in self.asked()}
         for index, leaf in enumerate(self._form_group.leaves):
             self.query_one(f"#household-leaf-{index}", Vertical).display = leaf.leaf in asked
 
+    def _draft(self) -> dict[str, str]:
+        """The answers given so far, blanks left out: what the backend is asked to resolve."""
+        return {leaf: value.strip() for leaf, value in self.answers().items() if value.strip()}
+
+    def _answers_changed(self) -> None:
+        if self._draft_timer is not None:
+            self._draft_timer.stop()
+        self._draft_timer = self.set_timer(_DRAFT_SETTLE_SECONDS, self._read_asks)
+
     def on_input_changed(self, _event: Input.Changed) -> None:
-        """Ask again after a typed answer changes."""
-        self._show_asked()
+        """Read the asks again once typing pauses."""
+        self._answers_changed()
 
     def on_option_list_option_highlighted(self, _event: OptionList.OptionHighlighted) -> None:
-        """Ask again after a chosen answer changes."""
+        """Read the asks again after a chosen answer changes."""
+        self._answers_changed()
+
+    def _read_asks(self) -> None:
+        """Have the backend resolve the asks of the answers given now, one read at a time."""
+        draft = self._draft()
+        if self._draft_job is not None or draft == self._resolved_for:
+            return
+        self._requested = draft
+        group_key = self._form_group.group_key
+        context = copy_context()
+        self._draft_job = self.run_worker(
+            lambda: context.run(self._port.read_draft, group_key, draft),
+            name="profile-household-draft",
+            group="profile-household-draft",
+            exit_on_error=False,
+            thread=True,
+        )
+
+    async def on_worker_state_changed(self, event: Worker.StateChanged) -> None:
+        """Take a finished read of the asks, then read again if the answers moved meanwhile."""
+        job = self._draft_job
+        if job is None or event.worker is not job:
+            return
+        if event.state not in {WorkerState.SUCCESS, WorkerState.ERROR, WorkerState.CANCELLED}:
+            return
+        self._draft_job = None
+        refusal = self.query_one("#household-person-refusal", Static)
+        if event.state is not WorkerState.SUCCESS or job.result is None:
+            self._save_waiting = False
+            refusal.update(tr(_READ_FAILED_LOCALE_KEY))
+            return
+        refusal.update("")
+        self._asks = {entry.leaf: entry.ask for entry in job.result}
+        self._resolved_for = self._requested
         self._show_asked()
+        if self._draft() != self._resolved_for:
+            self._read_asks()
+        elif self._save_waiting:
+            self._save_waiting = False
+            self._submit()
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Submit the person, or leave without adding anyone."""
@@ -362,6 +400,11 @@ class HouseholdPersonScreen(ModalScreen[dict[str, str] | None]):
             self.dismiss(None)
 
     def _submit(self) -> None:
+        if self._draft() != self._resolved_for or self._draft_job is not None:
+            # The asks shown are not those of what is answered now: wait for the backend's.
+            self._save_waiting = True
+            self._read_asks()
+            return
         answers = self.answers()
         asked = self.asked()
         blank = next((leaf for leaf in asked if leaf.required and not answers[leaf.leaf].strip()), None)
@@ -641,7 +684,7 @@ class HouseholdScreen(ModalScreen[bool | None]):
                 )
             )
 
-        self.app.push_screen(HouseholdPersonScreen(group, group.add_row_action.action_words), _added)
+        self.app.push_screen(HouseholdPersonScreen(group, group.add_row_action.action_words, self._port), _added)
 
     def _open_remove(self, group_index: int, row_index: str) -> None:
         view = self._view
@@ -697,6 +740,5 @@ __all__ = [
     "household_change_outcome",
     "household_refusal",
     "person_text",
-    "shown_leaves",
     "submitted_operation",
 ]
