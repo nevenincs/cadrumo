@@ -115,7 +115,6 @@ def replay_scope(persona: Persona) -> ReplayScope:
 class _Statements:
     """What the persona's operator states on the return between the workbench's key presses."""
 
-    before_calculate: Callable[[], None]
     after_calculate: Callable[[ModeloWorkCalculatePublicResultV3], bool]
     """Make the statements the calculation offers; whether the return must be calculated again to read them."""
     after_settled_calculation: Callable[[], bool]
@@ -124,12 +123,6 @@ class _Statements:
 
 def _statements(materialised: MaterialisedPersona, plan: PlannedRow, work_unit_id: str) -> _Statements:
     world = materialised.world
-    entered: list[bool] = []
-
-    def before_calculate() -> None:
-        if world.work_inputs and not entered:
-            enter_return_work_inputs(world, work_unit_id)
-            entered.append(True)
 
     def after_settled_calculation() -> bool:
         return plan.modelo == "100" and attest_pending_rental_carries(
@@ -137,7 +130,6 @@ def _statements(materialised: MaterialisedPersona, plan: PlannedRow, work_unit_i
         )
 
     return _Statements(
-        before_calculate=before_calculate,
         after_calculate=lambda calculated: state_after_calculation(world, calculated),
         after_settled_calculation=after_settled_calculation,
     )
@@ -159,7 +151,6 @@ async def _press_calculate(
     driver: WorkbenchDriver, statements: _Statements, action: ModeloFormNextAction, row: PilotRow
 ) -> ModeloWorkCalculatePublicResultV3 | None:
     """Press the key for ``action``; the calculation the workbench settled, or ``None`` with the reason in ``row``."""
-    await asyncio.to_thread(statements.before_calculate)
     shown = await driver.press_for(action)
     row.calculate = _settled_stage(shown)
     if not shown.submitted:
@@ -278,14 +269,29 @@ def stop_when_not_owed(row: PilotRow, *, owed: bool, calculated: bool, served: M
     return True
 
 
+def first_action(served: ModeloFormNextAction | None, *, calculated: bool) -> ModeloFormNextAction | None:
+    """The step the drive starts with: the calculation, when the return holds one and the form does not offer it.
+
+    The table calculates every return it created, and states what its calculation offers only after that
+    calculation. A return whose carries were stated first holds a calculation already, since the guarded edit that
+    states them calculates, so the form then serves the step after it (the check, or the finding to resolve) and
+    nothing would make the statements. The workbench binds its calculate key whatever step it serves; the
+    pilot presses it, as the table calculates.
+    """
+    if calculated and served not in _CALCULATE:
+        return ModeloFormNextAction.RECALCULATE
+    return served
+
+
 async def _drive(driver: WorkbenchDriver, statements: _Statements, row: PilotRow, *, owed: bool = True) -> None:
     """Take each operation step the form serves, once per stage, until it serves none, or one does not pass.
 
-    A return the table holds not owed (``owed`` false) is taken through calculate only.
+    The first step is the calculation (:func:`first_action`). A return the table holds not owed (``owed`` false)
+    is taken through calculate only.
     """
     taken: set[str] = set()
+    action = first_action(driver.served_next_action(), calculated=driver.calculated())
     while True:
-        action = driver.served_next_action()
         stage = None if action is None else _STAGE_OF_ACTION.get(action)
         if action is None or stage is None or stage in taken:
             _stop(driver, row, action)
@@ -293,6 +299,7 @@ async def _drive(driver: WorkbenchDriver, statements: _Statements, row: PilotRow
         taken.add(stage)
         if not await _take_step(driver, statements, row, action, owed=owed):
             return
+        action = driver.served_next_action()
 
 
 async def _take_step(
@@ -376,6 +383,8 @@ def _run_return(materialised: MaterialisedPersona, plan: PlannedRow, exports: Pa
         attest_before_first_calculation(
             world, modelo=plan.modelo, year=plan.year, period=plan.period, work_unit_id=work_unit_id
         )
+        if world.work_inputs:
+            enter_return_work_inputs(world, work_unit_id)
     except PersonaMaterialisationError as error:
         return _refused_before_workbench(row, error, "statement before calculating")
     exports.mkdir(parents=True, exist_ok=True)
