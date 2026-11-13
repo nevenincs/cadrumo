@@ -3774,10 +3774,16 @@ modelo:
         renta-final-settlement:
           field:
             title: Modelo 100 end settlement result
+        renta-mini-model-deduccion-madrid-cuidado-ascendientes:
+          field:
+            title: 'Modelo 100: Community of Madrid deduction for the care of ascendants'
         renta-mini-model-deduccion-madrid-nacimiento-adopcion:
           field:
             title: Modelo 100 2025 Community of Madrid birth/adoption deduction (box
               1039)
+        renta-mini-model-minimo-ascendientes-y-deducciones-autonomicas:
+          field:
+            title: 'Modelo 100: ascendant allowance and autonomous-community deductions'
         renta-movable-capital:
           field:
             title: Model 100 evidence of movable-capital dependencies

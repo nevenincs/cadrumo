@@ -3819,10 +3819,18 @@ modelo:
         renta-final-settlement:
           field:
             title: 'Modelo 100 nyomtatvány: vég settlement result'
+        renta-mini-model-deduccion-madrid-cuidado-ascendientes:
+          field:
+            title: 'Modelo 100 nyomtatvány: Madridi autonóm közösség levonása a felmenők
+              gondozása után'
         renta-mini-model-deduccion-madrid-nacimiento-adopcion:
           field:
             title: 'Modelo 100 nyomtatvány 2025: Madridi autonóm közösség születési/örökbefogadási
               levonása (1039. rovat)'
+        renta-mini-model-minimo-ascendientes-y-deducciones-autonomicas:
+          field:
+            title: 'Modelo 100 nyomtatvány: a felmenők utáni személyi minimum és az
+              autonóm közösségi levonások'
         renta-movable-capital:
           field:
             title: 'Modelo 100 nyomtatvány: az ingó tőkétől való függőség bizonyítékai'

@@ -3780,10 +3780,16 @@ modelo:
         renta-final-settlement:
           field:
             title: Model 100 resultat final de la liquidació
+        renta-mini-model-deduccion-madrid-cuidado-ascendientes:
+          field:
+            title: 'Model 100: deducció de la Comunitat de Madrid per cura d''ascendents'
         renta-mini-model-deduccion-madrid-nacimiento-adopcion:
           field:
             title: 'Model 100 2025: deducció de la Comunitat de Madrid per naixement/adopció
               (casella 1039)'
+        renta-mini-model-minimo-ascendientes-y-deducciones-autonomicas:
+          field:
+            title: 'Model 100: mínim per ascendents i deduccions autonòmiques'
         renta-movable-capital:
           field:
             title: Model 100 evidència de dependència del capital mobiliari
