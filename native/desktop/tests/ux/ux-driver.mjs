@@ -166,11 +166,11 @@ export async function teardown() {
 }
 
 export function profileCredential() {
-  const match = /^(?:_|PERSONA_)PROFILE_CREDENTIAL\s*=\s*"([^"\n]+)"/m.exec(
+  const match = /^PERSONA_PROFILE_CREDENTIAL\s*=\s*"([^"\n]+)"/m.exec(
     readFileSync(CREDENTIAL_SOURCE, "utf8"),
   );
   if (!match)
-    throw new Error("no _PROFILE_CREDENTIAL in persona_materialisation.py");
+    throw new Error("no PERSONA_PROFILE_CREDENTIAL in persona_materialisation.py");
   return match[1];
 }
 
