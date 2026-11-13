@@ -37,7 +37,7 @@ from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_indexed_authority
-from ....domain.calculations.registry.bindings import RegistryModeloObservation
+from ....domain.calculations.registry.bindings import RegistryModeloObservation, binding_source_casilla_ids
 from ....domain.calculations.registry.tests.authored_editions import newest_authored_edition, projected_exercise
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....domain.contribuyente.inventory.records import InventoryLedgerDocument
@@ -61,6 +61,8 @@ _GENERATED_PENDING: CasillaId = validated_casilla_id("1391", surface="_GENERATED
 _PRIOR_ANEXO_C_REMAINDERS: tuple[CasillaId, ...] = tuple(
     validated_casilla_id(box, surface="_PRIOR_ANEXO_C_REMAINDERS") for box in ("1384", "1387", "1390")
 )
+_SAVINGS_CARRY_PREFIX = "renta-saldo-negativo-"
+_SAVINGS_CARRY_SUFFIX = "-pendiente-inicio"
 _M130_PAGOS_OUTPUT: CasillaId = validated_casilla_id("19", surface="_M130_PAGOS_OUTPUT")
 _M131_PAGOS_OUTPUT: CasillaId = validated_casilla_id("15", surface="_M131_PAGOS_OUTPUT")
 _INVENTORY_INCREASE = "renta-inventory-activity-closing-increase-0177"
@@ -122,14 +124,29 @@ def _save_observation(
     )
 
 
+def _prior_savings_remainders(filing_year: int) -> tuple[CasillaId, ...]:
+    """The prior-return boxes the year's negative savings carries (LIRPF art. 49) open from."""
+    with bundled_indexed_authority().operation() as operation:
+        bindings = operation.reading_snapshot("100", filing_year=filing_year, period=_PERIOD).revision.bindings
+    return tuple(
+        casilla_id
+        for binding in bindings
+        if binding.provider.kind == "previous_filing"
+        and binding.id.startswith(_SAVINGS_CARRY_PREFIX)
+        and binding.id.endswith(_SAVINGS_CARRY_SUFFIX)
+        for casilla_id in binding_source_casilla_ids(binding)
+    )
+
+
 def _seed_earlier_filings(obs_repo: CalculationObservationRepository, *, filing_year: int) -> None:
-    """Seed the prior return's Anexo C remainders and the year's zero pago-fraccionado quarters."""
+    """Seed the prior return's zero Anexo C and savings remainders and the year's zero pago-fraccionado quarters."""
+    remainders = (*_PRIOR_ANEXO_C_REMAINDERS, *_prior_savings_remainders(filing_year))
     _save_observation(
         obs_repo,
         modelo="100",
         filing_year=filing_year - 1,
         period=_PERIOD,
-        casilla_values={_GENERATED_PENDING: Decimal("0"), **dict.fromkeys(_PRIOR_ANEXO_C_REMAINDERS, Decimal("0"))},
+        casilla_values={_GENERATED_PENDING: Decimal("0"), **dict.fromkeys(remainders, Decimal("0"))},
     )
     for period in _QUARTERS:
         _save_observation(
