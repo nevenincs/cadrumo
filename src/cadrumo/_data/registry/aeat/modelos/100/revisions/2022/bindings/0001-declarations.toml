@@ -2298,6 +2298,97 @@ source_refs = ["aeat-renta-2022-manual-parte1"]
 source_ref = "aeat-renta-2022-manual-parte1"
 required_text = ["una vez deducidos los gastos"]
 
+# The imputed income of art. 85 LIRPF for the days a property stood at its owner's disposal: the
+# Inmueble row of each such property states the use (0073), the ejercicio's cadastral value (0083),
+# whether the collective valuation behind it qualifies for the reduced rate (0084), the days (0085),
+# the share of the property at disposal (0087) and the income imputed to the filer (0089), worked by
+# the renta_inmueble resolver from the property's dated uses and cadastral values. 0089 also totals
+# its rows, which box 0155 reads. Days at disposal on which the property also served another use (0086
+# and 0088) are not computed; the resolver withholds that property's 0089 with a blocking finding.
+[[revisions."2022".bindings]]
+id = "renta-inmueble-disposicion-0073"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "row_field", record = "inmueble", grouping = "per_inmueble", row_field = "disposicion", target_casilla_id = "0073" }
+value = { data_type = "boolean", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-85"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["a disposición de sus propietarios o usufructuarios"]
+
+[[revisions."2022".bindings]]
+id = "renta-inmueble-imputacion-valor-catastral-0083"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "row_field", record = "inmueble", grouping = "per_inmueble", row_field = "imputacion_valor_catastral", target_casilla_id = "0083" }
+value = { data_type = "money", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-85"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["del inmueble que figure en el recibo del Impuesto sobre Bienes Inmuebles"]
+
+[[revisions."2022".bindings]]
+id = "renta-inmueble-imputacion-valor-catastral-revisado-0084"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "row_field", record = "inmueble", grouping = "per_inmueble", row_field = "imputacion_valor_catastral_revisado", target_casilla_id = "0084" }
+value = { data_type = "boolean", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-85"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["hayan entrado en vigor en el período impositivo o en el plazo de los diez"]
+
+[[revisions."2022".bindings]]
+id = "renta-inmueble-imputacion-dias-0085"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "row_field", record = "inmueble", grouping = "per_inmueble", row_field = "imputacion_dias", target_casilla_id = "0085" }
+value = { data_type = "integer", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-85"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Período computable (nº de días), casilla [0085]"]
+
+[[revisions."2022".bindings]]
+id = "renta-inmueble-imputacion-porcentaje-disposicion-0087"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "row_field", record = "inmueble", grouping = "per_inmueble", row_field = "imputacion_porcentaje_disposicion", target_casilla_id = "0087" }
+value = { data_type = "decimal", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-85"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Parte del inmueble que está a disposición del contribuyente, casilla [0087]", "porcentaje del 100 por 100"]
+
+[[revisions."2022".bindings]]
+id = "renta-inmueble-renta-imputada-0089"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "row_field", record = "inmueble", grouping = "per_inmueble", row_field = "renta_imputada", target_casilla_id = "0089" }
+value = { data_type = "money", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-11", "ley-35-2006:art-85"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Importe de la renta inmobiliaria imputada, casilla [0089]", "porcentaje que represente su participación en la titularidad"]
+
+[[revisions."2022".bindings]]
+id = "renta-inmueble-total-renta-imputada-0089"
+provider = { kind = "renta_inmueble", modelo = "100", period = "0A", fact = "total", record = "inmueble", grouping = "per_inmueble", row_field = "renta_imputada", target_casilla_id = "0089" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-85"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Importe de la renta inmobiliaria imputada, casilla [0089]"]
+
 # Whether the profile's stated income categories positively exclude a family of rentas other than work
 # income. The list the profile states is the taxpayer's complete statement for the period, so a family
 # absent from a stated list is a proven zero for the LIRPF art. 20 limit; an unstated list excludes nothing.

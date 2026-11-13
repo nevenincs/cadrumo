@@ -8726,7 +8726,7 @@ family = "constructs"
 selector = {revision = "2023", id = "renta-mini-model-capital-inmobiliario"}
 sequence_additions = {source_refs = ["aeat-dr-100-2024-dictionary", "aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]}
 sequence_removals = {source_refs = [1, 2, 3]}
-sequence_order = {formulas = [0, 1, 12, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], legal_refs = [0, 1, 2, 6, 3, 4, 5], source_refs = [1, 2, 3, 0]}
+sequence_order = {legal_refs = [0, 1, 2, 6, 3, 4, 5], source_refs = [1, 2, 3, 0]}
 [[revisions."2024".family_overrides]]
 family = "verification_expectations"
 selector = {revision = "2023", id = "modelo-100-reconcile-when-present"}
@@ -8749,11 +8749,6 @@ family = "formulas"
 selector = {revision = "2023", id = "renta-cuota-resultante-autoliquidacion"}
 sequence_additions = {source_citations = [{source_ref = "aeat-renta-2024-manual-parte1", required_text = ["cuota resultante", "cuota diferencial"]}], source_refs = ["aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]}
 sequence_removals = {source_citations = [0], source_refs = [0, 1]}
-[[revisions."2024".family_overrides]]
-family = "formulas"
-selector = {revision = "2023", id = "renta-inmobiliario-renta-imputada-art-85"}
-sequence_additions = {source_citations = [{source_ref = "aeat-renta-2024-manual-parte1", required_text = ["1,1 por 100 s/40.800 = 448,80", "2 por 100", "valor catastral", "62 ÷ 365"]}], source_refs = ["aeat-dr-100-2024-dictionary", "aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]}
-sequence_removals = {source_citations = [0], source_refs = [0, 1, 2]}
 [[revisions."2024".family_overrides]]
 family = "formulas"
 selector = {revision = "2023", id = "renta-minimo-contribuyente-estatal"}
@@ -9413,11 +9408,6 @@ position = 180
 family = "formulas"
 id = "renta-reduccion-prevision-social-total"
 position = 182
-
-[[revisions."2024".family_positions]]
-family = "formulas"
-id = "renta-inmobiliario-renta-imputada-art-85"
-position = 184
 
 [[revisions."2024".family_positions]]
 family = "dependency_classifications"
@@ -10558,3 +10548,8 @@ sequence_additions = { "expression.args" = [
 ], source_refs = ["aeat-dr-100-2024-dictionary"] }
 sequence_order = { "expression.args" = [0, 3, 4, 5, 6, 7, 1, 8, 2, 9, 10, 11, 12, 13, 14], "source_citations" = [0, 1, 4, 5, 6, 7, 8, 2, 9, 3, 10, 11, 12, 13, 14, 15] }
 # END casilla 0564 autonomic deduction sum
+
+[[revisions."2024".family_overrides]]
+family = "parameters"
+selector = {revision = "2023", id = "renta-imputacion-inmobiliaria-revision-vigor-desde"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2024-manual-parte1", required_text = ["seguirán aplicando la imputación al 1,1 por ciento en 2024"]}], source_refs = ["aeat-renta-2024-manual-parte1"]}

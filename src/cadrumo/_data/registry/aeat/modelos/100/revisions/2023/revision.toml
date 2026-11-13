@@ -8417,11 +8417,6 @@ sequence_additions = {source_citations = [{source_ref = "aeat-renta-2023-manual-
 sequence_removals = {source_citations = [0], source_refs = [0, 1]}
 [[revisions."2023".family_overrides]]
 family = "formulas"
-selector = {revision = "2022", id = "renta-inmobiliario-renta-imputada-art-85"}
-sequence_additions = {source_citations = [{source_ref = "aeat-renta-2023-manual-parte1", required_text = ["1,1 por 100 s/40.800 = 448,80", "2 por 100", "valor catastral", "62 ÷ 365"]}], source_refs = ["aeat-dr-100-2023-dictionary", "aeat-renta-2023-manual-parte1", "boe-modelo-100-2023-form"]}
-sequence_removals = {source_citations = [0], source_refs = [0, 1, 2]}
-[[revisions."2023".family_overrides]]
-family = "formulas"
 selector = {revision = "2022", id = "renta-minimo-contribuyente-estatal"}
 sequence_additions = {source_citations = [{source_ref = "aeat-renta-2023-manual-parte1", required_text = ["Mínimo del contribuyente"]}], source_refs = ["aeat-dr-100-2023-dictionary", "aeat-renta-2023-manual-parte1", "boe-modelo-100-2023-form"]}
 sequence_removals = {source_citations = [0], source_refs = [0, 1, 2]}

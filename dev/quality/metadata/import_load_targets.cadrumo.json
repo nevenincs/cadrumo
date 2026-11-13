@@ -582,6 +582,7 @@
         "cadrumo.application.aggregation.renta_income_models",
         "cadrumo.application.aggregation.renta_inmueble_carry",
         "cadrumo.application.aggregation.renta_inmueble_findings",
+        "cadrumo.application.aggregation.renta_inmueble_imputacion",
         "cadrumo.application.aggregation.renta_inmueble_links",
         "cadrumo.application.aggregation.renta_inmueble_net",
         "cadrumo.application.aggregation.renta_inmueble_period",

@@ -372,10 +372,10 @@ def test_three_let_properties_reach_their_hand_derived_boxes(year: int) -> None:
     assert resolution.binding_values[_total(revision, RentaInmuebleRowField.RENDIMIENTO_NETO_REDUCIDO)] == total_reduced
     assert resolution.binding_values[_total(revision, RentaInmuebleRowField.RETENCIONES)] == _WITHHELD_ON_ONE
 
-    # The days property two stood empty are imputed income this chain does not compute, and it says so.
+    # The days property two stood empty have no stated use, so their imputed income stays open, and it says so.
     facts = {diagnostic.fact for diagnostic in resolution.diagnostics if diagnostic.fact is not None}
     sentences = {(fact.sentence.value, fact.row_refs) for fact in facts}
-    assert (f"renta_inmueble_{RentaInmuebleCause.DAYS_NOT_LET.value}", ("inmueble:1",)) in sentences, year
+    assert (f"renta_inmueble_{RentaInmuebleCause.DAYS_UNACCOUNTED.value}", ("inmueble:1",)) in sentences, year
     assert not any(
         fact.sentence.value == f"renta_inmueble_{RentaInmuebleCause.PENDING_EXPENSES_UNSTATED.value}" for fact in facts
     ), year

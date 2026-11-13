@@ -2352,8 +2352,9 @@ application:
         al inicio del ejercicio.'
       renta_inmueble_currency_unconverted: Un movimiento vinculado está en moneda
         extranjera y no tiene valor en euros.
-      renta_inmueble_days_not_let: 'Inmueble {record}: lo tuviste días en que no estuvo
-        arrendado, y la renta imputada de esos días no se calcula.'
+      renta_inmueble_days_unaccounted: 'Inmueble {record}: lo tuviste días en que
+        no estuvo arrendado ni en ningún uso indicado; indica su uso esos días para
+        calcular la renta imputada.'
       renta_inmueble_expense_row_on_lease: Un movimiento de salida está vinculado
         a un arrendamiento; vincula el gasto a su inmueble.
       renta_inmueble_expense_row_without_concept: Un movimiento vinculado a un inmueble
@@ -2362,6 +2363,17 @@ application:
         durante el ejercicio, y el prorrateo de sus gastos no se ofrece.'
       renta_inmueble_improvement_in_ejercicio: 'Inmueble {record}: una mejora tiene
         fecha dentro del ejercicio, y sus días de amortización no se calculan.'
+      renta_inmueble_imputacion_rustica: 'Inmueble {record}: es rústico y estuvo a
+        tu disposición; la renta imputada de un inmueble rústico no se calcula.'
+      renta_inmueble_imputacion_uso_simultaneo: 'Inmueble {record}: algún día a tu
+        disposición coincide con un arrendamiento u otro uso; la renta imputada de
+        un uso simultáneo no se calcula.'
+      renta_inmueble_imputacion_valor_catastral_unstated: 'Inmueble {record}: estuvo
+        a tu disposición, pero no indicas su valor catastral del ejercicio; añádelo
+        para calcular la renta imputada.'
+      renta_inmueble_imputacion_vigor_unstated: 'Inmueble {record}: no indicas el
+        año de entrada en vigor de la valoración colectiva de su valor catastral;
+        añádelo para elegir el porcentaje de la renta imputada.'
       renta_inmueble_income_outside_lease: Un cobro de alquiler tiene fecha fuera
         del periodo del arrendamiento al que está vinculado.
       renta_inmueble_income_row_on_property: Un movimiento de entrada está vinculado

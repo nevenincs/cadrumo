@@ -845,7 +845,6 @@ FormulaOperator = Literal[
     "lookup_parameter",
     "lookup_bracket",
     "lookup_bracket_by_ccaa",
-    "m100_resolve_renta_inmobiliaria_imputada",
     "irnr_resolve_tipo_gravamen",
     "m210_resolve_base_imponible",
     "lookup_parameter_by_entity_type",

@@ -2233,8 +2233,9 @@ application:
         of the year is not stated.'
       renta_inmueble_currency_unconverted: A linked ledger entry is in a foreign currency
         and has no euro value.
-      renta_inmueble_days_not_let: 'Property {record}: you held it on days it was
-        not let, and the imputed income of those days is not calculated.'
+      renta_inmueble_days_unaccounted: 'Property {record}: you held it on days it
+        was neither let nor in any stated use; state its use on those days to calculate
+        the imputed income.'
       renta_inmueble_expense_row_on_lease: An outgoing ledger entry is linked to a
         lease; link an expense to its property.
       renta_inmueble_expense_row_without_concept: A ledger entry linked to a property
@@ -2243,6 +2244,17 @@ application:
         transferred during the year, and the proration of its expenses is not offered.'
       renta_inmueble_improvement_in_ejercicio: 'Property {record}: an improvement
         is dated inside the year, and its amortisation days are not calculated.'
+      renta_inmueble_imputacion_rustica: 'Property {record}: it is rustic and was
+        at your disposal; the imputed income of a rustic property is not calculated.'
+      renta_inmueble_imputacion_uso_simultaneo: 'Property {record}: a day at your
+        disposal coincides with a lease or another use; the imputed income of a simultaneous
+        use is not calculated.'
+      renta_inmueble_imputacion_valor_catastral_unstated: 'Property {record}: it was
+        at your disposal, but you state no cadastral value for the year; add it to
+        calculate the imputed income.'
+      renta_inmueble_imputacion_vigor_unstated: 'Property {record}: you do not state
+        the year the collective valuation behind its cadastral value entered into
+        force; add it to choose the imputed income rate.'
       renta_inmueble_income_outside_lease: A rent entry is dated outside the period
         of the lease it is linked to.
       renta_inmueble_income_row_on_property: An incoming ledger entry is linked to

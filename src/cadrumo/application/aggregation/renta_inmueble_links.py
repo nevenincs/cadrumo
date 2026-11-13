@@ -11,6 +11,7 @@ from dataclasses import dataclass, field
 from datetime import date
 
 from ...core.errors.hierarchy import ProfileAnswerTypeError
+from ...core.retencion_soportada import RetencionSoportadaClase
 from ...domain.calculations.registry.gasto_capital_inmobiliario import GastoCapitalInmobiliarioCatalogue
 from ...domain.contribuyente.arrendamiento_record import ArrendamientoRecord
 from ...domain.contribuyente.inmueble_facts import (
@@ -21,12 +22,13 @@ from ...domain.contribuyente.inmueble_facts import (
     rows_from_facts,
 )
 from ...domain.contribuyente.inmueble_record import InmuebleRecord
+from ...domain.renta.retencion_soportada import RetencionSoportadaRecord
 from ...domain.transactions.dates import transaction_filing_date
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ...domain.transactions.models import Transaction
 from .currency_predicates import is_non_eur_without_conversion
 from .renta_inmueble_findings import RentaInmuebleCause, RentaInmuebleFinding
-from .renta_inmueble_period import Ejercicio
+from .renta_inmueble_period import Ejercicio, Occupancy
 
 
 @dataclass(slots=True)
@@ -173,4 +175,35 @@ def link_rows(
     return links
 
 
-__all__ = ["Links", "Records", "link_rows", "read_records", "row_due_date"]
+def _tenant_key(identifier: str) -> str:
+    return identifier.strip().upper()
+
+
+def place_withholding(
+    records: Iterable[RetencionSoportadaRecord], occupied: Mapping[int, Occupancy | None]
+) -> tuple[dict[int, tuple[RetencionSoportadaRecord, ...]], list[RentaInmuebleFinding]]:
+    """Place each urban-rent withholding on the let property whose lease names its payer as a tenant."""
+    tenants: dict[str, set[int]] = {}
+    for clave, occupied_as in occupied.items():
+        for lease in () if occupied_as is None else occupied_as.leases:
+            for tenant in lease.inquilinos:
+                tenants.setdefault(_tenant_key(tenant.nif), set()).add(clave)
+    placed: dict[int, list[RetencionSoportadaRecord]] = {}
+    findings: list[RentaInmuebleFinding] = []
+    for record in records:
+        if record.income_class is not RetencionSoportadaClase.ARRENDAMIENTO_INMUEBLE_URBANO:
+            continue
+        properties = tenants.get(_tenant_key(record.payer_tax_id), set())
+        if len(properties) == 1:
+            placed.setdefault(next(iter(properties)), []).append(record)
+            continue
+        cause = (
+            RentaInmuebleCause.WITHHOLDING_PAYER_NO_TENANT
+            if not properties
+            else RentaInmuebleCause.WITHHOLDING_PAYER_SEVERAL_PROPERTIES
+        )
+        findings.append(RentaInmuebleFinding(cause, f"retencion:{record.payer_ref}"))
+    return {clave: tuple(items) for clave, items in placed.items()}, findings
+
+
+__all__ = ["Links", "Records", "link_rows", "place_withholding", "read_records", "row_due_date"]

@@ -2348,8 +2348,9 @@ application:
         acumulada a l''inici de l''exercici.'
       renta_inmueble_currency_unconverted: Un moviment vinculat és en moneda estrangera
         i no té valor en euros.
-      renta_inmueble_days_not_let: 'Immoble {record}: el vas tenir dies en què no
-        estava arrendat, i la renda imputada d''aquests dies no es calcula.'
+      renta_inmueble_days_unaccounted: 'Immoble {record}: el vas tenir dies en què
+        no estava arrendat ni en cap ús indicat; indica''n l''ús aquests dies per
+        calcular la renda imputada.'
       renta_inmueble_expense_row_on_lease: Un moviment de sortida està vinculat a
         un arrendament; vincula la despesa al seu immoble.
       renta_inmueble_expense_row_without_concept: Un moviment vinculat a un immoble
@@ -2358,6 +2359,17 @@ application:
         durant l''exercici, i el prorrateig de les seves despeses no s''ofereix.'
       renta_inmueble_improvement_in_ejercicio: 'Immoble {record}: una millora té data
         dins de l''exercici, i els seus dies d''amortització no es calculen.'
+      renta_inmueble_imputacion_rustica: 'Immoble {record}: és rústic i va estar a
+        la teva disposició; la renda imputada d''un immoble rústic no es calcula.'
+      renta_inmueble_imputacion_uso_simultaneo: 'Immoble {record}: algun dia a la
+        teva disposició coincideix amb un arrendament o un altre ús; la renda imputada
+        d''un ús simultani no es calcula.'
+      renta_inmueble_imputacion_valor_catastral_unstated: 'Immoble {record}: va estar
+        a la teva disposició, però no n''indiques el valor cadastral de l''exercici;
+        afegeix-lo per calcular la renda imputada.'
+      renta_inmueble_imputacion_vigor_unstated: 'Immoble {record}: no indiques l''any
+        d''entrada en vigor de la valoració col·lectiva del seu valor cadastral; afegeix-lo
+        per triar el percentatge de la renda imputada.'
       renta_inmueble_income_outside_lease: Un cobrament de lloguer té una data fora
         del període de l'arrendament al qual està vinculat.
       renta_inmueble_income_row_on_property: Un moviment d'entrada està vinculat a

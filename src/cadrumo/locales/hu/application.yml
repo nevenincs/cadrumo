@@ -2307,9 +2307,10 @@ application:
         nem szerepel.'
       renta_inmueble_currency_unconverted: Egy kapcsolt főkönyvi tétel devizában van,
         és nincs euróértéke.
-      renta_inmueble_days_not_let: '{record}. ingatlan: voltak napok, amikor a tiéd
-        volt, de nem volt bérbe adva, és ezeknek a napoknak a vélelmezett jövedelme
-        nincs kiszámítva.'
+      renta_inmueble_days_unaccounted: '{record}. ingatlan: voltak napok, amikor a
+        tiéd volt, de sem bérbe adva, sem megadott használatban nem volt; add meg,
+        mire használtad ezeken a napokon, hogy a vélelmezett jövedelem kiszámítható
+        legyen.'
       renta_inmueble_expense_row_on_lease: Egy kimenő főkönyvi tétel bérleti szerződéshez
         kapcsolódik; a kiadást az ingatlanához kapcsold.
       renta_inmueble_expense_row_without_concept: Egy ingatlanhoz kapcsolt főkönyvi
@@ -2318,6 +2319,18 @@ application:
         vagy ruháztad át, és a kiadásai időarányos megosztása nem elérhető.'
       renta_inmueble_improvement_in_ejercicio: '{record}. ingatlan: egy felújítás
         dátuma az adóévre esik, és az értékcsökkenési napjai nincsenek kiszámítva.'
+      renta_inmueble_imputacion_rustica: '{record}. ingatlan: külterületi ingatlan,
+        és a rendelkezésedre állt; külterületi ingatlan vélelmezett jövedelme nincs
+        kiszámítva.'
+      renta_inmueble_imputacion_uso_simultaneo: '{record}. ingatlan: egy nap, amikor
+        a rendelkezésedre állt, egybeesik egy bérlettel vagy más használattal; az
+        egyidejű használat vélelmezett jövedelme nincs kiszámítva.'
+      renta_inmueble_imputacion_valor_catastral_unstated: '{record}. ingatlan: a rendelkezésedre
+        állt, de nem adod meg az adóév kataszteri értékét; add meg, hogy a vélelmezett
+        jövedelem kiszámítható legyen.'
+      renta_inmueble_imputacion_vigor_unstated: '{record}. ingatlan: nem adod meg,
+        melyik évben lépett hatályba a kataszteri értéke mögötti csoportos értékelés;
+        add meg, hogy a vélelmezett jövedelem kulcsa kiválasztható legyen.'
       renta_inmueble_income_outside_lease: Egy bérleti díj tétel dátuma kívül esik
         a kapcsolt bérleti szerződés időszakán.
       renta_inmueble_income_row_on_property: Egy bejövő főkönyvi tétel ingatlanhoz

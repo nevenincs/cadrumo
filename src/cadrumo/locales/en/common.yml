@@ -6396,6 +6396,7 @@ sheets:
       dias_miembro: Number of days as member
       direccion: Address
       disability_clave: Disability
+      disposicion: At disposal
       domicilio_fiscal: Member's tax domicile
       donor_legal_name: Donor legal name
       donor_tax_id: Donor tax id
@@ -6451,6 +6452,10 @@ sheets:
       importe_q3: Amount Q3
       importe_q4: Amount Q4
       importe_total: Total amount
+      imputacion_dias: Days at disposal
+      imputacion_porcentaje_disposicion: At disposal (%)
+      imputacion_valor_catastral: Cadastral value (imputation)
+      imputacion_valor_catastral_revisado: Revised cadastral value
       incapacity_cash_perception: Cash income from work incapacity
       incapacity_cash_withholding: Withholding on work-incapacity benefits
       incapacity_kind_ingreso_a_cuenta: Payments on account, in-kind incapacity benefits
@@ -6541,6 +6546,7 @@ sheets:
         objetiva)
       rendimiento_neto_previo_eo: Prior net yield (estimación objetiva)
       rendimiento_neto_reducido: Reduced net income
+      renta_imputada: Imputed income
       representative_nif: Representative NIF
       representative_tax_id: Legal representative NIF
       residence_country_code: Residence country code
@@ -9612,6 +9618,8 @@ workspace:
         verdict:
           attribution_pass_through: 'Not filed by the entity itself: the income is
             attributed to its members, who declare it in their own returns.'
+          incomplete: 'Not decided: the stored facts do not settle whether this declaration
+            is owed. It counts as neither owed nor excluded until you complete them.'
           not_applicable: 'Does not apply to you: your profile does not call for this
             declaration in this period.'
       title: Filing calendar
