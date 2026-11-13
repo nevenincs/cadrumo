@@ -879,6 +879,13 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.work.verify.renta_inmueble_rows.current",
         "modelo.work.verify.renta_inmueble_rows.unavailable",
     ),
+    # A profile fact the draft's calculation read was edited: calculate again.
+    _profile(
+        "modelo.work.verify",
+        "modelo.work.verify.profile_reads.current",
+        "modelo.work.verify.profile_reads.drift_detected",
+        action_id="operator.modelo.work.calculate",
+    ),
     _profile(
         "modelo.work.verify",
         "modelo.work.verify.invoice_fingerprint.current",

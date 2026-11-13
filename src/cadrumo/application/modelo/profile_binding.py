@@ -65,16 +65,21 @@ from ...domain.calculations.registry.schema import BindingDefinition, RegistrySn
 from ...domain.calculations.registry.schema_base import NUMERIC_CASILLA_DATA_TYPES, CasillaDataType
 from ...domain.calculations.registry.schema_formula import FormulaExpression
 from ...domain.modelos.calculation_revision_sources import CalculationNoteFact, CalculationNoteSentence
+from ...domain.modelos.profile_read_fingerprint import (
+    ProfileReadFingerprint,
+    ProfileReadSource,
+    profile_read_fingerprint,
+)
 from ...domain.user_profile.errors import ProfileNotFoundError
 from ...domain.user_profile.registry_contract import profile_binding_selectors
 from ...domain.user_profile.schema import ProfileSchemaDefinition, derived_selector_for_path
-from ...domain.user_profile.values import UserProfileFactValue
+from ...domain.user_profile.values import UserProfileFactValue, UserProfileRecord
 from ..aggregation.source_mesh import (
     CalculationSourceDiagnostic,
     CalculationSourceProvenance,
     CalculationSourceResolution,
 )
-from ..user_profile.projections import profile_fact_index
+from ..user_profile.projections import profile_fact_index, taxpayer_projection_read_fingerprint
 from .autonomic_deduccion_dispatch import inject_autonomic_deduccion_facts
 from .printed_boxes import first_printed_dependent, printed_boxes
 from .profile_binding_refusal_doors import binding_contract_defect_verdict, profile_fact_value_refused_verdict
@@ -97,11 +102,14 @@ from .profile_derived_facts import (
 )
 from .profile_maternidad_meses import inject_derived_deduccion_maternidad_facts
 from .profile_minimo_ascendientes import inject_derived_minimo_ascendientes_facts
+from .profile_read_recording import RecordingFactIndex, absent_profile_read_fingerprint, redigest_profile_reads
 from .profile_row_binding import profile_row_bindings, resolve_profile_row_values
 
 _BOUND_CHANNEL_CASILLA_DATA_TYPES = NUMERIC_CASILLA_DATA_TYPES | {CasillaDataType.BOOLEAN}
 _PROFILE_RESOLVER_ID = "profile"
 _PROFILE_OWNED_SOURCES: tuple[BindingSourceKind, ...] = (BindingSourceKind.PROFILE,)
+_READS_NOTHING = profile_read_fingerprint(profile_present=True, entries=())
+"""A revision whose registry selects no profile binding reads no fact, so no edit moves it."""
 
 
 if TYPE_CHECKING:
@@ -369,7 +377,8 @@ class _ProfileBindingSelection:
 class _ProfileFacts:
     """The bucket's resolved profile fact index plus its record fingerprint."""
 
-    fact_index: dict[str, UserProfileFactValue]
+    fact_index: RecordingFactIndex
+    """The index every resolution step reads, recording each read for the revision's profile-read fingerprint."""
     fingerprint: str | None
     decided_derived_paths: frozenset[str] = frozenset()
     """Derived paths an injector decided, including those it decided to leave absent."""
@@ -437,6 +446,19 @@ def _select_profile_bindings(snapshot: RegistrySnapshot) -> _ProfileBindingSelec
     return _ProfileBindingSelection(bindings=bindings, formula_date_consumed=frozenset(formula_date_consumed))
 
 
+def _stored_profile_record(bucket_id: str, *, operation: PinnedAuthorityOperation) -> object | None:
+    """Load the bucket's stored profile record, or ``None`` when it has none."""
+    from ..user_profile.profile_record_repository import ProfileRecordRepository
+
+    try:
+        return ProfileRecordRepository.for_current_session(
+            bucket_id,
+            profile_decode_context=operation.profile_decode_context(),
+        ).load(bucket_id)
+    except ProfileNotFoundError:
+        return None
+
+
 def _load_profile_facts(
     snapshot: RegistrySnapshot,
     *,
@@ -447,22 +469,14 @@ def _load_profile_facts(
     operation: PinnedAuthorityOperation,
 ) -> _ProfileFacts | None:
     """Load and derive the bucket's profile fact index, or ``None`` when absent."""
-    record = profile_record
+    record = profile_record if profile_record is not None else _stored_profile_record(bucket_id, operation=operation)
     if record is None:
-        from ..user_profile.profile_record_repository import ProfileRecordRepository
-
-        try:
-            record = ProfileRecordRepository.for_current_session(
-                bucket_id,
-                profile_decode_context=operation.profile_decode_context(),
-            ).load(bucket_id)
-        except ProfileNotFoundError:
-            return None
+        return None
     profile_record_fingerprint = _profile_record_fingerprint(record)
     if schema is None:
         schema = operation.profile_schema()
     resolved_schema = schema
-    fact_index = profile_fact_index(record, resolved_schema)
+    fact_index = RecordingFactIndex(profile_fact_index(record, resolved_schema))
     family_context = family_fact_context(snapshot, operation=operation)
     inject_derived_marriage_facts(fact_index, snapshot.filing_year)
     inject_ordinary_work_maritime_facts(fact_index)
@@ -650,7 +664,11 @@ def resolve_profile_sourced_bindings(
     """
     selection = _select_profile_bindings(snapshot)
     if not selection.bindings and not profile_row_bindings(snapshot):
-        return CalculationSourceResolution(resolver_id=_PROFILE_RESOLVER_ID, owned_sources=_PROFILE_OWNED_SOURCES)
+        return CalculationSourceResolution(
+            resolver_id=_PROFILE_RESOLVER_ID,
+            owned_sources=_PROFILE_OWNED_SOURCES,
+            profile_read_fingerprint=_READS_NOTHING,
+        )
     resolved_schema = schema or operation.profile_schema()
     facts = _load_profile_facts(
         snapshot,
@@ -661,7 +679,11 @@ def resolve_profile_sourced_bindings(
         operation=operation,
     )
     if facts is None:
-        return CalculationSourceResolution(resolver_id=_PROFILE_RESOLVER_ID, owned_sources=_PROFILE_OWNED_SOURCES)
+        return CalculationSourceResolution(
+            resolver_id=_PROFILE_RESOLVER_ID,
+            owned_sources=_PROFILE_OWNED_SOURCES,
+            profile_read_fingerprint=absent_profile_read_fingerprint(),
+        )
     channels = resolve_profile_binding_channels(
         selection.bindings,
         facts.fact_index,
@@ -697,6 +719,7 @@ def resolve_profile_sourced_bindings(
     return CalculationSourceResolution(
         resolver_id=_PROFILE_RESOLVER_ID,
         owned_sources=_PROFILE_OWNED_SOURCES,
+        profile_read_fingerprint=facts.fact_index.read_fingerprint(),
         binding_values=decimal_values,
         enum_binding_values=enum_values,
         date_binding_values=date_values,
@@ -753,6 +776,50 @@ def _binding_provenance(
             fingerprint=fingerprint,
         )
         for binding_id in sourced
+    )
+
+
+def current_profile_read_fingerprint(
+    snapshot: RegistrySnapshot,
+    recorded: ProfileReadFingerprint,
+    *,
+    bucket_id: str,
+    profile_record: object | None,
+    operation: PinnedAuthorityOperation,
+) -> ProfileReadFingerprint:
+    """Digest the reads ``recorded`` names over the profile as it stands now.
+
+    A record read is digested over the stored facts. The derived index is
+    rebuilt, through the same derivation the calculation ran, only when the
+    revision read it, so a recorded read of a derived selector is digested over
+    the selector as the current inputs derive it.
+
+    Raises:
+        ProfileBindingResolutionError: The current profile cannot be derived,
+            for example a stored date that no longer parses.
+    """
+    record = profile_record if profile_record is not None else _stored_profile_record(bucket_id, operation=operation)
+    if not isinstance(record, UserProfileRecord):
+        return redigest_profile_reads(
+            recorded, fact_index=None, record_facts=None, projection_fingerprint=lambda _selector: None
+        )
+    fact_index: dict[str, UserProfileFactValue] | None = None
+    if any(entry.source is ProfileReadSource.INDEX for entry in recorded.entries):
+        facts = _load_profile_facts(
+            snapshot,
+            bucket_id=bucket_id,
+            profile_record=record,
+            schema=None,
+            selected_bindings=_select_profile_bindings(snapshot).bindings,
+            operation=operation,
+        )
+        fact_index = None if facts is None else dict(dict.items(facts.fact_index))
+    schema = operation.profile_schema()
+    return redigest_profile_reads(
+        recorded,
+        fact_index=fact_index,
+        record_facts=record.facts,
+        projection_fingerprint=lambda selector: taxpayer_projection_read_fingerprint(record, selector, schema=schema),
     )
 
 

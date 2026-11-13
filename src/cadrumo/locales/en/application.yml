@@ -2810,6 +2810,9 @@ application:
         ({reason}).'
       export_period_unmappable: Declaration %{work_unit_id} carries period %{period},
         which cannot be mapped to a filing period of the modelo.
+      export_profile_read_drift: The saved calculation %{calculation_revision_id}
+        rests on profile facts you have changed since (%{changed_count} changed).
+        Calculate it again and verify it before exporting.
       export_revision_state_refused: The saved calculation %{calculation_revision_id}
         is not checked and complete, or recorded as filed, and cannot be exported.
       export_settlement_unknown: The export cannot state how the return is settled
@@ -3555,6 +3558,16 @@ application:
       printed_total_mismatch: Box [%{box}] does not match the sum of the printed lines
         that make it up (%{printed_sum}), so the file would not add up and AEAT may
         reject it.
+      profile_read_drift: Your profile changed after modelo %{modelo} %{filing_year},
+        %{period} was calculated (%{changed_count} facts it used changed). Calculate
+        it again before verifying.
+      profile_read_fingerprint_absent: This modelo %{modelo} %{filing_year}, %{period}
+        calculation predates profile tracking, so whether the profile facts it used
+        have changed since cannot be told. Calculate it again to start tracking them.
+      profile_read_superseded_filed: Modelo %{modelo} %{filing_year}, %{period} is
+        recorded as filed, but %{changed_count} profile facts it used have changed
+        since. The filed return stays as filed; if the change affects it, file an
+        amendment.
       prorrata_seed_changed: The provisional prorrata in your register changed after
         modelo %{modelo} %{filing_year}, %{period} was calculated. Calculate it again
         before verifying.
@@ -4002,6 +4015,8 @@ application:
           comes from, then calculate again.
         add_base_to_entry: Add the taxable amount (base imponible) to the entry in
           your records, then calculate again.
+        amend_filed_declaration: Check whether the profile change affects the filed
+          return, and if it does, start an amendment of it.
         attach_document: Attach the document to the entry in your records.
         await_update: This cannot be resolved here yet. Update the application once
           a version that covers it is available.

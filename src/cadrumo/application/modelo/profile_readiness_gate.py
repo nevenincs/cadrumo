@@ -65,6 +65,7 @@ from ..user_profile.preflight import (
     deferred_profile_grounding_index,
     format_profile_preflight_requirement,
 )
+from ..user_profile.profile_read_recorder import profile_values_under
 from ..user_profile.profile_record_repository import ProfileRecordRepository, take_invocation_profile_record
 from ..user_profile.projections import projection_for_taxpayer, record_to_path_values
 from ..user_profile.validation import (
@@ -267,7 +268,14 @@ def modelo_work_profile_baseline_missing_paths(
     values = record_to_path_values(record)
 
     def has_value(path: str) -> bool:
-        return any(section_field_key(candidate) == path and bool(value.strip()) for candidate, value in values.items())
+        if values.get(path, "").strip():
+            return True
+        # Otherwise the field may be held on an indexed row of its section.
+        section = f"{path.partition('.')[0]}."
+        return any(
+            section_field_key(candidate) == path and bool(value.strip())
+            for candidate, value in profile_values_under(values, section).items()
+        )
 
     return tuple(path for path in _modelo_work_baseline_paths(record, modelo=modelo) if not has_value(path))
 

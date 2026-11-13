@@ -77,6 +77,7 @@ from ...domain.calculations.registry.schema_form_layouts import (
 )
 from ...domain.iva.refund_eligibility import RedemeEnrolmentState
 from ...domain.modelos.calculation_revision import CalculationRevision
+from ...domain.modelos.verification_report import ModeloVerificationFinding
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
 from .calculation_note_gate import NO_SOURCE_DISAGREEMENT_RESOLUTIONS, SourceDisagreementResolutions
 from .calculation_notes import UNWORKED_BOX_REASONS
@@ -95,6 +96,7 @@ from .work_form_field_vocabulary import (
     ModeloFormCasillaAddressV1,
     ModeloFormScalar,
 )
+from .work_form_findings import ModeloFormIssue
 from .work_form_inspection import (
     build_inspection_only_form,
     project_aeat_data,
@@ -146,6 +148,7 @@ def build_modelo_work_form(
     profile_binding_values: Mapping[BindingId, ModeloFormScalar] | None = None,
     resolutions: SourceDisagreementResolutions = NO_SOURCE_DISAGREEMENT_RESOLUTIONS,
     redeme: RedemeEnrolmentState = RedemeEnrolmentState.UNSTATED,
+    filed_findings: tuple[ModeloVerificationFinding, ...] = (),
 ) -> ModeloWorkForm:
     """Join one work review with its revision's declared layout into a classified editor form.
 
@@ -186,6 +189,11 @@ def build_modelo_work_form(
     result may be elected as a refund in this period or only carried forward;
     its default leaves the answer unstated rather than assuming one.
 
+    ``filed_findings`` are what the caller found about a declaration recorded
+    as filed since it was filed, such as profile facts it rested on that were
+    edited. Verify returns a filed declaration's sealed report unchanged, so
+    these reach the filer only here, after the report's own findings.
+
     ``known_truths`` are the yes-or-no facts already known for the filer, by
     boolean binding. They decide which guarded inputs the calculation is
     certain to refuse without (:func:`~.calculation_required_inputs.calculation_required_inputs`),
@@ -216,7 +224,68 @@ def build_modelo_work_form(
         screen_outdated=calculation_screen_outdated,
         filed_before_grade_cap=calculation_filed_before_grade_cap,
     )
-    context = WorkFormContext(
+    context = _work_form_context(
+        review=review,
+        snapshot=snapshot,
+        revision=revision,
+        permitted_surface=permitted_surface,
+        entered_casilla_ids=entered_casilla_ids,
+        overridden_binding_ids=overridden_binding_ids,
+        language=language,
+        sources=sources,
+        element_names=element_names,
+        known_truths=known_truths,
+        resolutions=resolutions,
+        redeme=redeme,
+    )
+    held = calculation_diagnostics is not None
+    inspection = _inspection_only_for_unusable_layout(
+        layout,
+        context,
+        snapshot,
+        deadline=deadline,
+        aeat_data_imported_at=aeat_data_imported_at,
+        notes=(sources, held),
+    )
+    if inspection is not None:
+        return _worded(
+            inspection.model_copy(update={"issues": (*inspection.issues, *_filed_issues(context, filed_findings))})
+        )
+    if layout is None:
+        raise ValueError("usable form layout is absent")
+    form = _projected_work_form(
+        review=review,
+        snapshot=snapshot,
+        layout=layout,
+        context=context,
+        entered_casilla_ids=entered_casilla_ids,
+        producer_values=producer_values,
+        profile_binding_values=profile_binding_values,
+        deadline=deadline,
+        aeat_data_imported_at=aeat_data_imported_at,
+        sources=sources,
+        held=held,
+        filed_findings=filed_findings,
+    )
+    return _worded(form)
+
+
+def _work_form_context(
+    *,
+    review: ModeloWorkReview,
+    snapshot: RegistrySnapshot,
+    revision: CalculationRevision | None,
+    permitted_surface: tuple[ModeloEditPermittedSurfaceEntryV1, ...] | None,
+    entered_casilla_ids: frozenset[CasillaId] | None,
+    overridden_binding_ids: frozenset[BindingId] | None,
+    language: OutputLanguage,
+    sources: tuple[NoteSource, ...],
+    element_names: Mapping[str, str] | None,
+    known_truths: Mapping[BindingId, bool] | None,
+    resolutions: SourceDisagreementResolutions,
+    redeme: RedemeEnrolmentState,
+) -> WorkFormContext:
+    return WorkFormContext(
         review=review,
         snapshot=snapshot,
         revision=revision,
@@ -234,19 +303,23 @@ def build_modelo_work_form(
         resolutions=resolutions,
         redeme=redeme,
     )
-    held = calculation_diagnostics is not None
-    inspection = _inspection_only_for_unusable_layout(
-        layout,
-        context,
-        snapshot,
-        deadline=deadline,
-        aeat_data_imported_at=aeat_data_imported_at,
-        notes=(sources, held),
-    )
-    if inspection is not None:
-        return _worded(inspection)
-    if layout is None:
-        raise ValueError("usable form layout is absent")
+
+
+def _projected_work_form(
+    *,
+    review: ModeloWorkReview,
+    snapshot: RegistrySnapshot,
+    layout: FormLayoutDefinition,
+    context: WorkFormContext,
+    producer_values: Mapping[FilingProducerKey, ModeloFormScalar] | None,
+    profile_binding_values: Mapping[BindingId, ModeloFormScalar] | None,
+    deadline: ModeloFormDeadline | None,
+    aeat_data_imported_at: datetime | None,
+    sources: tuple[NoteSource, ...],
+    held: bool,
+    entered_casilla_ids: frozenset[CasillaId] | None,
+    filed_findings: tuple[ModeloVerificationFinding, ...],
+) -> ModeloWorkForm:
     usable_layout = layout
     pages, working, unplaced = _project_layout(
         usable_layout, context, producer_values=producer_values, profile_binding_values=profile_binding_values
@@ -255,7 +328,7 @@ def build_modelo_work_form(
     laid_out = [*form_fields, *working, *(item.field for item in unplaced)]
     answers = list(answer_fields(usable_layout, context, laid_out))
     every_field = [*laid_out, *answers]
-    form = _assemble_work_form(
+    return _assemble_work_form(
         review=review,
         snapshot=snapshot,
         layout=usable_layout,
@@ -265,14 +338,14 @@ def build_modelo_work_form(
         unplaced=unplaced,
         answers=answers,
         every_field=every_field,
-        language=language,
+        language=context.language,
         entered_casilla_ids=entered_casilla_ids,
         deadline=deadline,
         aeat_data_imported_at=aeat_data_imported_at,
         sources=sources,
         held=held,
+        filed_findings=filed_findings,
     )
-    return _worded(form)
 
 
 def _inspection_only_for_unusable_layout(
@@ -381,6 +454,7 @@ def _assemble_work_form(
     aeat_data_imported_at: datetime | None,
     sources: tuple[NoteSource, ...],
     held: bool,
+    filed_findings: tuple[ModeloVerificationFinding, ...],
 ) -> ModeloWorkForm:
     provenance = (
         ModeloFormLayoutProvenance.REVIEWED
@@ -421,7 +495,10 @@ def _assemble_work_form(
         operator_entries_known=entered_casilla_ids is not None,
         edit_admitted=context.surface is not None,
         verification=review.verification_outcome,
-        issues=project_verification_issues(review, every_field),
+        issues=(
+            *project_verification_issues(review, every_field),
+            *_filed_issues(context, filed_findings),
+        ),
         calculation_notes=project_calculation_notes(context, sources, every_field),
         calculation_notes_held=held,
         result=project_settlement_result(context, every_field),
@@ -432,6 +509,13 @@ def _assemble_work_form(
         carry_attestations=form_carry_attestations(context),
         prior_value_attestations=form_prior_value_attestations(context),
     )
+
+
+def _filed_issues(
+    context: WorkFormContext, filed_findings: tuple[ModeloVerificationFinding, ...]
+) -> tuple[ModeloFormIssue, ...]:
+    """The caller's findings about a filed declaration, shown only while the form shows one."""
+    return tuple(ModeloFormIssue(finding=finding) for finding in filed_findings) if context.filed else ()
 
 
 def _worded(form: ModeloWorkForm) -> ModeloWorkForm:

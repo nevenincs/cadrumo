@@ -55,6 +55,7 @@ from ...domain.user_profile.schema import derived_selector_for_path
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
 from .profile_derived_facts import partnered_status_codes, snapshot_authored_year
 from .profile_minimo_ascendientes import ascendant_entitlement_count
+from .profile_read_recording import fact_items_under
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
@@ -117,7 +118,7 @@ def descendant_entry_window_weighted_count(
 ) -> Decimal:
     """The cohabiting descendants inside their entry window, each by its equal-parts share."""
     descendant_facts = {
-        key: str(value) for key, value in fact_index.items() if key.startswith("renta_family.descendiente.")
+        key: str(value) for key, value in fact_items_under(fact_index, "renta_family.descendiente.").items()
     }
     weighted_count = Decimal("0")
     for descendant in descendant_list_from_facts(descendant_facts):
