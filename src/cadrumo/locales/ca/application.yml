@@ -3745,13 +3745,13 @@ application:
         un exercici anterior. Les normes oficials no indiquen com declarar-ne la base
         i la retenció, així que encara no pots registrar aquesta declaració com a
         presentada ni exportar-la.
-      m200_incn_periodo_anterior_disagrees: L'import net de la xifra de negocis del
-        període impositiu anterior decideix el tipus de gravamen, però el Model %{modelo}
-        %{source_filing_year} desat d'aquell període declara %{held_turnover} i el
-        teu perfil indica un import de dotze mesos de %{stated_turnover}. Aquell període
-        va durar dotze mesos, així que tots dos són el seu propi import i han de coincidir;
-        cap no s'imposa a l'altre. Corregeix el que sigui erroni, a %{profile_path}
-        o en aquell Model %{modelo}.
+      m200_incn_periodo_anterior_disagrees: 'L''import net de la xifra de negocis
+        del període impositiu anterior decideix el tipus de gravamen, però el Model
+        %{modelo} %{source_filing_year} desat d''aquell període declara %{held_turnover}
+        i el teu perfil indica un import de dotze mesos de %{stated_turnover}. Aquell
+        període va durar dotze mesos, així que tots dos són el seu propi import i
+        han de coincidir; cap no s''imposa a l''altre. Corregeix el que sigui erroni:
+        l''import de dotze mesos del teu perfil o aquell Model %{modelo}.'
       m210_agrupacion_renta_invalid: 'Model %{modelo_id}, període %{period_code}:
         algunes rendes estan agrupades d''una manera que el model no admet.'
       m210_convenio_lob_advisory: Les rendes del tipus %{tipo_renta_code} del país
