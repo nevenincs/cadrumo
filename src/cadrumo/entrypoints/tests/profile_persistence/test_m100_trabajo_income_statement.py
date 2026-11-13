@@ -30,7 +30,7 @@ from ....application.modelo.edit_models import (
     ModeloEditScalarIntentKind,
     ModeloScalarEditIntentV1,
 )
-from ....application.modelo.trabajo_income_findings import trabajo_income_findings
+from ....application.modelo.trabajo_income_findings import TrabajoIncomeFinding, trabajo_income_findings
 from ....application.modelo.work_form_models import ModeloWorkForm
 from ....application.modelo.work_form_service import load_modelo_work_form
 from ....core.authority_grade import RegistryAuthorityGrade
@@ -41,7 +41,7 @@ from ....domain.calculations.registry.errors import FilingYearOutsideSupportEnve
 from ....domain.calculations.registry.tests.published_authority import published_supported_filing_years
 from ....domain.modelos.calculation_revision import CalculationRevision
 from ....domain.modelos.calculation_revision_operator_layer import ATTESTED_ZERO
-from ....domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingSeverity
+from ....domain.modelos.verification_report import ModeloVerificationFindingSeverity
 from ....domain.user_profile.tests.general_regime_facts import RENTA_UNMARRIED_TAXPAYER_FACTS
 from ....domain.user_profile.values import UserProfileFact
 from ...adapter_composition import profile_adapter_composition
@@ -112,13 +112,13 @@ def _form(work: SeededOperatorWork, language: OutputLanguage = OutputLanguage.EN
 
 def _findings(
     work: SeededOperatorWork, *, profile_values: dict[str, str] | None = None
-) -> tuple[ModeloVerificationFinding, ...]:
+) -> tuple[TrabajoIncomeFinding, ...]:
     unit = work.work_unit
     revision = work.operation.snapshot(
         "100", filing_year=unit.filing_year, period="0A", grade=RegistryAuthorityGrade.CALCULATION
     ).revision
     head: CalculationRevision = work.require_head()
-    return trabajo_income_findings(
+    findings = trabajo_income_findings(
         str(unit.modelo),
         revision,
         head,
@@ -126,14 +126,33 @@ def _findings(
         effective_date=date(unit.filing_year, 12, 31),
         operation=work.operation,
     )
+    # The producer builds each blocking finding with its verify verdict, and a warning without one.
+    for finding, failure in findings:
+        blocks = finding.severity is ModeloVerificationFindingSeverity.BLOCKING
+        assert (failure is not None) is blocks, finding.message_locale_key
+        assert failure is None or failure.subject_leaf_key == "modelo.work.verify"
+    return findings
 
 
-def _blocking_boxes(findings: tuple[ModeloVerificationFinding, ...]) -> set[str]:
+def _blocking_boxes(findings: tuple[TrabajoIncomeFinding, ...]) -> set[str]:
     return {
         str(finding.casilla_id)
-        for finding in findings
+        for finding, _failure in findings
         if finding.severity is ModeloVerificationFindingSeverity.BLOCKING and finding.casilla_id is not None
     }
+
+
+def _door(findings: tuple[TrabajoIncomeFinding, ...], box: str) -> tuple[str, dict[str, str | int | Decimal]]:
+    """The action a blocking box's verdict offers, with the arguments it already binds."""
+    failure = next(failure for finding, failure in findings if str(finding.casilla_id) == box and failure is not None)
+    action = failure.verdict.action
+    assert action is not None
+    bound = {
+        binding.argument_name: binding.value
+        for binding in failure.verdict.argument_bindings
+        if binding.value is not None
+    }
+    return action.action_id, bound
 
 
 def _record_certificate(work: SeededOperatorWork, year: int) -> None:
@@ -169,7 +188,13 @@ def test_each_unstated_income_box_blocks_until_the_one_action_states_all_four_an
         # The four boxes no certificate states block, and the deductions only the filer can evidence are served.
         findings = _findings(work)
         assert _blocking_boxes(findings) == set(_STATEMENT_BINDINGS)
-        assert [f for f in findings if f.message_locale_key.endswith("trabajo_deduction_not_computed")]
+        assert [f for f, _ in findings if f.message_locale_key.endswith("trabajo_deduction_not_computed")]
+        # Each box's verdict sends the filer to state it through the override of the binding it reads.
+        for box, binding_id in _STATEMENT_BINDINGS.items():
+            assert _door(findings, box) == (
+                "operator.modelo.work.override",
+                {"work_unit_id": work.work_unit_id, "binding_id": binding_id},
+            )
 
         # One action, next to the finding, names all four boxes in its words and apart from the carry words.
         offered = {attestation.family: attestation for attestation in _form(work).carry_attestations}
@@ -242,6 +267,10 @@ def test_a_stated_disability_blocks_the_unstated_increase_and_a_stated_expense_a
         # Without a stated disability the increase is not in question; with one, it blocks until stated.
         assert "0021" not in _blocking_boxes(_findings(work))
         assert "0021" in _blocking_boxes(_findings(work, profile_values=disability))
+        assert _door(_findings(work, profile_values=disability), "0021") == (
+            "operator.modelo.work.set_value",
+            {"work_unit_id": work.work_unit_id, "casilla_id": "0021"},
+        )
 
         def stated(casilla: str, value: str) -> ModeloScalarEditIntentV1:
             return ModeloScalarEditIntentV1(
@@ -258,6 +287,11 @@ def test_a_stated_disability_blocks_the_unstated_increase_and_a_stated_expense_a
         assert not {"0015", "0016"} & _blocking_boxes(_findings(work))
         assert work.apply(scalar=(stated("0015", "500.01"), stated("0016", "300.01"))).refusal is None
         assert {"0015", "0016"} <= _blocking_boxes(_findings(work))
+        for box in ("0015", "0016"):
+            assert _door(_findings(work), box) == (
+                "operator.modelo.work.set_value",
+                {"work_unit_id": work.work_unit_id, "casilla_id": box},
+            )
 
 
 @pytest.mark.parametrize("year", _renta_years())
