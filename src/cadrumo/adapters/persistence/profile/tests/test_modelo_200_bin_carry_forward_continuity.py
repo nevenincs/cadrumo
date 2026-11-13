@@ -79,6 +79,10 @@ _M200_BIN_APLICADA_MAXIMA: CasillaId = validated_casilla_id(
     surface="_M200_BIN_APLICADA_MAXIMA",
 )
 
+#: Net turnover (00255) every filed prior return states; the current rate reads it.
+_M200_TURNOVER: CasillaId = validated_casilla_id("00255", surface="_M200_TURNOVER")
+_PRIOR_TURNOVER = Decimal("500000")
+
 #: Two distinct renta years the enrollment spans; each sources the prior year's 00671.
 _YEAR_N = 2025
 _YEAR_N_PLUS_1 = 2026
@@ -123,7 +127,7 @@ def _seed_m200_bin_stock(*, source_year: int, stock: Decimal, obs_repo: Calculat
                     modelo=_MODELO_200,
                     filing_year=source_year,
                     period="0A",
-                    casilla_values={_M200_BIN_PENDIENTE_FUTUROS: stock},
+                    casilla_values={_M200_BIN_PENDIENTE_FUTUROS: stock, _M200_TURNOVER: _PRIOR_TURNOVER},
                     grade=RegistryAuthorityGrade.CALCULATION,
                 ),
             ),
@@ -138,7 +142,7 @@ def _seed_m200_bin_stock(*, source_year: int, stock: Decimal, obs_repo: Calculat
                         modelo=_MODELO_200,
                         filing_year=source_year,
                         period="0A",
-                        casilla_values={_M200_BIN_PENDIENTE_FUTUROS: stock},
+                        casilla_values={_M200_BIN_PENDIENTE_FUTUROS: stock, _M200_TURNOVER: _PRIOR_TURNOVER},
                         grade=RegistryAuthorityGrade.CALCULATION,
                     ),
                 )

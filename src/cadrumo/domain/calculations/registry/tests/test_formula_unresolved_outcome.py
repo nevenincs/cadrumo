@@ -66,10 +66,15 @@ def test_the_hydrated_expression_keeps_the_reason() -> None:
     assert unresolved.value.reason is _REASON
 
 
-@pytest.mark.parametrize("count", [0, 2])
-def test_the_outcome_names_exactly_one_reason(count: int) -> None:
-    with pytest.raises((ValidationError, RegistryValidationError), match="expects 1 arg"):
+@pytest.mark.parametrize("count", [0, 3])
+def test_the_outcome_takes_a_reason_and_at_most_the_box_the_operator_states(count: int) -> None:
+    with pytest.raises((ValidationError, RegistryValidationError), match=r"expects 1\.\.2 args"):
         FormulaExpression(op="unresolved_outcome", args=(FormulaExpression(text_literal=_REASON.value),) * count)
+
+
+def test_a_second_operand_must_name_a_casilla_not_another_reason() -> None:
+    with pytest.raises((ValidationError, RegistryValidationError), match="casilla leaf"):
+        FormulaExpression(op="unresolved_outcome", args=(FormulaExpression(text_literal=_REASON.value),) * 2)
 
 
 def test_the_reason_must_be_a_text_literal() -> None:

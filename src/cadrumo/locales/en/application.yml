@@ -528,11 +528,19 @@ application:
           foral tax territory without saying which one, and the Modelo 202 must name
           it (Navarra, Gipuzkoa, Bizkaia or Álava). A foral territory cannot be stated
           in the profile yet, so this instalment cannot be exported.'
+        m202_prior_periodo_turnover_disagrees: 'Nothing was written: the turnover
+          of the preceding período impositivo decides the tipo de gravamen, but the
+          Modelo 200 held for that período declares %{held_value} and your profile
+          states a twelve-month turnover of %{stated_value}. Neither is taken over
+          the other. Correct the one that is wrong, at %{profile_path} or in that
+          Modelo 200, and export again.'
         m202_prior_periodo_turnover_unreadable: 'Nothing was written: the período
           impositivo before this one lasted less than twelve months, so the turnover
           that decides the tipo de gravamen is that período''s own, as its Modelo
-          200 declares it. The application cannot read that Modelo 200 yet, so this
-          instalment cannot be exported yet.'
+          200 declares it. No Modelo 200 of that período is held and no figure for
+          it has been stated, so this instalment cannot be exported. Capture or record
+          that Modelo 200, or state its turnover on this ejercicio''s Modelo 200,
+          and export again.'
         m280_negative_imputation_key_invalid: 'Nothing was written: a negative imputation
           in Modelo 280 needs key 2 with the negative sign N, or zero fill under any
           other key. Correct the record and export again.'
@@ -3535,6 +3543,12 @@ application:
         includes %{settled_prior_accrual_rows} payment(s) of income earned in an earlier
         year. The official rules do not say how to report their base and withholding,
         so you cannot record this declaration as filed or export it yet.
+      m200_incn_periodo_anterior_disagrees: The turnover of the período impositivo
+        before this one decides the tipo de gravamen, but the Modelo %{modelo} %{source_filing_year}
+        held for that período declares %{held_turnover} and your profile states a
+        twelve-month turnover of %{stated_turnover}. That período lasted twelve months,
+        so both are its own turnover and must agree; neither is taken over the other.
+        Correct the one that is wrong, at %{profile_path} or in that Modelo %{modelo}.
       m210_agrupacion_renta_invalid: 'Modelo %{modelo_id}, period %{period_code}:
         some income lines are grouped in a way the form does not accept.'
       m210_convenio_lob_advisory: Income of type %{tipo_renta_code} from country %{country_code}
@@ -3834,6 +3848,12 @@ application:
           for a joint return, because your return does not separate each member's
           work and business income, and the limits apply to each member individually
           (LIRPF art. 52.1). It is never shown as zero.
+        m200_extincion_entidad_unsupported: This box needs the limit on compensating
+          negative taxable bases (LIS art. 26.1), which is not calculated when your
+          entity marks box 00072 "Extinción de entidad", because Cadrumo cannot tell
+          whether the extinction comes from a restructuring operation, so it has no
+          value. State in box 00547 the amount you offset yourself, from the official
+          instructions. It is never shown as zero.
         m200_tax_regime_unsupported: This box needs the tipo de gravamen of your entity's
           tax regime, which is not calculated for that regime or legal form, so it
           has no value. Enter the box yourself from the official instructions. It

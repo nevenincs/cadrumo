@@ -58,6 +58,7 @@ _INSTALMENT_CASILLA_BY_PERIOD: dict[str, CasillaId] = {
 _CUOTA_DIFERENCIAL_CASILLA = validated_casilla_id("DP200014B:00611")
 _CUOTA_INSTALMENT_CASILLA = validated_casilla_id("03")
 _ORDINAL_BY_PERIOD = {"1P": "primero", "2P": "segundo", "3P": "tercero"}
+_PRECEDING_TURNOVER_CARRY = "modelo-200-incn-periodo-impositivo-anterior"
 _SELF_CARRIES = (
     "modelo-200-bin-pendiente-ejercicios-anteriores",
     "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores",
@@ -184,6 +185,8 @@ def _calculate(
         binding_values={
             "modelo-200-profile-new-entity-flag": Decimal("0"),
             "modelo-200-profile-incn-prior-12-months": Decimal("12000000"),
+            # The rate reads the preceding período's turnover from its held return.
+            _PRECEDING_TURNOVER_CARRY: Decimal("12000000"),
             "modelo-200-profile-tributacion-estado-porcentaje": Decimal("100"),
         },
         relation_values={**dict.fromkeys(_SELF_CARRIES, Decimal("0")), **resolved},

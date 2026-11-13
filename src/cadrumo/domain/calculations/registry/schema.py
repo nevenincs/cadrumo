@@ -37,6 +37,7 @@ from .autonomic_deduccion_enrolment import AutonomicDeduccionEnrolment
 from .binding_absence_attestation import AbsenceAttestationFamilyField
 from .binding_borrador_participation import BorradorParticipation, BorradorParticipationField
 from .binding_grade_cap import BindingGradeCap
+from .binding_prior_value_rules import PRIOR_VALUE_RULE_SOURCES, HeldSourceSetAsideMarks, PriorValueRuleFlag
 from .binding_provider import BindingProvider
 from .binding_temporal import (
     AllRevisionContexts,
@@ -48,7 +49,7 @@ from .binding_terminal_origin import TerminalOriginExpectation
 from .binding_value_contract import BindingDataType, BindingValueChannel, BindingValueContract
 from .credit_reconciliation import CreditReconciliationEntry
 from .errors import RegistryValidationError
-from .field_absence import absent_when_none
+from .field_absence import absent_when_none, later_absent_when_none
 from .ids import (
     ApplicationLinkId,
     BindingId,
@@ -257,6 +258,15 @@ class BindingDefinition(RegistryModel):
     # snapshots, so it is left out of every dump while absent (see
     # :mod:`.field_absence`).
     absence_attestation: AbsenceAttestationFamilyField | None = Field(default=None, exclude_if=absent_when_none)
+    # Whether only an attested zero, never a typed one, stands for this carry's
+    # earlier return, and whether an earlier period ended before the activity
+    # began leaves it unresolved rather than zero (see
+    # :mod:`.binding_prior_value_rules`). Left out of every dump while absent.
+    zero_needs_attestation: PriorValueRuleFlag | None = Field(default=None, exclude_if=later_absent_when_none)
+    before_activity_unresolved: PriorValueRuleFlag | None = Field(default=None, exclude_if=later_absent_when_none)
+    held_source_set_aside_when_marked: HeldSourceSetAsideMarks | None = Field(
+        default=None, exclude_if=later_absent_when_none
+    )
     legal_refs: LegalRefs
     source_refs: SourceRefs
     source_citations: tuple[SourceCitation, ...] = Field(default_factory=tuple)
@@ -321,6 +331,37 @@ class BindingDefinition(RegistryModel):
                 context={
                     "id": self.id,
                     "absence_attestation": family.value,
+                    "source": self.source.value,
+                    "channel": self.value.channel.value,
+                },
+            )
+        return self
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _validate_prior_value_rules_read_an_earlier_decimal(self) -> BindingDefinition:
+        """Refuse a prior-value rule on a binding that is not a decimal carry read from an earlier filing.
+
+        Both rules speak of the figure that stands for an earlier return the
+        carry reads directly; on any other binding there is no such figure.
+        """
+        declared = tuple(
+            name
+            for name, flag in (
+                ("zero_needs_attestation", self.zero_needs_attestation),
+                ("before_activity_unresolved", self.before_activity_unresolved),
+                ("held_source_set_aside_when_marked", self.held_source_set_aside_when_marked),
+            )
+            if flag is not None
+        )
+        if not declared:
+            return self
+        if self.source not in PRIOR_VALUE_RULE_SOURCES or self.value.channel is not BindingValueChannel.DECIMAL:
+            raise RegistryValidationError(
+                f"binding {self.id!r}: {', '.join(declared)} needs a decimal binding read from an earlier filing",
+                context={
+                    "id": self.id,
+                    "rules": ",".join(declared),
                     "source": self.source.value,
                     "channel": self.value.channel.value,
                 },

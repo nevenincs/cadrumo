@@ -8,14 +8,22 @@ from decimal import Decimal
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.application.calculations.observations_repository import APP_FILING_SOURCE_KIND, ResultDispositionProjection
-from cadrumo.core.casilla_id import CasillaId
+from cadrumo.core.authority_grade import RegistryAuthorityGrade
+from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.result_disposition import ResultDisposition
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
+from cadrumo.domain.calculations.registry.bindings_previous_filing import (
+    PreviousFilingProvider,
+    previous_filing_binding_source_casilla_ids,
+)
 from cadrumo.domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
     revision_id_for_observation,
 )
 from cadrumo.domain.modelos.filing_kind_evidence import ObservedFilingKind
+
+_M200_TURNOVER: CasillaId = validated_casilla_id("00255", surface="_M200_TURNOVER")
 
 
 def save_stamped_observation(
@@ -75,3 +83,51 @@ def save_local_m303_compensacion_filings(
                 provenance_locator=f"test-local-filing:{filing_year}:{period}",
             ),
         )
+
+
+def save_preceding_m200_turnover(
+    repository: CalculationObservationRepository,
+    *,
+    filing_year: int,
+    turnover: Decimal,
+    captured_at: datetime,
+) -> None:
+    """Hold the preceding Modelo 200 locally, showing the net turnover (casilla 00255) the rate reads.
+
+    LIS art. 29.1 keys the rate to the turnover of the immediately preceding tax
+    period, a fact of that period's own return. An edition whose rate reads no
+    preceding turnover gets nothing held, since its earlier year may lie outside
+    the support envelope.
+    """
+    if not _reads_preceding_m200_turnover(filing_year):
+        return
+    save_stamped_observation(
+        repository,
+        RegistryModeloObservation(
+            modelo="200",
+            filing_year=filing_year - 1,
+            period="0A",
+            observations=registry_grounded_observations(
+                modelo="200",
+                filing_year=filing_year - 1,
+                period="0A",
+                casilla_values={_M200_TURNOVER: turnover},
+                grade=RegistryAuthorityGrade.CALCULATION,
+            ),
+        ),
+        source_kind=APP_FILING_SOURCE_KIND,
+        captured_at=captured_at,
+    )
+
+
+def _reads_preceding_m200_turnover(filing_year: int) -> bool:
+    with bundled_indexed_authority().operation() as authority:
+        snapshot = authority.snapshot(
+            "200", filing_year=filing_year, period="0A", grade=RegistryAuthorityGrade.CALCULATION
+        )
+    return any(
+        isinstance(binding.provider, PreviousFilingProvider)
+        and binding.provider.source_modelo == "200"
+        and _M200_TURNOVER in previous_filing_binding_source_casilla_ids(binding)
+        for binding in snapshot.revision.bindings
+    )

@@ -565,12 +565,19 @@ application:
           un territori foral sense dir quin, i el Model 202 l''ha de consignar (Navarra,
           Guipúscoa, Biscaia o Àlaba). Encara no pots indicar un territori foral al
           perfil, així que aquest pagament fraccionat no es pot exportar.'
+        m202_prior_periodo_turnover_disagrees: 'No s''ha escrit res: l''import net
+          de la xifra de negocis del període impositiu anterior decideix el tipus
+          de gravamen, però el Model 200 desat d''aquell període declara %{held_value}
+          i el teu perfil indica un import de dotze mesos de %{stated_value}. Cap
+          no s''imposa a l''altre. Corregeix el que sigui erroni, a %{profile_path}
+          o en aquell Model 200, i torna a exportar.'
         m202_prior_periodo_turnover_unreadable: 'No s''ha escrit res: el període impositiu
           anterior a aquest va durar menys de dotze mesos, així que l''import net
           de la xifra de negocis que decideix el tipus de gravamen és el d''aquell
-          període, tal com el declara el seu Model 200. L''aplicació encara no pot
-          llegir aquest Model 200, així que aquest pagament fraccionat encara no es
-          pot exportar.'
+          període, tal com el declara el seu Model 200. No hi ha cap Model 200 d''aquell
+          període desat ni n''has indicat l''import, així que aquest pagament fraccionat
+          no es pot exportar. Captura o registra aquell Model 200, o indica''n l''import
+          al Model 200 d''aquest exercici, i torna a exportar.'
         m280_negative_imputation_key_invalid: 'No s''ha escrit res: una imputació
           negativa del Modelo 280 necessita la clau 2 amb el signe negatiu N, o farciment
           amb zeros sota qualsevol altra clau. Corregeix el registre i torna a exportar.'
@@ -3723,6 +3730,13 @@ application:
         un exercici anterior. Les normes oficials no indiquen com declarar-ne la base
         i la retenció, així que encara no pots registrar aquesta declaració com a
         presentada ni exportar-la.
+      m200_incn_periodo_anterior_disagrees: L'import net de la xifra de negocis del
+        període impositiu anterior decideix el tipus de gravamen, però el Model %{modelo}
+        %{source_filing_year} desat d'aquell període declara %{held_turnover} i el
+        teu perfil indica un import de dotze mesos de %{stated_turnover}. Aquell període
+        va durar dotze mesos, així que tots dos són el seu propi import i han de coincidir;
+        cap no s'imposa a l'altre. Corregeix el que sigui erroni, a %{profile_path}
+        o en aquell Model %{modelo}.
       m210_agrupacion_renta_invalid: 'Model %{modelo_id}, període %{period_code}:
         algunes rendes estan agrupades d''una manera que el model no admet.'
       m210_convenio_lob_advisory: Les rendes del tipus %{tipo_renta_code} del país
@@ -4034,6 +4048,12 @@ application:
           en una declaració conjunta, perquè la teva declaració no separa els rendiments
           del treball i d'activitats econòmiques de cada membre, i els límits s'apliquen
           a cada membre individualment (art. 52.1 LIRPF). Mai es mostra com a zero.
+        m200_extincion_entidad_unsupported: Aquesta casella necessita el límit a la
+          compensació de bases imposables negatives (art. 26.1 LIS), que no es calcula
+          quan la teva entitat marca la casella 00072 «Extinción de entidad», perquè
+          no podem distingir si l'extinció prové d'una operació de reestructuració,
+          així que no té valor. Indica tu mateix a la casella 00547 l'import que compenses,
+          segons les instruccions oficials. Mai es mostra com a zero.
         m200_tax_regime_unsupported: Aquesta casella necessita el tipus de gravamen
           del règim fiscal de la teva entitat, que no es calcula per a aquest règim
           o forma jurídica, així que no té valor. Introdueix la casella tu mateix

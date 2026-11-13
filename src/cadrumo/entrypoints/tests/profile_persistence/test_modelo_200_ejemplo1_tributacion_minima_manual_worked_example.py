@@ -170,7 +170,7 @@ from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFac
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import calculation_ports_for_test
 
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
-from .observation_seeding_support import save_stamped_observation
+from .observation_seeding_support import save_preceding_m200_turnover, save_stamped_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -407,6 +407,12 @@ def _calculate_m200(
     """Run the live M200 0A calculate for the exercise with Ejemplo 1's manual casilla inputs."""
     _seed_sociedad_profile(filing_year)
     _seed_zero_m202_pagos(filing_year)
+    save_preceding_m200_turnover(
+        CalculationObservationRepository(),
+        filing_year=filing_year,
+        turnover=Decimal("25000000"),
+        captured_at=_profile_instant(filing_year),
+    )
     wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     bucket_event_repo = BucketEventHistoryRepository(objects=secure_objects)

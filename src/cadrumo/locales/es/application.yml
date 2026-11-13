@@ -568,11 +568,19 @@ application:
           territorio foral sin decir cuál, y el Modelo 202 debe consignarlo (Navarra,
           Gipuzkoa, Bizkaia o Álava). Todavía no puedes indicar un territorio foral
           en el perfil, así que este pago fraccionado no se puede exportar.'
+        m202_prior_periodo_turnover_disagrees: 'No se ha escrito nada: el importe
+          neto de la cifra de negocios del período impositivo anterior decide el tipo
+          de gravamen, pero el Modelo 200 guardado de ese período declara %{held_value}
+          y tu perfil indica un importe de doce meses de %{stated_value}. Ninguno
+          se impone al otro. Corrige el que esté mal, en %{profile_path} o en ese
+          Modelo 200, y vuelve a exportar.'
         m202_prior_periodo_turnover_unreadable: 'No se ha escrito nada: el período
           impositivo anterior a este duró menos de doce meses, así que el importe
           neto de la cifra de negocios que decide el tipo de gravamen es el de ese
-          período, tal como lo declara su Modelo 200. La aplicación todavía no puede
-          leer ese Modelo 200, así que este pago fraccionado aún no se puede exportar.'
+          período, tal como lo declara su Modelo 200. No hay ningún Modelo 200 de
+          ese período guardado ni has indicado su importe, así que este pago fraccionado
+          no se puede exportar. Captura o registra ese Modelo 200, o indica su importe
+          en el Modelo 200 de este ejercicio, y vuelve a exportar.'
         m280_negative_imputation_key_invalid: 'No se ha escrito nada: una imputación
           negativa del Modelo 280 necesita la clave 2 con el signo negativo N, o relleno
           con ceros bajo cualquier otra clave. Corrige el registro y vuelve a exportar.'
@@ -3729,6 +3737,13 @@ application:
         un ejercicio anterior. Las normas oficiales no indican cómo declarar su base
         y su retención, así que aún no puedes registrar esta declaración como presentada
         ni exportarla.
+      m200_incn_periodo_anterior_disagrees: El importe neto de la cifra de negocios
+        del período impositivo anterior decide el tipo de gravamen, pero el Modelo
+        %{modelo} %{source_filing_year} guardado de ese período declara %{held_turnover}
+        y tu perfil indica un importe de doce meses de %{stated_turnover}. Ese período
+        duró doce meses, así que ambos son su propio importe y deben coincidir; ninguno
+        se impone al otro. Corrige el que esté mal, en %{profile_path} o en ese Modelo
+        %{modelo}.
       m210_agrupacion_renta_invalid: 'Modelo %{modelo_id}, periodo %{period_code}:
         algunas rentas están agrupadas de una forma que el modelo no admite.'
       m210_convenio_lob_advisory: Las rentas del tipo %{tipo_renta_code} del país
@@ -4043,6 +4058,12 @@ application:
           del trabajo y de actividades económicas de cada miembro, y los límites se
           aplican a cada miembro individualmente (art. 52.1 LIRPF). Nunca se muestra
           como cero.
+        m200_extincion_entidad_unsupported: Esta casilla necesita el límite a la compensación
+          de bases imponibles negativas (art. 26.1 LIS), que no se calcula cuando
+          tu entidad marca la casilla 00072 «Extinción de entidad», porque no distinguimos
+          si la extinción procede de una operación de reestructuración, así que no
+          tiene valor. Indica tú mismo en la casilla 00547 el importe que compensas,
+          según las instrucciones oficiales. Nunca se muestra como cero.
         m200_tax_regime_unsupported: Esta casilla necesita el tipo de gravamen del
           régimen fiscal de tu entidad, que no se calcula para ese régimen o forma
           jurídica, así que no tiene valor. Introduce la casilla tú mismo según las

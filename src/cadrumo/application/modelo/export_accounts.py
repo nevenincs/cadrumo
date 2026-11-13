@@ -144,6 +144,7 @@ from .export_preparation import (
     resolve_m303_export_arrivals,
 )
 from .filing_revision_persistence import require_filing_instance_evidence_for_work_unit
+from .incn_periodo_anterior import IncnPeriodoAnteriorStores, incn_periodo_anterior_reader
 from .lifecycle_view_refusal_doors import profile_facts_verdict, unit_filing_evidence_verdict
 from .m200_page_002_profile import modelo_200_profile_facts
 from .m303_regimen_simplificado_scope import m303_profile_readiness_failure
@@ -906,6 +907,20 @@ def resolve_export_model_profile(
                 work_unit.period
             ),
             operation=operation,
+            incn_periodo_anterior=incn_periodo_anterior_reader(
+                work_unit.bucket_id,
+                # The Modelo 200 of the período the instalment is on account of reads the preceding one.
+                periodo.start.year,
+                stores=IncnPeriodoAnteriorStores(
+                    operation=operation,
+                    observation_repository=export_ports.observation,
+                    iva_compensation_history_repository=export_ports.iva_compensation_history,
+                    calculation_repository=export_ports.calculation,
+                    work_unit_repository=export_ports.work_unit,
+                    filing_repository=export_ports.filing,
+                ),
+                activity_start_date=workflow_profile.activity_start_date,
+            ),
         ), None
     if modelo == form_for_role("withholding.work_periodic"):
         return _modelo_111_profile_facts(

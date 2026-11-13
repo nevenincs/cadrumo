@@ -16,6 +16,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -41,6 +42,7 @@ from ....domain.transactions.enums import BusinessClassification, TransactionDir
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from .file_flow_test_support import calculation_ports_for_test
+from .observation_seeding_support import save_preceding_m200_turnover
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -56,6 +58,8 @@ def bucket_id() -> str:
 
 
 _T0 = datetime(2026, 1, 14, 10, 0, tzinfo=UTC)
+# The sociedad-limitada persona's turnover of the twelve months before the period.
+_PRECEDING_TURNOVER = Decimal("28500.00")
 _T1 = datetime(2026, 1, 14, 11, 0, tzinfo=UTC)
 _M200 = "200"
 _FILING_YEAR = 2025
@@ -178,6 +182,11 @@ def _calculate_m200(
     operation: PinnedAuthorityOperation,
 ) -> tuple[BucketAggregationCalculationResult, CalculationRevisionCatalogueRepository]:
     seed_persona_profile("sociedad-limitada", bucket_id=_BUCKET_ID, at=_T0)
+    # The rate reads the preceding período's turnover from its own Modelo 200, held here at the
+    # persona's stated twelve-month figure, so the two agree.
+    save_preceding_m200_turnover(
+        CalculationObservationRepository(), filing_year=_FILING_YEAR, turnover=_PRECEDING_TURNOVER, captured_at=_T0
+    )
     wu_repo = WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     event_repo = BucketEventHistoryRepository(objects=secure_objects)
