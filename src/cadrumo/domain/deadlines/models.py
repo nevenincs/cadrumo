@@ -667,6 +667,7 @@ class TaxpayerProfile(BaseModel):
     activity_start_date: date | None = None
     activity_end_date: date | None = None
     incn_prior_12_months: Decimal | None = None
+    regimen_entidades_navieras_tonelaje: bool | None = None
     iae_epigraph: str = ""
     activity_iae_epigraphs: tuple[str | None, ...] = ()
     """Every declared activity's IAE epigraph, in declaration order.

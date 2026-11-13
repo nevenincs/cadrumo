@@ -90,6 +90,7 @@ from .ledger_drift_gate import (
     undetermined_mixed_use_contributor_finding,
 )
 from .preconditions import ModeloPreconditionFailure, build_modelo_precondition_failure_for_scenario
+from .profile_drift_gate import profile_drift_findings
 from .verification_cross_period import (
     CrossPeriodDoor,
     cross_period_clean_state_findings,
@@ -892,6 +893,18 @@ def collect_verification_gate_findings(
             work_profile=work_profile,
             ledger_membership_ports=ledger_membership_ports,
             failures_by_finding_id=failures_by_finding_id,
+        ),
+    )
+    # The profile counterpart of the ledger comparison above: a profile fact the
+    # draft read was edited after it was calculated.
+    findings.extend(
+        profile_drift_findings(
+            target=target,
+            work_unit=work_unit,
+            profile_record=work_profile.record,
+            operation=operation,
+            source_refs=optional_observation_refs(target.observations, "source_refs"),
+            failure_observer=lambda finding, failure: failures_by_finding_id.__setitem__(id(finding), failure),
         ),
     )
     return findings, resolved_casilla_ids, missing_required_casilla_ids, failures_by_finding_id

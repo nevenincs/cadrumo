@@ -64,6 +64,7 @@ from ...domain.modelos.calculation_revision import (
 from ...domain.modelos.calculation_revision_m303_handoff import M303RegimenSimplificadoAnnualSummaryHandoff
 from ...domain.modelos.calculation_revision_operator_layer import RowCarryAttestation
 from ...domain.modelos.calculation_revision_sources import CalculationNoteFact
+from ...domain.modelos.profile_read_fingerprint import ProfileReadFingerprint
 from ...domain.modelos.row_models import ModeloDetailRow
 from ...domain.modelos.source_disagreement import SourceDisagreementFact
 from ..modelo.work_profile import ModeloWorkProfile
@@ -635,6 +636,13 @@ class CalculationSourceResolution(BaseModel):
     # not a binding channel.  It remains separate so a later persistence layer
     # cannot reconstruct it from scalar values or provenance strings.
     m303_regimen_simplificado_annual_summary_handoff: M303RegimenSimplificadoAnnualSummaryHandoff | None = None
+    profile_read_fingerprint: ProfileReadFingerprint | None = Field(default=None, exclude=True, repr=False)
+    """The profile facts this resolution read, with a digest of each; stated only by the profile resolver.
+
+    The calculation persists it on the revision so verification and export can
+    tell whether a fact the casillas rest on was edited afterwards. Merging
+    resolutions does not carry it: the calculation reads it from the profile tier.
+    """
     diagnostics: tuple[CalculationSourceDiagnostic, ...] = Field(default_factory=tuple)
     provenance: tuple[CalculationSourceProvenance, ...] = Field(default_factory=tuple)
     value_outcomes: Mapping[BindingId, BindingValueOutcome] = Field(default_factory=dict)

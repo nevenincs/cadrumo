@@ -263,6 +263,10 @@ FINDING_MESSAGE_ACTION_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
         "application.modelo.findings.registry_snapshot_unresolved": (
             "application.modelo.work_form.finding_action.retry_or_update"
         ),
+        # A filed declaration whose profile facts were edited since.
+        "application.modelo.findings.profile_read_superseded_filed": (
+            "application.modelo.work_form.finding_action.amend_filed_declaration"
+        ),
     }
 )
 """What to do about a finding, by its message, where the message says more than its kind.
@@ -311,6 +315,27 @@ def _issue_invoice(data: dict[str, object]) -> InvoiceId | None:
     return finding_invoice_to_open(finding)
 
 
+FINDING_MESSAGE_DOORS: Final[Mapping[str, str]] = MappingProxyType(
+    {
+        # Correcting a declaration recorded as filed starts an amendment.
+        "application.modelo.findings.profile_read_superseded_filed": "operator.modelo.work.amend",
+    }
+)
+"""The served operator action that resolves a finding, by its message, where one does."""
+
+
+def finding_door_action_id(finding: ModeloVerificationFinding) -> str | None:
+    """The served operator action the filer takes to resolve ``finding``, when one resolves it."""
+    return FINDING_MESSAGE_DOORS.get(finding.message_locale_key)
+
+
+def _issue_door(data: dict[str, object]) -> str | None:
+    finding = data.get("finding")
+    if not isinstance(finding, ModeloVerificationFinding):
+        raise ValueError("an issue's door is derived from its finding")
+    return finding_door_action_id(finding)
+
+
 class ModeloFormIssue(BaseModel):
     """One finding of the current calculation's latest verification, with the box it concerns.
 
@@ -330,6 +355,8 @@ class ModeloFormIssue(BaseModel):
     action_locale_key: str = Field(default_factory=_issue_action)
     #: The invoice whose document the action attaches, served as the door to it.
     open_invoice_id: InvoiceId | None = Field(default_factory=_issue_invoice)
+    #: The served operator action that resolves the finding, such as the amendment of a filed declaration.
+    door_action_id: str | None = Field(default_factory=_issue_door)
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -340,4 +367,6 @@ class ModeloFormIssue(BaseModel):
             raise ValueError("an issue's action must be the one its finding maps to")
         if self.open_invoice_id != finding_invoice_to_open(self.finding):
             raise ValueError("an issue's invoice must be the one its finding names")
+        if self.door_action_id != finding_door_action_id(self.finding):
+            raise ValueError("an issue's door must be the one its finding maps to")
         return self

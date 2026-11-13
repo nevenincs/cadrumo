@@ -84,6 +84,7 @@ def _seed_sociedad(bucket_id: str, *, incn: Decimal, elected: bool) -> None:
             facts=persona_facts_beneath(
                 (
                     UserProfileFact(path=_INCN_PATH, value=incn),
+                    UserProfileFact(path="taxpayer_type.regimen_entidades_navieras_tonelaje", value=False),
                     UserProfileFact(path=_ELECTION_PATH, value=elected),
                     UserProfileFact(
                         path="censo.activity_start_date", value=date(filing_year_envelope().floor - 1, 1, 1)

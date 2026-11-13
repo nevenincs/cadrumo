@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#canonical-storage-management'
 date: '2026-08-03'
-modified: '2026-10-31'
+modified: '2026-11-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:eeb9ae693ffb10688b36e35b95e61e16cbef0685fb1998810a9df770659ec3e4'
+body_hash: 'sha256:4d3d539f9c0719b5808f65c1acd75dfe9fdddc2eaaa22d4b621733610df7f428'
 related:
   - "[[2026-08-03-canonical-storage-management-research]]"
   - "[[2026-07-13-data-output-standardization-adr]]"
@@ -1264,3 +1264,9 @@ Accepted 2026-10-30 on the owner's rulings of that date: "CADRUMO_STORAGE_ROOT i
 Basis: the user's ruling of 2026-10-30 that Cadrumo has no development-versus-installed (dev/prod) mode and that the storage location is selected only by the environment: an absolute `CADRUMO_STORAGE_ROOT`, otherwise the per-user default for the channel. The user pre-approved ADR changes for the macOS platform bring-up, recorded in the Description of `2026-10-30-macos-platform-plan`. Implemented in commits 212247032d (Python `StorageMode` removal), 0a27935448 (native storage resolves from the environment alone) and 947fa42364 (runtime containment on macOS and Linux).
 
 The 2026-10-08 Darwin exception is restated without a mode. It refines R1/R3/R5 for the `RUNTIME_SOCKETS` namespace on Darwin, for every storage root. The owner-level lookup sanctioned in the location-lookup rule is the canonical owner's lazy Darwin transport query, not a "default-installed-Darwin" query. "Development roots remain root-relative and explicit synthetic/operator socket namespaces keep their isolation; custom installed data roots retain root-derived endpoint identities" now reads: "Every root keeps its root-derived endpoint identity in the transient directory; a namespace passed explicitly by a caller keeps its isolation; no environment variable selects a socket directory." Materialisation, reclaim, no-migration and refusal rules are unchanged. `2026-10-08-canonical-environment-darwin-transport-adr`, amendment 2026-10-31, governs the detail.
+
+## Amendment 2026-11-13 - fixed-clock marker under `.runtime/`
+
+Accepted 2026-11-13 at 12:19 by CADRUMO-PRIME together with `2026-11-13-desktop-test-host-clock-adr`, under the ADR acceptance the operator delegated to PRIME. The taxonomy gains one runtime-owned file member beneath `RUNTIME_COORDINATION` (`.runtime`): the fixed-clock marker. It records that an e2e storage root was admitted under a fixed clock, and the admitted instant. Like its `.runtime/` siblings it is root-scoped, runtime-owned, `UNBOUNDED_BY_DESIGN`, grouped under state and excluded from the fingerprint; it carries no variable and no settings field (amendment 2026-10-30), and no `reclaim` area selects it.
+
+The member is admitted only under `2026-11-13-desktop-test-host-clock-adr`. Only a test host compiled with the `native-automation` feature writes it, only for an e2e root that record admits, and only at that root's first admission. No other producer writes it, and no released image contains a writer. Its presence makes the root refuse every later runtime start that arrives without an admitted fixed clock, so a root once used under a fixed clock never runs on wall time. Its subpath is declared once in the taxonomy and reaches native code only through the generated projection, as R5 and `2026-10-04-canonical-environment-adr` require. *Hypothesis:* the leaf name `fixed-clock.json`. R1-R30, the no-migration rule and refuse-and-instruct relocation are otherwise unchanged.

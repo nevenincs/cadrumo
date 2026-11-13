@@ -37,6 +37,7 @@ class RegistryFailureCondition(StrEnum):
 
     TAXPAYER_MODEL_DECLARED = "registry.applicability.taxpayer_model.declared"
     MODELO_202_INCN_DECLARED = "registry.applicability.modelo_202.incn.declared"
+    MODELO_202_NAVIERAS_DECLARED = "registry.applicability.modelo_202.navieras.declared"
     QUERY_FILING_YEAR_SCOPED = "registry.query.filing_year.scoped"
     QUERY_CASILLA_DECLARED = "registry.query.casilla.declared"
     SNAPSHOT_AUTHORITY_GRADE_SUFFICIENT = "registry.snapshot.authority_grade.sufficient"
