@@ -72,6 +72,12 @@ _PENDING_BASES = (
     "renta-base-liquidable-negativa-general-em2-pendiente-inicio",
     "renta-base-liquidable-negativa-general-em3-pendiente-inicio",
     "renta-base-liquidable-negativa-general-em4-pendiente-inicio",
+    # LIRPF art. 49.2 compensates the pending negative savings balances of the four earlier returns, per source.
+    *(
+        f"renta-saldo-negativo-{source}-ahorro-em{age}-pendiente-inicio"
+        for source in ("gyp", "rcm")
+        for age in (1, 2, 3, 4)
+    ),
 )
 _M130_INSTALMENTS = "renta-modelo-130-pagos-fraccionados"
 _M303_CARRY = "modelo-303-compensacion-pendiente-anteriores"
@@ -123,20 +129,6 @@ _DECLARATIONS = (
         "180", "0A", dict.fromkeys(("modelo-180-115-base-anual", "modelo-180-115-retenciones-anual"), "115"), _PAYER
     ),
     _Declaration(
-        "190",
-        "0A",
-        dict.fromkeys(
-            (
-                f"modelo-190-111-{kind}-{form}-importe-anual"
-                for kind in ("trabajo", "actividades", "premios", "ganancias")
-                for form in ("dinerario", "especie")
-            ),
-            "111",
-        )
-        | {"modelo-190-111-derechos-imagen-importe-anual": "111", "modelo-190-111-retenciones-anual": "111"},
-        _PAYER,
-    ),
-    _Declaration(
         "193", "0A", dict.fromkeys(("modelo-193-123-base-anual", "modelo-193-123-retenciones-anual"), "123"), _PAYER
     ),
     _Declaration(
@@ -147,8 +139,15 @@ _DECLARATIONS = (
             "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": "200",
             "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": "200",
             "modelo-200-incn-periodo-impositivo-anterior": "200",
-            "modelo-200-pagos-fraccionados-anuales-40-2": "202",
-            "modelo-200-pagos-fraccionados-anuales": "202",
+            # One box per Modelo 202 instalment, each credited from the modality that applied (art. 40.2 or 40.3).
+            **dict.fromkeys(
+                (
+                    f"modelo-200-pago-fraccionado-{instalment}-{modality}"
+                    for instalment in ("primero", "segundo", "tercero")
+                    for modality in ("40-2", "40-3")
+                ),
+                "202",
+            ),
         },
         _ENTITY,
         None,
