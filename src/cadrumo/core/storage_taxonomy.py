@@ -282,6 +282,9 @@ class StorageCategory(StrEnum):
     RUNTIME_COORDINATION = "runtime-coordination"
     RUNTIME_INSTALLATION_RECORD = "runtime-installation-record"
     RUNTIME_INSTALLATION_LOCK = "runtime-installation-lock"
+    # Written only by a test host admitting a fixed clock for an e2e root; its
+    # presence makes every later start without that admitted clock refuse.
+    RUNTIME_FIXED_CLOCK_MARKER = "runtime-fixed-clock-marker"
 
     # ── Fixed layout: per-bucket ────────────────────────────────────────────
     BUCKET_DATABASE = "bucket.db"

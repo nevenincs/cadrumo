@@ -118,6 +118,7 @@ class ProfileConnectionAdmissionMixin:
                         rebound=self._cue_lease_holders,
                         recovery=self._custody_recovery,
                         worker_lost=self.lifecycle_changed,
+                        fixed_clock=self.fixed_clock,
                     )
                     if not self._admitting():
                         raise RefusalError(RefusalCode.DRAINING)
