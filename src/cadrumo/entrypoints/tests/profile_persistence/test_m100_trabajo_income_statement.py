@@ -155,6 +155,25 @@ def _door(findings: tuple[TrabajoIncomeFinding, ...], box: str) -> tuple[str, di
     return action.action_id, bound
 
 
+def _alternative_doors(
+    findings: tuple[TrabajoIncomeFinding, ...], box: str
+) -> list[tuple[str, dict[str, str | int | Decimal], tuple[str, ...]]]:
+    """The alternatives a blocking box's verdict offers: action, bound arguments, arguments the filer supplies."""
+    failure = next(failure for finding, failure in findings if str(finding.casilla_id) == box and failure is not None)
+    return [
+        (
+            alternative.action.action_id,
+            {
+                binding.argument_name: binding.value
+                for binding in alternative.argument_bindings
+                if binding.value is not None
+            },
+            alternative.missing_argument_names,
+        )
+        for alternative in failure.verdict.alternative_actions
+    ]
+
+
 def _record_certificate(work: SeededOperatorWork, year: int) -> None:
     seed_payer_certificate(
         operation=work.operation,
@@ -189,12 +208,20 @@ def test_each_unstated_income_box_blocks_until_the_one_action_states_all_four_an
         findings = _findings(work)
         assert _blocking_boxes(findings) == set(_STATEMENT_BINDINGS)
         assert [f for f, _ in findings if f.message_locale_key.endswith("trabajo_deduction_not_computed")]
-        # Each box's verdict sends the filer to state it through the override of the binding it reads.
+        # Each box's verdict serves the one statement first, and keeps the override of the binding it reads
+        # as the alternative that states that box alone.
         for box, binding_id in _STATEMENT_BINDINGS.items():
             assert _door(findings, box) == (
-                "operator.modelo.work.override",
-                {"work_unit_id": work.work_unit_id, "binding_id": binding_id},
+                "operator.modelo.work.attest_work_income",
+                {"work_unit_id": work.work_unit_id},
             )
+            assert _alternative_doors(findings, box) == [
+                (
+                    "operator.modelo.work.override",
+                    {"work_unit_id": work.work_unit_id, "binding_id": binding_id},
+                    ("value",),
+                )
+            ]
 
         # One action, next to the finding, names all four boxes in its words and apart from the carry words.
         offered = {attestation.family: attestation for attestation in _form(work).carry_attestations}
@@ -271,6 +298,7 @@ def test_a_stated_disability_blocks_the_unstated_increase_and_a_stated_expense_a
             "operator.modelo.work.set_value",
             {"work_unit_id": work.work_unit_id, "casilla_id": "0021"},
         )
+        assert _alternative_doors(_findings(work, profile_values=disability), "0021") == []
 
         def stated(casilla: str, value: str) -> ModeloScalarEditIntentV1:
             return ModeloScalarEditIntentV1(
@@ -292,6 +320,7 @@ def test_a_stated_disability_blocks_the_unstated_increase_and_a_stated_expense_a
                 "operator.modelo.work.set_value",
                 {"work_unit_id": work.work_unit_id, "casilla_id": box},
             )
+            assert _alternative_doors(_findings(work), box) == []
 
 
 @pytest.mark.parametrize("year", _renta_years())
