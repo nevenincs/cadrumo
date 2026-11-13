@@ -36,7 +36,7 @@ target_casilla_id = "DP200013:00552"
 expression = { op = "subtract", args = [
     { op = "subtract", args = [
         { casilla_id = "DP200013:00550" },
-        { casilla_id = "DP200013:01032" },
+        { casilla_id = "01032" },
     ] },
     { casilla_id = "DP200013:00547" },
 ] }
@@ -245,22 +245,22 @@ expression = { op = "max", args = [
                 { casilla_id = "DP200014:00585" },
                 { casilla_id = "DP200014:00584" },
                 { casilla_id = "DP200014:00588" },
-                { casilla_id = "DP200014:01039" },
-                { casilla_id = "DP200014:02314" },
-                { casilla_id = "DP200014:02315" },
+                { casilla_id = "01039" },
+                { casilla_id = "02314" },
+                { casilla_id = "02315" },
                 { casilla_id = "DP200014:00565" },
                 { casilla_id = "DP200014:00590" },
                 { casilla_id = "DP200014:00399" },
                 { casilla_id = "DP200014:00082" },
-                { casilla_id = "DP200014:01040" },
-                { casilla_id = "DP200014:01041" },
+                { casilla_id = "01040" },
+                { casilla_id = "01041" },
             ] },
         ] },
         { literal = "0" },
     ] },
 ] }
 rounding = "money-2"
-legal_refs = ["ley-27-2014:art-30", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-36", "ley-27-2014:art-39"]
+legal_refs = ["ley-27-2014:art-30", "ley-27-2014:art-30-bis", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-36", "ley-27-2014:art-39"]
 source_refs = ["aeat-dr-200-2022", "aeat-modelo-200-manual-2022"]
 
 [[revisions."2022".formulas.source_citations]]

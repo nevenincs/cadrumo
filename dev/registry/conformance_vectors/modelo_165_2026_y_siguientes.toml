@@ -1,0 +1,44 @@
+# Pinned public conformance-vector declaration for Modelo 165 revision
+# 2026-y-siguientes.
+#
+# Modelo 165 is held at filing grade, so this vector exercises the proof's
+# success path while the Modelo 200 pin is refused by grade. Only the
+# generation MANIFEST digest is pinned, as for every pinned vector: the manifest
+# enumerates each generated output with its own sha256, so one digest carries the
+# fail-closed property. A regenerated export tree must refresh this digest under
+# review. The declaration needs no draft input: the edition renders its base
+# layout and envelope from an empty draft.
+
+authority_id = "dev.registry.filing-export-conformance"
+mechanism_source_ref = "generated-provenance/165/2026-y-siguientes"
+generation_manifest_sha256 = "ba3b8cfb551c074bd29fd9841a0dceb8ac3a15b4adccc8590edbc13591b1d3b9"
+filing_year = 2026
+period_code = "0A"
+
+[coordinate]
+modelo = "165"
+revision = "2026-y-siguientes"
+layout_ids = ["modelo-165-fichero"]
+
+[[probes]]
+record_id = "modelo-165-declarante"
+field_id = "modelo-165-t1-record-type"
+emitted_offset = 0
+length = 1
+
+[[probes]]
+record_id = "modelo-165-declarante"
+field_id = "modelo-165-t1-modelo"
+emitted_offset = 1
+length = 3
+
+[[probes]]
+record_id = "modelo-165-declarante"
+field_id = "modelo-165-t1-tipo-soporte"
+emitted_offset = 57
+length = 1
+
+[inputs.decimal]
+# Casilla decl.ejercicio is required: the fiscal year the declaration covers, which
+# is this pin's filing year.
+"decl.ejercicio" = "2026"

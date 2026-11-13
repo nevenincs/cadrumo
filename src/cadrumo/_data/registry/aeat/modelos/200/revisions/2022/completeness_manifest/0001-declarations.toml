@@ -116,7 +116,7 @@ segmento = "DP200013"
 number = "00552"
 
 [[revisions."2022".completeness_manifest.casillas]]
-casilla_id = "DP200013:01032"
+casilla_id = "01032"
 segmento = "DP200013"
 number = "01032"
 
@@ -261,17 +261,17 @@ segmento = "DP200014"
 number = "00619"
 
 [[revisions."2022".completeness_manifest.casillas]]
-casilla_id = "DP200014:01039"
+casilla_id = "01039"
 segmento = "DP200014"
 number = "01039"
 
 [[revisions."2022".completeness_manifest.casillas]]
-casilla_id = "DP200014:01040"
+casilla_id = "01040"
 segmento = "DP200014"
 number = "01040"
 
 [[revisions."2022".completeness_manifest.casillas]]
-casilla_id = "DP200014:01041"
+casilla_id = "01041"
 segmento = "DP200014"
 number = "01041"
 
@@ -281,12 +281,12 @@ segmento = "DP200014"
 number = "01330"
 
 [[revisions."2022".completeness_manifest.casillas]]
-casilla_id = "DP200014:02314"
+casilla_id = "02314"
 segmento = "DP200014"
 number = "02314"
 
 [[revisions."2022".completeness_manifest.casillas]]
-casilla_id = "DP200014:02315"
+casilla_id = "02315"
 segmento = "DP200014"
 number = "02315"
 

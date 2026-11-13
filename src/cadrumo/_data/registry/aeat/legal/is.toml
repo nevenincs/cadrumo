@@ -725,6 +725,28 @@ required_text = [
     "aplicar a la base imponible el tipo de gravamen",
 ]
 
+[legal."ley-27-2014:art-30-bis"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014.html#a3-3"
+document_id = "BOE-A-2014-12328"
+article = "30 bis"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a3-3"
+published_at = 2021-12-29
+effective_from = 2022-01-01
+review_status = "agent_reviewed"
+reviewed_by = "agent: enrolled from the bundled consolidated LIS (ley-27-2014.html, block a3-3), because Modelo 200 box 00619 (cuota liquida minima) is printed by the AEAT design and the Manual practico de Sociedades as regulated by art. 30 bis LIS, and an article absent from the catalogue is not citable. All required_text phrases were confirmed present in the bundled payload. NOT CLAIMED -- no operator countersignature."
+reviewed_at = 2026-11-12
+notes = """LIS art. 30 bis: tributacion minima. Contribuyentes con importe neto de la cifra de negocios de al menos 20 millones de euros en los 12 meses anteriores al inicio del periodo impositivo, o en regimen de consolidacion fiscal, no pueden tener una cuota liquida inferior al resultado de aplicar el 15 por ciento a la base imponible (cuota liquida minima); apartado 2 ordena las minoraciones y deducciones y apartado 3 el diferimiento de lo no deducido. Introducido por el art. 61.2 de la Ley 22/2021 con efectos desde los periodos impositivos iniciados a partir de 1 de enero de 2022; el apartado 1 se modifica por la disposicion final 8.4 de la Ley 7/2024 desde los periodos iniciados a partir de 1 de enero de 2025. Entrada en vigor: el consolidado bundled anota el apartado con "Se añade, con efectos para los períodos impositivos que se inicien a partir de 1 de enero de 2022, por el art. 61.2 de la Ley 22/2021, de 28 de diciembre. Ref. BOE-A-2021-21653" (ley-27-2014.html.extracted.md L880); el texto de la propia Ley 22/2021 no esta en el corpus. Funda la casilla 00619 del Modelo 200 desde la edicion 2022."""
+required_text = [
+    "Tributación mínima",
+    "la cuota líquida no podrá ser inferior al resultado de aplicar el 15 por ciento a la base imponible",
+    "Dicha cuota tendrá el carácter de cuota líquida mínima",
+    "el 60 por ciento a la cuota íntegra",
+    "por el art. 61.2 de la Ley 22/2021, de 28 de diciembre",
+]
+
 [legal."ley-27-2014:art-39"]
 evidence_tier = "legal_authority"
 authority = "boe"
@@ -2324,21 +2346,42 @@ evidence_tier = "legal_authority"
 authority = "boe"
 kind = "ley"
 corpus_ref = "corpus/normatives/html/ley-31-2022-art-39.html#a39"
-document_id = "BOE-A-2014-12328"
-article = "29"
-permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328&p=20221229&tn=1#a29"
-published_at = 2014-11-28
+document_id = "BOE-A-2022-22128"
+article = "39"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2022-22128#a39"
+published_at = 2022-12-24
 effective_from = 2023-01-01
 effective_to = 2024-12-31
 review_status = "agent_reviewed"
 reviewed_at = 2026-11-12
 reviewed_by = "agent-review"
-notes = """LIS art 29.1 as Ley 31/2022 art 39 worded it for periodos impositivos from 1 January 2023: tipo general 25 por ciento, and 23 por ciento for a contribuyente whose importe neto de la cifra de negocios of the immediately preceding periodo is below 1 millón de euros. For periodos starting within 2025 onward Ley 7/2024 reworded art 29.1 and DT 44 (ley-27-2014:dt-44, "Con efectos para los períodos impositivos que se inicien dentro del año 2025, a efectos de lo dispuesto en el artículo 29.1 de la LIS") sets the transitional scale, so this redaction governs periodos 2023 and 2024 only. The bundled text is the amending article itself, which quotes the redaction in full."""
+notes = """LIS art 29.1 in the wording Ley 31/2022 art 39 gave it, so the amending provision is the source of this text: "Se modifica el artículo 29 de la Ley 27/2014 ... que queda redactado de la siguiente forma: «Artículo 29. Tipos de gravamen. 1. El tipo general de gravamen ... será el 25 por ciento. No obstante, tributarán al tipo del 23 por ciento los contribuyentes cuyo importe neto de la cifra de negocios del período impositivo inmediato anterior sea inferior a 1 millón de euros." (ley-31-2022-art-39.html.extracted.md L1-L6). It governs periodos impositivos initiated in 2023 and 2024: from 2025 Ley 7/2024 rewords art 29.1 and DT 44 (ley-27-2014:dt-44) sets the transitional scale. The Manual práctico de Sociedades 2024 rate table corroborates the 23 % lane: "Entidades INCN < 1 millón de euros en el período impositivo inmediato anterior (no siendo aplicable a aquellas entidades que tengan la consideración de entidad patrimonial) 23 por 100" (manuals/sociedades/2024/source.pdf.extracted.md L14682-L14683)."""
 required_text = [
+    "Se modifica el artículo 29 de la Ley 27/2014",
     "Artículo 29. Tipos de gravamen.",
     "El tipo general de gravamen para los contribuyentes de este Impuesto será el 25 por ciento.",
     "tributarán al tipo del 23 por ciento",
     "inferior a 1 millón de euros",
+]
+
+[legal."ley-27-2014:art-29-2025"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014.html#a29"
+document_id = "BOE-A-2014-12328"
+article = "29.1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a29"
+published_at = 2024-12-21
+effective_from = 2025-01-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-11-13
+reviewed_by = "agent: enrolled from the bundled consolidated LIS (ley-27-2014.html, block a29, ley-27-2014.html.extracted.md L810-L851) because the wording of art. 29.1 for periodos initiated from 2025 is the one Ley 7/2024 gave it, and the Ley 7/2024 text itself is not bundled. NOT CLAIMED -- no operator countersignature."
+notes = """LIS art 29.1 in the wording of the disposicion final 8.3 de la Ley 7/2024, de 20 de diciembre (BOE-A-2024-26694), which the consolidated text annotates as "Se modifican los apartados 1 y 2, con efectos para los períodos impositivos que se inicien a partir de 1 de enero de 2025, por la disposición final 8.3 de la Ley 7/2024, de 20 de diciembre" (ley-27-2014.html.extracted.md L851). Tipo general 25 por ciento, except entidades whose INCN of the immediately preceding periodo is below 1 millon de euros, which apply the 17 / 20 por ciento scale (L812-L814). For periodos initiated within 2025 and 2026 the DT 44 (ley-27-2014:dt-44) scale applies on top of it (21 / 22 por ciento in 2025; 19 / 21 in 2026). The Manual practico de Sociedades 2025 rate table corroborates the 2025 lane: "Entidades INCN < 1 millón de euros en el período impositivo inmediato anterior ... Hasta 50.000 euros 21 por 100 / Resto Base Imponible 22 por 100 / Entidades de Reducida Dimensión (art. 101 LIS) 24 por 100" (manuals/sociedades/2025/source.pdf.extracted.md L14980-L14985). Replaces ley-27-2014:art-29-2023, whose wording governed periodos 2023 and 2024."""
+required_text = [
+    "El tipo general de gravamen para los contribuyentes de este Impuesto será el 25 por ciento",
+    "inferior a 1 millón de euros",
+    "por la disposición final 8.3 de la Ley 7/2024, de 20 de diciembre",
 ]
 
 [legal."ley-27-2014:art-75-2"]

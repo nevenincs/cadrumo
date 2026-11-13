@@ -946,54 +946,6 @@ section = ["conversion_de_activos_por_impuesto_diferido_en_cre", "compensacion_p
 semantic_role = "is_conversion_aid_compensacion"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1418 DP200014 9|64|17|N
-[[revisions."2023".casillas]]
-id = "01032"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1418 (DP200014 field 9): Liquidación III - Base imponible - Reserva de capitalización [01032]. aeat-dr-200-2022 prints no field with this caption. Its box [01032] is printed only on another sheet: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1382 (DP200013 field 95): Liquidación II - Base imponible - Reserva de capitalización [01032]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "is-reserva-capitalizacion-importe"
-number = "01032"
-segmento = "DP200014"
-section = ["liquidacion_iii", "base_imponible"]
-semantic_role = "is_reserva_capitalizacion_importe"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1489 DP200014B 10|81|17|Num
-[[revisions."2023".casillas]]
-id = "01039"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1489 (DP200014B field 10): Liquidación IV - Otras deducciones - Deducciones por producc. Cinematograf. Extranjeras (art. 36.2 LIS) [01039]. aeat-dr-200-2022 prints no field with this caption. Its box [01039] is printed only on another sheet: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1453 (DP200014 field 52): Liquidación III - Otras deducciones - Deducciones por producc. Cinematograf. Extranjeras (art. 36.2 LIS) [01039]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "01039"
-number = "01039"
-segmento = "DP200014B"
-section = ["liquidacion_iv", "otras_deducciones"]
-semantic_role = "is_liquidacion_iv_resultado_misc"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1496 DP200014B 17|200|17|Num
-[[revisions."2023".casillas]]
-id = "01040"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1496 (DP200014B field 17): Liquidación IV - Otras deducciones - Deducciones por reversión de medidas temporales DT 37ª.1 LIS [01040]. aeat-dr-200-2022 prints no field with this caption. Its box [01040] is printed only on another sheet: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1460 (DP200014 field 59): Liquidación III - Otras deducciones - Deducciones por reversión de medidas temporales DT 37ª.1 LIS [01040]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "is-liquidacion-iv-importe"
-number = "01040"
-segmento = "DP200014B"
-section = ["liquidacion_iv", "otras_deducciones"]
-semantic_role = "is_liquidacion_iv_importe"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1497 DP200014B 18|217|17|Num
-[[revisions."2023".casillas]]
-id = "01041"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1497 (DP200014B field 18): Liquidación IV - Otras deducciones - Deducciones por reversión de medidas temporales DT 37ª.2 LIS [01041]. aeat-dr-200-2022 prints no field with this caption. Its box [01041] is printed only on another sheet: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1461 (DP200014 field 60): Liquidación III - Otras deducciones - Deducciones por reversión de medidas temporales DT 37ª.2 LIS [01041]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "01041"
-number = "01041"
-segmento = "DP200014B"
-section = ["liquidacion_iv", "otras_deducciones"]
-semantic_role = "is_liquidacion_iv_importe"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-
 # 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2920 DP200018C 130|2121|17|Num
 [[revisions."2023".casillas]]
 id = "01061"
@@ -2037,30 +1989,6 @@ continuidad_id = "02185"
 number = "02185"
 section = ["liquidacion_ii", "detalle_correcciones_resultado_cta_perdidas_y_gana"]
 semantic_role = "is_correcciones_disminuciones_liquidacion_detalle"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1490 DP200014B 11|98|17|Num
-[[revisions."2023".casillas]]
-id = "02314"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1490 (DP200014B field 11): Liquidación IV - Otras deducciones - Deducciones por producciones cinematográficas extranjeras en Canarias (art. 36.2 LIS y DA 14ª Ley 19/1994) [02.... aeat-dr-200-2022 prints no field with this caption. Its box [02314] is printed only on another sheet: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1454 (DP200014 field 53): Liquidación III - Otras deducciones - Deducciones por producciones cinematográficas extranjeras en Canarias (art. 36..... The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "02314"
-number = "02314"
-segmento = "DP200014B"
-section = ["liquidacion_iv", "otras_deducciones"]
-semantic_role = "is_liquidacion_iv_resultado_misc"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1491 DP200014B 12|115|17|Num
-[[revisions."2023".casillas]]
-id = "02315"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1491 (DP200014B field 12): Liquidación IV - Otras deducciones - Deducción por inversiones y gastos realizados por las autoridades portuarias (art. 38 bis LIS) [02315]. aeat-dr-200-2022 prints no field with this caption. Its box [02315] is printed only on another sheet: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1455 (DP200014 field 54): Liquidación III - Otras deducciones - Deducción por inversiones y gastos realizados por las autoridades portuarias (a.... The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "is-deduccion-inversion-autoridades-portuarias"
-number = "02315"
-segmento = "DP200014B"
-section = ["liquidacion_iv", "otras_deducciones"]
-semantic_role = "is_deduccion_inversion_autoridades_portuarias"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 
 # 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3769 DP200022 33|472|17|Num

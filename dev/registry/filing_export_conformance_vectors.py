@@ -39,7 +39,8 @@ from cadrumo.domain.transactions.protocols import TransactionCatalogueRepository
 
 from .compiler.authority import compile_validated_authority
 from .compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENAME
-from .edition_export_scenarios import m200_export_scenario
+from .edition_export_scenarios import general_export_scenario, m200_export_scenario
+from .edition_round_trip import EditionExportScenario
 from .filing_export_proof_contracts import (
     FilingExportConformanceRenderInputs,
     FilingExportConformanceVectorEvidence,
@@ -323,8 +324,8 @@ def _conformance_draft_review_ports() -> DraftReviewPorts:
 
 
 @dataclass(frozen=True, slots=True)
-class ModeloSociedadesConformanceVectorBuilder:
-    """Materialise value-independent Modelo 200 conformance inputs.
+class PinnedConformanceVectorBuilder:
+    """Materialise value-independent conformance inputs for one pinned vector.
 
     The draft uses declared public inputs against the law-selected snapshot, and
     the producer snapshot carries synthetic identity and source-shaped rows. Neither
@@ -341,7 +342,7 @@ class ModeloSociedadesConformanceVectorBuilder:
         self,
         evidence: FilingExportConformanceVectorEvidence,
     ) -> FilingExportConformanceRenderInputs:
-        """Return canonical writer inputs for the pinned Modelo 200 coordinate.
+        """Return canonical writer inputs for the pinned coordinate.
 
         Returns:
             The :class:`FilingExportConformanceRenderInputs` for ``evidence``.
@@ -358,11 +359,11 @@ class ModeloSociedadesConformanceVectorBuilder:
     ) -> FilingExportConformanceRenderInputs:
         """Construct and review public inputs under the selected candidate facts."""
         modelo_id = str(evidence.coordinate.modelo)
-        scenario = m200_export_scenario(evidence.period, result_disposition=ResultDisposition.INGRESO)
+        scenario = _conformance_scenario(modelo_id, evidence.period)
         producer_snapshot = scenario.producer_snapshot()
         subject_name = producer_snapshot.taxpayer_identity.full_name
         if subject_name is None:
-            raise RegistryValidationError("Modelo 200 public conformance requires explicit subject identity")
+            raise RegistryValidationError("public conformance requires explicit subject identity")
         schema_provider = schema_provider_from_authority(
             authority,
             filing_year=evidence.filing_year,
@@ -393,8 +394,6 @@ class ModeloSociedadesConformanceVectorBuilder:
                 category_profiles={},
             )
         software_identity_factory = scenario.product_software_identity_factory
-        if software_identity_factory is None:
-            raise RegistryValidationError("Modelo 200 public conformance requires explicit software identity")
         return FilingExportConformanceRenderInputs(
             coordinate=evidence.coordinate,
             filing_year=evidence.filing_year,
@@ -402,7 +401,7 @@ class ModeloSociedadesConformanceVectorBuilder:
             draft=approved,
             producer_snapshot=producer_snapshot,
             prior_domiciliation_election=scenario.prior_domiciliation_election,
-            product_software_identity=software_identity_factory(),
+            product_software_identity=None if software_identity_factory is None else software_identity_factory(),
         )
 
 
@@ -416,6 +415,25 @@ _CONFORMANCE_BUCKET_ID = "filing-export-conformance"
 
 
 _CONFORMANCE_APPROVER = "filing-export-conformance-vector"
+
+
+def _conformance_scenario(modelo_id: str, period: Period) -> EditionExportScenario:
+    """Return the public synthetic scenario a pinned coordinate's writer inputs derive from.
+
+    Raises:
+        RegistryValidationError: If no scenario is declared for ``modelo_id``.
+    """
+    if modelo_id == _SOCIEDADES_MODELO_ID:
+        return m200_export_scenario(period, result_disposition=ResultDisposition.INGRESO)
+    if modelo_id in _NO_INPUT_CONFORMANCE_MODELOS:
+        return general_export_scenario(modelo_id, period)
+    raise RegistryValidationError(f"no public conformance scenario is declared for modelo {modelo_id}")
+
+
+# Modelo 200 needs its own scenario (rate-dispatch profile bindings, software
+# identity, projection rows); the modelos below render from a draft with no input.
+_SOCIEDADES_MODELO_ID = "200"
+_NO_INPUT_CONFORMANCE_MODELOS = frozenset({"165"})
 
 
 def canonical_filing_export_conformance_vectors(
@@ -439,7 +457,7 @@ def canonical_filing_export_conformance_vectors(
                     manifest_raw=manifest_raw,
                     manifest=manifest,
                 ),
-                builder=ModeloSociedadesConformanceVectorBuilder(
+                builder=PinnedConformanceVectorBuilder(
                     registry_root=registry_root,
                     source_root=source_root,
                     pinned_path=pinned_path,

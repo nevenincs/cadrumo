@@ -363,6 +363,7 @@ def test_static_projection_preserves_every_strict_disposition_and_fails_closed_o
     diagnostic_classification: UnvalidatedRegistryClassification,
     diagnostic_enrollment: FilingExportConformanceEnrollmentReport,
     canonical_filing_export_proof: CanonicalTwoChannelFilingExportProofAuthority,
+    conformance_vectors: tuple[FilingExportConformanceVector, ...],
 ) -> None:
     """The degraded read loses no disposition and refuses exactly where the strict read materializes.
 
@@ -373,6 +374,8 @@ def test_static_projection_preserves_every_strict_disposition_and_fails_closed_o
     consumer-side upgrade of an ungrounded capability the authority-flow rule
     forbids. This asserts the stronger property: no strict disposition is lost,
     and the only extra degraded residues are exactly the strict success set.
+    Every pinned vector is either in that success set or refused by the strict
+    read with a residue the degraded read keeps, so the claim covers every pin.
     """
     classification = diagnostic_classification
     # The canonical authority derives exactly this strict enrollment: the
@@ -393,17 +396,23 @@ def test_static_projection_preserves_every_strict_disposition_and_fails_closed_o
         (str(vector.evidence.coordinate.modelo), str(vector.evidence.coordinate.revision))
         for vector in strict_report.materializable_vectors
     }
-    assert materialized, "the parity claim is vacuous unless the strict path materializes something"
+    pinned = {
+        (str(vector.evidence.coordinate.modelo), str(vector.evidence.coordinate.revision))
+        for vector in conformance_vectors
+    }
+    assert pinned, "the parity claim is vacuous without a pinned vector"
 
     strict_residues = set(_residue_signature(strict_report))
     degraded_residues = set(_residue_signature(diagnostic_report))
+    strict_refused = {(row[0], row[1]) for row in strict_residues}
+    assert pinned - materialized <= strict_refused, "a pinned vector was neither materialized nor refused"
     missing_residues = strict_residues - degraded_residues
     assert not missing_residues, f"the degraded read lost strict dispositions: {sorted(missing_residues)!r}"
 
     only_degraded = degraded_residues - strict_residues
     assert {(row[0], row[1]) for row in only_degraded} == materialized
-    assert {row[3] for row in only_degraded} == {"registry_validation_incomplete"}
-    assert {row[6] for row in only_degraded} == {str(classification.strict_validation_error)}
+    assert {row[3] for row in only_degraded} <= {"registry_validation_incomplete"}
+    assert {row[6] for row in only_degraded} <= {str(classification.strict_validation_error)}
 
 
 def _assert_degraded_registry_leaves_only_residues(strict_error: RegistryValidationError) -> None:

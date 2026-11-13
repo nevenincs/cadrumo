@@ -17,14 +17,26 @@ import pytest
 from cadrumo.application.filing.draft_construction import build_draft
 from cadrumo.application.filing.export import export_draft, render_export_layout
 from cadrumo.application.filing.export_verification import FilingExportValidatedPayload
-from cadrumo.application.filing.runtime import ModeloOperatorProfile, build_runtime_schema_provider
+from cadrumo.application.filing.runtime import (
+    ModeloOperatorProfile,
+    RegistrySchemaAccessor,
+    build_runtime_schema_provider,
+    collection_from_snapshot,
+    subview_from_snapshot,
+)
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.export_layout_format import ExportLayoutFormat
 from cadrumo.core.period import Period
 from cadrumo.core.prior_domiciliation_election import PriorDomiciliationElection
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.errors import (
+    RegistryError,
+    RegistryFailureCondition,
+    RegistrySnapshotError,
+    RegistryValidationError,
+)
 from cadrumo.domain.calculations.registry.export_shared_owner import (
     canonical_export_layout,
     unadjudicated_shared_owners,
@@ -74,15 +86,53 @@ class _PayloadSink:
         self.payload = payload.payload
 
 
-def _m200_filing_years() -> tuple[int, ...]:
+def _m200_newest_edition_years() -> tuple[int, ...]:
+    """Every supported year the newest authored Modelo 200 edition calculates, whose design these cells were read from.
+
+    The years are selected by the edition the registry resolves for them, not by
+    its grade: the shared-cell rule reads the layout and the casillas alone.
+    """
     authority = compiled_bundled_authority()
+    newest = max(authority.modelo(_M200).revisions.values(), key=lambda revision: revision.valid_from)
     return tuple(
         year
         for year in authority.supported_filing_years().years
         if authority.snapshot(
-            _M200, filing_year=year, period="0A", grade=RegistryAuthorityGrade.APPLICABILITY
-        ).revision.authority_grade
-        is RegistryAuthorityGrade.FILING
+            _M200, filing_year=year, period="0A", grade=RegistryAuthorityGrade.CALCULATION
+        ).revision.id
+        == newest.id
+    )
+
+
+def _is_grade_refusal(error: RegistryError) -> bool:
+    failure = error.registry_failure
+    return failure is not None and failure.condition is RegistryFailureCondition.SNAPSHOT_AUTHORITY_GRADE_SUFFICIENT
+
+
+def _export_schema_provider(operation: PinnedAuthorityOperation, modelo: str, period: Period) -> RegistrySchemaAccessor:
+    """The filing provider, or the calculation snapshot of an edition held below filing grade.
+
+    The filing provider admits a filing-grade edition only, which
+    ``test_the_filing_provider_refuses_an_edition_held_below_filing_grade``
+    proves. The renderer's shared-cell rule does not read the grade, so an
+    edition held at calculation grade is projected through the runtime's own
+    collection and subview projections rather than left unexercised.
+    """
+    try:
+        return build_runtime_schema_provider(
+            operation=operation, modelos=(modelo,), filing_year=period.filing_year, period=period
+        )
+    except (RegistrySnapshotError, RegistryValidationError) as refused:
+        if not _is_grade_refusal(refused):
+            raise
+    snapshot = operation.snapshot(
+        modelo, filing_year=period.filing_year, period=period.registry_token, grade=RegistryAuthorityGrade.CALCULATION
+    )
+    return RegistrySchemaAccessor(
+        collections={modelo: collection_from_snapshot(snapshot)},
+        subviews={modelo: subview_from_snapshot(snapshot)},
+        snapshots={modelo: snapshot},
+        sources=snapshot.sources,
     )
 
 
@@ -103,10 +153,8 @@ def _export(
     """Run the real path, raising whatever the export refuses with."""
     period = scenario.period
     with bundled_indexed_authority().operation() as operation:
-        revision = operation.snapshot(modelo, filing_year=period.filing_year, period=period.code).revision
-        provider = build_runtime_schema_provider(
-            operation=operation, modelos=(modelo,), filing_year=period.filing_year, period=period
-        )
+        provider = _export_schema_provider(operation, modelo, period)
+        revision = provider.get_snapshot(modelo).revision
         draft = build_draft(
             modelo=modelo,
             period=period,
@@ -189,7 +237,7 @@ def _refusal(year: int, supplied: ModeloInputs) -> FilingExportValidationError:
     return caught.value
 
 
-@pytest.mark.parametrize("year", _m200_filing_years())
+@pytest.mark.parametrize("year", _m200_newest_edition_years())
 def test_tributos_is_refused_naming_its_six_sheets_and_nothing_is_delivered(year: int) -> None:
     sink = _PayloadSink()
     with pytest.raises(FilingExportValidationError) as caught:
@@ -208,11 +256,11 @@ def test_tributos_is_refused_naming_its_six_sheets_and_nothing_is_delivered(year
 
 def test_a_dictionary_layout_holding_a_shared_box_is_refused_like_a_fixed_width_one() -> None:
     """No bundled dictionary layout declares records today, so one is planted to prove the branch still asks."""
-    year = _m200_filing_years()[-1]
+    year = _m200_newest_edition_years()[-1]
     period = Period.from_year_and_code(year, "0A")
     scenario = _m200_scenario(year)
     with bundled_indexed_authority().operation() as operation:
-        provider = build_runtime_schema_provider(filing_year=year, period=period, modelos=(_M200,), operation=operation)
+        provider = _export_schema_provider(operation, _M200, period)
         registry_snapshot = provider.get_snapshot(_M200)
         planted = canonical_export_layout(registry_snapshot.revision.export_layouts)
         assert planted is not None
@@ -241,7 +289,30 @@ def test_a_dictionary_layout_holding_a_shared_box_is_refused_like_a_fixed_width_
     assert (caught.value.context or {})["casilla_ids"] == "00281"
 
 
-@pytest.mark.parametrize("year", _m200_filing_years())
+def test_the_newest_edition_governs_a_supported_year() -> None:
+    assert _m200_newest_edition_years(), "no supported year selects the newest Modelo 200 edition"
+
+
+@pytest.mark.parametrize("year", _m200_newest_edition_years())
+def test_the_filing_provider_refuses_an_edition_held_below_filing_grade(year: int) -> None:
+    """A Modelo 200 fichero is built only from a filing-grade edition; a lower one is refused, typed."""
+    period = Period.from_year_and_code(year, "0A")
+    with bundled_indexed_authority().operation() as operation:
+        grade = operation.snapshot(
+            _M200, filing_year=year, period="0A", grade=RegistryAuthorityGrade.CALCULATION
+        ).revision.authority_grade
+        if grade is RegistryAuthorityGrade.FILING:
+            provider = build_runtime_schema_provider(
+                operation=operation, modelos=(_M200,), filing_year=year, period=period
+            )
+            assert provider.get_snapshot(_M200).revision.authority_grade is RegistryAuthorityGrade.FILING
+            return
+        with pytest.raises((RegistrySnapshotError, RegistryValidationError)) as refused:
+            build_runtime_schema_provider(operation=operation, modelos=(_M200,), filing_year=year, period=period)
+    assert _is_grade_refusal(refused.value)
+
+
+@pytest.mark.parametrize("year", _m200_newest_edition_years())
 def test_a_refused_export_leaves_no_file(year: int, tmp_path: Path) -> None:
     output = tmp_path / "refused.boe"
     with pytest.raises(FilingExportValidationError) as caught:
@@ -250,7 +321,7 @@ def test_a_refused_export_leaves_no_file(year: int, tmp_path: Path) -> None:
     assert list(tmp_path.iterdir()) == []
 
 
-@pytest.mark.parametrize("year", _m200_filing_years())
+@pytest.mark.parametrize("year", _m200_newest_edition_years())
 def test_the_socimi_flag_is_refused_naming_the_reserve_deduction_cell(year: int) -> None:
     refusal = _refusal(year, {"00012": Decimal("1")})
 
@@ -261,7 +332,7 @@ def test_the_socimi_flag_is_refused_naming_the_reserve_deduction_cell(year: int)
     assert {"DP200001", "DP200022"} <= {_sheet(cell) for cell in target_cells["00012"]}
 
 
-@pytest.mark.parametrize("year", _m200_filing_years())
+@pytest.mark.parametrize("year", _m200_newest_edition_years())
 def test_every_written_box_is_named_at_once(year: int) -> None:
     refusal = _refusal(year, {"00281": Decimal("123.45"), "00012": Decimal("1")})
 
@@ -272,7 +343,7 @@ def test_every_written_box_is_named_at_once(year: int) -> None:
     assert set(target_cells) == {"00281", "00012"}
 
 
-@pytest.mark.parametrize("year", _m200_filing_years())
+@pytest.mark.parametrize("year", _m200_newest_edition_years())
 def test_a_declared_echo_writes_its_amount_into_both_its_cells(year: int) -> None:
     """DP200015's "aplicado en esta liquidación" total repeats the liquidación box it feeds."""
     rendered = _export(_M200, _m200_scenario(year), {"DP200014:00547": Decimal("123.45")})
@@ -284,7 +355,7 @@ def test_a_declared_echo_writes_its_amount_into_both_its_cells(year: int) -> Non
         assert _slot(rendered.payload, rendered.revision, cell) == b"12345".rjust(cell.length, b"0")
 
 
-@pytest.mark.parametrize("year", _m200_filing_years())
+@pytest.mark.parametrize("year", _m200_newest_edition_years())
 def test_a_box_with_one_cell_exports_its_value(year: int) -> None:
     rendered = _export(_M200, _m200_scenario(year), {"DP200012:00004": Decimal("123.45")})
 
@@ -293,7 +364,7 @@ def test_a_box_with_one_cell_exports_its_value(year: int) -> None:
     assert _slot(rendered.payload, rendered.revision, cell) == b"12345".rjust(cell.length, b"0")
 
 
-@pytest.mark.parametrize("year", _m200_filing_years())
+@pytest.mark.parametrize("year", _m200_newest_edition_years())
 @pytest.mark.parametrize(
     ("casilla_id", "zero"),
     [
@@ -309,10 +380,14 @@ def test_a_zero_is_byte_identical_to_the_box_never_being_supplied(year: int, cas
     assert supplied.payload == absent.payload
 
 
-@pytest.mark.parametrize("year", _m200_filing_years())
+@pytest.mark.parametrize("year", _m200_newest_edition_years())
 def test_a_zero_in_every_rate_and_flag_owner_matches_absence_in_every_cell(year: int) -> None:
     """The zero rule is proved over the shared owners' real cell shapes, not assumed per kind."""
-    revision = compiled_bundled_authority().snapshot(_M200, filing_year=year, period="0A").revision
+    revision = (
+        compiled_bundled_authority()
+        .snapshot(_M200, filing_year=year, period="0A", grade=RegistryAuthorityGrade.CALCULATION)
+        .revision
+    )
     layout = canonical_export_layout(revision.export_layouts)
     assert layout is not None
     owners = unadjudicated_shared_owners(layout, revision.casillas)
@@ -329,10 +404,14 @@ def test_a_zero_in_every_rate_and_flag_owner_matches_absence_in_every_cell(year:
         assert written_unadjudicated_shared_owners(layout, revision.casillas, values) == ()
 
 
-@pytest.mark.parametrize("year", _m200_filing_years())
+@pytest.mark.parametrize("year", _m200_newest_edition_years())
 def test_a_zero_or_digit_in_a_text_cell_is_a_written_value_and_refuses(year: int) -> None:
     """Box 00040 reaches a text cell, where a zero prints instead of leaving the design's blank."""
-    revision = compiled_bundled_authority().snapshot(_M200, filing_year=year, period="0A").revision
+    revision = (
+        compiled_bundled_authority()
+        .snapshot(_M200, filing_year=year, period="0A", grade=RegistryAuthorityGrade.CALCULATION)
+        .revision
+    )
     layout = canonical_export_layout(revision.export_layouts)
     assert layout is not None
     (owner,) = [
@@ -347,7 +426,7 @@ def test_a_zero_or_digit_in_a_text_cell_is_a_written_value_and_refuses(year: int
         assert written_unadjudicated_shared_owners(layout, revision.casillas, {owner.casilla_id: blank}) == ()
 
 
-@pytest.mark.parametrize("year", _m200_filing_years())
+@pytest.mark.parametrize("year", _m200_newest_edition_years())
 @pytest.mark.parametrize("amount", [Decimal("0.01"), Decimal("-0.01")], ids=["smallest-positive", "smallest-negative"])
 def test_the_smallest_amount_either_side_of_zero_refuses(year: int, amount: Decimal) -> None:
     assert _refusal(year, {"00281": amount}).translated_message == _REFUSAL

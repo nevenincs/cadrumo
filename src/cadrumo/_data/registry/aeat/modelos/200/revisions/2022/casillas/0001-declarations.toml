@@ -23360,7 +23360,7 @@ formula = "modelo-200-base-imponible-previa"
 legal_refs = ["ley-27-2014:art-10", "ley-27-2014:art-11", "ley-27-2014:art-15", "ley-27-2014:art-25", "ley-27-2014:art-26", "ley-27-2014:art-105"]
 # 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1382 DP200013 95|1526|17|N
 [[revisions."2022".casillas]]
-id = "DP200013:01032"
+id = "01032"
 continuidad_id = "is-reserva-capitalizacion-importe"
 number = "01032"
 segmento = "DP200013"
@@ -23479,7 +23479,7 @@ semantic_role = "is_liquidacion_iv_importe"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 # 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1453 DP200014 52|782|17|Num
 [[revisions."2022".casillas]]
-id = "DP200014:01039"
+id = "01039"
 continuidad_id = "01039"
 number = "01039"
 segmento = "DP200014"
@@ -23488,7 +23488,7 @@ semantic_role = "is_liquidacion_iv_resultado_misc"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 # 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1454 DP200014 53|799|17|Num
 [[revisions."2022".casillas]]
-id = "DP200014:02314"
+id = "02314"
 continuidad_id = "02314"
 number = "02314"
 segmento = "DP200014"
@@ -23497,7 +23497,7 @@ semantic_role = "is_liquidacion_iv_resultado_misc"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 # 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1455 DP200014 54|816|17|Num
 [[revisions."2022".casillas]]
-id = "DP200014:02315"
+id = "02315"
 continuidad_id = "is-deduccion-inversion-autoridades-portuarias"
 number = "02315"
 segmento = "DP200014"
@@ -23542,7 +23542,7 @@ semantic_role = "is_liquidacion_iv_importe"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 # 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1460 DP200014 59|901|17|Num
 [[revisions."2022".casillas]]
-id = "DP200014:01040"
+id = "01040"
 continuidad_id = "is-liquidacion-iv-importe"
 number = "01040"
 segmento = "DP200014"
@@ -23551,7 +23551,7 @@ semantic_role = "is_liquidacion_iv_importe"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 # 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1461 DP200014 60|918|17|Num
 [[revisions."2022".casillas]]
-id = "DP200014:01041"
+id = "01041"
 continuidad_id = "01041"
 number = "01041"
 segmento = "DP200014"
@@ -23566,7 +23566,7 @@ number = "00619"
 segmento = "DP200014"
 section = ["liquidacion_iii", "otras_deducciones"]
 semantic_role = "is_liquidacion_iv_cuota_liquida_minima"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26", "ley-27-2014:art-30-bis"]
 # 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1463 DP200014 62|952|17|Num
 [[revisions."2022".casillas]]
 id = "DP200014:00592"

@@ -15,8 +15,10 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+from cadrumo.domain.calculations.registry.errors import RegistryError, RegistryFailureCondition, RegistryValidationError
 from cadrumo.domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
 from cadrumo.domain.calculations.registry.tests.authored_editions import (
     newest_authored_editions,
@@ -26,6 +28,7 @@ from cadrumo.domain.calculations.registry.tests.authored_editions import (
 
 from ..filing_export_conformance import FilingExportConformanceRequest
 from ..filing_export_conformance_vectors import (
+    FilingExportConformanceVector,
     build_pinned_conformance_evidence,
     canonical_filing_export_conformance_vectors,
     load_pinned_conformance_document,
@@ -34,6 +37,7 @@ from ..filing_export_conformance_vectors import (
 from ..filing_export_proof_authority import (
     CanonicalTwoChannelFilingExportProofAuthority,
 )
+from ..filing_export_proof_contracts import FilingExportConformanceRenderInputs
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -41,19 +45,38 @@ _PINNED = Path(__file__).resolve().parents[1] / "conformance_vectors" / "modelo_
 _REGISTRY_ROOT = bundled_path("registry", "aeat")
 #: The pin covers the open-ended edition of Modelo 200.
 _PINNED_M200_REVISION = str(open_ended_revision("200").id)
+#: The pin that exercises the success path whatever Modelo 200's grade is: Modelo 165 is held at filing grade.
+_PINNED_FILING_GRADE_MODELO = "165"
+_PINNED_FILING_GRADE_REVISION = str(open_ended_revision(_PINNED_FILING_GRADE_MODELO).id)
 
 
-def test_the_shipped_pin_materializes_against_the_current_generated_tree(
+def _pinned_revision_is_filing_grade(authority: ValidatedRegistryAuthority) -> bool:
+    (revision,) = (
+        revision for revision in authority.modelo("200").revisions.values() if str(revision.id) == _PINNED_M200_REVISION
+    )
+    return revision.authority_grade is RegistryAuthorityGrade.FILING
+
+
+def test_the_shipped_pin_admits_the_current_generated_tree_and_enrolls_by_grade(
     canonical_filing_export_proof: CanonicalTwoChannelFilingExportProofAuthority,
+    registry_authority: ValidatedRegistryAuthority,
 ) -> None:
-    """The committed pin admits the tree as generated today."""
+    """The committed pin admits the tree as generated today, and enrolls only while its revision is filing grade.
+
+    Loading the vectors checks the live generation manifest against the pinned
+    digest, so the pin admits the tree whatever the grade. A revision held below
+    filing grade is refused with its own residue rather than dropped.
+    """
     vectors = canonical_filing_export_conformance_vectors(
         registry_root=_REGISTRY_ROOT,
         source_root=bundled_path(),
     )
-    assert len(vectors) == 1
-    coordinate = vectors[0].evidence.coordinate
-    assert (str(coordinate.modelo), str(coordinate.revision)) == ("200", _PINNED_M200_REVISION)
+    assert {
+        (str(vector.evidence.coordinate.modelo), str(vector.evidence.coordinate.revision)) for vector in vectors
+    } == {
+        ("200", _PINNED_M200_REVISION),
+        (_PINNED_FILING_GRADE_MODELO, _PINNED_FILING_GRADE_REVISION),
+    }
 
     # The canonical proof derives its enrollment from exactly these vectors and
     # the validated bundled authority.
@@ -62,13 +85,20 @@ def test_the_shipped_pin_materializes_against_the_current_generated_tree(
         (str(vector.evidence.coordinate.modelo), str(vector.evidence.coordinate.revision))
         for vector in enrollment.materializable_vectors
     }
+    assert (_PINNED_FILING_GRADE_MODELO, _PINNED_FILING_GRADE_REVISION) in materialized
     m200_residues = [
-        (residue.reason, residue.owner, residue.detail)
+        (residue.revision, residue.reason, residue.owner, residue.detail)
         for residue in enrollment.residues
         if str(residue.modelo) == "200"
     ]
-    assert ("200", _PINNED_M200_REVISION) in materialized, m200_residues
-    assert not m200_residues
+    if _pinned_revision_is_filing_grade(registry_authority):
+        assert ("200", _PINNED_M200_REVISION) in materialized, m200_residues
+        assert not m200_residues
+    else:
+        assert ("200", _PINNED_M200_REVISION) not in materialized
+        assert [(str(revision), reason) for revision, reason, _, _ in m200_residues] == [
+            (_PINNED_M200_REVISION, "filing_revision_unselected")
+        ]
     candidates = {
         (str(candidate.evidence.coordinate.modelo), str(candidate.evidence.coordinate.revision))
         for candidate in enrollment.provenance_candidates
@@ -82,34 +112,30 @@ def test_the_shipped_pin_materializes_against_the_current_generated_tree(
     } <= candidates
 
 
-def test_public_proof_uses_the_real_writer_and_restores_candidate_fact_scope(
-    tmp_path: Path,
-    canonical_filing_export_proof: CanonicalTwoChannelFilingExportProofAuthority,
-    registry_authority,
-) -> None:
-    """Required rows, typed rate inputs and official probes all reach the production writer."""
-    authority = registry_authority
-    proof = canonical_filing_export_proof
-    vector = proof.conformance_enrollment.materializable_vectors[0]
-    before = governed_facts_in_scope()
-    render = vector.builder.build(vector.evidence)
-    assert governed_facts_in_scope() is before
-    values = {value.casilla_id: value.value for value in render.draft.values}
-    assert values["DP200014:00562"] == Decimal("25000")
-    assert render.draft.profile_tax_id == render.producer_snapshot.taxpayer_tax_id
-    assert render.product_software_identity is not None
-    request = FilingExportConformanceRequest(coordinate=vector.evidence.coordinate)
-    receipt = proof.prove_conformance(request)
-    assert receipt.checked_official_offsets == len(vector.evidence.provenance.probes)
-    assert receipt.emitted_bytes > 0
-    assert receipt.taxpayer_truth_claimed is False
-    assert receipt.source_owned_replay_claimed is False
-    assert governed_facts_in_scope() is before
+def _pinned_vector(
+    vectors: tuple[FilingExportConformanceVector, ...],
+    modelo: str,
+) -> FilingExportConformanceVector:
+    (vector,) = (vector for vector in vectors if str(vector.evidence.coordinate.modelo) == modelo)
+    return vector
 
-    # The healthy active tree must not mask a corrupt explicitly selected candidate.
+
+def _corrupt_candidate_output_is_refused(
+    tmp_path: Path,
+    *,
+    proof: CanonicalTwoChannelFilingExportProofAuthority,
+    authority: ValidatedRegistryAuthority,
+    vector: FilingExportConformanceVector,
+    request: FilingExportConformanceRequest,
+) -> None:
+    """The healthy active tree must not mask a corrupt explicitly selected candidate."""
+    modelo = str(vector.evidence.coordinate.modelo)
+    revision = str(vector.evidence.coordinate.revision)
     candidate_root = tmp_path / "registry"
-    candidate_export = candidate_root / f"modelos/200/revisions/{_PINNED_M200_REVISION}/export"
-    shutil.copytree(_REGISTRY_ROOT / f"modelos/200/revisions/{_PINNED_M200_REVISION}/export", candidate_export)
+    # The whole modelo is copied because an edition's generated export can inherit
+    # its predecessor's package, which the writer reads from the same candidate root.
+    shutil.copytree(_REGISTRY_ROOT / f"modelos/{modelo}", candidate_root / f"modelos/{modelo}")
+    candidate_export = candidate_root / f"modelos/{modelo}/revisions/{revision}/export"
     selected_output = candidate_export / vector.evidence.provenance.generated_outputs[0].relative_path
     selected_output.write_bytes(selected_output.read_bytes() + b"\n# changed candidate\n")
     candidate_proof = CanonicalTwoChannelFilingExportProofAuthority(
@@ -124,7 +150,85 @@ def test_public_proof_uses_the_real_writer_and_restores_candidate_fact_scope(
     )
     with pytest.raises(RegistryValidationError, match="output-file digests"):
         candidate_proof.prove_conformance(request)
+
+
+def _prove_through_the_real_writer(
+    tmp_path: Path,
+    *,
+    proof: CanonicalTwoChannelFilingExportProofAuthority,
+    authority: ValidatedRegistryAuthority,
+    vector: FilingExportConformanceVector,
+) -> FilingExportConformanceRenderInputs:
+    """Build the vector's inputs, prove it through the production writer and refuse a corrupt candidate."""
+    before = governed_facts_in_scope()
+    render = vector.builder.build(vector.evidence)
     assert governed_facts_in_scope() is before
+    assert render.draft.profile_tax_id == render.producer_snapshot.taxpayer_tax_id
+    request = FilingExportConformanceRequest(coordinate=vector.evidence.coordinate)
+    receipt = proof.prove_conformance(request)
+    assert receipt.checked_official_offsets == len(vector.evidence.provenance.probes)
+    assert receipt.emitted_bytes > 0
+    assert receipt.taxpayer_truth_claimed is False
+    assert receipt.source_owned_replay_claimed is False
+    assert governed_facts_in_scope() is before
+    _corrupt_candidate_output_is_refused(tmp_path, proof=proof, authority=authority, vector=vector, request=request)
+    assert governed_facts_in_scope() is before
+    return render
+
+
+def test_a_filing_grade_pin_proves_through_the_real_writer(
+    tmp_path: Path,
+    canonical_filing_export_proof: CanonicalTwoChannelFilingExportProofAuthority,
+    registry_authority: ValidatedRegistryAuthority,
+) -> None:
+    """The pin of a revision held at filing grade runs the proof's success path whatever Modelo 200's grade is."""
+    vector = _pinned_vector(
+        canonical_filing_export_proof.conformance_enrollment.materializable_vectors,
+        _PINNED_FILING_GRADE_MODELO,
+    )
+    assert str(vector.evidence.coordinate.revision) == _PINNED_FILING_GRADE_REVISION
+    _prove_through_the_real_writer(
+        tmp_path, proof=canonical_filing_export_proof, authority=registry_authority, vector=vector
+    )
+
+
+def test_the_modelo_200_pin_follows_the_declared_grade(
+    tmp_path: Path,
+    canonical_filing_export_proof: CanonicalTwoChannelFilingExportProofAuthority,
+    registry_authority: ValidatedRegistryAuthority,
+) -> None:
+    """Required rows, typed rate inputs and official probes reach the production writer once the grade allows it.
+
+    The production writer admits a filing-grade revision only. While the pinned
+    revision is held below it, the canonical builder is refused with the typed
+    grade failure, the proof refuses the unenrolled coordinate, and both leave
+    the candidate fact scope as they found it. The expectation is derived from
+    the registry's declared grade, so it becomes the success expectation when
+    the grade returns.
+    """
+    authority = registry_authority
+    proof = canonical_filing_export_proof
+    before = governed_facts_in_scope()
+    if not _pinned_revision_is_filing_grade(authority):
+        pinned = _pinned_vector(
+            canonical_filing_export_conformance_vectors(registry_root=_REGISTRY_ROOT, source_root=bundled_path()),
+            "200",
+        )
+        with pytest.raises(RegistryError) as refused:
+            pinned.builder.build(pinned.evidence)
+        failure = refused.value.registry_failure
+        assert failure is not None
+        assert failure.condition is RegistryFailureCondition.SNAPSHOT_AUTHORITY_GRADE_SUFFICIENT
+        assert governed_facts_in_scope() is before
+        with pytest.raises(ValueError, match="no mechanism vector"):
+            proof.prove_conformance(FilingExportConformanceRequest(coordinate=pinned.evidence.coordinate))
+        assert governed_facts_in_scope() is before
+        return
+    vector = _pinned_vector(proof.conformance_enrollment.materializable_vectors, "200")
+    render = _prove_through_the_real_writer(tmp_path, proof=proof, authority=authority, vector=vector)
+    values = {value.casilla_id: value.value for value in render.draft.values}
+    assert values["DP200014:00562"] == Decimal("25000")
+    assert render.product_software_identity is not None
 
 
 def test_a_manifest_digest_that_drifts_from_the_pin_is_refused(tmp_path: Path) -> None:
