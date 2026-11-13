@@ -516,17 +516,29 @@ enum Edit {
         row_key: String,
     },
     Complete,
-    /// The whole stated family at once: the product replaces every descendant
-    /// and the count with exactly these people, so a person left out is
-    /// removed.
+    /// A change of the stated family, exactly one of: the whole family at once
+    /// (`rows`: the product replaces every descendant and the count with
+    /// exactly these people, so a person left out is removed), one person to
+    /// add to the stored family (`add_row`), or one stored person to remove
+    /// (`remove_row_index`, the `row_index` the household page served).
     Descendants {
-        rows: Vec<FamilyRow>,
+        #[serde(default)]
+        rows: Option<Vec<FamilyRow>>,
+        #[serde(default)]
+        add_row: Option<FamilyRow>,
+        #[serde(default)]
+        remove_row_index: Option<String>,
     },
-    /// The whole stated set of ascendants at once, as for the descendants: the
-    /// product replaces every ascendant and the count with exactly these
-    /// people, within the limit the declaration's design states.
+    /// A change of the stated ascendants, as for the descendants: the whole
+    /// set, one person to add or one stored person to remove, within the limit
+    /// the declaration's design states.
     Ascendants {
-        rows: Vec<FamilyRow>,
+        #[serde(default)]
+        rows: Option<Vec<FamilyRow>>,
+        #[serde(default)]
+        add_row: Option<FamilyRow>,
+        #[serde(default)]
+        remove_row_index: Option<String>,
     },
     /// What one ejercicio's imputation election states: each answer is the
     /// token a served choice carries, an empty token clears the ejercicio's
@@ -564,6 +576,15 @@ struct FamilyRow {
 struct FamilyFact {
     field_key: String,
     value: String,
+}
+/// Whether `index` is a stored row index as the product writes it, which its
+/// removal names: `0`, or a decimal of up to four digits without a leading
+/// zero.
+fn household_row_index(index: &str) -> bool {
+    !index.is_empty()
+        && index.len() <= 4
+        && index.bytes().all(|byte| byte.is_ascii_digit())
+        && (index == "0" || !index.starts_with('0'))
 }
 impl FamilyRow {
     /// Whether the person is within the product's bounds: some facts, each
@@ -616,6 +637,47 @@ impl Baseline<'_> {
         }
         let people = rows.len();
         self.record_as(definition, members, Confirm::Family(people))
+    }
+    /// A family change, which states exactly one of `rows` (the whole family
+    /// under `member`), `add_row` and `remove_row_index`; any other mix, or
+    /// none, is refused.
+    fn family_change(
+        &self,
+        definition: &'static str,
+        member: &str,
+        change: (Option<Vec<FamilyRow>>, Option<FamilyRow>, Option<String>),
+    ) -> Result<Prepared> {
+        match change {
+            (Some(rows), None, None) => self.family(definition, member, rows),
+            (None, Some(row), None) => self.family_addition(definition, &row),
+            (None, None, Some(index)) => self.family_removal(definition, &index),
+            _ => Err(Failure::new("refused")),
+        }
+    }
+    /// One person added to the stored family, saved only where the settled
+    /// result says the family changed and counts at least that person.
+    fn family_addition(&self, definition: &'static str, row: &FamilyRow) -> Result<Prepared> {
+        if !row.bounded() {
+            return Err(Failure::new("refused"));
+        }
+        let members = json!({"add_row":row});
+        if members.to_string().len() > FAMILY_MEMBERS_LIMIT {
+            return Err(Failure::new("refused"));
+        }
+        self.record_as(definition, members, Confirm::FamilyChange { added: true })
+    }
+    /// One stored person removed from the family, named by the index the
+    /// household page served, saved only where the settled result says the
+    /// family changed.
+    fn family_removal(&self, definition: &'static str, index: &str) -> Result<Prepared> {
+        if !household_row_index(index) {
+            return Err(Failure::new("refused"));
+        }
+        self.record_as(
+            definition,
+            json!({"remove_row_index":index}),
+            Confirm::FamilyChange { added: false },
+        )
     }
     /// A user-profile operation's request: `members` under the page's
     /// baseline.
@@ -695,6 +757,11 @@ enum Confirm {
     Record,
     /// The profile record, and a family of exactly this many people.
     Family(usize),
+    /// The profile record, changed by one person added (which leaves a family
+    /// of at least one) or removed from the stored family. The settled result
+    /// counts the resulting family, which the host does not know beforehand, so
+    /// it is checked to be a count, not a number.
+    FamilyChange { added: bool },
     /// The profile record, and the statement of exactly this ejercicio.
     Election(u16),
     /// The sign-in method configured, as the product reports it.
@@ -715,6 +782,13 @@ impl Confirm {
                 Self::Record => saved(result, expected_revision),
                 Self::Family(people) => {
                     saved(result, expected_revision) && result["total"] == *people
+                }
+                Self::FamilyChange { added } => {
+                    saved(result, expected_revision)
+                        && result["changed"] == true
+                        && result["total"]
+                            .as_u64()
+                            .is_some_and(|total| !*added || total >= 1)
                 }
                 Self::Election(year) => {
                     saved(result, expected_revision) && result["tax_year"] == *year
@@ -772,11 +846,27 @@ impl Edit {
                 json!({"section_key":section_key,"row_key":row_key}),
             ),
             Self::Complete => ("user-profile.complete-setup", json!({})),
-            Self::Descendants { rows } => {
-                return baseline.family("user-profile.descendants", "descendants", rows);
+            Self::Descendants {
+                rows,
+                add_row,
+                remove_row_index,
+            } => {
+                return baseline.family_change(
+                    "user-profile.descendants",
+                    "descendants",
+                    (rows, add_row, remove_row_index),
+                );
             }
-            Self::Ascendants { rows } => {
-                return baseline.family("user-profile.ascendants", "ascendants", rows);
+            Self::Ascendants {
+                rows,
+                add_row,
+                remove_row_index,
+            } => {
+                return baseline.family_change(
+                    "user-profile.ascendants",
+                    "ascendants",
+                    (rows, add_row, remove_row_index),
+                );
             }
             Self::ImputationElection {
                 tax_year,
@@ -1277,10 +1367,15 @@ mod tests {
             json!({"kind":"descendants","rows":[],"extra":1}),
             json!({"kind":"descendants","rows":[{"facts":[],"extra":1}]}),
             json!({"kind":"descendants","rows":[{"facts":[{"field_key":"nombre","value":"x","masked":false}]}]}),
-            json!({"kind":"descendants"}),
+            json!({"kind":"descendants","rows":null,"add_row":{"facts":[],"extra":1}}),
+            json!({"kind":"descendants","add_row":{"facts":[{"field_key":"nombre","value":"x","masked":false}]}}),
+            json!({"kind":"descendants","remove_row_index":0}),
+            json!({"kind":"descendants","remove_row":"0"}),
         ] {
             assert!(serde_json::from_value::<Edit>(edit).is_err());
         }
+        // A change that states nothing decodes and is refused by the host.
+        assert_eq!(refusal(json!({"kind":"descendants"})), "refused");
     }
 
     #[test]
@@ -1345,11 +1440,164 @@ mod tests {
             json!({"kind":"ascendants","rows":[],"extra":1}),
             json!({"kind":"ascendants","rows":[{"facts":[],"extra":1}]}),
             json!({"kind":"ascendants","rows":[{"facts":[{"field_key":"nif","value":"x","masked":false}]}]}),
-            json!({"kind":"ascendants"}),
             json!({"kind":"ascendants","ascendants":[]}),
+            json!({"kind":"ascendants","add_row":{"facts":[],"extra":1}}),
+            json!({"kind":"ascendants","remove_row_index":0}),
         ] {
             assert!(serde_json::from_value::<Edit>(edit).is_err());
         }
+        // A change that states nothing decodes and is refused by the host.
+        assert_eq!(refusal(json!({"kind":"ascendants"})), "refused");
+    }
+
+    fn person(key: &str, value: &str) -> Value {
+        json!({"facts":[{"field_key":key,"value":value}]})
+    }
+
+    #[test]
+    fn one_person_added_to_a_family_is_its_own_member_and_saved_only_when_it_changed_the_family() {
+        let digest = "a".repeat(64);
+        for (kind, definition) in [
+            ("descendants", "user-profile.descendants"),
+            ("ascendants", "user-profile.ascendants"),
+        ] {
+            let row = json!({"facts":[{"field_key":"fecha_nacimiento","value":"2020-05-01"},
+                {"field_key":"discapacidad_grado","value":"0"}]});
+            let request = prepared(json!({"kind":kind,"add_row":row})).unwrap();
+            assert_eq!(request.definition, definition);
+            assert_eq!(
+                request.payload,
+                json!({"profile_id":PROFILE_ID,"expected_revision":3,
+                    "expected_content_digest":digest,"add_row":row})
+            );
+            assert!(request.certificate.is_none());
+            let settled =
+                json!({"profile_id":PROFILE_ID,"record_revision":4,"total":1,"changed":true});
+            assert!(request.confirm.holds(&settled, PROFILE_ID, 3));
+            let grown =
+                json!({"profile_id":PROFILE_ID,"record_revision":4,"total":7,"changed":true});
+            assert!(request.confirm.holds(&grown, PROFILE_ID, 3));
+            for unread in [
+                json!({"profile_id":PROFILE_ID,"record_revision":4,"total":0,"changed":true}),
+                json!({"profile_id":PROFILE_ID,"record_revision":4,"total":1,"changed":false}),
+                json!({"profile_id":PROFILE_ID,"record_revision":4,"total":1}),
+                json!({"profile_id":PROFILE_ID,"record_revision":4,"changed":true}),
+                json!({"profile_id":PROFILE_ID,"record_revision":4,"total":"1","changed":true}),
+                json!({"profile_id":PROFILE_ID,"record_revision":2,"total":1,"changed":true}),
+                json!({"profile_id":"another","record_revision":4,"total":1,"changed":true}),
+            ] {
+                assert!(!request.confirm.holds(&unread, PROFILE_ID, 3), "{unread}");
+            }
+        }
+    }
+
+    #[test]
+    fn one_stored_person_removed_from_a_family_is_named_by_the_index_the_page_served() {
+        let digest = "a".repeat(64);
+        for (kind, definition) in [
+            ("descendants", "user-profile.descendants"),
+            ("ascendants", "user-profile.ascendants"),
+        ] {
+            for index in ["0", "3", "10", "9999"] {
+                let request = prepared(json!({"kind":kind,"remove_row_index":index})).unwrap();
+                assert_eq!(request.definition, definition);
+                assert_eq!(
+                    request.payload,
+                    json!({"profile_id":PROFILE_ID,"expected_revision":3,
+                        "expected_content_digest":digest,"remove_row_index":index})
+                );
+            }
+            let request = prepared(json!({"kind":kind,"remove_row_index":"0"})).unwrap();
+            // Removing the last person leaves a family of none, which is still a saved change.
+            for total in [0, 1, 5] {
+                let settled = json!({"profile_id":PROFILE_ID,"record_revision":4,
+                    "total":total,"changed":true});
+                assert!(request.confirm.holds(&settled, PROFILE_ID, 3), "{total}");
+            }
+            for unread in [
+                json!({"profile_id":PROFILE_ID,"record_revision":4,"total":1,"changed":false}),
+                json!({"profile_id":PROFILE_ID,"record_revision":4,"total":1}),
+                json!({"profile_id":PROFILE_ID,"record_revision":4,"changed":true}),
+                json!({"profile_id":PROFILE_ID,"record_revision":4,"total":-1,"changed":true}),
+                json!({"profile_id":PROFILE_ID,"record_revision":2,"total":1,"changed":true}),
+                json!({"profile_id":"another","record_revision":4,"total":1,"changed":true}),
+            ] {
+                assert!(!request.confirm.holds(&unread, PROFILE_ID, 3), "{unread}");
+            }
+        }
+    }
+
+    #[test]
+    fn a_family_change_states_exactly_one_of_the_set_one_person_to_add_or_one_to_remove() {
+        for kind in ["descendants", "ascendants"] {
+            let row = person("nombre", "Ana");
+            let rows = json!([row.clone()]);
+            for edit in [
+                json!({"kind":kind}),
+                json!({"kind":kind,"rows":null,"add_row":null,"remove_row_index":null}),
+                json!({"kind":kind,"rows":rows,"add_row":row}),
+                json!({"kind":kind,"rows":rows,"remove_row_index":"0"}),
+                json!({"kind":kind,"add_row":row,"remove_row_index":"0"}),
+                json!({"kind":kind,"rows":rows,"add_row":row,"remove_row_index":"0"}),
+                json!({"kind":kind,"rows":[],"remove_row_index":"0"}),
+            ] {
+                assert_eq!(refusal(edit.clone()), "refused", "{edit}");
+            }
+            // Each statement alone is taken, an empty set included, and a null is no statement.
+            for edit in [
+                json!({"kind":kind,"rows":rows}),
+                json!({"kind":kind,"rows":[]}),
+                json!({"kind":kind,"add_row":row}),
+                json!({"kind":kind,"remove_row_index":"2"}),
+                json!({"kind":kind,"rows":null,"add_row":row,"remove_row_index":null}),
+                json!({"kind":kind,"rows":null,"add_row":null,"remove_row_index":"2"}),
+            ] {
+                assert!(prepared(edit.clone()).is_ok(), "{edit}");
+            }
+        }
+    }
+
+    #[test]
+    fn a_person_to_add_or_an_index_to_remove_beyond_the_products_bounds_is_refused() {
+        let fact = |key: &str, value: &str| json!({"field_key":key,"value":value});
+        for kind in ["descendants", "ascendants"] {
+            for row in [
+                json!({"facts":[]}),
+                json!({"facts":[fact("nombre","")]}),
+                json!({"facts":[fact("nombre",&"a".repeat(FAMILY_VALUE_LIMIT + 1))]}),
+                json!({"facts":[fact("Nombre","x")]}),
+                json!({"facts":[fact("1nombre","x")]}),
+                json!({"facts":[fact("nombre","x"),fact("nombre","y")]}),
+                json!({"facts":(0..=FAMILY_FACTS).map(|n| fact(&format!("k{n}"),"x")).collect::<Vec<_>>()}),
+            ] {
+                assert_eq!(
+                    refusal(json!({"kind":kind,"add_row":row.clone()})),
+                    "refused",
+                    "{row:.80}"
+                );
+            }
+            for index in [
+                "", "00", "01", "-1", "+1", "1.0", "a", " 1", "1 ", "1\n", "10000", "99999", "١",
+                "0x1",
+            ] {
+                assert_eq!(
+                    refusal(json!({"kind":kind,"remove_row_index":index})),
+                    "refused",
+                    "{index:?}"
+                );
+            }
+        }
+        // The index is the served text, never a number.
+        assert!(
+            serde_json::from_value::<Edit>(json!({"kind":"descendants","remove_row_index":1}))
+                .is_err()
+        );
+        // One person is bounded like the relay's payload, as a whole family is.
+        let full = json!({"facts":(0..FAMILY_FACTS)
+            .map(|n| json!({"field_key":format!("k{n}"),"value":"a".repeat(FAMILY_VALUE_LIMIT)}))
+            .collect::<Vec<_>>()});
+        assert!(full.to_string().len() < FAMILY_MEMBERS_LIMIT);
+        assert!(prepared(json!({"kind":"descendants","add_row":full})).is_ok());
     }
 
     #[test]

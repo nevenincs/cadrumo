@@ -174,6 +174,7 @@ from .preconditions import (
     build_modelo_precondition_failure_for_scenario,
 )
 from .prior_domiciliation import resolveprior_domiciliation_election
+from .profile_drift_gate import require_profile_reads_current_for_export
 from .refusal_door_verdicts import (
     operator_choice_verdict,
     safety_stop_verdict,
@@ -1076,6 +1077,9 @@ def _prepare_modelo_export(
         justificante_repository=export_ports.justificante,
     )
     require_exportable_revision_state(revision, work_unit=work_unit)
+    # A grant seals the revision, but a profile edit is not held at the write, so
+    # the facts the verified figures rest on are compared again here.
+    require_profile_reads_current_for_export(revision, work_unit, operation=operation)
     # A handoff whose filed source was replaced makes the revision a statement
     # about superseded facts, so it is refused before anything judges that
     # revision's own evidence -- the order verification and filing keep too.

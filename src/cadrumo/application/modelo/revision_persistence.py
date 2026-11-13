@@ -47,6 +47,7 @@ from ...domain.modelos.calculation_screen_stamp import CalculationScreenStamp
 from ...domain.modelos.errors import ModeloValidatedRecord, ModeloValidationError
 from ...domain.modelos.invoice_fingerprint import InvoiceFingerprintSnapshot
 from ...domain.modelos.ledger_filing_snapshot import LedgerFilingSnapshot
+from ...domain.modelos.profile_read_fingerprint import ProfileReadFingerprint
 from ...domain.modelos.protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
 )
@@ -146,6 +147,7 @@ def _build_calculation_revision(
     detail_rows: tuple[ModeloDetailRow, ...],
     ledger_filing_snapshot: LedgerFilingSnapshot | None,
     invoice_fingerprint: InvoiceFingerprintSnapshot | None,
+    profile_read_fingerprint: ProfileReadFingerprint | None,
     filing_instance_evidence: FilingInstanceEvidence | None,
     m303_regimen_simplificado_annual_summary_handoff: (M303RegimenSimplificadoAnnualSummaryHandoff | None),
     now: datetime,
@@ -181,6 +183,7 @@ def _build_calculation_revision(
         detail_rows=detail_rows,
         ledger_filing_snapshot=ledger_filing_snapshot,
         invoice_fingerprint=invoice_fingerprint,
+        profile_read_fingerprint=profile_read_fingerprint,
         filing_instance_evidence=filing_instance_evidence,
         m303_regimen_simplificado_annual_summary_handoff=m303_regimen_simplificado_annual_summary_handoff,
         created_at=now,
@@ -236,12 +239,13 @@ def _refreshed_draft_fingerprint(
     existing: CalculationRevision,
     invoice_fingerprint: InvoiceFingerprintSnapshot | None,
     ledger_filing_snapshot: LedgerFilingSnapshot | None,
+    profile_read_fingerprint: ProfileReadFingerprint | None,
     *,
     now: datetime,
 ) -> CalculationRevision | None:
     """Return the draft re-pinned to what this calculation read, when that moved.
 
-    An invoice or ledger edit that moves no casilla derives the same revision id.
+    An invoice, ledger or profile edit that moves no casilla derives the same revision id.
     Without this the operator's recalculation would land on the stored draft and
     leave it reporting drift that no further recalculation could clear.
     """
@@ -252,6 +256,8 @@ def _refreshed_draft_fingerprint(
         update["invoice_fingerprint"] = invoice_fingerprint
     if _ledger_filing_snapshot_moved(existing.ledger_filing_snapshot, ledger_filing_snapshot):
         update["ledger_filing_snapshot"] = ledger_filing_snapshot
+    if profile_read_fingerprint is not None and existing.profile_read_fingerprint != profile_read_fingerprint:
+        update["profile_read_fingerprint"] = profile_read_fingerprint
     if not update:
         return None
     return existing.model_copy(update={**update, "updated_at": now})
@@ -290,6 +296,7 @@ def _persist_duplicate_calculation_revision(
     revisions_revision_id: str,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
     invoice_fingerprint: InvoiceFingerprintSnapshot | None,
+    profile_read_fingerprint: ProfileReadFingerprint | None,
     ledger_filing_snapshot: LedgerFilingSnapshot | None,
     revision_id: str,
     work_unit: WorkUnit,
@@ -311,7 +318,9 @@ def _persist_duplicate_calculation_revision(
         revision_id=revision_id,
         additional_secure_object_writes_for_revision=additional_secure_object_writes_for_revision,
     )
-    refreshed = _refreshed_draft_fingerprint(existing, invoice_fingerprint, ledger_filing_snapshot, now=now)
+    refreshed = _refreshed_draft_fingerprint(
+        existing, invoice_fingerprint, ledger_filing_snapshot, profile_read_fingerprint, now=now
+    )
     if refreshed is not None:
         calculation_repository.save_with_secure_object_writes(
             upsert_calculation_revision(revisions, refreshed),
@@ -648,6 +657,7 @@ def _load_calculation_publication_target(
     operation: PinnedAuthorityOperation,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
     invoice_fingerprint: InvoiceFingerprintSnapshot | None,
+    profile_read_fingerprint: ProfileReadFingerprint | None,
     ledger_filing_snapshot: LedgerFilingSnapshot | None,
     revision_id: str,
     work_unit: WorkUnit,
@@ -668,6 +678,7 @@ def _load_calculation_publication_target(
         revisions_revision_id=revisions_revision_id,
         calculation_repository=calculation_repository,
         invoice_fingerprint=invoice_fingerprint,
+        profile_read_fingerprint=profile_read_fingerprint,
         ledger_filing_snapshot=ledger_filing_snapshot,
         revision_id=revision_id,
         work_unit=work_unit,
@@ -678,6 +689,113 @@ def _load_calculation_publication_target(
         additional_secure_object_writes_for_revision=additional_secure_object_writes_for_revision,
     )
     return revisions, revisions_revision_id, publication
+
+
+def _build_and_publish_calculation_revision(
+    *,
+    revision_id: str,
+    work_unit_id: str,
+    registry_snapshot_ref: RegistrySnapshotRef,
+    input_values_by_casilla_id: dict[CasillaId, str],
+    binding_overrides: dict[BindingId, str],
+    row_binding_values: dict[BindingId, dict[str, str]],
+    row_source_identities: Mapping[RowBindingKey, RowSourceIdentity],
+    closed_record_row_sets: tuple[ClosedRecordRowSet, ...],
+    row_casilla_values: Mapping[RowCasillaKey, Decimal],
+    row_casilla_provenance: Mapping[RowCasillaKey, DirectRowMaterializationProvenance],
+    relation_overrides: dict[RelationId, str],
+    source_transaction_ids: tuple[str, ...],
+    m210_official_tipo_renta_code: str | None,
+    m210_gross_income_source_mode: M210GrossIncomeSourceMode | None,
+    borrador_snapshot_id: str | None,
+    bindings_sourced_from_borrador: tuple[BindingId, ...],
+    cleared_casilla_ids: tuple[CasillaId, ...],
+    operator_layer: CalculationOperatorLayer | None,
+    rendering_snapshot: CalculationRenderingSnapshot | None,
+    screen_stamp: CalculationScreenStamp | None,
+    casilla_values: dict[CasillaId, Decimal],
+    observations: tuple[CasillaObservation, ...],
+    unresolved_outcomes: tuple[RegistryCalculationUnresolvedOutcome, ...],
+    source_provenance: tuple[CalculationSourceRef, ...],
+    source_issues: tuple[CalculationSourceIssue, ...],
+    detail_rows: tuple[ModeloDetailRow, ...],
+    ledger_filing_snapshot: LedgerFilingSnapshot | None,
+    invoice_fingerprint: InvoiceFingerprintSnapshot | None,
+    profile_read_fingerprint: ProfileReadFingerprint | None,
+    filing_instance_evidence: FilingInstanceEvidence | None,
+    m303_regimen_simplificado_annual_summary_handoff: M303RegimenSimplificadoAnnualSummaryHandoff | None,
+    now: datetime,
+    revisions: CalculationRevisionCatalogue,
+    revisions_revision_id: str,
+    work_unit: WorkUnit,
+    work_units: WorkUnitCatalogue,
+    formula_count: int,
+    actor: str,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
+    work_units_revision_id: str,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
+    additional_secure_object_writes_for_revision: Callable[[str, str | None], tuple[SecureObjectWrite, ...]] | None,
+) -> CalculationRevisionPublication:
+    """Build the draft revision from its derived inputs and publish it beside its parents."""
+    revision = _build_calculation_revision(
+        revision_id=revision_id,
+        work_unit_id=work_unit_id,
+        registry_snapshot_ref=registry_snapshot_ref,
+        input_values_by_casilla_id=input_values_by_casilla_id,
+        binding_overrides=binding_overrides,
+        row_binding_values=row_binding_values,
+        row_source_identities=row_source_identities,
+        closed_record_row_sets=closed_record_row_sets,
+        row_casilla_values=row_casilla_values,
+        row_casilla_provenance=row_casilla_provenance,
+        relation_overrides=relation_overrides,
+        source_transaction_ids=source_transaction_ids,
+        m210_official_tipo_renta_code=m210_official_tipo_renta_code,
+        m210_gross_income_source_mode=m210_gross_income_source_mode,
+        borrador_snapshot_id=borrador_snapshot_id,
+        bindings_sourced_from_borrador=bindings_sourced_from_borrador,
+        cleared_casilla_ids=cleared_casilla_ids,
+        operator_layer=operator_layer,
+        rendering_snapshot=rendering_snapshot,
+        screen_stamp=screen_stamp,
+        casilla_values=casilla_values,
+        observations=observations,
+        unresolved_outcomes=unresolved_outcomes,
+        source_provenance=source_provenance,
+        source_issues=source_issues,
+        detail_rows=detail_rows,
+        ledger_filing_snapshot=ledger_filing_snapshot,
+        invoice_fingerprint=invoice_fingerprint,
+        profile_read_fingerprint=profile_read_fingerprint,
+        filing_instance_evidence=filing_instance_evidence,
+        m303_regimen_simplificado_annual_summary_handoff=m303_regimen_simplificado_annual_summary_handoff,
+        now=now,
+    )
+    return _publish_new_calculation_revision(
+        revision=revision,
+        revisions=revisions,
+        revisions_revision_id=revisions_revision_id,
+        work_unit=work_unit,
+        work_units=work_units,
+        input_values_by_casilla_id=input_values_by_casilla_id,
+        row_binding_values=row_binding_values,
+        row_casilla_values=row_casilla_values,
+        casilla_values=casilla_values,
+        formula_count=formula_count,
+        source_transaction_ids=source_transaction_ids,
+        borrador_snapshot_id=borrador_snapshot_id,
+        bindings_sourced_from_borrador=bindings_sourced_from_borrador,
+        observations=observations,
+        source_provenance=source_provenance,
+        actor=actor,
+        now=now,
+        work_unit_repository=work_unit_repository,
+        work_units_revision_id=work_units_revision_id,
+        bucket_event_repository=bucket_event_repository,
+        calculation_repository=calculation_repository,
+        additional_secure_object_writes_for_revision=additional_secure_object_writes_for_revision,
+    )
 
 
 def persist_calculation_revision(
@@ -719,6 +837,7 @@ def persist_calculation_revision(
     bucket_event_repository: BucketEventHistoryRepositoryProtocol,
     ledger_filing_snapshot: LedgerFilingSnapshot | None = None,
     invoice_fingerprint: InvoiceFingerprintSnapshot | None = None,
+    profile_read_fingerprint: ProfileReadFingerprint | None = None,
     m210_official_tipo_renta_code: str | None = None,
     m210_gross_income_source_mode: M210GrossIncomeSourceMode | None = None,
     additional_secure_object_writes_for_revision: (
@@ -762,6 +881,7 @@ def persist_calculation_revision(
         operation=operation,
         calculation_repository=calculation_repository,
         invoice_fingerprint=invoice_fingerprint,
+        profile_read_fingerprint=profile_read_fingerprint,
         ledger_filing_snapshot=ledger_filing_snapshot,
         revision_id=revision_id,
         work_unit=work_unit,
@@ -773,7 +893,7 @@ def persist_calculation_revision(
     )
     if duplicate is not None:
         return duplicate
-    revision = _build_calculation_revision(
+    return _build_and_publish_calculation_revision(
         revision_id=revision_id,
         work_unit_id=work_unit_id,
         registry_snapshot_ref=registry_snapshot_ref,
@@ -802,28 +922,16 @@ def persist_calculation_revision(
         detail_rows=detail_rows,
         ledger_filing_snapshot=ledger_filing_snapshot,
         invoice_fingerprint=invoice_fingerprint,
+        profile_read_fingerprint=profile_read_fingerprint,
         filing_instance_evidence=filing_instance_evidence,
         m303_regimen_simplificado_annual_summary_handoff=stamped_annual_summary_handoff,
         now=now,
-    )
-    return _publish_new_calculation_revision(
-        revision=revision,
         revisions=revisions,
         revisions_revision_id=revisions_revision_id,
         work_unit=work_unit,
         work_units=work_units,
-        input_values_by_casilla_id=input_values_by_casilla_id,
-        row_binding_values=row_binding_values,
-        row_casilla_values=row_casilla_values,
-        casilla_values=casilla_values,
         formula_count=formula_count,
-        source_transaction_ids=source_transaction_ids,
-        borrador_snapshot_id=borrador_snapshot_id,
-        bindings_sourced_from_borrador=bindings_sourced_from_borrador,
-        observations=observations,
-        source_provenance=source_provenance,
         actor=actor,
-        now=now,
         work_unit_repository=work_unit_repository,
         work_units_revision_id=work_units_revision_id,
         bucket_event_repository=bucket_event_repository,

@@ -75,6 +75,7 @@ _LEGAL_ENTITY_FACTS = persona_facts_beneath(
         UserProfileFact(path="identity.legal_name", value="Probe IS Operator SL"),
         UserProfileFact(path="identity.tax_id", value="B00015016"),
         UserProfileFact(path="taxpayer_type.incn_prior_12_months", value=Decimal("500000.00")),
+        UserProfileFact(path="taxpayer_type.regimen_entidades_navieras_tonelaje", value=False),
         UserProfileFact(path="activities.description", value="economic activity"),
     ),
     persona_id="sociedad-limitada",

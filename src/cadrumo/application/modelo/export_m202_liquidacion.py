@@ -29,6 +29,7 @@ from typing import Final
 
 from ...core.filing_producer_key import FilingProducerKey
 from ...domain.calculations.registry.applicability_modelo202 import (
+    NAVIERAS_TONELAJE_PATH,
     Modelo202Modality,
     art_40_3_method_applies,
     modelo_202_modality_from_path_values,
@@ -117,9 +118,11 @@ def _modality_facts_unstated(profile_values: Mapping[str, str], modality: Modelo
     if modality is Modelo202Modality.ART_40_2_OPTIONAL:
         return (ART_40_3_ELECTION_PATH,)
     unstated = tuple(
-        path for path in (ENTITY_TYPE_PATH, INCN_PRIOR_12_MONTHS_PATH) if not (profile_values.get(path) or "").strip()
+        path
+        for path in (ENTITY_TYPE_PATH, INCN_PRIOR_12_MONTHS_PATH, NAVIERAS_TONELAJE_PATH)
+        if not (profile_values.get(path) or "").strip()
     )
-    # Both stated and still incomplete means one is unreadable or not a sociedad's, so both are named.
+    # All stated and still incomplete means one is unreadable or not a sociedad's, so the first two are named.
     return unstated or (ENTITY_TYPE_PATH, INCN_PRIOR_12_MONTHS_PATH)
 
 

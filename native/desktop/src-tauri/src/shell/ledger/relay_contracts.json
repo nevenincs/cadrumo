@@ -474,6 +474,14 @@
         "path": []
       }
     },
+    "ledger.inventory.movement.claim-candidates": {
+      "may_write": false,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
     "ledger.inventory.movement.correct": {
       "may_write": true,
       "review": false,
@@ -676,6 +684,30 @@
     },
     "ledger.preflight": {
       "may_write": false,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "ledger.prevision_social.list": {
+      "may_write": false,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "ledger.prevision_social.record": {
+      "may_write": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "ledger.prevision_social.remove": {
+      "may_write": true,
       "review": false,
       "subject": {
         "kind": "profile",

@@ -148,7 +148,7 @@ Public License.
 | textual | 8.2.8 | MIT License | `cadrumo/site-packages/textual-8.2.8.dist-info` |
 | tiktoken | 0.14.0 | stated in LICENSE | `cadrumo/site-packages/tiktoken-0.14.0.dist-info` |
 | truststore | 0.10.5 | MIT | `cadrumo/site-packages/truststore-0.10.5.dist-info` |
-| typer | 0.27.3 | MIT | `cadrumo/site-packages/typer-0.27.3.dist-info` |
+| typer | 0.29.0 | MIT | `cadrumo/site-packages/typer-0.29.0.dist-info` |
 | typing-extensions | 4.16.0 | PSF-2.0 | `cadrumo/site-packages/typing_extensions-4.16.0.dist-info` |
 | typing-inspection | 0.4.4 | MIT | `cadrumo/site-packages/typing_inspection-0.4.4.dist-info` |
 | tzdata | 2026.6 | Apache-2.0 | `cadrumo/site-packages/tzdata-2026.6.dist-info` |

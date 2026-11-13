@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#package-verification'
 date: '2026-10-13'
-modified: '2026-10-17'
+modified: '2026-11-13'
 body_schema: 'body-v2'
-body_hash: 'sha256:8a79f9b7587aa4583b4087bc912d51318a32a04928e40838a2b7700933bb19d7'
+body_hash: 'sha256:d17207121212d21125188562ba8503d897a9f585c095c0a701acf610d012b3d3'
 related:
   - "[[2026-10-13-native-agent-adr]]"
   - "[[2026-10-12-live-agent-evaluation-adr]]"
@@ -54,7 +54,7 @@ Divergent lanes:
 
 Binding:
 
-1. **The boundary.** A test or lane whose claim concerns application behaviour as a process runs against `stage/<Config>/app`, unmodified, using the package's own interpreter, entry points and bundled cadrumo-agent. Application behaviour as a process means: the desktop, the manager, the runtime's lifecycle as the application's host, the dedicated agent service, the agent column, or cadrumo-agent serving Cadrumo. It never imports a source checkout, a development `.venv`, or a build feature absent from shipped configurations.
+1. **The boundary.** A test or lane whose claim concerns application behaviour as a process runs against `stage/<Config>/app`, unmodified, using the package's own interpreter, entry points and bundled cadrumo-agent. Application behaviour as a process means: the desktop, the manager, the runtime's lifecycle as the application's host, the dedicated agent service, the agent column, or cadrumo-agent serving Cadrumo. It never imports a source checkout or a development `.venv`. It uses a build feature absent from shipped configurations only through the packaged test host (`desktop-packaged-host`); a claim made under such a feature, including the fixed clock of `2026-11-13-desktop-test-host-clock-adr`, names that feature and is not a claim about the shipped image.
 2. **What stays outside the boundary, from source or a wheel install:**
    - the unit and integration suites of `src` and `dev`;
    - the CLI and TUI tests, including `dev/tui` and `dev/tui/harness`;

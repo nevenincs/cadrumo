@@ -71,6 +71,7 @@ from ...domain.user_profile.errors import ProfileNotFoundError
 from ...domain.user_profile.values import UserProfileRecord
 from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from ..prorrata_register.service import require_prorrata_register_coordinates_current
+from ..user_profile.profile_read_recorder import profile_view_under
 from ..user_profile.profile_record_repository import ProfileRecordRepository
 from ..user_profile.projections import fact_value, profile_fact_index, record_to_path_values
 from .catalogue_read_binding import require_catalogue_reads_bound_to
@@ -206,7 +207,14 @@ def _seguro_enfermedad_person_counts(
         except ProfileNotFoundError:
             return {}
     counts = seguro_enfermedad_insured_counts_from_facts(
-        profile_fact_index(record, profile_schema),
+        # The insured count reads the descendants, the two disability grades and the marital status.
+        profile_view_under(
+            profile_fact_index(record, profile_schema),
+            "renta_family.descendiente.",
+            "renta_taxpayer.disability_grade",
+            "renta_spouse.disability_grade",
+            "renta_taxpayer.marital_status",
+        ),
         filing_year=filing_year,
     )
     return {

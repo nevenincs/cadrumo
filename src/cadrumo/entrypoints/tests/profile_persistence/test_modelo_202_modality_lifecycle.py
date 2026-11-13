@@ -157,6 +157,7 @@ def workflow_profile(incn: Decimal | None) -> TaxpayerProfile:
         iva_regime=IVARegime("GENERAL"),
         activity_start_date=date(2020, 1, 1),
         incn_prior_12_months=incn,
+        regimen_entidades_navieras_tonelaje=False,
         iva=ModeloIVAProfile(
             tax_territory=M303TaxTerritory.from_registry("common_regime"),
             regime_composition=M303RegimeComposition.from_registry("general"),
@@ -176,6 +177,7 @@ def _seed_profile(*, bucket_id: str, incn: Decimal | None) -> None:
         UserProfileFact(path="identity.legal_name", value="Taller Sol Sociedad Limitada"),
         UserProfileFact(path="activities.description", value="taller mecanico"),
         UserProfileFact(path="renta_filing.declaration_type", value="1"),
+        UserProfileFact(path="taxpayer_type.regimen_entidades_navieras_tonelaje", value=False),
     ]
     if incn is not None:
         stated.append(UserProfileFact(path="taxpayer_type.incn_prior_12_months", value=incn))

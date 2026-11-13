@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#runtime-manager-architecture'
 date: '2026-10-04'
-modified: '2026-11-11'
+modified: '2026-11-13'
 body_schema: 'body-v2'
-body_hash: 'sha256:f11933c62022534ea8b34144969d37b804bfa2deaf550c13c6910c04809d29d6'
+body_hash: 'sha256:b7f93b2c4c642e9d64bfb7dcb40cac41b4b01da5d4cc65e4dcb09ff5231a3e52'
 related:
   - "[[2026-10-04-runtime-manager-architecture-requirements-research]]"
   - "[[2026-10-03-runtime-manager-architecture-research]]"
@@ -81,7 +81,7 @@ This record decides the installed topology. The runtime-side contract is `2026-1
 - It runs as the signed-in user in that user's interactive session.
 - It refuses a full UAC-elevated token, session 0 and non-interactive logons.
 - It does not run inside a job it does not own. It tries one escape and otherwise refuses visibly.
-- It launches the runtime with an allow-list environment that has no `CADRUMO_*` overrides. It manages only the canonical default root. A root or authority selected by an environment override stays developer-owned and unmanaged.
+- It launches the runtime with an allow-list environment that has no `CADRUMO_*` overrides, except the fixed-clock launch slot that only a manager core compiled with the `native-automation` feature fills (`2026-11-13-desktop-test-host-clock-adr`). It manages only the canonical default root. A root or authority selected by an environment override stays developer-owned and unmanaged.
 
 **Lifecycle ownership.**
 - The runtime starts when the manager starts.

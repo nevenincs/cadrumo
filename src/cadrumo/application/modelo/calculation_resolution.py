@@ -60,6 +60,7 @@ from ...domain.modelos.calculation_revision_sources import (
     CalculationSourceRef,
 )
 from ...domain.modelos.filing_record import FilingDeclarationKind
+from ...domain.modelos.profile_read_fingerprint import ProfileReadFingerprint
 from ...domain.modelos.source_disagreement import SourceDisagreementFact, SourceDisagreementRole
 from ...domain.modelos.work_unit import WorkUnit
 from ..aggregation.source_diagnostic_reason import CalculationSourceDiagnosticReason
@@ -127,6 +128,8 @@ class ResolvedCalculationChannels:
     each row set the profile enumerated, which is what shows a declared-empty group as empty rather than unknown."""
     row_binding_values: Mapping[RowBindingKey, RowBindingValue] = field(default_factory=_no_row_values)
     """The row sets the precedence tiers answered, such as the household rows a profile states."""
+    profile_read_fingerprint: ProfileReadFingerprint | None = None
+    """The profile facts the profile tier read, which the revision keeps so a later edit to one is detected."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -284,6 +287,7 @@ def resolve_calculation_binding_channels(
             )
         ),
         row_binding_values=dict(merged.row_binding_values),
+        profile_read_fingerprint=profile_resolution.profile_read_fingerprint,
     )
 
 

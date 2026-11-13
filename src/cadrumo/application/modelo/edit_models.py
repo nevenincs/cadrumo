@@ -47,6 +47,7 @@ from .edit_contract import (
     ModeloEditMutationFamily,
     ModeloEditMutationResultReceiptV1,
 )
+from .edit_downstream_models import ModeloEditDownstreamRefusalV1
 from .edit_value_grammar import ModeloEditValueGrammarV1
 
 _MAX_FINDINGS = 500
@@ -666,8 +667,18 @@ class ModeloEditStaleBaselineRefusalV1(EditModel):
         return value
 
 
+def _is_absent(value: object) -> bool:
+    """Whether an optional member is missing, so the serialized record leaves it out."""
+    return value is None
+
+
 class ModeloEditDomainRefusalV1(EditModel):
-    """Typed post-admission refusal without a partial projection or raw exception."""
+    """Typed post-admission refusal without a partial projection or raw exception.
+
+    ``downstream`` is set only when the edit's values were admitted and a later
+    stage, such as the recalculation, refused under its own registered code;
+    a refusal of the value itself never carries it.
+    """
 
     kind: Literal["domain"] = "domain"
     edit_contract_version: Literal[1] = 1
@@ -678,6 +689,7 @@ class ModeloEditDomainRefusalV1(EditModel):
     responsible_owner: _BoundedCode
     reconsideration_condition: _BoundedText
     recovery_action: ActionReference | None = None
+    downstream: ModeloEditDownstreamRefusalV1 | None = Field(default=None, exclude_if=_is_absent)
 
     @model_validator(mode="after")
     def _reject_untyped_stale_baseline(self) -> ModeloEditDomainRefusalV1:

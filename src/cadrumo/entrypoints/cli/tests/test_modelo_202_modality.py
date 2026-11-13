@@ -40,9 +40,17 @@ import pytest
 from ....adapters.persistence.storage.tests.secure_sql import (
     isolated_cli_backend,
 )
-from ....domain.calculations.registry.applicability_modelo202 import Modelo202Modality, derive_modelo_202_modality
+from ....domain.calculations.registry.applicability_modelo202 import (
+    Modelo202Modality,
+    derive_modelo_202_modality,
+    modelo_202_filing_obligation,
+    modelo_202_incn_threshold_decimal,
+    resolve_modelo_202_art_40_3_incn_threshold,
+)
 from ....domain.calculations.registry.applicability_models import ApplicabilityVerdict
-from ....domain.calculations.registry.tests.authored_editions import latest_period_end
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.errors import RegistryFailureCondition
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, latest_period_end
 from ....domain.contribuyente.entity_type import EntityType
 from ....domain.contribuyente.renta_codes import FiscalResidency
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
@@ -57,13 +65,14 @@ _INCN_AT_THRESHOLD = Decimal("6_000_000.00")
 _INCN_BELOW_THRESHOLD = Decimal("5_999_999.99")
 
 
-def _sl_profile(incn: Decimal | None) -> TaxpayerProfile:
+def _sl_profile(incn: Decimal | None, *, naviera: bool | None = False) -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id="B00015016",
         entity_type=EntityType.from_registry("legal_entity"),
         irpf_income_categories=frozenset(),
         iva_regime=IVARegime("GENERAL"),
         incn_prior_12_months=incn,
+        regimen_entidades_navieras_tonelaje=naviera,
         fiscal_residency=FiscalResidency.from_registry("resident_irpf"),
     )
 
@@ -282,3 +291,112 @@ def test_legal_entity_can_create_modelo_202_work_unit(tmp_path: Path) -> None:
     payload = unwrap_schema_envelope(result.output)
     assert payload["status"] == "created"
     assert payload["modelo"] == "202"
+
+
+# ---------------------------------------------------------------------------
+# Navieras tonelaje regime: the instructions' second mandatory art. 40.3 case
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("year", filing_year_envelope().years)
+def test_a_naviera_below_the_threshold_is_art_40_3_mandatory_in_every_supported_year(
+    year: int, authority_operation: PinnedAuthorityOperation
+) -> None:
+    effective_date = date(year, 12, 31)
+    threshold = modelo_202_incn_threshold_decimal(
+        resolve_modelo_202_art_40_3_incn_threshold(effective_date=effective_date, authority=authority_operation)
+    )
+
+    for incn in (threshold, threshold / 2):
+        verdict = derive_modelo_202_modality(
+            _sl_profile(incn, naviera=True), effective_date=effective_date, authority=authority_operation
+        )
+
+        assert verdict.modality is Modelo202Modality.ART_40_3_MANDATORY_REGIME, (year, incn)
+        assert "navieras" in verdict.reason
+
+
+@pytest.mark.parametrize("year", filing_year_envelope().years)
+def test_a_naviera_without_a_stated_turnover_is_incomplete_with_the_turnover_door(
+    year: int, authority_operation: PinnedAuthorityOperation
+) -> None:
+    """Only the turnover tells whether the naviera files every instalment or only where an ingreso results."""
+    verdict = derive_modelo_202_modality(
+        _sl_profile(None, naviera=True), effective_date=date(year, 12, 31), authority=authority_operation
+    )
+
+    assert verdict.modality is Modelo202Modality.INCOMPLETE
+    assert verdict.failure is not None
+    assert verdict.failure.condition is RegistryFailureCondition.MODELO_202_INCN_DECLARED
+
+
+@pytest.mark.parametrize("year", filing_year_envelope().years)
+def test_not_a_naviera_below_the_threshold_keeps_the_election_modality(
+    year: int, authority_operation: PinnedAuthorityOperation
+) -> None:
+    effective_date = date(year, 12, 31)
+    threshold = modelo_202_incn_threshold_decimal(
+        resolve_modelo_202_art_40_3_incn_threshold(effective_date=effective_date, authority=authority_operation)
+    )
+
+    verdict = derive_modelo_202_modality(
+        _sl_profile(threshold, naviera=False), effective_date=effective_date, authority=authority_operation
+    )
+
+    assert verdict.modality is Modelo202Modality.ART_40_2_OPTIONAL
+
+
+@pytest.mark.parametrize("year", filing_year_envelope().years)
+def test_an_unstated_navieras_regime_below_the_threshold_is_incomplete_with_its_door(
+    year: int, authority_operation: PinnedAuthorityOperation
+) -> None:
+    effective_date = date(year, 12, 31)
+    threshold = modelo_202_incn_threshold_decimal(
+        resolve_modelo_202_art_40_3_incn_threshold(effective_date=effective_date, authority=authority_operation)
+    )
+
+    verdict = derive_modelo_202_modality(
+        _sl_profile(threshold, naviera=None), effective_date=effective_date, authority=authority_operation
+    )
+
+    assert verdict.modality is Modelo202Modality.INCOMPLETE
+    assert verdict.failure is not None
+    assert verdict.failure.condition is RegistryFailureCondition.MODELO_202_NAVIERAS_DECLARED
+
+
+@pytest.mark.parametrize("year", filing_year_envelope().years)
+def test_an_unstated_navieras_regime_above_the_threshold_does_not_matter(
+    year: int, authority_operation: PinnedAuthorityOperation
+) -> None:
+    effective_date = date(year, 12, 31)
+    threshold = modelo_202_incn_threshold_decimal(
+        resolve_modelo_202_art_40_3_incn_threshold(effective_date=effective_date, authority=authority_operation)
+    )
+
+    verdict = derive_modelo_202_modality(
+        _sl_profile(threshold + Decimal("0.01"), naviera=None),
+        effective_date=effective_date,
+        authority=authority_operation,
+    )
+
+    assert verdict.modality is Modelo202Modality.ART_40_3_MANDATORY
+
+
+@pytest.mark.parametrize("year", filing_year_envelope().years)
+def test_a_naviera_below_the_threshold_files_only_where_an_ingreso_results(
+    year: int, authority_operation: PinnedAuthorityOperation
+) -> None:
+    from ....domain.calculations.registry.applicability import derive_modelo_applicability
+
+    effective_date = date(year, 12, 31)
+    threshold = modelo_202_incn_threshold_decimal(
+        resolve_modelo_202_art_40_3_incn_threshold(effective_date=effective_date, authority=authority_operation)
+    )
+    profile = _sl_profile(threshold, naviera=True)
+    entity = derive_modelo_applicability(profile, "202", reference_date=effective_date, operation=authority_operation)
+
+    narrowed = modelo_202_filing_obligation(
+        profile, entity, effective_date=effective_date, authority=authority_operation
+    )
+
+    assert narrowed.verdict is ApplicabilityVerdict.INCOMPLETE

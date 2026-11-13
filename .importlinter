@@ -65,7 +65,7 @@ type = layers
 name = Every repository tooling package has a declared lane
 containers = dev
 layers =
-    paths : acceptance : actionlint : audit : cache_root : ci : ci_reports : conftest : corpus : deploy : desktop_agent_live : desktop_automation_stage : desktop_household_fixture : desktop_imputation_election_fixture : desktop_profile_fixture : desktop_withholding_refusal_words_fixture : desktop_year_authority_fixture : docs : env : exit_codes : first_party_source : fixture_projections : identity : ingest_harness : init : locales : mcp_eval : operation_contract_manifest : packaging : prettier_json : product_environment : quality : readme : registry : release : report_storage : runtime_lifecycle : sanitizer : smoke : source_tree : temporary_output : test_runs : tests : tui
+    paths : acceptance : actionlint : audit : cache_root : ci : ci_reports : conftest : corpus : deploy : desktop_agent_live : desktop_automation_stage : desktop_household_fixture : desktop_imputation_election_fixture : desktop_persona_world : desktop_profile_fixture : desktop_withholding_refusal_words_fixture : desktop_year_authority_fixture : docs : env : exit_codes : first_party_source : fixture_projections : identity : ingest_harness : init : locales : mcp_eval : operation_contract_manifest : packaging : prettier_json : product_environment : quality : readme : registry : release : report_storage : runtime_lifecycle : sanitizer : smoke : source_tree : temporary_output : test_runs : tests : tui
     tool_storage
 exhaustive = True
 

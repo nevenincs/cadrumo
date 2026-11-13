@@ -58,6 +58,8 @@ import type {
  */
 export type AbsenceAttestationFamily =
   | "renta_negative_general_bases_pending"
+  | "renta_negative_savings_capital_income_pending"
+  | "renta_negative_savings_gains_losses_pending"
   | "renta_trabajo_income_not_stated"
   | "renta_capital_inmobiliario_gastos_pendientes";
 
@@ -1273,6 +1275,7 @@ export type PublicModeloFormIssue = {
   attention: ModeloFormAttention;
   action_locale_key: string;
   open_invoice_id: string | null;
+  door_action_id: string | null;
 };
 
 /**

@@ -174,6 +174,7 @@ def _direct_estimation_activities_on(
         irpf_estimation_regime_tokens,
     )
     from ..user_profile.completeness import profile_section_rows, profile_value_is_present
+    from ..user_profile.profile_read_recorder import profile_values_under
     from ..user_profile.projections import record_to_path_values
 
     declared = {str(token) for token in irpf_estimation_regime_tokens()}
@@ -182,7 +183,11 @@ def _direct_estimation_activities_on(
         str(irpf_estimation_regime_directa_simplificada_token()),
     }
     values = record_to_path_values(record, as_of=day)
-    present = [path for path, value in values.items() if profile_value_is_present(value)]
+    present = [
+        path
+        for path, value in profile_values_under(values, f"{_ACTIVITIES_SECTION}.").items()
+        if profile_value_is_present(value)
+    ]
     rows = profile_section_rows(_ACTIVITIES_SECTION, present)
     regime = values.get(_ESTIMATION_REGIME_PATH, "").strip()
     regime_undeclared = bool(rows) and regime not in declared
