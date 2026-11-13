@@ -132,6 +132,9 @@ class PlannedRow:
     owed: bool = True
     """False when an obligation states the return not applicable and the persona states values for it: the table
     calculates and compares it, then checks the overview suppresses it instead of verifying, exporting and filing."""
+    sources_returns: tuple[str, ...] = ()
+    """The modelos whose returns this return reads, sorted; see ``TableRow.sources_returns``. Empty until the planner
+    names them."""
 
     @property
     def key(self) -> tuple[str, str, int, str]:
@@ -167,6 +170,11 @@ class TableRow:
     """The non-zero calculated values the revision's form layout does not place on the form (its working figures
     and unplaced casillas), same shape as ``figures``. No surface is held to show them. Empty for a row written
     before they were kept apart."""
+    sources_returns: tuple[str, ...] = ()
+    """The modelos whose returns this return reads, sorted, as the registry's bindings and dependency classifications
+    of the modelo declare (``planner.source_returns``). It names modelos, not periods or years, and can name the
+    row's own modelo when a revision reads an earlier period of itself. Not ``sources``, which holds the legal
+    references of the stated values. Empty for a row written before it was recorded and in the baseline."""
     verdict: Verdict = field(init=False)
 
     def __post_init__(self) -> None:
@@ -210,6 +218,7 @@ class TableRow:
             unchecked=plan.unchecked,
             figures=figures,
             internal_figures=internal_figures,
+            sources_returns=plan.sources_returns,
         )
 
     def to_json(self) -> str:
@@ -219,6 +228,7 @@ class TableRow:
         data["unchecked"] = list(self.unchecked)
         data["figures"] = dict(self.figures)
         data["internal_figures"] = dict(self.internal_figures)
+        data["sources_returns"] = list(self.sources_returns)
         return json.dumps(data, ensure_ascii=False, sort_keys=True)
 
     def to_baseline_json(self, horizon: int) -> str:
@@ -257,6 +267,7 @@ class TableRow:
         data["unchecked"] = tuple(data.get("unchecked", ()))
         data["figures"] = _read_figures(data.get("figures", {}))
         data["internal_figures"] = _read_figures(data.get("internal_figures", {}))
+        data["sources_returns"] = tuple(data.get("sources_returns", ()))
         for name in ("calculate", "verify", "export"):
             data[name] = Stage(data[name])
         return cls(**data)
