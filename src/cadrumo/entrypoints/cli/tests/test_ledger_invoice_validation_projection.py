@@ -9,6 +9,8 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.core.config import override_settings
+from cadrumo.core.operator_action_enums import NoRecoveryOutcome
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.invoices.catalogue import InvoiceCatalogue
 from cadrumo.domain.invoices.enums import PaymentStatus, resolve_iva_rate_token
@@ -18,6 +20,7 @@ from cadrumo.entrypoints.cli.common import cli_policy_refusal_projection
 from cadrumo.entrypoints.cli.ledger_support import ledger_invoice_validation_no_recovery
 
 from ....domain.iva.schema import InvoiceKind
+from .served_action_expectation import served_no_recovery_words
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -37,14 +40,16 @@ _EXPECTED_ACTION = {
     "missing_argument_names": [],
     "conditionality": "not_applicable",
     "no_recovery_outcome": "operator_decision",
+    **served_no_recovery_words(NoRecoveryOutcome.OPERATOR_DECISION, "en"),
 }
 
 
 def _assert_invoice_terminal(error: InvoiceValidationError | ValidationError) -> None:
     """Assert the exact canonical fact-only terminal projection."""
-    projected = ledger_invoice_validation_no_recovery(error)
-    assert projected is not None
-    refusal = cli_policy_refusal_projection(projected)
+    with override_settings(cadrumo_output_language="en"):
+        projected = ledger_invoice_validation_no_recovery(error)
+        assert projected is not None
+        refusal = cli_policy_refusal_projection(projected)
     assert refusal is not None
     assert refusal.precondition_action.model_dump(mode="json") == _EXPECTED_ACTION
 

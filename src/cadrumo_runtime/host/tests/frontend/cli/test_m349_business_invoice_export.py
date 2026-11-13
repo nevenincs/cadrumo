@@ -13,6 +13,8 @@ from typing import Any
 import pytest
 from click.testing import Result
 
+from cadrumo.adapters.persistence.profile.counterparty_establishment import CounterpartyEstablishmentRepository
+from cadrumo.adapters.persistence.profile.invoice_source_resolver import CounterpartyFilingNameAdapter
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.application.aggregation.source_mesh import CalculationSourceContext
@@ -110,6 +112,25 @@ def _add_business_invoice(
             country_code,
             "--operation-type",
             operation_type,
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    _state_filing_name(counterparty_nif=counterparty_nif, counterparty_name=counterparty_name)
+
+
+def _state_filing_name(*, counterparty_nif: str, counterparty_name: str) -> None:
+    """State the counterparty's filing name: the informative return files no name the operator has not stated."""
+    result = _invoke(
+        [
+            "app",
+            "ledger",
+            "counterparty",
+            "filing-name",
+            counterparty_nif,
+            "--kind",
+            "entity",
+            "--razon-social",
+            counterparty_name,
         ],
     )
     assert result.exit_code == 0, result.output
@@ -251,22 +272,23 @@ def test_m349_business_invoices_persist_and_export_operador_rows(tmp_path: Path)
 
     issued = rows[("123456789", "E")]
     assert issued[75:77] == "DE"
-    assert issued[92:132].strip() == "Kunde GmbH"
+    # The design files its alphanumeric fields in capitals, so the stated name is filed as its capitals.
+    assert issued[92:132].strip() == "KUNDE GMBH"
     assert issued[133:146] == "0000000100000"
 
     service = rows[("12345678901", "S")]
     assert service[75:77] == "FR"
-    assert service[92:132].strip() == "Service SARL"
+    assert service[92:132].strip() == "SERVICE SARL"
     assert service[133:146] == "0000000870000"
 
     received = rows[("222222222", "A")]
     assert received[75:77] == "DE"
-    assert received[92:132].strip() == "Supplier GmbH"
+    assert received[92:132].strip() == "SUPPLIER GMBH"
     assert received[133:146] == "0000001600000"
 
     received_service = rows[("12345678901", "I")]
     assert received_service[75:77] == "IT"
-    assert received_service[92:132].strip() == "Servizi SRL"
+    assert received_service[92:132].strip() == "SERVIZI SRL"
     assert received_service[133:146] == "0000000300000"
 
 
@@ -303,6 +325,8 @@ def test_emilio_catalogue_service_invoice_feeds_m349(authority_operation: Pinned
         assert created_invoice.exit_code == 0, created_invoice.output
         assert "operation_type\tS" in created_invoice.output
 
+        _state_filing_name(counterparty_nif="DE123456789", counterparty_name="DE Kunde GmbH")
+
         close_active_bucket_session()
         assert profile.label is not None
         authenticate_profile_for_invocation(
@@ -314,7 +338,12 @@ def test_emilio_catalogue_service_invoice_feeds_m349(authority_operation: Pinned
         stored = next(invoice for invoice in repository.load().values() if invoice.invoice_number == "OUT-2024-Q1-DE-S")
         assert stored.bucket_id is not None
         resolution = InvoiceCatalogueSourceResolver(
-            ports=InvoiceSourceResolverPorts(catalogue_reader=repository),
+            ports=InvoiceSourceResolverPorts(
+                catalogue_reader=repository,
+                counterparty_filing_names=CounterpartyFilingNameAdapter(
+                    repository=CounterpartyEstablishmentRepository()
+                ),
+            ),
         ).resolve(
             CalculationSourceContext(
                 bucket_id=stored.bucket_id,
