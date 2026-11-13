@@ -154,19 +154,29 @@ class InmuebleTitularidad(BaseModel):
 
 
 class ValorCatastral(BaseModel):
-    """The cadastral values of one IBI year: total (casilla 0123) and construction (casilla 0124)."""
+    """The cadastral values of one IBI year: total (casilla 0123) and construction (casilla 0124).
+
+    ``vigor`` is the year the general collective valuation that set these values
+    entered into force, which decides the art. 85 imputation rate; ``None`` when
+    it is not stated. It can never follow the IBI year it set.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
     year: int = Field(gt=0)
     total: Decimal = Field(ge=0)
     construccion: Decimal = Field(ge=0)
+    vigor: int | None = Field(default=None, gt=0)
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _construction_within_total(self) -> Self:
         if self.construccion > self.total:
             raise _refuse("the construction value cannot exceed the total cadastral value", field="valores_catastrales")
+        if self.vigor is not None and self.vigor > self.year:
+            raise _refuse(
+                "a collective valuation cannot enter into force after the IBI year it sets", field="valores_catastrales"
+            )
         return self
 
 

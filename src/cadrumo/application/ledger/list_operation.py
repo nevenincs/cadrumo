@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from typing import Final
 from uuid import UUID
 
 from pydantic import BaseModel, NonNegativeInt, PositiveInt, model_validator
@@ -10,6 +11,8 @@ from pydantic import BaseModel, NonNegativeInt, PositiveInt, model_validator
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ...core.external_constants import DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
+from ...core.gasto_capital_inmobiliario import GastoCapitalInmobiliario
+from ...core.i18n.render import tr
 from ...core.ledger_sort import LedgerSortField, LedgerSortOrder
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...domain.transactions.models import Transaction
@@ -31,6 +34,7 @@ from ..review.errors import FilterParseError
 from ..review.filter import LedgerReviewFilterSpec
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .actions_common import display_decimal
+from .entry_options_operation import ENTRY_OPTION_LABEL_PREFIX
 from .list_query import LedgerTransactionListQuery, query_ledger_transaction_list
 from .manual_read import ledger_transaction_payload
 from .read_access import resolve_ledger_read_access
@@ -43,6 +47,14 @@ from .transaction_projection import (
     classification_reason_source,
     classification_reason_words,
 )
+
+_CONCEPT_WORDS_PREFIX: Final = f"{ENTRY_OPTION_LABEL_PREFIX}gasto_capital_inmobiliario."
+"""Where the words of a rental expense concept live; the entry options serve the same words."""
+
+
+def rental_expense_concept_words(concept: GastoCapitalInmobiliario | None, language: OutputLanguage) -> str | None:
+    """The words that name a row's rental expense concept in ``language``; ``None`` for a row without one."""
+    return None if concept is None else tr(f"{_CONCEPT_WORDS_PREFIX}{concept}", locale=language.value)
 
 
 def _withholding_projection(withholding: MovementWithholding) -> LedgerMovementWithholdingProjection:
@@ -70,6 +82,7 @@ def ledger_list_row(
     """
     source = classification_reason_source(transaction.classification_reason)
     words = classification_reason_words(source, language)
+    concept_words = rental_expense_concept_words(transaction.gasto_capital_inmobiliario, language)
     return LedgerTransactionReviewProjection(
         transaction=LedgerTransactionProjection.from_payload(ledger_transaction_payload(transaction)),
         review_status=ledger_transaction_review_status(transaction),
@@ -79,6 +92,8 @@ def ledger_list_row(
         classification_reason_words=words,
         classification_reason_words_language=language if words else None,
         withholding=tuple(_withholding_projection(item) for item in withholding),
+        gasto_capital_inmobiliario_words=concept_words,
+        gasto_capital_inmobiliario_words_language=None if concept_words is None else language,
     )
 
 

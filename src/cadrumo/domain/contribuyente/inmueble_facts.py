@@ -8,7 +8,7 @@ the stable row key a lease and a ledger row name.
 Four leaves carry a short list in one string, because a profile fact is flat
 text. The grammar is one for every door and one canonical stored form::
 
-    valores_catastrales   ANO:TOTAL:CONSTRUCCION[;...]      ascending by year
+    valores_catastrales   ANO:TOTAL:CONSTRUCCION[:VIGOR][;...]  ascending by year
     mejoras               FECHA:IMPORTE[;...]               ascending by date
     usos                  TIPO:DESDE:HASTA[;...]            HASTA empty means it continues
     inquilinos            NIF:FRANJA:EXTRANJERO[;...]       EXTRANJERO is ``si`` or ``no``
@@ -125,26 +125,39 @@ def _boolean(raw: str, *, leaf: str) -> bool:
     return raw == "true"
 
 
-def _entries(raw: str, *, leaf: str, parts: int) -> list[list[str]]:
+def _entries(raw: str, *, leaf: str, parts: int, optional: int = 0) -> list[list[str]]:
+    """Split ``raw`` into entries of ``parts`` parts, the last ``optional`` of which may be left off."""
     entries: list[list[str]] = []
     for chunk in raw.split(ENTRY_SEPARATOR):
         pieces = [piece.strip() for piece in chunk.split(_PART_SEPARATOR)]
-        if len(pieces) != parts:
+        if not parts - optional <= len(pieces) <= parts:
             raise _refuse(f"each entry has {parts} parts separated by ':'", leaf=leaf)
-        entries.append(pieces)
+        entries.append(pieces + [""] * (parts - len(pieces)))
     return entries
 
 
+def _year(raw: str, *, leaf: str, what: str) -> int:
+    if not _YEAR.fullmatch(raw):
+        raise _refuse(f"{what} has four digits", leaf=leaf)
+    return int(raw)
+
+
 def parse_valores_catastrales(raw: str, *, leaf: str) -> tuple[ValorCatastral, ...]:
-    """Read ``ANO:TOTAL:CONSTRUCCION`` entries into values ascending by IBI year."""
+    """Read ``ANO:TOTAL:CONSTRUCCION[:VIGOR]`` entries into values ascending by IBI year.
+
+    ``VIGOR`` is the year the collective valuation that set the values entered into force.
+    """
     values: list[ValorCatastral] = []
-    for year, total, construccion in _entries(raw, leaf=leaf, parts=3):
-        if not _YEAR.fullmatch(year):
-            raise _refuse("an IBI year has four digits", leaf=leaf)
+    for year, total, construccion, vigor in _entries(raw, leaf=leaf, parts=4, optional=1):
         values.append(
             _validated(
                 ValorCatastral,
-                {"year": int(year), "total": _money(total, leaf=leaf), "construccion": _money(construccion, leaf=leaf)},
+                {
+                    "year": _year(year, leaf=leaf, what="an IBI year"),
+                    "total": _money(total, leaf=leaf),
+                    "construccion": _money(construccion, leaf=leaf),
+                    "vigor": _year(vigor, leaf=leaf, what="a collective valuation year") if vigor else None,
+                },
             )
         )
     return tuple(sorted(values, key=lambda valor: valor.year))
@@ -154,6 +167,7 @@ def serialise_valores_catastrales(values: tuple[ValorCatastral, ...]) -> str:
     """Render cadastral values in the stored form, ascending by IBI year."""
     return ENTRY_SEPARATOR.join(
         f"{valor.year}:{money_text(valor.total)}:{money_text(valor.construccion)}"
+        + ("" if valor.vigor is None else f":{valor.vigor}")
         for valor in sorted(values, key=lambda item: item.year)
     )
 

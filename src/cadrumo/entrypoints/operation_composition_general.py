@@ -406,12 +406,14 @@ def compose_user_profile_record_group_operation(inputs: OperationCompositionInpu
         build_record_groups_definition,
         build_record_groups_registration,
     )
-    from .ledger_action_composition import load_ledger_rows_for_rental_references
+    from .ledger_action_composition import load_ledger_rows_for_rental_references, load_work_units_for_record_groups
     from .prevision_social_contribution_composition import build_prevision_social_contribution_ports
 
     del inputs
     definition = build_record_groups_definition(
-        load_ledger_rows_for_rental_references, build_prevision_social_contribution_ports
+        load_ledger_rows_for_rental_references,
+        load_work_units_for_record_groups,
+        build_prevision_social_contribution_ports,
     )
     return built((definition,), (build_record_groups_registration(definition),))
 

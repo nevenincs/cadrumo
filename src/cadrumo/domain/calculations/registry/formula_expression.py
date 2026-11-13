@@ -552,7 +552,6 @@ _FormulaExpressionEvaluator = Callable[[FormulaExpression, EvalContext], Decimal
 SPECIALIZED_EXPRESSION_EVALUATORS: dict[str, _FormulaExpressionEvaluator] = {
     "lookup_bracket": _evaluate_lookup_bracket,
     "lookup_bracket_by_ccaa": _evaluate_lookup_bracket_by_ccaa,
-    "m100_resolve_renta_inmobiliaria_imputada": formula_runtime_m100.evaluate_m100_resolve_renta_inmobiliaria_imputada,
     "irnr_resolve_tipo_gravamen": formula_runtime_irnr.evaluate_irnr_resolve_tipo_gravamen,
     "m210_resolve_base_imponible": formula_runtime_irnr.evaluate_m210_resolve_base_imponible,
     "lookup_parameter_by_entity_type": _evaluate_lookup_parameter_by_entity_type,
