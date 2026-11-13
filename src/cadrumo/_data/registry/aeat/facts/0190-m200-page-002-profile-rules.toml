@@ -15,6 +15,8 @@ family = "mapping"
 #   responsabilidad limitada or a sociedad civil states at least one socio even below
 #   5 %; lines 4014-4016: the percentages add up to 100. A sociedad limitada laboral is a
 #   sociedad de responsabilidad limitada (Ley 44/2015 art. 1).
+# - G. Representantes legales, p. 96, lines 3739-3747: at least one representante is stated with
+#   "Apellidos y nombre", "NIF", "Fecha poder" and "Notaría/Otros", whatever the entity form.
 # - C. Entidades menores dependientes, p. 102, lines 4020-4024: filled only by the
 #   entidades eclesiásticas that marked clave 00078, so a mercantile or cooperative form
 #   rules the family out.
@@ -37,6 +39,7 @@ required_text = [
   "En caso de sociedades de responsabilidad limitada o de sociedades civiles, aunque ninguno de los socios tenga un porcentaje igual o superior al 5 por ciento del capital, este subapartado se deberá cumplimentar, al menos, con los datos correspondientes a uno de los socios.",
   "los porcentajes de participación de personas o entidades en la declarante ha de ser igual al 100 por cien del capital de la declarante",
   "deberá ser cumplimentado por aquellas entidades eclesiásticas que previamente hayan marcado la clave [00078]",
+  "deberán estar cumplimentados los siguientes datos de al menos un representante: \"Apellidos y nombre\", \"NIF\", \"Fecha poder\" y \"Notaría/Otros\".",
 ]
 
 [[fact.variants.source_citations]]
@@ -63,6 +66,7 @@ entries = [
   { key = "kind.m200_participacion_socio.percentage_total_forms", value = "sl,sll,sociedad_civil_mercantil" },
   { key = "kind.m200_representante_legal.section", value = "m200_representante_legal" },
   { key = "kind.m200_representante_legal.stated_answer", value = "m200_relaciones.has_representante_legal" },
+  { key = "kind.m200_representante_legal.rows_required_forms", value = "sl,sa,sal,sll,cooperativa,sociedad_civil_mercantil,sin_fines_lucrativos,other" },
   { key = "kind.m200_secretario_consejo.section", value = "m200_secretario_consejo" },
   { key = "kind.m200_secretario_consejo.stated_answer", value = "m200_relaciones.has_secretario_consejo" },
   { key = "kind.m200_participacion_directa.section", value = "m200_participacion_directa" },

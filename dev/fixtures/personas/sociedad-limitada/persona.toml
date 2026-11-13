@@ -78,6 +78,16 @@ as_of = { year = "horizon", month = 2, day = 16 }
 "taxpayer_type.erd_tipo_gravamen_especifico" = "false"
 "taxpayer_type.cooperativa_fiscalmente_protegida" = "false"
 "taxpayer_type.marca_instrumental" = "false"
+# Page 2 of its Modelo 200 (apartados B, G, D and E): its one socio is listed in B.2; its sole
+# administrator is its legal representative in G (the Sociedades manual requires at least one
+# representante there), it has no secretario del consejo (no board), holds no stake in another entity,
+# has no permanent establishment abroad and no SICAV socio.
+"m200_relaciones.has_participacion_socio" = "true"
+"m200_relaciones.has_representante_legal" = "true"
+"m200_relaciones.has_secretario_consejo" = "false"
+"m200_relaciones.has_participacion_directa" = "false"
+"m200_relaciones.has_establecimiento_permanente" = "false"
+"m200_relaciones.has_socio_sicav_disolucion" = "false"
 
 [[activities]]
 description = "Desarrollo y mantenimiento de aplicaciones y plataformas web"
@@ -87,6 +97,24 @@ iae_epigraph = "845"
 identity = "sociedad.administrador"
 role = "administrador_unico"
 remunerated = false
+
+# Page 2, apartado A of its Modelo 200: the sole administrator, a natural person (F/J column F)
+# who represents no legal-person administrator.
+[[profile_rows]]
+section = "m200_administrador"
+values = { nif = { identity = "sociedad.administrador" }, apellidos_nombre_razon_social = { identity = "sociedad.administrador", field = "full_name" }, forma_juridica = "F", representante = false }
+
+# Apartado B.2: the administrator holds the whole share capital, the 3000.00 minimum of an SL constituted
+# before Ley 18/2022, and lives in Valladolid (province 47) like the company.
+[[profile_rows]]
+section = "m200_participacion_socio"
+values = { nif = { identity = "sociedad.administrador" }, apellidos_nombre_razon_social = { identity = "sociedad.administrador", field = "full_name" }, forma_juridica = "F", codigo_provincia_pais = "47", nominal = "3000.00", porcentaje_participacion = "100" }
+
+# Page 2 bis, apartado G: the administrator represents the company under her appointment in the
+# escritura de constitución, executed before a Valladolid notary days before activity began (synthetic).
+[[profile_rows]]
+section = "m200_representante_legal"
+values = { apellidos_y_nombre = { identity = "sociedad.administrador", field = "full_name" }, nif = { identity = "sociedad.administrador" }, fecha_poder = { year = "horizon-6", month = 1, day = 10 }, notaria_otros = "VALLADOLID" }
 
 # The company's earlier Modelo 200 returns, which the application does not hold (synthetic history).
 # It began on horizon-6-01-15 and lost money while it built its first platforms: bases imponibles
