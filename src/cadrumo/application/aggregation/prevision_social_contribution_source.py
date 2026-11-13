@@ -78,11 +78,11 @@ PREVISION_SOCIAL_CONTRIBUTION_REF_PREFIX: Final = "prevision-social-contribution
 _SOURCE_KIND: Final = BindingSourceKind.PREVISION_SOCIAL_CONTRIBUTION
 _ENTER_DOOR: Final = "Enter the contribution boxes by hand with the modelo work edit action."
 _RECORD_DOOR: Final = (
-    "Record each pension contribution certificate with aeat app ledger prevision-social record, or enter the "
+    "Record each pension contribution certificate with app ledger prevision-social record, or enter the "
     "contribution boxes by hand with the modelo work edit action."
 )
 _CORRECT_DOOR: Final = (
-    "Wait for this year's placement to be confirmed, or remove the record with aeat app ledger prevision-social "
+    "Wait for this year's placement to be confirmed, or remove the record with app ledger prevision-social "
     "remove and enter the box by hand with the modelo work edit action."
 )
 _NOT_CERTIFIED_LOCALE_KEY: Final = "aggregation.prevision_social_contribution.served.not_certified"

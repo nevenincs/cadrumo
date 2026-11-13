@@ -94,21 +94,21 @@ CAPITAL_MOBILIARIO_PAYER_REF_PREFIX: Final = "capital-mobiliario-payer:"
 _SOURCE_KIND: Final = BindingSourceKind.CAPITAL_MOBILIARIO_POSITION
 _CLASS: Final = RetencionSoportadaClase.CAPITAL_MOBILIARIO
 _POSITION_DOOR: Final = (
-    "Add or correct the position with aeat config profile posicion, or link the rows to the right position with "
-    "aeat app ledger classify --posicion."
+    "Add or correct the position with config profile posicion, or link the rows to the right position with "
+    "app ledger classify --posicion."
 )
 _ROW_DOOR: Final = (
-    "Correct each row's concept or currency with aeat app ledger classify, or enter these casillas by hand with "
+    "Correct each row's concept or currency with app ledger classify, or enter these casillas by hand with "
     "the modelo work edit action."
 )
 _UNCOMPUTED_DOOR: Final = "Enter these casillas by hand with the modelo work edit action."
 _PAYER_DOOR: Final = (
-    "Record the payer's certificate with aeat app ledger retencion-soportada record, or attest that no payer "
-    "withheld with aeat app ledger retencion-soportada attest-absence."
+    "Record the payer's certificate with app ledger retencion-soportada record, or attest that no payer "
+    "withheld with app ledger retencion-soportada attest-absence."
 )
 _DISAGREEMENT_DOOR: Final = (
-    "Correct the payer record with aeat app ledger retencion-soportada record, or the linked rows with "
-    "aeat app ledger classify, until the two agree."
+    "Correct the payer record with app ledger retencion-soportada record, or the linked rows with "
+    "app ledger classify, until the two agree."
 )
 
 _JOIN_SENTENCES: Final[Mapping[CapitalMobiliarioJoinFindingKind, tuple[CalculationNoteSentence, str]]] = {
