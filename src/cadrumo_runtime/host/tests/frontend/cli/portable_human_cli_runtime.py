@@ -365,8 +365,8 @@ class _Worker(ProfileWorkerHumanAdmission):
         stopping: ChannelWake | None = None,
         fixed_clock: FixedClock | None = None,
     ) -> None:
-        # The worker runs in a joined thread of this process: no process exit to watch, and the
-        # runtime hosting it admits no test-host clock.
+        # The worker runs in a joined thread of this process: no process exit to watch,
+        # and the portable runtime admits no fixed clock.
         del wall_clock, exited, stopping, fixed_clock
         if authorization is None or worker_script is not None:
             raise AssertionError("portable worker requires its runtime owner and no external script")
