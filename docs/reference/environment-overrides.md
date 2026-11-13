@@ -146,7 +146,7 @@ Each profile belongs to one program. The host validates a launch parameter again
 - **Started with:** any arguments
 - **Starts from:** only the operating-system groups `system`, `session`, `terminal`, `display` and `network`
 - **Passes from its caller:** the name groups `presentation`, `remote` and `package` and the names `CADRUMO_PROXY_URL`, `CADRUMO_PROXY_USERNAME` and `CADRUMO_PROXY_BYPASS`
-- **Accepts from its parent:** `CADRUMO_PROFILE_ROOT` (directory, optional), `CADRUMO_FIXED_CLOCK_INSTANT` (text, optional) and `CADRUMO_FIXED_CLOCK_ROOT` (directory, optional)
+- **Accepts from its parent:** `CADRUMO_PROFILE_ROOT` (directory, optional)
 - **Sets itself:** `CADRUMO_STORAGE_ROOT` to the storage root the package's rule resolves (an absolute value you set wins, otherwise the per-user, per-channel default), `TEMP`, `TMP` and `TMPDIR` to the temporary-files location beneath the storage root and `CADRUMO_AUTHORITY_ROOT` to the package's registry authority
 - **Search path (`PATH`):** set by the package to the directory of the package's interpreter; the existing absolute directories `CADRUMO_EXTERNAL_BIN_DIRS` names; the package's native program directory; those of the usual installation directories that exist (`%USERPROFILE%\.local\bin` on Windows, `%USERPROFILE%\scoop\shims` on Windows, `%APPDATA%\npm` on Windows, `$HOME/.local/bin` on Linux and macOS, `/usr/local/bin` on Linux and macOS and `/opt/homebrew/bin` on macOS); the system directory (`%SYSTEMROOT%\System32` on Windows, `/usr/bin` and `/bin` elsewhere), in that order
 
@@ -184,7 +184,6 @@ Each profile belongs to one program. The host validates a launch parameter again
 - **Started with:** any arguments
 - **Starts from:** only the operating-system groups `system`, `session`, `display` and `network`
 - **Passes from its caller:** the names `CADRUMO_CLI_REVEAL_IDENTIFIERS`, `CADRUMO_PROXY_URL`, `CADRUMO_PROXY_USERNAME` and `CADRUMO_PROXY_BYPASS`
-- **Accepts from its parent:** `CADRUMO_FIXED_CLOCK_INSTANT` (text, optional) and `CADRUMO_FIXED_CLOCK_ROOT` (directory, optional)
 - **Sets itself:** `CADRUMO_STORAGE_ROOT` to the storage root the package's rule resolves (an absolute value you set wins, otherwise the per-user, per-channel default), `TEMP`, `TMP` and `TMPDIR` to the temporary-files location beneath the storage root and `CADRUMO_AUTHORITY_ROOT` to the package's registry authority
 - **Search path (`PATH`):** set by the package to the directory of the package's interpreter; the package's native program directory; the system directory (`%SYSTEMROOT%\System32` on Windows, `/usr/bin` and `/bin` elsewhere), in that order
 

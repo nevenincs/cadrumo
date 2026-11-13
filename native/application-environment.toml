@@ -109,6 +109,8 @@ CADRUMO_LOCAL_AI_DEMAND_SERVERS = { kind = "text", role = "slot" }
 # admits them once at its start and tells each profile worker the admitted values,
 # never ones it received; both refuse to start on any unbound value. They are not
 # settings, so no settings path reads them.
+# No launch profile admits them: a profile slot is filled from the ambient environment
+# in every image, so only the test host's own feature-gated relay may set them.
 CADRUMO_FIXED_CLOCK_INSTANT = { kind = "text", role = "slot" }
 CADRUMO_FIXED_CLOCK_ROOT = { kind = "directory", role = "slot" }
 
@@ -406,11 +408,7 @@ base_groups = ["system", "session", "terminal", "display", "network"]
 pins = true
 operator = ["presentation", "remote", "package"]
 pass = ["CADRUMO_PROXY_URL", "CADRUMO_PROXY_USERNAME", "CADRUMO_PROXY_BYPASS"]
-slots = [
-  { name = "CADRUMO_PROFILE_ROOT", required = false },
-  { name = "CADRUMO_FIXED_CLOCK_INSTANT", required = false },
-  { name = "CADRUMO_FIXED_CLOCK_ROOT", required = false },
-]
+slots = [{ name = "CADRUMO_PROFILE_ROOT", required = false }]
 path = "package"
 
 [profiles.kdf-child]
@@ -450,10 +448,6 @@ pass = [
   "CADRUMO_PROXY_URL",
   "CADRUMO_PROXY_USERNAME",
   "CADRUMO_PROXY_BYPASS",
-]
-slots = [
-  { name = "CADRUMO_FIXED_CLOCK_INSTANT", required = false },
-  { name = "CADRUMO_FIXED_CLOCK_ROOT", required = false },
 ]
 path = "package"
 
