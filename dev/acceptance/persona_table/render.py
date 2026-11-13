@@ -254,43 +254,55 @@ def render_table(
     lines += _unchecked_section(ordered)
     lines += _gap_section(coverage_gaps)
     lines += _undecided_section(undecided)
-    lines += ["Verdicts:", ""]
-    lines += [f"- `{verdict.value}`: {meaning}." for verdict, meaning in VERDICT_MEANING.items()]
-    lines += [
-        "",
-        "Each year is replayed with the registry horizon moved to it (column `run`); the real horizon wins a tie.",
-        "",
-        "| persona | modelo | year | period | verdict | calculate | verify | export | grounding | run | reason |"
-        + ("".join(f" {surface} |" for surface in SURFACES) if frontend is not None else ""),
-        "|---|---|---|---|---|---|---|---|---|---|---|" + ("---|" * len(SURFACES) if frontend is not None else ""),
-    ]
+    lines += _verdict_legend()
+    lines += _row_table_header(frontend)
     cells = _frontend_cells(frontend, head)
-    for row in ordered:
-        export = row.export.value + (f" ({row.export_detail})" if row.export_detail else "")
-        lines.append(
-            "| "
-            + " | ".join(
-                _cell(item)
-                for item in (
-                    row.persona,
-                    row.modelo,
-                    row.year,
-                    row.period,
-                    row.verdict.value,
-                    row.calculate.value,
-                    row.verify.value,
-                    export,
-                    row.grounding,
-                    row.horizon,
-                    row.reason,
-                    *cells.get(row.key, ()),
-                )
-            )
-            + " |"
-        )
+    lines += [_row_line(row, cells.get(row.key, ())) for row in ordered]
     if frontend is not None:
         lines += _frontend_section(frontend)
     return "\n".join(lines) + "\n"
+
+
+def _verdict_legend() -> list[str]:
+    """The verdict meanings and the note on how each year is replayed."""
+    return [
+        "Verdicts:",
+        "",
+        *(f"- `{verdict.value}`: {meaning}." for verdict, meaning in VERDICT_MEANING.items()),
+        "",
+        "Each year is replayed with the registry horizon moved to it (column `run`); the real horizon wins a tie.",
+        "",
+    ]
+
+
+def _row_table_header(frontend: FrontendComparison | None) -> list[str]:
+    """The header and separator of the row table, with a column per surface when ``frontend`` is compared."""
+    compared = frontend is not None
+    return [
+        "| persona | modelo | year | period | verdict | calculate | verify | export | grounding | run | reason |"
+        + ("".join(f" {surface} |" for surface in SURFACES) if compared else ""),
+        "|---|---|---|---|---|---|---|---|---|---|---|" + ("---|" * len(SURFACES) if compared else ""),
+    ]
+
+
+def _row_line(row: TableRow, surface_cells: Sequence[str]) -> str:
+    """One Markdown table line for ``row`` followed by its per-surface cells."""
+    export = row.export.value + (f" ({row.export_detail})" if row.export_detail else "")
+    items = (
+        row.persona,
+        row.modelo,
+        row.year,
+        row.period,
+        row.verdict.value,
+        row.calculate.value,
+        row.verify.value,
+        export,
+        row.grounding,
+        row.horizon,
+        row.reason,
+        *surface_cells,
+    )
+    return "| " + " | ".join(_cell(item) for item in items) + " |"
 
 
 def _frontend_cells(frontend: FrontendComparison | None, head: str) -> dict[tuple[str, str, int, str], list[str]]:

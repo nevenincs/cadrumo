@@ -144,6 +144,22 @@ def test_a_persona_level_line_needs_no_stages_and_no_year() -> None:
         parse_result(json.dumps(line | {"loads": True, "year": _YEAR}))
 
 
+def test_a_persona_level_line_may_state_its_stages_as_null() -> None:
+    line = {
+        "surface": "tui",
+        "tree": "abc",
+        "persona": "p",
+        "modelo": None,
+        "year": None,
+        "period": None,
+        "loads": True,
+    }
+    result = parse_result(json.dumps(line | {"calculate": None, "verify": None, "export": None}))
+    assert (result.modelo, result.loads) == (None, True)
+    with pytest.raises(ValueError, match="calculate must be one of"):
+        parse_result(json.dumps(_line(calculate=None)))
+
+
 def test_the_latest_line_wins_by_file_name_then_line_order(tmp_path: Path) -> None:
     _write(tmp_path, "b.jsonl", [_line(calculate="refused")])
     _write(tmp_path, "a.jsonl", [_line(calculate="error"), _line(calculate="incomplete")])

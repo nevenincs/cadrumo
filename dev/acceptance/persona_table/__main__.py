@@ -163,8 +163,7 @@ def _coverage(args: argparse.Namespace) -> int:
 
 def _render(args: argparse.Namespace) -> int:
     rows = _rows_from(args.rows)
-    lanes = tomllib.loads(args.lanes.read_text(encoding="utf-8")) if args.lanes else None
-    lane_of = {str(modelo): lane for lane, modelos in (lanes or {}).items() for modelo in modelos}
+    lane_of = _lane_of_modelo(args.lanes)
     meta = read_meta(args.meta or meta_path(args.rows[0]))
     gaps = None if args.coverage is None else load_coverage_gaps(args.coverage)
     undecided = None if args.coverage is None else load_coverage_undecided(args.coverage)
@@ -182,13 +181,24 @@ def _render(args: argparse.Namespace) -> int:
         undecided=undecided,
         frontend=frontend,
     )
-    if args.out is None:
-        sys.stdout.write(text)
-    else:
-        args.out.parent.mkdir(parents=True, exist_ok=True)
-        args.out.write_text(text, encoding="utf-8")
-        sys.stderr.write(summary_line(list(rows.values())) + "\n")
+    _publish_table(text, args.out, list(rows.values()))
     return 0
+
+
+def _lane_of_modelo(lanes_file: Path | None) -> dict[str, str]:
+    """The lane of each modelo code from a TOML mapping each lane to its codes; empty without a file."""
+    lanes = tomllib.loads(lanes_file.read_text(encoding="utf-8")) if lanes_file else {}
+    return {str(modelo): lane for lane, modelos in lanes.items() for modelo in modelos}
+
+
+def _publish_table(text: str, out: Path | None, rows: list[TableRow]) -> None:
+    """Write the table to ``out`` and its summary line to stderr, or the table to stdout without ``out``."""
+    if out is None:
+        sys.stdout.write(text)
+        return
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(text, encoding="utf-8")
+    sys.stderr.write(summary_line(rows) + "\n")
 
 
 def _baseline(args: argparse.Namespace) -> int:

@@ -157,16 +157,8 @@ def parse_result(line: str) -> SurfaceResult:
     if missing := sorted(_REQUIRED - set(data)):
         raise ValueError(f"missing key {', '.join(missing)}")
     surface = _choice(data, "surface", SURFACES)
-    modelo = _optional_text(data, "modelo")
-    year, period = _optional_year(data), _optional_text(data, "period")
-    if modelo is None and (year is not None or period is not None):
-        raise ValueError("a persona-level line (modelo null) has no year or period")
-    if modelo is not None and (year is None or period is None):
-        raise ValueError("a line with a modelo needs a year and a period")
-    absent = [name for name in _STAGE_FIELDS if name not in data]
-    if modelo is not None and absent:
-        raise ValueError(f"missing key {', '.join(absent)}")
-    stages = {name: _choice(data, name, STAGE_WORDS) for name in _STAGE_FIELDS if name in data}
+    modelo, year, period = _return_scope(data)
+    stages = _stage_words(data, modelo)
     loads = data["loads"]
     if not isinstance(loads, bool):
         raise ValueError("loads must be true or false")
@@ -186,6 +178,28 @@ def parse_result(line: str) -> SurfaceResult:
         reason=_optional_text(data, "reason") or "",
         log=_optional_text(data, "log") or "",
     )
+
+
+def _return_scope(data: Mapping[str, object]) -> tuple[str | None, int | None, str | None]:
+    """The ``(modelo, year, period)`` of a line: all set for a return, all null for a persona-level line."""
+    modelo = _optional_text(data, "modelo")
+    year, period = _optional_year(data), _optional_text(data, "period")
+    if modelo is None and (year is not None or period is not None):
+        raise ValueError("a persona-level line (modelo null) has no year or period")
+    if modelo is not None and (year is None or period is None):
+        raise ValueError("a line with a modelo needs a year and a period")
+    return modelo, year, period
+
+
+def _stage_words(data: Mapping[str, object], modelo: str | None) -> dict[str, str]:
+    """The stage words a line states; a line with a ``modelo`` must state all three."""
+    absent = [name for name in _STAGE_FIELDS if name not in data]
+    if modelo is not None and absent:
+        raise ValueError(f"missing key {', '.join(absent)}")
+    stated = {name: data[name] for name in _STAGE_FIELDS if name in data}
+    if modelo is None:
+        stated = {name: word for name, word in stated.items() if word is not None}
+    return {name: _choice(stated, name, STAGE_WORDS) for name in stated}
 
 
 def _text(data: Mapping[str, object], name: str) -> str:
@@ -305,23 +319,40 @@ def parity(
     """
     tree = None if result is None else result.tree
     if loads is False or (result is not None and not result.loads):
-        reason = load_reason or (result.reason if result is not None else "")
-        return RowParity(row.key, surface, LOAD_FAILED, (reason or "the profile did not load",), tree)
+        return RowParity(row.key, surface, LOAD_FAILED, (_load_failure_reason(result, load_reason),), tree)
     if result is None:
         return RowParity(row.key, surface, NOT_RUN)
     stages = {name: STAGE_OF[getattr(row, name)] for name in _STAGE_FIELDS}
+    if (why := _uncomparable_reason(row, stages)) is not None:
+        return RowParity(row.key, surface, NOT_COMPARABLE, (why,), tree)
+    causes = _stage_causes(surface, stages, result)
+    causes += figure_causes(surface, dict(row.figures), dict(result.figures))
+    return RowParity(row.key, surface, DIFFERS if causes else MATCHED, tuple(causes), tree)
+
+
+def _load_failure_reason(result: SurfaceResult | None, load_reason: str) -> str:
+    """The reason a persona did not load: the one given, else the result's own, else a generic sentence."""
+    reason = load_reason or (result.reason if result is not None else "")
+    return reason or "the profile did not load"
+
+
+def _uncomparable_reason(row: TableRow, stages: Mapping[str, str | None]) -> str | None:
+    """Why the table row has nothing to compare a surface with, or ``None`` when it can be compared."""
     if empty := [name for name, word in stages.items() if word is None]:
         why = ", ".join(f"{name} {getattr(row, name).value}" for name in empty)
-        return RowParity(row.key, surface, NOT_COMPARABLE, (f"table row has no comparable stage: {why}",), tree)
+        return f"table row has no comparable stage: {why}"
     if stages["calculate"] == "pass" and not row.figures:
-        return RowParity(row.key, surface, NOT_COMPARABLE, ("table row calculated but records no figures",), tree)
-    causes = [
+        return "table row calculated but records no figures"
+    return None
+
+
+def _stage_causes(surface: str, stages: Mapping[str, str | None], result: SurfaceResult) -> list[str]:
+    """Each stage at which the surface's word differs from the table row's."""
+    return [
         f"{name} {surface} {getattr(result, name)}, table {word}"
         for name, word in stages.items()
         if getattr(result, name) != word
     ]
-    causes += figure_causes(surface, dict(row.figures), dict(result.figures))
-    return RowParity(row.key, surface, DIFFERS if causes else MATCHED, tuple(causes), tree)
 
 
 @dataclass(frozen=True, slots=True)
@@ -356,35 +387,49 @@ def compare_frontend(rows: Iterable[TableRow], results: Mapping[ResultKey, Surfa
     for surface in SURFACES:
         held = {key: result for key, result in results.items() if key[0] == surface}
         loads = {persona: _loads(held, persona) for persona in personas}
-        found = tuple(
-            parity(
-                row,
-                surface,
-                held.get((surface, row.persona, row.modelo, row.year, row.period)),
-                loads=loads[row.persona],
-                load_reason=_load_reason(held, row.persona),
-            )
-            for row in ordered
-        )
+        found = _surface_parities(ordered, surface, held, loads)
         parities[surface] = found
-        extras[surface] = tuple(
-            RowParity(
-                (result.persona, result.modelo, result.year, result.period),
-                surface,
-                EXTRA,
-                ("no table row",),
-                result.tree,
-            )
-            for _, result in sorted(held.items(), key=lambda item: str(item[0]))
-            if result.modelo is not None
-            and result.year is not None
-            and result.period is not None
-            and (result.persona, result.modelo, result.year, result.period) not in keys
-        )
+        extras[surface] = _surface_extras(surface, held, keys)
         for persona in personas:
-            mine = [item for item in found if item.key[0] == persona]
-            cells[persona, surface] = PersonaCell(loads[persona], len(mine), Counter(item.outcome for item in mine))
+            cells[persona, surface] = _persona_cell(found, persona, loads[persona])
     return FrontendComparison(ordered, parities, extras, cells)
+
+
+def _surface_parities(
+    ordered: Iterable[TableRow],
+    surface: str,
+    held: Mapping[ResultKey, SurfaceResult],
+    loads: Mapping[str, bool | None],
+) -> tuple[RowParity, ...]:
+    """One parity per table row for ``surface``, given the results it ``held`` and each persona's load state."""
+    return tuple(
+        parity(
+            row,
+            surface,
+            held.get((surface, row.persona, row.modelo, row.year, row.period)),
+            loads=loads[row.persona],
+            load_reason=_load_reason(held, row.persona),
+        )
+        for row in ordered
+    )
+
+
+def _surface_extras(surface: str, held: Mapping[ResultKey, SurfaceResult], keys: set[RowKey]) -> tuple[RowParity, ...]:
+    """The return results of ``surface`` that no table row (``keys``) accounts for."""
+    extras: list[RowParity] = []
+    for _, result in sorted(held.items(), key=lambda item: str(item[0])):
+        if result.modelo is None or result.year is None or result.period is None:
+            continue
+        key = (result.persona, result.modelo, result.year, result.period)
+        if key not in keys:
+            extras.append(RowParity(key, surface, EXTRA, ("no table row",), result.tree))
+    return tuple(extras)
+
+
+def _persona_cell(found: Iterable[RowParity], persona: str, loads: bool | None) -> PersonaCell:
+    """``persona``'s cell on one surface from the parities of that surface's rows."""
+    mine = [item for item in found if item.key[0] == persona]
+    return PersonaCell(loads, len(mine), Counter(item.outcome for item in mine))
 
 
 def _persona_line(held: Mapping[ResultKey, SurfaceResult], persona: str) -> SurfaceResult | None:
