@@ -59,6 +59,21 @@ def now() -> datetime:
     return datetime.now(tz=UTC)
 
 
+def wall_now() -> datetime:
+    """Return the real current UTC-aware datetime, ignoring :func:`frozen_clock`.
+
+    Authority timing only: lease, session, admission, interaction-response and
+    journal stamps expire and order on real time, so a frozen past instant can
+    never keep a wall-minted grant alive. It holds no state and consults no
+    frozen instant, so it is not a second seam; tax work reads :func:`now`.
+
+    Returns:
+        A :class:`datetime.datetime` instance with :data:`datetime.UTC` as its
+        ``tzinfo``.
+    """
+    return datetime.now(tz=UTC)
+
+
 MADRID_TZ = ZoneInfo("Europe/Madrid")
 """Spain's peninsular civil timezone, the authority for regulated calendar boundaries.
 

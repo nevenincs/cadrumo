@@ -1,20 +1,17 @@
 [[revisions."2016-2017".applicability]]
 id = "m232-seed"
 applicable_entity_types = ["legal_entity"]
-applicable_reason = "Modelo 232 (declaracion informativa de operaciones vinculadas y de operaciones y situaciones relacionadas con paraisos fiscales): el contribuyente del Impuesto sobre Sociedades realiza operaciones con personas o entidades vinculadas en los terminos del articulo 18 de la Ley 27/2014, o mantiene operaciones o valores en paises o territorios calificados como paraisos fiscales, y queda obligado a informar de ellas conforme a la Orden HFP/816/2017."
-not_applicable_reason = "Modelo 232 no aplica: la obligacion informativa solo alcanza al contribuyente del Impuesto sobre Sociedades con operaciones vinculadas por encima de los umbrales del articulo 13.4 del RIS o con operaciones y situaciones relacionadas con paraisos fiscales."
-legal_refs = ["ley-27-2014:art-18", "rd-634-2015:art-13", "orden-hfp-816-2017:art-1"]
+required_payer_fact = "meets_modelo_232_related_party_grounds"
+applicable_reason = "Modelo 232 (declaracion informativa de operaciones vinculadas y de operaciones y situaciones relacionadas con paraisos fiscales): el contribuyente del Impuesto sobre Sociedades realiza operaciones con personas o entidades vinculadas en los terminos del articulo 18 de la Ley 27/2014, o mantiene operaciones o valores en paises o territorios calificados como paraisos fiscales, que cumplen alguno de los supuestos del articulo 2 de la Orden HFP/816/2017, y queda obligado a informar de ellas."
+not_applicable_reason = "Modelo 232 no aplica: la obligacion informativa solo alcanza al contribuyente del Impuesto sobre Sociedades con operaciones vinculadas por encima de los umbrales del articulo 2 de la Orden HFP/816/2017, con la reduccion por cesion de intangibles a vinculadas o con operaciones y situaciones relacionadas con paraisos fiscales, y las operaciones declaradas no cumplen ninguno de esos supuestos."
+legal_refs = ["ley-27-2014:art-18", "rd-634-2015:art-13", "orden-hfp-816-2017:art-1", "orden-hfp-816-2017:art-2"]
 
 # Orden HFP/816/2017 art. 2 obliges a company to file only when it has operations
 # with related persons above the thresholds of art. 2.1 (the parameters of this
 # revision), same-type operations above half its turnover (art. 2.3), the
 # intangibles reduction of LIS art. 23 on income from related persons (art. 2.4),
 # or operations or securities in a tax haven whatever their amount (art. 2.5).
-# Being a company is not one of those grounds, and the profile states no
-# related-party operations, so the obligation stays undecided rather than owed.
-[[revisions."2016-2017".applicability.exclusions]]
-id = "m232-operaciones-vinculadas-sin-declarar"
-outcome = "incomplete"
-entity_types = ["legal_entity"]
-reason = "No se puede determinar si debes presentar el Modelo 232: solo obliga a quien realiza operaciones con personas o entidades vinculadas por encima de los umbrales (más de 250.000 euros con una misma persona o entidad, más de 100.000 euros en cada tipo de operación específica, u operaciones del mismo tipo que superen la mitad de tu cifra de negocios), a quien aplica la reducción por cesión de intangibles a vinculadas, o a quien tiene operaciones o valores en paraísos fiscales, sea cual sea su importe. Tu perfil no indica si realizas operaciones de ese tipo; compruébalo."
-legal_refs = ["orden-hfp-816-2017:art-2", "ley-27-2014:art-18", "rd-634-2015:art-13"]
+# Being a company is not one of those grounds, so the rule reads the payer fact
+# that applies them to the operations the taxpayer states for the ejercicio. The
+# fact is undeclared until the taxpayer states those operations, or states that
+# there were none, so the obligation stays undecided rather than owed.

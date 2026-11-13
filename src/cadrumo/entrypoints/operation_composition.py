@@ -202,6 +202,7 @@ from .operation_composition_live import (
     compose_live_verify_capture_operation,
     compose_live_verify_read_operation,
 )
+from .operation_composition_m232_related_party import compose_m232_related_party_operations
 from .operation_composition_modelo import (
     compose_modelo_aggregate_operation,
     compose_modelo_amendment_context_operation,
@@ -358,6 +359,7 @@ _OPERATION_COMPOSITION_GROUPS: Mapping[str, _GroupComposer] = {
     "application.live.sede_view_operation": compose_live_sede_view_operation,
     "application.live.verify_capture_operation": compose_live_verify_capture_operation,
     "application.live.verify_read_operation": compose_live_verify_read_operation,
+    "application.m232_related_party.registered_operation": compose_m232_related_party_operations,
     "application.modelo.aggregate_operation": compose_modelo_aggregate_operation,
     "application.modelo.amendment_context_operation": compose_modelo_amendment_context_operation,
     "application.modelo.audit_operation": compose_modelo_audit_operation,
