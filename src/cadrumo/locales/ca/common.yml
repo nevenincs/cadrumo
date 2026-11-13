@@ -6296,6 +6296,10 @@ ledger:
   evidence:
     reader:
       operation_failed: Ha fallat l'operació del lector de justificants
+  link_field:
+    arrendamiento_ref: Arrendament vinculat
+    gasto_capital_inmobiliario: Concepte de despesa de l'immoble
+    inmueble_ref: Immoble vinculat
 live:
   errors:
     expediente_not_found: No s'ha trobat l'expedient sol.licitat a l'AEAT.

@@ -13,6 +13,7 @@ from pydantic import BaseModel, ValidationError
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, DisclosureCategory
 
+from ....core.external_constants import DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
 from ....core.operations import profile_operation_subject
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
@@ -201,9 +202,10 @@ def test_transaction_projection_roundtrips_the_live_canonical_m210_field_set(
     canonical = _m210_canonical_payload(authority_operation)
     projection = LedgerTransactionProjection.from_payload(canonical)
 
-    assert set(LedgerTransactionPayload.model_fields) == set(LedgerTransactionProjection.model_fields)
+    # The link fields are the one field the projection derives: they restate the stored link values with their words.
+    assert set(LedgerTransactionPayload.model_fields) == set(LedgerTransactionProjection.model_fields) - {"link_fields"}
     assert set(M210IncomeClassification.model_fields) == set(LedgerM210IncomeProjection.model_fields)
-    assert projection.model_dump(mode="json") == canonical.model_dump(mode="json")
+    assert projection.model_dump(mode="json", exclude={"link_fields"}) == canonical.model_dump(mode="json")
     assert canonical.m210_income_classification is not None
     assert projection.m210_income_classification is not None
     assert projection.m210_income_classification.gross_income_amount == str(
@@ -225,3 +227,26 @@ def test_transaction_projection_rejects_a_future_canonical_field(
 
     with pytest.raises(ValidationError):
         LedgerTransactionProjection.from_payload(expanded)
+
+
+def test_the_view_request_names_the_language_the_link_fields_are_said_in() -> None:
+    request = LedgerViewRequest(profile_id=_PROFILE, transaction_prefix="a" * 12)
+    english = LedgerViewRequest(profile_id=_PROFILE, transaction_prefix="a" * 12, output_language=OutputLanguage.EN)
+
+    assert request.output_language is DEFAULT_OUTPUT_LANGUAGE
+    assert english.output_language is OutputLanguage.EN
+    assert LedgerViewRequest.model_validate_json(english.model_dump_json()) == english
+
+
+def test_the_projection_the_view_serves_names_every_link_field_in_the_requested_language(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    canonical = _m210_canonical_payload(authority_operation)
+
+    projection = LedgerTransactionProjection.from_payload(canonical, language=OutputLanguage.EN)
+
+    assert [(item.field, item.value, item.field_words) for item in projection.link_fields] == [
+        ("arrendamiento_ref", None, "Linked lease"),
+        ("inmueble_ref", None, "Linked property"),
+        ("gasto_capital_inmobiliario", None, "Rental expense concept"),
+    ]
