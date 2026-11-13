@@ -1,8 +1,11 @@
 import fixtures from "@fixtures/desktop-household/household.json" with { type: "json" };
 import type {
+  HouseholdAsk,
+  HouseholdDraft,
   HouseholdFact,
   HouseholdGroup,
   HouseholdLeaf,
+  HouseholdLeafAsk,
   HouseholdPersonEdit,
   HouseholdQuestion,
   HouseholdRowAction,
@@ -23,6 +26,15 @@ import type { ProfileChange } from "../shell/userProfile";
 // of a group are the ones the application served for the same group in any
 // state, offered as it offers them: the add while the group holds fewer people
 // than its design admits, the remove while a person is stored.
+//
+// The asks (`new_row_leaves`, `leaf_asks`, and the answer of a draft read) are
+// the product's to resolve. The recorded household does not carry them yet, so
+// the fixture stands in for the product here and resolves them from the
+// `shown_when` the group serves, by the product's rule: a leaf with no
+// condition is asked; a leaf whose condition holds on an asked leaf is asked;
+// otherwise it awaits an answer while a leaf it is asked after is asked and
+// unanswered, and is not asked when every such leaf is answered. Nothing in
+// the window evaluates this; it goes when the recorded household serves asks.
 
 export type HouseholdScenario = keyof typeof fixtures.reads;
 
@@ -47,6 +59,11 @@ declare global {
       writes(): ProfileChange[];
       /** The households read so far. */
       reads(): number;
+      /** The drafts read so far, in order. */
+      drafts(): HouseholdDraft[];
+      /** The next draft read is refused as the product refuses an invalid
+       * draft. */
+      refuseNextDraft(): void;
     };
   }
 }
@@ -54,23 +71,83 @@ declare global {
 /** What a hidden fact shows in place of its value, as the host masks it. */
 const MASK = "••••••••";
 
+/** The sentence a refused draft is told in. The recorded household carries no
+ * such sentence, so this is synthetic, in one language. */
+const DRAFT_REFUSAL_WORDS =
+  "The answers of this person could not be checked. Try again.";
+
+/** A group as the recorded household serves it: the asks may be absent. */
+type ServedGroup = Omit<HouseholdGroup, "rows" | "new_row_leaves"> &
+  Partial<Pick<HouseholdGroup, "new_row_leaves">>;
+
 type Item =
-  | ({ kind: "family_group" } & Omit<HouseholdGroup, "rows">)
+  | ({ kind: "family_group" } & ServedGroup)
   | {
       kind: "family_row";
       group_key: string;
       row_index: string;
       facts: HouseholdFact[];
+      leaf_asks?: HouseholdLeafAsk[];
     }
   | ({ kind: "family_question" } & HouseholdQuestion);
 
 type Stored = {
-  group: Omit<HouseholdGroup, "rows">;
-  rows: { row_index: string; facts: HouseholdFact[] }[];
+  group: ServedGroup;
+  rows: {
+    row_index: string;
+    facts: HouseholdFact[];
+    leaf_asks?: HouseholdLeafAsk[];
+  }[];
 };
 
+const holds = (
+  condition: HouseholdLeaf["shown_when"][number],
+  answer: string,
+): boolean =>
+  condition.equals !== null
+    ? answer === condition.equals
+    : condition.contains !== null &&
+      answer
+        .split(",")
+        .map((token) => token.trim())
+        .includes(condition.contains);
+
+/** The asks the product would serve for these answers; see the note above. */
+function resolveAsks(
+  leaves: HouseholdLeaf[],
+  answers: Readonly<Record<string, string>>,
+): HouseholdLeafAsk[] {
+  const asks = new Map<string, HouseholdAsk>();
+  const asked = (leaf: string) => asks.get(leaf) === "asked";
+  for (const leaf of leaves) {
+    const governing = leaf.shown_when.map((condition) => condition.leaf);
+    if (
+      leaf.shown_when.length === 0 ||
+      leaf.shown_when.some(
+        (condition) =>
+          asked(condition.leaf) &&
+          holds(condition, (answers[condition.leaf] ?? "").trim()),
+      )
+    )
+      asks.set(leaf.leaf, "asked");
+    else if (
+      governing.some(
+        (parent) =>
+          asks.get(parent) === "awaits_answer" ||
+          (asked(parent) && (answers[parent] ?? "").trim() === ""),
+      )
+    )
+      asks.set(leaf.leaf, "awaits_answer");
+    else asks.set(leaf.leaf, "not_asked");
+  }
+  return leaves.map((leaf) => ({ leaf: leaf.leaf, ask: asks.get(leaf.leaf)! }));
+}
+
+const answersOf = (facts: HouseholdFact[]): Record<string, string> =>
+  Object.fromEntries(facts.map((fact) => [fact.leaf, fact.value]));
+
 export type HouseholdFixture = {
-  reads: Pick<ProfileCompanionPort, "household">;
+  reads: Pick<ProfileCompanionPort, "household" | "householdDraft">;
   change(change: ProfileChange): Promise<void>;
   /** Whether an edit is one of the household's: a replacement of a group, or
    * an answer to a question the household is asked. Any other edit of the
@@ -82,6 +159,9 @@ export type HouseholdFixture = {
   readCount(): number;
   refuseNext(refusal: HouseholdRefusal): void;
   loseNextAnswer(): void;
+  /** The drafts read so far, in order. */
+  drafts(): HouseholdDraft[];
+  refuseNextDraft(): void;
 };
 
 function itemsOf(scenario: HouseholdScenario, language: string): Item[] {
@@ -127,6 +207,7 @@ function assemble(items: Item[]): Stored[] {
           incomplete_words: item.incomplete_words,
           max_rows: item.max_rows,
           leaves: item.leaves,
+          new_row_leaves: item.new_row_leaves,
           add_row_action: item.add_row_action,
           remove_row_action: item.remove_row_action,
         },
@@ -135,7 +216,11 @@ function assemble(items: Item[]): Stored[] {
     } else
       groups
         .find((entry) => entry.group.group_key === item.group_key)!
-        .rows.push({ row_index: item.row_index, facts: item.facts });
+        .rows.push({
+          row_index: item.row_index,
+          facts: item.facts,
+          leaf_asks: item.leaf_asks,
+        });
   }
   return groups;
 }
@@ -204,6 +289,8 @@ export function householdFixture(
   let reads = 0;
   let refusal: HouseholdRefusal | null = null;
   let lost = false;
+  let refuseDraft = false;
+  const draftsRead: HouseholdDraft[] = [];
   const digest = () => `d${revision.toString(16).padStart(63, "0")}`;
 
   const household = (asked: string): ProfileHousehold => ({
@@ -220,6 +307,7 @@ export function householdFixture(
             ? actions.add
             : null,
         remove_row_action: now.rows.length > 0 ? actions.remove : null,
+        new_row_leaves: group.new_row_leaves ?? resolveAsks(group.leaves, {}),
         state: now.state,
         stated_count: now.stated_count,
         incomplete_words: now.incomplete_words,
@@ -229,6 +317,8 @@ export function householdFixture(
           facts: row.facts.map((fact) =>
             fact.masked ? { ...fact, value: MASK } : { ...fact },
           ),
+          leaf_asks:
+            row.leaf_asks ?? resolveAsks(group.leaves, answersOf(row.facts)),
         })),
       };
     }),
@@ -244,6 +334,36 @@ export function householdFixture(
       household: async (asked) => {
         reads += 1;
         return household(asked);
+      },
+      householdDraft: async (asked, draft) => {
+        draftsRead.push(structuredClone(draft));
+        const served = household(asked).groups.find(
+          (entry) => entry.group_key === draft.group,
+        );
+        const known = new Set(served?.leaves.map((leaf) => leaf.leaf));
+        const stated = draft.facts.map((fact) => fact.leaf);
+        if (
+          refuseDraft ||
+          !served ||
+          stated.some((leaf) => !known.has(leaf)) ||
+          new Set(stated).size !== stated.length
+        ) {
+          refuseDraft = false;
+          throw {
+            code: "refused",
+            reason: "invalid_household_draft",
+            refusal_words: DRAFT_REFUSAL_WORDS,
+          };
+        }
+        return {
+          group_key: served.group_key,
+          leaf_asks: resolveAsks(
+            served.leaves,
+            Object.fromEntries(
+              draft.facts.map((fact) => [fact.leaf, fact.value]),
+            ),
+          ),
+        };
       },
     },
     async change(change) {
@@ -377,6 +497,10 @@ export function householdFixture(
     loseNextAnswer() {
       lost = true;
     },
+    drafts: () => draftsRead,
+    refuseNextDraft() {
+      refuseDraft = true;
+    },
   };
   if (typeof window !== "undefined")
     window.__scenarioHousehold = {
@@ -384,6 +508,8 @@ export function householdFixture(
       loseNextAnswer: fixture.loseNextAnswer,
       writes: fixture.writes,
       reads: fixture.readCount,
+      drafts: fixture.drafts,
+      refuseNextDraft: fixture.refuseNextDraft,
     };
   return fixture;
 }

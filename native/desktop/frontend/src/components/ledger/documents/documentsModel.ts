@@ -8,21 +8,23 @@
 
 import type { FieldSpec } from "../../../shared/fieldKind";
 import { heldDecimal } from "../../../shared/numbers";
+import type { LedgerInvoiceDuplicateRequest } from "../../../shell/ledgerInvoiceOperations";
 import type {
-  CatalogueInvoice,
+  CatalogueInvoiceSnapshot,
   InvoiceKind,
-  LedgerInvoiceDuplicateRequest,
-} from "../../../shell/ledgerInvoiceOperations";
+} from "../../../shell/ledgerInvoiceContract";
 import type {
-  ConfirmationBlocker,
   EvidenceConfirmRequest,
-  EvidenceDraft,
-  EvidenceRecord,
   EvidenceUpdateRequest,
-  FieldProvenance,
-  FindingResolution,
-  FindingResolutionAction,
 } from "../../../shell/ledgerDocumentOperations";
+import type {
+  ConfirmationBlockerProjectionV1,
+  FieldProvenanceProjectionV1,
+  FindingResolutionAction,
+  FindingResolutionInputV1,
+  InvoiceDraftProjectionV1,
+} from "../../../shell/ledgerDocumentReviewContract";
+import type { LedgerEvidenceRecordProjection } from "../../../shell/ledgerDocumentContract";
 import type { JsonValue } from "../../../shell/ledger";
 import type { EvidenceUpdateField } from "../../../shell/ledgerContract";
 import {
@@ -242,7 +244,7 @@ export function readingRows(kind: InvoiceKind | null): ReadingRow[] {
 /** A reading's value of `field` as text, or null where it read nothing.
  * Rates are whole percentages. */
 export function readValue(
-  draft: EvidenceDraft,
+  draft: InvoiceDraftProjectionV1,
   field: ReadingField,
 ): string | null {
   const found = (draft as Record<string, JsonValue | undefined>)[field];
@@ -254,9 +256,9 @@ export function readValue(
 
 /** Where the reading says `field` came from. */
 export function provenanceOf(
-  draft: EvidenceDraft,
+  draft: InvoiceDraftProjectionV1,
   field: ReadingField,
-): FieldProvenance | null {
+): FieldProvenanceProjectionV1 | null {
   return draft.provenance?.find((found) => found.field === field) ?? null;
 }
 
@@ -322,7 +324,7 @@ export type Corrections = Partial<Record<CorrectionField, string>>;
 /** The corrections that change the reading, in the confirmation's
  * spelling; a refused one makes the whole set refused. */
 export function correctionValues(
-  draft: EvidenceDraft,
+  draft: InvoiceDraftProjectionV1,
   kind: InvoiceKind | null,
   corrections: Corrections,
 ):
@@ -370,9 +372,9 @@ export type FindingAnswer = {
  * chosen reading must be one of the finding's candidates, a supplied value
  * must say something, and an attestation must say why. */
 export function resolutionOf(
-  blocker: ConfirmationBlocker,
+  blocker: ConfirmationBlockerProjectionV1,
   answer: FindingAnswer | undefined,
-): FindingResolution | null {
+): FindingResolutionInputV1 | null {
   if (!answer) return null;
   const note = answer.note.trim();
   if (answer.action === "attest")
@@ -393,11 +395,14 @@ export function resolutionOf(
 /** The findings still open, and the resolutions of those answered. An
  * answer to a finding the reading no longer raises is dropped. */
 export function findingsState(
-  blockers: readonly ConfirmationBlocker[],
+  blockers: readonly ConfirmationBlockerProjectionV1[],
   answers: Readonly<Record<string, FindingAnswer>>,
-): { open: ConfirmationBlocker[]; resolutions: FindingResolution[] } {
-  const open: ConfirmationBlocker[] = [];
-  const resolutions: FindingResolution[] = [];
+): {
+  open: ConfirmationBlockerProjectionV1[];
+  resolutions: FindingResolutionInputV1[];
+} {
+  const open: ConfirmationBlockerProjectionV1[] = [];
+  const resolutions: FindingResolutionInputV1[] = [];
   for (const blocker of blockers) {
     const resolution = resolutionOf(blocker, answers[blocker.blocker_id]);
     if (resolution) resolutions.push(resolution);
@@ -424,7 +429,7 @@ export type DocumentReference =
  * id of, otherwise the attachment it is the digest of. */
 export function referenceOf(
   evidenceReference: string,
-  records: readonly EvidenceRecord[],
+  records: readonly LedgerEvidenceRecordProjection[],
 ): DocumentReference {
   return records.some((record) => record.evidence_id === evidenceReference)
     ? { kind: "evidence", id: evidenceReference }
@@ -459,13 +464,13 @@ export type ConfirmHold =
 export function confirmation(input: {
   reference: DocumentReference;
   binding: ReadingBinding;
-  draft: EvidenceDraft;
-  blockers: readonly ConfirmationBlocker[];
+  draft: InvoiceDraftProjectionV1;
+  blockers: readonly ConfirmationBlockerProjectionV1[];
   answers: Readonly<Record<string, FindingAnswer>>;
   kind: InvoiceKind | null;
   country: string;
   corrections: Corrections;
-  duplicate: CatalogueInvoice | null;
+  duplicate: CatalogueInvoiceSnapshot | null;
   /** Whether the ledger has yet to say if this reading is in the catalogue. */
   duplicateUnread?: boolean;
   confirmAnyway: boolean;
@@ -512,7 +517,7 @@ export function confirmation(input: {
 /** What the reading now states, to ask whether the catalogue holds it already.
  * No kind, no question: the kind is the person's to choose. */
 export function duplicateQuestion(
-  draft: EvidenceDraft,
+  draft: InvoiceDraftProjectionV1,
   kind: InvoiceKind | null,
   corrections: Corrections,
 ): LedgerInvoiceDuplicateRequest | null {
@@ -533,8 +538,8 @@ export function duplicateQuestion(
 /** Whether two readings say the same: a fresh reading equal to the one
  * shown is the reading the person reviewed. */
 export function sameReading(
-  left: EvidenceDraft,
-  right: EvidenceDraft,
+  left: InvoiceDraftProjectionV1,
+  right: InvoiceDraftProjectionV1,
 ): boolean {
   return stable(left) === stable(right);
 }
@@ -567,7 +572,7 @@ export const EVIDENCE_SHAPES: Record<EvidenceUpdateField, FieldShape | "note"> =
 
 /** A record's stored value of `field`, as text. Rates are percentages. */
 export const recordValue = (
-  record: EvidenceRecord,
+  record: LedgerEvidenceRecordProjection,
   field: EvidenceUpdateField,
 ) => (field === "notes" ? (record.notes ?? "") : (record[field] ?? null));
 
@@ -608,7 +613,7 @@ function readRecordField(
 /** The correction of a record, from the fields the person changed, or the
  * fields refused. Nothing changed is nothing to send. */
 export function recordUpdate(
-  record: EvidenceRecord,
+  record: LedgerEvidenceRecordProjection,
   typed: Partial<Record<EvidenceUpdateField, string>>,
 ):
   | { kind: "update"; request: EvidenceUpdateRequest }
@@ -651,10 +656,10 @@ export function recordUpdate(
 /** Whether a stored record now holds the correction asked for: what a
  * check reads back after an outcome that was not seen. */
 export function holdsUpdate(
-  record: EvidenceRecord,
+  record: LedgerEvidenceRecordProjection,
   request: EvidenceUpdateRequest,
 ): boolean {
-  return request.patch_fields.every((field) => {
+  return (request.patch_fields ?? []).every((field) => {
     const wanted = request.patch[field] ?? null;
     const stored = recordValue(record, field);
     if (wanted === null) return stored === null;

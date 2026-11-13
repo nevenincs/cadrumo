@@ -1,4 +1,4 @@
-import { useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,26 +13,45 @@ import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Icon } from "@/components/ui/icon";
 import { NativeSelect } from "@/components/ui/native-select";
 import type {
+  HouseholdDraft,
   HouseholdGroup,
+  HouseholdLeafAsk,
   HouseholdPersonEdit,
   HouseholdRow,
 } from "../../shell/profileHousehold";
 import { savedValue, seededValue, unreadDate } from "../../shell/profileInput";
 import { useStrings } from "../../shell/strings";
-import { leafField, shownLeaves, typedFacts } from "./householdModel";
+import {
+  askedLeaves,
+  awaitingLeaves,
+  draftOf,
+  leafField,
+  startingAsks,
+  typedFacts,
+} from "./householdModel";
 import { ProfileValueEditor } from "./ProfileValueEditor";
 
 /** What the dialog is for: a person to state, correct or take out. */
 export type PersonAction = "add" | "edit" | "remove";
 
+/** How long an answer rests before the product is asked again which leaves
+ * the person is asked, so typing is read once, not per keystroke. */
+const DRAFT_DELAY_MS = 350;
+
+/** What a draft read comes to: the asks the product resolved, or the sentence
+ * to tell instead. */
+export type DraftOutcome = { asks: HouseholdLeafAsk[] } | { words: string };
+
 /**
  * One person of a household group: every leaf the group serves and asks of
  * this person now, in the product's words, entered as the profile enters it
  * everywhere else; or the question whether to take the person out. A leaf is
- * asked while one of the answers it is served after holds, and a leaf no
- * longer asked is not stated. Adding and removing are worded by the group's
- * served controls. A refusal is shown as the product worded it and leaves what
- * was typed in place.
+ * shown while the product's ask for it is `asked`: the asks come with the
+ * group or the person, and after an answer changes the product resolves them
+ * again for what is typed so far. A leaf not asked is not stated, and Save
+ * waits for the asks to match the answers. Adding and removing are worded by
+ * the group's served controls. A refusal is shown as the product worded it and
+ * leaves what was typed in place.
  */
 export function HouseholdPersonDialog({
   group,
@@ -41,6 +60,7 @@ export function HouseholdPersonDialog({
   action,
   busy,
   words,
+  readAsks,
   onSave,
   onClose,
 }: {
@@ -52,6 +72,9 @@ export function HouseholdPersonDialog({
   busy: boolean;
   /** The sentence of the last refusal, as served. */
   words: string | null;
+  /** Asks the product which leaves a person with these unsaved answers is
+   * asked. Never rejects: a refusal comes back as the sentence to tell. */
+  readAsks(draft: HouseholdDraft): Promise<DraftOutcome>;
   /** States the person, or null to take the person out. */
   onSave(person: HouseholdPersonEdit | null): void;
   onClose(): void;
@@ -74,7 +97,49 @@ export function HouseholdPersonDialog({
   const [told, setTold] = useState<ReadonlySet<string>>(new Set());
   const unread = (leaf: HouseholdGroup["leaves"][number]) =>
     unreadDate(leafField(leaf, stored(leaf.leaf)), values[leaf.leaf] ?? "");
-  const asked = shownLeaves(group.leaves, values);
+  const [asks, setAsks] = useState(() => startingAsks(group, row));
+  // The asks are stale from an answer changing until the product's reading of
+  // it arrives; a reading that fails leaves them stale, and says why.
+  const [reading, setReading] = useState(false);
+  const [draftWords, setDraftWords] = useState<string | null>(null);
+  const ticket = useRef(0);
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  useEffect(
+    () => () => {
+      ticket.current += 1;
+      clearTimeout(timer.current);
+    },
+    [],
+  );
+  const answer = (next: Record<string, string>) => {
+    setValues(next);
+    setReading(true);
+    clearTimeout(timer.current);
+    const mine = ++ticket.current;
+    timer.current = setTimeout(() => {
+      // An unreadable date is told in the field and is not sent.
+      const typed = Object.fromEntries(
+        group.leaves.flatMap((leaf) => {
+          const field = leafField(leaf, stored(leaf.leaf));
+          const text = next[leaf.leaf] ?? "";
+          return unreadDate(field, text) === null
+            ? [[leaf.leaf, savedValue(field, text)]]
+            : [];
+        }),
+      );
+      void readAsks(draftOf(group, typed)).then((outcome) => {
+        if (mine !== ticket.current) return;
+        setReading(false);
+        if ("asks" in outcome) {
+          setAsks(outcome.asks);
+          setDraftWords(null);
+        } else setDraftWords(outcome.words);
+      });
+    }, DRAFT_DELAY_MS);
+  };
+  const asked = askedLeaves(group.leaves, asks);
+  const awaiting = awaitingLeaves(asks);
+  const stale = reading || draftWords !== null;
   const missing = asked.filter(
     (leaf) => leaf.required && (values[leaf.leaf] ?? "").trim() === "",
   );
@@ -87,6 +152,7 @@ export function HouseholdPersonDialog({
   const submit = () => {
     if (busy) return;
     if (action === "remove") return onSave(null);
+    if (stale) return;
     const refused = asked.filter((leaf) => unread(leaf) !== null);
     if (refused.length || missing.length) {
       setTold(new Set(refused.map((leaf) => leaf.leaf)));
@@ -136,6 +202,8 @@ export function HouseholdPersonDialog({
         </DialogHeader>
         <form
           className="grid min-w-0 gap-4"
+          aria-busy={reading}
+          data-household-awaiting={awaiting.join(" ") || undefined}
           onSubmit={(event) => {
             event.preventDefault();
             submit();
@@ -165,10 +233,7 @@ export function HouseholdPersonDialog({
                       value={values[leaf.leaf] ?? ""}
                       disabled={busy}
                       onChange={(event) =>
-                        setValues({
-                          ...values,
-                          [leaf.leaf]: event.target.value,
-                        })
+                        answer({ ...values, [leaf.leaf]: event.target.value })
                       }
                     >
                       <option value="">{t("desktop.profile.not_set")}</option>
@@ -199,7 +264,7 @@ export function HouseholdPersonDialog({
                         setTold(
                           new Set([...told].filter((l) => l !== leaf.leaf)),
                         );
-                        setValues({ ...values, [leaf.leaf]: value });
+                        answer({ ...values, [leaf.leaf]: value });
                       }}
                     />
                   )}
@@ -221,14 +286,14 @@ export function HouseholdPersonDialog({
                 </Field>
               );
             })}
-          {words && (
+          {(draftWords ?? words) && (
             <Alert
               role="alert"
               tone="danger"
               icon={<Icon name="alert" />}
               data-household-refusal=""
             >
-              {words}
+              {draftWords ?? words}
             </Alert>
           )}
           <DialogFooter>
@@ -242,7 +307,9 @@ export function HouseholdPersonDialog({
             </Button>
             <Button
               type="submit"
-              disabled={busy || (action !== "remove" && missing.length > 0)}
+              disabled={
+                busy || (action !== "remove" && (missing.length > 0 || stale))
+              }
             >
               {busy
                 ? t("desktop.profile.saving")

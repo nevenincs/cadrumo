@@ -13,6 +13,11 @@ import {
   UNKNOWN_YEAR_EMPTY_CALENDAR,
 } from "@/dev/fixtures/calendar";
 import { BUSY_CALENDAR, BUSY_TODAY } from "@/dev/fixtures/calendarBusy";
+import {
+  NONE_SUPPRESSED_CALENDAR,
+  SUPPRESSED_CALENDAR,
+  SUPPRESSED_ONLY_CALENDAR,
+} from "@/dev/fixtures/calendarSuppressed";
 import profiles from "@fixtures/desktop-profile/userProfile.json" with { type: "json" };
 import type { CalendarState } from "../shell/calendar";
 import type { UserProfile } from "../shell/userProfile";
@@ -169,6 +174,34 @@ export const UnknownYearEmpty: Story = {
 export const UnknownYearBesideRows: Story = {
   name: "Unknown year: beside known rows",
   args: { state: { kind: "ready", calendar: UNKNOWN_YEAR_CALENDAR } },
+};
+
+// Obligations the read held off the schedule are set apart from the owed
+// ones, each in the served words of its verdict. The section is drawn only
+// where the read served any: the story above it has none, and so has this one
+// that was asked and served an empty list.
+export const SuppressedBesideOwed: Story = {
+  name: "Held off the schedule: beside what is owed",
+  args: { state: { kind: "ready", calendar: SUPPRESSED_CALENDAR } },
+};
+
+export const SuppressedInPane: Story = {
+  name: "Held off the schedule: in a pane",
+  args: {
+    state: { kind: "ready", calendar: SUPPRESSED_CALENDAR },
+    pane: true,
+    view: "list",
+  },
+};
+
+export const SuppressedNothingOwed: Story = {
+  name: "Held off the schedule: nothing owed in the range",
+  args: { state: { kind: "ready", calendar: SUPPRESSED_ONLY_CALENDAR } },
+};
+
+export const SuppressedNone: Story = {
+  name: "Held off the schedule: asked, none served",
+  args: { state: { kind: "ready", calendar: NONE_SUPPRESSED_CALENDAR } },
 };
 
 // Where the mark for today stands in each shape of range.

@@ -1,0 +1,221 @@
+"""A TUI row matches the persona table's row only on its stages and figures, and a differing row names one cause."""
+
+from __future__ import annotations
+
+import json
+from dataclasses import replace
+from pathlib import Path
+
+import pytest
+
+from ...persona_table.frontend import DIFFERS, MATCHED
+from ...persona_table.rows import Stage, TableRow
+from ..causes import export_unavailable_note, outcome, row_cause, unreported_cause
+from ..intake import OUT_ENV, TREE_ENV, IntakeConfigurationError, PilotRow, write_rows
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
+_PERSONA = "synthetic-autonomo"
+_YEAR = 7
+"""A synthetic year: these rows meet no registry."""
+
+
+def _table(period: str, *, verify: Stage = Stage.PASSED, export: Stage = Stage.PASSED) -> TableRow:
+    return TableRow(
+        persona=_PERSONA,
+        modelo="130",
+        year=_YEAR,
+        period=period,
+        horizon=_YEAR,
+        grounding="verified",
+        sources=("rd-439-2007:art-110",),
+        has_values=True,
+        calculate=Stage.PASSED,
+        verify=verify,
+        export=export,
+        figures=(("01", "1000"), ("03", "475")),
+    )
+
+
+def _row(**data: object) -> PilotRow:
+    held = PilotRow(
+        persona=_PERSONA,
+        modelo="130",
+        year=_YEAR,
+        period="1T",
+        calculate="pass",
+        verify="pass",
+        export="pass",
+        figures={"01": "1000.00", "03": "475.00", "decl.periodo": "1T"},
+    )
+    return replace(held, **data)
+
+
+def test_a_row_with_the_tables_stages_and_figures_matches_and_names_no_cause() -> None:
+    row = _row()
+
+    assert outcome(row, _table("1T")) == MATCHED
+    assert row_cause(row, _table("1T"), []) == (None, "")
+
+
+def test_a_figure_shown_otherwise_is_the_figures_cause() -> None:
+    row = _row(figures={"01": "1000.00", "03": "474.00"})
+
+    cause, words = row_cause(row, _table("1T"), [])
+
+    assert outcome(row, _table("1T")) == DIFFERS
+    assert cause == "other:figures_differ"
+    assert "casilla 03" in words
+
+
+def test_a_served_confirmation_before_the_check_is_an_unconfirmed_assumed_value() -> None:
+    row = _row(verify="not-reached", export="not-reached", stopped_at="confirm")
+
+    assert row_cause(row, _table("1T"), [])[0] == "assumed_value_unconfirmed"
+
+
+def test_a_served_confirmation_before_calculate_is_an_unconfirmed_assumed_value_not_a_calculate_gap() -> None:
+    row = _row(calculate="not-reached", verify="not-reached", export="not-reached", figures={}, stopped_at="confirm")
+
+    assert row_cause(row, _table("1T"), [])[0] == "assumed_value_unconfirmed"
+
+
+def test_a_served_step_before_calculate_is_named_by_the_step_the_form_served() -> None:
+    unreached = {"calculate": "not-reached", "verify": "not-reached", "export": "not-reached", "figures": {}}
+
+    assert row_cause(_row(stopped_at="fill", **unreached), _table("1T"), [])[0] == "next_step_fill_before_calculate"
+    assert row_cause(_row(stopped_at="resolve", **unreached), _table("1T"), [])[0] == "other:next_step_resolve"
+    assert row_cause(_row(stopped_at="apply", **unreached), _table("1T"), [])[0] == "other:next_step_apply"
+
+
+def test_a_served_step_after_calculate_is_named_by_the_step_the_form_served() -> None:
+    after = {"verify": "not-reached", "export": "not-reached"}
+
+    assert row_cause(_row(stopped_at="fill", **after), _table("1T"), [])[0] == "next_step_fill_before_verify"
+    assert row_cause(_row(stopped_at="resolve", **after), _table("1T"), [])[0] == "other:next_step_resolve"
+    assert row_cause(_row(stopped_at="apply", **after), _table("1T"), [])[0] == "other:next_step_apply"
+
+
+def test_a_refused_calculate_keeps_its_refusal_even_when_a_step_was_served() -> None:
+    row = _row(
+        calculate="refused", refusal_code="REFUSED_X", verify="not-reached", export="not-reached", stopped_at="fill"
+    )
+
+    assert row_cause(row, _table("1T"), [])[0] == "other:calculate_refused_x"
+
+
+def test_a_chain_refusal_reads_an_unconfirmed_assumed_value_upstream_whichever_stage_was_reached() -> None:
+    before = _row(calculate="not-reached", verify="not-reached", export="not-reached", figures={}, stopped_at="confirm")
+    before.cause, before.cause_words = row_cause(before, _table("1T"), [])
+    after = _row(period="2T", verify="not-reached", export="not-reached", stopped_at="confirm")
+    after.cause, after.cause_words = row_cause(after, _table("2T"), [before])
+    later = _row(period="3T", calculate="refused", refusal_code="REFUSED_MODELO_PRIOR_PERIOD_UNFILED", figures={})
+
+    assert before.cause == after.cause == "assumed_value_unconfirmed"
+    assert row_cause(later, _table("3T"), [before, after])[0] == "upstream:assumed_value_unconfirmed"
+    assert row_cause(later, _table("3T"), [after])[0] == "upstream:assumed_value_unconfirmed"
+
+
+def test_a_chain_refusal_names_the_earlier_unfiled_returns_own_cause_upstream() -> None:
+    first = _row(verify="not-reached", export="not-reached", stopped_at="fill")
+    first.cause, first.cause_words = row_cause(first, _table("1T"), [])
+    second = _row(
+        period="2T",
+        calculate="refused",
+        verify="not-reached",
+        export="not-reached",
+        refusal_code="REFUSED_MODELO_PRIOR_PERIOD_UNFILED",
+        figures={},
+    )
+    second.cause, second.cause_words = row_cause(second, _table("2T"), [first])
+    third = _row(period="3T", calculate="refused", refusal_code="REFUSED_MODELO_PRIOR_PERIOD_UNFILED", figures={})
+
+    assert first.cause == "next_step_fill_before_verify"
+    assert second.cause == "upstream:next_step_fill_before_verify"
+    assert row_cause(third, _table("3T"), [first, second])[0] == "upstream:next_step_fill_before_verify"
+
+
+def test_a_filed_earlier_return_is_never_named_upstream() -> None:
+    first = _row(filed=True)
+    second = _row(period="2T", calculate="refused", refusal_code="REFUSED_MODELO_PRIOR_PERIOD_UNFILED", figures={})
+
+    assert unreported_cause(first, []) == (None, "")
+    assert row_cause(second, _table("2T"), [first])[0] == "other:calculate_refused_modelo_prior_period_unfiled"
+
+
+def test_a_return_the_table_holds_not_owed_differs_by_the_missing_calendar_verdict() -> None:
+    table = _table("1T", verify=Stage.NOT_OWED, export=Stage.NOT_REACHED)
+
+    assert row_cause(_row(), table, [])[0] == "tui_calendar_omits_not_applicable_verdict"
+
+
+def test_the_intake_line_is_the_persona_tables_schema_and_needs_the_tree(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    out = tmp_path / "tui.jsonl"
+    monkeypatch.setenv(OUT_ENV, str(out))
+    monkeypatch.delenv(TREE_ENV, raising=False)
+
+    with pytest.raises(IntakeConfigurationError):
+        write_rows([PilotRow(persona=_PERSONA)])
+    monkeypatch.setenv(TREE_ENV, "synthetic-tree")
+    write_rows([PilotRow(persona=_PERSONA), _row(cause="other:figures_differ")])
+
+    lines = [json.loads(line) for line in out.read_text(encoding="utf-8").splitlines()]
+    assert [line["modelo"] for line in lines] == [None, "130"]
+    assert lines[1]["reason"].startswith("cause=other:figures_differ")
+    assert set(lines[1]) == {
+        "surface",
+        "tree",
+        "persona",
+        "modelo",
+        "year",
+        "period",
+        "loads",
+        "calculate",
+        "verify",
+        "export",
+        "refusal_code",
+        "figures",
+        "reason",
+        "log",
+    }
+
+
+def test_an_export_the_form_did_not_serve_is_noted_against_the_tables_refused_export() -> None:
+    table = replace(
+        _table("1T", verify=Stage.INCOMPLETE, export=Stage.REFUSED), export_detail="REFUSED_MODELO_REVISION_NOT_SEALED"
+    )
+    row = _row(period="1T", calculate="pass", verify="incomplete", export="not-reached")
+
+    note = export_unavailable_note(row, table)
+
+    assert note is not None
+    assert "export unavailable (refused | not served)" in note
+    assert "REFUSED_MODELO_REVISION_NOT_SEALED" in note
+
+
+def test_the_export_note_needs_the_check_to_end_the_same_ungranted_way_on_both_sides() -> None:
+    refused = replace(_table("1T", verify=Stage.INCOMPLETE, export=Stage.REFUSED), export_detail="code")
+    assert (
+        export_unavailable_note(_row(period="1T", calculate="pass", verify="pass", export="not-reached"), refused)
+        is None
+    )
+    assert (
+        export_unavailable_note(_row(period="1T", calculate="pass", verify="refused", export="not-reached"), refused)
+        is None
+    )
+    passed = _table("1T")
+    assert (
+        export_unavailable_note(_row(period="1T", calculate="pass", verify="pass", export="not-reached"), passed)
+        is None
+    )
+
+
+def test_export_served_is_written_only_when_the_schema_knows_the_field() -> None:
+    from ..intake import _schema_takes_export_served
+
+    document = _row(export="not-reached", export_served=False).document(tree="t", log="")
+
+    assert ("export_served" in document) == _schema_takes_export_served()
+    assert "export_served" not in _row().document(tree="t", log="")

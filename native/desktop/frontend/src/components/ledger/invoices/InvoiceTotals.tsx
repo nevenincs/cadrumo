@@ -4,7 +4,7 @@ import { PercentEditor } from "@/components/editors/PercentEditor";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/components/ui/cn";
 import { formatAmount, heldDecimal } from "../../../shared/numbers";
-import type { InvoicePreviewRetention } from "../../../shell/ledgerInvoiceOperations";
+import type { InvoiceFiguresPreviewRetention } from "../../../shell/ledgerInvoiceContract";
 import { compareDecimal } from "../../../shell/ledgerGrammar";
 import { useStrings } from "../../../shell/strings";
 import { FormField, wired } from "./InvoiceFields";
@@ -95,7 +95,7 @@ export function Retention({
   rate: string;
   amount: string;
   /** The ledger's answer to this very retención, or null while none. */
-  answered: InvoicePreviewRetention | null;
+  answered: InvoiceFiguresPreviewRetention | null;
   /** What the ledger says is left to pay, and the retención it took off. */
   net: string | null;
   withheld: string | null;

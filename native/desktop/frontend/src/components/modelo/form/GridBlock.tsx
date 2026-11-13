@@ -80,6 +80,8 @@ function GridBox({ field }: { field: PublicModeloFormField }) {
     <td
       ref={ref}
       data-key={key}
+      data-value-kind={field.value?.kind}
+      data-value={field.value?.text}
       tabIndex={selected ? 0 : -1}
       aria-label={t("workspace.modelo.section.box", { box: field.box ?? "" })}
       className={cn(

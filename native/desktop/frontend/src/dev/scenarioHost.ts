@@ -809,6 +809,7 @@ export function scenarioHost(
       : {}),
     profileCompanions: {
       household: household.reads.household,
+      householdDraft: household.reads.householdDraft,
       imputationElection: election.reads.imputationElection,
     },
     censo: censoFixture(userProfile, scenario.censo),

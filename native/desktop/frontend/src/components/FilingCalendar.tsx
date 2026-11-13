@@ -40,13 +40,11 @@ import {
 import { factsGap, listed } from "../shell/compose";
 import { useMetric } from "../shell/metrics";
 import { useStrings } from "../shell/strings";
-import type {
-  CalendarCoverage,
-  CalendarEntry,
-  CalendarEvent,
-} from "../shell/views";
+import type { CoverageAdviceReason } from "../shell/calendarContract";
+import type { CalendarEntry, CalendarEvent } from "../shell/views";
 import type { UserProfile } from "../shell/userProfile";
 import { CalendarMonths } from "./calendar/CalendarMonths";
+import { CalendarSuppressed } from "./calendar/CalendarSuppressed";
 import { EVENT_MARK, STATE_MARK, STATE_TONE } from "./calendar/calendarMarks";
 import { ProfileCompletionNotice } from "./profile/ProfileCompletionNotice";
 
@@ -798,10 +796,7 @@ export function FilingCalendarView({
         )}
       </div>
     );
-    const advice: Record<
-      CalendarCoverage["advised"][number]["reason"],
-      string[]
-    > = {
+    const advice: Record<CoverageAdviceReason, string[]> = {
       applicable_window_missing: [],
       applicability_undetermined: [],
       registry_unmodeled: [],
@@ -995,6 +990,9 @@ export function FilingCalendarView({
             list
           )}
           {note}
+          <CalendarSuppressed
+            entries={state.calendar.suppressed_entries ?? []}
+          />
         </div>
         {/* Beside the months where the page is wide: the list keeps its own
             place and scrolls by itself, as tall as the page. */}

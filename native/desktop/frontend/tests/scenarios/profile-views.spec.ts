@@ -43,6 +43,7 @@ test("profile reads hide previous snapshots on the first commit and ignore late 
         advised: [],
         out_of_scope: [],
       },
+      suppressed_entries: [],
     };
     let refusals = 0;
     const refused = () => refusals++;
