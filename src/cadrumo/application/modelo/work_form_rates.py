@@ -101,18 +101,26 @@ def _grounded_rate(field: ModeloFormField, context: WorkFormContext) -> ModeloFo
     binding_ids = tuple(item for item in (casilla.binding, *casilla.alternate_bindings) if item is not None)
     rates: set[Decimal] = set()
     for binding_id in binding_ids:
-        binding = context.bindings.get(binding_id)
-        provider = None if binding is None else binding.provider
-        if not isinstance(provider, LedgerIvaProvider) or provider.applied_rates is None:
+        binding_rates = _binding_rates(context, binding_id)
+        if binding_rates is None:
             return None
-        if provider.fact == LedgerIvaFact.RECARGO_AMOUNT_SUM:
-            # applied_rates picks the IVA rate of the lines a recargo sum adds up; the recargo's own
-            # rate is a different one the binding does not state, so no rate is claimed from it.
-            return None
-        rates.update(provider.applied_rates)
+        rates.update(binding_rates)
     if len(rates) != 1:
         return None
     return ModeloFormRate(ratio=rates.pop(), binding_id=binding_ids[0])
+
+
+def _binding_rates(context: WorkFormContext, binding_id: str) -> tuple[Decimal, ...] | None:
+    """The rates a rate-specific IVA ledger binding states for the base it fills, or ``None``."""
+    binding = context.bindings.get(binding_id)
+    provider = None if binding is None else binding.provider
+    if not isinstance(provider, LedgerIvaProvider) or provider.applied_rates is None:
+        return None
+    if provider.fact == LedgerIvaFact.RECARGO_AMOUNT_SUM:
+        # applied_rates picks the IVA rate of the lines a recargo sum adds up; the recargo's own
+        # rate is a different one the binding does not state, so no rate is claimed from it.
+        return None
+    return tuple(provider.applied_rates)
 
 
 def with_grounded_grid_rates(
