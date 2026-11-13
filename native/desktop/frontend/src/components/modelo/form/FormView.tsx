@@ -449,33 +449,39 @@ export function FormView({
             <Icon name="splitColumn" />
           </IconButton>
         </div>
-        {/* The rung of authority this year reaches, as the registry named
-            it, and, below filing grade, the sentence saying why it cannot be
-            filed. */}
-        <p
-          data-year-projection={form.year_projection.direction}
-          data-reachable-grade={form.year_projection.reachable_grade}
-          className="flex flex-none flex-wrap gap-x-2 border-b border-border px-4 py-1.5 text-sm text-muted-foreground"
-        >
-          <span data-year-projection-grade className="font-medium">
-            {form.year_projection.reachable_grade_words}
-          </span>
-          {form.year_projection.words && (
-            <span data-year-projection-words>{form.year_projection.words}</span>
-          )}
-        </p>
-        <StatementsOffer
-          key={`${envelope.work_unit_id}:${session.statements
-            .map((statement) => statement.family)
-            .join()}`}
-          session={session}
-        />
-        <PriorValuesOffer
-          key={`${envelope.work_unit_id}:prior`}
-          session={session}
-          onRefusalAction={onRefusalAction}
-          opensRefusalPlace={opensRefusalPlace}
-        />
+        {/* What is said about the whole form can run longer than the
+            window; it scrolls on its own so the boxes keep their room. */}
+        <div className="max-h-1/3 min-h-0 overflow-y-auto">
+          {/* The rung of authority this year reaches, as the registry named
+              it, and, below filing grade, the sentence saying why it cannot be
+              filed. */}
+          <p
+            data-year-projection={form.year_projection.direction}
+            data-reachable-grade={form.year_projection.reachable_grade}
+            className="flex flex-none flex-wrap gap-x-2 border-b border-border px-4 py-1.5 text-sm text-muted-foreground"
+          >
+            <span data-year-projection-grade className="font-medium">
+              {form.year_projection.reachable_grade_words}
+            </span>
+            {form.year_projection.words && (
+              <span data-year-projection-words>
+                {form.year_projection.words}
+              </span>
+            )}
+          </p>
+          <StatementsOffer
+            key={`${envelope.work_unit_id}:${session.statements
+              .map((statement) => statement.family)
+              .join()}`}
+            session={session}
+          />
+          <PriorValuesOffer
+            key={`${envelope.work_unit_id}:prior`}
+            session={session}
+            onRefusalAction={onRefusalAction}
+            opensRefusalPlace={opensRefusalPlace}
+          />
+        </div>
         {pages.length > 1 && page && (
           <Tabs
             value={page.id}
@@ -501,7 +507,7 @@ export function FormView({
           aria-label={page?.heading.text ?? t("desktop.modelo.view.form")}
           tabIndex={session.selectedKey ? -1 : 0}
           onKeyDown={onKeyDown}
-          className="@container min-h-0 flex-1 overflow-y-auto px-6 py-5 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+          className="@container min-h-28 flex-1 overflow-y-auto px-6 py-5 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
         >
           {page && (
             <div
