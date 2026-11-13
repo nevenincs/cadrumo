@@ -1816,6 +1816,7 @@
         "cadrumo.application.overview.read_request",
         "cadrumo.application.overview.read_result",
         "cadrumo.application.overview.status_report",
+        "cadrumo.application.overview.suppressed_verdict_words",
         "cadrumo.application.persistence_errors",
         "cadrumo.application.prevision_social_contribution",
         "cadrumo.application.prevision_social_contribution.contracts",
