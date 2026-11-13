@@ -16,6 +16,7 @@ from .....application.ledger.counterparty_filing_name_kind_findings import (
     CounterpartyFilingNameFinding,
     served_kind_finding_words,
 )
+from .....application.ledger.counterparty_filing_name_rendering import CounterpartyFilingNameRendering
 from .....application.ledger.counterparty_filing_name_slots import (
     CounterpartyFilingNamePartLimit,
     CounterpartyFilingNameSlot,
@@ -25,7 +26,6 @@ from .....application.ledger.counterparty_filing_name_words import FilingNameSlo
 from .....application.ledger.counterparty_operation import (
     CounterpartyFactProjection,
     CounterpartyFilingNameProjection,
-    CounterpartyFilingNameRendering,
     CounterpartyResolutionProjection,
     LedgerCounterpartyRequest,
     LedgerCounterpartyResult,

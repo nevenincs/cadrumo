@@ -737,9 +737,11 @@ ANEXO_C_BASE_NEGATIVE_GENERAL_BINDING_ID = "renta-base-liquidable-negativa-gener
 # The base liquidable general negativa carry is grounded in Art. 50.3 LIRPF
 # (4-year carry-forward of a negative base liquidable general); Art. 48
 # (within-year integración) is a distinct mechanism and does not ground it.
+# Art. 49 arrives through the previous-return dependency the construct shares with the savings carries.
 ANEXO_C_BASE_NEGATIVE_GENERAL_REFS = frozenset(
     {
         BASE_LIQUIDABLE_ART_50_REF,
+        SAVINGS_BASE_ART_49_REF,
         MODELO_100_2025_FORM_ORDER_REF,
     }
 )
@@ -781,7 +783,8 @@ AUTONOMIC_DEDUCTION_2025_SECTION_COUNTS: Mapping[tuple[str, str], int] = {
 NO_FRACTIONAL_PAYMENT_2025_SECTION_COUNTS: Mapping[tuple[str, str], int] = {
     ("resultados", "anexo_a_res"): 173,
     ("resultados", "anexo_c_res"): 184,
-    ("resultados", "base_imponible_res"): 25,
+    # 25 printed boxes and the 28 working rows of the art. 49.2 compensation of pending negative savings balances.
+    ("resultados", "base_imponible_res"): 53,
     ("resultados", "base_liquidable_res"): 13,
     ("resultados", "calculo_impuesto_res"): 110,
     ("resultados", "compensacion_conyuges_res"): 12,

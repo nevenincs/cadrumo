@@ -8326,7 +8326,7 @@ selector = {revision = "2022", id = "renta-reduccion-prevision-social-total"}
 sequence_additions = {legal_refs = ["ley-35-2006:art-52"], source_citations = [{source_ref = "aeat-renta-2023-manual-parte1", required_text = ["planes de pensiones", "reducción", "límite"]}], source_refs = ["aeat-dr-100-2023-dictionary", "boe-modelo-100-2023-form", "aeat-renta-2023-manual-parte1"]}
 sequence_removals = {legal_refs = [0], source_citations = [0], source_refs = [0, 1, 2]}
 restate_identity = true
-fields = { expression = { op = "if_then_else", args = [
+fields = { expression = { args = [
     { op = "equal", args = [{ binding = "renta-profile-declaration-type" }, { literal = "2" }] },
     { op = "if_then_else", args = [
         { op = "greater_than", args = [
@@ -9350,6 +9350,54 @@ fields = {source_refs = ["aeat-renta-2023-manual-parte1"]}
 sequence_additions = {keyed_brackets = [{key = "madrid", value = "1502.58", valid_from = 2023-01-01}, {key = "baleares", value = "1540", valid_from = 2023-11-26}], legal_refs = ["baleares-dl-1-2014:art-2"], source_citations = [{source_ref = "aeat-renta-2023-manual-parte1", required_text = ["Más 1.460 euros anuales por cada ascendiente mayor de 75 años", "Más 1.502,58 euros anuales por cada ascendiente mayor de 75 años", "Más 1.540 euros anuales por cada ascendiente mayor de 75 años", "Autónomas que no han ejercido tal competencia normativa, se les aplica los importes del mínimo personal y"]}]}
 sequence_removals = {keyed_brackets = [2], source_citations = [0]}
 
+[[revisions."2023".family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "renta-saldo-negativo-gyp-ahorro-em4-pendiente-inicio"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2023-manual-parte1", required_text = ["Compensación de las partidas negativas pendientes de ejercicios anteriores", "Fase 2ª. Compensación de partidas negativas pendientes de ejercicios"]}], source_refs = ["aeat-dr-100-2023-dictionary", "aeat-renta-2023-manual-parte1", "boe-modelo-100-2023-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1, 2]}
+
+[[revisions."2023".family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "renta-saldo-negativo-gyp-ahorro-em3-pendiente-inicio"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2023-manual-parte1", required_text = ["Compensación de las partidas negativas pendientes de ejercicios anteriores", "Fase 2ª. Compensación de partidas negativas pendientes de ejercicios"]}], source_refs = ["aeat-dr-100-2023-dictionary", "aeat-renta-2023-manual-parte1", "boe-modelo-100-2023-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1, 2]}
+
+[[revisions."2023".family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "renta-saldo-negativo-gyp-ahorro-em2-pendiente-inicio"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2023-manual-parte1", required_text = ["Compensación de las partidas negativas pendientes de ejercicios anteriores", "Fase 2ª. Compensación de partidas negativas pendientes de ejercicios"]}], source_refs = ["aeat-dr-100-2023-dictionary", "aeat-renta-2023-manual-parte1", "boe-modelo-100-2023-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1, 2]}
+
+[[revisions."2023".family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "renta-saldo-negativo-gyp-ahorro-em1-pendiente-inicio"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2023-manual-parte1", required_text = ["Compensación de las partidas negativas pendientes de ejercicios anteriores", "Fase 2ª. Compensación de partidas negativas pendientes de ejercicios"]}], source_refs = ["aeat-dr-100-2023-dictionary", "aeat-renta-2023-manual-parte1", "boe-modelo-100-2023-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1, 2]}
+
+[[revisions."2023".family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "renta-saldo-negativo-rcm-ahorro-em4-pendiente-inicio"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2023-manual-parte1", required_text = ["Compensación de las partidas negativas pendientes de ejercicios anteriores", "Fase 2ª. Compensación de partidas negativas pendientes de ejercicios"]}], source_refs = ["aeat-dr-100-2023-dictionary", "aeat-renta-2023-manual-parte1", "boe-modelo-100-2023-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1, 2]}
+
+[[revisions."2023".family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "renta-saldo-negativo-rcm-ahorro-em3-pendiente-inicio"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2023-manual-parte1", required_text = ["Compensación de las partidas negativas pendientes de ejercicios anteriores", "Fase 2ª. Compensación de partidas negativas pendientes de ejercicios"]}], source_refs = ["aeat-dr-100-2023-dictionary", "aeat-renta-2023-manual-parte1", "boe-modelo-100-2023-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1, 2]}
+
+[[revisions."2023".family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "renta-saldo-negativo-rcm-ahorro-em2-pendiente-inicio"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2023-manual-parte1", required_text = ["Compensación de las partidas negativas pendientes de ejercicios anteriores", "Fase 2ª. Compensación de partidas negativas pendientes de ejercicios"]}], source_refs = ["aeat-dr-100-2023-dictionary", "aeat-renta-2023-manual-parte1", "boe-modelo-100-2023-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1, 2]}
+
+[[revisions."2023".family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "renta-saldo-negativo-rcm-ahorro-em1-pendiente-inicio"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2023-manual-parte1", required_text = ["Compensación de las partidas negativas pendientes de ejercicios anteriores", "Fase 2ª. Compensación de partidas negativas pendientes de ejercicios"]}], source_refs = ["aeat-dr-100-2023-dictionary", "aeat-renta-2023-manual-parte1", "boe-modelo-100-2023-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1, 2]}
+
 # BEGIN casilla 0564 autonomic deduction sum, written by dev.registry.authoring.autonomic_deduction_sum
 [[revisions."2023".family_overrides]]
 family = "formulas"
@@ -9632,50 +9680,3 @@ sequence_additions = { "expression.args" = [
 ], source_refs = ["aeat-dr-100-2023-dictionary"] }
 sequence_order = { "expression.args" = [0, 3, 4, 5, 6, 7, 8, 1, 2, 9, 10, 11, 12, 13, 14], "source_citations" = [0, 1, 4, 5, 6, 7, 8, 9, 2, 3, 10, 11, 12, 13, 14, 15] }
 # END casilla 0564 autonomic deduction sum
-[[revisions."2023".family_overrides]]
-family = "bindings"
-selector = {revision = "2022", id = "renta-saldo-negativo-gyp-ahorro-em4-pendiente-inicio"}
-sequence_additions = {source_citations = [{source_ref = "aeat-renta-2023-manual-parte1", required_text = ["Compensación de las partidas negativas pendientes de ejercicios anteriores", "Fase 2ª. Compensación de partidas negativas pendientes de ejercicios"]}], source_refs = ["aeat-dr-100-2023-dictionary", "aeat-renta-2023-manual-parte1", "boe-modelo-100-2023-form"]}
-sequence_removals = {source_citations = [0], source_refs = [0, 1, 2]}
-
-[[revisions."2023".family_overrides]]
-family = "bindings"
-selector = {revision = "2022", id = "renta-saldo-negativo-gyp-ahorro-em3-pendiente-inicio"}
-sequence_additions = {source_citations = [{source_ref = "aeat-renta-2023-manual-parte1", required_text = ["Compensación de las partidas negativas pendientes de ejercicios anteriores", "Fase 2ª. Compensación de partidas negativas pendientes de ejercicios"]}], source_refs = ["aeat-dr-100-2023-dictionary", "aeat-renta-2023-manual-parte1", "boe-modelo-100-2023-form"]}
-sequence_removals = {source_citations = [0], source_refs = [0, 1, 2]}
-
-[[revisions."2023".family_overrides]]
-family = "bindings"
-selector = {revision = "2022", id = "renta-saldo-negativo-gyp-ahorro-em2-pendiente-inicio"}
-sequence_additions = {source_citations = [{source_ref = "aeat-renta-2023-manual-parte1", required_text = ["Compensación de las partidas negativas pendientes de ejercicios anteriores", "Fase 2ª. Compensación de partidas negativas pendientes de ejercicios"]}], source_refs = ["aeat-dr-100-2023-dictionary", "aeat-renta-2023-manual-parte1", "boe-modelo-100-2023-form"]}
-sequence_removals = {source_citations = [0], source_refs = [0, 1, 2]}
-
-[[revisions."2023".family_overrides]]
-family = "bindings"
-selector = {revision = "2022", id = "renta-saldo-negativo-gyp-ahorro-em1-pendiente-inicio"}
-sequence_additions = {source_citations = [{source_ref = "aeat-renta-2023-manual-parte1", required_text = ["Compensación de las partidas negativas pendientes de ejercicios anteriores", "Fase 2ª. Compensación de partidas negativas pendientes de ejercicios"]}], source_refs = ["aeat-dr-100-2023-dictionary", "aeat-renta-2023-manual-parte1", "boe-modelo-100-2023-form"]}
-sequence_removals = {source_citations = [0], source_refs = [0, 1, 2]}
-
-[[revisions."2023".family_overrides]]
-family = "bindings"
-selector = {revision = "2022", id = "renta-saldo-negativo-rcm-ahorro-em4-pendiente-inicio"}
-sequence_additions = {source_citations = [{source_ref = "aeat-renta-2023-manual-parte1", required_text = ["Compensación de las partidas negativas pendientes de ejercicios anteriores", "Fase 2ª. Compensación de partidas negativas pendientes de ejercicios"]}], source_refs = ["aeat-dr-100-2023-dictionary", "aeat-renta-2023-manual-parte1", "boe-modelo-100-2023-form"]}
-sequence_removals = {source_citations = [0], source_refs = [0, 1, 2]}
-
-[[revisions."2023".family_overrides]]
-family = "bindings"
-selector = {revision = "2022", id = "renta-saldo-negativo-rcm-ahorro-em3-pendiente-inicio"}
-sequence_additions = {source_citations = [{source_ref = "aeat-renta-2023-manual-parte1", required_text = ["Compensación de las partidas negativas pendientes de ejercicios anteriores", "Fase 2ª. Compensación de partidas negativas pendientes de ejercicios"]}], source_refs = ["aeat-dr-100-2023-dictionary", "aeat-renta-2023-manual-parte1", "boe-modelo-100-2023-form"]}
-sequence_removals = {source_citations = [0], source_refs = [0, 1, 2]}
-
-[[revisions."2023".family_overrides]]
-family = "bindings"
-selector = {revision = "2022", id = "renta-saldo-negativo-rcm-ahorro-em2-pendiente-inicio"}
-sequence_additions = {source_citations = [{source_ref = "aeat-renta-2023-manual-parte1", required_text = ["Compensación de las partidas negativas pendientes de ejercicios anteriores", "Fase 2ª. Compensación de partidas negativas pendientes de ejercicios"]}], source_refs = ["aeat-dr-100-2023-dictionary", "aeat-renta-2023-manual-parte1", "boe-modelo-100-2023-form"]}
-sequence_removals = {source_citations = [0], source_refs = [0, 1, 2]}
-
-[[revisions."2023".family_overrides]]
-family = "bindings"
-selector = {revision = "2022", id = "renta-saldo-negativo-rcm-ahorro-em1-pendiente-inicio"}
-sequence_additions = {source_citations = [{source_ref = "aeat-renta-2023-manual-parte1", required_text = ["Compensación de las partidas negativas pendientes de ejercicios anteriores", "Fase 2ª. Compensación de partidas negativas pendientes de ejercicios"]}], source_refs = ["aeat-dr-100-2023-dictionary", "aeat-renta-2023-manual-parte1", "boe-modelo-100-2023-form"]}
-sequence_removals = {source_citations = [0], source_refs = [0, 1, 2]}

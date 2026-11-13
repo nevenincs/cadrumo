@@ -140,3 +140,18 @@ class FieldRole(StrEnum):
 
     USAGE_RATIO_ID = "usage_ratio_id"
     """Named usage ratio supplying the business percentage."""
+
+    ARRENDAMIENTO_REF = "arrendamiento_ref"
+    """Key of the stored lease an income row of a let property belongs to."""
+
+    INMUEBLE_REF = "inmueble_ref"
+    """Key of the stored property an expense row belongs to."""
+
+    GASTO_CAPITAL_INMOBILIARIO = "gasto_capital_inmobiliario"
+    """Which kind of property expense the row is, as the registry names it."""
+
+    POSICION_REF = "posicion_ref"
+    """Key of the stored savings position an income or expense row belongs to."""
+
+    CONCEPTO_CAPITAL_MOBILIARIO = "concepto_capital_mobiliario"
+    """What the row is within its savings position, as the registry names it."""

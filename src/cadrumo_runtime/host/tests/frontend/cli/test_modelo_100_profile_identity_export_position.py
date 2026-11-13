@@ -57,7 +57,6 @@ _PROFILE_IDENTITY: dict[str, str] = {
 #: is compared through the artefact only.
 _REDACTED_IN_ENVELOPE = frozenset({"DPNIF_D"})
 _CALCULATE_FLAGS: tuple[str, ...] = (
-    "--casilla", "0003=24000",
     "--binding", "renta-base-liquidable-negativa-general-anterior=0",
     "--binding", "renta-base-liquidable-negativa-general-em4-pendiente-inicio=0",
     "--binding", "renta-saldo-negativo-gyp-ahorro-em4-pendiente-inicio=0",

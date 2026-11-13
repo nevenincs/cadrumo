@@ -51,7 +51,10 @@ def test_bound_interactive_flow_publishes_once_and_abandonment_does_not_write(
         with context:
             bind_profile_client(context, client, profile_id=profile_id)
             client.login_password(bytearray(CREDENTIAL_INPUT.encode()))
-            keys = f"1\r{_BIRTH_DATE.isoformat()}\r\r\r\r\r\r\r\r\x1b[B\r\r\r\r\r\r\r"
+            # One descendant and its birth date, the defaults, "no" to sharing the
+            # minimum, the optional blanks through the descendant's surnames and
+            # name, then submit from the review.
+            keys = f"1\r{_BIRTH_DATE.isoformat()}\r\r\r\r\r\r\r\r\x1b[B\r\r\r\r\r\r\r\r"
             output = StringIO()
             with create_pipe_input() as pipe:
                 pipe.send_text(keys)

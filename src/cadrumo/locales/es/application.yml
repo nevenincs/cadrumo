@@ -5081,6 +5081,68 @@ application:
         summary_open: Arrendamiento %{row}, desde el %{start}
       renta_inmueble:
         summary: 'Inmueble %{row}: %{place}'
+    row_parts:
+      choice:
+        uso:
+          tipo:
+            actividad_economica: Actividad económica
+            disposicion_propietario: A disposición del propietario
+            vivienda_habitual: Vivienda habitual
+      field:
+        inquilino:
+          extranjero:
+            help: Indica si el identificador es extranjero y no español.
+            label: Identificador extranjero
+          franja_edad:
+            help: La franja de edad en la fecha del contrato, o que no es persona
+              física.
+            label: Edad del arrendatario
+          nif:
+            help: NIF, NIE o identificador extranjero del arrendatario, sin espacios
+              ni guiones.
+            label: NIF del arrendatario
+        mejora:
+          fecha:
+            help: Día en que terminó la mejora (AAAA-MM-DD).
+            label: Fecha de la mejora
+          importe:
+            help: Importe de la mejora con punto decimal y como máximo dos decimales,
+              por ejemplo 1500.00.
+            label: Importe (euros)
+        uso:
+          desde:
+            help: Primer día de este uso (AAAA-MM-DD).
+            label: Desde
+          hasta:
+            help: Último día de este uso (AAAA-MM-DD). Déjalo en blanco si el uso
+              continúa.
+            label: Hasta
+          tipo:
+            help: Para qué usas el inmueble en ese periodo en lugar de arrendarlo.
+            label: Tipo de uso
+        valor_catastral:
+          construccion:
+            help: Parte del valor catastral que corresponde a la construcción, con
+              el mismo formato.
+            label: Valor catastral de la construcción (euros)
+          total:
+            help: Valor catastral total del inmueble en ese ejercicio, con punto decimal
+              y como máximo dos decimales, por ejemplo 85000.00.
+            label: Valor catastral total (euros)
+          vigor:
+            help: Año en que entró en vigor la valoración colectiva de carácter general
+              que fijó estos valores. Déjalo en blanco si no lo sabes.
+            label: Año de la valoración colectiva
+          year:
+            help: Año del recibo del IBI al que corresponde este valor (cuatro cifras).
+            label: Ejercicio del IBI
+      invalid: El valor guardado no tiene la forma esperada, así que no se puede mostrar
+        por partes. Corrígelo como texto o bórralo y vuelve a indicarlo.
+      kind:
+        inquilino: Arrendatario
+        mejora: Mejora
+        uso: Uso
+        valor_catastral: Valor catastral
   wizard:
     errors:
       command_input_invalid: 'Los datos del perfil no superaron la validación: %{details}'

@@ -6175,6 +6175,10 @@ ledger:
   evidence:
     reader:
       operation_failed: Evidence reader operation failed
+  link_field:
+    arrendamiento_ref: Linked lease
+    gasto_capital_inmobiliario: Rental expense concept
+    inmueble_ref: Linked property
 live:
   errors:
     expediente_not_found: AEAT declaration register did not return the requested expediente.

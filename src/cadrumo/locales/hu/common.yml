@@ -6290,6 +6290,10 @@ ledger:
   evidence:
     reader:
       operation_failed: A bizonylatolvasó művelete sikertelen volt
+  link_field:
+    arrendamiento_ref: Kapcsolt bérleti szerződés
+    gasto_capital_inmobiliario: Ingatlanköltség jogcíme
+    inmueble_ref: Kapcsolt ingatlan
 live:
   errors:
     expediente_not_found: Az AEAT bevallási nyilvántartása nem adta vissza a kért
