@@ -27,6 +27,7 @@ from .overview_contracts import (
     CONTINUE_BUTTON_ID,
     HOUSEHOLD_BUTTON_ID,
     PLANTILLA_MEDIA_BUTTON_ID,
+    RECORD_GROUPS_BUTTON_ID_PREFIX,
     REQUIRED_ONLY_ID,
     SEARCH_ID,
     SEARCH_SETTLE_SECONDS,
@@ -36,6 +37,7 @@ from .plantilla_media import (
     PlantillaMediaScreen,
     PlantillaMediaSetRequest,
 )
+from .record_groups_panel import RecordGroupsScreen
 from .setup_journey import SETUP_STAGES, ProfileSetupStage
 
 if TYPE_CHECKING:
@@ -193,6 +195,12 @@ class ProfileOverviewInteractionMixin:
             self._refuse(tr("flows.manager.edit.write_in_flight"))
             return
         self.app.push_screen(HouseholdScreen(port), self._household_closed)
+
+    def _open_record_groups(self: ProfileManagerScreen) -> None:
+        """Open the profile's record groups read-only on the host's read."""
+        port = self._record_groups
+        if port is not None:
+            self.app.push_screen(RecordGroupsScreen(port))
 
     async def _household_closed(self: ProfileManagerScreen, touched: bool | None) -> None:
         """Read the profile again when a household change landed or may have landed."""
@@ -380,6 +388,9 @@ def _handle_section_button(screen: ProfileManagerScreen, button_id: str) -> bool
         return True
     if button_id == HOUSEHOLD_BUTTON_ID:
         screen._open_household()
+        return True
+    if button_id.startswith(RECORD_GROUPS_BUTTON_ID_PREFIX):
+        screen._open_record_groups()
         return True
     return False
 

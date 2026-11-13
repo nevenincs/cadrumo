@@ -32,6 +32,7 @@ from .entries_browse import LedgerEntriesBrowseScreen
 from .entries_browse_model import BROWSE_PAGE_SIZE, LedgerBrowseStateV1
 from .entries_common import CLASSIFICATION_LOCALE_KEYS, DIRECTION_LOCALE_KEYS, entry_label, joined
 from .entries_doors import LedgerEntriesDoorsV1
+from .link_picker import LINK_FAMILY_BY_FIELD, LedgerLinkPickers
 from .models import LedgerFlowState
 from .workspace_presentation import LedgerConfirmationFlowScreen, door_refusal_text, ledger_workspace_page
 
@@ -91,6 +92,13 @@ def _direction_options() -> list[tuple[str, str]]:
 
 def _classification_options() -> list[tuple[str, str]]:
     return [(tr(CLASSIFICATION_LOCALE_KEYS[member]), member.value) for member in BusinessClassification]
+
+
+def _held_links(request: LedgerAddRequest | None) -> dict[str, str]:
+    """The links a request the operator edits again had chosen, by field."""
+    if request is None:
+        return {}
+    return {field: value for field in LINK_FAMILY_BY_FIELD if (value := getattr(request, field)) is not None}
 
 
 def staged_add_lines(request: LedgerAddRequest) -> tuple[str, ...]:
@@ -200,6 +208,12 @@ class LedgerEntryAddScreen(LedgerConfirmationFlowScreen):
                     yield localized(Static(tr(key), markup=False), key)
                     held = None if initial is None else getattr(initial, name)
                     yield Input(value="" if held is None else str(held), id=_input_id(name))
+                yield LedgerLinkPickers(
+                    "entries-add",
+                    self.controller.link_options_door,
+                    initial=_held_links(initial),
+                    id="entries-add-links",
+                )
             with Horizontal(classes="entries-add-actions"):
                 yield localized(
                     Button(tr("tui.ledger.entry_tools.add.review"), id="entries-add-review", variant="primary"),
@@ -244,9 +258,14 @@ class LedgerEntryAddScreen(LedgerConfirmationFlowScreen):
         self.query_one("#entries-add-optional", Collapsible).title = tr("tui.ledger.entry_tools.add.optional")
         self.query_one("#entries-add-again", Button).label = self._again_label()
         if self.staged is not None:
-            self.query_one("#entries-add-summary", Static).update(joined(staged_add_lines(self.staged)))
+            self.query_one("#entries-add-summary", Static).update(self._staged_text(self.staged))
         if self.result is not None:
             self.query_one("#ledger-flow-status", Static).update(joined(add_outcome_lines(self.result)))
+
+    def _staged_text(self, request: LedgerAddRequest) -> str:
+        """The reviewed request's facts, then each chosen link in its served words."""
+        links = self.query_one("#entries-add-links", LedgerLinkPickers).chosen_lines()
+        return joined((*staged_add_lines(request), *links))
 
     def _text(self, name: str) -> str:
         return self.query_one(f"#{_input_id(name)}", Input).value.strip()
@@ -268,6 +287,7 @@ class LedgerEntryAddScreen(LedgerConfirmationFlowScreen):
             value = self._text(name)
             if value:
                 fields[name] = value
+        fields.update(self.query_one("#entries-add-links", LedgerLinkPickers).chosen())
         return LedgerAddRequest.model_validate(fields)
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
@@ -282,7 +302,7 @@ class LedgerEntryAddScreen(LedgerConfirmationFlowScreen):
                     notice.update(door_refusal_text(error))
                     return
                 notice.update("")
-                self.query_one("#entries-add-summary", Static).update(joined(staged_add_lines(self.staged)))
+                self.query_one("#entries-add-summary", Static).update(self._staged_text(self.staged))
                 self._lock_form()
                 self._transition(LedgerFlowState.CONFIRMING)
                 status.update(tr("tui.ledger.entry_tools.add.confirming"))

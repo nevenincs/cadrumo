@@ -1,0 +1,178 @@
+"""The link pickers offer what the real entry-options read serves and yield the served value chosen.
+
+The profile rows are synthetic; the options, their words and the request the
+chosen values go into are the backend's own. Only the runtime transport is
+replaced, by a door that returns the real read's projection.
+"""
+
+from __future__ import annotations
+
+from collections.abc import Iterator
+from typing import override
+from uuid import uuid4
+
+import pytest
+from textual.app import App, ComposeResult
+from textual.widgets import Select, Static
+
+from .....application.ledger.classify_requests import LedgerClassifyPatch
+from .....application.ledger.entry_options_operation import LedgerEntryOptionsProjection, ledger_entry_options
+from .....application.ledger.ledger_add_contracts import LedgerAddRequest
+from .....core.external_constants import OutputLanguage
+from .....core.i18n.render import tr
+from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
+from .....domain.contribuyente.inmueble_facts import ARRENDAMIENTO_SECTION, INMUEBLE_SECTION
+from ...tests.settling import settle
+from ..link_picker import LINK_FAMILY_BY_FIELD, LedgerLinkPicker, LedgerLinkPickers, option_words
+
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+_YEAR = filing_year_envelope().horizon
+_PROFILE = uuid4()
+
+
+@pytest.fixture(autouse=True)
+def authority_operation() -> Iterator[PinnedAuthorityOperation]:
+    """Read the options under one pinned authority generation, as the read does."""
+    with bundled_indexed_authority().operation() as operation:
+        yield operation
+
+
+def _options(operation: PinnedAuthorityOperation, *, rows: bool) -> LedgerEntryOptionsProjection:
+    facts = (
+        {
+            f"{INMUEBLE_SECTION}.0.direccion": "Calle Sintetica 1",
+            f"{ARRENDAMIENTO_SECTION}.0.inmueble": "0",
+            f"{ARRENDAMIENTO_SECTION}.0.fecha_inicio": f"{_YEAR}-01-01",
+        }
+        if rows
+        else None
+    )
+    return ledger_entry_options(_PROFILE, operation=operation, language=OutputLanguage.EN, profile_facts=facts)
+
+
+class _Door:
+    def __init__(self, options: LedgerEntryOptionsProjection | None) -> None:
+        self._options = options
+
+    async def __call__(self) -> LedgerEntryOptionsProjection:
+        if self._options is None:
+            raise ConnectionError("the read could not be completed")
+        return self._options
+
+
+class _Host(App[None]):
+    def __init__(self, door: _Door, initial: dict[str, str] | None = None) -> None:
+        super().__init__()
+        self._door = door
+        self._initial = initial
+
+    @override
+    def compose(self) -> ComposeResult:
+        yield LedgerLinkPickers("fixture", self._door, initial=self._initial, id="links")
+
+
+def _served(options: LedgerEntryOptionsProjection, field: str) -> list[tuple[str, str]]:
+    family = next(family for family in options.families if family.family == LINK_FAMILY_BY_FIELD[field])
+    return [(option_words(option), option.value) for option in family.options]
+
+
+def _picker(app: App[None], field: str) -> LedgerLinkPicker:
+    return next(picker for picker in app.query(LedgerLinkPicker) if picker.field == field)
+
+
+@pytest.mark.asyncio
+async def test_each_link_field_offers_its_served_family_in_served_words(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    options = _options(authority_operation, rows=True)
+    app = _Host(_Door(options))
+    async with app.run_test() as pilot:
+        await settle(pilot)
+        assert [picker.field for picker in app.query(LedgerLinkPicker)] == list(LINK_FAMILY_BY_FIELD)
+        for field in LINK_FAMILY_BY_FIELD:
+            picker = _picker(app, field)
+            served = _served(options, field)
+            assert served
+            for words, value in served:
+                # A value the picker does not offer is refused by the select itself.
+                picker.query_one(Select).value = value
+                await settle(pilot)
+                assert picker.chosen_words == words
+            picker.query_one(Select).clear()
+        rows = next(family for family in options.families if family.family == "rental_lease").options
+        assert [option_words(option) for option in rows] == [option.label_words for option in rows]
+        assert all(option.label_words != option.value for option in rows)
+        links = app.query_one("#links", LedgerLinkPickers)
+        assert links.chosen() == {}
+
+
+@pytest.mark.asyncio
+async def test_the_chosen_served_values_are_what_the_ledger_requests_take(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    options = _options(authority_operation, rows=True)
+    app = _Host(_Door(options))
+    async with app.run_test() as pilot:
+        await settle(pilot)
+        chosen: dict[str, str] = {}
+        for field in ("arrendamiento_ref", "gasto_capital_inmobiliario"):
+            _words, value = _served(options, field)[0]
+            _picker(app, field).query_one(Select).value = value
+            chosen[field] = value
+        await settle(pilot)
+        links = app.query_one("#links", LedgerLinkPickers)
+        assert links.chosen() == chosen
+        assert len(links.chosen_lines()) == 2
+        assert all(line.split(": ", 1)[1] for line in links.chosen_lines())
+        patch = LedgerClassifyPatch.model_validate(chosen)
+        assert patch.arrendamiento_ref == chosen["arrendamiento_ref"]
+        request = LedgerAddRequest.model_validate(
+            {
+                "profile_id": _PROFILE,
+                "booked_date": f"{_YEAR}-03-01",
+                "amount": "10.00",
+                "direction": "OUTGOING",
+                "description": "Synthetic row",
+                **chosen,
+            }
+        )
+        assert request.gasto_capital_inmobiliario == chosen["gasto_capital_inmobiliario"]
+
+
+@pytest.mark.asyncio
+async def test_a_profile_without_rental_rows_offers_no_row_and_says_so(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    app = _Host(_Door(_options(authority_operation, rows=False)))
+    async with app.run_test() as pilot:
+        await settle(pilot)
+        for field in ("arrendamiento_ref", "inmueble_ref"):
+            picker = _picker(app, field)
+            assert picker.query_one(Select).disabled
+            notes = [str(note.render()) for note in picker.query(".ledger-link-note").results(Static)]
+            assert notes == [tr("tui.ledger.link_picker.none_served")]
+        assert not _picker(app, "gasto_capital_inmobiliario").query_one(Select).disabled
+
+
+@pytest.mark.asyncio
+async def test_a_value_chosen_before_is_kept_only_while_it_is_offered(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    options = _options(authority_operation, rows=True)
+    lease = _served(options, "arrendamiento_ref")[0][1]
+    app = _Host(_Door(options), initial={"arrendamiento_ref": lease, "inmueble_ref": "not-offered"})
+    async with app.run_test() as pilot:
+        await settle(pilot)
+        assert app.query_one("#links", LedgerLinkPickers).chosen() == {"arrendamiento_ref": lease}
+
+
+@pytest.mark.asyncio
+async def test_a_failed_read_offers_no_picker_and_says_so() -> None:
+    app = _Host(_Door(None))
+    async with app.run_test() as pilot:
+        await settle(pilot)
+        assert not app.query(LedgerLinkPicker)
+        notes = [str(note.render()) for note in app.query(".ledger-link-note").results(Static)]
+        assert notes == [tr("tui.ledger.link_picker.unavailable")]

@@ -4930,6 +4930,16 @@ desktop:
       unknown: No hemos podido confirmar si la contraseña ha cambiado. La próxima
         vez entra con la nueva contraseña y, si no funciona, con la anterior.
     progress: '{filled} de {total} datos rellenados'
+    record_groups:
+      empty: Tu perfil aún no tiene registros relacionados.
+      linked_rows: Movimientos del libro vinculados
+      linked_rows_none: No hay ningún movimiento del libro vinculado.
+      linked_rows_shown: Se muestran {shown} de {total}
+      more: Mostrar más
+      read_again: Volver a leer
+      read_failed: No se han podido leer los registros relacionados.
+      reading: Leyendo los registros relacionados…
+      title: Registros relacionados
     refresh: Actualizar
     refused: No se han podido guardar estos cambios. Revisa las indicaciones de los
       campos y actualiza el perfil antes de volver a intentarlo.
@@ -8702,6 +8712,14 @@ tui:
           vincular.
         transaction_takes_no_invoice: 'Este movimiento no admite factura: solo puede
           tenerla un movimiento activo de entrada o salida de dinero.'
+    link_picker:
+      field:
+        arrendamiento_ref: Arrendamiento vinculado
+        gasto_capital_inmobiliario: Concepto de gasto del inmueble
+        inmueble_ref: Inmueble vinculado
+      none_served: Aún no hay nada que vincular.
+      unavailable: No se han podido leer los registros que vincular.
+      unchanged: Sin elegir
     overview:
       affected_declarations: Declaraciones afectadas
       areas: Áreas de Registros
@@ -9416,6 +9434,19 @@ tui:
     stopped:
       code: Código
     title: Operaciones
+  profile:
+    record_groups:
+      close: Cerrar
+      empty: Tu perfil aún no tiene registros relacionados.
+      ledger_row: '{date} · {direction} {amount} {currency} · {description}'
+      linked_rows: Movimientos del libro vinculados
+      linked_rows_none: No hay ningún movimiento del libro vinculado.
+      linked_rows_shown: Se muestran {shown} de {total}
+      more: Mostrar más
+      read_again: Volver a leer
+      read_failed: No se han podido leer los registros relacionados.
+      reading: Leyendo los registros relacionados…
+      title: Registros relacionados
   reference:
     action:
       close: Volver

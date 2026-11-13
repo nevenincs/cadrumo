@@ -83,6 +83,7 @@ from .runtime_ledger_classification import (
     build_runtime_ledger_classification_patch,
 )
 from .runtime_ledger_entries import compose_runtime_ledger_exclusion_submitter
+from .runtime_ledger_entry_options import RuntimeLedgerEntryOptionsTuiDoorV1
 from .runtime_ledger_import import compose_runtime_ledger_import_door
 from .runtime_ledger_records import compose_runtime_ledger_link_submitter, compose_runtime_ledger_record_doors
 from .runtime_ledger_review import compose_runtime_ledger_review_doors
@@ -439,6 +440,7 @@ class RuntimeWorkbenchRoot(RuntimeProfileLanguage):
         with self._language_guard:
             current_epoch = self._language_epoch
         classification = RuntimeLedgerClassificationTuiDoorV1(self._client, profile_label=self._label)
+        link_options = RuntimeLedgerEntryOptionsTuiDoorV1(self._client, profile_label=self._label)
         assets = compose_runtime_activity_asset_actions(self._client, profile_label=self._label)
         invoice_add = compose_runtime_invoice_add_door(client=self._client, profile_label=self._label)
         evidence = RuntimeEvidenceTuiDoorV1(self._client, profile_label=self._label)
@@ -481,6 +483,7 @@ class RuntimeWorkbenchRoot(RuntimeProfileLanguage):
                 classify_action=_action("operator.ledger.classify"),
                 classification_submitter=classification,
                 classification_patch_builder=build_runtime_ledger_classification_patch,
+                link_options_door=link_options,
                 refresh=refresh_ledger,
                 evidence_action=_action("operator.ledger.evidence.review.list"),
                 evidence_review_door=reviews.evidence_review,

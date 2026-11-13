@@ -24,6 +24,7 @@ from ..components.language import localized
 from ..components.widgets import ContentDataTable
 from ..operations.outcome import unknown_outcome_of
 from .controller import LedgerWorkspaceController
+from .link_picker import LedgerLinkPickers
 from .models import LedgerClassificationPatchV1, LedgerFlowState
 from .workspace_presentation import LedgerConfirmationFlowScreen, door_refusal_text, ledger_workspace_page
 
@@ -132,6 +133,9 @@ class LedgerClassificationScreen(LedgerConfirmationFlowScreen):
                     f"tui.ledger.classification.field.{field_name}",
                 )
                 yield Input(id=_input_id(field_name))
+            yield LedgerLinkPickers(
+                "ledger-classification", self.controller.link_options_door, id="ledger-classification-links"
+            )
             yield ContentDataTable[str](id="ledger-classifications", cursor_type="row", zebra_stripes=True)
             yield Static("", id="ledger-flow-status", markup=False)
             yield localized(
@@ -266,6 +270,7 @@ class LedgerClassificationScreen(LedgerConfirmationFlowScreen):
             value = self._optional_text(field_name)
             if value is not None:
                 values[field_name] = value
+        values.update(self.query_one("#ledger-classification-links", LedgerLinkPickers).chosen())
         return values
 
     @staticmethod

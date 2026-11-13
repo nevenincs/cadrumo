@@ -41,12 +41,14 @@ from .overview_contracts import (
     PLANTILLA_MEDIA_BUTTON_ID,
     PLANTILLA_MEDIA_SECTION,
     PRESENT_GLYPH,
+    RECORD_GROUPS_BUTTON_ID_PREFIX,
     REQUIRED_MARK,
     ROW_INDEX_SEPARATOR,
     SOURCE_ACTION_LOCALE_KEYS,
     SOURCE_DESCRIPTION_LOCALE_KEYS,
     SOURCE_TITLE_LOCALE_KEYS,
 )
+from .record_groups_panel import RECORD_GROUPS_TITLE_LOCALE_KEY
 from .setup_journey import ProfileSetupStage
 
 if TYPE_CHECKING:
@@ -469,6 +471,16 @@ async def _mount_profile_section_actions(
         # The people of the household are added and removed one at a time
         # through the destination the household read serves.
         await panel.mount(Button(tr(HOUSEHOLD_TITLE_LOCALE_KEY), id=HOUSEHOLD_BUTTON_ID, compact=True))
+    if screen._record_groups is not None and section.key in referenced_sections(screen.overview):
+        # A section whose rows another field names heads related records; the
+        # schema serves which, so no section is named here.
+        await panel.mount(
+            Button(
+                tr(RECORD_GROUPS_TITLE_LOCALE_KEY),
+                id=f"{RECORD_GROUPS_BUTTON_ID_PREFIX}{section.key}",
+                compact=True,
+            )
+        )
     if section.key == PLANTILLA_MEDIA_SECTION and screen._plantilla_media_offered:
         # Average-workforce years are indexed records, not repeatable section rows.
         await panel.mount(
@@ -478,6 +490,16 @@ async def _mount_profile_section_actions(
                 compact=True,
             )
         )
+
+
+def referenced_sections(overview: ProfileOverview) -> frozenset[str]:
+    """The sections one of whose rows a served field names, as the profile view declares it."""
+    return frozenset(
+        field.references_section
+        for section in overview.sections
+        for field in section.fields
+        if field.references_section is not None
+    )
 
 
 def _update_section_search_feedback(screen: ProfileManagerScreen, any_visible: bool) -> None:
