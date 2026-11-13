@@ -442,6 +442,21 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
             ("expense_within_limit", "expense_above_limit_source"),
         )
     ),
+    # An assumed value waits for the filer: stating the box again confirms it, and a box read
+    # from a source the filer may state over is confirmed by the override bound to it.
+    *(
+        _profile(
+            leaf,
+            f"{leaf}.assumed_value.confirmed",
+            f"{leaf}.assumed_value.{scenario}",
+            action_id=action_id,
+        )
+        for leaf in ("modelo.work.verify", "modelo.work.file", "modelo.export")
+        for scenario, action_id in (
+            ("unconfirmed", "operator.modelo.work.set_value"),
+            ("unconfirmed_source", "operator.modelo.work.override"),
+        )
+    ),
     # The profile door that states a household row's required fact: the fact is the
     # filer's, and the door lists the people the profile records so the missing one is added.
     *(

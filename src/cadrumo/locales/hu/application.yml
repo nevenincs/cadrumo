@@ -3553,6 +3553,9 @@ application:
         meghaladja az Art. 52 LIRPF szerinti %{sublimit} EUR egyéni részhatárt, és
         munkáltatói hozzájárulás nincs bevallva. Ellenőrizd, hogy az egyéni részhatárt
         alkalmazták-e.
+      assumed_value_unconfirmed: A(z) [%{box}] rovatban olyan érték van, amelyet senki
+        sem adott meg, ezért az csak feltételezett. Erősítsd meg az érték megadásával,
+        vagy add meg a helyeset, mielőtt ez a bevallás ellenőrizhető lenne.
       attribution_received_uncaptured: A(z) [%{casilla_id}] rovat %{filing_year} évre
         %{casilla_value} EUR betudott jövedelmet tartalmaz, de a profilod nem rögzíti,
         honnan származik. Vedd fel a profilodba.

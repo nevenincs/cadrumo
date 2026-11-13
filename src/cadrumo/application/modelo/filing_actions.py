@@ -57,6 +57,7 @@ from ...domain.calculations.registry.applicability_modelo202 import derive_model
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.deadlines.models import TaxpayerProfile
 from ...domain.modelos.calculation_revision import (
+    FILED_REVISION_STATES,
     CalculationRevision,
     CalculationRevisionCatalogue,
     CalculationRevisionState,
@@ -76,6 +77,11 @@ from .action_errors import (
     CalculationRevisionStateError,
     ModeloPreconditionErrorMixin,
     WorkUnitNotFoundError,
+)
+from .assumed_value_gate import (
+    ModeloAssumedValueStage,
+    require_assumed_values_confirmed,
+    unconfirmed_assumed_fields,
 )
 from .calculation_note_gate import require_work_unit_calculation_unblocked
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
@@ -232,6 +238,21 @@ def _load_filing_context(
         stage=Modelo123CountAuthorityStage.FILE,
     )
     require_modelo_193_settled_row_amount_authority(work_unit, target, stage=Modelo193SettledRowStage.FILE)
+    # Before the idempotent re-file no-op too: a verified revision whose assumed value was never
+    # confirmed must not be recorded as filed, nor returned as the filed answer.
+    if target.state not in FILED_REVISION_STATES:
+        require_assumed_values_confirmed(
+            work_unit,
+            unconfirmed_assumed_fields(
+                work_unit,
+                work_unit_repository=wu_repo,
+                calculation_repository=cr_repo,
+                verification_repository=ports.verification_repository,
+                credit_resolutions=ports.credit_resolution_reader,
+                operation=operation,
+            ),
+            stage=ModeloAssumedValueStage.FILE,
+        )
     require_modelo_390_prorrata_apartado_rendered(
         work_unit,
         registry_revision_id=target.registry_snapshot_ref.revision_id,

@@ -3600,6 +3600,9 @@ application:
         %{reduccion_value} EUR de reducció per previsió social, per sobre del sublímit
         individual de %{sublimit} EUR de l'art. 52 LIRPF, i no has declarat aportacions
         amb contribució empresarial. Comprova que s'ha aplicat el sublímit individual.
+      assumed_value_unconfirmed: La casella [%{box}] té un valor que ningú no ha introduït,
+        així que només està suposat. Confirma'l indicant el valor, o introdueix el
+        correcte, abans de poder verificar aquesta declaració.
       attribution_received_uncaptured: La casella [%{casilla_id}] de %{filing_year}
         recull %{casilla_value} EUR de renda atribuïda, però el teu perfil no indica
         d'on surt. Afegeix-la al teu perfil.
