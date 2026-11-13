@@ -72,6 +72,7 @@ class SupervisorHost:
         _lease_token: OperationLeaseToken
         _operands: OperationSecureReferenceStore | None
         _clock: Callable[[], datetime]
+        _fixed_clock_instant: datetime | None
         _execution_timeout: timedelta | None
         _cleanup_timeout: timedelta | None
         _response_authority_issuer: OperationResponseAuthorityIssuer | None

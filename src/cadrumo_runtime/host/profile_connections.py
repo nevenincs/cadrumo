@@ -29,6 +29,7 @@ from cadrumo.core.diagnostic_log import DiagnosticValue, diagnostic_event
 from cadrumo.core.logging import get_logger
 from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.core.time.clock import now
+from cadrumo.core.time.fixed_clock import FixedClock
 from cadrumo.entrypoints.operation_composition import build_manifest_operation_registry
 from cadrumo_client.contracts.access_vocabulary import Availability
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
@@ -140,11 +141,14 @@ class RuntimeProfileConnections(
         service_descriptors: tuple[InstalledServiceDescriptor, ...] | None = None,
         service_verifier: NativeServiceVerifier | None = None,
         custody_recovery: CustodyRecoveryPolicy | None = None,
+        fixed_clock: FixedClock | None = None,
     ) -> None:
         """Defer installation/profile/store access until an eligible peer requests login.
 
         ``installation_acts`` names the handlers of the sessionless installation
         door; the installed composition is used when none is given.
+        ``fixed_clock`` is the fixed clock this runtime admitted at its start, the
+        only source of the value its profile workers are told.
         """
         self.root, self.storage_identity, self.boot, self.stop = storage_root, storage_identity, runtime_boot_id, stop
         self._capture, self._secret_store = capture_login, secret_store
@@ -153,6 +157,7 @@ class RuntimeProfileConnections(
         self._eligible_login_seen = False
         self._login_lifecycle_available = False
         self._worker_script, self._wall_clock = worker_script, wall_clock
+        self.fixed_clock = fixed_clock
         self._custody_recovery = custody_recovery
         self._guard = RLock()
         self._human_handover_guard = RLock()

@@ -97,6 +97,7 @@ FINDING_FACT_KINDS: Final[Mapping[str, FindingFactKind]] = MappingProxyType(
         "source_filing_year": FindingFactKind.YEAR,
         "target_filing_year": FindingFactKind.YEAR,
         "authored_filing_year": FindingFactKind.YEAR,
+        "prior_filing_year": FindingFactKind.YEAR,
         # Amounts of euros.
         "casilla_value": FindingFactKind.MONEY,
         "computed_value": FindingFactKind.MONEY,
@@ -119,12 +120,17 @@ FINDING_FACT_KINDS: Final[Mapping[str, FindingFactKind]] = MappingProxyType(
         "base_amount": FindingFactKind.MONEY,
         "expected_cuota": FindingFactKind.MONEY,
         "recorded_cuota": FindingFactKind.MONEY,
+        "limit": FindingFactKind.MONEY,
+        "stated": FindingFactKind.MONEY,
+        "pending_total": FindingFactKind.MONEY,
+        "capacity": FindingFactKind.MONEY,
         # Other figures.
         "declared": FindingFactKind.NUMBER,
         "transaction_amount": FindingFactKind.NUMBER,
         "threshold": FindingFactKind.NUMBER,
         "iva_rate_percent": FindingFactKind.NUMBER,
         "weighted_count": FindingFactKind.NUMBER,
+        "percentage": FindingFactKind.NUMBER,
         # A prior-period figure the filer stated.
         "value": FindingFactKind.NUMBER,
         # Counts.
@@ -143,6 +149,7 @@ FINDING_FACT_KINDS: Final[Mapping[str, FindingFactKind]] = MappingProxyType(
         "rows_current": FindingFactKind.COUNT,
         "rows": FindingFactKind.COUNT,
         "rows_recorded": FindingFactKind.COUNT,
+        "registered_activity_rows": FindingFactKind.COUNT,
         "schedules_changed": FindingFactKind.COUNT,
         "settled_prior_accrual_rows": FindingFactKind.COUNT,
         "source_issue_count": FindingFactKind.COUNT,

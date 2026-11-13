@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import os
 import sys
-from collections.abc import Callable, Generator
+from collections.abc import Callable, Generator, Mapping
 from contextlib import AbstractContextManager, ExitStack, contextmanager
 from dataclasses import dataclass, field
 from importlib.metadata import version
@@ -18,8 +19,10 @@ from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedE
 from cadrumo.core.async_cleanup import AsyncCloseable, AsyncResourceCleanupError, close_async_resources
 from cadrumo.core.config import override_settings
 from cadrumo.core.diagnostic_log import diagnostic_error_fields, diagnostic_event, diagnostic_process, diagnostic_scope
+from cadrumo.core.errors.hierarchy import CoreValidationError
 from cadrumo.core.logging import configure_logging, get_logger, register_first_party_logger
 from cadrumo.core.storage_environment import withheld_child_settings
+from cadrumo.core.time.fixed_clock import FixedClock, admit_fixed_clock_from_environment, fixed_clock_refusal
 from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
 from cadrumo.entrypoints.exchange_rate_composition import live_exchange_rate_composition
 from cadrumo_client.contracts.automation_codes import AutomationCustodyError
@@ -63,6 +66,22 @@ class _WorkerRunResources:
     handshake_release: TransportCleanup | None = None
     endpoint_releases: list[AsyncCloseable] = field(default_factory=list)
     timeout: TimeoutDeadline = field(default_factory=DEFAULT_TIMEOUT_POLICY.deadline)
+
+
+def admitted_worker_fixed_clock(storage_root: Path, environ: Mapping[str, str]) -> FixedClock | None:
+    """Repeat the runtime's fixed-clock checks at worker entry, refusing to start on any failure.
+
+    The worker trusts no relayed value: the slots must still name this
+    worker's pinned root, never the channel default, and agree with the root's
+    marker, exactly as its runtime admitted them.
+    """
+    try:
+        return admit_fixed_clock_from_environment(environ, pinned_root=storage_root)
+    except CoreValidationError as error:
+        refusal = fixed_clock_refusal(error)
+        if refusal is None:
+            raise
+        raise RefusalError(RefusalCode.ROOT_MISMATCH, check=refusal.value) from error
 
 
 def _parse_worker_arguments(arguments: list[str] | None) -> argparse.Namespace:
@@ -163,6 +182,7 @@ def _serve_connected_worker(
     resources: _WorkerRunResources,
     identity: ProfileWorkerIdentity,
     composition_factory: Callable[[], AbstractContextManager[None]] | None,
+    fixed_clock: FixedClock | None,
 ) -> None:
     channel = cast(WorkerChannel, resources.channel)
     operation_channel = cast(WorkerChannel, resources.operation_channel)
@@ -191,6 +211,7 @@ def _serve_connected_worker(
                 parent_pid=options.parent_pid,
                 product_version=options.expected_version,
             ),
+            fixed_clock_instant=None if fixed_clock is None else fixed_clock.instant,
         )
         human = ProfileWorkerHumanLogin(custody, decode=operations.profile_decode_context)
         asyncio.run(serve_watched(channel, operation_channel, proof_channel, custody, human, operations))
@@ -203,10 +224,12 @@ def _run_worker(
 ) -> None:
     if options.expected_version != version("cadrumo"):
         raise RefusalError(RefusalCode.VERSION_MISMATCH)
+    # Before any channel opens: a worker given an unbound fixed clock never starts.
+    fixed_clock = admitted_worker_fixed_clock(options.storage_root, os.environ)
     identity = _open_control_channel(options, resources)
     _open_operation_channel(options, resources, identity)
     _open_operation_channel(options, resources, identity, proof=True)
-    _serve_connected_worker(options, resources, identity, composition_factory)
+    _serve_connected_worker(options, resources, identity, composition_factory, fixed_clock)
 
 
 def _collect_worker_failures(primary_error: BaseException | None) -> tuple[BaseException, ...]:

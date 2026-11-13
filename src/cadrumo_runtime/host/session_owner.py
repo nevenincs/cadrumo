@@ -18,6 +18,7 @@ from cadrumo.core.diagnostic_log import diagnostic_event
 from cadrumo.core.logging import get_logger
 from cadrumo.core.profile_session import ProfileHumanLoginReceipt
 from cadrumo.core.time.clock import now
+from cadrumo.core.time.fixed_clock import FixedClock
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.deadline_budget import DEFAULT_TIMEOUT_POLICY, TimeoutDeadline
@@ -56,11 +57,13 @@ class ProfileWorkerSessionOwner:
         worker_script: Path | None = None,
         wall_clock: Callable[[], datetime] = now,
         lost: Callable[[], None] | None = None,
+        fixed_clock: FixedClock | None = None,
     ) -> None:
         """Share the profile denial guard with the existing authority and administration.
 
         ``lost`` hears that a worker loss was established outside any request,
         so the sessions it ends are swept without waiting for one.
+        ``fixed_clock`` is the runtime's admitted fixed clock, told to each worker it starts.
         """
         self.identity, self.root = identity, storage_root
         self._lost_notice = lost
@@ -72,6 +75,7 @@ class ProfileWorkerSessionOwner:
         self._authorization = authorization
         self._worker_script = worker_script
         self._wall_clock = wall_clock
+        self._fixed_clock = fixed_clock
         self._retiring: list[ProfileWorkerProcess] = []
         self._lifecycle_guard = RLock()
         self._construction_changed = Condition(self._lifecycle_guard)
@@ -225,6 +229,7 @@ class ProfileWorkerSessionOwner:
                     wall_clock=self._wall_clock,
                     exited=self._worker_exited,
                     stopping=self._stopping,
+                    fixed_clock=self._fixed_clock,
                 )
                 with self._lifecycle_guard:
                     if self._stopping.is_set():
