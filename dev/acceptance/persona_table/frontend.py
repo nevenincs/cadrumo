@@ -192,14 +192,19 @@ def _return_scope(data: Mapping[str, object]) -> tuple[str | None, int | None, s
 
 
 def _stage_words(data: Mapping[str, object], modelo: str | None) -> dict[str, str]:
-    """The stage words a line states; a line with a ``modelo`` must state all three."""
-    absent = [name for name in _STAGE_FIELDS if name not in data]
-    if modelo is not None and absent:
-        raise ValueError(f"missing key {', '.join(absent)}")
-    stated = {name: data[name] for name in _STAGE_FIELDS if name in data}
+    """The stage words a line states: all three for a return, any not null for a persona-level line."""
     if modelo is None:
-        stated = {name: word for name, word in stated.items() if word is not None}
+        stated = {name: data[name] for name in _STAGE_FIELDS if data.get(name) is not None}
+    else:
+        _require_all_stages(data)
+        stated = {name: data[name] for name in _STAGE_FIELDS}
     return {name: _choice(stated, name, STAGE_WORDS) for name in stated}
+
+
+def _require_all_stages(data: Mapping[str, object]) -> None:
+    absent = [name for name in _STAGE_FIELDS if name not in data]
+    if absent:
+        raise ValueError(f"missing key {', '.join(absent)}")
 
 
 def _text(data: Mapping[str, object], name: str) -> str:
