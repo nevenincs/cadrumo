@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import argparse
 import dataclasses
 from collections.abc import Mapping, Sequence
 from decimal import Decimal
@@ -17,7 +16,7 @@ from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefin
 from cadrumo.entrypoints.tests.persona_materialisation import year_envelope
 from cadrumo.tests.personas import ExpectedObligation, ExpectedValue, Persona, YearToken, persona_ids
 
-from ..cli_column.__main__ import build_case, export_check_for
+from ..cli_column.case import CaseSpec, build_case, export_check_for
 from ..cli_column.hygiene import Redactor
 from ..cli_column.intake import LineWriter, Outcome
 from ..cli_column.world_report import RowPlan, WorldReport
@@ -184,9 +183,9 @@ def test_the_cli_column_hands_the_driver_the_tables_export_check(tmp_path: Path)
         rows=(),
     )
     writer = LineWriter(tmp_path / "cli-t.jsonl", Redactor(["synthetic-persona-passphrase"]))
-    args = argparse.Namespace(tree="t", persona="synthetic", horizon=_year() + 1)
+    spec = CaseSpec("t", "synthetic", _year() + 1, tmp_path / "snap-t", tmp_path / "authority-t")
     case = build_case(
-        args, report=report, runner=_Idle(), exports=tmp_path, writer=writer, log="case.log", trace=_no_trace
+        spec, report=report, runner=_Idle(), exports=tmp_path, writer=writer, log="case.log", trace=_no_trace
     )
     assert case.export_check is not None
 

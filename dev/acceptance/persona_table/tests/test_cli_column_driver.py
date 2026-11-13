@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Callable, Mapping, Sequence
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -178,6 +179,18 @@ def test_a_return_runs_create_calculate_verify_export_and_file_in_the_tables_ord
     assert (line["calculate"], line["verify"], line["export"], line["file"]) == ("pass", "pass", "pass", "pass")
     assert line["figures"] == {"01": "10.5"}
     assert line["reason"] == "filed locally"
+
+
+def test_a_return_whose_line_exists_runs_for_the_chain_but_is_not_written_again(tmp_path: Path) -> None:
+    runner = _Scripted(tmp_path / "exports")
+    report = _report(_plan("130", "1T"), _plan("303", "1T"))
+    case = replace(_case(tmp_path, report, runner), done=frozenset({("130", _YEAR, "1T")}))
+
+    summary = run_case(case, select_rows(report))
+
+    assert runner.keys().count("work create") == 2
+    assert summary.written == (("303", _YEAR, "1T"),)
+    assert [(line["modelo"], line["period"]) for line in _lines(tmp_path)] == [("303", "1T")]
 
 
 def test_a_modelo_303_elects_no_joint_return_and_attests_the_annual_summary_only_in_the_last_period(

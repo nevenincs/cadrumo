@@ -66,6 +66,8 @@ class Case:
     log: str
     export_check: ExportCheck | None = None
     trace: Trace = _no_trace
+    done: frozenset[ReturnKey] = frozenset()
+    """The returns whose lines already exist: they still run, since the chain needs them, but are not written."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -258,7 +260,7 @@ def run_case(case: Case, selection: Selection) -> CaseSummary:
             result = RowResult(
                 StageResult("error", reason=f"chain stopped after UNKNOWN at {'/'.join(map(str, stopped_at))}")
             )
-        if plan.key in selection.wanted:
+        if plan.key in selection.wanted and plan.key not in case.done:
             case.writer.write(return_line(_scope(case, plan), result, case.log))
             written.append(plan.key)
     return CaseSummary(tuple(written), stopped_at, selection.skipped)
