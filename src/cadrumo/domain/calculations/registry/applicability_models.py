@@ -527,6 +527,8 @@ class ModeloApplicabilityRule(BaseModel):
             return _PayerFactReading(None, ApplicabilityProvenance.PROFILE_DECLARED, None, ledger_conclusive=False)
         declared = payer_fact_declaration(profile, fact)
         derivation = self._ledger_payer_fact_derivation(fact, ledger_payer_facts)
+        if isinstance(fact, PayerFactProjection) and fact.records_source is not None:
+            return self._stated_records_reading(declared, derivation)
         disagreement = self._payer_fact_disagreement(fact, declared, derivation)
         conclusive = derivation in {LedgerPayerFactDerivation.DERIVED_YES, LedgerPayerFactDerivation.DERIVED_NO}
         if derivation is LedgerPayerFactDerivation.DERIVED_YES and declared is not PayerFactDeclaration.DECLARED_YES:
@@ -539,6 +541,29 @@ class ModeloApplicabilityRule(BaseModel):
         return _PayerFactReading(
             declared, ApplicabilityProvenance.PROFILE_DECLARED, disagreement, ledger_conclusive=conclusive
         )
+
+    @staticmethod
+    def _stated_records_reading(
+        declared: PayerFactDeclaration,
+        derivation: LedgerPayerFactDerivation | None,
+    ) -> _PayerFactReading:
+        """Read a fact only the taxpayer's stated records answer.
+
+        The profile holds no field for such a fact, so there is no answer to
+        contradict. The stated records are the taxpayer's own account of facts
+        no ledger holds, so a complete set that meets no ground answers no,
+        where a ledger's silence never does. A derivation that cannot settle
+        the fact leaves it unanswered.
+        """
+        if derivation is LedgerPayerFactDerivation.DERIVED_YES:
+            return _PayerFactReading(
+                PayerFactDeclaration.DECLARED_YES, ApplicabilityProvenance.LEDGER_DERIVED, None, ledger_conclusive=True
+            )
+        if derivation is LedgerPayerFactDerivation.DERIVED_NO:
+            return _PayerFactReading(
+                PayerFactDeclaration.DECLARED_NO, ApplicabilityProvenance.LEDGER_DERIVED, None, ledger_conclusive=True
+            )
+        return _PayerFactReading(declared, ApplicabilityProvenance.PROFILE_DECLARED, None, ledger_conclusive=False)
 
     @staticmethod
     def _ledger_payer_fact_derivation(
@@ -615,7 +640,12 @@ class ModeloApplicabilityRule(BaseModel):
         label = payer_fact_incomplete_label(fact)
         reason = verdict.reason
         if derived and verdict.verdict is ApplicabilityVerdict.APPLICABLE:
-            reason = f"{reason} {tr('filing.applicability.ledger_derived_basis', fact=label)}"
+            basis_key = (
+                "filing.applicability.records_derived_basis"
+                if isinstance(fact, PayerFactProjection) and fact.records_source is not None
+                else "filing.applicability.ledger_derived_basis"
+            )
+            reason = f"{reason} {tr(basis_key, fact=label)}"
         if reading.disagreement is not None:
             reason = f"{reason} {tr('filing.applicability.ledger_profile_disagreement', fact=label)}"
         return verdict.model_copy(
@@ -845,6 +875,17 @@ def _undetermined_applicability(
         A :class:`ModeloApplicability` with ``INCOMPLETE`` verdict and the
         undetermined-payer-fact rationale.
     """
+    if (
+        isinstance(payer_fact, PayerFactProjection)
+        and payer_fact.undetermined_reason is not None
+        and not periods_missing
+    ):
+        return ModeloApplicability(
+            modelo=modelo,
+            verdict=ApplicabilityVerdict.INCOMPLETE,
+            reason=payer_fact.undetermined_reason,
+            legal_refs=legal_refs,
+        )
     required = tr(
         "filing.applicability.incomplete_undetermined_fact_required",
         fact=payer_fact_incomplete_label(payer_fact),

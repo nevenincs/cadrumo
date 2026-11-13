@@ -67,6 +67,7 @@ from ..domain.transactions.models import TransactionCatalogue
 from ..domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..domain.user_profile.values import UserProfileRecord
 from .aeat_sync.workspace import AeatSyncWorkspaceProjectionError, AeatSyncWorkspaceProjectionV1
+from .aggregation.m232_related_party_repository import Modelo232RelatedPartyReader
 from .calculations.verification_report_gate import require_verification_report_coordinates_current
 from .ledger.workspace import (
     LedgerWorkspaceProjectionV1,
@@ -378,6 +379,7 @@ class _DeclarationSources(NamedTuple):
     ledger_sources: tuple[TransactionCatalogue, InvoiceCatalogue] | None
     aeat_projection: CalendarEvidenceProjection
     calendar_inputs: WorkbenchCalendarInputs
+    related_party_revision: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -403,6 +405,11 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
     invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None
     verification_repository: VerificationReportCatalogueRepositoryProtocol | None = None
+    related_party_records: Modelo232RelatedPartyReader | None = None
+    """The stated Modelo 232 operations the calendar's related-party obligation fact is derived from.
+
+    Unbound, that fact stays undeclared and Modelo 232 stays undecided, as in a read with no such store.
+    """
     credit_resolution_reader: CreditResolutionReader | None = None
     """The profile's accepted source disagreements, so a declaration's row counts a covered one as the gate does.
 
@@ -496,6 +503,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             filings_revision=capture.catalogues.filings_revision,
             ledger_revision=capture.ledger_revision,
             ledger_sources=capture.ledger_sources,
+            related_party_revision=capture.related_party_revision,
             verification=capture.catalogues.verification,
             bucket_events=capture.catalogues.bucket_events,
             aeat_sync_reads=aeat_sync_reads,
@@ -539,6 +547,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             filings_revision=capture.catalogues.filings_revision,
             ledger_revision=capture.ledger_revision,
             ledger_sources=capture.ledger_sources,
+            related_party_revision=capture.related_party_revision,
             verification=capture.catalogues.verification,
             bucket_events=capture.catalogues.bucket_events,
             aeat_sync_reads=None,
@@ -579,6 +588,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         # ledger-derived obligation signals the calendar decides on.
         ledger_revision = _timed("ledger_revision", self._ledger_revision)
         ledger_sources = self._load_ledger_sources()
+        related_party_revision = _timed("related_party_revision", self._related_party_revision)
         aeat_evidence, aeat_projection = _timed(
             "calendar_aeat_evidence", lambda: self._read_calendar_aeat_evidence(raw_values)
         )
@@ -596,6 +606,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             filings_revision=filings_revision,
             ledger_revision=ledger_revision,
             ledger_sources=ledger_sources,
+            related_party_revision=related_party_revision,
         )
         return _DeclarationSources(
             observed_at=observed_at,
@@ -606,6 +617,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             ledger_sources=ledger_sources,
             aeat_projection=aeat_projection,
             calendar_inputs=calendar_inputs,
+            related_party_revision=related_party_revision,
         )
 
     def _read_declarations_projection(
@@ -711,6 +723,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         filings_revision: str,
         ledger_revision: tuple[str, str] | None,
         ledger_sources: tuple[TransactionCatalogue, InvoiceCatalogue] | None,
+        related_party_revision: str,
     ) -> WorkbenchCalendarInputs:
         with _capture_phase("calendar_memo_key"):
             memo = CalendarMemo(
@@ -728,6 +741,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
                         }
                     ),
                     invoice_catalogue_revision=_invoice_catalogue_revision(ledger_revision, ledger_sources),
+                    related_party_revision=related_party_revision,
                 ),
             )
         return _timed(
@@ -743,6 +757,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
                 aeat_evidence=aeat_evidence,
                 invoice_source_ports=loaded_invoice_source_ports(None if ledger_sources is None else ledger_sources[1]),
                 memo=memo,
+                related_party_records=self.related_party_records,
             ),
         )
 
@@ -755,6 +770,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         filings_revision: str,
         ledger_revision: tuple[str, str] | None,
         ledger_sources: tuple[TransactionCatalogue, InvoiceCatalogue] | None,
+        related_party_revision: str,
         verification: VerificationReportCatalogue | None,
         bucket_events: BucketEventHistoryCatalogue | None,
         aeat_sync_reads: _AeatSyncSourceReads | None,
@@ -780,6 +796,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
                 and final_calculations_revision == calculations_revision
                 and final_filings_revision == filings_revision
                 and _timed("recheck_ledger", lambda: self._ledger_is_unchanged(ledger_revision, ledger_sources))
+                and _timed("recheck_related_party", self._related_party_revision) == related_party_revision
                 and _timed("recheck_verification_reports", self._load_verification_reports) == verification
                 and _timed("recheck_bucket_events", self._load_bucket_events) == bucket_events
                 and (
@@ -872,6 +889,12 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         if transaction_revision is None or invoice_revision is None:
             return None
         return transaction_revision, invoice_revision
+
+    def _related_party_revision(self) -> str:
+        """Name the stated Modelo 232 records the calendar was derived from; ``unbound`` when no store is bound."""
+        if self.related_party_records is None:
+            return "unbound"
+        return self.related_party_records.revision_marker(tuple(self.operation.supported_filing_years().years))
 
     def _ledger_is_unchanged(
         self,
