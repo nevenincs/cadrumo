@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#canonical-environment'
 date: '2026-10-13'
-modified: '2026-10-30'
+modified: '2026-11-13'
 body_schema: 'body-v2'
-body_hash: 'sha256:7006608581376c75858ebb9ef10bc3a3a546349c003161600d7ec562bc75ce61'
+body_hash: 'sha256:8d49e93a301e31d1610453edb78b04ae25c7875ea3b2b344db48216d8b1b6a27'
 related:
   - "[[2026-10-04-canonical-environment-adr]]"
   - "[[2026-10-03-application-packaging-interpreter-foundation-adr]]"
@@ -147,7 +147,7 @@ Binding; accepted 2026-10-13.
      - `CADRUMO_OUTPUT_LANGUAGE` and `CADRUMO_FALLBACK_LANGUAGES`;
      - `NO_COLOR`, `CADRUMO_FORCE_COLOR` and `CADRUMO_TUI_APPEARANCE`;
      - `CADRUMO_DEADLINE_DUE_SOON_DAYS`, `CADRUMO_INBOX_ALERT_LEAD_DAYS`, `CADRUMO_CERT_WARN_DAYS` and `CADRUMO_CERT_CRITICAL_DAYS`, which are presentation thresholds only.
-   - **Runtime images.** The runtime and its workers stay strict, and the KDF child keeps its parent-defined environment (constraint 18), as `2026-10-04-runtime-manager-architecture-adr` binds ("no `CADRUMO_*` overrides"). The runtime's own presentation names reach it only as package fixed values.
+   - **Runtime images.** The runtime and its workers stay strict, and the KDF child keeps its parent-defined environment (constraint 18), as `2026-10-04-runtime-manager-architecture-adr` binds ("no `CADRUMO_*` overrides"). The runtime launch profile declares one test launch slot, the fixed clock of `2026-11-13-desktop-test-host-clock-adr`, filled only by native code compiled with the `native-automation` feature and relayed to profile workers only from the runtime's admitted state. The runtime's own presentation names reach it only as package fixed values.
    - **Kept out**, each needing its own ruling to enter:
      - secret fields (`SecretStr`: provider keys, Cl@ve credentials, passphrases, proxy password);
      - authority and endpoint names (`CADRUMO_AUTHORITY_ROOT`, the `AEAT_*` URLs and paths, `SITE_HEALTH_PROBE_URL`, the LLM provider, model and endpoint names, `CADRUMO_AUTH_PROVIDER`, `CADRUMO_STORAGE_PROVIDER_KIND`);
@@ -156,7 +156,7 @@ Binding; accepted 2026-10-13.
      - retention and size limits, which govern custody lifecycle;
      - calculation semantics (`FINANCIAL_BASE_CURRENCY`, `CADRUMO_DRAFT_FAIL_ON_WARNING`);
      - network routing (`CADRUMO_PROXY_*`). (The proxy address, user name and bypass list are declared pass-through names that the native component engine follows when it downloads, `2026-10-18-dependency-provisioning-unified-setup-adr` D6 and `2026-10-24-rust-component-provisioning-adr` constraint 10; the password setting stays out under constraint 12, and work the runtime performs keeps its strict rule.)
-     - development and test names (`CADRUMO_DEV_*`, `CADRUMO_LIVE_TESTS_*`, `CADRUMO_LLM_CONTENTION_CHECK_OVERRIDE`, `CADRUMO_PROFILE_KDF_MEASURE_CALIBRATION`);
+     - development and test names (`CADRUMO_DEV_*`, `CADRUMO_LIVE_TESTS_*`, `CADRUMO_LLM_CONTENTION_CHECK_OVERRIDE`, `CADRUMO_PROFILE_KDF_MEASURE_CALIBRATION`); the fixed-clock slot enters only under `2026-11-13-desktop-test-host-clock-adr`;
      - the severed `CADRUMO_ACTIVE_PROFILE` (rule 13).
    - **Remote-interaction set (user decision, 2026-10-13: "yes include browser and network settings as overrides"),** for the same images. These are timing and display settings only:
      - authentication: `CADRUMO_AUTH_TIMEOUT_MS`, `CADRUMO_CLAVE_MOVIL_TIMEOUT_MS`, `CADRUMO_CLAVE_PERMANENTE_TIMEOUT_MS`;
