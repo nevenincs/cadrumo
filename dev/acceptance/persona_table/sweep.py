@@ -15,6 +15,7 @@ import os
 import re
 from collections.abc import Mapping
 from datetime import UTC, date, datetime
+from decimal import Decimal, InvalidOperation
 from functools import cache
 from pathlib import Path
 
@@ -95,6 +96,7 @@ from .rows import (
     PlannedRow,
     Stage,
     TableRow,
+    canonical_figures,
     in_force,
     is_unsupported,
     not_owed_stage,
@@ -266,11 +268,14 @@ def _run_return(
     except PersonaMaterialisationError as error:
         return _refused(plan, at_calculate, error)
     rows = row_figures(world, calculated)
+    figures = _figures(calculated, rows)
     calculate, reasons = _compare(plan, values, at_calculate, calculated, rows)
     if not plan.owed:
         verify, not_owed_reason = _not_owed(materialised, plan)
         reasons += [not_owed_reason] if not_owed_reason else []
-        return TableRow.from_plan(plan, calculate, verify=verify, reason=" | ".join(reasons)[:_REASON_LIMIT])
+        return TableRow.from_plan(
+            plan, calculate, verify=verify, reason=" | ".join(reasons)[:_REASON_LIMIT], figures=figures
+        )
     revision_id = calculated.calculation_revision_id
     verify, verify_reason = _verify(world, work_unit_id, revision_id)
     export, export_detail, export_reason = _export(world, plan, values, exports, work_unit_id, revision_id)
@@ -285,7 +290,25 @@ def _run_return(
         export=export,
         reason=" | ".join(reasons)[:_REASON_LIMIT],
         export_detail=export_detail,
+        figures=figures,
     )
+
+
+def _figures(calculated: ModeloWorkCalculatePublicResultV3, rows: Mapping[str, str]) -> tuple[tuple[str, str], ...]:
+    """The non-zero casilla values the comparison reads: the public scalars with each single row's figure merged in."""
+    scalars = {item.key: restore_scalar(item.value) for item in calculated.calculation.casilla_values}
+    merged, _conflicts = merge_row_figures(scalars, rows)
+    return canonical_figures(
+        {key: _row_amount(value) if rows.get(key) is value else value for key, value in merged.items()}
+    )
+
+
+def _row_amount(figure: object) -> object:
+    """A row figure as the number it prints, so it is canonical text like a public scalar's amount."""
+    try:
+        return Decimal(str(figure))
+    except InvalidOperation:
+        return figure
 
 
 def _refusal_at_calculate(stating: ExpectedValue | None) -> str | None:
