@@ -264,6 +264,26 @@ def run_case(case: Case, selection: Selection) -> CaseSummary:
     return CaseSummary(tuple(written), stopped_at, selection.skipped)
 
 
+class _ProfileBound:
+    """A runner whose authenticated commands select one exact profile by its label, as the root option does."""
+
+    def __init__(self, runner: Runner, profile: str) -> None:
+        self._runner = runner
+        self._profile = profile
+
+    def __call__(self, args: Sequence[str], *, authenticated: bool = True) -> Mapping[str, object] | None:
+        selected = ("--profile", self._profile, *args) if authenticated else tuple(args)
+        return self._runner(selected, authenticated=authenticated)
+
+
+def bind_profile(runner: Runner, profile: str) -> Runner:
+    """``runner`` with every authenticated command aimed at the profile labelled ``profile``.
+
+    A runtime serving one profile still needs the target stated for a command that carries the passphrase.
+    """
+    return _ProfileBound(runner, profile)
+
+
 def profile_check(runner: Runner) -> tuple[bool, str, str | None]:
     """Whether the world's profile is the only one the runtime serves and loads: ``(loads, reason, profile name)``.
 
@@ -277,7 +297,7 @@ def profile_check(runner: Runner) -> tuple[bool, str, str | None]:
     names = [str(row.get("name")) for row in rows if isinstance(row, Mapping)] if isinstance(rows, list) else []
     if len(names) != 1:
         return False, f"the runtime serves {len(names)} profiles; the world holds exactly one", None
-    loaded = classify(runner((*_WORK, "list")))
+    loaded = classify(bind_profile(runner, names[0])((*_WORK, "list")))
     if loaded.kind is not Kind.OK:
         return False, f"app modelo work list: {loaded.reason or loaded.kind.value}", names[0]
     return True, f"profile {names[0]} loaded", names[0]

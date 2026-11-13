@@ -15,6 +15,7 @@ import pytest
 
 from ..cli_column.driver import (
     Case,
+    bind_profile,
     profile_check,
     run_case,
     select_rows,
@@ -348,6 +349,23 @@ def test_the_profile_check_needs_exactly_one_profile_that_loads() -> None:
     loads, why, name = profile_check(runner_for([{"name": "persona"}], refusal))
     assert (loads, name) == (False, "persona")
     assert "AUTH_FAILED" in why
+
+
+def test_an_authenticated_command_names_the_profile_and_an_unauthenticated_one_does_not() -> None:
+    seen: list[tuple[tuple[str, ...], bool]] = []
+
+    def run(args: Sequence[str], *, authenticated: bool = True) -> Mapping[str, object]:
+        seen.append((tuple(args), authenticated))
+        return _ok()
+
+    bound = bind_profile(run, "persona")
+    bound(("app", "modelo", "work", "list"))
+    bound(("config", "profile", "list"), authenticated=False)
+
+    assert seen == [
+        (("--profile", "persona", "app", "modelo", "work", "list"), True),
+        (("config", "profile", "list"), False),
+    ]
 
 
 def test_a_world_report_is_parsed_and_a_mistyped_one_refused() -> None:

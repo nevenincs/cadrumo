@@ -34,7 +34,18 @@ from dev.exit_codes import FAILED, OK
 from ..export_check import export_reason
 from ..planner import MODELOS_ENV, YEARS_ENV, persona_under_horizon, plan_rows, registry_envelope, stated_values
 from ..rows import PlannedRow
-from .driver import Case, CaseSummary, ExportCheck, Runner, Selection, Trace, profile_check, run_case, select_rows
+from .driver import (
+    Case,
+    CaseSummary,
+    ExportCheck,
+    Runner,
+    Selection,
+    Trace,
+    bind_profile,
+    profile_check,
+    run_case,
+    select_rows,
+)
 from .hygiene import Redactor, SecretLeakError, remove_secret_bearing
 from .intake import LineWriter, Outcome, persona_line
 from .runtime import (
@@ -153,10 +164,13 @@ def _drive(args: argparse.Namespace, redactor: Redactor, root: Path, log_dir: Pa
     """Materialise, build, serve and drive one case; the persona line and a line per wanted return are written."""
     writer = LineWriter(args.out, redactor)
     log = str(log_dir / "case.log")
-    storage = root / _STORAGE
     report = run_world(
-        args.snapshot, args.authority, storage, args.persona, args.horizon, (args.modelo, args.year), redactor
+        args.snapshot, args.authority, root / _STORAGE, args.persona, args.horizon, (args.modelo, args.year), redactor
     )
+    # The world sits below the directory it was given; the runtime must serve the root the world reports.
+    storage = Path(report.storage_root)
+    if not storage.is_relative_to(root.resolve()):
+        raise RuntimeSetupError("the world reported a storage root outside the disposable root")
     published = authority_generation(args.authority)
     selection = select_rows(report, modelos=args.modelo, periods=args.period)
     if published != report.authority_generation:
@@ -170,12 +184,20 @@ def _drive(args: argparse.Namespace, redactor: Redactor, root: Path, log_dir: Pa
         loads, why, profile = profile_check(runner)
         reason = seeding_reason(report, profile, published, selection) if loads else why
         writer.write(persona_line(tree=args.tree, persona=args.persona, loads=loads, reason=reason, log=log))
-        if not loads:
+        if not loads or profile is None:
             return CaseSummary()
         exports = root / _EXPORTS
         exports.mkdir()
         trace = _Trace(log_dir / "case.log", redactor)
-        case = build_case(args, report=report, runner=runner, exports=exports, writer=writer, log=log, trace=trace)
+        case = build_case(
+            args,
+            report=report,
+            runner=bind_profile(runner, profile),
+            exports=exports,
+            writer=writer,
+            log=log,
+            trace=trace,
+        )
         return run_case(case, selection)
 
 
