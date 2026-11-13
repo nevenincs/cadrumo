@@ -1,0 +1,67 @@
+# LIS DA 15ª.1 limits on the BIN compensation of a contribuyente whose INCN of the 12
+# months before the period starts is at least 20 millones de euros: 50 per cent below 60
+# millones and 25 per cent from 60 millones, in place of the 70 per cent of art. 26.1
+# (manuals/sociedades/2024 L435-449, L14289-14300). Declared again here because the 2023
+# edition removes the members its manual prints without them (the Tribunal Constitucional
+# annulled DA 15ª, manuals/sociedades/2023 L575-592); Ley 7/2024 added DA 15ª back for periods
+# starting from 2024-01-01 that had not concluded on 2024-12-22.
+
+[[revisions."2024".parameters]]
+id = "is.modelo-200.bin-limite-da15-tramo-medio-incn-minimo"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-27-2014:art-26", "ley-27-2014:da-15"]
+
+[[revisions."2024".parameters.source_citations]]
+source_ref = "aeat-modelo-200-manual-2024"
+required_text = ["pero inferior a 60 millones de euros"]
+
+[[revisions."2024".parameters.values]]
+value = "20000000"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+
+[[revisions."2024".parameters]]
+id = "is.modelo-200.bin-limite-da15-tramo-medio-porcentaje"
+data_type = "ratio"
+unit = "percent"
+legal_refs = ["ley-27-2014:art-26", "ley-27-2014:da-15"]
+
+[[revisions."2024".parameters.source_citations]]
+source_ref = "aeat-modelo-200-manual-2024"
+required_text = ["sustituiran el limite del 70 por ciento por los siguientes"]
+
+[[revisions."2024".parameters.values]]
+value = "50"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+
+[[revisions."2024".parameters]]
+id = "is.modelo-200.bin-limite-da15-tramo-alto-incn-minimo"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-27-2014:art-26", "ley-27-2014:da-15"]
+
+[[revisions."2024".parameters.source_citations]]
+source_ref = "aeat-modelo-200-manual-2024"
+required_text = ["al menos de 60 millones de euros"]
+
+[[revisions."2024".parameters.values]]
+value = "60000000"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+
+[[revisions."2024".parameters]]
+id = "is.modelo-200.bin-limite-da15-tramo-alto-porcentaje"
+data_type = "ratio"
+unit = "percent"
+legal_refs = ["ley-27-2014:art-26", "ley-27-2014:da-15"]
+
+[[revisions."2024".parameters.source_citations]]
+source_ref = "aeat-modelo-200-manual-2024"
+required_text = ["sustituiran el limite del 70 por ciento por los siguientes"]
+
+[[revisions."2024".parameters.values]]
+value = "25"
+date_axis = "filing_period"
+valid_from = 2024-01-01

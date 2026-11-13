@@ -58,6 +58,10 @@ from ..prorrata_register.seed import (
     prior_definitiva_source_coordinates,
 )
 from ..prorrata_register.service import require_prorrata_register_coordinates_current
+from ..prorrata_register.settlement import (
+    ProrrataSettlementEspecialContinuationError,
+    settled_prorrata_register,
+)
 from .action_errors import ModeloPreconditionErrorMixin
 from .preconditions import ModeloPreconditionFailure, build_modelo_precondition_failure_for_scenario
 
@@ -77,6 +81,11 @@ _VERIFY_LEAF: Final = "modelo.work.verify"
 _EVIDENCE_ID: Final = "modelo.work.verify.prorrata_seed"
 _PRORRATA_SEED_LEGAL_REFS: Final[tuple[str, ...]] = ("ley-37-1992:art-104", "ley-37-1992:art-105")
 _PRORRATA_UNSEEDED_LEGAL_REFS: Final[tuple[str, ...]] = ("ley-37-1992:art-102", *_PRORRATA_SEED_LEGAL_REFS)
+_PRORRATA_SETTLEMENT_LEGAL_REFS: Final[tuple[str, ...]] = ("ley-37-1992:art-105",)
+_PRORRATA_SETTLEMENT_SECTORS_LOCALE_KEY: Final = "application.modelo.findings.prorrata_settlement_sector_entries"
+_PRORRATA_SETTLEMENT_ESPECIAL_CONTINUATION_LOCALE_KEY: Final = (
+    "application.modelo.findings.prorrata_settlement_especial_continuation"
+)
 
 
 class ModeloProrrataSeedSupersededError(ModeloPreconditionErrorMixin, ModeloError):
@@ -103,9 +112,92 @@ def prorrata_seed_verification_findings(
     if target.state is not CalculationRevisionState.BORRADOR or not _gate_applies(work_unit):
         return ()
     register = require_prorrata_register_coordinates_current(prorrata_register_repository.load(), operation=operation)
+    settlement = _settlement_coverage_finding(work_unit, register, target, operation=operation)
     if register.sector_definitions:
+        return settlement
+    return (
+        *settlement,
+        *_whole_entity_findings(work_unit, target, register, observation_repository, operation=operation),
+    )
+
+
+def _settlement_coverage_finding(
+    work_unit: WorkUnit,
+    register: ProrrataRegister,
+    target: CalculationRevision,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> tuple[ProrrataSeedVerificationFinding, ...]:
+    """Refuse a year's last return whose settled register cannot cover the year.
+
+    The export of that return reads the register as its filing will leave it
+    (LIVA art. 105.Cuatro); a register that stays without an explicit entry for
+    every declared scope, or that would continue an especial regime nobody
+    declared again (RIVA art. 28.1.2º), cannot be exported or filed.
+    """
+    try:
+        settled = settled_prorrata_register(register, revision=target, work_unit=work_unit, operation=operation)
+    except ProrrataSettlementEspecialContinuationError:
+        return (
+            _settlement_finding(
+                work_unit,
+                target,
+                scenario="especial_continuation",
+                finding=ModeloVerificationFinding(
+                    kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+                    severity=ModeloVerificationFindingSeverity.BLOCKING,
+                    message_locale_key=_PRORRATA_SETTLEMENT_ESPECIAL_CONTINUATION_LOCALE_KEY,
+                    message_facts={
+                        "filing_year": work_unit.filing_year,
+                        "prior_filing_year": work_unit.filing_year - 1,
+                    },
+                    legal_refs=_PRORRATA_SETTLEMENT_LEGAL_REFS,
+                ),
+            ),
+        )
+    ejercicio = work_unit.filing_year
+    if settled is None or settled.has_complete_current_entry_coverage(ejercicio):
         return ()
-    return _whole_entity_findings(work_unit, target, register, observation_repository, operation=operation)
+    missing = sorted(
+        set(settled.sector_ids()) - {entry.sector_id for entry in settled.entries_for_ejercicio(ejercicio)}
+    )
+    return (
+        _settlement_finding(
+            work_unit,
+            target,
+            scenario="sector_entries",
+            finding=ModeloVerificationFinding(
+                kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+                severity=ModeloVerificationFindingSeverity.BLOCKING,
+                message_locale_key=_PRORRATA_SETTLEMENT_SECTORS_LOCALE_KEY,
+                message_facts={"filing_year": ejercicio, "sector_ids": ", ".join(missing)},
+                legal_refs=_PRORRATA_SETTLEMENT_LEGAL_REFS,
+            ),
+        ),
+    )
+
+
+def _settlement_finding(
+    work_unit: WorkUnit,
+    target: CalculationRevision,
+    *,
+    scenario: str,
+    finding: ModeloVerificationFinding,
+) -> ProrrataSeedVerificationFinding:
+    return ProrrataSeedVerificationFinding(
+        finding=finding,
+        failure=build_modelo_precondition_failure_for_scenario(
+            subject_leaf_key=_VERIFY_LEAF,
+            scenario_id=f"{_VERIFY_LEAF}.prorrata_settlement.{scenario}",
+            evidence_id="modelo.work.verify.prorrata_settlement",
+            evidence_values={
+                "calculation_revision_id": target.calculation_revision_id,
+                "work_unit_id": work_unit.work_unit_id,
+                "ejercicio": work_unit.filing_year,
+            },
+            provenance=ActionEvidenceProvenance.PERSISTED_STATE,
+        ),
+    )
 
 
 def _whole_entity_findings(

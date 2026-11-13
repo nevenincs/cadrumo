@@ -2053,6 +2053,8 @@ errors:
     transaction_figures_without_business: A Personal movement has no business part,
       so it cannot carry business figures such as a spending category, taxable base
       or IVA. Classify it as Business or Mixed to record them.
+    transaction_iva_rate_not_fraction: 'An IVA rate is written as a decimal fraction,
+      not as a percentage: you entered {value}. Write 21% IVA as 0.21.'
     tui_modelo_lifecycle_action_unavailable: The selected Modelo lifecycle action
       is unavailable.
     unsupported_currency: The currency code provided is not supported.

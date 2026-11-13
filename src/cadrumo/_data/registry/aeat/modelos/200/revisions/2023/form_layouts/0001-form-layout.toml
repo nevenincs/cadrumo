@@ -7,7 +7,7 @@ revision_id = "2023"
 seed_source = "design_box_number"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "7859d3bdb2ca912e045b5e45e9dc00c369e1de7ad2dc10e7f9e67771735ed8ec"
+source_state_digest = "1019951d60818cbba98ce408cabb7e070f524a971bf912e737a358e7a2926d1e"
 design_sources = [
     { source_ref = "aeat-dr-200-2023", sha256 = "60ee0cb4ab7aa4fa2ae3dc61cb22f6a1a0797d1626a28d7bba013b44375a19aa" },
 ]
@@ -504,7 +504,6 @@ placements = [
     { casilla_id = "00542", kind = "on_form", box_number = "00542" },
     { casilla_id = "00543", kind = "on_form", box_number = "00543" },
     { casilla_id = "00544", kind = "on_form", box_number = "00544" },
-    { casilla_id = "00545", kind = "on_form", box_number = "00545" },
     { casilla_id = "00546", kind = "on_form", box_number = "00546" },
     { casilla_id = "00548", kind = "on_form", box_number = "00548" },
     { casilla_id = "00549", kind = "on_form", box_number = "00549" },
@@ -1153,6 +1152,7 @@ placements = [
     { casilla_id = "01497", kind = "on_form", box_number = "01497" },
     { casilla_id = "01498", kind = "on_form", box_number = "01498" },
     { casilla_id = "01499", kind = "on_form", box_number = "01499" },
+    { casilla_id = "01509", kind = "on_form", box_number = "01509" },
     { casilla_id = "01511", kind = "on_form", box_number = "01511" },
     { casilla_id = "01512", kind = "on_form", box_number = "01512" },
     { casilla_id = "01513", kind = "on_form", box_number = "01513" },
@@ -2655,6 +2655,7 @@ placements = [
     { casilla_id = "DP200010:00619", kind = "on_form", box_number = "00619" },
     { casilla_id = "DP200011:00417", kind = "on_form", box_number = "00417" },
     { casilla_id = "DP200011:00418", kind = "on_form", box_number = "00418" },
+    { casilla_id = "DP200011:00545", kind = "on_form", box_number = "00545" },
     { casilla_id = "DP200011:00547", kind = "on_form", box_number = "00547" },
     { casilla_id = "DP200011:00558", kind = "on_form", box_number = "00558" },
     { casilla_id = "DP200011:00569", kind = "on_form", box_number = "00569" },
@@ -2687,6 +2688,7 @@ placements = [
     { casilla_id = "DP200013:00314", kind = "on_form", box_number = "00314" },
     { casilla_id = "DP200013:00417", kind = "on_form", box_number = "00417" },
     { casilla_id = "DP200013:00418", kind = "on_form", box_number = "00418" },
+    { casilla_id = "DP200014:00545", kind = "on_form", box_number = "00545" },
     { casilla_id = "DP200014:00547", kind = "on_form", box_number = "00547" },
     { casilla_id = "DP200014:00550", kind = "on_form", box_number = "00550" },
     { casilla_id = "DP200014:00552", kind = "on_form", box_number = "00552" },
@@ -2775,6 +2777,7 @@ placements = [
     { casilla_id = "DP200041:00399", kind = "on_form", box_number = "00399" },
     { casilla_id = "DP200042:00417", kind = "on_form", box_number = "00417" },
     { casilla_id = "DP200042:00418", kind = "on_form", box_number = "00418" },
+    { casilla_id = "DP200042:00545", kind = "on_form", box_number = "00545" },
     { casilla_id = "DP200042:00547", kind = "on_form", box_number = "00547" },
     { casilla_id = "DP200042:00558", kind = "on_form", box_number = "00558" },
     { casilla_id = "DP200042:00562", kind = "on_form", box_number = "00562" },
@@ -3868,7 +3871,7 @@ blocks = [
     { kind = "field", id = "field", casilla_id = "00542" },
     { kind = "field", id = "field-2", casilla_id = "00543" },
     { kind = "field", id = "field-3", casilla_id = "00544" },
-    { kind = "field", id = "field-4", casilla_id = "00545" },
+    { kind = "field", id = "field-4", casilla_id = "DP200011:00545" },
     { kind = "field", id = "field-5", casilla_id = "00546" },
     { kind = "field", id = "field-6", casilla_id = "DP200011:00547" },
     { kind = "grid", id = "grid-2", columns = [{ key = "resultado-del-ejercicio", heading_key = "modelo.schema.200.form.column.resultado-del-ejercicio.heading", official_heading = "Resultado del ejercicio" }, { key = "dividendo-a-cuenta", heading_key = "modelo.schema.200.form.column.dividendo-a-cuenta.heading", official_heading = "Dividendo a cuenta" }, { key = "otros-instrumentos-patrimonio-neto", heading_key = "modelo.schema.200.form.column.otros-instrumentos-patrimonio-neto.heading", official_heading = "Otros instrumentos patrimonio neto" }, { key = "ajustes-por-cambios-de-valor", heading_key = "modelo.schema.200.form.column.ajustes-por-cambios-de-valor.heading", official_heading = "Ajustes por cambios de valor" }, { key = "subvenciones-donaciones-y-legados-recibidos", heading_key = "modelo.schema.200.form.column.subvenciones-donaciones-y-legados-recibidos.heading", official_heading = "Subvenciones, donaciones y legados recibidos" }, { key = "total", heading_key = "modelo.form.column.total", official_heading = "Total" }], rows = [{ key = "conversion-de-pasivos-en-patrim-neto", heading_key = "modelo.schema.200.form.row.conversion-de-pasivos-en-patrim-neto.heading", official_heading = "Conversión de pasivos en patrim. neto", cells = [{ kind = "casilla", casilla_id = "00555" }, { kind = "casilla", casilla_id = "00556" }, { kind = "casilla", casilla_id = "00557" }, { kind = "casilla", casilla_id = "DP200011:00558" }, { kind = "casilla", casilla_id = "00560" }, { kind = "casilla", casilla_id = "00561" }] }] },
@@ -4045,6 +4048,15 @@ heading_key = "modelo.schema.200.form.section.liquidacion-iii-base-imponible-sol
 official_heading = "Liquidación III - Base imponible - Sólo entidades ZEC"
 blocks = [
     { kind = "field", id = "field", casilla_id = "00559" },
+]
+
+[[revisions.2023.form_layouts.pages.sections]]
+id = "liquidacion-iii-base-imponible-2"
+heading_key = "modelo.schema.200.form.section.liquidacion-iii-base-imponible.heading"
+official_heading = "Liquidación III - Base imponible"
+blocks = [
+    { kind = "field", id = "field", casilla_id = "DP200014:00545" },
+    { kind = "field", id = "field-2", casilla_id = "01509" },
 ]
 
 [[revisions.2023.form_layouts.pages.sections]]
@@ -9376,20 +9388,21 @@ official_heading = "Entidades aseguradoras - Estado cambios patrimonio propio (I
 blocks = [
     { kind = "field", id = "field", casilla_id = "DP200042:00417" },
     { kind = "field", id = "field-2", casilla_id = "DP200042:00418" },
-    { kind = "field", id = "field-3", casilla_id = "DP200042:00547" },
-    { kind = "field", id = "field-4", casilla_id = "DP200042:00558" },
-    { kind = "field", id = "field-5", casilla_id = "DP200042:00562" },
-    { kind = "field", id = "field-6", casilla_id = "DP200042:00569" },
-    { kind = "field", id = "field-7", casilla_id = "DP200042:00570" },
-    { kind = "field", id = "field-8", casilla_id = "DP200042:00571" },
-    { kind = "field", id = "field-9", casilla_id = "DP200042:00572" },
-    { kind = "field", id = "field-10", casilla_id = "DP200042:00573" },
-    { kind = "field", id = "field-11", casilla_id = "DP200042:00575" },
-    { kind = "field", id = "field-12", casilla_id = "DP200042:00582" },
-    { kind = "field", id = "field-13", casilla_id = "DP200042:00583" },
-    { kind = "field", id = "field-14", casilla_id = "DP200042:00584" },
-    { kind = "field", id = "field-15", casilla_id = "DP200042:00585" },
-    { kind = "field", id = "field-16", casilla_id = "DP200042:00588" },
+    { kind = "field", id = "field-3", casilla_id = "DP200042:00545" },
+    { kind = "field", id = "field-4", casilla_id = "DP200042:00547" },
+    { kind = "field", id = "field-5", casilla_id = "DP200042:00558" },
+    { kind = "field", id = "field-6", casilla_id = "DP200042:00562" },
+    { kind = "field", id = "field-7", casilla_id = "DP200042:00569" },
+    { kind = "field", id = "field-8", casilla_id = "DP200042:00570" },
+    { kind = "field", id = "field-9", casilla_id = "DP200042:00571" },
+    { kind = "field", id = "field-10", casilla_id = "DP200042:00572" },
+    { kind = "field", id = "field-11", casilla_id = "DP200042:00573" },
+    { kind = "field", id = "field-12", casilla_id = "DP200042:00575" },
+    { kind = "field", id = "field-13", casilla_id = "DP200042:00582" },
+    { kind = "field", id = "field-14", casilla_id = "DP200042:00583" },
+    { kind = "field", id = "field-15", casilla_id = "DP200042:00584" },
+    { kind = "field", id = "field-16", casilla_id = "DP200042:00585" },
+    { kind = "field", id = "field-17", casilla_id = "DP200042:00588" },
 ]
 
 [[revisions.2023.form_layouts.pages.sections]]

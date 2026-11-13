@@ -112,6 +112,9 @@ _CASILLA_CUOTA_DIFERENCIAL: CasillaId = validated_casilla_id(
     surface="_CASILLA_CUOTA_DIFERENCIAL",
 )
 _RELATION_PREFILL_SOURCE = "relation_prefill"
+# The rate reads the turnover of the preceding tax period, which a first ejercicio
+# does not have; LIS art. 101.2 refers it to the first period, so the filer states it.
+_FIRST_PERIOD_TURNOVER = {"modelo-200-incn-periodo-impositivo-anterior": Decimal("500000")}
 
 
 def _seed_first_year_modalidad_cuota_profile() -> None:
@@ -182,7 +185,7 @@ def _calculate_m200(
     ) as _calculation_ports_173:
         return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
-            binding_values={},
+            binding_values=_FIRST_PERIOD_TURNOVER,
             ports=_calculation_ports_173,
             clock=_T1,
         )

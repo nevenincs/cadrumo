@@ -70,6 +70,7 @@ from ..export_periodo_impositivo import (
     periodo_impositivo_from_facts,
     periodo_impositivo_start_from_facts,
 )
+from .incn_periodo_anterior_support import nothing_held
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -347,6 +348,7 @@ def test_a_sociedad_stating_every_page_01_fact_exports_its_1p_instalment(
             filing_year=year,
             art_40_3_elected=False,
             operation=operation,
+            incn_periodo_anterior=nothing_held(operation, periodo.start.year),
         )
 
     if not _publishes_rates(operation, year):

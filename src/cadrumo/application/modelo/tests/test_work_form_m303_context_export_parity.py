@@ -378,6 +378,23 @@ def _revision(snapshot: RegistrySnapshot, work_id: str, evidence: FilingInstance
     )
 
 
+def _work_unit(
+    snapshot: RegistrySnapshot, work_id: str, period: Period, revision: CalculationRevision | None
+) -> WorkUnit:
+    return WorkUnit(
+        work_unit_id=work_id,
+        bucket_id=_BUCKET,
+        modelo="303",
+        filing_year=period.filing_year,
+        period=period,
+        revision_id=snapshot.revision.id,
+        name="Synthetic declaration",
+        created_at=_NOW,
+        updated_at=_NOW,
+        current_calculation_revision_id=None if revision is None else revision.calculation_revision_id,
+    )
+
+
 def _load_form(
     operation: PinnedAuthorityOperation,
     year: int,
@@ -392,18 +409,7 @@ def _load_form(
         bucket_id=_BUCKET, modelo="303", filing_year=year, period=period, revision_id=snapshot.revision.id
     )
     revision = None if evidence is None else _revision(snapshot, work_id, evidence)
-    unit = WorkUnit(
-        work_unit_id=work_id,
-        bucket_id=_BUCKET,
-        modelo="303",
-        filing_year=year,
-        period=period,
-        revision_id=snapshot.revision.id,
-        name="Synthetic declaration",
-        created_at=_NOW,
-        updated_at=_NOW,
-        current_calculation_revision_id=None if revision is None else revision.calculation_revision_id,
-    )
+    unit = _work_unit(snapshot, work_id, period, revision)
     work_repository = cast(
         WorkUnitCatalogueRepositoryProtocol, cast(object, _ReadCatalogue(WorkUnitCatalogue(work_units={work_id: unit})))
     )
@@ -477,6 +483,16 @@ def _producer_snapshot(
     identity = resolve_export_identity(bucket_id=_BUCKET, operation=operation, profile_record=record)
     assert identity is not None
     presenter, taxpayer = identity
+    period = evidence.m303.period
+    registry_snapshot = operation.reading_snapshot("303", filing_year=period.filing_year, period=period.registry_token)
+    work_id = derive_work_unit_id(
+        bucket_id=_BUCKET,
+        modelo="303",
+        filing_year=period.filing_year,
+        period=period,
+        revision_id=registry_snapshot.revision.id,
+    )
+    revision = _revision(registry_snapshot, work_id, evidence)
     return build_filing_producer_snapshot(
         modelo=Modelo("303"),
         taxpayer_tax_id=_TAX_ID,
@@ -490,9 +506,11 @@ def _producer_snapshot(
         charge_account=None,
         m303_filing_facts=resolve_m303_filing_facts_from_arrivals(
             bucket_id=_BUCKET,
-            period=evidence.m303.period,
+            period=period,
             evidence=evidence,
             arrivals=arrivals,
+            revision=revision,
+            work_unit=_work_unit(registry_snapshot, work_id, period, revision),
             operation=operation,
         ),
     )

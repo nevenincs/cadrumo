@@ -28,6 +28,7 @@ from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.casilla_id import CasillaId
 from ...core.hashing import content_hash_hex
 from ...core.time.clock import now as clock_now
+from ...domain.calculations.registry.binding_prior_value_rules import set_aside_declaring_binding_ids
 from ...domain.calculations.registry.binding_temporal import binding_applies_to_period
 from ...domain.calculations.registry.casilla_membership import row_field_template_records_by_casilla
 from ...domain.calculations.registry.errors import RegistryValidationError
@@ -399,7 +400,12 @@ def _offered_attestable_binding_ids(
     filing_catalogue: ModeloRecordCatalogue | None,
     work_catalogue: WorkUnitCatalogue,
 ) -> frozenset[BindingId]:
-    """The carry bindings a stated figure may be offered for; none without the sources that show the gap."""
+    """The carry bindings a stated figure may be offered for; none without the sources that show the gap.
+
+    A carry that declares boxes setting its held return aside is offered even
+    over a held return, since the same edit may mark the box; the edit itself
+    admits the statement only while a declared box is marked.
+    """
     if observation_repository is None or filing_catalogue is None:
         return frozenset[BindingId]()
     return attestable_carry_binding_ids(
@@ -408,7 +414,7 @@ def _offered_attestable_binding_ids(
         observation_repository=observation_repository,
         filing_catalogue=filing_catalogue,
         work_catalogue=work_catalogue,
-    )
+    ) | set_aside_declaring_binding_ids(snapshot.revision)
 
 
 def admit_modelo_edit_baseline(

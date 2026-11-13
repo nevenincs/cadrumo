@@ -168,7 +168,19 @@ def validate_binding_registration_section(*, prefix: str, revision: ModeloRevisi
     failures.extend(f"{prefix}: {failure}" for failure in credit_borrador_participation_failures(revision))
     failures.extend(f"{prefix}: {failure}" for failure in credit_reconciliation_revision_failures(revision))
     failures.extend(unreferenced_binding_failures(prefix=prefix, revision=revision))
+    failures.extend(_set_aside_mark_failures(prefix=prefix, revision=revision))
     return failures
+
+
+def _set_aside_mark_failures(*, prefix: str, revision: ModeloRevision) -> list[str]:
+    """Refuse a set-aside mark that names a box the revision does not declare."""
+    declared = {casilla.id for casilla in revision.casillas}
+    return [
+        f"{prefix}: binding {binding.id!r} held_source_set_aside_when_marked names undeclared casilla {mark!r}"
+        for binding in revision.bindings
+        for mark in binding.held_source_set_aside_when_marked or ()
+        if mark not in declared
+    ]
 
 
 def binding_temporal_support_failures(

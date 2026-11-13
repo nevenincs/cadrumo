@@ -26,7 +26,8 @@ from ..operations.next_step import OperationNextStepErrorMixin, OperationNextSte
 from .calculation_input_refusal_doors import missing_input_listing_verdict
 from .edit_admission import permitted_binding_entry
 from .edit_models import ModeloEditBindingIntentKind, ModeloEditWritableBindingOverrideSurfaceEntryV1
-from .preconditions import build_modelo_precondition_failure_for_scenario
+from .precondition_action_bindings import AlternativeActionArguments
+from .preconditions import ATTEST_PRIOR_VALUE_ACTION_ID, build_modelo_precondition_failure_for_scenario
 from .printed_boxes import PrintedBoxes, first_printed_dependent
 from .projection_next_steps import open_work_step
 from .reconciliation_sources import ReconciliationSourceNeed
@@ -444,6 +445,7 @@ def prior_period_unfiled(
 
 _INPUT_REQUIRED_SCENARIO_ID: Final[str] = "modelo.work.calculate.input.binding_unanswered"
 _OVERRIDE_REQUIRED_SCENARIO_ID: Final[str] = "modelo.work.calculate.input.override_unanswered"
+_ATTESTABLE_OVERRIDE_REQUIRED_SCENARIO_ID: Final[str] = "modelo.work.calculate.input.override_unanswered_attestable"
 _INPUT_REQUIRED_MESSAGE_LOCALE_KEY: Final[str] = "application.modelo.errors.input_required"
 _INPUT_REQUIRED_UNPRINTED_MESSAGE_LOCALE_KEY: Final[str] = "application.modelo.errors.input_required_unprinted"
 _UNOBSERVED_MESSAGE_LOCALE_KEY: Final[str] = "application.modelo.errors.previous_filing_unobserved"
@@ -511,6 +513,7 @@ def input_required(
     snapshot: RegistrySnapshot,
     boxes: PrintedBoxes,
     overridable: bool = False,
+    attestable: bool = False,
 ) -> ModeloWorkMissingInputError:
     """The refusal for ``missing`` naming the input the operator supplies and the doors that lead to it.
 
@@ -521,8 +524,10 @@ def input_required(
     input's value (``overridable``, from :func:`override_admitted`), the door
     is the override bound to this work unit and input, and the value is the
     operator's to give; otherwise it is the declared binding listing for this
-    modelo, year and period. The next step opens the work unit whose form
-    takes the value.
+    modelo, year and period. When the input is also a carry whose earlier
+    return the application holds nothing of (``attestable``), the filer's
+    statement of that return's figure is offered after the override. The next
+    step opens the work unit whose form takes the value.
 
     ``snapshot`` is the :class:`RegistrySnapshot` it uses.
     """
@@ -533,7 +538,14 @@ def input_required(
         for key in ("source_modelo", "source_filing_year", "source_period")
         if (value := context.get(key)) is not None
     }
-    scenario_id = _OVERRIDE_REQUIRED_SCENARIO_ID if overridable else _INPUT_REQUIRED_SCENARIO_ID
+    stated_figure_door = overridable and attestable
+    scenario_id = (
+        _ATTESTABLE_OVERRIDE_REQUIRED_SCENARIO_ID
+        if stated_figure_door
+        else _OVERRIDE_REQUIRED_SCENARIO_ID
+        if overridable
+        else _INPUT_REQUIRED_SCENARIO_ID
+    )
     failure = build_modelo_precondition_failure_for_scenario(
         subject_leaf_key=_PRIOR_CARRY_SUBJECT_LEAF_KEY,
         scenario_id=scenario_id,
@@ -559,6 +571,23 @@ def input_required(
         ),
         # The value is the operator's to state; the door never supplies one.
         missing_action_arguments=("value",) if overridable else (),
+        alternative_actions=(
+            (
+                AlternativeActionArguments(
+                    action_id=ATTEST_PRIOR_VALUE_ACTION_ID,
+                    action_argument_values={
+                        "work_unit_id": work_unit.work_unit_id,
+                        "modelo": str(work_unit.modelo),
+                        "year": work_unit.filing_year,
+                        "period": work_unit.period.registry_token,
+                        "binding_id": missing.binding_id,
+                    },
+                    missing_action_arguments=("value",),
+                ),
+            )
+            if stated_figure_door
+            else ()
+        ),
     )
     return ModeloWorkMissingInputError(
         missing,
