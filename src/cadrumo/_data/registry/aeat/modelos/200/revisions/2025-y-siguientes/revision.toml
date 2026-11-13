@@ -21784,7 +21784,7 @@ position = 3469
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "formulas"
 selector = {revision = "2024", id = "modelo-200-base-imponible"}
-sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["compensacion de bases imponibles negativas", "reserva de capitalizacion"]}], source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["el importe a consignar en la casilla [00552] «Base imponible» de la página 14 del modelo 200", "[00552] = [00550] - [01032] - [00547]", "la cuantía precedida del signo menos (-) tanto en dicha casilla [00550] como en la casilla [00552]"]}], source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]}
 sequence_removals = {source_citations = [0], source_refs = [0, 1]}
 
 [[revisions."2025-y-siguientes".family_overrides]]
@@ -21796,13 +21796,13 @@ sequence_removals = {source_citations = [0], source_refs = [0, 1]}
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "formulas"
 selector = {revision = "2024", id = "modelo-200-base-imponible-previa"}
-sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["correcciones al resultado de la cuenta de perdidas y ganancias", "base imponible antes de la compensacion"]}], source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["[00550] = [00501] + ([00417] - [00418])"]}], source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]}
 sequence_removals = {source_citations = [0], source_refs = [0, 1]}
 
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "formulas"
 selector = {revision = "2024", id = "modelo-200-bin-aplicada-maxima"}
-sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["bases imponibles negativas"]}], source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["con el límite del 70 por ciento de la base imponible previa a la aplicación de la reserva de capitalización y a su compensación", "sustituirán el límite del 70 por ciento por los siguientes", "se podrán compensar en el período impositivo bases imponibles negativas hasta el importe de 1 millón de euros"]}], source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]}
 sequence_removals = {source_citations = [0], source_refs = [0, 1]}
 
 [[revisions."2025-y-siguientes".family_overrides]]
@@ -21847,7 +21847,7 @@ sequence_removals = {source_citations = [0], source_refs = [0, 1]}
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "formulas"
 selector = {revision = "2024", id = "modelo-200-cuota-integra"}
-sequence_additions = {legal_refs = ["ley-27-2014:dt-44"], source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["cuota integra (casilla 00562)", "tipo de gravamen"]}], source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]}
+sequence_additions = {legal_refs = ["ley-27-2014:dt-44"], source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["el tipo de gravamen de la casilla [00558]", "[00562] = [01330] x [00558]/100", "El contenido de la casilla [00562] «Cuota íntegra» siempre deberá ser una cantidad positiva o cero", "Por la parte de base imponible comprendida entre 0 y 50.000 euros, el tipo del 21 por ciento.", "Por la parte de base imponible restante, el tipo del 22 por ciento", "Entidades de Reducida Dimensión (art. 101 LIS) 24 por 100"]}], source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]}
 sequence_removals = {source_citations = [0], source_refs = [0, 1]}
 sequence_order = {legal_refs = [0, 1, 2, 4, 3]}
 fields = { expression = { args = [
@@ -21964,7 +21964,7 @@ sequence_removals = {source_citations = [0], source_refs = [0, 1]}
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "formulas"
 selector = {revision = "2024", id = "modelo-200-tipo-gravamen-por-forma-juridica"}
-sequence_additions = {legal_refs = ["ley-27-2014:dt-44", "ley-27-2014:art-29-2025"], source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["tipo de gravamen", "cuota integra (casilla 00562)", "Resto Base Imponible 22 por 100"]}], source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]}
+sequence_additions = {legal_refs = ["ley-27-2014:dt-44", "ley-27-2014:art-29-2025"], source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["se hará constar el tipo de gravamen que corresponda de acuerdo con el régimen de tributación aplicable a la entidad declarante", "Tipo general 25 por 100", "Entidades de nueva creación del artículo 29.1 de la LIS que realicen actividades", "tengan la consideración de entidad patrimonial) 15 por 100", "Entidades INCN < 1 millón de euros en el período impositivo inmediato anterior", "Hasta 50.000 euros 21 por 100", "Resto Base Imponible 22 por 100", "Entidades de Reducida Dimensión (art. 101 LIS) 24 por 100", "será el que corresponda a los resultados cooperativos: 20 por ciento"]}], source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]}
 sequence_removals = {legal_refs = [3], source_citations = [0], source_refs = [0, 1]}
 sequence_order = {legal_refs = [0, 1, 2, 4, 5, 3]}
 fields = { expression = { op = "multiply", args = [
@@ -22172,38 +22172,38 @@ sequence_removals = {source_refs = [0, 1]}
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "parameters"
 selector = {revision = "2024", id = "is.modelo-200.cuota-integra-bracket-cooperative-protected"}
-sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["tipo de gravamen"]}], source_refs = ["aeat-modelo-200-manual-2025"]}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["será el que corresponda a los resultados cooperativos: 20 por ciento"]}], source_refs = ["aeat-modelo-200-manual-2025"]}
 sequence_removals = {source_citations = [0], source_refs = [0]}
 
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "parameters"
 selector = {revision = "2024", id = "is.modelo-200.cuota-integra-bracket-general"}
-sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["tipo de gravamen"]}], source_refs = ["aeat-modelo-200-manual-2025"]}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["Tipo general 25 por 100"]}], source_refs = ["aeat-modelo-200-manual-2025"]}
 sequence_removals = {source_citations = [0], source_refs = [0]}
 
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "parameters"
 selector = {revision = "2024", id = "is.modelo-200.cuota-integra-bracket-new-entity"}
-sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["tipo de gravamen"]}], source_refs = ["aeat-modelo-200-manual-2025"]}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["Entidades de nueva creación del artículo 29.1 de la LIS que realicen actividades", "tengan la consideración de entidad patrimonial) 15 por 100"]}], source_refs = ["aeat-modelo-200-manual-2025"]}
 sequence_removals = {source_citations = [0], source_refs = [0]}
 
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "parameters"
 selector = {revision = "2024", id = "is.modelo-200.cuota-integra-bracket-non-profit-special-regime"}
-sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["tipo de gravamen"]}], source_refs = ["aeat-modelo-200-manual-2025"]}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["Entidades a las que sea de aplicación el régimen fiscal establecido en la Ley 49/2002 10 por 100"]}], source_refs = ["aeat-modelo-200-manual-2025"]}
 sequence_removals = {source_citations = [0], source_refs = [0]}
 
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "parameters"
 selector = {revision = "2024", id = "is.modelo-200.incn-umbral-microempresa"}
-sequence_additions = {legal_refs = ["ley-27-2014:dt-44"], source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["tipo de gravamen"]}], source_refs = ["aeat-modelo-200-manual-2025"]}
+sequence_additions = {legal_refs = ["ley-27-2014:dt-44"], source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["Entidades INCN < 1 millón de euros en el período impositivo inmediato anterior"]}], source_refs = ["aeat-modelo-200-manual-2025"]}
 sequence_removals = {legal_refs = [1], source_citations = [0], source_refs = [0]}
 sequence_order = {legal_refs = [1, 0]}
 
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "parameters"
 selector = {revision = "2024", id = "is.modelo-200.tipo-gravamen-cooperative-protected"}
-sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["tipo de gravamen"]}], source_refs = ["aeat-modelo-200-manual-2025"]}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["será el que corresponda a los resultados cooperativos: 20 por ciento"]}], source_refs = ["aeat-modelo-200-manual-2025"]}
 sequence_removals = {source_citations = [0], source_refs = [0]}
 
 [[revisions."2025-y-siguientes".family_overrides]]
@@ -22240,31 +22240,31 @@ sequence_removals = {source_citations = [0], source_refs = [0]}
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "parameters"
 selector = {revision = "2024", id = "is.modelo-200.tipo-gravamen-general"}
-sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["tipo de gravamen", "cuota integra"]}], source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["Tipo general 25 por 100"]}], source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]}
 sequence_removals = {source_citations = [0], source_refs = [0, 1]}
 
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "parameters"
 selector = {revision = "2024", id = "is.modelo-200.tipo-gravamen-new-entity-first-2-years"}
-sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["tipo de gravamen"]}], source_refs = ["aeat-modelo-200-manual-2025"]}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["Entidades de nueva creación del artículo 29.1 de la LIS que realicen actividades", "tengan la consideración de entidad patrimonial) 15 por 100"]}], source_refs = ["aeat-modelo-200-manual-2025"]}
 sequence_removals = {source_citations = [0], source_refs = [0]}
 
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "parameters"
 selector = {revision = "2024", id = "is.modelo-200.tipo-gravamen-non-profit-special-regime"}
-sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["tipo de gravamen"]}], source_refs = ["aeat-modelo-200-manual-2025"]}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["Entidades a las que sea de aplicación el régimen fiscal establecido en la Ley 49/2002 10 por 100"]}], source_refs = ["aeat-modelo-200-manual-2025"]}
 sequence_removals = {source_citations = [0], source_refs = [0]}
 
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "parameters"
 selector = {revision = "2024", id = "is.modelo-200.tipo-gravamen-pyme"}
-sequence_additions = {legal_refs = ["ley-27-2014:dt-44"], source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["tipo de gravamen"]}], source_refs = ["aeat-modelo-200-manual-2025"]}
+sequence_additions = {legal_refs = ["ley-27-2014:dt-44"], source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["Hasta 50.000 euros 21 por 100", "Resto Base Imponible 22 por 100", "Por la parte de base imponible comprendida entre 0 y 50.000 euros, al tipo del 19", "Por la parte de base imponible restante, al tipo del 21 por ciento."]}], source_refs = ["aeat-modelo-200-manual-2025"]}
 sequence_removals = {source_citations = [0], source_refs = [0]}
 
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "parameters"
 selector = {revision = "2024", id = "is.modelo-200.tipo-gravamen-pyme-display"}
-sequence_additions = {legal_refs = ["ley-27-2014:dt-44"], source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["tipo de gravamen"]}], source_refs = ["aeat-modelo-200-manual-2025"]}
+sequence_additions = {legal_refs = ["ley-27-2014:dt-44"], source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["Hasta 50.000 euros 21 por 100", "Por la parte de base imponible comprendida entre 0 y 50.000 euros, al tipo del 19"]}], source_refs = ["aeat-modelo-200-manual-2025"]}
 sequence_removals = {source_citations = [0], source_refs = [0]}
 sequence_order = {legal_refs = [0, 2, 1]}
 
@@ -25747,7 +25747,7 @@ sequence_removals = {source_refs = [0]}
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "bindings"
 selector = {revision = "2024", id = "modelo-200-bin-pendiente-ejercicios-anteriores"}
-sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["bases imponibles negativas"]}], source_refs = ["aeat-modelo-200-manual-2025"]}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["pendientes de aplicación al inicio del período impositivo", "En la columna «Pendiente de aplicación en períodos futuros» se consignará la diferencia positiva"]}], source_refs = ["aeat-modelo-200-manual-2025"]}
 sequence_removals = {source_citations = [0], source_refs = [0]}
 
 [[revisions."2025-y-siguientes".family_overrides]]
@@ -25765,37 +25765,37 @@ sequence_removals = {source_citations = [0], source_refs = [0]}
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "bindings"
 selector = {revision = "2024", id = "modelo-200-pago-fraccionado-primero-40-2"}
-sequence_additions = {source_refs = ["aeat-modelo-200-manual-2025"], source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["los importes correspondientes al primer, segundo y tercer pago fraccionado", "la cantidad a ingresar (casilla 03 o casilla 34)"]}]}
+sequence_additions = {source_refs = ["aeat-modelo-200-manual-2025"], source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["los importes correspondientes al primer, segundo y tercer pago fraccionado", "Casilla 03. Cantidad a ingresar", "Será el resultado de aplicar el porcentaje del 18 por ciento a la cantidad calculada como base del pago fraccionado"]}]}
 sequence_removals = {source_refs = [0], source_citations = [0]}
 
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "bindings"
 selector = {revision = "2024", id = "modelo-200-pago-fraccionado-primero-40-3"}
-sequence_additions = {source_refs = ["aeat-modelo-200-manual-2025"], source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["los importes correspondientes al primer, segundo y tercer pago fraccionado", "la cantidad a ingresar (casilla 03 o casilla 34)"]}]}
+sequence_additions = {source_refs = ["aeat-modelo-200-manual-2025"], source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["los importes correspondientes al primer, segundo y tercer pago fraccionado", "Casilla [34]. Cantidad a ingresar"]}]}
 sequence_removals = {source_refs = [0], source_citations = [0]}
 
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "bindings"
 selector = {revision = "2024", id = "modelo-200-pago-fraccionado-segundo-40-2"}
-sequence_additions = {source_refs = ["aeat-modelo-200-manual-2025"], source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["los importes correspondientes al primer, segundo y tercer pago fraccionado", "la cantidad a ingresar (casilla 03 o casilla 34)"]}]}
+sequence_additions = {source_refs = ["aeat-modelo-200-manual-2025"], source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["los importes correspondientes al primer, segundo y tercer pago fraccionado", "Casilla 03. Cantidad a ingresar", "Será el resultado de aplicar el porcentaje del 18 por ciento a la cantidad calculada como base del pago fraccionado"]}]}
 sequence_removals = {source_refs = [0], source_citations = [0]}
 
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "bindings"
 selector = {revision = "2024", id = "modelo-200-pago-fraccionado-segundo-40-3"}
-sequence_additions = {source_refs = ["aeat-modelo-200-manual-2025"], source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["los importes correspondientes al primer, segundo y tercer pago fraccionado", "la cantidad a ingresar (casilla 03 o casilla 34)"]}]}
+sequence_additions = {source_refs = ["aeat-modelo-200-manual-2025"], source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["los importes correspondientes al primer, segundo y tercer pago fraccionado", "Casilla [34]. Cantidad a ingresar"]}]}
 sequence_removals = {source_refs = [0], source_citations = [0]}
 
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "bindings"
 selector = {revision = "2024", id = "modelo-200-pago-fraccionado-tercero-40-2"}
-sequence_additions = {source_refs = ["aeat-modelo-200-manual-2025"], source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["los importes correspondientes al primer, segundo y tercer pago fraccionado", "la cantidad a ingresar (casilla 03 o casilla 34)"]}]}
+sequence_additions = {source_refs = ["aeat-modelo-200-manual-2025"], source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["los importes correspondientes al primer, segundo y tercer pago fraccionado", "Casilla 03. Cantidad a ingresar", "Será el resultado de aplicar el porcentaje del 18 por ciento a la cantidad calculada como base del pago fraccionado"]}]}
 sequence_removals = {source_refs = [0], source_citations = [0]}
 
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "bindings"
 selector = {revision = "2024", id = "modelo-200-pago-fraccionado-tercero-40-3"}
-sequence_additions = {source_refs = ["aeat-modelo-200-manual-2025"], source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["los importes correspondientes al primer, segundo y tercer pago fraccionado", "la cantidad a ingresar (casilla 03 o casilla 34)"]}]}
+sequence_additions = {source_refs = ["aeat-modelo-200-manual-2025"], source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["los importes correspondientes al primer, segundo y tercer pago fraccionado", "Casilla [34]. Cantidad a ingresar"]}]}
 sequence_removals = {source_refs = [0], source_citations = [0]}
 
 [[revisions."2025-y-siguientes".family_overrides]]
@@ -25813,13 +25813,13 @@ sequence_removals = {source_citations = [0], source_refs = [0]}
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "bindings"
 selector = {revision = "2024", id = "modelo-200-profile-legal-entity-form"}
-sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["tipo de gravamen"]}], source_refs = ["aeat-modelo-200-manual-2025"]}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["se hará constar el tipo de gravamen que corresponda de acuerdo con el régimen de tributación aplicable a la entidad declarante"]}], source_refs = ["aeat-modelo-200-manual-2025"]}
 sequence_removals = {source_citations = [0], source_refs = [0]}
 
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "bindings"
 selector = {revision = "2024", id = "modelo-200-profile-new-entity-flag"}
-sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["tipo de gravamen"]}], source_refs = ["aeat-modelo-200-manual-2025"]}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["en el primer período impositivo en que la base imponible resulte positiva y en el siguiente"]}], source_refs = ["aeat-modelo-200-manual-2025"]}
 sequence_removals = {source_citations = [0], source_refs = [0]}
 
 [[revisions."2025-y-siguientes".family_overrides]]

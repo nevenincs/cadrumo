@@ -71,7 +71,7 @@ source_refs = ["aeat-modelo-200-manual-2025"]
 
 [[revisions."2025-y-siguientes".parameters.source_citations]]
 source_ref = "aeat-modelo-200-manual-2025"
-required_text = ["Entidades de Reducida Dimensión (art. 101 LIS) 24 por 100"]
+required_text = ["Entidades de Reducida Dimensión (art. 101 LIS) 24 por 100", "régimen de las empresas de reducida dimensión tributarán al tipo del 23 por ciento", "régimen de las empresas de reducida dimensión tributarán al tipo del 22 por ciento", "régimen de las empresas de reducida dimensión tributarán al tipo del 21 por ciento"]
 
 [[revisions."2025-y-siguientes".parameters.values]]
 value = "24"
@@ -115,7 +115,7 @@ source_refs = ["aeat-modelo-200-manual-2025"]
 
 [[revisions."2025-y-siguientes".parameters.source_citations]]
 source_ref = "aeat-modelo-200-manual-2025"
-required_text = ["Entidades de Reducida Dimensión (art. 101 LIS) 24 por 100"]
+required_text = ["importe neto de la cifra de negocios en el período impositivo inmediato anterior sea inferior a 10 millones de euros"]
 
 [[revisions."2025-y-siguientes".parameters.values]]
 value = "10000000"
