@@ -33,9 +33,6 @@ from cadrumo.adapters.persistence.profile.tests.modelo_export_support import iso
 from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.application.export.review_snapshot_loader import CALCULATION_NOTE_FINDING_PREFIX
 from cadrumo.application.modelo.action_errors import CalculationRevisionStateError
-from cadrumo.application.modelo.calculation_bucket_actions import (
-    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
-)
 from cadrumo.application.modelo.calculation_note_gate import ModeloCalculationBlockedError
 from cadrumo.application.modelo.calculation_notes import (
     CALCULATION_SCREEN_OUTDATED_REASON,
@@ -104,6 +101,7 @@ from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import
 from cadrumo.entrypoints.tests.profile_persistence.modelo_303_export_support import (
     build_verified_modelo_303_revision,
 )
+from cadrumo.entrypoints.tests.profile_persistence.registered_calculate_support import calculate_as_filer_enters
 
 __all__ = ["isolated_backend"]
 
@@ -139,7 +137,7 @@ def _calculate_130(
         calculation_repository=calculation_repo,
         bucket_event_repository=event_repo,
     ) as ports:
-        revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+        revision = calculate_as_filer_enters(
             work_unit.work_unit_id,
             actor="operator-A",
             casilla_inputs={**_BASELINE_INPUTS, **(inputs or {})},

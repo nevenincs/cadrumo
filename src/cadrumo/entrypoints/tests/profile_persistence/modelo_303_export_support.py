@@ -6,6 +6,7 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
+from cadrumo.entrypoints.tests.profile_persistence.registered_calculate_support import calculate_as_filer_enters
 from cadrumo.entrypoints.tests.profile_persistence.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
     build_test_verification_repository_bundle,
@@ -31,9 +32,6 @@ from ....adapters.persistence.storage.runtime import inspect_bucket_storage_runt
 from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ....application.calculations.cross_period_clean_state import cross_period_dependency_requirements
 from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
-from ....application.modelo.calculation_bucket_actions import (
-    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
-)
 from ....application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
@@ -502,7 +500,7 @@ def calculate_and_verify_modelo_303_revision(
         calculation_repository=calc_repo,
         bucket_event_repository=event_repo,
     ) as _calculation_ports_481:
-        revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+        revision = calculate_as_filer_enters(
             work_unit.work_unit_id,
             actor="operator",
             casilla_inputs=casilla_inputs,
