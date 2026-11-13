@@ -23,8 +23,9 @@ _SCRIPTS = REPO_ROOT / "native" / "desktop" / "frontend" / "scripts"
 _DRIVERS = {
     "modelo-fixtures.mjs": ("if (values.check)", "rmSync(resolve(directory, name))", "console.log(`wrote ${path}`)"),
     "ledger-contract.mjs": ("if (values.check)", "writeFileSync(contract"),
+    "profile-contract.mjs": ("if (values.check)", "writeFileSync(contract"),
 }
-_SOURCES = (*_DRIVERS, "generated-module-bound.mjs", "modelo_fixtures.py", "ledger_contract.py")
+_SOURCES = (*_DRIVERS, "generated-module-bound.mjs", "modelo_fixtures.py", "ledger_contract.py", "profile_contract.py")
 _REFUSAL = "refuseOversizedModules("
 
 
