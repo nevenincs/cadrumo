@@ -55,6 +55,7 @@ from cadrumo.application.user_profile.automation_enrollment import AutomationInv
 from cadrumo.core.config import override_settings
 from cadrumo.core.model_roles import ModelRole
 from cadrumo.core.time.clock import now
+from cadrumo.core.time.fixed_clock import FixedClock
 from cadrumo.core.time.utc import UtcInstant
 from cadrumo.domain.calculations.registry.authority_location import published_authority_generation
 from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
@@ -362,9 +363,11 @@ class _Worker(ProfileWorkerHumanAdmission):
         wall_clock=now,
         exited: Callable[[_Worker], None] | None = None,
         stopping: ChannelWake | None = None,
+        fixed_clock: FixedClock | None = None,
     ) -> None:
-        # The worker runs in a joined thread of this process: no process exit to watch.
-        del wall_clock, exited, stopping
+        # The worker runs in a joined thread of this process: no process exit to watch, and the
+        # runtime hosting it admits no test-host clock.
+        del wall_clock, exited, stopping, fixed_clock
         if authorization is None or worker_script is not None:
             raise AssertionError("portable worker requires its runtime owner and no external script")
         oracle = current_active_bucket_session()
