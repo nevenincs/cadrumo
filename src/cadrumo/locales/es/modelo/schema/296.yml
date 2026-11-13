@@ -26,6 +26,17 @@ modelo:
           sin establecimiento permanente. Declaración anual de retenciones e ingresos
           a cuenta.
         title: IRNR resumen anual de retenciones e ingresos a cuenta
+      form:
+        page:
+          m296-declarante:
+            heading: 'Registro de tipo 1: Registro de declarante'
+          numbered-boxes:
+            heading: Hoja-resumen
+        section:
+          general:
+            heading: Datos identificativos y resumen de la declaración
+          resumen:
+            heading: Resumen de los datos incluidos en la declaración
       revision:
         '2022':
           field:
