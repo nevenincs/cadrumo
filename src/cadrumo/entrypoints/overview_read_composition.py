@@ -148,10 +148,13 @@ def _filing_year_applicability_evidence(
 
     The invoice reader is the one the filing calculation composes for the same
     bucket, so the ledger signal reads exactly the catalogue the declaration
-    is built from.
+    is built from. The Modelo 232 statements are read from the bucket's own
+    secure-object repository.
     """
     from ..adapters.persistence.profile.invoice_source_resolver import InvoiceCatalogueSourceResolverAdapter
     from ..adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+    from ..adapters.persistence.profile.m232_related_party_records import Modelo232RelatedPartyStoreAdapter
+    from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
     from ..application.invoices.source_resolver_ports import InvoiceSourceResolverPorts
 
     return bind_filing_year_applicability_evidence(
@@ -166,6 +169,7 @@ def _filing_year_applicability_evidence(
         operation=operation,
         today=today_madrid(),
         modelo_202_instalment_facts=_modelo_202_instalment_facts(bucket_id, record, operation=operation),
+        related_party_records=Modelo232RelatedPartyStoreAdapter(objects=secure_object_repository_for_bucket(bucket_id)),
     )
 
 

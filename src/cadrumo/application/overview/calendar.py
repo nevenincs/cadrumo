@@ -643,6 +643,11 @@ def _obligation_applicability(
         ledger_payer_facts=(
             {} if applicability_evidence is None else applicability_evidence.ledger_payer_facts_for_year(filing_year)
         ),
+        records_derivation_notes=(
+            {}
+            if applicability_evidence is None
+            else applicability_evidence.records_derivation_notes_for_year(filing_year)
+        ),
     )
 
 

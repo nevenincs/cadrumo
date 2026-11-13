@@ -20,6 +20,7 @@ from uuid import uuid4
 
 import pytest
 
+from .....application.aggregation.m232_registry_parameters import always_specific_operation_types
 from .....application.aggregation.m232_related_party_repository import (
     Modelo232PinnedWriteAuthority,
     Modelo232RelatedPartyRefusedError,
@@ -412,9 +413,13 @@ def test_every_code_the_design_publishes_is_accepted_at_write(
     tmp_path: Path, operation: PinnedAuthorityOperation
 ) -> None:
     codes = resolve_form_codes("form-row-codes", authority=operation)
+    always_specific = always_specific_operation_types(_EJERCICIO, operation=operation)
     stated = (
         [_operation(tipo_vinculacion=code) for code in codes.ordered_codes("m232.tipo_vinculacion.codes")]
-        + [_operation(tipo_operacion=code) for code in codes.ordered_codes("m232.tipo_operacion.codes")]
+        + [
+            _operation(tipo_operacion=code, specific_operation=code in always_specific)
+            for code in codes.ordered_codes("m232.tipo_operacion.codes")
+        ]
         + [_operation(valuation_method=code) for code in codes.ordered_codes("m232.metodo_valoracion.codes")]
     )
     with isolated_runtime_profile(tmp_path=tmp_path):

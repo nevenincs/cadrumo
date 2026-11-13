@@ -73,7 +73,7 @@ required_text = [
 variant_id = "modelo-payer-applicability-facts:2013-01-01"
 date_axis = "filing_period"
 valid_from = 2013-01-01
-valid_to = 2022-12-31
+valid_to = 2015-12-31
 legal_refs = [
   "rd-1065-2007:art-31",
   "rd-1065-2007:art-33",
@@ -184,6 +184,167 @@ required_text = [
 # both facts, this catalogue only says which answers the obligation depends on.
 
 [[fact.variants]]
+variant_id = "modelo-payer-applicability-facts:2016-01-01"
+date_axis = "filing_period"
+valid_from = 2016-01-01
+valid_to = 2022-12-31
+legal_refs = [
+  "rd-1065-2007:art-31",
+  "rd-1065-2007:art-33",
+  "orden-eha-3012-2008:art-1",
+  "orden-eha-3012-2008:art-10",
+  "ley-58-2003:art-93",
+  "ley-7-2012:da-1",
+  "orden-hap-72-2013:art-1",
+  "orden-hap-70-2013:art-6",
+  "orden-hap-70-2013:art-7",
+  "ley-35-2006:art-25",
+  "ley-35-2006:art-99",
+  "orden-eha-3377-2011:art-1",
+  "rd-439-2007:art-108",
+  "rd-439-2007:art-90",
+  "ley-35-2006:art-101",
+  "rd-439-2007:art-109",
+  "ley-27-2014:art-18",
+  "rd-634-2015:art-13",
+  "orden-hfp-816-2017:art-2",
+]
+source_refs = [
+  "aeat-modelo-347-procedure",
+  "aeat-modelo-720-procedure",
+  "aeat-modelo-193-procedure",
+  "aeat-modelo-232-human-form-instructions",
+  "boe-orden-hfp-816-2017-art-2-obligados",
+]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "payer_fact.order", value = "exceeds_third_party_threshold,bienes_extranjero_above_threshold,premio_loteria_gravamen_especial_sin_retencion,pays_capital_income_with_retencion,pays_non_resident_income_with_retencion,patrimonio_declaration_threshold_met,art109_activity_income_withholding_ge_70pct,meets_modelo_232_related_party_grounds,pays_employees" },
+  { key = "payer_fact.exceeds_third_party_threshold.value", value = "exceeds_third_party_threshold" },
+  { key = "payer_fact.exceeds_third_party_threshold.profile_key", value = "third_party_transactions_above_347_threshold" },
+  { key = "payer_fact.exceeds_third_party_threshold.label", value = "supera el umbral anual de operaciones con terceras personas" },
+  { key = "payer_fact.exceeds_third_party_threshold.legal_refs", value = "rd-1065-2007:art-31|rd-1065-2007:art-33|orden-eha-3012-2008:art-1|orden-eha-3012-2008:art-10|ley-58-2003:art-93" },
+  { key = "payer_fact.exceeds_third_party_threshold.ledger_modelo", value = "347" },
+  { key = "payer_fact.exceeds_third_party_threshold.ledger_period", value = "0A" },
+  { key = "payer_fact.exceeds_third_party_threshold.ledger_record_count_binding", value = "modelo-347-declarante-numero-personas-entidades" },
+  { key = "payer_fact.bienes_extranjero_above_threshold.value", value = "bienes_extranjero_above_threshold" },
+  { key = "payer_fact.bienes_extranjero_above_threshold.profile_key", value = "bienes_extranjero_above_threshold" },
+  { key = "payer_fact.bienes_extranjero_above_threshold.label", value = "posee bienes o derechos en el extranjero por encima del umbral" },
+  { key = "payer_fact.bienes_extranjero_above_threshold.legal_refs", value = "ley-7-2012:da-1|orden-hap-72-2013:art-1" },
+  { key = "payer_fact.premio_loteria_gravamen_especial_sin_retencion.value", value = "premio_loteria_gravamen_especial_sin_retencion" },
+  { key = "payer_fact.premio_loteria_gravamen_especial_sin_retencion.profile_key", value = "premio_loteria_gravamen_especial_sin_retencion" },
+  { key = "payer_fact.premio_loteria_gravamen_especial_sin_retencion.label", value = "obtuvo un premio de loterías o apuestas sujeto al gravamen especial sin retención ni ingreso a cuenta" },
+  { key = "payer_fact.premio_loteria_gravamen_especial_sin_retencion.period_set_key", value = "premio_loteria_gravamen_especial_trimestres" },
+  { key = "payer_fact.premio_loteria_gravamen_especial_sin_retencion.period_set_label", value = "trimestres naturales en que se cobraron esos premios" },
+  { key = "payer_fact.premio_loteria_gravamen_especial_sin_retencion.legal_refs", value = "orden-hap-70-2013:art-6|orden-hap-70-2013:art-7" },
+  { key = "payer_fact.pays_capital_income_with_retencion.value", value = "pays_capital_income_with_retencion" },
+  { key = "payer_fact.pays_capital_income_with_retencion.profile_key", value = "pays_capital_income_with_retencion" },
+  { key = "payer_fact.pays_capital_income_with_retencion.label", value = "paga rendimientos del capital mobiliario sujetos a retención" },
+  { key = "payer_fact.pays_capital_income_with_retencion.legal_refs", value = "ley-35-2006:art-25|ley-35-2006:art-99|orden-eha-3377-2011:art-1|rd-439-2007:art-108|rd-439-2007:art-90|ley-35-2006:art-101|ley-58-2003:art-93" },
+  { key = "payer_fact.pays_non_resident_income_with_retencion.value", value = "pays_non_resident_income_with_retencion" },
+  { key = "payer_fact.pays_non_resident_income_with_retencion.profile_key", value = "pays_non_resident_income_with_retencion" },
+  { key = "payer_fact.pays_non_resident_income_with_retencion.label", value = "paga a no residentes sin establecimiento permanente rentas sujetas a retención del IRNR" },
+  { key = "payer_fact.pays_non_resident_income_with_retencion.legal_refs", value = "trlirnr-rdleg-5-2004:art-31|orden-eha-3290-2008:art-1|orden-eha-3290-2008:art-6" },
+  { key = "payer_fact.patrimonio_declaration_threshold_met.value", value = "patrimonio_declaration_threshold_met" },
+  { key = "payer_fact.patrimonio_declaration_threshold_met.profile_key", value = "patrimonio_declaration_threshold_met" },
+  { key = "payer_fact.patrimonio_declaration_threshold_met.label", value = "resulta cuota a ingresar en el Impuesto sobre el Patrimonio o el valor de sus bienes y derechos supera 2.000.000 euros" },
+  { key = "payer_fact.patrimonio_declaration_threshold_met.legal_refs", value = "ley-19-1991:art-37" },
+  { key = "payer_fact.art109_activity_income_withholding_ge_70pct.value", value = "art109_activity_income_withholding_ge_70pct" },
+  { key = "payer_fact.art109_activity_income_withholding_ge_70pct.profile_key", value = "art109_activity_income_withholding_ge_70pct" },
+  { key = "payer_fact.art109_activity_income_withholding_ge_70pct.label", value = "cumple la excepción del artículo 109 del Reglamento del IRPF: al menos el 70 por ciento de sus ingresos de actividades profesionales, agrícolas, ganaderas o forestales soportó retención o ingreso a cuenta" },
+  { key = "payer_fact.art109_activity_income_withholding_ge_70pct.legal_refs", value = "rd-439-2007:art-109" },
+  { key = "payer_fact.meets_modelo_232_related_party_grounds.value", value = "meets_modelo_232_related_party_grounds" },
+  { key = "payer_fact.meets_modelo_232_related_party_grounds.label", value = "realiza operaciones con personas o entidades vinculadas, o con países o territorios calificados como paraísos fiscales, que cumplen alguno de los supuestos del artículo 2 de la Orden HFP/816/2017" },
+  { key = "payer_fact.meets_modelo_232_related_party_grounds.legal_refs", value = "orden-hfp-816-2017:art-2|ley-27-2014:art-18|rd-634-2015:art-13" },
+  { key = "payer_fact.meets_modelo_232_related_party_grounds.undetermined_reason", value = "No se puede determinar si debes presentar el Modelo 232: solo obliga a quien realiza operaciones con personas o entidades vinculadas por encima de los umbrales (más de 250.000 euros con una misma persona o entidad, más de 100.000 euros en cada tipo de operación específica, u operaciones del mismo tipo y método de valoración que superen la mitad de tu cifra de negocios), a quien aplica la reducción por cesión de intangibles a vinculadas, o a quien tiene operaciones o valores en paraísos fiscales, sea cual sea su importe. No has indicado las operaciones vinculadas de este ejercicio ni que no tuviste ninguna; indícalas." },
+  { key = "payer_fact.meets_modelo_232_related_party_grounds.records_kind", value = "modelo-232-related-party" },
+  { key = "payer_fact.meets_modelo_232_related_party_grounds.records_modelo", value = "232" },
+  { key = "payer_fact.meets_modelo_232_related_party_grounds.records_period", value = "0A" },
+  { key = "payer_fact.pays_employees.value", value = "pays_employees" },
+  { key = "payer_fact.pays_employees.profile_key", value = "has_employees" },
+  { key = "payer_fact.pays_employees.label", value = "paga rendimientos del trabajo a empleados propios" },
+  { key = "payer_fact.pays_employees.legal_refs", value = "ley-35-2006:art-99|ley-35-2006:art-101|rd-439-2007:art-108" },
+]
+
+# Each source is the AEAT procedure page for the modelo whose obligation one payer fact
+# names, and each citation quotes that page's own subject line -- the only part of these pages
+# that states what they are about. What is NOT claimed: the THRESHOLDS. The 347 umbral, the 720
+# and 721 limits and the retencion rates are grounded in the legal_refs above, not in these
+# pages. Mentions of these concepts elsewhere on the pages are entries in the site's navigation
+# list of other modelos and would prove nothing.
+
+# aeat-modelo-193-procedure -> payer fact pays_capital_income_with_retencion
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-193-procedure"
+required_text = [
+    "Retenciones e ingresos a cuenta del IRPF sobre determinados rendimientos del capital mobiliario",
+]
+
+# aeat-modelo-347-procedure -> payer fact exceeds_third_party_threshold
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-347-procedure"
+required_text = [
+    "Declaración anual de operaciones con terceras personas",
+]
+
+# meets_modelo_232_related_party_grounds is decided from the Modelo 232 operations the taxpayer
+# states for the ejercicio, never from the ledger: being related (LIS art. 18.2) is a relationship
+# no ledger records. Orden HFP/816/2017 art. 2 names who files, and each ground is quoted here.
+# The amounts and the turnover share are NOT restated: they are the dated parameters
+# modelo-232-same-related-party-threshold-eur, modelo-232-specific-operations-threshold-eur and
+# modelo-232-same-type-turnover-share of the Modelo 232 revision for the ejercicio.
+[[fact.variants.source_citations]]
+source_ref = "boe-orden-hfp-816-2017-art-2-obligados"
+required_text = [
+    "Operaciones realizadas con la misma persona o entidad vinculada siempre que el importe de la contraprestación del conjunto de operaciones en el período impositivo supere los 250.000 euros, de acuerdo con el valor de mercado.",
+    "Operaciones específicas, siempre que el importe conjunto de cada una de este tipo de operaciones en el período impositivo supere los 100.000 euros.",
+    "tienen la consideración de operaciones específicas, aquellas operaciones excluidas del contenido simplificado de la documentación a que se refieren los artículos 18.3 de la Ley del Impuesto sobre Sociedades y 16.5 del Reglamento del Impuesto sobre Sociedades.",
+    "no será obligatorio cumplimentar la",
+    "Las operaciones realizadas entre entidades que se integren en un mismo grupo de consolidación fiscal",
+    "Las operaciones realizadas en el ámbito de ofertas públicas de venta o de ofertas públicas de adquisición de valores.",
+    "aquellas operaciones del mismo tipo que a su vez utilicen el mismo método de valoración, siempre que el importe del conjunto de dichas operaciones en el período impositivo sea superior al 50% de la cifra de negocios de la entidad.",
+    "en aquellos casos en que el contribuyente aplique la citada reducción prevista en el artículo 23 de la Ley del Impuesto sobre Sociedades, porque obtiene rentas como consecuencia de la cesión de determinados intangibles a personas o entidades vinculadas.",
+    "en aquellos casos en que el contribuyente realice operaciones o tenga valores en países o territorios calificados como paraísos fiscales independientemente de su importe.",
+]
+
+# The AEAT instructions print the decision table. Its 250.000 euro row reads "(no operaciones
+# específicas)", but the Orden governs where the table is narrower: art. 2.1.a sums "el conjunto
+# de operaciones" with the same person and excludes none, so the per-person total counts every
+# operation that art. 2.2 does not exclude, the specific ones included. Income and payment
+# operations are declared in separate rows "sin que puedan efectuarse compensaciones entre ellas";
+# the order speaks of "el conjunto de operaciones", so both directions add up to one total and
+# never net against each other. The table supports the 100.000 euro and turnover rows below.
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-232-human-form-instructions"
+required_text = [
+    "> 100.000 € en operaciones específicas del mismo tipo",
+    "si el conjunto de operaciones del mismo tipo y método de valoración > 50 % de la cifra de",
+    "sin que puedan efectuarse compensaciones entre ellas",
+]
+
+# aeat-modelo-720-procedure -> payer fact bienes_extranjero_above_threshold
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-720-procedure"
+required_text = [
+    "Declaración sobre bienes y derechos situados en el extranjero",
+]
+
+# premio_loteria_gravamen_especial_sin_retencion is grounded in Orden HAP/70/2013 art. 6,
+# which names the obligados to file modelo 136 "cuando tales premios no hubieran sido
+# objeto de la retención o ingreso a cuenta". LIRPF DA 33 is not cited in this span: its
+# consolidated text on file applies from 2020, after this variant opens.
+# It cites no procedure page: the modelo 136 page on file applies only from 2026.
+# period_set_key names the companion quarter set, grounded in art. 7: each filing covers
+# "los premios cobrados en el trimestre natural inmediato anterior". A yes counts only
+# with at least one quarter; a yes without quarters, like an unanswered question, leaves
+# modelo 136 undetermined rather than excluded. What is NOT claimed: the prize amount
+# against the exempt portion, or that a declared quarter is correct -- the profile states
+# both facts, this catalogue only says which answers the obligation depends on.
+
+[[fact.variants]]
 variant_id = "modelo-payer-applicability-facts:2023-01-01"
 date_axis = "filing_period"
 valid_from = 2023-01-01
@@ -214,12 +375,17 @@ legal_refs = [
   "rd-1624-1992:art-71",
   "rd-1624-1992:art-30",
   "rd-439-2007:art-109",
+  "ley-27-2014:art-18",
+  "rd-634-2015:art-13",
+  "orden-hfp-816-2017:art-2",
 ]
 source_refs = [
   "aeat-modelo-347-procedure",
   "aeat-modelo-720-procedure",
   "aeat-modelo-721-procedure",
   "aeat-modelo-193-procedure",
+  "aeat-modelo-232-human-form-instructions",
+  "boe-orden-hfp-816-2017-art-2-obligados",
 ]
 review_status = "agent_reviewed"
 ownership = "authored"
@@ -227,7 +393,7 @@ ownership = "authored"
 [fact.variants.payload]
 kind = "mapping"
 entries = [
-  { key = "payer_fact.order", value = "exceeds_third_party_threshold,bienes_extranjero_above_threshold,monedas_virtuales_extranjero_above_threshold,premio_loteria_gravamen_especial_sin_retencion,pays_capital_income_with_retencion,pays_non_resident_income_with_retencion,patrimonio_declaration_threshold_met,iva_books_kept_through_sii,art109_activity_income_withholding_ge_70pct,pays_employees" },
+  { key = "payer_fact.order", value = "exceeds_third_party_threshold,bienes_extranjero_above_threshold,monedas_virtuales_extranjero_above_threshold,premio_loteria_gravamen_especial_sin_retencion,pays_capital_income_with_retencion,pays_non_resident_income_with_retencion,patrimonio_declaration_threshold_met,iva_books_kept_through_sii,art109_activity_income_withholding_ge_70pct,meets_modelo_232_related_party_grounds,pays_employees" },
   { key = "payer_fact.exceeds_third_party_threshold.value", value = "exceeds_third_party_threshold" },
   { key = "payer_fact.exceeds_third_party_threshold.profile_key", value = "third_party_transactions_above_347_threshold" },
   { key = "payer_fact.exceeds_third_party_threshold.label", value = "supera el umbral anual de operaciones con terceras personas" },
@@ -269,6 +435,13 @@ entries = [
   { key = "payer_fact.iva_books_kept_through_sii.any_of_profile_keys", value = "iva.sii_enrolled|iva.voluntary_sii_enrolled|iva.redeme_enrolled|iva.group_member_enrolled|iva.group_dominant_entity_enrolled|enrollment.large_company" },
   { key = "payer_fact.iva_books_kept_through_sii.label", value = "lleva los libros registro del IVA a través del Suministro Inmediato de Información (SII), por obligación o por opción" },
   { key = "payer_fact.iva_books_kept_through_sii.legal_refs", value = "rd-1065-2007:art-32|rd-1624-1992:art-62|rd-1624-1992:art-71|rd-1624-1992:art-30" },
+  { key = "payer_fact.meets_modelo_232_related_party_grounds.value", value = "meets_modelo_232_related_party_grounds" },
+  { key = "payer_fact.meets_modelo_232_related_party_grounds.label", value = "realiza operaciones con personas o entidades vinculadas, o con países o territorios calificados como paraísos fiscales, que cumplen alguno de los supuestos del artículo 2 de la Orden HFP/816/2017" },
+  { key = "payer_fact.meets_modelo_232_related_party_grounds.legal_refs", value = "orden-hfp-816-2017:art-2|ley-27-2014:art-18|rd-634-2015:art-13" },
+  { key = "payer_fact.meets_modelo_232_related_party_grounds.undetermined_reason", value = "No se puede determinar si debes presentar el Modelo 232: solo obliga a quien realiza operaciones con personas o entidades vinculadas por encima de los umbrales (más de 250.000 euros con una misma persona o entidad, más de 100.000 euros en cada tipo de operación específica, u operaciones del mismo tipo y método de valoración que superen la mitad de tu cifra de negocios), a quien aplica la reducción por cesión de intangibles a vinculadas, o a quien tiene operaciones o valores en paraísos fiscales, sea cual sea su importe. No has indicado las operaciones vinculadas de este ejercicio ni que no tuviste ninguna; indícalas." },
+  { key = "payer_fact.meets_modelo_232_related_party_grounds.records_kind", value = "modelo-232-related-party" },
+  { key = "payer_fact.meets_modelo_232_related_party_grounds.records_modelo", value = "232" },
+  { key = "payer_fact.meets_modelo_232_related_party_grounds.records_period", value = "0A" },
   { key = "payer_fact.pays_employees.value", value = "pays_employees" },
   { key = "payer_fact.pays_employees.profile_key", value = "has_employees" },
   { key = "payer_fact.pays_employees.label", value = "paga rendimientos del trabajo a empleados propios" },
@@ -294,6 +467,41 @@ required_text = [
 source_ref = "aeat-modelo-347-procedure"
 required_text = [
     "Declaración anual de operaciones con terceras personas",
+]
+
+# meets_modelo_232_related_party_grounds is decided from the Modelo 232 operations the taxpayer
+# states for the ejercicio, never from the ledger: being related (LIS art. 18.2) is a relationship
+# no ledger records. Orden HFP/816/2017 art. 2 names who files, and each ground is quoted here.
+# The amounts and the turnover share are NOT restated: they are the dated parameters
+# modelo-232-same-related-party-threshold-eur, modelo-232-specific-operations-threshold-eur and
+# modelo-232-same-type-turnover-share of the Modelo 232 revision for the ejercicio.
+[[fact.variants.source_citations]]
+source_ref = "boe-orden-hfp-816-2017-art-2-obligados"
+required_text = [
+    "Operaciones realizadas con la misma persona o entidad vinculada siempre que el importe de la contraprestación del conjunto de operaciones en el período impositivo supere los 250.000 euros, de acuerdo con el valor de mercado.",
+    "Operaciones específicas, siempre que el importe conjunto de cada una de este tipo de operaciones en el período impositivo supere los 100.000 euros.",
+    "tienen la consideración de operaciones específicas, aquellas operaciones excluidas del contenido simplificado de la documentación a que se refieren los artículos 18.3 de la Ley del Impuesto sobre Sociedades y 16.5 del Reglamento del Impuesto sobre Sociedades.",
+    "no será obligatorio cumplimentar la",
+    "Las operaciones realizadas entre entidades que se integren en un mismo grupo de consolidación fiscal",
+    "Las operaciones realizadas en el ámbito de ofertas públicas de venta o de ofertas públicas de adquisición de valores.",
+    "aquellas operaciones del mismo tipo que a su vez utilicen el mismo método de valoración, siempre que el importe del conjunto de dichas operaciones en el período impositivo sea superior al 50% de la cifra de negocios de la entidad.",
+    "en aquellos casos en que el contribuyente aplique la citada reducción prevista en el artículo 23 de la Ley del Impuesto sobre Sociedades, porque obtiene rentas como consecuencia de la cesión de determinados intangibles a personas o entidades vinculadas.",
+    "en aquellos casos en que el contribuyente realice operaciones o tenga valores en países o territorios calificados como paraísos fiscales independientemente de su importe.",
+]
+
+# The AEAT instructions print the decision table. Its 250.000 euro row reads "(no operaciones
+# específicas)", but the Orden governs where the table is narrower: art. 2.1.a sums "el conjunto
+# de operaciones" with the same person and excludes none, so the per-person total counts every
+# operation that art. 2.2 does not exclude, the specific ones included. Income and payment
+# operations are declared in separate rows "sin que puedan efectuarse compensaciones entre ellas";
+# the order speaks of "el conjunto de operaciones", so both directions add up to one total and
+# never net against each other. The table supports the 100.000 euro and turnover rows below.
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-232-human-form-instructions"
+required_text = [
+    "> 100.000 € en operaciones específicas del mismo tipo",
+    "si el conjunto de operaciones del mismo tipo y método de valoración > 50 % de la cifra de",
+    "sin que puedan efectuarse compensaciones entre ellas",
 ]
 
 # aeat-modelo-720-procedure -> payer fact bienes_extranjero_above_threshold
