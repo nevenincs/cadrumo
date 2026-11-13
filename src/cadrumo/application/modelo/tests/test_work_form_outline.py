@@ -22,10 +22,13 @@ from ....domain.calculations.registry.schema_form_layouts import (
     FormLayoutDefinition,
     FormOutlineGroup,
     FormOutlineSection,
+    FormPlacementKind,
 )
+from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.modelos.calculation_revision import CalculationRevisionState
 from ..work_form import build_modelo_work_form
 from ..work_form_field_vocabulary import (
+    ModeloFormCasillaAddressV1,
     ModeloFormOrigin,
     ModeloFormStanding,
     ModeloFormTextDisclosure,
@@ -310,7 +313,19 @@ def test_a_failed_working_figure_is_counted_and_reached_through_the_working_figu
     failed = [field for field in form.working_figures if field.origin is ModeloFormOrigin.CALCULATION_FAILED]
     group = next(group for group in form.outline if group.kind is ModeloFormOutlineKind.WORKING_FIGURES)
 
-    assert len(failed) == 6
+    # Every computed casilla the layout shows as a working figure is one the calculation could not work out here.
+    snapshot = form_snapshot(operation, "100", form.filing_year, form.period.code)
+    computed = {casilla.id for casilla in snapshot.revision.casillas if casilla.input_kind is InputKind.COMPUTED}
+    layout = _layout(operation, "100", form.registry_revision_id)
+    expected = {
+        placement.casilla_id
+        for placement in layout.placements
+        if placement.kind is FormPlacementKind.WORKING_FIGURE and placement.casilla_id in computed
+    }
+    assert expected
+    assert {
+        field.address.casilla_id for field in failed if isinstance(field.address, ModeloFormCasillaAddressV1)
+    } == expected
     assert group.counts.could_not_calculate == len(failed)
     assert group.counts.needs_you == len(failed)
     assert group.section_ids == ()

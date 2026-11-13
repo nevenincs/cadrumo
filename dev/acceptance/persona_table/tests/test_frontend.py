@@ -12,6 +12,7 @@ import pytest
 
 from ..__main__ import main
 from ..frontend import (
+    EXPORT_WITHHELD_UNVERIFIED,
     STAGE_OF,
     FrontendResultError,
     PersonaCell,
@@ -19,13 +20,14 @@ from ..frontend import (
     SurfaceResult,
     cell_text,
     compare_frontend,
+    export_refusal_code,
     extra_figures,
     figure_causes,
     parity,
     parse_result,
     read_results,
 )
-from ..render import render_table
+from ..render import render_table, unavailable_exports_lines
 from ..rows import PlannedRow, Stage, TableRow, canonical_figures, write_rows
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -42,21 +44,23 @@ def _row(
     export: Stage = Stage.PASSED,
     *,
     persona: str = "persona",
+    horizon: int = _YEAR + 1,
     figures: tuple[tuple[str, str], ...] = _FIGURES,
     internal_figures: tuple[tuple[str, str], ...] = (),
+    reason: str = "",
 ) -> TableRow:
     plan = PlannedRow(
         persona=persona,
         modelo="303",
         year=_YEAR,
         period=period,
-        horizon=_YEAR + 1,
+        horizon=horizon,
         has_values=True,
         grounding="verified",
         sources=("ley:art-1",),
     )
     return TableRow.from_plan(
-        plan, calculate, verify=verify, export=export, figures=figures, internal_figures=internal_figures
+        plan, calculate, verify=verify, export=export, figures=figures, internal_figures=internal_figures, reason=reason
     )
 
 
@@ -518,3 +522,224 @@ def test_the_cli_column_is_counted_beside_tui_and_window_and_an_empty_one_is_not
     assert first.endswith("| matched | not run | matched |")
     nothing = compare_frontend(rows, {})
     assert cell_text(nothing.cells["persona", "cli"]) == "not yet run"
+
+
+_NOT_SEALED = "REFUSED_MODELO_REVISION_NOT_SEALED"
+_NOT_SEALED_REASON = f"verify: blocked; 1 findings | export: modelo.export refused {_NOT_SEALED} :: not verified"
+_UNAVAILABLE = f"export unavailable (refused | not served) {_NOT_SEALED}"
+
+
+def _sealed_row(period: str = "1T", reason: str = _NOT_SEALED_REASON, export: Stage = Stage.REFUSED) -> TableRow:
+    return _row(period, verify=Stage.INCOMPLETE, export=export, reason=reason)
+
+
+def _unserved(**overrides: object) -> SurfaceResult:
+    return _result(verify="incomplete", export="not-reached", export_served=False, **overrides)
+
+
+def test_an_export_door_not_served_matches_the_unsealed_refusal_and_records_the_code() -> None:
+    outcome = parity(_sealed_row(), "tui", _unserved())
+    assert (outcome.outcome, outcome.causes, outcome.gated_stages) == ("matched", (), (_UNAVAILABLE,))
+
+
+@pytest.mark.parametrize(
+    ("row", "result", "cause"),
+    [
+        (_sealed_row(), _result(verify="incomplete", export="not-reached"), "export tui not-reached, table refused"),
+        (
+            _sealed_row(),
+            _result(verify="incomplete", export="not-reached", export_served=True),
+            "export tui not-reached, table refused",
+        ),
+        (
+            _sealed_row(reason="export: modelo.export refused REFUSED_MODELO_OTHER :: x"),
+            _unserved(),
+            "export tui not-reached, table refused",
+        ),
+        (_sealed_row(reason=""), _unserved(), "export tui not-reached, table refused"),
+        (_sealed_row(export=Stage.PASSED), _unserved(), "export tui not-reached, table pass"),
+    ],
+)
+def test_every_other_export_difference_stays_a_difference(row: TableRow, result: SurfaceResult, cause: str) -> None:
+    outcome = parity(row, "tui", result)
+    assert (outcome.outcome, cause in outcome.causes, outcome.gated_stages) == ("differs", True, ())
+
+
+def test_a_surface_export_refusal_against_the_table_refusal_is_a_plain_match() -> None:
+    outcome = parity(_sealed_row(), "tui", _result(verify="incomplete", export="refused", export_served=False))
+    assert (outcome.outcome, outcome.gated_stages) == ("matched", ())
+
+
+def test_a_verify_difference_stays_a_difference_even_when_the_export_door_is_not_served() -> None:
+    outcome = parity(_sealed_row(), "tui", _result(verify="pass", export="not-reached", export_served=False))
+    assert outcome.outcome == "differs"
+    assert "verify tui pass, table incomplete" in outcome.causes
+
+
+@pytest.mark.parametrize(
+    ("reason", "code"),
+    [
+        (_NOT_SEALED_REASON, _NOT_SEALED),
+        ("export: modelo.export refused ERROR_MODELO_EXPORT :: x", "ERROR_MODELO_EXPORT"),
+        ("verify: blocked | export: modelo.export refused REFUSED_B :: x", "REFUSED_B"),
+        ("verify: refused REFUSED_VERIFY :: x", None),
+        ("export: modelo.export passed", None),
+        ("", None),
+    ],
+)
+def test_the_export_refusal_code_is_read_after_the_export_marker(reason: str, code: str | None) -> None:
+    assert export_refusal_code(reason) == code
+    assert _NOT_SEALED in EXPORT_WITHHELD_UNVERIFIED
+
+
+@pytest.mark.parametrize(("value", "expected"), [(True, True), (False, False), (None, None)])
+def test_export_served_is_read_as_true_false_or_unknown(value: bool | None, expected: bool | None) -> None:
+    assert _result(export_served=value).export_served is expected
+    line = _line()
+    assert parse_result(json.dumps(line)).export_served is None
+
+
+@pytest.mark.parametrize("value", ["false", 0, 1, []])
+def test_a_non_boolean_export_served_is_refused(value: object) -> None:
+    with pytest.raises(ValueError, match="export_served must be true, false or null"):
+        parse_result(json.dumps(_line(export_served=value)))
+
+
+def test_the_cell_names_rows_matched_by_gating_only_when_there_are_some() -> None:
+    rows = [_sealed_row("1T"), _row("2T"), _row("3T")]
+    lines = [
+        _line(period="1T", verify="incomplete", export="not-reached", export_served=False),
+        _line(period="2T"),
+        _line(period="3T"),
+    ]
+    results = {parse_result(json.dumps(line)).key: parse_result(json.dumps(line)) for line in lines}
+    cell = compare_frontend(rows, results).cells["persona", "tui"]
+    assert cell.gated_rows == 1
+    assert cell_text(cell) == "loads, 3/3 matched, 0 differs, 0 not run, 1 rows matched by gating"
+    plain = compare_frontend(rows[1:], results).cells["persona", "tui"]
+    assert plain.gated_rows == 0
+    assert cell_text(plain) == "loads, 2/2 matched, 0 differs, 0 not run"
+    assert "gating" not in cell_text(PersonaCell(True, 1, {"matched": 1}))
+
+
+def test_the_report_lists_the_rows_matched_as_export_unavailable_only_when_there_are_some() -> None:
+    rows = [_sealed_row("1T"), _row("2T")]
+    lines = [_line(period="1T", verify="incomplete", export="not-reached", export_served=False), _line(period="2T")]
+    results = {parse_result(json.dumps(line)).key: parse_result(json.dumps(line)) for line in lines}
+    comparison = compare_frontend(rows, results)
+    assert unavailable_exports_lines(comparison) == [
+        f"Export unavailable (refused | not served), matched: persona|303|{_YEAR}|1T {_NOT_SEALED} [tui]"
+    ]
+    text = render_table(rows, head="abc", frontend=comparison)
+    assert f"Export unavailable (refused | not served), matched: persona|303|{_YEAR}|1T {_NOT_SEALED} [tui]" in text
+    assert text.index("Export unavailable (refused") < text.index("### Rows differing")
+    quiet = render_table(rows[1:], head="abc", frontend=compare_frontend(rows[1:], results))
+    assert "Export unavailable" not in quiet
+
+
+_H0, _H1, _H2 = _YEAR + 1001, _YEAR + 1002, _YEAR + 1003
+
+
+def _persona_line(horizon: int | None, *, loads: bool = True, reason: str = "") -> dict[str, object]:
+    line = _line(modelo=None, year=None, period=None, loads=loads, reason=reason)
+    for name in ("calculate", "verify", "export", "figures"):
+        del line[name]
+    return line | ({} if horizon is None else {"horizon": horizon})
+
+
+def _fold(rows: list[TableRow], lines: list[dict[str, object]]) -> tuple[PersonaCell, dict[str, str], dict[str, str]]:
+    """The tui cell of ``persona``, each row's outcome by period, and the cause of each row that has one."""
+    parsed = [parse_result(json.dumps(line)) for line in lines]
+    comparison = compare_frontend(rows, {result.key: result for result in parsed})
+    found = comparison.parities["tui"]
+    return (
+        comparison.cells["persona", "tui"],
+        {item.key[3]: item.outcome for item in found},
+        {item.key[3]: item.causes[0] for item in found if item.causes},
+    )
+
+
+def _horizon_rows() -> list[TableRow]:
+    return [_row("1T", horizon=_H0), _row("2T", horizon=_H1), _row("3T", horizon=_H1), _row("4T", horizon=_H2)]
+
+
+def test_a_load_failure_at_one_horizon_fails_only_the_rows_of_that_horizon_without_a_line_of_their_own() -> None:
+    lines = [
+        _persona_line(_H0),
+        _persona_line(_H1, loads=False, reason=f"horizon {_H1}: not loaded officers"),
+        _persona_line(_H2),
+        _line(period="1T"),
+        _line(period="3T"),
+        _line(period="4T"),
+    ]
+    cell, outcomes, causes = _fold(_horizon_rows(), lines)
+    assert outcomes == {"1T": "matched", "2T": "load-failed", "3T": "matched", "4T": "matched"}
+    assert causes == {"2T": f"horizon {_H1}: not loaded officers"}
+    assert cell.loads is True
+    assert cell_text(cell) == "loads, 3/4 matched, 0 differs, 0 not run, 1 load failed"
+
+
+def test_the_cell_says_does_not_load_only_when_every_row_failed_to_load() -> None:
+    reason = "not loaded"
+    failing = [_persona_line(horizon, loads=False, reason=reason) for horizon in (_H0, _H1, _H2)]
+    cell, outcomes, _ = _fold(_horizon_rows(), failing)
+    assert set(outcomes.values()) == {"load-failed"}
+    assert cell_text(cell) == "does not load, 0/4 matched, 0 differs, 0 not run, 4 load failed"
+    cell, _, _ = _fold(_horizon_rows(), [*failing[:2], _persona_line(_H2)])
+    assert cell_text(cell) == "loads, 0/4 matched, 0 differs, 1 not run, 3 load failed"
+
+
+def test_a_persona_line_without_a_horizon_speaks_for_the_horizons_no_line_answers_for() -> None:
+    lines = [_persona_line(None, loads=False, reason="profile locked"), _persona_line(_H1), _line(period="2T")]
+    cell, outcomes, causes = _fold(_horizon_rows(), lines)
+    assert outcomes == {"1T": "load-failed", "2T": "matched", "3T": "not-run", "4T": "load-failed"}
+    assert causes["1T"] == "profile locked"
+    assert cell_text(cell) == "loads, 1/4 matched, 0 differs, 1 not run, 2 load failed"
+
+
+def test_a_persona_with_lines_for_other_horizons_only_loaded_by_default_at_a_horizon_without_one() -> None:
+    cell, outcomes, _ = _fold(_horizon_rows(), [_persona_line(_H1, loads=False, reason="no")])
+    assert outcomes == {"1T": "not-run", "2T": "load-failed", "3T": "load-failed", "4T": "not-run"}
+    assert cell.loads is True
+
+
+def test_without_any_horizon_a_failed_persona_line_fails_every_row_as_before() -> None:
+    rows = [_row("1T"), _row("2T", horizon=_H2)]
+    cell, outcomes, causes = _fold(rows, [_persona_line(None, loads=False, reason="profile locked")])
+    assert outcomes == {"1T": "load-failed", "2T": "load-failed"}
+    assert causes == {"1T": "profile locked", "2T": "profile locked"}
+    assert cell_text(cell) == "does not load, 0/2 matched, 0 differs, 0 not run, 2 load failed"
+
+
+def test_the_latest_persona_line_of_a_horizon_wins_over_an_earlier_one() -> None:
+    lines = [_persona_line(_H1, loads=False, reason="first"), _persona_line(_H1)]
+    _, outcomes, _ = _fold(_horizon_rows(), lines)
+    assert set(outcomes.values()) == {"not-run"}
+
+
+def test_the_horizon_is_read_from_the_field_and_a_bad_one_is_refused() -> None:
+    assert parse_result(json.dumps(_persona_line(_H1))).horizon == _H1
+    assert parse_result(json.dumps(_persona_line(None) | {"horizon": None})).horizon is None
+    assert parse_result(json.dumps(_persona_line(_H1, reason=f"horizon {_H2}: x"))).horizon == _H1
+    for bad in ("text", _H1 + 0.5, True, [_H1]):
+        with pytest.raises(ValueError, match="horizon must be an integer or null"):
+            parse_result(json.dumps(_persona_line(None) | {"horizon": bad}))
+    with pytest.raises(ValueError, match="a line with a modelo has no horizon"):
+        parse_result(json.dumps(_line(horizon=_H1)))
+
+
+@pytest.mark.parametrize(
+    ("reason", "expected"),
+    [
+        (f"horizon {_H1}: not loaded officers", _H1),
+        (f"horizon {_H1}", _H1),
+        (f"persona@{_H2}: not loaded", _H2),
+        (f"other@{_H2}: not loaded", None),
+        (f"horizon {_H1}0: x", None),
+        (f"the horizon {_H1}: x", None),
+        (f"persona@{_H1}9", None),
+        ("", None),
+    ],
+)
+def test_the_horizon_is_read_from_the_reason_prefix_when_the_field_is_absent(reason: str, expected: int | None) -> None:
+    assert parse_result(json.dumps(_persona_line(None, reason=reason))).horizon == expected
