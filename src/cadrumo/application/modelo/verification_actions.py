@@ -393,6 +393,9 @@ def _finish_verification(
     failures_by_finding_id: dict[int, ModeloPreconditionFailure],
 ) -> ModeloVerificationResult:
     cr_repo, vr_repo = repos.calculation, repos.verification
+    # Pairing every finding with its verdict is assembly, not an effect: a finding
+    # built without its verdict fails here, before any report or event is persisted.
+    finding_preconditions = project_verification_findings(findings, failures_by_finding_id=failures_by_finding_id)
     if granted:
         gate_engine = workflow_engine or build_revision_workflow_engine(
             certificate_secret_backend_factory=certificate_secret_backend_factory,
@@ -461,10 +464,7 @@ def _finish_verification(
     return ModeloVerificationResult(
         report=report,
         published=True,
-        finding_preconditions=project_verification_findings(
-            findings,
-            failures_by_finding_id=failures_by_finding_id,
-        ),
+        finding_preconditions=finding_preconditions,
         calculation_notes=_recorded_notes(target, work_unit, repos),
     )
 

@@ -75,13 +75,16 @@ def _findings(tmp_path: Path) -> tuple[ModeloVerificationFinding, ...]:
         revision = work.operation.snapshot(
             "100", filing_year=unit.filing_year, period="0A", grade=RegistryAuthorityGrade.CALCULATION
         ).revision
-        return trabajo_income_findings(
-            str(unit.modelo),
-            revision,
-            work.require_head(),
-            profile_values={},
-            effective_date=date(unit.filing_year, 12, 31),
-            operation=work.operation,
+        return tuple(
+            finding
+            for finding, _failure in trabajo_income_findings(
+                str(unit.modelo),
+                revision,
+                work.require_head(),
+                profile_values={},
+                effective_date=date(unit.filing_year, 12, 31),
+                operation=work.operation,
+            )
         )
 
 
