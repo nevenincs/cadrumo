@@ -18,6 +18,7 @@ from dev.first_party_source import is_test_source
 from dev.paths import REPO_ROOT
 from dev.quality.shared_scan import scanner_identity, shared_scan_result
 
+from .discovery_paths import DISCOVERY_PATHS, NOT_SCANNED, PRODUCT_SUFFIXES, discovery_identity, discovery_path_inputs
 from .errors import LocaleError
 from .locale_audit import (
     LocaleAuditResult,
@@ -54,23 +55,9 @@ from .subtree_move import (
     normalise_key_prefix,
     plan_locale_subtree_move,
 )
-from .wizard_translation_audit import wizard_descriptor_keys
 from .write_guard import CatalogueWriteGuard, catalogue_write_guard
 
 _log = get_logger(__name__)
-
-
-#: Suffixes of the product files the codebase-key scan reads: Python source,
-#: which it parses and whose command and wizard registries it imports, and the
-#: TOML registry, schema and navigation data it reads keys from.
-_CODEBASE_KEY_SUFFIXES = frozenset({".py", ".toml"})
-
-#: Directories no input of the scan lives in: bytecode and the test surface.
-_NOT_SCANNED = ("__pycache__", "tests")
-
-#: Repository tooling whose code decides the key set: this package's scanners
-#: and the registry compiler that projects the Modelo key universe.
-_CODEBASE_KEY_TOOLING = ("dev/locales", "dev/registry/compiler", "dev/quality", "dev/first_party_source.py")
 
 
 def _is_repository_tree(root: Path) -> bool:
@@ -86,43 +73,28 @@ def _committed_locales_dir() -> Path:
 
 
 def _codebase_key_tree_inputs(tree: Path) -> Iterable[Path]:
-    """Enumerate production source and data files under one scan root."""
+    """Enumerate production Python and data files under one scan root."""
     return (
         path
-        for path in scan_directory(tree, pattern="*", recursive=True, prune_directories=_NOT_SCANNED)
-        if path.suffix in _CODEBASE_KEY_SUFFIXES and path.is_file() and not is_test_source(path, root=tree)
+        for path in scan_directory(tree, pattern="*", recursive=True, prune_directories=NOT_SCANNED)
+        if path.suffix in PRODUCT_SUFFIXES and path.is_file() and not is_test_source(path, root=tree)
     )
-
-
-def _codebase_key_tooling_inputs(tooling: Path) -> Iterable[Path]:
-    """Enumerate one scanner file or the production Python of its directory."""
-    if tooling.is_file():
-        yield tooling
-    elif tooling.is_dir():
-        yield from (
-            path
-            for path in scan_directory(tooling, pattern="*.py", recursive=True, prune_directories=_NOT_SCANNED)
-            if not is_test_source(path, root=tooling)
-        )
 
 
 def codebase_key_inputs(source_roots: Sequence[Path]) -> tuple[Path, ...]:
     """Every file the codebase-key scan of ``source_roots`` can read, over-approximated, never under.
 
-    The scan parses the roots' Python, imports product registries from anywhere
-    under ``src`` and reads TOML data packaged there, so every Python and TOML
-    file under ``src`` is an input, as is the Python of each root outside it and
-    of the tooling that implements the scan. The test surface is not: the scan
-    skips test sources, and no registry it imports or reads lives there, so an
-    edit to a test cannot move the key set and does not invalidate it.
+    The scan walks the Python of its roots, and every other discovery path is
+    declared in :data:`.discovery_paths.DISCOVERY_PATHS` with the files it
+    reads, so the key follows the scan's own readers. The test surface is not an
+    input: the scan skips test sources, and no registry it imports or reads
+    lives there, so an edit to a test cannot move the key set.
     """
     product = REPO_ROOT / "src"
     trees = (product, *(root for root in source_roots if not root.resolve().is_relative_to(product)))
-    found: set[Path] = set()
+    found: set[Path] = set(discovery_path_inputs())
     for tree in trees:
         found.update(_codebase_key_tree_inputs(tree))
-    for relative in _CODEBASE_KEY_TOOLING:
-        found.update(_codebase_key_tooling_inputs(REPO_ROOT / relative))
     return tuple(sorted(found))
 
 
@@ -192,7 +164,9 @@ class LocaleManager:
         A manager over this checkout's own tree also shares the scan across the
         run: every manager in every process asking about the same roots reads
         one result per distinct content of the sources and registry data the
-        scan reads and of the scanner code (see :func:`_codebase_key_inputs`).
+        scan reads and of the scanner code (see :func:`codebase_key_inputs`; every
+        discovery path past the two walks of the roots is declared with its
+        inputs in :mod:`.discovery_paths`).
         A manager over a planted tree scans it in place.
 
         Only production modules are scanned: test files are excluded so a
@@ -246,6 +220,7 @@ class LocaleManager:
                     "roots": [root.resolve().relative_to(REPO_ROOT).as_posix() for root in source_roots],
                     "committed_catalogues": self.locales_dir == _committed_locales_dir(),
                     "ast_scanner": scanner_identity(*codebase_key_scanner_modules()),
+                    "discovery": discovery_identity(),
                 }
             )
             found, unread = shared_scan_result(
@@ -267,14 +242,7 @@ class LocaleManager:
 
     def scan_codebase_keys(self) -> tuple[frozenset[str], tuple[str, ...]]:
         """Run every discovery path; return the keys and the sources that could not be read."""
-        from cadrumo_client.contracts.navigation import load_navigation_register
-
         from .ast_scanner import scan_source_trees
-        from .command_spec_scanner import scan_command_spec_keys
-        from .desktop_chrome import DESKTOP_CHROME_KEYS
-        from .fstring_registry import get_registered_keys
-        from .manager_chrome import MANAGER_CHROME_KEYS
-        from .registry_scanner import scan_modelo_schema_keys, scan_profile_schema_keys, scan_registry_keys
 
         keys: set[str] = set()
         unread: list[str] = []
@@ -285,15 +253,8 @@ class LocaleManager:
         # per root (the package, docs, and harness each contribute to the same
         # required-key set).
         keys.update(scan_source_trees(source_roots))
-        keys.update(get_registered_keys())
-        keys.update(scan_command_spec_keys())
-        keys.update(scan_registry_keys())
-        keys.update(scan_profile_schema_keys())
-        keys.update(scan_modelo_schema_keys())
-        keys.update(wizard_descriptor_keys())
-        keys.update(DESKTOP_CHROME_KEYS)
-        keys.update(MANAGER_CHROME_KEYS)
-        keys.update(key for element in load_navigation_register().elements for key in (element.label, element.keywords))
+        for declared in DISCOVERY_PATHS:
+            keys.update(declared.keys())
         from .paths import LOCALES_DIR
         from .service_catalogues import SERVICE_FAMILIES, SERVICE_KEYS
 

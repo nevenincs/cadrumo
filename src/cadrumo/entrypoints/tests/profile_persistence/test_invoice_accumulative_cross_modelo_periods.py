@@ -99,8 +99,12 @@ from cadrumo.domain.user_profile.tests.profile_creation_authority import profile
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from cadrumo.entrypoints.adapter_composition_work_ports import build_calculation_action_ports
 
+from ....adapters.persistence.profile.inventory import InventoryLedgerRepository
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
+from ....application.aggregation.tests.inventory_source_support import closed_no_stock_ledger
+from ....application.modelo.calculation_source_policy import BUCKET_AGGREGATION_LOCK_SOURCES
 from ....application.modelo.tests.filed_observation_fixture import persist_filed_revision_observation
+from ....domain.contribuyente.inventory.records import InventoryLedgerDocument
 from ....domain.iva.schema import InvoiceKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -550,12 +554,17 @@ def _m100_non_relation_zero_bindings(secure_objects: SecureObjectRepository) -> 
             "collectible_invoice",
             "payable_invoice",
             "retencion_soportada",
+            *BUCKET_AGGREGATION_LOCK_SOURCES,
         )
     }
     return values
 
 
 def _calculate_m100_annual(secure_objects: SecureObjectRepository) -> CalculationRevision:
+    # The persona held no existencias: its activity's book opens with no stock and closes at zero.
+    InventoryLedgerRepository(objects=secure_objects).save(
+        InventoryLedgerDocument(ledgers=(closed_no_stock_ledger(_YEAR),))
+    )
     wu_repo = WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)

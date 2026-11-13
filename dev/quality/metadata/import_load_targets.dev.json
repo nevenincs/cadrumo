@@ -580,6 +580,7 @@
         "dev.locales.desktop_profile_interface_keys",
         "dev.locales.desktop_workspace_keys",
         "dev.locales.dictionary_provisioning",
+        "dev.locales.discovery_paths",
         "dev.locales.errors",
         "dev.locales.form_layout_heading_scan",
         "dev.locales.fstring_registry",

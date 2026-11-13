@@ -445,6 +445,25 @@ RETENCION_SOPORTADA_RECORDS_NAMESPACE = SecureObjectNamespaceDefinition(
     scope=StorageNamespaceScope.PROFILE_LOCAL,
     custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
 )
+# The taxpayer's own statement of its Modelo 232 related-party and tax-haven
+# operations per ejercicio, the "none" statements and the turnover statements the
+# art. 2.3 ground compares against, and one guard row per ejercicio that
+# serialises their writes. FINANCIAL: an operation row holds a
+# counterparty's tax identifier, name and the amount dealt. The row key carries
+# only the ejercicio and a random id, never a counterparty.
+MODELO_232_RELATED_PARTY_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="modelo_232_related_party_records",
+    namespace="cadrumo.modelo.m232.related_party",
+    owner="cadrumo.application.aggregation",
+    sensitivity=SensitivityClass.FINANCIAL,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar=(
+        "operation:{ejercicio}:{operation_id}|none:{ejercicio}:{statement_id}"
+        "|turnover:{ejercicio}:{statement_id}|year:{ejercicio}"
+    ),
+    scope=StorageNamespaceScope.PROFILE_LOCAL,
+    custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
+)
 WITHHOLDING_WORKFLOW_NAMESPACE = SecureObjectNamespaceDefinition(
     key="withholding_workflow",
     namespace="cadrumo.withholding.workflow",

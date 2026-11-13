@@ -39,6 +39,7 @@ def test_a_shared_key_scan_follows_an_edit_to_a_scanned_source(tmp_path: Path, m
         return keys, ()
 
     monkeypatch.setattr(manager_module, "REPO_ROOT", repository)
+    monkeypatch.setattr(manager_module, "discovery_path_inputs", lambda: ())
     monkeypatch.setattr(LocaleManager, "scan_codebase_keys", scan)
     monkeypatch.setattr(shared_scan, "memo", {})
     monkeypatch.setenv("CADRUMO_RUN_ARTIFACT_ROOT", str(repository / "run-cache"))
@@ -104,6 +105,7 @@ def test_an_import_before_a_scanner_edit_cannot_poison_the_current_implementatio
 
     monkeypatch.setattr(manager_module, "REPO_ROOT", repository)
     monkeypatch.setattr(manager_module, "codebase_key_scanner_modules", lambda: tuple(imported))
+    monkeypatch.setattr(manager_module, "discovery_path_inputs", lambda: (helper,))
     monkeypatch.setattr(LocaleManager, "scan_codebase_keys", scan)
     monkeypatch.setattr(shared_scan, "memo", {})
     monkeypatch.setenv("CADRUMO_RUN_ARTIFACT_ROOT", str(repository / "run-cache"))

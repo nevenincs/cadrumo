@@ -39,6 +39,7 @@ from ....application.modelo.calculation_bucket_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
+from ....application.modelo.calculation_source_policy import BUCKET_AGGREGATION_LOCK_SOURCES
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
@@ -83,6 +84,7 @@ _SOURCED_ELSEWHERE = frozenset(
         "collectible_invoice",
         "payable_invoice",
         "retencion_soportada",
+        *BUCKET_AGGREGATION_LOCK_SOURCES,
     },
 )
 __all__ = ["secure_objects"]

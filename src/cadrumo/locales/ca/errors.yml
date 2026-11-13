@@ -479,6 +479,8 @@ errors:
       Model 036.
     canonical_m145_communication_record_persistence: No s'ha pogut desar el registre
       de comunicació del Model 145.
+    canonical_modelo_232_related_party_persistence: No s'han pogut llegir ni desar
+      les teves declaracions d'operacions vinculades del model 232.
     canonical_modelo_edit_receipt_persistence: No s'ha pogut desar el rebut d'edició
       del Model.
     canonical_operator_scope_session: No s'ha pogut llegir la sessió de custòdia activa
@@ -1478,6 +1480,9 @@ errors:
     modelo_210_agrupacion_renta_rows: Les rendes agrupades anuals del Model 210 han
       de formar una agrupació única i vàlida (un codi, un tipus, un bé identificat
       i un pagador, excepte l'excepció de múltiples pagadors).
+    modelo_232_related_party_refused: No s'ha desat la declaració del model 232.
+    modelo_232_related_party_revision_conflict: La declaració del model 232 ha canviat
+      des que la vas llegir; torna a llegir-la abans de desar.
     modelo_349_country_prefix_context: 'El model 349 rebutja el prefix de país {country_code}
       per a la clau d''operació {clave_operacion} en {filing_year}/{period}: {reason}.
       Fonament: instruccions AEAT Brexit IVA NIF-IVA / model 349.'

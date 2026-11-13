@@ -447,6 +447,8 @@ errors:
     canonical_m036_declaration_persistence: A Modelo 036 bevallást nem sikerült menteni.
     canonical_m145_communication_record_persistence: A Modelo 145 kommunikációs rekordját
       nem sikerült menteni.
+    canonical_modelo_232_related_party_persistence: A 232-es modell kapcsolt felekre
+      vonatkozó nyilatkozatait nem sikerült beolvasni vagy menteni.
     canonical_modelo_edit_receipt_persistence: A nyomtatvány szerkesztési bizonylatát
       nem sikerült menteni.
     canonical_operator_scope_session: Az operátor aktív őrzési munkamenetét nem sikerült
@@ -1370,6 +1372,9 @@ errors:
     modelo_210_agrupacion_renta_rows: A Modelo 210 éves csoportosított jövedelem-sorainak
       egyetlen jogszerű csoportot kell alkotniuk (egy kód, egy kulcs, egy azonosított
       ingatlan, és egy kifizető, kivéve a több kifizetős kivételt).
+    modelo_232_related_party_refused: A 232-es modell nyilatkozata nem lett mentve.
+    modelo_232_related_party_revision_conflict: A 232-es modell nyilatkozata megváltozott,
+      amióta elolvastad; olvasd be újra mentés előtt.
     modelo_349_country_prefix_context: 'A Modelo 349 elutasítja a(z) {country_code}
       országelőtagot a(z) {clave_operacion} műveletkulcshoz {filing_year}/{period}
       időszakban: {reason}. Jogalap: AEAT Brexit IVA NIF-IVA / Modelo 349 útmutató.'

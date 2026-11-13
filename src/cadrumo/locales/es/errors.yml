@@ -477,6 +477,8 @@ errors:
       Modelo 036.
     canonical_m145_communication_record_persistence: No se pudo guardar el registro
       de comunicación del Modelo 145.
+    canonical_modelo_232_related_party_persistence: No se pudieron leer ni guardar
+      tus declaraciones de operaciones vinculadas del modelo 232.
     canonical_modelo_edit_receipt_persistence: No se pudo guardar el recibo de edición
       del Modelo.
     canonical_operator_scope_session: No se pudo leer la sesión de custodia activa
@@ -1457,6 +1459,9 @@ errors:
     modelo_210_agrupacion_renta_rows: Las rentas agrupadas anuales del Modelo 210
       deben formar una agrupación única y válida (un código, un tipo, un bien identificado
       y un pagador, salvo la excepción de múltiples pagadores).
+    modelo_232_related_party_refused: No se guardó la declaración del modelo 232.
+    modelo_232_related_party_revision_conflict: La declaración del modelo 232 cambió
+      desde que la leíste; vuelve a leerla antes de guardar.
     modelo_349_country_prefix_context: 'El Modelo 349 rechaza el prefijo de país {country_code}
       para la clave de operación {clave_operacion} en {filing_year}/{period}: {reason}.
       Fundamento: instrucciones AEAT Brexit IVA NIF-IVA / Modelo 349.'

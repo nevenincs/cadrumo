@@ -441,6 +441,8 @@ errors:
       persisted.
     canonical_m145_communication_record_persistence: The Modelo 145 communication
       record could not be persisted.
+    canonical_modelo_232_related_party_persistence: Your Modelo 232 related-party
+      statements could not be read or saved.
     canonical_modelo_edit_receipt_persistence: The Modelo edit receipt could not be
       persisted.
     canonical_operator_scope_session: The active operator custody session could not
@@ -1341,6 +1343,9 @@ errors:
     modelo_210_agrupacion_renta_rows: Modelo 210 annual grouped-renta rows must form
       a lawful single grouping (one code, one rate, one identified property, and one
       payer unless the multi-payer exception applies).
+    modelo_232_related_party_refused: The Modelo 232 statement was not saved.
+    modelo_232_related_party_revision_conflict: The Modelo 232 statement changed since
+      you read it; read it again before saving.
     modelo_349_country_prefix_context: 'Modelo 349 rejects country prefix {country_code}
       for operation key {clave_operacion} in {filing_year}/{period}: {reason}. Authority:
       AEAT Brexit IVA NIF-IVA / Modelo 349 instructions.'
