@@ -3,8 +3,12 @@
 The filer types an amount on a Modelo 130 while the profile, changed since the
 edit began, no longer makes the declaration applicable. The value is admitted;
 the recalculation refuses under the profile readiness code. The edit settles
-under that code with its own door, writes nothing and carries no value. A
-value the edit itself refuses still settles as the edit refusal.
+under that code with its own door, writes nothing and carries no value: its
+sentence needs the profile's requirement words, which do not travel, so the
+sentence names the code. A refusal whose sentence names only public registry
+coordinates -- a third quarter whose earlier quarters are unfiled -- is served
+in its own words, finished, with those coordinates. A value the edit itself
+refuses still settles as the edit refusal.
 
 Real behaviour throughout: an isolated encrypted profile, the bundled
 authority, the production admission and edit executor.
@@ -50,6 +54,10 @@ def _set_box_06(value: str) -> ModeloScalarEditIntentV1:
         kind=ModeloEditScalarIntentKind.SET_TYPED_VALUE,
         value=value,
     )
+
+
+_PRIOR_PERIOD_CODE = "REFUSED_MODELO_PRIOR_PERIOD_UNFILED"
+_PRIOR_PERIOD_KEY = "application.modelo.errors.prior_period_unfiled"
 
 
 @dataclass(frozen=True, slots=True)
@@ -122,3 +130,48 @@ def test_a_value_the_edit_refuses_still_settles_as_the_edit_refusal(tmp_path: Pa
     assert get_registered_error_code(applied.refusal).code == "REFUSED_MODELO_EDIT_REFUSED"
     assert applied.effects[-1] is OperationEffect.NONE
     assert head_after is None
+
+
+@pytest.fixture(scope="module")
+def prior_unfiled(tmp_path_factory: pytest.TempPathFactory) -> tuple[_Refused, int]:
+    """Admit an edit on a third quarter whose earlier quarters are unfiled: the recalculation refuses."""
+    with seeded_operator_work(tmp_path_factory.mktemp("prior_unfiled"), period_code="3T") as work:
+        applied = work.apply(scalar=(_set_box_06(_TYPED),), baseline=work.baseline())
+        return _Refused(applied=applied, head_after=work.head()), work.work_unit.filing_year
+
+
+@pytest.mark.parametrize("language", list(OutputLanguage))
+def test_a_refusal_naming_only_public_coordinates_is_served_in_its_own_words(
+    prior_unfiled: tuple[_Refused, int], language: OutputLanguage
+) -> None:
+    refused, filing_year = prior_unfiled
+    error = _error(refused)
+
+    assert get_registered_error_code(error).code == _PRIOR_PERIOD_CODE
+    assert refused.head_after is None
+    words = resolve_error_message(error, locale=language.value)
+    assert words == tr(
+        _PRIOR_PERIOD_KEY,
+        locale=language.value,
+        modelo="130",
+        period="3T",
+        filing_year=str(filing_year),
+        unfiled_period="1T",
+    )
+    assert not extract_placeholders(words)
+    assert _TYPED not in words
+
+
+def test_only_the_coordinates_the_sentence_names_reach_the_settled_refusal(
+    prior_unfiled: tuple[_Refused, int],
+) -> None:
+    refused, filing_year = prior_unfiled
+    error = _error(refused)
+
+    assert error.context == {
+        "filing_year": str(filing_year),
+        "modelo": "130",
+        "period": "3T",
+        "unfiled_period": "1T",
+    }
+    assert _TYPED not in repr(error.args)
