@@ -135,11 +135,16 @@ class OperationSupervisor(
         execution_authority: OperationExecutionAuthority | None = None,
         typed_financial_operand_custody: OperationTypedFinancialOperandCustodyRepository | None = None,
         ephemeral: OperationEphemeralRouting | None = None,
+        fixed_clock_instant: datetime | None = None,
     ) -> None:
         """Bind the registry and durable ports for one process owner.
 
         ``ephemeral`` keeps operations declared ``EPHEMERAL`` in process
         memory; without it they are journaled durably like every other.
+        ``fixed_clock_instant`` is a profile worker's admitted test-host fixed
+        clock: each executor's application work runs at that instant, while
+        every journal, lease and receipt stamp this supervisor writes reads
+        ``clock`` outside that scope.
         """
         self.registry = registry
         self._execution_authority = execution_authority
@@ -152,6 +157,7 @@ class OperationSupervisor(
         self._owner_id = owner_id
         self._lease_token = lease_token_factory()
         self._clock = clock
+        self._fixed_clock_instant = fixed_clock_instant
         self._lease_duration = lease_duration
         self._execution_timeout = execution_timeout
         self._cleanup_timeout = cleanup_timeout

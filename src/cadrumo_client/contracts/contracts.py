@@ -14,6 +14,7 @@ from pydantic import BaseModel, Field
 from cadrumo.core.errors.hierarchy import CadrumoError
 from cadrumo.core.identity.digest import ContentDigest
 from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from cadrumo.core.time.utc import UtcInstant
 
 
 class RefusalCode(StrEnum):
@@ -207,6 +208,7 @@ class ServerHello(BaseModel):
     """Readiness of an OS-authenticated runtime; the boot ID is not a bearer."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    frame_omits_when_unset: ClassVar[frozenset[str]] = frozenset({"fixed_clock_instant"})
 
     kind: Literal["server_hello"] = "server_hello"
     protocol_version: Annotated[int, Field(strict=True, ge=RUNTIME_PROTOCOL_VERSION, le=RUNTIME_PROTOCOL_VERSION)] = (
@@ -216,6 +218,8 @@ class ServerHello(BaseModel):
     storage_identity: ContentDigest
     boot_id: UUID
     authority_generation: AuthorityGeneration | None = None
+    fixed_clock_instant: UtcInstant | None = None
+    """The test-host fixed clock this runtime admitted at its start; absent when it runs on wall time."""
 
 
 class Peer(BaseModel):

@@ -133,18 +133,26 @@ def madrid_wall_clock_to_utc(value: datetime) -> datetime:
     return value.astimezone(UTC)
 
 
+def live_tests_opt_in_active() -> bool:
+    """Return whether the live-test opt-in is set, the condition under which :func:`frozen_clock` refuses.
+
+    ``load_settings`` is imported lazily to avoid a module-load cycle between
+    ``core.config`` and ``core.time``.
+    """
+    from ..config import load_settings
+
+    return load_settings().live_tests_enabled
+
+
 def _refuse_under_live_opt_in() -> None:
     """Raise :class:`CoreValidationError` when the live-test opt-in is active.
 
     The seam must stay off in live-marked tests: those run against real
     external services on real wall-clock, and freezing the clock there
     is the exact global-freeze anti-pattern the live-import ban exists to
-    prevent. ``load_settings`` is imported lazily to avoid a
-    module-load cycle between ``core.config`` and ``core.time``.
+    prevent.
     """
-    from ..config import load_settings
-
-    if load_settings().live_tests_enabled:
+    if live_tests_opt_in_active():
         raise CoreValidationError(
             "frozen_clock is forbidden while the live-test opt-in "
             "is set: live-marked tests must run on "
