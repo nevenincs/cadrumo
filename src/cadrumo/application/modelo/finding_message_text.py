@@ -81,6 +81,7 @@ FINDING_FACT_KINDS: Final[Mapping[str, FindingFactKind]] = MappingProxyType(
         "transaction_date": FindingFactKind.DATE,
         # Boxes, by casilla id or printed number.
         "casilla_id": FindingFactKind.BOX,
+        "open_casilla_id": FindingFactKind.BOX,
         "box": FindingFactKind.BOX,
         "ingreso_id": FindingFactKind.BOX,
         "reduccion_id": FindingFactKind.BOX,
@@ -122,6 +123,8 @@ FINDING_FACT_KINDS: Final[Mapping[str, FindingFactKind]] = MappingProxyType(
         "recorded_cuota": FindingFactKind.MONEY,
         "limit": FindingFactKind.MONEY,
         "stated": FindingFactKind.MONEY,
+        "held_turnover": FindingFactKind.MONEY,
+        "stated_turnover": FindingFactKind.MONEY,
         "pending_total": FindingFactKind.MONEY,
         "capacity": FindingFactKind.MONEY,
         # Other figures.
@@ -165,12 +168,16 @@ FINDING_FACT_KINDS: Final[Mapping[str, FindingFactKind]] = MappingProxyType(
         "expected": FindingFactKind.OFFICIAL_CODE,
         # Numbers printed on the filer's own documents.
         "invoice_number": FindingFactKind.DOCUMENT_NUMBER,
+        # The filer's own sector names in their prorrata register, kept as written.
+        "sector_ids": FindingFactKind.DOCUMENT_NUMBER,
         # Identifiers, for technical details only.
         "anchored": FindingFactKind.TECHNICAL,
         "membership_available": FindingFactKind.TECHNICAL,
         "attestation_profile_path": FindingFactKind.TECHNICAL,
         "attested_periods": FindingFactKind.TECHNICAL,
         "binding_id": FindingFactKind.TECHNICAL,
+        "profile_path": FindingFactKind.TECHNICAL,
+        "reason": FindingFactKind.TECHNICAL,
         "blocker_codes": FindingFactKind.TECHNICAL,
         "condition_id": FindingFactKind.TECHNICAL,
         "declared_grade": FindingFactKind.TECHNICAL,
