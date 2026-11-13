@@ -114,10 +114,15 @@ def _operator_entry_origin(
     casilla_id = row.casilla_id
     if casilla_id in context.cleared:
         return ModeloFormOrigin.CLEARED
+    source_supplied = casilla_id in context.source_supplied
     if context.entered is not None and casilla_id in context.entered:
-        return ModeloFormOrigin.ENTERED
+        return ModeloFormOrigin.OVERRIDES_SOURCE if source_supplied else ModeloFormOrigin.ENTERED
     if row.realised_kind is ModeloValueKind.EMPTY:
         return ModeloFormOrigin.NEEDS_INPUT if required else ModeloFormOrigin.OPTIONAL_EMPTY
+    if source_supplied and context.entered is not None:
+        # A source resolver handed the calculation this value and the operator's own entries are known to omit
+        # the box, so it is derived from the filer's records, not assumed. An unknown record proves neither.
+        return ModeloFormOrigin.IMPORTED
     return held_value_origin(row.value, required=required)
 
 
