@@ -165,6 +165,16 @@ aggregation:
       supplier_regime_observations_outside_period: L'agregació d'IVA conté observacions
         datades fora del període de declaració sol·licitat.
   modelo_232_related_party:
+    basis:
+      contradiction: Hi ha una declaració que no hi va haver operacions al costat
+        d'una operació vigent, així que no es decideix res.
+      none_stated: Vas declarar que aquest any no va tenir operacions vinculades ni
+        amb paradisos fiscals.
+      nothing_stated: No has declarat res per a aquest any.
+      operations_stated: Vas declarar operacions per a aquest any.
+    direction:
+      ingreso: Ingrés (I)
+      pago: Pagament (P)
     errors:
       already_stated: Aquesta declaració ja és vigent per a aquest any. Retira-la
         abans de tornar-la a declarar.
@@ -182,6 +192,56 @@ aggregation:
         específica.
       stale_revision: Aquesta declaració del model 232 ha canviat des que la vas llegir.
         Torna-la a llegir i reintenta-ho.
+      validation: Les dades no formen una declaració del model 232 d'aquest tipus.
+        Revisa les opcions que aquest tipus necessita i les que no admet.
+    exclusion:
+      aie_or_registered_ute: AIE o UTE inscrita amb els seus membres (art. 2.2.b)
+      consolidation_group: Dins d'un grup de consolidació fiscal (art. 2.2.a)
+      public_offer: En una oferta pública de valors (art. 2.2.c)
+    ground:
+      intangibles_reduction: Reducció per cessió d'actius intangibles (art. 2.4)
+      same_related_party: Operacions amb una mateixa persona o entitat vinculada (art.
+        2.1.a)
+      specific_operation_type: Operacions específiques d'un mateix tipus (art. 2.1.b)
+      tax_haven: Operacions o valors en paradisos fiscals (art. 2.5)
+      turnover_share: Operacions del mateix tipus i mètode de valoració davant la
+        xifra de negocis (art. 2.3)
+    ground_state:
+      met: Es compleix
+      not_met: No es compleix
+      undecided: Sense decidir
+    obligation:
+      not_owed: Els teus registres indiquen que no has de presentar el model 232.
+      owed: Els teus registres indiquen que has de presentar el model 232.
+      undecided: Els teus registres encara no permeten decidir si has de presentar
+        el model 232.
+    operation_kind:
+      intangibles_reduction: Rendes amb la reducció per cessió d'actius intangibles
+        (art. 23 LIS)
+      related_party: Operació amb persona o entitat vinculada
+      tax_haven_holding: Valors en un paradís fiscal
+      tax_haven_operation: Operació amb un paradís fiscal
+    served:
+      already_stated: Ja hi ha una declaració d'aquest tipus vigent per a aquest any.
+        Retira-la abans de tornar-la a declarar.
+      code_unknown: Un tipus de vinculació, d'operació o un mètode de valoració no
+        és dels que el disseny del model 232 publica per a aquest any.
+      ejercicio_unsupported: Aquest any queda fora dels exercicis que admet Cadrumo.
+      none_stated: Vas declarar que aquest any no va tenir operacions vinculades ni
+        amb paradisos fiscals. Retira aquesta declaració abans d'afegir una operació.
+      not_stated: Aquí no hi ha cap declaració vigent per retirar.
+      operations_present: Aquest any té operacions vigents. Retira-les abans de declarar
+        que no n'hi va haver cap.
+      specific_operation_required: Aquest tipus d'operació és sempre una operació
+        específica segons les regles del model 232, així que l'has de declarar com
+        a específica.
+      stale_revision: Aquests registres del model 232 han canviat des que els vas
+        llegir. Torna'ls a llegir i reintenta-ho.
+      validation: Les dades indicades no formen una declaració del model 232 d'aquest
+        tipus. Revisa quines dades necessita aquest tipus.
+    state:
+      active: Vigent
+      withdrawn: Retirada
   modelo_bindings:
     errors:
       invoice_advance_payment_partially_collected: Una factura registra un pagament

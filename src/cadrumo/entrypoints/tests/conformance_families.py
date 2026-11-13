@@ -26,6 +26,7 @@ from .conformance_ledger_rule_remove_support import LEDGER_RULE_REMOVE_CONFORMAN
 from .conformance_live_borrador_support import LIVE_BORRADOR_CONFORMANCE_FAMILY
 from .conformance_m036_support import M036_CONFORMANCE_FAMILY
 from .conformance_m145_support import M145_CONFORMANCE_FAMILY
+from .conformance_m232_related_party_support import M232_RELATED_PARTY_CONFORMANCE_FAMILY
 from .conformance_maritime_preview_support import MARITIME_PREVIEW_CONFORMANCE_FAMILY
 from .conformance_modelo_audit_support import MODELO_AUDIT_CONFORMANCE_FAMILY
 from .conformance_modelo_spreadsheet_support import MODELO_SPREADSHEET_CONFORMANCE_FAMILY
@@ -58,6 +59,7 @@ CONFORMANCE_FAMILIES: tuple[ConformanceFamily, ...] = (
     LIVE_BORRADOR_CONFORMANCE_FAMILY,
     M036_CONFORMANCE_FAMILY,
     M145_CONFORMANCE_FAMILY,
+    M232_RELATED_PARTY_CONFORMANCE_FAMILY,
     MARITIME_PREVIEW_CONFORMANCE_FAMILY,
     MODELO_AUDIT_CONFORMANCE_FAMILY,
     MODELO_SPREADSHEET_CONFORMANCE_FAMILY,

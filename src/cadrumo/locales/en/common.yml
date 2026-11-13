@@ -156,6 +156,15 @@ aggregation:
       supplier_regime_observations_outside_period: The IVA aggregation carries observations
         dated outside the requested filing period.
   modelo_232_related_party:
+    basis:
+      contradiction: A statement of no operations stands beside an operation in force,
+        so nothing is decided.
+      none_stated: You stated that this year had no related-party or tax-haven operations.
+      nothing_stated: You have stated nothing for this year.
+      operations_stated: You stated operations for this year.
+    direction:
+      ingreso: Income (I)
+      pago: Payment (P)
     errors:
       already_stated: This statement is already in force for that year. Withdraw it
         before you state it again.
@@ -173,6 +182,53 @@ aggregation:
         under the Modelo 232 rules. State this operation as specific.
       stale_revision: This Modelo 232 statement changed since you read it. Read it
         again and retry.
+      validation: The statement's fields do not form a Modelo 232 statement of that
+        kind. Check the options that kind needs and the ones it does not take.
+    exclusion:
+      aie_or_registered_ute: AIE or registered UTE with its members (art. 2.2.b)
+      consolidation_group: Within a tax consolidation group (art. 2.2.a)
+      public_offer: Within a public offer of securities (art. 2.2.c)
+    ground:
+      intangibles_reduction: Reduction for assigning intangible assets (art. 2.4)
+      same_related_party: Operations with one related person or entity (art. 2.1.a)
+      specific_operation_type: Specific operations of one type (art. 2.1.b)
+      tax_haven: Operations or securities in a tax haven (art. 2.5)
+      turnover_share: Operations of one type and valuation method against turnover
+        (art. 2.3)
+    ground_state:
+      met: Met
+      not_met: Not met
+      undecided: Undecided
+    obligation:
+      not_owed: Your records show that you do not have to file Modelo 232.
+      owed: Your records show that you must file Modelo 232.
+      undecided: Your records do not yet decide whether you must file Modelo 232.
+    operation_kind:
+      intangibles_reduction: Income with the reduction for assigning intangible assets
+        (LIS art. 23)
+      related_party: Operation with a related person or entity
+      tax_haven_holding: Securities held in a tax haven
+      tax_haven_operation: Operation with a tax haven
+    served:
+      already_stated: A statement of this kind is already in force for this year.
+        Withdraw it before you state it again.
+      code_unknown: A relationship type, operation type or valuation method is not
+        one the Modelo 232 design publishes for this year.
+      ejercicio_unsupported: This year is outside the filing years Cadrumo supports.
+      none_stated: You stated that this year had no related-party or tax-haven operations.
+        Withdraw that statement before you add an operation.
+      not_stated: There is no statement in force here to withdraw.
+      operations_present: This year has operations in force. Withdraw them before
+        you state that there were none.
+      specific_operation_required: This operation type is always a specific operation
+        under the Modelo 232 rules, so it must be stated as specific.
+      stale_revision: These Modelo 232 records changed since you read them. Read them
+        again and retry.
+      validation: The details given do not form a Modelo 232 statement of this kind.
+        Check which details this kind needs.
+    state:
+      active: In force
+      withdrawn: Withdrawn
   modelo_bindings:
     errors:
       invoice_advance_payment_partially_collected: An invoice records an advance payment

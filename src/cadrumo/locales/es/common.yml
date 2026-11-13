@@ -169,6 +169,16 @@ aggregation:
       supplier_regime_observations_outside_period: La agregación de IVA contiene observaciones
         fechadas fuera del periodo de declaración solicitado.
   modelo_232_related_party:
+    basis:
+      contradiction: Hay una declaración de que no hubo operaciones junto a una operación
+        vigente, así que no se decide nada.
+      none_stated: Declaraste que este año no tuvo operaciones vinculadas ni con paraísos
+        fiscales.
+      nothing_stated: No has declarado nada para este año.
+      operations_stated: Declaraste operaciones para este año.
+    direction:
+      ingreso: Ingreso (I)
+      pago: Pago (P)
     errors:
       already_stated: Esta declaración ya está vigente para ese año. Retírala antes
         de volver a declararla.
@@ -186,6 +196,56 @@ aggregation:
         específica según las reglas del Modelo 232. Indica esta operación como específica.
       stale_revision: Esta declaración del modelo 232 cambió desde que la leíste.
         Léela de nuevo y reinténtalo.
+      validation: Los datos no forman una declaración del modelo 232 de ese tipo.
+        Revisa las opciones que ese tipo necesita y las que no admite.
+    exclusion:
+      aie_or_registered_ute: AIE o UTE inscrita con sus miembros (art. 2.2.b)
+      consolidation_group: Dentro de un grupo de consolidación fiscal (art. 2.2.a)
+      public_offer: En una oferta pública de valores (art. 2.2.c)
+    ground:
+      intangibles_reduction: Reducción por cesión de activos intangibles (art. 2.4)
+      same_related_party: Operaciones con una misma persona o entidad vinculada (art.
+        2.1.a)
+      specific_operation_type: Operaciones específicas de un mismo tipo (art. 2.1.b)
+      tax_haven: Operaciones o valores en paraísos fiscales (art. 2.5)
+      turnover_share: Operaciones del mismo tipo y método de valoración frente a la
+        cifra de negocios (art. 2.3)
+    ground_state:
+      met: Se cumple
+      not_met: No se cumple
+      undecided: Sin decidir
+    obligation:
+      not_owed: Tus registros indican que no tienes que presentar el modelo 232.
+      owed: Tus registros indican que debes presentar el modelo 232.
+      undecided: Tus registros aún no permiten decidir si debes presentar el modelo
+        232.
+    operation_kind:
+      intangibles_reduction: Rentas con la reducción por cesión de activos intangibles
+        (art. 23 LIS)
+      related_party: Operación con persona o entidad vinculada
+      tax_haven_holding: Valores en un paraíso fiscal
+      tax_haven_operation: Operación con un paraíso fiscal
+    served:
+      already_stated: Ya hay una declaración de este tipo vigente para este año. Retírala
+        antes de volver a declararla.
+      code_unknown: Un tipo de vinculación, de operación o un método de valoración
+        no es de los que el diseño del modelo 232 publica para este año.
+      ejercicio_unsupported: Este año queda fuera de los ejercicios que admite Cadrumo.
+      none_stated: Declaraste que este año no tuvo operaciones vinculadas ni con paraísos
+        fiscales. Retira esa declaración antes de añadir una operación.
+      not_stated: Aquí no hay ninguna declaración vigente que retirar.
+      operations_present: Este año tiene operaciones vigentes. Retíralas antes de
+        declarar que no hubo ninguna.
+      specific_operation_required: Este tipo de operación es siempre una operación
+        específica según las reglas del modelo 232, así que debes declararla como
+        específica.
+      stale_revision: Estos registros del modelo 232 cambiaron desde que los leíste.
+        Léelos de nuevo y reinténtalo.
+      validation: Los datos indicados no forman una declaración del modelo 232 de
+        este tipo. Revisa qué datos necesita este tipo.
+    state:
+      active: Vigente
+      withdrawn: Retirada
   modelo_bindings:
     errors:
       invoice_advance_payment_partially_collected: Una factura registra un pago anticipado

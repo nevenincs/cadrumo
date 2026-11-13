@@ -29,12 +29,14 @@ if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 __all__ = [
+    "M232_TURNOVER_SOURCE_LOCALE_KEYS",
     "StatedRecordsDerivation",
     "derive_modelo_232_obligation",
+    "modelo_232_finding_note",
     "stated_records_derivation",
 ]
 
-_TURNOVER_SOURCE_LOCALE_KEYS: Final[dict[Modelo232TurnoverSource, str]] = {
+M232_TURNOVER_SOURCE_LOCALE_KEYS: Final[dict[Modelo232TurnoverSource, str]] = {
     Modelo232TurnoverSource.ANNUAL_ACCOUNTS: "filing.applicability.records_turnover_source.annual_accounts",
     Modelo232TurnoverSource.CORPORATION_TAX_RETURN: (
         "filing.applicability.records_turnover_source.corporation_tax_return"
@@ -81,7 +83,7 @@ def derive_modelo_232_obligation(
     )
 
 
-def _finding_note(finding: Modelo232ObligationFinding) -> str | None:
+def modelo_232_finding_note(finding: Modelo232ObligationFinding) -> str | None:
     """Name the turnover and its source, and the operations art. 2.2 excluded, when the finding has them."""
     sentences: list[str] = []
     if (
@@ -93,7 +95,7 @@ def _finding_note(finding: Modelo232ObligationFinding) -> str | None:
             tr(
                 "filing.applicability.records_turnover_considered",
                 amount=format_decimal(finding.turnover_eur),
-                source=tr(_TURNOVER_SOURCE_LOCALE_KEYS[finding.turnover_source]),
+                source=tr(M232_TURNOVER_SOURCE_LOCALE_KEYS[finding.turnover_source]),
             )
         )
     if finding.excluded_operations:
@@ -125,7 +127,7 @@ def stated_records_derivation(
     except Modelo232RelatedPartyPersistenceError:
         return StatedRecordsDerivation(LedgerPayerFactDerivation.UNKNOWN)
     if finding.obligation is Modelo232Obligation.OWED:
-        return StatedRecordsDerivation(LedgerPayerFactDerivation.DERIVED_YES, _finding_note(finding))
+        return StatedRecordsDerivation(LedgerPayerFactDerivation.DERIVED_YES, modelo_232_finding_note(finding))
     if finding.obligation is Modelo232Obligation.NOT_OWED:
-        return StatedRecordsDerivation(LedgerPayerFactDerivation.DERIVED_NO, _finding_note(finding))
+        return StatedRecordsDerivation(LedgerPayerFactDerivation.DERIVED_NO, modelo_232_finding_note(finding))
     return StatedRecordsDerivation(LedgerPayerFactDerivation.UNKNOWN)
