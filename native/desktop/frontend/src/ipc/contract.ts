@@ -390,7 +390,7 @@ export interface HostCommands {
   /** Which leaves one person with unsaved answers is asked, resolved by the
    * product. The draft is a hidden input: no value of it is stored, logged or
    * echoed. Rejects with `{ code }`: `not_signed_in`, `unavailable` or
-   * `invalid_household_draft` (with `refusal_words`). */
+   * `refused` with `reason: "invalid_household_draft"`. */
   user_profile_household_draft: {
     args: {
       language: string;

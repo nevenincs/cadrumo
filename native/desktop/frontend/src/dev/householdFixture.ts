@@ -350,7 +350,8 @@ export function householdFixture(
         ) {
           refuseDraft = false;
           throw {
-            code: "invalid_household_draft",
+            code: "refused",
+            reason: "invalid_household_draft",
             refusal_words: DRAFT_REFUSAL_WORDS,
           };
         }

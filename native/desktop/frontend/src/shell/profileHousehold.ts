@@ -60,7 +60,7 @@ export type HouseholdDraft = {
 
 /** What the product answers a draft with: the asks it resolved, and no value.
  * A draft naming a group or leaf it does not serve, or one leaf twice, is
- * refused with `{ code: "invalid_household_draft" }`. */
+ * refused with `{ code: "refused", reason: "invalid_household_draft" }`. */
 export type HouseholdDraftAnswer = {
   group_key: string;
   leaf_asks: HouseholdLeafAsk[];
@@ -186,8 +186,8 @@ export type ImputationElection = {
 };
 
 /** The profile's companion reads. A rejection carries `{ code }`: one of
- * `not_signed_in` or `unavailable`; a draft read also `invalid_household_draft`
- * with the product's sentence as `refusal_words`. */
+ * `not_signed_in` or `unavailable`; a refused draft read is `refused` with
+ * `reason: "invalid_household_draft"`. */
 export type ProfileCompanionPort = {
   household(language: string, plan?: CallPlan): Promise<ProfileHousehold>;
   /** Which leaves one person with these unsaved answers is asked. No effect. */

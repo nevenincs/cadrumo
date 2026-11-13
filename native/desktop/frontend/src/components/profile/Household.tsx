@@ -93,7 +93,6 @@ const STATE: Record<
 const FAILURE_WORDS: Record<string, string> = {
   not_signed_in: "desktop.profile.signed_out",
   refused: "desktop.profile.refused",
-  invalid_household_draft: "desktop.profile.refused",
   conflict: "desktop.profile.conflict",
   unknown: "desktop.profile.unknown",
   saved_unread: "desktop.profile.saved_unread",
@@ -496,8 +495,9 @@ export function Household({
         const answer = await reads.householdDraft(language, draft, {
           sessionEnded: () =>
             !alive.current || windowEnded.current?.() === true,
-          // The dialog tells this refusal in the product's words.
-          answered: (code) => code === "invalid_household_draft",
+          // The host refuses an invalid draft as `refused`; the dialog tells it
+          // in the product's words.
+          answered: (code) => code === "refused",
         });
         if (answer.group_key === draft.group) return { asks: answer.leaf_asks };
         return { words: t("desktop.profile.unavailable") };
