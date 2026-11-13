@@ -28,7 +28,7 @@ import type { LedgerPort, LedgerRow } from "../../../shell/ledger";
 import type { RuleSeed } from "../../../shell/ledgerCommands";
 import { useLedgerLimits } from "../../../shell/ledgerLimits";
 import { useRuleTrial } from "../../../shell/ledgerRuleTrial";
-import type { LedgerRuleRow } from "../../../shell/ledgerClassificationSetup";
+import type { LedgerRuleRowProjection } from "../../../shell/ledgerClassificationContract";
 import type { StageEvent } from "../../../shell/ledgerStage";
 import { useStrings } from "../../../shell/strings";
 import { useVocabulary } from "../suggestions/SuggestionsProvider";
@@ -58,7 +58,7 @@ import { ruleName } from "./setupWords";
  * nothing. */
 export type RuleDialogTarget =
   | { kind: "seed"; seed: RuleSeed }
-  | { kind: "rule"; rule: LedgerRuleRow }
+  | { kind: "rule"; rule: LedgerRuleRowProjection }
   | { kind: "new" };
 
 let stagedRuleApplies = 0;
@@ -120,7 +120,7 @@ export function RuleDialog({
   rows: readonly LedgerRow[] | null;
   onStage(event: StageEvent): void;
   /** The rule was saved, at `place` in the order the rules run, from 1. */
-  onSaved(rule: LedgerRuleRow, place: number): void;
+  onSaved(rule: LedgerRuleRowProjection, place: number): void;
   onClose(): void;
   /** Called as the dialog closes, to hand focus back to where it was
    * opened from. */
@@ -230,11 +230,14 @@ export function RuleDialog({
     !saving;
 
   const save = async () => {
-    if (!ready || priority === null) return;
+    const decided = RULE_CLASSIFICATIONS.find(
+      (value) => value === classification,
+    );
+    if (!ready || priority === null || !decided) return;
     setSaving(true);
     const sent = {
       description_pattern: pattern,
-      classification,
+      classification: decided,
       category_id: takesCategory && category ? category : null,
       priority,
     };
@@ -247,7 +250,7 @@ export function RuleDialog({
     // does; one not stored leaves the form to send again.
     if (call.kind === "unknown" || call.kind === "saved_unread") {
       const what = t("desktop.ledger.rules.title");
-      let stored: LedgerRuleRow | null = null;
+      let stored: LedgerRuleRowProjection | null = null;
       hold({
         what,
         outcome: call.kind,
