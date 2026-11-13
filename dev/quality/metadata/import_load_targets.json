@@ -2076,6 +2076,7 @@
         "cadrumo.application.user_profile.registration",
         "cadrumo.application.user_profile.rental_records",
         "cadrumo.application.user_profile.repository",
+        "cadrumo.application.user_profile.row_parts",
         "cadrumo.application.user_profile.section_rows",
         "cadrumo.application.user_profile.session_admission",
         "cadrumo.application.user_profile.session_retirement",
