@@ -59,6 +59,7 @@ ACTION_WORDS_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
         "operator.ledger.link": "application.operator_actions.served.action.ledger_link",
         "operator.ledger.preflight": "application.operator_actions.served.action.ledger_preflight",
         "operator.ledger.prorrata.list": "application.operator_actions.served.action.ledger_prorrata_list",
+        "operator.ledger.prorrata.seed": "application.operator_actions.served.action.ledger_prorrata_seed",
         "operator.ledger.review": "application.operator_actions.served.action.ledger_review",
         "operator.live.filed.pull": "application.operator_actions.served.action.live_filed_pull",
         "operator.live.filed.pull_all": "application.operator_actions.served.action.live_filed_pull_all",
@@ -77,6 +78,7 @@ ACTION_WORDS_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
             "application.operator_actions.served.action.modelo_verification_report_list"
         ),
         "operator.modelo.work.amend": "application.operator_actions.served.action.modelo_work_amend",
+        "operator.modelo.work.amend_wizard": ("application.operator_actions.served.action.modelo_work_amend_wizard"),
         "operator.modelo.work.attest_m303_exonerado_390": (
             "application.operator_actions.served.action.modelo_work_attest_m303_exonerado_390"
         ),

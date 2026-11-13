@@ -202,7 +202,7 @@ entries = [
   { key = "prorrata.catalogue.regimes_min", value = "3" },
   { key = "prorrata.catalogue.apportioning_regimes", value = "2" },
   { key = "prorrata.catalogue.transition_kinds", value = "2" },
-  { key = "prorrata.catalogue.provenances", value = "4" },
+  { key = "prorrata.catalogue.provenances", value = "5" },
   { key = "prorrata.catalogue.sector_letters", value = "4" },
   { key = "m296.telefono_max", value = "9" },
   { key = "m296.numero_total_perceptores_max", value = "9" },

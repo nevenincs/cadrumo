@@ -672,8 +672,14 @@ def prepare_prorrata_whole_seed_refusal_case(
     operation: PinnedAuthorityOperation,
     observation_repository: CalculationObservationRepositoryProtocol | None = None,
     refusal_reason: Literal["regulated_override_standing", "seed_existing_blocked"],
+    contradicted_entry_settled: bool = True,
 ) -> ProrrataWholeSeedRefusalCase:
-    """Persist source and target facts that drive one exact whole-seed refusal."""
+    """Persist source and target facts that drive one exact whole-seed refusal.
+
+    The contradicted carried entry refuses a re-seed only once its year is
+    settled; ``contradicted_entry_settled=False`` stores the same contradiction
+    on an unsettled year, which a re-seed replaces instead.
+    """
     observations = observation_repository or CalculationObservationRepository(bucket_id=str(profile_id))
     with validating_governed_facts(operation):
         _save_prior_settlement_observation(
@@ -707,7 +713,18 @@ def prepare_prorrata_whole_seed_refusal_case(
             )
             if evaluation.seed is None or evaluation.blocked:
                 raise AssertionError("canonical conformance observation did not produce a whole-entity seed")
-            contradictory = evaluation.seed.entry.model_copy(update={"provisional_percentage": Decimal("42.00")})
+            settlement = (
+                {
+                    "definitive_percentage": Decimal("42"),
+                    "definitive_volume_con_derecho": Decimal("4200.00"),
+                    "definitive_volume_sin_derecho": Decimal("5800.00"),
+                }
+                if contradicted_entry_settled
+                else {}
+            )
+            contradictory = evaluation.seed.entry.model_copy(
+                update={"provisional_percentage": Decimal("42.00"), **settlement}
+            )
             register = service.declare(contradictory)
             expected_findings = cross_check_prorrata_entry_against_observations(
                 contradictory,

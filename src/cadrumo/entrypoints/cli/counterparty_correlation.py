@@ -102,6 +102,27 @@ def counterparty_withdrawal_invalid(
     return invalid
 
 
+def counterparty_filing_name_withdrawal_invalid(
+    invalid: bool, request: LedgerCounterpartyRequest, result: LedgerCounterpartyResult
+) -> bool:
+    """Correlate a filing-name withdrawal: a write only if a name was removed, and the remaining record on the key."""
+    invalid = invalid or any(
+        (
+            result.withdrawn is None,
+            result.filing_name is not None,
+            result.resolution is not None,
+            result.recorded is not None,
+            result.conflict_context is not None,
+            result.changed != result.withdrawn,
+        )
+    )
+    facts = result.facts
+    if facts is None:
+        return invalid
+    expected_key = confirmed_counterparty_facts_key(request.tax_identifier, country_code=request.country_code)
+    return invalid or facts.counterparty_key != expected_key
+
+
 def counterparty_resolution_invalid(
     invalid: bool, request: LedgerCounterpartyRequest, result: LedgerCounterpartyResult
 ) -> bool:

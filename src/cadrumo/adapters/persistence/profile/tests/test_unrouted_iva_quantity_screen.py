@@ -9,13 +9,18 @@ from pathlib import Path
 
 import pytest
 
-from .....application.aggregation.modelo_bindings_iva import LedgerIvaAggregationSourceResolver
+from .....application.aggregation.modelo_bindings_iva import (
+    LedgerIvaAggregationSourceResolver,
+    recorded_prorrata_apportionment,
+    recorded_prorrata_only_exempt_output,
+)
 from .....application.aggregation.source_mesh import CalculationSourceContext, CalculationSourceResolution
 from .....application.invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.casilla_id import validated_casilla_id
 from .....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from .....core.period import Period
+from .....core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
 from .....domain.bienes_inversion.register import BienesInversionIvaRegister
 from .....domain.calculations.registry.binding_targets import casillas_by_binding
 from .....domain.calculations.registry.schema import ModeloRevision
@@ -25,6 +30,7 @@ from .....domain.invoices.models import Invoice
 from .....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from .....domain.iva.schema import InvoiceKind, IvaCategory
 from .....domain.modelos.calculation_revision_sources import CalculationNoteFact, CalculationNoteSentence
+from .....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
 from .....domain.transactions.date_partition import LedgerDatePartition
 from .....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from .....domain.transactions.models import Transaction, TransactionCatalogue
@@ -450,7 +456,7 @@ def _exempt_row(provider_id: str, *, on: date, direction: TransactionDirection) 
 
 
 def _resolve_exempt(
-    tmp_path: Path, modelo: str, period: Period, row: Transaction
+    tmp_path: Path, modelo: str, period: Period, row: Transaction, *, register: ProrrataRegister | None = None
 ) -> tuple[ModeloRevision, CalculationSourceResolution]:
     """Resolve one exempt row against the revision the registry selects for ``period``, at calculation grade."""
     revision = (
@@ -466,6 +472,8 @@ def _resolve_exempt(
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=profile.repository)
         repository.save(TransactionCatalogue.from_transactions((row,)))
+        if register is not None:
+            ProrrataRegisterRepository(bucket_id=_BUCKET_ID, objects=profile.repository).save(register)
         resolution = _resolver(repository).resolve(
             CalculationSourceContext(
                 bucket_id=_BUCKET_ID,
@@ -476,6 +484,28 @@ def _resolve_exempt(
             ),
         )
     return revision, resolution
+
+
+def _apportioning_register(ejercicio: int) -> ProrrataRegister:
+    """A general prorrata for ``ejercicio`` carried from the prior year's final-period 303."""
+    prior = published_authority_operation().snapshot("303", filing_year=ejercicio - 1, period="4T")
+    return ProrrataRegister(
+        entries=(
+            ProrrataRegisterEntry(
+                ejercicio=ejercicio,
+                regime=ProrrataRegisterRegime.from_registry("general"),
+                especial_transition=None,
+                provisional_percentage=Decimal("80"),
+                provisional_provenance=ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva"),
+                source_observation_ref=f"303:{ejercicio - 1}:4T",
+                source_registry_snapshot_refs=(prior.snapshot_ref,),
+            ),
+        ),
+    )
+
+
+def _source_refs(resolution: CalculationSourceResolution) -> tuple[str, ...]:
+    return tuple(item.source_ref for item in resolution.provenance)
 
 
 def _reasons(resolution: CalculationSourceResolution) -> list[str]:
@@ -497,6 +527,36 @@ def test_an_exempt_sale_without_deduction_right_is_left_to_the_prorrata_on_the_p
 
         assert "unrouted_declarable_quantity" not in _reasons(resolution), year
         assert "structurally_unroutable_base_category" in _reasons(resolution), year
+
+
+def test_an_exempt_sale_left_to_an_unapplied_prorrata_is_recorded_for_the_verify_gate(tmp_path: Path) -> None:
+    """LIVA art. 102.Uno: with no apportionment applied, the calculation records the exempt output it left over."""
+    period = Period.from_year_and_code(max(_envelope_years()), "1T")
+    row = _exempt_row("asistencia-1", on=period.start_date, direction=TransactionDirection.INCOMING)
+
+    _, resolution = _resolve_exempt(tmp_path, "303", period, row)
+
+    assert recorded_prorrata_only_exempt_output(_source_refs(resolution)) == 1
+    assert recorded_prorrata_apportionment(_source_refs(resolution)) is None
+
+
+def test_an_exempt_sale_under_an_applied_prorrata_records_no_exempt_output_marker(tmp_path: Path) -> None:
+    period = Period.from_year_and_code(max(_envelope_years()), "1T")
+    row = _exempt_row("asistencia-1", on=period.start_date, direction=TransactionDirection.INCOMING)
+
+    _, resolution = _resolve_exempt(tmp_path, "303", period, row, register=_apportioning_register(period.filing_year))
+
+    assert recorded_prorrata_apportionment(_source_refs(resolution)) is not None
+    assert recorded_prorrata_only_exempt_output(_source_refs(resolution)) is None
+
+
+def test_a_received_exempt_base_records_no_exempt_output_marker(tmp_path: Path) -> None:
+    period = Period.from_year_and_code(max(_envelope_years()), "1T")
+    row = _exempt_row("seguro-1", on=period.start_date, direction=TransactionDirection.OUTGOING)
+
+    _, resolution = _resolve_exempt(tmp_path, "303", period, row)
+
+    assert recorded_prorrata_only_exempt_output(_source_refs(resolution)) is None
 
 
 def test_a_received_exempt_base_stays_unrouted_on_the_periodic_return(tmp_path: Path) -> None:

@@ -40,6 +40,7 @@ from cadrumo.application.prorrata_register.ports import (
     ProrrataPriorSettlementSourceSnapshot,
     ProrrataSourceRevision,
 )
+from cadrumo.application.prorrata_register.seed import prior_definitiva_source_coordinates
 from cadrumo.core.classification.policies import SensitivityClass
 from cadrumo.core.config import Settings
 from cadrumo.core.external_constants import UTF_8_ENCODING
@@ -50,12 +51,10 @@ from cadrumo.core.time.clock import now
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError
-from cadrumo.domain.calculations.registry.form_codes import form_for_role
 from cadrumo.domain.calculations.registry.ids import RevisionId
 from cadrumo.domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 from cadrumo.domain.modelos.filing_kind_evidence import ObservedFilingKind
 
-from ....core.period import StandardPeriodCode
 from ..storage.envelope.contract import Envelope
 from ..storage.envelope.secure_bound_repository import SecureBoundRepository
 from ..storage.errors import STORED_RECORD_FAILURES, SecureObjectRowIdentityError
@@ -217,20 +216,21 @@ class CalculationObservationRepository:
             member_nif=member_nif,
         )
 
-    def load_prior_m303_settlement_snapshot(self, prior_year: int) -> ProrrataPriorSettlementSourceSnapshot:
-        """Read both possible unmembered annual 303 source rows and revisions.
+    def load_prior_definitiva_source_snapshot(self, prior_year: int) -> ProrrataPriorSettlementSourceSnapshot:
+        """Read every possible unmembered prior definitive source row and its revision.
 
-        The 4T and 12 coordinates are both asserted at commit, including
-        absence. A newly captured higher-priority source therefore invalidates
-        a previously evaluated seed rather than escaping its source fence.
+        The prior 390 and the 303 4T and 12 coordinates are all asserted at
+        commit, including absence. A newly captured higher-priority source
+        therefore invalidates a previously evaluated seed rather than escaping
+        its source fence.
         """
 
         def _read() -> ProrrataPriorSettlementSourceSnapshot:
             observations: list[ObservationEnvelopePayload] = []
             revisions: list[ProrrataSourceRevision] = []
             objects = self._layers.secure_object_repository
-            for period_token in (StandardPeriodCode.Q4.value, StandardPeriodCode.DEC.value):
-                identifier = observation_key_for_token(form_for_role("iva.periodic"), prior_year, period_token)
+            for modelo, period_token in prior_definitiva_source_coordinates():
+                identifier = observation_key_for_token(modelo, prior_year, period_token)
                 layers, revision = self._layers.load_revisioned(identifier)
                 if layers is not None and layers.effective is not None:
                     observations.append(layers.effective)

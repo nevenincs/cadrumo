@@ -1864,6 +1864,9 @@ errors:
       the country of fiscal residence belonged to the EU or the EEA, and that depends
       on the date of the filing period. The check did not supply that date. This is
       a fault in the program, and nothing you entered caused it.
+    refused_modelo_prorrata_seed_superseded: Modelo %{modelo} %{filing_year}, %{period}
+      was filed deducting under a provisional prorrata your register no longer holds.
+      Correct it with an amendment.
     refused_modelo_refund_account_missing: A refund was requested but no refund account
       is on file; AEAT cannot pay a refund without an account. Configure a refund
       account, or carry the credit forward.

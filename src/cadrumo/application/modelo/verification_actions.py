@@ -74,6 +74,7 @@ from .m303_regimen_simplificado_scope import (
 from .modelo_bucket_events import emit_modelo_bucket_event
 from .participation_writes import build_participation_writes
 from .preconditions import ModeloPreconditionFailure
+from .prorrata_seed_gate import require_filed_prorrata_seed_current
 from .registry_helpers import assert_revision_content_integrity
 from .required_binding_gate import (
     require_persisted_revision_required_bindings_resolved,
@@ -168,6 +169,14 @@ def _existing_verification(
             target,
         )
         if existing is not None:
+            # The revision is locked, but the register figure it deducted under is not:
+            # a superseded figure is refused here with the amendment door, never a clean no-op.
+            require_filed_prorrata_seed_current(
+                work_unit=work_unit,
+                target=target,
+                prorrata_register_repository=repos.prorrata_register,
+                operation=operation,
+            )
             return ModeloVerificationResult(
                 report=existing,
                 published=False,

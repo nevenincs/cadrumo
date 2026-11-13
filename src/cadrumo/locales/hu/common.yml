@@ -3791,6 +3791,7 @@ desktop:
         carried_prior_definitiva: Előző évi végleges
         inicio_actividad: Tevékenység kezdete
         interrumpida_tres_ultimos: Utolsó három aktív év
+        operator_stated_prior_definitiva: Az általad megadott előző évi végleges
       provenance_label: Honnan származik
       reference: Hivatkozás
       reference_hint: Az engedély vagy javaslat, amelyen alapul

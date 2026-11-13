@@ -113,6 +113,8 @@ cli:
           imprès al document.
         view_help: Mostra què respondria l'escala d'identificació d'IVA per a aquesta
           contrapart amb el que s'ha confirmat fins ara.
+        withdraw_filing_name_help: Retira només el nom de declaració indicat per a
+          una contrapart. Tota la resta que has indicat sobre ella es conserva.
         withdraw_help: Retira el que es va confirmar sobre una contrapart, declarant
           que la resposta anterior era incorrecta.
       evidence:
@@ -629,11 +631,20 @@ cli:
         seed_ejercicio_help: Exercici (any) el percentatge provisional del qual s'arrossega
           o es liquida.
         seed_help: Arrossega a l'exercici la prorrata provisional a partir del percentatge
-          definitiu de l'any anterior (LIVA art. 105.Uno), llegit de l'observació
-          segellada de la liquidació del Model 303 anterior.
+          definitiu de l'any anterior (LIVA art. 105.Uno), llegit del Model 390 anterior
+          desat o, si n'estàs exonerat, del Model 303 de l'últim període de l'any
+          anterior.
         seed_local_authority: El percentatge provisional s'ha arrossegat localment
           des de la teva observació desada de la liquidació {modelo} {period} {filing_year}
           (LIVA art. 105.Uno). No és un percentatge emès per l'AEAT per a aquest exercici.
+        seed_operator_stated: El percentatge provisional és la teva pròpia declaració
+          de la prorrata definitiva del {filing_year}, en lloc del Model {modelo}
+          del {filing_year}, que no està desat (LIVA art. 105.Uno). No és una xifra
+          llegida d'una declaració.
+        seed_percentage_help: El percentatge definitiu de prorrata de l'any anterior
+          (0-100), tal com el declares. Només s'utilitza si no està desat ni el Model
+          390 anterior ni el Model 303 de l'últim període de l'any anterior; si una
+          declaració desada indica una altra xifra, es rebutja.
         seed_regulated_override_standing: L'exercici {ejercicio} ja té una prorrata
           provisional {provenance}, que preval sobre l'arrossegament de l'art. 105.Uno
           LIVA. No s'ha escrit res; substitueix aquesta declaració de manera expressa
@@ -3687,6 +3698,7 @@ cli:
       lines:
         filing_name_stated: '{identifier}: nom de declaració indicat'
         filing_name_unchanged: '{identifier}: el nom de declaració ja estava indicat'
+        filing_name_withdrawn: '{identifier}: nom de declaració retirat'
       notices:
         already_confirmed: '''{identifier}'' ja havia estat confirmada per ''{asserted_by}''
           com a ''{answered}''; aquesta crida no ha creat cap confirmació nova i es
@@ -3702,6 +3714,9 @@ cli:
           per a {declared}, però la forma d'aquest identificador fiscal espanyol és
           la de {observed}. El nom es desa tal com l'has indicat i no s'ha canviat
           res; comprova quina de les dues coses és correcta.
+        no_filing_name_to_withdraw: No hi havia cap nom de declaració indicat per
+          a '{identifier}', de manera que no s'ha retirat res i el magatzem ja es
+          troba en l'estat sol·licitat.
         not_confirmed: No hi ha cap establiment confirmat per a '{identifier}', de
           manera que aquest esglaó no resol res i un document el paper del qual no
           sigui concloent plantejarà la pregunta.

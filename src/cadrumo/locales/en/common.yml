@@ -3751,6 +3751,7 @@ desktop:
         carried_prior_definitiva: Prior year's definitive
         inicio_actividad: Start of activity
         interrumpida_tres_ultimos: Last three active years
+        operator_stated_prior_definitiva: Prior year's definitive, stated by you
       provenance_label: Where it comes from
       reference: Reference
       reference_hint: The authorisation or proposal it stands on

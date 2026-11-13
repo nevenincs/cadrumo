@@ -32,11 +32,10 @@ from ....application.prorrata_register.sector_lifecycle import (
     seed_sector_carried_definitive_from_register,
     settle_sector_definitive,
 )
+from ....application.prorrata_register.seed import prior_definitiva_source_coordinates
 from ....core.errors.hierarchy import CadrumoError
 from ....core.logging import get_logger
-from ....core.period import StandardPeriodCode
 from ....core.secure_object_write import SecureObjectRevisionAssertion, SecureObjectWrite
-from ....domain.calculations.registry.form_codes import form_for_role
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.prorrata_register.register import (
     ProrrataOperatorGrossDeclaration,
@@ -183,19 +182,20 @@ class ProrrataRegisterRepository:
         expected_revision_id: str,
         source_snapshot: ProrrataPriorSettlementSourceSnapshot,
     ) -> None:
-        """Fence both possible unmembered prior 303 rows and the register in one transaction."""
+        """Fence every possible unmembered prior definitive source row and the register in one transaction."""
         if source_snapshot.backend_identity is not self._objects.engine:
             raise StorageValidationError("prorrata seed source and target must share the same profile store")
+        coordinates = prior_definitiva_source_coordinates()
         expected = {
             (
                 CALCULATION_OBSERVATIONS_NAMESPACE.namespace,
-                observation_key_for_token(form_for_role("iva.periodic"), ejercicio - 1, token),
+                observation_key_for_token(modelo, ejercicio - 1, token),
             )
-            for token in (StandardPeriodCode.Q4.value, StandardPeriodCode.DEC.value)
+            for modelo, token in coordinates
         }
         actual = {(revision.namespace, revision.object_key) for revision in source_snapshot.revisions}
-        if len(source_snapshot.revisions) != 2 or actual != expected:
-            raise StorageValidationError("prorrata seed requires both prior-year 303 source revisions")
+        if len(source_snapshot.revisions) != len(coordinates) or actual != expected:
+            raise StorageValidationError("prorrata seed requires every prior-year definitive source revision")
         assertions = tuple(
             SecureObjectRevisionAssertion(
                 namespace=revision.namespace,

@@ -82,9 +82,15 @@ class ProrrataRevokeEspecialRequest(ProrrataElectionRequest):
 
 
 class ProrrataSeedRequest(ProrrataProfileRequest):
-    """Carry whole-entity prior definitive from the pinned 303 observation."""
+    """Carry the whole-entity prior definitive from the held prior 390 or final-period 303.
+
+    ``percentage`` is the taxpayer's statement of that prior definitive; it is
+    carried only when neither return is held, and refused when a held return
+    states another figure.
+    """
 
     ejercicio: int
+    percentage: PublicDecimal | None = None
 
 
 class ProrrataSeedSectorRequest(ProrrataProfileRequest):

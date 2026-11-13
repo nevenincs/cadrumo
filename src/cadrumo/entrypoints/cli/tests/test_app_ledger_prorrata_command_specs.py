@@ -332,6 +332,15 @@ _EXPECTED_LEAVES: Final[tuple[tuple[object, ...], ...]] = (
                 False,
             ),
             ("sector", ("--sector",), "builtins:str", "LITERAL", None, "cli.app.ledger.prorrata.sector_help", False),
+            (
+                "percentage",
+                ("--percentage",),
+                "builtins:str",
+                "LITERAL",
+                None,
+                "cli.app.ledger.prorrata.seed_percentage_help",
+                False,
+            ),
         ),
     ),
     (

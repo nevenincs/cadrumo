@@ -1173,6 +1173,24 @@ application:
       party_kinds:
         entity: szervezet
         natural_person: természetes személy
+      served:
+        part:
+          nombre: Utónév
+          primer_apellido: Első vezetéknév
+          razon_social: Cégnév (razón social)
+          segundo_apellido: Második vezetéknév
+        party_kind:
+          entity: Szervezet
+          natural_person: Természetes személy
+        slot_state:
+          fits: A megadott név egészben elfér ebben a mezőben
+          fits_by_rendering: Az ehhez a szélességhez megadott rövidebb alakkal kerül
+            be a bevallásba
+          missing: Nincs megadott név, ezért ez a mező nem tölthető ki
+          single_surname: Az egyetlen vezetéknévvel megadott természetes személyre
+            ebben a mezőben nincs összeállítási szabály
+          too_wide: A megadott név szélesebb ennél a mezőnél, és nincs hozzá a szélességének
+            megfelelő alak
     draft_finding:
       breakdown_bases_disagree: A kulcsonkénti alapok összege {summed}, a dokumentum
         viszont {base} adóalapot tüntet fel. Ez ugyanannak a dokumentumnak két olvasata,
@@ -3567,6 +3585,26 @@ application:
       printed_total_mismatch: A(z) [%{box}] rovat nem egyezik az őt alkotó nyomtatott
         sorok összegével (%{printed_sum}), ezért a fájl összegei nem stimmelnének,
         és az AEAT elutasíthatja.
+      prorrata_seed_changed: A nyilvántartásod ideiglenes arányosítási százaléka megváltozott
+        a(z) %{modelo} %{filing_year}, %{period} kiszámítása után. Számítsd ki újra
+        az ellenőrzés előtt.
+      prorrata_seed_contradicted: A nálad lévő %{source_filing_year}. évi Modelo %{source_modelo}
+        más végleges arányosítási százalékot tartalmaz, mint amit a nyilvántartásod
+        ideiglenesként %{filing_year} évre átvezet. Vezesd át újra %{filing_year}
+        évre ebből a bevallásból.
+      prorrata_seed_operator_stated: A(z) %{filing_year}. évi %{percentage} ideiglenes
+        arányosítási százalék a(z) %{prior_filing_year}. évi végleges százalék saját
+        megadásod, mert nincs tárolva olyan %{prior_filing_year}. évi bevallás, amely
+        tartalmazná.
+      prorrata_seed_unseeded: '%{filing_year} évben levonási jog nélküli adómentes
+        ügyleteket is végzel, ezért arányosítást kell alkalmazni (LIVA 102. cikk),
+        de az arányosítási nyilvántartásodban nincs arányosítás %{filing_year} évre,
+        ezért a levonható IVA nem számítható ki. Vezesd át %{filing_year} évre az
+        előző év végleges százalékát.'
+      prorrata_seed_unsourced: Az arányosítási nyilvántartásod %{filing_year} évre
+        arányosítást alkalmaz, de nincs benne ideiglenes százalék, ezért a levonható
+        IVA nem számítható ki. Vezesd át %{filing_year} évre az előző év végleges
+        százalékát.
       pulled_filing_casilla_mismatch: '[%{casilla_number}] rovat, %{filing_year} %{period_code}
         időszak: a számítás eredménye %{computed_value}, de az AEAT-hez benyújtott
         bevallásban %{filed_value} szerepel.'
@@ -4091,6 +4129,7 @@ application:
         ledger_link: Kapcsold össze a számlát a kifizetésével
         ledger_preflight: Ellenőrizd az időszak nyilvántartását
         ledger_prorrata_list: Nézd át a prorrata-nyilvántartást
+        ledger_prorrata_seed: Vezesd át az ideiglenes arányosítási százalékot az adóévre
         ledger_review: Nézd át a nyilvántartást
         live_filed_pull: Töltsd le a benyújtott bevallást az AEAT-tól
         live_filed_pull_all: Töltsd le az összes benyújtott bevallást az AEAT-tól
@@ -4105,6 +4144,7 @@ application:
         modelo_iva_wallet_seed: Add meg a továbbvihető IVA nyitóegyenlegét
         modelo_verification_report_list: Nézd át az ellenőrzési jelentéseket
         modelo_work_amend: Javítsd a benyújtott bevallást
+        modelo_work_amend_wizard: Javítsd lépésről lépésre a benyújtott bevallást
         modelo_work_attest_m303_exonerado_390: Erősítsd meg, hogy mentesülsz a 390-es
           modelo alól
         modelo_work_attest_prior_carries: Add meg a korábbi évekből áthozott összegeket

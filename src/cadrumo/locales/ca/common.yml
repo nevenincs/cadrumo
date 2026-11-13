@@ -3814,6 +3814,8 @@ desktop:
         carried_prior_definitiva: Definitiva de l'any anterior
         inicio_actividad: Inici d'activitat
         interrumpida_tres_ultimos: Darrers tres anys d'activitat
+        operator_stated_prior_definitiva: Definitiva de l'any anterior que has indicat
+          tu
       provenance_label: D'on surt
       reference: Referència
       reference_hint: L'autorització o proposta en què es basa

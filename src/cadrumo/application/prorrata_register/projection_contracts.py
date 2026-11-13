@@ -227,7 +227,11 @@ class ProrrataFindingProjection(BaseModel):
 
 
 class ProrrataSeedSourceProjection(BaseModel):
-    """Identity of the local stamped observation that supplied a carried seed."""
+    """Identity of the local stamped observation, or the stated box, that supplied a carried seed.
+
+    ``operator_stated`` marks the taxpayer's statement: the coordinate is then
+    the prior annual summary box it stands in for, not a held observation.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
@@ -236,7 +240,7 @@ class ProrrataSeedSourceProjection(BaseModel):
     period: str
     casilla_id: str
     stamped_revision_id: str
-    authority: Literal["local_prior_observation"] = "local_prior_observation"
+    authority: Literal["local_prior_observation", "operator_stated"] = "local_prior_observation"
 
     @classmethod
     def from_seed(cls, seed: ProrrataPriorDefinitivaSeed) -> ProrrataSeedSourceProjection:
@@ -247,6 +251,7 @@ class ProrrataSeedSourceProjection(BaseModel):
             period=seed.source_period,
             casilla_id=seed.source_casilla_id,
             stamped_revision_id=seed.stamped_revision_id,
+            authority="operator_stated" if seed.operator_stated else "local_prior_observation",
         )
 
 

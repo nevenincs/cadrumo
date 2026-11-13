@@ -473,7 +473,8 @@ class LedgerIvaAggregationSourceResolver:
             source_transaction_ids=tuple(sorted(transaction_ids)),
             diagnostics=self._screening_diagnostics(context, aggregation_period, aggregation, invoice_screen)
             + self._unrouted_diagnostics(context, unconsumed, unrouted_quantities, unroutable_categories),
-            provenance=self._ledger_provenance(context, aggregation_period, aggregation),
+            provenance=self._ledger_provenance(context, aggregation_period, aggregation)
+            + _prorrata_only_exempt_output_provenance(context.revision, aggregation_period, aggregation, exempt_output),
         )
 
     def _screening_diagnostics(
@@ -713,7 +714,7 @@ def _iva_prorrata_apportionment_provenance(
             contributor_source_kind="ledger_iva_aggregation",
             contributor_binding_source=BindingSourceKind.LEDGER_IVA_AGGREGATION,
             lineage_role=CalculationSourceLineageRole.PRIMARY,
-            source_ref=_iva_prorrata_apportionment_source_ref(period, apportionment),
+            source_ref=iva_prorrata_apportionment_source_ref(period, apportionment),
             parent_source_ref=None,
             terminal_origin=TerminalOriginClass.LEDGER_AGGREGATE,
             legal_refs=tuple(dict.fromkeys(ref for casilla in casillas for ref in casilla.legal_refs)),
@@ -722,12 +723,111 @@ def _iva_prorrata_apportionment_provenance(
     )
 
 
-def _iva_prorrata_apportionment_source_ref(
+def _prorrata_only_exempt_output_provenance(
+    revision: ModeloRevision,
+    period: Period,
+    aggregation: IvaLedgerAggregation,
+    exempt_output: _ProrrataOnlyExemptOutput | None,
+) -> tuple[CalculationSourceProvenance, ...]:
+    """Record that the period holds exempt output left to the prorrata while no apportionment applied.
+
+    Such output means the taxpayer performs operations without the right to
+    deduct, so the prorrata applies (LIVA art. 102.Uno); deducting with no
+    apportionment is then a full deduction the verify gate refuses.
+    """
+    if exempt_output is None or aggregation.prorrata_apportionment is not None:
+        return ()
+    rows = {
+        _observation_source_ref(observation)
+        for observation in aggregation.observations
+        if exempt_output.accounts_for(observation)
+    }
+    if not rows:
+        return ()
+    casillas = _iva_deducible_cuota_casillas(revision)
+    return (
+        CalculationSourceProvenance(
+            resolver_id=LedgerIvaAggregationSourceResolver.resolver_id,
+            resolved_binding_source=BindingSourceKind.LEDGER_IVA_AGGREGATION,
+            contributor_source_kind="ledger_iva_aggregation",
+            contributor_binding_source=BindingSourceKind.LEDGER_IVA_AGGREGATION,
+            lineage_role=CalculationSourceLineageRole.PRIMARY,
+            source_ref=prorrata_only_exempt_output_source_ref(period, len(rows)),
+            parent_source_ref=None,
+            terminal_origin=TerminalOriginClass.LEDGER_AGGREGATE,
+            legal_refs=tuple(dict.fromkeys(ref for casilla in casillas for ref in casilla.legal_refs)),
+            source_refs=tuple(dict.fromkeys(ref for casilla in casillas for ref in casilla.source_refs)),
+        ),
+    )
+
+
+_PRORRATA_ONLY_EXEMPT_OUTPUT_SOURCE_REF_PREFIX = "prorrata-only-exempt-output"
+
+
+def prorrata_only_exempt_output_source_ref(period: Period, row_count: int) -> str:
+    """Return the reference a calculation records when it left exempt output to a prorrata it did not apply.
+
+    :func:`recorded_prorrata_only_exempt_output` reads the row count back.
+    """
+    return f"{_PRORRATA_ONLY_EXEMPT_OUTPUT_SOURCE_REF_PREFIX}:{period.filing_year}:rows:{row_count}"
+
+
+def recorded_prorrata_only_exempt_output(source_refs: Iterable[str]) -> int | None:
+    """Read back how many records of exempt output a calculation left to an unapplied prorrata, or ``None``."""
+    for source_ref in source_refs:
+        match source_ref.split(":"):
+            case [prefix, _filing_year, "rows", row_count] if prefix == _PRORRATA_ONLY_EXEMPT_OUTPUT_SOURCE_REF_PREFIX:
+                return int(row_count)
+            case _:
+                continue
+    return None
+
+
+_PRORRATA_APPORTIONMENT_SOURCE_REF_PREFIX = "prorrata-apportionment"
+
+
+@dataclass(frozen=True, slots=True)
+class RecordedProrrataApportionment:
+    """The provisional prorrata a saved calculation recorded that it applied."""
+
+    filing_year: int
+    regime: str
+    percentage: Decimal
+    provenance: str
+
+
+def recorded_prorrata_apportionment(source_refs: Iterable[str]) -> RecordedProrrataApportionment | None:
+    """Read back the apportionment a calculation recorded, or ``None`` when it applied none.
+
+    The reference is the one this module writes for the deducible casillas,
+    so its leading fields are fixed: year, regime, percentage and provenance.
+    """
+    for source_ref in source_refs:
+        match source_ref.split(":"):
+            case [prefix, filing_year, regime, "percentage", percentage, "provenance", provenance, *_] if (
+                prefix == _PRORRATA_APPORTIONMENT_SOURCE_REF_PREFIX
+            ):
+                return RecordedProrrataApportionment(
+                    filing_year=int(filing_year),
+                    regime=regime,
+                    percentage=Decimal(percentage),
+                    provenance=provenance,
+                )
+            case _:
+                continue
+    return None
+
+
+def iva_prorrata_apportionment_source_ref(
     period: Period,
     apportionment: IvaLedgerProrrataApportionment,
 ) -> str:
+    """Return the reference a calculation records for the apportionment it deducted under.
+
+    :func:`recorded_prorrata_apportionment` reads its leading fields back.
+    """
     source_ref = (
-        f"prorrata-apportionment:{period.filing_year}:{apportionment.regime.value}:"
+        f"{_PRORRATA_APPORTIONMENT_SOURCE_REF_PREFIX}:{period.filing_year}:{apportionment.regime.value}:"
         f"percentage:{apportionment.percentage}:provenance:{apportionment.provenance.value}"
     )
     if apportionment.source_observation_ref is not None:

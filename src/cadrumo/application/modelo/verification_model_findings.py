@@ -27,6 +27,7 @@ from .m303_m349_reconcile import m303_m349_intracom_reconcile_findings
 from .m390_prorrata_apartado_gate import modelo_390_prorrata_apartado_verification_finding
 from .m720_redeclaration_gate import modelo_720_redeclaration_findings
 from .preconditions import ModeloPreconditionFailure
+from .prorrata_seed_gate import prorrata_seed_verification_findings
 from .pulled_filing_reconcile import pulled_filing_divergence_findings
 from .verification_finding_contracts import REGISTRY_SNAPSHOT_REFUSAL_SCENARIOS
 from .verification_preconditions import (
@@ -142,6 +143,16 @@ def append_readable_model_findings(
         prorrata_finding, prorrata_failure = prorrata_apartado
         findings.append(prorrata_finding)
         failures_by_finding_id[id(prorrata_finding)] = prorrata_failure
+    for seed_finding in prorrata_seed_verification_findings(
+        work_unit=work_unit,
+        target=target,
+        prorrata_register_repository=repos.prorrata_register,
+        observation_repository=repos.observation,
+        operation=operation,
+    ):
+        findings.append(seed_finding.finding)
+        if seed_finding.failure is not None:
+            failures_by_finding_id[id(seed_finding.finding)] = seed_finding.failure
     registry_snapshot_refused = any(
         failure.scenario_id in REGISTRY_SNAPSHOT_REFUSAL_SCENARIOS for failure in failures_by_finding_id.values()
     )

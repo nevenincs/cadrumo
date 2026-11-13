@@ -24,12 +24,14 @@ from uuid import UUID
 
 import pytest
 
-from ...application.ledger.counterparty_operation import (
+from ...application.ledger.counterparty_filing_name_kind_findings import (
     FILING_NAME_KIND_CONTRADICTS_FORM_FINDING,
+    filing_name_kind_findings,
+)
+from ...application.ledger.counterparty_operation import (
     LEDGER_COUNTERPARTY_OPERATION_DEFINITION_ID,
     LedgerCounterpartyRequest,
     LedgerCounterpartyResult,
-    filing_name_kind_findings,
 )
 from ...core.config import override_settings
 from ...core.external_constants import OutputLanguage

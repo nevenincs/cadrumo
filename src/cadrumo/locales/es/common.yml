@@ -3818,6 +3818,8 @@ desktop:
         carried_prior_definitiva: Definitiva del año anterior
         inicio_actividad: Inicio de actividad
         interrumpida_tres_ultimos: Últimos tres años de actividad
+        operator_stated_prior_definitiva: Definitiva del año anterior que has indicado
+          tú
       provenance_label: De dónde sale
       reference: Referencia
       reference_hint: La autorización o propuesta en la que se basa

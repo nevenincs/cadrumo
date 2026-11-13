@@ -1191,6 +1191,24 @@ application:
       party_kinds:
         entity: una entidad
         natural_person: una persona física
+      served:
+        part:
+          nombre: Nombre
+          primer_apellido: Primer apellido
+          razon_social: Razón social
+          segundo_apellido: Segundo apellido
+        party_kind:
+          entity: Entidad
+          natural_person: Persona física
+        slot_state:
+          fits: El nombre indicado cabe entero en este campo
+          fits_by_rendering: Se declara con la versión más corta que indicaste para
+            este ancho
+          missing: No hay nombre indicado, así que este campo no se puede declarar
+          single_surname: Una persona física con un solo apellido no tiene regla de
+            composición en este campo
+          too_wide: El nombre indicado es más ancho que este campo y no tiene versión
+            para su ancho
     draft_finding:
       breakdown_bases_disagree: Las bases por tipo suman {summed}, pero el documento
         indica una base imponible de {base}. Son dos lecturas del mismo documento
@@ -3621,6 +3639,25 @@ application:
       printed_total_mismatch: La casilla [%{box}] no coincide con la suma de las líneas
         impresas que la componen (%{printed_sum}), así que el fichero no cuadraría
         y la AEAT podría rechazarlo.
+      prorrata_seed_changed: La prorrata provisional de tu registro ha cambiado después
+        de calcular el modelo %{modelo} %{filing_year}, %{period}. Vuelve a calcularlo
+        antes de verificarlo.
+      prorrata_seed_contradicted: El modelo %{source_modelo} de %{source_filing_year}
+        que tienes declara una prorrata definitiva distinta del porcentaje provisional
+        que tu registro arrastra a %{filing_year}. Vuelve a arrastrar %{filing_year}
+        desde esa declaración.
+      prorrata_seed_operator_stated: La prorrata provisional del %{percentage} para
+        %{filing_year} es tu propia declaración del porcentaje definitivo de %{prior_filing_year},
+        porque no hay guardada ninguna declaración de %{prior_filing_year} que lo
+        contenga.
+      prorrata_seed_unseeded: En %{filing_year} realizas operaciones exentas sin derecho
+        a deducción, así que se aplica la prorrata (art. 102 LIVA), pero tu registro
+        de prorrata no tiene ninguna prorrata para %{filing_year}, así que no se puede
+        calcular el IVA deducible. Arrastra a %{filing_year} el porcentaje definitivo
+        del año anterior.
+      prorrata_seed_unsourced: Tu registro de prorrata aplica una prorrata en %{filing_year}
+        pero no tiene porcentaje provisional, así que no se puede calcular el IVA
+        deducible. Arrastra a %{filing_year} el porcentaje definitivo del año anterior.
       pulled_filing_casilla_mismatch: 'Casilla [%{casilla_number}] del periodo %{period_code}
         de %{filing_year}: el cálculo da %{computed_value}, pero la declaración presentada
         ante la AEAT muestra %{filed_value}.'
@@ -4146,6 +4183,7 @@ application:
         ledger_link: Vincula la factura con su pago
         ledger_preflight: Comprueba los libros de este periodo
         ledger_prorrata_list: Revisa el registro de la prorrata
+        ledger_prorrata_seed: Arrastra la prorrata provisional al ejercicio
         ledger_review: Revisa los libros
         live_filed_pull: Descarga la declaración presentada de la AEAT
         live_filed_pull_all: Descarga todas las declaraciones presentadas de la AEAT
@@ -4160,6 +4198,7 @@ application:
         modelo_iva_wallet_seed: Indica el saldo inicial de IVA a compensar
         modelo_verification_report_list: Revisa los informes de verificación
         modelo_work_amend: Corrige la declaración presentada
+        modelo_work_amend_wizard: Corrige paso a paso la declaración presentada
         modelo_work_attest_m303_exonerado_390: Confirma que estás exonerado del modelo
           390
         modelo_work_attest_prior_carries: Indica los importes pendientes de ejercicios

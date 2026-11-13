@@ -230,6 +230,18 @@ def carried_prior_definitiva_prorrata_provenance(
     ).carried_prior_definitiva_provenance
 
 
+def operator_stated_prior_definitiva_prorrata_provenance(
+    *,
+    effective_date: date | None = None,
+    authority: GovernedFactSource | None = None,
+) -> ProrrataProvisionalProvenance:
+    """Return the registry-declared provenance of a prior definitive the taxpayer stated."""
+    return resolve_prorrata_register_catalogue(
+        effective_date=effective_date,
+        authority=authority,
+    ).operator_stated_prior_definitiva_provenance
+
+
 def prorrata_provenance_precedence(
     *,
     effective_date: date | None = None,
@@ -345,6 +357,7 @@ __all__ = [
     "general_prorrata_register_regime",
     "ninguna_prorrata_register_regime",
     "opcion_prorrata_transition",
+    "operator_stated_prior_definitiva_prorrata_provenance",
     "prorrata_electable_provenances",
     "prorrata_provenance_precedence",
     "prorrata_referenced_provenances",

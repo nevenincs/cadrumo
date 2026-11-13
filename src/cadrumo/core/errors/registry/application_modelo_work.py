@@ -244,6 +244,16 @@ MODELO_WORK_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.modelo.prorrata_seed_gate.ModeloProrrataSeedSupersededError",
+        ErrorCode(
+            code="REFUSED_MODELO_PRORRATA_SEED_SUPERSEDED",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_modelo_prorrata_seed_superseded",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.modelo.m193_settled_row_gate.Modelo193SettledRowAmountAuthorityUnresolvedError",
         ErrorCode(
             code="REFUSED_MODELO_193_SETTLED_ROW_AMOUNT_AUTHORITY_UNRESOLVED",
