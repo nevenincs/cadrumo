@@ -422,6 +422,26 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         )
         for leaf in ("modelo.work.verify", "modelo.work.file", "modelo.export")
     ),
+    # A work-income box only the filer can state, a stated disability's increase left
+    # unanswered, or an expense above its legal limit: the filer states the box, through
+    # the override of the binding it reads or else its own value.
+    *(
+        _profile(
+            "modelo.work.verify",
+            f"modelo.work.verify.trabajo_income.{condition}",
+            f"modelo.work.verify.trabajo_income.{scenario}",
+            action_id=(
+                "operator.modelo.work.override" if scenario.endswith("_source") else "operator.modelo.work.set_value"
+            ),
+        )
+        for condition, scenario in (
+            ("stated", "unstated"),
+            ("stated", "unstated_source"),
+            ("disability_increase_stated", "disability_increase_unstated"),
+            ("expense_within_limit", "expense_above_limit"),
+            ("expense_within_limit", "expense_above_limit_source"),
+        )
+    ),
     # The profile door that states a household row's required fact: the fact is the
     # filer's, and the door lists the people the profile records so the missing one is added.
     *(
