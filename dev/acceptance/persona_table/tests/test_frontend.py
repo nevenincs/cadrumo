@@ -45,7 +45,7 @@ def _row(
     *,
     persona: str = "persona",
     horizon: int = _YEAR + 1,
-    figures: tuple[tuple[str, str], ...] = _FIGURES,
+    figures: tuple[tuple[str, str], ...] | None = _FIGURES,
     internal_figures: tuple[tuple[str, str], ...] = (),
     reason: str = "",
 ) -> TableRow:
@@ -244,9 +244,36 @@ def test_a_refused_python_row_matches_a_refusing_surface_with_no_figures() -> No
 
 
 def test_a_row_that_calculated_without_recorded_figures_is_not_comparable() -> None:
-    outcome = parity(_row(figures=()), "tui", _result())
+    outcome = parity(_row(figures=None), "tui", _result())
     assert outcome.outcome == "not-comparable"
     assert "no figures" in outcome.causes[0]
+
+
+def test_a_calculated_row_recorded_with_no_figures_is_compared_on_its_stages() -> None:
+    not_owed = _row(verify=Stage.NOT_OWED, export=Stage.NOT_REACHED, figures=())
+    assert not_owed.figures_recorded
+    matching = _result(verify="not-owed", export="not-reached", figures={})
+    assert parity(not_owed, "tui", matching).outcome == "matched"
+    differing = parity(not_owed, "tui", _result(verify="pass", export="not-reached", figures={}))
+    assert differing.outcome == "differs"
+    shown = parity(not_owed, "tui", _result(verify="not-owed", export="not-reached", figures={"0505": "3"}))
+    assert (shown.outcome, shown.extra_names) == ("matched", ("0505",))
+
+
+def test_recorded_ness_is_the_presence_of_the_figures_object_in_a_json_line() -> None:
+    recorded = _row(figures=())
+    line = json.loads(recorded.to_json())
+    assert line["figures"] == {}
+    assert "figures_recorded" not in line
+    assert TableRow.from_json(recorded.to_json()).figures_recorded
+    unrecorded = _row(figures=None)
+    older = json.loads(unrecorded.to_json())
+    assert "figures" not in older
+    assert not TableRow.from_json(json.dumps(older)).figures_recorded
+    assert TableRow.from_json(unrecorded.to_json()) == unrecorded
+    assert TableRow.from_json(recorded.to_json()) == recorded
+    baseline = recorded.to_baseline_json(recorded.horizon)
+    assert not TableRow.from_json(baseline, horizon=recorded.horizon).figures_recorded
 
 
 @pytest.mark.parametrize("stage", [Stage.HISTORY_FILED, Stage.NOT_RUN])
@@ -333,7 +360,7 @@ def _comparison() -> tuple[list[TableRow], dict[ResultKey, SurfaceResult]]:
         _row("1T"),
         _row("2T"),
         _row("3T"),
-        _row("4T", figures=()),
+        _row("4T", figures=None),
         _row("1T", persona="other"),
         _row("1T", persona="locked"),
         _row("1T", persona="unrun"),

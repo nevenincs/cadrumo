@@ -424,8 +424,9 @@ def parity(
     """How ``result`` of ``surface`` stands against ``row``; ``loads`` is False when the persona did not load there.
 
     ``load_reason`` is the reason that load failure gave. A missing result is ``not-run`` unless the load failed;
-    a row with nothing to compare (history-filed, not run, or calculated with no recorded figures) is
-    ``not-comparable`` and never matched.
+    a row with nothing to compare (history-filed, not run, or calculated in a file written before figures
+    were recorded) is ``not-comparable`` and never matched. A row that recorded no non-zero figure compares on its
+    stages, and the figure test passes with no table figure to find.
     """
     tree = None if result is None else result.tree
     if loads is False or (result is not None and not result.loads):
@@ -454,7 +455,7 @@ def _uncomparable_reason(row: TableRow, stages: Mapping[str, str | None]) -> str
     if empty := [name for name, word in stages.items() if word is None]:
         why = ", ".join(f"{name} {getattr(row, name).value}" for name in empty)
         return f"table row has no comparable stage: {why}"
-    if stages["calculate"] == "pass" and not row.figures:
+    if stages["calculate"] == "pass" and not row.figures_recorded:
         return "table row calculated but records no figures"
     return None
 
