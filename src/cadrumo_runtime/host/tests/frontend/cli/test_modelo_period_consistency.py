@@ -67,6 +67,7 @@ def _create_profile() -> None:
             "identity.legal_name": "Operator SL",
             "activities.description": "design",
             "taxpayer_type.incn_prior_12_months": "7500000.00",
+            "taxpayer_type.regimen_entidades_navieras_tonelaje": "false",
         },
         log_in=False,
     )

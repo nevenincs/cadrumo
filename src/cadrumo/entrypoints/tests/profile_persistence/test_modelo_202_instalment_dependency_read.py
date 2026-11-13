@@ -82,6 +82,7 @@ def _seed_sociedad_without_the_election(bucket_id: str) -> None:
             facts=persona_facts_beneath(
                 (
                     UserProfileFact(path="taxpayer_type.incn_prior_12_months", value=Decimal("500000")),
+                    UserProfileFact(path="taxpayer_type.regimen_entidades_navieras_tonelaje", value=False),
                     UserProfileFact(path="taxpayer_type.pago_fraccionado_art_40_3_elected", value=False),
                     UserProfileFact(
                         path="censo.activity_start_date", value=date(filing_year_envelope().floor - 1, 1, 1)

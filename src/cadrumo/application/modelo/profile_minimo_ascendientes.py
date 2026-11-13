@@ -68,6 +68,7 @@ from ..aggregation.source_mesh import CalculationSourceDiagnostic
 from ..user_profile.ascendant_rows import ASCENDANT_ROW_LEAVES
 from .profile_binding_refusal_doors import ascendant_row_value_refused_verdict
 from .profile_derived_facts import ProfileBindingResolutionError, snapshot_authored_year
+from .profile_read_recording import fact_items_under
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.schema import RegistrySnapshot
@@ -237,7 +238,7 @@ def _stored_answer(row: Mapping[str, str], index: int, leaf: str) -> bool | None
 
 def _stored_rows(fact_index: Mapping[str, UserProfileFactValue]) -> dict[int, dict[str, str]]:
     rows: dict[int, dict[str, str]] = {}
-    for path, value in fact_index.items():
+    for path, value in fact_items_under(fact_index, f"{_ASCENDANT_GROUP}.").items():
         match = _ROW_LEAF.match(path)
         # Only the leaves the edit door reads make a row, so a position here is the door's index.
         if match is None or value is None or match.group(2) not in ASCENDANT_ROW_LEAVES:
@@ -331,7 +332,7 @@ def _inject_disability_keys(
     """
     prefix = f"{_ASCENDANT_GROUP}."
     suffix = f".{ASCENDANT_DISABILITY_KEY_LEAF}"
-    for path in [path for path in fact_index if path.startswith(prefix) and path.endswith(suffix)]:
+    for path in [path for path in fact_items_under(fact_index, prefix) if path.endswith(suffix)]:
         fact_index.pop(path)
     if not _reads_disability_key(snapshot):
         return

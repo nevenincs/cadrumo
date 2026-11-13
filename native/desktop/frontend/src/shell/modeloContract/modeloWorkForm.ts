@@ -1275,6 +1275,7 @@ export type PublicModeloFormIssue = {
   attention: ModeloFormAttention;
   action_locale_key: string;
   open_invoice_id: string | null;
+  door_action_id: string | null;
 };
 
 /**

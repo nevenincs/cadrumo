@@ -29,6 +29,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
             None,
         ),
         (
+            RegistryFailureCondition.MODELO_202_NAVIERAS_DECLARED,
+            {"modelo": "202", "regimen_entidades_navieras_tonelaje_declared": False},
+            "operator.profile.edit",
+            None,
+        ),
+        (
             RegistryFailureCondition.QUERY_FILING_YEAR_SCOPED,
             {"modelo": "100", "as_of_supplied": True, "filing_year_supplied": False},
             "operator.modelo.describe",
@@ -79,6 +85,7 @@ def test_registry_failure_facts_resolve_through_existing_action_or_terminal_auth
     elif condition in {
         RegistryFailureCondition.TAXPAYER_MODEL_DECLARED,
         RegistryFailureCondition.MODELO_202_INCN_DECLARED,
+        RegistryFailureCondition.MODELO_202_NAVIERAS_DECLARED,
     }:
         assert verdict.conditionality is ActionConditionality.REQUIRES_ARGUMENTS
         assert verdict.missing_argument_names == ("profile_name",)
