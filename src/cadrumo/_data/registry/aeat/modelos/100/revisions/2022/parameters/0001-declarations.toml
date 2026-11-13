@@ -2498,7 +2498,7 @@ valid_from = 2022-01-01
 
 
 # LIRPF art. 19.2.f: the 2.000 euros fixed "otros gastos" amount of every taxpayer with work income
-# (ley-35-2006.html.extracted.md:326). The increments for geographic mobility and for an active
+# (ley-35-2006.html.extracted.md:330). The increments for geographic mobility and for an active
 # worker with a disability are operator-stated and are not parameters here.
 [[revisions."2022".parameters]]
 id = "renta-trabajo-otros-gastos-cuantia-general"
@@ -2553,7 +2553,7 @@ marginal_rate = "0"
 valid_from = 2022-01-01
 
 # LIRPF art. 20: the reduction is lost when the other rentas of the taxpayer exceed this limit
-# (ley-35-2006.html.extracted.md:334).
+# (ley-35-2006.html.extracted.md:338).
 [[revisions."2022".parameters]]
 id = "renta-trabajo-reduccion-otras-rentas-limite"
 data_type = "money"
@@ -2588,7 +2588,7 @@ value = "500"
 date_axis = "filing_period"
 valid_from = 2007-04-01
 
-# LIRPF art. 19.2.e: the limit of the legal-defence expenses (ley-35-2006.html.extracted.md:325).
+# LIRPF art. 19.2.e: the limit of the legal-defence expenses (ley-35-2006.html.extracted.md:329).
 [[revisions."2022".parameters]]
 id = "renta-trabajo-defensa-juridica-limite"
 data_type = "money"

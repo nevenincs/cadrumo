@@ -214,9 +214,9 @@ evidence_tier = "official_source_guidance"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/ley-35-2006.html"
-sha256 = "b55ba6f2ee97c045290277acd5be1e6493e95b8e5ba7cb7e5e776ff5a572d9f0"
-bytes = 1921157
-retrieved_at = 2026-05-06
+sha256 = "931aa9c5e55e61c2b52b85f553e39416177f0188541dc1ddfa5c8936cfe75e9a"
+bytes = 2036413
+retrieved_at = 2026-11-13
 published_at = 2006-11-29
 applies_from = 2020-01-01
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#datrigesimatercera"
