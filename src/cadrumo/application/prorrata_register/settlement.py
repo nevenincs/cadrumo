@@ -51,8 +51,10 @@ PRORRATA_PORCENTAJE_CASILLA = validated_casilla_id(
     surface="prorrata settlement definitive percentage casilla id",
 )
 
-#: The words of the refusal, shared with the verification finding that reports the same condition.
-PRORRATA_SETTLEMENT_ESPECIAL_CONTINUATION_KEY = "application.modelo.findings.prorrata_settlement_especial_continuation"
+#: The words of the refusal; the verification finding that reports the same condition names the same key.
+PRORRATA_SETTLEMENT_ESPECIAL_CONTINUATION_LOCALE_KEY = (
+    "application.modelo.findings.prorrata_settlement_especial_continuation"
+)
 
 
 class ProrrataSettlementEspecialContinuationError(ProrrataRegisterValidationError):
@@ -61,7 +63,7 @@ class ProrrataSettlementEspecialContinuationError(ProrrataRegisterValidationErro
     def __init__(self, *, filing_year: int) -> None:
         """Name the settled year and the prior year whose especial entry stands."""
         super().__init__(
-            tr(PRORRATA_SETTLEMENT_ESPECIAL_CONTINUATION_KEY),
+            tr(PRORRATA_SETTLEMENT_ESPECIAL_CONTINUATION_LOCALE_KEY),
             context={"filing_year": filing_year, "prior_filing_year": filing_year - 1},
         )
         self.filing_year = filing_year
@@ -199,7 +201,7 @@ def settled_prorrata_register(
 
 __all__ = [
     "PRORRATA_PORCENTAJE_CASILLA",
-    "PRORRATA_SETTLEMENT_ESPECIAL_CONTINUATION_KEY",
+    "PRORRATA_SETTLEMENT_ESPECIAL_CONTINUATION_LOCALE_KEY",
     "PRORRATA_VOLUMEN_CON_DERECHO_CASILLA",
     "PRORRATA_VOLUMEN_TOTAL_CASILLA",
     "ProrrataSettlementEspecialContinuationError",

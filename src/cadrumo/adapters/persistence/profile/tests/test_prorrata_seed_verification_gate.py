@@ -29,7 +29,7 @@ from .....application.prorrata_register.seed import PRORRATA_DIFFERENTIATED_SECT
 from .....application.prorrata_register.service import ProrrataRegisterService, ProrrataWholeSeedUnavailableError
 from .....application.prorrata_register.settlement import (
     PRORRATA_PORCENTAJE_CASILLA,
-    PRORRATA_SETTLEMENT_ESPECIAL_CONTINUATION_KEY,
+    PRORRATA_SETTLEMENT_ESPECIAL_CONTINUATION_LOCALE_KEY,
     PRORRATA_VOLUMEN_CON_DERECHO_CASILLA,
     PRORRATA_VOLUMEN_TOTAL_CASILLA,
 )
@@ -419,7 +419,7 @@ def test_a_last_return_after_an_especial_year_with_no_declaration_blocks_before_
 
     (item,) = _last_return_findings()
 
-    assert item.finding.message_locale_key == PRORRATA_SETTLEMENT_ESPECIAL_CONTINUATION_KEY
+    assert item.finding.message_locale_key == PRORRATA_SETTLEMENT_ESPECIAL_CONTINUATION_LOCALE_KEY
     assert item.finding.severity is ModeloVerificationFindingSeverity.BLOCKING
     assert dict(item.finding.message_facts) == {"filing_year": _YEAR, "prior_filing_year": _YEAR - 1}
     assert item.finding.legal_refs == ("ley-37-1992:art-105",)

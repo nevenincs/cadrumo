@@ -66,7 +66,7 @@ from ...application.prorrata_register.projection_contracts import (
 )
 from ...application.prorrata_register.settlement import (
     PRORRATA_PORCENTAJE_CASILLA,
-    PRORRATA_SETTLEMENT_ESPECIAL_CONTINUATION_KEY,
+    PRORRATA_SETTLEMENT_ESPECIAL_CONTINUATION_LOCALE_KEY,
 )
 from ...core.modelo_export_artefact import ModeloExportArtefact
 from ...domain.calculations.registry.authority import bundled_indexed_authority
@@ -402,7 +402,7 @@ def test_an_especial_year_before_the_last_return_without_a_declaration_is_refuse
 
 def test_an_especial_year_before_the_last_return_without_a_declaration_is_refused_at_verify(tmp_path: Path) -> None:
     _verify_refuses_a_register_declared_before_calculation(
-        tmp_path, _declare_prior_year_especial, PRORRATA_SETTLEMENT_ESPECIAL_CONTINUATION_KEY
+        tmp_path, _declare_prior_year_especial, PRORRATA_SETTLEMENT_ESPECIAL_CONTINUATION_LOCALE_KEY
     )
 
 
