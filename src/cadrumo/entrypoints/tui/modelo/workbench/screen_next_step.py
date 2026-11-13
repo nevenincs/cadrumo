@@ -12,11 +12,7 @@ from .....application.modelo.work_form_models import (
     ModeloFormField,
     ModeloWorkForm,
 )
-from .....application.modelo.work_form_next_step import (
-    ModeloFormNextAction,
-    ModeloFormNextStep,
-    held_prerequisite_step,
-)
+from .....application.modelo.work_form_next_step import ModeloFormNextAction
 from .....application.modelo.work_form_service import ModeloWorkFormLoadV1
 from .....core.i18n.render import tr
 from ...components.dialogs import ConfirmScreen
@@ -245,16 +241,8 @@ class WorkbenchNextStepMixin:
 
     def _progress(self: ModeloWorkbenchScreen, load: ModeloWorkFormLoadV1) -> WorkbenchProgress:
         """Where the declaration stands now, with the changes staged here."""
-        progress = workbench_progress(
-            load.form, staged=len(self._session.changes), verified=load.verified, filed=self.recorded
-        )
+        progress = workbench_progress(load, staged=len(self._session.changes))
         if self._active_apply_prerequisite() is not None:
-            held = held_prerequisite_step(ModeloFormNextStep(action=progress.next_action, count=progress.count))
-            return replace(
-                progress,
-                next_action=held.action,
-                count=held.count,
-                blocking=progress.blocking + 1,
-                findings_lead=held.findings_lead,
-            )
+            held = load.journey.held_prerequisite_next_step
+            return replace(progress, next_action=held.action, count=held.count, findings_lead=held.findings_lead)
         return progress

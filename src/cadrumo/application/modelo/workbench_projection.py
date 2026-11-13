@@ -90,6 +90,7 @@ from .work_form_field_vocabulary import (
 from .work_form_findings import ModeloFormAttention
 from .work_form_header import ModeloFormHeader
 from .work_form_issue_lines import ModeloFormIssueLine, ModeloFormVerdict
+from .work_form_journey import ModeloFormJourney
 from .work_form_models import (
     ModeloFormBindingStatement,
     ModeloFormCarryAttestation,
@@ -464,6 +465,7 @@ class PublicModeloWorkFormLoadV1(BaseModel):
     form: PublicModeloWorkForm
     verified: bool
     filed: bool
+    journey: ModeloFormJourney
 
 
 class PublicSpanishTaxIdFormat(BaseModel):

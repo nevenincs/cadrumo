@@ -52,9 +52,9 @@ from ....components.host import ScreenHostApp
 from ....tests.modelo_workbench_session import application_workbench
 from ....tests.settling import settle_until
 from ..factory import InstalledModeloWorkbench
-from ..progress import WorkbenchProgress, next_action_text, workbench_progress
+from ..progress import WorkbenchProgress, next_action_text
 from ..screen import ModeloWorkbenchScreen
-from .workbench_fixture import FakeActions
+from .workbench_fixture import FakeActions, served_progress
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -107,7 +107,7 @@ def _check(work: SeededOperatorWork) -> VerificationReport:
 
 
 def _progress(load: ModeloWorkFormLoadV1) -> WorkbenchProgress:
-    return workbench_progress(load.form, staged=0, verified=load.verified, filed=load.filed)
+    return served_progress(load.form, staged=0, verified=load.verified, filed=load.filed)
 
 
 def _blocking_on_the_cause(form: ModeloWorkForm) -> list[str]:
