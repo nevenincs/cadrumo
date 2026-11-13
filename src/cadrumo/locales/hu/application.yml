@@ -4350,6 +4350,8 @@ application:
           modelo alól
         modelo_work_attest_prior_carries: Add meg a korábbi évekből áthozott összegeket
         modelo_work_attest_prior_value: Add meg a korábbi bevallás összegét
+        modelo_work_attest_work_income: Add meg, hogy nincs más munkából származó
+          jövedelmed, amelyet be kellene vallanod
         modelo_work_calculate: Számold ki ezt a bevallást
         modelo_work_calculate_joint_return: Számold ki együttes bevallásként
         modelo_work_create: Kezdd el ezt a bevallást

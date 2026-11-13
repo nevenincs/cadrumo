@@ -4401,6 +4401,8 @@ application:
         modelo_work_attest_prior_carries: Indica els imports pendents d'exercicis
           anteriors
         modelo_work_attest_prior_value: Indica l'import de la declaració anterior
+        modelo_work_attest_work_income: Indica que no tens altres rendiments del treball
+          per declarar
         modelo_work_calculate: Calcula aquesta declaració
         modelo_work_calculate_joint_return: Calcula-la com a declaració conjunta
         modelo_work_create: Comença aquesta declaració
