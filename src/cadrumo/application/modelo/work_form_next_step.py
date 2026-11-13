@@ -384,18 +384,31 @@ def _after_verified_review(form: ModeloWorkForm) -> tuple[ModeloFormNextAction, 
     return action, 0, False
 
 
-def _remaining_review_step(
+def _check_precedes_ungated_notes(
     form: ModeloWorkForm, *, unboxed: int, to_fill: int, blocked: int, blocking: int
-) -> tuple[ModeloFormNextAction, int, bool]:
-    if (
+) -> bool:
+    """Whether the check comes before filling: every value left missing is a note the gates do not refuse on.
+
+    The note stays in the missing count and the findings list.
+    """
+    return bool(
         unboxed
         and not (blocked or blocking or to_fill or form.verification in _UNRESOLVED_VERDICTS)
         and _only_ungated_missing_notes(form)
-    ):
-        # Every value left missing is a note the gates do not refuse on, so the check
-        # comes before filling; the note stays in the findings list.
+    )
+
+
+def _only_values_missing(form: ModeloWorkForm, *, unboxed: int, blocked: int, blocking: int) -> bool:
+    """Whether values only a finding or a note names are missing and nothing else blocks filing."""
+    return bool(unboxed and not (blocked or blocking or form.verification is VerificationCompletenessStatus.BLOCKED))
+
+
+def _remaining_review_step(
+    form: ModeloWorkForm, *, unboxed: int, to_fill: int, blocked: int, blocking: int
+) -> tuple[ModeloFormNextAction, int, bool]:
+    if _check_precedes_ungated_notes(form, unboxed=unboxed, to_fill=to_fill, blocked=blocked, blocking=blocking):
         return ModeloFormNextAction.VERIFY, 0, False
-    if unboxed and not (blocked or blocking or form.verification is VerificationCompletenessStatus.BLOCKED):
+    if _only_values_missing(form, unboxed=unboxed, blocked=blocked, blocking=blocking):
         # Only values are missing, so the step is filling them in, counted as the
         # missing chip counts them; findings name them, so they lead there.
         return ModeloFormNextAction.FILL, to_fill + unboxed, True

@@ -66,6 +66,17 @@ def _entered(operation: PinnedAuthorityOperation) -> ModeloWorkForm:
     return built_form(operation, "210", 2025, "0A", held=_HELD, entered=frozenset(_HELD))
 
 
+def _held_form(
+    operation: PinnedAuthorityOperation,
+    *,
+    entered: frozenset[str],
+    findings: tuple[ModeloVerificationFinding, ...] = (),
+) -> ModeloWorkForm:
+    """The held income and kind as the filer entered ``entered`` of them, in the year ``_entered`` is built for."""
+    year = _entered(operation).filing_year
+    return built_form(operation, "210", year, "0A", held=_HELD, entered=entered, findings=findings)
+
+
 def _calculated(form: ModeloWorkForm, **update: object) -> ModeloWorkForm:
     return form.model_copy(update={"calculation_revision_id": _CALCULATION, **update})
 
@@ -254,7 +265,7 @@ def test_a_missing_finding_beside_an_ungated_missing_note_still_leads_to_filling
         legal_refs=("ley-58-2003:art-119",),
     )
     form = _calculated(
-        built_form(operation, "210", 2025, "0A", held=_HELD, entered=frozenset(_HELD), findings=(missing,)),
+        _held_form(operation, entered=frozenset(_HELD), findings=(missing,)),
         calculation_notes=(_missing_note("settlement_not_computed", withholds_filing=False),),
     )
 
@@ -267,7 +278,7 @@ def test_a_missing_finding_beside_an_ungated_missing_note_still_leads_to_filling
 def test_an_assumed_value_the_editor_withholds_the_file_on_keeps_its_place_ahead_of_the_check(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    assumed = _calculated(built_form(operation, "210", 2025, "0A", held=_HELD, entered=frozenset({_KIND})))
+    assumed = _calculated(_held_form(operation, entered=frozenset({_KIND})))
 
     assert form_next_step(assumed, verified=False, filed=False).action is ModeloFormNextAction.CONFIRM
     ungated = assumed.model_copy(
