@@ -42,7 +42,7 @@ from .workspace_presentation import LedgerConfirmationFlowScreen, door_refusal_t
 
 #: The words of every fact the form can ask for, by the field name the schema serves.
 #: The served schema decides which of them the form offers; a served fact with no entry here is not offered.
-FIELD_LABEL_KEYS: Final[dict[str, str]] = {
+FIELD_LABEL_LOCALE_KEYS: Final[dict[str, str]] = {
     "booked_date": "tui.ledger.entry_tools.add.field.booked_date",
     "amount": "tui.ledger.entry_tools.add.field.amount",
     "direction": "tui.ledger.entry_tools.add.field.direction",
@@ -122,7 +122,7 @@ def _held_links(request: LedgerAddRequest | None) -> dict[str, str]:
 def staged_add_lines(request: LedgerAddRequest, form: LedgerAddFormV1) -> tuple[str, ...]:
     """Name every fact the reviewed request will write, in the operator's language."""
     return tuple(
-        f"{tr(FIELD_LABEL_KEYS[field.name])}: {_shown_value(field, request)}"
+        f"{tr(FIELD_LABEL_LOCALE_KEYS[field.name])}: {_shown_value(field, request)}"
         for field in form.fields
         if field.name != "currency" and (field.required or getattr(request, field.name) not in (None, ""))
     )
@@ -189,7 +189,7 @@ class LedgerEntryAddScreen(LedgerConfirmationFlowScreen):
 
     def _field_widgets(self, field: LedgerAddFieldV1) -> Iterator[Widget]:
         """The words of one fact and the control that takes it."""
-        key = FIELD_LABEL_KEYS[field.name]
+        key = FIELD_LABEL_LOCALE_KEYS[field.name]
         yield localized(Static(tr(key), markup=False), key)
         held = self._held(field)
         if not field.is_choice:
@@ -265,7 +265,7 @@ class LedgerEntryAddScreen(LedgerConfirmationFlowScreen):
             value = select.value
             select.set_options(_choice_options(field))
             select.value = value
-            select.prompt = tr(FIELD_LABEL_KEYS[field.name])
+            select.prompt = tr(FIELD_LABEL_LOCALE_KEYS[field.name])
         self.query_one("#entries-add-optional", Collapsible).title = tr("tui.ledger.entry_tools.add.optional")
         self.query_one("#entries-add-again", Button).label = self._again_label()
         if self.staged is not None:
@@ -422,4 +422,10 @@ class LedgerEntryAddScreen(LedgerConfirmationFlowScreen):
         self._offer_again()
 
 
-__all__ = ["FIELD_LABEL_KEYS", "SUPPLIED_FIELDS", "LedgerEntryAddScreen", "add_outcome_lines", "staged_add_lines"]
+__all__ = [
+    "FIELD_LABEL_LOCALE_KEYS",
+    "SUPPLIED_FIELDS",
+    "LedgerEntryAddScreen",
+    "add_outcome_lines",
+    "staged_add_lines",
+]

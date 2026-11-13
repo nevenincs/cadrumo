@@ -14,7 +14,7 @@ from .....application.ledger.tests.add_request_description_support import ledger
 from .....core.config import override_settings
 from .....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ...tests.settling import settle
-from ..entries_add import FIELD_LABEL_KEYS, SUPPLIED_FIELDS, LedgerEntryAddScreen
+from ..entries_add import FIELD_LABEL_LOCALE_KEYS, SUPPLIED_FIELDS, LedgerEntryAddScreen
 from ..entries_add_form import LedgerAddFormUnavailableError, LedgerAddFormV1, read_served_form
 from ..models import LedgerFlowState
 from .entries_door_fixtures import MemoryEntriesLedger, entries_controller, served_add_form
@@ -34,7 +34,7 @@ def _served_schema() -> dict[str, object]:
 
 
 def _read(schema: dict[str, object]) -> LedgerAddFormV1:
-    return read_served_form(schema, offered=FIELD_LABEL_KEYS, supplied=SUPPLIED_FIELDS)
+    return read_served_form(schema, offered=FIELD_LABEL_LOCALE_KEYS, supplied=SUPPLIED_FIELDS)
 
 
 def _properties(schema: dict[str, object]) -> dict[str, dict[str, object]]:
@@ -49,7 +49,7 @@ def test_the_required_and_optional_facts_are_the_served_ones() -> None:
     assert "business_classification" in optional
     assert "profile_id" not in optional
     assert "attachment_ids" not in optional
-    assert all(field.name in FIELD_LABEL_KEYS for field in form.fields)
+    assert all(field.name in FIELD_LABEL_LOCALE_KEYS for field in form.fields)
 
 
 def test_the_choices_are_the_tokens_the_schema_lists() -> None:
