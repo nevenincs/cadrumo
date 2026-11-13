@@ -71,7 +71,15 @@ from ..sources import BoxNumbers
 from ..vocabulary import BLOCKS_MARK
 from .declaration_states import recorded_as_filed
 from .form_edits import replace_fields
-from .workbench_fixture import FakeActions, FakeReader, form_field, status_line_of, synthetic_form, with_pages
+from .workbench_fixture import (
+    FakeActions,
+    FakeReader,
+    form_field,
+    served_load,
+    status_line_of,
+    synthetic_form,
+    with_pages,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -238,8 +246,10 @@ def test_a_finding_the_form_marks_as_an_explanation_is_for_information_and_asks_
 
 def test_the_verdict_says_what_the_check_concluded_and_leaves_the_counting_to_the_title() -> None:
     with override_settings(cadrumo_output_language="en"):
-        blocked = verdict_text(_checked())
-        passed = verdict_text(_checked().model_copy(update={"verification": VerificationCompletenessStatus.COMPLETE}))
+        checked = _checked().model_copy(update={"language": OutputLanguage.EN})
+        blocked = verdict_text(served_load(checked).journey.verdict)
+        passed_form = checked.model_copy(update={"verification": VerificationCompletenessStatus.COMPLETE})
+        passed = verdict_text(served_load(passed_form).journey.verdict)
 
     assert blocked == "The check found something that blocks filing."
     assert passed == "The check passed."
@@ -247,7 +257,8 @@ def test_the_verdict_says_what_the_check_concluded_and_leaves_the_counting_to_th
 
 @pytest.mark.asyncio
 async def test_the_list_groups_by_level_wraps_every_word_and_keeps_codes_and_facts_behind_t() -> None:
-    form = _checked().model_copy(update={"issues": (*_checked().issues, _explanation())})
+    # The reader serves the declaration in the language the workbench asks for, its verdict included.
+    form = _checked().model_copy(update={"issues": (*_checked().issues, _explanation()), "language": OutputLanguage.EN})
     with override_settings(cadrumo_output_language="en"):
         screen = ModeloWorkbenchScreen(FakeReader(form=form), actions=FakeActions())
         app = ScreenHostApp(screen)
@@ -435,7 +446,7 @@ async def test_a_declaration_recorded_as_filed_lists_no_assumed_values_and_count
     form = recorded_as_filed(_checked())
     with override_settings(cadrumo_output_language="en"):
         assumed = unentered_boxes(form, IssueLevel.CONFIRM)
-        screen = WorkbenchIssuesScreen(form)
+        screen = WorkbenchIssuesScreen(served_load(form))
         app = ScreenHostApp(screen)
         async with app.run_test(size=(100, 40)) as pilot:
             await settle(pilot)
@@ -468,7 +479,7 @@ def test_without_findings_or_assumed_values_the_list_says_there_is_nothing_to_lo
 async def test_the_declarations_status_line_leads_the_dialog_and_the_title_is_strong() -> None:
     status = "To pay 1,300.00 € · file by 20 Apr 2026"
     with override_settings(cadrumo_output_language="en"):
-        screen = WorkbenchIssuesScreen(_checked(), status_line=status_line_of(status))
+        screen = WorkbenchIssuesScreen(served_load(_checked()), status_line=status_line_of(status))
         app = ScreenHostApp(screen)
         async with app.run_test(size=(100, 40)) as pilot:
             await settle(pilot)
@@ -479,7 +490,7 @@ async def test_the_declarations_status_line_leads_the_dialog_and_the_title_is_st
             verdict = screen.query_one("#issues-verdict", Static)
             title_style, verdict_style = title.rich_style, verdict.rich_style
             app.exit(None)
-        plain = WorkbenchIssuesScreen(_checked())
+        plain = WorkbenchIssuesScreen(served_load(_checked()))
         plain_app = ScreenHostApp(plain)
         async with plain_app.run_test(size=(100, 40)) as pilot:
             await settle(pilot)
@@ -591,7 +602,7 @@ async def test_on_the_smallest_terminal_the_status_keeps_one_line_the_list_opens
     with override_settings(cadrumo_output_language="en"):
         status = status_line(form, OutputLanguage.EN, staged=0, recorded=False)
         assert status is not None and len(status.chips) >= 2
-        screen = WorkbenchIssuesScreen(form, status_line=status)
+        screen = WorkbenchIssuesScreen(served_load(form), status_line=status)
         app = ScreenHostApp(screen)
         async with app.run_test(size=(80, 24)) as pilot:
             await settle(pilot)
