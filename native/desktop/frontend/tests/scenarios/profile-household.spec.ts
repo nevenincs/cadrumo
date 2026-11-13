@@ -49,6 +49,12 @@ const maskedFirstRow = (group: string) =>
       .facts!.map((fact) => [fact.leaf, fact.value]),
   );
 
+/** The birth dates of a group's served rows, in the order the read served them. */
+const servedBirthDates = (scenario: string, group: string) =>
+  served.reads[scenario]!.items.en!.filter(
+    (item) => item.kind === "family_row" && item.group_key === group,
+  ).map((row) => row.facts!.find((fact) => fact.leaf === "birth_date")!.value);
+
 /** The question the product served for a scenario, in a language. */
 const questionOf = (scenario: string, language: Language) =>
   served.reads[scenario]!.items[language]!.find(
@@ -295,16 +301,21 @@ test.describe("the household in the profile page", () => {
       .getByRole("button", { name: addWords("unknown", 0) })
       .click();
     const dialog = page.getByRole("dialog");
+    // Two different dates the product served for its descendants: the draft
+    // read is refused once whatever is typed, so only the change matters.
+    const [first, second] = servedBirthDates("rows", DESCENDANTS).filter(
+      (date, index, dates) => dates.indexOf(date) === index,
+    );
     const born = groupsOf("unknown", "en")[0]!.leaves!.find(
       (entry) => entry.leaf === "birth_date",
     )!.label;
-    await dialog.getByRole("textbox", { name: born }).fill("2020-01-02");
+    await dialog.getByRole("textbox", { name: born }).fill(first!);
     const save = dialog.getByRole("button", {
       name: label("desktop.profile.save"),
     });
     await expect(dialog.getByRole("alert")).toBeVisible();
     await expect(save).toBeDisabled();
-    await dialog.getByRole("textbox", { name: born }).fill("2020-01-03");
+    await dialog.getByRole("textbox", { name: born }).fill(second!);
     await expect(dialog.getByRole("alert")).toHaveCount(0);
     await expect(save).toBeEnabled();
   });
