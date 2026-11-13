@@ -267,15 +267,31 @@ def missing_findings(form: ModeloWorkForm) -> int:
     A finding about a box the missing boxes already list is not counted again:
     that box names it.
     """
+    return _missing_issue_findings(form) + sum(
+        1 for note in form.calculation_notes if note.attention is ModeloFormAttention.MISSING
+    )
+
+
+def _missing_issue_findings(form: ModeloWorkForm) -> int:
+    """How many missing values the check's findings name that no listed missing box already names."""
     listed = _missing_boxes(form)
     records = _record_casillas(form)
-    findings = sum(
+    return sum(
         1
         for issue in form.issues
         if issue.attention is ModeloFormAttention.MISSING and not _named_by_a_missing_box(issue, listed, records)
     )
-    notes = sum(1 for note in form.calculation_notes if note.attention is ModeloFormAttention.MISSING)
-    return findings + notes
+
+
+def _only_ungated_missing_notes(form: ModeloWorkForm) -> bool:
+    """Whether every missing value left is a calculation note that does not withhold filing.
+
+    The check, not the filer, decides whether such a note stands, so it is
+    disclosed in the findings and the next action is the check.
+    """
+    return _missing_issue_findings(form) == 0 and not any(
+        note.attention is ModeloFormAttention.MISSING and note.withholds_filing for note in form.calculation_notes
+    )
 
 
 def missing_count(form: ModeloWorkForm) -> int:
@@ -368,10 +384,31 @@ def _after_verified_review(form: ModeloWorkForm) -> tuple[ModeloFormNextAction, 
     return action, 0, False
 
 
+def _check_precedes_ungated_notes(
+    form: ModeloWorkForm, *, unboxed: int, to_fill: int, blocked: int, blocking: int
+) -> bool:
+    """Whether the check comes before filling: every value left missing is a note the gates do not refuse on.
+
+    The note stays in the missing count and the findings list.
+    """
+    return bool(
+        unboxed
+        and not (blocked or blocking or to_fill or form.verification in _UNRESOLVED_VERDICTS)
+        and _only_ungated_missing_notes(form)
+    )
+
+
+def _only_values_missing(form: ModeloWorkForm, *, unboxed: int, blocked: int, blocking: int) -> bool:
+    """Whether values only a finding or a note names are missing and nothing else blocks filing."""
+    return bool(unboxed and not (blocked or blocking or form.verification is VerificationCompletenessStatus.BLOCKED))
+
+
 def _remaining_review_step(
     form: ModeloWorkForm, *, unboxed: int, to_fill: int, blocked: int, blocking: int
 ) -> tuple[ModeloFormNextAction, int, bool]:
-    if unboxed and not (blocked or blocking or form.verification is VerificationCompletenessStatus.BLOCKED):
+    if _check_precedes_ungated_notes(form, unboxed=unboxed, to_fill=to_fill, blocked=blocked, blocking=blocking):
+        return ModeloFormNextAction.VERIFY, 0, False
+    if _only_values_missing(form, unboxed=unboxed, blocked=blocked, blocking=blocking):
         # Only values are missing, so the step is filling them in, counted as the
         # missing chip counts them; findings name them, so they lead there.
         return ModeloFormNextAction.FILL, to_fill + unboxed, True

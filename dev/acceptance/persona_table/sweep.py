@@ -166,7 +166,7 @@ def _sources(modelo: str) -> frozenset[str]:
     )
 
 
-def _plan(persona_id: str, horizon: int) -> tuple[list[PlannedRow], frozenset[tuple[str, str, int, str]]]:
+def plan_rows(persona_id: str, horizon: int) -> tuple[list[PlannedRow], frozenset[tuple[str, str, int, str]]]:
     """The rows the replay runs, in chain order, and the keys of the selected rows it writes."""
     rows = owed_rows(_persona_at(persona_id, horizon), horizon, _envelope())
     selected = select(rows, modelos=_listed(MODELOS_ENV), years=tuple(int(year) for year in _listed(YEARS_ENV)))
@@ -180,7 +180,7 @@ def _cases() -> list[pytest.ParameterSet]:
         for persona_id in persona_ids()
         if not wanted or persona_id in wanted
         for horizon in replay_horizons(_envelope())
-        if _plan(persona_id, horizon)[1]
+        if plan_rows(persona_id, horizon)[1]
     ]
 
 
@@ -198,7 +198,7 @@ def _short(error: BaseException) -> str:
     return (head if detail == "no detail" else f"{head} :: {detail}")[:_REASON_LIMIT]
 
 
-def _values(persona: Persona, envelope: YearEnvelope, plan: PlannedRow) -> list[ExpectedValue]:
+def stated_values(persona: Persona, envelope: YearEnvelope, plan: PlannedRow) -> list[ExpectedValue]:
     """The persona's stated values in force for the planned return, under the replay's envelope.
 
     A value stated per counterparty is taken only for a return whose type-2 record is compared.
@@ -718,7 +718,7 @@ def _owed_periods(persona: Persona, plan: PlannedRow) -> set[str]:
     return periods or {plan.period}
 
 
-def _scope(persona: Persona) -> ReplayScope:
+def replay_scope(persona: Persona) -> ReplayScope:
     """The records scope when the persona holds a return history, else the full ledger.
 
     The table takes every return of the history through calculate, verify,
@@ -734,13 +734,15 @@ def _scope(persona: Persona) -> ReplayScope:
 def test_persona_returns(tmp_path: Path, persona_id: str, horizon: int) -> None:
     """Replay one persona under one horizon and append a row for every return it owes there."""
     out = Path(os.environ[OUT_ENV])
-    plans, emitted = _plan(persona_id, horizon)
+    plans, emitted = plan_rows(persona_id, horizon)
     persona = _persona(persona_id)
     try:
-        with materialised_persona(persona_id, tmp_path, _scope(persona), reuse=True, horizon=horizon) as materialised:
+        with materialised_persona(
+            persona_id, tmp_path, replay_scope(persona), reuse=True, horizon=horizon
+        ) as materialised:
             envelope = materialised.world.envelope
             for plan in plans:
-                values = _values(materialised.persona, envelope, plan)
+                values = stated_values(materialised.persona, envelope, plan)
                 row = _run_return(materialised, plan, values, tmp_path / "exports")
                 if plan.key in emitted:
                     write_rows(out, [row])
