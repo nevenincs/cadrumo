@@ -261,13 +261,15 @@ def _collected_findings(
     assert target is not None
     findings: list[ModeloVerificationFinding] = []
     failures: dict[int, ModeloPreconditionFailure] = {}
+    repos = build_test_verification_repository_bundle()
     append_readable_model_findings(
         findings,
         failures,
         bucket.work_unit,
         target,
-        build_test_verification_repository_bundle(),
+        repos,
         operation,
+        calculation_catalogue=repos.calculation.load_revisioned(operation=operation)[0],
     )
     return findings, failures
 
