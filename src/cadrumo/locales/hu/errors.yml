@@ -916,6 +916,9 @@ errors:
     filing_export_payload_destination_count: Az exportnak nem pontosan egy tartalomcélt
       adtak meg. Az alkalmazás ezt a saját exportálási tervéből származtatja, ezért
       az adataid módosítása nem javítja ki.
+    filing_export_period_start_unresolved: 'A(z) %{modelo} %{period} adómegállapítási
+      időszakának kezdete nem állapítható meg: add meg a profilodban az alapítás dátumát,
+      valamint az üzleti év zárónapját és hónapját.'
     filing_export_producer_fact_not_boolean: A(z) %{field} exportmezőnek típusos logikai
       előállítói tényre van szüksége, de más típust kapott. Az alkalmazás ezt a saját
       exportálási tervéből származtatja, ezért az adataid módosítása nem javítja ki.
@@ -1316,6 +1319,10 @@ errors:
       létrehozni.
     canonical_tui_destination_unavailable: A kért TUI-célállomás jelenleg nem érhető
       el.
+    canonical_tui_iva_wallet_not_sent: Az IVA-egyenleg kérése nem felelt meg az alkalmazás
+      ellenőrzéseinek, ezért semmit sem küldtünk el, és semmi sem változott.
+    canonical_tui_iva_wallet_refused: Az alkalmazás elutasította az IVA-egyenleg beolvasását
+      vagy rögzítését; az elutasított rögzítés semmit sem változtatott meg.
     canonical_tui_modelo_workspace_declaration_admission: A nyomtatvány munkaterület-deklarációja
       nem engedélyezhető a jelenlegi munkaterület-generációban.
     canonical_tui_module_argument: A TUI-modul csak a támogatott argumentumokat fogadja

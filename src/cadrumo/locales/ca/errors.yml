@@ -988,6 +988,9 @@ errors:
     filing_export_payload_destination_count: A l'exportació se li va donar un nombre
       de destinacions del contingut diferent d'un. L'aplicació ho deriva del seu propi
       disseny d'exportació, així que cap canvi a les teves dades ho corregeix.
+    filing_export_period_start_unresolved: 'No es pot determinar l''inici del període
+      impositiu de %{modelo} %{period}: indica al teu perfil la data de constitució
+      i el dia i mes de tancament de l''exercici.'
     filing_export_producer_fact_not_boolean: El camp d'exportació %{field} necessita
       un fet de productor booleà tipat i n'ha rebut un d'altre tipus. L'aplicació
       ho deriva del seu propi disseny d'exportació, així que cap canvi a les teves
@@ -1421,6 +1424,11 @@ errors:
       vàlida.
     canonical_tui_destination_unavailable: La destinació TUI sol·licitada no està
       disponible actualment.
+    canonical_tui_iva_wallet_not_sent: La sol·licitud del saldo d'IVA no ha superat
+      les comprovacions de l'aplicació, així que no s'ha enviat res i no ha canviat
+      res.
+    canonical_tui_iva_wallet_refused: L'aplicació ha rebutjat la lectura o el registre
+      del saldo d'IVA; un registre rebutjat no ha canviat res.
     canonical_tui_modelo_workspace_declaration_admission: La declaració de l'espai
       de treball del Model no es pot admetre en la generació actual de l'espai de
       treball.

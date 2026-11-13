@@ -898,6 +898,9 @@ errors:
     filing_export_payload_destination_count: The export was given a number of payload
       destinations other than one. The application derives this from its own export
       design, so no change to your data repairs it.
+    filing_export_period_start_unresolved: 'The start of the período impositivo for
+      %{modelo} %{period} can''t be worked out: state the constitution date and the
+      financial year-end day and month in your profile.'
     filing_export_producer_fact_not_boolean: The export field %{field} needs a typed
       boolean producer fact and received another type. The application derives this
       from its own export design, so no change to your data repairs it.
@@ -1288,6 +1291,10 @@ errors:
       screen.
     canonical_tui_destination_unavailable: The requested TUI destination is not currently
       available.
+    canonical_tui_iva_wallet_not_sent: The IVA balance request did not pass the application's
+      checks, so nothing was sent and nothing changed.
+    canonical_tui_iva_wallet_refused: The application refused the IVA balance read
+      or recording; a refused recording changed nothing.
     canonical_tui_modelo_workspace_declaration_admission: The Modelo workspace declaration
       cannot be admitted in the current workspace generation.
     canonical_tui_module_argument: The TUI module accepts only its supported arguments.

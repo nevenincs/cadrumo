@@ -138,6 +138,26 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.entrypoints.tui.modelo.wallet.IvaWalletNotSentError",
+        ErrorCode(
+            code="REFUSED_TUI_IVA_WALLET_NOT_SENT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.canonical_tui_iva_wallet_not_sent",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.entrypoints.tui.modelo.wallet.IvaWalletRefusedError",
+        ErrorCode(
+            code="REFUSED_TUI_IVA_WALLET_REFUSED",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.canonical_tui_iva_wallet_refused",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.entrypoints.tui.account.AccountSessionExpiredError",
         ErrorCode(
             code="FAIL_TUI_ACCOUNT_SESSION_EXPIRED",

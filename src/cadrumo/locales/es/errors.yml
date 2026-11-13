@@ -970,6 +970,9 @@ errors:
     filing_export_payload_destination_count: A la exportación se le dio un número
       de destinos del contenido distinto de uno. La aplicación lo deriva de su propio
       diseño de exportación, así que ningún cambio en tus datos lo corrige.
+    filing_export_period_start_unresolved: 'No se puede determinar el inicio del período
+      impositivo de %{modelo} %{period}: indica en tu perfil la fecha de constitución
+      y el día y mes de cierre del ejercicio.'
     filing_export_producer_fact_not_boolean: El campo de exportación %{field} necesita
       un hecho de productor booleano tipado y recibió otro tipo. La aplicación lo
       deriva de su propio diseño de exportación, así que ningún cambio en tus datos
@@ -1400,6 +1403,10 @@ errors:
     canonical_tui_destination_factory: El destino TUI no pudo crear una pantalla válida.
     canonical_tui_destination_unavailable: El destino TUI solicitado no está disponible
       actualmente.
+    canonical_tui_iva_wallet_not_sent: La solicitud del saldo de IVA no superó las
+      comprobaciones de la aplicación, así que no se envió nada y nada cambió.
+    canonical_tui_iva_wallet_refused: La aplicación rechazó la lectura o el registro
+      del saldo de IVA; un registro rechazado no cambió nada.
     canonical_tui_modelo_workspace_declaration_admission: La declaración del espacio
       de trabajo de Modelo no se puede admitir en la generación actual del espacio
       de trabajo.
