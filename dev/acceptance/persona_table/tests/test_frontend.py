@@ -377,6 +377,7 @@ def test_a_render_without_a_frontend_is_unchanged_and_with_one_adds_columns_line
     text = render_table(rows, head="abc", frontend=compare_frontend(rows, results))
     assert "Frontend: TUI matched 1 / 7, window matched 0 / 7, CLI matched 0 / 7 (7 rows)\n" in text
     assert "| grounding | run | reason | tui | window | cli |" in text
+    assert "\nTrees folded: tui abc (3)\n" in text
     lines = text.splitlines()
     first = next(line for line in lines if line.startswith(f"| persona | 303 | {_YEAR} | 1T |"))
     second = next(line for line in lines if line.startswith(f"| persona | 303 | {_YEAR} | 2T |"))
@@ -403,6 +404,59 @@ def test_a_tree_other_than_the_head_is_named_in_the_cell() -> None:
     comparison = compare_frontend(rows[:1], {result.key: result})
     text = render_table(rows[:1], head="abc", frontend=comparison)
     assert "| matched @def | not run | not run |" in text
+
+
+def _tree_results(trees: dict[str, str]) -> dict[ResultKey, SurfaceResult]:
+    """TUI results for the rows of the given periods (period to tree)."""
+    results = [_result(period=period, tree=tree) for period, tree in trees.items()]
+    return {result.key: result for result in results}
+
+
+def test_a_cell_on_the_head_tree_is_unchanged_and_names_no_tree() -> None:
+    rows = [_row("1T"), _row("2T")]
+    comparison = compare_frontend(rows, _tree_results({"1T": "abc", "2T": "abc"}))
+    cell = comparison.cells["persona", "tui"]
+    assert cell.trees == ("abc",)
+    assert cell_text(cell, "abc") == "loads, 2/2 matched, 0 differs, 0 not run"
+    assert cell_text(cell) == "loads, 2/2 matched, 0 differs, 0 not run"
+
+
+def test_a_cell_names_one_older_tree_after_its_counts() -> None:
+    rows = [_row("1T"), _row("2T")]
+    comparison = compare_frontend(rows, _tree_results({"1T": "abc", "2T": "old"}))
+    text = render_table(rows, head="abc", frontend=comparison)
+    matrix = text.split("## Frontend matrix", 1)[1]
+    assert "| persona | loads, 2/2 matched, 0 differs, 0 not run @old | not yet run | not yet run |" in matrix
+
+
+def test_a_cell_names_several_trees_sorted_and_leaves_the_head_out() -> None:
+    rows = [_row("1T"), _row("2T"), _row("3T")]
+    comparison = compare_frontend(rows, _tree_results({"1T": "zzz", "2T": "abc", "3T": "mmm"}))
+    assert cell_text(comparison.cells["persona", "tui"], "abc") == "loads, 3/3 matched, 0 differs, 0 not run @mmm,zzz"
+
+
+def test_a_differing_row_names_the_tree_of_its_result_only_when_it_is_not_the_head() -> None:
+    rows = [_row("1T"), _row("2T")]
+    results = _tree_results({"1T": "old", "2T": "abc"})
+    results |= {
+        result.key: result
+        for result in (_result(period="1T", tree="old", verify="incomplete"), _result(period="2T", verify="incomplete"))
+    }
+    text = render_table(rows, head="abc", frontend=compare_frontend(rows, results))
+    differing = text.split("### Rows differing", 1)[1]
+    assert f"- persona|303|{_YEAR}|1T: tui@old differs: verify tui incomplete, table pass" in differing
+    assert f"- persona|303|{_YEAR}|2T: tui differs: verify tui incomplete, table pass" in differing
+
+
+def test_the_trees_folded_line_counts_table_rows_per_tree_and_surface() -> None:
+    rows = [_row("1T"), _row("2T"), _row("3T")]
+    results = _tree_results({"1T": "old", "2T": "abc", "3T": "abc"})
+    cli = _result(surface="cli", period="1T", tree="new")
+    results[cli.key] = cli
+    comparison = compare_frontend(rows, results)
+    text = render_table(rows, head="abc", frontend=comparison)
+    assert "\nTrees folded: tui abc (2), old (1); cli new (1)\n" in text
+    assert "Trees folded: none" in render_table(rows, head="abc", frontend=compare_frontend(rows, {}))
 
 
 def test_render_with_frontend_publishes_the_columns_even_when_nothing_was_run(tmp_path: Path) -> None:

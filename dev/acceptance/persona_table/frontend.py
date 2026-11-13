@@ -296,6 +296,8 @@ class PersonaCell:
     counts: Mapping[str, int]
     extra_rows: int = 0
     """The rows on which the surface showed casillas the table row has no figure for."""
+    trees: tuple[str, ...] = ()
+    """The trees of the results the cell summarises (rows and the persona's own line), sorted and distinct."""
 
 
 def _number(text: str) -> Decimal | None:
@@ -412,6 +414,10 @@ class FrontendComparison:
         """The table rows ``surface`` matched."""
         return sum(item.outcome == MATCHED for item in self.parities[surface])
 
+    def trees_folded(self, surface: str) -> Counter[str]:
+        """Per tree, the table rows whose result on ``surface`` came from it."""
+        return Counter(item.tree for item in self.parities[surface] if item.tree is not None)
+
 
 def compare_frontend(rows: Iterable[TableRow], results: Mapping[ResultKey, SurfaceResult]) -> FrontendComparison:
     """Compare ``results`` with the table's ``rows`` on every surface."""
@@ -428,7 +434,8 @@ def compare_frontend(rows: Iterable[TableRow], results: Mapping[ResultKey, Surfa
         parities[surface] = found
         extras[surface] = _surface_extras(surface, held, keys)
         for persona in personas:
-            cells[persona, surface] = _persona_cell(found, persona, loads[persona])
+            line = _persona_line(held, persona)
+            cells[persona, surface] = _persona_cell(found, persona, loads[persona], None if line is None else line.tree)
     return FrontendComparison(ordered, parities, extras, cells)
 
 
@@ -463,11 +470,18 @@ def _surface_extras(surface: str, held: Mapping[ResultKey, SurfaceResult], keys:
     return tuple(extras)
 
 
-def _persona_cell(found: Iterable[RowParity], persona: str, loads: bool | None) -> PersonaCell:
-    """``persona``'s cell on one surface from the parities of that surface's rows."""
+def _persona_cell(
+    found: Iterable[RowParity], persona: str, loads: bool | None, line_tree: str | None = None
+) -> PersonaCell:
+    """``persona``'s cell on one surface from the parities of that surface's rows and its own line's tree."""
     mine = [item for item in found if item.key[0] == persona]
+    trees = {item.tree for item in mine if item.tree is not None} | ({line_tree} if line_tree is not None else set())
     return PersonaCell(
-        loads, len(mine), Counter(item.outcome for item in mine), sum(item.extra_casillas > 0 for item in mine)
+        loads,
+        len(mine),
+        Counter(item.outcome for item in mine),
+        sum(item.extra_casillas > 0 for item in mine),
+        tuple(sorted(trees)),
     )
 
 
@@ -493,17 +507,24 @@ def _load_reason(held: Mapping[ResultKey, SurfaceResult], persona: str) -> str:
     return ""
 
 
-def cell_text(cell: PersonaCell) -> str:
+def cell_text(cell: PersonaCell, head: str | None = None) -> str:
     """The persona cell summary, ``loads, 5/7 matched, 1 differs, 1 not run``, or ``not yet run``.
 
     Rows that could not be compared, rows lost to a failed load and rows that show extra casillas are named after
-    the three counts when there are any.
+    the three counts when there are any. With ``head`` given, the sorted trees of the cell's results that are not
+    ``head`` close it as `` @<tree>,<tree>``.
     """
     if cell.loads is None:
         return "not yet run"
+    others = [tree for tree in cell.trees if head is not None and tree != head]
+    return ", ".join(_cell_parts(cell)) + (f" @{','.join(others)}" if others else "")
+
+
+def _cell_parts(cell: PersonaCell) -> list[str]:
+    """The comma-separated parts of a persona cell that has a surface line."""
     counts = cell.counts
     parts = [
-        "loads" if cell.loads else "does not load",
+        "loads" if cell.loads is True else "does not load",
         f"{counts.get(MATCHED, 0)}/{cell.rows} matched",
         f"{counts.get(DIFFERS, 0)} differs",
         f"{counts.get(NOT_RUN, 0)} not run",
@@ -514,7 +535,7 @@ def cell_text(cell: PersonaCell) -> str:
         parts.append(f"{counts.get(LOAD_FAILED, 0)} load failed")
     if cell.extra_rows:
         parts.append(f"{cell.extra_rows} rows show extra casillas")
-    return ", ".join(parts)
+    return parts
 
 
 def row_cell(item: RowParity, head: str) -> str:
@@ -530,6 +551,19 @@ def frontend_line(comparison: FrontendComparison) -> str:
         f"{SURFACE_LABELS[surface]} matched {comparison.matched(surface)} / {total}" for surface in SURFACES
     )
     return f"Frontend: {matched} ({total} rows)"
+
+
+def trees_line(comparison: FrontendComparison) -> str:
+    """``Trees folded: tui abc (5), def (2); window abc (3)``: per surface, each tree and the table rows it covers.
+
+    A surface with no result is omitted; ``none`` stands when no surface has one.
+    """
+    groups = []
+    for surface in SURFACES:
+        folded = comparison.trees_folded(surface)
+        if folded:
+            groups.append(f"{surface} " + ", ".join(f"{tree} ({count})" for tree, count in sorted(folded.items())))
+    return "Trees folded: " + ("; ".join(groups) or "none")
 
 
 __all__ = [
@@ -552,4 +586,5 @@ __all__ = [
     "parse_result",
     "read_results",
     "row_cell",
+    "trees_line",
 ]
