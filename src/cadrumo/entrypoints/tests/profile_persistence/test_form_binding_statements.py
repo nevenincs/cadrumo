@@ -38,18 +38,12 @@ from ..modelo_operator_work_storage import SeededOperatorWork, seeded_operator_w
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _PRIOR_INCOME = "irpf.previous_year_economic_activity_net_income"
-#: The carries pending from the previous ejercicios: the negative general base, and (LIRPF art. 49.2) the
-#: negative savings balances per source.
+#: The carries of the negative general base still pending from the four previous ejercicios.
 _PENDING_CARRIES = (
     "renta-base-liquidable-negativa-general-anterior",
     "renta-base-liquidable-negativa-general-em2-pendiente-inicio",
     "renta-base-liquidable-negativa-general-em3-pendiente-inicio",
     "renta-base-liquidable-negativa-general-em4-pendiente-inicio",
-    *(
-        f"renta-saldo-negativo-{source}-ahorro-em{age}-pendiente-inicio"
-        for source in ("gyp", "rcm")
-        for age in (1, 2, 3, 4)
-    ),
 )
 #: The negative savings balances (rcm and gyp) of the four earlier ejercicios, which LIRPF art. 49 reads from the previous return.
 _PENDING_SAVINGS_BALANCES = tuple(
