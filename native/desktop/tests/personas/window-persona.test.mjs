@@ -13,6 +13,9 @@
 //                            printed, when the caller staged the package once
 //                            for several windows; default: stage here
 //   CADRUMO_PERSONA_PROFILE  (optional) profile label, default "persona"
+//   CADRUMO_PERSONA_LOADS_ONLY (optional) 1: sign in and wait for the
+//                            declarations list, write only the persona line
+//                            and open no declaration
 //   CADRUMO_PERSONA_LANGUAGE (optional) chrome-string locale; default: the
 //                            window's own document language, else "en"
 import assert from "node:assert/strict";
@@ -1367,6 +1370,7 @@ test(
     let runDir = resolve(
       process.env.CADRUMO_PERSONA_RUN || dirname(resolve(resultsPath)),
     );
+    const loadsOnly = process.env.CADRUMO_PERSONA_LOADS_ONLY === "1";
     let loadError = null;
     let rowCount = 0;
     try {
@@ -1408,7 +1412,7 @@ test(
             ? `signed in to profile ${PROFILE}; the declarations list shows ${rowCount} rows`
             : `the window did not load the profile: ${loadError.message}`,
       });
-      for (const row of world.rows) {
+      for (const row of loadsOnly ? [] : world.rows) {
         await t.test(`${row.modelo} ${row.year} ${row.period}`, async () => {
           const base = {
             modelo: row.modelo,

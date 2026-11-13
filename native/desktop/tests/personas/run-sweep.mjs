@@ -20,7 +20,7 @@
 //     --build <CMake binary dir of the packaged host> [--rows <rows-<sha>.jsonl>] \
 //     [--config Release] [--jobs 1] [--persona <id>[,<id>]] [--out <file>] \
 //     [--case-timeout-min 30] [--logs <dir>] [--fresh] [--no-stop-on-load-failure]
-//     [--dry-run]
+//     [--loads-only] [--dry-run]
 //
 //   --rows       default: the newest rows-*.jsonl in the table directory; the
 //                tree defaults to the sha in that file name.
@@ -31,6 +31,15 @@
 //   By default no further case starts once a case's window did not load the
 //   profile (loads false) or its world was not prepared;
 //   --no-stop-on-load-failure runs on.
+//   --loads-only plan one case per persona (the newest horizon of the rows
+//                file) and only sign in and wait for the declarations list
+//                (CADRUMO_PERSONA_LOADS_ONLY=1); a load failure does not stop
+//                the sweep, and each persona's line is appended as it ends.
+//                A final line per persona reads `<persona> loads=<yes|no> <reason>`.
+//   A case that fails with a WebView2 ExecuteScript error, a timeout or
+//   `Access is denied` is a harness failure: its lines carry the reason prefix
+//   `cause harness: ` and the sweep goes on; only a real sign-in or version
+//   refusal stops it.
 //   --dry-run    print the planned cases and exit; nothing is launched.
 //
 // The packaged host is staged once at the start and shared by every window;
@@ -83,7 +92,12 @@ const PERSONA_KEYS = KEYS.filter(
 );
 
 function parseArguments(argv) {
-  const flags = new Set(["dry-run", "fresh", "no-stop-on-load-failure"]);
+  const flags = new Set([
+    "dry-run",
+    "fresh",
+    "loads-only",
+    "no-stop-on-load-failure",
+  ]);
   const values = {};
   for (let index = 0; index < argv.length; index += 1) {
     const name = argv[index];
@@ -128,6 +142,23 @@ export function plannedCases(rowsPath) {
     cases.set(id, found);
   });
   return [...cases.values()];
+}
+
+/** One case per persona: its newest horizon. */
+export function newestHorizonCases(cases) {
+  const newest = new Map();
+  for (const item of cases) {
+    const have = newest.get(item.persona);
+    if (!have || item.horizon > have.horizon) newest.set(item.persona, item);
+  }
+  return [...newest.values()];
+}
+
+/** Whether a failure is the harness's (WebView2 script error, timeout, access denied), not the window's. */
+export function isHarnessFailure(text) {
+  return /0x8007139F|ExecuteScript|timeout|timed out|Access is denied/i.test(
+    String(text),
+  );
 }
 
 function byPersona(cases) {
@@ -356,6 +387,7 @@ async function runCase(item, context) {
           CADRUMO_CMAKE_BINARY_DIR: build,
           CADRUMO_BUILD_CONFIG: config,
           CADRUMO_PERSONA_HOST: host,
+          ...(context.loadsOnly ? { CADRUMO_PERSONA_LOADS_ONLY: "1" } : {}),
           PYTHONDONTWRITEBYTECODE: "1",
         },
       },
@@ -372,7 +404,12 @@ async function runCase(item, context) {
       result.note = `the spec wrote no lines (exit ${window.status})`;
       return result;
     }
-    const problem = lineProblem(lines, worldJson, tree, item.persona);
+    const problem = lineProblem(
+      lines,
+      context.loadsOnly ? { rows: [] } : worldJson,
+      tree,
+      item.persona,
+    );
     if (problem) {
       result.note = problem;
       return result;
@@ -408,9 +445,11 @@ async function main() {
   const tree = args.tree ?? basename(rowsPath).match(/^rows-(.+)\.jsonl$/)?.[1];
   if (!tree) throw new Error("--tree is required");
   const wanted = args.persona ? args.persona.split(",") : null;
-  const cases = plannedCases(rowsPath).filter(
+  const loadsOnly = args["loads-only"] === true;
+  const filtered = plannedCases(rowsPath).filter(
     (item) => wanted === null || wanted.includes(item.persona),
   );
+  const cases = loadsOnly ? newestHorizonCases(filtered) : filtered;
   const groups = byPersona(cases);
   if (args["dry-run"]) {
     console.log(`rows ${rowsPath}`);
@@ -478,11 +517,13 @@ async function main() {
     parent: windowsTemp(),
     logsDir,
     timeoutMs: Number(args["case-timeout-min"] ?? 30) * 60_000,
+    loadsOnly,
   };
   const ordinals = new Map(cases.map((item, index) => [item.id, index + 1]));
   const results = new Map();
   const queue = [...groups];
   let halted = false;
+  const harness = [];
   const worker = async () => {
     for (let group = queue.shift(); group && !halted; group = queue.shift()) {
       for (const item of group) {
@@ -496,10 +537,31 @@ async function main() {
           `case ${item.id} ${done.ok ? "ok" : "FAILED"} ${done.note}`,
         );
         results.set(item.id, done);
-        const unloaded = done.lines.find(
+        let unloaded = done.lines.find(
           (line) => line.modelo === null && line.loads === false,
         );
+        const harnessLines = done.lines.filter((line) =>
+          isHarnessFailure(line.reason),
+        );
+        if (harnessLines.length || (!done.ok && isHarnessFailure(done.note))) {
+          // The harness failed, not the window: mark the lines and go on.
+          harness.push(item.id);
+          done.lines = done.lines.map((line) =>
+            !harnessLines.includes(line) ||
+            line.reason.includes("cause harness: ")
+              ? line
+              : {
+                  ...line,
+                  reason: line.reason.replace(
+                    /^(S+?: )?/,
+                    (head) => `${head}cause harness: `,
+                  ),
+                },
+          );
+          if (unloaded && harnessLines.includes(unloaded)) unloaded = undefined;
+        }
         if (
+          !loadsOnly &&
           !args["no-stop-on-load-failure"] &&
           (unloaded || /world not prepared/.test(done.note))
         ) {
@@ -540,6 +602,18 @@ async function main() {
     console.log(
       `FAILED ${item.id}: ${results.get(item.id)?.note ?? "not run"}`,
     );
+  if (harness.length)
+    console.log(`${harness.length} harness failures: ${harness.join(", ")}`);
+  if (loadsOnly)
+    for (const item of cases) {
+      const line = results
+        .get(item.id)
+        ?.lines.find((have) => have.modelo === null);
+      const reason = line?.reason ?? results.get(item.id)?.note ?? "not run";
+      console.log(
+        `${item.persona} loads=${line?.loads ? "yes" : "no"} ${reason}`,
+      );
+    }
   return failed.length === 0 ? 0 : 1;
 }
 
