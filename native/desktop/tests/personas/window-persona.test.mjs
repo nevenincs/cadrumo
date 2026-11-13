@@ -505,7 +505,19 @@ function log(event, data = {}) {
   );
 }
 
-const exec = (fn, ...args) => window_.browser.execute(fn, ...args);
+// WebView2 refuses a script while the view changes state (0x8007139F, "not in
+// the correct state"); the same script a moment later runs. Retry only that.
+async function exec(fn, ...args) {
+  for (let attempt = 1; ; attempt += 1) {
+    try {
+      return await window_.browser.execute(fn, ...args);
+    } catch (error) {
+      if (attempt >= 4 || !String(error?.message).includes("0x8007139F"))
+        throw error;
+      await sleep(750 * attempt);
+    }
+  }
+}
 
 async function live() {
   try {
