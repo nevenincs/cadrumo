@@ -2116,6 +2116,8 @@ errors:
     transaction_figures_without_business: Egy Magán tételnek nincs üzleti része, ezért
       nem hordozhat üzleti adatokat, például költségkategóriát, adóalapot vagy áfát.
       Sorold a tételt Üzletinek vagy Vegyesnek, ha rögzíteni szeretnéd őket.
+    transaction_iva_rate_not_fraction: 'Az ÁFA-kulcsot tizedes törtként kell megadni,
+      nem százalékként: ezt írtad be: {value}. A 21%-os ÁFÁ-t így írd: 0.21.'
     tui_modelo_lifecycle_action_unavailable: A kiválasztott Modelo-életciklusművelet
       nem érhető el.
     unsupported_currency: A megadott devizakód nem támogatott.

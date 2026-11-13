@@ -298,6 +298,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.domain.transactions.errors.TransactionIvaRateNotFractionError",
+        ErrorCode(
+            code="REFUSED_TRANSACTION_IVA_RATE_NOT_FRACTION",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.transaction_iva_rate_not_fraction",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.domain.transactions.errors.LedgerLinkError",
         ErrorCode(
             code="FAIL_LEDGER_LINK",

@@ -2229,6 +2229,8 @@ errors:
     transaction_figures_without_business: Un movimiento Personal no tiene parte profesional,
       así que no puede llevar datos de la actividad como una categoría de gasto, una
       base imponible o el IVA. Clasifícalo como Profesional o Mixto para registrarlos.
+    transaction_iva_rate_not_fraction: 'El tipo de IVA se escribe como fracción decimal,
+      no como porcentaje: has introducido {value}. Escribe el 21 % de IVA como 0.21.'
     tui_modelo_lifecycle_action_unavailable: La acción seleccionada del ciclo de vida
       del modelo no está disponible.
     unsupported_currency: El código de moneda indicado no es compatible.
