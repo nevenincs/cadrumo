@@ -103,6 +103,7 @@ def _secure_read_door(
 ) -> Callable[[], SecureProfileWorkbenchGenerationReadDoorV1]:
     """Compose the read door over one profile's secure repositories, afresh for each capture."""
     from ..adapters.persistence.profile.credit_resolution_records import CreditResolutionRepositoryAdapter
+    from ..adapters.persistence.profile.m232_related_party_records import Modelo232RelatedPartyStoreAdapter
     from ..adapters.persistence.profile.modelo_reconciliation import ModeloReconciliationRecordRepository
     from ..adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
     from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
@@ -152,6 +153,7 @@ def _secure_read_door(
                 operation=operation,
             ),
             verification_repository=calculation_binding.verification_repository(),
+            related_party_records=Modelo232RelatedPartyStoreAdapter(objects=objects),
             credit_resolution_reader=CreditResolutionRepositoryAdapter(objects=objects),
             reconciliation_reader=lambda: tuple(ModeloReconciliationRecordRepository(objects=objects).iter_records()),
             notification_custody_reader=StoredNotificationCustodyCounter(profile_id),

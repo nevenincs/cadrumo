@@ -130,6 +130,7 @@ from .edit_models import (
 )
 from .edit_parsing import modelo_edit_address_grammar, validate_modelo_edit_value
 from .edit_receipt_ports import ModeloEditReceiptRepositoryPort
+from .edit_row_statement_withdrawal import is_row_stated, withdraw_superseded_row_statements
 from .edit_services import (
     RESPONSIBLE_OWNER,
     detail_row_natural_key,
@@ -445,11 +446,6 @@ def _calculated_rows(
     )
 
 
-def _row_stated(revision: ModeloRevision, binding_id: BindingId) -> bool:
-    family = next((item.absence_attestation for item in revision.bindings if item.id == binding_id), None)
-    return family is not None and family.row_grain
-
-
 def _apply_binding_intents(
     state: _OperatorState,
     submission: ModeloEditSubmissionV1,
@@ -491,7 +487,7 @@ def _apply_binding_intent(
 ) -> ModeloEditExecutionNoEffectV1 | None:
     """Apply one binding intent to the operator state, or refuse it."""
     binding_id = intent.address.binding_id
-    row_stated = _row_stated(revision, binding_id)
+    row_stated = is_row_stated(revision, binding_id)
     if row_stated != (intent.address.row_identity is not None):
         return _domain_refusal(
             ModeloEditRefusalCode.DISALLOWED_INTENT,
@@ -500,13 +496,16 @@ def _apply_binding_intent(
             condition="name a row exactly when the binding's carry is stated row by row",
         )
     if row_stated:
-        return _state_row_carry(
+        refusal = _state_row_carry(
             state,
             intent,
             rows=_calculated_rows(head, revision, binding_id),
             grammar=modelo_edit_address_grammar(submission.baseline, intent.address),
             tax_id_format=tax_id_format,
         )
+        if refusal is None:
+            withdraw_superseded_row_statements(state.row_attestations, revision, intent.address)
+        return refusal
     # Whatever the intent, an earlier statement on the binding gives way to it.
     state.attested_binding_ids.discard(binding_id)
     state.value_attestations.pop(binding_id, None)

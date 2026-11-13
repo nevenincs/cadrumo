@@ -189,6 +189,12 @@ class _PayerFactReading(NamedTuple):
 NO_LEDGER_PAYER_FACTS: Mapping[str, LedgerPayerFactDerivation] = MappingProxyType[str, LedgerPayerFactDerivation](
     {},
 )
+NO_RECORDS_DERIVATION_NOTES: Mapping[str, str] = MappingProxyType[str, str]({})
+"""Operator-facing detail behind a records-derived payer fact, keyed by payer fact token.
+
+The sentences come from the derivation that read the stated records (the turnover
+considered and where it came from, the operations left out); a fact with none is absent.
+"""
 _UNANSWERED_PAYER_FACT_DECLARATIONS = frozenset(
     {PayerFactDeclaration.UNDECLARED, PayerFactDeclaration.PERIODS_UNDECLARED},
 )
@@ -527,6 +533,8 @@ class ModeloApplicabilityRule(BaseModel):
             return _PayerFactReading(None, ApplicabilityProvenance.PROFILE_DECLARED, None, ledger_conclusive=False)
         declared = payer_fact_declaration(profile, fact)
         derivation = self._ledger_payer_fact_derivation(fact, ledger_payer_facts)
+        if isinstance(fact, PayerFactProjection) and fact.records_source is not None:
+            return self._stated_records_reading(declared, derivation)
         disagreement = self._payer_fact_disagreement(fact, declared, derivation)
         conclusive = derivation in {LedgerPayerFactDerivation.DERIVED_YES, LedgerPayerFactDerivation.DERIVED_NO}
         if derivation is LedgerPayerFactDerivation.DERIVED_YES and declared is not PayerFactDeclaration.DECLARED_YES:
@@ -539,6 +547,29 @@ class ModeloApplicabilityRule(BaseModel):
         return _PayerFactReading(
             declared, ApplicabilityProvenance.PROFILE_DECLARED, disagreement, ledger_conclusive=conclusive
         )
+
+    @staticmethod
+    def _stated_records_reading(
+        declared: PayerFactDeclaration,
+        derivation: LedgerPayerFactDerivation | None,
+    ) -> _PayerFactReading:
+        """Read a fact only the taxpayer's stated records answer.
+
+        The profile holds no field for such a fact, so there is no answer to
+        contradict. The stated records are the taxpayer's own account of facts
+        no ledger holds, so a complete set that meets no ground answers no,
+        where a ledger's silence never does. A derivation that cannot settle
+        the fact leaves it unanswered.
+        """
+        if derivation is LedgerPayerFactDerivation.DERIVED_YES:
+            return _PayerFactReading(
+                PayerFactDeclaration.DECLARED_YES, ApplicabilityProvenance.LEDGER_DERIVED, None, ledger_conclusive=True
+            )
+        if derivation is LedgerPayerFactDerivation.DERIVED_NO:
+            return _PayerFactReading(
+                PayerFactDeclaration.DECLARED_NO, ApplicabilityProvenance.LEDGER_DERIVED, None, ledger_conclusive=True
+            )
+        return _PayerFactReading(declared, ApplicabilityProvenance.PROFILE_DECLARED, None, ledger_conclusive=False)
 
     @staticmethod
     def _ledger_payer_fact_derivation(
@@ -606,16 +637,29 @@ class ModeloApplicabilityRule(BaseModel):
             legal_refs=self.legal_refs,
         )
 
-    def _with_ledger_evidence(self, verdict: ModeloApplicability, reading: _PayerFactReading) -> ModeloApplicability:
-        """Label a ledger-derived verdict and carry a disagreement onto whatever verdict was reached."""
+    def _with_ledger_evidence(
+        self,
+        verdict: ModeloApplicability,
+        reading: _PayerFactReading,
+        records_notes: Mapping[str, str],
+    ) -> ModeloApplicability:
+        """Label a ledger-derived verdict and carry a disagreement onto whatever verdict was reached.
+
+        A verdict derived from the stated records says so whether it is applicable
+        or not, and carries the derivation's own detail, so a "no" is never shown
+        as if an AEAT value or the profile had said it.
+        """
         fact = self.required_payer_fact
         derived = reading.provenance is ApplicabilityProvenance.LEDGER_DERIVED
         if fact is None or (not derived and reading.disagreement is None):
             return verdict
         label = payer_fact_incomplete_label(fact)
         reason = verdict.reason
-        if derived and verdict.verdict is ApplicabilityVerdict.APPLICABLE:
-            reason = f"{reason} {tr('filing.applicability.ledger_derived_basis', fact=label)}"
+        records_fact = fact if isinstance(fact, PayerFactProjection) and fact.records_source is not None else None
+        if derived:
+            reason = _derived_verdict_reason(
+                verdict, label=label, records_fact=records_fact, records_notes=records_notes
+            )
         if reading.disagreement is not None:
             reason = f"{reason} {tr('filing.applicability.ledger_profile_disagreement', fact=label)}"
         return verdict.model_copy(
@@ -647,6 +691,7 @@ class ModeloApplicabilityRule(BaseModel):
         profile: TaxpayerProfile,
         *,
         ledger_payer_facts: Mapping[str, LedgerPayerFactDerivation] = NO_LEDGER_PAYER_FACTS,
+        records_derivation_notes: Mapping[str, str] = NO_RECORDS_DERIVATION_NOTES,
         operation: PinnedAuthorityOperation | None = None,
     ) -> ModeloApplicability:
         """Derive the :class:`ModeloApplicability` for ``profile``.
@@ -664,6 +709,9 @@ class ModeloApplicabilityRule(BaseModel):
             ledger_payer_facts: What the taxpayer's own records show about
                 payer facts for the filing year being decided, keyed by payer
                 fact token. Empty when no derivation is available.
+            records_derivation_notes: The detail behind a derivation read from
+                the taxpayer's stated records, keyed by payer fact token; it is
+                appended to the reason of a verdict those records decided.
             operation: The caller's pinned authority operation, used for the
                 one verdict reason this rule resolves from the registry, the
                 attribution pass-through answer. Leaving it ``None`` makes
@@ -680,7 +728,9 @@ class ModeloApplicabilityRule(BaseModel):
         exclusion = self._exclusion_finding(profile, ledger_answers_payer_fact=reading.ledger_conclusive)
         if exclusion is not None and exclusion.answered:
             return exclusion.applicability
-        return self._with_ledger_evidence(self._payer_fact_verdict(reading, exclusion), reading)
+        return self._with_ledger_evidence(
+            self._payer_fact_verdict(reading, exclusion), reading, records_derivation_notes
+        )
 
     def _not_applicable(self) -> ModeloApplicability:
         """Return the ``NOT_APPLICABLE`` applicability for this rule."""
@@ -845,6 +895,17 @@ def _undetermined_applicability(
         A :class:`ModeloApplicability` with ``INCOMPLETE`` verdict and the
         undetermined-payer-fact rationale.
     """
+    if (
+        isinstance(payer_fact, PayerFactProjection)
+        and payer_fact.undetermined_reason is not None
+        and not periods_missing
+    ):
+        return ModeloApplicability(
+            modelo=modelo,
+            verdict=ApplicabilityVerdict.INCOMPLETE,
+            reason=payer_fact.undetermined_reason,
+            legal_refs=legal_refs,
+        )
     required = tr(
         "filing.applicability.incomplete_undetermined_fact_required",
         fact=payer_fact_incomplete_label(payer_fact),
@@ -862,3 +923,27 @@ def _undetermined_applicability(
         reason=reason,
         legal_refs=legal_refs,
     )
+
+
+def _derived_verdict_reason(
+    verdict: ModeloApplicability,
+    *,
+    label: str,
+    records_fact: PayerFactProjection | None,
+    records_notes: Mapping[str, str],
+) -> str:
+    """Append to a ledger-derived verdict's reason the basis it rests on and the derivation's own detail."""
+    reason = verdict.reason
+    if verdict.verdict is ApplicabilityVerdict.APPLICABLE:
+        basis_key = (
+            "filing.applicability.ledger_derived_basis"
+            if records_fact is None
+            else "filing.applicability.records_derived_basis"
+        )
+        reason = f"{reason} {tr(basis_key, fact=label)}"
+    elif records_fact is not None and verdict.verdict is ApplicabilityVerdict.NOT_APPLICABLE:
+        reason = f"{reason} {tr('filing.applicability.records_derived_basis_not_met', fact=label)}"
+    note = None if records_fact is None else records_notes.get(records_fact.token)
+    if note is not None:
+        reason = f"{reason} {note}"
+    return reason

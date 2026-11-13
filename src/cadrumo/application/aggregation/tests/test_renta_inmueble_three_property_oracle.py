@@ -27,8 +27,12 @@ corpus copies:
   net yield of a dwelling lease is reduced by 60 per 100.
 
 Every lease here was made before that law, so the 60 per 100 holds in every
-year of the support envelope. Property one states 300.00 pending from earlier
-years; the other two state that nothing is pending.
+year of the support envelope. Properties one and three were first let when
+they were acquired, five years before the ejercicio, and property two in it.
+Property one states 300.00 left pending by the ejercicio before and nothing by
+the others of the carry window; property three states that no origin year left
+anything pending, and property two, first let in the ejercicio, needs no
+statement.
 """
 
 from __future__ import annotations
@@ -43,7 +47,12 @@ from ....core.retencion_soportada import RetencionSoportadaClase
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
 from ....domain.calculations.registry.ids import BindingId
-from ....domain.calculations.registry.renta_inmueble_bindings import renta_inmueble_columns, renta_inmueble_totals
+from ....domain.calculations.registry.renta_inmueble_bindings import (
+    RentaInmuebleOriginPart,
+    renta_inmueble_columns,
+    renta_inmueble_origin_columns,
+    renta_inmueble_totals,
+)
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_selected_for
 from ....domain.contribuyente.arrendamiento_record import Inquilino, InquilinoEdad
@@ -97,6 +106,27 @@ def _contract_before_the_law(year: int) -> date:
     return min(rules.contract_cut_off - timedelta(days=1), date(year, 1, 1))
 
 
+def _acquired(year: int) -> date:
+    """The day the support acquires a property, five years before ``year``; properties one and three were let then."""
+    return date(year - 5, 6, 1)
+
+
+def _statements(revision: ModeloRevision) -> tuple[RowCarryAttestation, ...]:
+    """State each origin year's opening: 300.00 on property one from the year before, nothing otherwise."""
+    statements: list[RowCarryAttestation] = []
+    for back, binding in renta_inmueble_origin_columns(revision)[RentaInmuebleOriginPart.OPENING].items():
+        for row in ("inmueble:0", "inmueble:2"):
+            if row == "inmueble:0" and back == 1:
+                statements.append(RowCarryAttestation(binding_id=binding.id, source_row_identity=row, amount="300"))
+            else:
+                statements.append(
+                    RowCarryAttestation(
+                        binding_id=binding.id, source_row_identity=row, amount=ATTESTED_ZERO, absent=True
+                    )
+                )
+    return tuple(statements)
+
+
 def _tenant(nif: str) -> tuple[Inquilino, ...]:
     return (Inquilino(nif=nif, franja_edad=InquilinoEdad.OTRA, extranjero=False),)
 
@@ -109,6 +139,7 @@ def _records(year: int) -> dict[str, str]:
         importe_adquisicion=Decimal(150000),
         gastos_tributos_adquisicion=Decimal(10000),
         valores_catastrales=(ValorCatastral(year=year, total=Decimal(100000), construccion=Decimal(60000)),),
+        arrendado_desde=_acquired(year),
     )
     half_year = inmueble(
         1,
@@ -117,6 +148,7 @@ def _records(year: int) -> dict[str, str]:
         importe_adquisicion=Decimal(80000),
         gastos_tributos_adquisicion=Decimal(4000),
         valores_catastrales=(ValorCatastral(year=year, total=Decimal(50000), construccion=Decimal(25000)),),
+        arrendado_desde=date(year, 7, 1),
     )
     shared = inmueble(
         2,
@@ -130,6 +162,7 @@ def _records(year: int) -> dict[str, str]:
             porcentaje_propiedad=Decimal(50),
         ),
         importes_movimientos=ImportesMovimientos.INMUEBLE_COMPLETO,
+        arrendado_desde=_acquired(year),
     )
     leases = (
         lease(0, inmueble_clave=0, start=contract),
@@ -223,7 +256,6 @@ def _resolve(year: int) -> CalculationSourceResolution:
     operation = governed_facts_in_scope()
     assert isinstance(operation, PinnedAuthorityOperation)
     revision = m100_revision(year)
-    pending = _column(revision, RentaInmuebleRowField.GASTOS_PENDIENTES_ANTERIORES)
     profile = ModeloWorkProfile(
         record=create_user_profile_record(
             setup_state=ProfileSetupState.COMPLETE,
@@ -249,15 +281,7 @@ def _resolve(year: int) -> CalculationSourceResolution:
             period=Period.from_year_and_code(year, "0A"),
             revision=revision,
             profile=profile,
-            caller_row_attestations=(
-                RowCarryAttestation(binding_id=pending, source_row_identity="inmueble:0", amount="300"),
-                RowCarryAttestation(
-                    binding_id=pending, source_row_identity="inmueble:1", amount=ATTESTED_ZERO, absent=True
-                ),
-                RowCarryAttestation(
-                    binding_id=pending, source_row_identity="inmueble:2", amount=ATTESTED_ZERO, absent=True
-                ),
-            ),
+            caller_row_attestations=_statements(revision),
         )
     )
 
@@ -336,6 +360,11 @@ def test_three_let_properties_reach_their_hand_derived_boxes(year: int) -> None:
     applied = _column(revision, RentaInmuebleRowField.GASTOS_PENDIENTES_APLICADOS)
     assert values[(pending, 1)] == _PENDING_ON_ONE, year
     assert values[(applied, 1)] == _PENDING_ON_ONE, year
+    # Anexo C.1 follows the 300.00 by its origin year: opened and applied whole, nothing carried on.
+    origin = renta_inmueble_origin_columns(revision)
+    assert values[(origin[RentaInmuebleOriginPart.OPENING][1].id, 1)] == _PENDING_ON_ONE, year
+    assert values[(origin[RentaInmuebleOriginPart.APPLIED][1].id, 1)] == _PENDING_ON_ONE, year
+    assert (origin[RentaInmuebleOriginPart.CARRIED][1].id, 1) not in values, year
     assert (pending, 2) not in values and (pending, 3) not in values, year
 
     # Box 0156 takes the sum of the reduced net yields; 0153 totals the withholding.

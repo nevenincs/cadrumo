@@ -671,6 +671,8 @@ profile:
           label: Igazolt halmozott értékcsökkenés
         amortizacion_acumulada_desde:
           label: A halmozott értékcsökkenés vonatkozási napja
+        arrendado_desde:
+          label: Az ingatlan első bérbeadásának napja
         direccion:
           label: Az ingatlan címe
         fecha_adquisicion:
@@ -701,6 +703,8 @@ profile:
           label: Haszonélvezeti hányad (%)
         referencia_catastral:
           label: Kataszteri hivatkozási szám
+        sin_arrendar:
+          label: Soha ki nem adott ingatlan
         situacion:
           choices:
             '1': Kataszteri hivatkozási számmal, közös adóterületen

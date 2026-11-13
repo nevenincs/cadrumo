@@ -173,6 +173,7 @@ def _acquired_on_the_first_day(
         ejercicio=year,
         adquisicion_titulo=AdquisicionTitulo.ONEROSA,
         fecha_adquisicion=date(year, 1, 1),
+        arrendado_desde=date(year, 1, 1),
         importe_adquisicion=amount,
         gastos_tributos_adquisicion=Decimal(1000),
         valores_catastrales=(ValorCatastral(year=year, total=total, construccion=construccion),),

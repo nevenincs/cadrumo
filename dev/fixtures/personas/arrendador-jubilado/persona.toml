@@ -88,6 +88,7 @@ gastos_tributos_adquisicion = "0.00" # synthetic: no acquisition expenses or tax
 valores_catastrales = [
   { year = "horizon-1", total = "90000.00", construccion = "54000.00" }, # synthetic
 ]
+arrendado_desde = { year = "horizon-2", month = 6, day = 1 } # synthetic: the dwelling is let from the first lease start
 # Lease facts below are synthetic persona facts; the art. 23.2 rate is derived from them, never stated.
 fecha_contrato = { year = "horizon-2", month = 6, day = 1 } # synthetic: signed on contract_start
 fecha_inicio = { year = "horizon-2", month = 6, day = 1 } # synthetic: starts on contract_start

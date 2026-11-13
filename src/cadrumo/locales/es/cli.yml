@@ -560,6 +560,66 @@ cli:
           con esta identidad (%{invoice_id}); no se creó nada.'
         yes_help: Confirma la eliminación de la factura
         yes_required: Debes pasar --yes para eliminar una factura
+      operaciones_vinculadas:
+        amount_help: Contraprestación a valor de mercado en euros, con dos decimales
+          como máximo; para unos valores, su valor de adquisición.
+        cifra_negocios_help: Cifra de negocios del ejercicio en euros, con dos decimales
+          como máximo.
+        counterparty_country_help: Código de país de dos letras de la contraparte,
+          por ejemplo ES.
+        counterparty_name_help: Nombre o razón social de la contraparte.
+        counterparty_tax_id_help: Identificador fiscal de la persona o entidad vinculada,
+          también extranjero. Obligatorio en los dos tipos de persona vinculada.
+        description_help: Qué fue la operación con el paraíso fiscal. Solo para tax_haven_operation.
+        direction_help: I si cobraste la contraprestación, P si la pagaste.
+        ejercicio_help: Ejercicio al que pertenecen los registros.
+        exclusion_help: 'Supuesto del art. 2.2 que excluye la operación: consolidation_group,
+          aie_or_registered_ute o public_offer.'
+        expected_guard_revision_help: Revisión de control que mostró la lista para
+          el año; si la indicas, la declaración se rechaza si el año cambió desde
+          entonces.
+        expected_revision_help: Revisión que mostró la lista para el registro que
+          retiras.
+        group_help: Declara, lista y retira tus registros del modelo 232 de operaciones
+          vinculadas y con paraísos fiscales.
+        invalid_input: 'Hay un valor no válido: revisa el ejercicio, los importes,
+          el identificador de la operación y la revisión.'
+        kind_help: 'Tipo de operación: related_party, intangibles_reduction, tax_haven_operation
+          o tax_haven_holding.'
+        list_help: Lista lo que declaraste para un ejercicio, con la revisión de cada
+          registro y lo que deciden sobre el modelo 232.
+        metodo_valoracion_help: Código del método de valoración (tabla B del diseño
+          del modelo 232).
+        note_help: Por qué el año no tuvo esas operaciones. Obligatorio.
+        operation_id_help: Identificador de la operación (operation_id) que mostró
+          la lista.
+        parent_name_help: Nombre de la entidad dominante. Solo para intangibles_reduction,
+          junto con --parent-tax-id.
+        parent_tax_id_help: Identificador fiscal de la entidad dominante. Solo para
+          intangibles_reduction, junto con --parent-name.
+        participation_help: Porcentaje del emisor que posees. Solo para tax_haven_holding.
+        source_help: 'De dónde sale la cifra: annual_accounts, corporation_tax_return,
+          vat_returns u operator_estimate.'
+        source_reference_help: Referencia del documento o declaración del que tomaste
+          la cifra.
+        specific_help: La operación es una operación específica (art. 2.1.b de la
+          Orden HFP/816/2017).
+        state_none_help: Declara que un ejercicio no tuvo operaciones vinculadas ni
+          con paraísos fiscales.
+        state_operation_help: Declara una operación vinculada o con un paraíso fiscal
+          de un ejercicio. Es tu propia declaración.
+        state_turnover_help: Declara la cifra de negocios de un ejercicio y de dónde
+          la tomaste.
+        tipo_operacion_help: Código del tipo de operación (tabla C del diseño del
+          modelo 232).
+        tipo_vinculacion_help: Código del tipo de vinculación (tabla A del diseño
+          del modelo 232).
+        withdraw_none_help: Retira la declaración de que no hubo operaciones, protegida
+          por la revisión que mostró la lista.
+        withdraw_operation_help: Retira una operación declarada, protegida por la
+          revisión que mostró la lista.
+        withdraw_turnover_help: Retira la cifra de negocios declarada, protegida por
+          la revisión que mostró la lista.
       prevision_social:
         amount_help: Importe de la aportación en euros que indica el certificado,
           por ejemplo 1500.00.

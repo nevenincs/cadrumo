@@ -323,6 +323,39 @@ def test_a_retired_leaf_is_refused_as_undeclared_for_both_sections(world: _World
             world.edit(section, key, {"anejo_referencia_catastral": CATASTRAL})
 
 
+def test_a_letting_start_is_stored_and_a_start_later_than_a_lease_is_refused_on_both_doors(world: _World) -> None:
+    lease_start = date(YEAR, 2, 1)
+    row = world.add(INMUEBLE_SECTION, _property() | {"arrendado_desde": lease_start.isoformat()})
+    assert world.stored(INMUEBLE_SECTION, row)["arrendado_desde"] == lease_start.isoformat()
+
+    world.add(ARRENDAMIENTO_SECTION, _lease(row))
+    later = date(YEAR, 3, 1).isoformat()
+    refused = _refusal(world, lambda: world.edit(INMUEBLE_SECTION, row, {"arrendado_desde": later}))
+    assert refused.translated_message == "application.user_profile.errors.rental_row_invalid"
+    assert refused.context == {"leaf": "arrendado_desde", "door": "aeat config profile inmueble edit"}
+
+    other = world.add(INMUEBLE_SECTION, _property() | {"arrendado_desde": later, "referencia_catastral": CATASTRAL})
+    refused_lease = _refusal(world, lambda: world.add(ARRENDAMIENTO_SECTION, _lease(other)))
+    assert (refused_lease.context or {})["leaf"] == "arrendado_desde"
+
+
+def test_the_earliest_lease_start_does_not_fill_an_unstated_letting_start(world: _World) -> None:
+    row = world.add(INMUEBLE_SECTION, _property())
+    world.add(ARRENDAMIENTO_SECTION, _lease(row))
+
+    assert "arrendado_desde" not in world.stored(INMUEBLE_SECTION, row)
+
+
+def test_a_property_stated_never_let_refuses_a_lease_and_a_lease_refuses_that_statement(world: _World) -> None:
+    never = world.add(INMUEBLE_SECTION, _property() | {"sin_arrendar": "true"})
+    refused = _refusal(world, lambda: world.add(ARRENDAMIENTO_SECTION, _lease(never)))
+    assert (refused.context or {})["leaf"] == "sin_arrendar"
+
+    row = world.add(INMUEBLE_SECTION, _property())
+    world.add(ARRENDAMIENTO_SECTION, _lease(row))
+    _refusal(world, lambda: world.edit(INMUEBLE_SECTION, row, {"sin_arrendar": "true"}))
+
+
 def test_a_property_a_ledger_row_names_is_not_removed(world: _World) -> None:
     row = world.add(INMUEBLE_SECTION, _property())
     world.properties_named_by_ledger = {str(row): 2}
