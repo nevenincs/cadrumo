@@ -21,7 +21,7 @@ from types import MappingProxyType
 from typing import Final
 
 from ...core.period import Period
-from ...domain.calculations.registry.applicability_modelo202 import Modelo202BaseBasis
+from ...domain.calculations.registry.applicability_modelo202 import Modelo202BaseBasis, Modelo202Modality
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.result_casillas import canonical_result_amount, result_disposition_casilla_ids
 from ...domain.modelos.calculation_revision import (
@@ -36,6 +36,7 @@ from ...domain.transactions.models import TransactionCatalogue
 from ...domain.user_profile.schema import ProfileSchemaDefinition
 from ...domain.user_profile.values import UserProfileRecord
 from ..aggregation.ledger_filing_snapshot import evaluate_ledger_filing_staleness
+from ..calculations.cross_period_models import operator_value_attestations
 from ..calculations.modelo_202_base_source import (
     MODELO_202_BASE_BINDING_ID,
     modelo_202_base_source_periods,
@@ -43,13 +44,17 @@ from ..calculations.modelo_202_base_source import (
     modelo_202_form,
     modelo_202_instalment_has_no_prior_return,
 )
+from ..calculations.modelo_202_instalment_resolution import (
+    Modelo202InstalmentResolution,
+    Modelo202InstalmentResolver,
+)
 from ..calculations.observations_repository import (
     CalculationObservationRepositoryProtocol,
+    ObservationEnvelopePayload,
     ObservationSourceKind,
 )
 from ..calculations.relation_prefill import resolve_relations_from_local_store
 from ..calculations.revision_carry_gate import revision_carry_outcome
-from ..modelo.verification_cross_period import operator_value_attestations
 from ..modelo.work_addressing import ModeloWorkAddress, resolve_optional_modelo_work_address
 from ..user_profile.projections import record_to_values
 from .calendar_warnings import MODELO_202_ELECTION_PROFILE_KEY
@@ -59,6 +64,7 @@ from .modelo202_instalment import (
     Modelo202CalculationReading,
     Modelo202InstalmentFacts,
     Modelo202InstalmentFactsReader,
+    resolve_modelo_202_instalment,
 )
 
 _VERIFIED_STATES = frozenset({CalculationRevisionState.VERIFICADO_COMPLETO, CalculationRevisionState.PRESENTADO})
@@ -87,6 +93,39 @@ def art_40_3_election_reader(
     return election_for
 
 
+def art_40_3_election_reader_for_bucket(
+    bucket_id: str,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> Callable[[Period], bool | None]:
+    """Read the art. 40.3 election from the bucket's stored profile, loaded on first use.
+
+    The record is read through the current session the first time an
+    instalment asks, so a read that decides no instalment never opens it. A
+    bucket without a profile states no election.
+    """
+    from ...domain.user_profile.errors import ProfileNotFoundError
+    from ..user_profile.profile_record_repository import ProfileRecordRepository
+
+    readers: list[Callable[[Period], bool | None]] = []
+
+    def election_for(instalment: Period) -> bool | None:
+        if not readers:
+            context = operation.profile_decode_context()
+            try:
+                record = ProfileRecordRepository.for_current_session(
+                    bucket_id,
+                    profile_decode_context=context,
+                ).load(bucket_id)
+            except ProfileNotFoundError:
+                readers.append(lambda _instalment: None)
+            else:
+                readers.append(art_40_3_election_reader(record, schema=context.schema))
+        return readers[0](instalment)
+
+    return election_for
+
+
 @dataclass(frozen=True, slots=True)
 class Modelo202InstalmentStores:
     """The stores and declared facts one read decides Modelo 202 instalments on.
@@ -96,7 +135,8 @@ class Modelo202InstalmentStores:
         observations: The filed-observation store the base binding resolves from.
         work_units: Loads the bucket's work-unit catalogue once per read.
         calculations: The bucket's calculation-revision store.
-        transactions: Loads the bucket's live transaction catalogue.
+        transactions: Loads the bucket's live transaction catalogue; ``None`` where
+            the read holds no ledger, so no elected calculation counts as current.
         activity_start_date: The declared activity start, if any.
         election_for: The art. 40.3 election in force for an instalment; ``None``
             when it was never stated.
@@ -106,7 +146,7 @@ class Modelo202InstalmentStores:
     observations: CalculationObservationRepositoryProtocol
     work_units: Callable[[], WorkUnitCatalogue]
     calculations: CalculationRevisionCatalogueRepositoryProtocol
-    transactions: Callable[[], TransactionCatalogue]
+    transactions: Callable[[], TransactionCatalogue] | None
     activity_start_date: date | None
     election_for: Callable[[Period], bool | None]
 
@@ -158,21 +198,27 @@ def _attested_base(revision: CalculationRevision | None, source: Modelo202BaseSo
 def _calculation_is_current(
     revision: CalculationRevision,
     *,
-    transactions: Callable[[], TransactionCatalogue],
+    transactions: Callable[[], TransactionCatalogue] | None,
     operation: PinnedAuthorityOperation,
 ) -> bool:
-    """Report whether the revision's registry stamp carries and its ledger anchor has not moved."""
+    """Report whether the revision's registry stamp carries and its ledger anchor has not moved.
+
+    Without a ledger to compare against, an anchored revision cannot be shown
+    current, so it is not.
+    """
     if revision_carry_outcome(revision.registry_snapshot_ref, operation=operation).refused:
         return False
     anchor = revision.ledger_filing_snapshot
-    return anchor is None or not evaluate_ledger_filing_staleness(anchor, transactions()).is_stale
+    if anchor is None:
+        return True
+    return transactions is not None and not evaluate_ledger_filing_staleness(anchor, transactions()).is_stale
 
 
 def _calculation_reading(
     revision: CalculationRevision,
     *,
     modelo: str,
-    transactions: Callable[[], TransactionCatalogue],
+    transactions: Callable[[], TransactionCatalogue] | None,
     operation: PinnedAuthorityOperation,
 ) -> Modelo202CalculationReading | None:
     result_ids = result_disposition_casilla_ids(modelo)
@@ -221,7 +267,7 @@ def bind_modelo_202_instalment_facts(
     ledgers: list[TransactionCatalogue] = []
 
     def transactions() -> TransactionCatalogue:
-        if not ledgers:
+        if not ledgers and stores.transactions is not None:
             ledgers.append(stores.transactions())
         return ledgers[0]
 
@@ -264,10 +310,59 @@ def bind_modelo_202_instalment_facts(
             work_unit_id=None if unit is None else unit.work_unit_id,
             calculation=None
             if revision is None
-            else _calculation_reading(revision, modelo=modelo, transactions=transactions, operation=operation),
+            else _calculation_reading(
+                revision,
+                modelo=modelo,
+                transactions=None if stores.transactions is None else transactions,
+                operation=operation,
+            ),
         )
 
     return read
 
 
-__all__ = ["Modelo202InstalmentStores", "art_40_3_election_reader", "bind_modelo_202_instalment_facts"]
+def _presented_filing(
+    instalment: Period,
+    stores: Modelo202InstalmentStores,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> ObservationEnvelopePayload | None:
+    """Return the instalment's presented filing: its local filing or captured AEAT evidence, if held."""
+    effective = stores.observations.load_observation_layers(modelo_202_form(operation=operation), instalment).effective
+    if effective is None or _decisive_basis(effective.source_kind) is None:
+        return None
+    return effective
+
+
+def bind_modelo_202_instalment_resolver(
+    stores: Modelo202InstalmentStores,
+    *,
+    modality: Modelo202Modality | None,
+    operation: PinnedAuthorityOperation,
+) -> Modelo202InstalmentResolver:
+    """Bind the instalment resolution to one read's stores and the ejercicio's derived modality.
+
+    ``modality`` is the Modelo 202 modality derived for the instalments'
+    ejercicio; ``None`` when it could not be derived, which leaves every unfiled
+    instalment unresolved.
+    """
+    facts_for = bind_modelo_202_instalment_facts(stores, operation=operation)
+
+    def resolve(instalment: Period) -> Modelo202InstalmentResolution:
+        return resolve_modelo_202_instalment(
+            facts_for(instalment),
+            filing=_presented_filing(instalment, stores, operation=operation),
+            modality=modality,
+            operation=operation,
+        )
+
+    return resolve
+
+
+__all__ = [
+    "Modelo202InstalmentStores",
+    "art_40_3_election_reader",
+    "art_40_3_election_reader_for_bucket",
+    "bind_modelo_202_instalment_facts",
+    "bind_modelo_202_instalment_resolver",
+]

@@ -6,24 +6,30 @@ INCN facts, then delegates to the raw-input modality rule used by calculation.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
-from typing import Annotated
+from typing import TYPE_CHECKING, Annotated
 
 from pydantic import BaseModel, Field, StringConstraints
 
+from ....core.decimal.grammar import try_parse_canonical_decimal
 from ....core.modelo import Modelo
 from ....core.models import STRICT_FROZEN_CONFIG
 from ...contribuyente.entity_type import EntityType
 from ...deadlines.models import TaxpayerProfile
 from .applicability_models import ApplicabilityVerdict, ModeloApplicability
-from .entity_type import entity_type_legal_entity_token
+from .entity_type import entity_type_legal_entity_token, require_entity_type
 from .errors import RegistryFailureClassification, RegistryFailureCondition, RegistryValidationError
 from .facts.resolution import MappingFactQuery, ResolvedMappingFact, ResolvedScalarFact, ScalarFactQuery
 from .governed_fact_scope import GovernedFactSource, require_governed_fact_authority
-from .ids import LegalRefId
+from .ids import BindingId, LegalRefId
+from .runtime_graph import expression_binding_refs
 from .schema_base import DateAxis
+
+if TYPE_CHECKING:
+    from .schema import ModeloRevision
 
 type _OperatorReason = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
 
@@ -140,6 +146,7 @@ def _modelo_202_applicability_declarations(
         *(f"reason.{outcome.value}" for outcome in Modelo202InstalmentOutcome),
         *(f"legal_refs.{outcome.value}" for outcome in Modelo202InstalmentOutcome),
         *(f"basis.{basis.value}" for basis in Modelo202BaseBasis),
+        *(_method_section_key(art_40_3=method) for method in (False, True)),
     }
     missing = sorted(required - declarations.keys())
     if missing:
@@ -149,6 +156,29 @@ def _modelo_202_applicability_declarations(
             f"Modelo 202 applicability fact {_MODELO_202_APPLICABILITY_FACT_ID!r} is missing {missing!r}",
         )
     return declarations
+
+
+def _method_section_key(*, art_40_3: bool) -> str:
+    return "section.art_40_3" if art_40_3 else "section.art_40_2"
+
+
+def modelo_202_method_section(
+    *,
+    art_40_3: bool,
+    effective_date: date,
+    authority: GovernedFactSource | None = None,
+) -> str:
+    """Return the form section that calculates the pago fraccionado under one LIS art. 40 method.
+
+    The Modelo 202 instructions calculate an instalment in one section per
+    method: art. 40.2 from the earlier cuota, or art. 40.3 from the base
+    imponible of the months elapsed, which alone deducts the earlier
+    instalments of the same periodo impositivo. The catalogue names each
+    method's section token as the casillas declare it.
+    """
+    authority = require_governed_fact_authority(authority, subject="Modelo 202 applicability")
+    declarations = _modelo_202_applicability_declarations(effective_date=effective_date, authority=authority)
+    return declarations[_method_section_key(art_40_3=art_40_3)]
 
 
 def _modelo_202_legal_refs(
@@ -280,6 +310,82 @@ def derive_modelo_202_modality(
     )
 
 
+_ENTITY_TYPE_PATH = "taxpayer_type.entity_type"
+_INCN_PATH = "taxpayer_type.incn_prior_12_months"
+
+
+def _entity_type_from_token(raw: str | None) -> EntityType | None:
+    """Map a raw ``taxpayer_type.entity_type`` token to :class:`EntityType`, or ``None``."""
+    if raw is None or not raw:
+        return None
+    try:
+        return require_entity_type(raw)
+    except RegistryValidationError:
+        return None
+
+
+def modelo_202_modality_from_path_values(
+    values: Mapping[str, str],
+    *,
+    filing_year: int,
+    authority: GovernedFactSource,
+) -> Modelo202Modality:
+    """Derive the ejercicio's Modelo 202 modality from the wizard-free profile projection.
+
+    An absent or unreadable entity type or INCN leaves the modality incomplete;
+    a malformed decimal never stands for a value.
+    """
+    incn = values.get(_INCN_PATH)
+    return modelo_202_modality_from_inputs(
+        entity_type=_entity_type_from_token(values.get(_ENTITY_TYPE_PATH)),
+        incn_prior_12_months=None if incn is None or not incn else try_parse_canonical_decimal(incn),
+        effective_date=date(filing_year, 12, 31),
+        authority=authority,
+    ).modality
+
+
+def art_40_3_method_applies(modality: Modelo202Modality, *, elected: bool | None) -> bool | None:
+    """Return whether LIS art. 40.3 calculates the instalment, or ``None`` when that is not known.
+
+    Above the threshold art. 40.3 is mandatory; below it the declaración censal
+    election decides, and an unstated election decides nothing.
+    """
+    if modality is Modelo202Modality.ART_40_3_MANDATORY:
+        return True
+    if modality is Modelo202Modality.ART_40_2_OPTIONAL:
+        return elected
+    return None
+
+
+def modelo_202_bindings_outside_method(
+    revision: ModeloRevision,
+    *,
+    art_40_3: bool,
+    filing_year: int,
+    authority: GovernedFactSource,
+) -> frozenset[BindingId]:
+    """Return the bindings only the LIS art. 40 method not in force reads.
+
+    Each method calculates the instalment in its own section of the form, so a
+    binding counts only when at least one casilla carries it, every such
+    casilla lies in the other method's section, and no formula reads it
+    directly.
+    """
+    other_section = modelo_202_method_section(
+        art_40_3=not art_40_3, effective_date=date(filing_year, 12, 31), authority=authority
+    )
+    formula_read = {binding for formula in revision.formulas for binding in expression_binding_refs(formula.expression)}
+    sections_by_binding: dict[BindingId, list[tuple[str, ...]]] = {}
+    for casilla in revision.casillas:
+        if casilla.binding is not None:
+            sections_by_binding.setdefault(casilla.binding, []).append(tuple(casilla.section))
+    return frozenset(
+        binding
+        for binding, sections in sections_by_binding.items()
+        if binding not in formula_read and all(other_section in section for section in sections)
+    )
+
+
 def modelo_202_filing_obligation(
     profile: TaxpayerProfile,
     entity_applicability: ModeloApplicability,
@@ -344,29 +450,65 @@ def modelo_202_instalment_applicability(
     ``basis`` names the record that supplied the art. 40.2 base, and its served
     sentence follows the reason so the operator sees where the figure came from.
     """
+    grounds = modelo_202_instalment_grounds(outcome, basis=basis, effective_date=effective_date, authority=authority)
+    return ModeloApplicability(
+        modelo=entity_applicability.modelo,
+        verdict=outcome.verdict,
+        reason=grounds.reason,
+        legal_refs=grounds.legal_refs,
+        provenance=entity_applicability.provenance,
+    )
+
+
+class Modelo202InstalmentGrounds(BaseModel):
+    """The catalogue's served reason and legal references for one instalment outcome."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    outcome: Modelo202InstalmentOutcome
+    reason: _OperatorReason
+    legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
+
+
+def modelo_202_instalment_grounds(
+    outcome: Modelo202InstalmentOutcome,
+    *,
+    basis: Modelo202BaseBasis | None,
+    effective_date: date,
+    authority: GovernedFactSource | None = None,
+) -> Modelo202InstalmentGrounds:
+    """Return the served reason and legal references the catalogue gives ``outcome``.
+
+    ``basis`` names the record that supplied the art. 40.2 base; its served
+    sentence follows the reason so the reader sees where the figure came from.
+    """
     authority = require_governed_fact_authority(authority, subject="Modelo 202 applicability")
     declarations = _modelo_202_applicability_declarations(effective_date=effective_date, authority=authority)
     reason = declarations[f"reason.{outcome.value}"]
     if basis is not None:
         reason = f"{reason} {declarations[f'basis.{basis.value}']}"
-    return ModeloApplicability(
-        modelo=entity_applicability.modelo,
-        verdict=outcome.verdict,
+    return Modelo202InstalmentGrounds(
+        outcome=outcome,
         reason=reason,
         legal_refs=_modelo_202_legal_refs(declarations, outcome.value),
-        provenance=entity_applicability.provenance,
     )
 
 
 __all__ = [
     "Modelo202BaseBasis",
+    "Modelo202InstalmentGrounds",
     "Modelo202InstalmentOutcome",
     "Modelo202Modality",
     "Modelo202ModalityVerdict",
+    "art_40_3_method_applies",
     "derive_modelo_202_modality",
+    "modelo_202_bindings_outside_method",
     "modelo_202_filing_obligation",
     "modelo_202_incn_threshold_decimal",
     "modelo_202_instalment_applicability",
+    "modelo_202_instalment_grounds",
+    "modelo_202_method_section",
     "modelo_202_modality_from_inputs",
+    "modelo_202_modality_from_path_values",
     "resolve_modelo_202_art_40_3_incn_threshold",
 ]

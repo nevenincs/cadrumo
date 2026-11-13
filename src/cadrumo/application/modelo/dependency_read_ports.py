@@ -17,6 +17,7 @@ from ...domain.modelos.protocols import (
     VerificationReportCatalogueRepositoryProtocol,
 )
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
+from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..calculations.observations_repository import CalculationObservationRepositoryProtocol
 
 
@@ -30,6 +31,7 @@ class DependencyReadRepositories:
     verification: VerificationReportCatalogueRepositoryProtocol
     observation: CalculationObservationRepositoryProtocol
     justificante: JustificanteRepositoryProtocol
+    transaction: TransactionCatalogueRepositoryProtocol
 
 
 @dataclass(frozen=True, slots=True)

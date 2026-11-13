@@ -2640,6 +2640,9 @@ application:
       edit_prior_carries_unstated: This change leaves the amounts carried from earlier
         years unstated, so the declaration cannot be calculated. Nothing was changed.
         State those amounts first.
+      edit_required_bindings_missing: 'This change leaves the declaration without
+        inputs it needs: %{bindings}. Nothing was changed. State them, then apply
+        the change again.'
       edit_revision_id_unresolved: The calculation behind the edit did not report
         which revision it created, so the receipt of the edit could not be kept. This
         is a program inconsistency, and nothing you entered caused it. List the revisions

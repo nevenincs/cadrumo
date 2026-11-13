@@ -75,7 +75,7 @@ from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from ..calculations.cross_period_clean_state import attestable_carry_sources
 from ..calculations.cross_period_models import CrossPeriodDependencyRequirement
 from ..operator_actions.models import ActionReference
-from .action_errors import ModeloClearedCasillaSourceFedError
+from .action_errors import ModeloClearedCasillaSourceFedError, ModeloRequiredBindingsMissingError
 from .calculation_action_ports import CalculationActionPorts
 from .calculation_bucket_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
@@ -145,6 +145,7 @@ _ROW_UNSUPPORTED_REASON: dict[ModeloEditRowIntentKind, ModeloEditUnsupportedInte
 _PRE_EFFECT_REFUSALS: tuple[type[BaseException], ...] = (CadrumoError,)
 
 #: The door an edit refused for an unstated earlier-ejercicio carry offers: state the carries.
+_MAX_REFUSAL_BINDING_IDS: Final[int] = 16
 PRIOR_CARRIES_ACTION: Final[ActionReference] = ActionReference(action_id="operator.modelo.work.attest_prior_carries")
 
 
@@ -716,6 +717,20 @@ def _with_prior_carry_door(
     )
 
 
+def _missing_required_binding_ids(
+    error: ModeloRequiredBindingsMissingError, revision: ModeloRevision | None
+) -> tuple[str, ...]:
+    """The required bindings the gate named, kept only where the edited revision declares them."""
+    raw = (error.context or {}).get("missing_bindings")
+    if not isinstance(raw, tuple):
+        return ()
+    declared = None if revision is None else {binding.id for binding in revision.bindings}
+    named = tuple(
+        binding_id for binding_id in raw if isinstance(binding_id, str) and (declared is None or binding_id in declared)
+    )
+    return named[:_MAX_REFUSAL_BINDING_IDS]
+
+
 def pre_effect_refusal(
     error: BaseException, *, revision: ModeloRevision | None = None
 ) -> ModeloEditExecutionNoEffectV1:
@@ -737,6 +752,13 @@ def pre_effect_refusal(
                 condition="state the carries from earlier ejercicios before the declaration is calculated",
             ),
             error,
+        )
+    if isinstance(error, ModeloRequiredBindingsMissingError):
+        return _domain_refusal(
+            ModeloEditRefusalCode.VALIDATION_FAILED,
+            facts=(code,),
+            evidence=_missing_required_binding_ids(error, revision),
+            condition="supply the inputs the recalculation requires, then resubmit",
         )
     if isinstance(error, ModeloClearedCasillaSourceFedError):
         return _domain_refusal(

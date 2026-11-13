@@ -703,6 +703,7 @@
         "cadrumo.application.calculations.m303_settlement_observation",
         "cadrumo.application.calculations.maritime_exemption_service",
         "cadrumo.application.calculations.modelo_202_base_source",
+        "cadrumo.application.calculations.modelo_202_instalment_resolution",
         "cadrumo.application.calculations.multi_year",
         "cadrumo.application.calculations.observations_repository",
         "cadrumo.application.calculations.per_grupo_member_keys",

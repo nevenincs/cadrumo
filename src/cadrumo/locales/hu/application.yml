@@ -2726,6 +2726,9 @@ application:
       edit_prior_carries_unstated: Ez a módosítás megadatlanul hagyja a korábbi évekből
         áthozott összegeket, ezért a bevallás nem számolható ki. Semmi sem változott.
         Először add meg ezeket az összegeket.
+      edit_required_bindings_missing: 'Ez a módosítás olyan adatok nélkül hagyja a
+        bevallást, amelyekre szüksége van: %{bindings}. Semmi sem változott. Add meg
+        őket, majd alkalmazd újra a módosítást.'
       edit_revision_id_unresolved: A szerkesztés mögötti számítás nem jelezte, melyik
         változatot hozta létre, ezért a szerkesztés nyugtáját nem lehetett megőrizni.
         Ez programhiba, és semmi, amit megadtál, nem okozta. Újabb szerkesztés előtt

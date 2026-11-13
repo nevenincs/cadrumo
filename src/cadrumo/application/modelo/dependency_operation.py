@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import date
 from functools import partial
 from typing import Literal, Self
 from uuid import UUID
@@ -15,6 +16,7 @@ from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.period import Period
 from ...domain.calculations.registry.applicability import derive_taxpayer_files_economic_activity
+from ...domain.calculations.registry.applicability_modelo202 import derive_modelo_202_modality
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.modelos.calculation_revision import CalculationRevision
@@ -25,6 +27,7 @@ from ..calculations.cross_period_clean_state import (
     cross_period_dependency_requirements,
     evaluate_cross_period_clean_state,
 )
+from ..calculations.cross_period_models import operator_value_attestations
 from ..operations.access_resolution import (
     ADMISSION_REPLAY_ACTIONS,
     LIFECYCLE_SELECTED_PERIODS_REGISTERED_RESULT_TAX_VALUES_ACCESS,
@@ -46,7 +49,11 @@ from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .dependency_projection import DependencyCleanStateSnapshot, DependencyInventoryItemSnapshot
 from .dependency_read_ports import DependencyReadPorts, DependencyReadPortsFactory
-from .verification_cross_period import cross_period_expected_member_sets_from_profile, operator_value_attestations
+from .verification_cross_period import (
+    Modelo202ResolverStores,
+    cross_period_expected_member_sets_from_profile,
+    modelo_202_instalment_resolver_for_snapshot,
+)
 
 MODELO_DEPENDENCY_OPERATION_DEFINITION_ID = "modelo.work.dependencies"
 
@@ -159,6 +166,7 @@ def _require_dependency_profile_ports(ports: DependencyReadPorts, profile_id: st
             repositories.calculation,
             repositories.filing,
             repositories.verification,
+            repositories.transaction,
         )
     ):
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
@@ -227,6 +235,10 @@ class ModeloDependencyExecutor:
                     operation=operation,
                 )
             )
+            # The modality is the one verification reads, at the close of the target's year.
+            modelo_202_modality = derive_modelo_202_modality(
+                ports.profile, effective_date=date(payload.filing_year, 12, 31)
+            ).modality
             verdict = evaluate_cross_period_clean_state(
                 snapshot,
                 operation=operation,
@@ -243,6 +255,20 @@ class ModeloDependencyExecutor:
                 m111_no_retenciones_periods=ports.m111_no_retenciones_periods,
                 operator_value_attestations=attestations,
                 work_catalogue=work_catalogue,
+                modelo_202_modality=modelo_202_modality,
+                modelo_202_instalment_resolver=modelo_202_instalment_resolver_for_snapshot(
+                    snapshot,
+                    bucket_id=profile_id,
+                    stores=Modelo202ResolverStores(
+                        observations=repositories.observation,
+                        calculations=repositories.calculation,
+                        work_units=repositories.work_unit,
+                        transactions=repositories.transaction,
+                    ),
+                    activity_start_date=ports.profile.activity_start_date,
+                    modality=modelo_202_modality,
+                    operation=operation,
+                ),
             )
             allowed = dependency_access_periods(payload, operation)
             if verdict.bucket_id != profile_id or any(

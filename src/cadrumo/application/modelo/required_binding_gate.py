@@ -13,8 +13,9 @@ silent-zero advisory in
 which explicitly excludes those three source kinds. The two gates answer
 different questions for different reasons: this one refuses M202 lifecycle
 actions outright when a declared binding has no resolved value at
-all (Ley 27/2014 art. 40.2/40.3 modalidad-cuota requires every input present
-before a pago fraccionado can be computed), while the generic advisory flags a
+all (Ley 27/2014 art. 40.2/40.3 requires every input of the method in force
+present before a pago fraccionado can be computed; a binding only the other
+method's section reads is no input), while the generic advisory flags a
 narrower "present source produced no value" silent-zero shape across every
 modelo without blocking. Collapsing either gate into the other would either
 silence M202's hard stop or over-block every other modelo's advisory path —
@@ -30,13 +31,19 @@ from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from ...core.operator_action_enums import ActionEvidenceProvenance
+from ...domain.calculations.registry.applicability_modelo202 import (
+    art_40_3_method_applies,
+    modelo_202_bindings_outside_method,
+    modelo_202_modality_from_path_values,
+)
 from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.work_unit import WorkUnit
 from ...domain.user_profile.values import UserProfileFactValue
-from ..user_profile.projections import profile_fact_index
+from ..overview.modelo202_instalment_evidence import art_40_3_election_reader
+from ..user_profile.projections import profile_fact_index, record_to_path_values
 from .action_errors import ModeloRequiredBindingsMissingError
 from .preconditions import build_modelo_precondition_failure
 from .profile_binding import resolve_profile_binding_value
@@ -53,6 +60,8 @@ def require_modelo_required_bindings_resolved(
     registry_revision: ModeloRevision,
     resolved_binding_ids: Iterable[BindingId],
     action: str,
+    profile: ModeloWorkProfile,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """Refuse M202 lifecycle work when declared bindings are absent.
 
@@ -63,11 +72,17 @@ def require_modelo_required_bindings_resolved(
         resolved_binding_ids: Binding ids already supplied by the caller or
             source resolvers.
         action: Operator action name used in the refusal message.
+        profile: The checked work profile, whose modality and art. 40.3
+            election decide which method's section the instalment fills.
+        operation: Caller-held authority operation.
     """
     missing = missing_modelo_required_binding_ids(
         work_unit=work_unit,
         registry_revision=registry_revision,
         resolved_binding_ids=resolved_binding_ids,
+        not_required=_bindings_outside_the_method_in_force(
+            work_unit, registry_revision, profile=profile, operation=operation
+        ),
     )
     if not missing:
         return
@@ -80,6 +95,7 @@ def require_persisted_revision_required_bindings_resolved(
     revision: CalculationRevision,
     action: str,
     operation: PinnedAuthorityOperation,
+    profile: ModeloWorkProfile,
 ) -> None:
     """Refuse saved M202 revisions whose replay payload lacks required bindings.
 
@@ -90,6 +106,7 @@ def require_persisted_revision_required_bindings_resolved(
         action: Operator action name used in the refusal message.
         operation: Caller-held authority operation used to select the exact
             generation-pinned revision.
+        profile: The checked work profile the action already loaded.
     """
     if str(work_unit.modelo) != form_for_role("sociedades.instalment"):
         return
@@ -103,6 +120,8 @@ def require_persisted_revision_required_bindings_resolved(
         registry_revision=registry_revision,
         resolved_binding_ids=_persisted_binding_ids(revision.binding_overrides),
         action=action,
+        profile=profile,
+        operation=operation,
     )
 
 
@@ -111,6 +130,7 @@ def missing_modelo_required_binding_ids(
     work_unit: WorkUnit,
     registry_revision: ModeloRevision,
     resolved_binding_ids: Iterable[BindingId],
+    not_required: frozenset[BindingId] = frozenset[BindingId](),
 ) -> tuple[BindingId, ...]:
     """Return required M202 binding ids absent from a resolved channel set.
 
@@ -121,12 +141,44 @@ def missing_modelo_required_binding_ids(
             declarations are inspected.
         resolved_binding_ids: Binding ids available from caller inputs or
             resolved source data.
+        not_required: Declared bindings the instalment does not read, because
+            only the LIS art. 40 method not in force reads them.
     """
     if str(work_unit.modelo) != form_for_role("sociedades.instalment"):
         return ()
-    resolved = frozenset(resolved_binding_ids)
+    resolved = frozenset(resolved_binding_ids) | not_required
     return tuple(
         sorted(binding.id for binding in registry_revision.bindings if binding.id not in resolved),
+    )
+
+
+def _bindings_outside_the_method_in_force(
+    work_unit: WorkUnit,
+    registry_revision: ModeloRevision,
+    *,
+    profile: ModeloWorkProfile,
+    operation: PinnedAuthorityOperation,
+) -> frozenset[BindingId]:
+    """Return the bindings only the LIS art. 40 method not in force reads.
+
+    The Modelo 202 instructions deduct the earlier instalments (clave [30]) only
+    under art. 40.3; under art. 40.2 the instalment is 18 % of the base less the
+    result of a declaration it complements. Where the method in force is not
+    known, an unstated election or an incomplete modality, every declared
+    binding stays required.
+    """
+    if str(work_unit.modelo) != form_for_role("sociedades.instalment", authority=operation):
+        return frozenset[BindingId]()
+    record = profile.record
+    modality = modelo_202_modality_from_path_values(
+        record_to_path_values(record), filing_year=work_unit.filing_year, authority=operation
+    )
+    elected = art_40_3_election_reader(record, schema=profile.profile_decode_context.schema)(work_unit.period)
+    art_40_3 = art_40_3_method_applies(modality, elected=elected)
+    if art_40_3 is None:
+        return frozenset[BindingId]()
+    return modelo_202_bindings_outside_method(
+        registry_revision, art_40_3=art_40_3, filing_year=work_unit.filing_year, authority=operation
     )
 
 

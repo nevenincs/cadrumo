@@ -2769,6 +2769,9 @@ application:
       edit_prior_carries_unstated: Este cambio deja sin indicar los importes pendientes
         de ejercicios anteriores, por lo que la declaración no se puede calcular.
         No se ha cambiado nada. Indica primero esos importes.
+      edit_required_bindings_missing: 'Este cambio deja la declaración sin datos que
+        necesita: %{bindings}. No se ha cambiado nada. Indícalos y vuelve a aplicar
+        el cambio.'
       edit_revision_id_unresolved: El cálculo de la edición no indicó qué revisión
         creó, así que no se pudo conservar el recibo de la edición. Es una incoherencia
         del programa y nada de lo que has introducido la causa. Lista las revisiones
