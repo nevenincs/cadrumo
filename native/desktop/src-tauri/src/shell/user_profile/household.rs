@@ -38,7 +38,23 @@ struct Choice {
     label: String,
 }
 
+/// One answer of another leaf of the same row that a leaf is asked under.
+/// Exactly one of `equals` (the leaf's answer is the token) and `contains`
+/// (the token is one of the comma-joined tokens of that answer) is stated; the
+/// absent one is released as null.
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+struct Condition {
+    leaf: String,
+    #[serde(default)]
+    equals: Option<String>,
+    #[serde(default)]
+    contains: Option<String>,
+}
+
 /// One fact a row can state: its stored key, its words and its answer set.
+/// The leaf is asked only where one of its `shown_when` conditions holds; none
+/// means it is always asked.
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 struct Leaf {
@@ -48,6 +64,17 @@ struct Leaf {
     field_type: String,
     required: bool,
     choices: Vec<Choice>,
+    #[serde(default)]
+    shown_when: Vec<Condition>,
+}
+
+/// A control that changes a group's rows: its words and the registered
+/// operations it submits.
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+struct RowAction {
+    action_words: String,
+    target_operation_ids: Vec<String>,
 }
 
 /// One stored fact of a row. A leaf the row does not state is absent from it,
@@ -78,6 +105,10 @@ enum Item {
         incomplete_words: Option<String>,
         max_rows: Option<usize>,
         leaves: Vec<Leaf>,
+        #[serde(default)]
+        add_row_action: Option<RowAction>,
+        #[serde(default)]
+        remove_row_action: Option<RowAction>,
     },
     #[serde(rename = "family_row")]
     Row {
@@ -126,6 +157,11 @@ pub struct Group {
     /// The most people the declaration's design lets the group hold.
     max_rows: Option<usize>,
     leaves: Vec<Leaf>,
+    /// Adds one row built from `leaves`; none where the group takes no more.
+    add_row_action: Option<RowAction>,
+    /// Removes one served row named by its `row_index`; none where no row is
+    /// stored.
+    remove_row_action: Option<RowAction>,
     rows: Vec<Row>,
 }
 
@@ -185,9 +221,17 @@ impl Family {
                     incomplete_words,
                     max_rows,
                     leaves,
+                    add_row_action,
+                    remove_row_action,
                 } if self.keys.insert(group_key.clone()) => {
                     let leaf_keys: BTreeSet<_> = leaves.iter().map(|leaf| &leaf.leaf).collect();
                     if leaf_keys.len() != leaves.len()
+                        || leaves
+                            .iter()
+                            .flat_map(|leaf| &leaf.shown_when)
+                            .any(|condition| {
+                                condition.equals.is_some() == condition.contains.is_some()
+                            })
                         || (state == GroupState::NotServed
                             && (!leaves.is_empty() || row_count != 0 || stated_count.is_some()))
                         || max_rows == Some(0)
@@ -207,6 +251,8 @@ impl Family {
                         incomplete_words,
                         max_rows,
                         leaves,
+                        add_row_action,
+                        remove_row_action,
                         rows: vec![],
                     });
                 }
@@ -570,6 +616,115 @@ mod tests {
         let mut stateless = group("unknown", 0);
         stateless["state"] = "empty".into();
         assert!(read(vec![stateless]).is_err());
+    }
+
+    const OPERATION: &str = "user-profile.descendants";
+
+    fn action(words: &str) -> Value {
+        json!({"action_words":words,"target_operation_ids":[OPERATION]})
+    }
+
+    #[test]
+    fn a_leaf_keeps_the_conditions_it_is_asked_under_and_one_without_any_is_always_asked() {
+        let mut conditional = group("unknown", 0);
+        conditional["leaves"][0]["shown_when"] = json!([
+            {"leaf":"fecha_nacimiento","equals":"true"},
+            {"leaf":"fecha_nacimiento","contains":"a","equals":null},
+            {"leaf":"fecha_nacimiento","equals":null,"contains":"b,c"}
+        ]);
+        let shown = serde_json::to_value(read(vec![conditional]).unwrap()).unwrap();
+        assert_eq!(
+            shown["groups"][0]["leaves"][0]["shown_when"],
+            json!([
+                {"leaf":"fecha_nacimiento","equals":"true","contains":null},
+                {"leaf":"fecha_nacimiento","equals":null,"contains":"a"},
+                {"leaf":"fecha_nacimiento","equals":null,"contains":"b,c"}
+            ])
+        );
+        // A leaf that states none, or an empty list, is asked always.
+        assert_eq!(shown["groups"][0]["leaves"][1]["shown_when"], json!([]));
+        let mut empty = group("unknown", 0);
+        empty["leaves"][0]["shown_when"] = json!([]);
+        let shown = serde_json::to_value(read(vec![empty]).unwrap()).unwrap();
+        assert_eq!(shown["groups"][0]["leaves"][0]["shown_when"], json!([]));
+    }
+
+    #[test]
+    fn a_condition_states_exactly_one_answer_and_nothing_else() {
+        for condition in [
+            json!({"leaf":"nombre","equals":"a","contains":"b"}),
+            json!({"leaf":"nombre"}),
+            json!({"leaf":"nombre","equals":null,"contains":null}),
+            json!({"leaf":"nombre","equals":"a","tip":"x"}),
+            json!({"equals":"a"}),
+            json!({"leaf":"nombre","equals":1}),
+        ] {
+            let mut stated = group("unknown", 0);
+            stated["leaves"][1]["shown_when"] = json!([condition.clone()]);
+            assert!(read(vec![stated]).is_err(), "{condition}");
+        }
+        let mut listless = group("unknown", 0);
+        listless["leaves"][0]["shown_when"] = Value::Null;
+        assert!(read(vec![listless]).is_err());
+    }
+
+    #[test]
+    fn a_group_carries_the_row_controls_the_product_serves_and_none_where_it_serves_none() {
+        let mut both = group("rows", 1);
+        both["add_row_action"] = action("Add a person");
+        both["remove_row_action"] = action("Remove a person");
+        let shown = serde_json::to_value(read(vec![both, row("0", "nombre")]).unwrap()).unwrap();
+        assert_eq!(shown["groups"][0]["add_row_action"], action("Add a person"));
+        assert_eq!(
+            shown["groups"][0]["remove_row_action"],
+            action("Remove a person")
+        );
+        // Absent and null are the same statement: no such control.
+        let mut nulls = group("unknown", 0);
+        nulls["add_row_action"] = action("Add a person");
+        nulls["remove_row_action"] = Value::Null;
+        let shown = serde_json::to_value(read(vec![nulls]).unwrap()).unwrap();
+        assert_eq!(
+            shown["groups"][0]["add_row_action"]["action_words"],
+            "Add a person"
+        );
+        assert_eq!(shown["groups"][0]["remove_row_action"], Value::Null);
+        let shown = serde_json::to_value(read(vec![group("unknown", 0)]).unwrap()).unwrap();
+        assert_eq!(shown["groups"][0]["add_row_action"], Value::Null);
+        assert_eq!(shown["groups"][0]["remove_row_action"], Value::Null);
+        let mut nulled = group("unknown", 0);
+        nulled["add_row_action"] = Value::Null;
+        nulled["remove_row_action"] = Value::Null;
+        let shown = serde_json::to_value(read(vec![nulled]).unwrap()).unwrap();
+        assert_eq!(shown["groups"][0]["add_row_action"], Value::Null);
+        assert_eq!(shown["groups"][0]["remove_row_action"], Value::Null);
+    }
+
+    #[test]
+    fn a_row_control_with_an_unknown_or_missing_member_is_refused() {
+        for member in ["add_row_action", "remove_row_action"] {
+            let mut extra = group("unknown", 0);
+            extra[member] = action("Add a person");
+            extra[member]["advice"] = "x".into();
+            assert!(read(vec![extra]).is_err(), "{member}");
+            let mut unworded = group("unknown", 0);
+            unworded[member] = action("Add a person");
+            unworded[member]
+                .as_object_mut()
+                .unwrap()
+                .remove("action_words");
+            assert!(read(vec![unworded]).is_err(), "{member}");
+            let mut untargeted = group("unknown", 0);
+            untargeted[member] = action("Add a person");
+            untargeted[member]
+                .as_object_mut()
+                .unwrap()
+                .remove("target_operation_ids");
+            assert!(read(vec![untargeted]).is_err(), "{member}");
+            let mut mistyped = group("unknown", 0);
+            mistyped[member] = json!({"action_words":"Add","target_operation_ids":OPERATION});
+            assert!(read(vec![mistyped]).is_err(), "{member}");
+        }
     }
 
     #[test]
