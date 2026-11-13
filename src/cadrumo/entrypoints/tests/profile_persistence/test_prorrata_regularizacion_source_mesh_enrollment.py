@@ -37,6 +37,7 @@ from ....adapters.persistence.profile.tests.published_authority_support import p
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.aggregation.source_mesh import CalculationSourceResolution
 from ....application.calculations.observations_repository import ResultDispositionProjection
+from ....application.modelo.calculation_resolution import calculation_source_provenance_refs
 from ....application.modelo.calculation_source_mesh_actions import resolve_bucket_source_mesh
 from ....core.aggregation import BindingSourceKind
 from ....core.casilla_id import CasillaId, validated_casilla_id
@@ -48,6 +49,7 @@ from ....domain.calculations.registry.iva_compensation_annual_partition_bindings
     M303_COMPENSATION_RESULTADO_CASILLA,
 )
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
+from ....domain.modelos.calculation_revision_sources import bound_input_source_refs
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
@@ -206,6 +208,9 @@ def test_non_settlement_liquidation_carries_a_structural_zero(tmp_path: Path) ->
     assert f"303:{_FILING_YEAR}:3T:prorrata-regularizacion-settlement-only" in {
         row.source_ref for row in resolution.provenance
     }
+    # The merged trace names the resolver that handed over the box, whatever the box declares.
+    supplied = bound_input_source_refs(calculation_source_provenance_refs(resolution.provenance))
+    assert supplied[_CASILLA_44_ID].resolved_binding_source is BindingSourceKind.PRORRATA_REGULARIZACION
 
 
 def test_source_mesh_m390_restates_the_filed_settlement_casilla_44(tmp_path: Path) -> None:

@@ -18,7 +18,7 @@ from enum import StrEnum
 from types import MappingProxyType
 from typing import Protocol
 
-from ...core.aggregation import BindingSourceKind, BindingValueOutcome
+from ...core.aggregation import BindingSourceKind, BindingValueOutcome, CalculationSourceLineageRole
 from ...core.casilla_id import CasillaId
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.translatable import Translatable as tr
@@ -33,7 +33,7 @@ from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.row_casilla import DirectRowMaterializationProvenance, RowCasillaKey
 from ...domain.calculations.row_source_identity import RowBindingKey, RowSourceIdentity
 from ...domain.modelos.calculation_revision_m303_handoff import M303RegimenSimplificadoAnnualSummaryHandoff
-from ...domain.modelos.calculation_revision_sources import CalculationNoteFact
+from ...domain.modelos.calculation_revision_sources import CalculationNoteFact, bound_input_source_ref
 from ...domain.modelos.row_models import ModeloDetailRow
 from ...domain.modelos.source_disagreement import (
     DisagreementBooleanValue,
@@ -454,6 +454,7 @@ class _SourceResolutionMergeState:
     row_casilla_owners: dict[RowCasillaKey, str] = field(default_factory=dict)
     relation_owners: dict[RelationId, str] = field(default_factory=dict)
     casilla_owners: dict[CasillaId, str] = field(default_factory=dict)
+    bound_input_provenance: dict[CasillaId, CalculationSourceProvenance] = field(default_factory=dict)
     borrador_provenance: BorradorSourceProvenance | None = None
     m303_regimen_simplificado_annual_summary_handoff: M303RegimenSimplificadoAnnualSummaryHandoff | None = None
     value_outcomes: dict[BindingId, BindingValueOutcome] = field(default_factory=dict)
@@ -481,6 +482,7 @@ class _SourceResolutionMergeState:
         self._absorb_precedence_row_casillas(resolution)
         self._absorb_precedence_relations(resolution)
         self.bound_inputs_by_casilla_id.update(resolution.bound_inputs_by_casilla_id)
+        self._record_bound_input_sources(resolution)
 
     def _absorb_closed_record_rows(self, resolution: CalculationSourceResolution) -> None:
         """A source's membership and values cannot be overlaid independently."""
@@ -625,6 +627,34 @@ class _SourceResolutionMergeState:
         for casilla_id, value in resolution.bound_inputs_by_casilla_id.items():
             _claim_bound_casilla(self.casilla_owners, casilla_id, resolution.resolver_id)
             self.bound_inputs_by_casilla_id[casilla_id] = value
+        self._record_bound_input_sources(resolution)
+
+    def _record_bound_input_sources(self, resolution: CalculationSourceResolution) -> None:
+        """Name the resolver that supplied each casilla value it handed over directly, apart from any binding.
+
+        A casilla fed this way has no binding for the persisted source trace to
+        point at, so each gets its own primary node. A later tier that supplies
+        the same casilla replaces the earlier node, as it replaces the value. A
+        resolver that owns no single source kind cannot be named, and a casilla
+        an inner merge already named keeps that node.
+        """
+        source = _bound_input_source_kind(resolution)
+        if source is None:
+            return
+        named = {row.source_ref for row in resolution.provenance}
+        for casilla_id in resolution.bound_inputs_by_casilla_id:
+            if bound_input_source_ref(casilla_id) in named:
+                continue
+            self.bound_input_provenance[casilla_id] = CalculationSourceProvenance(
+                resolver_id=str(resolution.resolver_id),
+                resolved_binding_source=source,
+                contributor_source_kind=source.value,
+                contributor_binding_source=source,
+                lineage_role=CalculationSourceLineageRole.PRIMARY,
+                source_ref=bound_input_source_ref(casilla_id),
+                parent_source_ref=None,
+                source_casilla_ids=(casilla_id,),
+            )
 
     def _unresolved_binding_ids(self) -> tuple[BindingId, ...]:
         row_binding_ids = {binding_id for binding_id, _row_index in self.row_binding_values}
@@ -663,7 +693,7 @@ class _SourceResolutionMergeState:
             borrador_provenance=self.borrador_provenance,
             m303_regimen_simplificado_annual_summary_handoff=self.m303_regimen_simplificado_annual_summary_handoff,
             diagnostics=tuple(self.diagnostics),
-            provenance=tuple(self.provenance),
+            provenance=(*self.provenance, *(row for _, row in sorted(self.bound_input_provenance.items()))),
             value_outcomes=self.value_outcomes,
             payment_year_binding_values=self.payment_year_binding_values,
             instalment_basis_binding_values=self.instalment_basis_binding_values,
@@ -837,6 +867,12 @@ def _claim_row_casilla(owners: dict[RowCasillaKey, str], row_casilla_key: RowCas
             "second_resolver": resolver_id,
         },
     )
+
+
+def _bound_input_source_kind(resolution: CalculationSourceResolution) -> BindingSourceKind | None:
+    """Return the one source kind a resolution's direct casilla values rest on, when it owns exactly one."""
+    kinds = set(resolution.owned_sources) or {row.resolved_binding_source for row in resolution.provenance}
+    return next(iter(kinds)) if len(kinds) == 1 else None
 
 
 def _claim_bound_casilla(owners: dict[CasillaId, str], casilla_id: CasillaId, resolver_id: str) -> None:
