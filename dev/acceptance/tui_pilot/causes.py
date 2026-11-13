@@ -43,14 +43,27 @@ def row_cause(row: PilotRow, table: TableRow, earlier: Sequence[PilotRow]) -> tu
     ``earlier`` holds the rows the same run drove before ``row``, with their own causes. A table row with nothing to
     compare (history filed, not run) gets no cause; the words say why.
     """
-    if row.cause is not None and row.cause.startswith(CRASH_CAUSE):
-        return row.cause, row.cause_words
+    crashed = _crash(row)
+    if crashed is not None:
+        return crashed
     found = parity(table, SURFACE, row.result())
     if found.outcome == MATCHED:
         return None, ""
     words = "; ".join(found.causes)
     if found.outcome == NOT_COMPARABLE:
         return None, words
+    return _differing_cause(row, table, earlier, words)
+
+
+def _crash(row: PilotRow) -> tuple[str, str] | None:
+    """The crash cause the pilot set on ``row`` with its words, else ``None``."""
+    if row.cause is not None and row.cause.startswith(CRASH_CAUSE):
+        return row.cause, row.cause_words
+    return None
+
+
+def _differing_cause(row: PilotRow, table: TableRow, earlier: Sequence[PilotRow], words: str) -> tuple[str, str]:
+    """The first cause that applies to a row that differs from its comparable table row; ``words`` name the diff."""
     if row.refusal_code == _EDIT_REFUSED and row.calculate != PASSED:
         return "edit_refused_no_detail", words
     upstream = _upstream(row, earlier)
@@ -58,9 +71,16 @@ def row_cause(row: PilotRow, table: TableRow, earlier: Sequence[PilotRow]) -> tu
         return upstream
     if STAGE_OF[table.verify] == NOT_OWED and row.verify != NOT_OWED:
         return "tui_calendar_omits_not_applicable_verdict", words
-    if row.calculate == PASSED and row.stopped_at is None and figure_causes(SURFACE, dict(table.figures), row.figures):
+    if _figures_differ(row, table):
         return "other:figures_differ", words
     return _first_step_missed(row, STAGE_OF[table.verify]), words
+
+
+def _figures_differ(row: PilotRow, table: TableRow) -> bool:
+    """Whether a calculated, unstopped row shows figures that differ from the table row's."""
+    if row.calculate != PASSED or row.stopped_at is not None:
+        return False
+    return bool(figure_causes(SURFACE, dict(table.figures), row.figures))
 
 
 def unreported_cause(row: PilotRow, earlier: Sequence[PilotRow]) -> tuple[str | None, str]:
@@ -69,8 +89,9 @@ def unreported_cause(row: PilotRow, earlier: Sequence[PilotRow]) -> tuple[str | 
     The table reports such a return at another horizon, so no table row of this replay is its oracle: it has no
     cause once the workbench filed it or stopped it as not owed, else the first step it did not take.
     """
-    if row.cause is not None and row.cause.startswith(CRASH_CAUSE):
-        return row.cause, row.cause_words
+    crashed = _crash(row)
+    if crashed is not None:
+        return crashed
     if row.filed or row.verify == NOT_OWED:
         # A return the table holds not owed is never filed; its successors read the table's world, not a gap.
         return None, ""
@@ -85,14 +106,19 @@ def _first_step_missed(row: PilotRow, verify: str | None) -> str:
     if row.calculate != PASSED:
         return f"other:calculate_{(row.refusal_code or row.calculate or ERROR).lower()}"
     if row.stopped_at is not None:
-        if row.stopped_at == _CONFIRM:
-            # An unconfirmed assumed value withholds filing; the form rightly asks for the confirmation first.
-            return "assumed_value_unconfirmed"
-        stage = next((name for name in _STAGES if getattr(row, name) == NOT_REACHED), "export")
-        return f"next_step_{row.stopped_at}_before_{stage}"
+        return _stopped_key(row, row.stopped_at)
     if row.verify != verify:
         return f"other:verify_{row.verify}"
     return f"export_{(row.refusal_code or row.export or ERROR).lower()}"
+
+
+def _stopped_key(row: PilotRow, stopped_at: str) -> str:
+    """The key of a step the form served and the pilot cannot take."""
+    if stopped_at == _CONFIRM:
+        # An unconfirmed assumed value withholds filing; the form rightly asks for the confirmation first.
+        return "assumed_value_unconfirmed"
+    stage = next((name for name in _STAGES if getattr(row, name) == NOT_REACHED), "export")
+    return f"next_step_{stopped_at}_before_{stage}"
 
 
 def _upstream(row: PilotRow, earlier: Sequence[PilotRow]) -> tuple[str, str] | None:
@@ -101,13 +127,18 @@ def _upstream(row: PilotRow, earlier: Sequence[PilotRow]) -> tuple[str, str] | N
     An earlier return of the same modelo is taken first, since the refusal names that modelo's chain; else the
     first earlier one of any modelo.
     """
-    if row.refusal_code not in CHAIN_REFUSALS:
-        return None
-    unfiled = [before for before in earlier if before.cause is not None and not before.filed]
-    same = [before for before in unfiled if before.modelo == row.modelo]
-    chosen = (same or unfiled or [None])[0]
+    chosen = _unfiled_origin(row, earlier)
     if chosen is None or chosen.cause is None:
         return None
     key = chosen.cause if chosen.cause.startswith(UPSTREAM) else f"{UPSTREAM}{chosen.cause}"
     words = f"{chosen.modelo} {chosen.year} {chosen.period} is not filed through the TUI ({chosen.cause})"
     return key, words
+
+
+def _unfiled_origin(row: PilotRow, earlier: Sequence[PilotRow]) -> PilotRow | None:
+    """The earlier unfiled differing return a chain refusal of ``row`` names, the same modelo's first."""
+    if row.refusal_code not in CHAIN_REFUSALS:
+        return None
+    unfiled = [before for before in earlier if before.cause is not None and not before.filed]
+    same = [before for before in unfiled if before.modelo == row.modelo]
+    return (same or unfiled or [None])[0]

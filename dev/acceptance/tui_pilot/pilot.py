@@ -223,13 +223,18 @@ def _exported(shown: ShownOutcome, row: PilotRow) -> bool:
         stage = ERROR
         row.reasons.append("export: the result screen showed no result")
     row.export = stage
-    if stage == PASSED and shown.export is not None:
-        result = shown.export
+    _note_export(shown, row, stage)
+    return stage == PASSED
+
+
+def _note_export(shown: ShownOutcome, row: PilotRow, stage: str) -> None:
+    """Record what the settled export stage showed: the written file, or why it did not pass."""
+    result = shown.export
+    if stage == PASSED and result is not None:
         row.reasons.append(f"export: {result.export_format}, {result.byte_size} B, {result.completeness}")
     elif stage != PASSED:
         row.refusal_code = row.refusal_code or shown.code
         row.reasons.append(f"export: {shown.code} {shown.refusal or shown.notice}")
-    return stage == PASSED
 
 
 def _recorded(shown: ShownOutcome, row: PilotRow) -> bool:
@@ -286,20 +291,26 @@ async def _drive(driver: WorkbenchDriver, statements: _Statements, row: PilotRow
             _stop(driver, row, action)
             return
         taken.add(stage)
-        if action in _CALCULATE:
-            passed = await _calculate(driver, statements, action, row)
-            if driver.calculated():
-                row.figures = driver.shown_figures()
-            if stop_when_not_owed(row, owed=owed, calculated=passed, served=driver.served_next_action()):
-                return
-        elif action is ModeloFormNextAction.VERIFY:
-            passed = _verified(await driver.press_for(action), row)
-        elif action in _EXPORT:
-            passed = _exported(await driver.press_for(action), row)
-        else:
-            passed = _recorded(await driver.press_for(action), row)
-        if not passed:
+        if not await _take_step(driver, statements, row, action, owed=owed):
             return
+
+
+async def _take_step(
+    driver: WorkbenchDriver, statements: _Statements, row: PilotRow, action: ModeloFormNextAction, *, owed: bool
+) -> bool:
+    """Take one served step; whether the drive goes on to the next one."""
+    if action in _CALCULATE:
+        passed = await _calculate(driver, statements, action, row)
+        if driver.calculated():
+            row.figures = driver.shown_figures()
+        if stop_when_not_owed(row, owed=owed, calculated=passed, served=driver.served_next_action()):
+            return False
+        return passed
+    if action is ModeloFormNextAction.VERIFY:
+        return _verified(await driver.press_for(action), row)
+    if action in _EXPORT:
+        return _exported(await driver.press_for(action), row)
+    return _recorded(await driver.press_for(action), row)
 
 
 def _refused_before_workbench(row: PilotRow, error: PersonaMaterialisationError, where: str) -> PilotRow:
