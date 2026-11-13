@@ -129,13 +129,15 @@ def _verification_stage(
     target = work.require_head()
     findings: list[ModeloVerificationFinding] = []
     failures: dict[int, ModeloPreconditionFailure] = {}
+    repos = build_verification_repository_bundle(work.work_unit.bucket_id, operation=work.operation)
     append_readable_model_findings(
         findings,
         failures,
         work.work_unit,
         target,
-        build_verification_repository_bundle(work.work_unit.bucket_id, operation=work.operation),
+        repos,
         work.operation,
+        calculation_catalogue=repos.calculation.load_revisioned(operation=work.operation)[0],
     )
     return findings, failures
 

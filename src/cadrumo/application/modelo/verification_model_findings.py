@@ -11,6 +11,7 @@ from cadrumo.application.calculations.observations_repository import (
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...domain.modelos.calculation_revision import (
     CalculationRevision,
+    CalculationRevisionCatalogue,
 )
 from ...domain.modelos.protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
@@ -127,6 +128,8 @@ def append_readable_model_findings(
     target: CalculationRevision,
     repos: VerificationRepositoryBundle,
     operation: PinnedAuthorityOperation,
+    *,
+    calculation_catalogue: CalculationRevisionCatalogue,
 ) -> None:
     """Skip model checks only after an explicit registry-snapshot refusal.
 
@@ -167,6 +170,7 @@ def append_readable_model_findings(
                 verification_repository=repos.verification,
                 credit_resolutions=repos.credit_resolution,
                 operation=operation,
+                calculation_catalogue=calculation_catalogue,
             ),
         ):
             findings.append(assumed_finding)

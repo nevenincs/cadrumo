@@ -36,6 +36,7 @@ from .work_form_service import load_modelo_work_form
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+    from ...domain.modelos.calculation_revision import CalculationRevisionCatalogue
     from ...domain.modelos.protocols import (
         CalculationRevisionCatalogueRepositoryProtocol,
         VerificationReportCatalogueRepositoryProtocol,
@@ -69,8 +70,12 @@ def unconfirmed_assumed_fields(
     verification_repository: VerificationReportCatalogueRepositoryProtocol,
     credit_resolutions: CreditResolutionReader | None,
     operation: PinnedAuthorityOperation,
+    calculation_catalogue: CalculationRevisionCatalogue | None = None,
 ) -> tuple[ModeloFormField, ...]:
-    """The boxes of the work unit's current calculation that hold an assumed value, as its work form reads them."""
+    """The boxes of the work unit's current calculation that hold an assumed value, as its work form reads them.
+
+    Verification passes the catalogue it read with its revision guard, so the gate judges that snapshot.
+    """
     loaded = load_modelo_work_form(
         work_unit.bucket_id,
         work_unit.modelo,
@@ -84,6 +89,7 @@ def unconfirmed_assumed_fields(
         # Only the boxes' origins are read; no words are rendered from this form.
         language=OutputLanguage.EN,
         credit_resolutions=credit_resolutions,
+        calculation_catalogue=calculation_catalogue,
     )
     return assumed_fields(loaded.form)
 
