@@ -13,6 +13,7 @@ import type {
   CalculationRevisionId,
   CasillaId,
   ContentDigest,
+  NoRecoveryOutcome,
   RevisionId,
   WorkUnitId,
 } from "./modelo";
@@ -224,6 +225,10 @@ export type ModeloEditDetailRowIntentKind =
 
 /**
  * Typed post-admission refusal without a partial projection or raw exception.
+ *
+ * `downstream` is set only when the edit's values were admitted and a later
+ * stage, such as the recalculation, refused under its own registered code; a
+ * refusal of the value itself never carries it.
  */
 export type ModeloEditDomainRefusalV1 = {
   kind: "domain";
@@ -235,6 +240,40 @@ export type ModeloEditDomainRefusalV1 = {
   responsible_owner: string;
   reconsideration_condition: string;
   recovery_action: ActionReference | null;
+  downstream?: ModeloEditDownstreamRefusalV1 | null;
+};
+
+/**
+ * One public registry coordinate a downstream refusal's sentence names.
+ */
+export type ModeloEditDownstreamContextEntryV1 = {
+  key: string;
+  value: string;
+};
+
+/**
+ * The registered refusal a stage after value admission raised, kept as itself
+ * and nothing more.
+ *
+ * It holds the refusal's registered code, a catalogue key whose sentence needs
+ * no filer's value to be finished (none when the refusal has no such key, and
+ * the code's unworded sentence then names the code), the public registry
+ * coordinates that sentence names (see
+ * `MODELO_EDIT_DOWNSTREAM_PUBLIC_CONTEXT`), and its door with every value
+ * taken out: the failed condition, then either the action that clears it and
+ * the names of that action's arguments, or the closed outcome when no action
+ * does. No other context, evidence value or argument value travels, so neither
+ * a filer's value nor a name or tax ID can reach operation persistence or a
+ * rendered message.
+ */
+export type ModeloEditDownstreamRefusalV1 = {
+  error_code: string;
+  message_key: string | null;
+  context?: ModeloEditDownstreamContextEntryV1[];
+  failed_condition_id: string | null;
+  recovery_action: ActionReference | null;
+  argument_names: string[];
+  no_recovery_outcome: NoRecoveryOutcome | null;
 };
 
 /**
