@@ -38,7 +38,7 @@ from ...core.identity.documents import TAX_ID_FORMAT_CONTEXT
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.type_guards import is_object_dict, is_object_list_or_tuple, is_object_mapping, is_object_set_or_frozenset
 from ..calculations.registry.facts.atoms import TAGGED_FACT_ATOM_CONTEXT
-from ..calculations.registry.field_absence import absent_when_none, later_absent_when_none
+from ..calculations.registry.field_absence import absent_when_none, later_absent_when_empty, later_absent_when_none
 from ..calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from ..calculations.registry.ids import RevisionId
 from ..calculations.registry.revision_contracts import DeclaredPredecessor, NoPredecessor
@@ -56,7 +56,12 @@ _REVISION_ID_SEQUENCE_ADAPTER: TypeAdapter[tuple[RevisionId, ...]] = TypeAdapter
 _SAVED_JSON_ADAPTER: TypeAdapter[object] = TypeAdapter(object)
 # The exclusions of fields added after snapshots were saved: each leaves its field out at the
 # value an earlier snapshot implies, so that snapshot's dumps and digests are unchanged.
-_LATER_FIELD_EXCLUSIONS: Final = (absent_when_none, later_absent_when_none, bracket_kind_is_default)
+_LATER_FIELD_EXCLUSIONS: Final = (
+    absent_when_none,
+    later_absent_when_none,
+    later_absent_when_empty,
+    bracket_kind_is_default,
+)
 
 
 def _complete_registry_value(value: object) -> object:
