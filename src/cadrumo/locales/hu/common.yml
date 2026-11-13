@@ -168,7 +168,7 @@ aggregation:
         mielőtt újra megteszed.
       code_unknown: A kapcsolat, a ügylet típusa vagy az értékelési módszer nem szerepel
         a 232-es modell adott évi tervében.
-      ejercicio_unsupported: Ez az év kívül esik a Cadrumo által támogatott bevallási
+      ejercicio_unsupported: Ez az év kívül esik az alkalmazás által támogatott bevallási
         éveken.
       none_stated: Kijelentetted, hogy ebben az évben nem volt kapcsolt felekkel vagy
         adóparadicsommal végzett ügyleted. Vond vissza ezt a nyilatkozatot, mielőtt

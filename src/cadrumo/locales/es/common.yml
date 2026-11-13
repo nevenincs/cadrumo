@@ -174,7 +174,8 @@ aggregation:
         de volver a declararla.
       code_unknown: Un tipo de vinculación, un tipo de operación o un método de valoración
         no es de los que el diseño del modelo 232 publica para ese año.
-      ejercicio_unsupported: Este año queda fuera de los ejercicios que Cadrumo admite.
+      ejercicio_unsupported: Este año queda fuera de los ejercicios que admite la
+        aplicación.
       none_stated: Declaraste que este año no tuvo operaciones vinculadas ni con paraísos
         fiscales. Retira esa declaración antes de añadir una operación.
       not_stated: No hay una declaración vigente que retirar, o la declaración indicada

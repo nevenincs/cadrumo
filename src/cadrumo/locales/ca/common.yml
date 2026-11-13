@@ -170,7 +170,7 @@ aggregation:
         abans de tornar-la a declarar.
       code_unknown: Un tipus de vinculació, un tipus d'operació o un mètode de valoració
         no és dels que el disseny del model 232 publica per a aquest any.
-      ejercicio_unsupported: Aquest any queda fora dels exercicis que Cadrumo admet.
+      ejercicio_unsupported: Aquest any queda fora dels exercicis que admet l'aplicació.
       none_stated: Vas declarar que aquest any no va tenir operacions vinculades ni
         amb paradisos fiscals. Retira aquesta declaració abans d'afegir una operació.
       not_stated: No hi ha cap declaració vigent per retirar, o la declaració indicada

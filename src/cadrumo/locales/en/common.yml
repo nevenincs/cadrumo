@@ -161,7 +161,8 @@ aggregation:
         before you state it again.
       code_unknown: A relationship, operation type or valuation method is not one
         the Modelo 232 design publishes for that year.
-      ejercicio_unsupported: This year is outside the filing years Cadrumo supports.
+      ejercicio_unsupported: This year is outside the filing years the application
+        supports.
       none_stated: You stated that this year had no related-party or tax-haven operations.
         Withdraw that statement before you add an operation.
       not_stated: No statement in force exists to withdraw, or the statement given
