@@ -314,7 +314,7 @@ def test_a_failed_working_figure_is_counted_and_reached_through_the_working_figu
     group = next(group for group in form.outline if group.kind is ModeloFormOutlineKind.WORKING_FIGURES)
 
     # Every computed casilla the layout shows as a working figure is one the calculation could not work out here.
-    snapshot = form_snapshot(operation, "100", 2025, "0A")
+    snapshot = form_snapshot(operation, "100", form.filing_year, form.period.code)
     computed = {casilla.id for casilla in snapshot.revision.casillas if casilla.input_kind is InputKind.COMPUTED}
     layout = _layout(operation, "100", form.registry_revision_id)
     expected = {
