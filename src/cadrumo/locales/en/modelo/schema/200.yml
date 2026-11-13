@@ -9328,6 +9328,10 @@ modelo:
             label: Insurance undertakings - Statement of changes in own equity (II)
               - Transactions with shareholders or mutual members - Transactions with
               own shares or equity interests (net). (Own shares in equity) [00547]
+          is-ecpp-aseguradoras-ii-acciones-propias-netas-prima-emision:
+            label: Insurance undertakings - Statement of changes in own equity (II)
+              - Transactions with shareholders or mutual members - Transactions with
+              own shares or equity interests (net). Share premium [00545]
           is-ecpp-aseguradoras-ii-combinacion-negocios-otras-aportaciones-socios-mutualistas:
             label: Insurance undertakings - Statement of changes in own equity (II)
               - Transactions with shareholders or mutual members - Increase (reduction)
@@ -9737,6 +9741,9 @@ modelo:
             label: Settlement III - Tax credits/Double taxation deductions - Double
               taxation deductions - International D.T. generated and applied in the
               current period (art. 31 and 32 LIS) [00573]
+          is-liquidacion-iii-quitas-acuerdo-acreedores:
+            label: Settlement III - Taxable base - Income from debt write-offs under
+              an agreement with creditors (LIS art. 26.1) - Decreases [00545]
           is-liquidacion-iii-reserva-nivelacion-aumentos:
             label: Settlement III - Taxable base - Reduced-size entities - Levelling
               reserve - Increases [01033]

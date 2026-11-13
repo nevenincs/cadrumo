@@ -114,6 +114,7 @@ from ..filing.runtime import RegistrySchemaAccessor
 from ..operator_actions.models import PreconditionVerdict
 from ..overview.modelo202_instalment_evidence import art_40_3_election_reader_for_bucket
 from ..prorrata_register.service import require_prorrata_register_coordinates_current
+from ..prorrata_register.settlement import settled_prorrata_register
 from ..user_profile.completeness import pinned_registry_scope
 from ..user_profile.modelo_scoped_conditions import (
     ModeloScopedRequirementState,
@@ -143,6 +144,7 @@ from .export_preparation import (
     resolve_m303_export_arrivals,
 )
 from .filing_revision_persistence import require_filing_instance_evidence_for_work_unit
+from .incn_periodo_anterior import IncnPeriodoAnteriorStores, incn_periodo_anterior_reader
 from .lifecycle_view_refusal_doors import profile_facts_verdict, unit_filing_evidence_verdict
 from .m200_page_002_profile import modelo_200_profile_facts
 from .m303_regimen_simplificado_scope import m303_profile_readiness_failure
@@ -905,6 +907,20 @@ def resolve_export_model_profile(
                 work_unit.period
             ),
             operation=operation,
+            incn_periodo_anterior=incn_periodo_anterior_reader(
+                work_unit.bucket_id,
+                # The Modelo 200 of the período the instalment is on account of reads the preceding one.
+                periodo.start.year,
+                stores=IncnPeriodoAnteriorStores(
+                    operation=operation,
+                    observation_repository=export_ports.observation,
+                    iva_compensation_history_repository=export_ports.iva_compensation_history,
+                    calculation_repository=export_ports.calculation,
+                    work_unit_repository=export_ports.work_unit,
+                    filing_repository=export_ports.filing,
+                ),
+                activity_start_date=workflow_profile.activity_start_date,
+            ),
         ), None
     if modelo == form_for_role("withholding.work_periodic"):
         return _modelo_111_profile_facts(
@@ -974,6 +990,8 @@ def _resolve_m303_filing_facts_for_export(
         period=work_unit.period,
         evidence=filing_instance_evidence,
         arrivals=export_ports.m303_arrivals(),
+        revision=revision,
+        work_unit=work_unit,
         operation=operation,
     )
     require_m303_regimen_simplificado_scope_matches_profile(
@@ -989,18 +1007,28 @@ def resolve_m303_filing_facts_from_arrivals(
     period: Period,
     evidence: FilingInstanceEvidence,
     arrivals: M303ArrivalPorts,
+    revision: CalculationRevision,
+    work_unit: WorkUnit,
     operation: PinnedAuthorityOperation,
 ) -> M303FilingFacts:
     """Fold the saved filing evidence with the ledger and register arrivals into the export's filing facts.
 
     The export and the declaration's form both resolve a Modelo 303's period
     facts here, so the form can show nothing the exported file does not carry.
+    The last return of the year reads the register as filing ``revision`` will
+    leave it (LIVA art. 105.Cuatro), derived in memory from its own casillas;
+    nothing is written before the filing exists.
     """
     prorrata_register_repository = arrivals.prorrata_register
     prorrata_register = require_prorrata_register_coordinates_current(
         prorrata_register_repository.load(),
         operation=operation,
     )
+    settled_register = settled_prorrata_register(
+        prorrata_register, revision=revision, work_unit=work_unit, operation=operation
+    )
+    if settled_register is not None:
+        prorrata_register = settled_register
     bienes_register = arrivals.bienes_inversion.load()
     iva_aggregation = aggregate_iva_ledger_observations_from_repositories(
         bucket_id=bucket_id,

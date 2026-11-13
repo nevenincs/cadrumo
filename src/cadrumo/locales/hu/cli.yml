@@ -587,7 +587,7 @@ cli:
         participation_help: A kibocsátóban birtokolt részesedésed százalékban. Csak
           tax_haven_holding esetén.
         source_help: 'Honnan származik az adat: annual_accounts, corporation_tax_return,
-          vat_returns vagy operator_estimate.'
+          declaraciones_iva vagy operator_estimate.'
         source_reference_help: Hivatkozás arra a dokumentumra vagy bevallásra, amelyből
           az adatot vetted.
         specific_help: Az ügylet különleges ügylet (Orden HFP/816/2017 2.1.b cikk).

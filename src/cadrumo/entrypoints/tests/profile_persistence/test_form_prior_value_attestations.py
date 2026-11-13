@@ -139,6 +139,7 @@ _DECLARATIONS = (
             "modelo-200-bin-pendiente-ejercicios-anteriores": "200",
             "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": "200",
             "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": "200",
+            "modelo-200-incn-periodo-impositivo-anterior": "200",
             **dict.fromkeys(
                 (
                     f"modelo-200-pago-fraccionado-{instalment}-{modality}"

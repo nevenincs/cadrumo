@@ -21,7 +21,6 @@ from pydantic_core import core_schema
 
 from ...core.concepto_capital_mobiliario import ConceptoCapitalMobiliario
 from ...core.concepto_ingreso import ConceptoIngreso
-from ...core.decimal.constants import ONE
 from ...core.errors.hierarchy import CoreValidationError, pydantic_validation_boundary
 from ...core.external_constants import CLASSIFIED_BY_AUTO, DEFAULT_CURRENCY
 from ...core.gasto_capital_inmobiliario import GastoCapitalInmobiliario
@@ -88,6 +87,7 @@ from .model_validation import (
     validate_classified_by_shape,
     validate_confidence_range,
     validate_figures_without_business,
+    validate_iva_rate_is_fraction,
     validate_non_negative_decimal,
 )
 from .own_accounts import OwnAccountId
@@ -138,13 +138,6 @@ def derive_transaction_id(raw: RawTransaction, *, own_account_id: str | None = N
     return content_hash_hex(payload)
 
 
-#: Upper bound for an IVA rate held as a decimal fraction. This is the unit
-#: boundary of a fraction, not a regulatory rate -- the highest Spanish IVA rate
-#: is well below it -- so it stays a local constant rather than a registry lookup
-#: and cannot drift with a filing year.
-_MAX_IVA_RATE_FRACTION = ONE
-
-
 def _derive_transaction_id_from_validated_data(data: dict[str, object]) -> str:
     raw = data.get("raw")
     if not isinstance(raw, RawTransaction):
@@ -173,18 +166,27 @@ _DERIVED_TRANSACTION_ID_CHECK = "derived_transaction_id"
 
 _FIGURES_WITHOUT_BUSINESS_CHECK = "figures_without_business"
 
+_IVA_RATE_FRACTION_CHECK = "iva_rate_fraction"
+
 #: A row written before personal rows were refused business figures may still
 #: hold them. Reading it never refuses: the reader withholds those figures
 #: (:func:`~.withheld_figures.withhold_figures_without_business`) and the row's next write drops
 #: them, so only a new write meets the refusal.
-_STORED_ROW = _StoredRow(frozenset({_FIGURES_WITHOUT_BUSINESS_CHECK}))
+#:
+#: A row written before an IVA rate above one was refused may hold a percentage
+#: such as ``21``. Reading it never refuses either: the row loads as stored, the
+#: IVA aggregation gate refuses that rate as unsupported and names the row, and
+#: the operator corrects it through the ledger edit, whose patch states a fraction.
+_STORED_ROW = _StoredRow(frozenset({_FIGURES_WITHOUT_BUSINESS_CHECK, _IVA_RATE_FRACTION_CHECK}))
 
 #: The derived-id re-hash re-proves what the store's binding already proves:
 #: the transaction id is the object key the AEAD authenticates, and the
 #: repository asserts the decoded id equals the addressed key. Every dated
 #: registry rule stays, because a stored row does not record the authority
 #: generation it was admitted under.
-_AUTHENTICATED_STORED_ROW = _StoredRow(frozenset({_DERIVED_TRANSACTION_ID_CHECK, _FIGURES_WITHOUT_BUSINESS_CHECK}))
+_AUTHENTICATED_STORED_ROW = _StoredRow(
+    frozenset({_DERIVED_TRANSACTION_ID_CHECK, _FIGURES_WITHOUT_BUSINESS_CHECK, _IVA_RATE_FRACTION_CHECK})
+)
 
 
 def _skips_admission_check(info: core_schema.ValidationInfo, check: str) -> bool:
@@ -713,30 +715,16 @@ class Transaction(BaseModel):
     @field_validator("iva_rate")
     @classmethod
     @pydantic_validation_boundary
-    def _iva_rate_is_a_fraction_not_a_percentage(cls, value: Decimal | None) -> Decimal | None:
-        """Refuse an IVA rate that was supplied as a percentage.
+    def _iva_rate_is_a_fraction_not_a_percentage(
+        cls, value: Decimal | None, info: core_schema.ValidationInfo
+    ) -> Decimal | None:
+        """Refuse an IVA rate supplied as a percentage, with the words the backend serves.
 
-        This field is a fraction: 21% IVA is ``0.21``. The inventory and asset
-        ledgers take the same tax concept as a percentage bounded 0-100 and divide
-        by a hundred themselves, so an operator moving between those surfaces and
-        this one has two conventions under one option name and no signal telling
-        them which applies.
-
-        Left unbounded, ``21`` stored here is a 2100% rate: arithmetically valid,
-        silently accepted, and a hundredfold over-statement of the cuota on every
-        downstream aggregation that reads the row. No Spanish IVA rate exceeds 21%
-        (LIVA arts. 90-91), so no legitimate fraction is above 1 and the refusal
-        cannot reject a real filing.
-
-        The message names the convention rather than the bound, because the
-        failure it catches is a unit mistake and ``must be <= 1`` does not tell
-        the operator that.
+        A row read back from the secure store is not refused: it may predate the refusal.
         """
-        if value is not None and value > _MAX_IVA_RATE_FRACTION:
-            raise ValueError(
-                f"iva_rate is a decimal fraction, not a percentage: got {value}. Express 21% IVA as 0.21.",
-            )
-        return value
+        if _skips_admission_check(info, _IVA_RATE_FRACTION_CHECK):
+            return value
+        return validate_iva_rate_is_fraction(value)
 
     @field_validator(
         "invoice_id",

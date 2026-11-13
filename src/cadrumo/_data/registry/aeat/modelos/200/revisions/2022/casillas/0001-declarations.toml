@@ -4644,9 +4644,10 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 # 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1104 DP200011 78|1237|17|N
 [[revisions."2022".casillas]]
-id = "00545"
+id = "DP200011:00545"
 continuidad_id = "00545"
 number = "00545"
+segmento = "DP200011"
 section = ["estado_de_cambios_patrimonio_neto_iii", "operaciones_con_socios_o_propietarios"]
 semantic_role = "is_ecpn_operaciones_socios_importe"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
@@ -9836,6 +9837,15 @@ number = "01499"
 segmento = "DP200020D"
 section = ["dotaciones_deterioro_creditos_u_otros_activos", "total"]
 semantic_role = "is_correccion_dotaciones_deterioro_creditos_saldo_final_cumplido_condiciones"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1416 DP200014 15|166|17|Num
+[[revisions."2022".casillas]]
+id = "01509"
+continuidad_id = "01509"
+number = "01509"
+section = ["liquidacion_iii", "base_imponible"]
+semantic_role = "is_liquidacion_iii_importe"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 
 # 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3723 DP200022 117|1900|17|Num
@@ -22263,6 +22273,16 @@ section = ["aseguradoras_estado_cambios_patrimonio_propio_ii", "saldo_final_ejer
 semantic_role = "is_ecpp_aseguradoras_importe"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:6069 DP200042 78|1237|17|N
+[[revisions."2022".casillas]]
+id = "DP200042:00545"
+continuidad_id = "is-ecpp-aseguradoras-ii-acciones-propias-netas-prima-emision"
+number = "00545"
+segmento = "DP200042"
+section = ["aseguradoras_estado_cambios_patrimonio_propio_ii", "operaciones_con_socios_o_mutualistas"]
+semantic_role = "is_ecpp_aseguradoras_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
 # 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:6071 DP200042 80|1271|17|N
 [[revisions."2022".casillas]]
 id = "DP200042:00547"
@@ -23441,6 +23461,16 @@ semantic_role_cardinality_reason = "Liquidación III base imponible después de 
 input_kind = "computed"
 formula = "modelo-200-base-imponible-despues-reserva-nivelacion"
 legal_refs = ["ley-27-2014:art-105", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-41"]
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1415 DP200014 14|149|17|Num
+[[revisions."2022".casillas]]
+id = "DP200014:00545"
+continuidad_id = "is-liquidacion-iii-quitas-acuerdo-acreedores"
+number = "00545"
+segmento = "DP200014"
+section = ["liquidacion_iii", "base_imponible"]
+semantic_role = "is_liquidacion_iii_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
 # 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1449 DP200014 48|714|17|Num
 [[revisions."2022".casillas]]
 id = "DP200014:00583"

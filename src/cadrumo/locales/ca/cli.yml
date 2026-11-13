@@ -597,7 +597,7 @@ cli:
           a intangibles_reduction, juntament amb --parent-name.
         participation_help: Percentatge de l'emissor que tens. Només per a tax_haven_holding.
         source_help: 'D''on surt la xifra: annual_accounts, corporation_tax_return,
-          vat_returns o operator_estimate.'
+          declaraciones_iva o operator_estimate.'
         source_reference_help: Referència del document o declaració d'on vas treure
           la xifra.
         specific_help: L'operació és una operació específica (art. 2.1.b de l'Ordre

@@ -560,11 +560,19 @@ application:
           ad meg, de nem mondja meg, melyiket, pedig a 202-es nyomtatványon fel kell
           tüntetni (Navarra, Gipuzkoa, Bizkaia vagy Álava). Foral adóterületet még
           nem adhatsz meg a profilban, ezért ez az előleg nem exportálható.'
+        m202_prior_periodo_turnover_disagrees: 'Semmi sem íródott ki: az adókulcsot
+          a megelőző adómegállapítási időszak nettó árbevétele határozza meg, de az
+          erről az időszakról elmentett 200-as nyomtatvány %{held_value} összeget
+          vall be, a profilod pedig %{stated_value} tizenkét havi árbevételt ad meg.
+          Egyik sem írja felül a másikat. Javítsd ki a hibásat a(z) %{profile_path}
+          helyen vagy abban a 200-as nyomtatványban, majd exportálj újra.'
         m202_prior_periodo_turnover_unreadable: 'Semmi sem íródott ki: az ezt megelőző
           adómegállapítási időszak tizenkét hónapnál rövidebb volt, ezért az adókulcsot
           meghatározó nettó árbevétel annak az időszaknak a saját árbevétele, ahogy
-          a 200-as nyomtatványa bevallja. Az alkalmazás ezt a 200-as nyomtatványt
-          még nem tudja beolvasni, ezért ez az előleg még nem exportálható.'
+          a 200-as nyomtatványa bevallja. Ennek az időszaknak nincs elmentett 200-as
+          nyomtatványa, és az összeget sem adtad meg, ezért ez az előleg nem exportálható.
+          Rögzítsd azt a 200-as nyomtatványt, vagy add meg az összegét ennek az adóévnek
+          a 200-as nyomtatványán, majd exportálj újra.'
         m280_negative_imputation_key_invalid: 'Semmi sem íródott ki: a 280-as modell
           negatív imputációjához a 2-es kulcs és az N negatív előjel kell, vagy bármely
           más kulcs alatt nulla kitöltés. Javítsd a rekordot, és exportálj újra.'
@@ -3684,6 +3692,13 @@ application:
         évben keletkezett jövedelemre vonatkozik. A hivatalos szabályok nem határozzák
         meg, hogyan kell ezek alapját és a levont adót bevallani, ezért ezt a bevallást
         egyelőre nem rögzítheti benyújtottként, és nem is exportálhatja.
+      m200_incn_periodo_anterior_disagrees: Az adókulcsot a megelőző adómegállapítási
+        időszak nettó árbevétele határozza meg, de az erről az időszakról elmentett
+        %{source_filing_year}. évi %{modelo}-as nyomtatvány %{held_turnover} összeget
+        vall be, a profilod pedig %{stated_turnover} tizenkét havi árbevételt ad meg.
+        Az az időszak tizenkét hónapig tartott, így mindkettő a saját árbevétele,
+        és egyezniük kell; egyik sem írja felül a másikat. Javítsd ki a hibásat a(z)
+        %{profile_path} helyen vagy abban a %{modelo}-as nyomtatványban.
       m210_agrupacion_renta_invalid: 'Modelo %{modelo_id}, %{period_code} időszak:
         egyes jövedelemsorok olyan csoportosításban szerepelnek, amelyet a nyomtatvány
         nem fogad el.'
@@ -3745,6 +3760,17 @@ application:
         arányosítást alkalmaz, de nincs benne ideiglenes százalék, ezért a levonható
         IVA nem számítható ki. Vezesd át %{filing_year} évre az előző év végleges
         százalékát.
+      prorrata_settlement_especial_continuation: Az arányosítási nyilvántartásodban
+        a(z) %{prior_filing_year}. évre különleges áfa-arányosítás szerepel, a(z)
+        %{filing_year}. évre viszont nincs nyilatkozat, ezért nem tudni, hogy folytatod-e
+        vagy visszavonod (RIVA 28. cikk). A modell ellenőrzése vagy exportálása előtt
+        add meg a nyilvántartásodban a(z) %{filing_year}. év rendszerét.
+      prorrata_settlement_sector_entries: 'Az arányosítási nyilvántartásodban elkülönült
+        ágazatok vannak, és ezeknek nincs a(z) %{filing_year}. évi arányosítása: %{sector_ids}.
+        A végleges arányosítást az év utolsó bevallásában kell kiszámítani (LIVA 105.
+        cikk), és az egyes ágazatok százaléka nélkül nem adható meg. A modell ellenőrzése
+        vagy exportálása előtt add meg a nyilvántartásodban mindegyik ágazat a(z)
+        %{filing_year}. évi arányosítását.'
       pulled_filing_casilla_mismatch: '[%{casilla_number}] rovat, %{filing_year} %{period_code}
         időszak: a számítás eredménye %{computed_value}, de az AEAT-hez benyújtott
         bevallásban %{filed_value} szerepel.'
@@ -3987,6 +4013,12 @@ application:
           nem számítható ki, mert a bevallásod nem választja szét az egyes tagok munkaviszonyból
           és gazdasági tevékenységből származó jövedelmét, a határok pedig tagonként
           külön érvényesek (LIRPF 52.1. cikk). Soha nem jelenik meg nullaként.
+        m200_extincion_entidad_unsupported: Ehhez a mezőhöz a negatív adóalap elszámolására
+          vonatkozó korlát kell (LIS 26. cikk 1. pont), amelyet nem számítunk ki,
+          ha a céged megjelöli a 00072 mezőt («Extinción de entidad»), mert nem tudjuk
+          megkülönböztetni, hogy a megszűnés átalakítási műveletből ered-e, ezért
+          nincs értéke. Add meg magad a 00547 mezőben a kompenzált összeget a hivatalos
+          útmutató szerint. Soha nem jelenik meg nullaként.
         m200_tax_regime_unsupported: Ehhez a rovathoz a szervezeted adózási rendszerének
           adókulcsa (tipo de gravamen) kell, ez viszont az adott rendszerre vagy jogi
           formára nem számolható ki, ezért a rovatnak nincs értéke. Add meg a rovatot

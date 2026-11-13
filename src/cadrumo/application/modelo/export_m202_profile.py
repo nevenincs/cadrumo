@@ -27,12 +27,15 @@ design derives from a stated fact:
   millón" mark (2025 position 130) and the several-rates mark (2025 position 131)
   are law, not choices: they are derived from the governed LIS art. 29 rates the
   stated régimen marks select (see ``export_m202_tipo_gravamen``).
-- The immediately preceding período's turnover is the twelve-month turnover when
-  that período lasted twelve months. A shorter preceding período's turnover is
-  that período's own, read from its Modelo 200, which the application cannot
-  read yet, so such an instalment is refused rather than exported on another
-  turnover. An entity in its first período has no preceding one, so the mark
-  stays blank.
+- The immediately preceding período's turnover is read through the canonical
+  reader (``incn_periodo_anterior``): the held Modelo 200 of that período, else
+  the figure the filer stated for it, else, when that período lasted twelve
+  months, the twelve-month turnover the profile states, which is then that
+  período's own. A shorter preceding período with neither a held return nor a
+  statement is refused rather than exported on another turnover, and a held
+  return that disagrees with the stated twelve-month turnover is refused with
+  both figures, neither overriding the other. An entity in its first período
+  has no preceding one, so the mark stays blank.
 
 Only the facts the selected edition's layout cites are asked for, so a fact a
 year's design has no position for never blocks that year's export.
@@ -72,6 +75,7 @@ from .export_m202_tipo_gravamen import (
     tipo_gravamen_rates,
 )
 from .export_periodo_impositivo import PeriodoImpositivo
+from .incn_periodo_anterior import IncnPeriodoAnterior, IncnPeriodoAnteriorGap, IncnPeriodoAnteriorReader
 
 _K = FilingProducerKey
 
@@ -139,9 +143,14 @@ _COMBINED_NO_CONSTA: Final = "0"
 #: The served words of the refusal: the export needs a fact which is not stated.
 _PRODUCER_FACT_REQUIRED_MESSAGE: Final = "application.filing.export.errors.producer_fact_required"
 _REFUSAL_REASON: Final = "m202_profile_facts_missing"
-#: The served words of the refusal: a shorter preceding período's turnover cannot be read yet.
+#: The served words of the refusal: neither a held return nor a statement gives a shorter preceding período's turnover.
 _PRIOR_PERIODO_TURNOVER_MESSAGE: Final = "application.filing.export.errors.m202_prior_periodo_turnover_unreadable"
 _PRIOR_PERIODO_TURNOVER_REASON: Final = "m202_prior_periodo_turnover_unreadable"
+#: The served words of the refusal: the held return and the stated twelve-month turnover disagree.
+_PRIOR_PERIODO_TURNOVER_DISAGREES_MESSAGE: Final = (
+    "application.filing.export.errors.m202_prior_periodo_turnover_disagrees"
+)
+_PRIOR_PERIODO_TURNOVER_DISAGREES_REASON: Final = "m202_prior_periodo_turnover_disagrees"
 
 
 class _Reader:
@@ -223,6 +232,7 @@ def modelo_202_producer_profile(
     filing_year: int,
     art_40_3_elected: bool | None,
     operation: PinnedAuthorityOperation,
+    incn_periodo_anterior: IncnPeriodoAnteriorReader,
 ) -> Modelo202ProducerProfile:
     """Return the Modelo 202 producer view, or refuse naming every profile fact the layout needs and lacks.
 
@@ -240,13 +250,16 @@ def modelo_202_producer_profile(
         art_40_3_elected: The declaración censal art. 40.3 election in force at
             the start of the período, ``None`` when never stated.
         operation: The pinned authority the governed rates are read from.
+        incn_periodo_anterior: The canonical reader of the preceding período's
+            turnover for the instalment's ejercicio.
 
     Raises:
         FilingProducerSnapshotError: A cited fact is unstated, or the principal CNAE
             is not four digits; the refusal opens the first such profile fact.
             A régimen or ejercicio whose rates are not published refuses terminally.
-            A preceding período shorter than twelve months refuses with no door:
-            its turnover is read from its Modelo 200, which cannot be read yet.
+            A preceding período shorter than twelve months whose turnover no
+            held return or statement gives refuses, as does a held return that
+            disagrees with the stated twelve-month turnover.
     """
     cited = frozenset(cited_producer_keys)
     reader = _Reader(profile_values)
@@ -262,7 +275,9 @@ def modelo_202_producer_profile(
         if key in cited
     }
     rate_inputs = (
-        _read_rate_inputs(reader, workflow_profile=workflow_profile, periodo=periodo)
+        _read_rate_inputs(
+            reader, workflow_profile=workflow_profile, periodo=periodo, incn_periodo_anterior=incn_periodo_anterior
+        )
         if cited & _RATE_PRODUCER_KEYS
         else None
     )
@@ -312,28 +327,30 @@ def _principal_cnae(reader: _Reader, *, effective_date: date, operation: PinnedA
 
 
 def _read_rate_inputs(
-    reader: _Reader, *, workflow_profile: TaxpayerProfile, periodo: PeriodoImpositivo
+    reader: _Reader,
+    *,
+    workflow_profile: TaxpayerProfile,
+    periodo: PeriodoImpositivo,
+    incn_periodo_anterior: IncnPeriodoAnteriorReader,
 ) -> _RateInputs | None:
     """Read the régimen marks and the preceding período's turnover, or ``None`` when one is unstated.
 
     Raises:
-        FilingProducerSnapshotError: The preceding período lasted less than
-            twelve months, so its turnover is that período's own and cannot be
-            read yet.
+        FilingProducerSnapshotError: The preceding período's turnover is neither
+            held nor stated and that período lasted less than twelve months, or
+            the held return disagrees with the stated twelve-month turnover.
     """
     ley_49_2002 = reader.mark(LEY_49_2002_PATH)
     socimi = reader.mark(SOCIMI_PATH)
     navieras = reader.mark(NAVIERAS_PATH)
     erd = reader.mark(ERD_PATH)
     cooperativa = reader.mark(COOPERATIVA_PATH)
-    prior_incn: Decimal | None = None
-    if periodo.prior_lasted_twelve_months:
-        prior_incn = reader.stated(INCN_PRIOR_12_MONTHS_PATH, workflow_profile.incn_prior_12_months)
-    elif periodo.prior_start is not None:
-        raise _prior_periodo_turnover_unreadable(periodo.prior_start)
+    prior_incn, prior_unstated = _prior_periodo_turnover(
+        reader, workflow_profile=workflow_profile, periodo=periodo, incn_periodo_anterior=incn_periodo_anterior
+    )
     if ley_49_2002 is None or socimi is None or navieras is None or erd is None or cooperativa is None:
         return None
-    if periodo.prior_start is not None and prior_incn is None:
+    if prior_unstated:
         return None
     return _RateInputs(
         marks=RegimenMarks(
@@ -347,6 +364,38 @@ def _read_rate_inputs(
         ),
         prior_incn=prior_incn,
     )
+
+
+def _prior_periodo_turnover(
+    reader: _Reader,
+    *,
+    workflow_profile: TaxpayerProfile,
+    periodo: PeriodoImpositivo,
+    incn_periodo_anterior: IncnPeriodoAnteriorReader,
+) -> tuple[Decimal | None, bool]:
+    """The preceding período's turnover, and whether an owed one is unstated.
+
+    A first período has none and owes none, and neither does an edition that
+    selects no rate by it. A twelve-month preceding período with nothing held
+    or stated asks for the profile's twelve-month turnover, its own.
+
+    Raises:
+        FilingProducerSnapshotError: As :func:`_read_rate_inputs`.
+    """
+    if periodo.prior_start is None:
+        return None, False
+    twelve_months = periodo.prior_lasted_twelve_months
+    located = incn_periodo_anterior(workflow_profile.incn_prior_12_months if twelve_months else None)
+    if located.resolved:
+        return located.value, False
+    if located.gap is IncnPeriodoAnteriorGap.NOT_READ_BY_EDITION:
+        return None, False
+    if located.gap is IncnPeriodoAnteriorGap.TWELVE_MONTH_STATEMENT_DISAGREES:
+        raise _prior_periodo_turnover_disagrees(located)
+    if twelve_months and located.gap is IncnPeriodoAnteriorGap.NO_RETURN_HELD:
+        reader.stated(INCN_PRIOR_12_MONTHS_PATH, None)
+        return None, True
+    raise _prior_periodo_turnover_unreadable(periodo.prior_start)
 
 
 def _derived_rate_fields(
@@ -410,13 +459,14 @@ def _turnover_band(incn: Decimal) -> str:
 
 
 def _prior_periodo_turnover_unreadable(prior_start: date) -> FilingProducerSnapshotError:
-    """Refuse an instalment whose shorter preceding período's turnover only its Modelo 200 holds.
+    """Refuse an instalment whose preceding período's turnover neither a held return nor a statement gives.
 
     LIS art. 29.1 reads the turnover of the "período impositivo inmediato
     anterior"; when that período lasted less than twelve months it is not the
     twelve-month turnover the profile states but the one that período's
-    Modelo 200 declares. Nothing the filer can state replaces it, so the
-    refusal opens no door.
+    Modelo 200 declares. It is given by holding that return or by stating its
+    figure on the ejercicio's Modelo 200; no profile fact replaces it, so the
+    refusal opens no profile door.
     """
     return FilingProducerSnapshotError(
         f"the Modelo 202 rates read the turnover of the shorter período starting {prior_start.isoformat()}",
@@ -425,6 +475,31 @@ def _prior_periodo_turnover_unreadable(prior_start: date) -> FilingProducerSnaps
         precondition_verdict=filing_no_recovery_verdict(
             FilingPreconditionCondition.OPERATION_ADMISSIBLE,
             facts={"reason": _PRIOR_PERIODO_TURNOVER_REASON},
+        ),
+    )
+
+
+def _prior_periodo_turnover_disagrees(located: IncnPeriodoAnterior) -> FilingProducerSnapshotError:
+    """Refuse an instalment whose held preceding return and stated twelve-month turnover disagree.
+
+    For a twelve-month preceding período both are that período's own turnover,
+    so they must agree; neither is taken over the other, and the filer corrects
+    the one that is wrong.
+    """
+    held = located.held_value
+    stated = located.twelve_month_statement
+    return FilingProducerSnapshotError(
+        f"the held Modelo 200 turnover {held} and the stated twelve-month turnover {stated} disagree",
+        translated_message=_PRIOR_PERIODO_TURNOVER_DISAGREES_MESSAGE,
+        context={
+            "reason": _PRIOR_PERIODO_TURNOVER_DISAGREES_REASON,
+            "held_value": str(held),
+            "stated_value": str(stated),
+            "profile_path": INCN_PRIOR_12_MONTHS_PATH,
+        },
+        precondition_verdict=filing_no_recovery_verdict(
+            FilingPreconditionCondition.OPERATION_ADMISSIBLE,
+            facts={"reason": _PRIOR_PERIODO_TURNOVER_DISAGREES_REASON},
         ),
     )
 

@@ -25,6 +25,7 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from ....domain.calculations.registry.runtime_graph import enum_consumed_binding_ids
 from ....domain.calculations.registry.schema import RegistrySnapshot
+from ....domain.calculations.registry.tests.modelo_200_turnover import turnover_binding_values
 from ..draft_construction import filing_binding_values, string_inputs_for_ids
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -139,7 +140,7 @@ def test_calculate_registry_snapshot_accepts_enum_binding_via_enum_channel() -> 
         date_context={"filing_period": date(2024, 12, 31)},
         binding_values={
             "modelo-200-profile-new-entity-flag": Decimal("0"),
-            "modelo-200-profile-incn-prior-12-months": Decimal("500000"),
+            **turnover_binding_values(snap, Decimal("500000")),
             "modelo-200-profile-tributacion-estado-porcentaje": Decimal("100"),
             # Fresh-filer scenario: no prior-period BIN to compensate.
             "modelo-200-bin-pendiente-ejercicios-anteriores": Decimal("0"),
@@ -193,7 +194,7 @@ def test_calculate_registry_snapshot_applies_non_zero_bin_pendiente_compensation
         date_context={"filing_period": date(2024, 12, 31)},
         binding_values={
             "modelo-200-profile-new-entity-flag": Decimal("0"),
-            "modelo-200-profile-incn-prior-12-months": Decimal("500000"),
+            **turnover_binding_values(snap, Decimal("500000")),
             "modelo-200-profile-tributacion-estado-porcentaje": Decimal("100"),
             "modelo-200-bin-pendiente-ejercicios-anteriores": Decimal("10000"),
             # No prior-year unfulfilled credit-impairment balance (casilla 01494).

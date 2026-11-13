@@ -23,13 +23,18 @@ from collections.abc import Mapping
 from datetime import datetime
 from decimal import Decimal
 
+from ...core.decimal.constants import ONE
 from ...core.errors.hierarchy import CoreValidationError
 from ...core.external_constants import CLASSIFIED_BY_AUTO, CLASSIFIED_BY_MANUAL
 from ...core.time.utc import parse_iso_datetime, validate_utc_aware
 from ...core.unit_proportion import is_unit_proportion
 from .classification_effects import fields_refused_by_classification
 from .enums import BusinessClassification, takes_business_share
-from .errors import TransactionFiguresWithoutBusinessError, TransactionValidationError
+from .errors import (
+    TransactionFiguresWithoutBusinessError,
+    TransactionIvaRateNotFractionError,
+    TransactionValidationError,
+)
 
 _NON_NEGATIVE_DECIMAL_HINTS = {
     "taxable_base": (
@@ -205,6 +210,40 @@ def parse_required_aware_datetime(value: object, *, field_name: str) -> datetime
     if not isinstance(value, datetime):
         raise TransactionValidationError(f"{field_name} must be a datetime")
     return require_aware_datetime(value)
+
+
+#: Upper bound for an IVA rate held as a decimal fraction. This is the unit
+#: boundary of a fraction, not a regulatory rate -- the highest Spanish IVA rate
+#: is well below it -- so it stays a local constant rather than a registry lookup
+#: and cannot drift with a filing year.
+_MAX_IVA_RATE_FRACTION = ONE
+
+
+def validate_iva_rate_is_fraction(value: Decimal | None) -> Decimal | None:
+    """Refuse an IVA rate that was supplied as a percentage.
+
+    This field is a fraction: 21% IVA is ``0.21``. The inventory and asset
+    ledgers take the same tax concept as a percentage bounded 0-100 and divide
+    by a hundred themselves, so an operator moving between those surfaces and
+    this one has two conventions under one option name and no signal telling
+    them which applies.
+
+    Left unbounded, ``21`` stored here is a 2100% rate: arithmetically valid,
+    silently accepted, and a hundredfold over-statement of the cuota on every
+    downstream aggregation that reads the row. No Spanish IVA rate exceeds 21%
+    (LIVA arts. 90-91), so no legitimate fraction is above 1 and the refusal
+    cannot reject a real filing. An unset rate stays unset.
+
+    The served sentence names the convention rather than the bound, because the
+    failure it catches is a unit mistake and ``must be <= 1`` does not tell the
+    operator that.
+    """
+    if value is not None and value > _MAX_IVA_RATE_FRACTION:
+        raise TransactionIvaRateNotFractionError(
+            f"iva_rate is a decimal fraction, not a percentage: got {value}. Express 21% IVA as 0.21.",
+            context={"value": str(value)},
+        )
+    return value
 
 
 def validate_non_negative_decimal(value: Decimal | None, *, field_name: str) -> Decimal | None:

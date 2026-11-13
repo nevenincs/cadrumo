@@ -3300,6 +3300,22 @@ effective_from = 2015-01-01
 section = "3.e"
 required_text = ["3. No obstante, podrán amortizarse libremente:", "e) Los elementos del inmovilizado material nuevos, cuyo valor unitario no exceda de 300 euros, hasta el límite de 25.000 euros referido al período impositivo."]
 
+[legal."ley-27-2014:da-15"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014.html#dadecimoquinta"
+document_id = "BOE-A-2014-12328"
+article = "DA-15"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#dadecimoquinta"
+published_at = 2014-11-28
+review_status = "agent_reviewed"
+reviewed_at = 2026-11-13
+reviewed_by = "agent-authored from the bundled consolidated ley-27-2014.html#dadecimoquinta and its amendment notes; operator review pending"
+notes = "LIS DA 15, limits for contribuyentes whose INCN of the 12 months before the period starts is at least 20 millones de euros: 50 per cent below 60 millones and 25 per cent from 60 millones replace the 70 per cent of art. 26.1 (and the limits of arts. 11.12, 62.1.e and 67.d-e); apartado 2 caps the double-taxation deductions at 50 per cent of the cuota integra. Added for periods starting from 2016-01-01 by RDL 3/2016, declared unconstitutional and null by STC 11/2024 of 18 January, and added again by Ley 7/2024 (BOE-A-2024-26694) for periods starting from 2024-01-01 that had not concluded when that Ley entered into force. A period governed only by the annulled wording, such as one the Manual practico de Sociedades 2023 prints without these limits, must not read them."
+effective_from = 2016-01-01
+required_text = ["Los contribuyentes cuyo importe neto de la cifra de negocios sea al menos de 20 millones de euros durante los 12 meses anteriores a la fecha en que se inicie el período impositivo", "El 50 por ciento, cuando en los referidos 12 meses el importe neto de la cifra de negocios sea al menos de 20 millones de euros, pero inferior a 60 millones de euros.", "El 25 por ciento, cuando en los referidos 12 meses el importe neto de la cifra de negocios sea al menos de 60 millones de euros."]
+
 [legal."ley-27-2014:da-16"]
 evidence_tier = "legal_authority"
 authority = "boe"

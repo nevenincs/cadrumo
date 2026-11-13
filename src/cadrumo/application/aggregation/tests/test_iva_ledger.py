@@ -32,7 +32,7 @@ from ....domain.iva.schema import (
     IvaRateKind,
 )
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
-from ....domain.transactions.models import Transaction, TransactionCatalogue
+from ....domain.transactions.models import Transaction, TransactionCatalogue, validate_stored_transaction_json
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ...ledger.preflight import OPERATOR_ACTION_BY_IVA_LEDGER_AGGREGATION_ISSUE
 from ...ledger.ratios import resolve_business_share_pct
@@ -581,6 +581,24 @@ def test_non_canonical_iva_rate_is_reported() -> None:
 
     assert result.observations == ()
     assert result.issues[0].reason is IvaLedgerAggregationIssueReason.UNSUPPORTED_IVA_RATE
+
+
+def test_a_stored_row_holding_a_percentage_rate_is_refused_as_unsupported_not_read_as_2100_percent() -> None:
+    """A row stored before an IVA rate above one was refused loads, and no cuota is derived from it."""
+    good = _transaction("row-percentage-rate")
+    stored_payload = good.model_dump_json().replace('"iva_rate":"0.21"', '"iva_rate":"21"').encode()
+    assert b'"iva_rate":"21"' in stored_payload
+    stored = validate_stored_transaction_json(Transaction, stored_payload)
+    assert stored.iva_rate == Decimal("21")
+
+    result = aggregate_iva_ledger_observations(
+        TransactionCatalogue.from_transactions((stored,)),
+        period=_Q2_2026,
+    )
+
+    assert result.observations == ()
+    assert [issue.reason for issue in result.issues] == [IvaLedgerAggregationIssueReason.UNSUPPORTED_IVA_RATE]
+    assert result.issues[0].transaction_id == stored.transaction_id
 
 
 def test_out_of_period_and_foreign_currency_rows_do_not_project() -> None:

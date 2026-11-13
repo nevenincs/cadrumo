@@ -11,16 +11,13 @@ import pytest
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
-from ..cross_period_clean_state import (
-    OFFICIAL_EVIDENCE_DELTA_BLOCKERS,
-    relax_same_year_local_chain,
-)
 from ..cross_period_models import (
     CrossPeriodCleanStateBlocker,
     CrossPeriodDependencyEvidence,
     CrossPeriodDependencyOrigin,
     CrossPeriodDependencyRequirement,
 )
+from ..cross_period_suppressed_evidence import OFFICIAL_EVIDENCE_DELTA_BLOCKERS, relax_same_year_local_chain
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
