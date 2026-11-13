@@ -120,10 +120,17 @@ def test_unstated_work_income_boxes_verify_to_blocking_findings_with_their_doors
         assert failure.scenario_id == "modelo.work.verify.trabajo_income.unstated_source"
         action = failure.verdict.action
         assert action is not None
-        assert action.action_id == "operator.modelo.work.override"
+        assert action.action_id == "operator.modelo.work.attest_work_income"
         bound = {binding.argument_name: binding.value for binding in failure.verdict.argument_bindings}
-        assert bound["binding_id"] == statement[box]
-        assert bound["work_unit_id"] == revision.work_unit_id
+        assert bound == {"work_unit_id": revision.work_unit_id}
+        assert failure.verdict.missing_argument_names == ()
+        # The override of the binding the box reads stays beside it, owing only the figure.
+        (alternative,) = failure.verdict.alternative_actions
+        assert alternative.action.action_id == "operator.modelo.work.override"
+        alternative_bound = {binding.argument_name: binding.value for binding in alternative.argument_bindings}
+        assert alternative_bound["binding_id"] == statement[box]
+        assert alternative_bound["work_unit_id"] == revision.work_unit_id
+        assert alternative.missing_argument_names == ("value",)
     # Every blocking finding carries its verdict and no warning does, so the report projects whole.
     for projection in result.finding_preconditions:
         blocks = projection.finding.severity is ModeloVerificationFindingSeverity.BLOCKING

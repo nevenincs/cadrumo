@@ -2412,6 +2412,7 @@
         "cadrumo.core.time",
         "cadrumo.core.time.clock",
         "cadrumo.core.time.date_range",
+        "cadrumo.core.time.fixed_clock",
         "cadrumo.core.time.utc",
         "cadrumo.core.tipos_actividad",
         "cadrumo.core.toml",

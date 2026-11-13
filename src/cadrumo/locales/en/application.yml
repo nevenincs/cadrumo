@@ -4150,6 +4150,8 @@ application:
           390
         modelo_work_attest_prior_carries: State the amounts carried from earlier years
         modelo_work_attest_prior_value: State the earlier return's figure
+        modelo_work_attest_work_income: State that there is no other work income to
+          declare
         modelo_work_calculate: Calculate this declaration
         modelo_work_calculate_joint_return: Calculate it as a joint return
         modelo_work_create: Start this declaration
