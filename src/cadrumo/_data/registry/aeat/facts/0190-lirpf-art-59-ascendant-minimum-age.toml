@@ -1,0 +1,19 @@
+[fact]
+fact_id = "lirpf-art-59-ascendant-minimum-age"
+family = "scalar"
+
+[[fact.variants]]
+variant_id = "lirpf-art-59-ascendant-minimum-age:2007-01-01"
+date_axis = "filing_period"
+valid_from = 2007-01-01
+legal_refs = ["ley-35-2006:art-59"]
+source_refs = ["boe-lirpf-statutory-facts"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-lirpf-statutory-facts"
+required_text = ["mayor de 65 años o con discapacidad cualquiera que sea su edad"]
+[fact.variants.payload]
+kind = "scalar"
+value = 65
+unit = "years"

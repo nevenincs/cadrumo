@@ -6,7 +6,7 @@ family = "mapping"
 variant_id = "form-row-codes:design"
 date_axis = "filing_period"
 legal_refs = ["ley-37-1992:art-164"]
-source_refs = ["aeat-dr-100-2025-xsd", "boe-modelo-037-historical-suppression", "aeat-dr-720", "aeat-dr-130-2019-v12", "aeat-dr-200-2025", "aeat-dr-232-2018", "enrolled-modelo-156-layout", "aeat-dr-347-2025", "boe-orden-hfp-1335-2021-iva-authority", "aeat-dr-303-2026", "aeat-dr-222-2025", "aeat-dr-353-2026", "aeat-dr-296-2024", "aeat-dr-360-2010", "aeat-dr-280-2022", "aeat-dr-165-2016-2022", "aeat-dr-190-2020"]
+source_refs = ["aeat-dr-100-2025-xsd", "aeat-dr-100-2025-dictionary", "boe-modelo-037-historical-suppression", "aeat-dr-720", "aeat-dr-130-2019-v12", "aeat-dr-200-2025", "aeat-dr-232-2018", "enrolled-modelo-156-layout", "aeat-dr-347-2025", "boe-orden-hfp-1335-2021-iva-authority", "aeat-dr-303-2026", "aeat-dr-222-2025", "aeat-dr-353-2026", "aeat-dr-296-2024", "aeat-dr-360-2010", "aeat-dr-280-2022", "aeat-dr-165-2016-2022", "aeat-dr-190-2020"]
 review_status = "agent_reviewed"
 ownership = "authored"
 
@@ -31,6 +31,18 @@ required_text = ["(E|G|C|V){1}", "E5AI8"]
 [[fact.variants.source_citations]]
 source_ref = "aeat-dr-100-2025-xsd"
 required_text = ['<xs:element name="APENOMDLG" type="tipo_ApeNom" minOccurs="1" maxOccurs="1"/>', '<xs:simpleType name="tipo_ApeNom">', '<xs:maxLength value="80"/>']
+
+# The disability key of a Modelo 100 ascendant row (Ascendiente/PCTMINASDLG, "Clave de
+# discapacidad"): 1 and 2 for a grade from 33 % to under 65 %, without and with
+# assistance of third persons or reduced mobility, 3 for 65 % or more, 4 for a judicial
+# incapacity. The design's own text stops before its first accent.
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-100-2025-xsd"
+required_text = ['<xs:element name="PCTMINASDLG" type="tipo_Opciones1a4" minOccurs="0" maxOccurs="1">', '"1"=Discapacidad igual o superior al 33% e inferior al 65%, sin estar en el caso siguiente.', '"2"=Discapacidad igual o superior al 33% e inferior al 65%, si se acredita necesitar ayuda de terceras personas o movilidad reducida.', '"3"=Discapacidad en grado igual o superior al 65% (distinta de la indicada en el punto 4).', '"4"=Incapacitaci']
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-100-2025-dictionary"
+required_text = ["PCTMINASDLG=[/DatosIdentificativos/Ascendientes/Ascendiente/PCTMINASDLG][X][*93][Clave de discapacidad]"]
 
 # The Modelo 720 position-102 clave and the five letters its row lists.
 [[fact.variants.source_citations]]
@@ -174,6 +186,10 @@ entries = [
   { key = "m303.prorrata.cnae_digits", value = "3,4" },
   { key = "m100.ascendant_cohabiting_descendants_max", value = "10" },
   { key = "m100.household_person_name_max", value = "80" },
+  { key = "m100.ascendant_disability_key.grade_from_minimum", value = "1" },
+  { key = "m100.ascendant_disability_key.grade_from_minimum_with_assistance", value = "2" },
+  { key = "m100.ascendant_disability_key.grade_from_higher", value = "3" },
+  { key = "m100.ascendant_disability_key.incapacidad_judicial", value = "4" },
   { key = "m222.numero_grupo_max", value = "7" },
   { key = "m222.dominant_territory_max", value = "2" },
   { key = "m353.numero_grupo_max", value = "10" },

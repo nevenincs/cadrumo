@@ -168,6 +168,7 @@
         "cadrumo_runtime.host.frontend.tui.profile.automation_inventory_details",
         "cadrumo_runtime.host.frontend.tui.profile.automation_inventory_disclosures",
         "cadrumo_runtime.host.frontend.tui.profile.automation_inventory_view",
+        "cadrumo_runtime.host.frontend.tui.profile.household_client",
         "cadrumo_runtime.host.frontend.tui.profile.manager_client",
         "cadrumo_runtime.host.frontend.tui.profile.overview_client",
         "cadrumo_runtime.host.frontend.tui.runtime_access_actions",

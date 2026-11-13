@@ -1,0 +1,32 @@
+[[revisions."2020".formulas]]
+id = "renta-minimo-ascendientes-estatal"
+target_casilla_id = "0515"
+# Art. 59 LIRPF mínimo por ascendientes, parte estatal. The per-ascendant cuantía and
+# its sharing are computed by the profile-binding aggregate; this formula projects that
+# aggregate onto the casilla.
+expression = { op = "copy", args = [
+    { binding = "renta-profile-minimo-ascendientes-estatal" }
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-59", "ley-35-2006:art-61"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["El mínimo por ascendientes será de 1.150 euros anuales"]
+[[revisions."2020".formulas]]
+id = "renta-minimo-ascendientes-autonomico"
+target_casilla_id = "0516"
+# Art. 56.3 and 59 LIRPF mínimo por ascendientes, parte autonómica. The profile-binding
+# aggregate applies the comunidad's own art. 59 cuantías, or the state ones where it
+# approved none; this formula projects that aggregate onto the casilla.
+expression = { op = "copy", args = [
+    { binding = "renta-profile-minimo-ascendientes-autonomico" }
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-56", "ley-35-2006:art-59", "ley-35-2006:art-61"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["incrementados o disminuidos a efectos de cálculo del gravamen autonómico"]

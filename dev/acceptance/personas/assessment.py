@@ -7,7 +7,10 @@ stated only as concepts carries no casilla and is not asserted; a ``refusal``
 asserts the error code the period's calculation settles with; a ``not_sourced``
 casilla asserts that the application does not carry the law's figure; an
 obligation's applicability comes from the overview explanation and its windows
-and deadlines from the overview calendar. Nothing here edits an expectation to
+and deadlines from the overview calendar. Where a modelo's obligations of one
+year expect different verdicts for different periods, the modelo-wide
+explanation cannot state them, and each period's verdict is read from the
+calendar instead: its window row, or the verdict of its suppressed row. Nothing here edits an expectation to
 agree with a run: every function only compares.
 """
 
@@ -24,6 +27,7 @@ from cadrumo.tests.personas import (
     ExpectedValue,
     Persona,
     YearEnvelope,
+    per_period_modelos,
     values_in_force,
 )
 
@@ -212,10 +216,15 @@ class CalendarWindow:
 
 @dataclass(frozen=True, slots=True)
 class CalendarView:
-    """The calendar rows of one filing year by ``(modelo, period code)``, and the modelos it advises instead."""
+    """The calendar rows of one filing year by ``(modelo, period code)``, and the modelos it advises instead.
+
+    ``suppressed`` holds the verdict of each obligation the calendar leaves off
+    its rows, as it reports them when asked to show suppressed obligations.
+    """
 
     entries: Mapping[tuple[str, str], CalendarWindow] = field(default_factory=dict)
     advised: frozenset[tuple[str, str]] = frozenset()
+    suppressed: Mapping[tuple[str, str], str] = field(default_factory=dict)
     refusal: str | None = None
 
 
@@ -261,6 +270,35 @@ def _verdict_check(year: int, item: ExpectedObligation, explained: Explanation |
         status=status,
         legal_ref=item.legal_ref,
     )
+
+
+def calendar_verdict(calendar: CalendarView, modelo: str, period: str) -> str:
+    """The verdict the calendar shows for one period: applicable with a window row, else its suppressed verdict."""
+    if (modelo, period) in calendar.entries:
+        return "applicable"
+    return calendar.suppressed.get((modelo, period), _ABSENT)
+
+
+def _period_verdict_checks(year: int, item: ExpectedObligation, calendar: CalendarView) -> list[ObligationCheck]:
+    if calendar.refusal is not None and not calendar.entries:
+        return []
+    verdict, _applicable = expected_verdict(item)
+    checks: list[ObligationCheck] = []
+    for period in item.periods:
+        actual = calendar_verdict(calendar, item.modelo, period)
+        checks.append(
+            ObligationCheck(
+                year=year,
+                modelo=item.modelo,
+                period=period,
+                check="verdict",
+                expected=verdict,
+                actual=actual,
+                status=CheckStatus.PASSED if actual == verdict else CheckStatus.FAIL,
+                legal_ref=item.legal_ref,
+            )
+        )
+    return checks
 
 
 def _row_check(year: int, item: ExpectedObligation, period: str, *, expected: str, actual: str) -> ObligationCheck:
@@ -380,10 +418,18 @@ def assess_obligations(
     explanations: Mapping[str, Explanation],
     envelope: YearEnvelope,
 ) -> tuple[ObligationCheck, ...]:
-    """The checks one year's obligations and deadlines yield against the overview reads."""
+    """The checks one year's obligations and deadlines yield against the overview reads.
+
+    A modelo of :func:`per_period_modelos` has its verdict checked per period
+    against the calendar rather than against its explanation.
+    """
     checks = _calendar_refusal_check(year, calendar)
+    per_period = per_period_modelos(obligations)
     for item in obligations:
-        checks.append(_verdict_check(year, item, explanations.get(item.modelo)))
+        if item.modelo in per_period:
+            checks.extend(_period_verdict_checks(year, item, calendar))
+        else:
+            checks.append(_verdict_check(year, item, explanations.get(item.modelo)))
         checks.extend(_calendar_checks(year, item, calendar))
     checks.extend(_deadline_check(deadline, year, calendar, envelope) for deadline in deadlines)
     return tuple(checks)
@@ -411,8 +457,20 @@ def _advised(result: Mapping[str, object]) -> frozenset[tuple[str, str]]:
     return frozenset((str(row.get("modelo")), str(row.get("reason"))) for row in rows or () if isinstance(row, Mapping))
 
 
+def _suppressed(result: Mapping[str, object], year: int) -> dict[tuple[str, str], str]:
+    suppressed: dict[tuple[str, str], str] = {}
+    rows = result.get("suppressed_entries")
+    for row in rows if isinstance(rows, list) else ():
+        if not isinstance(row, Mapping):
+            continue
+        row_year, code = _period_parts(str(row.get("period", "")))
+        if row_year == year:
+            suppressed[str(row.get("modelo")), code] = str(row.get("verdict"))
+    return suppressed
+
+
 def calendar_view(result: Mapping[str, object], year: int) -> CalendarView:
-    """The calendar rows of filing year ``year`` from the ``app overview calendar`` JSON result.
+    """The rows and suppressed obligations of filing year ``year`` from the ``app overview calendar`` JSON result.
 
     The CLI row names its period as ``"<year> <code>"`` and carries no separate
     filing year, so the period's year stands for it.
@@ -425,7 +483,7 @@ def calendar_view(result: Mapping[str, object], year: int) -> CalendarView:
         row_year, code = _period_parts(str(row.get("period", "")))
         if row_year == year:
             entries[str(row.get("modelo")), code] = _calendar_window(row)
-    return CalendarView(entries=entries, advised=_advised(result))
+    return CalendarView(entries=entries, advised=_advised(result), suppressed=_suppressed(result, year))
 
 
 def explanation(result: Mapping[str, object]) -> Explanation:

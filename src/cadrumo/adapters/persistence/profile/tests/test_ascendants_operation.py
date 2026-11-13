@@ -163,6 +163,23 @@ def test_a_set_is_stored_as_rows_with_its_count_and_served_back(world: _World) -
     }
 
 
+def test_the_art_59_facts_are_stored_in_their_canonical_form(world: _World) -> None:
+    world.replace(
+        _row(birth_date="1948-03-04", rentas_anuales=" 7200.5 ", declaracion_propia="FALSE", discapacidad="033")
+    )
+
+    assert world.facts() == {
+        _COUNT: "1",
+        f"{_OBJECT}.0.birth_date": "1948-03-04",
+        f"{_OBJECT}.0.rentas_anuales": "7200.5",
+        f"{_OBJECT}.0.declaracion_propia": "False",
+        f"{_OBJECT}.0.discapacidad": "33",
+    }
+    # The schema types the own-return answer, so the record holds a boolean rather than the text typed.
+    (answer,) = (fact.value for fact in world.record().facts if fact.path == f"{_OBJECT}.0.declaracion_propia")
+    assert answer is False
+
+
 def test_the_same_set_again_publishes_nothing(world: _World) -> None:
     rows = (_row(nif=_NIF, birth_date="1948-03-04"),)
     world.replace(*rows)
@@ -242,6 +259,12 @@ def test_the_design_limit_is_accepted_and_one_more_is_refused(world: _World) -> 
         ({"birth_date": "1948-03-04", "apellidos_nombre": " 	 "}, 1),
         ({"birth_date": "1948-03-04", "apellidos_nombre": "Roca " * 40}, 1),
         ({"birth_date": "1948-03-04", "discapacidad_clave": "1"}, 1),
+        ({"birth_date": "1948-03-04", "rentas_anuales": "-1.00"}, 1),
+        ({"birth_date": "1948-03-04", "rentas_anuales": "7.200,00"}, 1),
+        ({"birth_date": "1948-03-04", "rentas_anuales": "7200.001"}, 1),
+        ({"birth_date": "1948-03-04", "declaracion_propia": "si"}, 1),
+        ({"birth_date": "1948-03-04", "discapacidad": "50"}, 1),
+        ({"birth_date": "1948-03-04", "discapacidad": "33%"}, 1),
     ],
 )
 def test_a_row_the_declaration_cannot_hold_is_refused_before_anything_is_written(
@@ -311,6 +334,7 @@ def test_every_refusal_serves_a_sentence_in_the_workers_language_and_never_echoe
         (_row(nif=_NIF), ("2",)),
         (_row(birth_date="1948-03-04", fallecimiento="1900-01-01"), ("2",)),
         (_row(birth_date="1948-03-04", convivientes="11"), ("2", "10")),
+        (_row(birth_date="1948-03-04", rentas_anuales="7.200,00"), ("2",)),
     )
     sentences: set[str] = set()
     with override_settings(cadrumo_output_language=language.value):

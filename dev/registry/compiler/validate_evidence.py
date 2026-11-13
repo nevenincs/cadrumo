@@ -471,6 +471,28 @@ class EvidenceValidator:
         self._source_root = source_root
         self._source_text_cache: dict[str, str] = {}
 
+    def source_tier(self, ref: str) -> str | None:
+        """The evidence tier of the cited source, or ``None`` when the catalogue does not declare it."""
+        source = self._sources.get(ref)
+        return None if source is None else source.evidence_tier
+
+    def dictionary_lines(self, ref: str) -> tuple[str, ...] | None:
+        """The decoded lines of a cited dictionary source, or ``None`` when no evidence root is bound.
+
+        Raises:
+            OSError: the source is not a bundled dictionary, or its file cannot be read or decoded.
+        """
+        source = self._sources.get(ref)
+        if self._source_root is None:
+            return None
+        if source is None or source.kind is not RegistrySourceKind.DICTIONARY:
+            raise OSError(f"source {ref!r} is not a declared dictionary")
+        try:
+            body = _resolve_source_path(source, self._source_root).read_bytes()
+            return tuple(decode_dictionary_text(body).splitlines())
+        except RegistryValidationError as exc:
+            raise OSError(f"could not decode dictionary source {ref!r}: {exc}") from exc
+
     def require_source_tier(
         self,
         scope: str,

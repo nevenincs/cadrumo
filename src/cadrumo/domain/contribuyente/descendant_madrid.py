@@ -24,26 +24,21 @@ class DescendantMadridMixin(DescendantRecordBase):
         """
         return self._entry_date().year
 
-    def is_nacimiento_adopcion_eligible(
-        self,
-        filing_year: int,
-        *,
-        context: FamilyFactResolutionContext,
-    ) -> bool:
-        """True when this descendant is inside the nacimiento/adopción window and cohabits.
+    def is_within_entry_window(self, filing_year: int, *, following_periods: int) -> bool:
+        """True when this descendant cohabits and *filing_year* falls in its entry window.
 
-        The Madrid nacimiento/adopción deducción (DL 1/2010 art. 4) requires both
-        that the parent cohabits with the child ("Solo tendrán derecho a practicar
-        la deducción los padres que convivan con los hijos nacidos o adoptados")
-        and that the filing year falls inside the applicability window measured
-        from the entry (nacimiento/adopción) year.
+        The window opens in the nacimiento or adopción year and runs for
+        *following_periods* periods after it, the number the deducción's own
+        text sets. Cohabitation is required: the Madrid nacimiento/adopción
+        deducción (DL 1/2010 art. 4) is for "los padres que convivan con los
+        hijos nacidos o adoptados".
         """
         if not self.convive_con_contribuyente:
             return False
         return within_multi_year_applicability_window(
             self.entry_year(),
             filing_year,
-            following_periods=context.integer("madrid-birth-adoption-following-periods"),
+            following_periods=following_periods,
         )
 
     def nacimiento_adopcion_prorrateo_share(self, *, context: FamilyFactResolutionContext) -> Decimal:

@@ -7,7 +7,7 @@ import pytest
 from cadrumo_client.commands.errors import CliRefusedBoundaryError
 
 from .....application.user_profile.family_rows import ProfileFamilyGroupState, ProfileViewFamilyGroupItem
-from ..ascendiente_flag import parse_ascendiente_flag
+from ..ascendiente_flag import parse_ascendiente_edit, parse_ascendiente_flag
 from ..operation_household import require_group_open_to_none, require_rows_or_none
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -26,6 +26,15 @@ def test_each_key_maps_to_exactly_one_stored_leaf() -> None:
     }
 
 
+def test_the_art_59_keys_reach_the_leaves_the_minimum_reads() -> None:
+    assert _leaves("NACIMIENTO=1948-03-04,rentas=7200.00,Declaracion_Propia=false,DISCAPACIDAD=33") == {
+        "birth_date": "1948-03-04",
+        "rentas_anuales": "7200.00",
+        "declaracion_propia": "false",
+        "discapacidad": "33",
+    }
+
+
 def test_the_grammar_leaves_the_required_birth_date_to_the_operation() -> None:
     assert _leaves("NACIMIENTO=1948-03-04") == {"birth_date": "1948-03-04"}
     assert _leaves("NIF=12345678Z") == {"nif": "12345678Z"}
@@ -38,6 +47,8 @@ def test_the_grammar_leaves_the_required_birth_date_to_the_operation() -> None:
         ("NACIMIENTO=1948-03-04,NACIMIENTO=1950-01-01", "NACIMIENTO"),
         ("NACIMIENTO=1948-03-04,NIF=", "NIF"),
         ("NACIMIENTO=1948-03-04,NIF", "NIF"),
+        ("NACIMIENTO=1948-03-04,RENTAS=1,RENTAS=2", "RENTAS"),
+        ("NACIMIENTO=1948-03-04,RENTAS_ANUALES=7200.00", None),
         ("", None),
     ],
 )
@@ -46,6 +57,41 @@ def test_an_unreadable_row_is_refused_naming_the_key_never_the_value(raw: str, n
         parse_ascendiente_flag(raw)
     assert refused.value.translated_message == "cli.config.profile.ascendiente.invalid_row"
     assert refused.value.context == ({"key": named_key} if named_key is not None else {})
+
+
+def test_an_edit_reads_its_replacements_across_options_and_its_clears_by_key() -> None:
+    assert parse_ascendiente_edit(["RENTAS=7200.00", "declaracion_propia=false"], ["fallecimiento"]) == (
+        {"rentas_anuales": "7200.00", "declaracion_propia": "false"},
+        ("fallecimiento",),
+    )
+    assert parse_ascendiente_edit(None, ["NIF", "DISCAPACIDAD"]) == ({}, ("nif", "discapacidad"))
+    assert parse_ascendiente_edit(["CONVIVIENTES=2"], None) == ({"convivientes": "2"}, ())
+
+
+@pytest.mark.parametrize(
+    ("values", "clears", "named_key"),
+    [
+        (["RENTAS=1", "RENTAS=2"], None, "RENTAS"),
+        (["RENTAS=1"], ["rentas"], "RENTAS"),
+        (None, ["NIF", "nif"], "NIF"),
+        (None, ["NOMBRE"], None),
+        (["NOMBRE=Ana"], None, None),
+    ],
+)
+def test_an_edit_naming_a_key_twice_or_an_unknown_key_is_refused(
+    values: list[str] | None, clears: list[str] | None, named_key: str | None
+) -> None:
+    with pytest.raises(CliRefusedBoundaryError) as refused:
+        parse_ascendiente_edit(values, clears)
+    assert refused.value.translated_message == "cli.config.profile.ascendiente.invalid_row"
+    assert refused.value.context == ({"key": named_key} if named_key is not None else {})
+
+
+@pytest.mark.parametrize(("values", "clears"), [(None, None), ([], [])])
+def test_an_edit_that_names_nothing_is_refused(values: list[str] | None, clears: list[str] | None) -> None:
+    with pytest.raises(CliRefusedBoundaryError) as refused:
+        parse_ascendiente_edit(values, clears)
+    assert refused.value.translated_message == "cli.config.profile.ascendiente.edit_empty"
 
 
 def test_a_request_names_rows_or_none_but_not_both_and_not_neither() -> None:

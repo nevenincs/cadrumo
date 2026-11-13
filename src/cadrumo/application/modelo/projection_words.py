@@ -42,6 +42,12 @@ _CASILLA_REASON_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
         RegistryUnresolvedOutcomeReason.INCOME_FAMILY_CONTRADICTS_PROFILE.value: (
             "application.modelo.projection_words.casilla_reason.income_family_contradicts_profile"
         ),
+        RegistryUnresolvedOutcomeReason.AUTONOMIC_DEDUCTION_OTHER_COMUNIDAD.value: (
+            "application.modelo.projection_words.casilla_reason.autonomic_deduction_other_comunidad"
+        ),
+        RegistryUnresolvedOutcomeReason.AUTONOMIC_DEDUCTION_UNSUMMED_BOX.value: (
+            "application.modelo.projection_words.casilla_reason.autonomic_deduction_unsummed_box"
+        ),
         RegistryUnresolvedOutcomeReason.M200_TAX_REGIME_UNSUPPORTED.value: (
             "application.modelo.projection_words.casilla_reason.m200_tax_regime_unsupported"
         ),

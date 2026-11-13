@@ -50,16 +50,20 @@ _CCAA_BINDING = "renta-profile-tax-residence-ccaa"
 # Madrid nacimiento/adopcion (casilla 1039, DL 1/2010), and the anualidades sin
 # minimo separate-escala eligibility flag (Art. 64/75 LIRPF), and the maternity
 # deduction (Art. 81.1 LIRPF, casilla 0611) and its guarderia increment (Art. 81.2,
-# casilla 0613), zero without children under three.
+# casilla 0613), zero without children under three; and the minimo por ascendientes
+# estatal + autonomico (Art. 59/61 LIRPF, casillas 0515 and 0516), zero without ascendants.
 _DERIVED_FACT_PROFILE_BINDINGS = frozenset(
     {
         "renta-profile-minimo-descendientes-estatal",
         "renta-profile-minimo-descendientes-autonomico",
+        "renta-profile-minimo-ascendientes-estatal",
+        "renta-profile-minimo-ascendientes-autonomico",
         "renta-profile-has-economic-activity",
         "renta-profile-income-family-excluded-capital-mobiliario",
         "renta-profile-income-family-excluded-capital-inmobiliario",
         "renta-profile-income-family-excluded-ganancias-patrimoniales",
         "renta-profile-madrid-nacimiento-adopcion-eligible-count",
+        "renta-profile-deduccion-madrid-cuidado-ascendientes-count",
         "renta-profile-unidad-familiar-otros-miembros-base",
         "renta-profile-anualidades-sin-minimo-descendientes",
         "renta-profile-deduccion-maternidad",

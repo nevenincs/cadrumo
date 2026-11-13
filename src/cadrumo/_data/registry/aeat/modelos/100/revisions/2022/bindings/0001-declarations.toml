@@ -538,7 +538,7 @@ source_ref = "aeat-renta-2022-manual-parte1"
 required_text = ["Modelo 100", "ejercicio 2022"]
 [[revisions."2022".bindings]]
 id = "renta-family-ascendant-disability-grade"
-provider = { kind = "profile", rows = { object_path = "renta_family.ascendiente", leaf = "discapacidad_clave", count_path = "renta_family.ascendientes_count" }, xsd_path = "/DatosIdentificativos/Ascendientes/Ascendiente/PCTMINASDLG", dictionary_field = "PCTMINASDLG", repeating = true }
+provider = { kind = "profile", rows = { object_path = "renta_family.ascendiente", leaf = "minimo_discapacidad_clave", count_path = "renta_family.ascendientes_count" }, xsd_path = "/DatosIdentificativos/Ascendientes/Ascendiente/PCTMINASDLG", dictionary_field = "PCTMINASDLG", repeating = true }
 value = { data_type = "text", channel = "row_set" }
 aggregation = { op = "rows" }
 legal_refs = ["ley-35-2006:art-59", "ley-35-2006:art-60", "orden-hfp-310-2023:art-3"]

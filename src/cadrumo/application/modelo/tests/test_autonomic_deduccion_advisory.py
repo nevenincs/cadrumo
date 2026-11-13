@@ -2,7 +2,7 @@
 
 Covers ``madrid_nacimiento_adopcion_eligibility_advisory_finding``: the
 verify-path advisory fires when the calculate-path auto-trigger
-(``inject_derived_autonomic_deduccion_facts``) fail-closed on an indeterminate
+(``inject_autonomic_deduccion_facts``) fail-closed on an indeterminate
 (tributación conjunta or married/pareja-de-hecho) Madrid unit with at least one
 nacimiento/adopción-eligible descendant, leaving casilla 1039 at zero with no
 operator-facing signal.
@@ -12,14 +12,14 @@ an inward fake reader. That keeps these tests focused on advisory policy; the
 encrypted profile-capsule round trip belongs to the persistence adapter test
 tree. The parity assertion still reads the SAME weighted count the
 calculate-path injector would have computed from the identical fact set (via
-the shared ``madrid_nacimiento_adopcion_candidate_weighted_count`` primitive),
+the shared ``descendant_entry_window_weighted_count`` primitive),
 proving the verify-path advisory is not fabricating a number independent of the
 calculate path.
 
 See Also:
-    :func:`~application.modelo._autonomic_deduccion_advisory.madrid_nacimiento_adopcion_eligibility_advisory_finding`:
+    :func:`~application.modelo.autonomic_deduccion_advisory.madrid_nacimiento_adopcion_eligibility_advisory_finding`:
         Verify-path advisory under test.
-    :func:`~application.modelo.profile_binding.inject_derived_autonomic_deduccion_facts`:
+    :func:`~application.modelo.autonomic_deduccion_dispatch.inject_autonomic_deduccion_facts`:
         Calculate-path fail-closed injector this advisory complements.
     :class:`~domain.calculations.registry.schema.RegistrySnapshot`:
         Registry authority used to resolve the casilla-1039 semantic role.
@@ -50,10 +50,8 @@ from ....domain.user_profile.values import (
 )
 from .. import autonomic_deduccion_advisory
 from ..autonomic_deduccion_advisory import madrid_nacimiento_adopcion_eligibility_advisory_finding
-from ..profile_derived_facts import (
-    inject_derived_autonomic_deduccion_facts,
-    madrid_nacimiento_adopcion_candidate_weighted_count,
-)
+from ..autonomic_deduccion_dispatch import descendant_entry_window_weighted_count, inject_autonomic_deduccion_facts
+from ..profile_derived_facts import family_fact_context
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -265,6 +263,7 @@ def test_advisory_silent_when_no_profile_record_exists(
 
 
 def test_advisory_weighted_count_matches_calculate_path_candidate_count(
+    m100_snapshot: RegistrySnapshot,
     modelo_operation: PinnedAuthorityOperation,
     seeded_bucket: str,
 ) -> None:
@@ -287,15 +286,23 @@ def test_advisory_weighted_count_matches_calculate_path_candidate_count(
     # The calculate-path injector fail-closes for this indeterminate unit: the
     # synthetic key resolves to the neutral 0 default, never the real count.
     injected_index = dict(fact_index)
-    inject_derived_autonomic_deduccion_facts(injected_index, _YEAR, authored_year=_YEAR, operation=modelo_operation)
+    context = family_fact_context(m100_snapshot, operation=modelo_operation)
+    inject_autonomic_deduccion_facts(
+        injected_index,
+        m100_snapshot,
+        schema=modelo_operation.profile_schema(),
+        context=context,
+        bucket_id=seeded_bucket,
+    )
     assert injected_index["renta_family.madrid_nacimiento_adopcion_eligible_count"] == Decimal("0")
 
     # The shared candidate-count primitive (which the verify-path advisory
     # calls) recovers the real prorrateo-weighted count regardless of the
     # unit's determinability — this is the number the advisory surfaces.
-    candidate_count = madrid_nacimiento_adopcion_candidate_weighted_count(
+    candidate_count = descendant_entry_window_weighted_count(
         fact_index,
         _YEAR,
-        operation=modelo_operation,
+        following_periods=context.integer("madrid-birth-adoption-following-periods"),
+        context=context,
     )
     assert candidate_count == Decimal("0.5")

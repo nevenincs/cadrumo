@@ -1,0 +1,27 @@
+# Comunidad de Madrid, "Por cuidado de ascendientes" (DL 1/2010 art. 7 bis): the weighted count
+# of qualifying ascendants times the amount. The article sets no income limit. The enrolment
+# below is what the shared autonomic-deducción dispatch reads; later editions inherit it.
+[[revisions."2023".formulas]]
+id = "renta-deduccion-madrid-cuidado-ascendientes"
+target_casilla_id = "1115"
+expression = { op = "multiply", args = [
+    { binding = "renta-profile-deduccion-madrid-cuidado-ascendientes-count" },
+    { parameter = "renta-deduccion-madrid-cuidado-ascendientes-cuantia" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-77", "madrid-dl-1-2010:art-7-bis"]
+source_refs = ["aeat-renta-2023-manual-parte1"]
+
+[revisions."2023".formulas.autonomic_deduccion]
+ccaa = "madrid"
+target_semantic_role = "irpf_deduccion_madrid_cuidado_ascendientes"
+eligibility = { kind = "ascendant_minimum_entitlement", minimum_age = "renta-deduccion-madrid-cuidado-ascendientes-edad-minima", minimum_discapacidad_grado = "renta-deduccion-madrid-cuidado-ascendientes-discapacidad-minima" }
+count_binding = "renta-profile-deduccion-madrid-cuidado-ascendientes-count"
+amount = "renta-deduccion-madrid-cuidado-ascendientes-cuantia"
+income_limit = { kind = "none" }
+prorrateo = "state_minimum_sharing"
+legal_refs = ["ley-35-2006:art-77", "madrid-dl-1-2010:art-7-bis"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "aeat-renta-2023-manual-parte1"
+required_text = ["Por cuidado de ascendientes", "515,50 euros por cada ascendiente mayor de 65 años o con discapacidad igual o"]

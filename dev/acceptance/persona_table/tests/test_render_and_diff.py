@@ -9,7 +9,16 @@ import pytest
 
 from ..__main__ import _envelope, main
 from ..diff import diff_tables, render_diff, row_id
-from ..render import counts, render_table, summary_line, unchecked_causes
+from ..render import (
+    CoverageGap,
+    UndecidedObligation,
+    counts,
+    load_coverage_gaps,
+    load_coverage_undecided,
+    render_table,
+    summary_line,
+    unchecked_causes,
+)
 from ..rows import PlannedRow, Stage, TableRow, Verdict, write_rows
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -48,6 +57,17 @@ def test_the_summary_never_counts_history_filed_as_green() -> None:
     assert counted["fail:verify"] == 1
     assert counted["fail:calculate"] == 1
     assert summary_line(rows).startswith("green 1 / 4")
+
+
+def test_the_summary_counts_a_not_owed_row_as_green_and_names_it_apart() -> None:
+    not_owed = dataclasses.replace(_row("1P", Stage.PASSED, Stage.NOT_OWED), modelo="202")
+    owed_shown = dataclasses.replace(_row("2P", Stage.PASSED, Stage.OWED_SHOWN), modelo="202")
+    rows = [_GREEN, not_owed, owed_shown]
+    assert (not_owed.verdict, owed_shown.verdict) == (Verdict.NOT_OWED, Verdict.FAIL)
+    line = summary_line(rows)
+    assert line.startswith("green 2 / 3")
+    assert "not-owed 1" in line
+    assert counts(rows)["fail:verify"] == 1
 
 
 def test_the_table_lists_every_row_with_its_verdict() -> None:
@@ -136,3 +156,108 @@ def test_render_prints_run_provenance_in_the_header() -> None:
     text = render_table([_GREEN], head="abc", provenance={"tree": "t1", "logical_generation": "g1"})
     assert "Run provenance: logical_generation `g1`, tree `t1`." in text
     assert "Run provenance" not in render_table([_GREEN], head="abc")
+
+
+_NOT_RUN = _row("2T", Stage.NOT_RUN)
+
+
+def test_the_rows_line_without_coverage_says_the_expected_count_is_the_table_plan_only() -> None:
+    text = render_table([_GREEN, _HISTORY, _NOT_RUN], head="abc")
+    assert "Rows: expected 3 (table plan only; no coverage audit) / run 2\n" in text
+    assert "Coverage gaps" not in text
+
+
+def test_not_run_rows_are_expected_but_never_run() -> None:
+    assert _NOT_RUN.verdict is Verdict.NOT_RUN
+    text = render_table([_NOT_RUN, _dup("3T"), _dup("4T")], head="abc", coverage_gaps=())
+    assert "Rows: expected 3 / run 2\n" in text
+
+
+def _dup(period: str) -> TableRow:
+    return dataclasses.replace(_GREEN, period=period)
+
+
+def test_coverage_with_no_gaps_expects_only_the_planned_rows_and_adds_no_section() -> None:
+    text = render_table([_GREEN, _HISTORY], head="abc", coverage_gaps=())
+    assert "Rows: expected 2 / run 2\n" in text
+    assert "table plan only" not in text
+    assert "Coverage gaps" not in text
+
+
+def test_coverage_gaps_raise_the_expected_count_and_are_listed_sorted() -> None:
+    gaps = (CoverageGap("persona", "303", _YEAR, "4T"), CoverageGap("alpha", "130", _YEAR, "1T"))
+    text = render_table([_GREEN, _HISTORY], head="abc", coverage_gaps=gaps)
+    lines = text.splitlines()
+    assert lines[lines.index(next(line for line in lines if line.startswith("Summary: "))) + 1] == (
+        "Rows: expected 4 / run 2"
+    )
+    section = text.split("## Coverage gaps (2)", 1)[1].split("Verdicts:", 1)[0]
+    assert section.split() == ["-", f"alpha|130|{_YEAR}|1T", "-", f"persona|303|{_YEAR}|4T"]
+
+
+def test_coverage_gaps_load_from_the_coverage_file(tmp_path: Path) -> None:
+    path = tmp_path / "coverage.json"
+    path.write_text(
+        '{"horizon": 9, "gaps": [{"persona": "p", "modelo": "303", "year": 7, "period": "1T", "source": "calendar"}]}',
+        encoding="utf-8",
+    )
+    assert load_coverage_gaps(path) == (CoverageGap("p", "303", 7, "1T"),)
+
+
+@pytest.mark.parametrize(
+    "content",
+    [
+        "not json",
+        "[]",
+        '{"horizon": 9}',
+        '{"gaps": ["x"]}',
+        '{"gaps": [{"persona": "p", "modelo": "303", "year": 7}]}',
+        '{"gaps": [{"persona": "p", "modelo": "303", "year": "7", "period": "1T"}]}',
+    ],
+)
+def test_a_malformed_coverage_file_is_refused(tmp_path: Path, content: str) -> None:
+    path = tmp_path / "coverage.json"
+    path.write_text(content, encoding="utf-8")
+    with pytest.raises(ValueError, match="coverage file"):
+        load_coverage_gaps(path)
+
+
+def test_undecided_obligations_are_listed_with_their_reason_and_count_in_no_expected_figure() -> None:
+    undecided = (
+        UndecidedObligation(CoverageGap("sociedad", "232", _YEAR, "0A"), "incomplete: no related-party record", False),
+    )
+    text = render_table([_GREEN, _HISTORY], head="abc", coverage_gaps=(), undecided=undecided)
+    assert "Rows: expected 2 / run 2\n" in text
+    section = text.split("## Undecided obligations (1)", 1)[1].split("Verdicts:", 1)[0]
+    assert f"- sociedad|232|{_YEAR}|0A: incomplete: no related-party record (not run)" in section
+
+
+def test_no_undecided_obligation_adds_no_section() -> None:
+    assert "Undecided obligations" not in render_table([_GREEN], head="abc", coverage_gaps=(), undecided=())
+
+
+def test_undecided_obligations_load_from_the_coverage_file(tmp_path: Path) -> None:
+    path = tmp_path / "coverage.json"
+    path.write_text(
+        '{"gaps": [], "undecided": [{"persona": "p", "modelo": "232", "year": 7, "period": "0A", '
+        '"reason": "incomplete: x", "in_table": true}]}',
+        encoding="utf-8",
+    )
+    expected = UndecidedObligation(CoverageGap("p", "232", 7, "0A"), "incomplete: x", True)
+    assert load_coverage_undecided(path) == (expected,)
+
+
+@pytest.mark.parametrize(
+    "content",
+    [
+        '{"gaps": []}',
+        '{"undecided": [{"persona": "p", "modelo": "232", "year": 7, "period": "0A", "in_table": true}]}',
+        '{"undecided": [{"persona": "p", "modelo": "232", "year": 7, "period": "0A", '
+        '"reason": "r", "in_table": "no"}]}',
+    ],
+)
+def test_a_malformed_undecided_list_is_refused(tmp_path: Path, content: str) -> None:
+    path = tmp_path / "coverage.json"
+    path.write_text(content, encoding="utf-8")
+    with pytest.raises(ValueError, match="coverage file"):
+        load_coverage_undecided(path)

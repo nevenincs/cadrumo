@@ -159,6 +159,13 @@ def _binding_values_for_year(year: int) -> dict[str, Decimal]:
             for binding in ("renta-profile-incremento-guarderia", "renta-profile-deduccion-maternidad-cotizaciones")
             if binding in declared_bindings
         },
+        # The Madrid deducción por cuidado de ascendientes (DL 1/2010 art. 7 bis) of an
+        # edition that computes casilla 1115, neutral zero for a filer with no ascendants.
+        **{
+            binding: Decimal("0")
+            for binding in ("renta-profile-deduccion-madrid-cuidado-ascendientes-count",)
+            if binding in declared_bindings
+        },
         # The art. 7.p) and art. 75 Ley 19/1994 operands of a filer with no maritime work.
         **{
             binding: value
@@ -177,6 +184,10 @@ def _binding_values_for_year(year: int) -> dict[str, Decimal]:
         "renta-profile-minimo-descendientes-estatal": Decimal("0"),
         # Parte autonómica: non-Madrid corpus fixture mirrors the estatal zero.
         "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
+        # No ascendants: the Art. 59/61 LIRPF mínimo por ascendientes is zero
+        # for both halves (casillas 0515 and 0516).
+        "renta-profile-minimo-ascendientes-estatal": Decimal("0"),
+        "renta-profile-minimo-ascendientes-autonomico": Decimal("0"),
         # Individual declaration by a filer with no minor children and no
         # negative general base carried in from earlier ejercicios.
         "renta-profile-declaration-type": Decimal("1"),

@@ -177,6 +177,16 @@ rounding = "money-2"
 legal_refs = ["ley-35-2006:art-77", "madrid-dl-1-2010:art-4", "madrid-dl-1-2010:art-18"]
 source_refs = ["aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-dr-100-2025-dictionary"]
 
+[revisions."2025".formulas.autonomic_deduccion]
+ccaa = "madrid"
+target_semantic_role = "irpf_deduccion_madrid_nacimiento_adopcion"
+eligibility = { kind = "descendant_entry_window_count", following_periods_fact = "madrid-birth-adoption-following-periods" }
+count_binding = "renta-profile-madrid-nacimiento-adopcion-eligible-count"
+amount = "renta-deduccion-madrid-nacimiento-adopcion-cuantia"
+income_limit = { kind = "base", base_semantic_roles = ["irpf_base_imponible_general", "irpf_base_imponible_ahorro"], unit = "unidad_familiar", individual_limit = "renta-deduccion-madrid-nacimiento-adopcion-limite-contribuyente-individual", joint_limit = "renta-deduccion-madrid-nacimiento-adopcion-limite-contribuyente-conjunta", unidad_familiar_limit = "renta-deduccion-madrid-nacimiento-adopcion-limite-unidad-familiar", other_members_base_binding = "renta-profile-unidad-familiar-otros-miembros-base", legal_refs = ["madrid-dl-1-2010:art-18"] }
+prorrateo = "equal_parts"
+legal_refs = ["ley-35-2006:art-77", "madrid-dl-1-2010:art-4", "madrid-dl-1-2010:art-18"]
+
 [[revisions."2025".formulas.source_citations]]
 source_ref = "aeat-renta-2025-manual-deducciones-autonomicas"
 required_text = ["Por nacimiento o adopción de hijos", "721,70 euros por cada hijo nacido o adoptado"]

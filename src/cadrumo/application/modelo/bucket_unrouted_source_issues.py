@@ -69,10 +69,17 @@ def _durable_register_note_reason(diagnostic: CalculationSourceDiagnostic) -> _D
         return "inventory_book_claimed_purchase"
     if diagnostic.reason == "ledger_expense_may_be_durable":
         return "ledger_expense_may_be_durable"
+    return _durable_household_note_reason(diagnostic)
+
+
+def _durable_household_note_reason(diagnostic: CalculationSourceDiagnostic) -> _DurableSourceIssueReason | None:
+    """Keep what the household rows leave open with the filed record."""
     if diagnostic.reason == "household_rows_incomplete":
         return "household_rows_incomplete"
     if diagnostic.reason == "household_row_fact_unstated":
         return "household_row_fact_unstated"
+    if diagnostic.reason == "ascendant_disability_minimum_not_computed":
+        return "ascendant_disability_minimum_not_computed"
     return None
 
 
@@ -204,6 +211,7 @@ _DurableSourceIssueReason = Literal[
     "ledger_expense_may_be_durable",
     "household_rows_incomplete",
     "household_row_fact_unstated",
+    "ascendant_disability_minimum_not_computed",
     "advisory_binding_value",
     "credit_source_disagreement",
     "credit_cross_check_absent",

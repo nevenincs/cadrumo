@@ -129,6 +129,7 @@ appear in a persona; identifier-refusal tests take them from here.
 | `[profile]` | table | wizard question id → answer |
 | `[fields]` | table | profile schema path → value, for facts no wizard question asks |
 | `[[activities]]` | array | censo activity rows: `description`, `iae_epigraph`, `tipo_actividad` |
+| `[[profile_rows]]` | array | rows of other repeatable profile sections: `section` and `values` (field key → value) |
 | `[[elections]]` | array | dated elections: `question` (wizard id), `value`, `year` (token) |
 | `[[household.descendants]]` | array | one descendant row |
 | `[[household.ascendants]]` | array | one ascendant row |
@@ -178,6 +179,14 @@ profile schema.
 the question and its dated year companion (for
 `irpf-activity-income-imputation-criterion`, the year goes to
 `irpf-activity-income-imputation-year`).
+
+`[[profile_rows]]` rows go through the same repeatable-row mutation, one row
+each, for any section without a block of its own (`activities` is refused
+here). `section` names the schema section; `values` maps its field keys to a
+value written as `[profile]` values are: a string, a boolean, a date token
+table, or an identity reference. The identity field `full_name` gives the name
+an official form asks for: a person's surnames then given name, or an entity's
+razón social.
 
 ### Household rows
 
@@ -427,6 +436,13 @@ modelo whose window the calendar cannot show: `applicable_window_missing` (the
 provision that fixes the window, such as the annual Orden, is not yet published)
 or `applicability_undetermined`. The test then asserts that the calendar advises
 the modelo with that reason and shows no window row for it.
+
+A modelo may take several `[[obligations]]` of one year whose `applicable`
+differs by period, such as a Modelo 202 instalment not owed while the others stay
+undecided. The overview explanation states one verdict per modelo and year, so
+the persona journey then asserts each period's verdict from the calendar read
+with suppressed obligations shown: a window row is `applicable`, and a
+suppressed row carries its own verdict.
 
 `[[deadlines]]`: `modelo`, `period`, `year`, `statutory_end` (date), optional
 `note`. `statutory_end` is the last day the provision gives, before any shift.

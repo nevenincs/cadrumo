@@ -193,9 +193,12 @@ def test_advisory_fires_when_a_selected_derived_binding_resolves_to_nothing() ->
         "renta-modelo-100-estimacion-directa-modalidad-clave",
         "renta-profile-activity-cash-criterion-0169",
         "renta-profile-anualidades-sin-minimo-descendientes",
+        "renta-profile-deduccion-madrid-cuidado-ascendientes-count",
         "renta-profile-deduccion-maternidad",
         "renta-profile-estimacion-directa",
         "renta-profile-incremento-guarderia",
+        "renta-profile-minimo-ascendientes-autonomico",
+        "renta-profile-minimo-ascendientes-estatal",
         "renta-profile-minimo-descendientes-autonomico",
         "renta-profile-minimo-descendientes-estatal",
     }
@@ -227,6 +230,8 @@ def test_every_derived_binding_actually_resolves_for_an_ordinary_profile(
     resolved = {**resolution.binding_values, **resolution.boolean_binding_values}
     for binding_id in (
         "renta-profile-minimo-descendientes-estatal",
+        "renta-profile-minimo-ascendientes-estatal",
+        "renta-profile-minimo-ascendientes-autonomico",
         "renta-profile-minimo-descendientes-autonomico",
         "renta-profile-anualidades-sin-minimo-descendientes",
         "renta-profile-incremento-guarderia",

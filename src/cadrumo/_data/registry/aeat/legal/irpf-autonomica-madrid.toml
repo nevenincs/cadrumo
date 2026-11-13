@@ -89,3 +89,93 @@ required_text = [
     "61.860 euros",
     "suma de las casillas [0435] y [0460]",
 ]
+
+[legal."madrid-dl-1-2010:art-7-bis"]
+evidence_tier = "legal_authority"
+authority = "autonomous_community"
+kind = "real_decreto_legislativo"
+corpus_ref = "corpus/manuals/renta/2025/part2-deducciones-autonomicas/source.pdf#madrid-cuidado-ascendientes"
+document_id = "BOCM-m-2010-90050"
+article = "7 bis"
+permalink = "https://www.boe.es/buscar/act.php?id=BOCM-m-2010-90050"
+published_at = 2010-10-21
+effective_from = 2023-01-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-11-12
+reviewed_by = "agent-authored from the bundled AEAT Renta manuals; operator to re-stamp and confirm the BOCM/BOE consolidated id and the amending law"
+notes = """\
+DL 1/2010 art. 7 bis (Comunidad de Madrid): deducción por cuidado de ascendientes. 515,50 euros por \
+cada ascendiente mayor de 65 años o con discapacidad igual o superior al 33 por 100 por el que pueda \
+aplicarse el mínimo por ascendientes; cuando el ascendiente genera el derecho para más de un \
+contribuyente, el importe se prorratea por partes iguales si tributan de forma individual. The \
+article sets no income limit. The Manual práctico de Renta 2022 lists no such Madrid deducción \
+(its Madrid list runs from nacimiento o adopción to cuidado de hijos menores de 3 años), and the \
+2023, 2024 and 2025 manuals carry it in the same words, so effective_from records the first \
+exercise the bundled corpus shows it governing; the manuals do not name the law that added it."""
+required_text = [
+    "Por cuidado de ascendientes",
+    "Art. 7 bis Texto Refundido de las disposiciones legales de la Comunidad de",
+    "515,50 euros por cada ascendiente mayor de 65 años o con discapacidad igual o",
+    "superior al 33 por 100 por el que puedan aplicarse el mínimo por ascendientes.",
+    "el importe de la misma se prorrateará por partes iguales en la",
+]
+
+[legal."madrid-dl-1-2010:art-2-2022"]
+evidence_tier = "legal_authority"
+authority = "autonomous_community"
+kind = "real_decreto_legislativo"
+corpus_ref = "corpus/manuals/renta/2022/part1/source.pdf#pag-941"
+document_id = "BOCM-m-2010-90050"
+article = "2"
+permalink = "https://www.boe.es/buscar/act.php?id=BOCM-m-2010-90050"
+published_at = 2010-10-21
+effective_from = 2022-11-21
+governs_periods_from = 2022-01-01
+governs_periods_to = 2022-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-11-12
+reviewed_by = "agent-authored from the bundled AEAT Renta manual; operator to re-stamp and confirm the BOCM/BOE consolidated id"
+notes = """\
+DL 1/2010 arts. 2 to 2 quater (Comunidad de Madrid) in the redaction of the artículo único of Ley \
+8/2022, de 16 de noviembre (BOCM 21-11-2022), with effects from 1 January 2022 (Manual práctico de \
+Renta 2022, lines 36235 to 36236). Mínimo por ascendientes: 1.197,15 euros anuales, más \
+1.457,40 euros anuales por cada ascendiente mayor de 75 años (lines 36255 to 36257). effective_from \
+records the BOCM publication; governs_periods records the retroactive effect the manual states, \
+ending where the Ley 13/2023 redaction takes over."""
+required_text = [
+    "Comunidad de Madrid: Importes del mínimo personal y familiar",
+    "único de la Ley 8/2022, de 16 de noviembre (BOCM 21-11-2022) ha modificado el articulo 2",
+    "Mínimo por ascendientes",
+    "1.197,15 euros anuales.",
+    "Más 1.457,40 euros anuales por cada ascendiente mayor de 75 años.",
+]
+
+[legal."madrid-dl-1-2010:art-2-2023"]
+evidence_tier = "legal_authority"
+authority = "autonomous_community"
+kind = "real_decreto_legislativo"
+corpus_ref = "corpus/manuals/renta/2023/part1/source.pdf#pag-1112"
+document_id = "BOCM-m-2010-90050"
+article = "2"
+permalink = "https://www.boe.es/buscar/act.php?id=BOCM-m-2010-90050"
+published_at = 2010-10-21
+effective_from = 2023-12-21
+governs_periods_from = 2023-01-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-11-12
+reviewed_by = "agent-authored from the bundled AEAT Renta manual; operator to re-stamp and confirm the BOCM/BOE consolidated id"
+notes = """\
+DL 1/2010 arts. 2 to 2 quater (Comunidad de Madrid) in the redaction of the artículo único, \
+apartados Dos a Cinco, of Ley 13/2023, de 15 de diciembre (BOCM 21-12-2023), with effects from 1 \
+January 2023 (Manual práctico de Renta 2023, lines 42668 to 42670). Mínimo por \
+ascendientes: 1.234,26 euros anuales, más 1.502,58 euros anuales por cada ascendiente mayor de 75 \
+años (lines 42693 to 42695, on the page after the one this reference resolves; the 2025 manual \
+repeats them at lines 42913 to 42915). effective_from records the BOCM publication; governs_periods \
+records the retroactive effect the manual states."""
+required_text = [
+    "Comunidad de Madrid: Importes del mínimo personal y familiar",
+    "de la Ley 13/2023, de 15 de diciembre (BOCM 21-12-",
+    "por ascendientes y por discapacidad.",
+    "Más 1.234,26 euros anuales por contribuyente mayor de 65 años.",
+    "Adicionalmente, 1.502,58 euros anuales por contribuyente mayor de 75 años.",
+]

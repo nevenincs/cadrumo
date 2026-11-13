@@ -1,6 +1,6 @@
 [schema]
 id = "cadrumo.user_profile"
-version = 11
+version = 12
 title = "Cadrumo user profile schema"
 snapshot_policy = "immutable_secure_snapshot_hash"
 remove_policy = "live_profile_tombstone_retain_snapshots"
@@ -32,6 +32,27 @@ derived_from = ["renta_family.descendiente", "tax_residence.ccaa"]
 entry_surface = "aeat config profile descendiente"
 description = "Parte autonomica del minimo por descendientes, resuelta contra la CCAA de residencia."
 legal_refs = ["ley-35-2006:art-58", "ley-35-2006:art-61"]
+
+[[derived_selectors]]
+pattern = "renta_family.ascendientes_minimos_aggregate"
+derived_from = ["renta_family.ascendiente"]
+entry_surface = "aeat config profile ascendiente"
+description = "Parte estatal del minimo por ascendientes, calculada de los ascendientes declarados."
+legal_refs = ["ley-35-2006:art-59", "ley-35-2006:art-61"]
+
+[[derived_selectors]]
+pattern = "renta_family.ascendientes_minimos_aggregate_autonomico"
+derived_from = ["renta_family.ascendiente", "tax_residence.ccaa"]
+entry_surface = "aeat config profile ascendiente"
+description = "Parte autonomica del minimo por ascendientes, resuelta contra la CCAA de residencia."
+legal_refs = ["ley-35-2006:art-56", "ley-35-2006:art-59", "ley-35-2006:art-61"]
+
+[[derived_selectors]]
+pattern = "renta_family.deduccion_madrid_cuidado_ascendientes_count"
+derived_from = ["renta_family.ascendiente", "tax_residence.ccaa"]
+entry_surface = "aeat config profile ascendiente"
+description = "Ascendientes por los que se aplica el minimo por ascendientes y que cumplen la edad o la discapacidad de la deduccion de la Comunidad de Madrid por cuidado de ascendientes, ponderados por la parte del minimo que corresponde al contribuyente."
+legal_refs = ["ley-35-2006:art-77", "madrid-dl-1-2010:art-7-bis"]
 
 [[derived_selectors]]
 pattern = "renta_family.anualidades_sin_minimo_descendientes_{filing_year}"
@@ -74,20 +95,6 @@ derived_from = ["tax_residence.jurisdiction_scope"]
 entry_surface = "aeat config profile edit --tax-residence-jurisdiction-scope SCOPE"
 description = "Porcentaje atribuible al Estado derivado exclusivamente del regimen territorial declarado."
 legal_refs = ["ley-12-2002:art-29"]
-
-[[derived_selectors]]
-pattern = "renta_capital_inmobiliario.reduccion_art_23_2_aplicable"
-derived_from = ["renta_arrendamiento.uso_vivienda", "renta_arrendamiento.fecha_contrato", "renta_arrendamiento.zona_tensionada", "renta_arrendamiento.incumple_lau_17_6"]
-entry_surface = "aeat config profile arrendamiento edit"
-description = "Si la reduccion del art. 23.2 LIRPF alcanza el arrendamiento del ejercicio: no alcanza al que no es de vivienda ni, en el regimen de tramos, al que incumple el art. 17.6 LAU."
-legal_refs = ["ley-35-2006:art-23", "ley-35-2006:art-23-2021", "ley-35-2006:dt-38"]
-
-[[derived_selectors]]
-pattern = "renta_capital_inmobiliario.reduccion_art_23_2_tier"
-derived_from = ["renta_arrendamiento.fecha_contrato", "renta_arrendamiento.zona_tensionada", "renta_arrendamiento.primer_arrendamiento_vivienda", "renta_arrendamiento.inquilinos", "renta_arrendamiento.arrendatario_entidad_tipo", "renta_arrendamiento.arrendatario_entidad_finalidad", "renta_arrendamiento.rehabilitacion_fecha", "renta_arrendamiento.renta_inicial", "renta_arrendamiento.renta_ultima_contrato_anterior"]
-entry_surface = "aeat config profile arrendamiento edit"
-description = "Regimen o tramo de la reduccion del art. 23.2 LIRPF del arrendamiento del ejercicio: el 60 por ciento anterior a la Ley 12/2023, o el 90, 70, 60 o 50 por ciento."
-legal_refs = ["ley-35-2006:art-23", "ley-35-2006:art-23-2021", "ley-35-2006:dt-38"]
 
 [[derived_selectors]]
 pattern = "irpf.estimation_directa"
@@ -2794,8 +2801,8 @@ type = "object"
 required = false
 sensitivity = "identity"
 effective_dated = true
-description = "Details of each ascendant who gives entitlement to the ascendant minimum, stored as renta_family.ascendiente.{n}: NIF, surnames and name, birth date, official disability code, number of descendants the ascendant lives with and date of death."
-legal_refs = ["ley-35-2006:art-59"]
+description = "Each ascendant for the ascendant minimum, stored as renta_family.ascendiente.{n}: NIF, surnames and name, birth date, date of death, descendants the ascendant lives with, cohabitation for half the period, annual income excluding exempt income, own return, disability grade, assistance or reduced mobility, and judicial incapacity, each as at the devengo or the date of death. The official disability code is derived from the grade and both circumstances, never stored."
+legal_refs = ["ley-35-2006:art-59", "ley-35-2006:art-60", "ley-35-2006:art-61"]
 
 [[sections.fields]]
 key = "ascendientes_count"

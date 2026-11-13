@@ -74,7 +74,7 @@ FAMILY_ROW_BINDINGS: Mapping[str, tuple[str, str, str]] = {
     "renta-family-ascendant-birth-date": ("renta_family.ascendiente", "birth_date", "renta_family.ascendientes_count"),
     "renta-family-ascendant-disability-grade": (
         "renta_family.ascendiente",
-        "discapacidad_clave",
+        "minimo_discapacidad_clave",
         "renta_family.ascendientes_count",
     ),
     "renta-family-ascendant-cohabiting-descendant-count": (

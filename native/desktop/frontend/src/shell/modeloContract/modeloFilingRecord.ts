@@ -102,6 +102,10 @@ import type {
  * `household_row_fact_unstated` is a stored household row that omits a fact
  * the official design requires of every row, such as an ascendant's NIF: it
  * withholds checking, exporting and filing until the profile states the fact.
+ * `ascendant_disability_minimum_not_computed` is an ascendant the mínimo por
+ * ascendientes reaches whose grade reaches the disability threshold: the
+ * disability minimum for that ascendant is not computed, so it withholds
+ * checking, exporting and filing rather than leave the minimum silently out.
  * `fact` states such a note's own row, element, interval and amount.
  * `binding_source` is `None` only where the condition names no binding source
  * kind. `precedence_tier_divergence` is a filed figure for which a higher
@@ -140,6 +144,7 @@ export type CalculationSourceIssue = {
     | "ledger_expense_may_be_durable"
     | "household_rows_incomplete"
     | "household_row_fact_unstated"
+    | "ascendant_disability_minimum_not_computed"
     | "advisory_binding_value"
     | "credit_source_disagreement"
     | "credit_cross_check_absent"
@@ -535,4 +540,6 @@ export type RegistryUnresolvedOutcomeReason =
   | "m210-convenio-rate-missing"
   | "waived-refund-result-unsupported"
   | "income-family-contradicts-profile"
+  | "autonomic-deduction-other-comunidad"
+  | "autonomic-deduction-unsummed-box"
   | "m200-tax-regime-unsupported";

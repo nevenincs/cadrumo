@@ -7,7 +7,8 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.application.modelo.profile_derived_facts import madrid_nacimiento_adopcion_candidate_weighted_count
+from cadrumo.application.modelo.autonomic_deduccion_dispatch import descendant_entry_window_weighted_count
+from cadrumo.application.modelo.profile_derived_facts import family_fact_context
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.binding_value_contract import BindingDataType, BindingValueChannel
@@ -113,7 +114,8 @@ def test_madrid_nacimiento_adopcion_count_binding_declares_a_non_monetary_decima
     the prorrata away, and ``money`` would label a count as currency.
     """
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
-        revision = modelo_100_snapshot(_REVIEWED_EDITION).revision
+        snapshot = modelo_100_snapshot(_REVIEWED_EDITION)
+        revision = snapshot.revision
         binding = next(item for item in revision.bindings if item.id == _NACIMIENTO_ADOPCION_COUNT_BINDING)
 
         assert binding.value.data_type is BindingDataType.DECIMAL
@@ -124,8 +126,12 @@ def test_madrid_nacimiento_adopcion_count_binding_declares_a_non_monetary_decima
             "renta_family.descendiente.0.convivencia": "true",
             "renta_family.descendiente.0.custodia_compartida": "true",
         }
-        weighted_count = madrid_nacimiento_adopcion_candidate_weighted_count(
-            shared_custody_facts, _REVIEWED_EDITION, operation=_authority_operation_for_test
+        context = family_fact_context(snapshot, operation=_authority_operation_for_test)
+        weighted_count = descendant_entry_window_weighted_count(
+            shared_custody_facts,
+            _REVIEWED_EDITION,
+            following_periods=context.integer("madrid-birth-adoption-following-periods"),
+            context=context,
         )
 
         assert weighted_count == Decimal("0.5")

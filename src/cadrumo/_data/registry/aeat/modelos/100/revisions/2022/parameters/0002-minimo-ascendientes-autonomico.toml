@@ -1,0 +1,106 @@
+# Mínimo por ascendientes for the gravamen autonómico (LIRPF art. 56.3; Ley 22/2009
+# art. 46.1.a), keyed by the comunidad of residence. Each row is the art. 59.1 cuantía
+# (mayor-65) or the art. 59.2 increment (mayor-75) one comunidad approved, dated from
+# the day its law gives the figure effect. A comunidad without a row approved no
+# ascendant amount of its own, and art. 56.3 leaves it the state figures of
+# renta-minimo-ascendientes-mayor-65 and -mayor-75: the manual names the comunidades
+# that approved their own mínimos and states that the rest apply those of the LIRPF.
+# The Renta 2020 and 2021 manuals list no comunidad with its own ascendant amount, so
+# the table starts with this edition.
+#
+# For 2022 (Manual práctico de Renta 2022, parte 1, cap. 14, pp. 937-944): Andalucía
+# (Ley 5/2021 art. 23 bis, effect from 1 January 2022), Galicia (DL 1/2011 art. 4 bis,
+# effect from 1 January 2022), Madrid (DL 1/2010 in the redaction of Ley 8/2022, effect
+# from 1 January 2022) and the Comunitat Valenciana (Ley 13/1997 art. 2 bis, in force
+# from 28 October 2022, so it governs the devengo of 31 December 2022).
+#
+# The art. 61 norma 4ª cuantía for an ascendant who dies in the period stays the state
+# figure: each comunidad law amends the art. 59 amounts, not art. 61.
+[[revisions."2022".parameters]]
+id = "renta-minimo-ascendientes-mayor-65-autonomico"
+data_type = "keyed_bracket_table"
+unit = "EUR"
+legal_refs = [
+    "ley-35-2006:art-56",
+    "ley-35-2006:art-59",
+    "andalucia-ley-5-2021:art-23-bis",
+    "galicia-dl-1-2011:art-4-bis",
+    "madrid-dl-1-2010:art-2",
+    "valenciana-ley-13-1997:art-2-bis",
+]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = [
+    "1.200 euros anuales por cada ascendiente de edad superior a 65 años o con discapacidad cualquiera que sea su edad",
+    "1.199 euros anuales por cada ascendiente mayor de 65 años o con discapacidad cualquiera que sea su edad",
+    "Comunidad de Madrid: Importes del mínimo personal y familiar",
+    "Mínimo por ascendientes • 1.197,15 euros anuales.",
+    "Comunitat Valenciana: Importes del mínimo personal y familiar",
+    "Mínimo por ascendientes • 1.265 euros anuales.",
+    "Autónomas que no han ejercido tal competencia normativa, se les aplica los importes del mínimo personal y familiar",
+]
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "andalucia"
+value = "1200"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "galicia"
+value = "1199"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "madrid"
+value = "1197.15"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "comunidad_valenciana"
+value = "1265"
+valid_from = 2022-10-28
+
+[[revisions."2022".parameters]]
+id = "renta-minimo-ascendientes-mayor-75-autonomico"
+data_type = "keyed_bracket_table"
+unit = "EUR"
+legal_refs = [
+    "ley-35-2006:art-56",
+    "ley-35-2006:art-59",
+    "andalucia-ley-5-2021:art-23-bis",
+    "galicia-dl-1-2011:art-4-bis",
+    "madrid-dl-1-2010:art-2",
+    "valenciana-ley-13-1997:art-2-bis",
+]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = [
+    "Más 1.460 euros anuales por cada ascendiente mayor de 75 años",
+    "Más 1.457,40 euros anuales por cada ascendiente mayor de 75 años",
+    "Más 1.540 euros anuales por cada ascendiente mayor de 75 años",
+    "Autónomas que no han ejercido tal competencia normativa, se les aplica los importes del mínimo personal y familiar",
+]
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "andalucia"
+value = "1460"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "galicia"
+value = "1460"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "madrid"
+value = "1457.40"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "comunidad_valenciana"
+value = "1540"
+valid_from = 2022-10-28

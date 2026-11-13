@@ -2,8 +2,12 @@
 
 from __future__ import annotations
 
+import json
 from collections import Counter
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Mapping, Sequence
+from dataclasses import dataclass
+from pathlib import Path
+from typing import cast
 
 from .rows import GREEN, VERDICT_MEANING, Stage, TableRow, Verdict
 
@@ -45,16 +49,16 @@ def lane_counts(rows: Iterable[TableRow], lanes: Mapping[str, str]) -> dict[str,
 
 def lane_line(rows: Iterable[TableRow], lanes: Mapping[str, str]) -> str:
     """The per-lane sentence: each lane's green and total rows, and its rows held back as unchecked."""
-    return "By lane (green/total, green = pass; unchecked rows in brackets): " + ", ".join(
+    return "By lane (green/total, green = pass or not-owed; unchecked rows in brackets): " + ", ".join(
         f"{lane} {green}/{total} (unchecked {unchecked})"
         for lane, (green, total, unchecked) in lane_counts(rows, lanes).items()
     )
 
 
 def summary_line(rows: list[TableRow]) -> str:
-    """The summary sentence: green first, then every other verdict, then failing rows by stage."""
+    """The summary sentence: green (each ``GREEN`` verdict) first, then every other verdict, then red rows by stage."""
     counted = counts(rows)
-    green = counted[Verdict.PASSED.value]
+    green = sum(counted[verdict.value] for verdict in GREEN)
     parts = [f"green {green} / {len(rows)}"]
     parts += [f"{verdict.value} {counted[verdict.value]}" for verdict in Verdict if verdict is not Verdict.PASSED]
     parts += [f"red at {stage} {counted[f'fail:{stage}']}" for stage in ("calculate", "verify", "export")]
@@ -96,6 +100,110 @@ def _unchecked_section(rows: Iterable[TableRow]) -> list[str]:
     return [*lines, ""]
 
 
+@dataclass(frozen=True)
+class CoverageGap:
+    """A return the application's own calendar marks applicable that the table does not run."""
+
+    persona: str
+    modelo: str
+    year: int
+    period: str
+
+    @property
+    def label(self) -> str:
+        """The gap id ``persona|modelo|year|period``, spelled as a row id."""
+        return f"{self.persona}|{self.modelo}|{self.year}|{self.period}"
+
+
+@dataclass(frozen=True)
+class UndecidedObligation:
+    """A return the application's calendar can neither mark owed nor not owed, with the calendar's reason."""
+
+    obligation: CoverageGap
+    reason: str
+    in_table: bool
+
+
+def _coverage_list(path: Path, key: str) -> list[object]:
+    """One list of a coverage JSON, refusing an unreadable file or one whose ``key`` is not a list."""
+    try:
+        document = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as error:
+        raise ValueError(f"coverage file {path} is unreadable: {error}") from error
+    items: object = document.get(key) if isinstance(document, dict) else None
+    if not isinstance(items, list):
+        raise ValueError(f"coverage file {path} must be an object with a '{key}' list")
+    return cast("list[object]", items)
+
+
+def load_coverage_gaps(path: Path) -> tuple[CoverageGap, ...]:
+    """The gaps of a coverage JSON (a ``gaps`` list of persona, modelo, year, period), refusing a malformed file."""
+    return tuple(_coverage_gap(path, index, item) for index, item in enumerate(_coverage_list(path, "gaps")))
+
+
+def load_coverage_undecided(path: Path) -> tuple[UndecidedObligation, ...]:
+    """The undecided obligations of a coverage JSON, each with the calendar's reason and whether the table runs it."""
+    return tuple(_undecided(path, index, item) for index, item in enumerate(_coverage_list(path, "undecided")))
+
+
+def _undecided(path: Path, index: int, item: object) -> UndecidedObligation:
+    """One undecided obligation, refusing an item without a text reason and a boolean ``in_table``."""
+    obligation = _coverage_gap(path, index, item)
+    fields = cast("dict[str, object]", item)
+    reason, in_table = fields.get("reason"), fields.get("in_table")
+    if not isinstance(reason, str) or not isinstance(in_table, bool):
+        raise ValueError(f"coverage file {path}: undecided {index} needs a text reason and a boolean in_table")
+    return UndecidedObligation(obligation, reason, in_table)
+
+
+def _coverage_gap(path: Path, index: int, item: object) -> CoverageGap:
+    """One gap of a coverage file, refusing an item that is not an object of text keys and an integer year."""
+    if not isinstance(item, dict):
+        raise ValueError(f"coverage file {path}: gap {index} must be an object")
+    missing = [key for key in ("persona", "modelo", "year", "period") if key not in item]
+    if missing:
+        raise ValueError(f"coverage file {path}: gap {index} lacks {', '.join(missing)}")
+    year = item["year"]
+    if (
+        not isinstance(year, int)
+        or isinstance(year, bool)
+        or not all(isinstance(item[key], str) for key in ("persona", "modelo", "period"))
+    ):
+        raise ValueError(f"coverage file {path}: gap {index} needs text persona, modelo and period and an integer year")
+    return CoverageGap(item["persona"], item["modelo"], year, item["period"])
+
+
+def rows_line(rows: Sequence[TableRow], coverage_gaps: Sequence[CoverageGap] | None) -> str:
+    """The ``rows expected / rows run`` sentence; expected adds the coverage gaps to the table's planned rows."""
+    run = sum(row.verdict is not Verdict.NOT_RUN for row in rows)
+    if coverage_gaps is None:
+        return f"Rows: expected {len(rows)} (table plan only; no coverage audit) / run {run}"
+    return f"Rows: expected {len(rows) + len(coverage_gaps)} / run {run}"
+
+
+def _gap_section(coverage_gaps: Sequence[CoverageGap] | None) -> list[str]:
+    if coverage_gaps is None or len(coverage_gaps) == 0:
+        return []
+    lines = [f"## Coverage gaps ({len(coverage_gaps)})", ""]
+    lines += [f"- {label}" for label in sorted(gap.label for gap in coverage_gaps)]
+    return [*lines, ""]
+
+
+def _undecided_section(undecided: Sequence[UndecidedObligation] | None) -> list[str]:
+    if undecided is None or len(undecided) == 0:
+        return []
+    lines = [
+        f"## Undecided obligations ({len(undecided)})",
+        "",
+        "The calendar can neither mark these returns owed nor not owed; they count in no expected figure.",
+        "",
+    ]
+    for item in sorted(undecided, key=lambda entry: entry.obligation.label):
+        where = "run in the table" if item.in_table else "not run"
+        lines.append(f"- {item.obligation.label}: {item.reason} ({where})")
+    return [*lines, ""]
+
+
 def _cell(text: object) -> str:
     return str(text).replace("|", "\\|").replace("\n", " ")
 
@@ -106,22 +214,31 @@ def render_table(
     head: str,
     lanes: Mapping[str, str] | None = None,
     provenance: Mapping[str, str] | None = None,
+    coverage_gaps: Sequence[CoverageGap] | None = None,
+    undecided: Sequence[UndecidedObligation] | None = None,
 ) -> str:
-    """The full table for ``head`` as Markdown, naming the run's tree and authority when ``provenance`` is given."""
+    """The full table for ``head`` as Markdown, naming the run's tree and authority when ``provenance`` is given.
+
+    ``coverage_gaps`` is ``None`` when no coverage audit was supplied, which the rows line says; ``undecided`` lists the
+    returns that audit could not decide.
+    """
     ordered = sorted(rows, key=lambda row: row.key)
     lines = [f"# Persona table at {head}", ""]
-    if provenance:
+    if provenance is not None and provenance:
         lines += [
             "Run provenance: " + ", ".join(f"{key} `{value}`" for key, value in sorted(provenance.items())) + ".",
             "",
         ]
     lines += [
         f"Summary: {summary_line(ordered)}.",
+        rows_line(ordered, coverage_gaps),
         "",
     ]
     if lanes is not None:
         lines += [lane_line(ordered, lanes), ""]
     lines += _unchecked_section(ordered)
+    lines += _gap_section(coverage_gaps)
+    lines += _undecided_section(undecided)
     lines += ["Verdicts:", ""]
     lines += [f"- `{verdict.value}`: {meaning}." for verdict, meaning in VERDICT_MEANING.items()]
     lines += [
@@ -157,12 +274,17 @@ def render_table(
 
 
 __all__ = [
+    "CoverageGap",
+    "UndecidedObligation",
     "counts",
     "lane_counts",
     "lane_line",
+    "load_coverage_gaps",
+    "load_coverage_undecided",
     "red_stage",
     "render_table",
     "row_label",
+    "rows_line",
     "summary_line",
     "unchecked_causes",
 ]

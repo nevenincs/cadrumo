@@ -198,7 +198,8 @@ _NO_DESCENDANTS = MissingRoute(
 )
 _NO_ASCENDANTS = MissingRoute(
     "household.ascendants",
-    "no command submits the user-profile.ascendants operation (it is listed among the operations no command submits)",
+    "the persona replay renders no `config profile ascendiente add` command yet, although that command submits the "
+    "user-profile.ascendants operation and has a --ascendiente key for every ascendant leaf a persona states",
 )
 
 

@@ -395,6 +395,7 @@ export type CalculationNoteSentence =
   | "credit_resolution_applied"
   | "household_rows_incomplete"
   | "household_row_fact_unstated"
+  | "ascendant_disability_minimum_not_computed"
   | "profile_fact_unrecorded"
   | "prior_filing_unrecorded"
   | "withholding_invoice_kind_undeclared"

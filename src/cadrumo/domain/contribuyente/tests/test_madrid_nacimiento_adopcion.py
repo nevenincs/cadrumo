@@ -34,6 +34,8 @@ EXERCISE = filing_year_envelope().horizon
 
 _CONTEXT = FamilyFactResolutionContext(PublishedGovernedFactSource(), date(EXERCISE, 12, 31), date(EXERCISE, 12, 31))
 
+_FOLLOWING_PERIODS = _CONTEXT.integer("madrid-birth-adoption-following-periods")
+
 
 @pytest.mark.parametrize("filing_year", PublishedGovernedFactSource().supported_filing_years().years)
 def test_applicability_window_spans_three_periods_ending_at_the_filing_year(filing_year: int) -> None:
@@ -80,7 +82,7 @@ def test_eligibility_uses_inscripcion_date_as_entry_when_present() -> None:
     """A child born in 2018 but adopted in 2024 is in the 2025 window via the inscription."""
     child = _child(birth=date(EXERCISE - 7, 5, 1), adoption=date(EXERCISE - 1, 3, 10))
     assert child.entry_year() == (EXERCISE - 1)
-    assert child.is_nacimiento_adopcion_eligible(EXERCISE, context=_CONTEXT) is True
+    assert child.is_within_entry_window(EXERCISE, following_periods=_FOLLOWING_PERIODS) is True
 
 
 def test_acogimiento_resolucion_never_moves_the_madrid_entry_year() -> None:
@@ -98,7 +100,7 @@ def test_acogimiento_resolucion_never_moves_the_madrid_entry_year() -> None:
         acogimiento_resolucion_date=date(EXERCISE - 1, 3, 10),
     )
     assert fostered.entry_year() == (EXERCISE - 7)
-    assert fostered.is_nacimiento_adopcion_eligible(EXERCISE, context=_CONTEXT) is False
+    assert fostered.is_within_entry_window(EXERCISE, following_periods=_FOLLOWING_PERIODS) is False
     # The same placement DOES open the Art. 58.2 window, which is what makes the
     # two anchors genuinely different rather than one being unused.
     assert fostered.is_eligible_minimo_incremento_menor_tres(EXERCISE, context=_CONTEXT) is True
@@ -110,7 +112,7 @@ def test_eligibility_excludes_non_cohabiting_and_out_of_window_children() -> Non
         ("out-of-window", _child(birth=date(EXERCISE - 5, 1, 1))),
     )
     for case_id, child in cases:
-        assert child.is_nacimiento_adopcion_eligible(EXERCISE, context=_CONTEXT) is False, case_id
+        assert child.is_within_entry_window(EXERCISE, following_periods=_FOLLOWING_PERIODS) is False, case_id
 
 
 def test_prorrateo_share_reflects_shared_custody() -> None:
@@ -120,18 +122,6 @@ def test_prorrateo_share_reflects_shared_custody() -> None:
     )
     for case_id, child, expected in cases:
         assert child.nacimiento_adopcion_prorrateo_share(context=_CONTEXT) == expected, case_id
-
-
-def test_profile_eligible_count_ignores_out_of_window_and_non_cohabiting() -> None:
-    profile = RentaFamilyProfile(
-        descendientes=(
-            _child(birth=date(EXERCISE - 1, 6, 1)),  # eligible
-            _child(birth=date(EXERCISE - 2, 2, 1)),  # eligible (entry year 2023, in window)
-            _child(birth=date(EXERCISE - 5, 1, 1)),  # out of window
-            _child(birth=date(EXERCISE, 1, 1), convive=False),  # non-cohabiting
-        ),
-    )
-    assert profile.madrid_nacimiento_adopcion_eligible_count(EXERCISE, context=_CONTEXT) == 2
 
 
 def test_unidad_familiar_otros_miembros_base_is_zero_for_single_filer() -> None:

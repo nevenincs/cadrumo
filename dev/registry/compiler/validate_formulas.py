@@ -33,6 +33,8 @@ from cadrumo.domain.calculations.registry.schema_references import LegalReferenc
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 from cadrumo.domain.calculations.registry.validate_revision_identity import duplicates
 
+from .design_sum import NUMERIC_CASILLA_TYPES
+from .validate_design_sum import formula_citation_failures
 from .validate_evidence import EvidenceValidator
 from .validate_helpers import missing_refs
 
@@ -55,19 +57,15 @@ def validate_formula_section(
     turn, and each failure is collected into the returned list.
     """
     failures: list[str] = []
+    numeric_casillas = frozenset(
+        str(casilla.id) for casilla in revision.casillas if casilla.data_type in NUMERIC_CASILLA_TYPES
+    )
     for formula in revision.formulas:
         owner = f"formula {formula.id}"
         failures.extend(missing_refs(prefix, owner, formula.legal_refs, legal_refs, "legal"))
         failures.extend(missing_refs(prefix, owner, formula.source_refs, source_refs, "source"))
-        failures.extend(evidence.require_source_tier(prefix, owner, formula.source_refs, "official_source_guidance"))
         failures.extend(
-            evidence.validate_source_citations(
-                prefix,
-                owner,
-                formula.source_refs,
-                formula.source_citations,
-                "official_source_guidance",
-            ),
+            formula_citation_failures(prefix, formula, numeric_casillas=numeric_casillas, evidence=evidence)
         )
         failures.extend(
             validate_formula_target_casilla(

@@ -92,6 +92,7 @@ GATE_REFUSED_REASONS: Final[frozenset[str]] = frozenset(
         "credit_source_disagreement",
         "precedence_tier_divergence",
         "household_row_fact_unstated",
+        "ascendant_disability_minimum_not_computed",
     }
 )
 """Reasons the calculation-note gate refuses checking, exporting and recording on.
@@ -209,6 +210,7 @@ CALCULATION_NOTE_ATTENTION: Final[Mapping[str, ModeloFormAttention]] = MappingPr
         # For the filer's information.
         "deferred_binding_source": _I,
         "oss_no_live_source": _I,
+        "autonomic_deducciones_not_enrolled": _I,
         "register_owned_capital_acquisition": _I,
         "inventory_book_claimed_purchase": _I,
         "activity_asset_agrarian_excluded": _I,
@@ -263,7 +265,9 @@ RECORDS_REASONS: Final[frozenset[str]] = frozenset(
 )
 """Reasons whose cause is an entry in the filer's records, where the note sits and is put right."""
 
-PROFILE_REASONS: Final[frozenset[str]] = frozenset({"household_rows_incomplete", "household_row_fact_unstated"})
+PROFILE_REASONS: Final[frozenset[str]] = frozenset(
+    {"household_rows_incomplete", "household_row_fact_unstated", "ascendant_disability_minimum_not_computed"}
+)
 """Reasons whose cause is a fact the filer keeps in their profile, where the note is put right."""
 
 _KEY_ROOT: Final[str] = "application.modelo.calc_diagnostic"
@@ -311,9 +315,20 @@ _HOUSEHOLD_LEAF_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
         "nif": "application.modelo.calc_diagnostic_words.household_leaf.nif",
         "apellidos_nombre": "application.modelo.calc_diagnostic_words.household_leaf.apellidos_nombre",
         "birth_date": "application.modelo.calc_diagnostic_words.household_leaf.birth_date",
+        "convivientes": "application.modelo.calc_diagnostic_words.household_leaf.convivientes",
+        "rentas_anuales": "application.modelo.calc_diagnostic_words.household_leaf.rentas_anuales",
+        "declaracion_propia": "application.modelo.calc_diagnostic_words.household_leaf.declaracion_propia",
+        "discapacidad": "application.modelo.calc_diagnostic_words.household_leaf.discapacidad",
+        "convivencia_mitad_periodo": (
+            "application.modelo.calc_diagnostic_words.household_leaf.convivencia_mitad_periodo"
+        ),
+        "incapacidad_judicial": "application.modelo.calc_diagnostic_words.household_leaf.incapacidad_judicial",
     }
 )
-"""The words of each household row fact the design requires, by the leaf token the profile stores."""
+"""The words of each household row fact a note can name, by the leaf token the profile stores.
+
+The design requires the identity leaves on every row; the mínimo por ascendientes needs the others.
+"""
 _PROFILE_FIELD_VALUE: Final[str] = "field"
 _DATE_VALUES: Final[frozenset[str]] = frozenset({"date", "start", "end", "row_date", "period_end"})
 _AMOUNT_VALUES: Final[frozenset[str]] = frozenset(

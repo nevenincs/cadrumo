@@ -227,6 +227,22 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
             target_command_key="config.profile.ascendiente.list",
         ),
         ActionCatalogueEntry(
+            action_id="operator.profile.ascendiente.edit",
+            target_command_key="config.profile.ascendiente.edit",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="index",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="index",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="ascendiente",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="ascendiente",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
             action_id="operator.profile.descendiente",
             target_command_key="config.profile.descendiente.list",
         ),

@@ -94,6 +94,10 @@ CalculationSourceDiagnosticReason = Literal[
     "iva_row_placed_on_movement_date",
     "iva_operation_date_after_movement",
     "oss_no_live_source",
+    # The filer's comunidad of residence, or an unstated one, has no autonomic
+    # deducción enrolled in the edition: its regional deducciones are not computed
+    # and stay enterable by hand. Leaving one out can only raise the tax.
+    "autonomic_deducciones_not_enrolled",
     # An annual withholding summary whose per-perceptor-clave detail store holds
     # NO observation for the year. The bound percepciones count is still
     # materialised as an explicit zero so the casilla gets its fact and the
@@ -364,4 +368,8 @@ CalculationSourceDiagnosticReason = Literal[
     # group, such as an ascendant stored with no NIF. The declaration cannot be checked,
     # exported or filed until the filer states it; nothing stands in for it.
     "household_row_fact_unstated",
+    # An ascendant the mínimo por ascendientes reaches has a disability grade that reaches
+    # the threshold, and the disability minimum for that ascendant is not computed. The
+    # declaration cannot be checked, exported or filed while it would leave that minimum out.
+    "ascendant_disability_minimum_not_computed",
 ]
