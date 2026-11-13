@@ -209,6 +209,7 @@ def _create_legal_profile(environment: dict[str, str]) -> None:
             "identity.legal_name": "Entidad de prueba SL",
             "activities.description": "actividad",
             "taxpayer_type.incn_prior_12_months": "500000",
+            "taxpayer_type.regimen_entidades_navieras_tonelaje": "false",
             "censo.activity_start_date": "2024-01-15",
             "tax_residence.ccaa": "madrid",
         },

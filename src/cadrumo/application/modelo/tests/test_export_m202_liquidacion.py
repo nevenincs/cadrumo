@@ -65,6 +65,7 @@ _SLOTS = frozenset({_MODALIDAD, _FORAL})
 _ENTITY_TYPE_PATH = "taxpayer_type.entity_type"
 _INCN_PATH = "taxpayer_type.incn_prior_12_months"
 _ELECTION_PATH = "taxpayer_type.pago_fraccionado_art_40_3_elected"
+_NAVIERAS_PATH = "taxpayer_type.regimen_entidades_navieras_tonelaje"
 _SCOPE_PATH = "tax_residence.jurisdiction_scope"
 _COMMON = "common_regime"
 _FORAL_SCOPE = "foral_unsupported"
@@ -116,7 +117,7 @@ def _periodo(year: int) -> PeriodoImpositivo:
 
 def _stated(turnover: Decimal | None, **overrides: str) -> dict[str, str]:
     """A sociedad under the common normativa stating the turnover that decides its modality."""
-    values = {_ENTITY_TYPE_PATH: "legal_entity", _SCOPE_PATH: _COMMON}
+    values = {_ENTITY_TYPE_PATH: "legal_entity", _SCOPE_PATH: _COMMON, _NAVIERAS_PATH: "false"}
     if turnover is not None:
         values[_INCN_PATH] = str(turnover)
     return {**values, **overrides}
@@ -244,6 +245,67 @@ def test_the_modality_slot_consigns_the_modality_in_force(
 
     assert _slot(page_01[year], _MODALIDAD).length == 1
     assert rendered[_MODALIDAD] == modalidad
+
+
+@pytest.mark.parametrize("year", _YEARS)
+@pytest.mark.parametrize("elected", [None, False, True])
+def test_the_navieras_tonelaje_regime_makes_art_40_3_mandatory_below_the_threshold(
+    year: int,
+    elected: bool | None,
+    operation: PinnedAuthorityOperation,
+    page_01: Mapping[int, tuple[ExportRecordDefinition, ...]],
+) -> None:
+    """The instructions oblige the regime's entities to art. 40.3 whatever the election says."""
+    values = _stated(_threshold(operation, year), **{_NAVIERAS_PATH: "true"})
+
+    rendered = _render(page_01[year], year, values, operation=operation, elected=elected)
+
+    assert rendered[_MODALIDAD] == "B"
+
+
+@pytest.mark.parametrize("year", _YEARS)
+def test_a_naviera_without_a_stated_turnover_refuses_with_the_turnover_door(
+    year: int,
+    operation: PinnedAuthorityOperation,
+    page_01: Mapping[int, tuple[ExportRecordDefinition, ...]],
+) -> None:
+    values = _stated(None, **{_NAVIERAS_PATH: "true"})
+
+    error, failure = _refusal(page_01[year], year, values, operation=operation, elected=None)
+
+    assert error.context is not None
+    assert str(error.context["missing_profile_paths"]).split(", ") == [_INCN_PATH]
+    _assert_door(failure, _INCN_PATH)
+
+
+@pytest.mark.parametrize("year", _YEARS)
+def test_an_unstated_navieras_regime_below_the_threshold_leaves_the_modality_unknown_with_its_door(
+    year: int,
+    operation: PinnedAuthorityOperation,
+    page_01: Mapping[int, tuple[ExportRecordDefinition, ...]],
+) -> None:
+    values = _stated(_threshold(operation, year))
+    del values[_NAVIERAS_PATH]
+
+    error, failure = _refusal(page_01[year], year, values, operation=operation, elected=True)
+
+    assert error.context is not None
+    assert str(error.context["missing_profile_paths"]).split(", ") == [_NAVIERAS_PATH]
+    _assert_door(failure, _NAVIERAS_PATH)
+
+
+@pytest.mark.parametrize("year", _YEARS)
+def test_an_unstated_navieras_regime_above_the_threshold_does_not_matter(
+    year: int,
+    operation: PinnedAuthorityOperation,
+    page_01: Mapping[int, tuple[ExportRecordDefinition, ...]],
+) -> None:
+    values = _stated(_threshold(operation, year) + Decimal("0.01"))
+    del values[_NAVIERAS_PATH]
+
+    rendered = _render(page_01[year], year, values, operation=operation, elected=None)
+
+    assert rendered[_MODALIDAD] == "B"
 
 
 @pytest.mark.parametrize("year", _YEARS)
