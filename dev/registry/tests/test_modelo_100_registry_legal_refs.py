@@ -35,6 +35,7 @@ from .modelo_100_registry_support import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _AUTHORED_EXERCISES = single_exercise_editions("100")
+_SALDO_POSITIVO_CASILLA = validated_casilla_id("0429", surface="test_modelo_100_registry.casilla")
 #: The vehicle incentive's disposición adicional enters the catalogue on the date its amending law takes effect.
 _DA_59_FIRST_EXERCISE = loaded_registry()[1].legal["ley-35-2006:da-59"].effective_from.year
 
@@ -59,14 +60,23 @@ def test_disposal_excess_cites_the_law_in_force_for_the_filing_year(filing_year:
 
 
 def test_modelo_100_savings_base_includes_current_capital_mobiliario() -> None:
+    """The year's savings capital-mobiliario income (0041) reaches 0460 once, through its positive balance 0429.
+
+    The official savings-base element sums the balance boxes, not 0041 itself, so a direct 0041 term
+    would count the same income twice.
+    """
     for filing_year in _AUTHORED_EXERCISES:
         revision = modelo_100_revision(filing_year)
-        formula = next(
-            formula for formula in revision.formulas if formula.target_casilla_id == BASE_IMPONIBLE_AHORRO_CASILLA
-        )
+        by_target = {formula.target_casilla_id: formula for formula in revision.formulas}
+        savings_base = by_target[BASE_IMPONIBLE_AHORRO_CASILLA]
+        positive_balance = by_target[_SALDO_POSITIVO_CASILLA]
 
-        assert SAVINGS_BASE_ART_49_REF in formula.legal_refs, filing_year
-        assert CAPITAL_MOBILIARIO_AHORRO_CASILLA in expression_casilla_refs(formula.expression), filing_year
+        assert SAVINGS_BASE_ART_49_REF in savings_base.legal_refs, filing_year
+        assert _SALDO_POSITIVO_CASILLA in expression_casilla_refs(savings_base.expression)
+        assert CAPITAL_MOBILIARIO_AHORRO_CASILLA not in expression_casilla_refs(savings_base.expression), filing_year
+        assert SAVINGS_BASE_ART_49_REF in positive_balance.legal_refs, filing_year
+        positive_balance_refs = set(expression_casilla_refs(positive_balance.expression))
+        assert positive_balance_refs == {CAPITAL_MOBILIARIO_AHORRO_CASILLA}, filing_year
 
 
 def test_modelo_100_donation_deduction_surface_cites_art_68_3() -> None:

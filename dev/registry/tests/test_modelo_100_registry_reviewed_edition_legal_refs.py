@@ -217,6 +217,7 @@ def test_modelo_100_anexo_c_base_negative_general_uses_member_refs_only() -> Non
     casillas = {casilla.id: casilla for casilla in revision.casillas}
     formulas = {formula.id: formula for formula in revision.formulas}
     bindings = {binding.id: binding for binding in revision.bindings}
+    dependencies = {dependency.id: dependency for dependency in revision.dependency_classifications}
     member_refs: set[str] = set()
 
     for casilla_id in construct.casilla_ids:
@@ -225,6 +226,8 @@ def test_modelo_100_anexo_c_base_negative_general_uses_member_refs_only() -> Non
         member_refs.update(formulas[formula_id].legal_refs)
     for binding_id in construct.bindings:
         member_refs.update(bindings[binding_id].legal_refs)
+    for dependency_id in construct.dependency_classifications:
+        member_refs.update(dependencies[dependency_id].legal_refs)
 
     # The previous_filing carry of the base liquidable general negativa is
     # grounded in Art. 50.3 LIRPF (4-year carry-forward of a negative base
