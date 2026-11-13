@@ -133,6 +133,10 @@ def binding_values() -> dict[BindingId, Decimal]:
         **M100_NO_DESCENDANT_MATERNIDAD_BINDINGS,
         "renta-profile-minimo-descendientes-estatal": Decimal("0"),
         "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
+        # No ascendant rows: the mínimo por ascendientes aggregates and the Madrid count are zero.
+        "renta-profile-minimo-ascendientes-estatal": Decimal("0"),
+        "renta-profile-minimo-ascendientes-autonomico": Decimal("0"),
+        "renta-profile-deduccion-madrid-cuidado-ascendientes-count": Decimal("0"),
         "renta-profile-marriage-full-year": Decimal("0"),
         "renta-profile-marriage-month-start": Decimal("0"),
         "renta-profile-marriage-month-end": Decimal("0"),

@@ -116,6 +116,10 @@ def _bindings(revision_id: str) -> dict[str, Decimal]:
         # resolved no-descendant scalar just as the profile resolver would.
         **M100_NO_DESCENDANT_MATERNIDAD_BINDINGS,
         "renta-profile-incremento-guarderia": Decimal("0"),
+        # The 2025 Madrid birth or adoption deducción (casilla 1039) reads these two; a filer with no descendants
+        # has no eligible descendant and no other member of the unit.
+        "renta-profile-madrid-nacimiento-adopcion-eligible-count": Decimal("0"),
+        "renta-profile-unidad-familiar-otros-miembros-base": Decimal("0"),
         "renta-profile-marriage-full-year": Decimal("0"),
         "renta-profile-marriage-month-start": Decimal("0"),
         "renta-profile-marriage-month-end": Decimal("0"),
@@ -143,6 +147,10 @@ def _bindings(revision_id: str) -> dict[str, Decimal]:
         "renta-modelo-100-estimacion-directa-es-normal": Decimal("0"),
         "renta-profile-minimo-descendientes-estatal": Decimal("0"),
         "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
+        # No ascendant rows: the mínimo por ascendientes aggregates and the Madrid count are zero.
+        "renta-profile-minimo-ascendientes-estatal": Decimal("0"),
+        "renta-profile-minimo-ascendientes-autonomico": Decimal("0"),
+        "renta-profile-deduccion-madrid-cuidado-ascendientes-count": Decimal("0"),
     }
     return {binding_id: value for binding_id, value in neutral.items() if binding_id in declared}
 

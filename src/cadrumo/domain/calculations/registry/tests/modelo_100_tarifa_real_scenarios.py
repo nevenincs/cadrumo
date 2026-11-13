@@ -243,6 +243,10 @@ def base_binding_values() -> dict[BindingId, Decimal]:
         # per-CCAA divergence table, so the autonómico aggregate mirrors the
         # estatal one exactly — zero baseline here for the same reason.
         "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
+        # No ascendant rows: the mínimo por ascendientes aggregates and the Madrid count are zero.
+        "renta-profile-minimo-ascendientes-estatal": Decimal("0"),
+        "renta-profile-minimo-ascendientes-autonomico": Decimal("0"),
+        "renta-profile-deduccion-madrid-cuidado-ascendientes-count": Decimal("0"),
         # matrimonio-sobrevenido bindings (81feae7b0): zero = marriage pre-dates filing year.
         "renta-profile-marriage-full-year": Decimal("0"),
         "renta-profile-marriage-month-start": Decimal("0"),
@@ -530,6 +534,10 @@ def check_m100_cuota_estatal_pere_age_70_with_age_supplement(
             **M100_NO_DESCENDANT_MATERNIDAD_BINDINGS,
             "renta-profile-minimo-descendientes-estatal": Decimal("0"),
             "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
+            # No ascendant rows: the mínimo por ascendientes aggregates and the Madrid count are zero.
+            "renta-profile-minimo-ascendientes-estatal": Decimal("0"),
+            "renta-profile-minimo-ascendientes-autonomico": Decimal("0"),
+            "renta-profile-deduccion-madrid-cuidado-ascendientes-count": Decimal("0"),
         },
         relation_values=RELATION_VALUES,
         date_binding_values=PERE_AGE_70_BIRTH_DATE_BINDINGS,
@@ -582,6 +590,10 @@ def check_m100_cuota_estatal_two_descendants_one_under_three(
             **M100_NO_DESCENDANT_MATERNIDAD_BINDINGS,
             "renta-profile-minimo-descendientes-estatal": Decimal("7900"),
             "renta-profile-minimo-descendientes-autonomico": Decimal("7900"),
+            # No ascendant rows: the mínimo por ascendientes aggregates and the Madrid count are zero.
+            "renta-profile-minimo-ascendientes-estatal": Decimal("0"),
+            "renta-profile-minimo-ascendientes-autonomico": Decimal("0"),
+            "renta-profile-deduccion-madrid-cuidado-ascendientes-count": Decimal("0"),
         },
         relation_values=RELATION_VALUES,
         date_binding_values=BIRTH_DATE_BINDINGS,
@@ -613,18 +625,25 @@ def check_m100_cuota_estatal_ascendant_over_75(
     """
     result = calculate_registry_snapshot(
         tariff_snapshot,
-        inputs={
-            TRABAJO_INGRESOS_INTEGROS_CASILLA: TRABAJO_INGRESOS_INTEGROS,
-            MINIMO_ASCENDIENTES_CASILLA: Decimal("2550"),  # Art. 59: 1150 + 1400, operator-supplied
-        },
+        inputs={TRABAJO_INGRESOS_INTEGROS_CASILLA: TRABAJO_INGRESOS_INTEGROS},
         date_context={"filing_period": date(TARIFF_EXERCISE, 12, 31)},
         enum_binding_values={"renta-profile-tax-residence-ccaa": "cataluna"},
-        binding_values=base_binding_values(),
+        binding_values={
+            **base_binding_values(),
+            # Casilla 0515 is computed from the profile aggregate binding: Art. 59, 1150 + 1400 for one ascendant
+            # over 75. The autonomic aggregate mirrors it; this scenario asserts the estatal cuota only.
+            "renta-profile-minimo-ascendientes-estatal": Decimal("2550"),
+            "renta-profile-minimo-ascendientes-autonomico": Decimal("2550"),
+        },
         relation_values=RELATION_VALUES,
         date_binding_values=BIRTH_DATE_BINDINGS,
         boolean_binding_values=NEUTRAL_BOOLEAN_BINDINGS,
     )
 
+    minimo_ascendientes = result.values[MINIMO_ASCENDIENTES_CASILLA]
+    assert minimo_ascendientes == Decimal("2550"), (
+        f"casilla 0515 (mínimo por ascendientes estatal) = {minimo_ascendientes!r}; expected 2550 (Art. 59: 1150 + 1400)."
+    )
     cuota_estatal = result.values[CUOTA_INTEGRA_ESTATAL_CASILLA]
     assert abs(cuota_estatal - EXPECTED_CUOTA_ESTATAL_ASCENDANT_OVER75) <= TOLERANCE, (
         f"cuota íntegra estatal (0545) with Art. 59 ascendant >75 = {cuota_estatal!r}; "

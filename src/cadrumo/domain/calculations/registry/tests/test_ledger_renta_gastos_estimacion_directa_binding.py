@@ -268,6 +268,10 @@ def test_modelo_100_renta_ledger_expense_bindings_resolve_to_bound_casillas(
             # autonómico halves, regardless of the Madrid tax residence below.
             "renta-profile-minimo-descendientes-estatal": Decimal("0"),
             "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
+            # No ascendant rows: the mínimo por ascendientes aggregates and the Madrid count are zero.
+            "renta-profile-minimo-ascendientes-estatal": Decimal("0"),
+            "renta-profile-minimo-ascendientes-autonomico": Decimal("0"),
+            "renta-profile-deduccion-madrid-cuidado-ascendientes-count": Decimal("0"),
         },
         boolean_binding_values={"renta-maritime-path-rebeca": False},
         enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},

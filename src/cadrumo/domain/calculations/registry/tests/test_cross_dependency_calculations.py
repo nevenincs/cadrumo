@@ -102,6 +102,9 @@ _M100_MADRID_NACIMIENTO_ADOPCION_ELIGIBLE_COUNT_BINDING = "renta-profile-madrid-
 _M100_UNIDAD_FAMILIAR_OTROS_MIEMBROS_BASE_BINDING = "renta-profile-unidad-familiar-otros-miembros-base"
 _M100_MINIMO_DESCENDIENTES_ESTATAL_BINDING = "renta-profile-minimo-descendientes-estatal"
 _M100_MINIMO_DESCENDIENTES_AUTONOMICO_BINDING = "renta-profile-minimo-descendientes-autonomico"
+_M100_MINIMO_ASCENDIENTES_ESTATAL_BINDING = "renta-profile-minimo-ascendientes-estatal"
+_M100_MINIMO_ASCENDIENTES_AUTONOMICO_BINDING = "renta-profile-minimo-ascendientes-autonomico"
+_M100_MADRID_CUIDADO_ASCENDIENTES_COUNT_BINDING = "renta-profile-deduccion-madrid-cuidado-ascendientes-count"
 _M131_PAGOS_FRACCIONADOS_CASILLA: CasillaId = validated_casilla_id(
     "15",
     surface="_M131_PAGOS_FRACCIONADOS_CASILLA",
@@ -683,6 +686,10 @@ def test_modelo_100_payment_calculation_resolves_cross_model_periodic_and_annual
             _M100_UNIDAD_FAMILIAR_OTROS_MIEMBROS_BASE_BINDING: Decimal("0"),
             _M100_MINIMO_DESCENDIENTES_ESTATAL_BINDING: Decimal("0"),
             _M100_MINIMO_DESCENDIENTES_AUTONOMICO_BINDING: Decimal("0"),
+            # No ascendant rows: the mínimo por ascendientes aggregates and the Madrid count are zero.
+            _M100_MINIMO_ASCENDIENTES_ESTATAL_BINDING: Decimal("0"),
+            _M100_MINIMO_ASCENDIENTES_AUTONOMICO_BINDING: Decimal("0"),
+            _M100_MADRID_CUIDADO_ASCENDIENTES_COUNT_BINDING: Decimal("0"),
             "renta-maritime-gross-navigation-income": Decimal("0"),
             "renta-maritime-annual-salary": Decimal("0"),
             "renta-maritime-qualifying-days": Decimal("0"),
@@ -799,6 +806,10 @@ def test_a_filed_modelo_184_does_not_fill_the_member_share_casilla_1577(
             _M100_UNIDAD_FAMILIAR_OTROS_MIEMBROS_BASE_BINDING: Decimal("0"),
             _M100_MINIMO_DESCENDIENTES_ESTATAL_BINDING: Decimal("0"),
             _M100_MINIMO_DESCENDIENTES_AUTONOMICO_BINDING: Decimal("0"),
+            # No ascendant rows: the mínimo por ascendientes aggregates and the Madrid count are zero.
+            _M100_MINIMO_ASCENDIENTES_ESTATAL_BINDING: Decimal("0"),
+            _M100_MINIMO_ASCENDIENTES_AUTONOMICO_BINDING: Decimal("0"),
+            _M100_MADRID_CUIDADO_ASCENDIENTES_COUNT_BINDING: Decimal("0"),
             "renta-maritime-gross-navigation-income": Decimal("0"),
             "renta-maritime-annual-salary": Decimal("0"),
             "renta-maritime-qualifying-days": Decimal("0"),
@@ -911,6 +922,10 @@ def test_modelo_100_payment_calculation_consumes_real_modelo_130_quarterly_regis
             _M100_UNIDAD_FAMILIAR_OTROS_MIEMBROS_BASE_BINDING: Decimal("0"),
             _M100_MINIMO_DESCENDIENTES_ESTATAL_BINDING: Decimal("0"),
             _M100_MINIMO_DESCENDIENTES_AUTONOMICO_BINDING: Decimal("0"),
+            # No ascendant rows: the mínimo por ascendientes aggregates and the Madrid count are zero.
+            _M100_MINIMO_ASCENDIENTES_ESTATAL_BINDING: Decimal("0"),
+            _M100_MINIMO_ASCENDIENTES_AUTONOMICO_BINDING: Decimal("0"),
+            _M100_MADRID_CUIDADO_ASCENDIENTES_COUNT_BINDING: Decimal("0"),
             # Maritime-worker exemption operands stay neutral: the path itself is false.
             "renta-maritime-gross-navigation-income": Decimal("0"),
             "renta-maritime-annual-salary": Decimal("0"),

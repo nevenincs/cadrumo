@@ -25,6 +25,7 @@ from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from .....domain.calculations.registry.formula_runtime_ops import resolve_parameter
 from .....domain.calculations.registry.schema import RegistrySnapshot
+from .....domain.calculations.registry.tests.modelo_100_registry_support import M100_NO_LET_PROPERTY_BINDINGS
 from .....domain.calculations.registry.tests.published_authority import (
     published_snapshot,
     published_supported_filing_years,
@@ -178,6 +179,7 @@ def test_profile_descendant_facts_feed_the_worked_example_minimo_and_downstream_
         date_context={"filing_period": date(year, 12, 31)},
         binding_values={
             **resolution.binding_values,
+            **M100_NO_LET_PROPERTY_BINDINGS,
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
             "renta-profile-incremento-guarderia": Decimal("0"),
             "renta-base-liquidable-negativa-general-anterior": Decimal("0"),

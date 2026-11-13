@@ -71,6 +71,10 @@ def _binding_values(year: int) -> dict[str, Decimal]:
         "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),
         "renta-profile-minimo-descendientes-estatal": Decimal("0"),
         "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
+        # No ascendant rows: the mínimo por ascendientes aggregates and the Madrid count are zero.
+        "renta-profile-minimo-ascendientes-estatal": Decimal("0"),
+        "renta-profile-minimo-ascendientes-autonomico": Decimal("0"),
+        "renta-profile-deduccion-madrid-cuidado-ascendientes-count": Decimal("0"),
         # The maritime exemption's three numeric facts, authored from the 2022
         # edition, whose boolean predicate is answered False beside them: a
         # taxpayer claiming nothing there still has to supply the facts, because

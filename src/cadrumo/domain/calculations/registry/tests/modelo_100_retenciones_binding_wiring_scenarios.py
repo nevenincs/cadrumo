@@ -100,6 +100,10 @@ def prior_base_binding_values(
         "renta-profile-incremento-guarderia": Decimal("0"),
         "renta-profile-minimo-descendientes-estatal": Decimal("0"),
         "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
+        # No ascendant rows: the mínimo por ascendientes aggregates and the Madrid count are zero.
+        "renta-profile-minimo-ascendientes-estatal": Decimal("0"),
+        "renta-profile-minimo-ascendientes-autonomico": Decimal("0"),
+        "renta-profile-deduccion-madrid-cuidado-ascendientes-count": Decimal("0"),
         "renta-profile-marriage-full-year": Decimal("0"),
         "renta-profile-marriage-month-start": Decimal("0"),
         "renta-profile-marriage-month-end": Decimal("0"),
@@ -157,6 +161,10 @@ def reviewed_base_binding_values(*, certificado_trabajo: Decimal | None = None) 
         "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),
         "renta-profile-minimo-descendientes-estatal": Decimal("0"),
         "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
+        # No ascendant rows: the mínimo por ascendientes aggregates and the Madrid count are zero.
+        "renta-profile-minimo-ascendientes-estatal": Decimal("0"),
+        "renta-profile-minimo-ascendientes-autonomico": Decimal("0"),
+        "renta-profile-deduccion-madrid-cuidado-ascendientes-count": Decimal("0"),
         # No maritime-worker income in these scenarios.
         "renta-maritime-gross-navigation-income": Decimal("0"),
         "renta-maritime-annual-salary": Decimal("0"),
