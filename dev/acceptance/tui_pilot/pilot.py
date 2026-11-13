@@ -65,7 +65,7 @@ from cadrumo.tests.personas import Persona, PersonaCatalogueError, read_persona
 
 from ..persona_table.frontend import DIFFERS, NOT_REACHED
 from ..persona_table.rows import PlannedRow, TableRow
-from .causes import CRASH_CAUSE, outcome, row_cause, unreported_cause
+from .causes import CRASH_CAUSE, export_unavailable_note, outcome, row_cause, unreported_cause
 from .intake import ERROR, INCOMPLETE, NOT_OWED, PASSED, REFUSED, PilotRow, write_rows
 from .plan import pilot_envelope, pilot_plan, table_rows_path
 
@@ -484,6 +484,9 @@ def run_persona(persona_id: str, tmp_path: Path) -> PersonaRun:
                     if planned.key in replay.reported:
                         table = plan.expected[planned.key]
                         row.cause, row.cause_words = row_cause(row, table, ran)
+                        note = export_unavailable_note(row, table)
+                        if note is not None:
+                            row.reasons.append(note)
                         done.add(planned.key)
                         reported.append(_reported(table, row))
                     else:

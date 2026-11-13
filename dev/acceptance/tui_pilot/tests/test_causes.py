@@ -10,7 +10,7 @@ import pytest
 
 from ...persona_table.frontend import DIFFERS, MATCHED
 from ...persona_table.rows import Stage, TableRow
-from ..causes import outcome, row_cause, unreported_cause
+from ..causes import export_unavailable_note, outcome, row_cause, unreported_cause
 from ..intake import OUT_ENV, TREE_ENV, IntakeConfigurationError, PilotRow, write_rows
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -180,3 +180,33 @@ def test_the_intake_line_is_the_persona_tables_schema_and_needs_the_tree(
         "reason",
         "log",
     }
+
+
+def test_an_export_the_form_did_not_serve_is_noted_against_the_tables_refused_export() -> None:
+    table = replace(
+        _table("1T", verify=Stage.INCOMPLETE, export=Stage.REFUSED), export_detail="REFUSED_MODELO_REVISION_NOT_SEALED"
+    )
+    row = _row(period="1T", calculate="pass", verify="incomplete", export="not-reached")
+
+    note = export_unavailable_note(row, table)
+
+    assert note is not None
+    assert "export unavailable (refused | not served)" in note
+    assert "REFUSED_MODELO_REVISION_NOT_SEALED" in note
+
+
+def test_the_export_note_needs_the_check_to_end_the_same_ungranted_way_on_both_sides() -> None:
+    refused = replace(_table("1T", verify=Stage.INCOMPLETE, export=Stage.REFUSED), export_detail="code")
+    assert (
+        export_unavailable_note(_row(period="1T", calculate="pass", verify="pass", export="not-reached"), refused)
+        is None
+    )
+    assert (
+        export_unavailable_note(_row(period="1T", calculate="pass", verify="refused", export="not-reached"), refused)
+        is None
+    )
+    passed = _table("1T")
+    assert (
+        export_unavailable_note(_row(period="1T", calculate="pass", verify="pass", export="not-reached"), passed)
+        is None
+    )
