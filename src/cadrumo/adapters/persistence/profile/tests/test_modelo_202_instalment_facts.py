@@ -28,7 +28,11 @@ from .....application.overview.modelo202_instalment_evidence import (
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.casilla_id import validated_casilla_id
 from .....core.period import Period
-from .....domain.calculations.registry.applicability_modelo202 import Modelo202BaseBasis, Modelo202InstalmentOutcome
+from .....domain.calculations.registry.applicability_modelo202 import (
+    Modelo202BaseBasis,
+    Modelo202InstalmentOutcome,
+    Modelo202Modality,
+)
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.calculations.registry.tests.registry_observations import (
@@ -109,7 +113,10 @@ def test_each_instalment_reads_the_last_modelo_200_due_before_its_window(
     assert facts.base_source.modelo == _MODELO_200
     assert facts.base_source.period == Period.from_year_and_code(_year() - years_back, _MODELO_200_ANNUAL)
     assert facts.base is None
-    assert decide_modelo_202_instalment(facts) is Modelo202InstalmentOutcome.BASE_ABSENT
+    assert (
+        decide_modelo_202_instalment(facts, modality=Modelo202Modality.ART_40_2_OPTIONAL)
+        is Modelo202InstalmentOutcome.BASE_ABSENT
+    )
 
 
 @pytest.mark.parametrize(
@@ -133,7 +140,10 @@ def test_a_presented_modelo_200_decides_the_base_and_names_its_record(
     assert facts.base is not None
     assert facts.base.value == Decimal("840.00")
     assert facts.base.basis is basis
-    assert decide_modelo_202_instalment(facts) is Modelo202InstalmentOutcome.BASE_POSITIVE
+    assert (
+        decide_modelo_202_instalment(facts, modality=Modelo202Modality.ART_40_2_OPTIONAL)
+        is Modelo202InstalmentOutcome.BASE_POSITIVE
+    )
 
 
 def test_a_zero_cuota_excuses_the_instalment(tmp_path: Path, authority_operation: PinnedAuthorityOperation) -> None:
@@ -144,7 +154,10 @@ def test_a_zero_cuota_excuses_the_instalment(tmp_path: Path, authority_operation
             repository, filing_year=_year() - 1, cuota=Decimal("0"), source_kind=ObservationSourceKind.APP_FILING
         )
         facts = _read(repository, instalment, authority_operation)
-    assert decide_modelo_202_instalment(facts) is Modelo202InstalmentOutcome.BASE_NOT_POSITIVE
+    assert (
+        decide_modelo_202_instalment(facts, modality=Modelo202Modality.ART_40_2_OPTIONAL)
+        is Modelo202InstalmentOutcome.BASE_NOT_POSITIVE
+    )
 
 
 def test_an_operator_entered_modelo_200_is_not_a_filing(
@@ -161,7 +174,10 @@ def test_an_operator_entered_modelo_200_is_not_a_filing(
         )
         facts = _read(repository, instalment, authority_operation)
     assert facts.base is None
-    assert decide_modelo_202_instalment(facts) is Modelo202InstalmentOutcome.BASE_ABSENT
+    assert (
+        decide_modelo_202_instalment(facts, modality=Modelo202Modality.ART_40_2_OPTIONAL)
+        is Modelo202InstalmentOutcome.BASE_ABSENT
+    )
 
 
 def test_an_activity_start_after_the_source_period_leaves_no_prior_return(
@@ -183,5 +199,11 @@ def test_an_activity_start_after_the_source_period_leaves_no_prior_return(
             authority_operation,
             activity_start_date=date(second_year - 1, 1, 1),
         )
-    assert decide_modelo_202_instalment(first) is Modelo202InstalmentOutcome.NO_PRIOR_RETURN
-    assert decide_modelo_202_instalment(second) is Modelo202InstalmentOutcome.BASE_ABSENT
+    assert (
+        decide_modelo_202_instalment(first, modality=Modelo202Modality.ART_40_2_OPTIONAL)
+        is Modelo202InstalmentOutcome.NO_PRIOR_RETURN
+    )
+    assert (
+        decide_modelo_202_instalment(second, modality=Modelo202Modality.ART_40_2_OPTIONAL)
+        is Modelo202InstalmentOutcome.BASE_ABSENT
+    )

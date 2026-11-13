@@ -19,6 +19,7 @@ from ....core.period import Period
 from ....domain.calculations.registry.applicability_modelo202 import (
     Modelo202BaseBasis,
     Modelo202InstalmentOutcome,
+    Modelo202Modality,
     modelo_202_incn_threshold_decimal,
     resolve_modelo_202_art_40_3_incn_threshold,
 )
@@ -164,7 +165,9 @@ def _calendar(
 def test_an_unstated_election_stays_incomplete_whatever_the_base() -> None:
     """The election decides how the base is computed, so without it no base decides anything."""
     positive = Modelo202BaseReading(value=Decimal("100.00"), basis=Modelo202BaseBasis.AEAT_EVIDENCE)
-    outcome = decide_modelo_202_instalment(_facts("2P", election=None, base=positive))
+    outcome = decide_modelo_202_instalment(
+        _facts("2P", election=None, base=positive), modality=Modelo202Modality.ART_40_2_OPTIONAL
+    )
     assert outcome is Modelo202InstalmentOutcome.ELECTION_UNSTATED
     assert outcome.verdict is ApplicabilityVerdict.INCOMPLETE
 
@@ -181,17 +184,21 @@ def test_the_art_40_2_base_decides_an_instalment_without_the_election(
     value: Decimal, expected: Modelo202InstalmentOutcome
 ) -> None:
     base = Modelo202BaseReading(value=value, basis=Modelo202BaseBasis.LOCAL_FILING)
-    assert decide_modelo_202_instalment(_facts("2P", base=base)) is expected
+    assert (
+        decide_modelo_202_instalment(_facts("2P", base=base), modality=Modelo202Modality.ART_40_2_OPTIONAL) is expected
+    )
 
 
 def test_a_base_never_held_is_not_read_as_zero() -> None:
-    outcome = decide_modelo_202_instalment(_facts("2P", base=None))
+    outcome = decide_modelo_202_instalment(_facts("2P", base=None), modality=Modelo202Modality.ART_40_2_OPTIONAL)
     assert outcome is Modelo202InstalmentOutcome.BASE_ABSENT
     assert outcome.verdict is ApplicabilityVerdict.INCOMPLETE
 
 
 def test_no_prior_return_decides_before_the_base_is_looked_for() -> None:
-    outcome = decide_modelo_202_instalment(_facts("1P", base=None, no_prior_return=True))
+    outcome = decide_modelo_202_instalment(
+        _facts("1P", base=None, no_prior_return=True), modality=Modelo202Modality.ART_40_2_OPTIONAL
+    )
     assert outcome is Modelo202InstalmentOutcome.NO_PRIOR_RETURN
     assert outcome.verdict is ApplicabilityVerdict.NOT_APPLICABLE
 
@@ -231,7 +238,7 @@ def test_under_the_election_only_a_current_verified_calculation_decides(
 ) -> None:
     """Neither a positive nor a zero result decides until a passing verification sealed a current calculation."""
     facts = _facts("2P", election=True, work_unit_id=_WORK_UNIT_ID, calculation=calculation)
-    assert decide_modelo_202_instalment(facts) is expected
+    assert decide_modelo_202_instalment(facts, modality=Modelo202Modality.ART_40_2_OPTIONAL) is expected
 
 
 def test_an_unverified_calculation_opens_its_verification() -> None:

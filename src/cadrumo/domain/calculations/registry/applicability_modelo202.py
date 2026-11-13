@@ -64,6 +64,10 @@ class Modelo202InstalmentOutcome(StrEnum):
     ELECTED_PENDING_VERIFICATION = "instalment_elected_pending_verification"
     ELECTED_CALCULATION_POSITIVE = "instalment_elected_calculation_positive"
     ELECTED_CALCULATION_ZERO = "instalment_elected_calculation_zero"
+    REGIME_PENDING_CALCULATION = "instalment_regime_pending_calculation"
+    REGIME_PENDING_VERIFICATION = "instalment_regime_pending_verification"
+    REGIME_CALCULATION_POSITIVE = "instalment_regime_calculation_positive"
+    REGIME_CALCULATION_ZERO = "instalment_regime_calculation_zero"
     BASE_POSITIVE = "instalment_base_positive"
     BASE_NOT_POSITIVE = "instalment_base_not_positive"
     NO_PRIOR_RETURN = "instalment_no_prior_return"
@@ -80,11 +84,16 @@ class Modelo202InstalmentOutcome(StrEnum):
 
 
 _INSTALMENT_APPLICABLE = frozenset(
-    {Modelo202InstalmentOutcome.ELECTED_CALCULATION_POSITIVE, Modelo202InstalmentOutcome.BASE_POSITIVE}
+    {
+        Modelo202InstalmentOutcome.ELECTED_CALCULATION_POSITIVE,
+        Modelo202InstalmentOutcome.REGIME_CALCULATION_POSITIVE,
+        Modelo202InstalmentOutcome.BASE_POSITIVE,
+    }
 )
 _INSTALMENT_NOT_APPLICABLE = frozenset(
     {
         Modelo202InstalmentOutcome.ELECTED_CALCULATION_ZERO,
+        Modelo202InstalmentOutcome.REGIME_CALCULATION_ZERO,
         Modelo202InstalmentOutcome.BASE_NOT_POSITIVE,
         Modelo202InstalmentOutcome.NO_PRIOR_RETURN,
     }
@@ -459,9 +468,11 @@ def modelo_202_filing_obligation(
     only when the INCN of the twelve months before the período impositivo
     exceeds the art. 40.3 threshold. Below it, filing is owed only in a period
     that yields an ingreso, which depends on the art. 40.2 base (the last
-    declared cuota íntegra less deductions, bonificaciones and retenciones) or
-    on an art. 40.3 option elected in the declaración censal. Both are facts of
-    one instalment, so this per-profile answer stays incomplete there; the
+    declared cuota íntegra less deductions, bonificaciones and retenciones), on
+    an art. 40.3 option elected in the declaración censal, or, for an entity
+    under the navieras tonelaje regime, on the art. 40.3 base the law imposes
+    (LIS art. 116). All are facts of one instalment, so this per-profile answer
+    stays incomplete there; the
     calendar decides each instalment through
     :func:`modelo_202_instalment_applicability`. Any verdict other than
     applicable passes through unchanged.
