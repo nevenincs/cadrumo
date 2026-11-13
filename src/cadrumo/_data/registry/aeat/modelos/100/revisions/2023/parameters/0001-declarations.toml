@@ -172,14 +172,17 @@ lower_bound = "1500"
 fixed_addition = "1500"
 marginal_rate = "1"
 valid_from = 2023-01-01
-# LIRPF DA 55.ª (Ley 31/2022, art. 66): the reduced rate also applies where the general collective
+# LIRPF DA 55.ª: the reduced rate also applies where the general collective
 # valuation entered into force from the first day of the year this parameter
-# states, whatever the ten-period look-back of art. 85.1 gives.
+# states, whatever the ten-period look-back of art. 85.1 gives. The instrument that
+# words the disposición differs by accrual year, so each edition cites its own: this
+# one Ley 31/2022 art. 66, the 2024 and 2025 editions the decree-laws in force on
+# their 31 December accrual date (see the legal entries for their standing).
 [[revisions."2023".parameters]]
 id = "renta-imputacion-inmobiliaria-revision-vigor-desde"
 data_type = "integer"
 unit = "year"
-legal_refs = ["ley-35-2006:art-85"]
+legal_refs = ["ley-35-2006:art-85", "ley-31-2022:art-66"]
 source_refs = ["aeat-renta-2023-manual-parte1"]
 
 [[revisions."2023".parameters.source_citations]]

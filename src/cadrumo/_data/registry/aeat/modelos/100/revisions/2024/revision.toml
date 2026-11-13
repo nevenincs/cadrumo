@@ -10552,4 +10552,5 @@ sequence_order = { "expression.args" = [0, 3, 4, 5, 6, 7, 1, 8, 2, 9, 10, 11, 12
 [[revisions."2024".family_overrides]]
 family = "parameters"
 selector = {revision = "2023", id = "renta-imputacion-inmobiliaria-revision-vigor-desde"}
-sequence_additions = {source_citations = [{source_ref = "aeat-renta-2024-manual-parte1", required_text = ["seguirán aplicando la imputación al 1,1 por ciento en 2024"]}], source_refs = ["aeat-renta-2024-manual-parte1"]}
+sequence_additions = {legal_refs = ["rdl-9-2024:art-6"], source_citations = [{source_ref = "aeat-renta-2024-manual-parte1", required_text = ["Al igual que en el ejercicio anterior, en 2024", "valoración colectiva de carácter general", "seguirán aplicando la imputación al 1,1 por ciento en 2024"]}], source_refs = ["aeat-renta-2024-manual-parte1"]}
+sequence_removals = {legal_refs = [1], source_citations = [0], source_refs = [0]}

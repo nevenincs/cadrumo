@@ -10040,4 +10040,5 @@ sequence_order = { "expression.args" = [3, 4, 5, 6, 7, 8, 9, 0, 1, 10, 11, 2, 12
 [[revisions."2025".family_overrides]]
 family = "parameters"
 selector = {revision = "2024", id = "renta-imputacion-inmobiliaria-revision-vigor-desde"}
-sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["imputación al 1,1 por 100 en 2025"]}], source_refs = ["aeat-renta-2025-manual-parte1"]}
+sequence_additions = {legal_refs = ["rdl-16-2025:art-14"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Al igual que en el ejercicio anterior, en 2025", "valoración colectiva de carácter general", "imputación al 1,1 por 100 en 2025"]}, {source_ref = "aeat-nota-efectos-rdl-16-2025-rdl-2-2026", required_text = ["En la fecha de devengo del IRPF para 2025, las modificaciones introducidas por el Real Decreto-ley 16/2025, de 23 de diciembre, estaban en vigor y desplegando sus plenos efectos jurídicos", "Imputación de rentas inmobiliarias (disposición adicional quincuagésima quinta de la LIRPF"]}], source_refs = ["aeat-renta-2025-manual-parte1", "aeat-nota-efectos-rdl-16-2025-rdl-2-2026"]}
+sequence_removals = {legal_refs = [1], source_citations = [0], source_refs = [0]}
