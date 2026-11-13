@@ -109,22 +109,6 @@ errors:
     lookup_dispatch_arg_count: El operador {op} de la fórmula espera {expected} argumentos.
     lookup_dispatch_arg_kind: El operador {op} de la fórmula requiere que {position}
       sea una hoja de tipo {expected_kind}.
-    m100_art85_boolean_invalid: La casilla booleana del artículo 85 del Modelo 100
-      debe ser 0 o 1.
-    m100_art85_catastral_value_negative: El valor catastral del artículo 85 del Modelo
-      100 no puede ser negativo.
-    m100_art85_disposal_percentage_invalid: El porcentaje de uso mixto del artículo
-      85 del Modelo 100 debe ser mayor que 0 y como máximo 100.
-    m100_art85_imputation_days_invalid: Los días de imputación del artículo 85 del
-      Modelo 100 deben ser un número entero entre 1 y 365.
-    m100_art85_input_negative: Las entradas numéricas del artículo 85 del Modelo 100
-      no pueden ser negativas.
-    m100_art85_mixed_use_inputs_without_flag: Los días o el porcentaje de uso mixto
-      del artículo 85 del Modelo 100 requieren que la casilla de uso mixto esté marcada.
-    m100_art85_no_catastral_base_missing: La imputación del artículo 85 del Modelo
-      100 sin valor catastral requiere casillas de base sustitutiva que no están presentes.
-    m100_art85_revision_flag_invalid: El indicador de valor catastral revisado del
-      artículo 85 del Modelo 100 debe ser el valor oficial X de la casilla.
     m184_days_past_the_year: '{days} días no caben en {filing_year}.'
     m210_gastos_deducibles_negative: Los gastos_deducibles M210 %{casilla_id} no pueden
       ser negativos; valor recibido %{value}.

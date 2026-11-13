@@ -7417,6 +7417,104 @@ required_text = [
     "tendrá como límite el importe total del gasto efectivo no subvencionado",
 ]
 
+[legal."ley-31-2022:art-66"]
+# The instrument that ADDED disposición adicional quincuagésima quinta to the LIRPF.
+# Cited by itself because the whole-law file carries the disposición under its
+# current wording and its amendment history, not under the 2023 redaction.
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-31-2022.html#a6-8"
+document_id = "BOE-A-2022-22128"
+article = "66"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2022-22128#a6-8"
+published_at = 2022-12-24
+effective_from = 2023-01-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-11-13
+reviewed_by = "verified against the bundled BOE-A-2022-22128 consolidated text, article 66"
+notes = """\
+Ley 31/2022 art. 66 adds disposición adicional quincuagésima quinta (DA 55.ª) to the LIRPF with effect from \
+2023-01-01 and indefinite vigencia. The disposición states in its own heading that it governs the período \
+impositivo 2023: the 1,1 por ciento of art. 85 LIRPF applies to property in municipalities whose cadastral values \
+were revised, modified or determined by a general collective valuation procedure that entered into force from \
+2012-01-01, whatever the ten-período look-back of art. 85 gives. This is the statute the 2023 reading of \
+renta-imputacion-inmobiliaria-revision-vigor-desde rests on; the instrument text is bundled."""
+required_text = [
+    "Imputación de rentas inmobiliarias",
+    "disposición adicional quincuagésima quinta",
+    "El porcentaje de imputación del 1,1 por ciento previsto en el artículo 85 de esta ley",
+    "siempre que hubieran entrado en vigor a partir de 1 de enero de 2012",
+]
+
+[legal."rdl-9-2024:art-6"]
+# Cited through the BOE amendment history of the bundled consolidated LIRPF: the
+# text of the decree-law itself is not bundled, so this entry quotes only what that
+# history states.
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto_ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#da-10"
+document_id = "BOE-A-2024-26915"
+article = "6"
+section = "Segundo"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-26915"
+published_at = 2024-12-24
+effective_from = 2024-12-25
+effective_to = 2025-01-22
+review_status = "agent_reviewed"
+reviewed_at = 2026-11-13
+reviewed_by = "agent-prepared from the BOE amendment history of the bundled consolidated LIRPF DA 55.ª; wording of the decree-law not bundled; pending operator re-stamp"
+notes = """\
+RDL 9/2024 art. 6.Segundo modifies LIRPF disposición adicional quincuagésima quinta (DA 55.ª) "con efectos desde el 1 de \
+enero de 2024"; the BOE publishes it on 2024-12-24 and it is in force from 2024-12-25. The Congreso de los Diputados \
+refused it: the Resolución de 22 de enero de 2025 (BOE-A-2025-1136, publicada 2025-01-23) leaves the modification \
+without effect, so the last day of vigencia is 2025-01-22. The 1,1 por ciento of art. 85 LIRPF for the período impositivo \
+2024 rests on the wording in force on the 2024-12-31 accrual date. That the refused decree-law still governs 2024 is the \
+criterion of the Agencia Tributaria note of 2025-03-21, which follows the Dirección General de Tributos, and of the \
+Manual de Renta 2024; it is administrative doctrine, not a statute in force today. Not bundled and therefore not quoted \
+here: the decree-law's own wording of DA 55.ª, the Agencia Tributaria note of 2025-03-21 and the DGT criterion."""
+required_text = [
+    "Se modifica, con efectos desde el 1 de enero de 2024, por el art. 6.Segundo del Real Decreto-ley 9/2024, de 23 de diciembre. Ref. BOE-A-2024-26915",
+    "Se deja sin efecto la modificación de esta disposición por Resolución de 22 de enero de 2025, que publica el Acuerdo del Congreso de los Diputados por el que se deroga el Real Decreto-ley 9/2024, de 23 de diciembre. Ref. BOE-A-2025-1136",
+]
+
+[legal."rdl-16-2025:art-14"]
+# Cited through the BOE amendment history of the bundled consolidated LIRPF: the
+# text of the decree-law itself is not bundled, so this entry quotes only what that
+# history states.
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto_ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#da-10"
+document_id = "BOE-A-2025-26458"
+article = "14"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-26458"
+published_at = 2025-12-24
+effective_from = 2025-12-25
+effective_to = 2026-01-27
+review_status = "agent_reviewed"
+reviewed_at = 2026-11-13
+reviewed_by = "agent-prepared from the BOE amendment history of the bundled consolidated LIRPF DA 55.ª; wording of the decree-law not bundled; pending operator re-stamp"
+notes = """\
+RDL 16/2025 art. 14 modifies LIRPF disposición adicional quincuagésima quinta (DA 55.ª); the BOE publishes it on \
+2025-12-24 and it is in force from 2025-12-25. The Congreso de los Diputados refused it: the Resolución de 27 de enero \
+de 2026 (BOE-A-2026-2024, publicada 2026-01-28) leaves the modification without effect, so the last day of vigencia is \
+2026-01-27. The 1,1 por ciento of art. 85 LIRPF for the período impositivo 2025 rests on the wording in force on the \
+2025-12-31 accrual date. That the refused decree-law still governs 2025 is the criterion of the Agencia Tributaria note \
+of 2026-04-01 (bundled as aeat-nota-efectos-rdl-16-2025-rdl-2-2026, which names the disposición adicional \
+quincuagésima quinta) and of the Manual de Renta 2025; it is administrative doctrine, not a statute in force today. \
+The same amendment history lists RDL 2/2026 art. 10.2 (BOE-A-2026-2547, effects 2025-01-01, in force from 2026-02-05, \
+refused by BOE-A-2026-4667): it was not in force on the 2025-12-31 accrual date and is not used. Unresolved and not \
+guessed: the BOE annotation gives this modification "efectos de 1 de enero de 2015", a date years before the \
+decree-law was made, and the annotation (art. 14.2) and the Agencia Tributaria note (art. 14.Dos) are not confirmed \
+against the decree-law's own text, so whether the rewording sits in apartado Dos or Tres of art. 14 stays open. Not \
+bundled and therefore not quoted here: the decree-law's own wording of DA 55.ª."""
+required_text = [
+    "Se modifica, con efectos de 1 de enero de 2015, por el art. 14.2 del Real Decreto-ley 16/2025, de 23 de diciembre. Ref. BOE-A-2025-26458",
+    "Se deja sin efecto la modificación de esta disposición por Resolución de 27 de enero de 2026, que publica el Acuerdo del Congreso de los Diputados por el que se deroga el Real Decreto-ley 16/2025 de 23 de diciembre. Ref. BOE-A-2026-2024",
+]
+
 [legal."ley-49-2002:art-19"]
 # The article that ESTABLISHES the IRPF donativos deduction, which modelo 100's
 # Anexo A boxes G, H, J and M are the bases of. Read from the bundled

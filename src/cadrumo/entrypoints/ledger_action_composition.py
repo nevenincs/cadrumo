@@ -13,6 +13,7 @@ from ..application.ledger.action_ports import LedgerActionPorts
 from ..application.ledger.import_ports import LedgerImportPorts
 from ..application.ledger.read_ports import LedgerReadPorts
 from ..domain.calculations.registry.authority import PinnedAuthorityOperation
+from ..domain.modelos.work_unit import WorkUnit
 from ..domain.transactions.models import Transaction
 from ..domain.usage_ratios.model import UsageRatioProfile
 
@@ -107,6 +108,13 @@ def load_ledger_rows_for_rental_references(bucket_id: str) -> Iterable[Transacti
     return TransactionCatalogueRepository(bucket_id=bucket_id).load().transactions.values()
 
 
+def load_work_units_for_record_groups(bucket_id: str) -> Iterable[WorkUnit]:
+    """Read every Modelo work unit of ``bucket_id``, which date the reduction a lease is served."""
+    from ..adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+
+    return WorkUnitCatalogueRepository(bucket_id=bucket_id).load().work_units.values()
+
+
 def load_entry_option_profile_facts(bucket_id: str, operation: PinnedAuthorityOperation) -> Mapping[str, str] | None:
     """Read the facts of ``bucket_id``'s profile under ``operation``'s pin, for the rental rows an entry form offers."""
     from .adapter_composition_ports import build_pinned_profile_read_ports
@@ -127,4 +135,5 @@ __all__ = [
     "compose_ledger_import_ports",
     "load_entry_option_profile_facts",
     "load_ledger_rows_for_rental_references",
+    "load_work_units_for_record_groups",
 ]
