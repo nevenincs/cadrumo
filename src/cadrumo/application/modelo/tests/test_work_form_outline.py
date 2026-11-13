@@ -86,7 +86,9 @@ def test_the_2025_headings_do_not_name_another_editions_part_of_the_same_id(
         return section.heading.text, section.heading.disclosure
 
     assert heading(current, "calculoimpuestores-4")[1] is ModeloFormTextDisclosure.LOCALIZED
-    assert heading(earlier, "calculoimpuestores-4")[1] is ModeloFormTextDisclosure.TECHNICAL
+    assert heading(earlier, "calculoimpuestores-4")[1] is ModeloFormTextDisclosure.LOCALIZED
+    assert heading(earlier, "calculoimpuestores-4")[0] != heading(current, "calculoimpuestores-4")[0]
+    assert heading(earlier, "calculoimpuestores-4") == heading(current, "calculoimpuestores-5")
     assert [group.id for group in _section_groups(earlier)] == [page.id for page in earlier.pages if page.sections]
 
 
