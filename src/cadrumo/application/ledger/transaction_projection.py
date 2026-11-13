@@ -113,6 +113,9 @@ class LedgerTransactionProjection(BaseModel):
     m210_income_classification: LedgerM210IncomeProjection | None
     usage_ratio_id: str | None
     prorrata_reference: str | None
+    arrendamiento_ref: str | None = None
+    inmueble_ref: str | None = None
+    gasto_capital_inmobiliario: str | None = None
     purchase_invoice_evidence_id: str | None
     invoice_id: str | None
     attachment_ids: tuple[str, ...]
@@ -172,6 +175,9 @@ class LedgerTransactionReviewProjection(BaseModel):
 
     ``withholding`` is empty for a movement that pays no invoice stating a
     retención: its retención is absent, never zero.
+
+    A row routed by a rental expense concept carries the concept's served words
+    and their language; both are absent for every other row.
     """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -184,3 +190,5 @@ class LedgerTransactionReviewProjection(BaseModel):
     classification_reason_words: str
     classification_reason_words_language: OutputLanguage | None
     withholding: tuple[LedgerMovementWithholdingProjection, ...] = ()
+    gasto_capital_inmobiliario_words: str | None = None
+    gasto_capital_inmobiliario_words_language: OutputLanguage | None = None

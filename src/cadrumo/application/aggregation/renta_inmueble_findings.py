@@ -1,4 +1,4 @@
-"""What stops or limits a let property's ``Inmueble`` occurrence, and the command that settles it.
+"""What stops or limits a property's ``Inmueble`` occurrence, and the command that settles it.
 
 A finding has one of three weights. A refusal means the occurrence cannot be
 built from what the records state: no row of the return is emitted, because a
@@ -76,7 +76,11 @@ class RentaInmuebleCause(StrEnum):
     RELATIVE_TENANT = "relative_tenant"
     IMPROVEMENT_IN_EJERCICIO = "improvement_in_ejercicio"
     HELD_PART_OF_EJERCICIO = "held_part_of_ejercicio"
-    DAYS_NOT_LET = "days_not_let"
+    DAYS_UNACCOUNTED = "days_unaccounted"
+    IMPUTACION_VALOR_CATASTRAL_UNSTATED = "imputacion_valor_catastral_unstated"
+    IMPUTACION_VIGOR_UNSTATED = "imputacion_vigor_unstated"
+    IMPUTACION_USO_SIMULTANEO = "imputacion_uso_simultaneo"
+    IMPUTACION_RUSTICA = "imputacion_rustica"
     ACQUISITION_COST_UNSTATED = "acquisition_cost_unstated"
     CADASTRAL_VALUES_UNSTATED = "cadastral_values_unstated"
     CUMULATIVE_AMORTISATION_UNSTATED = "cumulative_amortisation_unstated"
@@ -221,10 +225,36 @@ _CAUSE_TERMS: Final[dict[RentaInmuebleCause, tuple[RentaInmuebleFindingKind, Ren
         RentaInmuebleDoor.INMUEBLE_EDIT,
         "the property was acquired or transmitted inside the ejercicio, and its expense proration is not offered",
     ),
-    RentaInmuebleCause.DAYS_NOT_LET: (
+    RentaInmuebleCause.DAYS_UNACCOUNTED: (
         _BLOCKING,
-        RentaInmuebleDoor.ARRENDAMIENTO_ADD,
-        "the property was held on days it was not let, and the imputed income of those days is not computed",
+        RentaInmuebleDoor.INMUEBLE_EDIT,
+        "the property was held on days it was neither let nor in a stated use, so whether those days impute "
+        "income under art. 85 LIRPF is unknown",
+    ),
+    RentaInmuebleCause.IMPUTACION_VALOR_CATASTRAL_UNSTATED: (
+        _BLOCKING,
+        RentaInmuebleDoor.INMUEBLE_EDIT,
+        "the property was at its owner's disposal and states no cadastral value for the ejercicio; a property "
+        "without one, or whose value was not notified, imputes on half its acquisition or checked value, which "
+        "the Inmueble boxes do not carry, so its imputed income is not computed",
+    ),
+    RentaInmuebleCause.IMPUTACION_VIGOR_UNSTATED: (
+        _BLOCKING,
+        RentaInmuebleDoor.INMUEBLE_EDIT,
+        "the property was at its owner's disposal and does not state the year the collective valuation behind "
+        "the ejercicio's cadastral value entered into force, so the art. 85 rate is unknown",
+    ),
+    RentaInmuebleCause.IMPUTACION_USO_SIMULTANEO: (
+        _BLOCKING,
+        RentaInmuebleDoor.INMUEBLE_EDIT,
+        "the property was at its owner's disposal on days it was also let or in another use, and the imputed "
+        "income of that simultaneous use (casillas 0086 to 0088) is not computed",
+    ),
+    RentaInmuebleCause.IMPUTACION_RUSTICA: (
+        _BLOCKING,
+        RentaInmuebleDoor.INMUEBLE_EDIT,
+        "a rustic property was at its owner's disposal; it imputes income only for constructions not "
+        "indispensable to farming, which the record does not state, so its imputed income is not computed",
     ),
     RentaInmuebleCause.ACQUISITION_COST_UNSTATED: (
         _BLOCKING,

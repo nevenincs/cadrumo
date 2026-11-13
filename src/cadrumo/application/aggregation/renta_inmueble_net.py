@@ -56,6 +56,7 @@ from ...domain.renta.rental_reduction_derivation import (
 )
 from ...domain.renta.retencion_soportada import RetencionSoportadaRecord
 from .renta_inmueble_findings import RentaInmuebleCause
+from .renta_inmueble_imputacion import ImputacionTerms
 
 _ZERO: Final = Decimal(0)
 _HUNDRED: Final = Decimal(100)
@@ -72,6 +73,8 @@ class RentaInmuebleTerms:
     reduction_rules: RentalReductionArt232Rules
     reduction_rates: Mapping[RentalReductionArt232Tier, Decimal]
     """The rate of every reduction a lease can take at the ejercicio's devengo."""
+    imputacion: ImputacionTerms
+    """The art. 85 data the imputed income of the days at the owner's disposal reads."""
 
 
 @dataclass(frozen=True, slots=True)

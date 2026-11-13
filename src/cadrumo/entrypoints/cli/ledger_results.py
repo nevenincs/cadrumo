@@ -472,6 +472,9 @@ class TransactionPayload(OutputSchema):
     m210_income_classification: M210IncomeClassificationPayload | None = None
     usage_ratio_id: str | None = None
     prorrata_reference: str | None = None
+    arrendamiento_ref: str | None = None
+    inmueble_ref: str | None = None
+    gasto_capital_inmobiliario: str | None = None
     purchase_invoice_evidence_id: str | None = None
     invoice_id: str | None = None
     attachment_ids: list[str] = []
@@ -818,6 +821,9 @@ class LedgerListRowPayload(OutputSchema):
     m210_income_classification: M210IncomeClassificationPayload | None = None
     usage_ratio_id: str | None = None
     prorrata_reference: str | None = None
+    arrendamiento_ref: str | None = None
+    inmueble_ref: str | None = None
+    gasto_capital_inmobiliario: str | None = None
     purchase_invoice_evidence_id: str | None = None
     invoice_id: str | None = None
     attachment_ids: list[str] = []

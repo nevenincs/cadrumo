@@ -280,6 +280,9 @@ class OverviewSuppressedCalendarEntryPayload(OutputSchema):
 
     modelo: str
     period: str
+    opens_on: str
+    closes_on: str
+    adjusted_closes_on: str
     verdict: str
     reason: str
     actions: list[ResolvedNoticeAction] = []
