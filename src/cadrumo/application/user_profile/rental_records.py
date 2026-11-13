@@ -186,7 +186,7 @@ def _admit_arrendamiento(
         )
         _refusing_incoherent(
             lambda: require_letting_start_before_leases(landlord_property, (*others, record.fecha_inicio)),
-            door=_door(INMUEBLE_SECTION, RentalRowMutation.EDIT),
+            door=_door(INMUEBLE_SECTION, ProfileRecordRowMutation.EDIT),
         )
     if len(record.inquilinos) > _tenant_capacity(authority):
         raise UserProfileValidationError(
