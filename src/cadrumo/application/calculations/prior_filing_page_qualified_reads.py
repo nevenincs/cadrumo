@@ -97,6 +97,26 @@ def _moved(item: CasillaObservation, retired: frozenset[CasillaId]) -> CasillaOb
     )
 
 
+def _read_under_qualified_ids(
+    observations: tuple[CasillaObservation, ...], retired: frozenset[CasillaId]
+) -> tuple[tuple[CasillaObservation, ...], tuple[CasillaId, ...]]:
+    """Return the observations with retired bare ids moved, and the ids held twice with different values."""
+    qualified = {item.casilla_id: item for item in observations if item.casilla_id not in retired}
+    read: list[CasillaObservation] = []
+    conflicts: list[CasillaId] = []
+    for item in observations:
+        if item.casilla_id not in retired:
+            read.append(item)
+            continue
+        moved = _moved(item, retired)
+        twin = qualified.get(moved.casilla_id)
+        if twin is None:
+            read.append(moved)
+        elif twin.value != moved.value or twin.value_kind != moved.value_kind:
+            conflicts.append(moved.casilla_id)
+    return tuple(read), tuple(conflicts)
+
+
 def page_qualified_prior_observation(
     payload: ObservationEnvelopePayload,
     *,
@@ -123,19 +143,7 @@ def page_qualified_prior_observation(
     retired = _retired_bare_ids(payload, bare_ids, operation=operation)
     if not retired:
         return payload
-    qualified = {item.casilla_id: item for item in observation.observations if item.casilla_id not in retired}
-    read: list[CasillaObservation] = []
-    conflicts: list[CasillaId] = []
-    for item in observation.observations:
-        if item.casilla_id not in retired:
-            read.append(item)
-            continue
-        moved = _moved(item, retired)
-        twin = qualified.get(moved.casilla_id)
-        if twin is None:
-            read.append(moved)
-        elif twin.value != moved.value or twin.value_kind != moved.value_kind:
-            conflicts.append(moved.casilla_id)
+    read, conflicts = _read_under_qualified_ids(observation.observations, retired)
     if conflicts:
         raise PriorFilingPageQualifiedConflictError(
             "an earlier Modelo 200 return holds a PyG box under its bare and its page-qualified id "
@@ -148,7 +156,7 @@ def page_qualified_prior_observation(
                 "casilla_ids": ", ".join(sorted(conflicts)),
             },
         )
-    return payload.model_copy(update={"observation": observation.model_copy(update={"observations": tuple(read)})})
+    return payload.model_copy(update={"observation": observation.model_copy(update={"observations": read})})
 
 
 __all__ = ["MODELO_200_PAGE_QUALIFIED_CASILLAS", "page_qualified_prior_observation"]
