@@ -180,8 +180,12 @@ export function FieldRow({ field }: { field: PublicModeloFormField }) {
       onFocus={(event) => {
         if (event.target === event.currentTarget) session.select(key);
       }}
+      // On a narrow form, beside the rail and the details, the value and
+      // what is said of its origin go under the label, so the label keeps
+      // the row's width rather than the fixed columns taking it.
       className={cn(
         "group grid min-h-11 cursor-default grid-cols-[--spacing(10)_minmax(0,1fr)_auto_--spacing(44)] items-center gap-3 rounded-md px-2 py-1 outline-none",
+        "@max-lg:grid-cols-[--spacing(10)_minmax(0,1fr)] @max-lg:gap-x-2 @max-lg:gap-y-1",
         "hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring aria-selected:bg-selected",
         field.origin === "not_applicable" && "text-muted-foreground",
       )}
@@ -198,7 +202,10 @@ export function FieldRow({ field }: { field: PublicModeloFormField }) {
         </span>
         <FieldHelp field={field} full={selected} />
       </span>
-      <span role="gridcell" className="flex justify-end">
+      <span
+        role="gridcell"
+        className="flex justify-end @max-lg:col-start-2 @max-lg:justify-start"
+      >
         <ValueCell
           field={field}
           staged={staged}
@@ -215,7 +222,7 @@ export function FieldRow({ field }: { field: PublicModeloFormField }) {
       </span>
       <span
         role="gridcell"
-        className="flex min-w-0 flex-col items-start gap-0.5"
+        className="flex min-w-0 flex-col items-start gap-0.5 @max-lg:col-start-2"
       >
         <OriginMark field={field} staged={staged} />
         {reason && (

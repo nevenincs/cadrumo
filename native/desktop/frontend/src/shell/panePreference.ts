@@ -21,6 +21,9 @@ export type PanePlacement = "side" | "bottom";
 export type PanePreference = {
   /** Null follows the page's default until the person shows or hides it. */
   open: boolean | null;
+  /** Where the person chose to draw the pane; null follows the page, which
+   * picks a placement from the room it has. */
+  placement?: PanePlacement | null;
   /** Sizes in CSS pixels by placement; null keeps the page's default. */
   side: number | null;
   bottom: number | null;
@@ -28,6 +31,7 @@ export type PanePreference = {
 
 export const DEFAULT_PANE_PREFERENCE: PanePreference = {
   open: null,
+  placement: null,
   side: null,
   bottom: null,
 };
@@ -47,6 +51,10 @@ export function panePreferenceOf(value: unknown): PanePreference {
   const held = value as Record<string, unknown>;
   return {
     open: typeof held.open === "boolean" ? held.open : null,
+    placement:
+      held.placement === "side" || held.placement === "bottom"
+        ? held.placement
+        : null,
     side: size(held.side),
     bottom: size(held.bottom),
   };
@@ -99,6 +107,8 @@ export function writePanePreference(
 export type PanePreferenceControl = {
   preference: PanePreference;
   setOpen(open: boolean): void;
+  /** A placement the person chose, or null to follow the page again. */
+  setPlacement(placement: PanePlacement | null): void;
   /** A size in CSS pixels for a placement, or null for the default. */
   setSize(placement: PanePlacement, size: number | null): void;
 };
@@ -115,6 +125,10 @@ export function usePanePreference(id: string): PanePreferenceControl {
     changed.current = true;
     setPreference((held) => ({ ...held, open }));
   }, []);
+  const setPlacement = useCallback((placement: PanePlacement | null) => {
+    changed.current = true;
+    setPreference((held) => ({ ...held, placement }));
+  }, []);
   const setSize = useCallback(
     (placement: PanePlacement, next: number | null) => {
       changed.current = true;
@@ -122,5 +136,5 @@ export function usePanePreference(id: string): PanePreferenceControl {
     },
     [],
   );
-  return { preference, setOpen, setSize };
+  return { preference, setOpen, setPlacement, setSize };
 }
