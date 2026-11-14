@@ -1588,11 +1588,14 @@ async function driveRow(row, runDir, persona) {
     last = await judge(before, run);
     state = await readState();
   }
+  // The table states these on the calculated return whatever that
+  // calculation left open, as an incomplete calculation still offers
+  // calculate: a rental carry or a work-income statement is what completes it.
   if (
     late.length > 0 &&
     state.action !== null &&
-    !CALCULATING.includes(state.action) &&
-    !["refused", "error"].includes(last?.stage)
+    last !== null &&
+    !["refused", "error"].includes(last.stage)
   ) {
     take(await enterStatements(late, row));
     state = await readState();
@@ -1753,13 +1756,34 @@ async function recordFiling(out) {
     },
     { timeout: TIMEOUT.verify, what: "the local filing", soft: true },
   );
-  if (settled?.words) say(settled.words.join(" | "));
-  else if (!settled)
+  // A finished filing leaves the declaration unread behind the write hold;
+  // the operator reads it again, and so do we, before judging the filing.
+  let state = settled?.state ?? null;
+  let words = settled?.words ?? [];
+  if (await exec(pageVisible, ".modelo-write-hold")) {
+    const reread = await clickText(".modelo-write-hold", "button", [
+      label("workspace.modelo.read_again"),
+    ]);
+    if (reread) {
+      await waitFor(
+        async () => !(await exec(pageVisible, ".modelo-write-hold")),
+        {
+          timeout: TIMEOUT.verify,
+          what: "the declaration to be read again",
+          soft: true,
+          interval: 400,
+        },
+      );
+      await sleep(800);
+      state = await readState();
+      words = freshOf(before, state);
+      log("read-again", { action: "file" });
+    }
+  }
+  if (words.length > 0) say(words.join(" | "));
+  else if (!state)
     say("the window did not settle the local filing within the wait");
-  log("filed", {
-    action: settled?.state?.action ?? null,
-    words: settled?.words ?? [],
-  });
+  log("filed", { action: state?.action ?? null, words });
 }
 
 async function exportFile(row, runDir, persona, out) {
@@ -1894,6 +1918,7 @@ async function exportFile(row, runDir, persona, out) {
  * and silent, as it does for a name of a kind it does not save.
  */
 async function exportOutcome(destination, queued, before) {
+  const notDone = label("workspace.modelo.outcome.not_done");
   let quietSince = null;
   let busySeen = false;
   return waitFor(
@@ -1902,6 +1927,15 @@ async function exportOutcome(destination, queued, before) {
         return { pass: true };
       const state = await readState();
       const words = freshOf(before, state);
+      // The window says only that nothing was done when the press reached no
+      // operation, as it does for a name of a kind it does not save.
+      if (
+        !busySeen &&
+        !existsSync(queued) &&
+        words.length > 0 &&
+        words.every((text) => text === notDone)
+      )
+        return { wrongKind: true };
       if (words.length > 0) return { words };
       busySeen ||= state.busy;
       if (existsSync(queued) || state.busy || busySeen) {
