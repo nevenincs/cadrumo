@@ -8,7 +8,9 @@ import { label } from "../support/strings";
 // them, all three are drawn inside the window and unclipped, each says
 // whether it is pressed as the panes are drawn, each has its own icon, and
 // every line between the panes, the notes above the form's line among them,
-// moves.
+// moves. Where the window is too short to stack the details under the form,
+// the arrangement control is held pressed (aria-disabled), the details stay
+// beside, and pressing it changes nothing until the window has the room.
 
 const SIZES = [
   { width: 1441, height: 923 },
@@ -71,10 +73,15 @@ test.beforeEach(async ({ page: target }) => {
   );
 });
 
+/** What the person asked for; `beside` is the arrangement chosen, drawn
+ * unless the window holds the details beside. */
 type Shown = { side: boolean; details: boolean; beside: boolean };
 
 const pressed = async (target: Page, control: Control) =>
   (await toggle(target, control).getAttribute("aria-pressed")) === "true";
+
+const held = async (target: Page) =>
+  (await toggle(target, "placement").getAttribute("aria-disabled")) === "true";
 
 async function shownNow(target: Page): Promise<Shown> {
   return {
@@ -82,6 +89,12 @@ async function shownNow(target: Page): Promise<Shown> {
     details: await pressed(target, "details"),
     beside: await pressed(target, "placement"),
   };
+}
+
+/** Presses a control as a person does; a held control is still pressed,
+ * and changes nothing. */
+async function pressControl(target: Page, control: Control) {
+  await toggle(target, control).click({ force: true });
 }
 
 /** Each control drawn once, inside the window, on top where it is drawn,
@@ -129,7 +142,8 @@ async function expectControlsReachable(target: Page) {
 }
 
 /** The panes are drawn as the controls say, with the icons that say it. */
-async function expectDrawnAs(target: Page, shown: Shown) {
+async function expectDrawnAs(target: Page, asked: Shown) {
+  const shown = { ...asked, beside: asked.beside || (await held(target)) };
   for (const [control, on] of [
     ["side", shown.side],
     ["details", shown.details],
@@ -203,8 +217,9 @@ for (const size of SIZES) {
       let shown = await shownNow(target);
       await expectDrawnAs(target, shown);
       for (const control of sequence) {
-        await toggle(target, control).click();
-        shown = press(shown, control);
+        const stays = control === "placement" && (await held(target));
+        await pressControl(target, control);
+        if (!stays) shown = press(shown, control);
         await expectDrawnAs(target, shown);
       }
       await expectLinesMove(target, shown);
@@ -276,11 +291,13 @@ const NATIVE_SIZES = [
 ];
 
 async function setControl(target: Page, control: Control, on: boolean) {
+  // A held arrangement control stays pressed, the details beside.
+  const drawn = control === "placement" && (await held(target)) ? true : on;
   if ((await pressed(target, control)) !== on)
-    await toggle(target, control).click();
+    await pressControl(target, control);
   await expect(toggle(target, control)).toHaveAttribute(
     "aria-pressed",
-    String(on),
+    String(drawn),
   );
 }
 
@@ -344,13 +361,20 @@ test("UX-19 and UX-16 the native audit's toggle sequence at the native inner siz
         await setControl(target, "side", side);
         await setControl(target, "details", true);
         await setControl(target, "placement", false);
+        const under = (await held(target)) ? "side" : "bottom";
         const line = workspace(target).getByRole("separator", {
           name: label("desktop.modelo.details.resize"),
         });
         await line.focus();
         await expect(line).toBeFocused();
         const height = () =>
-          details(target).evaluate((e) => e.getBoundingClientRect().height);
+          details(target).evaluate(
+            (e, across) =>
+              across
+                ? e.getBoundingClientRect().width
+                : e.getBoundingClientRect().height,
+            under === "side",
+          );
         await target.keyboard.press("Home");
         const least = await height();
         await target.keyboard.press("End");
@@ -359,10 +383,13 @@ test("UX-19 and UX-16 the native audit's toggle sequence at the native inner siz
         // The arrangement survives another view and a new opening.
         await chooseView(target, "workspace.modelo.step.review");
         await chooseView(target, "desktop.modelo.view.form");
-        await expect(area(target)).toHaveAttribute("data-details", "bottom");
+        await expect(area(target)).toHaveAttribute("data-details", under);
       }
       await openDeclaration(target);
-      await expect(area(target)).toHaveAttribute("data-details", "bottom");
+      await expect(area(target)).toHaveAttribute(
+        "data-details",
+        (await held(target)) ? "side" : "bottom",
+      );
       await setControl(target, "placement", true);
       await openDeclaration(target);
       await expect(area(target)).toHaveAttribute("data-details", "side");

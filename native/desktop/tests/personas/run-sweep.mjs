@@ -461,19 +461,36 @@ async function runCase(item, context) {
 // Main
 // ---------------------------------------------------------------------------
 
+/**
+ * The cases named by --persona (`<id>` or `<id>@<horizon>`, comma separated),
+ * or every case when it is absent. A name that matches no case of the rows
+ * file is refused, so a mistyped persona cannot silently shrink a sweep.
+ */
+export function selectCases(planned, persona) {
+  if (!persona) return planned;
+  const wanted = persona
+    .split(",")
+    .map((name) => name.trim())
+    .filter(Boolean);
+  const matches = (name, item) =>
+    name === item.persona || name === `${item.persona}@${item.horizon}`;
+  const unknown = wanted.filter(
+    (name) => !planned.some((item) => matches(name, item)),
+  );
+  if (unknown.length > 0)
+    throw new Error(
+      `--persona names no case of the rows file: ${unknown.join(", ")}`,
+    );
+  return planned.filter((item) => wanted.some((name) => matches(name, item)));
+}
+
 async function main() {
   const args = parseArguments(process.argv.slice(2));
   const rowsPath = resolve(args.rows ?? newestRows());
   const tree = args.tree ?? basename(rowsPath).match(/^rows-(.+)\.jsonl$/)?.[1];
   if (!tree) throw new Error("--tree is required");
-  const wanted = args.persona ? args.persona.split(",") : null;
   const loadsOnly = args["loads-only"] === true;
-  const filtered = plannedCases(rowsPath).filter(
-    (item) =>
-      wanted === null ||
-      wanted.includes(item.persona) ||
-      wanted.includes(`${item.persona}@${item.horizon}`),
-  );
+  const filtered = selectCases(plannedCases(rowsPath), args.persona);
   const cases = loadsOnly ? newestHorizonCases(filtered) : filtered;
   const groups = byPersona(cases);
   if (args["dry-run"]) {

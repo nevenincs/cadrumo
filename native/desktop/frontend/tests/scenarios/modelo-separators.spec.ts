@@ -77,12 +77,16 @@ async function arrange(target: Page, arrangement: Arrangement) {
     await expect(area(target)).toHaveAttribute("data-details", "closed");
     return;
   }
-  if ((await area(target).getAttribute("data-details")) !== arrangement.details)
+  // Where the window is too short to stack the details under the form's
+  // least room, the arrangement control is held pressed and the details
+  // stay beside (modelo-split-window.spec.ts holds the rule).
+  const held =
+    (await toggle(target, "placement").getAttribute("aria-disabled")) ===
+    "true";
+  const drawn = held ? "side" : arrangement.details;
+  if ((await area(target).getAttribute("data-details")) !== drawn)
     await toggle(target, "placement").click();
-  await expect(area(target)).toHaveAttribute(
-    "data-details",
-    arrangement.details,
-  );
+  await expect(area(target)).toHaveAttribute("data-details", drawn);
 }
 
 type Panels = { name: string; width: number; height: number };
@@ -279,8 +283,8 @@ async function travel(target: Page, line: Line): Promise<Travel> {
   await target.keyboard.press(grow);
   const keyed = await paneSize(target, line.name);
   await target.keyboard.press("Home");
-  // A short window scrolls the workspace as a whole, and the line moves with
-  // the pane's size: bring it into the window before taking hold of it.
+  // The line moves with the pane's size: bring it into the window before
+  // taking hold of it.
   await handle.scrollIntoViewIfNeeded();
   const box = (await handle.boundingBox())!;
   const x = box.x + box.width / 2;

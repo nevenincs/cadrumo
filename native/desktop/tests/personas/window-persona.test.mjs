@@ -62,6 +62,14 @@ import {
   verifyListener,
   waitForWebDriver,
 } from "../automation/session.mjs";
+import {
+  pageChooseSignOut,
+  pageOpenAccountMenu,
+  pageSignedOut,
+  removeLeftSessionKeys,
+  sessionKeyTargets,
+  storageProfileIds,
+} from "../automation/session-keys.mjs";
 
 const require = createRequire(
   new URL("../../frontend/package.json", import.meta.url),
@@ -2548,6 +2556,8 @@ async function launch(world, runDir) {
     `the run's storage directory must be absent or empty: ${storage}`,
   );
   cpSync(source, storage, { recursive: true, errorOnExist: true });
+  const profileIds = storageProfileIds(storage);
+  window_.sessionKeys = { profileIds, before: sessionKeyTargets(profileIds) };
   const same = (left, right) =>
     inspectionPlatform() === "windows"
       ? left.toLowerCase() === right.toLowerCase()
@@ -2638,17 +2648,33 @@ async function launch(world, runDir) {
   return runDir;
 }
 
+/** Close the run's window; answer why the credential guard refuses it, or null. */
 async function teardown() {
-  if (window_.closed) return;
+  if (window_.closed) return null;
   window_.closed = true;
   await dumpBrowserLog("teardown");
+  // Signing out deletes the run's profile-session key from the credential
+  // store; the guard after the process stops removes and reports any left.
+  try {
+    if (window_.browser && (await exec(pageOpenAccountMenu))) {
+      await sleep(500);
+      if (await exec(pageChooseSignOut, label("desktop.account.sign_out")))
+        await waitFor(() => exec(pageSignedOut), {
+          timeout: 15_000,
+          what: "the sign-in form after signing out",
+          soft: true,
+        });
+    }
+  } catch (error) {
+    log("teardown", { signOut: error.message });
+  }
   try {
     await window_.browser?.deleteSession();
   } catch (error) {
     log("teardown", { deleteSession: error.message });
   }
   releasePort();
-  if (!window_.pid) return;
+  if (!window_.pid) return sessionKeyGuard();
   const check = inspectProcess(window_.pid);
   if (check.status === 0 && isHostCommand(check.stdout, window_.executable)) {
     process.kill(window_.pid, "SIGTERM");
@@ -2663,6 +2689,21 @@ async function teardown() {
       note: "host identity not confirmed; not terminated",
     });
   }
+  return sessionKeyGuard();
+}
+
+/** Remove the profile-session keys the run added; answer why that refuses the run, or null. */
+function sessionKeyGuard() {
+  if (!window_.sessionKeys) return null;
+  const { left, failed } = removeLeftSessionKeys(
+    window_.sessionKeys.profileIds,
+    window_.sessionKeys.before,
+  );
+  log("teardown", { sessionKeysLeft: left.length, notRemoved: failed.length });
+  return left.length > 0
+    ? `the run left ${left.length} profile-session key(s) in the credential store (removed ${left.length - failed.length}` +
+        `${failed.length ? `, could not remove ${failed.length}` : ""}): it did not sign out`
+    : null;
 }
 
 async function signIn(password) {
@@ -2854,6 +2895,7 @@ test(
     );
     const loadsOnly = process.env.CADRUMO_PERSONA_LOADS_ONLY === "1";
     let loadError = null;
+    let keyGuard = null;
     let rowCount = 0;
     try {
       runDir = await launch(world, runDir);
@@ -2969,8 +3011,9 @@ test(
         });
       }
     } finally {
-      await teardown();
+      keyGuard = await teardown();
     }
     if (loadError !== null) throw loadError;
+    if (keyGuard !== null) throw new Error(keyGuard);
   },
 );
