@@ -606,6 +606,8 @@ application:
           que no està indicada. Indica-la i torna a exportar.'
         producer_fact_required: 'No s''ha escrit res: l''exportació necessita %{fact},
           que no està indicat. Indica''l i torna a exportar.'
+        producer_facts_unsupplied: 'No s''ha escrit res: l''exportació del model %{modelo}
+          necessita %{facts}, i l''aplicació encara no els pot aportar.'
         product_identity_not_admitted: 'No s''ha escrit res: aquesta exportació no
           té lloc per a la identitat del producte o del programari, així que no se''n
           pot indicar cap.'
@@ -876,18 +878,18 @@ application:
           i l'exercici %{year}. Obre'l en lloc de crear-ne un altre.
         activity_not_found: No existeix cap registre d'inventari per a aquesta activitat
           i l'exercici %{year}. Crea'l primer o revisa l'activitat i l'exercici.
-        claimed_transaction_amount_mismatch: 'La compra %{movement_id} de l''inventari
-          %{year} no coincideix amb el seu moviment: la base, l''IVA i el recàrrec
-          han de ser iguals al cèntim. Corregeix la compra o tria un altre moviment.'
-        claimed_transaction_double_claim: El moviment que indica la compra %{movement_id}
-          ja el reclama un altre inventari o un element del teu registre de béns.
-          Cada moviment pertany a un sol registre.
-        claimed_transaction_missing: La compra %{movement_id} de l'inventari %{year}
-          indica un moviment que no està actiu als teus moviments. Tria el moviment
-          que registra aquesta compra.
-        claimed_transaction_not_eur: El moviment que indica la compra %{movement_id}
-          no està en euros. De moment només es vinculen moviments en euros.
-        claimed_transaction_substrate_missing: El moviment que indica la compra %{movement_id}
+        claimed_transaction_amount_mismatch: 'Aquesta compra de l''inventari %{year}
+          no coincideix amb el seu moviment: la base, l''IVA i el recàrrec han de
+          ser iguals al cèntim. Corregeix la compra o tria un altre moviment.'
+        claimed_transaction_double_claim: El moviment que indica aquesta compra ja
+          el reclama un altre inventari o un element del teu registre de béns. Cada
+          moviment pertany a un sol registre.
+        claimed_transaction_missing: Aquesta compra de l'inventari %{year} indica
+          un moviment que no està actiu als teus moviments. Tria el moviment que registra
+          aquesta compra.
+        claimed_transaction_not_eur: El moviment que indica aquesta compra no està
+          en euros. De moment només es vinculen moviments en euros.
+        claimed_transaction_substrate_missing: El moviment que indica aquesta compra
           no té base imposable o quota d'IVA, així que no es pot comparar. Completa'l
           primer.
         closing_authority_conflict: Ja hi ha un altre valor de tancament registrat
@@ -920,7 +922,7 @@ application:
           activitat parteix d'aquest tancament, així que les dades d'existències de
           %{year} ja no poden canviar.
         ledger_row_not_purchase: Només una compra de l'inventari pot indicar quin
-          moviment la registra, i %{movement_id} no és una compra.
+          moviment la registra, i aquest moviment no és una compra.
         movement_already_superseded: Aquest moviment ja es va corregir o anul·lar.
         movement_not_found: L'inventari %{year} d'aquesta activitat no té aquest moviment.
         movement_outside_year: Aquest moviment té una data fora de l'inventari %{year}.
