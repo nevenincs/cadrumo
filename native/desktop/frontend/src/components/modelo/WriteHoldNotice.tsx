@@ -18,6 +18,14 @@ export const useModeloWriteHold = (holds: ModeloWriteHolds, target: string) =>
     () => undefined,
   );
 
+/** Whether the window is reading its own settled write on `target`. */
+export const useModeloReading = (holds: ModeloWriteHolds, target: string) =>
+  useSyncExternalStore(
+    holds.subscribe,
+    () => holds.isReading(target),
+    () => false,
+  );
+
 export const useModeloBlockingWriteHold = (
   holds: ModeloWriteHolds,
   target: string,
@@ -62,11 +70,7 @@ export function WriteHoldNotice({
   const t = useStrings();
   const hold = useModeloWriteHold(holds, target);
   const reviewed = useModeloReviewedFailure(holds, target);
-  const reading = useSyncExternalStore(
-    holds.subscribe,
-    () => holds.isReading(target),
-    () => false,
-  );
+  const reading = useModeloReading(holds, target);
   const generation = useRef(0);
   useLayoutEffect(
     () => () => {
