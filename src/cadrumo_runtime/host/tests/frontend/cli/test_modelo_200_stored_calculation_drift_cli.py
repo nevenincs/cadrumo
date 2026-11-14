@@ -24,6 +24,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
 _FILING_AUTHORITY_CONDITION = "modelo.work.verify.registry_snapshot.filing_authority"
+_PROFILE_READS_CURRENT_CONDITION = "modelo.work.verify.profile_reads.current"
 _PRECEDING_TURNOVER_CARRY = "modelo-200-incn-periodo-impositivo-anterior"
 
 
@@ -132,7 +133,9 @@ def test_verify_after_profile_activity_start_change_reports_scoped_advisories_wi
     assert report["granted_verificado_completo"] is False
     snapshot = report["registry_snapshot_ref"]
     if _reaches_filing_grade(snapshot["modelo"], filing_year=snapshot["modelo_year"], period=snapshot["period"]):
-        assert blocking == []
+        # At filing grade verification reaches the profile-reads gate: the profile edit after the
+        # calculation makes it stale, and that refusal asks for a new calculation.
+        assert [finding["action"]["failed_condition_id"] for finding in blocking] == [_PROFILE_READS_CURRENT_CONDITION]
     else:
         # Below filing grade the only other blocker is the typed grade refusal.
         assert [finding["action"]["failed_condition_id"] for finding in blocking] == [_FILING_AUTHORITY_CONDITION]
