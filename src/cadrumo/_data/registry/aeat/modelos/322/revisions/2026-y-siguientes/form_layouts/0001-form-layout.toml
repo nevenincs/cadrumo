@@ -7,7 +7,7 @@ revision_id = "2026-y-siguientes"
 seed_source = "authored"
 review = { state = "generated", notes = "Authored against visually inspected BOE-A-2026-1761 Annex I, printed12123-12126 and AEAT2026 record design. All229 casillas placed, including six paper-only activity descriptions,8 supporting figures separate. Identity choices retain exact record codes; prorrata choice/revocation is one owner per DR32201 Note7, not two independent facts. The no-activity marker is an explicit X-or-blank declaration, never inferred from the settlement result; Printed totals38/62/63/68/70/88/717/735 use their BOE arithmetic;65 applies the declared territorial percentage64 to63 per AEAT instructions. Guidance corroborates meanings, but its stale70 expression does not override BOE deduction112. The auxiliary IVA formulas remain separate. BOE final provision first applies this form to February2026; DR32201 Note8 restricts the gasoline marker to periods02 onwards. DR32201 Note5 requires boxes153-155 and162-173 to be zero: registry numeric bounds now reject positive and negative amounts without inventing values for missing inputs. January2026 presentation remains to reconcile. No operator countersignature, native verification or full-fidelity claim." }
 generator_version = 1
-source_state_digest = "26e96d640ef2f06a2f5d93cf6465e6075efc6ef46a021625e28d12d9c3926583"
+source_state_digest = "9e3828f013fc277a00fce12094e2b94020446d692292f22788de7da4bd308a7c"
 design_sources = [
     { source_ref = "aeat-dr-322-2026", sha256 = "23734480e9a4a133b0319b7922afecc424ca042be65c619d229f8a25059aeabe" },
     { source_ref = "boe-modelo-390-2026-form", sha256 = "0552f1b8b0e30b22a63e0cc4be29f5ba8ab050609dcb04ed16549b8eb5030694" },

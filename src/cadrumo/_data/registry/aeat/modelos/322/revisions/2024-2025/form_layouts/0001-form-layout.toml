@@ -7,7 +7,7 @@ revision_id = "2024-2025"
 seed_source = "authored"
 review = { state = "generated", notes = "Authored against visually inspected BOE-A-2024-21961 AnnexI four printed pages and the hydrated 2024-2025 registry. Base/type/quota rows, six activity descriptions, explicit no-activity declaration, December-only annual page and two deduction groups follow the official form. Supporting IVA figures remain separate. Nine printed totals now use registry formulas;65 applies the declared territorial percentage64. Populated fictional native Sheets passed API formula and input-change readback; browser visual fit remains unverified. The form and generated filing field share the explicit no-activity declaration, independently of settlement. This expanded form first applies to October2024. The coarse2024-2025 revision still needs the January-September2024 presentation branch; this declaration does not claim those earlier months were reviewed against this form. No operator review or full-fidelity claim." }
 generator_version = 1
-source_state_digest = "74d34fdf74ccec22128d928efcb1e8a884fae08e829670f61ca2ee2bec71de81"
+source_state_digest = "83dda61a8c7396ae80c7dae627011d3bf383e07f7bc92952dd27830b9ab0145d"
 design_sources = [
     { source_ref = "boe-modelo-322-2024-form-pdf", sha256 = "62774bac10656a88ff2c7c37bc556a61d8b1e1b70442e9bed31dd0244b5451bc" },
 ]
