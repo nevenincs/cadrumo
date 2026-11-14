@@ -613,8 +613,19 @@ async function openView(key) {
       }
     }
   }
+  const tabs = await exec(
+    (selector) =>
+      [...document.querySelectorAll(`${selector} [role="tab"]`)]
+        .map(
+          (tab) =>
+            `${(tab.textContent ?? "").replace(/s+/g, " ").trim()}=${tab.getAttribute("aria-selected")}/${tab.getAttribute("data-state")}${tab.disabled || tab.getAttribute("aria-disabled") === "true" ? "/disabled" : ""}`,
+        )
+        .join("; ") +
+      ` | form drawn: ${document.querySelector("[data-modelo-form]") !== null}`,
+    list,
+  );
   throw new Error(
-    `window_view_switch_reverts: the view ${wanted} did not stay open after 3 presses`,
+    `window_view_switch_reverts: the view ${wanted} did not stay open after 3 presses (${tabs})`,
   );
 }
 
