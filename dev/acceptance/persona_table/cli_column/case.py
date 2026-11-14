@@ -24,6 +24,7 @@ from ..export_check import export_reason
 from ..planner import MODELOS_ENV, YEARS_ENV, persona_under_horizon, plan_rows, registry_envelope, stated_values
 from ..rows import PlannedRow
 from .driver import (
+    CalculateMode,
     Case,
     CaseSummary,
     ExportCheck,
@@ -57,6 +58,9 @@ class CaseSpec:
     authority: Path
     modelos: tuple[str, ...] = ()
     periods: tuple[str, ...] = ()
+    keys: frozenset[ReturnKey] | None = None
+    """The exact returns wanted, when a keys file names them; ``None`` wants every return the other filters pass."""
+    calculate: CalculateMode = CalculateMode.AS_RUN
 
 
 @dataclass(frozen=True, slots=True)
@@ -77,6 +81,14 @@ def add_shared_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--period", action="append", default=[], help="a period to report (repeatable)")
     parser.add_argument("--client-root", type=Path, default=None, help="the checkout whose env/.env holds the client")
     parser.add_argument("--keep-snapshot", action="store_true", help="do not remove the snapshot at the end")
+    parser.add_argument(
+        "--calculate",
+        type=CalculateMode,
+        choices=list(CalculateMode),
+        default=CalculateMode.AS_RUN,
+        help="as-run sends calculate after the statements (default); read-back reads the statement's own"
+        " calculation instead, as a diagnosis, and marks the row with a workaround",
+    )
 
 
 class _Trace:
@@ -151,6 +163,7 @@ def build_case(
         export_check=export_check_for(spec.persona, spec.horizon),
         trace=trace,
         done=done,
+        calculate=spec.calculate,
     )
 
 
@@ -217,7 +230,7 @@ def drive_case(
     if published != report.authority_generation:
         reason = f"authority generation mismatch: world {report.authority_generation}, runtime {published}"
         return _not_loaded(spec, writer, reason, log)
-    selection = select_rows(report, modelos=spec.modelos, periods=spec.periods)
+    selection = select_rows(report, modelos=spec.modelos, periods=spec.periods, keys=spec.keys)
     served_log = place.log_dir / "runtime.stderr.log"
     with served_root(template, storage, spec.authority, PERSONA_PROFILE_CREDENTIAL, served_log) as runner:
         loads, why, profile = profile_check(runner)

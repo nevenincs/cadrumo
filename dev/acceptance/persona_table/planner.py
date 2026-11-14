@@ -46,6 +46,7 @@ from cadrumo.entrypoints.tests.persona_materialisation import (
 from cadrumo.entrypoints.tests.persona_prior_carries import attest_prior_carries
 from cadrumo.tests.personas import ExpectedValue, Persona, YearEnvelope
 
+from .cli_column.world_report import StatementKind
 from .counterparties import is_compared
 from .rows import PlannedRow, Stage, TableRow, in_force, is_unsupported, owed_rows, replayed, select
 from .unchecked import persona_at
@@ -168,7 +169,11 @@ class PreparedReturn:
 
 
 def prepare_return(
-    materialised: MaterialisedPersona, plan: PlannedRow, values: list[ExpectedValue]
+    materialised: MaterialisedPersona,
+    plan: PlannedRow,
+    values: list[ExpectedValue],
+    *,
+    left: frozenset[StatementKind] = frozenset(),
 ) -> PreparedReturn | TableRow:
     """Create one return and state everything the table states before its first calculation.
 
@@ -176,6 +181,8 @@ def prepare_return(
     history already filed, one whose create or whose statements were refused, or one whose refusal the persona
     states. A caller that does not calculate takes the prepared return and its request from here. The statements
     are those of :func:`state_before_first_calculation`, then :func:`build_calculation_request`, in that order.
+    ``left`` names the kinds of statement a caller leaves unstated because an operator states them in another
+    surface; none is left by default.
     """
     world = materialised.world
     if filing_key(plan.modelo, plan.year, plan.period) in materialised.filings:
@@ -185,28 +192,36 @@ def prepare_return(
         work_unit_id = _create(world, plan)
         if isinstance(work_unit_id, TableRow):
             return work_unit_id
-        state_before_first_calculation(materialised, plan, work_unit_id)
+        state_before_first_calculation(materialised, plan, work_unit_id, left=left)
         request = build_calculation_request(materialised, plan, work_unit_id)
     except PersonaMaterialisationError as error:
         return refusal_row(plan, at_calculate, error)
     return PreparedReturn(work_unit_id=work_unit_id, request=request)
 
 
-def state_before_first_calculation(materialised: MaterialisedPersona, plan: PlannedRow, work_unit_id: str) -> None:
+def state_before_first_calculation(
+    materialised: MaterialisedPersona,
+    plan: PlannedRow,
+    work_unit_id: str,
+    *,
+    left: frozenset[StatementKind] = frozenset(),
+) -> None:
     """State what the first calculation of a created return needs beforehand; build no request.
 
     A Modelo 100 first states the persona's pending carries of earlier ejercicios that no earlier return in the
     profile supplies, through the operations the calculation's refusal names. Every return then states the prior
     figures the persona attests for it (``attest_before_first_calculation``), where the world records any, since
     its calculation refuses while a required source return is neither held nor stated. The Modelo 390 exemption
-    attestation of a Modelo 303 is not made here; :func:`build_calculation_request` makes it.
+    attestation of a Modelo 303 is not made here; :func:`build_calculation_request` makes it. A kind named in
+    ``left`` is not stated.
     """
     world = materialised.world
-    if plan.modelo == "100":
+    if plan.modelo == "100" and StatementKind.PRIOR_CARRIES not in left:
         attest_prior_carries(materialised.persona, world, work_unit_id, plan.year)
-    attest_before_first_calculation(
-        world, modelo=plan.modelo, year=plan.year, period=plan.period, work_unit_id=work_unit_id
-    )
+    if StatementKind.PRIOR_VALUE not in left:
+        attest_before_first_calculation(
+            world, modelo=plan.modelo, year=plan.year, period=plan.period, work_unit_id=work_unit_id
+        )
 
 
 def build_calculation_request(
