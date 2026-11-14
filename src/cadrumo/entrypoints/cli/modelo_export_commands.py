@@ -158,7 +158,9 @@ def modelo_export_verb(
         revision=operator_input.registry_revision,
         bucket_id=operator_input.bucket_id,
         selector=parse_revision_selector(operator_input.select),
-        default_for="export",
+        # The declaration's current calculation, as the window and the table export it, so a calculation not yet
+        # checked is refused by the export itself as not sealed; --select names another revision.
+        default_for=None,
     )
     target_revision_id = selected_revision.calculation_revision_id
     completed = run_modelo_export(

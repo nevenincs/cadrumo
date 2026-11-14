@@ -1203,8 +1203,8 @@ cli:
         replace_help: Replace a file already at --output. Without it, an existing
           export file is refused so an earlier export is never destroyed.
         revision_help: Id of the saved calculation to export; defaults to the declaration's
-          most recent saved calculation that is checked and complete, or recorded
-          as filed.
+          current calculation, which must be checked and complete or recorded as filed.
+          Use --select to name another one.
         work_unit_id_help: Declaration id (SHA-256 or unambiguous prefix).
       filing_record:
         app_help: Inspect internal filing records

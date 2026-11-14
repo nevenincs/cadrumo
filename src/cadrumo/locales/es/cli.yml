@@ -1296,8 +1296,8 @@ cli:
           se rechaza un archivo de exportación existente para no destruir una exportación
           anterior.
         revision_help: Identificador del cálculo guardado a exportar; por defecto,
-          el cálculo más reciente de la declaración que esté comprobado y completo
-          o registrado como presentado.
+          el cálculo actual de la declaración, que debe estar comprobado y completo
+          o registrado como presentado. Usa --select para indicar otro.
         work_unit_id_help: Identificador de la declaración (SHA-256 o prefijo inequívoco).
       filing_record:
         app_help: Inspeccionar los registros internos de presentación guardados
