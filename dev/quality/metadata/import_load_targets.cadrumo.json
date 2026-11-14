@@ -3378,6 +3378,8 @@
         "cadrumo.entrypoints.cli.modelo_work_command_specs",
         "cadrumo.entrypoints.cli.modelo_work_disagreement_cli",
         "cadrumo.entrypoints.cli.modelo_work_disagreement_payloads",
+        "cadrumo.entrypoints.cli.modelo_work_form_cli",
+        "cadrumo.entrypoints.cli.modelo_work_form_payloads",
         "cadrumo.entrypoints.cli.modelo_work_income_attestation_cli",
         "cadrumo.entrypoints.cli.modelo_work_income_attestation_payloads",
         "cadrumo.entrypoints.cli.modelo_work_lifecycle_cli",

@@ -2404,21 +2404,18 @@ application:
       renta_inmueble_pending_expenses_held_return_unstated: '{record}. ingatlan: már
         az adóév előtt is bérbe volt adva, és az előző adóév bevallása itt tárolva
         van, de nem olvassuk ki belőle, mennyi kamat- és javítási kiadást hagyott
-        levonásra váróként a(z) {box}. mező adóéve. Add meg ezzel: app modelo work
-        attest-no-amount <munkaegység> {binding} --row inmueble:{record}, vagy az
-        összeggel az attest-prior-value paranccsal.'
+        levonásra váróként a(z) {box}. mező adóéve. Add meg ezt az összeget ennél
+        az ingatlannál, vagy azt, hogy semmit sem hagyott.'
       renta_inmueble_pending_expenses_total_unsplit: '{record}. ingatlan: a levonásra
         váró kamat- és javítási kiadásait egyetlen összegként adtad meg, a C.1 melléklet
-        viszont keletkezésük adóéve szerint kéri őket. Add meg, mennyit hagyott levonásra
-        váróként a(z) {box}. mező adóéve, ezzel: app modelo work attest-prior-value
-        <munkaegység> {binding} <összeg> --row inmueble:{record}, vagy az attest-no-amount
-        paranccsal, ha semmit.'
+        viszont keletkezésük adóéve szerint kéri őket. Add meg ennél az ingatlannál,
+        mennyit hagyott levonásra váróként a(z) {box}. mező adóéve, vagy azt, hogy
+        semmit sem hagyott.'
       renta_inmueble_pending_expenses_unstated: '{record}. ingatlan: már az adóév
         előtt is bérbe volt adva, és nincs megadva, mennyi kamat- és javítási kiadást
         hagyott levonásra váróként a(z) {box}. mező adóéve, és egyik itt tárolt korábbi
-        bevallás sem tartalmazza. Add meg ezzel: app modelo work attest-no-amount
-        <munkaegység> {binding} --row inmueble:{record}, vagy az összeggel az attest-prior-value
-        paranccsal.'
+        bevallás sem tartalmazza. Add meg ezt az összeget ennél az ingatlannál, vagy
+        azt, hogy semmit sem hagyott.'
       renta_inmueble_property_abroad_let: '{record}. ingatlan: külföldön van és bérbe
         adott, külföldi jövedelemként való kezelése nem elérhető.'
       renta_inmueble_record_unreadable: A profilod egyik ingatlan- vagy bérleti rekordja

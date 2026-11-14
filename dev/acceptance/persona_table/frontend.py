@@ -40,6 +40,14 @@ A window line written before the word existed, with ``calculate`` ``pass`` and a
 ``calculate: a calculation was already present; none was run``, is read as ``calculate_inherited``. Only the window
 surface is read that way, and only when its calculate is ``pass``; the same words in another surface's reason are
 ordinary text. The python-stage vocabulary of the table rows does not change.
+
+Redacted figures compare by presence. The central privacy boundary of the CLI prints some values (the tenant NIF,
+casilla 0091) as ``sha256:<8 hex>`` while the table's figure is the plain text, and neither side may compare the
+content. A surface figure whose value is exactly ``sha256:`` and eight lowercase hexadecimal characters is redacted
+(any casilla, any surface). It equals the table's figure of that casilla whenever the table holds a non-empty value
+for it, whatever the value; when the table holds none the row differs with the cause ``casilla <id> redacted but the
+table has no value``. Seven or nine characters, uppercase hexadecimal or a different prefix are not redacted and
+compare as ordinary text.
 """
 
 from __future__ import annotations
@@ -73,6 +81,7 @@ EXPORT_UNAVAILABLE = "export unavailable (refused | not served)"
 """How the comparison of a not-served export door with the table's withheld export is recorded."""
 _EXPORT_CODE = re.compile(r"\bexport:.*?\b((?:REFUSED|ERROR)_[A-Z0-9_]+)")
 _HORIZON_PREFIX = re.compile(r"horizon (\d{4})\b")
+_REDACTED = re.compile(r"sha256:[0-9a-f]{8}")
 
 STAGE_OF: Mapping[Stage, str | None] = {
     Stage.PASSED: "pass",
@@ -425,7 +434,9 @@ def _number(text: str) -> Decimal | None:
 
 
 def _equal(table: str, shown: str) -> bool:
-    """Whether two figure texts are equal: as numbers when both parse as one, else as text."""
+    """Whether two figure texts are equal: redacted by presence, numbers as numbers, else as text."""
+    if is_redacted(shown):
+        return bool(table.strip())
     first, second = _number(table), _number(shown)
     return first == second if first is not None and second is not None else table == shown
 
@@ -435,10 +446,16 @@ def _is_zero(text: str) -> bool:
     return number is not None and number == 0
 
 
+def is_redacted(text: str) -> bool:
+    """Whether a figure text is a redacted value: exactly ``sha256:`` and eight lowercase hexadecimal characters."""
+    return _REDACTED.fullmatch(text) is not None
+
+
 def figure_causes(surface: str, table: Mapping[str, str], shown: Mapping[str, str]) -> list[str]:
     """Each way the figures ``shown`` by a surface miss or disagree with the table row's ``table`` figures.
 
-    The table row is the oracle for calculated values, so a casilla shown beyond ``table`` is not a cause.
+    The table row is the oracle for calculated values, so a casilla shown beyond ``table`` is not a cause, except a
+    redacted figure (compared by presence, see the module docstring), which needs a table value to stand for.
     ``table`` holds only the casillas the revision's form places; the row's internal figures (working figures and
     unplaced casillas, which no surface is held to show) are never compared and are not extras when shown.
     """
@@ -448,6 +465,11 @@ def figure_causes(surface: str, table: Mapping[str, str], shown: Mapping[str, st
             causes.append(f"casilla {casilla} not shown")
         elif not _equal(table[casilla], shown[casilla]):
             causes.append(f"casilla {casilla} {surface} {shown[casilla]}, table {table[casilla]}")
+    causes.extend(
+        f"casilla {casilla} redacted but the table has no value"
+        for casilla in sorted(set(shown) - set(table))
+        if is_redacted(shown[casilla])
+    )
     return causes
 
 
@@ -761,6 +783,7 @@ __all__ = [
     "extra_figures",
     "figure_causes",
     "frontend_line",
+    "is_redacted",
     "parity",
     "parse_result",
     "read_results",

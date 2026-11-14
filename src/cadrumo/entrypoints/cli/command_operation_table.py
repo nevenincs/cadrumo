@@ -324,6 +324,7 @@ COMMAND_OPERATION_ROWS: Final[tuple[tuple[tuple[str, ...], str | None], ...]] = 
     (("app", "modelo", "work", "discard"), "modelo.work.metadata"),
     (("app", "modelo", "work", "file"), "modelo.work.file"),
     (("app", "modelo", "work", "file"), "modelo.work.revision"),
+    (("app", "modelo", "work", "form"), "modelo.work.form"),
     (("app", "modelo", "work", "history"), "modelo.work.history"),
     (("app", "modelo", "work", "history"), "modelo.work.metadata"),
     (("app", "modelo", "work", "list"), "modelo.work.list"),

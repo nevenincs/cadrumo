@@ -32,6 +32,7 @@ from .intake import (
     return_line,
     verify_stage,
 )
+from .row_form import FORM_PATH, form_row_figures, merge_form_figures, parse_form_result
 from .world_report import Phase, ReturnKey, RowPlan, Statement, StatementKind, WorldReport
 
 FILING_NOTE = "Synthetic local pending filing only; not sent to AEAT"
@@ -95,6 +96,8 @@ class Case:
     """The returns whose lines already exist: they still run, since the chain needs them, but are not written."""
     calculate: CalculateMode = CalculateMode.AS_RUN
     """Whether a statement-holding return is calculated with ``calculate`` or read back (see :class:`CalculateMode`)."""
+    form_door: bool = False
+    """Whether the live command tree has the ``work form`` leaf; only then are the saved rows' figures read."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -346,6 +349,8 @@ def _stated_return(case: Case, plan: RowPlan, work_unit_id: str, stated: _Stated
     if isinstance(calculated, StageResult):
         return RowResult(stated.noted(calculated))
     calculate, figures = calculate_stage(calculated)
+    if calculated.kind is Kind.OK:
+        calculate, figures = _with_row_figures(case, work_unit_id, calculate, figures)
     result = RowResult(stated.noted(calculate), figures=figures)
     revision_id = _printed(calculated, "calculation_revision_id")
     if calculated.kind is not Kind.OK:
@@ -355,6 +360,32 @@ def _stated_return(case: Case, plan: RowPlan, work_unit_id: str, stated: _Stated
     if not plan.owed:
         return _not_owed(case, plan, result)
     return _lifecycle(case, plan, work_unit_id, revision_id, result)
+
+
+def _joined(reason: str, more: str) -> str:
+    return f"{reason} | {more}" if reason else more
+
+
+def _with_row_figures(
+    case: Case, work_unit_id: str, calculate: StageResult, figures: tuple[tuple[str, str], ...]
+) -> tuple[StageResult, tuple[tuple[str, str], ...]]:
+    """The calculate stage and figures once the casillas the saved rows hold are filled, where the leaf exists.
+
+    The ``work form`` command is read once, after the return's final calculation. A row figure fills a casilla only
+    where the calculation printed none or zero; a differing nonzero figure stays and is named in the reason. A read
+    that did not succeed leaves the figures as they are and says so; the read changes nothing, so it settles nothing.
+    """
+    if not case.form_door:
+        return calculate, figures
+    read = _step(case, "work form", [*FORM_PATH, work_unit_id])
+    if read.kind is not Kind.OK:
+        return replace(
+            calculate, reason=_joined(calculate.reason, f"work form: {read.reason or read.kind.value}")
+        ), figures
+    merged, conflicts = merge_form_figures(figures, form_row_figures(parse_form_result(read.result)))
+    if not conflicts:
+        return calculate, merged
+    return replace(calculate, reason=_joined(calculate.reason, "row figures: " + "; ".join(conflicts))), merged
 
 
 def _not_owed(case: Case, plan: RowPlan, calculated: RowResult) -> RowResult:
