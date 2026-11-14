@@ -106,6 +106,7 @@ from .export_verification import (
 from .export_xml_dictionary import refuse_incomplete_xml_dictionary_payload, render_xml_dictionary_layout
 from .m200_projection import build_m200_filing_projection_plan
 from .m296_projection import build_m296_filing_projection_plan
+from .m840_projection import build_m840_filing_projection_plan
 from .producer_snapshot import (
     FilingProducerSnapshot,
 )
@@ -994,6 +995,12 @@ def _projection_plan_for_layout(
         )
     if draft.modelo == form_for_role("irnr.withholding_annual"):
         return build_m296_filing_projection_plan(
+            registry_snapshot=registry_snapshot,
+            layout=layout,
+            producer_snapshot=producer_snapshot,
+        )
+    if draft.modelo == form_for_role("iae.census_declaration"):
+        return build_m840_filing_projection_plan(
             registry_snapshot=registry_snapshot,
             layout=layout,
             producer_snapshot=producer_snapshot,

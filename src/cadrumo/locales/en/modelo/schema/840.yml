@@ -99,9 +99,6 @@ modelo:
               label: Tax year to which the return relates
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               label: Return type (registration / change / deregistration)
-            x-chim6r31e9gmst355pkmsp39cdgm8rri5lo62pr9dpgiqorfdlo6opbdcln78obid5gg:
-              label: Supplementary page indicator (blank for an original page, C for
-                a supplementary page)
             x-clm6ar9dehp6iohedlqmsqb3d5o62r1dedqmqo9dcdnmqs3lehgm4r35:
               label: 'Municipal quota: sum of the countable floor area of the premises'
             x-clm6ar9dehp6iohedlqmsqb3d5o62r1dedqmqo9de9im6t39cpkm6ob4c4:
