@@ -601,6 +601,8 @@ application:
           újra.'
         producer_fact_required: 'Semmi sem íródott ki: az exportáláshoz szükség van
           erre: %{fact}, de az nincs megadva. Add meg, és exportálj újra.'
+        producer_facts_unsupplied: 'Semmi sem íródott ki: a(z) %{modelo} modell exportálásához
+          szükség van erre: %{facts}, de az alkalmazás ezeket még nem tudja előállítani.'
         product_identity_not_admitted: 'Semmi sem íródott ki: ennek az exportnak nincs
           helye a termék vagy a szoftver azonosítójának, ezért nem adható meg ilyen.'
         product_identity_required: 'Semmi sem íródott ki: az exporthoz szükség van
@@ -868,20 +870,20 @@ application:
         activity_not_found: Nincs készletnyilvántartás ehhez a tevékenységhez és a(z)
           %{year} évhez. Először hozd létre, vagy ellenőrizd a tevékenységet és az
           évet.
-        claimed_transaction_amount_mismatch: 'A(z) %{year}. évi készlet %{movement_id}
-          vásárlása nem egyezik a tételével: az alapnak, az áfának és a pótdíjnak
-          centre egyeznie kell. Javítsd a vásárlást, vagy válassz másik tételt.'
-        claimed_transaction_double_claim: A(z) %{movement_id} vásárlás által megjelölt
-          tételt már egy másik készlet vagy az eszköznyilvántartásod egy eleme magáénak
-          tekinti. Minden tétel csak egy nyilvántartáshoz tartozhat.
-        claimed_transaction_missing: A(z) %{year}. évi készlet %{movement_id} vásárlása
-          olyan tételt jelöl meg, amely nem aktív tétel a könyvelésedben. Válaszd
-          ki a vásárlást rögzítő tételt.
-        claimed_transaction_not_eur: A(z) %{movement_id} vásárlás által megjelölt
-          tétel nem euróban van. Egyelőre csak euróban vezetett tétel jelölhető meg.
-        claimed_transaction_substrate_missing: A(z) %{movement_id} vásárlás által
-          megjelölt tételnek nincs adóalapja vagy áfaösszege, ezért nem hasonlítható
-          össze. Előbb egészítsd ki a tételt.
+        claimed_transaction_amount_mismatch: 'A(z) %{year}. évi készlet ezen vásárlása
+          nem egyezik a tételével: az alapnak, az áfának és a pótdíjnak centre egyeznie
+          kell. Javítsd a vásárlást, vagy válassz másik tételt.'
+        claimed_transaction_double_claim: Az ezen vásárlás által megjelölt tételt
+          már egy másik készlet vagy az eszköznyilvántartásod egy eleme magáénak tekinti.
+          Minden tétel csak egy nyilvántartáshoz tartozhat.
+        claimed_transaction_missing: A(z) %{year}. évi készlet ezen vásárlása olyan
+          tételt jelöl meg, amely nem aktív tétel a könyvelésedben. Válaszd ki a vásárlást
+          rögzítő tételt.
+        claimed_transaction_not_eur: Az ezen vásárlás által megjelölt tétel nem euróban
+          van. Egyelőre csak euróban vezetett tétel jelölhető meg.
+        claimed_transaction_substrate_missing: Az ezen vásárlás által megjelölt tételnek
+          nincs adóalapja vagy áfaösszege, ezért nem hasonlítható össze. Előbb egészítsd
+          ki a tételt.
         closing_authority_conflict: Ehhez a tevékenységhez és évhez már másik záróérték
           van rögzítve.
         closing_authority_invalid: Ezt a záróértéket nem sikerült rögzíteni, mert
@@ -911,7 +913,7 @@ application:
           évi záróértéke erre a zárásra épül, ezért a(z) %{year}. évi készletadatok
           már nem módosíthatók.
         ledger_row_not_purchase: Csak egy készletvásárlás jelölheti meg az őt rögzítő
-          könyvelt tételt, és a(z) %{movement_id} nem vásárlás.
+          könyvelt tételt, és ez a mozgás nem vásárlás.
         movement_already_superseded: Ezt a mozgást már javították vagy sztornózták.
         movement_not_found: Ennek a tevékenységnek a(z) %{year}. évi készletében nincs
           ilyen mozgás.
