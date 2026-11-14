@@ -334,6 +334,12 @@ function pageBoxes() {
           text: element.getAttribute("data-value"),
         }
       : null;
+  // A box is named by the casilla its served address names (`c:<casilla>`),
+  // as the table names its figures; the printed box number can differ from
+  // it (box 69 is casilla iva.resultado) or be absent. A binding address
+  // (`b:`) is not a casilla.
+  const casillaOf = (key, printed) =>
+    key?.startsWith("c:") ? key.slice(2) : key?.startsWith("b:") ? "" : printed;
   const boxes = [];
   for (const row of root.querySelectorAll('div[role="row"][data-key]')) {
     const cells = [...row.children].filter(
@@ -341,13 +347,11 @@ function pageBoxes() {
     );
     const key = row.getAttribute("data-key");
     const printed = norm(cells[0]?.textContent);
-    // A field the form serves with no printed box number still names its
-    // casilla in the served key (`c:<casilla>`).
-    const served = !printed && key?.startsWith("c:") ? key.slice(2) : "";
+    const box = casillaOf(key, printed);
     boxes.push({
       key,
-      box: printed || served,
-      fromKey: Boolean(served),
+      box,
+      printed,
       value: norm((cells[2]?.querySelector("button") ?? cells[2])?.textContent),
       typed: typedOf(row),
     });
@@ -356,9 +360,12 @@ function pageBoxes() {
     const values = [...cell.querySelectorAll("button")]
       .map((button) => norm(button.textContent))
       .filter(Boolean);
+    const key = cell.getAttribute("data-key");
+    const printed = norm(cell.querySelector('[class*="font-mono"]')?.textContent);
     boxes.push({
-      key: cell.getAttribute("data-key"),
-      box: norm(cell.querySelector('[class*="font-mono"]')?.textContent),
+      key,
+      box: casillaOf(key, printed),
+      printed,
       value: values.at(-1) ?? "",
       typed: typedOf(cell),
     });
@@ -1369,15 +1376,16 @@ async function readFigures() {
   const conflicts = [];
   const language = await exec(() => document.documentElement.lang);
   let typedBoxes = 0;
-  const keyedBoxes = [];
+  // Boxes whose casilla is not the number the form prints, for the run log.
+  const renamed = [];
   // Boxes whose value cell shows no figure: for the run log, to tell a box the
   // window leaves blank from one the reader cannot read.
   const blank = [];
-  for (const { key, box, value, typed, fromKey } of seen.values()) {
+  for (const { key, box, printed, value, typed } of seen.values()) {
     if (box && (!value || value === "—"))
       blank.push({ key, box, value, typed: typed?.text ?? null });
     if (!box || !value || value === "—" || isZeroText(value)) continue;
-    if (fromKey) keyedBoxes.push(box);
+    if (printed !== undefined && printed !== box) renamed.push([printed, box]);
     // The typed scalar the form serves wins; without one, a number is
     // written as a plain decimal and any other text stays as displayed.
     const figure = typed ? typed.text : plainDecimal(value, language);
@@ -1388,7 +1396,7 @@ async function readFigures() {
   }
   log("figures", {
     typedBoxes,
-    keyedBoxes,
+    renamed: renamed.slice(0, 80),
     blank: blank.length,
     blankWithTyped: blank.filter((item) => item.typed !== null).slice(0, 60),
     pages,
