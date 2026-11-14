@@ -4693,6 +4693,14 @@ application:
         and %{count} were given.
       descendant_value_invalid: Descendant %{row} states a value the declaration cannot
         hold; check its dates, amounts and yes-or-no answers.
+      iae_row_invalid: The fact “%{leaf}” is not valid or contradicts other facts
+        of the row; nothing was stored. Correct it and repeat “%{door}”.
+      iae_row_reference_missing: “%{leaf}” names row %{row} of “%{section}”, which
+        does not exist; nothing was stored. Add that row first, then repeat “%{door}”.
+      iae_row_referenced: Row %{row} is still named by rows %{rows} of “%{section}”;
+        nothing was removed. Remove those first with “%{door}”.
+      iae_row_repeated: Row %{row} already states this “%{leaf}”; nothing was stored.
+        Change that row with “%{door}” instead.
       lifecycle_schema_validation_failed: The profile data does not match the user-profile
         schema.
       passphrase_confirmation_mismatch: The new password and its confirmation do not
@@ -4899,6 +4907,12 @@ application:
         stale_revision: The profile or its ledger entries changed after this list
           was read. Read the list again.
       relation:
+        iae_elemento_tributario:
+          actividad: Tax element of this activity
+        iae_local:
+          actividad: Premises of this activity
+        iae_local_superficie:
+          local: Surface class of these premises
         prevision_social_contribution: Certificate of the year
         renta_arrendamiento:
           inmueble: Lease of this property

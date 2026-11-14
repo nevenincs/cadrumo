@@ -34,6 +34,7 @@ from ...domain.user_profile.errors import ProfileSchemaValidationError
 from ...domain.user_profile.values import UserProfileFact, UserProfileRecord
 from .completeness import profile_section_rows
 from .fact_write import ProfileFactWriteDoor, apply_profile_fact_changes
+from .iae_records import RowReferences, admit_iae_row, is_iae_section, require_iae_rows_unreferencing
 from .posicion_records import admit_posicion_row, is_posicion_section, require_posicion_row_removable
 from .profile_record_repository import ProfileRecordRepository
 from .projections import record_to_path_values
@@ -117,7 +118,7 @@ def _record_row_number(section_key: str, row_key: str) -> int:
 
 def _is_record_section(section_key: str) -> bool:
     """Report whether a repeatable section carries record-level admission."""
-    return is_rental_section(section_key) or is_posicion_section(section_key)
+    return is_rental_section(section_key) or is_posicion_section(section_key) or is_iae_section(section_key)
 
 
 def _admit_record_row(
@@ -126,12 +127,17 @@ def _admit_record_row(
     row_key: int,
     row: Mapping[str, str],
     path_values: Mapping[str, object],
+    references: RowReferences,
     authority: PinnedAuthorityOperation,
     mutation: ProfileRecordRowMutation,
 ) -> dict[str, str]:
     """Return the stored form of a record row from the admission its section owns."""
     if is_posicion_section(section_key):
         return admit_posicion_row(row_key=row_key, row=row, authority=authority, mutation=mutation)
+    if is_iae_section(section_key):
+        return admit_iae_row(
+            section_key, row_key=row_key, row=row, path_values=path_values, references=references, mutation=mutation
+        )
     return admit_rental_row(
         section_key, row_key=row_key, row=row, path_values=path_values, authority=authority, mutation=mutation
     )
@@ -329,6 +335,7 @@ def add_profile_repeatable_section_row(
             row_key=row_index,
             row={key: value.strip() for key, value in values.items()},
             path_values=record_to_path_values(current),
+            references=schema.row_references(),
             authority=authority,
             mutation=ProfileRecordRowMutation.ADD,
         )
@@ -386,7 +393,13 @@ def update_profile_repeatable_section_row(
     _require_existing_row(section.key, row_key, current)
     if _is_record_section(section.key):
         values, clears = _admitted_record_edit(
-            section.key, row_key, values=values, clears=clears, current=current, authority=authority
+            section.key,
+            row_key,
+            values=values,
+            clears=clears,
+            current=current,
+            references=schema.row_references(),
+            authority=authority,
         )
         if not values and not clears:
             return ProfileRepeatableRowChangeOutcome(
@@ -423,6 +436,7 @@ def _admitted_record_edit(
     values: Mapping[str, str],
     clears: Iterable[str],
     current: UserProfileRecord,
+    references: RowReferences,
     authority: PinnedAuthorityOperation,
 ) -> tuple[dict[str, str], tuple[str, ...]]:
     """Judge the whole row an edit leaves; return the leaves to write and the leaves to clear."""
@@ -440,6 +454,7 @@ def _admitted_record_edit(
         row_key=number,
         row=merged,
         path_values=path_values,
+        references=references,
         authority=authority,
         mutation=ProfileRecordRowMutation.EDIT,
     )
@@ -490,6 +505,9 @@ def remove_profile_repeatable_section_row(
             row_key=_record_row_number(section.key, row_key),
             ledger_references=rental_ledger_references(profile_id=profile_id),
         )
+    require_iae_rows_unreferencing(
+        section.key, row_key=int(row_key) if row_key else 0, path_values=present, references=schema.row_references()
+    )
     changes = tuple(
         UserProfileFact(path=path, value=None)
         for field in section.fields

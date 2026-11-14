@@ -1,6 +1,6 @@
 [schema]
 id = "cadrumo.user_profile"
-version = 14
+version = 15
 title = "Cadrumo user profile schema"
 snapshot_policy = "immutable_secure_snapshot_hash"
 remove_policy = "live_profile_tombstone_retain_snapshots"
@@ -324,6 +324,39 @@ model_selectors = ["address.cadastral_reference"]
 legal_refs = ["rdleg-1-2004:art-6.3"]
 
 [[sections.fields]]
+key = "fiscal_address_province_code"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Codigo de provincia del domicilio fiscal, two digits from the AEAT provincia table (Modelo 840 Apartado I casilla [11], posiciones 213-214). Operator-entered or acquired with provenance; absent means unstated, never derived from the postcode."
+model_selectors = ["contact.fiscal_address_province_code"]
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form"]
+
+[[sections.fields]]
+key = "fiscal_address_municipality_code"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Codigo de municipio del domicilio fiscal, five characters from the AEAT municipio table (Modelo 840 Apartado I casilla [10], posiciones 215-219). Operator-entered or acquired with provenance; absent means unstated."
+model_selectors = ["contact.fiscal_address_municipality_code"]
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form"]
+
+[[sections.fields]]
+key = "fiscal_address_municipality_name"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Nombre del municipio del domicilio fiscal, at most thirty characters (Modelo 840 Apartado I, posiciones 220-249). Operator-entered or acquired with provenance; absent means unstated."
+model_selectors = ["contact.fiscal_address_municipality_name"]
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form"]
+
+[[sections.fields]]
 key = "contact_person_phone"
 type = "string"
 carried_by_filing_record = true
@@ -446,6 +479,39 @@ effective_dated = true
 description = "AEAT censo baja date for the economic activity. Caps obligation calendar after baja."
 model_selectors = ["censo.activity_end_date"]
 legal_refs = ["rd-1065-2007:art-11"]
+
+[[sections.fields]]
+key = "aeat_delegacion_code"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Codigo de la Delegacion de la AEAT del sujeto pasivo, two digits from the AEAT table (Modelo 840 posiciones 11-12). Operator-entered or acquired with provenance; absent means unstated, never derived from the fiscal address."
+model_selectors = ["censo.aeat_delegacion_code"]
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form"]
+
+[[sections.fields]]
+key = "aeat_administracion_code"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Codigo de la Administracion de la AEAT del sujeto pasivo, three digits from the AEAT table (Modelo 840 posiciones 13-15, the code part of '3 Cod + 20 Descrip'). Operator-entered or acquired with provenance; absent means unstated."
+model_selectors = ["censo.aeat_administracion_code"]
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form"]
+
+[[sections.fields]]
+key = "aeat_administracion_name"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Nombre de la Administracion de la AEAT del sujeto pasivo, at most twenty characters (Modelo 840 posiciones 16-35, the description part of '3 Cod + 20 Descrip'). Operator-entered or acquired with provenance; absent means unstated."
+model_selectors = ["censo.aeat_administracion_name"]
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form"]
 
 [[sections.fields]]
 key = "divergencia"
@@ -1747,6 +1813,477 @@ enum_values = ["A01", "A02", "A03", "A04", "A05", "B01", "B02", "B03", "B04", "B
 model_selectors = ["activities.tipo_actividad"]
 legal_refs = ["orden-eha-1274-2007:art-1", "ley-35-2006:art-27"]
 source_refs = ["aeat-m036-activity-code-table-2026-03-26"]
+
+[[sections.fields]]
+key = "province_code"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Codigo de provincia donde se ejerce la actividad, two digits from the AEAT provincia table (Modelo 840 Apartado IV casilla [40], posiciones 581-582). Operator-entered or acquired with provenance; absent means unstated, never inferred from the IAE epigraph."
+model_selectors = ["activities.province_code"]
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form"]
+
+[[sections.fields]]
+key = "municipality_code"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Codigo de municipio donde se ejerce la actividad, five characters from the AEAT municipio table (Modelo 840 Apartado IV casilla [38], posiciones 583-587). Operator-entered or acquired with provenance; absent means unstated, never inferred from the IAE epigraph."
+model_selectors = ["activities.municipality_code"]
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form"]
+
+[[sections.fields]]
+key = "municipality_name"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Nombre del municipio donde se ejerce la actividad, at most thirty characters (Modelo 840 Apartado IV, posiciones 588-617). Operator-entered or acquired with provenance; absent means unstated, never inferred from the IAE epigraph."
+model_selectors = ["activities.municipality_name"]
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form"]
+
+[[sections.fields]]
+key = "cuota_provincial_province_code"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Provincia of a provincial clase de cuota, two digits from the AEAT provincia table (Modelo 840 Apartado IV casilla [33] Provincial (provincia), posiciones 531-532); stated only for an activity taxed by cuota provincial. Operator-entered or acquired with provenance; absent means unstated, never inferred from the IAE epigraph."
+model_selectors = ["activities.cuota_provincial_province_code"]
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form"]
+
+[[sections.fields]]
+key = "local_afecto_indirectamente"
+type = "boolean"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Whether the activity has a local afecto indirectamente (Modelo 840 Apartado IV casilla [35], S o blanco); the local itself is an iae_local row with afectacion indirecta. Operator-entered or acquired with provenance; absent means unstated, never inferred from the IAE epigraph."
+model_selectors = ["activities.local_afecto_indirectamente"]
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form"]
+
+[[sections.fields]]
+key = "maquinas_recreativas_tipo_a"
+type = "integer"
+required = false
+sensitivity = "identity"
+effective_dated = true
+minimum = "0"
+maximum = "9999999"
+description = "Numero de maquinas recreativas tipo A (Modelo 840 Apartado VI B, posiciones 573-579, seven digits). Operator-entered or acquired with provenance; absent means unstated, never inferred from the IAE epigraph."
+model_selectors = ["activities.maquinas_recreativas_tipo_a"]
+legal_refs = ["orden-hac-2572-2003:apartado-1", "rdleg-1175-1990:art-unico"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form", "boe-iae-tarifas-rdleg-1175-1990"]
+
+[[sections.fields]]
+key = "maquinas_recreativas_tipo_b"
+type = "integer"
+required = false
+sensitivity = "identity"
+effective_dated = true
+minimum = "0"
+maximum = "9999999"
+description = "Numero de maquinas recreativas tipo B (Modelo 840 Apartado VI B, posiciones 606-612, seven digits). Operator-entered or acquired with provenance; absent means unstated, never inferred from the IAE epigraph."
+model_selectors = ["activities.maquinas_recreativas_tipo_b"]
+legal_refs = ["orden-hac-2572-2003:apartado-1", "rdleg-1175-1990:art-unico"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form", "boe-iae-tarifas-rdleg-1175-1990"]
+
+[[sections.fields]]
+key = "expositores_autoventa"
+type = "integer"
+required = false
+sensitivity = "identity"
+effective_dated = true
+minimum = "0"
+maximum = "9999999"
+description = "Numero de expositores para autoventa (Modelo 840 Apartado VI B, posiciones 639-645, seven digits). Operator-entered or acquired with provenance; absent means unstated, never inferred from the IAE epigraph."
+model_selectors = ["activities.expositores_autoventa"]
+legal_refs = ["orden-hac-2572-2003:apartado-1", "rdleg-1175-1990:art-unico"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form", "boe-iae-tarifas-rdleg-1175-1990"]
+
+[[sections]]
+key = "iae_local"
+title = "IAE premises"
+sensitivity = "identity"
+effective_dated = true
+repeatable = true
+
+[[sections.fields]]
+key = "actividad"
+type = "integer"
+required = true
+sensitivity = "identity"
+effective_dated = true
+references_section = "activities"
+minimum = "0"
+description = "Identificador de fila de la actividad a la que esta afecto el local: the position of its row in the activities section."
+model_selectors = ["iae_local.actividad"]
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form"]
+
+[[sections.fields]]
+key = "afectacion"
+type = "enum"
+required = true
+sensitivity = "identity"
+effective_dated = true
+enum_values = ["ejercicio", "indirecta"]
+description = "How the local serves the activity: ejercicio for a local where the activity is exercised (Modelo 840 Apartado VI C and Anexo Relacion de locales), indirecta for the local afecto indirectamente (Apartado V)."
+model_selectors = ["iae_local.afectacion"]
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form"]
+
+[[sections.fields]]
+key = "via_sg"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Siglas de la via publica del local (SG), two characters from the AEAT table. Operator-entered or acquired with provenance; absent means unstated."
+model_selectors = ["iae_local.via_sg"]
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form"]
+
+[[sections.fields]]
+key = "via_nombre"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Nombre de la via publica del local, at most twenty-five characters. Operator-entered or acquired with provenance; absent means unstated."
+model_selectors = ["iae_local.via_nombre"]
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form"]
+
+[[sections.fields]]
+key = "numero"
+type = "integer"
+required = false
+sensitivity = "identity"
+effective_dated = true
+minimum = "0"
+maximum = "99999"
+description = "Numero de la via del local, at most five digits. Operator-entered or acquired with provenance; absent means unstated."
+model_selectors = ["iae_local.numero"]
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form"]
+
+[[sections.fields]]
+key = "km"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Kilometro de la via del local, at most five characters. Operator-entered or acquired with provenance; absent means unstated."
+model_selectors = ["iae_local.km"]
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form"]
+
+[[sections.fields]]
+key = "portal"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Portal (Pto.) del local, at most four characters; Apartado V only, the Anexo has no position for it. Operator-entered or acquired with provenance; absent means unstated."
+model_selectors = ["iae_local.portal"]
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form"]
+
+[[sections.fields]]
+key = "escalera"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Escalera del local, at most two characters. Operator-entered or acquired with provenance; absent means unstated."
+model_selectors = ["iae_local.escalera"]
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form"]
+
+[[sections.fields]]
+key = "piso"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Piso del local, at most two characters. Operator-entered or acquired with provenance; absent means unstated."
+model_selectors = ["iae_local.piso"]
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form"]
+
+[[sections.fields]]
+key = "puerta"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Puerta del local, at most two characters. Operator-entered or acquired with provenance; absent means unstated."
+model_selectors = ["iae_local.puerta"]
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form"]
+
+[[sections.fields]]
+key = "postcode"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Codigo postal del local, five digits. Operator-entered or acquired with provenance; absent means unstated."
+model_selectors = ["iae_local.postcode"]
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form"]
+
+[[sections.fields]]
+key = "province_code"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Codigo de provincia del local, two digits from the AEAT provincia table. Operator-entered or acquired with provenance; absent means unstated."
+model_selectors = ["iae_local.province_code"]
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form"]
+
+[[sections.fields]]
+key = "municipality_code"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Codigo de municipio del local, five characters from the AEAT municipio table. Operator-entered or acquired with provenance; absent means unstated."
+model_selectors = ["iae_local.municipality_code"]
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form"]
+
+[[sections.fields]]
+key = "municipality_name"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Nombre del municipio del local, at most thirty characters. Operator-entered or acquired with provenance; absent means unstated."
+model_selectors = ["iae_local.municipality_name"]
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form"]
+
+[[sections.fields]]
+key = "telefono"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Telefono del local afecto indirectamente, nine digits (Modelo 840 Apartado V casilla [83]). Operator-entered or acquired with provenance; absent means unstated."
+model_selectors = ["iae_local.telefono"]
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form"]
+
+[[sections.fields]]
+key = "uso_destino_code"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Codigo de uso o destino del local afecto indirectamente, two characters (Modelo 840 Apartado V casilla [68], 2 Cod + 50 Descrip). Operator-entered or acquired with provenance; absent means unstated."
+model_selectors = ["iae_local.uso_destino_code"]
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form"]
+
+[[sections.fields]]
+key = "uso_destino_description"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Descripcion del uso o destino del local afecto indirectamente (almacen, deposito, centro de direccion...), at most fifty characters (Modelo 840 Apartado V casilla [68]). Operator-entered or acquired with provenance; absent means unstated."
+model_selectors = ["iae_local.uso_destino_description"]
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form"]
+
+[[sections.fields]]
+key = "superficie_total"
+type = "integer"
+required = false
+sensitivity = "identity"
+effective_dated = true
+minimum = "0"
+maximum = "99999"
+description = "Superficie total del local in square metres, as the Anexo Relacion de locales states it (five digits). Stored apart from the rectificada and computable surfaces, never derived from them. Operator-entered or acquired with provenance; absent means unstated."
+model_selectors = ["iae_local.superficie_total"]
+legal_refs = ["orden-hac-2572-2003:apartado-1", "rdleg-1175-1990:art-unico"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form", "boe-iae-tarifas-rdleg-1175-1990"]
+
+[[sections.fields]]
+key = "superficie_rectificada"
+type = "integer"
+required = false
+sensitivity = "identity"
+effective_dated = true
+minimum = "0"
+maximum = "99999"
+description = "Superficie rectificada del local in square metres, as the Anexo Relacion de locales states it (five digits). Stored apart from the total and computable surfaces. Operator-entered or acquired with provenance; absent means unstated."
+model_selectors = ["iae_local.superficie_rectificada"]
+legal_refs = ["orden-hac-2572-2003:apartado-1", "rdleg-1175-1990:art-unico"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form", "boe-iae-tarifas-rdleg-1175-1990"]
+
+[[sections.fields]]
+key = "superficie_computable"
+type = "integer"
+required = false
+sensitivity = "identity"
+effective_dated = true
+minimum = "0"
+maximum = "99999"
+description = "Superficie computable del local in square metres, as the Anexo Relacion de locales states it (five digits). Stored apart from the total and rectificada surfaces. Operator-entered or acquired with provenance; absent means unstated."
+model_selectors = ["iae_local.superficie_computable"]
+legal_refs = ["orden-hac-2572-2003:apartado-1", "rdleg-1175-1990:art-unico"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form", "boe-iae-tarifas-rdleg-1175-1990"]
+
+[[sections]]
+key = "iae_local_superficie"
+title = "IAE premises surfaces"
+sensitivity = "identity"
+effective_dated = true
+repeatable = true
+
+[[sections.fields]]
+key = "local"
+type = "integer"
+required = true
+sensitivity = "identity"
+effective_dated = true
+references_section = "iae_local"
+minimum = "0"
+description = "Identificador de fila del local cuya superficie se declara: the position of its row in the iae_local section."
+model_selectors = ["iae_local_superficie.local"]
+legal_refs = ["orden-hac-2572-2003:apartado-1", "rdleg-1175-1990:art-unico"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form", "boe-iae-tarifas-rdleg-1175-1990"]
+
+[[sections.fields]]
+key = "clase"
+type = "enum"
+required = true
+sensitivity = "identity"
+effective_dated = true
+enum_values = ["0.1", "0.2", "1.1", "1.2", "1.3", "2.0", "3.1", "3.2", "4.0", "5.0", "6.0"]
+description = "Clase de superficie of IAE Regla 14 as Modelo 840 Apartado VI C lists it: 0.1 sin reduccion, 0.2 hospedaje, 1.1 descubierta, 1.2 instalacion deportiva descubierta, 1.3 gradas descubiertas, 2.0 puesto temporada, 3.1 cubierta de instalacion deportiva y espectaculo, 3.2 gradas cubiertas, 4.0 ensenanza, 5.0 almacen, 6.0 aparcamiento cubierto. A local states each class once."
+model_selectors = ["iae_local_superficie.clase"]
+legal_refs = ["orden-hac-2572-2003:apartado-1", "rdleg-1175-1990:art-unico"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form", "boe-iae-tarifas-rdleg-1175-1990"]
+
+[[sections.fields]]
+key = "total"
+type = "integer"
+required = false
+sensitivity = "identity"
+effective_dated = true
+minimum = "0"
+maximum = "99999"
+description = "Superficie total of the class in whole square metres (Modelo 840 Apartado VI C, five digits). Stated on its own, never derived from the rectificada or computable surface. Operator-entered or acquired with provenance; absent means unstated, not zero."
+model_selectors = ["iae_local_superficie.total"]
+legal_refs = ["orden-hac-2572-2003:apartado-1", "rdleg-1175-1990:art-unico"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form", "boe-iae-tarifas-rdleg-1175-1990"]
+
+[[sections.fields]]
+key = "rectificada"
+type = "integer"
+required = false
+sensitivity = "identity"
+effective_dated = true
+minimum = "0"
+maximum = "99999"
+description = "Superficie rectificada of the class in whole square metres (Modelo 840 Apartado VI C, five digits). Stated on its own, never derived from the total or computable surface. Operator-entered or acquired with provenance; absent means unstated, not zero."
+model_selectors = ["iae_local_superficie.rectificada"]
+legal_refs = ["orden-hac-2572-2003:apartado-1", "rdleg-1175-1990:art-unico"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form", "boe-iae-tarifas-rdleg-1175-1990"]
+
+[[sections.fields]]
+key = "computable"
+type = "integer"
+required = false
+sensitivity = "identity"
+effective_dated = true
+minimum = "0"
+maximum = "99999"
+description = "Superficie computable of the class in whole square metres (Modelo 840 Apartado VI C, five digits). Stated on its own, never derived from the total or rectificada surface. Operator-entered or acquired with provenance; absent means unstated, not zero."
+model_selectors = ["iae_local_superficie.computable"]
+legal_refs = ["orden-hac-2572-2003:apartado-1", "rdleg-1175-1990:art-unico"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form", "boe-iae-tarifas-rdleg-1175-1990"]
+
+[[sections]]
+key = "iae_elemento_tributario"
+title = "IAE tax elements"
+sensitivity = "identity"
+effective_dated = true
+repeatable = true
+
+[[sections.fields]]
+key = "actividad"
+type = "integer"
+required = true
+sensitivity = "identity"
+effective_dated = true
+references_section = "activities"
+minimum = "0"
+description = "Identificador de fila de la actividad del elemento tributario: the position of its row in the activities section."
+model_selectors = ["iae_elemento_tributario.actividad"]
+legal_refs = ["orden-hac-2572-2003:apartado-1", "rdleg-1175-1990:art-unico"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form", "boe-iae-tarifas-rdleg-1175-1990"]
+
+[[sections.fields]]
+key = "linea"
+type = "integer"
+required = true
+sensitivity = "identity"
+effective_dated = true
+minimum = "1"
+maximum = "4"
+description = "Linea of Modelo 840 Apartado VI A (1 to 4; the design reserves lines 5 to 8) the element occupies; one element per line and activity."
+model_selectors = ["iae_elemento_tributario.linea"]
+legal_refs = ["orden-hac-2572-2003:apartado-1", "rdleg-1175-1990:art-unico"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form", "boe-iae-tarifas-rdleg-1175-1990"]
+
+[[sections.fields]]
+key = "code"
+type = "string"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "Codigo del elemento tributario del grupo o epigrafe, two characters (Modelo 840 Apartado VI A, 2 Cod + 30 Descrip). Operator-entered or acquired with provenance; absent means unstated."
+model_selectors = ["iae_elemento_tributario.code"]
+legal_refs = ["orden-hac-2572-2003:apartado-1", "rdleg-1175-1990:art-unico"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form", "boe-iae-tarifas-rdleg-1175-1990"]
+
+[[sections.fields]]
+key = "description"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Descripcion del elemento tributario, at most thirty characters (Modelo 840 Apartado VI A, 2 Cod + 30 Descrip). Operator-entered or acquired with provenance; absent means unstated."
+model_selectors = ["iae_elemento_tributario.description"]
+legal_refs = ["orden-hac-2572-2003:apartado-1", "rdleg-1175-1990:art-unico"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form", "boe-iae-tarifas-rdleg-1175-1990"]
+
+[[sections.fields]]
+key = "numero"
+type = "decimal"
+required = true
+sensitivity = "identity"
+effective_dated = true
+minimum = "0"
+maximum = "9999999.99"
+description = "Numero de unidades del elemento tributario, at most seven integer digits and two decimals (Modelo 840 Apartado VI A, 7ent + 2dec). Operator-entered or acquired with provenance; absent means unstated."
+model_selectors = ["iae_elemento_tributario.numero"]
+legal_refs = ["orden-hac-2572-2003:apartado-1", "rdleg-1175-1990:art-unico"]
+source_refs = ["aeat-dr-840", "aeat-modelo-840-form", "boe-iae-tarifas-rdleg-1175-1990"]
 
 [[sections]]
 key = "irpf"

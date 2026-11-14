@@ -4925,6 +4925,15 @@ application:
         i se n'han indicat %{count}.
       descendant_value_invalid: El descendent %{row} indica un valor que la declaració
         no admet; revisa'n les dates, els imports i les respostes de sí o no.
+      iae_row_invalid: La dada «%{leaf}» no és vàlida o contradiu altres dades de
+        la fila; no s'ha desat res. Corregeix-la i repeteix «%{door}».
+      iae_row_reference_missing: «%{leaf}» anomena la fila %{row} de «%{section}»,
+        que no existeix; no s'ha desat res. Afegeix abans aquesta fila i repeteix
+        «%{door}».
+      iae_row_referenced: Les files %{rows} de «%{section}» encara anomenen la fila
+        %{row}; no s'ha tret res. Treu-les abans amb «%{door}».
+      iae_row_repeated: La fila %{row} ja indica aquest «%{leaf}»; no s'ha desat res.
+        Canvia aquesta fila amb «%{door}».
       lifecycle_schema_validation_failed: Les dades del perfil no coincideixen amb
         l'esquema de perfil d'usuari.
       passphrase_confirmation_mismatch: La nova contrasenya i la seva confirmació
@@ -5138,6 +5147,12 @@ application:
         stale_revision: El perfil o els seus moviments han canviat després de llegir
           aquesta llista. Torna a llegir la llista.
       relation:
+        iae_elemento_tributario:
+          actividad: Element tributari d'aquesta activitat
+        iae_local:
+          actividad: Local d'aquesta activitat
+        iae_local_superficie:
+          local: Classe de superfície d'aquest local
         prevision_social_contribution: Certificat de l'exercici
         renta_arrendamiento:
           inmueble: Arrendament d'aquest immoble
