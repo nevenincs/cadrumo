@@ -653,8 +653,8 @@ class FilingProducerKey(StrEnum):
     # the bundled diseño (Orden HAC/2572/2003), apartado and block included. AEAT's
     # own labels for the local grid say only Total / Rectificada / Computable without
     # naming the magnitude, so these keys say the same rather than asserting a
-    # surface figure the document does not state. The relación de locales repeats
-    # nine times in the Anexo record; nine repeats of one local are one identity.
+    # surface figure the document does not state. The Anexo's relación de locales is
+    # a projection (filing_projection_m840), not a header key: it repeats per sheet.
     #: Delegación. Tabla.
     M840_DELEGACION_CODIGO = "m840.delegacion_codigo"
     #: Administración. Tabla.
@@ -669,34 +669,6 @@ class FilingProducerKey(StrEnum):
     M840_ACTIVIDAD_MUNICIPIO = "m840.actividad.municipio"
     #: Apart. V: Local afecto indirectamente a la act. Municipio
     M840_LOCAL_INDIRECTO_MUNICIPIO = "m840.local_indirecto.municipio"
-    #: Apartado II: Relación de locales. SG Tabla
-    M840_LOCALES_SG_TABLA = "m840.locales.sg_tabla"
-    #: Apartado II: Relación de locales. Nombre de la vía pública
-    M840_LOCALES_NOMBRE_VIA = "m840.locales.nombre_via"
-    #: Apartado II: Relación de locales. Núm.
-    M840_LOCALES_NUMERO = "m840.locales.numero"
-    #: Apartado II: Relación de locales. Km.
-    M840_LOCALES_KM = "m840.locales.km"
-    #: Apartado II: Relación de locales. Esc.
-    M840_LOCALES_ESCALERA = "m840.locales.escalera"
-    #: Apartado II: Relación de locales. Piso
-    M840_LOCALES_PISO = "m840.locales.piso"
-    #: Apartado II: Relación de locales. Pta.
-    M840_LOCALES_PUERTA = "m840.locales.puerta"
-    #: Apartado II: Relación de locales. Cód. Postal
-    M840_LOCALES_CODIGO_POSTAL = "m840.locales.codigo_postal"
-    #: Apartado II: Relación de locales. Provincia Tabla
-    M840_LOCALES_PROVINCIA_CODIGO = "m840.locales.provincia_codigo"
-    #: Apartado II: Relación de locales. Municipio Tabla
-    M840_LOCALES_MUNICIPIO_CODIGO = "m840.locales.municipio_codigo"
-    #: Apartado II: Relación de locales. Municipio
-    M840_LOCALES_MUNICIPIO_NOMBRE = "m840.locales.municipio_nombre"
-    #: Apartado II: Relación de locales. Total
-    M840_LOCALES_TOTAL = "m840.locales.total"
-    #: Apartado II: Relación de locales. Rectificada
-    M840_LOCALES_RECTIFICADA = "m840.locales.rectificada"
-    #: Apartado II: Relación de locales. Computable
-    M840_LOCALES_COMPUTABLE = "m840.locales.computable"
     #: Apartado VI: Elem. Trib. del grupo o epígrafe. A) 1. Código
     M840_ELEMENTOS_TRIBUTARIOS_GRUPO_A1_CODIGO = "m840.elementos_tributarios.grupo.a1.codigo"
     #: Apartado VI: Elem. Trib. del grupo o epígrafe. A) 1. Número
