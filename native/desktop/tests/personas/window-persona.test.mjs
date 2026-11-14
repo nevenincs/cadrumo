@@ -193,7 +193,7 @@ function pageVisible(selector) {
 }
 
 /** What the workspace and any open dialog show right now. */
-function pageState(actions) {
+function pageState(actions, busyWords) {
   const norm = (text) => (text ?? "").replace(/\s+/g, " ").trim();
   const shown = (element) => element.getClientRects().length > 0;
   const header =
@@ -201,8 +201,14 @@ function pageState(actions) {
       .filter((candidate) => candidate.querySelector("h1") && shown(candidate))
       .at(-1) ?? null;
   let action = null;
-  let busy = false;
-  if (header) {
+  // While the window reads the form again after its own write, the header
+  // shows that it is busy in place of the next step; no step is served then.
+  let busy =
+    !!header &&
+    [...header.querySelectorAll('[role="status"]')].some(
+      (status) => shown(status) && norm(status.textContent) === busyWords,
+    );
+  if (header && !busy) {
     for (const button of header.querySelectorAll("button")) {
       if (!shown(button)) continue;
       const text = norm(button.textContent);
@@ -741,6 +747,7 @@ const readState = () =>
         label(`workspace.modelo.next_button.${action}`),
       ]),
     ),
+    label("desktop.navigation.busy"),
   );
 
 const tablist = (key) =>
@@ -1673,10 +1680,12 @@ async function driveRow(row, runDir, persona) {
   const entries = row.window_statements ?? [];
   const early = entries.filter((entry) => !entry.after_calculation);
   const late = entries.filter((entry) => entry.after_calculation);
+  // A world that refused to record a statement holds no calculation of its own.
   const inherited =
     row.driver_calculate !== undefined &&
     row.driver_calculate !== null &&
-    row.driver_calculate !== NOT_RUN;
+    row.driver_calculate !== NOT_RUN &&
+    row.driver_calculate !== "refused";
   let last = null;
   const unoffered = [];
   const take = (result) => {
@@ -2049,6 +2058,8 @@ async function exportFile(row, runDir, persona, out) {
  * or `wrongKind` when the picker was asked and the window then stayed idle
  * and silent, as it does for a name of a kind it does not save.
  */
+const EXPORT_QUIET_MS = 30_000;
+
 async function exportOutcome(destination, queued, before) {
   const notDone = label("workspace.modelo.outcome.not_done");
   let quietSince = null;
@@ -2075,7 +2086,12 @@ async function exportOutcome(destination, queued, before) {
         return null;
       }
       quietSince ??= Date.now();
-      return Date.now() - quietSince > 6000 ? { wrongKind: true } : null;
+      // An export the window took can run several seconds without drawing a
+      // busy state (Modelo 100 took 8 s on build 12), so silence counts as a
+      // refused kind only after EXPORT_QUIET_MS.
+      return Date.now() - quietSince > EXPORT_QUIET_MS
+        ? { wrongKind: true }
+        : null;
     },
     {
       timeout: TIMEOUT.export,

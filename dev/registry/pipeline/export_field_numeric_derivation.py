@@ -18,6 +18,7 @@ from .export_field_derivation import (
     EQUALS_NUMERIC_ENUMERATION_TOKEN_RE,
     INTEGER_CONTENT_RE,
     LABELLED_ENUMERATION_VALUE_DELIMITER_RE,
+    LEADING_NUMERIC_ENUMERATION_MEMBER_RE,
     OFFICIAL_LITERAL_RE,
     OFFICIAL_UNQUOTED_LITERAL_RE,
     PARENTHESISED_QUOTED_NUMERIC_ENUMERATION_RE,
@@ -318,7 +319,7 @@ def _note_governed_printed_derivation(
     printed run is refused rather than preferred.
     """
     field_id = joined_field.semantic_entry.export_field_id
-    printed = _numeric_enumeration_values(stem)
+    printed = numeric_enumeration_values(stem)
     if printed is None:
         constant = _printed_numeric_constant(field_id, stem)
         _require_reading_fills_the_printed_runs(field_id, (constant,), adjudicated)
@@ -550,7 +551,7 @@ def _integer_numeric_derivation(
     )
 
 
-def _numeric_enumeration_values(content: str) -> tuple[str, ...] | None:
+def numeric_enumeration_values(content: str) -> tuple[str, ...] | None:
     """Read a closed numeric enumeration in any accepted official spelling."""
     labelled_values = _labelled_numeric_values(content)
     if labelled_values is not None:
@@ -615,11 +616,19 @@ def _m369_closed_period_range(
 def _labelled_numeric_values(content: str) -> tuple[str, ...] | None:
     """Read dash, equals, or bare comma-separated numeric labels."""
     dash_values = tuple(str(match.group("value")) for match in DASH_NUMERIC_ENUMERATION_TOKEN_RE.finditer(content))
-    equals_values = tuple(str(match.group("value")) for match in EQUALS_NUMERIC_ENUMERATION_TOKEN_RE.finditer(content))
-    labelled_values = dash_values if len(dash_values) > 1 else equals_values
+    labelled_values = dash_values if len(dash_values) > 1 else _equals_labelled_values(content)
     if len(labelled_values) > 1:
         return labelled_values
     return _bare_labelled_numeric_values(content)
+
+
+def _equals_labelled_values(content: str) -> tuple[str, ...]:
+    """Read a label-first set with any value-first member that opens it."""
+    values = tuple(str(match.group("value")) for match in EQUALS_NUMERIC_ENUMERATION_TOKEN_RE.finditer(content))
+    leading = LEADING_NUMERIC_ENUMERATION_MEMBER_RE.match(content)
+    if leading is None or len(values) < 2:
+        return values
+    return (str(leading.group("value")), *values)
 
 
 def _bare_labelled_numeric_values(content: str) -> tuple[str, ...] | None:
@@ -654,7 +663,7 @@ def _enumeration_numeric_derivation(
     """Validate and derive a closed set of numeric wire values."""
     raw_values = numbered_line_enumeration_values(joined_field.parser_field.content)
     if raw_values is None:
-        raw_values = _numeric_enumeration_values(content)
+        raw_values = numeric_enumeration_values(content)
     if raw_values is None:
         return None
     parser_field = joined_field.parser_field

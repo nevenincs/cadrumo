@@ -341,6 +341,7 @@ signed = false
 design_type = "Num"
 value_policy = "enumerated-digits"
 allowed_values = [
+    "0",
     "1",
     "2",
 ]
@@ -364,6 +365,7 @@ signed = false
 design_type = "Num"
 value_policy = "enumerated-digits"
 allowed_values = [
+    "0",
     "1",
     "2",
 ]
@@ -388,6 +390,7 @@ signed = false
 design_type = "Num"
 value_policy = "enumerated-digits"
 allowed_values = [
+    "0",
     "1",
     "2",
 ]
