@@ -48,6 +48,7 @@ from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.filing_year import FOUR_DIGIT_YEAR_FIRST, FOUR_DIGIT_YEAR_LAST
 from ...core.hashing import sha256_hex
+from ...core.hex import Hex64Str
 from ...core.identity.hex_ids import FilingRecordId
 from ...core.identity.tax_id import tax_id_identity_token
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -264,6 +265,17 @@ class ObservationEnvelopePayload(BaseModel):
             "Registry revision id the source filing resolved to at capture time "
             "so carry-read code can re-confirm the value against the law-determined "
             "registry revision."
+        ),
+    )
+    authority_generation: Hex64Str | None = Field(
+        default=None,
+        exclude_if=lambda value: value is None,
+        description=(
+            "Logical generation of the published authority whose declarations this "
+            "envelope's casilla ids were validated against when it was written. "
+            "Absent on rows stored before the stamp existed, which were written "
+            "under an earlier generation; left out of a dump while absent, so such "
+            "a row serializes exactly as it was stored."
         ),
     )
     source_metadata: dict[str, str] = Field(

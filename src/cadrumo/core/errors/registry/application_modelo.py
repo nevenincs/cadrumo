@@ -248,6 +248,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.calculations.errors.PriorFilingPageQualifiedConflictError",
+        ErrorCode(
+            code="REFUSED_PRIOR_FILING_PAGE_QUALIFIED_CONFLICT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.calc.previous_filing_casillas_conflicting",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.calculations.errors.ObservationKeyError",
         ErrorCode(
             code="ERROR_OBSERVATION_KEY",
