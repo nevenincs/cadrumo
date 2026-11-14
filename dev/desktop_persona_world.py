@@ -197,20 +197,24 @@ def window_split(materialised: MaterialisedPersona, plan: PlannedRow) -> WindowS
         made = statements_for(materialised, plan)
     except PersonaMaterialisationError:
         return WindowSplit()
-    last = max((at for at, statement in enumerate(made) if not _has_window_door(statement)), default=-1)
-    recorded_kinds = {statement.kind for statement in made[: last + 1]}
-    entered: list[Statement] = []
-    for statement in made[last + 1 :]:
-        if statement.kind in recorded_kinds or not _has_window_door(statement):
-            continue
-        if any(item.kind is statement.kind and item.target == statement.target for item in entered):
-            continue
-        entered.append(statement)
+    entered = _entered_in_window(made)
     return WindowSplit(
         left=frozenset(statement.kind for statement in entered),
         entered=tuple(entered),
         without_door=tuple(statement for statement in made if not _has_window_door(statement)),
     )
+
+
+def _entered_in_window(made: Sequence[Statement]) -> list[Statement]:
+    """The statements after the last door-less one, each target once, of kinds the world did not record."""
+    last = max((at for at, statement in enumerate(made) if not _has_window_door(statement)), default=-1)
+    recorded_kinds = {statement.kind for statement in made[: last + 1]}
+    entered: list[Statement] = []
+    for statement in made[last + 1 :]:
+        taken = any(item.kind is statement.kind and item.target == statement.target for item in entered)
+        if statement.kind not in recorded_kinds and _has_window_door(statement) and not taken:
+            entered.append(statement)
+    return entered
 
 
 def _window_statement(statement: Statement) -> dict[str, Any]:
