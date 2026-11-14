@@ -415,11 +415,11 @@ async function runCase(item, context) {
     if (existsSync(logSource)) copyFileSync(logSource, kept);
     // The window's host output and the runtime log, which the removed root
     // would otherwise take with it: a WebView refusing scripts is diagnosed there.
-    const run = join(dirname(dirname(results)), "run");
+    const runRoot = join(dirname(dirname(results)), "run");
     for (const [from, suffix] of [
-      [join(run, "host.stderr.log"), "host-stderr.log"],
-      [join(run, "host.stdout.log"), "host-stdout.log"],
-      [join(run, "storage", "logs", "cadrumo.log"), "runtime.log"],
+      [join(runRoot, "host.stderr.log"), "host-stderr.log"],
+      [join(runRoot, "host.stdout.log"), "host-stdout.log"],
+      [join(runRoot, "storage", "logs", "cadrumo.log"), "runtime.log"],
     ])
       if (existsSync(from))
         copyFileSync(from, join(logsDir, `${caseName}.${suffix}`));
