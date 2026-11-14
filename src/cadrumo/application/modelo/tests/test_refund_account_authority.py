@@ -1,9 +1,8 @@
-"""A Modelo 100 refund refused for want of an account cites the ejercicio's own Orden, never another year's.
+"""A Modelo 100 refund refused for want of an account cites the Orden of the edition serving its ejercicio.
 
-The Orden each year's citation must come from is read from the authored edition's
+The Orden each year's citation must come from is read from the serving edition's
 own ``orden_aplicabilidad``, apart from the fact under test. A year no edition
-authors is carried from the nearest edition, and its refusal cites the statute
-alone rather than the Orden of the year it is carried from.
+authors is served by the nearest edition and cites that edition's Orden.
 """
 
 from __future__ import annotations
@@ -18,21 +17,23 @@ from ....core.period import Period
 from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.tests.authored_editions import (
-    projected_exercise,
     revision_selected_for,
     supported_authored_exercises,
+    supported_exercises_with_projection,
 )
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ..action_errors import ModeloRefundAccountMissingError
 from ..export_settlement import DeclaredSettlement, settlement_dictionary_values
-from ..refund_account_authority import REFUND_ACCOUNT_STATUTE, refund_account_legal_refs
+from ..refund_account_authority import refund_account_legal_refs
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _MODELO = "100"
 _ANNUAL = "0A"
 _CLOCK = datetime(1980, 7, 9, tzinfo=UTC)
+#: The refund the Modelo 100 settles, by statute, whichever Orden is cited beside it.
+_STATUTE = "ley-35-2006:art-103"
 
 
 def _work_unit(filing_year: int) -> WorkUnit:
@@ -63,22 +64,16 @@ def _approving_ordenes(filing_year: int) -> set[str]:
     return {_document(ref) for ref in revision_selected_for(_MODELO, filing_year, _ANNUAL).orden_aplicabilidad}
 
 
-def test_every_authored_year_cites_the_orden_approving_its_own_edition(operation: PinnedAuthorityOperation) -> None:
-    years = supported_authored_exercises(_MODELO)
+def test_every_supported_year_cites_the_orden_of_the_edition_serving_it(operation: PinnedAuthorityOperation) -> None:
+    years = supported_exercises_with_projection(_MODELO)
     cited = {year: refund_account_legal_refs(_work_unit(year), operation=operation) for year in years}
 
-    assert years
+    assert len(years) > len(supported_authored_exercises(_MODELO))
     for year, refs in cited.items():
-        ordenes = {_document(ref) for ref in refs if ref not in REFUND_ACCOUNT_STATUTE}
+        ordenes = {_document(ref) for ref in refs if ref != _STATUTE}
         assert ordenes == _approving_ordenes(year), year
-        assert set(REFUND_ACCOUNT_STATUTE) <= set(refs), year
-        assert len(refs) > len(REFUND_ACCOUNT_STATUTE), year
-
-
-def test_a_year_no_edition_authors_cites_the_statute_alone(operation: PinnedAuthorityOperation) -> None:
-    year = projected_exercise(_MODELO)
-
-    assert refund_account_legal_refs(_work_unit(year), operation=operation) == REFUND_ACCOUNT_STATUTE
+        assert _STATUTE in refs, year
+        assert len(refs) > 1, year
 
 
 def test_the_refusal_of_a_refund_without_an_account_carries_the_citation(operation: PinnedAuthorityOperation) -> None:
