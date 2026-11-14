@@ -181,6 +181,7 @@ from .preconditions import (
 )
 from .prior_domiciliation import resolveprior_domiciliation_election
 from .profile_drift_gate import require_profile_reads_current_for_export
+from .refund_account_authority import refund_account_legal_refs
 from .refusal_door_verdicts import (
     operator_choice_verdict,
     safety_stop_verdict,
@@ -494,6 +495,7 @@ def _settlement_values_for_export(
         ),
         charge_account=charge_account,
         refund_account=refund_account,
+        refund_legal_refs=lambda: refund_account_legal_refs(work_unit, operation=operation),
     )
 
 
