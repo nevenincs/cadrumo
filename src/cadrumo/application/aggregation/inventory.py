@@ -17,7 +17,6 @@ from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.hashing import content_hash_hex
-from ...domain.calculations.registry.applicability import derive_taxpayer_files_economic_activity
 from ...domain.calculations.registry.binding_temporal import SameTargetContext
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.inventory_bindings import InventoryProvider
@@ -30,6 +29,7 @@ from ...domain.contribuyente.inventory.valuation import compute_inventory_anexo_
 from ...domain.modelos.calculation_revision_sources import CalculationNoteFact
 from ...domain.user_profile.values import UserProfileRecord
 from ..inventory.movement_claim_checks import InventoryClaimLedgerReads
+from .activity_applicability import profile_declares_no_activity_income
 from .inventory_claim_findings import inventory_claim_findings
 from .modelo_bindings_support import STORAGE_DEGRADATION_ERRORS
 from .source_diagnostic_reason import CalculationSourceDiagnosticReason
@@ -82,25 +82,6 @@ def revision_carries_inventory_purchases(revision: ModeloRevision) -> bool:
     return any(
         casilla.input_kind == InputKind.BOUND and casilla.binding in acquisition for casilla in revision.casillas
     )
-
-
-def _profile_declares_no_activity_income(context: CalculationSourceContext) -> bool:
-    """Whether the filer's profile declares income categories that exclude an economic activity.
-
-    The Anexo D inventory rows belong to the rendimientos de actividades
-    economicas a filer carries on (LIRPF arts. 27 and 30): a filer who declares
-    only employment, capital or other non-activity income holds no activity
-    ledger because there is no activity to hold one for. Only that typed
-    declaration counts. A profile that declares no income category at all, or
-    a context with no profile, is unknown rather than inapplicable, and a
-    missing ledger is then still reported.
-    """
-    if context.profile is None:
-        return False
-    from ..user_profile.projections import projection_for_taxpayer
-
-    taxpayer = projection_for_taxpayer(context.profile.record, schema=context.profile.profile_decode_context.schema)
-    return derive_taxpayer_files_economic_activity(taxpayer) is False
 
 
 @dataclass(frozen=True, slots=True)
@@ -731,7 +712,7 @@ class InventorySourceResolver:
         )
         if isinstance(template, CalculationSourceResolution):
             return template
-        if _profile_declares_no_activity_income(context):
+        if profile_declares_no_activity_income(context):
             return self._inapplicable(binding_ids)
         if self._inventory_repository is None:
             return self._storage_refusal(binding_ids)

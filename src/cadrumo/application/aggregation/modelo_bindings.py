@@ -86,6 +86,7 @@ from ..invoices.catalogue_reads_ports import (
     InvoiceCatalogueReadPersistenceError,
     InvoiceCatalogueReadPorts,
 )
+from .activity_applicability import ActivityLedgerApplicability, activity_ledger_applicability
 from .errors import AggregationValidationError
 from .income_family_not_computed import income_family_not_computed_diagnostics
 from .irnr_income_ledger import IrnrIncomeObservation, aggregate_irnr_income_ledger_from_repositories
@@ -389,10 +390,14 @@ class LedgerRentaIncomeAggregationSourceResolver:
                     source_kinds=self.owned_sources,
                     error=exc,
                 )
-        resolution = self._assemble_resolution(context, aggregation, profile_decode_context, disposal_excess, criteria)
+        applicability = activity_ledger_applicability(context, self.owned_sources)
+        resolution = self._assemble_resolution(
+            context, aggregation, profile_decode_context, disposal_excess, criteria, applicability
+        )
         return resolution.model_copy(
             update={
                 "diagnostics": (*resolution.diagnostics, *income_family_diagnostics),
+                "inapplicable_binding_ids": applicability.inapplicable_binding_ids,
                 "payment_year_binding_values": payment_year_values,
                 "instalment_basis_binding_values": instalment_basis_values,
             }
@@ -553,6 +558,7 @@ class LedgerRentaIncomeAggregationSourceResolver:
         profile_decode_context: ProfileDecodeContext,
         disposal_excess: tuple[ActivityAssetDisposalExcess, ...],
         criteria: ImputationCriteria,
+        applicability: ActivityLedgerApplicability,
     ) -> CalculationSourceResolution:
         declared_excess = _declared_disposal_excess(context, disposal_excess)
         binding_values = resolve_ledger_renta_income_aggregation_binding_values(
@@ -596,7 +602,7 @@ class LedgerRentaIncomeAggregationSourceResolver:
         bound_inputs = _m130_retenciones_backend_inputs(context, binding_values)
         source_transaction_ids = sorted_ids(aggregation.observations, lambda observation: observation.transaction_id)
         diagnostics = (
-            self._ledger_screening_diagnostics(context, aggregation, criteria)
+            self._ledger_screening_diagnostics(context, aggregation, criteria, applicability)
             + self._imputation_diagnostics(context, aggregation, criteria, binding_values, unresolved_rows)
             + _unrouted_observation_diagnostics(context, unrouted, resolver_id=self.resolver_id)
             + tuple(
@@ -641,6 +647,7 @@ class LedgerRentaIncomeAggregationSourceResolver:
         context: CalculationSourceContext,
         aggregation: RentaIncomeLedgerAggregation,
         criteria: ImputationCriteria,
+        applicability: ActivityLedgerApplicability,
     ) -> tuple[CalculationSourceDiagnostic, ...]:
         """Report the window, issue, unpaid-withholding, part-payment and late-payment findings."""
         return (
@@ -653,7 +660,8 @@ class LedgerRentaIncomeAggregationSourceResolver:
                 aggregation.issues,
                 source_kind="ledger_renta_income_aggregation",
                 resolver_id=self.resolver_id,
-                suppressed_reasons=frozenset({RentaIncomeLedgerAggregationIssueReason.IMPUTATION_UNRESOLVED}),
+                suppressed_reasons=frozenset({RentaIncomeLedgerAggregationIssueReason.IMPUTATION_UNRESOLVED})
+                | applicability.not_activity_row_reasons,
             )
             + accrued_withholding_unpaid_diagnostics(aggregation.accrued_unpaid, resolver_id=self.resolver_id)
             + part_payment_diagnostics(aggregation.observations, resolver_id=self.resolver_id)
