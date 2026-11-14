@@ -4,9 +4,9 @@
 # 2024 edition's row stands for. The comment above each row cites the design line
 # in 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md.
 #
-# NOT DECLARED HERE, recorded as debt rather than guessed: 935 rows of the 2024
+# NOT DECLARED HERE, recorded as debt rather than guessed: 765 rows of the 2024
 # edition -- 306 whose box the 2022 design prints with another caption,
-# 301 whose 2022 caption names another year,
+# 131 whose 2022 caption names another year that does not rotate with the ejercicio,
 # 277 whose box the 2022 design does not print,
 # 22 whose sheet-scoped box the 2022 design prints only on another sheet,
 # 19 whose own 2024 field is not identified among the fields printing their number,
@@ -16,7 +16,9 @@
 # declared either.
 #
 # Rows carry the 2024 row's continuidad_id: the identical caption on the same box in
-# both designs grounds the identity. The rows the cuota chain reads and writes carry
+# both designs grounds the identity, and so does a caption that differs only in a
+# year rotating with the ejercicio across the 2022, 2023 and 2024 designs (the block
+# ahead of the cuota chain's rows). The rows the cuota chain reads and writes carry
 # their formula or binding; the cuota chain's own rows close the file. Labels resolve
 # from the continuity tier, or from this edition's own keys where the 2024 label is
 # edition-specific.
@@ -22608,6 +22610,2323 @@ number = "00619"
 segmento = "DP200043"
 section = ["aseguradoras_estado_cambios_patrimonio_propio_iii", "otras_variaciones_del_patrimonio_neto"]
 semantic_role = "is_ecpp_aseguradoras_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# Rows whose caption differs from the 2023 and 2024 designs' only in the year it
+# names, a year that rotates with the ejercicio on the same box across all three
+# designs: each is declared here once, with the 2024 row's continuidad_id, and
+# the comment above it cites the 2023 and 2024 lines printing the same field.
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1662 DP200015 81|1288|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1683 (DP200015 field 102) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1749 (DP200015 field 105), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "02316"
+continuidad_id = "02316"
+number = "02316"
+section = ["detalle_compensacion_bases_imponibles_negativas", "2025"]
+semantic_role = "is_bin_detalle_compensacion"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1663 DP200015 82|1305|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1684 (DP200015 field 103) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1750 (DP200015 field 106), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "02317"
+continuidad_id = "02317"
+number = "02317"
+section = ["detalle_compensacion_bases_imponibles_negativas", "2025"]
+semantic_role = "is_compensacion_bases_negativas"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1664 DP200015 83|1322|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1685 (DP200015 field 104) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1751 (DP200015 field 107), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "02318"
+continuidad_id = "02318"
+number = "02318"
+section = ["detalle_compensacion_bases_imponibles_negativas", "2025"]
+semantic_role = "is_bin_detalle_compensacion"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1668 DP200015 87|1390|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1689 (DP200015 field 108) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1755 (DP200015 field 111), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "01048"
+continuidad_id = "01048"
+number = "01048"
+section = ["detalle_compensacion_bases_imponibles_negativas", "2025"]
+semantic_role = "is_bin_detalle_compensacion"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1669 DP200015 88|1407|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1690 (DP200015 field 109) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1756 (DP200015 field 112), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "01049"
+continuidad_id = "01049"
+number = "01049"
+section = ["detalle_compensacion_bases_imponibles_negativas", "2025"]
+semantic_role = "is_bin_detalle_compensacion"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1713 DP200015B 8|34|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1739 (DP200015B field 8) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1811 (DP200015B field 8), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "00846"
+continuidad_id = "00846"
+number = "00846"
+section = ["deducciones_doble_imposicion_interna_rdleg_4_2004", "di_interna_2008"]
+semantic_role = "is_deduccion_di_interna_rdleg_detalle"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1738 DP200015B 33|394|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1764 (DP200015B field 33) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1836 (DP200015B field 33), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "00714"
+continuidad_id = "is-deduccion-di-interna-rdleg-detalle"
+number = "00714"
+section = ["deducciones_doble_imposicion_interna_rdleg_4_2004", "di_interna_2013"]
+semantic_role = "is_deduccion_di_interna_rdleg_detalle"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1763 DP200015B 58|757|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1789 (DP200015B field 58) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1861 (DP200015B field 58), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "01597"
+continuidad_id = "01597"
+number = "01597"
+section = ["deducciones_doble_imposicion_interna_dt_23_1_lis", "di_interna_2017"]
+semantic_role = "is_deduccion_di_interna_dt231_detalle"
+legal_refs = ["ley-27-2014:dt-23"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1768 DP200015B 63|829|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1794 (DP200015B field 63) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1866 (DP200015B field 63), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "01830"
+continuidad_id = "01830"
+number = "01830"
+section = ["deducciones_doble_imposicion_interna_dt_23_1_lis", "di_interna_2018"]
+semantic_role = "is_deduccion_di_interna_dt231_detalle"
+legal_refs = ["ley-27-2014:dt-23"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1773 DP200015B 68|901|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1799 (DP200015B field 68) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1871 (DP200015B field 68), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "02198"
+continuidad_id = "02198"
+number = "02198"
+section = ["deducciones_doble_imposicion_interna_dt_23_1_lis", "di_interna_2019"]
+semantic_role = "is_deduccion_di_interna_dt231_detalle"
+legal_refs = ["ley-27-2014:dt-23"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1778 DP200015B 73|973|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1804 (DP200015B field 73) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1876 (DP200015B field 73), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "02321"
+continuidad_id = "02321"
+number = "02321"
+section = ["deducciones_doble_imposicion_interna_dt_23_1_lis", "di_interna_2020"]
+semantic_role = "is_deduccion_di_interna_dt231_detalle"
+legal_refs = ["ley-27-2014:dt-23"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1792 DP200015B 87|1185|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1823 (DP200015B field 92) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1901 (DP200015B field 98), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "01343"
+continuidad_id = "01343"
+number = "01343"
+section = ["deducciones_doble_imposicion_interna_dt_23_1_lis", "total"]
+semantic_role = "is_deduccion_di_interna_dt231_detalle"
+legal_refs = ["ley-27-2014:dt-23"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1809 DP200015B 104|1438|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1840 (DP200015B field 109) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1918 (DP200015B field 115), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "00849"
+continuidad_id = "00849"
+number = "00849"
+section = ["deducciones_doble_imposicion_internacional_rdleg_4", "di_internacional_2006"]
+semantic_role = "is_deduccion_di_internacional_rdleg_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1819 DP200015B 114|1582|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1850 (DP200015B field 119) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1928 (DP200015B field 125), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "00825"
+continuidad_id = "is-deduccion-di-internacional-rdleg-importe"
+number = "00825"
+section = ["deducciones_doble_imposicion_internacional_rdleg_4", "di_internacional_2008"]
+semantic_role = "is_deduccion_di_internacional_rdleg_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1874 DP200016 8|34|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1905 (DP200016 field 8) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1983 (DP200016 field 8), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "01051"
+continuidad_id = "01051"
+number = "01051"
+section = ["deducciones_doble_imposicion_internacional_lis", "di_internacional_2015"]
+semantic_role = "is_deduccion_di_internacional_detalle"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1879 DP200016 13|106|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1910 (DP200016 field 13) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1988 (DP200016 field 13), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "01350"
+continuidad_id = "01350"
+number = "01350"
+section = ["deducciones_doble_imposicion_internacional_lis", "di_internacional_2016"]
+semantic_role = "is_deduccion_di_internacional_detalle"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1884 DP200016 18|178|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1915 (DP200016 field 18) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1993 (DP200016 field 18), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "01772"
+continuidad_id = "01772"
+number = "01772"
+section = ["deducciones_doble_imposicion_internacional_lis", "di_internacional_2017"]
+semantic_role = "is_deduccion_di_internacional_detalle"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1889 DP200016 23|250|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1920 (DP200016 field 23) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1998 (DP200016 field 23), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "01835"
+continuidad_id = "01835"
+number = "01835"
+section = ["deducciones_doble_imposicion_internacional_lis", "di_internacional_2018"]
+semantic_role = "is_deduccion_di_internacional_detalle"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1894 DP200016 28|322|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1925 (DP200016 field 28) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2003 (DP200016 field 28), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "02203"
+continuidad_id = "02203"
+number = "02203"
+section = ["deducciones_doble_imposicion_internacional_lis", "di_internacional_2019"]
+semantic_role = "is_deduccion_di_internacional_detalle"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1899 DP200016 33|394|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1930 (DP200016 field 33) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2008 (DP200016 field 33), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "02326"
+continuidad_id = "02326"
+number = "02326"
+section = ["deducciones_doble_imposicion_internacional_lis", "di_internacional_2020"]
+semantic_role = "is_deduccion_di_internacional_detalle"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1979 DP200016 113|1718|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2015 (DP200016 field 118) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2099 (DP200016 field 124), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "00749"
+continuidad_id = "00749"
+number = "00749"
+section = ["deducciones_dt_24a_1_lis", "2020_periodificacion"]
+semantic_role = "is_deduccion_dt24a1_periodificacion"
+legal_refs = ["ley-27-2014:dt-24"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1980 DP200016 114|1735|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2016 (DP200016 field 119) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2100 (DP200016 field 125), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "00750"
+continuidad_id = "00750"
+number = "00750"
+section = ["deducciones_dt_24a_1_lis", "2020_periodificacion"]
+semantic_role = "is_deduccion_dt24a1_periodificacion"
+legal_refs = ["ley-27-2014:dt-24"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1981 DP200016 115|1752|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2017 (DP200016 field 120) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2101 (DP200016 field 126), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "00752"
+continuidad_id = "00752"
+number = "00752"
+section = ["deducciones_dt_24a_1_lis", "2021_periodificacion"]
+semantic_role = "is_deduccion_dt24a1_periodificacion"
+legal_refs = ["ley-27-2014:dt-24"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1982 DP200016 116|1769|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2018 (DP200016 field 121) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2102 (DP200016 field 127), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "00753"
+continuidad_id = "00753"
+number = "00753"
+section = ["deducciones_dt_24a_1_lis", "2021_periodificacion"]
+semantic_role = "is_deduccion_dt24a1_periodificacion"
+legal_refs = ["ley-27-2014:dt-24"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1983 DP200016 117|1786|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2019 (DP200016 field 122) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2103 (DP200016 field 128), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "00754"
+continuidad_id = "00754"
+number = "00754"
+section = ["deducciones_dt_24a_1_lis", "2021_periodificacion"]
+semantic_role = "is_deduccion_dt24a1_periodificacion"
+legal_refs = ["ley-27-2014:dt-24"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1984 DP200016 118|1803|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2020 (DP200016 field 123) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2104 (DP200016 field 129), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "00755"
+continuidad_id = "00755"
+number = "00755"
+section = ["deducciones_dt_24a_1_lis", "2022_periodificacion"]
+semantic_role = "is_deduccion_dt24a1_periodificacion"
+legal_refs = ["ley-27-2014:dt-24"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1985 DP200016 119|1820|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2021 (DP200016 field 124) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2105 (DP200016 field 130), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "00756"
+continuidad_id = "00756"
+number = "00756"
+section = ["deducciones_dt_24a_1_lis", "2022_periodificacion"]
+semantic_role = "is_deduccion_dt24a1_periodificacion"
+legal_refs = ["ley-27-2014:dt-24"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1986 DP200016 120|1837|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2022 (DP200016 field 125) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2106 (DP200016 field 131), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "00757"
+continuidad_id = "00757"
+number = "00757"
+section = ["deducciones_dt_24a_1_lis", "2022_periodificacion"]
+semantic_role = "is_deduccion_dt24a1_periodificacion"
+legal_refs = ["ley-27-2014:dt-24"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1987 DP200016 121|1854|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2023 (DP200016 field 126) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2107 (DP200016 field 132), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "00758"
+continuidad_id = "00758"
+number = "00758"
+section = ["deducciones_dt_24a_1_lis", "2023_periodificacion"]
+semantic_role = "is_deduccion_dt24a1_periodificacion"
+legal_refs = ["ley-27-2014:dt-24"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1988 DP200016 122|1871|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2024 (DP200016 field 127) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2108 (DP200016 field 133), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "00759"
+continuidad_id = "00759"
+number = "00759"
+section = ["deducciones_dt_24a_1_lis", "2023_periodificacion"]
+semantic_role = "is_deduccion_dt24a1_periodificacion"
+legal_refs = ["ley-27-2014:dt-24"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1993 DP200016 127|1956|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2029 (DP200016 field 132) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2113 (DP200016 field 138), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "00744"
+continuidad_id = "is-deduccion-dt24a1-periodificacion"
+number = "00744"
+section = ["deducciones_dt_24a_1_lis", "2025_periodificacion"]
+semantic_role = "is_deduccion_dt24a1_periodificacion"
+legal_refs = ["ley-27-2014:dt-24"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1994 DP200016 128|1973|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2030 (DP200016 field 133) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2114 (DP200016 field 139), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "00745"
+continuidad_id = "00745"
+number = "00745"
+section = ["deducciones_dt_24a_1_lis", "2025_periodificacion"]
+semantic_role = "is_deduccion_dt24a1_periodificacion"
+legal_refs = ["ley-27-2014:dt-24"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1995 DP200016 129|1990|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2031 (DP200016 field 134) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2115 (DP200016 field 140), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "00746"
+continuidad_id = "00746"
+number = "00746"
+section = ["deducciones_dt_24a_1_lis", "2025_periodificacion"]
+semantic_role = "is_deduccion_dt24a1_periodificacion"
+legal_refs = ["ley-27-2014:dt-24"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1996 DP200016 130|2007|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2032 (DP200016 field 135) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2116 (DP200016 field 141), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "00779"
+continuidad_id = "00779"
+number = "00779"
+section = ["deducciones_dt_24a_1_lis", "2025_periodificacion"]
+semantic_role = "is_deduccion_dt24a1_periodificacion"
+legal_refs = ["ley-27-2014:dt-24"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2157 DP200016B 146|2393|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2202 (DP200016B field 155) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2295 (DP200016B field 164), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = '02287'
+continuidad_id = "02287"
+number = '02287'
+semantic_role = 'is_informacion_adicional_limites_deducciones_canarias_generada'
+section = [
+    'informacion_adicional_para_el_calculo_de_limites_d',
+    '2025_deduccion_por_investigacion_y_desarrollo_en_c',
+]
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2158 DP200016B 147|2410|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2203 (DP200016B field 156) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2296 (DP200016B field 165), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = '02288'
+continuidad_id = "02288"
+number = '02288'
+semantic_role = 'is_informacion_adicional_limites_deducciones_canarias_generada'
+section = [
+    'informacion_adicional_para_el_calculo_de_limites_d',
+    '2025_deduccion_por_innovacion_tecnologica_en_canar',
+]
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2159 DP200016B 148|2427|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2204 (DP200016B field 157) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2297 (DP200016B field 166), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = '02495'
+continuidad_id = "02495"
+number = '02495'
+semantic_role = 'is_informacion_adicional_limites_deducciones_canarias_generada'
+section = [
+    'informacion_adicional_para_el_calculo_de_limites_d',
+    '2025_productor_deduccion_por_producciones_cinemato',
+]
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2160 DP200016B 149|2444|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2205 (DP200016B field 158) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2298 (DP200016B field 167), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = '02079'
+continuidad_id = "is-informacion-adicional-limites-deducciones-canarias-generada"
+number = '02079'
+semantic_role = 'is_informacion_adicional_limites_deducciones_canarias_generada'
+section = [
+    'informacion_adicional_para_el_calculo_de_limites_d',
+    '2025_financiador_deduccion_por_producciones_cinema',
+]
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2161 DP200016B 150|2461|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2206 (DP200016B field 159) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2299 (DP200016B field 168), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = '02496'
+continuidad_id = "02496"
+number = '02496'
+semantic_role = 'is_informacion_adicional_limites_deducciones_canarias_generada'
+section = [
+    'informacion_adicional_para_el_calculo_de_limites_d',
+    '2025_productor_deduccion_por_espectaculos_en_vivo',
+]
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2162 DP200016B 151|2478|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2207 (DP200016B field 160) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2300 (DP200016B field 169), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = '02080'
+continuidad_id = "02080"
+number = '02080'
+semantic_role = 'is_informacion_adicional_limites_deducciones_canarias_generada'
+section = [
+    'informacion_adicional_para_el_calculo_de_limites_d',
+    '2025_financiador_deduccion_por_espectaculos_en_viv',
+]
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2306 DP200017 134|2189|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2360 (DP200017 field 143) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2462 (DP200017 field 152), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "02449"
+continuidad_id = "02449"
+number = "02449"
+section = ["deducc_para_incentivar_determ_actividades", "2025_suma_deducciones_cap_iv_tit_vi_ley_43_95_rdle"]
+semantic_role = "is_deduccion_cap_iv_tit_vi_suma_periodo"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2307 DP200017 135|2206|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2361 (DP200017 field 144) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2463 (DP200017 field 153), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "02450"
+continuidad_id = "02450"
+number = "02450"
+section = ["deducc_para_incentivar_determ_actividades", "2025_suma_deducciones_cap_iv_tit_vi_ley_43_95_rdle"]
+semantic_role = "is_deduccion_cap_iv_tit_vi_suma_periodo"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2308 DP200017 136|2223|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2362 (DP200017 field 145) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2464 (DP200017 field 154), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "02461"
+continuidad_id = "02461"
+number = "02461"
+section = ["deducc_para_incentivar_determ_actividades", "2025_suma_deducciones_cap_iv_tit_vi_ley_43_95_rdle"]
+semantic_role = "is_deduccion_cap_iv_tit_vi_suma_periodo"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2309 DP200017 137|2240|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2363 (DP200017 field 146) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2465 (DP200017 field 155), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "01363"
+continuidad_id = "01363"
+number = "01363"
+section = ["deducc_para_incentivar_determ_actividades", "2025_investigacion_y_desarrollo_ct"]
+semantic_role = "is_deduccion_idi_investigacion_desarrollo_periodo"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2310 DP200017 138|2257|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2364 (DP200017 field 147) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2466 (DP200017 field 156), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "01364"
+continuidad_id = "01364"
+number = "01364"
+section = ["deducc_para_incentivar_determ_actividades", "2025_investigacion_y_desarrollo_ct"]
+semantic_role = "is_deduccion_idi_investigacion_desarrollo_periodo"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2311 DP200017 139|2274|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2365 (DP200017 field 148) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2467 (DP200017 field 157), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "01365"
+continuidad_id = "01365"
+number = "01365"
+section = ["deducc_para_incentivar_determ_actividades", "2025_investigacion_y_desarrollo_ct"]
+semantic_role = "is_deduccion_idi_investigacion_pendiente"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2312 DP200017 140|2291|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2366 (DP200017 field 149) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2468 (DP200017 field 158), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "01366"
+continuidad_id = "01366"
+number = "01366"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2313 DP200017 141|2308|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2367 (DP200017 field 150) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2469 (DP200017 field 159), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "01367"
+continuidad_id = "01367"
+number = "01367"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2314 DP200017 142|2325|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2368 (DP200017 field 151) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2470 (DP200017 field 160), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "01368"
+continuidad_id = "01368"
+number = "01368"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_pendiente"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2315 DP200017 143|2342|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2369 (DP200017 field 152) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2471 (DP200017 field 161), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "01928"
+continuidad_id = "01928"
+number = "01928"
+section = ["deducc_para_incentivar_determ_actividades", "2025_inversiones_en_territ_africa_occidental_y_gas"]
+semantic_role = "is_deduccion_inversiones_africa_canarias"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2316 DP200017 144|2359|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2370 (DP200017 field 153) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2472 (DP200017 field 162), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "01929"
+continuidad_id = "01929"
+number = "01929"
+section = ["deducc_para_incentivar_determ_actividades", "2025_inversiones_en_territ_africa_occidental_y_gas"]
+semantic_role = "is_deduccion_inversiones_africa_canarias_periodo"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2317 DP200017 145|2376|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2371 (DP200017 field 154) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2473 (DP200017 field 163), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "01930"
+continuidad_id = "01930"
+number = "01930"
+section = ["deducc_para_incentivar_determ_actividades", "2025_inversiones_en_territ_africa_occidental_y_gas"]
+semantic_role = "is_deduccion_inversiones_africa_canarias_pendiente"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2318 DP200017 146|2393|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2372 (DP200017 field 155) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2474 (DP200017 field 164), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "00828"
+continuidad_id = "is-deduccion-idi-diferimiento"
+number = "00828"
+section = ["deducc_para_incentivar_determ_actividades", "2025_diferim_deducciones_cap_iv_tit_vi_ley_43_95_r"]
+semantic_role = "is_deduccion_idi_diferimiento"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2319 DP200017 147|2410|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2373 (DP200017 field 156) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2475 (DP200017 field 165), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "00829"
+continuidad_id = "is-deduccion-idi-diferimiento-aplicado-periodo"
+number = "00829"
+section = ["deducc_para_incentivar_determ_actividades", "2025_diferim_deducciones_cap_iv_tit_vi_ley_43_95_r"]
+semantic_role = "is_deduccion_idi_diferimiento_aplicado_periodo"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2320 DP200017 148|2427|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2374 (DP200017 field 157) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2476 (DP200017 field 166), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "00830"
+continuidad_id = "is-deduccion-idi-diferimiento-pendiente"
+number = "00830"
+section = ["deducc_para_incentivar_determ_actividades", "2025_diferim_deducciones_cap_iv_tit_vi_ley_43_95_r"]
+semantic_role = "is_deduccion_idi_diferimiento_pendiente"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2321 DP200017 149|2444|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2375 (DP200017 field 158) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2492 (DP200018 field 6), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "00798"
+continuidad_id = "is-deduccion-idi-investigacion-desarrollo-periodo"
+number = "00798"
+section = ["deducc_para_incentivar_determ_actividades", "2025_investigacion_y_desarrollo_ct"]
+semantic_role = "is_deduccion_idi_investigacion_desarrollo_periodo"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2322 DP200017 150|2461|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2376 (DP200017 field 159) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2493 (DP200018 field 7), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "00799"
+continuidad_id = "00799"
+number = "00799"
+section = ["deducc_para_incentivar_determ_actividades", "2025_investigacion_y_desarrollo_ct"]
+semantic_role = "is_deduccion_idi_investigacion_desarrollo_periodo"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2323 DP200017 151|2478|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2377 (DP200017 field 160) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2494 (DP200018 field 8), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "00800"
+continuidad_id = "is-deduccion-idi-investigacion-pendiente"
+number = "00800"
+section = ["deducc_para_incentivar_determ_actividades", "2025_investigacion_y_desarrollo_ct"]
+semantic_role = "is_deduccion_idi_investigacion_pendiente"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2324 DP200017 152|2495|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2378 (DP200017 field 161) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2495 (DP200018 field 9), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "00096"
+continuidad_id = "is-deduccion-idi-innovacion-tecnologica"
+number = "00096"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2325 DP200017 153|2512|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2379 (DP200017 field 162) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2496 (DP200018 field 10), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "00698"
+continuidad_id = "00698"
+number = "00698"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_tecnologica"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2326 DP200017 154|2529|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2380 (DP200017 field 163) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2497 (DP200018 field 11), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "00713"
+continuidad_id = "is-deduccion-idi-innovacion-pendiente"
+number = "00713"
+section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
+semantic_role = "is_deduccion_idi_innovacion_pendiente"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2327 DP200017 155|2546|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2381 (DP200017 field 164) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2498 (DP200018 field 12), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "00807"
+continuidad_id = "is-deduccion-produccion-cinematografica-espanola-productor"
+number = "00807"
+section = ["deducc_para_incentivar_determ_actividades", "2025_productor_producciones_cinematograficas_esp"]
+semantic_role = "is_deduccion_produccion_cinematografica_espanola_productor"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2328 DP200017 156|2563|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2382 (DP200017 field 165) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2499 (DP200018 field 13), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "00808"
+continuidad_id = "is-deduccion-produccion-cinematografica-espanola-productor-aplicado-periodo"
+number = "00808"
+section = ["deducc_para_incentivar_determ_actividades", "2025_productor_producciones_cinematograficas_esp"]
+semantic_role = "is_deduccion_produccion_cinematografica_espanola_productor_aplicado_periodo"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2329 DP200017 157|2580|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2383 (DP200017 field 166) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2500 (DP200018 field 14), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "00809"
+continuidad_id = "is-deduccion-produccion-cinematografica-espanola-productor-pendiente-futuros"
+number = "00809"
+section = ["deducc_para_incentivar_determ_actividades", "2025_productor_producciones_cinematograficas_esp"]
+semantic_role = "is_deduccion_produccion_cinematografica_espanola_productor_pendiente_futuros"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2330 DP200017 158|2597|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2384 (DP200017 field 167) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2501 (DP200018 field 15), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "02462"
+continuidad_id = "is-deduccion-produccion-cinematografica-espanola-financiador"
+number = "02462"
+section = ["deducc_para_incentivar_determ_actividades", "2025_financiador_producciones_cinematograficas_es"]
+semantic_role = "is_deduccion_produccion_cinematografica_espanola_financiador"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2331 DP200017 159|2614|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2385 (DP200017 field 168) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2502 (DP200018 field 16), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "02463"
+continuidad_id = "is-deduccion-produccion-cinematografica-espanola-financiador-aplicado-periodo"
+number = "02463"
+section = ["deducc_para_incentivar_determ_actividades", "2025_financiador_producciones_cinematograficas_es"]
+semantic_role = "is_deduccion_produccion_cinematografica_espanola_financiador_aplicado_periodo"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2332 DP200017 160|2631|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2386 (DP200017 field 169) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2503 (DP200018 field 17), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "02464"
+continuidad_id = "is-deduccion-produccion-cinematografica-espanola-financiador-pendiente-futuros"
+number = "02464"
+section = ["deducc_para_incentivar_determ_actividades", "2025_financiador_producciones_cinematograficas_es"]
+semantic_role = "is_deduccion_produccion_cinematografica_espanola_financiador_pendiente_futuros"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2333 DP200017 161|2648|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2387 (DP200017 field 170) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2504 (DP200018 field 18), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "01075"
+continuidad_id = "is-deduccion-espectaculos-vivo-productor"
+number = "01075"
+section = ["deducc_para_incentivar_determ_actividades", "2025_productor_espectaculos_en_vivo_artes_escenic"]
+semantic_role = "is_deduccion_espectaculos_vivo_productor"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2334 DP200017 162|2665|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2388 (DP200017 field 171) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2505 (DP200018 field 19), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "01076"
+continuidad_id = "is-deduccion-espectaculos-vivo-productor-aplicado-periodo"
+number = "01076"
+section = ["deducc_para_incentivar_determ_actividades", "2025_productor_espectaculos_en_vivo_artes_escenic"]
+semantic_role = "is_deduccion_espectaculos_vivo_productor_aplicado_periodo"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2335 DP200017 163|2682|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2389 (DP200017 field 172) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2506 (DP200018 field 20), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "01077"
+continuidad_id = "is-deduccion-espectaculos-vivo-productor-pendiente-futuros"
+number = "01077"
+section = ["deducc_para_incentivar_determ_actividades", "2025_productor_espectaculos_en_vivo_artes_escenic"]
+semantic_role = "is_deduccion_espectaculos_vivo_productor_pendiente_futuros"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2336 DP200017 164|2699|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2390 (DP200017 field 173) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2507 (DP200018 field 21), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "02455"
+continuidad_id = "is-deduccion-espectaculos-vivo-financiador"
+number = "02455"
+section = ["deducc_para_incentivar_determ_actividades", "2025_financiador_espectaculos_en_vivo_artes_escen"]
+semantic_role = "is_deduccion_espectaculos_vivo_financiador"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2337 DP200017 165|2716|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2391 (DP200017 field 174) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2508 (DP200018 field 22), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "02456"
+continuidad_id = "is-deduccion-espectaculos-vivo-financiador-aplicado-periodo"
+number = "02456"
+section = ["deducc_para_incentivar_determ_actividades", "2025_financiador_espectaculos_en_vivo_artes_escen"]
+semantic_role = "is_deduccion_espectaculos_vivo_financiador_aplicado_periodo"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2338 DP200017 166|2733|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2392 (DP200017 field 175) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2509 (DP200018 field 23), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "02457"
+continuidad_id = "is-deduccion-espectaculos-vivo-financiador-pendiente-futuros"
+number = "02457"
+section = ["deducc_para_incentivar_determ_actividades", "2025_financiador_espectaculos_en_vivo_artes_escen"]
+semantic_role = "is_deduccion_espectaculos_vivo_financiador_pendiente_futuros"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2339 DP200017 167|2750|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2393 (DP200017 field 176) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2510 (DP200018 field 24), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "00795"
+continuidad_id = "is-deduccion-creacion-empleo-discapacidad"
+number = "00795"
+section = ["deducc_para_incentivar_determ_actividades", "2025_deduccion_por_creacion_de_empleo_discapacida"]
+semantic_role = "is_deduccion_creacion_empleo_discapacidad"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2341 DP200017 169|2784|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2395 (DP200017 field 178) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2512 (DP200018 field 26), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "00797"
+continuidad_id = "is-deduccion-creacion-empleo-discapacidad-pendiente-futuros"
+number = "00797"
+section = ["deducc_para_incentivar_determ_actividades", "2025_deduccion_por_creacion_de_empleo_discapacida"]
+semantic_role = "is_deduccion_creacion_empleo_discapacidad_pendiente_futuros"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2346 DP200017 174|2869|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2400 (DP200017 field 183) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2517 (DP200018 field 31), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "00888"
+continuidad_id = "is-deduccion-inversion-en-beneficios-aplicado-periodo"
+number = "00888"
+section = ["deducc_para_incentivar_determ_actividades", "2025_deduccion_por_inversion_en_beneficios_ib"]
+semantic_role = "is_deduccion_inversion_en_beneficios_aplicado_periodo"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2347 DP200017 175|2886|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2401 (DP200017 field 184) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2518 (DP200018 field 32), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "00889"
+continuidad_id = "is-deduccion-inversion-en-beneficios-pendiente-futuros"
+number = "00889"
+section = ["deducc_para_incentivar_determ_actividades", "2025_deduccion_por_inversion_en_beneficios_ib"]
+semantic_role = "is_deduccion_inversion_en_beneficios_pendiente_futuros"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2348 DP200017 176|2903|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2417 (DP200018 field 6) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2519 (DP200018 field 33), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "01369"
+continuidad_id = "is-deduccion-sociedades-forestales"
+number = "01369"
+section = ["deducc_para_incentivar_determ_actividades", "2025_gastos_e_inversiones_de_sociedades_forestales"]
+semantic_role = "is_deduccion_sociedades_forestales"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2349 DP200017 177|2920|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2418 (DP200018 field 7) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2520 (DP200018 field 34), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "01370"
+continuidad_id = "is-deduccion-sociedades-forestales-aplicado-periodo"
+number = "01370"
+section = ["deducc_para_incentivar_determ_actividades", "2025_gastos_e_inversiones_de_sociedades_forestales"]
+semantic_role = "is_deduccion_sociedades_forestales_aplicado_periodo"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2350 DP200017 178|2937|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2419 (DP200018 field 8) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2521 (DP200018 field 35), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "01371"
+continuidad_id = "is-deduccion-sociedades-forestales-pendiente-futuros"
+number = "01371"
+section = ["deducc_para_incentivar_determ_actividades", "2025_gastos_e_inversiones_de_sociedades_forestales"]
+semantic_role = "is_deduccion_sociedades_forestales_pendiente_futuros"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2351 DP200017 179|2954|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2420 (DP200018 field 9) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2522 (DP200018 field 36), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "02190"
+continuidad_id = "is-deduccion-inversiones-africa-canarias"
+number = "02190"
+section = ["deducc_para_incentivar_determ_actividades", "2025_inversiones_en_territ_africa_occidental_y_gas"]
+semantic_role = "is_deduccion_inversiones_africa_canarias"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2352 DP200017 180|2971|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2421 (DP200018 field 10) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2523 (DP200018 field 37), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "02191"
+continuidad_id = "is-deduccion-inversiones-africa-canarias-periodo"
+number = "02191"
+section = ["deducc_para_incentivar_determ_actividades", "2025_inversiones_en_territ_africa_occidental_y_gas"]
+semantic_role = "is_deduccion_inversiones_africa_canarias_periodo"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2353 DP200017 181|2988|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2422 (DP200018 field 11) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2524 (DP200018 field 38), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "02192"
+continuidad_id = "is-deduccion-inversiones-africa-canarias-pendiente"
+number = "02192"
+section = ["deducc_para_incentivar_determ_actividades", "2025_inversiones_en_territ_africa_occidental_y_gas"]
+semantic_role = "is_deduccion_inversiones_africa_canarias_pendiente"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2396 DP200018 33|424|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2438 (DP200018 field 27) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2531 (DP200018 field 45), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = '02365'
+continuidad_id = "public-interest-alicante-sailing-departure-credit-2024-generated"
+# AEAT aeat-dr-200-2024 DP200018 campo 45: fila del acontecimiento alicante-sailing-departure, ejercicio 2024, columna pendiente/generada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
+number = '02365'
+semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
+section = [
+    'deducc_para_incentivar_determ_actividades',
+    '2025_innovacion_tecnologica_it',
+]
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2397 DP200018 34|441|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2439 (DP200018 field 28) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2532 (DP200018 field 46), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = '02366'
+continuidad_id = "public-interest-alicante-sailing-departure-credit-2024-applied"
+# AEAT aeat-dr-200-2024 DP200018 campo 46: fila del acontecimiento alicante-sailing-departure, ejercicio 2024, columna aplicada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
+number = '02366'
+semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
+section = [
+    'deducc_para_incentivar_determ_actividades',
+    '2025_innovacion_tecnologica_it',
+]
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2398 DP200018 35|458|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2440 (DP200018 field 29) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2533 (DP200018 field 47), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = '02367'
+continuidad_id = "public-interest-alicante-sailing-departure-credit-2024-remaining"
+# AEAT aeat-dr-200-2024 DP200018 campo 47: fila del acontecimiento alicante-sailing-departure, ejercicio 2024, columna pendiente futura. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
+number = '02367'
+semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
+section = [
+    'deducc_para_incentivar_determ_actividades',
+    '2025_innovacion_tecnologica_it',
+]
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2402 DP200018 39|526|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2441 (DP200018 field 30) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2534 (DP200018 field 48), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "02371"
+continuidad_id = "02371"
+number = "02371"
+section = ["deducc_para_incentivar_determ_actividades", "2025_plan_de_fomento_de_la_opera_en_la_calle_del"]
+semantic_role = "is_deduccion_idi_evento_especial"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2403 DP200018 40|543|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2442 (DP200018 field 31) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2535 (DP200018 field 49), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "02372"
+continuidad_id = "02372"
+number = "02372"
+section = ["deducc_para_incentivar_determ_actividades", "2025_plan_de_fomento_de_la_opera_en_la_calle_del"]
+semantic_role = "is_deduccion_eventos_especiales_aplicado_periodo"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2404 DP200018 41|560|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2443 (DP200018 field 32) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2536 (DP200018 field 50), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "02373"
+continuidad_id = "02373"
+number = "02373"
+section = ["deducc_para_incentivar_determ_actividades", "2025_plan_de_fomento_de_la_opera_en_la_calle_del"]
+semantic_role = "is_deduccion_eventos_especiales_pendiente"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2510 DP200018 135|2158|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2531 (DP200018 field 111) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2552 (DP200018 field 63), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = '02458'
+continuidad_id = "public-interest-andalucia-valderrama-masters-credit-2024-generated"
+# AEAT aeat-dr-200-2024 DP200018 campo 63: fila del acontecimiento andalucia-valderrama-masters, ejercicio 2024, columna pendiente/generada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
+number = '02458'
+semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
+section = [
+    'deducc_para_incentivar_determ_actividades',
+    '2025_innovacion_tecnologica_it',
+]
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2511 DP200018 136|2175|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2532 (DP200018 field 112) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2553 (DP200018 field 64), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = '02459'
+continuidad_id = "public-interest-andalucia-valderrama-masters-credit-2024-applied"
+# AEAT aeat-dr-200-2024 DP200018 campo 64: fila del acontecimiento andalucia-valderrama-masters, ejercicio 2024, columna aplicada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
+number = '02459'
+semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
+section = [
+    'deducc_para_incentivar_determ_actividades',
+    '2025_innovacion_tecnologica_it',
+]
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2512 DP200018 137|2192|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2533 (DP200018 field 113) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2554 (DP200018 field 65), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = '02460'
+continuidad_id = "public-interest-andalucia-valderrama-masters-credit-2024-remaining"
+# AEAT aeat-dr-200-2024 DP200018 campo 65: fila del acontecimiento andalucia-valderrama-masters, ejercicio 2024, columna pendiente futura. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
+number = '02460'
+semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
+section = [
+    'deducc_para_incentivar_determ_actividades',
+    '2025_innovacion_tecnologica_it',
+]
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2513 DP200018 138|2209|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2534 (DP200018 field 114) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2555 (DP200018 field 66), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "00874"
+continuidad_id = "is-deduccion-idi-evento-especial"
+number = "00874"
+section = ["deducc_para_incentivar_determ_actividades", "2025_bicentenario_de_la_policia_nacional_pn"]
+semantic_role = "is_deduccion_idi_evento_especial"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2514 DP200018 139|2226|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2535 (DP200018 field 115) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2556 (DP200018 field 67), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "00875"
+continuidad_id = "is-deduccion-eventos-especiales-aplicado-periodo"
+number = "00875"
+section = ["deducc_para_incentivar_determ_actividades", "2025_bicentenario_de_la_policia_nacional_pn"]
+semantic_role = "is_deduccion_eventos_especiales_aplicado_periodo"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2515 DP200018 140|2243|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2536 (DP200018 field 116) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2557 (DP200018 field 68), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "00877"
+continuidad_id = "is-deduccion-eventos-especiales-pendiente"
+number = "00877"
+section = ["deducc_para_incentivar_determ_actividades", "2025_bicentenario_de_la_policia_nacional_pn"]
+semantic_role = "is_deduccion_eventos_especiales_pendiente"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2519 DP200018 144|2311|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2540 (DP200018 field 120) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2558 (DP200018 field 69), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = '00902'
+continuidad_id = "public-interest-plan-2030-base-sport-credit-2024-generated"
+# AEAT aeat-dr-200-2024 DP200018 campo 69: fila del acontecimiento plan-2030-base-sport, ejercicio 2024, columna pendiente/generada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
+number = '00902'
+semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
+section = [
+    'deducc_para_incentivar_determ_actividades',
+    '2025_innovacion_tecnologica_it',
+]
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2520 DP200018 145|2328|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2541 (DP200018 field 121) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2559 (DP200018 field 70), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = '00906'
+continuidad_id = "public-interest-plan-2030-base-sport-credit-2024-applied"
+# AEAT aeat-dr-200-2024 DP200018 campo 70: fila del acontecimiento plan-2030-base-sport, ejercicio 2024, columna aplicada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
+number = '00906'
+semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
+section = [
+    'deducc_para_incentivar_determ_actividades',
+    '2025_innovacion_tecnologica_it',
+]
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2521 DP200018 146|2345|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2542 (DP200018 field 122) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2560 (DP200018 field 71), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = '01870'
+continuidad_id = "public-interest-plan-2030-base-sport-credit-2024-remaining"
+# AEAT aeat-dr-200-2024 DP200018 campo 71: fila del acontecimiento plan-2030-base-sport, ejercicio 2024, columna pendiente futura. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
+number = '01870'
+semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
+section = [
+    'deducc_para_incentivar_determ_actividades',
+    '2025_innovacion_tecnologica_it',
+]
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2522 DP200018 147|2362|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2543 (DP200018 field 123) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2561 (DP200018 field 72), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = '01914'
+continuidad_id = "public-interest-universo-mujer-three-credit-2024-generated"
+# AEAT aeat-dr-200-2024 DP200018 campo 72: fila del acontecimiento universo-mujer-three, ejercicio 2024, columna pendiente/generada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
+number = '01914'
+semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
+section = [
+    'deducc_para_incentivar_determ_actividades',
+    '2025_innovacion_tecnologica_it',
+]
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2523 DP200018 148|2379|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2544 (DP200018 field 124) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2562 (DP200018 field 73), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = '00955'
+continuidad_id = "public-interest-universo-mujer-three-credit-2024-applied"
+# AEAT aeat-dr-200-2024 DP200018 campo 73: fila del acontecimiento universo-mujer-three, ejercicio 2024, columna aplicada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
+number = '00955'
+semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
+section = [
+    'deducc_para_incentivar_determ_actividades',
+    '2025_innovacion_tecnologica_it',
+]
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2524 DP200018 149|2396|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2545 (DP200018 field 125) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2563 (DP200018 field 74), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = '00956'
+continuidad_id = "public-interest-universo-mujer-three-credit-2024-remaining"
+# AEAT aeat-dr-200-2024 DP200018 campo 74: fila del acontecimiento universo-mujer-three, ejercicio 2024, columna pendiente futura. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
+number = '00956'
+semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
+section = [
+    'deducc_para_incentivar_determ_actividades',
+    '2025_innovacion_tecnologica_it',
+]
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2525 DP200018 150|2413|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2546 (DP200018 field 126) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2564 (DP200018 field 75), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = '00957'
+continuidad_id = "public-interest-paris-olympic-preparation-credit-2024-generated"
+# AEAT aeat-dr-200-2024 DP200018 campo 75: fila del acontecimiento paris-olympic-preparation, ejercicio 2024, columna pendiente/generada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
+number = '00957'
+semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
+section = [
+    'deducc_para_incentivar_determ_actividades',
+    '2025_innovacion_tecnologica_it',
+]
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2526 DP200018 151|2430|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2547 (DP200018 field 127) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2565 (DP200018 field 76), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = '01087'
+continuidad_id = "public-interest-paris-olympic-preparation-credit-2024-applied"
+# AEAT aeat-dr-200-2024 DP200018 campo 76: fila del acontecimiento paris-olympic-preparation, ejercicio 2024, columna aplicada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
+number = '01087'
+semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
+section = [
+    'deducc_para_incentivar_determ_actividades',
+    '2025_innovacion_tecnologica_it',
+]
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2527 DP200018 152|2447|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2548 (DP200018 field 128) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2566 (DP200018 field 77), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = '01088'
+continuidad_id = "public-interest-paris-olympic-preparation-credit-2024-remaining"
+# AEAT aeat-dr-200-2024 DP200018 campo 77: fila del acontecimiento paris-olympic-preparation, ejercicio 2024, columna pendiente futura. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
+number = '01088'
+semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
+section = [
+    'deducc_para_incentivar_determ_actividades',
+    '2025_innovacion_tecnologica_it',
+]
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2528 DP200018 153|2464|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2549 (DP200018 field 129) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2567 (DP200018 field 78), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = '01089'
+continuidad_id = "public-interest-joaquin-sorolla-centenary-credit-2024-generated"
+# AEAT aeat-dr-200-2024 DP200018 campo 78: fila del acontecimiento joaquin-sorolla-centenary, ejercicio 2024, columna pendiente/generada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
+number = '01089'
+semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
+section = [
+    'deducc_para_incentivar_determ_actividades',
+    '2025_innovacion_tecnologica_it',
+]
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2529 DP200018 154|2481|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2550 (DP200018 field 130) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2568 (DP200018 field 79), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = '01110'
+continuidad_id = "public-interest-joaquin-sorolla-centenary-credit-2024-applied"
+# AEAT aeat-dr-200-2024 DP200018 campo 79: fila del acontecimiento joaquin-sorolla-centenary, ejercicio 2024, columna aplicada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
+number = '01110'
+semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
+section = [
+    'deducc_para_incentivar_determ_actividades',
+    '2025_innovacion_tecnologica_it',
+]
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2530 DP200018 155|2498|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2551 (DP200018 field 131) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2569 (DP200018 field 80), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = '01141'
+continuidad_id = "public-interest-joaquin-sorolla-centenary-credit-2024-remaining"
+# AEAT aeat-dr-200-2024 DP200018 campo 80: fila del acontecimiento joaquin-sorolla-centenary, ejercicio 2024, columna pendiente futura. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
+number = '01141'
+semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
+section = [
+    'deducc_para_incentivar_determ_actividades',
+    '2025_innovacion_tecnologica_it',
+]
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2531 DP200018 156|2515|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2552 (DP200018 field 132) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2570 (DP200018 field 81), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = '01142'
+continuidad_id = "public-interest-primavera-sound-anniversary-credit-2024-generated"
+# AEAT aeat-dr-200-2024 DP200018 campo 81: fila del acontecimiento primavera-sound-anniversary, ejercicio 2024, columna pendiente/generada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
+number = '01142'
+semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
+section = [
+    'deducc_para_incentivar_determ_actividades',
+    '2025_innovacion_tecnologica_it',
+]
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2532 DP200018 157|2532|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2553 (DP200018 field 133) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2571 (DP200018 field 82), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = '01144'
+continuidad_id = "public-interest-primavera-sound-anniversary-credit-2024-applied"
+# AEAT aeat-dr-200-2024 DP200018 campo 82: fila del acontecimiento primavera-sound-anniversary, ejercicio 2024, columna aplicada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
+number = '01144'
+semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
+section = [
+    'deducc_para_incentivar_determ_actividades',
+    '2025_innovacion_tecnologica_it',
+]
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2533 DP200018 158|2549|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2554 (DP200018 field 134) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2572 (DP200018 field 83), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = '01145'
+continuidad_id = "public-interest-primavera-sound-anniversary-credit-2024-remaining"
+# AEAT aeat-dr-200-2024 DP200018 campo 83: fila del acontecimiento primavera-sound-anniversary, ejercicio 2024, columna pendiente futura. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
+number = '01145'
+semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
+section = [
+    'deducc_para_incentivar_determ_actividades',
+    '2025_innovacion_tecnologica_it',
+]
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2534 DP200018 159|2566|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2555 (DP200018 field 135) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2573 (DP200018 field 84), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = '01146'
+continuidad_id = "public-interest-victoria-angeles-centenary-credit-2024-generated"
+# AEAT aeat-dr-200-2024 DP200018 campo 84: fila del acontecimiento victoria-angeles-centenary, ejercicio 2024, columna pendiente/generada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
+number = '01146'
+semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
+section = [
+    'deducc_para_incentivar_determ_actividades',
+    '2025_innovacion_tecnologica_it',
+]
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2535 DP200018 160|2583|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2556 (DP200018 field 136) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2574 (DP200018 field 85), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = '01150'
+continuidad_id = "public-interest-victoria-angeles-centenary-credit-2024-applied"
+# AEAT aeat-dr-200-2024 DP200018 campo 85: fila del acontecimiento victoria-angeles-centenary, ejercicio 2024, columna aplicada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
+number = '01150'
+semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
+section = [
+    'deducc_para_incentivar_determ_actividades',
+    '2025_innovacion_tecnologica_it',
+]
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2536 DP200018 161|2600|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2557 (DP200018 field 137) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2575 (DP200018 field 86), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = '01151'
+continuidad_id = "public-interest-victoria-angeles-centenary-credit-2024-remaining"
+# AEAT aeat-dr-200-2024 DP200018 campo 86: fila del acontecimiento victoria-angeles-centenary, ejercicio 2024, columna pendiente futura. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
+number = '01151'
+semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
+section = [
+    'deducc_para_incentivar_determ_actividades',
+    '2025_innovacion_tecnologica_it',
+]
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2537 DP200018 162|2617|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2558 (DP200018 field 138) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2576 (DP200018 field 87), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = '01152'
+continuidad_id = "public-interest-picasso-death-anniversary-credit-2024-generated"
+# AEAT aeat-dr-200-2024 DP200018 campo 87: fila del acontecimiento picasso-death-anniversary, ejercicio 2024, columna pendiente/generada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
+number = '01152'
+semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
+section = [
+    'deducc_para_incentivar_determ_actividades',
+    '2025_innovacion_tecnologica_it',
+]
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2538 DP200018 163|2634|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2559 (DP200018 field 139) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2577 (DP200018 field 88), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = '01153'
+continuidad_id = "public-interest-picasso-death-anniversary-credit-2024-applied"
+# AEAT aeat-dr-200-2024 DP200018 campo 88: fila del acontecimiento picasso-death-anniversary, ejercicio 2024, columna aplicada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
+number = '01153'
+semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
+section = [
+    'deducc_para_incentivar_determ_actividades',
+    '2025_innovacion_tecnologica_it',
+]
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2539 DP200018 164|2651|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2560 (DP200018 field 140) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2578 (DP200018 field 89), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = '01154'
+continuidad_id = "public-interest-picasso-death-anniversary-credit-2024-remaining"
+# AEAT aeat-dr-200-2024 DP200018 campo 89: fila del acontecimiento picasso-death-anniversary, ejercicio 2024, columna pendiente futura. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
+number = '01154'
+semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
+section = [
+    'deducc_para_incentivar_determ_actividades',
+    '2025_innovacion_tecnologica_it',
+]
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2540 DP200018 165|2668|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2561 (DP200018 field 141) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2579 (DP200018 field 90), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = '01155'
+continuidad_id = "public-interest-todos-contra-cancer-credit-2024-generated"
+# AEAT aeat-dr-200-2024 DP200018 campo 90: fila del acontecimiento todos-contra-cancer, ejercicio 2024, columna pendiente/generada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
+number = '01155'
+semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
+section = [
+    'deducc_para_incentivar_determ_actividades',
+    '2025_innovacion_tecnologica_it',
+]
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2541 DP200018 166|2685|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2562 (DP200018 field 142) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2580 (DP200018 field 91), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = '01156'
+continuidad_id = "public-interest-todos-contra-cancer-credit-2024-applied"
+# AEAT aeat-dr-200-2024 DP200018 campo 91: fila del acontecimiento todos-contra-cancer, ejercicio 2024, columna aplicada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
+number = '01156'
+semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
+section = [
+    'deducc_para_incentivar_determ_actividades',
+    '2025_innovacion_tecnologica_it',
+]
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2542 DP200018 167|2702|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2563 (DP200018 field 143) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2581 (DP200018 field 92), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = '01157'
+continuidad_id = "public-interest-todos-contra-cancer-credit-2024-remaining"
+# AEAT aeat-dr-200-2024 DP200018 campo 92: fila del acontecimiento todos-contra-cancer, ejercicio 2024, columna pendiente futura. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
+number = '01157'
+semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
+section = [
+    'deducc_para_incentivar_determ_actividades',
+    '2025_innovacion_tecnologica_it',
+]
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2543 DP200018 168|2719|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2564 (DP200018 field 144) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2582 (DP200018 field 93), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "01871"
+continuidad_id = "01871"
+number = "01871"
+section = ["deducc_para_incentivar_determ_actividades", "2025_ano_de_investigacion_santiago_ramon_y_cajal"]
+semantic_role = "is_deduccion_idi_evento_especial"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2544 DP200018 169|2736|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2565 (DP200018 field 145) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2583 (DP200018 field 94), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "01180"
+continuidad_id = "01180"
+number = "01180"
+section = ["deducc_para_incentivar_determ_actividades", "2025_ano_de_investigacion_santiago_ramon_y_cajal"]
+semantic_role = "is_deduccion_eventos_especiales_aplicado_periodo"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2545 DP200018 170|2753|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2566 (DP200018 field 146) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2584 (DP200018 field 95), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "01195"
+continuidad_id = "01195"
+number = "01195"
+section = ["deducc_para_incentivar_determ_actividades", "2025_ano_de_investigacion_santiago_ramon_y_cajal"]
+semantic_role = "is_deduccion_eventos_especiales_pendiente"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2561 DP200018B 6|13|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2567 (DP200018 field 147) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2585 (DP200018 field 96), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "01197"
+continuidad_id = "01197"
+number = "01197"
+section = ["deducc_para_incentivar_determ_actividades", "2025_ano_jubilar_lebaniego_2023_2024_l23"]
+semantic_role = "is_deduccion_idi_evento_especial"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2562 DP200018B 7|30|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2568 (DP200018 field 148) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2586 (DP200018 field 97), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "01207"
+continuidad_id = "01207"
+number = "01207"
+section = ["deducc_para_incentivar_determ_actividades", "2025_ano_jubilar_lebaniego_2023_2024_l23"]
+semantic_role = "is_deduccion_eventos_especiales_aplicado_periodo"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2563 DP200018B 8|47|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2569 (DP200018 field 149) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2587 (DP200018 field 98), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "01208"
+continuidad_id = "01208"
+number = "01208"
+section = ["deducc_para_incentivar_determ_actividades", "2025_ano_jubilar_lebaniego_2023_2024_l23"]
+semantic_role = "is_deduccion_eventos_especiales_pendiente"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2567 DP200018B 12|115|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2573 (DP200018 field 153) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2588 (DP200018 field 99), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = '01220'
+continuidad_id = "public-interest-wine-tourism-conference-credit-2024-generated"
+# AEAT aeat-dr-200-2024 DP200018 campo 99: fila del acontecimiento wine-tourism-conference, ejercicio 2024, columna pendiente/generada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
+number = '01220'
+semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
+section = [
+    'deducc_para_incentivar_determ_actividades',
+    '2025_innovacion_tecnologica_it',
+]
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2568 DP200018B 13|132|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2574 (DP200018 field 154) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2589 (DP200018 field 100), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = '01221'
+continuidad_id = "public-interest-wine-tourism-conference-credit-2024-applied"
+# AEAT aeat-dr-200-2024 DP200018 campo 100: fila del acontecimiento wine-tourism-conference, ejercicio 2024, columna aplicada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
+number = '01221'
+semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
+section = [
+    'deducc_para_incentivar_determ_actividades',
+    '2025_innovacion_tecnologica_it',
+]
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2569 DP200018B 14|149|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2575 (DP200018 field 155) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2590 (DP200018 field 101), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = '01222'
+continuidad_id = "public-interest-wine-tourism-conference-credit-2024-remaining"
+# AEAT aeat-dr-200-2024 DP200018 campo 101: fila del acontecimiento wine-tourism-conference, ejercicio 2024, columna pendiente futura. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
+number = '01222'
+semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
+section = [
+    'deducc_para_incentivar_determ_actividades',
+    '2025_innovacion_tecnologica_it',
+]
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2570 DP200018B 15|166|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2576 (DP200018 field 156) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2591 (DP200018 field 102), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "01223"
+continuidad_id = "01223"
+number = "01223"
+section = ["deducc_para_incentivar_determ_actividades", "2025_caravaca_de_la_cruz_2024_ano_jubilar_c24"]
+semantic_role = "is_deduccion_idi_evento_especial"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2571 DP200018B 16|183|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2577 (DP200018 field 157) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2592 (DP200018 field 103), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "01229"
+continuidad_id = "01229"
+number = "01229"
+section = ["deducc_para_incentivar_determ_actividades", "2025_caravaca_de_la_cruz_2024_ano_jubilar_c24"]
+semantic_role = "is_deduccion_eventos_especiales_aplicado_periodo"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2572 DP200018B 17|200|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2578 (DP200018 field 158) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2593 (DP200018 field 104), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "01232"
+continuidad_id = "01232"
+number = "01232"
+section = ["deducc_para_incentivar_determ_actividades", "2025_caravaca_de_la_cruz_2024_ano_jubilar_c24"]
+semantic_role = "is_deduccion_eventos_especiales_pendiente"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2573 DP200018B 18|217|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2579 (DP200018 field 159) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2594 (DP200018 field 105), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = '01233'
+continuidad_id = "public-interest-ateneo-madrid-bicentenary-credit-2024-generated"
+# AEAT aeat-dr-200-2024 DP200018 campo 105: fila del acontecimiento ateneo-madrid-bicentenary, ejercicio 2024, columna pendiente/generada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
+number = '01233'
+semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
+section = [
+    'deducc_para_incentivar_determ_actividades',
+    '2025_innovacion_tecnologica_it',
+]
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2574 DP200018B 19|234|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2580 (DP200018 field 160) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2595 (DP200018 field 106), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = '01235'
+continuidad_id = "public-interest-ateneo-madrid-bicentenary-credit-2024-applied"
+# AEAT aeat-dr-200-2024 DP200018 campo 106: fila del acontecimiento ateneo-madrid-bicentenary, ejercicio 2024, columna aplicada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
+number = '01235'
+semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
+section = [
+    'deducc_para_incentivar_determ_actividades',
+    '2025_innovacion_tecnologica_it',
+]
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2575 DP200018B 20|251|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2581 (DP200018 field 161) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2596 (DP200018 field 107), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = '01236'
+continuidad_id = "public-interest-ateneo-madrid-bicentenary-credit-2024-remaining"
+# AEAT aeat-dr-200-2024 DP200018 campo 107: fila del acontecimiento ateneo-madrid-bicentenary, ejercicio 2024, columna pendiente futura. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
+number = '01236'
+semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
+section = [
+    'deducc_para_incentivar_determ_actividades',
+    '2025_innovacion_tecnologica_it',
+]
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2576 DP200018B 21|268|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2582 (DP200018 field 162) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2597 (DP200018 field 108), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = '01237'
+continuidad_id = "public-interest-barcelona-equestrian-challenge-four-credit-2024-generated"
+# AEAT aeat-dr-200-2024 DP200018 campo 108: fila del acontecimiento barcelona-equestrian-challenge-four, ejercicio 2024, columna pendiente/generada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
+number = '01237'
+semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
+section = [
+    'deducc_para_incentivar_determ_actividades',
+    '2025_innovacion_tecnologica_it',
+]
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2577 DP200018B 22|285|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2583 (DP200018 field 163) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2598 (DP200018 field 109), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = '01238'
+continuidad_id = "public-interest-barcelona-equestrian-challenge-four-credit-2024-applied"
+# AEAT aeat-dr-200-2024 DP200018 campo 109: fila del acontecimiento barcelona-equestrian-challenge-four, ejercicio 2024, columna aplicada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
+number = '01238'
+semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
+section = [
+    'deducc_para_incentivar_determ_actividades',
+    '2025_innovacion_tecnologica_it',
+]
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2578 DP200018B 23|302|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2584 (DP200018 field 164) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2599 (DP200018 field 110), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = '01239'
+continuidad_id = "public-interest-barcelona-equestrian-challenge-four-credit-2024-remaining"
+# AEAT aeat-dr-200-2024 DP200018 campo 110: fila del acontecimiento barcelona-equestrian-challenge-four, ejercicio 2024, columna pendiente futura. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
+number = '01239'
+semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
+section = [
+    'deducc_para_incentivar_determ_actividades',
+    '2025_innovacion_tecnologica_it',
+]
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2579 DP200018B 24|319|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2585 (DP200018 field 165) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2600 (DP200018 field 111), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = '01261'
+continuidad_id = "public-interest-passeig-gracia-bicentenary-credit-2024-generated"
+# AEAT aeat-dr-200-2024 DP200018 campo 111: fila del acontecimiento passeig-gracia-bicentenary, ejercicio 2024, columna pendiente/generada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
+number = '01261'
+semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
+section = [
+    'deducc_para_incentivar_determ_actividades',
+    '2025_innovacion_tecnologica_it',
+]
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2580 DP200018B 25|336|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2586 (DP200018 field 166) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2601 (DP200018 field 112), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = '01262'
+continuidad_id = "public-interest-passeig-gracia-bicentenary-credit-2024-applied"
+# AEAT aeat-dr-200-2024 DP200018 campo 112: fila del acontecimiento passeig-gracia-bicentenary, ejercicio 2024, columna aplicada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
+number = '01262'
+semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
+section = [
+    'deducc_para_incentivar_determ_actividades',
+    '2025_innovacion_tecnologica_it',
+]
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2581 DP200018B 26|353|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2587 (DP200018 field 167) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2602 (DP200018 field 113), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = '01263'
+continuidad_id = "public-interest-passeig-gracia-bicentenary-credit-2024-remaining"
+# AEAT aeat-dr-200-2024 DP200018 campo 113: fila del acontecimiento passeig-gracia-bicentenary, ejercicio 2024, columna pendiente futura. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
+number = '01263'
+semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
+section = [
+    'deducc_para_incentivar_determ_actividades',
+    '2025_innovacion_tecnologica_it',
+]
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2582 DP200018B 27|370|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2588 (DP200018 field 168) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2603 (DP200018 field 114), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = '01264'
+continuidad_id = "public-interest-club-natacio-barcelona-credit-2024-generated"
+# AEAT aeat-dr-200-2024 DP200018 campo 114: fila del acontecimiento club-natacio-barcelona, ejercicio 2024, columna pendiente/generada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
+number = '01264'
+semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
+section = [
+    'deducc_para_incentivar_determ_actividades',
+    '2025_innovacion_tecnologica_it',
+]
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2584 DP200018B 28|387|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2590 (DP200018 field 169) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2605 (DP200018 field 115), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = '01265'
+continuidad_id = "public-interest-club-natacio-barcelona-credit-2024-applied"
+# AEAT aeat-dr-200-2024 DP200018 campo 115: fila del acontecimiento club-natacio-barcelona, ejercicio 2024, columna aplicada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
+number = '01265'
+semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
+section = [
+    'deducc_para_incentivar_determ_actividades',
+    '2025_innovacion_tecnologica_it',
+]
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2586 DP200018B 29|404|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2592 (DP200018 field 170) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2607 (DP200018 field 116), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = '01266'
+continuidad_id = "public-interest-club-natacio-barcelona-credit-2024-remaining"
+# AEAT aeat-dr-200-2024 DP200018 campo 116: fila del acontecimiento club-natacio-barcelona, ejercicio 2024, columna pendiente futura. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
+number = '01266'
+semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
+section = [
+    'deducc_para_incentivar_determ_actividades',
+    '2025_innovacion_tecnologica_it',
+]
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2589 DP200018B 31|438|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2595 (DP200018 field 172) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2610 (DP200018 field 118), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = '01268'
+continuidad_id = "public-interest-alimentaria-hostelco-credit-2024-applied"
+# AEAT aeat-dr-200-2024 DP200018 campo 118: fila del acontecimiento alimentaria-hostelco, ejercicio 2024, columna aplicada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
+number = '01268'
+semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
+section = [
+    'deducc_para_incentivar_determ_actividades',
+    '2025_innovacion_tecnologica_it',
+]
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2590 DP200018B 32|455|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2596 (DP200018 field 173) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2611 (DP200018 field 119), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = '01269'
+continuidad_id = "public-interest-alimentaria-hostelco-credit-2024-remaining"
+# AEAT aeat-dr-200-2024 DP200018 campo 119: fila del acontecimiento alimentaria-hostelco, ejercicio 2024, columna pendiente futura. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
+number = '01269'
+semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
+section = [
+    'deducc_para_incentivar_determ_actividades',
+    '2025_innovacion_tecnologica_it',
+]
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2591 DP200018B 33|472|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2597 (DP200018 field 174) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2612 (DP200018 field 120), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = '01272'
+continuidad_id = "public-interest-barcelona-music-lab-credit-2024-generated"
+# AEAT aeat-dr-200-2024 DP200018 campo 120: fila del acontecimiento barcelona-music-lab, ejercicio 2024, columna pendiente/generada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
+number = '01272'
+semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
+section = [
+    'deducc_para_incentivar_determ_actividades',
+    '2025_innovacion_tecnologica_it',
+]
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2592 DP200018B 34|489|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2598 (DP200018 field 175) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2613 (DP200018 field 121), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = '01273'
+continuidad_id = "public-interest-barcelona-music-lab-credit-2024-applied"
+# AEAT aeat-dr-200-2024 DP200018 campo 121: fila del acontecimiento barcelona-music-lab, ejercicio 2024, columna aplicada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
+number = '01273'
+semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
+section = [
+    'deducc_para_incentivar_determ_actividades',
+    '2025_innovacion_tecnologica_it',
+]
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2593 DP200018B 35|506|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2599 (DP200018 field 176) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2614 (DP200018 field 122), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = '01274'
+continuidad_id = "public-interest-barcelona-music-lab-credit-2024-remaining"
+# AEAT aeat-dr-200-2024 DP200018 campo 122: fila del acontecimiento barcelona-music-lab, ejercicio 2024, columna pendiente futura. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
+number = '01274'
+semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
+section = [
+    'deducc_para_incentivar_determ_actividades',
+    '2025_innovacion_tecnologica_it',
+]
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2597 DP200018B 39|574|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2615 (DP200018B field 6) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2615 (DP200018 field 123), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = '01281'
+continuidad_id = "public-interest-south-summit-credit-2024-generated"
+# AEAT aeat-dr-200-2024 DP200018 campo 123: fila del acontecimiento south-summit, ejercicio 2024, columna pendiente/generada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
+number = '01281'
+semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
+section = [
+    'deducc_para_incentivar_determ_actividades',
+    '2025_innovacion_tecnologica_it',
+]
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2598 DP200018B 40|591|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2616 (DP200018B field 7) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2616 (DP200018 field 124), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = '01282'
+continuidad_id = "public-interest-south-summit-credit-2024-applied"
+# AEAT aeat-dr-200-2024 DP200018 campo 124: fila del acontecimiento south-summit, ejercicio 2024, columna aplicada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
+number = '01282'
+semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
+section = [
+    'deducc_para_incentivar_determ_actividades',
+    '2025_innovacion_tecnologica_it',
+]
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2599 DP200018B 41|608|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2617 (DP200018B field 8) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2617 (DP200018 field 125), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = '01283'
+continuidad_id = "public-interest-south-summit-credit-2024-remaining"
+# AEAT aeat-dr-200-2024 DP200018 campo 125: fila del acontecimiento south-summit, ejercicio 2024, columna pendiente futura. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
+number = '01283'
+semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
+section = [
+    'deducc_para_incentivar_determ_actividades',
+    '2025_innovacion_tecnologica_it',
+]
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2603 DP200018B 45|676|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2666 (DP200018B field 57) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2657 (DP200018 field 165), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = '01683'
+continuidad_id = "is-deduccion-acontecimiento-interes-publico-otras"
+number = '01683'
+semantic_role = 'is_deduccion_acontecimiento_interes_publico_otras'
+section = [
+    'deducc_para_incentivar_determ_actividades',
+    '2026_otras_deducciones_relativas_a_programas_de_ap',
+]
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2604 DP200018B 46|693|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2667 (DP200018B field 58) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2658 (DP200018 field 166), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = '01684'
+continuidad_id = "01684"
+number = '01684'
+semantic_role = 'is_deduccion_eventos_especiales_aplicado_periodo'
+section = [
+    'deducc_para_incentivar_determ_actividades',
+    '2026_otras_deducciones_relativas_a_programas_de_ap',
+]
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2605 DP200018B 47|710|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2668 (DP200018B field 59) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2659 (DP200018 field 167), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = '01685'
+continuidad_id = "01685"
+number = '01685'
+semantic_role = 'is_deduccion_eventos_especiales_pendiente'
+section = [
+    'deducc_para_incentivar_determ_actividades',
+    '2026_otras_deducciones_relativas_a_programas_de_ap',
+]
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2787 DP200018C 71|1118|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2864 (DP200018C field 74) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2883 (DP200018C field 76), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "01692"
+continuidad_id = "01692"
+number = "01692"
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
+semantic_role = "is_deduccion_donativos_general"
+legal_refs = ["ley-49-2002:art-20"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2788 DP200018C 72|1135|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2865 (DP200018C field 75) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2884 (DP200018C field 77), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "01693"
+continuidad_id = "01693"
+number = "01693"
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
+semantic_role = "is_deduccion_donativos_general"
+legal_refs = ["ley-49-2002:art-20"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2789 DP200018C 73|1152|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2866 (DP200018C field 76) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2885 (DP200018C field 78), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "01694"
+continuidad_id = "01694"
+number = "01694"
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
+semantic_role = "is_deduccion_donativos_general"
+legal_refs = ["ley-49-2002:art-20"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2790 DP200018C 74|1169|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2867 (DP200018C field 77) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2886 (DP200018C field 79), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "01695"
+continuidad_id = "01695"
+number = "01695"
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
+semantic_role = "is_deduccion_donativos_general"
+legal_refs = ["ley-49-2002:art-20"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2791 DP200018C 75|1186|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2868 (DP200018C field 78) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2887 (DP200018C field 80), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "01696"
+continuidad_id = "01696"
+number = "01696"
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
+semantic_role = "is_deduccion_donativos_general"
+legal_refs = ["ley-49-2002:art-20"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2792 DP200018C 76|1203|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2869 (DP200018C field 79) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2888 (DP200018C field 81), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "01697"
+continuidad_id = "01697"
+number = "01697"
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
+semantic_role = "is_deduccion_donativos_general"
+legal_refs = ["ley-49-2002:art-20"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2861 DP200018C 145|2376|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2941 (DP200018C field 151) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2962 (DP200018C field 155), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "01704"
+continuidad_id = "01704"
+number = "01704"
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecena"]
+semantic_role = "is_deduccion_donativos_prioritarias"
+legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2862 DP200018C 146|2393|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2942 (DP200018C field 152) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2963 (DP200018C field 156), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "01705"
+continuidad_id = "01705"
+number = "01705"
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecena"]
+semantic_role = "is_deduccion_donativos_prioritarias"
+legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2863 DP200018C 147|2410|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2943 (DP200018C field 153) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2964 (DP200018C field 157), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "01706"
+continuidad_id = "01706"
+number = "01706"
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecena"]
+semantic_role = "is_deduccion_donativos_prioritarias"
+legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2864 DP200018C 148|2427|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2944 (DP200018C field 154) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2965 (DP200018C field 158), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "01729"
+continuidad_id = "01729"
+number = "01729"
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecena"]
+semantic_role = "is_deduccion_donativos_prioritarias"
+legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2865 DP200018C 149|2444|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2945 (DP200018C field 155) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2966 (DP200018C field 159), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "02475"
+continuidad_id = "02475"
+number = "02475"
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecena"]
+semantic_role = "is_deduccion_donativos_prioritarias"
+legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2866 DP200018C 150|2461|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2946 (DP200018C field 156) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2967 (DP200018C field 160), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "02476"
+continuidad_id = "02476"
+number = "02476"
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecena"]
+semantic_role = "is_deduccion_donativos_prioritarias"
+legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3257 DP200020B 45|676|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3363 (DP200020B field 57) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3409 (DP200020B field 57), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "01731"
+continuidad_id = "01731"
+number = "01731"
+section = ["reserva_de_nivelacion", "reduccion_base_imponible"]
+semantic_role = "is_reserva_nivelacion_adicion_pendiente"
+legal_refs = ["ley-27-2014:art-105"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3640 DP200022 34|489|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3775 (DP200022 field 39) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3836 (DP200022 field 32), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "00927"
+continuidad_id = "is-reserva-inversiones-canarias-importe"
+number = "00927"
+section = ["reg_especial_reserva_inversiones_canarias", "importe_de_la_dotacion_ric_con_cargo_a_beneficios"]
+semantic_role = "is_reserva_inversiones_canarias_importe"
+legal_refs = ["ley-19-1994:art-27"]
+# AEAT aeat-dr-200-2024 DP200022 campo 34, posicion 489: Rég. especial reserva inversiones Canarias - Inversiones anticipadas 2024 - Inversiones previstas letras A y B, art. 27.4 Ley 19/1994 [03352]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3747 DP200022 141|2308|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3886 (DP200022 field 150) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3944 (DP200022 field 140), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "01225"
+continuidad_id = "01225"
+number = "01225"
+section = ["reg_cooperativas", "detalle_compensacion_cuotas_2024_pendiente_aplicac"]
+semantic_role = "is_cooperativa_compensacion_cuotas"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3748 DP200022 142|2325|17|Num
+# aeat-dr-200-2023 and aeat-dr-200-2024 print the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3887 (DP200022 field 151) and 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3945 (DP200022 field 141), with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "01226"
+continuidad_id = "01226"
+number = "01226"
+section = ["reg_cooperativas", "detalle_compensacion_cuotas_2024_pendiente_aplicac"]
+semantic_role = "is_cooperativa_compensacion_cuotas"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 
 # aeat-dr-200-2022, DP200032, row 87, field 82, offset 1305, width 17: Contabilidad Banco de España - Estado cambios patrimonio neto (II) - Estado total cambios - Transferencias entre componentes del patrimonio neto - Ganancias acumuladas [00501]
