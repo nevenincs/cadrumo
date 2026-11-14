@@ -2024,6 +2024,11 @@ cli:
         filing_evidence_option_other_modelo: 'El Modelo %{modelo} no admite ninguna
           de estas opciones: %{options}. Son exclusivas del Modelo %{applies_to}.
           Quítalas y vuelve a calcular; no se ha calculado nada.'
+        form_help: 'Muestra los registros repetidos guardados del formulario de una
+          declaración, como una fila por inmueble arrendado, tal como los muestra
+          el área de trabajo: una línea por valor con el bloque, el número de fila
+          del registro, la casilla y el valor. Un bloque cuyos registros no se pueden
+          leer se indica como desconocido, nunca como vacío.'
         formula_operation_calculation: cálculo
         formula_operation_clamp: límite
         formula_operation_conditional: condicional

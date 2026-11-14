@@ -1993,6 +1993,11 @@ cli:
           el ezeket a kapcsolókat: %{options}. Ezek kizárólag a Modelo %{applies_to}
           nyomtatványhoz tartoznak. Töröld őket, és futtasd újra a számítást; semmi
           sem lett kiszámolva.'
+        form_help: 'Kiírja egy bevallás űrlapjának mentett ismétlődő rekordjait, például
+          bérbe adott ingatlanonként egy sort, ahogy a munkaterület mutatja őket:
+          értékenként egy sort a blokkal, a rekord sorszámával, a mezővel és az értékkel.
+          Az a blokk, amelynek rekordjai nem olvashatók, ismeretlenként jelenik meg,
+          soha nem üresként.'
         formula_operation_calculation: számítás
         formula_operation_clamp: korlátozás
         formula_operation_conditional: feltételes
