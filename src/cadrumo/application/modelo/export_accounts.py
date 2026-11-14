@@ -924,12 +924,21 @@ def resolve_export_model_profile(
                 activity_start_date=workflow_profile.activity_start_date,
             ),
         ), None
+    return _remaining_model_profile(
+        modelo, workflow_profile=workflow_profile, work_unit=work_unit, operation=operation
+    ), None
+
+
+def _remaining_model_profile(
+    modelo: Modelo,
+    *,
+    workflow_profile: TaxpayerProfile,
+    work_unit: WorkUnit,
+    operation: PinnedAuthorityOperation,
+) -> FilingModelProfileFacts:
+    """Return the profile facts of a modelo whose export reads no Modelo 303 filing facts."""
     if modelo == form_for_role("withholding.work_periodic"):
-        return _modelo_111_profile_facts(
-            workflow_profile=workflow_profile,
-            work_unit=work_unit,
-            operation=operation,
-        ), None
+        return _modelo_111_profile_facts(workflow_profile=workflow_profile, work_unit=work_unit, operation=operation)
     if modelo == form_for_role("iae.census_declaration"):
         record = load_export_profile_record(bucket_id=work_unit.bucket_id, operation=operation, profile_record=None)
         return modelo_840_profile_facts(
@@ -937,8 +946,8 @@ def resolve_export_model_profile(
             path_values=record_to_path_values(
                 record if isinstance(record, UserProfileRecord) else None, as_of=work_unit.period.end_date
             ),
-        ), None
-    return GeneralFilingProfileFacts(), None
+        )
+    return GeneralFilingProfileFacts()
 
 
 _COLEGIO_CONCERTADO_SELECTOR = "colegio_concertado"
