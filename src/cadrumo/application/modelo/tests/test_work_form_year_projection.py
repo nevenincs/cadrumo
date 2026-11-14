@@ -34,9 +34,9 @@ _GRADE_WORDS_LOCALE_KEYS = {
     RegistryAuthorityGrade.CALCULATION: "application.modelo.work_form.authority_grade.calculation",
     RegistryAuthorityGrade.FILING: "application.modelo.work_form.authority_grade.filing",
 }
-# Modelo 200 authors editions held at each rung of the ladder, so its own years
+# Modelo 390 authors editions held at filing grade and one held below it, so its own years
 # exercise an edition below filing grade as well as one at it.
-_GRADED_MODELO = "200"
+_GRADED_MODELO = "390"
 
 
 def test_an_authored_year_is_served_as_not_projected(operation: PinnedAuthorityOperation) -> None:
