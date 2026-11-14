@@ -22,6 +22,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useScrolls } from "@/components/ui/useScrolls";
 import { formatInstantDay } from "../../../shared/dateFormats";
 import { facts } from "../../../shell/compose";
 import type {
@@ -246,6 +247,11 @@ export function ModeloWorkspace({
   const t = useStrings();
   // The views share one panel, whose content follows the chosen tab.
   const panel = useId();
+  // The panel is a Tab stop while it scrolls, named by the chosen tab, so
+  // the Page and End keys move it without the pointer.
+  const [panelEl, setPanelEl] = useState<HTMLElement | null>(null);
+  const panelScrolls = useScrolls(panelEl);
+  const tabId = (value: WorkspaceView) => `${panel}-tab-${value}`;
   // Where the form view draws its pane controls: at the end of the view
   // bar, which keeps its width whatever the panes do.
   const [paneControls, setPaneControls] = useState<HTMLElement | null>(null);
@@ -370,6 +376,7 @@ export function ModeloWorkspace({
   const tab = (value: WorkspaceView, name: string, extra?: ReactNode) => (
     <TabsTrigger
       value={value}
+      id={tabId(value)}
       aria-controls={panel}
       onPointerDown={(event) => press(value, event)}
       onClick={() => onViewChange(value)}
@@ -577,9 +584,11 @@ export function ModeloWorkspace({
         />
       ) : (
         <div
+          ref={setPanelEl}
           id={panel}
           role="tabpanel"
-          tabIndex={-1}
+          aria-labelledby={tabId(view)}
+          tabIndex={panelScrolls ? 0 : -1}
           className="@container min-h-0 flex-1 overflow-y-auto px-6 py-6 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
         >
           {view === "check" && slots.check}

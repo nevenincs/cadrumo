@@ -5,7 +5,7 @@ tags:
 date: '2026-11-14'
 modified: '2026-11-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:0eaee953199e758922648915f9aea065e3f9e59437584ace761014af5cf8b553'
+body_hash: 'sha256:3b46b69d5957cba9d3500d4bbfaa67163de2ba7de428af84beca8c9cf36c74d2'
 related:
   - "[[2026-11-14-modelo-200-pyg-page-qualified-plan]]"
 ---
@@ -139,7 +139,24 @@ related:
 - `S01` `M` `src/cadrumo/locales/ca/modelo/schema/200.yml`
 - `S01` `M` `src/cadrumo/locales/hu/modelo/schema/200.yml`
 - `S01` `verify:` `dev.locales audit and casilla-audit` -> `pass`
+- `S02` `M` `.vault/adr/2026-11-14-modelo-200-pyg-page-qualified-adr.md`
+- `S02` `M` `src/cadrumo/adapters/persistence/profile/calculation_observations.py`
+- `S02` `M` `src/cadrumo/application/calculations/binding_prefill.py`
+- `S02` `M` `src/cadrumo/application/calculations/errors.py`
+- `S02` `M` `src/cadrumo/application/calculations/observations_repository.py`
+- `S02` `A` `src/cadrumo/application/calculations/prior_filing_page_qualified_reads.py`
+- `S02` `A` `src/cadrumo/application/calculations/tests/test_prior_filing_page_qualified_table.py`
+- `S02` `M` `src/cadrumo/core/errors/registry/application_modelo.py`
+- `S02` `M` `src/cadrumo/core/errors/tests/declared_code_history.txt`
+- `S02` `A` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_200_prior_page_qualified_read_live.py`
+- `S02` `M` `src/cadrumo/locales/ca/errors.yml`
+- `S02` `M` `src/cadrumo/locales/en/errors.yml`
+- `S02` `M` `src/cadrumo/locales/es/errors.yml`
+- `S02` `M` `src/cadrumo/locales/hu/errors.yml`
+- `S02` `verify:` `pytest-s02-live-and-neighbours` -> `pass`
+- `S02` `verify:` `ruff-ty-pyrefly-basedpyright-lint-imports` -> `pass`
 
 ## Notes
 
 - `S01` 33 page-qualified occurrences lacked labels (6 suite reds); authored through casilla-author; DP200016B:00296 shares one cohort text across 2024 and 2025 because no evolution kind links two continuity ids
+- `S02` Per the ADR amendment of 2026-11-14 (A2), a read-seam map replaces a stored rewrite; live calculate tests replace the dry-run preview and the rewrite equality test. Two error-hygiene test failures come from merged tui code, not S02.
