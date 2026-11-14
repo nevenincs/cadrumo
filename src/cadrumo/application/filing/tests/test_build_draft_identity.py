@@ -53,11 +53,12 @@ _M303_REGIMEN_GENERAL_RESULT_CASILLA: CasillaId = validated_casilla_id(
     surface="_M303_REGIMEN_GENERAL_RESULT_CASILLA",
 )
 # The reused-printed-number invariant is about a printed number that two
-# casillas share, not about any one modelo. Modelo 200's 2025 filing-grade
-# revision has several genuine cross-page reuses. The pair itself is re-sourced
-# from that revision below rather than transcribed, so the test cannot outlive
-# the reuse it describes.
-_REUSED_NUMBER_MODELO = "200"
+# casillas share, not about any one modelo. Modelo 193's 2025 filing-grade
+# revision has genuine reuses (Modelo 200's 2025 edition, which this test used,
+# is calculation grade and refuses a filing snapshot). The pair itself is
+# re-sourced from that revision below rather than transcribed, so the test
+# cannot outlive the reuse it describes.
+_REUSED_NUMBER_MODELO = "193"
 _REUSED_NUMBER_FILING_YEAR = 2025
 _REUSED_NUMBER_PERIOD_CODE = "0A"
 

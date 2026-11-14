@@ -567,6 +567,8 @@ application:
           stated. State it and export again.'
         producer_fact_required: 'Nothing was written: the export needs %{fact}, which
           is not stated. State it and export again.'
+        producer_facts_unsupplied: 'Nothing was written: the export of Modelo %{modelo}
+          needs %{facts}, and nothing in the application can supply them yet.'
         product_identity_not_admitted: 'Nothing was written: this export has no slot
           for a product or software identity, so none can be given for it.'
         product_identity_required: 'Nothing was written: the export needs the product
@@ -825,20 +827,20 @@ application:
           and year %{year}. Open it instead of creating another.
         activity_not_found: No inventory record book exists for this activity and
           year %{year}. Create it first, or check the activity and year.
-        claimed_transaction_amount_mismatch: 'Purchase %{movement_id} of the %{year}
-          inventory does not match its ledger entry: the base, IVA and recargo must
-          be equal to the cent. Correct the purchase or choose another entry.'
-        claimed_transaction_double_claim: The ledger entry that purchase %{movement_id}
-          names is already claimed by another inventory or by an asset in your register.
-          Each ledger entry belongs to one register only.
-        claimed_transaction_missing: Purchase %{movement_id} of the %{year} inventory
-          names a ledger entry that is not an active entry of your ledger. Choose
-          the entry that books this purchase.
-        claimed_transaction_not_eur: The ledger entry that purchase %{movement_id}
-          names is not in euros. Only entries in euros can be named for now.
-        claimed_transaction_substrate_missing: The ledger entry that purchase %{movement_id}
-          names states no taxable base or IVA, so it cannot be compared. Complete
-          the entry first.
+        claimed_transaction_amount_mismatch: 'This purchase of the %{year} inventory
+          does not match its ledger entry: the base, IVA and recargo must be equal
+          to the cent. Correct the purchase or choose another entry.'
+        claimed_transaction_double_claim: The ledger entry this purchase names is
+          already claimed by another inventory or by an asset in your register. Each
+          ledger entry belongs to one register only.
+        claimed_transaction_missing: This purchase of the %{year} inventory names
+          a ledger entry that is not an active entry of your ledger. Choose the entry
+          that books this purchase.
+        claimed_transaction_not_eur: The ledger entry this purchase names is not in
+          euros. Only entries in euros can be named for now.
+        claimed_transaction_substrate_missing: The ledger entry this purchase names
+          states no taxable base or IVA, so it cannot be compared. Complete the entry
+          first.
         closing_authority_conflict: A different closing value is already recorded
           for this activity and year.
         closing_authority_invalid: This closing value could not be recorded because
@@ -868,7 +870,7 @@ application:
           activity starts from this closing, so the %{year} stock facts can no longer
           change.
         ledger_row_not_purchase: Only an inventory purchase can name the ledger entry
-          that books it, and %{movement_id} is not a purchase.
+          that books it, and this movement is not a purchase.
         movement_already_superseded: This movement was already corrected or reversed.
         movement_not_found: The %{year} inventory of this activity does not have this
           movement.

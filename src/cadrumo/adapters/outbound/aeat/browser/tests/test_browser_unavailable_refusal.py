@@ -14,6 +14,7 @@ from playwright.async_api import async_playwright
 
 from ......application.browser_location import playwright_browsers_root
 from ......application.operations.error_detail import build_operation_error_detail
+from ......application.operator_actions.served_actions import serve_precondition_verdict
 from ......core.config import Settings, override_settings
 from ......core.errors.error_codes import (
     ErrorCategory,
@@ -125,4 +126,14 @@ def test_the_rendered_refusal_is_its_sentence_alone(tmp_path: Path) -> None:
     assert detail is not None
     assert detail.context == ()
     assert detail.message_key == "adapters.browser.errors.not_available"
-    assert detail.precondition_verdict() == error.terminal_precondition_verdict
+    # The recorded detail carries the verdict with its way-out words served; the error holds it bare.
+    recorded = detail.precondition_verdict()
+    assert recorded is not None
+    assert error.terminal_precondition_verdict is not None
+    assert error.terminal_precondition_verdict.no_recovery_words is None
+    assert recorded.no_recovery_words is not None
+    assert recorded.no_recovery_words.strip() != ""
+    assert recorded.no_recovery_words_language is not None
+    assert recorded == serve_precondition_verdict(
+        error.terminal_precondition_verdict, recorded.no_recovery_words_language
+    )

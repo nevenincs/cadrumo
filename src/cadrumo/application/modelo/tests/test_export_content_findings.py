@@ -109,4 +109,4 @@ def test_an_xml_return_with_no_identity_to_state_blocks_without_naming_a_box() -
 
 
 def test_a_fixed_width_return_is_not_judged_by_this_check() -> None:
-    assert _content_findings("200", "0A") == []
+    assert _content_findings("130", "1T") == []

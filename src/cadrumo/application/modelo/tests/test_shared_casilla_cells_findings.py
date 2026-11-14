@@ -8,7 +8,6 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-from cadrumo.domain.deadlines.models import IVARegime
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
@@ -16,7 +15,6 @@ from ....domain.calculations.registry.bindings import CasillaObservation
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
-from ....domain.deadlines.models import TaxpayerProfile
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
@@ -29,10 +27,9 @@ from ....domain.modelos.verification_report import (
     ModeloVerificationFindingSeverity,
 )
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from ..verification_revision_findings import collect_revision_verification_findings
+from ..preconditions import ModeloPreconditionFailure
+from ..shared_casilla_cells_findings import append_shared_casilla_cells_findings
 from ..work_form_findings import finding_action_locale_key
-from .advisory_diagnostic_repositories import EmptyTransactionCatalogueRepository
-from .invoice_catalogue_fake import InvoiceCatalogueFake
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -107,18 +104,22 @@ def _revision(work_unit: WorkUnit, casilla_values: dict[CasillaId, Decimal]) -> 
 def _shared_cell_findings(
     filing_year: int, casilla_values: dict[CasillaId, Decimal]
 ) -> tuple[list[ModeloVerificationFinding], set[str]]:
-    """Run the real revision verification for one Modelo 200 year."""
+    """Run the shared-cell check verification applies to a revision resolved at filing grade, for one Modelo 200 year.
+
+    Verification adds this check only for a revision that resolves at filing grade, and the
+    2025 edition of Modelo 200 is held at calculation grade, so the check is applied to the
+    edition's layout directly, as verification applies it.
+    """
     with bundled_indexed_authority().operation() as operation:
-        revision_id = str(operation.snapshot(_MODELO, filing_year=filing_year, period="0A").revision.id)
-        work_unit = _work_unit(filing_year, revision_id)
-        findings, _resolved, _missing, failures = collect_revision_verification_findings(
-            work_unit=work_unit,
+        snapshot = operation.reading_snapshot(_MODELO, filing_year=filing_year, period="0A")
+        work_unit = _work_unit(filing_year, str(snapshot.revision.id))
+        findings: list[ModeloVerificationFinding] = []
+        failures: dict[int, ModeloPreconditionFailure] = {}
+        append_shared_casilla_cells_findings(
             target=_revision(work_unit, casilla_values),
-            profile=TaxpayerProfile(tax_id="X0001500M", iva_regime=IVARegime("GENERAL")),
-            transaction_repository=EmptyTransactionCatalogueRepository(bucket_id=work_unit.bucket_id),
-            invoice_repository=InvoiceCatalogueFake(),
-            operation=operation,
-            work_profile=None,
+            snapshot=snapshot,
+            findings=findings,
+            failures_by_finding_id=failures,
         )
     matching = [finding for finding in findings if finding.message_locale_key == _MESSAGE]
     return matching, {failures[id(finding)].scenario_id for finding in matching}
