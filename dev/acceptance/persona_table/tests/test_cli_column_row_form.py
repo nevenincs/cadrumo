@@ -123,12 +123,23 @@ def test_a_casilla_in_two_blocks_is_two_rows_and_a_repeated_line_is_not_collapse
     assert form_row_figures(parse_form_lines("r\ta\t1\t0063\t5\nrecord\ta\t1\t0063\t5\n")) == {}
 
 
-def test_a_casilla_with_any_text_value_is_left_out() -> None:
+def test_a_text_value_of_one_row_is_kept_as_printed_and_a_text_casilla_in_several_rows_has_no_figure() -> None:
     values = parse_form_lines(
-        "r\tb\t1\t0001\tcalle mayor 1\nrecord\tb\t1\t0063\t5\nrecord\tb\t2\t0063\tn/a\nrecord\tb\t1\t0064\tNaN\n"
+        "record\tb\t1\t0066\t0000002VK0000N0001LH\nrecord\tb\t1\t0093\t2024-06-01\n"
+        "record\tb\t1\t0063\t5\nrecord\tb\t2\t0063\tn/a\n"
+        "record\tb\t1\t0120\t2023-03-15\nrecord\tb\t2\t0120\t2023-04-01\n"
     )
 
-    assert form_row_figures(values) == {}
+    assert form_row_figures(values) == {"0066": "0000002VK0000N0001LH", "0093": "2024-06-01"}
+
+
+def test_a_text_row_figure_fills_an_absent_scalar_and_a_differing_printed_text_is_a_conflict() -> None:
+    merged, conflicts = merge_form_figures((("0100", "1"),), {"0093": "2024-06-01"})
+
+    assert merged == (("0093", "2024-06-01"), ("0100", "1"))
+    assert conflicts == []
+    _, conflicts = merge_form_figures((("0093", "2023-01-01"),), {"0093": "2024-06-01"})
+    assert conflicts == ["casilla 0093 scalar 2023-01-01 differs from its row figure 2024-06-01"]
 
 
 def test_a_row_figure_fills_an_absent_or_zero_scalar_and_a_differing_nonzero_scalar_is_a_conflict() -> None:
@@ -172,7 +183,7 @@ def test_a_redacted_value_of_one_row_is_kept_as_printed_and_numeric_rules_stay()
         f"record\tb\t1\t0091\t{_REDACTED}\nrecord\tb\t1\t0063\t12000.00\nrecord\tb\t1\t0001\tcalle mayor 1\n"
     )
 
-    assert form_row_figures(values) == {"0091": _REDACTED, "0063": "12000"}
+    assert form_row_figures(values) == {"0091": _REDACTED, "0063": "12000", "0001": "calle mayor 1"}
 
 
 def test_a_redacted_value_in_several_rows_or_mixed_with_a_number_has_no_figure() -> None:

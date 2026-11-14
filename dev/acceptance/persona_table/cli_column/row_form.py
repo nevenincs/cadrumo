@@ -166,9 +166,9 @@ def form_row_figures(values: Sequence[FormValue]) -> Mapping[str, str]:
     """The figure of each casilla held by exactly one saved row, by casilla id, as canonical text.
 
     Every printed value of a casilla is one row, whichever record and block it is in, so a casilla in two rows has no
-    single figure. A casilla any of whose values is not a number is left out, since its rows cannot be counted as
-    amounts, except a redacted value, which a casilla held by exactly one row keeps as printed. The one-row rule of
-    the numeric casillas is the table's :func:`..row_figures.single_row_figures`.
+    single figure. A casilla any of whose values is not a number is not counted as an amount; held by exactly one
+    row, its value (a cadastral reference, a date, a redacted value) is kept as printed. The one-row rule of the
+    numeric casillas is the table's :func:`..row_figures.single_row_figures`.
     """
     printed: dict[str, dict[str, Decimal | None]] = {}
     for position, item in enumerate(values):
@@ -180,13 +180,13 @@ def form_row_figures(values: Sequence[FormValue]) -> Mapping[str, str]:
     }
     single = single_row_figures(rows, {casilla: casilla for casilla in rows})
     numeric = dict(canonical_figures({casilla: Decimal(text) for casilla, text in single.items()}))
-    return numeric | _redacted_figures(values)
+    return numeric | _text_figures(values)
 
 
-def _redacted_figures(values: Sequence[FormValue]) -> dict[str, str]:
-    """The redacted value of each casilla held by exactly one printed value, as printed."""
+def _text_figures(values: Sequence[FormValue]) -> dict[str, str]:
+    """The value of each casilla held by exactly one printed value that is not a number, as printed."""
     held = Counter(item.casilla for item in values)
-    return {item.casilla: item.value for item in values if held[item.casilla] == 1 and is_redacted(item.value)}
+    return {item.casilla: item.value for item in values if held[item.casilla] == 1 and _number(item.value) is None}
 
 
 def merge_form_figures(
@@ -194,28 +194,29 @@ def merge_form_figures(
 ) -> tuple[tuple[tuple[str, str], ...], list[str]]:
     """The ``figures`` with each row figure filled where the printed one is zero or absent, and every conflict.
 
-    The table's :func:`..row_figures.merge_row_figures` decides for the numeric row figures; a redacted row figure
-    is filled by the same rule and conflicts only with a different redacted figure. The result is written as
+    The table's :func:`..row_figures.merge_row_figures` decides for the numeric row figures; a row figure that is
+    text (a cadastral reference, a date, a redacted value) is filled by the same rule and conflicts only with a
+    different printed text of its own kind. The result is written as
     canonical figures again. When any figure of the result is redacted, a last entry ``redacted: <casilla ids>``
     names the casillas kept redacted, so the caller's reason says that they were not compared by content.
     """
-    numeric = {casilla: text for casilla, text in rows.items() if not is_redacted(text)}
+    numeric = {casilla: text for casilla, text in rows.items() if _number(text) is not None}
     merged, conflicts = merge_row_figures(dict(figures), numeric)
     for casilla, text in rows.items():
-        if is_redacted(text):
-            conflicts += _fill_redacted(merged, casilla, text)
+        if _number(text) is None:
+            conflicts += _fill_text(merged, casilla, text)
     result = canonical_figures(merged)
     kept = [casilla for casilla, text in result if is_redacted(text)]
     return result, [*conflicts, f"redacted: {', '.join(kept)}"] if kept else conflicts
 
 
-def _fill_redacted(merged: dict[str, object], casilla: str, text: str) -> list[str]:
-    """Fill ``casilla`` with a redacted row figure where nothing is printed; name a different redacted figure."""
+def _fill_text(merged: dict[str, object], casilla: str, text: str) -> list[str]:
+    """Fill ``casilla`` with a text row figure where nothing is printed; name a different printed text of its kind."""
     printed = merged.get(casilla)
     shown = "" if printed is None else str(printed).strip()
     if not shown or _number(shown) == 0:
         merged[casilla] = text
-    elif is_redacted(shown) and shown != text:
+    elif shown != text and is_redacted(shown) == is_redacted(text):
         return [f"casilla {casilla} scalar {shown} differs from its row figure {text}"]
     return []
 
