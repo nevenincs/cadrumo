@@ -520,6 +520,7 @@ export function FilingView({
   const recordAvailability = offer?.record ?? null;
   const mayRecord = recordAvailability?.available === true;
   const holdId = useId();
+  const recordHintId = useId();
   const sharedHold = !recorded ? hold : null;
   const sharedWords = sharedHold?.words ?? null;
   const sharesHold = (
@@ -531,6 +532,26 @@ export function FilingView({
     availability.words === sharedWords;
   const fileSharesHold = sharesHold(filing?.availability);
   const recordSharesHold = sharesHold(recordAvailability);
+  // Why recording is closed while the served state offers it: the one
+  // source of the button's disabled state is also the source of its words.
+  const recordHeld = !recorded && mayRecord && quiet;
+  const recordHeldWords = !recordHeld
+    ? null
+    : working !== null || reading || writeHold?.phase === "running"
+      ? t("desktop.navigation.busy")
+      : writeHold?.phase === "refresh"
+        ? t(
+            writeHold.savedUnread
+              ? "workspace.modelo.write_hold.saved_unread"
+              : "workspace.modelo.write_hold.reload_needed",
+          )
+        : writeHold
+          ? t(
+              writeHold.operationId === null
+                ? "workspace.modelo.write_hold.unresolved"
+                : "workspace.modelo.write_hold.unknown",
+            )
+          : t("workspace.modelo.next.apply", { count: session.stagedCount });
   const copyOptions = [
     ...copies,
     ...(offer
@@ -751,7 +772,13 @@ export function FilingView({
             <Button
               variant="secondary"
               disabled={!mayRecord || quiet}
-              aria-describedby={recordSharesHold ? holdId : undefined}
+              aria-describedby={
+                recordSharesHold
+                  ? holdId
+                  : recordHeldWords !== null
+                    ? recordHintId
+                    : undefined
+              }
               onClick={() => setConfirming(true)}
             >
               {working === "record" && <Spinner />}
@@ -773,10 +800,15 @@ export function FilingView({
             {t("workspace.modelo.filing.add_receipt_pdf")}
           </Button>
           {!recordSharesHold && (
-            <span className="text-sm text-muted-foreground">
+            <span
+              id={recordHintId}
+              data-record-hint={recordHeldWords !== null ? "held" : "served"}
+              className="text-sm text-muted-foreground"
+            >
               {!recorded
                 ? mayRecord
-                  ? t("workspace.modelo.filing.also_other_way")
+                  ? (recordHeldWords ??
+                    t("workspace.modelo.filing.also_other_way"))
                   : (recordAvailability?.words ??
                     t("workspace.modelo.filing.check_first"))
                 : (receipt?.words ??

@@ -17,6 +17,9 @@ import { calls } from "../support/scenarioModeloWrites";
 const EXPORT = () => label("workspace.modelo.filing.export_again", {}, "en");
 const BUSY = () => label("desktop.navigation.busy");
 const NOT_DONE = () => label("workspace.modelo.outcome.not_done");
+/** The view's busy notice; the record button's words repeat the same sentence. */
+const busyNotice = (target: Page) =>
+  target.locator('[data-slot="alert"]').filter({ hasText: BUSY() });
 
 /** Opens the Export and record view of the 130 after `patch` has run on the
  * scenario's modelo port, which the first list read has already created. */
@@ -76,7 +79,7 @@ test("a save dialog that has not answered shows that it is waiting", async ({
   });
   await exportButton(target).click();
   await expect(exportButton(target)).toBeDisabled();
-  await expect(target.getByText(BUSY())).toBeVisible();
+  await expect(busyNotice(target)).toBeVisible();
   await expect(
     exportButton(target).locator('[data-slot="spinner"], [role="progressbar"]'),
   ).not.toHaveCount(0);
@@ -101,7 +104,7 @@ test("an export that is still running shows that it is waiting", async ({
     port.observe = async () => running;
   });
   await exportButton(target).click();
-  await expect(target.getByText(BUSY())).toBeVisible();
+  await expect(busyNotice(target)).toBeVisible();
   await expect(exportButton(target)).toBeDisabled();
   await expect(
     exportButton(target).locator('[data-slot="spinner"], [role="progressbar"]'),
