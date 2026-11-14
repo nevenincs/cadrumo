@@ -383,3 +383,58 @@ test("a correction whose settlement was not seen is unknown and sends nothing mo
     1,
   );
 });
+
+test("recording the filing reads the declaration again by itself, with no hold to press", async ({
+  page: target,
+}) => {
+  await filing(target, "exported");
+  const before = (await calls(target, "modelo form")).length;
+  // The window's own read after the write is held open, as a slow host's is.
+  await target.evaluate(() => {
+    const port = window.__fixtureModelo!;
+    const form = port.form;
+    const gate = window as unknown as { __releaseRead?: () => void };
+    port.form = async (...args) => {
+      await new Promise<void>((release) => {
+        gate.__releaseRead = release;
+      });
+      return form(...args);
+    };
+  });
+  await target
+    .getByRole("button", {
+      name: label("workspace.modelo.filing.record_as_filed"),
+    })
+    .click();
+  await target
+    .getByRole("dialog")
+    .getByRole("button", {
+      name: label("application.modelo.lifecycle.file_confirm_accept"),
+    })
+    .click();
+  await expect
+    .poll(async () => calls(target, "modelo submit modelo.work.file"))
+    .toHaveLength(1);
+  await expect
+    .poll(() =>
+      target.evaluate(
+        () =>
+          typeof (window as unknown as { __releaseRead?: () => void })
+            .__releaseRead,
+      ),
+    )
+    .toBe("function");
+  // The window is reading: it asks nobody to read again.
+  await target.waitForTimeout(800);
+  await expect(target.locator(".modelo-write-hold")).toHaveCount(0);
+  await target.evaluate(() =>
+    (window as unknown as { __releaseRead: () => void }).__releaseRead(),
+  );
+  await expect(
+    target.getByText(label("workspace.modelo.filing.recorded_here")).first(),
+  ).toBeVisible();
+  await expect
+    .poll(async () => (await calls(target, "modelo form")).length - before)
+    .toBe(1);
+  await expect(target.locator(".modelo-write-hold")).toHaveCount(0);
+});
