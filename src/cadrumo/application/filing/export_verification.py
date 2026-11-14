@@ -32,6 +32,7 @@ from ...domain.calculations.registry.schema_exports import (
 )
 from ...domain.filing.errors import FilingExportDesignIntegrityError, FilingExportError, FilingExportValidationError
 from ...domain.filing.schema import ModeloCasillaProvenance, ModeloDraft
+from .export_ratio_scale import casilla_values_as_designed
 from .export_refusal_doors import ExportRefusalReason, export_design_terminal, export_input_decision
 from .export_xml_dictionary import (
     expected_xml_dictionary_root_identity,
@@ -452,7 +453,10 @@ def mismatched_casilla_ids(
             payload=payload,
             schema_provider=schema_provider,
         )
-    values = {value.casilla_id: value.value for value in draft.values}
+    values = casilla_values_as_designed(
+        {value.casilla_id: value.value for value in draft.values},
+        revision=schema_provider.get_snapshot(draft.modelo).revision,
+    )
     fields_by_identity = _export_fields_by_identity(layout)
     mismatched: list[CasillaId] = []
     checked: list[CasillaId] = []
