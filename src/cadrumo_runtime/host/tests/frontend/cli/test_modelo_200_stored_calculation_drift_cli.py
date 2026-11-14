@@ -126,8 +126,8 @@ def test_verify_after_profile_activity_start_change_reports_scoped_advisories_wi
     ]
     assert len(turnover_carry) == 1, findings
     blocking = [finding for finding in findings if finding["kind"] != "advisory" and finding not in turnover_carry]
-    # The unresolved turnover blocks at any grade; the drift itself still surfaces
-    # as advisories, never as a traceback.
+    # The unresolved turnover blocks at any grade. The drift surfaces as advisories, never as a
+    # traceback, and at filing grade it also blocks through the profile-reads currentness gate.
     assert verification.exit_code != 0, verification.output
     assert report["completeness_status"] == "blocked"
     assert report["granted_verificado_completo"] is False
