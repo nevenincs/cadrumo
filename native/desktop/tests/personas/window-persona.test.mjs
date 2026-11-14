@@ -1033,15 +1033,26 @@ async function exportFile(row, runDir, persona, out) {
     const state = await readState();
     const shown = await exec(
       (selector) =>
-        [...document.querySelectorAll(`${selector} button`)]
-          .map(
-            (button) =>
-              `[${(button.textContent ?? "").replace(/\s+/g, " ").trim()}` +
-              `${button.getClientRects().length ? "" : " hidden"}` +
-              `${button.disabled ? " disabled" : ""}]`,
-          )
-          .join(" ")
-          .slice(0, 900),
+        [...document.querySelectorAll(selector)]
+          .map((root) => {
+            const box = (element) => {
+              const rect = element.getBoundingClientRect();
+              return `${Math.round(rect.x)},${Math.round(rect.y)},${Math.round(rect.width)}x${Math.round(rect.height)}`;
+            };
+            const buttons = [...root.querySelectorAll("button")].map(
+              (button) =>
+                `[${(button.textContent ?? "").replace(/\s+/g, " ").trim()}` +
+                ` @${box(button)}` +
+                `${button.getClientRects().length ? "" : " hidden"}` +
+                `${button.disabled ? " disabled" : ""}]`,
+            );
+            return (
+              `panel#${root.id || "?"} @${box(root)} scroll ${root.scrollHeight}/${root.clientHeight}: ` +
+              buttons.join(" ")
+            );
+          })
+          .join(" || ")
+          .slice(0, 1500),
       panel,
     );
     sayExport(
