@@ -1362,6 +1362,8 @@ export function WorkspaceScreen({
   const reread = useCallback(() => {
     const ticket = ++latest.current;
     const before = holds.get(target);
+    // While this read runs, the hold it will release asks nobody to read.
+    const marked = before ? holds.readBegan(before) : false;
     const overtaken = () =>
       newest.current !== null && newest.current.ticket > ticket
         ? newest.current.result
@@ -1379,6 +1381,8 @@ export function WorkspaceScreen({
         if (!shown.current)
           setRead({ phase: "failed", code: ledgerFailure(error).code });
         return false;
+      } finally {
+        if (marked && before) holds.readEnded(before);
       }
     })();
     newest.current = { ticket, result };
