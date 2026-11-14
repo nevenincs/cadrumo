@@ -10,6 +10,8 @@ import { ShellDock } from "./components/ShellDock";
 import { WindowOverlays } from "./components/WindowOverlays";
 import { WindowTitlebar } from "./components/WindowTitlebar";
 import { useAbout } from "./shell/about";
+import { viewerPosition } from "./shell/navigation/history";
+import { useViewerHistory } from "./shell/navigation/useViewerHistory";
 import type { Host } from "./shell/host";
 import type { OutputLanguage } from "./shell/modeloContract/modelo";
 import type { ModeloDeclarationsSearchHitV1 } from "./shell/modeloContract/modeloDeclarations";
@@ -154,6 +156,23 @@ export function App({ host }: { host: Host }) {
     reader,
     browserOn: visibility.browserOn,
     wantsDeclarations: navigation.wantsDeclarations,
+  });
+  // Back and forward over the places this window has shown, for one
+  // sign-in: a page, its Ledger section, the declaration open and its view.
+  const history = useViewerHistory({
+    reader,
+    position: viewerPosition(
+      layout.page,
+      layout.ledgerView.section,
+      memories.openDeclaration,
+    ),
+    ledgerSection: layout.ledgerView.section,
+    guard: guardNavigation,
+    show: (place) => {
+      if (place.page === "declarations")
+        memories.showDeclaration(place.workUnitId, place.view);
+      navigation.showPagePlace(place.page, place.section);
+    },
   });
   const reads = useWindowReads({
     host,
@@ -311,6 +330,8 @@ export function App({ host }: { host: Host }) {
     docs,
     goHome,
     pageOn,
+    historyBack: history.back,
+    historyForward: history.forward,
     patch,
     layout,
     prefs,
@@ -502,6 +523,7 @@ export function App({ host }: { host: Host }) {
       calendarOn={visibility.calendarOn}
       openDeclaration={memories.openDeclaration}
       openWorkUnit={memories.openWorkUnit}
+      showDeclarationView={memories.showDeclarationView}
       guarded={guarded}
       askCenso={pageAsks.askCenso}
       askProfileStep={pageAsks.askProfileStep}

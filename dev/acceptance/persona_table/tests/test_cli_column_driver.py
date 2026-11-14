@@ -16,6 +16,7 @@ import pytest
 
 from ..cli_column.driver import (
     READ_BACK_WORKAROUND,
+    CalculateMode,
     Case,
     bind_profile,
     profile_check,
@@ -127,11 +128,20 @@ class _Scripted:
         ]
 
 
-def _case(tmp_path: Path, report: WorldReport, runner: _Scripted, *, check: str | None = "") -> Case:
+def _case(
+    tmp_path: Path,
+    report: WorldReport,
+    runner: _Scripted,
+    *,
+    check: str | None = "",
+    calculate: CalculateMode = CalculateMode.READ_BACK,
+) -> Case:
     writer = LineWriter(tmp_path / "cli-t.jsonl", Redactor(["synthetic-persona-passphrase"]))
     exports = tmp_path / "exports"
     exports.mkdir(exist_ok=True)
-    return Case("t", report, runner, exports, writer, "case.log", export_check=lambda _plan, _path: check)
+    return Case(
+        "t", report, runner, exports, writer, "case.log", export_check=lambda _plan, _path: check, calculate=calculate
+    )
 
 
 def _lines(tmp_path: Path) -> list[dict[str, object]]:
@@ -676,3 +686,77 @@ def test_only_the_returns_whose_calculation_was_read_back_state_the_workaround(t
     assert runner.keys().count("work revision") == 1
     assert "workaround" not in plain
     assert runner.keys().count("work calculate") == 1
+
+
+def test_as_run_always_sends_calculate_after_the_statements_and_never_reads_a_calculation_back(tmp_path: Path) -> None:
+    runner = _Scripted(tmp_path / "exports", **_STATEMENT_COMMANDS)
+    report = _report(_plan("100", "0A", statements=_every_kind()))
+
+    run_case(_case(tmp_path, report, runner, calculate=CalculateMode.AS_RUN), select_rows(report))
+
+    keys = runner.keys()
+    assert "work revision" not in keys
+    assert keys.count("work calculate") == 3
+    assert keys.index("work calculate") > keys.index("work set-value")
+    verified = [command[4] for command in runner.sent if command[3] == "verify"]
+    assert verified == ["rev-wu-100-0A"]
+    (line,) = _lines(tmp_path)
+    assert (line["calculate"], line["verify"], line["export"], line["file"]) == ("pass", "pass", "pass", "pass")
+    assert "workaround" not in line
+    assert "state work_input 00501 applied" in str(line["reason"])
+
+
+def test_as_run_calculates_a_modelo_303_that_holds_statements_with_its_evidence(tmp_path: Path) -> None:
+    statements = (
+        _stated(StatementKind.PRIOR_VALUE, Phase.BEFORE_EVIDENCE, "bind-prior", "5"),
+        _stated(StatementKind.WORK_INPUT, Phase.AT_CALCULATION, "00501", "7"),
+    )
+    runner = _Scripted(tmp_path / "exports", **_STATEMENT_COMMANDS)
+    report = _report(_plan("303", "4T", statements=statements))
+
+    run_case(_case(tmp_path, report, runner, calculate=CalculateMode.AS_RUN), select_rows(report))
+
+    calculate = next(command for command in runner.sent if command[3] == "calculate")
+    assert "--m303-exonerado-390-attachment-id" in calculate
+    (line,) = _lines(tmp_path)
+    assert line["calculate"] == "pass"
+    assert "workaround" not in line
+
+
+def test_the_default_mode_is_as_run_and_the_read_back_is_only_taken_when_asked_for(tmp_path: Path) -> None:
+    statements = (_stated(StatementKind.WORK_INPUT, Phase.AT_CALCULATION, "00501", "7"),)
+    report = _report(_plan("100", "0A", statements=statements))
+    plain = _Scripted(tmp_path / "plain", **_STATEMENT_COMMANDS)
+    writer = LineWriter(tmp_path / "cli-t.jsonl", Redactor(["synthetic-persona-passphrase"]))
+    exports = tmp_path / "plain"
+    exports.mkdir()
+
+    run_case(Case("t", report, plain, exports, writer, "case.log", export_check=lambda *_: ""), select_rows(report))
+
+    assert Case.__dataclass_fields__["calculate"].default is CalculateMode.AS_RUN
+    sent = plain.keys()
+    assert "work revision" not in sent
+    asked = _Scripted(tmp_path / "exports", **_STATEMENT_COMMANDS)
+    run_case(_case(tmp_path, report, asked, calculate=CalculateMode.READ_BACK), select_rows(report))
+    assert asked.keys().count("work revision") == 1
+
+
+def test_selection_by_keys_wants_only_those_keys_and_still_runs_the_chain_before_the_last() -> None:
+    report = _report(
+        _plan("130", "1T"),
+        _plan("303", "1T"),
+        _plan("130", "2T"),
+        _plan("303", "2T"),
+        _plan("130", "3T"),
+    )
+
+    selection = select_rows(report, keys=frozenset({("130", _YEAR, "2T")}))
+
+    assert selection.wanted == {("130", _YEAR, "2T")}
+    assert [plan.key for plan in selection.run] == [
+        ("130", _YEAR, "1T"),
+        ("303", _YEAR, "1T"),
+        ("130", _YEAR, "2T"),
+    ]
+    assert select_rows(report, keys=frozenset()).wanted == frozenset()
+    assert select_rows(report, keys=None).wanted == {plan.key for plan in report.rows}

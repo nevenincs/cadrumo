@@ -51,6 +51,7 @@ from .....application.ledger.reset_operation import (
     LedgerResetRequest,
 )
 from .....application.ledger.status_operation import LedgerStatusProjection, LedgerStatusRequest
+from .....application.ledger.tests.add_request_description_support import ledger_add_description
 from .....application.ledger.track_operation import LedgerTrackProjection, LedgerTrackRequest
 from .....application.ledger.tracking_projection import LedgerTrackingProjection
 from .....application.ledger.transaction_projection import (
@@ -70,6 +71,7 @@ from .....domain.transactions.enums import BusinessClassification, TransactionLi
 from ...account import AccountSessionExpiredError
 from ...operations.outcome import OperationOutcomeUnknownError
 from ..controller import LedgerWorkspaceController
+from ..entries_add_form import LedgerAddFormV1, read_served_form
 from ..entries_doors import LedgerEntriesDoorsV1
 from ..workspace_injection import LedgerWorkspaceInjection
 from .workspace_fixtures import ledger_context, ledger_projection, ledger_review_action
@@ -547,6 +549,11 @@ def entries_controller() -> LedgerWorkspaceController:
     )
 
 
+def served_add_form() -> LedgerAddFormV1:
+    """The Add entry form as the runtime serves it: read from the real ``ledger.add`` description."""
+    return read_served_form(ledger_add_description().request_json_schema)
+
+
 LifecycleName = Literal["ledger.archive", "ledger.stash", "ledger.restore", "ledger.exclude"]
 
 
@@ -564,5 +571,6 @@ __all__ = [
     "entries_controller",
     "entry_id",
     "lifecycle_requests",
+    "served_add_form",
     "synthetic_entry",
 ]

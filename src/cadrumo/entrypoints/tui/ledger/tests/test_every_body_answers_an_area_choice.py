@@ -63,7 +63,7 @@ from ..workspace_injection import LedgerWorkspaceInjection
 from ..workspace_presentation import LedgerConfirmationFlowScreen
 from ..workspace_screen import LedgerWorkspaceScreen
 from .categorisation_memory_doors import MemoryCategorisationProfile, categorisation_controller
-from .entries_door_fixtures import MemoryEntriesLedger, entries_controller, entry_id
+from .entries_door_fixtures import MemoryEntriesLedger, entries_controller, entry_id, served_add_form
 from .evidence_files_fixtures import MemoryEvidenceFilesStore
 from .invoices_fixtures import (
     MemoryInvoiceImportDoor,
@@ -241,7 +241,9 @@ def _builders() -> dict[type[LedgerWorkspaceScreen], _Build]:
                 LedgerWorkspaceInjection(review_action=ledger_review_action(), invoice_add_door=InvoiceDoor())
             )
         ),
-        LedgerEntryAddScreen: lambda: LedgerEntryAddScreen(entries_controller(), _entry_doors().doors()),
+        LedgerEntryAddScreen: lambda: LedgerEntryAddScreen(
+            entries_controller(), _entry_doors().doors(), served_add_form()
+        ),
         LedgerEntriesExportScreen: lambda: LedgerEntriesExportScreen(entries_controller(), _entry_doors().doors()),
         LedgerResetScreen: lambda: LedgerResetScreen(entries_controller(), _entry_doors().doors()),
         LedgerEntriesBrowseScreen: lambda: LedgerEntriesBrowseScreen(entries_controller(), _entry_doors().doors()),

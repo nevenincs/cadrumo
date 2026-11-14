@@ -72,6 +72,10 @@ _CAPITAL_PROFILE_FACTS = persona_facts_beneath(
         UserProfileFact(path="activities.description", value="capital income payer activity"),
         UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
         UserProfileFact(path="withholding.colegio_concertado", value=False),
+        # A filer stated as neither a gran empresa nor a large public administration files quarterly.
+        UserProfileFact(path="withholding.pays_capital_income_with_retencion", value=True),
+        UserProfileFact(path="censo.large_company", value=False),
+        UserProfileFact(path="censo.public_administration_budget_gt_6000000", value=False),
     )
 )
 
@@ -176,7 +180,11 @@ def test_ledger_capital_payment_is_stored_in_m123_and_calculation_stays_refused(
     error = json.loads(calculated_output)["error"]
     assert error["code"] == "REFUSED_MODELO_123_COUNT_AUTHORITY_UNRESOLVED", calculated_output
     context = error["context"]
-    assert context["effect"] == "unknown", calculated_output
+    # The gate reads the captured observations and refuses at the start of the evaluation
+    # (calculation_actions._evaluate_prepared_calculation), before any persistence commit. The
+    # operation journals an unknown effect only when the first commit is about to begin
+    # (FirstWriteEffectAnnouncement), so a refusal ahead of every write settles with no effect.
+    assert context["effect"] == "none", calculated_output
     assert context["captured_retencion_observations"] == "1"
     assert context["terminal_condition"] == "refused", calculated_output
     assert isinstance(context["operation_id"], str) and context["operation_id"], calculated_output

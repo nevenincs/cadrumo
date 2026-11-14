@@ -57,6 +57,7 @@ def _spec(args: argparse.Namespace) -> CaseSpec:
         args.authority,
         modelos=tuple(args.modelo),
         periods=tuple(args.period),
+        calculate=args.calculate,
     )
 
 

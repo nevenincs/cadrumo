@@ -2,6 +2,7 @@ import { useMemo, type RefObject } from "react";
 import type { DocsLanguage } from "@/ipc/environment";
 import type { DocsFrameApi } from "../components/DocsFrame";
 import type { Action } from "./actions";
+import { POINTER_BACK, POINTER_FORWARD } from "./historyActions";
 import type { Layout } from "./layout";
 import type { Translate } from "./strings";
 
@@ -49,6 +50,7 @@ export function useDocsActions({
         group: "docs",
         icon: "back",
         chords: [{ alt: true, code: "ArrowLeft", key: "←", scope: "docs" }],
+        buttons: [POINTER_BACK],
         enabled: () => !pageOn,
         run: () => docs.current?.back(),
       },
@@ -58,6 +60,7 @@ export function useDocsActions({
         group: "docs",
         icon: "forward",
         chords: [{ alt: true, code: "ArrowRight", key: "→", scope: "docs" }],
+        buttons: [POINTER_FORWARD],
         enabled: () => !pageOn,
         run: () => docs.current?.forward(),
       },

@@ -33,7 +33,7 @@ from cadrumo.entrypoints.tests.persona_prior_values import entries_on
 from cadrumo.entrypoints.tests.persona_work_inputs import resolved_casillas, work_inputs_for
 
 from .. import planner
-from ..cli_column.driver import READ_BACK, Case, run_case, select_rows
+from ..cli_column.driver import READ_BACK, CalculateMode, Case, run_case, select_rows
 from ..cli_column.hygiene import Redactor
 from ..cli_column.intake import LineWriter
 from ..cli_column.statements import plain_amount, statements_for
@@ -133,7 +133,10 @@ def _drive(tmp_path: Path, plan: RowPlan) -> list[tuple[str, ...]]:
     report = WorldReport("p", plan.year + 1, "root", "id", "gen", "as-of", "full", _ACTOR, False, (plan,))
     runner = _Runner(tmp_path)
     writer = LineWriter(tmp_path / "cli.jsonl", Redactor(["synthetic-persona-passphrase"]))
-    run_case(Case("t", report, runner, tmp_path, writer, "case.log", export_check=lambda *_: ""), select_rows(report))
+    case = Case(
+        "t", report, runner, tmp_path, writer, "case.log", export_check=lambda *_: "", calculate=CalculateMode.READ_BACK
+    )
+    run_case(case, select_rows(report))
     (line,) = [json.loads(text) for text in (tmp_path / "cli.jsonl").read_text(encoding="utf-8").splitlines()]
     assert (line["calculate"], line["verify"], line["file"]) == ("pass", "pass", "pass")
     assert line["workaround"] == "cli_calculate_drops_statements"

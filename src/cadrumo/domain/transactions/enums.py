@@ -7,6 +7,7 @@ Defines the closed discriminators on
 from __future__ import annotations
 
 from enum import StrEnum
+from typing import Literal, get_args
 
 
 class TransactionDirection(StrEnum):
@@ -122,6 +123,22 @@ CLASSIFIED_STATES: frozenset[BusinessClassification] = frozenset(
 )
 """Frozen set of :class:`BusinessClassification` values that count as
 classified outcomes for downstream rollups."""
+
+
+ManualEntryClassificationToken = Literal["BUSINESS", "PERSONAL", "MIXED", "NOT_YET_PROCESSED"]
+"""The classification tokens a person may assign when adding an entry by hand:
+the classified outcomes and the not-yet-processed default. This is the one list
+of them; a wire contract that must publish a closed enumeration types its field
+with it, and every other member is assigned by the ledger pipeline."""
+
+MANUAL_ENTRY_CLASSIFICATIONS: tuple[BusinessClassification, ...] = tuple(
+    BusinessClassification(token) for token in get_args(ManualEntryClassificationToken)
+)
+"""The members :data:`ManualEntryClassificationToken` names, in its order."""
+
+TransactionDirectionToken = Literal["INCOMING", "OUTGOING", "INTERNAL_TRANSFER"]
+"""Every :class:`TransactionDirection` value, for a wire contract that must
+publish the closed enumeration while accepting the plain token."""
 
 
 BUSINESS_BEARING_STATES: frozenset[BusinessClassification] = frozenset(

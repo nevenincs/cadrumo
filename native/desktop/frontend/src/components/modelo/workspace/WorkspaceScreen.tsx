@@ -179,6 +179,8 @@ function Ready({
   onOpenInvoice,
   onOpenCounterparty,
   initialView,
+  shownView,
+  onViewShown,
   onLeaveGuard,
   profileCompanions,
   borrador,
@@ -200,13 +202,23 @@ function Ready({
   onOpenInvoice?: (invoiceId: string) => void;
   onOpenCounterparty?: (ask: CounterpartyAsk) => void;
   initialView: WorkspaceView;
+  shownView?: WorkspaceView | null;
+  onViewShown?: (view: WorkspaceView) => void;
   onLeaveGuard?: (guard: LeaveGuard | null) => void;
   profileCompanions?: ProfileCompanionKit;
   borrador?: BorradorPort;
 }) {
   const t = useStrings();
   const session: FormSession = useFormSession({ envelope, port, language });
-  const [view, setView] = useState<WorkspaceView>(initialView);
+  const [ownView, setOwnView] = useState<WorkspaceView>(initialView);
+  // Where the window holds the view, as its back and forward do, the view
+  // shown is the window's; otherwise the workspace's own.
+  const view = shownView ?? (onViewShown ? initialView : ownView);
+  const setView = (next: WorkspaceView) => {
+    if (next === view) return;
+    setOwnView(next);
+    onViewShown?.(next);
+  };
   const panes = {
     side: usePanePreference(WORKSPACE_PANE_IDS.side),
     details: usePanePreference(WORKSPACE_PANE_IDS.details),
@@ -1258,6 +1270,8 @@ export function WorkspaceScreen({
   onOpenInvoice,
   onOpenCounterparty,
   initialView = "form",
+  view,
+  onViewChange,
   onLeaveGuard,
   onWritten,
   holds: suppliedHolds,
@@ -1288,6 +1302,12 @@ export function WorkspaceScreen({
   onOpenCounterparty?: (ask: CounterpartyAsk) => void;
   /** The view the declaration opens on. */
   initialView?: WorkspaceView;
+  /** The view the window holds shown, where it holds one; null is the one
+   * it opens on. */
+  view?: WorkspaceView | null;
+  /** Told when the viewer moves to another view; with it, the window holds
+   * the view. */
+  onViewChange?: (view: WorkspaceView) => void;
   /** Hands the shell the guard that asks before staged edits are dropped. */
   onLeaveGuard?: (guard: LeaveGuard | null) => void;
   /** Told whenever the workspace sends a write, whatever its outcome. */
@@ -1428,6 +1448,8 @@ export function WorkspaceScreen({
         onOpenInvoice={onOpenInvoice}
         onOpenCounterparty={onOpenCounterparty}
         initialView={initialView}
+        shownView={view}
+        onViewShown={onViewChange}
         onLeaveGuard={onLeaveGuard}
         profileCompanions={profileCompanions}
         borrador={borrador}

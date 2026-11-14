@@ -1116,6 +1116,52 @@ application:
       wallet_local_recurrence_divergence: The AEAT wallet and the local recurrence
         diverge; a review is required before the automatic result is produced.
   ledger:
+    add:
+      choice:
+        business_classification:
+          business: Business
+          mixed: Mixed
+          not_yet_processed: Not yet processed
+          personal: Personal
+        direction:
+          incoming: Incoming
+          internal_transfer: Own transfer
+          outgoing: Outgoing
+      field:
+        accrual_date: Accrual date for Renta (YYYY-MM-DD)
+        amount: Amount, without a sign
+        arrendamiento_ref: Linked lease
+        art_104_tres_exclusion: Art. 104.Tres exclusion
+        booked_date: Booked date (YYYY-MM-DD)
+        business_classification: Classification
+        business_pct: Business share (0 to 1)
+        category_id: Spending category
+        counterparty: Counterparty
+        counterparty_country: Counterparty country (two letters)
+        counterparty_identification_state: Counterparty IVA identification state
+        currency: Currency (EUR if blank)
+        deduction_fact_kind: IVA deduction fact
+        description: Description
+        direction: Direction
+        gasto_capital_inmobiliario: Rental expense concept
+        inmueble_ref: Linked property
+        input_classification: Input classification for prorrata
+        investment_asset_id: Capital good id
+        irpf_category: IRPF category
+        iva_amount: IVA amount
+        iva_category: IVA category
+        iva_rate: IVA rate (for example 0.21)
+        notes: Notes
+        operation_date: Operation date (YYYY-MM-DD)
+        own_account_id: Own account (acc-01)
+        prorrata_reference: Prorrata reference
+        prorrata_sector: Prorrata sector
+        purchase_invoice_evidence_id: Purchase invoice evidence id
+        recargo_amount: Equivalence surcharge amount
+        source_jurisdiction: Source jurisdiction (country code)
+        taxable_base: Taxable base
+        usage_ratio_id: Usage ratio id
+        value_date: Value date (YYYY-MM-DD)
     confirmation_block:
       served:
         ambiguous_identity: The counterparty's identity is not settled

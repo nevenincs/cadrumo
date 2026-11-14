@@ -18,7 +18,7 @@ from typing import Literal, cast
 from uuid import UUID
 
 import pytest
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 from cadrumo.application.export.tabular import ExportSerializationFormat
 from cadrumo.application.ledger.action_ports import LedgerActionPortsFactory
@@ -129,6 +129,7 @@ from cadrumo.application.operations.persistence.replay import OperationReplaySta
 from cadrumo.application.operations.public_period import PublicPeriod
 from cadrumo.application.operations.registry import (
     OperationPublicDefinitionContractV1,
+    OperationPublicDefinitionDescriptionV1,
     OperationPublicDefinitionRegistrationV1,
     OperationRegistry,
 )
@@ -162,7 +163,7 @@ from cadrumo.entrypoints.tui.ledger.tests.entries_door_fixtures import (
     entry_id,
 )
 from cadrumo.entrypoints.tui.operations.outcome import OperationOutcomeUnknownError
-from cadrumo_client.contracts.contracts import RefusalError
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo_client.transport.operation_controller import OperationController
@@ -170,6 +171,7 @@ from cadrumo_client.transport.operation_controller import OperationController
 from ....frontend.tui.runtime_ledger_entries import (
     RuntimeLedgerEntryTuiDoorV1,
     compose_entries_tools,
+    compose_ledger_add_form,
     compose_runtime_ledger_entries_doors,
     compose_runtime_ledger_exclusion_submitter,
 )
@@ -247,11 +249,36 @@ def _definition(definition_id: str) -> tuple[OperationDefinition, OperationPubli
 class _Client:
     frontend = OperationFrontendProjection.TUI
 
-    def __init__(self) -> None:
+    def __init__(
+        self, *, refuse_description: bool = False, describe_as: str | None = None, tamper: bool = False
+    ) -> None:
         self.profile_id = _PROFILE_ID
         self.session_id = _SESSION_ID
         self.session_read_threads: list[int] = []
         """The thread of each blocking session read: at composition, then around each operation."""
+        self.refuse_description = refuse_description
+        self.describe_as = describe_as
+        self.tamper = tamper
+        self.described: list[str] = []
+
+    def describe(self, definition_id: str, *, deadline: float) -> OperationPublicDefinitionDescriptionV1:
+        """Describe an operation as the runtime would, from its real registration, or refuse or misdescribe it."""
+        assert deadline > 0
+        self.described.append(definition_id)
+        if self.refuse_description:
+            raise FrontendRefusedError("operation_not_admitted")
+        served_id = self.describe_as or definition_id
+        definition, registration = _definition(served_id)
+        served = OperationRegistry(definitions=(definition,), public_registrations=(registration,))
+        description = served.describe_public_definition(served_id)
+        if not self.tamper:
+            return description
+        # What the client does when the served schema does not hash to its contract's fingerprint.
+        schema = {**description.request_json_schema, "title": "LedgerAddRequest, as another version served it"}
+        try:
+            return OperationPublicDefinitionDescriptionV1(contract=description.contract, request_json_schema=schema)
+        except ValidationError:
+            raise RefusalError(RefusalCode.INVALID_FRAME) from None
 
 
 @dataclass
@@ -873,4 +900,55 @@ def test_the_entries_composer_offers_its_five_tools_through_the_seam(monkeypatch
         LedgerEntriesExportScreen,
         LedgerHealthScreen,
         LedgerResetScreen,
+    ]
+
+
+def test_add_entry_is_built_from_the_description_the_runtime_served() -> None:
+    client = _Client()
+
+    form = compose_ledger_add_form(cast(FrontendClient, client))
+
+    assert client.described == [LEDGER_ADD_OPERATION_DEFINITION_ID]
+    assert form is not None
+    assert [field.name for field in form.required] == ["booked_date", "amount", "direction", "description"]
+    assert form.field("business_classification").choices == ("BUSINESS", "PERSONAL", "MIXED", "NOT_YET_PROCESSED")
+    assert form.field("direction").choices == ("INCOMING", "OUTGOING", "INTERNAL_TRANSFER")
+    assert form.field("amount").label_key == "application.ledger.add.field.amount"
+    assert form.profile_fields == ("profile_id",)
+    assert [(link.field, link.family) for link in form.links] == [
+        ("arrendamiento_ref", "rental_lease"),
+        ("inmueble_ref", "rental_property"),
+        ("gasto_capital_inmobiliario", "gasto_capital_inmobiliario"),
+    ]
+
+
+@pytest.mark.parametrize(
+    "client",
+    [
+        _Client(refuse_description=True),
+        _Client(describe_as=LEDGER_REMOVE_OPERATION_DEFINITION_ID),
+        _Client(tamper=True),
+    ],
+    ids=["description refused", "another operation described", "schema does not match its fingerprint"],
+)
+def test_add_entry_is_not_admitted_without_a_matching_description(client: _Client) -> None:
+    assert compose_ledger_add_form(cast(FrontendClient, client)) is None
+
+
+def test_the_entries_composer_leaves_add_entry_out_when_the_runtime_does_not_serve_it(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    client = _Client(refuse_description=True)
+    observation = _observation(LEDGER_LIST_OPERATION_DEFINITION_ID)
+    _install(monkeypatch, client, _Controller(observation=observation, result=None))
+
+    tools = compose_runtime_ledger_tools(
+        cast(FrontendClient, client), profile_label=_LABEL, composers=(compose_entries_tools,)
+    )
+
+    assert [tool.key for tool in tools] == [
+        "ledger.tool.entries.browse",
+        "ledger.tool.entries.export",
+        "ledger.tool.entries.health",
+        "ledger.tool.entries.reset",
     ]

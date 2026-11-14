@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field, replace
+from enum import StrEnum
 from pathlib import Path
 from typing import Protocol
 
@@ -45,6 +46,17 @@ READ_BACK_WORKAROUND = "cli_calculate_drops_statements"
 """The workaround an intake line states for a return whose calculation was read back instead of calculated.
 
 The read-back is a diagnosis; a person runs ``calculate``, so such a row never counts as matched."""
+
+
+class CalculateMode(StrEnum):
+    """How the driver calculates a return that holds applied statements."""
+
+    AS_RUN = "as-run"
+    """Always send ``calculate``, as a person does; the calculation replays the head, so the statements stay in it."""
+    READ_BACK = "read-back"
+    """Read the revision the last statement's edit printed instead of calculating; a diagnosis."""
+
+
 _M303 = "303"
 _WORK = ("app", "modelo", "work")
 
@@ -80,6 +92,8 @@ class Case:
     trace: Trace = _no_trace
     done: frozenset[ReturnKey] = frozenset()
     """The returns whose lines already exist: they still run, since the chain needs them, but are not written."""
+    calculate: CalculateMode = CalculateMode.AS_RUN
+    """Whether a statement-holding return is calculated with ``calculate`` or read back (see :class:`CalculateMode`)."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -112,11 +126,16 @@ def unsupported_reason(plan: RowPlan, doors: Mapping[StatementKind, Door] = DOOR
     return statement_gap(plan.statements, doors)
 
 
-def _wanted(report: WorldReport, modelos: Sequence[str], periods: Sequence[str]) -> frozenset[ReturnKey]:
+def _wanted(
+    report: WorldReport, modelos: Sequence[str], periods: Sequence[str], keys: frozenset[ReturnKey] | None
+) -> frozenset[ReturnKey]:
     return frozenset(
         plan.key
         for plan in report.rows
-        if plan.emitted and (not modelos or plan.modelo in modelos) and (not periods or plan.period in periods)
+        if plan.emitted
+        and (not modelos or plan.modelo in modelos)
+        and (not periods or plan.period in periods)
+        and (keys is None or plan.key in keys)
     )
 
 
@@ -126,14 +145,16 @@ def select_rows(
     modelos: Sequence[str] = (),
     periods: Sequence[str] = (),
     doors: Mapping[StatementKind, Door] = DOORS,
+    keys: frozenset[ReturnKey] | None = None,
 ) -> Selection:
     """The returns to run: every wanted return and the supported replayed ones before the last of them.
 
-    A return is wanted when the table writes a row for it and it passes the ``modelos`` and ``periods`` filters. A
+    A return is wanted when the table writes a row for it and it passes the ``modelos`` and ``periods`` filters and,
+    when ``keys`` is given, is one of them; the returns before the last wanted one still run, as its chain. A
     history-filed return is neither run nor reported; a return the driver cannot run is left out with the reason,
     which names the statement that has no CLI door.
     """
-    wanted = _wanted(report, modelos, periods)
+    wanted = _wanted(report, modelos, periods, keys)
     last = max((index for index, plan in enumerate(report.rows) if plan.key in wanted), default=-1)
     candidates = [plan for plan in report.rows[: last + 1] if not plan.history_filed]
     reasons = [(plan, unsupported_reason(plan, doors)) for plan in candidates]
@@ -274,13 +295,15 @@ def _prepared(case: Case, plan: RowPlan, work_unit_id: str, stated: _Stated) -> 
 def _calculation(case: Case, work_unit_id: str, evidence: list[str], stated: _Stated) -> Outcome | StageResult:
     """Where the table calculates: the ``calculate`` command, or the calculation the last applied statement made.
 
-    ``calculate`` keeps no statement an edit recorded (see :data:`READ_BACK`), so once a statement was applied the
-    revision its edit printed is read instead. The Modelo 303 evidence travels only on ``calculate``, so a return that
-    needs it and holds an applied statement cannot be calculated the table's way and ends here.
+    In the ``as-run`` mode ``calculate`` is always sent and never replaced by a read. In the ``read-back`` mode, where
+    ``calculate`` keeps no statement an edit recorded (see :data:`READ_BACK`), once a statement was applied the
+    revision its edit printed is read instead. The Modelo 303 evidence travels only on ``calculate``, so in that mode
+    a return that needs it and holds an applied statement cannot be calculated the table's way and ends here.
     """
-    if not stated.applied:
-        return _step(case, "calculate", [*_WORK, "calculate", work_unit_id, *evidence, "--by", case.report.actor])
+    read = stated.applied and case.calculate is CalculateMode.READ_BACK
     stated.applied = False
+    if not read:
+        return _step(case, "calculate", [*_WORK, "calculate", work_unit_id, *evidence, "--by", case.report.actor])
     if evidence:
         return StageResult("error", reason="calculate carries the Modelo 303 evidence but drops the statements made")
     if stated.revision is None:

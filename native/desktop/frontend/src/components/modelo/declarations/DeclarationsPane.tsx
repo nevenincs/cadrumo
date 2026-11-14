@@ -6,6 +6,7 @@ import type { BorradorPort } from "../../../shell/borrador";
 import type { CounterpartyAsk } from "../../../shell/counterpartyAsk";
 import type { LedgerProfileStep } from "../../../shell/ledger";
 import type { ProfileCompanionKit } from "../workspace/ProfileCompanions";
+import type { WorkspaceView } from "../workspace/Workspace";
 import { WorkspaceScreen } from "../workspace/WorkspaceScreen";
 import type { ModeloPort } from "../../../shell/modelo";
 import { modeloWritesFor } from "../../../shell/modeloWriteHolds";
@@ -21,6 +22,8 @@ export function DeclarationsPane({
   port,
   reader,
   workUnitId,
+  view,
+  onViewChange,
   onOpen,
   onOpenWork,
   onCensus,
@@ -48,6 +51,11 @@ export function DeclarationsPane({
   reader: string | null;
   /** The declaration open, or null for the list. */
   workUnitId: string | null;
+  /** The open declaration's view as the window holds it; null for the one
+   * it opens on. */
+  view?: WorkspaceView | null;
+  /** Told when the viewer moves to another view of the declaration. */
+  onViewChange?: (view: WorkspaceView) => void;
   onOpen(workUnitId: string): void;
   /** Switching an open workspace must honor its staged-edit guard. */
   onOpenWork?: (workUnitId: string) => void;
@@ -123,6 +131,8 @@ export function DeclarationsPane({
           key={workUnitId}
           port={port}
           workUnitId={workUnitId}
+          view={view}
+          onViewChange={onViewChange}
           holds={modeloWritesFor(ownedMemory)}
           language={language}
           locale={locale}
