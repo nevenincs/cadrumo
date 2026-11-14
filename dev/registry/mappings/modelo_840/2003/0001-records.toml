@@ -22,3 +22,6 @@ sheet = "Anexo"
 record_identity = "Anexo"
 export_record_id = "m840-anexo"
 record_type = "anexo"
+# One record is one Anexo sheet ("Hoja"): nine premises slots and their partial sums.
+# A tenth premises opens a further sheet, marked "C (Compl.)" at position 10.
+repeat = "projection_rows"
