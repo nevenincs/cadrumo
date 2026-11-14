@@ -2442,21 +2442,18 @@ application:
       renta_inmueble_pending_expenses_held_return_unstated: 'Immoble {record}: estava
         arrendat abans d''aquest exercici, i la declaració de l''exercici anterior
         està desada aquí, però no es llegeix per saber el que l''exercici de la casella
-        {box} va deixar pendent de deduir en despeses d''interessos i reparació. Indica-ho
-        amb app modelo work attest-no-amount <unitat de treball> {binding} --row inmueble:{record},
-        o amb attest-prior-value i l''import.'
+        {box} va deixar pendent de deduir en despeses d''interessos i reparació. Indica
+        aquest import per a aquest immoble, o que no en va deixar res.'
       renta_inmueble_pending_expenses_total_unsplit: 'Immoble {record}: les seves
         despeses d''interessos i reparació pendents es van indicar com un sol total,
         i l''annex C.1 les demana per l''exercici en què es van originar. Indica el
-        que va deixar pendent l''exercici de la casella {box} amb app modelo work
-        attest-prior-value <unitat de treball> {binding} <import> --row inmueble:{record},
-        o amb attest-no-amount si no en va deixar res.'
+        que va deixar pendent l''exercici de la casella {box} per a aquest immoble,
+        o que no en va deixar res.'
       renta_inmueble_pending_expenses_unstated: 'Immoble {record}: estava arrendat
         abans d''aquest exercici, i no s''indica el que l''exercici de la casella
         {box} va deixar pendent de deduir en despeses d''interessos i reparació, ni
-        ho recull cap declaració anterior desada aquí. Indica-ho amb app modelo work
-        attest-no-amount <unitat de treball> {binding} --row inmueble:{record}, o
-        amb attest-prior-value i l''import.'
+        ho recull cap declaració anterior desada aquí. Indica aquest import per a
+        aquest immoble, o que no en va deixar res.'
       renta_inmueble_property_abroad_let: 'Immoble {record}: és a l''estranger i arrendat,
         i el seu tractament com a renda estrangera no s''ofereix.'
       renta_inmueble_record_unreadable: No es pot llegir un registre d'immoble o d'arrendament
