@@ -11,6 +11,9 @@
 //                    input). Needs the remote-debugging test host in
 //                    CADRUMO_PERSONA_HOST (python -m dev.desktop_agent_live.stage_host),
 //                    loopback only; refused for any other host.
+//   CADRUMO_UX_STAGED_SHA256  sha256 of the host executable staged for this
+//                    build (python -m dev.desktop_automation_stage); a run
+//                    that drives any other executable is not counted
 //   CADRUMO_UX_ONLY  (optional) comma-separated substrings: run only tests whose name has one
 import assert from "node:assert/strict";
 import { existsSync, mkdtempSync, statSync } from "node:fs";
@@ -71,11 +74,18 @@ before(async () => {
 after(teardown);
 
 /** Why the run's bundle and host executable were not recorded, or null. */
+const STAGED_SHA256 = (process.env.CADRUMO_UX_STAGED_SHA256 ?? "")
+  .trim()
+  .toLowerCase();
 const identityProblem = () =>
   runIdentity.error ??
   (!runIdentity.bundle?.length || !runIdentity.exeSha256
     ? "no bundle name or executable hash was recorded"
-    : null);
+    : !STAGED_SHA256
+      ? "CADRUMO_UX_STAGED_SHA256 names no freshly staged host to compare with"
+      : runIdentity.exeSha256.toLowerCase() !== STAGED_SHA256
+        ? `the window ran executable ${runIdentity.exeSha256}, not the freshly staged host ${STAGED_SHA256}`
+        : null);
 
 // Every test but UX-00 fails when the run did not record what it drove: a run
 // that cannot say which bundle and executable it measured is not counted.
