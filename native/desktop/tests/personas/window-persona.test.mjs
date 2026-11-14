@@ -589,43 +589,93 @@ function viewShown(list, wanted, isForm) {
 }
 
 /**
- * Open a workspace view and wait until it stays open. A view the window
- * puts back (a reread re-rendering the form) is clicked again; one that never
- * stays is a window defect named in the error.
+ * What a press on the marked tab meets: the element drawn at the tab's centre
+ * (another element there covers the tab), and every view tab's selection.
+ */
+function tabPressReport(list, mark) {
+  const norm = (text) => (text ?? "").replace(/\s+/g, " ").trim();
+  const tab = document.querySelector(`[${mark}]`);
+  let atCentre = "no tab";
+  if (tab) {
+    const rect = tab.getBoundingClientRect();
+    const hit = document.elementFromPoint(
+      rect.x + rect.width / 2,
+      rect.y + rect.height / 2,
+    );
+    atCentre = !hit
+      ? `nothing at ${Math.round(rect.x)},${Math.round(rect.y)}`
+      : hit === tab || tab.contains(hit)
+        ? "the tab"
+        : `${hit.tagName.toLowerCase()}${hit.id ? `#${hit.id}` : ""}.${String(hit.className).slice(0, 80)} "${norm(hit.textContent).slice(0, 60)}"`;
+  }
+  const tabs = [...document.querySelectorAll(`${list} [role="tab"]`)]
+    .map(
+      (element) =>
+        `${norm(element.textContent)}=${element.getAttribute("aria-selected")}`,
+    )
+    .join("; ");
+  return `at the tab's centre: ${atCentre}; tabs: ${tabs}; form drawn: ${document.querySelector("[data-modelo-form]") !== null}`;
+}
+
+/** Activate the marked tab without a pointer click: focus it and press it. */
+function pressTabDirectly(mark) {
+  const tab = document.querySelector(`[${mark}]`);
+  if (!tab) return false;
+  tab.focus();
+  for (const type of ["pointerdown", "mousedown"])
+    tab.dispatchEvent(
+      new (type.startsWith("pointer") ? PointerEvent : MouseEvent)(type, {
+        bubbles: true,
+        cancelable: true,
+        button: 0,
+      }),
+    );
+  return true;
+}
+
+/**
+ * Open a workspace view and wait until it stays open. The first press is a
+ * real pointer click; when that leaves the tab unselected the tab is pressed
+ * directly, and the log names what covered it, since an operator's click would
+ * miss it too. A view that never stays is named in the error.
  */
 async function openView(key) {
   const list = tablist("desktop.modelo.views.label");
   const wanted = label(key);
   const isForm = key === "desktop.modelo.view.form";
+  let report = "";
   for (let attempt = 1; attempt <= 3; attempt += 1) {
-    const opened = await clickText(list, '[role="tab"]', [wanted], "startsWith");
-    if (!opened) throw new Error(`the view ${wanted} is not offered`);
+    const marked = await exec(
+      pageMarkByText,
+      list,
+      '[role="tab"]',
+      [wanted],
+      "startsWith",
+      MARK,
+    );
+    if (marked === null) throw new Error(`the view ${wanted} is not offered`);
+    report = await exec(tabPressReport, list, MARK);
+    if (attempt === 1) await clickSelector(`[${MARK}]`);
+    else await exec(pressTabDirectly, MARK);
     const started = Date.now();
     let since = null;
     while (Date.now() - started < 10_000) {
       await sleep(250);
       if (await exec(viewShown, list, wanted, isForm)) {
         since ??= Date.now();
-        if (Date.now() - since >= 1500) return;
+        if (Date.now() - since >= 1500) {
+          if (attempt === 1) return null;
+          log("view-click-missed", { view: wanted, attempt, report });
+          return report;
+        }
       } else if (since !== null) {
         log("view-reverted", { view: wanted, attempt });
         break;
       }
     }
   }
-  const tabs = await exec(
-    (selector) =>
-      [...document.querySelectorAll(`${selector} [role="tab"]`)]
-        .map(
-          (tab) =>
-            `${(tab.textContent ?? "").replace(/s+/g, " ").trim()}=${tab.getAttribute("aria-selected")}/${tab.getAttribute("data-state")}${tab.disabled || tab.getAttribute("aria-disabled") === "true" ? "/disabled" : ""}`,
-        )
-        .join("; ") +
-      ` | form drawn: ${document.querySelector("[data-modelo-form]") !== null}`,
-    list,
-  );
   throw new Error(
-    `window_view_switch_reverts: the view ${wanted} did not stay open after 3 presses (${tabs})`,
+    `window_view_switch_reverts: the view ${wanted} did not stay open after a click and two direct presses (${report})`,
   );
 }
 
@@ -1060,7 +1110,12 @@ async function driveRow(row, runDir, persona) {
 
 async function exportFile(row, runDir, persona, out) {
   try {
-    await openView("workspace.modelo.filing.title");
+    const missed = await openView("workspace.modelo.filing.title");
+    if (missed)
+      sayExport(
+        out,
+        `window_view_tab_click_missed: a click on the view tab did not open it; a direct press did (${missed})`,
+      );
   } catch (error) {
     sayExport(out, String(error?.message ?? error));
     return "error";
