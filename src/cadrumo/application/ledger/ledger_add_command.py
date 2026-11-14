@@ -29,7 +29,7 @@ from ...domain.categories.spending_category_catalogue import require_spending_ca
 from ...domain.iva.prorrata import InputClassification
 from ...domain.iva.schema import EUMemberState, IvaCategory
 from ...domain.iva.vehicle_use import require_iva_vehicle_use
-from ...domain.transactions.enums import BusinessClassification, TransactionDirection, is_classified
+from ...domain.transactions.enums import MANUAL_ENTRY_CLASSIFICATIONS, BusinessClassification, TransactionDirection
 from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.irpf_categories import require_ledger_irpf_category
 from ...domain.transactions.model_validation import validate_figures_without_business
@@ -259,7 +259,7 @@ def resolve_ledger_add_flow(payload: LedgerAddRequest) -> tuple[BusinessClassifi
         direction = TransactionDirection(payload.direction)
     except ValueError as error:
         raise TransactionValidationError("ledger add direction and classification must be canonical values") from error
-    if not is_classified(classification) and classification is not BusinessClassification.NOT_YET_PROCESSED:
+    if classification not in MANUAL_ENTRY_CLASSIFICATIONS:
         raise TransactionValidationError("this classification is assigned by the ledger pipeline")
     return classification, direction
 

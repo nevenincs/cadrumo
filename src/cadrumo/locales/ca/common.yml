@@ -7946,44 +7946,12 @@ tui:
         confirming: Revisa les dades de dalt i confirma per desar l'apunt.
         created: 'Afegit: {entry}. Estat de revisió: {status}.'
         edit_again: Torna a editar
-        field:
-          accrual_date: Data de meritació a la Renda (AAAA-MM-DD)
-          amount: Import, sense signe
-          art_104_tres_exclusion: Exclusió de l'art. 104.Tres
-          booked_date: Data d'operació (AAAA-MM-DD)
-          business_classification: Classificació
-          business_pct: Part afecta a l'activitat (0 a 1)
-          category_id: Categoria de despesa
-          counterparty: Contrapart
-          counterparty_country: País de la contrapart (dues lletres)
-          counterparty_identification_state: Estat d'identificació IVA de la contrapart
-          currency: Moneda (EUR si es deixa en blanc)
-          deduction_fact_kind: Fet de deducció d'IVA
-          description: Concepte
-          direction: Sentit
-          input_classification: Classificació d'entrada per a prorrata
-          investment_asset_id: Identificador del bé d'inversió
-          irpf_category: Categoria d'IRPF
-          iva_amount: Quota d'IVA
-          iva_category: Categoria d'IVA
-          iva_rate: Tipus d'IVA (per exemple 0.21)
-          notes: Notes
-          operation_date: Data de l'operació (AAAA-MM-DD)
-          own_account_id: Compte propi (acc-01)
-          prorrata_reference: Referència de prorrata
-          prorrata_sector: Sector de prorrata
-          purchase_invoice_evidence_id: Identificador del justificant de compra
-          recargo_amount: Import del recàrrec d'equivalència
-          source_jurisdiction: Jurisdicció d'origen (codi de país)
-          taxable_base: Base imposable
-          usage_ratio_id: Identificador del percentatge d'ús
-          value_date: Data valor (AAAA-MM-DD)
         input_classification_inert: La classificació d'entrada no afecta la prorrata
           d'aquest apunt.
         open_in_browse: Obre'l a Explora els apunts
         optional: Dades fiscals (opcional)
-        prompt: Introdueix les quatre dades que necessita tot apunt. Obre les dades
-          fiscals només si les tens.
+        prompt: Introdueix les dades que necessita tot apunt. Obre les dades fiscals
+          només si les tens.
         refused: 'El llibre ha rebutjat aquest apunt:'
         review: Revisa l'apunt
         sector_unmatched: El sector de prorrata no coincideix amb cap sector del teu

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Annotated, Literal
+from typing import Annotated, Final, Literal
 from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator, model_validator
@@ -12,8 +12,13 @@ from ...core.decimal.grammar import CENT_FRACTION_DIGITS, DECIMAL_TEXT_MAX_LENGT
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.parsing.dates import require_iso8601_date
 from ...domain.iva.prorrata import ProrrataReferenceText
-from ...domain.transactions.enums import BusinessClassification
+from ...domain.transactions.enums import (
+    BusinessClassification,
+    ManualEntryClassificationToken,
+    TransactionDirectionToken,
+)
 from ...domain.transactions.own_accounts import OwnAccountId
+from ..operations.form_field_annotation import form_field_schema
 from ..review.filter import LedgerReviewStatus
 from .transaction_projection import LedgerTransactionProjection
 
@@ -30,8 +35,8 @@ _AddDateText = Annotated[str, Field(min_length=1, max_length=16)]
 _AddOptionalDateText = _AddDateText | None
 _AddId = Annotated[str, Field(min_length=1, max_length=256)]
 _AddOptionalId = _AddId | None
-_AddDirection = Annotated[str, Field(min_length=1, max_length=32)]
-_AddClassification = Annotated[str, Field(min_length=1, max_length=64)]
+_AddDirection = TransactionDirectionToken
+_AddClassification = ManualEntryClassificationToken
 _AddIvaCategory = Annotated[str, Field(min_length=1, max_length=128)] | None
 _AddEUMemberState = CountryCodeAlpha2 | None
 _AddAttachmentIds = Annotated[
@@ -48,52 +53,193 @@ LedgerAddSourceJurisdictionCode = Literal["source_jurisdiction_required_irnr", "
 LedgerAddValidationCode = LedgerAddSourceJurisdictionCode | Literal["invalid_command"]
 
 
+_DIRECTION_CHOICE_LOCALE_KEYS: Final[dict[str, str]] = {
+    "INCOMING": "application.ledger.add.choice.direction.incoming",
+    "OUTGOING": "application.ledger.add.choice.direction.outgoing",
+    "INTERNAL_TRANSFER": "application.ledger.add.choice.direction.internal_transfer",
+}
+"""The words of each direction token the request takes, by token."""
+_CLASSIFICATION_CHOICE_LOCALE_KEYS: Final[dict[str, str]] = {
+    "BUSINESS": "application.ledger.add.choice.business_classification.business",
+    "PERSONAL": "application.ledger.add.choice.business_classification.personal",
+    "MIXED": "application.ledger.add.choice.business_classification.mixed",
+    "NOT_YET_PROCESSED": "application.ledger.add.choice.business_classification.not_yet_processed",
+}
+"""The words of each classification token a person may assign, by token."""
+
+
 class LedgerAddRequest(BaseModel):
     """Bounded private CLI input; taxpayer-derived values are resolved in the worker."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-    profile_id: UUID
-    booked_date: _AddDateText
-    amount: _AddDecimalText
-    direction: _AddDirection
-    description: Annotated[str, Field(min_length=1, max_length=4096)]
-    value_date: _AddOptionalDateText = None
-    operation_date: _AddOptionalDateText = None
-    accrual_date: _AddOptionalDateText = None
-    currency: Annotated[str, Field(min_length=1, max_length=16)] = "EUR"
-    counterparty: _AddOptionalText = None
-    business_classification: _AddClassification = BusinessClassification.NOT_YET_PROCESSED.value
-    business_pct: _AddOptionalDecimalText = None
-    category_id: _AddOptionalId = None
-    taxable_base: _AddOptionalDecimalText = None
-    iva_rate: _AddOptionalDecimalText = None
-    iva_amount: _AddOptionalDecimalText = None
-    iva_category: _AddIvaCategory = None
-    deduction_fact_kind: Annotated[str, Field(max_length=128)] | None = None
-    investment_asset_id: _AddOptionalId = None
+    profile_id: Annotated[UUID, Field(json_schema_extra=form_field_schema(bound="profile"))]
+    booked_date: Annotated[
+        _AddDateText, Field(json_schema_extra=form_field_schema(label_key="application.ledger.add.field.booked_date"))
+    ]
+    amount: Annotated[
+        _AddDecimalText, Field(json_schema_extra=form_field_schema(label_key="application.ledger.add.field.amount"))
+    ]
+    direction: Annotated[
+        _AddDirection,
+        Field(
+            json_schema_extra=form_field_schema(
+                label_key="application.ledger.add.field.direction", choice_label_keys=_DIRECTION_CHOICE_LOCALE_KEYS
+            )
+        ),
+    ]
+    description: Annotated[
+        Annotated[str, Field(min_length=1, max_length=4096)],
+        Field(json_schema_extra=form_field_schema(label_key="application.ledger.add.field.description")),
+    ]
+    value_date: Annotated[
+        _AddOptionalDateText,
+        Field(json_schema_extra=form_field_schema(label_key="application.ledger.add.field.value_date")),
+    ] = None
+    operation_date: Annotated[
+        _AddOptionalDateText,
+        Field(json_schema_extra=form_field_schema(label_key="application.ledger.add.field.operation_date")),
+    ] = None
+    accrual_date: Annotated[
+        _AddOptionalDateText,
+        Field(json_schema_extra=form_field_schema(label_key="application.ledger.add.field.accrual_date")),
+    ] = None
+    currency: Annotated[
+        Annotated[str, Field(min_length=1, max_length=16)],
+        Field(json_schema_extra=form_field_schema(label_key="application.ledger.add.field.currency")),
+    ] = "EUR"
+    counterparty: Annotated[
+        _AddOptionalText,
+        Field(json_schema_extra=form_field_schema(label_key="application.ledger.add.field.counterparty")),
+    ] = None
+    business_classification: Annotated[
+        _AddClassification,
+        Field(
+            json_schema_extra=form_field_schema(
+                label_key="application.ledger.add.field.business_classification",
+                choice_label_keys=_CLASSIFICATION_CHOICE_LOCALE_KEYS,
+            )
+        ),
+    ] = BusinessClassification.NOT_YET_PROCESSED.value
+    business_pct: Annotated[
+        _AddOptionalDecimalText,
+        Field(json_schema_extra=form_field_schema(label_key="application.ledger.add.field.business_pct")),
+    ] = None
+    category_id: Annotated[
+        _AddOptionalId, Field(json_schema_extra=form_field_schema(label_key="application.ledger.add.field.category_id"))
+    ] = None
+    taxable_base: Annotated[
+        _AddOptionalDecimalText,
+        Field(json_schema_extra=form_field_schema(label_key="application.ledger.add.field.taxable_base")),
+    ] = None
+    iva_rate: Annotated[
+        _AddOptionalDecimalText,
+        Field(json_schema_extra=form_field_schema(label_key="application.ledger.add.field.iva_rate")),
+    ] = None
+    iva_amount: Annotated[
+        _AddOptionalDecimalText,
+        Field(json_schema_extra=form_field_schema(label_key="application.ledger.add.field.iva_amount")),
+    ] = None
+    iva_category: Annotated[
+        _AddIvaCategory,
+        Field(json_schema_extra=form_field_schema(label_key="application.ledger.add.field.iva_category")),
+    ] = None
+    deduction_fact_kind: Annotated[
+        Annotated[str, Field(max_length=128)] | None,
+        Field(json_schema_extra=form_field_schema(label_key="application.ledger.add.field.deduction_fact_kind")),
+    ] = None
+    investment_asset_id: Annotated[
+        _AddOptionalId,
+        Field(json_schema_extra=form_field_schema(label_key="application.ledger.add.field.investment_asset_id")),
+    ] = None
     iva_vehicle_use: Annotated[str, Field(max_length=128)] | None = None
-    counterparty_country: CountryCodeAlpha2 | None = None
-    counterparty_identification_state: _AddEUMemberState = None
-    arrendamiento_ref: Annotated[str, Field(max_length=64)] | None = None
-    inmueble_ref: Annotated[str, Field(max_length=64)] | None = None
-    gasto_capital_inmobiliario: Annotated[str, Field(max_length=128)] | None = None
+    counterparty_country: Annotated[
+        CountryCodeAlpha2 | None,
+        Field(json_schema_extra=form_field_schema(label_key="application.ledger.add.field.counterparty_country")),
+    ] = None
+    counterparty_identification_state: Annotated[
+        _AddEUMemberState,
+        Field(
+            json_schema_extra=form_field_schema(
+                label_key="application.ledger.add.field.counterparty_identification_state"
+            )
+        ),
+    ] = None
+    arrendamiento_ref: Annotated[
+        Annotated[str, Field(max_length=64)] | None,
+        Field(
+            json_schema_extra=form_field_schema(
+                label_key="application.ledger.add.field.arrendamiento_ref", entry_option_family="rental_lease"
+            )
+        ),
+    ] = None
+    inmueble_ref: Annotated[
+        Annotated[str, Field(max_length=64)] | None,
+        Field(
+            json_schema_extra=form_field_schema(
+                label_key="application.ledger.add.field.inmueble_ref", entry_option_family="rental_property"
+            )
+        ),
+    ] = None
+    gasto_capital_inmobiliario: Annotated[
+        Annotated[str, Field(max_length=128)] | None,
+        Field(
+            json_schema_extra=form_field_schema(
+                label_key="application.ledger.add.field.gasto_capital_inmobiliario",
+                entry_option_family="gasto_capital_inmobiliario",
+            )
+        ),
+    ] = None
     posicion_ref: Annotated[str, Field(max_length=64)] | None = None
     concepto_capital_mobiliario: Annotated[str, Field(max_length=128)] | None = None
-    recargo_amount: _AddOptionalDecimalText = None
-    irpf_category: _AddOptionalText = None
-    usage_ratio_id: _AddOptionalId = None
-    prorrata_reference: ProrrataReferenceText | None = None
-    art_104_tres_exclusion: Annotated[str, Field(max_length=128)] | None = None
-    input_classification: Annotated[str, Field(max_length=128)] | None = None
-    prorrata_sector: Annotated[str, Field(max_length=64)] | None = None
-    purchase_invoice_evidence_id: _AddOptionalId = None
+    recargo_amount: Annotated[
+        _AddOptionalDecimalText,
+        Field(json_schema_extra=form_field_schema(label_key="application.ledger.add.field.recargo_amount")),
+    ] = None
+    irpf_category: Annotated[
+        _AddOptionalText,
+        Field(json_schema_extra=form_field_schema(label_key="application.ledger.add.field.irpf_category")),
+    ] = None
+    usage_ratio_id: Annotated[
+        _AddOptionalId,
+        Field(json_schema_extra=form_field_schema(label_key="application.ledger.add.field.usage_ratio_id")),
+    ] = None
+    prorrata_reference: Annotated[
+        ProrrataReferenceText | None,
+        Field(json_schema_extra=form_field_schema(label_key="application.ledger.add.field.prorrata_reference")),
+    ] = None
+    art_104_tres_exclusion: Annotated[
+        Annotated[str, Field(max_length=128)] | None,
+        Field(json_schema_extra=form_field_schema(label_key="application.ledger.add.field.art_104_tres_exclusion")),
+    ] = None
+    input_classification: Annotated[
+        Annotated[str, Field(max_length=128)] | None,
+        Field(json_schema_extra=form_field_schema(label_key="application.ledger.add.field.input_classification")),
+    ] = None
+    prorrata_sector: Annotated[
+        Annotated[str, Field(max_length=64)] | None,
+        Field(json_schema_extra=form_field_schema(label_key="application.ledger.add.field.prorrata_sector")),
+    ] = None
+    purchase_invoice_evidence_id: Annotated[
+        _AddOptionalId,
+        Field(
+            json_schema_extra=form_field_schema(label_key="application.ledger.add.field.purchase_invoice_evidence_id")
+        ),
+    ] = None
     attachment_ids: _AddAttachmentIds = ()
-    notes: _AddText = ""
+    notes: Annotated[
+        _AddText, Field(json_schema_extra=form_field_schema(label_key="application.ledger.add.field.notes"))
+    ] = ""
     actor: Annotated[str, Field(max_length=64)] | None = None
     idempotency_key: Annotated[str, Field(max_length=256)] | None = None
-    source_jurisdiction: Annotated[str, Field(max_length=16)] | None = None
-    own_account_id: OwnAccountId | None = None
+    source_jurisdiction: Annotated[
+        Annotated[str, Field(max_length=16)] | None,
+        Field(json_schema_extra=form_field_schema(label_key="application.ledger.add.field.source_jurisdiction")),
+    ] = None
+    own_account_id: Annotated[
+        OwnAccountId | None,
+        Field(json_schema_extra=form_field_schema(label_key="application.ledger.add.field.own_account_id")),
+    ] = None
 
     @field_validator("booked_date", "value_date", "operation_date", "accrual_date")
     @classmethod

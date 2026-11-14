@@ -15,7 +15,8 @@ rather than guessing what the row holds.
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Mapping, Sequence
+from dataclasses import dataclass
 from types import MappingProxyType
 from typing import ClassVar, Final, Protocol, override
 
@@ -44,6 +45,25 @@ LINK_FAMILY_BY_FIELD: Final[Mapping[str, EntryOptionFamily]] = MappingProxyType(
 """Each ledger field a link is stated in, and the served family its choices come from, in form order."""
 
 _LABEL_KEY_PREFIX: Final = "tui.ledger.link_picker.field."
+
+
+@dataclass(frozen=True, slots=True)
+class LedgerLinkFieldV1:
+    """One link field, the served family its choices come from, and the catalogue key of its words."""
+
+    field: str
+    family: str
+    label_key: str
+
+
+def default_link_fields() -> tuple[LedgerLinkFieldV1, ...]:
+    """The link fields of a form whose served contract does not name them, worded by the link picker's own keys."""
+    return tuple(
+        LedgerLinkFieldV1(field=field, family=family, label_key=f"{_LABEL_KEY_PREFIX}{field}")
+        for field, family in LINK_FAMILY_BY_FIELD.items()
+    )
+
+
 _NONE_SERVED_LOCALE_KEY: Final = "tui.ledger.link_picker.none_served"
 _UNCHANGED_LOCALE_KEY: Final = "tui.ledger.link_picker.unchanged"
 _UNAVAILABLE_LOCALE_KEY: Final = "tui.ledger.link_picker.unavailable"
@@ -78,10 +98,13 @@ def option_words(option: LedgerEntryOptionProjection) -> str:
     return option.value if option.label_key is None else tr(option.label_key)
 
 
-def link_families(options: LedgerEntryOptionsProjection) -> dict[str, LedgerEntryOptionFamilyProjection]:
+def link_families(
+    options: LedgerEntryOptionsProjection, fields: Sequence[LedgerLinkFieldV1] | None = None
+) -> dict[str, LedgerEntryOptionFamilyProjection]:
     """The served family of each link field, keyed by the field; a family not served is absent."""
-    served = {family.family: family for family in options.families}
-    return {field: served[family] for field, family in LINK_FAMILY_BY_FIELD.items() if family in served}
+    served: dict[str, LedgerEntryOptionFamilyProjection] = {family.family: family for family in options.families}
+    chosen = default_link_fields() if fields is None else fields
+    return {link.field: served[link.family] for link in chosen if link.family in served}
 
 
 class LedgerLinkPicker(Vertical):
@@ -98,11 +121,16 @@ class LedgerLinkPicker(Vertical):
         family: LedgerEntryOptionFamilyProjection,
         *,
         initial: str | None = None,
+        label_key: str | None = None,
         id: str | None = None,
     ) -> None:
-        """Offer ``family``'s served choices for ``field``, starting at ``initial`` when the family offers it."""
+        """Offer ``family``'s served choices for ``field``, starting at ``initial`` when the family offers it.
+
+        ``label_key`` is the catalogue key of the field's words where a served contract names it.
+        """
         super().__init__(id=id)
         self.field = field
+        self._label_key = f"{_LABEL_KEY_PREFIX}{field}" if label_key is None else label_key
         self._family = family
         offered = initial is not None and any(option.value == initial for option in family.options)
         self._initial = initial if offered else None
@@ -110,7 +138,7 @@ class LedgerLinkPicker(Vertical):
     @property
     def label(self) -> str:
         """The field's chrome label."""
-        return tr(f"{_LABEL_KEY_PREFIX}{self.field}")
+        return tr(self._label_key)
 
     @property
     def chosen_words(self) -> str | None:
@@ -127,8 +155,7 @@ class LedgerLinkPicker(Vertical):
 
     @override
     def compose(self) -> ComposeResult:
-        label_key = f"{_LABEL_KEY_PREFIX}{self.field}"
-        yield localized(Static(tr(label_key), classes="ledger-link-label", markup=False), label_key)
+        yield localized(Static(tr(self._label_key), classes="ledger-link-label", markup=False), self._label_key)
         options = self._family.options
         yield Select[str](
             [(option_words(option), option.value) for option in options],
@@ -148,13 +175,20 @@ def link_picker_id(scope: str, field: str) -> str:
 
 
 def link_pickers(
-    scope: str, options: LedgerEntryOptionsProjection, initial: Mapping[str, str] | None = None
+    scope: str,
+    options: LedgerEntryOptionsProjection,
+    initial: Mapping[str, str] | None = None,
+    fields: Sequence[LedgerLinkFieldV1] | None = None,
 ) -> list[LedgerLinkPicker]:
     """One picker per served link family, in form order, each at its ``initial`` value where offered."""
     held = initial or {}
+    chosen = default_link_fields() if fields is None else fields
+    label_keys = {link.field: link.label_key for link in chosen}
     return [
-        LedgerLinkPicker(field, family, initial=held.get(field), id=link_picker_id(scope, field))
-        for field, family in link_families(options).items()
+        LedgerLinkPicker(
+            field, family, initial=held.get(field), label_key=label_keys[field], id=link_picker_id(scope, field)
+        )
+        for field, family in link_families(options, chosen).items()
     ]
 
 
@@ -177,11 +211,17 @@ class LedgerLinkPickers(Vertical):
         *,
         initial: Mapping[str, str] | None = None,
         held: LedgerHeldLinksDoorV1 | None = None,
+        fields: Sequence[LedgerLinkFieldV1] | None = None,
         id: str | None = None,
     ) -> None:
-        """Bind the scope, the options read, what the operator chose before and the read of the links the row holds."""
+        """Bind the scope, the options read, what the operator chose before and the read of the links the row holds.
+
+        ``fields`` are the link fields a served contract names with their words; without them the
+        picker's own link fields are offered.
+        """
         super().__init__(id=id)
         self._scope = scope
+        self._fields = None if fields is None else tuple(fields)
         self._door = door
         self._initial = dict(initial or {})
         self._held = held
@@ -212,7 +252,7 @@ class LedgerLinkPickers(Vertical):
                     )
                 )
         # What the operator chose before wins over what the row held.
-        await self.mount_all(link_pickers(self._scope, options, {**held, **self._initial}))
+        await self.mount_all(link_pickers(self._scope, options, {**held, **self._initial}, self._fields))
 
     def chosen(self) -> dict[str, str]:
         """The served value chosen in each mounted picker, by field."""
@@ -235,10 +275,12 @@ def chosen_links(pickers: Iterable[LedgerLinkPicker]) -> dict[str, str]:
 __all__ = [
     "LINK_FAMILY_BY_FIELD",
     "LedgerHeldLinksDoorV1",
+    "LedgerLinkFieldV1",
     "LedgerLinkOptionsDoorV1",
     "LedgerLinkPicker",
     "LedgerLinkPickers",
     "chosen_links",
+    "default_link_fields",
     "held_links",
     "link_families",
     "link_picker_id",
