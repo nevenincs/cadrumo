@@ -9,7 +9,7 @@
 //                    (must be outside the git project; default: a temp dir)
 //   CADRUMO_UX_ONLY  (optional) comma-separated substrings: run only tests whose name has one
 import assert from "node:assert/strict";
-import { mkdtempSync } from "node:fs";
+import { existsSync, mkdtempSync, statSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, before, test } from "node:test";
@@ -37,8 +37,14 @@ import {
   pageNow,
   pageLedgerBlocker,
   pageScrollContainers,
+  pageTabCentre,
+  pageTabSelectedAt,
+  pageTabs,
   pageWheelControl,
   paneToggleState,
+  pickerAnswerPending,
+  pointerClickAt,
+  queueSavePicker,
   setPaneToggle,
   tablist,
   wheelContainer,
@@ -46,10 +52,11 @@ import {
 
 const ONLY = process.env.CADRUMO_UX_ONLY;
 let world;
+let runDir;
 const DEFAULT_SIZE = [1441, 923];
 
 before(async () => {
-  const runDir =
+  runDir =
     process.env.CADRUMO_UX_RUN ??
     join(mkdtempSync(join(tmpdir(), "cadrumo-e2e-ux-")), "run");
   ({ world } = await start(runDir));
@@ -1364,3 +1371,526 @@ ux(
     );
   },
 );
+
+// ---------------------------------------------------------------------------
+// The Modelo export: its busy state, the record-as-filed button after it, and
+// a single click on a view tab.
+// ---------------------------------------------------------------------------
+
+const FILING_FILE_KINDS = ["boe", "xml"];
+const EXPORT_WAIT_MS = 60_000;
+
+const exportNames = () => [
+  label("workspace.modelo.filing.export_file"),
+  label("workspace.modelo.filing.export_again"),
+];
+
+/** The export button of the shown view panel, and what the window draws of busy. */
+function pageExportState(names, busyText, notDoneText) {
+  const norm = (text) => (text ?? "").replace(/\s+/g, " ").trim();
+  const shown = (e) => e.getClientRects().length > 0;
+  const section = document.querySelector("section.declarations-workspace");
+  const panel = [
+    ...(section?.querySelectorAll('[role="tabpanel"]') ?? []),
+  ].find(shown);
+  const button = [...(panel?.querySelectorAll("button") ?? [])].find(
+    (b) => shown(b) && names.includes(norm(b.textContent)),
+  );
+  return {
+    found: !!button,
+    disabled: button ? button.disabled : null,
+    text: button ? norm(button.textContent) : null,
+    around: button ? norm(button.parentElement?.innerText).slice(0, 300) : null,
+    panelText: panel ? norm(panel.innerText).slice(0, 400) : null,
+    notDone: !!panel && norm(panel.innerText).includes(notDoneText),
+    dialog: [...document.querySelectorAll('[role="dialog"]')].some(shown),
+    holdShown: [...document.querySelectorAll(".modelo-write-hold")].some(shown),
+  };
+}
+
+/** Whether the declaration header shows busy or is mid-read: false when settled. */
+function pageHeaderBusy(busyText) {
+  const header = document.querySelector(
+    "section.declarations-workspace header",
+  );
+  if (!header) return false;
+  const norm = (text) => (text ?? "").replace(/\s+/g, " ").trim();
+  return (
+    !!header.querySelector('[aria-busy="true"]') ||
+    [...header.querySelectorAll('[role="status"]')].some(
+      (e) =>
+        e.getClientRects().length > 0 && norm(e.textContent).includes(busyText),
+    )
+  );
+}
+
+/** Sample every busy sign of the export every 25 ms, in the page. */
+function pageStartExportSampler(names, busyText) {
+  const state = { samples: 0, first: {}, last: {}, count: {} };
+  const mark = (kind, now) => {
+    state.count[kind] = (state.count[kind] ?? 0) + 1;
+    state.first[kind] ??= now;
+    state.last[kind] = now;
+  };
+  const sample = () => {
+    const section = document.querySelector("section.declarations-workspace");
+    if (!section) return;
+    const norm = (text) => (text ?? "").replace(/\s+/g, " ").trim();
+    const shown = (e) => e.getClientRects().length > 0;
+    const now = Date.now();
+    state.samples += 1;
+    const header = section.querySelector("header");
+    const statuses = [...section.querySelectorAll('[role="status"]')].filter(
+      (e) => shown(e) && norm(e.textContent) === busyText,
+    );
+    const panel = [...section.querySelectorAll('[role="tabpanel"]')].find(
+      shown,
+    );
+    const button = [...(panel?.querySelectorAll("button") ?? [])].find(
+      (b) => shown(b) && names.includes(norm(b.textContent)),
+    );
+    const seen = {
+      headerStatus: statuses.some((e) => header?.contains(e)),
+      panelStatus: statuses.some((e) => !header?.contains(e)),
+      panelWords: !!panel && norm(panel.innerText).includes(busyText),
+      spinner: !!button?.querySelector('[data-slot="spinner"]'),
+      ariaBusy: !!section.querySelector('[aria-busy="true"]'),
+      buttonDisabled: button ? button.disabled : false,
+    };
+    for (const [kind, on] of Object.entries(seen)) if (on) mark(kind, now);
+    if (Object.values(seen).some(Boolean)) mark("any", now);
+  };
+  state.timer = setInterval(sample, 25);
+  window.__uxExportSampler = state;
+  sample();
+}
+
+/** Stop the export sampler and answer its counts and first and last times. */
+function pageStopExportSampler() {
+  const state = window.__uxExportSampler;
+  if (!state) return null;
+  clearInterval(state.timer);
+  delete window.__uxExportSampler;
+  return {
+    samples: state.samples,
+    first: state.first,
+    last: state.last,
+    count: state.count,
+  };
+}
+
+/** Press a window read-again button the declaration shows and wait for it to go. */
+async function readAgainIfHeld() {
+  if (
+    !(await clickText(".modelo-write-hold", "button", [
+      label("workspace.modelo.read_again"),
+    ]))
+  )
+    return false;
+  await waitFor(
+    () => exec(() => !document.querySelector(".modelo-write-hold")),
+    {
+      timeout: 120_000,
+      what: "the declaration to be read again",
+      soft: true,
+      interval: 400,
+    },
+  );
+  await sleep(800);
+  return true;
+}
+
+/**
+ * Bring the open declaration to an enabled export button on its export view,
+ * driving the header's calculate, recalculate and verify the way a person
+ * does. Answers { reached, reason }.
+ */
+async function reachExport() {
+  const names = exportNames();
+  const busyText = label("desktop.navigation.busy");
+  const notDone = label("workspace.modelo.outcome.not_done");
+  const state = () => exec(pageExportState, names, busyText, notDone);
+  for (let step = 0; step < 6; step += 1) {
+    await chooseTab(VIEWS, label("workspace.modelo.filing.title"));
+    await readAgainIfHeld();
+    let now = await state();
+    if (now.found && !now.disabled) return { reached: true };
+    let driven = null;
+    for (const action of ["calculate", "recalculate", "verify"]) {
+      if (
+        await clickText(`${SECTION} header`, "button", [
+          label(`workspace.modelo.next_button.${action}`),
+        ])
+      ) {
+        driven = action;
+        break;
+      }
+    }
+    if (!driven) {
+      now = await state();
+      return {
+        reached: false,
+        reason:
+          `the export button is ${now.found ? `disabled (${now.around})` : "not shown"} and ` +
+          `the header offers no calculate, recalculate or verify; panel: ${now.panelText}`,
+      };
+    }
+    await sleep(1000);
+    await waitFor(async () => !(await exec(pageHeaderBusy, busyText)), {
+      timeout: 600_000,
+      what: `the ${driven} to settle`,
+      soft: true,
+      interval: 700,
+    });
+    now = await state();
+    if (now.dialog)
+      return {
+        reached: false,
+        reason: `${driven} opened a dialog that the audit does not answer`,
+      };
+  }
+  return {
+    reached: false,
+    reason: "no enabled export button after six header steps",
+  };
+}
+
+/** Per-signal first and last time of a sampler result, in ms after `pressedAt`. */
+function busyFromPress(sampled, pressedAt) {
+  const out = {};
+  for (const kind of Object.keys(sampled.count)) {
+    out[kind] = {
+      samples: sampled.count[kind],
+      firstMs: sampled.first[kind] - pressedAt,
+      lastMs: sampled.last[kind] - pressedAt,
+    };
+  }
+  return out;
+}
+
+/**
+ * Press export once with a save-picker answer queued for a file of `kind`,
+ * sample the page until the file exists, and press it a second time while it
+ * runs. Answers what was seen; `outcome` is "written", "wrong_kind" or "timeout".
+ */
+async function pressExport(kind) {
+  const names = exportNames();
+  const busyText = label("desktop.navigation.busy");
+  const notDone = label("workspace.modelo.outcome.not_done");
+  const stamp = Date.now();
+  const destination = join(runDir, "exports", `ux22-${stamp}.${kind}`);
+  const second = join(runDir, "exports", `ux22-${stamp}-second.${kind}`);
+  const state = () => exec(pageExportState, names, busyText, notDone);
+
+  const before = await state();
+  if (!before.found || before.disabled)
+    throw new Error(
+      `the export button is ${before.found ? "disabled" : "not shown"} before the press`,
+    );
+  queueSavePicker(runDir, destination);
+  const button = await exec((names) => {
+    const norm = (text) => (text ?? "").replace(/\s+/g, " ").trim();
+    const panel = [
+      ...document.querySelectorAll(
+        'section.declarations-workspace [role="tabpanel"]',
+      ),
+    ].find((e) => e.getClientRects().length > 0);
+    const target = [...(panel?.querySelectorAll("button") ?? [])].find(
+      (b) =>
+        b.getClientRects().length > 0 && names.includes(norm(b.textContent)),
+    );
+    target?.setAttribute("data-ux-export", "1");
+    return !!target;
+  }, names);
+  if (!button) throw new Error("the export button could not be marked");
+
+  await exec(pageStartExportSampler, names, busyText);
+  const pressedAt = Date.now();
+  let sampled;
+  const result = {
+    kind,
+    secondPress: { attempted: false },
+    outcome: "timeout",
+  };
+  try {
+    await clickSelector('[data-ux-export="1"]');
+    for (;;) {
+      if (existsSync(destination) && statSync(destination).size > 0) {
+        result.outcome = "written";
+        break;
+      }
+      const elapsed = Date.now() - pressedAt;
+      if (elapsed > EXPORT_WAIT_MS) break;
+      const now = await state();
+      if (!result.secondPress.attempted && !pickerAnswerPending(runDir)) {
+        // The first press is running (the picker took its answer, no file yet):
+        // a second press is made only where the button is still enabled, with
+        // its own answer queued so no native picker is left open.
+        result.secondPress = {
+          attempted: true,
+          atMs: elapsed,
+          buttonFound: now.found,
+          buttonDisabled: now.disabled,
+          couldStart: now.found && now.disabled === false,
+          pressed: false,
+          secondFileWritten: null,
+        };
+        if (result.secondPress.couldStart) {
+          queueSavePicker(runDir, second);
+          await clickSelector('[data-ux-export="1"]');
+          result.secondPress.pressed = true;
+        }
+      }
+      if (elapsed > 1500 && now.notDone && !pickerAnswerPending(runDir)) {
+        result.outcome = "wrong_kind";
+        break;
+      }
+      await sleep(200);
+    }
+  } finally {
+    result.settledMs = Date.now() - pressedAt;
+    sampled = await exec(pageStopExportSampler);
+    await exec(() =>
+      document
+        .querySelector("[data-ux-export]")
+        ?.removeAttribute("data-ux-export"),
+    );
+  }
+  result.tookMs = result.settledMs;
+  result.busy = sampled ? busyFromPress(sampled, pressedAt) : null;
+  result.busySeen = !!sampled && (sampled.count.any ?? 0) > 0;
+  result.busyVisibleMs =
+    sampled && sampled.count.any ? sampled.last.any - sampled.first.any : 0;
+  if (result.secondPress.pressed) {
+    await sleep(3000);
+    result.secondPress.secondFileWritten = existsSync(second);
+  }
+  return result;
+}
+
+let exportRun = null;
+
+ux(
+  "UX-22 the Modelo export shows the operation running from the press until it settles",
+  async (t) => {
+    exportRun = null;
+    await open("100");
+    const inner = await setSize(...DEFAULT_SIZE);
+    const reach = await reachExport();
+    if (!reach.reached) {
+      report(t, {
+        probe: "export-busy",
+        size: inner,
+        reached: false,
+        reason: reach.reason,
+      });
+      return;
+    }
+    const failures = [];
+    for (const kind of FILING_FILE_KINDS) {
+      let run;
+      try {
+        run = await pressExport(kind);
+      } catch (error) {
+        report(t, {
+          probe: "export-busy",
+          size: inner,
+          kind,
+          reached: false,
+          reason: `press failed: ${error.message}`,
+        });
+        continue;
+      }
+      report(t, { probe: "export-busy", size: inner, reached: true, ...run });
+      if (run.outcome === "wrong_kind") continue;
+      if (run.outcome === "timeout") {
+        report(t, {
+          probe: "export-busy",
+          size: inner,
+          kind,
+          reached: false,
+          reason: `no file within ${EXPORT_WAIT_MS} ms`,
+        });
+        break;
+      }
+      exportRun = { kind, tookMs: run.tookMs, at: Date.now() };
+      if (run.tookMs > 1000 && !run.busySeen)
+        failures.push(
+          `the export took ${run.tookMs} ms and the window drew no busy state in that time`,
+        );
+      if (run.secondPress.couldStart)
+        failures.push(
+          `a second press at ${run.secondPress.atMs} ms found the export button enabled while the first export was running` +
+            `${run.secondPress.secondFileWritten ? " and a second file was written" : ""}`,
+        );
+      break;
+    }
+    assert.deepEqual(
+      failures,
+      [],
+      `the export gives no sign it is running, or can be started twice: ${failures.join("; ")}`,
+    );
+  },
+);
+
+ux(
+  "UX-23 record-as-filed is available right after an export without reading the declaration again",
+  async (t) => {
+    const inner = await setSize(...DEFAULT_SIZE);
+    if (!exportRun) {
+      report(t, {
+        probe: "record-after-export",
+        size: inner,
+        reached: false,
+        reason: "UX-22 wrote no export in this run",
+      });
+      return;
+    }
+    const record = label("workspace.modelo.filing.record_as_filed");
+    const hint = label("workspace.modelo.filing.also_other_way");
+    // Read the button and its hint; no press is made, as a record changes the world.
+    const read = () =>
+      exec(
+        (record, hint) => {
+          const norm = (text) => (text ?? "").replace(/\s+/g, " ").trim();
+          const shown = (e) => e.getClientRects().length > 0;
+          const panel = [
+            ...document.querySelectorAll(
+              'section.declarations-workspace [role="tabpanel"]',
+            ),
+          ].find(shown);
+          const button = [...(panel?.querySelectorAll("button") ?? [])].find(
+            (b) => shown(b) && norm(b.textContent) === record,
+          );
+          const holds = [...document.querySelectorAll(".modelo-write-hold")]
+            .filter(shown)
+            .map((e) => norm(e.innerText).slice(0, 300));
+          const around = button ? norm(button.parentElement?.innerText) : null;
+          return {
+            buttonShown: !!button,
+            disabled: button ? button.disabled : null,
+            hintText: around,
+            hintSaysAvailable: !!around && around.includes(hint),
+            holdShown: holds.length > 0,
+            holdText: holds.join(" | "),
+          };
+        },
+        record,
+        hint,
+      );
+    const afterMs = Date.now() - exportRun.at;
+    const samples = [];
+    const end = Date.now() + 5000;
+    for (;;) {
+      samples.push({ atMs: Date.now() - exportRun.at, ...(await read()) });
+      if (Date.now() >= end) break;
+      await sleep(500);
+    }
+    const first = samples[0];
+    const last = samples.at(-1);
+    report(t, {
+      probe: "record-after-export",
+      size: inner,
+      reached: true,
+      exportKind: exportRun.kind,
+      firstReadAfterExportMs: afterMs,
+      first,
+      last,
+      samples: samples.length,
+      pressed: "not pressed: a record changes the world",
+    });
+    const failures = [];
+    if (!last.buttonShown)
+      failures.push("the record-as-filed button is not shown");
+    if (last.hintSaysAvailable && last.disabled)
+      failures.push(
+        `the hint says recording is available ("${hint}") but the button is disabled`,
+      );
+    if (last.holdShown)
+      failures.push(`a write hold is shown: "${last.holdText}"`);
+    assert.deepEqual(
+      failures,
+      [],
+      `record-as-filed is not available 5 s after the export without reading the declaration again: ${failures.join("; ")}`,
+    );
+  },
+);
+
+ux("UX-24 a single click opens a Modelo view tab", async (t) => {
+  await open("100");
+  const views = `${SECTION} ${tablist("desktop.modelo.views.label")}`;
+  const startTab =
+    (await exec(pageTabs, views)).tabs.find((tab) => tab.selected)?.text ??
+    null;
+  const failures = [];
+  try {
+    await atSizes(t, "modelo-view-tabs", async (size) => {
+      try {
+        const listed = await exec(pageTabs, views);
+        if (listed.tabs.length === 0) throw new Error("no view tabs are drawn");
+        const names = listed.tabs.map((tab) => tab.text);
+        for (let index = 0; index < names.length; index += 1) {
+          const name = names[index];
+          // A click on the selected tab shows no change: move off it first.
+          const now = await exec(pageTabs, views);
+          if (now.tabs[index]?.selected) {
+            const other = now.tabs.findIndex((_, i) => i !== index);
+            if (other >= 0) await chooseTab(views, now.tabs[other].text);
+          }
+          const target = await exec(pageTabCentre, views, index);
+          if (!target || !target.inWindow) {
+            failures.push(
+              `"${name}" at ${size.join("x")}: its centre is outside the window`,
+            );
+            report(t, {
+              probe: "view-tab-click",
+              tab: name,
+              size,
+              reached: false,
+              reason: "the tab's centre is outside the window",
+              target,
+            });
+            continue;
+          }
+          const startedAt = Date.now();
+          await pointerClickAt(target.x, target.y);
+          const selected = await waitFor(
+            async () =>
+              (await exec(pageTabSelectedAt, views, index)) === "true",
+            {
+              timeout: 1500,
+              what: `tab "${name}" to be selected`,
+              soft: true,
+              interval: 100,
+            },
+          );
+          report(t, {
+            probe: "view-tab-click",
+            tab: name,
+            size,
+            point: [target.x, target.y],
+            rect: target.rect,
+            hit: target.hit,
+            hitIsTab: target.hitIsTab,
+            hitInsideTablist: target.hitInsideTablist,
+            selected: !!selected,
+            waitedMs: Date.now() - startedAt,
+          });
+          if (!selected)
+            failures.push(
+              `"${name}" at ${size.join("x")}: one click at (${target.x}, ${target.y}) on ${target.hit} did not select it`,
+            );
+        }
+      } finally {
+        if (startTab) await chooseTab(views, startTab);
+      }
+    });
+  } finally {
+    if (startTab) await chooseTab(views, startTab);
+  }
+  assert.deepEqual(
+    failures,
+    [],
+    `a single click does not open a view tab: ${failures.join("; ")}`,
+  );
+});
