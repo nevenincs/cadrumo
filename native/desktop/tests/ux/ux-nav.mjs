@@ -1,4 +1,7 @@
 // Navigation helpers shared by the specs (built on ux-driver.mjs).
+import { existsSync } from "node:fs";
+import { join } from "node:path";
+import { queuePickerSelection } from "../automation/session.mjs";
 import {
   win,
   exec,
@@ -365,8 +368,11 @@ export function pageScrollContainers(rootSel) {
   };
   const containers = [];
   for (const el of [root, ...root.querySelectorAll("*")]) {
-    if (!el.getClientRects().length || el.clientHeight <= 0) continue;
+    if (!el.getClientRects().length || el.clientHeight <= 2) continue;
     const cs = getComputedStyle(el);
+    // The visually-hidden clip pattern is not a scroller a person can use.
+    if (cs.position === "absolute" && px(cs.width) <= 1 && px(cs.height) <= 1)
+      continue;
     const scrolling = cs.overflowY === "auto" || cs.overflowY === "scroll";
     const overflows = el.scrollHeight > el.clientHeight + 1;
     if (!scrolling && !(overflows && cs.overflowY !== "visible")) continue;
@@ -524,4 +530,89 @@ export async function wheelContainer(id, deltaY = 300) {
   await sleep(400);
   const after = await exec(pageWheelResult, id, target.before);
   return { ...target, after, moved: after !== target.before, error };
+}
+
+/**
+ * Queue the answer of the window's next native save picker: `destination`
+ * must lie under the run's exports directory and not exist yet. The window
+ * consumes the answer when it asks.
+ */
+export function queueSavePicker(run, destination) {
+  return queuePickerSelection(run, "save", destination);
+}
+
+/** Whether a queued picker answer is still waiting to be taken by the window. */
+export const pickerAnswerPending = (run) =>
+  existsSync(join(run, "temporary", "native-picker-selection.json"));
+
+/** The shown tabs of the first shown tablist matching `scope`, with their state. */
+export function pageTabs(scope) {
+  const list = [...document.querySelectorAll(scope)].find(
+    (l) => l.getClientRects().length > 0,
+  );
+  const tabs = [...(list?.querySelectorAll('[role="tab"]') ?? [])]
+    .filter((t) => t.getClientRects().length > 0)
+    .map((t) => ({
+      text: (t.textContent ?? "").replace(/\s+/g, " ").trim(),
+      selected: t.getAttribute("aria-selected") === "true",
+    }));
+  return { found: !!list, tabs };
+}
+
+/**
+ * Where a pointer press on shown tab `index` of the tablist `scope` lands: the
+ * tab's centre in viewport pixels, and what the page draws at that point.
+ */
+export function pageTabCentre(scope, index) {
+  const list = [...document.querySelectorAll(scope)].find(
+    (l) => l.getClientRects().length > 0,
+  );
+  const tab = [...(list?.querySelectorAll('[role="tab"]') ?? [])].filter(
+    (t) => t.getClientRects().length > 0,
+  )[index];
+  if (!tab) return null;
+  tab.scrollIntoView({ block: "nearest", inline: "nearest" });
+  const b = tab.getBoundingClientRect();
+  const x = Math.round(b.left + b.width / 2);
+  const y = Math.round(b.top + b.height / 2);
+  const inWindow = x >= 0 && y >= 0 && x < innerWidth && y < innerHeight;
+  const hit = inWindow ? document.elementFromPoint(x, y) : null;
+  const describe = (el) =>
+    `${el.tagName.toLowerCase()}` +
+    `${el.getAttribute("role") ? `[role=${el.getAttribute("role")}]` : ""}` +
+    `${typeof el.className === "string" && el.className ? "." + el.className.split(/\s+/).filter(Boolean).slice(0, 2).join(".") : ""}`;
+  return {
+    x,
+    y,
+    rect: [b.left, b.top, b.right, b.bottom].map(Math.round),
+    inWindow,
+    hit: hit ? describe(hit) : null,
+    hitIsTab: !!hit && tab.contains(hit),
+    hitInsideTablist: !!hit && !!list && list.contains(hit),
+  };
+}
+
+/** aria-selected of shown tab `index` of the tablist `scope` now, or null. */
+export function pageTabSelectedAt(scope, index) {
+  const list = [...document.querySelectorAll(scope)].find(
+    (l) => l.getClientRects().length > 0,
+  );
+  const tab = [...(list?.querySelectorAll('[role="tab"]') ?? [])].filter(
+    (t) => t.getClientRects().length > 0,
+  )[index];
+  return tab ? tab.getAttribute("aria-selected") : null;
+}
+
+/** One real pointer press and release at viewport point (x, y), as WebDriver actions. */
+export async function pointerClickAt(x, y) {
+  try {
+    await win.browser
+      .action("pointer", { parameters: { pointerType: "mouse" } })
+      .move({ x, y, origin: "viewport" })
+      .down()
+      .up()
+      .perform();
+  } finally {
+    await win.browser.releaseActions().catch(() => {});
+  }
 }
