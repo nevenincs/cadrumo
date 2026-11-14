@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Icon } from "@/components/ui/icon";
+import { usePanePreference } from "../../../shell/panePreference";
 import { useStrings } from "../../../shell/strings";
 import type { FormSession } from "./session";
 
@@ -22,7 +23,10 @@ export function StatementsOffer({ session }: { session: FormSession }) {
   );
   // The ticks follow what is staged until the filer changes one.
   const [ticked, setTicked] = useState<boolean[] | null>(null);
-  const [open, setOpen] = useState(true);
+  // Shown or hidden as the viewer last left it, on every declaration.
+  const kept = usePanePreference("modelo.workspace.statements");
+  const open = kept.preference.open ?? true;
+  const setOpen = kept.setOpen;
   const [unplaced, setUnplaced] = useState(false);
   const titleId = useId();
   const listId = useId();

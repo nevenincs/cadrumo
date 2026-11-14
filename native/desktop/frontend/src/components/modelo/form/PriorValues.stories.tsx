@@ -65,7 +65,6 @@ function Session({
   const [holds] = useState(createModeloWriteHolds);
   const target = declarationWriteKey(envelope.work_unit_id);
   const session = useFormSession({ envelope, port, language });
-  const [details, setDetails] = useState(false);
   const ran = useRef(false);
   useEffect(() => {
     if (ran.current || !setup) return;
@@ -83,8 +82,6 @@ function Session({
         <FormView
           envelope={envelope}
           session={session}
-          detailsOpen={details}
-          onDetailsOpenChange={setDetails}
           onOpenSurface={noop}
           onRefusalAction={onRefusalAction}
           opensRefusalPlace={(place) =>

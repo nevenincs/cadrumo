@@ -4673,6 +4673,8 @@ desktop:
     details:
       close: Cerrar detalles
       hide: Ocultar detalles
+      label: Detalles
+      resize: Cambiar el tamaño de los detalles
       show: Mostrar detalles
     disagreement:
       accept: Aceptar con un motivo
@@ -4722,6 +4724,7 @@ desktop:
     side:
       label: Junto al formulario
       outline: Esquema
+      resize: Cambiar el tamaño del panel junto al formulario
     statements:
       hide: Ocultar
       intro: Marca cada manifestación que sea cierta para ti. Las que marques quedan

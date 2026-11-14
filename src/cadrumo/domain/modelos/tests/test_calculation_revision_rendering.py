@@ -20,7 +20,11 @@ from pydantic_core import SchemaSerializer
 from ....core.hashing import content_hash_hex
 from ....core.models import STRICT_FROZEN_CONFIG
 from ...calculations.registry.authority import bundled_indexed_authority
-from ...calculations.registry.field_absence import absent_when_none, later_absent_when_none
+from ...calculations.registry.field_absence import (
+    absent_when_none,
+    later_absent_when_empty,
+    later_absent_when_none,
+)
 from ...calculations.registry.revision_contracts import DeclaredPredecessor, NoPredecessor
 from ...calculations.registry.schema_formula import BracketKind, bracket_kind_is_default
 from ..calculation_revision_rendering import (
@@ -242,6 +246,7 @@ class _AbsentFields(BaseModel):
 
     earlier: str | None = Field(default=None, exclude_if=absent_when_none)
     later: str | None = Field(default=None, exclude_if=later_absent_when_none)
+    later_rows: tuple[str, ...] = Field(default=(), exclude_if=later_absent_when_empty)
 
 
 def _complete_dump(value: _AbsentFields, *, absent_as_null: bool) -> object:
@@ -271,3 +276,12 @@ def test_a_later_field_that_holds_a_value_is_dumped_in_both_complete_forms(absen
     dumped = _complete_dump(_AbsentFields(earlier="a", later="b"), absent_as_null=absent_as_null)
 
     assert dumped == {"earlier": "a", "later": "b"}
+
+
+@pytest.mark.parametrize("absent_as_null", (False, True))
+def test_a_later_collection_stays_out_of_both_complete_forms_while_empty_and_is_dumped_once_it_holds_rows(
+    absent_as_null: bool,
+) -> None:
+    held = _complete_dump(_AbsentFields(later_rows=("a",)), absent_as_null=absent_as_null)
+
+    assert held == ({"earlier": None, "later_rows": ["a"]} if absent_as_null else {"later_rows": ["a"]})

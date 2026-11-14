@@ -35,11 +35,13 @@ from cadrumo.application.modelo.revision_selection_operation import (
     ModeloWorkRevisionProjection,
     ModeloWorkRevisionRequest,
 )
+from cadrumo.application.modelo.selectors import ModeloCalculationRevisionSelectorNotFoundError
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from cadrumo.application.modelo.verification_repository_ports import VerificationRepositoryBundle
 from cadrumo.application.modelo.work_lifecycle import get_work_unit
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.owner import OperationExecutorContext
+from cadrumo.application.operator_actions.models import PreconditionVerdict
 from cadrumo.application.workflow.run_models import WorkflowDeadlineContextDetails, WorkflowPurpose, WorkflowStage
 from cadrumo.core.operations import OperationEffect, profile_operation_subject
 from cadrumo.domain.buckets.event import BucketEventType
@@ -224,7 +226,7 @@ def test_verify_grants_for_a_closed_past_period_real_registry(repos: Repos, monk
     assert refreshed.state is CalculationRevisionState.VERIFICADO_COMPLETO
 
 
-def test_verify_repairs_missing_current_revision_pointer(repos: Repos) -> None:
+def test_verify_refuses_a_work_unit_with_no_current_calculation_with_the_calculate_door(repos: Repos) -> None:
     wu_repo, cr_repo, _, vr_repo, bv_repo = repos
     work_unit = seed_work_unit(wu_repo)
     baseline_inputs = dict(DEFAULT_130_BASELINE_INPUTS)
@@ -248,21 +250,27 @@ def test_verify_repairs_missing_current_revision_pointer(repos: Repos) -> None:
         ),
     )
 
-    report = verify_revision(
-        revision.calculation_revision_id,
-        revision=revision,
-        work_unit=work_unit,
-        actor="operator-A",
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        verification_repository=vr_repo,
-        bucket_event_repository=bv_repo,
-        clock=T2,
-    )
+    with pytest.raises(ModeloCalculationRevisionSelectorNotFoundError) as refused:
+        verify_revision(
+            revision.calculation_revision_id,
+            revision=revision,
+            work_unit=work_unit,
+            actor="operator-A",
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            verification_repository=vr_repo,
+            bucket_event_repository=bv_repo,
+            clock=T2,
+        )
 
-    assert report.granted_verificado_completo is True
-    repaired = get_work_unit(work_unit.work_unit_id, ports=build_work_lifecycle_ports(bucket_id=FILE_FLOW_PROFILE_ID))
-    assert repaired.current_calculation_revision_id == revision.calculation_revision_id
+    # A withdrawn calculation stays stored but is no longer the declaration's: the refusal opens
+    # calculate, and verification neither grants it nor makes it current again.
+    verdict = refused.value.terminal_precondition_verdict
+    assert isinstance(verdict, PreconditionVerdict)
+    assert verdict.action is not None
+    assert verdict.action.action_id == "operator.modelo.work.calculate"
+    withdrawn = get_work_unit(work_unit.work_unit_id, ports=build_work_lifecycle_ports(bucket_id=FILE_FLOW_PROFILE_ID))
+    assert withdrawn.current_calculation_revision_id is None
 
 
 def test_verify_does_not_overwrite_different_current_revision(repos: Repos) -> None:
