@@ -35,7 +35,9 @@ import {
   openLedgerSection,
   openRailPage,
   pageNow,
+  pageLedgerBlocker,
   pageScrollContainers,
+  pageWheelControl,
   paneToggleState,
   setPaneToggle,
   tablist,
@@ -1096,10 +1098,27 @@ async function auditScrollContainers(t, page, size, root, failures) {
   }
 }
 
+/**
+ * Wheel a scroller that is not the app's at the current size. It must move,
+ * or no wheel result of the app's scrollers can be trusted.
+ */
+async function wheelControl(t, page, size) {
+  await exec(pageWheelControl, true);
+  let wheel;
+  try {
+    wheel = await wheelContainer("control");
+  } finally {
+    await exec(pageWheelControl, false);
+  }
+  report(t, { probe: "wheel-control", page, size, wheel });
+  return wheel.moved === true;
+}
+
 ux(
   "UX-21 every overflowing scroll container shows a scrollbar and scrolls by wheel",
   async (t) => {
     const failures = [];
+    const controlFailed = [];
 
     await atSizes(t, "profile", async (size) => {
       const got = await openRailPage("profile", "section.user-profile-page");
@@ -1111,6 +1130,8 @@ ux(
           reason: got.reason,
         });
       await sleep(700);
+      if (!(await wheelControl(t, "profile", size)))
+        controlFailed.push(`profile at ${size.join("x")}`);
       await auditScrollContainers(
         t,
         "profile",
@@ -1136,7 +1157,14 @@ ux(
           LEDGER_SETUP.includes(id) ? LEDGER_SETUP : null,
         );
         if (!opened.reached) {
-          report(t, { page, size, reached: false, reason: opened.reason });
+          report(t, {
+            page,
+            size,
+            reached: false,
+            reason: opened.reason,
+            blocker: await exec(pageLedgerBlocker),
+          });
+          await win.browser.keys("Escape");
           continue;
         }
         await sleep(700);
@@ -1154,9 +1182,16 @@ ux(
     await chooseTab(VIEWS, label("desktop.modelo.view.form"));
     await atSizes(t, "modelo", async (size) => {
       await sleep(500);
+      if (!(await wheelControl(t, "modelo", size)))
+        controlFailed.push(`modelo at ${size.join("x")}`);
       await auditScrollContainers(t, "modelo", size, SECTION, failures);
     });
 
+    assert.deepEqual(
+      controlFailed,
+      [],
+      `the harness wheel did not move its own control scroller, so no wheel result here is the app's: ${controlFailed.join("; ")}`,
+    );
     assert.deepEqual(
       failures,
       [],

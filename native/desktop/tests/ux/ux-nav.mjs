@@ -399,6 +399,62 @@ export function pageScrollContainers(rootSel) {
   return { found: true, containers };
 }
 
+/**
+ * Add (`on`) or remove a scroller that is not the app's: a fixed 240x240 box
+ * with 4000px of content, tagged `data-ux-scroll="control"`. A wheel that
+ * moves it shows the WebDriver wheel reaches the page, so an app scroller the
+ * same wheel leaves still is the app's defect, not the harness's.
+ */
+export function pageWheelControl(on) {
+  document.querySelector('[data-ux-scroll="control"]')?.remove();
+  if (!on) return true;
+  const box = document.createElement("div");
+  box.setAttribute("data-ux-scroll", "control");
+  box.style.cssText =
+    "position:fixed;left:40%;top:30%;width:240px;height:240px;" +
+    "overflow-y:auto;z-index:2147483647;background:#fff";
+  const inner = document.createElement("div");
+  inner.style.height = "4000px";
+  box.append(inner);
+  document.body.append(box);
+  return true;
+}
+
+/** Why a ledger section could not be chosen: dialogs, menus, what covers its tabs. */
+export function pageLedgerBlocker() {
+  const shown = (el) => el.getClientRects().length > 0;
+  const name = (el) =>
+    `${el.tagName.toLowerCase()}${el.getAttribute("role") ? `[role=${el.getAttribute("role")}]` : ""}` +
+    `${el.getAttribute("aria-label") ? `[aria-label=${el.getAttribute("aria-label").slice(0, 40)}]` : ""}` +
+    `${typeof el.className === "string" && el.className ? "." + el.className.split(/\s+/).slice(0, 2).join(".") : ""}`;
+  const overlays = [
+    ...document.querySelectorAll(
+      '[role="dialog"],[role="alertdialog"],[role="menu"],[data-state="open"]',
+    ),
+  ]
+    .filter(shown)
+    .map(name)
+    .slice(0, 6);
+  const tab = document.querySelector('.ledger-page [role="tab"]');
+  let atTab = null;
+  if (tab) {
+    const b = tab.getBoundingClientRect();
+    const hit = document.elementFromPoint(
+      b.left + b.width / 2,
+      b.top + b.height / 2,
+    );
+    atTab = hit ? `${name(hit)}${tab.contains(hit) ? " (the tab)" : ""}` : null;
+  }
+  return {
+    overlays,
+    atTab,
+    ledgerShown:
+      !!document.querySelector("section.ledger-page") &&
+      shown(document.querySelector("section.ledger-page")),
+    focused: document.activeElement ? name(document.activeElement) : null,
+  };
+}
+
 /** Where to put a wheel over container `id`, and its scrollTop before. */
 export function pageWheelTarget(id) {
   const el = document.querySelector(`[data-ux-scroll="${id}"]`);
