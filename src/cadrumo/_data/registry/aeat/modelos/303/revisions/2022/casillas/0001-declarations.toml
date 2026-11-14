@@ -2254,6 +2254,8 @@ id = "17"
 number = "17"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "ratio"
+# The design prints [17] as "Tipo %", a percentage in a five-digit field with two decimals.
+constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-303-2022"] }
 semantic_role = "dr303_17"
 continuidad_id = "dr303-17"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
