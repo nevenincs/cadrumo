@@ -144,18 +144,38 @@ pub fn workspace_browser_arguments() -> Option<String> {
 
 /// The data directory the workspace window's browser runs in, given the
 /// package's own one and the workspace's browser arguments; `None` leaves the
-/// workspace in the startup window's browser.
+/// workspace in Tauri's default directory.
 ///
 /// WebView2 refuses a second browser on one data directory with other
 /// arguments than the browser already running there, so a workspace given
 /// its own DevTools port must have its own directory, as the product's has.
 /// Only the packaged test host started with the remote-debugging variable
-/// alone, which reaches every browser alike, shares the startup window's.
+/// alone, which reaches every browser alike, shares the startup window's
+/// browser, in the startup window's directory: Tauri's default directory is
+/// one per identifier, which every concurrent test host would join.
 pub fn workspace_data_directory(
     directory: std::path::PathBuf,
     arguments: Option<&str>,
 ) -> Option<std::path::PathBuf> {
-    owns_data_directory(Policy::of_this_build(), arguments).then_some(directory)
+    workspace_directory(
+        Policy::of_this_build(),
+        directory,
+        arguments,
+        startup_data_directory(),
+    )
+}
+
+fn workspace_directory(
+    policy: Policy,
+    directory: std::path::PathBuf,
+    arguments: Option<&str>,
+    startup: Option<std::path::PathBuf>,
+) -> Option<std::path::PathBuf> {
+    if owns_data_directory(policy, arguments) {
+        Some(directory)
+    } else {
+        startup
+    }
 }
 
 fn owns_data_directory(policy: Policy, arguments: Option<&str>) -> bool {
@@ -257,6 +277,30 @@ mod tests {
         assert_eq!(
             workspace_data_directory(directory.clone(), port.as_deref()),
             Some(directory)
+        );
+    }
+
+    #[test]
+    fn a_test_host_workspace_shares_the_startup_browser_in_its_storage_root() {
+        let package = std::path::PathBuf::from(r"C:\package\webview");
+        let startup = std::path::PathBuf::from(r"C:\run\storage\webview");
+        assert_eq!(
+            workspace_directory(DEBUGGING, package.clone(), None, Some(startup.clone())),
+            Some(startup.clone())
+        );
+        let port = workspace_arguments("9222".into());
+        assert_eq!(
+            workspace_directory(
+                DEBUGGING,
+                package.clone(),
+                port.as_deref(),
+                Some(startup.clone())
+            ),
+            Some(package.clone())
+        );
+        assert_eq!(
+            workspace_directory(PACKAGED, package.clone(), None, Some(startup)),
+            Some(package)
         );
     }
 
