@@ -2877,6 +2877,10 @@ application:
       export_ledger_evidence_missing: The saved calculation %{calculation_revision_id}
         built from your records lacks its supporting records or a resolvable reference
         to them; check the calculation again before exporting.
+      export_m210_tipo_renta_code_missing: 'Nothing was written: calculation %{calculation_revision_id}
+        does not keep the official tipo de renta code that Modelo 210 asks for, and
+        several codes share the same concept. Calculate again stating the code with
+        --casilla tipo_renta=CODE. Accepted codes: %{accepted}.'
       export_no_active_bucket: No active profile bucket; run `aeat config profile
         create NAME` before exporting a modelo revision.
       export_output_path_invalid: 'The export output path is not valid: {output_path}

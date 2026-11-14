@@ -3015,6 +3015,10 @@ application:
       export_ledger_evidence_missing: El càlcul desat %{calculation_revision_id} construït
         a partir dels teus registres no inclou els seus justificants ni una referència
         resoluble a ells; torna a comprovar el càlcul abans d'exportar.
+      export_m210_tipo_renta_code_missing: 'No s''ha escrit res: el càlcul %{calculation_revision_id}
+        no desa el codi oficial de tipus de renda que demana el Model 210, i diversos
+        codis comparteixen el mateix concepte. Torna a calcular indicant el codi amb
+        --casilla tipo_renta=CODI. Codis acceptats: %{accepted}.'
       export_no_active_bucket: No hi ha cap perfil actiu; executa `aeat config profile
         create NAME` abans d'exportar una revisió de model.
       export_output_path_invalid: 'El camí de sortida de l''exportació no és vàlid:

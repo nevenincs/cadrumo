@@ -2972,6 +2972,10 @@ application:
       export_ledger_evidence_missing: A nyilvántartásaidból készült %{calculation_revision_id}
         mentett számítás nem tartalmazza a hozzá tartozó bizonylatokat vagy azok feloldható
         hivatkozását; exportálás előtt ellenőrizd újra a számítást.
+      export_m210_tipo_renta_code_missing: 'Semmi sem íródott ki: a(z) %{calculation_revision_id}
+        számítás nem őrzi meg a Modelo 210 által kért hivatalos jövedelemtípus-kódot,
+        és több kód ugyanarra a fogalomra vonatkozik. Számolj újra, és add meg a kódot
+        a --casilla tipo_renta=KÓD kapcsolóval. Elfogadott kódok: %{accepted}.'
       export_no_active_bucket: Nincs aktív profilhoz tartozó tárhely; a mentett számítás
         exportálása előtt futtasd az `aeat config profile create NÉV` parancsot.
       export_output_path_invalid: 'Az exportálási kimeneti útvonal érvénytelen: {output_path}
