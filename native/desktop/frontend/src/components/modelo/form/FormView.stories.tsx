@@ -50,7 +50,6 @@ function Loaded({
   setup?: Setup;
 }) {
   const session = useFormSession({ envelope, port, language: locale });
-  const [details, setDetails] = useState(false);
   const ran = useRef(false);
   useEffect(() => {
     if (ran.current || !setup) return;
@@ -58,13 +57,7 @@ function Loaded({
     void setup(session, envelope);
   }, [session, setup, envelope]);
   return (
-    <FormView
-      envelope={envelope}
-      session={session}
-      detailsOpen={details}
-      onDetailsOpenChange={setDetails}
-      onOpenSurface={noop}
-    />
+    <FormView envelope={envelope} session={session} onOpenSurface={noop} />
   );
 }
 

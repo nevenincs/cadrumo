@@ -1,15 +1,22 @@
 import { seededUnit } from "@/dev/seededUnits";
 import { RENTA_UNIT } from "@/dev/rentaUnit";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { useRef } from "react";
-import { userEvent, waitFor } from "storybook/test";
+import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { expect, userEvent, waitFor, within } from "storybook/test";
 import rulesIncomplete from "@fixtures/modelo/scenario-rules-incomplete.json" with { type: "json" };
 import { modeloFixture, type ModeloShape } from "@/dev/modeloFixture";
 import { translator } from "../../../shell/strings";
 import type { ModeloPort } from "../../../shell/modelo";
 import type { OutputLanguage } from "../../../shell/modeloContract/modelo";
+import {
+  readPanePreference,
+  writePanePreference,
+  type PanePreference,
+} from "../../../shell/panePreference";
+import { PRIOR_VALUES_PANE } from "../form/PriorValuesOffer";
 import type { WorkspaceView } from "./Workspace";
 import { WorkspaceScreen } from "./WorkspaceScreen";
+import { WORKSPACE_PANE_IDS } from "./WorkspacePanes";
 
 // One declaration's workspace over the envelopes the application read for a
 // synthetic taxpayer, through the scenario's modelo port.
@@ -63,6 +70,37 @@ function Screen({
     </div>
   );
 }
+
+/** Draws its children with the panes kept as `kept`, by pane name, and gives
+ * the viewer's own preferences back when the story is left. */
+function KeptPanes({
+  kept,
+  children,
+}: {
+  kept: Record<string, PanePreference>;
+  children: ReactNode;
+}) {
+  const [held] = useState(() => {
+    const before = Object.keys(kept).map(
+      (id) => [id, readPanePreference(id)] as const,
+    );
+    for (const [id, preference] of Object.entries(kept))
+      writePanePreference(id, preference);
+    return before;
+  });
+  useLayoutEffect(
+    () => () => {
+      for (const [id, preference] of held) writePanePreference(id, preference);
+    },
+    [held],
+  );
+  return children;
+}
+
+const ALL_PANES = (preference: PanePreference) =>
+  Object.fromEntries(
+    Object.values(WORKSPACE_PANE_IDS).map((id) => [id, preference]),
+  );
 
 const meta: Meta = {
   title: "Modelo/Workspace",
@@ -245,5 +283,65 @@ export const Modelo100Sources: Story = {
       view="sources"
       locale={language(globals)}
     />
+  ),
+};
+
+export const PanesHidden: Story = {
+  name: "130 · To do and details hidden",
+  render: (_, { globals }) => (
+    <KeptPanes kept={ALL_PANES({ open: false, side: null, bottom: null })}>
+      <Screen modelo="130" locale={language(globals)} />
+    </KeptPanes>
+  ),
+};
+
+export const PanesResized: Story = {
+  name: "130 · To do and details drawn wider",
+  render: (_, { globals }) => (
+    <KeptPanes kept={ALL_PANES({ open: true, side: 22 * 16, bottom: 18 * 16 })}>
+      <Screen modelo="130" locale={language(globals)} />
+    </KeptPanes>
+  ),
+};
+
+export const NarrowRailOpener: Story = {
+  name: "130 · a narrow window, the To do and Outline opened from the toolbar",
+  render: (_, { globals }) => (
+    <KeptPanes kept={ALL_PANES({ open: null, side: null, bottom: null })}>
+      <div className="flex h-150 w-200 max-w-full min-h-0 flex-col border border-border">
+        <Screen modelo="130" locale={language(globals)} />
+      </div>
+    </KeptPanes>
+  ),
+  play: async ({ canvasElement }) => {
+    const opener = await waitFor(
+      () => {
+        const found = canvasElement.querySelector<HTMLElement>(
+          "[data-pane-toggle=side]",
+        );
+        if (!found) throw new Error("the rail's control is not drawn yet");
+        return found;
+      },
+      { timeout: 15_000 },
+    );
+    await expect(opener).toHaveAttribute("aria-pressed", "false");
+    await userEvent.click(opener);
+    await expect(opener).toHaveAttribute("aria-pressed", "true");
+    await expect(
+      within(canvasElement).getAllByRole("separator").length,
+    ).toBeGreaterThan(0);
+  },
+};
+
+export const PriorValuesHidden: Story = {
+  name: "130 · the earlier-return figures offer hidden",
+  render: (_, { globals }) => (
+    <KeptPanes
+      kept={{
+        [PRIOR_VALUES_PANE]: { open: false, side: null, bottom: null },
+      }}
+    >
+      <Screen modelo="130" locale={language(globals)} />
+    </KeptPanes>
   ),
 };
