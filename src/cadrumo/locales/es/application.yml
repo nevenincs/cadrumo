@@ -609,6 +609,8 @@ application:
           que no está indicada. Indícala y vuelve a exportar.'
         producer_fact_required: 'No se ha escrito nada: la exportación necesita %{fact},
           que no está indicado. Indícalo y vuelve a exportar.'
+        producer_facts_unsupplied: 'No se ha escrito nada: la exportación del modelo
+          %{modelo} necesita %{facts}, y la aplicación todavía no puede aportarlos.'
         product_identity_not_admitted: 'No se ha escrito nada: esta exportación no
           tiene un lugar para la identidad del producto o del programa, así que no
           se puede indicar ninguna.'
@@ -880,20 +882,20 @@ application:
           y el ejercicio %{year}. Ábrelo en lugar de crear otro.
         activity_not_found: No existe ningún registro de inventario para esta actividad
           y el ejercicio %{year}. Créalo primero o revisa la actividad y el ejercicio.
-        claimed_transaction_amount_mismatch: 'La compra %{movement_id} del inventario
-          %{year} no coincide con su movimiento: la base, el IVA y el recargo deben
-          ser iguales al céntimo. Corrige la compra o elige otro movimiento.'
-        claimed_transaction_double_claim: El movimiento que indica la compra %{movement_id}
-          ya lo reclama otro inventario o un elemento de tu registro de bienes. Cada
+        claimed_transaction_amount_mismatch: 'Esta compra del inventario %{year} no
+          coincide con su movimiento: la base, el IVA y el recargo deben ser iguales
+          al céntimo. Corrige la compra o elige otro movimiento.'
+        claimed_transaction_double_claim: El movimiento que indica esta compra ya
+          lo reclama otro inventario o un elemento de tu registro de bienes. Cada
           movimiento pertenece a un solo registro.
-        claimed_transaction_missing: La compra %{movement_id} del inventario %{year}
-          indica un movimiento que no está activo en tus movimientos. Elige el movimiento
-          que registra esta compra.
-        claimed_transaction_not_eur: El movimiento que indica la compra %{movement_id}
-          no está en euros. Por ahora solo se vinculan movimientos en euros.
-        claimed_transaction_substrate_missing: El movimiento que indica la compra
-          %{movement_id} no tiene base imponible o cuota de IVA, así que no se puede
-          comparar. Complétalo primero.
+        claimed_transaction_missing: Esta compra del inventario %{year} indica un
+          movimiento que no está activo en tus movimientos. Elige el movimiento que
+          registra esta compra.
+        claimed_transaction_not_eur: El movimiento que indica esta compra no está
+          en euros. Por ahora solo se vinculan movimientos en euros.
+        claimed_transaction_substrate_missing: El movimiento que indica esta compra
+          no tiene base imponible o cuota de IVA, así que no se puede comparar. Complétalo
+          primero.
         closing_authority_conflict: Ya hay otro valor de cierre registrado para esta
           actividad y este año.
         closing_authority_invalid: Este valor de cierre no se pudo registrar porque
@@ -924,7 +926,7 @@ application:
           actividad parte de este cierre, así que los datos de existencias de %{year}
           ya no pueden cambiar.
         ledger_row_not_purchase: Solo una compra del inventario puede indicar qué
-          movimiento la registra, y %{movement_id} no es una compra.
+          movimiento la registra, y este movimiento no es una compra.
         movement_already_superseded: Este movimiento ya se corrigió o se anuló.
         movement_not_found: El inventario %{year} de esta actividad no tiene este
           movimiento.
