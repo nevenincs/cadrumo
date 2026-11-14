@@ -26,6 +26,7 @@ from pydantic import Field
 
 from ...core.spanish_postcode import SPANISH_PROVINCE_CODES
 from ...domain.calculations.registry.binding_value_contract import BindingDataType, BindingValueChannel
+from ...domain.calculations.registry.ratio_scale import ratio_scale
 from ...domain.calculations.registry.runtime_graph import enum_consumed_binding_ids, revision_date_binding_ids
 from ...domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from ...domain.calculations.registry.schema_base import (
@@ -169,13 +170,8 @@ def ratio_unit(data_type: str, maximum: Decimal | None) -> ModeloEditRatioUnit |
     A declared maximum of 100 makes the figure a percent and a maximum of 1 a
     fraction; a ratio that declares neither is undeclared, never guessed.
     """
-    if data_type != CasillaDataType.RATIO:
-        return None
-    if maximum == Decimal(100):
-        return ModeloEditRatioUnit.PERCENT
-    if maximum == Decimal(1):
-        return ModeloEditRatioUnit.FRACTION
-    return ModeloEditRatioUnit.UNDECLARED
+    scale = ratio_scale(data_type, maximum)
+    return None if scale is None else ModeloEditRatioUnit(scale.value)
 
 
 def _casilla_fraction_digits(family: ModeloEditValueFamily, is_money: bool) -> int | None:
