@@ -3294,6 +3294,10 @@ application:
       m390_attestation_period_year_differs: A 390-es modell alkalmazhatósági nyilatkozatának
         időszaka a(z) %{period_year}. évhez tartozik, de a nyilatkozat a(z) %{filing_year}.
         bevallási évre szól. Használj a bevallási év időszakát.
+      m840_anexo_activities_ambiguous: 'Modelo %{modelo} %{filing_year}: a tevékenységek
+        gyakorlásának helyiségei több tevékenységhez tartoznak (%{activities}), de
+        egy Modelo 840 egyetlen tevékenységet jelent be. Ellenőrizd, hogy a(z) %{profile_section}
+        szakaszban az egyes helyiségek melyik tevékenységet nevezik meg.'
       novel_source_kind_rejected: 'Ismeretlen számítási forrástípus(ok) %{novel_source_kinds}
         a(z) %{revision_id} változatban: a nyomtatványdefiníciók olyan értékforrást
         deklarálnak, amelyet egyetlen számítási feloldó sem kezel. Adj hozzá egy feloldót,

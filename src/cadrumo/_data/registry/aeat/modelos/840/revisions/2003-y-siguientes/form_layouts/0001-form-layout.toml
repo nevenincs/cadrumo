@@ -7,7 +7,7 @@ revision_id = "2003-y-siguientes"
 seed_source = "casilla_number"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "8d60ca5a79d3d5163e994224d7f908b73e7d567a05fe14dfe6772a70c6b256c4"
+source_state_digest = "5a36e5d014fb6489ae339c7490d13bfae9ac1be84e7cabc2c9f2009f89032e19"
 placements = [
     { casilla_id = "act.actividad-principal", kind = "on_form", box_number = "59" },
     { casilla_id = "act.ano-inicio-primera-vez", kind = "on_form", box_number = "65" },
@@ -51,16 +51,15 @@ placements = [
     { casilla_id = "cuota.maquinas-recreativas-autoventa", kind = "working_figure" },
     { casilla_id = "decl.ejercicio", kind = "on_form", box_number = "14" },
     { casilla_id = "decl.tipo-declaracion", kind = "on_form", box_number = "15" },
-    { casilla_id = "declarante.indicador-pagina-complementaria", kind = "on_form" },
     { casilla_id = "elem-trib.municipal-suma-computable", kind = "on_form", box_number = "89" },
     { casilla_id = "elem-trib.municipal-suma-rectificada", kind = "on_form", box_number = "88" },
     { casilla_id = "elem-trib.municipal-suma-total", kind = "on_form", box_number = "87" },
     { casilla_id = "elem-trib.municipal-superficie-computable", kind = "on_form", box_number = "91" },
     { casilla_id = "elem-trib.municipal-superficie-deducible", kind = "on_form", box_number = "90" },
-    { casilla_id = "elem-trib.provincial-nacional-computable", kind = "on_form", box_number = "98", aliases = [{ page_id = "m840-anexo", section_id = "general", official_ref = "m840-anexo" }] },
+    { casilla_id = "elem-trib.provincial-nacional-computable", kind = "on_form", box_number = "98" },
     { casilla_id = "elem-trib.provincial-nacional-numero", kind = "on_form", box_number = "95" },
-    { casilla_id = "elem-trib.provincial-nacional-rectificada", kind = "on_form", box_number = "97", aliases = [{ page_id = "m840-anexo", section_id = "general", official_ref = "m840-anexo" }] },
-    { casilla_id = "elem-trib.provincial-nacional-total", kind = "on_form", box_number = "96", aliases = [{ page_id = "m840-anexo", section_id = "general", official_ref = "m840-anexo" }] },
+    { casilla_id = "elem-trib.provincial-nacional-rectificada", kind = "on_form", box_number = "97" },
+    { casilla_id = "elem-trib.provincial-nacional-total", kind = "on_form", box_number = "96" },
     { casilla_id = "local-indirecto.codigo-postal", kind = "on_form", box_number = "69" },
     { casilla_id = "local-indirecto.escalera", kind = "on_form", box_number = "80" },
     { casilla_id = "local-indirecto.kilometro", kind = "on_form", box_number = "78" },
@@ -216,16 +215,4 @@ blocks = [
     { kind = "field", id = "field-10", casilla_id = "notificacion.lugar" },
     { kind = "field", id = "field-11", casilla_id = "notificacion.fecha" },
     { kind = "field", id = "field-12", casilla_id = "notificacion.calidad" },
-]
-
-[[revisions.2003-y-siguientes.form_layouts.pages]]
-id = "m840-anexo"
-official_ref = "m840-anexo"
-heading_key = "modelo.schema.840.form.page.m840-anexo.heading"
-
-[[revisions.2003-y-siguientes.form_layouts.pages.sections]]
-id = "general"
-heading_key = "modelo.schema.840.form.page.m840-anexo.section.general.heading"
-blocks = [
-    { kind = "field", id = "field", casilla_id = "declarante.indicador-pagina-complementaria" },
 ]

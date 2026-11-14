@@ -69,6 +69,7 @@ from .producer_snapshot_m210 import Modelo210ProfileFacts
 from .producer_snapshot_m296 import Modelo296ProfileFacts
 from .producer_snapshot_m360 import Modelo360ProfileFacts
 from .producer_snapshot_m390 import M390FilingFacts
+from .producer_snapshot_m840 import Modelo840ProfileFacts
 
 _NonBlankName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=FILING_TEXT_CAPACITY)]
 _AeatReceiptNumber = Annotated[
@@ -628,6 +629,7 @@ type FilingModelProfileFacts = (
     | Modelo296ProfileFacts
     | Modelo353ProfileFacts
     | Modelo360ProfileFacts
+    | Modelo840ProfileFacts
     | ModeloIVAProfile
 )
 
@@ -709,6 +711,9 @@ def _validate_snapshot_modelo_profile(snapshot: FilingProducerSnapshot) -> None:
     if snapshot.modelo == form_for_role("iva.foreign_refund"):
         _validate_modelo_360_snapshot(snapshot)
         return
+    if snapshot.modelo == form_for_role("iae.census_declaration"):
+        _validate_modelo_840_snapshot(snapshot)
+        return
     _validate_general_modelo_snapshot(snapshot)
 
 
@@ -724,6 +729,12 @@ def _validate_modelo_200_snapshot(snapshot: FilingProducerSnapshot) -> None:
     """
     if not isinstance(snapshot.model_profile, Modelo200ProfileFacts):
         raise ValueError("modelo 200 requires Modelo200ProfileFacts")
+
+
+def _validate_modelo_840_snapshot(snapshot: FilingProducerSnapshot) -> None:
+    """Modelo 840's Anexo lists the stored premises; a general profile carries none of them."""
+    if not isinstance(snapshot.model_profile, Modelo840ProfileFacts):
+        raise ValueError("modelo 840 requires Modelo840ProfileFacts")
 
 
 def _validate_modelo_296_snapshot(snapshot: FilingProducerSnapshot) -> None:
