@@ -56,6 +56,7 @@ from ..invoices.catalogue_reads_ports import (
 from ..invoices.source_observations import is_rectificativa
 from ..ledger.usage_ratio_repository import UsageRatioProfileLoader
 from ..user_profile.usage_ratio_resolution import resolve_effective_usage_ratios
+from .activity_applicability import activity_ledger_applicability
 from .activity_asset_disposal_projection import disposal_row_source_identities
 from .activity_asset_expense_reconciliation import (
     LedgerExpenseRegisterClassification,
@@ -334,6 +335,7 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
         refused: tuple[UnregisteredAmortizationRow, ...],
         may_be_durable: tuple[CalculationSourceDiagnostic, ...],
         unrouted: Sequence[RentaGastosEstimacionDirectaObservationProtocol],
+        not_activity_row_reasons: frozenset[str],
     ) -> tuple[CalculationSourceDiagnostic, ...]:
         return (
             source_issue_diagnostics(
@@ -348,7 +350,8 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
                     }
                 ),
                 source_ref=lambda issue: f"transaction:{issue.transaction_id}",
-                suppressed_reasons=frozenset({RentaLedgerAggregationIssueReason.IMPUTATION_UNRESOLVED}),
+                suppressed_reasons=frozenset({RentaLedgerAggregationIssueReason.IMPUTATION_UNRESOLVED})
+                | not_activity_row_reasons,
             )
             + _expense_imputation_diagnostics(
                 context,
@@ -503,6 +506,7 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
             context.revision,
             asset_projection.disposal_rows,
         )
+        applicability = activity_ledger_applicability(context, self.owned_sources)
         return CalculationSourceResolution(
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
@@ -521,7 +525,7 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
                 ),
             },
             enum_binding_values=element_types,
-            inapplicable_binding_ids=element_types_inapplicable,
+            inapplicable_binding_ids=(*element_types_inapplicable, *applicability.inapplicable_binding_ids),
             value_outcomes=_ledger_expense_value_outcomes(
                 context,
                 resolve_ledger_renta_gastos_estimacion_directa_aggregation_binding_values(
@@ -542,6 +546,7 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
                 refused=refused,
                 may_be_durable=may_be_durable,
                 unrouted=unrouted,
+                not_activity_row_reasons=applicability.not_activity_row_reasons,
             ),
             provenance=self._provenance(split, asset_projection),
         )
