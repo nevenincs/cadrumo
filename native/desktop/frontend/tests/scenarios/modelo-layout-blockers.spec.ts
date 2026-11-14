@@ -30,6 +30,12 @@ for (const size of [
   { width: 1280, height: 800 },
   { width: 1024, height: 640 },
   { width: 900, height: 600 },
+  // The native window's inner sizes, where the form showed 189px of an
+  // 834px pane.
+  { width: 1427, height: 915 },
+  { width: 1267, height: 793 },
+  { width: 1011, height: 632 },
+  { width: 887, height: 592 },
 ]) {
   test(`at ${size.width} by ${size.height} a tall offer over the form leaves the form room and the header in view`, async ({
     page: target,
@@ -50,10 +56,16 @@ for (const size of [
       element.focus();
       element.scrollIntoView({ block: "end" });
     });
-    // UX-01: the form keeps room to work.
+    // UX-01: the form keeps room to work: at least 200px, or a third of
+    // the pane where the pane is shorter than 600px.
+    const pane = await workspace(target).evaluate(
+      (element) => element.getBoundingClientRect().height,
+    );
+    const shown = await form.evaluate((element) => element.clientHeight);
     expect(
-      await form.evaluate((element) => element.clientHeight),
-    ).toBeGreaterThanOrEqual(100);
+      shown,
+      `the form shows ${shown}px of a ${Math.round(pane)}px pane`,
+    ).toBeGreaterThanOrEqual(Math.min(200, pane / 3));
     // UX-02: the pane is not scrolled, and the header, the view tabs and
     // the next action are on screen.
     expect(
