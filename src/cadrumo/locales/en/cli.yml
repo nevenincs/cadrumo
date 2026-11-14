@@ -1769,10 +1769,10 @@ cli:
           Its values fill only the boxes whose source is marked aeat_prefilled in
           the modelo definitions; values you give with --binding always take precedence.
         bucket_id_help: Profile the declaration belongs to
-        calculate_help: Save a new draft calculation for the declaration. This command
-          calculates only from the values given to it. Values entered earlier in the
-          full-screen interface are not kept unless you give them again here; the
-          full-screen interface keeps them.
+        calculate_help: Save a new draft calculation for the declaration. Given no
+          values, it recalculates from the current calculation and keeps every value
+          and statement you recorded on it. Given values, or --inputs-only, it calculates
+          only from them and lists each recorded value or statement it did not use.
         calculate_reused_sealed: 'These inputs match calculation %{revision_id} (state:
           %{state}). No new draft was created. Select this saved calculation by its
           revision ID, or change the inputs.'
@@ -1908,6 +1908,9 @@ cli:
           {candidates}'
         include_discarded_help: Include discarded declarations in the listing (excluded
           by default)
+        inputs_only_help: Calculate only from the values given to this command, even
+          when it gives none. Without it, a command that gives no values recalculates
+          from the current calculation and keeps every value and statement you recorded.
         invalid_binding_key: '--binding key is not a valid id for the source of a
           box (BindingId: lowercase alphanumeric plus . _ : - separators, max 128
           chars)'
@@ -2198,6 +2201,16 @@ cli:
         state_label_presentado: recorded as filed
         state_label_presentado_supersedido: superseded filing
         state_label_verificado_completo: checked and complete
+        statement_not_carried: 'Not used: %{words}, %{target}: %{value}'
+        statement_not_carried_whole: 'Not used: %{words}'
+        statement_not_carried_without_value: 'Not used: %{words}, %{target}'
+        statement_target_box: box %{box} (%{label})
+        statements_not_carried: 'Values or statements recorded on calculation %{revision_id}
+          that this calculation did not use: %{count}. That calculation still holds
+          them; calculate again without giving values to keep them.'
+        statements_not_carried_incomplete: Calculation %{revision_id} did not record
+          which values you typed, so the list may miss some of them. That calculation
+          still holds every value.
         status_calculate_summary: This active declaration can be calculated.
         status_discarded_summary: This declaration is discarded, so calculation is
           unavailable.
