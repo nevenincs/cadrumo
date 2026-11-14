@@ -1033,10 +1033,15 @@ async function exportFile(row, runDir, persona, out) {
     const state = await readState();
     const shown = await exec(
       (selector) =>
-        (document.querySelector(selector)?.innerText ?? "")
-          .replace(/\s+/g, " ")
-          .trim()
-          .slice(0, 400),
+        [...document.querySelectorAll(`${selector} button`)]
+          .map(
+            (button) =>
+              `[${(button.textContent ?? "").replace(/\s+/g, " ").trim()}` +
+              `${button.getClientRects().length ? "" : " hidden"}` +
+              `${button.disabled ? " disabled" : ""}]`,
+          )
+          .join(" ")
+          .slice(0, 900),
       panel,
     );
     sayExport(
