@@ -9,8 +9,9 @@
 // the row's `window_statements`: the spec enters each through the form's own
 // offers (the statements offer for a statement of nothing pending and the
 // work-income statement, the prior-values offer for a figure of an earlier
-// return), applies them through the review, and that apply is the window
-// calculating. Which statements a row carries is the world's data; the spec
+// return, which is also where a pending carry's amount is stated, and the
+// box's own value cell for a work input), applies them through the review,
+// and that apply is the window calculating. Which statements a row carries is the world's data; the spec
 // names none and chooses no value.
 //
 // Environment (all required unless noted):
@@ -477,6 +478,37 @@ function pageShowSection(id) {
   if (!section) return false;
   section.scrollIntoView({ block: "start" });
   return true;
+}
+
+/** What the form shows for one keyed cell: its value button and the state it carries; null if not drawn. */
+function pageCell(selector, mark) {
+  const norm = (text) => (text ?? "").replace(/\s+/g, " ").trim();
+  for (const old of document.querySelectorAll(`[${mark}]`))
+    old.removeAttribute(mark);
+  const node = document.querySelector(selector);
+  if (!node) return null;
+  const cells = [...node.children].filter(
+    (child) => child.getAttribute("role") === "gridcell",
+  );
+  const button = (cells[2] ?? node).querySelector("button");
+  const editor = node.querySelector('[data-slot="modelo-value-editor"]');
+  const alert = node.querySelector('[role="alert"]');
+  if (button && !button.disabled && !editor) {
+    button.setAttribute(mark, "1");
+    button.scrollIntoView({ block: "center" });
+  }
+  return {
+    button: button !== null,
+    disabled: button ? button.disabled : null,
+    editor: editor !== null,
+    alert: alert ? norm(alert.textContent) : null,
+    state: {
+      kind: node.getAttribute("data-value-kind"),
+      value: node.getAttribute("data-value"),
+      selected: node.getAttribute("aria-selected"),
+    },
+    text: norm(node.textContent).slice(0, 200),
+  };
 }
 
 function pageScroll(to) {
@@ -1067,6 +1099,115 @@ async function judge(before, run) {
   return { stage: "incomplete", why };
 }
 
+/** The figures a statement enters through the prior-values offer: a prior figure, or each amount of a carry. */
+function figuresOf(entry) {
+  if (entry.kind === "prior_value")
+    return [{ target: entry.target, value: entry.value }];
+  if (entry.kind === "prior_carries")
+    return (entry.figures ?? []).map((figure) => ({
+      target: figure.binding,
+      value: figure.value,
+    }));
+  return [];
+}
+
+/** Type one figure into its prior-values entry and stage it; the problem text, or null when it was staged. */
+async function enterPriorFigure(figure, language, stagedWord) {
+  const base = PRIOR_ENTRY(figure.target);
+  const shown = await waitFor(() => exec(pageOffer, base), {
+    timeout: 20_000,
+    what: `the prior-values entry ${figure.target}`,
+    soft: true,
+  });
+  if (!shown || !shown.input)
+    return `the prior-values offer takes no figure for ${figure.target}${shown ? `: ${shown.text}` : ""}`;
+  const field = await window_.browser.$(`${base} input:not([type="checkbox"])`);
+  await field.setValue(amountText(figure.value, language));
+  await clickSelector(`${base} button[type="submit"]`);
+  const answer = await waitFor(
+    async () => {
+      const now = await exec(pageOffer, base);
+      return now && (now.text.includes(stagedWord) || now.status.length > 0)
+        ? now
+        : null;
+    },
+    {
+      timeout: 30_000,
+      what: `the figure for ${figure.target} to be staged`,
+      soft: true,
+    },
+  );
+  if (answer?.text.includes(stagedWord) && answer.status.length === 0)
+    return null;
+  return `${figure.target}: ${answer?.status.join(" | ") || "the figure was not staged"}`;
+}
+
+/**
+ * Find the value cell of one box on any page of the form. Sections draw
+ * only near the viewport, so each is brought into view in turn. Returns the
+ * cell's selector and state, or the page names that were searched.
+ */
+async function findCell(box) {
+  const selector = `[data-key=${JSON.stringify(`c:${box}`)}]`;
+  const tabs = tablist("desktop.modelo.form.pages");
+  const pages = await exec(pageTexts, tabs, '[role="tab"]');
+  const names = pages.length > 0 ? pages : ["(single)"];
+  for (let index = 0; index < names.length; index += 1) {
+    if (pages.length > 0) {
+      await exec(pageChooseTab, tabs, index);
+      await sleep(700);
+    }
+    for (const id of [null, ...((await exec(pageSections)) ?? [])]) {
+      if (id) {
+        await exec(pageShowSection, id);
+        await sleep(150);
+      }
+      const cell = await exec(pageCell, selector, MARK);
+      if (cell) return { selector, cell, page: names[index] };
+    }
+  }
+  return { searched: names };
+}
+
+/**
+ * Type a work input into its box's own value cell, as the filer does: open
+ * the cell's editor, type the value in the document's decimal mark and keep
+ * it with Enter, which stages it for the review. Returns the problem text,
+ * or null when the entry was staged.
+ */
+async function enterWorkInput(entry, language) {
+  const found = await findCell(entry.target);
+  if (found.searched)
+    return `work_input_cell_absent: c:${entry.target} is drawn on none of the pages seen (${found.searched.join(", ")})`;
+  const { selector, cell, page } = found;
+  const facts = `${JSON.stringify(cell.state)}; ${cell.text}`;
+  if (!cell.button || cell.disabled)
+    return `work_input_cell_not_editable: c:${entry.target} on ${page} has ${cell.button ? "a disabled" : "no"} value button; ${facts}`;
+  await clickSelector(`[${MARK}]`);
+  const field = await window_.browser.$(
+    `${selector} [data-slot="modelo-value-editor"] input`,
+  );
+  await field.waitForExist({ timeout: 10_000 }).catch(() => {});
+  if (!(await field.isExisting()))
+    return `work_input_cell_not_editable: c:${entry.target} on ${page} opened no editor; ${facts}`;
+  await field.setValue(amountText(entry.value, language));
+  await window_.browser.keys("Enter");
+  const now = await waitFor(
+    async () => {
+      const read = await exec(pageCell, selector, MARK);
+      return read && (!read.editor || read.alert) ? read : null;
+    },
+    {
+      timeout: 30_000,
+      what: `the value for c:${entry.target} to be read`,
+      soft: true,
+    },
+  );
+  if (now && !now.editor && !now.alert) return null;
+  await window_.browser.keys("Escape");
+  return `work_input_entry_refused: c:${entry.target}: ${now?.alert ?? "the entry was not read within the wait"}`;
+}
+
 /**
  * Enter statements the world left to the window, through the form's own
  * doors: a prior-values entry is typed and stated, a statement is ticked and
@@ -1089,44 +1230,6 @@ async function enterStatements(list, row) {
   await exec(pageExpandOffers);
   const language = await exec(() => document.documentElement.lang);
   const stagedWord = label("workspace.modelo.attention.staged");
-  for (const entry of list.filter((item) => item.kind === "prior_value")) {
-    const base = PRIOR_ENTRY(entry.target);
-    const shown = await waitFor(() => exec(pageOffer, base), {
-      timeout: 20_000,
-      what: `the prior-values entry ${entry.target}`,
-      soft: true,
-    });
-    if (!shown || !shown.input) {
-      problems.push(
-        `the prior-values offer takes no figure for ${entry.target}${shown ? `: ${shown.text}` : ""}`,
-      );
-      continue;
-    }
-    const field = await window_.browser.$(
-      `${base} input:not([type="checkbox"])`,
-    );
-    await field.setValue(amountText(entry.value, language));
-    await clickSelector(`${base} button[type="submit"]`);
-    const answer = await waitFor(
-      async () => {
-        const now = await exec(pageOffer, base);
-        return now && (now.text.includes(stagedWord) || now.status.length > 0)
-          ? now
-          : null;
-      },
-      {
-        timeout: 30_000,
-        what: `the figure for ${entry.target} to be staged`,
-        soft: true,
-      },
-    );
-    if (answer?.text.includes(stagedWord) && answer.status.length === 0)
-      entered.push(`${entry.target} = ${entry.value}`);
-    else
-      problems.push(
-        `${entry.target}: ${answer?.status.join(" | ") || "the figure was not staged"}`,
-      );
-  }
   const families = [
     ...new Set(
       list
@@ -1174,6 +1277,19 @@ async function enterStatements(list, row) {
         );
       else entered.push(...ticked);
     }
+  }
+  // The figures follow the ticks: a family's statement of nothing pending
+  // stages every carry it covers, and a figure typed after it replaces that
+  // carry's statement, as the table states an amount and leaves the rest.
+  for (const figure of list.flatMap(figuresOf)) {
+    const problem = await enterPriorFigure(figure, language, stagedWord);
+    if (problem) problems.push(problem);
+    else entered.push(`${figure.target} = ${figure.value}`);
+  }
+  for (const entry of list.filter((item) => item.kind === "work_input")) {
+    const problem = await enterWorkInput(entry, language);
+    if (problem) problems.push(problem);
+    else entered.push(`c:${entry.target} = ${entry.value}`);
   }
   const before = await readState();
   if (before.action !== "apply" || entered.length === 0)

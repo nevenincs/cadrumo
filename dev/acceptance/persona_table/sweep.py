@@ -347,7 +347,7 @@ def record_statements(
     """
     world = materialised.world
     work_unit_id = prepared.work_unit_id
-    if world.work_inputs:
+    if world.work_inputs and StatementKind.WORK_INPUT not in left:
         enter_return_work_inputs(world, work_unit_id)
     if left:
         _state_offered_not_left(world, plan, work_unit_id, left)

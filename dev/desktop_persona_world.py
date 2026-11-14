@@ -8,13 +8,14 @@ and prior figures the table states first and a Modelo 303's evidence) and record
 calculate makes (the persona's work inputs, prior values, work-income statements and the pending rental carries)
 through the table's own functions. Planning, scope, stated values, preparation and statements are the table's own.
 
-The window enters the statements it has a door for. A pending-carry statement of nothing pending, a prior figure
-and the work-income statement each have one on the declaration's form (the statements offer and the prior-values
-offer), so the world does not record them: the row's ``window_statements`` carries each, taken from the table's own
-statement readers, for the window to enter and calculate with. A work input, a pending carry stated as an amount
-and a let property's carry have no such door; the world records those and every statement the table states before
-the last of them, keeps the calculation that stores, and the row's ``no_window_door`` names each kind with the
-operation that records it.
+The window enters the statements it has a door for. A pending-carry statement (of nothing pending or of amounts),
+a prior figure, the work-income statement and a work input each have one on the declaration's form (the statements
+offer, the prior-values offer and the box's own value cell), so the world does not record them: the row's
+``window_statements`` carries each, taken from the table's own statement readers, for the window to enter and
+calculate with. A pending carry stated as amounts also names, in ``figures``, the bindings the prior-values offer
+takes them on. A let property's carry has no such door; the world records it and every statement the table states
+before it, keeps the calculation that stores, and the row's ``no_window_door`` names each kind with the operation
+that records it.
 
     python -m dev.desktop_persona_world --persona <id> --horizon <year> --storage-root <absolute directory>
 
@@ -48,8 +49,10 @@ from typing import TYPE_CHECKING, Any, Final
 from cadrumo.adapters.outbound.fx.tests.recorded_ecb_rates import recorded_ecb_rate_provider
 from cadrumo.application.exchange_rate_provider import bind_exchange_rate_provider_factory
 from cadrumo.application.modelo.operation_shared import MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID
+from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.binding_absence_attestation import AbsenceAttestationFamily
+from cadrumo.domain.calculations.registry.binding_targets import casillas_by_binding
 from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
 from cadrumo.entrypoints.tests.persona_materialisation import (
     PersonaMaterialisationError,
@@ -81,6 +84,7 @@ CALCULATING_EDIT_STAGES: Final = frozenset(
 STAGE_OF_KIND: Final = {
     StatementKind.PRIOR_CARRIES: "prior_carries",
     StatementKind.PRIOR_VALUE: "attested_prior_values",
+    StatementKind.WORK_INPUT: "work_inputs",
     StatementKind.WORK_INCOME_NONE: "work_income_none",
 }
 """The stage name of each statement kind the window can enter, as ``stages`` names the recorded ones."""
@@ -173,15 +177,15 @@ def _has_window_door(statement: Statement) -> bool:
     """Whether the declaration's form lets the filer enter ``statement``.
 
     The statements offer states that no amount from earlier ejercicios is pending and the prior-values offer states
-    a figure for an earlier return; the work-income statement is one of the statements offer's families. A carry
-    stated as an amount, a casilla value and a let property's carry (a family stated per row, which the offer does
-    not serve) have no such door.
+    a figure for an earlier return, which is also where a pending carry's amount is stated; the work-income
+    statement is one of the statements offer's families, and a casilla's value cell takes a work input. A let
+    property's carry (a family stated per row, which the offer does not serve) has no such door.
     """
     if statement.refusal is not None:
         return False
     if statement.kind is StatementKind.PRIOR_CARRIES:
-        return not statement.amounts and statement.gap is None
-    return statement.kind in {StatementKind.PRIOR_VALUE, StatementKind.WORK_INCOME_NONE}
+        return statement.gap is None
+    return statement.kind in {StatementKind.PRIOR_VALUE, StatementKind.WORK_INCOME_NONE, StatementKind.WORK_INPUT}
 
 
 def window_split(materialised: MaterialisedPersona, plan: PlannedRow) -> WindowSplit:
@@ -217,10 +221,38 @@ def _entered_in_window(made: Sequence[Statement]) -> list[Statement]:
     return entered
 
 
-def _window_statement(statement: Statement) -> dict[str, Any]:
+def _carry_figures(materialised: MaterialisedPersona, plan: PlannedRow, statement: Statement) -> list[dict[str, str]]:
+    """The binding each stated carry amount is entered on, as the prior-values offer keys its entries.
+
+    Each binding of a family the statement names takes the amount stated for the boxes the year's registry
+    revision feeds it from, as the table's own statement reads them.
+
+    Raises:
+        PersonaMaterialisationError: When one binding's boxes are stated with different amounts.
+    """
+    revision = materialised.world.operation.snapshot(
+        plan.modelo, filing_year=plan.year, period=plan.period, grade=RegistryAuthorityGrade.CALCULATION
+    ).revision
+    fed = casillas_by_binding(revision)
+    stated = dict(statement.amounts)
+    figures: list[dict[str, str]] = []
+    for binding in revision.bindings:
+        if binding.absence_attestation is None or binding.absence_attestation.value not in statement.families:
+            continue
+        found = {stated[str(box)] for box in fed.get(binding.id, ()) if str(box) in stated}
+        if len(found) > 1:
+            raise PersonaMaterialisationError(f"{binding.id}: its boxes are stated with different amounts")
+        if found:
+            figures.append({"binding": str(binding.id), "value": found.pop()})
+    return figures
+
+
+def _window_statement(statement: Statement, materialised: MaterialisedPersona, plan: PlannedRow) -> dict[str, Any]:
     """The report record of a statement the window enters: the table's own, and whether it follows a calculation."""
     record: dict[str, Any] = dict(statement_record(statement))
     record["after_calculation"] = statement.phase in NEEDS_CALCULATION
+    if statement.kind is StatementKind.PRIOR_CARRIES and statement.amounts:
+        record["figures"] = _carry_figures(materialised, plan, statement)
     if statement.kind is StatementKind.WORK_INCOME_NONE:
         record["families"] = [AbsenceAttestationFamily.RENTA_TRABAJO_INCOME_NOT_STATED.value]
     return record
@@ -329,7 +361,7 @@ def _prepared_rows(materialised: MaterialisedPersona, plans: Sequence[PlannedRow
                 stages=stages,
                 calculate_outcome=calculate_outcome,
                 calculate_inherited_reason=inherited_reason,
-                window_statements=[_window_statement(statement) for statement in split.entered],
+                window_statements=[_window_statement(statement, materialised, plan) for statement in split.entered],
                 no_window_door=_without_door(split),
             )
         )
