@@ -2007,6 +2007,11 @@ cli:
         filing_evidence_option_other_modelo: 'El model %{modelo} no admet cap d''aquestes
           opcions: %{options}. Són exclusives del model %{applies_to}. Treu-les i
           torna a calcular; no s''ha calculat res.'
+        form_help: 'Mostra els registres repetits desats del formulari d''una declaració,
+          com ara una fila per immoble arrendat, tal com els mostra l''àrea de treball:
+          una línia per valor amb el bloc, el número de fila del registre, la casella
+          i el valor. Un bloc els registres del qual no es poden llegir s''indica
+          com a desconegut, mai com a buit.'
         formula_operation_calculation: càlcul
         formula_operation_clamp: límit
         formula_operation_conditional: condicional
