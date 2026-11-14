@@ -135,15 +135,26 @@ def _entry(
     }
 
 
-def _m303_evidence(prepared: PreparedReturn) -> dict[str, str] | None:
-    """The Modelo 390 attestation the calculate request carries, or none outside the year's last period."""
+def _m303_evidence(prepared: PreparedReturn) -> dict[str, Any] | None:
+    """The Modelo 303 evidence the calculate request carries, or none for any other return.
+
+    The window's evidence dialog asks for the same answers: whether a joint return was elected and, in the
+    year's last period, whether the Modelo 390 attestation (the one the world records) stands.
+    """
     evidence = prepared.request.ordinary_m303_filing_evidence
-    if evidence is None or evidence.m303_exonerado_390_attachment_id is None:
+    if evidence is None:
         return None
-    return {
-        "attachment_id": evidence.m303_exonerado_390_attachment_id,
-        "sha256": str(evidence.m303_exonerado_390_sha256),
-    }
+    answers: dict[str, Any] = {"joint_return_elected": evidence.joint_return_elected}
+    if evidence.m303_exonerado_390_attachment_id is not None:
+        answers["attachment_id"] = evidence.m303_exonerado_390_attachment_id
+        answers["sha256"] = str(evidence.m303_exonerado_390_sha256)
+    return answers
+
+
+def _m303_attested(prepared: PreparedReturn) -> bool:
+    """Whether the world recorded the Modelo 390 attestation the calculate request carries."""
+    evidence = prepared.request.ordinary_m303_filing_evidence
+    return evidence is not None and evidence.m303_exonerado_390_attachment_id is not None
 
 
 @dataclass(frozen=True, slots=True)
@@ -235,7 +246,7 @@ def _stage_names(
         stages.append("prior_carries")
     if world.attested_prior_values:
         stages.append("attested_prior_values")
-    if _m303_evidence(prepared) is not None:
+    if _m303_attested(prepared):
         stages.append("m303_attestation")
     if world.work_inputs:
         stages.append("work_inputs")

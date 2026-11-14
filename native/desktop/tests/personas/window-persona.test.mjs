@@ -133,6 +133,20 @@ function pageMarkByText(scope, item, texts, mode, mark) {
   return null;
 }
 
+/** Which of the evidence dialog's answers are taken: the joint-return choice and the 390 confirmation. */
+function pageEvidenceChosen(scope, answer, confirm) {
+  const norm = (text) => (text ?? "").replace(/\s+/g, " ").trim();
+  const labels = [...document.querySelectorAll(`${scope} label`)];
+  const input = (text) =>
+    labels
+      .find((element) => norm(element.textContent) === text)
+      ?.querySelector("input");
+  return {
+    joint: input(answer)?.checked === true,
+    attested: input(confirm)?.checked === true,
+  };
+}
+
 /** Mark the nth shown `item` under `scope`. */
 function pageMarkNth(scope, item, index, mark) {
   for (const old of document.querySelectorAll(`[${mark}]`))
@@ -830,15 +844,56 @@ async function answerDialog(title, row, notes) {
   }
   if (title === label("workspace.modelo.calculate.evidence.title")) {
     // The dialog asks whether a joint return was elected and, for the year's
-    // last period, to confirm a Modelo 390 attestation the window authors
-    // itself. The world carries the table request's attestation (attachment
-    // id and digest, `m303_evidence`) but not the joint-return answer, so no
-    // tax fact is chosen here: the dialog is cancelled and the stage is
-    // incomplete.
+    // last period, to confirm the Modelo 390 attestation. Both answers are the
+    // table's own (`m303_evidence` from the world); without them no tax fact
+    // is chosen and the dialog is cancelled.
+    const evidence = row.m303_evidence;
+    if (typeof evidence?.joint_return_elected !== "boolean") {
+      await clickText(dialog, "button", [
+        label("workspace.modelo.calculate.evidence.cancel"),
+      ]);
+      return "m303 evidence dialog: the world states no joint-return answer";
+    }
+    const answer = label(
+      evidence.joint_return_elected
+        ? "workspace.modelo.calculate.evidence.yes"
+        : "workspace.modelo.calculate.evidence.no",
+    );
+    await clickText(dialog, "label", [answer]);
+    const confirm = label(
+      "workspace.modelo.calculate.evidence.modelo_390_confirm",
+    );
+    const asks390 = await exec(
+      pageMarkByText,
+      dialog,
+      "label",
+      [confirm],
+      "equals",
+      MARK,
+    );
+    if (asks390 !== null) {
+      if (!evidence.attachment_id) {
+        await clickText(dialog, "button", [
+          label("workspace.modelo.calculate.evidence.cancel"),
+        ]);
+        return "m303 evidence dialog asks the Modelo 390 attestation the world does not record";
+      }
+      await clickSelector(`[${MARK}]`);
+    }
+    const chosen = await exec(pageEvidenceChosen, dialog, answer, confirm);
+    if (!chosen.joint || (asks390 !== null && !chosen.attested)) {
+      await clickText(dialog, "button", [
+        label("workspace.modelo.calculate.evidence.cancel"),
+      ]);
+      return `m303 evidence dialog: answer not taken (${JSON.stringify(chosen)})`;
+    }
     await clickText(dialog, "button", [
-      label("workspace.modelo.calculate.evidence.cancel"),
+      label("workspace.modelo.calculate.evidence.calculate"),
     ]);
-    return "m303 evidence dialog";
+    notes.push(
+      `answered the m303 evidence dialog (joint return ${evidence.joint_return_elected}${asks390 !== null ? ", 390 attested" : ""})`,
+    );
+    return null;
   }
   const reviewTitle = label("workspace.modelo.review.title")
     .split("{")[0]
@@ -1771,7 +1826,9 @@ function profileCredential() {
     readFileSync(CREDENTIAL_SOURCE, "utf8"),
   );
   if (!match)
-    throw new Error("no PERSONA_PROFILE_CREDENTIAL in persona_materialisation.py");
+    throw new Error(
+      "no PERSONA_PROFILE_CREDENTIAL in persona_materialisation.py",
+    );
   return match[1];
 }
 

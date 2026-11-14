@@ -124,6 +124,11 @@ def test_world_holds_the_rows_the_table_plans_and_a_profile_that_signs_in(
     assert {item["kind"] for row in report["rows"] for item in row["no_window_door"]} == recorded_kinds
     for row in report["rows"]:
         assert "m303_evidence" in row
+        if row["prepared"] and row["modelo"] == "303":
+            assert isinstance(row["m303_evidence"]["joint_return_elected"], bool), row
+            assert ("attachment_id" in row["m303_evidence"]) == ("m303_attestation" in row["stages"]), row
+        elif row["modelo"] != "303":
+            assert row["m303_evidence"] is None, row
         if row["prepared"]:
             assert row["work_unit_id"], row
             assert row["pre_calculate_outcome"] is None
