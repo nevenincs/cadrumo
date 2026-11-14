@@ -1882,6 +1882,10 @@ cli:
         filing_evidence_option_other_modelo: 'Modelo %{modelo} takes none of these
           options: %{options}. They belong to Modelo %{applies_to} only. Remove them
           and run the calculation again; nothing was calculated.'
+        form_help: 'Print the saved repeating records of a declaration''s form, such
+          as one row per let property, as the workbench shows them: one line per value
+          with the block, the record''s row number, the box and the value. A block
+          whose records cannot be read is reported as unknown, never as empty.'
         formula_operation_calculation: calculation
         formula_operation_clamp: limit
         formula_operation_conditional: conditional

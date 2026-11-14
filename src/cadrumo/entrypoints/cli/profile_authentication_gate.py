@@ -280,6 +280,7 @@ PROFILE_CONNECTION_KEYS = frozenset(
         "app_modelo_work_list",
         "app_modelo_work_create",
         "app_modelo_work_review",
+        "app_modelo_work_form",
         "app_modelo_work_run",
         "app_modelo_work_run_details",
         "app_modelo_work_runs",

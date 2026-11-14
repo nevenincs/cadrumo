@@ -829,3 +829,78 @@ def test_selection_by_keys_wants_only_those_keys_and_still_runs_the_chain_before
     ]
     assert select_rows(report, keys=frozenset()).wanted == frozenset()
     assert select_rows(report, keys=None).wanted == {plan.key for plan in report.rows}
+
+
+def _row(row: int, casilla: str, value: str) -> dict[str, object]:
+    return {"record": "renta_inmueble", "block": "inmuebles", "row": row, "casilla_id": casilla, "value": value}
+
+
+def _saved_rows(command: Sequence[str]) -> Mapping[str, object]:
+    del command
+    rows = [_row(1, "0063", "12000.00"), _row(1, "01", "9"), _row(1, "0065", "3500"), _row(2, "0065", "10")]
+    return _ok(values=rows)
+
+
+def test_without_the_form_leaf_the_saved_rows_are_not_read_and_the_figures_are_the_calculations(tmp_path: Path) -> None:
+    runner = _Scripted(tmp_path / "exports", form=_saved_rows)
+    report = _report(_plan("130", "1T"))
+    case = _case(tmp_path, report, runner)
+
+    run_case(case, select_rows(report))
+
+    assert case.form_door is False
+    sent = runner.keys()
+    assert "work form" not in sent
+    (line,) = _lines(tmp_path)
+    assert line["figures"] == {"01": "10.5"}
+    assert line["reason"] == "filed locally"
+
+
+def test_with_the_form_leaf_the_saved_rows_are_read_once_after_the_final_calculation_and_merged(tmp_path: Path) -> None:
+    runner = _Scripted(tmp_path / "exports", form=_saved_rows)
+    report = _report(_plan("130", "1T"))
+
+    run_case(replace(_case(tmp_path, report, runner), form_door=True), select_rows(report))
+
+    assert runner.keys() == ["work create", "work calculate", "work form", "work verify", "export", "work file"]
+    assert runner.sent[2] == ("app", "modelo", "work", "form", "wu-130-1T")
+    (line,) = _lines(tmp_path)
+    assert line["figures"] == {"01": "10.5", "0063": "12000"}
+    assert line["calculate"] == "pass"
+    assert line["reason"] == "row figures: casilla 01 scalar 10.5 differs from its row figure 9 | filed locally"
+
+
+def test_the_form_is_read_after_the_recalculation_a_statement_makes(tmp_path: Path) -> None:
+    statements = (_stated(StatementKind.RENTAL_CARRY, Phase.AFTER_RECALCULATION, "irpf.opening"),)
+    runner = _Scripted(tmp_path / "exports", form=_saved_rows, **_STATEMENT_COMMANDS)
+    report = _report(_plan("100", "0A", statements=statements))
+    case = replace(_case(tmp_path, report, runner, calculate=CalculateMode.AS_RUN), form_door=True)
+
+    run_case(case, select_rows(report))
+
+    keys = runner.keys()
+    assert keys.count("work form") == 1
+    assert keys.index("work form") > len(keys) - 1 - keys[::-1].index("work calculate")
+    assert keys.index("work form") < keys.index("work verify")
+
+
+def test_a_form_read_that_prints_nothing_readable_adds_no_figure_and_a_refused_read_is_named(tmp_path: Path) -> None:
+    def refused(_command: Sequence[str]) -> Mapping[str, object]:
+        error = {"code": "MODELO_WORK_NOT_FOUND", "category": "VALIDATION", "message": "no such work"}
+        return {"status": "error", "error": error}
+
+    report = _report(_plan("130", "1T"), _plan("130", "2T"))
+    unreadable = _Scripted(tmp_path / "exports", form=lambda _command: _ok(values="not rows"))
+    case = replace(_case(tmp_path, report, unreadable), form_door=True)
+    run_case(case, select_rows(report, keys=frozenset({("130", _YEAR, "1T")})))
+    refusing = _Scripted(tmp_path / "exports", form=refused)
+    run_case(
+        replace(_case(tmp_path, report, refusing), form_door=True),
+        select_rows(report, keys=frozenset({("130", _YEAR, "2T")})),
+    )
+
+    first, second = _lines(tmp_path)
+    assert first["figures"] == second["figures"] == {"01": "10.5"}
+    assert first["reason"] == "filed locally"
+    assert str(second["reason"]).startswith("work form: MODELO_WORK_NOT_FOUND: no such work")
+    assert (first["calculate"], second["calculate"]) == ("pass", "pass")
