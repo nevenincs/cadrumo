@@ -55,6 +55,9 @@ number = "t22007000.849-854"
 segmento = "T22007000"
 section = ["liquidacion", "base_imponible_y_cuota_integra_del_grupo"]
 data_type = "ratio"
+# The design prints this slot as "Tipo de gravamen | 2 enteros, 4 decimales"; two integer digits hold a
+# tipo de gravamen such as 25.0000, a percentage, so the value is stored on the percent scale.
+constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-220-2025"] }
 legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 
 # @855+17 N. Tramo 1 - Base imponible (resultados extracooperativos) | Nota 3
@@ -78,6 +81,9 @@ number = "t22007000.872-877"
 segmento = "T22007000"
 section = ["liquidacion", "base_imponible_y_cuota_integra_del_grupo"]
 data_type = "ratio"
+# The design prints this slot as "Tipo de gravamen | 2 enteros, 4 decimales"; two integer digits hold a
+# tipo de gravamen such as 25.0000, a percentage, so the value is stored on the percent scale.
+constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-220-2025"] }
 legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 
 # @878+17 N. Tramo 2 - Base imponible 2 (resultados extracooperativos) | Nota 3
@@ -101,6 +107,9 @@ number = "t22007000.895-900"
 segmento = "T22007000"
 section = ["liquidacion", "base_imponible_y_cuota_integra_del_grupo"]
 data_type = "ratio"
+# The design prints this slot as "Tipo de gravamen | 2 enteros, 4 decimales"; two integer digits hold a
+# tipo de gravamen such as 25.0000, a percentage, so the value is stored on the percent scale.
+constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-220-2025"] }
 legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # Modelo 220 RECORD T22009000 -- liquidacion (II): from the cuota integra through the
 # bonificaciones, the deducciones por doble imposicion and the otras deducciones to the

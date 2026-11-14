@@ -473,6 +473,8 @@ data_type = "ratio"
 semantic_role = "irpf_inmueble_porcentaje_propiedad"
 continuidad_id = "irpf-inmueble-porcentaje-propiedad"
 legal_refs = ["ley-35-2006:art-22"]
+# The dictionary prints [0063] as "Propiedad (%)" and the XSD types it tipo_Porcentaje, 0.00 to 100.00.
+constraints = { sign = "non_negative", max_value = "100", source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-xsd"] }
 [[revisions."2020".casillas]]
 id = "0064"
 number = "0064"
@@ -481,6 +483,8 @@ data_type = "ratio"
 semantic_role = "irpf_inmueble_porcentaje_usufructo"
 continuidad_id = "irpf-inmueble-porcentaje-usufructo"
 legal_refs = ["ley-35-2006:art-22"]
+# The dictionary prints [0064] as "Usufructo (%)" and the XSD types it tipo_Porcentaje, 0.00 to 100.00.
+constraints = { sign = "non_negative", max_value = "100", source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-xsd"] }
 [[revisions."2020".casillas]]
 id = "0065"
 number = "0065"
@@ -665,6 +669,8 @@ data_type = "ratio"
 semantic_role = "irpf_inmueble_pct_a_disposicion"
 continuidad_id = "irpf-inmueble-pct-a-disposicion"
 legal_refs = ["ley-35-2006:art-22"]
+# The dictionary prints [0087] as "Indique el porcentaje (%) del inmueble a disposición", a percentage.
+constraints = { sign = "non_negative", max_value = "100", source_refs = ["aeat-dr-100-2020-dictionary"] }
 [[revisions."2020".casillas]]
 id = "0088"
 number = "0088"
@@ -3779,6 +3785,8 @@ semantic_role = "irpf_tipo_medio_gravamen_ahorro_estatal"
 input_kind = "computed"
 formula = "renta-tipo-medio-gravamen-estatal-base-liquidable-ahorro"
 legal_refs = ["ley-35-2006:art-63-2015"]
+# The dictionary states the average rate as a percentage, [0542] = [0540] x 100 / [0510].
+constraints = { sign = "non_negative", max_value = "100", source_refs = ["aeat-dr-100-2020-dictionary"] }
 [[revisions."2020".casillas]]
 id = "0543"
 # Grounding: aeat-dr-100-2020-dictionary:758, TMAAH; tipo medio autonómico de gravamen de la base liquidable del ahorro.
@@ -3790,6 +3798,8 @@ semantic_role = "irpf_tipo_medio_gravamen_ahorro_autonomico"
 input_kind = "computed"
 formula = "renta-tipo-medio-gravamen-autonomico-base-liquidable-ahorro"
 legal_refs = ["ley-35-2006:art-63-2015"]
+# The dictionary states the average rate as a percentage, [0543] = [0541] x 100 / [0510].
+constraints = { sign = "non_negative", max_value = "100", source_refs = ["aeat-dr-100-2020-dictionary"] }
 [[revisions."2020".casillas]]
 id = "0545"
 number = "0545"
@@ -4886,6 +4896,9 @@ data_type = "ratio"
 semantic_role = "irpf_anexo_a_prestamo_porcentaje_vivienda"
 continuidad_id = "irpf-anexo-a-prestamo-porcentaje-vivienda"
 legal_refs = ["ley-35-2006:dt-18"]
+# The dictionary prints [0710] as "Porcentaje del importe total del préstamo hipotecario" and the XSD
+# types it tipo_Porcentaje, 0.00 to 100.00.
+constraints = { sign = "non_negative", max_value = "100", source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-xsd"] }
 [[revisions."2020".casillas]]
 id = "0711"
 continuidad_id = "irpf-deduccion-nueva-empresa-entidad-nif-nifrc1"

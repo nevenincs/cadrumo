@@ -2748,6 +2748,8 @@ number = "00626"
 segmento = "T22016000"
 section = ["liquidacion", "reparto_foral"]
 data_type = "ratio"
+# The design prints [00626] as "Porcentajes de tributacion ... | %, con 2 decimales", a percentage, so the value is stored on the percent scale.
+constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-220-2024"] }
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
 
 # @1046+5. Cálculo de porcentajes de tributación. Volúmenes de operaciones realizado en cada territorio. Porcentajes de tributacion. Guipuzcoa
@@ -2758,6 +2760,8 @@ number = "00627"
 segmento = "T22016000"
 section = ["liquidacion", "reparto_foral"]
 data_type = "ratio"
+# The design prints [00627] as "Porcentajes de tributacion ... | %, con 2 decimales", a percentage, so the value is stored on the percent scale.
+constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-220-2024"] }
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
 
 # @1051+5. Cálculo de porcentajes de tributación. Volúmenes de operaciones realizado en cada territorio. Porcentajes de tributacion. Vizcaya
@@ -2768,6 +2772,8 @@ number = "00628"
 segmento = "T22016000"
 section = ["liquidacion", "reparto_foral"]
 data_type = "ratio"
+# The design prints [00628] as "Porcentajes de tributacion ... | %, con 2 decimales", a percentage, so the value is stored on the percent scale.
+constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-220-2024"] }
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
 
 # @1056+5. Cálculo de porcentajes de tributación. Volúmenes de operaciones realizado en cada territorio. Porcentajes de tributacion. Navarra
@@ -2778,6 +2784,8 @@ number = "00629"
 segmento = "T22016000"
 section = ["liquidacion", "reparto_foral"]
 data_type = "ratio"
+# The design prints [00629] as "Porcentajes de tributacion ... | %, con 2 decimales", a percentage, so the value is stored on the percent scale.
+constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-220-2024"] }
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
 
 # @1061+5. Cálculo de porcentajes de tributación. Volúmenes de operaciones realizado en cada territorio. Porcentajes de tributacion. Territorio común
@@ -2788,6 +2796,8 @@ number = "00625"
 segmento = "T22016000"
 section = ["liquidacion", "reparto_foral"]
 data_type = "ratio"
+# The design prints [00625] as "Porcentajes de tributacion ... | %, con 2 decimales", a percentage, so the value is stored on the percent scale.
+constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-220-2024"] }
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
 
 # @2715+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Líquido a ingresar incluido el 1er fraccionamiento del art. 19.1 LIS. Bizkaia.

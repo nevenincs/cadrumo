@@ -4201,6 +4201,8 @@ number = "00558"
 segmento = "T22007000"
 section = ["liquidacion", "base_imponible_y_cuota_integra_del_grupo"]
 data_type = "ratio"
+# The design prints [00558] as "Tipo de gravamen (%)", a percentage, so the value is stored on the percent scale.
+constraints = { min_value = "0", max_value = "100" }
 
 # @514+17 N. Suma de cuotas íntegras de las cooperativas del grupo [00560]
 [[revisions."2022".casillas]]
@@ -4298,6 +4300,8 @@ number = "t22007000.3304-3308"
 segmento = "T22007000"
 section = ["liquidacion", "base_imponible_y_cuota_integra_del_grupo"]
 data_type = "ratio"
+# The design prints this slot as "Tramo de tipo de gravamen 1 (tres enteros, dos decimales)", a percentage, so the value is stored on the percent scale.
+constraints = { min_value = "0", max_value = "100" }
 
 # @3309+17 N. Tramo base imponible 2
 [[revisions."2022".casillas]]
@@ -4315,6 +4319,8 @@ number = "t22007000.3326-3330"
 segmento = "T22007000"
 section = ["liquidacion", "base_imponible_y_cuota_integra_del_grupo"]
 data_type = "ratio"
+# The design prints this slot as "Tramo de tipo de gravamen 2 (tres enteros, dos decimales)", a percentage, so the value is stored on the percent scale.
+constraints = { min_value = "0", max_value = "100" }
 
 # ---- record T22007D00
 
