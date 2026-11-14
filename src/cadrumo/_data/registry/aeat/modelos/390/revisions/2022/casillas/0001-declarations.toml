@@ -2068,6 +2068,8 @@ id = "iva.anual.territorio.comun.porcentaje"
 number = "87"
 section = ["iva", "anual", "tributacion_territorio"]
 data_type = "ratio"
+# The design prints [87] "Tributación razón de territorio" at 3 enteros 2 decimales, and [92] = [84] x [87] / 100, a percentage.
+constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-390-2022"] }
 semantic_role = "iva_territorio_comun_porcentaje"
 continuidad_id = "iva-territorio-comun-porcentaje"
 continuidad_origin = "predecessor_edition_silent"
@@ -2082,6 +2084,8 @@ id = "iva.anual.territorio.alava.porcentaje"
 number = "88"
 section = ["iva", "anual", "tributacion_territorio"]
 data_type = "ratio"
+# The design prints [88] "Tributación razón de territorio" at 3 enteros 2 decimales, and [92] = [84] x [87] / 100, a percentage.
+constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-390-2022"] }
 semantic_role = "iva_territorio_alava_porcentaje"
 continuidad_id = "iva-territorio-alava-porcentaje"
 continuidad_origin = "predecessor_edition_silent"
@@ -2096,6 +2100,8 @@ id = "iva.anual.territorio.guipuzcoa.porcentaje"
 number = "89"
 section = ["iva", "anual", "tributacion_territorio"]
 data_type = "ratio"
+# The design prints [89] "Tributación razón de territorio" at 3 enteros 2 decimales, and [92] = [84] x [87] / 100, a percentage.
+constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-390-2022"] }
 semantic_role = "iva_territorio_guipuzcoa_porcentaje"
 continuidad_id = "iva-territorio-guipuzcoa-porcentaje"
 continuidad_origin = "predecessor_edition_silent"
@@ -2110,6 +2116,8 @@ id = "iva.anual.territorio.vizcaya.porcentaje"
 number = "90"
 section = ["iva", "anual", "tributacion_territorio"]
 data_type = "ratio"
+# The design prints [90] "Tributación razón de territorio" at 3 enteros 2 decimales, and [92] = [84] x [87] / 100, a percentage.
+constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-390-2022"] }
 semantic_role = "iva_territorio_vizcaya_porcentaje"
 continuidad_id = "iva-territorio-vizcaya-porcentaje"
 continuidad_origin = "predecessor_edition_silent"
@@ -2124,6 +2132,8 @@ id = "iva.anual.territorio.navarra.porcentaje"
 number = "91"
 section = ["iva", "anual", "tributacion_territorio"]
 data_type = "ratio"
+# The design prints [91] "Tributación razón de territorio" at 3 enteros 2 decimales, and [92] = [84] x [87] / 100, a percentage.
+constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-390-2022"] }
 semantic_role = "iva_territorio_navarra_porcentaje"
 continuidad_id = "iva-territorio-navarra-porcentaje"
 continuidad_origin = "predecessor_edition_silent"
