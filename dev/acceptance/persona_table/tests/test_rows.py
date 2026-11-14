@@ -33,6 +33,7 @@ from ..rows import (
     in_force,
     latest_rows,
     not_owed_stage,
+    not_run,
     planned_rows,
     read_rows,
     replay_horizons,
@@ -272,6 +273,17 @@ def test_a_baseline_line_holds_year_tokens_and_reads_back_on_the_horizon() -> No
     assert (restored.key, restored.verdict, restored.horizon) == (row.key, row.verdict, row.horizon)
     with pytest.raises(ValueError, match="needs the registry horizon"):
         TableRow.from_json(line)
+
+
+def test_a_row_built_with_figures_is_recorded_even_when_they_are_none_and_one_without_is_not() -> None:
+    plan = _plan()
+    empty = TableRow.from_plan(plan, Stage.PASSED, verify=Stage.NOT_OWED, figures=())
+    assert (empty.figures, empty.figures_recorded) == ((), True)
+    assert TableRow.from_plan(plan, Stage.PASSED, figures=(("01", "1"),)).figures_recorded
+    assert not TableRow.from_plan(plan, Stage.REFUSED).figures_recorded
+    assert not not_run(plan, "never reached").figures_recorded
+    line = TableRow.from_json(empty.to_json())
+    assert (line.figures, line.figures_recorded) == ((), True)
 
 
 def test_every_return_with_stated_casillas_has_an_oracle_even_beside_concept_only_values() -> None:
