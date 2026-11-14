@@ -1623,9 +1623,23 @@ async function exportFile(row, runDir, persona, out) {
       sayExport(out, outcome.words.join(" | "));
       return "refused";
     }
+    // Whether the save picker was ever asked: the queued selection is
+    // consumed only when the window opens it.
+    const pickerAsked = !existsSync(
+      join(runDir, "temporary", "native-picker-selection.json"),
+    );
+    const panelText = await exec(
+      (selector) =>
+        [...document.querySelectorAll(selector)]
+          .filter((root) => root.getClientRects().length > 0)
+          .map((root) => (root.innerText ?? "").replace(/\s+/g, " ").trim())
+          .join(" || ")
+          .slice(0, 700),
+      panel,
+    );
     sayExport(
       out,
-      "no file was written and the window said nothing within the wait",
+      `no file was written and the window said nothing within the wait (save picker ${pickerAsked ? "asked" : "never asked"}; panel: ${panelText})`,
     );
     return "error";
   } finally {
