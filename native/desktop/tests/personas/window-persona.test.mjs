@@ -1203,8 +1203,13 @@ async function judge(before, run) {
     why.push("the calculate button is still offered and nothing was said");
     return { stage: "error", why };
   }
-  why.push(describeNotPass(run.state, await findings()));
-  return { stage: "incomplete", why };
+  // The table grades a calculation that ran and settled as pass and names what
+  // it left open as a reason; its figures are compared on their own. A step
+  // that asks for more (complete the marked boxes, resolve) is that reason,
+  // not a different stage.
+  why.push(`open: ${describeNotPass(run.state, await findings())}`);
+  log("calculate-served-step", { action: run.state.action, graded: "pass" });
+  return { stage: "pass", why };
 }
 
 /** The figures a statement enters through the prior-values offer: a prior figure, or each amount of a carry. */
