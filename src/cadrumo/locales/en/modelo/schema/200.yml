@@ -1156,10 +1156,10 @@ modelo:
             label: Detail of offset of negative tax bases - 2007 - Pending application
               at the beginning of the period/generated in the period [00743]
           '00745':
-            label: Deductions DT 24.1 LIS - 2025(*) Accrual allocation - Applied in
-              this settlement [00745]
+            label: Deductions DT 24.1 LIS - N(*) Accrual allocation - Applied in this
+              settlement [00745]
           '00746':
-            label: Deductions DT 24.1 LIS - 2025(*) Accrual allocation - Pending application
+            label: Deductions DT 24.1 LIS - N(*) Accrual allocation - Pending application
               in future periods [00746]
           '00747':
             label: Detail of offset of negative tax bases - 2007 - Applied in this
@@ -1168,38 +1168,38 @@ modelo:
             label: Detail of offset of negative tax bases - 2007 - Pending application
               in future periods [00748]
           00749:
-            label: Deductions DT 24.1 LIS - 2020 Accrual allocation - Pending/generated
+            label: Deductions DT 24.1 LIS - N-5 Accrual allocation - Pending/generated
               deduction [00749]
           '00750':
-            label: Deductions DT 24.1 LIS - 2020 Accrual allocation - Applied in this
+            label: Deductions DT 24.1 LIS - N-5 Accrual allocation - Applied in this
               settlement [00750]
           '00751':
             label: Reserve for investments in the Balearic Islands (DA 70 Law 31/2022)
               - Decrease - Adjustments for the tax year - Temporary (originating in
               the period) [00751]
           '00752':
-            label: Deductions DT 24.1 LIS - 2021 Accrual allocation - Pending/generated
+            label: Deductions DT 24.1 LIS - N-4 Accrual allocation - Pending/generated
               deduction [00752]
           '00753':
-            label: Deductions DT 24.1 LIS - 2021 Accrual allocation - Applied in this
+            label: Deductions DT 24.1 LIS - N-4 Accrual allocation - Applied in this
               settlement [00753]
           '00754':
-            label: Deductions DT 24.1 LIS - 2021 Accrual allocation - Pending application
+            label: Deductions DT 24.1 LIS - N-4 Accrual allocation - Pending application
               in future periods [00754]
           '00755':
-            label: Deductions DT 24.1 LIS - 2022 Accrual allocation - Pending/generated
+            label: Deductions DT 24.1 LIS - N-3 Accrual allocation - Pending/generated
               deduction [00755]
           '00756':
-            label: Deductions DT 24.1 LIS - 2022 Accrual allocation - Applied in this
+            label: Deductions DT 24.1 LIS - N-3 Accrual allocation - Applied in this
               settlement [00756]
           '00757':
-            label: Deductions DT 24.1 LIS - 2022 Accrual allocation - Pending application
+            label: Deductions DT 24.1 LIS - N-3 Accrual allocation - Pending application
               in future periods [00757]
           00758:
-            label: Deductions DT 24.1 LIS - 2023 Accrual allocation - Pending/generated
+            label: Deductions DT 24.1 LIS - N-2 Accrual allocation - Pending/generated
               deduction [00758]
           00759:
-            label: Deductions DT 24.1 LIS - 2023 Accrual allocation - Applied in this
+            label: Deductions DT 24.1 LIS - N-2 Accrual allocation - Applied in this
               settlement [00759]
           '00773':
             label: Cooperative regime - Detail of tax liability offset. 2012 Applied
@@ -1212,7 +1212,7 @@ modelo:
               result - Investment reserves in the Balearic Islands (DA 70 Law 31/2022)
               - Increases [00778]
           00779:
-            label: Deductions DT 24.1 LIS - 2025 Accrual allocation - Pending/generated
+            label: Deductions DT 24.1 LIS - N Accrual allocation - Pending/generated
               deduction [00779]
           00799:
             help: Applied in this settlement - Research and development (CT)
@@ -1325,13 +1325,13 @@ modelo:
               in future periods [00845]
           00846:
             label: Internal double taxation deductions RDLeg. 4/2004 - Internal D.T.
-              2008 - 2025 - Pending deduction [00846]
+              2008 - N - Pending deduction [00846]
           00847:
             label: Internal double taxation deductions RDLeg. 4/2004 - Internal D.T.
               2008 - Applied in this settlement [00847]
           00849:
             label: International double taxation deductions RDLeg. 4/2004 - International
-              D.T. 2006 - 2025 pending deduction [00849]
+              D.T. 2006 - N pending deduction [00849]
           00851:
             label: R&D&i deductions excluded from the limit - 2014 Technological innovation
               - Amount paid due to insufficient tax liability [00851]
@@ -1451,7 +1451,7 @@ modelo:
               application in future periods [00900]
           00901:
             label: Deduction for reversal of temporary measures (D.T.37th. 1 LIS)
-              - 2025(*) - Amount generated/pending at beginning of period [00901]
+              - N - Amount generated/pending at beginning of period [00901]
           00907:
             label: Cooperative regime - Tax liability compensation detail. 2013 Pending
               application at the beginning of the period [00907]
@@ -1497,7 +1497,7 @@ modelo:
               - Investments under letters A and B, art. 27.4 Law 19/1994 [00928]
           00929:
             label: Deduction for reversal of temporary measures (D.T.37th. 2 LIS)
-              - 2025(*) - Deduction base [00929]
+              - N - Deduction base [00929]
           00935:
             label: Cooperative regime - Tax liability compensation detail. 2015 Pending
               application at the beginning of the period [00935]
@@ -1566,7 +1566,7 @@ modelo:
               periods [00989]'
           00992:
             label: Deduction for reversal of temporary measures (D.T.37th. 2 LIS)
-              - 2025(*) - Amount generated/pending at beginning of period [00992]
+              - N - Amount generated/pending at beginning of period [00992]
           00993:
             label: Deduction for donations to non-profit entities - General donations
               - 2016 without repeated donations to the same entity - Pending/generated
@@ -1659,17 +1659,17 @@ modelo:
             label: Negative tax base compensation detail - 2015 - Pending application
               in future periods [01047]
           01048:
-            label: Negative tax base compensation detail - 2025 - Pending application
+            label: Negative tax base compensation detail - N - Pending application
               at beginning of period/generated in the period [01048]
           01049:
-            label: Negative tax base compensation detail - 2025 - Pending application
+            label: Negative tax base compensation detail - N - Pending application
               in future periods [01049]
           '01050':
             label: International double taxation deductions (LIS) - International
               D.T. 2015 - Tax rate for generation period [01050]
           '01051':
             label: International double taxation deductions (LIS) - International
-              D.T. 2015 - 2025 pending deduction [01051]
+              D.T. 2015 - N pending deduction [01051]
           '01052':
             label: International double taxation deductions (LIS) - International
               D.T. 2015 - Applied in this settlement [01052]
@@ -2027,10 +2027,10 @@ modelo:
             label: Cooperative regime - Tax liability compensation detail. 2000 Pending
               application in future periods [01224]
           '01225':
-            label: Cooperative regime - Tax liability compensation detail. 2024 Pending
+            label: Cooperative regime - Detail of tax liability offset. N Pending
               application at beginning of period [01225]
           '01226':
-            label: Cooperative regime - Tax liability compensation detail. 2024 Pending
+            label: Cooperative regime - Detail of tax liability offset. N Pending
               application in future periods [01226]
           01229:
             help: Applied in this settlement - Caravaca de la Cruz 2024. Año Jubilar
@@ -2162,7 +2162,7 @@ modelo:
               (art. 38 bis LIS) - Total - Pending/generated deduction [01298]
           01299:
             label: Internal double taxation deductions (DT 23.1 LIS) - Internal D.T.
-              2023 - 2025 - Pending deduction [01299]
+              2023 - N - Pending deduction [01299]
           '01304':
             label: Deduction for investments and expenses made by port authorities
               (art. 38 bis LIS) - Total - Pending application in future periods [01304]
@@ -2278,7 +2278,7 @@ modelo:
               of foreign-production deductions - Navarre [01341]
           '01343':
             label: Internal double taxation deductions (Transitional Provision 23.1
-              LIS) - Total - 2025 - Pending deduction [01343]
+              LIS) - Total - N - Pending deduction [01343]
           '01344':
             label: Settlement III - Tax credits/Double taxation deductions - Double
               taxation deductions - Internal D.T. from prior periods applied in the
@@ -2297,7 +2297,7 @@ modelo:
               D.T. 2016 - Pending deduction [01348]
           '01350':
             label: International double taxation deductions (LIS) - International
-              D.T. 2016 - 2025 pending deduction [01350]
+              D.T. 2016 - N pending deduction [01350]
           '01351':
             label: International double taxation deductions (LIS) - International
               D.T. 2016 - Applied in this settlement [01351]
@@ -2332,22 +2332,22 @@ modelo:
             label: International double taxation deductions (LIS) - International
               D.T. 2023 - Tax rate for generation period [01362]
           '01363':
-            label: Deductions to incentivise certain activities - 2025(*) Research
-              and development (CT) - Pending/generated deduction [01363]
+            label: Deductions to incentivise certain activities - N(*) Research and
+              development (CT) - Pending/generated deduction [01363]
           '01364':
-            label: Deductions to incentivise certain activities - 2025(*) Research
-              and development (CT) - Applied in this settlement [01364]
+            label: Deductions to incentivise certain activities - N(*) Research and
+              development (CT) - Applied in this settlement [01364]
           '01365':
-            label: Deductions to incentivise certain activities - 2025(*) Research
-              and development (CT) - Pending application in future periods [01365]
+            label: Deductions to incentivise certain activities - N(*) Research and
+              development (CT) - Pending application in future periods [01365]
           '01366':
-            label: Deductions to incentivise certain activities - 2025(*) Technological
+            label: Deductions to incentivise certain activities - N(*) Technological
               innovation (IT) - Pending/generated deduction [01366]
           '01367':
-            label: Deductions to incentivise certain activities - 2025(*) Technological
+            label: Deductions to incentivise certain activities - N(*) Technological
               innovation (IT) - Applied in this settlement [01367]
           01368:
-            label: Deductions to incentivise certain activities - 2025(*) Technological
+            label: Deductions to incentivise certain activities - N(*) Technological
               innovation (IT) - Pending application in future periods [01368]
           '01374':
             label: Deduction for donations to non-profit entities - Donations for
@@ -2616,7 +2616,7 @@ modelo:
               period'
           '01457':
             label: International double taxation deductions (LIS) - International
-              D.T. 2023 - 2025 pending deduction [01457]
+              D.T. 2023 - N pending deduction [01457]
           '01462':
             label: Limitation on deductibility of financial expenses. Financial expenses
               pending deduction - Generation year 2016 - Pending application at the
@@ -2867,7 +2867,7 @@ modelo:
               LIS) - Internal D.T. 2017 - Tax rate for generation period [01596]
           01597:
             label: Internal double taxation deductions (Transitional Provision 23.1
-              LIS) - Internal D.T. 2017 - 2025 - Pending deduction [01597]
+              LIS) - Internal D.T. 2017 - N - Pending deduction [01597]
           01598:
             label: Internal double taxation deductions (Transitional Provision 23.1
               LIS) - Internal D.T. 2017 - Applied in this settlement [01598]
@@ -2893,15 +2893,15 @@ modelo:
           01608:
             label: 'Joint taxation of State and provincial tax administrations - Corrective:
               amount payable following the processing of earlier self-assessments
-              or administrative assessments for tax period 2025 - Gipuzkoa [01608]'
+              or administrative assessments for tax period N - Gipuzkoa [01608]'
           01609:
             label: 'Joint taxation of State and provincial tax administrations - Corrective:
               amount payable following the processing of earlier self-assessments
-              or administrative assessments for tax period 2025 - Bizkaia [01609]'
+              or administrative assessments for tax period N - Bizkaia [01609]'
           '01610':
             label: 'Joint taxation of State and provincial tax administrations - Corrective:
               amount payable following the processing of earlier self-assessments
-              or administrative assessments for tax period 2025 - Navarre [01610]'
+              or administrative assessments for tax period N - Navarre [01610]'
           '01614':
             label: Deductions for investment in the Canary Islands - Fixed assets
               2024 - Pending/generated deduction [01614]
@@ -2934,16 +2934,15 @@ modelo:
               result - Gipuzkoa [01625]
           '01626':
             label: Impairment allowances for receivables or other assets - Generation
-              year - 2025(*) - Allowances pending integration at start of period -
-              That have not met tax deductibility conditions [01626]
+              year - N - Allowances pending integration at start of period - That
+              have not met tax deductibility conditions [01626]
           '01627':
             label: Impairment allowances for receivables or other assets - Generation
-              year - 2025(*) - Allowances applied to conversion of deferred tax assets
-              [01627]
+              year - N - Allowances applied to conversion of deferred tax assets [01627]
           01628:
             label: Impairment allowances for receivables or other assets - Generation
-              year - 2025(*) - Allowances pending integration in future periods -
-              That have not met tax deductibility conditions [01628]
+              year - N - Allowances pending integration in future periods - That have
+              not met tax deductibility conditions [01628]
           01629:
             label: Joint taxation of State and provincial tax administrations - Self-assessment
               result - Bizkaia [01629]
@@ -3023,11 +3022,11 @@ modelo:
               European Union or EEA Member States - Decrease - Balance pending at
               start of year [01681]
           01684:
-            label: Deductions to incentivise certain activities - 2025(****) other
+            label: Deductions to incentivise certain activities - N+1(****) other
               deductions relating to support programmes for events of exceptional
               public interest - Applied in this settlement [01684]
           01685:
-            label: Deductions to incentivise certain activities - 2025(****) other
+            label: Deductions to incentivise certain activities - N+1(****) other
               deductions relating to support programmes for events of exceptional
               public interest - Carried forward for application in future periods
               [01685]
@@ -3037,28 +3036,28 @@ modelo:
               end of year [01688]
           01692:
             label: Deduction for donations to non-profit entities - General donations
-              - Donations subtotal 2015 to 2025 without repeated donations to the
-              same entity. - Deduction carried forward/generated [01692]
+              - Donations subtotal 2015 to N without repeated donations to the same
+              entity. - Deduction carried forward/generated [01692]
           01693:
             label: Deduction for donations to non-profit entities - General donations
-              - Donations subtotal 2015 to 2025 without repeated donations to the
-              same entity. - Applied in this settlement [01693]
+              - Donations subtotal 2015 to N without repeated donations to the same
+              entity. - Applied in this settlement [01693]
           01694:
             label: Deduction for donations to non-profit entities - General donations
-              - Donations subtotal 2015 to 2025 without repeated donations to the
-              same entity. - Carried forward for application in future periods [01694]
+              - Donations subtotal 2015 to N without repeated donations to the same
+              entity. - Carried forward for application in future periods [01694]
           01695:
             label: Deduction for donations to non-profit entities - General donations
-              - Donations subtotal 2015 to 2025 with repeated donations to the same
-              entity - Deduction carried forward/generated [01695]
+              - Donations subtotal 2015 to N with repeated donations to the same entity
+              - Deduction carried forward/generated [01695]
           01696:
             label: Deduction for donations to non-profit entities - General donations
-              - Donations subtotal 2015 to 2025 with repeated donations to the same
-              entity - Applied in this settlement [01696]
+              - Donations subtotal 2015 to N with repeated donations to the same entity
+              - Applied in this settlement [01696]
           01697:
             label: Deduction for donations to non-profit entities - General donations
-              - Donations subtotal 2015 to 2025 with repeated donations to the same
-              entity - Carried forward for application in future periods [01697]
+              - Donations subtotal 2015 to N with repeated donations to the same entity
+              - Carried forward for application in future periods [01697]
           01698:
             label: Deduction for donations to non-profit entities - General donations
               - Total - Pending/generated deduction [01698]
@@ -3071,18 +3070,18 @@ modelo:
           '01704':
             label: Deduction for donations to non-profit entities - Donations for
               priority patronage activities and others entitled to increased deduction
-              - Donations subtotal 2015 to 2025 without repeated donations to the
-              same entity - Deduction carried forward/generated [01704]
+              - Donations subtotal 2015 to N without repeated donations to the same
+              entity - Deduction carried forward/generated [01704]
           '01705':
             label: Deduction for donations to non-profit entities - Donations for
               priority patronage activities and others entitled to increased deduction
-              - Donations subtotal 2015 to 2025 without repeated donations to the
-              same entity - Applied in this settlement [01705]
+              - Donations subtotal 2015 to N without repeated donations to the same
+              entity - Applied in this settlement [01705]
           '01706':
             label: Deduction for donations to non-profit entities - Donations for
               priority patronage activities and others entitled to increased deduction
-              - Donations subtotal 2015 to 2025 without repeated donations to the
-              same entity - Carried forward for application in future periods [01706]
+              - Donations subtotal 2015 to N without repeated donations to the same
+              entity - Carried forward for application in future periods [01706]
           '01707':
             label: Special regime for the Balearic Islands investment reserve - Balearic
               Islands investment reserve 2023 - BIIR pending materialization at start
@@ -3154,14 +3153,14 @@ modelo:
           01729:
             label: Deduction for donations to non-profit entities - Donations for
               priority patronage activities and others entitled to increased deduction
-              - Donations subtotal 2015 to 2025 with repeated donations to the same
-              entity - Deduction carried forward/generated [01729]
+              - Donations subtotal 2015 to N with repeated donations to the same entity
+              - Deduction carried forward/generated [01729]
           '01730':
             label: Levelling reserve - Reduction of the taxable base - Year of generation
               2021 - Amount added to tax base in the period [01730]
           '01731':
             label: Levelling reserve - Reduction of the taxable base - Year of generation
-              2025 - Amount pending addition in future periods [01731]
+              N - Amount pending addition in future periods [01731]
           '01736':
             label: Limitation on deductibility of financial expenses. Financial expenses
               pending deduction - Generation year 2017 - Pending application at the
@@ -3263,7 +3262,7 @@ modelo:
               DT 2017 - Tax rate for the year of generation [01771]
           '01772':
             label: International double taxation deductions (LIS) - International
-              DT 2017 - 2025 Deduction carried forward [01772]
+              DT 2017 - N Deduction carried forward [01772]
           '01773':
             label: International double taxation deductions (LIS) - International
               DT 2017 - Applied in this return [01773]
@@ -3437,7 +3436,7 @@ modelo:
               LIS) - Internal DT 2018 - Tax rate for the year of generation [01829]
           01830:
             label: Internal double taxation deductions (Transitional Provision 23.1
-              LIS) - Internal DT 2018 - 2025 - Deduction carried forward [01830]
+              LIS) - Internal DT 2018 - N - Deduction carried forward [01830]
           01831:
             label: Internal double taxation deductions (Transitional Provision 23.1
               LIS) - Internal DT 2018 - Applied in this return [01831]
@@ -3453,7 +3452,7 @@ modelo:
               DT 2018 - Tax rate for the year of generation [01834]
           01835:
             label: International double taxation deductions (LIS) - International
-              DT 2018 - 2025 Deduction carried forward [01835]
+              DT 2018 - N Deduction carried forward [01835]
           01836:
             label: International double taxation deductions (LIS) - International
               DT 2018 - Applied in this return [01836]
@@ -3713,15 +3712,15 @@ modelo:
               in Western Africa territory and advertising and promotion expenses (art.
               27 bis Law 19/1994) (TAP) - Applied in this return [01926]
           01928:
-            label: Deductions to incentivise certain activities - 2025(*) Investments
+            label: Deductions to incentivise certain activities - N(*) Investments
               in Western Africa territory and advertising and promotion expenses (art.
               27 bis Law 19/1994) (TAP) - Deduction carried forward/generated [01928]
           01929:
-            label: Deductions to incentivise certain activities - 2025(*) Investments
+            label: Deductions to incentivise certain activities - N(*) Investments
               in Western Africa territory and advertising and promotion expenses (art.
               27 bis Law 19/1994) (TAP) - Applied in this return [01929]
           01930:
-            label: Deductions to incentivise certain activities - 2025(*) Investments
+            label: Deductions to incentivise certain activities - N(*) Investments
               in Western Africa territory and advertising and promotion expenses (art.
               27 bis Law 19/1994) (TAP) - Carried forward for application in future
               periods [01930]
@@ -4019,10 +4018,10 @@ modelo:
             label: Programa deportivo "RETO DE" (RD). Applied in this settlement
           '02070':
             label: Deduction for reversal of temporary measures (Transitional Provision
-              37.2 LIS) - 2025(*) - Amount applied [02070]
+              37.2 LIS) - N - Amount applied [02070]
           '02071':
             label: Deduction for reversal of temporary measures (Transitional Provision
-              37.2 LIS) - 2025(*) - Amount carried forward [02071]
+              37.2 LIS) - N - Amount carried forward [02071]
           '02072':
             label: R&D&i deductions excluded from the limit - 2024 Research and development
               - Deduction carried forward/generated [02072]
@@ -4047,9 +4046,9 @@ modelo:
               in La Palma, La Gomera and El Hierro 2023 - Deduction carried forward/generated
               [02078]
           02080:
-            label: 'Additional information for calculating deduction limits - 2024:
-              financier: deduction for live performing arts and musical shows in the
-              Canary Islands generated in the tax period [02080]'
+            label: 'Additional information for calculating deduction limits - N: financier:
+              deduction for live performing arts and musical shows in the Canary Islands
+              generated in the tax period [02080]'
           02081:
             label: Deductions to incentivise certain activities - 2015 Investments
               in Western Africa territory and advertising and promotion expenses (art.
@@ -4368,7 +4367,7 @@ modelo:
               LIS) - Internal DT 2019 - Tax rate for the year of generation [02197]
           02198:
             label: Internal double taxation deductions (Transitional Provision 23.1
-              LIS) - Internal DT 2019 - 2025 - Deduction carried forward [02198]
+              LIS) - Internal DT 2019 - N - Deduction carried forward [02198]
           02199:
             label: Internal double taxation deductions (Transitional Provision 23.1
               LIS) - Internal DT 2019 - Applied in this return [02199]
@@ -4384,7 +4383,7 @@ modelo:
               DT 2019 - Tax rate for the year of generation [02202]
           '02203':
             label: International double taxation deductions (LIS) - International
-              DT 2019 - 2025 Deduction carried forward [02203]
+              DT 2019 - N Deduction carried forward [02203]
           '02204':
             label: International double taxation deductions (LIS) - International
               DT 2019 - Applied in this return [02204]
@@ -4614,13 +4613,13 @@ modelo:
             label: Cooperative regime - Detail of offset of tax liabilities. 2019
               Carried forward for application in future periods [02283]
           02287:
-            label: 'Additional information for calculating deduction limits - 2024:
-              deduction for research and development in the Canary Islands generated
-              in the tax period [02287]'
+            label: 'Additional information for calculating deduction limits - N: deduction
+              for research and development in the Canary Islands generated in the
+              tax period [02287]'
           02288:
-            label: 'Additional information for calculating deduction limits - 2024:
-              deduction for technological innovation in the Canary Islands generated
-              in the tax period [02288]'
+            label: 'Additional information for calculating deduction limits - N: deduction
+              for technological innovation in the Canary Islands generated in the
+              tax period [02288]'
           02289:
             label: 37th America's Cup Barcelona (Law 31/2022) - Decrease - Balance
               carried forward at start of year [02289]
@@ -4666,14 +4665,14 @@ modelo:
               productions in the Canary Islands (art. 36.2 LIS and Additional Provision
               14, Law 19/1994) (breakdown on page 18 bis) [02314]
           '02316':
-            label: Detail of offset of negative taxable bases - 2025(*) - Carried
-              forward at the start of the period/generated in the period [02316]
+            label: Detail of offset of negative taxable bases - N(*) - Carried forward
+              at the start of the period/generated in the period [02316]
           '02317':
-            label: Detail of offset of negative taxable bases - 2025(*) - Applied
-              in this return [02317]
+            label: Detail of offset of negative taxable bases - N(*) - Applied in
+              this return [02317]
           02318:
-            label: Detail of offset of negative taxable bases - 2025(*) - Carried
-              forward for application in future periods [02318]
+            label: Detail of offset of negative taxable bases - N(*) - Carried forward
+              for application in future periods [02318]
           02319:
             label: Internal double taxation deductions (Transitional Provision 23.1
               LIS) - Internal DT 2020 - Deduction carried forward [02319]
@@ -4682,7 +4681,7 @@ modelo:
               LIS) - Internal DT 2020 - Tax rate for the year of generation [02320]
           '02321':
             label: Internal double taxation deductions (Transitional Provision 23.1
-              LIS) - Internal DT 2020 - 2025 - Deduction carried forward [02321]
+              LIS) - Internal DT 2020 - N - Deduction carried forward [02321]
           '02322':
             label: Internal double taxation deductions (Transitional Provision 23.1
               LIS) - Internal DT 2020 - Applied in this return [02322]
@@ -4698,7 +4697,7 @@ modelo:
               DT 2020 - Tax rate for the year of generation [02325]
           '02326':
             label: International double taxation deductions (LIS) - International
-              DT 2020 - 2025 Deduction carried forward [02326]
+              DT 2020 - N Deduction carried forward [02326]
           '02327':
             label: International double taxation deductions (LIS) - International
               DT 2020 - Applied in this return [02327]
@@ -5017,33 +5016,32 @@ modelo:
               - Amount paid due to insufficient tax liability [02437]
           02438:
             label: Limitation on deductibility of financial expenses. Financial expenses
-              pending deduction - Year of generation 2025(*) - Applied in this return
-              [02438]
+              pending deduction - Year of generation N - Applied in this return [02438]
           '02442':
             label: Limitation on deductibility of financial expenses. Financial expenses
-              pending deduction - Year of generation 2025(*) - Pending application
-              in future periods - Due to limit [02442]
+              pending deduction - Year of generation N - Pending application in future
+              periods - Due to limit [02442]
           '02443':
             label: Deductions for foreign film productions (art. 36.2 LIS) - 2024
               - Carried forward for application in future periods [02443]
           '02444':
             label: Limitation on deductibility of financial expenses. Financial expenses
-              pending deduction - Year of generation 2025(*) - Pending application
-              in future periods - Remainder [02444]
+              pending deduction - Year of generation N - Pending application in future
+              periods - Remainder [02444]
           '02447':
             label: Carried forward for addition due to unapplied operating-profit
-              limit - Year of generation 2025(*) - Carried forward at the start of
-              the period [02447]
+              limit - Year of generation N - Carried forward at the start of the period
+              [02447]
           02448:
             label: Deductions to incentivise certain activities - 2021 Sum of deductions
               under Chapter IV Title VI Law 43/95, RDLeg. 4/2004 and LIS (excluding
               R&D&i and TAP) - Carried forward for application in future periods [02448]
           02449:
-            label: Deductions to incentivise certain activities - 2025(*) Sum of deductions
+            label: Deductions to incentivise certain activities - N(*) Sum of deductions
               under Chapter IV Title VI Law 43/95, RDLeg. 4/2004 and LIS (excluding
               R&D&i and TAP) - Deduction carried forward/generated [02449]
           '02450':
-            label: Deductions to incentivise certain activities - 2025(*) Sum of deductions
+            label: Deductions to incentivise certain activities - N(*) Sum of deductions
               under Chapter IV Title VI Law 43/95, RDLeg. 4/2004 and LIS (excluding
               R&D&i and TAP) - Applied in this return [02450]
           '02452':
@@ -5056,12 +5054,12 @@ modelo:
             label: Cooperative regime - Detail of offset of tax liabilities. 2020
               Carried forward for application in future periods [02454]
           '02461':
-            label: Deductions to incentivise certain activities - 2025(*) Sum of deductions
+            label: Deductions to incentivise certain activities - N(*) Sum of deductions
               under Chapter IV Title VI Law 43/95, RDLeg. 4/2004 and LIS (excluding
               R&D&i and TAP) - Carried forward for application in future periods [02461]
           '02465':
             label: Carried forward for addition due to unapplied operating-profit
-              limit - Year of generation 2025(*) - Applied in this return [02465]
+              limit - Year of generation N - Applied in this return [02465]
           '02466':
             label: Deductions for foreign film productions in the Canary Islands (art.
               36.2 LIS and 14th Additional Provision, Law 19/1994) - 2024 - Applied
@@ -5085,13 +5083,13 @@ modelo:
           '02475':
             label: Deduction for donations to non-profit entities - Donations for
               priority patronage activities and others entitled to increased deduction
-              - Donations subtotal 2015 to 2025 with repeated donations to the same
-              entity - Applied in this settlement [02475]
+              - Donations subtotal 2015 to N with repeated donations to the same entity
+              - Applied in this settlement [02475]
           '02476':
             label: Deduction for donations to non-profit entities - Donations for
               priority patronage activities and others entitled to increased deduction
-              - Donations subtotal 2015 to 2025 with repeated donations to the same
-              entity - Carried forward for application in future periods [02476]
+              - Donations subtotal 2015 to N with repeated donations to the same entity
+              - Carried forward for application in future periods [02476]
           '02477':
             label: Deduction for reversal of temporary measures (Transitional Provision
               37.2 LIS) - 2022 - Amount generated/carried forward at start of period
@@ -5122,25 +5120,25 @@ modelo:
             label: Settlement IV - Instalment option in cases of change of residence
               (art. 19.1 LIS) - Corrective return - Self-assessment result including
               the first instalment under art. 19.1 LIS arising from an earlier self-assessment
-              or administrative assessment for tax period 2025 - State [02487]
+              or administrative assessment for tax period N - State [02487]
           02488:
             label: Settlement IV - Instalment option in cases of change of residence
               (art. 19.1 LIS) - Corrective return - Self-assessment result including
               the first instalment under art. 19.1 LIS arising from an earlier self-assessment
-              or administrative assessment for tax period 2025 - Regional (foral)
-              administrations/Navarre (Totals) [02488]
+              or administrative assessment for tax period N - Regional (foral) administrations/Navarre
+              (Totals) [02488]
           02489:
             label: Settlement IV - Instalment option in cases of change of residence
               (art. 19.1 LIS) - Result including the first instalment under art. 19.1
               LIS - State [02489]
           02495:
-            label: 'Additional information for calculating deduction limits - 2024:
-              producer: deduction for Spanish film productions in the Canary Islands
-              generated in the tax period [02495]'
+            label: 'Additional information for calculating deduction limits - N: producer:
+              deduction for Spanish film productions in the Canary Islands generated
+              in the tax period [02495]'
           02496:
-            label: 'Additional information for calculating deduction limits - 2024:
-              producer: deduction for live performing arts and musical shows in the
-              Canary Islands generated in the tax period [02496]'
+            label: 'Additional information for calculating deduction limits - N: producer:
+              deduction for live performing arts and musical shows in the Canary Islands
+              generated in the tax period [02496]'
           02497:
             label: Deductions for investment in the Canary Islands - Fixed assets
               in La Palma, La Gomera and El Hierro 2022 - Carried forward for application
@@ -5645,8 +5643,8 @@ modelo:
               pending materialisation at period-end [02917]
           02918:
             label: Special regime for the Balearic Islands investment reserve - Amount
-              of the Balearic Islands investment reserve allocation charged to 2024
-              profits [02918]
+              of the Balearic Islands investment reserve allocation charged to N profits
+              [02918]
           02919:
             label: Settlement I - Detail of adjustments to the profit and loss account
               result - Adjustments for impairment of securities representing holdings
@@ -5708,8 +5706,8 @@ modelo:
             label: B) Financial data. Deduction base
           02972:
             label: Carried forward for addition due to unapplied operating-profit
-              limit - Year of generation 2025(*) - Carried forward for application
-              in future periods [02972]
+              limit - Year of generation N - Carried forward for application in future
+              periods [02972]
           02973:
             help: Deduction base - B) Financial data
             label: B) Financial data. Deduction base
@@ -6658,10 +6656,10 @@ modelo:
           dp200014-00563:
             label: Settlement III - Tax credits/Double taxation deductions - Rebate
               on income from the sale of tangible goods produced in the Canary Islands
-              (art. 26, Law 19/1994) [00563]
+              [00563]
           dp200014-00566:
             label: Settlement III - Tax credits/Double taxation deductions - Rebates
-              for cooperative societies (Law 20/1990) [00566]
+              for cooperative societies [00566]
           dp200014-00567:
             label: Settlement III - Tax credits/Double taxation deductions - Rebate
               for income obtained in Ceuta and Melilla (art. 33 LIS) [00567]
@@ -7448,12 +7446,12 @@ modelo:
               (originating in this tax year) [03337]
           is-correccion-amortizacion-acelerada-vehiculos-permanente-aumento:
             label: Accelerated depreciation of certain vehicles and new charging infrastructure
-              (DA 18 LIS RDL 5/2023 and RDL 7/2026) - Increase - Adjustments for the
-              tax year - Permanent [00076]
+              (Additional Provision 18 LIS, RDL 5/2023) - Increase - Adjustments for
+              the tax year - Permanent [00076]
           is-correccion-amortizacion-acelerada-vehiculos-saldo-inicial:
             label: Accelerated depreciation of certain vehicles and new charging infrastructure
-              (DA 18 LIS RDL 5/2023 and RDL 7/2026) - Increase - Balance pending at
-              the beginning of the period [00075]
+              (Additional Provision 18 LIS, RDL 5/2023) - Increase - Balance pending
+              at the beginning of the period [00075]
           is-correccion-amortizacion-inmovilizado-idi-permanente-aumento:
             label: Depreciation of fixed assets used in research and development activities
               (art. 12.3 b) LIS) - Increase - Adjustments for the tax year - Permanent
@@ -8885,7 +8883,7 @@ modelo:
           is-cuota-liquida:
             label: Settlement IV - Other deductions - Net tax liability [00592]
           is-deduccion-acontecimiento-interes-publico-otras:
-            label: Deductions to incentivise certain activities - 2025(****) other
+            label: Deductions to incentivise certain activities - N+1(****) other
               deductions relating to support programmes for events of exceptional
               public interest - Deduction pending or generated [01683]
           is-deduccion-actividades-total-pendiente:
@@ -8907,7 +8905,7 @@ modelo:
               carried forward/generated [00315]
           is-deduccion-cinematografica-extranjera-aplicado-periodo:
             label: Deductions for foreign film productions in the Canary Islands (art.
-              36.2 LIS and DA 14 Law 19/1994) - 2025(*) - Amount paid due to insufficient
+              36.2 LIS and DA 14 Law 19/1994) - N - Amount paid due to insufficient
               tax liability [00366]
           is-deduccion-cinematografica-extranjera-canarias-total:
             label: Deductions for foreign film productions in the Canary Islands (art.
@@ -8915,7 +8913,7 @@ modelo:
               deduction [01317]
           is-deduccion-cinematografica-extranjera-pendiente-futuros:
             label: Deductions for foreign film productions in the Canary Islands (art.
-              36.2 LIS and DA 14 Law 19/1994) - 2025(*) - Pending application in future
+              36.2 LIS and DA 14 Law 19/1994) - N - Pending application in future
               periods [00367]
           is-deduccion-cinematografica-extranjera-total:
             label: Deductions for foreign film productions (art. 36.2 LIS) - Total
@@ -8939,7 +8937,7 @@ modelo:
               LIS) - Internal D.T. 2023 - Pending deduction [01270]
           is-deduccion-di-interna-rdleg-detalle:
             label: Internal double taxation deductions RDLeg. 4/2004 - Internal D.T.
-              2013 - 2025 - Pending deduction [00714]
+              2013 - N - Pending deduction [00714]
           is-deduccion-di-interna-rdleg-pendiente:
             label: Internal double taxation deductions RDLeg. 4/2004 - Internal D.T.
               2008 - Pending application in future periods [00848]
@@ -8966,7 +8964,7 @@ modelo:
               D.T. 2015 - Pending applic. in future periods [01053]
           is-deduccion-di-internacional-rdleg-importe:
             label: International double taxation deductions RDLeg. 4/2004 - International
-              D.T. 2008 - 2025 pending deduction [00825]
+              D.T. 2008 - N pending deduction [00825]
           is-deduccion-di-internacional-rdleg-pendiente:
             label: International double taxation deductions RDLeg. 4/2004 - International
               D.T. 2008 - Pending application in future periods [00827]
@@ -8985,7 +8983,7 @@ modelo:
               for donations to non-profit entities - Pending application in future
               periods [00895]
           is-deduccion-dt24a1-periodificacion:
-            label: Deductions DT 24.1 LIS - 2025(*) Accrual allocation - Pending/generated
+            label: Deductions DT 24.1 LIS - N(*) Accrual allocation - Pending/generated
               deduction [00744]
           is-deduccion-dt24a7-pendiente:
             label: Deductions under Transitional Provision 24.7 LIS - Deduction art.
@@ -9030,17 +9028,17 @@ modelo:
             label: Bicentenario de la Policía Nacional (PN). Pending application in
               future periods
           is-deduccion-idi-diferimiento:
-            label: Deductions to incentivise certain activities - 2025 Deferral of
-              deductions Ch. IV Title VI Law 43/95, RDLeg. 4/2004 and LIS - Pending/generated
+            label: Deductions to incentivise certain activities - N Deferral of deductions
+              Ch. IV Title VI Law 43/95, RDLeg. 4/2004 and LIS - Pending/generated
               deduction [00828]
           is-deduccion-idi-diferimiento-aplicado-periodo:
-            label: Deductions to incentivise certain activities - 2025 Deferral of
-              deductions Ch. IV Title VI Law 43/95, RDLeg. 4/2004 and LIS - Applied
-              in this settlement [00829]
+            label: Deductions to incentivise certain activities - N Deferral of deductions
+              Ch. IV Title VI Law 43/95, RDLeg. 4/2004 and LIS - Applied in this settlement
+              [00829]
           is-deduccion-idi-diferimiento-pendiente:
-            label: Deductions to incentivise certain activities - 2025 Deferral of
-              deductions Ch. IV Title VI Law 43/95, RDLeg. 4/2004 and LIS - Pending
-              application in future periods [00830]
+            label: Deductions to incentivise certain activities - N Deferral of deductions
+              Ch. IV Title VI Law 43/95, RDLeg. 4/2004 and LIS - Pending application
+              in future periods [00830]
           is-deduccion-idi-evento-especial:
             help: Deduction pending or generated - Bicentenario de la Policía Nacional
               (PN)
@@ -9171,10 +9169,10 @@ modelo:
               24.7 LIS 2023 - Pending/generated deduction [00696]
           is-deduccion-reversion-medidas-dt1-pendiente:
             label: Deduction for reversal of temporary measures (D.T.37th. 1 LIS)
-              - 2025(*) - Pending amount [00905]
+              - N - Pending amount [00905]
           is-deduccion-reversion-medidas-dt1-periodo:
             label: Deduction for reversal of temporary measures (D.T.37th. 1 LIS)
-              - 2025(*) - Amount applied [00904]
+              - N - Amount applied [00904]
           is-deduccion-reversion-medidas-dt1-total:
             label: Deduction for reversal of temporary measures (D.T.37th. 1 LIS)
               - Total - Deduction base [01170]
@@ -9198,7 +9196,7 @@ modelo:
               - 2022 - Amount generated/pending at beginning of period [01083]
           is-deduccion-reversion-medidas-periodo:
             label: Deduction for reversal of temporary measures (D.T.37th. 1 LIS)
-              - 2025(*) - Deduction base [00899]
+              - N - Deduction base [00899]
           is-deduccion-sociedades-forestales:
             help: Deduction pending or generated - Expenses and investments of forestry
               companies (SF)
@@ -9917,9 +9915,9 @@ modelo:
               Chapter XI, Title VII of the Corporate Income Tax Law [00006].
             label: Small-sized entity incentives (Chapter XI, Title VII LIS) [00006]
           is-informacion-adicional-limites-deducciones-canarias-generada:
-            label: 'Additional information for calculating deduction limits - 2024:
-              financier: deduction for Spanish film productions in the Canary Islands
-              generated in the tax period [02079]'
+            label: 'Additional information for calculating deduction limits - N: financier:
+              deduction for Spanish film productions in the Canary Islands generated
+              in the tax period [02079]'
           is-inversiones-anticipadas-reserva-inversiones-en-canarias-art-27-11-ley-19-1994:
             help: Flag indicating advance investments for the Canary Islands investment
               reserve under article 27.11 of Law 19/1994 [00045].
@@ -10134,10 +10132,10 @@ modelo:
             label: Direct holdings in other entities. Valuation corrections. g) Balance
               of tax corrections outstanding at year end (art. 12.3 RDL 4/2004)
           is-participaciones-directas-d-valor-en-libros-en-el-activo-de-la-declarante-de-la-particip:
-            help: Box 1502 of modelo 200, tax year 2024.
+            help: Box 1502 of modelo 200.
             label: Book value of the holding (in the declarant's assets) [1502]
           is-participaciones-directas-d-valor-nominal-total-de-la-participacion:
-            help: Box 1501 of modelo 200, tax year 2024.
+            help: Box 1501 of modelo 200.
             label: Total nominal value of the holding [1501]
           is-participe-de-agrupacion-de-interes-economico-o-de-union-temporal-de-empresas:
             label: Participant in an economic interest grouping or temporary consortium
@@ -10508,7 +10506,7 @@ modelo:
               year) [03297]
           is-reserva-inversiones-canarias-importe:
             label: Special regime for the Canary Islands investment reserve - Amount
-              of RIC allocation charged to 2024 profits [00927]
+              of RIC allocation charged to N profits [00927]
           is-reserva-inversiones-illes-balears-importe:
             label: Reserve for investments in the Balearic Islands (DA 70 Law 31/2022)
               - Increase - Balance pending at the beginning of the period [00094]
@@ -10683,7 +10681,7 @@ modelo:
           is-tributacion-conjunta-estado-forales-rectificacion-importe:
             label: 'Joint taxation of State and provincial tax administrations - Corrective:
               amount payable following the processing of earlier self-assessments
-              or administrative assessments for tax period 2025 - Araba/Alava [01607]'
+              or administrative assessments for tax period N - Araba/Alava [01607]'
           is-tributacion-conjunta-fraccionamiento-importe:
             label: Joint taxation of State and provincial tax administrations - Instalment
               option art. 19.1 LIS - Included amount - Gipuzkoa [01632]
@@ -10865,27 +10863,27 @@ modelo:
               - 2024(*) - With repeated donations to the same entity - Carried forward
               for application in future periods [02700]
           public-interest-alicante-sailing-departure-credit-2024-applied:
-            label: Deductions to incentivise certain activities - 2024 Alicante 2021.
+            label: Deductions to incentivise certain activities - N Alicante 2021.
               Start of the round-the-world sailing race (A21) - Applied in this settlement
               [02366]
           public-interest-alicante-sailing-departure-credit-2024-generated:
-            label: Deductions to incentivise certain activities - 2024 Alicante 2021.
+            label: Deductions to incentivise certain activities - N Alicante 2021.
               Start of the round-the-world sailing race (A21) - Deduction carried
               forward/generated [02365]
           public-interest-alicante-sailing-departure-credit-2024-remaining:
-            label: Deductions to incentivise certain activities - 2024 Alicante 2021.
+            label: Deductions to incentivise certain activities - N Alicante 2021.
               Start of the round-the-world sailing race (A21) - Carried forward for
               application in future periods [02367]
           public-interest-alimentaria-hostelco-credit-2024-applied:
-            label: Deductions to incentivise certain activities - 2024 ALIMENTARIA
-              2022 and HOSTELCO 2022 (AH) - Applied in this settlement [01268]
+            label: Deductions to incentivise certain activities - N ALIMENTARIA 2022
+              and HOSTELCO 2022 (AH) - Applied in this settlement [01268]
           public-interest-alimentaria-hostelco-credit-2024-generated:
-            label: Deductions to incentivise certain activities - 2024 ALIMENTARIA
-              2022 and HOSTELCO 2022 (AH) - Deduction carried forward/generated [01267]
+            label: Deductions to incentivise certain activities - N ALIMENTARIA 2022
+              and HOSTELCO 2022 (AH) - Deduction carried forward/generated [01267]
           public-interest-alimentaria-hostelco-credit-2024-remaining:
-            label: Deductions to incentivise certain activities - 2024 ALIMENTARIA
-              2022 and HOSTELCO 2022 (AH) - Carried forward for application in future
-              periods [01269]
+            label: Deductions to incentivise certain activities - N ALIMENTARIA 2022
+              and HOSTELCO 2022 (AH) - Carried forward for application in future periods
+              [01269]
           public-interest-andalucia-valderrama-masters-credit-2024-applied:
             label: Deductions to incentivise certain activities - 2024 Andalucía Valderrama
               Masters 2022/2024 (AVM22) - Applied in this settlement [02459]
@@ -10897,79 +10895,79 @@ modelo:
               Masters 2022/2024 (AVM22) - Carried forward for application in future
               periods [02460]
           public-interest-ateneo-madrid-bicentenary-credit-2024-applied:
-            label: Deductions to incentivise certain activities - 2024 Bicentenary
-              of the Ateneo de Madrid (BA) - Applied in this settlement [01235]
+            label: Deductions to incentivise certain activities - N Bicentenary of
+              the Ateneo de Madrid (BA) - Applied in this settlement [01235]
           public-interest-ateneo-madrid-bicentenary-credit-2024-generated:
-            label: Deductions to incentivise certain activities - 2024 Bicentenary
-              of the Ateneo de Madrid (BA) - Deduction carried forward/generated [01233]
+            label: Deductions to incentivise certain activities - N Bicentenary of
+              the Ateneo de Madrid (BA) - Deduction carried forward/generated [01233]
           public-interest-ateneo-madrid-bicentenary-credit-2024-remaining:
-            label: Deductions to incentivise certain activities - 2024 Bicentenary
-              of the Ateneo de Madrid (BA) - Carried forward for application in future
+            label: Deductions to incentivise certain activities - N Bicentenary of
+              the Ateneo de Madrid (BA) - Carried forward for application in future
               periods [01236]
           public-interest-barcelona-equestrian-challenge-four-credit-2024-applied:
-            label: Deductions to incentivise certain activities - 2024 Barcelona Equestrian
+            label: Deductions to incentivise certain activities - N Barcelona Equestrian
               Challenge (4th edition) (BE4) - Applied in this settlement [01238]
           public-interest-barcelona-equestrian-challenge-four-credit-2024-generated:
-            label: Deductions to incentivise certain activities - 2024 Barcelona Equestrian
+            label: Deductions to incentivise certain activities - N Barcelona Equestrian
               Challenge (4th edition) (BE4) - Deduction carried forward/generated
               [01237]
           public-interest-barcelona-equestrian-challenge-four-credit-2024-remaining:
-            label: Deductions to incentivise certain activities - 2024 Barcelona Equestrian
+            label: Deductions to incentivise certain activities - N Barcelona Equestrian
               Challenge (4th edition) (BE4) - Carried forward for application in future
               periods [01239]
           public-interest-barcelona-music-lab-credit-2024-applied:
-            label: Deductions to incentivise certain activities - 2024 Barcelona Music
+            label: Deductions to incentivise certain activities - N Barcelona Music
               Lab. The future of music (ML) - Applied in this settlement [01273]
           public-interest-barcelona-music-lab-credit-2024-generated:
-            label: Deductions to incentivise certain activities - 2024 Barcelona Music
+            label: Deductions to incentivise certain activities - N Barcelona Music
               Lab. The future of music (ML) - Deduction carried forward/generated
               [01272]
           public-interest-barcelona-music-lab-credit-2024-remaining:
-            label: Deductions to incentivise certain activities - 2024 Barcelona Music
+            label: Deductions to incentivise certain activities - N Barcelona Music
               Lab. The future of music (ML) - Carried forward for application in future
               periods [01274]
           public-interest-club-natacio-barcelona-credit-2024-applied:
-            label: Deductions to incentivise certain activities - 2024 reconstruction
+            label: Deductions to incentivise certain activities - N reconstruction
               of the historic covered diving pool of Club Natació Barcelona (CNB)
               - applied in this settlement [01265]
           public-interest-club-natacio-barcelona-credit-2024-generated:
-            label: Deductions to incentivise certain activities - 2024 reconstruction
+            label: Deductions to incentivise certain activities - N reconstruction
               of the historic covered diving pool of Club Natació Barcelona (CNB)
               - deduction pending/generated [01264]
           public-interest-club-natacio-barcelona-credit-2024-remaining:
-            label: Deductions to incentivise certain activities - 2024 reconstruction
+            label: Deductions to incentivise certain activities - N reconstruction
               of the historic covered diving pool of Club Natació Barcelona (CNB)
               - pending application in future periods [01266]
           public-interest-hockey-centenary-credit-2024-applied:
-            label: 'Deductions to incentivise certain activities - 2024: Centenary
-              of hockey 1923-2023 (CH) - Applied in this settlement [01904]'
+            label: 'Deductions to incentivise certain activities - N: Centenary of
+              hockey 1923-2023 (CH) - Applied in this settlement [01904]'
           public-interest-hockey-centenary-credit-2024-generated:
-            label: 'Deductions to incentivise certain activities - 2024: Centenary
-              of hockey 1923-2023 (CH) - Deduction carried forward/generated [01903]'
+            label: 'Deductions to incentivise certain activities - N: Centenary of
+              hockey 1923-2023 (CH) - Deduction carried forward/generated [01903]'
           public-interest-hockey-centenary-credit-2024-remaining:
-            label: 'Deductions to incentivise certain activities - 2024: Centenary
-              of hockey 1923-2023 (CH) - Carried forward for application in future
-              periods [01976]'
+            label: 'Deductions to incentivise certain activities - N: Centenary of
+              hockey 1923-2023 (CH) - Carried forward for application in future periods
+              [01976]'
           public-interest-joaquin-sorolla-centenary-credit-2024-applied:
-            label: Deductions to incentivise certain activities - 2024 100th anniversary
+            label: Deductions to incentivise certain activities - N 100th anniversary
               of the death of Joaquín Sorolla (JS) - Applied in this settlement [01110]
           public-interest-joaquin-sorolla-centenary-credit-2024-generated:
-            label: Deductions to incentivise certain activities - 2024 100th anniversary
+            label: Deductions to incentivise certain activities - N 100th anniversary
               of the death of Joaquín Sorolla (JS) - Deduction carried forward/generated
               [01089]
           public-interest-joaquin-sorolla-centenary-credit-2024-remaining:
-            label: Deductions to incentivise certain activities - 2024 100th anniversary
+            label: Deductions to incentivise certain activities - N 100th anniversary
               of the death of Joaquín Sorolla (JS) - Carried forward for application
               in future periods [01141]
           public-interest-manifesta-fifteen-credit-2024-applied:
-            label: 'Deductions to incentivise certain activities - 2024: Manifesta
-              15 Barcelona biennial (BM15) - Applied in this settlement [02285]'
+            label: 'Deductions to incentivise certain activities - N: Manifesta 15
+              Barcelona biennial (BM15) - Applied in this settlement [02285]'
           public-interest-manifesta-fifteen-credit-2024-generated:
-            label: 'Deductions to incentivise certain activities - 2024: Manifesta
-              15 Barcelona biennial (BM15) - Deduction carried forward/generated [02284]'
+            label: 'Deductions to incentivise certain activities - N: Manifesta 15
+              Barcelona biennial (BM15) - Deduction carried forward/generated [02284]'
           public-interest-manifesta-fifteen-credit-2024-remaining:
-            label: 'Deductions to incentivise certain activities - 2024: Manifesta
-              15 Barcelona biennial (BM15) - Carried forward for application in future
+            label: 'Deductions to incentivise certain activities - N: Manifesta 15
+              Barcelona biennial (BM15) - Carried forward for application in future
               periods [02286]'
           public-interest-paris-olympic-preparation-credit-2024-applied:
             label: Deductions to incentivise certain activities - 2024 Preparation
@@ -10984,46 +10982,46 @@ modelo:
               programme for Spanish athletes at the Paris 2024 Games (P24) - Carried
               forward for application in future periods [01088]
           public-interest-passeig-gracia-bicentenary-credit-2024-applied:
-            label: Deductions to incentivise certain activities - 2024 200th anniversary
+            label: Deductions to incentivise certain activities - N 200th anniversary
               of Passeig de Grácia (PG) - Applied in this settlement [01262]
           public-interest-passeig-gracia-bicentenary-credit-2024-generated:
-            label: Deductions to incentivise certain activities - 2024 200th anniversary
+            label: Deductions to incentivise certain activities - N 200th anniversary
               of Passeig de Grácia (PG) - Deduction carried forward/generated [01261]
           public-interest-passeig-gracia-bicentenary-credit-2024-remaining:
-            label: Deductions to incentivise certain activities - 2024 200th anniversary
+            label: Deductions to incentivise certain activities - N 200th anniversary
               of Passeig de Grácia (PG) - Carried forward for application in future
               periods [01263]
           public-interest-picasso-death-anniversary-credit-2024-applied:
-            label: Deductions to incentivise certain activities - 2024 Commemoration
+            label: Deductions to incentivise certain activities - N Commemoration
               of the 50th anniversary of the death of the Spanish artist Pablo Picasso
               (50P) - Applied in this settlement [01153]
           public-interest-picasso-death-anniversary-credit-2024-generated:
-            label: Deductions to incentivise certain activities - 2024 Commemoration
+            label: Deductions to incentivise certain activities - N Commemoration
               of the 50th anniversary of the death of the Spanish artist Pablo Picasso
               (50P) - Deduction carried forward/generated [01152]
           public-interest-picasso-death-anniversary-credit-2024-remaining:
-            label: Deductions to incentivise certain activities - 2024 Commemoration
+            label: Deductions to incentivise certain activities - N Commemoration
               of the 50th anniversary of the death of the Spanish artist Pablo Picasso
               (50P) - Carried forward for application in future periods [01154]
           public-interest-plan-2030-base-sport-credit-2024-applied:
-            label: Deductions to incentivise certain activities - 2024 2030 Plan for
+            label: Deductions to incentivise certain activities - N 2030 Plan for
               the support of grassroots sport (P30) - Applied in this settlement [00906]
           public-interest-plan-2030-base-sport-credit-2024-generated:
-            label: Deductions to incentivise certain activities - 2024 2030 Plan for
+            label: Deductions to incentivise certain activities - N 2030 Plan for
               the support of grassroots sport (P30) - Deduction carried forward/generated
               [00902]
           public-interest-plan-2030-base-sport-credit-2024-remaining:
-            label: Deductions to incentivise certain activities - 2024 2030 Plan for
+            label: Deductions to incentivise certain activities - N 2030 Plan for
               the support of grassroots sport (P30) - Carried forward for application
               in future periods [01870]
           public-interest-primavera-sound-anniversary-credit-2024-applied:
-            label: Deductions to incentivise certain activities - 2024 20th anniversary
+            label: Deductions to incentivise certain activities - N 20th anniversary
               of Primavera Sound (PS) - Applied in this settlement [01144]
           public-interest-primavera-sound-anniversary-credit-2024-generated:
-            label: Deductions to incentivise certain activities - 2024 20th anniversary
+            label: Deductions to incentivise certain activities - N 20th anniversary
               of Primavera Sound (PS) - Deduction carried forward/generated [01142]
           public-interest-primavera-sound-anniversary-credit-2024-remaining:
-            label: Deductions to incentivise certain activities - 2024 20th anniversary
+            label: Deductions to incentivise certain activities - N 20th anniversary
               of Primavera Sound (PS) - Carried forward for application in future
               periods [01145]
           public-interest-south-summit-credit-2024-applied:
@@ -11036,44 +11034,43 @@ modelo:
             label: Deductions to incentivise certain activities - 2024 South Summit
               2022-2024 (SS) - Carried forward for application in future periods [01283]
           public-interest-todos-contra-cancer-credit-2024-applied:
-            label: Deductions to incentivise certain activities - 2024 All against
-              cancer (TC) - Applied in this settlement [01156]
+            label: Deductions to incentivise certain activities - N All against cancer
+              (TC) - Applied in this settlement [01156]
           public-interest-todos-contra-cancer-credit-2024-generated:
-            label: Deductions to incentivise certain activities - 2024 All against
-              cancer (TC) - Deduction carried forward/generated [01155]
+            label: Deductions to incentivise certain activities - N All against cancer
+              (TC) - Deduction carried forward/generated [01155]
           public-interest-todos-contra-cancer-credit-2024-remaining:
-            label: Deductions to incentivise certain activities - 2024 All against
-              cancer (TC) - Carried forward for application in future periods [01157]
+            label: Deductions to incentivise certain activities - N All against cancer
+              (TC) - Carried forward for application in future periods [01157]
           public-interest-universo-mujer-three-credit-2024-applied:
-            label: Deductions to incentivise certain activities - 2024 Universo Mujer
+            label: Deductions to incentivise certain activities - N Universo Mujer
               III (UM3) - Applied in this settlement [00955]
           public-interest-universo-mujer-three-credit-2024-generated:
-            label: Deductions to incentivise certain activities - 2024 Universo Mujer
+            label: Deductions to incentivise certain activities - N Universo Mujer
               III (UM3) - Deduction carried forward/generated [01914]
           public-interest-universo-mujer-three-credit-2024-remaining:
-            label: Deductions to incentivise certain activities - 2024 Universo Mujer
+            label: Deductions to incentivise certain activities - N Universo Mujer
               III (UM3) - Carried forward for application in future periods [00956]
           public-interest-victoria-angeles-centenary-credit-2024-applied:
-            label: Deductions to incentivise certain activities - 2024 Centenary of
-              the birth of Victoria de los Ángeles (VA) - Applied in this settlement
-              [01150]
+            label: Deductions to incentivise certain activities - N Centenary of the
+              birth of Victoria de los Ángeles (VA) - Applied in this settlement [01150]
           public-interest-victoria-angeles-centenary-credit-2024-generated:
-            label: Deductions to incentivise certain activities - 2024 Centenary of
-              the birth of Victoria de los Ángeles (VA) - Deduction carried forward/generated
+            label: Deductions to incentivise certain activities - N Centenary of the
+              birth of Victoria de los Ángeles (VA) - Deduction carried forward/generated
               [01146]
           public-interest-victoria-angeles-centenary-credit-2024-remaining:
-            label: Deductions to incentivise certain activities - 2024 Centenary of
-              the birth of Victoria de los Ángeles (VA) - Carried forward for application
+            label: Deductions to incentivise certain activities - N Centenary of the
+              birth of Victoria de los Ángeles (VA) - Carried forward for application
               in future periods [01151]
           public-interest-wine-tourism-conference-credit-2024-applied:
-            label: Deductions to incentivise certain activities - 2024 7th UNWTO Global
+            label: Deductions to incentivise certain activities - N 7th UNWTO Global
               Conference on Wine Tourism 2023 (7TE) - Applied in this settlement [01221]
           public-interest-wine-tourism-conference-credit-2024-generated:
-            label: Deductions to incentivise certain activities - 2024 7th UNWTO Global
+            label: Deductions to incentivise certain activities - N 7th UNWTO Global
               Conference on Wine Tourism 2023 (7TE) - Deduction carried forward/generated
               [01220]
           public-interest-wine-tourism-conference-credit-2024-remaining:
-            label: Deductions to incentivise certain activities - 2024 7th UNWTO Global
+            label: Deductions to incentivise certain activities - N 7th UNWTO Global
               Conference on Wine Tourism 2023 (7TE) - Carried forward for application
               in future periods [01222]
           ric-2019-materialization-a-b:
@@ -12486,8 +12483,8 @@ modelo:
           casilla:
             '00077':
               label: Accelerated depreciation of certain vehicles and new charging
-                infrastructure (DA 18 LIS RDL 5/2023 and RDL 7/2026) - Increase -
-                Adjustments for the tax year - Temporary (originating in this tax
+                infrastructure (Additional Provision 18 LIS, RDL 5/2023) - Increase
+                - Adjustments for the tax year - Temporary (originating in this tax
                 year) [00077]
             00091:
               label: 'Special regime for ships and shipping companies in the Canary
@@ -12526,29 +12523,29 @@ modelo:
             00812:
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
-                Generation year - 2025(*) - DTAs pending application in future periods
-                - With a right of conversion into a claimable credit, excess tax due
+                Generation year - N - DTAs pending application in future periods -
+                With a right of conversion into a claimable credit, excess tax due
                 [00812]
             00816:
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
-                Generation year - 2025(*) - DTAs pending application in future periods
-                - Without a right of conversion into a claimable credit [00816]
+                Generation year - N - DTAs pending application in future periods -
+                Without a right of conversion into a claimable credit [00816]
             00817:
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Excess positive net tax liability - Generation
-                year - 2025(*) - Excess positive net tax due outstanding at the start
-                of the period [00817]
+                year - N - Excess positive net tax due outstanding at the start of
+                the period [00817]
             00878:
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Excess positive net tax liability - Generation
-                year - 2025(*) - Excess positive net tax due applied in tax periods
-                2008 to 2015 [00878]
+                year - N - Excess positive net tax due applied in tax periods 2008
+                to 2015 [00878]
             00879:
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Excess positive net tax liability - Generation
-                year - 2025(*) - Excess positive net tax due applied in tax periods
-                beginning from 2016 [00879]
+                year - N - Excess positive net tax due applied in tax periods beginning
+                from 2016 [00879]
             00881:
               label: Deductions to incentivise certain activities - 2023 Investments
                 in West African territories and advertising and publicity expenses
@@ -12557,8 +12554,8 @@ modelo:
             00882:
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Excess positive net tax liability - Generation
-                year - 2025(*) - Excess positive net tax due pending application in
-                future periods [00882]
+                year - N - Excess positive net tax due pending application in future
+                periods [00882]
             00925:
               label: Settlement III - Taxable base - Income that does not limit the
                 offsetting of negative taxable bases - Income from the reversal of
@@ -12647,61 +12644,61 @@ modelo:
             01578:
               label: Settlement IV - Corrective return - Amount payable as a result
                 of processing prior self-assessments or administrative assessments
-                corresponding to the 2025 tax period - State [01578]
+                corresponding to the N tax period - State [01578]
             01583:
               label: Settlement IV - Corrective return - Amount payable as a result
                 of processing prior self-assessments or administrative assessments
-                corresponding to the 2025 tax period - Regional (foral) administrations/Navarre
+                corresponding to the N tax period - Regional (foral) administrations/Navarre
                 (Totals) [01583]
             01584:
               label: Settlement IV - Corrective return - Refund agreed by the Tax
                 Agency as a result of processing prior self-assessments or administrative
-                assessments corresponding to the 2025 tax period - State [01584]
+                assessments corresponding to the N tax period - State [01584]
             01585:
               label: Settlement IV - Corrective return - Refund agreed by the Tax
                 Agency as a result of processing prior self-assessments or administrative
-                assessments corresponding to the 2025 tax period - Regional (foral)
-                administrations/Navarre (Totals) [01585]
+                assessments corresponding to the N tax period - Regional (foral) administrations/Navarre
+                (Totals) [01585]
             '01611':
               label: 'Joint taxation of State and provincial tax administrations -
                 Corrective: refund agreed by the Tax Agency as a result of processing
                 prior self-assessments or administrative assessments corresponding
-                to the 2025 tax period - Araba/Alava [01611]'
+                to the N tax period - Araba/Alava [01611]'
             '01612':
               label: 'Joint taxation of State and provincial tax administrations -
                 Corrective: refund agreed by the Tax Agency as a result of processing
                 prior self-assessments or administrative assessments corresponding
-                to the 2025 tax period - Gipuzkoa [01612]'
+                to the N tax period - Gipuzkoa [01612]'
             '01613':
               label: 'Joint taxation of State and provincial tax administrations -
                 Corrective: refund agreed by the Tax Agency as a result of processing
                 prior self-assessments or administrative assessments corresponding
-                to the 2025 tax period - Bizkaia [01613]'
+                to the N tax period - Bizkaia [01613]'
             '01623':
               label: 'Joint taxation of State and provincial tax administrations -
                 Corrective: refund agreed by the Tax Agency as a result of processing
                 prior self-assessments or administrative assessments corresponding
-                to the 2025 tax period - Navarre [01623]'
+                to the N tax period - Navarre [01623]'
             '01650':
               label: 'Joint taxation of State and provincial tax administrations -
                 Corrective: self-assessment result including the first instalment
                 under art. 19.1 LIS arising from an earlier self-assessment or administrative
-                assessment for tax period 2025 - Araba/Alava [01650]'
+                assessment for tax period N - Araba/Alava [01650]'
             '01651':
               label: 'Joint taxation of State and provincial tax administrations -
                 Corrective: self-assessment result including the first instalment
                 under art. 19.1 LIS arising from an earlier self-assessment or administrative
-                assessment for tax period 2025 - Gipuzkoa [01651]'
+                assessment for tax period N - Gipuzkoa [01651]'
             '01652':
               label: 'Joint taxation of State and provincial tax administrations -
                 Corrective: self-assessment result including the first instalment
                 under art. 19.1 LIS arising from an earlier self-assessment or administrative
-                assessment for tax period 2025 - Bizkaia [01652]'
+                assessment for tax period N - Bizkaia [01652]'
             '01653':
               label: 'Joint taxation of State and provincial tax administrations -
                 Corrective: self-assessment result including the first instalment
                 under art. 19.1 LIS arising from an earlier self-assessment or administrative
-                assessment for tax period 2025 - Navarre [01653]'
+                assessment for tax period N - Navarre [01653]'
             01658:
               label: 'Joint taxation of State and provincial tax administrations -
                 Conversion of deferred tax assets into a credit claimable from the
