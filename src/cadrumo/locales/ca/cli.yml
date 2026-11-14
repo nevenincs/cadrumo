@@ -1285,8 +1285,8 @@ cli:
           opció es rebutja un fitxer d'exportació existent per no destruir una exportació
           anterior.
         revision_help: Identificador del càlcul desat a exportar; per defecte, el
-          càlcul més recent de la declaració que estigui comprovat i complet o registrat
-          com a presentat.
+          càlcul actual de la declaració, que ha d'estar comprovat i complet o registrat
+          com a presentat. Fes servir --select per indicar-ne un altre.
         work_unit_id_help: Identificador de la declaració (SHA-256 o prefix inequívoc).
       filing_record:
         app_help: Inspeccionar els registres interns de presentació

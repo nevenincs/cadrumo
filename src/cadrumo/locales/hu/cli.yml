@@ -1268,8 +1268,9 @@ cli:
         replace_help: Lecseréli a --output helyén már meglévő fájlt. Enélkül a meglévő
           exportfájlt a program elutasítja, hogy egy korábbi export ne vesszen el.
         revision_help: 'Az exportálandó mentett számítás azonosítója; alapértelmezés:
-          a bevallás legutóbbi ellenőrzött és teljes, vagy benyújtottként rögzített
-          számítása.'
+          a bevallás jelenlegi számítása, amelynek ellenőrzöttnek és teljesnek vagy
+          benyújtottként rögzítettnek kell lennie. Másikat a --select kapcsolóval
+          adhatsz meg.'
         work_unit_id_help: Bevallásazonosító (SHA-256 vagy egyértelmű előtag).
       filing_record:
         app_help: Belső benyújtási rekordok vizsgálata.
