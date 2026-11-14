@@ -7,7 +7,7 @@ revision_id = "2023"
 seed_source = "authored"
 review = { state = "generated", notes = "Authored against visually inspected BOE-A-2022-19290 AnnexI four printed pages and the hydrated 2023 registry. Base/type/quota rows, six activity descriptions, explicit no-activity declaration, December-only annual page and two deduction groups follow the official form. Supporting IVA figures remain separate. Nine printed totals now use registry formulas;65 applies the declared territorial percentage64. Populated fictional native Sheets passed API formula and input-change readback; browser visual fit remains unverified. The form and generated filing field share the explicit no-activity declaration, independently of settlement. Applies to periods from January2023. No operator review or full-fidelity claim." }
 generator_version = 1
-source_state_digest = "e1aba8d350082228ba9d4ca0f14c9393c25340174ecc673d655cb4fa9de297e8"
+source_state_digest = "f415f4a64321d79a8433e62feb38dbcfd4baea86ab5c5b8db2d91735b9d16c48"
 design_sources = [
     { source_ref = "boe-modelo-322-2023-form-pdf", sha256 = "71caf415a830b8f8bd08edb6d239bc3e85a1c6ca0e276512f9717a5d2c19c590" },
 ]

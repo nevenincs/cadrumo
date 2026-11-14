@@ -9,6 +9,7 @@ import pytest
 from cadrumo.core.filing_producer_key import FilingProducerKey
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.export_semantics import ExportComputedKey
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
 from ...compiler.form_layout_integrity import form_layout_source_digest
@@ -101,5 +102,24 @@ def test_a_required_slot_may_not_lose_its_requirement_through_the_feed_change(af
 
 def test_a_changed_constant_is_refused(after: ModeloRevision) -> None:
     old, new = _sharing_the_old_form(_header_feed(after), _with_marker_fields(after, presence_marker="X"))
+    with pytest.raises(RegistryValidationError, match="marker-changing feed"):
+        reconcile_unreferenced_export_producers(old, new)
+
+
+def test_a_blank_slot_follows_the_continuation_marker_and_its_requirement(after: ModeloRevision) -> None:
+    """A slot its design prints blank declared no constant, so the marker's own requirement replaces the header's."""
+    blank = _with_marker_fields(after, presence_marker=None)
+    old, new = _sharing_the_old_form(_header_feed(blank), _with_marker_fields(blank, required=False))
+
+    reconciled = reconcile_unreferenced_export_producers(old, new)
+
+    assert reconciled.source_state_digest == form_layout_source_digest(new)
+
+
+def test_a_blank_slot_may_not_move_to_another_computed_value(after: ModeloRevision) -> None:
+    blank = _with_marker_fields(after, presence_marker=None)
+    other = _with_marker_fields(blank, computed_key=ExportComputedKey.M303_NO_ACTIVITY_MARKER)
+    old, new = _sharing_the_old_form(_header_feed(blank), other)
+
     with pytest.raises(RegistryValidationError, match="marker-changing feed"):
         reconcile_unreferenced_export_producers(old, new)
