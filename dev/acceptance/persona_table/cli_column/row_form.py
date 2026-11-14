@@ -1,18 +1,18 @@
 """The row figures of a return, read from the saved repeating records the ``work form`` command prints.
 
 The calculation the CLI prints holds column totals only, while a casilla a repeating-row group stores per row (a let
-property's rendimientos) is answered by its row. ``aeat app modelo work form <work>`` prints those records one value
-per line, ``record<TAB>block<TAB>row index<TAB>casilla id<TAB>value``, and as a JSON envelope. This module is pure: it
-parses either form, fails closed (an output it cannot read whole gives no value, never a guessed one), and maps the
-values to figures with the table's own single-row rule (:mod:`..row_figures`), which it reuses and does not restate.
-
-The JSON form is read as a ``values`` list of objects with the same five names (``record``, ``block``, ``row``,
-``casilla_id``, ``value``); that shape follows the TAB columns and is not yet confirmed against the command.
+property's rendimientos) is answered by its row. ``aeat app modelo work form <work>`` prints the form's repeating blocks
+and their saved records: as TAB lines (header lines, ``block<TAB>id<TAB>known<TAB>n`` or ``...<TAB>unknown<TAB>words``,
+then ``record<TAB>block<TAB>row index<TAB>casilla id<TAB>value`` per value) and as a JSON envelope whose ``blocks``
+carry ``block_id``, ``rows_known`` and ``records`` of ``index`` and ``values`` (``casilla_id``, ``value``). This
+module is pure: it parses either form, fails closed (an output it cannot read whole gives no value, never a guessed
+one), and maps the values to figures with the table's own single-row rule (:mod:`..row_figures`), which it reuses and
+does not restate. A block whose rows are not known contributes no value: its records are unknown, never empty. A
+cell no casilla owns is not a figure of any casilla and is skipped.
 A value the central privacy boundary printed redacted (``sha256:<8 hex>``, see :func:`..frontend.is_redacted`, e.g.
 the tenant NIF 0091) is kept as the text it was printed. It is a figure of a casilla held by exactly one row, and
 fills the merge only where the printed figure is absent or zero; the single-row and conflict rules of the table stay
 those of numeric casillas, and the merge names the casillas kept redacted.
-TODO: confirm the envelope's field names once the leaf is on the tree and adjust :func:`parse_form_result`.
 """
 
 from __future__ import annotations
@@ -32,8 +32,7 @@ from ..rows import canonical_figures
 FORM_PATH = ("app", "modelo", "work", "form")
 """The command that prints the saved repeating records of one work unit."""
 _FIELDS = 5
-_VALUES = "values"
-_ROW_NAMES = ("record", "block", "row", "casilla_id", "value")
+_BLOCKS = "blocks"
 
 
 @dataclass(frozen=True, slots=True)
@@ -68,36 +67,91 @@ def _row_value(record: str, block: str, row: object, casilla: str, value: object
     return FormValue(record, block, index, casilla, text)
 
 
+_RECORD = "record"
+_SKIPPED_LINES = frozenset(
+    {
+        "operation",
+        "work_unit_id",
+        "modelo",
+        "filing_year",
+        "period",
+        "registry_revision_id",
+        "calculation_revision_id",
+        "block",
+        "record_column",
+    }
+)
+
+
 def parse_form_lines(text: str) -> tuple[FormValue, ...]:
-    """The values of the TAB form; empty unless every non-blank line is five well-formed fields."""
+    """The values of the TAB form; empty unless every non-blank line is a known header, block or record line.
+
+    A ``record`` line is five well-formed fields; header, ``block`` and ``record_column`` lines carry no casilla value.
+    """
     found: list[FormValue] = []
     for line in text.splitlines():
         if not line.strip():
             continue
         parts = line.rstrip("\r").split("\t")
-        item = None if len(parts) != _FIELDS else _row_value(parts[0], parts[1], parts[2], parts[3], parts[4])
+        if parts[0] in _SKIPPED_LINES:
+            continue
+        item = (
+            None
+            if parts[0] != _RECORD or len(parts) != _FIELDS
+            else _row_value(parts[0], parts[1], parts[2], parts[3], parts[4])
+        )
         if item is None:
             return ()
         found.append(item)
     return tuple(found)
 
 
-def _entry_value(entry: object) -> FormValue | None:
-    if not isinstance(entry, Mapping) or any(name not in entry for name in _ROW_NAMES):
+def _cell_value(block: str, index: object, cell: object) -> FormValue | None:
+    """The cell's value; ``None`` when the cell is malformed."""
+    if not isinstance(cell, Mapping) or "casilla_id" not in cell or "value" not in cell:
         return None
-    record, block, casilla = entry["record"], entry["block"], entry["casilla_id"]
-    if not (isinstance(record, str) and isinstance(block, str) and isinstance(casilla, str)):
+    casilla = cell["casilla_id"]
+    if not isinstance(casilla, str):
         return None
-    return _row_value(record, block, entry["row"], casilla, entry["value"])
+    return _row_value(_RECORD, block, index, casilla, cell["value"])
+
+
+def _block_values(block: object) -> list[FormValue] | None:
+    """The values of one block of the JSON form; none when the block is malformed, empty when its rows are unknown."""
+    if not isinstance(block, Mapping) or not isinstance(block.get("block_id"), str):
+        return None
+    known, records = block.get("rows_known"), block.get("records")
+    if not isinstance(known, bool) or not isinstance(records, list):
+        return None
+    if not known:
+        return [] if not records else None
+    found: list[FormValue] = []
+    for record in records:
+        cells = record.get("values") if isinstance(record, Mapping) else None
+        if not isinstance(cells, list) or not isinstance(record, Mapping):
+            return None
+        for cell in cells:
+            if isinstance(cell, Mapping) and "casilla_id" in cell and cell["casilla_id"] is None:
+                continue
+            item = _cell_value(str(block["block_id"]), record.get("index"), cell)
+            if item is None:
+                return None
+            found.append(item)
+    return found
 
 
 def parse_form_result(result: Mapping[str, object]) -> tuple[FormValue, ...]:
-    """The values of the JSON form's ``result``; empty unless every entry is an object of the five names."""
-    entries = result.get(_VALUES)
-    if not isinstance(entries, list):
+    """The values of the JSON form's ``result``; empty unless every block, record and cell is well formed."""
+    blocks = result.get(_BLOCKS)
+    if not isinstance(blocks, list):
         return ()
-    found = [_entry_value(entry) for entry in entries]
-    return () if any(item is None for item in found) else tuple(item for item in found if item is not None)
+    found: list[FormValue] = []
+    for block in blocks:
+        values = _block_values(block)
+        if values is None:
+            return ()
+        found.extend(values)
+    return tuple(found)
 
 
 def _number(text: str) -> Decimal | None:
