@@ -1030,7 +1030,19 @@ async function exportFile(row, runDir, persona, out) {
     MARK,
   );
   if (text === null) {
-    sayExport(out, "the export button is not shown");
+    const state = await readState();
+    const shown = await exec(
+      (selector) =>
+        (document.querySelector(selector)?.innerText ?? "")
+          .replace(/\s+/g, " ")
+          .trim()
+          .slice(0, 400),
+      panel,
+    );
+    sayExport(
+      out,
+      `the export button is not shown (next action ${state.action}): ${shown}`,
+    );
     return "incomplete";
   }
   const enabled = await exec(
