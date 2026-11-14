@@ -12,15 +12,13 @@ review_status = "agent_reviewed"
 reviewed_by = "agent-prepared-pending-operator"
 reviewed_at = 2026-08-19
 # The exact 2025 design is published through the canonical generated export
-# tree, with its source-hash-bound provenance and loader validation, but the
-# formulas this edition inherits do not all agree with the 2025 design and
-# manual: base imponible 00552 drops the sign of a negative base previa
-# (manual p. 349-350), cuota integra
-# 00562 is not 01330 x 00558 / 100 (p. 371), and tipo de gravamen 00558 does
-# not cover the manual's rate categories (p. 372). A grade states evidence, so
-# the edition calculates and refuses export and local filing until those
-# formulas hold and the filing grade is reviewed again.
-authority_grade = "calculation"
+# tree, with its source-hash-bound provenance and loader validation, and the
+# formulas cite the 2025 design and manual's own operation text: 00552 keeps
+# the sign of a negative base previa, 00562 is [01330] x tipo / 100 or the
+# microempresa scale, and 00558 holds the design's four-digit code. A grade
+# states evidence; this one rests on the 2025 export round trip, those
+# citations and the 2025 persona oracle.
+authority_grade = "filing"
 # valid_from tracks the ejercicio this revision computes (2025), matching the
 # registry-wide convention (holds for 44/52 annual-cadence revisions), not the
 # orden's own publication/effective year. The span is left open ('y siguientes')
