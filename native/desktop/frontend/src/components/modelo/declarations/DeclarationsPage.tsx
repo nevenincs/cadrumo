@@ -1,4 +1,5 @@
 import {
+  useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -11,7 +12,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataGrid } from "@/components/ui/data-grid";
 import { DataGridText } from "@/components/ui/data-grid-text";
-import { type GridColumn, type GridRow } from "@/components/ui/dataGridTypes";
+import {
+  type DataGridHandle,
+  type GridColumn,
+  type GridRow,
+} from "@/components/ui/dataGridTypes";
 import { EmptyState } from "@/components/ui/empty";
 import { Icon } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
@@ -53,6 +58,9 @@ export type DeclarationsMemory = ListMemory & {
   sort?: SortState;
   query?: string;
   collapsed?: ReadonlySet<string>;
+  /** The row a declaration was opened from, which takes the keyboard when
+   * the list comes back. */
+  returnTo?: string;
 };
 
 /** A piece of the page's state that outlives the page in its memory. */
@@ -465,6 +473,16 @@ export function DeclarationsPage({
     () => new Map(rows.map((row) => [row.key, row])),
     [rows],
   );
+  // Back from a declaration, the keyboard returns to the row it was opened
+  // from, once that row is drawn; the list's place is not lost.
+  const grid = useRef<DataGridHandle>(null);
+  useEffect(() => {
+    const key = ownedMemory.returnTo;
+    if (key === undefined || !gridRows.some((row) => row.key === key)) return;
+    delete ownedMemory.returnTo;
+    grid.current?.scrollToKey(key, "center");
+    grid.current?.focusCell(key);
+  }, [gridRows, ownedMemory]);
   const activate = (key: string) => {
     const row = byKey.get(key);
     if (!row) return;
@@ -472,8 +490,10 @@ export function DeclarationsPage({
     setHelp(null);
     if (action === "related")
       setRelatedSelection({ reader, memory: ownedMemory, row });
-    else if (action === "open" && row.work_unit_id) onOpen(row.work_unit_id);
-    else if (action === "aeat") setAeatRow(row);
+    else if (action === "open" && row.work_unit_id) {
+      ownedMemory.returnTo = key;
+      onOpen(row.work_unit_id);
+    } else if (action === "aeat") setAeatRow(row);
     else if (action === "help") setHelp(row.help_words);
     else if (action === "start")
       setCreating({
@@ -617,6 +637,7 @@ export function DeclarationsPage({
         )}
         <div className="flex min-h-0 flex-1 flex-col p-3">
           <DataGrid
+            ref={grid}
             className="declarations-grid rounded-md"
             label={t("workspace.declarations.destination.overview")}
             columns={cols}
@@ -736,6 +757,7 @@ export function DeclarationsPage({
               ? () => {
                   const work = relatedRow.work_unit_id;
                   setRelatedSelection(null);
+                  ownedMemory.returnTo = relatedRow.key;
                   if (work) onOpen(work);
                 }
               : undefined

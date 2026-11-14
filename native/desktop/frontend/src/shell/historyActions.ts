@@ -9,11 +9,16 @@ export const POINTER_FORWARD = 4;
 
 /** Whether the element with focus keeps Alt+Left and Alt+Right for itself:
  * a grid's column header resizes its column with them, a page that marks
- * itself keeps them for its grids, and on macOS a text field moves by
- * word. */
+ * itself keeps them for its grid's cells, which move focus and hold editors,
+ * and on macOS a text field moves by word. Anywhere else they step the
+ * window's history. */
 function keepsAltArrows(element: Element | null): boolean {
   if (!element) return false;
-  if (element.closest('[role="columnheader"], [data-keeps-alt-arrows]'))
+  if (
+    element.closest(
+      '[role="columnheader"], [data-keeps-alt-arrows] [data-slot="data-grid-cell"]',
+    )
+  )
     return true;
   return (
     IS_MAC &&
