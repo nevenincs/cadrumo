@@ -18,6 +18,7 @@ import {
   SegmentedControlItem,
 } from "@/components/ui/segmented-control";
 import { Spinner } from "@/components/ui/spinner";
+import { useScrolls } from "@/components/ui/useScrolls";
 import { createWorkRequest, type ModeloPort } from "../../../shell/modelo";
 import {
   creationWriteKey,
@@ -158,6 +159,8 @@ function Chooser({
     start?.period?.filing_year ?? null,
   );
   const [attempt, setAttempt] = useState<Attempt>({ kind: "idle" });
+  const [list, setList] = useState<HTMLElement | null>(null);
+  const scrolls = useScrolls(list);
   const alive = useRef(false);
   const generation = useRef(0);
   const activeTarget = useRef("");
@@ -350,7 +353,21 @@ function Chooser({
               {t("workspace.declarations.list.new.no_match", { query })}
             </p>
           ) : (
-            <div className="-mx-2 flex min-h-0 flex-col gap-3 overflow-y-auto px-2">
+            <div
+              ref={setList}
+              role={scrolls ? "region" : undefined}
+              aria-label={
+                scrolls
+                  ? t("workspace.declarations.list.new.which_modelo")
+                  : undefined
+              }
+              tabIndex={scrolls ? 0 : undefined}
+              className={cn(
+                "-mx-2 flex min-h-0 flex-col gap-3 overflow-y-auto px-2",
+                scrolls &&
+                  "outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
+              )}
+            >
               {[true, false].map((expected) => {
                 const list = found.filter((m) => m.expected === expected);
                 if (!list.length) return null;

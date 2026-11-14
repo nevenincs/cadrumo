@@ -166,6 +166,12 @@
   --calendar-month-min: 16rem;
   --calendar-list-min: 20rem;
   --calendar-list-max: 26rem;
+  /* The Modelo form's least height: the short one on a window this tall, the
+     tall one from this much taller, growing with the window between. */
+  --form-least-short: 10rem;
+  --form-least-tall: 11rem;
+  --form-least-from: 600px;
+  --form-least-slope: 0.16;
 
   /* ── Layers, lowest first. Overlays are portalled to the document body,
      so only these few need an order. ─────────────────────────────── */
