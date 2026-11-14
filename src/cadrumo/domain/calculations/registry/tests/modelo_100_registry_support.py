@@ -47,11 +47,18 @@ unrelated chain states these as neutral zeros together with the path below."""
 M100_NO_MARITIME_WORKER_BOOLEAN_BINDINGS: Final = MappingProxyType({"renta-maritime-path-rebeca": False})
 """The REBECA path flag of a filer with no maritime work."""
 
-M100_NO_LET_PROPERTY_BINDINGS: Final = MappingProxyType({"renta-inmueble-total-rendimiento-neto-0149": Decimal(0)})
-"""The let properties' net-yield total of a filer with no let property: the source sums no rows.
+M100_NO_LET_PROPERTY_BINDINGS: Final = MappingProxyType(
+    {
+        "renta-inmueble-total-rendimiento-neto-0149": Decimal(0),
+        "renta-inmueble-total-renta-imputada-0089": Decimal(0),
+    }
+)
+"""The property totals of a filer with no property: the source sums no rows.
 
-The art. 20 LIRPF other-income limit reads this total in every edition that computes the
-reduction, so a scenario of an unrelated chain states it as a neutral zero."""
+The art. 20 LIRPF other-income limit reads the let properties' net-yield total, and box 0155
+sums the art. 85 LIRPF imputed income the Inmueble rows carry, in every edition that computes
+them, so a scenario of an unrelated chain states both as a neutral zero, as the registered
+projection resolves them for a filer with no property."""
 
 
 def neutral_binding_values(

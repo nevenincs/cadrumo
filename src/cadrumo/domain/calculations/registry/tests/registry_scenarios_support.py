@@ -557,6 +557,9 @@ def real_estate_capital_scenario() -> RegistryCalculationScenario:
             "renta-profile-minimo-ascendientes-estatal": Decimal("0"),
             "renta-profile-minimo-ascendientes-autonomico": Decimal("0"),
             "renta-profile-deduccion-madrid-cuidado-ascendientes-count": Decimal("0"),
+            # The one property's art. 85 LIRPF imputed income, the total its Inmueble row
+            # carries in casilla 0089: 2 % of the 6.172,50 cadastral value for all 365 days.
+            "renta-inmueble-total-renta-imputada-0089": Decimal("123.45"),
         },
         enum_binding_values={
             "renta-profile-tax-residence-ccaa": "madrid",
@@ -571,9 +574,9 @@ def real_estate_capital_scenario() -> RegistryCalculationScenario:
                 "0155",
                 value=Decimal("123.45"),
                 operand_refs=registry_scenarios_operand_refs(
-                    "0089",
+                    "renta-inmueble-total-renta-imputada-0089",
                 ),
-                operand_casilla_refs=operand_casilla_refs("0089"),
+                operand_casilla_refs=operand_casilla_refs(),
                 legal_refs=("ley-35-2006:art-22", "ley-35-2006:art-85", "orden-hac-277-2026:art-3"),
             ),
             expected(
