@@ -11,7 +11,7 @@
 
 authority_id = "dev.registry.filing-export-conformance"
 mechanism_source_ref = "generated-provenance/200/2025-y-siguientes"
-generation_manifest_sha256 = "bc835e8b155c067271d7aa33cbd6a3cfe7fcec1bd1f8419b25cc31c5820f0096"
+generation_manifest_sha256 = "70301cd3769e00b16361e44499934f598c2752f8a5f517a34bd18d287b96a504"
 filing_year = 2025
 period_code = "0A"
 
