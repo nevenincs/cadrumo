@@ -26,6 +26,7 @@ function Page({ mode, language }: { mode: AeatSyncMode; language: string }) {
         language={language}
         shown
         page={page}
+        pane={{ controls: [], onToggleMaximize: () => {} }}
         onOpenAccess={noop}
         onOpenAeat={noop}
         onReviewCensus={noop}

@@ -8,6 +8,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { Spinner } from "@/components/ui/spinner";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Tooltip,
@@ -191,6 +192,7 @@ export function ModeloWorkspace({
   stagedCount,
   panes,
   busy = false,
+  reading = false,
   writeHeld = false,
   prerequisiteHeld = false,
   notice,
@@ -212,6 +214,9 @@ export function ModeloWorkspace({
   panes: WorkspacePanes;
   /** An operation the header started has not answered yet. */
   busy?: boolean;
+  /** The window is reading the declaration again after its own settled
+   * write: the step served before it is not offered until the read answers. */
+  reading?: boolean;
   writeHeld?: boolean;
   /** An apply was refused on a prerequisite that still stands. */
   prerequisiteHeld?: boolean;
@@ -298,7 +303,7 @@ export function ModeloWorkspace({
       ])}
     </span>
   );
-  const nextShown =
+  const step =
     action === "recorded" ? (
       next?.receipt_to_add && view !== "file" ? (
         <>
@@ -321,6 +326,19 @@ export function ModeloWorkspace({
         <Icon name={busy && writesNext ? "loader" : "forward"} size="xs" />
       </Button>
     ) : null;
+  // The step served before the window's own write is not offered while the
+  // read that replaces it runs.
+  const nextShown = reading ? (
+    <span
+      role="status"
+      className="flex items-center gap-1.5 text-sm text-muted-foreground"
+    >
+      <Spinner />
+      {t("desktop.navigation.busy")}
+    </span>
+  ) : (
+    step
+  );
 
   const marks = (tab: WorkspaceView) =>
     (TAB_LEVELS[tab] ?? []).map((level) => {
