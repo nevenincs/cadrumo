@@ -3,6 +3,7 @@ import { useAccountActions } from "./accountActions";
 import type { Action } from "./actions";
 import { useArrangementActions } from "./arrangementActions";
 import { useDocsActions } from "./docsActions";
+import { useHistoryActions } from "./historyActions";
 import { useLogActions } from "./logActions";
 import { useSetupActions } from "./setupActions";
 import { useTerminalActions } from "./terminalActions";
@@ -21,6 +22,7 @@ type ShellActionSources = Parameters<typeof useWindowChromeActions>[0] &
   Parameters<typeof useWindowDialogActions>[0] &
   Parameters<typeof useSetupActions>[0] &
   Parameters<typeof useViewActions>[0] &
+  Parameters<typeof useHistoryActions>[0] &
   Parameters<typeof useAccountActions>[0] &
   Parameters<typeof useFocusActions>[0] &
   Parameters<typeof useTerminalActions>[0];
@@ -37,6 +39,7 @@ export function useShellActions(sources: ShellActionSources): Action[] {
   const dialogs = useWindowDialogActions(sources);
   const setup = useSetupActions(sources);
   const views = useViewActions(sources);
+  const history = useHistoryActions(sources);
   const account = useAccountActions(sources);
   const focus = useFocusActions(sources);
   const terminal = useTerminalActions(sources);
@@ -49,6 +52,7 @@ export function useShellActions(sources: ShellActionSources): Action[] {
       ...dialogs,
       ...setup,
       ...views,
+      ...history,
       ...account,
       ...focus,
       ...terminal,
@@ -61,6 +65,7 @@ export function useShellActions(sources: ShellActionSources): Action[] {
       dialogs,
       setup,
       views,
+      history,
       account,
       focus,
       terminal,

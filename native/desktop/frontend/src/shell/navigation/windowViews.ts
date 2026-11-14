@@ -5,6 +5,7 @@
 // element with no entry here is declared but not drawn.
 
 import type { LedgerSection, PanelTab } from "../layout";
+import type { ViewerPosition } from "./history";
 
 /** The window's pages that a register element opens. */
 export type WindowPage =
@@ -158,4 +159,30 @@ export function unmountedBy(
   if (view.kind !== "page") return new Set();
   const next = mountedNow(view.page, view.section ?? ledgerSection);
   return new Set([...mounted].filter((id) => !next.has(id)));
+}
+
+/** What stepping from `from` to `to` would take down, by the ids owners
+ * guard their work under: leaving a page or a Ledger section as any
+ * navigation does, and leaving one declaration, for its list or another,
+ * takes down the declaration's own work. A change of view takes down
+ * nothing. */
+export function positionUnmounts(
+  from: ViewerPosition,
+  to: ViewerPosition,
+  ledgerSection: LedgerSection,
+): ReadonlySet<string> {
+  const unmounted = new Set(
+    unmountedBy(
+      mountedNow(from.page, from.section ?? ledgerSection),
+      { kind: "page", page: to.page, section: to.section },
+      ledgerSection,
+    ),
+  );
+  if (
+    from.page === "declarations" &&
+    from.workUnitId !== null &&
+    from.workUnitId !== to.workUnitId
+  )
+    unmounted.add("declarations");
+  return unmounted;
 }

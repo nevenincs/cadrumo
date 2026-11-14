@@ -37,6 +37,7 @@ import type { LeaveGuard } from "./ledger/editing/LedgerEditing";
 import { LedgerPage, type LedgerMemory } from "./ledger/LedgerPage";
 import { DeclarationsPane } from "./modelo/declarations/DeclarationsPane";
 import type { DeclarationsMemory } from "./modelo/declarations/DeclarationsPage";
+import type { WorkspaceView } from "./modelo/workspace/Workspace";
 import type { PaneControl } from "./PaneHeader";
 import { UserProfilePage } from "./profile/UserProfilePage";
 import { SignedOut } from "./SignIn";
@@ -68,6 +69,7 @@ export function MainPane({
   calendarOn,
   openDeclaration,
   openWorkUnit,
+  showDeclarationView,
   guarded,
   askCenso,
   askProfileStep,
@@ -147,10 +149,12 @@ export function MainPane({
   calendarOn: boolean;
   openDeclaration: {
     workUnitId: string | null;
+    view: WorkspaceView | null;
     arrival: number;
     memory: { current: DeclarationsMemory };
   };
   openWorkUnit: (workUnitId: string | null) => void;
+  showDeclarationView: (view: WorkspaceView) => void;
   guarded: (proceed: () => void) => void;
   askCenso: () => void;
   askProfileStep: (step: LedgerProfileStep) => void;
@@ -224,6 +228,8 @@ export function MainPane({
           port={host.modelo}
           reader={reader}
           workUnitId={openDeclaration.workUnitId}
+          view={openDeclaration.view}
+          onViewChange={showDeclarationView}
           onOpen={openWorkUnit}
           onOpenWork={(id) => guarded(() => openWorkUnit(id))}
           // The one census flow, as the palette offers it.

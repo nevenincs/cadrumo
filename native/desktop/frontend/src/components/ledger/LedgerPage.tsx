@@ -163,6 +163,9 @@ export function LedgerPage(props: LedgerPageProps) {
             tabIndex={-1}
             aria-label={t("desktop.ledger.title")}
             aria-busy={periodWindow?.phase === "reading" || undefined}
+            // Its grids take Alt+Left and Alt+Right; the window's back and
+            // forward leave them the keys and keep the pointer's buttons.
+            data-keeps-alt-arrows=""
             className="ledger-page flex min-h-0 flex-1 flex-col overflow-y-auto bg-background focus-visible:-outline-offset-2"
           >
             <div
