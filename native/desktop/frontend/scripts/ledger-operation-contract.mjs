@@ -24,6 +24,8 @@ const outputs = {
   invoice: "src/shell/ledgerInvoiceContract.ts",
   document: "src/shell/ledgerDocumentContract.ts",
   documentReview: "src/shell/ledgerDocumentReviewContract.ts",
+  movement: "src/shell/ledgerMovementContract.ts",
+  movementCheck: "src/shell/ledgerMovementCheckContract.ts",
 };
 
 const frontend = fileURLToPath(new URL("..", import.meta.url));

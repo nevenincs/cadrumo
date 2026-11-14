@@ -6,7 +6,7 @@ import { Icon } from "@/components/ui/icon";
 import { facts, listed } from "@/shell/compose";
 import type { EvidenceListResult } from "../../../shell/ledgerDocumentOperations";
 import type { LedgerPort, LedgerRow } from "../../../shell/ledger";
-import type { LedgerStagedRowAnswer } from "../../../shell/ledgerMovementOperations";
+import type { LedgerStagedRowAnswer } from "../../../shell/ledgerMovementCheckContract";
 import {
   newIdempotencyKey,
   type StageEvent,

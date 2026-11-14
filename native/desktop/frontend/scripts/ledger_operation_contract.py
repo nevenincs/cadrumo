@@ -90,6 +90,36 @@ FAMILIES: dict[str, tuple[str, tuple[str, ...]]] = {
             "ledger.evidence.review.view",
         ),
     ),
+    "movement": (
+        "LedgerMovementContracts",
+        (
+            "ledger.add",
+            "ledger.allocate",
+            "ledger.archive",
+            "ledger.classify.bulk",
+            "ledger.classify.iva-derive",
+            "ledger.classify.single",
+            "ledger.exclude",
+            "ledger.merge",
+            "ledger.remove",
+            "ledger.restore",
+            "ledger.split.manual",
+            "ledger.stash",
+            "ledger.update",
+        ),
+    ),
+    "movementCheck": (
+        "LedgerMovementCheckContracts",
+        (
+            "ledger.classify.review",
+            "ledger.history.typed",
+            "ledger.rule.trial",
+            "ledger.split.check",
+            "ledger.split.review",
+            "ledger.staged.check",
+            "ledger.track",
+        ),
+    ),
 }
 
 #: The families whose modules a family imports its types from rather than writing them again, in the order
@@ -97,6 +127,8 @@ FAMILIES: dict[str, tuple[str, tuple[str, ...]]] = {
 EARLIER: dict[str, tuple[str, ...]] = {
     "document": ("invoice",),
     "documentReview": ("invoice", "document"),
+    "movement": ("classification", "invoice", "document", "documentReview"),
+    "movementCheck": ("classification", "invoice", "document", "documentReview", "movement"),
 }
 
 _FILE_TOKEN = WindowType("FileToken", "./ledger")
