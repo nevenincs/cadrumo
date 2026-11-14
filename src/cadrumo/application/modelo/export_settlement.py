@@ -168,6 +168,7 @@ def settlement_dictionary_values(
     first_instalment_share: Decimal | None,
     charge_account: ChargeAccount | None,
     refund_account: RefundAccount | None,
+    refund_legal_refs: tuple[str, ...] = (),
 ) -> dict[str, object]:
     """Compose the settlement rows of the official record, keyed by dictionary field id.
 
@@ -179,6 +180,7 @@ def settlement_dictionary_values(
             ``None`` where the modelo declares no split.
         charge_account: The account AEAT debits, when a payment is direct-debited.
         refund_account: The account AEAT pays a refund into.
+        refund_legal_refs: The law a refund without an account is refused under.
 
     Raises:
         ModeloExportSettlementRefusedError: When the settled amount is unknown or
@@ -202,7 +204,7 @@ def settlement_dictionary_values(
         values.update(_payment_values(disposition, amount, instalment, first_instalment_share, charge_account))
         return values
     if disposition in _TO_REFUND:
-        values.update(_refund_values(-amount, refund_account))
+        values.update(_refund_values(-amount, refund_account, refund_legal_refs))
         return values
     raise _uncomposed(disposition, cause="disposition_not_composed")
 
@@ -247,9 +249,14 @@ def _payment_values(
     }
 
 
-def _refund_values(amount: Decimal, refund_account: RefundAccount | None) -> dict[str, object]:
+def _refund_values(
+    amount: Decimal, refund_account: RefundAccount | None, legal_refs: tuple[str, ...]
+) -> dict[str, object]:
     if refund_account is None or refund_account.iban is None:
-        raise own_account_missing_error("refund", context={"result_disposition": ResultDisposition.DEVOLUCION.value})
+        context: dict[str, object] = {"result_disposition": ResultDisposition.DEVOLUCION.value}
+        if legal_refs:
+            context["legal_refs"] = ", ".join(legal_refs)
+        raise own_account_missing_error("refund", context=context)
     values: dict[str, object] = {_REFUND_AMOUNT_FIELD: amount}
     marca = derive_sepa_marca(iban=refund_account.iban, bank_country_code=refund_account.bank_country_code)
     if marca is SepaMarca.ESPANA:

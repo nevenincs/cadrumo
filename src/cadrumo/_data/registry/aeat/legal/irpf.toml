@@ -8035,3 +8035,147 @@ published_at = 2007-03-31
 applies_from = 2007-04-01
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a108"
 review_status = "agent_reviewed"
+
+[legal."orden-hfp-310-2023:art-13"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-310-2023.html#a1-5"
+document_id = "BOE-A-2023-8118"
+article = "13"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2023-8118#a1-5"
+published_at = 2023-03-31
+effective_from = 2023-04-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-11-14
+reviewed_by = "verified against bundled orden-hfp-310-2023.html; operator to re-stamp"
+notes = "Orden HFP/310/2023 art 13 (pago de la deuda y obtención de la devolución), IRPF ejercicio 2022: a return whose result is a devolver may ask for the refund by transfer, waive it or ask for it by transfer through a foreign financial entity."
+required_text = [
+    "Si el resultado de la declaración es a devolver, el contribuyente podrá solicitar la devolución por transferencia",
+]
+
+[legal."orden-hfp-310-2023:art-16"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-310-2023.html#a1-8"
+document_id = "BOE-A-2023-8118"
+article = "16"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2023-8118#a1-8"
+published_at = 2023-03-31
+effective_from = 2023-04-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-11-14
+reviewed_by = "verified against bundled orden-hfp-310-2023.html; operator to re-stamp"
+notes = "Orden HFP/310/2023 art 16 (presentación electrónica), IRPF ejercicio 2022: a borrador or declaration whose result is a devolver must state or confirm the IBAN of the account the refund is paid into."
+required_text = [
+    "Si el resultado del borrador de declaración es a devolver o negativo el declarante deberá, en su caso, cumplimentar o confirmar el identificador único de la cuenta, código internacional de cuenta bancaria (IBAN)",
+]
+
+[legal."orden-hac-265-2024:art-12"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-265-2024.html#a1-4"
+document_id = "BOE-A-2024-5721"
+article = "12"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2024-5721#a1-4"
+published_at = 2024-03-22
+effective_from = 2024-03-23
+review_status = "agent_reviewed"
+reviewed_at = 2026-11-14
+reviewed_by = "verified against bundled orden-hac-265-2024.html; operator to re-stamp"
+notes = "Orden HAC/265/2024 art 12 (pago de la deuda y obtención de la devolución), IRPF ejercicio 2023: a return whose result is a devolver may ask for the refund by transfer, waive it or ask for it by transfer through a foreign financial entity."
+required_text = [
+    "Si el resultado de la declaración es a devolver, el contribuyente podrá solicitar la devolución por transferencia",
+]
+
+[legal."orden-hac-265-2024:art-10"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-265-2024.html#a1-2"
+document_id = "BOE-A-2024-5721"
+article = "10"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2024-5721#a1-2"
+published_at = 2024-03-22
+effective_from = 2024-03-23
+review_status = "agent_reviewed"
+reviewed_at = 2026-11-14
+reviewed_by = "verified against bundled orden-hac-265-2024.html; operator to re-stamp"
+notes = "Orden HAC/265/2024 art 10 (presentación electrónica), IRPF ejercicio 2023: a borrador or declaration whose result is a devolver must state or confirm the IBAN of the account the refund is paid into."
+required_text = [
+    "Si el resultado del borrador de declaración es a devolver o negativo el declarante deberá, en su caso, cumplimentar o confirmar el identificador único de la cuenta, código internacional de cuenta bancaria (IBAN)",
+]
+
+[legal."orden-hac-242-2025:art-12"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-242-2025.html#a12"
+document_id = "BOE-A-2025-5049"
+article = "12"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2025-5049#a12"
+published_at = 2025-03-14
+effective_from = 2025-03-15
+review_status = "agent_reviewed"
+reviewed_at = 2026-11-14
+reviewed_by = "verified against bundled orden-hac-242-2025.html; operator to re-stamp"
+notes = "Orden HAC/242/2025 art 12 (pago de la deuda y obtención de la devolución), IRPF ejercicio 2024: a return whose result is a devolver may ask for the refund by transfer, waive it or ask for it by transfer through a foreign financial entity."
+required_text = [
+    "Si el resultado de la declaración es a devolver, el contribuyente podrá solicitar la devolución por transferencia",
+]
+
+[legal."orden-hac-242-2025:art-10"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-242-2025.html#a10"
+document_id = "BOE-A-2025-5049"
+article = "10"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2025-5049#a10"
+published_at = 2025-03-14
+effective_from = 2025-03-15
+review_status = "agent_reviewed"
+reviewed_at = 2026-11-14
+reviewed_by = "verified against bundled orden-hac-242-2025.html; operator to re-stamp"
+notes = "Orden HAC/242/2025 art 10 (presentación electrónica), IRPF ejercicio 2024: a borrador or declaration whose result is a devolver must state or confirm the IBAN of the account the refund is paid into."
+required_text = [
+    "Si el resultado del borrador de declaración es a devolver o negativo el declarante deberá, en su caso, cumplimentar o confirmar el identificador único de la cuenta, código internacional de cuenta bancaria (IBAN)",
+]
+
+[legal."orden-hac-277-2026:art-11"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-277-2026.html#a11"
+document_id = "BOE-A-2026-7041"
+article = "11"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2026-7041#a11"
+published_at = 2026-03-27
+effective_from = 2026-03-28
+review_status = "agent_reviewed"
+reviewed_at = 2026-11-14
+reviewed_by = "verified against bundled orden-hac-277-2026.html; operator to re-stamp"
+notes = "Orden HAC/277/2026 art 11 (pago de la deuda y obtención de la devolución), IRPF ejercicio 2025: a return whose result is a devolver may ask for the refund by transfer, waive it or ask for it by transfer through a foreign financial entity."
+required_text = [
+    "Si el resultado de la declaración es a devolver, el contribuyente podrá solicitar la devolución por transferencia",
+]
+
+[legal."orden-hac-277-2026:art-9"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-277-2026.html#a9"
+document_id = "BOE-A-2026-7041"
+article = "9"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2026-7041#a9"
+published_at = 2026-03-27
+effective_from = 2026-03-28
+review_status = "agent_reviewed"
+reviewed_at = 2026-11-14
+reviewed_by = "verified against bundled orden-hac-277-2026.html; operator to re-stamp"
+notes = "Orden HAC/277/2026 art 9 (presentación electrónica), IRPF ejercicio 2025: a borrador or declaration whose result is a devolver must state or confirm the IBAN of the account the refund is paid into."
+required_text = [
+    "Si el resultado del borrador de declaración es a devolver o negativo el declarante deberá, en su caso, cumplimentar o confirmar el identificador único de la cuenta, código internacional de cuenta bancaria (IBAN)",
+]
