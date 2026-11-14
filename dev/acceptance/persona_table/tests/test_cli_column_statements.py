@@ -142,11 +142,22 @@ def test_the_values_the_operator_types_resolve_to_their_casillas_and_the_figures
         typed = work_input_statements(world, plan)
         figures = prior_value_statements(world, plan)
 
-    assert [(item.phase, item.value) for item in typed] == [
-        (Phase.AT_CALCULATION, "25400"),
-        (Phase.AT_CALCULATION, "16300"),
-    ]
-    assert [item.target for item in typed] == ["DP200012:00501", "DP200014:00547"]
+    assert {item.phase for item in typed} == {Phase.AT_CALCULATION}
+    # the persona states nine roles: the two liquidacion lines, then the cuenta de perdidas y ganancias of pages 7 and 8
+    # (cifra de negocios and prestaciones 30800, otros gastos, servicios exteriores and servicios exteriores resto
+    # -5400, resultado de explotacion and resultado antes de impuestos 25400), each typed at its page-qualified casilla
+    assert {item.target: item.value for item in typed} == {
+        "DP200012:00501": "25400",
+        "DP200014:00547": "16300",
+        "DP200007:00255": "30800",
+        "DP200007:00257": "30800",
+        "DP200007:00279": "-5400",
+        "DP200007:00280": "-5400",
+        "DP200007:00254": "-5400",
+        "DP200007:00296": "25400",
+        "DP200008:00325": "25400",
+    }
+    assert len(typed) == 9
     assert {item.phase for item in figures} == {Phase.AFTER_CALCULATION}
     envelope = registry_envelope()
     persona = persona_under_horizon("sociedad-limitada", envelope.horizon)
