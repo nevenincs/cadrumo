@@ -5,6 +5,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Icon } from "@/components/ui/icon";
 import { usePanePreference } from "../../../shell/panePreference";
 import { useStrings } from "../../../shell/strings";
+import { rowOfStatement } from "./rowStatements";
 import type { FormSession } from "./session";
 
 // The statements a declaration serves, offered together: each in the words
@@ -13,7 +14,9 @@ import type { FormSession } from "./session";
 // them all in the one review with the filer's other changes; leaving one
 // staged earlier unticked takes it back. The window names no statement and
 // chooses none: it lists what the form serves and stages what was ticked,
-// each on every box the form says it covers.
+// each on every box the form says it covers. A statement the form serves for
+// one row of a repeating group is a row of its own, named in the words served
+// for the row, and is staged on the row it names.
 
 export function StatementsOffer({ session }: { session: FormSession }) {
   const t = useStrings();
@@ -74,7 +77,11 @@ export function StatementsOffer({ session }: { session: FormSession }) {
           </p>
           <ul className="flex flex-col gap-3">
             {statements.map((statement, at) => (
-              <li key={statement.family} data-statement={statement.family}>
+              <li
+                key={`${statement.family}:${rowOfStatement(statement) ?? ""}`}
+                data-statement={statement.family}
+                data-statement-row={rowOfStatement(statement) ?? undefined}
+              >
                 <label className="flex cursor-pointer items-start gap-2.5">
                   <Checkbox
                     className="mt-1"
@@ -88,6 +95,11 @@ export function StatementsOffer({ session }: { session: FormSession }) {
                     }}
                   />
                   <span className="flex min-w-0 flex-col gap-0.5">
+                    {statement.row_words && (
+                      <span className="text-sm font-medium text-foreground">
+                        {statement.row_words}
+                      </span>
+                    )}
                     <span className="text-base font-medium">
                       {statement.action_words}
                     </span>
