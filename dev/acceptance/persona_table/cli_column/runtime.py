@@ -6,12 +6,14 @@ or the operator's profile: the root is a fresh ``cadrumo-e2e-*`` directory in th
 every Git project, and the product environment of every child is rebuilt from an allowlist.
 
 The profile passphrase is the synthetic one of the persona world. It reaches a child only on its standard input,
-once per command, so no stored sign-in is made and nothing enters the account's credential store. The publisher's
-Google OAuth client reaches the wheel build alone, as a variable of that one process.
+once per command. Before the runtime is drained the served profile is signed out through the person's own
+``config logout`` command, so a sign-in a command made leaves nothing in the account's credential store. The
+publisher's Google OAuth client reaches the wheel build alone, as a variable of that one process.
 """
 
 from __future__ import annotations
 
+import json
 import os
 import shutil
 import stat
@@ -19,11 +21,13 @@ import subprocess
 import sys
 from collections.abc import Generator, Mapping, Sequence
 from contextlib import contextmanager
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Any, Protocol
 
 from cadrumo.tests.env_scope import scoped_env_var
 from cadrumo_runtime.application.development_root import mark_development_root
-from dev.acceptance.installed_cli import InstalledCli, build_installed_cli_environment
+from dev.acceptance.installed_cli import InstalledCli, InstalledCliError, build_installed_cli_environment
 from dev.desktop_agent_live.disposable_root import create_root, is_link, remove_root, temporary_parent
 from dev.packaging.acquire_common import venv_executable
 from dev.packaging.authority_staging import AUTHORITY_ROOT_ENV, stage_published_authority
@@ -32,7 +36,7 @@ from dev.packaging.google_oauth import build_client_json
 from dev.packaging.installed_runtime import installed_cli_runtime
 
 from .hygiene import OAUTH_CLIENT_ENV, Redactor
-from .intake import TIMEOUT_STATUS
+from .intake import TIMEOUT_STATUS, Kind, Outcome, classify
 from .world_report import ReportError, WorldReport, parse_report
 
 BUILD_SECONDS = 3600
@@ -43,6 +47,9 @@ _BUILD_SNIPPET = (
 _KEPT_PREFIXES = ("CADRUMO_", "AEAT_")
 _INTERPRETER_NAMES = frozenset({"PYTHONPATH", "PYTHONHOME", "PYTHONUSERBASE", "VIRTUAL_ENV", "UV_PROJECT_ENVIRONMENT"})
 _TAIL_LINES = 12
+SIGN_OUT_COMMAND = ("config", "logout")
+"""The person's sign-out command, ``aeat config logout NAME``, which proves the person with the passphrase on stdin."""
+SIGN_OUT_FAILED_CODE = "acceptance.cli_column.sign_out_failed"
 
 
 class RuntimeSetupError(RuntimeError):
@@ -186,23 +193,105 @@ def run_world(
         raise RuntimeSetupError(redactor.text(str(error))) from error
 
 
+@dataclass(frozen=True, slots=True)
+class SignOut:
+    """One sign-out the runner made at teardown: the profile it addressed and how the command ended."""
+
+    profile: str | None
+    outcome: Outcome
+
+    @property
+    def finding(self) -> str | None:
+        """The typed finding of a sign-out that did not succeed, ``None`` when it did."""
+        if self.outcome.kind is Kind.OK:
+            return None
+        code = self.outcome.code or self.outcome.kind.value
+        return (
+            f"sign-out at teardown: {' '.join(SIGN_OUT_COMMAND)} {self.profile or '(selected profile)'} ended "
+            f"{self.outcome.kind.value} ({code}): a profile-session credential may remain in the account's store"
+        )
+
+
+def _profile_named(args: Sequence[str]) -> str | None:
+    """The profile an ``aeat --profile NAME ...`` command is aimed at, ``None`` when it names none."""
+    for index, argument in enumerate(args[:-1]):
+        if argument == "--profile":
+            return args[index + 1]
+    return None
+
+
+class InstalledCommands(Protocol):
+    """The installed CLI a runner drives: its sign-in passphrase and one JSON command per fresh process."""
+
+    passphrase: str
+
+    def run(
+        self, args: Sequence[str], *, authenticated: bool, allow_error: bool, stdin_payload: str | None = None
+    ) -> dict[str, Any]:
+        """Run ``args`` and return the envelope it printed."""
+        ...
+
+
 class CliRunner:
     """Run ``aeat`` commands of the tree venv against the served root, one fresh process each.
 
     A command that does not answer in time is reported with the ``timeout`` status, which the intake maps to an
-    unsettled effect; it is never run again.
+    unsettled effect; it is never run again. Every profile a passphrase-bearing command was aimed at is remembered,
+    and :meth:`sign_out_all` signs each of them out through the person's own sign-out command.
     """
 
-    def __init__(self, cli: InstalledCli) -> None:
+    def __init__(self, cli: InstalledCommands) -> None:
         """Bind the runner to an installed CLI whose passphrase goes on each command's standard input."""
         self._cli = cli
+        self._signed_in: dict[str | None, None] = {}
+        self.sign_outs: list[SignOut] = []
+        """Each sign-out :meth:`sign_out_all` made, in order."""
 
     def __call__(self, args: Sequence[str], *, authenticated: bool = True) -> Mapping[str, object] | None:
         """Run ``args``; the envelope it printed, a timeout marker, or an adapter error document."""
+        if authenticated:
+            self._signed_in[_profile_named(args)] = None
         try:
             return self._cli.run(args, authenticated=authenticated, allow_error=True)
         except subprocess.TimeoutExpired:
             return {"status": TIMEOUT_STATUS}
+
+    def sign_out_all(self) -> list[SignOut]:
+        """Sign out every profile a command carried the passphrase for; a sign-out that fails is a finding, not a raise.
+
+        The command is ``aeat config logout NAME`` with the passphrase as its machine secret, the way a person ends a
+        sign-in from another process. Its outcome, success or not, is kept in :attr:`sign_outs`; nothing is retried.
+        """
+        made: list[SignOut] = []
+        for profile in tuple(self._signed_in):
+            made.append(SignOut(profile, self._sign_out(profile)))
+            del self._signed_in[profile]
+        self.sign_outs.extend(made)
+        return made
+
+    def _sign_out(self, profile: str | None) -> Outcome:
+        arguments = (*SIGN_OUT_COMMAND, *(() if profile is None else (profile,)), "--secrets-stdin")
+        payload = json.dumps({"passphrase": self._cli.passphrase}, separators=(",", ":"))
+        try:
+            document = self._cli.run(arguments, authenticated=False, allow_error=True, stdin_payload=payload)
+        except subprocess.TimeoutExpired:
+            return classify({"status": TIMEOUT_STATUS})
+        except (OSError, subprocess.SubprocessError, InstalledCliError) as error:
+            return Outcome(Kind.ERROR, SIGN_OUT_FAILED_CODE, type(error).__name__)
+        return classify(document)
+
+
+@contextmanager
+def signing_out(runner: CliRunner) -> Generator[CliRunner]:
+    """Yield ``runner`` and, however the body ends, sign out every profile it signed in before returning.
+
+    The sign-out needs the runtime that served the profile, so this context is entered inside the runtime's own and
+    leaves first.
+    """
+    try:
+        yield runner
+    finally:
+        runner.sign_out_all()
 
 
 @contextmanager
@@ -212,10 +301,13 @@ def served_root(
     """Serve ``storage_root`` through the venv's caller-owned runtime and yield a runner of its ``aeat``.
 
     The root is marked as a development root first; the runtime refuses the installed default root. On exit the
-    runtime's standard input is closed and its drain (exit 64) is required.
+    profiles the runner signed in are signed out first, while the runtime still serves them, then the runtime's
+    standard input is closed and its drain (exit 64) is required.
     """
     mark_development_root(storage_root)
     cli = venv_executable(template, "aeat")
     environment = build_installed_cli_environment(storage_root=storage_root, authority_root=authority)
     with installed_cli_runtime(cli, environment, log):
-        yield CliRunner(InstalledCli(cli, storage_root=storage_root, authority_root=authority, passphrase=passphrase))
+        installed = InstalledCli(cli, storage_root=storage_root, authority_root=authority, passphrase=passphrase)
+        with signing_out(CliRunner(installed)) as runner:
+            yield runner
