@@ -90,8 +90,9 @@ def _stored_profile(storage_root: Path, profile_id: str) -> tuple[str, ProfileSe
         ("asalariada-familia", {"prior_carries", "work_income_none"}, set()),
         ("traductora-profesional", {"prior_carries"}, set()),
         ("sociedad-limitada", {"prior_value", "work_input"}, set()),
+        ("arrendador-jubilado", {"prior_carries", "work_income_none", "rental_carry"}, set()),
     ],
-    ids=["asalariada", "traductora", "sociedad"],
+    ids=["asalariada", "traductora", "sociedad", "arrendador"],
 )
 def test_world_holds_the_rows_the_table_plans_and_a_profile_that_signs_in(
     disposable_root: Path,
