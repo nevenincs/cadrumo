@@ -1075,16 +1075,18 @@ const SETTLED_FORM_READ = /operation settled .* definition=modelo\.work\.form /;
  * and then a read of the work form, which is the window reading its own
  * settled write; the header drawn before that read is the step before it.
  */
+function settledReadAfter(mark) {
+  const lines = runtimeLines().slice(mark);
+  const write = lines.findIndex((line) => SETTLED_WRITE.test(line));
+  return (
+    write >= 0 &&
+    lines.slice(write + 1).some((line) => SETTLED_FORM_READ.test(line))
+  );
+}
+
 async function formReadAfterWrite(mark, timeout) {
   const seen = await waitFor(
-    async () => {
-      const lines = runtimeLines().slice(mark);
-      const write = lines.findIndex((line) => SETTLED_WRITE.test(line));
-      if (write < 0) return null;
-      return lines.slice(write + 1).some((line) => SETTLED_FORM_READ.test(line))
-        ? true
-        : null;
-    },
+    async () => (settledReadAfter(mark) ? true : null),
     {
       timeout,
       what: "the window's read of its own settled write",
@@ -1859,7 +1861,13 @@ async function recordFiling(out) {
       const state = await readState();
       const words = freshOf(before, state);
       if (words.length > 0) return { words };
-      return !state.busy && state.action !== before.action ? { state } : null;
+      // A filing can leave the header's step as it was; the runtime's settled
+      // filing and the window's read after it end the wait, which otherwise
+      // runs past the attended session's idle expiry and signs the window out.
+      return !state.busy &&
+        (state.action !== before.action || settledReadAfter(mark))
+        ? { state }
+        : null;
     },
     { timeout: TIMEOUT.verify, what: "the local filing", soft: true },
   );
