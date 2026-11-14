@@ -5,13 +5,13 @@ tags:
 date: '2026-11-14'
 modified: '2026-11-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:50629a3f6a576f23daec408e8870090e6e49c7baf1a65d7fa55356be0de0d7c9'
+body_hash: 'sha256:1aa1660248845d77c7572ec23fc18649511ed27aaa43703c5f994b6282e28b3e'
 related:
   - "[[2026-08-25-source-casilla-integration-modelo-840-source-and-repeated-row-owner-deferral-adr]]"
   - "[[2026-08-25-source-casilla-integration-modelo-840-source-and-repeated-row-lifecycle-grounding-research]]"
 ---
 
-# `source-casilla-integration` adr: `Modelo 840 profile facts and the premises repeat layout` | (**status:** `proposed`)
+# `source-casilla-integration` adr: `Modelo 840 profile facts and the premises repeat layout` | (**status:** `accepted`)
 
 ## Problem Statement
 
@@ -107,6 +107,14 @@ the blank keys without either inventing values or writing refusing stubs, and bo
 The work is phase-2 scope with no persona row, so deferring loses no measured coverage now.
 
 Recommendation: defer (option c) until phase 2.
+
+Decision (2026-11-14): the operator approved this record on condition that it does not diverge
+from the delta-keyed, compacted registry, and PRIME accepted it on that authority with option (a)
+chosen. The facts belong to the profile schema, not the registry. Any Modelo 840 registry member
+the work adds is declared once, at its earliest edition, and the repeat semantics regenerate only
+the Modelo 840 editions whose layout changes. LIFECYCLE owns the work, as an L2 plan per this
+record. This is the explicitly authorized Modelo 840 slice of the 2026-08-25 deferral ADR, and it
+does not start phase 2 in general.
 
 ## Consequences
 

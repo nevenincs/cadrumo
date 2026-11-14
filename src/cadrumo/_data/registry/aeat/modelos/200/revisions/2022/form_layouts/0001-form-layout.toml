@@ -7,7 +7,7 @@ revision_id = "2022"
 seed_source = "design_box_number"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "56e7a06ed08440531d52791a2210371250b86f46b04479ec8a9b9352c0cd5ca7"
+source_state_digest = "71220fd7d9358cd7af8285ad01ed581dc07de537e07b371a272e3ff48437a574"
 design_sources = [
     { source_ref = "aeat-dr-200-2022", sha256 = "8c9fa09e5713dc19ed9235757c314a1afee24108bccee4e39031f0df9a75fae6" },
 ]
@@ -231,10 +231,7 @@ placements = [
     { casilla_id = "00251", kind = "on_form", box_number = "00251" },
     { casilla_id = "00252", kind = "on_form", box_number = "00252" },
     { casilla_id = "00253", kind = "on_form", box_number = "00253" },
-    { casilla_id = "00254", kind = "on_form", box_number = "00254" },
-    { casilla_id = "00255", kind = "on_form", box_number = "00255" },
     { casilla_id = "00256", kind = "on_form", box_number = "00256" },
-    { casilla_id = "00257", kind = "on_form", box_number = "00257" },
     { casilla_id = "00258", kind = "unplaced", unplaced_reason = "ambiguous_anchor", box_number = "00258" },
     { casilla_id = "00259", kind = "on_form", box_number = "00259" },
     { casilla_id = "00260", kind = "on_form", box_number = "00260" },
@@ -256,8 +253,6 @@ placements = [
     { casilla_id = "00276", kind = "on_form", box_number = "00276" },
     { casilla_id = "00277", kind = "on_form", box_number = "00277" },
     { casilla_id = "00278", kind = "on_form", box_number = "00278" },
-    { casilla_id = "00279", kind = "on_form", box_number = "00279" },
-    { casilla_id = "00280", kind = "on_form", box_number = "00280" },
     { casilla_id = "00281", kind = "on_form", box_number = "00281" },
     { casilla_id = "00282", kind = "on_form", box_number = "00282" },
     { casilla_id = "00283", kind = "on_form", box_number = "00283" },
@@ -273,7 +268,6 @@ placements = [
     { casilla_id = "00293", kind = "on_form", box_number = "00293" },
     { casilla_id = "00294", kind = "on_form", box_number = "00294" },
     { casilla_id = "00295", kind = "on_form", box_number = "00295" },
-    { casilla_id = "00296", kind = "on_form", box_number = "00296" },
     { casilla_id = "00297", kind = "on_form", box_number = "00297" },
     { casilla_id = "00298", kind = "on_form", box_number = "00298" },
     { casilla_id = "00299", kind = "on_form", box_number = "00299" },
@@ -286,7 +280,6 @@ placements = [
     { casilla_id = "00322", kind = "on_form", box_number = "00322" },
     { casilla_id = "00323", kind = "on_form", box_number = "00323" },
     { casilla_id = "00324", kind = "on_form", box_number = "00324" },
-    { casilla_id = "00325", kind = "on_form", box_number = "00325" },
     { casilla_id = "00326", kind = "on_form", box_number = "00326" },
     { casilla_id = "00327", kind = "on_form", box_number = "00327" },
     { casilla_id = "00328", kind = "on_form", box_number = "00328" },
@@ -2371,6 +2364,12 @@ placements = [
     { casilla_id = "DP200001:00031", kind = "on_form", box_number = "00031" },
     { casilla_id = "DP200001:00032", kind = "on_form", box_number = "00032" },
     { casilla_id = "DP200001:00082", kind = "on_form", box_number = "00082" },
+    { casilla_id = "DP200007:00254", kind = "on_form", box_number = "00254" },
+    { casilla_id = "DP200007:00255", kind = "on_form", box_number = "00255" },
+    { casilla_id = "DP200007:00257", kind = "on_form", box_number = "00257" },
+    { casilla_id = "DP200007:00279", kind = "on_form", box_number = "00279" },
+    { casilla_id = "DP200007:00280", kind = "on_form", box_number = "00280" },
+    { casilla_id = "DP200007:00296", kind = "on_form", box_number = "00296" },
     { casilla_id = "DP200008:00301", kind = "on_form", box_number = "00301" },
     { casilla_id = "DP200008:00302", kind = "on_form", box_number = "00302" },
     { casilla_id = "DP200008:00303", kind = "on_form", box_number = "00303" },
@@ -2387,6 +2386,7 @@ placements = [
     { casilla_id = "DP200008:00314", kind = "on_form", box_number = "00314" },
     { casilla_id = "DP200008:00315", kind = "on_form", box_number = "00315" },
     { casilla_id = "DP200008:00316", kind = "on_form", box_number = "00316" },
+    { casilla_id = "DP200008:00325", kind = "on_form", box_number = "00325" },
     { casilla_id = "DP200010:00399", kind = "on_form", box_number = "00399" },
     { casilla_id = "DP200010:00550", kind = "on_form", box_number = "00550" },
     { casilla_id = "DP200010:00552", kind = "on_form", box_number = "00552" },
@@ -2432,6 +2432,7 @@ placements = [
     { casilla_id = "DP200012:00308", kind = "on_form", box_number = "00308" },
     { casilla_id = "DP200012:00309", kind = "on_form", box_number = "00309" },
     { casilla_id = "DP200012:00310", kind = "on_form", box_number = "00310" },
+    { casilla_id = "DP200012:00325", kind = "on_form", box_number = "00325" },
     { casilla_id = "DP200012:00501", kind = "on_form", box_number = "00501" },
     { casilla_id = "DP200013:00311", kind = "on_form", box_number = "00311" },
     { casilla_id = "DP200013:00312", kind = "on_form", box_number = "00312" },
@@ -2481,9 +2482,17 @@ placements = [
     { casilla_id = "DP200014B:00611", kind = "on_form", box_number = "00611" },
     { casilla_id = "DP200014B:01766", kind = "on_form", box_number = "01766" },
     { casilla_id = "DP200014B:01784", kind = "on_form", box_number = "01784" },
+    { casilla_id = "DP200016B:00257", kind = "on_form", box_number = "00257" },
     { casilla_id = "DP200018:00315", kind = "on_form", box_number = "00315" },
     { casilla_id = "DP200018:00316", kind = "on_form", box_number = "00316" },
+    { casilla_id = "DP200022:00279", kind = "on_form", box_number = "00279" },
+    { casilla_id = "DP200022:00280", kind = "on_form", box_number = "00280" },
     { casilla_id = "DP200026:00625", kind = "on_form", box_number = "00625" },
+    { casilla_id = "DP200030:00255", kind = "on_form", box_number = "00255" },
+    { casilla_id = "DP200030:00257", kind = "on_form", box_number = "00257" },
+    { casilla_id = "DP200031:00279", kind = "on_form", box_number = "00279" },
+    { casilla_id = "DP200031:00280", kind = "on_form", box_number = "00280" },
+    { casilla_id = "DP200032:00296", kind = "on_form", box_number = "00296" },
     { casilla_id = "DP200032:00305", kind = "on_form", box_number = "00305" },
     { casilla_id = "DP200032:00306", kind = "on_form", box_number = "00306" },
     { casilla_id = "DP200032:00307", kind = "on_form", box_number = "00307" },
@@ -2504,11 +2513,18 @@ placements = [
     { casilla_id = "DP200033:00314", kind = "on_form", box_number = "00314" },
     { casilla_id = "DP200033:00315", kind = "on_form", box_number = "00315" },
     { casilla_id = "DP200033:00316", kind = "on_form", box_number = "00316" },
+    { casilla_id = "DP200033:00325", kind = "on_form", box_number = "00325" },
     { casilla_id = "DP200033:00563", kind = "on_form", box_number = "00563" },
     { casilla_id = "DP200033:00565", kind = "on_form", box_number = "00565" },
     { casilla_id = "DP200033:00566", kind = "on_form", box_number = "00566" },
     { casilla_id = "DP200033:00567", kind = "on_form", box_number = "00567" },
     { casilla_id = "DP200033:00568", kind = "on_form", box_number = "00568" },
+    { casilla_id = "DP200038:00254", kind = "on_form", box_number = "00254" },
+    { casilla_id = "DP200038:00255", kind = "on_form", box_number = "00255" },
+    { casilla_id = "DP200038:00257", kind = "on_form", box_number = "00257" },
+    { casilla_id = "DP200038:00279", kind = "on_form", box_number = "00279" },
+    { casilla_id = "DP200038:00280", kind = "on_form", box_number = "00280" },
+    { casilla_id = "DP200039:00296", kind = "on_form", box_number = "00296" },
     { casilla_id = "DP200039:00301", kind = "on_form", box_number = "00301" },
     { casilla_id = "DP200039:00302", kind = "on_form", box_number = "00302" },
     { casilla_id = "DP200039:00303", kind = "on_form", box_number = "00303" },
@@ -2525,6 +2541,7 @@ placements = [
     { casilla_id = "DP200039:00314", kind = "on_form", box_number = "00314" },
     { casilla_id = "DP200039:00315", kind = "on_form", box_number = "00315" },
     { casilla_id = "DP200039:00316", kind = "on_form", box_number = "00316" },
+    { casilla_id = "DP200039:00325", kind = "on_form", box_number = "00325" },
     { casilla_id = "DP200041:00399", kind = "on_form", box_number = "00399" },
     { casilla_id = "DP200042:00417", kind = "on_form", box_number = "00417" },
     { casilla_id = "DP200042:00418", kind = "on_form", box_number = "00418" },
@@ -2563,9 +2580,19 @@ placements = [
     { casilla_id = "DP200043:00603", kind = "on_form", box_number = "00603" },
     { casilla_id = "DP200043:00605", kind = "on_form", box_number = "00605" },
     { casilla_id = "DP200043:00619", kind = "on_form", box_number = "00619" },
+    { casilla_id = "DP200047:00254", kind = "on_form", box_number = "00254" },
+    { casilla_id = "DP200047:00255", kind = "on_form", box_number = "00255" },
+    { casilla_id = "DP200047:00257", kind = "on_form", box_number = "00257" },
+    { casilla_id = "DP200047:00279", kind = "on_form", box_number = "00279" },
+    { casilla_id = "DP200047:00280", kind = "on_form", box_number = "00280" },
+    { casilla_id = "DP200048:00296", kind = "on_form", box_number = "00296" },
     { casilla_id = "DP200048:00301", kind = "on_form", box_number = "00301" },
     { casilla_id = "DP200048:00302", kind = "on_form", box_number = "00302" },
     { casilla_id = "DP200048:00303", kind = "on_form", box_number = "00303" },
+    { casilla_id = "DP200053:00254", kind = "on_form", box_number = "00254" },
+    { casilla_id = "DP200053:00255", kind = "on_form", box_number = "00255" },
+    { casilla_id = "DP200053:00257", kind = "on_form", box_number = "00257" },
+    { casilla_id = "DP200053:00280", kind = "on_form", box_number = "00280" },
     { casilla_id = "DP200053:00301", kind = "on_form", box_number = "00301" },
     { casilla_id = "DP200053:00302", kind = "on_form", box_number = "00302" },
     { casilla_id = "DP200053:00307", kind = "on_form", box_number = "00307" },
@@ -2573,6 +2600,8 @@ placements = [
     { casilla_id = "DP200053:00309", kind = "on_form", box_number = "00309" },
     { casilla_id = "DP200053:00310", kind = "on_form", box_number = "00310" },
     { casilla_id = "DP200053:00311", kind = "on_form", box_number = "00311" },
+    { casilla_id = "DP200054:00279", kind = "on_form", box_number = "00279" },
+    { casilla_id = "DP200054:00296", kind = "on_form", box_number = "00296" },
     { casilla_id = "DP200054:00303", kind = "on_form", box_number = "00303" },
     { casilla_id = "DP200054:00304", kind = "on_form", box_number = "00304" },
     { casilla_id = "DP200054:00305", kind = "on_form", box_number = "00305" },
@@ -2966,9 +2995,9 @@ id = "cuenta-de-perdidas-y-ganancias-i"
 heading_key = "modelo.schema.200.form.section.cuenta-de-perdidas-y-ganancias-i.heading"
 official_heading = "Cuenta de pérdidas y ganancias (I)"
 blocks = [
-    { kind = "field", id = "field", casilla_id = "00255" },
+    { kind = "field", id = "field", casilla_id = "DP200007:00255" },
     { kind = "field", id = "field-2", casilla_id = "00256" },
-    { kind = "field", id = "field-3", casilla_id = "00257" },
+    { kind = "field", id = "field-3", casilla_id = "DP200007:00257" },
     { kind = "field", id = "field-4", casilla_id = "00711" },
     { kind = "field", id = "field-5", casilla_id = "00705" },
 ]
@@ -3024,10 +3053,10 @@ blocks = [
     { kind = "field", id = "field-6", casilla_id = "00276" },
     { kind = "field", id = "field-7", casilla_id = "00277" },
     { kind = "field", id = "field-8", casilla_id = "00278" },
-    { kind = "field", id = "field-9", casilla_id = "00279" },
-    { kind = "field", id = "field-10", casilla_id = "00280" },
+    { kind = "field", id = "field-9", casilla_id = "DP200007:00279" },
+    { kind = "field", id = "field-10", casilla_id = "DP200007:00280" },
     { kind = "field", id = "field-11", casilla_id = "00253" },
-    { kind = "field", id = "field-12", casilla_id = "00254" },
+    { kind = "field", id = "field-12", casilla_id = "DP200007:00254" },
     { kind = "field", id = "field-13", casilla_id = "00281" },
     { kind = "field", id = "field-14", casilla_id = "00282" },
     { kind = "field", id = "field-15", casilla_id = "00283" },
@@ -3072,7 +3101,7 @@ blocks = [
     { kind = "field", id = "field", casilla_id = "00710" },
     { kind = "field", id = "field-2", casilla_id = "00294" },
     { kind = "field", id = "field-3", casilla_id = "00295" },
-    { kind = "field", id = "field-4", casilla_id = "00296" },
+    { kind = "field", id = "field-4", casilla_id = "DP200007:00296" },
 ]
 
 [[revisions.2022.form_layouts.pages]]
@@ -3180,7 +3209,7 @@ blocks = [
     { kind = "field", id = "field-3", casilla_id = "00331" },
     { kind = "field", id = "field-4", casilla_id = "00332" },
     { kind = "field", id = "field-5", casilla_id = "00324" },
-    { kind = "field", id = "field-6", casilla_id = "00325" },
+    { kind = "field", id = "field-6", casilla_id = "DP200008:00325" },
     { kind = "field", id = "field-7", casilla_id = "00326" },
     { kind = "field", id = "field-8", casilla_id = "00327" },
     { kind = "field", id = "field-9", casilla_id = "00328" },
@@ -3686,15 +3715,16 @@ blocks = [
     { kind = "field", id = "field-6", casilla_id = "01005" },
     { kind = "field", id = "field-7", casilla_id = "01006" },
     { kind = "grid", id = "grid-3", columns = [{ key = "aumentos", heading_key = "modelo.form.column.aumentos", official_heading = "Aumentos" }, { key = "disminuciones", heading_key = "modelo.form.column.disminuciones", official_heading = "Disminuciones" }], rows = [{ key = "amortizacion-inmovilizado-afecto-investig-b2365c", heading_key = "modelo.schema.200.form.row.amortizacion-inmovilizado-afecto-investig-b2365c.heading", official_heading = "Amortización inmovilizado afecto investigación y desarrollo (art. 12.3.b) LIS)", cells = [{ kind = "casilla", casilla_id = "DP200012:00305" }, { kind = "casilla", casilla_id = "DP200012:00306" }] }, { key = "libertad-de-amortizacion-de-gastos-de-inv-ef8596", heading_key = "modelo.schema.200.form.row.libertad-de-amortizacion-de-gastos-de-inv-ef8596.heading", official_heading = "Libertad de amortización de gastos de investigación y desarrollo (art. 12.3.c) LIS)", cells = [{ kind = "casilla", casilla_id = "DP200012:00307" }, { kind = "casilla", casilla_id = "DP200012:00308" }] }, { key = "libertad-de-amortizacion-inmovilizado-mat-e46d93", heading_key = "modelo.schema.200.form.row.libertad-de-amortizacion-inmovilizado-mat-e46d93.heading", official_heading = "Libertad de amortización inmovilizado material nuevo (art. 12.3 e) LIS)", cells = [{ kind = "casilla", casilla_id = "01003" }, { kind = "casilla", casilla_id = "01004" }] }, { key = "otros-supuestos-de-libertad-de-amortizaci-c5a30b", heading_key = "modelo.schema.200.form.row.otros-supuestos-de-libertad-de-amortizaci-c5a30b.heading", official_heading = "Otros supuestos de libertad de amortización (art. 12.3 a) y d) y DA 16ª LIS)", cells = [{ kind = "casilla", casilla_id = "DP200012:00309" }, { kind = "casilla", casilla_id = "DP200012:00310" }] }] },
-    { kind = "field", id = "field-8", casilla_id = "00335" },
-    { kind = "field", id = "field-9", casilla_id = "00368" },
-    { kind = "field", id = "field-10", casilla_id = "01815" },
-    { kind = "field", id = "field-11", casilla_id = "01816" },
-    { kind = "field", id = "field-12", casilla_id = "01817" },
+    { kind = "field", id = "field-8", casilla_id = "DP200012:00325" },
+    { kind = "field", id = "field-9", casilla_id = "00335" },
+    { kind = "field", id = "field-10", casilla_id = "00368" },
+    { kind = "field", id = "field-11", casilla_id = "01815" },
+    { kind = "field", id = "field-12", casilla_id = "01816" },
+    { kind = "field", id = "field-13", casilla_id = "01817" },
     { kind = "grid", id = "grid-4", columns = [{ key = "aumentos", heading_key = "modelo.form.column.aumentos", official_heading = "Aumentos" }, { key = "disminuciones", heading_key = "modelo.form.column.disminuciones", official_heading = "Disminuciones" }], rows = [{ key = "asimetrias-hibridas-art-15-bis-lis-except-dca95e", heading_key = "modelo.schema.200.form.row.asimetrias-hibridas-art-15-bis-lis-except-dca95e.heading", official_heading = "Asimetrías híbridas (art. 15 bis LIS, excepto art. 15 bis.12 LIS)", cells = [{ kind = "casilla", casilla_id = "02469" }, { kind = "casilla", casilla_id = "02470" }] }, { key = "entidad-en-regimen-de-atribucion-de-renta-7ff667", heading_key = "modelo.schema.200.form.row.entidad-en-regimen-de-atribucion-de-renta-7ff667.heading", official_heading = "Entidad en régimen de atribución de rentas: asimetrías híbridas (art. 15 bis.12 LIS)", cells = [{ kind = "casilla", casilla_id = "00333" }, { kind = "casilla", casilla_id = "00334" }] }, { key = "perdidas-por-deterioro-de-valores-repr-de-b58645", heading_key = "modelo.schema.200.form.row.perdidas-por-deterioro-de-valores-repr-de-b58645.heading", official_heading = "Pérdidas por deterioro de valores repr. de partic. en el capital o fondos propios (art. 15 k) LIS)", cells = [{ kind = "casilla", casilla_id = "01807" }, { kind = "casilla", casilla_id = "01811" }] }, { key = "disminucion-de-valor-originada-por-criter-254359", heading_key = "modelo.schema.200.form.row.disminucion-de-valor-originada-por-criter-254359.heading", official_heading = "Disminución de valor originada por criterio de valor razonable (art. 15 l) LIS)", cells = [{ kind = "casilla", casilla_id = "01808" }, { kind = "casilla", casilla_id = "01812" }] }, { key = "deuda-tributaria-de-actos-juridicos-docum-382f63", heading_key = "modelo.schema.200.form.row.deuda-tributaria-de-actos-juridicos-docum-382f63.heading", official_heading = "Deuda tributaria de actos jurídicos documentados (ITP y AJD) (art. 15 m) LIS)", cells = [{ kind = "casilla", casilla_id = "01813" }, { kind = "casilla", casilla_id = "01814" }] }] },
-    { kind = "field", id = "field-13", casilla_id = "02311" },
+    { kind = "field", id = "field-14", casilla_id = "02311" },
     { kind = "grid", id = "grid-5", columns = [{ key = "aumentos", heading_key = "modelo.form.column.aumentos", official_heading = "Aumentos" }, { key = "disminuciones", heading_key = "modelo.form.column.disminuciones", official_heading = "Disminuciones" }], rows = [{ key = "ajustes-por-la-limitacion-en-la-deduc-de-50f201", heading_key = "modelo.schema.200.form.row.ajustes-por-la-limitacion-en-la-deduc-de-50f201.heading", official_heading = "Ajustes por la limitación en la deduc. de gastos financieros (art. 16 LIS)", cells = [{ kind = "casilla", casilla_id = "00363" }, { kind = "casilla", casilla_id = "00364" }] }, { key = "operaciones-de-aumento-de-capital-o-fondo-60a153", heading_key = "modelo.schema.200.form.row.operaciones-de-aumento-de-capital-o-fondo-60a153.heading", official_heading = "Operaciones de aumento de capital o fondos propios por compensación de créditos (art. 17.2 LIS)", cells = [{ kind = "casilla", casilla_id = "01818" }, { kind = "casilla", casilla_id = "01819" }] }] },
-    { kind = "field", id = "field-14", casilla_id = "00371" },
+    { kind = "field", id = "field-15", casilla_id = "00371" },
     { kind = "grid", id = "grid-6", columns = [{ key = "aumentos", heading_key = "modelo.form.column.aumentos", official_heading = "Aumentos" }, { key = "disminuciones", heading_key = "modelo.form.column.disminuciones", official_heading = "Disminuciones" }], rows = [{ key = "operaciones-vinculadas-aplicacion-del-val-6e23da", heading_key = "modelo.schema.200.form.row.operaciones-vinculadas-aplicacion-del-val-6e23da.heading", official_heading = "Operaciones vinculadas: aplicación del valor normal de mercado (art. 18 LIS)", cells = [{ kind = "casilla", casilla_id = "01011" }, { kind = "casilla", casilla_id = "01012" }] }, { key = "cambio-de-residencia-a-estados-miembros-d-e0cdaa", heading_key = "modelo.schema.200.form.row.cambio-de-residencia-a-estados-miembros-d-e0cdaa.heading", official_heading = "Cambio de residencia a Estados miembros de la Unión Europea o EEE (art. 19.1 LIS)", cells = [{ kind = "casilla", casilla_id = "01572" }, { kind = "casilla", casilla_id = "01573" }] }] },
 ]
 
@@ -3998,7 +4028,9 @@ id = "deducciones-inversion-canarias"
 heading_key = "modelo.schema.200.form.section.deducciones-inversion-canarias.heading"
 official_heading = "Deducciones inversión Canarias"
 blocks = [
-    { kind = "grid", id = "grid", columns = [{ key = "pendiente_generada", heading_key = "modelo.form.column.pendiente_generada", official_heading = "Deducción pendiente/generada" }, { key = "aplicado", heading_key = "modelo.form.column.aplicado", official_heading = "Aplicado en esta liquidación" }, { key = "pendiente_futuro", heading_key = "modelo.form.column.pendiente_futuro", official_heading = "Pendiente de aplicación en periodos futuros" }], rows = [{ key = "activos-fijos-2010", heading_key = "modelo.schema.200.form.row.activos-fijos-2010.heading", official_heading = "Activos fijos 2010", cells = [{ kind = "casilla", casilla_id = "00854" }, { kind = "casilla", casilla_id = "00855" }, { kind = "casilla", casilla_id = "01356" }] }, { key = "activos-fijos-2011", heading_key = "modelo.schema.200.form.row.activos-fijos-2011.heading", official_heading = "Activos fijos 2011", cells = [{ kind = "casilla", casilla_id = "00857" }, { kind = "casilla", casilla_id = "00858" }, { kind = "casilla", casilla_id = "00859" }] }, { key = "activos-fijos-2012", heading_key = "modelo.schema.200.form.row.activos-fijos-2012.heading", official_heading = "Activos fijos 2012", cells = [{ kind = "casilla", casilla_id = "00860" }, { kind = "casilla", casilla_id = "00861" }, { kind = "casilla", casilla_id = "00862" }] }, { key = "activos-fijos-2013", heading_key = "modelo.schema.200.form.row.activos-fijos-2013.heading", official_heading = "Activos fijos 2013", cells = [{ kind = "casilla", casilla_id = "00863" }, { kind = "casilla", casilla_id = "00864" }, { kind = "casilla", casilla_id = "00865" }] }, { key = "activos-fijos-2014", heading_key = "modelo.schema.200.form.row.activos-fijos-2014.heading", official_heading = "Activos fijos 2014", cells = [{ kind = "casilla", casilla_id = "00883" }, { kind = "casilla", casilla_id = "00884" }, { kind = "casilla", casilla_id = "00885" }] }, { key = "activos-fijos-2016", heading_key = "modelo.schema.200.form.row.activos-fijos-2016.heading", official_heading = "Activos fijos 2016", cells = [{ kind = "casilla", casilla_id = "01357" }, { kind = "casilla", casilla_id = "01358" }, { kind = "casilla", casilla_id = "01359" }] }, { key = "activos-fijos-2017", heading_key = "modelo.schema.200.form.row.activos-fijos-2017.heading", official_heading = "Activos fijos 2017", cells = [{ kind = "casilla", casilla_id = "01778" }, { kind = "casilla", casilla_id = "01779" }, { kind = "casilla", casilla_id = "01780" }] }, { key = "activos-fijos-2018", heading_key = "modelo.schema.200.form.row.activos-fijos-2018.heading", official_heading = "Activos fijos 2018", cells = [{ kind = "casilla", casilla_id = "00852" }, { kind = "casilla", casilla_id = "00853" }, { kind = "casilla", casilla_id = "00856" }] }, { key = "activos-fijos-2019", heading_key = "modelo.schema.200.form.row.activos-fijos-2019.heading", official_heading = "Activos fijos 2019", cells = [{ kind = "casilla", casilla_id = "02116" }, { kind = "casilla", casilla_id = "02117" }, { kind = "casilla", casilla_id = "02118" }] }, { key = "activos-fijos-2020", heading_key = "modelo.schema.200.form.row.activos-fijos-2020.heading", official_heading = "Activos fijos 2020", cells = [{ kind = "casilla", casilla_id = "02209" }, { kind = "casilla", casilla_id = "02210" }, { kind = "casilla", casilla_id = "02211" }] }, { key = "activos-fijos-2021", heading_key = "modelo.schema.200.form.row.activos-fijos-2021.heading", official_heading = "Activos fijos 2021", cells = [{ kind = "casilla", casilla_id = "02332" }, { kind = "casilla", casilla_id = "02333" }, { kind = "casilla", casilla_id = "02334" }] }, { key = "activos-fijos-en-la-palma-la-gomera-y-el-14d5d6", heading_key = "modelo.schema.200.form.row.activos-fijos-en-la-palma-la-gomera-y-el-14d5d6.heading", official_heading = "Activos fijos en La Palma, La Gomera y el Hierro 2018", cells = [{ kind = "casilla", casilla_id = "02335" }, { kind = "casilla", casilla_id = "02336" }, { kind = "casilla", casilla_id = "02337" }] }, { key = "activos-fijos-en-la-palma-la-gomera-y-el-a83ee5", heading_key = "modelo.schema.200.form.row.activos-fijos-en-la-palma-la-gomera-y-el-a83ee5.heading", official_heading = "Activos fijos en La Palma, La Gomera y el Hierro 2019", cells = [{ kind = "casilla", casilla_id = "02338" }, { kind = "casilla", casilla_id = "02339" }, { kind = "casilla", casilla_id = "02340" }] }, { key = "activos-fijos-en-la-palma-la-gomera-y-el-c298d7", heading_key = "modelo.schema.200.form.row.activos-fijos-en-la-palma-la-gomera-y-el-c298d7.heading", official_heading = "Activos fijos en La Palma, La Gomera y el Hierro 2020", cells = [{ kind = "casilla", casilla_id = "02341" }, { kind = "casilla", casilla_id = "02342" }, { kind = "casilla", casilla_id = "02343" }] }, { key = "activos-fijos-en-la-palma-la-gomera-y-el-a3b20d", heading_key = "modelo.schema.200.form.row.activos-fijos-en-la-palma-la-gomera-y-el-a3b20d.heading", official_heading = "Activos fijos en La Palma, La Gomera y el Hierro 2021", cells = [{ kind = "casilla", casilla_id = "02344" }, { kind = "casilla", casilla_id = "02345" }, { kind = "casilla", casilla_id = "02346" }] }, { key = "inversiones-canarias-2006", heading_key = "modelo.schema.200.form.row.inversiones-canarias-2006.heading", official_heading = "Inversiones Canarias 2006", cells = [{ kind = "casilla", casilla_id = "00939" }, { kind = "casilla", casilla_id = "00940" }, { kind = "blank" }] }, { key = "inversiones-canarias-2016", heading_key = "modelo.schema.200.form.row.inversiones-canarias-2016.heading", official_heading = "Inversiones Canarias 2016", cells = [{ kind = "casilla", casilla_id = "01058" }, { kind = "casilla", casilla_id = "01059" }, { kind = "casilla", casilla_id = "01060" }] }, { key = "inversiones-canarias-2017", heading_key = "modelo.schema.200.form.row.inversiones-canarias-2017.heading", official_heading = "Inversiones Canarias 2017", cells = [{ kind = "blank" }, { kind = "casilla", casilla_id = "00802" }, { kind = "casilla", casilla_id = "00806" }] }, { key = "inversiones-canarias-2018", heading_key = "modelo.schema.200.form.row.inversiones-canarias-2018.heading", official_heading = "Inversiones Canarias 2018", cells = [{ kind = "casilla", casilla_id = "01781" }, { kind = "casilla", casilla_id = "01782" }, { kind = "casilla", casilla_id = "01783" }] }, { key = "inversiones-canarias-2019", heading_key = "modelo.schema.200.form.row.inversiones-canarias-2019.heading", official_heading = "Inversiones Canarias 2019", cells = [{ kind = "casilla", casilla_id = "02122" }, { kind = "casilla", casilla_id = "02123" }, { kind = "casilla", casilla_id = "02124" }] }, { key = "inversiones-canarias-2020", heading_key = "modelo.schema.200.form.row.inversiones-canarias-2020.heading", official_heading = "Inversiones Canarias 2020", cells = [{ kind = "casilla", casilla_id = "02212" }, { kind = "casilla", casilla_id = "02213" }, { kind = "casilla", casilla_id = "02214" }] }, { key = "inversiones-canarias-2021", heading_key = "modelo.schema.200.form.row.inversiones-canarias-2021.heading", official_heading = "Inversiones Canarias 2021", cells = [{ kind = "casilla", casilla_id = "02347" }, { kind = "casilla", casilla_id = "02348" }, { kind = "casilla", casilla_id = "02349" }] }, { key = "inversiones-en-la-palma-la-gomera-y-el-hi-74bf69", heading_key = "modelo.schema.200.form.row.inversiones-en-la-palma-la-gomera-y-el-hi-74bf69.heading", official_heading = "Inversiones en La Palma, La Gomera y El Hierro 2018", cells = [{ kind = "casilla", casilla_id = "02119" }, { kind = "casilla", casilla_id = "02120" }, { kind = "casilla", casilla_id = "02121" }] }, { key = "inversiones-en-la-palma-la-gomera-y-el-hi-3ac35e", heading_key = "modelo.schema.200.form.row.inversiones-en-la-palma-la-gomera-y-el-hi-3ac35e.heading", official_heading = "Inversiones en La Palma, La Gomera y El Hierro 2019", cells = [{ kind = "casilla", casilla_id = "02125" }, { kind = "casilla", casilla_id = "02126" }, { kind = "casilla", casilla_id = "02127" }] }, { key = "inversiones-en-la-palma-la-gomera-y-el-hi-b1b9d8", heading_key = "modelo.schema.200.form.row.inversiones-en-la-palma-la-gomera-y-el-hi-b1b9d8.heading", official_heading = "Inversiones en La Palma, La Gomera y El Hierro 2020", cells = [{ kind = "casilla", casilla_id = "02215" }, { kind = "casilla", casilla_id = "02216" }, { kind = "casilla", casilla_id = "02217" }] }, { key = "inversiones-en-la-palma-la-gomera-y-el-hi-36f831", heading_key = "modelo.schema.200.form.row.inversiones-en-la-palma-la-gomera-y-el-hi-36f831.heading", official_heading = "Inversiones en La Palma, La Gomera y El Hierro 2021", cells = [{ kind = "casilla", casilla_id = "02350" }, { kind = "casilla", casilla_id = "02351" }, { kind = "casilla", casilla_id = "02352" }] }, { key = "total", heading_key = "modelo.schema.200.form.row.total.heading", official_heading = "Total", cells = [{ kind = "casilla", casilla_id = "00886" }, { kind = "blank" }, { kind = "casilla", casilla_id = "00887" }] }] },
+    { kind = "grid", id = "grid", columns = [{ key = "pendiente_generada", heading_key = "modelo.form.column.pendiente_generada", official_heading = "Deducción pendiente/generada" }, { key = "aplicado", heading_key = "modelo.form.column.aplicado", official_heading = "Aplicado en esta liquidación" }, { key = "pendiente_futuro", heading_key = "modelo.form.column.pendiente_futuro", official_heading = "Pendiente de aplicación en periodos futuros" }], rows = [{ key = "activos-fijos-2010", heading_key = "modelo.schema.200.form.row.activos-fijos-2010.heading", official_heading = "Activos fijos 2010", cells = [{ kind = "casilla", casilla_id = "00854" }, { kind = "casilla", casilla_id = "00855" }, { kind = "casilla", casilla_id = "01356" }] }, { key = "activos-fijos-2011", heading_key = "modelo.schema.200.form.row.activos-fijos-2011.heading", official_heading = "Activos fijos 2011", cells = [{ kind = "casilla", casilla_id = "00857" }, { kind = "casilla", casilla_id = "00858" }, { kind = "casilla", casilla_id = "00859" }] }, { key = "activos-fijos-2012", heading_key = "modelo.schema.200.form.row.activos-fijos-2012.heading", official_heading = "Activos fijos 2012", cells = [{ kind = "casilla", casilla_id = "00860" }, { kind = "casilla", casilla_id = "00861" }, { kind = "casilla", casilla_id = "00862" }] }, { key = "activos-fijos-2013", heading_key = "modelo.schema.200.form.row.activos-fijos-2013.heading", official_heading = "Activos fijos 2013", cells = [{ kind = "casilla", casilla_id = "00863" }, { kind = "casilla", casilla_id = "00864" }, { kind = "casilla", casilla_id = "00865" }] }, { key = "activos-fijos-2014", heading_key = "modelo.schema.200.form.row.activos-fijos-2014.heading", official_heading = "Activos fijos 2014", cells = [{ kind = "casilla", casilla_id = "00883" }, { kind = "casilla", casilla_id = "00884" }, { kind = "casilla", casilla_id = "00885" }] }, { key = "activos-fijos-2016", heading_key = "modelo.schema.200.form.row.activos-fijos-2016.heading", official_heading = "Activos fijos 2016", cells = [{ kind = "casilla", casilla_id = "01357" }, { kind = "casilla", casilla_id = "01358" }, { kind = "casilla", casilla_id = "01359" }] }, { key = "activos-fijos-2017", heading_key = "modelo.schema.200.form.row.activos-fijos-2017.heading", official_heading = "Activos fijos 2017", cells = [{ kind = "casilla", casilla_id = "01778" }, { kind = "casilla", casilla_id = "01779" }, { kind = "casilla", casilla_id = "01780" }] }, { key = "activos-fijos-2018", heading_key = "modelo.schema.200.form.row.activos-fijos-2018.heading", official_heading = "Activos fijos 2018", cells = [{ kind = "casilla", casilla_id = "00852" }, { kind = "casilla", casilla_id = "00853" }, { kind = "casilla", casilla_id = "00856" }] }, { key = "activos-fijos-2019", heading_key = "modelo.schema.200.form.row.activos-fijos-2019.heading", official_heading = "Activos fijos 2019", cells = [{ kind = "casilla", casilla_id = "02116" }, { kind = "casilla", casilla_id = "02117" }, { kind = "casilla", casilla_id = "02118" }] }, { key = "activos-fijos-2020", heading_key = "modelo.schema.200.form.row.activos-fijos-2020.heading", official_heading = "Activos fijos 2020", cells = [{ kind = "casilla", casilla_id = "02209" }, { kind = "casilla", casilla_id = "02210" }, { kind = "casilla", casilla_id = "02211" }] }, { key = "activos-fijos-2021", heading_key = "modelo.schema.200.form.row.activos-fijos-2021.heading", official_heading = "Activos fijos 2021", cells = [{ kind = "casilla", casilla_id = "02332" }, { kind = "casilla", casilla_id = "02333" }, { kind = "casilla", casilla_id = "02334" }] }, { key = "activos-fijos-en-la-palma-la-gomera-y-el-14d5d6", heading_key = "modelo.schema.200.form.row.activos-fijos-en-la-palma-la-gomera-y-el-14d5d6.heading", official_heading = "Activos fijos en La Palma, La Gomera y el Hierro 2018", cells = [{ kind = "casilla", casilla_id = "02335" }, { kind = "casilla", casilla_id = "02336" }, { kind = "casilla", casilla_id = "02337" }] }, { key = "activos-fijos-en-la-palma-la-gomera-y-el-a83ee5", heading_key = "modelo.schema.200.form.row.activos-fijos-en-la-palma-la-gomera-y-el-a83ee5.heading", official_heading = "Activos fijos en La Palma, La Gomera y el Hierro 2019", cells = [{ kind = "casilla", casilla_id = "02338" }, { kind = "casilla", casilla_id = "02339" }, { kind = "casilla", casilla_id = "02340" }] }, { key = "activos-fijos-en-la-palma-la-gomera-y-el-c298d7", heading_key = "modelo.schema.200.form.row.activos-fijos-en-la-palma-la-gomera-y-el-c298d7.heading", official_heading = "Activos fijos en La Palma, La Gomera y el Hierro 2020", cells = [{ kind = "casilla", casilla_id = "02341" }, { kind = "casilla", casilla_id = "02342" }, { kind = "casilla", casilla_id = "02343" }] }, { key = "activos-fijos-en-la-palma-la-gomera-y-el-a3b20d", heading_key = "modelo.schema.200.form.row.activos-fijos-en-la-palma-la-gomera-y-el-a3b20d.heading", official_heading = "Activos fijos en La Palma, La Gomera y el Hierro 2021", cells = [{ kind = "casilla", casilla_id = "02344" }, { kind = "casilla", casilla_id = "02345" }, { kind = "casilla", casilla_id = "02346" }] }, { key = "inversiones-canarias-2006", heading_key = "modelo.schema.200.form.row.inversiones-canarias-2006.heading", official_heading = "Inversiones Canarias 2006", cells = [{ kind = "casilla", casilla_id = "00939" }, { kind = "casilla", casilla_id = "00940" }, { kind = "blank" }] }] },
+    { kind = "field", id = "field", casilla_id = "DP200016B:00257" },
+    { kind = "grid", id = "grid-2", columns = [{ key = "pendiente_generada", heading_key = "modelo.form.column.pendiente_generada", official_heading = "Deducción pendiente/generada" }, { key = "aplicado", heading_key = "modelo.form.column.aplicado", official_heading = "Aplicado en esta liquidación" }, { key = "pendiente_futuro", heading_key = "modelo.form.column.pendiente_futuro", official_heading = "Pendiente de aplicación en periodos futuros" }], rows = [{ key = "inversiones-canarias-2016", heading_key = "modelo.schema.200.form.row.inversiones-canarias-2016.heading", official_heading = "Inversiones Canarias 2016", cells = [{ kind = "casilla", casilla_id = "01058" }, { kind = "casilla", casilla_id = "01059" }, { kind = "casilla", casilla_id = "01060" }] }, { key = "inversiones-canarias-2017", heading_key = "modelo.schema.200.form.row.inversiones-canarias-2017.heading", official_heading = "Inversiones Canarias 2017", cells = [{ kind = "blank" }, { kind = "casilla", casilla_id = "00802" }, { kind = "casilla", casilla_id = "00806" }] }, { key = "inversiones-canarias-2018", heading_key = "modelo.schema.200.form.row.inversiones-canarias-2018.heading", official_heading = "Inversiones Canarias 2018", cells = [{ kind = "casilla", casilla_id = "01781" }, { kind = "casilla", casilla_id = "01782" }, { kind = "casilla", casilla_id = "01783" }] }, { key = "inversiones-canarias-2019", heading_key = "modelo.schema.200.form.row.inversiones-canarias-2019.heading", official_heading = "Inversiones Canarias 2019", cells = [{ kind = "casilla", casilla_id = "02122" }, { kind = "casilla", casilla_id = "02123" }, { kind = "casilla", casilla_id = "02124" }] }, { key = "inversiones-canarias-2020", heading_key = "modelo.schema.200.form.row.inversiones-canarias-2020.heading", official_heading = "Inversiones Canarias 2020", cells = [{ kind = "casilla", casilla_id = "02212" }, { kind = "casilla", casilla_id = "02213" }, { kind = "casilla", casilla_id = "02214" }] }, { key = "inversiones-canarias-2021", heading_key = "modelo.schema.200.form.row.inversiones-canarias-2021.heading", official_heading = "Inversiones Canarias 2021", cells = [{ kind = "casilla", casilla_id = "02347" }, { kind = "casilla", casilla_id = "02348" }, { kind = "casilla", casilla_id = "02349" }] }, { key = "inversiones-en-la-palma-la-gomera-y-el-hi-74bf69", heading_key = "modelo.schema.200.form.row.inversiones-en-la-palma-la-gomera-y-el-hi-74bf69.heading", official_heading = "Inversiones en La Palma, La Gomera y El Hierro 2018", cells = [{ kind = "casilla", casilla_id = "02119" }, { kind = "casilla", casilla_id = "02120" }, { kind = "casilla", casilla_id = "02121" }] }, { key = "inversiones-en-la-palma-la-gomera-y-el-hi-3ac35e", heading_key = "modelo.schema.200.form.row.inversiones-en-la-palma-la-gomera-y-el-hi-3ac35e.heading", official_heading = "Inversiones en La Palma, La Gomera y El Hierro 2019", cells = [{ kind = "casilla", casilla_id = "02125" }, { kind = "casilla", casilla_id = "02126" }, { kind = "casilla", casilla_id = "02127" }] }, { key = "inversiones-en-la-palma-la-gomera-y-el-hi-b1b9d8", heading_key = "modelo.schema.200.form.row.inversiones-en-la-palma-la-gomera-y-el-hi-b1b9d8.heading", official_heading = "Inversiones en La Palma, La Gomera y El Hierro 2020", cells = [{ kind = "casilla", casilla_id = "02215" }, { kind = "casilla", casilla_id = "02216" }, { kind = "casilla", casilla_id = "02217" }] }, { key = "inversiones-en-la-palma-la-gomera-y-el-hi-36f831", heading_key = "modelo.schema.200.form.row.inversiones-en-la-palma-la-gomera-y-el-hi-36f831.heading", official_heading = "Inversiones en La Palma, La Gomera y El Hierro 2021", cells = [{ kind = "casilla", casilla_id = "02350" }, { kind = "casilla", casilla_id = "02351" }, { kind = "casilla", casilla_id = "02352" }] }, { key = "total", heading_key = "modelo.schema.200.form.row.total.heading", official_heading = "Total", cells = [{ kind = "casilla", casilla_id = "00886" }, { kind = "blank" }, { kind = "casilla", casilla_id = "00887" }] }] },
 ]
 
 [[revisions.2022.form_layouts.pages]]
@@ -5364,41 +5396,43 @@ blocks = [
     { kind = "field", id = "field-20", casilla_id = "00692" },
     { kind = "field", id = "field-21", casilla_id = "00693" },
     { kind = "field", id = "field-22", casilla_id = "00672" },
-    { kind = "field", id = "field-23", casilla_id = "00587" },
-    { kind = "field", id = "field-24", casilla_id = "00900" },
-    { kind = "field", id = "field-25", casilla_id = "00099" },
-    { kind = "field", id = "field-26", casilla_id = "00100" },
-    { kind = "field", id = "field-27", casilla_id = "00773" },
-    { kind = "field", id = "field-28", casilla_id = "00777" },
-    { kind = "field", id = "field-29", casilla_id = "00907" },
-    { kind = "field", id = "field-30", casilla_id = "00908" },
-    { kind = "field", id = "field-31", casilla_id = "00909" },
-    { kind = "field", id = "field-32", casilla_id = "00910" },
-    { kind = "field", id = "field-33", casilla_id = "00911" },
-    { kind = "field", id = "field-34", casilla_id = "00912" },
-    { kind = "field", id = "field-35", casilla_id = "00935" },
-    { kind = "field", id = "field-36", casilla_id = "00936" },
-    { kind = "field", id = "field-37", casilla_id = "00937" },
-    { kind = "field", id = "field-38", casilla_id = "01511" },
-    { kind = "field", id = "field-39", casilla_id = "01512" },
-    { kind = "field", id = "field-40", casilla_id = "01513" },
-    { kind = "field", id = "field-41", casilla_id = "01767" },
-    { kind = "field", id = "field-42", casilla_id = "01768" },
-    { kind = "field", id = "field-43", casilla_id = "01769" },
-    { kind = "field", id = "field-44", casilla_id = "02113" },
-    { kind = "field", id = "field-45", casilla_id = "02114" },
-    { kind = "field", id = "field-46", casilla_id = "02115" },
-    { kind = "field", id = "field-47", casilla_id = "02281" },
-    { kind = "field", id = "field-48", casilla_id = "02282" },
-    { kind = "field", id = "field-49", casilla_id = "02283" },
-    { kind = "field", id = "field-50", casilla_id = "02452" },
-    { kind = "field", id = "field-51", casilla_id = "02453" },
-    { kind = "field", id = "field-52", casilla_id = "02454" },
-    { kind = "field", id = "field-53", casilla_id = "01186" },
-    { kind = "field", id = "field-54", casilla_id = "01187" },
-    { kind = "field", id = "field-55", casilla_id = "01190" },
-    { kind = "field", id = "field-56", casilla_id = "00694" },
-    { kind = "field", id = "field-57", casilla_id = "00695" },
+    { kind = "field", id = "field-23", casilla_id = "DP200022:00279" },
+    { kind = "field", id = "field-24", casilla_id = "DP200022:00280" },
+    { kind = "field", id = "field-25", casilla_id = "00587" },
+    { kind = "field", id = "field-26", casilla_id = "00900" },
+    { kind = "field", id = "field-27", casilla_id = "00099" },
+    { kind = "field", id = "field-28", casilla_id = "00100" },
+    { kind = "field", id = "field-29", casilla_id = "00773" },
+    { kind = "field", id = "field-30", casilla_id = "00777" },
+    { kind = "field", id = "field-31", casilla_id = "00907" },
+    { kind = "field", id = "field-32", casilla_id = "00908" },
+    { kind = "field", id = "field-33", casilla_id = "00909" },
+    { kind = "field", id = "field-34", casilla_id = "00910" },
+    { kind = "field", id = "field-35", casilla_id = "00911" },
+    { kind = "field", id = "field-36", casilla_id = "00912" },
+    { kind = "field", id = "field-37", casilla_id = "00935" },
+    { kind = "field", id = "field-38", casilla_id = "00936" },
+    { kind = "field", id = "field-39", casilla_id = "00937" },
+    { kind = "field", id = "field-40", casilla_id = "01511" },
+    { kind = "field", id = "field-41", casilla_id = "01512" },
+    { kind = "field", id = "field-42", casilla_id = "01513" },
+    { kind = "field", id = "field-43", casilla_id = "01767" },
+    { kind = "field", id = "field-44", casilla_id = "01768" },
+    { kind = "field", id = "field-45", casilla_id = "01769" },
+    { kind = "field", id = "field-46", casilla_id = "02113" },
+    { kind = "field", id = "field-47", casilla_id = "02114" },
+    { kind = "field", id = "field-48", casilla_id = "02115" },
+    { kind = "field", id = "field-49", casilla_id = "02281" },
+    { kind = "field", id = "field-50", casilla_id = "02282" },
+    { kind = "field", id = "field-51", casilla_id = "02283" },
+    { kind = "field", id = "field-52", casilla_id = "02452" },
+    { kind = "field", id = "field-53", casilla_id = "02453" },
+    { kind = "field", id = "field-54", casilla_id = "02454" },
+    { kind = "field", id = "field-55", casilla_id = "01186" },
+    { kind = "field", id = "field-56", casilla_id = "01187" },
+    { kind = "field", id = "field-57", casilla_id = "01190" },
+    { kind = "field", id = "field-58", casilla_id = "00694" },
+    { kind = "field", id = "field-59", casilla_id = "00695" },
 ]
 
 [[revisions.2022.form_layouts.pages]]
@@ -8613,6 +8647,34 @@ blocks = [
 ]
 
 [[revisions.2022.form_layouts.pages]]
+id = "dp200030"
+official_ref = "DP200030"
+heading_key = "modelo.schema.200.form.page.dp200030.heading"
+
+[[revisions.2022.form_layouts.pages.sections]]
+id = "contabilidad-banco-de-espana"
+heading_key = "modelo.schema.200.form.section.contabilidad-banco-de-espana.heading"
+official_heading = "Contabilidad Banco de España"
+blocks = [
+    { kind = "field", id = "field", casilla_id = "DP200030:00255" },
+    { kind = "field", id = "field-2", casilla_id = "DP200030:00257" },
+]
+
+[[revisions.2022.form_layouts.pages]]
+id = "dp200031"
+official_ref = "DP200031"
+heading_key = "modelo.schema.200.form.page.dp200031.heading"
+
+[[revisions.2022.form_layouts.pages.sections]]
+id = "contabilidad-banco-de-espana-estado-cambi-287880"
+heading_key = "modelo.schema.200.form.section.contabilidad-banco-de-espana-estado-cambi-287880.heading"
+official_heading = "Contabilidad Banco de España - Estado cambios patrimonio neto (I)"
+blocks = [
+    { kind = "field", id = "field", casilla_id = "DP200031:00279" },
+    { kind = "field", id = "field-2", casilla_id = "DP200031:00280" },
+]
+
+[[revisions.2022.form_layouts.pages]]
 id = "dp200032"
 official_ref = "DP200032"
 heading_key = "modelo.schema.200.form.page.dp200032.heading"
@@ -8622,16 +8684,17 @@ id = "contabilidad-banco-de-espana-estado-cambi-27d9ae"
 heading_key = "modelo.schema.200.form.section.contabilidad-banco-de-espana-estado-cambi-27d9ae.heading"
 official_heading = "Contabilidad Banco de España - Estado cambios patrimonio neto (II) - Estado total cambios"
 blocks = [
-    { kind = "field", id = "field", casilla_id = "DP200032:00305" },
-    { kind = "field", id = "field-2", casilla_id = "DP200032:00306" },
-    { kind = "field", id = "field-3", casilla_id = "DP200032:00307" },
-    { kind = "field", id = "field-4", casilla_id = "DP200032:00308" },
-    { kind = "field", id = "field-5", casilla_id = "DP200032:00309" },
-    { kind = "field", id = "field-6", casilla_id = "DP200032:00310" },
-    { kind = "field", id = "field-7", casilla_id = "DP200032:00417" },
-    { kind = "field", id = "field-8", casilla_id = "DP200032:00501" },
-    { kind = "field", id = "field-9", casilla_id = "DP200032:00558" },
-    { kind = "field", id = "field-10", casilla_id = "DP200032:00562" },
+    { kind = "field", id = "field", casilla_id = "DP200032:00296" },
+    { kind = "field", id = "field-2", casilla_id = "DP200032:00305" },
+    { kind = "field", id = "field-3", casilla_id = "DP200032:00306" },
+    { kind = "field", id = "field-4", casilla_id = "DP200032:00307" },
+    { kind = "field", id = "field-5", casilla_id = "DP200032:00308" },
+    { kind = "field", id = "field-6", casilla_id = "DP200032:00309" },
+    { kind = "field", id = "field-7", casilla_id = "DP200032:00310" },
+    { kind = "field", id = "field-8", casilla_id = "DP200032:00417" },
+    { kind = "field", id = "field-9", casilla_id = "DP200032:00501" },
+    { kind = "field", id = "field-10", casilla_id = "DP200032:00558" },
+    { kind = "field", id = "field-11", casilla_id = "DP200032:00562" },
 ]
 
 [[revisions.2022.form_layouts.pages]]
@@ -8654,17 +8717,50 @@ blocks = [
     { kind = "field", id = "field-8", casilla_id = "DP200033:00314" },
     { kind = "field", id = "field-9", casilla_id = "DP200033:00315" },
     { kind = "field", id = "field-10", casilla_id = "DP200033:00316" },
-    { kind = "field", id = "field-11", casilla_id = "DP200033:00563" },
-    { kind = "field", id = "field-12", casilla_id = "DP200033:00565" },
-    { kind = "field", id = "field-13", casilla_id = "DP200033:00566" },
-    { kind = "field", id = "field-14", casilla_id = "DP200033:00567" },
-    { kind = "field", id = "field-15", casilla_id = "DP200033:00568" },
+    { kind = "field", id = "field-11", casilla_id = "DP200033:00325" },
+    { kind = "field", id = "field-12", casilla_id = "DP200033:00563" },
+    { kind = "field", id = "field-13", casilla_id = "DP200033:00565" },
+    { kind = "field", id = "field-14", casilla_id = "DP200033:00566" },
+    { kind = "field", id = "field-15", casilla_id = "DP200033:00567" },
+    { kind = "field", id = "field-16", casilla_id = "DP200033:00568" },
+]
+
+[[revisions.2022.form_layouts.pages]]
+id = "dp200038"
+official_ref = "DP200038"
+heading_key = "modelo.schema.200.form.page.dp200038.heading"
+
+[[revisions.2022.form_layouts.pages.sections]]
+id = "entidades-aseguradoras-perdidas-y-ganancias-i"
+heading_key = "modelo.schema.200.form.section.entidades-aseguradoras-perdidas-y-ganancias-i.heading"
+official_heading = "Entidades aseguradoras - Pérdidas y ganancias (I)"
+blocks = [
+    { kind = "field", id = "field", casilla_id = "DP200038:00254" },
+    { kind = "field", id = "field-2", casilla_id = "DP200038:00255" },
+]
+
+[[revisions.2022.form_layouts.pages.sections]]
+id = "entidades-aseguradoras-perdidas-y-gananci-fc933b"
+heading_key = "modelo.schema.200.form.section.entidades-aseguradoras-perdidas-y-gananci-fc933b.heading"
+official_heading = "Entidades aseguradoras - Pérdidas y ganancias (I) - Cuenta técnica seguro no vida"
+blocks = [
+    { kind = "field", id = "field", casilla_id = "DP200038:00257" },
+    { kind = "field", id = "field-2", casilla_id = "DP200038:00279" },
+    { kind = "field", id = "field-3", casilla_id = "DP200038:00280" },
 ]
 
 [[revisions.2022.form_layouts.pages]]
 id = "dp200039"
 official_ref = "DP200039"
 heading_key = "modelo.schema.200.form.page.dp200039.heading"
+
+[[revisions.2022.form_layouts.pages.sections]]
+id = "entidades-aseguradoras-perdidas-y-gananci-3190e2"
+heading_key = "modelo.schema.200.form.section.entidades-aseguradoras-perdidas-y-gananci-3190e2.heading"
+official_heading = "Entidades aseguradoras - Pérdidas y ganancias (II) - Cuenta técnica seguro de vida - Variación provisión para primas no consumidas y riesgos en curso (+ ó"
+blocks = [
+    { kind = "field", id = "field", casilla_id = "DP200039:00296" },
+]
 
 [[revisions.2022.form_layouts.pages.sections]]
 id = "entidades-aseguradoras-perdidas-y-ganancias-ii"
@@ -8727,6 +8823,14 @@ heading_key = "modelo.schema.200.form.section.entidades-aseguradoras-perdidas-y-
 official_heading = "Entidades aseguradoras - Pérdidas y ganancias (II) - Cuenta técnica seguro de vida - Variación provisión prestaciones (+ ó"
 blocks = [
     { kind = "field", id = "field", casilla_id = "DP200039:00316" },
+]
+
+[[revisions.2022.form_layouts.pages.sections]]
+id = "entidades-aseguradoras-perdidas-y-ganancias-ii-4"
+heading_key = "modelo.schema.200.form.section.entidades-aseguradoras-perdidas-y-ganancias-ii.heading"
+official_heading = "Entidades aseguradoras - Pérdidas y ganancias (II)"
+blocks = [
+    { kind = "field", id = "field", casilla_id = "DP200039:00325" },
 ]
 
 [[revisions.2022.form_layouts.pages]]
@@ -8823,6 +8927,44 @@ blocks = [
 ]
 
 [[revisions.2022.form_layouts.pages]]
+id = "dp200047"
+official_ref = "DP200047"
+heading_key = "modelo.schema.200.form.page.dp200047.heading"
+
+[[revisions.2022.form_layouts.pages.sections]]
+id = "inst-inversion-colectiva"
+heading_key = "modelo.schema.200.form.section.inst-inversion-colectiva.heading"
+official_heading = "Inst. inversión colectiva"
+blocks = [
+    { kind = "field", id = "field", casilla_id = "DP200047:00254" },
+    { kind = "field", id = "field-2", casilla_id = "DP200047:00255" },
+]
+
+[[revisions.2022.form_layouts.pages.sections]]
+id = "inst-inversion-colectiva-estado-variacion-eb6d75"
+heading_key = "modelo.schema.200.form.section.inst-inversion-colectiva-estado-variacion-eb6d75.heading"
+official_heading = "Inst. inversión colectiva - Estado variación patrimonial (I)"
+blocks = [
+    { kind = "field", id = "field", casilla_id = "DP200047:00257" },
+]
+
+[[revisions.2022.form_layouts.pages.sections]]
+id = "inst-inversion-colectiva-2"
+heading_key = "modelo.schema.200.form.section.inst-inversion-colectiva.heading"
+official_heading = "Inst. inversión colectiva"
+blocks = [
+    { kind = "field", id = "field", casilla_id = "DP200047:00279" },
+]
+
+[[revisions.2022.form_layouts.pages.sections]]
+id = "inst-inversion-colectiva-estado-variacion-eb6d75-2"
+heading_key = "modelo.schema.200.form.section.inst-inversion-colectiva-estado-variacion-eb6d75.heading"
+official_heading = "Inst. inversión colectiva - Estado variación patrimonial (I)"
+blocks = [
+    { kind = "field", id = "field", casilla_id = "DP200047:00280" },
+]
+
+[[revisions.2022.form_layouts.pages]]
 id = "dp200048"
 official_ref = "DP200048"
 heading_key = "modelo.schema.200.form.page.dp200048.heading"
@@ -8832,9 +8974,10 @@ id = "inst-inversion-colectiva"
 heading_key = "modelo.schema.200.form.section.inst-inversion-colectiva.heading"
 official_heading = "Inst. inversión colectiva"
 blocks = [
-    { kind = "field", id = "field", casilla_id = "DP200048:00301" },
-    { kind = "field", id = "field-2", casilla_id = "DP200048:00302" },
-    { kind = "field", id = "field-3", casilla_id = "DP200048:00303" },
+    { kind = "field", id = "field", casilla_id = "DP200048:00296" },
+    { kind = "field", id = "field-2", casilla_id = "DP200048:00301" },
+    { kind = "field", id = "field-3", casilla_id = "DP200048:00302" },
+    { kind = "field", id = "field-4", casilla_id = "DP200048:00303" },
 ]
 
 [[revisions.2022.form_layouts.pages]]
@@ -8843,7 +8986,32 @@ official_ref = "DP200053"
 heading_key = "modelo.schema.200.form.page.dp200053.heading"
 
 [[revisions.2022.form_layouts.pages.sections]]
+id = "sociedades-de-garantia-reciproca-estado-t-e64c83"
+heading_key = "modelo.schema.200.form.section.sociedades-de-garantia-reciproca-estado-t-e64c83.heading"
+official_heading = "Sociedades de garantia recíproca - Estado total cambios patrimonio neto - Operaciones con socios"
+blocks = [
+    { kind = "field", id = "field", casilla_id = "DP200053:00254" },
+    { kind = "field", id = "field-2", casilla_id = "DP200053:00255" },
+]
+
+[[revisions.2022.form_layouts.pages.sections]]
 id = "sociedades-de-garantia-reciproca-estado-t-9e1507"
+heading_key = "modelo.schema.200.form.section.sociedades-de-garantia-reciproca-estado-t-9e1507.heading"
+official_heading = "Sociedades de garantia recíproca - Estado total cambios patrimonio neto"
+blocks = [
+    { kind = "field", id = "field", casilla_id = "DP200053:00257" },
+]
+
+[[revisions.2022.form_layouts.pages.sections]]
+id = "sociedades-de-garantia-reciproca-estado-t-752a73"
+heading_key = "modelo.schema.200.form.section.sociedades-de-garantia-reciproca-estado-t-752a73.heading"
+official_heading = "Sociedades de garantia recíproca - Estado total cambios patrimonio neto - Operaciones con socios - (-) Distribución de dividendos"
+blocks = [
+    { kind = "field", id = "field", casilla_id = "DP200053:00280" },
+]
+
+[[revisions.2022.form_layouts.pages.sections]]
+id = "sociedades-de-garantia-reciproca-estado-t-9e1507-2"
 heading_key = "modelo.schema.200.form.section.sociedades-de-garantia-reciproca-estado-t-9e1507.heading"
 official_heading = "Sociedades de garantia recíproca - Estado total cambios patrimonio neto"
 blocks = [
@@ -8861,7 +9029,7 @@ blocks = [
 ]
 
 [[revisions.2022.form_layouts.pages.sections]]
-id = "sociedades-de-garantia-reciproca-estado-t-9e1507-2"
+id = "sociedades-de-garantia-reciproca-estado-t-9e1507-3"
 heading_key = "modelo.schema.200.form.section.sociedades-de-garantia-reciproca-estado-t-9e1507.heading"
 official_heading = "Sociedades de garantia recíproca - Estado total cambios patrimonio neto"
 blocks = [
@@ -8872,6 +9040,15 @@ blocks = [
 id = "dp200054"
 official_ref = "DP200054"
 heading_key = "modelo.schema.200.form.page.dp200054.heading"
+
+[[revisions.2022.form_layouts.pages.sections]]
+id = "sociedades-de-garantia-reciproca-estado-t-e64c83"
+heading_key = "modelo.schema.200.form.section.sociedades-de-garantia-reciproca-estado-t-e64c83.heading"
+official_heading = "Sociedades de garantia recíproca - Estado total cambios patrimonio neto - Operaciones con socios"
+blocks = [
+    { kind = "field", id = "field", casilla_id = "DP200054:00279" },
+    { kind = "field", id = "field-2", casilla_id = "DP200054:00296" },
+]
 
 [[revisions.2022.form_layouts.pages.sections]]
 id = "sociedades-de-garantia-reciproca-estado-t-9e1507"

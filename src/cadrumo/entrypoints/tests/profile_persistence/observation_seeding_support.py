@@ -23,7 +23,7 @@ from cadrumo.domain.calculations.registry.tests.registry_observations import (
 )
 from cadrumo.domain.modelos.filing_kind_evidence import ObservedFilingKind
 
-_M200_TURNOVER: CasillaId = validated_casilla_id("00255", surface="_M200_TURNOVER")
+_M200_TURNOVER: CasillaId = validated_casilla_id("DP200007:00255", surface="_M200_TURNOVER")
 
 
 def save_stamped_observation(

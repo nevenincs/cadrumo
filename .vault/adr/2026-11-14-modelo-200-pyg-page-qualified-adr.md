@@ -5,14 +5,14 @@ tags:
 date: '2026-11-14'
 modified: '2026-11-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:9cd0dc8ccf7d4abc17da8bd41212e3ceef84015af5eafb70fbf53130ae396a7d'
+body_hash: 'sha256:2e0b76523a049d09e8536bc4b81e5a5f712177efc69061b37be211924aa87e1e'
 related:
   - "[[2026-09-02-registry-declaration-hardening-identifier-grammar-adr]]"
   - "[[2026-06-03-m200-internal-casilla-discipline-adr]]"
   - '[[2026-09-09-registry-edition-authoring-code-shape-and-blast-radius-reference]]'
 ---
 
-# `modelo-200-pyg-page-qualified` adr: `Modelo 200 PyG casillas become page-qualified, with a stored-id migration` | (**status:** `proposed`)
+# `modelo-200-pyg-page-qualified` adr: `Modelo 200 PyG casillas become page-qualified, with a stored-id migration` | (**status:** `accepted`)
 
 ## Problem Statement
 
@@ -110,6 +110,15 @@ and operator-reviewed. That cost is why it needs the operator's acceptance.
 Recommendation: defer (keep option b). The four rows are backend-only (the TUI column already
 passes them), and the migration touches every stored Modelo 200 calculation. It should be
 scheduled when Modelo 200 grade work resumes, not inside the frontend-priority phase.
+
+Decision (2026-11-14): the operator approved this record on condition that it does not diverge
+from the delta-keyed, compacted registry, and PRIME accepted it on that authority with option (a)
+chosen. Binding condition: each PyG line is declared page-qualified once, at its earliest identical
+edition. The 29 same-number declarations parked on `pyg-wip` are not landed as they stand: every
+member a later edition restates byte for byte is dropped by the edition-delta migration, and the
+`delta_minimality` and `edition_delta_assessment` lanes are green before hand-over. Layouts are
+regenerated only for editions whose design changed. The stored-id migration refuses ambiguous
+rows, and no filing grade rises by this record.
 
 ## Consequences
 

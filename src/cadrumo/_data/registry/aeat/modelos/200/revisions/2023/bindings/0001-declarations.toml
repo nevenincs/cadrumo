@@ -19,7 +19,7 @@
 # (`held_source_set_aside_when_marked`).
 [[revisions."2023".bindings]]
 id = "modelo-200-incn-periodo-impositivo-anterior"
-provider = { kind = "previous_filing", source_modelo = "200", source_casilla_id = "00255", temporal = { kind = "filing_year_offset", years = -1, source_periods = ["0A"] } }
+provider = { kind = "previous_filing", source_modelo = "200", source_casilla_id = "DP200007:00255", temporal = { kind = "filing_year_offset", years = -1, source_periods = ["0A"] } }
 applicability = { kind = "target_periods", periods = ["0A"] }
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "copy" }

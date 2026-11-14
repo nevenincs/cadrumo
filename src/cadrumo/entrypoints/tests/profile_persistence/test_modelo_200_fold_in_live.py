@@ -175,7 +175,7 @@ _PRIOR_BIN_STOCK = Decimal("30000.00")
 _PRIOR_DOTACIONES_NO_CUMPLIDO = Decimal("8000.00")
 _PRIOR_DOTACIONES_CUMPLIDO = Decimal("5000.00")
 # A filed prior return states its net turnover, which the current rate reads.
-_PRIOR_TURNOVER: CasillaId = validated_casilla_id("00255", surface="_PRIOR_TURNOVER")
+_PRIOR_TURNOVER: CasillaId = validated_casilla_id("DP200007:00255", surface="_PRIOR_TURNOVER")
 _PRIOR_TURNOVER_AMOUNT = Decimal("500000")
 _PRECEDING_TURNOVER_CARRY = "modelo-200-incn-periodo-impositivo-anterior"
 

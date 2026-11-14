@@ -245,63 +245,6 @@ grounding = "verified"
 modelo = "200"
 period = "0A"
 year = "horizon-1"
-not_sourced = { "00255" = "30800.00", "00279" = "5400.00" }
-derivation = """
-The bank ledger gives revenue 30800.00 and the equipment and licence rental 5400.00 (net of deductible IVA).
-They would fill the cuenta de pérdidas y ganancias of the Modelo 200 record design (aeat-dr-200, the same lines
-in the 2022 and 2025 designs): "Cuenta de pérdidas y ganancias (I) - Operaciones continuadas - Importe neto de la
-cifra de negocios [00255]" (element 6, position 13, length 17) and "Cuenta de pérdidas y ganancias (I) -
-Operaciones continuadas - Otros gastos de explotación [00279]", where a rental of equipment and licences is a
-servicio exterior.
-"""
-legal_ref = ["ley-27-2014:art-124"]
-grounding = "unverified"
-reason = "The cuenta de pérdidas y ganancias lines need closing entries (amortisation, accruals, officer costs) the bank ledger lacks, so these casillas stay not sourced until Sociedades sources them. The accounting result itself (role is-liquidacion-i-importe, casilla 00501 of the liquidación page) is a given the company enters (persona.toml [[work_inputs]]), so it is not asserted here."
-
-[[values]]
-modelo = "200"
-period = "0A"
-year = "horizon-1"
-governed_by = "ley-27-2014:art-29-2023"
-not_sourced = { "00255" = "30800.00", "00279" = "5400.00" }
-derivation = """
-The bank ledger gives revenue 30800.00 and the equipment and licence rental 5400.00 (net of deductible IVA).
-They would fill the cuenta de pérdidas y ganancias of the Modelo 200 record design (aeat-dr-200, the same lines
-in the 2022 and 2025 designs): "Cuenta de pérdidas y ganancias (I) - Operaciones continuadas - Importe neto de la
-cifra de negocios [00255]" (element 6, position 13, length 17) and "Cuenta de pérdidas y ganancias (I) -
-Operaciones continuadas - Otros gastos de explotación [00279]", where a rental of equipment and licences is a
-servicio exterior.
-Restated under ley-27-2014:art-29-2023 because a value limited to a provision replaces every plain value of the same return in the
-years that provision governs; these figures do not depend on the tax rate.
-"""
-legal_ref = ["ley-27-2014:art-124", "ley-27-2014:art-29-2023"]
-grounding = "unverified"
-reason = "The cuenta de pérdidas y ganancias lines need closing entries (amortisation, accruals, officer costs) the bank ledger lacks, so these casillas stay not sourced until Sociedades sources them. The accounting result itself (role is-liquidacion-i-importe, casilla 00501 of the liquidación page) is a given the company enters (persona.toml [[work_inputs]]), so it is not asserted here."
-
-[[values]]
-modelo = "200"
-period = "0A"
-year = "horizon-1"
-governed_by = "ley-27-2014:dt-44"
-not_sourced = { "00255" = "30800.00", "00279" = "5400.00" }
-derivation = """
-The bank ledger gives revenue 30800.00 and the equipment and licence rental 5400.00 (net of deductible IVA).
-They would fill the cuenta de pérdidas y ganancias of the Modelo 200 record design (aeat-dr-200, the same lines
-in the 2022 and 2025 designs): "Cuenta de pérdidas y ganancias (I) - Operaciones continuadas - Importe neto de la
-cifra de negocios [00255]" (element 6, position 13, length 17) and "Cuenta de pérdidas y ganancias (I) -
-Operaciones continuadas - Otros gastos de explotación [00279]", where a rental of equipment and licences is a
-servicio exterior.
-Restated under ley-27-2014:dt-44 because a value limited to a provision replaces every plain value of the same return in the
-years that provision governs; these figures do not depend on the tax rate.
-"""
-legal_ref = ["ley-27-2014:art-124", "ley-27-2014:dt-44"]
-grounding = "unverified"
-reason = "The cuenta de pérdidas y ganancias lines need closing entries (amortisation, accruals, officer costs) the bank ledger lacks, so these casillas stay not sourced until Sociedades sources them. The accounting result itself (role is-liquidacion-i-importe, casilla 00501 of the liquidación page) is a given the company enters (persona.toml [[work_inputs]]), so it is not asserted here."
-
-[[values]]
-modelo = "200"
-period = "0A"
-year = "horizon-1"
 roles = { "is_liquidacion_iii_base_imponible_previa" = "25400.00", "is_liquidacion_iii_base_imponible" = "9100.00", "is_liquidacion_iv_pago_fraccionado_primero" = "54.00", "is_liquidacion_iv_pago_fraccionado_segundo" = "0.00", "is_liquidacion_iv_pago_fraccionado_tercero" = "0.00", "is_liquidacion_iii_cuota_integra" = "2275.00", "is_cuota_liquida" = "2275.00", "is_liquidacion_iv_cuota_diferencial" = "2221.00", "is_tributacion_conjunta_porcentaje_estado" = "100" }
 derivation = """
 Cuota íntegra, LIS art. 29.1 as worded before Ley 31/2022 (periodos before 2023): tipo general 25 %, there being no reduced rate for an

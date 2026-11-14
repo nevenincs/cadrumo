@@ -6649,6 +6649,24 @@ modelo:
             label: Entidades aseguradoras - Pérdidas y ganancias (II) - Cuenta técnica
               seguro de vida - Inversiones afectas a seguros el tomador asume riesgo
               de inversión [00308]
+          is-aseguradoras-no-vida-gastos-gestion-inversiones-cuentas-financieras:
+            label: Entidades aseguradoras - Pérdidas y ganancias (I) - Cuenta técnica
+              seguro no vida - Gastos gestión inversiones - Gastos inversiones y cuentas
+              financieras [00280]
+          is-aseguradoras-no-vida-gastos-gestion-inversiones-inmovilizado-material:
+            label: Entidades aseguradoras - Pérdidas y ganancias (I) - Cuenta técnica
+              seguro no vida - Gastos gestión inversiones - Gastos inmovilizado material
+              e inv. inmobiliarias [00279]
+          is-aseguradoras-no-vida-prestaciones-gastos-pagados:
+            label: Entidades aseguradoras - Pérdidas y ganancias (I) - Cuenta técnica
+              seguro no vida - Prestaciones y gastos pagados [00255]
+          is-aseguradoras-no-vida-prestaciones-gastos-pagados-reaseguro-aceptado:
+            label: Entidades aseguradoras - Pérdidas y ganancias (I) - Cuenta técnica
+              seguro no vida - Prestaciones y gastos pagados - Reaseguro aceptado
+              [00257]
+          is-aseguradoras-no-vida-siniestralidad-neta-reaseguro:
+            label: Entidades aseguradoras - Pérdidas y ganancias (I) - Cuenta técnica
+              seguro no vida - Siniestralidad del ejercicio, neta de reaseguro [00254]
           is-aseguradoras-vida-cuenta-tecnica-otros-ingresos-tecnicos:
             label: Entidades aseguradoras - Pérdidas y ganancias (II) - Cuenta técnica
               seguro de vida - Otros ingresos ténicos [00309]
@@ -6691,6 +6709,14 @@ modelo:
           is-aseguradoras-vida-ingresos-inversiones-financieras:
             label: Entidades aseguradoras - Pérdidas y ganancias (II) - Cuenta técnica
               seguro de vida - Ingresos inversiones financieras [00301]
+          is-aseguradoras-vida-provisiones-riesgo-tomadores:
+            label: Entidades aseguradoras - Pérdidas y ganancias (II) - Cuenta técnica
+              seguro de vida - Provisiones seguros de vida cuando el riesgo lo asumen
+              los tomadores [00325]
+          is-aseguradoras-vida-variacion-provision-primas-no-consumidas-seguro-directo:
+            label: Entidades aseguradoras - Pérdidas y ganancias (II) - Cuenta técnica
+              seguro de vida - Variación provisión para primas no consumidas y riesgos
+              en curso (+ o -) - Seguro directo [00296]
           is-atribucion-rentas-hibridos-aumento:
             label: 'Entidad en régimen de atribución de rentas: asimetrías híbridas
               (art. 15 bis.12 LIS) - Aumento - Correcciones del ejercicio - Permanentes
@@ -7169,6 +7195,12 @@ modelo:
           is-cooperativa-compensacion-cuotas:
             label: Rég. cooperativas - Detalle compensación cuotas. 2010 Aplicado
               en esta liquidación [00099]
+          is-cooperativa-compensacion-cuotas-2008-aplicado:
+            label: Rég. cooperativas - Detalle compensación cuotas. 2008 Aplicado
+              en esta liquidación [00280]
+          is-cooperativa-compensacion-cuotas-2008-pendiente-inicio:
+            label: Rég. cooperativas - Detalle compensación cuotas. 2008 Pendiente
+              aplicación al principio del periodo [00279]
           is-cooperativa-cuota-integra-previa:
             label: Liquidación III - Base imponible - Sólo sociedades cooperativas
               - Cuota íntegra previa después de la reserva de nivelación [01331]
@@ -8711,6 +8743,12 @@ modelo:
           is-deduccion-di-interna-total:
             label: Deducciones doble imposición interna (DT 23.1 LIS) - Total - Deducción
               pendiente [01342]
+          is-deduccion-di-internacional-2024-pendiente-final:
+            label: Deducciones doble imposición internacional LIS - DI internacional
+              2024(*) - 2024 Deducción pendiente [00255]
+          is-deduccion-di-internacional-2024-tipo-gravamen-periodo-generacion:
+            label: Deducciones doble imposición internacional LIS - DI internacional
+              2024(*) - Tipo gravamen período generación [00254]
           is-deduccion-di-internacional-detalle:
             label: Deducciones doble imposición internacional LIS - DI internacional
               2024 - Deducción pendiente [01013]
@@ -8834,9 +8872,20 @@ modelo:
             label: Liquidación IV - Otras deducciones - Deducción por inversiones
               y gastos realizados por las autoridades portuarias (art. 38 bis LIS)
               (desglose en página 18 bis) [02315]
+          is-deduccion-inversion-canarias-2009-aplicado:
+            label: Deducciones inversión Canarias - Inversiones Canarias 2009 - Aplicado
+              en esta liquidación [00257]
           is-deduccion-inversion-canarias-importe:
             label: Deducciones inversión Canarias - Inversiones en La Palma, La Gomera
               y El Hierro 2023 - Pendiente de aplicación en periodos futuros [00774]
+          is-deduccion-inversion-canarias-islas-menores-2024-pendiente-futuros:
+            label: Deducciones inversión Canarias - Inversiones del ejercicio en La
+              Palma, La Gomera y El Hierro - Pendiente de aplicación en periodos futuros
+              [00296]
+          is-deduccion-inversion-canarias-islas-menores-2025-asterisco-pendiente-futuros:
+            label: Deducciones inversión Canarias - Inversiones del ejercicio en La
+              Palma, La Gomera y El Hierro - Pendiente de aplicación en periodos futuros
+              [00296]
           is-deduccion-inversion-canarias-islas-menores-aplicado:
             label: Deducciones inversión Canarias - Inversiones en La Palma, La Gomera
               y El Hierro 2024 - Aplicado en esta liquidación [01806]
@@ -8974,6 +9023,18 @@ modelo:
           is-ecpn-ajuste-errores-importe:
             label: Estado de cambios patrimonio neto (II) - Ajustes por errores de
               ejercicios anteriores - Capital - Escriturado [00408]
+          is-ecpn-bde-cambios-politicas-contables-resultado-ejercicio:
+            label: Contabilidad Banco de España - Estado cambios patrimonio neto (II)
+              - Estado total cambios - Efectos de los cambios en las políticas contables
+              - Resultado del ejercicio [00325]
+          is-ecpn-bde-coberturas-flujos-efectivo-ganancias-perdidas-valor:
+            label: Contabilidad Banco de España - Estado cambios patrimonio neto (I)
+              - Estado de Ingresos y gastos Reconocidos - Ganancias o (-) pérdidas
+              de valor contabilizadas en el patrimonio neto [00279]
+          is-ecpn-bde-coberturas-flujos-efectivo-transferido-resultados:
+            label: Contabilidad Banco de España - Estado cambios patrimonio neto (I)
+              - Estado de Ingresos y gastos Reconocidos - Transferido a resultados
+              [00280]
           is-ecpn-bde-correccion-errores-acciones-propias:
             label: Contabilidad Banco de España - Estado cambios patrimonio neto (II)
               - Estado total cambios - Efectos de la corrección de errores - (-) Acciones
@@ -9030,6 +9091,10 @@ modelo:
             label: Contabilidad Banco de España - Estado cambios patrimonio neto (II)
               - Estado total cambios - Saldo de apertura [antes de la reexpresión]
               - Otro resultado global acumulado [00303]
+          is-ecpn-bde-saldo-apertura-otros-elementos-patrimonio-neto:
+            label: Contabilidad Banco de España - Estado cambios patrimonio neto (II)
+              - Estado total cambios - Saldo de apertura [antes de la reexpresión]
+              - Otros elementos del patrimonio neto [00296]
           is-ecpn-bde-saldo-apertura-resultado-ejercicio:
             label: Contabilidad Banco de España - Estado cambios patrimonio neto (II)
               - Estado total cambios - Saldo de apertura [antes de la reexpresión]
@@ -9633,9 +9698,28 @@ modelo:
             label: Inst. inversión colectiva - Estado variación patrimonial (II) -
               Revalorización inmuebles uso propio y resultados por enajenación inmobilizado
               [00302]
+          is-iic-variacion-patrimonial-comisiones-retrocedidas:
+            label: Inst. inversión colectiva - Estado variación patrimonial (II) -
+              Comisiones retrocedidas [00296]
+          is-iic-variacion-patrimonial-dividendos:
+            label: Inst. inversión colectiva - Estado variación patrimonial (I) -
+              Dividendos [00255]
+          is-iic-variacion-patrimonial-intereses:
+            label: Inst. inversión colectiva - Estado variación patrimonial (I) -
+              Intereses [00254]
           is-iic-variacion-patrimonial-otros:
             label: Inst. inversión colectiva - Estado variación patrimonial (II) -
               Otros [00301]
+          is-iic-variacion-patrimonial-servicios-exteriores:
+            label: Inst. inversión colectiva - Estado variación patrimonial (I) -
+              Servicios exteriores [00279]
+          is-iic-variacion-patrimonial-servicios-exteriores-tasaciones:
+            label: Inst. inversión colectiva - Estado variación patrimonial (I) -
+              Servicios exteriores - Tasaciones [00280]
+          is-iic-variacion-valor-razonable-inversiones-inmobiliarias:
+            label: Inst. inversión colectiva - Estado variación patrimonial (I) -
+              Inversiones inmobiliarias - Variación valor razonable invers. inmob.
+              [00257]
           is-imputacion-en-base-imponible-rentas-positivas-art-100-lis:
             help: Indicador de imputación en la base imponible de rentas positivas
               conforme al artículo 100 de la LIS [00007].
@@ -9683,6 +9767,10 @@ modelo:
           is-liquidacion-i-correcciones-impuesto-sociedades-disminuciones:
             label: Liquidación I - Resultado de la cuenta de pérdidas y ganancias
               - Correcciones por Impuesto Sociedades - Disminuciones [00302]
+          is-liquidacion-i-deterioro-participaciones-art-13-2-b-aumentos:
+            label: Liquidación I - Detalle correcciones resultado cta. pérdidas y
+              ganancias - Ajustes por pérdidas por deterioro de valores repr. de partic.
+              en el capital o fondos propios (art. 13.2 b) LIS) - Aumentos [00325]
           is-liquidacion-i-libertad-amortizacion-gastos-id-art-12-3-c-aumentos:
             label: Liquidación I - Detalle correcciones resultado cta. pérdidas y
               ganancias - Libertad de amortización de gastos de investigación y desarrollo
@@ -9871,6 +9959,13 @@ modelo:
             help: Consigna la cifra media de personal asalariado fijo del ejercicio
               [00041].
             label: Personal asalariado (cifra media del ejercicio) Personal fijo [00041]
+          is-pyg-bde-fondo-comercio-negativo-reconocido-resultados:
+            label: Contabilidad Banco de España - Pérdidas y ganancias - Fondo de
+              comercio negativo reconocido en resultados [00255]
+          is-pyg-bde-ganancias-perdidas-antes-impuestos-actividades-continuadas:
+            label: Contabilidad Banco de España - Pérdidas y ganancias - C) Ganancias
+              o (-) pérdidas antes de impuestos procedentes de las actividades continuadas
+              [00257]
           is-pyg-continuadas-amortizacion-del-inmovilizado:
             label: Cuenta de pérdidas y ganancias (I) - Operaciones continuadas -
               Amortización del inmovilizado [00284]
@@ -10281,6 +10376,26 @@ modelo:
           is-sal-reserva-especial-dotacion:
             label: Liquidación III - Base Imponible - Sociedades Laborales - Reserva
               especial dotación Ley 44/2015 Art. 14 [SAL_RESERVA_DOTACION]
+          is-sgr-operaciones-socios-capital-no-exigido:
+            label: 'Sociedades de garantía recíproca - Estado total cambios patrimonio
+              neto - Operaciones con socios - Capital - Menos: no exigido [00254]'
+          is-sgr-operaciones-socios-capital-reembolsable:
+            label: 'Sociedades de garantía recíproca - Estado total cambios patrimonio
+              neto - Operaciones con socios - Capital - Menos: reembolsable [00255]'
+          is-sgr-operaciones-socios-distribucion-dividendos-capital-suscrito:
+            label: Sociedades de garantía recíproca - Estado total cambios patrimonio
+              neto - Operaciones con socios - (-) Distribución de dividendos - Capital
+              - Suscrito [00280]
+          is-sgr-operaciones-socios-reducciones-capital-total:
+            label: Sociedades de garantía recíproca - Estado total cambios patrimonio
+              neto - Operaciones con socios - (-) Reducciones de capital - Total [00279]
+          is-sgr-operaciones-socios-resultados-ejercicios-anteriores:
+            label: Sociedades de garantía recíproca - Estado total cambios patrimonio
+              neto - Operaciones con socios - Resultados ejercicios anteriores [00257]
+          is-sgr-otras-operaciones-socios-fondos-provisiones-tecnicas-aportaciones-terceros:
+            label: Sociedades de garantía recíproca - Estado total cambios patrimonio
+              neto - Operaciones con socios - Otras operaciones con socios - Fondos
+              provisiones técnicas. Aportaciones de terceros [00296]
           is-sgr-otras-variaciones-ajustes-cambio-valor:
             label: Sociedades de garantia recíproca - Estado total cambios patrimonio
               neto - Otras variaciones patrimonio neto - Ajustes cambio valor [00304]

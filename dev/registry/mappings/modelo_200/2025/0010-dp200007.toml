@@ -72,7 +72,7 @@ record_identity = "DP200007"
 [[entries]]
 export_field_id = "m200-2025.dp200007.f0006"
 kind = "casilla"
-casilla_id = "00255"
+casilla_id = "DP200007:00255"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [entries.anchor]
@@ -98,7 +98,7 @@ record_identity = "DP200007"
 [[entries]]
 export_field_id = "m200-2025.dp200007.f0008"
 kind = "casilla"
-casilla_id = "00257"
+casilla_id = "DP200007:00257"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [entries.anchor]
@@ -540,7 +540,7 @@ record_identity = "DP200007"
 [[entries]]
 export_field_id = "m200-2025.dp200007.f0042"
 kind = "casilla"
-casilla_id = "00279"
+casilla_id = "DP200007:00279"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [entries.anchor]
@@ -553,7 +553,7 @@ record_identity = "DP200007"
 [[entries]]
 export_field_id = "m200-2025.dp200007.f0043"
 kind = "casilla"
-casilla_id = "00280"
+casilla_id = "DP200007:00280"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [entries.anchor]
@@ -579,7 +579,7 @@ record_identity = "DP200007"
 [[entries]]
 export_field_id = "m200-2025.dp200007.f0045"
 kind = "casilla"
-casilla_id = "00254"
+casilla_id = "DP200007:00254"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [entries.anchor]
@@ -852,7 +852,7 @@ record_identity = "DP200007"
 [[entries]]
 export_field_id = "m200-2025.dp200007.f0066"
 kind = "casilla"
-casilla_id = "00296"
+casilla_id = "DP200007:00296"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [entries.anchor]
