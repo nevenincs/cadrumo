@@ -18,6 +18,7 @@ from .filing_projection_m296 import (
     M296PerceptorInteresesProjectionRef,
     M296PerceptorProjectionRef,
 )
+from .filing_projection_m840 import M840AnexoHojaProjectionRef, M840LocalProjectionRef
 from .models import STRICT_FROZEN_CONFIG
 
 
@@ -888,7 +889,9 @@ FilingProjectionRef = Annotated[
     | M296PerceptorProjectionRef
     | M296PerceptorInteresesProjectionRef
     | M296AnexoPagoProjectionRef
-    | M296AnexoCertificadoProjectionRef,
+    | M296AnexoCertificadoProjectionRef
+    | M840LocalProjectionRef
+    | M840AnexoHojaProjectionRef,
     Field(discriminator="projection_kind"),
 ]
 """Strict core-owned union for every repeated-row filing projection."""

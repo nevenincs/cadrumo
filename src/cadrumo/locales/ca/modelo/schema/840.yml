@@ -98,9 +98,6 @@ modelo:
               label: Exercici fiscal a què es refereix la declaració
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               label: Tipus de declaració (alta / variació / baixa)
-            x-chim6r31e9gmst355pkmsp39cdgm8rri5lo62pr9dpgiqorfdlo6opbdcln78obid5gg:
-              label: Indicador de pàgina complementària (deixa'l en blanc si no ho
-                és, «C» si ho és)
             x-clm6ar9dehp6iohedlqmsqb3d5o62r1dedqmqo9dcdnmqs3lehgm4r35:
               label: 'Quota municipal: suma de la superfície computable dels locals'
             x-clm6ar9dehp6iohedlqmsqb3d5o62r1dedqmqo9de9im6t39cpkm6ob4c4:
