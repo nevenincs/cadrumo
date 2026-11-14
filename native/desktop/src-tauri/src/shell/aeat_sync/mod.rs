@@ -31,8 +31,6 @@ use tauri::{State, ipc::Channel};
 const SELECTION_LIMIT: usize = 64;
 /// A modelo number: short, ASCII and alphanumeric.
 const FORM_LENGTH: std::ops::RangeInclusive<usize> = 1..=5;
-/// A calendar year written with four digits; the years on offer are the backend's.
-const YEARS: std::ops::RangeInclusive<u16> = 10u16.pow(3)..=10u16.pow(4) - 1;
 /// The most served years one reply carries.
 const YEAR_LIMIT: usize = 64;
 /// How long the preflight waits for the setup engine's first quick read.
@@ -347,7 +345,7 @@ impl RelayDriver {
 }
 
 /// The years `key` of a status read lists; none where it does not read as a
-/// bounded list of four-digit years.
+/// bounded list of years.
 fn served_years(status: &Value, key: &str) -> Option<Vec<u16>> {
     let years = status["status"][key].as_array()?;
     if years.len() > YEAR_LIMIT {
@@ -355,11 +353,7 @@ fn served_years(status: &Value, key: &str) -> Option<Vec<u16>> {
     }
     years
         .iter()
-        .map(|year| {
-            year.as_u64()
-                .and_then(|y| u16::try_from(y).ok())
-                .filter(|y| YEARS.contains(y))
-        })
+        .map(|year| year.as_u64().and_then(|y| u16::try_from(y).ok()))
         .collect()
 }
 
@@ -931,7 +925,6 @@ fn filed_row(row: &Value) -> Result<FiledRow> {
     let year = row["filing_year"]
         .as_u64()
         .and_then(|year| u16::try_from(year).ok())
-        .filter(|year| YEARS.contains(year))
         .ok_or_else(protocol)?;
     let period = match &row["period"] {
         Value::Null => None,
@@ -1227,9 +1220,7 @@ pub async fn aeat_sync_borrador_import(
     file: String,
     year: Option<u16>,
 ) -> Result<BorradorImported> {
-    let year = year
-        .filter(|year| YEARS.contains(year))
-        .ok_or_else(invalid)?;
+    let year = year.ok_or_else(invalid)?;
     let person = held(&host, &profile).await?;
     let path = host.picked(&person, &file, Purpose::Borrador).await?;
     let payload = json!({

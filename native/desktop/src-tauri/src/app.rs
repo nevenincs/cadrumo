@@ -217,6 +217,11 @@ pub fn run(
             } else {
                 loading.focused(false)
             };
+            #[cfg(windows)]
+            let loading = match shell::webview_environment::startup_data_directory() {
+                Some(directory) => loading.data_directory(directory),
+                None => loading,
+            };
             let loading = loading
                 .center()
                 .incognito(true)
