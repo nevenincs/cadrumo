@@ -8,7 +8,7 @@ related:
   - '[[2026-11-14-modelo-200-pyg-page-qualified-adr]]'
 modified: '2026-11-14'
 body_schema: body-v2
-body_hash: 'sha256:47f575bb855205e12cb63cc17ab487798dfe2f36611308dac20582217e4affb1'
+body_hash: 'sha256:8ad66d34bbef621fe4945e9acaec1e9474203f181dce40f66c9bff585b9bf149'
 ---
 
 # `modelo-200-pyg-page-qualified` plan
@@ -24,7 +24,7 @@ The work declares each Modelo 200 PyG line page-qualified once at its earliest i
 ## Steps
 
 - [x] `S01` - Declare each Modelo 200 PyG line page-qualified once at its earliest identical edition, rebased from pyg-wip with every byte-for-byte restatement dropped; `src/cadrumo/_data/registry/aeat/modelos/200`.
-- [ ] `S02` - Migrate stored bare PyG ids to their page-qualified ids with a dry-run preview, a before and after equality test and an ambiguous-row refusal; `src/cadrumo/application/modelo`.
+- [x] `S02` - Migrate stored bare PyG ids to their page-qualified ids with a dry-run preview, a before and after equality test and an ambiguous-row refusal; `src/cadrumo/application/modelo`.
 - [ ] `S03` - Supply the sociedad persona PyG work inputs and retire its not-sourced expectation blocks; `dev/personas`.
 - [ ] `S04` - Rerun the four sociedad Modelo 200 rows through backend, CLI, TUI and window; `X:/code/cadrumo/.tmp/2026-11-11-prime/table`.
 
