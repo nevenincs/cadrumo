@@ -273,7 +273,6 @@ from .persona_inventory_purchases import replay_inventory_purchases
 from .persona_own_accounts import replay_own_accounts
 from .persona_prior_values import (
     PriorValueAttestationError,
-    attest_prior_values,
     attest_return_prior_values,
     check_prior_value_bindings,
     entries_on,
@@ -803,7 +802,14 @@ def _with_attested_prior_values(
     subject: str | None,
 ) -> BaseModel:
     """``calculated``, or its calculation again once the persona's stated prior values and work-income statements are made."""
-    if not state_after_calculation(world, calculated):
+    unit = calculated.unit
+    if not state_offered_statements(
+        world,
+        modelo=unit.modelo,
+        filing_year=unit.filing_year,
+        period=unit.period.code,
+        work_unit_id=calculated.work_unit_id,
+    ):
         return calculated
     recalculated = settle_operation(world, definition_id, payload, subject=subject)
     if not isinstance(recalculated, ModeloWorkCalculatePublicResultV3):
@@ -811,10 +817,13 @@ def _with_attested_prior_values(
     return recalculated
 
 
-def state_after_calculation(world: PersonaWorld, calculated: ModeloWorkCalculatePublicResultV3) -> bool:
-    """Make the persona's stated prior values and work-income statements the calculation offers; whether any was made.
+def state_offered_statements(
+    world: PersonaWorld, *, modelo: str, filing_year: int, period: str, work_unit_id: str
+) -> bool:
+    """Make the persona's stated prior values and work-income statements the work unit's form offers; whether any was made.
 
-    A calculation that made one must be calculated again to read the stated figure.
+    A return that made one must be calculated again to read the stated figure. The statements travel as calculating
+    edits, so a work unit that took one holds a calculation.
     """
 
     def settle(
@@ -826,23 +835,28 @@ def state_after_calculation(world: PersonaWorld, calculated: ModeloWorkCalculate
         return settle_operation(world, definition_id, payload, subject=subject)
 
     try:
-        attested = attest_prior_values(
+        attested = attest_return_prior_values(
             world.attested_prior_values,
             envelope=world.envelope,
             profile_id=world.profile_id,
-            calculated=calculated,
+            work_unit_id=work_unit_id,
+            modelo=modelo,
+            filing_year=filing_year,
+            period=period,
             settle=settle,
-        )
+        ).applied
         stated = state_work_income_none(
             world.work_income_none_statements,
             envelope=world.envelope,
             profile_id=world.profile_id,
-            calculated=calculated,
+            modelo=modelo,
+            filing_year=filing_year,
+            work_unit_id=work_unit_id,
             settle=settle,
         )
     except PriorValueAttestationError as error:
         raise PersonaMaterialisationError(str(error)) from error
-    return bool(attested or stated)
+    return attested is not None or stated
 
 
 def public_result(world: PersonaWorld, terminal: OperationPublicProjectionV1) -> BaseModel | None:
@@ -2334,7 +2348,7 @@ __all__ = [
     "run_operation",
     "scenario_instant",
     "settle_operation",
-    "state_after_calculation",
+    "state_offered_statements",
     "submitted_answer",
     "year_envelope",
 ]

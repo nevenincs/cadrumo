@@ -4638,6 +4638,8 @@ desktop:
     details:
       close: Részletek bezárása
       hide: Részletek elrejtése
+      label: Részletek
+      resize: Részletek átméretezése
       show: Részletek megjelenítése
     disagreement:
       accept: Elfogadás indoklással
@@ -4688,6 +4690,7 @@ desktop:
     side:
       label: A nyomtatvány mellett
       outline: Vázlat
+      resize: A nyomtatvány melletti panel átméretezése
     statements:
       hide: Elrejtés
       intro: Jelöld be azokat a nyilatkozatokat, amelyek igazak rád. A bejelöltek

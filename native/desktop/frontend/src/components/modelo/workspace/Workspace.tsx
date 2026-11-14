@@ -25,6 +25,7 @@ import type {
 import { useStrings, type Translate } from "../../../shell/strings";
 import { JourneySteps } from "./JourneySteps";
 import { AttentionMark, DEADLINE_TONE, GlyphMark } from "./Marks";
+import { FormPanes, type WorkspacePanes } from "./WorkspacePanes";
 
 /** The views of one declaration, as its tabs name them. */
 export type WorkspaceView =
@@ -34,7 +35,7 @@ export type WorkspaceView =
 export type WorkspaceSlots = {
   /** The form view's column: its toolbar, notice and pages. */
   form: ReactNode;
-  /** Beside the form at wide widths: the To do and Outline rail. */
+  /** Beside the form: the To do and Outline rail. */
   rail?: ReactNode;
   /** The chosen box's details; placed beside the form, or under it at
    * narrow widths. Content only. */
@@ -188,7 +189,7 @@ export function ModeloWorkspace({
   view,
   onViewChange,
   stagedCount,
-  detailsOpen,
+  panes,
   busy = false,
   writeHeld = false,
   prerequisiteHeld = false,
@@ -207,7 +208,8 @@ export function ModeloWorkspace({
   onViewChange(view: WorkspaceView): void;
   /** Edits the form holds unapplied. */
   stagedCount: number;
-  detailsOpen: boolean;
+  /** The viewer's arrangement of the panes around the form. */
+  panes: WorkspacePanes;
   /** An operation the header started has not answered yet. */
   busy?: boolean;
   writeHeld?: boolean;
@@ -412,9 +414,12 @@ export function ModeloWorkspace({
       <Tabs
         value={view}
         onValueChange={(v) => onViewChange(v as WorkspaceView)}
-        className="flex-none border-b border-border px-4"
+        className="min-w-0 flex-none border-b border-border px-4"
       >
-        <TabsList aria-label={t("desktop.modelo.views.label")}>
+        <TabsList
+          aria-label={t("desktop.modelo.views.label")}
+          className="overflow-x-auto"
+        >
           {tab("form", t("desktop.modelo.view.form"))}
           {tab(
             "check",
@@ -458,33 +463,26 @@ export function ModeloWorkspace({
           {banner}
         </div>
       )}
-      {notice}
-      {view === "form" ? (
+      {notice && (
+        // What the last operation answered can run long; it scrolls on its
+        // own so the form under it keeps its room at any window height.
         <div
-          id={panel}
-          role="tabpanel"
-          className="relative grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)] @4xl:grid-cols-[--spacing(60)_minmax(0,1fr)] @6xl:grid-rows-[minmax(0,1fr)_auto] @6xl:data-[details=true]:grid-cols-[--spacing(64)_minmax(0,1fr)_--spacing(88)]"
-          data-details={detailsOpen && slots.details !== undefined}
+          data-workspace-notice=""
+          className="max-h-1/3 shrink-0 overflow-y-auto"
         >
-          <aside
-            aria-label={t("desktop.modelo.side.label")}
-            className="hidden min-h-0 flex-col border-r border-border bg-chrome @4xl:flex @6xl:col-start-1 @6xl:row-span-2 @6xl:row-start-1"
-          >
-            {slots.rail}
-          </aside>
-          <div className="flex min-h-0 min-w-0 flex-col @6xl:contents">
-            {/* Stacked, the details under the form give way to the form's
-                least room: its toolbar, page tabs and a few boxes. */}
-            <div className="flex min-h-60 min-w-0 flex-1 flex-col @6xl:col-start-2 @6xl:row-start-1 @6xl:min-h-0">
-              {slots.form}
-            </div>
-            {detailsOpen && slots.details && (
-              <aside className="h-2/5 min-h-0 min-w-0 shrink overflow-y-auto border-t border-border bg-card @6xl:col-start-3 @6xl:row-span-2 @6xl:row-start-1 @6xl:h-auto @6xl:border-t-0 @6xl:border-l">
-                {slots.details}
-              </aside>
-            )}
-            {stagedCount > 0 && (
-              <div className="flex shrink-0 items-center gap-3 border-t border-border bg-card px-6 py-3 shadow-raised @6xl:col-start-2 @6xl:row-start-2">
+          {notice}
+        </div>
+      )}
+      {view === "form" ? (
+        <FormPanes
+          panes={panes}
+          panelId={panel}
+          rail={slots.rail}
+          form={slots.form}
+          details={slots.details ?? null}
+          staged={
+            stagedCount > 0 && (
+              <div className="flex shrink-0 flex-wrap items-center gap-3 border-t border-border bg-card px-6 py-3 shadow-raised">
                 <Icon name="edit" size="sm" />
                 <span className="text-base font-medium">
                   {t("workspace.modelo.next.apply", { count: stagedCount })}
@@ -498,9 +496,9 @@ export function ModeloWorkspace({
                   </Button>
                 </div>
               </div>
-            )}
-          </div>
-        </div>
+            )
+          }
+        />
       ) : (
         <div
           id={panel}

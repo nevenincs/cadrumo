@@ -33,6 +33,7 @@ import type {
 import type { PublicModeloWorkForm } from "../../../shell/modeloContract/modeloWorkFormPart2";
 import type { RefusalIntent, WindowPlace } from "../../../shell/refusal";
 import { useStrings, type Translate } from "../../../shell/strings";
+import { WorkspacePaneToggles } from "../workspace/WorkspacePanes";
 import { boxNotes } from "./boxNotes";
 import {
   FormContext,
@@ -176,8 +177,6 @@ function Keys() {
 export type FormViewProps = {
   envelope: ModeloWorkbenchFormProjectionV1;
   session: FormSession;
-  detailsOpen: boolean;
-  onDetailsOpenChange: (open: boolean) => void;
   /** Opens the place a source-fed value is corrected at. */
   onOpenSurface?: (surface: SourceSurface) => void;
   /** Whether the window can open an area; every area is taken as openable
@@ -193,8 +192,6 @@ export type FormViewProps = {
 export function FormView({
   envelope,
   session,
-  detailsOpen,
-  onDetailsOpenChange,
   onOpenSurface,
   canOpenSurface,
   onRefusalAction,
@@ -409,8 +406,8 @@ export function FormView({
   return (
     <FormContext.Provider value={context}>
       <div className="flex min-h-0 flex-1 flex-col">
-        <div className="flex items-center gap-2 border-b border-border px-6 py-2">
-          <div className="relative w-64">
+        <div className="flex flex-none flex-wrap items-center gap-2 border-b border-border px-6 py-2">
+          <div className="relative w-64 max-w-full min-w-0">
             <Icon
               name="search"
               size="xs"
@@ -436,22 +433,15 @@ export function FormView({
           </Button>
           <span className="ml-auto" />
           {admitted && <Keys />}
-          <IconButton
-            label={t(
-              detailsOpen
-                ? "desktop.modelo.details.hide"
-                : "desktop.modelo.details.show",
-            )}
-            size="sm"
-            aria-pressed={detailsOpen}
-            onClick={() => onDetailsOpenChange(!detailsOpen)}
-          >
-            <Icon name="splitColumn" />
-          </IconButton>
+          <WorkspacePaneToggles />
         </div>
         {/* What is said about the whole form can run longer than the
-            window; it scrolls on its own so the boxes keep their room. */}
-        <div className="max-h-1/3 min-h-0 overflow-y-auto">
+            window; it scrolls on its own and gives way first, so the boxes
+            keep their room. */}
+        <div
+          data-form-gives-way=""
+          className="max-h-1/3 min-h-0 overflow-y-auto"
+        >
           {/* The rung of authority this year reaches, as the registry named
               it, and, below filing grade, the sentence saying why it cannot be
               filed. */}
@@ -507,7 +497,7 @@ export function FormView({
           aria-label={page?.heading.text ?? t("desktop.modelo.view.form")}
           tabIndex={session.selectedKey ? -1 : 0}
           onKeyDown={onKeyDown}
-          className="@container min-h-28 flex-1 overflow-y-auto px-6 py-5 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+          className="@container min-h-40 flex-1 overflow-y-auto px-6 py-5 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
         >
           {page && (
             <div

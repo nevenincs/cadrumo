@@ -182,39 +182,10 @@ def attest_return_prior_values(
     return PriorValueAttestation(applied=applied, unoffered=unoffered)
 
 
-def attest_prior_values(
-    entries: Sequence[AttestedPriorValue],
-    *,
-    envelope: YearEnvelope,
-    profile_id: UUID,
-    calculated: ModeloWorkCalculatePublicResultV3,
-    settle: SettleOperation,
-) -> bool:
-    """Submit the attestation of each entry of the calculated return the application offers; whether any was applied.
-
-    Nothing is submitted for an entry whose binding the admitted baseline does
-    not offer the attestation on: the application then holds the source, and
-    the source governs. The caller recalculates after a submission.
-    """
-    unit = calculated.unit
-    attested = attest_return_prior_values(
-        entries,
-        envelope=envelope,
-        profile_id=profile_id,
-        work_unit_id=calculated.work_unit_id,
-        modelo=unit.modelo,
-        filing_year=unit.filing_year,
-        period=unit.period.code,
-        settle=settle,
-    )
-    return attested.applied is not None
-
-
 __all__ = [
     "PriorValueAttestation",
     "PriorValueAttestationError",
     "SettleOperation",
-    "attest_prior_values",
     "attest_return_prior_values",
     "check_prior_value_bindings",
     "entries_for",

@@ -179,6 +179,7 @@ def _workspace_families() -> Mapping[str, tuple[str, ...]]:
                 "workspace.modelo.period.month_",
                 "workspace.modelo.period.quarter_",
                 "workspace.modelo.review.effect.",
+                "workspace.modelo.step.",
             )
         }
 
@@ -262,6 +263,8 @@ WORKSPACE_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.modelo.credits.show_box",
         "desktop.modelo.details.close",
         "desktop.modelo.details.hide",
+        "desktop.modelo.details.label",
+        "desktop.modelo.details.resize",
         "desktop.modelo.details.show",
         "desktop.modelo.disagreement.accept",
         "desktop.modelo.disagreement.accept_title",
@@ -299,6 +302,7 @@ WORKSPACE_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.modelo.settlement.title",
         "desktop.modelo.side.label",
         "desktop.modelo.side.outline",
+        "desktop.modelo.side.resize",
         "desktop.modelo.statements.hide",
         "desktop.modelo.statements.intro",
         "desktop.modelo.statements.mark",

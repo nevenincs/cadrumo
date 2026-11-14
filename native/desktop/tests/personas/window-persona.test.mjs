@@ -428,6 +428,23 @@ function pageFormProbe() {
   };
 }
 
+/** The ids of the open page's sections, in order; the form draws each only near the viewport. */
+function pageSections() {
+  const root = document.querySelector("[data-modelo-form]");
+  if (!root) return [];
+  return [...root.querySelectorAll('section[id^="section-"]')].map(
+    (section) => section.id,
+  );
+}
+
+/** Bring one section into the form's view; the caller waits a few frames for it to draw. */
+function pageShowSection(id) {
+  const section = document.getElementById(id);
+  if (!section) return false;
+  section.scrollIntoView({ block: "start" });
+  return true;
+}
+
 function pageScroll(to) {
   const root = document.querySelector("[data-modelo-form]");
   if (!root) return null;
@@ -576,15 +593,107 @@ const readState = () =>
 const tablist = (key) =>
   `[role="tablist"][aria-label=${JSON.stringify(label(key))}]`;
 
-async function openView(key) {
-  const opened = await clickText(
-    tablist("desktop.modelo.views.label"),
-    '[role="tab"]',
-    [label(key)],
-    "startsWith",
+/** Whether the views tab starting with `wanted` is selected and its panel is the one drawn. */
+function viewShown(list, wanted, isForm) {
+  const norm = (text) => (text ?? "").replace(/\s+/g, " ").trim();
+  const tab = [...document.querySelectorAll(`${list} [role="tab"]`)].find(
+    (element) => norm(element.textContent).startsWith(wanted),
   );
-  if (!opened) throw new Error(`the view ${label(key)} is not offered`);
-  await sleep(500);
+  return (
+    tab?.getAttribute("aria-selected") === "true" &&
+    (document.querySelector("[data-modelo-form]") !== null) === isForm
+  );
+}
+
+/**
+ * What a press on the marked tab meets: the element drawn at the tab's centre
+ * (another element there covers the tab), and every view tab's selection.
+ */
+function tabPressReport(list, mark) {
+  const norm = (text) => (text ?? "").replace(/\s+/g, " ").trim();
+  const tab = document.querySelector(`[${mark}]`);
+  let atCentre = "no tab";
+  if (tab) {
+    const rect = tab.getBoundingClientRect();
+    const hit = document.elementFromPoint(
+      rect.x + rect.width / 2,
+      rect.y + rect.height / 2,
+    );
+    atCentre = !hit
+      ? `nothing at ${Math.round(rect.x)},${Math.round(rect.y)}`
+      : hit === tab || tab.contains(hit)
+        ? "the tab"
+        : `${hit.tagName.toLowerCase()}${hit.id ? `#${hit.id}` : ""}.${String(hit.className).slice(0, 80)} "${norm(hit.textContent).slice(0, 60)}"`;
+  }
+  const tabs = [...document.querySelectorAll(`${list} [role="tab"]`)]
+    .map(
+      (element) =>
+        `${norm(element.textContent)}=${element.getAttribute("aria-selected")}`,
+    )
+    .join("; ");
+  return `at the tab's centre: ${atCentre}; tabs: ${tabs}; form drawn: ${document.querySelector("[data-modelo-form]") !== null}`;
+}
+
+/** Activate the marked tab without a pointer click: focus it and press it. */
+function pressTabDirectly(mark) {
+  const tab = document.querySelector(`[${mark}]`);
+  if (!tab) return false;
+  tab.focus();
+  for (const type of ["pointerdown", "mousedown"])
+    tab.dispatchEvent(
+      new (type.startsWith("pointer") ? PointerEvent : MouseEvent)(type, {
+        bubbles: true,
+        cancelable: true,
+        button: 0,
+      }),
+    );
+  return true;
+}
+
+/**
+ * Open a workspace view and wait until it stays open. The first press is a
+ * real pointer click; when that leaves the tab unselected the tab is pressed
+ * directly, and the log names what covered it, since an operator's click would
+ * miss it too. A view that never stays is named in the error.
+ */
+async function openView(key) {
+  const list = tablist("desktop.modelo.views.label");
+  const wanted = label(key);
+  const isForm = key === "desktop.modelo.view.form";
+  let report = "";
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    const marked = await exec(
+      pageMarkByText,
+      list,
+      '[role="tab"]',
+      [wanted],
+      "startsWith",
+      MARK,
+    );
+    if (marked === null) throw new Error(`the view ${wanted} is not offered`);
+    report = await exec(tabPressReport, list, MARK);
+    if (attempt === 1) await clickSelector(`[${MARK}]`);
+    else await exec(pressTabDirectly, MARK);
+    const started = Date.now();
+    let since = null;
+    while (Date.now() - started < 10_000) {
+      await sleep(250);
+      if (await exec(viewShown, list, wanted, isForm)) {
+        since ??= Date.now();
+        if (Date.now() - since >= 1500) {
+          if (attempt === 1) return null;
+          log("view-click-missed", { view: wanted, attempt, report });
+          return report;
+        }
+      } else if (since !== null) {
+        log("view-reverted", { view: wanted, attempt });
+        break;
+      }
+    }
+  }
+  throw new Error(
+    `window_view_switch_reverts: the view ${wanted} did not stay open after a click and two direct presses (${report})`,
+  );
 }
 
 /** Wait for a write the header started to answer; dialogs return at once. */
@@ -731,6 +840,17 @@ async function readFigures() {
       records: await exec(pageRecordsProbe),
     });
     const before = seen.size;
+    const collect = async () => {
+      for (const box of (await exec(pageBoxes)) ?? [])
+        if (!seen.has(box.key)) seen.set(box.key, box);
+    };
+    // Section by section: the form draws a section only once it nears the
+    // viewport, and pixel steps can pass a section before it draws.
+    for (const id of (await exec(pageSections)) ?? []) {
+      await exec(pageShowSection, id);
+      await sleep(150);
+      await collect();
+    }
     await exec(pageScroll, "top");
     let atEnd = 0;
     for (let step = 0; step < 400 && atEnd < 2; step += 1) {
@@ -961,7 +1081,7 @@ async function driveRow(row, runDir, persona) {
     }
     state = run.state.dialogTitle ? await readState() : run.state;
   } else if (["verify", ...FILED].includes(state.action)) {
-    out.calculate = "pass";
+    out.calculate = "calculate_inherited";
     say("calculate", "a calculation was already present; none was run");
   } else {
     out.calculate = "incomplete";
@@ -970,11 +1090,13 @@ async function driveRow(row, runDir, persona) {
   log("calculate", { stage: out.calculate });
 
   // The form, once calculated (also when it came out incomplete)
-  if (out.calculate === "pass" || out.calculate === "incomplete")
+  if (["pass", "incomplete", "calculate_inherited"].includes(out.calculate))
     out.figures = await readFigures();
 
   // Verify
-  const chain = out.calculate === "pass" || state.action === "verify";
+  const chain =
+    ["pass", "calculate_inherited"].includes(out.calculate) ||
+    state.action === "verify";
   if (chain && state.action === "verify") {
     const before = await readState();
     const run = await runAction("verify", before, TIMEOUT.verify, row);
@@ -1015,7 +1137,17 @@ async function driveRow(row, runDir, persona) {
 }
 
 async function exportFile(row, runDir, persona, out) {
-  await openView("workspace.modelo.filing.title");
+  try {
+    const missed = await openView("workspace.modelo.filing.title");
+    if (missed)
+      sayExport(
+        out,
+        `window_view_tab_click_missed: a click on the view tab did not open it; a direct press did (${missed})`,
+      );
+  } catch (error) {
+    sayExport(out, String(error?.message ?? error));
+    return "error";
+  }
   const names = [
     label("workspace.modelo.filing.export_file"),
     label("workspace.modelo.filing.export_again"),
@@ -1030,7 +1162,35 @@ async function exportFile(row, runDir, persona, out) {
     MARK,
   );
   if (text === null) {
-    sayExport(out, "the export button is not shown");
+    const state = await readState();
+    const shown = await exec(
+      (selector) =>
+        [...document.querySelectorAll(selector)]
+          .map((root) => {
+            const box = (element) => {
+              const rect = element.getBoundingClientRect();
+              return `${Math.round(rect.x)},${Math.round(rect.y)},${Math.round(rect.width)}x${Math.round(rect.height)}`;
+            };
+            const buttons = [...root.querySelectorAll("button")].map(
+              (button) =>
+                `[${(button.textContent ?? "").replace(/\s+/g, " ").trim()}` +
+                ` @${box(button)}` +
+                `${button.getClientRects().length ? "" : " hidden"}` +
+                `${button.disabled ? " disabled" : ""}]`,
+            );
+            return (
+              `panel#${root.id || "?"} @${box(root)} scroll ${root.scrollHeight}/${root.clientHeight}: ` +
+              buttons.join(" ")
+            );
+          })
+          .join(" || ")
+          .slice(0, 1500),
+      panel,
+    );
+    sayExport(
+      out,
+      `the export button is not shown (next action ${state.action}): ${shown}`,
+    );
     return "incomplete";
   }
   const enabled = await exec(
@@ -1280,11 +1440,11 @@ function requiredEnv(name) {
 }
 
 function profileCredential() {
-  const match = /^_PROFILE_CREDENTIAL\s*=\s*"([^"\n]+)"/m.exec(
+  const match = /^PERSONA_PROFILE_CREDENTIAL\s*=\s*"([^"\n]+)"/m.exec(
     readFileSync(CREDENTIAL_SOURCE, "utf8"),
   );
   if (!match)
-    throw new Error("no _PROFILE_CREDENTIAL in persona_materialisation.py");
+    throw new Error("no PERSONA_PROFILE_CREDENTIAL in persona_materialisation.py");
   return match[1];
 }
 
@@ -1319,6 +1479,7 @@ const plainDecimal = (value, language) => {
 
 const STAGES = [
   "pass",
+  "calculate_inherited",
   "incomplete",
   "refused",
   "not-owed",
