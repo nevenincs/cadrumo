@@ -1972,3 +1972,16 @@ number = "03629"
 section = ["reg_especial_reserva_inversiones_canarias", "inversiones_anticipadas_2024"]
 semantic_role = "is_reserva_inversiones_canarias_importe"
 legal_refs = ["ley-19-1994:art-27"]
+# aeat-dr-200-2025 01-200-ejercicio-2025-10-9-mb-xls.xls.extracted.md:2317 DP200016B field 165, offset 2716, length 17, type Num: Deducciones inversión Canarias - Inversiones en La Palma, La Gomera y El Hierro 2025(*) - Pendiente de aplicación en periodos futuros [00296]
+[[revisions."2025-y-siguientes".casillas]]
+id = "DP200016B:00296"
+continuidad_id = "is-deduccion-inversion-canarias-islas-menores-2025-asterisco-pendiente-futuros"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2025 01-200-ejercicio-2025-10-9-mb-xls.xls.extracted.md:2317 (DP200016B field 165): Deducciones inversión Canarias - Inversiones en La Palma, La Gomera y El Hierro 2025(*) - Pendiente de aplicación en periodos futuros [00296]. aeat-dr-200-2024 prints box [00296] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2291 on the 2024 cohort row instead; the 2025(*) cohort row does not exist in the 2024 design."
+number = "00296"
+segmento = "DP200016B"
+section = ["deducciones_inversion_canarias", "inversiones_en_la_palma_la_gomera_y_el_hierro_2025_asterisco"]
+semantic_role = "is_deduccion_inversion_canarias_islas_menores_pendiente"
+semantic_role_cardinality = "shared"
+data_type = "money"
+legal_refs = ["ley-27-2014:art-39"]

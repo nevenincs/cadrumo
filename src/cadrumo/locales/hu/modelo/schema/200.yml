@@ -6695,6 +6695,24 @@ modelo:
             label: Biztosítók - Nyereség és veszteség (II) - Életbiztosítás technikai
               számlája - Olyan biztosítási szerződésekhez kapcsolódó befektetések,
               amelyeknél a szerződő viseli a befektetési kockázatot [00308]
+          is-aseguradoras-no-vida-gastos-gestion-inversiones-cuentas-financieras:
+            label: Biztosítók - Nyereség és veszteség (I) - Nem-életbiztosítás technikai
+              számlája - Befektetéskezelési ráfordítások - Befektetések és pénzügyi
+              számlák ráfordításai [00280]
+          is-aseguradoras-no-vida-gastos-gestion-inversiones-inmovilizado-material:
+            label: Biztosítók - Nyereség és veszteség (I) - Nem-életbiztosítás technikai
+              számlája - Befektetéskezelési ráfordítások - Tárgyi eszközök és befektetési
+              célú ingatlanok ráfordításai [00279]
+          is-aseguradoras-no-vida-prestaciones-gastos-pagados:
+            label: Biztosítók - Nyereség és veszteség (I) - Nem-életbiztosítás technikai
+              számlája - Kifizetett szolgáltatások és költségek [00255]
+          is-aseguradoras-no-vida-prestaciones-gastos-pagados-reaseguro-aceptado:
+            label: Biztosítók - Nyereség és veszteség (I) - Nem-életbiztosítás technikai
+              számlája - Kifizetett szolgáltatások és költségek - Elfogadott viszontbiztosítás
+              [00257]
+          is-aseguradoras-no-vida-siniestralidad-neta-reaseguro:
+            label: Biztosítók - Nyereség és veszteség (I) - Nem-életbiztosítás technikai
+              számlája - Tárgyévi kárráfordítás, viszontbiztosítással csökkentve [00254]
           is-aseguradoras-vida-cuenta-tecnica-otros-ingresos-tecnicos:
             label: Biztosítók - Nyereség és veszteség (II) - Életbiztosítás technikai
               számlája - Egyéb technikai bevételek [00309]
@@ -6739,6 +6757,14 @@ modelo:
           is-aseguradoras-vida-ingresos-inversiones-financieras:
             label: Biztosítók - Nyereség és veszteség (II) - Életbiztosítás technikai
               számlája - Pénzügyi befektetések bevételei [00301]
+          is-aseguradoras-vida-provisiones-riesgo-tomadores:
+            label: Biztosítók - Nyereség és veszteség (II) - Életbiztosítás technikai
+              számlája - Életbiztosítási tartalékok, ha a befektetési kockázatot a
+              szerződők viselik [00325]
+          is-aseguradoras-vida-variacion-provision-primas-no-consumidas-seguro-directo:
+            label: Biztosítók - Nyereség és veszteség (II) - Életbiztosítás technikai
+              számlája - A meg nem szolgált díjak és a folyamatban lévő kockázatok
+              tartalékának változása (+ vagy -) - Közvetlen biztosítás [00296]
           is-atribucion-rentas-hibridos-aumento:
             label: 'Jövedelemattribúciós rendszer alá tartozó jogalany: hibrid eltérések
               (LIS 15 bis.12. cikk) - Növekedés - Évi korrekciók - Végleges [01842]'
@@ -7219,6 +7245,12 @@ modelo:
           is-cooperativa-compensacion-cuotas:
             label: Szövetkezeti rendszer - Kvótakompenzáció részletezése. 2010 Ebben
               az elszámolásban alkalmazva [00099]
+          is-cooperativa-compensacion-cuotas-2008-aplicado:
+            label: Szövetkezeti rendszer - Kvótakompenzáció részletezése. 2008 Ebben
+              az elszámolásban alkalmazva [00280]
+          is-cooperativa-compensacion-cuotas-2008-pendiente-inicio:
+            label: Szövetkezeti rendszer - Kvótakompenzáció részletezése. 2008 Az
+              időszak elején alkalmazásra váró [00279]
           is-cooperativa-cuota-integra-previa:
             label: Elszámolás III - adóalap - Csak szövetkezetek - Kiegyenlítési tartalék
               utáni előzetes teljes adókötelezettség [01331]
@@ -8709,6 +8741,12 @@ modelo:
           is-deduccion-di-interna-total:
             label: Belföldi kettős adóztatás levonásai (LIS 23.1 átmeneti rendelkezés)
               - Összesen - Függőben lévő levonás [01342]
+          is-deduccion-di-internacional-2024-pendiente-final:
+            label: LIS szerinti nemzetközi kettős adóztatási levonások - Nemzetközi
+              kettős adóztatás 2024(*) - 2024 Függőben lévő levonás [00255]
+          is-deduccion-di-internacional-2024-tipo-gravamen-periodo-generacion:
+            label: LIS szerinti nemzetközi kettős adóztatási levonások - Nemzetközi
+              kettős adóztatás 2024(*) - A keletkezési időszak adókulcsa [00254]
           is-deduccion-di-internacional-detalle:
             label: LIS szerinti nemzetközi kettős adóztatási levonások - Nemzetközi
               kettős adóztatás 2024 - Függőben lévő levonás [01013]
@@ -8832,10 +8870,21 @@ modelo:
             label: Elszámolás IV - Egyéb levonások - A kikötői hatóságok beruházásainak
               és ráfordításainak levonása (LIS 38 bis. cikk) (részletezés a 18 bis.
               oldalon) [02315]
+          is-deduccion-inversion-canarias-2009-aplicado:
+            label: Kanári-szigeteki beruházási levonások - Kanári-szigeteki beruházások
+              2009 - Ebben az elszámolásban alkalmazva [00257]
           is-deduccion-inversion-canarias-importe:
             label: Kanári-szigeteki beruházási levonások - Beruházások La Palma, La
               Gomera és El Hierro területén 2023 - Jövőbeli időszakokban alkalmazandó
               [00774]
+          is-deduccion-inversion-canarias-islas-menores-2024-pendiente-futuros:
+            label: Kanári-szigeteki beruházási levonások - Tárgyévi beruházások La
+              Palma, La Gomera és El Hierro szigetén - Jövőbeli időszakokban alkalmazandó
+              [00296]
+          is-deduccion-inversion-canarias-islas-menores-2025-asterisco-pendiente-futuros:
+            label: Kanári-szigeteki beruházási levonások - Tárgyévi beruházások La
+              Palma, La Gomera és El Hierro szigetén - Jövőbeli időszakokban alkalmazandó
+              [00296]
           is-deduccion-inversion-canarias-islas-menores-aplicado:
             label: Kanári-szigeteki beruházási levonások - Beruházások La Palma, La
               Gomera és El Hierro szigetén 2024 - Ebben az elszámolásban alkalmazva
@@ -8976,6 +9025,18 @@ modelo:
           is-ecpn-ajuste-errores-importe:
             label: Saját tőke változásainak kimutatása (II) - Előző időszakok hibái
               miatti kiigazítások - Tőke - Jegyzett [00408]
+          is-ecpn-bde-cambios-politicas-contables-resultado-ejercicio:
+            label: Spanyol Nemzeti Bank szerinti számvitel - Saját tőke változásainak
+              kimutatása (II) - Összes változás kimutatása - A számviteli politika
+              változásainak hatásai - Tárgyévi eredmény [00325]
+          is-ecpn-bde-coberturas-flujos-efectivo-ganancias-perdidas-valor:
+            label: Spanyol Nemzeti Bank szerinti számvitel - Saját tőke változásainak
+              kimutatása (I) - Elszámolt bevételek és ráfordítások kimutatása - Saját
+              tőkében elszámolt értéknyereség vagy (-) értékveszteség [00279]
+          is-ecpn-bde-coberturas-flujos-efectivo-transferido-resultados:
+            label: Spanyol Nemzeti Bank szerinti számvitel - Saját tőke változásainak
+              kimutatása (I) - Elszámolt bevételek és ráfordítások kimutatása - Eredménybe
+              átvezetve [00280]
           is-ecpn-bde-correccion-errores-acciones-propias:
             label: Spanyol Nemzeti Bank szerinti számvitel - Saját tőke változásainak
               kimutatása (II) - Összes változás kimutatása - Hibajavítások hatásai
@@ -9032,6 +9093,10 @@ modelo:
             label: Spanyol Nemzeti Bank szerinti számvitel - Saját tőke változásainak
               kimutatása (II) - Összes változás kimutatása - Nyitó egyenleg [az újramegállapítás
               előtt] - Halmozott egyéb átfogó jövedelem [00303]
+          is-ecpn-bde-saldo-apertura-otros-elementos-patrimonio-neto:
+            label: Spanyol Nemzeti Bank szerinti számvitel - Saját tőke változásainak
+              kimutatása (II) - Összes változás kimutatása - Nyitó egyenleg [az újramegállapítás
+              előtt] - A saját tőke egyéb elemei [00296]
           is-ecpn-bde-saldo-apertura-resultado-ejercicio:
             label: Spanyol Nemzeti Bank szerinti számvitel - Saját tőke változásainak
               kimutatása (II) - Összes változás kimutatása - Nyitó egyenleg [az újramegállapítás
@@ -9620,9 +9685,28 @@ modelo:
             label: Kollektív befektetési intézmények - Nettó vagyon változásának kimutatása
               (II) - Saját használatú ingatlanok átértékelése és befektetett eszközök
               elidegenítésének eredménye [00302]
+          is-iic-variacion-patrimonial-comisiones-retrocedidas:
+            label: Kollektív befektetési intézmények - Nettó vagyon változásának kimutatása
+              (II) - Visszatérített jutalékok [00296]
+          is-iic-variacion-patrimonial-dividendos:
+            label: Kollektív befektetési intézmények - Nettó vagyon változásának kimutatása
+              (I) - Osztalékok [00255]
+          is-iic-variacion-patrimonial-intereses:
+            label: Kollektív befektetési intézmények - Nettó vagyon változásának kimutatása
+              (I) - Kamatok [00254]
           is-iic-variacion-patrimonial-otros:
             label: Kollektív befektetési intézmények - Nettó vagyon változásának kimutatása
               (II) - Egyéb [00301]
+          is-iic-variacion-patrimonial-servicios-exteriores:
+            label: Kollektív befektetési intézmények - Nettó vagyon változásának kimutatása
+              (I) - Igénybe vett szolgáltatások [00279]
+          is-iic-variacion-patrimonial-servicios-exteriores-tasaciones:
+            label: Kollektív befektetési intézmények - Nettó vagyon változásának kimutatása
+              (I) - Igénybe vett szolgáltatások - Értékbecslések [00280]
+          is-iic-variacion-valor-razonable-inversiones-inmobiliarias:
+            label: Kollektív befektetési intézmények - Nettó vagyon változásának kimutatása
+              (I) - Befektetési célú ingatlanok - Befektetési célú ingatlanok valós
+              értékének változása [00257]
           is-imputacion-en-base-imponible-rentas-positivas-art-100-lis:
             help: Jelölő pozitív jövedelmek adóalapba történő beszámításához a társasági
               adóról szóló törvény 100. cikke szerint [00007].
@@ -9670,6 +9754,11 @@ modelo:
           is-liquidacion-i-correcciones-impuesto-sociedades-disminuciones:
             label: Elszámolás I - Eredménykimutatás eredménye - Társasági adó miatti
               korrekciók - Csökkentések [00302]
+          is-liquidacion-i-deterioro-participaciones-art-13-2-b-aumentos:
+            label: Elszámolás I - Az eredménykimutatás eredményét érintő korrekciók
+              részletezése - Tőkében vagy saját tőkében fennálló részesedést megtestesítő
+              értékpapírok értékvesztésének korrekciói (LIS 13.2. b) cikk) - Növelések
+              [00325]
           is-liquidacion-i-libertad-amortizacion-gastos-id-art-12-3-c-aumentos:
             label: Elszámolás I - Az eredménykimutatás eredményét érintő korrekciók
               részletezése - Kutatási és fejlesztési ráfordítások szabad értékcsökkenése
@@ -9857,6 +9946,13 @@ modelo:
             help: Add meg az időszak átlagos állandó alkalmazotti létszámát [00041].
             label: Alkalmazotti létszám (az időszak átlagos száma) állandó személyzet
               [00041]
+          is-pyg-bde-fondo-comercio-negativo-reconocido-resultados:
+            label: Spanyol Nemzeti Bank szerinti számvitel - Nyereség és veszteség
+              - Eredményben elszámolt negatív üzleti vagy cégérték [00255]
+          is-pyg-bde-ganancias-perdidas-antes-impuestos-actividades-continuadas:
+            label: Spanyol Nemzeti Bank szerinti számvitel - Nyereség és veszteség
+              - C) Folytatódó tevékenységek adózás előtti nyeresége vagy (-) vesztesége
+              [00257]
           is-pyg-continuadas-amortizacion-del-inmovilizado:
             label: Eredménykimutatás (I) - Folytatódó tevékenységek - Befektetett
               eszközök értékcsökkenése és amortizációja [00284]
@@ -10256,6 +10352,31 @@ modelo:
           is-sal-reserva-especial-dotacion:
             label: Elszámolás III - Adóalap - Munkavállalói társaságok - Különleges
               tartalék képzése (44/2015. törvény 14. cikk) [SAL_RESERVA_DOTACION]
+          is-sgr-operaciones-socios-capital-no-exigido:
+            label: 'Kölcsönös garanciavállaló társaságok - Saját tőke változásának
+              teljes kimutatása - Tagokkal folytatott ügyletek - Tőke - Levonva: be
+              nem hívott [00254]'
+          is-sgr-operaciones-socios-capital-reembolsable:
+            label: 'Kölcsönös garanciavállaló társaságok - Saját tőke változásának
+              teljes kimutatása - Tagokkal folytatott ügyletek - Tőke - Levonva: visszatérítendő
+              [00255]'
+          is-sgr-operaciones-socios-distribucion-dividendos-capital-suscrito:
+            label: Kölcsönös garanciavállaló társaságok - Saját tőke változásának
+              teljes kimutatása - Tagokkal folytatott ügyletek - (-) Osztalékfizetés
+              - Tőke - Jegyzett [00280]
+          is-sgr-operaciones-socios-reducciones-capital-total:
+            label: Kölcsönös garanciavállaló társaságok - Saját tőke változásának
+              teljes kimutatása - Tagokkal folytatott ügyletek - (-) Tőkeleszállítások
+              - Összesen [00279]
+          is-sgr-operaciones-socios-resultados-ejercicios-anteriores:
+            label: Kölcsönös garanciavállaló társaságok - Saját tőke változásának
+              teljes kimutatása - Tagokkal folytatott ügyletek - Előző évek eredménye
+              [00257]
+          is-sgr-otras-operaciones-socios-fondos-provisiones-tecnicas-aportaciones-terceros:
+            label: Kölcsönös garanciavállaló társaságok - Saját tőke változásának
+              teljes kimutatása - Tagokkal folytatott ügyletek - Egyéb ügyletek a
+              tagokkal - Technikai tartalékalapok - Harmadik felek hozzájárulásai
+              [00296]
           is-sgr-otras-variaciones-ajustes-cambio-valor:
             label: Kölcsönös garanciavállaló társaságok - Saját tőke változásának
               teljes kimutatása - Saját tőke egyéb változásai - Értékváltozások miatti

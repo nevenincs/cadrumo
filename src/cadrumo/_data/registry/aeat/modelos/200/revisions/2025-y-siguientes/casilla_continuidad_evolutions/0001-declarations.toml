@@ -1520,3 +1520,13 @@ to_revision = "2025-y-siguientes"
 evolution_kind = "label_evolved"
 legal_refs = ["ley-27-2014:art-36-2"]
 source_refs = ["aeat-dr-200-2024", "aeat-dr-200-2025"]
+# AEAT DP200016B: 2024 prints [00296] on the La Palma, La Gomera y El Hierro 2024 row; 2025 prints it on the
+# 2025(*) row and carries the 2024 cohort on boxes [01805], [01806] and [01847], so the 2024 row's box [00296] ends.
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "m200-dp200016b-00296-2024-2025-y-siguientes-retired"
+continuidad_id = "is-deduccion-inversion-canarias-islas-menores-2024-pendiente-futuros"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["ley-27-2014:art-39"]
+source_refs = ["aeat-dr-200-2024", "aeat-dr-200-2025"]

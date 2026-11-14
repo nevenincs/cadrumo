@@ -80,7 +80,7 @@ _M200_BIN_APLICADA_MAXIMA: CasillaId = validated_casilla_id(
 )
 
 #: Net turnover (00255) every filed prior return states; the current rate reads it.
-_M200_TURNOVER: CasillaId = validated_casilla_id("00255", surface="_M200_TURNOVER")
+_M200_TURNOVER: CasillaId = validated_casilla_id("DP200007:00255", surface="_M200_TURNOVER")
 _PRIOR_TURNOVER = Decimal("500000")
 
 #: Two distinct renta years the enrollment spans; each sources the prior year's 00671.
