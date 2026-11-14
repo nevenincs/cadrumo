@@ -7,6 +7,10 @@
 // CADRUMO_PERSONA_HOST, CADRUMO_CMAKE_BINARY_DIR, CADRUMO_BUILD_CONFIG), plus
 //   CADRUMO_UX_RUN   the run directory the window's storage is copied into
 //                    (must be outside the git project; default: a temp dir)
+//   CADRUMO_UX_DEVTOOLS  (optional) 1: wheel through Chromium DevTools (trusted
+//                    input). Needs the remote-debugging test host in
+//                    CADRUMO_PERSONA_HOST (python -m dev.desktop_agent_live.stage_host),
+//                    loopback only; refused for any other host.
 //   CADRUMO_UX_ONLY  (optional) comma-separated substrings: run only tests whose name has one
 import assert from "node:assert/strict";
 import { existsSync, mkdtempSync, statSync } from "node:fs";
@@ -21,6 +25,7 @@ import {
   pageErrors,
   pageGeometry,
   paneAudit,
+  runIdentity,
   setSize,
   sleep,
   start,
@@ -65,15 +70,47 @@ before(async () => {
 });
 after(teardown);
 
+/** Why the run's bundle and host executable were not recorded, or null. */
+const identityProblem = () =>
+  runIdentity.error ??
+  (!runIdentity.bundle?.length || !runIdentity.exeSha256
+    ? "no bundle name or executable hash was recorded"
+    : null);
+
+// Every test but UX-00 fails when the run did not record what it drove: a run
+// that cannot say which bundle and executable it measured is not counted.
 const ux = (name, fn) =>
   test(
     name,
     {
-      skip: ONLY && !ONLY.split(",").some((part) => name.includes(part.trim())),
+      skip:
+        ONLY &&
+        !name.startsWith("UX-00") &&
+        !ONLY.split(",").some((part) => name.includes(part.trim())),
       timeout: 600_000,
     },
-    fn,
+    async (t) => {
+      if (!name.startsWith("UX-00") && identityProblem())
+        assert.fail(
+          "NOT COUNTED: the run did not record its bundle and executable",
+        );
+      return fn(t);
+    },
   );
+
+ux("UX-00 the run records the live bundle and the host executable", (t) => {
+  // One line per run; the later report lines are traced to it by their run.
+  t.diagnostic(
+    JSON.stringify({
+      probe: "run-identity",
+      bundle: runIdentity.bundle,
+      exe: runIdentity.exe,
+      exeSha256: runIdentity.exeSha256,
+      wheel: win.devtools ? "devtools" : "webdriver",
+    }),
+  );
+  assert.equal(identityProblem(), null, `run identity: ${identityProblem()}`);
+});
 
 const rowOf = (modelo) =>
   world.rows.find((r) => r.modelo === modelo && r.prepared);
@@ -1218,8 +1255,11 @@ ux(
     const problems = [];
     if (controlFailed.length > 0)
       problems.push(
-        "UNMEASURED wheel: the WebDriver wheel is an untrusted synthetic event (tauri-plugin-wdio-webdriver 1.5.1) and moved no scroller, " +
-          `so no wheel verdict is the app's (control did not move: ${controlFailed.join("; ")})`,
+        `UNMEASURED wheel: the ${win.devtools ? "DevTools" : "WebDriver"} wheel ` +
+          (win.devtools
+            ? "moved no control scroller"
+            : "is an untrusted synthetic event (tauri-plugin-wdio-webdriver 1.5.1) and moved no scroller; set CADRUMO_UX_DEVTOOLS=1 with the remote-debugging test host for a trusted one") +
+          `, so no wheel verdict is the app's (control did not move: ${controlFailed.join("; ")})`,
       );
     else failures.push(...wheelFailures);
     if (failures.length > 0)

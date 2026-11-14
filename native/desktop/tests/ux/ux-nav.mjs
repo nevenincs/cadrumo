@@ -504,32 +504,44 @@ export function pageWheelResult(id, restore) {
 }
 
 /**
- * Wheel over the centre of container `id` through WebDriver actions and
- * answer whether its scrollTop moved. The scrollTop is restored afterwards.
+ * Wheel over the centre of container `id` and answer whether its scrollTop
+ * moved. The wheel is the trusted Chromium DevTools one when the run attached
+ * it (CADRUMO_UX_DEVTOOLS=1, source "devtools"), else a WebDriver action
+ * (source "webdriver", an untrusted synthetic event). The scrollTop is
+ * restored afterwards.
  */
 export async function wheelContainer(id, deltaY = 300) {
   const target = await exec(pageWheelTarget, id);
   if (!target) return { moved: false, error: "container gone" };
+  const trusted = win.devtools?.trustedWheel;
+  const source = trusted ? "devtools" : "webdriver";
   if (!target.pointInWindow)
-    return { ...target, moved: false, error: "container not inside window" };
+    return {
+      ...target,
+      source,
+      moved: false,
+      error: "container not inside window",
+    };
   let error = null;
   try {
-    await win.browser
-      .action("wheel")
-      .scroll({
-        x: target.x,
-        y: target.y,
-        deltaX: 0,
-        deltaY: deltaY * target.direction,
-        duration: 100,
-      })
-      .perform();
+    if (trusted) await trusted(target.x, target.y, deltaY * target.direction);
+    else
+      await win.browser
+        .action("wheel")
+        .scroll({
+          x: target.x,
+          y: target.y,
+          deltaX: 0,
+          deltaY: deltaY * target.direction,
+          duration: 100,
+        })
+        .perform();
   } catch (failure) {
-    error = `wheel action failed: ${failure.message}`;
+    error = `wheel (${source}) failed: ${failure.message}`;
   }
   await sleep(400);
   const after = await exec(pageWheelResult, id, target.before);
-  return { ...target, after, moved: after !== target.before, error };
+  return { ...target, source, after, moved: after !== target.before, error };
 }
 
 /**
