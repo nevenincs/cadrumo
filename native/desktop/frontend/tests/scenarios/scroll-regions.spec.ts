@@ -7,8 +7,12 @@ import { expect, test, type Page } from "@playwright/test";
 // the surface. This guard measures that rule on the rendered pages, at the
 // four window sizes the audits use, without trusting the rule's own words:
 // it scans every element that really overflows with auto or scroll, and for
-// each asserts the bar is drawn, the thumb has length, a wheel moves it and
-// (once per run) that the thumb colour holds its contrast in light and dark.
+// each asserts the bar is drawn, the thumb has length, a wheel moves it, the
+// keyboard reaches it (it is a Tab stop itself, or a grid, list, menu, tree
+// or tab list that keeps one stop, and in either case the Page and End keys,
+// or the arrows for one that scrolls sideways, move it while focus is on it
+// or inside it) and (once per run) that the thumb colour holds its contrast
+// in light and dark.
 //
 // Chromium is launched with its scrollbars (the harness hides them by
 // default), so the bars exist to be measured.
@@ -41,9 +45,40 @@ const ALLOWED: {
   /** A part of the scroller's described selector. */
   selector: string;
   /** The check it is excused from. */
-  check: "thumb" | "wheel" | "bar";
+  check: "thumb" | "wheel" | "bar" | "keyboard";
   reason: string;
-}[] = [];
+}[] = [
+  {
+    selector: "[role=tabpanel]",
+    check: "keyboard",
+    reason:
+      "the Modelo Check, Export and Sources panels scroll as tabindex -1 panels whose first control is Tab stop 7; the panels are drawn in src/components/modelo/workspace/Workspace.tsx, which the view tab list change is editing",
+  },
+  {
+    selector: "section.group/calendar.calendar-page",
+    check: "keyboard",
+    reason:
+      "the calendar page scrolls as a section that is no Tab stop; src/components/FilingCalendar.tsx",
+  },
+  {
+    selector: "div.calendar-aside",
+    check: "keyboard",
+    reason:
+      "the calendar's side column scrolls and is no Tab stop (its first control is stop 14); src/components/FilingCalendar.tsx:1003",
+  },
+  {
+    selector: "div.ledger-assets-fixed",
+    check: "keyboard",
+    reason:
+      "the fixed assets pane scrolls as a div that is no Tab stop; src/components/ledger/assets/FixedAssetsPane.tsx:215",
+  },
+  {
+    selector: "section.aeat-sync-page",
+    check: "keyboard",
+    reason:
+      "the AEAT sync body scrolls as a div that is no Tab stop; src/components/aeatSync/AeatSyncPage.tsx",
+  },
+];
 
 // ---------------------------------------------------------------------------
 // The scan, as it runs in the page.
@@ -67,10 +102,32 @@ interface ScrollerRow {
    * belongs to it alone (covered, or only its children scroll there). */
   wheelY: number | null;
   wheelX: number | null;
+  /** What the keyboard can do with it; null where it was not probed. */
+  keys: KeyFacts | null;
 }
 
+/** How the keyboard reaches one scroller. */
+interface KeyFacts {
+  /** The scroller is itself a Tab stop. */
+  own: boolean;
+  /** It is, or holds, a grid, list, menu or tree: one widget that owns the
+   * arrow, Page and End keys and keeps its own single Tab stop. */
+  composite: boolean;
+  /** Tab stops ahead of the scroller (or, when it is not one, of its first
+   * control) in its section, the scroller counted: reported with a failure,
+   * for a scroller that is a Tab stop is reached wherever it stands. */
+  stops: number;
+  /** Controls inside it that Tab reaches. */
+  inside: number;
+  /** Whether the Page and End keys, or the arrows across, moved it while
+   * focus was on it or inside it; null when nothing could take focus. */
+  moved: boolean | null;
+}
+
+type Scanned = Omit<ScrollerRow, "wheelY" | "wheelX" | "keys">;
+
 /** Every shown element that scrolls with auto or scroll and overflows. */
-function scanScrollers(): Omit<ScrollerRow, "wheelY" | "wheelX">[] {
+function scanScrollers(): Scanned[] {
   const shown = (el: Element) => {
     const r = el.getBoundingClientRect();
     const cs = getComputedStyle(el);
@@ -90,8 +147,11 @@ function scanScrollers(): Omit<ScrollerRow, "wheelY" | "wheelX">[] {
       classes ? "." + classes : ""
     }${role ? `[role=${role}]` : ""}`;
   };
-  const rows: Omit<ScrollerRow, "wheelY" | "wheelX">[] = [];
+  const rows: Scanned[] = [];
   let n = 0;
+  // Tags from an earlier scan would answer to the same numbers.
+  for (const old of document.querySelectorAll("[data-scroll-guard]"))
+    old.removeAttribute("data-scroll-guard");
   for (const el of document.querySelectorAll<HTMLElement>("*")) {
     const cs = getComputedStyle(el);
     const scrollsX = cs.overflowX === "auto" || cs.overflowX === "scroll";
@@ -194,11 +254,175 @@ async function wheelOver(
   );
 }
 
+/**
+ * In the page: how the keyboard reaches one tagged scroller, and the control
+ * a key press should start from. Tab stops are counted in document order
+ * inside the scroller's section (the nearest section, dialog, tab panel or
+ * aside), the way Tab walks them.
+ */
+function keyFacts(index: number): Omit<KeyFacts, "moved"> | null {
+  const el = document.querySelector<HTMLElement>(
+    `[data-scroll-guard="${index}"]`,
+  );
+  if (!el) return null;
+  const shown = (e: Element) => {
+    const r = e.getBoundingClientRect();
+    const cs = getComputedStyle(e);
+    return (
+      r.width > 0 &&
+      r.height > 0 &&
+      cs.visibility !== "hidden" &&
+      cs.display !== "none"
+    );
+  };
+  const tabbable = (e: Element): e is HTMLElement =>
+    e instanceof HTMLElement &&
+    e.tabIndex >= 0 &&
+    !e.matches(":disabled") &&
+    !e.closest("[inert], [aria-hidden=true]") &&
+    shown(e);
+  const section =
+    el.parentElement?.closest(
+      "section, [role=dialog], [role=alertdialog], [role=tabpanel], aside, main",
+    ) ?? document.body;
+  const own = tabbable(el);
+  const inner = [...el.querySelectorAll("*")].filter(tabbable);
+  const widgets = [
+    "grid",
+    "treegrid",
+    "listbox",
+    "menu",
+    "menubar",
+    "tree",
+    "tablist",
+  ];
+  const composite = [el, ...el.querySelectorAll("[role]")].some((e) =>
+    widgets.includes(e.getAttribute("role") ?? ""),
+  );
+  const mark = own ? el : (inner[0] ?? null);
+  let stops = 0;
+  if (mark) {
+    for (const e of section.querySelectorAll("*"))
+      if (
+        tabbable(e) &&
+        !el.contains(e) &&
+        mark.compareDocumentPosition(e) & Node.DOCUMENT_POSITION_PRECEDING
+      )
+        stops += 1;
+    stops += 1;
+  }
+  return { own, composite, stops, inside: inner.length };
+}
+
+/** Focus the scroller or the first control inside it, press the keys that
+ * scroll, and say whether any of them moved it. */
+async function keysOver(
+  page: Page,
+  index: number,
+  vertical: boolean,
+  walks: boolean,
+): Promise<boolean | null> {
+  const focus = () =>
+    page.evaluate((index) => {
+      const el = document.querySelector<HTMLElement>(
+        `[data-scroll-guard="${index}"]`,
+      );
+      if (!el) return false;
+      const ok = (e: Element): e is HTMLElement =>
+        e instanceof HTMLElement &&
+        e.tabIndex >= 0 &&
+        !e.matches(":disabled") &&
+        e.getBoundingClientRect().width > 0;
+      const text = (e: HTMLElement) =>
+        e instanceof HTMLTextAreaElement ||
+        (e instanceof HTMLInputElement &&
+          !["button", "checkbox", "radio", "range", "submit"].includes(e.type));
+      // A widget that keeps one Tab stop and moves focus with the arrows
+      // (tabs, options, cells) holds its other items at tabindex -1.
+      const roving = (e: Element): e is HTMLElement =>
+        e instanceof HTMLElement &&
+        e.hasAttribute("tabindex") &&
+        e.getBoundingClientRect().width > 0;
+      const all = [...el.querySelectorAll("*")];
+      const own = ok(el);
+      const inside = all.filter(ok);
+      if (!own && inside.length === 0) inside.push(...all.filter(roving));
+      const target = own
+        ? el
+        : (inside.find((e) => !text(e)) ?? inside[0] ?? null);
+      if (!target) return false;
+      el.scrollTop = 0;
+      el.scrollLeft = 0;
+      target.focus({ preventScroll: true });
+      // A tab list hands focus to its own current tab.
+      for (const old of document.querySelectorAll("[data-guard-start]"))
+        old.removeAttribute("data-guard-start");
+      document.activeElement?.setAttribute("data-guard-start", "");
+      return el.contains(document.activeElement);
+    }, index);
+  // Moved: it scrolled, or it is a tab list and the key took focus to
+  // another tab (the strip follows the focused tab, and choosing a tab can
+  // change what the strip holds, so its scroll is no measure there).
+  const moved = () =>
+    page.evaluate((index) => {
+      const el = document.querySelector<HTMLElement>(
+        `[data-scroll-guard="${index}"]`,
+      );
+      if (!el) return false;
+      const active = document.activeElement;
+      return (
+        Math.max(el.scrollTop, el.scrollLeft) > 0 ||
+        (el.getAttribute("role") === "tablist" &&
+          !!active &&
+          el.contains(active) &&
+          !active.hasAttribute("data-guard-start"))
+      );
+    }, index);
+  const reset = () =>
+    page.evaluate((index) => {
+      const el = document.querySelector<HTMLElement>(
+        `[data-scroll-guard="${index}"]`,
+      );
+      if (el) {
+        el.scrollTop = 0;
+        el.scrollLeft = 0;
+      }
+    }, index);
+  let focused = false;
+  for (const key of vertical ? ["PageDown", "End"] : ["End", "ArrowRight"]) {
+    if (!(await focus())) continue;
+    focused = true;
+    await page.keyboard.press(key);
+    await page.waitForTimeout(260);
+    if (await moved()) {
+      await reset();
+      return true;
+    }
+  }
+  // A grid with a pinned last column reveals nothing at its End; its cells
+  // are walked back from there until one that was off to the side is drawn.
+  if (walks && focused && (await focus())) {
+    await page.keyboard.press("End");
+    for (let step = 0; step < 40; step += 1) {
+      await page.keyboard.press("ArrowLeft");
+      if (step % 4 === 3) {
+        await page.waitForTimeout(120);
+        if (await moved()) {
+          await reset();
+          return true;
+        }
+      }
+    }
+  }
+  await reset();
+  return focused ? false : null;
+}
+
 // ---------------------------------------------------------------------------
 // The checker: pure, so the guard can be shown to catch a defect.
 // ---------------------------------------------------------------------------
 
-type Check = "bar" | "thumb" | "wheel";
+type Check = "bar" | "thumb" | "wheel" | "keyboard";
 
 /** What is wrong with one scroller, by check. */
 function violations(row: ScrollerRow): { check: Check; why: string }[] {
@@ -245,24 +469,61 @@ function violations(row: ScrollerRow): { check: Check; why: string }[] {
     if (row.wheelX === 0 && !scrollsY)
       out.push({ check: "wheel", why: "a wheel does not move it sideways" });
   }
+  const keys = row.keys;
+  if (keys) {
+    const which = scrollsY ? "Page Down and End" : "End and the right arrow";
+    if (!keys.own && !keys.composite)
+      out.push({
+        check: "keyboard",
+        why:
+          keys.inside === 0
+            ? "it is no Tab stop, no widget of its own and holds no control"
+            : `it is no Tab stop and no widget of its own (a control inside is stop ${keys.stops} of its section)`,
+      });
+    else if (keys.moved === false)
+      out.push({
+        check: "keyboard",
+        why: `${which} do not move it with focus ${keys.own ? "on it" : "inside it"}`,
+      });
+    else if (keys.moved === null)
+      out.push({
+        check: "keyboard",
+        why: "nothing in it takes focus, so no key can move it",
+      });
+  }
   return out;
 }
 
 const used = new Set<number>();
+/** The page tests that have audited, so a run of one test cannot call the
+ * allow-list stale. */
+const audited = new Set<string>();
 
 /** Scan the page now and assert every scroller; `where` names the state. */
 async function audit(page: Page, where: string) {
+  audited.add(test.info().title);
   const rows = await page.evaluate(scanScrollers);
   const seen = new Set<string>();
   for (const [index, found] of rows.entries()) {
     const key = `${found.sel}|${found.scrollH}|${found.scrollW}`;
     if (seen.has(key)) continue;
     seen.add(key);
-    const row: ScrollerRow = { ...found, wheelY: null, wheelX: null };
-    if (found.scrollH - found.clientH > 1)
-      row.wheelY = await wheelOver(page, index, true);
+    const row: ScrollerRow = {
+      ...found,
+      wheelY: null,
+      wheelX: null,
+      keys: null,
+    };
+    const overY = found.scrollH - found.clientH > 1;
+    if (overY) row.wheelY = await wheelOver(page, index, true);
     if (found.scrollW - found.clientW > 1)
       row.wheelX = await wheelOver(page, index, false);
+    const facts = await page.evaluate(keyFacts, index);
+    if (facts)
+      row.keys = {
+        ...facts,
+        moved: await keysOver(page, index, overY, facts.composite),
+      };
     for (const bad of violations(row)) {
       const excuse = ALLOWED.findIndex(
         (a) => a.check === bad.check && row.sel.includes(a.selector),
@@ -330,7 +591,7 @@ async function auditTabs(page: Page, name: string, root: string) {
   return scanned;
 }
 
-test.describe.configure({ mode: "serial" });
+test.describe.configure({ mode: "default" });
 
 for (const size of SIZES) {
   const tag = `${size[0]}x${size[1]}`;
@@ -650,7 +911,8 @@ test("the checker reports a scroller whose bar is hidden and passes a plain one"
     sel: `fixture ${key}`,
     wheelY: null,
     wheelX: null,
-    ...(rows[key] as Omit<ScrollerRow, "sel" | "wheelY" | "wheelX">),
+    keys: null,
+    ...(rows[key] as Omit<ScrollerRow, "sel" | "wheelY" | "wheelX" | "keys">),
   });
   expect(
     violations(row("plain")),
@@ -668,6 +930,39 @@ test("the checker reports a scroller whose bar is hidden and passes a plain one"
     violations({ ...row("plain"), wheelY: 0 }).map((v) => v.check),
     "a wheel that moves nothing",
   ).toContain("wheel");
+  const keyed = (keys: Partial<KeyFacts>): ScrollerRow => ({
+    ...row("plain"),
+    keys: {
+      own: true,
+      composite: false,
+      stops: 1,
+      inside: 0,
+      moved: true,
+      ...keys,
+    },
+  });
+  expect(
+    violations(keyed({})),
+    "a scroller that is a Tab stop and moves",
+  ).toEqual([]);
+  expect(
+    violations(keyed({ own: false, composite: true })),
+    "a widget that keeps one stop and moves",
+  ).toEqual([]);
+  expect(
+    violations(keyed({ own: false, inside: 4, stops: 3 })).map((v) => v.check),
+    "a scroller that is no stop, only holds controls",
+  ).toContain("keyboard");
+  expect(
+    violations(keyed({ moved: false })).map((v) => v.check),
+    "a Tab stop the keys do not move",
+  ).toContain("keyboard");
+  expect(
+    violations(keyed({ own: false, composite: true, moved: null })).map(
+      (v) => v.check,
+    ),
+    "a widget nothing in which takes focus",
+  ).toContain("keyboard");
   expect(
     violations({
       ...row("plain"),
@@ -680,6 +975,8 @@ test("the checker reports a scroller whose bar is hidden and passes a plain one"
 });
 
 test("the allow-list holds nothing that no longer applies", () => {
+  // Only a run of every page test can tell that an entry matched nothing.
+  if (audited.size < SIZES.length * 4) return;
   for (const [index, entry] of ALLOWED.entries())
     expect(used.has(index), `stale: ${entry.selector} (${entry.reason})`).toBe(
       true,
