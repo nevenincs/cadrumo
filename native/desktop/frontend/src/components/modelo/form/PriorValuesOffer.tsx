@@ -156,7 +156,7 @@ function PriorFamily({
             size="xs"
             variant="outline"
             data-withdraw-prior={withdrawal.family_id}
-            disabled={withdrawn}
+            disabled={withdrawn || session.locked}
             onClick={() => {
               const outcome = session.withdrawPriorValues(withdrawal);
               setRefused(outcome.kind === "refused" ? outcome : null);
@@ -226,7 +226,7 @@ function PriorEntry({
   const [text, setText] = useState(stating?.entry ?? "");
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
-  const takes = field !== null && session.editable(field);
+  const takes = field !== null && session.admitsEntry(field);
   const state = async (event: FormEvent) => {
     event.preventDefault();
     if (!field || pending) return;
@@ -294,7 +294,7 @@ function PriorEntry({
               aria-describedby={describedBy}
               aria-invalid={message !== null || undefined}
               value={text}
-              disabled={pending}
+              disabled={pending || session.locked}
               onChange={(event) => {
                 setText(event.target.value);
                 setMessage(null);
@@ -304,7 +304,7 @@ function PriorEntry({
               type="submit"
               size="xs"
               variant="secondary"
-              disabled={pending}
+              disabled={pending || session.locked}
             >
               {entry.action_words}
             </Button>

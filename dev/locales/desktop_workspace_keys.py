@@ -269,6 +269,7 @@ WORKSPACE_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.modelo.details.label",
         "desktop.modelo.details.resize",
         "desktop.modelo.details.show",
+        "desktop.modelo.details.under_held",
         "desktop.modelo.disagreement.accept",
         "desktop.modelo.disagreement.accept_title",
         "desktop.modelo.disagreement.confirm_accept",

@@ -80,6 +80,13 @@ async function arrange(target: Page, wanted: Placement): Promise<Placement> {
   const control = toggle(target, "placement");
   const held = (await control.getAttribute("aria-disabled")) === "true";
   if (held) {
+    // The control says why it does nothing, to the eye and to a reader.
+    await expect(control).toHaveAccessibleDescription(
+      label("desktop.modelo.details.under_held"),
+    );
+    await expect(control).toHaveAccessibleName(
+      label("desktop.modelo.details.beside"),
+    );
     await expect(control).toHaveAttribute("aria-pressed", "true");
     await expect(area(target)).toHaveAttribute("data-details", "side");
     // Pressing a held control changes nothing.
@@ -88,6 +95,9 @@ async function arrange(target: Page, wanted: Placement): Promise<Placement> {
     await expect(area(target)).toHaveAttribute("data-details", "side");
     return "side";
   }
+  // Where the window can stack the details, the control gives no reason.
+  await expect(control).not.toHaveAttribute("aria-disabled", "true");
+  await expect(control).toHaveAccessibleDescription("");
   if ((await area(target).getAttribute("data-details")) !== wanted)
     await control.click();
   await expect(area(target)).toHaveAttribute("data-details", wanted);
@@ -190,3 +200,29 @@ test("UX-16 coming back from the Ledger draws the form at once with the arrangem
   await line(target).focus();
   await expect(line(target)).toBeFocused();
 });
+
+for (const size of SIZES.slice(2)) {
+  for (const railOn of [true, false]) {
+    test(`UX-16 at ${size.width} by ${size.height} with the rail ${railOn ? "shown" : "hidden"}, a window too short to stack holds the arrangement control and says why`, async ({
+      page: target,
+    }) => {
+      await target.setViewportSize(size);
+      await openRenta(target);
+      await press(target, "side", railOn);
+      await press(target, "details", true);
+      const control = toggle(target, "placement");
+      await target.mouse.move(0, 0);
+      await expect(control).toHaveAttribute("aria-disabled", "true");
+      await expect(control).toHaveAccessibleDescription(
+        label("desktop.modelo.details.under_held"),
+      );
+      // Its tooltip says it too, on the pointer.
+      await control.hover();
+      await expect(
+        target.getByRole("tooltip").filter({
+          hasText: label("desktop.modelo.details.under_held"),
+        }),
+      ).toBeVisible();
+    });
+  }
+}
