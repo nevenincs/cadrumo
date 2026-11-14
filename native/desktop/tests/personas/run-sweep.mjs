@@ -70,6 +70,11 @@ import {
 import { tmpdir } from "node:os";
 import { basename, delimiter, dirname, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  removeLeftSessionKeys,
+  sessionKeyTargets,
+  storageProfileIds,
+} from "../automation/session-keys.mjs";
 
 const repository = fileURLToPath(new URL("../../../../", import.meta.url));
 const spec = fileURLToPath(
@@ -389,6 +394,10 @@ async function runCase(item, context) {
     const worldJson = JSON.parse(world.stdout);
     const results = join(root, "results", "window.jsonl");
     mkdirSync(dirname(results), { recursive: true });
+    // A spec killed at the case timeout never reaches its own sign-out and
+    // credential guard, so the sweep removes the keys the case added itself.
+    const profileIds = storageProfileIds(worldJson.storage_root);
+    const keysBefore = sessionKeyTargets(profileIds);
     const window = await run(
       process.execPath,
       ["--test", spec],
@@ -416,6 +425,11 @@ async function runCase(item, context) {
           .map((text) => JSON.parse(text))
       : [];
     if (window.timedOut) lines = withTimeoutLines(lines, worldJson, tree, item);
+    const keys = removeLeftSessionKeys(profileIds, keysBefore);
+    const keyNote =
+      keys.left.length > 0
+        ? `the case left ${keys.left.length} profile-session key(s)${window.timedOut ? " (timed out before its sign-out)" : ""}; removed ${keys.left.length - keys.failed.length}${keys.failed.length ? `, could not remove ${keys.failed.length}` : ""}`
+        : "";
     // Keep the spec's log and test output under --logs before any refusal,
     // because the root is removed and a failed case is the one to diagnose.
     const caseName = item.id.replace("@", "-");
@@ -437,7 +451,9 @@ async function runCase(item, context) {
       `${window.stdout}\n--- stderr ---\n${window.stderr}`,
     );
     if (lines.length === 0) {
-      result.note = `the spec wrote no lines (exit ${window.status})`;
+      result.note = [`the spec wrote no lines (exit ${window.status})`, keyNote]
+        .filter(Boolean)
+        .join("; ");
       return result;
     }
     const problem = lineProblem(
@@ -447,12 +463,17 @@ async function runCase(item, context) {
       item.persona,
     );
     if (problem) {
-      result.note = problem;
+      result.note = [problem, keyNote].filter(Boolean).join("; ");
       return result;
     }
     result.lines = lines.map((line) => ({ ...line, log: kept }));
     result.ok = true;
-    result.note = window.status === 0 ? "" : `spec exit ${window.status}`;
+    result.note = [
+      window.status === 0 ? "" : `spec exit ${window.status}`,
+      keyNote,
+    ]
+      .filter(Boolean)
+      .join("; ");
     return result;
   } catch (error) {
     result.note = String(error?.message ?? error);
