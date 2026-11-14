@@ -1654,6 +1654,60 @@ async function openWork(row) {
     );
 }
 
+/**
+ * How the calendar presents one obligation: scheduled (owed), set apart as
+ * not applicable (suppressed, with the words the product served), or neither.
+ * The calendar keys an obligation by modelo and period.
+ */
+function pageCalendar(modelo, period) {
+  const norm = (text) => (text ?? "").replace(/\s+/g, " ").trim();
+  const key = `${modelo}:${period}`;
+  const owed = document.querySelector(
+    `[data-entry="${CSS.escape(key)}"]`,
+  );
+  const apart = document.querySelector(
+    `[data-suppressed="${CSS.escape(key)}"]`,
+  );
+  return {
+    key,
+    owed: !!owed,
+    suppressed: !!apart,
+    words: apart
+      ? norm(apart.querySelector("[lang]")?.textContent) ||
+        norm(apart.textContent)
+      : "",
+    entries: [...document.querySelectorAll("[data-entry]")]
+      .map((node) => node.getAttribute("data-entry"))
+      .filter((value) => value.startsWith(`${modelo}:`)),
+    drawn:
+      document.querySelectorAll("[data-entry],[data-suppressed]").length > 0,
+  };
+}
+
+/** The pane toggled by the rail's calendar item: its pressed state, null if absent. */
+function pageRailPressed(rail) {
+  const node = document.querySelector(`[data-rail="${rail}"]`);
+  return node ? node.getAttribute("aria-pressed") : null;
+}
+
+/** A return the persona states not owed: what the overview calendar shows of it. */
+async function readCalendarApplicability(row) {
+  if ((await exec(pageRailPressed, "calendar")) !== "true")
+    await clickSelector('[data-rail="calendar"]');
+  const shown = await waitFor(
+    async () => {
+      const read = await exec(pageCalendar, row.modelo, row.period);
+      return read.owed || read.suppressed ? read : null;
+    },
+    { timeout: 30_000, what: "the calendar to show the return", soft: true },
+  );
+  const read = shown ?? (await exec(pageCalendar, row.modelo, row.period));
+  // Leave the calendar as it was found, so the list is the next page.
+  if ((await exec(pageRailPressed, "calendar")) === "true")
+    await clickSelector('[data-rail="calendar"]');
+  return read;
+}
+
 async function driveRow(row, runDir, persona) {
   const out = {
     calculate: "not-reached",
@@ -1747,6 +1801,37 @@ async function driveRow(row, runDir, persona) {
   if (["pass", "incomplete", "calculate_inherited"].includes(out.calculate))
     out.figures = await readFigures();
 
+  // A return the persona states not owed is neither verified, exported nor
+  // filed: the calendar either sets it apart as not applicable, as the table
+  // expects, or it shows something else.
+  if (row.owed === false) {
+    const seen = await readCalendarApplicability(row);
+    log("not-owed", { owed: row.owed, calendar: seen });
+    if (seen.suppressed && !seen.owed) {
+      out.verify = "not-owed";
+      say(
+        "verify",
+        `overview: stated not owed, the calendar sets it apart as not applicable${seen.words ? `: ${seen.words}` : ""}`,
+      );
+    } else {
+      out.verify = "refused";
+      say(
+        "verify",
+        `overview: stated not owed, the window shows ${
+          seen.owed
+            ? `${seen.key} scheduled as owed`
+            : seen.drawn
+              ? `${seen.key} neither scheduled nor set apart`
+              : "no calendar entries"
+        }`,
+      );
+    }
+    say("export", "a not-owed return is not exported");
+    log("verify", { stage: out.verify });
+    log("export", { stage: out.export });
+    return out;
+  }
+
   // Verify
   const chain =
     ["pass", "calculate_inherited"].includes(out.calculate) ||
@@ -1759,8 +1844,16 @@ async function driveRow(row, runDir, persona) {
       out.verify = "error";
       say("verify", "no answer within the wait");
     } else if (words.length > 0) {
-      out.verify = "refused";
-      say("verify", words.join(" | "));
+      const listed = await findings();
+      if (checkedWithFindings(before, run.state, listed)) {
+        // The check ran to its end and found what stops the filing: the
+        // table's "incomplete", not a refusal to check.
+        out.verify = "incomplete";
+        say("verify", describeNotPass(run.state, listed));
+      } else {
+        out.verify = "refused";
+        say("verify", words.join(" | "));
+      }
     } else if (FILED.includes(run.state.action)) {
       out.verify = "pass";
     } else if (run.state.action === "verify") {
@@ -1783,7 +1876,9 @@ async function driveRow(row, runDir, persona) {
   }
   log("verify", { stage: out.verify });
 
-  // Export
+  // Export. A return that did not verify is not exported, but the table
+  // also states whether the form served an export door for it.
+  if (out.verify !== "pass") await probeExportDoor(out);
   if (out.verify === "pass")
     out.export = await exportFile(row, runDir, persona, out);
   log("export", { stage: out.export });
@@ -2159,6 +2254,71 @@ async function exportOutcome(destination, queued, before) {
 
 function sayExport(out, text) {
   out.reasons.push(`export: ${text}`);
+}
+
+/**
+ * Whether the words a verify left are the check's own completed-with-findings
+ * notice. The notice is the form's served `checked_words`: it is drawn as a
+ * warning alert (never a refusal notice) and leads to the findings. It is
+ * recognised by the catalogue text of its keys when the catalogue holds them,
+ * else by that structure: no fresh refusal notice, every fresh word an alert,
+ * the declaration no longer offering verify, and findings listed.
+ */
+function checkedWithFindings(before, after, listed) {
+  const fresh = (now, was) => now.filter((text) => !was.includes(text));
+  const alerts = fresh(after.alerts, before.alerts);
+  if (fresh(after.refusals, before.refusals).length > 0) return false;
+  if (alerts.length === 0 || listed.length === 0) return false;
+  const known = [
+    "workspace.modelo.operation.checked.blocked",
+    "workspace.modelo.operation.checked.incomplete",
+  ].map(label);
+  if (alerts.every((text) => known.includes(text))) return true;
+  return after.action !== "verify" && !after.timedOut;
+}
+
+/**
+ * Read, without pressing it, whether the export view serves a usable export
+ * button, then return to the form. Sets `export_served` only when measured.
+ */
+async function probeExportDoor(out) {
+  try {
+    await openView("workspace.modelo.filing.title");
+    const text = await exec(
+      pageMarkByText,
+      '[role="tabpanel"]',
+      "button",
+      [
+        label("workspace.modelo.filing.export_file"),
+        label("workspace.modelo.filing.export_again"),
+      ],
+      "equals",
+      MARK,
+    );
+    if (text === null) {
+      out.export_served = false;
+      sayExport(out, "not reached; the export view shows no export button");
+    } else {
+      const enabled = await exec(
+        (mark) => !document.querySelector(`[${mark}]`).disabled,
+        MARK,
+      );
+      out.export_served = enabled === true ? true : false;
+      sayExport(
+        out,
+        enabled === true
+          ? "not reached; the export door was served (button enabled, not pressed)"
+          : "not reached; the export button is shown disabled",
+      );
+    }
+  } catch (error) {
+    sayExport(out, `export door not measured: ${String(error?.message ?? error)}`);
+  }
+  try {
+    await openView("desktop.modelo.view.form");
+  } catch {
+    // The next row opens its own work.
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -2617,6 +2777,8 @@ const KEYS = [
   "reason",
   "log",
 ];
+/** Present only when the export door was measured. */
+const OPTIONAL_KEYS = ["export_served"];
 
 /** The acceptance intake refuses unknown keys and unknown stages; so does this. */
 function assertContract(line) {
@@ -2625,7 +2787,12 @@ function assertContract(line) {
     line.modelo === null
       ? KEYS.filter((key) => !["calculate", "verify", "export"].includes(key))
       : KEYS;
-  assert.deepEqual(Object.keys(line).sort(), [...expected].sort(), "line keys");
+  const present = Object.keys(line).filter(
+    (key) => !OPTIONAL_KEYS.includes(key),
+  );
+  assert.deepEqual(present.sort(), [...expected].sort(), "line keys");
+  if ("export_served" in line)
+    assert.equal(typeof line.export_served, "boolean", "export_served");
   assert.equal(line.surface, "window");
   assert.equal(typeof line.loads, "boolean");
   if (line.modelo === null) {
@@ -2788,6 +2955,9 @@ test(
             calculate: out.calculate,
             verify: out.verify,
             export: out.export,
+            ...(typeof out.export_served === "boolean"
+              ? { export_served: out.export_served }
+              : {}),
             figures: out.figures,
             reason:
               out.reasons.join("; ").slice(0, 1200) ||
