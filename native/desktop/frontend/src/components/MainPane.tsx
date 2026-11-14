@@ -476,6 +476,16 @@ export function MainPane({
             language={locale}
             shown={firstPaneShown}
             page={aeatSyncPage}
+            pane={{
+              onToggleMaximize: () => toggleMaximize("docs"),
+              controls: [
+                maximizeControl("docs", "desktop.pane.maximize_docs"),
+                ...splitControls.map((control) => ({
+                  ...control,
+                  yields: true,
+                })),
+              ],
+            }}
             results={host.aeatSyncResults}
             run={host.aeatSyncRun}
             prepare={host.aeatSyncPrepare}
