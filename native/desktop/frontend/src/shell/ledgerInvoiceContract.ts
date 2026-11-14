@@ -53,6 +53,29 @@ export type ContentDigest = string;
 
 export type DuplicateBasis = "number" | "party_day_total";
 
+export type EntryOptionFamily =
+  | "country"
+  | "currency"
+  | "deduction_fact_kind"
+  | "m210_payer_mode"
+  | "m210_tipo_renta"
+  | "iva_category"
+  | "irpf_category"
+  | "spending_category"
+  | "usage_ratio_category"
+  | "invoice_class"
+  | "premises_situation"
+  | "prorrata_provenance"
+  | "prorrata_sector_letter"
+  | "capital_good_kind"
+  | "capital_good_disposal"
+  | "import_format"
+  | "export_format"
+  | "gasto_capital_inmobiliario"
+  | "rental_lease"
+  | "rental_property"
+  | "withholding_certificate_figure";
+
 /**
  * Stable, closed names of what a figure rule found.
  */
@@ -919,11 +942,28 @@ export type LedgerReviewStatus =
   "pending" | "reviewed" | "skipped" | "excluded";
 
 /**
+ * One link field of a row: the field, the served family its choices come from,
+ * its name, and the value stored.
+ */
+export type LedgerTransactionLinkFieldProjection = {
+  field: string;
+  family: EntryOptionFamily;
+  field_words: string;
+  field_words_language: OutputLanguage;
+  value: string | null;
+};
+
+/**
  * The existing transaction payload with a strict JSON-stable M210 projection.
  *
  * Financial values are copied from canonical read facts, never recomputed.
  * Domain reconstruction and registry validation remain inside the worker;
  * frontends receive only the admitted display and audit facts.
+ *
+ * `link_fields` serves every link field of a row in form order, the stored
+ * value or `None` for each, so a frontend holds no field-to-family table; the
+ * three flat link fields carry the same values. The projection built from a
+ * payload names the fields in the language it is given.
  */
 export type LedgerTransactionProjection = {
   transaction_id: TransactionId;
@@ -957,6 +997,7 @@ export type LedgerTransactionProjection = {
   arrendamiento_ref: string | null;
   inmueble_ref: string | null;
   gasto_capital_inmobiliario: string | null;
+  link_fields: LedgerTransactionLinkFieldProjection[];
   purchase_invoice_evidence_id: string | null;
   invoice_id: string | null;
   attachment_ids: string[];

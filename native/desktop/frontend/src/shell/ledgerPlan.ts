@@ -5,21 +5,24 @@
 // into parts the host will carry.
 
 import {
-  LEDGER_BULK_CLASSIFY_COLUMNS,
   type LedgerAddRequest,
   type LedgerBulkClassifyRequest,
   type LedgerClassifyField,
   type LedgerClassifyRequest,
-  type LedgerStagedBlocker,
   type LedgerUpdateRequest,
 } from "./ledgerMovementOperations";
+import { type LedgerStagedBlocker } from "./ledgerMovementCheckContract";
 import type {
   JsonObject,
   LedgerDefinitionId,
   LedgerRow,
   OutputLanguage,
 } from "./ledger";
-import { LEDGER_UPDATE_FIELDS, type LedgerUpdateField } from "./ledgerContract";
+import {
+  LEDGER_BULK_CLASSIFY_COLUMNS,
+  LEDGER_UPDATE_FIELDS,
+  type LedgerUpdateField,
+} from "./ledgerContract";
 import { takesBusinessShare } from "./ledgerClassifications";
 import { RELAY_PAYLOAD_LIMIT } from "./relayBounds";
 import { canonicalDecimal } from "./ledgerGrammar";
@@ -638,11 +641,18 @@ function addRequest(draft: Draft): LedgerAddRequest {
     values[field] = DRAFT_DECIMALS.has(field)
       ? (canonicalDecimal(text) ?? text)
       : text;
+  // The staged check holds back a draft with a missing or unknown value of
+  // these, and the form offers only the contract's own classifications.
+  const { business_classification, direction, ...rest } = values;
   return {
-    ...values,
+    ...rest,
+    ...(business_classification !== undefined && {
+      business_classification:
+        business_classification as LedgerAddRequest["business_classification"],
+    }),
     booked_date: values.booked_date!,
     amount: values.amount!,
-    direction: values.direction!,
+    direction: direction as LedgerAddRequest["direction"],
     description: values.description!,
     idempotency_key: draft.idempotencyKey,
   };

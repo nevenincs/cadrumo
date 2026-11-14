@@ -9,11 +9,13 @@ import type { LedgerRow, OutputLanguage } from "../shell/ledger";
 import type {
   LedgerStagedCheckRequest,
   LedgerStagedCheckResult,
+} from "../shell/ledgerMovementOperations";
+import type {
   LedgerStagedDraft,
   LedgerStagedRow,
   LedgerStagedBlocker,
   LedgerStagedRowAnswer,
-} from "../shell/ledgerMovementOperations";
+} from "../shell/ledgerMovementCheckContract";
 import { STAGE_FIELDS, storedFieldValue } from "../shell/ledgerStage";
 import entryOptions from "@fixtures/ledger-entry-options/ledgerEntryOptions.json" with { type: "json" };
 import recorded from "@fixtures/ledger-staged-check/ledgerStagedCheck.json" with { type: "json" };
@@ -90,7 +92,7 @@ export function answerStagedCheck(
   const language = request.output_language ?? DEFAULT_LANGUAGE;
   const answers: LedgerStagedRowAnswer[] = [];
   let whole = true;
-  for (const asked of request.rows) {
+  for (const asked of request.rows ?? []) {
     const row = rows(asked.transaction_id);
     if (!row) {
       answers.push({
@@ -115,7 +117,7 @@ export function answerStagedCheck(
     }
   }
   const drafts: LedgerStagedCheckResult["drafts"] = [];
-  for (const draft of request.drafts) {
+  for (const draft of request.drafts ?? []) {
     const question = draftQuestion(draft);
     const answer = (recorded.drafts as unknown as RecordedDrafts)[question];
     if (answer)
@@ -139,7 +141,7 @@ export function answerStagedCheck(
     input_digest: "recorded",
     rows: answers,
     drafts,
-    categories: request.categories.map((category) => ({
+    categories: (request.categories ?? []).map((category) => ({
       category,
       business: known.includes(category),
       mixed: known.includes(category) && shared.includes(category),

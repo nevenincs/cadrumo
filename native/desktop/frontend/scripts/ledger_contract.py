@@ -33,6 +33,7 @@ from cadrumo.application.invoices.catalogue_lifecycle import CatalogueInvoicePat
 from cadrumo.application.invoices.figures_preview_contracts import INVOICE_CORRECTION_JUDGED_FIELDS
 from cadrumo.application.ledger.classify_requests import CLASSIFY_UNCLEARABLE_FIELD_NAMES
 from cadrumo.application.ledger.evidence_mutation_operation import LedgerEvidenceUpdatePatch
+from cadrumo.application.ledger.models import BULK_CLASSIFY_ALLOWED_COLUMNS
 from cadrumo.application.ledger.preflight import LedgerPreflightIssueReason
 from cadrumo.application.ledger.readiness_routes import IVA_DERIVABLE_REASONS, READINESS_REASON_FIELDS
 from cadrumo.application.ledger.staged_check import DRAFT_REQUIRED_FIELDS, TRANSFER_LOCKED_FIELDS
@@ -153,6 +154,27 @@ _CLASSIFICATION_SETS: tuple[tuple[str, str, str, frozenset[BusinessClassificatio
         "The classifications no person or rule decided, so classifying over one overwrites nothing.",
         UNDECIDED_STATES,
     ),
+)
+
+#: The columns of a bulk classification CSV in the order the window writes them: the two a row must carry, then
+#: the optional ones. The model fixes which columns exist, not their order, so the two are checked to agree.
+_BULK_CLASSIFY_COLUMNS: tuple[str, ...] = (
+    "transaction_id",
+    "classification",
+    "category_id",
+    "business_pct",
+    "usage_ratio_id",
+    "taxable_base",
+    "iva_rate",
+    "iva_amount",
+    "iva_category",
+    "irpf_category",
+    "arrendamiento_ref",
+    "inmueble_ref",
+    "gasto_capital_inmobiliario",
+    "posicion_ref",
+    "concepto_capital_mobiliario",
+    "notes",
 )
 
 #: Each mask as ``(constant, type, doc, model)``.
@@ -387,6 +409,13 @@ def _rules() -> list[str]:
         ),
         "\n".join(
             [
+                "/** The columns a bulk classification CSV may carry; `transaction_id` and `classification` are",
+                " * required on every row. */",
+                f"export const LEDGER_BULK_CLASSIFY_COLUMNS = {_literal(_BULK_CLASSIFY_COLUMNS)}",
+            ]
+        ),
+        "\n".join(
+            [
                 "/** The fields a new movement must have before it can be added. */",
                 f"export const DRAFT_REQUIRED_FIELDS = {_literal(DRAFT_REQUIRED_FIELDS)}",
             ]
@@ -400,6 +429,10 @@ def _literal_set(constant: str, doc: str, values: Sequence[str]) -> str:
 
 def render() -> str:
     """The generated ledger contract module, before the frontend's formatter writes it."""
+    if set(_BULK_CLASSIFY_COLUMNS) != BULK_CLASSIFY_ALLOWED_COLUMNS or len(set(_BULK_CLASSIFY_COLUMNS)) != len(
+        _BULK_CLASSIFY_COLUMNS
+    ):
+        raise SystemExit("the bulk classification column order does not name exactly the columns the model allows")
     blocks = [
         _names(constant, type_name, doc, [member.value for member in enum], guard)
         for constant, type_name, guard, doc, enum in _ENUMS

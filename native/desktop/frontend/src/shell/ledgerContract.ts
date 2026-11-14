@@ -349,6 +349,27 @@ export const REQUIRED_FIELDS = [
   "direction",
 ] as const;
 
+/** The columns a bulk classification CSV may carry; `transaction_id` and `classification` are
+ * required on every row. */
+export const LEDGER_BULK_CLASSIFY_COLUMNS = [
+  "transaction_id",
+  "classification",
+  "category_id",
+  "business_pct",
+  "usage_ratio_id",
+  "taxable_base",
+  "iva_rate",
+  "iva_amount",
+  "iva_category",
+  "irpf_category",
+  "arrendamiento_ref",
+  "inmueble_ref",
+  "gasto_capital_inmobiliario",
+  "posicion_ref",
+  "concepto_capital_mobiliario",
+  "notes",
+] as const;
+
 /** The fields a new movement must have before it can be added. */
 export const DRAFT_REQUIRED_FIELDS = [
   "booked_date",
