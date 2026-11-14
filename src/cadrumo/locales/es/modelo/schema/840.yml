@@ -98,9 +98,6 @@ modelo:
               label: Ejercicio fiscal al que se refiere la declaración
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               label: Tipo de declaración (alta / variación / baja)
-            x-chim6r31e9gmst355pkmsp39cdgm8rri5lo62pr9dpgiqorfdlo6opbdcln78obid5gg:
-              label: Indicador de página complementaria (déjalo en blanco si no es
-                complementaria, «C» si lo es)
             x-clm6ar9dehp6iohedlqmsqb3d5o62r1dedqmqo9dcdnmqs3lehgm4r35:
               label: 'Cuota municipal: suma de la superficie computable de los locales'
             x-clm6ar9dehp6iohedlqmsqb3d5o62r1dedqmqo9de9im6t39cpkm6ob4c4:
