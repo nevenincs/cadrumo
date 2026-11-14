@@ -38,6 +38,7 @@ from .common import attach_cli_policy_verdict, emit_envelope
 from .modelo_cli_support import resolve_actor_option
 from .modelo_query_results import unresolved_findings_payload
 from .modelo_rendering import source_diagnostic_notice, source_diagnostic_notice_text
+from .modelo_replaced_head_rendering import replaced_head_statement_output
 from .modelo_work_wizard_payloads import WizardPromptedCasillaPayload, WorkWizardResult
 from .operation_modelo_calculation import calculation_snapshot_lines, calculation_snapshot_payload
 from .operation_modelo_metadata import read_modelo_work_unit
@@ -78,12 +79,24 @@ def _wizard_calculation_inputs(prompted: list[tuple[ModeloWorkWizardStep, str]])
     )
 
 
+def _wizard_caller_context(inputs: ModeloCalculationInputFieldsV1) -> ModeloWorkCalculateCallerContext:
+    """Replay the head when nothing was prompted; calculate from the prompted answers alone otherwise.
+
+    An attempt that carries answers calculates from exactly them, and its
+    result names each statement of the earlier head it left out.
+    """
+    if inputs == ModeloCalculationInputFieldsV1():
+        return ModeloWorkCalculateCallerContext.REPLAY_HEAD
+    return ModeloWorkCalculateCallerContext.EXPLICIT
+
+
 def _drive_wizard_calculation(
     *, ctx: typer.Context, wizard: ModeloWorkWizardRun, actor: str | None, language: OutputLanguage
 ) -> None:
     resolved_actor = resolve_actor_option(actor)
     prompted = list(run_wizard_steps(wizard, wizard.steps))
     for attempt in range(_MAX_MISSING_INPUT_RETRIES):
+        inputs = _wizard_calculation_inputs(prompted)
         completed = run_modelo_work_wizard_attempt(
             ctx,
             ModeloWorkWizardAttemptRequest(
@@ -92,8 +105,8 @@ def _drive_wizard_calculation(
                 calculation=ModeloWorkCalculateRequest(
                     work_unit_id=wizard.unit.work_unit_id,
                     actor=resolved_actor,
-                    caller_context=ModeloWorkCalculateCallerContext.EXPLICIT,
-                    inputs=_wizard_calculation_inputs(prompted),
+                    caller_context=_wizard_caller_context(inputs),
+                    inputs=inputs,
                 ),
             ),
         )
@@ -188,6 +201,11 @@ def emit_wizard_result(
         for diagnostic in advisories.to_diagnostics()
     ]
     lines.extend(source_diagnostic_notice_text(notice) for notice in notices)
+    statement_notices, statement_lines = replaced_head_statement_output(
+        calculation_result.replaced_head, command="modelo.work.wizard"
+    )
+    notices.extend(statement_notices)
+    lines.extend(statement_lines)
     emit_envelope(ctx, command="modelo.work.wizard", result=result, lines=lines, notices=notices or None)
 
 

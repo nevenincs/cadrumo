@@ -246,11 +246,10 @@ def test_a_blocking_note_refuses_export_and_filing_until_a_recalculation_clears_
         assert not any(report.granted_verificado_completo for report in reports)
 
     refused_output = tmp_path / "modelo-130-blocked.txt"
-    # Default selection keeps its independent verified-state guard. The explicit
-    # revision option names the draft without granting eligibility to export it.
+    # The default export takes the declaration's current calculation, as the window and the table do, so the
+    # export itself refuses the unchecked draft; naming it by id is refused the same way.
     exit_code, output = _export(work_unit_id, refused_output)
-    assert exit_code == 2, output
-    assert require_error_document(output)["error"]["code"] == "REFUSED_MODELO_CALCULATION_REVISION_SELECTOR_STATE"
+    _assert_unverified(exit_code, output, revision_id=blocked_revision_id, code="REFUSED_MODELO_REVISION_NOT_SEALED")
     assert not refused_output.exists()
     exit_code, output = _export(work_unit_id, refused_output, revision_id=blocked_revision_id)
     _assert_unverified(exit_code, output, revision_id=blocked_revision_id, code="REFUSED_MODELO_REVISION_NOT_SEALED")

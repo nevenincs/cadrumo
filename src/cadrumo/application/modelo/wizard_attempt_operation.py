@@ -40,9 +40,8 @@ from .calculation_action_ports import CalculationActionPortsFactory
 from .calculation_bucket_actions import refuse_blocked_ledger_preflight
 from .calculation_operation import (
     calculate_prepared_modelo_work,
-    calculation_public_result,
+    calculation_public_result_replacing,
     prepare_modelo_work_calculation,
-    replaced_calculation_head,
 )
 from .metadata_projection import ModeloWorkMetadataSnapshot
 from .work_calculation_contracts import ModeloWorkCalculatePublicResultV3, ModeloWorkCalculateRequest
@@ -220,10 +219,11 @@ class ModeloWorkWizardAttemptExecutor:
                     if result.revision_published:
                         await context.events.effect(OperationEffect.UPDATED)
                     public_result = await asyncio.to_thread(
-                        calculation_public_result,
+                        calculation_public_result_replacing,
                         result,
+                        prepared=prepared,
+                        payload=payload.calculation,
                         operation=context.authority_operation,
-                        replaced_head=replaced_calculation_head(prepared, payload.calculation, result.work_unit),
                     )
                     projection = ModeloWorkWizardAttemptProjection(
                         profile_id=payload.profile_id,

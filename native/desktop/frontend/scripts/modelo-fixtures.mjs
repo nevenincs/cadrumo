@@ -84,6 +84,7 @@ const CONTRACT_MODULES = [
   "src/shell/modeloContract/modeloSpreadsheet.ts",
   "src/shell/modeloContract/modeloVerificationReport.ts",
   "src/shell/modeloContract/modeloWork.ts",
+  "src/shell/modeloContract/modeloWorkAmend.ts",
   "src/shell/modeloContract/modeloWorkAmendmentContext.ts",
   "src/shell/modeloContract/modeloWorkCasillaHelp.ts",
   "src/shell/modeloContract/modeloWorkCreate.ts",
