@@ -1573,6 +1573,19 @@ modelo:
           00986:
             label: Egyes tevékenységek ösztönzésére szolgáló levonások - 2015 Kutatás-fejlesztés
               - Függőben lévő/keletkezett levonás [00986]
+          00987:
+            label: 'A Kanári-szigeteki hajók és hajózási társaságok különleges rendszere:
+              a negatív adóalapok beszámításának részletezése - A 2023. évi különleges
+              adóalap beszámítása - Az időszak elején alkalmazásra vár/az időszakban
+              keletkezett [00987]'
+          00988:
+            label: 'A Kanári-szigeteki hajók és hajózási társaságok különleges rendszere:
+              a negatív adóalapok beszámításának részletezése - A 2023. évi különleges
+              adóalap beszámítása - Ebben az elszámolásban alkalmazva [00988]'
+          00989:
+            label: 'A Kanári-szigeteki hajók és hajózási társaságok különleges rendszere:
+              a negatív adóalapok beszámításának részletezése - A 2023. évi különleges
+              adóalap beszámítása - Jövőbeli időszakokban alkalmazandó [00989]'
           00992:
             label: Ideiglenes intézkedések visszafordításának levonása (D.T.37. 2
               LIS) - 2025(*) - Időszak elején keletkezett/függőben lévő összeg [00992]
@@ -1596,6 +1609,11 @@ modelo:
             label: Elszámolás I - Az eredménykimutatás eredményét érintő korrekciók
               részletezése - Új tárgyi eszközök szabad értékcsökkenése (LIS 12.3 e)
               cikk) - Csökkentések [01004]
+          '01010':
+            label: 'A Kanári-szigeteki hajók és hajózási társaságok különleges rendszere:
+              a negatív adóalapok beszámításának részletezése - A 2023. évi egyéb
+              tevékenységek adóalapjának beszámítása - Az időszak elején alkalmazásra
+              vár/az időszakban keletkezett [01010]'
           '01011':
             label: 'Elszámolás I - Az eredménykimutatás eredményét érintő korrekciók
               részletezése - Kapcsolt ügyletek: szokásos piaci érték alkalmazása (LIS
@@ -1876,6 +1894,11 @@ modelo:
           '01175':
             label: Kanári-szigeteki beruházási tartalék különös rendszere - RIC 2021
               - Időszak végén materializálásra váró RIC [01175]
+          '01177':
+            label: 'A Kanári-szigeteki hajók és hajózási társaságok különleges rendszere:
+              a negatív adóalapok beszámításának részletezése - A 2023. évi egyéb
+              tevékenységek adóalapjának beszámítása - Ebben az elszámolásban alkalmazva
+              [01177]'
           01178:
             label: Ideiglenes intézkedések visszafordításának levonása (D.T.37. 2
               LIS) - 2015 - Levonási alap [01178]
@@ -1941,6 +1964,11 @@ modelo:
             label: Pénzügyi ráfordítások levonhatóságának korlátozása. levonásra váró
               pénzügyi ráfordítások - Keletkezési év 2014 - Ebben az elszámolásban
               alkalmazva [01199]
+          '01200':
+            label: 'A Kanári-szigeteki hajók és hajózási társaságok különleges rendszere:
+              a negatív adóalapok beszámításának részletezése - A 2023. évi egyéb
+              tevékenységek adóalapjának beszámítása - Jövőbeli időszakokban alkalmazandó
+              [01200]'
           '01201':
             label: Pénzügyi ráfordítások levonhatóságának korlátozása. levonásra váró
               pénzügyi ráfordítások - Keletkezési év 2014 - Jövőbeli időszakokban
@@ -2353,6 +2381,21 @@ modelo:
           01368:
             label: Egyes tevékenységek ösztönzésére szolgáló levonások - 2025(*) Technológiai
               innováció (IT) - Jövőbeli időszakokban alkalmazandó [01368]
+          '01374':
+            label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
+              és más, növelt levonásra jogosító célokra adott adományok - 2023 - Ugyanazon
+              szervezetnek ismételt adományozással - Függőben lévő/keletkezett levonás
+              [01374]
+          '01375':
+            label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
+              és más, növelt levonásra jogosító célokra adott adományok - 2023 - Ugyanazon
+              szervezetnek ismételt adományozással - Ebben az elszámolásban alkalmazva
+              [01375]
+          '01376':
+            label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
+              és más, növelt levonásra jogosító célokra adott adományok - 2023 - Ugyanazon
+              szervezetnek ismételt adományozással - Jövőbeli időszakokban alkalmazandó
+              [01376]
           '01377':
             label: Ideiglenes intézkedések visszafordításának levonása (LIS 37.1 átmeneti
               rendelkezés) - 2023 - Levonási alap [01377]
@@ -2453,10 +2496,66 @@ modelo:
             label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
               érvényesíthető követeléssé - Halasztott adókövetelések (DTA). LIS 130.
               cikk - Keletkezés éve - 2022 - Az időszakban alkalmazott DTA [01413]
+          '01414':
+            label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
+              érvényesíthető követeléssé - Halasztott adókövetelések (DTA). LIS 130.
+              cikk - Keletkezés éve - 2023 - Az időszak elején felhasználásra váró
+              halasztott adókövetelések összesen (130.6 a) cikk) [01414]
           '01415':
             label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
               érvényesíthető követeléssé - Halasztott adókövetelések (DTA). LIS 130.
               cikk - Keletkezés éve - 2023 - Pozitív nettó adókötelezettség [01415]
+          '01416':
+            label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
+              érvényesíthető követeléssé - Halasztott adókövetelések (DTA). LIS 130.
+              cikk - Keletkezés éve - 2023 - Az időszak elején felhasználásra váró
+              halasztott adókövetelések - Érvényesíthető követeléssé alakítás jogával
+              [01416]
+          '01417':
+            label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
+              érvényesíthető követeléssé - Halasztott adókövetelések (DTA). LIS 130.
+              cikk - Keletkezés éve - 2023 - Az időszak elején felhasználásra váró
+              halasztott adókövetelések - Érvényesíthető követeléssé alakítás joga
+              adótöbblet miatt [01417]
+          01418:
+            label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
+              érvényesíthető követeléssé - Halasztott adókövetelések (DTA). LIS 130.
+              cikk - Keletkezés éve - 2023 - Az időszak elején felhasználásra váró
+              halasztott adókövetelések - Érvényesíthető követeléssé alakítás joga
+              nélkül [01418]
+          01419:
+            label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
+              érvényesíthető követeléssé - Halasztott adókövetelések (DTA). LIS 130.
+              cikk - Keletkezés éve - 2023 - Az időszakban érvényesíthető követeléssé
+              alakított halasztott adókövetelések [01419]
+          '01420':
+            label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
+              érvényesíthető követeléssé - Halasztott adókövetelések (DTA). LIS 130.
+              cikk - Keletkezés éve - 2023 - Jövőbeli időszakokban felhasználásra
+              váró halasztott adókövetelések - Érvényesíthető követeléssé alakítás
+              jogával [01420]
+          '01421':
+            label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
+              érvényesíthető követeléssé - Halasztott adókövetelések (DTA). LIS 130.
+              cikk - Keletkezés éve - 2023 - Jövőbeli időszakokban felhasználásra
+              váró halasztott adókövetelések - Érvényesíthető követeléssé alakítás
+              jogával, adótöbblet [01421]
+          '01422':
+            label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
+              érvényesíthető követeléssé - Halasztott adókövetelések (DTA). LIS 130.
+              cikk - Keletkezés éve - 2023 - Jövőbeli időszakokban felhasználásra
+              váró halasztott adókövetelések - Érvényesíthető követeléssé alakítás
+              joga nélkül [01422]
+          '01424':
+            label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
+              érvényesíthető követeléssé - Pozitív nettó adókötelezettség többlete
+              - Keletkezés éve - 2023 - A 2008-2015 adómegállapítási időszakokban
+              felhasznált pozitív nettó adótöbblet [01424]
+          '01425':
+            label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
+              érvényesíthető követeléssé - Pozitív nettó adókötelezettség többlete
+              - Keletkezés éve - 2023 - A 2016-tól kezdődő adómegállapítási időszakokban
+              felhasznált pozitív nettó adótöbblet [01425]
           '01426':
             label: Korlátból kizárt K+F+i levonások - 2016 Kutatás-fejlesztés - Függőben
               lévő/keletkezett levonás [01426]
@@ -2969,6 +3068,14 @@ modelo:
             label: A LIS 19. cikke szerinti, az Európai Unió vagy az EGT tagállamaiba
               történő székhelyáthelyezéstől eltérő ügyletek - Csökkenés - Év elején
               függőben lévő egyenleg [01681]
+          01684:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - 2025(****)
+              egyéb levonások a kiemelt közérdekű eseményeket támogató programokhoz
+              kapcsolódóan - Ebben az elszámolásban alkalmazva [01684]
+          01685:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - 2025(****)
+              egyéb levonások a kiemelt közérdekű eseményeket támogató programokhoz
+              kapcsolódóan - Jövőbeli időszakokban alkalmazandó [01685]
           01688:
             label: A LIS 19. cikke szerinti, az Európai Unió vagy az EGT tagállamaiba
               történő székhelyáthelyezéstől eltérő ügyletek - Csökkenés - Év végén
@@ -2981,6 +3088,10 @@ modelo:
             label: Nonprofit szervezeteknek adott adományok levonása - Általános adományok
               - Adományok részösszege 2015-2025, ugyanazon szervezetnek ismételten
               nem nyújtott adományokkal. - Ebben az elszámolásban alkalmazva [01693]
+          01694:
+            label: Nonprofit szervezeteknek adott adományok levonása - Általános adományok
+              - Adományok részösszege 2015-2025, ugyanazon szervezetnek ismételten
+              nem nyújtott adományokkal. - Jövőbeli időszakokban alkalmazandó [01694]
           01695:
             label: Nonprofit szervezeteknek adott adományok levonása - Általános adományok
               - Adományok részösszege 2015-2025, ugyanazon szervezetnek ismételten
@@ -2989,6 +3100,10 @@ modelo:
             label: Nonprofit szervezeteknek adott adományok levonása - Általános adományok
               - Adományok részösszege 2015-2025, ugyanazon szervezetnek ismételten
               nyújtott adományokkal - Ebben az elszámolásban alkalmazva [01696]
+          01697:
+            label: Nonprofit szervezeteknek adott adományok levonása - Általános adományok
+              - Adományok részösszege 2015-2025, ugyanazon szervezetnek ismételten
+              nyújtott adományokkal - Jövőbeli időszakokban alkalmazandó [01697]
           01698:
             label: Nonprofit szervezeteknek adott adományok levonása - Általános adományok
               - Összesen - Függőben lévő/keletkezett levonás [01698]
@@ -2998,6 +3113,21 @@ modelo:
           '01700':
             label: Nonprofit szervezeteknek adott adományok levonása - Általános adományok
               - Összesen - Jövőbeli időszakokban alkalmazandó [01700]
+          '01704':
+            label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
+              és más, növelt levonásra jogosító célokra adott adományok - Adományok
+              részösszege 2015-2025, ugyanazon szervezetnek ismételten nem nyújtott
+              adományokkal - Függőben lévő/keletkezett levonás [01704]
+          '01705':
+            label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
+              és más, növelt levonásra jogosító célokra adott adományok - Adományok
+              részösszege 2015-2025, ugyanazon szervezetnek ismételten nem nyújtott
+              adományokkal - Ebben az elszámolásban alkalmazva [01705]
+          '01706':
+            label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
+              és más, növelt levonásra jogosító célokra adott adományok - Adományok
+              részösszege 2015-2025, ugyanazon szervezetnek ismételten nem nyújtott
+              adományokkal - Jövőbeli időszakokban alkalmazandó [01706]
           '01707':
             label: Baleár-szigeteki beruházási tartalék különleges rendszere - RIIB
               2023 - Időszak elején megvalósításra váró RIIB [01707]
@@ -3066,6 +3196,11 @@ modelo:
           01728:
             label: Ideiglenes intézkedések visszafordításának levonása (LIS 37.2 átmeneti
               rendelkezés) - 2018 - Függőben lévő összeg [01728]
+          01729:
+            label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
+              és más, növelt levonásra jogosító célokra adott adományok - Adományok
+              részösszege 2015-2025, ugyanazon szervezetnek ismételten nyújtott adományokkal
+              - Függőben lévő/keletkezett levonás [01729]
           '01730':
             label: Kiegyenlítési tartalék - Adóalap-csökkentés - Keletkezési év 2021
               - Az időszakban az adóalaphoz hozzáadott összeg [01730]
@@ -3617,6 +3752,10 @@ modelo:
             label: Egyes tevékenységek ösztönzésére szolgáló levonások - 2025(*) Nyugat-afrikai
               területi beruházások és reklám- és propagandaköltségek (19/1994. törvény
               27 bis. cikk) (TAP) - Ebben az elszámolásban alkalmazva [01929]
+          01930:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - 2025(*) Nyugat-afrikai
+              területi beruházások és reklám- és propagandaköltségek (19/1994. törvény
+              27 bis. cikk) (TAP) - Jövőbeli időszakokban alkalmazandó [01930]
           01931:
             label: Külföldi filmgyártási produkciók levonásai (LIS 36.2. cikk) - 2015
               - Függőben lévő/keletkezett levonás [01931]
@@ -3939,6 +4078,10 @@ modelo:
             label: Kanári-szigeteki beruházási levonások - Tárgyi eszközök La Palma,
               La Gomera és El Hierro szigetén 2023 - Függőben lévő/keletkezett levonás
               [02078]
+          02080:
+            label: 'Kiegészítő információk a levonási korlátok számításához - 2024:
+              finanszírozó: az adómegállapítási időszakban keletkezett Kanári-szigeteki
+              élő előadóművészeti és zenei levonás [02080]'
           02081:
             label: Egyes tevékenységek ösztönzésére szolgáló levonások - 2015 Nyugat-afrikai
               területi beruházások és reklám- és propagandaköltségek (19/1994. törvény
@@ -4506,6 +4649,14 @@ modelo:
           02283:
             label: Szövetkezeti rendszer - A kvóták kompenzációjának részletezése.
               2019 Jövőbeli időszakokban alkalmazandó [02283]
+          02287:
+            label: 'Kiegészítő információk a levonási korlátok számításához - 2024:
+              az adómegállapítási időszakban keletkezett Kanári-szigeteki kutatás-fejlesztési
+              levonás [02287]'
+          02288:
+            label: 'Kiegészítő információk a levonási korlátok számításához - 2024:
+              az adómegállapítási időszakban keletkezett Kanári-szigeteki technológiai
+              innovációs levonás [02288]'
           02289:
             label: XXXVII. America's Cup Barcelona (31/2022. törvény) - Csökkenés
               - Az időszak elején fennálló egyenleg [02289]
@@ -4970,6 +5121,16 @@ modelo:
             label: Elszámolás I - Az eredménykimutatás eredményét érintő korrekciók
               részletezése - Hibrid aszimmetriák (LIS 15 bis. cikk, kivéve a LIS 15
               bis.12. cikket) - Csökkentések [02470]
+          '02475':
+            label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
+              és más, növelt levonásra jogosító célokra adott adományok - Adományok
+              részösszege 2015-2025, ugyanazon szervezetnek ismételten nyújtott adományokkal
+              - Ebben az elszámolásban alkalmazva [02475]
+          '02476':
+            label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
+              és más, növelt levonásra jogosító célokra adott adományok - Adományok
+              részösszege 2015-2025, ugyanazon szervezetnek ismételten nyújtott adományokkal
+              - Jövőbeli időszakokban alkalmazandó [02476]
           '02477':
             label: Ideiglenes intézkedések visszafordításának levonása (LIS 37.2 átmeneti
               rendelkezés) - 2022 - Keletkezett/időszak elején függőben lévő összeg
@@ -5010,6 +5171,14 @@ modelo:
             label: Elszámolás IV - Részletfizetési lehetőség lakóhely-változás esetén
               (LIS 19.1 cikk) - Eredmény a LIS 19.1. cikke szerinti 1. részletfizetéssel
               együtt - Állam [02489]
+          02495:
+            label: 'Kiegészítő információk a levonási korlátok számításához - 2024:
+              producer: az adómegállapítási időszakban keletkezett Kanári-szigeteki
+              spanyol filmes levonás [02495]'
+          02496:
+            label: 'Kiegészítő információk a levonási korlátok számításához - 2024:
+              producer: az adómegállapítási időszakban keletkezett Kanári-szigeteki
+              élő előadóművészeti és zenei levonás [02496]'
           02497:
             label: Kanári-szigeteki beruházási levonások - Tárgyi eszközök La Palma,
               La Gomera és El Hierro szigetén 2022 - Jövőbeli időszakokban alkalmazandó
@@ -8680,6 +8849,10 @@ modelo:
               számviteli eredmény korrekciói - Növelések [01230]
           is-cuota-liquida:
             label: Elszámolás IV - Egyéb levonások - Nettó adókötelezettség [00592]
+          is-deduccion-acontecimiento-interes-publico-otras:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - 2025(****)
+              egyéb levonások a kiemelt közérdekű eseményeket támogató programokhoz
+              kapcsolódóan - Függőben lévő/keletkezett levonás [01683]
           is-deduccion-actividades-total-pendiente:
             label: Egyes tevékenységek ösztönzésére szolgáló levonások - Összesen
               - Függőben lévő/keletkezett levonás [00831]
@@ -9716,6 +9889,10 @@ modelo:
             help: Jelölő a társasági adóról szóló törvény VII. cím XI. fejezete szerinti
               kis méretű vállalkozási ösztönzők alkalmazásához [00006].
             label: Kis méretű vállalkozások ösztönzői (LIS VII. cím XI. fejezet) [00006]
+          is-informacion-adicional-limites-deducciones-canarias-generada:
+            label: 'Kiegészítő információk a levonási korlátok számításához - 2024:
+              finanszírozó: az adómegállapítási időszakban keletkezett Kanári-szigeteki
+              spanyol filmes levonás [02079]'
           is-inversiones-anticipadas-reserva-inversiones-en-canarias-art-27-11-ley-19-1994:
             help: Jelölő a 19/1994. törvény 27.11 cikke szerinti Kanári-szigeteki
               beruházási tartalékhoz kapcsolódó előzetes beruházásokhoz [00045].
@@ -12382,24 +12559,6 @@ modelo:
                 saját tőkében fennálló részesedést megtestesítő értékpapírok értékvesztésének
                 visszaírásából származó jövedelem, szövetkezetek (adószinten) (LIS
                 16.3 átmeneti rendelkezés) -csökkenések [00932]
-            00987:
-              label: 'A Kanári-szigeteki hajók és hajózási társaságok különleges rendszere:
-                a negatív adóalapok beszámításának részletezése - A 2023. évi különleges
-                adóalap beszámítása - Az időszak elején alkalmazásra vár/az időszakban
-                keletkezett [00987]'
-            00988:
-              label: 'A Kanári-szigeteki hajók és hajózási társaságok különleges rendszere:
-                a negatív adóalapok beszámításának részletezése - A 2023. évi különleges
-                adóalap beszámítása - Ebben az elszámolásban alkalmazva [00988]'
-            00989:
-              label: 'A Kanári-szigeteki hajók és hajózási társaságok különleges rendszere:
-                a negatív adóalapok beszámításának részletezése - A 2023. évi különleges
-                adóalap beszámítása - Jövőbeli időszakokban alkalmazandó [00989]'
-            '01010':
-              label: 'A Kanári-szigeteki hajók és hajózási társaságok különleges rendszere:
-                a negatív adóalapok beszámításának részletezése - A 2023. évi egyéb
-                tevékenységek adóalapjának beszámítása - Az időszak elején alkalmazásra
-                vár/az időszakban keletkezett [01010]'
             '01043':
               label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
                 érvényesíthető követeléssé (LIS 130. cikk) - Halasztott adókövetelések
@@ -12417,16 +12576,6 @@ modelo:
                 és más, növelt levonásra jogosító célokra adott adományok - 2022 -
                 Ugyanazon szervezetnek ismételt adományozással - Függőben lévő/keletkezett
                 levonás [01073]
-            '01177':
-              label: 'A Kanári-szigeteki hajók és hajózási társaságok különleges rendszere:
-                a negatív adóalapok beszámításának részletezése - A 2023. évi egyéb
-                tevékenységek adóalapjának beszámítása - Ebben az elszámolásban alkalmazva
-                [01177]'
-            '01200':
-              label: 'A Kanári-szigeteki hajók és hajózási társaságok különleges rendszere:
-                a negatív adóalapok beszámításának részletezése - A 2023. évi egyéb
-                tevékenységek adóalapjának beszámítása - Jövőbeli időszakokban alkalmazandó
-                [01200]'
             01258:
               label: Pénzügyi ráfordítások levonhatóságának korlátozása - LIS 16.1.
                 és 16.2. cikke szerinti korlát - m) Korábbi adómegállapítási időszakokból
@@ -12468,82 +12617,11 @@ modelo:
                 és más, növelt levonásra jogosító célokra adott adományok - 2023 -
                 Ugyanazon szervezetnek ismételten nem nyújtott adományok - Jövőbeli
                 időszakokban alkalmazandó [01373]
-            '01374':
-              label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
-                és más, növelt levonásra jogosító célokra adott adományok - 2023 -
-                Ugyanazon szervezetnek ismételt adományozással - Függőben lévő/keletkezett
-                levonás [01374]
-            '01375':
-              label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
-                és más, növelt levonásra jogosító célokra adott adományok - 2023 -
-                Ugyanazon szervezetnek ismételt adományozással - Ebben az elszámolásban
-                alkalmazva [01375]
-            '01376':
-              label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
-                és más, növelt levonásra jogosító célokra adott adományok - 2023 -
-                Ugyanazon szervezetnek ismételt adományozással - Jövőbeli időszakokban
-                alkalmazandó [01376]
-            '01414':
-              label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
-                érvényesíthető követeléssé - Halasztott adókövetelések (DTA). LIS
-                130. cikk - Keletkezés éve - 2023 - Az időszak elején felhasználásra
-                váró halasztott adókövetelések összesen (130.6 a) cikk) [01414]
-            '01416':
-              label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
-                érvényesíthető követeléssé - Halasztott adókövetelések (DTA). LIS
-                130. cikk - Keletkezés éve - 2023 - Az időszak elején felhasználásra
-                váró halasztott adókövetelések - Érvényesíthető követeléssé alakítás
-                jogával [01416]
-            '01417':
-              label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
-                érvényesíthető követeléssé - Halasztott adókövetelések (DTA). LIS
-                130. cikk - Keletkezés éve - 2023 - Az időszak elején felhasználásra
-                váró halasztott adókövetelések - Érvényesíthető követeléssé alakítás
-                joga adótöbblet miatt [01417]
-            01418:
-              label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
-                érvényesíthető követeléssé - Halasztott adókövetelések (DTA). LIS
-                130. cikk - Keletkezés éve - 2023 - Az időszak elején felhasználásra
-                váró halasztott adókövetelések - Érvényesíthető követeléssé alakítás
-                joga nélkül [01418]
-            01419:
-              label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
-                érvényesíthető követeléssé - Halasztott adókövetelések (DTA). LIS
-                130. cikk - Keletkezés éve - 2023 - Az időszakban érvényesíthető követeléssé
-                alakított halasztott adókövetelések [01419]
-            '01420':
-              label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
-                érvényesíthető követeléssé - Halasztott adókövetelések (DTA). LIS
-                130. cikk - Keletkezés éve - 2023 - Jövőbeli időszakokban felhasználásra
-                váró halasztott adókövetelések - Érvényesíthető követeléssé alakítás
-                jogával [01420]
-            '01421':
-              label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
-                érvényesíthető követeléssé - Halasztott adókövetelések (DTA). LIS
-                130. cikk - Keletkezés éve - 2023 - Jövőbeli időszakokban felhasználásra
-                váró halasztott adókövetelések - Érvényesíthető követeléssé alakítás
-                jogával, adótöbblet [01421]
-            '01422':
-              label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
-                érvényesíthető követeléssé - Halasztott adókövetelések (DTA). LIS
-                130. cikk - Keletkezés éve - 2023 - Jövőbeli időszakokban felhasználásra
-                váró halasztott adókövetelések - Érvényesíthető követeléssé alakítás
-                joga nélkül [01422]
             '01423':
               label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
                 érvényesíthető követeléssé - Pozitív nettó adókötelezettség többlete
                 - Keletkezés éve - 2023 - Az időszak elején fennálló pozitív nettó
                 adótöbblet [01423]
-            '01424':
-              label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
-                érvényesíthető követeléssé - Pozitív nettó adókötelezettség többlete
-                - Keletkezés éve - 2023 - A 2008-2015 adómegállapítási időszakokban
-                felhasznált pozitív nettó adótöbblet [01424]
-            '01425':
-              label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
-                érvényesíthető követeléssé - Pozitív nettó adókötelezettség többlete
-                - Keletkezés éve - 2023 - A 2016-tól kezdődő adómegállapítási időszakokban
-                felhasznált pozitív nettó adótöbblet [01425]
             '01575':
               label: Elszámolás II - Az eredménykimutatás eredményét érintő korrekciók
                 részletezése - A LIS 19. cikke szerinti, az Európai Unió vagy az EGT
@@ -12680,48 +12758,6 @@ modelo:
                 adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
                 követeléssé (LIS 130. cikk) - Az átalakítás eredménye: Fizetendő -
                 Bizkaia [01672]'
-            01683:
-              label: Egyes tevékenységek ösztönzésére szolgáló levonások - 2025(****)
-                egyéb levonások a kiemelt közérdekű eseményeket támogató programokhoz
-                kapcsolódóan - Függőben lévő/keletkezett levonás [01683]
-            01684:
-              label: Egyes tevékenységek ösztönzésére szolgáló levonások - 2025(****)
-                egyéb levonások a kiemelt közérdekű eseményeket támogató programokhoz
-                kapcsolódóan - Ebben az elszámolásban alkalmazva [01684]
-            01685:
-              label: Egyes tevékenységek ösztönzésére szolgáló levonások - 2025(****)
-                egyéb levonások a kiemelt közérdekű eseményeket támogató programokhoz
-                kapcsolódóan - Jövőbeli időszakokban alkalmazandó [01685]
-            01694:
-              label: Nonprofit szervezeteknek adott adományok levonása - Általános
-                adományok - Adományok részösszege 2015-2025, ugyanazon szervezetnek
-                ismételten nem nyújtott adományokkal. - Jövőbeli időszakokban alkalmazandó
-                [01694]
-            01697:
-              label: Nonprofit szervezeteknek adott adományok levonása - Általános
-                adományok - Adományok részösszege 2015-2025, ugyanazon szervezetnek
-                ismételten nyújtott adományokkal - Jövőbeli időszakokban alkalmazandó
-                [01697]
-            '01704':
-              label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
-                és más, növelt levonásra jogosító célokra adott adományok - Adományok
-                részösszege 2015-2025, ugyanazon szervezetnek ismételten nem nyújtott
-                adományokkal - Függőben lévő/keletkezett levonás [01704]
-            '01705':
-              label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
-                és más, növelt levonásra jogosító célokra adott adományok - Adományok
-                részösszege 2015-2025, ugyanazon szervezetnek ismételten nem nyújtott
-                adományokkal - Ebben az elszámolásban alkalmazva [01705]
-            '01706':
-              label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
-                és más, növelt levonásra jogosító célokra adott adományok - Adományok
-                részösszege 2015-2025, ugyanazon szervezetnek ismételten nem nyújtott
-                adományokkal - Jövőbeli időszakokban alkalmazandó [01706]
-            01729:
-              label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
-                és más, növelt levonásra jogosító célokra adott adományok - Adományok
-                részösszege 2015-2025, ugyanazon szervezetnek ismételten nyújtott
-                adományokkal - Függőben lévő/keletkezett levonás [01729]
             '01742':
               label: Bizonyos járművek és új töltőinfrastruktúrák szabad amortizációja
                 (LIS 18. kiegészítő rendelkezés, RDL 4/2024) - Növekedés - Évi korrekciók
@@ -12730,11 +12766,6 @@ modelo:
               label: Bizonyos járművek és új töltőinfrastruktúrák szabad amortizációja
                 (LIS 18. kiegészítő rendelkezés, RDL 4/2024) - Növekedés - Évi korrekciók
                 - Átmeneti (korábbi időszakokból eredő) [01820]
-            01930:
-              label: Egyes tevékenységek ösztönzésére szolgáló levonások - 2025(*)
-                Nyugat-afrikai területi beruházások és reklám- és propagandaköltségek
-                (19/1994. törvény 27 bis. cikk) (TAP) - Jövőbeli időszakokban alkalmazandó
-                [01930]
             01961:
               label: Bizonyos járművek és új töltőinfrastruktúrák szabad amortizációja
                 (LIS 18. kiegészítő rendelkezés, RDL 4/2024) - Csökkenés - Évi korrekciók
@@ -12743,22 +12774,6 @@ modelo:
               label: Bizonyos járművek és új töltőinfrastruktúrák szabad amortizációja
                 (LIS 18. kiegészítő rendelkezés, RDL 4/2024) - Csökkenés - Évi korrekciók
                 - Átmeneti (korábbi időszakokból eredő) [01962]
-            02079:
-              label: 'Kiegészítő információk a levonási korlátok számításához - 2024:
-                finanszírozó: az adómegállapítási időszakban keletkezett Kanári-szigeteki
-                spanyol filmes levonás [02079]'
-            02080:
-              label: 'Kiegészítő információk a levonási korlátok számításához - 2024:
-                finanszírozó: az adómegállapítási időszakban keletkezett Kanári-szigeteki
-                élő előadóművészeti és zenei levonás [02080]'
-            02287:
-              label: 'Kiegészítő információk a levonási korlátok számításához - 2024:
-                az adómegállapítási időszakban keletkezett Kanári-szigeteki kutatás-fejlesztési
-                levonás [02287]'
-            02288:
-              label: 'Kiegészítő információk a levonási korlátok számításához - 2024:
-                az adómegállapítási időszakban keletkezett Kanári-szigeteki technológiai
-                innovációs levonás [02288]'
             '02301':
               label: Az eredmény korrekcióinak részletezése - Az adóévi eredménykimutatás
                 eredményének korrekciói - Állandó jellegű korrekció (az IS és az IC
@@ -12781,16 +12796,6 @@ modelo:
               label: Állami és tartományi adóhatóságok együttes adóztatása - Eltérés
                 a hatósági állásponttól egyes helyesbítő önadózási esetekben, amelyek
                 más rovatokba nem tartoznak - Gipuzkoa [02379]
-            '02475':
-              label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
-                és más, növelt levonásra jogosító célokra adott adományok - Adományok
-                részösszege 2015-2025, ugyanazon szervezetnek ismételten nyújtott
-                adományokkal - Ebben az elszámolásban alkalmazva [02475]
-            '02476':
-              label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
-                és más, növelt levonásra jogosító célokra adott adományok - Adományok
-                részösszege 2015-2025, ugyanazon szervezetnek ismételten nyújtott
-                adományokkal - Jövőbeli időszakokban alkalmazandó [02476]
             02490:
               label: 'Halasztott adókövetelések átalakítása az adóhatósággal szemben
                 érvényesíthető követeléssé (LIS 130. cikk) - Helyesbítő bevallás -
@@ -12816,14 +12821,6 @@ modelo:
                 érvényesíthető követeléssé (LIS 130. cikk) - Helyesbítő bevallás -
                 Az AID átalakításának eredménye a rendezés után: Fizetendő - Tartományi
                 adóhatóságok/Navarra (Összesen) [02494]'
-            02495:
-              label: 'Kiegészítő információk a levonási korlátok számításához - 2024:
-                producer: az adómegállapítási időszakban keletkezett Kanári-szigeteki
-                spanyol filmes levonás [02495]'
-            02496:
-              label: 'Kiegészítő információk a levonási korlátok számításához - 2024:
-                producer: az adómegállapítási időszakban keletkezett Kanári-szigeteki
-                élő előadóművészeti és zenei levonás [02496]'
             02786:
               label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
                 érvényesíthető követeléssé - Halasztott adókövetelések (DTA). LIS
