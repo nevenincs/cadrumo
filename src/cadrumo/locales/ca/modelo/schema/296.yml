@@ -28,11 +28,12 @@ modelo:
         page:
           m296-declarante:
             heading: 'Registre de tipus 1: registre de declarant'
+            section:
+              general:
+                heading: Dades identificatives i resum de la declaració
           numbered-boxes:
             heading: Full resum
         section:
-          general:
-            heading: Dades identificatives i resum de la declaració
           resumen:
             heading: Resum de les dades incloses en la declaració
       revision:

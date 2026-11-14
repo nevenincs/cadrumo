@@ -29,11 +29,12 @@ modelo:
         page:
           m296-declarante:
             heading: 'Type 1 record: declarant record'
+            section:
+              general:
+                heading: Identification details and summary of the return
           numbered-boxes:
             heading: Summary sheet
         section:
-          general:
-            heading: Identification details and summary of the return
           resumen:
             heading: Summary of the data included in the return
       revision:

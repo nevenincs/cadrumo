@@ -3845,22 +3845,40 @@ modelo:
         page:
           datoseconomicos:
             heading: Who each income belongs to
+            section:
+              general:
+                heading: Taxpayer each income belongs to
           datoseconomicos-resultados:
             heading: Return summary and calculation
           datoseconomicos-tomadatosampliada:
             heading: Detailed income and deduction data
           datosidentificativos:
             heading: Identification
+            section:
+              general:
+                heading: Spouse who is neither resident nor an IRPF taxpayer
           datosidentificativos-ascendientes:
             heading: Ascendants
           datosidentificativos-conyuge:
             heading: Spouse
+            section:
+              general:
+                heading: Spouse's personal details and residence in the EU or EEA
           datosidentificativos-declarante:
             heading: Declarant
+            section:
+              general:
+                heading: Personal details of the declarant
           datosidentificativos-hijos:
             heading: Children and other descendants
+            section:
+              general:
+                heading: Non-resident descendants living in the EU or EEA
           declaracion:
             heading: Declaration
+            section:
+              general:
+                heading: Autonomous community and chosen taxation option
         section:
           anexoa:
             heading: Home energy improvements, electric vehicles and charging points
@@ -3953,8 +3971,6 @@ modelo:
           gcambioresidenciaextres:
             heading: 'Capital gains on a change of residence outside Spanish territory:
               summary'
-          general:
-            heading: Taxpayer each income belongs to
           gpaccionesres:
             heading: 'Transfers of traded shares: summary'
           gpderechosres:

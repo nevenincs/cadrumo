@@ -64,7 +64,7 @@ heading_key = "modelo.schema.604.form.page.pag-1.heading"
 
 [[revisions.2021-2023.form_layouts.pages.sections]]
 id = "general"
-heading_key = "modelo.schema.604.form.section.general.heading"
+heading_key = "modelo.schema.604.form.page.pag-1.section.general.heading"
 blocks = [
     { kind = "field", id = "field", casilla_id = "decl.tipo-autoliquidacion" },
 ]

@@ -727,7 +727,7 @@ heading_key = "modelo.schema.036.form.page.pag-1.heading"
 
 [[revisions.2025-02-03-y-siguientes.form_layouts.pages.sections]]
 id = "general"
-heading_key = "modelo.schema.036.form.section.general.heading"
+heading_key = "modelo.schema.036.form.page.pag-1.section.general.heading"
 blocks = [
     { kind = "field", id = "field", casilla_id = "decl.nif" },
     { kind = "field", id = "field-2", casilla_id = "decl.apellidos-razon-social" },
@@ -771,7 +771,7 @@ heading_key = "modelo.schema.036.form.page.pag-2b.heading"
 
 [[revisions.2025-02-03-y-siguientes.form_layouts.pages.sections]]
 id = "general"
-heading_key = "modelo.schema.036.form.section.general.heading"
+heading_key = "modelo.schema.036.form.page.pag-2b.section.general.heading"
 blocks = [
     { kind = "field", id = "field", casilla_id = "pj.pjur-tiene-personalidad-juridica" },
     { kind = "field", id = "field-2", casilla_id = "pj.pjur-es-persona-juridica" },
@@ -802,7 +802,7 @@ blocks = [
 
 [[revisions.2025-02-03-y-siguientes.form_layouts.pages.sections]]
 id = "general"
-heading_key = "modelo.schema.036.form.section.general.heading"
+heading_key = "modelo.schema.036.form.page.pag-3.section.general.heading"
 blocks = [
     { kind = "field", id = "field", casilla_id = "rep1.designada-nif" },
     { kind = "field", id = "field-2", casilla_id = "rep1.designada-apellido-1" },
@@ -832,7 +832,7 @@ blocks = [
 
 [[revisions.2025-02-03-y-siguientes.form_layouts.pages.sections]]
 id = "general-2"
-heading_key = "modelo.schema.036.form.section.general-2.heading"
+heading_key = "modelo.schema.036.form.page.pag-3.section.general-2.heading"
 blocks = [
     { kind = "field", id = "field", casilla_id = "rep2.designada-nif" },
     { kind = "field", id = "field-2", casilla_id = "rep2.designada-apellido-1" },
@@ -857,7 +857,7 @@ heading_key = "modelo.schema.036.form.page.pag-4.heading"
 
 [[revisions.2025-02-03-y-siguientes.form_layouts.pages.sections]]
 id = "general"
-heading_key = "modelo.schema.036.form.section.general.heading"
+heading_key = "modelo.schema.036.form.page.pag-4.section.general.heading"
 blocks = [
     { kind = "field", id = "field", casilla_id = "act.actividad-descripcion" },
     { kind = "field", id = "field-2", casilla_id = "act.actividad-tipo-actividad" },
@@ -940,7 +940,7 @@ heading_key = "modelo.schema.036.form.page.pag-5.heading"
 
 [[revisions.2025-02-03-y-siguientes.form_layouts.pages.sections]]
 id = "general"
-heading_key = "modelo.schema.036.form.section.general.heading"
+heading_key = "modelo.schema.036.form.page.pag-5.section.general.heading"
 blocks = [
     { kind = "field", id = "field", casilla_id = "iva.gran-empresa-es-gran-empresa" },
     { kind = "field", id = "field-2", casilla_id = "iva.gran-empresa-es-admon-publica-presupuesto" },
@@ -986,7 +986,7 @@ heading_key = "modelo.schema.036.form.page.pag-6.heading"
 
 [[revisions.2025-02-03-y-siguientes.form_layouts.pages.sections]]
 id = "general"
-heading_key = "modelo.schema.036.form.section.general.heading"
+heading_key = "modelo.schema.036.form.page.pag-6.section.general.heading"
 blocks = [
     { kind = "field", id = "field", casilla_id = "obl.irpf-pagos-fraccionados-actividad" },
     { kind = "field", id = "field-2", casilla_id = "obl.irpf-pagos-fraccionados-atribucion" },
@@ -1008,7 +1008,7 @@ heading_key = "modelo.schema.036.form.page.pag-7.heading"
 
 [[revisions.2025-02-03-y-siguientes.form_layouts.pages.sections]]
 id = "general"
-heading_key = "modelo.schema.036.form.section.general.heading"
+heading_key = "modelo.schema.036.form.page.pag-7.section.general.heading"
 blocks = [
     { kind = "field", id = "field", casilla_id = "ret.retenciones-trabajo-personal" },
     { kind = "field", id = "field-2", casilla_id = "ret.retenciones-actividades-profesionales" },
@@ -1037,7 +1037,7 @@ heading_key = "modelo.schema.036.form.page.pag-9.heading"
 
 [[revisions.2025-02-03-y-siguientes.form_layouts.pages.sections]]
 id = "general"
-heading_key = "modelo.schema.036.form.section.general.heading"
+heading_key = "modelo.schema.036.form.page.pag-9.section.general.heading"
 blocks = [
     { kind = "field", id = "field", casilla_id = "suc-a.nif" },
     { kind = "field", id = "field-2", casilla_id = "suc-b.nif" },
