@@ -2037,4 +2037,8 @@ number = "1907-1911"
 section = ["prorrata"]
 data_type = "ratio"
 semantic_role = "prorrata_definitiva"
-legal_refs = ["orden-eha-789-2010:art-4"]
+# The design prints campo 112 as "Prorrata definitiva 2 decimales" in a 5-digit Num slot
+# (corpus/aeat_official/disenos_registro/modelo_360/files/01-360-orden-eha-789-2010.pdf.extracted.md:127),
+# room for 100,00; LIVA art. 104.Dos states the prorrata as a percentage, 100 times the fraction.
+legal_refs = ["orden-eha-789-2010:art-4", "ley-37-1992:art-104"]
+constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-360-2010"] }
