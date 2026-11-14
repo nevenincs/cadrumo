@@ -53,6 +53,7 @@ import type { FormSession } from "../form/session";
 import { CalculationNotes } from "../workspace/CalculationNotes";
 import { Settlement } from "../workspace/Settlement";
 import { useModeloOperation } from "../WriteScope";
+import { useModeloReading } from "../WriteHoldNotice";
 import { servedRefusal } from "../../../shell/refusal";
 import { RefusalNotice } from "../../RefusalNotice";
 import type { LedgerErrorDetail } from "../../../shell/ledger";
@@ -261,6 +262,9 @@ export function FilingView({
   }, [port, envelope, pending, holds, target]);
   // The write being waited for, whether it is at its dialog or its answer.
   const working = notice?.kind === "busy" ? notice.write : pickerFor;
+  // The window's own read of its own settled write has not answered yet; the
+  // steps stay closed, and say why, until it has.
+  const reading = useModeloReading(holds, target);
   const quiet = working !== null || writeHold !== undefined || pending;
   // A write that is not made and has nothing of its own to say is still said.
   const notDone = (write: Write) => {
@@ -606,7 +610,7 @@ export function FilingView({
         ))}
       </ol>
 
-      {working !== null && (
+      {(working !== null || reading) && (
         <Alert tone="neutral" icon={<Spinner />}>
           {t("desktop.navigation.busy")}
         </Alert>
