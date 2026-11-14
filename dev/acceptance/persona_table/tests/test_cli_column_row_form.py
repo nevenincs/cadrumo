@@ -132,3 +132,40 @@ def test_the_form_leaf_is_found_only_when_the_live_tree_has_it_as_a_command() ->
     assert form_leaf_present(_tree(leaf=False)) is False
     assert form_leaf_present(_tree(leaf=True, group=True)) is False
     assert form_leaf_present(TyperCommand("aeat")) is False
+
+
+_REDACTED = "sha256:0123abcd"
+
+
+def test_a_redacted_value_of_one_row_is_kept_as_printed_and_numeric_rules_stay() -> None:
+    values = parse_form_lines(f"r\tb\t1\t0091\t{_REDACTED}\nr\tb\t1\t0063\t12000.00\nr\tb\t1\t0001\tcalle mayor 1\n")
+
+    assert form_row_figures(values) == {"0091": _REDACTED, "0063": "12000"}
+
+
+def test_a_redacted_value_in_several_rows_or_mixed_with_a_number_has_no_figure() -> None:
+    assert form_row_figures(parse_form_lines(f"r\tb\t1\t0091\t{_REDACTED}\nr\tb\t2\t0091\t{_REDACTED}\n")) == {}
+    assert form_row_figures(parse_form_lines(f"r\tb\t1\t0091\t{_REDACTED}\nr\tb\t2\t0091\t5\n")) == {}
+    assert form_row_figures(parse_form_lines("r\tb\t1\t0091\tsha256:0123ABCD\n")) == {}
+
+
+def test_a_redacted_row_figure_is_added_and_named_while_numeric_conflicts_stay_numeric() -> None:
+    rows = {"0091": _REDACTED, "0067": "40"}
+
+    merged, notes = merge_form_figures((("0067", "41"),), rows)
+
+    assert dict(merged) == {"0067": "41", "0091": _REDACTED}
+    assert notes == ["casilla 0067 scalar 41 differs from its row figure 40", "redacted: 0091"]
+
+
+def test_a_redacted_row_figure_fills_only_an_absent_or_zero_figure_and_a_different_one_conflicts() -> None:
+    assert merge_form_figures((("0091", "0"),), {"0091": _REDACTED}) == ((("0091", _REDACTED),), ["redacted: 0091"])
+    same = merge_form_figures((("0091", _REDACTED),), {"0091": _REDACTED})
+    assert same == ((("0091", _REDACTED),), ["redacted: 0091"])
+    other, notes = merge_form_figures((("0091", "sha256:ffffffff"),), {"0091": _REDACTED})
+    assert dict(other) == {"0091": "sha256:ffffffff"}
+    assert notes == [f"casilla 0091 scalar sha256:ffffffff differs from its row figure {_REDACTED}", "redacted: 0091"]
+
+
+def test_no_redacted_figure_adds_no_note() -> None:
+    assert merge_form_figures((("0100", "1"),), {"0063": "2"})[1] == []

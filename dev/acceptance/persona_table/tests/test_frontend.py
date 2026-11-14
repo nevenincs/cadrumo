@@ -28,6 +28,7 @@ from ..frontend import (
     export_refusal_code,
     extra_figures,
     figure_causes,
+    is_redacted,
     parity,
     parse_result,
     read_results,
@@ -239,6 +240,49 @@ def test_text_figures_compare_as_text() -> None:
     assert figure_causes("tui", {"0001": "ES12"}, {"0001": "ES12"}) == []
     assert figure_causes("tui", {"0001": "ES12"}, {"0001": "es12"}) == ["casilla 0001 tui es12, table ES12"]
     assert figure_causes("tui", {"0001": "10"}, {"0001": "ten"}) == ["casilla 0001 tui ten, table 10"]
+
+
+def test_a_redacted_figure_equals_any_non_empty_table_value_for_its_casilla() -> None:
+    row = _row(figures=(*_FIGURES, ("0091", "12345678Z")))
+    shown = _result(figures={**dict(_FIGURES), "0091": "sha256:0123abcd"})
+    assert (parity(row, "cli", shown).outcome, parity(row, "cli", shown).causes) == ("matched", ())
+    other = _row(figures=(*_FIGURES, ("0091", "87654321X")))
+    assert parity(other, "cli", shown).outcome == "matched"
+    assert figure_causes("cli", {"0001": "ES12"}, {"0001": "sha256:00000000"}) == []
+
+
+def test_a_redacted_figure_without_a_table_value_is_a_difference() -> None:
+    shown = _result(figures={**dict(_FIGURES), "0091": "sha256:0123abcd"})
+    outcome = parity(_row(), "cli", shown)
+    assert (outcome.outcome, outcome.causes) == ("differs", ("casilla 0091 redacted but the table has no value",))
+    assert figure_causes("cli", {"0091": ""}, {"0091": "sha256:0123abcd"}) == [
+        "casilla 0091 cli sha256:0123abcd, table "
+    ]
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "sha256:0123ABCD",
+        "sha256:0123abc",
+        "sha256:0123abcde",
+        "SHA256:0123abcd",
+        "sha256:0123abcg",
+        "sha256: 0123abc",
+        "x sha256:0123abcd",
+    ],
+)
+def test_only_the_exact_redaction_form_is_redacted(text: str) -> None:
+    assert not is_redacted(text)
+    assert figure_causes("cli", {"0091": "12345678Z"}, {"0091": text}) == [f"casilla 0091 cli {text}, table 12345678Z"]
+    assert is_redacted("sha256:0123abcd")
+
+
+def test_a_redacted_figure_is_not_a_cause_for_a_casilla_the_table_lacks_only_when_it_is_not_redacted() -> None:
+    assert figure_causes("cli", {}, {"0091": "plain"}) == []
+    assert figure_causes("cli", {"0505": "1"}, {"0505": "1", "0091": "sha256:0123abcd"}) == [
+        "casilla 0091 redacted but the table has no value"
+    ]
 
 
 def test_a_refused_python_row_matches_a_refusing_surface_with_no_figures() -> None:

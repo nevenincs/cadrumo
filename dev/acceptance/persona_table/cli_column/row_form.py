@@ -8,11 +8,16 @@ values to figures with the table's own single-row rule (:mod:`..row_figures`), w
 
 The JSON form is read as a ``values`` list of objects with the same five names (``record``, ``block``, ``row``,
 ``casilla_id``, ``value``); that shape follows the TAB columns and is not yet confirmed against the command.
+A value the central privacy boundary printed redacted (``sha256:<8 hex>``, see :func:`..frontend.is_redacted`, e.g.
+the tenant NIF 0091) is kept as the text it was printed. It is a figure of a casilla held by exactly one row, and
+fills the merge only where the printed figure is absent or zero; the single-row and conflict rules of the table stay
+those of numeric casillas, and the merge names the casillas kept redacted.
 TODO: confirm the envelope's field names once the leaf is on the tree and adjust :func:`parse_form_result`.
 """
 
 from __future__ import annotations
 
+from collections import Counter
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
@@ -20,6 +25,7 @@ from decimal import Decimal, InvalidOperation
 import typer
 from typer.core import TyperGroup
 
+from ..frontend import is_redacted
 from ..row_figures import merge_row_figures, single_row_figures
 from ..rows import canonical_figures
 
@@ -107,7 +113,8 @@ def form_row_figures(values: Sequence[FormValue]) -> Mapping[str, str]:
 
     Every printed value of a casilla is one row, whichever record and block it is in, so a casilla in two rows has no
     single figure. A casilla any of whose values is not a number is left out, since its rows cannot be counted as
-    amounts. The one-row rule is the table's :func:`..row_figures.single_row_figures`.
+    amounts, except a redacted value, which a casilla held by exactly one row keeps as printed. The one-row rule of
+    the numeric casillas is the table's :func:`..row_figures.single_row_figures`.
     """
     printed: dict[str, dict[str, Decimal | None]] = {}
     for position, item in enumerate(values):
@@ -118,7 +125,14 @@ def form_row_figures(values: Sequence[FormValue]) -> Mapping[str, str]:
         if all(number is not None for number in held.values())
     }
     single = single_row_figures(rows, {casilla: casilla for casilla in rows})
-    return dict(canonical_figures({casilla: Decimal(text) for casilla, text in single.items()}))
+    numeric = dict(canonical_figures({casilla: Decimal(text) for casilla, text in single.items()}))
+    return numeric | _redacted_figures(values)
+
+
+def _redacted_figures(values: Sequence[FormValue]) -> dict[str, str]:
+    """The redacted value of each casilla held by exactly one printed value, as printed."""
+    held = Counter(item.casilla for item in values)
+    return {item.casilla: item.value for item in values if held[item.casilla] == 1 and is_redacted(item.value)}
 
 
 def merge_form_figures(
@@ -126,10 +140,30 @@ def merge_form_figures(
 ) -> tuple[tuple[tuple[str, str], ...], list[str]]:
     """The ``figures`` with each row figure filled where the printed one is zero or absent, and every conflict.
 
-    The table's :func:`..row_figures.merge_row_figures` decides; its result is written as canonical figures again.
+    The table's :func:`..row_figures.merge_row_figures` decides for the numeric row figures; a redacted row figure
+    is filled by the same rule and conflicts only with a different redacted figure. The result is written as
+    canonical figures again. When any figure of the result is redacted, a last entry ``redacted: <casilla ids>``
+    names the casillas kept redacted, so the caller's reason says that they were not compared by content.
     """
-    merged, conflicts = merge_row_figures(dict(figures), rows)
-    return canonical_figures(merged), conflicts
+    numeric = {casilla: text for casilla, text in rows.items() if not is_redacted(text)}
+    merged, conflicts = merge_row_figures(dict(figures), numeric)
+    for casilla, text in rows.items():
+        if is_redacted(text):
+            conflicts += _fill_redacted(merged, casilla, text)
+    result = canonical_figures(merged)
+    kept = [casilla for casilla, text in result if is_redacted(text)]
+    return result, [*conflicts, f"redacted: {', '.join(kept)}"] if kept else conflicts
+
+
+def _fill_redacted(merged: dict[str, object], casilla: str, text: str) -> list[str]:
+    """Fill ``casilla`` with a redacted row figure where nothing is printed; name a different redacted figure."""
+    printed = merged.get(casilla)
+    shown = "" if printed is None else str(printed).strip()
+    if not shown or _number(shown) == 0:
+        merged[casilla] = text
+    elif is_redacted(shown) and shown != text:
+        return [f"casilla {casilla} scalar {shown} differs from its row figure {text}"]
+    return []
 
 
 def form_leaf_present(root: object) -> bool:
