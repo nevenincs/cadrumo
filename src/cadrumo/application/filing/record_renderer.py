@@ -38,6 +38,7 @@ from ...domain.modelos.perceptor_clave_scope import (
     resolve_perceptor_clave_scope,
 )
 from .export_parity import did_page_suppressed
+from .export_ratio_scale import casilla_values_as_designed
 from .export_refusal_doors import ExportRefusalReason, export_input_decision
 from .m347_declarado_row_scope import require_m347_declarado_casillas_have_one_row
 from .party_name_slots import require_declared_party_names
@@ -67,6 +68,7 @@ def render_layout_records(
     :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
     """
     occurrences: list[RenderedRecordOccurrence] = []
+    designed_values = casilla_values_as_designed(casilla_values, revision=registry_snapshot.revision)
     source_digests = {ref: source.sha256 for ref, source in registry_snapshot.sources.items()}
     clave_scope = (
         resolve_perceptor_clave_scope(period=draft.period) if governs_perceptor_records(draft.modelo) else None
@@ -109,7 +111,7 @@ def render_layout_records(
                         draft=draft,
                         headers=headers,
                         producer_snapshot=producer_snapshot,
-                        casilla_values=casilla_values,
+                        casilla_values=designed_values,
                         binding_values=binding_values,
                         row=row,
                         render_context=context,
