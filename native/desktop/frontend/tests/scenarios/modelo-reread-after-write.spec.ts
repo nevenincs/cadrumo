@@ -99,7 +99,7 @@ const readAgain = (target: Page) =>
     name: label("workspace.modelo.read_again"),
   });
 
-test("a read overtaken during the write's own read does not say it failed and the hold is released", async ({
+test("the write's own read is not offered to be read again while it runs and releases the hold", async ({
   page: target,
 }) => {
   await openCheckedDeclaration(target, serveVerification);
@@ -107,18 +107,19 @@ test("a read overtaken during the write's own read does not say it failed and th
     window.__rereadTest!.holdFirst = true;
   });
   await verify(target).click();
-  // The write's own read is under way and the notice offers to read again.
+  // The write's own read is under way: the notice does not ask the person to
+  // read again, and the hold is gone once that read answers.
   await expect
     .poll(() => target.evaluate(() => !!window.__rereadTest!.release))
     .toBe(true);
-  await readAgain(target).click();
+  await expect(readAgain(target)).toHaveCount(0);
   await expect(target.locator(".modelo-write-hold")).toHaveCount(0);
   await target.evaluate(() => window.__rereadTest!.release!());
   await expect(failedWords(target)).toHaveCount(0);
   await expect(target.locator(".modelo-write-hold")).toHaveCount(0);
   const state = await target.evaluate(() => window.__rereadTest!);
   expect(state.verifies).toBe(1);
-  expect(state.formCalls).toBe(2);
+  expect(state.formCalls).toBe(1);
 });
 
 test("a read that really failed says so and keeps the control that reads again", async ({
