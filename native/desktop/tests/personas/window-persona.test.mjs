@@ -2058,6 +2058,8 @@ async function exportFile(row, runDir, persona, out) {
  * or `wrongKind` when the picker was asked and the window then stayed idle
  * and silent, as it does for a name of a kind it does not save.
  */
+const EXPORT_QUIET_MS = 30_000;
+
 async function exportOutcome(destination, queued, before) {
   const notDone = label("workspace.modelo.outcome.not_done");
   let quietSince = null;
@@ -2084,7 +2086,12 @@ async function exportOutcome(destination, queued, before) {
         return null;
       }
       quietSince ??= Date.now();
-      return Date.now() - quietSince > 6000 ? { wrongKind: true } : null;
+      // An export the window took can run several seconds without drawing a
+      // busy state (Modelo 100 took 8 s on build 12), so silence counts as a
+      // refused kind only after EXPORT_QUIET_MS.
+      return Date.now() - quietSince > EXPORT_QUIET_MS
+        ? { wrongKind: true }
+        : null;
     },
     {
       timeout: TIMEOUT.export,
