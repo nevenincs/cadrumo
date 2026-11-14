@@ -45,6 +45,7 @@ casilla_ids = [
     "representante.telefono",
     "representante.domicilio-codigo-postal",
     "representante.domicilio-municipio",
+    "representante.domicilio-municipio-nombre",
     "representante.domicilio-provincia",
     "local-indirecto.uso-destino",
     "local-indirecto.codigo-postal",
