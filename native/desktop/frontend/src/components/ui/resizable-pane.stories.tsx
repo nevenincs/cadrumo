@@ -13,7 +13,8 @@ const REM = 16;
 
 function Pane({ edge }: { edge: PaneEdge }) {
   const [size, setSize] = useState<number | null>(null);
-  const across = edge === "bottom";
+  const across = edge === "top" || edge === "bottom";
+  const leads = edge === "start" || edge === "top";
   const pane = (
     <ResizablePane
       edge={edge}
@@ -34,11 +35,11 @@ function Pane({ edge }: { edge: PaneEdge }) {
     <div
       className={`flex h-72 w-full min-w-0 rounded-md border border-border ${across ? "flex-col" : "flex-row"}`}
     >
-      {edge === "start" && pane}
+      {leads && pane}
       <div className="min-h-0 min-w-0 flex-1 p-3 text-sm text-muted-foreground">
         The area beside the pane keeps at least half of the box.
       </div>
-      {edge !== "start" && pane}
+      {!leads && pane}
     </div>
   );
 }
@@ -48,11 +49,12 @@ export const Edges: Story = {
     <div>
       <Specimen
         className="flex-col items-stretch"
-        title="At the start, at the end, under"
+        title="At the start, at the end, above, under"
         note="Drag the line, or focus it: arrow keys move it, Home and End go to the least and the most, Enter or a double click returns the default."
       >
         <Pane edge="start" />
         <Pane edge="end" />
+        <Pane edge="top" />
         <Pane edge="bottom" />
       </Specimen>
     </div>

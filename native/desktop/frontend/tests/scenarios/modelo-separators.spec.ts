@@ -89,6 +89,8 @@ type Panels = { name: string; width: number; height: number };
 type Line = {
   index: number;
   name: string;
+  /** The edge of its row or column the pane is drawn against. */
+  edge: string;
   orientation: string;
   disabled: string | null;
   x: number;
@@ -209,6 +211,7 @@ function measure(target: Page): Promise<Line[]> {
       return {
         index,
         name: handle.getAttribute("aria-label") ?? "",
+        edge: pane.getAttribute("data-pane-edge") ?? "",
         orientation: handle.getAttribute("aria-orientation") ?? "",
         disabled: handle.getAttribute("aria-disabled"),
         x: Math.round(box.x * 10) / 10,
@@ -262,13 +265,16 @@ async function travel(target: Page, line: Line): Promise<Travel> {
   const most = await paneSize(target, line.name);
   await target.keyboard.press("Home");
   // The key that grows the pane: toward the form for a pane drawn against
-  // the end, away from it for the rail.
-  const rail = line.name === label("desktop.modelo.side.resize");
-  const grow =
-    line.orientation === "vertical"
-      ? rail
-        ? "ArrowRight"
-        : "ArrowLeft"
+  // the end or the bottom, away from it for the rail and the notes above
+  // the form.
+  const leads = line.edge === "start" || line.edge === "top";
+  const vertical = line.orientation === "vertical";
+  const grow = vertical
+    ? leads
+      ? "ArrowRight"
+      : "ArrowLeft"
+    : leads
+      ? "ArrowDown"
       : "ArrowUp";
   await target.keyboard.press(grow);
   const keyed = await paneSize(target, line.name);
@@ -281,9 +287,9 @@ async function travel(target: Page, line: Line): Promise<Travel> {
   const y = box.y + box.height / 2;
   await target.mouse.move(x, y);
   await target.mouse.down();
-  if (line.orientation === "vertical")
-    await target.mouse.move(rail ? x + DRAG : x - DRAG, y, { steps: 4 });
-  else await target.mouse.move(x, y - DRAG, { steps: 4 });
+  const along = leads ? DRAG : -DRAG;
+  if (vertical) await target.mouse.move(x + along, y, { steps: 4 });
+  else await target.mouse.move(x, y + along, { steps: 4 });
   await target.mouse.up();
   const dragged = await paneSize(target, line.name);
   await handle.focus();
@@ -307,9 +313,15 @@ for (const size of SIZES) {
       await arrange(target, arrangement);
       const drawn = await measure(target);
 
-      // One separator for each pane that is drawn, and none for a hidden one.
+      // One separator for each pane that is drawn, and none for a hidden
+      // one. The notes above the form have theirs where the window leaves
+      // them room to move (modelo-toggles.spec.ts holds it at these sizes).
+      const band = label("desktop.modelo.band.resize");
       expect(
-        drawn.map((line) => line.name).sort(),
+        drawn
+          .map((line) => line.name)
+          .filter((name) => name !== band)
+          .sort(),
         "the separators drawn",
       ).toEqual(
         [
