@@ -61,6 +61,7 @@ import {
   ScopedWriteHoldNotice,
   useModeloOperation,
 } from "../WriteScope";
+import { useModeloReading } from "../WriteHoldNotice";
 import { ReviewDialog } from "../dialogs/ReviewDialog";
 import { FormView } from "../form/FormView";
 import { useFormSession, type FormSession } from "../form/session";
@@ -248,6 +249,8 @@ function Ready({
   const operation = useModeloOperation();
   const held = operation.hold !== undefined;
   const busy = operation.hold?.phase === "running";
+  // The window's own read of its own settled write has not answered yet.
+  const reading = useModeloReading(operation.holds, operation.target);
   const [said, setNotice] = useState<HistoryNotice>(null);
   // A check this window ran has finished: what it concluded is the read
   // model's, taken from the declaration read after it.
@@ -884,6 +887,7 @@ function Ready({
       stagedCount={session.stagedCount}
       panes={panes}
       busy={busy}
+      reading={reading}
       writeHeld={held}
       prerequisiteHeld={prerequisiteHeld || evidence !== null}
       notice={
