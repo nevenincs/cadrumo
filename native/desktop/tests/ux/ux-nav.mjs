@@ -516,13 +516,39 @@ export function pageWheelTarget(id) {
     el.scrollIntoView({ block: "nearest" });
     b = box();
   }
-  const x = Math.floor((b.left + b.right) / 2);
-  const y = Math.floor((b.top + b.bottom) / 2);
-  const hit = document.elementFromPoint(x, y);
+  // The wheel scrolls the innermost scroller under the pointer first, so the
+  // point must lie where no nested scroller with room to move covers el.
+  const nestedScroller = (hit) => {
+    for (let node = hit; node && node !== el; node = node.parentElement)
+      if (
+        /auto|scroll/.test(getComputedStyle(node).overflowY) &&
+        node.scrollHeight > node.clientHeight + 1
+      )
+        return true;
+    return false;
+  };
+  let x = Math.floor((b.left + b.right) / 2);
+  let y = Math.floor((b.top + b.bottom) / 2);
+  let hit = document.elementFromPoint(x, y);
+  let nestedOnly = false;
+  if (hit && el.contains(hit) && nestedScroller(hit)) {
+    nestedOnly = true;
+    search: for (let i = 1; i < 8; i += 1)
+      for (let j = 1; j < 8; j += 1) {
+        const px = Math.floor(b.left + ((b.right - b.left) * i) / 8);
+        const py = Math.floor(b.top + ((b.bottom - b.top) * j) / 8);
+        const at = document.elementFromPoint(px, py);
+        if (at && el.contains(at) && !nestedScroller(at)) {
+          [x, y, hit, nestedOnly] = [px, py, at, false];
+          break search;
+        }
+      }
+  }
   const max = el.scrollHeight - el.clientHeight;
   return {
     x,
     y,
+    nestedOnly,
     before: el.scrollTop,
     // A container already at its end is wheeled the other way.
     direction: el.scrollTop >= max - 1 ? -1 : 1,
@@ -558,6 +584,14 @@ export async function wheelContainer(id, deltaY = 300) {
       source,
       moved: false,
       error: "container not inside window",
+    };
+  if (target.nestedOnly)
+    return {
+      ...target,
+      source,
+      moved: false,
+      unmeasured: true,
+      error: "every point over the container lies over a nested scroller",
     };
   let error = null;
   try {
