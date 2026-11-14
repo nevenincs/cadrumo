@@ -1,5 +1,13 @@
 // Navigation helpers shared by the specs (built on ux-driver.mjs).
-import { win, exec, label, sleep, waitFor, clickText, clickSelector } from "./ux-driver.mjs";
+import {
+  win,
+  exec,
+  label,
+  sleep,
+  waitFor,
+  clickText,
+  clickSelector,
+} from "./ux-driver.mjs";
 
 // ---------------------------------------------------------------------------
 // Navigation helpers shared by the specs
@@ -10,11 +18,10 @@ export const tablist = (key) =>
 
 /** Dismiss the first-run setup dialog with its own "not now". */
 export async function dismissSetup() {
-  const shown = await exec(
-    () =>
-      [...document.querySelectorAll('[role="dialog"]')].some(
-        (d) => d.getClientRects().length > 0,
-      ),
+  const shown = await exec(() =>
+    [...document.querySelectorAll('[role="dialog"]')].some(
+      (d) => d.getClientRects().length > 0,
+    ),
   );
   if (!shown) return false;
   const done = await clickText('[role="dialog"]', "button", [
@@ -42,12 +49,15 @@ export async function showList() {
       return (
         !!g &&
         !document.querySelector(".declarations-loading") &&
-        g.querySelectorAll('[data-slot="data-grid-row"][data-kind="data"]').length > 0
+        g.querySelectorAll('[data-slot="data-grid-row"][data-kind="data"]')
+          .length > 0
       );
     });
   if (await ready()) return;
-  const pressed = await exec(
-    () => document.querySelector('[data-rail="declarations"]')?.getAttribute("aria-pressed"),
+  const pressed = await exec(() =>
+    document
+      .querySelector('[data-rail="declarations"]')
+      ?.getAttribute("aria-pressed"),
   );
   if (pressed !== "true") await rail("declarations");
   await waitFor(ready, { timeout: 120_000, what: "the declarations list" });
@@ -59,9 +69,12 @@ export async function openDeclaration(row) {
   const search = await win.browser.$("input.declarations-search");
   await search.waitForExist({ timeout: 15_000 });
   await search.setValue(row.modelo);
-  await clickText(".declarations-view", '[data-slot="segmented-control-item"]', [
-    label("workspace.declarations.list.filter.all"),
-  ], "startsWith");
+  await clickText(
+    ".declarations-view",
+    '[data-slot="segmented-control-item"]',
+    [label("workspace.declarations.list.filter.all")],
+    "startsWith",
+  );
   const key = await waitFor(
     () =>
       exec(
@@ -75,8 +88,9 @@ export async function openDeclaration(row) {
           if (exact) return exact.getAttribute("data-key");
           const near = rows.filter(
             (r) =>
-              (r.querySelector('[data-column="modelo"]')?.textContent ?? "").trim() === modelo &&
-              r.textContent.includes(year),
+              (
+                r.querySelector('[data-column="modelo"]')?.textContent ?? ""
+              ).trim() === modelo && r.textContent.includes(year),
           );
           return near.length >= 1 ? near[0].getAttribute("data-key") : null;
         },
@@ -92,7 +106,12 @@ export async function openDeclaration(row) {
     );
     const cell = r?.querySelector('[data-column="declaration"]') ?? r;
     cell.dispatchEvent(
-      new MouseEvent("dblclick", { bubbles: true, cancelable: true, view: window, detail: 2 }),
+      new MouseEvent("dblclick", {
+        bubbles: true,
+        cancelable: true,
+        view: window,
+        detail: 2,
+      }),
     );
   }, key);
   await waitFor(
@@ -108,7 +127,12 @@ export async function openDeclaration(row) {
 
 /** Choose a Modelo view tab by its label key. */
 export async function openView(key) {
-  const ok = await clickText(tablist("desktop.modelo.views.label"), '[role="tab"]', [label(key)], "startsWith");
+  const ok = await clickText(
+    tablist("desktop.modelo.views.label"),
+    '[role="tab"]',
+    [label(key)],
+    "startsWith",
+  );
   if (!ok) throw new Error(`the view ${label(key)} is not offered`);
   await sleep(700);
 }
@@ -118,12 +142,22 @@ export async function openView(key) {
 export async function chooseTab(scope, text) {
   const chosen = await exec(
     (scope, text) => {
-      const list = [...document.querySelectorAll(scope)].find((l) => l.getClientRects().length);
+      const list = [...document.querySelectorAll(scope)].find(
+        (l) => l.getClientRects().length,
+      );
       const tab = [...(list?.querySelectorAll('[role="tab"]') ?? [])].find(
-        (t) => t.getClientRects().length && (t.textContent ?? "").replace(/\s+/g, " ").trim().startsWith(text),
+        (t) =>
+          t.getClientRects().length &&
+          (t.textContent ?? "").replace(/\s+/g, " ").trim().startsWith(text),
       );
       if (!tab) return null;
-      tab.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, cancelable: true, button: 0 }));
+      tab.dispatchEvent(
+        new MouseEvent("mousedown", {
+          bubbles: true,
+          cancelable: true,
+          button: 0,
+        }),
+      );
       tab.focus();
       return tab.getAttribute("aria-selected");
     },
@@ -142,7 +176,13 @@ export async function chooseTab(scope, text) {
 export async function openRailPage(id, rootSel, attr = "aria-pressed") {
   await dismissSetup();
   const rootShown = () =>
-    exec((sel) => [...document.querySelectorAll(sel)].some((e) => e.getClientRects().length > 0), rootSel);
+    exec(
+      (sel) =>
+        [...document.querySelectorAll(sel)].some(
+          (e) => e.getClientRects().length > 0,
+        ),
+      rootSel,
+    );
   const state = await exec(
     (id, attr) => {
       const button = document.querySelector(`[data-rail="${id}"]`);
@@ -156,17 +196,34 @@ export async function openRailPage(id, rootSel, attr = "aria-pressed") {
     id,
     attr,
   );
-  if (!state.offered) return { reached: false, reason: `no shown rail button [data-rail=${id}]` };
-  if (state.disabled) return { reached: false, reason: `rail button ${id} is held (aria-disabled)` };
+  if (!state.offered)
+    return { reached: false, reason: `no shown rail button [data-rail=${id}]` };
+  if (state.disabled)
+    return {
+      reached: false,
+      reason: `rail button ${id} is held (aria-disabled)`,
+    };
   if (!state.on || !(await rootShown())) {
     try {
       await rail(id);
     } catch (error) {
-      return { reached: false, reason: `pressing rail ${id} failed: ${error.message}` };
+      return {
+        reached: false,
+        reason: `pressing rail ${id} failed: ${error.message}`,
+      };
     }
   }
-  const root = await waitFor(rootShown, { timeout: 20_000, what: `page ${rootSel}`, soft: true });
-  return root ? { reached: true } : { reached: false, reason: `${rootSel} not shown after pressing rail ${id}` };
+  const root = await waitFor(rootShown, {
+    timeout: 20_000,
+    what: `page ${rootSel}`,
+    soft: true,
+  });
+  return root
+    ? { reached: true }
+    : {
+        reached: false,
+        reason: `${rootSel} not shown after pressing rail ${id}`,
+      };
 }
 
 /** Close the settings popover with Escape. */
@@ -185,16 +242,24 @@ export async function openLedgerSection(id, setup) {
     const chosen = await chooseTab(tablist("desktop.ledger.sections"), name);
     return chosen === "true"
       ? { reached: true }
-      : { reached: false, reason: chosen === null ? `no tab "${name}"` : `tab "${name}" not selected` };
+      : {
+          reached: false,
+          reason:
+            chosen === null ? `no tab "${name}"` : `tab "${name}" not selected`,
+        };
   }
-  const opened = await clickText(
-    ".ledger-head",
-    "button.ledger-setup",
-    [label("desktop.ledger.setup"), ...setup.map((key) => label(`desktop.ledger.section.${key}`))],
-  );
+  const opened = await clickText(".ledger-head", "button.ledger-setup", [
+    label("desktop.ledger.setup"),
+    ...setup.map((key) => label(`desktop.ledger.section.${key}`)),
+  ]);
   if (!opened) return { reached: false, reason: "no setup menu button" };
   await sleep(500);
-  const picked = await clickText('[role="menu"]', '[role="menuitem"]', [name], "startsWith");
+  const picked = await clickText(
+    '[role="menu"]',
+    '[role="menuitem"]',
+    [name],
+    "startsWith",
+  );
   if (!picked) {
     await win.browser.keys("Escape");
     return { reached: false, reason: `no setup menu item "${name}"` };
@@ -208,20 +273,50 @@ export async function openLedgerSection(id, setup) {
         .startsWith(name),
     name,
   );
-  return now ? { reached: true } : { reached: false, reason: `setup button does not show "${name}"` };
+  return now
+    ? { reached: true }
+    : { reached: false, reason: `setup button does not show "${name}"` };
 }
 
 /** Which page the window shows now: the roots drawn and the rail buttons pressed. */
 export function pageNow() {
   const drawn = (sel) =>
-    [...document.querySelectorAll(sel)].some((e) => e.getClientRects().length > 0);
+    [...document.querySelectorAll(sel)].some(
+      (e) => e.getClientRects().length > 0,
+    );
   return {
     ledger: drawn("section.ledger-page"),
     profile: drawn("section.user-profile-page"),
     aeatSync: drawn("section.aeat-sync-page"),
     declarations: drawn("section.declarations-workspace"),
-    pressed: [...document.querySelectorAll('[data-rail][aria-pressed="true"]')].map((b) =>
-      b.getAttribute("data-rail"),
-    ),
+    pressed: [
+      ...document.querySelectorAll('[data-rail][aria-pressed="true"]'),
+    ].map((b) => b.getAttribute("data-rail")),
   };
+}
+
+/** The pressed state of a Modelo workspace pane toggle ("side", "details" or
+ * "placement"): "true", "false", or null when the toggle is not drawn. */
+export const paneToggleState = (pane) =>
+  exec(
+    (pane) =>
+      document
+        .querySelector(
+          `section.declarations-workspace [data-pane-toggle="${pane}"]`,
+        )
+        ?.getAttribute("aria-pressed") ?? null,
+    pane,
+  );
+
+/** Press a Modelo workspace pane toggle until it is `on`. Answers the state
+ * it reached: "true", "false", or null when the toggle is not drawn. */
+export async function setPaneToggle(pane, on) {
+  let state = await paneToggleState(pane);
+  if (state === null || state === String(on)) return state;
+  await clickSelector(
+    `section.declarations-workspace [data-pane-toggle="${pane}"]`,
+  );
+  await sleep(700);
+  state = await paneToggleState(pane);
+  return state;
 }
