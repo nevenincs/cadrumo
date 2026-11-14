@@ -39,7 +39,13 @@ from cadrumo.application.modelo.work_verification_contracts import (
     ModeloWorkVerifyPublicResultV2,
     ModeloWorkVerifyRequest,
 )
+from cadrumo.application.modelo.workbench_operations import (
+    MODELO_WORK_FORM_OPERATION_DEFINITION_ID,
+    ModeloWorkbenchFormRequest,
+)
+from cadrumo.application.modelo.workbench_projection import ModeloWorkbenchFormProjectionV1
 from cadrumo.application.operations.public_scalar import restore_scalar
+from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.modelo_export_artefact import ModeloExportArtefact
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.entrypoints.tests.persona_materialisation import (
@@ -47,11 +53,14 @@ from cadrumo.entrypoints.tests.persona_materialisation import (
     MaterialisedPersona,
     PersonaMaterialisationError,
     PersonaWorld,
+    enter_return_work_inputs,
     materialised_persona,
     run_operation,
     settle_operation,
+    state_offered_statements,
 )
 from cadrumo.entrypoints.tests.persona_rental_carries import attest_pending_rental_carries
+from cadrumo.entrypoints.tests.persona_work_income_statements import states_for
 from cadrumo.tests.personas import ExpectedValue, Persona, PersonaCatalogueError, persona_ids, read_persona
 
 from .calendar_sweep import calendar_observations
@@ -103,12 +112,15 @@ __all__ = [
     "Lifecycle",
     "PreparedReturn",
     "cases",
+    "holds_calculation",
     "plan_rows",
     "prepare_return",
+    "record_statements",
     "replay_scope",
     "run_lifecycle",
     "run_return",
     "stated_values",
+    "statements_needing_calculation",
 ]
 
 
@@ -308,6 +320,62 @@ def _calculate(
             subject=work_unit_id,
         )
     return calculated
+
+
+def record_statements(materialised: MaterialisedPersona, plan: PlannedRow, prepared: PreparedReturn) -> None:
+    """State what the persona's operator states on the prepared return, and stop before a plain calculation.
+
+    These are the statements :func:`_calculate` makes around its calculations, through the same functions and
+    operations: the values the persona gives (``enter_return_work_inputs``), its prior values and work-income
+    statements (``state_offered_statements``) and a let property's pending carry
+    (``attest_pending_rental_carries``). Each travels as a calculating edit, so the return holds a calculation
+    once one was applied; :func:`holds_calculation` reads whether it does. A statement the work unit's form
+    does not offer yet is not made.
+
+    Raises:
+        PersonaMaterialisationError: When an operation refuses a statement.
+    """
+    world = materialised.world
+    work_unit_id = prepared.work_unit_id
+    if world.work_inputs:
+        enter_return_work_inputs(world, work_unit_id)
+    state_offered_statements(
+        world, modelo=plan.modelo, filing_year=plan.year, period=plan.period, work_unit_id=work_unit_id
+    )
+    if plan.modelo == "100":
+        attest_pending_rental_carries(materialised.persona, world, work_unit_id, plan.year)
+
+
+def statements_needing_calculation(materialised: MaterialisedPersona, plan: PlannedRow) -> tuple[str, ...]:
+    """The kinds of statement the persona makes for the return that its form offers only on a calculated work unit.
+
+    A Modelo 100 work-income statement is offered with the calculation's findings, and a let property's carry on
+    the row the calculation emits; :func:`record_statements` makes neither on a work unit holding no calculation.
+    """
+    world = materialised.world
+    kinds: list[str] = []
+    if states_for(world.work_income_none_statements, world.envelope, modelo=plan.modelo, filing_year=plan.year):
+        kinds.append("work_income_none")
+    if plan.modelo == "100" and any(
+        rental.pendiente_intereses_reparacion is not None for rental in materialised.persona.rental_properties
+    ):
+        kinds.append("rental_carries")
+    return tuple(kinds)
+
+
+def holds_calculation(world: PersonaWorld, work_unit_id: str) -> bool:
+    """Whether the work unit holds a calculation, read from the edit baseline its form admits (false if none)."""
+    form = run_operation(
+        world,
+        MODELO_WORK_FORM_OPERATION_DEFINITION_ID,
+        ModeloWorkbenchFormRequest(
+            profile_id=world.profile_id, work_unit_id=work_unit_id, output_language=OutputLanguage.EN
+        ),
+        ModeloWorkbenchFormProjectionV1,
+        subject=work_unit_id,
+    )
+    baseline = form.admitted_baseline
+    return baseline is not None and baseline.to_baseline().current_calculation_revision_id is not None
 
 
 def _compare(

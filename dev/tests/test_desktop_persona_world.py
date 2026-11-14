@@ -10,6 +10,7 @@ from uuid import UUID
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.storage.custody.tests.portable_password_custody import portable_password_custody
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.adapters.persistence.storage.tests.profile_session_setup import reset_test_profile_session
@@ -46,8 +47,11 @@ def _registry_horizon() -> int:
         return year_envelope(operation).horizon
 
 
-def _stored_profile(storage_root: Path, profile_id: str) -> tuple[str, ProfileSetupState]:
-    """Sign in to the stored profile with the materialiser's passphrase and read its record back."""
+def _stored_profile(storage_root: Path, profile_id: str) -> tuple[str, ProfileSetupState, dict[str, bool]]:
+    """Sign in to the stored profile with the materialiser's passphrase and read its record and work units back.
+
+    The work units map each stored work unit id to whether it holds a calculation.
+    """
     identity = UUID(profile_id)
     with (
         bundled_indexed_authority().operation() as operation,
@@ -61,20 +65,25 @@ def _stored_profile(storage_root: Path, profile_id: str) -> tuple[str, ProfileSe
                 name=profile_id, passphrase_callback=lambda: PERSONA_PROFILE_CREDENTIAL, profile_decode_context=decode
             )
             record = ProfileRecordRepository.for_current_session(identity, profile_decode_context=decode).load(identity)
+            catalogue = WorkUnitCatalogueRepository(bucket_id=profile_id).load()
         finally:
             close_active_bucket_session()
             reset_test_profile_session()
-    return str(record.profile_id), record.setup_state
+    held = {unit_id: unit.current_calculation_revision_id is not None for unit_id, unit in catalogue.work_units.items()}
+    return str(record.profile_id), record.setup_state, held
 
 
+@pytest.mark.parametrize(
+    ("persona", "leaves_uncalculated"), [(PERSONA, False), ("traductora-profesional", True)], ids=["held", "open"]
+)
 def test_world_holds_the_rows_the_table_plans_and_a_profile_that_signs_in(
-    disposable_root: Path, capsys: pytest.CaptureFixture[str]
+    disposable_root: Path, capsys: pytest.CaptureFixture[str], persona: str, leaves_uncalculated: bool
 ) -> None:
     horizon = _registry_horizon()
     ambient = os.environ.get(STORAGE_ROOT_ENV)
 
     status = desktop_persona_world.main(
-        ["--persona", PERSONA, "--horizon", str(horizon), "--storage-root", str(disposable_root / "world")]
+        ["--persona", persona, "--horizon", str(horizon), "--storage-root", str(disposable_root / "world")]
     )
 
     assert status == 0
@@ -83,11 +92,11 @@ def test_world_holds_the_rows_the_table_plans_and_a_profile_that_signs_in(
 
     from ..acceptance.persona_table import sweep
 
-    plans, _emitted = sweep.plan_rows(PERSONA, horizon)
+    plans, _emitted = sweep.plan_rows(persona, horizon)
     assert [(row["modelo"], row["year"], row["period"]) for row in report["rows"]] == [
         (plan.modelo, plan.year, plan.period) for plan in plans
     ]
-    assert report["persona"] == PERSONA
+    assert report["persona"] == persona
     assert report["horizon"] == horizon
     assert report["passphrase_source"] == desktop_persona_world.CREDENTIAL_SOURCE
     assert PERSONA_PROFILE_CREDENTIAL not in json.dumps(report)
@@ -98,13 +107,16 @@ def test_world_holds_the_rows_the_table_plans_and_a_profile_that_signs_in(
             assert row["work_unit_id"], row
             assert row["pre_calculate_outcome"] is None
             assert row["stages"][0] == "create"
-            assert "calculate" in row["stages"]
-            assert row["driver_calculate"] in {"calculated", "refused"}
+            assert "calculate" not in row["stages"] or row["calculate_inherited_reason"], row
+            assert row["driver_calculate"] in {desktop_persona_world.NOT_RUN, "calculated", "refused"}
+            assert (row["driver_calculate"] == desktop_persona_world.NOT_RUN) == (
+                row["calculate_inherited_reason"] is None and row["driver_calculate"] != "refused"
+            ), row
         else:
             assert row["pre_calculate_outcome"], row
             assert row["stages"] == []
             assert row["driver_calculate"] is None
-    assert any(row["driver_calculate"] == "calculated" for row in report["rows"]), report["rows"]
+            assert row["calculate_inherited_reason"] is None
     assert PERSONA_PROFILE_CREDENTIAL not in json.dumps(report)
 
     storage_root = Path(report["storage_root"])
@@ -112,9 +124,14 @@ def test_world_holds_the_rows_the_table_plans_and_a_profile_that_signs_in(
     assert storage_root.name == "cadrumo-storage"
     assert storage_root.is_relative_to(disposable_root)
     assert (storage_root / "buckets" / report["profile_id"]).is_dir()
-    stored_id, setup_state = _stored_profile(storage_root, report["profile_id"])
+    stored_id, setup_state, held = _stored_profile(storage_root, report["profile_id"])
     assert stored_id == report["profile_id"]
     assert setup_state is ProfileSetupState.COMPLETE
+    prepared = [row for row in report["rows"] if row["prepared"]]
+    # A row reported not run holds no calculation in the stored profile; one reported calculated holds one.
+    assert any(row["driver_calculate"] == desktop_persona_world.NOT_RUN for row in prepared) is leaves_uncalculated
+    for row in prepared:
+        assert held[row["work_unit_id"]] is (row["driver_calculate"] != desktop_persona_world.NOT_RUN), row
 
 
 def test_a_root_that_holds_files_is_refused(tmp_path: Path) -> None:
