@@ -85,7 +85,11 @@ export function usePageArrival({
   useEffect(() => {
     if (declarationsVisible && wantsDeclarations.current) {
       wantsDeclarations.current = false;
-      declarationsPage.current?.focus();
+      // The page may already have put the keyboard on a row of its own, the
+      // one a declaration was opened from; that is more specific than the
+      // page and is kept.
+      const page = declarationsPage.current;
+      if (!page?.contains(document.activeElement)) page?.focus();
     }
   }, [
     declarationsVisible,
