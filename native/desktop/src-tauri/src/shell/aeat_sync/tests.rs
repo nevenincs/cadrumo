@@ -1243,10 +1243,13 @@ fn the_borrador_years_are_only_the_served_ones() {
     for none in [
         json!({"status": {"filed_declaration_years": []}}),
         json!({"status": {}}),
-        json!({"status": {"filed_declaration_years": [25]}}),
+        json!({"status": {"filed_declaration_years": ["2025"]}}),
     ] {
         assert!(borrador_years(&none).is_empty(), "{none}");
     }
+    // The years are the backend's: the host keeps any it serves, whatever its digits.
+    let short = json!({"status": {"filed_declaration_years": [25]}});
+    assert_eq!(borrador_years(&short), [25]);
 }
 
 #[test]
@@ -1316,7 +1319,7 @@ fn a_filed_row_outside_the_closed_words_is_refused() {
         ("local_record_at", Value::Null),
         ("differences", json!(["amount"])),
         ("modelo", json!("../303")),
-        ("filing_year", json!(20250)),
+        ("filing_year", json!("2025")),
         ("receipt_confirmed", json!("yes")),
     ] {
         let mut row = served_row();

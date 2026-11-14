@@ -876,8 +876,7 @@ impl Edit {
                 let bounded = |answer: &Option<String>, limit: usize| {
                     answer.as_ref().is_none_or(|token| token.len() <= limit)
                 };
-                if !election::TAX_YEARS.contains(&tax_year)
-                    || (criterion.is_none() && codigo_comercio_accounting.is_none())
+                if (criterion.is_none() && codigo_comercio_accounting.is_none())
                     || !bounded(&criterion, 64)
                     || !bounded(&codigo_comercio_accounting, 16)
                 {
@@ -1649,12 +1648,16 @@ mod tests {
         }
         for edit in [
             json!({"kind":"imputation_election","tax_year":2025,"criterion":null,"codigo_comercio_accounting":null}),
-            json!({"kind":"imputation_election","tax_year":999,"criterion":"devengo","codigo_comercio_accounting":null}),
-            json!({"kind":"imputation_election","tax_year":10000,"criterion":"devengo","codigo_comercio_accounting":null}),
             json!({"kind":"imputation_election","tax_year":2025,"criterion":"a".repeat(65),"codigo_comercio_accounting":null}),
             json!({"kind":"imputation_election","tax_year":2025,"criterion":null,"codigo_comercio_accounting":"a".repeat(17)}),
         ] {
             assert_eq!(refusal(edit.clone()), "refused", "{edit}");
+        }
+        for year in [999, 10000] {
+            let forwarded = prepared(json!({"kind":"imputation_election","tax_year":year,
+                "criterion":"devengo","codigo_comercio_accounting":null}))
+            .unwrap();
+            assert_eq!(forwarded.payload["tax_year"], year);
         }
         for edit in [
             json!({"kind":"imputation_election","tax_year":-1,"criterion":"x","codigo_comercio_accounting":null}),
