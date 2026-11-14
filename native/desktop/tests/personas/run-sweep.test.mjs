@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
-import { selectCases } from "./run-sweep.mjs";
+import { lineProblem, selectCases } from "./run-sweep.mjs";
 
 const planned = [
   { persona: "sociedad-limitada", horizon: 2025, rows: 4 },
@@ -60,4 +60,71 @@ test("the command exits non-zero naming an unknown persona", () => {
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
+});
+
+const world = { rows: [{ modelo: "200", year: 2025, period: "0A" }] };
+const personaLine = {
+  surface: "window",
+  tree: "t",
+  persona: "sociedad-limitada",
+  modelo: null,
+  year: null,
+  period: null,
+  loads: true,
+  refusal_code: null,
+  figures: null,
+  reason: "",
+  log: null,
+};
+const rowLine = {
+  ...personaLine,
+  modelo: "200",
+  year: 2025,
+  period: "0A",
+  calculate: "pass",
+  verify: "incomplete",
+  export: "not-reached",
+};
+
+test("a row line may state export_served, as a boolean only", () => {
+  assert.equal(
+    lineProblem([personaLine, rowLine], world, "t", "sociedad-limitada"),
+    null,
+  );
+  assert.equal(
+    lineProblem(
+      [personaLine, { ...rowLine, export_served: false }],
+      world,
+      "t",
+      "sociedad-limitada",
+    ),
+    null,
+  );
+  assert.match(
+    lineProblem(
+      [personaLine, { ...rowLine, export_served: "no" }],
+      world,
+      "t",
+      "sociedad-limitada",
+    ),
+    /export_served is not a boolean/,
+  );
+  assert.match(
+    lineProblem(
+      [{ ...personaLine, export_served: true }, rowLine],
+      world,
+      "t",
+      "sociedad-limitada",
+    ),
+    /line keys differ/,
+  );
+  assert.match(
+    lineProblem(
+      [personaLine, { ...rowLine, surprise: 1 }],
+      world,
+      "t",
+      "sociedad-limitada",
+    ),
+    /line keys differ/,
+  );
 });
