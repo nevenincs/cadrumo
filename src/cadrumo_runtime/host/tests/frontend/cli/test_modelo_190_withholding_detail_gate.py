@@ -105,6 +105,11 @@ def _profile_session(
             "taxpayer_type.irpf_income_categories": "actividad_economica",
             "censo.activity_start_date": "2020-01-01",
             "withholding.colegio_concertado": "false",
+            # A filer stated as neither a gran empresa nor a large public administration files quarterly;
+            # an unstated filer has no quarterly window.
+            "censo.large_company": "false",
+            "withholding.has_employees": "true",
+            "censo.public_administration_budget_gt_6000000": "false",
         }
         if attested_periods is not None:
             values["withholding.modelo_111_no_retenciones_periods"] = attested_periods

@@ -250,6 +250,14 @@ def seed_revision(
     )
     cr_repo = CalculationRevisionCatalogueRepository()
     cr_repo.save(upsert_calculation_revision(cr_repo.load(), revision))
+    # Persisting a calculation points its work unit at the revision it saved;
+    # export, verification and filing read the work unit's current revision.
+    WorkUnitCatalogueRepository().save(
+        upsert_work_unit(
+            WorkUnitCatalogueRepository().load(),
+            work_unit.model_copy(update={"current_calculation_revision_id": calculation_revision_id}),
+        ),
+    )
     return work_unit_id, calculation_revision_id
 
 

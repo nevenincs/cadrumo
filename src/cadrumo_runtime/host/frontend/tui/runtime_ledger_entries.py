@@ -4,10 +4,15 @@ Every door here submits one registered ``ledger.*`` operation for the exact
 profile and session the workbench was admitted for, and refuses a result its
 terminal receipt does not support: another profile, another record, a refusal
 receipt, or an effect the request cannot have caused.
+
+Add entry is offered only when the runtime describes ``ledger.add`` under this
+session with the exact request and result schemas this door submits and reads.
+Its form is built from the request schema the runtime served.
 """
 
 from __future__ import annotations
 
+import time
 from collections.abc import Callable
 from decimal import Decimal, InvalidOperation
 from typing import Final
@@ -87,10 +92,17 @@ from cadrumo.application.ledger.track_operation import (
 )
 from cadrumo.application.ledger.workspace import LedgerWorkspaceArea
 from cadrumo.application.operations.frontend_projection import OperationPublicProjectionV1
+from cadrumo.application.operations.registry import OperationPublicDefinitionContractV1
+from cadrumo.application.operations.schema_identity import OperationSchemaIdentityV1
 from cadrumo.application.operator_actions.catalogue import lookup_action
 from cadrumo.application.review.filter import LedgerReviewStatus
-from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
+from cadrumo.core.operations import OperationEffect, OperationFrontendProjection, OperationTerminalCondition
 from cadrumo.entrypoints.tui.ledger.entries_add import LedgerEntryAddScreen
+from cadrumo.entrypoints.tui.ledger.entries_add_form import (
+    LedgerAddFormUnavailableError,
+    LedgerAddFormV1,
+    read_served_form,
+)
 from cadrumo.entrypoints.tui.ledger.entries_browse import LedgerEntriesBrowseScreen
 from cadrumo.entrypoints.tui.ledger.entries_doors import (
     LedgerEntriesDoorsV1,
@@ -105,9 +117,13 @@ from cadrumo.entrypoints.tui.ledger.models import (
 )
 from cadrumo.entrypoints.tui.ledger.tools import LedgerToolV1
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
 from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 
 from .operations.runtime_profile_session import RuntimeProfileSession
+
+_CONTRACT_SECONDS: Final = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
 
 _LIFECYCLE_SUCCESS_STATES: Final[dict[LedgerLifecycleOperationId, str]] = {
     LEDGER_ARCHIVE_OPERATION_DEFINITION_ID: "ARCHIVED",
@@ -261,6 +277,44 @@ def _add_matches(
         and _decimal(transaction.amount) == _decimal(request.amount)
         and len(result.bucket_event_ids) <= 1
     )
+
+
+def _schema(kind: str, model_type: type[BaseModel]) -> OperationSchemaIdentityV1:
+    return OperationSchemaIdentityV1.from_model(
+        schema_id=f"{LEDGER_ADD_OPERATION_DEFINITION_ID}.{kind}", schema_version=1, model_type=model_type
+    )
+
+
+def ledger_add_contract_matches(contract: OperationPublicDefinitionContractV1) -> bool:
+    """Whether ``contract`` is exactly the ``ledger.add`` this door submits and reads."""
+    return (
+        contract.definition_id == LEDGER_ADD_OPERATION_DEFINITION_ID
+        and contract.request_schema == _schema("request", LedgerAddRequest)
+        and contract.result_schema == _schema("result", LedgerAddOperationResult)
+    )
+
+
+def compose_ledger_add_form(client: FrontendClient) -> LedgerAddFormV1 | None:
+    """Read the Add entry form from what the runtime serves for ``ledger.add``, or ``None``.
+
+    The runtime describes the operation under the client's live scope; a
+    refused description (including one whose schema does not match its
+    fingerprint), a contract that is not exactly the one this door submits, or
+    a schema with a required fact it serves no words or binding for, leaves Add entry
+    unavailable. No hand-written list of facts stands in for the description.
+    """
+    if client.frontend is not OperationFrontendProjection.TUI:
+        return None
+    try:
+        description = client.describe(LEDGER_ADD_OPERATION_DEFINITION_ID, deadline=time.monotonic() + _CONTRACT_SECONDS)
+    except (FrontendRefusedError, RefusalError):
+        return None
+    if not ledger_add_contract_matches(description.contract):
+        return None
+    try:
+        return read_served_form(description.request_json_schema)
+    except LedgerAddFormUnavailableError:
+        return None
 
 
 def _remove_matches(
@@ -581,8 +635,24 @@ def compose_runtime_ledger_exclusion_submitter(
 
 
 def compose_entries_tools(client: FrontendClient, profile_label: str) -> tuple[LedgerToolV1, ...]:
-    """The entry and export tools, all bound to one retained session of the workbench's profile."""
+    """The entry and export tools, all bound to one retained session of the workbench's profile.
+
+    Add entry is left out when the runtime does not serve a ``ledger.add`` this door can submit.
+    """
     doors = compose_runtime_ledger_entries_doors(client, profile_label=profile_label)
+    form = compose_ledger_add_form(client)
+    add = (
+        ()
+        if form is None
+        else (
+            LedgerToolV1(
+                key="ledger.tool.entries.add",
+                label_key="tui.ledger.entry_tools.tool.add",
+                area=LedgerWorkspaceArea.ENTRIES,
+                build=lambda controller: LedgerEntryAddScreen(controller, doors, form),
+            ),
+        )
+    )
     return (
         LedgerToolV1(
             key="ledger.tool.entries.browse",
@@ -590,12 +660,7 @@ def compose_entries_tools(client: FrontendClient, profile_label: str) -> tuple[L
             area=LedgerWorkspaceArea.ENTRIES,
             build=lambda controller: LedgerEntriesBrowseScreen(controller, doors),
         ),
-        LedgerToolV1(
-            key="ledger.tool.entries.add",
-            label_key="tui.ledger.entry_tools.tool.add",
-            area=LedgerWorkspaceArea.ENTRIES,
-            build=lambda controller: LedgerEntryAddScreen(controller, doors),
-        ),
+        *add,
         LedgerToolV1(
             key="ledger.tool.entries.export",
             label_key="tui.ledger.entry_tools.tool.export",
@@ -622,6 +687,8 @@ __all__ = [
     "RuntimeLedgerExclusionSubmitterV1",
     "RuntimeLedgerLifecycleTuiDoorV1",
     "compose_entries_tools",
+    "compose_ledger_add_form",
     "compose_runtime_ledger_entries_doors",
     "compose_runtime_ledger_exclusion_submitter",
+    "ledger_add_contract_matches",
 ]

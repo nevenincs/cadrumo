@@ -116,7 +116,7 @@ legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:ar
 id = "06"
 number = "06"
 section = ["actividades_economicas_estimacion_directa"]
-semantic_role = "retenciones_ingresos_a_cuenta"
+semantic_role = "irpf_pf_retenciones_ingresos_a_cuenta_directa"
 withholding_side = "suffered"
 constraints = { sign = "non_negative", legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"] }
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
@@ -153,7 +153,7 @@ legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:ar
 id = "10"
 number = "10"
 section = ["actividades_agricolas_ganaderas_forestales_pesqueras"]
-semantic_role = "retenciones_ingresos_a_cuenta"
+semantic_role = "irpf_pf_retenciones_ingresos_a_cuenta_agraria"
 input_kind = "bound"
 binding = "modelo-130-retenciones-agrarias"
 constraints = { sign = "non_negative", legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"] }

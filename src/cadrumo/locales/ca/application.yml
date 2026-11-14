@@ -1178,6 +1178,52 @@ application:
       wallet_local_recurrence_divergence: La cartera de l'AEAT i la recurrència local
         difereixen; cal una revisió abans de generar el resultat automàtic.
   ledger:
+    add:
+      choice:
+        business_classification:
+          business: Activitat
+          mixed: Mixt
+          not_yet_processed: Sense processar
+          personal: Personal
+        direction:
+          incoming: Ingrés
+          internal_transfer: Traspàs propi
+          outgoing: Despesa
+      field:
+        accrual_date: Data de meritació a la Renda (AAAA-MM-DD)
+        amount: Import, sense signe
+        arrendamiento_ref: Arrendament vinculat
+        art_104_tres_exclusion: Exclusió de l'art. 104.Tres
+        booked_date: Data d'operació (AAAA-MM-DD)
+        business_classification: Classificació
+        business_pct: Part afecta a l'activitat (0 a 1)
+        category_id: Categoria de despesa
+        counterparty: Contrapart
+        counterparty_country: País de la contrapart (dues lletres)
+        counterparty_identification_state: Estat d'identificació IVA de la contrapart
+        currency: Moneda (EUR si es deixa en blanc)
+        deduction_fact_kind: Fet de deducció d'IVA
+        description: Concepte
+        direction: Sentit
+        gasto_capital_inmobiliario: Concepte de despesa de l'immoble
+        inmueble_ref: Immoble vinculat
+        input_classification: Classificació d'entrada per a prorrata
+        investment_asset_id: Identificador del bé d'inversió
+        irpf_category: Categoria d'IRPF
+        iva_amount: Quota d'IVA
+        iva_category: Categoria d'IVA
+        iva_rate: Tipus d'IVA (per exemple 0.21)
+        notes: Notes
+        operation_date: Data de l'operació (AAAA-MM-DD)
+        own_account_id: Compte propi (acc-01)
+        prorrata_reference: Referència de prorrata
+        prorrata_sector: Sector de prorrata
+        purchase_invoice_evidence_id: Identificador del justificant de compra
+        recargo_amount: Import del recàrrec d'equivalència
+        source_jurisdiction: Jurisdicció d'origen (codi de país)
+        taxable_base: Base imposable
+        usage_ratio_id: Identificador del percentatge d'ús
+        value_date: Data valor (AAAA-MM-DD)
     confirmation_block:
       served:
         ambiguous_identity: La identitat de la contrapart no està clara
