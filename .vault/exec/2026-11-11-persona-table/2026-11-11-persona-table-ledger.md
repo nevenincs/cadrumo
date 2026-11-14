@@ -5,7 +5,7 @@ tags:
 date: '2026-11-11'
 modified: '2026-11-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:6f6b9ee38167fd5d9f596f32f2b185f7c9beac6f71a9b01fea7dfc4b5e3671a5'
+body_hash: 'sha256:d1196141adbf3c5e9d476ab2b02e33b2d1c0d315d031da49151776af728ad589'
 related:
   - "[[2026-11-11-persona-table-plan]]"
 ---
@@ -196,6 +196,12 @@ related:
 - `S63` `M` `.vault/plan/2026-11-11-persona-table-plan.md`
 - `S63` `verify:` `persona table rows for this Step green in the published table` -> `pass`
 - `S63` `by:` `ACCEPTANCE`
+- `S64` `M` `.vault/plan/2026-11-11-persona-table-plan.md`
+- `S64` `M` `dev/acceptance/persona_table/probe.py`
+- `S64` `verify:` `python -m dev.acceptance.persona_table probe on published head 2e273a9e66 (285 returns: 277 typed-findings, 8 typed-refusal, 0 untyped-exception, 0 unknown-settlement)` -> `pass`
+- `S64` `by:` `ACCEPTANCE`
+- `S11` `M` `.vault/plan/2026-11-11-persona-table-plan.md`
+- `S11` `verify:` `test_refund_account_authority.py + test_export_refusal_doors.py on tui 1397b95ef6 (7 passed); t80/t82 tables 0 red` -> `pass`
 
 ## Notes
 
