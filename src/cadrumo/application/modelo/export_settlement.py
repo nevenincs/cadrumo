@@ -53,7 +53,12 @@ from ...core.payment_instalment_election import (
 from ...core.result_disposition import ResultDisposition
 from ...domain.deadlines.models import ChargeAccount, RefundAccount
 from ...domain.iva.sepa_marca import SepaMarca, derive_sepa_marca
-from .action_errors import instalment_election_refusal, own_account_missing_error
+from .action_errors import (
+    ModeloChargeAccountMissingError,
+    ModeloRefundAccountMissingError,
+    instalment_election_refusal,
+    own_account_missing_error,
+)
 from .export_contracts import ModeloExportDesignIntegrityError, ModeloExportSettlementRefusedError
 from .export_field_refusal import export_design_fault_refusal
 from .preconditions import build_modelo_precondition_failure_for_scenario
@@ -249,15 +254,22 @@ def _payment_values(
     }
 
 
+def _refund_account_missing(
+    legal_refs: Callable[[], tuple[str, ...]] | None,
+) -> ModeloChargeAccountMissingError | ModeloRefundAccountMissingError:
+    """The refusal of a refund with no account to pay it into, citing the law ``legal_refs`` reads."""
+    context: dict[str, object] = {"result_disposition": ResultDisposition.DEVOLUCION.value}
+    cited = () if legal_refs is None else legal_refs()
+    if cited:
+        context["legal_refs"] = ", ".join(cited)
+    return own_account_missing_error("refund", context=context)
+
+
 def _refund_values(
     amount: Decimal, refund_account: RefundAccount | None, legal_refs: Callable[[], tuple[str, ...]] | None
 ) -> dict[str, object]:
     if refund_account is None or refund_account.iban is None:
-        context: dict[str, object] = {"result_disposition": ResultDisposition.DEVOLUCION.value}
-        cited = () if legal_refs is None else legal_refs()
-        if cited:
-            context["legal_refs"] = ", ".join(cited)
-        raise own_account_missing_error("refund", context=context)
+        raise _refund_account_missing(legal_refs)
     values: dict[str, object] = {_REFUND_AMOUNT_FIELD: amount}
     marca = derive_sepa_marca(iban=refund_account.iban, bank_country_code=refund_account.bank_country_code)
     if marca is SepaMarca.ESPANA:
