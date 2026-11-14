@@ -29,6 +29,7 @@ from ....domain.calculations.registry.schema import BindingDefinition, ModeloRev
 from ....domain.calculations.registry.schema_references import PeriodSelector
 from ....domain.iva.flow import IvaFlowDirection
 from ....domain.iva.schema import IvaCashAccountingTreatment, IvaCategory, IvaLedgerObservationRole, IvaRateKind
+from ....domain.modelos.calculation_revision_sources import bound_input_source_ref
 from ..source_mesh import CalculationSourceProvenance, CalculationSourceResolution
 from ..terminal_origin_audit import collect_terminal_origin_diagnostics
 
@@ -238,3 +239,24 @@ def test_a_fold_value_with_no_terminal_node_is_still_reported() -> None:
     )
 
     assert [diagnostic.reason for diagnostic in diagnostics] == ["terminal_origin_mismatch"]
+
+
+def test_a_bound_input_node_does_not_cost_an_empty_fold_its_exemption() -> None:
+    """A casilla the resolver supplied directly stands behind no binding, so the empty fold stays exempt."""
+    bound_input = CalculationSourceProvenance(
+        resolver_id="ledger_iva_aggregation",
+        resolved_binding_source=BindingSourceKind.LEDGER_IVA_AGGREGATION,
+        contributor_source_kind=BindingSourceKind.LEDGER_IVA_AGGREGATION.value,
+        contributor_binding_source=BindingSourceKind.LEDGER_IVA_AGGREGATION,
+        lineage_role=CalculationSourceLineageRole.PRIMARY,
+        source_ref=bound_input_source_ref("07"),
+        parent_source_ref=None,
+        source_casilla_ids=("07",),
+    )
+    zero = _ledger_resolution(Decimal("0")).model_copy(update={"provenance": (bound_input,)})
+    nonzero = _ledger_resolution(Decimal("12.50")).model_copy(update={"provenance": (bound_input,)})
+
+    assert collect_terminal_origin_diagnostics(_revision(_ledger_binding()), zero) == ()
+    assert [d.reason for d in collect_terminal_origin_diagnostics(_revision(_ledger_binding()), nonzero)] == [
+        "terminal_origin_mismatch"
+    ]
