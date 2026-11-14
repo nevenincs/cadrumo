@@ -8,6 +8,7 @@ import {
   type ReactNode,
   type RefObject,
 } from "react";
+import { createPortal } from "react-dom";
 import { Icon } from "@/components/ui/icon";
 import { IconButton } from "@/components/ui/icon-button";
 import { fittedPaneSize, ResizablePane } from "@/components/ui/resizable-pane";
@@ -73,13 +74,12 @@ const PaneDoors = createContext<{
 
 /**
  * The controls that show and hide the panes beside the form and set where
- * the details go, for the form's toolbar, each with its own icon: the rail
- * at the start, the details at the end or under the form, and the line
- * between the form and the details. They stay together and are drawn
- * whatever is shown, so none comes and goes with another's state. Outside a
- * workspace there are no panes, and nothing is drawn.
+ * the details go, each with its own icon: the rail at the start, the details
+ * at the end or under the form, and the line between the form and the
+ * details. They stay together and are drawn whatever is shown, so none
+ * comes and goes with another's state.
  */
-export function WorkspacePaneToggles() {
+function WorkspacePaneToggles() {
   const doors = useContext(PaneDoors);
   const t = useStrings();
   if (!doors) return null;
@@ -152,6 +152,11 @@ function DetailsToggles({
       </IconButton>
     </>
   );
+}
+
+/** The pane controls, drawn in `place` once the workspace has drawn it. */
+function PaneControls({ place }: { place: HTMLElement | null }) {
+  return place ? createPortal(<WorkspacePaneToggles />, place) : null;
 }
 
 function useBoxSize() {
@@ -417,6 +422,7 @@ export function FormPanes({
   form,
   details,
   staged,
+  controls,
 }: {
   panes: WorkspacePanes;
   /** The id of the tab panel this area is. */
@@ -426,6 +432,9 @@ export function FormPanes({
   /** Null where the declaration has no details to show. */
   details: ReactNode | null;
   staged: ReactNode;
+  /** Where the pane controls are drawn: a place in the workspace's view
+   * bar, so they stay put whatever the panes do to the form's width. */
+  controls: HTMLElement | null;
 }) {
   const t = useStrings();
   const [panel, room] = useBoxSize();
@@ -475,6 +484,7 @@ export function FormPanes({
   // anew, and keep what they read.
   return (
     <PaneDoors.Provider value={doors}>
+      <PaneControls place={controls} />
       <div
         ref={panel}
         id={panelId}
