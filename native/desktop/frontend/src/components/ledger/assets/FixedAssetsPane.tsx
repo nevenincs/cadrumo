@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { Alert } from "@/components/ui/alert";
+import { cn } from "@/components/ui/cn";
 import { EmptyState } from "@/components/ui/empty";
 import { Icon } from "@/components/ui/icon";
 import { IconButton } from "@/components/ui/icon-button";
+import { useScrolls } from "@/components/ui/useScrolls";
 import type { LedgerPort } from "../../../shell/ledger";
 import { inLanguage } from "../../../shell/ledgerLanguage";
 import type { ActivityAssetListResult } from "../../../shell/ledgerSetup";
@@ -98,6 +100,8 @@ export function FixedAssetsPane({
   const [asked, setAsked] = useState(0);
   const [added, setAdded] = useState(false);
   const [width, setWidth] = useState<number | null>(null);
+  const [scroller, setScroller] = useState<HTMLElement | null>(null);
+  const scrolls = useScrolls(scroller);
 
   const ask = (next: AssetFormRequest | null) => {
     setRequest(next);
@@ -212,7 +216,19 @@ export function FixedAssetsPane({
   const onElement = request !== null && request.assetId !== null;
   return (
     <div className="ledger-assets-fixed flex min-h-0 flex-1">
-      <div className="flex min-w-0 flex-1 flex-col gap-3 overflow-y-auto">
+      <div
+        ref={setScroller}
+        // A pane that scrolls is a Tab stop, so the Page and End keys move
+        // it without the pointer.
+        tabIndex={scrolls ? 0 : undefined}
+        role={scrolls ? "group" : undefined}
+        aria-label={scrolls ? t(ASSET_KEYS.area.fixed) : undefined}
+        className={cn(
+          "flex min-w-0 flex-1 flex-col gap-3 overflow-y-auto",
+          scrolls &&
+            "outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
+        )}
+      >
         <div className="flex flex-wrap items-center gap-2">
           <WriteHold>
             <IconButton

@@ -36,49 +36,20 @@ const MIN_THUMB = 28;
 /** WCAG 1.4.11: a user interface component against its surroundings. */
 const MIN_CONTRAST = 3;
 
-/**
- * Scrollers that still break a check, each with the file that owns the fix.
- * An entry is removed when its file is changed; the guard fails on a stale
- * entry (one that matched nothing), so this list cannot outlive its reason.
- */
-const ALLOWED: {
+interface Allowed {
   /** A part of the scroller's described selector. */
   selector: string;
   /** The check it is excused from. */
   check: "thumb" | "wheel" | "bar" | "keyboard";
   reason: string;
-}[] = [
-  {
-    selector: "[role=tabpanel]",
-    check: "keyboard",
-    reason:
-      "the Modelo Check, Export and Sources panels scroll as tabindex -1 panels whose first control is Tab stop 7; the panels are drawn in src/components/modelo/workspace/Workspace.tsx, which the view tab list change is editing",
-  },
-  {
-    selector: "section.group/calendar.calendar-page",
-    check: "keyboard",
-    reason:
-      "the calendar page scrolls as a section that is no Tab stop; src/components/FilingCalendar.tsx",
-  },
-  {
-    selector: "div.calendar-aside",
-    check: "keyboard",
-    reason:
-      "the calendar's side column scrolls and is no Tab stop (its first control is stop 14); src/components/FilingCalendar.tsx:1003",
-  },
-  {
-    selector: "div.ledger-assets-fixed",
-    check: "keyboard",
-    reason:
-      "the fixed assets pane scrolls as a div that is no Tab stop; src/components/ledger/assets/FixedAssetsPane.tsx:215",
-  },
-  {
-    selector: "section.aeat-sync-page",
-    check: "keyboard",
-    reason:
-      "the AEAT sync body scrolls as a div that is no Tab stop; src/components/aeatSync/AeatSyncPage.tsx",
-  },
-];
+}
+
+/**
+ * Scrollers that still break a check, each with the file that owns the fix.
+ * An entry is removed when its file is changed; the guard fails on a stale
+ * entry (one that matched nothing), so this list cannot outlive its reason.
+ */
+const ALLOWED: Allowed[] = [];
 
 // ---------------------------------------------------------------------------
 // The scan, as it runs in the page.
@@ -977,8 +948,26 @@ test("the checker reports a scroller whose bar is hidden and passes a plain one"
 test("the allow-list holds nothing that no longer applies", () => {
   // Only a run of every page test can tell that an entry matched nothing.
   if (audited.size < SIZES.length * 4) return;
-  for (const [index, entry] of ALLOWED.entries())
-    expect(used.has(index), `stale: ${entry.selector} (${entry.reason})`).toBe(
-      true,
-    );
+  for (const entry of staleEntries(ALLOWED, used))
+    expect(false, `stale: ${entry.selector} (${entry.reason})`).toBe(true);
+});
+
+/** The entries of an allow-list that excused nothing in a run. */
+function staleEntries(
+  allowed: readonly Allowed[],
+  matched: ReadonlySet<number>,
+) {
+  return allowed.filter((_, index) => !matched.has(index));
+}
+
+test("the allow-list check reports an entry that excused nothing", () => {
+  const entry: Allowed = {
+    selector: "div.gone",
+    check: "keyboard",
+    reason: "stands in for a scroller that was fixed",
+  };
+  expect(staleEntries([entry], new Set()), "an unmatched entry").toEqual([
+    entry,
+  ]);
+  expect(staleEntries([entry], new Set([0])), "a matched entry").toEqual([]);
 });

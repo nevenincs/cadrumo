@@ -127,6 +127,11 @@ errors:
     m210_imputation_no_filing_year: La imputació immobiliària M210 requereix un exercici
       de declaració no nul.
     parameter_unknown: El paràmetre {parameter_id} no està registrat.
+    previous_filing_casillas_conflicting: La declaració del model {source_modelo}
+      de {source_filing_year} ({source_period}) que tens desada conté les caselles
+      {casilla_ids} dues vegades, amb el número antic i amb el número qualificat per
+      pàgina, amb valors diferents. Corregeix aquesta declaració perquè cada casella
+      tingui un sol valor i torna a calcular.
     previous_filing_casillas_unobserved: 'La declaració del model {source_modelo}
       de {source_filing_year} ({source_period}) que tens desada no mostra les caselles
       {casilla_ids}, que aquest càlcul arrossega d''ella. Una casella que no mostra
