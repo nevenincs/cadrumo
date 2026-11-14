@@ -4622,6 +4622,7 @@
         "dev.acceptance.persona_table.cli_column.hygiene",
         "dev.acceptance.persona_table.cli_column.intake",
         "dev.acceptance.persona_table.cli_column.keys",
+        "dev.acceptance.persona_table.cli_column.row_form",
         "dev.acceptance.persona_table.cli_column.runtime",
         "dev.acceptance.persona_table.cli_column.statements",
         "dev.acceptance.persona_table.cli_column.sweep",

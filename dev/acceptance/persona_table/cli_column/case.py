@@ -16,6 +16,7 @@ from dataclasses import dataclass
 from functools import cache
 from pathlib import Path
 
+from cadrumo.entrypoints.cli.tests.cli_runner import cadrumo_click_command
 from cadrumo.entrypoints.tests.persona_materialisation import PERSONA_PROFILE_CREDENTIAL
 from cadrumo.tests.env_scope import scoped_env_var
 from dev.acceptance.installed_cli import authority_generation
@@ -38,6 +39,7 @@ from .driver import (
 )
 from .hygiene import Redactor, remove_secret_bearing
 from .intake import LineWriter, Outcome, persona_line
+from .row_form import form_leaf_present
 from .runtime import RuntimeSetupError, e2e_parent, remove_snapshot, run_world, served_root, teardown_root
 from .world_report import ReturnKey, RowPlan, WorldReport
 
@@ -164,6 +166,7 @@ def build_case(
         trace=trace,
         done=done,
         calculate=spec.calculate,
+        form_door=form_leaf_present(cadrumo_click_command()),
     )
 
 
