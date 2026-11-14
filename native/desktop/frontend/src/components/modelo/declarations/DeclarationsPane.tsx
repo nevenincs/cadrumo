@@ -134,6 +134,7 @@ export function DeclarationsPane({
           view={view}
           onViewChange={onViewChange}
           holds={modeloWritesFor(ownedMemory)}
+          kept={ownedMemory}
           language={language}
           locale={locale}
           onBack={onBack}

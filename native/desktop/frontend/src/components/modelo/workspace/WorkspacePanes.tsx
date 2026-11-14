@@ -44,11 +44,13 @@ const DETAILS_SIDE = { size: 22, min: 8, max: 40, share: 0.45 };
 // Under the form the details open at two fifths of the area and give way to
 // the form's least room on a short window.
 const DETAILS_BOTTOM = { share: 0.4, min: 6, max: 48, maxShare: 0.6 };
-// The room under the form kept for the details however short the window,
-// in rem: more than their least, so their line always has room to move.
-// Where the window cannot hold it beside the form's least room, the
-// workspace scrolls as a whole rather than clipping either.
+// The room under the form kept for the details before a band above the form
+// gives way to them, in rem.
 const DETAILS_BOTTOM_ROOM = 10;
+// The least room under the form's least height that stacking needs, in rem:
+// the details' least and two rem of travel for their line. A window that
+// cannot give it draws the details beside the form instead.
+const DETAILS_STACK_ROOM = DETAILS_BOTTOM.min + 2;
 // The least width in rem the form keeps beside the details, so a box's
 // label stays readable once its value goes under it. Where the window
 // cannot hold it beside the details' least, the details give way to it.
@@ -62,7 +64,13 @@ const BAND_KEEP_REM = 6;
 const remPx = () =>
   parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
 
-type PaneDoor = { open: boolean; toggle(): void; controls: string };
+type PaneDoor = {
+  open: boolean;
+  toggle(): void;
+  controls: string;
+  /** Whether the window holds the door as drawn, so pressing it does nothing. */
+  held?: boolean;
+};
 const PaneDoors = createContext<{
   side: PaneDoor;
   /** Null where the declaration has no details. */
@@ -145,6 +153,7 @@ function DetailsToggles({
         size="sm"
         aria-pressed={beside}
         aria-controls={controls}
+        aria-disabled={placement.held || undefined}
         data-pane-toggle="placement"
         onClick={placement.toggle}
       >
@@ -336,14 +345,35 @@ function keptAbove(least: FormLeast, height: number, kept: number): number {
   );
 }
 
+/** Whether the area can hold the form's least room and the details' least
+ * under it with room for their line to move; true until it is measured. */
+function stackFits(
+  least: FormLeast,
+  room: { height: number } | null,
+  rem: number,
+): boolean {
+  if (least.fixed <= 0 || room === null) return true;
+  return room.height - least.fixed >= DETAILS_STACK_ROOM * rem + HANDLES;
+}
+
 /** Whether the rail is shown and where the details go: as the person chose,
- * or as the area's width suggests. */
-function chosenOrAutomatic(panes: WorkspacePanes, width: number, rem: number) {
+ * or as the area's width suggests, and beside the form, held there, where
+ * the area is too short to stack them. */
+function chosenOrAutomatic(
+  panes: WorkspacePanes,
+  width: number,
+  rem: number,
+  stackable: boolean,
+) {
   const automatic = automaticPlacement(width, rem);
+  const wanted = panes.details.preference.placement ?? automatic;
+  const held = !stackable;
   return {
     sideOpen: panes.side.preference.open ?? width >= RAIL_ROOM_REM * rem,
     automatic,
-    placement: panes.details.preference.placement ?? automatic,
+    placement: held ? ("side" as const) : wanted,
+    wanted,
+    held,
   };
 }
 
@@ -361,29 +391,31 @@ function useArrangement(
     height: window.innerHeight,
   };
   const { side, details } = panes;
-  const { sideOpen, automatic, placement } = chosenOrAutomatic(
+  const { sideOpen, automatic, placement, wanted, held } = chosenOrAutomatic(
     panes,
     width,
     rem,
+    stackFits(least, room, rem),
   );
   const beside = placement === "side";
   // Under the form, the form's fixed bands and its scroller's least height
   // come first, then the room kept for the details, then the first lines of
-  // a band that gives way, then the rest of the details. Too short for the
-  // form and that room, the area keeps them and the workspace scrolls as a
-  // whole. Opened where the details would get less than their least, they
-  // start hidden; a window made shorter later keeps them shown.
+  // a band that gives way, then the rest of the details. Opened where the
+  // details would get less than their least, they start hidden; a window
+  // made shorter later keeps them shown. Whether they start shown follows
+  // the arrangement asked for, not the one a short area holds them in.
   const kept = DETAILS_BOTTOM_ROOM * rem;
   const roomy = useRoomAtOpening(roomyUnder(least, room, rem));
   const detailsOpen =
-    hasDetails && (details.preference.open ?? (beside || roomy === true));
+    hasDetails &&
+    (details.preference.open ?? (wanted === "side" || roomy === true));
   const rail = railBounds(rem, width, detailsOpen && beside);
-  const under = detailsOpen && !beside ? kept : 0;
   return {
     rem,
     sideOpen,
     detailsOpen,
     placement,
+    held,
     automatic,
     rail,
     details: detailsBounds(placement, rem, {
@@ -391,7 +423,9 @@ function useArrangement(
       rail: railDrawn(side, rail, sideOpen, rem, width),
       keep: keptAbove(least, height, kept),
     }),
-    areaLeast: least.fixed > 0 ? least.fixed + under : 0,
+    // Only the form's own least: the details are stacked only where the
+    // area holds them, so the area is never drawn taller for them.
+    areaLeast: least.fixed > 0 ? least.fixed : 0,
   };
 }
 
@@ -410,10 +444,15 @@ function useArrangement(
  * presentation, kept by the caller, never a fact about the declaration.
  *
  * The form's least room wins over any arrangement: under the form, the form
- * keeps its bands and its scroller's least height and the details their
- * kept room, and a short window scrolls the workspace as a whole; beside it,
- * the form keeps its least width and the details give way to it. Nothing is
- * clipped.
+ * keeps its bands and its scroller's least height; beside it, the form keeps
+ * its least width and the details give way to it. Where the area is too
+ * short to hold the form's least height and the details' least under it,
+ * with room for their line to move, the details are drawn beside the form
+ * whatever was chosen, and the arrangement control is held pressed
+ * (aria-disabled) until the area grows: a short window never puts a pane
+ * outside it, and the person's choice comes back with the room. Beside is
+ * the arrangement that always fits, since there the details give way to the
+ * form's width. Nothing is clipped and nothing is pushed out of the window.
  */
 export function FormPanes({
   panes,
@@ -465,7 +504,9 @@ export function FormPanes({
         ? null
         : {
             open: beside,
+            held: layout.held,
             toggle: () => {
+              if (layout.held) return;
               // Where the details go never shows or hides them: until the
               // person chose, whether they are shown follows the arrangement,
               // so it is held as drawn.

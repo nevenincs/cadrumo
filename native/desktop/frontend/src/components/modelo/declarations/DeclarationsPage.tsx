@@ -50,18 +50,20 @@ import { DEADLINE_TONE } from "../workspace/Marks";
 import { AeatFilingDialog } from "./AeatFilingDialog";
 import { RelatedFilingsDialog } from "./RelatedFilingsDialog";
 import { useDeclarationsList, type ListMemory } from "./useDeclarationsList";
+import type { KeptWorkspaceRead } from "../workspace/keptRead";
 
 /** What the page keeps of itself while it is put away for a declaration:
  * the list as read, and how it was looked at. Held in memory only. */
-export type DeclarationsMemory = ListMemory & {
-  view?: View;
-  sort?: SortState;
-  query?: string;
-  collapsed?: ReadonlySet<string>;
-  /** The row a declaration was opened from, which takes the keyboard when
-   * the list comes back. */
-  returnTo?: string;
-};
+export type DeclarationsMemory = ListMemory &
+  KeptWorkspaceRead & {
+    view?: View;
+    sort?: SortState;
+    query?: string;
+    collapsed?: ReadonlySet<string>;
+    /** The row a declaration was opened from, which takes the keyboard when
+     * the list comes back. */
+    returnTo?: string;
+  };
 
 /** A piece of the page's state that outlives the page in its memory. */
 function useKept<K extends "view" | "sort" | "query" | "collapsed">(
