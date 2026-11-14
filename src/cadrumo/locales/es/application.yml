@@ -3018,6 +3018,10 @@ application:
       export_ledger_evidence_missing: El cálculo guardado %{calculation_revision_id}
         construido a partir de tus registros no incluye sus justificantes ni una referencia
         resoluble a ellos; vuelve a comprobar el cálculo antes de exportar.
+      export_m210_tipo_renta_code_missing: 'No se ha escrito nada: el cálculo %{calculation_revision_id}
+        no guarda el código oficial de tipo de renta que pide el Modelo 210, y varios
+        códigos comparten el mismo concepto. Vuelve a calcular indicando el código
+        con --casilla tipo_renta=CÓDIGO. Códigos aceptados: %{accepted}.'
       export_no_active_bucket: No hay un perfil activo; ejecuta `aeat config profile
         create NAME` antes de exportar una revisión de modelo.
       export_output_path_invalid: 'La ruta de salida de exportación no es válida:
