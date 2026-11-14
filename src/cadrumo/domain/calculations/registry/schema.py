@@ -49,7 +49,7 @@ from .binding_terminal_origin import TerminalOriginExpectation
 from .binding_value_contract import BindingDataType, BindingValueChannel, BindingValueContract
 from .credit_reconciliation import CreditReconciliationEntry
 from .errors import RegistryValidationError
-from .field_absence import absent_when_none, later_absent_when_none
+from .field_absence import absent_when_none, later_absent_when_empty, later_absent_when_none
 from .ids import (
     ApplicationLinkId,
     BindingId,
@@ -405,7 +405,7 @@ class FormulaDefinition(RegistryModel):
     legal_refs: LegalRefs
     source_refs: SourceRefs
     source_citations: tuple[SourceCitation, ...] = Field(default_factory=tuple)
-    autonomic_deduccion: AutonomicDeduccionEnrolment | None = Field(default=None, exclude_if=absent_when_none)
+    autonomic_deduccion: AutonomicDeduccionEnrolment | None = Field(default=None, exclude_if=later_absent_when_none)
     """The comunidad deducción this formula computes, when its box is an enrolled autonomic deducción."""
 
 
@@ -639,7 +639,9 @@ class ModeloRevision(RegistryRevisionDeclaration):
     workbook_parity_refs: Annotated[tuple[WorkbookParityReference, ...], SCHEMA_FAMILY] = ()
     verification_expectations: Annotated[tuple[VerificationExpectationDefinition, ...], SCHEMA_FAMILY] = ()
     credit_reconciliation: Annotated[tuple[CreditReconciliationEntry, ...], SCHEMA_FAMILY] = ()
-    prevision_social_placements: Annotated[tuple[PrevisionSocialPlacement, ...], SCHEMA_FAMILY] = ()
+    prevision_social_placements: Annotated[tuple[PrevisionSocialPlacement, ...], SCHEMA_FAMILY] = Field(
+        default=(), exclude_if=later_absent_when_empty
+    )
     application_links: Annotated[tuple[ApplicationLinkDefinition, ...], SCHEMA_FAMILY] = ()
     deadline_windows: Annotated[tuple[DeadlineWindowDefinition, ...], SCHEMA_FAMILY] = ()
     filing_schedules: Annotated[tuple[ModeloScheduleDefinition, ...], SCHEMA_FAMILY] = ()

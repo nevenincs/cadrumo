@@ -24,6 +24,11 @@ field is absent or null the horizon is read from the start of ``reason`` (``hori
 if neither matches the line has no horizon and speaks for every row of the persona that no horizon line answers for.
 A table row that has a result line of its own on a surface is judged by that line and never load-failed by a persona
 line.
+
+A return line may state ``workaround``, non-empty text naming a diagnostic substitute for what a person does (the CLI
+column reading a calculation back instead of running ``calculate``): the stage values were produced by that substitute,
+so the row never counts as matched. Its outcome is ``differs`` with the cause ``workaround <value>`` first, and the
+stage and figure causes are still computed and listed after it so the diagnosis stays visible.
 """
 
 from __future__ import annotations
@@ -115,6 +120,7 @@ _FIELDS = frozenset(
         "reason",
         "log",
         "horizon",
+        "workaround",
     }
 )
 _REQUIRED = frozenset({"surface", "tree", "persona", "modelo", "year", "period", "loads"})
@@ -149,6 +155,8 @@ class SurfaceResult:
     log: str = ""
     horizon: int | None = None
     """The horizon a persona-level line was run at, stated or read from its reason; ``None`` on a return line."""
+    workaround: str | None = None
+    """The diagnostic substitute that produced the stage values; a row with one is never ``matched``."""
 
     @property
     def key(self) -> ResultKey:
@@ -179,6 +187,8 @@ def read_results(directory: Path) -> dict[ResultKey, SurfaceResult]:
     row is compared on the casillas of its form only, never on its internal figures.
     The optional ``horizon`` (an integer or null, persona-level lines only) names the horizon a persona line was run
     at; absent, it is read from the reason's ``horizon <year>`` or ``<persona>@<year>`` prefix.
+    The optional ``workaround`` (non-empty text or null) states that a diagnostic substitute for what a person does
+    produced the stage values; the row then never counts as matched.
     Unknown keys and bad values are refused.
     """
     if not directory.is_dir():
@@ -235,6 +245,7 @@ def parse_result(line: str) -> SurfaceResult:
         reason=reason,
         log=_optional_text(data, "log") or "",
         horizon=_line_horizon(data, persona, modelo, reason),
+        workaround=_optional_workaround(data),
     )
 
 
@@ -277,6 +288,13 @@ def _stage_words(data: Mapping[str, object], modelo: str | None) -> dict[str, st
 def _optional_stage(data: Mapping[str, object], name: str) -> str | None:
     """The stage word of an optional stage field, ``None`` when absent or null."""
     return None if data.get(name) is None else _choice(data, name, STAGE_WORDS)
+
+
+def _optional_workaround(data: Mapping[str, object]) -> str | None:
+    """The workaround text of a line: ``None`` when absent or null, else non-empty text."""
+    if data.get("workaround") is None:
+        return None
+    return _text(data, "workaround")
 
 
 def _optional_bool(data: Mapping[str, object], name: str) -> bool | None:
@@ -424,8 +442,9 @@ def parity(
     """How ``result`` of ``surface`` stands against ``row``; ``loads`` is False when the persona did not load there.
 
     ``load_reason`` is the reason that load failure gave. A missing result is ``not-run`` unless the load failed;
-    a row with nothing to compare (history-filed, not run, or calculated with no recorded figures) is
-    ``not-comparable`` and never matched.
+    a row with nothing to compare (history-filed, not run, or calculated in a file written before figures
+    were recorded) is ``not-comparable`` and never matched. A row that recorded no non-zero figure compares on its
+    stages, and the figure test passes with no table figure to find.
     """
     tree = None if result is None else result.tree
     if loads is False or (result is not None and not result.loads):
@@ -437,10 +456,15 @@ def parity(
         return RowParity(row.key, surface, NOT_COMPARABLE, (why,), tree)
     table, shown = dict(row.figures), dict(result.figures)
     stage_causes, gated = _stage_causes(surface, stages, result, export_refusal_code(row.reason))
-    causes = stage_causes + figure_causes(surface, table, shown)
+    causes = _workaround_causes(result) + stage_causes + figure_causes(surface, table, shown)
     outcome = DIFFERS if causes else MATCHED
     extras = extra_figures(table | dict(row.internal_figures), shown)
     return RowParity(row.key, surface, outcome, tuple(causes), tree, extras, gated)
+
+
+def _workaround_causes(result: SurfaceResult) -> list[str]:
+    """The cause that keeps a row produced through a diagnostic substitute from ever matching."""
+    return [] if result.workaround is None else [f"workaround {result.workaround}"]
 
 
 def _load_failure_reason(result: SurfaceResult | None, load_reason: str) -> str:
@@ -454,7 +478,7 @@ def _uncomparable_reason(row: TableRow, stages: Mapping[str, str | None]) -> str
     if empty := [name for name, word in stages.items() if word is None]:
         why = ", ".join(f"{name} {getattr(row, name).value}" for name in empty)
         return f"table row has no comparable stage: {why}"
-    if stages["calculate"] == "pass" and not row.figures:
+    if stages["calculate"] == "pass" and not row.figures_recorded:
         return "table row calculated but records no figures"
     return None
 

@@ -29,4 +29,14 @@ def later_absent_when_none(value: object) -> bool:
     return value is None
 
 
-__all__ = ["absent_when_none", "later_absent_when_none"]
+def later_absent_when_empty(value: object) -> bool:
+    """Leave out, while it is empty, a collection field added after builds stopped writing ``null``.
+
+    The collection counterpart of :func:`later_absent_when_none`: a snapshot saved
+    before the field existed is bound by digests of dumps without it, and an
+    empty collection says nothing the field's absence did not.
+    """
+    return not value
+
+
+__all__ = ["absent_when_none", "later_absent_when_empty", "later_absent_when_none"]

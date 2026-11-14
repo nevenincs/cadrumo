@@ -3849,10 +3849,100 @@ modelo:
             heading: Base imposable, reduccions i base liquidable
           tax-calculation:
             heading: Càlcul de l'impost
+        page:
+          datoseconomicos:
+            heading: Titulars de les rendes
+          datoseconomicos-resultados:
+            heading: Resum i càlcul de la declaració
+          datoseconomicos-tomadatosampliada:
+            heading: Dades detallades de rendes i deduccions
+          datosidentificativos:
+            heading: Dades identificatives
+          datosidentificativos-ascendientes:
+            heading: Ascendents
+          datosidentificativos-conyuge:
+            heading: Cònjuge
+          datosidentificativos-declarante:
+            heading: Declarant
+          datosidentificativos-hijos:
+            heading: Fills i altres descendents
+          declaracion:
+            heading: Declaració
         section:
+          anexoa:
+            heading: Millores energètiques en habitatges, vehicles elèctrics i punts
+              de recàrrega (annex A)
+          anexoares:
+            heading: Deducció per inversió en habitatge habitual (annex A)
+          anexoares-10:
+            heading: Deduccions per incentius i estímuls a la inversió empresarial
+              (annex A)
+          anexoares-2:
+            heading: Dades de l'habitatge habitual i de la inversió en empreses de
+              nova o recent creació (annex A)
+          anexoares-3:
+            heading: Deducció per lloguer de l'habitatge habitual (annex A)
+          anexoares-4:
+            heading: Deduccions per donatius i altres aportacions (annex A)
+          anexoares-5:
+            heading: Deducció per rendes obtingudes a Ceuta o Melilla (annex A)
+          anexoares-6:
+            heading: Deducció per residència habitual i efectiva a l'illa de La Palma
+              (annex A)
+          anexoares-7:
+            heading: Deducció per inversions i despeses en béns d'interès cultural
+              (annex A)
+          anexoares-8:
+            heading: Deduccions per obres de millora de l'eficiència energètica i
+              per vehicles elèctrics i punts de recàrrega (annex A)
+          anexoares-9:
+            heading: Reserves per a inversions a Canàries i a les Illes Balears i
+              deducció per a residents a la Unió Europea (annex A)
+          anexocres:
+            heading: Partides pendents d'aplicació i altres informacions (annex C)
+          ascendiente:
+            heading: Dades de cada ascendent
+          baseimponibleres:
+            heading: Saldo net positiu del capital mobiliari a la base imposable de
+              l'estalvi
+          baseimponibleres-2:
+            heading: Base imposable general i base imposable de l'estalvi
+          baseliquidableres:
+            heading: Base liquidable general i base liquidable de l'estalvi
           bienes-inmuebles-a-disposicion-de-sus-tit-88aad7:
             heading: Béns immobles a disposició dels seus titulars, arrendats o cedits
               a tercers, o afectes a activitats econòmiques
+          calculoimpuestores:
+            heading: Retencions i ingressos a compte atribuïts per entitats en règim
+              d'atribució de rendes
+          calculoimpuestores-2:
+            heading: Retencions i ingressos a compte imputats per agrupacions d'interès
+              econòmic i UTE
+          calculoimpuestores-3:
+            heading: 'Càlcul de l''impost: quotes, deduccions, retencions i pagaments
+              a compte'
+          calculoimpuestores-4:
+            heading: Import de la deducció per lloguer de l'habitatge habitual
+          calculoimpuestores-5:
+            heading: Total de deduccions per incentius i estímuls a la inversió empresarial
+          calculoimpuestores-6:
+            heading: Total de deduccions per incentius i estímuls a la inversió empresarial
+          calculoimpuestores-7:
+            heading: Devolució que pugui resultar de la rectificació
+          compensacionconyugesres:
+            heading: Suspensió de l'ingrés i renúncia a la devolució entre cònjuges
+          datosadicionalesanexob:
+            heading: Informació addicional de les deduccions autonòmiques (annex B)
+          datosadicionalesanexob-2:
+            heading: 'Deduccions per naixement i per adopció de les Illes Balears:
+              abonament anticipat (annex B)'
+          datosadicionalesres:
+            heading: Rendes exemptes amb progressivitat i anualitats per aliments
+              a favor dels fills
+          deduccionautonomicares:
+            heading: Deduccions autonòmiques (annex B)
+          dt9:
+            heading: Valor de transmissió acumulat amb la disposició transitòria novena
           ganancias-patrimoniales-por-cambio-de-res-0c81c7:
             heading: Guanys patrimonials per canvi de residència fora del territori
               espanyol (article 95 bis de la Llei de l'impost)
@@ -3868,6 +3958,132 @@ modelo:
           ganancias-y-perdidas-por-la-transmision-d-5aa38b:
             heading: Guanys i pèrdues per la transmissió de participacions de fons
               cotitzats (ETF) i d'accions de SICAV índex cotitzades
+          gcambioresidenciaextres:
+            heading: Resum de guanys patrimonials per canvi de residència fora del
+              territori espanyol
+          general:
+            heading: Contribuent a qui correspon cada renda
+          gpaccionesres:
+            heading: Resum de transmissions d'accions negociades
+          gpderechosres:
+            heading: Resum de transmissions de drets de subscripció
+          gpfondoscotires:
+            heading: Resum de transmissions de fons cotitzats (ETF) i d'accions de
+              SICAV índex cotitzades
+          gpfondosres:
+            heading: Resum de transmissions d'accions o participacions d'institucions
+              d'inversió col·lectiva
+          gpotrasganancias:
+            heading: Altres guanys patrimonials de la base imposable de l'estalvi
+          gpotrasgananciasejerant:
+            heading: Guanys i pèrdues de transmissions d'exercicis anteriors imputables
+              a aquest exercici
+          gpotrasgananciasejerantres:
+            heading: Resum de guanys i pèrdues de transmissions d'exercicis anteriors
+              imputables a aquest exercici
+          gpotrasgananciasres:
+            heading: Resum d'altres guanys patrimonials de la base imposable de l'estalvi
+          gpotroscriptomonedasres:
+            heading: Resum de transmissions de monedes virtuals
+          gpotroselementos:
+            heading: Transmissions d'altres elements patrimonials
+          gpotroselementos-2:
+            heading: 'Transmissions d''altres elements patrimonials amb preu ajornat:
+              guanys i pèrdues pendents d''imputació'
+          gpotroselementosres:
+            heading: Resum de transmissions d'altres elements patrimonials
+          gpotrosinmuebles:
+            heading: Transmissions d'immobles i drets reals sobre immobles
+          gpotrosinmuebles-2:
+            heading: 'Transmissions d''immobles amb preu ajornat: guanys pendents
+              d''imputació'
+          gpotrosinmuebles-3:
+            heading: Exempció per reinversió en habitatge habitual
+          gpotrosinmueblesres:
+            heading: Resum de transmissions d'immobles i drets reals sobre immobles
+          gppremios:
+            heading: 'Guanys i pèrdues patrimonials no derivats de transmissions:
+              jocs, premis i altres'
+          gppremiosres:
+            heading: Resum de guanys i pèrdues patrimonials no derivats de transmissions
+          gpreinversion:
+            heading: Guanys acollits a diferiment per reinversió imputables a aquest
+              exercici
+          gpreinversionres:
+            heading: Resum de guanys acollits a diferiment per reinversió imputables
+              a aquest exercici
+          hijo:
+            heading: Dades de cada descendent
+          ingresodevolucionres:
+            heading: Resultat a ingressar o a retornar
+          inmuebles:
+            heading: Béns immobles a disposició dels seus titulars, arrendats o cedits
+              a tercers, o afectes a activitats econòmiques
+          inmuebles-2:
+            heading: Béns immobles a disposició dels seus titulars, arrendats o cedits
+              a tercers, o afectes a activitats econòmiques
+          inmuebles-3:
+            heading: Béns immobles a disposició dels seus titulars, arrendats o cedits
+              a tercers, o afectes a activitats econòmiques
+          inmueblesres:
+            heading: Resum de rendiments del capital immobiliari i imputacions de
+              rendes immobiliàries
+          integracionres:
+            heading: Integració i compensació de guanys i pèrdues patrimonials
+          integracionres-2:
+            heading: Saldo net negatiu del capital mobiliari a la base imposable de
+              l'estalvi
+          irpfccaares:
+            heading: IRPF que correspon a la comunitat autònoma de residència
+          minimoperfamres:
+            heading: Mínim personal i familiar
+          rdtocapitalmobiliario:
+            heading: Rendiments del capital mobiliari
+          rdtocapitalmobiliariores:
+            heading: Resum de rendiments del capital mobiliari
+          rdtotrabajores:
+            heading: Resum de rendiments del treball
+          redbaseimponible:
+            heading: 'Reduccions de la base imposable: previsió social, discapacitat,
+              patrimonis protegits, pensions compensatòries i esportistes'
+          redbaseimponibleres:
+            heading: Reduccions de la base imposable
+          regestimadirecta:
+            heading: Activitats econòmiques en estimació directa
+          regestimadirectares:
+            heading: Resum d'activitats econòmiques en estimació directa
+          regestimaobj:
+            heading: Activitats econòmiques en estimació objectiva (excepte agrícoles,
+              ramaderes i forestals)
+          regestimaobjagricola:
+            heading: Activitats agrícoles, ramaderes i forestals en estimació objectiva
+          regestimaobjagricolares:
+            heading: Resum d'activitats agrícoles, ramaderes i forestals en estimació
+              objectiva
+          regestimaobjres:
+            heading: Resum d'activitats econòmiques en estimació objectiva (excepte
+              agrícoles, ramaderes i forestals)
+          regimenesespeciales:
+            heading: 'Atribució i imputació de rendes: entitats en atribució, agrupacions
+              d''interès econòmic i UTE, transparència fiscal internacional, drets
+              d''imatge i institucions d''inversió col·lectiva en paradisos fiscals'
+          regimenesespecialesres:
+            heading: Resum de rendes atribuïdes per entitats en règim d'atribució
+              de rendes
+          regimenesespecialesres-2:
+            heading: Resum de bases imputades per agrupacions d'interès econòmic i
+              UTE
+          regimenesespecialesres-3:
+            heading: Resum d'imputacions per transparència fiscal internacional, drets
+              d'imatge i institucions d'inversió col·lectiva en paradisos fiscals
+          regimenespecial:
+            heading: Socis d'entitats no residents afectats per fusions, escissions
+              o bescanvis de valors
+          regimenespecial-2:
+            heading: Operacions de fusió, escissió, aportació d'actius i bescanvi
+              de valors
+          regularizacionres:
+            heading: Regularització d'autoliquidacions anteriors o liquidacions administratives
           rendimientos-de-trabajo:
             heading: Rendiments de treball
           transmision-de-acciones-negociadas:
@@ -15996,6 +16212,21 @@ modelo:
                 title: 'Model 100 2024: dades del perfil personal i familiar'
           field:
             label: Exercici 2024
+          form:
+            section:
+              calculoimpuestores:
+                heading: Discrepància de criteri administratiu
+              calculoimpuestores-2:
+                heading: Retencions i ingressos a compte atribuïts per entitats en
+                  règim d'atribució de rendes
+              calculoimpuestores-3:
+                heading: Retencions i ingressos a compte imputats per agrupacions
+                  d'interès econòmic i UTE
+              calculoimpuestores-4:
+                heading: 'Càlcul de l''impost: quotes, deduccions, retencions i pagaments
+                  a compte'
+              calculoimpuestores-5:
+                heading: Import de la deducció per lloguer de l'habitatge habitual
         '2025':
           casilla:
             '0003':
@@ -18235,67 +18466,7 @@ modelo:
           field:
             label: Exercici 2025
           form:
-            page:
-              datoseconomicos:
-                heading: Titulars de les rendes
-              datoseconomicos-resultados:
-                heading: Resum i càlcul de la declaració
-              datoseconomicos-tomadatosampliada:
-                heading: Dades detallades de rendes i deduccions
-              datosidentificativos:
-                heading: Dades identificatives
-              datosidentificativos-ascendientes:
-                heading: Ascendents
-              datosidentificativos-conyuge:
-                heading: Cònjuge
-              datosidentificativos-declarante:
-                heading: Declarant
-              datosidentificativos-hijos:
-                heading: Fills i altres descendents
-              declaracion:
-                heading: Declaració
             section:
-              anexoa:
-                heading: Millores energètiques en habitatges, vehicles elèctrics i
-                  punts de recàrrega (annex A)
-              anexoares:
-                heading: Deducció per inversió en habitatge habitual (annex A)
-              anexoares-10:
-                heading: Deduccions per incentius i estímuls a la inversió empresarial
-                  (annex A)
-              anexoares-2:
-                heading: Dades de l'habitatge habitual i de la inversió en empreses
-                  de nova o recent creació (annex A)
-              anexoares-3:
-                heading: Deducció per lloguer de l'habitatge habitual (annex A)
-              anexoares-4:
-                heading: Deduccions per donatius i altres aportacions (annex A)
-              anexoares-5:
-                heading: Deducció per rendes obtingudes a Ceuta o Melilla (annex A)
-              anexoares-6:
-                heading: Deducció per residència habitual i efectiva a l'illa de La
-                  Palma (annex A)
-              anexoares-7:
-                heading: Deducció per inversions i despeses en béns d'interès cultural
-                  (annex A)
-              anexoares-8:
-                heading: Deduccions per obres de millora de l'eficiència energètica
-                  i per vehicles elèctrics i punts de recàrrega (annex A)
-              anexoares-9:
-                heading: Reserves per a inversions a Canàries i a les Illes Balears
-                  i deducció per a residents a la Unió Europea (annex A)
-              anexocres:
-                heading: Partides pendents d'aplicació i altres informacions (annex
-                  C)
-              ascendiente:
-                heading: Dades de cada ascendent
-              baseimponibleres:
-                heading: Saldo net positiu del capital mobiliari a la base imposable
-                  de l'estalvi
-              baseimponibleres-2:
-                heading: Base imposable general i base imposable de l'estalvi
-              baseliquidableres:
-                heading: Base liquidable general i base liquidable de l'estalvi
               calculoimpuestores:
                 heading: Discrepància de criteri administratiu
               calculoimpuestores-2:
@@ -18309,146 +18480,3 @@ modelo:
                   a compte'
               calculoimpuestores-5:
                 heading: Import de la deducció per lloguer de l'habitatge habitual
-              calculoimpuestores-6:
-                heading: Total de deduccions per incentius i estímuls a la inversió
-                  empresarial
-              calculoimpuestores-7:
-                heading: Devolució que pugui resultar de la rectificació
-              compensacionconyugesres:
-                heading: Suspensió de l'ingrés i renúncia a la devolució entre cònjuges
-              datosadicionalesanexob:
-                heading: Informació addicional de les deduccions autonòmiques (annex
-                  B)
-              datosadicionalesanexob-2:
-                heading: 'Deduccions per naixement i per adopció de les Illes Balears:
-                  abonament anticipat (annex B)'
-              datosadicionalesres:
-                heading: Rendes exemptes amb progressivitat i anualitats per aliments
-                  a favor dels fills
-              deduccionautonomicares:
-                heading: Deduccions autonòmiques (annex B)
-              dt9:
-                heading: Valor de transmissió acumulat amb la disposició transitòria
-                  novena
-              gcambioresidenciaextres:
-                heading: Resum de guanys patrimonials per canvi de residència fora
-                  del territori espanyol
-              general:
-                heading: Contribuent a qui correspon cada renda
-              gpaccionesres:
-                heading: Resum de transmissions d'accions negociades
-              gpderechosres:
-                heading: Resum de transmissions de drets de subscripció
-              gpfondoscotires:
-                heading: Resum de transmissions de fons cotitzats (ETF) i d'accions
-                  de SICAV índex cotitzades
-              gpfondosres:
-                heading: Resum de transmissions d'accions o participacions d'institucions
-                  d'inversió col·lectiva
-              gpotrasganancias:
-                heading: Altres guanys patrimonials de la base imposable de l'estalvi
-              gpotrasgananciasejerant:
-                heading: Guanys i pèrdues de transmissions d'exercicis anteriors imputables
-                  al 2025
-              gpotrasgananciasejerantres:
-                heading: Resum de guanys i pèrdues de transmissions d'exercicis anteriors
-                  imputables al 2025
-              gpotrasgananciasres:
-                heading: Resum d'altres guanys patrimonials de la base imposable de
-                  l'estalvi
-              gpotroscriptomonedasres:
-                heading: Resum de transmissions de monedes virtuals
-              gpotroselementos:
-                heading: Transmissions d'altres elements patrimonials
-              gpotroselementos-2:
-                heading: 'Transmissions d''altres elements patrimonials amb preu ajornat:
-                  guanys i pèrdues pendents d''imputació'
-              gpotroselementosres:
-                heading: Resum de transmissions d'altres elements patrimonials
-              gpotrosinmuebles:
-                heading: Transmissions d'immobles i drets reals sobre immobles
-              gpotrosinmuebles-2:
-                heading: 'Transmissions d''immobles amb preu ajornat: guanys pendents
-                  d''imputació'
-              gpotrosinmuebles-3:
-                heading: Exempció per reinversió en habitatge habitual
-              gpotrosinmueblesres:
-                heading: Resum de transmissions d'immobles i drets reals sobre immobles
-              gppremios:
-                heading: 'Guanys i pèrdues patrimonials no derivats de transmissions:
-                  jocs, premis i altres'
-              gppremiosres:
-                heading: Resum de guanys i pèrdues patrimonials no derivats de transmissions
-              gpreinversion:
-                heading: Guanys acollits a diferiment per reinversió imputables al
-                  2025
-              gpreinversionres:
-                heading: Resum de guanys acollits a diferiment per reinversió imputables
-                  al 2025
-              hijo:
-                heading: Dades de cada descendent
-              ingresodevolucionres:
-                heading: Resultat a ingressar o a retornar
-              inmueblesres:
-                heading: Resum de rendiments del capital immobiliari i imputacions
-                  de rendes immobiliàries
-              integracionres:
-                heading: Integració i compensació de guanys i pèrdues patrimonials
-              integracionres-2:
-                heading: Saldo net negatiu del capital mobiliari a la base imposable
-                  de l'estalvi
-              irpfccaares:
-                heading: IRPF que correspon a la comunitat autònoma de residència
-              minimoperfamres:
-                heading: Mínim personal i familiar
-              rdtocapitalmobiliario:
-                heading: Rendiments del capital mobiliari
-              rdtocapitalmobiliariores:
-                heading: Resum de rendiments del capital mobiliari
-              rdtotrabajores:
-                heading: Resum de rendiments del treball
-              redbaseimponible:
-                heading: 'Reduccions de la base imposable: previsió social, discapacitat,
-                  patrimonis protegits, pensions compensatòries i esportistes'
-              redbaseimponibleres:
-                heading: Reduccions de la base imposable
-              regestimadirecta:
-                heading: Activitats econòmiques en estimació directa
-              regestimadirectares:
-                heading: Resum d'activitats econòmiques en estimació directa
-              regestimaobj:
-                heading: Activitats econòmiques en estimació objectiva (excepte agrícoles,
-                  ramaderes i forestals)
-              regestimaobjagricola:
-                heading: Activitats agrícoles, ramaderes i forestals en estimació
-                  objectiva
-              regestimaobjagricolares:
-                heading: Resum d'activitats agrícoles, ramaderes i forestals en estimació
-                  objectiva
-              regestimaobjres:
-                heading: Resum d'activitats econòmiques en estimació objectiva (excepte
-                  agrícoles, ramaderes i forestals)
-              regimenesespeciales:
-                heading: 'Atribució i imputació de rendes: entitats en atribució,
-                  agrupacions d''interès econòmic i UTE, transparència fiscal internacional,
-                  drets d''imatge i institucions d''inversió col·lectiva en paradisos
-                  fiscals'
-              regimenesespecialesres:
-                heading: Resum de rendes atribuïdes per entitats en règim d'atribució
-                  de rendes
-              regimenesespecialesres-2:
-                heading: Resum de bases imputades per agrupacions d'interès econòmic
-                  i UTE
-              regimenesespecialesres-3:
-                heading: Resum d'imputacions per transparència fiscal internacional,
-                  drets d'imatge i institucions d'inversió col·lectiva en paradisos
-                  fiscals
-              regimenespecial:
-                heading: Socis d'entitats no residents afectats per fusions, escissions
-                  o bescanvis de valors
-              regimenespecial-2:
-                heading: Operacions de fusió, escissió, aportació d'actius i bescanvi
-                  de valors
-              regularizacionres:
-                heading: Regularització d'autoliquidacions anteriors o liquidacions
-                  administratives

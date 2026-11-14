@@ -3929,10 +3929,104 @@ modelo:
             heading: Base imponible, reducciones y base liquidable
           tax-calculation:
             heading: Cálculo del impuesto
+        page:
+          datoseconomicos:
+            heading: Titulares de las rentas
+          datoseconomicos-resultados:
+            heading: Resumen y cálculo de la declaración
+          datoseconomicos-tomadatosampliada:
+            heading: Datos detallados de rentas y deducciones
+          datosidentificativos:
+            heading: Datos identificativos
+          datosidentificativos-ascendientes:
+            heading: Ascendientes
+          datosidentificativos-conyuge:
+            heading: Cónyuge
+          datosidentificativos-declarante:
+            heading: Declarante
+          datosidentificativos-hijos:
+            heading: Hijos y otros descendientes
+          declaracion:
+            heading: Declaración
         section:
+          anexoa:
+            heading: Mejoras energéticas en viviendas, vehículos eléctricos y puntos
+              de recarga (anexo A)
+          anexoares:
+            heading: Deducción por inversión en vivienda habitual (anexo A)
+          anexoares-10:
+            heading: Deducciones por incentivos y estímulos a la inversión empresarial
+              (anexo A)
+          anexoares-2:
+            heading: Datos de la vivienda habitual y de la inversión en empresas de
+              nueva o reciente creación (anexo A)
+          anexoares-3:
+            heading: Deducción por alquiler de la vivienda habitual (anexo A)
+          anexoares-4:
+            heading: Deducciones por donativos y otras aportaciones (anexo A)
+          anexoares-5:
+            heading: Deducción por rentas obtenidas en Ceuta o Melilla (anexo A)
+          anexoares-6:
+            heading: Deducción por residencia habitual y efectiva en la isla de La
+              Palma (anexo A)
+          anexoares-7:
+            heading: Deducción por inversiones y gastos en bienes de interés cultural
+              (anexo A)
+          anexoares-8:
+            heading: Deducciones por obras de mejora de la eficiencia energética y
+              por vehículos eléctricos y puntos de recarga (anexo A)
+          anexoares-9:
+            heading: Reservas para inversiones en Canarias y en las Illes Balears
+              y deducción para residentes en la Unión Europea (anexo A)
+          anexocres:
+            heading: Partidas pendientes de aplicación y otras informaciones (anexo
+              C)
+          ascendiente:
+            heading: Datos de cada ascendiente
+          baseimponibleres:
+            heading: Saldo neto positivo del capital mobiliario en la base imponible
+              del ahorro
+          baseimponibleres-2:
+            heading: Base imponible general y base imponible del ahorro
+          baseliquidableres:
+            heading: Base liquidable general y base liquidable del ahorro
           bienes-inmuebles-a-disposicion-de-sus-tit-88aad7:
             heading: Bienes inmuebles a disposición de sus titulares, arrendados o
               cedidos a terceros, o afectos a actividades económicas
+          calculoimpuestores:
+            heading: Retenciones e ingresos a cuenta atribuidos por entidades en régimen
+              de atribución de rentas
+          calculoimpuestores-2:
+            heading: Retenciones e ingresos a cuenta imputados por agrupaciones de
+              interés económico y UTE
+          calculoimpuestores-3:
+            heading: 'Cálculo del impuesto: cuotas, deducciones, retenciones y pagos
+              a cuenta'
+          calculoimpuestores-4:
+            heading: Importe de la deducción por alquiler de la vivienda habitual
+          calculoimpuestores-5:
+            heading: Total de deducciones por incentivos y estímulos a la inversión
+              empresarial
+          calculoimpuestores-6:
+            heading: Total de deducciones por incentivos y estímulos a la inversión
+              empresarial
+          calculoimpuestores-7:
+            heading: Devolución que pudiera resultar de la rectificación
+          compensacionconyugesres:
+            heading: Suspensión del ingreso y renuncia a la devolución entre cónyuges
+          datosadicionalesanexob:
+            heading: Información adicional de las deducciones autonómicas (anexo B)
+          datosadicionalesanexob-2:
+            heading: 'Deducciones por nacimiento y por adopción de las Illes Balears:
+              abono anticipado (anexo B)'
+          datosadicionalesres:
+            heading: Rentas exentas con progresividad y anualidades por alimentos
+              a favor de los hijos
+          deduccionautonomicares:
+            heading: Deducciones autonómicas (anexo B)
+          dt9:
+            heading: Valor de transmisión acumulado con la disposición transitoria
+              novena
           ganancias-patrimoniales-por-cambio-de-res-0c81c7:
             heading: Ganancias patrimoniales por cambio de residencia fuera del territorio
               español (artículo 95 bis de la Ley del Impuesto)
@@ -3948,6 +4042,138 @@ modelo:
           ganancias-y-perdidas-por-la-transmision-d-5aa38b:
             heading: Ganancias y pérdidas por la transmisión de participaciones de
               fondos cotizados (ETF) y de acciones de SICAV índice cotizadas
+          gcambioresidenciaextres:
+            heading: Resumen de ganancias patrimoniales por cambio de residencia fuera
+              del territorio español
+          general:
+            heading: Contribuyente al que corresponde cada renta
+          gpaccionesres:
+            heading: Resumen de transmisiones de acciones negociadas
+          gpderechosres:
+            heading: Resumen de transmisiones de derechos de suscripción
+          gpfondoscotires:
+            heading: Resumen de transmisiones de fondos cotizados (ETF) y de acciones
+              de SICAV índice cotizadas
+          gpfondosres:
+            heading: Resumen de transmisiones de acciones o participaciones de instituciones
+              de inversión colectiva
+          gpotrasganancias:
+            heading: Otras ganancias patrimoniales de la base imponible del ahorro
+          gpotrasgananciasejerant:
+            heading: Ganancias y pérdidas de transmisiones de ejercicios anteriores
+              imputables a este ejercicio
+          gpotrasgananciasejerantres:
+            heading: Resumen de ganancias y pérdidas de transmisiones de ejercicios
+              anteriores imputables a este ejercicio
+          gpotrasgananciasres:
+            heading: Resumen de otras ganancias patrimoniales de la base imponible
+              del ahorro
+          gpotroscriptomonedasres:
+            heading: Resumen de transmisiones de monedas virtuales
+          gpotroselementos:
+            heading: Transmisiones de otros elementos patrimoniales
+          gpotroselementos-2:
+            heading: 'Transmisiones de otros elementos patrimoniales con precio aplazado:
+              ganancias y pérdidas pendientes de imputación'
+          gpotroselementosres:
+            heading: Resumen de transmisiones de otros elementos patrimoniales
+          gpotrosinmuebles:
+            heading: Transmisiones de inmuebles y derechos reales sobre inmuebles
+          gpotrosinmuebles-2:
+            heading: 'Transmisiones de inmuebles con precio aplazado: ganancias pendientes
+              de imputación'
+          gpotrosinmuebles-3:
+            heading: Exención por reinversión en vivienda habitual
+          gpotrosinmueblesres:
+            heading: Resumen de transmisiones de inmuebles y derechos reales sobre
+              inmuebles
+          gppremios:
+            heading: 'Ganancias y pérdidas patrimoniales no derivadas de transmisiones:
+              juegos, premios y otras'
+          gppremiosres:
+            heading: Resumen de ganancias y pérdidas patrimoniales no derivadas de
+              transmisiones
+          gpreinversion:
+            heading: Ganancias acogidas a diferimiento por reinversión imputables
+              a este ejercicio
+          gpreinversionres:
+            heading: Resumen de ganancias acogidas a diferimiento por reinversión
+              imputables a este ejercicio
+          hijo:
+            heading: Datos de cada descendiente
+          ingresodevolucionres:
+            heading: Resultado a ingresar o a devolver
+          inmuebles:
+            heading: Bienes inmuebles a disposición de sus titulares, arrendados o
+              cedidos a terceros, o afectos a actividades económicas
+          inmuebles-2:
+            heading: Bienes inmuebles a disposición de sus titulares, arrendados o
+              cedidos a terceros, o afectos a actividades económicas
+          inmuebles-3:
+            heading: Bienes inmuebles a disposición de sus titulares, arrendados o
+              cedidos a terceros, o afectos a actividades económicas
+          inmueblesres:
+            heading: Resumen de rendimientos del capital inmobiliario e imputaciones
+              de rentas inmobiliarias
+          integracionres:
+            heading: Integración y compensación de ganancias y pérdidas patrimoniales
+          integracionres-2:
+            heading: Saldo neto negativo del capital mobiliario en la base imponible
+              del ahorro
+          irpfccaares:
+            heading: IRPF que corresponde a la comunidad autónoma de residencia
+          minimoperfamres:
+            heading: Mínimo personal y familiar
+          rdtocapitalmobiliario:
+            heading: Rendimientos del capital mobiliario
+          rdtocapitalmobiliariores:
+            heading: Resumen de rendimientos del capital mobiliario
+          rdtotrabajores:
+            heading: Resumen de rendimientos del trabajo
+          redbaseimponible:
+            heading: 'Reducciones de la base imponible: previsión social, discapacidad,
+              patrimonios protegidos, pensiones compensatorias y deportistas'
+          redbaseimponibleres:
+            heading: Reducciones de la base imponible
+          regestimadirecta:
+            heading: Actividades económicas en estimación directa
+          regestimadirectares:
+            heading: Resumen de actividades económicas en estimación directa
+          regestimaobj:
+            heading: Actividades económicas en estimación objetiva (excepto agrícolas,
+              ganaderas y forestales)
+          regestimaobjagricola:
+            heading: Actividades agrícolas, ganaderas y forestales en estimación objetiva
+          regestimaobjagricolares:
+            heading: Resumen de actividades agrícolas, ganaderas y forestales en estimación
+              objetiva
+          regestimaobjres:
+            heading: Resumen de actividades económicas en estimación objetiva (excepto
+              agrícolas, ganaderas y forestales)
+          regimenesespeciales:
+            heading: 'Atribución e imputación de rentas: entidades en atribución,
+              agrupaciones de interés económico y UTE, transparencia fiscal internacional,
+              derechos de imagen e instituciones de inversión colectiva en paraísos
+              fiscales'
+          regimenesespecialesres:
+            heading: Resumen de rentas atribuidas por entidades en régimen de atribución
+              de rentas
+          regimenesespecialesres-2:
+            heading: Resumen de bases imputadas por agrupaciones de interés económico
+              y UTE
+          regimenesespecialesres-3:
+            heading: Resumen de imputaciones por transparencia fiscal internacional,
+              derechos de imagen e instituciones de inversión colectiva en paraísos
+              fiscales
+          regimenespecial:
+            heading: Socios de entidades no residentes afectados por fusiones, escisiones
+              o canjes de valores
+          regimenespecial-2:
+            heading: Operaciones de fusión, escisión, aportación de activos y canje
+              de valores
+          regularizacionres:
+            heading: Regularización de autoliquidaciones anteriores o liquidaciones
+              administrativas
           rendimientos-de-trabajo:
             heading: Rendimientos de trabajo
           transmision-de-acciones-negociadas:
@@ -16173,6 +16399,21 @@ modelo:
                 title: 'Modelo 100 2024: datos del perfil personal y familiar'
           field:
             label: Ejercicio 2024
+          form:
+            section:
+              calculoimpuestores:
+                heading: Discrepancia de criterio administrativo
+              calculoimpuestores-2:
+                heading: Retenciones e ingresos a cuenta atribuidos por entidades
+                  en régimen de atribución de rentas
+              calculoimpuestores-3:
+                heading: Retenciones e ingresos a cuenta imputados por agrupaciones
+                  de interés económico y UTE
+              calculoimpuestores-4:
+                heading: 'Cálculo del impuesto: cuotas, deducciones, retenciones y
+                  pagos a cuenta'
+              calculoimpuestores-5:
+                heading: Importe de la deducción por alquiler de la vivienda habitual
         '2025':
           casilla:
             '0003':
@@ -18434,68 +18675,7 @@ modelo:
           field:
             label: Ejercicio 2025
           form:
-            page:
-              datoseconomicos:
-                heading: Titulares de las rentas
-              datoseconomicos-resultados:
-                heading: Resumen y cálculo de la declaración
-              datoseconomicos-tomadatosampliada:
-                heading: Datos detallados de rentas y deducciones
-              datosidentificativos:
-                heading: Datos identificativos
-              datosidentificativos-ascendientes:
-                heading: Ascendientes
-              datosidentificativos-conyuge:
-                heading: Cónyuge
-              datosidentificativos-declarante:
-                heading: Declarante
-              datosidentificativos-hijos:
-                heading: Hijos y otros descendientes
-              declaracion:
-                heading: Declaración
             section:
-              anexoa:
-                heading: Mejoras energéticas en viviendas, vehículos eléctricos y
-                  puntos de recarga (anexo A)
-              anexoares:
-                heading: Deducción por inversión en vivienda habitual (anexo A)
-              anexoares-10:
-                heading: Deducciones por incentivos y estímulos a la inversión empresarial
-                  (anexo A)
-              anexoares-2:
-                heading: Datos de la vivienda habitual y de la inversión en empresas
-                  de nueva o reciente creación (anexo A)
-              anexoares-3:
-                heading: Deducción por alquiler de la vivienda habitual (anexo A)
-              anexoares-4:
-                heading: Deducciones por donativos y otras aportaciones (anexo A)
-              anexoares-5:
-                heading: Deducción por rentas obtenidas en Ceuta o Melilla (anexo
-                  A)
-              anexoares-6:
-                heading: Deducción por residencia habitual y efectiva en la isla de
-                  La Palma (anexo A)
-              anexoares-7:
-                heading: Deducción por inversiones y gastos en bienes de interés cultural
-                  (anexo A)
-              anexoares-8:
-                heading: Deducciones por obras de mejora de la eficiencia energética
-                  y por vehículos eléctricos y puntos de recarga (anexo A)
-              anexoares-9:
-                heading: Reservas para inversiones en Canarias y en las Illes Balears
-                  y deducción para residentes en la Unión Europea (anexo A)
-              anexocres:
-                heading: Partidas pendientes de aplicación y otras informaciones (anexo
-                  C)
-              ascendiente:
-                heading: Datos de cada ascendiente
-              baseimponibleres:
-                heading: Saldo neto positivo del capital mobiliario en la base imponible
-                  del ahorro
-              baseimponibleres-2:
-                heading: Base imponible general y base imponible del ahorro
-              baseliquidableres:
-                heading: Base liquidable general y base liquidable del ahorro
               calculoimpuestores:
                 heading: Discrepancia de criterio administrativo
               calculoimpuestores-2:
@@ -18509,148 +18689,3 @@ modelo:
                   pagos a cuenta'
               calculoimpuestores-5:
                 heading: Importe de la deducción por alquiler de la vivienda habitual
-              calculoimpuestores-6:
-                heading: Total de deducciones por incentivos y estímulos a la inversión
-                  empresarial
-              calculoimpuestores-7:
-                heading: Devolución que pudiera resultar de la rectificación
-              compensacionconyugesres:
-                heading: Suspensión del ingreso y renuncia a la devolución entre cónyuges
-              datosadicionalesanexob:
-                heading: Información adicional de las deducciones autonómicas (anexo
-                  B)
-              datosadicionalesanexob-2:
-                heading: 'Deducciones por nacimiento y por adopción de las Illes Balears:
-                  abono anticipado (anexo B)'
-              datosadicionalesres:
-                heading: Rentas exentas con progresividad y anualidades por alimentos
-                  a favor de los hijos
-              deduccionautonomicares:
-                heading: Deducciones autonómicas (anexo B)
-              dt9:
-                heading: Valor de transmisión acumulado con la disposición transitoria
-                  novena
-              gcambioresidenciaextres:
-                heading: Resumen de ganancias patrimoniales por cambio de residencia
-                  fuera del territorio español
-              general:
-                heading: Contribuyente al que corresponde cada renta
-              gpaccionesres:
-                heading: Resumen de transmisiones de acciones negociadas
-              gpderechosres:
-                heading: Resumen de transmisiones de derechos de suscripción
-              gpfondoscotires:
-                heading: Resumen de transmisiones de fondos cotizados (ETF) y de acciones
-                  de SICAV índice cotizadas
-              gpfondosres:
-                heading: Resumen de transmisiones de acciones o participaciones de
-                  instituciones de inversión colectiva
-              gpotrasganancias:
-                heading: Otras ganancias patrimoniales de la base imponible del ahorro
-              gpotrasgananciasejerant:
-                heading: Ganancias y pérdidas de transmisiones de ejercicios anteriores
-                  imputables a 2025
-              gpotrasgananciasejerantres:
-                heading: Resumen de ganancias y pérdidas de transmisiones de ejercicios
-                  anteriores imputables a 2025
-              gpotrasgananciasres:
-                heading: Resumen de otras ganancias patrimoniales de la base imponible
-                  del ahorro
-              gpotroscriptomonedasres:
-                heading: Resumen de transmisiones de monedas virtuales
-              gpotroselementos:
-                heading: Transmisiones de otros elementos patrimoniales
-              gpotroselementos-2:
-                heading: 'Transmisiones de otros elementos patrimoniales con precio
-                  aplazado: ganancias y pérdidas pendientes de imputación'
-              gpotroselementosres:
-                heading: Resumen de transmisiones de otros elementos patrimoniales
-              gpotrosinmuebles:
-                heading: Transmisiones de inmuebles y derechos reales sobre inmuebles
-              gpotrosinmuebles-2:
-                heading: 'Transmisiones de inmuebles con precio aplazado: ganancias
-                  pendientes de imputación'
-              gpotrosinmuebles-3:
-                heading: Exención por reinversión en vivienda habitual
-              gpotrosinmueblesres:
-                heading: Resumen de transmisiones de inmuebles y derechos reales sobre
-                  inmuebles
-              gppremios:
-                heading: 'Ganancias y pérdidas patrimoniales no derivadas de transmisiones:
-                  juegos, premios y otras'
-              gppremiosres:
-                heading: Resumen de ganancias y pérdidas patrimoniales no derivadas
-                  de transmisiones
-              gpreinversion:
-                heading: Ganancias acogidas a diferimiento por reinversión imputables
-                  a 2025
-              gpreinversionres:
-                heading: Resumen de ganancias acogidas a diferimiento por reinversión
-                  imputables a 2025
-              hijo:
-                heading: Datos de cada descendiente
-              ingresodevolucionres:
-                heading: Resultado a ingresar o a devolver
-              inmueblesres:
-                heading: Resumen de rendimientos del capital inmobiliario e imputaciones
-                  de rentas inmobiliarias
-              integracionres:
-                heading: Integración y compensación de ganancias y pérdidas patrimoniales
-              integracionres-2:
-                heading: Saldo neto negativo del capital mobiliario en la base imponible
-                  del ahorro
-              irpfccaares:
-                heading: IRPF que corresponde a la comunidad autónoma de residencia
-              minimoperfamres:
-                heading: Mínimo personal y familiar
-              rdtocapitalmobiliario:
-                heading: Rendimientos del capital mobiliario
-              rdtocapitalmobiliariores:
-                heading: Resumen de rendimientos del capital mobiliario
-              rdtotrabajores:
-                heading: Resumen de rendimientos del trabajo
-              redbaseimponible:
-                heading: 'Reducciones de la base imponible: previsión social, discapacidad,
-                  patrimonios protegidos, pensiones compensatorias y deportistas'
-              redbaseimponibleres:
-                heading: Reducciones de la base imponible
-              regestimadirecta:
-                heading: Actividades económicas en estimación directa
-              regestimadirectares:
-                heading: Resumen de actividades económicas en estimación directa
-              regestimaobj:
-                heading: Actividades económicas en estimación objetiva (excepto agrícolas,
-                  ganaderas y forestales)
-              regestimaobjagricola:
-                heading: Actividades agrícolas, ganaderas y forestales en estimación
-                  objetiva
-              regestimaobjagricolares:
-                heading: Resumen de actividades agrícolas, ganaderas y forestales
-                  en estimación objetiva
-              regestimaobjres:
-                heading: Resumen de actividades económicas en estimación objetiva
-                  (excepto agrícolas, ganaderas y forestales)
-              regimenesespeciales:
-                heading: 'Atribución e imputación de rentas: entidades en atribución,
-                  agrupaciones de interés económico y UTE, transparencia fiscal internacional,
-                  derechos de imagen e instituciones de inversión colectiva en paraísos
-                  fiscales'
-              regimenesespecialesres:
-                heading: Resumen de rentas atribuidas por entidades en régimen de
-                  atribución de rentas
-              regimenesespecialesres-2:
-                heading: Resumen de bases imputadas por agrupaciones de interés económico
-                  y UTE
-              regimenesespecialesres-3:
-                heading: Resumen de imputaciones por transparencia fiscal internacional,
-                  derechos de imagen e instituciones de inversión colectiva en paraísos
-                  fiscales
-              regimenespecial:
-                heading: Socios de entidades no residentes afectados por fusiones,
-                  escisiones o canjes de valores
-              regimenespecial-2:
-                heading: Operaciones de fusión, escisión, aportación de activos y
-                  canje de valores
-              regularizacionres:
-                heading: Regularización de autoliquidaciones anteriores o liquidaciones
-                  administrativas

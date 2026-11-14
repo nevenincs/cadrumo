@@ -11,6 +11,7 @@ from pathlib import Path
 import pytest
 
 from ..__main__ import main
+from ..diff import row_id
 from ..frontend import (
     EXPORT_WITHHELD_UNVERIFIED,
     STAGE_OF,
@@ -45,7 +46,7 @@ def _row(
     *,
     persona: str = "persona",
     horizon: int = _YEAR + 1,
-    figures: tuple[tuple[str, str], ...] = _FIGURES,
+    figures: tuple[tuple[str, str], ...] | None = _FIGURES,
     internal_figures: tuple[tuple[str, str], ...] = (),
     reason: str = "",
 ) -> TableRow:
@@ -244,9 +245,36 @@ def test_a_refused_python_row_matches_a_refusing_surface_with_no_figures() -> No
 
 
 def test_a_row_that_calculated_without_recorded_figures_is_not_comparable() -> None:
-    outcome = parity(_row(figures=()), "tui", _result())
+    outcome = parity(_row(figures=None), "tui", _result())
     assert outcome.outcome == "not-comparable"
     assert "no figures" in outcome.causes[0]
+
+
+def test_a_calculated_row_recorded_with_no_figures_is_compared_on_its_stages() -> None:
+    not_owed = _row(verify=Stage.NOT_OWED, export=Stage.NOT_REACHED, figures=())
+    assert not_owed.figures_recorded
+    matching = _result(verify="not-owed", export="not-reached", figures={})
+    assert parity(not_owed, "tui", matching).outcome == "matched"
+    differing = parity(not_owed, "tui", _result(verify="pass", export="not-reached", figures={}))
+    assert differing.outcome == "differs"
+    shown = parity(not_owed, "tui", _result(verify="not-owed", export="not-reached", figures={"0505": "3"}))
+    assert (shown.outcome, shown.extra_names) == ("matched", ("0505",))
+
+
+def test_recorded_ness_is_the_presence_of_the_figures_object_in_a_json_line() -> None:
+    recorded = _row(figures=())
+    line = json.loads(recorded.to_json())
+    assert line["figures"] == {}
+    assert "figures_recorded" not in line
+    assert TableRow.from_json(recorded.to_json()).figures_recorded
+    unrecorded = _row(figures=None)
+    older = json.loads(unrecorded.to_json())
+    assert "figures" not in older
+    assert not TableRow.from_json(json.dumps(older)).figures_recorded
+    assert TableRow.from_json(unrecorded.to_json()) == unrecorded
+    assert TableRow.from_json(recorded.to_json()) == recorded
+    baseline = recorded.to_baseline_json(recorded.horizon)
+    assert not TableRow.from_json(baseline, horizon=recorded.horizon).figures_recorded
 
 
 @pytest.mark.parametrize("stage", [Stage.HISTORY_FILED, Stage.NOT_RUN])
@@ -333,7 +361,7 @@ def _comparison() -> tuple[list[TableRow], dict[ResultKey, SurfaceResult]]:
         _row("1T"),
         _row("2T"),
         _row("3T"),
-        _row("4T", figures=()),
+        _row("4T", figures=None),
         _row("1T", persona="other"),
         _row("1T", persona="locked"),
         _row("1T", persona="unrun"),
@@ -743,3 +771,59 @@ def test_the_horizon_is_read_from_the_field_and_a_bad_one_is_refused() -> None:
 )
 def test_the_horizon_is_read_from_the_reason_prefix_when_the_field_is_absent(reason: str, expected: int | None) -> None:
     assert parse_result(json.dumps(_persona_line(None, reason=reason))).horizon == expected
+
+
+_DIAGNOSIS = "cli_calculate_drops_statements"
+
+
+def test_a_workaround_line_parses_and_an_absent_or_null_one_is_none() -> None:
+    assert _result(workaround=_DIAGNOSIS).workaround == _DIAGNOSIS
+    assert _result(workaround=None).workaround is None
+    assert _result().workaround is None
+
+
+@pytest.mark.parametrize("value", ["", 1, True, ["x"], {"a": "b"}])
+def test_an_empty_or_non_text_workaround_is_refused(value: object) -> None:
+    with pytest.raises(ValueError, match="workaround must be non-empty text"):
+        parse_result(json.dumps(_line(workaround=value)))
+
+
+def test_a_row_produced_through_a_workaround_differs_even_when_everything_else_matches() -> None:
+    assert parity(_row(), "cli", _result()).outcome == "matched"
+
+    outcome = parity(_row(), "cli", _result(workaround=_DIAGNOSIS))
+
+    assert (outcome.outcome, outcome.causes) == ("differs", (f"workaround {_DIAGNOSIS}",))
+
+
+def test_a_workaround_cause_comes_first_and_the_stage_and_figure_causes_stay_listed() -> None:
+    shown = _result(workaround=_DIAGNOSIS, verify="incomplete", figures={"0505": "1200.5", "0700": "1.00"})
+
+    outcome = parity(_row(), "cli", shown)
+
+    assert outcome.outcome == "differs"
+    assert outcome.causes == (
+        f"workaround {_DIAGNOSIS}",
+        "verify cli incomplete, table pass",
+        "casilla 0700 cli 1.00, table -2104.67",
+    )
+
+
+def test_a_workaround_does_not_turn_a_row_without_a_comparable_stage_into_a_difference() -> None:
+    outcome = parity(_row(calculate=Stage.NOT_RUN), "cli", _result(workaround=_DIAGNOSIS))
+
+    assert outcome.outcome == "not-comparable"
+
+
+def test_the_cell_counts_a_workaround_row_as_differing_and_never_matched() -> None:
+    rows = [_row("1T"), _row("2T")]
+    lines = [_line(surface="cli", period="1T", workaround=_DIAGNOSIS), _line(surface="cli", period="2T")]
+    results = {parse_result(json.dumps(line)).key: parse_result(json.dumps(line)) for line in lines}
+
+    comparison = compare_frontend(rows, results)
+
+    assert comparison.matched("cli") == 1
+    assert cell_text(comparison.cells["persona", "cli"]) == "loads, 1/2 matched, 1 differs, 0 not run"
+    rendered = render_table(rows, head="abc", frontend=comparison)
+    assert f"- {row_id(rows[0].key)}: cli differs: workaround {_DIAGNOSIS}" in rendered
+    assert f"{row_id(rows[1].key)}: cli" not in rendered

@@ -24,6 +24,17 @@ modelo:
           telephellyel nem rendelkező külföldi illetőségűek. Az adóelőleg-levonások
           és -befizetések éves bevallása.
         title: IRNR adóelőleg-levonások és -befizetések éves összesítője
+      form:
+        page:
+          m296-declarante:
+            heading: '1-es típusú rekord: a bevalló rekordja'
+          numbered-boxes:
+            heading: Összesítő lap
+        section:
+          general:
+            heading: Azonosító adatok és a bevallás összesítése
+          resumen:
+            heading: A bevallásban szereplő adatok összesítése
       revision:
         '2022':
           field:

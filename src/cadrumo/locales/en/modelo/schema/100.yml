@@ -3842,10 +3842,99 @@ modelo:
             heading: Tax base, reductions and taxable base
           tax-calculation:
             heading: Tax calculation
+        page:
+          datoseconomicos:
+            heading: Who each income belongs to
+          datoseconomicos-resultados:
+            heading: Return summary and calculation
+          datoseconomicos-tomadatosampliada:
+            heading: Detailed income and deduction data
+          datosidentificativos:
+            heading: Identification
+          datosidentificativos-ascendientes:
+            heading: Ascendants
+          datosidentificativos-conyuge:
+            heading: Spouse
+          datosidentificativos-declarante:
+            heading: Declarant
+          datosidentificativos-hijos:
+            heading: Children and other descendants
+          declaracion:
+            heading: Declaration
         section:
+          anexoa:
+            heading: Home energy improvements, electric vehicles and charging points
+              (annex A)
+          anexoares:
+            heading: Deduction for investment in the main home (annex A)
+          anexoares-10:
+            heading: Deductions for business investment incentives (annex A)
+          anexoares-2:
+            heading: Main home details and investment in new or recently created companies
+              (annex A)
+          anexoares-3:
+            heading: Deduction for renting the main home (annex A)
+          anexoares-4:
+            heading: Deductions for donations and other contributions (annex A)
+          anexoares-5:
+            heading: Deduction for income obtained in Ceuta or Melilla (annex A)
+          anexoares-6:
+            heading: Deduction for habitual and effective residence on the island
+              of La Palma (annex A)
+          anexoares-7:
+            heading: Deduction for investment and expenditure on assets of cultural
+              interest (annex A)
+          anexoares-8:
+            heading: Deductions for energy efficiency works and for electric vehicles
+              and charging points (annex A)
+          anexoares-9:
+            heading: Investment reserves in the Canary and Balearic Islands and deduction
+              for residents of the European Union (annex A)
+          anexocres:
+            heading: Amounts carried forward and other information (annex C)
+          ascendiente:
+            heading: Details of each ascendant
+          baseimponibleres:
+            heading: Positive net balance of movable capital income in the savings
+              tax base
+          baseimponibleres-2:
+            heading: General tax base and savings tax base
+          baseliquidableres:
+            heading: General taxable base and savings taxable base
           bienes-inmuebles-a-disposicion-de-sus-tit-88aad7:
             heading: Real estate available to its owners, let or assigned to third
               parties, or used in economic activities
+          calculoimpuestores:
+            heading: Withholdings and payments on account attributed by entities under
+              the income attribution regime
+          calculoimpuestores-2:
+            heading: Withholdings and payments on account imputed by economic interest
+              groupings and joint ventures (UTE)
+          calculoimpuestores-3:
+            heading: 'Tax calculation: tax due, deductions, withholdings and payments
+              on account'
+          calculoimpuestores-4:
+            heading: Amount of the deduction for renting the main home
+          calculoimpuestores-5:
+            heading: Total deductions for business investment incentives
+          calculoimpuestores-6:
+            heading: Total deductions for business investment incentives
+          calculoimpuestores-7:
+            heading: Refund that may result from the correction
+          compensacionconyugesres:
+            heading: Suspended payment and waived refund between spouses
+          datosadicionalesanexob:
+            heading: Additional information on regional deductions (annex B)
+          datosadicionalesanexob-2:
+            heading: 'Balearic Islands birth and adoption deductions: advance payment
+              (annex B)'
+          datosadicionalesres:
+            heading: Exempt income counted for the tax rate and maintenance paid to
+              children
+          deduccionautonomicares:
+            heading: Regional deductions (annex B)
+          dt9:
+            heading: Accumulated transfer value under the ninth transitional provision
           ganancias-patrimoniales-por-cambio-de-res-0c81c7:
             heading: Capital gains on a change of residence outside Spanish territory
               (article 95 bis of the Tax Law)
@@ -3861,6 +3950,131 @@ modelo:
           ganancias-y-perdidas-por-la-transmision-d-5aa38b:
             heading: Gains and losses on the transfer of units in listed funds (ETFs)
               and of shares in listed index SICAVs
+          gcambioresidenciaextres:
+            heading: 'Capital gains on a change of residence outside Spanish territory:
+              summary'
+          general:
+            heading: Taxpayer each income belongs to
+          gpaccionesres:
+            heading: 'Transfers of traded shares: summary'
+          gpderechosres:
+            heading: 'Transfers of subscription rights: summary'
+          gpfondoscotires:
+            heading: 'Transfers of listed funds (ETFs) and listed index SICAV shares:
+              summary'
+          gpfondosres:
+            heading: 'Transfers of shares or units in collective investment undertakings:
+              summary'
+          gpotrasganancias:
+            heading: Other capital gains in the savings tax base
+          gpotrasgananciasejerant:
+            heading: Gains and losses from transfers in earlier years allocable to
+              this tax year
+          gpotrasgananciasejerantres:
+            heading: 'Gains and losses from transfers in earlier years allocable to
+              this tax year: summary'
+          gpotrasgananciasres:
+            heading: 'Other capital gains in the savings tax base: summary'
+          gpotroscriptomonedasres:
+            heading: 'Transfers of virtual currencies: summary'
+          gpotroselementos:
+            heading: Transfers of other assets
+          gpotroselementos-2:
+            heading: 'Transfers of other assets with deferred price: gains and losses
+              still to be allocated'
+          gpotroselementosres:
+            heading: 'Transfers of other assets: summary'
+          gpotrosinmuebles:
+            heading: Transfers of real estate and rights in rem over real estate
+          gpotrosinmuebles-2:
+            heading: 'Real estate transfers with deferred price: gains still to be
+              allocated'
+          gpotrosinmuebles-3:
+            heading: Exemption for reinvestment in the main home
+          gpotrosinmueblesres:
+            heading: 'Transfers of real estate and rights in rem over real estate:
+              summary'
+          gppremios:
+            heading: 'Capital gains and losses not arising from transfers: gambling,
+              prizes and others'
+          gppremiosres:
+            heading: 'Capital gains and losses not arising from transfers: summary'
+          gpreinversion:
+            heading: Gains deferred for reinvestment allocable to this tax year
+          gpreinversionres:
+            heading: 'Gains deferred for reinvestment allocable to this tax year:
+              summary'
+          hijo:
+            heading: Details of each descendant
+          ingresodevolucionres:
+            heading: Amount to pay or to refund
+          inmuebles:
+            heading: Real estate available to its owners, let or assigned to third
+              parties, or used in economic activities
+          inmuebles-2:
+            heading: Real estate available to its owners, let or assigned to third
+              parties, or used in economic activities
+          inmuebles-3:
+            heading: Real estate available to its owners, let or assigned to third
+              parties, or used in economic activities
+          inmueblesres:
+            heading: Real estate income and imputed property income summary
+          integracionres:
+            heading: Combining and offsetting capital gains and losses
+          integracionres-2:
+            heading: Negative net balance of movable capital income in the savings
+              tax base
+          irpfccaares:
+            heading: Income tax due to the autonomous community of residence
+          minimoperfamres:
+            heading: Personal and family minimum
+          rdtocapitalmobiliario:
+            heading: Movable capital income
+          rdtocapitalmobiliariores:
+            heading: Movable capital income summary
+          rdtotrabajores:
+            heading: Employment income summary
+          redbaseimponible:
+            heading: 'Tax base reductions: pension schemes, disability, protected
+              assets, compensatory pensions and athletes'
+          redbaseimponibleres:
+            heading: Reductions of the tax base
+          regestimadirecta:
+            heading: Business activities under direct assessment
+          regestimadirectares:
+            heading: 'Business activities under direct assessment: summary'
+          regestimaobj:
+            heading: Business activities under objective assessment, except farming,
+              livestock and forestry
+          regestimaobjagricola:
+            heading: Farming, livestock and forestry activities under objective assessment
+          regestimaobjagricolares:
+            heading: 'Farming, livestock and forestry activities under objective assessment:
+              summary'
+          regestimaobjres:
+            heading: 'Business activities under objective assessment, except farming,
+              livestock and forestry: summary'
+          regimenesespeciales:
+            heading: 'Attributed and imputed income: pass-through entities, economic
+              interest groupings and joint ventures, international tax transparency,
+              image rights and collective investment in tax havens'
+          regimenesespecialesres:
+            heading: 'Income attributed by entities under the income attribution regime:
+              summary'
+          regimenesespecialesres-2:
+            heading: 'Bases imputed by economic interest groupings and joint ventures
+              (UTE): summary'
+          regimenesespecialesres-3:
+            heading: 'Imputations for international tax transparency, image rights
+              and collective investment in tax havens: summary'
+          regimenespecial:
+            heading: Shareholders of non-resident entities affected by mergers, divisions
+              or exchanges of securities
+          regimenespecial-2:
+            heading: Mergers, divisions, contributions of assets and exchanges of
+              securities
+          regularizacionres:
+            heading: Adjustment of earlier self-assessments or administrative assessments
           rendimientos-de-trabajo:
             heading: Employment income
           transmision-de-acciones-negociadas:
@@ -15630,6 +15844,21 @@ modelo:
                 title: 'Modelo 100 2024: personal and family profile data'
           field:
             label: Tax year 2024
+          form:
+            section:
+              calculoimpuestores:
+                heading: Disagreement with an administrative criterion
+              calculoimpuestores-2:
+                heading: Withholdings and payments on account attributed by entities
+                  under the income attribution regime
+              calculoimpuestores-3:
+                heading: Withholdings and payments on account imputed by economic
+                  interest groupings and joint ventures (UTE)
+              calculoimpuestores-4:
+                heading: 'Tax calculation: tax due, deductions, withholdings and payments
+                  on account'
+              calculoimpuestores-5:
+                heading: Amount of the deduction for renting the main home
         '2025':
           casilla:
             '0003':
@@ -17850,66 +18079,7 @@ modelo:
           field:
             label: Tax year 2025
           form:
-            page:
-              datoseconomicos:
-                heading: Who each income belongs to
-              datoseconomicos-resultados:
-                heading: Return summary and calculation
-              datoseconomicos-tomadatosampliada:
-                heading: Detailed income and deduction data
-              datosidentificativos:
-                heading: Identification
-              datosidentificativos-ascendientes:
-                heading: Ascendants
-              datosidentificativos-conyuge:
-                heading: Spouse
-              datosidentificativos-declarante:
-                heading: Declarant
-              datosidentificativos-hijos:
-                heading: Children and other descendants
-              declaracion:
-                heading: Declaration
             section:
-              anexoa:
-                heading: Home energy improvements, electric vehicles and charging
-                  points (annex A)
-              anexoares:
-                heading: Deduction for investment in the main home (annex A)
-              anexoares-10:
-                heading: Deductions for business investment incentives (annex A)
-              anexoares-2:
-                heading: Main home details and investment in new or recently created
-                  companies (annex A)
-              anexoares-3:
-                heading: Deduction for renting the main home (annex A)
-              anexoares-4:
-                heading: Deductions for donations and other contributions (annex A)
-              anexoares-5:
-                heading: Deduction for income obtained in Ceuta or Melilla (annex
-                  A)
-              anexoares-6:
-                heading: Deduction for habitual and effective residence on the island
-                  of La Palma (annex A)
-              anexoares-7:
-                heading: Deduction for investment and expenditure on assets of cultural
-                  interest (annex A)
-              anexoares-8:
-                heading: Deductions for energy efficiency works and for electric vehicles
-                  and charging points (annex A)
-              anexoares-9:
-                heading: Investment reserves in the Canary and Balearic Islands and
-                  deduction for residents of the European Union (annex A)
-              anexocres:
-                heading: Amounts carried forward and other information (annex C)
-              ascendiente:
-                heading: Details of each ascendant
-              baseimponibleres:
-                heading: Positive net balance of movable capital income in the savings
-                  tax base
-              baseimponibleres-2:
-                heading: General tax base and savings tax base
-              baseliquidableres:
-                heading: General taxable base and savings taxable base
               calculoimpuestores:
                 heading: Disagreement with an administrative criterion
               calculoimpuestores-2:
@@ -17923,138 +18093,3 @@ modelo:
                   on account'
               calculoimpuestores-5:
                 heading: Amount of the deduction for renting the main home
-              calculoimpuestores-6:
-                heading: Total deductions for business investment incentives
-              calculoimpuestores-7:
-                heading: Refund that may result from the correction
-              compensacionconyugesres:
-                heading: Suspended payment and waived refund between spouses
-              datosadicionalesanexob:
-                heading: Additional information on regional deductions (annex B)
-              datosadicionalesanexob-2:
-                heading: 'Balearic Islands birth and adoption deductions: advance
-                  payment (annex B)'
-              datosadicionalesres:
-                heading: Exempt income counted for the tax rate and maintenance paid
-                  to children
-              deduccionautonomicares:
-                heading: Regional deductions (annex B)
-              dt9:
-                heading: Accumulated transfer value under the ninth transitional provision
-              gcambioresidenciaextres:
-                heading: 'Capital gains on a change of residence outside Spanish territory:
-                  summary'
-              general:
-                heading: Taxpayer each income belongs to
-              gpaccionesres:
-                heading: 'Transfers of traded shares: summary'
-              gpderechosres:
-                heading: 'Transfers of subscription rights: summary'
-              gpfondoscotires:
-                heading: 'Transfers of listed funds (ETFs) and listed index SICAV
-                  shares: summary'
-              gpfondosres:
-                heading: 'Transfers of shares or units in collective investment undertakings:
-                  summary'
-              gpotrasganancias:
-                heading: Other capital gains in the savings tax base
-              gpotrasgananciasejerant:
-                heading: Gains and losses from transfers in earlier years allocable
-                  to 2025
-              gpotrasgananciasejerantres:
-                heading: 'Gains and losses from transfers in earlier years allocable
-                  to 2025: summary'
-              gpotrasgananciasres:
-                heading: 'Other capital gains in the savings tax base: summary'
-              gpotroscriptomonedasres:
-                heading: 'Transfers of virtual currencies: summary'
-              gpotroselementos:
-                heading: Transfers of other assets
-              gpotroselementos-2:
-                heading: 'Transfers of other assets with deferred price: gains and
-                  losses still to be allocated'
-              gpotroselementosres:
-                heading: 'Transfers of other assets: summary'
-              gpotrosinmuebles:
-                heading: Transfers of real estate and rights in rem over real estate
-              gpotrosinmuebles-2:
-                heading: 'Real estate transfers with deferred price: gains still to
-                  be allocated'
-              gpotrosinmuebles-3:
-                heading: Exemption for reinvestment in the main home
-              gpotrosinmueblesres:
-                heading: 'Transfers of real estate and rights in rem over real estate:
-                  summary'
-              gppremios:
-                heading: 'Capital gains and losses not arising from transfers: gambling,
-                  prizes and others'
-              gppremiosres:
-                heading: 'Capital gains and losses not arising from transfers: summary'
-              gpreinversion:
-                heading: Gains deferred for reinvestment allocable to 2025
-              gpreinversionres:
-                heading: 'Gains deferred for reinvestment allocable to 2025: summary'
-              hijo:
-                heading: Details of each descendant
-              ingresodevolucionres:
-                heading: Amount to pay or to refund
-              inmueblesres:
-                heading: Real estate income and imputed property income summary
-              integracionres:
-                heading: Combining and offsetting capital gains and losses
-              integracionres-2:
-                heading: Negative net balance of movable capital income in the savings
-                  tax base
-              irpfccaares:
-                heading: Income tax due to the autonomous community of residence
-              minimoperfamres:
-                heading: Personal and family minimum
-              rdtocapitalmobiliario:
-                heading: Movable capital income
-              rdtocapitalmobiliariores:
-                heading: Movable capital income summary
-              rdtotrabajores:
-                heading: Employment income summary
-              redbaseimponible:
-                heading: 'Tax base reductions: pension schemes, disability, protected
-                  assets, compensatory pensions and athletes'
-              redbaseimponibleres:
-                heading: Reductions of the tax base
-              regestimadirecta:
-                heading: Business activities under direct assessment
-              regestimadirectares:
-                heading: 'Business activities under direct assessment: summary'
-              regestimaobj:
-                heading: Business activities under objective assessment, except farming,
-                  livestock and forestry
-              regestimaobjagricola:
-                heading: Farming, livestock and forestry activities under objective
-                  assessment
-              regestimaobjagricolares:
-                heading: 'Farming, livestock and forestry activities under objective
-                  assessment: summary'
-              regestimaobjres:
-                heading: 'Business activities under objective assessment, except farming,
-                  livestock and forestry: summary'
-              regimenesespeciales:
-                heading: 'Attributed and imputed income: pass-through entities, economic
-                  interest groupings and joint ventures, international tax transparency,
-                  image rights and collective investment in tax havens'
-              regimenesespecialesres:
-                heading: 'Income attributed by entities under the income attribution
-                  regime: summary'
-              regimenesespecialesres-2:
-                heading: 'Bases imputed by economic interest groupings and joint ventures
-                  (UTE): summary'
-              regimenesespecialesres-3:
-                heading: 'Imputations for international tax transparency, image rights
-                  and collective investment in tax havens: summary'
-              regimenespecial:
-                heading: Shareholders of non-resident entities affected by mergers,
-                  divisions or exchanges of securities
-              regimenespecial-2:
-                heading: Mergers, divisions, contributions of assets and exchanges
-                  of securities
-              regularizacionres:
-                heading: Adjustment of earlier self-assessments or administrative
-                  assessments
