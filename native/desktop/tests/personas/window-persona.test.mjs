@@ -4,6 +4,15 @@
 // file in the acceptance column contract. No tax rule is encoded here: the
 // window decides each outcome and this spec only records what it showed.
 //
+// The statements the persona's operator states reach the window two ways. The
+// world records those the window has no door for. Those it has a door for are
+// the row's `window_statements`: the spec enters each through the form's own
+// offers (the statements offer for a statement of nothing pending and the
+// work-income statement, the prior-values offer for a figure of an earlier
+// return), applies them through the review, and that apply is the window
+// calculating. Which statements a row carries is the world's data; the spec
+// names none and chooses no value.
+//
 // Environment (all required unless noted):
 //   CADRUMO_PERSONA_WORLD    path of the world JSON the Python world builder wrote
 //   CADRUMO_PERSONA_RESULTS  path of the JSONL file to append
@@ -89,6 +98,13 @@ const NEXT_ACTIONS = [
 ];
 const CALCULATING = ["calculate", "recalculate"];
 const FILED = ["export", "export_again", "record_after_file", "recorded"];
+// The world's `driver_calculate` of a return it left for the window to calculate.
+const NOT_RUN = "not_run";
+// The offers on the form: one prior-values entry per binding and one
+// statements entry per family, as the form serves them.
+const PRIOR_ENTRY = (binding) =>
+  `[data-prior-entry=${JSON.stringify(binding)}]`;
+const STATEMENT = (family) => `[data-statement=${JSON.stringify(family)}]`;
 
 // ---------------------------------------------------------------------------
 // Page-side functions. Each is serialised into the window, so it may use only
@@ -115,6 +131,20 @@ function pageMarkByText(scope, item, texts, mode, mark) {
     }
   }
   return null;
+}
+
+/** Which of the evidence dialog's answers are taken: the joint-return choice and the 390 confirmation. */
+function pageEvidenceChosen(scope, answer, confirm) {
+  const norm = (text) => (text ?? "").replace(/\s+/g, " ").trim();
+  const labels = [...document.querySelectorAll(`${scope} label`)];
+  const input = (text) =>
+    labels
+      .find((element) => norm(element.textContent) === text)
+      ?.querySelector("input");
+  return {
+    joint: input(answer)?.checked === true,
+    attested: input(confirm)?.checked === true,
+  };
 }
 
 /** Mark the nth shown `item` under `scope`. */
@@ -506,6 +536,74 @@ function pageChoose(value) {
   return node.value === value;
 }
 
+/** Open the statements and prior-values offers the viewer left hidden. */
+function pageExpandOffers() {
+  let opened = 0;
+  for (const offer of document.querySelectorAll(
+    "[data-statements], [data-prior-values]",
+  )) {
+    const toggle = offer.querySelector('button[aria-expanded="false"]');
+    if (toggle) {
+      toggle.click();
+      opened += 1;
+    }
+  }
+  return opened;
+}
+
+/** What one offer entry (a prior-values entry or a statement) shows now; null if it is not drawn. */
+function pageOffer(selector) {
+  const norm = (text) => (text ?? "").replace(/\s+/g, " ").trim();
+  const node = document.querySelector(selector);
+  if (!node || !node.getClientRects().length) return null;
+  const box = node.querySelector('input[type="checkbox"]');
+  return {
+    checked: box ? box.checked : null,
+    input: node.querySelector('input:not([type="checkbox"])') !== null,
+    text: norm(node.textContent).slice(0, 400),
+    status: [...node.querySelectorAll('[role="status"]')]
+      .filter((element) => element.getClientRects().length > 0)
+      .map((element) => norm(element.textContent)),
+  };
+}
+
+/** What the review dialog offers right now; null when no dialog is shown. */
+function pageReview(apply, acknowledge, again) {
+  const norm = (text) => (text ?? "").replace(/\s+/g, " ").trim();
+  const shown = (element) => element.getClientRects().length > 0;
+  const dialog = [...document.querySelectorAll('[role="dialog"]')]
+    .filter((candidate) => shown(candidate) && !candidate.matches(".sign-in"))
+    .at(-1);
+  if (!dialog) return null;
+  const buttons = [...dialog.querySelectorAll("button")].filter(shown);
+  const named = (text) => buttons.find((b) => norm(b.textContent) === text);
+  const applyButton = named(apply);
+  const box = [...dialog.querySelectorAll('input[type="checkbox"]')].find(
+    (candidate) =>
+      norm(candidate.closest("label")?.textContent) === acknowledge,
+  );
+  return {
+    apply: applyButton ? !applyButton.disabled : null,
+    acknowledge: box ? box.checked : null,
+    again: named(again) !== undefined,
+    text: norm(dialog.textContent).slice(0, 600),
+  };
+}
+
+/** Tick the review's acknowledgement as a press does. */
+function pageAcknowledge(acknowledge) {
+  const norm = (text) => (text ?? "").replace(/\s+/g, " ").trim();
+  const box = [
+    ...document.querySelectorAll('[role="dialog"] input[type="checkbox"]'),
+  ].find(
+    (candidate) =>
+      norm(candidate.closest("label")?.textContent) === acknowledge,
+  );
+  if (!box) return false;
+  if (!box.checked) box.click();
+  return true;
+}
+
 // ---------------------------------------------------------------------------
 // Driver
 // ---------------------------------------------------------------------------
@@ -746,18 +844,124 @@ async function answerDialog(title, row, notes) {
   }
   if (title === label("workspace.modelo.calculate.evidence.title")) {
     // The dialog asks whether a joint return was elected and, for the year's
-    // last period, to confirm a Modelo 390 attestation the window authors
-    // itself. The world carries the table request's attestation (attachment
-    // id and digest, `m303_evidence`) but not the joint-return answer, so no
-    // tax fact is chosen here: the dialog is cancelled and the stage is
-    // incomplete.
+    // last period, to confirm the Modelo 390 attestation. Both answers are the
+    // table's own (`m303_evidence` from the world); without them no tax fact
+    // is chosen and the dialog is cancelled.
+    const evidence = row.m303_evidence;
+    if (typeof evidence?.joint_return_elected !== "boolean") {
+      await clickText(dialog, "button", [
+        label("workspace.modelo.calculate.evidence.cancel"),
+      ]);
+      return "m303 evidence dialog: the world states no joint-return answer";
+    }
+    const answer = label(
+      evidence.joint_return_elected
+        ? "workspace.modelo.calculate.evidence.yes"
+        : "workspace.modelo.calculate.evidence.no",
+    );
+    await clickText(dialog, "label", [answer]);
+    const confirm = label(
+      "workspace.modelo.calculate.evidence.modelo_390_confirm",
+    );
+    const asks390 = await exec(
+      pageMarkByText,
+      dialog,
+      "label",
+      [confirm],
+      "equals",
+      MARK,
+    );
+    if (asks390 !== null) {
+      if (!evidence.attachment_id) {
+        await clickText(dialog, "button", [
+          label("workspace.modelo.calculate.evidence.cancel"),
+        ]);
+        return "m303 evidence dialog asks the Modelo 390 attestation the world does not record";
+      }
+      await clickSelector(`[${MARK}]`);
+    }
+    const chosen = await exec(pageEvidenceChosen, dialog, answer, confirm);
+    if (!chosen.joint || (asks390 !== null && !chosen.attested)) {
+      await clickText(dialog, "button", [
+        label("workspace.modelo.calculate.evidence.cancel"),
+      ]);
+      return `m303 evidence dialog: answer not taken (${JSON.stringify(chosen)})`;
+    }
     await clickText(dialog, "button", [
-      label("workspace.modelo.calculate.evidence.cancel"),
+      label("workspace.modelo.calculate.evidence.calculate"),
     ]);
-    return "m303 evidence dialog";
+    notes.push(
+      `answered the m303 evidence dialog (joint return ${evidence.joint_return_elected}${asks390 !== null ? ", 390 attested" : ""})`,
+    );
+    return null;
   }
+  const reviewTitle = label("workspace.modelo.review.title")
+    .split("{")[0]
+    .trim();
+  if (reviewTitle && title.startsWith(reviewTitle)) return answerReview(notes);
   await window_.browser.keys("Escape");
   return `unexpected dialog: ${title}`;
+}
+
+/**
+ * The review of the statements the window staged: wait for its check, apply,
+ * and close it once it says it is done. The apply recalculates the
+ * declaration, which is the window's own calculation. Returns null when the
+ * statements were applied, else why they were not.
+ */
+async function answerReview(notes) {
+  const dialog = '[role="dialog"]';
+  const apply = label("workspace.modelo.review.apply");
+  const acknowledge = label("workspace.modelo.review.acknowledge");
+  const again = label("workspace.modelo.review.check_again");
+  const read = () => exec(pageReview, apply, acknowledge, again);
+  const ready = await waitFor(
+    async () => {
+      const now = await read();
+      if (!now) return { gone: true };
+      if (now.again) return { failed: now.text };
+      if (now.apply) return { ok: true };
+      if (now.acknowledge === false) {
+        await exec(pageAcknowledge, acknowledge);
+        notes.push("acknowledged the review notice before applying");
+      }
+      return null;
+    },
+    { timeout: 90_000, what: "the review to be ready", soft: true },
+  );
+  if (!ready?.ok) {
+    const now = await read();
+    await window_.browser.keys("Escape");
+    return `the review could not be applied: ${ready?.failed ?? now?.text ?? "it closed"}`;
+  }
+  await clickText(dialog, "button", [apply]);
+  const done = label("workspace.modelo.operation.done");
+  const end = await waitFor(
+    async () => {
+      const now = await read();
+      if (!now) return { gone: true };
+      if (now.text.includes(done)) return { done: true };
+      if (now.again) return { failed: now.text };
+      return null;
+    },
+    {
+      timeout: TIMEOUT.calculate,
+      what: "the review to apply",
+      soft: true,
+      interval: 700,
+    },
+  );
+  if (end?.done) {
+    await clickText(dialog, "button", [label("workspace.modelo.key.close")]);
+    notes.push("applied the staged statements through the review");
+    return null;
+  }
+  if (end?.gone) {
+    notes.push("applied the staged statements through the review");
+    return null;
+  }
+  await window_.browser.keys("Escape");
+  return `the review did not complete: ${end?.failed ?? "no answer within the wait"}`;
 }
 
 async function runAction(action, before, timeout, row) {
@@ -822,6 +1026,162 @@ function describeNotPass(state, listed) {
   ]
     .filter(Boolean)
     .join(" | ");
+}
+
+/** A world figure as the filer types it: the decimal mark of the window's language. */
+const amountText = (value, language) =>
+  (language ?? "").toLowerCase().startsWith("en")
+    ? value
+    : value.replace(".", ",");
+
+/** What a calculating step settled: the stage and the words that explain it. */
+async function judge(before, run) {
+  const why = [...run.notes];
+  const words = freshOf(before, run.state);
+  if (run.declined) {
+    why.push(run.declined);
+    return { stage: "incomplete", why };
+  }
+  if (run.state.timedOut) {
+    why.push("no answer within the wait");
+    return { stage: "error", why };
+  }
+  if (words.length > 0) {
+    why.push(words.join(" | "));
+    return { stage: "refused", why };
+  }
+  if (
+    [...FILED, "verify"].includes(run.state.action) &&
+    run.state.unresolved === ""
+  )
+    return { stage: "pass", why };
+  if (CALCULATING.includes(run.state.action)) {
+    why.push("the calculate button is still offered and nothing was said");
+    return { stage: "error", why };
+  }
+  why.push(describeNotPass(run.state, await findings()));
+  return { stage: "incomplete", why };
+}
+
+/**
+ * Enter statements the world left to the window, through the form's own
+ * doors: a prior-values entry is typed and stated, a statement is ticked and
+ * staged, and the staged changes are applied through the review. The apply
+ * calculates the declaration with them. Returns the calculating step it made
+ * (`judged`, null when nothing was applied) and what the window did not offer.
+ */
+async function enterStatements(list, row) {
+  const problems = [];
+  const entered = [];
+  try {
+    const missed = await openView("desktop.modelo.view.form");
+    if (missed) log("view-click-missed", { view: "form", report: missed });
+  } catch (error) {
+    return {
+      judged: null,
+      problems: [`the form is not shown: ${error.message}`],
+    };
+  }
+  await exec(pageExpandOffers);
+  const language = await exec(() => document.documentElement.lang);
+  const stagedWord = label("workspace.modelo.attention.staged");
+  for (const entry of list.filter((item) => item.kind === "prior_value")) {
+    const base = PRIOR_ENTRY(entry.target);
+    const shown = await waitFor(() => exec(pageOffer, base), {
+      timeout: 20_000,
+      what: `the prior-values entry ${entry.target}`,
+      soft: true,
+    });
+    if (!shown || !shown.input) {
+      problems.push(
+        `the prior-values offer takes no figure for ${entry.target}${shown ? `: ${shown.text}` : ""}`,
+      );
+      continue;
+    }
+    const field = await window_.browser.$(
+      `${base} input:not([type="checkbox"])`,
+    );
+    await field.setValue(amountText(entry.value, language));
+    await clickSelector(`${base} button[type="submit"]`);
+    const answer = await waitFor(
+      async () => {
+        const now = await exec(pageOffer, base);
+        return now && (now.text.includes(stagedWord) || now.status.length > 0)
+          ? now
+          : null;
+      },
+      {
+        timeout: 30_000,
+        what: `the figure for ${entry.target} to be staged`,
+        soft: true,
+      },
+    );
+    if (answer?.text.includes(stagedWord) && answer.status.length === 0)
+      entered.push(`${entry.target} = ${entry.value}`);
+    else
+      problems.push(
+        `${entry.target}: ${answer?.status.join(" | ") || "the figure was not staged"}`,
+      );
+  }
+  const families = [
+    ...new Set(
+      list
+        .filter((item) => item.kind !== "prior_value")
+        .flatMap((item) => item.families),
+    ),
+  ];
+  const ticked = [];
+  for (const family of families) {
+    const base = STATEMENT(family);
+    const shown = await waitFor(() => exec(pageOffer, base), {
+      timeout: 20_000,
+      what: `the statement ${family}`,
+      soft: true,
+    });
+    if (!shown) {
+      problems.push(`the statements offer does not serve ${family}`);
+      continue;
+    }
+    if (shown.checked === false)
+      await clickSelector(`${base} input[type="checkbox"]`);
+    ticked.push(family);
+  }
+  if (ticked.length > 0) {
+    await sleep(400);
+    const staged = await clickText("[data-statements]", "button", [
+      label("desktop.modelo.statements.stage"),
+    ]);
+    if (!staged) {
+      problems.push("the statements offer's stage button is not shown");
+    } else {
+      await sleep(800);
+      const said = await exec(
+        pageTexts,
+        "[data-statements]",
+        '[role="status"]',
+      );
+      if (
+        said.some((text) =>
+          text.includes(label("desktop.modelo.statements.not_placed")),
+        )
+      )
+        problems.push(
+          `the form does not show the boxes of ${ticked.join(", ")}`,
+        );
+      else entered.push(...ticked);
+    }
+  }
+  const before = await readState();
+  if (before.action !== "apply" || entered.length === 0)
+    return {
+      judged: null,
+      problems: [...problems, "nothing was staged, so nothing was applied"],
+    };
+  const run = await runAction("apply", before, TIMEOUT.calculate, row);
+  const judged = await judge(before, run);
+  judged.why.unshift(`entered in the window: ${entered.join("; ")}`);
+  log("statements-entered", { entered, problems, stage: judged.stage });
+  return { judged, problems };
 }
 
 /** Every box the form shows, page by page, scrolling to draw the lazy sections. */
@@ -1050,42 +1410,64 @@ async function driveRow(row, runDir, persona) {
     banner: state.banner,
   });
 
-  // Calculate
-  if (CALCULATING.includes(state.action)) {
-    const run = await runAction(state.action, state, TIMEOUT.calculate, row);
-    const words = freshOf(state, run.state);
-    for (const note of run.notes) say("calculate", note);
-    if (run.declined) {
-      out.calculate = "incomplete";
-      say("calculate", run.declined);
-    } else if (run.state.timedOut) {
-      out.calculate = "error";
-      say("calculate", "no answer within the wait");
-    } else if (words.length > 0) {
-      out.calculate = "refused";
-      say("calculate", words.join(" | "));
-    } else if (
-      [...FILED, "verify"].includes(run.state.action) &&
-      run.state.unresolved === ""
-    ) {
-      out.calculate = "pass";
-    } else if (CALCULATING.includes(run.state.action)) {
-      out.calculate = "error";
+  // Calculate. The statements the world left to the window are entered
+  // through the form's own doors and applied; an apply calculates the
+  // declaration with them, and that is the window calculating. The first
+  // are those the table states before the first calculation, the others
+  // those it states on the calculated return.
+  const entries = row.window_statements ?? [];
+  const early = entries.filter((entry) => !entry.after_calculation);
+  const late = entries.filter((entry) => entry.after_calculation);
+  const inherited =
+    row.driver_calculate !== undefined &&
+    row.driver_calculate !== null &&
+    row.driver_calculate !== NOT_RUN;
+  let last = null;
+  const unoffered = [];
+  const take = (result) => {
+    unoffered.push(...result.problems);
+    if (result.judged) last = result.judged;
+  };
+  if (early.length > 0) {
+    take(await enterStatements(early, row));
+    state = await readState();
+  }
+  if (
+    CALCULATING.includes(state.action) &&
+    (last === null || last.stage === "error")
+  ) {
+    const before = state;
+    const run = await runAction(state.action, before, TIMEOUT.calculate, row);
+    last = await judge(before, run);
+    state = await readState();
+  }
+  if (
+    late.length > 0 &&
+    state.action !== null &&
+    !CALCULATING.includes(state.action) &&
+    !["refused", "error"].includes(last?.stage)
+  ) {
+    take(await enterStatements(late, row));
+    state = await readState();
+  }
+  for (const text of unoffered) say("calculate", text);
+  const standing = ["verify", ...FILED].includes(state.action);
+  if (last === null || (inherited && last.stage === "pass")) {
+    if (standing) {
+      out.calculate = "calculate_inherited";
       say(
         "calculate",
-        "the calculate button is still offered and nothing was said",
+        row.calculate_inherited_reason ||
+          "a calculation was already present; none was run",
       );
+      for (const text of last?.why ?? []) say("calculate", text);
     } else {
       out.calculate = "incomplete";
-      say("calculate", describeNotPass(run.state, await findings()));
+      say("calculate", describeNotPass(state, await findings()));
     }
-    state = run.state.dialogTitle ? await readState() : run.state;
-  } else if (["verify", ...FILED].includes(state.action)) {
-    out.calculate = "calculate_inherited";
-    say("calculate", "a calculation was already present; none was run");
   } else {
-    out.calculate = "incomplete";
-    say("calculate", describeNotPass(state, await findings()));
+    out.calculate = last.stage;
+    for (const text of last.why) say("calculate", text);
   }
   log("calculate", { stage: out.calculate });
 
@@ -1241,9 +1623,23 @@ async function exportFile(row, runDir, persona, out) {
       sayExport(out, outcome.words.join(" | "));
       return "refused";
     }
+    // Whether the save picker was ever asked: the queued selection is
+    // consumed only when the window opens it.
+    const pickerAsked = !existsSync(
+      join(runDir, "temporary", "native-picker-selection.json"),
+    );
+    const panelText = await exec(
+      (selector) =>
+        [...document.querySelectorAll(selector)]
+          .filter((root) => root.getClientRects().length > 0)
+          .map((root) => (root.innerText ?? "").replace(/\s+/g, " ").trim())
+          .join(" || ")
+          .slice(0, 700),
+      panel,
+    );
     sayExport(
       out,
-      "no file was written and the window said nothing within the wait",
+      `no file was written and the window said nothing within the wait (save picker ${pickerAsked ? "asked" : "never asked"}; panel: ${panelText})`,
     );
     return "error";
   } finally {
@@ -1444,7 +1840,9 @@ function profileCredential() {
     readFileSync(CREDENTIAL_SOURCE, "utf8"),
   );
   if (!match)
-    throw new Error("no PERSONA_PROFILE_CREDENTIAL in persona_materialisation.py");
+    throw new Error(
+      "no PERSONA_PROFILE_CREDENTIAL in persona_materialisation.py",
+    );
   return match[1];
 }
 
