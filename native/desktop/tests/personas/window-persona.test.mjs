@@ -1816,9 +1816,44 @@ async function recordFiling(out) {
     say("the record-as-filed button is not shown");
     return;
   }
-  if (
-    !(await exec((mark) => !document.querySelector(`[${mark}]`).disabled, MARK))
-  ) {
+  // The button stays disabled while the window reads the declaration again
+  // after the export's write (Modelo 303 2T on build 12), so it is given that
+  // read before it counts as disabled.
+  const enabled = await waitFor(
+    async () => {
+      if ((await readState()).busy) return null;
+      const mark = await exec(
+        pageMarkByText,
+        panel,
+        "button",
+        [record],
+        "equals",
+        MARK,
+      );
+      if (mark === null) return null;
+      return (await exec(
+        (mark) => !document.querySelector(`[${mark}]`).disabled,
+        MARK,
+      ))
+        ? true
+        : null;
+    },
+    { timeout: 30_000, what: "the record-as-filed button", soft: true },
+  );
+  if (!enabled) {
+    if (
+      (await exec(
+        pageMarkByText,
+        panel,
+        "button",
+        [record],
+        "equals",
+        MARK,
+      )) === null
+    ) {
+      say("the record-as-filed button is not shown");
+      return;
+    }
     const why = await exec(
       (mark) =>
         (document.querySelector(`[${mark}]`).parentElement?.innerText ?? "")
