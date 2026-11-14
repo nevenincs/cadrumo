@@ -64,7 +64,7 @@ def _values(block: PublicModeloFormRepeatingBlock, row: PublicModeloFormRepeatin
     ]
 
 
-def _block(page_id: str, section_id: str, block: PublicModeloFormRepeatingBlock) -> WorkFormRecordBlock:
+def _record_block(page_id: str, section_id: str, block: PublicModeloFormRepeatingBlock) -> WorkFormRecordBlock:
     return WorkFormRecordBlock(
         block_id=block.id,
         page_id=page_id,
@@ -95,7 +95,7 @@ def work_form_result(bucket_id: str, projection: ModeloWorkbenchFormProjectionV1
         registry_revision_id=form.registry_revision_id,
         calculation_revision_id=form.calculation_revision_id,
         blocks=[
-            _block(page.id, section.id, block)
+            _record_block(page.id, section.id, block)
             for page in form.pages
             for section in page.sections
             for block in section.blocks
