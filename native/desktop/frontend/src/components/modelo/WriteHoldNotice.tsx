@@ -62,6 +62,11 @@ export function WriteHoldNotice({
   const t = useStrings();
   const hold = useModeloWriteHold(holds, target);
   const reviewed = useModeloReviewedFailure(holds, target);
+  const reading = useSyncExternalStore(
+    holds.subscribe,
+    () => holds.isReading(target),
+    () => false,
+  );
   const generation = useRef(0);
   useLayoutEffect(
     () => () => {
@@ -84,6 +89,10 @@ export function WriteHoldNotice({
       </Alert>
     ) : null;
   if (hold.phase === "running") return null;
+  // The window reads its own settled write by itself; the notice and its
+  // control stay for a read the person started, served words, or a failed read.
+  if (hold.phase === "refresh" && reading && !refreshing && !hold.words)
+    return null;
   const canReview =
     !creation &&
     onReviewCurrent !== undefined &&
