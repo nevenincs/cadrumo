@@ -7,6 +7,13 @@ request is opened, not by hand — see [`RELEASING.md`](RELEASING.md).
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.1](https://github.com/nevenincs/cadrumo/compare/v0.6.0...v0.6.1) (2026-11-10)
+
+
+### Bug Fixes
+
+* **logging:** log a served refusal that changed nothing at INFO ([db460a4](https://github.com/nevenincs/cadrumo/commit/db460a45fed53f8fd99386fbaa0eb3d0f16bb7e9))
+
 ## [0.6.0](https://github.com/nevenincs/cadrumo/compare/v0.5.1...v0.6.0) (2026-10-08)
 
 
