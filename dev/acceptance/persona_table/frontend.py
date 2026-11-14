@@ -29,6 +29,17 @@ A return line may state ``workaround``, non-empty text naming a diagnostic subst
 column reading a calculation back instead of running ``calculate``): the stage values were produced by that substitute,
 so the row never counts as matched. Its outcome is ``differs`` with the cause ``workaround <value>`` first, and the
 stage and figure causes are still computed and listed after it so the diagnosis stays visible.
+
+The ``calculate`` stage (and only it) may also be ``calculate_inherited``: the surface did not run the calculation;
+one was already present in the world it was given. Such a row is never matched: its outcome is ``differs`` with the
+cause ``calculate inherited (the surface did not run the calculation)`` first (before a ``workaround`` cause), then
+the usual stage and figure causes. The calculate stage itself is compared as ``pass``, so a table row that did not
+calculate still names the stage, and the verify and export stages are compared and listed as usual.
+
+A window line written before the word existed, with ``calculate`` ``pass`` and a reason containing
+``calculate: a calculation was already present; none was run``, is read as ``calculate_inherited``. Only the window
+surface is read that way, and only when its calculate is ``pass``; the same words in another surface's reason are
+ordinary text. The python-stage vocabulary of the table rows does not change.
 """
 
 from __future__ import annotations
@@ -49,6 +60,12 @@ SURFACE_LABELS = {"tui": "TUI", "window": "window", "cli": "CLI"}
 NOT_REACHED = "not-reached"
 STAGE_WORDS = ("pass", "incomplete", "refused", "not-owed", NOT_REACHED, "error")
 """The stage vocabulary of a surface result."""
+CALCULATE_INHERITED = "calculate_inherited"
+"""The calculate stage of a surface that did not run the calculation; one was already present in its world."""
+CALCULATE_WORDS = (*STAGE_WORDS, CALCULATE_INHERITED)
+INHERITED_CAUSE = "calculate inherited (the surface did not run the calculation)"
+LEGACY_INHERITED_REASON = "calculate: a calculation was already present; none was run"
+"""How the window wrote an inherited calculation (as ``pass``) before the word existed."""
 
 EXPORT_WITHHELD_UNVERIFIED = ("REFUSED_MODELO_REVISION_NOT_SEALED",)
 """The codes the export operation raises for a revision that is not sealed (unverified, so no grant sealed it)."""
@@ -188,7 +205,10 @@ def read_results(directory: Path) -> dict[ResultKey, SurfaceResult]:
     The optional ``horizon`` (an integer or null, persona-level lines only) names the horizon a persona line was run
     at; absent, it is read from the reason's ``horizon <year>`` or ``<persona>@<year>`` prefix.
     The optional ``workaround`` (non-empty text or null) states that a diagnostic substitute for what a person does
-    produced the stage values; the row then never counts as matched.
+    produced the stage values; the row then never counts as matched. The ``calculate`` stage may also be
+    ``calculate_inherited`` (the surface did not run the calculation; one was already present in the world it was
+    given); the row then never counts as matched. A window line with ``calculate`` ``pass`` whose reason contains
+    ``calculate: a calculation was already present; none was run`` is read as ``calculate_inherited``.
     Unknown keys and bad values are refused.
     """
     if not directory.is_dir():
@@ -221,12 +241,12 @@ def parse_result(line: str) -> SurfaceResult:
         raise ValueError(f"missing key {', '.join(missing)}")
     surface = _choice(data, "surface", SURFACES)
     modelo, year, period = _return_scope(data)
-    stages = _stage_words(data, modelo)
+    reason = _optional_text(data, "reason") or ""
+    stages = _stage_words(data, modelo, window_inherited=surface == "window" and LEGACY_INHERITED_REASON in reason)
     loads = data["loads"]
     if not isinstance(loads, bool):
         raise ValueError("loads must be true or false")
     persona = _text(data, "persona")
-    reason = _optional_text(data, "reason") or ""
     return SurfaceResult(
         surface=surface,
         tree=_text(data, "tree"),
@@ -275,14 +295,21 @@ def _return_scope(data: Mapping[str, object]) -> tuple[str | None, int | None, s
     return modelo, year, period
 
 
-def _stage_words(data: Mapping[str, object], modelo: str | None) -> dict[str, str]:
-    """The stage words a line states: all three for a return, any not null for a persona-level line."""
+def _stage_words(data: Mapping[str, object], modelo: str | None, *, window_inherited: bool) -> dict[str, str]:
+    """The stage words a line states: all three for a return, any not null for a persona-level line.
+
+    ``window_inherited`` marks a window line whose reason says the calculation was already present: its ``pass``
+    calculate is read as ``calculate_inherited``.
+    """
     if modelo is None:
         stated = {name: data[name] for name in _STAGE_FIELDS if data.get(name) is not None}
     else:
         _require_all_stages(data)
         stated = {name: data[name] for name in _STAGE_FIELDS}
-    return {name: _choice(stated, name, STAGE_WORDS) for name in stated}
+    words = {name: _choice(stated, name, CALCULATE_WORDS if name == "calculate" else STAGE_WORDS) for name in stated}
+    if window_inherited and words.get("calculate") == "pass":
+        words["calculate"] = CALCULATE_INHERITED
+    return words
 
 
 def _optional_stage(data: Mapping[str, object], name: str) -> str | None:
@@ -292,9 +319,7 @@ def _optional_stage(data: Mapping[str, object], name: str) -> str | None:
 
 def _optional_workaround(data: Mapping[str, object]) -> str | None:
     """The workaround text of a line: ``None`` when absent or null, else non-empty text."""
-    if data.get("workaround") is None:
-        return None
-    return _text(data, "workaround")
+    return None if data.get("workaround") is None else _text(data, "workaround")
 
 
 def _optional_bool(data: Mapping[str, object], name: str) -> bool | None:
@@ -456,15 +481,16 @@ def parity(
         return RowParity(row.key, surface, NOT_COMPARABLE, (why,), tree)
     table, shown = dict(row.figures), dict(result.figures)
     stage_causes, gated = _stage_causes(surface, stages, result, export_refusal_code(row.reason))
-    causes = _workaround_causes(result) + stage_causes + figure_causes(surface, table, shown)
+    causes = _substitute_causes(result) + stage_causes + figure_causes(surface, table, shown)
     outcome = DIFFERS if causes else MATCHED
     extras = extra_figures(table | dict(row.internal_figures), shown)
     return RowParity(row.key, surface, outcome, tuple(causes), tree, extras, gated)
 
 
-def _workaround_causes(result: SurfaceResult) -> list[str]:
-    """The cause that keeps a row produced through a diagnostic substitute from ever matching."""
-    return [] if result.workaround is None else [f"workaround {result.workaround}"]
+def _substitute_causes(result: SurfaceResult) -> list[str]:
+    """The causes that keep a row whose calculation the surface did not run itself from ever matching."""
+    causes = [INHERITED_CAUSE] if result.calculate == CALCULATE_INHERITED else []
+    return [*causes, f"workaround {result.workaround}"] if result.workaround is not None else causes
 
 
 def _load_failure_reason(result: SurfaceResult | None, load_reason: str) -> str:
@@ -512,7 +538,8 @@ def _stage_causes(
     causes: list[str] = []
     gated: list[str] = []
     for name, word in stages.items():
-        if getattr(result, name) == word:
+        shown = "pass" if getattr(result, name) == CALCULATE_INHERITED else getattr(result, name)
+        if shown == word:
             continue
         if _export_unavailable(name, word, result, code):
             gated.append(f"{EXPORT_UNAVAILABLE} {code}")

@@ -4577,6 +4577,8 @@ desktop:
     details:
       close: Close details
       hide: Hide details
+      label: Details
+      resize: Resize the details
       show: Show details
     disagreement:
       accept: Accept with a reason
@@ -4626,6 +4628,7 @@ desktop:
     side:
       label: Beside the form
       outline: Outline
+      resize: Resize the panel beside the form
     statements:
       hide: Hide
       intro: Tick each statement that is true for you. Every one you tick is staged

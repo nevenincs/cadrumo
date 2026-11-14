@@ -13,8 +13,12 @@ import pytest
 from ..__main__ import main
 from ..diff import row_id
 from ..frontend import (
+    CALCULATE_INHERITED,
     EXPORT_WITHHELD_UNVERIFIED,
+    INHERITED_CAUSE,
+    LEGACY_INHERITED_REASON,
     STAGE_OF,
+    STAGE_WORDS,
     FrontendResultError,
     PersonaCell,
     ResultKey,
@@ -827,3 +831,81 @@ def test_the_cell_counts_a_workaround_row_as_differing_and_never_matched() -> No
     rendered = render_table(rows, head="abc", frontend=comparison)
     assert f"- {row_id(rows[0].key)}: cli differs: workaround {_DIAGNOSIS}" in rendered
     assert f"{row_id(rows[1].key)}: cli" not in rendered
+
+
+def test_calculate_inherited_is_a_calculate_stage_word_and_no_other_stage_accepts_it() -> None:
+    assert _result(calculate=CALCULATE_INHERITED).calculate == "calculate_inherited"
+    assert CALCULATE_INHERITED not in STAGE_WORDS
+    for stage in ("verify", "export", "file"):
+        with pytest.raises(ValueError, match=f"{stage} must be one of"):
+            parse_result(json.dumps(_line(**{stage: CALCULATE_INHERITED})))
+
+
+def test_a_legacy_window_line_with_the_inherited_reason_is_read_as_calculate_inherited() -> None:
+    reason = f"persona@7: {LEGACY_INHERITED_REASON}; export: the export button is not shown"
+
+    legacy = _result(surface="window", reason=reason)
+
+    assert (legacy.calculate, legacy.verify, legacy.export) == ("calculate_inherited", "pass", "pass")
+
+
+@pytest.mark.parametrize(
+    "overrides",
+    [
+        {"surface": "tui", "reason": LEGACY_INHERITED_REASON},
+        {"surface": "cli", "reason": LEGACY_INHERITED_REASON},
+        {"surface": "window", "reason": "calculate: a calculation was run"},
+        {"surface": "window", "calculate": "incomplete", "reason": LEGACY_INHERITED_REASON},
+    ],
+)
+def test_the_inherited_reason_is_read_as_inherited_only_for_a_window_line_that_says_pass(
+    overrides: dict[str, object],
+) -> None:
+    assert _result(**overrides).calculate == overrides.get("calculate", "pass")
+
+
+def test_a_row_whose_calculation_was_inherited_differs_with_that_cause_first_and_the_rest_listed() -> None:
+    assert parity(_row(), "window", _result(surface="window")).outcome == "matched"
+
+    alone = parity(_row(), "window", _result(surface="window", calculate=CALCULATE_INHERITED))
+    assert (alone.outcome, alone.causes) == ("differs", (INHERITED_CAUSE,))
+
+    shown = _result(
+        surface="window",
+        calculate=CALCULATE_INHERITED,
+        workaround=_DIAGNOSIS,
+        verify="incomplete",
+        figures={"0505": "1200.5", "0700": "1.00"},
+    )
+    outcome = parity(_row(), "window", shown)
+    assert outcome.outcome == "differs"
+    assert outcome.causes == (
+        INHERITED_CAUSE,
+        f"workaround {_DIAGNOSIS}",
+        "verify window incomplete, table pass",
+        "casilla 0700 window 1.00, table -2104.67",
+    )
+
+
+def test_an_inherited_calculation_against_a_table_calculate_that_is_not_pass_names_the_stage() -> None:
+    outcome = parity(_row(calculate=Stage.REFUSED), "window", _result(surface="window", calculate=CALCULATE_INHERITED))
+
+    assert outcome.causes[:2] == (INHERITED_CAUSE, "calculate window calculate_inherited, table refused")
+
+
+def test_the_cell_counts_an_inherited_row_as_differing_and_the_legacy_line_too() -> None:
+    rows = [_row("1T"), _row("2T"), _row("3T")]
+    lines = [
+        _line(surface="window", period="1T", calculate=CALCULATE_INHERITED),
+        _line(surface="window", period="2T", reason=LEGACY_INHERITED_REASON),
+        _line(surface="window", period="3T"),
+    ]
+    results = {parse_result(json.dumps(line)).key: parse_result(json.dumps(line)) for line in lines}
+
+    comparison = compare_frontend(rows, results)
+
+    assert comparison.matched("window") == 1
+    assert cell_text(comparison.cells["persona", "window"]) == "loads, 1/3 matched, 2 differs, 0 not run"
+    rendered = render_table(rows, head="abc", frontend=comparison)
+    assert f"- {row_id(rows[0].key)}: window differs: {INHERITED_CAUSE}" in rendered
+    assert f"- {row_id(rows[1].key)}: window differs: {INHERITED_CAUSE}" in rendered

@@ -51,7 +51,7 @@ from cadrumo.entrypoints.tests.persona_materialisation import (
     materialised_persona,
     public_result,
     settle_operation,
-    state_after_calculation,
+    state_offered_statements,
 )
 from cadrumo.entrypoints.tests.persona_prior_carries import attest_prior_carries
 from cadrumo.entrypoints.tests.persona_rental_carries import attest_pending_rental_carries
@@ -130,7 +130,13 @@ def _statements(materialised: MaterialisedPersona, plan: PlannedRow, work_unit_i
         )
 
     return _Statements(
-        after_calculate=lambda calculated: state_after_calculation(world, calculated),
+        after_calculate=lambda calculated: state_offered_statements(
+            world,
+            modelo=calculated.unit.modelo,
+            filing_year=calculated.unit.filing_year,
+            period=calculated.unit.period.code,
+            work_unit_id=calculated.work_unit_id,
+        ),
         after_settled_calculation=after_settled_calculation,
     )
 

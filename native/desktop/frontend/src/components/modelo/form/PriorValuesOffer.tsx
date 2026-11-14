@@ -5,6 +5,7 @@ import { Icon } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
 import type { PublicModeloFormPriorValueAttestation } from "../../../shell/modeloContract/modeloWorkFormPart2";
 import type { RefusalIntent, WindowPlace } from "../../../shell/refusal";
+import { usePanePreference } from "../../../shell/panePreference";
 import { useStrings } from "../../../shell/strings";
 import { RefusalNotice } from "../../RefusalNotice";
 import { BoxNumber } from "./BoxNumber";
@@ -43,13 +44,20 @@ function families(
   return [...byFamily.values()];
 }
 
+/** The name the offer's shown or hidden state is kept under in the
+ * viewer's preferences. */
+export const PRIOR_VALUES_PANE = "modelo.workspace.prior_values";
+
 export function PriorValuesOffer({
   session,
   onRefusalAction,
   opensRefusalPlace,
 }: { session: FormSession } & RefusalDoors) {
   const t = useStrings();
-  const [open, setOpen] = useState(true);
+  // Shown or hidden as the viewer last left it, on every declaration.
+  const kept = usePanePreference(PRIOR_VALUES_PANE);
+  const open = kept.preference.open ?? true;
+  const setOpen = kept.setOpen;
   const titleId = useId();
   const listId = useId();
   const { priorValues } = session;

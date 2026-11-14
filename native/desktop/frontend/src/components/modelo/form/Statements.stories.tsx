@@ -80,7 +80,6 @@ function Session({
   const [holds] = useState(createModeloWriteHolds);
   const target = declarationWriteKey(envelope.work_unit_id);
   const session = useFormSession({ envelope, port, language });
-  const [details, setDetails] = useState(false);
   const ran = useRef(false);
   useEffect(() => {
     if (ran.current || !setup) return;
@@ -95,13 +94,7 @@ function Session({
       reload={() => Promise.resolve(true)}
     >
       <div className="flex h-full min-h-0 flex-col bg-background">
-        <FormView
-          envelope={envelope}
-          session={session}
-          detailsOpen={details}
-          onDetailsOpenChange={setDetails}
-          onOpenSurface={noop}
-        />
+        <FormView envelope={envelope} session={session} onOpenSurface={noop} />
         {review && session.stagedCount > 0 && (
           <ReviewDialog
             open
