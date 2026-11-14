@@ -12,6 +12,7 @@ from collections.abc import MutableMapping
 
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema import BindingDefinition, ModeloRevision
+from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.calculation_revision_operator_layer import ATTESTED_ZERO, RowCarryAttestation
 from .edit_models import ModeloEditBindingAddressV1
 
@@ -22,6 +23,23 @@ def is_row_stated(revision: ModeloRevision, binding_id: BindingId) -> bool:
     """Whether the carry of ``binding_id`` is stated row by row."""
     family = next((item.absence_attestation for item in revision.bindings if item.id == binding_id), None)
     return family is not None and family.row_grain
+
+
+def calculated_row_indexes(
+    head: CalculationRevision | None, revision: ModeloRevision, binding_id: BindingId
+) -> dict[str, int]:
+    """The row index of each row ``head`` holds from the source that fills ``binding_id``, by its source identity.
+
+    A row statement may speak only of these rows, so a statement never names a row the declaration does not hold.
+    """
+    binding = next((item for item in revision.bindings if item.id == binding_id), None)
+    if head is None or binding is None:
+        return {}
+    indexes: dict[str, int] = {}
+    for (_column, index), identity in sorted(head.row_source_identities.items()):
+        if identity.source_kind is binding.source:
+            indexes.setdefault(identity.source_row_identity, index)
+    return indexes
 
 
 def withdraw_superseded_row_statements(

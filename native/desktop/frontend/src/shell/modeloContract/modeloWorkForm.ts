@@ -284,10 +284,16 @@ export type ModeloFormCalculationNote = {
  * holds no value: no stored earlier return supplied it, and the filer has
  * neither entered it nor stated it. Applying it stages one `attest_no_amount`
  * intent per binding, which records each as a zero the filer stated.
+ *
+ * A family stated row by row takes one statement per row of the repeating
+ * group: `row_identity` names the row the calculation holds, and every intent
+ * the statement stages carries it in its address.
  */
 export type ModeloFormCarryAttestation = {
   family: AbsenceAttestationFamily;
   binding_ids: BindingId[];
+  row_identity?: string | null;
+  row_words?: string | null;
   action_words: string;
   statement_words: string;
   effect_words: string;

@@ -8,7 +8,7 @@
 //! a comparison never stands for agreement: the product serves each side's
 //! state and each box's own classification, and the host adds none.
 use super::admitted::{Kind, admitted};
-use super::{YEARS, bare, held, invalid};
+use super::{bare, held, invalid};
 use crate::shell::relay::protocol;
 use crate::shell::user_profile::ProfileHost;
 use serde::Deserialize;
@@ -93,7 +93,7 @@ impl Selector {
             {
                 Some(json!({"kind":"view","snapshot_id":snapshot_id}))
             }
-            Self::Latest { filing_year } if YEARS.contains(filing_year) => {
+            Self::Latest { filing_year } => {
                 Some(json!({"kind":"latest","filing_year":filing_year}))
             }
             _ => None,
@@ -194,7 +194,7 @@ pub(super) async fn compare(
     filing_year: u16,
     language: String,
 ) -> crate::shell::relay::Result<Value> {
-    if !YEARS.contains(&filing_year) || !crate::shell::language::supported(&language) {
+    if !crate::shell::language::supported(&language) {
         return Err(invalid());
     }
     let payload =
@@ -243,8 +243,6 @@ mod tests {
             json!({"kind":"view","snapshot_id":"ab 12"}),
             json!({"kind":"view","snapshot_id":"g"}),
             json!({"kind":"view","snapshot_id":"a".repeat(65)}),
-            json!({"kind":"latest","filing_year":999}),
-            json!({"kind":"latest","filing_year":10000}),
         ] {
             assert!(selector(refused.clone()).members().is_none(), "{refused}");
         }
@@ -253,6 +251,12 @@ mod tests {
                 .members()
                 .is_some()
         );
+        for year in [999, 2025, 10000] {
+            assert_eq!(
+                selector(json!({"kind":"latest","filing_year":year})).members(),
+                Some(json!({"kind":"latest","filing_year":year}))
+            );
+        }
         for unread in [
             json!({"kind":"list","state":"everything"}),
             json!({"kind":"list","extra":1}),

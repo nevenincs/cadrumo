@@ -18,13 +18,25 @@ import {
   clickText,
   exec,
   label,
+  pageErrors,
   pageGeometry,
+  paneAudit,
   setSize,
   sleep,
   start,
   teardown,
+  waitFor,
+  win,
 } from "./ux-driver.mjs";
-import { chooseTab, openDeclaration, tablist } from "./ux-nav.mjs";
+import {
+  chooseTab,
+  closeSettings,
+  openDeclaration,
+  openLedgerSection,
+  openRailPage,
+  pageNow,
+  tablist,
+} from "./ux-nav.mjs";
 
 const ONLY = process.env.CADRUMO_UX_ONLY;
 let world;
@@ -220,4 +232,210 @@ ux("UX-07 form page tabs are named in words, not registry paths", async () => {
   assert(names.length > 0, "the form offers page tabs");
   const raw = names.filter((n) => /[a-z][A-Z]|\w\/\w/.test(n));
   assert.deepEqual(raw, [], `page tabs named by registry path: ${raw.join(" | ")}`);
+});
+
+// ---------------------------------------------------------------------------
+// Rail pages: resize and clipping. Each probe reports what it measured as a
+// test diagnostic (one JSON object per page, probe and size) and asserts
+// nothing: a defect is read from the report, and a page the probe cannot reach
+// is reported as not reached with the reason.
+// ---------------------------------------------------------------------------
+
+const AUDIT_SIZES = [
+  DEFAULT_SIZE,
+  [1280, 800],
+  [1024, 640],
+  [900, 600],
+];
+
+const report = (t, record) => t.diagnostic(JSON.stringify(record));
+
+/** Measure the page now drawn and report it. */
+async function measure(t, page, size, root, options) {
+  const audit = await exec(paneAudit, root, options);
+  const errors = await exec(pageErrors);
+  const geometry = await exec(pageGeometry);
+  report(t, {
+    page,
+    size,
+    reached: true,
+    audit,
+    error: { boundary: errors.boundary, crash: errors.crash, empty: errors.empty },
+    geometry: {
+      docScroll: geometry.docScroll,
+      unreachable: geometry.unreachable.length,
+      unreachableFirst: geometry.unreachable.slice(0, 5),
+      overflowHidden: geometry.overflowHidden.length,
+    },
+  });
+}
+
+/** Run `probe(size)` at each audit size; a throw is reported as not reached. */
+async function atSizes(t, page, probe) {
+  try {
+    for (const size of AUDIT_SIZES) {
+      const inner = await setSize(...size);
+      try {
+        await probe(inner);
+      } catch (error) {
+        report(t, { page, size: inner, reached: false, reason: `probe failed: ${error.message}` });
+      }
+    }
+  } finally {
+    await setSize(...DEFAULT_SIZE);
+  }
+}
+
+/** Open a rail page and measure it; report why when it cannot be reached. */
+const pageProbe = (t, page, id, root, options, attr) =>
+  atSizes(t, page, async (size) => {
+    const got = await openRailPage(id, root, attr);
+    if (!got.reached) return report(t, { page, size, reached: false, reason: got.reason });
+    await sleep(700);
+    await measure(t, page, size, root, options);
+  });
+
+// The ids are the section tokens of the ledger's locale keys
+// (desktop.ledger.section.<id>); the words come from label().
+const LEDGER_TABS = ["movements", "invoices", "documents", "assets"];
+const LEDGER_SETUP = ["rules", "registers", "health"];
+
+ux("UX-08 ledger sections keep their header and scroller at each size", async (t) => {
+  await atSizes(t, "ledger", async (size) => {
+    const got = await openRailPage("ledger", "section.ledger-page");
+    if (!got.reached) {
+      report(t, { page: "ledger", size, reached: false, reason: got.reason });
+      return;
+    }
+    for (const id of [...LEDGER_TABS, ...LEDGER_SETUP]) {
+      const page = `ledger/${id}`;
+      const opened = await openLedgerSection(id, LEDGER_SETUP.includes(id) ? LEDGER_SETUP : null);
+      if (!opened.reached) {
+        report(t, { page, size, reached: false, reason: opened.reason });
+        continue;
+      }
+      await sleep(700);
+      await measure(t, page, size, "section.ledger-page");
+    }
+  });
+});
+
+ux("UX-09 profile keeps its header and scroller at each size", async (t) => {
+  await pageProbe(t, "profile", "profile", "section.user-profile-page");
+});
+
+ux("UX-10 profile household stays inside the profile pane at each size", async (t) => {
+  await atSizes(t, "profile/household", async (size) => {
+    const got = await openRailPage("profile", "section.user-profile-page");
+    if (!got.reached) {
+      report(t, { page: "profile/household", size, reached: false, reason: got.reason });
+      return;
+    }
+    const found = await waitFor(
+      () => exec(() => !!document.querySelector("[data-household]")),
+      { timeout: 15_000, what: "the household", soft: true },
+    );
+    if (!found) {
+      report(t, {
+        page: "profile/household",
+        size,
+        reached: false,
+        reason:
+          "no [data-household]: the host offers no profile companions, a detail search is " +
+          "active, or the profile has not loaded",
+      });
+      return;
+    }
+    await exec(() =>
+      document.querySelector("[data-household]")?.scrollIntoView({ block: "end" }),
+    );
+    await sleep(700);
+    await measure(t, "profile/household", size, "[data-household]");
+  });
+});
+
+ux("UX-11 settings popover keeps its header and fits the window at each size", async (t) => {
+  await atSizes(t, "settings", async (size) => {
+    try {
+      const got = await openRailPage("settings", ".settings", "aria-expanded");
+      if (!got.reached) {
+        report(t, { page: "settings", size, reached: false, reason: got.reason });
+        return;
+      }
+      await sleep(700);
+      await measure(t, "settings", size, ".settings", { header: ".settings h2" });
+    } finally {
+      await closeSettings();
+    }
+  });
+});
+
+ux("UX-12 AEAT sync keeps its header and scroller at each size", async (t) => {
+  await pageProbe(t, "aeat-sync", "aeat-sync", "section.aeat-sync-page");
+});
+
+ux("UX-13 back and forward move between the pages visited", async (t) => {
+  await setSize(...DEFAULT_SIZE);
+  const sequence = [
+    ["ledger", "section.ledger-page"],
+    ["profile", "section.user-profile-page"],
+    ["aeat-sync", "section.aeat-sync-page"],
+  ];
+  const visited = [];
+  for (const [id, root] of sequence) {
+    const got = await openRailPage(id, root);
+    await sleep(700);
+    visited.push({ id, ...got, shown: await exec(pageNow) });
+  }
+  report(t, { probe: "history", step: "visited", visited });
+
+  const step = async (how, act) => {
+    const before = await exec(pageNow);
+    let reason = null;
+    try {
+      await act();
+    } catch (error) {
+      reason = `${how} not done: ${error.message}`;
+    }
+    await sleep(1000);
+    const after = await exec(pageNow);
+    report(t, {
+      probe: "history",
+      how,
+      before,
+      after,
+      changed: JSON.stringify(before) !== JSON.stringify(after),
+      reason,
+    });
+  };
+  const blur = () => exec(() => document.activeElement?.blur?.());
+  const chord = (key) => async () => {
+    await blur();
+    await win.browser.keys(["Alt", key]);
+  };
+  // The shell binds the pointer's side buttons on the window's mouseup.
+  const side = (button) => () =>
+    exec((button) => {
+      document.body.dispatchEvent(
+        new MouseEvent("mouseup", { button, bubbles: true, cancelable: true }),
+      );
+    }, button);
+
+  // The shell never moves the document's own history (that would unload the
+  // window), so it is called only where it cannot leave the page.
+  const documentLength = await exec(() => history.length);
+  const documentHistory = (call) => async () => {
+    if (documentLength > 1 && !process.env.CADRUMO_UX_DOCUMENT_HISTORY)
+      throw new Error(
+        `history.length is ${documentLength}; set CADRUMO_UX_DOCUMENT_HISTORY to call it`,
+      );
+    await exec((call) => history[call](), call);
+  };
+  await step("history.back()", documentHistory("back"));
+  await step("history.forward()", documentHistory("forward"));
+  await step("Alt+ArrowLeft", chord("ArrowLeft"));
+  await step("Alt+ArrowLeft again", chord("ArrowLeft"));
+  await step("Alt+ArrowRight", chord("ArrowRight"));
+  await step("pointer back button", side(3));
+  await step("pointer forward button", side(4));
 });
