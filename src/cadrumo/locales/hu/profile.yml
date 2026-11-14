@@ -165,10 +165,26 @@ profile:
   schema:
     field:
       activities:
+        cuota_provincial_province_code:
+          label: A tartományi kvóta tartománya
         description:
           label: Tevékenység leírása
+        expositores_autoventa:
+          label: Önkiszolgáló értékesítő kijelzők
         iae_epigraph:
           label: IAE-epigrafus
+        local_afecto_indirectamente:
+          label: Van közvetetten használt helyisége
+        maquinas_recreativas_tipo_a:
+          label: A típusú szórakoztató gépek
+        maquinas_recreativas_tipo_b:
+          label: B típusú szórakoztató gépek
+        municipality_code:
+          label: A tevékenység településkódja
+        municipality_name:
+          label: A tevékenység települése
+        province_code:
+          label: A tevékenység tartománykódja
         tipo_actividad:
           choices:
             A01: Ingatlan bérbeadók
@@ -260,6 +276,12 @@ profile:
           label: Tevékenység vége
         activity_start_date:
           label: Tevékenység kezdete
+        aeat_administracion_code:
+          label: AEAT Administración kódja
+        aeat_administracion_name:
+          label: AEAT Administración
+        aeat_delegacion_code:
+          label: AEAT Delegación kódja
         divergencia:
           label: Censo-eltérések
         large_company:
@@ -281,8 +303,80 @@ profile:
           label: Adóügyi cím
         fiscal_address_cadastral_reference:
           label: Az adóügyi cím kataszteri hivatkozása
+        fiscal_address_municipality_code:
+          label: Az adóügyi lakcím településkódja
+        fiscal_address_municipality_name:
+          label: Az adóügyi lakcím települése
+        fiscal_address_province_code:
+          label: Az adóügyi lakcím tartománykódja
         postcode:
           label: Irányítószám
+      iae_elemento_tributario:
+        actividad:
+          label: Tevékenység
+        code:
+          label: Adóelem kódja
+        description:
+          label: Adóelem leírása
+        linea:
+          label: Sor
+        numero:
+          label: Mennyiség
+      iae_local:
+        actividad:
+          label: Tevékenység
+        afectacion:
+          choices:
+            ejercicio: Ahol a tevékenységet végzik
+            indirecta: Közvetetten a tevékenységhez rendelt
+          label: A helyiség rendeltetése
+        escalera:
+          label: Lépcsőház
+        km:
+          label: Km
+        municipality_code:
+          label: Településkód
+        municipality_name:
+          label: Település
+        numero:
+          label: Házszám
+        piso:
+          label: Emelet
+        portal:
+          label: Kapu
+        postcode:
+          label: Irányítószám
+        province_code:
+          label: Tartománykód
+        puerta:
+          label: Ajtó
+        superficie_computable:
+          label: Beszámítható terület (m²)
+        superficie_rectificada:
+          label: Helyesbített terület (m²)
+        superficie_total:
+          label: Teljes terület (m²)
+        telefono:
+          label: Telefon
+        uso_destino_code:
+          label: Használat vagy rendeltetés kódja
+        uso_destino_description:
+          label: Használat vagy rendeltetés
+        via_nombre:
+          label: Közterület neve
+        via_sg:
+          label: Közterület jellege
+      iae_local_superficie:
+        clase:
+          label: Területosztály (Regla 14)
+        computable:
+          label: Beszámítható (m²)
+        local:
+          label: Helyiség
+        rectificada:
+          label: Helyesbített (m²)
+        total:
+          label: Teljes (m²)
       identity:
         email:
           label: Kapcsolattartó e-mail
@@ -922,6 +1016,18 @@ profile:
       contact:
         summary: Hol érhet el téged az AEAT, és mi az adózási lakcímed.
         title: Kapcsolat és adóügyi cím
+      iae_elemento_tributario:
+        summary: Az egyes tevékenységek adóelemei a 840-es nyomtatványhoz, soronként
+          egy sor.
+        title: IAE adóelemek
+      iae_local:
+        summary: 'Az egyes tevékenységek helyiségei, helyiségenként egy sor: ahol
+          végzed, vagy amit közvetetten használsz.'
+        title: IAE helyiségek
+      iae_local_superficie:
+        summary: Az egyes helyiségek területei Regla 14 osztályonként, osztályonként
+          egy sor.
+        title: Helyiségterületek (Regla 14)
       identity:
         summary: 'A neved és NIF-számod: kinek a nevében készülnek a bevallások.'
         title: Azonosítás
