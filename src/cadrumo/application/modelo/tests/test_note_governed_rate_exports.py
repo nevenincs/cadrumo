@@ -2,10 +2,15 @@
 
 Modelo 490's Territorio común [24] prints "Ver nota 2" where its siblings print
 "3 ent + 2 dec"; Nota 2 reads "Tres enteros y dos decimales" and fills 100,00 as
-100000. Modelo 200's Tipo de gravamen [00558] prints "Nota 1", which fills a 25 %
-rate as 2500. Read as unscaled integers both slots wrote the rate a hundred times
-too small (00100, 0025), so every supported year that prints the box is held to
-the note's bytes, and [24] shows its stored percentage on the form.
+100000. Read as an unscaled integer the slot wrote the rate a hundred times too
+small (00100), so every supported year that prints the box is held to the note's
+bytes, and [24] shows its stored percentage on the form.
+
+Modelo 200's Tipo de gravamen [00558] prints "Nota 1", a four-digit code: a single
+rate fills its two digits and 00 (25 % as 2500), a double rate its two rates
+(18/19 % as 1819). The edition's formula stores that code in the casilla, so the
+slot writes the stored value unscaled; scaling it again wrote 250000 into four
+positions and refused every export of the edition.
 """
 
 from __future__ import annotations
@@ -132,9 +137,17 @@ def test_m490_territorio_comun_shows_the_stored_percentage(year: int, snapshot: 
 
 
 @pytest.mark.parametrize(("year", "snapshot"), _M200, ids=[str(year) for year, _ in _M200])
-def test_m200_tipo_de_gravamen_exports_the_rate_with_two_trailing_digits(year: int, snapshot: RegistrySnapshot) -> None:
+def test_m200_tipo_de_gravamen_exports_the_stored_nota_1_code(year: int, snapshot: RegistrySnapshot) -> None:
     field = _export_field("200", snapshot, _M200_BOX)
 
-    assert (field.length, field.decimals) == (4, 2), year
-    assert render_fixed_width_export_field(field, Decimal("25")) == "2500"
-    assert render_fixed_width_export_field(field, Decimal("15")) == "1500"
+    assert field.length == 4, year
+    if field.decimals == 2:
+        # Editions whose design prints "2 enteros y 2 decimales" store the percentage itself.
+        assert render_fixed_width_export_field(field, Decimal("25")) == "2500"
+        assert render_fixed_width_export_field(field, Decimal("15")) == "1500"
+        return
+    # Editions whose design prints the Nota 1 code store that code, already scaled by the formula.
+    assert field.decimals is None or field.decimals == 0, year
+    assert render_fixed_width_export_field(field, Decimal("2500")) == "2500"
+    assert render_fixed_width_export_field(field, Decimal("1500")) == "1500"
+    assert render_fixed_width_export_field(field, Decimal("2122")) == "2122"
