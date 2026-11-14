@@ -831,14 +831,17 @@ def test_selection_by_keys_wants_only_those_keys_and_still_runs_the_chain_before
     assert select_rows(report, keys=None).wanted == {plan.key for plan in report.rows}
 
 
-def _row(row: int, casilla: str, value: str) -> dict[str, object]:
-    return {"record": "renta_inmueble", "block": "inmuebles", "row": row, "casilla_id": casilla, "value": value}
+def _cell(casilla: str, value: str) -> dict[str, object]:
+    return {"column_key": casilla, "casilla_id": casilla, "kind": "decimal", "value": value, "value_text": None}
 
 
 def _saved_rows(command: Sequence[str]) -> Mapping[str, object]:
     del command
-    rows = [_row(1, "0063", "12000.00"), _row(1, "01", "9"), _row(1, "0065", "3500"), _row(2, "0065", "10")]
-    return _ok(values=rows)
+    records = [
+        {"index": 1, "values": [_cell("0063", "12000.00"), _cell("01", "9"), _cell("0065", "3500")]},
+        {"index": 2, "values": [_cell("0065", "10")]},
+    ]
+    return _ok(blocks=[{"block_id": "inmueble-rows", "rows_known": True, "records": records}])
 
 
 def test_without_the_form_leaf_the_saved_rows_are_not_read_and_the_figures_are_the_calculations(tmp_path: Path) -> None:
@@ -890,7 +893,7 @@ def test_a_form_read_that_prints_nothing_readable_adds_no_figure_and_a_refused_r
         return {"status": "error", "error": error}
 
     report = _report(_plan("130", "1T"), _plan("130", "2T"))
-    unreadable = _Scripted(tmp_path / "exports", form=lambda _command: _ok(values="not rows"))
+    unreadable = _Scripted(tmp_path / "exports", form=lambda _command: _ok(blocks="not rows"))
     case = replace(_case(tmp_path, report, unreadable), form_door=True)
     run_case(case, select_rows(report, keys=frozenset({("130", _YEAR, "1T")})))
     refusing = _Scripted(tmp_path / "exports", form=refused)

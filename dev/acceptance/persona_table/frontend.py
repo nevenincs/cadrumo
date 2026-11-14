@@ -25,6 +25,11 @@ if neither matches the line has no horizon and speaks for every row of the perso
 A table row that has a result line of its own on a surface is judged by that line and never load-failed by a persona
 line.
 
+A return line may name the horizon it was run at in the same way (the field, else the start of ``reason``). The table
+row of a return is the replay at its highest horizon, and a line of another horizon is a different run of the same
+return, with its own figures; it never pairs with that row. A return line without a horizon pairs with the row of
+any horizon. Lines of one return at different horizons are all kept, the latest of each horizon.
+
 A return line may state ``workaround``, non-empty text naming a diagnostic substitute for what a person does (the CLI
 column reading a calculation back instead of running ``calculate``): the stage values were produced by that substitute,
 so the row never counts as matched. Its outcome is ``differs`` with the cause ``workaround <value>`` first, and the
@@ -122,10 +127,14 @@ CELL_WORDS = {
 }
 
 type RowKey = tuple[str, str, int, str]
-type ResultKey = tuple[str, str, str | None, int | None, str | None]
-"""``(surface, persona, modelo, year, period)``.
+type ResultKey = (
+    tuple[str, str, str | None, int | None, str | None] | tuple[str, str, str | None, int | None, str | None, int]
+)
+"""``(surface, persona, modelo, year, period)``, plus the line's horizon as a sixth item when a return line states one.
 
-A persona-level line has no modelo, year or period; its year slot holds its horizon (``None`` without one)."""
+A persona-level line has no modelo, year or period; its year slot holds its horizon (``None`` without one). A
+return line of a stated horizon is held beside the lines of the other horizons of the same return, and pairs only
+with the table row run at that horizon; a return line without a horizon pairs with the row of any horizon."""
 
 _FIELDS = frozenset(
     {
@@ -180,20 +189,25 @@ class SurfaceResult:
     reason: str = ""
     log: str = ""
     horizon: int | None = None
-    """The horizon a persona-level line was run at, stated or read from its reason; ``None`` on a return line."""
+    """The horizon the line was run at, stated or read from its reason; ``None`` when it names none."""
     workaround: str | None = None
     """The diagnostic substitute that produced the stage values; a row with one is never ``matched``."""
 
     @property
     def key(self) -> ResultKey:
-        """The result key ``(surface, persona, modelo, year, period)``; a persona line holds its horizon as year."""
-        return (
+        """The result key ``(surface, persona, modelo, year, period)``; a persona line holds its horizon as year.
+
+        A return line that names its horizon adds it as a sixth item, so the same return run at two horizons is two
+        results and a line of one horizon never replaces a line of another.
+        """
+        base = (
             self.surface,
             self.persona,
             self.modelo,
             self.horizon if self.modelo is None else self.year,
             self.period,
         )
+        return base if self.modelo is None or self.horizon is None else (*base, self.horizon)
 
 
 def read_results(directory: Path) -> dict[ResultKey, SurfaceResult]:
@@ -211,8 +225,9 @@ def read_results(directory: Path) -> dict[ResultKey, SurfaceResult]:
     ``log`` are optional text;
     ``figures`` is an optional object of every non-zero casilla value the surface displayed, as text; the table
     row is compared on the casillas of its form only, never on its internal figures.
-    The optional ``horizon`` (an integer or null, persona-level lines only) names the horizon a persona line was run
-    at; absent, it is read from the reason's ``horizon <year>`` or ``<persona>@<year>`` prefix.
+    The optional ``horizon`` (an integer or null) names the horizon a line was run at; absent, it is read from the
+    reason's ``horizon <year>`` or ``<persona>@<year>`` prefix. A return line pairs only with the table row of its
+    horizon.
     The optional ``workaround`` (non-empty text or null) states that a diagnostic substitute for what a person does
     produced the stage values; the row then never counts as matched. The ``calculate`` stage may also be
     ``calculate_inherited`` (the surface did not run the calculation; one was already present in the world it was
@@ -279,12 +294,8 @@ def parse_result(line: str) -> SurfaceResult:
 
 
 def _line_horizon(data: Mapping[str, object], persona: str, modelo: str | None, reason: str) -> int | None:
-    """The horizon of a persona-level line: the stated one, else the one its reason starts with, else ``None``."""
+    """The horizon of a line: the stated one, else the one its reason starts with, else ``None``."""
     value = data.get("horizon")
-    if modelo is not None:
-        if value is not None:
-            raise ValueError("a line with a modelo has no horizon")
-        return None
     if value is not None:
         if not isinstance(value, int) or isinstance(value, bool):
             raise ValueError("horizon must be an integer or null")
@@ -623,7 +634,8 @@ def _surface_parities(
     """One parity per table row for ``surface``, given the results it ``held`` and each persona's own lines."""
     found: list[RowParity] = []
     for row in ordered:
-        result = held.get((surface, row.persona, row.modelo, row.year, row.period))
+        base = (surface, row.persona, row.modelo, row.year, row.period)
+        result = held.get((*base, row.horizon), held.get(base))
         loads, reason = (None, "") if result is not None else _row_load(lines[row.persona], held, row)
         found.append(parity(row, surface, result, loads=loads, load_reason=reason))
     return tuple(found)

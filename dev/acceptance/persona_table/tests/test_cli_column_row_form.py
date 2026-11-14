@@ -23,25 +23,25 @@ from ..row_figures import merge_row_figures, single_row_figures
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_ONE_PROPERTY = "renta_inmueble\tinmuebles\t1\t0063\t12000.00\nrenta_inmueble\tinmuebles\t1\t0065\t3500\n"
-_TWO_PROPERTIES = _ONE_PROPERTY + "renta_inmueble\tinmuebles\t2\t0063\t800\nrenta_inmueble\tinmuebles\t2\t0067\t40\n"
+_ONE_PROPERTY = "record\tinmuebles\t1\t0063\t12000.00\nrecord\tinmuebles\t1\t0065\t3500\n"
+_TWO_PROPERTIES = _ONE_PROPERTY + "record\tinmuebles\t2\t0063\t800\nrecord\tinmuebles\t2\t0067\t40\n"
 
 
 def test_tab_lines_are_read_as_record_block_row_casilla_and_value() -> None:
     assert parse_form_lines(_ONE_PROPERTY) == (
-        FormValue("renta_inmueble", "inmuebles", 1, "0063", "12000.00"),
-        FormValue("renta_inmueble", "inmuebles", 1, "0065", "3500"),
+        FormValue("record", "inmuebles", 1, "0063", "12000.00"),
+        FormValue("record", "inmuebles", 1, "0065", "3500"),
     )
 
 
 @pytest.mark.parametrize(
     "text",
     [
-        "renta_inmueble\tinmuebles\t1\t0063\n",
-        "renta_inmueble\tinmuebles\t1\t0063\t5\textra\n",
-        "renta_inmueble\tinmuebles\tone\t0063\t5\n",
-        "renta_inmueble\tinmuebles\t0\t0063\t5\n",
-        "renta_inmueble\tinmuebles\t1\t\t5\n",
+        "record\tinmuebles\t1\t0063\n",
+        "record\tinmuebles\t1\t0063\t5\textra\n",
+        "record\tinmuebles\tone\t0063\t5\n",
+        "record\tinmuebles\t0\t0063\t5\n",
+        "record\tinmuebles\t1\t\t5\n",
         "record\tblock\trow\tcasilla\tvalue\n",
         _ONE_PROPERTY + "a broken line\n",
     ],
@@ -54,15 +54,45 @@ def test_blank_lines_and_no_output_give_no_value() -> None:
     assert parse_form_lines("") == parse_form_lines("\n\n") == ()
 
 
-def test_the_json_form_is_read_whole_or_not_at_all() -> None:
-    entry = {"record": "renta_inmueble", "block": "inmuebles", "row": 1, "casilla_id": "0063", "value": "12000.00"}
+def _json_block(*cells: object, known: bool = True) -> dict[str, object]:
+    records = [{"index": 1, "values": list(cells)}] if cells else []
+    return {"block_id": "inmueble-rows", "rows_known": known, "records": records if known else []}
 
-    assert parse_form_result({"values": [entry]}) == (FormValue("renta_inmueble", "inmuebles", 1, "0063", "12000.00"),)
-    assert parse_form_result({"values": [entry, {**entry, "row": "x"}]}) == ()
-    assert parse_form_result({"values": [entry, {"record": "renta_inmueble"}]}) == ()
-    assert parse_form_result({"values": [{**entry, "value": None}]}) == ()
-    assert parse_form_result({"values": "text"}) == ()
+
+def test_the_json_form_is_read_whole_or_not_at_all() -> None:
+    cell = {"column_key": "a", "casilla_id": "0063", "kind": "decimal", "value": "12000.00", "value_text": None}
+    block = _json_block(cell)
+
+    assert parse_form_result({"blocks": [block]}) == (FormValue("record", "inmueble-rows", 1, "0063", "12000.00"),)
+    assert parse_form_result({"blocks": [block, _json_block({**cell, "value": None})]}) == ()
+    assert parse_form_result({"blocks": [block, _json_block({"casilla_id": "0065"})]}) == ()
+    assert parse_form_result({"blocks": [block, {**block, "records": [{"index": 0, "values": [cell]}]}]}) == ()
+    assert parse_form_result({"blocks": [block, {"block_id": "x"}]}) == ()
+    assert parse_form_result({"blocks": "text"}) == ()
     assert parse_form_result({}) == ()
+
+
+def test_an_unknown_block_adds_no_value_and_a_cell_no_casilla_owns_is_skipped() -> None:
+    cell = {"casilla_id": "0063", "value": "5"}
+    other = {"casilla_id": None, "value": "text"}
+
+    assert parse_form_result({"blocks": [_json_block(known=False), _json_block(cell, other)]}) == (
+        FormValue("record", "inmueble-rows", 1, "0063", "5"),
+    )
+    assert parse_form_result({"blocks": [{**_json_block(known=False), "records": [{"index": 1, "values": []}]}]}) == ()
+
+
+def test_the_text_form_skips_header_block_and_column_lines() -> None:
+    text = (
+        (
+            "operation@modelo.work.form!work_unit_id@w!block@inmueble-rows@known@1!"
+            "record_column@inmueble-rows@1@notas@hola!record@inmueble-rows@1@0063@5!block@hijo-rows@unknown@words!"
+        )
+        .replace("@", "\t")
+        .replace("!", "\n")
+    )
+
+    assert parse_form_lines(text) == (FormValue("record", "inmueble-rows", 1, "0063", "5"),)
 
 
 def test_the_one_row_a_casilla_is_held_by_gives_its_figure_as_the_table_gives_it() -> None:
@@ -83,22 +113,33 @@ def test_a_casilla_in_several_rows_has_no_figure_and_the_others_keep_theirs() ->
 
 
 def test_a_zero_row_still_counts_as_a_row() -> None:
-    values = parse_form_lines("r\tb\t1\t0063\t5\nr\tb\t2\t0063\t0\n")
+    values = parse_form_lines("r\tb\t1\t0063\t5\nrecord\tb\t2\t0063\t0\n")
 
     assert form_row_figures(values) == {}
 
 
 def test_a_casilla_in_two_blocks_is_two_rows_and_a_repeated_line_is_not_collapsed() -> None:
-    assert form_row_figures(parse_form_lines("r\ta\t1\t0063\t5\nr\tb\t1\t0063\t5\n")) == {}
-    assert form_row_figures(parse_form_lines("r\ta\t1\t0063\t5\nr\ta\t1\t0063\t5\n")) == {}
+    assert form_row_figures(parse_form_lines("r\ta\t1\t0063\t5\nrecord\tb\t1\t0063\t5\n")) == {}
+    assert form_row_figures(parse_form_lines("r\ta\t1\t0063\t5\nrecord\ta\t1\t0063\t5\n")) == {}
 
 
-def test_a_casilla_with_any_text_value_is_left_out() -> None:
+def test_a_text_value_of_one_row_is_kept_as_printed_and_a_text_casilla_in_several_rows_has_no_figure() -> None:
     values = parse_form_lines(
-        "r\tb\t1\t0001\tcalle mayor 1\nr\tb\t1\t0063\t5\nr\tb\t2\t0063\tn/a\nr\tb\t1\t0064\tNaN\n"
+        "record\tb\t1\t0066\t0000002VK0000N0001LH\nrecord\tb\t1\t0093\tref-b\n"
+        "record\tb\t1\t0063\t5\nrecord\tb\t2\t0063\tn/a\n"
+        "record\tb\t1\t0120\tref-c\nrecord\tb\t2\t0120\tref-d\n"
     )
 
-    assert form_row_figures(values) == {}
+    assert form_row_figures(values) == {"0066": "0000002VK0000N0001LH", "0093": "ref-b"}
+
+
+def test_a_text_row_figure_fills_an_absent_scalar_and_a_differing_printed_text_is_a_conflict() -> None:
+    merged, conflicts = merge_form_figures((("0100", "1"),), {"0093": "ref-b"})
+
+    assert merged == (("0093", "ref-b"), ("0100", "1"))
+    assert conflicts == []
+    _, conflicts = merge_form_figures((("0093", "ref-a"),), {"0093": "ref-b"})
+    assert conflicts == ["casilla 0093 scalar ref-a differs from its row figure ref-b"]
 
 
 def test_a_row_figure_fills_an_absent_or_zero_scalar_and_a_differing_nonzero_scalar_is_a_conflict() -> None:
@@ -138,14 +179,18 @@ _REDACTED = "sha256:0123abcd"
 
 
 def test_a_redacted_value_of_one_row_is_kept_as_printed_and_numeric_rules_stay() -> None:
-    values = parse_form_lines(f"r\tb\t1\t0091\t{_REDACTED}\nr\tb\t1\t0063\t12000.00\nr\tb\t1\t0001\tcalle mayor 1\n")
+    values = parse_form_lines(
+        f"record\tb\t1\t0091\t{_REDACTED}\nrecord\tb\t1\t0063\t12000.00\nrecord\tb\t1\t0001\tcalle mayor 1\n"
+    )
 
-    assert form_row_figures(values) == {"0091": _REDACTED, "0063": "12000"}
+    assert form_row_figures(values) == {"0091": _REDACTED, "0063": "12000", "0001": "calle mayor 1"}
 
 
 def test_a_redacted_value_in_several_rows_or_mixed_with_a_number_has_no_figure() -> None:
-    assert form_row_figures(parse_form_lines(f"r\tb\t1\t0091\t{_REDACTED}\nr\tb\t2\t0091\t{_REDACTED}\n")) == {}
-    assert form_row_figures(parse_form_lines(f"r\tb\t1\t0091\t{_REDACTED}\nr\tb\t2\t0091\t5\n")) == {}
+    assert (
+        form_row_figures(parse_form_lines(f"record\tb\t1\t0091\t{_REDACTED}\nrecord\tb\t2\t0091\t{_REDACTED}\n")) == {}
+    )
+    assert form_row_figures(parse_form_lines(f"record\tb\t1\t0091\t{_REDACTED}\nrecord\tb\t2\t0091\t5\n")) == {}
     assert form_row_figures(parse_form_lines("r\tb\t1\t0091\tsha256:0123ABCD\n")) == {}
 
 
