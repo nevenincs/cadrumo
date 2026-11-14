@@ -533,6 +533,17 @@ data_type = "text"
 semantic_role = "representante_domicilio_municipio"
 input_kind = "informational"
 
+# @492+30, type_code An. Municipio (nombre) of the representante. [representante-domicilio-municipio-nombre].
+# Slug: AEAT prints no box number on this field; the operator enters it with the
+# other representante address boxes, so it is a casilla rather than a profile fact.
+[[revisions."2003-y-siguientes".casillas]]
+id = "representante.domicilio-municipio-nombre"
+number = "representante-domicilio-municipio-nombre"
+section = ["representante"]
+data_type = "text"
+semantic_role = "representante_domicilio_municipio_nombre"
+input_kind = "informational"
+
 # @485+2. Provincia (codigo). [31].
 [[revisions."2003-y-siguientes".casillas]]
 id = "representante.domicilio-provincia"

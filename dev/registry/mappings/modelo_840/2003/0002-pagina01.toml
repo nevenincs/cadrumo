@@ -435,8 +435,8 @@ record_identity = "Pág. 1"
 
 [[entries]]
 export_field_id = "m840-2003.pagina01.f037"
-kind = "header"
-producer_key = "m840.representante.municipio"
+kind = "casilla"
+casilla_id = "representante.domicilio-municipio-nombre"
 legal_refs = ["orden-hac-2572-2003:apartado-1"]
 source_refs = ["aeat-dr-840"]
 [entries.anchor]
