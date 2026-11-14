@@ -2,6 +2,7 @@ import {
   useEffect,
   useId,
   useRef,
+  useState,
   type PointerEvent,
   type ReactNode,
 } from "react";
@@ -245,6 +246,9 @@ export function ModeloWorkspace({
   const t = useStrings();
   // The views share one panel, whose content follows the chosen tab.
   const panel = useId();
+  // Where the form view draws its pane controls: at the end of the view
+  // bar, which keeps its width whatever the panes do.
+  const [paneControls, setPaneControls] = useState<HTMLElement | null>(null);
   const form = envelope.form.form;
   const header = envelope.header;
   const journey = envelope.form.journey;
@@ -473,49 +477,58 @@ export function ModeloWorkspace({
           {nextShown}
         </div>
       </header>
-      <Tabs
-        value={view}
-        onValueChange={(v) => onViewChange(v as WorkspaceView)}
-        className="min-w-0 flex-none border-b border-border px-4"
-      >
-        <TabsList
-          aria-label={t("desktop.modelo.views.label")}
-          className="overflow-x-auto"
+      <div className="flex min-w-0 flex-none items-center gap-2 border-b border-border px-4">
+        <Tabs
+          value={view}
+          onValueChange={(v) => onViewChange(v as WorkspaceView)}
+          className="min-w-0 flex-1"
         >
-          {tab("form", t("desktop.modelo.view.form"))}
-          {tab(
-            "check",
-            t("workspace.modelo.step.review"),
-            envelope.verdict.status === "complete" && (
-              <GlyphMark
-                icon="check"
-                words={envelope.verdict.words}
-                className="text-success"
-              />
-            ),
-          )}
-          {tab(
-            "file",
-            t("workspace.modelo.filing.title"),
-            form.filing && (
-              <GlyphMark
-                icon="check"
-                words={t("workspace.declarations.list.group.recorded")}
-                className="text-success"
-              />
-            ),
-          )}
-          {slots.credits !== undefined &&
-            tab(
-              "credits",
-              slots.creditsLabel ?? t("desktop.modelo.view.credits"),
+          <TabsList
+            aria-label={t("desktop.modelo.views.label")}
+            className="overflow-x-auto"
+          >
+            {tab("form", t("desktop.modelo.view.form"))}
+            {tab(
+              "check",
+              t("workspace.modelo.step.review"),
+              envelope.verdict.status === "complete" && (
+                <GlyphMark
+                  icon="check"
+                  words={envelope.verdict.words}
+                  className="text-success"
+                />
+              ),
             )}
-          {slots.compare !== undefined &&
-            tab("compare", t("desktop.modelo.view.compare"))}
-          {tab("sources", t("workspace.modelo.key.sources"))}
-          {tab("history", t("workspace.modelo.history.title"))}
-        </TabsList>
-      </Tabs>
+            {tab(
+              "file",
+              t("workspace.modelo.filing.title"),
+              form.filing && (
+                <GlyphMark
+                  icon="check"
+                  words={t("workspace.declarations.list.group.recorded")}
+                  className="text-success"
+                />
+              ),
+            )}
+            {slots.credits !== undefined &&
+              tab(
+                "credits",
+                slots.creditsLabel ?? t("desktop.modelo.view.credits"),
+              )}
+            {slots.compare !== undefined &&
+              tab("compare", t("desktop.modelo.view.compare"))}
+            {tab("sources", t("workspace.modelo.key.sources"))}
+            {tab("history", t("workspace.modelo.history.title"))}
+          </TabsList>
+        </Tabs>
+        {view === "form" && (
+          <div
+            ref={setPaneControls}
+            data-pane-controls=""
+            className="flex-none"
+          />
+        )}
+      </div>
       {banner && (
         <div
           role="status"
@@ -542,6 +555,7 @@ export function ModeloWorkspace({
           rail={slots.rail}
           form={slots.form}
           details={slots.details ?? null}
+          controls={paneControls}
           staged={
             stagedCount > 0 && (
               <div className="flex shrink-0 flex-wrap items-center gap-3 border-t border-border bg-card px-6 py-3 shadow-raised">

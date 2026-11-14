@@ -258,3 +258,114 @@ for (const size of SIZES) {
     await expect.poll(height).toBeCloseTo(chosen, 0);
   });
 }
+
+// The native window audit's own sequence (window-ux-audit.test.mjs, UX-19
+// and UX-16), step for step at the native window's inner sizes: details on,
+// then at each size the form view with the rail and details on, the rail
+// off and on, the details off and on, the arrangement off and on, another
+// view and back; after each step all three controls are drawn inside the
+// window with distinct icons and the group does not move. Then the details
+// under the form: their line takes focus and moves from Home to End, inside
+// the window, and the arrangement chosen survives another view and a new
+// opening.
+const NATIVE_SIZES = [
+  { width: 1427, height: 915 },
+  { width: 1267, height: 793 },
+  { width: 1011, height: 632 },
+  { width: 887, height: 592 },
+];
+
+async function setControl(target: Page, control: Control, on: boolean) {
+  if ((await pressed(target, control)) !== on)
+    await toggle(target, control).click();
+  await expect(toggle(target, control)).toHaveAttribute(
+    "aria-pressed",
+    String(on),
+  );
+}
+
+async function chooseView(target: Page, key: string) {
+  await workspace(target)
+    .getByRole("tablist", { name: label("desktop.modelo.views.label") })
+    .getByRole("tab", { name: label(key) })
+    .click();
+}
+
+const groupLeft = (target: Page) =>
+  workspace(target)
+    .locator("[data-pane-toggles]")
+    .evaluate((element) => Math.round(element.getBoundingClientRect().left));
+
+test("UX-19 and UX-16 the native audit's toggle sequence at the native inner sizes", async ({
+  page: target,
+}) => {
+  test.setTimeout(300_000);
+  await target.setViewportSize(NATIVE_SIZES[0]!);
+  await openDeclaration(target);
+  await chooseView(target, "desktop.modelo.view.form");
+  await setControl(target, "details", true);
+  for (const size of NATIVE_SIZES) {
+    await target.setViewportSize(size);
+    const steps: [string, () => Promise<void>][] = [
+      [
+        "form view",
+        async () => {
+          await chooseView(target, "desktop.modelo.view.form");
+          await setControl(target, "side", true);
+          await setControl(target, "details", true);
+        },
+      ],
+      ["side off", () => setControl(target, "side", false)],
+      ["side on", () => setControl(target, "side", true)],
+      ["details off", () => setControl(target, "details", false)],
+      ["details on", () => setControl(target, "details", true)],
+      ["placement off", () => setControl(target, "placement", false)],
+      ["placement on", () => setControl(target, "placement", true)],
+      [
+        "other view and back",
+        async () => {
+          await chooseView(target, "workspace.modelo.step.review");
+          await chooseView(target, "desktop.modelo.view.form");
+        },
+      ],
+    ];
+    let left: number | null = null;
+    for (const [name, act] of steps) {
+      await test.step(`${name} at ${size.width}x${size.height}`, async () => {
+        await act();
+        await expectDrawnAs(target, await shownNow(target));
+        const now = await groupLeft(target);
+        if (left !== null) expect(now, "the group stays put").toBe(left);
+        left = now;
+      });
+    }
+    await test.step(`the stacked line at ${size.width}x${size.height}`, async () => {
+      for (const side of [true, false]) {
+        await setControl(target, "side", side);
+        await setControl(target, "details", true);
+        await setControl(target, "placement", false);
+        const line = workspace(target).getByRole("separator", {
+          name: label("desktop.modelo.details.resize"),
+        });
+        await line.focus();
+        await expect(line).toBeFocused();
+        const height = () =>
+          details(target).evaluate((e) => e.getBoundingClientRect().height);
+        await target.keyboard.press("Home");
+        const least = await height();
+        await target.keyboard.press("End");
+        await expect.poll(height).toBeGreaterThan(least);
+        await target.keyboard.press("Enter");
+        // The arrangement survives another view and a new opening.
+        await chooseView(target, "workspace.modelo.step.review");
+        await chooseView(target, "desktop.modelo.view.form");
+        await expect(area(target)).toHaveAttribute("data-details", "bottom");
+      }
+      await openDeclaration(target);
+      await expect(area(target)).toHaveAttribute("data-details", "bottom");
+      await setControl(target, "placement", true);
+      await openDeclaration(target);
+      await expect(area(target)).toHaveAttribute("data-details", "side");
+    });
+  }
+});

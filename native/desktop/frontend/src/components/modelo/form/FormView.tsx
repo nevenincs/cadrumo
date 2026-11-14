@@ -33,7 +33,6 @@ import type {
 import type { PublicModeloWorkForm } from "../../../shell/modeloContract/modeloWorkFormPart2";
 import type { RefusalIntent, WindowPlace } from "../../../shell/refusal";
 import { useStrings, type Translate } from "../../../shell/strings";
-import { WorkspacePaneToggles } from "../workspace/WorkspacePanes";
 import { FormBand } from "./FormBand";
 import { boxNotes } from "./boxNotes";
 import {
@@ -434,7 +433,6 @@ export function FormView({
           </Button>
           <span className="ml-auto" />
           {admitted && <Keys />}
-          <WorkspacePaneToggles />
         </div>
         {/* What is said about the whole form can run longer than the
             window; the person sizes it with its line, it scrolls on its own
