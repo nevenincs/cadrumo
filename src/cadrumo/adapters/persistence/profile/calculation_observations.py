@@ -326,6 +326,7 @@ class CalculationObservationRepository:
                     "source_kind": resolved_source_kind,
                     "member_nif": member_nif,
                     "stamped_revision_id": stamped_revision_id,
+                    "authority_generation": operation.pin().logical_generation,
                     "source_metadata": dict(source_metadata or {}),
                     "source_headers": source_headers,
                     "result_disposition": result_disposition,
