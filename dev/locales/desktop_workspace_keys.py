@@ -261,6 +261,7 @@ WORKSPACE_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.modelo.credits.lead",
         "desktop.modelo.credits.list",
         "desktop.modelo.credits.show_box",
+        "desktop.modelo.details.beside",
         "desktop.modelo.details.close",
         "desktop.modelo.details.hide",
         "desktop.modelo.details.label",

@@ -304,6 +304,60 @@ export const PanesResized: Story = {
   ),
 };
 
+export const DetailsStacked: Story = {
+  name: "130 · details chosen under the form on a wide window",
+  render: (_, { globals }) => (
+    <KeptPanes
+      kept={ALL_PANES({
+        open: true,
+        placement: "bottom",
+        side: null,
+        bottom: null,
+      })}
+    >
+      <Screen modelo="130" locale={language(globals)} />
+    </KeptPanes>
+  ),
+};
+
+export const NarrowDetailsBeside: Story = {
+  name: "130 · a narrow window, details chosen beside the form",
+  render: (_, { globals }) => (
+    <KeptPanes
+      kept={ALL_PANES({
+        open: true,
+        placement: "side",
+        side: null,
+        bottom: null,
+      })}
+    >
+      <div className="flex h-150 w-200 max-w-full min-h-0 flex-col border border-border">
+        <Screen modelo="130" locale={language(globals)} />
+      </div>
+    </KeptPanes>
+  ),
+  play: async ({ canvasElement }) => {
+    const control = await waitFor(
+      () => {
+        const found = canvasElement.querySelector<HTMLElement>(
+          "[data-pane-toggle=placement]",
+        );
+        if (!found) throw new Error("the arrangement control is not drawn yet");
+        return found;
+      },
+      { timeout: 15_000 },
+    );
+    await expect(control).toHaveAttribute("aria-pressed", "true");
+    await userEvent.click(control);
+    await expect(control).toHaveAttribute("aria-pressed", "false");
+    await expect(
+      canvasElement.querySelector("[data-details=bottom]"),
+    ).not.toBeNull();
+    await userEvent.click(control);
+    await expect(control).toHaveAttribute("aria-pressed", "true");
+  },
+};
+
 export const NarrowRailOpener: Story = {
   name: "130 · a narrow window, the To do and Outline opened from the toolbar",
   render: (_, { globals }) => (
