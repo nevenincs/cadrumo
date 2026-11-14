@@ -106,6 +106,7 @@ from .export_contracts import (
     ModeloIvaWalletDecisionProvenance,
 )
 from .export_field_refusal import export_operator_decision_refusal, export_taxpayer_name_missing_refusal
+from .export_official_codes import draft_with_official_codes
 from .export_sink import LocalFileExportSink
 from .lifecycle_view_refusal_doors import unit_calculate_verdict
 from .m303_filing_evidence import m303_filing_evidence_failure
@@ -367,6 +368,12 @@ def build_revision_export_draft(
         inputs=inputs,
         closed_record_row_sets=revision.closed_record_row_sets,
         schema_provider=schema_provider,
+    )
+    draft = draft_with_official_codes(
+        draft,
+        revision=revision,
+        snapshot=schema_provider.get_snapshot(work_unit.modelo),
+        operation=operation,
     )
     return attach_revision_row_source_identities(draft=draft, revision=revision)
 
