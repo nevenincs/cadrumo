@@ -4591,6 +4591,9 @@ desktop:
     none_unread: Cap sense llegir a l'última sincronització
     unread: '{count} sense llegir'
   modelo:
+    band:
+      label: Notes sobre el formulari
+      resize: Canvia la mida de les notes sobre el formulari
     box_notes:
       label: El que el càlcul ha anotat sobre aquesta casella
     compare:
@@ -4701,6 +4704,8 @@ desktop:
       label: Esquema del formulari
       may_apply: Només si se t'aplica
       needs_you: 'Et necessita: {count}'
+    panes:
+      label: Taulers al voltant del formulari
     prior_values:
       intro: Si aquí no consta la declaració anterior de la qual una casella arrossega
         un import, pots indicar tu mateix aquest import. Els imports indicats per
