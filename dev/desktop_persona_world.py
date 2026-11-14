@@ -86,6 +86,7 @@ STAGE_OF_KIND: Final = {
     StatementKind.PRIOR_VALUE: "attested_prior_values",
     StatementKind.WORK_INPUT: "work_inputs",
     StatementKind.WORK_INCOME_NONE: "work_income_none",
+    StatementKind.RENTAL_CARRY: "rental_carries",
 }
 """The stage name of each statement kind the window can enter, as ``stages`` names the recorded ones."""
 NEEDS_CALCULATION: Final = frozenset({Phase.AFTER_CALCULATION, Phase.AFTER_RECALCULATION})
@@ -178,14 +179,19 @@ def _has_window_door(statement: Statement) -> bool:
 
     The statements offer states that no amount from earlier ejercicios is pending and the prior-values offer states
     a figure for an earlier return, which is also where a pending carry's amount is stated; the work-income
-    statement is one of the statements offer's families, and a casilla's value cell takes a work input. A let
-    property's carry (a family stated per row, which the offer does not serve) has no such door.
+    statement is one of the statements offer's families, and a casilla's value cell takes a work input; a let
+    property's carry is the statements offer's entry for that property's row.
     """
     if statement.refusal is not None:
         return False
     if statement.kind is StatementKind.PRIOR_CARRIES:
         return statement.gap is None
-    return statement.kind in {StatementKind.PRIOR_VALUE, StatementKind.WORK_INCOME_NONE, StatementKind.WORK_INPUT}
+    return statement.kind in {
+        StatementKind.PRIOR_VALUE,
+        StatementKind.WORK_INCOME_NONE,
+        StatementKind.WORK_INPUT,
+        StatementKind.RENTAL_CARRY,
+    }
 
 
 def window_split(materialised: MaterialisedPersona, plan: PlannedRow) -> WindowSplit:
@@ -215,10 +221,15 @@ def _entered_in_window(made: Sequence[Statement]) -> list[Statement]:
     recorded_kinds = {statement.kind for statement in made[: last + 1]}
     entered: list[Statement] = []
     for statement in made[last + 1 :]:
-        taken = any(item.kind is statement.kind and item.target == statement.target for item in entered)
+        taken = any(_same_entry(item, statement) for item in entered)
         if statement.kind not in recorded_kinds and _has_window_door(statement) and not taken:
             entered.append(statement)
     return entered
+
+
+def _same_entry(first: Statement, second: Statement) -> bool:
+    """Whether two statements are one window entry: the same kind on the same target and row."""
+    return first.kind is second.kind and first.target == second.target and first.row == second.row
 
 
 def _carry_figures(materialised: MaterialisedPersona, plan: PlannedRow, statement: Statement) -> list[dict[str, str]]:
@@ -255,6 +266,8 @@ def _window_statement(statement: Statement, materialised: MaterialisedPersona, p
         record["figures"] = _carry_figures(materialised, plan, statement)
     if statement.kind is StatementKind.WORK_INCOME_NONE:
         record["families"] = [AbsenceAttestationFamily.RENTA_TRABAJO_INCOME_NOT_STATED.value]
+    if statement.kind is StatementKind.RENTAL_CARRY:
+        record["families"] = [AbsenceAttestationFamily.RENTA_CAPITAL_INMOBILIARIO_GASTOS_PENDIENTES.value]
     return record
 
 

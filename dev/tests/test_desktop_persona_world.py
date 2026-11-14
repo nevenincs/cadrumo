@@ -221,7 +221,7 @@ def _split(monkeypatch: pytest.MonkeyPatch, made: tuple[Statement, ...]) -> desk
     return desktop_persona_world.window_split(cast(MaterialisedPersona, SimpleNamespace()), plan)
 
 
-def test_a_carry_a_prior_figure_the_work_income_statement_and_a_work_input_have_a_window_door() -> None:
+def test_a_carry_a_prior_figure_the_work_income_statement_a_work_input_and_a_rental_carry_have_a_window_door() -> None:
     door = desktop_persona_world._has_window_door
     assert door(_statement(StatementKind.PRIOR_CARRIES, Phase.BEFORE_EVIDENCE, families=("f",)))
     assert door(_statement(StatementKind.PRIOR_VALUE, Phase.BEFORE_EVIDENCE, target="b", value="1"))
@@ -230,7 +230,8 @@ def test_a_carry_a_prior_figure_the_work_income_statement_and_a_work_input_have_
     assert door(_statement(StatementKind.WORK_INPUT, Phase.AT_CALCULATION, target="c", value="1"))
     assert not door(_statement(StatementKind.PRIOR_CARRIES, Phase.BEFORE_EVIDENCE, gap="not sayable"))
     assert not door(_statement(StatementKind.WORK_INPUT, Phase.AT_CALCULATION, refusal="no"))
-    assert not door(_statement(StatementKind.RENTAL_CARRY, Phase.AFTER_RECALCULATION, target="b", row="r"))
+    assert door(_statement(StatementKind.RENTAL_CARRY, Phase.AFTER_RECALCULATION, target="b", row="r"))
+    assert not door(_statement(StatementKind.RENTAL_CARRY, Phase.AFTER_RECALCULATION, refusal="one total"))
     assert not door(_statement(StatementKind.WORK_INCOME_NONE, Phase.AFTER_CALCULATION, refusal="no"))
 
 
@@ -243,6 +244,8 @@ def test_the_world_records_up_to_the_last_statement_no_window_door_enters_and_le
     work_input = _statement(StatementKind.WORK_INPUT, Phase.AT_CALCULATION, target="c", value="2")
     income = _statement(StatementKind.WORK_INCOME_NONE, Phase.AFTER_CALCULATION)
     rental = _statement(StatementKind.RENTAL_CARRY, Phase.AFTER_RECALCULATION, target="b", row="r")
+    other_rental = _statement(StatementKind.RENTAL_CARRY, Phase.AFTER_RECALCULATION, target="b", row="s")
+    refused_rental = _statement(StatementKind.RENTAL_CARRY, Phase.AFTER_RECALCULATION, refusal="one total")
 
     everything = _split(monkeypatch, (carries, figure, figure_again, income))
     assert everything.left == {StatementKind.PRIOR_CARRIES, StatementKind.PRIOR_VALUE, StatementKind.WORK_INCOME_NONE}
@@ -257,10 +260,15 @@ def test_the_world_records_up_to_the_last_statement_no_window_door_enters_and_le
     assert with_input.left == {StatementKind.PRIOR_CARRIES, StatementKind.WORK_INPUT, StatementKind.WORK_INCOME_NONE}
     assert with_input.without_door == ()
 
-    behind_rental = _split(monkeypatch, (carries, figure, income, rental))
-    assert behind_rental.left == frozenset()
-    assert behind_rental.entered == ()
-    assert behind_rental.without_door == (rental,)
+    with_rentals = _split(monkeypatch, (carries, income, rental, other_rental))
+    assert StatementKind.RENTAL_CARRY in with_rentals.left
+    assert [item.row for item in with_rentals.entered if item.kind is StatementKind.RENTAL_CARRY] == ["r", "s"]
+    assert with_rentals.without_door == ()
+
+    behind_refusal = _split(monkeypatch, (carries, figure, income, refused_rental))
+    assert behind_refusal.left == frozenset()
+    assert behind_refusal.entered == ()
+    assert behind_refusal.without_door == (refused_rental,)
 
     nothing = _split(monkeypatch, ())
     assert nothing == desktop_persona_world.WindowSplit()

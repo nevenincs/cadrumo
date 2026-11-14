@@ -162,6 +162,29 @@ fn owns_data_directory(policy: Policy, arguments: Option<&str>) -> bool {
     !policy.remote_debugging || arguments.is_some()
 }
 
+/// The data directory the packaged test host's startup window runs its
+/// browser in: the `webview` directory of the storage root it was started on.
+///
+/// Its workspace window shares that browser, so without a directory of its
+/// own every concurrent test host would join one browser in the identifier's
+/// default directory, and the first host to exit would take every other
+/// host's pages with it. The product's startup window keeps Tauri's default.
+#[cfg(feature = "webview2-remote-debugging")]
+pub fn startup_data_directory() -> Option<std::path::PathBuf> {
+    test_host_startup_directory(std::env::var_os(cadrumo_platform::ROOT_VARIABLE))
+}
+
+#[cfg(not(feature = "webview2-remote-debugging"))]
+pub fn startup_data_directory() -> Option<std::path::PathBuf> {
+    None
+}
+
+#[cfg(any(test, feature = "webview2-remote-debugging"))]
+fn test_host_startup_directory(root: Option<OsString>) -> Option<std::path::PathBuf> {
+    let root = std::path::PathBuf::from(root.filter(|root| !root.is_empty())?);
+    root.is_absolute().then(|| root.join("webview"))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -234,6 +257,22 @@ mod tests {
         assert_eq!(
             workspace_data_directory(directory.clone(), port.as_deref()),
             Some(directory)
+        );
+    }
+
+    #[test]
+    fn a_test_host_startup_browser_runs_in_its_own_storage_root() {
+        let root = std::path::PathBuf::from(r"C:\run\storage");
+        assert_eq!(
+            test_host_startup_directory(Some(root.clone().into_os_string())),
+            Some(root.join("webview"))
+        );
+        // Without an absolute storage root there is no directory of its own to name.
+        assert_eq!(test_host_startup_directory(None), None);
+        assert_eq!(test_host_startup_directory(Some(OsString::new())), None);
+        assert_eq!(
+            test_host_startup_directory(Some(OsString::from(r"relative\storage"))),
+            None
         );
     }
 
