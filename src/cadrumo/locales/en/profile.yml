@@ -168,10 +168,26 @@ profile:
   schema:
     field:
       activities:
+        cuota_provincial_province_code:
+          label: Province of the provincial quota
         description:
           label: Activity description
+        expositores_autoventa:
+          label: Self-sale display units
         iae_epigraph:
           label: IAE epigraph
+        local_afecto_indirectamente:
+          label: Has premises used indirectly
+        maquinas_recreativas_tipo_a:
+          label: Type A recreational machines
+        maquinas_recreativas_tipo_b:
+          label: Type B recreational machines
+        municipality_code:
+          label: Activity municipality code
+        municipality_name:
+          label: Activity municipality
+        province_code:
+          label: Activity province code
         tipo_actividad:
           choices:
             A01: Lessors of real estate
@@ -263,6 +279,12 @@ profile:
           label: Activity end date
         activity_start_date:
           label: Activity start date
+        aeat_administracion_code:
+          label: AEAT administración code
+        aeat_administracion_name:
+          label: AEAT administración
+        aeat_delegacion_code:
+          label: AEAT delegación code
         divergencia:
           label: Censo divergence rows
         large_company:
@@ -284,8 +306,80 @@ profile:
           label: Fiscal address
         fiscal_address_cadastral_reference:
           label: Cadastral reference of the fiscal address
+        fiscal_address_municipality_code:
+          label: Fiscal address municipality code
+        fiscal_address_municipality_name:
+          label: Fiscal address municipality
+        fiscal_address_province_code:
+          label: Fiscal address province code
         postcode:
           label: Postcode
+      iae_elemento_tributario:
+        actividad:
+          label: Activity
+        code:
+          label: Tax element code
+        description:
+          label: Tax element description
+        linea:
+          label: Line
+        numero:
+          label: Quantity
+      iae_local:
+        actividad:
+          label: Activity
+        afectacion:
+          choices:
+            ejercicio: Where the activity is carried on
+            indirecta: Used indirectly by the activity
+          label: Use of the premises
+        escalera:
+          label: Staircase
+        km:
+          label: Km
+        municipality_code:
+          label: Municipality code
+        municipality_name:
+          label: Municipality
+        numero:
+          label: Street number
+        piso:
+          label: Floor
+        portal:
+          label: Entrance
+        postcode:
+          label: Postcode
+        province_code:
+          label: Province code
+        puerta:
+          label: Door
+        superficie_computable:
+          label: Computable surface (m²)
+        superficie_rectificada:
+          label: Rectified surface (m²)
+        superficie_total:
+          label: Total surface (m²)
+        telefono:
+          label: Phone
+        uso_destino_code:
+          label: Use or purpose code
+        uso_destino_description:
+          label: Use or purpose
+        via_nombre:
+          label: Street name
+        via_sg:
+          label: Street type
+      iae_local_superficie:
+        clase:
+          label: Surface class (Regla 14)
+        computable:
+          label: Computable (m²)
+        local:
+          label: Premises
+        rectificada:
+          label: Rectified (m²)
+        total:
+          label: Total (m²)
       identity:
         email:
           label: Contact email
@@ -918,6 +1012,16 @@ profile:
       contact:
         summary: Where the AEAT can reach you and your fiscal address.
         title: Contact and fiscal address
+      iae_elemento_tributario:
+        summary: The tax elements of each activity for Modelo 840, one row per line.
+        title: IAE tax elements
+      iae_local:
+        summary: 'The premises of each activity, one row per premises: where you carry
+          it on or what you use indirectly.'
+        title: IAE premises
+      iae_local_superficie:
+        summary: The surfaces of each premises by Regla 14 class, one row per class.
+        title: Premises surfaces (Regla 14)
       identity:
         summary: 'Your name and NIF: who the declarations are prepared for.'
         title: Identity

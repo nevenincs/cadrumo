@@ -49,8 +49,11 @@ def _schema(*, owner_repeatable: bool, target_repeatable: bool, target: str = "p
     }
 
 
-def test_the_published_schema_declares_the_rental_row_references() -> None:
+def test_the_published_schema_declares_the_premises_and_rental_row_references() -> None:
     assert published_profile_schema().row_references() == (
+        ("iae_local", "actividad", "activities"),
+        ("iae_local_superficie", "local", "iae_local"),
+        ("iae_elemento_tributario", "actividad", "activities"),
         ("renta_inmueble", "inmueble_principal", "renta_inmueble"),
         ("renta_arrendamiento", "inmueble", "renta_inmueble"),
     )

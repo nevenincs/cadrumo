@@ -167,10 +167,26 @@ profile:
   schema:
     field:
       activities:
+        cuota_provincial_province_code:
+          label: Província de la quota provincial
         description:
           label: Descripció de l'activitat
+        expositores_autoventa:
+          label: Expositors d'autovenda
         iae_epigraph:
           label: Epígraf IAE
+        local_afecto_indirectamente:
+          label: Té local afecte indirectament
+        maquinas_recreativas_tipo_a:
+          label: Màquines recreatives tipus A
+        maquinas_recreativas_tipo_b:
+          label: Màquines recreatives tipus B
+        municipality_code:
+          label: Codi del municipi de l'activitat
+        municipality_name:
+          label: Municipi de l'activitat
+        province_code:
+          label: Codi de la província de l'activitat
         tipo_actividad:
           choices:
             A01: Arrendadors de béns immobles
@@ -261,6 +277,12 @@ profile:
           label: Data de baixa de l'activitat
         activity_start_date:
           label: Data d'alta de l'activitat
+        aeat_administracion_code:
+          label: Codi de l'Administració de l'AEAT
+        aeat_administracion_name:
+          label: Administració de l'AEAT
+        aeat_delegacion_code:
+          label: Codi de la Delegació de l'AEAT
         divergencia:
           label: Divergències de l'acarament censal
         large_company:
@@ -282,8 +304,80 @@ profile:
           label: Domicili fiscal
         fiscal_address_cadastral_reference:
           label: Referència cadastral del domicili fiscal
+        fiscal_address_municipality_code:
+          label: Codi del municipi del domicili fiscal
+        fiscal_address_municipality_name:
+          label: Municipi del domicili fiscal
+        fiscal_address_province_code:
+          label: Codi de la província del domicili fiscal
         postcode:
           label: Codi postal
+      iae_elemento_tributario:
+        actividad:
+          label: Activitat
+        code:
+          label: Codi de l'element tributari
+        description:
+          label: Descripció de l'element tributari
+        linea:
+          label: Línia
+        numero:
+          label: Nombre
+      iae_local:
+        actividad:
+          label: Activitat
+        afectacion:
+          choices:
+            ejercicio: On s'exerceix l'activitat
+            indirecta: Afecte indirectament a l'activitat
+          label: Afectació del local
+        escalera:
+          label: Escala
+        km:
+          label: Km
+        municipality_code:
+          label: Codi del municipi
+        municipality_name:
+          label: Municipi
+        numero:
+          label: Número
+        piso:
+          label: Pis
+        portal:
+          label: Portal
+        postcode:
+          label: Codi postal
+        province_code:
+          label: Codi de la província
+        puerta:
+          label: Porta
+        superficie_computable:
+          label: Superfície computable (m²)
+        superficie_rectificada:
+          label: Superfície rectificada (m²)
+        superficie_total:
+          label: Superfície total (m²)
+        telefono:
+          label: Telèfon
+        uso_destino_code:
+          label: Codi d'ús o destinació
+        uso_destino_description:
+          label: Ús o destinació
+        via_nombre:
+          label: Nom de la via pública
+        via_sg:
+          label: Tipus de via
+      iae_local_superficie:
+        clase:
+          label: Classe de superfície (Regla 14)
+        computable:
+          label: Computable (m²)
+        local:
+          label: Local
+        rectificada:
+          label: Rectificada (m²)
+        total:
+          label: Total (m²)
       identity:
         email:
           label: Correu electrònic de contacte
@@ -915,6 +1009,18 @@ profile:
       contact:
         summary: On et pot contactar l'AEAT i el teu domicili fiscal.
         title: Contacte i domicili fiscal
+      iae_elemento_tributario:
+        summary: Els elements tributaris de cada activitat per al model 840, una fila
+          per línia.
+        title: Elements tributaris de l'IAE
+      iae_local:
+        summary: 'Els locals de cada activitat, una fila per local: on l''exerceixes
+          o els que fas servir indirectament.'
+        title: Locals de l'IAE
+      iae_local_superficie:
+        summary: Les superfícies de cada local per classe de la Regla 14, una fila
+          per classe.
+        title: Superfícies del local (Regla 14)
       identity:
         summary: 'El teu nom i NIF: per a qui es preparen les declaracions.'
         title: Identitat

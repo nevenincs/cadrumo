@@ -67,6 +67,7 @@ PROFILE_CODED_CHOICE_PATHS: frozenset[str] = frozenset(
         "attribution_entity_socios.naturaleza_inmueble",
         "attribution_entity_socios.situacion_inmueble",
         "attribution_entity_socios.clave_declarado",
+        "iae_local_superficie.clase",
         "m200_administrador.forma_juridica",
         "m200_participacion_socio.forma_juridica",
         "renta_taxpayer.marital_status",
