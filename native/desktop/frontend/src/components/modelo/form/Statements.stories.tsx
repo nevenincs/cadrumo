@@ -10,6 +10,7 @@ import {
 import { expect, userEvent, waitFor, within } from "storybook/test";
 import { modeloFixture } from "@/dev/modeloFixture";
 import { ModeloEnvelope } from "@/dev/ModeloEnvelope";
+import { RENTAL_ROWS, withRentalRows } from "@/dev/modeloRentalCarryFixture";
 import {
   checkingStatements,
   withoutRemoval,
@@ -341,6 +342,55 @@ export const WithdrawalKept: Story = {
     );
     await userEvent.click(withdraw);
     await within(canvasElement).findByRole("status");
+  },
+};
+
+/** The read with one statement for each of two let properties added after
+ * the form-wide ones. */
+const forProperties: Adjust = (envelope) => withRentalRows(envelope);
+
+export const PerProperty: Story = {
+  name: "100 · one statement for each let property, in the words served",
+  render: (_, { globals }) => (
+    <Renta locale={globals.locale} adjust={forProperties} />
+  ),
+  play: async ({ canvasElement }) => {
+    const section = await offer(canvasElement);
+    const rows = section.querySelectorAll("[data-statement-row]");
+    await expect(rows).toHaveLength(RENTAL_ROWS.length);
+    for (const [at, row] of RENTAL_ROWS.entries())
+      await expect(rows[at]?.textContent).toContain(row.words);
+  },
+};
+
+export const PropertyStaged: Story = {
+  name: "100 · a property's statement staged on its row in the review",
+  render: (_, { globals }) => (
+    <Renta
+      locale={globals.locale}
+      adjust={forProperties}
+      review
+      setup={(session) => {
+        const first = session.statements.find(
+          (statement) => statement.row_identity === RENTAL_ROWS[0]?.identity,
+        );
+        if (first) session.stageStatements([first]);
+      }}
+    />
+  ),
+  play: async ({ canvasElement }) => {
+    const page = within(canvasElement.ownerDocument.body);
+    const dialog = await page.findByRole("dialog", {}, { timeout: READ_WAIT });
+    await waitFor(
+      () => {
+        const lines = dialog.querySelectorAll("[data-statement-line]");
+        if (lines.length !== 1) throw new Error("the row is not listed yet");
+        return expect(lines[0]?.textContent).toContain(
+          RENTAL_ROWS[0]?.words ?? "",
+        );
+      },
+      { timeout: READ_WAIT },
+    );
   },
 };
 

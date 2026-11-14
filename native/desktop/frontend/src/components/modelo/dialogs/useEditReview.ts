@@ -103,7 +103,13 @@ async function preflight(
     const outcome = await port.edit(
       "modelo.edit.preflight",
       modeloEditBody(
-        editSubmission(baseline, session.staged.values(), language, true),
+        editSubmission(
+          baseline,
+          session.staged.values(),
+          language,
+          true,
+          session.rowStatements.values(),
+        ),
       ),
     );
     if (outcome.kind !== "settled")
@@ -297,7 +303,10 @@ export function useEditReview({
   useEffect(() => {
     latest.current = check;
   });
-  const editsKey = [...session.staged.keys()].join("\u0000");
+  const editsKey = [
+    ...session.staged.keys(),
+    ...session.rowStatements.keys(),
+  ].join("\u0000");
   const baselineId = baseline?.baseline_id ?? null;
   const previousCheck = useRef<{
     open: boolean;
@@ -388,7 +397,13 @@ export function useEditReview({
           port.edit(
             "modelo.edit.apply",
             modeloEditBody(
-              editSubmission(on, session.staged.values(), language),
+              editSubmission(
+                on,
+                session.staged.values(),
+                language,
+                false,
+                session.rowStatements.values(),
+              ),
             ),
           ),
         () => alive.current,

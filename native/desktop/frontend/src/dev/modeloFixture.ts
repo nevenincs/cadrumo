@@ -55,6 +55,11 @@ import type { Translate } from "../shell/strings";
 import { ASSET_NOTES } from "./modeloAssetNotes";
 import { EXPORT_DISCLOSURE } from "./modeloExportDisclosure";
 import { wholeEnvelopes } from "./modeloEnvelopePatch";
+import {
+  answeredRentalCarry,
+  intentsLine,
+  withRentalRows,
+} from "./modeloRentalCarryFixture";
 import { hex64 } from "./fixtures/ledger";
 
 /** How the scenario's modelo family answers. `checked`, `filed`, `receipt`
@@ -197,6 +202,11 @@ export const MODELO_SHAPES = [
   "renta-uncalculated",
   "renta-parent",
   "renta-parentapart",
+  /** The paying filer's Modelo 100 serving, after its form-wide statements,
+   * one statement for each of two let properties, whose checks and applies
+   * are answered as checked and applied and whose staged intents are said
+   * back as host calls. */
+  "rental-carry",
   "refused",
   /** A creation refused for a profile fact the application wants, which names
    * that fact's own row as the way on. */
@@ -248,9 +258,11 @@ const RENTA = "100-0A";
 /** The filer's form a `renta` shape reads: the salaried filer without a
  * certificate is the declaration itself. */
 const rentaForm = (shape: ModeloShape): string =>
-  shape.startsWith("renta-")
-    ? `${RENTA}-${shape.slice("renta-".length)}`
-    : RENTA;
+  shape === "rental-carry"
+    ? `${RENTA}-pay`
+    : shape.startsWith("renta-")
+      ? `${RENTA}-${shape.slice("renta-".length)}`
+      : RENTA;
 
 /** Every box a form's pages hold. */
 function fields(node: unknown): PublicModeloFormField[] {
@@ -654,6 +666,7 @@ export function modeloFixture(options: Options): ModeloPort {
     const admitted = form ? form.admitted_baseline?.baseline_id : undefined;
     if (read && admitted) admittedBy.set(admitted, read);
     if (!form) return reject("refused", { reason: "profile_mismatch" });
+    if (shape === "rental-carry") withRentalRows(form);
     if (shape === "read-only-boxes")
       return withReadOnlyBoxes(form, options.translate(language));
     if (shape === "withholding-link" && name === LATER_STATES)
@@ -1272,6 +1285,12 @@ export function modeloFixture(options: Options): ModeloPort {
           ) as ModeloEditOperatorInputV2;
         } catch {
           return reject("invalid");
+        }
+        if (shape === "rental-carry") {
+          say(intentsLine(definition, input));
+          return settle(
+            answeredRentalCarry(definition, input),
+          ) as LedgerOutcome<ModeloResult<typeof definition>>;
         }
         // The answer is the one the application gave on the baseline this
         // body names: a baseline no written form admitted is refused.
