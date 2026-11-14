@@ -1,10 +1,26 @@
 import { useCallback, useEffect, useMemo, useRef, type RefObject } from "react";
 import {
   bridgeChords,
+  claimsButton,
   findAction,
+  findButtonAction,
   type Action,
   type FocusArea,
 } from "./actions";
+
+/** What is drawn over the window and keeps a pointer's buttons. */
+const LAYERS =
+  '[role="dialog"], [role="alertdialog"], [role="menu"], [data-modal-layer]';
+
+/** The area a key or button event came from: a terminal or the browser
+ * keeps its own keys; everything else is the window's chrome. */
+function areaOf(target: EventTarget | null): FocusArea {
+  return (target as HTMLElement | null)?.closest?.(
+    ".xterm, [data-browser-surface]",
+  )
+    ? "terminal"
+    : "chrome";
+}
 
 /** Shares one action keymap and modal policy between native keys and docs. */
 export function useShellShortcuts(
@@ -57,11 +73,7 @@ export function useShellShortcuts(
 
   useEffect(() => {
     const key = (event: KeyboardEvent) => {
-      const focus: FocusArea = (event.target as HTMLElement | null)?.closest?.(
-        ".xterm, [data-browser-surface]",
-      )
-        ? "terminal"
-        : "chrome";
+      const focus = areaOf(event.target);
       const action = findAction(actionsRef.current, event, focus);
       if (!action) return;
       if (
@@ -80,8 +92,29 @@ export function useShellShortcuts(
       event.stopPropagation();
       action.run();
     };
+    // A pointer's side buttons run what their chords run. The document's
+    // own history never moves: that would unload the window. A dialog,
+    // sheet or menu drawn over the window keeps its buttons to itself.
+    const button = (event: MouseEvent) => {
+      if (!claimsButton(actionsRef.current, event.button)) return;
+      event.preventDefault();
+      const target = event.target as Element | null;
+      if (target?.closest?.(LAYERS)) return;
+      const action = findButtonAction(
+        actionsRef.current,
+        event.button,
+        areaOf(target),
+      );
+      if (!action || !chordAllowed(action.id)) return;
+      event.stopPropagation();
+      action.run();
+    };
     window.addEventListener("keydown", key, true);
-    return () => window.removeEventListener("keydown", key, true);
+    window.addEventListener("mouseup", button, true);
+    return () => {
+      window.removeEventListener("keydown", key, true);
+      window.removeEventListener("mouseup", button, true);
+    };
   }, [actionsRef, chordAllowed]);
 
   return { isShellChord, chords, runShortcut };
