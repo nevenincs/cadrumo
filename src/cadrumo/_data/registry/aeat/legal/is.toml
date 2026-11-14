@@ -1703,7 +1703,7 @@ applies_from = 2024-01-01
 applies_to = 2024-12-31
 record_design_epoch = "2024"
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_24/DR200-2024.xls"
-review_status = "pending_review"
+review_status = "agent_reviewed"
 
 [sources."aeat-dr-220-2023"]
 evidence_tier = "layout_authority"
@@ -1810,7 +1810,7 @@ retrieved_at = 2026-05-06
 applies_from = 2024-01-01
 applies_to = 2024-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/Sociedades/Manual_Sociedades_2024.pdf"
-review_status = "pending_review"
+review_status = "agent_reviewed"
 
 [sources."aeat-modelo-200-manual-2025"]
 evidence_tier = "official_source_guidance"

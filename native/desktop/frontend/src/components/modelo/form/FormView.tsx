@@ -490,6 +490,10 @@ export function FormView({
             </TabsList>
           </Tabs>
         )}
+        {/* The form's least height, which the area counts and the band and
+            details give way to: 10rem on a 600px window, growing to 11rem
+            from 700px, so a taller window gives the form a viewport to read
+            in and a short one still leaves the band and details their lines. */}
         <div
           ref={scroller}
           id={panel}
@@ -498,7 +502,7 @@ export function FormView({
           aria-label={page?.heading.text ?? t("desktop.modelo.view.form")}
           tabIndex={session.selectedKey ? -1 : 0}
           onKeyDown={onKeyDown}
-          className="@container min-h-40 flex-1 overflow-y-auto px-6 py-5 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+          className="@container form-least-height flex-1 overflow-y-auto px-6 py-5 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
         >
           {page && (
             <div
