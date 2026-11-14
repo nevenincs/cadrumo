@@ -100,6 +100,24 @@ If accepted: one L1 plan with these Steps.
 3. The persona work inputs for the PyG and the retirement of the not-sourced expectation blocks.
 4. The four sociedad M200 rows rerun through backend, CLI, TUI and window.
 
+Amendment 2026-11-14 (PRIME ruling 18:27, option A2) to step 2: no stored record is rewritten.
+The seven retired bare PyG ids and their page-qualified replacements are declared once, as frozen
+data, in `src/cadrumo/application/calculations/prior_filing_page_qualified_reads.py`, and applied
+where a Modelo 200 prior value is read (`src/cadrumo/application/calculations/binding_prefill.py`,
+grouped and single-key reads). A stored row is mapped only when its own stored fields show it was
+written under an earlier authority: its `authority_generation` stamp is absent or differs from the
+pinned generation, and its stamped revision no longer declares the bare id but declares the
+qualified one. Id spelling alone never triggers the map, and a row the current generation wrote is
+read as stored, so new writes are never aliased. A row holding a box under both ids with different
+values is refused (`REFUSED_PRIOR_FILING_PAGE_QUALIFIED_CONFLICT`). The observation envelope gains
+the optional `authority_generation` stamp, written by the one observation write door. The dry-run
+preview and the before/after rewrite equality test fall away with the rewrite; their place is
+taken by tests through the real calculate path: a pre-rename prior turnover feeding the next
+year's rate, the conflict refusal, a sealed revision's rendering byte-identical, and a
+current-generation bare id left unmapped. Residual: cross-period clean-state and verification
+reads do not use the map, so a pre-rename prior row can still be reported as missing its source
+box there; that is a refusal, not a wrong value.
+
 ## Rationale
 
 Option (a) is the only path that lets the four rows verify the PyG instead of declaring it

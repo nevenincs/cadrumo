@@ -89,6 +89,7 @@ from .errors import BindingPrefillTypeError
 from .iva_compensation_history_ports import IvaCompensationHistoryRepositoryProtocol
 from .observations_repository import CalculationObservationRepositoryProtocol, ObservationEnvelopePayload
 from .per_grupo_member_keys import per_grupo_member_requirement_keys
+from .prior_filing_page_qualified_reads import page_qualified_prior_observation
 from .revision_carry_gate import revision_carry_outcome
 
 _LOCAL_FILING_PROVENANCE: Final = "local_filing"
@@ -313,6 +314,7 @@ def _gather_grouped_member_observations(
         # R2 carry gate: divergent or unreconfirmable stamp -> skip.
         if _revision_carry_outcome(payload, operation=operation):
             continue
+        obs = page_qualified_prior_observation(payload, operation=operation).observation
         member_idx = seen_member.get(req_key, 0)
         seen_member[req_key] = member_idx + 1
         needed[(obs.modelo, obs.filing_year, obs.period, member_idx)] = _gathered_observation(
@@ -336,7 +338,7 @@ def _gathered_from_payload(
     if _revision_carry_outcome(payload, operation=operation):
         return None
     return _gathered_observation(
-        payload.observation,
+        page_qualified_prior_observation(payload, operation=operation).observation,
         registry_snapshot_ref=payload.registry_snapshot_ref,
         source_kind=payload.source_kind,
     )

@@ -122,6 +122,10 @@ errors:
     m210_imputation_no_filing_year: M210 imputed real-estate calculation requires
       a non-zero filing year.
     parameter_unknown: Parameter {parameter_id} is not registered.
+    previous_filing_casillas_conflicting: Your stored Modelo {source_modelo} return
+      for {source_filing_year} ({source_period}) holds boxes {casilla_ids} twice,
+      under the old box number and under the page-qualified one, with different values.
+      Correct that return so each box has one value, then calculate again.
     previous_filing_casillas_unobserved: 'Your stored Modelo {source_modelo} return
       for {source_filing_year} ({source_period}) does not show boxes {casilla_ids},
       which this calculation carries forward from it. A box it does not show is unknown,
