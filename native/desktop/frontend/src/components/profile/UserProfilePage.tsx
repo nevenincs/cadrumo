@@ -3,6 +3,7 @@ import {
   useCallback,
   useDeferredValue,
   useEffect,
+  useId,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -135,6 +136,7 @@ export const UserProfilePage = memo(function UserProfilePage({
   const [password, setPassword] = useState(false);
   const [shortcuts, setShortcuts] = useState(false);
   const [fromAeat, setFromAeat] = useState<ReadonlySet<string>>(new Set());
+  const pageId = useId();
   const scroller = useRef<HTMLDivElement>(null);
   const searchInput = useRef<HTMLInputElement>(null);
   const { show, group, sort } = view;
@@ -906,6 +908,7 @@ export const UserProfilePage = memo(function UserProfilePage({
   return (
     <section
       ref={page}
+      id={pageId}
       tabIndex={-1}
       aria-label={t("desktop.profile.title")}
       onKeyDown={onPageKey}
@@ -957,7 +960,10 @@ export const UserProfilePage = memo(function UserProfilePage({
           {index}
           <div
             ref={scroller}
-            className="relative min-w-0 flex-1 overflow-y-auto"
+            role="group"
+            tabIndex={0}
+            aria-labelledby={pageId}
+            className="relative min-w-0 flex-1 overflow-y-auto focus-visible:-outline-offset-2"
             onKeyDown={onListKey}
           >
             {toolbar}
