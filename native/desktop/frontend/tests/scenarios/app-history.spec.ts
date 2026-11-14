@@ -47,8 +47,7 @@ test("Alt+Left steps back out of a declaration and across pages, Alt+Right steps
   await target.keyboard.press("Alt+ArrowLeft");
   await expect(target.locator(".ledger-page")).toBeVisible();
   await expect(target.locator(".declarations-page")).toHaveCount(0);
-  // The Ledger keeps Alt+Left and Alt+Right for its grids; the pointer's
-  // forward button still steps.
+  // Off a grid cell the Ledger passes Alt+Right to the window as well.
   await expect
     .poll(() =>
       target.evaluate(
@@ -59,8 +58,6 @@ test("Alt+Left steps back out of a declaration and across pages, Alt+Right steps
     )
     .toBe(true);
   await target.keyboard.press("Alt+ArrowRight");
-  await expect(target.locator(".ledger-page")).toBeVisible();
-  await target.locator(".ledger-page").dispatchEvent("mouseup", { button: 4 });
   await expect(list(target)).toBeVisible();
   await target.locator(".declarations-page").focus();
   await target.keyboard.press("Alt+ArrowRight");

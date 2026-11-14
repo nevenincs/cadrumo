@@ -1,4 +1,4 @@
-import { useId, type ReactNode } from "react";
+import { useEffect, useId, useRef, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/components/ui/cn";
 import { Icon } from "@/components/ui/icon";
@@ -255,6 +255,23 @@ export function ModeloWorkspace({
   const day = (iso: string | null) =>
     iso ? formatInstantDay(locale, iso) : "";
 
+  // A next action that opens another view puts the keyboard in it, on its
+  // first finding where it lists one: the button pressed is not drawn on the
+  // view it opened, and the keyboard would otherwise fall to the document.
+  const arriving = useRef(false);
+  useEffect(() => {
+    if (!arriving.current) return;
+    arriving.current = false;
+    const shown = document.getElementById(panel);
+    (
+      shown?.querySelector<HTMLElement>("[data-attention-level]") ?? shown
+    )?.focus();
+  }, [view, panel]);
+  const openView = (next: WorkspaceView) => {
+    if (next !== view && next !== "form") arriving.current = true;
+    onViewChange(next);
+  };
+
   const runNext = () => {
     if (!action) return;
     if (action === "apply") onReview();
@@ -265,9 +282,9 @@ export function ModeloWorkspace({
           .getElementById(panel)
           ?.querySelector<HTMLElement>("[data-attention-level]")
           ?.focus();
-      else onViewChange("check");
+      else openView("check");
     } else if (target) {
-      onViewChange(target);
+      openView(target);
       if (target === "form") onJumpToFirstAttention();
     } else onRun(action);
   };
@@ -286,7 +303,7 @@ export function ModeloWorkspace({
       next?.receipt_to_add && view !== "file" ? (
         <>
           {recorded}
-          <Button onClick={() => onViewChange("file")}>
+          <Button onClick={() => openView("file")}>
             {t("workspace.modelo.next_button.add_receipt")}
             <Icon name="forward" size="xs" />
           </Button>
@@ -503,7 +520,8 @@ export function ModeloWorkspace({
         <div
           id={panel}
           role="tabpanel"
-          className="@container min-h-0 flex-1 overflow-y-auto px-6 py-6"
+          tabIndex={-1}
+          className="@container min-h-0 flex-1 overflow-y-auto px-6 py-6 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
         >
           {view === "check" && slots.check}
           {view === "credits" && slots.credits}
