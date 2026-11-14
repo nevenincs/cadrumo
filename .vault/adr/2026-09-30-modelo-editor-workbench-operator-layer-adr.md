@@ -159,3 +159,7 @@ persistence boundary and needs no migration of stored data.
   That is visible to the operator as a decision not yet made, not as a silent lock.
 - Date and year casillas stay read-only in the editor until the engine gains a channel for them,
   with the reason shown on the row.
+
+## Amendment 2026-11-14: the CLI replays the head by default
+
+Authorized by PRIME's ruling of 2026-11-14 00:35 (CLI column blocker), which settles the later decision the consequences above left open. `modelo work calculate` and the work wizard now use the window's default. A calculation whose command carries no caller inputs replays the current head's caller context, so a statement recorded through attest-prior-carries, attest-prior-value, set-value or attest-work-income survives recalculation. A command that carries inputs, or that passes `--inputs-only`, keeps the explicit full-specification semantics. Its result names every recorded statement of the replaced head that it did not use, so dropping one is never silent. The request contract is unchanged: a replaying calculation still carries no inputs, and layering request inputs over the head remains the edit executor's job.

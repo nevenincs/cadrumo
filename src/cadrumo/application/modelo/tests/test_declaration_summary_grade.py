@@ -78,8 +78,10 @@ def test_the_list_and_the_form_read_the_same_revision_at_its_declared_grade(
     assert declaration_result_casilla_id(listed.revision) == declaration_result_casilla_id(formed.revision)
 
 
-def test_a_refusal_of_the_calculation_gate_is_confined_to_its_row(operation: PinnedAuthorityOperation) -> None:
-    """The gate asks for filing grade, which the registry refuses for this 390; the row reads as unreadable."""
+def test_the_calculation_gate_reads_a_revision_below_filing_grade_at_its_declared_grade(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """The gate reads the screen at the revision's own grade, so the row is not refused for the grade the registry withholds."""
     selected = operation.revision_for_context(_MODELO, filing_year=_YEAR, period=_PERIOD.registry_token)
     work_unit_id = "e" * 64
     instant = datetime(1980, 3, 10, 12, tzinfo=UTC)
@@ -116,5 +118,6 @@ def test_a_refusal_of_the_calculation_gate_is_confined_to_its_row(operation: Pin
         declaration, revisions={head.calculation_revision_id: head}, verification=None, operation=operation
     )
 
-    assert summary.state is DeclarationSummaryState.UNREADABLE
-    assert summary.result is None and summary.technical_reason is not None
+    assert summary.state is DeclarationSummaryState.CALCULATED
+    assert summary.technical_reason is None
+    assert summary.calculation_outdated
