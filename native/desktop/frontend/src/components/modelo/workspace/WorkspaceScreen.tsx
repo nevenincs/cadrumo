@@ -41,6 +41,7 @@ import type {
   ModeloWorkbenchFormProjectionV1,
   OperationNextStepV1,
 } from "../../../shell/modeloContract/modeloWorkForm";
+import { usePanePreference } from "../../../shell/panePreference";
 import type { WindowPlace } from "../../../shell/refusal";
 import { useStrings, type Translate } from "../../../shell/strings";
 import type { LeaveGuard } from "../../ledger/editing/LedgerEditing";
@@ -100,6 +101,7 @@ import { SourcesView } from "./SourcesView";
 import { BoxName } from "./BoxName";
 import { languageName, UnresolvedFindings } from "./UnresolvedFindings";
 import { ACTION_VIEW, ModeloWorkspace, type WorkspaceView } from "./Workspace";
+import { WORKSPACE_PANE_IDS } from "./WorkspacePanes";
 
 type Read =
   | { phase: "reading" }
@@ -205,7 +207,10 @@ function Ready({
   const t = useStrings();
   const session: FormSession = useFormSession({ envelope, port, language });
   const [view, setView] = useState<WorkspaceView>(initialView);
-  const [detailsOpen, setDetailsOpen] = useState(true);
+  const panes = {
+    side: usePanePreference(WORKSPACE_PANE_IDS.side),
+    details: usePanePreference(WORKSPACE_PANE_IDS.details),
+  };
   const [reviewing, setReviewing] = useState(false);
   const [correcting, setCorrecting] = useState(false);
   const [relatedOpen, setRelatedOpen] = useState(false);
@@ -865,7 +870,7 @@ function Ready({
       view={view}
       onViewChange={setView}
       stagedCount={session.stagedCount}
-      detailsOpen={detailsOpen}
+      panes={panes}
       busy={busy}
       writeHeld={held}
       prerequisiteHeld={prerequisiteHeld || evidence !== null}
@@ -898,8 +903,6 @@ function Ready({
           <FormView
             envelope={envelope}
             session={session}
-            detailsOpen={detailsOpen}
-            onDetailsOpenChange={setDetailsOpen}
             onOpenSurface={(surface) => {
               if (surface !== "none") onOpenSurface(surface);
             }}
@@ -937,7 +940,7 @@ function Ready({
             openLink={openLink}
             onOpenSurface={onOpenSurface}
             canOpenSurface={canOpenSurface}
-            onClose={() => setDetailsOpen(false)}
+            onClose={() => panes.details.setOpen(false)}
           />
         ),
         filing: (
