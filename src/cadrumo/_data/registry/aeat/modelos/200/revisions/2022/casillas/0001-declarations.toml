@@ -2123,18 +2123,20 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 # 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:747 DP200007 41|608|17|N
 [[revisions."2022".casillas]]
-id = "00254"
+id = "DP200007:00254"
 continuidad_id = "is-pyg-importe"
 number = "00254"
+segmento = "DP200007"
 section = ["cuenta_de_perdidas_y_ganancias_i", "operaciones_continuadas"]
 semantic_role = "is_pyg_importe"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 
 # 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:710 DP200007 6|13|17|N
 [[revisions."2022".casillas]]
-id = "00255"
+id = "DP200007:00255"
 continuidad_id = "is-pyg-continuadas-importe-neto-de-la-cifra-de-negocios"
 number = "00255"
+segmento = "DP200007"
 section = ["cuenta_de_perdidas_y_ganancias_i", "operaciones_continuadas"]
 semantic_role = "is_pyg_importe"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
@@ -2150,9 +2152,10 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 # 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:712 DP200007 8|47|17|N
 [[revisions."2022".casillas]]
-id = "00257"
+id = "DP200007:00257"
 continuidad_id = "is-pyg-continuadas-prestaciones-de-servicios"
 number = "00257"
+segmento = "DP200007"
 section = ["cuenta_de_perdidas_y_ganancias_i", "operaciones_continuadas"]
 semantic_role = "is_pyg_importe"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
@@ -2348,18 +2351,20 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 # 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:744 DP200007 38|557|17|N
 [[revisions."2022".casillas]]
-id = "00279"
+id = "DP200007:00279"
 continuidad_id = "is-pyg-continuadas-otros-gastos-de-explotacion"
 number = "00279"
+segmento = "DP200007"
 section = ["cuenta_de_perdidas_y_ganancias_i", "operaciones_continuadas"]
 semantic_role = "is_pyg_importe"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 
 # 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:745 DP200007 39|574|17|N
 [[revisions."2022".casillas]]
-id = "00280"
+id = "DP200007:00280"
 continuidad_id = "is-pyg-continuadas-servicios-exteriores"
 number = "00280"
+segmento = "DP200007"
 section = ["cuenta_de_perdidas_y_ganancias_i", "operaciones_continuadas"]
 semantic_role = "is_pyg_importe"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
@@ -2501,9 +2506,10 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 # 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:765 DP200007 59|914|17|N
 [[revisions."2022".casillas]]
-id = "00296"
+id = "DP200007:00296"
 continuidad_id = "is-pyg-continuadas-resultado-de-explotacion"
 number = "00296"
+segmento = "DP200007"
 section = ["cuenta_de_perdidas_y_ganancias_i", "operaciones_continuadas"]
 semantic_role = "is_pyg_importe"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
@@ -2778,9 +2784,10 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 # 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:813 DP200008 38|557|17|N
 [[revisions."2022".casillas]]
-id = "00325"
+id = "DP200008:00325"
 continuidad_id = "is-pyg-continuadas-resultado-antes-de-impuestos"
 number = "00325"
+segmento = "DP200008"
 section = ["cuenta_de_perdidas_y_ganancias_ii", "operaciones_continuadas"]
 semantic_role = "is_pyg_importe"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
@@ -23608,3 +23615,355 @@ semantic_role = "is_cuota_liquida"
 input_kind = "computed"
 formula = "modelo-200-cuota-liquida"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# The Modelo 200 record design prints the box numbers 00254, 00255, 00257, 00279, 00280, 00296 and 00325 of the cuenta
+# de perdidas y ganancias (DP200007 and DP200008) again on other pages with another meaning, so every occurrence is
+# declared on its own page (the page 7 and 8 rows above as DP200007:/DP200008:) and each binds only its own record slot.
+# Every caption below is printed identically on the same page by the 2022, 2023, 2024 and 2025 designs.
+# aeat-dr-200-2022 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1222 DP200012 field 47, offset 710, length 17, type Num: Liquidacion I - Detalle correcciones resultado cta. perdidas y ganancias - Ajustes por perdidas por deterioro de valores repr. de partic.en el capital o fondos propios (art 13.2 b) LIS) - Aumentos [00325]
+[[revisions."2022".casillas]]
+id = "DP200012:00325"
+continuidad_id = "is-liquidacion-i-deterioro-participaciones-art-13-2-b-aumentos"
+number = "00325"
+segmento = "DP200012"
+section = ["liquidacion_i", "detalle_correcciones_resultado_cuenta_perdidas_y_ganancias"]
+semantic_role = "is_correcciones_aumentos"
+semantic_role_cardinality = "shared"
+data_type = "money"
+legal_refs = ["ley-27-2014:art-13"]
+
+# aeat-dr-200-2022 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2092 DP200016B field 81, offset 1288, length 17, type Num: Deducciones inversion Canarias - Inversiones Canarias 2009 - Aplicado en esta liquidacion [00257]
+[[revisions."2022".casillas]]
+id = "DP200016B:00257"
+continuidad_id = "is-deduccion-inversion-canarias-2009-aplicado"
+number = "00257"
+segmento = "DP200016B"
+section = ["deducciones_inversion_canarias", "inversiones_canarias_2009"]
+semantic_role = "is_deduccion_inversion_canarias_importe"
+semantic_role_cardinality = "shared"
+data_type = "money"
+legal_refs = ["ley-27-2014:art-39"]
+
+# aeat-dr-200-2022 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3699 DP200022 field 93, offset 1492, length 17, type Num: Reg. cooperativas - Detalle compensacion cuotas. 2008 Pendiente aplicacion al principio del periodo [00279]
+[[revisions."2022".casillas]]
+id = "DP200022:00279"
+continuidad_id = "is-cooperativa-compensacion-cuotas-2008-pendiente-inicio"
+number = "00279"
+segmento = "DP200022"
+section = ["reg_cooperativas", "detalle_compensacion_cuotas_2008"]
+semantic_role = "is_cooperativa_compensacion_cuotas"
+semantic_role_cardinality = "shared"
+data_type = "money"
+legal_refs = ["ley-27-2014:art-124"]
+
+# aeat-dr-200-2022 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3700 DP200022 field 94, offset 1509, length 17, type Num: Reg. cooperativas - Detalle compensacion cuotas. 2008 Aplicado en esta liquidacion [00280]
+[[revisions."2022".casillas]]
+id = "DP200022:00280"
+continuidad_id = "is-cooperativa-compensacion-cuotas-2008-aplicado"
+number = "00280"
+segmento = "DP200022"
+section = ["reg_cooperativas", "detalle_compensacion_cuotas_2008"]
+semantic_role = "is_cooperativa_compensacion_cuotas"
+semantic_role_cardinality = "shared"
+data_type = "money"
+legal_refs = ["ley-27-2014:art-124"]
+
+# aeat-dr-200-2022 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:5267 DP200030 field 37, offset 540, length 17, type N: Contabilidad Banco de Espana - Perdidas y ganancias - Fondo de comercio negativo reconocido en resultados [00255]
+[[revisions."2022".casillas]]
+id = "DP200030:00255"
+continuidad_id = "is-pyg-bde-fondo-comercio-negativo-reconocido-resultados"
+number = "00255"
+segmento = "DP200030"
+section = ["banco_de_espana_perdidas_y_ganancias"]
+semantic_role = "is_pyg_importe"
+semantic_role_cardinality = "shared"
+data_type = "money"
+legal_refs = ["ley-27-2014:art-124"]
+
+# aeat-dr-200-2022 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:5269 DP200030 field 39, offset 574, length 17, type N: Contabilidad Banco de Espana - Perdidas y ganancias - C) Ganancias o (-) perdidas antes de impuestos procedentes de las actividades continuadas [00257]
+[[revisions."2022".casillas]]
+id = "DP200030:00257"
+continuidad_id = "is-pyg-bde-ganancias-perdidas-antes-impuestos-actividades-continuadas"
+number = "00257"
+segmento = "DP200030"
+section = ["banco_de_espana_perdidas_y_ganancias"]
+semantic_role = "is_pyg_importe"
+semantic_role_cardinality = "shared"
+data_type = "money"
+legal_refs = ["ley-27-2014:art-124"]
+
+# aeat-dr-200-2022 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:5310 DP200031 field 27, offset 370, length 17, type N: Contabilidad Banco de Espana - Estado cambios patrimonio neto (I) - Estado de Ingresos y gastos Reconocidos - Ganancias o (-) perdidas de valor contabilizadas en el patrimonio neto [00279]
+[[revisions."2022".casillas]]
+id = "DP200031:00279"
+continuidad_id = "is-ecpn-bde-coberturas-flujos-efectivo-ganancias-perdidas-valor"
+number = "00279"
+segmento = "DP200031"
+section = ["banco_de_espana_estado_cambios_patrimonio_neto_i", "estado_ingresos_gastos_reconocidos"]
+semantic_role = "is_ecpn_banco_espana_importe"
+semantic_role_cardinality = "shared"
+data_type = "money"
+legal_refs = ["ley-27-2014:art-124"]
+
+# aeat-dr-200-2022 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:5311 DP200031 field 28, offset 387, length 17, type N: Contabilidad Banco de Espana - Estado cambios patrimonio neto (I) - Estado de Ingresos y gastos Reconocidos - Transferido a resultados [00280]
+[[revisions."2022".casillas]]
+id = "DP200031:00280"
+continuidad_id = "is-ecpn-bde-coberturas-flujos-efectivo-transferido-resultados"
+number = "00280"
+segmento = "DP200031"
+section = ["banco_de_espana_estado_cambios_patrimonio_neto_i", "estado_ingresos_gastos_reconocidos"]
+semantic_role = "is_ecpn_banco_espana_importe"
+semantic_role_cardinality = "shared"
+data_type = "money"
+legal_refs = ["ley-27-2014:art-124"]
+
+# aeat-dr-200-2022 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:5346 DP200032 field 9, offset 64, length 17, type N: Contabilidad Banco de Espana - Estado cambios patrimonio neto (II) - Estado total cambios - Saldo de apertura [antes de la reexpresion] - Otros elementos del patrimonio neto [00296]
+[[revisions."2022".casillas]]
+id = "DP200032:00296"
+continuidad_id = "is-ecpn-bde-saldo-apertura-otros-elementos-patrimonio-neto"
+number = "00296"
+segmento = "DP200032"
+section = ["banco_de_espana_estado_cambios_patrimonio_neto_ii", "saldo_apertura_antes_reexpresion"]
+semantic_role = "is_ecpn_banco_espana_importe"
+semantic_role_cardinality = "shared"
+data_type = "money"
+legal_refs = ["ley-27-2014:art-124"]
+
+# aeat-dr-200-2022 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:5470 DP200033 field 20, offset 251, length 17, type N: Contabilidad Banco de Espana - Estado cambios patrimonio neto (II) - Estado total cambios - Efectos de los cambios en las politicas contables - Resultado del ejercicio [00325]
+[[revisions."2022".casillas]]
+id = "DP200033:00325"
+continuidad_id = "is-ecpn-bde-cambios-politicas-contables-resultado-ejercicio"
+number = "00325"
+segmento = "DP200033"
+section = ["banco_de_espana_estado_cambios_patrimonio_neto_ii", "efectos_cambios_politicas_contables"]
+semantic_role = "is_ecpn_banco_espana_importe"
+semantic_role_cardinality = "shared"
+data_type = "money"
+legal_refs = ["ley-27-2014:art-124"]
+
+# aeat-dr-200-2022 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:5777 DP200038 field 26, offset 353, length 17, type N: Entidades aseguradoras - Perdidas y ganancias (I) - Cuenta tecnica seguro no vida - Siniestralidad del ejercicio, neta de reaseguro [00254]
+[[revisions."2022".casillas]]
+id = "DP200038:00254"
+continuidad_id = "is-aseguradoras-no-vida-siniestralidad-neta-reaseguro"
+number = "00254"
+segmento = "DP200038"
+section = ["entidades_aseguradoras_perdidas_ganancias_i", "cuenta_tecnica_seguro_no_vida"]
+semantic_role = "is_pyg_importe"
+semantic_role_cardinality = "shared"
+data_type = "money"
+legal_refs = ["ley-27-2014:art-124"]
+
+# aeat-dr-200-2022 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:5778 DP200038 field 27, offset 370, length 17, type N: Entidades aseguradoras - Perdidas y ganancias (I) - Cuenta tecnica seguro no vida - Prestaciones y gastos pagados [00255]
+[[revisions."2022".casillas]]
+id = "DP200038:00255"
+continuidad_id = "is-aseguradoras-no-vida-prestaciones-gastos-pagados"
+number = "00255"
+segmento = "DP200038"
+section = ["entidades_aseguradoras_perdidas_ganancias_i", "cuenta_tecnica_seguro_no_vida"]
+semantic_role = "is_pyg_importe"
+semantic_role_cardinality = "shared"
+data_type = "money"
+legal_refs = ["ley-27-2014:art-124"]
+
+# aeat-dr-200-2022 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:5780 DP200038 field 29, offset 404, length 17, type N: Entidades aseguradoras - Perdidas y ganancias (I) - Cuenta tecnica seguro no vida - Prestaciones y gastos pagados - Reaseguro aceptado [00257]
+[[revisions."2022".casillas]]
+id = "DP200038:00257"
+continuidad_id = "is-aseguradoras-no-vida-prestaciones-gastos-pagados-reaseguro-aceptado"
+number = "00257"
+segmento = "DP200038"
+section = ["entidades_aseguradoras_perdidas_ganancias_i", "cuenta_tecnica_seguro_no_vida"]
+semantic_role = "is_pyg_importe"
+semantic_role_cardinality = "shared"
+data_type = "money"
+legal_refs = ["ley-27-2014:art-124"]
+
+# aeat-dr-200-2022 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:5802 DP200038 field 51, offset 778, length 17, type N: Entidades aseguradoras - Perdidas y ganancias (I) - Cuenta tecnica seguro no vida - Gastos gestion inversiones - Gastos inmovilizado material e inv.inmobiliarias [00279]
+[[revisions."2022".casillas]]
+id = "DP200038:00279"
+continuidad_id = "is-aseguradoras-no-vida-gastos-gestion-inversiones-inmovilizado-material"
+number = "00279"
+segmento = "DP200038"
+section = ["entidades_aseguradoras_perdidas_ganancias_i", "cuenta_tecnica_seguro_no_vida"]
+semantic_role = "is_pyg_importe"
+semantic_role_cardinality = "shared"
+data_type = "money"
+legal_refs = ["ley-27-2014:art-124"]
+
+# aeat-dr-200-2022 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:5803 DP200038 field 52, offset 795, length 17, type N: Entidades aseguradoras - Perdidas y ganancias (I) - Cuenta tecnica seguro no vida - Gastos gestion inversiones - Gastos inversiones y cuentas financieras [00280]
+[[revisions."2022".casillas]]
+id = "DP200038:00280"
+continuidad_id = "is-aseguradoras-no-vida-gastos-gestion-inversiones-cuentas-financieras"
+number = "00280"
+segmento = "DP200038"
+section = ["entidades_aseguradoras_perdidas_ganancias_i", "cuenta_tecnica_seguro_no_vida"]
+semantic_role = "is_pyg_importe"
+semantic_role_cardinality = "shared"
+data_type = "money"
+legal_refs = ["ley-27-2014:art-124"]
+
+# aeat-dr-200-2022 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:5834 DP200039 field 13, offset 132, length 17, type N: Entidades aseguradoras - Perdidas y ganancias (II) - Cuenta tecnica seguro de vida - Variacion provision para primas no consumidas y riesgos en curso (+ o -) -Seguro directo [00296]
+[[revisions."2022".casillas]]
+id = "DP200039:00296"
+continuidad_id = "is-aseguradoras-vida-variacion-provision-primas-no-consumidas-seguro-directo"
+number = "00296"
+segmento = "DP200039"
+section = ["entidades_aseguradoras_perdidas_ganancias_ii", "cuenta_tecnica_seguro_vida"]
+semantic_role = "is_pyg_importe"
+semantic_role_cardinality = "shared"
+data_type = "money"
+legal_refs = ["ley-27-2014:art-124"]
+
+# aeat-dr-200-2022 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:5863 DP200039 field 42, offset 625, length 17, type N: Entidades aseguradoras - Perdidas y ganancias (II) - Cuenta tecnica seguro de vida - Provisiones seguros de vida riesgo asumen tomadores [00325]
+[[revisions."2022".casillas]]
+id = "DP200039:00325"
+continuidad_id = "is-aseguradoras-vida-provisiones-riesgo-tomadores"
+number = "00325"
+segmento = "DP200039"
+section = ["entidades_aseguradoras_perdidas_ganancias_ii", "cuenta_tecnica_seguro_vida"]
+semantic_role = "is_pyg_importe"
+semantic_role_cardinality = "shared"
+data_type = "money"
+legal_refs = ["ley-27-2014:art-124"]
+
+# aeat-dr-200-2022 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:6463 DP200047 field 16, offset 183, length 17, type N: Inst. inversion colectiva - Estado variacion patrimonial (I) - Intereses [00254]
+[[revisions."2022".casillas]]
+id = "DP200047:00254"
+continuidad_id = "is-iic-variacion-patrimonial-intereses"
+number = "00254"
+segmento = "DP200047"
+section = ["iic_estado_variacion_patrimonial_i", "variacion_patrimonial"]
+semantic_role = "is_ecpn_otras_variaciones_importe"
+semantic_role_cardinality = "shared"
+data_type = "money"
+legal_refs = ["ley-27-2014:art-124"]
+
+# aeat-dr-200-2022 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:6464 DP200047 field 17, offset 200, length 17, type N: Inst. inversion colectiva - Estado variacion patrimonial (I) - Dividendos [00255]
+[[revisions."2022".casillas]]
+id = "DP200047:00255"
+continuidad_id = "is-iic-variacion-patrimonial-dividendos"
+number = "00255"
+segmento = "DP200047"
+section = ["iic_estado_variacion_patrimonial_i", "variacion_patrimonial"]
+semantic_role = "is_ecpn_otras_variaciones_importe"
+semantic_role_cardinality = "shared"
+data_type = "money"
+legal_refs = ["ley-27-2014:art-124"]
+
+# aeat-dr-200-2022 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:6466 DP200047 field 19, offset 234, length 17, type N: Inst. inversion colectiva - Estado variacion patrimonial (I) - Inversiones inmobiliarias - Variacion valor razonable invers. inmob. [00257]
+[[revisions."2022".casillas]]
+id = "DP200047:00257"
+continuidad_id = "is-iic-variacion-valor-razonable-inversiones-inmobiliarias"
+number = "00257"
+segmento = "DP200047"
+section = ["iic_estado_variacion_patrimonial_i", "variacion_patrimonial"]
+semantic_role = "is_ecpn_otras_variaciones_importe"
+semantic_role_cardinality = "shared"
+data_type = "money"
+legal_refs = ["ley-27-2014:art-124"]
+
+# aeat-dr-200-2022 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:6488 DP200047 field 41, offset 608, length 17, type N: Inst. inversion colectiva - Estado variacion patrimonial (I) - Servicios exteriores [00279]
+[[revisions."2022".casillas]]
+id = "DP200047:00279"
+continuidad_id = "is-iic-variacion-patrimonial-servicios-exteriores"
+number = "00279"
+segmento = "DP200047"
+section = ["iic_estado_variacion_patrimonial_i", "variacion_patrimonial"]
+semantic_role = "is_ecpn_otras_variaciones_importe"
+semantic_role_cardinality = "shared"
+data_type = "money"
+legal_refs = ["ley-27-2014:art-124"]
+
+# aeat-dr-200-2022 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:6489 DP200047 field 42, offset 625, length 17, type N: Inst. inversion colectiva - Estado variacion patrimonial (I) - Servicios exteriores - Tasaciones [00280]
+[[revisions."2022".casillas]]
+id = "DP200047:00280"
+continuidad_id = "is-iic-variacion-patrimonial-servicios-exteriores-tasaciones"
+number = "00280"
+segmento = "DP200047"
+section = ["iic_estado_variacion_patrimonial_i", "variacion_patrimonial"]
+semantic_role = "is_ecpn_otras_variaciones_importe"
+semantic_role_cardinality = "shared"
+data_type = "money"
+legal_refs = ["ley-27-2014:art-124"]
+
+# aeat-dr-200-2022 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:6520 DP200048 field 8, offset 47, length 17, type N: Inst. inversion colectiva - Estado variacion patrimonial (II) - Comisiones retrocedidas [00296]
+[[revisions."2022".casillas]]
+id = "DP200048:00296"
+continuidad_id = "is-iic-variacion-patrimonial-comisiones-retrocedidas"
+number = "00296"
+segmento = "DP200048"
+section = ["iic_estado_variacion_patrimonial_ii", "variacion_patrimonial"]
+semantic_role = "is_ecpn_otras_variaciones_importe"
+semantic_role_cardinality = "shared"
+data_type = "money"
+legal_refs = ["ley-27-2014:art-124"]
+
+# aeat-dr-200-2022 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:6741 DP200053 field 32, offset 455, length 17, type N: Sociedades de garantia reciproca - Estado total cambios patrimonio neto - Operaciones con socios - Capital - Menos: no exigido [00254]
+[[revisions."2022".casillas]]
+id = "DP200053:00254"
+continuidad_id = "is-sgr-operaciones-socios-capital-no-exigido"
+number = "00254"
+segmento = "DP200053"
+section = ["sociedades_garantia_reciproca_estado_total_cambios_patrimonio_neto", "operaciones_con_socios"]
+semantic_role = "is_ecpn_operaciones_socios_importe"
+semantic_role_cardinality = "shared"
+data_type = "money"
+legal_refs = ["ley-27-2014:art-124"]
+
+# aeat-dr-200-2022 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:6742 DP200053 field 33, offset 472, length 17, type N: Sociedades de garantia reciproca - Estado total cambios patrimonio neto - Operaciones con socios - Capital - Menos: reembolsable [00255]
+[[revisions."2022".casillas]]
+id = "DP200053:00255"
+continuidad_id = "is-sgr-operaciones-socios-capital-reembolsable"
+number = "00255"
+segmento = "DP200053"
+section = ["sociedades_garantia_reciproca_estado_total_cambios_patrimonio_neto", "operaciones_con_socios"]
+semantic_role = "is_ecpn_operaciones_socios_importe"
+semantic_role_cardinality = "shared"
+data_type = "money"
+legal_refs = ["ley-27-2014:art-124"]
+
+# aeat-dr-200-2022 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:6744 DP200053 field 35, offset 506, length 17, type N: Sociedades de garantia reciproca - Estado total cambios patrimonio neto - Operaciones con socios - Resultados ejercicios anteriores [00257]
+[[revisions."2022".casillas]]
+id = "DP200053:00257"
+continuidad_id = "is-sgr-operaciones-socios-resultados-ejercicios-anteriores"
+number = "00257"
+segmento = "DP200053"
+section = ["sociedades_garantia_reciproca_estado_total_cambios_patrimonio_neto", "operaciones_con_socios"]
+semantic_role = "is_ecpn_operaciones_socios_importe"
+semantic_role_cardinality = "shared"
+data_type = "money"
+legal_refs = ["ley-27-2014:art-124"]
+
+# aeat-dr-200-2022 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:6755 DP200053 field 46, offset 693, length 17, type N: Sociedades de garantia reciproca - Estado total cambios patrimonio neto - Operaciones con socios - (-) Distribucion de dividendos - Capital - Suscrito [00280]
+[[revisions."2022".casillas]]
+id = "DP200053:00280"
+continuidad_id = "is-sgr-operaciones-socios-distribucion-dividendos-capital-suscrito"
+number = "00280"
+segmento = "DP200053"
+section = ["sociedades_garantia_reciproca_estado_total_cambios_patrimonio_neto", "operaciones_con_socios"]
+semantic_role = "is_ecpn_operaciones_socios_importe"
+semantic_role_cardinality = "shared"
+data_type = "money"
+legal_refs = ["ley-27-2014:art-124"]
+
+# aeat-dr-200-2022 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:6821 DP200054 field 37, offset 540, length 17, type N: Sociedades de garantia reciproca - Estado total cambios patrimonio neto - Operaciones con socios - (-) Reducciones de capital - Total [00279]
+[[revisions."2022".casillas]]
+id = "DP200054:00279"
+continuidad_id = "is-sgr-operaciones-socios-reducciones-capital-total"
+number = "00279"
+segmento = "DP200054"
+section = ["sociedades_garantia_reciproca_estado_total_cambios_patrimonio_neto", "operaciones_con_socios"]
+semantic_role = "is_ecpn_operaciones_socios_importe"
+semantic_role_cardinality = "shared"
+data_type = "money"
+legal_refs = ["ley-27-2014:art-124"]
+
+# aeat-dr-200-2022 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:6828 DP200054 field 44, offset 659, length 17, type N: Sociedades de garantia reciproca - Estado total cambios patrimonio neto - Operaciones con socios - Otras operaciones con socios - Fondos provisiones tecnicas. Aportaciones de terceros [00296]
+[[revisions."2022".casillas]]
+id = "DP200054:00296"
+continuidad_id = "is-sgr-otras-operaciones-socios-fondos-provisiones-tecnicas-aportaciones-terceros"
+number = "00296"
+segmento = "DP200054"
+section = ["sociedades_garantia_reciproca_estado_total_cambios_patrimonio_neto", "otras_operaciones_con_socios"]
+semantic_role = "is_ecpn_operaciones_socios_importe"
+semantic_role_cardinality = "shared"
+data_type = "money"
+legal_refs = ["ley-27-2014:art-124"]

@@ -30,7 +30,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures(
 _YEARS = filing_year_envelope().years
 _LEGAL_ID = "ley-27-2014:art-29"
 _SOURCE_ID = "aeat-modelo-200-manual-2023"
-_TURNOVER: CasillaId = validated_casilla_id("00255", surface="_TURNOVER")
+_TURNOVER: CasillaId = validated_casilla_id("DP200007:00255", surface="_TURNOVER")
 _BINDING_ID = "modelo-200-test-preceding-turnover"
 _MONEY = BindingValueContract(data_type=BindingDataType.MONEY, channel=BindingValueChannel.DECIMAL)
 
