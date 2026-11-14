@@ -1583,6 +1583,20 @@ modelo:
           00986:
             label: Deducc. para incentivar determ.actividades - 2015 Investigación
               y desarrollo - Deducción pendiente/generada [00986]
+          00987:
+            label: 'Régimen especial de buques y empresas navieras en Canarias: desglose
+              de la compensación de bases imponibles negativas - Compensación de base
+              imponible especial año 2023 - Pendiente aplicación a principio del período/generada
+              en el período [00987]'
+          00988:
+            label: 'Régimen especial de buques y empresas navieras en Canarias: desglose
+              de la compensación de bases imponibles negativas - Compensación de base
+              imponible especial año 2023 - Aplicado en esta liquidación [00988]'
+          00989:
+            label: 'Régimen especial de buques y empresas navieras en Canarias: desglose
+              de la compensación de bases imponibles negativas - Compensación de base
+              imponible especial año 2023 - Pendiente aplicación en períodos futuros
+              [00989]'
           00992:
             label: Deducción por reversión de medidas temporales (D.T.37ª. 2 LIS)
               - 2025(*) - Importe generado/pendiente principio periodo [00992]
@@ -1606,6 +1620,11 @@ modelo:
             label: Liquidación I - Detalle correcciones resultado cta. pérdidas y
               ganancias - Libertad de amortización inmovilizado material nuevo (art.
               12.3 e) LIS) - Disminuciones [01004]
+          '01010':
+            label: 'Régimen especial de buques y empresas navieras en Canarias: desglose
+              de la compensación de bases imponibles negativas - Compensación de base
+              imponible resto actividades año 2023 - Pendiente aplicación a principio
+              del período/generada en el período [01010]'
           '01011':
             label: 'Liquidación I - Detalle correcciones resultado cta. pérdidas y
               ganancias - Operaciones vinculadas: aplicación del valor normal de mercado
@@ -1886,6 +1905,11 @@ modelo:
           '01175':
             label: Rég. especial reserva inversiones Canarias - RIC 2021 - Pendiente
               de materializar RIC al final de período [01175]
+          '01177':
+            label: 'Régimen especial de buques y empresas navieras en Canarias: desglose
+              de la compensación de bases imponibles negativas - Compensación de base
+              imponible resto actividades año 2023 - Aplicado en esta liquidación
+              [01177]'
           01178:
             label: Deducción por reversión de medidas temporales (D.T.37ª. 2 LIS)
               - 2015 - Base deducción [01178]
@@ -1949,6 +1973,11 @@ modelo:
             label: Limitación deducibilidad gastos financieros. gastos financieros
               pendientes deducir - Ejercicio generación 2014 - Aplicado en esta liquidación
               [01199]
+          '01200':
+            label: 'Régimen especial de buques y empresas navieras en Canarias: desglose
+              de la compensación de bases imponibles negativas - Compensación de base
+              imponible resto actividades año 2023 - Pendiente aplicación en períodos
+              futuros [01200]'
           '01201':
             label: Limitación deducibilidad gastos financieros. gastos financieros
               pendientes deducir - Ejercicio generación 2014 - Pendiente aplicación
@@ -2360,6 +2389,21 @@ modelo:
           01368:
             label: Deducc. para incentivar determ.actividades - 2025(*) Innovación
               tecnológica (IT) - Pendiente de aplicación en periodos futuros [01368]
+          '01374':
+            label: Deducción donativos entidades sin fines lucro - Donaciones para
+              actividades prioritarias de mecenazgo y otras con derecho a deducción
+              incrementada - 2023 - Con reiteración de donaciones a una misma entidad
+              - Deducción pendiente/generada [01374]
+          '01375':
+            label: Deducción donativos entidades sin fines lucro - Donaciones para
+              actividades prioritarias de mecenazgo y otras con derecho a deducción
+              incrementada - 2023 - Con reiteración de donaciones a una misma entidad
+              - Aplicado en esta liquidación [01375]
+          '01376':
+            label: Deducción donativos entidades sin fines lucro - Donaciones para
+              actividades prioritarias de mecenazgo y otras con derecho a deducción
+              incrementada - 2023 - Con reiteración de donaciones a una misma entidad
+              - Pendiente de aplicación en periodos futuros [01376]
           '01377':
             label: Deducción por reversión de medidas temporales (D.T.37ª. 1 LIS)
               - 2023 - Base deducción [01377]
@@ -2460,10 +2504,58 @@ modelo:
             label: Conversión activos impuesto diferido crédito exigible frente Admón.tributaria
               - Activos impuesto diferido (AID). Art. 130 LIS - Ejercicio generación
               - 2022 - AID aplicados en el periodo [01413]
+          '01414':
+            label: Conversión activos impuesto diferido crédito exigible frente Admón.tributaria
+              - Activos impuesto diferido (AID). Art. 130 LIS - Ejercicio generación
+              - 2023 - Importe total AID (art. 130.6 a) pendiente aplicación a principio
+              periodo [01414]
           '01415':
             label: Conversión activos impuesto diferido crédito exigible frente Admón.tributaria
               - Activos impuesto diferido (AID). Art. 130 LIS - Ejercicio generación
               - 2023 - Cuota líquida positiva [01415]
+          '01416':
+            label: Conversión activos impuesto diferido crédito exigible frente Admón.tributaria
+              - Activos impuesto diferido (AID). Art. 130 LIS - Ejercicio generación
+              - 2023 - AID pendientes aplicación a principio periodo - Con derecho
+              conversión crédito exigible [01416]
+          '01417':
+            label: Conversión activos impuesto diferido crédito exigible frente Admón.tributaria
+              - Activos impuesto diferido (AID). Art. 130 LIS - Ejercicio generación
+              - 2023 - AID pendientes aplicación a principio periodo - Con derecho
+              conversión crédito exigible por exceso cuota [01417]
+          01418:
+            label: Conversión activos impuesto diferido crédito exigible frente Admón.tributaria
+              - Activos impuesto diferido (AID). Art. 130 LIS - Ejercicio generación
+              - 2023 - AID pendientes aplicación a principio periodo - Sin derecho
+              conversión crédito exigible [01418]
+          01419:
+            label: Conversión activos impuesto diferido crédito exigible frente Admón.tributaria
+              - Activos impuesto diferido (AID). Art. 130 LIS - Ejercicio generación
+              - 2023 - AID convertidos en crédito exigible periodo [01419]
+          '01420':
+            label: Conversión activos impuesto diferido crédito exigible frente Admón.tributaria
+              - Activos impuesto diferido (AID). Art. 130 LIS - Ejercicio generación
+              - 2023 - AID pendientes aplicación periodos futuros - Con derecho conversión
+              crédito exigible [01420]
+          '01421':
+            label: Conversión activos impuesto diferido crédito exigible frente Admón.tributaria
+              - Activos impuesto diferido (AID). Art. 130 LIS - Ejercicio generación
+              - 2023 - AID pendientes aplicación periodos futuros - Con derecho conversión
+              crédito exigible exceso cuota [01421]
+          '01422':
+            label: Conversión activos impuesto diferido crédito exigible frente Admón.tributaria
+              - Activos impuesto diferido (AID). Art. 130 LIS - Ejercicio generación
+              - 2023 - AID pendientes aplicación periodos futuros - Sin derecho conversión
+              crédito exigible [01422]
+          '01424':
+            label: Conversión activos impuesto diferido crédito exigible frente Admón.tributaria
+              - Exceso cuota líquida positiva - Ejercicio generación - 2023 - Exceso
+              cuota líquida positiva aplicado periodos impositivos 2008 a 2015 [01424]
+          '01425':
+            label: Conversión activos impuesto diferido crédito exigible frente Admón.tributaria
+              - Exceso cuota líquida positiva - Ejercicio generación - 2023 - Exceso
+              cuota líquida positiva aplicado periodos impositivos iniciados a partir
+              2016 [01425]
           '01426':
             label: Deducciones I+D+i excluidas de límite - 2016 Investigación y desarrollo
               - Deducción pendiente/generada [01426]
@@ -2965,6 +3057,14 @@ modelo:
             label: Operaciones del art. 19 LIS distintas del cambio de residencia
               a Estados miembros de la Unión Europea o EEE - Disminución - Saldo pendiente
               a principio de ejercicio [01681]
+          01684:
+            label: Deducc. para incentivar determ.actividades - 2025(****) Otras deducciones
+              relativas a programas de apoyo a acontecimientos de excepcional interés
+              público - Aplicado en esta liquidación [01684]
+          01685:
+            label: Deducc. para incentivar determ.actividades - 2025(****) Otras deducciones
+              relativas a programas de apoyo a acontecimientos de excepcional interés
+              público - Pendiente de aplicación en periodos futuros [01685]
           01688:
             label: Operaciones del art. 19 LIS distintas del cambio de residencia
               a Estados miembros de la Unión Europea o EEE - Disminución - Saldo pendiente
@@ -2977,6 +3077,10 @@ modelo:
             label: Deducción donativos entidades sin fines lucro - Donaciones de carácter
               general - Subtotal donaciones 2015 a 2025 sin reiteración de donaciones
               a una misma entidad. - Aplicado en esta liquidación [01693]
+          01694:
+            label: Deducción donativos entidades sin fines lucro - Donaciones de carácter
+              general - Subtotal donaciones 2015 a 2025 sin reiteración de donaciones
+              a una misma entidad. - Pendiente de aplicación en periodos futuros [01694]
           01695:
             label: Deducción donativos entidades sin fines lucro - Donaciones de carácter
               general - Subtotal donaciones 2015 a 2025 con reiteración de donaciones
@@ -2985,6 +3089,10 @@ modelo:
             label: Deducción donativos entidades sin fines lucro - Donaciones de carácter
               general - Subtotal donaciones 2015 a 2025 con reiteración de donaciones
               a una misma entidad - Aplicado en esta liquidación [01696]
+          01697:
+            label: Deducción donativos entidades sin fines lucro - Donaciones de carácter
+              general - Subtotal donaciones 2015 a 2025 con reiteración de donaciones
+              a una misma entidad - Pendiente de aplicación en periodos futuros [01697]
           01698:
             label: Deducción donativos entidades sin fines lucro - Donaciones de carácter
               general - Total - Deducción pendiente/generada [01698]
@@ -2994,6 +3102,21 @@ modelo:
           '01700':
             label: Deducción donativos entidades sin fines lucro - Donaciones de carácter
               general - Total - Pendiente de aplicación en periodos futuros [01700]
+          '01704':
+            label: Deducción donativos entidades sin fines lucro - Donaciones para
+              actividades prioritarias de mecenazgo y otras con derecho a deducción
+              incrementada - Subtotal donaciones 2015 a 2025 sin reiteración de donaciones
+              a una misma entidad - Deducción pendiente/generada [01704]
+          '01705':
+            label: Deducción donativos entidades sin fines lucro - Donaciones para
+              actividades prioritarias de mecenazgo y otras con derecho a deducción
+              incrementada - Subtotal donaciones 2015 a 2025 sin reiteración de donaciones
+              a una misma entidad - Aplicado en esta liquidación [01705]
+          '01706':
+            label: Deducción donativos entidades sin fines lucro - Donaciones para
+              actividades prioritarias de mecenazgo y otras con derecho a deducción
+              incrementada - Subtotal donaciones 2015 a 2025 sin reiteración de donaciones
+              a una misma entidad - Pendiente de aplicación en periodos futuros [01706]
           '01707':
             label: Rég. especial reserva inversiones Illes Balears - RIIB 2023 - Pendiente
               de materializar RIIB a principio del período [01707]
@@ -3060,6 +3183,11 @@ modelo:
           01728:
             label: Deducción por reversión de medidas temporales (D.T.37ª. 2 LIS)
               - 2018 - Importe pendiente [01728]
+          01729:
+            label: Deducción donativos entidades sin fines lucro - Donaciones para
+              actividades prioritarias de mecenazgo y otras con derecho a deducción
+              incrementada - Subtotal donaciones 2015 a 2025 con reiteración de donaciones
+              a una misma entidad - Deducción pendiente/generada [01729]
           '01730':
             label: Reserva de nivelación - Reducción base imponible - Ejercicio generación
               2021 - Importe adicionado base imponible en periodo [01730]
@@ -3599,6 +3727,11 @@ modelo:
             label: Deducc. para incentivar determ.actividades - 2025(*) Inversiones
               en territ. África Occidental y gastos de propaganda y publicidad (art.
               27 bis Ley 19/1994) (TAP) - Aplicado en esta liquidación [01929]
+          01930:
+            label: Deducc. para incentivar determ.actividades - 2025(*) Inversiones
+              en territ. África Occidental y gastos de propaganda y publicidad (art.
+              27 bis Ley 19/1994) (TAP) - Pendiente de aplicación en periodos futuros
+              [01930]
           01931:
             label: Deducciones por producciones cinematográficas extranjeras (art.
               36.2 LIS) - 2015 - Deducción pendiente/generada [01931]
@@ -3912,6 +4045,10 @@ modelo:
           02078:
             label: Deducciones inversión Canarias - Activos fijos en La Palma, La
               Gomera y el Hierro 2023 - Deducción pendiente/generada [02078]
+          02080:
+            label: 'Información adicional para el cálculo de límites de deducciones
+              - 2024: Financiador: deducción por espectáculos en vivo de artes escénicas
+              y musicales en Canarias generada en el período impositivo [02080]'
           02081:
             label: Deducc. para incentivar determ.actividades - 2015 Inversiones en
               territ. África Occidental y gastos de propaganda y publicidad (art.
@@ -4458,6 +4595,14 @@ modelo:
           02283:
             label: Rég. cooperativas - Detalle compensación cuotas. 2019 Pendiente
               aplicación en períodos futuros [02283]
+          02287:
+            label: 'Información adicional para el cálculo de límites de deducciones
+              - 2024: Deducción por investigación y desarrollo en Canarias generada
+              en el período impositivo [02287]'
+          02288:
+            label: 'Información adicional para el cálculo de límites de deducciones
+              - 2024: Deducción por innovación tecnológica en Canarias generada en
+              el período impositivo [02288]'
           02289:
             label: XXXVII Copa América Barcelona (Ley 31/2022) - Disminución - Saldo
               pendiente a principio de ejercicio [02289]
@@ -4902,6 +5047,16 @@ modelo:
             label: Liquidación I - Detalle correcciones resultado cta. pérdidas y
               ganancias - Asimetrías híbridas (art. 15 bis LIS, excepto art. 15 bis.12
               LIS) - Disminuciones [02470]
+          '02475':
+            label: Deducción donativos entidades sin fines lucro - Donaciones para
+              actividades prioritarias de mecenazgo y otras con derecho a deducción
+              incrementada - Subtotal donaciones 2015 a 2025 con reiteración de donaciones
+              a una misma entidad - Aplicado en esta liquidación [02475]
+          '02476':
+            label: Deducción donativos entidades sin fines lucro - Donaciones para
+              actividades prioritarias de mecenazgo y otras con derecho a deducción
+              incrementada - Subtotal donaciones 2015 a 2025 con reiteración de donaciones
+              a una misma entidad - Pendiente de aplicación en periodos futuros [02476]
           '02477':
             label: Deducción por reversión de medidas temporales (D.T.37ª. 2 LIS)
               - 2022 - Importe generado/pendiente principio periodo [02477]
@@ -4942,6 +5097,14 @@ modelo:
             label: Liquidación IV - Opción de fraccionamiento en supuestos de cambios
               de residencia (art. 19.1 LIS) - Resultado incluido el 1er fraccionamiento
               del art. 19.1 LIS - Estado [02489]
+          02495:
+            label: 'Información adicional para el cálculo de límites de deducciones
+              - 2024: Productor: deducción por producciones cinematográficas españolas
+              en Canarias generada en el período impositivo [02495]'
+          02496:
+            label: 'Información adicional para el cálculo de límites de deducciones
+              - 2024: Productor: deducción por espectáculos en vivo de artes escénicas
+              y musicales en Canarias generada en el período impositivo [02496]'
           02497:
             label: Deducciones inversión Canarias - Activos fijos en La Palma, La
               Gomera y el Hierro 2022 - Pendiente de aplicación en periodos futuros
@@ -8682,6 +8845,10 @@ modelo:
               [01230]
           is-cuota-liquida:
             label: Liquidación IV - Otras deducciones - Cuota líquida [00592]
+          is-deduccion-acontecimiento-interes-publico-otras:
+            label: Deducc. para incentivar determ.actividades - 2025(****) Otras deducciones
+              relativas a programas de apoyo a acontecimientos de excepcional interés
+              público - Deducción pendiente/generada [01683]
           is-deduccion-actividades-total-pendiente:
             label: Deducc. para incentivar determ.actividades - Total - Deducción
               pendiente/generada [00831]
@@ -9729,6 +9896,10 @@ modelo:
               dimensión del capítulo XI, título VII de la LIS [00006].
             label: Incentivos entidad de reducida dimensión ( cap XI, tít. VII LIS
               ) [00006]
+          is-informacion-adicional-limites-deducciones-canarias-generada:
+            label: 'Información adicional para el cálculo de límites de deducciones
+              - 2024: Financiador: deducción por producciones cinematográficas españolas
+              en Canarias generada en el período impositivo [02079]'
           is-inversiones-anticipadas-reserva-inversiones-en-canarias-art-27-11-ley-19-1994:
             help: Indicador de inversiones anticipadas para la reserva para inversiones
               en Canarias conforme al artículo 27.11 de la Ley 19/1994 [00045].
@@ -12391,26 +12562,6 @@ modelo:
                 de valores representativos de la participación en el capital o en
                 los fondos propios, cooperativas (a nivel de cuota) (DT 16ª.3 LIS)
                 -Disminuciones [00932]
-            00987:
-              label: 'Régimen especial de buques y empresas navieras en Canarias:
-                desglose de la compensación de bases imponibles negativas - Compensación
-                de base imponible especial año 2023 - Pendiente aplicación a principio
-                del período/generada en el período [00987]'
-            00988:
-              label: 'Régimen especial de buques y empresas navieras en Canarias:
-                desglose de la compensación de bases imponibles negativas - Compensación
-                de base imponible especial año 2023 - Aplicado en esta liquidación
-                [00988]'
-            00989:
-              label: 'Régimen especial de buques y empresas navieras en Canarias:
-                desglose de la compensación de bases imponibles negativas - Compensación
-                de base imponible especial año 2023 - Pendiente aplicación en períodos
-                futuros [00989]'
-            '01010':
-              label: 'Régimen especial de buques y empresas navieras en Canarias:
-                desglose de la compensación de bases imponibles negativas - Compensación
-                de base imponible resto actividades año 2023 - Pendiente aplicación
-                a principio del período/generada en el período [01010]'
             '01043':
               label: Conversión de activos por impuesto diferido en crédito exigible
                 frente a la Administración tributaria (art. 130 LIS) - Abono por conversión
@@ -12427,16 +12578,6 @@ modelo:
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
                 incrementada - 2022 - Con reiteración de donaciones a una misma entidad
                 - Deducción pendiente/generada [01073]
-            '01177':
-              label: 'Régimen especial de buques y empresas navieras en Canarias:
-                desglose de la compensación de bases imponibles negativas - Compensación
-                de base imponible resto actividades año 2023 - Aplicado en esta liquidación
-                [01177]'
-            '01200':
-              label: 'Régimen especial de buques y empresas navieras en Canarias:
-                desglose de la compensación de bases imponibles negativas - Compensación
-                de base imponible resto actividades año 2023 - Pendiente aplicación
-                en períodos futuros [01200]'
             01258:
               label: Limitación deducibilidad gastos financieros - Límite art. 16.1
                 y 16.2 LIS - m) Gastos financieros pendientes de deducir en períodos
@@ -12477,77 +12618,11 @@ modelo:
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
                 incrementada - 2023 - Sin reiteración de donaciones a una misma entidad
                 - Pendiente de aplicación en periodos futuros [01373]
-            '01374':
-              label: Deducción donativos entidades sin fines lucro - Donaciones para
-                actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - 2023 - Con reiteración de donaciones a una misma entidad
-                - Deducción pendiente/generada [01374]
-            '01375':
-              label: Deducción donativos entidades sin fines lucro - Donaciones para
-                actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - 2023 - Con reiteración de donaciones a una misma entidad
-                - Aplicado en esta liquidación [01375]
-            '01376':
-              label: Deducción donativos entidades sin fines lucro - Donaciones para
-                actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - 2023 - Con reiteración de donaciones a una misma entidad
-                - Pendiente de aplicación en periodos futuros [01376]
-            '01414':
-              label: Conversión activos impuesto diferido crédito exigible frente
-                Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
-                Ejercicio generación - 2023 - Importe total AID (art. 130.6 a) pendiente
-                aplicación a principio periodo [01414]
-            '01416':
-              label: Conversión activos impuesto diferido crédito exigible frente
-                Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
-                Ejercicio generación - 2023 - AID pendientes aplicación a principio
-                periodo - Con derecho conversión crédito exigible [01416]
-            '01417':
-              label: Conversión activos impuesto diferido crédito exigible frente
-                Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
-                Ejercicio generación - 2023 - AID pendientes aplicación a principio
-                periodo - Con derecho conversión crédito exigible por exceso cuota
-                [01417]
-            01418:
-              label: Conversión activos impuesto diferido crédito exigible frente
-                Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
-                Ejercicio generación - 2023 - AID pendientes aplicación a principio
-                periodo - Sin derecho conversión crédito exigible [01418]
-            01419:
-              label: Conversión activos impuesto diferido crédito exigible frente
-                Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
-                Ejercicio generación - 2023 - AID convertidos en crédito exigible
-                periodo [01419]
-            '01420':
-              label: Conversión activos impuesto diferido crédito exigible frente
-                Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
-                Ejercicio generación - 2023 - AID pendientes aplicación periodos futuros
-                - Con derecho conversión crédito exigible [01420]
-            '01421':
-              label: Conversión activos impuesto diferido crédito exigible frente
-                Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
-                Ejercicio generación - 2023 - AID pendientes aplicación periodos futuros
-                - Con derecho conversión crédito exigible exceso cuota [01421]
-            '01422':
-              label: Conversión activos impuesto diferido crédito exigible frente
-                Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
-                Ejercicio generación - 2023 - AID pendientes aplicación periodos futuros
-                - Sin derecho conversión crédito exigible [01422]
             '01423':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Exceso cuota líquida positiva - Ejercicio generación
                 - 2023 - Exceso cuota líquida positiva pendiente a principio periodo
                 [01423]
-            '01424':
-              label: Conversión activos impuesto diferido crédito exigible frente
-                Admón.tributaria - Exceso cuota líquida positiva - Ejercicio generación
-                - 2023 - Exceso cuota líquida positiva aplicado periodos impositivos
-                2008 a 2015 [01424]
-            '01425':
-              label: Conversión activos impuesto diferido crédito exigible frente
-                Admón.tributaria - Exceso cuota líquida positiva - Ejercicio generación
-                - 2023 - Exceso cuota líquida positiva aplicado periodos impositivos
-                iniciados a partir 2016 [01425]
             '01575':
               label: Liquidación II - Detalle correcciones resultado cta. pérdidas
                 y ganancias - Operaciones del art. 19 LIS distintas del cambio de
@@ -12685,49 +12760,6 @@ modelo:
                 por impuesto diferido en crédito exigible frente a la Administración
                 tributaria (art. 130 LIS) - Resultado de conversión: A Ingresar -
                 Bizkaia [01672]'
-            01683:
-              label: Deducc. para incentivar determ.actividades - 2025(****) Otras
-                deducciones relativas a programas de apoyo a acontecimientos de excepcional
-                interés público - Deducción pendiente/generada [01683]
-            01684:
-              label: Deducc. para incentivar determ.actividades - 2025(****) Otras
-                deducciones relativas a programas de apoyo a acontecimientos de excepcional
-                interés público - Aplicado en esta liquidación [01684]
-            01685:
-              label: Deducc. para incentivar determ.actividades - 2025(****) Otras
-                deducciones relativas a programas de apoyo a acontecimientos de excepcional
-                interés público - Pendiente de aplicación en periodos futuros [01685]
-            01694:
-              label: Deducción donativos entidades sin fines lucro - Donaciones de
-                carácter general - Subtotal donaciones 2015 a 2025 sin reiteración
-                de donaciones a una misma entidad. - Pendiente de aplicación en periodos
-                futuros [01694]
-            01697:
-              label: Deducción donativos entidades sin fines lucro - Donaciones de
-                carácter general - Subtotal donaciones 2015 a 2025 con reiteración
-                de donaciones a una misma entidad - Pendiente de aplicación en periodos
-                futuros [01697]
-            '01704':
-              label: Deducción donativos entidades sin fines lucro - Donaciones para
-                actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - Subtotal donaciones 2015 a 2025 sin reiteración de
-                donaciones a una misma entidad - Deducción pendiente/generada [01704]
-            '01705':
-              label: Deducción donativos entidades sin fines lucro - Donaciones para
-                actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - Subtotal donaciones 2015 a 2025 sin reiteración de
-                donaciones a una misma entidad - Aplicado en esta liquidación [01705]
-            '01706':
-              label: Deducción donativos entidades sin fines lucro - Donaciones para
-                actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - Subtotal donaciones 2015 a 2025 sin reiteración de
-                donaciones a una misma entidad - Pendiente de aplicación en periodos
-                futuros [01706]
-            01729:
-              label: Deducción donativos entidades sin fines lucro - Donaciones para
-                actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - Subtotal donaciones 2015 a 2025 con reiteración de
-                donaciones a una misma entidad - Deducción pendiente/generada [01729]
             '01742':
               label: Libertad de amortización de determinados vehículos y de nuevas
                 infraestructuras de recarga (DA 18ª LIS RDL 4/2024) - Aumento - Correcciones
@@ -12737,11 +12769,6 @@ modelo:
                 infraestructuras de recarga (DA 18ª LIS RDL 4/2024) - Aumento - Correcciones
                 del ejercicio - Temporarias (con origen en ejercicios anteriores)
                 [01820]
-            01930:
-              label: Deducc. para incentivar determ.actividades - 2025(*) Inversiones
-                en territ. África Occidental y gastos de propaganda y publicidad (art.
-                27 bis Ley 19/1994) (TAP) - Pendiente de aplicación en periodos futuros
-                [01930]
             01961:
               label: Libertad de amortización de determinados vehículos y de nuevas
                 infraestructuras de recarga (DA 18ª LIS RDL 4/2024) - Disminución
@@ -12752,22 +12779,6 @@ modelo:
                 infraestructuras de recarga (DA 18ª LIS RDL 4/2024) - Disminución
                 - Correcciones del ejercicio - Temporarias (con origen en ejercicios
                 anteriores) [01962]
-            02079:
-              label: 'Información adicional para el cálculo de límites de deducciones
-                - 2024: Financiador: deducción por producciones cinematográficas españolas
-                en Canarias generada en el período impositivo [02079]'
-            02080:
-              label: 'Información adicional para el cálculo de límites de deducciones
-                - 2024: Financiador: deducción por espectáculos en vivo de artes escénicas
-                y musicales en Canarias generada en el período impositivo [02080]'
-            02287:
-              label: 'Información adicional para el cálculo de límites de deducciones
-                - 2024: Deducción por investigación y desarrollo en Canarias generada
-                en el período impositivo [02287]'
-            02288:
-              label: 'Información adicional para el cálculo de límites de deducciones
-                - 2024: Deducción por innovación tecnológica en Canarias generada
-                en el período impositivo [02288]'
             '02301':
               label: Detalle correcciones resultado pérdidas y ganancias - Correcciones
                 al resultado de la cuenta de pérdidas y ganancias del ejercicio -
@@ -12792,17 +12803,6 @@ modelo:
               label: Tributación conjunta Estado y Adm.Forales - Discrepancia de criterio
                 administrativo para determinados supuestos de autoliquidación rectificativa
                 que no deban incluirse en otras casillas - Gipuzkoa [02379]
-            '02475':
-              label: Deducción donativos entidades sin fines lucro - Donaciones para
-                actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - Subtotal donaciones 2015 a 2025 con reiteración de
-                donaciones a una misma entidad - Aplicado en esta liquidación [02475]
-            '02476':
-              label: Deducción donativos entidades sin fines lucro - Donaciones para
-                actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - Subtotal donaciones 2015 a 2025 con reiteración de
-                donaciones a una misma entidad - Pendiente de aplicación en periodos
-                futuros [02476]
             02490:
               label: 'Conversión de activos por impuesto diferido en crédito exigible
                 frente a la Administración tributaria (art. 130 LIS) - Rectificativa
@@ -12828,14 +12828,6 @@ modelo:
                 frente a la Administración tributaria (art. 130 LIS) - Rectificativa
                 - Resultado de conversión de AID tras regularización: A ingresar -
                 D. Forales/Navarra (Totales) [02494]'
-            02495:
-              label: 'Información adicional para el cálculo de límites de deducciones
-                - 2024: Productor: deducción por producciones cinematográficas españolas
-                en Canarias generada en el período impositivo [02495]'
-            02496:
-              label: 'Información adicional para el cálculo de límites de deducciones
-                - 2024: Productor: deducción por espectáculos en vivo de artes escénicas
-                y musicales en Canarias generada en el período impositivo [02496]'
             02786:
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
