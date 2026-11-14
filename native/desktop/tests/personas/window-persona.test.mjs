@@ -868,6 +868,35 @@ async function settle(before, timeout) {
   }
 }
 
+/**
+ * After a write the window reads its own settled result again; wait until the
+ * header, notices and write hold have held still and idle, so the stage is
+ * judged on the re-read declaration rather than on the read in progress.
+ */
+async function quietAfterWrite(timeout) {
+  const started = Date.now();
+  let last = null;
+  let since = started;
+  while (Date.now() - started < timeout) {
+    await sleep(400);
+    const state = await readState();
+    const hold = await exec(pageVisible, ".modelo-write-hold");
+    const key = JSON.stringify([
+      state.action,
+      state.busy,
+      state.alerts,
+      state.refusals,
+      state.unresolved,
+      hold,
+    ]);
+    if (key !== last) {
+      last = key;
+      since = Date.now();
+    } else if (!state.busy && Date.now() - since >= 2000) return state;
+  }
+  return null;
+}
+
 const freshOf = (before, after) => [
   ...after.refusals.filter((text) => !before.refusals.includes(text)),
   ...after.alerts.filter((text) => !before.alerts.includes(text)),
@@ -1031,10 +1060,15 @@ async function runAction(action, before, timeout, row) {
     if (!state.dialogTitle) {
       // A finished write that left the declaration unread holds the form until
       // it is read again; the operator presses the notice's button, and so do we.
+      // The window first reads its own settled write; the notice that remains
+      // after that read is the one to press.
+      const quiet = await quietAfterWrite(
+        Math.min(15_000, Math.max(timeout - (Date.now() - started), 1000)),
+      );
       const reread = await clickText(".modelo-write-hold", "button", [
         label("workspace.modelo.read_again"),
       ]);
-      if (!reread) return { state, notes, declined: null };
+      if (!reread) return { state: quiet ?? state, notes, declined: null };
       notes.push("read the declaration again after the write");
       log("read-again", { action });
       // The notice stays while the read runs; the stage is read once it is gone.
@@ -1390,9 +1424,19 @@ async function readFigures() {
     // written as a plain decimal and any other text stays as displayed.
     const figure = typed ? typed.text : plainDecimal(value, language);
     if (typed) typedBoxes += 1;
-    if (box in figures && figures[box] !== figure)
-      conflicts.push({ box, kept: figures[box], other: figure });
-    else figures[box] ??= figure;
+    // A repeated row group's casilla is drawn as its column scalar and as the
+    // row; as the table's row figures do, a row figure fills a zero scalar,
+    // and any other disagreement stays a conflict with the first kept.
+    if (box in figures && figures[box] !== figure) {
+      const filled = isZeroText(figures[box]) && !isZeroText(figure);
+      conflicts.push({
+        box,
+        kept: filled ? figure : figures[box],
+        other: filled ? figures[box] : figure,
+        filled,
+      });
+      if (filled) figures[box] = figure;
+    } else figures[box] ??= figure;
   }
   log("figures", {
     typedBoxes,
@@ -1589,17 +1633,22 @@ async function driveRow(row, runDir, persona) {
     state = await readState();
   }
   // The table states these on the calculated return whatever that
-  // calculation left open, as an incomplete calculation still offers
-  // calculate: a rental carry or a work-income statement is what completes it.
+  // calculation left open: a rental carry or a work-income statement is what
+  // completes it. They are entered through the form whatever the header
+  // offers next, which after an incomplete calculation is the resolve step.
   if (
     late.length > 0 &&
-    state.action !== null &&
     last !== null &&
     !["refused", "error"].includes(last.stage)
   ) {
     take(await enterStatements(late, row));
     state = await readState();
-  }
+  } else if (late.length > 0)
+    log("late-statements-skipped", {
+      late: late.length,
+      action: state.action,
+      stage: last?.stage ?? null,
+    });
   for (const text of unoffered) say("calculate", text);
   const standing = ["verify", ...FILED].includes(state.action);
   if (last === null || (inherited && last.stage === "pass")) {
@@ -1760,6 +1809,11 @@ async function recordFiling(out) {
   // the operator reads it again, and so do we, before judging the filing.
   let state = settled?.state ?? null;
   let words = settled?.words ?? [];
+  const quiet = await quietAfterWrite(15_000);
+  if (quiet) {
+    state = quiet;
+    words = freshOf(before, quiet);
+  }
   if (await exec(pageVisible, ".modelo-write-hold")) {
     const reread = await clickText(".modelo-write-hold", "button", [
       label("workspace.modelo.read_again"),
@@ -1870,10 +1924,16 @@ async function exportFile(row, runDir, persona, out) {
     if (existsSync(destination))
       destination = join(runDir, "exports", `${stem}-${Date.now()}.${kind}`);
     const before = await readState();
+    log("export-press", { kind, alerts: before.alerts, action: before.action });
     queuePickerSelection(runDir, "save", destination);
     try {
       await clickSelector(`[${MARK}]`);
       const outcome = await exportOutcome(destination, queued, before);
+      log("export-outcome", {
+        kind,
+        outcome: outcome ? Object.keys(outcome)[0] : "silent",
+        pickerAsked: !existsSync(queued),
+      });
       if (outcome?.pass) {
         await sleep(1500);
         log("exported", { bytes: statSync(destination).size, destination });

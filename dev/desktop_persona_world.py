@@ -339,6 +339,10 @@ def _recorded(
         return stages, "refused", None
     if not sweep.holds_calculation(world, prepared.work_unit_id):
         awaiting = sweep.statements_needing_calculation(materialised, plan, left=split.left)
+        # A carry the window enters waits for the window's own calculation, which
+        # emits the property row its door is on.
+        if StatementKind.RENTAL_CARRY in split.left:
+            awaiting = tuple(kind for kind in awaiting if kind != "rental_carries")
         if not awaiting:
             return stages, NOT_RUN, None
         reason = f"{', '.join(awaiting)} can only be stated on a calculated work unit"
