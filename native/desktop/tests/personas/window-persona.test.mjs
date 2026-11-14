@@ -1054,7 +1054,50 @@ async function answerReview(notes) {
   return `the review did not complete: ${end?.failed ?? "no answer within the wait"}`;
 }
 
+/** The runtime's own log of this run, as lines (empty while it is not written). */
+function runtimeLines() {
+  try {
+    return readFileSync(
+      join(window_.runDir ?? "", "storage", "logs", "cadrumo.log"),
+      "utf8",
+    ).split("\n");
+  } catch {
+    return [];
+  }
+}
+
+const SETTLED_WRITE =
+  /operation settled .* definition=modelo\.[a-z_.]+ condition=\w+ effect=updated/;
+const SETTLED_FORM_READ = /operation settled .* definition=modelo\.work\.form /;
+
+/**
+ * Wait until the runtime settled a write after `mark` (a line count of its log)
+ * and then a read of the work form, which is the window reading its own
+ * settled write; the header drawn before that read is the step before it.
+ */
+async function formReadAfterWrite(mark, timeout) {
+  const seen = await waitFor(
+    async () => {
+      const lines = runtimeLines().slice(mark);
+      const write = lines.findIndex((line) => SETTLED_WRITE.test(line));
+      if (write < 0) return null;
+      return lines.slice(write + 1).some((line) => SETTLED_FORM_READ.test(line))
+        ? true
+        : null;
+    },
+    {
+      timeout,
+      what: "the window's read of its own settled write",
+      soft: true,
+      interval: 500,
+    },
+  );
+  if (!seen) log("reread-not-seen", { mark });
+  return seen === true;
+}
+
 async function runAction(action, before, timeout, row) {
+  const mark = runtimeLines().length;
   const clicked = await clickText("header", "button", [
     label(`workspace.modelo.next_button.${action}`),
   ]);
@@ -1071,6 +1114,10 @@ async function runAction(action, before, timeout, row) {
       // it is read again; the operator presses the notice's button, and so do we.
       // The window first reads its own settled write; the notice that remains
       // after that read is the one to press.
+      await formReadAfterWrite(
+        mark,
+        Math.min(30_000, Math.max(timeout - (Date.now() - started), 1000)),
+      );
       const quiet = await quietAfterWrite(
         Math.min(15_000, Math.max(timeout - (Date.now() - started), 1000)),
       );
@@ -1805,6 +1852,7 @@ async function recordFiling(out) {
     return;
   }
   const before = await readState();
+  const mark = runtimeLines().length;
   await clickSelector(`[${MARK}]`);
   const settled = await waitFor(
     async () => {
@@ -1819,6 +1867,7 @@ async function recordFiling(out) {
   // the operator reads it again, and so do we, before judging the filing.
   let state = settled?.state ?? null;
   let words = settled?.words ?? [];
+  if (!settled?.words) await formReadAfterWrite(mark, 30_000);
   const quiet = await quietAfterWrite(15_000);
   if (quiet) {
     state = quiet;
