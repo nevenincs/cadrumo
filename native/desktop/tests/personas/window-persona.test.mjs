@@ -74,6 +74,10 @@ const CREDENTIAL_SOURCE = resolve(
   "src/cadrumo/entrypoints/tests/persona_materialisation.py",
 );
 const MARK = "data-persona-target";
+// The kinds of file an official filing is saved as (fixed-width BOE design,
+// XML dictionary), as the export offer names them.
+const FILING_FILE_KINDS = ["boe", "xml"];
+
 const TIMEOUT = {
   signIn: 300_000,
   list: 300_000,
@@ -1592,60 +1596,88 @@ async function exportFile(row, runDir, persona, out) {
     return "incomplete";
   }
   const stem = `${persona}-${row.modelo}-${row.year}-${row.period}`;
-  let destination = join(runDir, "exports", `${stem}.boe`);
-  if (existsSync(destination))
-    destination = join(runDir, "exports", `${stem}-${Date.now()}.boe`);
-  const before = await readState();
-  queuePickerSelection(runDir, "save", destination);
-  try {
-    await clickSelector(`[${MARK}]`);
-    const outcome = await waitFor(
-      async () => {
-        if (existsSync(destination) && statSync(destination).size > 0)
-          return { pass: true };
-        const state = await readState();
-        const words = freshOf(before, state);
-        return words.length > 0 ? { words } : null;
-      },
-      {
-        timeout: TIMEOUT.export,
-        what: "the export",
-        soft: true,
-        interval: 700,
-      },
-    );
-    if (outcome?.pass) {
-      await sleep(1500);
-      log("exported", { bytes: statSync(destination).size, destination });
-      return "pass";
+  const queued = join(runDir, "temporary", "native-picker-selection.json");
+  // The window saves the filing file under the kind the export offer names,
+  // which the page does not draw, and refuses a name of any other kind
+  // without a word. So each official kind is tried in turn: a name the
+  // window takes but answers with silence is one of the wrong kind.
+  for (const kind of FILING_FILE_KINDS) {
+    let destination = join(runDir, "exports", `${stem}.${kind}`);
+    if (existsSync(destination))
+      destination = join(runDir, "exports", `${stem}-${Date.now()}.${kind}`);
+    const before = await readState();
+    queuePickerSelection(runDir, "save", destination);
+    try {
+      await clickSelector(`[${MARK}]`);
+      const outcome = await exportOutcome(destination, queued, before);
+      if (outcome?.pass) {
+        await sleep(1500);
+        log("exported", { bytes: statSync(destination).size, destination });
+        return "pass";
+      }
+      if (outcome?.words) {
+        sayExport(out, outcome.words.join(" | "));
+        return "refused";
+      }
+      if (outcome?.wrongKind) {
+        log("export-kind-refused", { kind });
+        continue;
+      }
+      const panelText = await exec(
+        (selector) =>
+          [...document.querySelectorAll(selector)]
+            .filter((root) => root.getClientRects().length > 0)
+            .map((root) => (root.innerText ?? "").replace(/\s+/g, " ").trim())
+            .join(" || ")
+            .slice(0, 700),
+        panel,
+      );
+      sayExport(
+        out,
+        `no file was written and the window said nothing within the wait (save picker ${existsSync(queued) ? "never asked" : "asked"}; panel: ${panelText})`,
+      );
+      return "error";
+    } finally {
+      if (existsSync(queued)) unlinkSync(queued);
     }
-    if (outcome?.words) {
-      sayExport(out, outcome.words.join(" | "));
-      return "refused";
-    }
-    // Whether the save picker was ever asked: the queued selection is
-    // consumed only when the window opens it.
-    const pickerAsked = !existsSync(
-      join(runDir, "temporary", "native-picker-selection.json"),
-    );
-    const panelText = await exec(
-      (selector) =>
-        [...document.querySelectorAll(selector)]
-          .filter((root) => root.getClientRects().length > 0)
-          .map((root) => (root.innerText ?? "").replace(/\s+/g, " ").trim())
-          .join(" || ")
-          .slice(0, 700),
-      panel,
-    );
-    sayExport(
-      out,
-      `no file was written and the window said nothing within the wait (save picker ${pickerAsked ? "asked" : "never asked"}; panel: ${panelText})`,
-    );
-    return "error";
-  } finally {
-    const queued = join(runDir, "temporary", "native-picker-selection.json");
-    if (existsSync(queued)) unlinkSync(queued);
   }
+  sayExport(
+    out,
+    `the window took no filing file name of any official kind (${FILING_FILE_KINDS.join(", ")})`,
+  );
+  return "error";
+}
+
+/**
+ * What an export press came to: a written file, fresh words from the window,
+ * or `wrongKind` when the picker was asked and the window then stayed idle
+ * and silent, as it does for a name of a kind it does not save.
+ */
+async function exportOutcome(destination, queued, before) {
+  let quietSince = null;
+  let busySeen = false;
+  return waitFor(
+    async () => {
+      if (existsSync(destination) && statSync(destination).size > 0)
+        return { pass: true };
+      const state = await readState();
+      const words = freshOf(before, state);
+      if (words.length > 0) return { words };
+      busySeen ||= state.busy;
+      if (existsSync(queued) || state.busy || busySeen) {
+        quietSince = null;
+        return null;
+      }
+      quietSince ??= Date.now();
+      return Date.now() - quietSince > 6000 ? { wrongKind: true } : null;
+    },
+    {
+      timeout: TIMEOUT.export,
+      what: "the export",
+      soft: true,
+      interval: 700,
+    },
+  );
 }
 
 function sayExport(out, text) {
