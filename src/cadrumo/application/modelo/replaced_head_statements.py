@@ -75,6 +75,8 @@ def unused_head_statements(
     if head.operator_layer is not None:
         statements.extend(_unused_value_statements(head.operator_layer, new.known_operator_layer, namer))
         statements.extend(_unused_attestation_statements(head.operator_layer, new.known_operator_layer, namer))
+        statements.extend(_unused_row_statements(head.operator_layer, new.known_operator_layer, namer))
+    statements.extend(_unused_cleared_statements(head, new, namer))
     statements.extend(_unused_whole_statements(head, new, namer))
     return tuple(statements)
 
@@ -98,10 +100,10 @@ def _statement_namer(
     return _StatementNamer(casillas=casillas, bound_casillas=bound_casillas, boxes=boxes, language=language)
 
 
-def _unused_whole_statements(
+def _unused_cleared_statements(
     head: CalculationCallerContext, new: CalculationCallerContext, namer: _StatementNamer
 ) -> list[ModeloUnusedHeadStatement]:
-    """Name the head's clears and declaration-wide statements that ``new`` does not hold unchanged."""
+    """Name the head's cleared boxes and detail rows that ``new`` does not hold unchanged."""
     statements: list[ModeloUnusedHeadStatement] = []
     statements.extend(
         namer.casilla(ModeloHeadStatementKind.CLEARED_CASILLA, casilla_id)
@@ -110,6 +112,14 @@ def _unused_whole_statements(
     )
     if head.detail_rows and head.detail_rows != new.detail_rows:
         statements.append(namer.whole(ModeloHeadStatementKind.DETAIL_ROWS, value=str(len(head.detail_rows))))
+    return statements
+
+
+def _unused_whole_statements(
+    head: CalculationCallerContext, new: CalculationCallerContext, namer: _StatementNamer
+) -> list[ModeloUnusedHeadStatement]:
+    """Name the head's declaration-wide statements that ``new`` does not hold unchanged."""
+    statements: list[ModeloUnusedHeadStatement] = []
     if head.filing_instance_evidence is not None and head.filing_instance_evidence != new.filing_instance_evidence:
         statements.append(namer.whole(ModeloHeadStatementKind.M303_FILING_EVIDENCE))
     head_m210 = (head.m210_official_tipo_renta_code, head.m210_gross_income_source_mode)
@@ -146,7 +156,7 @@ def _unused_value_statements(
 def _unused_attestation_statements(
     head: CalculationOperatorLayer, new: CalculationOperatorLayer, namer: _StatementNamer
 ) -> list[ModeloUnusedHeadStatement]:
-    """Name the attestations and income-family entries of ``head`` that ``new`` does not hold unchanged."""
+    """Name the absence and value attestations of ``head`` that ``new`` does not hold unchanged."""
     statements: list[ModeloUnusedHeadStatement] = []
     statements.extend(
         namer.binding(ModeloHeadStatementKind.ABSENCE_ATTESTATION, binding_id)
@@ -157,6 +167,14 @@ def _unused_attestation_statements(
         value = head.binding_overrides.get(binding_id)
         if new.value_attestations.get(binding_id) != attestation or new.binding_overrides.get(binding_id) != value:
             statements.append(namer.binding(ModeloHeadStatementKind.VALUE_ATTESTATION, binding_id, value=value))
+    return statements
+
+
+def _unused_row_statements(
+    head: CalculationOperatorLayer, new: CalculationOperatorLayer, namer: _StatementNamer
+) -> list[ModeloUnusedHeadStatement]:
+    """Name the row attestations and income-family entries of ``head`` that ``new`` does not hold unchanged."""
+    statements: list[ModeloUnusedHeadStatement] = []
     statements.extend(
         namer.binding(
             ModeloHeadStatementKind.ROW_ATTESTATION,
