@@ -180,7 +180,24 @@ export async function chooseTab(scope, text) {
     text,
   );
   await sleep(1200);
-  return chosen;
+  if (chosen === null) return null;
+  // The state is read after React has rendered the press, not in the same
+  // script that dispatched it.
+  return exec(
+    (scope, text) => {
+      const list = [...document.querySelectorAll(scope)].find(
+        (l) => l.getClientRects().length,
+      );
+      const tab = [...(list?.querySelectorAll('[role="tab"]') ?? [])].find(
+        (t) =>
+          t.getClientRects().length &&
+          (t.textContent ?? "").replace(/\s+/g, " ").trim().startsWith(text),
+      );
+      return tab ? tab.getAttribute("aria-selected") : null;
+    },
+    scope,
+    text,
+  );
 }
 
 /**
@@ -263,18 +280,38 @@ export async function openLedgerSection(id, setup) {
             chosen === null ? `no tab "${name}"` : `tab "${name}" not selected`,
         };
   }
-  const opened = await clickText(".ledger-head", "button.ledger-setup", [
-    label("desktop.ledger.setup"),
-    ...setup.map((key) => label(`desktop.ledger.section.${key}`)),
-  ]);
+  // The setup menu is a Radix dropdown: it opens on pointerdown, which the
+  // WebDriver click does not send, and selects an item on click.
+  const opened = await exec(() => {
+    const button = [...document.querySelectorAll("button.ledger-setup")].find(
+      (b) => b.getClientRects().length,
+    );
+    if (!button) return false;
+    if (button.getAttribute("aria-expanded") !== "true")
+      button.dispatchEvent(
+        new PointerEvent("pointerdown", {
+          bubbles: true,
+          cancelable: true,
+          button: 0,
+          pointerType: "mouse",
+        }),
+      );
+    return true;
+  });
   if (!opened) return { reached: false, reason: "no setup menu button" };
   await sleep(500);
-  const picked = await clickText(
-    '[role="menu"]',
-    '[role="menuitem"]',
-    [name],
-    "startsWith",
-  );
+  const picked = await exec((name) => {
+    const item = [
+      ...document.querySelectorAll('[role="menu"] [role="menuitem"]'),
+    ].find(
+      (e) =>
+        e.getClientRects().length &&
+        (e.textContent ?? "").replace(/\s+/g, " ").trim().startsWith(name),
+    );
+    if (!item) return false;
+    item.click();
+    return true;
+  }, name);
   if (!picked) {
     await win.browser.keys("Escape");
     return { reached: false, reason: `no setup menu item "${name}"` };
@@ -504,32 +541,44 @@ export function pageWheelResult(id, restore) {
 }
 
 /**
- * Wheel over the centre of container `id` through WebDriver actions and
- * answer whether its scrollTop moved. The scrollTop is restored afterwards.
+ * Wheel over the centre of container `id` and answer whether its scrollTop
+ * moved. The wheel is the trusted Chromium DevTools one when the run attached
+ * it (CADRUMO_UX_DEVTOOLS=1, source "devtools"), else a WebDriver action
+ * (source "webdriver", an untrusted synthetic event). The scrollTop is
+ * restored afterwards.
  */
 export async function wheelContainer(id, deltaY = 300) {
   const target = await exec(pageWheelTarget, id);
   if (!target) return { moved: false, error: "container gone" };
+  const trusted = win.devtools?.trustedWheel;
+  const source = trusted ? "devtools" : "webdriver";
   if (!target.pointInWindow)
-    return { ...target, moved: false, error: "container not inside window" };
+    return {
+      ...target,
+      source,
+      moved: false,
+      error: "container not inside window",
+    };
   let error = null;
   try {
-    await win.browser
-      .action("wheel")
-      .scroll({
-        x: target.x,
-        y: target.y,
-        deltaX: 0,
-        deltaY: deltaY * target.direction,
-        duration: 100,
-      })
-      .perform();
+    if (trusted) await trusted(target.x, target.y, deltaY * target.direction);
+    else
+      await win.browser
+        .action("wheel")
+        .scroll({
+          x: target.x,
+          y: target.y,
+          deltaX: 0,
+          deltaY: deltaY * target.direction,
+          duration: 100,
+        })
+        .perform();
   } catch (failure) {
-    error = `wheel action failed: ${failure.message}`;
+    error = `wheel (${source}) failed: ${failure.message}`;
   }
   await sleep(400);
   const after = await exec(pageWheelResult, id, target.before);
-  return { ...target, after, moved: after !== target.before, error };
+  return { ...target, source, after, moved: after !== target.before, error };
 }
 
 /**
