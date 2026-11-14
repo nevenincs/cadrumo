@@ -576,15 +576,46 @@ const readState = () =>
 const tablist = (key) =>
   `[role="tablist"][aria-label=${JSON.stringify(label(key))}]`;
 
-async function openView(key) {
-  const opened = await clickText(
-    tablist("desktop.modelo.views.label"),
-    '[role="tab"]',
-    [label(key)],
-    "startsWith",
+/** Whether the views tab starting with `wanted` is selected and its panel is the one drawn. */
+function viewShown(list, wanted, isForm) {
+  const norm = (text) => (text ?? "").replace(/\s+/g, " ").trim();
+  const tab = [...document.querySelectorAll(`${list} [role="tab"]`)].find(
+    (element) => norm(element.textContent).startsWith(wanted),
   );
-  if (!opened) throw new Error(`the view ${label(key)} is not offered`);
-  await sleep(500);
+  return (
+    tab?.getAttribute("aria-selected") === "true" &&
+    (document.querySelector("[data-modelo-form]") !== null) === isForm
+  );
+}
+
+/**
+ * Open a workspace view and wait until it stays open. A view the window
+ * puts back (a reread re-rendering the form) is clicked again; one that never
+ * stays is a window defect named in the error.
+ */
+async function openView(key) {
+  const list = tablist("desktop.modelo.views.label");
+  const wanted = label(key);
+  const isForm = key === "desktop.modelo.view.form";
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    const opened = await clickText(list, '[role="tab"]', [wanted], "startsWith");
+    if (!opened) throw new Error(`the view ${wanted} is not offered`);
+    const started = Date.now();
+    let since = null;
+    while (Date.now() - started < 10_000) {
+      await sleep(250);
+      if (await exec(viewShown, list, wanted, isForm)) {
+        since ??= Date.now();
+        if (Date.now() - since >= 1500) return;
+      } else if (since !== null) {
+        log("view-reverted", { view: wanted, attempt });
+        break;
+      }
+    }
+  }
+  throw new Error(
+    `window_view_switch_reverts: the view ${wanted} did not stay open after 3 presses`,
+  );
 }
 
 /** Wait for a write the header started to answer; dialogs return at once. */
@@ -1017,7 +1048,12 @@ async function driveRow(row, runDir, persona) {
 }
 
 async function exportFile(row, runDir, persona, out) {
-  await openView("workspace.modelo.filing.title");
+  try {
+    await openView("workspace.modelo.filing.title");
+  } catch (error) {
+    sayExport(out, String(error?.message ?? error));
+    return "error";
+  }
   const names = [
     label("workspace.modelo.filing.export_file"),
     label("workspace.modelo.filing.export_again"),
