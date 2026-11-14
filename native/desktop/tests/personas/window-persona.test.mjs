@@ -1816,9 +1816,64 @@ async function recordFiling(out) {
     say("the record-as-filed button is not shown");
     return;
   }
-  if (
-    !(await exec((mark) => !document.querySelector(`[${mark}]`).disabled, MARK))
-  ) {
+  // The button is disabled while a write holds the declaration: after the
+  // export's write (Modelo 303 2T on build 12) the window asks to read it
+  // again, as the operator would, before the return can be recorded.
+  let rereads = 0;
+  const enabled = await waitFor(
+    async () => {
+      if ((await readState()).busy) return null;
+      if (await exec(pageVisible, ".modelo-write-hold")) {
+        if (
+          await clickText(".modelo-write-hold", "button", [
+            label("workspace.modelo.read_again"),
+          ])
+        ) {
+          rereads += 1;
+          // UX-23 workaround: comes out once FRONTEND's fix is confirmed.
+          log("ux23", { action: "record", rereads });
+        }
+        return null;
+      }
+      const mark = await exec(
+        pageMarkByText,
+        panel,
+        "button",
+        [record],
+        "equals",
+        MARK,
+      );
+      if (mark === null) return null;
+      return (await exec(
+        (mark) => !document.querySelector(`[${mark}]`).disabled,
+        MARK,
+      ))
+        ? true
+        : null;
+    },
+    { timeout: 30_000, what: "the record-as-filed button", soft: true },
+  );
+  if (!enabled) {
+    const hold = await exec(() =>
+      (document.querySelector(".modelo-write-hold")?.innerText ?? "")
+        .replace(/\s+/g, " ")
+        .trim()
+        .slice(0, 200),
+    );
+    if (hold || rereads) say(`write hold: "${hold}" (read again ${rereads}x)`);
+    if (
+      (await exec(
+        pageMarkByText,
+        panel,
+        "button",
+        [record],
+        "equals",
+        MARK,
+      )) === null
+    ) {
+      say("the record-as-filed button is not shown");
+      return;
+    }
     const why = await exec(
       (mark) =>
         (document.querySelector(`[${mark}]`).parentElement?.innerText ?? "")

@@ -18,7 +18,7 @@
 // Usage:
 //   node native/desktop/tests/personas/run-sweep.mjs --tree <sha> \
 //     --build <CMake binary dir of the packaged host> [--rows <rows-<sha>.jsonl>] \
-//     [--config Release] [--jobs 1] [--persona <id>[,<id>]] [--out <file>] \
+//     [--config Release] [--jobs 1] [--persona <id>[@<horizon>][,...]] [--out <file>] \
 //     [--case-timeout-min 30] [--logs <dir>] [--fresh] [--no-stop-on-load-failure]
 //     [--loads-only] [--world-tree <dir>] [--staged-package <dir>] [--dry-run]
 //
@@ -469,7 +469,10 @@ async function main() {
   const wanted = args.persona ? args.persona.split(",") : null;
   const loadsOnly = args["loads-only"] === true;
   const filtered = plannedCases(rowsPath).filter(
-    (item) => wanted === null || wanted.includes(item.persona),
+    (item) =>
+      wanted === null ||
+      wanted.includes(item.persona) ||
+      wanted.includes(`${item.persona}@${item.horizon}`),
   );
   const cases = loadsOnly ? newestHorizonCases(filtered) : filtered;
   const groups = byPersona(cases);
