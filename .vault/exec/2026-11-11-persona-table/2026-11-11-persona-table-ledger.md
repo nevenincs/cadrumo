@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#persona-table'
 date: '2026-11-11'
-modified: '2026-11-12'
+modified: '2026-11-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:5c3e0eac67ed273a27d6a910e07c891e6bb296413c30a3389a1f152aecc795ab'
+body_hash: 'sha256:6f6b9ee38167fd5d9f596f32f2b185f7c9beac6f71a9b01fea7dfc4b5e3671a5'
 related:
   - "[[2026-11-11-persona-table-plan]]"
 ---
@@ -169,6 +169,33 @@ related:
 - `S43` `M` `src/cadrumo/locales/hu/profile.yml`
 - `S43` `M` `src/cadrumo/locales/hu/wizard.yml`
 - `S43` `verify:` `pytest application/wizard/tests domain/deadlines/tests and dev/locales/tests (2896 passed)` -> `pass`
+- `S15` `M` `.vault/plan/2026-11-11-persona-table-plan.md`
+- `S15` `verify:` `persona table t80: 0 red at export, 281 pass 4 typed refusals; 141 closure tests` -> `pass`
+- `S15` `by:` `ACCEPTANCE`
+- `S45` `M` `.vault/plan/2026-11-11-persona-table-plan.md`
+- `S45` `verify:` `persona table t80: RESINGDEV on all 31 Modelo 100 rows; export pass; closure tests` -> `pass`
+- `S45` `by:` `ACCEPTANCE`
+- `S50` `M` `.vault/plan/2026-11-11-persona-table-plan.md`
+- `S50` `verify:` `persona table t80: 0515 on asalariada-familia Modelo 100 2022-2025; binding tests` -> `pass`
+- `S50` `by:` `ACCEPTANCE`
+- `S60` `M` `.vault/plan/2026-11-11-persona-table-plan.md`
+- `S60` `verify:` `persona table t80 +0 -0; drift gate tests` -> `pass`
+- `S60` `by:` `ACCEPTANCE`
+- `S35` `M` `.vault/plan/2026-11-11-persona-table-plan.md`
+- `S35` `verify:` `persona table rows for this Step green in the published table` -> `pass`
+- `S35` `by:` `ACCEPTANCE`
+- `S46` `M` `.vault/plan/2026-11-11-persona-table-plan.md`
+- `S46` `verify:` `persona table rows for this Step green in the published table` -> `pass`
+- `S46` `by:` `ACCEPTANCE`
+- `S49` `M` `.vault/plan/2026-11-11-persona-table-plan.md`
+- `S49` `verify:` `persona table rows for this Step green in the published table` -> `pass`
+- `S49` `by:` `ACCEPTANCE`
+- `S61` `M` `.vault/plan/2026-11-11-persona-table-plan.md`
+- `S61` `verify:` `persona table rows for this Step green in the published table` -> `pass`
+- `S61` `by:` `ACCEPTANCE`
+- `S63` `M` `.vault/plan/2026-11-11-persona-table-plan.md`
+- `S63` `verify:` `persona table rows for this Step green in the published table` -> `pass`
+- `S63` `by:` `ACCEPTANCE`
 
 ## Notes
 
