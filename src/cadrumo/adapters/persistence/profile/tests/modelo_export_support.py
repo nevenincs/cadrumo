@@ -194,6 +194,17 @@ def seed_revision(
         period=typed_period,
         revision_id=revision_id,
     )
+    calculation_revision_id = derive_calculation_revision_id(
+        work_unit_id=work_unit_id,
+        input_values_by_casilla_id=input_values_by_casilla_id,
+        binding_overrides=binding_overrides,
+        casilla_values=casilla_values,
+        filing_instance_evidence=filing_instance_evidence,
+        source_provenance=(),
+        screen_stamp=screen_stamp,
+    )
+    # A calculation makes its revision the work unit's current one; a work unit
+    # with no current calculation exports nothing.
     work_unit = WorkUnit(
         work_unit_id=work_unit_id,
         bucket_id=bucket_id,
@@ -204,18 +215,10 @@ def seed_revision(
         name=f"{modelo}-{filing_year}-{typed_period.registry_token}",
         created_at=_SEEDED_REVISION_AT,
         updated_at=_SEEDED_REVISION_AT,
+        current_calculation_revision_id=calculation_revision_id,
     )
     WorkUnitCatalogueRepository().save(
         upsert_work_unit(WorkUnitCatalogueRepository().load(), work_unit),
-    )
-    calculation_revision_id = derive_calculation_revision_id(
-        work_unit_id=work_unit_id,
-        input_values_by_casilla_id=input_values_by_casilla_id,
-        binding_overrides=binding_overrides,
-        casilla_values=casilla_values,
-        filing_instance_evidence=filing_instance_evidence,
-        source_provenance=(),
-        screen_stamp=screen_stamp,
     )
     revision = CalculationRevision(
         calculation_revision_id=calculation_revision_id,
