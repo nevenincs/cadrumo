@@ -13,6 +13,7 @@ from cadrumo.core.atomic_write import hardened_staged_bytes_publication
 from cadrumo.core.link_safety import is_link_like
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export_field_casilla import derive_casilla_export_refs
+from cadrumo.domain.calculations.registry.export_semantics import ExportComputedKey
 from cadrumo.domain.calculations.registry.export_value_policy import ExportValuePolicy
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportSignPosition
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
@@ -267,6 +268,8 @@ def _reconcile_producer_field(
     if old_field["kind"] == "header" and new_field["kind"] == "computed":
         _validate_header_to_marker(old_field, new_field, address, referenced)
         old_field.update(kind="computed", computed_key=new_field["computed_key"], producer_key=None)
+        if old_field["presence_marker"] is None:
+            old_field["required"] = new_field["required"]
         return changed + 1
     if old_field["producer_key"] == new_field["producer_key"]:
         return changed
@@ -339,9 +342,16 @@ def _validate_header_to_marker(
     address: tuple[str, str, str],
     referenced: set[tuple[str, str, str]],
 ) -> None:
-    """Admit an unseen blank-or-constant slot whose feed moves from a producer fact to a computed marker."""
+    """Admit an unseen blank-or-constant slot whose feed moves from a producer fact to a computed marker.
+
+    A slot printing one constant keeps it. A slot that declared no constant may
+    move only to the continuation-page marker, whose page writes blank, so its
+    requirement follows the marker the design describes.
+    """
     marker = old_field["presence_marker"]
-    if address in referenced or marker is None or marker != new_field["presence_marker"]:
+    if address in referenced or marker != new_field["presence_marker"]:
+        raise RegistryValidationError("producer reconciliation refuses a displayed or marker-changing feed")
+    if marker is None and new_field["computed_key"] != ExportComputedKey.CONTINUATION_PAGE_MARKER.value:
         raise RegistryValidationError("producer reconciliation refuses a displayed or marker-changing feed")
 
 
