@@ -104,7 +104,16 @@ const ux = (name, fn) =>
         assert.fail(
           "NOT COUNTED: the run did not record its bundle and executable",
         );
-      await fn(t);
+      try {
+        await fn(t);
+      } catch (error) {
+        // A failing check still names what it could not measure.
+        const missed = unreached.get(t) ?? [];
+        if (missed.length > 0 && error instanceof Error)
+          error.message += `
+UNMEASURED as well (${missed.length}): ${missed.slice(0, 6).join("; ")}`;
+        throw error;
+      }
       const missed = unreached.get(t) ?? [];
       if (missed.length > 0)
         assert.fail(
@@ -749,38 +758,55 @@ ux(
       label("desktop.navigation.busy"),
     );
     let result;
+    let pressed = null;
+    let problem = null;
     try {
-      // No write is triggered: a view change re-reads the form, and the window's
-      // own read of a settled write goes through the same header.
-      for (let round = 0; round < 3; round += 1) {
-        const away = await chooseTab(
-          VIEWS,
-          label("workspace.modelo.step.review"),
+      // The header's busy state is the window reading the declaration again
+      // after its own settled write; a view change never triggers it, so the
+      // check presses the header's own write and samples the read after it.
+      const head = await exec(
+        pageHeaderStep,
+        nextActionLabels(),
+        label("desktop.navigation.busy"),
+      );
+      if (
+        head.action &&
+        WRITING_ACTIONS.includes(head.action) &&
+        !head.disabled
+      ) {
+        pressed = head.action;
+        problem = await pressHeaderAction(head.action, []);
+        await sleep(2000);
+      } else
+        unmeasured(
+          t,
+          "modelo-header-reread",
+          null,
+          `the header offers no enabled write to press (next action ${head.action ?? "none"}${head.disabled ? ", disabled" : ""})`,
         );
-        const back = await chooseTab(VIEWS, label("desktop.modelo.view.form"));
-        if (away === null || back === null)
-          unmeasured(
-            t,
-            "modelo-header-reread",
-            null,
-            "a view tab is not offered",
-          );
-      }
     } finally {
       result = await exec(pageStopHeaderSampler);
     }
     report(t, {
       probe: "modelo-header-reread",
-      write: "none triggered",
+      write: pressed ?? "none pressed",
+      problem,
       ...result,
     });
-    assert(result, "the header sampler ran");
-    if (result.samples === 0 || result.busy === 0)
+    if (pressed && problem)
       unmeasured(
         t,
         "modelo-header-reread",
         null,
-        `the header showed busy in ${result.busy} of ${result.samples} samples, so a stale next step beside busy was not observable`,
+        `the ${pressed} press: ${problem}`,
+      );
+    assert(result, "the header sampler ran");
+    if (pressed && !problem && (result.samples === 0 || result.busy === 0))
+      unmeasured(
+        t,
+        "modelo-header-reread",
+        null,
+        `after the window's own ${pressed} settled, the header showed busy in ${result.busy} of ${result.samples} samples (every header mutation is sampled), so a stale next step beside busy was not observable`,
       );
     assert.equal(
       result.busyWithNext,
@@ -1065,14 +1091,32 @@ ux(
       if (!back.reached) await openDeclaration(rowOf("100"));
       await sleep(1500);
       await chooseTab(VIEWS, label("desktop.modelo.view.form"));
+      // The form is drawn some time after the page returns; reading the
+      // arrangement before it is drawn measures nothing.
+      const drawn = await waitFor(
+        async () => (await paneToggleState("placement")) !== null,
+        {
+          timeout: 20_000,
+          what: "the Modelo form's placement toggle",
+          soft: true,
+        },
+      );
       const kept = await splitNow();
       report(t, {
         probe: "placement",
         step: "after-navigation",
         away,
+        drawn: !!drawn,
         ...kept,
       });
-      if (kept.placement !== "side")
+      if (!drawn)
+        unmeasured(
+          t,
+          "placement/after-navigation",
+          null,
+          "the Modelo form was not drawn again after leaving the page",
+        );
+      else if (kept.placement !== "side")
         failures.push(
           `the choice did not survive leaving the page (${kept.placement})`,
         );
@@ -1269,7 +1313,8 @@ async function auditScrollContainers(
     const where = `${page} at ${size.join("x")}: ${c.el}`;
     if (!c.barVisible)
       failures.push(`${where} overflows with no scrollbar drawn`);
-    if (!wheel.moved)
+    if (wheel.unmeasured) unmeasured(t, page, size, `${c.el}: ${wheel.error}`);
+    else if (!wheel.moved)
       wheelFailures.push(
         `${where} did not scroll by wheel${wheel.error ? ` (${wheel.error})` : ""}`,
       );
@@ -1718,6 +1763,10 @@ const PRESSABLE_ACTIONS = [
   "verify",
 ];
 const ROUTING_ACTIONS = ["fill", "confirm", "resolve"];
+// The header actions that write and are followed by the window's own read.
+const WRITING_ACTIONS = PRESSABLE_ACTIONS.filter(
+  (action) => !ROUTING_ACTIONS.includes(action),
+);
 const STEP_TIMEOUT_MS = 600_000;
 
 const nextActionLabels = () =>
