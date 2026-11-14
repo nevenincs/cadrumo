@@ -72,6 +72,7 @@ class Verdict(StrEnum):
     EXPECTED_REFUSAL = "expected-refusal"
     HISTORY_FILED = "history-filed"
     UNVERIFIED = "unverified"
+    GRADE_HELD = "grade-held"
     NO_ORACLE = "no-oracle"
     UNSUPPORTED = "unsupported"
     NOT_RUN = "not-run"
@@ -89,6 +90,9 @@ VERDICT_MEANING: dict[Verdict, str] = {
     Verdict.HISTORY_FILED: "filed by the persona's history replay; no value is asserted and nothing is exported",
     Verdict.UNVERIFIED: "the stated values cite no official source (grounding `unverified` or no legal_ref); "
     "stages are shown but the row is not a pass",
+    Verdict.GRADE_HELD: "a grounded live calculation passes and verification is blocked only by "
+    "registry_authority_grade_insufficient, so the edition's authority grade, not the calculation, holds the return; "
+    "never green, reported apart from fail",
     Verdict.NO_ORACLE: "the persona owes the return but states no values for it; stages are shown, nothing compared",
     Verdict.UNSUPPORTED: "the application refuses the return as unsupported",
     Verdict.NOT_RUN: "the persona could not be replayed for that year, or the runner itself failed",
@@ -372,7 +376,34 @@ def _classify_by_stages(row: TableRow) -> Verdict:
         return _unless_unchecked(row, Verdict.PASSED)
     if stages == (Stage.PASSED, Stage.NOT_OWED, Stage.NOT_REACHED):
         return _unless_unchecked(row, Verdict.NOT_OWED)
+    if _held_only_by_authority_grade(row):
+        return Verdict.GRADE_HELD
     return Verdict.FLOOR_SOURCE if _refused_for_dropped_source(row) else Verdict.FAIL
+
+
+_GRADE_BLOCKER = "registry_authority_grade_insufficient"
+_BLOCKING_SEGMENT = re.compile(r"blocking: (?P<findings>.*?)(?: \| |$)")
+_BLOCKING_CODE = re.compile(r"\S+ - (?P<code>\w+)")
+_GRADE_HELD_EXPORT_STAGES = frozenset({Stage.REFUSED, Stage.NOT_REACHED})
+
+
+def _held_only_by_authority_grade(row: TableRow) -> bool:
+    """Whether a calculated, unmismatched row is blocked at verify by the edition's authority grade and nothing else.
+
+    The calculation passed, verification was blocked and its only blocking finding is
+    ``registry_authority_grade_insufficient``, and the export did not run (its refusal is the consequence of the
+    unverified revision). A calculation mismatch, any other blocking finding or a verify that did not block keeps
+    the row ``fail``.
+    """
+    if row.calculate is not Stage.PASSED or row.verify not in (Stage.INCOMPLETE, Stage.REFUSED):
+        return False
+    if row.export not in _GRADE_HELD_EXPORT_STAGES:
+        return False
+    segment = _BLOCKING_SEGMENT.search(row.reason)
+    if segment is None:
+        return False
+    codes = {match["code"] for match in _BLOCKING_CODE.finditer(segment["findings"])}
+    return codes == {_GRADE_BLOCKER}
 
 
 def _unless_unchecked(row: TableRow, verdict: Verdict) -> Verdict:
