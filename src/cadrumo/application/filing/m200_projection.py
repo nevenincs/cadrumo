@@ -195,6 +195,9 @@ def _m200_record_depth(
 ) -> int:
     """Return how many occurrences of a slot-addressed page its families fill: one, or none.
 
+    A page the design requires is still written once when its families are empty;
+    the caller applies that floor.
+
     Rows fill the page's numbered slots, not further pages, so a family with more rows
     than the page has slots for it cannot be written and refuses.
     """
@@ -254,6 +257,10 @@ def _project_m200_record(
     if not refs:
         return (), ()
     depth = _m200_record_depth(profile, refs, catalogue=catalogue)
+    if record.required:
+        # The design requires the page whether or not its families have rows; its other
+        # casillas still print, and slots without a row print blank.
+        depth = max(depth, 1)
     contexts: list[FilingRecordRenderContext] = []
     values: list[FilingProjectionValue] = []
     for occurrence in range(1, depth + 1):
