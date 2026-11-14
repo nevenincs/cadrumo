@@ -2,6 +2,7 @@ import { useState, type RefObject } from "react";
 import type { CalendarMemory } from "../components/FilingCalendar";
 import type { LedgerMemory } from "../components/ledger/LedgerPage";
 import type { DeclarationsMemory } from "../components/modelo/declarations/DeclarationsPage";
+import type { WorkspaceView } from "../components/modelo/workspace/Workspace";
 
 /** What the pages keep of themselves while they are put away, for one
  * profile and one sign-in, in memory only. */
@@ -48,10 +49,12 @@ export function usePageMemories({
     setLedgerKept({ reader, memory: { current: {} } });
   // The declaration open in the workspace, and what the list keeps of
   // itself meanwhile, for one profile and one sign-in, in memory only; no
-  // declaration shows the list.
+  // declaration shows the list. Its view is the tab the viewer is on, null
+  // for the one it opens on.
   const [openDeclaration, setOpenDeclaration] = useState(() => ({
     reader,
     workUnitId: null as string | null,
+    view: null as WorkspaceView | null,
     arrival: 0,
     memory: { current: {} as DeclarationsMemory },
   }));
@@ -59,13 +62,25 @@ export function usePageMemories({
     setOpenDeclaration({
       reader,
       workUnitId: null,
+      view: null,
       arrival: 0,
       memory: { current: {} },
     });
-  const openWorkUnit = (workUnitId: string | null) => {
+  // A declaration opened, or the list, or a place the window's back and
+  // forward return to: the declaration on the view the viewer was on.
+  const showDeclaration = (
+    workUnitId: string | null,
+    view: WorkspaceView | null,
+  ) => {
     wantsDeclarations.current = true;
-    setOpenDeclaration((held) => ({ ...held, workUnitId }));
+    setOpenDeclaration((held) => ({ ...held, workUnitId, view }));
   };
+  const openWorkUnit = (workUnitId: string | null) =>
+    showDeclaration(workUnitId, null);
+  const showDeclarationView = (view: WorkspaceView) =>
+    setOpenDeclaration((held) =>
+      held.view === view ? held : { ...held, view },
+    );
   // The list, looked at as the caller says: every view, narrowed to the words
   // given. The page is read anew from its memory.
   const showDeclarationList = (query: string) => {
@@ -73,7 +88,12 @@ export function usePageMemories({
     setOpenDeclaration((held) => {
       held.memory.current.view = "all";
       held.memory.current.query = query;
-      return { ...held, workUnitId: null, arrival: held.arrival + 1 };
+      return {
+        ...held,
+        workUnitId: null,
+        view: null,
+        arrival: held.arrival + 1,
+      };
     });
   };
   return {
@@ -86,5 +106,7 @@ export function usePageMemories({
     ledgerMemory: ledgerKept.memory,
     openDeclaration,
     openWorkUnit,
+    showDeclaration,
+    showDeclarationView,
   };
 }

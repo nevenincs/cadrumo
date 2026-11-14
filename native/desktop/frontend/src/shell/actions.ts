@@ -36,6 +36,12 @@ export type Action = {
   /** The view's own name, where the label wraps it in "Show" or "Hide". */
   name?: string;
   chords?: readonly Chord[];
+  /** The pointer buttons (`MouseEvent.button`) that run it as its chords
+   * do, where the area under the pointer admits its chords' scope. */
+  buttons?: readonly number[];
+  /** Whether its buttons run it, where that differs from `enabled`: a key
+   * the focused element keeps for itself leaves the pointer's buttons. */
+  buttonsEnabled?: () => boolean;
   /** Kept out of the palette (shortcut-only actions such as terminal copy). */
   hidden?: boolean;
   /** Listed in the palette only for a query that matches it: one of many
@@ -79,6 +85,33 @@ export function findAction(
     }
   }
   return null;
+}
+
+/** The action a pointer button runs over `area`: the first enabled one
+ * that declares the button with a chord whose scope the area admits. */
+export function findButtonAction(
+  actions: readonly Action[],
+  button: number,
+  area: FocusArea,
+): Action | null {
+  for (const action of actions) {
+    if (!action.buttons?.includes(button)) continue;
+    const admitted = (action.chords ?? []).some((chord) =>
+      ALLOWED[area].includes(chord.scope),
+    );
+    const enabled = action.buttonsEnabled ?? action.enabled;
+    if (!admitted || (enabled && !enabled())) continue;
+    return action;
+  }
+  return null;
+}
+
+/** Whether any action declares the pointer button, enabled or not. */
+export function claimsButton(
+  actions: readonly Action[],
+  button: number,
+): boolean {
+  return actions.some((action) => action.buttons?.includes(button));
 }
 
 /** The bridge `keymap` payload: every chord the docs frame must hand back. */
