@@ -2,6 +2,8 @@ modelo:
   schema:
     '200':
       binding:
+        modelo-200-incn-periodo-impositivo-anterior:
+          label: Importe neto de la cifra de negocios del período impositivo anterior
         modelo-200-pago-fraccionado-primero-40-2:
           label: Primer pago fraccionado · Modelo 202, artículo 40.2, casilla 03
         modelo-200-pago-fraccionado-primero-40-3:
