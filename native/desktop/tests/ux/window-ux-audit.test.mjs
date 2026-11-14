@@ -9,7 +9,7 @@
 //                    (must be outside the git project; default: a temp dir)
 //   CADRUMO_UX_ONLY  (optional) comma-separated substrings: run only tests whose name has one
 import assert from "node:assert/strict";
-import { mkdtempSync } from "node:fs";
+import { existsSync, mkdtempSync, statSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, before, test } from "node:test";
@@ -31,14 +31,21 @@ import {
 import {
   chooseTab,
   closeSettings,
+  dismissSetup,
   openDeclaration,
   openLedgerSection,
   openRailPage,
   pageNow,
   pageLedgerBlocker,
   pageScrollContainers,
+  pageTabCentre,
+  pageTabSelectedAt,
+  pageTabs,
   pageWheelControl,
   paneToggleState,
+  pickerAnswerPending,
+  pointerClickAt,
+  queueSavePicker,
   setPaneToggle,
   tablist,
   wheelContainer,
@@ -46,10 +53,11 @@ import {
 
 const ONLY = process.env.CADRUMO_UX_ONLY;
 let world;
+let runDir;
 const DEFAULT_SIZE = [1441, 923];
 
 before(async () => {
-  const runDir =
+  runDir =
     process.env.CADRUMO_UX_RUN ??
     join(mkdtempSync(join(tmpdir(), "cadrumo-e2e-ux-")), "run");
   ({ world } = await start(runDir));
@@ -1053,7 +1061,14 @@ ux("UX-17 every field-row label is at least 120 px wide", async (t) => {
  * Containers that clip with overflow-y hidden are reported, not judged: they
  * offer no scrolling by design.
  */
-async function auditScrollContainers(t, page, size, root, failures) {
+async function auditScrollContainers(
+  t,
+  page,
+  size,
+  root,
+  failures,
+  wheelFailures,
+) {
   const found = await exec(pageScrollContainers, root);
   if (!found.found) {
     report(t, {
@@ -1092,7 +1107,7 @@ async function auditScrollContainers(t, page, size, root, failures) {
     if (!c.barVisible)
       failures.push(`${where} overflows with no scrollbar drawn`);
     if (!wheel.moved)
-      failures.push(
+      wheelFailures.push(
         `${where} did not scroll by wheel${wheel.error ? ` (${wheel.error})` : ""}`,
       );
   }
@@ -1118,6 +1133,7 @@ ux(
   "UX-21 every overflowing scroll container shows a scrollbar and scrolls by wheel",
   async (t) => {
     const failures = [];
+    const wheelFailures = [];
     const controlFailed = [];
 
     await atSizes(t, "profile", async (size) => {
@@ -1138,6 +1154,7 @@ ux(
         size,
         "section.user-profile-page",
         failures,
+        wheelFailures,
       );
     });
 
@@ -1174,6 +1191,7 @@ ux(
           size,
           "section.ledger-page",
           failures,
+          wheelFailures,
         );
       }
     });
@@ -1184,19 +1202,31 @@ ux(
       await sleep(500);
       if (!(await wheelControl(t, "modelo", size)))
         controlFailed.push(`modelo at ${size.join("x")}`);
-      await auditScrollContainers(t, "modelo", size, SECTION, failures);
+      await auditScrollContainers(
+        t,
+        "modelo",
+        size,
+        SECTION,
+        failures,
+        wheelFailures,
+      );
     });
 
-    assert.deepEqual(
-      controlFailed,
-      [],
-      `the harness wheel did not move its own control scroller, so no wheel result here is the app's: ${controlFailed.join("; ")}`,
-    );
-    assert.deepEqual(
-      failures,
-      [],
-      `a container with more content than room shows no scrollbar or ignores the wheel: ${failures.join("; ")}`,
-    );
+    // The wheel is judged only where the control scroller moved; where it did
+    // not, the verdict is unmeasured and no per-container wheel failure is
+    // added. Missing scrollbars are still judged.
+    const problems = [];
+    if (controlFailed.length > 0)
+      problems.push(
+        "UNMEASURED wheel: the WebDriver wheel is an untrusted synthetic event (tauri-plugin-wdio-webdriver 1.5.1) and moved no scroller, " +
+          `so no wheel verdict is the app's (control did not move: ${controlFailed.join("; ")})`,
+      );
+    else failures.push(...wheelFailures);
+    if (failures.length > 0)
+      problems.push(
+        `a container with more content than room shows no scrollbar or ignores the wheel: ${failures.join("; ")}`,
+      );
+    assert.deepEqual(problems, [], problems.join(" | "));
   },
 );
 
@@ -1361,6 +1391,918 @@ ux(
       failures,
       [],
       `the pane toggles fail a person: ${failures.join("; ")}`,
+    );
+  },
+);
+
+// ---------------------------------------------------------------------------
+// The Modelo export: its busy state, the record-as-filed button after it, and
+// a single click on a view tab.
+// ---------------------------------------------------------------------------
+
+const FILING_FILE_KINDS = ["boe", "xml"];
+const EXPORT_WAIT_MS = 60_000;
+
+const exportNames = () => [
+  label("workspace.modelo.filing.export_file"),
+  label("workspace.modelo.filing.export_again"),
+];
+
+/** The export button of the shown view panel, and what the window draws of busy. */
+function pageExportState(names, busyText, notDoneText) {
+  const norm = (text) => (text ?? "").replace(/\s+/g, " ").trim();
+  const shown = (e) => e.getClientRects().length > 0;
+  const section = document.querySelector("section.declarations-workspace");
+  const panel = [
+    ...(section?.querySelectorAll('[role="tabpanel"]') ?? []),
+  ].find(shown);
+  const button = [...(panel?.querySelectorAll("button") ?? [])].find(
+    (b) => shown(b) && names.includes(norm(b.textContent)),
+  );
+  return {
+    found: !!button,
+    disabled: button ? button.disabled : null,
+    text: button ? norm(button.textContent) : null,
+    around: button ? norm(button.parentElement?.innerText).slice(0, 300) : null,
+    panelText: panel ? norm(panel.innerText).slice(0, 400) : null,
+    notDone: !!panel && norm(panel.innerText).includes(notDoneText),
+    dialog: [...document.querySelectorAll('[role="dialog"]')].some(shown),
+    holdShown: [...document.querySelectorAll(".modelo-write-hold")].some(shown),
+  };
+}
+
+/** Whether the declaration header shows busy or is mid-read: false when settled. */
+function pageHeaderBusy(busyText) {
+  const header = document.querySelector(
+    "section.declarations-workspace header",
+  );
+  if (!header) return false;
+  const norm = (text) => (text ?? "").replace(/\s+/g, " ").trim();
+  return (
+    !!header.querySelector('[aria-busy="true"]') ||
+    [...header.querySelectorAll('[role="status"]')].some(
+      (e) =>
+        e.getClientRects().length > 0 && norm(e.textContent).includes(busyText),
+    )
+  );
+}
+
+/** Sample every busy sign of the export every 25 ms, in the page. */
+function pageStartExportSampler(names, busyText) {
+  const state = { samples: 0, first: {}, last: {}, count: {} };
+  const mark = (kind, now) => {
+    state.count[kind] = (state.count[kind] ?? 0) + 1;
+    state.first[kind] ??= now;
+    state.last[kind] = now;
+  };
+  const sample = () => {
+    const section = document.querySelector("section.declarations-workspace");
+    if (!section) return;
+    const norm = (text) => (text ?? "").replace(/\s+/g, " ").trim();
+    const shown = (e) => e.getClientRects().length > 0;
+    const now = Date.now();
+    state.samples += 1;
+    const header = section.querySelector("header");
+    const statuses = [...section.querySelectorAll('[role="status"]')].filter(
+      (e) => shown(e) && norm(e.textContent) === busyText,
+    );
+    const panel = [...section.querySelectorAll('[role="tabpanel"]')].find(
+      shown,
+    );
+    const button = [...(panel?.querySelectorAll("button") ?? [])].find(
+      (b) => shown(b) && names.includes(norm(b.textContent)),
+    );
+    const seen = {
+      headerStatus: statuses.some((e) => header?.contains(e)),
+      panelStatus: statuses.some((e) => !header?.contains(e)),
+      panelWords: !!panel && norm(panel.innerText).includes(busyText),
+      spinner: !!button?.querySelector('[data-slot="spinner"]'),
+      ariaBusy: !!section.querySelector('[aria-busy="true"]'),
+      buttonDisabled: button ? button.disabled : false,
+    };
+    for (const [kind, on] of Object.entries(seen)) if (on) mark(kind, now);
+    if (Object.values(seen).some(Boolean)) mark("any", now);
+  };
+  state.timer = setInterval(sample, 25);
+  window.__uxExportSampler = state;
+  sample();
+}
+
+/** Stop the export sampler and answer its counts and first and last times. */
+function pageStopExportSampler() {
+  const state = window.__uxExportSampler;
+  if (!state) return null;
+  clearInterval(state.timer);
+  delete window.__uxExportSampler;
+  return {
+    samples: state.samples,
+    first: state.first,
+    last: state.last,
+    count: state.count,
+  };
+}
+
+/** Press a window read-again button the declaration shows and wait for it to go. */
+async function readAgainIfHeld() {
+  if (
+    !(await clickText(".modelo-write-hold", "button", [
+      label("workspace.modelo.read_again"),
+    ]))
+  )
+    return false;
+  await waitFor(
+    () => exec(() => !document.querySelector(".modelo-write-hold")),
+    {
+      timeout: 120_000,
+      what: "the declaration to be read again",
+      soft: true,
+      interval: 400,
+    },
+  );
+  await sleep(800);
+  return true;
+}
+
+// The header actions a press can progress; fill, confirm and resolve only
+// route to the view where the filer acts, which the audit does not do.
+const PRESSABLE_ACTIONS = [
+  "apply",
+  "fill",
+  "confirm",
+  "calculate",
+  "recalculate",
+  "resolve",
+  "verify",
+];
+const ROUTING_ACTIONS = ["fill", "confirm", "resolve"];
+const STEP_TIMEOUT_MS = 600_000;
+
+const nextActionLabels = () =>
+  Object.fromEntries(
+    [...NEXT_ACTIONS, "recorded"].map((action) => [
+      action,
+      label(`workspace.modelo.next_button.${action}`),
+    ]),
+  );
+
+/** The header's one next action, whether the header is busy, and any open dialog's title. */
+function pageHeaderStep(actions, busyText) {
+  const norm = (text) => (text ?? "").replace(/\s+/g, " ").trim();
+  const shown = (e) => e.getClientRects().length > 0;
+  const header = document.querySelector(
+    "section.declarations-workspace header",
+  );
+  let action = null;
+  let disabled = null;
+  let busy = false;
+  if (header) {
+    busy =
+      !!header.querySelector('[aria-busy="true"]') ||
+      [...header.querySelectorAll('[role="status"]')].some(
+        (e) => shown(e) && norm(e.textContent).includes(busyText),
+      );
+    for (const button of header.querySelectorAll("button")) {
+      if (!shown(button)) continue;
+      const name = Object.keys(actions).find(
+        (key) => actions[key] === norm(button.textContent),
+      );
+      if (!name) continue;
+      action = name;
+      disabled = button.disabled;
+      break;
+    }
+  }
+  const dialog =
+    [...document.querySelectorAll('[role="dialog"]')]
+      .filter((e) => shown(e) && !e.matches(".sign-in"))
+      .at(-1) ?? null;
+  return {
+    found: !!header,
+    action,
+    disabled,
+    busy,
+    headerText: norm(header?.textContent).slice(0, 300),
+    dialogTitle: dialog
+      ? norm(
+          dialog.querySelector("h1,h2,h3,[data-slot='dialog-title']")
+            ?.textContent,
+        )
+      : null,
+  };
+}
+
+/** What the review dialog offers right now; null when no dialog is shown. */
+function pageReview(apply, acknowledge, again) {
+  const norm = (text) => (text ?? "").replace(/\s+/g, " ").trim();
+  const shown = (e) => e.getClientRects().length > 0;
+  const dialog = [...document.querySelectorAll('[role="dialog"]')]
+    .filter((e) => shown(e) && !e.matches(".sign-in"))
+    .at(-1);
+  if (!dialog) return null;
+  const buttons = [...dialog.querySelectorAll("button")].filter(shown);
+  const named = (text) => buttons.find((b) => norm(b.textContent) === text);
+  const applyButton = named(apply);
+  const box = [...dialog.querySelectorAll('input[type="checkbox"]')].find(
+    (c) => norm(c.closest("label")?.textContent) === acknowledge,
+  );
+  return {
+    apply: applyButton ? !applyButton.disabled : null,
+    acknowledge: box ? box.checked : null,
+    again: named(again) !== undefined,
+    text: norm(dialog.textContent).slice(0, 600),
+  };
+}
+
+/** Tick the review's acknowledgement as a press does. */
+function pageAcknowledge(acknowledge) {
+  const norm = (text) => (text ?? "").replace(/\s+/g, " ").trim();
+  const box = [
+    ...document.querySelectorAll('[role="dialog"] input[type="checkbox"]'),
+  ].find((c) => norm(c.closest("label")?.textContent) === acknowledge);
+  if (!box) return false;
+  if (!box.checked) box.click();
+  return true;
+}
+
+/**
+ * The review of the staged statements: wait for its check, apply, and close it
+ * once it says it is done. Answers null when applied, else why it was not.
+ */
+async function answerReview(notes) {
+  const dialog = '[role="dialog"]';
+  const apply = label("workspace.modelo.review.apply");
+  const acknowledge = label("workspace.modelo.review.acknowledge");
+  const again = label("workspace.modelo.review.check_again");
+  const read = () => exec(pageReview, apply, acknowledge, again);
+  const ready = await waitFor(
+    async () => {
+      const now = await read();
+      if (!now) return { gone: true };
+      if (now.again) return { failed: now.text };
+      if (now.apply) return { ok: true };
+      if (now.acknowledge === false) {
+        await exec(pageAcknowledge, acknowledge);
+        notes.push("acknowledged the review notice before applying");
+      }
+      return null;
+    },
+    { timeout: 90_000, what: "the review to be ready", soft: true },
+  );
+  if (!ready?.ok) {
+    const now = await read();
+    await win.browser.keys("Escape");
+    return `the review could not be applied: ${ready?.failed ?? now?.text ?? "it closed"}`;
+  }
+  await clickText(dialog, "button", [apply]);
+  const done = label("workspace.modelo.operation.done");
+  const end = await waitFor(
+    async () => {
+      const now = await read();
+      if (!now) return { gone: true };
+      if (now.text.includes(done)) return { done: true };
+      if (now.again) return { failed: now.text };
+      return null;
+    },
+    {
+      timeout: STEP_TIMEOUT_MS,
+      what: "the review to apply",
+      soft: true,
+      interval: 700,
+    },
+  );
+  if (end?.done) {
+    await clickText(dialog, "button", [label("workspace.modelo.key.close")]);
+    notes.push("applied the staged statements through the review");
+    return null;
+  }
+  if (end?.gone) {
+    notes.push("applied the staged statements through the review");
+    return null;
+  }
+  await win.browser.keys("Escape");
+  return `the review did not complete: ${end?.failed ?? "no answer within the wait"}`;
+}
+
+/**
+ * Answer a dialog a header step opened. The at-risk prompt is proceeded; the
+ * evidence dialog is cancelled because this world states no joint-return
+ * answer and the audit chooses no tax fact. Answers null, or why not.
+ */
+async function answerStepDialog(title, notes) {
+  const dialog = '[role="dialog"]';
+  // A fresh profile's set-up dialog can open over the workspace; the audit
+  // configures nothing in it, as the persona spec does.
+  if (title === label("desktop.setup.title")) {
+    await dismissSetup();
+    notes.push("dismissed the set-up dialog");
+    return null;
+  }
+  if (title === label("workspace.modelo.calculate.at_risk_title")) {
+    await clickText(dialog, "button", [
+      label("workspace.modelo.calculate.at_risk_proceed"),
+    ]);
+    notes.push("accepted the at-risk prompt");
+    return null;
+  }
+  if (title === label("workspace.modelo.calculate.evidence.title")) {
+    await clickText(dialog, "button", [
+      label("workspace.modelo.calculate.evidence.cancel"),
+    ]);
+    return "the calculation asked for joint-return evidence this world does not state";
+  }
+  const reviewTitle = label("workspace.modelo.review.title")
+    .split("{")[0]
+    .trim();
+  if (reviewTitle && title.startsWith(reviewTitle)) return answerReview(notes);
+  await win.browser.keys("Escape");
+  return `unexpected dialog: ${title}`;
+}
+
+/**
+ * Press the header's marked next action, answer the dialogs it opens and wait
+ * for the header to be settled. Answers null, or why the step stopped.
+ */
+async function pressHeaderAction(action, notes) {
+  const busyText = label("desktop.navigation.busy");
+  const clicked = await clickText(`${SECTION} header`, "button", [
+    label(`workspace.modelo.next_button.${action}`),
+  ]);
+  if (!clicked) return `the ${action} button was not shown at the press`;
+  const started = Date.now();
+  const read = () => exec(pageHeaderStep, nextActionLabels(), busyText);
+  await sleep(1200);
+  for (;;) {
+    let quiet = 0;
+    const seen = await waitFor(
+      async () => {
+        const now = await read();
+        if (now.dialogTitle) return now;
+        quiet = now.busy ? 0 : quiet + 1;
+        return quiet >= 2 ? now : null;
+      },
+      {
+        timeout: Math.max(STEP_TIMEOUT_MS - (Date.now() - started), 1000),
+        what: `the ${action} to settle`,
+        soft: true,
+        interval: 600,
+      },
+    );
+    if (!seen) return `the ${action} did not settle within the wait`;
+    if (!seen.dialogTitle) return null;
+    const declined = await answerStepDialog(seen.dialogTitle, notes);
+    await waitFor(async () => !(await read()).dialogTitle, {
+      timeout: 10_000,
+      what: "the dialog to close",
+      soft: true,
+      interval: 300,
+    });
+    if (declined) return declined;
+  }
+}
+
+/**
+ * Bring the open declaration to an enabled export button on its export view.
+ * From the form view it presses the header's one next action (apply, fill,
+ * confirm, calculate, recalculate, resolve or verify), answers the dialogs it
+ * opens, waits for the header to settle and repeats, up to eight steps. Answers
+ * { reached, reason }.
+ */
+async function reachExport() {
+  const names = exportNames();
+  const busyText = label("desktop.navigation.busy");
+  const notDone = label("workspace.modelo.outcome.not_done");
+  const state = () => exec(pageExportState, names, busyText, notDone);
+  const notes = [];
+  const pressed = [];
+  const stop = async (head, why) => {
+    await chooseTab(VIEWS, label("workspace.modelo.filing.title"));
+    const now = await state();
+    return {
+      reached: false,
+      reason:
+        `${why}; header action: ${head?.action ?? "none"}` +
+        `${head?.disabled ? " (disabled)" : ""}; header: ${head?.headerText ?? ""}; ` +
+        `the export button is ${now.found ? `disabled (${now.around})` : "not shown"}; ` +
+        `pressed: ${pressed.join(", ") || "nothing"}${notes.length ? `; notes: ${notes.join("; ")}` : ""}; ` +
+        `panel: ${now.panelText}`,
+    };
+  };
+  for (let step = 0; step < 8; step += 1) {
+    await chooseTab(VIEWS, label("workspace.modelo.filing.title"));
+    await readAgainIfHeld();
+    const now = await state();
+    if (now.found && !now.disabled) return { reached: true };
+    await chooseTab(VIEWS, label("desktop.modelo.view.form"));
+    await readAgainIfHeld();
+    const head = await exec(pageHeaderStep, nextActionLabels(), busyText);
+    if (!head.action) return stop(head, "the header offers no next action");
+    if (!PRESSABLE_ACTIONS.includes(head.action))
+      return stop(
+        head,
+        `the header's next action is ${head.action}, which does not progress to an enabled export`,
+      );
+    if (head.disabled)
+      return stop(head, `the ${head.action} button is disabled`);
+    // Fill asks for the marked boxes; the statements the form offers answer
+    // them the way a filer does, and the header then offers apply.
+    if (head.action === "fill" && !pressed.includes("stage")) {
+      const staging = await stageStatements(busyText);
+      notes.push(`staging: ${staging.staged} (${staging.note})`);
+      if (staging.staged !== "nothing") {
+        pressed.push("stage");
+        continue;
+      }
+    }
+    if (ROUTING_ACTIONS.includes(head.action) && pressed.at(-1) === head.action)
+      return stop(
+        head,
+        `${head.action} was pressed twice and only routed to a view without progress`,
+      );
+    pressed.push(head.action);
+    const problem = await pressHeaderAction(head.action, notes);
+    if (problem) return stop(head, problem);
+  }
+  return stop(
+    await exec(pageHeaderStep, nextActionLabels(), busyText),
+    "no enabled export button after eight header steps",
+  );
+}
+
+/** Per-signal first and last time of a sampler result, in ms after `pressedAt`. */
+function busyFromPress(sampled, pressedAt) {
+  const out = {};
+  for (const kind of Object.keys(sampled.count)) {
+    out[kind] = {
+      samples: sampled.count[kind],
+      firstMs: sampled.first[kind] - pressedAt,
+      lastMs: sampled.last[kind] - pressedAt,
+    };
+  }
+  return out;
+}
+
+/**
+ * Press export once with a save-picker answer queued for a file of `kind`,
+ * sample the page until the file exists, and press it a second time while it
+ * runs. Answers what was seen; `outcome` is "written", "wrong_kind" or "timeout".
+ */
+async function pressExport(kind) {
+  const names = exportNames();
+  const busyText = label("desktop.navigation.busy");
+  const notDone = label("workspace.modelo.outcome.not_done");
+  const stamp = Date.now();
+  const destination = join(runDir, "exports", `ux22-${stamp}.${kind}`);
+  const second = join(runDir, "exports", `ux22-${stamp}-second.${kind}`);
+  const state = () => exec(pageExportState, names, busyText, notDone);
+
+  const before = await state();
+  if (!before.found || before.disabled)
+    throw new Error(
+      `the export button is ${before.found ? "disabled" : "not shown"} before the press`,
+    );
+  queueSavePicker(runDir, destination);
+  const button = await exec((names) => {
+    const norm = (text) => (text ?? "").replace(/\s+/g, " ").trim();
+    const panel = [
+      ...document.querySelectorAll(
+        'section.declarations-workspace [role="tabpanel"]',
+      ),
+    ].find((e) => e.getClientRects().length > 0);
+    const target = [...(panel?.querySelectorAll("button") ?? [])].find(
+      (b) =>
+        b.getClientRects().length > 0 && names.includes(norm(b.textContent)),
+    );
+    target?.setAttribute("data-ux-export", "1");
+    return !!target;
+  }, names);
+  if (!button) throw new Error("the export button could not be marked");
+
+  await exec(pageStartExportSampler, names, busyText);
+  const pressedAt = Date.now();
+  let sampled;
+  const result = {
+    kind,
+    secondPress: { attempted: false },
+    outcome: "timeout",
+  };
+  try {
+    await clickSelector('[data-ux-export="1"]');
+    for (;;) {
+      if (existsSync(destination) && statSync(destination).size > 0) {
+        result.outcome = "written";
+        break;
+      }
+      const elapsed = Date.now() - pressedAt;
+      if (elapsed > EXPORT_WAIT_MS) break;
+      const now = await state();
+      if (!result.secondPress.attempted && !pickerAnswerPending(runDir)) {
+        // The first press is running (the picker took its answer, no file yet):
+        // a second press is made only where the button is still enabled, with
+        // its own answer queued so no native picker is left open.
+        result.secondPress = {
+          attempted: true,
+          atMs: elapsed,
+          buttonFound: now.found,
+          buttonDisabled: now.disabled,
+          couldStart: now.found && now.disabled === false,
+          pressed: false,
+          secondFileWritten: null,
+        };
+        if (result.secondPress.couldStart) {
+          queueSavePicker(runDir, second);
+          await clickSelector('[data-ux-export="1"]');
+          result.secondPress.pressed = true;
+        }
+      }
+      if (elapsed > 1500 && now.notDone && !pickerAnswerPending(runDir)) {
+        result.outcome = "wrong_kind";
+        break;
+      }
+      await sleep(200);
+    }
+  } finally {
+    result.settledMs = Date.now() - pressedAt;
+    sampled = await exec(pageStopExportSampler);
+    await exec(() =>
+      document
+        .querySelector("[data-ux-export]")
+        ?.removeAttribute("data-ux-export"),
+    );
+  }
+  result.tookMs = result.settledMs;
+  result.busy = sampled ? busyFromPress(sampled, pressedAt) : null;
+  result.busySeen = !!sampled && (sampled.count.any ?? 0) > 0;
+  result.busyVisibleMs =
+    sampled && sampled.count.any ? sampled.last.any - sampled.first.any : 0;
+  if (result.secondPress.pressed) {
+    await sleep(3000);
+    result.secondPress.secondFileWritten = existsSync(second);
+  }
+  return result;
+}
+
+/** Open the offers the viewer left hidden and count what the form offers; mark every untaken statement's tick. */
+function pageStatementOffer() {
+  for (const old of document.querySelectorAll("[data-ux-stage]"))
+    old.removeAttribute("data-ux-stage");
+  for (const offer of document.querySelectorAll(
+    "[data-statements], [data-prior-values]",
+  ))
+    offer.querySelector('button[aria-expanded="false"]')?.click();
+  const shown = (e) => e.getClientRects().length > 0;
+  const entries = [
+    ...document.querySelectorAll("[data-statements] [data-statement]"),
+  ].filter(shown);
+  const prior = [...document.querySelectorAll("[data-prior-entry]")].filter(
+    shown,
+  );
+  const boxes = entries
+    .map((e) => e.querySelector('input[type="checkbox"]'))
+    .filter((c) => c && !c.checked);
+  boxes.forEach((c, i) => c.setAttribute("data-ux-stage", String(i)));
+  return {
+    statements: entries.length,
+    priorEntries: prior.length,
+    ticked: entries.filter(
+      (e) => e.querySelector('input[type="checkbox"]')?.checked,
+    ).length,
+    marked: boxes.length,
+  };
+}
+
+/**
+ * Stage every statement the form offers the way a filer does: tick them and
+ * press stage, then wait for the header to offer apply. The prior-year carry
+ * statements must all be declared in one change, so one alone cannot apply. A prior-values entry
+ * needs a typed figure the audit world does not hold, so none is staged.
+ * Answers what the form offered and what was staged.
+ */
+async function stageStatements(busyText) {
+  const read = () => exec(pageHeaderStep, nextActionLabels(), busyText);
+  const before = await read();
+  if (before.action === "apply")
+    return {
+      offered: "an apply already",
+      staged: "nothing",
+      note: "already staged",
+    };
+  let seen = await exec(pageStatementOffer);
+  await sleep(500);
+  seen = await exec(pageStatementOffer);
+  const offered = `${seen.statements} statement(s) and ${seen.priorEntries} prior-values entr${seen.priorEntries === 1 ? "y" : "ies"}`;
+  if (!seen.marked)
+    return {
+      offered,
+      staged: "nothing",
+      note:
+        seen.statements > 0
+          ? "every statement was already ticked"
+          : "no statement can be staged without a typed figure",
+    };
+  for (let index = 0; index < seen.marked; index += 1) {
+    await clickSelector(`[data-ux-stage="${index}"]`);
+    await sleep(200);
+  }
+  await sleep(400);
+  const pressed = await clickText("[data-statements]", "button", [
+    label("desktop.modelo.statements.stage"),
+  ]);
+  if (!pressed)
+    return {
+      offered,
+      staged: "nothing",
+      note: "the stage button is not shown",
+    };
+  const apply = await waitFor(
+    async () => ((await read()).action === "apply" ? true : null),
+    {
+      timeout: 30_000,
+      what: "the header to offer apply",
+      soft: true,
+      interval: 500,
+    },
+  );
+  const now = await read();
+  return {
+    offered,
+    staged: `${seen.marked} statement(s), ticked and staged`,
+    note: apply
+      ? "the header offers apply"
+      : `the header offered ${now.action ?? "no action"} after staging`,
+  };
+}
+
+ux("UX-24 a single click opens a Modelo view tab", async (t) => {
+  await open("100");
+  const views = `${SECTION} ${tablist("desktop.modelo.views.label")}`;
+  const startTab =
+    (await exec(pageTabs, views)).tabs.find((tab) => tab.selected)?.text ??
+    null;
+  const failures = [];
+  const busyText = label("desktop.navigation.busy");
+  const probes = [];
+  // The defect was seen as a click met a header still settling a write, so the
+  // series starts at the press of an apply: the review's apply, then the tab
+  // clicks without waiting for the settle that follows.
+  await chooseTab(VIEWS, label("desktop.modelo.view.form"));
+  const staging = await stageStatements(busyText);
+  report(t, { probe: "view-tab-stage", ...staging });
+  const applyOffered = await clickText(`${SECTION} header`, "button", [
+    label("workspace.modelo.next_button.apply"),
+  ]);
+  if (!applyOffered) {
+    report(t, {
+      probe: "view-tab-click",
+      reached: false,
+      reason: "no apply was offered",
+    });
+    assert.fail(
+      "UNMEASURED: no apply was offered, so no click landed while a write settled " +
+        `(the form offered ${staging.offered}; ${staging.note})`,
+    );
+  }
+  const applyProblem = await answerReview([]);
+  if (applyProblem) {
+    report(t, {
+      probe: "view-tab-click",
+      reached: false,
+      reason: applyProblem,
+    });
+    assert.fail(`UNMEASURED: the apply did not complete: ${applyProblem}`);
+  }
+  try {
+    await atSizes(t, "modelo-view-tabs", async (size) => {
+      try {
+        const listed = await exec(pageTabs, views);
+        if (listed.tabs.length === 0) throw new Error("no view tabs are drawn");
+        const names = listed.tabs.map((tab) => tab.text);
+        for (let index = 0; index < names.length; index += 1) {
+          const name = names[index];
+          // A click on the selected tab shows no change: move off it first.
+          const now = await exec(pageTabs, views);
+          if (now.tabs[index]?.selected) {
+            const other = now.tabs.findIndex((_, i) => i !== index);
+            if (other >= 0) await chooseTab(views, now.tabs[other].text);
+          }
+          const target = await exec(pageTabCentre, views, index);
+          if (!target || !target.inWindow) {
+            failures.push(
+              `"${name}" at ${size.join("x")}: its centre is outside the window`,
+            );
+            report(t, {
+              probe: "view-tab-click",
+              tab: name,
+              size,
+              reached: false,
+              reason: "the tab's centre is outside the window",
+              target,
+            });
+            continue;
+          }
+          const whileSettling = !!(await exec(pageHeaderBusy, busyText));
+          probes.push(whileSettling);
+          const startedAt = Date.now();
+          await pointerClickAt(target.x, target.y);
+          const selected = await waitFor(
+            async () =>
+              (await exec(pageTabSelectedAt, views, index)) === "true",
+            {
+              timeout: 1500,
+              what: `tab "${name}" to be selected`,
+              soft: true,
+              interval: 100,
+            },
+          );
+          report(t, {
+            probe: "view-tab-click",
+            tab: name,
+            size,
+            point: [target.x, target.y],
+            rect: target.rect,
+            hit: target.hit,
+            hitIsTab: target.hitIsTab,
+            hitInsideTablist: target.hitInsideTablist,
+            whileSettling,
+            selected: !!selected,
+            waitedMs: Date.now() - startedAt,
+          });
+          if (!selected)
+            failures.push(
+              `"${name}" at ${size.join("x")}: one click at (${target.x}, ${target.y}) on ${target.hit} did not select it`,
+            );
+        }
+      } finally {
+        if (startTab) await chooseTab(views, startTab);
+      }
+    });
+  } finally {
+    if (startTab) await chooseTab(views, startTab);
+  }
+  if (!probes.some(Boolean))
+    assert.fail(
+      `UNMEASURED: the apply settled before any of ${probes.length} clicks, so no click landed while a write settled`,
+    );
+  assert.deepEqual(
+    failures,
+    [],
+    `a single click does not open a view tab: ${failures.join("; ")}`,
+  );
+});
+
+let exportRun = null;
+
+ux(
+  "UX-22 the Modelo export shows the operation running from the press until it settles",
+  async (t) => {
+    exportRun = null;
+    await open("100");
+    const inner = await setSize(...DEFAULT_SIZE);
+    const reach = await reachExport();
+    if (!reach.reached) {
+      report(t, {
+        probe: "export-busy",
+        size: inner,
+        reached: false,
+        reason: reach.reason,
+      });
+      assert.fail(`UNMEASURED: ${reach.reason}`);
+    }
+    const failures = [];
+    const unwritten = [];
+    for (const kind of FILING_FILE_KINDS) {
+      let run;
+      try {
+        run = await pressExport(kind);
+      } catch (error) {
+        report(t, {
+          probe: "export-busy",
+          size: inner,
+          kind,
+          reached: false,
+          reason: `press failed: ${error.message}`,
+        });
+        unwritten.push(`${kind}: press failed: ${error.message}`);
+        continue;
+      }
+      report(t, { probe: "export-busy", size: inner, reached: true, ...run });
+      if (run.outcome === "wrong_kind") {
+        unwritten.push(`${kind}: the export offered another file kind`);
+        continue;
+      }
+      if (run.outcome === "timeout") {
+        report(t, {
+          probe: "export-busy",
+          size: inner,
+          kind,
+          reached: false,
+          reason: `no file within ${EXPORT_WAIT_MS} ms`,
+        });
+        unwritten.push(`${kind}: no file within ${EXPORT_WAIT_MS} ms`);
+        break;
+      }
+      exportRun = { kind, tookMs: run.tookMs, at: Date.now() };
+      if (run.tookMs > 1000 && !run.busySeen)
+        failures.push(
+          `the export took ${run.tookMs} ms and the window drew no busy state in that time`,
+        );
+      if (run.secondPress.couldStart)
+        failures.push(
+          `a second press at ${run.secondPress.atMs} ms found the export button enabled while the first export was running` +
+            `${run.secondPress.secondFileWritten ? " and a second file was written" : ""}`,
+        );
+      break;
+    }
+    if (!exportRun)
+      assert.fail(
+        `UNMEASURED: no export kind produced a file (${unwritten.join("; ") || "none was pressed"})`,
+      );
+    assert.deepEqual(
+      failures,
+      [],
+      `the export gives no sign it is running, or can be started twice: ${failures.join("; ")}`,
+    );
+  },
+);
+
+ux(
+  "UX-23 record-as-filed is available right after an export without reading the declaration again",
+  async (t) => {
+    const inner = await setSize(...DEFAULT_SIZE);
+    if (!exportRun) {
+      report(t, {
+        probe: "record-after-export",
+        size: inner,
+        reached: false,
+        reason: "UX-22 wrote no export in this run",
+      });
+      assert.fail("UNMEASURED: UX-22 wrote no export in this run");
+    }
+    const record = label("workspace.modelo.filing.record_as_filed");
+    const hint = label("workspace.modelo.filing.also_other_way");
+    // Read the button and its hint; no press is made, as a record changes the world.
+    const read = () =>
+      exec(
+        (record, hint) => {
+          const norm = (text) => (text ?? "").replace(/\s+/g, " ").trim();
+          const shown = (e) => e.getClientRects().length > 0;
+          const panel = [
+            ...document.querySelectorAll(
+              'section.declarations-workspace [role="tabpanel"]',
+            ),
+          ].find(shown);
+          const button = [...(panel?.querySelectorAll("button") ?? [])].find(
+            (b) => shown(b) && norm(b.textContent) === record,
+          );
+          const holds = [...document.querySelectorAll(".modelo-write-hold")]
+            .filter(shown)
+            .map((e) => norm(e.innerText).slice(0, 300));
+          const around = button ? norm(button.parentElement?.innerText) : null;
+          return {
+            buttonShown: !!button,
+            disabled: button ? button.disabled : null,
+            hintText: around,
+            hintSaysAvailable: !!around && around.includes(hint),
+            holdShown: holds.length > 0,
+            holdText: holds.join(" | "),
+          };
+        },
+        record,
+        hint,
+      );
+    const afterMs = Date.now() - exportRun.at;
+    const samples = [];
+    const end = Date.now() + 5000;
+    for (;;) {
+      samples.push({ atMs: Date.now() - exportRun.at, ...(await read()) });
+      if (Date.now() >= end) break;
+      await sleep(500);
+    }
+    const first = samples[0];
+    const last = samples.at(-1);
+    report(t, {
+      probe: "record-after-export",
+      size: inner,
+      reached: true,
+      exportKind: exportRun.kind,
+      firstReadAfterExportMs: afterMs,
+      first,
+      last,
+      samples: samples.length,
+      pressed: "not pressed: a record changes the world",
+    });
+    const failures = [];
+    if (!last.buttonShown)
+      failures.push("the record-as-filed button is not shown");
+    if (last.hintSaysAvailable && last.disabled)
+      failures.push(
+        `the hint says recording is available ("${hint}") but the button is disabled`,
+      );
+    if (last.holdShown)
+      failures.push(`a write hold is shown: "${last.holdText}"`);
+    assert.deepEqual(
+      failures,
+      [],
+      `record-as-filed is not available 5 s after the export without reading the declaration again: ${failures.join("; ")}`,
     );
   },
 );
