@@ -4204,6 +4204,24 @@ application:
         missing: '%{modelo}, %{period}: sin calcular'
         unfiled: '%{modelo}, %{period}: comprobada, sin presentar'
         unverified: '%{modelo}, %{period}: calculada, sin comprobar'
+    replaced_head:
+      statement:
+        absence_attestation: Tu indicación de que un saldo de una declaración anterior
+          no tiene importe
+        binding_override: Un valor que indicaste para un dato por encima de lo que
+          aporta su fuente
+        borrador_snapshot: El borrador de la AEAT que usó el cálculo
+        casilla_value: Un valor que escribiste en una casilla
+        cleared_casilla: Una casilla que vaciaste
+        detail_rows: Las filas de detalle de la declaración
+        income_family_entry: Las cifras que introdujiste a mano para rentas que la
+          aplicación no calcula
+        m210_selection: Tus selecciones de rentas del Modelo 210
+        m303_filing_evidence: Tus respuestas sobre la presentación del Modelo 303
+          y el Modelo 390
+        row_attestation: Tu indicación del saldo pendiente de una fila
+        value_attestation: La cifra que indicaste para una declaración anterior que
+          la aplicación no tiene
     taxation_comparison_words:
       below_materiality: Los dos resultados difieren en {difference}, menos de {threshold},
         así que da igual cuál de las dos modalidades elijas.

@@ -99,18 +99,84 @@ class ModeloOperatorEntriesCarry(StrEnum):
     REPLACED_BY_REQUEST = "replaced_by_request"
 
 
+class ModeloHeadStatementKind(StrEnum):
+    """What kind of caller-supplied statement a calculation head recorded."""
+
+    #: A value the person typed into a box.
+    CASILLA_VALUE = "casilla_value"
+    #: A value the person set for an input over what its source supplies.
+    BINDING_OVERRIDE = "binding_override"
+    #: The person's statement that an earlier-filing carry holds no amount.
+    ABSENCE_ATTESTATION = "absence_attestation"
+    #: The person's stated figure for an earlier filing the product does not hold.
+    VALUE_ATTESTATION = "value_attestation"
+    #: The person's statement of the carry on one row of a repeating group.
+    ROW_ATTESTATION = "row_attestation"
+    #: Figures the person entered by hand for an income family the product does not calculate.
+    INCOME_FAMILY_ENTRY = "income_family_entry"
+    #: A box the person explicitly cleared.
+    CLEARED_CASILLA = "cleared_casilla"
+    #: The detail rows the head was calculated with.
+    DETAIL_ROWS = "detail_rows"
+    #: The Modelo 303 filing facts the person answered.
+    M303_FILING_EVIDENCE = "m303_filing_evidence"
+    #: The Modelo 210 income selections.
+    M210_SELECTION = "m210_selection"
+    #: The admitted borrador snapshot the head was calculated with.
+    BORRADOR_SNAPSHOT = "borrador_snapshot"
+
+
+class ModeloUnusedHeadStatement(BaseModel):
+    """One statement the replaced head recorded that the new calculation did not carry.
+
+    ``subject`` names what the statement speaks of: the casilla id, the binding
+    id, the income family token or the borrador snapshot id, and ``None`` for a
+    statement about the whole declaration. ``box`` and ``label`` are the printed
+    number and the label of the box the statement reaches, when it reaches one
+    the form prints. ``value`` is the value the statement held, when it holds
+    one. ``words`` says what the statement was, in the result's ``words_language``.
+    """
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    kind: ModeloHeadStatementKind
+    subject: Annotated[str, Field(min_length=1, max_length=256)] | None
+    row_identity: Annotated[str, Field(min_length=1, max_length=256)] | None = None
+    box: Annotated[str, Field(min_length=1, max_length=128)] | None = None
+    label: Annotated[str, Field(min_length=1, max_length=1_024)] | None = None
+    value: Annotated[str, Field(min_length=1, max_length=4_096)] | None = None
+    words: Annotated[str, Field(min_length=1, max_length=1_024)]
+
+
 class ModeloWorkCalculateReplacedHead(BaseModel):
     """The calculation head one calculation replaced as the declaration's current one.
 
     Calculating stores a new revision and removes none. The earlier revision,
     with every value it held, stays readable by its id; ``operator_entries``
     says whether the person's entries in it reached the new head.
+
+    When the request carried its own inputs, ``unused_statements`` names every
+    statement the earlier head recorded that the new calculation did not carry.
+    ``unused_statements_complete`` is ``False`` when the earlier head did not
+    record which of its values the person entered: the list then names only
+    the statements it did record, and values the person typed may be missing
+    from it. Both keep their defaults for any other carry.
     """
 
-    model_config = STRICT_FROZEN_CONFIG
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     calculation_revision_id: Annotated[str, Field(min_length=1, max_length=128)]
     operator_entries: ModeloOperatorEntriesCarry
+    unused_statements: tuple[ModeloUnusedHeadStatement, ...] = ()
+    unused_statements_complete: bool = True
+
+    @model_validator(mode="after")
+    def _statements_only_when_replaced(self) -> Self:
+        if self.operator_entries is not ModeloOperatorEntriesCarry.REPLACED_BY_REQUEST and (
+            self.unused_statements or not self.unused_statements_complete
+        ):
+            raise ValueError("only a calculation that replaced the person's entries names unused statements")
+        return self
 
 
 class ModeloWorkCalculatePublicResultV3(BaseModel):

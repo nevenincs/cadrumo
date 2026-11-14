@@ -4194,6 +4194,24 @@ application:
         missing: '%{modelo}, %{period}: sense calcular'
         unfiled: '%{modelo}, %{period}: comprovada, sense presentar'
         unverified: '%{modelo}, %{period}: calculada, sense comprovar'
+    replaced_head:
+      statement:
+        absence_attestation: La teva indicació que un saldo d'una declaració anterior
+          no té import
+        binding_override: Un valor que vas indicar per a una dada per sobre del que
+          aporta la seva font
+        borrador_snapshot: L'esborrany de l'AEAT que va fer servir el càlcul
+        casilla_value: Un valor que vas escriure en una casella
+        cleared_casilla: Una casella que vas buidar
+        detail_rows: Les files de detall de la declaració
+        income_family_entry: Les xifres que vas introduir a mà per a rendes que l'aplicació
+          no calcula
+        m210_selection: Les teves seleccions de rendes del Model 210
+        m303_filing_evidence: Les teves respostes sobre la presentació del Model 303
+          i el Model 390
+        row_attestation: La teva indicació del saldo pendent d'una fila
+        value_attestation: La xifra que vas indicar per a una declaració anterior
+          que l'aplicació no té
     taxation_comparison_words:
       below_materiality: Els dos resultats difereixen en {difference}, menys de {threshold},
         així que tant se val quina de les dues modalitats triïs.

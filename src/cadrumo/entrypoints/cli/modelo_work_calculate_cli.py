@@ -48,6 +48,7 @@ from .modelo_rendering import (
     work_deadline_output_from_posture,
     work_plazo_lines_from_posture,
 )
+from .modelo_replaced_head_rendering import replaced_head_statement_output
 from .modelo_results import WorkCalculateResult
 from .modelo_revision_rendering import calculation_revision_state_label
 from .operation_modelo_calculation import (
@@ -90,6 +91,18 @@ def _ordinary_m303_evidence(
     return ordinary_m303
 
 
+def _caller_context(*, inputs_only: bool, carries_inputs: bool) -> ModeloWorkCalculateCallerContext:
+    """Replay the head unless the command gives inputs of its own or asks for them alone.
+
+    Every option left out reaches the request at the request's own default, so
+    comparing the built inputs with the empty request is exactly the test of
+    whether the operator gave one.
+    """
+    if inputs_only or carries_inputs:
+        return ModeloWorkCalculateCallerContext.EXPLICIT
+    return ModeloWorkCalculateCallerContext.REPLAY_HEAD
+
+
 def _validated_amount(raw: str | None, *, translation_key: str) -> str | None:
     """Keep the existing CLI euro-cent grammar before registered submission."""
     amount = optional_decimal_option(raw, translation_key=translation_key, default="")
@@ -126,9 +139,16 @@ def run_work_calculate(
     joint_return_elected: bool | None,
     m303_exonerado_390_attachment_id: str | None,
     m303_exonerado_390_sha256: str | None,
+    inputs_only: bool,
     output_language: OutputLanguage | None,
 ) -> None:
-    """Run the modelo work calculation command through the registered operation bridge."""
+    """Run the modelo work calculation command through the registered operation bridge.
+
+    A command that gives no input of its own recalculates from the declaration's
+    current head, keeping every statement recorded on it. A command that gives
+    inputs, or ``--inputs-only``, calculates from exactly what it gives, and the
+    result names each statement of the earlier head it left out.
+    """
     activate_subcommand_output_language(ctx, output_language)
     target = resolve_active_bucket_id()
     if target is None:
@@ -193,13 +213,19 @@ def run_work_calculate(
     ordinary_m303 = _ordinary_m303_evidence(
         joint_return_elected, m303_exonerado_390_attachment_id, m303_exonerado_390_sha256, str(unit.modelo)
     )
+    caller_context = _caller_context(
+        inputs_only=inputs_only,
+        # Modelo 303 filing evidence is not a caller input: a replaying calculation takes newly answered evidence
+        # over the head's, so supplying it keeps every recorded statement.
+        carries_inputs=inputs != ModeloCalculationInputFieldsV1() or bool(detail_rows),
+    )
     try:
         request = ModeloWorkCalculateRequest.model_validate_json(
             canonical_json_bytes(
                 {
                     "work_unit_id": str(unit.work_unit_id),
                     "actor": resolve_actor_option(actor),
-                    "caller_context": ModeloWorkCalculateCallerContext.EXPLICIT.value,
+                    "caller_context": caller_context.value,
                     "ordinary_m303_filing_evidence": ordinary_m303.model_dump(mode="json") if ordinary_m303 else None,
                     "inputs": inputs.model_dump(mode="json"),
                     "detail_rows": [item.model_dump(mode="json") for item in detail_rows],
@@ -244,6 +270,9 @@ def _emit_work_calculation(ctx: typer.Context, projection: ModeloWorkCalculatePu
     deadline_payload, deadline_notices = work_deadline_output_from_posture(
         posture, fallback_legal_ref=advisories.fallback_recargo_legal_ref
     )
+    statement_notices, statement_lines = replaced_head_statement_output(
+        projection.replaced_head, command="modelo.work.calculate"
+    )
     try:
         result = WorkCalculateResult.model_validate(
             {
@@ -272,9 +301,11 @@ def _emit_work_calculation(ctx: typer.Context, projection: ModeloWorkCalculatePu
             *unresolved_findings_lines(projection.unresolved_bindings, projection.unresolved_casillas),
             *work_plazo_lines_from_posture(posture),
             *source_advisory_lines,
+            *statement_lines,
             saved_confirmation,
         ],
         notices=[
+            *statement_notices,
             *(
                 [
                     Notice(
@@ -380,6 +411,7 @@ def work_calculate(
     joint_return_elected: bool | None = None,
     m303_exonerado_390_attachment_id: str | None = None,
     m303_exonerado_390_sha256: str | None = None,
+    inputs_only: bool = False,
     output_language: OutputLanguage | None = None,
 ) -> None:
     """Persist a new draft :class:`CalculationRevision` for the resolved work unit."""
@@ -412,6 +444,7 @@ def work_calculate(
         joint_return_elected=joint_return_elected,
         m303_exonerado_390_attachment_id=m303_exonerado_390_attachment_id,
         m303_exonerado_390_sha256=m303_exonerado_390_sha256,
+        inputs_only=inputs_only,
         output_language=output_language,
     )
 

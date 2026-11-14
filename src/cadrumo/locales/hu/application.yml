@@ -4146,6 +4146,23 @@ application:
         missing: '%{modelo}, %{period}: nincs kiszámítva'
         unfiled: '%{modelo}, %{period}: ellenőrizve, nincs benyújtva'
         unverified: '%{modelo}, %{period}: kiszámítva, nincs ellenőrizve'
+    replaced_head:
+      statement:
+        absence_attestation: A nyilatkozatod, hogy egy korábbi bevallásból áthozott
+          tétel nem tartalmaz összeget
+        binding_override: Egy érték, amelyet egy adathoz a forrása által adott helyett
+          megadtál
+        borrador_snapshot: Az AEAT-tervezet (borrador), amelyet a számítás felhasznált
+        casilla_value: Egy érték, amelyet egy mezőbe írtál
+        cleared_casilla: Egy mező, amelyet kiürítettél
+        detail_rows: A bevallás részletező sorai
+        income_family_entry: A kézzel beírt összegeid olyan jövedelemhez, amelyet
+          az alkalmazás nem számol ki
+        m210_selection: A Modelo 210 jövedelemválasztásaid
+        m303_filing_evidence: A válaszaid a Modelo 303 és a Modelo 390 benyújtásáról
+        row_attestation: A nyilatkozatod egy sor áthozott összegéről
+        value_attestation: Az összeg, amelyet egy olyan korábbi bevallásra adtál meg,
+          amelyet az alkalmazás nem tárol
     taxation_comparison_words:
       below_materiality: A két eredmény {difference} összeggel tér el, ami kevesebb,
         mint {threshold}, ezért bármelyik adózási mód megfelelő.

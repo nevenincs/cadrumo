@@ -62,6 +62,7 @@ if TYPE_CHECKING:
     from ..operations.owner import OperationExecutorContext
     from .calculate_input import ModeloWorkCalculationServiceResult, WorkCalculateInputBundle
     from .calculation_action_ports import CalculationActionPorts
+    from .caller_context import CalculationCallerContext
 
 
 from ..operations.first_write_effect import FirstWriteEffectAnnouncement
@@ -104,11 +105,17 @@ def calculation_public_result(
 
 @dataclass(frozen=True, slots=True)
 class PreparedModeloWorkCalculation:
-    """One admitted work unit with canonical inputs and calculation authorities."""
+    """One admitted work unit with canonical inputs and calculation authorities.
+
+    ``head_caller_context`` is the caller context of the head the work unit had
+    when it was admitted, read whatever the request's caller context, so the
+    result can name what an explicit request left out of it.
+    """
 
     work_unit: WorkUnit
     ports: CalculationActionPorts
     inputs: WorkCalculateInputBundle
+    head_caller_context: CalculationCallerContext
 
 
 async def prepare_modelo_work_calculation(
@@ -144,19 +151,25 @@ async def prepare_modelo_work_calculation(
     )
     if work_unit.bucket_id != active_bucket_id:
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+    head_caller_context = await await_cancellation_complete(
+        asyncio.to_thread(_head_caller_context, work_unit=work_unit, ports=ports, operation=operation),
+        task_name="modelo-work-calculate-head-caller-context",
+    )
     if payload.caller_context is ModeloWorkCalculateCallerContext.REPLAY_HEAD:
         replayed = await await_cancellation_complete(
             asyncio.to_thread(
                 _replayed_head_inputs,
                 payload=payload,
+                caller_context=head_caller_context,
                 work_unit=work_unit,
-                ports=ports,
                 operation=operation,
                 attachment_store_factory=attachment_store_factory,
             ),
             task_name="modelo-work-calculate-caller-context-replay",
         )
-        return PreparedModeloWorkCalculation(work_unit=work_unit, ports=ports, inputs=replayed)
+        return PreparedModeloWorkCalculation(
+            work_unit=work_unit, ports=ports, inputs=replayed, head_caller_context=head_caller_context
+        )
     filing_instance_evidence = _ordinary_m303_filing_instance_evidence(
         payload=payload,
         work_unit=work_unit,
@@ -174,14 +187,30 @@ async def prepare_modelo_work_calculation(
         ),
         task_name="modelo-work-calculate-input-preparation",
     )
-    return PreparedModeloWorkCalculation(work_unit=work_unit, ports=ports, inputs=inputs)
+    return PreparedModeloWorkCalculation(
+        work_unit=work_unit, ports=ports, inputs=inputs, head_caller_context=head_caller_context
+    )
+
+
+def _head_caller_context(
+    *, work_unit: WorkUnit, ports: CalculationActionPorts, operation: PinnedAuthorityOperation
+) -> CalculationCallerContext:
+    """Read the caller context of the work unit's current head; a unit not yet calculated has an empty one."""
+    from .caller_context import caller_context_of
+
+    head = (
+        ports.calculation_repository.load(operation=operation).get(work_unit.current_calculation_revision_id)
+        if work_unit.current_calculation_revision_id is not None
+        else None
+    )
+    return caller_context_of(head)
 
 
 def _replayed_head_inputs(
     *,
     payload: ModeloWorkCalculateRequest,
+    caller_context: CalculationCallerContext,
     work_unit: WorkUnit,
-    ports: CalculationActionPorts,
     operation: PinnedAuthorityOperation,
     attachment_store_factory: Callable[[str], AttachmentStoreProtocol],
 ) -> WorkCalculateInputBundle:
@@ -193,14 +222,8 @@ def _replayed_head_inputs(
     """
     from ...core.authority_grade import RegistryAuthorityGrade
     from .calculate_input import WorkCalculateInputBundle
-    from .caller_context import caller_context_calculation_inputs, caller_context_of
+    from .caller_context import caller_context_calculation_inputs
 
-    head = (
-        ports.calculation_repository.load(operation=operation).get(work_unit.current_calculation_revision_id)
-        if work_unit.current_calculation_revision_id is not None
-        else None
-    )
-    caller_context = caller_context_of(head)
     filing_instance_evidence = _ordinary_m303_filing_instance_evidence(
         payload=payload,
         work_unit=work_unit,
@@ -241,23 +264,69 @@ def replaced_calculation_head(
     prepared: PreparedModeloWorkCalculation,
     payload: ModeloWorkCalculateRequest,
     returned_unit: WorkUnit,
+    *,
+    new_caller_context: CalculationCallerContext,
+    operation: PinnedAuthorityOperation,
 ) -> ModeloWorkCalculateReplacedHead | None:
     """Name the head a calculation replaced and what became of the person's entries in it.
 
     Read from the unit admitted before the calculation and the unit the writer
     returned, so it states what this calculation did and nothing a later one
-    changed.
+    changed. An explicit request also names every statement the earlier head
+    recorded that ``new_caller_context``, the caller context of the revision
+    this calculation returned, does not hold.
     """
     earlier = prepared.work_unit.current_calculation_revision_id
     if earlier is None or returned_unit.current_calculation_revision_id == earlier:
         return None
     if payload.caller_context is ModeloWorkCalculateCallerContext.EXPLICIT:
-        carry = ModeloOperatorEntriesCarry.REPLACED_BY_REQUEST
-    elif prepared.inputs.record_operator_layer:
-        carry = ModeloOperatorEntriesCarry.REPLAYED
-    else:
-        carry = ModeloOperatorEntriesCarry.NOT_RECORDED
+        from .replaced_head_statements import unused_head_statements
+
+        return ModeloWorkCalculateReplacedHead(
+            calculation_revision_id=earlier,
+            operator_entries=ModeloOperatorEntriesCarry.REPLACED_BY_REQUEST,
+            unused_statements=unused_head_statements(
+                prepared.head_caller_context,
+                new_caller_context,
+                work_unit=prepared.work_unit,
+                operation=operation,
+                language=OutputLanguage(output_language()),
+            ),
+            unused_statements_complete=prepared.head_caller_context.operator_layer_known,
+        )
+    carry = (
+        ModeloOperatorEntriesCarry.REPLAYED
+        if prepared.inputs.record_operator_layer
+        else ModeloOperatorEntriesCarry.NOT_RECORDED
+    )
     return ModeloWorkCalculateReplacedHead(calculation_revision_id=earlier, operator_entries=carry)
+
+
+def calculation_public_result_replacing(
+    result: ModeloWorkCalculationServiceResult,
+    *,
+    prepared: PreparedModeloWorkCalculation,
+    payload: ModeloWorkCalculateRequest,
+    operation: PinnedAuthorityOperation,
+) -> ModeloWorkCalculatePublicResultV3:
+    """Project one prepared calculation's return together with the head it replaced.
+
+    It reads the registry for the words of what an explicit request left out,
+    so callers run it off the event loop.
+    """
+    from .caller_context import caller_context_of
+
+    return calculation_public_result(
+        result,
+        operation=operation,
+        replaced_head=replaced_calculation_head(
+            prepared,
+            payload,
+            result.work_unit,
+            new_caller_context=caller_context_of(result.revision),
+            operation=operation,
+        ),
+    )
 
 
 def calculate_prepared_modelo_work(
@@ -330,8 +399,10 @@ class ModeloWorkCalculateExecutor:
     before operator layers existed replays no values (they are unknown, not
     empty), and its recalculation records no layer either, so that uncertainty
     is carried rather than silently resolved. An explicit request, such as the
-    CLI ``modelo work calculate`` command, keeps its full-specification
-    semantics: exactly the inputs and detail rows it carries.
+    CLI ``modelo work calculate`` command given inputs, keeps its
+    full-specification semantics: exactly the inputs and detail rows it
+    carries, and its result names every statement of the earlier head it did
+    not carry.
     """
 
     def __init__(
@@ -401,10 +472,11 @@ class ModeloWorkCalculateExecutor:
                 if result.revision_published or writes.began:
                     await context.events.effect(OperationEffect.UPDATED)
                 public_result = await asyncio.to_thread(
-                    calculation_public_result,
+                    calculation_public_result_replacing,
                     result,
+                    prepared=prepared,
+                    payload=payload,
                     operation=context.authority_operation,
-                    replaced_head=replaced_calculation_head(prepared, payload, result.work_unit),
                 )
                 return await context.operands.put(public_result, written_at=now())
 

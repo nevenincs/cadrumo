@@ -3990,6 +3990,23 @@ application:
         missing: '%{modelo}, %{period}: not calculated'
         unfiled: '%{modelo}, %{period}: checked, not filed'
         unverified: '%{modelo}, %{period}: calculated, not checked'
+    replaced_head:
+      statement:
+        absence_attestation: Your statement that a carry from an earlier return holds
+          no amount
+        binding_override: A value you set for an input over what its source supplies
+        borrador_snapshot: The AEAT tax draft (borrador) the calculation used
+        casilla_value: A value you typed into a box
+        cleared_casilla: A box you cleared
+        detail_rows: The detail rows of the declaration
+        income_family_entry: The figures you entered by hand for income this app does
+          not calculate
+        m210_selection: Your Modelo 210 income selections
+        m303_filing_evidence: Your answers about filing the Modelo 303 and the Modelo
+          390
+        row_attestation: Your statement of the carry on one row
+        value_attestation: The figure you stated for an earlier return this app does
+          not hold
     taxation_comparison_words:
       below_materiality: The two results differ by {difference}, less than {threshold},
         so either filing mode is acceptable.
