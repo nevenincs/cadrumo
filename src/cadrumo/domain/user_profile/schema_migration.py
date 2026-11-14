@@ -35,6 +35,12 @@ two.
   property record. It only adds fields, so it clears nothing: a stored value that
   predates the field was never stated, and the pending-expense statement of a
   property lives on the calculation revision, not on the profile.
+- Schema 15 adds the Modelo 840 facts: the AEAT delegacion and administracion,
+  the coded fiscal-address provincia and municipio, the activity's provincia,
+  municipio, local afecto indirectamente and Apartado VI B counts, and the IAE
+  premises, their Regla 14 surface classes and the Apartado VI A tax elements as
+  repeatable rows. It only adds fields, so it clears nothing; a schema-14 record
+  that already carries one of them is refused.
 
 Before each of those bumps the setup wizard pre-answered the affected
 questions and wrote its default as an ordinary ``manual_cli`` fact, so the
@@ -71,7 +77,7 @@ from .errors import UserProfileValidationError
 from .schema import ProfileSchemaDefinition
 from .values import UserProfileFact, UserProfileRecord, section_field_key
 
-MIGRATED_PROFILE_SCHEMA_VERSION: Final[int] = 14
+MIGRATED_PROFILE_SCHEMA_VERSION: Final[int] = 15
 """The profile schema version the migration writes."""
 
 _UNPROVEN_FALSE: Final[bool] = False
@@ -179,7 +185,7 @@ _ASCENDANT_DISABILITY_LEAVES: Final[tuple[str, ...]] = (
 )
 """The row facts the retired key is derived from now, which a row whose key was cleared is asked for."""
 
-_ADDITIVE_TRANSITIONS: Final[frozenset[int]] = frozenset({9, 10, 12, 13})
+_ADDITIVE_TRANSITIONS: Final[frozenset[int]] = frozenset({9, 10, 12, 13, 14})
 """Versions whose outgoing transition only adds fields, so it clears no stored value."""
 
 
@@ -359,6 +365,56 @@ PATHS_INTRODUCED_IN_V14: Final[frozenset[str]] = frozenset(
 )
 """Fields schema 13 did not declare: when the property was first let, or that it never was."""
 
+_M840_LEAVES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType(
+    {
+        "censo": ("aeat_delegacion_code", "aeat_administracion_code", "aeat_administracion_name"),
+        "contact": (
+            "fiscal_address_province_code",
+            "fiscal_address_municipality_code",
+            "fiscal_address_municipality_name",
+        ),
+        "activities": (
+            "province_code",
+            "municipality_code",
+            "municipality_name",
+            "cuota_provincial_province_code",
+            "local_afecto_indirectamente",
+            "maquinas_recreativas_tipo_a",
+            "maquinas_recreativas_tipo_b",
+            "expositores_autoventa",
+        ),
+        "iae_local": (
+            "actividad",
+            "afectacion",
+            "via_sg",
+            "via_nombre",
+            "numero",
+            "km",
+            "portal",
+            "escalera",
+            "piso",
+            "puerta",
+            "postcode",
+            "province_code",
+            "municipality_code",
+            "municipality_name",
+            "telefono",
+            "uso_destino_code",
+            "uso_destino_description",
+            "superficie_total",
+            "superficie_rectificada",
+            "superficie_computable",
+        ),
+        "iae_local_superficie": ("local", "clase", "total", "rectificada", "computable"),
+        "iae_elemento_tributario": ("actividad", "linea", "code", "description", "numero"),
+    },
+)
+
+PATHS_INTRODUCED_IN_V15: Final[frozenset[str]] = frozenset(
+    f"{section}.{leaf}" for section, leaves in _M840_LEAVES.items() for leaf in leaves
+)
+"""Fields schema 14 did not declare: the Modelo 840 facts, premises, surface classes and tax elements."""
+
 _PATHS_INTRODUCED_BY_VERSION: Final[Mapping[int, frozenset[str]]] = MappingProxyType(
     {
         7: PATHS_INTRODUCED_IN_V7,
@@ -367,6 +423,7 @@ _PATHS_INTRODUCED_BY_VERSION: Final[Mapping[int, frozenset[str]]] = MappingProxy
         11: PATHS_INTRODUCED_IN_V11,
         13: PATHS_INTRODUCED_IN_V13,
         14: PATHS_INTRODUCED_IN_V14,
+        15: PATHS_INTRODUCED_IN_V15,
     },
 )
 """Fields each version ADDED. Schema 8 adds none; it only re-reads stored values."""
@@ -658,6 +715,7 @@ __all__ = [
     "PATHS_INTRODUCED_IN_V11",
     "PATHS_INTRODUCED_IN_V13",
     "PATHS_INTRODUCED_IN_V14",
+    "PATHS_INTRODUCED_IN_V15",
     "RETIRED_ASCENDANT_DISABILITY_KEY_GROUP",
     "RETIRED_ASCENDANT_DISABILITY_KEY_LEAF",
     "RETIRED_RENTAL_TIER_PATH",

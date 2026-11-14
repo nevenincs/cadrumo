@@ -169,10 +169,26 @@ profile:
   schema:
     field:
       activities:
+        cuota_provincial_province_code:
+          label: Provincia de la cuota provincial
         description:
           label: Descripción de la actividad
+        expositores_autoventa:
+          label: Expositores de autoventa
         iae_epigraph:
           label: Epígrafe IAE
+        local_afecto_indirectamente:
+          label: Tiene local afecto indirectamente
+        maquinas_recreativas_tipo_a:
+          label: Máquinas recreativas tipo A
+        maquinas_recreativas_tipo_b:
+          label: Máquinas recreativas tipo B
+        municipality_code:
+          label: Código del municipio de la actividad
+        municipality_name:
+          label: Municipio de la actividad
+        province_code:
+          label: Código de la provincia de la actividad
         tipo_actividad:
           choices:
             A01: Arrendadores de bienes inmuebles
@@ -263,6 +279,12 @@ profile:
           label: Fecha de baja de la actividad
         activity_start_date:
           label: Fecha de alta de la actividad
+        aeat_administracion_code:
+          label: Código de la Administración de la AEAT
+        aeat_administracion_name:
+          label: Administración de la AEAT
+        aeat_delegacion_code:
+          label: Código de la Delegación de la AEAT
         divergencia:
           label: Divergencias del cotejo censal
         large_company:
@@ -284,8 +306,80 @@ profile:
           label: Domicilio fiscal
         fiscal_address_cadastral_reference:
           label: Referencia catastral del domicilio fiscal
+        fiscal_address_municipality_code:
+          label: Código del municipio del domicilio fiscal
+        fiscal_address_municipality_name:
+          label: Municipio del domicilio fiscal
+        fiscal_address_province_code:
+          label: Código de la provincia del domicilio fiscal
         postcode:
           label: Código postal
+      iae_elemento_tributario:
+        actividad:
+          label: Actividad
+        code:
+          label: Código del elemento tributario
+        description:
+          label: Descripción del elemento tributario
+        linea:
+          label: Línea
+        numero:
+          label: Número
+      iae_local:
+        actividad:
+          label: Actividad
+        afectacion:
+          choices:
+            ejercicio: Donde se ejerce la actividad
+            indirecta: Afecto indirectamente a la actividad
+          label: Afectación del local
+        escalera:
+          label: Escalera
+        km:
+          label: Km
+        municipality_code:
+          label: Código del municipio
+        municipality_name:
+          label: Municipio
+        numero:
+          label: Número
+        piso:
+          label: Piso
+        portal:
+          label: Portal
+        postcode:
+          label: Código postal
+        province_code:
+          label: Código de la provincia
+        puerta:
+          label: Puerta
+        superficie_computable:
+          label: Superficie computable (m²)
+        superficie_rectificada:
+          label: Superficie rectificada (m²)
+        superficie_total:
+          label: Superficie total (m²)
+        telefono:
+          label: Teléfono
+        uso_destino_code:
+          label: Código de uso o destino
+        uso_destino_description:
+          label: Uso o destino
+        via_nombre:
+          label: Nombre de la vía pública
+        via_sg:
+          label: Tipo de vía
+      iae_local_superficie:
+        clase:
+          label: Clase de superficie (Regla 14)
+        computable:
+          label: Computable (m²)
+        local:
+          label: Local
+        rectificada:
+          label: Rectificada (m²)
+        total:
+          label: Total (m²)
       identity:
         email:
           label: Correo electrónico de contacto
@@ -918,6 +1012,18 @@ profile:
       contact:
         summary: Dónde puede contactarte la AEAT y tu domicilio fiscal.
         title: Contacto y domicilio fiscal
+      iae_elemento_tributario:
+        summary: Los elementos tributarios de cada actividad para el modelo 840, una
+          fila por línea.
+        title: Elementos tributarios del IAE
+      iae_local:
+        summary: 'Los locales de cada actividad, una fila por local: donde la ejerces
+          o los que usas indirectamente.'
+        title: Locales del IAE
+      iae_local_superficie:
+        summary: Las superficies de cada local por clase de la Regla 14, una fila
+          por clase.
+        title: Superficies del local (Regla 14)
       identity:
         summary: 'Tu nombre y NIF: para quién se preparan las declaraciones.'
         title: Identidad

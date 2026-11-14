@@ -4938,6 +4938,14 @@ application:
         y se han indicado %{count}.
       descendant_value_invalid: El descendiente %{row} indica un valor que la declaración
         no admite; revisa sus fechas, importes y respuestas de sí o no.
+      iae_row_invalid: El dato «%{leaf}» no es válido o contradice otros datos de
+        la fila; no se guardó nada. Corrígelo y repite «%{door}».
+      iae_row_reference_missing: «%{leaf}» nombra la fila %{row} de «%{section}»,
+        que no existe; no se guardó nada. Añade antes esa fila y repite «%{door}».
+      iae_row_referenced: Las filas %{rows} de «%{section}» aún nombran la fila %{row};
+        no se quitó nada. Quítalas antes con «%{door}».
+      iae_row_repeated: La fila %{row} ya indica este «%{leaf}»; no se guardó nada.
+        Cambia esa fila con «%{door}».
       lifecycle_schema_validation_failed: Los datos del perfil no coinciden con el
         esquema de perfil de usuario.
       passphrase_confirmation_mismatch: La nueva contraseña y su confirmación no coinciden.
@@ -5151,6 +5159,12 @@ application:
         stale_revision: El perfil o sus movimientos han cambiado después de leer esta
           lista. Vuelve a leer la lista.
       relation:
+        iae_elemento_tributario:
+          actividad: Elemento tributario de esta actividad
+        iae_local:
+          actividad: Local de esta actividad
+        iae_local_superficie:
+          local: Clase de superficie de este local
         prevision_social_contribution: Certificado del ejercicio
         renta_arrendamiento:
           inmueble: Arrendamiento de este inmueble
