@@ -85,6 +85,7 @@ function Screen({
           language={language}
           shown
           page={page}
+          pane={{ controls: [], onToggleMaximize: () => {} }}
           onOpenAccess={noop}
           onOpenAeat={noop}
           onReviewCensus={noop}
