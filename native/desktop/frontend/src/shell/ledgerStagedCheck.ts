@@ -9,18 +9,21 @@ import { ReadSessionScheduler } from "./readSessionScheduler";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import type { LedgerPort, LedgerRow } from "./ledger";
 import type {
-  LedgerStagedCell,
   LedgerStagedCheckRequest,
   LedgerStagedCheckResult,
+} from "./ledgerMovementOperations";
+import type {
+  LedgerStagedCell,
   LedgerStagedDraft,
   LedgerStagedRow,
   LedgerStagedRowAnswer,
-} from "./ledgerMovementOperations";
+} from "./ledgerMovementCheckContract";
 import { ledgerLanguage } from "./ledgerLanguage";
 import { readAnswer } from "./ledgerWindow";
 import {
   actionRows,
   STAGE_FIELDS,
+  type DraftField,
   type StagedAction,
   type StagedContent,
   type StagedRowChanges,
@@ -99,7 +102,7 @@ export function stagedCheckRequest(
   const asked = [...ids].filter((id) => rows.has(id)).sort();
   const drafts: LedgerStagedDraft[] = content.drafts.map((draft) => ({
     key: draft.key,
-    fields: Object.entries(draft.fields)
+    fields: (Object.entries(draft.fields) as [DraftField, string | undefined][])
       .filter(([, value]) => typeof value === "string")
       .map(([field, value]) => ({ field, value: value as string }))
       .sort((a, b) => (a.field < b.field ? -1 : 1)),
@@ -163,9 +166,9 @@ const IDLE: CheckView = {
 /** How long editing rests before what is staged is asked about. */
 const PAUSE_MS = 250;
 const NOTHING_ASKED = (request: LedgerStagedCheckRequest) =>
-  request.rows.length === 0 &&
-  request.drafts.length === 0 &&
-  request.categories.length === 0;
+  !request.rows?.length &&
+  !request.drafts?.length &&
+  !request.categories?.length;
 /** What is known with nothing asked. */
 export const NOTHING_CHECKED: StagedCheck = {
   rows: new Map(),

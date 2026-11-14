@@ -71,6 +71,8 @@ number = "24"
 section = ["490_01"]
 data_type = "ratio"
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+# DR49001 Nota 2 states [24] in three integers and two decimals and fills 100,00 when no foral box is filled.
+constraints = { min_value = "0", max_value = "100" }
 
 [[revisions."2022-2t-4t".casillas]]
 id = "reg-base-declarada-27"

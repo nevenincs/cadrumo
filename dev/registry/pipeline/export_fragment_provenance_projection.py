@@ -9,7 +9,7 @@ from pydantic import BaseModel
 
 from cadrumo.core.hashing import content_hash_hex
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.field_absence import later_absent_when_none
+from cadrumo.domain.calculations.registry.field_absence import later_absent_when_empty, later_absent_when_none
 from cadrumo.domain.calculations.registry.schema_exports import (
     ExportFieldDefinition,
     ExportLayoutDefinition,
@@ -249,7 +249,7 @@ def normalised_loader_semantics(loaded_layout: ExportLayoutDefinition) -> dict[s
     lookup or fallback surface. Exact-key checks are deliberate: an added loader
     schema field refuses until this projection and its version are reviewed.
     """
-    payload = loaded_layout.model_dump(mode="json")
+    payload = _with_later_absent_keys(loaded_layout.model_dump(mode="json"), ExportLayoutDefinition)
     _require_exact_keys(payload, _LAYOUT_KEYS, subject="loader export layout")
     records = [_normalise_loader_record(item) for item in _as_object_list(payload["records"], subject="loader records")]
     records.sort(key=_loader_record_sort_key)
@@ -488,12 +488,15 @@ def _semantic_record_sort_key(payload: Mapping[str, object]) -> tuple[str, str, 
 
 
 def _with_later_absent_keys(payload: Mapping[str, object], model: type[BaseModel]) -> Mapping[str, object]:
-    """Read a later field the dump leaves out while it holds nothing as its declared ``None``."""
-    absent = {
-        name: None
-        for name, model_field in model.model_fields.items()
-        if model_field.exclude_if is later_absent_when_none and name not in payload
-    }
+    """Read a later field the dump leaves out while it holds nothing as its declared empty value."""
+    absent: dict[str, object] = {}
+    for name, model_field in model.model_fields.items():
+        if name in payload:
+            continue
+        if model_field.exclude_if is later_absent_when_none:
+            absent[name] = None
+        elif model_field.exclude_if is later_absent_when_empty:
+            absent[name] = []
     return {**payload, **absent} if absent else payload
 
 
