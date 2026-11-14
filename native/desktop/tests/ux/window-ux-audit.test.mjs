@@ -764,11 +764,15 @@ ux(
       // The header's busy state is the window reading the declaration again
       // after its own settled write; a view change never triggers it, so the
       // check presses the header's own write and samples the read after it.
-      const head = await exec(
-        pageHeaderStep,
-        nextActionLabels(),
-        label("desktop.navigation.busy"),
-      );
+      const busyText = label("desktop.navigation.busy");
+      let head = await exec(pageHeaderStep, nextActionLabels(), busyText);
+      // A fresh declaration asks to be filled first; the form's statements
+      // answer it as a filer does, and the header then offers apply.
+      if (head.action === "fill") {
+        await stageStatements(busyText);
+        await sleep(1500);
+        head = await exec(pageHeaderStep, nextActionLabels(), busyText);
+      }
       if (
         head.action &&
         WRITING_ACTIONS.includes(head.action) &&
