@@ -9,7 +9,7 @@ related:
   - '[[2026-08-25-source-casilla-integration-modelo-840-source-and-repeated-row-owner-deferral-adr]]'
 modified: '2026-11-14'
 body_schema: body-v2
-body_hash: 'sha256:21376755c37f495d5dca32a68209b8d07b0344b9e62d7e8e49da84e5fec6be9e'
+body_hash: 'sha256:2cced88733a748590d9ff79861fccac1f917d541aea9d121a431c4378ea11963'
 ---
 
 # `source-casilla-integration` plan
@@ -49,7 +49,7 @@ Hand 1 stores the structured fiscal address with INE codes, the AEAT delegacion 
 Hand 2 gives the export generator repeat semantics for the anexo premises slots keyed by a durable per-local identity and regenerates only the Modelo 840 editions whose layout changes.
 
 - [ ] `P02.S04` - Give the export generator repeat semantics for the anexo Relacion de locales slots keyed by the per-local identity, proven against the official slot positions; `dev/registry/pipeline`.
-- [ ] `P02.S05` - Regenerate only the Modelo 840 export editions whose layout changes, declaring any new registry member once at its earliest edition; `src/cadrumo/_data/registry/aeat/modelos/840`.
+- [ ] `P02.S05` - Regenerate only the Modelo 840 export editions whose layout changes, declaring any new registry member once at its earliest edition, including an informational casilla for the representante's municipality name (design Apart. III position 492) that the operator enters with the other representante address casillas, mapped to that export field instead of a profile producer; `src/cadrumo/_data/registry/aeat/modelos/840`.
 
 ### Phase `P03` - producers and the official round trip
 
