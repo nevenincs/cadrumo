@@ -129,7 +129,8 @@ export function useWorkspaceVisibility({
     firstPaneShown &&
     !docking.floating.some((entry) => entry.pane === "docs");
   const dockMinimumWidths = useMemo(
-    () => (fitLedger ? { docs: mainMin, agent: agentMin } : undefined),
+    () =>
+      fitLedger ? { docs: mainMin, agent: agentMin } : { agent: agentMin },
     [fitLedger, mainMin, agentMin],
   );
   // Side by side needs room for both panes' minimums; a narrower window

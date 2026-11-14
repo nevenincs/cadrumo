@@ -44,7 +44,7 @@ const BADGE_LIMIT = 99;
 function RailButton({ item }: { item: RailItem }) {
   return (
     <>
-      {item.divided && <Separator className="my-1 w-5" />}
+      {item.divided && <Separator className="my-1 w-5 rail-compact:my-0.5" />}
       <Toolbar.Button asChild>
         <IconButton
           label={item.label}
@@ -143,8 +143,10 @@ function RailButton({ item }: { item: RailItem }) {
 /**
  * The icon rail: a vertical toolbar. It is one tab stop; the arrow keys,
  * Home and End move within it. Every item is named by its tooltip, which
- * also shows its shortcut. In a window too short for all of it the rail
- * scrolls inside itself: it never makes the window taller.
+ * also shows its shortcut. In a window under 48rem high the buttons close
+ * up (no gaps, tighter dividers) so that all of them, Settings and the panel
+ * toggle included, stay inside it; only a window too short even then makes
+ * the rail scroll inside itself: it never makes the window taller.
  */
 export function Rail({
   label,
@@ -164,14 +166,14 @@ export function Rail({
         orientation="vertical"
         // The side padding, not centring, places the buttons: the chosen
         // item's bar then sits exactly on the rail's outer edge.
-        className="flex min-h-full flex-col items-start justify-between gap-1 px-1.5 py-2"
+        className="flex min-h-full flex-col items-start justify-between gap-1 px-1.5 py-2 rail-compact:gap-0 rail-compact:py-1"
       >
-        <div className="rail-group flex flex-col items-center gap-1">
+        <div className="rail-group flex flex-col items-center gap-1 rail-compact:gap-0">
           {top.map((item) => (
             <RailButton key={item.id} item={item} />
           ))}
         </div>
-        <div className="rail-group flex flex-col items-center gap-1">
+        <div className="rail-group flex flex-col items-center gap-1 rail-compact:gap-0">
           {bottom.map((item) => (
             <RailButton key={item.id} item={item} />
           ))}
