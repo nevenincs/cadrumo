@@ -2019,7 +2019,7 @@ heading_key = "modelo.schema.100.form.page.datosidentificativos-declarante.headi
 
 [[revisions.2023.form_layouts.pages.sections]]
 id = "general"
-heading_key = "modelo.schema.100.form.section.general.heading"
+heading_key = "modelo.schema.100.form.page.datosidentificativos-declarante.section.general.heading"
 blocks = [
     { kind = "field", id = "field", casilla_id = "DPNIF_D" },
     { kind = "field", id = "field-2", casilla_id = "DP_APENOM_D" },
@@ -2037,7 +2037,7 @@ heading_key = "modelo.schema.100.form.page.datosidentificativos-conyuge.heading"
 
 [[revisions.2023.form_layouts.pages.sections]]
 id = "general"
-heading_key = "modelo.schema.100.form.section.general.heading"
+heading_key = "modelo.schema.100.form.page.datosidentificativos-conyuge.section.general.heading"
 blocks = [
     { kind = "field", id = "field", casilla_id = "DPNIF_C" },
     { kind = "field", id = "field-2", casilla_id = "DP_APENOM_C" },
@@ -2055,7 +2055,7 @@ heading_key = "modelo.schema.100.form.page.datosidentificativos.heading"
 
 [[revisions.2023.form_layouts.pages.sections]]
 id = "general"
-heading_key = "modelo.schema.100.form.section.general.heading"
+heading_key = "modelo.schema.100.form.page.datosidentificativos.section.general.heading"
 blocks = [
     { kind = "field", id = "field", casilla_id = "NORESIDENTE" },
 ]
@@ -2066,7 +2066,7 @@ heading_key = "modelo.schema.100.form.page.declaracion.heading"
 
 [[revisions.2023.form_layouts.pages.sections]]
 id = "general"
-heading_key = "modelo.schema.100.form.section.general.heading"
+heading_key = "modelo.schema.100.form.page.declaracion.section.general.heading"
 blocks = [
     { kind = "field", id = "field", casilla_id = "ZCCAD" },
     { kind = "field", id = "field-2", casilla_id = "TIPOTRIBUTACION" },
@@ -2086,7 +2086,7 @@ blocks = [
 
 [[revisions.2023.form_layouts.pages.sections]]
 id = "general"
-heading_key = "modelo.schema.100.form.section.general.heading"
+heading_key = "modelo.schema.100.form.page.datosidentificativos-hijos.section.general.heading"
 blocks = [
     { kind = "field", id = "field", casilla_id = "HIJOSUE" },
 ]
@@ -2110,7 +2110,7 @@ heading_key = "modelo.schema.100.form.page.datoseconomicos.heading"
 
 [[revisions.2023.form_layouts.pages.sections]]
 id = "general"
-heading_key = "modelo.schema.100.form.section.general.heading"
+heading_key = "modelo.schema.100.form.page.datoseconomicos.section.general.heading"
 blocks = [
     { kind = "field", id = "field", casilla_id = "0001" },
     { kind = "field", id = "field-2", casilla_id = "0026" },

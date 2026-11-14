@@ -3893,22 +3893,40 @@ modelo:
         page:
           datoseconomicos:
             heading: A jövedelmek jogosultjai
+            section:
+              general:
+                heading: Az egyes jövedelmek jogosult adózója
           datoseconomicos-resultados:
             heading: A bevallás összesítése és számítása
           datoseconomicos-tomadatosampliada:
             heading: Jövedelmek és kedvezmények részletes adatai
           datosidentificativos:
             heading: Azonosító adatok
+            section:
+              general:
+                heading: Nem rezidens és IRPF-adózónak nem minősülő házastárs
           datosidentificativos-ascendientes:
             heading: Felmenők
           datosidentificativos-conyuge:
             heading: Házastárs
+            section:
+              general:
+                heading: A házastárs személyes adatai és EU- vagy EGT-beli lakóhelye
           datosidentificativos-declarante:
             heading: Bevalló
+            section:
+              general:
+                heading: A bevalló személyes adatai
           datosidentificativos-hijos:
             heading: Gyermekek és más leszármazottak
+            section:
+              general:
+                heading: EU- vagy EGT-beli lakóhelyű, nem rezidens leszármazottak
           declaracion:
             heading: Bevallás
+            section:
+              general:
+                heading: Autonóm közösség és választott adózási opció
         section:
           anexoa:
             heading: Lakások energetikai korszerűsítése, elektromos járművek és töltőpontok
@@ -4003,8 +4021,6 @@ modelo:
           gcambioresidenciaextres:
             heading: A spanyol területen kívülre történő lakóhely-változás miatti
               vagyoni nyereségek összesítése
-          general:
-            heading: Az egyes jövedelmek jogosult adózója
           gpaccionesres:
             heading: Forgalmazott részvények átruházásának összesítése
           gpderechosres:
