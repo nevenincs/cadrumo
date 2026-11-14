@@ -32,6 +32,14 @@ import type {
   PublicModeloWorkForm,
 } from "../../../shell/modeloContract/modeloWorkFormPart2";
 import { takesEntry } from "./entryField";
+import {
+  chosenRowStatements,
+  formWideStatements,
+  rowOfStatement,
+  stagesRowStatement,
+  wholeRowStatements,
+  type RowStatementEdit,
+} from "./rowStatements";
 
 // The form's working state: the edits staged on it and the box chosen. It
 // lives in memory only, for one declaration, and is handed to the review and
@@ -527,7 +535,8 @@ function held(edit: StagedEdit): ModeloEditHeldChangeV1 | null {
 }
 
 /** The staged edits as one submission, valid for a preflight and for an
- * apply: typed values only, never entries as typed. Findings and refusals
+ * apply: typed values only, never entries as typed, and the statements staged
+ * for rows (`rows`) beside them. Findings and refusals
  * come back said in `language`. A preflight is also told the changes held,
  * `heldChanges`, and reports what became of each. */
 export function editSubmission(
@@ -535,6 +544,7 @@ export function editSubmission(
   edits: Iterable<StagedEdit>,
   language: OutputLanguage,
   heldChanges = false,
+  rows: Iterable<RowStatementEdit> = [],
 ): ModeloEditOperatorInputV2 {
   const all = [...edits];
   const scalar: NonNullable<
@@ -562,6 +572,9 @@ export function editSubmission(
     )
       binding.push({ address, kind: intent.kind, ...value });
   }
+  // A row's statement names its row in the address it is staged at.
+  for (const row of rows)
+    binding.push({ address: row.address, kind: "attest_no_amount" });
   return {
     input_version: 2,
     output_language: language,
@@ -822,6 +835,10 @@ export type FormSession = {
   /** Adopts a renewal of the baseline for every check and apply after it. */
   adoptBaseline(baseline: ModeloEditApplyBaselineV1): void;
   staged: ReadonlyMap<string, StagedEdit>;
+  /** The statements staged for rows of a repeating group, by binding and
+   * row: kept apart from the boxes' edits, since no box holds them. */
+  rowStatements: ReadonlyMap<string, RowStatementEdit>;
+  /** Every edit staged, the row statements' included. */
   stagedCount: number;
   /** Stages one edit on its box; an edit staged over one box of a statement
    * or withdrawal takes the rest of it back, so none is left in part. */
@@ -829,8 +846,8 @@ export type FormSession = {
   /** Takes back the edit staged under `editKey`, and with it every other box
    * of the statement or withdrawal it belongs to. */
   unstage(editKey: string): void;
-  /** Every statement the form serves, in its order and words; none where
-   * the declaration takes no edit. */
+  /** Every statement the form serves, in its order and words, a row's
+   * statement among them; none where the declaration takes no edit. */
   statements: readonly ModeloFormCarryAttestation[];
   /** Whether `statement` is staged on every box it names. */
   stagesStatement(statement: ModeloFormCarryAttestation): boolean;
@@ -925,6 +942,9 @@ export function useFormSession({
   const [staged, setStaged] = useState<ReadonlyMap<string, StagedEdit>>(
     () => new Map(),
   );
+  const [rowStatements, setRowStatements] = useState<
+    ReadonlyMap<string, RowStatementEdit>
+  >(() => new Map());
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [pageId, setPageId] = useState<string | null>(
     form.pages[0]?.id ?? null,
@@ -941,6 +961,7 @@ export function useFormSession({
   if (heldUnit !== unit) {
     setHeldUnit(unit);
     setStaged(new Map());
+    setRowStatements(new Map());
     setSelectedKey(null);
     setPageId(form.pages[0]?.id ?? null);
     setReveal(null);
@@ -1000,6 +1021,7 @@ export function useFormSession({
   const rebased = useMemo(() => rebasedOf(moved), [moved]);
   const discardAll = useCallback(() => {
     setStaged(new Map());
+    setRowStatements(new Map());
     setMoved(new Map());
   }, []);
 
@@ -1020,7 +1042,7 @@ export function useFormSession({
       staged,
       pendingRebase,
       placed,
-      form.carry_attestations,
+      formWideStatements(form.carry_attestations),
       priorValuesOf(form),
     );
     setStaged(next);
@@ -1029,6 +1051,12 @@ export function useFormSession({
     // it finds, by box, and never takes back what an earlier report dropped.
     if (found.length) setMoved((shown) => noteMoved(shown, found));
   }, [pendingRebase, placed, staged, form]);
+  // A row's statement stands only while the form still serves it whole.
+  useEffect(() => {
+    setRowStatements((held) =>
+      wholeRowStatements(held, form.carry_attestations),
+    );
+  }, [form.carry_attestations]);
   const acknowledge = useCallback(() => {
     setMoved(new Map());
     setStaged((held) => {
@@ -1129,7 +1157,7 @@ export function useFormSession({
       ),
     [staged],
   );
-  const stagesStatement = useCallback(
+  const stagesFormWide = useCallback(
     (statement: ModeloFormCarryAttestation) =>
       statement.binding_ids.length > 0 &&
       statement.binding_ids.every((bindingId) => {
@@ -1141,10 +1169,19 @@ export function useFormSession({
       }),
     [staged],
   );
+  const stagesStatement = useCallback(
+    (statement: ModeloFormCarryAttestation) =>
+      rowOfStatement(statement) === null
+        ? stagesFormWide(statement)
+        : stagesRowStatement(rowStatements, statement),
+    [stagesFormWide, rowStatements],
+  );
   const stageStatements = useCallback(
     (chosen: readonly ModeloFormCarryAttestation[]) => {
       const unplaced: ModeloFormCarryAttestation[] = [];
-      for (const statement of statements) {
+      // A row's statement is staged or taken back as chosen, at its row.
+      setRowStatements(chosenRowStatements(statements, chosen));
+      for (const statement of formWideStatements(statements)) {
         if (!chosen.includes(statement)) {
           const held = [...staged.values()].find(
             (edit) =>
@@ -1154,14 +1191,14 @@ export function useFormSession({
           if (held) unstage(held.key);
           continue;
         }
-        if (stagesStatement(statement)) continue;
+        if (stagesFormWide(statement)) continue;
         const edits = statementEdits(placed, statement);
         if (edits) stageAll(edits);
         else unplaced.push(statement);
       }
       return unplaced;
     },
-    [statements, staged, unstage, stagesStatement, placed, stageAll],
+    [statements, staged, unstage, stagesFormWide, placed, stageAll],
   );
   const enter = useCallback(
     async (
@@ -1369,7 +1406,8 @@ export function useFormSession({
     baseline,
     adoptBaseline,
     staged,
-    stagedCount: staged.size,
+    rowStatements,
+    stagedCount: staged.size + rowStatements.size,
     stage,
     unstage,
     statements,
