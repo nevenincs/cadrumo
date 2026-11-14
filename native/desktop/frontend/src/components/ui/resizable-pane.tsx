@@ -1,6 +1,7 @@
 import * as React from "react";
 import { cn } from "@/components/ui/cn";
 import { ResizeHandle } from "@/components/ui/resize-handle";
+import { useScrolls } from "@/components/ui/useScrolls";
 
 /** The edge of its row or column the pane is drawn against. */
 type PaneEdge = "start" | "end" | "top" | "bottom";
@@ -169,6 +170,8 @@ function ResizablePane({
   ...props
 }: ResizablePaneProps) {
   const box = React.useRef<HTMLDivElement>(null);
+  const [pane, setPane] = React.useState<HTMLElement | null>(null);
+  const scrolls = useScrolls(pane);
   const generated = React.useId();
   const paneId = id ?? generated;
   const { across, leads, grows, orientation, length, flow } = EDGES[edge];
@@ -209,8 +212,17 @@ function ResizablePane({
     >
       {!leads && movable && handle}
       <aside
+        ref={setPane}
         id={paneId}
-        className={cn("flex min-h-0 min-w-0 flex-1 flex-col", className)}
+        // A pane that scrolls is a Tab stop, so the arrows and the Page keys
+        // move it without the pointer; it keeps the name it was given.
+        tabIndex={scrolls ? 0 : undefined}
+        className={cn(
+          "flex min-h-0 min-w-0 flex-1 flex-col",
+          scrolls &&
+            "outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
+          className,
+        )}
         {...props}
       >
         {children}
