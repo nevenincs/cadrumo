@@ -29,6 +29,10 @@ from ....adapters.persistence.profile.transactions import TransactionCatalogueRe
 from ....application.aggregation.renta_inmueble_findings import RentaInmuebleCause
 from ....application.aggregation.renta_inmueble_source import RentaInmuebleRowField
 from ....application.aggregation.tests.renta_inmueble_support import inmueble, lease, profile_facts, rent
+from ....application.modelo.absence_statement_submission import (
+    ModeloAbsenceStatementNothingOpenError,
+    absence_statement_submission,
+)
 from ....application.modelo.calculate_input import WorkCalculateInputBundle, calculate_modelo_work_revision
 from ....application.modelo.calculation_note_gate import (
     ModeloCalculationBlockedError,
@@ -42,7 +46,11 @@ from ....application.modelo.edit_models import (
     ModeloEditBindingIntentKind,
     ModeloEditWritableBindingOverrideSurfaceEntryV1,
 )
+from ....application.modelo.work_form_models import ModeloFormCarryAttestation
+from ....application.modelo.work_form_service import load_modelo_work_form
 from ....core.authority_grade import RegistryAuthorityGrade
+from ....core.external_constants import OutputLanguage
+from ....domain.calculations.registry.binding_absence_attestation import AbsenceAttestationFamily
 from ....domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.renta_inmueble_bindings import (
@@ -78,6 +86,7 @@ _NEGATIVE_BASE_CARRIES: tuple[BindingId, ...] = (
     ),
 )
 _PENDING_SENTENCE = f"renta_inmueble_{RentaInmuebleCause.PENDING_EXPENSES_UNSTATED.value}"
+_RENTAL = AbsenceAttestationFamily.RENTA_CAPITAL_INMOBILIARIO_GASTOS_PENDIENTES
 _LET_YEARS_BEFORE = 3
 """The property was first let this many ejercicios before the one filed, so as many origin years are asked."""
 
@@ -278,6 +287,99 @@ def test_a_row_statement_names_a_calculated_row_of_a_row_stated_carry_and_never_
         assert renta.require_head().calculation_revision_id == before.calculation_revision_id
 
 
+def _row_doors(
+    renta: SeededOperatorWork, language: OutputLanguage = OutputLanguage.EN
+) -> tuple[ModeloFormCarryAttestation, ...]:
+    """The rental-carry statements the work form serves, one per let property with an origin year still open."""
+    unit = renta.work_unit
+    form = load_modelo_work_form(
+        unit.bucket_id,
+        unit.modelo,
+        unit.filing_year,
+        unit.period,
+        operation=renta.operation,
+        work_unit_repository=renta.ports.work_unit_repository,
+        calculation_repository=renta.ports.calculation_repository,
+        verification_repository=renta.ports.verification_repository,
+        admission=renta.admit(),
+        language=language,
+    ).form
+    return tuple(attestation for attestation in form.carry_attestations if attestation.family is _RENTAL)
+
+
+@pytest.mark.parametrize("year", _renta_years())
+def test_the_form_serves_one_nothing_pending_door_per_let_property_and_staging_it_states_each_origin_year(
+    tmp_path: Path, year: int
+) -> None:
+    with (
+        profile_adapter_composition(),
+        seeded_operator_work(
+            tmp_path, modelo="100", filing_year=year, period_code="0A", extra_facts=_facts(year)
+        ) as renta,
+    ):
+        # With no calculation the declaration holds no property row, so no row door is served.
+        assert _row_doors(renta) == ()
+        # The door asks of the origin years the letting reaches, which are the ones the calculation notes.
+        asked = _openings(renta)
+        _calculated(renta, year)
+
+        (door,) = _row_doors(renta)
+        assert door.row_identity == _ROW
+        assert door.binding_ids == tuple(sorted(asked))
+        assert door.row_words == "Property 1"
+        (spanish,) = _row_doors(renta, OutputLanguage.ES)
+        assert spanish.row_words == "Inmueble 1"
+        assert spanish.action_words != door.action_words
+        assert door.model_dump(mode="json")["row_identity"] == _ROW
+
+        submission = absence_statement_submission(renta.baseline(), (door,), family=_RENTAL)
+        assert {intent.address.row_identity for intent in submission.binding_intents} == {_ROW}
+        assert {intent.address.binding_id for intent in submission.binding_intents} == set(asked)
+        assert renta.apply(binding=submission.binding_intents).refusal is None
+        head = renta.require_head()
+        assert head.operator_layer is not None
+        assert set(head.operator_layer.row_attestations) == {
+            RowCarryAttestation(binding_id=opening, source_row_identity=_ROW, amount=ATTESTED_ZERO, absent=True)
+            for opening in asked
+        }
+        assert _no_carry_note(head)
+
+        # Every origin year the row is asked about is stated, so the form serves its door no more.
+        assert _row_doors(renta) == ()
+        with pytest.raises(ModeloAbsenceStatementNothingOpenError):
+            absence_statement_submission(renta.baseline(), _row_doors(renta), family=_RENTAL)
+
+
+@pytest.mark.parametrize("year", _renta_years())
+def test_a_row_door_leaves_out_the_origin_years_the_filer_already_stated(tmp_path: Path, year: int) -> None:
+    with (
+        profile_adapter_composition(),
+        seeded_operator_work(
+            tmp_path, modelo="100", filing_year=year, period_code="0A", extra_facts=_facts(year)
+        ) as renta,
+    ):
+        asked = _openings(renta)
+        newest = asked[0]
+        _calculated(renta, year)
+        stated = renta.apply(
+            binding=(_state(newest, ModeloEditBindingIntentKind.ATTEST_PRIOR_VALUE, value=Decimal("300")),)
+        )
+        assert stated.refusal is None
+
+        (door,) = _row_doors(renta)
+        assert door.binding_ids == tuple(sorted(asked[1:]))
+        submission = absence_statement_submission(renta.baseline(), (door,), family=_RENTAL)
+        assert renta.apply(binding=submission.binding_intents).refusal is None
+        head = renta.require_head()
+        assert head.operator_layer is not None
+        # The amount stated is kept; the door stated only the origin years still open.
+        assert RowCarryAttestation(binding_id=newest, source_row_identity=_ROW, amount="300") in set(
+            head.operator_layer.row_attestations
+        )
+        assert _row_value(head, newest) == Decimal(300)
+        assert _row_doors(renta) == ()
+
+
 def _carry_notes(head: CalculationRevision, cause: RentaInmuebleCause) -> tuple[CalculationSourceIssue, ...]:
     sentence = f"renta_inmueble_{cause.value}"
     return tuple(
@@ -394,6 +496,8 @@ def test_a_property_first_let_in_the_ejercicio_raises_no_carry_note(tmp_path: Pa
         head = _calculated(renta, year)
         assert _no_carry_note(head)
         assert _row_value(head, _column(renta, RentaInmuebleRowField.RENDIMIENTO_NETO)) is not None
+        # Every origin year resolves to nothing pending, so the property's row asks for no statement.
+        assert _row_doors(renta) == ()
 
 
 @pytest.mark.parametrize("year", _renta_years())
