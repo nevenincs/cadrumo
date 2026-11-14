@@ -15,6 +15,11 @@ const SIZES = [
   { width: 1280, height: 800 },
   { width: 1024, height: 640 },
   { width: 900, height: 600 },
+  // The native window's inner sizes at the same four window sizes.
+  { width: 1427, height: 915 },
+  { width: 1267, height: 793 },
+  { width: 1011, height: 632 },
+  { width: 887, height: 592 },
 ];
 const FORM_LEAST = 160;
 const LABEL_LEAST = 120;
@@ -113,13 +118,12 @@ async function expectFloors(target: Page, placement: Placement) {
   });
   expect(geometry.paneRight).toBeLessThanOrEqual(geometry.right);
   expect(geometry.paneBottom).toBeLessThanOrEqual(geometry.bottom);
-  if (placement === "side") {
+  if (placement === "side")
     expect(geometry.formRight).toBeLessThanOrEqual(geometry.paneLeft);
-    expect(
-      geometry.label,
-      `a box's label is ${geometry.label}px wide beside the details`,
-    ).toBeGreaterThanOrEqual(LABEL_LEAST);
-  }
+  expect(
+    geometry.label,
+    `a box's label is ${geometry.label}px wide with the details ${placement === "side" ? "beside" : "under"} the form`,
+  ).toBeGreaterThanOrEqual(LABEL_LEAST);
 }
 
 /** Moves the details' line with the keyboard and a pointer in `placement`,
@@ -182,9 +186,10 @@ for (const size of SIZES) {
       await openDeclaration(target);
       await showPane(target, "side", railOn);
       await expect(rail(target)).toHaveCount(railOn ? 1 : 0);
-      // Hidden details have nothing to arrange.
+      // The arrangement control stays while the details are hidden, so
+      // the toolbar does not change under the pointer.
       await showPane(target, "details", false);
-      await expect(toggle(target, "placement")).toHaveCount(0);
+      await expect(toggle(target, "placement")).toBeVisible();
       await showPane(target, "details", true);
       const control = toggle(target, "placement");
       await expect(control).toHaveAccessibleName(

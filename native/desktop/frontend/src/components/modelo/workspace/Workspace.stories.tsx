@@ -399,3 +399,93 @@ export const PriorValuesHidden: Story = {
     </KeptPanes>
   ),
 };
+
+/** The three pane controls, found once the workspace has drawn them. */
+const paneControls = (canvasElement: HTMLElement) =>
+  waitFor(
+    () => {
+      const found = ["side", "details", "placement"].map((name) =>
+        canvasElement.querySelector<HTMLElement>(`[data-pane-toggle=${name}]`),
+      );
+      if (found.some((control) => !control))
+        throw new Error("the pane controls are not drawn yet");
+      return found as [HTMLElement, HTMLElement, HTMLElement];
+    },
+    { timeout: 15_000 },
+  );
+
+const iconOf = (control: HTMLElement) =>
+  control.querySelector("svg[data-icon]")?.getAttribute("data-icon");
+
+export const PaneControlsDetailsHidden: Story = {
+  name: "130 · pane controls with the details hidden, the arrangement still set",
+  render: (_, { globals }) => (
+    <KeptPanes kept={ALL_PANES({ open: false, side: null, bottom: null })}>
+      <Screen modelo="130" locale={language(globals)} />
+    </KeptPanes>
+  ),
+  play: async ({ canvasElement }) => {
+    const [side, details, placement] = await paneControls(canvasElement);
+    await expect(details).toHaveAttribute("aria-pressed", "false");
+    await expect(new Set([side, details, placement].map(iconOf)).size).toBe(3);
+    const before = placement.getAttribute("aria-pressed");
+    await userEvent.click(placement);
+    await expect(placement).not.toHaveAttribute("aria-pressed", before ?? "");
+    await userEvent.click(placement);
+    await expect(placement).toHaveAttribute("aria-pressed", before ?? "");
+  },
+};
+
+export const PaneControlsBeside: Story = {
+  name: "130 · pane controls with the rail shown and the details beside the form",
+  render: (_, { globals }) => (
+    <KeptPanes
+      kept={ALL_PANES({
+        open: true,
+        placement: "side",
+        side: null,
+        bottom: null,
+      })}
+    >
+      <Screen modelo="130" locale={language(globals)} />
+    </KeptPanes>
+  ),
+  play: async ({ canvasElement }) => {
+    const controls = await paneControls(canvasElement);
+    for (const control of controls)
+      await expect(control).toHaveAttribute("aria-pressed", "true");
+    await expect(controls.map(iconOf)).toEqual([
+      "panelLeft",
+      "panelRight",
+      "splitBeside",
+    ]);
+  },
+};
+
+export const PaneControlsUnder: Story = {
+  name: "130 · pane controls with the rail hidden and the details under the form",
+  render: (_, { globals }) => (
+    <KeptPanes
+      kept={{
+        [WORKSPACE_PANE_IDS.side]: { open: false, side: null, bottom: null },
+        [WORKSPACE_PANE_IDS.details]: {
+          open: true,
+          placement: "bottom",
+          side: null,
+          bottom: null,
+        },
+      }}
+    >
+      <Screen modelo="130" locale={language(globals)} />
+    </KeptPanes>
+  ),
+  play: async ({ canvasElement }) => {
+    const controls = await paneControls(canvasElement);
+    await expect(controls.map(iconOf)).toEqual([
+      "panelLeft",
+      "panelBottom",
+      "splitUnder",
+    ]);
+    await expect(controls[2]).toHaveAttribute("aria-pressed", "false");
+  },
+};

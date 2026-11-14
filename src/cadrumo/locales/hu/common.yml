@@ -4568,6 +4568,9 @@ desktop:
     none_unread: A legutóbbi szinkronizáláskor nem volt olvasatlan
     unread: '{count} olvasatlan'
   modelo:
+    band:
+      label: Megjegyzések a nyomtatvány felett
+      resize: A nyomtatvány feletti megjegyzések átméretezése
     box_notes:
       label: Amit a számítás erről a rovatról feljegyzett
     compare:
@@ -4675,6 +4678,8 @@ desktop:
       label: A nyomtatvány vázlata
       may_apply: Csak ha rád vonatkozik
       needs_you: 'Rád vár: {count}'
+    panes:
+      label: A nyomtatvány körüli panelek
     prior_values:
       intro: Ha itt nincs meg az a korábbi bevallás, amelyből egy mező összeget hoz
         át, az összeget magad is megadhatod. Az ugyanazokhoz a korábbi bevallásokhoz

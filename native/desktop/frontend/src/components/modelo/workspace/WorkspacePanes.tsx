@@ -64,14 +64,20 @@ const remPx = () =>
 type PaneDoor = { open: boolean; toggle(): void; controls: string };
 const PaneDoors = createContext<{
   side: PaneDoor;
+  /** Null where the declaration has no details. */
   details: PaneDoor | null;
-  /** Whether the details are beside the form; null while they are hidden. */
+  /** Whether the details go beside the form, shown or hidden; null where
+   * the declaration has no details. */
   placement: PaneDoor | null;
 } | null>(null);
 
 /**
- * The controls that show and hide the panes beside the form, for the form's
- * toolbar. Outside a workspace there are no panes, and nothing is drawn.
+ * The controls that show and hide the panes beside the form and set where
+ * the details go, for the form's toolbar, each with its own icon: the rail
+ * at the start, the details at the end or under the form, and the line
+ * between the form and the details. They stay together and are drawn
+ * whatever is shown, so none comes and goes with another's state. Outside a
+ * workspace there are no panes, and nothing is drawn.
  */
 export function WorkspacePaneToggles() {
   const doors = useContext(PaneDoors);
@@ -79,7 +85,12 @@ export function WorkspacePaneToggles() {
   if (!doors) return null;
   const { side, details, placement } = doors;
   return (
-    <>
+    <div
+      role="group"
+      aria-label={t("desktop.modelo.panes.label")}
+      data-pane-toggles=""
+      className="flex flex-none items-center gap-1"
+    >
       {/* The rail's control keeps the rail's own name; whether it is shown
           is its pressed state. */}
       <IconButton
@@ -90,38 +101,55 @@ export function WorkspacePaneToggles() {
         data-pane-toggle="side"
         onClick={side.toggle}
       >
-        <Icon name="splitRow" />
+        <Icon name="panelLeft" />
       </IconButton>
-      {details && (
-        <IconButton
-          label={t(
-            details.open
-              ? "desktop.modelo.details.hide"
-              : "desktop.modelo.details.show",
-          )}
-          size="sm"
-          aria-pressed={details.open}
-          aria-controls={details.open ? details.controls : undefined}
-          data-pane-toggle="details"
-          onClick={details.toggle}
-        >
-          <Icon name="splitColumn" />
-        </IconButton>
+      {details && placement && (
+        <DetailsToggles details={details} placement={placement} />
       )}
-      {/* Beside the form when pressed, under it when not; the icon shows
-          the arrangement a press gives. */}
-      {placement && (
-        <IconButton
-          label={t("desktop.modelo.details.beside")}
-          size="sm"
-          aria-pressed={placement.open}
-          aria-controls={placement.controls}
-          data-pane-toggle="placement"
-          onClick={placement.toggle}
-        >
-          <Icon name={placement.open ? "splitColumn" : "splitRow"} />
-        </IconButton>
-      )}
+    </div>
+  );
+}
+
+/** The details' control, with the icon of where they go, and beside it the
+ * control that sets where: beside the form when pressed, under it when not,
+ * whether or not the details are shown, so a choice made while they are
+ * hidden holds when they are shown. Its icon draws the line as it is. */
+function DetailsToggles({
+  details,
+  placement,
+}: {
+  details: PaneDoor;
+  placement: PaneDoor;
+}) {
+  const t = useStrings();
+  const beside = placement.open;
+  const controls = details.open ? details.controls : undefined;
+  return (
+    <>
+      <IconButton
+        label={t(
+          details.open
+            ? "desktop.modelo.details.hide"
+            : "desktop.modelo.details.show",
+        )}
+        size="sm"
+        aria-pressed={details.open}
+        aria-controls={controls}
+        data-pane-toggle="details"
+        onClick={details.toggle}
+      >
+        <Icon name={beside ? "panelRight" : "panelBottom"} />
+      </IconButton>
+      <IconButton
+        label={t("desktop.modelo.details.beside")}
+        size="sm"
+        aria-pressed={beside}
+        aria-controls={controls}
+        data-pane-toggle="placement"
+        onClick={placement.toggle}
+      >
+        <Icon name={beside ? "splitBeside" : "splitUnder"} />
+      </IconButton>
     </>
   );
 }
@@ -146,7 +174,9 @@ function useBoxSize() {
 
 /** What the form column holds against the details under it: its fixed bands
  * and its scroller's least height (`data-modelo-form`), and apart from them
- * the first lines of a band that gives way (`data-form-gives-way`). */
+ * the first lines of a band that gives way (`data-form-gives-way`). A band
+ * drawn as a resizable pane counts with its frame, so its line coming and
+ * going as its room changes moves nothing else. */
 type FormLeast = { fixed: number; band: number };
 
 function formLeast(element: HTMLElement, bandKeep: number): FormLeast {
@@ -157,7 +187,9 @@ function formLeast(element: HTMLElement, bandKeep: number): FormLeast {
   for (const giving of element.querySelectorAll<HTMLElement>(
     "[data-form-gives-way]",
   )) {
-    drawn += giving.offsetHeight;
+    const frame = giving.parentElement;
+    drawn += (frame?.dataset.slot === "resizable-pane" ? frame : giving)
+      .offsetHeight;
     band += Math.min(giving.scrollHeight, bandKeep);
   }
   const least = parseFloat(getComputedStyle(scroller).minHeight) || 0;
@@ -419,16 +451,23 @@ export function FormPanes({
             toggle: () => detailsPane.setOpen(!layout.detailsOpen),
             controls: detailsId,
           },
-    placement: layout.detailsOpen
-      ? {
-          open: beside,
-          toggle: () =>
-            detailsPane.setPlacement(
-              chosenPlacement(beside ? "bottom" : "side", layout.automatic),
-            ),
-          controls: detailsId,
-        }
-      : null,
+    placement:
+      details === null
+        ? null
+        : {
+            open: beside,
+            toggle: () => {
+              // Where the details go never shows or hides them: until the
+              // person chose, whether they are shown follows the arrangement,
+              // so it is held as drawn.
+              if (detailsPane.preference.open === null)
+                detailsPane.setOpen(layout.detailsOpen);
+              detailsPane.setPlacement(
+                chosenPlacement(beside ? "bottom" : "side", layout.automatic),
+              );
+            },
+            controls: detailsId,
+          },
   };
 
   // One grid with the panes always in the same places in the document, so
