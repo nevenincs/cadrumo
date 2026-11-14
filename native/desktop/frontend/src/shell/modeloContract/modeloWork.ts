@@ -589,6 +589,22 @@ export type ModeloFilingRecordSnapshot = {
 };
 
 /**
+ * What kind of caller-supplied statement a calculation head recorded.
+ */
+export type ModeloHeadStatementKind =
+  | "casilla_value"
+  | "binding_override"
+  | "absence_attestation"
+  | "value_attestation"
+  | "row_attestation"
+  | "income_family_entry"
+  | "cleared_casilla"
+  | "detail_rows"
+  | "m303_filing_evidence"
+  | "m210_selection"
+  | "borrador_snapshot";
+
+/**
  * Strict recorded advisory facts bound to one calculated revision.
  */
 export type ModeloLifecycleAdvisories = {
@@ -741,59 +757,24 @@ export type ModeloTaxationComparisonRequest = {
 };
 
 /**
- * The externally filed return an amendment corrects.
+ * One statement the replaced head recorded that the new calculation did not
+ * carry.
  *
- * An amendment is only meaningful against a specific filed baseline, so the
- * request names that record rather than a work unit: the baseline supplies the
- * full casilla map, and the overrides replace only what changed.
+ * `subject` names what the statement speaks of: the casilla id, the binding
+ * id, the income family token or the borrador snapshot id, and `None` for a
+ * statement about the whole declaration. `box` and `label` are the printed
+ * number and the label of the box the statement reaches, when it reaches one
+ * the form prints. `value` is the value the statement held, when it holds one.
+ * `words` says what the statement was, in the result's `words_language`.
  */
-export type ModeloWorkAmendBaseline = {
-  from_filing_record_id: string;
-};
-
-/**
- * One corrected casilla and the value that replaces it.
- *
- * The value crosses as an exact decimal STRING rather than a number. A public
- * operation schema must validate and serialize to the same shape, and a bare
- * Decimal does not: it accepts number-or-string and emits string. Carrying the
- * digits avoids that asymmetry and any float coercion on the way.
- */
-export type ModeloWorkAmendOverride = {
-  casilla_id: string;
-  value: string;
-};
-
-/**
- * The writer's complete local record and its amendment handoff facts.
- */
-export type ModeloWorkAmendPublicResultV2 = {
-  result_version: 2;
-  record: ModeloFilingRecordSnapshot;
-  source_filing_record_id: FilingRecordId;
-  amended_from_filing_record_id: FilingRecordId;
-  amendment_kind: FilingDeclarationKind;
-  corrected_casilla_count: number;
-  m303_rectificativa_motive: M303RectificativaMotive | null;
-  handoff_required: true;
-};
-
-/**
- * One amendment: which baseline, which corrections, and why.
- *
- * `reason` is required because an amendment is a declaration to the tax
- * authority that a previously filed figure was wrong; a correction with no
- * stated reason is not something the operator should be able to file.
- */
-export type ModeloWorkAmendRequest = {
-  baseline: ModeloWorkAmendBaseline;
-  amendment_kind: FilingDeclarationKind;
-  overrides: ModeloWorkAmendOverride[];
-  reason: string;
-  m303_rectificativa_motive?: M303RectificativaMotive | null;
-  detail_rows?: ModeloDetailRowWireV1[] | null;
-  binding_overrides?: ModeloCalculationOverride[];
-  actor: string;
+export type ModeloUnusedHeadStatement = {
+  kind: ModeloHeadStatementKind;
+  subject: string | null;
+  row_identity: string | null;
+  box: string | null;
+  label: string | null;
+  value: string | null;
+  words: string;
 };
 
 /**
@@ -830,10 +811,19 @@ export type ModeloWorkCalculatePublicResultV3 = {
  * Calculating stores a new revision and removes none. The earlier revision,
  * with every value it held, stays readable by its id; `operator_entries` says
  * whether the person's entries in it reached the new head.
+ *
+ * When the request carried its own inputs, `unused_statements` names every
+ * statement the earlier head recorded that the new calculation did not carry.
+ * `unused_statements_complete` is `False` when the earlier head did not record
+ * which of its values the person entered: the list then names only the
+ * statements it did record, and values the person typed may be missing from
+ * it. Both keep their defaults for any other carry.
  */
 export type ModeloWorkCalculateReplacedHead = {
   calculation_revision_id: string;
   operator_entries: ModeloOperatorEntriesCarry;
+  unused_statements: ModeloUnusedHeadStatement[];
+  unused_statements_complete: boolean;
 };
 
 /**
