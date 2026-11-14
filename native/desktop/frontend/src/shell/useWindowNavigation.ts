@@ -8,11 +8,12 @@ import {
 import type { LeaveGuard } from "../components/ledger/editing/LedgerEditing";
 import type { DockPane } from "./docking";
 import type { Host } from "./host";
-import type { Layout, Maximized } from "./layout";
+import type { Layout, LedgerSection, Maximized } from "./layout";
 import { NAVIGATION } from "./navigation/projection";
+import { lineage } from "./navigation/register";
 import { useNavigator, type NavigatorWindow } from "./navigation/useNavigator";
 import { useWindowCloseGuard } from "./navigation/useWindowCloseGuard";
-import { mountedNow } from "./navigation/windowViews";
+import { mountedNow, pageViewId, windowView } from "./navigation/windowViews";
 import type { SignInController } from "./signIn";
 import type { Translate } from "./strings";
 
@@ -165,6 +166,28 @@ export function useWindowNavigation({
     );
     return () => releases.forEach((release) => release());
   }, [nav.runtime]);
+  // A page the window's back or forward returns to, already let through
+  // the guard: applied as the navigator applies the element that opens it,
+  // and given the keyboard as it would be.
+  const showPagePlace = useCallback(
+    (page: Layout["page"], section: LedgerSection | null) => {
+      const id = pageViewId(
+        page,
+        section ?? layoutNow.current.ledgerView.section,
+      );
+      const entry = id === undefined ? undefined : windowView(id);
+      if (id === undefined || !entry) {
+        showPage(page);
+        return;
+      }
+      commands.current?.showInWindow(id, entry);
+      nav.runtime.focus.request(
+        lineage(NAVIGATION, id).map((element) => element.id),
+        performance.now(),
+      );
+    },
+    [layoutNow, showPage, nav.runtime],
+  );
   // The calendar was asked for: it takes focus once it is laid out.
   const wantsCalendar = useRef(false);
   // The documentation asked for by name: its pane is shown first.
@@ -186,6 +209,7 @@ export function useWindowNavigation({
     guardLeave,
     guarded,
     setPage,
+    showPagePlace,
     showDocs,
     closePage,
     calendarPage,
