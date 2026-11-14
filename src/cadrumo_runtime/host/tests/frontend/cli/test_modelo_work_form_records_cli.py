@@ -62,6 +62,13 @@ def _newest_renta_year(operation: PinnedAuthorityOperation) -> int:
     raise AssertionError("the support envelope admits no Modelo 100 year")
 
 
+def _activity_start() -> date:
+    """A start of activity before every year the support envelope admits, so the activity is under way in each."""
+    support = published_supported_filing_years()
+    assert support is not None
+    return date(min(support.years) - 1, 1, 1)
+
+
 @pytest.fixture
 def runtime_profile(tmp_path: Path) -> Iterator[NativeCliProfileFixture]:
     with native_cli_profile_scope(tmp_path) as profile:
@@ -75,7 +82,7 @@ def runtime_profile(tmp_path: Path) -> Iterator[NativeCliProfileFixture]:
                 "taxpayer_type.irpf_income_categories": "actividad_economica",
                 "irpf.estimation_regime": "directa_normal",
                 "activities.description": "economic activity",
-                "censo.activity_start_date": "2015-01-01",
+                "censo.activity_start_date": _activity_start().isoformat(),
                 "tax_residence.ccaa": "madrid",
                 "provenance.source": "manual_cli",
                 **{
