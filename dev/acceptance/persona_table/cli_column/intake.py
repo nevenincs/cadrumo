@@ -14,8 +14,9 @@ from decimal import Decimal, InvalidOperation
 from enum import StrEnum
 from pathlib import Path
 
-from ..frontend import NOT_REACHED, parse_result
-from ..rows import canonical_figures
+from ..coverage import APPLICABLE, CalendarObservation
+from ..frontend import NOT_REACHED, STAGE_OF, parse_result
+from ..rows import canonical_figures, not_owed_stage
 from .hygiene import Redactor
 
 SURFACE = "cli"
@@ -177,6 +178,51 @@ def calculate_stage(outcome: Outcome) -> tuple[StageResult, tuple[tuple[str, str
     if outcome.kind is Kind.OK:
         return StageResult(_PASSED), figures_of(outcome.result)
     return failed(outcome, "calculate"), ()
+
+
+def _calendar_rows(result: Mapping[str, object], name: str) -> list[Mapping[str, object]]:
+    rows = result.get(name)
+    return [row for row in rows if isinstance(row, Mapping)] if isinstance(rows, list) else []
+
+
+def _year_and_code(period: str) -> tuple[int | None, str]:
+    """The year and the registry code of a calendar period printed as ``<year> <code>``."""
+    head, _, code = period.rpartition(" ")
+    year = head.rsplit(" ", 1)[-1]
+    return (int(year) if year.isdigit() else None), code
+
+
+def calendar_observations(persona: str, result: Mapping[str, object]) -> list[CalendarObservation]:
+    """The returns the printed overview calendar projects: a window row as ``applicable``, a suppressed row by verdict.
+
+    A row whose period names no year cannot be keyed to a return and is left out, as the table's own calendar read
+    leaves a suppressed row of that kind out.
+    """
+    found: list[CalendarObservation] = []
+    for row in _calendar_rows(result, "entries"):
+        year, code = _year_and_code(str(row.get("period", "")))
+        if year is not None:
+            found.append(CalendarObservation(persona, str(row.get("modelo", "")), year, code, APPLICABLE))
+    for row in _calendar_rows(result, "suppressed_entries"):
+        year, code = _year_and_code(str(row.get("period", "")))
+        if year is not None:
+            verdict, reason = str(row.get("verdict", "")), str(row.get("reason", ""))
+            found.append(CalendarObservation(persona, str(row.get("modelo", "")), year, code, verdict, reason))
+    return found
+
+
+def not_owed_verify_stage(outcome: Outcome, scope: ReturnScope) -> StageResult:
+    """The verify stage of a return the table states not owed, read from the calendar the CLI printed.
+
+    The table's own reading decides: the return is ``not-owed`` only when the printed calendar suppresses it as not
+    applicable; a window, another verdict or no mention is ``incomplete`` and names what the calendar said.
+    """
+    if outcome.kind is not Kind.OK:
+        return failed(outcome, "overview")
+    observed = calendar_observations(scope.persona, outcome.result)
+    stage, reason = not_owed_stage(observed, (scope.modelo, scope.year, scope.period))
+    word = STAGE_OF[stage]
+    return StageResult(word if word is not None else "error", reason=reason)
 
 
 def blocking_findings(result: Mapping[str, object]) -> str:

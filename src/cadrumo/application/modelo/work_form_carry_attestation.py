@@ -18,7 +18,7 @@ from typing import Final, TypeIs
 
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.i18n.render import tr
-from ...domain.calculations.registry.binding_absence_attestation import AbsenceAttestationFamily
+from ...domain.calculations.registry.binding_absence_attestation import ROW_GRAIN_FAMILIES, AbsenceAttestationFamily
 from ...domain.calculations.registry.ids import BindingId
 from ..operator_actions.invariant_verdicts import internal_invariant_verdict
 from .edit_models import (
@@ -29,6 +29,7 @@ from .edit_models import (
 from .trabajo_income_findings import trabajo_recorded
 from .work_form_context import WorkFormContext
 from .work_form_models import ModeloFormCarryAttestation
+from .work_form_row_carry_attestation import OpenCarryRow, open_carry_rows
 
 _ACTION_LOCALE_KEYS: Final[Mapping[AbsenceAttestationFamily, str]] = MappingProxyType(
     {
@@ -43,6 +44,9 @@ _ACTION_LOCALE_KEYS: Final[Mapping[AbsenceAttestationFamily, str]] = MappingProx
         ),
         AbsenceAttestationFamily.RENTA_TRABAJO_INCOME_NOT_STATED: (
             "application.modelo.work_form.carry_attestation.renta_trabajo_income_not_stated.action"
+        ),
+        AbsenceAttestationFamily.RENTA_CAPITAL_INMOBILIARIO_GASTOS_PENDIENTES: (
+            "application.modelo.work_form.carry_attestation.renta_capital_inmobiliario_gastos_pendientes.action"
         ),
     }
 )
@@ -60,6 +64,9 @@ _STATEMENT_LOCALE_KEYS: Final[Mapping[AbsenceAttestationFamily, str]] = MappingP
         AbsenceAttestationFamily.RENTA_TRABAJO_INCOME_NOT_STATED: (
             "application.modelo.work_form.carry_attestation.renta_trabajo_income_not_stated.statement"
         ),
+        AbsenceAttestationFamily.RENTA_CAPITAL_INMOBILIARIO_GASTOS_PENDIENTES: (
+            "application.modelo.work_form.carry_attestation.renta_capital_inmobiliario_gastos_pendientes.statement"
+        ),
     }
 )
 _EFFECT_LOCALE_KEYS: Final[Mapping[AbsenceAttestationFamily, str]] = MappingProxyType(
@@ -76,18 +83,34 @@ _EFFECT_LOCALE_KEYS: Final[Mapping[AbsenceAttestationFamily, str]] = MappingProx
         AbsenceAttestationFamily.RENTA_TRABAJO_INCOME_NOT_STATED: (
             "application.modelo.work_form.carry_attestation.renta_trabajo_income_not_stated.effect"
         ),
+        AbsenceAttestationFamily.RENTA_CAPITAL_INMOBILIARIO_GASTOS_PENDIENTES: (
+            "application.modelo.work_form.carry_attestation.renta_capital_inmobiliario_gastos_pendientes.effect"
+        ),
     }
 )
+_ROW_LOCALE_KEYS: Final[Mapping[AbsenceAttestationFamily, str]] = MappingProxyType(
+    {
+        AbsenceAttestationFamily.RENTA_CAPITAL_INMOBILIARIO_GASTOS_PENDIENTES: (
+            "application.modelo.work_form.carry_attestation.renta_capital_inmobiliario_gastos_pendientes.row"
+        ),
+    }
+)
+"""How a statement of a family stated row by row names its row, by the row's number in its group."""
 
-# A family stated row by row is answered per row through the edit address, never by this form-wide action.
+# A family stated row by row is answered once per row, never by one form-wide action.
 _FORM_FAMILIES: Final = frozenset(family for family in AbsenceAttestationFamily if not family.row_grain)
 
 for _family_words in (_ACTION_LOCALE_KEYS, _STATEMENT_LOCALE_KEYS, _EFFECT_LOCALE_KEYS):
-    if frozenset(_family_words) != _FORM_FAMILIES:
+    if frozenset(_family_words) != frozenset(AbsenceAttestationFamily):
         raise InternalInvariantError(
             "every statement family the registry can declare needs its words",
             precondition_verdict=internal_invariant_verdict("work_form_wording.statement_family_worded"),
         )
+if frozenset(_ROW_LOCALE_KEYS) != ROW_GRAIN_FAMILIES:
+    raise InternalInvariantError(
+        "every statement family stated row by row needs the words of its row",
+        precondition_verdict=internal_invariant_verdict("work_form_wording.statement_family_worded"),
+    )
 
 
 def _attestable_open(
@@ -127,13 +150,14 @@ def form_carry_attestations(context: WorkFormContext) -> tuple[ModeloFormCarryAt
 
     A carry holds a value when the current calculation resolved one for it from
     any source, a stored earlier return included, or the filer entered or
-    stated one.
+    stated one. A family stated row by row takes one statement per row the
+    calculation holds with a carry still open, after the form-wide families.
     """
     if context.surface is None:
         return ()
     open_by_family = _open_carries_by_family(context, context.surface.values())
     locale = context.language.value
-    return tuple(
+    form_wide = tuple(
         ModeloFormCarryAttestation(
             family=family,
             binding_ids=tuple(sorted(open_by_family[family])),
@@ -143,6 +167,20 @@ def form_carry_attestations(context: WorkFormContext) -> tuple[ModeloFormCarryAt
         )
         for family in AbsenceAttestationFamily
         if family in open_by_family
+    )
+    return (*form_wide, *(_row_attestation(row, locale) for row in open_carry_rows(context)))
+
+
+def _row_attestation(row: OpenCarryRow, locale: str) -> ModeloFormCarryAttestation:
+    """The statement that one row's open carries hold nothing, naming the row by its number in its group."""
+    return ModeloFormCarryAttestation(
+        family=row.family,
+        binding_ids=row.binding_ids,
+        row_identity=row.row_identity,
+        row_words=tr(_ROW_LOCALE_KEYS[row.family], number=row.index, locale=locale),
+        action_words=tr(_ACTION_LOCALE_KEYS[row.family], locale=locale),
+        statement_words=tr(_STATEMENT_LOCALE_KEYS[row.family], locale=locale),
+        effect_words=tr(_EFFECT_LOCALE_KEYS[row.family], locale=locale),
     )
 
 

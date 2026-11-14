@@ -28,6 +28,7 @@ from .intake import (
     export_stage,
     failed,
     file_stage,
+    not_owed_verify_stage,
     return_line,
     verify_stage,
 )
@@ -118,11 +119,9 @@ class CaseSummary:
 def unsupported_reason(plan: RowPlan, doors: Mapping[StatementKind, Door] = DOORS) -> str | None:
     """Why the driver cannot run ``plan`` yet, or ``None`` when it can.
 
-    A return is run whatever its modelo; it is left out when the table states it not owed (the calendar read is not
-    driven yet) or makes a statement no command line can say the way the table does.
+    A return is run whatever its modelo and whether the table states it owed or not; it is left out when it makes a
+    statement no command line can say the way the table does.
     """
-    if not plan.owed:
-        return "stated not owed: needs the overview calendar read"
     return statement_gap(plan.statements, doors)
 
 
@@ -353,7 +352,21 @@ def _stated_return(case: Case, plan: RowPlan, work_unit_id: str, stated: _Stated
         return result
     if revision_id is None:
         return RowResult(StageResult("error", reason="calculate printed no calculation_revision_id"), figures=figures)
+    if not plan.owed:
+        return _not_owed(case, plan, result)
     return _lifecycle(case, plan, work_unit_id, revision_id, result)
+
+
+def _not_owed(case: Case, plan: RowPlan, calculated: RowResult) -> RowResult:
+    """The verify stage of a return stated not owed, read from the overview calendar printed after its calculation.
+
+    The calendar is read after the calculation, since an instalment's applicability can turn on the base stated on
+    its own work unit, over the years the table reads: the return's and the next. Nothing is verified, exported or
+    filed, so those stages stay unreached.
+    """
+    window = ["--from", f"{plan.year}-01-01", "--to", f"{plan.year + 1}-12-31", "--show-suppressed"]
+    read = _step(case, "overview", ["app", "overview", "calendar", *window])
+    return RowResult(calculated.calculate, not_owed_verify_stage(read, _scope(case, plan)), figures=calculated.figures)
 
 
 def _lifecycle(case: Case, plan: RowPlan, work_unit_id: str, revision_id: str, calculated: RowResult) -> RowResult:
