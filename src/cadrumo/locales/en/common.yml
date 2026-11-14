@@ -4575,6 +4575,7 @@ desktop:
       list: Withholdings
       show_box: Show box {box} on the form
     details:
+      beside: Details beside the form
       close: Close details
       hide: Hide details
       label: Details

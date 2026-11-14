@@ -4663,6 +4663,7 @@ desktop:
       list: Retencions
       show_box: Mostra la casella {box} al formulari
     details:
+      beside: Detalls al costat del formulari
       close: Tancar els detalls
       hide: Amagar els detalls
       label: Detalls
