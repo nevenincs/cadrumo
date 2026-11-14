@@ -791,28 +791,10 @@ _NOTE_GOVERNED_AMOUNTS_BY_REF: dict[str, tuple[NoteGovernedAmountDeclaration, ..
                 ),
             )
         ),
-        NoteGovernedAmountDeclaration(
-            source_ref="aeat-dr-200-2025",
-            source_sha256="92392cdb46d8e7c7f6e4e6477306570e15edfd64d5ea3e6d631e5cf847dd5509",
-            sheet="DP200014",
-            published_content="Nota 1",
-            note_cell="A73",
-            note_statement=(
-                "En caso de tipo de gravamen único se rellenarán los dos primeros dígitos con el tipo, y los dos "
-                "últimos con 00."
-            ),
-            integer_digits=2,
-            decimal_digits=2,
-            sign_policy=_UNSIGNED_SIGN_POLICY,
-            mandated_values=None,
-            evidence=(
-                "DP200014!G36 (Tipo de gravamen [00558], Num, position 438, length 4) holds only 'Nota 1'. "
-                "Nota 1 (A73, B74) fills a single rate as its two digits and 00, '25% se rellenará como 2500': "
-                "the percentage at two implied decimals, as the 2024 layout writes it. The double-rate form "
-                "(A75, '18/19% ... 1819') is no decimal quantity and is not claimed; the registry calculates "
-                "one rate. Read as an unscaled integer the slot wrote 25 % as 0025."
-            ),
-        ),
+        # DP200014!G36, tipo de gravamen [00558], points only to 'Nota 1', which fills the slot with a
+        # four-digit code ('25%' as 2500, a double rate '18/19%' as 1819). That code is no scaled
+        # percentage, and the 2025 edition's formula already stores it in the casilla, so the slot
+        # exports the stored value as an unscaled integer and carries no note reading here.
     ),
     **{source_ref: (_m490_territorio_comun(source_ref),) for source_ref in _M490_DESIGN_PINS},
     "aeat-dr-303-2023": (

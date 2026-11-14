@@ -99,7 +99,6 @@ _OTHER_SHA: Final = "58f731b0c72eff7fd23484000c74e73e0ac803a5167065176d78cac8712
 #: paired forms of modelo 200's DP200001!A121 fill it: fifteen digits and two
 #: decimals unsigned, or a sign position with fourteen and two.
 _WIDTH_17: Final = 17
-_RATE_WIDTH: Final = 4
 
 #: The cell content EXACTLY as the production parser hands it to the renderer.
 #: Read from the hash-pinned workbook rather than composed here. The wrapper is
@@ -639,16 +638,15 @@ class TestModelo200NoteGovernedAmounts:
     def test_the_live_catalogue_pins_every_pointer_run_to_the_read_design(self) -> None:
         declarations = note_governed_amounts_for("aeat-dr-200-2025")
 
-        assert {item.sheet for item in declarations} == {"DP200019", "DP200020B", "DP200014B", "DP200014"}
+        assert {item.sheet for item in declarations} == {"DP200019", "DP200020B", "DP200014B"}
         for declaration in declarations:
             assert declaration.source_sha256 == self._M200_2025_SHA
             assert declaration.note_statement is not None
             assert declaration.note_statement.strip() == declaration.note_statement
             assert declaration.note_statement
-            # Every amount run fills the same seventeen-byte slot, by one of the
-            # two paired forms DP200001!A121 states; the DP200014 tipo de
-            # gravamen is a four-position rate its Nota 1 writes as 2500.
-            assert declaration.wire_length == (_RATE_WIDTH if declaration.sheet == "DP200014" else _WIDTH_17)
+            # Every run of this design fills the same seventeen-byte slot, by
+            # one of the two paired forms DP200001!A121 states.
+            assert declaration.wire_length == _WIDTH_17
             assert declaration.decimal_digits == 2
 
     def test_the_unsigned_runs_spend_every_byte_on_digits(self) -> None:
@@ -668,8 +666,6 @@ class TestModelo200NoteGovernedAmounts:
         assert "grupos mercantiles" in (by_sheet["DP200019"].note_statement or "")
         assert by_sheet["DP200020B"].note_cell == "A106"
         assert "00000000009999999" in (by_sheet["DP200020B"].note_statement or "")
-        assert by_sheet["DP200014"].note_cell == "A73"
-        assert "los dos últimos con 00" in (by_sheet["DP200014"].note_statement or "")
 
     def test_the_pointer_run_renders_the_scale_its_design_states(self) -> None:
         derived = numeric_derivation(
