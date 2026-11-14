@@ -20,6 +20,7 @@ from functools import cache
 from pathlib import Path
 
 import pytest
+from pydantic import BaseModel
 
 from cadrumo.application.modelo.export_projection import ModeloExportPublicResultV3
 from cadrumo.application.modelo.operation_shared import (
@@ -59,11 +60,13 @@ from cadrumo.entrypoints.tests.persona_materialisation import (
     settle_operation,
     state_offered_statements,
 )
+from cadrumo.entrypoints.tests.persona_prior_values import PriorValueAttestationError, attest_return_prior_values
 from cadrumo.entrypoints.tests.persona_rental_carries import attest_pending_rental_carries
-from cadrumo.entrypoints.tests.persona_work_income_statements import states_for
+from cadrumo.entrypoints.tests.persona_work_income_statements import state_work_income_none, states_for
 from cadrumo.tests.personas import ExpectedValue, Persona, PersonaCatalogueError, persona_ids, read_persona
 
 from .calendar_sweep import calendar_observations
+from .cli_column.world_report import StatementKind
 from .counterparties import DESIGNS, counterparty_mismatches, is_compared
 from .export_check import export_layout, export_reason
 from .planner import (
@@ -322,7 +325,13 @@ def _calculate(
     return calculated
 
 
-def record_statements(materialised: MaterialisedPersona, plan: PlannedRow, prepared: PreparedReturn) -> None:
+def record_statements(
+    materialised: MaterialisedPersona,
+    plan: PlannedRow,
+    prepared: PreparedReturn,
+    *,
+    left: frozenset[StatementKind] = frozenset(),
+) -> None:
     """State what the persona's operator states on the prepared return, and stop before a plain calculation.
 
     These are the statements :func:`_calculate` makes around its calculations, through the same functions and
@@ -330,7 +339,8 @@ def record_statements(materialised: MaterialisedPersona, plan: PlannedRow, prepa
     statements (``state_offered_statements``) and a let property's pending carry
     (``attest_pending_rental_carries``). Each travels as a calculating edit, so the return holds a calculation
     once one was applied; :func:`holds_calculation` reads whether it does. A statement the work unit's form
-    does not offer yet is not made.
+    does not offer yet is not made. A kind named in ``left`` is not made either: an operator states it in another
+    surface.
 
     Raises:
         PersonaMaterialisationError: When an operation refuses a statement.
@@ -339,22 +349,64 @@ def record_statements(materialised: MaterialisedPersona, plan: PlannedRow, prepa
     work_unit_id = prepared.work_unit_id
     if world.work_inputs:
         enter_return_work_inputs(world, work_unit_id)
-    state_offered_statements(
-        world, modelo=plan.modelo, filing_year=plan.year, period=plan.period, work_unit_id=work_unit_id
-    )
+    if left:
+        _state_offered_not_left(world, plan, work_unit_id, left)
+    else:
+        state_offered_statements(
+            world, modelo=plan.modelo, filing_year=plan.year, period=plan.period, work_unit_id=work_unit_id
+        )
     if plan.modelo == "100":
         attest_pending_rental_carries(materialised.persona, world, work_unit_id, plan.year)
 
 
-def statements_needing_calculation(materialised: MaterialisedPersona, plan: PlannedRow) -> tuple[str, ...]:
+def _state_offered_not_left(
+    world: PersonaWorld, plan: PlannedRow, work_unit_id: str, left: frozenset[StatementKind]
+) -> None:
+    """What :func:`state_offered_statements` states, less the kinds in ``left``, through the same two statements."""
+
+    def settle(definition_id: str, payload: BaseModel, *, subject: str | None = None) -> BaseModel | None:
+        return settle_operation(world, definition_id, payload, subject=subject)
+
+    try:
+        if StatementKind.PRIOR_VALUE not in left:
+            attest_return_prior_values(
+                world.attested_prior_values,
+                envelope=world.envelope,
+                profile_id=world.profile_id,
+                work_unit_id=work_unit_id,
+                modelo=plan.modelo,
+                filing_year=plan.year,
+                period=plan.period,
+                settle=settle,
+            )
+        if StatementKind.WORK_INCOME_NONE not in left:
+            state_work_income_none(
+                world.work_income_none_statements,
+                envelope=world.envelope,
+                profile_id=world.profile_id,
+                modelo=plan.modelo,
+                filing_year=plan.year,
+                work_unit_id=work_unit_id,
+                settle=settle,
+            )
+    except PriorValueAttestationError as error:
+        raise PersonaMaterialisationError(str(error)) from error
+
+
+def statements_needing_calculation(
+    materialised: MaterialisedPersona, plan: PlannedRow, *, left: frozenset[StatementKind] = frozenset()
+) -> tuple[str, ...]:
     """The kinds of statement the persona makes for the return that its form offers only on a calculated work unit.
 
     A Modelo 100 work-income statement is offered with the calculation's findings, and a let property's carry on
     the row the calculation emits; :func:`record_statements` makes neither on a work unit holding no calculation.
+    A kind named in ``left`` is not the caller's to state.
     """
     world = materialised.world
     kinds: list[str] = []
-    if states_for(world.work_income_none_statements, world.envelope, modelo=plan.modelo, filing_year=plan.year):
+    if StatementKind.WORK_INCOME_NONE not in left and states_for(
+        world.work_income_none_statements, world.envelope, modelo=plan.modelo, filing_year=plan.year
+    ):
         kinds.append("work_income_none")
     if plan.modelo == "100" and any(
         rental.pendiente_intereses_reparacion is not None for rental in materialised.persona.rental_properties

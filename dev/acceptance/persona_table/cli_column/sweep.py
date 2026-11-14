@@ -4,6 +4,12 @@
         --tree <sha> --snapshot <dir>/snap-<sha> --authority <dir>/authority-<sha> \
         --client-root <checkout> --out <frontend dir>/cli-<sha>.jsonl
 
+``--keys-file <json>`` drives an exact list of returns (see ``keys``) instead of every row of the persona: only the
+returns it names are written, and the returns before the last of them in the planner's chain order run so the chain
+is filed first. ``--calculate as-run`` (the default) sends ``calculate`` after the statements of a return, as a person
+does; ``--calculate read-back`` reads the statement's own calculation instead, as a diagnosis, and the row then
+carries a workaround.
+
 The horizons and the returns to drive come from the table's planner: every horizon of the registry envelope at which
 the persona has a row the table writes, and those rows. The tree venv is built once and every case reuses it. Cases
 run one after another, each on a fresh disposable root that is removed when its horizon is done. A horizon is skipped
@@ -40,9 +46,10 @@ from .case import (
     run_redactor,
     unfiltered_plan,
 )
-from .driver import CaseSummary
+from .driver import CalculateMode, CaseSummary
 from .hygiene import Redactor, SecretLeakError
 from .intake import SURFACE, LineWriter
+from .keys import KeysFileError, RerunKey, allowed_at, personas_of, read_keys
 from .runtime import RuntimeSetupError, build_tree_venv, create_e2e_root, e2e_parent
 from .world_report import ReturnKey
 
@@ -84,6 +91,9 @@ class SweepSettings:
     periods: tuple[str, ...] = ()
     root_parent: Path | None = None
     """The folder the disposable roots are made in; the account's temporary folder when unset."""
+    keys: tuple[RerunKey, ...] | None = None
+    """The exact returns to drive, when a keys file names them; ``None`` drives every row of the personas."""
+    calculate: CalculateMode = CalculateMode.AS_RUN
 
 
 type Driver = Callable[[CaseSpec, Path, LineWriter, Redactor, CasePlace, frozenset[ReturnKey]], CaseSummary]
@@ -115,13 +125,18 @@ def _chosen_horizons(horizons: Sequence[int]) -> list[int]:
 
 
 def _wanted(
-    emitted: Iterable[tuple[str, str, int, str]], modelos: Sequence[str], periods: Sequence[str]
+    emitted: Iterable[tuple[str, str, int, str]],
+    modelos: Sequence[str],
+    periods: Sequence[str],
+    allowed: frozenset[ReturnKey] | None = None,
 ) -> frozenset[ReturnKey]:
-    """The returns among the planner's emitted rows that pass the ``modelos`` and ``periods`` filters."""
+    """The returns among the planner's emitted rows that pass the ``modelos``, ``periods`` and ``allowed`` filters."""
     return frozenset(
         (modelo, year, period)
         for _persona, modelo, year, period in emitted
-        if (not modelos or modelo in modelos) and (not periods or period in periods)
+        if (not modelos or modelo in modelos)
+        and (not periods or period in periods)
+        and (allowed is None or (modelo, year, period) in allowed)
     )
 
 
@@ -131,15 +146,26 @@ def horizon_plans(
     horizons: Sequence[int] = (),
     modelos: Sequence[str] = (),
     periods: Sequence[str] = (),
+    keys: Sequence[RerunKey] | None = None,
 ) -> list[HorizonPlan]:
     """The cases to run: per persona, each replay horizon, newest first, at which the planner emits a wanted row.
 
     ``horizons`` narrows the registry envelope's horizons and is refused when it names one outside it; ``modelos``
-    and ``periods`` narrow the rows. A persona and horizon without a wanted row is not a case.
+    and ``periods`` narrow the rows; ``keys``, when given, keeps only the rows it names (a key with a horizon only at
+    that horizon). A persona and horizon without a wanted row is not a case.
     """
     chosen = _chosen_horizons(horizons)
     candidates = (
-        HorizonPlan(persona, horizon, _wanted(unfiltered_plan(persona, horizon)[1], modelos, periods))
+        HorizonPlan(
+            persona,
+            horizon,
+            _wanted(
+                unfiltered_plan(persona, horizon)[1],
+                modelos,
+                periods,
+                None if keys is None else allowed_at(keys, persona, horizon),
+            ),
+        )
         for persona in personas
         for horizon in chosen
     )
@@ -249,8 +275,10 @@ def _drive_horizon(
         plan.horizon,
         settings.snapshot,
         settings.authority,
-        modelos=settings.modelos,
+        modelos=settings.modelos if settings.keys is None else tuple(sorted({key[0] for key in plan.keys})),
         periods=settings.periods,
+        keys=None if settings.keys is None else plan.keys,
+        calculate=settings.calculate,
     )
     summary = CaseSummary()
     try:
@@ -291,13 +319,31 @@ def _parser() -> argparse.ArgumentParser:
         "--persona", action="append", default=[], help="a catalogue persona id (repeatable; default all)"
     )
     parser.add_argument("--horizon", action="append", default=[], type=int, help="a horizon (repeatable; default all)")
+    parser.add_argument(
+        "--keys-file",
+        type=Path,
+        default=None,
+        help="a JSON list of {persona, modelo, year, period[, horizon]} to drive",
+    )
     add_shared_arguments(parser)
     return parser
 
 
+def _keys_of(args: argparse.Namespace, parser: argparse.ArgumentParser) -> tuple[RerunKey, ...] | None:
+    """The keys the ``--keys-file`` holds, or ``None`` without one; a file the schema refuses is a usage error."""
+    if args.keys_file is None:
+        return None
+    try:
+        return read_keys(args.keys_file)
+    except (KeysFileError, OSError) as error:
+        return parser.error(str(error))
+
+
 def _settings(args: argparse.Namespace, parser: argparse.ArgumentParser) -> SweepSettings:
     known = persona_ids()
-    unknown = [persona for persona in args.persona if persona not in known]
+    keys = _keys_of(args, parser)
+    chosen = tuple(args.persona) or (tuple(known) if keys is None else personas_of(keys))
+    unknown = [persona for persona in chosen if persona not in known]
     if unknown:
         parser.error(f"unknown persona {unknown[0]!r}")
     return SweepSettings(
@@ -307,10 +353,12 @@ def _settings(args: argparse.Namespace, parser: argparse.ArgumentParser) -> Swee
         args.out.resolve(),
         args.client_root,
         args.keep_snapshot,
-        tuple(args.persona) or tuple(known),
+        chosen,
         horizons=tuple(args.horizon),
         modelos=tuple(args.modelo),
         periods=tuple(args.period),
+        keys=keys,
+        calculate=args.calculate,
     )
 
 
@@ -325,10 +373,15 @@ def _announce(result: SweepResult, redactor: Redactor) -> None:
         sys.stderr.write(redactor.text(line) + "\n")
 
 
+def parse_settings(argv: Sequence[str] | None = None) -> SweepSettings:
+    """The settings the command line ``argv`` asks for; a usage error exits."""
+    parser = _parser()
+    return _settings(parser.parse_args(argv), parser)
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     """Parse the command line and sweep; the exit code is :data:`OK` when every driven case ran to its end."""
-    parser = _parser()
-    settings = _settings(parser.parse_args(argv), parser)
+    settings = parse_settings(argv)
     redactor = run_redactor()
     build_log = settings.out.parent / "logs" / f"cli-{settings.tree}" / "build.log"
 
@@ -339,7 +392,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     status = FAILED
     try:
         plans = horizon_plans(
-            settings.personas, horizons=settings.horizons, modelos=settings.modelos, periods=settings.periods
+            settings.personas,
+            horizons=settings.horizons,
+            modelos=settings.modelos,
+            periods=settings.periods,
+            keys=settings.keys,
         )
         venv = TreeVenv(settings.snapshot, build)
         result = run_sweep(settings, plans, venv, (LineWriter(settings.out, redactor), redactor))

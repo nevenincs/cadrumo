@@ -33,6 +33,7 @@ from ...domain.calculations.registry.binding_terminal_origin import (
 )
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema import BindingDefinition, ModeloRevision
+from ...domain.modelos.calculation_revision_sources import BOUND_INPUT_SOURCE_REF_PREFIX
 from .source_mesh import (
     CalculationSourceDiagnostic,
     CalculationSourceProvenance,
@@ -65,11 +66,15 @@ def _primaries_by_source(
     is the only attribution a resolver records: one fold over the ledger stands
     behind every ledger binding of that family on the revision. The audit reads
     it the same way rather than inventing a per-binding attribution the data
-    does not carry.
+    does not carry. A bound-input node names a casilla the resolver supplied
+    directly, apart from every binding, so it stands behind no binding's value
+    and is left out.
     """
     grouped: dict[BindingSourceKind, list[CalculationSourceProvenance]] = defaultdict(list)
     for row in provenance:
-        if row.lineage_role is CalculationSourceLineageRole.PRIMARY:
+        if row.lineage_role is CalculationSourceLineageRole.PRIMARY and not row.source_ref.startswith(
+            BOUND_INPUT_SOURCE_REF_PREFIX
+        ):
             grouped[row.resolved_binding_source].append(row)
     return {source: tuple(rows) for source, rows in grouped.items()}
 
