@@ -121,6 +121,7 @@ from ..user_profile.modelo_scoped_conditions import (
     field_declaring_selector,
     modelo_scoped_requirement,
 )
+from ..user_profile.projections import record_to_path_values
 from .action_errors import (
     ModeloChargeAccountMissingError,
     ModeloDomiciliationPastCutoffError,
@@ -148,6 +149,7 @@ from .incn_periodo_anterior import IncnPeriodoAnteriorStores, incn_periodo_anter
 from .lifecycle_view_refusal_doors import profile_facts_verdict, unit_filing_evidence_verdict
 from .m200_page_002_profile import modelo_200_profile_facts
 from .m303_regimen_simplificado_scope import m303_profile_readiness_failure
+from .m840_anexo_profile import modelo_840_profile_facts
 from .profile_export_binding import (
     load_export_profile_record,
     resolve_declaration_contact,
@@ -927,6 +929,14 @@ def resolve_export_model_profile(
             workflow_profile=workflow_profile,
             work_unit=work_unit,
             operation=operation,
+        ), None
+    if modelo == form_for_role("iae.census_declaration"):
+        record = load_export_profile_record(bucket_id=work_unit.bucket_id, operation=operation, profile_record=None)
+        return modelo_840_profile_facts(
+            work_unit=work_unit,
+            path_values=record_to_path_values(
+                record if isinstance(record, UserProfileRecord) else None, as_of=work_unit.period.end_date
+            ),
         ), None
     return GeneralFilingProfileFacts(), None
 

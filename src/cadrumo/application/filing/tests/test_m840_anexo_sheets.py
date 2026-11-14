@@ -43,14 +43,15 @@ from ....domain.calculations.registry.schema_references import RegistrySnapshotR
 from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.filing.schema import ModeloDraft, registry_schema_version
 from ....domain.submission.models import ModeloDraftStatus
+from ..m840_projection import build_m840_filing_projection_plan
 from ..producer_snapshot import (
     FilingElectionFacts,
     FilingProducerSnapshot,
-    GeneralFilingProfileFacts,
     PresenterIdentity,
     TaxpayerIdentityFacts,
     build_filing_producer_snapshot,
 )
+from ..producer_snapshot_m840 import Modelo840LocalRow, Modelo840ProfileFacts
 from ..projection import FilingRecordRenderContext
 from ..record_field_renderer import continuation_page_marker, format_field, projection_field_value
 from ..record_types import ProjectionAddress
@@ -153,7 +154,7 @@ def test_every_slot_and_partial_sum_sits_where_the_design_prints_it(exercise: in
     assert shipped == design
 
 
-def _producer_snapshot() -> FilingProducerSnapshot:
+def _producer_snapshot(rows: tuple[Modelo840LocalRow, ...] = ()) -> FilingProducerSnapshot:
     return build_filing_producer_snapshot(
         modelo=Modelo(_MODELO),
         taxpayer_tax_id="12345678Z",
@@ -161,7 +162,7 @@ def _producer_snapshot() -> FilingProducerSnapshot:
             legal_name=None, given_name="Ana", surnames="Prueba", full_name="Ana Prueba"
         ),
         presenter=PresenterIdentity(tax_id="00000000T", full_name="Gestoría Prueba"),
-        model_profile=GeneralFilingProfileFacts(),
+        model_profile=Modelo840ProfileFacts(local_rows=rows),
         elections=FilingElectionFacts(
             result_disposition=ResultDisposition.NEGATIVA,
             payment=PaymentElection.INGRESO,
@@ -266,3 +267,53 @@ def test_a_second_sheet_is_marked_c_and_carries_only_its_own_premises(exercise: 
     assert parse_field_value(total_field, wire(2, surface)) == 120
     (partial_field,) = (field for field in record.fields if field.projection_ref == partial)
     assert parse_field_value(partial_field, wire(2, partial)) == 120
+
+
+def _premises(count: int) -> tuple[Modelo840LocalRow, ...]:
+    return tuple(
+        Modelo840LocalRow(nombre_via=f"CALLE {index}", total=index * 10, computable=None if index % 2 else index)
+        for index in range(1, count + 1)
+    )
+
+
+@pytest.mark.parametrize(("premises", "sheets"), [(0, 0), (1, 1), (9, 1), (10, 2), (19, 3)])
+def test_the_premises_fill_as_many_sheets_as_they_need(exercise: int, premises: int, sheets: int) -> None:
+    snapshot, layout, record = _snapshot(exercise)
+    rows = _premises(premises)
+
+    plan = build_m840_filing_projection_plan(
+        registry_snapshot=snapshot, layout=layout, producer_snapshot=_producer_snapshot(rows)
+    )
+
+    assert [context.occurrence for context in plan.contexts] == list(range(1, sheets + 1))
+    assert all(context.record.id == record.id for context in plan.contexts)
+    by_address = {(value.occurrence, value.projection_ref): value.value for value in plan.values}
+    for index, row in enumerate(rows):
+        occurrence, slot = divmod(index, 9)
+        assert by_address[(occurrence + 1, _local(slot + 1, M840LocalField.NOMBRE_VIA))] == row.nombre_via
+        assert by_address[(occurrence + 1, _local(slot + 1, M840LocalField.TOTAL))] == Decimal(row.total or 0)
+    if sheets:
+        last = rows[(sheets - 1) * 9 :]
+        assert by_address[(sheets, _local(9, M840LocalField.NOMBRE_VIA))] == (
+            rows[-1].nombre_via if len(last) == 9 else None
+        )
+
+
+def test_each_sheet_sums_only_its_own_stated_surfaces(exercise: int) -> None:
+    snapshot, layout, _record = _snapshot(exercise)
+    rows = _premises(10)
+
+    plan = build_m840_filing_projection_plan(
+        registry_snapshot=snapshot, layout=layout, producer_snapshot=_producer_snapshot(rows)
+    )
+
+    sums = {
+        (value.occurrence, value.projection_ref.field): value.value
+        for value in plan.values
+        if isinstance(value.projection_ref, M840AnexoHojaProjectionRef)
+    }
+    assert sums[(1, M840AnexoHojaField.SUMA_PARCIAL_TOTAL)] == Decimal(sum(index * 10 for index in range(1, 10)))
+    assert sums[(2, M840AnexoHojaField.SUMA_PARCIAL_TOTAL)] == Decimal(100)
+    assert sums[(1, M840AnexoHojaField.SUMA_PARCIAL_COMPUTABLE)] == Decimal(2 + 4 + 6 + 8)
+    assert sums[(2, M840AnexoHojaField.SUMA_PARCIAL_COMPUTABLE)] == Decimal(10)
+    assert sums[(1, M840AnexoHojaField.SUMA_PARCIAL_RECTIFICADA)] is None
