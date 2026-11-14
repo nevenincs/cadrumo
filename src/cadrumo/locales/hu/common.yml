@@ -4636,6 +4636,7 @@ desktop:
       list: Levonások
       show_box: A(z) {box} rovat megjelenítése az űrlapon
     details:
+      beside: Részletek a nyomtatvány mellett
       close: Részletek bezárása
       hide: Részletek elrejtése
       label: Részletek

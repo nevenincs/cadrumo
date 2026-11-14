@@ -10,8 +10,11 @@ import {
 } from "react";
 import { Icon } from "@/components/ui/icon";
 import { IconButton } from "@/components/ui/icon-button";
-import { ResizablePane } from "@/components/ui/resizable-pane";
-import type { PanePreferenceControl } from "../../../shell/panePreference";
+import { fittedPaneSize, ResizablePane } from "@/components/ui/resizable-pane";
+import type {
+  PanePlacement,
+  PanePreferenceControl,
+} from "../../../shell/panePreference";
 import { useStrings } from "../../../shell/strings";
 
 /** The panes around a declaration's form whose presentation the viewer
@@ -27,20 +30,30 @@ export const WORKSPACE_PANE_IDS = {
   details: "modelo.workspace.details",
 } as const;
 
-// Widths in rem at which the rail opens by default and the details move
-// beside the form rather than under it.
+// Width in rem at which the rail opens by default.
 const RAIL_ROOM_REM = 56;
+// Width in rem from which, until the person chooses, the details are drawn
+// beside the form rather than under it. It only picks the default: the
+// person's choice of arrangement always wins over it.
 const DETAILS_BESIDE_REM = 72;
 // Each pane's default, least and most in rem, and the most of the form's
 // area it takes, so the form keeps the rest at any window size.
-const RAIL = { size: 15, min: 11, max: 28, share: 0.4 };
-const DETAILS_SIDE = { size: 22, min: 16, max: 40, share: 0.45 };
+const RAIL = { size: 15, min: 10, max: 28, share: 0.4 };
+const DETAILS_SIDE = { size: 22, min: 8, max: 40, share: 0.45 };
 // Under the form the details open at two fifths of the area and give way to
 // the form's least room on a short window.
 const DETAILS_BOTTOM = { share: 0.4, min: 6, max: 48, maxShare: 0.6 };
-// The least the details under the form are drawn at however short the
-// window, in rem, so they stay on screen and keep what they read.
-const DETAILS_BOTTOM_FLOOR = 2;
+// The room under the form kept for the details however short the window,
+// in rem: more than their least, so their line always has room to move.
+// Where the window cannot hold it beside the form's least room, the
+// workspace scrolls as a whole rather than clipping either.
+const DETAILS_BOTTOM_ROOM = 10;
+// The least width in rem the form keeps beside the details, so a box's
+// label stays readable once its value goes under it. Where the window
+// cannot hold it beside the details' least, the details give way to it.
+const FORM_BESIDE_LEAST = 15;
+// The two separators' hairlines, in CSS pixels.
+const HANDLES = 2;
 // What a band that gives way keeps of itself before the details give way
 // to it, in rem: its first lines stay readable and its controls reachable.
 const BAND_KEEP_REM = 6;
@@ -52,6 +65,8 @@ type PaneDoor = { open: boolean; toggle(): void; controls: string };
 const PaneDoors = createContext<{
   side: PaneDoor;
   details: PaneDoor | null;
+  /** Whether the details are beside the form; null while they are hidden. */
+  placement: PaneDoor | null;
 } | null>(null);
 
 /**
@@ -62,7 +77,7 @@ export function WorkspacePaneToggles() {
   const doors = useContext(PaneDoors);
   const t = useStrings();
   if (!doors) return null;
-  const { side, details } = doors;
+  const { side, details, placement } = doors;
   return (
     <>
       {/* The rail's control keeps the rail's own name; whether it is shown
@@ -91,6 +106,20 @@ export function WorkspacePaneToggles() {
           onClick={details.toggle}
         >
           <Icon name="splitColumn" />
+        </IconButton>
+      )}
+      {/* Beside the form when pressed, under it when not; the icon shows
+          the arrangement a press gives. */}
+      {placement && (
+        <IconButton
+          label={t("desktop.modelo.details.beside")}
+          size="sm"
+          aria-pressed={placement.open}
+          aria-controls={placement.controls}
+          data-pane-toggle="placement"
+          onClick={placement.toggle}
+        >
+          <Icon name={placement.open ? "splitColumn" : "splitRow"} />
         </IconButton>
       )}
     </>
@@ -179,13 +208,175 @@ function useRoomAtOpening(roomy: boolean | null): boolean | null {
   return kept ?? roomy;
 }
 
+type Bounds = { min: number; max: number; maxShare: number; keep?: number };
+
+/** Where the details go for whoever has not chosen: beside the form on a
+ * wide area, under it otherwise. */
+function automaticPlacement(width: number, rem: number): PanePlacement {
+  return width >= DETAILS_BESIDE_REM * rem ? "side" : "bottom";
+}
+
+/** What is kept when the person asks for `next`: choosing the arrangement
+ * the area would pick anyway hands the choice back to the area. */
+function chosenPlacement(
+  next: PanePlacement,
+  automatic: PanePlacement,
+): PanePlacement | null {
+  return next === automatic ? null : next;
+}
+
+/** The rail's bounds. Beside the details it leaves them their least and the
+ * form its least, and takes half of what is left over, so both lines keep
+ * room to move on a narrow area. */
+function railBounds(rem: number, width: number, beside: boolean): Bounds {
+  const bounds = {
+    min: RAIL.min * rem,
+    max: RAIL.max * rem,
+    maxShare: RAIL.share,
+  };
+  if (!beside) return bounds;
+  const others = (DETAILS_SIDE.min + FORM_BESIDE_LEAST) * rem + HANDLES;
+  const spare = Math.max(0, width - bounds.min - others);
+  return { ...bounds, keep: others + spare / 2 };
+}
+
+/** The details' bounds and default in `placement`. Beside the form they
+ * leave the rail as drawn and the form its least width; under it, the form
+ * keeps `keep`. Where an area cannot hold both, the form's least wins and
+ * the details are drawn smaller than their own least, never over the form. */
+function detailsBounds(
+  placement: PanePlacement,
+  rem: number,
+  area: { height: number; rail: number; keep: number },
+): Bounds & { size: number } {
+  if (placement === "side")
+    return {
+      size: DETAILS_SIDE.size * rem,
+      min: DETAILS_SIDE.min * rem,
+      max: DETAILS_SIDE.max * rem,
+      maxShare: DETAILS_SIDE.share,
+      keep: area.rail + FORM_BESIDE_LEAST * rem + HANDLES,
+    };
+  return {
+    size: area.height * DETAILS_BOTTOM.share,
+    min: DETAILS_BOTTOM.min * rem,
+    max: DETAILS_BOTTOM.max * rem,
+    maxShare: DETAILS_BOTTOM.maxShare,
+    keep: area.keep,
+  };
+}
+
+/** The rail's width as drawn in an area `width` wide, or 0 while hidden. */
+function railDrawn(
+  side: PanePreferenceControl,
+  bounds: Bounds,
+  open: boolean,
+  rem: number,
+  width: number,
+) {
+  return open
+    ? fittedPaneSize(side.preference.side ?? RAIL.size * rem, bounds, width)
+    : 0;
+}
+
+/** Whether the details under the form get their least when the area is
+ * first measured; null until it is. */
+function roomyUnder(
+  least: FormLeast,
+  room: { height: number } | null,
+  rem: number,
+): boolean | null {
+  if (least.fixed <= 0 || room === null) return null;
+  return room.height - least.fixed - least.band >= DETAILS_BOTTOM.min * rem;
+}
+
+/** What the form keeps above the details under it: its fixed bands and
+ * least height, then as much of a band that gives way as leaves the
+ * details their kept room. */
+function keptAbove(least: FormLeast, height: number, kept: number): number {
+  return (
+    least.fixed + Math.min(least.band, Math.max(0, height - least.fixed - kept))
+  );
+}
+
+/** Whether the rail is shown and where the details go: as the person chose,
+ * or as the area's width suggests. */
+function chosenOrAutomatic(panes: WorkspacePanes, width: number, rem: number) {
+  const automatic = automaticPlacement(width, rem);
+  return {
+    sideOpen: panes.side.preference.open ?? width >= RAIL_ROOM_REM * rem,
+    automatic,
+    placement: panes.details.preference.placement ?? automatic,
+  };
+}
+
+/** How the form's area is laid out: whether each pane is shown, where the
+ * details go and what bounds each pane keeps. */
+function useArrangement(
+  panes: WorkspacePanes,
+  room: { width: number; height: number } | null,
+  least: FormLeast,
+  hasDetails: boolean,
+) {
+  const rem = remPx();
+  const { width, height } = room ?? {
+    width: window.innerWidth,
+    height: window.innerHeight,
+  };
+  const { side, details } = panes;
+  const { sideOpen, automatic, placement } = chosenOrAutomatic(
+    panes,
+    width,
+    rem,
+  );
+  const beside = placement === "side";
+  // Under the form, the form's fixed bands and its scroller's least height
+  // come first, then the room kept for the details, then the first lines of
+  // a band that gives way, then the rest of the details. Too short for the
+  // form and that room, the area keeps them and the workspace scrolls as a
+  // whole. Opened where the details would get less than their least, they
+  // start hidden; a window made shorter later keeps them shown.
+  const kept = DETAILS_BOTTOM_ROOM * rem;
+  const roomy = useRoomAtOpening(roomyUnder(least, room, rem));
+  const detailsOpen =
+    hasDetails && (details.preference.open ?? (beside || roomy === true));
+  const rail = railBounds(rem, width, detailsOpen && beside);
+  const under = detailsOpen && !beside ? kept : 0;
+  return {
+    rem,
+    sideOpen,
+    detailsOpen,
+    placement,
+    automatic,
+    rail,
+    details: detailsBounds(placement, rem, {
+      height,
+      rail: railDrawn(side, rail, sideOpen, rem, width),
+      keep: keptAbove(least, height, kept),
+    }),
+    areaLeast: least.fixed > 0 ? least.fixed + under : 0,
+  };
+}
+
 /**
  * The form view's area: the rail at its start, the form, the details beside
- * it on a wide area or under it on a narrow one, and the staged-edit bar
- * under the form. Each pane is shown or hidden from the form's toolbar and
- * resized by its separator; both are the viewer's presentation, kept by the
- * caller, never a fact about the declaration. Under the form the details
- * give way first: the form keeps its bands and its scroller's least height.
+ * it or under it, and the staged-edit bar under the form. Each pane is shown
+ * or hidden from the form's toolbar and resized by its separator, in either
+ * arrangement of the details.
+ *
+ * Where the details go is the person's: the toolbar's arrangement control
+ * puts them beside the form (a vertical line) or under it (a horizontal
+ * line). Whoever has not chosen gets the arrangement the area's width
+ * suggests; choosing the one the area would pick anyway hands the choice
+ * back to the area, so a second press returns to the automatic arrangement.
+ * Each arrangement keeps its own size. All of this is the viewer's
+ * presentation, kept by the caller, never a fact about the declaration.
+ *
+ * The form's least room wins over any arrangement: under the form, the form
+ * keeps its bands and its scroller's least height and the details their
+ * kept room, and a short window scrolls the workspace as a whole; beside it,
+ * the form keeps its least width and the details give way to it. Nothing is
+ * clipped.
  */
 export function FormPanes({
   panes,
@@ -211,63 +402,51 @@ export function FormPanes({
   const least = useFormLeast(column, below);
   const railId = useId();
   const detailsId = useId();
-  const rem = remPx();
-  const width = room?.width ?? window.innerWidth;
-  const height = room?.height ?? window.innerHeight;
+  const layout = useArrangement(panes, room, least, details !== null);
   const { side, details: detailsPane } = panes;
-  const sideOpen = side.preference.open ?? width >= RAIL_ROOM_REM * rem;
-  const beside = width >= DETAILS_BESIDE_REM * rem;
-  // Under the form, the form's fixed bands and its scroller's least height
-  // come first, then a sliver of the details, then the first lines of a
-  // band that gives way, then the rest of the details. Too short for the
-  // form and that sliver, the area keeps them and the workspace scrolls as
-  // a whole. Opened where that leaves the details less than their least,
-  // they start hidden; a window made shorter later keeps them shown.
-  const floor = DETAILS_BOTTOM_FLOOR * rem;
-  const roomy = useRoomAtOpening(
-    least.fixed > 0 && room !== null
-      ? height - least.fixed - least.band >= DETAILS_BOTTOM.min * rem
-      : null,
-  );
-  const detailsOpen =
-    details !== null &&
-    (detailsPane.preference.open ?? (beside || roomy === true));
-  const under = detailsOpen && !beside;
-  const keep =
-    least.fixed +
-    Math.min(least.band, Math.max(0, height - least.fixed - floor));
-  const areaLeast = least.fixed > 0 ? least.fixed + (under ? floor : 0) : 0;
+  const beside = layout.placement === "side";
   const doors = {
     side: {
-      open: sideOpen,
-      toggle: () => side.setOpen(!sideOpen),
+      open: layout.sideOpen,
+      toggle: () => side.setOpen(!layout.sideOpen),
       controls: railId,
     },
     details:
       details === null
         ? null
         : {
-            open: detailsOpen,
-            toggle: () => detailsPane.setOpen(!detailsOpen),
+            open: layout.detailsOpen,
+            toggle: () => detailsPane.setOpen(!layout.detailsOpen),
             controls: detailsId,
           },
+    placement: layout.detailsOpen
+      ? {
+          open: beside,
+          toggle: () =>
+            detailsPane.setPlacement(
+              chosenPlacement(beside ? "bottom" : "side", layout.automatic),
+            ),
+          controls: detailsId,
+        }
+      : null,
   };
 
   // One grid with the panes always in the same places in the document, so
   // the details move between beside and under the form without being drawn
-  // anew, and keep what they read. Too short for the form's least room, the
-  // area keeps it and the workspace scrolls as a whole.
+  // anew, and keep what they read.
   return (
     <PaneDoors.Provider value={doors}>
       <div
         ref={panel}
         id={panelId}
         role="tabpanel"
-        data-details={detailsOpen ? (beside ? "side" : "bottom") : "closed"}
+        data-details={layout.detailsOpen ? layout.placement : "closed"}
         className="relative grid min-h-60 flex-1 grid-cols-[auto_minmax(0,1fr)_auto] grid-rows-[minmax(0,1fr)_auto_auto]"
-        style={areaLeast > 0 ? { minHeight: areaLeast } : undefined}
+        style={
+          layout.areaLeast > 0 ? { minHeight: layout.areaLeast } : undefined
+        }
       >
-        {sideOpen && (
+        {layout.sideOpen && (
           <ResizablePane
             edge="start"
             id={railId}
@@ -275,10 +454,8 @@ export function FormPanes({
             handleLabel={t("desktop.modelo.side.resize")}
             size={side.preference.side}
             onSize={(size) => side.setSize("side", size)}
-            defaultSize={RAIL.size * rem}
-            min={RAIL.min * rem}
-            max={RAIL.max * rem}
-            maxShare={RAIL.share}
+            defaultSize={RAIL.size * layout.rem}
+            {...layout.rail}
             boxClassName="col-start-1 row-span-3 row-start-1"
             className="bg-chrome"
           >
@@ -291,27 +468,19 @@ export function FormPanes({
         >
           {form}
         </div>
-        {detailsOpen && (
+        {layout.detailsOpen && (
           <ResizablePane
             edge={beside ? "end" : "bottom"}
             id={detailsId}
             aria-label={t("desktop.modelo.details.label")}
             handleLabel={t("desktop.modelo.details.resize")}
-            size={
-              beside
-                ? detailsPane.preference.side
-                : detailsPane.preference.bottom
-            }
-            onSize={(size) =>
-              detailsPane.setSize(beside ? "side" : "bottom", size)
-            }
-            defaultSize={
-              beside ? DETAILS_SIDE.size * rem : height * DETAILS_BOTTOM.share
-            }
-            min={(beside ? DETAILS_SIDE.min : DETAILS_BOTTOM.min) * rem}
-            max={(beside ? DETAILS_SIDE.max : DETAILS_BOTTOM.max) * rem}
-            maxShare={beside ? DETAILS_SIDE.share : DETAILS_BOTTOM.maxShare}
-            keep={beside ? undefined : keep}
+            size={detailsPane.preference[layout.placement]}
+            onSize={(size) => detailsPane.setSize(layout.placement, size)}
+            defaultSize={layout.details.size}
+            min={layout.details.min}
+            max={layout.details.max}
+            maxShare={layout.details.maxShare}
+            keep={layout.details.keep}
             boxClassName={
               beside
                 ? "col-start-3 row-span-3 row-start-1"
