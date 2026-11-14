@@ -10,7 +10,7 @@ related:
   - '[[2026-10-18-runtime-authority-boundary-adr]]'
 modified: '2026-11-14'
 body_schema: body-v2
-body_hash: 'sha256:05ca5e050858956d128c29b75968d48503051e105b6add1550ee5dd90c878d1c'
+body_hash: 'sha256:01121fa077fbabe7349e1e9106b25b937e21abcbd40e2f59275209e9582ea541'
 ---
 
 <!-- RETIRED: S44 -->
@@ -74,7 +74,7 @@ Every persona row passes calculate, verify and export, proven in Python with no 
 - [x] `P01.S61` - Model the Modelo 100 Anexo C.1 casillas 1211 to 1223, the prior-origin pending excess of repair, conservation and interest expenses, as a prior-carry attestation family and compute the current-year rows; give a blocking finding only where the property was let in any of the four ejercicios before the one filed and an origin year in that window is neither read from a held return nor stated, while a property first let in the ejercicio filed raises nothing; in the same change the arrendador fixtures state the carry per origin year with their expected values unchanged; after S50 and S45 (PRIME ORDER 21:22 and 21:33, RULINGS 21:31 on the accepted ADR); owner CALC-RENTA; `src/cadrumo/_data/registry/aeat/modelos/100, src/cadrumo/application/aggregation, src/cadrumo/application/modelo, dev/fixtures/personas`.
 - [ ] `P01.S62` - Build the Modelo 232 related-party operations record per the accepted 2026-11-12-modelo-232-related-party-operations-adr: an encrypted per-ejercicio record of operations aggregated per person and type, with the turnover and its source and a withdrawable none statement; a record-backed payer-fact source applying the 232 parameters; state, list and withdraw operations with CLI and a TUI door; a profile schema version only if needed, in landing order; decides the sociedad Modelo 232 undecided row (PRIME ORDER 21:48); owner CALC-PAGOS; `src/cadrumo/domain, src/cadrumo/application, src/cadrumo/_data/registry/aeat/modelos/232, src/cadrumo/entrypoints`.
 - [x] `P01.S63` - Served next step puts verify ahead of fill when every remaining MISSING calculation note has withholds_filing=false (PRIME ORDER 10:55, RULINGS 10:55); owner LIFECYCLE; closes when the TUI column reads matched for asalariada-familia Modelo 100 2022-2025, arrendador-jubilado Modelo 100 and minorista-recargo Modelo 100, 130 and 347 on a published table; `src/cadrumo/application/modelo, src/cadrumo/entrypoints/tui`.
-- [ ] `P01.S64` - Probe verify on the unstated state of every persona and horizon: run verify once before the trabajo boxes are stated (persona_materialisation.py:795) and require typed findings, with no exception and no unknown settlement; a check reported with the failing persona, horizon and owner, not a table row (PRIME ORDER 14:46, RULINGS 14:46); owner ACCEPTANCE, finding producers LIFECYCLE; closes when the probe runs on a published head and lists no failure or each failure has an owner; `dev/acceptance/persona_table`.
+- [x] `P01.S64` - Probe verify on the unstated state of every persona and horizon: run verify once before the trabajo boxes are stated (persona_materialisation.py:795) and require typed findings, with no exception and no unknown settlement; a check reported with the failing persona, horizon and owner, not a table row (PRIME ORDER 14:46, RULINGS 14:46); owner ACCEPTANCE, finding producers LIFECYCLE; closes when the probe runs on a published head and lists no failure or each failure has an owner; `dev/acceptance/persona_table`.
 
 ### Phase `P02` - Deferred backend scope
 
