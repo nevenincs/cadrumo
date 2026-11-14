@@ -16,6 +16,7 @@ from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCata
 from cadrumo.adapters.persistence.profile.tests.ready_profile_support import seed_ready_profile
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from cadrumo.application.cli_exception_preconditions import nested_terminal_precondition_verdict
 from cadrumo.application.modelo.action_errors import CalculationRevisionNotFoundError
 from cadrumo.application.modelo.selectors import ModeloCalculationRevisionSelector
 from cadrumo.application.modelo.work_addressing import (
@@ -402,6 +403,9 @@ def test_exact_work_unit_id_in_calculation_revision_slot_has_only_the_canonical_
     assert binding.value == work_unit.work_unit_id
     assert binding.source is ActionArgumentSource.VERDICT_CONTEXT
     assert binding.source_key == "work_unit_id"
+    # The CLI boundary reads the one verdict of the whole raised chain, so the
+    # selector refusal this recovery replaces must not stand beside it.
+    assert nested_terminal_precondition_verdict(raised.value) == verdict
 
 
 @pytest.mark.parametrize(
@@ -499,6 +503,7 @@ def test_discarded_work_unit_id_in_calculation_revision_slot_is_a_terminal_appli
     assert verdict.argument_bindings == ()
     assert verdict.missing_argument_names == ()
     assert verdict.no_recovery_outcome is NoRecoveryOutcome.TERMINAL
+    assert nested_terminal_precondition_verdict(raised.value) == verdict
 
 
 def _capture_period() -> Period:
