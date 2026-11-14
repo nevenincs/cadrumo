@@ -428,6 +428,23 @@ function pageFormProbe() {
   };
 }
 
+/** The ids of the open page's sections, in order; the form draws each only near the viewport. */
+function pageSections() {
+  const root = document.querySelector("[data-modelo-form]");
+  if (!root) return [];
+  return [...root.querySelectorAll('section[id^="section-"]')].map(
+    (section) => section.id,
+  );
+}
+
+/** Bring one section into the form's view; the caller waits a few frames for it to draw. */
+function pageShowSection(id) {
+  const section = document.getElementById(id);
+  if (!section) return false;
+  section.scrollIntoView({ block: "start" });
+  return true;
+}
+
 function pageScroll(to) {
   const root = document.querySelector("[data-modelo-form]");
   if (!root) return null;
@@ -823,6 +840,17 @@ async function readFigures() {
       records: await exec(pageRecordsProbe),
     });
     const before = seen.size;
+    const collect = async () => {
+      for (const box of (await exec(pageBoxes)) ?? [])
+        if (!seen.has(box.key)) seen.set(box.key, box);
+    };
+    // Section by section: the form draws a section only once it nears the
+    // viewport, and pixel steps can pass a section before it draws.
+    for (const id of (await exec(pageSections)) ?? []) {
+      await exec(pageShowSection, id);
+      await sleep(150);
+      await collect();
+    }
     await exec(pageScroll, "top");
     let atEnd = 0;
     for (let step = 0; step < 400 && atEnd < 2; step += 1) {
