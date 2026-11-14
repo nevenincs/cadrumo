@@ -81,6 +81,8 @@ export function createModeloWriteHolds() {
   const versions = new Map<string, number>();
   const reviewed = new Map<string, TerminalOperationFailure>();
   const listeners = new Set<() => void>();
+  // Refresh holds the window is reading itself, by hold id: how many reads.
+  const reading = new Map<number, number>();
   let snapshot: readonly ModeloWriteHold[] = [];
   const publish = () => {
     snapshot = [...holds.values()];
@@ -206,6 +208,28 @@ export function createModeloWriteHolds() {
       if (!owns(lease)) return;
       holds.delete(lease.key);
       publish();
+    },
+    /** The window began its own read of a refresh hold; nobody needs to be
+     * asked to read again while it runs. False when nothing was marked. */
+    readBegan(hold: ModeloWriteHold): boolean {
+      if (hold.phase !== "refresh" || holds.get(hold.key) !== hold)
+        return false;
+      reading.set(hold.id, (reading.get(hold.id) ?? 0) + 1);
+      publish();
+      return true;
+    },
+    /** A read marked by `readBegan` ended, read or failed. */
+    readEnded(hold: ModeloWriteHold) {
+      const count = reading.get(hold.id) ?? 0;
+      if (count === 0) return;
+      if (count > 1) reading.set(hold.id, count - 1);
+      else reading.delete(hold.id);
+      publish();
+    },
+    /** Whether the window is reading the refresh hold on `key` itself. */
+    isReading(key: string) {
+      const hold = holds.get(key);
+      return hold?.phase === "refresh" && reading.has(hold.id);
     },
     /** Capture before starting the read. Completion cannot release a hold
      * that was unknown then, or that changed while the read was in flight. */
