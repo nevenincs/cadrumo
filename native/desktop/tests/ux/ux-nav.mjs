@@ -60,7 +60,19 @@ export async function showList() {
       ?.getAttribute("aria-pressed"),
   );
   if (pressed !== "true") await rail("declarations");
-  await waitFor(ready, { timeout: 120_000, what: "the declarations list" });
+  // The rail restores the declaration left open, not the list; its overview
+  // destination returns to the list.
+  const overview = label("workspace.declarations.destination.overview");
+  await waitFor(
+    async () => {
+      if (await ready()) return true;
+      await clickText("section.declarations-workspace header", "button", [
+        overview,
+      ]);
+      return false;
+    },
+    { timeout: 120_000, what: "the declarations list" },
+  );
 }
 
 /** Open the declaration of `row` (a world row) with the list's double click. */

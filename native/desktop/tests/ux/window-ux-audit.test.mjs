@@ -7,7 +7,7 @@
 // CADRUMO_PERSONA_HOST, CADRUMO_CMAKE_BINARY_DIR, CADRUMO_BUILD_CONFIG), plus
 //   CADRUMO_UX_RUN   the run directory the window's storage is copied into
 //                    (must be outside the git project; default: a temp dir)
-//   CADRUMO_UX_ONLY  (optional) substring: run only tests whose name has it
+//   CADRUMO_UX_ONLY  (optional) comma-separated substrings: run only tests whose name has one
 import assert from "node:assert/strict";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -56,7 +56,14 @@ before(async () => {
 after(teardown);
 
 const ux = (name, fn) =>
-  test(name, { skip: ONLY && !name.includes(ONLY), timeout: 600_000 }, fn);
+  test(
+    name,
+    {
+      skip: ONLY && !ONLY.split(",").some((part) => name.includes(part.trim())),
+      timeout: 600_000,
+    },
+    fn,
+  );
 
 const rowOf = (modelo) =>
   world.rows.find((r) => r.modelo === modelo && r.prepared);
