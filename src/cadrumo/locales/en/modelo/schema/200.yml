@@ -2,6 +2,8 @@ modelo:
   schema:
     '200':
       binding:
+        modelo-200-incn-periodo-impositivo-anterior:
+          label: Net turnover of the preceding tax period
         modelo-200-pago-fraccionado-primero-40-2:
           label: First instalment payment · Form 202, Article 40.2, box 03
         modelo-200-pago-fraccionado-primero-40-3:
