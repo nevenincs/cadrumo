@@ -4,14 +4,17 @@
 # 2024 edition's row stands for. The comment above each row cites the design line
 # in 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md.
 #
-# NOT DECLARED HERE, recorded as debt rather than guessed: 765 rows of the 2024
-# edition -- 306 whose box the 2022 design prints with another caption,
-# 131 whose 2022 caption names another year that does not rotate with the ejercicio,
-# 277 whose box the 2022 design does not print,
-# 22 whose sheet-scoped box the 2022 design prints only on another sheet,
-# 19 whose own 2024 field is not identified among the fields printing their number,
-# 5 whose unsheeted number the 2022 design also prints as a reserve cohort box,
-# 5 citing a provision catalogued as effective only after 2022.
+# NOT DECLARED HERE, recorded as debt rather than guessed: 766 rows of the 2024
+# edition (the rows the 2023 and 2024 editions state) --
+# 331 whose box the 2022 design prints, on the row's sheet where it names one,
+# with another caption, including boxes it prints as a reserve cohort box and
+# numbers the 2024 design prints more than once,
+# 128 whose 2022 caption on that box differs only in the years it names, without
+# the rotation across the 2022, 2023 and 2024 designs that grounds the block below,
+# 279 whose box the 2022 design does not print,
+# 26 whose sheet-scoped box the 2022 design prints only on another sheet,
+# 2 that are no printed box of either design.
+# 28 of these rows cite a provision catalogued as effective only after 2022.
 # Boxes the 2022 design prints that the 2024 edition does not declare are not
 # declared either.
 #
