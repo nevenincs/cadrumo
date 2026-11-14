@@ -7,8 +7,8 @@ family = "mapping"
 [[fact.variants]]
 variant_id = "modelo-role-routing:design"
 date_axis = "filing_period"
-legal_refs = ["ley-37-1992:art-164", "ley-35-2006:art-99", "rd-439-2007:art-109"]
-source_refs = ["aeat-modelo-303-procedure", "aeat-modelo-111-instructions", "aeat-modelo-115-obligaciones-retenedor", "aeat-modelo-123-procedure", "aeat-modelo-145-procedure", "aeat-modelo-151-procedure", "aeat-modelo-036-procedure", "aeat-modelo-184-procedure", "aeat-modelo-190-procedure", "aeat-modelo-193-procedure", "boe-modelo-200-2025-form", "aeat-modelo-202-instructions", "aeat-modelo-210-procedure", "aeat-modelo-222-instructions", "aeat-modelo-232-procedure", "aeat-modelo-296-procedure", "aeat-modelo-347-procedure", "aeat-modelo-349-procedure", "aeat-modelo-353-procedure", "aeat-modelo-360-procedure", "aeat-modelo-369-procedure", "aeat-modelo-720-procedure"]
+legal_refs = ["ley-37-1992:art-164", "ley-35-2006:art-99", "rd-439-2007:art-109", "rdl-2-2004:art-90"]
+source_refs = ["aeat-modelo-303-procedure", "aeat-modelo-111-instructions", "aeat-modelo-115-obligaciones-retenedor", "aeat-modelo-123-procedure", "aeat-modelo-145-procedure", "aeat-modelo-151-procedure", "aeat-modelo-036-procedure", "aeat-modelo-184-procedure", "aeat-modelo-190-procedure", "aeat-modelo-193-procedure", "boe-modelo-200-2025-form", "aeat-modelo-202-instructions", "aeat-modelo-210-procedure", "aeat-modelo-222-instructions", "aeat-modelo-232-procedure", "aeat-modelo-296-procedure", "aeat-modelo-347-procedure", "aeat-modelo-349-procedure", "aeat-modelo-353-procedure", "aeat-modelo-360-procedure", "aeat-modelo-369-procedure", "aeat-modelo-720-procedure", "aeat-modelo-840-procedure"]
 review_status = "agent_reviewed"
 ownership = "authored"
 
@@ -77,6 +77,10 @@ source_ref = "aeat-modelo-296-procedure"
 required_text = ["Modelo 296. Declaración Informativa. Retenciones e ingresos a cuenta"]
 
 [[fact.variants.source_citations]]
+source_ref = "aeat-modelo-840-procedure"
+required_text = ["Modelo 840: Cumplimentación y presentación telemática"]
+
+[[fact.variants.source_citations]]
 source_ref = "aeat-modelo-347-procedure"
 required_text = ["Declaración anual de operaciones con terceras personas"]
 
@@ -130,6 +134,7 @@ entries = [
   { key = "irnr.income", value = "210" },
   { key = "irnr.withholding_annual", value = "296" },
   { key = "foreign_assets.informative", value = "720" },
+  { key = "iae.census_declaration", value = "840" },
   { key = "renta_income_ledger.modelos", value = "100,130,131" },
   { key = "filed_declaration_reconciliation.modelos", value = "100,111,130,190,303,390" },
   { key = "pre_activity_lifecycle.modelos", value = "130,303" },
