@@ -1,0 +1,86 @@
+[fact]
+fact_id = "modelo-100-devolucion-cuenta"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "modelo-100-devolucion-cuenta:2022-01-01"
+date_axis = "filing_period"
+valid_from = 2022-01-01
+valid_to = 2022-12-31
+legal_refs = ["orden-hfp-310-2023:art-13", "orden-hfp-310-2023:art-16", "ley-35-2006:art-103"]
+source_refs = ["boe-modelo-100-2022-form"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-modelo-100-2022-form"
+required_text = [
+  "Si el resultado de la declaración es a devolver, el contribuyente podrá solicitar la devolución por transferencia",
+  "Si el resultado del borrador de declaración es a devolver o negativo el declarante deberá, en su caso, cumplimentar o confirmar el identificador único de la cuenta, código internacional de cuenta bancaria (IBAN)",
+]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "refund.transfer_account", value = "required" },
+]
+
+[[fact.variants]]
+variant_id = "modelo-100-devolucion-cuenta:2023-01-01"
+date_axis = "filing_period"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+legal_refs = ["orden-hac-265-2024:art-12", "orden-hac-265-2024:art-10", "ley-35-2006:art-103"]
+source_refs = ["boe-modelo-100-2023-form"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-modelo-100-2023-form"
+required_text = [
+  "Si el resultado de la declaración es a devolver, el contribuyente podrá solicitar la devolución por transferencia",
+  "Si el resultado del borrador de declaración es a devolver o negativo el declarante deberá, en su caso, cumplimentar o confirmar el identificador único de la cuenta, código internacional de cuenta bancaria (IBAN)",
+]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "refund.transfer_account", value = "required" },
+]
+
+[[fact.variants]]
+variant_id = "modelo-100-devolucion-cuenta:2024-01-01"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+legal_refs = ["orden-hac-242-2025:art-12", "orden-hac-242-2025:art-10", "ley-35-2006:art-103"]
+source_refs = ["boe-modelo-100-2024-form"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-modelo-100-2024-form"
+required_text = [
+  "Si el resultado de la declaración es a devolver, el contribuyente podrá solicitar la devolución por transferencia",
+  "Si el resultado del borrador de declaración es a devolver o negativo el declarante deberá, en su caso, cumplimentar o confirmar el identificador único de la cuenta, código internacional de cuenta bancaria (IBAN)",
+]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "refund.transfer_account", value = "required" },
+]
+
+[[fact.variants]]
+variant_id = "modelo-100-devolucion-cuenta:2025-01-01"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+legal_refs = ["orden-hac-277-2026:art-11", "orden-hac-277-2026:art-9", "ley-35-2006:art-103"]
+source_refs = ["boe-modelo-100-2025-form"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-modelo-100-2025-form"
+required_text = [
+  "Si el resultado de la declaración es a devolver, el contribuyente podrá solicitar la devolución por transferencia",
+  "Si el resultado del borrador de declaración es a devolver o negativo el declarante deberá, en su caso, cumplimentar o confirmar el identificador único de la cuenta, código internacional de cuenta bancaria (IBAN)",
+]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "refund.transfer_account", value = "required" },
+]

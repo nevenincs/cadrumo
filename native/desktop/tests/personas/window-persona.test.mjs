@@ -907,13 +907,19 @@ const freshOf = (before, after) => [
 
 async function findings() {
   await openView("workspace.modelo.step.review");
-  return exec(() => {
+  const shown = await exec(() => {
     const norm = (text) => (text ?? "").replace(/\s+/g, " ").trim();
     return [...document.querySelectorAll("[data-attention-level]")]
       .filter((element) => element.getClientRects().length > 0)
-      .slice(0, 6)
-      .map((element) => norm(element.textContent).slice(0, 200));
+      .map((element) => ({
+        data: { ...element.dataset },
+        text: norm(element.textContent).slice(0, 600),
+      }));
   });
+  // The row keeps a short reading; the log keeps every finding whole with the
+  // attributes the form serves on it, so a served step can be traced to its cause.
+  log("findings", { shown });
+  return shown.slice(0, 6).map((item) => item.text.slice(0, 200));
 }
 
 /** Answer a dialog the calculation opened; never choose a tax fact the world lacks. */
