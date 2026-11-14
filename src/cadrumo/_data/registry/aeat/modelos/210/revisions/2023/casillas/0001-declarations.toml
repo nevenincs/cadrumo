@@ -384,6 +384,9 @@ required = true
 input_kind = "computed"
 formula = "m210-tipo-gravamen-resolve"
 legal_refs = ["trlirnr-rdleg-5-2004:art-25.1.a", "trlirnr-rdleg-5-2004:art-25.1.b", "trlirnr-rdleg-5-2004:art-25.1.f"]
+# The designs print [21] as "Tipo de gravamen Ley IRNR (%)" (aeat-dr-210-2022 and aeat-dr-210-2026), and the
+# calculation stores the rate as a fraction (0.24 for 24 %), so the box declares a fraction that reads as that percentage.
+constraints = { sign = "non_negative", max_value = "1" }
 
 [[revisions."2023".casillas]]
 id = "cuota_integra"
