@@ -19,7 +19,9 @@ from cadrumo.adapters.persistence.storage.tests.profile_session_setup import res
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
 from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository
+from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.binding_targets import casillas_by_binding
 from cadrumo.domain.user_profile.values import ProfileSetupState
 from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
 from cadrumo.entrypoints.tests.persona_materialisation import (
@@ -87,7 +89,7 @@ def _stored_profile(storage_root: Path, profile_id: str) -> tuple[str, ProfileSe
     [
         ("asalariada-familia", {"prior_carries", "work_income_none"}, set()),
         ("traductora-profesional", {"prior_carries"}, set()),
-        ("sociedad-limitada", {"prior_value"}, {"work_input"}),
+        ("sociedad-limitada", {"prior_value", "work_input"}, set()),
     ],
     ids=["asalariada", "traductora", "sociedad"],
 )
@@ -219,14 +221,15 @@ def _split(monkeypatch: pytest.MonkeyPatch, made: tuple[Statement, ...]) -> desk
     return desktop_persona_world.window_split(cast(MaterialisedPersona, SimpleNamespace()), plan)
 
 
-def test_a_statement_of_nothing_pending_a_prior_figure_and_the_work_income_statement_have_a_window_door() -> None:
+def test_a_carry_a_prior_figure_the_work_income_statement_and_a_work_input_have_a_window_door() -> None:
     door = desktop_persona_world._has_window_door
     assert door(_statement(StatementKind.PRIOR_CARRIES, Phase.BEFORE_EVIDENCE, families=("f",)))
     assert door(_statement(StatementKind.PRIOR_VALUE, Phase.BEFORE_EVIDENCE, target="b", value="1"))
     assert door(_statement(StatementKind.WORK_INCOME_NONE, Phase.AFTER_CALCULATION))
-    assert not door(_statement(StatementKind.PRIOR_CARRIES, Phase.BEFORE_EVIDENCE, amounts=(("1380", "5"),)))
+    assert door(_statement(StatementKind.PRIOR_CARRIES, Phase.BEFORE_EVIDENCE, amounts=(("1380", "5"),)))
+    assert door(_statement(StatementKind.WORK_INPUT, Phase.AT_CALCULATION, target="c", value="1"))
     assert not door(_statement(StatementKind.PRIOR_CARRIES, Phase.BEFORE_EVIDENCE, gap="not sayable"))
-    assert not door(_statement(StatementKind.WORK_INPUT, Phase.AT_CALCULATION, target="c", value="1"))
+    assert not door(_statement(StatementKind.WORK_INPUT, Phase.AT_CALCULATION, refusal="no"))
     assert not door(_statement(StatementKind.RENTAL_CARRY, Phase.AFTER_RECALCULATION, target="b", row="r"))
     assert not door(_statement(StatementKind.WORK_INCOME_NONE, Phase.AFTER_CALCULATION, refusal="no"))
 
@@ -250,9 +253,9 @@ def test_the_world_records_up_to_the_last_statement_no_window_door_enters_and_le
     ]
     assert everything.without_door == ()
 
-    after_input = _split(monkeypatch, (carries, work_input, income))
-    assert after_input.left == {StatementKind.WORK_INCOME_NONE}
-    assert after_input.without_door == (work_input,)
+    with_input = _split(monkeypatch, (carries, work_input, income))
+    assert with_input.left == {StatementKind.PRIOR_CARRIES, StatementKind.WORK_INPUT, StatementKind.WORK_INCOME_NONE}
+    assert with_input.without_door == ()
 
     behind_rental = _split(monkeypatch, (carries, figure, income, rental))
     assert behind_rental.left == frozenset()
@@ -261,3 +264,26 @@ def test_the_world_records_up_to_the_last_statement_no_window_door_enters_and_le
 
     nothing = _split(monkeypatch, ())
     assert nothing == desktop_persona_world.WindowSplit()
+
+
+def test_a_carry_stated_as_an_amount_is_entered_on_each_binding_its_box_feeds() -> None:
+    family = "renta_negative_general_bases_pending"
+    statement = _statement(
+        StatementKind.PRIOR_CARRIES, Phase.BEFORE_EVIDENCE, families=(family,), amounts=(("1380", "5.5"),)
+    )
+    with bundled_indexed_authority().operation() as operation:
+        revision = operation.snapshot(
+            "100", filing_year=_registry_horizon(), period="0A", grade=RegistryAuthorityGrade.CALCULATION
+        ).revision
+        world = SimpleNamespace(operation=operation)
+        plan = cast(PlannedRow, SimpleNamespace(modelo="100", year=_registry_horizon(), period="0A"))
+        figures = desktop_persona_world._carry_figures(
+            cast(MaterialisedPersona, SimpleNamespace(world=world)), plan, statement
+        )
+        fed = casillas_by_binding(revision)
+    assert figures
+    assert {item["value"] for item in figures} == {"5.5"}
+    for item in figures:
+        assert "1380" in {
+            str(box) for binding, boxes in fed.items() if str(binding) == item["binding"] for box in boxes
+        }
