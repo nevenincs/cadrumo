@@ -4082,6 +4082,18 @@ application:
         onwards: Box {box} of Modelo {modelo}, tax years {years} onwards.
         year_span: Box {box} of Modelo {modelo}, tax years {years}.
       carry_attestation:
+        renta_capital_inmobiliario_gastos_pendientes:
+          action: This property has no interest or repair costs pending from earlier
+            years
+          effect: 'Recorded as a 0 you stated: nothing pending deduction from this
+            origin year.'
+          row: Property {number}
+          statement: States that this let property carries no interest on borrowed
+            capital and no repair and upkeep costs from the four previous years still
+            pending deduction (art. 23.1.a Ley 35/2006; art. 13.a RIRPF; anexo C.1).
+            Each origin year is recorded as a 0 you stated, apart from a figure you
+            typed; if an earlier year did leave an amount pending, state that amount
+            on its origin year instead.
         renta_negative_general_bases_pending:
           action: I have no amounts pending from earlier years
           effect: 'Recorded as a 0 you stated: nothing pending from earlier years.'

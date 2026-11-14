@@ -136,9 +136,17 @@ export async function openFromDialog(
   target: Page,
   modelo: string,
   language: Language = "en",
+  shape = "",
 ) {
-  await openList(target, { language });
-  const existing = list(language).creation_targets.find(
+  await openList(target, { language, shape });
+  // A named shape lists what the host serves for it, not the stored default.
+  const served = shape
+    ? await target.evaluate(
+        async (asked) => window.__fixtureModelo!.declarations(asked),
+        language,
+      )
+    : list(language);
+  const existing = served.creation_targets.find(
     (entry) => entry.modelo === modelo && entry.existing,
   );
   if (!existing) throw new Error(`no declaration of ${modelo} to open`);
