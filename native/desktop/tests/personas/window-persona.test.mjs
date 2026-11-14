@@ -1830,7 +1830,8 @@ async function recordFiling(out) {
           ])
         ) {
           rereads += 1;
-          log("read-again", { action: "record", rereads });
+          // UX-23 workaround: comes out once FRONTEND's fix is confirmed.
+          log("ux23", { action: "record", rereads });
         }
         return null;
       }
