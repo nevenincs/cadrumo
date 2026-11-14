@@ -1,9 +1,17 @@
-import { memo, useCallback, useRef, useState, type RefObject } from "react";
+import {
+  memo,
+  useCallback,
+  useRef,
+  useState,
+  type ReactNode,
+  type RefObject,
+} from "react";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { Spinner } from "@/components/ui/spinner";
+import { PaneHeader, type PaneControl } from "../PaneHeader";
 import {
   AEAT_SYNC_AREAS,
   aeatSyncFailure,
@@ -98,6 +106,7 @@ export const AeatSyncPage = memo(function AeatSyncPage({
   language,
   shown,
   page,
+  pane,
   results,
   run: runPort,
   prepare,
@@ -111,6 +120,11 @@ export const AeatSyncPage = memo(function AeatSyncPage({
   shown: boolean;
   /** The page's own element, for whoever sends focus to it. */
   page: RefObject<HTMLElement | null>;
+  /** The pane's title and controls, which the page's header carries. */
+  pane: {
+    controls: PaneControl[];
+    onToggleMaximize: () => void;
+  };
   results?: AeatSyncResultsPort;
   run?: AeatSyncRunPort;
   prepare?: AeatSyncPreparePort;
@@ -227,8 +241,25 @@ export const AeatSyncPage = memo(function AeatSyncPage({
     .filter((area) => area.update === "bring")
     .map((area) => area.area);
 
+  const title = t("desktop.aeat_sync.title");
+  // The page's one action sits in the header, so it stays in view while the
+  // body scrolls.
+  const header = (action?: ReactNode) => (
+    <PaneHeader
+      title={title}
+      controls={pane.controls}
+      onToggleMaximize={pane.onToggleMaximize}
+    >
+      {action && (
+        <>
+          <span className="flex-1" />
+          {action}
+        </>
+      )}
+    </PaneHeader>
+  );
   const shell =
-    "aeat-sync-page @container/aeat relative flex min-h-0 flex-1 flex-col overflow-y-auto outline-none";
+    "aeat-sync-page @container/aeat relative flex min-h-0 flex-1 flex-col outline-none";
   const hasResults =
     snapshot?.state === "done" || snapshot?.state === "stopped";
   const ended = !runUncertain && hasResults;
@@ -240,14 +271,17 @@ export const AeatSyncPage = memo(function AeatSyncPage({
         aria-label={t("desktop.aeat_sync.title")}
         className={shell}
       >
-        <div className="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4">
-          <AeatSyncFlow
-            port={prepare}
-            locale={language}
-            onReady={checked}
-            onClose={leave}
-            onOpenAccess={onOpenAccess}
-          />
+        {header()}
+        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+          <div className="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4">
+            <AeatSyncFlow
+              port={prepare}
+              locale={language}
+              onReady={checked}
+              onClose={leave}
+              onOpenAccess={onOpenAccess}
+            />
+          </div>
         </div>
       </section>
     );
@@ -264,43 +298,45 @@ export const AeatSyncPage = memo(function AeatSyncPage({
         aria-label={t("desktop.aeat_sync.title")}
         className={shell}
       >
-        <div className="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4">
-          {ended && (
-            <div className="flex justify-end">
-              <Button onClick={finish}>
-                {t("desktop.aeat_sync.progress.done_all")}
-              </Button>
-            </div>
-          )}
-          {/* A finished update with every part in order is told by its
-              results alone. */}
-          {(!ended ||
-            snapshot?.state === "stopped" ||
-            (snapshot !== null && aeatSyncRunProblems(snapshot) > 0)) && (
-            <AeatSyncRunView
-              run={run}
-              paused={
-                <AeatSyncFlow
-                  port={prepare}
-                  locale={language}
-                  reason="session_ended"
-                  onReady={signedBackIn}
-                  onClose={park}
-                  onOpenAccess={onOpenAccess}
-                />
-              }
-            />
-          )}
-          {hasResults && results && profile !== undefined && (
-            <Results
-              port={results}
-              retryBlocked={runUncertain || run.busy}
-              profile={profile}
-              language={language}
-              onOpenAeat={onOpenAeat}
-              onReviewCensus={onReviewCensus}
-            />
-          )}
+        {header(
+          ended && (
+            <Button onClick={finish}>
+              {t("desktop.aeat_sync.progress.done_all")}
+            </Button>
+          ),
+        )}
+        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+          <div className="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4">
+            {/* A finished update with every part in order is told by its
+                results alone. */}
+            {(!ended ||
+              snapshot?.state === "stopped" ||
+              (snapshot !== null && aeatSyncRunProblems(snapshot) > 0)) && (
+              <AeatSyncRunView
+                run={run}
+                paused={
+                  <AeatSyncFlow
+                    port={prepare}
+                    locale={language}
+                    reason="session_ended"
+                    onReady={signedBackIn}
+                    onClose={park}
+                    onOpenAccess={onOpenAccess}
+                  />
+                }
+              />
+            )}
+            {hasResults && results && profile !== undefined && (
+              <Results
+                port={results}
+                retryBlocked={runUncertain || run.busy}
+                profile={profile}
+                language={language}
+                onOpenAeat={onOpenAeat}
+                onReviewCensus={onReviewCensus}
+              />
+            )}
+          </div>
         </div>
       </section>
     );
@@ -312,141 +348,141 @@ export const AeatSyncPage = memo(function AeatSyncPage({
       aria-label={t("desktop.aeat_sync.title")}
       className={shell}
     >
-      <div className="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4">
-        <div className="flex justify-end">
-          <Button
-            disabled={
-              starting || going || runUncertain || bringable.length === 0
-            }
-            onClick={() => void start(bringable)}
-          >
-            {starting ? <Spinner /> : <Icon name="sync" size="sm" />}
-            {t("desktop.aeat_sync.bring_all")}
-          </Button>
-        </div>
-        {runUncertain && <AeatSyncRunView run={run} />}
-        {failure && (
-          <Alert role="alert" tone="danger" icon={<Icon name="alert" />}>
-            {t(
-              failure === "unknown"
-                ? "desktop.aeat_sync.start_unknown"
-                : "desktop.aeat_sync.start_failed",
-            )}
-          </Alert>
-        )}
-        {status.error && (
-          <Alert
-            role="alert"
-            tone="danger"
-            icon={<Icon name="alert" />}
-            data-testid="aeat-sync-error"
-          >
-            {t("desktop.aeat_sync.unavailable")}
-            <span>
-              <Button size="xs" variant="outline" onClick={refresh}>
-                {t("desktop.aeat_sync.retry")}
-              </Button>
-            </span>
-          </Alert>
-        )}
-        {status.loading && !status.data && (
-          <div
-            role="status"
-            className="flex items-center gap-2 text-muted-foreground"
-          >
-            <Spinner />
-            {t("desktop.aeat_sync.loading")}
-          </div>
-        )}
-        {status.data && (
-          <ul
-            aria-label={t("desktop.aeat_sync.areas")}
-            className="grid gap-3 @2xl/aeat:grid-cols-2"
-          >
-            {rows.map(({ id, area }) => {
-              const state = area?.state ?? "unavailable";
-              const name = t(`desktop.aeat_sync.area.${id}.name`);
-              const attempt = area ? lastTry(t, language, area) : null;
-              const importing = area?.update === "import";
-              const look = STATE_LOOK[state];
-              const counts = (area?.counts ?? []).filter(
-                (count) => COUNT_KEYS[count.kind] && count.value > 0,
-              );
-              return (
-                <li
-                  key={id}
-                  data-area={id}
-                  data-state={state}
-                  className="flex flex-col gap-1.5 rounded-lg border bg-card p-3"
-                >
-                  <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
-                    <h3 className="max-w-full min-w-0 text-base font-semibold [overflow-wrap:anywhere] text-foreground">
-                      {name}
-                    </h3>
-                    {!importing && (
-                      <Button
-                        size="xs"
-                        variant="outline"
-                        className="shrink-0"
-                        aria-label={t("desktop.aeat_sync.update_area", {
-                          area: name,
-                        })}
-                        disabled={starting || going || runUncertain || !area}
-                        onClick={() => void start([id])}
-                      >
-                        {t("desktop.aeat_sync.update")}
-                      </Button>
-                    )}
-                  </div>
-                  <p className="flex items-center gap-2 text-sm text-foreground">
-                    <Icon
-                      name={look.icon}
-                      size="sm"
-                      className={`shrink-0 ${look.tone}`}
-                    />
-                    <span className="min-w-0">
-                      {area
-                        ? standing(t, language, area)
-                        : t("desktop.aeat_sync.state.unavailable")}
-                    </span>
-                  </p>
-                  {attempt && (
-                    <p className="text-sm text-muted-foreground">{attempt}</p>
-                  )}
-                  {counts.length > 0 && (
-                    <ul className="flex flex-wrap gap-1.5">
-                      {counts.map((count) => (
-                        <li key={count.kind}>
-                          <Badge>
-                            {t(COUNT_KEYS[count.kind] ?? "", {
-                              count: count.value,
-                            })}
-                          </Badge>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                  {importing &&
-                    (results && profile !== undefined ? (
-                      <BorradorImport
-                        port={results}
-                        profile={profile}
-                        years={status.data?.borrador_years ?? []}
-                        onImported={refresh}
-                      />
-                    ) : (
-                      <div>
-                        <Button size="xs" variant="outline" disabled>
-                          <Icon name="upload" size="xs" />
-                          {t("desktop.aeat_sync.results.borrador.import")}
+      {header(
+        <Button
+          disabled={starting || going || runUncertain || bringable.length === 0}
+          onClick={() => void start(bringable)}
+        >
+          {starting ? <Spinner /> : <Icon name="sync" size="sm" />}
+          {t("desktop.aeat_sync.bring_all")}
+        </Button>,
+      )}
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+        <div className="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4">
+          {runUncertain && <AeatSyncRunView run={run} />}
+          {failure && (
+            <Alert role="alert" tone="danger" icon={<Icon name="alert" />}>
+              {t(
+                failure === "unknown"
+                  ? "desktop.aeat_sync.start_unknown"
+                  : "desktop.aeat_sync.start_failed",
+              )}
+            </Alert>
+          )}
+          {status.error && (
+            <Alert
+              role="alert"
+              tone="danger"
+              icon={<Icon name="alert" />}
+              data-testid="aeat-sync-error"
+            >
+              {t("desktop.aeat_sync.unavailable")}
+              <span>
+                <Button size="xs" variant="outline" onClick={refresh}>
+                  {t("desktop.aeat_sync.retry")}
+                </Button>
+              </span>
+            </Alert>
+          )}
+          {status.loading && !status.data && (
+            <div
+              role="status"
+              className="flex items-center gap-2 text-muted-foreground"
+            >
+              <Spinner />
+              {t("desktop.aeat_sync.loading")}
+            </div>
+          )}
+          {status.data && (
+            <ul
+              aria-label={t("desktop.aeat_sync.areas")}
+              className="grid gap-3 @2xl/aeat:grid-cols-2"
+            >
+              {rows.map(({ id, area }) => {
+                const state = area?.state ?? "unavailable";
+                const name = t(`desktop.aeat_sync.area.${id}.name`);
+                const attempt = area ? lastTry(t, language, area) : null;
+                const importing = area?.update === "import";
+                const look = STATE_LOOK[state];
+                const counts = (area?.counts ?? []).filter(
+                  (count) => COUNT_KEYS[count.kind] && count.value > 0,
+                );
+                return (
+                  <li
+                    key={id}
+                    data-area={id}
+                    data-state={state}
+                    className="flex flex-col gap-1.5 rounded-lg border bg-card p-3"
+                  >
+                    <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
+                      <h3 className="max-w-full min-w-0 text-base font-semibold [overflow-wrap:anywhere] text-foreground">
+                        {name}
+                      </h3>
+                      {!importing && (
+                        <Button
+                          size="xs"
+                          variant="outline"
+                          className="shrink-0"
+                          aria-label={t("desktop.aeat_sync.update_area", {
+                            area: name,
+                          })}
+                          disabled={starting || going || runUncertain || !area}
+                          onClick={() => void start([id])}
+                        >
+                          {t("desktop.aeat_sync.update")}
                         </Button>
-                      </div>
-                    ))}
-                </li>
-              );
-            })}
-          </ul>
-        )}
+                      )}
+                    </div>
+                    <p className="flex items-center gap-2 text-sm text-foreground">
+                      <Icon
+                        name={look.icon}
+                        size="sm"
+                        className={`shrink-0 ${look.tone}`}
+                      />
+                      <span className="min-w-0">
+                        {area
+                          ? standing(t, language, area)
+                          : t("desktop.aeat_sync.state.unavailable")}
+                      </span>
+                    </p>
+                    {attempt && (
+                      <p className="text-sm text-muted-foreground">{attempt}</p>
+                    )}
+                    {counts.length > 0 && (
+                      <ul className="flex flex-wrap gap-1.5">
+                        {counts.map((count) => (
+                          <li key={count.kind}>
+                            <Badge>
+                              {t(COUNT_KEYS[count.kind] ?? "", {
+                                count: count.value,
+                              })}
+                            </Badge>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    {importing &&
+                      (results && profile !== undefined ? (
+                        <BorradorImport
+                          port={results}
+                          profile={profile}
+                          years={status.data?.borrador_years ?? []}
+                          onImported={refresh}
+                        />
+                      ) : (
+                        <div>
+                          <Button size="xs" variant="outline" disabled>
+                            <Icon name="upload" size="xs" />
+                            {t("desktop.aeat_sync.results.borrador.import")}
+                          </Button>
+                        </div>
+                      ))}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
       </div>
     </section>
   );

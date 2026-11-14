@@ -957,7 +957,7 @@ export const UserProfilePage = memo(function UserProfilePage({
           {index}
           <div
             ref={scroller}
-            className="min-w-0 flex-1 overflow-y-auto"
+            className="relative min-w-0 flex-1 overflow-y-auto"
             onKeyDown={onListKey}
           >
             {toolbar}

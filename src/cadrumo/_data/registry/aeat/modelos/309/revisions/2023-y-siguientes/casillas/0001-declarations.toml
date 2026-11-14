@@ -20,6 +20,8 @@ number = "709-713"
 form_number = "26"
 section = ["declarante", "liquidacion"]
 data_type = "ratio"
+# The design prints [26] as "Liquidación (8) - Régimen General - Tipo %" at tres enteros y dos decimales, a percentage.
+constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-309-2023"] }
 semantic_role = "rg_tipo_26"
 # Design regimen general tipo % [26].
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
