@@ -609,6 +609,8 @@ application:
           que no está indicada. Indícala y vuelve a exportar.'
         producer_fact_required: 'No se ha escrito nada: la exportación necesita %{fact},
           que no está indicado. Indícalo y vuelve a exportar.'
+        producer_facts_unsupplied: 'No se ha escrito nada: la exportación del modelo
+          %{modelo} necesita %{facts}, y la aplicación todavía no puede aportarlos.'
         product_identity_not_admitted: 'No se ha escrito nada: esta exportación no
           tiene un lugar para la identidad del producto o del programa, así que no
           se puede indicar ninguna.'

@@ -103,6 +103,10 @@ _UNSWEPT_MODULE_RATIONALES: dict[str, str] = {
         "Producer-snapshot completeness is consumed by export.py, whose "
         "public export boundary owns the resulting validation/catch path."
     ),
+    "export_producer_supply.py": (
+        "The unsupplied-producer refusal is raised while export.py prepares a draft, "
+        "so export.py's public export boundary owns its projection."
+    ),
     "export_xml_dictionary.py": (
         "XML-dictionary layout invariants are consumed by export.py, whose "
         "export/verification boundary owns their projection."

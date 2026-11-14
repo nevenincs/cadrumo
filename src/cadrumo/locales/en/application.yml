@@ -567,6 +567,8 @@ application:
           stated. State it and export again.'
         producer_fact_required: 'Nothing was written: the export needs %{fact}, which
           is not stated. State it and export again.'
+        producer_facts_unsupplied: 'Nothing was written: the export of Modelo %{modelo}
+          needs %{facts}, and nothing in the application can supply them yet.'
         product_identity_not_admitted: 'Nothing was written: this export has no slot
           for a product or software identity, so none can be given for it.'
         product_identity_required: 'Nothing was written: the export needs the product

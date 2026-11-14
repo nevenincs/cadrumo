@@ -91,6 +91,7 @@ from .export_parity import (
     assert_xml_declaration_aux_declared,
 )
 from .export_producer import filing_producer_values
+from .export_producer_supply import require_supplied_producers
 from .export_refusal_doors import ExportRefusalReason, export_design_terminal, export_input_decision
 from .export_verification import (
     DeclaracionExportFormat,
@@ -302,12 +303,14 @@ def _prepare_export_draft(
             "filing producer snapshot modelo does not match draft",
             translated_message="errors.integrity.filing_export_producer_snapshot_modelo_mismatch",
         )
+    producer_values = filing_producer_values(producer_snapshot)
+    require_supplied_producers(layout, producer_values, modelo=draft.modelo)
     return _PreparedExportDraft(
         provider=provider,
         subview=subview,
         registry_snapshot=registry_snapshot,
         layout=layout,
-        producer_values=filing_producer_values(producer_snapshot),
+        producer_values=producer_values,
         prior_domiciliation_election=resolvedprior_domiciliation_election,
         renders_filing_envelope=renders_filing_envelope,
         xml_aux_version=aeat_aux_version() if layout.format is ExportLayoutFormat.XML_DICTIONARY else None,

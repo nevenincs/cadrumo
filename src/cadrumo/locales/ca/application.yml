@@ -606,6 +606,8 @@ application:
           que no està indicada. Indica-la i torna a exportar.'
         producer_fact_required: 'No s''ha escrit res: l''exportació necessita %{fact},
           que no està indicat. Indica''l i torna a exportar.'
+        producer_facts_unsupplied: 'No s''ha escrit res: l''exportació del model %{modelo}
+          necessita %{facts}, i l''aplicació encara no els pot aportar.'
         product_identity_not_admitted: 'No s''ha escrit res: aquesta exportació no
           té lloc per a la identitat del producte o del programari, així que no se''n
           pot indicar cap.'

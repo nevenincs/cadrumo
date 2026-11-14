@@ -601,6 +601,8 @@ application:
           újra.'
         producer_fact_required: 'Semmi sem íródott ki: az exportáláshoz szükség van
           erre: %{fact}, de az nincs megadva. Add meg, és exportálj újra.'
+        producer_facts_unsupplied: 'Semmi sem íródott ki: a(z) %{modelo} modell exportálásához
+          szükség van erre: %{facts}, de az alkalmazás ezeket még nem tudja előállítani.'
         product_identity_not_admitted: 'Semmi sem íródott ki: ennek az exportnak nincs
           helye a termék vagy a szoftver azonosítójának, ezért nem adható meg ilyen.'
         product_identity_required: 'Semmi sem íródott ki: az exporthoz szükség van
