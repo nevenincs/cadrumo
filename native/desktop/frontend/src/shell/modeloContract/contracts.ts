@@ -159,8 +159,6 @@ import type {
   ModeloMaritimePreviewRequest,
   ModeloTaxationComparisonProjection,
   ModeloTaxationComparisonRequest,
-  ModeloWorkAmendPublicResultV2,
-  ModeloWorkAmendRequest,
   ModeloWorkCalculatePublicResultV3,
   ModeloWorkCalculateRequest,
   ModeloWorkDiscardPublicResultV2,
@@ -188,6 +186,10 @@ import type {
   ModeloWorkWizardContextProjection,
   ModeloWorkWizardContextRequest,
 } from "./modeloWork";
+import type {
+  ModeloWorkAmendPublicResultV2,
+  ModeloWorkAmendRequest,
+} from "./modeloWorkAmend";
 import type {
   ModeloWorkAmendmentContextProjection,
   ModeloWorkAmendmentContextRequest,

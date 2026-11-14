@@ -1296,8 +1296,8 @@ cli:
           se rechaza un archivo de exportación existente para no destruir una exportación
           anterior.
         revision_help: Identificador del cálculo guardado a exportar; por defecto,
-          el cálculo más reciente de la declaración que esté comprobado y completo
-          o registrado como presentado.
+          el cálculo actual de la declaración, que debe estar comprobado y completo
+          o registrado como presentado. Usa --select para indicar otro.
         work_unit_id_help: Identificador de la declaración (SHA-256 o prefijo inequívoco).
       filing_record:
         app_help: Inspeccionar los registros internos de presentación guardados
@@ -1908,10 +1908,10 @@ cli:
           indicas con --binding siempre tienen prioridad.
         bucket_id_help: Perfil al que pertenece la declaración
         calculate_help: Guardar un nuevo cálculo en borrador para la declaración.
-          Este comando calcula solo a partir de los valores que se le indican. Los
-          valores introducidos antes en la interfaz de pantalla completa (aeat app
-          tui) no se conservan salvo que se vuelvan a indicar aquí; la interfaz de
-          pantalla completa sí los conserva.
+          Sin valores, recalcula desde el cálculo actual y conserva todos los valores
+          e indicaciones que registraste en él. Con valores, o con --inputs-only,
+          calcula solo a partir de ellos y enumera cada valor o indicación registrados
+          que no usó.
         calculate_reused_sealed: 'Estos datos coinciden con el cálculo %{revision_id}
           (estado: %{state}). No se ha creado un borrador nuevo. Selecciona este cálculo
           guardado por su identificador de revisión o cambia los datos.'
@@ -2051,6 +2051,10 @@ cli:
           {candidates}'
         include_discarded_help: Incluir las declaraciones descartadas en el listado
           (excluidas por defecto)
+        inputs_only_help: Calcula solo a partir de los valores que indicas en esta
+          orden, aunque no indiques ninguno. Sin esta opción, una orden sin valores
+          recalcula desde el cálculo actual y conserva todos los valores e indicaciones
+          que registraste.
         invalid_binding_key: 'La clave --binding no es un identificador válido de
           origen de una casilla (BindingId: alfanumérico en minúsculas más separadores
           . _ : -, máx. 128 caracteres)'
@@ -2348,6 +2352,16 @@ cli:
         state_label_presentado: Registrada como presentada
         state_label_presentado_supersedido: Presentación sustituida
         state_label_verificado_completo: Comprobada y completa
+        statement_not_carried: 'No usado: %{words}, %{target}: %{value}'
+        statement_not_carried_whole: 'No usado: %{words}'
+        statement_not_carried_without_value: 'No usado: %{words}, %{target}'
+        statement_target_box: casilla %{box} (%{label})
+        statements_not_carried: 'Valores o indicaciones registrados en el cálculo
+          %{revision_id} que este cálculo no usó: %{count}. Ese cálculo los sigue
+          conservando; vuelve a calcular sin indicar valores para mantenerlos.'
+        statements_not_carried_incomplete: El cálculo %{revision_id} no registró qué
+          valores escribiste, así que la lista puede omitir alguno. Ese cálculo sigue
+          conservando todos los valores.
         status_calculate_summary: Esta declaración activa se puede calcular.
         status_discarded_summary: Esta declaración está descartada, por lo que el
           cálculo no está disponible.
