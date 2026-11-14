@@ -5,7 +5,7 @@ tags:
 date: '2026-11-14'
 modified: '2026-11-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:1aa1660248845d77c7572ec23fc18649511ed27aaa43703c5f994b6282e28b3e'
+body_hash: 'sha256:7a8024055089a333aefeaac569962e0805760cfe2df9325755c3ce3788738860'
 related:
   - "[[2026-08-25-source-casilla-integration-modelo-840-source-and-repeated-row-owner-deferral-adr]]"
   - "[[2026-08-25-source-casilla-integration-modelo-840-source-and-repeated-row-lifecycle-grounding-research]]"
@@ -106,15 +106,25 @@ Producers need facts to read, and the facts need a persisted schema. No smaller 
 the blank keys without either inventing values or writing refusing stubs, and both are ruled out.
 The work is phase-2 scope with no persona row, so deferring loses no measured coverage now.
 
-Recommendation: defer (option c) until phase 2.
+The author recommended deferral (option c) until phase 2.
 
-Decision (2026-11-14): the operator approved this record on condition that it does not diverge
-from the delta-keyed, compacted registry, and PRIME accepted it on that authority with option (a)
-chosen. The facts belong to the profile schema, not the registry. Any Modelo 840 registry member
-the work adds is declared once, at its earliest edition, and the repeat semantics regenerate only
-the Modelo 840 editions whose layout changes. LIFECYCLE owns the work, as an L2 plan per this
-record. This is the explicitly authorized Modelo 840 slice of the 2026-08-25 deferral ADR, and it
-does not start phase 2 in general.
+## Decision
+
+Accepted on 2026-11-14 with option (a), on the operator's approval of the proposed records
+"if they do not diverge from delta keyed compacted registry definitions", as applied by PRIME
+in RULINGS 2026-11-14 13:54. Conditions of the acceptance:
+
+- The new facts belong to the profile schema, not the registry.
+- Any Modelo 840 registry member the work adds is declared once, at its earliest edition. Later
+  editions state only official differences and restate nothing.
+- The premises repeat semantics regenerate only the Modelo 840 editions whose layout changes.
+- `test_every_cited_producer_key_is_resolvable` clears only through real producers over stored
+  facts, never through stubs or always-refusing producers.
+- This authorizes the Modelo 840 slice only, as the explicitly authorized slice of the
+  2026-08-25 deferral ADR. It does not start phase 2 in general.
+
+Owner LIFECYCLE, after M322T and M322P, through an L2 plan built from the Implementation
+section.
 
 ## Consequences
 
