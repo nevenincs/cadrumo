@@ -141,13 +141,13 @@ def test_m200_tipo_de_gravamen_exports_the_stored_nota_1_code(year: int, snapsho
     field = _export_field("200", snapshot, _M200_BOX)
 
     assert field.length == 4, year
-    if field.decimals:
+    if field.decimals == 2:
         # Editions whose design prints "2 enteros y 2 decimales" store the percentage itself.
-        assert field.decimals == 2, year
         assert render_fixed_width_export_field(field, Decimal("25")) == "2500"
         assert render_fixed_width_export_field(field, Decimal("15")) == "1500"
         return
     # Editions whose design prints the Nota 1 code store that code, already scaled by the formula.
+    assert field.decimals is None or field.decimals == 0, year
     assert render_fixed_width_export_field(field, Decimal("2500")) == "2500"
     assert render_fixed_width_export_field(field, Decimal("1500")) == "1500"
     assert render_fixed_width_export_field(field, Decimal("2122")) == "2122"
