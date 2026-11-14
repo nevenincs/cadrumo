@@ -407,7 +407,7 @@ heading_key = "modelo.schema.490.form.page.dr49001.heading"
 
 [[revisions.2023-y-siguientes.form_layouts.pages.sections]]
 id = "general"
-heading_key = "modelo.schema.490.form.section.general.heading"
+heading_key = "modelo.schema.490.form.page.dr49001.section.general.heading"
 blocks = [
     { kind = "field", id = "field", casilla_id = "490-01-indicador-pagina-complementaria-12" },
     { kind = "field", id = "field-2", casilla_id = "490-01-tipo-declaracion-13" },
@@ -425,7 +425,7 @@ blocks = [
 
 [[revisions.2023-y-siguientes.form_layouts.pages.sections]]
 id = "general-2"
-heading_key = "modelo.schema.490.form.section.general-2.heading"
+heading_key = "modelo.schema.490.form.page.dr49001.section.general-2.heading"
 blocks = [
     { kind = "field", id = "field", casilla_id = "490-01-grupo-denominacion-388" },
     { kind = "field", id = "field-2", casilla_id = "490-01-grupo-pais-dominante-513" },
@@ -466,7 +466,7 @@ blocks = [
 
 [[revisions.2023-y-siguientes.form_layouts.pages.sections]]
 id = "general-3"
-heading_key = "modelo.schema.490.form.section.general-3.heading"
+heading_key = "modelo.schema.490.form.page.dr49001.section.general-3.heading"
 blocks = [
     { kind = "field", id = "field", casilla_id = "resultado-a-deducir-25" },
     { kind = "field", id = "field-2", casilla_id = "resultado-liquidacion-26" },
@@ -484,7 +484,7 @@ heading_key = "modelo.schema.490.form.page.dr49002.heading"
 
 [[revisions.2023-y-siguientes.form_layouts.pages.sections]]
 id = "general"
-heading_key = "modelo.schema.490.form.section.general.heading"
+heading_key = "modelo.schema.490.form.page.dr49002.section.general.heading"
 blocks = [
     { kind = "field", id = "field", casilla_id = "490-02-indicador-pagina-complementaria-12" },
     { kind = "field", id = "field-2", casilla_id = "490-02-regularizacion-ejercicio-13" },
@@ -539,7 +539,7 @@ blocks = [
 
 [[revisions.2023-y-siguientes.form_layouts.pages.sections]]
 id = "general-2"
-heading_key = "modelo.schema.490.form.section.general-2.heading"
+heading_key = "modelo.schema.490.form.page.dr49002.section.general-2.heading"
 blocks = [
     { kind = "field", id = "field", casilla_id = "reg-ajuste-total-estado-37" },
     { kind = "field", id = "field-2", casilla_id = "reg-ajuste-total-estado-58" },
@@ -596,7 +596,7 @@ blocks = [
 
 [[revisions.2023-y-siguientes.form_layouts.pages.sections]]
 id = "general-3"
-heading_key = "modelo.schema.490.form.section.general-3.heading"
+heading_key = "modelo.schema.490.form.page.dr49002.section.general-3.heading"
 blocks = [
     { kind = "field", id = "field", casilla_id = "490-02-regularizacion-ejercicio-909" },
     { kind = "field", id = "field-2", casilla_id = "reg-base-declarada-111" },
@@ -650,7 +650,7 @@ blocks = [
 
 [[revisions.2023-y-siguientes.form_layouts.pages.sections]]
 id = "general-4"
-heading_key = "modelo.schema.490.form.section.general-4.heading"
+heading_key = "modelo.schema.490.form.page.dr49002.section.general-4.heading"
 blocks = [
     { kind = "field", id = "field", casilla_id = "reg-ajuste-total-estado-121" },
     { kind = "field", id = "field-2", casilla_id = "reg-ajuste-total-estado-142" },
@@ -712,7 +712,7 @@ heading_key = "modelo.schema.490.form.page.dr49003.heading"
 
 [[revisions.2023-y-siguientes.form_layouts.pages.sections]]
 id = "general"
-heading_key = "modelo.schema.490.form.section.general.heading"
+heading_key = "modelo.schema.490.form.page.dr49003.section.general.heading"
 blocks = [
     { kind = "field", id = "field", casilla_id = "490-03-indicador-pagina-complementaria-12" },
     { kind = "field", id = "field-2", casilla_id = "490-03-regularizacion-ejercicio-13" },
@@ -767,7 +767,7 @@ blocks = [
 
 [[revisions.2023-y-siguientes.form_layouts.pages.sections]]
 id = "general-2"
-heading_key = "modelo.schema.490.form.section.general-2.heading"
+heading_key = "modelo.schema.490.form.page.dr49003.section.general-2.heading"
 blocks = [
     { kind = "field", id = "field", casilla_id = "reg-ajuste-total-estado-205" },
     { kind = "field", id = "field-2", casilla_id = "reg-ajuste-total-estado-226" },
@@ -824,7 +824,7 @@ blocks = [
 
 [[revisions.2023-y-siguientes.form_layouts.pages.sections]]
 id = "general-3"
-heading_key = "modelo.schema.490.form.section.general-3.heading"
+heading_key = "modelo.schema.490.form.page.dr49003.section.general-3.heading"
 blocks = [
     { kind = "field", id = "field", casilla_id = "490-03-regularizacion-ejercicio-909" },
     { kind = "field", id = "field-2", casilla_id = "reg-base-declarada-279" },
@@ -878,7 +878,7 @@ blocks = [
 
 [[revisions.2023-y-siguientes.form_layouts.pages.sections]]
 id = "general-4"
-heading_key = "modelo.schema.490.form.section.general-4.heading"
+heading_key = "modelo.schema.490.form.page.dr49003.section.general-4.heading"
 blocks = [
     { kind = "field", id = "field", casilla_id = "reg-ajuste-total-estado-289" },
     { kind = "field", id = "field-2", casilla_id = "reg-ajuste-total-estado-310" },
@@ -935,7 +935,7 @@ blocks = [
 
 [[revisions.2023-y-siguientes.form_layouts.pages.sections]]
 id = "general-5"
-heading_key = "modelo.schema.490.form.section.general-5.heading"
+heading_key = "modelo.schema.490.form.page.dr49003.section.general-5.heading"
 blocks = [
     { kind = "field", id = "field", casilla_id = "reg-total-cuota-363" },
     { kind = "field", id = "field-2", casilla_id = "reg-total-cuota-estado-364" },

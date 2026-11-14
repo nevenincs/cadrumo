@@ -112,7 +112,7 @@ heading_key = "modelo.schema.840.form.page.m840-pagina01.heading"
 
 [[revisions.2003-y-siguientes.form_layouts.pages.sections]]
 id = "general"
-heading_key = "modelo.schema.840.form.section.general.heading"
+heading_key = "modelo.schema.840.form.page.m840-pagina01.section.general.heading"
 blocks = [
     { kind = "field", id = "field", casilla_id = "sujeto.nif" },
     { kind = "field", id = "field-2", casilla_id = "sujeto.apellidos-razon-social" },
@@ -202,7 +202,7 @@ heading_key = "modelo.schema.840.form.page.m840-pagina02.heading"
 
 [[revisions.2003-y-siguientes.form_layouts.pages.sections]]
 id = "general"
-heading_key = "modelo.schema.840.form.section.general.heading"
+heading_key = "modelo.schema.840.form.page.m840-pagina02.section.general.heading"
 blocks = [
     { kind = "field", id = "field", casilla_id = "elem-trib.municipal-suma-total" },
     { kind = "field", id = "field-2", casilla_id = "elem-trib.municipal-suma-rectificada" },
@@ -225,7 +225,7 @@ heading_key = "modelo.schema.840.form.page.m840-anexo.heading"
 
 [[revisions.2003-y-siguientes.form_layouts.pages.sections]]
 id = "general"
-heading_key = "modelo.schema.840.form.section.general.heading"
+heading_key = "modelo.schema.840.form.page.m840-anexo.section.general.heading"
 blocks = [
     { kind = "field", id = "field", casilla_id = "declarante.indicador-pagina-complementaria" },
 ]

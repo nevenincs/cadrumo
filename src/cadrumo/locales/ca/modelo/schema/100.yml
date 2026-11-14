@@ -3852,22 +3852,40 @@ modelo:
         page:
           datoseconomicos:
             heading: Titulars de les rendes
+            section:
+              general:
+                heading: Contribuent a qui correspon cada renda
           datoseconomicos-resultados:
             heading: Resum i càlcul de la declaració
           datoseconomicos-tomadatosampliada:
             heading: Dades detallades de rendes i deduccions
           datosidentificativos:
             heading: Dades identificatives
+            section:
+              general:
+                heading: Cònjuge no resident i no contribuent de l'IRPF
           datosidentificativos-ascendientes:
             heading: Ascendents
           datosidentificativos-conyuge:
             heading: Cònjuge
+            section:
+              general:
+                heading: Dades personals del cònjuge i residència a la UE o l'EEE
           datosidentificativos-declarante:
             heading: Declarant
+            section:
+              general:
+                heading: Dades personals del declarant
           datosidentificativos-hijos:
             heading: Fills i altres descendents
+            section:
+              general:
+                heading: Descendents no residents amb residència a la UE o l'EEE
           declaracion:
             heading: Declaració
+            section:
+              general:
+                heading: Comunitat autònoma i opció de tributació triada
         section:
           anexoa:
             heading: Millores energètiques en habitatges, vehicles elèctrics i punts
@@ -3961,8 +3979,6 @@ modelo:
           gcambioresidenciaextres:
             heading: Resum de guanys patrimonials per canvi de residència fora del
               territori espanyol
-          general:
-            heading: Contribuent a qui correspon cada renda
           gpaccionesres:
             heading: Resum de transmissions d'accions negociades
           gpderechosres:
