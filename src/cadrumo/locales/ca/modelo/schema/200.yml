@@ -6593,6 +6593,25 @@ modelo:
             label: Entitats asseguradores - Pèrdues i guanys (II) - Compte tècnic
               de l’assegurança de vida - Inversions afectes a assegurances en què
               el prenedor assumeix el risc d’inversió [00308]
+          is-aseguradoras-no-vida-gastos-gestion-inversiones-cuentas-financieras:
+            label: Entitats asseguradores - Pèrdues i guanys (I) - Compte tècnic de
+              l’assegurança de no-vida - Despeses de gestió d'inversions - Despeses
+              d'inversions i comptes financers [00280]
+          is-aseguradoras-no-vida-gastos-gestion-inversiones-inmovilizado-material:
+            label: Entitats asseguradores - Pèrdues i guanys (I) - Compte tècnic de
+              l’assegurança de no-vida - Despeses de gestió d'inversions - Despeses
+              d'immobilitzat material i inversions immobiliàries [00279]
+          is-aseguradoras-no-vida-prestaciones-gastos-pagados:
+            label: Entitats asseguradores - Pèrdues i guanys (I) - Compte tècnic de
+              l’assegurança de no-vida - Prestacions i despeses pagades [00255]
+          is-aseguradoras-no-vida-prestaciones-gastos-pagados-reaseguro-aceptado:
+            label: Entitats asseguradores - Pèrdues i guanys (I) - Compte tècnic de
+              l’assegurança de no-vida - Prestacions i despeses pagades - Reassegurança
+              acceptada [00257]
+          is-aseguradoras-no-vida-siniestralidad-neta-reaseguro:
+            label: Entitats asseguradores - Pèrdues i guanys (I) - Compte tècnic de
+              l’assegurança de no-vida - Sinistralitat de l'exercici, neta de reassegurança
+              [00254]
           is-aseguradoras-vida-cuenta-tecnica-otros-ingresos-tecnicos:
             label: Entitats asseguradores - Pèrdues i guanys (II) - Compte tècnic
               de l’assegurança de vida - Altres ingressos tècnics [00309]
@@ -6640,6 +6659,14 @@ modelo:
           is-aseguradoras-vida-ingresos-inversiones-financieras:
             label: Entitats asseguradores - Pèrdues i guanys (II) - Compte tècnic
               de l’assegurança de vida - Ingressos d’inversions financeres [00301]
+          is-aseguradoras-vida-provisiones-riesgo-tomadores:
+            label: Entitats asseguradores - Pèrdues i guanys (II) - Compte tècnic
+              de l’assegurança de vida - Provisions d'assegurances de vida quan el
+              risc l'assumeixen els prenedors [00325]
+          is-aseguradoras-vida-variacion-provision-primas-no-consumidas-seguro-directo:
+            label: Entitats asseguradores - Pèrdues i guanys (II) - Compte tècnic
+              de l’assegurança de vida - Variació de la provisió per a primes no consumides
+              i riscos en curs (+ o -) - Assegurança directa [00296]
           is-atribucion-rentas-hibridos-aumento:
             label: 'Entitat en règim d''atribució de rendes: asimetries híbrides (art.
               15 bis.12 LIS) - Augment - Correccions de l''exercici - Permanents [01842]'
@@ -7112,6 +7139,12 @@ modelo:
           is-cooperativa-compensacion-cuotas:
             label: Règ. cooperatives - Detall compensació quotes. 2010 Aplicat en
               aquesta liquidació [00099]
+          is-cooperativa-compensacion-cuotas-2008-aplicado:
+            label: Règ. cooperatives - Detall compensació quotes. 2008 Aplicat en
+              aquesta liquidació [00280]
+          is-cooperativa-compensacion-cuotas-2008-pendiente-inicio:
+            label: Règ. cooperatives - Detall compensació quotes. 2008 Pendent d'aplicació
+              a l'inici del període [00279]
           is-cooperativa-cuota-integra-previa:
             label: Liquidació III - base imposable - Només societats cooperatives
               - Quota íntegra prèvia després de la reserva de nivellació [01331]
@@ -8621,6 +8654,12 @@ modelo:
           is-deduccion-di-interna-total:
             label: Deduccions per doble imposició interna (DT 23.1 LIS) - Total -
               Deducció pendent [01342]
+          is-deduccion-di-internacional-2024-pendiente-final:
+            label: Deduccions per doble imposició internacional LIS - DI internacional
+              2024(*) - 2024 Deducció pendent [00255]
+          is-deduccion-di-internacional-2024-tipo-gravamen-periodo-generacion:
+            label: Deduccions per doble imposició internacional LIS - DI internacional
+              2024(*) - Tipus de gravamen del període de generació [00254]
           is-deduccion-di-internacional-detalle:
             label: Deduccions per doble imposició internacional LIS - DI internacional
               2024 - Deducció pendent [01013]
@@ -8742,9 +8781,20 @@ modelo:
             label: Liquidació IV - Altres deduccions - Deducció per inversions i despeses
               realitzades per les autoritats portuàries (art. 38 bis LIS) (desglossament
               a la pàgina 18 bis) [02315]
+          is-deduccion-inversion-canarias-2009-aplicado:
+            label: Deduccions per inversió a Canàries - Inversions Canàries 2009 -
+              Aplicat en aquesta liquidació [00257]
           is-deduccion-inversion-canarias-importe:
             label: Deduccions per inversió a Canàries - Inversions a La Palma, La
               Gomera i El Hierro 2023 - Pendent d'aplicació en períodes futurs [00774]
+          is-deduccion-inversion-canarias-islas-menores-2024-pendiente-futuros:
+            label: Deduccions per inversió a Canàries - Inversions de l'exercici a
+              La Palma, La Gomera i El Hierro - Pendent d'aplicació en períodes futurs
+              [00296]
+          is-deduccion-inversion-canarias-islas-menores-2025-asterisco-pendiente-futuros:
+            label: Deduccions per inversió a Canàries - Inversions de l'exercici a
+              La Palma, La Gomera i El Hierro - Pendent d'aplicació en períodes futurs
+              [00296]
           is-deduccion-inversion-canarias-islas-menores-aplicado:
             label: Deduccions per inversió a Canàries - Inversions a La Palma, La
               Gomera i El Hierro 2024 - Aplicat en aquesta liquidació [01806]
@@ -8882,6 +8932,18 @@ modelo:
           is-ecpn-ajuste-errores-importe:
             label: Estat de canvis en el patrimoni net (II) - Ajustos per errors d'exercicis
               anteriors - Capital - Escripturat [00408]
+          is-ecpn-bde-cambios-politicas-contables-resultado-ejercicio:
+            label: Comptabilitat Banc d'Espanya - Estat de canvis en el patrimoni
+              net (II) - Estat total de canvis - Efectes dels canvis en les polítiques
+              comptables - Resultat de l'exercici [00325]
+          is-ecpn-bde-coberturas-flujos-efectivo-ganancias-perdidas-valor:
+            label: Comptabilitat Banc d'Espanya - Estat de canvis en el patrimoni
+              net (I) - Estat d'ingressos i despeses reconeguts - Guanys o (-) pèrdues
+              de valor comptabilitzats en el patrimoni net [00279]
+          is-ecpn-bde-coberturas-flujos-efectivo-transferido-resultados:
+            label: Comptabilitat Banc d'Espanya - Estat de canvis en el patrimoni
+              net (I) - Estat d'ingressos i despeses reconeguts - Transferit a resultats
+              [00280]
           is-ecpn-bde-correccion-errores-acciones-propias:
             label: Comptabilitat Banc d'Espanya - Estat de canvis en el patrimoni
               net (II) - Estat total de canvis - Efectes de la correcció d’errors
@@ -8938,6 +9000,10 @@ modelo:
             label: Comptabilitat Banc d'Espanya - Estat de canvis en el patrimoni
               net (II) - Estat total de canvis - Saldo d’obertura [abans de la reexpressió]
               - Altre resultat global acumulat [00303]
+          is-ecpn-bde-saldo-apertura-otros-elementos-patrimonio-neto:
+            label: Comptabilitat Banc d'Espanya - Estat de canvis en el patrimoni
+              net (II) - Estat total de canvis - Saldo d’obertura [abans de la reexpressió]
+              - Altres elements del patrimoni net [00296]
           is-ecpn-bde-saldo-apertura-resultado-ejercicio:
             label: Comptabilitat Banc d'Espanya - Estat de canvis en el patrimoni
               net (II) - Estat total de canvis - Saldo d’obertura [abans de la reexpressió]
@@ -9536,9 +9602,28 @@ modelo:
             label: Institucions d’inversió col·lectiva - Estat de variació patrimonial
               (II) - Revaloració d’immobles d’ús propi i resultats per alienació d’immobilitzat
               [00302]
+          is-iic-variacion-patrimonial-comisiones-retrocedidas:
+            label: Institucions d’inversió col·lectiva - Estat de variació patrimonial
+              (II) - Comissions retrocedides [00296]
+          is-iic-variacion-patrimonial-dividendos:
+            label: Institucions d’inversió col·lectiva - Estat de variació patrimonial
+              (I) - Dividends [00255]
+          is-iic-variacion-patrimonial-intereses:
+            label: Institucions d’inversió col·lectiva - Estat de variació patrimonial
+              (I) - Interessos [00254]
           is-iic-variacion-patrimonial-otros:
             label: Institucions d’inversió col·lectiva - Estat de variació patrimonial
               (II) - Altres [00301]
+          is-iic-variacion-patrimonial-servicios-exteriores:
+            label: Institucions d’inversió col·lectiva - Estat de variació patrimonial
+              (I) - Serveis exteriors [00279]
+          is-iic-variacion-patrimonial-servicios-exteriores-tasaciones:
+            label: Institucions d’inversió col·lectiva - Estat de variació patrimonial
+              (I) - Serveis exteriors - Taxacions [00280]
+          is-iic-variacion-valor-razonable-inversiones-inmobiliarias:
+            label: Institucions d’inversió col·lectiva - Estat de variació patrimonial
+              (I) - Inversions immobiliàries - Variació del valor raonable de les
+              inversions immobiliàries [00257]
           is-imputacion-en-base-imponible-rentas-positivas-art-100-lis:
             help: Indicador d'imputació en la base imposable de rendes positives segons
               l'article 100 de la LIS [00007].
@@ -9586,6 +9671,10 @@ modelo:
           is-liquidacion-i-correcciones-impuesto-sociedades-disminuciones:
             label: Liquidació I - Resultat del compte de pèrdues i guanys - Correccions
               per l’impost sobre societats - Disminucions [00302]
+          is-liquidacion-i-deterioro-participaciones-art-13-2-b-aumentos:
+            label: Liquidació I - Detall correccions resultat cte. pèrdues i guanys
+              - Ajustos per pèrdues per deteriorament de valors repr. de partic. en
+              el capital o fons propis (art. 13.2 b) LIS) - Augments [00325]
           is-liquidacion-i-libertad-amortizacion-gastos-id-art-12-3-c-aumentos:
             label: Liquidació I - Detall correccions resultat cte. pèrdues i guanys
               - Llibertat d’amortització de despeses de recerca i desenvolupament
@@ -9776,6 +9865,12 @@ modelo:
               [00041].
             label: Personal assalariat (xifra mitjana de l'exercici) personal fix
               [00041]
+          is-pyg-bde-fondo-comercio-negativo-reconocido-resultados:
+            label: Comptabilitat Banc d'Espanya - Pèrdues i guanys - Fons de comerç
+              negatiu reconegut en resultats [00255]
+          is-pyg-bde-ganancias-perdidas-antes-impuestos-actividades-continuadas:
+            label: Comptabilitat Banc d'Espanya - Pèrdues i guanys - C) Guanys o (-)
+              pèrdues abans d'impostos procedents de les activitats continuades [00257]
           is-pyg-continuadas-amortizacion-del-inmovilizado:
             label: Compte de pèrdues i guanys (I) - Operacions continuades - Amortització
               de l'immobilitzat [00284]
@@ -10175,6 +10270,27 @@ modelo:
           is-sal-reserva-especial-dotacion:
             label: Liquidació III - Base imposable - Societats Laborals - Reserva
               especial de dotació Llei 44/2015 Art. 14 [SAL_RESERVA_DOTACION]
+          is-sgr-operaciones-socios-capital-no-exigido:
+            label: 'Societats de garantia recíproca - Estat total de canvis en el
+              patrimoni net - Operacions amb socis - Capital - Menys: no exigit [00254]'
+          is-sgr-operaciones-socios-capital-reembolsable:
+            label: 'Societats de garantia recíproca - Estat total de canvis en el
+              patrimoni net - Operacions amb socis - Capital - Menys: reemborsable
+              [00255]'
+          is-sgr-operaciones-socios-distribucion-dividendos-capital-suscrito:
+            label: Societats de garantia recíproca - Estat total de canvis en el patrimoni
+              net - Operacions amb socis - (-) Distribució de dividends - Capital
+              - Subscrit [00280]
+          is-sgr-operaciones-socios-reducciones-capital-total:
+            label: Societats de garantia recíproca - Estat total de canvis en el patrimoni
+              net - Operacions amb socis - (-) Reduccions de capital - Total [00279]
+          is-sgr-operaciones-socios-resultados-ejercicios-anteriores:
+            label: Societats de garantia recíproca - Estat total de canvis en el patrimoni
+              net - Operacions amb socis - Resultats d'exercicis anteriors [00257]
+          is-sgr-otras-operaciones-socios-fondos-provisiones-tecnicas-aportaciones-terceros:
+            label: Societats de garantia recíproca - Estat total de canvis en el patrimoni
+              net - Operacions amb socis - Altres operacions amb socis - Fons de provisions
+              tècniques - Aportacions de tercers [00296]
           is-sgr-otras-variaciones-ajustes-cambio-valor:
             label: Societats de garantia recíproca - Estat total de canvis en el patrimoni
               net - Altres variacions del patrimoni net - Ajustos per canvis de valor

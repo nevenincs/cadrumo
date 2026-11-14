@@ -6680,6 +6680,25 @@ modelo:
             label: Insurance undertakings - Profit and loss (II) - Life insurance
               technical account - Investments linked to insurance contracts where
               the policyholder bears the investment risk [00308]
+          is-aseguradoras-no-vida-gastos-gestion-inversiones-cuentas-financieras:
+            label: Insurance undertakings - Profit and loss (I) - Non-life insurance
+              technical account - Investment management expenses - Investment and
+              financial account expenses [00280]
+          is-aseguradoras-no-vida-gastos-gestion-inversiones-inmovilizado-material:
+            label: Insurance undertakings - Profit and loss (I) - Non-life insurance
+              technical account - Investment management expenses - Property, plant
+              and equipment and investment property expenses [00279]
+          is-aseguradoras-no-vida-prestaciones-gastos-pagados:
+            label: Insurance undertakings - Profit and loss (I) - Non-life insurance
+              technical account - Benefits and expenses paid [00255]
+          is-aseguradoras-no-vida-prestaciones-gastos-pagados-reaseguro-aceptado:
+            label: Insurance undertakings - Profit and loss (I) - Non-life insurance
+              technical account - Benefits and expenses paid - Reinsurance accepted
+              [00257]
+          is-aseguradoras-no-vida-siniestralidad-neta-reaseguro:
+            label: Insurance undertakings - Profit and loss (I) - Non-life insurance
+              technical account - Claims incurred for the year, net of reinsurance
+              [00254]
           is-aseguradoras-vida-cuenta-tecnica-otros-ingresos-tecnicos:
             label: Insurance undertakings - Profit and loss (II) - Life insurance
               technical account - Other technical income [00309]
@@ -6724,6 +6743,14 @@ modelo:
           is-aseguradoras-vida-ingresos-inversiones-financieras:
             label: Insurance undertakings - Profit and loss (II) - Life insurance
               technical account - Income from financial investments [00301]
+          is-aseguradoras-vida-provisiones-riesgo-tomadores:
+            label: Insurance undertakings - Profit and loss (II) - Life insurance
+              technical account - Life insurance provisions where the policyholders
+              bear the investment risk [00325]
+          is-aseguradoras-vida-variacion-provision-primas-no-consumidas-seguro-directo:
+            label: Insurance undertakings - Profit and loss (II) - Life insurance
+              technical account - Change in the provision for unearned premiums and
+              unexpired risks (+ or -) - Direct insurance [00296]
           is-atribucion-rentas-hibridos-aumento:
             label: 'Entity under the income-attribution regime: hybrid mismatches
               (art. 15 bis.12 LIS) - Increase - Adjustments for the tax year - Permanent
@@ -7199,6 +7226,12 @@ modelo:
           is-cooperativa-compensacion-cuotas:
             label: Cooperative regime - Detail of offsetting quotas. 2010 Applied
               in this settlement [00099]
+          is-cooperativa-compensacion-cuotas-2008-aplicado:
+            label: Cooperative regime - Detail of offsetting quotas. 2008 Applied
+              in this settlement [00280]
+          is-cooperativa-compensacion-cuotas-2008-pendiente-inicio:
+            label: Cooperative regime - Detail of offsetting quotas. 2008 Pending
+              application at the start of the period [00279]
           is-cooperativa-cuota-integra-previa:
             label: Settlement III - Taxable base - Only cooperative companies - Prior
               gross tax liability after the equalization reserve [01331]
@@ -8746,6 +8779,12 @@ modelo:
           is-deduccion-di-interna-total:
             label: Internal double taxation deductions (Transitional Provision 23.1
               LIS) - Total - Pending deduction [01342]
+          is-deduccion-di-internacional-2024-pendiente-final:
+            label: International double taxation deductions (LIS) - International
+              D.T. 2024(*) - 2024 Pending deduction [00255]
+          is-deduccion-di-internacional-2024-tipo-gravamen-periodo-generacion:
+            label: International double taxation deductions (LIS) - International
+              D.T. 2024(*) - Tax rate in the generating period [00254]
           is-deduccion-di-internacional-detalle:
             label: International double taxation deductions (LIS) - International
               D.T. 2024 - Pending deduction [01013]
@@ -8868,10 +8907,21 @@ modelo:
             label: Settlement IV - Other deductions - Deduction for investments and
               expenses made by port authorities (art. 38 bis LIS) (breakdown on page
               18 bis) [02315]
+          is-deduccion-inversion-canarias-2009-aplicado:
+            label: Deductions for investment in the Canary Islands - Canary Islands
+              investments 2009 - Applied in this return [00257]
           is-deduccion-inversion-canarias-importe:
             label: Deductions for investment in the Canary Islands - Investments in
               La Palma, La Gomera and El Hierro 2023 - Pending application in future
               periods [00774]
+          is-deduccion-inversion-canarias-islas-menores-2024-pendiente-futuros:
+            label: Deductions for investment in the Canary Islands - Investments for
+              the year in La Palma, La Gomera and El Hierro - Pending application
+              in future periods [00296]
+          is-deduccion-inversion-canarias-islas-menores-2025-asterisco-pendiente-futuros:
+            label: Deductions for investment in the Canary Islands - Investments for
+              the year in La Palma, La Gomera and El Hierro - Pending application
+              in future periods [00296]
           is-deduccion-inversion-canarias-islas-menores-aplicado:
             label: Deductions for investment in the Canary Islands - Investments in
               La Palma, La Gomera and El Hierro 2024 - Applied in this return [01806]
@@ -9008,6 +9058,18 @@ modelo:
           is-ecpn-ajuste-errores-importe:
             label: Statement of changes in equity (II) - Adjustments for errors from
               previous periods - Capital - Subscribed [00408]
+          is-ecpn-bde-cambios-politicas-contables-resultado-ejercicio:
+            label: Bank of Spain accounting - Statement of changes in equity (II)
+              - Total statement of changes - Effects of changes in accounting policies
+              - Profit or loss for the year [00325]
+          is-ecpn-bde-coberturas-flujos-efectivo-ganancias-perdidas-valor:
+            label: Bank of Spain accounting - Statement of changes in equity (I) -
+              Statement of recognised income and expense - Valuation gains or (-)
+              losses recognised in equity [00279]
+          is-ecpn-bde-coberturas-flujos-efectivo-transferido-resultados:
+            label: Bank of Spain accounting - Statement of changes in equity (I) -
+              Statement of recognised income and expense - Transferred to profit or
+              loss [00280]
           is-ecpn-bde-correccion-errores-acciones-propias:
             label: Bank of Spain accounting - Statement of changes in equity (II)
               - Total statement of changes - Effects of corrections of errors - (-)
@@ -9064,6 +9126,10 @@ modelo:
             label: Bank of Spain accounting - Statement of changes in equity (II)
               - Total statement of changes - Opening balance [before restatement]
               - Accumulated other comprehensive income [00303]
+          is-ecpn-bde-saldo-apertura-otros-elementos-patrimonio-neto:
+            label: Bank of Spain accounting - Statement of changes in equity (II)
+              - Total statement of changes - Opening balance [before restatement]
+              - Other equity items [00296]
           is-ecpn-bde-saldo-apertura-resultado-ejercicio:
             label: Bank of Spain accounting - Statement of changes in equity (II)
               - Total statement of changes - Opening balance [before restatement]
@@ -9649,9 +9715,28 @@ modelo:
             label: Collective investment institutions - Statement of changes in net
               assets (II) - Revaluation of owner-occupied property and gains or losses
               on disposal of fixed assets [00302]
+          is-iic-variacion-patrimonial-comisiones-retrocedidas:
+            label: Collective investment institutions - Statement of changes in net
+              assets (II) - Retroceded commissions [00296]
+          is-iic-variacion-patrimonial-dividendos:
+            label: Collective investment institutions - Statement of changes in net
+              assets (I) - Dividends [00255]
+          is-iic-variacion-patrimonial-intereses:
+            label: Collective investment institutions - Statement of changes in net
+              assets (I) - Interest [00254]
           is-iic-variacion-patrimonial-otros:
             label: Collective investment institutions - Statement of changes in net
               assets (II) - Other [00301]
+          is-iic-variacion-patrimonial-servicios-exteriores:
+            label: Collective investment institutions - Statement of changes in net
+              assets (I) - External services [00279]
+          is-iic-variacion-patrimonial-servicios-exteriores-tasaciones:
+            label: Collective investment institutions - Statement of changes in net
+              assets (I) - External services - Valuations [00280]
+          is-iic-variacion-valor-razonable-inversiones-inmobiliarias:
+            label: Collective investment institutions - Statement of changes in net
+              assets (I) - Investment property - Change in fair value of investment
+              property [00257]
           is-imputacion-en-base-imponible-rentas-positivas-art-100-lis:
             help: Flag indicating inclusion of positive income in the tax base under
               article 100 of the Corporate Income Tax Law [00007].
@@ -9699,6 +9784,10 @@ modelo:
           is-liquidacion-i-correcciones-impuesto-sociedades-disminuciones:
             label: Settlement I - Profit and loss account result - Adjustments for
               corporate income tax - Decreases [00302]
+          is-liquidacion-i-deterioro-participaciones-art-13-2-b-aumentos:
+            label: Settlement I - Detail of adjustments to the profit and loss account
+              result - Adjustments for impairment losses on securities representing
+              interests in capital or equity (art. 13.2 b) LIS) - Increases [00325]
           is-liquidacion-i-libertad-amortizacion-gastos-id-art-12-3-c-aumentos:
             label: Settlement I - Detail of adjustments to the profit and loss account
               result - Free depreciation of research and development expenditure (art.
@@ -9884,6 +9973,12 @@ modelo:
               period [00041].
             label: Salaried personnel (average figure for the period) permanent staff
               [00041]
+          is-pyg-bde-fondo-comercio-negativo-reconocido-resultados:
+            label: Bank of Spain accounting - Profit and loss - Negative goodwill
+              recognised in profit or loss [00255]
+          is-pyg-bde-ganancias-perdidas-antes-impuestos-actividades-continuadas:
+            label: Bank of Spain accounting - Profit and loss - C) Profit or (-) loss
+              before tax from continuing operations [00257]
           is-pyg-continuadas-amortizacion-del-inmovilizado:
             label: Profit and loss account (I) - Continuing operations - Depreciation
               and amortization of fixed assets [00284]
@@ -10278,6 +10373,26 @@ modelo:
           is-sal-reserva-especial-dotacion:
             label: Settlement III - Taxable base - Employee-owned companies - Special
               reserve allocation, Law 44/2015 Art. 14 [SAL_RESERVA_DOTACION]
+          is-sgr-operaciones-socios-capital-no-exigido:
+            label: 'Mutual guarantee companies - Total statement of changes in equity
+              - Transactions with members - Capital - Less: uncalled [00254]'
+          is-sgr-operaciones-socios-capital-reembolsable:
+            label: 'Mutual guarantee companies - Total statement of changes in equity
+              - Transactions with members - Capital - Less: refundable [00255]'
+          is-sgr-operaciones-socios-distribucion-dividendos-capital-suscrito:
+            label: Mutual guarantee companies - Total statement of changes in equity
+              - Transactions with members - (-) Distribution of dividends - Capital
+              - Subscribed [00280]
+          is-sgr-operaciones-socios-reducciones-capital-total:
+            label: Mutual guarantee companies - Total statement of changes in equity
+              - Transactions with members - (-) Capital reductions - Total [00279]
+          is-sgr-operaciones-socios-resultados-ejercicios-anteriores:
+            label: Mutual guarantee companies - Total statement of changes in equity
+              - Transactions with members - Prior years' results [00257]
+          is-sgr-otras-operaciones-socios-fondos-provisiones-tecnicas-aportaciones-terceros:
+            label: Mutual guarantee companies - Total statement of changes in equity
+              - Transactions with members - Other transactions with members - Technical
+              provision funds - Third-party contributions [00296]
           is-sgr-otras-variaciones-ajustes-cambio-valor:
             label: Mutual guarantee companies - Total statement of changes in equity
               - Other changes in equity - Adjustments for changes in value [00304]

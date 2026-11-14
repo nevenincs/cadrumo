@@ -6909,3 +6909,44 @@ source_refs = ["aeat-dr-200-2024"]
 legal_refs = ["ley-27-2014:art-36-2", "orden-hac-657-2025:modelo-200"]
 continuidad_origin = "new_on_form"
 continuidad_evidence = "Grounded first appearance within the legal-support-derived coverage: aeat-dr-200-2023 has no parsed DP200018B field printing [00316], while aeat-dr-200-2024 prints 'Deducciones por producciones cinematográficas extranjeras (art. 36.2 LIS) - 2024 - Aplicado en esta liquidación [00316]' at row 73, field 68, offset 1067, length 17, type Num. This records only the first observed supported design; it makes no claim about earlier unsupported editions. The same printed number on another sheet is an independent form identity and is not treated as its predecessor."
+# aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2028 DP200016 field 53, offset 691, length 4, type Num: Deducciones doble imposición internacional LIS - DI internacional 2024(*) - Tipo gravamen período generación [00254]
+[[revisions."2024".casillas]]
+id = "DP200016:00254"
+continuidad_id = "is-deduccion-di-internacional-2024-tipo-gravamen-periodo-generacion"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2028 (DP200016 field 53): Deducciones doble imposición internacional LIS - DI internacional 2024(*) - Tipo gravamen período generación [00254]. aeat-dr-200-2023 prints no box [00254] on DP200016, so the row is new on the 2024 form."
+number = "00254"
+segmento = "DP200016"
+section = ["deducciones_doble_imposicion_internacional_lis", "di_internacional_2024"]
+semantic_role = "is_deduccion_di_internacional_tipo_gravamen_periodo_generacion"
+semantic_role_cardinality = "shared"
+data_type = "decimal"
+legal_refs = ["ley-27-2014:art-31"]
+
+# aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2029 DP200016 field 54, offset 695, length 17, type Num: Deducciones doble imposición internacional LIS - DI internacional 2024(*) - 2024 Deducción pendiente [00255]
+[[revisions."2024".casillas]]
+id = "DP200016:00255"
+continuidad_id = "is-deduccion-di-internacional-2024-pendiente-final"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2029 (DP200016 field 54): Deducciones doble imposición internacional LIS - DI internacional 2024(*) - 2024 Deducción pendiente [00255]. aeat-dr-200-2023 prints no box [00255] on DP200016, so the row is new on the 2024 form."
+number = "00255"
+segmento = "DP200016"
+section = ["deducciones_doble_imposicion_internacional_lis", "di_internacional_2024"]
+semantic_role = "is_deduccion_di_internacional_detalle"
+semantic_role_cardinality = "shared"
+data_type = "money"
+legal_refs = ["ley-27-2014:art-31"]
+
+# aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2291 DP200016B field 160, offset 2631, length 17, type Num: Deducciones inversión Canarias - Inversiones en La Palma, La Gomera y El Hierro 2024 - Pendiente de aplicación en periodos futuros [00296]
+[[revisions."2024".casillas]]
+id = "DP200016B:00296"
+continuidad_id = "is-deduccion-inversion-canarias-islas-menores-2024-pendiente-futuros"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2291 (DP200016B field 160): Deducciones inversión Canarias - Inversiones en La Palma, La Gomera y El Hierro 2024 - Pendiente de aplicación en periodos futuros [00296]. aeat-dr-200-2023 prints no box [00296] on DP200016B, so the row is new on the 2024 form."
+number = "00296"
+segmento = "DP200016B"
+section = ["deducciones_inversion_canarias", "inversiones_en_la_palma_la_gomera_y_el_hierro_2024"]
+semantic_role = "is_deduccion_inversion_canarias_islas_menores_pendiente"
+semantic_role_cardinality = "shared"
+data_type = "money"
+legal_refs = ["ley-27-2014:art-39"]

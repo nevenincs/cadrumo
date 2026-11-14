@@ -152,7 +152,8 @@ segmento = "DP200015"
 number = "00671"
 
 [[revisions."2023".completeness_manifest.casillas]]
-casilla_id = "00255"
+casilla_id = "DP200007:00255"
+segmento = "DP200007"
 number = "00255"
 
 [[revisions."2023".completeness_manifest.casillas]]

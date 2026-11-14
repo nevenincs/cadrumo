@@ -7,7 +7,7 @@ revision_id = "2024"
 seed_source = "export_record_design"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "9a96d2bba8d6b99bc2bc6182606a5463b514179a2086bdb21f929268afdedcf6"
+source_state_digest = "1f814f92bd62074a9eca7fef8e196f6e6eb4e177520779de9660ea6195650813"
 design_sources = [
     { source_ref = "aeat-dr-200-2024", sha256 = "2d98f21f5ad41477d2c43491150c11f48bfa6370ce0c05b2434ec0e2956e80c8" },
 ]
@@ -173,27 +173,27 @@ placements = [
     { casilla_id = "00166", kind = "on_form", box_number = "00166", aliases = [{ page_id = "dp200016", section_id = "deducciones-doble-imposicion-internacional-lis", official_ref = "DP200016" }] },
     { casilla_id = "00167", kind = "on_form", box_number = "00167", aliases = [{ page_id = "dp200016", section_id = "deducciones-doble-imposicion-internacional-lis", official_ref = "DP200016" }] },
     { casilla_id = "00168", kind = "on_form", box_number = "00168", aliases = [{ page_id = "dp200015", section_id = "regimen-especial-de-buques-y-empresas-nav-4788c4", official_ref = "DP200015" }] },
-    { casilla_id = "00169", kind = "on_form", box_number = "00169", aliases = [{ page_id = "dp200016", section_id = "deducciones-doble-imposicion-internacional-lis", official_ref = "DP200016" }] },
-    { casilla_id = "00170", kind = "on_form", box_number = "00170", aliases = [{ page_id = "dp200016", section_id = "deducciones-doble-imposicion-internacional-lis", official_ref = "DP200016" }] },
-    { casilla_id = "00171", kind = "on_form", box_number = "00171", aliases = [{ page_id = "dp200016", section_id = "deducciones-doble-imposicion-internacional-lis", official_ref = "DP200016" }] },
+    { casilla_id = "00169", kind = "on_form", box_number = "00169", aliases = [{ page_id = "dp200016", section_id = "deducciones-doble-imposicion-internacional-lis", official_ref = "DP200016" }, { page_id = "dp200036", section_id = "entidades-aseguradoras-balance-pasivo-y-p-0d58ba", official_ref = "DP200036" }] },
+    { casilla_id = "00170", kind = "on_form", box_number = "00170", aliases = [{ page_id = "dp200016", section_id = "deducciones-doble-imposicion-internacional-lis", official_ref = "DP200016" }, { page_id = "dp200036", section_id = "entidades-aseguradoras-balance-pasivo-y-p-0d58ba", official_ref = "DP200036" }] },
+    { casilla_id = "00171", kind = "on_form", box_number = "00171", aliases = [{ page_id = "dp200016", section_id = "deducciones-doble-imposicion-internacional-lis", official_ref = "DP200016" }, { page_id = "dp200036", section_id = "entidades-aseguradoras-balance-pasivo-y-p-0d58ba", official_ref = "DP200036" }] },
     { casilla_id = "00172", kind = "on_form", box_number = "00172", aliases = [{ page_id = "dp200015", section_id = "regimen-especial-de-buques-y-empresas-nav-4788c4", official_ref = "DP200015" }, { page_id = "dp200036", section_id = "entidades-aseguradoras-balance-pasivo-y-p-588f2b", official_ref = "DP200036" }] },
     { casilla_id = "00173", kind = "on_form", box_number = "00173", aliases = [{ page_id = "dp200015", section_id = "regimen-especial-de-buques-y-empresas-nav-4788c4", official_ref = "DP200015" }, { page_id = "dp200036", section_id = "entidades-aseguradoras-balance-pasivo-y-p-588f2b", official_ref = "DP200036" }] },
     { casilla_id = "00174", kind = "on_form", box_number = "00174", aliases = [{ page_id = "dp200016", section_id = "deducciones-doble-imposicion-internacional-lis", official_ref = "DP200016" }, { page_id = "dp200036", section_id = "entidades-aseguradoras-balance-pasivo-y-p-588f2b", official_ref = "DP200036" }] },
     { casilla_id = "00175", kind = "on_form", box_number = "00175", aliases = [{ page_id = "dp200015", section_id = "regimen-especial-de-buques-y-empresas-nav-4788c4", official_ref = "DP200015" }, { page_id = "dp200036", section_id = "entidades-aseguradoras-balance-pasivo-y-p-588f2b", official_ref = "DP200036" }] },
     { casilla_id = "00176", kind = "on_form", box_number = "00176", aliases = [{ page_id = "dp200015", section_id = "regimen-especial-de-buques-y-empresas-nav-4788c4", official_ref = "DP200015" }, { page_id = "dp200036", section_id = "entidades-aseguradoras-balance-pasivo-y-p-588f2b", official_ref = "DP200036" }] },
     { casilla_id = "00177", kind = "on_form", box_number = "00177", aliases = [{ page_id = "dp200015", section_id = "regimen-especial-de-buques-y-empresas-nav-4788c4", official_ref = "DP200015" }, { page_id = "dp200036", section_id = "entidades-aseguradoras-balance-pasivo-y-p-588f2b", official_ref = "DP200036" }] },
-    { casilla_id = "00178", kind = "on_form", box_number = "00178", aliases = [{ page_id = "dp200015", section_id = "regimen-especial-de-buques-y-empresas-nav-4788c4", official_ref = "DP200015" }, { page_id = "dp200036", section_id = "entidades-aseguradoras-balance-pasivo-y-p-0d58ba", official_ref = "DP200036" }] },
-    { casilla_id = "00179", kind = "on_form", box_number = "00179", aliases = [{ page_id = "dp200015", section_id = "regimen-especial-de-buques-y-empresas-nav-4788c4", official_ref = "DP200015" }, { page_id = "dp200036", section_id = "entidades-aseguradoras-balance-pasivo-y-p-0d58ba", official_ref = "DP200036" }] },
-    { casilla_id = "00180", kind = "on_form", box_number = "00180", aliases = [{ page_id = "dp200017", section_id = "deducc-para-incentivar-determ-actividades", official_ref = "DP200017" }, { page_id = "dp200036", section_id = "entidades-aseguradoras-balance-pasivo-y-p-0d58ba", official_ref = "DP200036" }] },
+    { casilla_id = "00178", kind = "on_form", box_number = "00178", aliases = [{ page_id = "dp200015", section_id = "regimen-especial-de-buques-y-empresas-nav-4788c4", official_ref = "DP200015" }, { page_id = "dp200036", section_id = "entidades-aseguradoras-balance-pasivo-y-p-0d58ba-2", official_ref = "DP200036" }] },
+    { casilla_id = "00179", kind = "on_form", box_number = "00179", aliases = [{ page_id = "dp200015", section_id = "regimen-especial-de-buques-y-empresas-nav-4788c4", official_ref = "DP200015" }, { page_id = "dp200036", section_id = "entidades-aseguradoras-balance-pasivo-y-p-0d58ba-2", official_ref = "DP200036" }] },
+    { casilla_id = "00180", kind = "on_form", box_number = "00180", aliases = [{ page_id = "dp200017", section_id = "deducc-para-incentivar-determ-actividades", official_ref = "DP200017" }, { page_id = "dp200036", section_id = "entidades-aseguradoras-balance-pasivo-y-p-0d58ba-2", official_ref = "DP200036" }] },
     { casilla_id = "00181", kind = "on_form", box_number = "00181", aliases = [{ page_id = "dp200036", section_id = "entidades-aseguradoras-balance-pasivo-y-p-588f2b-2", official_ref = "DP200036" }] },
     { casilla_id = "00182", kind = "on_form", box_number = "00182", aliases = [{ page_id = "dp200036", section_id = "entidades-aseguradoras-balance-pasivo-y-p-588f2b-2", official_ref = "DP200036" }] },
     { casilla_id = "00183", kind = "on_form", box_number = "00183", aliases = [{ page_id = "dp200036", section_id = "entidades-aseguradoras-balance-pasivo-y-p-588f2b-2", official_ref = "DP200036" }] },
     { casilla_id = "00184", kind = "on_form", box_number = "00184", aliases = [{ page_id = "dp200036", section_id = "entidades-aseguradoras-balance-pasivo-y-p-588f2b-2", official_ref = "DP200036" }] },
     { casilla_id = "00185", kind = "on_form", box_number = "00185", aliases = [{ page_id = "dp200017", section_id = "deducc-para-incentivar-determ-actividades", official_ref = "DP200017" }, { page_id = "dp200036", section_id = "entidades-aseguradoras-balance-pasivo-y-p-588f2b-2", official_ref = "DP200036" }] },
-    { casilla_id = "00186", kind = "on_form", box_number = "00186", aliases = [{ page_id = "dp200017", section_id = "deducc-para-incentivar-determ-actividades", official_ref = "DP200017" }, { page_id = "dp200036", section_id = "entidades-aseguradoras-balance-pasivo-y-p-0d58ba-2", official_ref = "DP200036" }] },
-    { casilla_id = "00187", kind = "on_form", box_number = "00187", aliases = [{ page_id = "dp200036", section_id = "entidades-aseguradoras-balance-pasivo-y-p-0d58ba-2", official_ref = "DP200036" }] },
-    { casilla_id = "00188", kind = "on_form", box_number = "00188", aliases = [{ page_id = "dp200016", section_id = "deducc-disposic-transit-24a-7-lis", official_ref = "DP200016" }, { page_id = "dp200036", section_id = "entidades-aseguradoras-balance-pasivo-y-p-0d58ba-2", official_ref = "DP200036" }] },
-    { casilla_id = "00189", kind = "on_form", box_number = "00189", aliases = [{ page_id = "dp200016", section_id = "deducc-disposic-transit-24a-7-lis", official_ref = "DP200016" }, { page_id = "dp200036", section_id = "entidades-aseguradoras-balance-pasivo-y-p-0d58ba-2", official_ref = "DP200036" }] },
+    { casilla_id = "00186", kind = "on_form", box_number = "00186", aliases = [{ page_id = "dp200017", section_id = "deducc-para-incentivar-determ-actividades", official_ref = "DP200017" }, { page_id = "dp200036", section_id = "entidades-aseguradoras-balance-pasivo-y-p-0d58ba-3", official_ref = "DP200036" }] },
+    { casilla_id = "00187", kind = "on_form", box_number = "00187", aliases = [{ page_id = "dp200036", section_id = "entidades-aseguradoras-balance-pasivo-y-p-0d58ba-3", official_ref = "DP200036" }] },
+    { casilla_id = "00188", kind = "on_form", box_number = "00188", aliases = [{ page_id = "dp200016", section_id = "deducc-disposic-transit-24a-7-lis", official_ref = "DP200016" }, { page_id = "dp200036", section_id = "entidades-aseguradoras-balance-pasivo-y-p-0d58ba-3", official_ref = "DP200036" }] },
+    { casilla_id = "00189", kind = "on_form", box_number = "00189", aliases = [{ page_id = "dp200016", section_id = "deducc-disposic-transit-24a-7-lis", official_ref = "DP200016" }, { page_id = "dp200036", section_id = "entidades-aseguradoras-balance-pasivo-y-p-0d58ba-3", official_ref = "DP200036" }] },
     { casilla_id = "00190", kind = "on_form", box_number = "00190", aliases = [{ page_id = "dp200016", section_id = "deducc-disposic-transit-24a-7-lis", official_ref = "DP200016" }, { page_id = "dp200036", section_id = "entidades-aseguradoras-balance-pasivo-y-p-588f2b-3", official_ref = "DP200036" }] },
     { casilla_id = "00191", kind = "on_form", box_number = "00191", aliases = [{ page_id = "dp200016b", section_id = "deducciones-inversion-canarias", official_ref = "DP200016B" }, { page_id = "dp200036", section_id = "entidades-aseguradoras-balance-pasivo-y-p-588f2b-3", official_ref = "DP200036" }] },
     { casilla_id = "00192", kind = "on_form", box_number = "00192", aliases = [{ page_id = "dp200016b", section_id = "deducciones-inversion-canarias", official_ref = "DP200016B" }, { page_id = "dp200036", section_id = "entidades-aseguradoras-balance-pasivo-y-p-588f2b-3", official_ref = "DP200036" }] },
@@ -225,83 +225,77 @@ placements = [
     { casilla_id = "00218", kind = "on_form", box_number = "00218", aliases = [{ page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii", official_ref = "DP200008" }, { page_id = "dp200016b", section_id = "deducciones-inversion-canarias", official_ref = "DP200016B" }] },
     { casilla_id = "00219", kind = "on_form", box_number = "00219", aliases = [{ page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii", official_ref = "DP200008" }, { page_id = "dp200016b", section_id = "deducciones-inversion-canarias", official_ref = "DP200016B" }] },
     { casilla_id = "00220", kind = "on_form", box_number = "00220", aliases = [{ page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii", official_ref = "DP200008" }, { page_id = "dp200016b", section_id = "deducciones-inversion-canarias", official_ref = "DP200016B" }] },
-    { casilla_id = "00221", kind = "on_form", box_number = "00221", aliases = [{ page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii", official_ref = "DP200008" }, { page_id = "dp200016b", section_id = "deducciones-inversion-canarias", official_ref = "DP200016B" }] },
-    { casilla_id = "00222", kind = "on_form", box_number = "00222", aliases = [{ page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii", official_ref = "DP200008" }, { page_id = "dp200016b", section_id = "deducciones-inversion-canarias", official_ref = "DP200016B" }] },
-    { casilla_id = "00223", kind = "on_form", box_number = "00223", aliases = [{ page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii", official_ref = "DP200008" }, { page_id = "dp200026f", section_id = "reserva-para-inversiones-en-illes-balears-968709", official_ref = "DP200026F" }] },
-    { casilla_id = "00224", kind = "on_form", box_number = "00224", aliases = [{ page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii", official_ref = "DP200008" }] },
-    { casilla_id = "00225", kind = "on_form", box_number = "00225", aliases = [{ page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii-operaci-2b377a", official_ref = "DP200008" }, { page_id = "dp200012", section_id = "liquidacion-i-detalle-correcciones-result-9465bc", official_ref = "DP200012" }] },
-    { casilla_id = "00226", kind = "on_form", box_number = "00226", aliases = [{ page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii-operaci-2b377a", official_ref = "DP200008" }, { page_id = "dp200012", section_id = "liquidacion-i-detalle-correcciones-result-9465bc", official_ref = "DP200012" }] },
-    { casilla_id = "00227", kind = "on_form", box_number = "00227", aliases = [{ page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii-operaci-2b377a", official_ref = "DP200008" }] },
-    { casilla_id = "00228", kind = "on_form", box_number = "00228", aliases = [{ page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii-operaci-2b377a", official_ref = "DP200008" }, { page_id = "dp200017", section_id = "deducc-para-incentivar-determ-actividades", official_ref = "DP200017" }] },
-    { casilla_id = "00229", kind = "on_form", box_number = "00229", aliases = [{ page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii-2", official_ref = "DP200008" }, { page_id = "dp200017", section_id = "deducc-para-incentivar-determ-actividades", official_ref = "DP200017" }] },
-    { casilla_id = "00230", kind = "on_form", box_number = "00230", aliases = [{ page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii-operaci-2b377a-2", official_ref = "DP200008" }, { page_id = "dp200017", section_id = "deducc-para-incentivar-determ-actividades", official_ref = "DP200017" }] },
-    { casilla_id = "00231", kind = "on_form", box_number = "00231", aliases = [{ page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii-operaci-2b377a-2", official_ref = "DP200008" }, { page_id = "dp200019", section_id = "deducciones-i-d-i-excluidas-de-limite", official_ref = "DP200019" }] },
-    { casilla_id = "00232", kind = "on_form", box_number = "00232", aliases = [{ page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii-operaci-2b377a-2", official_ref = "DP200008" }, { page_id = "dp200019", section_id = "deducciones-i-d-i-excluidas-de-limite", official_ref = "DP200019" }] },
-    { casilla_id = "00233", kind = "on_form", box_number = "00233", aliases = [{ page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii-operaci-2b377a-2", official_ref = "DP200008" }, { page_id = "dp200019", section_id = "deducciones-i-d-i-excluidas-de-limite", official_ref = "DP200019" }] },
-    { casilla_id = "00234", kind = "on_form", box_number = "00234", aliases = [{ page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii-3", official_ref = "DP200008" }, { page_id = "dp200017", section_id = "deducc-para-incentivar-determ-actividades", official_ref = "DP200017" }] },
-    { casilla_id = "00235", kind = "on_form", box_number = "00235", aliases = [{ page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii-3", official_ref = "DP200008" }, { page_id = "dp200017", section_id = "deducc-para-incentivar-determ-actividades", official_ref = "DP200017" }] },
-    { casilla_id = "00236", kind = "on_form", box_number = "00236", aliases = [{ page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii-3", official_ref = "DP200008" }, { page_id = "dp200017", section_id = "deducc-para-incentivar-determ-actividades", official_ref = "DP200017" }] },
-    { casilla_id = "00237", kind = "on_form", box_number = "00237", aliases = [{ page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii-3", official_ref = "DP200008" }, { page_id = "dp200016b", section_id = "deducciones-inversion-canarias", official_ref = "DP200016B" }] },
-    { casilla_id = "00238", kind = "on_form", box_number = "00238", aliases = [{ page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii-3", official_ref = "DP200008" }, { page_id = "dp200016b", section_id = "deducciones-inversion-canarias", official_ref = "DP200016B" }] },
-    { casilla_id = "00239", kind = "on_form", box_number = "00239", aliases = [{ page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii-3", official_ref = "DP200008" }, { page_id = "dp200016b", section_id = "deducciones-inversion-canarias", official_ref = "DP200016B" }] },
-    { casilla_id = "00240", kind = "on_form", box_number = "00240", aliases = [{ page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii-3", official_ref = "DP200008" }, { page_id = "dp200016b", section_id = "deducciones-inversion-canarias", official_ref = "DP200016B" }] },
-    { casilla_id = "00241", kind = "on_form", box_number = "00241", aliases = [{ page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii-3", official_ref = "DP200008" }, { page_id = "dp200016b", section_id = "deducciones-inversion-canarias", official_ref = "DP200016B" }] },
-    { casilla_id = "00242", kind = "on_form", box_number = "00242", aliases = [{ page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii-3", official_ref = "DP200008" }, { page_id = "dp200016b", section_id = "deducciones-inversion-canarias", official_ref = "DP200016B" }] },
-    { casilla_id = "00243", kind = "on_form", box_number = "00243", aliases = [{ page_id = "dp200015", section_id = "regimen-especial-de-buques-y-empresas-nav-4788c4", official_ref = "DP200015" }] },
-    { casilla_id = "00244", kind = "on_form", box_number = "00244", aliases = [{ page_id = "dp200004", section_id = "balance-activo-ii-2", official_ref = "DP200004" }, { page_id = "dp200016b", section_id = "deducciones-inversion-canarias", official_ref = "DP200016B" }] },
+    { casilla_id = "00221", kind = "on_form", box_number = "00221", aliases = [{ page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii", official_ref = "DP200008" }, { page_id = "dp200016b", section_id = "deducciones-inversion-canarias", official_ref = "DP200016B" }, { page_id = "dp200030", section_id = "contabilidad-banco-de-espana", official_ref = "DP200030" }] },
+    { casilla_id = "00222", kind = "on_form", box_number = "00222", aliases = [{ page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii", official_ref = "DP200008" }, { page_id = "dp200016b", section_id = "deducciones-inversion-canarias", official_ref = "DP200016B" }, { page_id = "dp200030", section_id = "contabilidad-banco-de-espana", official_ref = "DP200030" }] },
+    { casilla_id = "00223", kind = "on_form", box_number = "00223", aliases = [{ page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii", official_ref = "DP200008" }, { page_id = "dp200026f", section_id = "reserva-para-inversiones-en-illes-balears-968709", official_ref = "DP200026F" }, { page_id = "dp200030", section_id = "contabilidad-banco-de-espana", official_ref = "DP200030" }] },
+    { casilla_id = "00224", kind = "on_form", box_number = "00224", aliases = [{ page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii", official_ref = "DP200008" }, { page_id = "dp200030", section_id = "contabilidad-banco-de-espana", official_ref = "DP200030" }] },
+    { casilla_id = "00225", kind = "on_form", box_number = "00225", aliases = [{ page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii-operaci-2b377a", official_ref = "DP200008" }, { page_id = "dp200012", section_id = "liquidacion-i-detalle-correcciones-result-9465bc", official_ref = "DP200012" }, { page_id = "dp200030", section_id = "contabilidad-banco-de-espana", official_ref = "DP200030" }] },
+    { casilla_id = "00226", kind = "on_form", box_number = "00226", aliases = [{ page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii-operaci-2b377a", official_ref = "DP200008" }, { page_id = "dp200012", section_id = "liquidacion-i-detalle-correcciones-result-9465bc", official_ref = "DP200012" }, { page_id = "dp200030", section_id = "contabilidad-banco-de-espana", official_ref = "DP200030" }] },
+    { casilla_id = "00227", kind = "on_form", box_number = "00227", aliases = [{ page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii-operaci-2b377a", official_ref = "DP200008" }, { page_id = "dp200030", section_id = "contabilidad-banco-de-espana", official_ref = "DP200030" }] },
+    { casilla_id = "00228", kind = "on_form", box_number = "00228", aliases = [{ page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii-operaci-2b377a", official_ref = "DP200008" }, { page_id = "dp200017", section_id = "deducc-para-incentivar-determ-actividades", official_ref = "DP200017" }, { page_id = "dp200030", section_id = "contabilidad-banco-de-espana", official_ref = "DP200030" }] },
+    { casilla_id = "00229", kind = "on_form", box_number = "00229", aliases = [{ page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii-2", official_ref = "DP200008" }, { page_id = "dp200017", section_id = "deducc-para-incentivar-determ-actividades", official_ref = "DP200017" }, { page_id = "dp200030", section_id = "contabilidad-banco-de-espana", official_ref = "DP200030" }] },
+    { casilla_id = "00230", kind = "on_form", box_number = "00230", aliases = [{ page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii-operaci-2b377a-2", official_ref = "DP200008" }, { page_id = "dp200017", section_id = "deducc-para-incentivar-determ-actividades", official_ref = "DP200017" }, { page_id = "dp200030", section_id = "contabilidad-banco-de-espana", official_ref = "DP200030" }] },
+    { casilla_id = "00231", kind = "on_form", box_number = "00231", aliases = [{ page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii-operaci-2b377a-2", official_ref = "DP200008" }, { page_id = "dp200019", section_id = "deducciones-i-d-i-excluidas-de-limite", official_ref = "DP200019" }, { page_id = "dp200030", section_id = "contabilidad-banco-de-espana", official_ref = "DP200030" }] },
+    { casilla_id = "00232", kind = "on_form", box_number = "00232", aliases = [{ page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii-operaci-2b377a-2", official_ref = "DP200008" }, { page_id = "dp200019", section_id = "deducciones-i-d-i-excluidas-de-limite", official_ref = "DP200019" }, { page_id = "dp200030", section_id = "contabilidad-banco-de-espana", official_ref = "DP200030" }] },
+    { casilla_id = "00233", kind = "on_form", box_number = "00233", aliases = [{ page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii-operaci-2b377a-2", official_ref = "DP200008" }, { page_id = "dp200019", section_id = "deducciones-i-d-i-excluidas-de-limite", official_ref = "DP200019" }, { page_id = "dp200030", section_id = "contabilidad-banco-de-espana", official_ref = "DP200030" }] },
+    { casilla_id = "00234", kind = "on_form", box_number = "00234", aliases = [{ page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii-3", official_ref = "DP200008" }, { page_id = "dp200017", section_id = "deducc-para-incentivar-determ-actividades", official_ref = "DP200017" }, { page_id = "dp200030", section_id = "contabilidad-banco-de-espana", official_ref = "DP200030" }] },
+    { casilla_id = "00235", kind = "on_form", box_number = "00235", aliases = [{ page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii-3", official_ref = "DP200008" }, { page_id = "dp200017", section_id = "deducc-para-incentivar-determ-actividades", official_ref = "DP200017" }, { page_id = "dp200030", section_id = "contabilidad-banco-de-espana", official_ref = "DP200030" }] },
+    { casilla_id = "00236", kind = "on_form", box_number = "00236", aliases = [{ page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii-3", official_ref = "DP200008" }, { page_id = "dp200017", section_id = "deducc-para-incentivar-determ-actividades", official_ref = "DP200017" }, { page_id = "dp200030", section_id = "contabilidad-banco-de-espana", official_ref = "DP200030" }] },
+    { casilla_id = "00237", kind = "on_form", box_number = "00237", aliases = [{ page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii-3", official_ref = "DP200008" }, { page_id = "dp200016b", section_id = "deducciones-inversion-canarias", official_ref = "DP200016B" }, { page_id = "dp200030", section_id = "contabilidad-banco-de-espana", official_ref = "DP200030" }] },
+    { casilla_id = "00238", kind = "on_form", box_number = "00238", aliases = [{ page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii-3", official_ref = "DP200008" }, { page_id = "dp200016b", section_id = "deducciones-inversion-canarias", official_ref = "DP200016B" }, { page_id = "dp200030", section_id = "contabilidad-banco-de-espana", official_ref = "DP200030" }] },
+    { casilla_id = "00239", kind = "on_form", box_number = "00239", aliases = [{ page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii-3", official_ref = "DP200008" }, { page_id = "dp200016b", section_id = "deducciones-inversion-canarias", official_ref = "DP200016B" }, { page_id = "dp200030", section_id = "contabilidad-banco-de-espana", official_ref = "DP200030" }] },
+    { casilla_id = "00240", kind = "on_form", box_number = "00240", aliases = [{ page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii-3", official_ref = "DP200008" }, { page_id = "dp200016b", section_id = "deducciones-inversion-canarias", official_ref = "DP200016B" }, { page_id = "dp200030", section_id = "contabilidad-banco-de-espana", official_ref = "DP200030" }] },
+    { casilla_id = "00241", kind = "on_form", box_number = "00241", aliases = [{ page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii-3", official_ref = "DP200008" }, { page_id = "dp200016b", section_id = "deducciones-inversion-canarias", official_ref = "DP200016B" }, { page_id = "dp200030", section_id = "contabilidad-banco-de-espana", official_ref = "DP200030" }] },
+    { casilla_id = "00242", kind = "on_form", box_number = "00242", aliases = [{ page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii-3", official_ref = "DP200008" }, { page_id = "dp200016b", section_id = "deducciones-inversion-canarias", official_ref = "DP200016B" }, { page_id = "dp200030", section_id = "contabilidad-banco-de-espana", official_ref = "DP200030" }] },
+    { casilla_id = "00243", kind = "on_form", box_number = "00243", aliases = [{ page_id = "dp200015", section_id = "regimen-especial-de-buques-y-empresas-nav-4788c4", official_ref = "DP200015" }, { page_id = "dp200030", section_id = "contabilidad-banco-de-espana", official_ref = "DP200030" }] },
+    { casilla_id = "00244", kind = "on_form", box_number = "00244", aliases = [{ page_id = "dp200004", section_id = "balance-activo-ii-2", official_ref = "DP200004" }, { page_id = "dp200016b", section_id = "deducciones-inversion-canarias", official_ref = "DP200016B" }, { page_id = "dp200030", section_id = "contabilidad-banco-de-espana", official_ref = "DP200030" }] },
     { casilla_id = "00245", kind = "on_form", box_number = "00245", aliases = [{ page_id = "dp200004", section_id = "balance-activo-ii-2", official_ref = "DP200004" }, { page_id = "dp200016b", section_id = "deducciones-inversion-canarias", official_ref = "DP200016B" }] },
     { casilla_id = "00246", kind = "on_form", box_number = "00246", aliases = [{ page_id = "dp200004", section_id = "balance-activo-ii-2", official_ref = "DP200004" }, { page_id = "dp200018c", section_id = "deduccion-donativos-entidades-sin-fines-l-e905a4", official_ref = "DP200018C" }] },
     { casilla_id = "00247", kind = "on_form", box_number = "00247", aliases = [{ page_id = "dp200004", section_id = "balance-activo-ii-2", official_ref = "DP200004" }, { page_id = "dp200018c", section_id = "deduccion-donativos-entidades-sin-fines-l-e905a4", official_ref = "DP200018C" }] },
-    { casilla_id = "00248", kind = "on_form", box_number = "00248", aliases = [{ page_id = "dp200004", section_id = "balance-activo-ii-2", official_ref = "DP200004" }, { page_id = "dp200018c", section_id = "deduccion-donativos-entidades-sin-fines-l-e905a4", official_ref = "DP200018C" }] },
-    { casilla_id = "00249", kind = "on_form", box_number = "00249", aliases = [{ page_id = "dp200004", section_id = "balance-activo-ii-2", official_ref = "DP200004" }, { page_id = "dp200016", section_id = "deducc-disposic-transit-24a-7-lis", official_ref = "DP200016" }] },
-    { casilla_id = "00250", kind = "on_form", box_number = "00250", aliases = [{ page_id = "dp200004", section_id = "balance-activo-ii-2", official_ref = "DP200004" }, { page_id = "dp200013", section_id = "liquidacion-ii-detalle-correcciones-resul-56f905", official_ref = "DP200013" }] },
-    { casilla_id = "00251", kind = "on_form", box_number = "00251", aliases = [{ page_id = "dp200004", section_id = "balance-activo-ii-2", official_ref = "DP200004" }, { page_id = "dp200013", section_id = "liquidacion-ii-detalle-correcciones-resul-56f905", official_ref = "DP200013" }] },
-    { casilla_id = "00252", kind = "on_form", box_number = "00252", aliases = [{ page_id = "dp200004", section_id = "balance-activo-ii-2", official_ref = "DP200004" }, { page_id = "dp200016", section_id = "deducc-disposic-transit-24a-7-lis", official_ref = "DP200016" }] },
-    { casilla_id = "00253", kind = "on_form", box_number = "00253", aliases = [{ page_id = "dp200007", section_id = "cuenta-de-perdidas-y-ganancias-i-3", official_ref = "DP200007" }, { page_id = "dp200016", section_id = "deducc-disposic-transit-24a-7-lis", official_ref = "DP200016" }] },
-    { casilla_id = "00254", kind = "on_form", box_number = "00254", aliases = [{ page_id = "dp200007", section_id = "cuenta-de-perdidas-y-ganancias-i-3", official_ref = "DP200007" }, { page_id = "dp200016", section_id = "deducciones-doble-imposicion-internacional-lis", official_ref = "DP200016" }] },
-    { casilla_id = "00255", kind = "on_form", box_number = "00255", aliases = [{ page_id = "dp200007", section_id = "cuenta-de-perdidas-y-ganancias-i", official_ref = "DP200007" }, { page_id = "dp200016", section_id = "deducciones-doble-imposicion-internacional-lis", official_ref = "DP200016" }] },
-    { casilla_id = "00256", kind = "on_form", box_number = "00256", aliases = [{ page_id = "dp200007", section_id = "cuenta-de-perdidas-y-ganancias-i", official_ref = "DP200007" }, { page_id = "dp200013", section_id = "liquidacion-ii-detalle-correcciones-resul-56f905", official_ref = "DP200013" }] },
-    { casilla_id = "00257", kind = "on_form", box_number = "00257", aliases = [{ page_id = "dp200007", section_id = "cuenta-de-perdidas-y-ganancias-i", official_ref = "DP200007" }, { page_id = "dp200016b", section_id = "deducciones-inversion-canarias", official_ref = "DP200016B" }] },
-    { casilla_id = "00258", kind = "on_form", box_number = "00258", aliases = [{ page_id = "dp200007", section_id = "cuenta-de-perdidas-y-ganancias-i-2", official_ref = "DP200007" }, { page_id = "dp200016", section_id = "deducciones-doble-imposicion-internacional-lis", official_ref = "DP200016" }] },
-    { casilla_id = "00259", kind = "on_form", box_number = "00259", aliases = [{ page_id = "dp200007", section_id = "cuenta-de-perdidas-y-ganancias-i-2", official_ref = "DP200007" }] },
-    { casilla_id = "00260", kind = "on_form", box_number = "00260", aliases = [{ page_id = "dp200007", section_id = "cuenta-de-perdidas-y-ganancias-i-2", official_ref = "DP200007" }, { page_id = "dp200015b", section_id = "deducciones-doble-imposicion-interna-dt-23-1-lis-8", official_ref = "DP200015B" }] },
+    { casilla_id = "00248", kind = "on_form", box_number = "00248", aliases = [{ page_id = "dp200004", section_id = "balance-activo-ii-2", official_ref = "DP200004" }, { page_id = "dp200018c", section_id = "deduccion-donativos-entidades-sin-fines-l-e905a4", official_ref = "DP200018C" }, { page_id = "dp200030", section_id = "contabilidad-banco-de-espana", official_ref = "DP200030" }] },
+    { casilla_id = "00249", kind = "on_form", box_number = "00249", aliases = [{ page_id = "dp200004", section_id = "balance-activo-ii-2", official_ref = "DP200004" }, { page_id = "dp200016", section_id = "deducc-disposic-transit-24a-7-lis", official_ref = "DP200016" }, { page_id = "dp200030", section_id = "contabilidad-banco-de-espana", official_ref = "DP200030" }] },
+    { casilla_id = "00250", kind = "on_form", box_number = "00250", aliases = [{ page_id = "dp200004", section_id = "balance-activo-ii-2", official_ref = "DP200004" }, { page_id = "dp200013", section_id = "liquidacion-ii-detalle-correcciones-resul-56f905", official_ref = "DP200013" }, { page_id = "dp200030", section_id = "contabilidad-banco-de-espana", official_ref = "DP200030" }] },
+    { casilla_id = "00251", kind = "on_form", box_number = "00251", aliases = [{ page_id = "dp200004", section_id = "balance-activo-ii-2", official_ref = "DP200004" }, { page_id = "dp200013", section_id = "liquidacion-ii-detalle-correcciones-resul-56f905", official_ref = "DP200013" }, { page_id = "dp200030", section_id = "contabilidad-banco-de-espana", official_ref = "DP200030" }] },
+    { casilla_id = "00252", kind = "on_form", box_number = "00252", aliases = [{ page_id = "dp200004", section_id = "balance-activo-ii-2", official_ref = "DP200004" }, { page_id = "dp200016", section_id = "deducc-disposic-transit-24a-7-lis", official_ref = "DP200016" }, { page_id = "dp200030", section_id = "contabilidad-banco-de-espana", official_ref = "DP200030" }] },
+    { casilla_id = "00253", kind = "on_form", box_number = "00253", aliases = [{ page_id = "dp200007", section_id = "cuenta-de-perdidas-y-ganancias-i-3", official_ref = "DP200007" }, { page_id = "dp200016", section_id = "deducc-disposic-transit-24a-7-lis", official_ref = "DP200016" }, { page_id = "dp200030", section_id = "contabilidad-banco-de-espana", official_ref = "DP200030" }, { page_id = "dp200038", section_id = "entidades-aseguradoras-perdidas-y-ganancias-i", official_ref = "DP200038" }, { page_id = "dp200053", section_id = "sociedades-de-garantia-reciproca-estado-t-e64c83", official_ref = "DP200053" }] },
+    { casilla_id = "00256", kind = "on_form", box_number = "00256", aliases = [{ page_id = "dp200007", section_id = "cuenta-de-perdidas-y-ganancias-i", official_ref = "DP200007" }, { page_id = "dp200013", section_id = "liquidacion-ii-detalle-correcciones-resul-56f905", official_ref = "DP200013" }, { page_id = "dp200030", section_id = "contabilidad-banco-de-espana", official_ref = "DP200030" }, { page_id = "dp200038", section_id = "entidades-aseguradoras-perdidas-y-gananci-fc933b", official_ref = "DP200038" }, { page_id = "dp200053", section_id = "sociedades-de-garantia-reciproca-estado-t-9e1507", official_ref = "DP200053" }] },
+    { casilla_id = "00258", kind = "on_form", box_number = "00258", aliases = [{ page_id = "dp200007", section_id = "cuenta-de-perdidas-y-ganancias-i-2", official_ref = "DP200007" }, { page_id = "dp200016", section_id = "deducciones-doble-imposicion-internacional-lis", official_ref = "DP200016" }, { page_id = "dp200030", section_id = "contabilidad-banco-de-espana", official_ref = "DP200030" }, { page_id = "dp200038", section_id = "entidades-aseguradoras-perdidas-y-gananci-fc933b", official_ref = "DP200038" }] },
+    { casilla_id = "00259", kind = "on_form", box_number = "00259", aliases = [{ page_id = "dp200007", section_id = "cuenta-de-perdidas-y-ganancias-i-2", official_ref = "DP200007" }, { page_id = "dp200030", section_id = "contabilidad-banco-de-espana", official_ref = "DP200030" }, { page_id = "dp200038", section_id = "entidades-aseguradoras-perdidas-y-gananci-fc933b", official_ref = "DP200038" }] },
+    { casilla_id = "00260", kind = "on_form", box_number = "00260", aliases = [{ page_id = "dp200007", section_id = "cuenta-de-perdidas-y-ganancias-i-2", official_ref = "DP200007" }, { page_id = "dp200015b", section_id = "deducciones-doble-imposicion-interna-dt-23-1-lis-8", official_ref = "DP200015B" }, { page_id = "dp200030", section_id = "contabilidad-banco-de-espana", official_ref = "DP200030" }] },
     { casilla_id = "00261", kind = "on_form", box_number = "00261", aliases = [{ page_id = "dp200007", section_id = "cuenta-de-perdidas-y-ganancias-i-2", official_ref = "DP200007" }, { page_id = "dp200015b", section_id = "deducciones-doble-imposicion-interna-dt-23-1-lis-8", official_ref = "DP200015B" }] },
     { casilla_id = "00262", kind = "on_form", box_number = "00262", aliases = [{ page_id = "dp200007", section_id = "cuenta-de-perdidas-y-ganancias-i-2", official_ref = "DP200007" }, { page_id = "dp200016b", section_id = "deducciones-inversion-canarias", official_ref = "DP200016B" }] },
     { casilla_id = "00263", kind = "on_form", box_number = "00263", aliases = [{ page_id = "dp200007", section_id = "cuenta-de-perdidas-y-ganancias-i-2", official_ref = "DP200007" }, { page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-i", official_ref = "DP200008" }, { page_id = "dp200016b", section_id = "deducciones-inversion-canarias", official_ref = "DP200016B" }] },
     { casilla_id = "00264", kind = "on_form", box_number = "00264", aliases = [{ page_id = "dp200007", section_id = "cuenta-de-perdidas-y-ganancias-i-2", official_ref = "DP200007" }, { page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-i-operacio-06ef97", official_ref = "DP200008" }, { page_id = "dp200016b", section_id = "deducciones-inversion-canarias", official_ref = "DP200016B" }] },
     { casilla_id = "00265", kind = "on_form", box_number = "00265", aliases = [{ page_id = "dp200007", section_id = "cuenta-de-perdidas-y-ganancias-i-2", official_ref = "DP200007" }, { page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-i-operacio-06ef97", official_ref = "DP200008" }, { page_id = "dp200015", section_id = "regimen-especial-de-buques-y-empresas-nav-4788c4", official_ref = "DP200015" }] },
     { casilla_id = "00266", kind = "on_form", box_number = "00266", aliases = [{ page_id = "dp200007", section_id = "cuenta-de-perdidas-y-ganancias-i-2", official_ref = "DP200007" }, { page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-i-2", official_ref = "DP200008" }, { page_id = "dp200015", section_id = "regimen-especial-de-buques-y-empresas-nav-4788c4", official_ref = "DP200015" }] },
-    { casilla_id = "00267", kind = "on_form", box_number = "00267", aliases = [{ page_id = "dp200015", section_id = "regimen-especial-de-buques-y-empresas-nav-4788c4", official_ref = "DP200015" }] },
-    { casilla_id = "00268", kind = "on_form", box_number = "00268", aliases = [{ page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii", official_ref = "DP200008" }, { page_id = "dp200016b", section_id = "deducciones-inversion-canarias", official_ref = "DP200016B" }] },
-    { casilla_id = "00269", kind = "on_form", box_number = "00269", aliases = [{ page_id = "dp200007", section_id = "cuenta-de-perdidas-y-ganancias-i-3", official_ref = "DP200007" }, { page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii", official_ref = "DP200008" }, { page_id = "dp200016b", section_id = "deducciones-inversion-canarias", official_ref = "DP200016B" }] },
-    { casilla_id = "00270", kind = "on_form", box_number = "00270", aliases = [{ page_id = "dp200007", section_id = "cuenta-de-perdidas-y-ganancias-i-3", official_ref = "DP200007" }, { page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii", official_ref = "DP200008" }, { page_id = "dp200016b", section_id = "deducciones-inversion-canarias", official_ref = "DP200016B" }] },
+    { casilla_id = "00267", kind = "on_form", box_number = "00267", aliases = [{ page_id = "dp200015", section_id = "regimen-especial-de-buques-y-empresas-nav-4788c4", official_ref = "DP200015" }, { page_id = "dp200054", section_id = "sociedades-de-garantia-reciproca-estado-t-e64c83", official_ref = "DP200054" }] },
+    { casilla_id = "00268", kind = "on_form", box_number = "00268", aliases = [{ page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii", official_ref = "DP200008" }, { page_id = "dp200016b", section_id = "deducciones-inversion-canarias", official_ref = "DP200016B" }, { page_id = "dp200054", section_id = "sociedades-de-garantia-reciproca-estado-t-e64c83", official_ref = "DP200054" }] },
+    { casilla_id = "00269", kind = "on_form", box_number = "00269", aliases = [{ page_id = "dp200007", section_id = "cuenta-de-perdidas-y-ganancias-i-3", official_ref = "DP200007" }, { page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii", official_ref = "DP200008" }, { page_id = "dp200016b", section_id = "deducciones-inversion-canarias", official_ref = "DP200016B" }, { page_id = "dp200054", section_id = "sociedades-de-garantia-reciproca-estado-t-e64c83", official_ref = "DP200054" }] },
+    { casilla_id = "00270", kind = "on_form", box_number = "00270", aliases = [{ page_id = "dp200007", section_id = "cuenta-de-perdidas-y-ganancias-i-3", official_ref = "DP200007" }, { page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii", official_ref = "DP200008" }, { page_id = "dp200016b", section_id = "deducciones-inversion-canarias", official_ref = "DP200016B" }, { page_id = "dp200054", section_id = "sociedades-de-garantia-reciproca-estado-t-e64c83", official_ref = "DP200054" }] },
     { casilla_id = "00271", kind = "on_form", box_number = "00271", aliases = [{ page_id = "dp200007", section_id = "cuenta-de-perdidas-y-ganancias-i-3", official_ref = "DP200007" }, { page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii", official_ref = "DP200008" }, { page_id = "dp200016b", section_id = "deducciones-inversion-canarias", official_ref = "DP200016B" }] },
     { casilla_id = "00272", kind = "on_form", box_number = "00272", aliases = [{ page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii", official_ref = "DP200008" }, { page_id = "dp200012", section_id = "liquidacion-i-detalle-correcciones-result-9465bc", official_ref = "DP200012" }] },
     { casilla_id = "00273", kind = "on_form", box_number = "00273", aliases = [{ page_id = "dp200007", section_id = "cuenta-de-perdidas-y-ganancias-i-3", official_ref = "DP200007" }, { page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii", official_ref = "DP200008" }, { page_id = "dp200016b", section_id = "deducciones-inversion-canarias", official_ref = "DP200016B" }] },
     { casilla_id = "00274", kind = "on_form", box_number = "00274", aliases = [{ page_id = "dp200007", section_id = "cuenta-de-perdidas-y-ganancias-i-3", official_ref = "DP200007" }, { page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii", official_ref = "DP200008" }, { page_id = "dp200016b", section_id = "deducciones-inversion-canarias", official_ref = "DP200016B" }] },
     { casilla_id = "00275", kind = "on_form", box_number = "00275", aliases = [{ page_id = "dp200007", section_id = "cuenta-de-perdidas-y-ganancias-i-3", official_ref = "DP200007" }, { page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii", official_ref = "DP200008" }, { page_id = "dp200015", section_id = "detalle-compensacion-bases-imponibles-negativas", official_ref = "DP200015" }] },
-    { casilla_id = "00276", kind = "on_form", box_number = "00276", aliases = [{ page_id = "dp200007", section_id = "cuenta-de-perdidas-y-ganancias-i-3", official_ref = "DP200007" }, { page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii", official_ref = "DP200008" }, { page_id = "dp200015", section_id = "detalle-compensacion-bases-imponibles-negativas", official_ref = "DP200015" }] },
-    { casilla_id = "00277", kind = "on_form", box_number = "00277", aliases = [{ page_id = "dp200007", section_id = "cuenta-de-perdidas-y-ganancias-i-3", official_ref = "DP200007" }, { page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii", official_ref = "DP200008" }, { page_id = "dp200015", section_id = "detalle-compensacion-bases-imponibles-negativas", official_ref = "DP200015" }] },
-    { casilla_id = "00278", kind = "on_form", box_number = "00278", aliases = [{ page_id = "dp200007", section_id = "cuenta-de-perdidas-y-ganancias-i-3", official_ref = "DP200007" }, { page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii-operaci-2b377a", official_ref = "DP200008" }, { page_id = "dp200013", section_id = "liquidacion-ii-detalle-correcciones-resul-56f905", official_ref = "DP200013" }] },
-    { casilla_id = "00279", kind = "on_form", box_number = "00279", aliases = [{ page_id = "dp200007", section_id = "cuenta-de-perdidas-y-ganancias-i-3", official_ref = "DP200007" }, { page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii-operaci-2b377a", official_ref = "DP200008" }, { page_id = "dp200022", section_id = "reg-cooperativas", official_ref = "DP200022" }] },
-    { casilla_id = "00280", kind = "on_form", box_number = "00280", aliases = [{ page_id = "dp200007", section_id = "cuenta-de-perdidas-y-ganancias-i-3", official_ref = "DP200007" }, { page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii-operaci-2b377a", official_ref = "DP200008" }, { page_id = "dp200022", section_id = "reg-cooperativas", official_ref = "DP200022" }] },
-    { casilla_id = "00281", kind = "on_form", box_number = "00281", aliases = [{ page_id = "dp200007", section_id = "cuenta-de-perdidas-y-ganancias-i-3", official_ref = "DP200007" }, { page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii-operaci-2b377a", official_ref = "DP200008" }, { page_id = "dp200022", section_id = "reg-cooperativas", official_ref = "DP200022" }] },
-    { casilla_id = "00282", kind = "on_form", box_number = "00282", aliases = [{ page_id = "dp200007", section_id = "cuenta-de-perdidas-y-ganancias-i-3", official_ref = "DP200007" }, { page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii-2", official_ref = "DP200008" }] },
+    { casilla_id = "00276", kind = "on_form", box_number = "00276", aliases = [{ page_id = "dp200007", section_id = "cuenta-de-perdidas-y-ganancias-i-3", official_ref = "DP200007" }, { page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii", official_ref = "DP200008" }, { page_id = "dp200015", section_id = "detalle-compensacion-bases-imponibles-negativas", official_ref = "DP200015" }, { page_id = "dp200054", section_id = "sociedades-de-garantia-reciproca-estado-t-e64c83", official_ref = "DP200054" }] },
+    { casilla_id = "00277", kind = "on_form", box_number = "00277", aliases = [{ page_id = "dp200007", section_id = "cuenta-de-perdidas-y-ganancias-i-3", official_ref = "DP200007" }, { page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii", official_ref = "DP200008" }, { page_id = "dp200015", section_id = "detalle-compensacion-bases-imponibles-negativas", official_ref = "DP200015" }, { page_id = "dp200054", section_id = "sociedades-de-garantia-reciproca-estado-t-e64c83", official_ref = "DP200054" }] },
+    { casilla_id = "00278", kind = "on_form", box_number = "00278", aliases = [{ page_id = "dp200007", section_id = "cuenta-de-perdidas-y-ganancias-i-3", official_ref = "DP200007" }, { page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii-operaci-2b377a", official_ref = "DP200008" }, { page_id = "dp200013", section_id = "liquidacion-ii-detalle-correcciones-resul-56f905", official_ref = "DP200013" }, { page_id = "dp200054", section_id = "sociedades-de-garantia-reciproca-estado-t-e64c83", official_ref = "DP200054" }] },
+    { casilla_id = "00281", kind = "on_form", box_number = "00281", aliases = [{ page_id = "dp200007", section_id = "cuenta-de-perdidas-y-ganancias-i-3", official_ref = "DP200007" }, { page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii-operaci-2b377a", official_ref = "DP200008" }, { page_id = "dp200022", section_id = "reg-cooperativas", official_ref = "DP200022" }, { page_id = "dp200053", section_id = "sociedades-de-garantia-reciproca-estado-t-752a73", official_ref = "DP200053" }] },
+    { casilla_id = "00282", kind = "on_form", box_number = "00282", aliases = [{ page_id = "dp200007", section_id = "cuenta-de-perdidas-y-ganancias-i-3", official_ref = "DP200007" }, { page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii-2", official_ref = "DP200008" }, { page_id = "dp200053", section_id = "sociedades-de-garantia-reciproca-estado-t-752a73", official_ref = "DP200053" }] },
     { casilla_id = "00283", kind = "on_form", box_number = "00283", aliases = [{ page_id = "dp200007", section_id = "cuenta-de-perdidas-y-ganancias-i-3", official_ref = "DP200007" }] },
     { casilla_id = "00284", kind = "on_form", box_number = "00284", aliases = [{ page_id = "dp200007", section_id = "cuenta-de-perdidas-y-ganancias-i-3", official_ref = "DP200007" }] },
-    { casilla_id = "00285", kind = "on_form", box_number = "00285", aliases = [{ page_id = "dp200007", section_id = "cuenta-de-perdidas-y-ganancias-i-3", official_ref = "DP200007" }, { page_id = "dp200015b", section_id = "deducciones-doble-imposicion-internaciona-d367fa", official_ref = "DP200015B" }] },
-    { casilla_id = "00286", kind = "on_form", box_number = "00286", aliases = [{ page_id = "dp200007", section_id = "cuenta-de-perdidas-y-ganancias-i-3", official_ref = "DP200007" }, { page_id = "dp200015b", section_id = "deducciones-doble-imposicion-internaciona-d367fa", official_ref = "DP200015B" }] },
-    { casilla_id = "00287", kind = "on_form", box_number = "00287", aliases = [{ page_id = "dp200007", section_id = "cuenta-de-perdidas-y-ganancias-i-3", official_ref = "DP200007" }, { page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii-3", official_ref = "DP200008" }, { page_id = "dp200015b", section_id = "deducciones-doble-imposicion-internaciona-d367fa", official_ref = "DP200015B" }] },
-    { casilla_id = "00288", kind = "on_form", box_number = "00288", aliases = [{ page_id = "dp200007", section_id = "cuenta-de-perdidas-y-ganancias-i-3", official_ref = "DP200007" }, { page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii-3", official_ref = "DP200008" }, { page_id = "dp200016", section_id = "deducciones-doble-imposicion-internacional-lis", official_ref = "DP200016" }] },
+    { casilla_id = "00285", kind = "on_form", box_number = "00285", aliases = [{ page_id = "dp200007", section_id = "cuenta-de-perdidas-y-ganancias-i-3", official_ref = "DP200007" }, { page_id = "dp200015b", section_id = "deducciones-doble-imposicion-internaciona-d367fa", official_ref = "DP200015B" }, { page_id = "dp200054", section_id = "sociedades-de-garantia-reciproca-estado-t-e64c83", official_ref = "DP200054" }] },
+    { casilla_id = "00286", kind = "on_form", box_number = "00286", aliases = [{ page_id = "dp200007", section_id = "cuenta-de-perdidas-y-ganancias-i-3", official_ref = "DP200007" }, { page_id = "dp200015b", section_id = "deducciones-doble-imposicion-internaciona-d367fa", official_ref = "DP200015B" }, { page_id = "dp200054", section_id = "sociedades-de-garantia-reciproca-estado-t-e64c83", official_ref = "DP200054" }] },
+    { casilla_id = "00287", kind = "on_form", box_number = "00287", aliases = [{ page_id = "dp200007", section_id = "cuenta-de-perdidas-y-ganancias-i-3", official_ref = "DP200007" }, { page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii-3", official_ref = "DP200008" }, { page_id = "dp200015b", section_id = "deducciones-doble-imposicion-internaciona-d367fa", official_ref = "DP200015B" }, { page_id = "dp200054", section_id = "sociedades-de-garantia-reciproca-estado-t-e64c83", official_ref = "DP200054" }] },
+    { casilla_id = "00288", kind = "on_form", box_number = "00288", aliases = [{ page_id = "dp200007", section_id = "cuenta-de-perdidas-y-ganancias-i-3", official_ref = "DP200007" }, { page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii-3", official_ref = "DP200008" }, { page_id = "dp200016", section_id = "deducciones-doble-imposicion-internacional-lis", official_ref = "DP200016" }, { page_id = "dp200054", section_id = "sociedades-de-garantia-reciproca-estado-t-e64c83", official_ref = "DP200054" }] },
     { casilla_id = "00289", kind = "on_form", box_number = "00289", aliases = [{ page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii-3", official_ref = "DP200008" }, { page_id = "dp200016", section_id = "deducc-disposic-transit-24a-7-lis", official_ref = "DP200016" }] },
     { casilla_id = "00290", kind = "on_form", box_number = "00290", aliases = [{ page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii-3", official_ref = "DP200008" }, { page_id = "dp200015", section_id = "regimen-especial-de-buques-y-empresas-nav-4788c4", official_ref = "DP200015" }] },
     { casilla_id = "00291", kind = "on_form", box_number = "00291", aliases = [{ page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii-3", official_ref = "DP200008" }, { page_id = "dp200016", section_id = "deducc-disposic-transit-24a-7-lis", official_ref = "DP200016" }] },
     { casilla_id = "00292", kind = "on_form", box_number = "00292", aliases = [{ page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii-3", official_ref = "DP200008" }, { page_id = "dp200016", section_id = "deducc-disposic-transit-24a-7-lis", official_ref = "DP200016" }] },
     { casilla_id = "00293", kind = "on_form", box_number = "00293", aliases = [{ page_id = "dp200013", section_id = "liquidacion-ii-detalle-correcciones-resul-56f905", official_ref = "DP200013" }, { page_id = "dp200017", section_id = "deducc-para-incentivar-determ-actividades", official_ref = "DP200017" }] },
-    { casilla_id = "00294", kind = "on_form", box_number = "00294", aliases = [{ page_id = "dp200013", section_id = "liquidacion-ii-detalle-correcciones-resul-56f905", official_ref = "DP200013" }, { page_id = "dp200016b", section_id = "deducciones-inversion-canarias", official_ref = "DP200016B" }, { page_id = "dp200035", section_id = "entidades-aseguradoras-balance", official_ref = "DP200035" }] },
-    { casilla_id = "00295", kind = "on_form", box_number = "00295", aliases = [{ page_id = "dp200013", section_id = "liquidacion-ii-detalle-correcciones-resul-56f905", official_ref = "DP200013" }, { page_id = "dp200016b", section_id = "deducciones-inversion-canarias", official_ref = "DP200016B" }, { page_id = "dp200035", section_id = "entidades-aseguradoras-balance", official_ref = "DP200035" }] },
-    { casilla_id = "00296", kind = "on_form", box_number = "00296", aliases = [{ page_id = "dp200013", section_id = "liquidacion-ii-detalle-correcciones-resul-56f905", official_ref = "DP200013" }, { page_id = "dp200016b", section_id = "deducciones-inversion-canarias", official_ref = "DP200016B" }, { page_id = "dp200035", section_id = "entidades-aseguradoras-balance", official_ref = "DP200035" }] },
-    { casilla_id = "00297", kind = "on_form", box_number = "00297", aliases = [{ page_id = "dp200013", section_id = "liquidacion-ii-detalle-correcciones-resul-56f905", official_ref = "DP200013" }, { page_id = "dp200018b", section_id = "deduccion-por-inversiones-y-gastos-realiz-867fe7", official_ref = "DP200018B" }, { page_id = "dp200035", section_id = "entidades-aseguradoras-balance", official_ref = "DP200035" }] },
+    { casilla_id = "00294", kind = "on_form", box_number = "00294", aliases = [{ page_id = "dp200013", section_id = "liquidacion-ii-detalle-correcciones-resul-56f905", official_ref = "DP200013" }, { page_id = "dp200016b", section_id = "deducciones-inversion-canarias", official_ref = "DP200016B" }, { page_id = "dp200035", section_id = "entidades-aseguradoras-balance", official_ref = "DP200035" }, { page_id = "dp200054", section_id = "sociedades-de-garantia-reciproca-estado-t-e64c83", official_ref = "DP200054" }] },
+    { casilla_id = "00295", kind = "on_form", box_number = "00295", aliases = [{ page_id = "dp200013", section_id = "liquidacion-ii-detalle-correcciones-resul-56f905", official_ref = "DP200013" }, { page_id = "dp200016b", section_id = "deducciones-inversion-canarias", official_ref = "DP200016B" }, { page_id = "dp200035", section_id = "entidades-aseguradoras-balance", official_ref = "DP200035" }, { page_id = "dp200036", section_id = "entidades-aseguradoras-balance-pasivo-y-p-0d58ba", official_ref = "DP200036" }, { page_id = "dp200054", section_id = "sociedades-de-garantia-reciproca-estado-t-e64c83", official_ref = "DP200054" }] },
+    { casilla_id = "00297", kind = "on_form", box_number = "00297", aliases = [{ page_id = "dp200013", section_id = "liquidacion-ii-detalle-correcciones-resul-56f905", official_ref = "DP200013" }, { page_id = "dp200018b", section_id = "deduccion-por-inversiones-y-gastos-realiz-867fe7", official_ref = "DP200018B" }, { page_id = "dp200035", section_id = "entidades-aseguradoras-balance", official_ref = "DP200035" }, { page_id = "dp200036", section_id = "entidades-aseguradoras-balance-pasivo-y-p-0d58ba", official_ref = "DP200036" }, { page_id = "dp200054", section_id = "sociedades-de-garantia-reciproca-estado-t-e64c83", official_ref = "DP200054" }] },
     { casilla_id = "00298", kind = "on_form", box_number = "00298", aliases = [{ page_id = "dp200013", section_id = "liquidacion-ii-detalle-correcciones-resul-56f905", official_ref = "DP200013" }, { page_id = "dp200018b", section_id = "deduccion-por-inversiones-y-gastos-realiz-867fe7", official_ref = "DP200018B" }, { page_id = "dp200035", section_id = "entidades-aseguradoras-balance", official_ref = "DP200035" }, { page_id = "dp200036", section_id = "entidades-aseguradoras-balance-pasivo-y-p-588f2b", official_ref = "DP200036" }] },
     { casilla_id = "00299", kind = "on_form", box_number = "00299", aliases = [{ page_id = "dp200018b", section_id = "deduccion-por-inversiones-y-gastos-realiz-867fe7", official_ref = "DP200018B" }, { page_id = "dp200033", section_id = "contabilidad-banco-de-espana-estado-cambi-27d9ae", official_ref = "DP200033" }, { page_id = "dp200035", section_id = "entidades-aseguradoras-balance", official_ref = "DP200035" }, { page_id = "dp200036", section_id = "entidades-aseguradoras-balance-pasivo-y-p-588f2b", official_ref = "DP200036" }] },
     { casilla_id = "00300", kind = "on_form", box_number = "00300", aliases = [{ page_id = "dp200033", section_id = "contabilidad-banco-de-espana-estado-cambi-27d9ae", official_ref = "DP200033" }, { page_id = "dp200035", section_id = "entidades-aseguradoras-balance", official_ref = "DP200035" }, { page_id = "dp200036", section_id = "entidades-aseguradoras-balance-pasivo-y-p-588f2b", official_ref = "DP200036" }] },
@@ -313,7 +307,6 @@ placements = [
     { casilla_id = "00322", kind = "on_form", box_number = "00322", aliases = [{ page_id = "dp200012", section_id = "liquidacion-i-detalle-correcciones-result-9465bc", official_ref = "DP200012" }, { page_id = "dp200013", section_id = "liquidacion-ii-detalle-correcciones-resul-56f905", official_ref = "DP200013" }, { page_id = "dp200036", section_id = "entidades-aseguradoras-balance-pasivo-y-p-588f2b-3", official_ref = "DP200036" }] },
     { casilla_id = "00323", kind = "on_form", box_number = "00323", aliases = [{ page_id = "dp200013", section_id = "liquidacion-ii-detalle-correcciones-resul-56f905", official_ref = "DP200013" }, { page_id = "dp200033", section_id = "contabilidad-banco-de-espana-estado-cambi-27d9ae", official_ref = "DP200033" }, { page_id = "dp200036", section_id = "entidades-aseguradoras-balance-pasivo-y-p-588f2b-3", official_ref = "DP200036" }] },
     { casilla_id = "00324", kind = "on_form", box_number = "00324", aliases = [{ page_id = "dp200013", section_id = "liquidacion-ii-detalle-correcciones-resul-56f905", official_ref = "DP200013" }, { page_id = "dp200033", section_id = "contabilidad-banco-de-espana-estado-cambi-27d9ae", official_ref = "DP200033" }, { page_id = "dp200036", section_id = "entidades-aseguradoras-balance-pasivo-y-p-588f2b-3", official_ref = "DP200036" }] },
-    { casilla_id = "00325", kind = "on_form", box_number = "00325", aliases = [{ page_id = "dp200012", section_id = "liquidacion-i-detalle-correcciones-result-9465bc", official_ref = "DP200012" }, { page_id = "dp200033", section_id = "contabilidad-banco-de-espana-estado-cambi-27d9ae", official_ref = "DP200033" }, { page_id = "dp200036", section_id = "entidades-aseguradoras-balance-pasivo-y-p-588f2b-3", official_ref = "DP200036" }] },
     { casilla_id = "00326", kind = "on_form", box_number = "00326", aliases = [{ page_id = "dp200012", section_id = "liquidacion-i-detalle-correcciones-result-9465bc", official_ref = "DP200012" }, { page_id = "dp200033", section_id = "contabilidad-banco-de-espana-estado-cambi-27d9ae", official_ref = "DP200033" }, { page_id = "dp200036", section_id = "entidades-aseguradoras-balance-pasivo-y-p-588f2b-3", official_ref = "DP200036" }] },
     { casilla_id = "00327", kind = "on_form", box_number = "00327", aliases = [{ page_id = "dp200012", section_id = "liquidacion-i-detalle-correcciones-result-9465bc", official_ref = "DP200012" }, { page_id = "dp200033", section_id = "contabilidad-banco-de-espana-estado-cambi-27d9ae", official_ref = "DP200033" }, { page_id = "dp200036", section_id = "entidades-aseguradoras-balance-pasivo-y-p-588f2b-3", official_ref = "DP200036" }] },
     { casilla_id = "00328", kind = "on_form", box_number = "00328", aliases = [{ page_id = "dp200012", section_id = "liquidacion-i-detalle-correcciones-result-9465bc", official_ref = "DP200012" }, { page_id = "dp200033", section_id = "contabilidad-banco-de-espana-estado-cambi-27d9ae", official_ref = "DP200033" }, { page_id = "dp200036", section_id = "entidades-aseguradoras-balance-pasivo-y-p-588f2b-3", official_ref = "DP200036" }] },
@@ -485,7 +478,7 @@ placements = [
     { casilla_id = "00497", kind = "on_form", box_number = "00497", aliases = [{ page_id = "dp200026", section_id = "tributacion-conjunta-estado-y-adm-forales", official_ref = "DP200026" }] },
     { casilla_id = "00498", kind = "on_form", box_number = "00498", aliases = [{ page_id = "dp200017", section_id = "deducc-para-incentivar-determ-actividades", official_ref = "DP200017" }, { page_id = "dp200043", section_id = "entidades-aseguradoras-estado-cambios-pat-153b5c", official_ref = "DP200043" }] },
     { casilla_id = "00499", kind = "on_form", box_number = "00499", aliases = [{ page_id = "dp200013", section_id = "liquidacion-ii-detalle-correcciones-resul-56f905", official_ref = "DP200013" }, { page_id = "dp200043", section_id = "entidades-aseguradoras-estado-cambios-pat-153b5c", official_ref = "DP200043" }] },
-    { casilla_id = "00500", kind = "on_form", box_number = "00500", aliases = [{ page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii-3", official_ref = "DP200008" }, { page_id = "dp200009", section_id = "estado-de-cambios-patrimonio-neto-i", official_ref = "DP200009" }, { page_id = "dp200024", section_id = "agrup-interes-economico-y-utes-b-datos-ec-653a29", official_ref = "DP200024" }, { page_id = "dp200041", section_id = "entidades-aseguradoras-estado-cambios-pat-f020d4", official_ref = "DP200041" }] },
+    { casilla_id = "00500", kind = "on_form", box_number = "00500", aliases = [{ page_id = "dp200008", section_id = "cuenta-de-perdidas-y-ganancias-ii-3", official_ref = "DP200008" }, { page_id = "dp200009", section_id = "estado-de-cambios-patrimonio-neto-i", official_ref = "DP200009" }, { page_id = "dp200024", section_id = "agrup-interes-economico-y-utes-b-datos-ec-653a29", official_ref = "DP200024" }, { page_id = "dp200030", section_id = "contabilidad-banco-de-espana", official_ref = "DP200030" }, { page_id = "dp200041", section_id = "entidades-aseguradoras-estado-cambios-pat-f020d4", official_ref = "DP200041" }] },
     { casilla_id = "00502", kind = "on_form", box_number = "00502", aliases = [{ page_id = "dp200013", section_id = "liquidacion-ii-detalle-correcciones-resul-56f905", official_ref = "DP200013" }, { page_id = "dp200043", section_id = "entidades-aseguradoras-estado-cambios-pat-153b5c", official_ref = "DP200043" }] },
     { casilla_id = "00503", kind = "on_form", box_number = "00503", aliases = [{ page_id = "dp200033", section_id = "contabilidad-banco-de-espana-estado-cambi-27d9ae", official_ref = "DP200033" }, { page_id = "dp200043", section_id = "entidades-aseguradoras-estado-cambios-pat-153b5c", official_ref = "DP200043" }] },
     { casilla_id = "00504", kind = "on_form", box_number = "00504", aliases = [{ page_id = "dp200013", section_id = "liquidacion-ii-detalle-correcciones-resul-56f905", official_ref = "DP200013" }] },
@@ -2041,7 +2034,7 @@ placements = [
     { casilla_id = "02159", kind = "on_form", box_number = "02159" },
     { casilla_id = "02160", kind = "on_form", box_number = "02160" },
     { casilla_id = "02161", kind = "on_form", box_number = "02161" },
-    { casilla_id = "02162", kind = "on_form", box_number = "02162" },
+    { casilla_id = "02162", kind = "on_form", box_number = "02162", aliases = [{ page_id = "dp200030", section_id = "contabilidad-banco-de-espana", official_ref = "DP200030" }] },
     { casilla_id = "02163", kind = "on_form", box_number = "02163", aliases = [{ page_id = "dp200018b", section_id = "deducciones-por-producciones-cinematograf-c74b42", official_ref = "DP200018B" }] },
     { casilla_id = "02164", kind = "on_form", box_number = "02164", aliases = [{ page_id = "dp200018b", section_id = "deducciones-por-producciones-cinematograf-c74b42", official_ref = "DP200018B" }] },
     { casilla_id = "02165", kind = "on_form", box_number = "02165", aliases = [{ page_id = "dp200018b", section_id = "deducciones-por-producciones-cinematograf-c74b42", official_ref = "DP200018B" }] },
@@ -3279,6 +3272,12 @@ placements = [
     { casilla_id = "DP200001:00032", kind = "on_form", box_number = "00032" },
     { casilla_id = "DP200001:00082", kind = "on_form", box_number = "00082" },
     { casilla_id = "DP200001:00083", kind = "on_form", box_number = "00083" },
+    { casilla_id = "DP200007:00254", kind = "on_form", box_number = "00254" },
+    { casilla_id = "DP200007:00255", kind = "on_form", box_number = "00255" },
+    { casilla_id = "DP200007:00257", kind = "on_form", box_number = "00257" },
+    { casilla_id = "DP200007:00279", kind = "on_form", box_number = "00279" },
+    { casilla_id = "DP200007:00280", kind = "on_form", box_number = "00280" },
+    { casilla_id = "DP200007:00296", kind = "on_form", box_number = "00296" },
     { casilla_id = "DP200008:00301", kind = "on_form", box_number = "00301" },
     { casilla_id = "DP200008:00302", kind = "on_form", box_number = "00302" },
     { casilla_id = "DP200008:00303", kind = "on_form", box_number = "00303" },
@@ -3295,6 +3294,7 @@ placements = [
     { casilla_id = "DP200008:00314", kind = "on_form", box_number = "00314" },
     { casilla_id = "DP200008:00315", kind = "on_form", box_number = "00315" },
     { casilla_id = "DP200008:00316", kind = "on_form", box_number = "00316" },
+    { casilla_id = "DP200008:00325", kind = "on_form", box_number = "00325" },
     { casilla_id = "DP200010:00399", kind = "on_form", box_number = "00399" },
     { casilla_id = "DP200010:00550", kind = "on_form", box_number = "00550" },
     { casilla_id = "DP200010:00552", kind = "on_form", box_number = "00552" },
@@ -3343,6 +3343,7 @@ placements = [
     { casilla_id = "DP200012:00308", kind = "on_form", box_number = "00308" },
     { casilla_id = "DP200012:00309", kind = "on_form", box_number = "00309" },
     { casilla_id = "DP200012:00310", kind = "on_form", box_number = "00310" },
+    { casilla_id = "DP200012:00325", kind = "on_form", box_number = "00325" },
     { casilla_id = "DP200012:00501", kind = "on_form", box_number = "00501" },
     { casilla_id = "DP200013:00311", kind = "on_form", box_number = "00311" },
     { casilla_id = "DP200013:00312", kind = "on_form", box_number = "00312" },
@@ -3395,10 +3396,21 @@ placements = [
     { casilla_id = "DP200014B:00619", kind = "on_form", box_number = "00619" },
     { casilla_id = "DP200014B:01766", kind = "on_form", box_number = "01766" },
     { casilla_id = "DP200014B:01784", kind = "on_form", box_number = "01784" },
+    { casilla_id = "DP200016:00254", kind = "on_form", box_number = "00254" },
+    { casilla_id = "DP200016:00255", kind = "on_form", box_number = "00255" },
+    { casilla_id = "DP200016B:00257", kind = "on_form", box_number = "00257" },
+    { casilla_id = "DP200016B:00296", kind = "on_form", box_number = "00296" },
     { casilla_id = "DP200018:00588", kind = "on_form", box_number = "00588" },
     { casilla_id = "DP200018B:00315", kind = "on_form", box_number = "00315" },
     { casilla_id = "DP200018B:00316", kind = "on_form", box_number = "00316" },
+    { casilla_id = "DP200022:00279", kind = "on_form", box_number = "00279" },
+    { casilla_id = "DP200022:00280", kind = "on_form", box_number = "00280" },
     { casilla_id = "DP200026:00625", kind = "on_form", box_number = "00625" },
+    { casilla_id = "DP200030:00255", kind = "on_form", box_number = "00255" },
+    { casilla_id = "DP200030:00257", kind = "on_form", box_number = "00257" },
+    { casilla_id = "DP200031:00279", kind = "on_form", box_number = "00279" },
+    { casilla_id = "DP200031:00280", kind = "on_form", box_number = "00280" },
+    { casilla_id = "DP200032:00296", kind = "on_form", box_number = "00296" },
     { casilla_id = "DP200032:00305", kind = "on_form", box_number = "00305" },
     { casilla_id = "DP200032:00306", kind = "on_form", box_number = "00306" },
     { casilla_id = "DP200032:00307", kind = "on_form", box_number = "00307" },
@@ -3419,11 +3431,18 @@ placements = [
     { casilla_id = "DP200033:00314", kind = "on_form", box_number = "00314" },
     { casilla_id = "DP200033:00315", kind = "on_form", box_number = "00315" },
     { casilla_id = "DP200033:00316", kind = "on_form", box_number = "00316" },
+    { casilla_id = "DP200033:00325", kind = "on_form", box_number = "00325" },
     { casilla_id = "DP200033:00563", kind = "on_form", box_number = "00563" },
     { casilla_id = "DP200033:00565", kind = "on_form", box_number = "00565" },
     { casilla_id = "DP200033:00566", kind = "on_form", box_number = "00566" },
     { casilla_id = "DP200033:00567", kind = "on_form", box_number = "00567" },
     { casilla_id = "DP200033:00568", kind = "on_form", box_number = "00568" },
+    { casilla_id = "DP200038:00254", kind = "on_form", box_number = "00254" },
+    { casilla_id = "DP200038:00255", kind = "on_form", box_number = "00255" },
+    { casilla_id = "DP200038:00257", kind = "on_form", box_number = "00257" },
+    { casilla_id = "DP200038:00279", kind = "on_form", box_number = "00279" },
+    { casilla_id = "DP200038:00280", kind = "on_form", box_number = "00280" },
+    { casilla_id = "DP200039:00296", kind = "on_form", box_number = "00296" },
     { casilla_id = "DP200039:00301", kind = "on_form", box_number = "00301" },
     { casilla_id = "DP200039:00302", kind = "on_form", box_number = "00302" },
     { casilla_id = "DP200039:00303", kind = "on_form", box_number = "00303" },
@@ -3440,6 +3459,7 @@ placements = [
     { casilla_id = "DP200039:00314", kind = "on_form", box_number = "00314" },
     { casilla_id = "DP200039:00315", kind = "on_form", box_number = "00315" },
     { casilla_id = "DP200039:00316", kind = "on_form", box_number = "00316" },
+    { casilla_id = "DP200039:00325", kind = "on_form", box_number = "00325" },
     { casilla_id = "DP200041:00399", kind = "on_form", box_number = "00399" },
     { casilla_id = "DP200042:00417", kind = "on_form", box_number = "00417" },
     { casilla_id = "DP200042:00418", kind = "on_form", box_number = "00418" },
@@ -3478,9 +3498,19 @@ placements = [
     { casilla_id = "DP200043:00603", kind = "on_form", box_number = "00603" },
     { casilla_id = "DP200043:00605", kind = "on_form", box_number = "00605" },
     { casilla_id = "DP200043:00619", kind = "on_form", box_number = "00619" },
+    { casilla_id = "DP200047:00254", kind = "on_form", box_number = "00254" },
+    { casilla_id = "DP200047:00255", kind = "on_form", box_number = "00255" },
+    { casilla_id = "DP200047:00257", kind = "on_form", box_number = "00257" },
+    { casilla_id = "DP200047:00279", kind = "on_form", box_number = "00279" },
+    { casilla_id = "DP200047:00280", kind = "on_form", box_number = "00280" },
+    { casilla_id = "DP200048:00296", kind = "on_form", box_number = "00296" },
     { casilla_id = "DP200048:00301", kind = "on_form", box_number = "00301" },
     { casilla_id = "DP200048:00302", kind = "on_form", box_number = "00302" },
     { casilla_id = "DP200048:00303", kind = "on_form", box_number = "00303" },
+    { casilla_id = "DP200053:00254", kind = "on_form", box_number = "00254" },
+    { casilla_id = "DP200053:00255", kind = "on_form", box_number = "00255" },
+    { casilla_id = "DP200053:00257", kind = "on_form", box_number = "00257" },
+    { casilla_id = "DP200053:00280", kind = "on_form", box_number = "00280" },
     { casilla_id = "DP200053:00301", kind = "on_form", box_number = "00301" },
     { casilla_id = "DP200053:00302", kind = "on_form", box_number = "00302" },
     { casilla_id = "DP200053:00307", kind = "on_form", box_number = "00307" },
@@ -3488,6 +3518,8 @@ placements = [
     { casilla_id = "DP200053:00309", kind = "on_form", box_number = "00309" },
     { casilla_id = "DP200053:00310", kind = "on_form", box_number = "00310" },
     { casilla_id = "DP200053:00311", kind = "on_form", box_number = "00311" },
+    { casilla_id = "DP200054:00279", kind = "on_form", box_number = "00279" },
+    { casilla_id = "DP200054:00296", kind = "on_form", box_number = "00296" },
     { casilla_id = "DP200054:00303", kind = "on_form", box_number = "00303" },
     { casilla_id = "DP200054:00304", kind = "on_form", box_number = "00304" },
     { casilla_id = "DP200054:00305", kind = "on_form", box_number = "00305" },
@@ -3672,13 +3704,13 @@ blocks = [
     { kind = "field", id = "field-19", casilla_id = "00109" },
     { kind = "field", id = "field-20", casilla_id = "00253" },
     { kind = "field", id = "field-21", casilla_id = "00110" },
-    { kind = "field", id = "field-22", casilla_id = "00254" },
+    { kind = "field", id = "field-22", casilla_id = "DP200047:00254" },
     { kind = "field", id = "field-23", casilla_id = "00111" },
-    { kind = "field", id = "field-24", casilla_id = "00255" },
+    { kind = "field", id = "field-24", casilla_id = "DP200047:00255" },
     { kind = "field", id = "field-25", casilla_id = "00112" },
     { kind = "field", id = "field-26", casilla_id = "00256" },
     { kind = "field", id = "field-27", casilla_id = "00113" },
-    { kind = "field", id = "field-28", casilla_id = "00257" },
+    { kind = "field", id = "field-28", casilla_id = "DP200047:00257" },
     { kind = "field", id = "field-29", casilla_id = "00114" },
     { kind = "field", id = "field-30", casilla_id = "00258" },
     { kind = "field", id = "field-31", casilla_id = "00115" },
@@ -3715,9 +3747,9 @@ blocks = [
     { kind = "field", id = "field-54", casilla_id = "00135" },
     { kind = "field", id = "field-55", casilla_id = "00278" },
     { kind = "field", id = "field-56", casilla_id = "00136" },
-    { kind = "field", id = "field-57", casilla_id = "00279" },
+    { kind = "field", id = "field-57", casilla_id = "DP200047:00279" },
     { kind = "field", id = "field-58", casilla_id = "00137" },
-    { kind = "field", id = "field-59", casilla_id = "00280" },
+    { kind = "field", id = "field-59", casilla_id = "DP200047:00280" },
     { kind = "field", id = "field-60", casilla_id = "00138" },
     { kind = "field", id = "field-61", casilla_id = "00281" },
     { kind = "field", id = "field-62", casilla_id = "00139" },
@@ -3928,8 +3960,10 @@ id = "cuenta-de-perdidas-y-ganancias-i"
 heading_key = "modelo.schema.200.form.section.cuenta-de-perdidas-y-ganancias-i.heading"
 official_heading = "Cuenta de pérdidas y ganancias (I)"
 blocks = [
-    { kind = "field", id = "field", casilla_id = "00711" },
-    { kind = "field", id = "field-2", casilla_id = "00705" },
+    { kind = "field", id = "field", casilla_id = "DP200007:00255" },
+    { kind = "field", id = "field-2", casilla_id = "DP200007:00257" },
+    { kind = "field", id = "field-3", casilla_id = "00711" },
+    { kind = "field", id = "field-4", casilla_id = "00705" },
 ]
 
 [[revisions.2024.form_layouts.pages.sections]]
@@ -3962,7 +3996,10 @@ heading_key = "modelo.schema.200.form.section.cuenta-de-perdidas-y-ganancias-i.h
 official_heading = "Cuenta de pérdidas y ganancias (I)"
 blocks = [
     { kind = "field", id = "field", casilla_id = "00790" },
-    { kind = "field", id = "field-2", casilla_id = "00709" },
+    { kind = "field", id = "field-2", casilla_id = "DP200007:00279" },
+    { kind = "field", id = "field-3", casilla_id = "DP200007:00280" },
+    { kind = "field", id = "field-4", casilla_id = "DP200007:00254" },
+    { kind = "field", id = "field-5", casilla_id = "00709" },
 ]
 
 [[revisions.2024.form_layouts.pages.sections]]
@@ -3976,7 +4013,7 @@ blocks = [
     { kind = "field", id = "field-4", casilla_id = "00793" },
     { kind = "field", id = "field-5", casilla_id = "00294" },
     { kind = "field", id = "field-6", casilla_id = "00295" },
-    { kind = "field", id = "field-7", casilla_id = "00296" },
+    { kind = "field", id = "field-7", casilla_id = "DP200007:00296" },
 ]
 
 [[revisions.2024.form_layouts.pages]]
@@ -4059,8 +4096,10 @@ official_heading = "Cuenta de pérdidas y ganancias (II) - Operaciones continuad
 blocks = [
     { kind = "field", id = "field", casilla_id = "DP200008:00315" },
     { kind = "field", id = "field-2", casilla_id = "DP200008:00316" },
-    { kind = "field", id = "field-3", casilla_id = "00317" },
-    { kind = "field", id = "field-4", casilla_id = "00318" },
+    { kind = "field", id = "field-3", casilla_id = "DP200031:00279" },
+    { kind = "field", id = "field-4", casilla_id = "00317" },
+    { kind = "field", id = "field-5", casilla_id = "DP200031:00280" },
+    { kind = "field", id = "field-6", casilla_id = "00318" },
 ]
 
 [[revisions.2024.form_layouts.pages.sections]]
@@ -4100,7 +4139,7 @@ blocks = [
     { kind = "field", id = "field-7", casilla_id = "00332" },
     { kind = "field", id = "field-8", casilla_id = "02175" },
     { kind = "field", id = "field-9", casilla_id = "00324" },
-    { kind = "field", id = "field-10", casilla_id = "00325" },
+    { kind = "field", id = "field-10", casilla_id = "DP200008:00325" },
     { kind = "field", id = "field-11", casilla_id = "00326" },
     { kind = "field", id = "field-12", casilla_id = "00327" },
     { kind = "field", id = "field-13", casilla_id = "00328" },
@@ -4597,10 +4636,12 @@ blocks = [
     { kind = "grid", id = "grid-2", columns = [{ key = "aumentos", heading_key = "modelo.form.column.aumentos", official_heading = "Aumentos" }, { key = "disminuciones", heading_key = "modelo.form.column.disminuciones", official_heading = "Disminuciones" }], rows = [{ key = "diferencias-entre-amortizacion-contable-y-6b5ec8", heading_key = "modelo.schema.200.form.row.diferencias-entre-amortizacion-contable-y-6b5ec8.heading", official_heading = "Diferencias entre amortización contable y fiscal (arts. 12.1 LIS)", cells = [{ kind = "casilla", casilla_id = "DP200012:00303" }, { kind = "casilla", casilla_id = "DP200012:00304" }] }] },
     { kind = "field", id = "field-7", casilla_id = "01005" },
     { kind = "field", id = "field-8", casilla_id = "01006" },
-    { kind = "grid", id = "grid-3", columns = [{ key = "aumentos", heading_key = "modelo.form.column.aumentos", official_heading = "Aumentos" }, { key = "disminuciones", heading_key = "modelo.form.column.disminuciones", official_heading = "Disminuciones" }], rows = [{ key = "amortizacion-inmovilizado-afecto-investig-b2365c", heading_key = "modelo.schema.200.form.row.amortizacion-inmovilizado-afecto-investig-b2365c.heading", official_heading = "Amortización inmovilizado afecto investigación y desarrollo (art. 12.3.b) LIS)", cells = [{ kind = "casilla", casilla_id = "DP200012:00305" }, { kind = "casilla", casilla_id = "DP200012:00306" }] }, { key = "libertad-de-amortizacion-de-gastos-de-inv-ef8596", heading_key = "modelo.schema.200.form.row.libertad-de-amortizacion-de-gastos-de-inv-ef8596.heading", official_heading = "Libertad de amortización de gastos de investigación y desarrollo (art. 12.3.c) LIS)", cells = [{ kind = "casilla", casilla_id = "DP200012:00307" }, { kind = "casilla", casilla_id = "DP200012:00308" }] }, { key = "libertad-de-amortizacion-inmovilizado-mat-e46d93", heading_key = "modelo.schema.200.form.row.libertad-de-amortizacion-inmovilizado-mat-e46d93.heading", official_heading = "Libertad de amortización inmovilizado material nuevo (art. 12.3 e) LIS)", cells = [{ kind = "casilla", casilla_id = "01003" }, { kind = "casilla", casilla_id = "01004" }] }, { key = "otros-supuestos-de-libertad-de-amortizaci-dcc843", heading_key = "modelo.schema.200.form.row.otros-supuestos-de-libertad-de-amortizaci-dcc843.heading", official_heading = "Otros supuestos de libertad de amortización (art. 12.3 a) y d) DA 16ª y 17ª LIS)", cells = [{ kind = "casilla", casilla_id = "DP200012:00309" }, { kind = "casilla", casilla_id = "DP200012:00310" }] }, { key = "amortizacion-acelerada-de-determinados-ve-e62c7c", heading_key = "modelo.schema.200.form.row.amortizacion-acelerada-de-determinados-ve-e62c7c.heading", official_heading = "Amortización acelerada de determinados vehículos y de nuevas infraestructuras de recarga (DA 18ª LIS RDL 5/2023)", cells = [{ kind = "casilla", casilla_id = "00775" }, { kind = "casilla", casilla_id = "00776" }] }, { key = "libertad-de-amortizacion-de-determinados-c0ad65", heading_key = "modelo.schema.200.form.row.libertad-de-amortizacion-de-determinados-c0ad65.heading", official_heading = "Libertad de amortización de determinados vehículos y de nuevas infraestructuras de recarga (DA 18ª LIS RDL 4/2024)", cells = [{ kind = "casilla", casilla_id = "DP200012:00005" }, { kind = "casilla", casilla_id = "DP200012:00006" }] }, { key = "ajustes-por-deterioro-de-valores-repr-de-0f4333", heading_key = "modelo.schema.200.form.row.ajustes-por-deterioro-de-valores-repr-de-0f4333.heading", official_heading = "Ajustes por deterioro de valores repr. de partic. en el capital o fondos propios (DT 16ª.1 y 2 LIS)", cells = [{ kind = "casilla", casilla_id = "02919" }, { kind = "casilla", casilla_id = "02920" }] }] },
-    { kind = "field", id = "field-9", casilla_id = "00335" },
-    { kind = "field", id = "field-10", casilla_id = "00368" },
-    { kind = "field", id = "field-11", casilla_id = "01815" },
+    { kind = "grid", id = "grid-3", columns = [{ key = "aumentos", heading_key = "modelo.form.column.aumentos", official_heading = "Aumentos" }, { key = "disminuciones", heading_key = "modelo.form.column.disminuciones", official_heading = "Disminuciones" }], rows = [{ key = "amortizacion-inmovilizado-afecto-investig-b2365c", heading_key = "modelo.schema.200.form.row.amortizacion-inmovilizado-afecto-investig-b2365c.heading", official_heading = "Amortización inmovilizado afecto investigación y desarrollo (art. 12.3.b) LIS)", cells = [{ kind = "casilla", casilla_id = "DP200012:00305" }, { kind = "casilla", casilla_id = "DP200012:00306" }] }, { key = "libertad-de-amortizacion-de-gastos-de-inv-ef8596", heading_key = "modelo.schema.200.form.row.libertad-de-amortizacion-de-gastos-de-inv-ef8596.heading", official_heading = "Libertad de amortización de gastos de investigación y desarrollo (art. 12.3.c) LIS)", cells = [{ kind = "casilla", casilla_id = "DP200012:00307" }, { kind = "casilla", casilla_id = "DP200012:00308" }] }, { key = "libertad-de-amortizacion-inmovilizado-mat-e46d93", heading_key = "modelo.schema.200.form.row.libertad-de-amortizacion-inmovilizado-mat-e46d93.heading", official_heading = "Libertad de amortización inmovilizado material nuevo (art. 12.3 e) LIS)", cells = [{ kind = "casilla", casilla_id = "01003" }, { kind = "casilla", casilla_id = "01004" }] }, { key = "otros-supuestos-de-libertad-de-amortizaci-dcc843", heading_key = "modelo.schema.200.form.row.otros-supuestos-de-libertad-de-amortizaci-dcc843.heading", official_heading = "Otros supuestos de libertad de amortización (art. 12.3 a) y d) DA 16ª y 17ª LIS)", cells = [{ kind = "casilla", casilla_id = "DP200012:00309" }, { kind = "casilla", casilla_id = "DP200012:00310" }] }, { key = "amortizacion-acelerada-de-determinados-ve-e62c7c", heading_key = "modelo.schema.200.form.row.amortizacion-acelerada-de-determinados-ve-e62c7c.heading", official_heading = "Amortización acelerada de determinados vehículos y de nuevas infraestructuras de recarga (DA 18ª LIS RDL 5/2023)", cells = [{ kind = "casilla", casilla_id = "00775" }, { kind = "casilla", casilla_id = "00776" }] }, { key = "libertad-de-amortizacion-de-determinados-c0ad65", heading_key = "modelo.schema.200.form.row.libertad-de-amortizacion-de-determinados-c0ad65.heading", official_heading = "Libertad de amortización de determinados vehículos y de nuevas infraestructuras de recarga (DA 18ª LIS RDL 4/2024)", cells = [{ kind = "casilla", casilla_id = "DP200012:00005" }, { kind = "casilla", casilla_id = "DP200012:00006" }] }] },
+    { kind = "field", id = "field-9", casilla_id = "DP200012:00325" },
+    { kind = "grid", id = "grid-4", columns = [{ key = "aumentos", heading_key = "modelo.form.column.aumentos", official_heading = "Aumentos" }, { key = "disminuciones", heading_key = "modelo.form.column.disminuciones", official_heading = "Disminuciones" }], rows = [{ key = "ajustes-por-deterioro-de-valores-repr-de-0f4333", heading_key = "modelo.schema.200.form.row.ajustes-por-deterioro-de-valores-repr-de-0f4333.heading", official_heading = "Ajustes por deterioro de valores repr. de partic. en el capital o fondos propios (DT 16ª.1 y 2 LIS)", cells = [{ kind = "casilla", casilla_id = "02919" }, { kind = "casilla", casilla_id = "02920" }] }] },
+    { kind = "field", id = "field-10", casilla_id = "00335" },
+    { kind = "field", id = "field-11", casilla_id = "00368" },
+    { kind = "field", id = "field-12", casilla_id = "01815" },
 ]
 
 [[revisions.2024.form_layouts.pages.sections]]
@@ -4628,41 +4669,42 @@ heading_key = "modelo.schema.200.form.section.liquidacion-ii-detalle-correccione
 official_heading = "Liquidación II - Detalle correcciones resultado cta. pérdidas y ganancias"
 blocks = [
     { kind = "grid", id = "grid", columns = [{ key = "aumentos", heading_key = "modelo.form.column.aumentos", official_heading = "Aumentos" }, { key = "disminuciones", heading_key = "modelo.form.column.disminuciones", official_heading = "Disminuciones" }], rows = [{ key = "operaciones-del-art-19-lis-distintas-del-c6eae4", heading_key = "modelo.schema.200.form.row.operaciones-del-art-19-lis-distintas-del-c6eae4.heading", official_heading = "Operaciones del art. 19 LIS distintas del cambio de residencia a Estados miembros de la Unión Europea o EEE", cells = [{ kind = "casilla", casilla_id = "01574" }, { kind = "casilla", casilla_id = "01575" }] }, { key = "efectos-de-la-valoracion-contable-diferen-81dabe", heading_key = "modelo.schema.200.form.row.efectos-de-la-valoracion-contable-diferen-81dabe.heading", official_heading = "Efectos de la valoración contable diferente a la fiscal (art. 20 LIS)", cells = [{ kind = "casilla", casilla_id = "01015" }, { kind = "casilla", casilla_id = "01016" }] }] },
-    { kind = "field", id = "field", casilla_id = "00370" },
-    { kind = "field", id = "field-2", casilla_id = "02181" },
-    { kind = "field", id = "field-3", casilla_id = "01764" },
-    { kind = "field", id = "field-4", casilla_id = "DP200032:00305" },
-    { kind = "field", id = "field-5", casilla_id = "01765" },
-    { kind = "field", id = "field-6", casilla_id = "DP200032:00306" },
-    { kind = "field", id = "field-7", casilla_id = "02182" },
+    { kind = "field", id = "field", casilla_id = "DP200032:00296" },
+    { kind = "field", id = "field-2", casilla_id = "00370" },
+    { kind = "field", id = "field-3", casilla_id = "02181" },
+    { kind = "field", id = "field-4", casilla_id = "01764" },
+    { kind = "field", id = "field-5", casilla_id = "DP200032:00305" },
+    { kind = "field", id = "field-6", casilla_id = "01765" },
+    { kind = "field", id = "field-7", casilla_id = "DP200032:00306" },
+    { kind = "field", id = "field-8", casilla_id = "02182" },
     { kind = "grid", id = "grid-2", columns = [{ key = "aumentos", heading_key = "modelo.form.column.aumentos", official_heading = "Aumentos" }, { key = "disminuciones", heading_key = "modelo.form.column.disminuciones", official_heading = "Disminuciones" }], rows = [{ key = "exencion-sobre-la-renta-obtenida-en-la-tr-f1265f", heading_key = "modelo.schema.200.form.row.exencion-sobre-la-renta-obtenida-en-la-tr-f1265f.heading", official_heading = "Exención sobre la renta obtenida en la transmisión de valores entidades residentes (art. 21.3, 21.10 y DT 40ª LIS)", cells = [{ kind = "casilla", casilla_id = "DP200032:00307" }, { kind = "casilla", casilla_id = "02183" }] }] },
-    { kind = "field", id = "field-8", casilla_id = "DP200032:00308" },
-    { kind = "field", id = "field-9", casilla_id = "02184" },
+    { kind = "field", id = "field-9", casilla_id = "DP200032:00308" },
+    { kind = "field", id = "field-10", casilla_id = "02184" },
     { kind = "grid", id = "grid-3", columns = [{ key = "aumentos", heading_key = "modelo.form.column.aumentos", official_heading = "Aumentos" }, { key = "disminuciones", heading_key = "modelo.form.column.disminuciones", official_heading = "Disminuciones" }], rows = [{ key = "exencion-sobre-la-renta-obtenida-en-la-tr-3dda71", heading_key = "modelo.schema.200.form.row.exencion-sobre-la-renta-obtenida-en-la-tr-3dda71.heading", official_heading = "Exención sobre la renta obtenida en la transmisión de valores entidades no residentes (art. 21.3, 21.10 y DT 40ª LIS)", cells = [{ kind = "casilla", casilla_id = "DP200032:00309" }, { kind = "casilla", casilla_id = "02185" }] }] },
-    { kind = "field", id = "field-10", casilla_id = "DP200032:00310" },
+    { kind = "field", id = "field-11", casilla_id = "DP200032:00310" },
     { kind = "grid", id = "grid-4", columns = [{ key = "aumentos", heading_key = "modelo.form.column.aumentos", official_heading = "Aumentos" }, { key = "disminuciones", heading_key = "modelo.form.column.disminuciones", official_heading = "Disminuciones" }], rows = [{ key = "exencion-sobre-la-renta-obtenida-en-los-s-20768b", heading_key = "modelo.schema.200.form.row.exencion-sobre-la-renta-obtenida-en-los-s-20768b.heading", official_heading = "Exención sobre la renta obtenida en los supuestos del art. 21.3, 21.10 y DT 40ª LIS distintos a transmisiones de valores entidades residentes", cells = [{ kind = "casilla", casilla_id = "02186" }, { kind = "casilla", casilla_id = "02187" }] }, { key = "exencion-sobre-la-renta-obtenida-en-los-s-75dadd", heading_key = "modelo.schema.200.form.row.exencion-sobre-la-renta-obtenida-en-los-s-75dadd.heading", official_heading = "Exención sobre la renta obtenida en los supuestos del art. 21.3, 21.10 y DT 40ª LIS distintos a transmisiones de valores entidades no residentes", cells = [{ kind = "casilla", casilla_id = "02188" }, { kind = "casilla", casilla_id = "02189" }] }, { key = "reduccion-de-ingresos-procedentes-de-dete-7b3121", heading_key = "modelo.schema.200.form.row.reduccion-de-ingresos-procedentes-de-dete-7b3121.heading", official_heading = "Reducción de ingresos procedentes de determinados activos intangibles (art. 23 LIS)", cells = [{ kind = "casilla", casilla_id = "01822" }, { kind = "casilla", casilla_id = "00372" }] }, { key = "obra-benefico-social-de-las-cajas-de-ahor-af50e9", heading_key = "modelo.schema.200.form.row.obra-benefico-social-de-las-cajas-de-ahor-af50e9.heading", official_heading = "Obra benéfico-social de las cajas de ahorro y fundaciones bancarias (art. 24 LIS)", cells = [{ kind = "casilla", casilla_id = "00373" }, { kind = "casilla", casilla_id = "00374" }] }] },
-    { kind = "field", id = "field-11", casilla_id = "01589" },
+    { kind = "field", id = "field-12", casilla_id = "01589" },
     { kind = "grid", id = "grid-5", columns = [{ key = "aumentos", heading_key = "modelo.form.column.aumentos", official_heading = "Aumentos" }, { key = "disminuciones", heading_key = "modelo.form.column.disminuciones", official_heading = "Disminuciones" }], rows = [{ key = "agrupacion-de-interes-economico-cap-ii-ti-30566e", heading_key = "modelo.schema.200.form.row.agrupacion-de-interes-economico-cap-ii-ti-30566e.heading", official_heading = "Agrupación de interés económico (Cap. II Tit. VII LIS)", cells = [{ kind = "casilla", casilla_id = "00375" }, { kind = "casilla", casilla_id = "00376" }] }, { key = "union-temporal-de-empresas-ajustes-del-ar-8865de", heading_key = "modelo.schema.200.form.row.union-temporal-de-empresas-ajustes-del-ar-8865de.heading", official_heading = "Unión temporal de empresas, ajustes del art. 45.1 LIS", cells = [{ kind = "casilla", casilla_id = "01320" }, { kind = "casilla", casilla_id = "01321" }] }] },
-    { kind = "field", id = "field-12", casilla_id = "00184" },
+    { kind = "field", id = "field-13", casilla_id = "00184" },
     { kind = "grid", id = "grid-6", columns = [{ key = "aumentos", heading_key = "modelo.form.column.aumentos", official_heading = "Aumentos" }, { key = "disminuciones", heading_key = "modelo.form.column.disminuciones", official_heading = "Disminuciones" }], rows = [{ key = "union-temporal-de-empresas-ajustes-por-re-1c4b46", heading_key = "modelo.schema.200.form.row.union-temporal-de-empresas-ajustes-por-re-1c4b46.heading", official_heading = "Unión temporal de empresas, ajustes por rentas exentas por participar en el extranjero en formulas de colaboración análogas a las UTE (art. 45.2 LIS)", cells = [{ kind = "casilla", casilla_id = "01022" }, { kind = "casilla", casilla_id = "01023" }] }] },
-    { kind = "field", id = "field-13", casilla_id = "00365" },
-    { kind = "field", id = "field-14", casilla_id = "01018" },
+    { kind = "field", id = "field-14", casilla_id = "00365" },
+    { kind = "field", id = "field-15", casilla_id = "01018" },
     { kind = "grid", id = "grid-7", columns = [{ key = "aumentos", heading_key = "modelo.form.column.aumentos", official_heading = "Aumentos" }, { key = "disminuciones", heading_key = "modelo.form.column.disminuciones", official_heading = "Disminuciones" }], rows = [{ key = "union-temporal-de-empresas-ajustes-por-cr-a97dae", heading_key = "modelo.schema.200.form.row.union-temporal-de-empresas-ajustes-por-cr-a97dae.heading", official_heading = "Unión temporal de empresas, ajustes por criterios de imputación temporal (art. 46.2 LIS)", cells = [{ kind = "casilla", casilla_id = "00366" }, { kind = "casilla", casilla_id = "01019" }] }] },
-    { kind = "field", id = "field-15", casilla_id = "00369" },
+    { kind = "field", id = "field-16", casilla_id = "00369" },
     { kind = "grid", id = "grid-8", columns = [{ key = "aumentos", heading_key = "modelo.form.column.aumentos", official_heading = "Aumentos" }, { key = "disminuciones", heading_key = "modelo.form.column.disminuciones", official_heading = "Disminuciones" }], rows = [{ key = "bi-negativas-generadas-dentro-del-grupo-f-b653f1", heading_key = "modelo.schema.200.form.row.bi-negativas-generadas-dentro-del-grupo-f-b653f1.heading", official_heading = "BI negativas generadas dentro del grupo fiscal por la entidad transmitida y que hayan sido compensadas", cells = [{ kind = "casilla", casilla_id = "01275" }, { kind = "casilla", casilla_id = "01276" }] }] },
-    { kind = "field", id = "field-16", casilla_id = "00377" },
+    { kind = "field", id = "field-17", casilla_id = "00377" },
     { kind = "grid", id = "grid-9", columns = [{ key = "aumentos", heading_key = "modelo.form.column.aumentos", official_heading = "Aumentos" }, { key = "disminuciones", heading_key = "modelo.form.column.disminuciones", official_heading = "Disminuciones" }], rows = [{ key = "soc-y-fondos-de-capital-riesgo-y-soc-desa-059c04", heading_key = "modelo.schema.200.form.row.soc-y-fondos-de-capital-riesgo-y-soc-desa-059c04.heading", official_heading = "Soc. y fondos de capital-riesgo y soc. desarrollo industrial regional (cap.IV, titulo VII LIS)", cells = [{ kind = "casilla", casilla_id = "00378" }, { kind = "casilla", casilla_id = "00379" }] }, { key = "empresas-de-reducida-dimension-libertad-d-d6e2b0", heading_key = "modelo.schema.200.form.row.empresas-de-reducida-dimension-libertad-d-d6e2b0.heading", official_heading = "Empresas de reducida dimensión: libertad de amortización (art. 102 LIS)", cells = [{ kind = "casilla", casilla_id = "DP200013:00311" }, { kind = "casilla", casilla_id = "DP200013:00312" }] }, { key = "empresas-de-reducida-dimension-amortizaci-5cbd1b", heading_key = "modelo.schema.200.form.row.empresas-de-reducida-dimension-amortizaci-5cbd1b.heading", official_heading = "Empresas de reducida dimensión: amortización acelerada (art. 103 LIS y DT 28ª LIS)", cells = [{ kind = "casilla", casilla_id = "DP200013:00313" }, { kind = "casilla", casilla_id = "DP200013:00314" }] }] },
-    { kind = "field", id = "field-17", casilla_id = "DP200032:00417" },
-    { kind = "field", id = "field-18", casilla_id = "00473" },
-    { kind = "field", id = "field-19", casilla_id = "00474" },
+    { kind = "field", id = "field-18", casilla_id = "DP200032:00417" },
+    { kind = "field", id = "field-19", casilla_id = "00473" },
+    { kind = "field", id = "field-20", casilla_id = "00474" },
     { kind = "grid", id = "grid-10", columns = [{ key = "aumentos", heading_key = "modelo.form.column.aumentos", official_heading = "Aumentos" }, { key = "disminuciones", heading_key = "modelo.form.column.disminuciones", official_heading = "Disminuciones" }], rows = [{ key = "reservas-inversiones-en-illes-balears-da-a43bd5", heading_key = "modelo.schema.200.form.row.reservas-inversiones-en-illes-balears-da-a43bd5.heading", official_heading = "Reservas inversiones en Illes Balears (DA 70ª Ley 31/2022 )", cells = [{ kind = "casilla", casilla_id = "00778" }, { kind = "casilla", casilla_id = "00813" }] }] },
-    { kind = "field", id = "field-20", casilla_id = "00487" },
-    { kind = "field", id = "field-21", casilla_id = "01824" },
-    { kind = "field", id = "field-22", casilla_id = "00488" },
+    { kind = "field", id = "field-21", casilla_id = "00487" },
+    { kind = "field", id = "field-22", casilla_id = "01824" },
+    { kind = "field", id = "field-23", casilla_id = "00488" },
     { kind = "grid", id = "grid-11", columns = [{ key = "aumentos", heading_key = "modelo.form.column.aumentos", official_heading = "Aumentos" }, { key = "disminuciones", heading_key = "modelo.form.column.disminuciones", official_heading = "Disminuciones" }], rows = [{ key = "xxxvii-copa-america-barcelona-ley-31-2022", heading_key = "modelo.schema.200.form.row.xxxvii-copa-america-barcelona-ley-31-2022.heading", official_heading = "XXXVII Copa América Barcelona (Ley 31/2022)", cells = [{ kind = "casilla", casilla_id = "01905" }, { kind = "casilla", casilla_id = "01906" }] }] },
-    { kind = "field", id = "field-23", casilla_id = "DP200032:00501" },
-    { kind = "field", id = "field-24", casilla_id = "01026" },
-    { kind = "field", id = "field-25", casilla_id = "01014" },
+    { kind = "field", id = "field-24", casilla_id = "DP200032:00501" },
+    { kind = "field", id = "field-25", casilla_id = "01026" },
+    { kind = "field", id = "field-26", casilla_id = "01014" },
     { kind = "grid", id = "grid-12", columns = [{ key = "aumentos", heading_key = "modelo.form.column.aumentos", official_heading = "Aumentos" }, { key = "disminuciones", heading_key = "modelo.form.column.disminuciones", official_heading = "Disminuciones" }], rows = [{ key = "eliminaciones-pdte-de-incorporar-sdes-que-bea9f8", heading_key = "modelo.schema.200.form.row.eliminaciones-pdte-de-incorporar-sdes-que-bea9f8.heading", official_heading = "Eliminaciones pdte. de incorporar sdes.que dejen de pertenecer a un grupo", cells = [{ kind = "casilla", casilla_id = "01027" }, { kind = "casilla", casilla_id = "01028" }] }] },
 ]
 
@@ -5199,6 +5241,8 @@ official_heading = "Deducciones doble imposición internacional LIS"
 blocks = [
     { kind = "grid", id = "grid", columns = [{ key = "pendiente_inicio", heading_key = "modelo.form.column.pendiente_inicio", official_heading = "Deducción pendiente" }, { key = "tipo-gravamen-periodo-generacion", heading_key = "modelo.schema.200.form.column.tipo-gravamen-periodo-generacion.heading", official_heading = "Tipo gravamen período generación" }, { key = "2024-deduccion-pendiente", heading_key = "modelo.schema.200.form.column.2024-deduccion-pendiente.heading", official_heading = "2024 Deducción pendiente" }, { key = "aplicado", heading_key = "modelo.form.column.aplicado", official_heading = "Aplicado en esta liquidación" }, { key = "pendiente_futuro", heading_key = "modelo.form.column.pendiente_futuro", official_heading = "Pendiente aplic. en períodos futuros" }], rows = [{ key = "di-internacional-2015", heading_key = "modelo.schema.200.form.row.di-internacional-2015.heading", official_heading = "DI internacional 2015", cells = [{ kind = "casilla", casilla_id = "01054" }, { kind = "casilla", casilla_id = "01050" }, { kind = "casilla", casilla_id = "01051" }, { kind = "casilla", casilla_id = "01052" }, { kind = "casilla", casilla_id = "01053" }] }, { key = "di-internacional-2016", heading_key = "modelo.schema.200.form.row.di-internacional-2016.heading", official_heading = "DI internacional 2016", cells = [{ kind = "casilla", casilla_id = "01348" }, { kind = "casilla", casilla_id = "01349" }, { kind = "casilla", casilla_id = "01350" }, { kind = "casilla", casilla_id = "01351" }, { kind = "casilla", casilla_id = "01352" }] }, { key = "di-internacional-2017", heading_key = "modelo.schema.200.form.row.di-internacional-2017.heading", official_heading = "DI internacional 2017", cells = [{ kind = "casilla", casilla_id = "01770" }, { kind = "casilla", casilla_id = "01771" }, { kind = "casilla", casilla_id = "01772" }, { kind = "casilla", casilla_id = "01773" }, { kind = "casilla", casilla_id = "01774" }] }, { key = "di-internacional-2018", heading_key = "modelo.schema.200.form.row.di-internacional-2018.heading", official_heading = "DI internacional 2018", cells = [{ kind = "casilla", casilla_id = "01833" }, { kind = "casilla", casilla_id = "01834" }, { kind = "casilla", casilla_id = "01835" }, { kind = "casilla", casilla_id = "01836" }, { kind = "casilla", casilla_id = "01837" }] }, { key = "di-internacional-2019", heading_key = "modelo.schema.200.form.row.di-internacional-2019.heading", official_heading = "DI internacional 2019", cells = [{ kind = "casilla", casilla_id = "02201" }, { kind = "casilla", casilla_id = "02202" }, { kind = "casilla", casilla_id = "02203" }, { kind = "casilla", casilla_id = "02204" }, { kind = "casilla", casilla_id = "02205" }] }, { key = "di-internacional-2020", heading_key = "modelo.schema.200.form.row.di-internacional-2020.heading", official_heading = "DI internacional 2020", cells = [{ kind = "casilla", casilla_id = "02324" }, { kind = "casilla", casilla_id = "02325" }, { kind = "casilla", casilla_id = "02326" }, { kind = "casilla", casilla_id = "02327" }, { kind = "casilla", casilla_id = "02328" }] }, { key = "di-internacional-2023", heading_key = "modelo.schema.200.form.row.di-internacional-2023.heading", official_heading = "DI internacional 2023", cells = [{ kind = "casilla", casilla_id = "01361" }, { kind = "casilla", casilla_id = "01362" }, { kind = "casilla", casilla_id = "01457" }, { kind = "casilla", casilla_id = "01472" }, { kind = "casilla", casilla_id = "01505" }] }] },
     { kind = "field", id = "field", casilla_id = "01013" },
+    { kind = "field", id = "field-2", casilla_id = "DP200016:00254" },
+    { kind = "field", id = "field-3", casilla_id = "DP200016:00255" },
 ]
 
 [[revisions.2024.form_layouts.pages.sections]]
@@ -5234,9 +5278,13 @@ blocks = [
     { kind = "grid", id = "grid-2", columns = [{ key = "pendiente_generada", heading_key = "modelo.form.column.pendiente_generada", official_heading = "Deducción pendiente/generada" }, { key = "aplicado", heading_key = "modelo.form.column.aplicado", official_heading = "Aplicado en esta liquidación" }, { key = "pendiente_futuro", heading_key = "modelo.form.column.pendiente_futuro", official_heading = "Pendiente de aplicación en periodos futuros" }], rows = [{ key = "activos-fijos-2024", heading_key = "modelo.schema.200.form.row.activos-fijos-2024.heading", official_heading = "Activos fijos 2024(*)", cells = [{ kind = "casilla", casilla_id = "01614" }, { kind = "casilla", casilla_id = "01615" }, { kind = "casilla", casilla_id = "01616" }] }, { key = "activos-fijos-en-la-palma-la-gomera-y-el-14d5d6", heading_key = "modelo.schema.200.form.row.activos-fijos-en-la-palma-la-gomera-y-el-14d5d6.heading", official_heading = "Activos fijos en La Palma, La Gomera y el Hierro 2018", cells = [{ kind = "casilla", casilla_id = "02335" }, { kind = "casilla", casilla_id = "02336" }, { kind = "casilla", casilla_id = "02337" }] }, { key = "activos-fijos-en-la-palma-la-gomera-y-el-a83ee5", heading_key = "modelo.schema.200.form.row.activos-fijos-en-la-palma-la-gomera-y-el-a83ee5.heading", official_heading = "Activos fijos en La Palma, La Gomera y el Hierro 2019", cells = [{ kind = "casilla", casilla_id = "02338" }, { kind = "casilla", casilla_id = "02339" }, { kind = "casilla", casilla_id = "02340" }] }, { key = "activos-fijos-en-la-palma-la-gomera-y-el-c298d7", heading_key = "modelo.schema.200.form.row.activos-fijos-en-la-palma-la-gomera-y-el-c298d7.heading", official_heading = "Activos fijos en La Palma, La Gomera y el Hierro 2020", cells = [{ kind = "casilla", casilla_id = "02341" }, { kind = "casilla", casilla_id = "02342" }, { kind = "casilla", casilla_id = "02343" }] }, { key = "activos-fijos-en-la-palma-la-gomera-y-el-a3b20d", heading_key = "modelo.schema.200.form.row.activos-fijos-en-la-palma-la-gomera-y-el-a3b20d.heading", official_heading = "Activos fijos en La Palma, La Gomera y el Hierro 2021", cells = [{ kind = "casilla", casilla_id = "02344" }, { kind = "casilla", casilla_id = "02345" }, { kind = "casilla", casilla_id = "02346" }] }] },
     { kind = "field", id = "field-2", casilla_id = "02497" },
     { kind = "grid", id = "grid-3", columns = [{ key = "pendiente_generada", heading_key = "modelo.form.column.pendiente_generada", official_heading = "Deducción pendiente/generada" }, { key = "aplicado", heading_key = "modelo.form.column.aplicado", official_heading = "Aplicado en esta liquidación" }], rows = [{ key = "activos-fijos-en-la-palma-la-gomera-y-el-a302f0", heading_key = "modelo.schema.200.form.row.activos-fijos-en-la-palma-la-gomera-y-el-a302f0.heading", official_heading = "Activos fijos en La Palma, La Gomera y el Hierro 2023", cells = [{ kind = "casilla", casilla_id = "02078" }, { kind = "casilla", casilla_id = "01913" }] }] },
-    { kind = "grid", id = "grid-4", columns = [{ key = "pendiente_generada", heading_key = "modelo.form.column.pendiente_generada", official_heading = "Deducción pendiente/generada" }, { key = "aplicado", heading_key = "modelo.form.column.aplicado", official_heading = "Aplicado en esta liquidación" }, { key = "pendiente_futuro", heading_key = "modelo.form.column.pendiente_futuro", official_heading = "Pendiente de aplicación en periodos futuros" }], rows = [{ key = "activos-fijos-en-la-palma-la-gomera-y-el-9f0230", heading_key = "modelo.schema.200.form.row.activos-fijos-en-la-palma-la-gomera-y-el-9f0230.heading", official_heading = "Activos fijos en La Palma, La Gomera y el Hierro 2024(*)", cells = [{ kind = "casilla", casilla_id = "01763" }, { kind = "casilla", casilla_id = "01800" }, { kind = "casilla", casilla_id = "01801" }] }, { key = "inversiones-canarias-2006", heading_key = "modelo.schema.200.form.row.inversiones-canarias-2006.heading", official_heading = "Inversiones Canarias 2006", cells = [{ kind = "casilla", casilla_id = "00939" }, { kind = "casilla", casilla_id = "00940" }, { kind = "blank" }] }, { key = "inversiones-canarias-2016", heading_key = "modelo.schema.200.form.row.inversiones-canarias-2016.heading", official_heading = "Inversiones Canarias 2016", cells = [{ kind = "casilla", casilla_id = "01058" }, { kind = "casilla", casilla_id = "01059" }, { kind = "casilla", casilla_id = "01060" }] }, { key = "inversiones-canarias-2017", heading_key = "modelo.schema.200.form.row.inversiones-canarias-2017.heading", official_heading = "Inversiones Canarias 2017", cells = [{ kind = "blank" }, { kind = "casilla", casilla_id = "00802" }, { kind = "casilla", casilla_id = "00806" }] }, { key = "inversiones-canarias-2018", heading_key = "modelo.schema.200.form.row.inversiones-canarias-2018.heading", official_heading = "Inversiones Canarias 2018", cells = [{ kind = "casilla", casilla_id = "01781" }, { kind = "casilla", casilla_id = "01782" }, { kind = "casilla", casilla_id = "01783" }] }, { key = "inversiones-canarias-2019", heading_key = "modelo.schema.200.form.row.inversiones-canarias-2019.heading", official_heading = "Inversiones Canarias 2019", cells = [{ kind = "casilla", casilla_id = "02122" }, { kind = "casilla", casilla_id = "02123" }, { kind = "casilla", casilla_id = "02124" }] }, { key = "inversiones-canarias-2020", heading_key = "modelo.schema.200.form.row.inversiones-canarias-2020.heading", official_heading = "Inversiones Canarias 2020", cells = [{ kind = "casilla", casilla_id = "02212" }, { kind = "casilla", casilla_id = "02213" }, { kind = "casilla", casilla_id = "02214" }] }, { key = "inversiones-canarias-2021", heading_key = "modelo.schema.200.form.row.inversiones-canarias-2021.heading", official_heading = "Inversiones Canarias 2021", cells = [{ kind = "casilla", casilla_id = "02347" }, { kind = "casilla", casilla_id = "02348" }, { kind = "casilla", casilla_id = "02349" }] }, { key = "inversiones-canarias-2024", heading_key = "modelo.schema.200.form.row.inversiones-canarias-2024.heading", official_heading = "Inversiones Canarias 2024(*)", cells = [{ kind = "casilla", casilla_id = "01802" }, { kind = "casilla", casilla_id = "01803" }, { kind = "casilla", casilla_id = "01804" }] }, { key = "inversiones-en-la-palma-la-gomera-y-el-hi-74bf69", heading_key = "modelo.schema.200.form.row.inversiones-en-la-palma-la-gomera-y-el-hi-74bf69.heading", official_heading = "Inversiones en La Palma, La Gomera y El Hierro 2018", cells = [{ kind = "casilla", casilla_id = "02119" }, { kind = "casilla", casilla_id = "02120" }, { kind = "casilla", casilla_id = "02121" }] }, { key = "inversiones-en-la-palma-la-gomera-y-el-hi-3ac35e", heading_key = "modelo.schema.200.form.row.inversiones-en-la-palma-la-gomera-y-el-hi-3ac35e.heading", official_heading = "Inversiones en La Palma, La Gomera y El Hierro 2019", cells = [{ kind = "casilla", casilla_id = "02125" }, { kind = "casilla", casilla_id = "02126" }, { kind = "casilla", casilla_id = "02127" }] }, { key = "inversiones-en-la-palma-la-gomera-y-el-hi-b1b9d8", heading_key = "modelo.schema.200.form.row.inversiones-en-la-palma-la-gomera-y-el-hi-b1b9d8.heading", official_heading = "Inversiones en La Palma, La Gomera y El Hierro 2020", cells = [{ kind = "casilla", casilla_id = "02215" }, { kind = "casilla", casilla_id = "02216" }, { kind = "casilla", casilla_id = "02217" }] }, { key = "inversiones-en-la-palma-la-gomera-y-el-hi-36f831", heading_key = "modelo.schema.200.form.row.inversiones-en-la-palma-la-gomera-y-el-hi-36f831.heading", official_heading = "Inversiones en La Palma, La Gomera y El Hierro 2021", cells = [{ kind = "casilla", casilla_id = "02350" }, { kind = "casilla", casilla_id = "02351" }, { kind = "casilla", casilla_id = "02352" }] }] },
-    { kind = "field", id = "field-3", casilla_id = "00774" },
-    { kind = "grid", id = "grid-5", columns = [{ key = "pendiente_generada", heading_key = "modelo.form.column.pendiente_generada", official_heading = "Deducción pendiente/generada" }, { key = "aplicado", heading_key = "modelo.form.column.aplicado", official_heading = "Aplicado en esta liquidación" }, { key = "pendiente_futuro", heading_key = "modelo.form.column.pendiente_futuro", official_heading = "Pendiente de aplicación en periodos futuros" }], rows = [{ key = "inversiones-en-la-palma-la-gomera-y-el-hi-e16f73", heading_key = "modelo.schema.200.form.row.inversiones-en-la-palma-la-gomera-y-el-hi-e16f73.heading", official_heading = "Inversiones en La Palma, La Gomera y El Hierro 2024(*)", cells = [{ kind = "casilla", casilla_id = "01805" }, { kind = "casilla", casilla_id = "01806" }, { kind = "casilla", casilla_id = "01847" }] }, { key = "total", heading_key = "modelo.schema.200.form.row.total.heading", official_heading = "Total", cells = [{ kind = "casilla", casilla_id = "00886" }, { kind = "blank" }, { kind = "casilla", casilla_id = "00887" }] }] },
+    { kind = "grid", id = "grid-4", columns = [{ key = "pendiente_generada", heading_key = "modelo.form.column.pendiente_generada", official_heading = "Deducción pendiente/generada" }, { key = "aplicado", heading_key = "modelo.form.column.aplicado", official_heading = "Aplicado en esta liquidación" }, { key = "pendiente_futuro", heading_key = "modelo.form.column.pendiente_futuro", official_heading = "Pendiente de aplicación en periodos futuros" }], rows = [{ key = "activos-fijos-en-la-palma-la-gomera-y-el-9f0230", heading_key = "modelo.schema.200.form.row.activos-fijos-en-la-palma-la-gomera-y-el-9f0230.heading", official_heading = "Activos fijos en La Palma, La Gomera y el Hierro 2024(*)", cells = [{ kind = "casilla", casilla_id = "01763" }, { kind = "casilla", casilla_id = "01800" }, { kind = "casilla", casilla_id = "01801" }] }, { key = "inversiones-canarias-2006", heading_key = "modelo.schema.200.form.row.inversiones-canarias-2006.heading", official_heading = "Inversiones Canarias 2006", cells = [{ kind = "casilla", casilla_id = "00939" }, { kind = "casilla", casilla_id = "00940" }, { kind = "blank" }] }] },
+    { kind = "field", id = "field-3", casilla_id = "DP200016B:00257" },
+    { kind = "grid", id = "grid-5", columns = [{ key = "pendiente_generada", heading_key = "modelo.form.column.pendiente_generada", official_heading = "Deducción pendiente/generada" }, { key = "aplicado", heading_key = "modelo.form.column.aplicado", official_heading = "Aplicado en esta liquidación" }, { key = "pendiente_futuro", heading_key = "modelo.form.column.pendiente_futuro", official_heading = "Pendiente de aplicación en periodos futuros" }], rows = [{ key = "inversiones-canarias-2016", heading_key = "modelo.schema.200.form.row.inversiones-canarias-2016.heading", official_heading = "Inversiones Canarias 2016", cells = [{ kind = "casilla", casilla_id = "01058" }, { kind = "casilla", casilla_id = "01059" }, { kind = "casilla", casilla_id = "01060" }] }, { key = "inversiones-canarias-2017", heading_key = "modelo.schema.200.form.row.inversiones-canarias-2017.heading", official_heading = "Inversiones Canarias 2017", cells = [{ kind = "blank" }, { kind = "casilla", casilla_id = "00802" }, { kind = "casilla", casilla_id = "00806" }] }, { key = "inversiones-canarias-2018", heading_key = "modelo.schema.200.form.row.inversiones-canarias-2018.heading", official_heading = "Inversiones Canarias 2018", cells = [{ kind = "casilla", casilla_id = "01781" }, { kind = "casilla", casilla_id = "01782" }, { kind = "casilla", casilla_id = "01783" }] }, { key = "inversiones-canarias-2019", heading_key = "modelo.schema.200.form.row.inversiones-canarias-2019.heading", official_heading = "Inversiones Canarias 2019", cells = [{ kind = "casilla", casilla_id = "02122" }, { kind = "casilla", casilla_id = "02123" }, { kind = "casilla", casilla_id = "02124" }] }, { key = "inversiones-canarias-2020", heading_key = "modelo.schema.200.form.row.inversiones-canarias-2020.heading", official_heading = "Inversiones Canarias 2020", cells = [{ kind = "casilla", casilla_id = "02212" }, { kind = "casilla", casilla_id = "02213" }, { kind = "casilla", casilla_id = "02214" }] }, { key = "inversiones-canarias-2021", heading_key = "modelo.schema.200.form.row.inversiones-canarias-2021.heading", official_heading = "Inversiones Canarias 2021", cells = [{ kind = "casilla", casilla_id = "02347" }, { kind = "casilla", casilla_id = "02348" }, { kind = "casilla", casilla_id = "02349" }] }, { key = "inversiones-canarias-2024", heading_key = "modelo.schema.200.form.row.inversiones-canarias-2024.heading", official_heading = "Inversiones Canarias 2024(*)", cells = [{ kind = "casilla", casilla_id = "01802" }, { kind = "casilla", casilla_id = "01803" }, { kind = "casilla", casilla_id = "01804" }] }, { key = "inversiones-en-la-palma-la-gomera-y-el-hi-74bf69", heading_key = "modelo.schema.200.form.row.inversiones-en-la-palma-la-gomera-y-el-hi-74bf69.heading", official_heading = "Inversiones en La Palma, La Gomera y El Hierro 2018", cells = [{ kind = "casilla", casilla_id = "02119" }, { kind = "casilla", casilla_id = "02120" }, { kind = "casilla", casilla_id = "02121" }] }, { key = "inversiones-en-la-palma-la-gomera-y-el-hi-3ac35e", heading_key = "modelo.schema.200.form.row.inversiones-en-la-palma-la-gomera-y-el-hi-3ac35e.heading", official_heading = "Inversiones en La Palma, La Gomera y El Hierro 2019", cells = [{ kind = "casilla", casilla_id = "02125" }, { kind = "casilla", casilla_id = "02126" }, { kind = "casilla", casilla_id = "02127" }] }, { key = "inversiones-en-la-palma-la-gomera-y-el-hi-b1b9d8", heading_key = "modelo.schema.200.form.row.inversiones-en-la-palma-la-gomera-y-el-hi-b1b9d8.heading", official_heading = "Inversiones en La Palma, La Gomera y El Hierro 2020", cells = [{ kind = "casilla", casilla_id = "02215" }, { kind = "casilla", casilla_id = "02216" }, { kind = "casilla", casilla_id = "02217" }] }, { key = "inversiones-en-la-palma-la-gomera-y-el-hi-36f831", heading_key = "modelo.schema.200.form.row.inversiones-en-la-palma-la-gomera-y-el-hi-36f831.heading", official_heading = "Inversiones en La Palma, La Gomera y El Hierro 2021", cells = [{ kind = "casilla", casilla_id = "02350" }, { kind = "casilla", casilla_id = "02351" }, { kind = "casilla", casilla_id = "02352" }] }] },
+    { kind = "field", id = "field-4", casilla_id = "00774" },
+    { kind = "grid", id = "grid-6", columns = [{ key = "pendiente_generada", heading_key = "modelo.form.column.pendiente_generada", official_heading = "Deducción pendiente/generada" }, { key = "aplicado", heading_key = "modelo.form.column.aplicado", official_heading = "Aplicado en esta liquidación" }, { key = "pendiente_futuro", heading_key = "modelo.form.column.pendiente_futuro", official_heading = "Pendiente de aplicación en periodos futuros" }], rows = [{ key = "inversiones-en-la-palma-la-gomera-y-el-hi-e16f73", heading_key = "modelo.schema.200.form.row.inversiones-en-la-palma-la-gomera-y-el-hi-e16f73.heading", official_heading = "Inversiones en La Palma, La Gomera y El Hierro 2024(*)", cells = [{ kind = "casilla", casilla_id = "01805" }, { kind = "casilla", casilla_id = "01806" }, { kind = "casilla", casilla_id = "01847" }] }] },
+    { kind = "field", id = "field-5", casilla_id = "DP200016B:00296" },
+    { kind = "grid", id = "grid-7", columns = [{ key = "pendiente_generada", heading_key = "modelo.form.column.pendiente_generada", official_heading = "Deducción pendiente/generada" }, { key = "pendiente_futuro", heading_key = "modelo.form.column.pendiente_futuro", official_heading = "Pendiente de aplicación en periodos futuros" }], rows = [{ key = "total", heading_key = "modelo.schema.200.form.row.total.heading", official_heading = "Total", cells = [{ kind = "casilla", casilla_id = "00886" }, { kind = "casilla", casilla_id = "00887" }] }] },
 ]
 
 [[revisions.2024.form_layouts.pages.sections]]
@@ -7072,51 +7120,53 @@ blocks = [
     { kind = "field", id = "field-20", casilla_id = "00692" },
     { kind = "field", id = "field-21", casilla_id = "00693" },
     { kind = "field", id = "field-22", casilla_id = "00672" },
-    { kind = "field", id = "field-23", casilla_id = "00587" },
-    { kind = "field", id = "field-24", casilla_id = "00900" },
-    { kind = "field", id = "field-25", casilla_id = "00099" },
-    { kind = "field", id = "field-26", casilla_id = "00100" },
-    { kind = "field", id = "field-27", casilla_id = "00773" },
-    { kind = "field", id = "field-28", casilla_id = "00777" },
-    { kind = "field", id = "field-29", casilla_id = "00907" },
-    { kind = "field", id = "field-30", casilla_id = "00908" },
-    { kind = "field", id = "field-31", casilla_id = "00909" },
-    { kind = "field", id = "field-32", casilla_id = "00910" },
-    { kind = "field", id = "field-33", casilla_id = "00911" },
-    { kind = "field", id = "field-34", casilla_id = "00912" },
-    { kind = "field", id = "field-35", casilla_id = "00935" },
-    { kind = "field", id = "field-36", casilla_id = "00936" },
-    { kind = "field", id = "field-37", casilla_id = "00937" },
-    { kind = "field", id = "field-38", casilla_id = "01511" },
-    { kind = "field", id = "field-39", casilla_id = "01512" },
-    { kind = "field", id = "field-40", casilla_id = "01513" },
-    { kind = "field", id = "field-41", casilla_id = "01767" },
-    { kind = "field", id = "field-42", casilla_id = "01768" },
-    { kind = "field", id = "field-43", casilla_id = "01769" },
-    { kind = "field", id = "field-44", casilla_id = "02113" },
-    { kind = "field", id = "field-45", casilla_id = "02114" },
-    { kind = "field", id = "field-46", casilla_id = "02115" },
-    { kind = "field", id = "field-47", casilla_id = "02281" },
-    { kind = "field", id = "field-48", casilla_id = "02282" },
-    { kind = "field", id = "field-49", casilla_id = "02283" },
-    { kind = "field", id = "field-50", casilla_id = "02452" },
-    { kind = "field", id = "field-51", casilla_id = "02453" },
-    { kind = "field", id = "field-52", casilla_id = "02454" },
-    { kind = "field", id = "field-53", casilla_id = "01186" },
-    { kind = "field", id = "field-54", casilla_id = "01187" },
-    { kind = "field", id = "field-55", casilla_id = "01190" },
-    { kind = "field", id = "field-56", casilla_id = "01516" },
-    { kind = "field", id = "field-57", casilla_id = "01517" },
-    { kind = "field", id = "field-58", casilla_id = "01518" },
-    { kind = "field", id = "field-59", casilla_id = "02850" },
-    { kind = "field", id = "field-60", casilla_id = "02912" },
-    { kind = "field", id = "field-61", casilla_id = "02913" },
-    { kind = "field", id = "field-62", casilla_id = "03357" },
-    { kind = "field", id = "field-63", casilla_id = "03358" },
-    { kind = "field", id = "field-64", casilla_id = "00694" },
-    { kind = "field", id = "field-65", casilla_id = "00695" },
-    { kind = "field", id = "field-66", casilla_id = "01225" },
-    { kind = "field", id = "field-67", casilla_id = "01226" },
+    { kind = "field", id = "field-23", casilla_id = "DP200022:00279" },
+    { kind = "field", id = "field-24", casilla_id = "DP200022:00280" },
+    { kind = "field", id = "field-25", casilla_id = "00587" },
+    { kind = "field", id = "field-26", casilla_id = "00900" },
+    { kind = "field", id = "field-27", casilla_id = "00099" },
+    { kind = "field", id = "field-28", casilla_id = "00100" },
+    { kind = "field", id = "field-29", casilla_id = "00773" },
+    { kind = "field", id = "field-30", casilla_id = "00777" },
+    { kind = "field", id = "field-31", casilla_id = "00907" },
+    { kind = "field", id = "field-32", casilla_id = "00908" },
+    { kind = "field", id = "field-33", casilla_id = "00909" },
+    { kind = "field", id = "field-34", casilla_id = "00910" },
+    { kind = "field", id = "field-35", casilla_id = "00911" },
+    { kind = "field", id = "field-36", casilla_id = "00912" },
+    { kind = "field", id = "field-37", casilla_id = "00935" },
+    { kind = "field", id = "field-38", casilla_id = "00936" },
+    { kind = "field", id = "field-39", casilla_id = "00937" },
+    { kind = "field", id = "field-40", casilla_id = "01511" },
+    { kind = "field", id = "field-41", casilla_id = "01512" },
+    { kind = "field", id = "field-42", casilla_id = "01513" },
+    { kind = "field", id = "field-43", casilla_id = "01767" },
+    { kind = "field", id = "field-44", casilla_id = "01768" },
+    { kind = "field", id = "field-45", casilla_id = "01769" },
+    { kind = "field", id = "field-46", casilla_id = "02113" },
+    { kind = "field", id = "field-47", casilla_id = "02114" },
+    { kind = "field", id = "field-48", casilla_id = "02115" },
+    { kind = "field", id = "field-49", casilla_id = "02281" },
+    { kind = "field", id = "field-50", casilla_id = "02282" },
+    { kind = "field", id = "field-51", casilla_id = "02283" },
+    { kind = "field", id = "field-52", casilla_id = "02452" },
+    { kind = "field", id = "field-53", casilla_id = "02453" },
+    { kind = "field", id = "field-54", casilla_id = "02454" },
+    { kind = "field", id = "field-55", casilla_id = "01186" },
+    { kind = "field", id = "field-56", casilla_id = "01187" },
+    { kind = "field", id = "field-57", casilla_id = "01190" },
+    { kind = "field", id = "field-58", casilla_id = "01516" },
+    { kind = "field", id = "field-59", casilla_id = "01517" },
+    { kind = "field", id = "field-60", casilla_id = "01518" },
+    { kind = "field", id = "field-61", casilla_id = "02850" },
+    { kind = "field", id = "field-62", casilla_id = "02912" },
+    { kind = "field", id = "field-63", casilla_id = "02913" },
+    { kind = "field", id = "field-64", casilla_id = "03357" },
+    { kind = "field", id = "field-65", casilla_id = "03358" },
+    { kind = "field", id = "field-66", casilla_id = "00694" },
+    { kind = "field", id = "field-67", casilla_id = "00695" },
+    { kind = "field", id = "field-68", casilla_id = "01225" },
+    { kind = "field", id = "field-69", casilla_id = "01226" },
 ]
 
 [[revisions.2024.form_layouts.pages]]
@@ -10692,6 +10742,20 @@ blocks = [
 ]
 
 [[revisions.2024.form_layouts.pages]]
+id = "dp200030"
+official_ref = "DP200030"
+heading_key = "modelo.schema.200.form.page.dp200030.heading"
+
+[[revisions.2024.form_layouts.pages.sections]]
+id = "contabilidad-banco-de-espana"
+heading_key = "modelo.schema.200.form.section.contabilidad-banco-de-espana.heading"
+official_heading = "Contabilidad Banco de España"
+blocks = [
+    { kind = "field", id = "field", casilla_id = "DP200030:00255" },
+    { kind = "field", id = "field-2", casilla_id = "DP200030:00257" },
+]
+
+[[revisions.2024.form_layouts.pages]]
 id = "dp200033"
 official_ref = "DP200033"
 heading_key = "modelo.schema.200.form.page.dp200033.heading"
@@ -10711,11 +10775,12 @@ blocks = [
     { kind = "field", id = "field-8", casilla_id = "DP200033:00314" },
     { kind = "field", id = "field-9", casilla_id = "DP200033:00315" },
     { kind = "field", id = "field-10", casilla_id = "DP200033:00316" },
-    { kind = "field", id = "field-11", casilla_id = "DP200033:00563" },
-    { kind = "field", id = "field-12", casilla_id = "DP200033:00565" },
-    { kind = "field", id = "field-13", casilla_id = "DP200033:00566" },
-    { kind = "field", id = "field-14", casilla_id = "DP200033:00567" },
-    { kind = "field", id = "field-15", casilla_id = "DP200033:00568" },
+    { kind = "field", id = "field-11", casilla_id = "DP200033:00325" },
+    { kind = "field", id = "field-12", casilla_id = "DP200033:00563" },
+    { kind = "field", id = "field-13", casilla_id = "DP200033:00565" },
+    { kind = "field", id = "field-14", casilla_id = "DP200033:00566" },
+    { kind = "field", id = "field-15", casilla_id = "DP200033:00567" },
+    { kind = "field", id = "field-16", casilla_id = "DP200033:00568" },
 ]
 
 [[revisions.2024.form_layouts.pages]]
@@ -10728,15 +10793,24 @@ id = "entidades-aseguradoras-balance"
 heading_key = "modelo.schema.200.form.section.entidades-aseguradoras-balance.heading"
 official_heading = "Entidades aseguradoras - Balance"
 blocks = [
-    { kind = "field", id = "field", casilla_id = "DP200048:00301" },
-    { kind = "field", id = "field-2", casilla_id = "DP200048:00302" },
-    { kind = "field", id = "field-3", casilla_id = "DP200048:00303" },
+    { kind = "field", id = "field", casilla_id = "DP200048:00296" },
+    { kind = "field", id = "field-2", casilla_id = "DP200048:00301" },
+    { kind = "field", id = "field-3", casilla_id = "DP200048:00302" },
+    { kind = "field", id = "field-4", casilla_id = "DP200048:00303" },
 ]
 
 [[revisions.2024.form_layouts.pages]]
 id = "dp200036"
 official_ref = "DP200036"
 heading_key = "modelo.schema.200.form.page.dp200036.heading"
+
+[[revisions.2024.form_layouts.pages.sections]]
+id = "entidades-aseguradoras-balance-pasivo-y-p-0d58ba"
+heading_key = "modelo.schema.200.form.section.entidades-aseguradoras-balance-pasivo-y-p-0d58ba.heading"
+official_heading = "Entidades aseguradoras - Balance: Pasivo y patrimonio neto (I) - Pasivo"
+blocks = [
+    { kind = "field", id = "field", casilla_id = "DP200039:00296" },
+]
 
 [[revisions.2024.form_layouts.pages.sections]]
 id = "entidades-aseguradoras-balance-pasivo-y-p-588f2b"
@@ -10749,7 +10823,7 @@ blocks = [
 ]
 
 [[revisions.2024.form_layouts.pages.sections]]
-id = "entidades-aseguradoras-balance-pasivo-y-p-0d58ba"
+id = "entidades-aseguradoras-balance-pasivo-y-p-0d58ba-2"
 heading_key = "modelo.schema.200.form.section.entidades-aseguradoras-balance-pasivo-y-p-0d58ba.heading"
 official_heading = "Entidades aseguradoras - Balance: Pasivo y patrimonio neto (I) - Pasivo"
 blocks = [
@@ -10771,7 +10845,7 @@ blocks = [
 ]
 
 [[revisions.2024.form_layouts.pages.sections]]
-id = "entidades-aseguradoras-balance-pasivo-y-p-0d58ba-2"
+id = "entidades-aseguradoras-balance-pasivo-y-p-0d58ba-3"
 heading_key = "modelo.schema.200.form.section.entidades-aseguradoras-balance-pasivo-y-p-0d58ba.heading"
 official_heading = "Entidades aseguradoras - Balance: Pasivo y patrimonio neto (I) - Pasivo"
 blocks = [
@@ -10787,6 +10861,38 @@ heading_key = "modelo.schema.200.form.section.entidades-aseguradoras-balance-pas
 official_heading = "Entidades aseguradoras - Balance: Pasivo y patrimonio neto (I)"
 blocks = [
     { kind = "field", id = "field", casilla_id = "DP200039:00316" },
+    { kind = "field", id = "field-2", casilla_id = "DP200039:00325" },
+]
+
+[[revisions.2024.form_layouts.pages]]
+id = "dp200038"
+official_ref = "DP200038"
+heading_key = "modelo.schema.200.form.page.dp200038.heading"
+
+[[revisions.2024.form_layouts.pages.sections]]
+id = "entidades-aseguradoras-perdidas-y-ganancias-i"
+heading_key = "modelo.schema.200.form.section.entidades-aseguradoras-perdidas-y-ganancias-i.heading"
+official_heading = "Entidades aseguradoras - Pérdidas y ganancias (I)"
+blocks = [
+    { kind = "field", id = "field", casilla_id = "DP200038:00254" },
+    { kind = "field", id = "field-2", casilla_id = "DP200038:00255" },
+]
+
+[[revisions.2024.form_layouts.pages.sections]]
+id = "entidades-aseguradoras-perdidas-y-gananci-fc933b"
+heading_key = "modelo.schema.200.form.section.entidades-aseguradoras-perdidas-y-gananci-fc933b.heading"
+official_heading = "Entidades aseguradoras - Pérdidas y ganancias (I) - Cuenta técnica seguro no vida"
+blocks = [
+    { kind = "field", id = "field", casilla_id = "DP200038:00257" },
+]
+
+[[revisions.2024.form_layouts.pages.sections]]
+id = "entidades-aseguradoras-perdidas-y-gananci-fc933b-2"
+heading_key = "modelo.schema.200.form.section.entidades-aseguradoras-perdidas-y-gananci-fc933b.heading"
+official_heading = "Entidades aseguradoras - Pérdidas y ganancias (I) - Cuenta técnica seguro no vida"
+blocks = [
+    { kind = "field", id = "field", casilla_id = "DP200038:00279" },
+    { kind = "field", id = "field-2", casilla_id = "DP200038:00280" },
 ]
 
 [[revisions.2024.form_layouts.pages]]
@@ -10895,7 +11001,32 @@ official_ref = "DP200053"
 heading_key = "modelo.schema.200.form.page.dp200053.heading"
 
 [[revisions.2024.form_layouts.pages.sections]]
+id = "sociedades-de-garantia-reciproca-estado-t-e64c83"
+heading_key = "modelo.schema.200.form.section.sociedades-de-garantia-reciproca-estado-t-e64c83.heading"
+official_heading = "Sociedades de garantia recíproca - Estado total cambios patrimonio neto - Operaciones con socios"
+blocks = [
+    { kind = "field", id = "field", casilla_id = "DP200053:00254" },
+    { kind = "field", id = "field-2", casilla_id = "DP200053:00255" },
+]
+
+[[revisions.2024.form_layouts.pages.sections]]
 id = "sociedades-de-garantia-reciproca-estado-t-9e1507"
+heading_key = "modelo.schema.200.form.section.sociedades-de-garantia-reciproca-estado-t-9e1507.heading"
+official_heading = "Sociedades de garantia recíproca - Estado total cambios patrimonio neto"
+blocks = [
+    { kind = "field", id = "field", casilla_id = "DP200053:00257" },
+]
+
+[[revisions.2024.form_layouts.pages.sections]]
+id = "sociedades-de-garantia-reciproca-estado-t-752a73"
+heading_key = "modelo.schema.200.form.section.sociedades-de-garantia-reciproca-estado-t-752a73.heading"
+official_heading = "Sociedades de garantia recíproca - Estado total cambios patrimonio neto - Operaciones con socios - (-) Distribución de dividendos"
+blocks = [
+    { kind = "field", id = "field", casilla_id = "DP200053:00280" },
+]
+
+[[revisions.2024.form_layouts.pages.sections]]
+id = "sociedades-de-garantia-reciproca-estado-t-9e1507-2"
 heading_key = "modelo.schema.200.form.section.sociedades-de-garantia-reciproca-estado-t-9e1507.heading"
 official_heading = "Sociedades de garantia recíproca - Estado total cambios patrimonio neto"
 blocks = [
@@ -10913,7 +11044,7 @@ blocks = [
 ]
 
 [[revisions.2024.form_layouts.pages.sections]]
-id = "sociedades-de-garantia-reciproca-estado-t-9e1507-2"
+id = "sociedades-de-garantia-reciproca-estado-t-9e1507-3"
 heading_key = "modelo.schema.200.form.section.sociedades-de-garantia-reciproca-estado-t-9e1507.heading"
 official_heading = "Sociedades de garantia recíproca - Estado total cambios patrimonio neto"
 blocks = [
@@ -10924,6 +11055,15 @@ blocks = [
 id = "dp200054"
 official_ref = "DP200054"
 heading_key = "modelo.schema.200.form.page.dp200054.heading"
+
+[[revisions.2024.form_layouts.pages.sections]]
+id = "sociedades-de-garantia-reciproca-estado-t-e64c83"
+heading_key = "modelo.schema.200.form.section.sociedades-de-garantia-reciproca-estado-t-e64c83.heading"
+official_heading = "Sociedades de garantia recíproca - Estado total cambios patrimonio neto - Operaciones con socios"
+blocks = [
+    { kind = "field", id = "field", casilla_id = "DP200054:00279" },
+    { kind = "field", id = "field-2", casilla_id = "DP200054:00296" },
+]
 
 [[revisions.2024.form_layouts.pages.sections]]
 id = "sociedades-de-garantia-reciproca-estado-t-9e1507"

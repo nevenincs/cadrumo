@@ -1752,13 +1752,13 @@ removed_fields = []
 restate_provenance = true
 
 [[revisions."2025-y-siguientes".casilla_overrides]]
-selector = { revision = "2024", id = "00254" }
+selector = { revision = "2024", id = "DP200007:00254" }
 fields = { continuidad_origin = "seeded" }
 removed_fields = []
 restate_provenance = true
 
 [[revisions."2025-y-siguientes".casilla_overrides]]
-selector = { revision = "2024", id = "00255" }
+selector = { revision = "2024", id = "DP200007:00255" }
 fields = { continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200007/DP200007, campos 6/6, filas 11/11: Cuenta de pérdidas y ganancias (I) - Operaciones continuadas - Importe neto de la cifra de negocios [00255]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de perdidas y ganancias (manuales Sociedades 2024/2025, cap. 4, regimen general).", continuidad_origin = "grounded" }
 removed_fields = []
 restate_provenance = true
@@ -1770,7 +1770,7 @@ removed_fields = []
 restate_provenance = true
 
 [[revisions."2025-y-siguientes".casilla_overrides]]
-selector = { revision = "2024", id = "00257" }
+selector = { revision = "2024", id = "DP200007:00257" }
 fields = { continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200007/DP200007, campos 8/8, filas 13/13: Cuenta de pérdidas y ganancias (I) - Operaciones continuadas - Prestaciones de servicios [00257]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de perdidas y ganancias (manuales Sociedades 2024/2025, cap. 4, regimen general).", continuidad_origin = "grounded" }
 removed_fields = []
 restate_provenance = true
@@ -1902,13 +1902,13 @@ removed_fields = []
 restate_provenance = true
 
 [[revisions."2025-y-siguientes".casilla_overrides]]
-selector = { revision = "2024", id = "00279" }
+selector = { revision = "2024", id = "DP200007:00279" }
 fields = { continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200007/DP200007, campos 42/42, filas 47/47: Cuenta de pérdidas y ganancias (I) - Operaciones continuadas - Otros gastos de explotación [00279]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de perdidas y ganancias (manuales Sociedades 2024/2025, cap. 4, regimen general).", continuidad_origin = "grounded" }
 removed_fields = []
 restate_provenance = true
 
 [[revisions."2025-y-siguientes".casilla_overrides]]
-selector = { revision = "2024", id = "00280" }
+selector = { revision = "2024", id = "DP200007:00280" }
 fields = { continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200007/DP200007, campos 43/43, filas 48/48: Cuenta de pérdidas y ganancias (I) - Operaciones continuadas - Servicios exteriores [00280]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de perdidas y ganancias (manuales Sociedades 2024/2025, cap. 4, regimen general).", continuidad_origin = "grounded" }
 removed_fields = []
 restate_provenance = true
@@ -2004,7 +2004,7 @@ removed_fields = []
 restate_provenance = true
 
 [[revisions."2025-y-siguientes".casilla_overrides]]
-selector = { revision = "2024", id = "00296" }
+selector = { revision = "2024", id = "DP200007:00296" }
 fields = { continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200007/DP200007, campos 66/66, filas 71/71: Cuenta de pérdidas y ganancias (I) - Operaciones continuadas - RESULTADO DE EXPLOTACION [00296]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de perdidas y ganancias (manuales Sociedades 2024/2025, cap. 4, regimen general).", continuidad_origin = "grounded" }
 removed_fields = []
 restate_provenance = true
@@ -2178,7 +2178,7 @@ removed_fields = []
 restate_provenance = true
 
 [[revisions."2025-y-siguientes".casilla_overrides]]
-selector = { revision = "2024", id = "00325" }
+selector = { revision = "2024", id = "DP200008:00325" }
 fields = { continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200008/DP200008, campos 40/40, filas 45/45: Cuenta de pérdidas y ganancias (II) - Operaciones continuadas - RESULTADO ANTES DE IMPUESTOS [00325]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de perdidas y ganancias (manuales Sociedades 2024/2025, cap. 4, regimen general).", continuidad_origin = "grounded" }
 removed_fields = []
 restate_provenance = true
