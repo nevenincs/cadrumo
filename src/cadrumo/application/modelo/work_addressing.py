@@ -971,7 +971,6 @@ def _resolve_modelo_calculation_revision_address(
         )
         if recovery_error is error:
             raise
-        raise recovery_error from error
     except ModeloWorkAddressNotFoundError as error:
         precondition_error = _natural_target_absent_precondition_error(
             error=error,
@@ -990,6 +989,10 @@ def _resolve_modelo_calculation_revision_address(
         if precondition_error is error:
             raise
         raise precondition_error from error
+    # Raised outside the handler: the recovery replaces the selector refusal,
+    # whose own door would otherwise stand beside it in the exception chain and
+    # make the one verdict the CLI boundary reads ambiguous.
+    raise recovery_error
 
 
 def _resolve_exact_calculation_revision_or_current_work_unit_revision(
