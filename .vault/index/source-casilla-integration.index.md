@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#source-casilla-integration'
 date: '2026-08-25'
-modified: '2026-11-06'
+modified: '2026-11-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:1d0e6148777b0b0705951ad089e4d73650cd4c849ad7e909d3691aa671326294'
+body_hash: 'sha256:f8e76f955ef7d496a764fb38b6d9cf475bf4ffa4fa4b3210f3d9b1d5c5b7ec38'
 related:
   - '[[2026-08-22-source-casilla-integration-adr]]'
   - '[[2026-08-22-source-casilla-integration-census-code-review-audit]]'
@@ -119,6 +119,7 @@ related:
   - '[[2026-08-25-source-casilla-integration-w05-p19-s110-m296-refusal-lifecycle-review-audit]]'
   - '[[2026-11-06-source-casilla-integration-profile-node-consumed-facts-adr]]'
   - '[[2026-11-06-source-casilla-integration-profile-node-fingerprint-reference]]'
+  - '[[2026-11-14-source-casilla-integration-modelo-840-profile-facts-and-premises-repeat-adr]]'
 ---
 
 # `source-casilla-integration` feature index
@@ -136,6 +137,7 @@ Auto-generated index of all documents tagged with `#source-casilla-integration`.
 - `2026-08-25-source-casilla-integration-m721-structured-message-source-owner-deferral-adr` - `source-casilla-integration` adr: `m721 structured-message source owner deferral` | (**status:** `accepted`)
 - `2026-08-25-source-casilla-integration-modelo-840-source-and-repeated-row-owner-deferral-adr` - `source-casilla-integration` adr: `modelo 840 source and repeated row owner deferral` | (**status:** `accepted`)
 - `2026-11-06-source-casilla-integration-profile-node-consumed-facts-adr` - `source-casilla-integration` adr: `Profile provenance node content is the consumed facts` | (**status:** `proposed`)
+- `2026-11-14-source-casilla-integration-modelo-840-profile-facts-and-premises-repeat-adr` - `source-casilla-integration` adr: `Modelo 840 profile facts and the premises repeat layout` | (**status:** `proposed`)
 
 ### audit
 
