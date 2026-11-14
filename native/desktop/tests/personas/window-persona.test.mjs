@@ -46,6 +46,7 @@ import {
 } from "node:fs";
 import { createRequire } from "node:module";
 import { createServer } from "node:net";
+import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
@@ -361,7 +362,9 @@ function pageBoxes() {
       .map((button) => norm(button.textContent))
       .filter(Boolean);
     const key = cell.getAttribute("data-key");
-    const printed = norm(cell.querySelector('[class*="font-mono"]')?.textContent);
+    const printed = norm(
+      cell.querySelector('[class*="font-mono"]')?.textContent,
+    );
     boxes.push({
       key,
       box: casillaOf(key, printed),
@@ -660,7 +663,7 @@ function pageAcknowledge(acknowledge) {
 // Driver
 // ---------------------------------------------------------------------------
 
-const window_ = { browser: null, child: null, closed: true };
+const window_ = { browser: null, child: null, closed: true, port: null };
 let logPath = null;
 let label = (key) => key;
 
@@ -1593,6 +1596,7 @@ async function driveRow(row, runDir, persona) {
     reasons: [],
   };
   const say = (stage, text) => text && out.reasons.push(`${stage}: ${text}`);
+  await installConsoleHook();
   await openWork(row);
   let state = await readState();
   log("opened", {
@@ -2033,6 +2037,202 @@ async function freePort() {
   return port;
 }
 
+const PORT_CLAIMS = join(tmpdir(), "cadrumo-e2e-ports");
+
+/** Release this process's claim on its host port; an absent claim is fine. */
+function releasePort() {
+  if (window_.port === null) return;
+  const claim = join(PORT_CLAIMS, String(window_.port));
+  window_.port = null;
+  try {
+    unlinkSync(claim);
+  } catch (error) {
+    if (error?.code !== "ENOENT") throw error;
+  }
+}
+
+function pidAlive(pid) {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (error) {
+    return error?.code !== "ESRCH";
+  }
+}
+
+/**
+ * A free port no other spec process holds: the probe alone cannot tell two
+ * concurrent runs apart, so each claims its port with an exclusive file.
+ */
+async function claimPort() {
+  mkdirSync(PORT_CLAIMS, { mode: 0o700, recursive: true });
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    const port = await freePort();
+    const claim = join(PORT_CLAIMS, String(port));
+    for (let pass = 0; pass < 2; pass += 1) {
+      try {
+        writeFileSync(claim, String(process.pid), { flag: "wx", mode: 0o600 });
+        return port;
+      } catch (error) {
+        if (error?.code !== "EEXIST") throw error;
+        const holder = Number.parseInt(readFileSync(claim, "utf8"), 10);
+        if (pass === 1 || (Number.isInteger(holder) && pidAlive(holder))) break;
+        try {
+          unlinkSync(claim);
+        } catch (unlinkError) {
+          if (unlinkError?.code !== "ENOENT") throw unlinkError;
+        }
+      }
+    }
+  }
+  throw new Error("No free WebDriver port could be claimed after 20 tries.");
+}
+
+/** Capture the page's console output and uncaught errors for dumpBrowserLog. */
+async function installConsoleHook() {
+  try {
+    await exec(() => {
+      if (window.__cadrumoConsoleHooked) return;
+      window.__cadrumoConsoleHooked = true;
+      window.__cadrumoConsole = window.__cadrumoConsole || [];
+      const push = (level, text) => {
+        const buffer = window.__cadrumoConsole;
+        buffer.push({
+          at: new Date().toISOString(),
+          level,
+          text: String(text).slice(0, 500),
+        });
+        if (buffer.length > 500) buffer.splice(0, buffer.length - 500);
+      };
+      for (const level of ["error", "warn", "log"]) {
+        const original = console[level].bind(console);
+        console[level] = (...args) => {
+          try {
+            push(
+              level,
+              args
+                .map((arg) => {
+                  try {
+                    return typeof arg === "string" ? arg : JSON.stringify(arg);
+                  } catch {
+                    return String(arg);
+                  }
+                })
+                .join(" "),
+            );
+          } catch {
+            // Capture must never break the page's own logging.
+          }
+          original(...args);
+        };
+      }
+      window.addEventListener("error", (event) =>
+        push("error", `${event.message} @ ${event.filename}:${event.lineno}`),
+      );
+      window.addEventListener("unhandledrejection", (event) =>
+        push("unhandledrejection", event.reason?.stack ?? event.reason),
+      );
+    });
+  } catch (error) {
+    log("console-hook", { message: error.message });
+  }
+}
+
+/** msedgewebview2.exe processes descending from the host, by --type= switch. */
+function webviewProcesses() {
+  if (!window_.pid || inspectionPlatform() !== "windows") return [];
+  const query = spawnSync(
+    "powershell.exe",
+    [
+      "-NoProfile",
+      "-NonInteractive",
+      "-Command",
+      "Get-CimInstance Win32_Process | Select-Object ProcessId,ParentProcessId,Name,CommandLine | ConvertTo-Json -Compress",
+    ],
+    { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 },
+  );
+  if (query.status !== 0 || !query.stdout.trim()) return [];
+  const all = [].concat(JSON.parse(query.stdout));
+  const parents = new Map(all.map((p) => [p.ProcessId, p.ParentProcessId]));
+  const descends = (pid) => {
+    const seen = new Set();
+    for (
+      let current = parents.get(pid);
+      current !== undefined && !seen.has(current);
+      current = parents.get(current)
+    ) {
+      if (current === window_.pid) return true;
+      seen.add(current);
+    }
+    return false;
+  };
+  return all
+    .filter(
+      (p) =>
+        String(p.Name).toLowerCase() === "msedgewebview2.exe" &&
+        descends(p.ProcessId),
+    )
+    .map((p) => ({
+      pid: p.ProcessId,
+      type: /--type=([^\s"]+)/.exec(p.CommandLine ?? "")?.[1] ?? "browser",
+    }));
+}
+
+/** The last lines of the WebView2 debug logs directly inside its data directory. */
+function webviewDebugLogs() {
+  const found = [];
+  const root = resolve(window_.runDir ?? "", "storage", "webview");
+  for (const directory of [root, join(root, "EBWebView")]) {
+    let names = [];
+    try {
+      names = readdirSync(directory);
+    } catch {
+      continue;
+    }
+    for (const name of names) {
+      if (name !== "chrome_debug.log" && !name.endsWith(".log")) continue;
+      const file = join(directory, name);
+      try {
+        if (!statSync(file).isFile()) continue;
+        found.push({
+          file,
+          lines: readFileSync(file, "utf8").split(/\r?\n/).slice(-40),
+        });
+      } catch (error) {
+        found.push({ file, error: error.message });
+      }
+    }
+  }
+  return found;
+}
+
+/** Log what the page and its WebView processes show; never throws. */
+async function dumpBrowserLog(reason) {
+  try {
+    let entries = null;
+    try {
+      entries = await window_.browser?.execute(() => {
+        const taken = window.__cadrumoConsole || [];
+        window.__cadrumoConsole = [];
+        return taken;
+      });
+    } catch (error) {
+      log("browser-console", { reason, unreadable: error.message });
+    }
+    if (entries) log("browser-console", { reason, entries });
+    log("webview-processes", { reason, processes: webviewProcesses() });
+    const logs = webviewDebugLogs();
+    if (logs.length === 0) log("webview-debug-log", { reason, found: false });
+    for (const entry of logs) log("webview-debug-log", { reason, ...entry });
+  } catch (error) {
+    try {
+      log("browser-console", { reason, failed: error.message });
+    } catch {
+      // Diagnostics must not mask the failure being diagnosed.
+    }
+  }
+}
+
 async function launch(world, runDir) {
   const storage = resolve(runDir, "storage");
   // The world builder's storage root is the directory the profile lives in;
@@ -2087,7 +2287,7 @@ async function launch(world, runDir) {
     hostJson = staged.stdout.trim();
   }
   const host = JSON.parse(hostJson);
-  const port = await freePort();
+  const port = await claimPort();
   const nonce = randomBytes(32).toString("hex");
   const stdout = openSync(resolve(runDir, "host.stdout.log"), "a", 0o600);
   const stderr = openSync(resolve(runDir, "host.stderr.log"), "a", 0o600);
@@ -2105,37 +2305,49 @@ async function launch(world, runDir) {
     pid: child.pid,
     executable: host.executable,
     closed: false,
+    port,
+    runDir,
   });
   // A crashed spec must not leave the host running.
   process.once("exit", () => {
+    releasePort();
     if (window_.closed || !window_.pid) return;
     const check = inspectProcess(window_.pid);
     if (check.status === 0 && isHostCommand(check.stdout, window_.executable))
       process.kill(window_.pid, "SIGTERM");
   });
   log("launched", { pid: child.pid, port, runDir });
-  await waitForWebDriver(child, port, runDir);
-  verifyListener({ pid: child.pid, executable: host.executable, port });
-  window_.browser = await remote({
-    hostname: "127.0.0.1",
-    port,
-    path: "/",
-    logLevel: "silent",
-    connectionRetryCount: 0,
-    capabilities: {},
-  });
-  await proveOwnership(window_.browser, nonce);
+  try {
+    await waitForWebDriver(child, port, runDir);
+    verifyListener({ pid: child.pid, executable: host.executable, port });
+    window_.browser = await remote({
+      hostname: "127.0.0.1",
+      port,
+      path: "/",
+      logLevel: "silent",
+      connectionRetryCount: 0,
+      capabilities: {},
+    });
+    await proveOwnership(window_.browser, nonce);
+  } catch (error) {
+    if (/nonce|listener|not this host/i.test(String(error?.message)))
+      log("launch-port-foreign", { port, message: error.message });
+    throw error;
+  }
+  await installConsoleHook();
   return runDir;
 }
 
 async function teardown() {
   if (window_.closed) return;
   window_.closed = true;
+  await dumpBrowserLog("teardown");
   try {
     await window_.browser?.deleteSession();
   } catch (error) {
     log("teardown", { deleteSession: error.message });
   }
+  releasePort();
   if (!window_.pid) return;
   const check = inspectProcess(window_.pid);
   if (check.status === 0 && isHostCommand(check.stdout, window_.executable)) {
@@ -2339,6 +2551,7 @@ test(
     try {
       runDir = await launch(world, runDir);
       await signIn(password);
+      await installConsoleHook();
       const lang =
         process.env.CADRUMO_PERSONA_LANGUAGE ||
         (await exec(() => document.documentElement.lang)) ||
@@ -2412,6 +2625,7 @@ test(
           try {
             out = await driveRow(row, runDir, world.persona);
           } catch (error) {
+            await dumpBrowserLog("row-error");
             log("row-error", {
               message: error.message,
               // Which step's script the WebView refused, to tell its state apart.
