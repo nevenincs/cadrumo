@@ -3691,6 +3691,9 @@ semantic_role = "irpf_tipo_medio_gravamen_base_liquidable_general_estatal"
 input_kind = "computed"
 formula = "renta-tipo-medio-gravamen-estatal-base-liquidable-general"
 legal_refs = ["ley-35-2006:art-63-2015"]
+# The design states the average rate as a percentage, [0534] = [0532] x 100 / [0505] (aeat-dr-100-2020-dictionary:749),
+# and every later edition's dictionary prints the same formula, so the figure reads on a scale of 100.
+constraints = { sign = "non_negative", max_value = "100", source_refs = ["aeat-dr-100-2020-dictionary"] }
 [[revisions."2020".casillas]]
 id = "0535"
 # Grounding: aeat-dr-100-2020-dictionary:750, TMA; tipo medio autonómico de gravamen de la base liquidable general.
@@ -3702,6 +3705,9 @@ semantic_role = "irpf_tipo_medio_gravamen_general_autonomico"
 input_kind = "computed"
 formula = "renta-tipo-medio-gravamen-autonomico-base-liquidable-general"
 legal_refs = ["ley-35-2006:art-63-2015"]
+# The design states the average rate as a percentage, [0535] = [0533] x 100 / [0505] (aeat-dr-100-2020-dictionary:750),
+# and every later edition's dictionary prints the same formula, so the figure reads on a scale of 100.
+constraints = { sign = "non_negative", max_value = "100", source_refs = ["aeat-dr-100-2020-dictionary"] }
 [[revisions."2020".casillas]]
 id = "0536"
 # Grounding: aeat-dr-100-2020-dictionary:751, CIEST1; escala estatal aplicada a la base liquidable del ahorro.
