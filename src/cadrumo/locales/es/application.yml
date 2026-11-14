@@ -4304,6 +4304,19 @@ application:
         onwards: Casilla {box} del modelo {modelo}, ejercicio {years} y siguientes.
         year_span: Casilla {box} del modelo {modelo}, ejercicio {years}.
       carry_attestation:
+        renta_capital_inmobiliario_gastos_pendientes:
+          action: Este inmueble no tiene intereses ni gastos de reparación pendientes
+            de ejercicios anteriores
+          effect: 'Se registra como un 0 que has declarado: nada pendiente de deducir
+            de este ejercicio de origen.'
+          row: Inmueble {number}
+          statement: Indica que a este inmueble arrendado no le quedan intereses de
+            capitales ajenos ni gastos de reparación y conservación de los cuatro
+            ejercicios anteriores pendientes de deducir (art. 23.1.a de la Ley 35/2006
+            y art. 13.a del Reglamento del IRPF; anexo C.1). Cada ejercicio de origen
+            se registra como un 0 que has declarado, distinto de una cifra escrita;
+            si algún ejercicio dejó un importe pendiente, indica ese importe en su
+            ejercicio de origen.
         renta_negative_general_bases_pending:
           action: No tengo importes pendientes de ejercicios anteriores
           effect: 'Se registra como un 0 que has declarado: nada pendiente de ejercicios

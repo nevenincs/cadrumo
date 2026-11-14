@@ -4292,6 +4292,19 @@ application:
         onwards: Casella {box} del model {modelo}, exercicis {years} i posteriors.
         year_span: Casella {box} del model {modelo}, exercicis {years}.
       carry_attestation:
+        renta_capital_inmobiliario_gastos_pendientes:
+          action: Aquest immoble no té interessos ni despeses de reparació pendents
+            d'exercicis anteriors
+          effect: 'Es registra com un 0 que has declarat: res pendent de deduir d''aquest
+            exercici d''origen.'
+          row: Immoble {number}
+          statement: Indica que a aquest immoble arrendat no li queden interessos
+            de capitals aliens ni despeses de reparació i conservació dels quatre
+            exercicis anteriors pendents de deduir (art. 23.1.a de la Llei 35/2006
+            i art. 13.a del Reglament de l'IRPF; annex C.1). Cada exercici d'origen
+            es registra com un 0 que has declarat, diferent d'una xifra escrita; si
+            algun exercici va deixar un import pendent, indica aquest import en el
+            seu exercici d'origen.
         renta_negative_general_bases_pending:
           action: No tinc imports pendents d'exercicis anteriors
           effect: 'Es registra com un 0 que has declarat: res pendent d''exercicis
