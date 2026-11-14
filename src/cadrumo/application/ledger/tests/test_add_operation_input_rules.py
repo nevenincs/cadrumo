@@ -52,8 +52,8 @@ def test_a_share_or_a_rate_keeps_the_fraction_digits_it_has(field: str, fraction
 
 @pytest.mark.parametrize("state", ["SKIPPED_BY_RULE", "FAILED_VALIDATION", "PROCESSED_UNCLASSIFIED"])
 def test_pipeline_owned_classifications_cannot_be_assigned(state: str) -> None:
-    with pytest.raises(TransactionValidationError, match="assigned by the ledger pipeline"):
-        resolve_ledger_add_flow(_request(business_classification=state))
+    with pytest.raises(ValidationError, match="business_classification"):
+        _request(business_classification=state)
 
 
 @pytest.mark.parametrize("state", ["NOT_YET_PROCESSED", "BUSINESS", "MIXED", "PERSONAL"])

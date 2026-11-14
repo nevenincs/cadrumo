@@ -1184,6 +1184,52 @@ application:
       wallet_local_recurrence_divergence: La cartera de la AEAT y la recurrencia local
         difieren; se requiere una revisión antes de generar el resultado automático.
   ledger:
+    add:
+      choice:
+        business_classification:
+          business: Actividad
+          mixed: Mixto
+          not_yet_processed: Sin procesar
+          personal: Personal
+        direction:
+          incoming: Ingreso
+          internal_transfer: Traspaso propio
+          outgoing: Gasto
+      field:
+        accrual_date: Fecha de devengo en Renta (AAAA-MM-DD)
+        amount: Importe, sin signo
+        arrendamiento_ref: Arrendamiento vinculado
+        art_104_tres_exclusion: Exclusión del art. 104.Tres
+        booked_date: Fecha de operación (AAAA-MM-DD)
+        business_classification: Clasificación
+        business_pct: Parte afecta a la actividad (0 a 1)
+        category_id: Categoría de gasto
+        counterparty: Contraparte
+        counterparty_country: País de la contraparte (dos letras)
+        counterparty_identification_state: Estado de identificación IVA de la contraparte
+        currency: Moneda (EUR si se deja en blanco)
+        deduction_fact_kind: Hecho de deducción de IVA
+        description: Concepto
+        direction: Sentido
+        gasto_capital_inmobiliario: Concepto de gasto del inmueble
+        inmueble_ref: Inmueble vinculado
+        input_classification: Clasificación de entrada para prorrata
+        investment_asset_id: Identificador del bien de inversión
+        irpf_category: Categoría de IRPF
+        iva_amount: Cuota de IVA
+        iva_category: Categoría de IVA
+        iva_rate: Tipo de IVA (por ejemplo 0.21)
+        notes: Notas
+        operation_date: Fecha de la operación (AAAA-MM-DD)
+        own_account_id: Cuenta propia (acc-01)
+        prorrata_reference: Referencia de prorrata
+        prorrata_sector: Sector de prorrata
+        purchase_invoice_evidence_id: Identificador del justificante de compra
+        recargo_amount: Importe del recargo de equivalencia
+        source_jurisdiction: Jurisdicción de origen (código de país)
+        taxable_base: Base imponible
+        usage_ratio_id: Identificador del porcentaje de uso
+        value_date: Fecha valor (AAAA-MM-DD)
     confirmation_block:
       served:
         ambiguous_identity: La identidad de la contraparte no está clara
