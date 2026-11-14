@@ -63,7 +63,7 @@ def _unnamed_section_headings(form: ModeloWorkForm) -> dict[str, str]:
         page.id: section.heading.text
         for page in form.pages
         for section in page.sections
-        if section.id == _UNNAMED_SECTION
+        if section.id == f"{page.id}.{_UNNAMED_SECTION}"
     }
 
 
