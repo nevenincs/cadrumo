@@ -7,7 +7,7 @@ revision_id = "2022"
 seed_source = "design_box_number"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "71220fd7d9358cd7af8285ad01ed581dc07de537e07b371a272e3ff48437a574"
+source_state_digest = "a28760b4c8a8d5fb7827567fbaef27a8ffee6d7c4356fc55eea52d8c490d7eec"
 design_sources = [
     { source_ref = "aeat-dr-200-2022", sha256 = "8c9fa09e5713dc19ed9235757c314a1afee24108bccee4e39031f0df9a75fae6" },
 ]
@@ -76,6 +76,7 @@ placements = [
     { casilla_id = "00080", kind = "on_form", box_number = "00080" },
     { casilla_id = "00081", kind = "on_form", box_number = "00081" },
     { casilla_id = "00084", kind = "on_form", box_number = "00084" },
+    { casilla_id = "00096", kind = "on_form", box_number = "00096" },
     { casilla_id = "00099", kind = "on_form", box_number = "00099" },
     { casilla_id = "00100", kind = "on_form", box_number = "00100" },
     { casilla_id = "00101", kind = "unplaced", unplaced_reason = "ambiguous_anchor", box_number = "00101" },
@@ -600,6 +601,7 @@ placements = [
     { casilla_id = "00693", kind = "on_form", box_number = "00693" },
     { casilla_id = "00694", kind = "on_form", box_number = "00694" },
     { casilla_id = "00695", kind = "on_form", box_number = "00695" },
+    { casilla_id = "00698", kind = "on_form", box_number = "00698" },
     { casilla_id = "00699", kind = "on_form", box_number = "00699" },
     { casilla_id = "00700", kind = "on_form", box_number = "00700" },
     { casilla_id = "00701", kind = "on_form", box_number = "00701" },
@@ -614,6 +616,8 @@ placements = [
     { casilla_id = "00710", kind = "on_form", box_number = "00710" },
     { casilla_id = "00711", kind = "on_form", box_number = "00711" },
     { casilla_id = "00712", kind = "on_form", box_number = "00712" },
+    { casilla_id = "00713", kind = "on_form", box_number = "00713" },
+    { casilla_id = "00714", kind = "on_form", box_number = "00714" },
     { casilla_id = "00715", kind = "on_form", box_number = "00715" },
     { casilla_id = "00716", kind = "on_form", box_number = "00716" },
     { casilla_id = "00717", kind = "on_form", box_number = "00717" },
@@ -643,19 +647,41 @@ placements = [
     { casilla_id = "00741", kind = "on_form", box_number = "00741" },
     { casilla_id = "00742", kind = "on_form", box_number = "00742" },
     { casilla_id = "00743", kind = "on_form", box_number = "00743" },
+    { casilla_id = "00744", kind = "on_form", box_number = "00744" },
+    { casilla_id = "00745", kind = "on_form", box_number = "00745" },
+    { casilla_id = "00746", kind = "on_form", box_number = "00746" },
     { casilla_id = "00747", kind = "on_form", box_number = "00747" },
     { casilla_id = "00748", kind = "on_form", box_number = "00748" },
+    { casilla_id = "00749", kind = "on_form", box_number = "00749" },
+    { casilla_id = "00750", kind = "on_form", box_number = "00750" },
+    { casilla_id = "00752", kind = "on_form", box_number = "00752" },
+    { casilla_id = "00753", kind = "on_form", box_number = "00753" },
+    { casilla_id = "00754", kind = "on_form", box_number = "00754" },
+    { casilla_id = "00755", kind = "on_form", box_number = "00755" },
+    { casilla_id = "00756", kind = "on_form", box_number = "00756" },
+    { casilla_id = "00757", kind = "on_form", box_number = "00757" },
+    { casilla_id = "00758", kind = "on_form", box_number = "00758" },
+    { casilla_id = "00759", kind = "on_form", box_number = "00759" },
     { casilla_id = "00760", kind = "on_form", box_number = "00760" },
     { casilla_id = "00761", kind = "on_form", box_number = "00761" },
     { casilla_id = "00762", kind = "on_form", box_number = "00762" },
     { casilla_id = "00763", kind = "on_form", box_number = "00763" },
     { casilla_id = "00773", kind = "on_form", box_number = "00773" },
     { casilla_id = "00777", kind = "on_form", box_number = "00777" },
+    { casilla_id = "00779", kind = "on_form", box_number = "00779" },
+    { casilla_id = "00795", kind = "on_form", box_number = "00795" },
+    { casilla_id = "00797", kind = "on_form", box_number = "00797" },
+    { casilla_id = "00798", kind = "on_form", box_number = "00798" },
+    { casilla_id = "00799", kind = "on_form", box_number = "00799" },
+    { casilla_id = "00800", kind = "on_form", box_number = "00800" },
     { casilla_id = "00802", kind = "on_form", box_number = "00802" },
     { casilla_id = "00803", kind = "on_form", box_number = "00803" },
     { casilla_id = "00804", kind = "on_form", box_number = "00804" },
     { casilla_id = "00805", kind = "on_form", box_number = "00805" },
     { casilla_id = "00806", kind = "on_form", box_number = "00806" },
+    { casilla_id = "00807", kind = "on_form", box_number = "00807" },
+    { casilla_id = "00808", kind = "on_form", box_number = "00808" },
+    { casilla_id = "00809", kind = "on_form", box_number = "00809" },
     { casilla_id = "00810", kind = "on_form", box_number = "00810" },
     { casilla_id = "00818", kind = "on_form", box_number = "00818" },
     { casilla_id = "00819", kind = "on_form", box_number = "00819" },
@@ -664,8 +690,12 @@ placements = [
     { casilla_id = "00822", kind = "on_form", box_number = "00822" },
     { casilla_id = "00823", kind = "on_form", box_number = "00823" },
     { casilla_id = "00824", kind = "on_form", box_number = "00824" },
+    { casilla_id = "00825", kind = "on_form", box_number = "00825" },
     { casilla_id = "00826", kind = "on_form", box_number = "00826" },
     { casilla_id = "00827", kind = "on_form", box_number = "00827" },
+    { casilla_id = "00828", kind = "on_form", box_number = "00828" },
+    { casilla_id = "00829", kind = "on_form", box_number = "00829" },
+    { casilla_id = "00830", kind = "on_form", box_number = "00830" },
     { casilla_id = "00831", kind = "on_form", box_number = "00831" },
     { casilla_id = "00832", kind = "on_form", box_number = "00832" },
     { casilla_id = "00833", kind = "on_form", box_number = "00833" },
@@ -681,8 +711,10 @@ placements = [
     { casilla_id = "00843", kind = "on_form", box_number = "00843" },
     { casilla_id = "00844", kind = "on_form", box_number = "00844" },
     { casilla_id = "00845", kind = "on_form", box_number = "00845" },
+    { casilla_id = "00846", kind = "on_form", box_number = "00846" },
     { casilla_id = "00847", kind = "on_form", box_number = "00847" },
     { casilla_id = "00848", kind = "on_form", box_number = "00848" },
+    { casilla_id = "00849", kind = "on_form", box_number = "00849" },
     { casilla_id = "00850", kind = "on_form", box_number = "00850" },
     { casilla_id = "00851", kind = "on_form", box_number = "00851" },
     { casilla_id = "00852", kind = "on_form", box_number = "00852" },
@@ -704,14 +736,21 @@ placements = [
     { casilla_id = "00871", kind = "on_form", box_number = "00871" },
     { casilla_id = "00872", kind = "on_form", box_number = "00872" },
     { casilla_id = "00873", kind = "on_form", box_number = "00873" },
+    { casilla_id = "00874", kind = "on_form", box_number = "00874" },
+    { casilla_id = "00875", kind = "on_form", box_number = "00875" },
+    { casilla_id = "00877", kind = "on_form", box_number = "00877" },
     { casilla_id = "00883", kind = "on_form", box_number = "00883" },
     { casilla_id = "00884", kind = "on_form", box_number = "00884" },
     { casilla_id = "00885", kind = "on_form", box_number = "00885" },
     { casilla_id = "00886", kind = "on_form", box_number = "00886" },
     { casilla_id = "00887", kind = "on_form", box_number = "00887" },
+    { casilla_id = "00888", kind = "on_form", box_number = "00888" },
+    { casilla_id = "00889", kind = "on_form", box_number = "00889" },
     { casilla_id = "00894", kind = "on_form", box_number = "00894" },
     { casilla_id = "00895", kind = "on_form", box_number = "00895" },
     { casilla_id = "00900", kind = "on_form", box_number = "00900" },
+    { casilla_id = "00902", kind = "on_form", box_number = "00902" },
+    { casilla_id = "00906", kind = "on_form", box_number = "00906" },
     { casilla_id = "00907", kind = "on_form", box_number = "00907" },
     { casilla_id = "00908", kind = "on_form", box_number = "00908" },
     { casilla_id = "00909", kind = "on_form", box_number = "00909" },
@@ -727,6 +766,7 @@ placements = [
     { casilla_id = "00923", kind = "on_form", box_number = "00923" },
     { casilla_id = "00924", kind = "on_form", box_number = "00924" },
     { casilla_id = "00926", kind = "on_form", box_number = "00926" },
+    { casilla_id = "00927", kind = "on_form", box_number = "00927" },
     { casilla_id = "00928", kind = "on_form", box_number = "00928" },
     { casilla_id = "00930", kind = "on_form", box_number = "00930" },
     { casilla_id = "00931", kind = "on_form", box_number = "00931" },
@@ -751,6 +791,9 @@ placements = [
     { casilla_id = "00952", kind = "on_form", box_number = "00952" },
     { casilla_id = "00953", kind = "on_form", box_number = "00953" },
     { casilla_id = "00954", kind = "on_form", box_number = "00954" },
+    { casilla_id = "00955", kind = "on_form", box_number = "00955" },
+    { casilla_id = "00956", kind = "on_form", box_number = "00956" },
+    { casilla_id = "00957", kind = "on_form", box_number = "00957" },
     { casilla_id = "00958", kind = "on_form", box_number = "00958" },
     { casilla_id = "00959", kind = "on_form", box_number = "00959" },
     { casilla_id = "00960", kind = "on_form", box_number = "00960" },
@@ -823,7 +866,10 @@ placements = [
     { casilla_id = "01045", kind = "on_form", box_number = "01045" },
     { casilla_id = "01046", kind = "on_form", box_number = "01046" },
     { casilla_id = "01047", kind = "on_form", box_number = "01047" },
+    { casilla_id = "01048", kind = "on_form", box_number = "01048" },
+    { casilla_id = "01049", kind = "on_form", box_number = "01049" },
     { casilla_id = "01050", kind = "on_form", box_number = "01050" },
+    { casilla_id = "01051", kind = "on_form", box_number = "01051" },
     { casilla_id = "01052", kind = "on_form", box_number = "01052" },
     { casilla_id = "01053", kind = "on_form", box_number = "01053" },
     { casilla_id = "01054", kind = "on_form", box_number = "01054" },
@@ -842,9 +888,15 @@ placements = [
     { casilla_id = "01069", kind = "on_form", box_number = "01069" },
     { casilla_id = "01070", kind = "on_form", box_number = "01070" },
     { casilla_id = "01071", kind = "on_form", box_number = "01071" },
+    { casilla_id = "01075", kind = "on_form", box_number = "01075" },
+    { casilla_id = "01076", kind = "on_form", box_number = "01076" },
+    { casilla_id = "01077", kind = "on_form", box_number = "01077" },
     { casilla_id = "01079", kind = "on_form", box_number = "01079" },
     { casilla_id = "01080", kind = "on_form", box_number = "01080" },
     { casilla_id = "01081", kind = "on_form", box_number = "01081" },
+    { casilla_id = "01087", kind = "on_form", box_number = "01087" },
+    { casilla_id = "01088", kind = "on_form", box_number = "01088" },
+    { casilla_id = "01089", kind = "on_form", box_number = "01089" },
     { casilla_id = "01090", kind = "on_form", box_number = "01090" },
     { casilla_id = "01091", kind = "on_form", box_number = "01091" },
     { casilla_id = "01092", kind = "on_form", box_number = "01092" },
@@ -856,6 +908,7 @@ placements = [
     { casilla_id = "01098", kind = "on_form", box_number = "01098" },
     { casilla_id = "01099", kind = "on_form", box_number = "01099" },
     { casilla_id = "01109", kind = "on_form", box_number = "01109" },
+    { casilla_id = "01110", kind = "on_form", box_number = "01110" },
     { casilla_id = "01111", kind = "on_form", box_number = "01111" },
     { casilla_id = "01116", kind = "on_form", box_number = "01116" },
     { casilla_id = "01123", kind = "on_form", box_number = "01123" },
@@ -869,10 +922,23 @@ placements = [
     { casilla_id = "01137", kind = "on_form", box_number = "01137" },
     { casilla_id = "01139", kind = "on_form", box_number = "01139" },
     { casilla_id = "01140", kind = "on_form", box_number = "01140" },
+    { casilla_id = "01141", kind = "on_form", box_number = "01141" },
+    { casilla_id = "01142", kind = "on_form", box_number = "01142" },
     { casilla_id = "01143", kind = "on_form", box_number = "01143" },
+    { casilla_id = "01144", kind = "on_form", box_number = "01144" },
+    { casilla_id = "01145", kind = "on_form", box_number = "01145" },
+    { casilla_id = "01146", kind = "on_form", box_number = "01146" },
     { casilla_id = "01147", kind = "on_form", box_number = "01147" },
     { casilla_id = "01148", kind = "on_form", box_number = "01148" },
     { casilla_id = "01149", kind = "on_form", box_number = "01149" },
+    { casilla_id = "01150", kind = "on_form", box_number = "01150" },
+    { casilla_id = "01151", kind = "on_form", box_number = "01151" },
+    { casilla_id = "01152", kind = "on_form", box_number = "01152" },
+    { casilla_id = "01153", kind = "on_form", box_number = "01153" },
+    { casilla_id = "01154", kind = "on_form", box_number = "01154" },
+    { casilla_id = "01155", kind = "on_form", box_number = "01155" },
+    { casilla_id = "01156", kind = "on_form", box_number = "01156" },
+    { casilla_id = "01157", kind = "on_form", box_number = "01157" },
     { casilla_id = "01158", kind = "on_form", box_number = "01158" },
     { casilla_id = "01159", kind = "on_form", box_number = "01159" },
     { casilla_id = "01160", kind = "on_form", box_number = "01160" },
@@ -890,6 +956,7 @@ placements = [
     { casilla_id = "01176", kind = "on_form", box_number = "01176" },
     { casilla_id = "01178", kind = "on_form", box_number = "01178" },
     { casilla_id = "01179", kind = "on_form", box_number = "01179" },
+    { casilla_id = "01180", kind = "on_form", box_number = "01180" },
     { casilla_id = "01181", kind = "on_form", box_number = "01181" },
     { casilla_id = "01182", kind = "on_form", box_number = "01182" },
     { casilla_id = "01183", kind = "on_form", box_number = "01183" },
@@ -903,7 +970,9 @@ placements = [
     { casilla_id = "01192", kind = "on_form", box_number = "01192" },
     { casilla_id = "01193", kind = "on_form", box_number = "01193" },
     { casilla_id = "01194", kind = "on_form", box_number = "01194" },
+    { casilla_id = "01195", kind = "on_form", box_number = "01195" },
     { casilla_id = "01196", kind = "on_form", box_number = "01196" },
+    { casilla_id = "01197", kind = "on_form", box_number = "01197" },
     { casilla_id = "01198", kind = "on_form", box_number = "01198" },
     { casilla_id = "01199", kind = "on_form", box_number = "01199" },
     { casilla_id = "01201", kind = "on_form", box_number = "01201" },
@@ -912,6 +981,8 @@ placements = [
     { casilla_id = "01204", kind = "on_form", box_number = "01204" },
     { casilla_id = "01205", kind = "on_form", box_number = "01205" },
     { casilla_id = "01206", kind = "on_form", box_number = "01206" },
+    { casilla_id = "01207", kind = "on_form", box_number = "01207" },
+    { casilla_id = "01208", kind = "on_form", box_number = "01208" },
     { casilla_id = "01209", kind = "on_form", box_number = "01209" },
     { casilla_id = "01210", kind = "on_form", box_number = "01210" },
     { casilla_id = "01211", kind = "on_form", box_number = "01211" },
@@ -920,10 +991,24 @@ placements = [
     { casilla_id = "01214", kind = "on_form", box_number = "01214" },
     { casilla_id = "01215", kind = "on_form", box_number = "01215" },
     { casilla_id = "01216", kind = "on_form", box_number = "01216" },
+    { casilla_id = "01220", kind = "on_form", box_number = "01220" },
+    { casilla_id = "01221", kind = "on_form", box_number = "01221" },
+    { casilla_id = "01222", kind = "on_form", box_number = "01222" },
+    { casilla_id = "01223", kind = "on_form", box_number = "01223" },
     { casilla_id = "01224", kind = "on_form", box_number = "01224" },
+    { casilla_id = "01225", kind = "on_form", box_number = "01225" },
+    { casilla_id = "01226", kind = "on_form", box_number = "01226" },
+    { casilla_id = "01229", kind = "on_form", box_number = "01229" },
     { casilla_id = "01230", kind = "on_form", box_number = "01230" },
     { casilla_id = "01231", kind = "on_form", box_number = "01231" },
+    { casilla_id = "01232", kind = "on_form", box_number = "01232" },
+    { casilla_id = "01233", kind = "on_form", box_number = "01233" },
     { casilla_id = "01234", kind = "on_form", box_number = "01234" },
+    { casilla_id = "01235", kind = "on_form", box_number = "01235" },
+    { casilla_id = "01236", kind = "on_form", box_number = "01236" },
+    { casilla_id = "01237", kind = "on_form", box_number = "01237" },
+    { casilla_id = "01238", kind = "on_form", box_number = "01238" },
+    { casilla_id = "01239", kind = "on_form", box_number = "01239" },
     { casilla_id = "01240", kind = "on_form", box_number = "01240" },
     { casilla_id = "01241", kind = "on_form", box_number = "01241" },
     { casilla_id = "01242", kind = "on_form", box_number = "01242" },
@@ -939,9 +1024,23 @@ placements = [
     { casilla_id = "01253", kind = "on_form", box_number = "01253" },
     { casilla_id = "01254", kind = "on_form", box_number = "01254" },
     { casilla_id = "01255", kind = "on_form", box_number = "01255" },
+    { casilla_id = "01261", kind = "on_form", box_number = "01261" },
+    { casilla_id = "01262", kind = "on_form", box_number = "01262" },
+    { casilla_id = "01263", kind = "on_form", box_number = "01263" },
+    { casilla_id = "01264", kind = "on_form", box_number = "01264" },
+    { casilla_id = "01265", kind = "on_form", box_number = "01265" },
+    { casilla_id = "01266", kind = "on_form", box_number = "01266" },
+    { casilla_id = "01268", kind = "on_form", box_number = "01268" },
+    { casilla_id = "01269", kind = "on_form", box_number = "01269" },
+    { casilla_id = "01272", kind = "on_form", box_number = "01272" },
+    { casilla_id = "01273", kind = "on_form", box_number = "01273" },
+    { casilla_id = "01274", kind = "on_form", box_number = "01274" },
     { casilla_id = "01275", kind = "on_form", box_number = "01275" },
     { casilla_id = "01276", kind = "on_form", box_number = "01276" },
     { casilla_id = "01280", kind = "on_form", box_number = "01280" },
+    { casilla_id = "01281", kind = "on_form", box_number = "01281" },
+    { casilla_id = "01282", kind = "on_form", box_number = "01282" },
+    { casilla_id = "01283", kind = "on_form", box_number = "01283" },
     { casilla_id = "01284", kind = "on_form", box_number = "01284" },
     { casilla_id = "01285", kind = "on_form", box_number = "01285" },
     { casilla_id = "01286", kind = "on_form", box_number = "01286" },
@@ -964,12 +1063,14 @@ placements = [
     { casilla_id = "01337", kind = "on_form", box_number = "01337" },
     { casilla_id = "01341", kind = "on_form", box_number = "01341" },
     { casilla_id = "01342", kind = "on_form", box_number = "01342" },
+    { casilla_id = "01343", kind = "on_form", box_number = "01343" },
     { casilla_id = "01344", kind = "on_form", box_number = "01344" },
     { casilla_id = "01345", kind = "on_form", box_number = "01345" },
     { casilla_id = "01346", kind = "on_form", box_number = "01346" },
     { casilla_id = "01347", kind = "on_form", box_number = "01347" },
     { casilla_id = "01348", kind = "on_form", box_number = "01348" },
     { casilla_id = "01349", kind = "on_form", box_number = "01349" },
+    { casilla_id = "01350", kind = "on_form", box_number = "01350" },
     { casilla_id = "01351", kind = "on_form", box_number = "01351" },
     { casilla_id = "01352", kind = "on_form", box_number = "01352" },
     { casilla_id = "01353", kind = "on_form", box_number = "01353" },
@@ -979,6 +1080,15 @@ placements = [
     { casilla_id = "01357", kind = "on_form", box_number = "01357" },
     { casilla_id = "01358", kind = "on_form", box_number = "01358" },
     { casilla_id = "01359", kind = "on_form", box_number = "01359" },
+    { casilla_id = "01363", kind = "on_form", box_number = "01363" },
+    { casilla_id = "01364", kind = "on_form", box_number = "01364" },
+    { casilla_id = "01365", kind = "on_form", box_number = "01365" },
+    { casilla_id = "01366", kind = "on_form", box_number = "01366" },
+    { casilla_id = "01367", kind = "on_form", box_number = "01367" },
+    { casilla_id = "01368", kind = "on_form", box_number = "01368" },
+    { casilla_id = "01369", kind = "on_form", box_number = "01369" },
+    { casilla_id = "01370", kind = "on_form", box_number = "01370" },
+    { casilla_id = "01371", kind = "on_form", box_number = "01371" },
     { casilla_id = "01408", kind = "on_form", box_number = "01408" },
     { casilla_id = "01409", kind = "on_form", box_number = "01409" },
     { casilla_id = "01426", kind = "on_form", box_number = "01426" },
@@ -1112,6 +1222,7 @@ placements = [
     { casilla_id = "01594", kind = "on_form", box_number = "01594" },
     { casilla_id = "01595", kind = "on_form", box_number = "01595" },
     { casilla_id = "01596", kind = "on_form", box_number = "01596" },
+    { casilla_id = "01597", kind = "on_form", box_number = "01597" },
     { casilla_id = "01598", kind = "on_form", box_number = "01598" },
     { casilla_id = "01599", kind = "on_form", box_number = "01599" },
     { casilla_id = "01603", kind = "on_form", box_number = "01603" },
@@ -1141,12 +1252,24 @@ placements = [
     { casilla_id = "01680", kind = "on_form", box_number = "01680" },
     { casilla_id = "01681", kind = "on_form", box_number = "01681" },
     { casilla_id = "01682", kind = "on_form", box_number = "01682" },
+    { casilla_id = "01683", kind = "on_form", box_number = "01683" },
+    { casilla_id = "01684", kind = "on_form", box_number = "01684" },
+    { casilla_id = "01685", kind = "on_form", box_number = "01685" },
     { casilla_id = "01686", kind = "on_form", box_number = "01686" },
     { casilla_id = "01687", kind = "on_form", box_number = "01687" },
     { casilla_id = "01688", kind = "on_form", box_number = "01688" },
+    { casilla_id = "01692", kind = "on_form", box_number = "01692" },
+    { casilla_id = "01693", kind = "on_form", box_number = "01693" },
+    { casilla_id = "01694", kind = "on_form", box_number = "01694" },
+    { casilla_id = "01695", kind = "on_form", box_number = "01695" },
+    { casilla_id = "01696", kind = "on_form", box_number = "01696" },
+    { casilla_id = "01697", kind = "on_form", box_number = "01697" },
     { casilla_id = "01698", kind = "on_form", box_number = "01698" },
     { casilla_id = "01699", kind = "on_form", box_number = "01699" },
     { casilla_id = "01700", kind = "on_form", box_number = "01700" },
+    { casilla_id = "01704", kind = "on_form", box_number = "01704" },
+    { casilla_id = "01705", kind = "on_form", box_number = "01705" },
+    { casilla_id = "01706", kind = "on_form", box_number = "01706" },
     { casilla_id = "01710", kind = "on_form", box_number = "01710" },
     { casilla_id = "01711", kind = "on_form", box_number = "01711" },
     { casilla_id = "01712", kind = "on_form", box_number = "01712" },
@@ -1166,7 +1289,9 @@ placements = [
     { casilla_id = "01726", kind = "on_form", box_number = "01726" },
     { casilla_id = "01727", kind = "on_form", box_number = "01727" },
     { casilla_id = "01728", kind = "on_form", box_number = "01728" },
+    { casilla_id = "01729", kind = "on_form", box_number = "01729" },
     { casilla_id = "01730", kind = "on_form", box_number = "01730" },
+    { casilla_id = "01731", kind = "on_form", box_number = "01731" },
     { casilla_id = "01736", kind = "on_form", box_number = "01736" },
     { casilla_id = "01737", kind = "on_form", box_number = "01737" },
     { casilla_id = "01738", kind = "on_form", box_number = "01738" },
@@ -1196,6 +1321,7 @@ placements = [
     { casilla_id = "01769", kind = "on_form", box_number = "01769" },
     { casilla_id = "01770", kind = "on_form", box_number = "01770" },
     { casilla_id = "01771", kind = "on_form", box_number = "01771" },
+    { casilla_id = "01772", kind = "on_form", box_number = "01772" },
     { casilla_id = "01773", kind = "on_form", box_number = "01773" },
     { casilla_id = "01774", kind = "on_form", box_number = "01774" },
     { casilla_id = "01775", kind = "on_form", box_number = "01775" },
@@ -1241,10 +1367,12 @@ placements = [
     { casilla_id = "01827", kind = "on_form", box_number = "01827" },
     { casilla_id = "01828", kind = "on_form", box_number = "01828" },
     { casilla_id = "01829", kind = "on_form", box_number = "01829" },
+    { casilla_id = "01830", kind = "on_form", box_number = "01830" },
     { casilla_id = "01831", kind = "on_form", box_number = "01831" },
     { casilla_id = "01832", kind = "on_form", box_number = "01832" },
     { casilla_id = "01833", kind = "on_form", box_number = "01833" },
     { casilla_id = "01834", kind = "on_form", box_number = "01834" },
+    { casilla_id = "01835", kind = "on_form", box_number = "01835" },
     { casilla_id = "01836", kind = "on_form", box_number = "01836" },
     { casilla_id = "01837", kind = "on_form", box_number = "01837" },
     { casilla_id = "01838", kind = "on_form", box_number = "01838" },
@@ -1266,6 +1394,8 @@ placements = [
     { casilla_id = "01857", kind = "on_form", box_number = "01857" },
     { casilla_id = "01858", kind = "on_form", box_number = "01858" },
     { casilla_id = "01859", kind = "on_form", box_number = "01859" },
+    { casilla_id = "01870", kind = "on_form", box_number = "01870" },
+    { casilla_id = "01871", kind = "on_form", box_number = "01871" },
     { casilla_id = "01880", kind = "on_form", box_number = "01880" },
     { casilla_id = "01881", kind = "on_form", box_number = "01881" },
     { casilla_id = "01882", kind = "on_form", box_number = "01882" },
@@ -1277,6 +1407,7 @@ placements = [
     { casilla_id = "01893", kind = "on_form", box_number = "01893" },
     { casilla_id = "01905", kind = "on_form", box_number = "01905" },
     { casilla_id = "01906", kind = "on_form", box_number = "01906" },
+    { casilla_id = "01914", kind = "on_form", box_number = "01914" },
     { casilla_id = "01916", kind = "on_form", box_number = "01916" },
     { casilla_id = "01917", kind = "on_form", box_number = "01917" },
     { casilla_id = "01918", kind = "on_form", box_number = "01918" },
@@ -1289,6 +1420,9 @@ placements = [
     { casilla_id = "01925", kind = "on_form", box_number = "01925" },
     { casilla_id = "01926", kind = "on_form", box_number = "01926" },
     { casilla_id = "01927", kind = "on_form", box_number = "01927" },
+    { casilla_id = "01928", kind = "on_form", box_number = "01928" },
+    { casilla_id = "01929", kind = "on_form", box_number = "01929" },
+    { casilla_id = "01930", kind = "on_form", box_number = "01930" },
     { casilla_id = "01931", kind = "on_form", box_number = "01931" },
     { casilla_id = "01932", kind = "on_form", box_number = "01932" },
     { casilla_id = "01933", kind = "on_form", box_number = "01933" },
@@ -1342,6 +1476,8 @@ placements = [
     { casilla_id = "01992", kind = "on_form", box_number = "01992" },
     { casilla_id = "01993", kind = "on_form", box_number = "01993" },
     { casilla_id = "01994", kind = "on_form", box_number = "01994" },
+    { casilla_id = "02079", kind = "on_form", box_number = "02079" },
+    { casilla_id = "02080", kind = "on_form", box_number = "02080" },
     { casilla_id = "02081", kind = "on_form", box_number = "02081" },
     { casilla_id = "02082", kind = "on_form", box_number = "02082" },
     { casilla_id = "02083", kind = "on_form", box_number = "02083" },
@@ -1438,15 +1574,20 @@ placements = [
     { casilla_id = "02187", kind = "on_form", box_number = "02187" },
     { casilla_id = "02188", kind = "on_form", box_number = "02188" },
     { casilla_id = "02189", kind = "on_form", box_number = "02189" },
+    { casilla_id = "02190", kind = "on_form", box_number = "02190" },
+    { casilla_id = "02191", kind = "on_form", box_number = "02191" },
+    { casilla_id = "02192", kind = "on_form", box_number = "02192" },
     { casilla_id = "02193", kind = "on_form", box_number = "02193" },
     { casilla_id = "02194", kind = "on_form", box_number = "02194" },
     { casilla_id = "02195", kind = "on_form", box_number = "02195" },
     { casilla_id = "02196", kind = "on_form", box_number = "02196" },
     { casilla_id = "02197", kind = "on_form", box_number = "02197" },
+    { casilla_id = "02198", kind = "on_form", box_number = "02198" },
     { casilla_id = "02199", kind = "on_form", box_number = "02199" },
     { casilla_id = "02200", kind = "on_form", box_number = "02200" },
     { casilla_id = "02201", kind = "on_form", box_number = "02201" },
     { casilla_id = "02202", kind = "on_form", box_number = "02202" },
+    { casilla_id = "02203", kind = "on_form", box_number = "02203" },
     { casilla_id = "02204", kind = "on_form", box_number = "02204" },
     { casilla_id = "02205", kind = "on_form", box_number = "02205" },
     { casilla_id = "02206", kind = "on_form", box_number = "02206" },
@@ -1518,6 +1659,8 @@ placements = [
     { casilla_id = "02281", kind = "on_form", box_number = "02281" },
     { casilla_id = "02282", kind = "on_form", box_number = "02282" },
     { casilla_id = "02283", kind = "on_form", box_number = "02283" },
+    { casilla_id = "02287", kind = "on_form", box_number = "02287" },
+    { casilla_id = "02288", kind = "on_form", box_number = "02288" },
     { casilla_id = "02289", kind = "on_form", box_number = "02289" },
     { casilla_id = "02290", kind = "on_form", box_number = "02290" },
     { casilla_id = "02291", kind = "on_form", box_number = "02291" },
@@ -1541,12 +1684,17 @@ placements = [
     { casilla_id = "02311", kind = "on_form", box_number = "02311" },
     { casilla_id = "02314", kind = "on_form", box_number = "02314" },
     { casilla_id = "02315", kind = "on_form", box_number = "02315" },
+    { casilla_id = "02316", kind = "on_form", box_number = "02316" },
+    { casilla_id = "02317", kind = "on_form", box_number = "02317" },
+    { casilla_id = "02318", kind = "on_form", box_number = "02318" },
     { casilla_id = "02319", kind = "on_form", box_number = "02319" },
     { casilla_id = "02320", kind = "on_form", box_number = "02320" },
+    { casilla_id = "02321", kind = "on_form", box_number = "02321" },
     { casilla_id = "02322", kind = "on_form", box_number = "02322" },
     { casilla_id = "02323", kind = "on_form", box_number = "02323" },
     { casilla_id = "02324", kind = "on_form", box_number = "02324" },
     { casilla_id = "02325", kind = "on_form", box_number = "02325" },
+    { casilla_id = "02326", kind = "on_form", box_number = "02326" },
     { casilla_id = "02327", kind = "on_form", box_number = "02327" },
     { casilla_id = "02328", kind = "on_form", box_number = "02328" },
     { casilla_id = "02329", kind = "on_form", box_number = "02329" },
@@ -1579,6 +1727,12 @@ placements = [
     { casilla_id = "02359", kind = "on_form", box_number = "02359" },
     { casilla_id = "02360", kind = "on_form", box_number = "02360" },
     { casilla_id = "02361", kind = "on_form", box_number = "02361" },
+    { casilla_id = "02365", kind = "on_form", box_number = "02365" },
+    { casilla_id = "02366", kind = "on_form", box_number = "02366" },
+    { casilla_id = "02367", kind = "on_form", box_number = "02367" },
+    { casilla_id = "02371", kind = "on_form", box_number = "02371" },
+    { casilla_id = "02372", kind = "on_form", box_number = "02372" },
+    { casilla_id = "02373", kind = "on_form", box_number = "02373" },
     { casilla_id = "02380", kind = "on_form", box_number = "02380" },
     { casilla_id = "02381", kind = "on_form", box_number = "02381" },
     { casilla_id = "02382", kind = "on_form", box_number = "02382" },
@@ -1630,14 +1784,28 @@ placements = [
     { casilla_id = "02435", kind = "on_form", box_number = "02435" },
     { casilla_id = "02436", kind = "on_form", box_number = "02436" },
     { casilla_id = "02448", kind = "on_form", box_number = "02448" },
+    { casilla_id = "02449", kind = "on_form", box_number = "02449" },
+    { casilla_id = "02450", kind = "on_form", box_number = "02450" },
     { casilla_id = "02452", kind = "on_form", box_number = "02452" },
     { casilla_id = "02453", kind = "on_form", box_number = "02453" },
     { casilla_id = "02454", kind = "on_form", box_number = "02454" },
+    { casilla_id = "02455", kind = "on_form", box_number = "02455" },
+    { casilla_id = "02456", kind = "on_form", box_number = "02456" },
+    { casilla_id = "02457", kind = "on_form", box_number = "02457" },
+    { casilla_id = "02458", kind = "on_form", box_number = "02458" },
+    { casilla_id = "02459", kind = "on_form", box_number = "02459" },
+    { casilla_id = "02460", kind = "on_form", box_number = "02460" },
+    { casilla_id = "02461", kind = "on_form", box_number = "02461" },
+    { casilla_id = "02462", kind = "on_form", box_number = "02462" },
+    { casilla_id = "02463", kind = "on_form", box_number = "02463" },
+    { casilla_id = "02464", kind = "on_form", box_number = "02464" },
     { casilla_id = "02469", kind = "on_form", box_number = "02469" },
     { casilla_id = "02470", kind = "on_form", box_number = "02470" },
     { casilla_id = "02472", kind = "on_form", box_number = "02472" },
     { casilla_id = "02473", kind = "on_form", box_number = "02473" },
     { casilla_id = "02474", kind = "on_form", box_number = "02474" },
+    { casilla_id = "02475", kind = "on_form", box_number = "02475" },
+    { casilla_id = "02476", kind = "on_form", box_number = "02476" },
     { casilla_id = "02480", kind = "on_form", box_number = "02480" },
     { casilla_id = "02481", kind = "on_form", box_number = "02481" },
     { casilla_id = "02482", kind = "on_form", box_number = "02482" },
@@ -1645,6 +1813,8 @@ placements = [
     { casilla_id = "02484", kind = "on_form", box_number = "02484" },
     { casilla_id = "02485", kind = "on_form", box_number = "02485" },
     { casilla_id = "02486", kind = "on_form", box_number = "02486" },
+    { casilla_id = "02495", kind = "on_form", box_number = "02495" },
+    { casilla_id = "02496", kind = "on_form", box_number = "02496" },
     { casilla_id = "02498", kind = "on_form", box_number = "02498" },
     { casilla_id = "02500", kind = "on_form", box_number = "02500" },
     { casilla_id = "02501", kind = "on_form", box_number = "02501" },
@@ -3949,7 +4119,7 @@ id = "detalle-compensacion-bases-imponibles-negativas"
 heading_key = "modelo.schema.200.form.section.detalle-compensacion-bases-imponibles-negativas.heading"
 official_heading = "Detalle compensación bases imponibles negativas"
 blocks = [
-    { kind = "grid", id = "grid", columns = [{ key = "pendiente_generada", heading_key = "modelo.form.column.pendiente_generada", official_heading = "Pendiente aplicación a principio del período/generada en el período" }, { key = "aplicado", heading_key = "modelo.form.column.aplicado", official_heading = "Aplicado en esta liquidación" }, { key = "pendiente_futuro", heading_key = "modelo.form.column.pendiente_futuro", official_heading = "Pendiente aplicación en períodos futuros" }], rows = [{ key = "1999", heading_key = "modelo.schema.200.form.row.1999.heading", official_heading = "1999", cells = [{ kind = "casilla", casilla_id = "00646" }, { kind = "casilla", casilla_id = "00647" }, { kind = "casilla", casilla_id = "00648" }] }, { key = "2000", heading_key = "modelo.schema.200.form.row.2000.heading", official_heading = "2000", cells = [{ kind = "casilla", casilla_id = "00649" }, { kind = "casilla", casilla_id = "00650" }, { kind = "casilla", casilla_id = "00651" }] }, { key = "2001", heading_key = "modelo.schema.200.form.row.2001.heading", official_heading = "2001", cells = [{ kind = "casilla", casilla_id = "00652" }, { kind = "casilla", casilla_id = "00653" }, { kind = "casilla", casilla_id = "00654" }] }, { key = "2002", heading_key = "modelo.schema.200.form.row.2002.heading", official_heading = "2002", cells = [{ kind = "casilla", casilla_id = "00655" }, { kind = "casilla", casilla_id = "00656" }, { kind = "casilla", casilla_id = "00657" }] }, { key = "2003", heading_key = "modelo.schema.200.form.row.2003.heading", official_heading = "2003", cells = [{ kind = "casilla", casilla_id = "00658" }, { kind = "casilla", casilla_id = "00659" }, { kind = "casilla", casilla_id = "00660" }] }, { key = "2004", heading_key = "modelo.schema.200.form.row.2004.heading", official_heading = "2004", cells = [{ kind = "casilla", casilla_id = "00661" }, { kind = "casilla", casilla_id = "00662" }, { kind = "casilla", casilla_id = "00663" }] }, { key = "2005", heading_key = "modelo.schema.200.form.row.2005.heading", official_heading = "2005", cells = [{ kind = "casilla", casilla_id = "00664" }, { kind = "casilla", casilla_id = "00665" }, { kind = "casilla", casilla_id = "00666" }] }, { key = "2006", heading_key = "modelo.schema.200.form.row.2006.heading", official_heading = "2006", cells = [{ kind = "casilla", casilla_id = "00667" }, { kind = "casilla", casilla_id = "00668" }, { kind = "casilla", casilla_id = "00669" }] }, { key = "2007", heading_key = "modelo.schema.200.form.row.2007.heading", official_heading = "2007", cells = [{ kind = "casilla", casilla_id = "00743" }, { kind = "casilla", casilla_id = "00747" }, { kind = "casilla", casilla_id = "00748" }] }, { key = "2014", heading_key = "modelo.schema.200.form.row.2014.heading", official_heading = "2014", cells = [{ kind = "blank" }, { kind = "casilla", casilla_id = "00675" }, { kind = "casilla", casilla_id = "00699" }] }, { key = "2015", heading_key = "modelo.schema.200.form.row.2015.heading", official_heading = "2015", cells = [{ kind = "casilla", casilla_id = "01045" }, { kind = "casilla", casilla_id = "01046" }, { kind = "casilla", casilla_id = "01047" }] }, { key = "2016", heading_key = "modelo.schema.200.form.row.2016.heading", official_heading = "2016", cells = [{ kind = "casilla", casilla_id = "01519" }, { kind = "casilla", casilla_id = "01520" }, { kind = "casilla", casilla_id = "01521" }] }, { key = "2017", heading_key = "modelo.schema.200.form.row.2017.heading", official_heading = "2017", cells = [{ kind = "casilla", casilla_id = "01592" }, { kind = "casilla", casilla_id = "01593" }, { kind = "casilla", casilla_id = "01594" }] }, { key = "2018", heading_key = "modelo.schema.200.form.row.2018.heading", official_heading = "2018", cells = [{ kind = "casilla", casilla_id = "01825" }, { kind = "casilla", casilla_id = "01826" }, { kind = "casilla", casilla_id = "01827" }] }, { key = "2019", heading_key = "modelo.schema.200.form.row.2019.heading", official_heading = "2019", cells = [{ kind = "casilla", casilla_id = "02193" }, { kind = "casilla", casilla_id = "02194" }, { kind = "casilla", casilla_id = "02195" }] }, { key = "total", heading_key = "modelo.schema.200.form.row.total.heading", official_heading = "TOTAL", cells = [{ kind = "casilla", casilla_id = "00670" }, { kind = "blank" }, { kind = "casilla", casilla_id = "00671" }] }] },
+    { kind = "grid", id = "grid", columns = [{ key = "pendiente_generada", heading_key = "modelo.form.column.pendiente_generada", official_heading = "Pendiente aplicación a principio del período/generada en el período" }, { key = "aplicado", heading_key = "modelo.form.column.aplicado", official_heading = "Aplicado en esta liquidación" }, { key = "pendiente_futuro", heading_key = "modelo.form.column.pendiente_futuro", official_heading = "Pendiente aplicación en períodos futuros" }], rows = [{ key = "1999", heading_key = "modelo.schema.200.form.row.1999.heading", official_heading = "1999", cells = [{ kind = "casilla", casilla_id = "00646" }, { kind = "casilla", casilla_id = "00647" }, { kind = "casilla", casilla_id = "00648" }] }, { key = "2000", heading_key = "modelo.schema.200.form.row.2000.heading", official_heading = "2000", cells = [{ kind = "casilla", casilla_id = "00649" }, { kind = "casilla", casilla_id = "00650" }, { kind = "casilla", casilla_id = "00651" }] }, { key = "2001", heading_key = "modelo.schema.200.form.row.2001.heading", official_heading = "2001", cells = [{ kind = "casilla", casilla_id = "00652" }, { kind = "casilla", casilla_id = "00653" }, { kind = "casilla", casilla_id = "00654" }] }, { key = "2002", heading_key = "modelo.schema.200.form.row.2002.heading", official_heading = "2002", cells = [{ kind = "casilla", casilla_id = "00655" }, { kind = "casilla", casilla_id = "00656" }, { kind = "casilla", casilla_id = "00657" }] }, { key = "2003", heading_key = "modelo.schema.200.form.row.2003.heading", official_heading = "2003", cells = [{ kind = "casilla", casilla_id = "00658" }, { kind = "casilla", casilla_id = "00659" }, { kind = "casilla", casilla_id = "00660" }] }, { key = "2004", heading_key = "modelo.schema.200.form.row.2004.heading", official_heading = "2004", cells = [{ kind = "casilla", casilla_id = "00661" }, { kind = "casilla", casilla_id = "00662" }, { kind = "casilla", casilla_id = "00663" }] }, { key = "2005", heading_key = "modelo.schema.200.form.row.2005.heading", official_heading = "2005", cells = [{ kind = "casilla", casilla_id = "00664" }, { kind = "casilla", casilla_id = "00665" }, { kind = "casilla", casilla_id = "00666" }] }, { key = "2006", heading_key = "modelo.schema.200.form.row.2006.heading", official_heading = "2006", cells = [{ kind = "casilla", casilla_id = "00667" }, { kind = "casilla", casilla_id = "00668" }, { kind = "casilla", casilla_id = "00669" }] }, { key = "2007", heading_key = "modelo.schema.200.form.row.2007.heading", official_heading = "2007", cells = [{ kind = "casilla", casilla_id = "00743" }, { kind = "casilla", casilla_id = "00747" }, { kind = "casilla", casilla_id = "00748" }] }, { key = "2014", heading_key = "modelo.schema.200.form.row.2014.heading", official_heading = "2014", cells = [{ kind = "blank" }, { kind = "casilla", casilla_id = "00675" }, { kind = "casilla", casilla_id = "00699" }] }, { key = "2015", heading_key = "modelo.schema.200.form.row.2015.heading", official_heading = "2015", cells = [{ kind = "casilla", casilla_id = "01045" }, { kind = "casilla", casilla_id = "01046" }, { kind = "casilla", casilla_id = "01047" }] }, { key = "2016", heading_key = "modelo.schema.200.form.row.2016.heading", official_heading = "2016", cells = [{ kind = "casilla", casilla_id = "01519" }, { kind = "casilla", casilla_id = "01520" }, { kind = "casilla", casilla_id = "01521" }] }, { key = "2017", heading_key = "modelo.schema.200.form.row.2017.heading", official_heading = "2017", cells = [{ kind = "casilla", casilla_id = "01592" }, { kind = "casilla", casilla_id = "01593" }, { kind = "casilla", casilla_id = "01594" }] }, { key = "2018", heading_key = "modelo.schema.200.form.row.2018.heading", official_heading = "2018", cells = [{ kind = "casilla", casilla_id = "01825" }, { kind = "casilla", casilla_id = "01826" }, { kind = "casilla", casilla_id = "01827" }] }, { key = "2019", heading_key = "modelo.schema.200.form.row.2019.heading", official_heading = "2019", cells = [{ kind = "casilla", casilla_id = "02193" }, { kind = "casilla", casilla_id = "02194" }, { kind = "casilla", casilla_id = "02195" }] }, { key = "2022", heading_key = "modelo.schema.200.form.row.2022.heading", official_heading = "2022(*)", cells = [{ kind = "casilla", casilla_id = "02316" }, { kind = "casilla", casilla_id = "02317" }, { kind = "casilla", casilla_id = "02318" }] }, { key = "total", heading_key = "modelo.schema.200.form.row.total.heading", official_heading = "TOTAL", cells = [{ kind = "casilla", casilla_id = "00670" }, { kind = "blank" }, { kind = "casilla", casilla_id = "00671" }] }, { key = "2022-2", heading_key = "modelo.schema.200.form.row.2022.heading", official_heading = "2022", cells = [{ kind = "casilla", casilla_id = "01048" }, { kind = "blank" }, { kind = "casilla", casilla_id = "01049" }] }] },
 ]
 
 [[revisions.2022.form_layouts.pages.sections]]
@@ -3966,11 +4136,34 @@ official_ref = "DP200015B"
 heading_key = "modelo.schema.200.form.page.dp200015b.heading"
 
 [[revisions.2022.form_layouts.pages.sections]]
+id = "deducciones-doble-imposicion-interna-rdle-e4a9a3"
+heading_key = "modelo.schema.200.form.section.deducciones-doble-imposicion-interna-rdle-e4a9a3.heading"
+official_heading = "Deducciones doble imposición interna RDLeg. 4/2004 - DI interna 2008"
+blocks = [
+    { kind = "field", id = "field", casilla_id = "00846" },
+]
+
+[[revisions.2022.form_layouts.pages.sections]]
 id = "deducciones-doble-imposicion-interna-rdle-eadf93"
 heading_key = "modelo.schema.200.form.section.deducciones-doble-imposicion-interna-rdle-eadf93.heading"
 official_heading = "Deducciones doble imposición interna RDLeg. 4/2004"
 blocks = [
     { kind = "grid", id = "grid", columns = [{ key = "aplicado", heading_key = "modelo.form.column.aplicado", official_heading = "Aplicado en esta liquidación" }, { key = "pendiente_futuro", heading_key = "modelo.form.column.pendiente_futuro", official_heading = "Pendiente aplic en períodos futuros" }], rows = [{ key = "di-interna-2008", heading_key = "modelo.schema.200.form.row.di-interna-2008.heading", official_heading = "DI interna 2008", cells = [{ kind = "casilla", casilla_id = "00847" }, { kind = "casilla", casilla_id = "00848" }] }] },
+]
+
+[[revisions.2022.form_layouts.pages.sections]]
+id = "deducciones-doble-imposicion-interna-rdle-7f0093"
+heading_key = "modelo.schema.200.form.section.deducciones-doble-imposicion-interna-rdle-7f0093.heading"
+official_heading = "Deducciones doble imposición interna RDLeg. 4/2004 - DI interna 2013"
+blocks = [
+    { kind = "field", id = "field", casilla_id = "00714" },
+]
+
+[[revisions.2022.form_layouts.pages.sections]]
+id = "deducciones-doble-imposicion-interna-rdle-eadf93-2"
+heading_key = "modelo.schema.200.form.section.deducciones-doble-imposicion-interna-rdle-eadf93.heading"
+official_heading = "Deducciones doble imposición interna RDLeg. 4/2004"
+blocks = [
     { kind = "field", id = "field", casilla_id = "00920" },
 ]
 
@@ -3979,11 +4172,93 @@ id = "deducciones-doble-imposicion-interna-dt-23-1-lis"
 heading_key = "modelo.schema.200.form.section.deducciones-doble-imposicion-interna-dt-23-1-lis.heading"
 official_heading = "Deducciones doble imposición interna (DT 23.1 LIS)"
 blocks = [
-    { kind = "grid", id = "grid", columns = [{ key = "pendiente_inicio", heading_key = "modelo.form.column.pendiente_inicio", official_heading = "Deducción pendiente" }, { key = "tipo-gravamen-periodo-generacion", heading_key = "modelo.schema.200.form.column.tipo-gravamen-periodo-generacion.heading", official_heading = "Tipo gravamen período generación" }, { key = "aplicado", heading_key = "modelo.form.column.aplicado", official_heading = "Aplicado en esta liquidación" }, { key = "pendiente_futuro", heading_key = "modelo.form.column.pendiente_futuro", official_heading = "Pendiente aplic. en períodos futuros" }], rows = [{ key = "di-interna-2017", heading_key = "modelo.schema.200.form.row.di-interna-2017.heading", official_heading = "DI interna 2017", cells = [{ kind = "casilla", casilla_id = "01595" }, { kind = "casilla", casilla_id = "01596" }, { kind = "casilla", casilla_id = "01598" }, { kind = "casilla", casilla_id = "01599" }] }, { key = "di-interna-2018", heading_key = "modelo.schema.200.form.row.di-interna-2018.heading", official_heading = "DI interna 2018", cells = [{ kind = "casilla", casilla_id = "01828" }, { kind = "casilla", casilla_id = "01829" }, { kind = "casilla", casilla_id = "01831" }, { kind = "casilla", casilla_id = "01832" }] }, { key = "di-interna-2019", heading_key = "modelo.schema.200.form.row.di-interna-2019.heading", official_heading = "DI interna 2019", cells = [{ kind = "casilla", casilla_id = "02196" }, { kind = "casilla", casilla_id = "02197" }, { kind = "casilla", casilla_id = "02199" }, { kind = "casilla", casilla_id = "02200" }] }, { key = "di-interna-2020", heading_key = "modelo.schema.200.form.row.di-interna-2020.heading", official_heading = "DI interna 2020", cells = [{ kind = "casilla", casilla_id = "02319" }, { kind = "casilla", casilla_id = "02320" }, { kind = "casilla", casilla_id = "02322" }, { kind = "casilla", casilla_id = "02323" }] }] },
+    { kind = "grid", id = "grid", columns = [{ key = "pendiente_inicio", heading_key = "modelo.form.column.pendiente_inicio", official_heading = "Deducción pendiente" }, { key = "tipo-gravamen-periodo-generacion", heading_key = "modelo.schema.200.form.column.tipo-gravamen-periodo-generacion.heading", official_heading = "Tipo gravamen período generación" }], rows = [{ key = "di-interna-2017", heading_key = "modelo.schema.200.form.row.di-interna-2017.heading", official_heading = "DI interna 2017", cells = [{ kind = "casilla", casilla_id = "01595" }, { kind = "casilla", casilla_id = "01596" }] }] },
+]
+
+[[revisions.2022.form_layouts.pages.sections]]
+id = "deducciones-doble-imposicion-interna-dt-2-b6039c"
+heading_key = "modelo.schema.200.form.section.deducciones-doble-imposicion-interna-dt-2-b6039c.heading"
+official_heading = "Deducciones doble imposición interna (DT 23.1 LIS) - DI interna 2017"
+blocks = [
+    { kind = "field", id = "field", casilla_id = "01597" },
+]
+
+[[revisions.2022.form_layouts.pages.sections]]
+id = "deducciones-doble-imposicion-interna-dt-23-1-lis-2"
+heading_key = "modelo.schema.200.form.section.deducciones-doble-imposicion-interna-dt-23-1-lis.heading"
+official_heading = "Deducciones doble imposición interna (DT 23.1 LIS)"
+blocks = [
+    { kind = "grid", id = "grid", columns = [{ key = "aplicado", heading_key = "modelo.form.column.aplicado", official_heading = "Aplicado en esta liquidación" }, { key = "pendiente_futuro", heading_key = "modelo.form.column.pendiente_futuro", official_heading = "Pendiente aplic. en períodos futuros" }], rows = [{ key = "di-interna-2017", heading_key = "modelo.schema.200.form.row.di-interna-2017.heading", official_heading = "DI interna 2017", cells = [{ kind = "casilla", casilla_id = "01598" }, { kind = "casilla", casilla_id = "01599" }] }] },
+    { kind = "grid", id = "grid-2", columns = [{ key = "pendiente_inicio", heading_key = "modelo.form.column.pendiente_inicio", official_heading = "Deducción pendiente" }, { key = "tipo-gravamen-periodo-generacion", heading_key = "modelo.schema.200.form.column.tipo-gravamen-periodo-generacion.heading", official_heading = "Tipo gravamen período generación" }], rows = [{ key = "di-interna-2018", heading_key = "modelo.schema.200.form.row.di-interna-2018.heading", official_heading = "DI interna 2018", cells = [{ kind = "casilla", casilla_id = "01828" }, { kind = "casilla", casilla_id = "01829" }] }] },
+]
+
+[[revisions.2022.form_layouts.pages.sections]]
+id = "deducciones-doble-imposicion-interna-dt-2-1f7566"
+heading_key = "modelo.schema.200.form.section.deducciones-doble-imposicion-interna-dt-2-1f7566.heading"
+official_heading = "Deducciones doble imposición interna (DT 23.1 LIS) - DI interna 2018"
+blocks = [
+    { kind = "field", id = "field", casilla_id = "01830" },
+]
+
+[[revisions.2022.form_layouts.pages.sections]]
+id = "deducciones-doble-imposicion-interna-dt-23-1-lis-3"
+heading_key = "modelo.schema.200.form.section.deducciones-doble-imposicion-interna-dt-23-1-lis.heading"
+official_heading = "Deducciones doble imposición interna (DT 23.1 LIS)"
+blocks = [
+    { kind = "grid", id = "grid", columns = [{ key = "aplicado", heading_key = "modelo.form.column.aplicado", official_heading = "Aplicado en esta liquidación" }, { key = "pendiente_futuro", heading_key = "modelo.form.column.pendiente_futuro", official_heading = "Pendiente aplic. en períodos futuros" }], rows = [{ key = "di-interna-2018", heading_key = "modelo.schema.200.form.row.di-interna-2018.heading", official_heading = "DI interna 2018", cells = [{ kind = "casilla", casilla_id = "01831" }, { kind = "casilla", casilla_id = "01832" }] }] },
+    { kind = "grid", id = "grid-2", columns = [{ key = "pendiente_inicio", heading_key = "modelo.form.column.pendiente_inicio", official_heading = "Deducción pendiente" }, { key = "tipo-gravamen-periodo-generacion", heading_key = "modelo.schema.200.form.column.tipo-gravamen-periodo-generacion.heading", official_heading = "Tipo gravamen período generación" }], rows = [{ key = "di-interna-2019", heading_key = "modelo.schema.200.form.row.di-interna-2019.heading", official_heading = "DI interna 2019", cells = [{ kind = "casilla", casilla_id = "02196" }, { kind = "casilla", casilla_id = "02197" }] }] },
+]
+
+[[revisions.2022.form_layouts.pages.sections]]
+id = "deducciones-doble-imposicion-interna-dt-2-21243f"
+heading_key = "modelo.schema.200.form.section.deducciones-doble-imposicion-interna-dt-2-21243f.heading"
+official_heading = "Deducciones doble imposición interna (DT 23.1 LIS) - DI interna 2019"
+blocks = [
+    { kind = "field", id = "field", casilla_id = "02198" },
+]
+
+[[revisions.2022.form_layouts.pages.sections]]
+id = "deducciones-doble-imposicion-interna-dt-23-1-lis-4"
+heading_key = "modelo.schema.200.form.section.deducciones-doble-imposicion-interna-dt-23-1-lis.heading"
+official_heading = "Deducciones doble imposición interna (DT 23.1 LIS)"
+blocks = [
+    { kind = "grid", id = "grid", columns = [{ key = "aplicado", heading_key = "modelo.form.column.aplicado", official_heading = "Aplicado en esta liquidación" }, { key = "pendiente_futuro", heading_key = "modelo.form.column.pendiente_futuro", official_heading = "Pendiente aplic. en períodos futuros" }], rows = [{ key = "di-interna-2019", heading_key = "modelo.schema.200.form.row.di-interna-2019.heading", official_heading = "DI interna 2019", cells = [{ kind = "casilla", casilla_id = "02199" }, { kind = "casilla", casilla_id = "02200" }] }] },
+    { kind = "grid", id = "grid-2", columns = [{ key = "pendiente_inicio", heading_key = "modelo.form.column.pendiente_inicio", official_heading = "Deducción pendiente" }, { key = "tipo-gravamen-periodo-generacion", heading_key = "modelo.schema.200.form.column.tipo-gravamen-periodo-generacion.heading", official_heading = "Tipo gravamen período generación" }], rows = [{ key = "di-interna-2020", heading_key = "modelo.schema.200.form.row.di-interna-2020.heading", official_heading = "DI interna 2020", cells = [{ kind = "casilla", casilla_id = "02319" }, { kind = "casilla", casilla_id = "02320" }] }] },
+]
+
+[[revisions.2022.form_layouts.pages.sections]]
+id = "deducciones-doble-imposicion-interna-dt-2-431183"
+heading_key = "modelo.schema.200.form.section.deducciones-doble-imposicion-interna-dt-2-431183.heading"
+official_heading = "Deducciones doble imposición interna (DT 23.1 LIS) - DI interna 2020"
+blocks = [
+    { kind = "field", id = "field", casilla_id = "02321" },
+]
+
+[[revisions.2022.form_layouts.pages.sections]]
+id = "deducciones-doble-imposicion-interna-dt-23-1-lis-5"
+heading_key = "modelo.schema.200.form.section.deducciones-doble-imposicion-interna-dt-23-1-lis.heading"
+official_heading = "Deducciones doble imposición interna (DT 23.1 LIS)"
+blocks = [
+    { kind = "grid", id = "grid", columns = [{ key = "aplicado", heading_key = "modelo.form.column.aplicado", official_heading = "Aplicado en esta liquidación" }, { key = "pendiente_futuro", heading_key = "modelo.form.column.pendiente_futuro", official_heading = "Pendiente aplic. en períodos futuros" }], rows = [{ key = "di-interna-2020", heading_key = "modelo.schema.200.form.row.di-interna-2020.heading", official_heading = "DI interna 2020", cells = [{ kind = "casilla", casilla_id = "02322" }, { kind = "casilla", casilla_id = "02323" }] }] },
     { kind = "field", id = "field", casilla_id = "01342" },
-    { kind = "field", id = "field-2", casilla_id = "01345" },
-    { kind = "field", id = "field-3", casilla_id = "01346" },
-    { kind = "field", id = "field-4", casilla_id = "01347" },
+]
+
+[[revisions.2022.form_layouts.pages.sections]]
+id = "deducciones-doble-imposicion-interna-dt-2-03ace4"
+heading_key = "modelo.schema.200.form.section.deducciones-doble-imposicion-interna-dt-2-03ace4.heading"
+official_heading = "Deducciones doble imposición interna (DT 23.1 LIS) - Total"
+blocks = [
+    { kind = "field", id = "field", casilla_id = "01343" },
+]
+
+[[revisions.2022.form_layouts.pages.sections]]
+id = "deducciones-doble-imposicion-interna-dt-23-1-lis-6"
+heading_key = "modelo.schema.200.form.section.deducciones-doble-imposicion-interna-dt-23-1-lis.heading"
+official_heading = "Deducciones doble imposición interna (DT 23.1 LIS)"
+blocks = [
+    { kind = "field", id = "field", casilla_id = "01345" },
+    { kind = "field", id = "field-2", casilla_id = "01346" },
+    { kind = "field", id = "field-3", casilla_id = "01347" },
 ]
 
 [[revisions.2022.form_layouts.pages.sections]]
@@ -3991,10 +4266,13 @@ id = "deducciones-doble-imposicion-internaciona-d367fa"
 heading_key = "modelo.schema.200.form.section.deducciones-doble-imposicion-internaciona-d367fa.heading"
 official_heading = "Deducciones doble imposición internacional RDLeg. 4/2004"
 blocks = [
-    { kind = "field", id = "field", casilla_id = "00894" },
-    { kind = "grid", id = "grid", columns = [{ key = "aplicado", heading_key = "modelo.form.column.aplicado", official_heading = "Aplicado en esta liquidación" }, { key = "pendiente_futuro", heading_key = "modelo.form.column.pendiente_futuro", official_heading = "Pendiente aplic. en períodos futuros" }], rows = [{ key = "di-internacional-2008", heading_key = "modelo.schema.200.form.row.di-internacional-2008.heading", official_heading = "DI internacional 2008", cells = [{ kind = "casilla", casilla_id = "00826" }, { kind = "casilla", casilla_id = "00827" }] }] },
-    { kind = "field", id = "field-2", casilla_id = "00921" },
-    { kind = "field", id = "field-3", casilla_id = "00926" },
+    { kind = "field", id = "field", casilla_id = "00849" },
+    { kind = "field", id = "field-2", casilla_id = "00894" },
+    { kind = "field", id = "field-3", casilla_id = "00825" },
+    { kind = "field", id = "field-4", casilla_id = "00826" },
+    { kind = "field", id = "field-5", casilla_id = "00827" },
+    { kind = "field", id = "field-6", casilla_id = "00921" },
+    { kind = "field", id = "field-7", casilla_id = "00926" },
 ]
 
 [[revisions.2022.form_layouts.pages]]
@@ -4007,7 +4285,7 @@ id = "deducciones-doble-imposicion-internacional-lis"
 heading_key = "modelo.schema.200.form.section.deducciones-doble-imposicion-internacional-lis.heading"
 official_heading = "Deducciones doble imposición internacional LIS"
 blocks = [
-    { kind = "grid", id = "grid", columns = [{ key = "pendiente_inicio", heading_key = "modelo.form.column.pendiente_inicio", official_heading = "Deducción pendiente" }, { key = "tipo-gravamen-periodo-generacion", heading_key = "modelo.schema.200.form.column.tipo-gravamen-periodo-generacion.heading", official_heading = "Tipo gravamen período generación" }, { key = "aplicado", heading_key = "modelo.form.column.aplicado", official_heading = "Aplicado en esta liquidación" }, { key = "pendiente_futuro", heading_key = "modelo.form.column.pendiente_futuro", official_heading = "Pendiente aplic. en períodos futuros" }], rows = [{ key = "di-internacional-2015", heading_key = "modelo.schema.200.form.row.di-internacional-2015.heading", official_heading = "DI internacional 2015", cells = [{ kind = "casilla", casilla_id = "01054" }, { kind = "casilla", casilla_id = "01050" }, { kind = "casilla", casilla_id = "01052" }, { kind = "casilla", casilla_id = "01053" }] }, { key = "di-internacional-2016", heading_key = "modelo.schema.200.form.row.di-internacional-2016.heading", official_heading = "DI internacional 2016", cells = [{ kind = "casilla", casilla_id = "01348" }, { kind = "casilla", casilla_id = "01349" }, { kind = "casilla", casilla_id = "01351" }, { kind = "casilla", casilla_id = "01352" }] }, { key = "di-internacional-2017", heading_key = "modelo.schema.200.form.row.di-internacional-2017.heading", official_heading = "DI internacional 2017", cells = [{ kind = "casilla", casilla_id = "01770" }, { kind = "casilla", casilla_id = "01771" }, { kind = "casilla", casilla_id = "01773" }, { kind = "casilla", casilla_id = "01774" }] }, { key = "di-internacional-2018", heading_key = "modelo.schema.200.form.row.di-internacional-2018.heading", official_heading = "DI internacional 2018", cells = [{ kind = "casilla", casilla_id = "01833" }, { kind = "casilla", casilla_id = "01834" }, { kind = "casilla", casilla_id = "01836" }, { kind = "casilla", casilla_id = "01837" }] }, { key = "di-internacional-2019", heading_key = "modelo.schema.200.form.row.di-internacional-2019.heading", official_heading = "DI internacional 2019", cells = [{ kind = "casilla", casilla_id = "02201" }, { kind = "casilla", casilla_id = "02202" }, { kind = "casilla", casilla_id = "02204" }, { kind = "casilla", casilla_id = "02205" }] }, { key = "di-internacional-2020", heading_key = "modelo.schema.200.form.row.di-internacional-2020.heading", official_heading = "DI internacional 2020", cells = [{ kind = "casilla", casilla_id = "02324" }, { kind = "casilla", casilla_id = "02325" }, { kind = "casilla", casilla_id = "02327" }, { kind = "casilla", casilla_id = "02328" }] }] },
+    { kind = "grid", id = "grid", columns = [{ key = "pendiente_inicio", heading_key = "modelo.form.column.pendiente_inicio", official_heading = "Deducción pendiente" }, { key = "tipo-gravamen-periodo-generacion", heading_key = "modelo.schema.200.form.column.tipo-gravamen-periodo-generacion.heading", official_heading = "Tipo gravamen período generación" }, { key = "2022-deduccion-pendiente", heading_key = "modelo.schema.200.form.column.2022-deduccion-pendiente.heading", official_heading = "2022 Deducción pendiente" }, { key = "aplicado", heading_key = "modelo.form.column.aplicado", official_heading = "Aplicado en esta liquidación" }, { key = "pendiente_futuro", heading_key = "modelo.form.column.pendiente_futuro", official_heading = "Pendiente aplic. en períodos futuros" }], rows = [{ key = "di-internacional-2015", heading_key = "modelo.schema.200.form.row.di-internacional-2015.heading", official_heading = "DI internacional 2015", cells = [{ kind = "casilla", casilla_id = "01054" }, { kind = "casilla", casilla_id = "01050" }, { kind = "casilla", casilla_id = "01051" }, { kind = "casilla", casilla_id = "01052" }, { kind = "casilla", casilla_id = "01053" }] }, { key = "di-internacional-2016", heading_key = "modelo.schema.200.form.row.di-internacional-2016.heading", official_heading = "DI internacional 2016", cells = [{ kind = "casilla", casilla_id = "01348" }, { kind = "casilla", casilla_id = "01349" }, { kind = "casilla", casilla_id = "01350" }, { kind = "casilla", casilla_id = "01351" }, { kind = "casilla", casilla_id = "01352" }] }, { key = "di-internacional-2017", heading_key = "modelo.schema.200.form.row.di-internacional-2017.heading", official_heading = "DI internacional 2017", cells = [{ kind = "casilla", casilla_id = "01770" }, { kind = "casilla", casilla_id = "01771" }, { kind = "casilla", casilla_id = "01772" }, { kind = "casilla", casilla_id = "01773" }, { kind = "casilla", casilla_id = "01774" }] }, { key = "di-internacional-2018", heading_key = "modelo.schema.200.form.row.di-internacional-2018.heading", official_heading = "DI internacional 2018", cells = [{ kind = "casilla", casilla_id = "01833" }, { kind = "casilla", casilla_id = "01834" }, { kind = "casilla", casilla_id = "01835" }, { kind = "casilla", casilla_id = "01836" }, { kind = "casilla", casilla_id = "01837" }] }, { key = "di-internacional-2019", heading_key = "modelo.schema.200.form.row.di-internacional-2019.heading", official_heading = "DI internacional 2019", cells = [{ kind = "casilla", casilla_id = "02201" }, { kind = "casilla", casilla_id = "02202" }, { kind = "casilla", casilla_id = "02203" }, { kind = "casilla", casilla_id = "02204" }, { kind = "casilla", casilla_id = "02205" }] }, { key = "di-internacional-2020", heading_key = "modelo.schema.200.form.row.di-internacional-2020.heading", official_heading = "DI internacional 2020", cells = [{ kind = "casilla", casilla_id = "02324" }, { kind = "casilla", casilla_id = "02325" }, { kind = "casilla", casilla_id = "02326" }, { kind = "casilla", casilla_id = "02327" }, { kind = "casilla", casilla_id = "02328" }] }] },
 ]
 
 [[revisions.2022.form_layouts.pages.sections]]
@@ -4016,6 +4294,16 @@ heading_key = "modelo.schema.200.form.section.deducc-disposic-transit-24a-7-lis.
 official_heading = "Deducc. Disposic.Transit. 24ª.7 LIS"
 blocks = [
     { kind = "grid", id = "grid", columns = [{ key = "pendiente_generada", heading_key = "modelo.form.column.pendiente_generada", official_heading = "Deducción pendiente/generada" }, { key = "aplicado", heading_key = "modelo.form.column.aplicado", official_heading = "Aplicado en esta liquidación" }, { key = "pendiente_futuro", heading_key = "modelo.form.column.pendiente_futuro", official_heading = "Pendiente aplicación en periodos futuros" }], rows = [{ key = "deducc-art-42-rdleg-4-2004-2014", heading_key = "modelo.schema.200.form.row.deducc-art-42-rdleg-4-2004-2014.heading", official_heading = "Deducc. Art. 42 RDLeg. 4/2004 2014", cells = [{ kind = "casilla", casilla_id = "00803" }, { kind = "casilla", casilla_id = "00804" }, { kind = "casilla", casilla_id = "00805" }] }, { key = "deducc-dt-24a-7-lis-2015", heading_key = "modelo.schema.200.form.row.deducc-dt-24a-7-lis-2015.heading", official_heading = "Deducc. DT 24ª.7 LIS 2015", cells = [{ kind = "casilla", casilla_id = "01055" }, { kind = "casilla", casilla_id = "01056" }, { kind = "casilla", casilla_id = "01057" }] }, { key = "deducc-dt-24a-7-lis-2017", heading_key = "modelo.schema.200.form.row.deducc-dt-24a-7-lis-2017.heading", official_heading = "Deducc. DT 24ª.7 LIS 2017", cells = [{ kind = "casilla", casilla_id = "01353" }, { kind = "casilla", casilla_id = "01354" }, { kind = "casilla", casilla_id = "01355" }] }, { key = "deducc-dt-24a-7-lis-2018", heading_key = "modelo.schema.200.form.row.deducc-dt-24a-7-lis-2018.heading", official_heading = "Deducc. DT 24ª.7 LIS 2018", cells = [{ kind = "casilla", casilla_id = "01775" }, { kind = "casilla", casilla_id = "01776" }, { kind = "casilla", casilla_id = "01777" }] }, { key = "deducc-dt-24a-7-lis-2019", heading_key = "modelo.schema.200.form.row.deducc-dt-24a-7-lis-2019.heading", official_heading = "Deducc. DT 24ª.7 LIS 2019", cells = [{ kind = "casilla", casilla_id = "01838" }, { kind = "casilla", casilla_id = "01839" }, { kind = "casilla", casilla_id = "01840" }] }, { key = "deducc-dt-24a-7-lis-2020", heading_key = "modelo.schema.200.form.row.deducc-dt-24a-7-lis-2020.heading", official_heading = "Deducc. DT 24ª.7 LIS 2020", cells = [{ kind = "casilla", casilla_id = "02206" }, { kind = "casilla", casilla_id = "02207" }, { kind = "casilla", casilla_id = "02208" }] }, { key = "deducc-dt-24a-7-lis-2021", heading_key = "modelo.schema.200.form.row.deducc-dt-24a-7-lis-2021.heading", official_heading = "Deducc. DT 24ª.7 LIS 2021", cells = [{ kind = "casilla", casilla_id = "02329" }, { kind = "casilla", casilla_id = "02330" }, { kind = "casilla", casilla_id = "02331" }] }, { key = "total-deducc-art-36-ter-ley-43-1995-y-42-67b105", heading_key = "modelo.schema.200.form.row.total-deducc-art-36-ter-ley-43-1995-y-42-67b105.heading", official_heading = "Total Deducc. Art. 36 ter Ley 43 / 1995 y 42 RDLeg. 4/2004 y 24ª.7 LIS", cells = [{ kind = "casilla", casilla_id = "00841" }, { kind = "blank" }, { kind = "casilla", casilla_id = "00843" }] }] },
+]
+
+[[revisions.2022.form_layouts.pages.sections]]
+id = "deducciones-dt-24a-1-lis"
+heading_key = "modelo.schema.200.form.section.deducciones-dt-24a-1-lis.heading"
+official_heading = "Deducciones DT 24ª.1 LIS"
+blocks = [
+    { kind = "grid", id = "grid", columns = [{ key = "pendiente_generada", heading_key = "modelo.form.column.pendiente_generada", official_heading = "Deducción pendiente/generada" }, { key = "aplicado", heading_key = "modelo.form.column.aplicado", official_heading = "Aplicado en esta liquidación" }], rows = [{ key = "2017-periodificacion", heading_key = "modelo.schema.200.form.row.2017-periodificacion.heading", official_heading = "2017 Periodificación", cells = [{ kind = "casilla", casilla_id = "00749" }, { kind = "casilla", casilla_id = "00750" }] }] },
+    { kind = "grid", id = "grid-2", columns = [{ key = "pendiente_generada", heading_key = "modelo.form.column.pendiente_generada", official_heading = "Deducción pendiente/generada" }, { key = "aplicado", heading_key = "modelo.form.column.aplicado", official_heading = "Aplicado en esta liquidación" }, { key = "pendiente_futuro", heading_key = "modelo.form.column.pendiente_futuro", official_heading = "Pendiente de aplicación en periodos futuros" }], rows = [{ key = "2018-periodificacion", heading_key = "modelo.schema.200.form.row.2018-periodificacion.heading", official_heading = "2018 Periodificación", cells = [{ kind = "casilla", casilla_id = "00752" }, { kind = "casilla", casilla_id = "00753" }, { kind = "casilla", casilla_id = "00754" }] }, { key = "2019-periodificacion", heading_key = "modelo.schema.200.form.row.2019-periodificacion.heading", official_heading = "2019 Periodificación", cells = [{ kind = "casilla", casilla_id = "00755" }, { kind = "casilla", casilla_id = "00756" }, { kind = "casilla", casilla_id = "00757" }] }, { key = "2020-periodificacion", heading_key = "modelo.schema.200.form.row.2020-periodificacion.heading", official_heading = "2020 Periodificación", cells = [{ kind = "casilla", casilla_id = "00758" }, { kind = "casilla", casilla_id = "00759" }, { kind = "blank" }] }, { key = "2022-periodificacion", heading_key = "modelo.schema.200.form.row.2022-periodificacion.heading", official_heading = "2022(*) Periodificación", cells = [{ kind = "casilla", casilla_id = "00744" }, { kind = "casilla", casilla_id = "00745" }, { kind = "casilla", casilla_id = "00746" }] }] },
+    { kind = "field", id = "field", casilla_id = "00779" },
 ]
 
 [[revisions.2022.form_layouts.pages]]
@@ -4031,6 +4319,19 @@ blocks = [
     { kind = "grid", id = "grid", columns = [{ key = "pendiente_generada", heading_key = "modelo.form.column.pendiente_generada", official_heading = "Deducción pendiente/generada" }, { key = "aplicado", heading_key = "modelo.form.column.aplicado", official_heading = "Aplicado en esta liquidación" }, { key = "pendiente_futuro", heading_key = "modelo.form.column.pendiente_futuro", official_heading = "Pendiente de aplicación en periodos futuros" }], rows = [{ key = "activos-fijos-2010", heading_key = "modelo.schema.200.form.row.activos-fijos-2010.heading", official_heading = "Activos fijos 2010", cells = [{ kind = "casilla", casilla_id = "00854" }, { kind = "casilla", casilla_id = "00855" }, { kind = "casilla", casilla_id = "01356" }] }, { key = "activos-fijos-2011", heading_key = "modelo.schema.200.form.row.activos-fijos-2011.heading", official_heading = "Activos fijos 2011", cells = [{ kind = "casilla", casilla_id = "00857" }, { kind = "casilla", casilla_id = "00858" }, { kind = "casilla", casilla_id = "00859" }] }, { key = "activos-fijos-2012", heading_key = "modelo.schema.200.form.row.activos-fijos-2012.heading", official_heading = "Activos fijos 2012", cells = [{ kind = "casilla", casilla_id = "00860" }, { kind = "casilla", casilla_id = "00861" }, { kind = "casilla", casilla_id = "00862" }] }, { key = "activos-fijos-2013", heading_key = "modelo.schema.200.form.row.activos-fijos-2013.heading", official_heading = "Activos fijos 2013", cells = [{ kind = "casilla", casilla_id = "00863" }, { kind = "casilla", casilla_id = "00864" }, { kind = "casilla", casilla_id = "00865" }] }, { key = "activos-fijos-2014", heading_key = "modelo.schema.200.form.row.activos-fijos-2014.heading", official_heading = "Activos fijos 2014", cells = [{ kind = "casilla", casilla_id = "00883" }, { kind = "casilla", casilla_id = "00884" }, { kind = "casilla", casilla_id = "00885" }] }, { key = "activos-fijos-2016", heading_key = "modelo.schema.200.form.row.activos-fijos-2016.heading", official_heading = "Activos fijos 2016", cells = [{ kind = "casilla", casilla_id = "01357" }, { kind = "casilla", casilla_id = "01358" }, { kind = "casilla", casilla_id = "01359" }] }, { key = "activos-fijos-2017", heading_key = "modelo.schema.200.form.row.activos-fijos-2017.heading", official_heading = "Activos fijos 2017", cells = [{ kind = "casilla", casilla_id = "01778" }, { kind = "casilla", casilla_id = "01779" }, { kind = "casilla", casilla_id = "01780" }] }, { key = "activos-fijos-2018", heading_key = "modelo.schema.200.form.row.activos-fijos-2018.heading", official_heading = "Activos fijos 2018", cells = [{ kind = "casilla", casilla_id = "00852" }, { kind = "casilla", casilla_id = "00853" }, { kind = "casilla", casilla_id = "00856" }] }, { key = "activos-fijos-2019", heading_key = "modelo.schema.200.form.row.activos-fijos-2019.heading", official_heading = "Activos fijos 2019", cells = [{ kind = "casilla", casilla_id = "02116" }, { kind = "casilla", casilla_id = "02117" }, { kind = "casilla", casilla_id = "02118" }] }, { key = "activos-fijos-2020", heading_key = "modelo.schema.200.form.row.activos-fijos-2020.heading", official_heading = "Activos fijos 2020", cells = [{ kind = "casilla", casilla_id = "02209" }, { kind = "casilla", casilla_id = "02210" }, { kind = "casilla", casilla_id = "02211" }] }, { key = "activos-fijos-2021", heading_key = "modelo.schema.200.form.row.activos-fijos-2021.heading", official_heading = "Activos fijos 2021", cells = [{ kind = "casilla", casilla_id = "02332" }, { kind = "casilla", casilla_id = "02333" }, { kind = "casilla", casilla_id = "02334" }] }, { key = "activos-fijos-en-la-palma-la-gomera-y-el-14d5d6", heading_key = "modelo.schema.200.form.row.activos-fijos-en-la-palma-la-gomera-y-el-14d5d6.heading", official_heading = "Activos fijos en La Palma, La Gomera y el Hierro 2018", cells = [{ kind = "casilla", casilla_id = "02335" }, { kind = "casilla", casilla_id = "02336" }, { kind = "casilla", casilla_id = "02337" }] }, { key = "activos-fijos-en-la-palma-la-gomera-y-el-a83ee5", heading_key = "modelo.schema.200.form.row.activos-fijos-en-la-palma-la-gomera-y-el-a83ee5.heading", official_heading = "Activos fijos en La Palma, La Gomera y el Hierro 2019", cells = [{ kind = "casilla", casilla_id = "02338" }, { kind = "casilla", casilla_id = "02339" }, { kind = "casilla", casilla_id = "02340" }] }, { key = "activos-fijos-en-la-palma-la-gomera-y-el-c298d7", heading_key = "modelo.schema.200.form.row.activos-fijos-en-la-palma-la-gomera-y-el-c298d7.heading", official_heading = "Activos fijos en La Palma, La Gomera y el Hierro 2020", cells = [{ kind = "casilla", casilla_id = "02341" }, { kind = "casilla", casilla_id = "02342" }, { kind = "casilla", casilla_id = "02343" }] }, { key = "activos-fijos-en-la-palma-la-gomera-y-el-a3b20d", heading_key = "modelo.schema.200.form.row.activos-fijos-en-la-palma-la-gomera-y-el-a3b20d.heading", official_heading = "Activos fijos en La Palma, La Gomera y el Hierro 2021", cells = [{ kind = "casilla", casilla_id = "02344" }, { kind = "casilla", casilla_id = "02345" }, { kind = "casilla", casilla_id = "02346" }] }, { key = "inversiones-canarias-2006", heading_key = "modelo.schema.200.form.row.inversiones-canarias-2006.heading", official_heading = "Inversiones Canarias 2006", cells = [{ kind = "casilla", casilla_id = "00939" }, { kind = "casilla", casilla_id = "00940" }, { kind = "blank" }] }] },
     { kind = "field", id = "field", casilla_id = "DP200016B:00257" },
     { kind = "grid", id = "grid-2", columns = [{ key = "pendiente_generada", heading_key = "modelo.form.column.pendiente_generada", official_heading = "Deducción pendiente/generada" }, { key = "aplicado", heading_key = "modelo.form.column.aplicado", official_heading = "Aplicado en esta liquidación" }, { key = "pendiente_futuro", heading_key = "modelo.form.column.pendiente_futuro", official_heading = "Pendiente de aplicación en periodos futuros" }], rows = [{ key = "inversiones-canarias-2016", heading_key = "modelo.schema.200.form.row.inversiones-canarias-2016.heading", official_heading = "Inversiones Canarias 2016", cells = [{ kind = "casilla", casilla_id = "01058" }, { kind = "casilla", casilla_id = "01059" }, { kind = "casilla", casilla_id = "01060" }] }, { key = "inversiones-canarias-2017", heading_key = "modelo.schema.200.form.row.inversiones-canarias-2017.heading", official_heading = "Inversiones Canarias 2017", cells = [{ kind = "blank" }, { kind = "casilla", casilla_id = "00802" }, { kind = "casilla", casilla_id = "00806" }] }, { key = "inversiones-canarias-2018", heading_key = "modelo.schema.200.form.row.inversiones-canarias-2018.heading", official_heading = "Inversiones Canarias 2018", cells = [{ kind = "casilla", casilla_id = "01781" }, { kind = "casilla", casilla_id = "01782" }, { kind = "casilla", casilla_id = "01783" }] }, { key = "inversiones-canarias-2019", heading_key = "modelo.schema.200.form.row.inversiones-canarias-2019.heading", official_heading = "Inversiones Canarias 2019", cells = [{ kind = "casilla", casilla_id = "02122" }, { kind = "casilla", casilla_id = "02123" }, { kind = "casilla", casilla_id = "02124" }] }, { key = "inversiones-canarias-2020", heading_key = "modelo.schema.200.form.row.inversiones-canarias-2020.heading", official_heading = "Inversiones Canarias 2020", cells = [{ kind = "casilla", casilla_id = "02212" }, { kind = "casilla", casilla_id = "02213" }, { kind = "casilla", casilla_id = "02214" }] }, { key = "inversiones-canarias-2021", heading_key = "modelo.schema.200.form.row.inversiones-canarias-2021.heading", official_heading = "Inversiones Canarias 2021", cells = [{ kind = "casilla", casilla_id = "02347" }, { kind = "casilla", casilla_id = "02348" }, { kind = "casilla", casilla_id = "02349" }] }, { key = "inversiones-en-la-palma-la-gomera-y-el-hi-74bf69", heading_key = "modelo.schema.200.form.row.inversiones-en-la-palma-la-gomera-y-el-hi-74bf69.heading", official_heading = "Inversiones en La Palma, La Gomera y El Hierro 2018", cells = [{ kind = "casilla", casilla_id = "02119" }, { kind = "casilla", casilla_id = "02120" }, { kind = "casilla", casilla_id = "02121" }] }, { key = "inversiones-en-la-palma-la-gomera-y-el-hi-3ac35e", heading_key = "modelo.schema.200.form.row.inversiones-en-la-palma-la-gomera-y-el-hi-3ac35e.heading", official_heading = "Inversiones en La Palma, La Gomera y El Hierro 2019", cells = [{ kind = "casilla", casilla_id = "02125" }, { kind = "casilla", casilla_id = "02126" }, { kind = "casilla", casilla_id = "02127" }] }, { key = "inversiones-en-la-palma-la-gomera-y-el-hi-b1b9d8", heading_key = "modelo.schema.200.form.row.inversiones-en-la-palma-la-gomera-y-el-hi-b1b9d8.heading", official_heading = "Inversiones en La Palma, La Gomera y El Hierro 2020", cells = [{ kind = "casilla", casilla_id = "02215" }, { kind = "casilla", casilla_id = "02216" }, { kind = "casilla", casilla_id = "02217" }] }, { key = "inversiones-en-la-palma-la-gomera-y-el-hi-36f831", heading_key = "modelo.schema.200.form.row.inversiones-en-la-palma-la-gomera-y-el-hi-36f831.heading", official_heading = "Inversiones en La Palma, La Gomera y El Hierro 2021", cells = [{ kind = "casilla", casilla_id = "02350" }, { kind = "casilla", casilla_id = "02351" }, { kind = "casilla", casilla_id = "02352" }] }, { key = "total", heading_key = "modelo.schema.200.form.row.total.heading", official_heading = "Total", cells = [{ kind = "casilla", casilla_id = "00886" }, { kind = "blank" }, { kind = "casilla", casilla_id = "00887" }] }] },
+]
+
+[[revisions.2022.form_layouts.pages.sections]]
+id = "informacion-adicional-para-el-calculo-de-fba972"
+heading_key = "modelo.schema.200.form.section.informacion-adicional-para-el-calculo-de-fba972.heading"
+official_heading = "Información adicional para el cálculo de límites de deducciones"
+blocks = [
+    { kind = "field", id = "field", casilla_id = "02287" },
+    { kind = "field", id = "field-2", casilla_id = "02288" },
+    { kind = "field", id = "field-3", casilla_id = "02495" },
+    { kind = "field", id = "field-4", casilla_id = "02079" },
+    { kind = "field", id = "field-5", casilla_id = "02496" },
+    { kind = "field", id = "field-6", casilla_id = "02080" },
 ]
 
 [[revisions.2022.form_layouts.pages]]
@@ -4050,7 +4351,7 @@ blocks = [
     { kind = "grid", id = "grid-3", columns = [{ key = "pendiente_generada", heading_key = "modelo.form.column.pendiente_generada", official_heading = "Deducción pendiente/generada" }, { key = "aplicado", heading_key = "modelo.form.column.aplicado", official_heading = "Aplicado en esta liquidación" }, { key = "pendiente_futuro", heading_key = "modelo.form.column.pendiente_futuro", official_heading = "Pendiente de aplicación en periodos futuros" }], rows = [{ key = "2013-suma-deducciones", heading_key = "modelo.schema.200.form.row.2013-suma-deducciones.heading", official_heading = "2013 Suma deducciones", cells = [{ kind = "casilla", casilla_id = "00966" }, { kind = "casilla", casilla_id = "00967" }, { kind = "casilla", casilla_id = "00968" }] }] },
     { kind = "field", id = "field-3", casilla_id = "00459" },
     { kind = "field", id = "field-4", casilla_id = "00460" },
-    { kind = "grid", id = "grid-4", columns = [{ key = "pendiente_generada", heading_key = "modelo.form.column.pendiente_generada", official_heading = "Deducción pendiente/generada" }, { key = "aplicado", heading_key = "modelo.form.column.aplicado", official_heading = "Aplicado en esta liquidación" }, { key = "pendiente_futuro", heading_key = "modelo.form.column.pendiente_futuro", official_heading = "Pendiente de aplicación en periodos futuros" }], rows = [{ key = "2014-suma-deducciones", heading_key = "modelo.schema.200.form.row.2014-suma-deducciones.heading", official_heading = "2014 Suma deducciones", cells = [{ kind = "casilla", casilla_id = "01063" }, { kind = "casilla", casilla_id = "01064" }, { kind = "casilla", casilla_id = "01065" }] }, { key = "2014-investigacion-y-desarrollo", heading_key = "modelo.schema.200.form.row.2014-investigacion-y-desarrollo.heading", official_heading = "2014 Investigación y desarrollo", cells = [{ kind = "casilla", casilla_id = "01066" }, { kind = "casilla", casilla_id = "01067" }, { kind = "casilla", casilla_id = "01068" }] }, { key = "2014-innovacion-tecnologica", heading_key = "modelo.schema.200.form.row.2014-innovacion-tecnologica.heading", official_heading = "2014 Innovación tecnológica", cells = [{ kind = "casilla", casilla_id = "01069" }, { kind = "casilla", casilla_id = "01070" }, { kind = "casilla", casilla_id = "01071" }] }, { key = "2015-suma-deducciones-cap-iv-tit-vi-ley-4-717c4a", heading_key = "modelo.schema.200.form.row.2015-suma-deducciones-cap-iv-tit-vi-ley-4-717c4a.heading", official_heading = "2015 Suma deducciones Cap. IV Tit. VI Ley 43/95, RDLeg. 4/2004 y LIS (excepto I+D+i y TAP)", cells = [{ kind = "casilla", casilla_id = "02294" }, { kind = "casilla", casilla_id = "02295" }, { kind = "casilla", casilla_id = "02296" }] }, { key = "2015-investigacion-y-desarrollo", heading_key = "modelo.schema.200.form.row.2015-investigacion-y-desarrollo.heading", official_heading = "2015 Investigación y desarrollo", cells = [{ kind = "casilla", casilla_id = "00986" }, { kind = "casilla", casilla_id = "00810" }, { kind = "blank" }] }, { key = "2015-inversiones-en-territ-africa-occiden-ce8e87", heading_key = "modelo.schema.200.form.row.2015-inversiones-en-territ-africa-occiden-ce8e87.heading", official_heading = "2015 Inversiones en territ. África Occidental y gastos de propaganda y publicidad (art. 27 bis Ley 19/1994) (TAP)", cells = [{ kind = "casilla", casilla_id = "02081" }, { kind = "casilla", casilla_id = "02082" }, { kind = "casilla", casilla_id = "02083" }] }, { key = "2016-suma-deducciones-cap-iv-tit-vi-ley-4-287052", heading_key = "modelo.schema.200.form.row.2016-suma-deducciones-cap-iv-tit-vi-ley-4-287052.heading", official_heading = "2016 Suma deducciones Cap. IV Tit. VI Ley 43/95, RDLeg. 4/2004 y LIS (excepto I+D+i y TAP)", cells = [{ kind = "casilla", casilla_id = "02297" }, { kind = "casilla", casilla_id = "02298" }, { kind = "casilla", casilla_id = "02299" }] }, { key = "2016-investigacion-y-desarrollo-ct", heading_key = "modelo.schema.200.form.row.2016-investigacion-y-desarrollo-ct.heading", official_heading = "2016 Investigación y desarrollo (CT)", cells = [{ kind = "casilla", casilla_id = "01617" }, { kind = "casilla", casilla_id = "01618" }, { kind = "casilla", casilla_id = "01619" }] }, { key = "2016-innovacion-tecnologica-it", heading_key = "modelo.schema.200.form.row.2016-innovacion-tecnologica-it.heading", official_heading = "2016 Innovación tecnológica (IT)", cells = [{ kind = "casilla", casilla_id = "01620" }, { kind = "casilla", casilla_id = "01621" }, { kind = "casilla", casilla_id = "01622" }] }, { key = "2016-inversiones-en-territ-africa-occiden-577d22", heading_key = "modelo.schema.200.form.row.2016-inversiones-en-territ-africa-occiden-577d22.heading", official_heading = "2016 Inversiones en territ. África Occidental y gastos de propaganda y publicidad (art. 27 bis Ley 19/1994) (TAP)", cells = [{ kind = "casilla", casilla_id = "02084" }, { kind = "casilla", casilla_id = "02085" }, { kind = "casilla", casilla_id = "02086" }] }, { key = "2017-suma-deducciones-cap-iv-tit-vi-ley-4-73c7f2", heading_key = "modelo.schema.200.form.row.2017-suma-deducciones-cap-iv-tit-vi-ley-4-73c7f2.heading", official_heading = "2017 Suma deducciones Cap. IV Tit. VI Ley 43/95, RDLeg. 4/2004 y LIS (excepto I+D+i y TAP)", cells = [{ kind = "casilla", casilla_id = "02300" }, { kind = "casilla", casilla_id = "02500" }, { kind = "casilla", casilla_id = "02087" }] }, { key = "2017-investigacion-y-desarrollo-ct", heading_key = "modelo.schema.200.form.row.2017-investigacion-y-desarrollo-ct.heading", official_heading = "2017 Investigación y desarrollo (CT)", cells = [{ kind = "casilla", casilla_id = "01850" }, { kind = "casilla", casilla_id = "01851" }, { kind = "casilla", casilla_id = "01852" }] }, { key = "2017-innovacion-tecnologica-it", heading_key = "modelo.schema.200.form.row.2017-innovacion-tecnologica-it.heading", official_heading = "2017 Innovación tecnológica (IT)", cells = [{ kind = "casilla", casilla_id = "01853" }, { kind = "casilla", casilla_id = "01854" }, { kind = "casilla", casilla_id = "01855" }] }, { key = "2017-inversiones-en-territ-africa-occiden-69f1fb", heading_key = "modelo.schema.200.form.row.2017-inversiones-en-territ-africa-occiden-69f1fb.heading", official_heading = "2017 Inversiones en territ. África Occidental y gastos de propaganda y publicidad (art. 27 bis Ley 19/1994) (TAP)", cells = [{ kind = "casilla", casilla_id = "02088" }, { kind = "casilla", casilla_id = "02089" }, { kind = "casilla", casilla_id = "02090" }] }, { key = "2018-suma-deducciones-cap-iv-tit-vi-ley-4-a0f2c5", heading_key = "modelo.schema.200.form.row.2018-suma-deducciones-cap-iv-tit-vi-ley-4-a0f2c5.heading", official_heading = "2018 Suma deducciones Cap. IV Tit. VI Ley 43/95, RDLeg. 4/2004 y LIS (excepto I+D+i y TAP)", cells = [{ kind = "casilla", casilla_id = "02091" }, { kind = "casilla", casilla_id = "02092" }, { kind = "casilla", casilla_id = "02093" }] }, { key = "2018-investigacion-y-desarrollo-ct", heading_key = "modelo.schema.200.form.row.2018-investigacion-y-desarrollo-ct.heading", official_heading = "2018 Investigación y desarrollo (CT)", cells = [{ kind = "casilla", casilla_id = "02221" }, { kind = "casilla", casilla_id = "02222" }, { kind = "casilla", casilla_id = "02223" }] }, { key = "2018-innovacion-tecnologica-it", heading_key = "modelo.schema.200.form.row.2018-innovacion-tecnologica-it.heading", official_heading = "2018 Innovación tecnológica (IT)", cells = [{ kind = "casilla", casilla_id = "02224" }, { kind = "casilla", casilla_id = "02225" }, { kind = "casilla", casilla_id = "02226" }] }, { key = "2018-inversiones-en-territ-africa-occiden-aadde9", heading_key = "modelo.schema.200.form.row.2018-inversiones-en-territ-africa-occiden-aadde9.heading", official_heading = "2018 Inversiones en territ. África Occidental y gastos de propaganda y publicidad (art. 27 bis Ley 19/1994) (TAP)", cells = [{ kind = "casilla", casilla_id = "01916" }, { kind = "casilla", casilla_id = "01917" }, { kind = "casilla", casilla_id = "01918" }] }, { key = "2019-suma-deducciones-cap-iv-tit-vi-ley-4-5ed457", heading_key = "modelo.schema.200.form.row.2019-suma-deducciones-cap-iv-tit-vi-ley-4-5ed457.heading", official_heading = "2019 Suma deducciones Cap. IV Tit. VI Ley 43/95, RDLeg. 4/2004 y LIS (excepto I+D+i y TAP)", cells = [{ kind = "casilla", casilla_id = "02094" }, { kind = "casilla", casilla_id = "02095" }, { kind = "casilla", casilla_id = "02096" }] }, { key = "2019-investigacion-y-desarrollo-ct", heading_key = "modelo.schema.200.form.row.2019-investigacion-y-desarrollo-ct.heading", official_heading = "2019 Investigación y desarrollo (CT)", cells = [{ kind = "casilla", casilla_id = "02356" }, { kind = "casilla", casilla_id = "02357" }, { kind = "casilla", casilla_id = "02358" }] }, { key = "2019-innovacion-tecnologica-it", heading_key = "modelo.schema.200.form.row.2019-innovacion-tecnologica-it.heading", official_heading = "2019 Innovación tecnológica (IT)", cells = [{ kind = "casilla", casilla_id = "02359" }, { kind = "casilla", casilla_id = "02360" }, { kind = "casilla", casilla_id = "02361" }] }, { key = "2019-inversiones-en-territ-africa-occiden-10c92b", heading_key = "modelo.schema.200.form.row.2019-inversiones-en-territ-africa-occiden-10c92b.heading", official_heading = "2019 Inversiones en territ. África Occidental y gastos de propaganda y publicidad (art. 27 bis Ley 19/1994) (TAP)", cells = [{ kind = "casilla", casilla_id = "01919" }, { kind = "casilla", casilla_id = "01920" }, { kind = "casilla", casilla_id = "01921" }] }, { key = "2020-suma-deducciones-cap-iv-tit-vi-ley-4-b38d7e", heading_key = "modelo.schema.200.form.row.2020-suma-deducciones-cap-iv-tit-vi-ley-4-b38d7e.heading", official_heading = "2020 Suma deducciones Cap. IV Tit. VI Ley 43/95, RDLeg. 4/2004 y LIS (excepto I+D+i y TAP)", cells = [{ kind = "casilla", casilla_id = "02097" }, { kind = "casilla", casilla_id = "02098" }, { kind = "casilla", casilla_id = "02099" }] }, { key = "2020-inversiones-en-territ-africa-occiden-c5a2c7", heading_key = "modelo.schema.200.form.row.2020-inversiones-en-territ-africa-occiden-c5a2c7.heading", official_heading = "2020 Inversiones en territ. África Occidental y gastos de propaganda y publicidad (art. 27 bis Ley 19/1994) (TAP)", cells = [{ kind = "casilla", casilla_id = "01922" }, { kind = "casilla", casilla_id = "01923" }, { kind = "casilla", casilla_id = "01924" }] }, { key = "2021-suma-deducciones-cap-iv-tit-vi-ley-4-7a9514", heading_key = "modelo.schema.200.form.row.2021-suma-deducciones-cap-iv-tit-vi-ley-4-7a9514.heading", official_heading = "2021 Suma deducciones Cap. IV Tit. VI Ley 43/95, RDLeg. 4/2004 y LIS (excepto I+D+i y TAP)", cells = [{ kind = "casilla", casilla_id = "02145" }, { kind = "casilla", casilla_id = "02146" }, { kind = "casilla", casilla_id = "02448" }] }, { key = "2021-inversiones-en-territ-africa-occiden-e71ec4", heading_key = "modelo.schema.200.form.row.2021-inversiones-en-territ-africa-occiden-e71ec4.heading", official_heading = "2021 Inversiones en territ. África Occidental y gastos de propaganda y publicidad (art. 27 bis Ley 19/1994) (TAP)", cells = [{ kind = "casilla", casilla_id = "01925" }, { kind = "casilla", casilla_id = "01926" }, { kind = "casilla", casilla_id = "01927" }] }] },
+    { kind = "grid", id = "grid-4", columns = [{ key = "pendiente_generada", heading_key = "modelo.form.column.pendiente_generada", official_heading = "Deducción pendiente/generada" }, { key = "aplicado", heading_key = "modelo.form.column.aplicado", official_heading = "Aplicado en esta liquidación" }, { key = "pendiente_futuro", heading_key = "modelo.form.column.pendiente_futuro", official_heading = "Pendiente de aplicación en periodos futuros" }], rows = [{ key = "2014-suma-deducciones", heading_key = "modelo.schema.200.form.row.2014-suma-deducciones.heading", official_heading = "2014 Suma deducciones", cells = [{ kind = "casilla", casilla_id = "01063" }, { kind = "casilla", casilla_id = "01064" }, { kind = "casilla", casilla_id = "01065" }] }, { key = "2014-investigacion-y-desarrollo", heading_key = "modelo.schema.200.form.row.2014-investigacion-y-desarrollo.heading", official_heading = "2014 Investigación y desarrollo", cells = [{ kind = "casilla", casilla_id = "01066" }, { kind = "casilla", casilla_id = "01067" }, { kind = "casilla", casilla_id = "01068" }] }, { key = "2014-innovacion-tecnologica", heading_key = "modelo.schema.200.form.row.2014-innovacion-tecnologica.heading", official_heading = "2014 Innovación tecnológica", cells = [{ kind = "casilla", casilla_id = "01069" }, { kind = "casilla", casilla_id = "01070" }, { kind = "casilla", casilla_id = "01071" }] }, { key = "2015-suma-deducciones-cap-iv-tit-vi-ley-4-717c4a", heading_key = "modelo.schema.200.form.row.2015-suma-deducciones-cap-iv-tit-vi-ley-4-717c4a.heading", official_heading = "2015 Suma deducciones Cap. IV Tit. VI Ley 43/95, RDLeg. 4/2004 y LIS (excepto I+D+i y TAP)", cells = [{ kind = "casilla", casilla_id = "02294" }, { kind = "casilla", casilla_id = "02295" }, { kind = "casilla", casilla_id = "02296" }] }, { key = "2015-investigacion-y-desarrollo", heading_key = "modelo.schema.200.form.row.2015-investigacion-y-desarrollo.heading", official_heading = "2015 Investigación y desarrollo", cells = [{ kind = "casilla", casilla_id = "00986" }, { kind = "casilla", casilla_id = "00810" }, { kind = "blank" }] }, { key = "2015-inversiones-en-territ-africa-occiden-ce8e87", heading_key = "modelo.schema.200.form.row.2015-inversiones-en-territ-africa-occiden-ce8e87.heading", official_heading = "2015 Inversiones en territ. África Occidental y gastos de propaganda y publicidad (art. 27 bis Ley 19/1994) (TAP)", cells = [{ kind = "casilla", casilla_id = "02081" }, { kind = "casilla", casilla_id = "02082" }, { kind = "casilla", casilla_id = "02083" }] }, { key = "2016-suma-deducciones-cap-iv-tit-vi-ley-4-287052", heading_key = "modelo.schema.200.form.row.2016-suma-deducciones-cap-iv-tit-vi-ley-4-287052.heading", official_heading = "2016 Suma deducciones Cap. IV Tit. VI Ley 43/95, RDLeg. 4/2004 y LIS (excepto I+D+i y TAP)", cells = [{ kind = "casilla", casilla_id = "02297" }, { kind = "casilla", casilla_id = "02298" }, { kind = "casilla", casilla_id = "02299" }] }, { key = "2016-investigacion-y-desarrollo-ct", heading_key = "modelo.schema.200.form.row.2016-investigacion-y-desarrollo-ct.heading", official_heading = "2016 Investigación y desarrollo (CT)", cells = [{ kind = "casilla", casilla_id = "01617" }, { kind = "casilla", casilla_id = "01618" }, { kind = "casilla", casilla_id = "01619" }] }, { key = "2016-innovacion-tecnologica-it", heading_key = "modelo.schema.200.form.row.2016-innovacion-tecnologica-it.heading", official_heading = "2016 Innovación tecnológica (IT)", cells = [{ kind = "casilla", casilla_id = "01620" }, { kind = "casilla", casilla_id = "01621" }, { kind = "casilla", casilla_id = "01622" }] }, { key = "2016-inversiones-en-territ-africa-occiden-577d22", heading_key = "modelo.schema.200.form.row.2016-inversiones-en-territ-africa-occiden-577d22.heading", official_heading = "2016 Inversiones en territ. África Occidental y gastos de propaganda y publicidad (art. 27 bis Ley 19/1994) (TAP)", cells = [{ kind = "casilla", casilla_id = "02084" }, { kind = "casilla", casilla_id = "02085" }, { kind = "casilla", casilla_id = "02086" }] }, { key = "2017-suma-deducciones-cap-iv-tit-vi-ley-4-73c7f2", heading_key = "modelo.schema.200.form.row.2017-suma-deducciones-cap-iv-tit-vi-ley-4-73c7f2.heading", official_heading = "2017 Suma deducciones Cap. IV Tit. VI Ley 43/95, RDLeg. 4/2004 y LIS (excepto I+D+i y TAP)", cells = [{ kind = "casilla", casilla_id = "02300" }, { kind = "casilla", casilla_id = "02500" }, { kind = "casilla", casilla_id = "02087" }] }, { key = "2017-investigacion-y-desarrollo-ct", heading_key = "modelo.schema.200.form.row.2017-investigacion-y-desarrollo-ct.heading", official_heading = "2017 Investigación y desarrollo (CT)", cells = [{ kind = "casilla", casilla_id = "01850" }, { kind = "casilla", casilla_id = "01851" }, { kind = "casilla", casilla_id = "01852" }] }, { key = "2017-innovacion-tecnologica-it", heading_key = "modelo.schema.200.form.row.2017-innovacion-tecnologica-it.heading", official_heading = "2017 Innovación tecnológica (IT)", cells = [{ kind = "casilla", casilla_id = "01853" }, { kind = "casilla", casilla_id = "01854" }, { kind = "casilla", casilla_id = "01855" }] }, { key = "2017-inversiones-en-territ-africa-occiden-69f1fb", heading_key = "modelo.schema.200.form.row.2017-inversiones-en-territ-africa-occiden-69f1fb.heading", official_heading = "2017 Inversiones en territ. África Occidental y gastos de propaganda y publicidad (art. 27 bis Ley 19/1994) (TAP)", cells = [{ kind = "casilla", casilla_id = "02088" }, { kind = "casilla", casilla_id = "02089" }, { kind = "casilla", casilla_id = "02090" }] }, { key = "2018-suma-deducciones-cap-iv-tit-vi-ley-4-a0f2c5", heading_key = "modelo.schema.200.form.row.2018-suma-deducciones-cap-iv-tit-vi-ley-4-a0f2c5.heading", official_heading = "2018 Suma deducciones Cap. IV Tit. VI Ley 43/95, RDLeg. 4/2004 y LIS (excepto I+D+i y TAP)", cells = [{ kind = "casilla", casilla_id = "02091" }, { kind = "casilla", casilla_id = "02092" }, { kind = "casilla", casilla_id = "02093" }] }, { key = "2018-investigacion-y-desarrollo-ct", heading_key = "modelo.schema.200.form.row.2018-investigacion-y-desarrollo-ct.heading", official_heading = "2018 Investigación y desarrollo (CT)", cells = [{ kind = "casilla", casilla_id = "02221" }, { kind = "casilla", casilla_id = "02222" }, { kind = "casilla", casilla_id = "02223" }] }, { key = "2018-innovacion-tecnologica-it", heading_key = "modelo.schema.200.form.row.2018-innovacion-tecnologica-it.heading", official_heading = "2018 Innovación tecnológica (IT)", cells = [{ kind = "casilla", casilla_id = "02224" }, { kind = "casilla", casilla_id = "02225" }, { kind = "casilla", casilla_id = "02226" }] }, { key = "2018-inversiones-en-territ-africa-occiden-aadde9", heading_key = "modelo.schema.200.form.row.2018-inversiones-en-territ-africa-occiden-aadde9.heading", official_heading = "2018 Inversiones en territ. África Occidental y gastos de propaganda y publicidad (art. 27 bis Ley 19/1994) (TAP)", cells = [{ kind = "casilla", casilla_id = "01916" }, { kind = "casilla", casilla_id = "01917" }, { kind = "casilla", casilla_id = "01918" }] }, { key = "2019-suma-deducciones-cap-iv-tit-vi-ley-4-5ed457", heading_key = "modelo.schema.200.form.row.2019-suma-deducciones-cap-iv-tit-vi-ley-4-5ed457.heading", official_heading = "2019 Suma deducciones Cap. IV Tit. VI Ley 43/95, RDLeg. 4/2004 y LIS (excepto I+D+i y TAP)", cells = [{ kind = "casilla", casilla_id = "02094" }, { kind = "casilla", casilla_id = "02095" }, { kind = "casilla", casilla_id = "02096" }] }, { key = "2019-investigacion-y-desarrollo-ct", heading_key = "modelo.schema.200.form.row.2019-investigacion-y-desarrollo-ct.heading", official_heading = "2019 Investigación y desarrollo (CT)", cells = [{ kind = "casilla", casilla_id = "02356" }, { kind = "casilla", casilla_id = "02357" }, { kind = "casilla", casilla_id = "02358" }] }, { key = "2019-innovacion-tecnologica-it", heading_key = "modelo.schema.200.form.row.2019-innovacion-tecnologica-it.heading", official_heading = "2019 Innovación tecnológica (IT)", cells = [{ kind = "casilla", casilla_id = "02359" }, { kind = "casilla", casilla_id = "02360" }, { kind = "casilla", casilla_id = "02361" }] }, { key = "2019-inversiones-en-territ-africa-occiden-10c92b", heading_key = "modelo.schema.200.form.row.2019-inversiones-en-territ-africa-occiden-10c92b.heading", official_heading = "2019 Inversiones en territ. África Occidental y gastos de propaganda y publicidad (art. 27 bis Ley 19/1994) (TAP)", cells = [{ kind = "casilla", casilla_id = "01919" }, { kind = "casilla", casilla_id = "01920" }, { kind = "casilla", casilla_id = "01921" }] }, { key = "2020-suma-deducciones-cap-iv-tit-vi-ley-4-b38d7e", heading_key = "modelo.schema.200.form.row.2020-suma-deducciones-cap-iv-tit-vi-ley-4-b38d7e.heading", official_heading = "2020 Suma deducciones Cap. IV Tit. VI Ley 43/95, RDLeg. 4/2004 y LIS (excepto I+D+i y TAP)", cells = [{ kind = "casilla", casilla_id = "02097" }, { kind = "casilla", casilla_id = "02098" }, { kind = "casilla", casilla_id = "02099" }] }, { key = "2020-inversiones-en-territ-africa-occiden-c5a2c7", heading_key = "modelo.schema.200.form.row.2020-inversiones-en-territ-africa-occiden-c5a2c7.heading", official_heading = "2020 Inversiones en territ. África Occidental y gastos de propaganda y publicidad (art. 27 bis Ley 19/1994) (TAP)", cells = [{ kind = "casilla", casilla_id = "01922" }, { kind = "casilla", casilla_id = "01923" }, { kind = "casilla", casilla_id = "01924" }] }, { key = "2021-suma-deducciones-cap-iv-tit-vi-ley-4-7a9514", heading_key = "modelo.schema.200.form.row.2021-suma-deducciones-cap-iv-tit-vi-ley-4-7a9514.heading", official_heading = "2021 Suma deducciones Cap. IV Tit. VI Ley 43/95, RDLeg. 4/2004 y LIS (excepto I+D+i y TAP)", cells = [{ kind = "casilla", casilla_id = "02145" }, { kind = "casilla", casilla_id = "02146" }, { kind = "casilla", casilla_id = "02448" }] }, { key = "2021-inversiones-en-territ-africa-occiden-e71ec4", heading_key = "modelo.schema.200.form.row.2021-inversiones-en-territ-africa-occiden-e71ec4.heading", official_heading = "2021 Inversiones en territ. África Occidental y gastos de propaganda y publicidad (art. 27 bis Ley 19/1994) (TAP)", cells = [{ kind = "casilla", casilla_id = "01925" }, { kind = "casilla", casilla_id = "01926" }, { kind = "casilla", casilla_id = "01927" }] }, { key = "2022-suma-deducciones-cap-iv-tit-vi-ley-4-6a719a", heading_key = "modelo.schema.200.form.row.2022-suma-deducciones-cap-iv-tit-vi-ley-4-6a719a.heading", official_heading = "2022(*) Suma deducciones Cap. IV Tit. VI Ley 43/95, RDLeg. 4/2004 y LIS (excepto I+D+i y TAP)", cells = [{ kind = "casilla", casilla_id = "02449" }, { kind = "casilla", casilla_id = "02450" }, { kind = "casilla", casilla_id = "02461" }] }, { key = "2022-investigacion-y-desarrollo-ct", heading_key = "modelo.schema.200.form.row.2022-investigacion-y-desarrollo-ct.heading", official_heading = "2022(*) Investigación y desarrollo (CT)", cells = [{ kind = "casilla", casilla_id = "01363" }, { kind = "casilla", casilla_id = "01364" }, { kind = "casilla", casilla_id = "01365" }] }, { key = "2022-innovacion-tecnologica-it", heading_key = "modelo.schema.200.form.row.2022-innovacion-tecnologica-it.heading", official_heading = "2022(*) Innovación tecnológica (IT)", cells = [{ kind = "casilla", casilla_id = "01366" }, { kind = "casilla", casilla_id = "01367" }, { kind = "casilla", casilla_id = "01368" }] }, { key = "2022-inversiones-en-territ-africa-occiden-a8f024", heading_key = "modelo.schema.200.form.row.2022-inversiones-en-territ-africa-occiden-a8f024.heading", official_heading = "2022(*) Inversiones en territ. África Occidental y gastos de propaganda y publicidad (art. 27 bis Ley 19/1994) (TAP)", cells = [{ kind = "casilla", casilla_id = "01928" }, { kind = "casilla", casilla_id = "01929" }, { kind = "casilla", casilla_id = "01930" }] }, { key = "2022-diferim-deducciones-cap-iv-tit-vi-le-eaa180", heading_key = "modelo.schema.200.form.row.2022-diferim-deducciones-cap-iv-tit-vi-le-eaa180.heading", official_heading = "2022 Diferim. deducciones Cap.IV Tít.VI Ley 43/95, RDLeg. 4/2004 y LIS", cells = [{ kind = "casilla", casilla_id = "00828" }, { kind = "casilla", casilla_id = "00829" }, { kind = "casilla", casilla_id = "00830" }] }, { key = "2022-investigacion-y-desarrollo-ct-2", heading_key = "modelo.schema.200.form.row.2022-investigacion-y-desarrollo-ct.heading", official_heading = "2022 Investigación y desarrollo (CT)", cells = [{ kind = "casilla", casilla_id = "00798" }, { kind = "casilla", casilla_id = "00799" }, { kind = "casilla", casilla_id = "00800" }] }, { key = "2022-innovacion-tecnologica-it-2", heading_key = "modelo.schema.200.form.row.2022-innovacion-tecnologica-it.heading", official_heading = "2022 Innovación tecnológica (IT)", cells = [{ kind = "casilla", casilla_id = "00096" }, { kind = "casilla", casilla_id = "00698" }, { kind = "casilla", casilla_id = "00713" }] }, { key = "2022-productor-producciones-cinematografi-5b63f4", heading_key = "modelo.schema.200.form.row.2022-productor-producciones-cinematografi-5b63f4.heading", official_heading = "2022 Productor: producciones cinematográficas españolas (PC)", cells = [{ kind = "casilla", casilla_id = "00807" }, { kind = "casilla", casilla_id = "00808" }, { kind = "casilla", casilla_id = "00809" }] }, { key = "2022-financiador-producciones-cinematogra-3ba0b7", heading_key = "modelo.schema.200.form.row.2022-financiador-producciones-cinematogra-3ba0b7.heading", official_heading = "2022 Financiador: producciones cinematográficas españolas (FPC)", cells = [{ kind = "casilla", casilla_id = "02462" }, { kind = "casilla", casilla_id = "02463" }, { kind = "casilla", casilla_id = "02464" }] }, { key = "2022-productor-espectaculos-en-vivo-artes-b8b7c9", heading_key = "modelo.schema.200.form.row.2022-productor-espectaculos-en-vivo-artes-b8b7c9.heading", official_heading = "2022 Productor: espectáculos en vivo artes escénicas y musicales (EV)", cells = [{ kind = "casilla", casilla_id = "01075" }, { kind = "casilla", casilla_id = "01076" }, { kind = "casilla", casilla_id = "01077" }] }, { key = "2022-financiador-espectaculos-en-vivo-art-5808c1", heading_key = "modelo.schema.200.form.row.2022-financiador-espectaculos-en-vivo-art-5808c1.heading", official_heading = "2022 Financiador: espectáculos en vivo artes escénicas y musicales (FEV)", cells = [{ kind = "casilla", casilla_id = "02455" }, { kind = "casilla", casilla_id = "02456" }, { kind = "casilla", casilla_id = "02457" }] }, { key = "2022-deduccion-por-creacion-de-empleo-tra-5e17c0", heading_key = "modelo.schema.200.form.row.2022-deduccion-por-creacion-de-empleo-tra-5e17c0.heading", official_heading = "2022 Deducción por creación de empleo trabaj. con discapacidad (CE)", cells = [{ kind = "casilla", casilla_id = "00795" }, { kind = "blank" }, { kind = "casilla", casilla_id = "00797" }] }, { key = "2022-deduccion-por-inversion-en-beneficios-ib", heading_key = "modelo.schema.200.form.row.2022-deduccion-por-inversion-en-beneficios-ib.heading", official_heading = "2022 Deducción por inversión en beneficios (IB)", cells = [{ kind = "blank" }, { kind = "casilla", casilla_id = "00888" }, { kind = "casilla", casilla_id = "00889" }] }, { key = "2022-gastos-e-inversiones-de-sociedades-f-284f38", heading_key = "modelo.schema.200.form.row.2022-gastos-e-inversiones-de-sociedades-f-284f38.heading", official_heading = "2022 Gastos e inversiones de sociedades forestales (SF)", cells = [{ kind = "casilla", casilla_id = "01369" }, { kind = "casilla", casilla_id = "01370" }, { kind = "casilla", casilla_id = "01371" }] }, { key = "2022-inversiones-en-territ-africa-occiden-e3356f", heading_key = "modelo.schema.200.form.row.2022-inversiones-en-territ-africa-occiden-e3356f.heading", official_heading = "2022 Inversiones en territ. África Occidental y gastos de propaganda y publicidad (art. 27 bis Ley 19/1994) (TAP)", cells = [{ kind = "casilla", casilla_id = "02190" }, { kind = "casilla", casilla_id = "02191" }, { kind = "casilla", casilla_id = "02192" }] }] },
 ]
 
 [[revisions.2022.form_layouts.pages]]
@@ -4063,7 +4364,7 @@ id = "deducc-para-incentivar-determ-actividades"
 heading_key = "modelo.schema.200.form.section.deducc-para-incentivar-determ-actividades.heading"
 official_heading = "Deducc. para incentivar determ.actividades"
 blocks = [
-    { kind = "grid", id = "grid", columns = [{ key = "pendiente_generada", heading_key = "modelo.form.column.pendiente_generada", official_heading = "Deducción pendiente/generada" }, { key = "aplicado", heading_key = "modelo.form.column.aplicado", official_heading = "Aplicado en esta liquidación" }], rows = [{ key = "2022-centenario-del-rugby-en-espana-y-de-9cac6c", heading_key = "modelo.schema.200.form.row.2022-centenario-del-rugby-en-espana-y-de-9cac6c.heading", official_heading = "2022 Centenario del Rugby en España y de la Unió Esportiva Santboiana (CRE)", cells = [{ kind = "casilla", casilla_id = "DP200018:00315" }, { kind = "casilla", casilla_id = "DP200018:00316" }] }] },
+    { kind = "grid", id = "grid", columns = [{ key = "pendiente_generada", heading_key = "modelo.form.column.pendiente_generada", official_heading = "Deducción pendiente/generada" }, { key = "aplicado", heading_key = "modelo.form.column.aplicado", official_heading = "Aplicado en esta liquidación" }, { key = "pendiente_futuro", heading_key = "modelo.form.column.pendiente_futuro", official_heading = "Pendiente de aplicación en periodos futuros" }], rows = [{ key = "2022-alicante-2021-salida-vuelta-al-mundo-f37374", heading_key = "modelo.schema.200.form.row.2022-alicante-2021-salida-vuelta-al-mundo-f37374.heading", official_heading = "2022 Alicante 2021. Salida Vuelta al Mundo a Vela (A21)", cells = [{ kind = "casilla", casilla_id = "02365" }, { kind = "casilla", casilla_id = "02366" }, { kind = "casilla", casilla_id = "02367" }] }, { key = "2022-plan-de-fomento-de-la-opera-en-la-ca-f71de7", heading_key = "modelo.schema.200.form.row.2022-plan-de-fomento-de-la-opera-en-la-ca-f71de7.heading", official_heading = "2022 Plan de Fomento de la ópera en la Calle del Teatro Real (FO)", cells = [{ kind = "casilla", casilla_id = "02371" }, { kind = "casilla", casilla_id = "02372" }, { kind = "casilla", casilla_id = "02373" }] }, { key = "2022-centenario-del-rugby-en-espana-y-de-9cac6c", heading_key = "modelo.schema.200.form.row.2022-centenario-del-rugby-en-espana-y-de-9cac6c.heading", official_heading = "2022 Centenario del Rugby en España y de la Unió Esportiva Santboiana (CRE)", cells = [{ kind = "casilla", casilla_id = "DP200018:00315" }, { kind = "casilla", casilla_id = "DP200018:00316" }, { kind = "blank" }] }, { key = "2022-andalucia-valderrama-masters-2022-20-ce8618", heading_key = "modelo.schema.200.form.row.2022-andalucia-valderrama-masters-2022-20-ce8618.heading", official_heading = "2022 Andalucía Valderrama Masters 2022/2024 (AVM22)", cells = [{ kind = "casilla", casilla_id = "02458" }, { kind = "casilla", casilla_id = "02459" }, { kind = "casilla", casilla_id = "02460" }] }, { key = "2022-bicentenario-de-la-policia-nacional-pn", heading_key = "modelo.schema.200.form.row.2022-bicentenario-de-la-policia-nacional-pn.heading", official_heading = "2022 Bicentenario de la Policía Nacional (PN)", cells = [{ kind = "casilla", casilla_id = "00874" }, { kind = "casilla", casilla_id = "00875" }, { kind = "casilla", casilla_id = "00877" }] }, { key = "2022-plan-2030-de-apoyo-al-deporte-de-base-p30", heading_key = "modelo.schema.200.form.row.2022-plan-2030-de-apoyo-al-deporte-de-base-p30.heading", official_heading = "2022 Plan 2030 de Apoyo al Deporte de Base (P30)", cells = [{ kind = "casilla", casilla_id = "00902" }, { kind = "casilla", casilla_id = "00906" }, { kind = "casilla", casilla_id = "01870" }] }, { key = "2022-universo-mujer-iii-um3", heading_key = "modelo.schema.200.form.row.2022-universo-mujer-iii-um3.heading", official_heading = "2022 Universo Mujer III (UM3)", cells = [{ kind = "casilla", casilla_id = "01914" }, { kind = "casilla", casilla_id = "00955" }, { kind = "casilla", casilla_id = "00956" }] }, { key = "2022-programa-de-preparacion-de-los-depor-886d7a", heading_key = "modelo.schema.200.form.row.2022-programa-de-preparacion-de-los-depor-886d7a.heading", official_heading = "2022 Programa de preparación de los deportistas españoles de los Juegos de París 2024 (P24)", cells = [{ kind = "casilla", casilla_id = "00957" }, { kind = "casilla", casilla_id = "01087" }, { kind = "casilla", casilla_id = "01088" }] }, { key = "2022-100-anos-del-fallecimiento-de-joaqui-189a58", heading_key = "modelo.schema.200.form.row.2022-100-anos-del-fallecimiento-de-joaqui-189a58.heading", official_heading = "2022 100 años del fallecimiento de Joaquín Sorolla (JS)", cells = [{ kind = "casilla", casilla_id = "01089" }, { kind = "casilla", casilla_id = "01110" }, { kind = "casilla", casilla_id = "01141" }] }, { key = "2022-20-aniversario-de-primavera-sound-ps", heading_key = "modelo.schema.200.form.row.2022-20-aniversario-de-primavera-sound-ps.heading", official_heading = "2022 20 Aniversario de Primavera Sound (PS)", cells = [{ kind = "casilla", casilla_id = "01142" }, { kind = "casilla", casilla_id = "01144" }, { kind = "casilla", casilla_id = "01145" }] }, { key = "2022-centenario-del-nacimiento-de-victori-146ada", heading_key = "modelo.schema.200.form.row.2022-centenario-del-nacimiento-de-victori-146ada.heading", official_heading = "2022 Centenario del nacimiento de Victoria de los Ángeles (VA)", cells = [{ kind = "casilla", casilla_id = "01146" }, { kind = "casilla", casilla_id = "01150" }, { kind = "casilla", casilla_id = "01151" }] }, { key = "2022-conmemoracion-del-50-aniversario-de-34c87a", heading_key = "modelo.schema.200.form.row.2022-conmemoracion-del-50-aniversario-de-34c87a.heading", official_heading = "2022 Conmemoración del 50 aniversario de la muerte del artista español Pablo Picasso (50P)", cells = [{ kind = "casilla", casilla_id = "01152" }, { kind = "casilla", casilla_id = "01153" }, { kind = "casilla", casilla_id = "01154" }] }, { key = "2022-todos-contra-el-cancer-tc", heading_key = "modelo.schema.200.form.row.2022-todos-contra-el-cancer-tc.heading", official_heading = "2022 Todos contra el cáncer (TC)", cells = [{ kind = "casilla", casilla_id = "01155" }, { kind = "casilla", casilla_id = "01156" }, { kind = "casilla", casilla_id = "01157" }] }, { key = "2022-ano-de-investigacion-santiago-ramon-fa8f33", heading_key = "modelo.schema.200.form.row.2022-ano-de-investigacion-santiago-ramon-fa8f33.heading", official_heading = "2022 Año de Investigación Santiago Ramón y Cajal 2022 (RC)", cells = [{ kind = "casilla", casilla_id = "01871" }, { kind = "casilla", casilla_id = "01180" }, { kind = "casilla", casilla_id = "01195" }] }] },
 ]
 
 [[revisions.2022.form_layouts.pages]]
@@ -4076,7 +4377,7 @@ id = "deducc-para-incentivar-determ-actividades"
 heading_key = "modelo.schema.200.form.section.deducc-para-incentivar-determ-actividades.heading"
 official_heading = "Deducc. para incentivar determ.actividades"
 blocks = [
-    { kind = "grid", id = "grid", columns = [{ key = "pendiente_generada", heading_key = "modelo.form.column.pendiente_generada", official_heading = "Deducción pendiente/generada" }, { key = "pendiente_futuro", heading_key = "modelo.form.column.pendiente_futuro", official_heading = "Pendiente de aplicación en periodos futuros" }], rows = [{ key = "total", heading_key = "modelo.schema.200.form.row.total.heading", official_heading = "Total", cells = [{ kind = "casilla", casilla_id = "00831" }, { kind = "casilla", casilla_id = "00832" }] }] },
+    { kind = "grid", id = "grid", columns = [{ key = "pendiente_generada", heading_key = "modelo.form.column.pendiente_generada", official_heading = "Deducción pendiente/generada" }, { key = "aplicado", heading_key = "modelo.form.column.aplicado", official_heading = "Aplicado en esta liquidación" }, { key = "pendiente_futuro", heading_key = "modelo.form.column.pendiente_futuro", official_heading = "Pendiente de aplicación en periodos futuros" }], rows = [{ key = "2022-ano-jubilar-lebaniego-2023-2024-l23", heading_key = "modelo.schema.200.form.row.2022-ano-jubilar-lebaniego-2023-2024-l23.heading", official_heading = "2022 Año Jubilar Lebaniego 2023-2024 (L23)", cells = [{ kind = "casilla", casilla_id = "01197" }, { kind = "casilla", casilla_id = "01207" }, { kind = "casilla", casilla_id = "01208" }] }, { key = "2022-7a-conferencia-mundial-sobre-turismo-a6889b", heading_key = "modelo.schema.200.form.row.2022-7a-conferencia-mundial-sobre-turismo-a6889b.heading", official_heading = "2022 7ª Conferencia Mundial sobre Turismo Enológico de la OMT 2023 (7TE)", cells = [{ kind = "casilla", casilla_id = "01220" }, { kind = "casilla", casilla_id = "01221" }, { kind = "casilla", casilla_id = "01222" }] }, { key = "2022-caravaca-de-la-cruz-2024-ano-jubilar-c24", heading_key = "modelo.schema.200.form.row.2022-caravaca-de-la-cruz-2024-ano-jubilar-c24.heading", official_heading = "2022 Caravaca de la Cruz 2024. Año Jubilar (C24)", cells = [{ kind = "casilla", casilla_id = "01223" }, { kind = "casilla", casilla_id = "01229" }, { kind = "casilla", casilla_id = "01232" }] }, { key = "2022-bicentenario-del-ateneo-de-madrid-ba", heading_key = "modelo.schema.200.form.row.2022-bicentenario-del-ateneo-de-madrid-ba.heading", official_heading = "2022 Bicentenario del Ateneo de Madrid (BA)", cells = [{ kind = "casilla", casilla_id = "01233" }, { kind = "casilla", casilla_id = "01235" }, { kind = "casilla", casilla_id = "01236" }] }, { key = "2022-barcelona-equestrian-challenge-4a-ed-b4272d", heading_key = "modelo.schema.200.form.row.2022-barcelona-equestrian-challenge-4a-ed-b4272d.heading", official_heading = "2022 Barcelona Equestrian Challenge (4ª Edición) (BE4)", cells = [{ kind = "casilla", casilla_id = "01237" }, { kind = "casilla", casilla_id = "01238" }, { kind = "casilla", casilla_id = "01239" }] }, { key = "2022-200-aniversario-del-passeig-de-gracia-pg", heading_key = "modelo.schema.200.form.row.2022-200-aniversario-del-passeig-de-gracia-pg.heading", official_heading = "2022 200 Aniversario del Passeig de Grácia (PG)", cells = [{ kind = "casilla", casilla_id = "01261" }, { kind = "casilla", casilla_id = "01262" }, { kind = "casilla", casilla_id = "01263" }] }, { key = "2022-alimentaria-2022-y-hostelco-2022-ah", heading_key = "modelo.schema.200.form.row.2022-alimentaria-2022-y-hostelco-2022-ah.heading", official_heading = "2022 ALIMENTARIA 2022 y HOSTELCO 2022 (AH)", cells = [{ kind = "blank" }, { kind = "casilla", casilla_id = "01268" }, { kind = "casilla", casilla_id = "01269" }] }, { key = "2022-barcelona-music-lab-el-futuro-de-la-047bc6", heading_key = "modelo.schema.200.form.row.2022-barcelona-music-lab-el-futuro-de-la-047bc6.heading", official_heading = "2022 Barcelona Music Lab. El futuro de la música (ML)", cells = [{ kind = "casilla", casilla_id = "01272" }, { kind = "casilla", casilla_id = "01273" }, { kind = "casilla", casilla_id = "01274" }] }, { key = "2022-south-summit-2022-2024-ss", heading_key = "modelo.schema.200.form.row.2022-south-summit-2022-2024-ss.heading", official_heading = "2022 South Summit 2022-2024 (SS)", cells = [{ kind = "casilla", casilla_id = "01281" }, { kind = "casilla", casilla_id = "01282" }, { kind = "casilla", casilla_id = "01283" }] }, { key = "2023-otras-deducciones-relativas-a-progra-185657", heading_key = "modelo.schema.200.form.row.2023-otras-deducciones-relativas-a-progra-185657.heading", official_heading = "2023(****) Otras deducciones relativas a programas de apoyo a acontecimientos de excepcional interés público", cells = [{ kind = "casilla", casilla_id = "01683" }, { kind = "casilla", casilla_id = "01684" }, { kind = "casilla", casilla_id = "01685" }] }, { key = "total", heading_key = "modelo.schema.200.form.row.total.heading", official_heading = "Total", cells = [{ kind = "casilla", casilla_id = "00831" }, { kind = "blank" }, { kind = "casilla", casilla_id = "00832" }] }] },
 ]
 
 [[revisions.2022.form_layouts.pages.sections]]
@@ -4228,7 +4529,7 @@ id = "deduccion-donativos-entidades-sin-fines-l-e905a4-8"
 heading_key = "modelo.schema.200.form.section.deduccion-donativos-entidades-sin-fines-l-e905a4.heading"
 official_heading = "Deducción donativos entidades sin fines lucro - Donaciones de carácter general"
 blocks = [
-    { kind = "grid", id = "grid", columns = [{ key = "pendiente_generada", heading_key = "modelo.form.column.pendiente_generada", official_heading = "Deducción pendiente/generada" }, { key = "aplicado", heading_key = "modelo.form.column.aplicado", official_heading = "Aplicado en esta liquidación" }, { key = "pendiente_futuro", heading_key = "modelo.form.column.pendiente_futuro", official_heading = "Pendiente de aplicación en periodos futuros" }], rows = [{ key = "total", heading_key = "modelo.schema.200.form.row.total.heading", official_heading = "Total", cells = [{ kind = "casilla", casilla_id = "01698" }, { kind = "casilla", casilla_id = "01699" }, { kind = "casilla", casilla_id = "01700" }] }] },
+    { kind = "grid", id = "grid", columns = [{ key = "pendiente_generada", heading_key = "modelo.form.column.pendiente_generada", official_heading = "Deducción pendiente/generada" }, { key = "aplicado", heading_key = "modelo.form.column.aplicado", official_heading = "Aplicado en esta liquidación" }, { key = "pendiente_futuro", heading_key = "modelo.form.column.pendiente_futuro", official_heading = "Pendiente de aplicación en periodos futuros" }], rows = [{ key = "subtotal-donaciones-2015-a-2022-sin-reite-a1fc34", heading_key = "modelo.schema.200.form.row.subtotal-donaciones-2015-a-2022-sin-reite-a1fc34.heading", official_heading = "Subtotal donaciones 2015 a 2022 sin reiteración de donaciones a una misma entidad", cells = [{ kind = "casilla", casilla_id = "01692" }, { kind = "casilla", casilla_id = "01693" }, { kind = "casilla", casilla_id = "01694" }] }, { key = "subtotal-donaciones-2015-a-2022-con-reite-e32d1a", heading_key = "modelo.schema.200.form.row.subtotal-donaciones-2015-a-2022-con-reite-e32d1a.heading", official_heading = "Subtotal donaciones 2015 a 2022 con reiteración de donaciones a una misma entidad", cells = [{ kind = "casilla", casilla_id = "01695" }, { kind = "casilla", casilla_id = "01696" }, { kind = "casilla", casilla_id = "01697" }] }, { key = "total", heading_key = "modelo.schema.200.form.row.total.heading", official_heading = "Total", cells = [{ kind = "casilla", casilla_id = "01698" }, { kind = "casilla", casilla_id = "01699" }, { kind = "casilla", casilla_id = "01700" }] }] },
 ]
 
 [[revisions.2022.form_layouts.pages.sections]]
@@ -4349,7 +4650,7 @@ id = "deduccion-donativos-entidades-sin-fines-l-490b0e-8"
 heading_key = "modelo.schema.200.form.section.deduccion-donativos-entidades-sin-fines-l-490b0e.heading"
 official_heading = "Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada"
 blocks = [
-    { kind = "grid", id = "grid", columns = [{ key = "pendiente_generada", heading_key = "modelo.form.column.pendiente_generada", official_heading = "Deducción pendiente/generada" }, { key = "aplicado", heading_key = "modelo.form.column.aplicado", official_heading = "Aplicado en esta liquidación" }, { key = "pendiente_futuro", heading_key = "modelo.form.column.pendiente_futuro", official_heading = "Pendiente de aplicación en periodos futuros" }], rows = [{ key = "total", heading_key = "modelo.schema.200.form.row.total.heading", official_heading = "Total", cells = [{ kind = "casilla", casilla_id = "01079" }, { kind = "casilla", casilla_id = "01080" }, { kind = "casilla", casilla_id = "01081" }] }] },
+    { kind = "grid", id = "grid", columns = [{ key = "pendiente_generada", heading_key = "modelo.form.column.pendiente_generada", official_heading = "Deducción pendiente/generada" }, { key = "aplicado", heading_key = "modelo.form.column.aplicado", official_heading = "Aplicado en esta liquidación" }, { key = "pendiente_futuro", heading_key = "modelo.form.column.pendiente_futuro", official_heading = "Pendiente de aplicación en periodos futuros" }], rows = [{ key = "subtotal-donaciones-2015-a-2022-sin-reite-a1fc34", heading_key = "modelo.schema.200.form.row.subtotal-donaciones-2015-a-2022-sin-reite-a1fc34.heading", official_heading = "Subtotal donaciones 2015 a 2022 sin reiteración de donaciones a una misma entidad", cells = [{ kind = "casilla", casilla_id = "01704" }, { kind = "casilla", casilla_id = "01705" }, { kind = "casilla", casilla_id = "01706" }] }, { key = "subtotal-donaciones-2015-a-2022-con-reite-e32d1a", heading_key = "modelo.schema.200.form.row.subtotal-donaciones-2015-a-2022-con-reite-e32d1a.heading", official_heading = "Subtotal donaciones 2015 a 2022 con reiteración de donaciones a una misma entidad", cells = [{ kind = "casilla", casilla_id = "01729" }, { kind = "casilla", casilla_id = "02475" }, { kind = "casilla", casilla_id = "02476" }] }, { key = "total", heading_key = "modelo.schema.200.form.row.total.heading", official_heading = "Total", cells = [{ kind = "casilla", casilla_id = "01079" }, { kind = "casilla", casilla_id = "01080" }, { kind = "casilla", casilla_id = "01081" }] }] },
 ]
 
 [[revisions.2022.form_layouts.pages.sections]]
@@ -4755,9 +5056,10 @@ blocks = [
     { kind = "field", id = "field-2", casilla_id = "02239" },
     { kind = "field", id = "field-3", casilla_id = "01603" },
     { kind = "grid", id = "grid", columns = [{ key = "importe-minoracion-b-i-periodo-pendiente-2a51d4", heading_key = "modelo.schema.200.form.column.importe-minoracion-b-i-periodo-pendiente-2a51d4.heading", official_heading = "Importe minoración B.I. periodo/pendiente adicionar inicio periodo" }, { key = "importe-adicionado-base-imponible-en-periodo", heading_key = "modelo.schema.200.form.column.importe-adicionado-base-imponible-en-periodo.heading", official_heading = "Importe adicionado base imponible en periodo" }, { key = "importe-integrado-en-la-declaracion-por-i-d6aac9", heading_key = "modelo.schema.200.form.column.importe-integrado-en-la-declaracion-por-i-d6aac9.heading", official_heading = "Importe integrado en la declaración por incumplimiento de requisitos" }, { key = "importe-pendiente-adicionar-en-periodos-futuros", heading_key = "modelo.schema.200.form.column.importe-pendiente-adicionar-en-periodos-futuros.heading", official_heading = "Importe pendiente adicionar en periodos futuros" }], rows = [{ key = "ejercicio-generacion-2020", heading_key = "modelo.schema.200.form.row.ejercicio-generacion-2020.heading", official_heading = "Ejercicio generación 2020", cells = [{ kind = "casilla", casilla_id = "02410" }, { kind = "casilla", casilla_id = "02411" }, { kind = "casilla", casilla_id = "01604" }, { kind = "casilla", casilla_id = "02412" }] }, { key = "ejercicio-generacion-2021", heading_key = "modelo.schema.200.form.row.ejercicio-generacion-2021.heading", official_heading = "Ejercicio generación 2021", cells = [{ kind = "casilla", casilla_id = "01109" }, { kind = "casilla", casilla_id = "01730" }, { kind = "casilla", casilla_id = "01605" }, { kind = "casilla", casilla_id = "01111" }] }] },
-    { kind = "field", id = "field-4", casilla_id = "01147" },
-    { kind = "field", id = "field-5", casilla_id = "01606" },
-    { kind = "field", id = "field-6", casilla_id = "01149" },
+    { kind = "field", id = "field-4", casilla_id = "01731" },
+    { kind = "field", id = "field-5", casilla_id = "01147" },
+    { kind = "field", id = "field-6", casilla_id = "01606" },
+    { kind = "field", id = "field-7", casilla_id = "01149" },
 ]
 
 [[revisions.2022.form_layouts.pages.sections]]
@@ -5366,7 +5668,8 @@ heading_key = "modelo.schema.200.form.section.reg-especial-reserva-inversiones-c
 official_heading = "Rég. especial reserva inversiones Canarias"
 blocks = [
     { kind = "field", id = "field", casilla_id = "01821" },
-    { kind = "field", id = "field-2", casilla_id = "01176" },
+    { kind = "field", id = "field-2", casilla_id = "00927" },
+    { kind = "field", id = "field-3", casilla_id = "01176" },
 ]
 
 [[revisions.2022.form_layouts.pages.sections]]
@@ -5433,6 +5736,8 @@ blocks = [
     { kind = "field", id = "field-57", casilla_id = "01190" },
     { kind = "field", id = "field-58", casilla_id = "00694" },
     { kind = "field", id = "field-59", casilla_id = "00695" },
+    { kind = "field", id = "field-60", casilla_id = "01225" },
+    { kind = "field", id = "field-61", casilla_id = "01226" },
 ]
 
 [[revisions.2022.form_layouts.pages]]
@@ -9067,6 +9372,15 @@ id = "estados-de-cuentas-de-entidades-de-credito"
 heading_key = "modelo.schema.200.form.section.estados-de-cuentas-de-entidades-de-credito.heading"
 blocks = [
     { kind = "field", id = "field-1", casilla_id = "00068" },
+]
+
+[[revisions.2022.form_layouts.pages.sections]]
+id = "deducc-para-incentivar-determ-actividades"
+heading_key = "modelo.schema.200.form.section.deducc-para-incentivar-determ-actividades.heading"
+blocks = [
+    { kind = "field", id = "field-1", casilla_id = "01264" },
+    { kind = "field", id = "field-2", casilla_id = "01265" },
+    { kind = "field", id = "field-3", casilla_id = "01266" },
 ]
 
 [[revisions.2022.form_layouts.pages.sections]]
