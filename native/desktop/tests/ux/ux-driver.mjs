@@ -32,6 +32,14 @@ import {
   verifyListener,
   waitForWebDriver,
 } from "../automation/session.mjs";
+import {
+  pageChooseSignOut,
+  pageOpenAccountMenu,
+  pageSignedOut,
+  removeLeftSessionKeys,
+  sessionKeyTargets,
+  storageProfileIds,
+} from "../automation/session-keys.mjs";
 
 const require = createRequire(
   new URL("../../frontend/package.json", import.meta.url),
@@ -125,6 +133,8 @@ export async function launch(world, runDir) {
     `the run's storage directory must be absent or empty: ${storage}`,
   );
   cpSync(source, storage, { recursive: true, errorOnExist: true });
+  const profileIds = storageProfileIds(storage);
+  win.sessionKeys = { profileIds, before: sessionKeyTargets(profileIds) };
   for (const member of ["temporary", "fixtures", "exports"])
     mkdirSync(resolve(runDir, member), { mode: 0o700, recursive: true });
   const host = JSON.parse(process.env.CADRUMO_PERSONA_HOST);
@@ -405,6 +415,21 @@ export async function attachDevtools() {
 export async function teardown() {
   if (win.closed) return;
   win.closed = true;
+  // Signing out deletes the run's profile-session key from the credential
+  // store; the guard after the process stops removes and reports any left.
+  try {
+    if (win.browser && (await exec(pageOpenAccountMenu))) {
+      await sleep(500);
+      if (await exec(pageChooseSignOut, label("desktop.account.sign_out")))
+        await waitFor(() => exec(pageSignedOut), {
+          timeout: 15_000,
+          what: "the sign-in form after signing out",
+          soft: true,
+        });
+    }
+  } catch {
+    // The credential guard below decides.
+  }
   try {
     win.devtools?.close();
   } catch {
@@ -423,6 +448,17 @@ export async function teardown() {
       await sleep(250);
       if (inspectProcess(win.pid).status !== 0) break;
     }
+  }
+  if (win.sessionKeys) {
+    const { left, failed } = removeLeftSessionKeys(
+      win.sessionKeys.profileIds,
+      win.sessionKeys.before,
+    );
+    if (left.length > 0)
+      throw new Error(
+        `the run left ${left.length} profile-session key(s) in the credential store (removed ${left.length - failed.length}` +
+          `${failed.length ? `, could not remove ${failed.join(", ")}` : ""}): it did not sign out`,
+      );
   }
 }
 
