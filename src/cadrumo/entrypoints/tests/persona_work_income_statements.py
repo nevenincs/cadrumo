@@ -19,7 +19,6 @@ from ...application.modelo.absence_statement_submission import absence_statement
 from ...application.modelo.edit_apply_contracts import ModeloEditApplyPublicResultV1, ModeloEditApplySubmissionV1
 from ...application.modelo.edit_operator_input import ModeloEditOperatorInputV2
 from ...application.modelo.operation_shared import MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID
-from ...application.modelo.work_calculation_contracts import ModeloWorkCalculatePublicResultV3
 from ...application.modelo.workbench_operations import (
     MODELO_WORK_FORM_OPERATION_DEFINITION_ID,
     ModeloWorkbenchFormRequest,
@@ -34,11 +33,10 @@ _MODELO = "100"
 
 
 def states_for(
-    statements: Sequence[WorkIncomeNoneStatement], envelope: YearEnvelope, calculated: ModeloWorkCalculatePublicResultV3
+    statements: Sequence[WorkIncomeNoneStatement], envelope: YearEnvelope, *, modelo: str, filing_year: int
 ) -> bool:
-    """Whether the persona states the work income of the Modelo 100 ``calculated`` is none."""
-    unit = calculated.unit
-    return unit.modelo == _MODELO and any(item.ejercicio.resolve(envelope) == unit.filing_year for item in statements)
+    """Whether the persona states the work income of the Modelo 100 of ``filing_year`` is none."""
+    return modelo == _MODELO and any(item.ejercicio.resolve(envelope) == filing_year for item in statements)
 
 
 def state_work_income_none(
@@ -46,17 +44,18 @@ def state_work_income_none(
     *,
     envelope: YearEnvelope,
     profile_id: UUID,
-    calculated: ModeloWorkCalculatePublicResultV3,
+    modelo: str,
+    filing_year: int,
+    work_unit_id: str,
     settle: SettleOperation,
 ) -> bool:
-    """Submit the statement the form offers for the calculated return, when the persona makes it; whether it was applied.
+    """Submit the statement the form offers for the return, when the persona makes it; whether it was applied.
 
     Nothing is submitted where the form offers no such statement: the return rests on no
     work-income record, or the statement was made already. The caller recalculates after a submission.
     """
-    if not states_for(statements, envelope, calculated):
+    if not states_for(statements, envelope, modelo=modelo, filing_year=filing_year):
         return False
-    work_unit_id = calculated.work_unit_id
     form = settle(
         MODELO_WORK_FORM_OPERATION_DEFINITION_ID,
         ModeloWorkbenchFormRequest(profile_id=profile_id, work_unit_id=work_unit_id, output_language=OutputLanguage.EN),

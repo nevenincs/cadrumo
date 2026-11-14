@@ -4665,6 +4665,8 @@ desktop:
     details:
       close: Tancar els detalls
       hide: Amagar els detalls
+      label: Detalls
+      resize: Canvia la mida dels detalls
       show: Mostrar els detalls
     disagreement:
       accept: Acceptar amb un motiu
@@ -4714,6 +4716,7 @@ desktop:
     side:
       label: Al costat del formulari
       outline: Esquema
+      resize: Canvia la mida del tauler al costat del formulari
     statements:
       hide: Amagar
       intro: Marca cada manifestació que sigui certa per a tu. Les que marquis queden
