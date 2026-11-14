@@ -17,6 +17,8 @@ from ..frontend import (
     EXPORT_WITHHELD_UNVERIFIED,
     INHERITED_CAUSE,
     LEGACY_INHERITED_REASON,
+    MATCHED,
+    NOT_RUN,
     STAGE_OF,
     STAGE_WORDS,
     FrontendResultError,
@@ -34,7 +36,7 @@ from ..frontend import (
     read_results,
 )
 from ..render import render_table, unavailable_exports_lines
-from ..rows import PlannedRow, Stage, TableRow, canonical_figures, write_rows
+from ..rows import PlannedRow, Stage, TableRow, canonical_figures, latest_rows, write_rows
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -800,8 +802,67 @@ def test_the_horizon_is_read_from_the_field_and_a_bad_one_is_refused() -> None:
     for bad in ("text", _H1 + 0.5, True, [_H1]):
         with pytest.raises(ValueError, match="horizon must be an integer or null"):
             parse_result(json.dumps(_persona_line(None) | {"horizon": bad}))
-    with pytest.raises(ValueError, match="a line with a modelo has no horizon"):
-        parse_result(json.dumps(_line(horizon=_H1)))
+
+
+def test_a_return_line_states_its_horizon_by_field_or_by_the_start_of_its_reason() -> None:
+    assert parse_result(json.dumps(_line())).horizon is None
+    assert parse_result(json.dumps(_line(horizon=_H1))).horizon == _H1
+    assert parse_result(json.dumps(_line(reason=f"persona@{_H2}: calculate"))).horizon == _H2
+    assert parse_result(json.dumps(_line(horizon=_H1, reason=f"persona@{_H2}: x"))).horizon == _H1
+    with pytest.raises(ValueError, match="horizon must be an integer or null"):
+        parse_result(json.dumps(_line(horizon="text")))
+
+
+def _horizon_result_rows() -> list[TableRow]:
+    """One return run at two horizons: the table keeps the replay at the highest."""
+    return [_row("1T", horizon=_H1), _row("1T", horizon=_H2, figures=(("0505", "1000"), ("0700", "-2104.67")))]
+
+
+def test_a_return_line_of_another_horizon_never_pairs_with_the_table_row() -> None:
+    lines = [
+        _line(horizon=_H1, figures={"0505": "1200.5", "0700": "-2104.67"}),
+        _line(horizon=_H2, figures={"0505": "1000", "0700": "-2104.67"}),
+    ]
+    results = {parse_result(json.dumps(line)).key: parse_result(json.dumps(line)) for line in lines}
+    assert len(results) == 2
+
+    rows = list(latest_rows(_horizon_result_rows()).values())
+    parity = compare_frontend(rows, results).parities["tui"][0]
+
+    assert parity.outcome == MATCHED
+
+
+def test_only_a_line_of_another_horizon_leaves_the_row_not_run_rather_than_differing() -> None:
+    line = _line(horizon=_H1, figures={"0505": "1200.5", "0700": "-2104.67"})
+    results = {parse_result(json.dumps(line)).key: parse_result(json.dumps(line))}
+
+    rows = list(latest_rows(_horizon_result_rows()).values())
+    comparison = compare_frontend(rows, results)
+
+    assert comparison.parities["tui"][0].outcome == NOT_RUN
+    assert comparison.extras["tui"] == ()
+
+
+def test_a_return_line_without_a_horizon_pairs_with_the_row_of_any_horizon() -> None:
+    line = _line(figures={"0505": "1000", "0700": "-2104.67"})
+    results = {parse_result(json.dumps(line)).key: parse_result(json.dumps(line))}
+
+    rows = list(latest_rows(_horizon_result_rows()).values())
+
+    assert compare_frontend(rows, results).parities["tui"][0].outcome == MATCHED
+
+
+def test_the_latest_return_line_of_a_horizon_wins_and_other_horizons_are_kept(tmp_path: Path) -> None:
+    _write(
+        tmp_path,
+        "a.jsonl",
+        [_line(horizon=_H1, calculate="error"), _line(horizon=_H2), _line(horizon=_H1, calculate="pass")],
+    )
+
+    found = read_results(tmp_path)
+
+    assert sorted(result.horizon or 0 for result in found.values()) == [_H1, _H2]
+    assert {result.calculate for result in found.values()} == {"pass"}
 
 
 @pytest.mark.parametrize(
