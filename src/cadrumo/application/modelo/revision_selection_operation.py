@@ -308,8 +308,11 @@ def _pick_revision(
         )
         if recovery is error:
             raise
-        raise recovery from error
-    return selection
+    else:
+        return selection
+    # Raised outside the handler, so the selector refusal it replaces does not
+    # stand beside it in the chain and leave the CLI boundary two verdicts.
+    raise recovery
 
 
 def _capture(
