@@ -98,7 +98,9 @@ class _Scripted:
         del authenticated
         command = tuple(args)
         self.sent.append(command)
-        key = "export" if command[:3] == ("app", "modelo", "export") else command[3]
+        key = {("app", "modelo", "export"): "export", ("app", "overview", "calendar"): "calendar"}.get(
+            command[:3], command[3]
+        )
         if key in self._overrides:
             return self._overrides[key](command)
         return self._default(key, command)
@@ -116,6 +118,8 @@ class _Scripted:
             return _ok(calculation_revision_id=command[4], casilla_values={"01": "10.50", "02": "0"})
         if key == "verify":
             return _ok(granted_verificado_completo=True, findings=[])
+        if key == "calendar":
+            return _ok(entries=[], suppressed_entries=[])
         if key == "export":
             Path(command[command.index("--output") + 1]).write_text("fichero", encoding="utf-8")
             return _ok(output_path=command[command.index("--output") + 1])
@@ -165,10 +169,11 @@ def test_selection_runs_the_wanted_returns_and_the_supported_replays_before_the_
         ("130", _YEAR, "1T"),
         ("303", _YEAR, "1T"),
         ("100", _YEAR, "0A"),
+        ("130", _YEAR, "2T"),
         ("130", _YEAR, "3T"),
     ]
     assert selection.wanted == {("303", _YEAR, "1T"), ("130", _YEAR, "3T")}
-    assert [key for key, _ in selection.skipped] == [("130", _YEAR, "2T")]
+    assert selection.skipped == ()
 
 
 def test_a_return_runs_create_calculate_verify_export_and_file_in_the_tables_order(tmp_path: Path) -> None:
@@ -204,6 +209,70 @@ def test_a_return_runs_create_calculate_verify_export_and_file_in_the_tables_ord
     assert line["figures"] == {"01": "10.5"}
     assert line["reason"] == "filed locally"
     assert "workaround" not in line
+
+
+def _suppressed(modelo: str, period: str, verdict: str, reason: str = "outside the instalment rule") -> dict[str, str]:
+    return {"modelo": modelo, "period": period, "verdict": verdict, "reason": reason}
+
+
+def test_a_return_stated_not_owed_is_calculated_then_read_from_the_calendar_and_never_verified(tmp_path: Path) -> None:
+    calendar = _ok(entries=[], suppressed_entries=[_suppressed("202", f"{_YEAR} 2P", "not_applicable")])
+    runner = _Scripted(tmp_path / "exports", calendar=lambda _command: calendar)
+    report = _report(_plan("202", "2P", owed=False))
+
+    summary = run_case(_case(tmp_path, report, runner), select_rows(report))
+
+    assert runner.keys() == ["work create", "work calculate", "calendar"]
+    assert runner.sent[-1] == (
+        "app",
+        "overview",
+        "calendar",
+        "--from",
+        f"{_YEAR}-01-01",
+        "--to",
+        f"{_YEAR + 1}-12-31",
+        "--show-suppressed",
+    )
+    assert summary.written == (("202", _YEAR, "2P"),)
+    (line,) = _lines(tmp_path)
+    assert (line["calculate"], line["verify"], line["export"]) == ("pass", "not-owed", "not-reached")
+    assert "file" not in line
+    assert line["figures"] == {"01": "10.5"}
+
+
+@pytest.mark.parametrize(
+    "calendar",
+    [
+        _ok(entries=[{"modelo": "202", "period": f"{_YEAR} 2P"}], suppressed_entries=[]),
+        _ok(entries=[], suppressed_entries=[_suppressed("202", f"{_YEAR} 2P", "undetermined")]),
+        _ok(entries=[], suppressed_entries=[]),
+        _ok(entries=[], suppressed_entries=[_suppressed("202", f"{_YEAR} 3P", "not_applicable")]),
+    ],
+    ids=["a window", "another verdict", "no mention", "another period"],
+)
+def test_a_return_stated_not_owed_is_incomplete_when_the_calendar_does_not_suppress_it(
+    tmp_path: Path, calendar: dict[str, object]
+) -> None:
+    runner = _Scripted(tmp_path / "exports", calendar=lambda _command: calendar)
+    report = _report(_plan("202", "2P", owed=False))
+
+    run_case(_case(tmp_path, report, runner), select_rows(report))
+
+    (line,) = _lines(tmp_path)
+    assert (line["calculate"], line["verify"], line["export"]) == ("pass", "incomplete", "not-reached")
+    assert str(line["reason"]).startswith("overview: stated not owed, the calendar says ")
+
+
+def test_a_refused_calendar_read_is_the_verify_stage_of_a_return_stated_not_owed(tmp_path: Path) -> None:
+    refusal = {"status": "error", "error": {"code": "REFUSED_OVERVIEW", "category": "REFUSED", "message": "no read"}}
+    runner = _Scripted(tmp_path / "exports", calendar=lambda _command: refusal)
+    report = _report(_plan("202", "2P", owed=False))
+
+    run_case(_case(tmp_path, report, runner), select_rows(report))
+
+    (line,) = _lines(tmp_path)
+    assert (line["calculate"], line["verify"]) == ("pass", "refused")
+    assert line["refusal_code"] == "REFUSED_OVERVIEW"
 
 
 def test_a_return_whose_line_exists_runs_for_the_chain_but_is_not_written_again(tmp_path: Path) -> None:

@@ -10,9 +10,6 @@ use super::{Failure, PROFILE_READ_LIMIT, ProfileHost, Result, protocol};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 
-/// The ejercicios the product accepts: four-digit years.
-pub(super) const TAX_YEARS: std::ops::RangeInclusive<u16> = 1000..=9999;
-
 #[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 enum State {
@@ -97,7 +94,6 @@ fn election(projection: Value, profile: &str, tax_year: u16, language: &str) -> 
         || !super::super::setup::wire::is_hex64(&election.content_digest)
         || !election.criterion.consistent()
         || !election.codigo_comercio_accounting.consistent()
-        || !years.iter().all(|year| TAX_YEARS.contains(year))
         || !years.windows(2).all(|pair| pair[0] < pair[1])
     {
         return Err(protocol());
@@ -112,7 +108,7 @@ impl ProfileHost {
         tax_year: u16,
         language: String,
     ) -> Result<Election> {
-        if !super::super::language::supported(&language) || !TAX_YEARS.contains(&tax_year) {
+        if !super::super::language::supported(&language) {
             return Err(protocol());
         }
         tokio::time::timeout(PROFILE_READ_LIMIT, async {
@@ -225,7 +221,7 @@ mod tests {
             json!([{"ejercicio":2025,"value":"devengo"},{"ejercicio":2025,"value":"caja"}]);
         assert!(read(repeated).is_err());
         let mut outside = projection();
-        outside["criterion_statements"] = json!([{"ejercicio":25,"value":"caja"}]);
+        outside["criterion_statements"] = json!([{"ejercicio":"2025","value":"caja"}]);
         assert!(read(outside).is_err());
     }
 }

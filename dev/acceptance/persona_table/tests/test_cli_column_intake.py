@@ -21,6 +21,7 @@ from ..cli_column.intake import (
     RowResult,
     StageResult,
     calculate_stage,
+    calendar_observations,
     classify,
     export_stage,
     failed,
@@ -334,3 +335,23 @@ def test_a_workaround_is_written_read_back_and_keeps_the_row_from_matching(tmp_p
     assert shown.workaround == "cli_calculate_drops_statements"
     outcome = parity(_row(figures), "cli", shown)
     assert (outcome.outcome, outcome.causes) == (DIFFERS, ("workaround cli_calculate_drops_statements",))
+
+
+def test_the_calendar_a_command_printed_is_read_as_window_rows_and_suppressed_verdicts() -> None:
+    year = 7
+    printed = {
+        "entries": [{"modelo": "303", "period": f"{year} 1T"}, {"modelo": "303", "period": "1T"}],
+        "suppressed_entries": [
+            {"modelo": "202", "period": f"{year} 2P", "verdict": "not_applicable", "reason": "no instalment owed"},
+            {"modelo": "202", "period": "3P", "verdict": "not_applicable", "reason": "no year"},
+            "damaged",
+        ],
+    }
+
+    found = calendar_observations("persona-x", printed)
+
+    assert [(item.modelo, item.year, item.period, item.verdict, item.reason) for item in found] == [
+        ("303", year, "1T", "applicable", ""),
+        ("202", year, "2P", "not_applicable", "no instalment owed"),
+    ]
+    assert calendar_observations("persona-x", {"entries": "none"}) == []

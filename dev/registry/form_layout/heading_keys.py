@@ -15,6 +15,16 @@ def form_heading_key(modelo_id: str, *nodes: str) -> str:
     return ".".join(("modelo", "schema", modelo_id, "form", *nodes, "heading"))
 
 
+def unnamed_section_form_heading_key(modelo_id: str, page_id: str, section_id: str) -> str:
+    """Return the heading key of a section the design leaves unnamed, scoped to its page.
+
+    An unnamed section holds what a page places outside its named parts, so it
+    is a different part on every page; the page scope gives each one its own
+    key, and the same page keeps that key in every edition.
+    """
+    return form_heading_key(modelo_id, "page", page_id, "section", section_id)
+
+
 def column_form_heading_key(modelo_id: str, key: str) -> str:
     """Return the heading key of a column: the shared one for a shared column, else a per-modelo key."""
     if key in SHARED_COLUMN_KEYS:

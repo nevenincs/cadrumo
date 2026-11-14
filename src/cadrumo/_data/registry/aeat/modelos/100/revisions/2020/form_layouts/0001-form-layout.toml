@@ -1552,7 +1552,7 @@ heading_key = "modelo.schema.100.form.page.datoseconomicos.heading"
 
 [[revisions.2020.form_layouts.pages.sections]]
 id = "general"
-heading_key = "modelo.schema.100.form.section.general.heading"
+heading_key = "modelo.schema.100.form.page.datoseconomicos.section.general.heading"
 blocks = [
     { kind = "field", id = "field", casilla_id = "0001" },
     { kind = "field", id = "field-2", casilla_id = "0026" },

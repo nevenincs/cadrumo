@@ -35,6 +35,7 @@ from ......application.modelo.work_form_wording import origin_words
 from ......core.casilla_id import validated_casilla_id
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
+from ......core.i18n.render import tr
 from .....tests.modelo_operator_work_storage import SEEDED_AT, SeededOperatorWork, seeded_operator_work
 from ....components.host import ScreenHostApp
 from ....tests.modelo_workbench_session import RecordedSubmissions, application_workbench
@@ -92,7 +93,8 @@ async def _keep_in_panel(
     return app.return_value, shown
 
 
-def test_confirming_an_assumed_value_then_applying_makes_it_entered_by_the_filer(tmp_path: Path) -> None:
+def test_confirming_an_assumed_value_then_applying_makes_it_the_filers_over_the_records(tmp_path: Path) -> None:
+    """Box 06 is one the ledger renta resolver supplies, so the confirmed figure replaces the records' value."""
     with _bench(tmp_path) as bench, override_settings(cadrumo_output_language="en"):
         calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             bench.work.work_unit_id, ports=bench.work.ports, clock=SEEDED_AT, casilla_inputs={_BOX: Decimal("100")}
@@ -122,6 +124,6 @@ def test_confirming_an_assumed_value_then_applying_makes_it_entered_by_the_filer
     assert decision.advance
     assert not [finding for finding in preflight.findings if finding.blocking]
     assert refusal is None, f"the edit executor refused the confirmation: {refusal!r}"
-    assert confirmed.origin is ModeloFormOrigin.ENTERED
+    assert confirmed.origin is ModeloFormOrigin.OVERRIDES_SOURCE
     assert confirmed.value == Decimal("100")
-    assert words == "Entered by you"
+    assert words == tr("workspace.modelo.origin_source.overrides_source.records", locale="en")

@@ -28,11 +28,12 @@ modelo:
         page:
           m296-declarante:
             heading: '1-es típusú rekord: a bevalló rekordja'
+            section:
+              general:
+                heading: Azonosító adatok és a bevallás összesítése
           numbered-boxes:
             heading: Összesítő lap
         section:
-          general:
-            heading: Azonosító adatok és a bevallás összesítése
           resumen:
             heading: A bevallásban szereplő adatok összesítése
       revision:

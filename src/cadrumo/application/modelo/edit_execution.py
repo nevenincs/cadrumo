@@ -131,7 +131,11 @@ from .edit_models import (
 )
 from .edit_parsing import modelo_edit_address_grammar, validate_modelo_edit_value
 from .edit_receipt_ports import ModeloEditReceiptRepositoryPort
-from .edit_row_statement_withdrawal import is_row_stated, withdraw_superseded_row_statements
+from .edit_row_statement_withdrawal import (
+    calculated_row_indexes,
+    is_row_stated,
+    withdraw_superseded_row_statements,
+)
 from .edit_services import (
     RESPONSIBLE_OWNER,
     detail_row_natural_key,
@@ -433,20 +437,6 @@ def _state_row_carry(
     return None
 
 
-def _calculated_rows(
-    head: CalculationRevision | None, revision: ModeloRevision, binding_id: BindingId
-) -> frozenset[str]:
-    """Return the source identities of the rows ``head`` holds from the source that fills ``binding_id``."""
-    binding = next((item for item in revision.bindings if item.id == binding_id), None)
-    if head is None or binding is None:
-        return frozenset[str]()
-    return frozenset(
-        identity.source_row_identity
-        for identity in head.row_source_identities.values()
-        if identity.source_kind is binding.source
-    )
-
-
 def _apply_binding_intents(
     state: _OperatorState,
     submission: ModeloEditSubmissionV1,
@@ -500,7 +490,7 @@ def _apply_binding_intent(
         refusal = _state_row_carry(
             state,
             intent,
-            rows=_calculated_rows(head, revision, binding_id),
+            rows=frozenset(calculated_row_indexes(head, revision, binding_id)),
             grammar=modelo_edit_address_grammar(submission.baseline, intent.address),
             tax_id_format=tax_id_format,
         )

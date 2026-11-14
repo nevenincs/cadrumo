@@ -9,8 +9,9 @@
 // the row's `window_statements`: the spec enters each through the form's own
 // offers (the statements offer for a statement of nothing pending and the
 // work-income statement, the prior-values offer for a figure of an earlier
-// return), applies them through the review, and that apply is the window
-// calculating. Which statements a row carries is the world's data; the spec
+// return, which is also where a pending carry's amount is stated, and the
+// box's own value cell for a work input), applies them through the review,
+// and that apply is the window calculating. Which statements a row carries is the world's data; the spec
 // names none and chooses no value.
 //
 // Environment (all required unless noted):
@@ -74,6 +75,10 @@ const CREDENTIAL_SOURCE = resolve(
   "src/cadrumo/entrypoints/tests/persona_materialisation.py",
 );
 const MARK = "data-persona-target";
+// The kinds of file an official filing is saved as (fixed-width BOE design,
+// XML dictionary), as the export offer names them.
+const FILING_FILE_KINDS = ["boe", "xml"];
+
 const TIMEOUT = {
   signIn: 300_000,
   list: 300_000,
@@ -101,10 +106,13 @@ const FILED = ["export", "export_again", "record_after_file", "recorded"];
 // The world's `driver_calculate` of a return it left for the window to calculate.
 const NOT_RUN = "not_run";
 // The offers on the form: one prior-values entry per binding and one
-// statements entry per family, as the form serves them.
+// statements entry per family, or per family and row where the family is
+// stated row by row (a let property's carry), as the form serves them.
 const PRIOR_ENTRY = (binding) =>
   `[data-prior-entry=${JSON.stringify(binding)}]`;
-const STATEMENT = (family) => `[data-statement=${JSON.stringify(family)}]`;
+const STATEMENT = (family, row) =>
+  `[data-statement=${JSON.stringify(family)}]` +
+  (row ? `[data-statement-row=${JSON.stringify(row)}]` : "");
 
 // ---------------------------------------------------------------------------
 // Page-side functions. Each is serialised into the window, so it may use only
@@ -326,14 +334,24 @@ function pageBoxes() {
           text: element.getAttribute("data-value"),
         }
       : null;
+  // A box is named by the casilla its served address names (`c:<casilla>`),
+  // as the table names its figures; the printed box number can differ from
+  // it (box 69 is casilla iva.resultado) or be absent. A binding address
+  // (`b:`) is not a casilla.
+  const casillaOf = (key, printed) =>
+    key?.startsWith("c:") ? key.slice(2) : key?.startsWith("b:") ? "" : printed;
   const boxes = [];
   for (const row of root.querySelectorAll('div[role="row"][data-key]')) {
     const cells = [...row.children].filter(
       (child) => child.getAttribute("role") === "gridcell",
     );
+    const key = row.getAttribute("data-key");
+    const printed = norm(cells[0]?.textContent);
+    const box = casillaOf(key, printed);
     boxes.push({
-      key: row.getAttribute("data-key"),
-      box: norm(cells[0]?.textContent),
+      key,
+      box,
+      printed,
       value: norm((cells[2]?.querySelector("button") ?? cells[2])?.textContent),
       typed: typedOf(row),
     });
@@ -342,9 +360,12 @@ function pageBoxes() {
     const values = [...cell.querySelectorAll("button")]
       .map((button) => norm(button.textContent))
       .filter(Boolean);
+    const key = cell.getAttribute("data-key");
+    const printed = norm(cell.querySelector('[class*="font-mono"]')?.textContent);
     boxes.push({
-      key: cell.getAttribute("data-key"),
-      box: norm(cell.querySelector('[class*="font-mono"]')?.textContent),
+      key,
+      box: casillaOf(key, printed),
+      printed,
       value: values.at(-1) ?? "",
       typed: typedOf(cell),
     });
@@ -473,6 +494,37 @@ function pageShowSection(id) {
   if (!section) return false;
   section.scrollIntoView({ block: "start" });
   return true;
+}
+
+/** What the form shows for one keyed cell: its value button and the state it carries; null if not drawn. */
+function pageCell(selector, mark) {
+  const norm = (text) => (text ?? "").replace(/\s+/g, " ").trim();
+  for (const old of document.querySelectorAll(`[${mark}]`))
+    old.removeAttribute(mark);
+  const node = document.querySelector(selector);
+  if (!node) return null;
+  const cells = [...node.children].filter(
+    (child) => child.getAttribute("role") === "gridcell",
+  );
+  const button = (cells[2] ?? node).querySelector("button");
+  const editor = node.querySelector('[data-slot="modelo-value-editor"]');
+  const alert = node.querySelector('[role="alert"]');
+  if (button && !button.disabled && !editor) {
+    button.setAttribute(mark, "1");
+    button.scrollIntoView({ block: "center" });
+  }
+  return {
+    button: button !== null,
+    disabled: button ? button.disabled : null,
+    editor: editor !== null,
+    alert: alert ? norm(alert.textContent) : null,
+    state: {
+      kind: node.getAttribute("data-value-kind"),
+      value: node.getAttribute("data-value"),
+      selected: node.getAttribute("aria-selected"),
+    },
+    text: norm(node.textContent).slice(0, 200),
+  };
 }
 
 function pageScroll(to) {
@@ -1063,6 +1115,115 @@ async function judge(before, run) {
   return { stage: "incomplete", why };
 }
 
+/** The figures a statement enters through the prior-values offer: a prior figure, or each amount of a carry. */
+function figuresOf(entry) {
+  if (entry.kind === "prior_value")
+    return [{ target: entry.target, value: entry.value }];
+  if (entry.kind === "prior_carries")
+    return (entry.figures ?? []).map((figure) => ({
+      target: figure.binding,
+      value: figure.value,
+    }));
+  return [];
+}
+
+/** Type one figure into its prior-values entry and stage it; the problem text, or null when it was staged. */
+async function enterPriorFigure(figure, language, stagedWord) {
+  const base = PRIOR_ENTRY(figure.target);
+  const shown = await waitFor(() => exec(pageOffer, base), {
+    timeout: 20_000,
+    what: `the prior-values entry ${figure.target}`,
+    soft: true,
+  });
+  if (!shown || !shown.input)
+    return `the prior-values offer takes no figure for ${figure.target}${shown ? `: ${shown.text}` : ""}`;
+  const field = await window_.browser.$(`${base} input:not([type="checkbox"])`);
+  await field.setValue(amountText(figure.value, language));
+  await clickSelector(`${base} button[type="submit"]`);
+  const answer = await waitFor(
+    async () => {
+      const now = await exec(pageOffer, base);
+      return now && (now.text.includes(stagedWord) || now.status.length > 0)
+        ? now
+        : null;
+    },
+    {
+      timeout: 30_000,
+      what: `the figure for ${figure.target} to be staged`,
+      soft: true,
+    },
+  );
+  if (answer?.text.includes(stagedWord) && answer.status.length === 0)
+    return null;
+  return `${figure.target}: ${answer?.status.join(" | ") || "the figure was not staged"}`;
+}
+
+/**
+ * Find the value cell of one box on any page of the form. Sections draw
+ * only near the viewport, so each is brought into view in turn. Returns the
+ * cell's selector and state, or the page names that were searched.
+ */
+async function findCell(box) {
+  const selector = `[data-key=${JSON.stringify(`c:${box}`)}]`;
+  const tabs = tablist("desktop.modelo.form.pages");
+  const pages = await exec(pageTexts, tabs, '[role="tab"]');
+  const names = pages.length > 0 ? pages : ["(single)"];
+  for (let index = 0; index < names.length; index += 1) {
+    if (pages.length > 0) {
+      await exec(pageChooseTab, tabs, index);
+      await sleep(700);
+    }
+    for (const id of [null, ...((await exec(pageSections)) ?? [])]) {
+      if (id) {
+        await exec(pageShowSection, id);
+        await sleep(150);
+      }
+      const cell = await exec(pageCell, selector, MARK);
+      if (cell) return { selector, cell, page: names[index] };
+    }
+  }
+  return { searched: names };
+}
+
+/**
+ * Type a work input into its box's own value cell, as the filer does: open
+ * the cell's editor, type the value in the document's decimal mark and keep
+ * it with Enter, which stages it for the review. Returns the problem text,
+ * or null when the entry was staged.
+ */
+async function enterWorkInput(entry, language) {
+  const found = await findCell(entry.target);
+  if (found.searched)
+    return `work_input_cell_absent: c:${entry.target} is drawn on none of the pages seen (${found.searched.join(", ")})`;
+  const { selector, cell, page } = found;
+  const facts = `${JSON.stringify(cell.state)}; ${cell.text}`;
+  if (!cell.button || cell.disabled)
+    return `work_input_cell_not_editable: c:${entry.target} on ${page} has ${cell.button ? "a disabled" : "no"} value button; ${facts}`;
+  await clickSelector(`[${MARK}]`);
+  const field = await window_.browser.$(
+    `${selector} [data-slot="modelo-value-editor"] input`,
+  );
+  await field.waitForExist({ timeout: 10_000 }).catch(() => {});
+  if (!(await field.isExisting()))
+    return `work_input_cell_not_editable: c:${entry.target} on ${page} opened no editor; ${facts}`;
+  await field.setValue(amountText(entry.value, language));
+  await window_.browser.keys("Enter");
+  const now = await waitFor(
+    async () => {
+      const read = await exec(pageCell, selector, MARK);
+      return read && (!read.editor || read.alert) ? read : null;
+    },
+    {
+      timeout: 30_000,
+      what: `the value for c:${entry.target} to be read`,
+      soft: true,
+    },
+  );
+  if (now && !now.editor && !now.alert) return null;
+  await window_.browser.keys("Escape");
+  return `work_input_entry_refused: c:${entry.target}: ${now?.alert ?? "the entry was not read within the wait"}`;
+}
+
 /**
  * Enter statements the world left to the window, through the form's own
  * doors: a prior-values entry is typed and stated, a statement is ticked and
@@ -1085,66 +1246,28 @@ async function enterStatements(list, row) {
   await exec(pageExpandOffers);
   const language = await exec(() => document.documentElement.lang);
   const stagedWord = label("workspace.modelo.attention.staged");
-  for (const entry of list.filter((item) => item.kind === "prior_value")) {
-    const base = PRIOR_ENTRY(entry.target);
-    const shown = await waitFor(() => exec(pageOffer, base), {
-      timeout: 20_000,
-      what: `the prior-values entry ${entry.target}`,
-      soft: true,
-    });
-    if (!shown || !shown.input) {
-      problems.push(
-        `the prior-values offer takes no figure for ${entry.target}${shown ? `: ${shown.text}` : ""}`,
-      );
-      continue;
+  // One entry per family, and per family and row for a row-grain family.
+  const wanted = new Map();
+  for (const item of list.filter((entry) => entry.kind !== "prior_value"))
+    for (const family of item.families) {
+      const row = item.kind === "rental_carry" ? item.row : null;
+      wanted.set(row ? `${family} ${row}` : family, { family, row });
     }
-    const field = await window_.browser.$(
-      `${base} input:not([type="checkbox"])`,
-    );
-    await field.setValue(amountText(entry.value, language));
-    await clickSelector(`${base} button[type="submit"]`);
-    const answer = await waitFor(
-      async () => {
-        const now = await exec(pageOffer, base);
-        return now && (now.text.includes(stagedWord) || now.status.length > 0)
-          ? now
-          : null;
-      },
-      {
-        timeout: 30_000,
-        what: `the figure for ${entry.target} to be staged`,
-        soft: true,
-      },
-    );
-    if (answer?.text.includes(stagedWord) && answer.status.length === 0)
-      entered.push(`${entry.target} = ${entry.value}`);
-    else
-      problems.push(
-        `${entry.target}: ${answer?.status.join(" | ") || "the figure was not staged"}`,
-      );
-  }
-  const families = [
-    ...new Set(
-      list
-        .filter((item) => item.kind !== "prior_value")
-        .flatMap((item) => item.families),
-    ),
-  ];
   const ticked = [];
-  for (const family of families) {
-    const base = STATEMENT(family);
+  for (const [named, { family, row }] of wanted) {
+    const base = STATEMENT(family, row);
     const shown = await waitFor(() => exec(pageOffer, base), {
       timeout: 20_000,
-      what: `the statement ${family}`,
+      what: `the statement ${named}`,
       soft: true,
     });
     if (!shown) {
-      problems.push(`the statements offer does not serve ${family}`);
+      problems.push(`the statements offer does not serve ${named}`);
       continue;
     }
     if (shown.checked === false)
       await clickSelector(`${base} input[type="checkbox"]`);
-    ticked.push(family);
+    ticked.push(named);
   }
   if (ticked.length > 0) {
     await sleep(400);
@@ -1170,6 +1293,19 @@ async function enterStatements(list, row) {
         );
       else entered.push(...ticked);
     }
+  }
+  // The figures follow the ticks: a family's statement of nothing pending
+  // stages every carry it covers, and a figure typed after it replaces that
+  // carry's statement, as the table states an amount and leaves the rest.
+  for (const figure of list.flatMap(figuresOf)) {
+    const problem = await enterPriorFigure(figure, language, stagedWord);
+    if (problem) problems.push(problem);
+    else entered.push(`${figure.target} = ${figure.value}`);
+  }
+  for (const entry of list.filter((item) => item.kind === "work_input")) {
+    const problem = await enterWorkInput(entry, language);
+    if (problem) problems.push(problem);
+    else entered.push(`c:${entry.target} = ${entry.value}`);
   }
   const before = await readState();
   if (before.action !== "apply" || entered.length === 0)
@@ -1240,8 +1376,16 @@ async function readFigures() {
   const conflicts = [];
   const language = await exec(() => document.documentElement.lang);
   let typedBoxes = 0;
-  for (const { box, value, typed } of seen.values()) {
+  // Boxes whose casilla is not the number the form prints, for the run log.
+  const renamed = [];
+  // Boxes whose value cell shows no figure: for the run log, to tell a box the
+  // window leaves blank from one the reader cannot read.
+  const blank = [];
+  for (const { key, box, printed, value, typed } of seen.values()) {
+    if (box && (!value || value === "—"))
+      blank.push({ key, box, value, typed: typed?.text ?? null });
     if (!box || !value || value === "—" || isZeroText(value)) continue;
+    if (printed !== undefined && printed !== box) renamed.push([printed, box]);
     // The typed scalar the form serves wins; without one, a number is
     // written as a plain decimal and any other text stays as displayed.
     const figure = typed ? typed.text : plainDecimal(value, language);
@@ -1252,6 +1396,9 @@ async function readFigures() {
   }
   log("figures", {
     typedBoxes,
+    renamed: renamed.slice(0, 80),
+    blank: blank.length,
+    blankWithTyped: blank.filter((item) => item.typed !== null).slice(0, 60),
     pages,
     boxes: seen.size,
     shown: Object.keys(figures).length,
@@ -1515,7 +1662,104 @@ async function driveRow(row, runDir, persona) {
   if (out.verify === "pass")
     out.export = await exportFile(row, runDir, persona, out);
   log("export", { stage: out.export });
+  // The table files every verified return locally, whatever its export
+  // settled, so the next period and the year's annual returns build on it.
+  if (out.verify === "pass") await recordFiling(out);
   return out;
+}
+
+/**
+ * Record the verified return as filed through the export view's own door:
+ * a PRESENTADO revision whose AEAT status stays pending; nothing is sent.
+ * Anything short of that is named in the row's reasons.
+ */
+async function recordFiling(out) {
+  const say = (text) => out.reasons.push(`file: ${text}`);
+  const panel = '[role="tabpanel"]';
+  const dialog = '[role="dialog"]';
+  try {
+    await openView("workspace.modelo.filing.title");
+  } catch (error) {
+    say(String(error?.message ?? error));
+    return;
+  }
+  const record = label("workspace.modelo.filing.record_as_filed");
+  if (
+    (await exec(pageMarkByText, panel, "button", [record], "equals", MARK)) ===
+    null
+  ) {
+    say("the record-as-filed button is not shown");
+    return;
+  }
+  if (
+    !(await exec((mark) => !document.querySelector(`[${mark}]`).disabled, MARK))
+  ) {
+    const why = await exec(
+      (mark) =>
+        (document.querySelector(`[${mark}]`).parentElement?.innerText ?? "")
+          .replace(/\s+/g, " ")
+          .trim()
+          .slice(0, 300),
+      MARK,
+    );
+    say(`the record-as-filed button is disabled: ${why}`);
+    return;
+  }
+  await clickSelector(`[${MARK}]`);
+  // The confirmation's words are the application's, not the chrome's, so its
+  // accept button is found by place: the last worded button of its footer,
+  // after the cancel.
+  const asked = await waitFor(
+    async () =>
+      exec(
+        (scope, mark) => {
+          for (const old of document.querySelectorAll(`[${mark}]`))
+            old.removeAttribute(mark);
+          const root = [...document.querySelectorAll(scope)].find(
+            (element) => element.getClientRects().length > 0,
+          );
+          const footer =
+            root?.querySelector('[data-slot="dialog-footer"]') ?? root;
+          const buttons = [
+            ...(footer?.querySelectorAll("button") ?? []),
+          ].filter(
+            (button) =>
+              button.getClientRects().length > 0 &&
+              (button.textContent ?? "").trim() !== "" &&
+              !button.disabled,
+          );
+          const accept = buttons.at(-1);
+          if (!accept || buttons.length < 2) return false;
+          accept.setAttribute(mark, "1");
+          return true;
+        },
+        dialog,
+        MARK,
+      ),
+    { timeout: 15_000, what: "the filing confirmation", soft: true },
+  );
+  if (!asked) {
+    say("the filing confirmation did not open");
+    return;
+  }
+  const before = await readState();
+  await clickSelector(`[${MARK}]`);
+  const settled = await waitFor(
+    async () => {
+      const state = await readState();
+      const words = freshOf(before, state);
+      if (words.length > 0) return { words };
+      return !state.busy && state.action !== before.action ? { state } : null;
+    },
+    { timeout: TIMEOUT.verify, what: "the local filing", soft: true },
+  );
+  if (settled?.words) say(settled.words.join(" | "));
+  else if (!settled)
+    say("the window did not settle the local filing within the wait");
+  log("filed", {
+    action: settled?.state?.action ?? null,
+    words: settled?.words ?? [],
+  });
 }
 
 async function exportFile(row, runDir, persona, out) {
@@ -1592,60 +1836,88 @@ async function exportFile(row, runDir, persona, out) {
     return "incomplete";
   }
   const stem = `${persona}-${row.modelo}-${row.year}-${row.period}`;
-  let destination = join(runDir, "exports", `${stem}.boe`);
-  if (existsSync(destination))
-    destination = join(runDir, "exports", `${stem}-${Date.now()}.boe`);
-  const before = await readState();
-  queuePickerSelection(runDir, "save", destination);
-  try {
-    await clickSelector(`[${MARK}]`);
-    const outcome = await waitFor(
-      async () => {
-        if (existsSync(destination) && statSync(destination).size > 0)
-          return { pass: true };
-        const state = await readState();
-        const words = freshOf(before, state);
-        return words.length > 0 ? { words } : null;
-      },
-      {
-        timeout: TIMEOUT.export,
-        what: "the export",
-        soft: true,
-        interval: 700,
-      },
-    );
-    if (outcome?.pass) {
-      await sleep(1500);
-      log("exported", { bytes: statSync(destination).size, destination });
-      return "pass";
+  const queued = join(runDir, "temporary", "native-picker-selection.json");
+  // The window saves the filing file under the kind the export offer names,
+  // which the page does not draw, and refuses a name of any other kind
+  // without a word. So each official kind is tried in turn: a name the
+  // window takes but answers with silence is one of the wrong kind.
+  for (const kind of FILING_FILE_KINDS) {
+    let destination = join(runDir, "exports", `${stem}.${kind}`);
+    if (existsSync(destination))
+      destination = join(runDir, "exports", `${stem}-${Date.now()}.${kind}`);
+    const before = await readState();
+    queuePickerSelection(runDir, "save", destination);
+    try {
+      await clickSelector(`[${MARK}]`);
+      const outcome = await exportOutcome(destination, queued, before);
+      if (outcome?.pass) {
+        await sleep(1500);
+        log("exported", { bytes: statSync(destination).size, destination });
+        return "pass";
+      }
+      if (outcome?.words) {
+        sayExport(out, outcome.words.join(" | "));
+        return "refused";
+      }
+      if (outcome?.wrongKind) {
+        log("export-kind-refused", { kind });
+        continue;
+      }
+      const panelText = await exec(
+        (selector) =>
+          [...document.querySelectorAll(selector)]
+            .filter((root) => root.getClientRects().length > 0)
+            .map((root) => (root.innerText ?? "").replace(/\s+/g, " ").trim())
+            .join(" || ")
+            .slice(0, 700),
+        panel,
+      );
+      sayExport(
+        out,
+        `no file was written and the window said nothing within the wait (save picker ${existsSync(queued) ? "never asked" : "asked"}; panel: ${panelText})`,
+      );
+      return "error";
+    } finally {
+      if (existsSync(queued)) unlinkSync(queued);
     }
-    if (outcome?.words) {
-      sayExport(out, outcome.words.join(" | "));
-      return "refused";
-    }
-    // Whether the save picker was ever asked: the queued selection is
-    // consumed only when the window opens it.
-    const pickerAsked = !existsSync(
-      join(runDir, "temporary", "native-picker-selection.json"),
-    );
-    const panelText = await exec(
-      (selector) =>
-        [...document.querySelectorAll(selector)]
-          .filter((root) => root.getClientRects().length > 0)
-          .map((root) => (root.innerText ?? "").replace(/\s+/g, " ").trim())
-          .join(" || ")
-          .slice(0, 700),
-      panel,
-    );
-    sayExport(
-      out,
-      `no file was written and the window said nothing within the wait (save picker ${pickerAsked ? "asked" : "never asked"}; panel: ${panelText})`,
-    );
-    return "error";
-  } finally {
-    const queued = join(runDir, "temporary", "native-picker-selection.json");
-    if (existsSync(queued)) unlinkSync(queued);
   }
+  sayExport(
+    out,
+    `the window took no filing file name of any official kind (${FILING_FILE_KINDS.join(", ")})`,
+  );
+  return "error";
+}
+
+/**
+ * What an export press came to: a written file, fresh words from the window,
+ * or `wrongKind` when the picker was asked and the window then stayed idle
+ * and silent, as it does for a name of a kind it does not save.
+ */
+async function exportOutcome(destination, queued, before) {
+  let quietSince = null;
+  let busySeen = false;
+  return waitFor(
+    async () => {
+      if (existsSync(destination) && statSync(destination).size > 0)
+        return { pass: true };
+      const state = await readState();
+      const words = freshOf(before, state);
+      if (words.length > 0) return { words };
+      busySeen ||= state.busy;
+      if (existsSync(queued) || state.busy || busySeen) {
+        quietSince = null;
+        return null;
+      }
+      quietSince ??= Date.now();
+      return Date.now() - quietSince > 6000 ? { wrongKind: true } : null;
+    },
+    {
+      timeout: TIMEOUT.export,
+      what: "the export",
+      soft: true,
+      interval: 700,
+    },
+  );
 }
 
 function sayExport(out, text) {
@@ -2046,7 +2318,14 @@ test(
           try {
             out = await driveRow(row, runDir, world.persona);
           } catch (error) {
-            log("row-error", { message: error.message });
+            log("row-error", {
+              message: error.message,
+              // Which step's script the WebView refused, to tell its state apart.
+              stack: String(error.stack ?? "")
+                .split(String.fromCharCode(10))
+                .slice(1, 8)
+                .map((line) => line.trim()),
+            });
             out = {
               calculate: "error",
               verify: "not-reached",

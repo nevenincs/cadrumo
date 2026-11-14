@@ -17,7 +17,7 @@ from cadrumo.domain.calculations.registry.schema_form_layouts import (
 
 from .generation_constants import INPUTS_PAGE, NUMBERED_PAGE
 from .generation_models import Build, RowDraft, SectionDraft
-from .heading_keys import form_heading_key, unique
+from .heading_keys import form_heading_key, unique, unnamed_section_form_heading_key
 from .official_text import node_slug
 from .page_fallbacks import inputs_page, numbered_casillas, numbered_page
 from .page_placement import block_bindings, block_casillas
@@ -113,10 +113,16 @@ def _section_for_page(
         state.section_of[index] = (page_id, section_id)
     state.shown.update(block_casillas(blocks))
     state.placed_bindings.update(block_bindings(blocks))
-    heading = node_slug(draft.heading) if (draft.heading is not None and draft.heading) else section_id
+    modelo_id = state.build.modelo_id
+    if draft.heading is not None and draft.heading:
+        heading_key = form_heading_key(modelo_id, "section", node_slug(draft.heading))
+    elif draft.key:
+        heading_key = form_heading_key(modelo_id, "section", section_id)
+    else:
+        heading_key = unnamed_section_form_heading_key(modelo_id, page_id, section_id)
     return FormSectionDefinition(
         id=section_id,
-        heading_key=form_heading_key(state.build.modelo_id, "section", heading),
+        heading_key=heading_key,
         official_heading=draft.heading,
         blocks=tuple(blocks),
     )

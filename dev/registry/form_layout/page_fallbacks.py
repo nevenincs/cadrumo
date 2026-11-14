@@ -17,7 +17,7 @@ from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefiniti
 
 from .generation_constants import GENERAL_SECTION
 from .generation_models import Build
-from .heading_keys import form_heading_key, unique
+from .heading_keys import form_heading_key, unique, unnamed_section_form_heading_key
 from .official_text import node_slug
 from .position_anchoring import casilla_box
 
@@ -60,7 +60,11 @@ def numbered_page(build: Build, page_id: str, casilla_ids: Sequence[str]) -> For
     sections = tuple(
         FormSectionDefinition(
             id=section_id,
-            heading_key=form_heading_key(build.modelo_id, "section", section_id),
+            heading_key=(
+                unnamed_section_form_heading_key(build.modelo_id, page_id, section_id)
+                if section_id == GENERAL_SECTION
+                else form_heading_key(build.modelo_id, "section", section_id)
+            ),
             blocks=tuple(
                 FormFieldBlock(id=f"field-{index + 1}", casilla_id=casilla_id)
                 for index, casilla_id in enumerate(members)
