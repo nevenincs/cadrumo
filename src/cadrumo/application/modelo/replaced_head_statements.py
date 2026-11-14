@@ -70,6 +70,19 @@ def unused_head_statements(
     operator layer on ``head`` contributes nothing here; the caller reports
     that the list is incomplete.
     """
+    namer = _statement_namer(work_unit=work_unit, operation=operation, language=language)
+    statements: list[ModeloUnusedHeadStatement] = []
+    if head.operator_layer is not None:
+        statements.extend(_unused_value_statements(head.operator_layer, new.known_operator_layer, namer))
+        statements.extend(_unused_attestation_statements(head.operator_layer, new.known_operator_layer, namer))
+    statements.extend(_unused_whole_statements(head, new, namer))
+    return tuple(statements)
+
+
+def _statement_namer(
+    *, work_unit: WorkUnit, operation: PinnedAuthorityOperation, language: OutputLanguage
+) -> _StatementNamer:
+    """Read the revision's boxes and labels once for naming every statement of one result."""
     snapshot = operation.snapshot(
         str(work_unit.modelo),
         filing_year=work_unit.filing_year,
@@ -82,11 +95,14 @@ def unused_head_statements(
         if casilla.binding is not None:
             bound_casillas.setdefault(casilla.binding, casilla)
     boxes = snapshot_printed_boxes(operation, snapshot)
-    namer = _StatementNamer(casillas=casillas, bound_casillas=bound_casillas, boxes=boxes, language=language)
+    return _StatementNamer(casillas=casillas, bound_casillas=bound_casillas, boxes=boxes, language=language)
 
+
+def _unused_whole_statements(
+    head: CalculationCallerContext, new: CalculationCallerContext, namer: _StatementNamer
+) -> list[ModeloUnusedHeadStatement]:
+    """Name the head's clears and declaration-wide statements that ``new`` does not hold unchanged."""
     statements: list[ModeloUnusedHeadStatement] = []
-    if head.operator_layer is not None:
-        statements.extend(_unused_layer_statements(head.operator_layer, new.known_operator_layer, namer))
     statements.extend(
         namer.casilla(ModeloHeadStatementKind.CLEARED_CASILLA, casilla_id)
         for casilla_id in head.cleared_casilla_ids
@@ -108,13 +124,13 @@ def unused_head_statements(
                 value=head.borrador_snapshot_id,
             )
         )
-    return tuple(statements)
+    return statements
 
 
-def _unused_layer_statements(
+def _unused_value_statements(
     head: CalculationOperatorLayer, new: CalculationOperatorLayer, namer: _StatementNamer
 ) -> list[ModeloUnusedHeadStatement]:
-    """Name the operator-layer statements of ``head`` that ``new`` does not hold unchanged."""
+    """Name the typed box values and plain binding overrides of ``head`` that ``new`` does not hold unchanged."""
     statements: list[ModeloUnusedHeadStatement] = []
     new_casilla_values = {**new.decimal_casilla_inputs, **new.text_casilla_inputs}
     for casilla_id, value in sorted({**head.decimal_casilla_inputs, **head.text_casilla_inputs}.items()):
@@ -124,6 +140,14 @@ def _unused_layer_statements(
     for binding_id, value in sorted(head.binding_overrides.items()):
         if binding_id not in stated_bindings and new.binding_overrides.get(binding_id) != value:
             statements.append(namer.binding(ModeloHeadStatementKind.BINDING_OVERRIDE, binding_id, value=value))
+    return statements
+
+
+def _unused_attestation_statements(
+    head: CalculationOperatorLayer, new: CalculationOperatorLayer, namer: _StatementNamer
+) -> list[ModeloUnusedHeadStatement]:
+    """Name the attestations and income-family entries of ``head`` that ``new`` does not hold unchanged."""
+    statements: list[ModeloUnusedHeadStatement] = []
     statements.extend(
         namer.binding(ModeloHeadStatementKind.ABSENCE_ATTESTATION, binding_id)
         for binding_id in head.attested_binding_ids
