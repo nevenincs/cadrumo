@@ -4865,6 +4865,15 @@ application:
         tartalmaz, de %{count} lett megadva.
       descendant_value_invalid: A(z) %{row}. leszármazott olyan értéket ad meg, amelyet
         a bevallás nem fogad el; ellenőrizd a dátumait, összegeit és az igen-nem válaszait.
+      iae_row_invalid: 'A(z) „%{leaf}” adat érvénytelen, vagy ellentmond a sor más
+        adatainak; semmi nem került mentésre. Javítsd, és ismételd meg: «%{door}».'
+      iae_row_reference_missing: 'A(z) „%{leaf}” a(z) „%{section}” %{row}. sorára
+        hivatkozik, amely nem létezik; semmi nem került mentésre. Előbb add hozzá
+        azt a sort, majd ismételd meg: «%{door}».'
+      iae_row_referenced: 'A(z) „%{section}” %{rows}. sorai még hivatkoznak a(z) %{row}.
+        sorra; semmi nem került törlésre. Előbb töröld azokat ezzel: «%{door}».'
+      iae_row_repeated: 'A(z) %{row}. sor már megadja ezt: „%{leaf}”; semmi nem került
+        mentésre. Inkább azt a sort módosítsd ezzel: «%{door}».'
       lifecycle_schema_validation_failed: A profiladatok nem felelnek meg a felhasználói
         profil sémájának.
       passphrase_confirmation_mismatch: Az új jelszó és a megerősítése nem egyezik.
@@ -5076,6 +5085,12 @@ application:
         stale_revision: A profil vagy a tételei megváltoztak a lista beolvasása óta.
           Olvasd be újra a listát.
       relation:
+        iae_elemento_tributario:
+          actividad: A tevékenység adóeleme
+        iae_local:
+          actividad: A tevékenység helyisége
+        iae_local_superficie:
+          local: A helyiség területosztálya
         prevision_social_contribution: Az év igazolása
         renta_arrendamiento:
           inmueble: Az ingatlan bérlete
