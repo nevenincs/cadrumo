@@ -132,6 +132,7 @@ def administration_subject(
     os_owner_id: str = "synthetic-owner",
     installation_id: UUID | None = None,
     profile_label: str = "Enrollment tests",
+    shared_native_store: bool = False,
 ) -> Generator[AdministrationSubject]:
     """Use a real encrypted profile; only native store and OS/transport observations are doubled."""
     create, decode = profile_authority_contexts()
@@ -209,7 +210,9 @@ def administration_subject(
             expires_at=NOW + timedelta(hours=1),
             issued_monotonic=10.0,
         )
-        native, client_native = MemoryNativePort(), MemoryNativePort()
+        native = MemoryNativePort()
+        # One OS account's credential store holds both custody and the client's key in production.
+        client_native = native if shared_native_store else MemoryNativePort()
         delivery = DeliveryFaults(NativeEnrollmentRecipient(requester=requester, secrets_store=client_native))
         owner = TestAdministrationOwner(
             AdministrationFacts(profile=profile, context=context, originating_login_id="test-login", session=session),

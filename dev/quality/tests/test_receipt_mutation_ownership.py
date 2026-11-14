@@ -72,6 +72,7 @@ _RECEIPT_LITERALS: Mapping[str, frozenset[str]] = {
     "profile-session:v2": frozenset({_KEYCHAIN}),
     "session.v2.json": frozenset({_RECEIPT, _TAXONOMY}),
     "session.v2.retirement.json": frozenset({_RECEIPT, _TAXONOMY}),
+    "session.v2.minted.json": frozenset({_RECEIPT, _TAXONOMY}),
 }
 """Spelling the receipt's keychain service or file reaches it without a writer."""
 

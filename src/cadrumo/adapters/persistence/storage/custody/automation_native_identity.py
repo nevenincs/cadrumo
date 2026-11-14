@@ -17,7 +17,11 @@ WRAP_NAMESPACE = f"{AUTOMATION_NAMESPACE_PREFIX}grant-wrap.v1"
 CLIENT_NAMESPACE = f"{AUTOMATION_NAMESPACE_PREFIX}client-key.v1"
 
 
+def automation_root_digest(root: Path) -> str:
+    """Return the one-way storage-root identity that leads every native automation account of ``root``."""
+    return sha256_hex(str(root.resolve()).encode("utf-8"))
+
+
 def automation_native_account(root: Path, installation_id: UUID, profile_id: UUID) -> str:
     """Name one profile's native credentials, scoped to the storage root they belong to."""
-    root_digest = sha256_hex(str(root.resolve()).encode("utf-8"))
-    return f"{root_digest}/{installation_id}/{profile_id}"
+    return f"{automation_root_digest(root)}/{installation_id}/{profile_id}"

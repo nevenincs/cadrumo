@@ -46,6 +46,7 @@ from __future__ import annotations
 
 import secrets
 from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import StrEnum
 from pathlib import Path
@@ -68,10 +69,15 @@ from ..errors import (
     StorageError,
     StorageValidationError,
 )
-from ..storage_path_definitions import PROFILE_SESSION_FILENAME, PROFILE_SESSION_RETIREMENT_FILENAME
+from ..storage_path_definitions import (
+    PROFILE_SESSION_FILENAME,
+    PROFILE_SESSION_MINTED_FILENAME,
+    PROFILE_SESSION_RETIREMENT_FILENAME,
+)
 from . import acceleration_receipt_crypto
 from .acceleration_keychain import (
     delete_acceleration_secret,
+    keychain_unavailability,
     probe_profile_session_keychain,
     read_acceleration_secret,
     store_acceleration_secret,
@@ -80,6 +86,7 @@ from .acceleration_receipt_crypto import encryption_error
 from .acceleration_receipt_document import (
     AccelerationReceiptDocument,
     DecodedReceipt,
+    MintedProfileSessionsDocument,
     PendingReceiptRetirementDocument,
     canonical_document_bytes,
     document_from_record,
@@ -114,6 +121,10 @@ PROFILE_SESSION_RECORD_MAX_BYTES: Final[int] = 8 * 1024
 
 _PROFILE_SESSION_RETIREMENT_MAX_BYTES: Final[int] = 24 * 1024
 _PROFILE_SESSION_RETIREMENT_SCHEMA_VERSION: Final[int] = 1
+_PROFILE_SESSION_MINTED_SCHEMA_VERSION: Final[int] = 1
+_PROFILE_SESSION_MINTED_MAX_SESSIONS: Final[int] = 256
+"""Bound on the minted record; a pruning pass drops every id whose key it saw removed."""
+_PROFILE_SESSION_MINTED_MAX_BYTES: Final[int] = 16 * 1024
 
 
 class ReceiptDeletion(StrEnum):
@@ -703,6 +714,7 @@ def _mint_profile_session(
                     replacement=journal,
                     maximum_bytes=_PROFILE_SESSION_RETIREMENT_MAX_BYTES,
                 )
+                _record_minted_session(receipt_path, session_id)
             try:
                 with diagnostic_phase(_log, _MINT_PHASE_EVENT, "keychain_store"):
                     store_acceleration_secret(
@@ -1137,6 +1149,166 @@ def delete_refused_receipt(*, path: Path, payload: bytes, decoded: DecodedReceip
     if not clear_captured_receipt(path, payload=payload, maximum_bytes=PROFILE_SESSION_RECORD_MAX_BYTES):
         return ReceiptDeletion.RECEIPT_RETAINED
     return ReceiptDeletion.KEYCHAIN_ENTRY_RETAINED if keychain_retained else ReceiptDeletion.DELETED
+
+
+def _minted_path_beside(receipt_path: Path) -> Path:
+    """Return the minted-session record beside an already validated receipt path."""
+    return receipt_path.with_name(PROFILE_SESSION_MINTED_FILENAME)
+
+
+def _read_minted_sessions(path: Path) -> tuple[bytes | None, frozenset[UUID]]:
+    """Read the exact record bytes and the session ids they name.
+
+    Raises:
+        ProfileCustodyRecordError: When the record is linked, oversized or unreadable.
+        ValueError: When it is not one canonical current record.
+    """
+    payload = read_optional_profile_custody_local_record(path, maximum_bytes=_PROFILE_SESSION_MINTED_MAX_BYTES)
+    if payload is None:
+        return None, frozenset[UUID]()
+    document = cast(MintedProfileSessionsDocument, parse_canonical_document(payload, MintedProfileSessionsDocument))
+    if document.schema_version != _PROFILE_SESSION_MINTED_SCHEMA_VERSION:
+        raise ValueError("profile-session minted record schema is not current")
+    return payload, frozenset(document.session_ids)
+
+
+def _publish_minted_sessions(path: Path, *, expected: bytes | None, sessions: frozenset[UUID]) -> None:
+    """Compare-and-swap the record through the custody local-record owner; an empty record is cleared."""
+    if not sessions:
+        if expected is not None:
+            compare_and_clear_profile_custody_local_record(
+                path, expected=expected, maximum_bytes=_PROFILE_SESSION_MINTED_MAX_BYTES
+            )
+        return
+    compare_and_replace_profile_custody_local_record(
+        path,
+        expected=expected,
+        replacement=canonical_document_bytes(
+            MintedProfileSessionsDocument(
+                schema_version=_PROFILE_SESSION_MINTED_SCHEMA_VERSION,
+                session_ids=tuple(sorted(sessions, key=str)),
+            )
+        ),
+        maximum_bytes=_PROFILE_SESSION_MINTED_MAX_BYTES,
+    )
+
+
+def _record_minted_session(receipt_path: Path, session_id: UUID) -> None:
+    """Name ``session_id`` as minted by this root before its key reaches the keychain.
+
+    A record that cannot be read, or that is full, leaves the new session
+    unrecorded: its entry is then never pruned, which only keeps a key, and
+    the sign-in itself does not depend on the record.
+    """
+    path = _minted_path_beside(receipt_path)
+    try:
+        payload, sessions = _read_minted_sessions(path)
+        if len(sessions) >= _PROFILE_SESSION_MINTED_MAX_SESSIONS:
+            _log.debug("profile-session minted record is full; the new session is not recorded")
+            return
+        _publish_minted_sessions(path, expected=payload, sessions=sessions | {session_id})
+    except (ProfileCustodyRecordError, ValueError, ValidationError) as exc:
+        _log.debug("profile-session minted record not written error_type=%s", type(exc).__name__)
+
+
+def _retained_sessions(*, storage_root: Path, profile_id: UUID, receipt_path: Path) -> frozenset[UUID]:
+    """Return the sessions whose keys must stay: the receipt's, of any schema, and both a pending journal names."""
+    sessions: set[UUID] = set()
+    captured = _read_receipt(receipt_path)
+    if captured is not None:
+        if captured[1].profile_id != profile_id:
+            raise StorageValidationError("profile-session receipt profile differs")
+        sessions.add(captured[1].session_id)
+    pending = _read_pending_retirement(_retirement_path_beside(receipt_path), profile_id=profile_id)
+    if pending is not None:
+        _payload, predecessor, successor = pending
+        if predecessor is not None:
+            sessions.add(decode_receipt(predecessor).session_id)
+        sessions.add(decode_receipt(successor).session_id)
+    return frozenset(sessions)
+
+
+@dataclass(frozen=True, slots=True)
+class ProfileSessionPruneOutcome:
+    """What one pruning pass removed, what it left for the next pass, and why it stopped early if it did.
+
+    It names UUID pairs only, never a secret. ``retained`` holds the minted,
+    unretained entries a failed deletion left in place.
+    """
+
+    removed: tuple[tuple[UUID, UUID], ...]
+    retained: tuple[tuple[UUID, UUID], ...]
+    unavailability: KeychainUnavailability | None
+
+
+def _owned_profiles(storage_root: Path) -> tuple[UUID, ...]:
+    from ..bucket.keystore_paths import keystore_root
+
+    try:
+        entries = tuple(keystore_root(storage_root).iterdir())
+    except FileNotFoundError:
+        return ()
+    owned: list[UUID] = []
+    for entry in entries:
+        try:
+            profile_id = UUID(entry.name)
+        except ValueError:
+            continue
+        if str(profile_id) == entry.name and not entry.is_symlink() and entry.is_dir():
+            owned.append(profile_id)
+    return tuple(sorted(owned, key=str))
+
+
+def prune_profile_session_entries(storage_root: Path) -> ProfileSessionPruneOutcome:
+    """Delete the keychain entries this root minted that no receipt or journal of it names any more.
+
+    The keychain account ``<profile>:<session>`` names no storage root, and
+    copies of a root share profile ids, so only a session this root recorded
+    when it minted it may be deleted; an entry it never recorded is left
+    alone. An id whose key is confirmed absent leaves the record, which keeps
+    it bounded. A profile whose receipt, journal or record cannot be read is
+    skipped. The pass holds the custody root lock, which every mint holds
+    from its journal to its receipt. A keychain that cannot answer stops the
+    pass with its typed reason; nothing is raised for it.
+    """
+    removed: list[tuple[UUID, UUID]] = []
+    with profile_custody_root_lock(storage_root):
+        for profile_id in _owned_profiles(storage_root):
+            receipt_path = profile_session_path(storage_root=storage_root, profile_id=profile_id)
+            minted_path = _minted_path_beside(receipt_path)
+            try:
+                with profile_custody_local_lock(profile_session_lock_path(receipt_path)):
+                    payload, minted = _read_minted_sessions(minted_path)
+                    if not minted:
+                        continue
+                    retained = _retained_sessions(
+                        storage_root=storage_root, profile_id=profile_id, receipt_path=receipt_path
+                    )
+                    candidates = sorted(minted - retained, key=str)
+                    gone: set[UUID] = set()
+                    failure: BaseException | None = None
+                    for session_id in candidates:
+                        try:
+                            delete_acceleration_secret(
+                                profile_id=profile_id, session_id=session_id, suppress_unavailable=False
+                            )
+                        except Exception as exc:
+                            failure = exc
+                            break
+                        gone.add(session_id)
+                        removed.append((profile_id, session_id))
+                    if gone:
+                        _publish_minted_sessions(minted_path, expected=payload, sessions=minted - gone)
+                    if failure is not None:
+                        return ProfileSessionPruneOutcome(
+                            removed=tuple(removed),
+                            retained=tuple((profile_id, session) for session in candidates if session not in gone),
+                            unavailability=keychain_unavailability(failure),
+                        )
+            except (OSError, ValueError, ValidationError, StorageError, ProfileCustodyRecordError) as exc:
+                _log.debug("profile-session prune skipped a profile error_type=%s", type(exc).__name__)
+                continue
+    return ProfileSessionPruneOutcome(removed=tuple(removed), retained=(), unavailability=None)
 
 
 __all__ = [
