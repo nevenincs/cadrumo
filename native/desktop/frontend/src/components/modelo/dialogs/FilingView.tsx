@@ -247,7 +247,8 @@ export function FilingView({
     run: runWrite,
   } = useModeloOperation();
   const picking = useRef(false);
-  const [pickerOpen, setPickerOpen] = useState(false);
+  // The write whose save or open dialog is waiting for the filer.
+  const [pickerFor, setPickerFor] = useState<Write | null>(null);
   const generation = useRef(0);
   const [confirming, setConfirming] = useState(false);
   const alive = useRef(true);
@@ -258,8 +259,13 @@ export function FilingView({
       generation.current += 1;
     };
   }, [port, envelope, pending, holds, target]);
-  const busy = notice?.kind === "busy";
-  const quiet = busy || writeHold !== undefined || pending || pickerOpen;
+  // The write being waited for, whether it is at its dialog or its answer.
+  const working = notice?.kind === "busy" ? notice.write : pickerFor;
+  const quiet = working !== null || writeHold !== undefined || pending;
+  // A write that is not made and has nothing of its own to say is still said.
+  const notDone = (write: Write) => {
+    if (alive.current) setNotice({ kind: "not_sent", write });
+  };
 
   const run = useCallback(
     async <Result,>(
@@ -274,7 +280,8 @@ export function FilingView({
       const outcome = await runWrite(start, () => alive.current);
       if (!outcome || !alive.current || mine !== generation.current) {
         void port.forgetFiles(tokens);
-        if (alive.current && mine === generation.current) setNotice(null);
+        if (alive.current && mine === generation.current)
+          setNotice({ kind: "not_sent", write });
         return;
       }
       // A file written here stays named so it can be shown in its folder.
@@ -306,7 +313,7 @@ export function FilingView({
   const choose = async (write: Write, pick: () => Promise<FilePicks>) => {
     if (picking.current || quiet || !alive.current) return null;
     picking.current = true;
-    setPickerOpen(true);
+    setPickerFor(write);
     const mine = generation.current;
     const version = holds.admissionVersion(target);
     try {
@@ -318,17 +325,21 @@ export function FilingView({
         holds.admissionVersion(target) !== version
       ) {
         void port.forgetFiles(picks.files.map((file) => file.token));
+        if (mine === generation.current) notDone(write);
         return null;
       }
       void port.forgetFiles(picks.files.slice(1).map((file) => file.token));
-      return picks.files[0] ?? null;
+      const chosen = picks.files[0] ?? null;
+      // A dialog closed without a choice writes nothing, and says so.
+      if (!chosen) notDone(write);
+      return chosen;
     } catch {
       if (alive.current && mine === generation.current)
         setNotice({ kind: "not_sent", write });
       return null;
     } finally {
       picking.current = false;
-      if (alive.current) setPickerOpen(false);
+      if (alive.current) setPickerFor(null);
     }
   };
   const save = (write: Write, format: ModeloSaveFormat, name: string) =>
@@ -343,14 +354,15 @@ export function FilingView({
   const exportFile = async (
     write: "export" | Exclude<ModeloExportArtefact, "fichero_boe">,
   ) => {
-    if (!calculation || quiet) return;
+    if (quiet) return;
+    if (!calculation) return notDone(write);
     const artefact: ModeloExportArtefact =
       write === "export" ? "fichero_boe" : write;
     // The offer says what kind of file each artefact is saved as.
     const format: ModeloSaveFormat | null =
       offer?.artefacts.find((option) => option.artefact === artefact)
         ?.save_format ?? null;
-    if (format === null) return;
+    if (format === null) return notDone(write);
     const picked = await save(write, format, stem);
     if (!picked) return;
     await run(
@@ -386,7 +398,8 @@ export function FilingView({
   };
 
   const buildPackage = async () => {
-    if (!calculation || quiet) return;
+    if (quiet) return;
+    if (!calculation) return notDone("package");
     const picked = await save("package", "zip", stem);
     if (!picked) return;
     await run(
@@ -415,7 +428,8 @@ export function FilingView({
   const record = async () => {
     setConfirming(false);
     const report = envelope.verification_report_id;
-    if (!calculation || !report || quiet) return;
+    if (quiet) return;
+    if (!calculation || !report) return notDone("record");
     await run(
       "record",
       () =>
@@ -592,6 +606,11 @@ export function FilingView({
         ))}
       </ol>
 
+      {working !== null && (
+        <Alert tone="neutral" icon={<Spinner />}>
+          {t("desktop.navigation.busy")}
+        </Alert>
+      )}
       {notice && notice.kind !== "busy" && <FilingNotice notice={notice} />}
       {pending && (
         <Alert tone="warning" icon={<Icon name="edit" />}>
@@ -661,7 +680,7 @@ export function FilingView({
                 void exportFile("export");
               }}
             >
-              {busy && notice.write === "export" ? (
+              {working === "export" ? (
                 <Spinner />
               ) : (
                 <Icon name="download" size="xs" />
@@ -707,7 +726,7 @@ export function FilingView({
             disabled={quiet}
             onClick={() => void importEvidence("declaration")}
           >
-            {busy && notice.write === "declaration" ? (
+            {working === "declaration" ? (
               <Spinner />
             ) : (
               <Icon name="page" size="xs" />
@@ -731,7 +750,7 @@ export function FilingView({
               aria-describedby={recordSharesHold ? holdId : undefined}
               onClick={() => setConfirming(true)}
             >
-              {busy && notice.write === "record" && <Spinner />}
+              {working === "record" && <Spinner />}
               {t("workspace.modelo.filing.record_as_filed")}
             </Button>
           )}
@@ -742,7 +761,7 @@ export function FilingView({
               void importEvidence("justificante");
             }}
           >
-            {busy && notice.write === "receipt" ? (
+            {working === "receipt" ? (
               <Spinner />
             ) : (
               <Icon name="paste" size="xs" />
@@ -817,7 +836,7 @@ export function FilingView({
                         : exportFile(copy));
                     }}
                   >
-                    {busy && notice.write === copy && <Spinner />}
+                    {working === copy && <Spinner />}
                     {t(`workspace.modelo.filing.copy.${copy}.action`)}
                   </Button>
                   {reveal(copy)}
