@@ -106,10 +106,13 @@ const FILED = ["export", "export_again", "record_after_file", "recorded"];
 // The world's `driver_calculate` of a return it left for the window to calculate.
 const NOT_RUN = "not_run";
 // The offers on the form: one prior-values entry per binding and one
-// statements entry per family, as the form serves them.
+// statements entry per family, or per family and row where the family is
+// stated row by row (a let property's carry), as the form serves them.
 const PRIOR_ENTRY = (binding) =>
   `[data-prior-entry=${JSON.stringify(binding)}]`;
-const STATEMENT = (family) => `[data-statement=${JSON.stringify(family)}]`;
+const STATEMENT = (family, row) =>
+  `[data-statement=${JSON.stringify(family)}]` +
+  (row ? `[data-statement-row=${JSON.stringify(row)}]` : "");
 
 // ---------------------------------------------------------------------------
 // Page-side functions. Each is serialised into the window, so it may use only
@@ -336,9 +339,15 @@ function pageBoxes() {
     const cells = [...row.children].filter(
       (child) => child.getAttribute("role") === "gridcell",
     );
+    const key = row.getAttribute("data-key");
+    const printed = norm(cells[0]?.textContent);
+    // A field the form serves with no printed box number still names its
+    // casilla in the served key (`c:<casilla>`).
+    const served = !printed && key?.startsWith("c:") ? key.slice(2) : "";
     boxes.push({
-      key: row.getAttribute("data-key"),
-      box: norm(cells[0]?.textContent),
+      key,
+      box: printed || served,
+      fromKey: Boolean(served),
       value: norm((cells[2]?.querySelector("button") ?? cells[2])?.textContent),
       typed: typedOf(row),
     });
@@ -1230,28 +1239,28 @@ async function enterStatements(list, row) {
   await exec(pageExpandOffers);
   const language = await exec(() => document.documentElement.lang);
   const stagedWord = label("workspace.modelo.attention.staged");
-  const families = [
-    ...new Set(
-      list
-        .filter((item) => item.kind !== "prior_value")
-        .flatMap((item) => item.families),
-    ),
-  ];
+  // One entry per family, and per family and row for a row-grain family.
+  const wanted = new Map();
+  for (const item of list.filter((entry) => entry.kind !== "prior_value"))
+    for (const family of item.families) {
+      const row = item.kind === "rental_carry" ? item.row : null;
+      wanted.set(row ? `${family} ${row}` : family, { family, row });
+    }
   const ticked = [];
-  for (const family of families) {
-    const base = STATEMENT(family);
+  for (const [named, { family, row }] of wanted) {
+    const base = STATEMENT(family, row);
     const shown = await waitFor(() => exec(pageOffer, base), {
       timeout: 20_000,
-      what: `the statement ${family}`,
+      what: `the statement ${named}`,
       soft: true,
     });
     if (!shown) {
-      problems.push(`the statements offer does not serve ${family}`);
+      problems.push(`the statements offer does not serve ${named}`);
       continue;
     }
     if (shown.checked === false)
       await clickSelector(`${base} input[type="checkbox"]`);
-    ticked.push(family);
+    ticked.push(named);
   }
   if (ticked.length > 0) {
     await sleep(400);
@@ -1360,8 +1369,15 @@ async function readFigures() {
   const conflicts = [];
   const language = await exec(() => document.documentElement.lang);
   let typedBoxes = 0;
-  for (const { box, value, typed } of seen.values()) {
+  const keyedBoxes = [];
+  // Boxes whose value cell shows no figure: for the run log, to tell a box the
+  // window leaves blank from one the reader cannot read.
+  const blank = [];
+  for (const { key, box, value, typed, fromKey } of seen.values()) {
+    if (box && (!value || value === "—"))
+      blank.push({ key, box, value, typed: typed?.text ?? null });
     if (!box || !value || value === "—" || isZeroText(value)) continue;
+    if (fromKey) keyedBoxes.push(box);
     // The typed scalar the form serves wins; without one, a number is
     // written as a plain decimal and any other text stays as displayed.
     const figure = typed ? typed.text : plainDecimal(value, language);
@@ -1372,6 +1388,9 @@ async function readFigures() {
   }
   log("figures", {
     typedBoxes,
+    keyedBoxes,
+    blank: blank.length,
+    blankWithTyped: blank.filter((item) => item.typed !== null).slice(0, 60),
     pages,
     boxes: seen.size,
     shown: Object.keys(figures).length,
