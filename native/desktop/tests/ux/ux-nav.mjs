@@ -368,8 +368,11 @@ export function pageScrollContainers(rootSel) {
   };
   const containers = [];
   for (const el of [root, ...root.querySelectorAll("*")]) {
-    if (!el.getClientRects().length || el.clientHeight <= 0) continue;
+    if (!el.getClientRects().length || el.clientHeight <= 2) continue;
     const cs = getComputedStyle(el);
+    // The visually-hidden clip pattern is not a scroller a person can use.
+    if (cs.position === "absolute" && px(cs.width) <= 1 && px(cs.height) <= 1)
+      continue;
     const scrolling = cs.overflowY === "auto" || cs.overflowY === "scroll";
     const overflows = el.scrollHeight > el.clientHeight + 1;
     if (!scrolling && !(overflows && cs.overflowY !== "visible")) continue;
