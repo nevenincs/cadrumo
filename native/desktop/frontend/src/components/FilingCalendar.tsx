@@ -38,6 +38,7 @@ import {
   STATE_ORDER,
 } from "../shell/calendarEntries";
 import { factsGap, listed } from "../shell/compose";
+import { useScrolls } from "@/components/ui/useScrolls";
 import { useMetric } from "../shell/metrics";
 import { useStrings } from "../shell/strings";
 import type { CoverageAdviceReason } from "../shell/calendarContract";
@@ -185,6 +186,23 @@ export function FilingCalendarView({
   const head = useRef<HTMLDivElement>(null);
   const bar = useRef<HTMLDivElement>(null);
   const aside = useRef<HTMLDivElement>(null);
+  // Each scroller is a Tab stop while it scrolls, so the Page and End keys
+  // reach it without the pointer.
+  const [pageEl, setPageEl] = useState<HTMLElement | null>(null);
+  const [asideEl, setAsideEl] = useState<HTMLDivElement | null>(null);
+  const pageScrolls = useScrolls(pageEl);
+  const asideScrolls = useScrolls(asideEl);
+  const takePage = useCallback(
+    (el: HTMLElement | null) => {
+      root.current = el;
+      setPageEl(el);
+    },
+    [root],
+  );
+  const takeAside = useCallback((el: HTMLDivElement | null) => {
+    aside.current = el;
+    setAsideEl(el);
+  }, []);
   // How much of the page's top the head keeps: all of it, or its controls.
   const kept = useCallback(
     () => head.current?.offsetHeight || bar.current?.offsetHeight || 0,
@@ -998,9 +1016,17 @@ export function FilingCalendarView({
             place and scrolls by itself, as tall as the page. */}
         {wide && !nothing && (
           <div
-            ref={aside}
+            ref={takeAside}
+            tabIndex={asideScrolls ? 0 : undefined}
+            aria-label={
+              asideScrolls ? t("desktop.calendar.view_list") : undefined
+            }
             onScroll={(event) => scrolled(event.currentTarget, ["list"])}
-            className="calendar-aside sticky top-0 h-(--calendar-height) overflow-y-auto border-l bg-background [--calendar-head:calc(var(--spacing)*0)]"
+            className={cn(
+              "calendar-aside sticky top-0 h-(--calendar-height) overflow-y-auto border-l bg-background [--calendar-head:calc(var(--spacing)*0)]",
+              asideScrolls &&
+                "outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
+            )}
           >
             {list}
           </div>
@@ -1011,8 +1037,8 @@ export function FilingCalendarView({
 
   return (
     <section
-      ref={root}
-      tabIndex={-1}
+      ref={takePage}
+      tabIndex={pageScrolls ? 0 : -1}
       aria-label={t("desktop.calendar.title")}
       aria-busy={refreshing || undefined}
       data-head={room.tall ? "whole" : "controls"}

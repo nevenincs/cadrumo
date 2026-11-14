@@ -9,8 +9,10 @@ import {
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/components/ui/cn";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { Spinner } from "@/components/ui/spinner";
+import { useScrolls } from "@/components/ui/useScrolls";
 import { PaneHeader, type PaneControl } from "../PaneHeader";
 import {
   AEAT_SYNC_AREAS,
@@ -75,6 +77,28 @@ function standing(t: Translate, locale: string, area: AeatSyncArea): string {
     case "capture_refused":
       return t("desktop.aeat_sync.state.capture_refused");
   }
+}
+
+/** The page's body, which scrolls under its header. It is a Tab stop while
+ * it scrolls, so the Page and End keys move it without the pointer. */
+function SyncBody({ label, children }: { label: string; children: ReactNode }) {
+  const [body, setBody] = useState<HTMLElement | null>(null);
+  const scrolls = useScrolls(body);
+  return (
+    <div
+      ref={setBody}
+      tabIndex={scrolls ? 0 : undefined}
+      role={scrolls ? "group" : undefined}
+      aria-label={scrolls ? label : undefined}
+      className={cn(
+        "flex min-h-0 flex-1 flex-col overflow-y-auto",
+        scrolls &&
+          "outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
+      )}
+    >
+      {children}
+    </div>
+  );
 }
 
 /** How the last try ended, only where it failed or could not be confirmed. */
@@ -272,7 +296,7 @@ export const AeatSyncPage = memo(function AeatSyncPage({
         className={shell}
       >
         {header()}
-        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+        <SyncBody label={t("desktop.aeat_sync.title")}>
           <div className="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4">
             <AeatSyncFlow
               port={prepare}
@@ -282,7 +306,7 @@ export const AeatSyncPage = memo(function AeatSyncPage({
               onOpenAccess={onOpenAccess}
             />
           </div>
-        </div>
+        </SyncBody>
       </section>
     );
   if (
@@ -305,7 +329,7 @@ export const AeatSyncPage = memo(function AeatSyncPage({
             </Button>
           ),
         )}
-        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+        <SyncBody label={t("desktop.aeat_sync.title")}>
           <div className="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4">
             {/* A finished update with every part in order is told by its
                 results alone. */}
@@ -337,7 +361,7 @@ export const AeatSyncPage = memo(function AeatSyncPage({
               />
             )}
           </div>
-        </div>
+        </SyncBody>
       </section>
     );
 
@@ -357,7 +381,7 @@ export const AeatSyncPage = memo(function AeatSyncPage({
           {t("desktop.aeat_sync.bring_all")}
         </Button>,
       )}
-      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+      <SyncBody label={t("desktop.aeat_sync.title")}>
         <div className="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4">
           {runUncertain && <AeatSyncRunView run={run} />}
           {failure && (
@@ -483,7 +507,7 @@ export const AeatSyncPage = memo(function AeatSyncPage({
             </ul>
           )}
         </div>
-      </div>
+      </SyncBody>
     </section>
   );
 });
