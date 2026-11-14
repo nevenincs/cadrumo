@@ -128,6 +128,10 @@ errors:
     m210_imputation_no_filing_year: Az M210 ingatlan-imputáció számításához nem nulla
       bevallási év szükséges.
     parameter_unknown: A(z) {parameter_id} paraméter nincs regisztrálva.
+    previous_filing_casillas_conflicting: A tárolt Modelo {source_modelo} bevallásodban
+      ({source_filing_year}, {source_period}) a(z) {casilla_ids} mezők kétszer szerepelnek,
+      a régi mezőszámmal és az oldallal minősített számmal, eltérő értékekkel. Javítsd
+      ki azt a bevallást, hogy minden mezőnek egy értéke legyen, majd számolj újra.
     previous_filing_casillas_unobserved: 'A tárolt Modelo {source_modelo} bevallásodban
       ({source_filing_year}, {source_period}) nem szerepelnek a(z) {casilla_ids} mezők,
       amelyeket ez a számítás belőle visz tovább. Egy mező, amely nem szerepel, ismeretlen,
