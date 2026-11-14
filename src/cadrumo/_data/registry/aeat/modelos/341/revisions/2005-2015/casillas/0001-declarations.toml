@@ -32,6 +32,8 @@ continuidad_id = "reagp-porcentaje-compensacion"
 number = "04"
 section = ["iva", "reagp", "compensacion", "porcentaje"]
 data_type = "ratio"
+# The design prints [04] as "Compensación: Porcentaje de compensación" at 3 enteros y 2 decimales, a percentage.
+constraints = { min_value = "0", max_value = "100" }
 semantic_role = "reagp_porcentaje_compensacion"
 legal_refs = ["ley-37-1992:art-130", "orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
 
@@ -41,6 +43,8 @@ continuidad_id = "05"
 number = "05"
 section = ["iva", "reagp", "compensacion", "porcentaje"]
 data_type = "ratio"
+# The design prints [05] as "Compensación: Porcentaje de compensación" at 3 enteros y 2 decimales, a percentage.
+constraints = { min_value = "0", max_value = "100" }
 semantic_role = "reagp_porcentaje_compensacion"
 legal_refs = ["ley-37-1992:art-130", "orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
 
@@ -50,6 +54,8 @@ continuidad_id = "06"
 number = "06"
 section = ["iva", "reagp", "compensacion", "porcentaje"]
 data_type = "ratio"
+# The design prints [06] as "Compensación: Porcentaje de compensación" at 3 enteros y 2 decimales, a percentage.
+constraints = { min_value = "0", max_value = "100" }
 semantic_role = "reagp_porcentaje_compensacion"
 legal_refs = ["ley-37-1992:art-130", "orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
 

@@ -293,6 +293,9 @@ id = "perc.porcentaje"
 number = "170-173"
 segmento = "perceptor"
 data_type = "ratio"
+# The design (aeat-dr-194-2019) prints positions 170-173 as "% RETENCIÓN", generally "el 18%", in two
+# integer and two decimal digits.
+constraints = { min_value = "0", max_value = "100" }
 continuidad_id = "capital-ajeno-perceptor-porcentaje-retencion"
 semantic_role = "capital_ajeno_perceptor_porcentaje_retencion"
 section = ["perceptores"]

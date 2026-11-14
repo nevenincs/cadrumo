@@ -184,6 +184,8 @@ continuidad_id = "tipo-impositivo"
 number = "15"
 section = ["490_01"]
 data_type = "ratio"
+# The design prints [15] "Liquidación. Tipo" at 1 ent + 2 dec and its rate rows as "3,00", a percentage.
+constraints = { min_value = "0", max_value = "100" }
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
@@ -360,6 +362,8 @@ continuidad_id = "regularization-exercise-1-q1-tax-rate"
 number = "4"
 section = ["490_02"]
 data_type = "ratio"
+# The design prints [4] at position 221, "Tipo impositivo", as "3,00" at 1 ent + 2 dec, a percentage.
+constraints = { min_value = "0", max_value = "100" }
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
@@ -368,6 +372,8 @@ continuidad_id = "regularization-exercise-1-q2-tax-rate"
 number = "4-224"
 section = ["490_02"]
 data_type = "ratio"
+# The design prints [4] at position 224, "Tipo impositivo", as "3,00" at 1 ent + 2 dec, a percentage.
+constraints = { min_value = "0", max_value = "100" }
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
@@ -376,6 +382,8 @@ continuidad_id = "regularization-exercise-1-q3-tax-rate"
 number = "4-227"
 section = ["490_02"]
 data_type = "ratio"
+# The design prints [4] at position 227, "Tipo impositivo", as "3,00" at 1 ent + 2 dec, a percentage.
+constraints = { min_value = "0", max_value = "100" }
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
@@ -384,6 +392,8 @@ continuidad_id = "regularization-exercise-1-q4-tax-rate"
 number = "4-230"
 section = ["490_02"]
 data_type = "ratio"
+# The design prints [4] at position 230, "Tipo impositivo", as "3,00" at 1 ent + 2 dec, a percentage.
+constraints = { min_value = "0", max_value = "100" }
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
@@ -569,6 +579,8 @@ continuidad_id = "regularization-exercise-2-q1-tax-rate"
 number = "29"
 section = ["490_02"]
 data_type = "ratio"
+# The design prints [29] at position 645, "Tipo impositivo", as "3,00" at 1 ent + 2 dec, a percentage.
+constraints = { min_value = "0", max_value = "100" }
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
@@ -577,6 +589,8 @@ continuidad_id = "regularization-exercise-2-q2-tax-rate"
 number = "29-648"
 section = ["490_02"]
 data_type = "ratio"
+# The design prints [29] at position 648, "Tipo impositivo", as "3,00" at 1 ent + 2 dec, a percentage.
+constraints = { min_value = "0", max_value = "100" }
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
@@ -585,6 +599,8 @@ continuidad_id = "regularization-exercise-2-q3-tax-rate"
 number = "29-651"
 section = ["490_02"]
 data_type = "ratio"
+# The design prints [29] at position 651, "Tipo impositivo", as "3,00" at 1 ent + 2 dec, a percentage.
+constraints = { min_value = "0", max_value = "100" }
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
@@ -593,6 +609,8 @@ continuidad_id = "regularization-exercise-2-q4-tax-rate"
 number = "29-654"
 section = ["490_02"]
 data_type = "ratio"
+# The design prints [29] at position 654, "Tipo impositivo", as "3,00" at 1 ent + 2 dec, a percentage.
+constraints = { min_value = "0", max_value = "100" }
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
@@ -777,6 +795,8 @@ continuidad_id = "regularization-exercise-3-q1-tax-rate"
 number = "54"
 section = ["490_02"]
 data_type = "ratio"
+# The design prints [54] at position 1069, "Tipo impositivo", as "3,00" at 1 ent + 2 dec, a percentage.
+constraints = { min_value = "0", max_value = "100" }
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
@@ -785,6 +805,8 @@ continuidad_id = "regularization-exercise-3-q2-tax-rate"
 number = "54-1072"
 section = ["490_02"]
 data_type = "ratio"
+# The design prints [54] at position 1072, "Tipo impositivo", as "3,00" at 1 ent + 2 dec, a percentage.
+constraints = { min_value = "0", max_value = "100" }
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
@@ -793,6 +815,8 @@ continuidad_id = "regularization-exercise-3-q3-tax-rate"
 number = "54-1075"
 section = ["490_02"]
 data_type = "ratio"
+# The design prints [54] at position 1075, "Tipo impositivo", as "3,00" at 1 ent + 2 dec, a percentage.
+constraints = { min_value = "0", max_value = "100" }
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
@@ -801,6 +825,8 @@ continuidad_id = "regularization-exercise-3-q4-tax-rate"
 number = "54-1078"
 section = ["490_02"]
 data_type = "ratio"
+# The design prints [54] at position 1078, "Tipo impositivo", as "3,00" at 1 ent + 2 dec, a percentage.
+constraints = { min_value = "0", max_value = "100" }
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
@@ -1015,6 +1041,8 @@ continuidad_id = "regularization-exercise-4-q1-tax-rate"
 number = "79"
 section = ["490_02"]
 data_type = "ratio"
+# The design prints [79] at position 1493, "Tipo impositivo", as "3,00" at 1 ent + 2 dec, a percentage.
+constraints = { min_value = "0", max_value = "100" }
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
@@ -1023,6 +1051,8 @@ continuidad_id = "regularization-exercise-4-q2-tax-rate"
 number = "79-1496"
 section = ["490_02"]
 data_type = "ratio"
+# The design prints [79] at position 1496, "Tipo impositivo", as "3,00" at 1 ent + 2 dec, a percentage.
+constraints = { min_value = "0", max_value = "100" }
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
@@ -1031,6 +1061,8 @@ continuidad_id = "regularization-exercise-4-q3-tax-rate"
 number = "79-1499"
 section = ["490_02"]
 data_type = "ratio"
+# The design prints [79] at position 1499, "Tipo impositivo", as "3,00" at 1 ent + 2 dec, a percentage.
+constraints = { min_value = "0", max_value = "100" }
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
@@ -1039,6 +1071,8 @@ continuidad_id = "regularization-exercise-4-q4-tax-rate"
 number = "79-1502"
 section = ["490_02"]
 data_type = "ratio"
+# The design prints [79] at position 1502, "Tipo impositivo", as "3,00" at 1 ent + 2 dec, a percentage.
+constraints = { min_value = "0", max_value = "100" }
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2021".casillas]]
