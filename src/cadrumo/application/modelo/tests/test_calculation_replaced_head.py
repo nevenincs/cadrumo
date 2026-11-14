@@ -6,10 +6,12 @@ from typing import cast
 
 import pytest
 
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.modelos.work_unit import WorkUnit
 from ..calculate_input import WorkCalculateInputBundle
 from ..calculation_action_ports import CalculationActionPorts
 from ..calculation_operation import PreparedModeloWorkCalculation, replaced_calculation_head
+from ..caller_context import caller_context_of
 from ..work_calculation_contracts import (
     ModeloOperatorEntriesCarry,
     ModeloWorkCalculateCallerContext,
@@ -42,6 +44,7 @@ def _prepared(unit: WorkUnit, *, operator_layer_recorded: bool) -> PreparedModel
             borrador_snapshot_id=None,
             record_operator_layer=operator_layer_recorded,
         ),
+        head_caller_context=caller_context_of(None),
     )
 
 
@@ -61,6 +64,7 @@ def test_a_calculation_that_moves_the_head_names_the_earlier_one_and_what_it_car
     caller_context: ModeloWorkCalculateCallerContext,
     operator_layer_recorded: bool,
     carried: ModeloOperatorEntriesCarry,
+    authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """The earlier revision is named so it can be read, with whether the person's entries reached the new head."""
     earlier = _unit_at(_EARLIER_HEAD)
@@ -69,13 +73,18 @@ def test_a_calculation_that_moves_the_head_names_the_earlier_one_and_what_it_car
         _prepared(earlier, operator_layer_recorded=operator_layer_recorded),
         _request(earlier, caller_context),
         _unit_at(_NEW_HEAD),
+        new_caller_context=caller_context_of(None),
+        operation=authority_operation,
     )
 
+    # An earlier head with nothing recorded leaves nothing for an explicit request to name.
     assert replaced == ModeloWorkCalculateReplacedHead(calculation_revision_id=_EARLIER_HEAD, operator_entries=carried)
 
 
 @pytest.mark.parametrize("caller_context", list(ModeloWorkCalculateCallerContext))
-def test_a_first_calculation_replaces_nothing(caller_context: ModeloWorkCalculateCallerContext) -> None:
+def test_a_first_calculation_replaces_nothing(
+    caller_context: ModeloWorkCalculateCallerContext, authority_operation: PinnedAuthorityOperation
+) -> None:
     """A work unit with no calculation yet has no earlier head to name."""
     never_calculated = _unit_at(None)
 
@@ -83,6 +92,8 @@ def test_a_first_calculation_replaces_nothing(caller_context: ModeloWorkCalculat
         _prepared(never_calculated, operator_layer_recorded=True),
         _request(never_calculated, caller_context),
         _unit_at(_NEW_HEAD),
+        new_caller_context=caller_context_of(None),
+        operation=authority_operation,
     )
 
     assert replaced is None
@@ -90,7 +101,7 @@ def test_a_first_calculation_replaces_nothing(caller_context: ModeloWorkCalculat
 
 @pytest.mark.parametrize("caller_context", list(ModeloWorkCalculateCallerContext))
 def test_a_calculation_that_leaves_the_same_revision_current_replaces_nothing(
-    caller_context: ModeloWorkCalculateCallerContext,
+    caller_context: ModeloWorkCalculateCallerContext, authority_operation: PinnedAuthorityOperation
 ) -> None:
     """A recalculation that reproduces the head moved nothing, whatever the request carried."""
     current = _unit_at(_EARLIER_HEAD)
@@ -99,6 +110,8 @@ def test_a_calculation_that_leaves_the_same_revision_current_replaces_nothing(
         _prepared(current, operator_layer_recorded=False),
         _request(current, caller_context),
         _unit_at(_EARLIER_HEAD),
+        new_caller_context=caller_context_of(None),
+        operation=authority_operation,
     )
 
     assert replaced is None

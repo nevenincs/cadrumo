@@ -1890,11 +1890,10 @@ cli:
           quals està marcat com a aeat_prefilled a les definicions dels models; els
           valors que indiques amb --binding sempre tenen prioritat.
         bucket_id_help: Perfil al qual pertany la declaració
-        calculate_help: Desar un nou càlcul en esborrany per a la declaració. Aquesta
-          ordre calcula només a partir dels valors que se li indiquen. Els valors
-          introduïts abans a la interfície de pantalla completa (aeat app tui) no
-          es conserven tret que es tornin a indicar aquí; la interfície de pantalla
-          completa sí que els conserva.
+        calculate_help: Desar un nou càlcul en esborrany per a la declaració. Sense
+          valors, recalcula des del càlcul actual i conserva tots els valors i indicacions
+          que hi vas registrar. Amb valors, o amb --inputs-only, calcula només a partir
+          d'ells i enumera cada valor o indicació registrats que no va fer servir.
         calculate_reused_sealed: 'Aquestes dades coincideixen amb el càlcul %{revision_id}
           (estat: %{state}). No s’ha creat cap esborrany nou. Selecciona aquest càlcul
           desat pel seu identificador de revisió o canvia les dades.'
@@ -2035,6 +2034,10 @@ cli:
           {candidates}'
         include_discarded_help: Incloure les declaracions descartades en el llistat
           (excloses per defecte)
+        inputs_only_help: Calcula només a partir dels valors que indiques en aquesta
+          ordre, encara que no n'indiquis cap. Sense aquesta opció, una ordre sense
+          valors recalcula des del càlcul actual i conserva tots els valors i indicacions
+          que vas registrar.
         invalid_binding_key: 'La clau --binding no és un identificador vàlid d''origen
           d''una casella (BindingId: alfanumèric en minúscules més separadors . _
           : -, màx. 128 caràcters)'
@@ -2331,6 +2334,16 @@ cli:
         state_label_presentado: Registrada com a presentada
         state_label_presentado_supersedido: Presentació substituïda
         state_label_verificado_completo: Comprovada i completa
+        statement_not_carried: 'No utilitzat: %{words}, %{target}: %{value}'
+        statement_not_carried_whole: 'No utilitzat: %{words}'
+        statement_not_carried_without_value: 'No utilitzat: %{words}, %{target}'
+        statement_target_box: casella %{box} (%{label})
+        statements_not_carried: 'Valors o indicacions registrats al càlcul %{revision_id}
+          que aquest càlcul no va fer servir: %{count}. Aquell càlcul els continua
+          conservant; torna a calcular sense indicar valors per mantenir-los.'
+        statements_not_carried_incomplete: El càlcul %{revision_id} no va registrar
+          quins valors vas escriure, de manera que la llista pot ometre'n algun. Aquell
+          càlcul continua conservant tots els valors.
         status_calculate_summary: Aquesta declaració activa es pot calcular.
         status_discarded_summary: Aquesta declaració està descartada, de manera que
           el càlcul no està disponible.

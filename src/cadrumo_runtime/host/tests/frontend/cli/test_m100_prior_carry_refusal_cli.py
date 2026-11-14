@@ -171,8 +171,7 @@ def test_the_statement_the_refusal_names_lets_the_declaration_calculate_for_ever
         assert applied["applied"] is True
         assert applied["receipt_id"]
 
-        # The guarded apply recalculates with the statement and stores that revision. A later
-        # `calculate` takes only the inputs it is given (full-specification semantics), so the
+        # The guarded apply recalculates with the statement and stores that revision, so the
         # declaration the statement settled is read from the revision the apply stored.
         stored = _invoke(("app", "modelo", "work", "revision", applied["calculation_revision_id"]))
         assert stored.exit_code == 0, (year, stored.output)
