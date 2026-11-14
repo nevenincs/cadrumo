@@ -1,13 +1,12 @@
 """Materialise one catalogue persona into a storage root, with every return its table row runs ready to calculate.
 
 The persona table replays a persona and takes each return it owes through create, calculate, verify, export and
-local filing. The desktop window does calculate, verify and export itself, so this tool stops each return where
-the table stops before the calculate operation: it replays the persona's world with ``reuse=False`` into a
-caller-given directory, then, in the table's own chain order, runs the table's preparation of every planned row
-(create, the pending carries and prior figures the table states first and a Modelo 303's evidence), then enters
-takes each prepared return through the table's own calculate, which enters the persona's work inputs, states the prior
-values and work-income statements and the pending rental carries, and calculates again over them. Planning, scope,
-stated values, preparation and calculation are the table's own functions.
+local filing. The desktop window does calculate, verify and export itself, so this tool stops each return before
+the calculate operation: it replays the persona's world with ``reuse=False`` into a caller-given directory, then,
+in the table's own chain order, runs the table's preparation of every planned row (create, the pending carries
+and prior figures the table states first and a Modelo 303's evidence) and records the statements the table's
+calculate makes (the persona's work inputs, prior values, work-income statements and the pending rental carries)
+through the table's own functions. Planning, scope, stated values, preparation and statements are the table's own.
 
     python -m dev.desktop_persona_world --persona <id> --horizon <year> --storage-root <absolute directory>
 
@@ -16,10 +15,12 @@ the ``CADRUMO_STORAGE_ROOT`` the packaged desktop must be started with, the prof
 passphrase is defined (never the passphrase), the scenario instant, and one entry per planned row.
 
 Every operation here ran under the persona's frozen scenario clock, as the table's calculate does; a desktop on the
-wall clock calculates at a later instant. Each row is left calculated once, so the window's own calculate reads the
-statements kept on its revision. A row is prepared against a profile in which the rows before it are calculated, not
-verified and filed locally, whereas the table files each verified row before it creates the next; the window drives
-those rows itself, so they stay unfiled here.
+wall clock calculates at a later instant. Each statement is recorded through a calculating edit, which stores a
+calculation. A return that holds none after its statements is left uncalculated (``driver_calculate`` is
+``not_run``), so the window's calculate reads the recorded statements. A return that holds one anyway, because its
+preparation or a statement was a calculating edit, reports ``calculate_inherited_reason``. A row is prepared
+against a profile in which the rows before it are not verified and filed locally, whereas the table files each
+verified row before it creates the next; the window drives those rows itself, so they stay unfiled here.
 """
 
 from __future__ import annotations
@@ -58,6 +59,12 @@ if TYPE_CHECKING:
 
 CREDENTIAL_SOURCE: Final = "persona_materialisation.PERSONA_PROFILE_CREDENTIAL"
 """Where the profile passphrase is defined; the tool never prints the passphrase itself."""
+NOT_RUN: Final = "not_run"
+"""The calculate outcome of a return left for the window to calculate."""
+CALCULATING_EDIT_STAGES: Final = frozenset(
+    {"prior_carries", "attested_prior_values", "work_inputs", "work_income_none", "rental_carries"}
+)
+"""The stages that record a statement through a calculating edit, which stores a calculation."""
 TABLE_PERSONAS_ENV: Final = "PERSONA_TABLE_PERSONAS"
 """The variable the table's collector reads, at import, to name the personas it collects."""
 
@@ -84,6 +91,7 @@ def _entry(
     m303_evidence: dict[str, str] | None = None,
     stages: Sequence[str] = (),
     calculate_outcome: str | None = None,
+    calculate_inherited_reason: str | None = None,
 ) -> dict[str, Any]:
     """The report entry of one planned row: its work unit when prepared, else the stage where the table stops."""
     return {
@@ -98,6 +106,7 @@ def _entry(
         "m303_evidence": m303_evidence,
         "stages": list(stages),
         "driver_calculate": calculate_outcome,
+        "calculate_inherited_reason": calculate_inherited_reason,
     }
 
 
@@ -113,7 +122,7 @@ def _m303_evidence(prepared: PreparedReturn) -> dict[str, str] | None:
 
 
 def _stage_names(materialised: MaterialisedPersona, plan: PlannedRow, prepared: PreparedReturn) -> list[str]:
-    """The names of the table's stages this return passes before verify, from what the persona's world holds."""
+    """The names of the table's stages this return passes before calculate, from what the persona's world holds."""
     world = materialised.world
     stages = ["create"]
     if plan.modelo == "100":
@@ -124,7 +133,6 @@ def _stage_names(materialised: MaterialisedPersona, plan: PlannedRow, prepared: 
         stages.append("m303_attestation")
     if world.work_inputs:
         stages.append("work_inputs")
-    stages.append("calculate")
     if world.work_income_none_statements:
         stages.append("work_income_none")
     if plan.modelo == "100":
@@ -132,21 +140,38 @@ def _stage_names(materialised: MaterialisedPersona, plan: PlannedRow, prepared: 
     return stages
 
 
-def _calculated(materialised: MaterialisedPersona, plan: PlannedRow, prepared: PreparedReturn) -> tuple[list[str], str]:
-    """Run the table's own calculate on the prepared return; a refusal leaves the window to meet it itself.
+def _recorded(
+    materialised: MaterialisedPersona, plan: PlannedRow, prepared: PreparedReturn
+) -> tuple[list[str], str, str | None]:
+    """Record the statements the table's calculate makes and stop before the calculation.
 
-    The table's calculate enters the work inputs, calculates, states the prior values and work-income statements the
-    calculation offers and the pending rental carries, and calculates again over them. The statements are kept on
-    the work unit, so the window's calculate reads them.
+    Returns the stages passed, the calculate outcome and why a calculation is held, if one is. The statements
+    travel as calculating edits, which store a calculation: a work unit that holds one after them, or whose
+    statements the form offers only on a calculated work unit, keeps the table's own calculate, and the reason
+    names why. Any other work unit stays uncalculated and the window calculates it.
     """
     from .acceptance.persona_table import sweep
 
     stages = _stage_names(materialised, plan, prepared)
+    world = materialised.world
+    held_by_preparation = sweep.holds_calculation(world, prepared.work_unit_id)
     try:
-        sweep._calculate(materialised, plan, prepared)  # the table's own calculate, not a copy
+        sweep.record_statements(materialised, plan, prepared)
     except PersonaMaterialisationError:
-        return stages, "refused"
-    return stages, "calculated"
+        return stages, "refused", None
+    if not sweep.holds_calculation(world, prepared.work_unit_id):
+        awaiting = sweep.statements_needing_calculation(materialised, plan)
+        if not awaiting:
+            return stages, NOT_RUN, None
+        reason = f"{', '.join(awaiting)} can only be stated on a calculated work unit"
+        try:
+            sweep._calculate(materialised, plan, prepared)  # the table's own calculate, not a copy
+        except PersonaMaterialisationError:
+            return [*stages, "calculate"], "refused", reason
+        return [*stages, "calculate"], "calculated", reason
+    edits = ", ".join(stage for stage in stages if stage in CALCULATING_EDIT_STAGES) or "none"
+    by = "the table's preparation" if held_by_preparation else "recording the statements"
+    return stages, "calculated", f"{by} stored it through a calculating edit; edit stages: {edits}"
 
 
 def _prepared_rows(materialised: MaterialisedPersona, plans: Sequence[PlannedRow]) -> list[dict[str, Any]]:
@@ -162,7 +187,7 @@ def _prepared_rows(materialised: MaterialisedPersona, plans: Sequence[PlannedRow
         if isinstance(prepared, TableRow):
             rows.append(_entry(plan, outcome=str(prepared.calculate), reason=prepared.reason or None))
             continue
-        stages, calculate_outcome = _calculated(materialised, plan, prepared)
+        stages, calculate_outcome, inherited_reason = _recorded(materialised, plan, prepared)
         rows.append(
             _entry(
                 plan,
@@ -171,6 +196,7 @@ def _prepared_rows(materialised: MaterialisedPersona, plans: Sequence[PlannedRow
                 m303_evidence=_m303_evidence(prepared),
                 stages=stages,
                 calculate_outcome=calculate_outcome,
+                calculate_inherited_reason=inherited_reason,
             )
         )
     return rows
