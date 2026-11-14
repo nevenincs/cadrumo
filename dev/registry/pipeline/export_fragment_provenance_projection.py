@@ -488,12 +488,15 @@ def _semantic_record_sort_key(payload: Mapping[str, object]) -> tuple[str, str, 
 
 
 def _with_later_absent_keys(payload: Mapping[str, object], model: type[BaseModel]) -> Mapping[str, object]:
-    """Read a later field the dump leaves out while it holds nothing as its declared ``None`` or empty list."""
-    absent: dict[str, object] = {
-        name: None if model_field.exclude_if is later_absent_when_none else []
-        for name, model_field in model.model_fields.items()
-        if model_field.exclude_if in (later_absent_when_none, later_absent_when_empty) and name not in payload
-    }
+    """Read a later field the dump leaves out while it holds nothing as its declared empty value."""
+    absent: dict[str, object] = {}
+    for name, model_field in model.model_fields.items():
+        if name in payload:
+            continue
+        if model_field.exclude_if is later_absent_when_none:
+            absent[name] = None
+        elif model_field.exclude_if is later_absent_when_empty:
+            absent[name] = []
     return {**payload, **absent} if absent else payload
 
 
