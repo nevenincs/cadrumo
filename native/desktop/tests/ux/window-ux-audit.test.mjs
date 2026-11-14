@@ -31,6 +31,7 @@ import {
 import {
   chooseTab,
   closeSettings,
+  dismissSetup,
   openDeclaration,
   openLedgerSection,
   openRailPage,
@@ -1689,6 +1690,13 @@ async function answerReview(notes) {
  */
 async function answerStepDialog(title, notes) {
   const dialog = '[role="dialog"]';
+  // A fresh profile's set-up dialog can open over the workspace; the audit
+  // configures nothing in it, as the persona spec does.
+  if (title === label("desktop.setup.title")) {
+    await dismissSetup();
+    notes.push("dismissed the set-up dialog");
+    return null;
+  }
   if (title === label("workspace.modelo.calculate.at_risk_title")) {
     await clickText(dialog, "button", [
       label("workspace.modelo.calculate.at_risk_proceed"),
@@ -1795,6 +1803,16 @@ async function reachExport() {
       );
     if (head.disabled)
       return stop(head, `the ${head.action} button is disabled`);
+    // Fill asks for the marked boxes; the statements the form offers answer
+    // them the way a filer does, and the header then offers apply.
+    if (head.action === "fill" && !pressed.includes("stage")) {
+      const staging = await stageStatements(busyText);
+      notes.push(`staging: ${staging.staged} (${staging.note})`);
+      if (staging.staged !== "nothing") {
+        pressed.push("stage");
+        continue;
+      }
+    }
     if (ROUTING_ACTIONS.includes(head.action) && pressed.at(-1) === head.action)
       return stop(
         head,
@@ -1922,6 +1940,214 @@ async function pressExport(kind) {
   }
   return result;
 }
+
+/** Open the offers the viewer left hidden and count what the form offers; mark every untaken statement's tick. */
+function pageStatementOffer() {
+  for (const old of document.querySelectorAll("[data-ux-stage]"))
+    old.removeAttribute("data-ux-stage");
+  for (const offer of document.querySelectorAll(
+    "[data-statements], [data-prior-values]",
+  ))
+    offer.querySelector('button[aria-expanded="false"]')?.click();
+  const shown = (e) => e.getClientRects().length > 0;
+  const entries = [
+    ...document.querySelectorAll("[data-statements] [data-statement]"),
+  ].filter(shown);
+  const prior = [...document.querySelectorAll("[data-prior-entry]")].filter(
+    shown,
+  );
+  const boxes = entries
+    .map((e) => e.querySelector('input[type="checkbox"]'))
+    .filter((c) => c && !c.checked);
+  boxes.forEach((c, i) => c.setAttribute("data-ux-stage", String(i)));
+  return {
+    statements: entries.length,
+    priorEntries: prior.length,
+    ticked: entries.filter(
+      (e) => e.querySelector('input[type="checkbox"]')?.checked,
+    ).length,
+    marked: boxes.length,
+  };
+}
+
+/**
+ * Stage every statement the form offers the way a filer does: tick them and
+ * press stage, then wait for the header to offer apply. The prior-year carry
+ * statements must all be declared in one change, so one alone cannot apply. A prior-values entry
+ * needs a typed figure the audit world does not hold, so none is staged.
+ * Answers what the form offered and what was staged.
+ */
+async function stageStatements(busyText) {
+  const read = () => exec(pageHeaderStep, nextActionLabels(), busyText);
+  const before = await read();
+  if (before.action === "apply")
+    return {
+      offered: "an apply already",
+      staged: "nothing",
+      note: "already staged",
+    };
+  let seen = await exec(pageStatementOffer);
+  await sleep(500);
+  seen = await exec(pageStatementOffer);
+  const offered = `${seen.statements} statement(s) and ${seen.priorEntries} prior-values entr${seen.priorEntries === 1 ? "y" : "ies"}`;
+  if (!seen.marked)
+    return {
+      offered,
+      staged: "nothing",
+      note:
+        seen.statements > 0
+          ? "every statement was already ticked"
+          : "no statement can be staged without a typed figure",
+    };
+  for (let index = 0; index < seen.marked; index += 1) {
+    await clickSelector(`[data-ux-stage="${index}"]`);
+    await sleep(200);
+  }
+  await sleep(400);
+  const pressed = await clickText("[data-statements]", "button", [
+    label("desktop.modelo.statements.stage"),
+  ]);
+  if (!pressed)
+    return {
+      offered,
+      staged: "nothing",
+      note: "the stage button is not shown",
+    };
+  const apply = await waitFor(
+    async () => ((await read()).action === "apply" ? true : null),
+    {
+      timeout: 30_000,
+      what: "the header to offer apply",
+      soft: true,
+      interval: 500,
+    },
+  );
+  const now = await read();
+  return {
+    offered,
+    staged: `${seen.marked} statement(s), ticked and staged`,
+    note: apply
+      ? "the header offers apply"
+      : `the header offered ${now.action ?? "no action"} after staging`,
+  };
+}
+
+ux("UX-24 a single click opens a Modelo view tab", async (t) => {
+  await open("100");
+  const views = `${SECTION} ${tablist("desktop.modelo.views.label")}`;
+  const startTab =
+    (await exec(pageTabs, views)).tabs.find((tab) => tab.selected)?.text ??
+    null;
+  const failures = [];
+  const busyText = label("desktop.navigation.busy");
+  const probes = [];
+  // The defect was seen as a click met a header still settling a write, so the
+  // series starts at the press of an apply: the review's apply, then the tab
+  // clicks without waiting for the settle that follows.
+  await chooseTab(VIEWS, label("desktop.modelo.view.form"));
+  const staging = await stageStatements(busyText);
+  report(t, { probe: "view-tab-stage", ...staging });
+  const applyOffered = await clickText(`${SECTION} header`, "button", [
+    label("workspace.modelo.next_button.apply"),
+  ]);
+  if (!applyOffered) {
+    report(t, {
+      probe: "view-tab-click",
+      reached: false,
+      reason: "no apply was offered",
+    });
+    assert.fail(
+      "UNMEASURED: no apply was offered, so no click landed while a write settled " +
+        `(the form offered ${staging.offered}; ${staging.note})`,
+    );
+  }
+  const applyProblem = await answerReview([]);
+  if (applyProblem) {
+    report(t, {
+      probe: "view-tab-click",
+      reached: false,
+      reason: applyProblem,
+    });
+    assert.fail(`UNMEASURED: the apply did not complete: ${applyProblem}`);
+  }
+  try {
+    await atSizes(t, "modelo-view-tabs", async (size) => {
+      try {
+        const listed = await exec(pageTabs, views);
+        if (listed.tabs.length === 0) throw new Error("no view tabs are drawn");
+        const names = listed.tabs.map((tab) => tab.text);
+        for (let index = 0; index < names.length; index += 1) {
+          const name = names[index];
+          // A click on the selected tab shows no change: move off it first.
+          const now = await exec(pageTabs, views);
+          if (now.tabs[index]?.selected) {
+            const other = now.tabs.findIndex((_, i) => i !== index);
+            if (other >= 0) await chooseTab(views, now.tabs[other].text);
+          }
+          const target = await exec(pageTabCentre, views, index);
+          if (!target || !target.inWindow) {
+            failures.push(
+              `"${name}" at ${size.join("x")}: its centre is outside the window`,
+            );
+            report(t, {
+              probe: "view-tab-click",
+              tab: name,
+              size,
+              reached: false,
+              reason: "the tab's centre is outside the window",
+              target,
+            });
+            continue;
+          }
+          const whileSettling = !!(await exec(pageHeaderBusy, busyText));
+          probes.push(whileSettling);
+          const startedAt = Date.now();
+          await pointerClickAt(target.x, target.y);
+          const selected = await waitFor(
+            async () =>
+              (await exec(pageTabSelectedAt, views, index)) === "true",
+            {
+              timeout: 1500,
+              what: `tab "${name}" to be selected`,
+              soft: true,
+              interval: 100,
+            },
+          );
+          report(t, {
+            probe: "view-tab-click",
+            tab: name,
+            size,
+            point: [target.x, target.y],
+            rect: target.rect,
+            hit: target.hit,
+            hitIsTab: target.hitIsTab,
+            hitInsideTablist: target.hitInsideTablist,
+            whileSettling,
+            selected: !!selected,
+            waitedMs: Date.now() - startedAt,
+          });
+          if (!selected)
+            failures.push(
+              `"${name}" at ${size.join("x")}: one click at (${target.x}, ${target.y}) on ${target.hit} did not select it`,
+            );
+        }
+      } finally {
+        if (startTab) await chooseTab(views, startTab);
+      }
+    });
+  } finally {
+    if (startTab) await chooseTab(views, startTab);
+  }
+  if (!probes.some(Boolean))
+    assert.fail(
+      `UNMEASURED: the apply settled before any of ${probes.length} clicks, so no click landed while a write settled`,
+    );
+  assert.deepEqual(
+    failures,
+    [],
+    `a single click does not open a view tab: ${failures.join("; ")}`,
+  );
+});
 
 let exportRun = null;
 
@@ -2080,207 +2306,3 @@ ux(
     );
   },
 );
-
-/** Open the offers the viewer left hidden and count what the form offers; mark the first untaken statement's tick. */
-function pageStatementOffer() {
-  for (const old of document.querySelectorAll("[data-ux-stage]"))
-    old.removeAttribute("data-ux-stage");
-  for (const offer of document.querySelectorAll(
-    "[data-statements], [data-prior-values]",
-  ))
-    offer.querySelector('button[aria-expanded="false"]')?.click();
-  const shown = (e) => e.getClientRects().length > 0;
-  const entries = [
-    ...document.querySelectorAll("[data-statements] [data-statement]"),
-  ].filter(shown);
-  const prior = [...document.querySelectorAll("[data-prior-entry]")].filter(
-    shown,
-  );
-  const box = entries
-    .map((e) => e.querySelector('input[type="checkbox"]'))
-    .find((c) => c && !c.checked);
-  box?.setAttribute("data-ux-stage", "1");
-  return {
-    statements: entries.length,
-    priorEntries: prior.length,
-    ticked: entries.filter(
-      (e) => e.querySelector('input[type="checkbox"]')?.checked,
-    ).length,
-    markedFirst: !!box,
-  };
-}
-
-/**
- * Stage the first statement the form offers the way a filer does: tick it and
- * press stage, then wait for the header to offer apply. A prior-values entry
- * needs a typed figure the audit world does not hold, so none is staged.
- * Answers what the form offered and what was staged.
- */
-async function stageFirstStatement(busyText) {
-  const read = () => exec(pageHeaderStep, nextActionLabels(), busyText);
-  const before = await read();
-  if (before.action === "apply")
-    return {
-      offered: "an apply already",
-      staged: "nothing",
-      note: "already staged",
-    };
-  let seen = await exec(pageStatementOffer);
-  await sleep(500);
-  seen = await exec(pageStatementOffer);
-  const offered = `${seen.statements} statement(s) and ${seen.priorEntries} prior-values entr${seen.priorEntries === 1 ? "y" : "ies"}`;
-  if (!seen.markedFirst)
-    return {
-      offered,
-      staged: "nothing",
-      note:
-        seen.statements > 0
-          ? "every statement was already ticked"
-          : "no statement can be staged without a typed figure",
-    };
-  await clickSelector('[data-ux-stage="1"]');
-  await sleep(400);
-  const pressed = await clickText("[data-statements]", "button", [
-    label("desktop.modelo.statements.stage"),
-  ]);
-  if (!pressed)
-    return {
-      offered,
-      staged: "nothing",
-      note: "the stage button is not shown",
-    };
-  const apply = await waitFor(
-    async () => ((await read()).action === "apply" ? true : null),
-    {
-      timeout: 30_000,
-      what: "the header to offer apply",
-      soft: true,
-      interval: 500,
-    },
-  );
-  const now = await read();
-  return {
-    offered,
-    staged: "the first statement, ticked and staged",
-    note: apply
-      ? "the header offers apply"
-      : `the header offered ${now.action ?? "no action"} after staging`,
-  };
-}
-
-ux("UX-24 a single click opens a Modelo view tab", async (t) => {
-  await open("100");
-  const views = `${SECTION} ${tablist("desktop.modelo.views.label")}`;
-  const startTab =
-    (await exec(pageTabs, views)).tabs.find((tab) => tab.selected)?.text ??
-    null;
-  const failures = [];
-  const busyText = label("desktop.navigation.busy");
-  const probes = [];
-  // The defect was seen as a click met a header still settling a write, so the
-  // series starts at the press of an apply: the review's apply, then the tab
-  // clicks without waiting for the settle that follows.
-  await chooseTab(VIEWS, label("desktop.modelo.view.form"));
-  const staging = await stageFirstStatement(busyText);
-  report(t, { probe: "view-tab-stage", ...staging });
-  const applyOffered = await clickText(`${SECTION} header`, "button", [
-    label("workspace.modelo.next_button.apply"),
-  ]);
-  if (!applyOffered) {
-    report(t, {
-      probe: "view-tab-click",
-      reached: false,
-      reason: "no apply was offered",
-    });
-    assert.fail(
-      "UNMEASURED: no apply was offered, so no click landed while a write settled " +
-        `(the form offered ${staging.offered}; ${staging.note})`,
-    );
-  }
-  const applyProblem = await answerReview([]);
-  if (applyProblem) {
-    report(t, {
-      probe: "view-tab-click",
-      reached: false,
-      reason: applyProblem,
-    });
-    assert.fail(`UNMEASURED: the apply did not complete: ${applyProblem}`);
-  }
-  try {
-    await atSizes(t, "modelo-view-tabs", async (size) => {
-      try {
-        const listed = await exec(pageTabs, views);
-        if (listed.tabs.length === 0) throw new Error("no view tabs are drawn");
-        const names = listed.tabs.map((tab) => tab.text);
-        for (let index = 0; index < names.length; index += 1) {
-          const name = names[index];
-          // A click on the selected tab shows no change: move off it first.
-          const now = await exec(pageTabs, views);
-          if (now.tabs[index]?.selected) {
-            const other = now.tabs.findIndex((_, i) => i !== index);
-            if (other >= 0) await chooseTab(views, now.tabs[other].text);
-          }
-          const target = await exec(pageTabCentre, views, index);
-          if (!target || !target.inWindow) {
-            failures.push(
-              `"${name}" at ${size.join("x")}: its centre is outside the window`,
-            );
-            report(t, {
-              probe: "view-tab-click",
-              tab: name,
-              size,
-              reached: false,
-              reason: "the tab's centre is outside the window",
-              target,
-            });
-            continue;
-          }
-          const whileSettling = !!(await exec(pageHeaderBusy, busyText));
-          probes.push(whileSettling);
-          const startedAt = Date.now();
-          await pointerClickAt(target.x, target.y);
-          const selected = await waitFor(
-            async () =>
-              (await exec(pageTabSelectedAt, views, index)) === "true",
-            {
-              timeout: 1500,
-              what: `tab "${name}" to be selected`,
-              soft: true,
-              interval: 100,
-            },
-          );
-          report(t, {
-            probe: "view-tab-click",
-            tab: name,
-            size,
-            point: [target.x, target.y],
-            rect: target.rect,
-            hit: target.hit,
-            hitIsTab: target.hitIsTab,
-            hitInsideTablist: target.hitInsideTablist,
-            whileSettling,
-            selected: !!selected,
-            waitedMs: Date.now() - startedAt,
-          });
-          if (!selected)
-            failures.push(
-              `"${name}" at ${size.join("x")}: one click at (${target.x}, ${target.y}) on ${target.hit} did not select it`,
-            );
-        }
-      } finally {
-        if (startTab) await chooseTab(views, startTab);
-      }
-    });
-  } finally {
-    if (startTab) await chooseTab(views, startTab);
-  }
-  if (!probes.some(Boolean))
-    assert.fail(
-      `UNMEASURED: the apply settled before any of ${probes.length} clicks, so no click landed while a write settled`,
-    );
-  assert.deepEqual(
-    failures,
-    [],
-    `a single click does not open a view tab: ${failures.join("; ")}`,
-  );
-});
