@@ -59,6 +59,25 @@
       var(--color-card-background)
     );
 
+    /* Scrollbars: a faint track and a thumb at 3:1 against the surface it
+       sits on, stronger under the pointer and while dragged. */
+    --scrollbar-track: color-mix(
+      in srgb,
+      var(--foreground) 6%,
+      var(--background)
+    );
+    --scrollbar-thumb: color-mix(
+      in srgb,
+      var(--foreground) 55%,
+      var(--background)
+    );
+    --scrollbar-thumb-hover: color-mix(
+      in srgb,
+      var(--foreground) 70%,
+      var(--background)
+    );
+    --scrollbar-thumb-active: var(--foreground);
+
     /* Status. */
     --destructive: var(--cadrumo-accent-danger);
     --warning: var(--cadrumo-accent-warning);

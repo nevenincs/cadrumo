@@ -36,10 +36,41 @@
     font-family: inherit;
   }
 
-  /* Scrollbars and text selection take the theme, like every other part. */
-  * {
-    scrollbar-width: thin;
-    scrollbar-color: var(--border-strong) transparent;
+  /* Scrollbars and text selection take the theme, like every other part.
+     One classic bar for every scroller: it takes layout room, so it is drawn
+     without the pointer over it (an overlay bar hides until hovered), its
+     thumb never shrinks below a length that can be grabbed and it holds 3:1
+     against the surface. The standard `scrollbar-width` and `scrollbar-color`
+     are never set: Chromium then ignores these pseudo-elements. A finger
+     scrolls by dragging the content, so a touch screen keeps its own bar. */
+  @media (pointer: fine) {
+    *::-webkit-scrollbar {
+      width: var(--scrollbar-size);
+      height: var(--scrollbar-size);
+      background: var(--scrollbar-track);
+    }
+    *::-webkit-scrollbar-track {
+      background: var(--scrollbar-track);
+    }
+    *::-webkit-scrollbar-thumb {
+      min-width: var(--scrollbar-thumb-min);
+      min-height: var(--scrollbar-thumb-min);
+      border: var(--scrollbar-inset) solid var(--scrollbar-track);
+      border-radius: var(--scrollbar-size);
+      background: var(--scrollbar-thumb);
+      background-clip: padding-box;
+    }
+    *::-webkit-scrollbar-thumb:hover {
+      background: var(--scrollbar-thumb-hover);
+      background-clip: padding-box;
+    }
+    *::-webkit-scrollbar-thumb:active {
+      background: var(--scrollbar-thumb-active);
+      background-clip: padding-box;
+    }
+    *::-webkit-scrollbar-corner {
+      background: var(--scrollbar-track);
+    }
   }
   ::selection {
     background: color-mix(in srgb, var(--brand) 28%, transparent);
