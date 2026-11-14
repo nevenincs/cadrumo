@@ -961,7 +961,7 @@ async function driveRow(row, runDir, persona) {
     }
     state = run.state.dialogTitle ? await readState() : run.state;
   } else if (["verify", ...FILED].includes(state.action)) {
-    out.calculate = "pass";
+    out.calculate = "calculate_inherited";
     say("calculate", "a calculation was already present; none was run");
   } else {
     out.calculate = "incomplete";
@@ -970,11 +970,13 @@ async function driveRow(row, runDir, persona) {
   log("calculate", { stage: out.calculate });
 
   // The form, once calculated (also when it came out incomplete)
-  if (out.calculate === "pass" || out.calculate === "incomplete")
+  if (["pass", "incomplete", "calculate_inherited"].includes(out.calculate))
     out.figures = await readFigures();
 
   // Verify
-  const chain = out.calculate === "pass" || state.action === "verify";
+  const chain =
+    ["pass", "calculate_inherited"].includes(out.calculate) ||
+    state.action === "verify";
   if (chain && state.action === "verify") {
     const before = await readState();
     const run = await runAction("verify", before, TIMEOUT.verify, row);
@@ -1347,6 +1349,7 @@ const plainDecimal = (value, language) => {
 
 const STAGES = [
   "pass",
+  "calculate_inherited",
   "incomplete",
   "refused",
   "not-owed",
