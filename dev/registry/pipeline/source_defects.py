@@ -40,6 +40,8 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
+from .export_field_derivation import NOTE_NUMBER_RE
+
 if TYPE_CHECKING:
     from .record_design_intermediate import RecordDesignIntermediateSource
 
@@ -487,7 +489,7 @@ class NoteGovernedAmountDeclaration(BaseModel):
 
     @model_validator(mode="after")
     def _require_a_note_exactly_where_the_content_names_one(self) -> NoteGovernedAmountDeclaration:
-        names_a_note = "Nota" in self.published_content
+        names_a_note = NOTE_NUMBER_RE.search(self.published_content) is not None
         if (self.note_cell is None) != (self.note_statement is None) or names_a_note == (self.note_cell is None):
             raise ValueError(
                 "note_cell and note_statement are recorded together, and exactly when the published "
@@ -573,6 +575,39 @@ def _m303_rate_percent(
             f"filers carry the rate, not how its digits are written. {domain} Read as an unscaled integer the "
             "slot printed a five percent rate as 00005, refused a seven-and-a-half percent one, and refused "
             "every fractional recargo rate."
+        ),
+    )
+
+
+#: Each Modelo 490 design's digest and the foral boxes its Nota 2 names.
+_M490_DESIGN_PINS: Final = {
+    "aeat-dr-490-2022-2t": ("9a4c8d8cd2e677801629b28b5152c66911d79f56f623c5b598ac6f7b4ec3bc66", "[20], [21] y [22]"),
+    "aeat-dr-490-2023": ("f55ecbfff8fb552de76f4e788ff7663269c96b6255b209b5289bf0869de89cb8", "[20], [21], [22] y [23]"),
+}
+
+
+def _m490_territorio_comun(source_ref: str) -> NoteGovernedAmountDeclaration:
+    """Read one Modelo 490 DR49001 Territorio común [24] slot as a percentage with two implied decimals."""
+    source_sha256, foral_boxes = _M490_DESIGN_PINS[source_ref]
+    return NoteGovernedAmountDeclaration(
+        source_ref=source_ref,
+        source_sha256=source_sha256,
+        sheet="DR49001",
+        published_content="Ver nota 2",
+        note_cell="F71",
+        note_statement=(
+            "2. Tres enteros y dos decimales: este campo se cumplimentará obligatoriamente, poniendo un valor "
+            f"100,00 (100000) en caso de no cumplimentar las casillas {foral_boxes}"
+        ),
+        integer_digits=3,
+        decimal_digits=2,
+        sign_policy=_UNSIGNED_SIGN_POLICY,
+        mandated_values=None,
+        evidence=(
+            "DR49001!A46 (Territorio común [24], Num, position 970, length 5) holds only 'Ver nota 2' where "
+            "its foral siblings print '3 ent + 2 dec'. Nota 2 (F71) opens 'Tres enteros y dos decimales' and "
+            "fills 100,00 when no foral box is filled: a percentage at two implied decimals. Read as an "
+            "unscaled integer the slot wrote 100 % as 00100."
         ),
     )
 
@@ -756,7 +791,30 @@ _NOTE_GOVERNED_AMOUNTS_BY_REF: dict[str, tuple[NoteGovernedAmountDeclaration, ..
                 ),
             )
         ),
+        NoteGovernedAmountDeclaration(
+            source_ref="aeat-dr-200-2025",
+            source_sha256="92392cdb46d8e7c7f6e4e6477306570e15edfd64d5ea3e6d631e5cf847dd5509",
+            sheet="DP200014",
+            published_content="Nota 1",
+            note_cell="A73",
+            note_statement=(
+                "En caso de tipo de gravamen único se rellenarán los dos primeros dígitos con el tipo, y los dos "
+                "últimos con 00."
+            ),
+            integer_digits=2,
+            decimal_digits=2,
+            sign_policy=_UNSIGNED_SIGN_POLICY,
+            mandated_values=None,
+            evidence=(
+                "DP200014!G36 (Tipo de gravamen [00558], Num, position 438, length 4) holds only 'Nota 1'. "
+                "Nota 1 (A73, B74) fills a single rate as its two digits and 00, '25% se rellenará como 2500': "
+                "the percentage at two implied decimals, as the 2024 layout writes it. The double-rate form "
+                "(A75, '18/19% ... 1819') is no decimal quantity and is not claimed; the registry calculates "
+                "one rate. Read as an unscaled integer the slot wrote 25 % as 0025."
+            ),
+        ),
     ),
+    **{source_ref: (_m490_territorio_comun(source_ref),) for source_ref in _M490_DESIGN_PINS},
     "aeat-dr-303-2023": (
         _m303_rate_percent(
             "aeat-dr-303-2023",
