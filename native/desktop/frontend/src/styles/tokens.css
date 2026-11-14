@@ -241,6 +241,13 @@
     @slot;
   }
 }
+/* The rail closes its buttons up in a window this short, so that all of them
+   stay inside it. */
+@custom-variant rail-compact {
+  @media (height <= 48rem) {
+    @slot;
+  }
+}
 @custom-variant titlebar-narrow {
   @media (width <= 30rem) {
     @slot;
