@@ -418,6 +418,99 @@ export function pageGeometry() {
   return out;
 }
 
+/**
+ * Measure one page at the current window size. `rootSel` is the page's root;
+ * `options.pane` is the selector of the pane that holds it (default: the main
+ * area, else the viewport) and `options.header` the selector of its header
+ * (default: the pane header). Reports the header's place, the main scrolling
+ * region, every overflow-hidden box that clips visible content vertically and
+ * any error boundary; it judges nothing.
+ */
+export function paneAudit(rootSel, options) {
+  const shown = (el) => {
+    const r = el.getBoundingClientRect();
+    const cs = getComputedStyle(el);
+    return r.width > 0 && r.height > 0 && cs.visibility !== "hidden" && cs.display !== "none";
+  };
+  const describe = (el) =>
+    `${el.tagName.toLowerCase()}${el.id ? "#" + el.id : ""}${
+      typeof el.className === "string" && el.className
+        ? "." + el.className.split(/\s+/).filter(Boolean).slice(0, 2).join(".")
+        : ""
+    }`;
+  const box = (el) => {
+    const r = el.getBoundingClientRect();
+    return [r.left, r.top, r.right, r.bottom].map(Math.round);
+  };
+  const scrolls = (el) => /auto|scroll/.test(getComputedStyle(el).overflowY);
+  const root = [...document.querySelectorAll(rootSel)].find(shown);
+  if (!root) return { found: false };
+  const pane =
+    (options?.pane ? root.closest(options.pane) : null) ?? root.closest(".main-area");
+  const paneBox = pane ? box(pane) : [0, 0, window.innerWidth, window.innerHeight];
+  const header = options?.header
+    ? [...document.querySelectorAll(options.header)].find(shown)
+    : (pane ?? document).querySelector('[data-slot="pane-header"]');
+  const headerBox = header && shown(header) ? box(header) : null;
+  const title = header?.querySelector("h1, h2, h3");
+  const titleBox = title && shown(title) ? box(title) : null;
+  // The nearest scrolling ancestor-or-self, else the tallest scrolling descendant.
+  let scroller = null;
+  for (let p = root; p && p !== document.body; p = p.parentElement) {
+    if (scrolls(p) && shown(p)) {
+      scroller = p;
+      break;
+    }
+  }
+  if (!scroller) {
+    for (const el of root.querySelectorAll("*")) {
+      if (scrolls(el) && shown(el) && (!scroller || el.clientHeight > scroller.clientHeight))
+        scroller = el;
+    }
+  }
+  const clipped = [];
+  const scan = [...root.querySelectorAll("*"), root];
+  for (let p = root.parentElement; p && p !== document.body; p = p.parentElement) scan.push(p);
+  for (const el of scan) {
+    if (getComputedStyle(el).overflowY !== "hidden") continue;
+    if (!shown(el) || el.clientHeight <= 0 || el.scrollHeight <= el.clientHeight + 2) continue;
+    if (![...el.children].some(shown)) continue;
+    clipped.push({
+      el: describe(el),
+      clientHeight: el.clientHeight,
+      scrollHeight: el.scrollHeight,
+    });
+  }
+  const boundary = document.querySelector(
+    '[data-error-boundary], [data-slot="error-boundary"], .error-boundary',
+  );
+  return {
+    found: true,
+    viewport: [window.innerWidth, window.innerHeight],
+    root: describe(root),
+    rootBox: box(root),
+    paneBox,
+    header: headerBox && {
+      box: headerBox,
+      inPane:
+        headerBox[1] >= paneBox[1] - 1 &&
+        headerBox[3] <= paneBox[3] + 1 &&
+        headerBox[0] >= paneBox[0] - 1 &&
+        headerBox[2] <= paneBox[2] + 1,
+      titleShown: !!titleBox && titleBox[2] - titleBox[0] > 1,
+    },
+    scroller: scroller && {
+      el: describe(scroller),
+      clientHeight: scroller.clientHeight,
+      scrollHeight: scroller.scrollHeight,
+      box: box(scroller),
+    },
+    clipped: clipped.slice(0, 10),
+    clippedCount: clipped.length,
+    boundary: !!boundary,
+  };
+}
+
 export async function setSize(width, height) {
   await win.browser.setWindowSize(width, height);
   await sleep(700);

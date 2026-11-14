@@ -461,7 +461,10 @@ export function FormView({
           </p>
           <StatementsOffer
             key={`${envelope.work_unit_id}:${session.statements
-              .map((statement) => statement.family)
+              .map(
+                (statement) =>
+                  `${statement.family}:${statement.row_identity ?? ""}`,
+              )
               .join()}`}
             session={session}
           />

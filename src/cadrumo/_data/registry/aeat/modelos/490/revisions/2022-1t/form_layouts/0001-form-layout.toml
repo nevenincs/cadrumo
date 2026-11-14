@@ -174,7 +174,7 @@ heading_key = "modelo.schema.490.form.page.dr49001.heading"
 
 [[revisions.2022-1t.form_layouts.pages.sections]]
 id = "general"
-heading_key = "modelo.schema.490.form.section.general.heading"
+heading_key = "modelo.schema.490.form.page.dr49001.section.general.heading"
 blocks = [
     { kind = "field", id = "field", casilla_id = "490-01-indicador-pagina-complementaria-12" },
     { kind = "field", id = "field-2", casilla_id = "490-01-tipo-declaracion-13" },
@@ -192,7 +192,7 @@ blocks = [
 
 [[revisions.2022-1t.form_layouts.pages.sections]]
 id = "general-2"
-heading_key = "modelo.schema.490.form.section.general-2.heading"
+heading_key = "modelo.schema.490.form.page.dr49001.section.general-2.heading"
 blocks = [
     { kind = "field", id = "field", casilla_id = "490-01-grupo-denominacion-388" },
     { kind = "field", id = "field-2", casilla_id = "490-01-grupo-pais-dominante-513" },
@@ -231,7 +231,7 @@ heading_key = "modelo.schema.490.form.page.dr49002.heading"
 
 [[revisions.2022-1t.form_layouts.pages.sections]]
 id = "general"
-heading_key = "modelo.schema.490.form.section.general.heading"
+heading_key = "modelo.schema.490.form.page.dr49002.section.general.heading"
 blocks = [
     { kind = "field", id = "field", casilla_id = "490-02-indicador-pagina-complementaria-12" },
     { kind = "field", id = "field-2", casilla_id = "490-02-regularizacion-ejercicio-13" },

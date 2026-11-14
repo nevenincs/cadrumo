@@ -30,11 +30,12 @@ modelo:
         page:
           m296-declarante:
             heading: 'Registro de tipo 1: Registro de declarante'
+            section:
+              general:
+                heading: Datos identificativos y resumen de la declaración
           numbered-boxes:
             heading: Hoja-resumen
         section:
-          general:
-            heading: Datos identificativos y resumen de la declaración
           resumen:
             heading: Resumen de los datos incluidos en la declaración
       revision:

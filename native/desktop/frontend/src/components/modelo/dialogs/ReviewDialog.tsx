@@ -25,6 +25,10 @@ import { useStrings, type Translate } from "../../../shell/strings";
 import { RefusalNotice } from "../../RefusalNotice";
 import { BoxNumber } from "../form/BoxNumber";
 import {
+  rowStatementLines,
+  type RowStatementEdit,
+} from "../form/rowStatements";
+import {
   addressKey,
   editKey,
   statementOf,
@@ -232,6 +236,24 @@ function StatementLine({
   );
 }
 
+/** One row's statement: the row in the words served, what the statement
+ * says in the form's words, and what staging it does. */
+function RowStatementLine({ edits }: { edits: RowStatementEdit[] }) {
+  const first = edits[0];
+  if (!first) return null;
+  return (
+    <li
+      data-statement-line=""
+      className="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-x-3 gap-y-0.5 px-3 py-2"
+    >
+      <span className="max-w-32 text-base">{first.rowWords}</span>
+      <span className="min-w-0 text-base">{first.words}</span>
+      <span />
+      <span className="text-xs text-muted-foreground">{first.effect}</span>
+    </li>
+  );
+}
+
 function PhaseNotice({
   phase,
   onRefusalAction,
@@ -373,6 +395,8 @@ export function ReviewDialog({
     edits.filter((edit) => edit.beforeChanged).map((edit) => edit.key),
   );
   const rebased = session.rebased;
+  const rowLines = rowStatementLines(session.rowStatements.values());
+  const staged = edits.length + session.rowStatements.size;
   const displacing = edits.filter(replacing).length;
   const findings = phase.kind === "checked" ? phase.findings : [];
   const blocked = findings.some((finding) => finding.blocking);
@@ -389,7 +413,7 @@ export function ReviewDialog({
     !writeHeld &&
     phase.kind === "checked" &&
     !session.rebasePending &&
-    edits.length > 0 &&
+    staged > 0 &&
     !blocked &&
     (acknowledged || !mustAcknowledge);
   const close = (next: boolean) => {
@@ -405,13 +429,13 @@ export function ReviewDialog({
       >
         <DialogHeader>
           <DialogTitle>
-            {t("workspace.modelo.review.title", { count: edits.length })}
+            {t("workspace.modelo.review.title", { count: staged })}
           </DialogTitle>
           <DialogDescription>
             {t("workspace.modelo.review.nothing_saved")}
           </DialogDescription>
         </DialogHeader>
-        {edits.length > 0 ? (
+        {staged > 0 ? (
           <ul className="flex max-h-[50vh] flex-col divide-y divide-border overflow-y-auto rounded-lg border border-border">
             {lines(edits).map((line) =>
               line.length === 1 && line[0] ? (
@@ -429,6 +453,12 @@ export function ReviewDialog({
                 />
               ),
             )}
+            {rowLines.map((line) => (
+              <RowStatementLine
+                key={line.map((edit) => edit.key).join()}
+                edits={line}
+              />
+            ))}
           </ul>
         ) : (
           phase.kind !== "applied" && (
@@ -564,7 +594,7 @@ export function ReviewDialog({
               <Button
                 variant="ghost"
                 className="text-destructive"
-                disabled={busy || edits.length === 0}
+                disabled={busy || staged === 0}
                 onClick={() => {
                   session.discardAll();
                   close(false);

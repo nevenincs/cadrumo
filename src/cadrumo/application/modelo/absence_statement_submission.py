@@ -5,8 +5,9 @@ filer can state holds nothing (:mod:`.work_form_carry_attestation`): an amount c
 earlier ejercicio, or the work-income boxes no payer certificate fills. A frontend that makes the
 statement without drawing the form stages exactly what the form names, one ``attest_no_amount``
 intent per binding, against the baseline its form read admitted, so the statement is checked and
-applied by the edit contract like any change the window stages. A declaration with nothing left to
-state is refused before anything is staged, in the words of the family asked about.
+applied by the edit contract like any change the window stages. A statement of a family stated row
+by row names its row on every intent it stages. A declaration with nothing left to state is refused
+before anything is staged, in the words of the family asked about.
 """
 
 from __future__ import annotations
@@ -14,7 +15,11 @@ from __future__ import annotations
 from collections.abc import Iterable
 from typing import Final
 
-from ...domain.calculations.registry.binding_absence_attestation import PRIOR_CARRY_FAMILIES, AbsenceAttestationFamily
+from ...domain.calculations.registry.binding_absence_attestation import (
+    PRIOR_CARRY_FAMILIES,
+    ROW_GRAIN_FAMILIES,
+    AbsenceAttestationFamily,
+)
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.modelos.errors import ModeloError
 from ..operator_actions.models import PreconditionVerdict
@@ -29,12 +34,15 @@ from .edit_models import (
 from .refusal_door_verdicts import operator_choice_verdict
 from .work_form_models import ModeloFormCarryAttestation
 
-_WORDED_FAMILIES: Final[frozenset[AbsenceAttestationFamily]] = PRIOR_CARRY_FAMILIES | {
-    AbsenceAttestationFamily.RENTA_TRABAJO_INCOME_NOT_STATED
-}
-# A family stated row by row is answered on each row's own door, never by this declaration-wide statement.
-if frozenset(family for family in AbsenceAttestationFamily if not family.row_grain) != _WORDED_FAMILIES:
+# A row family's carries are amounts earlier ejercicios left pending, so its refusal takes the carries' words.
+_WORDED_FAMILIES: Final[frozenset[AbsenceAttestationFamily]] = (
+    PRIOR_CARRY_FAMILIES | ROW_GRAIN_FAMILIES | {AbsenceAttestationFamily.RENTA_TRABAJO_INCOME_NOT_STATED}
+)
+if frozenset(AbsenceAttestationFamily) != _WORDED_FAMILIES:
     raise ValueError("every statement family needs the words of its nothing-open refusal")
+
+type _StatedAddress = tuple[BindingId, str | None]
+"""A binding the statement answers and the row it names, ``None`` for a declaration-wide carry."""
 
 
 class ModeloAbsenceStatementNothingOpenError(ModeloError):
@@ -73,18 +81,20 @@ def absence_statement_submission(
     """One ``attest_no_amount`` intent for each binding the form's statements of ``family`` name, against ``baseline``.
 
     Statements of another family are left out, so one family's wording never states another's figures.
-    Raises :class:`ModeloAbsenceStatementNothingOpenError` when the form serves no statement of the
-    family, so no empty edit is ever submitted.
+    A statement that names a row puts its row on each of its intents. Raises
+    :class:`ModeloAbsenceStatementNothingOpenError` when the form serves no statement of the family, so
+    no empty edit is ever submitted.
     """
-    binding_ids = sorted(
+    addresses = sorted(
         {
-            binding_id
+            (binding_id, attestation.row_identity)
             for attestation in attestations
             if attestation.family is family
             for binding_id in attestation.binding_ids
-        }
+        },
+        key=lambda address: (address[0], address[1] or ""),
     )
-    return _stated_absence(baseline, binding_ids, family=family)
+    return _stated_absence(baseline, addresses, family=family)
 
 
 def prior_carry_absence_submission(
@@ -96,22 +106,22 @@ def prior_carry_absence_submission(
     family stays unstated; statements of a family outside ``PRIOR_CARRY_FAMILIES`` are left out.
     Raises :class:`ModeloAbsenceStatementNothingOpenError` in the carries' words when no carry is open.
     """
-    binding_ids = sorted(
+    addresses: list[_StatedAddress] = sorted(
         {
-            binding_id
+            (binding_id, None)
             for attestation in attestations
             if attestation.family in PRIOR_CARRY_FAMILIES
             for binding_id in attestation.binding_ids
         }
     )
-    return _stated_absence(baseline, binding_ids, family=AbsenceAttestationFamily.RENTA_NEGATIVE_GENERAL_BASES_PENDING)
+    return _stated_absence(baseline, addresses, family=AbsenceAttestationFamily.RENTA_NEGATIVE_GENERAL_BASES_PENDING)
 
 
 def _stated_absence(
-    baseline: ModeloEditBaselineV1, binding_ids: list[BindingId], *, family: AbsenceAttestationFamily
+    baseline: ModeloEditBaselineV1, addresses: list[_StatedAddress], *, family: AbsenceAttestationFamily
 ) -> ModeloEditSubmissionV1:
-    """The edit stating ``binding_ids`` hold nothing, refused in ``family``'s words when there is none."""
-    if not binding_ids:
+    """The edit stating each of ``addresses`` holds nothing, refused in ``family``'s words when there is none."""
+    if not addresses:
         raise ModeloAbsenceStatementNothingOpenError(
             modelo=str(baseline.modelo),
             filing_year=baseline.filing_year,
@@ -127,10 +137,10 @@ def _stated_absence(
         mutation_family=ModeloEditMutationFamily.CALCULATE,
         binding_intents=tuple(
             ModeloBindingEditIntentV1(
-                address=ModeloEditBindingAddressV1(binding_id=binding_id),
+                address=ModeloEditBindingAddressV1(binding_id=binding_id, row_identity=row_identity),
                 kind=ModeloEditBindingIntentKind.ATTEST_NO_AMOUNT,
             )
-            for binding_id in binding_ids
+            for binding_id, row_identity in addresses
         ),
     )
 

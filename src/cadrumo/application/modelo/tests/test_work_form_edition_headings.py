@@ -23,6 +23,8 @@ from .work_form_fixture import built_form
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _ANNUAL = "0A"
+#: The id the layout gives the part of a page the design leaves unnamed.
+_UNNAMED_SECTION = "general"
 
 
 def _unnamed_parts(form: ModeloWorkForm) -> list[str]:
@@ -54,3 +56,28 @@ def test_every_supported_year_names_each_page_and_section_in_the_language(
 
     assert years
     assert unnamed == {}
+
+
+def _unnamed_section_headings(form: ModeloWorkForm) -> dict[str, str]:
+    return {
+        page.id: section.heading.text
+        for page in form.pages
+        for section in page.sections
+        if section.id == f"{page.id}.{_UNNAMED_SECTION}"
+    }
+
+
+@pytest.mark.parametrize("language", list(OutputLanguage))
+def test_each_page_names_its_unnamed_part_in_its_own_words(
+    operation: PinnedAuthorityOperation, language: OutputLanguage
+) -> None:
+    """The part a page holds outside its named sections is a different part on each page."""
+    years = filing_year_envelope().years
+    headings = {
+        year: _unnamed_section_headings(built_form(operation, "100", year, _ANNUAL, language=language))
+        for year in years
+    }
+    repeated = {year: by_page for year, by_page in headings.items() if len(set(by_page.values())) != len(by_page)}
+
+    assert max(len(by_page) for by_page in headings.values()) > 1
+    assert repeated == {}

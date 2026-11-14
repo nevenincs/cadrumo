@@ -3932,22 +3932,41 @@ modelo:
         page:
           datoseconomicos:
             heading: Titulares de las rentas
+            section:
+              general:
+                heading: Contribuyente al que corresponde cada renta
           datoseconomicos-resultados:
             heading: Resumen y cálculo de la declaración
           datoseconomicos-tomadatosampliada:
             heading: Datos detallados de rentas y deducciones
           datosidentificativos:
             heading: Datos identificativos
+            section:
+              general:
+                heading: Cónyuge no residente y no contribuyente del IRPF
           datosidentificativos-ascendientes:
             heading: Ascendientes
           datosidentificativos-conyuge:
             heading: Cónyuge
+            section:
+              general:
+                heading: Datos personales del cónyuge y residencia en la UE o el EEE
           datosidentificativos-declarante:
             heading: Declarante
+            section:
+              general:
+                heading: Datos personales del declarante
           datosidentificativos-hijos:
             heading: Hijos y otros descendientes
+            section:
+              general:
+                heading: Descendientes no residentes con residencia en la UE o el
+                  EEE
           declaracion:
             heading: Declaración
+            section:
+              general:
+                heading: Comunidad autónoma y opción de tributación elegida
         section:
           anexoa:
             heading: Mejoras energéticas en viviendas, vehículos eléctricos y puntos
@@ -4045,8 +4064,6 @@ modelo:
           gcambioresidenciaextres:
             heading: Resumen de ganancias patrimoniales por cambio de residencia fuera
               del territorio español
-          general:
-            heading: Contribuyente al que corresponde cada renta
           gpaccionesres:
             heading: Resumen de transmisiones de acciones negociadas
           gpderechosres:

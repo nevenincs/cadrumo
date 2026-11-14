@@ -807,12 +807,20 @@ class ModeloFormCarryAttestation(ModeloFormBase):
     holds no value: no stored earlier return supplied it, and the filer has
     neither entered it nor stated it. Applying it stages one ``attest_no_amount``
     intent per binding, which records each as a zero the filer stated.
+
+    A family stated row by row takes one statement per row of the repeating
+    group: ``row_identity`` names the row the calculation holds, and every
+    intent the statement stages carries it in its address.
     """
 
     #: The family of carries the statement answers, as their bindings declare it.
     family: AbsenceAttestationFamily
     #: The carries the statement answers, each a binding override the edit admits the statement on.
     binding_ids: tuple[BindingId, ...] = Field(min_length=1)
+    #: The source identity of the row the statement speaks of, present exactly when the family is stated per row.
+    row_identity: str | None = Field(default=None, min_length=1, max_length=256, exclude_if=_is_absent)
+    #: The row the statement speaks of, in the form's language; present exactly when ``row_identity`` is.
+    row_words: str | None = Field(default=None, min_length=1, exclude_if=_is_absent)
     #: The action, in the form's language.
     action_words: str = Field(min_length=1)
     #: What the statement records and what happens when an earlier return later shows an amount.
@@ -825,6 +833,15 @@ class ModeloFormCarryAttestation(ModeloFormBase):
     def _bindings_are_unique_and_sorted(self) -> ModeloFormCarryAttestation:
         if list(self.binding_ids) != sorted(set(self.binding_ids)):
             raise ValueError("a carry attestation names each binding once, in order")
+        return self
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _row_named_exactly_for_a_row_family(self) -> ModeloFormCarryAttestation:
+        if (self.row_identity is not None) != self.family.row_grain:
+            raise ValueError("a carry attestation names a row exactly when its family is stated row by row")
+        if (self.row_words is not None) != (self.row_identity is not None):
+            raise ValueError("a carry attestation words its row exactly when it names one")
         return self
 
 

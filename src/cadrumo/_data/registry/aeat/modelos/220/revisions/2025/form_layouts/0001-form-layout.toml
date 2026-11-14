@@ -347,7 +347,7 @@ heading_key = "modelo.schema.220.form.page.t22007000.heading"
 
 [[revisions.2025.form_layouts.pages.sections]]
 id = "general"
-heading_key = "modelo.schema.220.form.section.general.heading"
+heading_key = "modelo.schema.220.form.page.t22007000.section.general.heading"
 blocks = [
     { kind = "field", id = "field", casilla_id = "T22007000:00043" },
     { kind = "field", id = "field-2", casilla_id = "T22007000:00047" },
@@ -385,7 +385,7 @@ blocks = [
 
 [[revisions.2025.form_layouts.pages.sections]]
 id = "general-2"
-heading_key = "modelo.schema.220.form.section.general-2.heading"
+heading_key = "modelo.schema.220.form.page.t22007000.section.general-2.heading"
 blocks = [
     { kind = "field", id = "field", casilla_id = "T22007000:00552" },
     { kind = "field", id = "field-2", casilla_id = "T22007000:02545" },
@@ -415,7 +415,7 @@ heading_key = "modelo.schema.220.form.page.t22009000.heading"
 
 [[revisions.2025.form_layouts.pages.sections]]
 id = "general"
-heading_key = "modelo.schema.220.form.section.general.heading"
+heading_key = "modelo.schema.220.form.page.t22009000.section.general.heading"
 blocks = [
     { kind = "field", id = "field", casilla_id = "T22009000:00562" },
     { kind = "field", id = "field-2", casilla_id = "T22009000:03358" },
@@ -486,7 +486,7 @@ heading_key = "modelo.schema.220.form.page.t22009001.heading"
 
 [[revisions.2025.form_layouts.pages.sections]]
 id = "general"
-heading_key = "modelo.schema.220.form.section.general.heading"
+heading_key = "modelo.schema.220.form.page.t22009001.section.general.heading"
 blocks = [
     { kind = "field", id = "field", casilla_id = "T22009001:02540" },
     { kind = "field", id = "field-2", casilla_id = "T22009001:02541" },
@@ -531,7 +531,7 @@ heading_key = "modelo.schema.220.form.page.t22016000.heading"
 
 [[revisions.2025.form_layouts.pages.sections]]
 id = "general"
-heading_key = "modelo.schema.220.form.section.general.heading"
+heading_key = "modelo.schema.220.form.page.t22016000.section.general.heading"
 blocks = [
     { kind = "field", id = "field", casilla_id = "T22016000:00052" },
     { kind = "field", id = "field-2", casilla_id = "T22016000:00053" },
@@ -652,7 +652,7 @@ heading_key = "modelo.schema.220.form.page.t22016001.heading"
 
 [[revisions.2025.form_layouts.pages.sections]]
 id = "general"
-heading_key = "modelo.schema.220.form.section.general.heading"
+heading_key = "modelo.schema.220.form.page.t22016001.section.general.heading"
 blocks = [
     { kind = "field", id = "field", casilla_id = "T22016001:03373" },
     { kind = "field", id = "field-2", casilla_id = "T22016001:03374" },
@@ -703,7 +703,7 @@ blocks = [
 
 [[revisions.2025.form_layouts.pages.sections]]
 id = "general"
-heading_key = "modelo.schema.220.form.section.general.heading"
+heading_key = "modelo.schema.220.form.page.t220did00.section.general.heading"
 blocks = [
     { kind = "field", id = "field", casilla_id = "T220DID00:02806" },
     { kind = "field", id = "field-2", casilla_id = "T220DID00:02809" },
