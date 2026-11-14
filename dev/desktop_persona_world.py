@@ -8,6 +8,14 @@ and prior figures the table states first and a Modelo 303's evidence) and record
 calculate makes (the persona's work inputs, prior values, work-income statements and the pending rental carries)
 through the table's own functions. Planning, scope, stated values, preparation and statements are the table's own.
 
+The window enters the statements it has a door for. A pending-carry statement of nothing pending, a prior figure
+and the work-income statement each have one on the declaration's form (the statements offer and the prior-values
+offer), so the world does not record them: the row's ``window_statements`` carries each, taken from the table's own
+statement readers, for the window to enter and calculate with. A work input, a pending carry stated as an amount
+and a let property's carry have no such door; the world records those and every statement the table states before
+the last of them, keeps the calculation that stores, and the row's ``no_window_door`` names each kind with the
+operation that records it.
+
     python -m dev.desktop_persona_world --persona <id> --horizon <year> --storage-root <absolute directory>
 
 The directory must be absent or empty and lie outside every Git project. One JSON object goes to standard output:
@@ -16,11 +24,12 @@ passphrase is defined (never the passphrase), the scenario instant, and one entr
 
 Every operation here ran under the persona's frozen scenario clock, as the table's calculate does; a desktop on the
 wall clock calculates at a later instant. Each statement is recorded through a calculating edit, which stores a
-calculation. A return that holds none after its statements is left uncalculated (``driver_calculate`` is
-``not_run``), so the window's calculate reads the recorded statements. A return that holds one anyway, because its
-preparation or a statement was a calculating edit, reports ``calculate_inherited_reason``. A row is prepared
-against a profile in which the rows before it are not verified and filed locally, whereas the table files each
-verified row before it creates the next; the window drives those rows itself, so they stay unfiled here.
+calculation. A return that holds none after its recorded statements is left uncalculated (``driver_calculate`` is
+``not_run``), so the window's calculate reads what it enters. A return that holds one anyway, because a statement
+the window cannot enter was recorded through a calculating edit, reports ``calculate_inherited_reason`` naming the
+kinds. A row is prepared against a profile in which the rows before it are not verified and filed locally, whereas
+the table files each verified row before it creates the next; the window drives those rows itself, so they stay
+unfiled here.
 """
 
 from __future__ import annotations
@@ -32,12 +41,15 @@ import sys
 import tempfile
 from collections.abc import Sequence
 from contextlib import ExitStack
+from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Final
 
 from cadrumo.adapters.outbound.fx.tests.recorded_ecb_rates import recorded_ecb_rate_provider
 from cadrumo.application.exchange_rate_provider import bind_exchange_rate_provider_factory
+from cadrumo.application.modelo.operation_shared import MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.binding_absence_attestation import AbsenceAttestationFamily
 from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
 from cadrumo.entrypoints.tests.persona_materialisation import (
     PersonaMaterialisationError,
@@ -47,6 +59,7 @@ from cadrumo.entrypoints.tests.persona_materialisation import (
 from cadrumo.tests.env_scope import scoped_env_var
 from cadrumo.tests.personas import PersonaCatalogueError, persona_ids, read_persona
 
+from .acceptance.persona_table.cli_column.world_report import Phase, Statement, StatementKind, statement_record
 from .desktop_agent_live.disposable_root import enclosing_git_project
 from .exit_codes import FAILED, OK
 from .paths import STORAGE_ROOT_ENV
@@ -65,6 +78,14 @@ CALCULATING_EDIT_STAGES: Final = frozenset(
     {"prior_carries", "attested_prior_values", "work_inputs", "work_income_none", "rental_carries"}
 )
 """The stages that record a statement through a calculating edit, which stores a calculation."""
+STAGE_OF_KIND: Final = {
+    StatementKind.PRIOR_CARRIES: "prior_carries",
+    StatementKind.PRIOR_VALUE: "attested_prior_values",
+    StatementKind.WORK_INCOME_NONE: "work_income_none",
+}
+"""The stage name of each statement kind the window can enter, as ``stages`` names the recorded ones."""
+NEEDS_CALCULATION: Final = frozenset({Phase.AFTER_CALCULATION, Phase.AFTER_RECALCULATION})
+"""The phases whose statements the table makes on a calculated return."""
 TABLE_PERSONAS_ENV: Final = "PERSONA_TABLE_PERSONAS"
 """The variable the table's collector reads, at import, to name the personas it collects."""
 
@@ -92,6 +113,8 @@ def _entry(
     stages: Sequence[str] = (),
     calculate_outcome: str | None = None,
     calculate_inherited_reason: str | None = None,
+    window_statements: Sequence[dict[str, Any]] = (),
+    no_window_door: Sequence[dict[str, str]] = (),
 ) -> dict[str, Any]:
     """The report entry of one planned row: its work unit when prepared, else the stage where the table stops."""
     return {
@@ -107,6 +130,8 @@ def _entry(
         "stages": list(stages),
         "driver_calculate": calculate_outcome,
         "calculate_inherited_reason": calculate_inherited_reason,
+        "window_statements": list(window_statements),
+        "no_window_door": list(no_window_door),
     }
 
 
@@ -121,9 +146,90 @@ def _m303_evidence(prepared: PreparedReturn) -> dict[str, str] | None:
     }
 
 
-def _stage_names(materialised: MaterialisedPersona, plan: PlannedRow, prepared: PreparedReturn) -> list[str]:
-    """The names of the table's stages this return passes before calculate, from what the persona's world holds."""
+@dataclass(frozen=True, slots=True)
+class WindowSplit:
+    """Which statements of one return the window enters, and which the world records."""
+
+    left: frozenset[StatementKind] = frozenset()
+    """The kinds the world does not record because the window enters them."""
+    entered: tuple[Statement, ...] = ()
+    """The statements the window enters, in the table's order, one per carry statement, figure and statement."""
+    without_door: tuple[Statement, ...] = ()
+    """The statements no window door enters, which the world records."""
+
+
+def _has_window_door(statement: Statement) -> bool:
+    """Whether the declaration's form lets the filer enter ``statement``.
+
+    The statements offer states that no amount from earlier ejercicios is pending and the prior-values offer states
+    a figure for an earlier return; the work-income statement is one of the statements offer's families. A carry
+    stated as an amount, a casilla value and a let property's carry (a family stated per row, which the offer does
+    not serve) have no such door.
+    """
+    if statement.refusal is not None:
+        return False
+    if statement.kind is StatementKind.PRIOR_CARRIES:
+        return not statement.amounts and statement.gap is None
+    return statement.kind in {StatementKind.PRIOR_VALUE, StatementKind.WORK_INCOME_NONE}
+
+
+def window_split(materialised: MaterialisedPersona, plan: PlannedRow) -> WindowSplit:
+    """Split the statements the table makes about ``plan``'s return between the window and the world.
+
+    The world records every statement up to the last one the window has no door for, in the table's order, because
+    each is a calculating edit and a later one reads the calculation of the earlier. The window enters the statements
+    after it. A return with no such statement has all of its statements entered in the window.
+    """
+    from .acceptance.persona_table.cli_column.statements import statements_for
+
+    try:
+        made = statements_for(materialised, plan)
+    except PersonaMaterialisationError:
+        return WindowSplit()
+    last = max((at for at, statement in enumerate(made) if not _has_window_door(statement)), default=-1)
+    recorded_kinds = {statement.kind for statement in made[: last + 1]}
+    entered: list[Statement] = []
+    for statement in made[last + 1 :]:
+        if statement.kind in recorded_kinds or not _has_window_door(statement):
+            continue
+        if any(item.kind is statement.kind and item.target == statement.target for item in entered):
+            continue
+        entered.append(statement)
+    return WindowSplit(
+        left=frozenset(statement.kind for statement in entered),
+        entered=tuple(entered),
+        without_door=tuple(statement for statement in made if not _has_window_door(statement)),
+    )
+
+
+def _window_statement(statement: Statement) -> dict[str, Any]:
+    """The report record of a statement the window enters: the table's own, and whether it follows a calculation."""
+    record: dict[str, Any] = dict(statement_record(statement))
+    record["after_calculation"] = statement.phase in NEEDS_CALCULATION
+    if statement.kind is StatementKind.WORK_INCOME_NONE:
+        record["families"] = [AbsenceAttestationFamily.RENTA_TRABAJO_INCOME_NOT_STATED.value]
+    return record
+
+
+def _kind_names(split: WindowSplit) -> list[str]:
+    """The kinds of statement the world records because the window has no door, each once."""
+    return list(dict.fromkeys(statement.kind.value for statement in split.without_door))
+
+
+def _without_door(split: WindowSplit) -> list[dict[str, str]]:
+    """Each kind of statement the world records because the window has no door, with the operation that records it."""
+    return [{"kind": kind, "operation": MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID} for kind in _kind_names(split)]
+
+
+def _stage_names(
+    materialised: MaterialisedPersona, plan: PlannedRow, prepared: PreparedReturn, left: frozenset[StatementKind]
+) -> list[str]:
+    """The names of the table's stages this return passes before calculate, from what the persona's world holds.
+
+    A stage whose statements the window enters is not passed here.
+    """
     world = materialised.world
+    left_stages = {STAGE_OF_KIND[kind] for kind in left}
     stages = ["create"]
     if plan.modelo == "100":
         stages.append("prior_carries")
@@ -137,30 +243,42 @@ def _stage_names(materialised: MaterialisedPersona, plan: PlannedRow, prepared: 
         stages.append("work_income_none")
     if plan.modelo == "100":
         stages.append("rental_carries")
-    return stages
+    return [stage for stage in stages if stage not in left_stages]
+
+
+def _inherited_reason(split: WindowSplit, stages: Sequence[str], held_by_preparation: bool) -> str:
+    """Why the return holds a calculation the window did not make, naming the kinds that no window door enters."""
+    edits = ", ".join(stage for stage in stages if stage in CALCULATING_EDIT_STAGES) or "none"
+    by = "the table's preparation" if held_by_preparation else "recording the statements"
+    if not split.without_door:
+        return f"{by} stored it through a calculating edit; edit stages: {edits}"
+    return (
+        f"no window door enters {', '.join(_kind_names(split))}; {by} stored the calculation through a "
+        f"calculating edit ({MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID}); edit stages: {edits}"
+    )
 
 
 def _recorded(
-    materialised: MaterialisedPersona, plan: PlannedRow, prepared: PreparedReturn
+    materialised: MaterialisedPersona, plan: PlannedRow, prepared: PreparedReturn, split: WindowSplit
 ) -> tuple[list[str], str, str | None]:
-    """Record the statements the table's calculate makes and stop before the calculation.
+    """Record the statements the window has no door for, and those before them, and stop before the calculation.
 
     Returns the stages passed, the calculate outcome and why a calculation is held, if one is. The statements
     travel as calculating edits, which store a calculation: a work unit that holds one after them, or whose
     statements the form offers only on a calculated work unit, keeps the table's own calculate, and the reason
-    names why. Any other work unit stays uncalculated and the window calculates it.
+    names why. Any other work unit stays uncalculated and the window calculates it with the statements it enters.
     """
     from .acceptance.persona_table import sweep
 
-    stages = _stage_names(materialised, plan, prepared)
+    stages = _stage_names(materialised, plan, prepared, split.left)
     world = materialised.world
     held_by_preparation = sweep.holds_calculation(world, prepared.work_unit_id)
     try:
-        sweep.record_statements(materialised, plan, prepared)
+        sweep.record_statements(materialised, plan, prepared, left=split.left)
     except PersonaMaterialisationError:
         return stages, "refused", None
     if not sweep.holds_calculation(world, prepared.work_unit_id):
-        awaiting = sweep.statements_needing_calculation(materialised, plan)
+        awaiting = sweep.statements_needing_calculation(materialised, plan, left=split.left)
         if not awaiting:
             return stages, NOT_RUN, None
         reason = f"{', '.join(awaiting)} can only be stated on a calculated work unit"
@@ -169,9 +287,7 @@ def _recorded(
         except PersonaMaterialisationError:
             return [*stages, "calculate"], "refused", reason
         return [*stages, "calculate"], "calculated", reason
-    edits = ", ".join(stage for stage in stages if stage in CALCULATING_EDIT_STAGES) or "none"
-    by = "the table's preparation" if held_by_preparation else "recording the statements"
-    return stages, "calculated", f"{by} stored it through a calculating edit; edit stages: {edits}"
+    return stages, "calculated", _inherited_reason(split, stages, held_by_preparation)
 
 
 def _prepared_rows(materialised: MaterialisedPersona, plans: Sequence[PlannedRow]) -> list[dict[str, Any]]:
@@ -183,11 +299,12 @@ def _prepared_rows(materialised: MaterialisedPersona, plans: Sequence[PlannedRow
     rows: list[dict[str, Any]] = []
     for plan in plans:
         values = sweep.stated_values(materialised.persona, world.envelope, plan)
-        prepared = sweep.prepare_return(materialised, plan, values)
+        split = window_split(materialised, plan)
+        prepared = sweep.prepare_return(materialised, plan, values, left=split.left)
         if isinstance(prepared, TableRow):
             rows.append(_entry(plan, outcome=str(prepared.calculate), reason=prepared.reason or None))
             continue
-        stages, calculate_outcome, inherited_reason = _recorded(materialised, plan, prepared)
+        stages, calculate_outcome, inherited_reason = _recorded(materialised, plan, prepared, split)
         rows.append(
             _entry(
                 plan,
@@ -197,6 +314,8 @@ def _prepared_rows(materialised: MaterialisedPersona, plans: Sequence[PlannedRow
                 stages=stages,
                 calculate_outcome=calculate_outcome,
                 calculate_inherited_reason=inherited_reason,
+                window_statements=[_window_statement(statement) for statement in split.entered],
+                no_window_door=_without_door(split),
             )
         )
     return rows

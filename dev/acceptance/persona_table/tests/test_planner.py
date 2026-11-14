@@ -20,6 +20,7 @@ from cadrumo.domain.calculations.registry.binding_targets import revision_bindin
 from cadrumo.entrypoints.tests.persona_materialisation import PERSONA_ACTOR, MaterialisedPersona, PersonaWorld
 
 from .. import planner, sweep
+from ..cli_column.world_report import StatementKind
 from ..rows import PlannedRow, Stage, TableRow
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -183,6 +184,36 @@ def test_preparing_a_return_makes_the_same_calls_in_the_same_order_as_the_two_st
     request = planner.build_calculation_request(materialised, plan, _UNIT)
     assert stepped == calls
     assert request == prepared.request
+
+
+def test_a_kind_left_to_another_surface_is_not_stated_and_the_others_keep_their_order(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    materialised = _materialised("100", ("0A",))
+    plan = _plan("100", "0A")
+    carries_and_figures = frozenset({StatementKind.PRIOR_CARRIES, StatementKind.PRIOR_VALUE})
+
+    calls = _record(monkeypatch)
+    planner.state_before_first_calculation(materialised, plan, _UNIT, left=frozenset({StatementKind.PRIOR_CARRIES}))
+    assert calls == [f"before_first 100 {_YEAR} 0A {_UNIT}"]
+
+    calls = _record(monkeypatch)
+    planner.state_before_first_calculation(materialised, plan, _UNIT, left=frozenset({StatementKind.PRIOR_VALUE}))
+    assert calls == [f"prior_carries {_UNIT} {_YEAR}"]
+
+    calls = _record(monkeypatch)
+    planner.state_before_first_calculation(materialised, plan, _UNIT, left=carries_and_figures)
+    assert calls == []
+
+    # A kind the planner does not state before the first calculation changes nothing there.
+    calls = _record(monkeypatch)
+    planner.state_before_first_calculation(materialised, plan, _UNIT, left=frozenset({StatementKind.WORK_INCOME_NONE}))
+    assert calls == [f"prior_carries {_UNIT} {_YEAR}", f"before_first 100 {_YEAR} 0A {_UNIT}"]
+
+    calls = _record(monkeypatch)
+    prepared = planner.prepare_return(materialised, plan, [], left=carries_and_figures)
+    assert isinstance(prepared, planner.PreparedReturn)
+    assert calls == []
 
 
 def test_a_return_the_history_filed_makes_no_statement(monkeypatch: pytest.MonkeyPatch) -> None:

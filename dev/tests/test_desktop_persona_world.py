@@ -6,6 +6,8 @@ import json
 import os
 from collections.abc import Iterator
 from pathlib import Path
+from types import SimpleNamespace
+from typing import cast
 from uuid import UUID
 
 import pytest
@@ -20,9 +22,16 @@ from cadrumo.application.user_profile.profile_record_repository import ProfileRe
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.user_profile.values import ProfileSetupState
 from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
-from cadrumo.entrypoints.tests.persona_materialisation import PERSONA_PROFILE_CREDENTIAL, year_envelope
+from cadrumo.entrypoints.tests.persona_materialisation import (
+    PERSONA_PROFILE_CREDENTIAL,
+    MaterialisedPersona,
+    year_envelope,
+)
 
 from .. import desktop_persona_world
+from ..acceptance.persona_table.cli_column import statements as table_statements
+from ..acceptance.persona_table.cli_column.world_report import Phase, Statement, StatementKind
+from ..acceptance.persona_table.rows import PlannedRow
 from ..desktop_agent_live.disposable_root import create_root, remove_root, temporary_parent
 from ..paths import STORAGE_ROOT_ENV
 
@@ -74,10 +83,20 @@ def _stored_profile(storage_root: Path, profile_id: str) -> tuple[str, ProfileSe
 
 
 @pytest.mark.parametrize(
-    ("persona", "leaves_uncalculated"), [(PERSONA, False), ("traductora-profesional", True)], ids=["held", "open"]
+    ("persona", "entered_kinds", "recorded_kinds"),
+    [
+        ("asalariada-familia", {"prior_carries", "work_income_none"}, set()),
+        ("traductora-profesional", {"prior_carries"}, set()),
+        ("sociedad-limitada", {"prior_value"}, {"work_input"}),
+    ],
+    ids=["asalariada", "traductora", "sociedad"],
 )
 def test_world_holds_the_rows_the_table_plans_and_a_profile_that_signs_in(
-    disposable_root: Path, capsys: pytest.CaptureFixture[str], persona: str, leaves_uncalculated: bool
+    disposable_root: Path,
+    capsys: pytest.CaptureFixture[str],
+    persona: str,
+    entered_kinds: set[str],
+    recorded_kinds: set[str],
 ) -> None:
     horizon = _registry_horizon()
     ambient = os.environ.get(STORAGE_ROOT_ENV)
@@ -101,6 +120,8 @@ def test_world_holds_the_rows_the_table_plans_and_a_profile_that_signs_in(
     assert report["passphrase_source"] == desktop_persona_world.CREDENTIAL_SOURCE
     assert PERSONA_PROFILE_CREDENTIAL not in json.dumps(report)
     assert any(row["prepared"] for row in report["rows"])
+    assert {item["kind"] for row in report["rows"] for item in row["window_statements"]} == entered_kinds
+    assert {item["kind"] for row in report["rows"] for item in row["no_window_door"]} == recorded_kinds
     for row in report["rows"]:
         assert "m303_evidence" in row
         if row["prepared"]:
@@ -112,6 +133,12 @@ def test_world_holds_the_rows_the_table_plans_and_a_profile_that_signs_in(
             assert (row["driver_calculate"] == desktop_persona_world.NOT_RUN) == (
                 row["calculate_inherited_reason"] is None and row["driver_calculate"] != "refused"
             ), row
+            # A kind the window cannot enter is recorded and named; a row without one is left to the window.
+            if row["no_window_door"]:
+                assert row["driver_calculate"] != desktop_persona_world.NOT_RUN, row
+                assert all(item["kind"] in row["calculate_inherited_reason"] for item in row["no_window_door"]), row
+            else:
+                assert row["driver_calculate"] == desktop_persona_world.NOT_RUN, row
         else:
             assert row["pre_calculate_outcome"], row
             assert row["stages"] == []
@@ -129,7 +156,7 @@ def test_world_holds_the_rows_the_table_plans_and_a_profile_that_signs_in(
     assert setup_state is ProfileSetupState.COMPLETE
     prepared = [row for row in report["rows"] if row["prepared"]]
     # A row reported not run holds no calculation in the stored profile; one reported calculated holds one.
-    assert any(row["driver_calculate"] == desktop_persona_world.NOT_RUN for row in prepared) is leaves_uncalculated
+    assert any(row["driver_calculate"] == desktop_persona_world.NOT_RUN for row in prepared)
     for row in prepared:
         assert held[row["work_unit_id"]] is (row["driver_calculate"] != desktop_persona_world.NOT_RUN), row
 
@@ -161,3 +188,71 @@ def test_an_unknown_persona_is_refused(disposable_root: Path) -> None:
             ["--persona", "no-such-persona", "--horizon", "1", "--storage-root", str(disposable_root / "world")]
         )
     assert refusal.value.code == 2
+
+
+def _statement(
+    kind: StatementKind,
+    phase: Phase,
+    *,
+    target: str = "",
+    value: str = "",
+    row: str | None = None,
+    families: tuple[str, ...] = (),
+    amounts: tuple[tuple[str, str], ...] = (),
+    gap: str | None = None,
+    refusal: str | None = None,
+) -> Statement:
+    return Statement(
+        kind, phase, target=target, value=value, row=row, families=families, amounts=amounts, gap=gap, refusal=refusal
+    )
+
+
+def _split(monkeypatch: pytest.MonkeyPatch, made: tuple[Statement, ...]) -> desktop_persona_world.WindowSplit:
+    """Split ``made`` as the world does; the statements the table makes are the only thing replaced."""
+    monkeypatch.setattr(table_statements, "statements_for", lambda _materialised, _plan: made)
+    plan = cast(PlannedRow, SimpleNamespace(modelo="100", year=1, period="0A"))
+    return desktop_persona_world.window_split(cast(MaterialisedPersona, SimpleNamespace()), plan)
+
+
+def test_a_statement_of_nothing_pending_a_prior_figure_and_the_work_income_statement_have_a_window_door() -> None:
+    door = desktop_persona_world._has_window_door
+    assert door(_statement(StatementKind.PRIOR_CARRIES, Phase.BEFORE_EVIDENCE, families=("f",)))
+    assert door(_statement(StatementKind.PRIOR_VALUE, Phase.BEFORE_EVIDENCE, target="b", value="1"))
+    assert door(_statement(StatementKind.WORK_INCOME_NONE, Phase.AFTER_CALCULATION))
+    assert not door(_statement(StatementKind.PRIOR_CARRIES, Phase.BEFORE_EVIDENCE, amounts=(("1380", "5"),)))
+    assert not door(_statement(StatementKind.PRIOR_CARRIES, Phase.BEFORE_EVIDENCE, gap="not sayable"))
+    assert not door(_statement(StatementKind.WORK_INPUT, Phase.AT_CALCULATION, target="c", value="1"))
+    assert not door(_statement(StatementKind.RENTAL_CARRY, Phase.AFTER_RECALCULATION, target="b", row="r"))
+    assert not door(_statement(StatementKind.WORK_INCOME_NONE, Phase.AFTER_CALCULATION, refusal="no"))
+
+
+def test_the_world_records_up_to_the_last_statement_no_window_door_enters_and_leaves_the_rest(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    carries = _statement(StatementKind.PRIOR_CARRIES, Phase.BEFORE_EVIDENCE, families=("f",))
+    figure = _statement(StatementKind.PRIOR_VALUE, Phase.BEFORE_EVIDENCE, target="b", value="1")
+    figure_again = _statement(StatementKind.PRIOR_VALUE, Phase.AFTER_CALCULATION, target="b", value="1")
+    work_input = _statement(StatementKind.WORK_INPUT, Phase.AT_CALCULATION, target="c", value="2")
+    income = _statement(StatementKind.WORK_INCOME_NONE, Phase.AFTER_CALCULATION)
+    rental = _statement(StatementKind.RENTAL_CARRY, Phase.AFTER_RECALCULATION, target="b", row="r")
+
+    everything = _split(monkeypatch, (carries, figure, figure_again, income))
+    assert everything.left == {StatementKind.PRIOR_CARRIES, StatementKind.PRIOR_VALUE, StatementKind.WORK_INCOME_NONE}
+    assert [item.kind for item in everything.entered] == [
+        StatementKind.PRIOR_CARRIES,
+        StatementKind.PRIOR_VALUE,
+        StatementKind.WORK_INCOME_NONE,
+    ]
+    assert everything.without_door == ()
+
+    after_input = _split(monkeypatch, (carries, work_input, income))
+    assert after_input.left == {StatementKind.WORK_INCOME_NONE}
+    assert after_input.without_door == (work_input,)
+
+    behind_rental = _split(monkeypatch, (carries, figure, income, rental))
+    assert behind_rental.left == frozenset()
+    assert behind_rental.entered == ()
+    assert behind_rental.without_door == (rental,)
+
+    nothing = _split(monkeypatch, ())
+    assert nothing == desktop_persona_world.WindowSplit()
