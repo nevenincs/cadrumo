@@ -37,7 +37,7 @@ Account numbers pass through here in memory only, into the exported file;
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import StrEnum
@@ -168,7 +168,7 @@ def settlement_dictionary_values(
     first_instalment_share: Decimal | None,
     charge_account: ChargeAccount | None,
     refund_account: RefundAccount | None,
-    refund_legal_refs: tuple[str, ...] = (),
+    refund_legal_refs: Callable[[], tuple[str, ...]] | None = None,
 ) -> dict[str, object]:
     """Compose the settlement rows of the official record, keyed by dictionary field id.
 
@@ -180,7 +180,7 @@ def settlement_dictionary_values(
             ``None`` where the modelo declares no split.
         charge_account: The account AEAT debits, when a payment is direct-debited.
         refund_account: The account AEAT pays a refund into.
-        refund_legal_refs: The law a refund without an account is refused under.
+        refund_legal_refs: Reads the law a refund without an account is refused under, only when it is.
 
     Raises:
         ModeloExportSettlementRefusedError: When the settled amount is unknown or
@@ -250,12 +250,13 @@ def _payment_values(
 
 
 def _refund_values(
-    amount: Decimal, refund_account: RefundAccount | None, legal_refs: tuple[str, ...]
+    amount: Decimal, refund_account: RefundAccount | None, legal_refs: Callable[[], tuple[str, ...]] | None
 ) -> dict[str, object]:
     if refund_account is None or refund_account.iban is None:
         context: dict[str, object] = {"result_disposition": ResultDisposition.DEVOLUCION.value}
-        if legal_refs:
-            context["legal_refs"] = ", ".join(legal_refs)
+        cited = () if legal_refs is None else legal_refs()
+        if cited:
+            context["legal_refs"] = ", ".join(cited)
         raise own_account_missing_error("refund", context=context)
     values: dict[str, object] = {_REFUND_AMOUNT_FIELD: amount}
     marca = derive_sepa_marca(iban=refund_account.iban, bank_country_code=refund_account.bank_country_code)

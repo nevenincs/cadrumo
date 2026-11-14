@@ -93,7 +93,7 @@ def test_the_refusal_of_a_refund_without_an_account_carries_the_citation(operati
             first_instalment_share=None,
             charge_account=None,
             refund_account=None,
-            refund_legal_refs=refs,
+            refund_legal_refs=lambda: refs,
         )
 
     context = refused.value.context or {}

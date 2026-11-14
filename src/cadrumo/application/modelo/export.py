@@ -495,7 +495,7 @@ def _settlement_values_for_export(
         ),
         charge_account=charge_account,
         refund_account=refund_account,
-        refund_legal_refs=refund_account_legal_refs(work_unit, operation=operation),
+        refund_legal_refs=lambda: refund_account_legal_refs(work_unit, operation=operation),
     )
 
 
