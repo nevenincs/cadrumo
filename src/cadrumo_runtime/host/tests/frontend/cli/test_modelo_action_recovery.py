@@ -21,7 +21,10 @@ from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.application.operator_surface.verb_input_contracts import cli_argv_for
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
 from cadrumo.core.config import load_settings, override_settings
+from cadrumo.domain.calculations.registry.temporal import select_revision
+from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import (
+    SCENARIO_FILING_YEAR,
     m111_withholding_aggregate_arguments,
     m111_withholding_invoice_arguments,
 )
@@ -245,6 +248,13 @@ def _register_profile(
         dispose_engines_for_bucket(profile_id)
 
 
+def _m111_first_quarter_revision() -> str:
+    """The Modelo 111 revision the registry selects for the scenario year's 1T, where the shared helpers record the withholding."""
+    modelos, _catalogues = bundled_registry_tree()
+    modelo = next(candidate for candidate in modelos if candidate.id == "111")
+    return str(select_revision(modelo, filing_year=SCENARIO_FILING_YEAR, period="1T").id)
+
+
 def _create_work_unit(
     environment: dict[str, str],
     *,
@@ -277,7 +287,7 @@ def _create_work_unit(
 
 
 def _capture_m111_invoice_withholding(environment: dict[str, str]) -> None:
-    """Capture the Modelo 111 2025 1T invoice-backed retención through the installed console."""
+    """Capture the scenario year's Modelo 111 1T invoice-backed retención through the installed console."""
     created = _run_success(environment, m111_withholding_invoice_arguments())
     invoice_id = _result(created).get("invoice_id")
     assert isinstance(invoice_id, str) and invoice_id
@@ -288,9 +298,9 @@ def _create_calculable_m111_work(environment: dict[str, str]) -> str:
     work_unit_id = _create_work_unit(
         environment,
         modelo="111",
-        year=2025,
+        year=SCENARIO_FILING_YEAR,
         period="1T",
-        revision="2019-y-siguientes",
+        revision=_m111_first_quarter_revision(),
     )
     _capture_m111_invoice_withholding(environment)
     return work_unit_id
@@ -349,6 +359,20 @@ def _seed_discarded_work(*, storage_root: Path, work_unit_id: str) -> None:
                 )
         finally:
             dispose_engine(settings)
+
+
+def _structural_refusal(error: dict[str, Any]) -> dict[str, Any]:
+    """The refusal without what is worded in the requested language: its message and its action's served words."""
+    structural = {key: value for key, value in error.items() if key != "message"}
+    action = structural.get("action")
+    if isinstance(action, dict):
+        structural["action"] = _unworded(action)
+    return structural
+
+
+def _unworded(action: dict[str, Any]) -> dict[str, Any]:
+    """An action without the words it is served with in the requested language."""
+    return {key: value for key, value in action.items() if not key.endswith(("_words", "_words_language"))}
 
 
 def _assert_action_id(action: dict[str, Any], action_id: str) -> None:
@@ -412,7 +436,7 @@ def test_installed_console_file_calculate_verify_retry_persists_filing(tmp_path:
         _assert_action_id(current_action, "operator.modelo.work.verify")
         error = draft_document.get("error")
         assert isinstance(error, dict)
-        structural_error = {key: value for key, value in error.items() if key != "message"}
+        structural_error = _structural_refusal(error)
         context = dict(structural_error["context"])
         operation_id = context.pop("operation_id")
         assert isinstance(operation_id, str) and operation_id not in operation_ids
@@ -423,7 +447,7 @@ def test_installed_console_file_calculate_verify_retry_persists_filing(tmp_path:
         if verify_action is None:
             verify_action = current_action
         else:
-            assert current_action == verify_action
+            assert _unworded(current_action) == _unworded(verify_action)
         assert _work_state(storage_root=storage_root, work_unit_id=work_unit_id) == before_verify
     assert len(set(structural_digests.values())) == 1
     assert verify_action is not None
@@ -478,9 +502,9 @@ def test_installed_console_discarded_work_is_terminal_in_every_locale(tmp_path: 
     work_unit_id = _create_work_unit(
         environment,
         modelo="111",
-        year=2025,
+        year=SCENARIO_FILING_YEAR,
         period="1T",
-        revision="2019-y-siguientes",
+        revision=_m111_first_quarter_revision(),
     )
     _seed_discarded_work(storage_root=storage_root, work_unit_id=work_unit_id)
     before = _work_state(storage_root=storage_root, work_unit_id=work_unit_id)
@@ -504,9 +528,9 @@ def test_installed_console_discarded_work_is_terminal_in_every_locale(tmp_path: 
             message = error.get("message")
             assert isinstance(message, str)
             assert "aeat app" not in message.lower()
-            # The rendered message is locale-specific; every other refusal field,
+            # The rendered words are locale-specific; every other refusal field,
             # including terminal action and evidence structure, must be invariant.
-            structural_error = {key: value for key, value in error.items() if key != "message"}
+            structural_error = _structural_refusal(error)
             context = dict(structural_error["context"])
             operation_id = context.pop("operation_id")
             assert isinstance(operation_id, str) and operation_id not in operation_ids
