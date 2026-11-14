@@ -359,7 +359,7 @@ for (const picker of ["saveFile", "pickFile"] as const) {
   });
 }
 
-test("an export that settles after leaving filing releases its output token and retains the fresh-read hold", async ({
+test("an export that settles after leaving filing releases its output token and reads the declaration again itself", async ({
   page: target,
 }) => {
   await filing(target, "exported");
@@ -403,16 +403,16 @@ test("an export that settles after leaving filing releases its output token and 
     )
     .toBe(1);
   await tab(target, "desktop.modelo.view.form").click();
+  const readsBeforeSettling = (await calls(target, "modelo form")).length;
   await target.evaluate(() => window.__modeloFileGate!.release());
   await expect
     .poll(() => target.evaluate(() => window.__modeloFileGate!.forgotten))
     .toEqual(await target.evaluate(() => window.__modeloFileGate!.tokens));
-  await expect(target.locator(".modelo-write-hold")).toContainText(
-    label("workspace.modelo.write_hold.reload_needed"),
-  );
-  await target
-    .getByRole("button", { name: label("workspace.modelo.read_again") })
-    .click();
+  // The write was this window's own and its view has gone: the scope reads
+  // the declaration itself, so no reload control is left to press.
+  await expect
+    .poll(async () => (await calls(target, "modelo form")).length)
+    .toBeGreaterThan(readsBeforeSettling);
   await expect(target.locator(".modelo-write-hold")).toHaveCount(0);
   expect(await calls(target, "modelo submit modelo.export")).toHaveLength(1);
 });

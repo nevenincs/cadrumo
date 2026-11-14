@@ -195,6 +195,10 @@ class TestRevisionViewSurfacesDetailRows:
                 "--no-iva-cash-accounting-regime-enrolled",
                 "--no-iva-voluntary-sii-enrolled",
                 "--no-iva-hydrocarbon-deposit-advance-payment-deduction-entitled",
+                # A first-quarter Modelo 349 is the quarterly cadence, which holds while the
+                # intra-community operations stay at or under 50.000 EUR (RIVA art. 81.1).
+                "--does-intracomunitario",
+                "--no-iva-intracommunity-operations-exceed-50000-eur",
                 "--quiet",
             ],
         )
@@ -481,10 +485,11 @@ class TestRevisionViewSurfacesDetailRows:
             record[75:77]: record for record in records if record.startswith("2349") and not record[146:178].strip()
         }
 
+        # The design prints every alphanumeric field in capitals (Orden HAC/174/2020, anexo, diseños lógicos).
         assert operator_records["DE"][77:92].rstrip() == "123456789"
-        assert operator_records["DE"][92:132].rstrip() == "DE Auto GmbH"
+        assert operator_records["DE"][92:132].rstrip() == "DE AUTO GMBH"
         assert operator_records["FR"][77:92].rstrip() == "12345678901"
-        assert operator_records["FR"][92:132].rstrip() == "Equipement Garage SARL"
+        assert operator_records["FR"][92:132].rstrip() == "EQUIPEMENT GARAGE SARL"
         assert "DEDE123456789" not in text
         assert "FRFR12345678901" not in text
 
