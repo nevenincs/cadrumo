@@ -34,6 +34,7 @@ import type { PublicModeloWorkForm } from "../../../shell/modeloContract/modeloW
 import type { RefusalIntent, WindowPlace } from "../../../shell/refusal";
 import { useStrings, type Translate } from "../../../shell/strings";
 import { WorkspacePaneToggles } from "../workspace/WorkspacePanes";
+import { FormBand } from "./FormBand";
 import { boxNotes } from "./boxNotes";
 import {
   FormContext,
@@ -436,12 +437,9 @@ export function FormView({
           <WorkspacePaneToggles />
         </div>
         {/* What is said about the whole form can run longer than the
-            window; it scrolls on its own and gives way first, so the boxes
-            keep their room. */}
-        <div
-          data-form-gives-way=""
-          className="max-h-1/3 min-h-0 overflow-y-auto"
-        >
+            window; the person sizes it with its line, it scrolls on its own
+            and gives way first, so the boxes keep their room. */}
+        <FormBand>
           {/* The rung of authority this year reaches, as the registry named
               it, and, below filing grade, the sentence saying why it cannot be
               filed. */}
@@ -474,7 +472,7 @@ export function FormView({
             onRefusalAction={onRefusalAction}
             opensRefusalPlace={opensRefusalPlace}
           />
-        </div>
+        </FormBand>
         {pages.length > 1 && page && (
           <Tabs
             value={page.id}

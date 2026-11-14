@@ -182,10 +182,12 @@ export function FieldRow({ field }: { field: PublicModeloFormField }) {
       }}
       // On a narrow form, beside the rail and the details, the value and
       // what is said of its origin go under the label, so the label keeps
-      // the row's width rather than the fixed columns taking it.
+      // the row's width rather than the fixed columns taking it: below
+      // 36rem the box, the value and the origin column would leave the
+      // label under 120px.
       className={cn(
         "group grid min-h-11 cursor-default grid-cols-[--spacing(10)_minmax(0,1fr)_auto_--spacing(44)] items-center gap-3 rounded-md px-2 py-1 outline-none",
-        "@max-lg:grid-cols-[--spacing(10)_minmax(0,1fr)] @max-lg:gap-x-2 @max-lg:gap-y-1",
+        "@max-xl:grid-cols-[--spacing(10)_minmax(0,1fr)] @max-xl:gap-x-2 @max-xl:gap-y-1",
         "hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring aria-selected:bg-selected",
         field.origin === "not_applicable" && "text-muted-foreground",
       )}
@@ -204,7 +206,7 @@ export function FieldRow({ field }: { field: PublicModeloFormField }) {
       </span>
       <span
         role="gridcell"
-        className="flex justify-end @max-lg:col-start-2 @max-lg:justify-start"
+        className="flex justify-end @max-xl:col-start-2 @max-xl:justify-start"
       >
         <ValueCell
           field={field}
@@ -222,7 +224,7 @@ export function FieldRow({ field }: { field: PublicModeloFormField }) {
       </span>
       <span
         role="gridcell"
-        className="flex min-w-0 flex-col items-start gap-0.5 @max-lg:col-start-2"
+        className="flex min-w-0 flex-col items-start gap-0.5 @max-xl:col-start-2"
       >
         <OriginMark field={field} staged={staged} />
         {reason && (

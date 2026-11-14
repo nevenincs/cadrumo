@@ -4508,6 +4508,9 @@ desktop:
     none_unread: None unread at the last sync
     unread: '{count} unread'
   modelo:
+    band:
+      label: Notes above the form
+      resize: Resize the notes above the form
     box_notes:
       label: What the calculation noted about this box
     compare:
@@ -4613,6 +4616,8 @@ desktop:
       label: Form outline
       may_apply: Only if it applies to you
       needs_you: 'Needs you: {count}'
+    panes:
+      label: Panels around the form
     prior_values:
       intro: Where no earlier return a box carries from is held here, you can state
         its figure yourself. Figures stated for the same earlier returns are withdrawn
