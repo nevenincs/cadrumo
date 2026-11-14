@@ -1,4 +1,10 @@
-import { useEffect, useId, useRef, type ReactNode } from "react";
+import {
+  useEffect,
+  useId,
+  useRef,
+  type PointerEvent,
+  type ReactNode,
+} from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/components/ui/cn";
 import { Icon } from "@/components/ui/icon";
@@ -26,6 +32,7 @@ import type {
 import { useStrings, type Translate } from "../../../shell/strings";
 import { JourneySteps } from "./JourneySteps";
 import { AttentionMark, DEADLINE_TONE, GlyphMark } from "./Marks";
+import { useReservedSize } from "./useReservedSize";
 import { FormPanes, type WorkspacePanes } from "./WorkspacePanes";
 
 /** The views of one declaration, as its tabs name them. */
@@ -345,8 +352,24 @@ export function ModeloWorkspace({
       const entry = levels.get(level);
       return entry ? <AttentionMark key={level} entry={entry} /> : null;
     });
+  // The result and the step are swapped for each other as the declaration is
+  // calculated, written and read again; the room they have needed is kept so
+  // that the tabs below do not move under a press.
+  const reserved = useReservedSize<HTMLDivElement>();
+  // A tab opens its view on the first pointer event that reaches it, and
+  // again on the click that completes the press, so a press whose mouse
+  // events are not all delivered to the tab still opens it. Opening the view
+  // already shown does nothing.
+  const press = (value: WorkspaceView, event: PointerEvent<HTMLElement>) => {
+    if (event.button === 0 && !event.ctrlKey) onViewChange(value);
+  };
   const tab = (value: WorkspaceView, name: string, extra?: ReactNode) => (
-    <TabsTrigger value={value} aria-controls={panel}>
+    <TabsTrigger
+      value={value}
+      aria-controls={panel}
+      onPointerDown={(event) => press(value, event)}
+      onClick={() => onViewChange(value)}
+    >
       {name}
       {marks(value)}
       {extra}
@@ -441,7 +464,11 @@ export function ModeloWorkspace({
             )}
           </div>
         </div>
-        <div className="ml-auto flex items-center gap-5">
+        <div
+          ref={reserved.ref}
+          style={reserved.style}
+          className="ml-auto flex items-center justify-end gap-5"
+        >
           <ResultLine result={header.result} stagedCount={stagedCount} t={t} />
           {nextShown}
         </div>
