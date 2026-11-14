@@ -355,7 +355,7 @@ def record_statements(
         state_offered_statements(
             world, modelo=plan.modelo, filing_year=plan.year, period=plan.period, work_unit_id=work_unit_id
         )
-    if plan.modelo == "100":
+    if plan.modelo == "100" and StatementKind.RENTAL_CARRY not in left:
         attest_pending_rental_carries(materialised.persona, world, work_unit_id, plan.year)
 
 

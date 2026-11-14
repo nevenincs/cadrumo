@@ -102,6 +102,16 @@ EQUALS_NUMERIC_ENUMERATION_TOKEN_RE: Final[re.Pattern[str]] = re.compile(
 )
 
 
+#: The label-first set can open with one member the token rule above cannot
+#: see because its value comes first: Modelo 322 (2026) prints `0 , Si=1, No=2`
+#: and `0=Vacío, Si=1, No=2`, each admitting the zero. Only a value at position
+#: zero, bare or with a letter-led label, closed by a comma qualifies, so a
+#: formula or a comparison still contributes nothing.
+LEADING_NUMERIC_ENUMERATION_MEMBER_RE: Final[re.Pattern[str]] = re.compile(
+    r"^(?P<value>\d+)\s*(?:=\s*[^\W\d_][^\s,;=]*\s*)?,",
+)
+
+
 #: The quoted spelling with a FREE-TEXT label after each value, which is the same
 #: closed set as the SI/NO form above with a longer label: Modelo 202 writes
 #: `"0" No consta, "1" Cooperativa, "2" Otras entidades`. Only the values are
