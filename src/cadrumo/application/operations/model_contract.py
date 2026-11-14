@@ -8,6 +8,7 @@ from typing import TypeAliasType, get_args, get_origin, is_typeddict
 from pydantic import BaseModel
 
 from ...core.type_guards import is_object_dict
+from .form_field_annotation import OPERATION_FORM_FIELD_SCHEMA_KEY, require_form_field_annotation
 
 _NONSTRUCTURAL_JSON_SCHEMA_EXTRA_KEYS = frozenset({"deprecated", "description", "examples", "title"})
 
@@ -111,6 +112,7 @@ def _require_model_schema_contract(
         _require_nonstructural_json_schema_extra(
             field.json_schema_extra,
             path=f"{path}.{field_name}",
+            admits_form_field=True,
         )
 
 
@@ -166,17 +168,26 @@ def _require_no_custom_core_schema_hook(annotation: object, *, path: str) -> Non
     raise ValueError(f"operation {path} must not customize its Pydantic core schema")
 
 
-def _require_nonstructural_json_schema_extra(extra: object, *, path: str) -> None:
+def _require_nonstructural_json_schema_extra(extra: object, *, path: str, admits_form_field: bool = False) -> None:
+    """Admit plain annotations, and on a field its checked form annotation; refuse anything structural."""
     if extra is None:
         return
     if not is_object_dict(extra):
         raise ValueError(f"operation {path} must not use callable JSON schema customization")
     typed_extra = extra
-    unsupported = {
-        key for key in typed_extra if not isinstance(key, str) or key not in _NONSTRUCTURAL_JSON_SCHEMA_EXTRA_KEYS
-    }
+    admitted: frozenset[str] = (
+        _NONSTRUCTURAL_JSON_SCHEMA_EXTRA_KEYS | {OPERATION_FORM_FIELD_SCHEMA_KEY}
+        if admits_form_field
+        else _NONSTRUCTURAL_JSON_SCHEMA_EXTRA_KEYS
+    )
+    unsupported = {key for key in typed_extra if not isinstance(key, str) or key not in admitted}
     if unsupported:
         raise ValueError(f"operation {path} JSON schema extras must be nonstructural annotations only")
+    if OPERATION_FORM_FIELD_SCHEMA_KEY in typed_extra:
+        try:
+            require_form_field_annotation(typed_extra[OPERATION_FORM_FIELD_SCHEMA_KEY])
+        except ValueError as error:
+            raise ValueError(f"operation {path} {error}") from None
 
 
 def _require_annotation_contract(

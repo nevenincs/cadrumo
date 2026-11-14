@@ -258,6 +258,7 @@ _CALCULATE_PARAMETERS = (
         "--m303-exonerado-390-sha256",
         help_name="m303_exonerado_390_sha256",
     ),
+    o("inputs_only", "--inputs-only", FLAG_VALUE, flag=True),
     _LANG,
 )
 

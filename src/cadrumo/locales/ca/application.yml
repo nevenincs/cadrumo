@@ -1178,6 +1178,52 @@ application:
       wallet_local_recurrence_divergence: La cartera de l'AEAT i la recurrència local
         difereixen; cal una revisió abans de generar el resultat automàtic.
   ledger:
+    add:
+      choice:
+        business_classification:
+          business: Activitat
+          mixed: Mixt
+          not_yet_processed: Sense processar
+          personal: Personal
+        direction:
+          incoming: Ingrés
+          internal_transfer: Traspàs propi
+          outgoing: Despesa
+      field:
+        accrual_date: Data de meritació a la Renda (AAAA-MM-DD)
+        amount: Import, sense signe
+        arrendamiento_ref: Arrendament vinculat
+        art_104_tres_exclusion: Exclusió de l'art. 104.Tres
+        booked_date: Data d'operació (AAAA-MM-DD)
+        business_classification: Classificació
+        business_pct: Part afecta a l'activitat (0 a 1)
+        category_id: Categoria de despesa
+        counterparty: Contrapart
+        counterparty_country: País de la contrapart (dues lletres)
+        counterparty_identification_state: Estat d'identificació IVA de la contrapart
+        currency: Moneda (EUR si es deixa en blanc)
+        deduction_fact_kind: Fet de deducció d'IVA
+        description: Concepte
+        direction: Sentit
+        gasto_capital_inmobiliario: Concepte de despesa de l'immoble
+        inmueble_ref: Immoble vinculat
+        input_classification: Classificació d'entrada per a prorrata
+        investment_asset_id: Identificador del bé d'inversió
+        irpf_category: Categoria d'IRPF
+        iva_amount: Quota d'IVA
+        iva_category: Categoria d'IVA
+        iva_rate: Tipus d'IVA (per exemple 0.21)
+        notes: Notes
+        operation_date: Data de l'operació (AAAA-MM-DD)
+        own_account_id: Compte propi (acc-01)
+        prorrata_reference: Referència de prorrata
+        prorrata_sector: Sector de prorrata
+        purchase_invoice_evidence_id: Identificador del justificant de compra
+        recargo_amount: Import del recàrrec d'equivalència
+        source_jurisdiction: Jurisdicció d'origen (codi de país)
+        taxable_base: Base imposable
+        usage_ratio_id: Identificador del percentatge d'ús
+        value_date: Data valor (AAAA-MM-DD)
     confirmation_block:
       served:
         ambiguous_identity: La identitat de la contrapart no està clara
@@ -4148,6 +4194,24 @@ application:
         missing: '%{modelo}, %{period}: sense calcular'
         unfiled: '%{modelo}, %{period}: comprovada, sense presentar'
         unverified: '%{modelo}, %{period}: calculada, sense comprovar'
+    replaced_head:
+      statement:
+        absence_attestation: La teva indicació que un saldo d'una declaració anterior
+          no té import
+        binding_override: Un valor que vas indicar per a una dada per sobre del que
+          aporta la seva font
+        borrador_snapshot: L'esborrany de l'AEAT que va fer servir el càlcul
+        casilla_value: Un valor que vas escriure en una casella
+        cleared_casilla: Una casella que vas buidar
+        detail_rows: Les files de detall de la declaració
+        income_family_entry: Les xifres que vas introduir a mà per a rendes que l'aplicació
+          no calcula
+        m210_selection: Les teves seleccions de rendes del Model 210
+        m303_filing_evidence: Les teves respostes sobre la presentació del Model 303
+          i el Model 390
+        row_attestation: La teva indicació del saldo pendent d'una fila
+        value_attestation: La xifra que vas indicar per a una declaració anterior
+          que l'aplicació no té
     taxation_comparison_words:
       below_materiality: Els dos resultats difereixen en {difference}, menys de {threshold},
         així que tant se val quina de les dues modalitats triïs.

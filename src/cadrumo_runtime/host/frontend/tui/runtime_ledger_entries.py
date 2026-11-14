@@ -97,7 +97,7 @@ from cadrumo.application.operations.schema_identity import OperationSchemaIdenti
 from cadrumo.application.operator_actions.catalogue import lookup_action
 from cadrumo.application.review.filter import LedgerReviewStatus
 from cadrumo.core.operations import OperationEffect, OperationFrontendProjection, OperationTerminalCondition
-from cadrumo.entrypoints.tui.ledger.entries_add import FIELD_LABEL_LOCALE_KEYS, SUPPLIED_FIELDS, LedgerEntryAddScreen
+from cadrumo.entrypoints.tui.ledger.entries_add import LedgerEntryAddScreen
 from cadrumo.entrypoints.tui.ledger.entries_add_form import (
     LedgerAddFormUnavailableError,
     LedgerAddFormV1,
@@ -300,7 +300,7 @@ def compose_ledger_add_form(client: FrontendClient) -> LedgerAddFormV1 | None:
     The runtime describes the operation under the client's live scope; a
     refused description (including one whose schema does not match its
     fingerprint), a contract that is not exactly the one this door submits, or
-    a schema with a required fact the form has no words for, leaves Add entry
+    a schema with a required fact it serves no words or binding for, leaves Add entry
     unavailable. No hand-written list of facts stands in for the description.
     """
     if client.frontend is not OperationFrontendProjection.TUI:
@@ -312,9 +312,7 @@ def compose_ledger_add_form(client: FrontendClient) -> LedgerAddFormV1 | None:
     if not ledger_add_contract_matches(description.contract):
         return None
     try:
-        return read_served_form(
-            description.request_json_schema, offered=FIELD_LABEL_LOCALE_KEYS, supplied=SUPPLIED_FIELDS
-        )
+        return read_served_form(description.request_json_schema)
     except LedgerAddFormUnavailableError:
         return None
 

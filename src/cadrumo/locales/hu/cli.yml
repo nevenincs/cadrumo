@@ -1268,8 +1268,9 @@ cli:
         replace_help: Lecseréli a --output helyén már meglévő fájlt. Enélkül a meglévő
           exportfájlt a program elutasítja, hogy egy korábbi export ne vesszen el.
         revision_help: 'Az exportálandó mentett számítás azonosítója; alapértelmezés:
-          a bevallás legutóbbi ellenőrzött és teljes, vagy benyújtottként rögzített
-          számítása.'
+          a bevallás jelenlegi számítása, amelynek ellenőrzöttnek és teljesnek vagy
+          benyújtottként rögzítettnek kell lennie. Másikat a --select kapcsolóval
+          adhatsz meg.'
         work_unit_id_help: Bevallásazonosító (SHA-256 vagy egyértelmű előtag).
       filing_record:
         app_help: Belső benyújtási rekordok vizsgálata.
@@ -1873,10 +1874,11 @@ cli:
           ki, amelyek forrása a nyomtatványdefiníciókban aeat_prefilled jelölésű;
           az általad a --binding kapcsolóval megadott értékek mindig elsőbbséget élveznek.
         bucket_id_help: A bevalláshoz tartozó profil.
-        calculate_help: Új piszkozat számítás mentése a bevalláshoz. Ez a parancs
-          kizárólag a neki megadott értékekből számol. A teljes képernyős felületen
-          (aeat app tui) korábban megadott értékek nem maradnak meg, hacsak itt újra
-          meg nem adod őket; a teljes képernyős felület megőrzi őket.
+        calculate_help: Új piszkozat számítás mentése a bevalláshoz. Értékek nélkül
+          az aktuális számításból számol újra, és megtart minden rajta rögzített értéket
+          és nyilatkozatot. Értékekkel vagy az --inputs-only kapcsolóval csak azokból
+          számol, és felsorol minden rögzített értéket vagy nyilatkozatot, amelyet
+          nem használt fel.
         calculate_reused_sealed: 'Ezek az adatok a(z) %{revision_id} számításnak felelnek
           meg (állapot: %{state}). Nem készült új piszkozat. Válaszd ki ezt a mentett
           számítást a verzióazonosítójával, vagy módosítsd az adatokat.'
@@ -2018,6 +2020,9 @@ cli:
           {candidates}'
         include_discarded_help: Elvetett bevallások bevonása a listába (alapértelmezés
           szerint kizárva).
+        inputs_only_help: Csak a parancsnak megadott értékekből számol, akkor is,
+          ha egyet sem adsz meg. Enélkül egy értékek nélküli parancs az aktuális számításból
+          számol újra, és megtart minden általad rögzített értéket és nyilatkozatot.
         invalid_binding_key: 'A --binding kulcsa nem érvényes rovatforrás-azonosító
           (BindingId: kisbetűs alfanumerikus, plusz . _ : - elválasztók, max. 128
           karakter).'
@@ -2323,6 +2328,17 @@ cli:
         state_label_presentado: Benyújtottként rögzítve
         state_label_presentado_supersedido: Felülírt beadás
         state_label_verificado_completo: Teljesen ellenőrizve
+        statement_not_carried: 'Nem használt: %{words}, %{target}: %{value}'
+        statement_not_carried_whole: 'Nem használt: %{words}'
+        statement_not_carried_without_value: 'Nem használt: %{words}, %{target}'
+        statement_target_box: '%{box}. mező (%{label})'
+        statements_not_carried: 'A(z) %{revision_id} számításon rögzített, de ebben
+          a számításban fel nem használt értékek vagy nyilatkozatok száma: %{count}.
+          Az a számítás továbbra is őrzi őket; számolj újra értékek megadása nélkül,
+          hogy megtartsd őket.'
+        statements_not_carried_incomplete: A(z) %{revision_id} számítás nem rögzítette,
+          mely értékeket írtad be, ezért a lista kihagyhat közülük. Az a számítás
+          továbbra is őriz minden értéket.
         status_calculate_summary: Ez az aktív bevallás kiszámítható.
         status_discarded_summary: Ez a bevallás el van vetve, ezért a számítás nem
           érhető el.

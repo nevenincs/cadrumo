@@ -71,7 +71,6 @@ from .....domain.transactions.enums import BusinessClassification, TransactionLi
 from ...account import AccountSessionExpiredError
 from ...operations.outcome import OperationOutcomeUnknownError
 from ..controller import LedgerWorkspaceController
-from ..entries_add import FIELD_LABEL_LOCALE_KEYS, SUPPLIED_FIELDS
 from ..entries_add_form import LedgerAddFormV1, read_served_form
 from ..entries_doors import LedgerEntriesDoorsV1
 from ..workspace_injection import LedgerWorkspaceInjection
@@ -552,9 +551,7 @@ def entries_controller() -> LedgerWorkspaceController:
 
 def served_add_form() -> LedgerAddFormV1:
     """The Add entry form as the runtime serves it: read from the real ``ledger.add`` description."""
-    return read_served_form(
-        ledger_add_description().request_json_schema, offered=FIELD_LABEL_LOCALE_KEYS, supplied=SUPPLIED_FIELDS
-    )
+    return read_served_form(ledger_add_description().request_json_schema)
 
 
 LifecycleName = Literal["ledger.archive", "ledger.stash", "ledger.restore", "ledger.exclude"]

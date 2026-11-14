@@ -913,6 +913,13 @@ def test_add_entry_is_built_from_the_description_the_runtime_served() -> None:
     assert [field.name for field in form.required] == ["booked_date", "amount", "direction", "description"]
     assert form.field("business_classification").choices == ("BUSINESS", "PERSONAL", "MIXED", "NOT_YET_PROCESSED")
     assert form.field("direction").choices == ("INCOMING", "OUTGOING", "INTERNAL_TRANSFER")
+    assert form.field("amount").label_key == "application.ledger.add.field.amount"
+    assert form.profile_fields == ("profile_id",)
+    assert [(link.field, link.family) for link in form.links] == [
+        ("arrendamiento_ref", "rental_lease"),
+        ("inmueble_ref", "rental_property"),
+        ("gasto_capital_inmobiliario", "gasto_capital_inmobiliario"),
+    ]
 
 
 @pytest.mark.parametrize(

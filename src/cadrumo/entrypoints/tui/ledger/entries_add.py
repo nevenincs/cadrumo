@@ -1,8 +1,11 @@
 """Add entry: the ``ledger.add`` form, reviewed before it is written.
 
-Which facts the form asks for, which of them are required and which closed
-choices they offer come from the request schema the runtime served for
-``ledger.add``. The required facts come first. The optional facts sit in a
+Which facts the form asks for, which of them are required, which closed
+choices they offer, the words each fact and each choice is shown with, which
+facts are picked from served entry options and which the door fills from its
+session all come from the request schema the runtime served for
+``ledger.add``; the screen holds no list of facts and no words of its own for
+them. The required facts come first. The optional facts sit in a
 second section the operator opens on purpose. The form builds the operation's
 own request, so its date, amount and decimal rules refuse a value before
 review, and the worker's own validation refusal is shown as it was recorded.
@@ -10,7 +13,7 @@ review, and the worker's own validation refusal is shown as it was recorded.
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterator
+from collections.abc import Iterator
 from datetime import date
 from itertools import count
 from typing import ClassVar, Final, cast, override
@@ -34,54 +37,12 @@ from .controller import LedgerWorkspaceController, review_status_label
 from .entries_add_form import LedgerAddFieldV1, LedgerAddFormV1
 from .entries_browse import LedgerEntriesBrowseScreen
 from .entries_browse_model import BROWSE_PAGE_SIZE, LedgerBrowseStateV1
-from .entries_common import classification_label, direction_label, entry_label, joined
+from .entries_common import entry_label, joined
 from .entries_doors import LedgerEntriesDoorsV1
-from .link_picker import LINK_FAMILY_BY_FIELD, LedgerLinkPickers
+from .link_picker import LedgerLinkPickers
 from .models import LedgerFlowState
 from .workspace_presentation import LedgerConfirmationFlowScreen, door_refusal_text, ledger_workspace_page
 
-#: The words of every fact the form can ask for, by the field name the schema serves.
-#: The served schema decides which of them the form offers; a served fact with no entry here is not offered.
-FIELD_LABEL_LOCALE_KEYS: Final[dict[str, str]] = {
-    "booked_date": "tui.ledger.entry_tools.add.field.booked_date",
-    "amount": "tui.ledger.entry_tools.add.field.amount",
-    "direction": "tui.ledger.entry_tools.add.field.direction",
-    "description": "tui.ledger.entry_tools.add.field.description",
-    "business_classification": "tui.ledger.entry_tools.add.field.business_classification",
-    "value_date": "tui.ledger.entry_tools.add.field.value_date",
-    "operation_date": "tui.ledger.entry_tools.add.field.operation_date",
-    "accrual_date": "tui.ledger.entry_tools.add.field.accrual_date",
-    "currency": "tui.ledger.entry_tools.add.field.currency",
-    "counterparty": "tui.ledger.entry_tools.add.field.counterparty",
-    "business_pct": "tui.ledger.entry_tools.add.field.business_pct",
-    "category_id": "tui.ledger.entry_tools.add.field.category_id",
-    "taxable_base": "tui.ledger.entry_tools.add.field.taxable_base",
-    "iva_rate": "tui.ledger.entry_tools.add.field.iva_rate",
-    "iva_amount": "tui.ledger.entry_tools.add.field.iva_amount",
-    "iva_category": "tui.ledger.entry_tools.add.field.iva_category",
-    "recargo_amount": "tui.ledger.entry_tools.add.field.recargo_amount",
-    "deduction_fact_kind": "tui.ledger.entry_tools.add.field.deduction_fact_kind",
-    "investment_asset_id": "tui.ledger.entry_tools.add.field.investment_asset_id",
-    "counterparty_country": "tui.ledger.entry_tools.add.field.counterparty_country",
-    "counterparty_identification_state": "tui.ledger.entry_tools.add.field.counterparty_identification_state",
-    "irpf_category": "tui.ledger.entry_tools.add.field.irpf_category",
-    "usage_ratio_id": "tui.ledger.entry_tools.add.field.usage_ratio_id",
-    "prorrata_reference": "tui.ledger.entry_tools.add.field.prorrata_reference",
-    "art_104_tres_exclusion": "tui.ledger.entry_tools.add.field.art_104_tres_exclusion",
-    "input_classification": "tui.ledger.entry_tools.add.field.input_classification",
-    "prorrata_sector": "tui.ledger.entry_tools.add.field.prorrata_sector",
-    "purchase_invoice_evidence_id": "tui.ledger.entry_tools.add.field.purchase_invoice_evidence_id",
-    "source_jurisdiction": "tui.ledger.entry_tools.add.field.source_jurisdiction",
-    "own_account_id": "tui.ledger.entry_tools.add.field.own_account_id",
-    "notes": "tui.ledger.entry_tools.add.field.notes",
-}
-#: The facts the door supplies itself: the exact profile the session was admitted for.
-SUPPLIED_FIELDS: Final = frozenset({"profile_id"})
-#: How a served token of a closed fact is worded; any other closed fact shows its token.
-_CHOICE_WORDING: Final[dict[str, Callable[[str], str]]] = {
-    "direction": direction_label,
-    "business_classification": classification_label,
-}
 _JURISDICTION_LOCALE_KEYS: Final[dict[str, str]] = {
     "source_jurisdiction_required_irnr": "tui.ledger.entry_tools.add.source_jurisdiction_required_irnr",
     "source_jurisdiction_required_beckham": "tui.ledger.entry_tools.add.source_jurisdiction_required_beckham",
@@ -97,7 +58,9 @@ def _input_id(name: str) -> str:
 
 
 def _word(field: LedgerAddFieldV1, token: str) -> str:
-    return _CHOICE_WORDING.get(field.name, str)(token)
+    """A served token in its served words; a token the schema serves no words for is shown as served."""
+    key = field.choice_label_keys.get(token)
+    return token if key is None else tr(key)
 
 
 def _choice_options(field: LedgerAddFieldV1) -> list[tuple[str, str]]:
@@ -107,24 +70,22 @@ def _choice_options(field: LedgerAddFieldV1) -> list[tuple[str, str]]:
 
 def _shown_value(field: LedgerAddFieldV1, request: LedgerAddRequest) -> str:
     value = str(getattr(request, field.name))
-    if field.is_choice:
-        return _word(field, value)
-    return f"{value} {request.currency}" if field.name == "amount" else value
+    return _word(field, value) if field.is_choice else value
 
 
-def _held_links(request: LedgerAddRequest | None) -> dict[str, str]:
-    """The links a request the operator edits again had chosen, by field."""
+def _held_links(request: LedgerAddRequest | None, form: LedgerAddFormV1) -> dict[str, str]:
+    """The links a request the operator edits again had chosen, by served link field."""
     if request is None:
         return {}
-    return {field: value for field in LINK_FAMILY_BY_FIELD if (value := getattr(request, field)) is not None}
+    return {link.field: value for link in form.links if (value := getattr(request, link.field)) is not None}
 
 
 def staged_add_lines(request: LedgerAddRequest, form: LedgerAddFormV1) -> tuple[str, ...]:
     """Name every fact the reviewed request will write, in the operator's language."""
     return tuple(
-        f"{tr(FIELD_LABEL_LOCALE_KEYS[field.name])}: {_shown_value(field, request)}"
+        f"{tr(field.label_key)}: {_shown_value(field, request)}"
         for field in form.fields
-        if field.name != "currency" and (field.required or getattr(request, field.name) not in (None, ""))
+        if field.required or getattr(request, field.name) not in (None, "")
     )
 
 
@@ -189,7 +150,7 @@ class LedgerEntryAddScreen(LedgerConfirmationFlowScreen):
 
     def _field_widgets(self, field: LedgerAddFieldV1) -> Iterator[Widget]:
         """The words of one fact and the control that takes it."""
-        key = FIELD_LABEL_LOCALE_KEYS[field.name]
+        key = field.label_key
         yield localized(Static(tr(key), markup=False), key)
         held = self._held(field)
         if not field.is_choice:
@@ -222,7 +183,8 @@ class LedgerEntryAddScreen(LedgerConfirmationFlowScreen):
                 yield LedgerLinkPickers(
                     "entries-add",
                     self.controller.link_options_door,
-                    initial=_held_links(self.initial),
+                    initial=_held_links(self.initial, self.form),
+                    fields=self.form.links,
                     id="entries-add-links",
                 )
             with Horizontal(classes="entries-add-actions"):
@@ -265,7 +227,7 @@ class LedgerEntryAddScreen(LedgerConfirmationFlowScreen):
             value = select.value
             select.set_options(_choice_options(field))
             select.value = value
-            select.prompt = tr(FIELD_LABEL_LOCALE_KEYS[field.name])
+            select.prompt = tr(field.label_key)
         self.query_one("#entries-add-optional", Collapsible).title = tr("tui.ledger.entry_tools.add.optional")
         self.query_one("#entries-add-again", Button).label = self._again_label()
         if self.staged is not None:
@@ -287,7 +249,7 @@ class LedgerEntryAddScreen(LedgerConfirmationFlowScreen):
 
     def _form_request(self) -> LedgerAddRequest:
         """Build the operation's own request; a fact left blank is not sent."""
-        fields: dict[str, object] = {"profile_id": self.doors.profile_id}
+        fields: dict[str, object] = {name: self.doors.profile_id for name in self.form.profile_fields}
         for field in self.form.fields:
             value = self._entered(field)
             if value:
@@ -422,10 +384,4 @@ class LedgerEntryAddScreen(LedgerConfirmationFlowScreen):
         self._offer_again()
 
 
-__all__ = [
-    "FIELD_LABEL_LOCALE_KEYS",
-    "SUPPLIED_FIELDS",
-    "LedgerEntryAddScreen",
-    "add_outcome_lines",
-    "staged_add_lines",
-]
+__all__ = ["LedgerEntryAddScreen", "add_outcome_lines", "staged_add_lines"]

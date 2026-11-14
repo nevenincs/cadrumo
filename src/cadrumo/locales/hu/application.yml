@@ -1166,6 +1166,52 @@ application:
       wallet_local_recurrence_divergence: Az AEAT tárca és a helyi ismétlődés eltér;
         felülvizsgálat szükséges az automatikus eredmény előállítása előtt.
   ledger:
+    add:
+      choice:
+        business_classification:
+          business: Vállalkozási
+          mixed: Vegyes
+          not_yet_processed: Még nincs feldolgozva
+          personal: Magán
+        direction:
+          incoming: Bevétel
+          internal_transfer: Saját átvezetés
+          outgoing: Kiadás
+      field:
+        accrual_date: IRPF szerinti elszámolás dátuma (ÉÉÉÉ-HH-NN)
+        amount: Összeg, előjel nélkül
+        arrendamiento_ref: Kapcsolt bérleti szerződés
+        art_104_tres_exclusion: 104.Tres cikk szerinti kizárás
+        booked_date: Könyvelési dátum (ÉÉÉÉ-HH-NN)
+        business_classification: Besorolás
+        business_pct: Vállalkozási arány (0 és 1 között)
+        category_id: Költségkategória
+        counterparty: Partner
+        counterparty_country: A partner országa (két betű)
+        counterparty_identification_state: A partner IVA-azonosító tagállama
+        currency: Pénznem (üresen hagyva EUR)
+        deduction_fact_kind: IVA-levonási tény
+        description: Leírás
+        direction: Irány
+        gasto_capital_inmobiliario: Ingatlanköltség jogcíme
+        inmueble_ref: Kapcsolt ingatlan
+        input_classification: Bemeneti besorolás a prorratához
+        investment_asset_id: Beruházási javak azonosítója
+        irpf_category: IRPF-kategória
+        iva_amount: IVA összege
+        iva_category: IVA-kategória
+        iva_rate: IVA-kulcs (például 0.21)
+        notes: Megjegyzések
+        operation_date: Ügylet dátuma (ÉÉÉÉ-HH-NN)
+        own_account_id: Saját számla (acc-01)
+        prorrata_reference: Prorrata hivatkozás
+        prorrata_sector: Prorrata ágazat
+        purchase_invoice_evidence_id: Beszerzési számla bizonylatazonosítója
+        recargo_amount: Recargo de equivalencia összege
+        source_jurisdiction: Forrás joghatóság (országkód)
+        taxable_base: Adóalap
+        usage_ratio_id: Használati arány azonosítója
+        value_date: Értéknap (ÉÉÉÉ-HH-NN)
     confirmation_block:
       served:
         ambiguous_identity: A partner személye nem egyértelmű
@@ -4100,6 +4146,23 @@ application:
         missing: '%{modelo}, %{period}: nincs kiszámítva'
         unfiled: '%{modelo}, %{period}: ellenőrizve, nincs benyújtva'
         unverified: '%{modelo}, %{period}: kiszámítva, nincs ellenőrizve'
+    replaced_head:
+      statement:
+        absence_attestation: A nyilatkozatod, hogy egy korábbi bevallásból áthozott
+          tétel nem tartalmaz összeget
+        binding_override: Egy érték, amelyet egy adathoz a forrása által adott helyett
+          megadtál
+        borrador_snapshot: Az AEAT-tervezet (borrador), amelyet a számítás felhasznált
+        casilla_value: Egy érték, amelyet egy mezőbe írtál
+        cleared_casilla: Egy mező, amelyet kiürítettél
+        detail_rows: A bevallás részletező sorai
+        income_family_entry: A kézzel beírt összegeid olyan jövedelemhez, amelyet
+          az alkalmazás nem számol ki
+        m210_selection: A Modelo 210 jövedelemválasztásaid
+        m303_filing_evidence: A válaszaid a Modelo 303 és a Modelo 390 benyújtásáról
+        row_attestation: A nyilatkozatod egy sor áthozott összegéről
+        value_attestation: Az összeg, amelyet egy olyan korábbi bevallásra adtál meg,
+          amelyet az alkalmazás nem tárol
     taxation_comparison_words:
       below_materiality: A két eredmény {difference} összeggel tér el, ami kevesebb,
         mint {threshold}, ezért bármelyik adózási mód megfelelő.

@@ -8,9 +8,13 @@ from uuid import UUID
 import pytest
 from pydantic import ValidationError
 
+from ....core.config import override_settings
+from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
+from ....core.i18n.render import tr
 from ....core.type_guards import is_object_list, is_str_keyed_dict
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.errors import TransactionValidationError
+from ...operations.form_field_annotation import OperationFormFieldV1, served_form_field
 from ..ledger_add_command import resolve_ledger_add_flow
 from ..ledger_add_contracts import LedgerAddRequest
 from .add_request_description_support import ledger_add_description
@@ -103,3 +107,60 @@ def test_every_served_direction_is_accepted(direction: TransactionDirection) -> 
     )
 
     assert accepted is direction
+
+
+def _served_annotations() -> dict[str, OperationFormFieldV1]:
+    properties = ledger_add_description().request_json_schema["properties"]
+    assert is_str_keyed_dict(properties)
+    served: dict[str, OperationFormFieldV1] = {}
+    for name, prop in properties.items():
+        assert is_str_keyed_dict(prop)
+        annotation = served_form_field(prop)
+        if annotation is not None:
+            served[name] = annotation
+    return served
+
+
+def test_every_required_fact_is_put_to_a_person_or_bound_to_the_session() -> None:
+    required = ledger_add_description().request_json_schema["required"]
+    assert is_object_list(required)
+    served = _served_annotations()
+
+    assert {str(name) for name in required} <= set(served)
+    assert served["profile_id"].bound == "profile"
+
+
+def test_the_served_link_facts_name_their_entry_option_families() -> None:
+    families = {
+        name: annotation.entry_option_family
+        for name, annotation in _served_annotations().items()
+        if annotation.entry_option_family is not None
+    }
+
+    assert families == {
+        "arrendamiento_ref": "rental_lease",
+        "inmueble_ref": "rental_property",
+        "gasto_capital_inmobiliario": "gasto_capital_inmobiliario",
+    }
+
+
+def test_each_served_choice_word_names_a_served_token() -> None:
+    for name in ("direction", "business_classification"):
+        enum = _property(name)["enum"]
+        assert is_object_list(enum)
+        assert set(_served_annotations()[name].choice_label_keys) == set(enum)
+
+
+@pytest.mark.parametrize("language", SUPPORTED_OUTPUT_LANGUAGES)
+def test_every_served_word_key_has_words_in_each_language(language: str) -> None:
+    keys = [
+        key
+        for annotation in _served_annotations().values()
+        for key in (annotation.label_key, *annotation.choice_label_keys.values())
+        if key is not None
+    ]
+    with override_settings(cadrumo_output_language=language):
+        unworded = [key for key in keys if tr(key) in ("", key)]
+
+    assert keys
+    assert unworded == []
