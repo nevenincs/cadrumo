@@ -2,6 +2,8 @@ modelo:
   schema:
     '200':
       binding:
+        modelo-200-incn-periodo-impositivo-anterior:
+          label: Import net de la xifra de negocis del període impositiu anterior
         modelo-200-pago-fraccionado-primero-40-2:
           label: Primer pagament fraccionat · Model 202, article 40.2, casella 03
         modelo-200-pago-fraccionado-primero-40-3:
