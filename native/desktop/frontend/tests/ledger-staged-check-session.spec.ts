@@ -57,7 +57,10 @@ test("a reply to an older request is not taken for the newer one, which is then 
   await settled();
   expect(session.snapshot().current).toBeNull();
   expect(session.snapshot().updating).toBe(true);
-  expect(asked.map((sent) => sent.rows[0]!.transaction_id)).toEqual(["a", "b"]);
+  expect(asked.map((sent) => sent.rows![0]!.transaction_id)).toEqual([
+    "a",
+    "b",
+  ]);
   replies[1]!({ kind: "answer", result: result("new") });
   await settled();
   expect(answered(session, "new")).toBe(true);

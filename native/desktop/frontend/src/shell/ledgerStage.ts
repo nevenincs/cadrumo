@@ -5,10 +5,8 @@
 // check a staged change against the others before anything is sent.
 
 import type { FileToken, LedgerDecision, LedgerRow } from "./ledger";
-import type {
-  LedgerAddRequest,
-  LedgerClassifyRequest,
-} from "./ledgerMovementOperations";
+import type { LedgerClassifyRequest } from "./ledgerMovementOperations";
+import type { LedgerStagedDraftField } from "./ledgerMovementCheckContract";
 import { fieldsDroppedBy } from "./ledgerClassifications";
 import { isTransactionPrefix, sameDecimal } from "./ledgerGrammar";
 
@@ -56,10 +54,7 @@ export type StagedValue = { kind: "set"; value: string } | { kind: "clear" };
 export type StagedRowChanges = Partial<Record<StageField, StagedValue>>;
 
 /** The fields a new movement can carry when it is added. */
-export type DraftField = Exclude<
-  keyof LedgerAddRequest,
-  "actor" | "idempotency_key" | "attachment_ids"
->;
+export type DraftField = LedgerStagedDraftField["field"];
 /** A new movement. Its idempotency key is drawn once and kept until the add
  * settles, so an add sent again after an unknown outcome is the same add. */
 export type Draft = {

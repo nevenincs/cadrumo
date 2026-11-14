@@ -47,7 +47,7 @@ export function answerSplitCheck(
   const whole = cents(parentAmount)!;
   const open = parts.at(-1)?.amount === null;
   const named = open ? parts.slice(0, -1) : parts;
-  const typed = named.map((part) => cents(part.amount));
+  const typed = named.map((part) => cents(part.amount ?? null));
   const left = open
     ? typed.every((amount) => amount !== null)
       ? typed.reduce((sum: bigint, amount) => sum - amount!, whole)
@@ -66,7 +66,7 @@ export function answerSplitCheck(
       difference: spelled(-left!),
       over: true,
     });
-  const trimmed = parts.map((part) => part.description.trim());
+  const trimmed = parts.map((part) => (part.description ?? "").trim());
   const blank = trimmed.indexOf("");
   if (blank >= 0)
     return result(remainder, { kind: "description", index: blank });

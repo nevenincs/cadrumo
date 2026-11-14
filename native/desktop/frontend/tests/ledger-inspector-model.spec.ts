@@ -1,8 +1,6 @@
 import { expect, test } from "@playwright/test";
-import type {
-  LedgerLlmSuggestion,
-  LedgerStagedRowAnswer,
-} from "../src/shell/ledgerMovementOperations";
+import type { LedgerLlmSuggestion } from "../src/shell/ledgerMovementOperations";
+import type { LedgerStagedRowAnswer } from "../src/shell/ledgerMovementCheckContract";
 import type { LedgerRow } from "../src/shell/ledger";
 import { EMPTY_CONTENT, type StagedContent } from "../src/shell/ledgerStage";
 import {

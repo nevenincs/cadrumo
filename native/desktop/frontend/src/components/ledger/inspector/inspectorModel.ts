@@ -5,10 +5,8 @@
 // suggestion writes, and whether a date moves a movement to another
 // quarter. Nothing here reads or writes the ledger.
 
-import type {
-  LedgerLlmSuggestion,
-  LedgerStagedRowAnswer,
-} from "../../../shell/ledgerMovementOperations";
+import type { LedgerLlmSuggestion } from "../../../shell/ledgerMovementOperations";
+import type { LedgerStagedRowAnswer } from "../../../shell/ledgerMovementCheckContract";
 import type { LedgerRow, LedgerTransaction } from "../../../shell/ledger";
 import {
   FIELDS_DROPPED_BY_PERSONAL,
