@@ -558,7 +558,7 @@ heading_key = "modelo.schema.151.form.page.m15101000.heading"
 
 [[revisions.2015-2022.form_layouts.pages.sections]]
 id = "general"
-heading_key = "modelo.schema.151.form.section.general.heading"
+heading_key = "modelo.schema.151.form.page.m15101000.section.general.heading"
 blocks = [
     { kind = "field", id = "field", casilla_id = "p01.tipo-de-declaracion" },
 ]
@@ -573,7 +573,7 @@ blocks = [
 
 [[revisions.2015-2022.form_layouts.pages.sections]]
 id = "general-2"
-heading_key = "modelo.schema.151.form.section.general-2.heading"
+heading_key = "modelo.schema.151.form.page.m15101000.section.general-2.heading"
 blocks = [
     { kind = "field", id = "field", casilla_id = "p01.contribuyente-sexo" },
     { kind = "field", id = "field-2", casilla_id = "p01.contribuyente-fecha-de-nacimiento" },
@@ -806,7 +806,7 @@ blocks = [
 
 [[revisions.2015-2022.form_layouts.pages.sections]]
 id = "general-3"
-heading_key = "modelo.schema.151.form.section.general-3.heading"
+heading_key = "modelo.schema.151.form.page.m15101000.section.general-3.heading"
 blocks = [
     { kind = "field", id = "field", casilla_id = "p01.contribuyente-datos-ad-enda-actual-titularidad" },
     { kind = "field", id = "field-2", casilla_id = "p01.contribuyente-datos-ad-orcentaje-participacion" },
@@ -963,7 +963,7 @@ blocks = [
 
 [[revisions.2015-2022.form_layouts.pages.sections]]
 id = "general-4"
-heading_key = "modelo.schema.151.form.section.general-4.heading"
+heading_key = "modelo.schema.151.form.page.m15101000.section.general-4.heading"
 blocks = [
     { kind = "field", id = "field", casilla_id = "p01.comunidad-autonoma-de-e-el-ejercicio-indicado" },
     { kind = "field", id = "field-2", casilla_id = "p01.asignacion-tributaria-a-la-iglesia-catolica" },
@@ -980,7 +980,7 @@ heading_key = "modelo.schema.151.form.page.m151did00.heading"
 
 [[revisions.2015-2022.form_layouts.pages.sections]]
 id = "general"
-heading_key = "modelo.schema.151.form.section.general.heading"
+heading_key = "modelo.schema.151.form.page.m151did00.section.general.heading"
 blocks = [
     { kind = "field", id = "field", casilla_id = "did.numero-de-cuenta-iban" },
     { kind = "field", id = "field-2", casilla_id = "did.devolucion-swift-bic" },
@@ -996,7 +996,7 @@ heading_key = "modelo.schema.151.form.page.m151-page-02.heading"
 
 [[revisions.2015-2022.form_layouts.pages.sections]]
 id = "general"
-heading_key = "modelo.schema.151.form.section.general.heading"
+heading_key = "modelo.schema.151.form.page.m151-page-02.section.general.heading"
 blocks = [
     { kind = "field", id = "field", casilla_id = "p02.tipo-de-renta-1-01" },
     { kind = "field", id = "field-2", casilla_id = "p02.naturaleza-2-01" },
@@ -1079,7 +1079,7 @@ heading_key = "modelo.schema.151.form.page.m151-page-03.heading"
 
 [[revisions.2015-2022.form_layouts.pages.sections]]
 id = "general"
-heading_key = "modelo.schema.151.form.section.general.heading"
+heading_key = "modelo.schema.151.form.page.m151-page-03.section.general.heading"
 blocks = [
     { kind = "field", id = "field", casilla_id = "p03.tipo-de-renta-1-01" },
     { kind = "field", id = "field-2", casilla_id = "p03.naturaleza-2-01" },
@@ -1166,7 +1166,7 @@ heading_key = "modelo.schema.151.form.page.m151-page-04.heading"
 
 [[revisions.2015-2022.form_layouts.pages.sections]]
 id = "general"
-heading_key = "modelo.schema.151.form.section.general.heading"
+heading_key = "modelo.schema.151.form.page.m151-page-04.section.general.heading"
 blocks = [
     { kind = "field", id = "field", casilla_id = "p04.tipo-de-renta-1-01" },
     { kind = "field", id = "field-2", casilla_id = "p04.naturaleza-2-01" },
@@ -1244,7 +1244,7 @@ heading_key = "modelo.schema.151.form.page.m151-page-05.heading"
 
 [[revisions.2015-2022.form_layouts.pages.sections]]
 id = "general"
-heading_key = "modelo.schema.151.form.section.general.heading"
+heading_key = "modelo.schema.151.form.page.m151-page-05.section.general.heading"
 blocks = [
     { kind = "field", id = "field", casilla_id = "p05.tipo-de-renta-1-01" },
     { kind = "field", id = "field-2", casilla_id = "p05.ingresos-integros-2" },
@@ -1301,7 +1301,7 @@ heading_key = "modelo.schema.151.form.page.m151-page-06.heading"
 
 [[revisions.2015-2022.form_layouts.pages.sections]]
 id = "general"
-heading_key = "modelo.schema.151.form.section.general.heading"
+heading_key = "modelo.schema.151.form.page.m151-page-06.section.general.heading"
 blocks = [
     { kind = "field", id = "field", casilla_id = "p06.tipo-de-renta-1-01" },
     { kind = "field", id = "field-2", casilla_id = "p06.numero-justificante-del-modelo-211-01" },
@@ -1394,7 +1394,7 @@ heading_key = "modelo.schema.151.form.page.m151-page-07.heading"
 
 [[revisions.2015-2022.form_layouts.pages.sections]]
 id = "general"
-heading_key = "modelo.schema.151.form.section.general.heading"
+heading_key = "modelo.schema.151.form.page.m151-page-07.section.general.heading"
 blocks = [
     { kind = "field", id = "field", casilla_id = "p07.tipo-de-renta-1-01" },
     { kind = "field", id = "field-2", casilla_id = "p07.descripcion-de-la-ganancia-patrimonial-01" },
@@ -1464,7 +1464,7 @@ heading_key = "modelo.schema.151.form.page.m151-page-08.heading"
 
 [[revisions.2015-2022.form_layouts.pages.sections]]
 id = "general"
-heading_key = "modelo.schema.151.form.section.general.heading"
+heading_key = "modelo.schema.151.form.page.m151-page-08.section.general.heading"
 blocks = [
     { kind = "field", id = "field", casilla_id = "p08.tipo-de-renta-1-01" },
     { kind = "field", id = "field-2", casilla_id = "p08.descripcion-del-elemento-patrimonial-01" },

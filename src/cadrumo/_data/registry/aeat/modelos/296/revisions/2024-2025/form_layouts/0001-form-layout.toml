@@ -21,7 +21,7 @@ heading_key = "modelo.schema.296.form.page.m296-declarante.heading"
 
 [[revisions.2024-2025.form_layouts.pages.sections]]
 id = "general"
-heading_key = "modelo.schema.296.form.section.general.heading"
+heading_key = "modelo.schema.296.form.page.m296-declarante.section.general.heading"
 blocks = [
     { kind = "field", id = "field", casilla_id = "02" },
     { kind = "field", id = "field-2", casilla_id = "03" },
