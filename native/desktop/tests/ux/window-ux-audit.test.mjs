@@ -7,6 +7,13 @@
 // CADRUMO_PERSONA_HOST, CADRUMO_CMAKE_BINARY_DIR, CADRUMO_BUILD_CONFIG), plus
 //   CADRUMO_UX_RUN   the run directory the window's storage is copied into
 //                    (must be outside the git project; default: a temp dir)
+//   CADRUMO_UX_DEVTOOLS  (optional) 1: wheel through Chromium DevTools (trusted
+//                    input). Needs the remote-debugging test host in
+//                    CADRUMO_PERSONA_HOST (python -m dev.desktop_agent_live.stage_host),
+//                    loopback only; refused for any other host.
+//   CADRUMO_UX_STAGED_SHA256  sha256 of the host executable staged for this
+//                    build (python -m dev.desktop_automation_stage); a run
+//                    that drives any other executable is not counted
 //   CADRUMO_UX_ONLY  (optional) comma-separated substrings: run only tests whose name has one
 import assert from "node:assert/strict";
 import { existsSync, mkdtempSync, statSync } from "node:fs";
@@ -21,6 +28,7 @@ import {
   pageErrors,
   pageGeometry,
   paneAudit,
+  runIdentity,
   setSize,
   sleep,
   start,
@@ -65,15 +73,59 @@ before(async () => {
 });
 after(teardown);
 
+/** Why the run's bundle and host executable were not recorded, or null. */
+const STAGED_SHA256 = (process.env.CADRUMO_UX_STAGED_SHA256 ?? "")
+  .trim()
+  .toLowerCase();
+const identityProblem = () =>
+  runIdentity.error ??
+  (!runIdentity.bundle?.length || !runIdentity.exeSha256
+    ? "no bundle name or executable hash was recorded"
+    : !STAGED_SHA256
+      ? "CADRUMO_UX_STAGED_SHA256 names no freshly staged host to compare with"
+      : runIdentity.exeSha256.toLowerCase() !== STAGED_SHA256
+        ? `the window ran executable ${runIdentity.exeSha256}, not the freshly staged host ${STAGED_SHA256}`
+        : null);
+
+// Every test but UX-00 fails when the run did not record what it drove: a run
+// that cannot say which bundle and executable it measured is not counted.
 const ux = (name, fn) =>
   test(
     name,
     {
-      skip: ONLY && !ONLY.split(",").some((part) => name.includes(part.trim())),
+      skip:
+        ONLY &&
+        !name.startsWith("UX-00") &&
+        !ONLY.split(",").some((part) => name.includes(part.trim())),
       timeout: 600_000,
     },
-    fn,
+    async (t) => {
+      if (!name.startsWith("UX-00") && identityProblem())
+        assert.fail(
+          "NOT COUNTED: the run did not record its bundle and executable",
+        );
+      await fn(t);
+      const missed = unreached.get(t) ?? [];
+      if (missed.length > 0)
+        assert.fail(
+          `UNMEASURED: ${missed.length} page(s) the check covers were not reached, so it is not a pass: ${missed.slice(0, 6).join("; ")}`,
+        );
+    },
   );
+
+ux("UX-00 the run records the live bundle and the host executable", (t) => {
+  // One line per run; the later report lines are traced to it by their run.
+  t.diagnostic(
+    JSON.stringify({
+      probe: "run-identity",
+      bundle: runIdentity.bundle,
+      exe: runIdentity.exe,
+      exeSha256: runIdentity.exeSha256,
+      wheel: win.devtools ? "devtools" : "webdriver",
+    }),
+  );
+  assert.equal(identityProblem(), null, `run identity: ${identityProblem()}`);
+});
 
 const rowOf = (modelo) =>
   world.rows.find((r) => r.modelo === modelo && r.prepared);
@@ -180,14 +232,25 @@ ux(
   async () => {
     await open("100");
     await chooseTab(VIEWS, label("desktop.modelo.view.form"));
+    const offered = await exec(
+      () => !!document.querySelector("section[data-prior-values]"),
+    );
+    if (!offered)
+      assert.fail(
+        "UNMEASURED: the form draws no prior-values offer, so there is nothing to hide",
+      );
     await hidePriorValues();
     const listed = () =>
       exec(
         () => document.querySelectorAll("section[data-prior-values] li").length,
       );
     assert.equal(await listed(), 0, "the offer is collapsed after Ocultar");
-    await chooseTab(VIEWS, label("workspace.modelo.step.review"));
-    await chooseTab(VIEWS, label("desktop.modelo.view.form"));
+    const away = await chooseTab(VIEWS, label("workspace.modelo.step.review"));
+    const back = await chooseTab(VIEWS, label("desktop.modelo.view.form"));
+    if (away === null || back === null)
+      assert.fail(
+        "UNMEASURED: a view tab was not offered, so the view change was not made",
+      );
     assert.equal(
       await listed(),
       0,
@@ -204,7 +267,9 @@ for (const [width, height] of [
   ux(`UX-04 form keeps room to work at ${width}x${height}`, async () => {
     await open("100");
     await chooseTab(VIEWS, label("desktop.modelo.view.form"));
-    await setSize(width, height);
+    const inner = await setSize(width, height);
+    const short = sizeShortfall(inner, [width, height]);
+    if (short) assert.fail(`UNMEASURED: ${short}`);
     await hidePriorValues();
     const g = await workspaceGeometry();
     const pane = g.section.bottom - g.section.top;
@@ -243,8 +308,10 @@ ux(
   async () => {
     await open("100");
     await chooseTab(VIEWS, label("desktop.modelo.view.form"));
-    await setSize(900, 600);
+    const inner = await setSize(900, 600);
     try {
+      const short = sizeShortfall(inner, [900, 600]);
+      if (short) assert.fail(`UNMEASURED: ${short}`);
       const reachable = await exec(
         (sel, name) => {
           const side = document.querySelector(
@@ -305,7 +372,29 @@ ux("UX-07 form page tabs are named in words, not registry paths", async () => {
 
 const AUDIT_SIZES = [DEFAULT_SIZE, [1280, 800], [1024, 640], [900, 600]];
 
-const report = (t, record) => t.diagnostic(JSON.stringify(record));
+// A page or section a test was meant to measure and could not reach is
+// collected here, and the test is then not a pass (see ux below).
+const unreached = new WeakMap();
+const report = (t, record) => {
+  if (record.reached === false) {
+    const list = unreached.get(t) ?? [];
+    list.push(
+      `${record.page} at ${record.size?.join?.("x") ?? "?"}: ${record.reason}`,
+    );
+    unreached.set(t, list);
+  }
+  t.diagnostic(JSON.stringify(record));
+};
+
+/** Record that `page` at `size` was not measured, so the test is not a pass. */
+const unmeasured = (t, page, size, reason) =>
+  report(t, { page, size, reached: false, reason });
+
+/** Why the window did not reach the requested size, or null when it did. */
+const sizeShortfall = (inner, requested) =>
+  inner[0] > requested[0] || inner[1] > requested[1]
+    ? `the window stayed at ${inner.join("x")}, larger than the requested ${requested.join("x")}`
+    : null;
 
 /** Measure the page now drawn and report it. */
 async function measure(t, page, size, root, options) {
@@ -315,7 +404,12 @@ async function measure(t, page, size, root, options) {
   report(t, {
     page,
     size,
-    reached: true,
+    reached: audit.found === true,
+    ...(audit.found === true
+      ? {}
+      : {
+          reason: `no shown element matches ${root}, so nothing was measured`,
+        }),
     audit,
     error: {
       boundary: errors.boundary,
@@ -331,13 +425,27 @@ async function measure(t, page, size, root, options) {
   });
 }
 
-/** Run `probe(size)` at each audit size; a throw is reported as not reached. */
+/**
+ * Run `probe(inner, requested)` at each audit size; a throw, a size the window
+ * did not reach, or a size that repeats an earlier one is reported as not reached.
+ */
 async function atSizes(t, page, probe) {
+  const seen = new Set();
   try {
     for (const size of AUDIT_SIZES) {
       const inner = await setSize(...size);
+      const short =
+        sizeShortfall(inner, size) ??
+        (seen.has(inner.join("x"))
+          ? `the requested ${size.join("x")} gave ${inner.join("x")} again, so this size was not reached`
+          : null);
+      seen.add(inner.join("x"));
+      if (short) {
+        unmeasured(t, page, inner, short);
+        continue;
+      }
       try {
-        await probe(inner);
+        await probe(inner, size);
       } catch (error) {
         report(t, {
           page,
@@ -471,6 +579,8 @@ ux("UX-12 AEAT sync keeps its header and scroller at each size", async (t) => {
   await pageProbe(t, "aeat-sync", "aeat-sync", "section.aeat-sync-page");
 });
 
+const DOCUMENT_HISTORY_SKIP = "history.length is";
+
 ux("UX-13 back and forward move between the pages visited", async (t) => {
   await setSize(...DEFAULT_SIZE);
   const sequence = [
@@ -485,6 +595,9 @@ ux("UX-13 back and forward move between the pages visited", async (t) => {
     visited.push({ id, ...got, shown: await exec(pageNow) });
   }
   report(t, { probe: "history", step: "visited", visited });
+  for (const page of visited)
+    if (!page.reached)
+      unmeasured(t, `history/${page.id}`, DEFAULT_SIZE, page.reason);
 
   const step = async (how, act) => {
     const before = await exec(pageNow);
@@ -504,6 +617,10 @@ ux("UX-13 back and forward move between the pages visited", async (t) => {
       changed: JSON.stringify(before) !== JSON.stringify(after),
       reason,
     });
+    // The document-history calls are a deliberate safety skip (they could
+    // leave the page); the chords and pointer buttons carry the claim.
+    if (reason && !reason.includes(DOCUMENT_HISTORY_SKIP))
+      unmeasured(t, `history/${how}`, DEFAULT_SIZE, reason);
   };
   const blur = () => exec(() => document.activeElement?.blur?.());
   const chord = (key) => async () => {
@@ -524,7 +641,7 @@ ux("UX-13 back and forward move between the pages visited", async (t) => {
   const documentHistory = (call) => async () => {
     if (documentLength > 1 && !process.env.CADRUMO_UX_DOCUMENT_HISTORY)
       throw new Error(
-        `history.length is ${documentLength}; set CADRUMO_UX_DOCUMENT_HISTORY to call it`,
+        `${DOCUMENT_HISTORY_SKIP} ${documentLength}; set CADRUMO_UX_DOCUMENT_HISTORY to call it`,
       );
     await exec((call) => history[call](), call);
   };
@@ -636,8 +753,18 @@ ux(
       // No write is triggered: a view change re-reads the form, and the window's
       // own read of a settled write goes through the same header.
       for (let round = 0; round < 3; round += 1) {
-        await chooseTab(VIEWS, label("workspace.modelo.step.review"));
-        await chooseTab(VIEWS, label("desktop.modelo.view.form"));
+        const away = await chooseTab(
+          VIEWS,
+          label("workspace.modelo.step.review"),
+        );
+        const back = await chooseTab(VIEWS, label("desktop.modelo.view.form"));
+        if (away === null || back === null)
+          unmeasured(
+            t,
+            "modelo-header-reread",
+            null,
+            "a view tab is not offered",
+          );
       }
     } finally {
       result = await exec(pageStopHeaderSampler);
@@ -648,6 +775,13 @@ ux(
       ...result,
     });
     assert(result, "the header sampler ran");
+    if (result.samples === 0 || result.busy === 0)
+      unmeasured(
+        t,
+        "modelo-header-reread",
+        null,
+        `the header showed busy in ${result.busy} of ${result.samples} samples, so a stale next step beside busy was not observable`,
+      );
     assert.equal(
       result.busyWithNext,
       0,
@@ -734,7 +868,7 @@ ux(
             ?.getAttribute("aria-pressed") === "true",
       );
     const agentWasShown = await agentPressed();
-    await atSizes(t, "rail", async (size) => {
+    await atSizes(t, "rail", async (size, requested) => {
       const reach = await exec(pageRailReach);
       report(t, { probe: "rail-reach", size, ...reach });
       if (size[0] <= 1024) {
@@ -776,7 +910,7 @@ ux(
           composer,
           agentOpenedByCheck: opened,
         });
-        if (size[0] === 900 && size[1] === 600) {
+        if (requested[0] === 900 && requested[1] === 600) {
           if (!composer) failures.push(`no composer on ${id} at 900x600`);
           else if (!composer.inside)
             failures.push(`composer outside on ${id} at 900x600`);
@@ -919,6 +1053,13 @@ ux(
         failures.push("pressed off, the details are not under the form");
       await arrangeDetails("side");
       const away = await openRailPage("ledger", "section.ledger-page");
+      if (!away.reached)
+        unmeasured(
+          t,
+          "placement/after-navigation",
+          null,
+          `the page was not left: ${away.reason}`,
+        );
       await sleep(700);
       const back = await openRailPage("declarations", SECTION);
       if (!back.reached) await openDeclaration(rowOf("100"));
@@ -939,13 +1080,31 @@ ux(
       // Separator travel in both arrangements, rail shown and hidden, at each size.
       for (const size of AUDIT_SIZES) {
         const inner = await setSize(...size);
+        const short = sizeShortfall(inner, size);
+        if (short) {
+          unmeasured(t, "modelo-split", inner, short);
+          continue;
+        }
         for (const railOn of [true, false]) {
           for (const placement of ["side", "bottom"]) {
             const page = `modelo-split/${placement}/rail-${railOn ? "shown" : "hidden"}`;
             try {
-              await setPaneToggle("side", railOn);
-              await setPaneToggle("details", true);
-              await arrangeDetails(placement);
+              const sideState = await setPaneToggle("side", railOn);
+              const detailsState = await setPaneToggle("details", true);
+              const arranged = await arrangeDetails(placement);
+              if (
+                sideState !== String(railOn) ||
+                detailsState !== "true" ||
+                arranged.placement !== placement
+              ) {
+                unmeasured(
+                  t,
+                  page,
+                  inner,
+                  `the arrangement was not reached (rail toggle ${sideState}, details toggle ${detailsState}, placement ${arranged.placement})`,
+                );
+                continue;
+              }
               const start = await splitNow();
               await keyLine("Home");
               const least = await splitNow();
@@ -1040,7 +1199,7 @@ ux("UX-17 every field-row label is at least 120 px wide", async (t) => {
       minLabel: min,
     });
     if (widths.length === 0)
-      narrow.push(`no field rows measured at ${size.join("x")}`);
+      unmeasured(t, "modelo-field-labels", size, "no field-row labels found");
     else if (min < 120) narrow.push(`${size.join("x")}: ${min}px`);
   });
   assert.deepEqual(
@@ -1078,8 +1237,11 @@ async function auditScrollContainers(
       reached: false,
       reason: "no root",
     });
-    return;
+    return 0;
   }
+  if (found.containers.length === 0)
+    unmeasured(t, page, size, `no scroll container under ${root}`);
+  let judged = 0;
   for (const c of found.containers) {
     const wheel = c.overflows
       ? await wheelContainer(c.id)
@@ -1103,6 +1265,7 @@ async function auditScrollContainers(
       wheel,
     });
     if (!c.overflows || !c.scrollable) continue;
+    judged += 1;
     const where = `${page} at ${size.join("x")}: ${c.el}`;
     if (!c.barVisible)
       failures.push(`${where} overflows with no scrollbar drawn`);
@@ -1111,6 +1274,7 @@ async function auditScrollContainers(
         `${where} did not scroll by wheel${wheel.error ? ` (${wheel.error})` : ""}`,
       );
   }
+  return judged;
 }
 
 /**
@@ -1135,6 +1299,7 @@ ux(
     const failures = [];
     const wheelFailures = [];
     const controlFailed = [];
+    const judged = { profile: 0, ledger: 0, modelo: 0 };
 
     await atSizes(t, "profile", async (size) => {
       const got = await openRailPage("profile", "section.user-profile-page");
@@ -1148,7 +1313,7 @@ ux(
       await sleep(700);
       if (!(await wheelControl(t, "profile", size)))
         controlFailed.push(`profile at ${size.join("x")}`);
-      await auditScrollContainers(
+      judged.profile += await auditScrollContainers(
         t,
         "profile",
         size,
@@ -1185,7 +1350,7 @@ ux(
           continue;
         }
         await sleep(700);
-        await auditScrollContainers(
+        judged.ledger += await auditScrollContainers(
           t,
           page,
           size,
@@ -1202,7 +1367,7 @@ ux(
       await sleep(500);
       if (!(await wheelControl(t, "modelo", size)))
         controlFailed.push(`modelo at ${size.join("x")}`);
-      await auditScrollContainers(
+      judged.modelo += await auditScrollContainers(
         t,
         "modelo",
         size,
@@ -1211,6 +1376,14 @@ ux(
         wheelFailures,
       );
     });
+    for (const [page, count] of Object.entries(judged))
+      if (count === 0)
+        unmeasured(
+          t,
+          page,
+          null,
+          "no overflowing scroll container was judged at any size",
+        );
 
     // The wheel is judged only where the control scroller moved; where it did
     // not, the verdict is unmeasured and no per-container wheel failure is
@@ -1218,8 +1391,11 @@ ux(
     const problems = [];
     if (controlFailed.length > 0)
       problems.push(
-        "UNMEASURED wheel: the WebDriver wheel is an untrusted synthetic event (tauri-plugin-wdio-webdriver 1.5.1) and moved no scroller, " +
-          `so no wheel verdict is the app's (control did not move: ${controlFailed.join("; ")})`,
+        `UNMEASURED wheel: the ${win.devtools ? "DevTools" : "WebDriver"} wheel ` +
+          (win.devtools
+            ? "moved no control scroller"
+            : "is an untrusted synthetic event (tauri-plugin-wdio-webdriver 1.5.1) and moved no scroller; set CADRUMO_UX_DEVTOOLS=1 with the remote-debugging test host for a trusted one") +
+          `, so no wheel verdict is the app's (control did not move: ${controlFailed.join("; ")})`,
       );
     else failures.push(...wheelFailures);
     if (failures.length > 0)
@@ -1345,6 +1521,13 @@ ux(
           await setPaneToggle("details", true);
           await arrangeDetails("bottom");
           const start = await splitNow();
+          if (start.placement !== "bottom")
+            unmeasured(
+              t,
+              "stacked-separator",
+              inner,
+              `the details are placed ${start.placement}, not stacked`,
+            );
           await keyLine("Home");
           const least = await splitNow();
           await keyLine("End");
@@ -2083,6 +2266,15 @@ ux("UX-24 a single click opens a Modelo view tab", async (t) => {
           if (now.tabs[index]?.selected) {
             const other = now.tabs.findIndex((_, i) => i !== index);
             if (other >= 0) await chooseTab(views, now.tabs[other].text);
+            if ((await exec(pageTabSelectedAt, views, index)) === "true") {
+              unmeasured(
+                t,
+                "modelo-view-tabs",
+                size,
+                `tab "${name}" stayed selected, so a click on it shows no change`,
+              );
+              continue;
+            }
           }
           const target = await exec(pageTabCentre, views, index);
           if (!target || !target.inWindow) {
@@ -2201,6 +2393,15 @@ ux(
         break;
       }
       exportRun = { kind, tookMs: run.tookMs, at: Date.now() };
+      if (!run.secondPress.attempted || run.secondPress.buttonFound === false)
+        unmeasured(
+          t,
+          "export-busy",
+          inner,
+          run.secondPress.attempted
+            ? "the export button was gone at the second press"
+            : "the export settled before a second press could be tried",
+        );
       if (run.tookMs > 1000 && !run.busySeen)
         failures.push(
           `the export took ${run.tookMs} ms and the window drew no busy state in that time`,
@@ -2299,6 +2500,13 @@ ux(
       );
     if (last.holdShown)
       failures.push(`a write hold is shown: "${last.holdText}"`);
+    if (last.buttonShown && last.disabled && !last.hintSaysAvailable)
+      unmeasured(
+        t,
+        "record-after-export",
+        inner,
+        "the button is disabled and no hint says recording is available, so availability was not judged",
+      );
     assert.deepEqual(
       failures,
       [],

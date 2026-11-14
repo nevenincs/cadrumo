@@ -6,10 +6,11 @@
 // as that spec does, and stages nothing.
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
-import { randomBytes } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 import {
   closeSync,
   cpSync,
+  createReadStream,
   existsSync,
   mkdirSync,
   openSync,
@@ -36,7 +37,9 @@ const require = createRequire(
   new URL("../../frontend/package.json", import.meta.url),
 );
 const { remote } = require("webdriverio");
-export const repository = fileURLToPath(new URL("../../../../", import.meta.url));
+export const repository = fileURLToPath(
+  new URL("../../../../", import.meta.url),
+);
 export const sleep = (ms) => new Promise((done) => setTimeout(done, ms));
 
 const PROFILE = process.env.CADRUMO_PERSONA_PROFILE || "persona";
@@ -45,7 +48,23 @@ const CREDENTIAL_SOURCE = resolve(
   "src/cadrumo/entrypoints/tests/persona_materialisation.py",
 );
 
-export const win = { browser: null, child: null, closed: true, pid: null };
+export const win = {
+  browser: null,
+  child: null,
+  closed: true,
+  pid: null,
+  nonce: null,
+  devtools: null,
+  devtoolsPort: null,
+};
+
+/** What this run drove: the bundle the live page loaded and the host image. */
+export const runIdentity = {
+  bundle: null,
+  exe: null,
+  exeSha256: null,
+  error: null,
+};
 export let label = (key) => key;
 
 export const exec = (fn, ...args) => win.browser.execute(fn, ...args);
@@ -58,7 +77,10 @@ export async function live() {
   }
 }
 
-export async function waitFor(read, { timeout, what, interval = 400, soft = false }) {
+export async function waitFor(
+  read,
+  { timeout, what, interval = 400, soft = false },
+) {
   const end = Date.now() + timeout;
   let last;
   for (;;) {
@@ -108,11 +130,21 @@ export async function launch(world, runDir) {
   const host = JSON.parse(process.env.CADRUMO_PERSONA_HOST);
   const port = await freePort();
   const nonce = randomBytes(32).toString("hex");
+  const wantDevtools = process.env.CADRUMO_UX_DEVTOOLS === "1";
+  const devtoolsPort = wantDevtools ? await freePort() : null;
+  if (wantDevtools) await requireDevtoolsHost(host.executable);
   const stdout = openSync(resolve(runDir, "host.stdout.log"), "a", 0o600);
   const stderr = openSync(resolve(runDir, "host.stderr.log"), "a", 0o600);
   const child = spawn(host.executable, ["--gui"], {
     cwd: host.package,
-    env: hostEnvironment(process.env, runDir, host.package, port, nonce),
+    env: {
+      ...hostEnvironment(process.env, runDir, host.package, port, nonce),
+      // The test host admits exactly this one argument; hostEnvironment strips
+      // every WEBVIEW2_ variable the caller had.
+      ...(wantDevtools
+        ? { [DEVTOOLS_VARIABLE]: `--remote-debugging-port=${devtoolsPort}` }
+        : {}),
+    },
     detached: true,
     stdio: ["ignore", stdout, stderr],
   });
@@ -123,6 +155,8 @@ export async function launch(world, runDir) {
     child,
     pid: child.pid,
     executable: host.executable,
+    nonce,
+    devtoolsPort,
     closed: false,
   });
   process.once("exit", () => {
@@ -145,10 +179,237 @@ export async function launch(world, runDir) {
   return runDir;
 }
 
+// ---------------------------------------------------------------------------
+// Run identity: the frontend bundle the live page loaded and the host image.
+// ---------------------------------------------------------------------------
+
+/** sha256 of a file, streamed. */
+export function sha256File(path) {
+  return new Promise((done, fail) => {
+    const hash = createHash("sha256");
+    const stream = createReadStream(path);
+    stream.once("error", fail);
+    stream.on("data", (chunk) => hash.update(chunk));
+    stream.once("end", () => done(hash.digest("hex")));
+  });
+}
+
+/** Every script with a src and every modulepreload link of the live page. */
+function pageBundleNames() {
+  const names = new Set();
+  for (const el of document.querySelectorAll(
+    'script[src], link[rel="modulepreload"][href]',
+  )) {
+    const value = el.getAttribute(el.tagName === "LINK" ? "href" : "src");
+    if (value) names.add(value);
+  }
+  return [...names];
+}
+
+/**
+ * Read the bundle file names from the live page and hash the host executable
+ * this driver launched. Never throws: a failure is kept in runIdentity.error
+ * for the first test to assert on.
+ */
+export async function recordRunIdentity() {
+  Object.assign(runIdentity, {
+    bundle: null,
+    exe: win.executable ?? null,
+    exeSha256: null,
+    error: null,
+  });
+  const problems = [];
+  try {
+    runIdentity.bundle = await exec(pageBundleNames);
+    if (!runIdentity.bundle.length)
+      problems.push("the live page names no script or modulepreload bundle");
+  } catch (error) {
+    problems.push(
+      `the bundle could not be read from the page: ${error.message}`,
+    );
+  }
+  try {
+    runIdentity.exeSha256 = await sha256File(win.executable);
+  } catch (error) {
+    problems.push(`the host executable could not be hashed: ${error.message}`);
+  }
+  runIdentity.error = problems.length ? problems.join("; ") : null;
+  return runIdentity;
+}
+
+// ---------------------------------------------------------------------------
+// Trusted input through Chromium DevTools (test host only, loopback only).
+// ---------------------------------------------------------------------------
+
+const DEVTOOLS_VARIABLE = "WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS";
+const DEVTOOLS_FEATURE = "webview2-remote-debugging";
+const LOOPBACK = new Set(["127.0.0.1", "localhost", "[::1]"]);
+
+/**
+ * Refuse a host that is not the recorded remote-debugging test host: its
+ * record (CADRUMO_UX_HOST_RECORD, else the packaged host's host.json) must list
+ * the webview2-remote-debugging feature, and the executable's sha256 must be
+ * the recorded one. A staged copy in a package mirror has the same bytes.
+ */
+async function requireDevtoolsHost(executable) {
+  const recordPath =
+    process.env.CADRUMO_UX_HOST_RECORD ??
+    resolve(buildPath("desktop_testing"), "packaged", "host.json");
+  let record;
+  try {
+    record = JSON.parse(readFileSync(recordPath, "utf8"));
+  } catch (error) {
+    throw new Error(
+      `CADRUMO_UX_DEVTOOLS=1 needs the test host record ${recordPath}: ${error.message}`,
+    );
+  }
+  if (
+    !Array.isArray(record.features) ||
+    !record.features.includes(DEVTOOLS_FEATURE)
+  )
+    throw new Error(
+      `CADRUMO_UX_DEVTOOLS=1 refused: ${recordPath} does not list the ${DEVTOOLS_FEATURE} feature. ` +
+        "Set CADRUMO_PERSONA_HOST from `python -m dev.desktop_agent_live.stage_host`, not the automation package.",
+    );
+  if ((await sha256File(executable)) !== record.sha256)
+    throw new Error(
+      `CADRUMO_UX_DEVTOOLS=1 refused: ${executable} is not the host recorded in ${recordPath} (sha256 differs).`,
+    );
+}
+
+function webSocketClass() {
+  try {
+    return require("ws");
+  } catch {
+    if (typeof globalThis.WebSocket === "function") return globalThis.WebSocket;
+    throw new Error(
+      "no WebSocket client: neither the ws package nor Node's WebSocket",
+    );
+  }
+}
+
+/** A minimal DevTools protocol connection over one WebSocket. */
+async function openCdp(url) {
+  const Socket = webSocketClass();
+  const socket = new Socket(url);
+  const pending = new Map();
+  let next = 0;
+  await new Promise((done, fail) => {
+    socket.addEventListener("open", done, { once: true });
+    socket.addEventListener(
+      "error",
+      () => fail(new Error("DevTools socket error")),
+      { once: true },
+    );
+  });
+  socket.addEventListener("message", (event) => {
+    let message;
+    try {
+      message = JSON.parse(String(event.data));
+    } catch {
+      return;
+    }
+    const waiting = pending.get(message.id);
+    if (!waiting) return;
+    pending.delete(message.id);
+    if (message.error) waiting.fail(new Error(message.error.message));
+    else waiting.done(message.result);
+  });
+  socket.addEventListener("close", () => {
+    for (const waiting of pending.values())
+      waiting.fail(new Error("DevTools socket closed"));
+    pending.clear();
+  });
+  const send = (method, params = {}) =>
+    new Promise((done, fail) => {
+      next += 1;
+      const id = next;
+      const timer = setTimeout(() => {
+        pending.delete(id);
+        fail(new Error(`DevTools ${method} timed out`));
+      }, 10_000);
+      pending.set(id, {
+        done: (value) => {
+          clearTimeout(timer);
+          done(value);
+        },
+        fail: (error) => {
+          clearTimeout(timer);
+          fail(error);
+        },
+      });
+      socket.send(JSON.stringify({ id, method, params }));
+    });
+  return { send, close: () => socket.close() };
+}
+
+/**
+ * Connect to the page target of this launch's shell and expose
+ * win.devtools.trustedWheel(x, y, deltaY). The endpoint is 127.0.0.1 only and
+ * the target is the page that answers this launch's nonce. Answers null when
+ * CADRUMO_UX_DEVTOOLS is not set.
+ */
+export async function attachDevtools() {
+  if (!win.devtoolsPort) return null;
+  const endpoint = `http://127.0.0.1:${win.devtoolsPort}`;
+  const cdp = await waitFor(
+    async () => {
+      const targets = await (
+        await fetch(`${endpoint}/json`, { signal: AbortSignal.timeout(2000) })
+      ).json();
+      for (const target of targets.filter((item) => item.type === "page")) {
+        const socket = new URL(target.webSocketDebuggerUrl);
+        if (!LOOPBACK.has(socket.hostname))
+          throw new Error(
+            `refused a non-loopback DevTools endpoint: ${socket.hostname}`,
+          );
+        // Always dial 127.0.0.1 and the port this launch chose.
+        const candidate = await openCdp(
+          `ws://127.0.0.1:${win.devtoolsPort}${socket.pathname}`,
+        );
+        try {
+          const answer = await candidate.send("Runtime.evaluate", {
+            expression:
+              "JSON.stringify({nonce: window.__cadrumoAutomationNonce ?? null, shell: !!document.querySelector('[data-rail]')})",
+            returnByValue: true,
+          });
+          const seen = JSON.parse(answer.result?.value ?? "{}");
+          if (seen.nonce === win.nonce && seen.shell) return candidate;
+        } catch {
+          // Try the next target.
+        }
+        candidate.close();
+      }
+      return null;
+    },
+    { timeout: 30_000, what: "the DevTools page target of this launch" },
+  );
+  win.devtools = {
+    port: win.devtoolsPort,
+    trustedWheel: async (x, y, deltaY) => {
+      await cdp.send("Input.dispatchMouseEvent", { type: "mouseMoved", x, y });
+      await cdp.send("Input.dispatchMouseEvent", {
+        type: "mouseWheel",
+        x,
+        y,
+        deltaX: 0,
+        deltaY,
+      });
+    },
+    close: () => cdp.close(),
+  };
+  return win.devtools;
+}
+
 /** Stop only the host this driver started, by PID, after checking its identity. */
 export async function teardown() {
   if (win.closed) return;
   win.closed = true;
+  try {
+    win.devtools?.close();
+  } catch {
+    // The process check below decides.
+  }
   try {
     await win.browser?.deleteSession();
   } catch {
@@ -170,7 +431,9 @@ export function profileCredential() {
     readFileSync(CREDENTIAL_SOURCE, "utf8"),
   );
   if (!match)
-    throw new Error("no PERSONA_PROFILE_CREDENTIAL in persona_materialisation.py");
+    throw new Error(
+      "no PERSONA_PROFILE_CREDENTIAL in persona_materialisation.py",
+    );
   return match[1];
 }
 
@@ -189,7 +452,10 @@ function pageSignIn() {
         .querySelector(".sign-in .profile-named span[title]")
         ?.getAttribute("title") ?? null,
     choice: choice
-      ? { value: choice.value, options: [...choice.options].map((o) => o.value) }
+      ? {
+          value: choice.value,
+          options: [...choice.options].map((o) => o.value),
+        }
       : null,
     words: [
       ...document.querySelectorAll(
@@ -210,10 +476,10 @@ function pageChoose(value) {
   const node = document.querySelector("#profile-choice");
   const option = [...node.options].find((item) => item.value === value);
   if (!option || option.disabled) return false;
-  Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, "value").set.call(
-    node,
-    value,
-  );
+  Object.getOwnPropertyDescriptor(
+    HTMLSelectElement.prototype,
+    "value",
+  ).set.call(node, value);
   node.dispatchEvent(new Event("input", { bubbles: true }));
   node.dispatchEvent(new Event("change", { bubbles: true }));
   return node.value === value;
@@ -245,21 +511,28 @@ export async function signIn(password) {
     async () => {
       const now = await exec(pageSignIn);
       if (now.rail && !now.password) return { ok: true };
-      if (now.words.length > 0 && !now.busy) return { ok: false, words: now.words };
+      if (now.words.length > 0 && !now.busy)
+        return { ok: false, words: now.words };
       return null;
     },
     { timeout: 300_000, what: "the sign-in answer", soft: true },
   );
   if (!answer) throw new Error("no sign-in answer");
-  if (!answer.ok) throw new Error(`sign-in refused: ${answer.words.join(" | ")}`);
+  if (!answer.ok)
+    throw new Error(`sign-in refused: ${answer.words.join(" | ")}`);
 }
 
 /** Launch, sign in and load the chrome-string catalogue (sets `label`). */
 export async function start(runDir) {
-  const world = JSON.parse(readFileSync(process.env.CADRUMO_PERSONA_WORLD, "utf8"));
+  const world = JSON.parse(
+    readFileSync(process.env.CADRUMO_PERSONA_WORLD, "utf8"),
+  );
   const credential = profileCredential();
   await launch(world, runDir);
   await signIn(credential);
+  // The shell is reached: record what this run drives, once.
+  await recordRunIdentity();
+  await attachDevtools();
   const lang = (await exec(() => document.documentElement.lang)) || "en";
   const catalogue = JSON.parse(
     readFileSync(
@@ -289,7 +562,9 @@ export async function clickText(scope, item, texts, mode = "equals") {
           if (!el.getClientRects().length) continue;
           const text = norm(el.textContent);
           if (
-            texts.some((w) => (mode === "startsWith" ? text.startsWith(w) : text === w))
+            texts.some((w) =>
+              mode === "startsWith" ? text.startsWith(w) : text === w,
+            )
           ) {
             el.setAttribute("data-ux-target", "1");
             return text;
@@ -351,7 +626,11 @@ export function pageGeometry() {
   const clippedBy = (el) => {
     // The nearest ancestor that clips `el` on an axis without scrolling to it.
     const r = el.getBoundingClientRect();
-    for (let p = el.parentElement; p && p !== document.body; p = p.parentElement) {
+    for (
+      let p = el.parentElement;
+      p && p !== document.body;
+      p = p.parentElement
+    ) {
       const cs = getComputedStyle(p);
       const clipX = cs.overflowX !== "visible";
       const clipY = cs.overflowY !== "visible";
@@ -363,7 +642,11 @@ export function pageGeometry() {
         const scrolls =
           (outY && /auto|scroll/.test(cs.overflowY)) ||
           (outX && /auto|scroll/.test(cs.overflowX));
-        return { by: describe(p), scrolls, parent: [pr.top, pr.bottom, pr.left, pr.right].map(Math.round) };
+        return {
+          by: describe(p),
+          scrolls,
+          parent: [pr.top, pr.bottom, pr.left, pr.right].map(Math.round),
+        };
       }
     }
     return null;
@@ -400,8 +683,12 @@ export function pageGeometry() {
   for (const el of document.querySelectorAll("*")) {
     const cs = getComputedStyle(el);
     if (
-      (cs.overflowY === "hidden" && el.scrollHeight > el.clientHeight + 2 && el.clientHeight > 0) ||
-      (cs.overflowX === "hidden" && el.scrollWidth > el.clientWidth + 2 && el.clientWidth > 0)
+      (cs.overflowY === "hidden" &&
+        el.scrollHeight > el.clientHeight + 2 &&
+        el.clientHeight > 0) ||
+      (cs.overflowX === "hidden" &&
+        el.scrollWidth > el.clientWidth + 2 &&
+        el.clientWidth > 0)
     ) {
       if (!shown(el)) continue;
       out.overflowHidden.push({
@@ -430,7 +717,12 @@ export function paneAudit(rootSel, options) {
   const shown = (el) => {
     const r = el.getBoundingClientRect();
     const cs = getComputedStyle(el);
-    return r.width > 0 && r.height > 0 && cs.visibility !== "hidden" && cs.display !== "none";
+    return (
+      r.width > 0 &&
+      r.height > 0 &&
+      cs.visibility !== "hidden" &&
+      cs.display !== "none"
+    );
   };
   const describe = (el) =>
     `${el.tagName.toLowerCase()}${el.id ? "#" + el.id : ""}${
@@ -446,8 +738,11 @@ export function paneAudit(rootSel, options) {
   const root = [...document.querySelectorAll(rootSel)].find(shown);
   if (!root) return { found: false };
   const pane =
-    (options?.pane ? root.closest(options.pane) : null) ?? root.closest(".main-area");
-  const paneBox = pane ? box(pane) : [0, 0, window.innerWidth, window.innerHeight];
+    (options?.pane ? root.closest(options.pane) : null) ??
+    root.closest(".main-area");
+  const paneBox = pane
+    ? box(pane)
+    : [0, 0, window.innerWidth, window.innerHeight];
   const header = options?.header
     ? [...document.querySelectorAll(options.header)].find(shown)
     : (pane ?? document).querySelector('[data-slot="pane-header"]');
@@ -464,16 +759,30 @@ export function paneAudit(rootSel, options) {
   }
   if (!scroller) {
     for (const el of root.querySelectorAll("*")) {
-      if (scrolls(el) && shown(el) && (!scroller || el.clientHeight > scroller.clientHeight))
+      if (
+        scrolls(el) &&
+        shown(el) &&
+        (!scroller || el.clientHeight > scroller.clientHeight)
+      )
         scroller = el;
     }
   }
   const clipped = [];
   const scan = [...root.querySelectorAll("*"), root];
-  for (let p = root.parentElement; p && p !== document.body; p = p.parentElement) scan.push(p);
+  for (
+    let p = root.parentElement;
+    p && p !== document.body;
+    p = p.parentElement
+  )
+    scan.push(p);
   for (const el of scan) {
     if (getComputedStyle(el).overflowY !== "hidden") continue;
-    if (!shown(el) || el.clientHeight <= 0 || el.scrollHeight <= el.clientHeight + 2) continue;
+    if (
+      !shown(el) ||
+      el.clientHeight <= 0 ||
+      el.scrollHeight <= el.clientHeight + 2
+    )
+      continue;
     if (![...el.children].some(shown)) continue;
     clipped.push({
       el: describe(el),
@@ -526,8 +835,10 @@ export function pageErrors() {
   return {
     boundary: !!boundary,
     text: text.slice(0, 200),
-    crash: /something went wrong|unexpected error|internal error|Uncaught|TypeError|is not a function/i.test(text),
+    crash:
+      /something went wrong|unexpected error|internal error|Uncaught|TypeError|is not a function/i.test(
+        text,
+      ),
     empty: text.trim().length === 0,
   };
 }
-
