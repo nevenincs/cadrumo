@@ -473,6 +473,14 @@ MODELO_WORK_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         "WorkReviewResult",
     ),
     _leaf(
+        "form",
+        ".modelo_work_form_cli",
+        (a("work_unit_id", required=True), _LANG),
+        _MODEL_READ,
+        ".modelo_work_form_payloads",
+        "WorkFormResult",
+    ),
+    _leaf(
         "report",
         ".modelo_work_report_cli",
         (
