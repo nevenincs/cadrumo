@@ -11,6 +11,8 @@ import pytest
 from ..render import summary_line
 from ..rows import GREEN, PlannedRow, Stage, TableRow, Verdict
 
+_YEAR = 7
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _GRADE = "blocking_rule - registry_authority_grade_insufficient"
@@ -28,9 +30,9 @@ def _row(
     plan = PlannedRow(
         persona="persona",
         modelo="200",
-        year=2024,
+        year=_YEAR,
         period="0A",
-        horizon=2025,
+        horizon=_YEAR + 1,
         has_values=True,
         grounding=grounding,
         sources=("ley:art-1",),
