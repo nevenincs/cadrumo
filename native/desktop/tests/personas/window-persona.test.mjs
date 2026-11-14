@@ -2194,7 +2194,14 @@ test(
           try {
             out = await driveRow(row, runDir, world.persona);
           } catch (error) {
-            log("row-error", { message: error.message });
+            log("row-error", {
+              message: error.message,
+              // Which step's script the WebView refused, to tell its state apart.
+              stack: String(error.stack ?? "")
+                .split(String.fromCharCode(10))
+                .slice(1, 8)
+                .map((line) => line.trim()),
+            });
             out = {
               calculate: "error",
               verify: "not-reached",
