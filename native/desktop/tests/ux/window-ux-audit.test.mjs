@@ -35,9 +35,11 @@ import {
   openLedgerSection,
   openRailPage,
   pageNow,
+  pageScrollContainers,
   paneToggleState,
   setPaneToggle,
   tablist,
+  wheelContainer,
 } from "./ux-nav.mjs";
 
 const ONLY = process.env.CADRUMO_UX_ONLY;
@@ -1030,3 +1032,293 @@ ux("UX-17 every field-row label is at least 120 px wide", async (t) => {
     `a field-row label is narrower than 120px (or no row was drawn): ${narrow.join("; ")}`,
   );
 });
+
+// ---------------------------------------------------------------------------
+// Scrollbars and the mouse wheel; the three pane toggles.
+// ---------------------------------------------------------------------------
+
+/**
+ * Measure every scroll container under `root` and wheel each one. A container
+ * the person can scroll (overflow-y auto or scroll) fails when its content
+ * overflows and its scrollbar is not drawn or the wheel does not move it.
+ * Containers that clip with overflow-y hidden are reported, not judged: they
+ * offer no scrolling by design.
+ */
+async function auditScrollContainers(t, page, size, root, failures) {
+  const found = await exec(pageScrollContainers, root);
+  if (!found.found) {
+    report(t, {
+      probe: "scroll",
+      page,
+      size,
+      reached: false,
+      reason: "no root",
+    });
+    return;
+  }
+  for (const c of found.containers) {
+    const wheel = c.overflows
+      ? await wheelContainer(c.id)
+      : { moved: null, skipped: "does not overflow" };
+    report(t, {
+      probe: "scroll",
+      page,
+      size,
+      container: c.el,
+      overflowY: c.overflowY,
+      overflows: c.overflows,
+      scrollHeight: c.scrollHeight,
+      clientHeight: c.clientHeight,
+      scrollbarVisible: c.barVisible,
+      scrollbarNumbers: {
+        offsetMinusClient: c.classicWidth,
+        scrollbarWidth: c.scrollbarWidth,
+        webkitDisplay: c.webkitDisplay,
+        webkitWidth: c.webkitWidth,
+      },
+      wheel,
+    });
+    if (!c.overflows || !c.scrollable) continue;
+    const where = `${page} at ${size.join("x")}: ${c.el}`;
+    if (!c.barVisible)
+      failures.push(`${where} overflows with no scrollbar drawn`);
+    if (!wheel.moved)
+      failures.push(
+        `${where} did not scroll by wheel${wheel.error ? ` (${wheel.error})` : ""}`,
+      );
+  }
+}
+
+ux(
+  "UX-21 every overflowing scroll container shows a scrollbar and scrolls by wheel",
+  async (t) => {
+    const failures = [];
+
+    await atSizes(t, "profile", async (size) => {
+      const got = await openRailPage("profile", "section.user-profile-page");
+      if (!got.reached)
+        return report(t, {
+          page: "profile",
+          size,
+          reached: false,
+          reason: got.reason,
+        });
+      await sleep(700);
+      await auditScrollContainers(
+        t,
+        "profile",
+        size,
+        "section.user-profile-page",
+        failures,
+      );
+    });
+
+    await atSizes(t, "ledger", async (size) => {
+      const got = await openRailPage("ledger", "section.ledger-page");
+      if (!got.reached)
+        return report(t, {
+          page: "ledger",
+          size,
+          reached: false,
+          reason: got.reason,
+        });
+      for (const id of [...LEDGER_TABS, ...LEDGER_SETUP]) {
+        const page = `ledger/${id}`;
+        const opened = await openLedgerSection(
+          id,
+          LEDGER_SETUP.includes(id) ? LEDGER_SETUP : null,
+        );
+        if (!opened.reached) {
+          report(t, { page, size, reached: false, reason: opened.reason });
+          continue;
+        }
+        await sleep(700);
+        await auditScrollContainers(
+          t,
+          page,
+          size,
+          "section.ledger-page",
+          failures,
+        );
+      }
+    });
+
+    await open("100");
+    await chooseTab(VIEWS, label("desktop.modelo.view.form"));
+    await atSizes(t, "modelo", async (size) => {
+      await sleep(500);
+      await auditScrollContainers(t, "modelo", size, SECTION, failures);
+    });
+
+    assert.deepEqual(
+      failures,
+      [],
+      `a container with more content than room shows no scrollbar or ignores the wheel: ${failures.join("; ")}`,
+    );
+  },
+);
+
+const TOGGLES = ["side", "details", "placement"];
+
+/** The three pane toggles now: presence, rect, whether inside the window, icons. */
+function pageToggles(names) {
+  const out = {};
+  for (const name of names) {
+    const el = document.querySelector(
+      `section.declarations-workspace [data-pane-toggle="${name}"]`,
+    );
+    if (!el) {
+      out[name] = { present: false };
+      continue;
+    }
+    const b = el.getBoundingClientRect();
+    const drawn = el.getClientRects().length > 0 && b.width > 0 && b.height > 0;
+    out[name] = {
+      present: true,
+      visible:
+        drawn &&
+        b.left >= 0 &&
+        b.top >= 0 &&
+        b.right <= innerWidth &&
+        b.bottom <= innerHeight,
+      rect: [b.left, b.top, b.right, b.bottom].map(Math.round),
+      pressed: el.getAttribute("aria-pressed"),
+      icons: [...el.querySelectorAll("[data-icon]")].map((i) =>
+        i.getAttribute("data-icon"),
+      ),
+    };
+  }
+  return out;
+}
+
+/** Report the toggles after `step` and answer the defects found in them. */
+async function snapshotToggles(t, size, step, extra = {}) {
+  const toggles = await exec(pageToggles, TOGGLES);
+  const vanished = TOGGLES.filter((n) => !toggles[n].present);
+  const outside = TOGGLES.filter(
+    (n) => toggles[n].present && !toggles[n].visible,
+  );
+  const icons = TOGGLES.filter((n) => toggles[n].present).map((n) => [
+    n,
+    toggles[n].icons.join("+"),
+  ]);
+  const repeated = icons
+    .filter(([, icon], at) => icons.some(([, o], i) => i !== at && o === icon))
+    .map(([n, icon]) => `${n}:${icon}`);
+  report(t, {
+    probe: "pane-toggles",
+    size,
+    step,
+    ...extra,
+    toggles,
+    vanished,
+    outside,
+    repeatedIcons: repeated,
+  });
+  const where = `${step} at ${size.join("x")}`;
+  return [
+    ...vanished.map((n) => `${n} toggle vanished after ${where}`),
+    ...outside.map((n) => `${n} toggle outside the window after ${where}`),
+    ...(repeated.length
+      ? [`icons repeated after ${where}: ${repeated.join(", ")}`]
+      : []),
+  ];
+}
+
+ux(
+  "UX-19 the three pane toggles stay visible with their own icons and the stacked line moves",
+  async (t) => {
+    await open("100");
+    await chooseTab(VIEWS, label("desktop.modelo.view.form"));
+    const failures = [];
+    const original = {
+      side: await paneToggleState("side"),
+      details: await paneToggleState("details"),
+      placement: null,
+    };
+    try {
+      await setPaneToggle("details", true);
+      original.placement = await paneToggleState("placement");
+      for (const size of AUDIT_SIZES) {
+        const inner = await setSize(...size);
+        const step = async (name, act) => {
+          let error = null;
+          try {
+            await act();
+          } catch (failure) {
+            error = failure.message;
+            failures.push(`${name} at ${inner.join("x")}: ${failure.message}`);
+          }
+          await sleep(500);
+          failures.push(...(await snapshotToggles(t, inner, name, { error })));
+        };
+        await step("form view", async () => {
+          await chooseTab(VIEWS, label("desktop.modelo.view.form"));
+          await setPaneToggle("side", true);
+          await setPaneToggle("details", true);
+        });
+        await step("side off", () => setPaneToggle("side", false));
+        await step("side on", () => setPaneToggle("side", true));
+        await step("details off", () => setPaneToggle("details", false));
+        await step("details on", () => setPaneToggle("details", true));
+        await step("placement off", () => setPaneToggle("placement", false));
+        await step("placement on", () => setPaneToggle("placement", true));
+        await step("other view and back", async () => {
+          await chooseTab(VIEWS, label("workspace.modelo.step.review"));
+          await chooseTab(VIEWS, label("desktop.modelo.view.form"));
+        });
+
+        // The stacked line: keyboard Home and End, pane heights before and after.
+        try {
+          await setPaneToggle("details", true);
+          await arrangeDetails("bottom");
+          const start = await splitNow();
+          await keyLine("Home");
+          const least = await splitNow();
+          await keyLine("End");
+          const most = await splitNow();
+          const moved = extent(most) > extent(least);
+          report(t, {
+            probe: "stacked-separator",
+            size: inner,
+            placement: most.placement,
+            start: extent(start),
+            least: extent(least),
+            most: extent(most),
+            moved,
+            orientation: most.orientation,
+          });
+          if (!moved)
+            failures.push(
+              `the stacked separator does not move at ${inner.join("x")} ` +
+                `(${extent(least)} -> ${extent(most)})`,
+            );
+        } catch (error) {
+          failures.push(
+            `stacked separator at ${inner.join("x")}: ${error.message}`,
+          );
+          report(t, {
+            probe: "stacked-separator",
+            size: inner,
+            reached: false,
+            reason: error.message,
+          });
+        }
+      }
+    } finally {
+      await setSize(...DEFAULT_SIZE);
+      await setPaneToggle("details", true);
+      if (original.placement !== null)
+        await setPaneToggle("placement", original.placement === "true");
+      if (original.side !== null)
+        await setPaneToggle("side", original.side === "true");
+      if (original.details !== null)
+        await setPaneToggle("details", original.details === "true");
+    }
+    assert.deepEqual(
+      failures,
+      [],
+      `the pane toggles fail a person: ${failures.join("; ")}`,
+    );
+  },
+);

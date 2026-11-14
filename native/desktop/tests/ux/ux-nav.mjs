@@ -320,3 +320,140 @@ export async function setPaneToggle(pane, on) {
   state = await paneToggleState(pane);
   return state;
 }
+
+/**
+ * Every scroll container inside the shown `rootSel` (the root included): an
+ * element whose overflow-y is auto or scroll, or that overflows its box with
+ * overflow-y not visible. Each one is tagged `data-ux-scroll=<n>` so later
+ * calls can find it again. Answers the numbers behind each container's
+ * overflow and scrollbar; it judges nothing.
+ */
+export function pageScrollContainers(rootSel) {
+  for (const old of document.querySelectorAll("[data-ux-scroll]"))
+    old.removeAttribute("data-ux-scroll");
+  const root = [...document.querySelectorAll(rootSel)].find(
+    (e) => e.getClientRects().length > 0,
+  );
+  if (!root) return { found: false, containers: [] };
+  const px = (value) => parseFloat(value) || 0;
+  const describe = (el) => {
+    const data = [...el.attributes]
+      .filter((a) => a.name.startsWith("data-") && a.name !== "data-ux-scroll")
+      .slice(0, 2)
+      .map((a) => `[${a.name}${a.value ? `=${a.value.slice(0, 24)}` : ""}]`)
+      .join("");
+    const aria = el.getAttribute("aria-label");
+    const cls =
+      typeof el.className === "string" && el.className
+        ? "." + el.className.split(/\s+/).filter(Boolean).slice(0, 2).join(".")
+        : "";
+    return `${el.tagName.toLowerCase()}${el.id ? "#" + el.id : ""}${cls}${data}${
+      aria ? `[aria-label=${aria.slice(0, 30)}]` : ""
+    }`;
+  };
+  const containers = [];
+  for (const el of [root, ...root.querySelectorAll("*")]) {
+    if (!el.getClientRects().length || el.clientHeight <= 0) continue;
+    const cs = getComputedStyle(el);
+    const scrolling = cs.overflowY === "auto" || cs.overflowY === "scroll";
+    const overflows = el.scrollHeight > el.clientHeight + 1;
+    if (!scrolling && !(overflows && cs.overflowY !== "visible")) continue;
+    const id = String(containers.length);
+    el.setAttribute("data-ux-scroll", id);
+    const classicWidth = Math.round(
+      el.offsetWidth -
+        el.clientWidth -
+        px(cs.borderLeftWidth) -
+        px(cs.borderRightWidth),
+    );
+    const bar = getComputedStyle(el, "::-webkit-scrollbar");
+    containers.push({
+      id,
+      el: describe(el),
+      overflowY: cs.overflowY,
+      scrollable: scrolling,
+      overflows,
+      scrollHeight: el.scrollHeight,
+      clientHeight: el.clientHeight,
+      scrollTop: el.scrollTop,
+      classicWidth,
+      scrollbarWidth: cs.scrollbarWidth ?? null,
+      webkitDisplay: bar.display,
+      webkitWidth: bar.width,
+      barVisible: classicWidth > 0,
+    });
+    if (containers.length >= 40) break;
+  }
+  return { found: true, containers };
+}
+
+/** Where to put a wheel over container `id`, and its scrollTop before. */
+export function pageWheelTarget(id) {
+  const el = document.querySelector(`[data-ux-scroll="${id}"]`);
+  if (!el) return null;
+  const box = () => {
+    const b = el.getBoundingClientRect();
+    return {
+      left: Math.max(0, b.left),
+      top: Math.max(0, b.top),
+      right: Math.min(innerWidth, b.right),
+      bottom: Math.min(innerHeight, b.bottom),
+    };
+  };
+  let b = box();
+  if (b.right - b.left < 4 || b.bottom - b.top < 4) {
+    el.scrollIntoView({ block: "nearest" });
+    b = box();
+  }
+  const x = Math.floor((b.left + b.right) / 2);
+  const y = Math.floor((b.top + b.bottom) / 2);
+  const hit = document.elementFromPoint(x, y);
+  const max = el.scrollHeight - el.clientHeight;
+  return {
+    x,
+    y,
+    before: el.scrollTop,
+    // A container already at its end is wheeled the other way.
+    direction: el.scrollTop >= max - 1 ? -1 : 1,
+    pointInside: !!hit && el.contains(hit),
+    pointInWindow: b.right - b.left >= 4 && b.bottom - b.top >= 4,
+  };
+}
+
+/** scrollTop of container `id` now; restores it to `restore` when given. */
+export function pageWheelResult(id, restore) {
+  const el = document.querySelector(`[data-ux-scroll="${id}"]`);
+  if (!el) return null;
+  const after = el.scrollTop;
+  if (restore !== undefined) el.scrollTop = restore;
+  return after;
+}
+
+/**
+ * Wheel over the centre of container `id` through WebDriver actions and
+ * answer whether its scrollTop moved. The scrollTop is restored afterwards.
+ */
+export async function wheelContainer(id, deltaY = 300) {
+  const target = await exec(pageWheelTarget, id);
+  if (!target) return { moved: false, error: "container gone" };
+  if (!target.pointInWindow)
+    return { ...target, moved: false, error: "container not inside window" };
+  let error = null;
+  try {
+    await win.browser
+      .action("wheel")
+      .scroll({
+        x: target.x,
+        y: target.y,
+        deltaX: 0,
+        deltaY: deltaY * target.direction,
+        duration: 100,
+      })
+      .perform();
+  } catch (failure) {
+    error = `wheel action failed: ${failure.message}`;
+  }
+  await sleep(400);
+  const after = await exec(pageWheelResult, id, target.before);
+  return { ...target, after, moved: after !== target.before, error };
+}
