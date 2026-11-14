@@ -16,6 +16,8 @@ continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/0
 number = "23"
 section = ["490_01"]
 data_type = "ratio"
+# The design prints [23] as the territory share at 3 ent + 2 dec, completed to "100,00" with [24] (nota 2), a percentage.
+constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-490-2023"] }
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2023-y-siguientes".casillas]]
@@ -25,6 +27,8 @@ continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/0
 number = "212"
 section = ["490_03"]
 data_type = "ratio"
+# The design prints [212] as "% período objeto de regularización" at 3 ent + 2 dec, a percentage.
+constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-490-2023"] }
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2023-y-siguientes".casillas]]
@@ -34,6 +38,8 @@ continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/0
 number = "233"
 section = ["490_03"]
 data_type = "ratio"
+# The design prints [233] as "% período objeto de regularización" at 3 ent + 2 dec, a percentage.
+constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-490-2023"] }
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2023-y-siguientes".casillas]]
@@ -43,6 +49,8 @@ continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/0
 number = "254"
 section = ["490_03"]
 data_type = "ratio"
+# The design prints [254] as "% período objeto de regularización" at 3 ent + 2 dec, a percentage.
+constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-490-2023"] }
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2023-y-siguientes".casillas]]
@@ -52,6 +60,8 @@ continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/0
 number = "275"
 section = ["490_03"]
 data_type = "ratio"
+# The design prints [275] as "% período objeto de regularización" at 3 ent + 2 dec, a percentage.
+constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-490-2023"] }
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2023-y-siguientes".casillas]]
@@ -61,6 +71,8 @@ continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/0
 number = "213"
 section = ["490_03"]
 data_type = "ratio"
+# The design prints [213] as "% con regularización incluida" at 3 ent + 2 dec, a percentage.
+constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-490-2023"] }
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2023-y-siguientes".casillas]]
@@ -70,6 +82,8 @@ continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/0
 number = "234"
 section = ["490_03"]
 data_type = "ratio"
+# The design prints [234] as "% con regularización incluida" at 3 ent + 2 dec, a percentage.
+constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-490-2023"] }
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2023-y-siguientes".casillas]]
@@ -79,6 +93,8 @@ continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/0
 number = "255"
 section = ["490_03"]
 data_type = "ratio"
+# The design prints [255] as "% con regularización incluida" at 3 ent + 2 dec, a percentage.
+constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-490-2023"] }
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2023-y-siguientes".casillas]]
@@ -88,6 +104,8 @@ continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/0
 number = "276"
 section = ["490_03"]
 data_type = "ratio"
+# The design prints [276] as "% con regularización incluida" at 3 ent + 2 dec, a percentage.
+constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-490-2023"] }
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2023-y-siguientes".casillas]]
@@ -97,6 +115,8 @@ continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/0
 number = "44"
 section = ["490_02"]
 data_type = "ratio"
+# The design prints [44] as "% período objeto de regularización" at 3 ent + 2 dec, a percentage.
+constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-490-2023"] }
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2023-y-siguientes".casillas]]
@@ -106,6 +126,8 @@ continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/0
 number = "65"
 section = ["490_02"]
 data_type = "ratio"
+# The design prints [65] as "% período objeto de regularización" at 3 ent + 2 dec, a percentage.
+constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-490-2023"] }
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2023-y-siguientes".casillas]]
@@ -115,6 +137,8 @@ continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/0
 number = "86"
 section = ["490_02"]
 data_type = "ratio"
+# The design prints [86] as "% período objeto de regularización" at 3 ent + 2 dec, a percentage.
+constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-490-2023"] }
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2023-y-siguientes".casillas]]
@@ -124,6 +148,8 @@ continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/0
 number = "107"
 section = ["490_02"]
 data_type = "ratio"
+# The design prints [107] as "% período objeto de regularización" at 3 ent + 2 dec, a percentage.
+constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-490-2023"] }
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2023-y-siguientes".casillas]]
@@ -133,6 +159,8 @@ continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/0
 number = "45"
 section = ["490_02"]
 data_type = "ratio"
+# The design prints [45] as "% con regularización incluida" at 3 ent + 2 dec, a percentage.
+constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-490-2023"] }
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2023-y-siguientes".casillas]]
@@ -142,6 +170,8 @@ continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/0
 number = "66"
 section = ["490_02"]
 data_type = "ratio"
+# The design prints [66] as "% con regularización incluida" at 3 ent + 2 dec, a percentage.
+constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-490-2023"] }
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2023-y-siguientes".casillas]]
@@ -151,6 +181,8 @@ continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/0
 number = "87"
 section = ["490_02"]
 data_type = "ratio"
+# The design prints [87] as "% con regularización incluida" at 3 ent + 2 dec, a percentage.
+constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-490-2023"] }
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2023-y-siguientes".casillas]]
@@ -160,6 +192,8 @@ continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/0
 number = "108"
 section = ["490_02"]
 data_type = "ratio"
+# The design prints [108] as "% con regularización incluida" at 3 ent + 2 dec, a percentage.
+constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-490-2023"] }
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2023-y-siguientes".casillas]]
@@ -169,6 +203,8 @@ continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/0
 number = "128"
 section = ["490_02"]
 data_type = "ratio"
+# The design prints [128] as "% período objeto de regularización" at 3 ent + 2 dec, a percentage.
+constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-490-2023"] }
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2023-y-siguientes".casillas]]
@@ -178,6 +214,8 @@ continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/0
 number = "149"
 section = ["490_02"]
 data_type = "ratio"
+# The design prints [149] as "% período objeto de regularización" at 3 ent + 2 dec, a percentage.
+constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-490-2023"] }
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2023-y-siguientes".casillas]]
@@ -187,6 +225,8 @@ continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/0
 number = "170"
 section = ["490_02"]
 data_type = "ratio"
+# The design prints [170] as "% período objeto de regularización" at 3 ent + 2 dec, a percentage.
+constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-490-2023"] }
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2023-y-siguientes".casillas]]
@@ -196,6 +236,8 @@ continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/0
 number = "191"
 section = ["490_02"]
 data_type = "ratio"
+# The design prints [191] as "% período objeto de regularización" at 3 ent + 2 dec, a percentage.
+constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-490-2023"] }
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2023-y-siguientes".casillas]]
@@ -205,6 +247,8 @@ continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/0
 number = "129"
 section = ["490_02"]
 data_type = "ratio"
+# The design prints [129] as "% con regularización incluida" at 3 ent + 2 dec, a percentage.
+constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-490-2023"] }
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2023-y-siguientes".casillas]]
@@ -214,6 +258,8 @@ continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/0
 number = "150"
 section = ["490_02"]
 data_type = "ratio"
+# The design prints [150] as "% con regularización incluida" at 3 ent + 2 dec, a percentage.
+constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-490-2023"] }
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2023-y-siguientes".casillas]]
@@ -223,6 +269,8 @@ continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/0
 number = "171"
 section = ["490_02"]
 data_type = "ratio"
+# The design prints [171] as "% con regularización incluida" at 3 ent + 2 dec, a percentage.
+constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-490-2023"] }
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2023-y-siguientes".casillas]]
@@ -232,6 +280,8 @@ continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/0
 number = "192"
 section = ["490_02"]
 data_type = "ratio"
+# The design prints [192] as "% con regularización incluida" at 3 ent + 2 dec, a percentage.
+constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-490-2023"] }
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2023-y-siguientes".casillas]]
@@ -241,6 +291,8 @@ continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/0
 number = "296"
 section = ["490_03"]
 data_type = "ratio"
+# The design prints [296] as "% período objeto de regularización" at 3 ent + 2 dec, a percentage.
+constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-490-2023"] }
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2023-y-siguientes".casillas]]
@@ -250,6 +302,8 @@ continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/0
 number = "317"
 section = ["490_03"]
 data_type = "ratio"
+# The design prints [317] as "% período objeto de regularización" at 3 ent + 2 dec, a percentage.
+constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-490-2023"] }
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2023-y-siguientes".casillas]]
@@ -259,6 +313,8 @@ continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/0
 number = "338"
 section = ["490_03"]
 data_type = "ratio"
+# The design prints [338] as "% período objeto de regularización" at 3 ent + 2 dec, a percentage.
+constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-490-2023"] }
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2023-y-siguientes".casillas]]
@@ -268,6 +324,8 @@ continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/0
 number = "359"
 section = ["490_03"]
 data_type = "ratio"
+# The design prints [359] as "% período objeto de regularización" at 3 ent + 2 dec, a percentage.
+constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-490-2023"] }
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2023-y-siguientes".casillas]]
@@ -277,6 +335,8 @@ continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/0
 number = "297"
 section = ["490_03"]
 data_type = "ratio"
+# The design prints [297] as "% con regularización incluida" at 3 ent + 2 dec, a percentage.
+constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-490-2023"] }
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2023-y-siguientes".casillas]]
@@ -286,6 +346,8 @@ continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/0
 number = "318"
 section = ["490_03"]
 data_type = "ratio"
+# The design prints [318] as "% con regularización incluida" at 3 ent + 2 dec, a percentage.
+constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-490-2023"] }
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2023-y-siguientes".casillas]]
@@ -295,6 +357,8 @@ continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/0
 number = "339"
 section = ["490_03"]
 data_type = "ratio"
+# The design prints [339] as "% con regularización incluida" at 3 ent + 2 dec, a percentage.
+constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-490-2023"] }
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2023-y-siguientes".casillas]]
@@ -304,4 +368,6 @@ continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/0
 number = "360"
 section = ["490_03"]
 data_type = "ratio"
+# The design prints [360] as "% con regularización incluida" at 3 ent + 2 dec, a percentage.
+constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-490-2023"] }
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]

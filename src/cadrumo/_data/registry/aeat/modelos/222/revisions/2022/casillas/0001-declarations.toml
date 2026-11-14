@@ -205,6 +205,8 @@ continuidad_id = "is-pf-grupo-mod-40-3-lis-b-1-caso-general-porcentaje"
 number = "17"
 section = ["liquidacion"]
 data_type = "ratio"
+# The design prints [17] as "B1 - Caso general. Porcentaje" at 3 enteros + 2 decimales, a percentage.
+constraints = { min_value = "0", max_value = "100" }
 semantic_role = "is_pf_grupo_mod_40_3_lis_b_1_caso_general_porcentaje"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 
@@ -292,6 +294,8 @@ continuidad_id = "is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-porcentaje-1"
 number = "21"
 section = ["liquidacion"]
 data_type = "ratio"
+# The design prints [21] as "B2 - Casos específicos. Porcentaje" at 3 enteros + 2 decimales, a percentage.
+constraints = { min_value = "0", max_value = "100" }
 semantic_role = "is_pf_grupo_mod_40_3_lis_b_2_casos_especificos_porcentaje_1"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Mod. 40.3 LIS casos especificos declares TWO parallel rate tiers, each with its own base, porcentaje and importe, plus resultado previo and resultado. A group may be taxed at both, so each is its own box. The 2025 design adds tiers 3 and 4 ([61]-[66])."
@@ -327,6 +331,8 @@ continuidad_id = "is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-porcentaje-2"
 number = "24"
 section = ["liquidacion"]
 data_type = "ratio"
+# The design prints [24] as "B2 - Casos específicos. Porcentaje" at 3 enteros + 2 decimales, a percentage.
+constraints = { min_value = "0", max_value = "100" }
 semantic_role = "is_pf_grupo_mod_40_3_lis_b_2_casos_especificos_porcentaje_2"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Mod. 40.3 LIS casos especificos declares TWO parallel rate tiers, each with its own base, porcentaje and importe, plus resultado previo and resultado. A group may be taxed at both, so each is its own box. The 2025 design adds tiers 3 and 4 ([61]-[66])."
@@ -426,6 +432,8 @@ continuidad_id = "is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-volumen-de-oper
 number = "29"
 section = ["liquidacion"]
 data_type = "ratio"
+# The design prints [29] as "Volumen de operaciones en Territorio Común (%)" at 3 enteros + 2 decimales, a percentage.
+constraints = { min_value = "0", max_value = "100" }
 semantic_role = "is_pf_grupo_mod_40_3_lis_b_2_casos_especificos_volumen_de_operaciones_en_territorio_comun"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 
