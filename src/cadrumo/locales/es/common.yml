@@ -7956,44 +7956,12 @@ tui:
         confirming: Revisa los datos de arriba y confirma para guardar el apunte.
         created: 'Añadido: {entry}. Estado de revisión: {status}.'
         edit_again: Volver a editar
-        field:
-          accrual_date: Fecha de devengo en Renta (AAAA-MM-DD)
-          amount: Importe, sin signo
-          art_104_tres_exclusion: Exclusión del art. 104.Tres
-          booked_date: Fecha de operación (AAAA-MM-DD)
-          business_classification: Clasificación
-          business_pct: Parte afecta a la actividad (0 a 1)
-          category_id: Categoría de gasto
-          counterparty: Contraparte
-          counterparty_country: País de la contraparte (dos letras)
-          counterparty_identification_state: Estado de identificación IVA de la contraparte
-          currency: Moneda (EUR si se deja en blanco)
-          deduction_fact_kind: Hecho de deducción de IVA
-          description: Concepto
-          direction: Sentido
-          input_classification: Clasificación de entrada para prorrata
-          investment_asset_id: Identificador del bien de inversión
-          irpf_category: Categoría de IRPF
-          iva_amount: Cuota de IVA
-          iva_category: Categoría de IVA
-          iva_rate: Tipo de IVA (por ejemplo 0.21)
-          notes: Notas
-          operation_date: Fecha de la operación (AAAA-MM-DD)
-          own_account_id: Cuenta propia (acc-01)
-          prorrata_reference: Referencia de prorrata
-          prorrata_sector: Sector de prorrata
-          purchase_invoice_evidence_id: Identificador del justificante de compra
-          recargo_amount: Importe del recargo de equivalencia
-          source_jurisdiction: Jurisdicción de origen (código de país)
-          taxable_base: Base imponible
-          usage_ratio_id: Identificador del porcentaje de uso
-          value_date: Fecha valor (AAAA-MM-DD)
         input_classification_inert: La clasificación de entrada no afecta a la prorrata
           de este apunte.
         open_in_browse: Abrirlo en Explorar apuntes
         optional: Datos fiscales (opcional)
-        prompt: Introduce los cuatro datos que necesita todo apunte. Abre los datos
-          fiscales solo si los tienes.
+        prompt: Introduce los datos que necesita todo apunte. Abre los datos fiscales
+          solo si los tienes.
         refused: 'El libro ha rechazado este apunte:'
         review: Revisar apunte
         sector_unmatched: El sector de prorrata no coincide con ningún sector de tu

@@ -78,6 +78,10 @@ _M111_PROFILE_FACTS = persona_facts_beneath(
         UserProfileFact(path="activities.description", value="withholding employer activity"),
         UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
         UserProfileFact(path="withholding.colegio_concertado", value=False),
+        # A filer stated as neither a gran empresa nor a large public administration files quarterly.
+        UserProfileFact(path="withholding.has_employees", value=True),
+        UserProfileFact(path="censo.large_company", value=False),
+        UserProfileFact(path="censo.public_administration_budget_gt_6000000", value=False),
     )
 )
 

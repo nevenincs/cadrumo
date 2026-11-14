@@ -7913,42 +7913,10 @@ tui:
         confirming: Ellenőrizd a fenti adatokat, majd erősítsd meg a mentéshez.
         created: 'Hozzáadva: {entry}. Átnézési állapot: {status}.'
         edit_again: Szerkesztés újra
-        field:
-          accrual_date: IRPF szerinti elszámolás dátuma (ÉÉÉÉ-HH-NN)
-          amount: Összeg, előjel nélkül
-          art_104_tres_exclusion: 104.Tres cikk szerinti kizárás
-          booked_date: Könyvelési dátum (ÉÉÉÉ-HH-NN)
-          business_classification: Besorolás
-          business_pct: Vállalkozási arány (0 és 1 között)
-          category_id: Költségkategória
-          counterparty: Partner
-          counterparty_country: A partner országa (két betű)
-          counterparty_identification_state: A partner IVA-azonosító tagállama
-          currency: Pénznem (üresen hagyva EUR)
-          deduction_fact_kind: IVA-levonási tény
-          description: Leírás
-          direction: Irány
-          input_classification: Bemeneti besorolás a prorratához
-          investment_asset_id: Beruházási javak azonosítója
-          irpf_category: IRPF-kategória
-          iva_amount: IVA összege
-          iva_category: IVA-kategória
-          iva_rate: IVA-kulcs (például 0.21)
-          notes: Megjegyzések
-          operation_date: Ügylet dátuma (ÉÉÉÉ-HH-NN)
-          own_account_id: Saját számla (acc-01)
-          prorrata_reference: Prorrata hivatkozás
-          prorrata_sector: Prorrata ágazat
-          purchase_invoice_evidence_id: Beszerzési számla bizonylatazonosítója
-          recargo_amount: Recargo de equivalencia összege
-          source_jurisdiction: Forrás joghatóság (országkód)
-          taxable_base: Adóalap
-          usage_ratio_id: Használati arány azonosítója
-          value_date: Értéknap (ÉÉÉÉ-HH-NN)
         input_classification_inert: A bemeneti besorolás nem hat a tétel prorratájára.
         open_in_browse: Megnyitás a Tételek böngészésében
         optional: Adóadatok (nem kötelező)
-        prompt: Add meg a négy adatot, amely minden tételhez kell. Az adóadatokat
+        prompt: Add meg az adatokat, amelyek minden tételhez kellenek. Az adóadatokat
           csak akkor nyisd meg, ha megvannak.
         refused: 'A napló elutasította a tételt:'
         review: Tétel áttekintése
