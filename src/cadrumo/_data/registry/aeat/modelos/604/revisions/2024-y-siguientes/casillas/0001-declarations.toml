@@ -106,6 +106,8 @@ continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_604/files/0
 number = "16"
 section = ["territorio", "alava"]
 data_type = "ratio"
+# The design prints [16] as "% atribuible. Álava" at 3 enteros + 4 decimales, a percentage.
+constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-604-2024"] }
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2024-y-siguientes".casillas]]
@@ -156,6 +158,8 @@ continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_604/files/0
 number = "21"
 section = ["territorio", "guipuzcoa"]
 data_type = "ratio"
+# The design prints [21] as "% atribuible. Guipúzcoa" at 3 enteros + 4 decimales, a percentage.
+constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-604-2024"] }
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2024-y-siguientes".casillas]]
@@ -206,6 +210,8 @@ continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_604/files/0
 number = "26"
 section = ["territorio", "vizcaya"]
 data_type = "ratio"
+# The design prints [26] as "% atribuible. Vizcaya" at 3 enteros + 4 decimales, a percentage.
+constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-604-2024"] }
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2024-y-siguientes".casillas]]
@@ -256,6 +262,8 @@ continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_604/files/0
 number = "31"
 section = ["territorio", "navarra"]
 data_type = "ratio"
+# The design prints [31] as "% atribuible. Navarra" at 3 enteros + 4 decimales, a percentage.
+constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-604-2024"] }
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2024-y-siguientes".casillas]]
@@ -306,6 +314,8 @@ continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_604/files/0
 number = "36"
 section = ["territorio", "estado"]
 data_type = "ratio"
+# The design prints [36] as "% atribuible. Estado" at 3 enteros + 4 decimales, a percentage.
+constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-604-2024"] }
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 
 [[revisions."2024-y-siguientes".casillas]]

@@ -330,6 +330,8 @@ id = "decl.rg-tipo-02"
 number = "02"
 section = ["declarante","liquidacion"]
 data_type = "ratio"
+# The design prints [02] as "Liquidación - Régimen General - Tipo %" in a five-digit field, a percentage.
+constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-309-2004"] }
 semantic_role = "rg_tipo_02"
 continuidad_id = "rg-tipo-02"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
@@ -354,6 +356,8 @@ id = "decl.rg-tipo-05"
 number = "05"
 section = ["declarante","liquidacion"]
 data_type = "ratio"
+# The design prints [05] as "Liquidación - Régimen General - Tipo %" in a five-digit field, a percentage.
+constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-309-2004"] }
 semantic_role = "rg_tipo_05"
 continuidad_id = "rg-tipo-05"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
@@ -378,6 +382,8 @@ id = "decl.rg-tipo-08"
 number = "08"
 section = ["declarante","liquidacion"]
 data_type = "ratio"
+# The design prints [08] as "Liquidación - Régimen General - Tipo %" in a five-digit field, a percentage.
+constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-309-2004"] }
 semantic_role = "rg_tipo_08"
 continuidad_id = "rg-tipo-08"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
@@ -402,6 +408,8 @@ id = "decl.re-tipo-11"
 number = "11"
 section = ["declarante","liquidacion"]
 data_type = "ratio"
+# The design prints [11] as "Liquidación - Recargo equivalencia - Tipo %" in a five-digit field, a percentage.
+constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-309-2004"] }
 semantic_role = "re_tipo_11"
 continuidad_id = "re-tipo-11"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
@@ -426,6 +434,8 @@ id = "decl.re-tipo-14"
 number = "14"
 section = ["declarante","liquidacion"]
 data_type = "ratio"
+# The design prints [14] as "Liquidación - Recargo equivalencia - Tipo %" in a five-digit field, a percentage.
+constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-309-2004"] }
 semantic_role = "re_tipo_14"
 continuidad_id = "re-tipo-14"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
@@ -450,6 +460,8 @@ id = "decl.re-tipo-17"
 number = "17"
 section = ["declarante","liquidacion"]
 data_type = "ratio"
+# The design prints [17] as "Liquidación - Recargo equivalencia - Tipo %" in a five-digit field, a percentage.
+constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-309-2004"] }
 semantic_role = "re_tipo_17"
 continuidad_id = "re-tipo-17"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
@@ -474,6 +486,8 @@ id = "decl.re-tipo-20"
 number = "20"
 section = ["declarante","liquidacion"]
 data_type = "ratio"
+# The design prints [20] as "Liquidación - Recargo equivalencia - Tipo %" in a five-digit field, a percentage.
+constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-309-2004"] }
 semantic_role = "re_tipo_20"
 continuidad_id = "re-tipo-20"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]

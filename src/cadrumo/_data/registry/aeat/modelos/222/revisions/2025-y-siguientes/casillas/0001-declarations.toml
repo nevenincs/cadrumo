@@ -41,6 +41,8 @@ continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_222/files/0
 number = "62"
 section = ["liquidacion"]
 data_type = "ratio"
+# The design prints [62] as "B.2) - Casos específicos. Porcentaje 3" at 3 enteros + 2 decimales, a percentage.
+constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-222-2025"] }
 semantic_role = "is_pf_grupo_mod_40_3_lis_b_2_casos_especificos_porcentaje_3"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Mod. 40.3 LIS casos especificos declares four parallel rate tiers, each with its own base, porcentaje and importe, plus a resultado previo and a resultado. A group may be taxed at several rates, so each is its own box and appears once by construction."
@@ -78,6 +80,8 @@ continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_222/files/0
 number = "65"
 section = ["liquidacion"]
 data_type = "ratio"
+# The design prints [65] as "B.2) - Casos específicos. Porcentaje 4" at 3 enteros + 2 decimales, a percentage.
+constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-222-2025"] }
 semantic_role = "is_pf_grupo_mod_40_3_lis_b_2_casos_especificos_porcentaje_4"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Mod. 40.3 LIS casos especificos declares four parallel rate tiers, each with its own base, porcentaje and importe, plus a resultado previo and a resultado. A group may be taxed at several rates, so each is its own box and appears once by construction."
