@@ -8,7 +8,9 @@ import { label } from "../support/strings";
 // the keyboard. Whoever never chooses gets the arrangement the window's room
 // suggests. Both are the viewer's, kept in the window's own storage. However
 // the window is drawn, the form keeps its least room and a box's label stays
-// readable: nothing is clipped.
+// readable: nothing is clipped. A window too short to stack the details under
+// the form's least room holds them beside it, with the control held pressed
+// (modelo-split-window.spec.ts holds every pane inside the window).
 
 const SIZES = [
   { width: 1441, height: 923 },
@@ -166,15 +168,22 @@ async function resizeEitherWay(target: Page, placement: Placement) {
   await expect.poll(() => sizeOf(target, placement)).toBeCloseTo(start, 0);
 }
 
-async function choose(target: Page, placement: Placement) {
+const held = async (target: Page) =>
+  (await toggle(target, "placement").getAttribute("aria-disabled")) === "true";
+
+/** Presses the arrangement control for `placement`; a held control keeps
+ * the details beside. Answers the arrangement drawn. */
+async function choose(target: Page, placement: Placement): Promise<Placement> {
   const control = toggle(target, "placement");
+  const drawn: Placement = (await held(target)) ? "side" : placement;
   await control.focus();
   await target.keyboard.press("Enter");
-  await expect(area(target)).toHaveAttribute("data-details", placement);
+  await expect(area(target)).toHaveAttribute("data-details", drawn);
   await expect(control).toHaveAttribute(
     "aria-pressed",
-    String(placement === "side"),
+    String(drawn === "side"),
   );
+  return drawn;
 }
 
 for (const size of SIZES) {
@@ -207,7 +216,8 @@ for (const size of SIZES) {
       await expectFloors(target, first);
       await resizeEitherWay(target, first);
       const other: Placement = first === "side" ? "bottom" : "side";
-      await choose(target, other);
+      const drawn = await choose(target, other);
+      if (drawn === first) return;
       await expectFloors(target, other);
       await resizeEitherWay(target, other);
       await choose(target, first);
@@ -223,6 +233,12 @@ for (const size of SIZES) {
     await showPane(target, "details", true);
     const first = await placementOf(target);
     const other: Placement = first === "side" ? "bottom" : "side";
+    if (await held(target)) {
+      // Too short to stack: the details stay beside whatever is pressed.
+      expect(first).toBe("side");
+      expect(await choose(target, other)).toBe("side");
+      return;
+    }
     await choose(target, other);
     await line(target).focus();
     await target.keyboard.press("Home");

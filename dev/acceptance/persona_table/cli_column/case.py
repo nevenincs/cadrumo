@@ -10,9 +10,9 @@ from __future__ import annotations
 import argparse
 import json
 import os
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from contextlib import ExitStack
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from functools import cache
 from pathlib import Path
 
@@ -40,7 +40,17 @@ from .driver import (
 from .hygiene import Redactor, remove_secret_bearing
 from .intake import LineWriter, Outcome, persona_line
 from .row_form import form_leaf_present
-from .runtime import RuntimeSetupError, e2e_parent, remove_snapshot, run_world, served_root, teardown_root
+from .runtime import (
+    SIGN_OUT_COMMAND,
+    CliRunner,
+    RuntimeSetupError,
+    SignOut,
+    e2e_parent,
+    remove_snapshot,
+    run_world,
+    served_root,
+    teardown_root,
+)
 from .world_report import ReturnKey, RowPlan, WorldReport
 
 NOT_DRIVEN = "not driven"
@@ -236,24 +246,54 @@ def drive_case(
     selection = select_rows(report, modelos=spec.modelos, periods=spec.periods, keys=spec.keys)
     served_log = place.log_dir / "runtime.stderr.log"
     with served_root(template, storage, spec.authority, PERSONA_PROFILE_CREDENTIAL, served_log) as runner:
-        loads, why, profile = profile_check(runner)
-        if not loads or profile is None:
-            return _not_loaded(spec, writer, why, log)
-        reason = seeding_reason(report, profile, published, selection)
-        writer.write(persona_line(tree=spec.tree, persona=spec.persona, loads=True, reason=reason, log=log))
-        exports = place.root / _EXPORTS
-        exports.mkdir()
-        case = build_case(
-            spec,
-            report=report,
-            runner=bind_profile(runner, profile),
-            exports=exports,
-            writer=writer,
-            log=log,
-            trace=_Trace(place.log_dir / "case.log", redactor),
-            done=done,
-        )
-        return run_case(case, selection)
+        summary = _drive_served(spec, report, runner, writer, redactor, place, (published, selection), done)
+    return with_sign_out_findings(summary, runner.sign_outs, _Trace(place.log_dir / "case.log", redactor))
+
+
+def _drive_served(
+    spec: CaseSpec,
+    report: WorldReport,
+    runner: CliRunner,
+    writer: LineWriter,
+    redactor: Redactor,
+    place: CasePlace,
+    chosen: tuple[str, Selection],
+    done: frozenset[ReturnKey],
+) -> CaseSummary:
+    """Check that the served runtime holds the world's profile, then drive the selected returns on it."""
+    published, selection = chosen
+    log = str(place.log_dir / "case.log")
+    loads, why, profile = profile_check(runner)
+    if not loads or profile is None:
+        return _not_loaded(spec, writer, why, log)
+    reason = seeding_reason(report, profile, published, selection)
+    writer.write(persona_line(tree=spec.tree, persona=spec.persona, loads=True, reason=reason, log=log))
+    exports = place.root / _EXPORTS
+    exports.mkdir()
+    case = build_case(
+        spec,
+        report=report,
+        runner=bind_profile(runner, profile),
+        exports=exports,
+        writer=writer,
+        log=log,
+        trace=_Trace(place.log_dir / "case.log", redactor),
+        done=done,
+    )
+    return run_case(case, selection)
+
+
+def with_sign_out_findings(summary: CaseSummary, sign_outs: Sequence[SignOut], trace: Trace) -> CaseSummary:
+    """``summary`` with a note for each sign-out that failed; every sign-out is written to the case log.
+
+    A failed sign-out never changes the case's returns or its stop: it is only reported.
+    """
+    findings: list[str] = []
+    for sign_out in sign_outs:
+        trace(" ".join(SIGN_OUT_COMMAND), sign_out.outcome)
+        if (finding := sign_out.finding) is not None:
+            findings.append(finding)
+    return replace(summary, notes=(*summary.notes, *findings)) if findings else summary
 
 
 def finish_case(place: CasePlace, redactor: Redactor, *, keep_root: bool, parent: Path | None = None) -> list[str]:

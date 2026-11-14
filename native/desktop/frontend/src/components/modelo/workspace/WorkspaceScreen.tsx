@@ -44,6 +44,7 @@ import type {
 import { usePanePreference } from "../../../shell/panePreference";
 import type { WindowPlace } from "../../../shell/refusal";
 import { useStrings, type Translate } from "../../../shell/strings";
+import { keptRead, type KeptWorkspaceRead } from "./keptRead";
 import type { LeaveGuard } from "../../ledger/editing/LedgerEditing";
 import { Details, type OpenableSurface } from "../details/Details";
 import { TodoRail } from "../details/TodoRail";
@@ -1259,6 +1260,11 @@ const opensFromForm = (place: WindowPlace) =>
  * page's language, mounts the form view, the details, the dialogs and the
  * views into the workspace, and reads the form again after anything that
  * may have changed it. The form and staged edits live in memory only.
+ *
+ * Coming back to a declaration put away draws its last read at once, on the
+ * view the window holds, and reads it again behind it: the person returns
+ * to the form as they left it rather than to an empty pane while a large
+ * read (a Modelo 100's) arrives.
  */
 export function WorkspaceScreen({
   port,
@@ -1281,11 +1287,14 @@ export function WorkspaceScreen({
   holds: suppliedHolds,
   profileCompanions,
   borrador,
+  kept,
 }: {
   port: ModeloPort;
   workUnitId: string;
   language: OutputLanguage;
   locale: string;
+  /** Where the last read is kept while the workspace is put away. */
+  kept?: KeptWorkspaceRead;
   onBack(): void;
   /** Opens the area a source is kept and corrected in. */
   onOpenSurface(surface: OpenableSurface): void;
@@ -1328,7 +1337,9 @@ export function WorkspaceScreen({
   const [localHolds] = useState(createModeloWriteHolds);
   const holds = suppliedHolds ?? localHolds;
   const target = declarationWriteKey(workUnitId);
-  const [read, setRead] = useState<Read>({ phase: "reading" });
+  const [read, setRead] = useState<Read>(() =>
+    keptRead(kept, workUnitId, language),
+  );
   const owner = useMemo(() => {
     if (read.phase !== "ready") return undefined;
     const form = read.envelope.form.form;
@@ -1377,6 +1388,7 @@ export function WorkspaceScreen({
         const envelope = await port.form(workUnitId, language);
         if (ticket !== latest.current) return overtaken();
         shown.current = true;
+        if (kept) kept.form = { workUnitId, language, envelope };
         setRead({ phase: "ready", envelope });
         if (before) holds.readCompleted(before);
         return true;
@@ -1391,7 +1403,7 @@ export function WorkspaceScreen({
     })();
     newest.current = { ticket, result };
     return result;
-  }, [port, workUnitId, language, holds, target]);
+  }, [port, workUnitId, language, holds, target, kept]);
   const reloadHold = useCallback(
     async (hold: ModeloWriteHold) => {
       if (hold.phase !== "refresh") return false;
@@ -1416,10 +1428,11 @@ export function WorkspaceScreen({
     [port, workUnitId, holds, target, reread],
   );
   useEffect(() => {
-    shown.current = false;
-    setRead({ phase: "reading" });
+    const first = keptRead(kept, workUnitId, language);
+    shown.current = first.phase === "ready";
+    setRead(first);
     void reread();
-  }, [reread]);
+  }, [reread, kept, workUnitId, language]);
 
   const content =
     read.phase === "reading" ? (
