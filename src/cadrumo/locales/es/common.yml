@@ -4599,6 +4599,9 @@ desktop:
     none_unread: Ninguno sin leer en la última sincronización
     unread: '{count} sin leer'
   modelo:
+    band:
+      label: Notas sobre el formulario
+      resize: Cambiar el tamaño de las notas sobre el formulario
     box_notes:
       label: Lo que el cálculo ha anotado sobre esta casilla
     compare:
@@ -4709,6 +4712,8 @@ desktop:
       label: Esquema del formulario
       may_apply: Solo si se te aplica
       needs_you: 'Te necesita: {count}'
+    panes:
+      label: Paneles alrededor del formulario
     prior_values:
       intro: Si aquí no consta la declaración anterior de la que una casilla arrastra
         un importe, puedes indicar tú ese importe. Los importes indicados para las
