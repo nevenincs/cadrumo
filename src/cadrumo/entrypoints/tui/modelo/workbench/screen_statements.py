@@ -22,11 +22,15 @@ class WorkbenchStatementsMixin:
     """Own the statements offer of the modelo workbench."""
 
     def _served_statements(self: ModeloWorkbenchScreen) -> tuple[ModeloFormCarryAttestation, ...]:
-        """Every statement the form serves now, in its order; none where the declaration takes no edit."""
+        """Every form-wide statement the form serves now, in its order; none where the declaration takes no edit.
+
+        A statement naming one row is left out: the workbench stages a statement on the boxes it
+        names, and a row's carry has no box of its own here, so it could only ever be refused.
+        """
         form = self.form
         if form is None or not self._may_confirm():
             return ()
-        return form.carry_attestations
+        return tuple(statement for statement in form.carry_attestations if statement.row_identity is None)
 
     def _served_prior_values(self: ModeloWorkbenchScreen) -> tuple[ModeloFormPriorValueAttestation, ...]:
         """Every figure the form serves for earlier returns, in its order; none where the declaration takes no edit."""

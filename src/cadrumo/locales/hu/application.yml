@@ -4240,6 +4240,18 @@ application:
           adóévek.
         year_span: A Modelo {modelo} nyomtatvány {box}. mezője, {years}. adóév.
       carry_attestation:
+        renta_capital_inmobiliario_gastos_pendientes:
+          action: Ennél az ingatlannál nincs korábbi évekből fennmaradó kamat- vagy
+            javítási költség
+          effect: 'Általad kijelentett 0-ként rögzítve: ebből az eredetévből nincs
+            le nem vont összeg.'
+          row: '{number}. ingatlan'
+          statement: Rögzíti, hogy ennél a bérbe adott ingatlannál az előző négy adóévből
+            nem maradt le nem vont hitelkamat, illetve javítási és karbantartási költség
+            (Ley 35/2006, 23.1.a cikk; RIRPF, 13.a cikk; C.1 melléklet). Minden eredetév
+            általad kijelentett 0-ként kerül rögzítésre, a beírt számtól elkülönítve;
+            ha egy év mégis hagyott fennmaradó összeget, azt az összeget annak az
+            eredetévnek a soránál add meg.
         renta_negative_general_bases_pending:
           action: Nincs korábbi évekből fennmaradó összegem
           effect: 'Általad kijelentett 0-ként rögzítve: nincs korábbi évekből fennmaradó
