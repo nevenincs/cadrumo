@@ -131,7 +131,8 @@ def test_the_rendered_refusal_is_its_sentence_alone(tmp_path: Path) -> None:
     assert recorded is not None
     assert error.terminal_precondition_verdict is not None
     assert error.terminal_precondition_verdict.no_recovery_words is None
-    assert recorded.no_recovery_words
+    assert recorded.no_recovery_words is not None
+    assert recorded.no_recovery_words.strip() != ""
     assert recorded.no_recovery_words_language is not None
     assert recorded == serve_precondition_verdict(
         error.terminal_precondition_verdict, recorded.no_recovery_words_language
