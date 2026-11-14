@@ -135,11 +135,19 @@ def test_export_service_refuses_ledger_revision_without_evidence_reference(
     active_profile: None, tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
-        revision = _revision(
-            work_unit=_persisted_work_unit(operation=operation), source_transaction_ids=(_TX_ID,), operation=operation
-        )
+        work_unit = _persisted_work_unit(operation=operation)
+        revision = _revision(work_unit=work_unit, source_transaction_ids=(_TX_ID,), operation=operation)
         repository = CalculationRevisionCatalogueRepository()
         repository.save(upsert_calculation_revision(repository.load(), revision))
+        # A calculation makes its revision the work unit's current one; a work unit with no
+        # current calculation exports nothing.
+        work_units = WorkUnitCatalogueRepository()
+        work_units.save(
+            upsert_work_unit(
+                work_units.load(),
+                work_unit.model_copy(update={"current_calculation_revision_id": revision.calculation_revision_id}),
+            )
+        )
         output_path = tmp_path / "modelo-303.txt"
 
         with pytest.raises(ModeloExportEvidenceMissingError):

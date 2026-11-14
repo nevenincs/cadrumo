@@ -32,7 +32,7 @@ from .export_literal_fact import ExportLiteralFact, resolve_export_literal_fact
 from .export_record_components import validate_export_record_components
 from .export_semantics import ExportComputedKey, ExportDraftAttribute
 from .export_value_policy import ExportValuePolicyValue
-from .field_absence import later_absent_when_none
+from .field_absence import later_absent_when_empty, later_absent_when_none
 from .fixed_width_codec import (
     ExportAlphanumericTextValue,
     ExportEncodingValue,
@@ -933,7 +933,7 @@ class ExportLayoutDefinition(RegistryModel):
     id: ExportLayoutId
     format: ExportLayoutFormatValue = ExportLayoutFormat.FIXED_WIDTH
     dictionary_source_ref: SourceRefId | None = None
-    input_dictionary_source_ref: SourceRefId | None = None
+    input_dictionary_source_ref: SourceRefId | None = Field(default=None, exclude_if=later_absent_when_none)
     """The edition's input dictionary, read only for repeated records the declaration dictionary lacks.
 
     AEAT publishes two dictionaries per edition. The declaration dictionary names
@@ -973,7 +973,9 @@ class ExportLayoutDefinition(RegistryModel):
     as drift against itself.
     """
 
-    dictionary_row_targets: tuple[XmlDictionaryRowTarget, ...] = Field(default_factory=tuple)
+    dictionary_row_targets: tuple[XmlDictionaryRowTarget, ...] = Field(
+        default_factory=tuple, exclude_if=later_absent_when_empty
+    )
     """Dictionary rows that read a casilla other than the one their printed number names.
 
     Declared only where this edition's dictionary prints one number on several

@@ -3890,10 +3890,101 @@ modelo:
             heading: Adóalap, csökkentések és adóköteles alap
           tax-calculation:
             heading: Az adó kiszámítása
+        page:
+          datoseconomicos:
+            heading: A jövedelmek jogosultjai
+          datoseconomicos-resultados:
+            heading: A bevallás összesítése és számítása
+          datoseconomicos-tomadatosampliada:
+            heading: Jövedelmek és kedvezmények részletes adatai
+          datosidentificativos:
+            heading: Azonosító adatok
+          datosidentificativos-ascendientes:
+            heading: Felmenők
+          datosidentificativos-conyuge:
+            heading: Házastárs
+          datosidentificativos-declarante:
+            heading: Bevalló
+          datosidentificativos-hijos:
+            heading: Gyermekek és más leszármazottak
+          declaracion:
+            heading: Bevallás
         section:
+          anexoa:
+            heading: Lakások energetikai korszerűsítése, elektromos járművek és töltőpontok
+              (A melléklet)
+          anexoares:
+            heading: Kedvezmény a lakóingatlanba történő befektetésért (A melléklet)
+          anexoares-10:
+            heading: Vállalkozási beruházásösztönző kedvezmények (A melléklet)
+          anexoares-2:
+            heading: A lakóingatlan adatai és befektetés új vagy nemrég alapított
+              vállalkozásokba (A melléklet)
+          anexoares-3:
+            heading: Kedvezmény a lakóingatlan bérléséért (A melléklet)
+          anexoares-4:
+            heading: Adományok és egyéb hozzájárulások utáni kedvezmények (A melléklet)
+          anexoares-5:
+            heading: Ceutában vagy Melillában szerzett jövedelem utáni kedvezmény
+              (A melléklet)
+          anexoares-6:
+            heading: La Palma szigetén való szokásos és tényleges tartózkodás utáni
+              kedvezmény (A melléklet)
+          anexoares-7:
+            heading: Kulturális értékű javakra fordított befektetések és kiadások
+              utáni kedvezmény (A melléklet)
+          anexoares-8:
+            heading: Energiahatékonysági felújítások, elektromos járművek és töltőpontok
+              utáni kedvezmények (A melléklet)
+          anexoares-9:
+            heading: Kanári- és Baleár-szigeteki beruházási tartalék és az Európai
+              Unióban illetőségű adózók kedvezménye (A melléklet)
+          anexocres:
+            heading: Áthozott tételek és egyéb információk (C melléklet)
+          ascendiente:
+            heading: Az egyes felmenők adatai
+          baseimponibleres:
+            heading: Az ingó tőkéből származó jövedelem pozitív nettó egyenlege a
+              megtakarítási adóalapban
+          baseimponibleres-2:
+            heading: Általános adóalap és megtakarítási adóalap
+          baseliquidableres:
+            heading: Általános és megtakarítási adóköteles alap
           bienes-inmuebles-a-disposicion-de-sus-tit-88aad7:
             heading: A tulajdonosok rendelkezésére álló, bérbe adott vagy harmadik
               félnek átengedett, illetve gazdasági tevékenységhez rendelt ingatlanok
+          calculoimpuestores:
+            heading: Jövedelem-hozzárendelési rendszerű jogalanyok által hozzárendelt
+              forrásadók és adóelőlegek
+          calculoimpuestores-2:
+            heading: Gazdasági érdekcsoportok és ideiglenes vállalkozási társulások
+              (UTE) által betudott forrásadók és adóelőlegek
+          calculoimpuestores-3:
+            heading: 'Az adó kiszámítása: adó, kedvezmények, forrásadók és adóelőlegek'
+          calculoimpuestores-4:
+            heading: A lakóingatlan bérléséért járó kedvezmény összege
+          calculoimpuestores-5:
+            heading: Vállalkozási beruházásösztönző kedvezmények összesen
+          calculoimpuestores-6:
+            heading: Vállalkozási beruházásösztönző kedvezmények összesen
+          calculoimpuestores-7:
+            heading: A helyesbítésből esetleg eredő visszatérítés
+          compensacionconyugesres:
+            heading: Befizetés felfüggesztése és visszatérítésről való lemondás a
+              házastársak között
+          datosadicionalesanexob:
+            heading: Az autonóm közösségi kedvezmények kiegészítő adatai (B melléklet)
+          datosadicionalesanexob-2:
+            heading: 'Baleár-szigeteki születési és örökbefogadási kedvezmények: előleg
+              (B melléklet)'
+          datosadicionalesres:
+            heading: Az adókulcsnál figyelembe vett mentes jövedelmek és a gyermekek
+              javára fizetett tartásdíj
+          deduccionautonomicares:
+            heading: Autonóm közösségi adókedvezmények (B melléklet)
+          dt9:
+            heading: A kilencedik átmeneti rendelkezés szerint halmozott átruházási
+              érték
           ganancias-patrimoniales-por-cambio-de-res-0c81c7:
             heading: Vagyoni nyereségek a spanyol területen kívülre történő lakóhely-változás
               miatt (a törvény 95 bis. cikke)
@@ -3909,6 +4000,129 @@ modelo:
             heading: Tőzsdén jegyzett alapok (ETF) befektetési jegyeinek és tőzsdén
               jegyzett index SICAV-ok részvényeinek átruházásából eredő nyereségek
               és veszteségek
+          gcambioresidenciaextres:
+            heading: A spanyol területen kívülre történő lakóhely-változás miatti
+              vagyoni nyereségek összesítése
+          general:
+            heading: Az egyes jövedelmek jogosult adózója
+          gpaccionesres:
+            heading: Forgalmazott részvények átruházásának összesítése
+          gpderechosres:
+            heading: Jegyzési jogok átruházásának összesítése
+          gpfondoscotires:
+            heading: Tőzsdén jegyzett alapok (ETF) és jegyzett index SICAV-részvények
+              átruházásának összesítése
+          gpfondosres:
+            heading: Kollektív befektetési formák részvényei vagy befektetési jegyei
+              átruházásának összesítése
+          gpotrasganancias:
+            heading: A megtakarítási adóalapba tartozó egyéb vagyoni nyereségek
+          gpotrasgananciasejerant:
+            heading: Korábbi évek átruházásaiból eredő, erre az adóévre betudható
+              nyereségek és veszteségek
+          gpotrasgananciasejerantres:
+            heading: Korábbi évek átruházásaiból eredő, erre az adóévre betudható
+              nyereségek és veszteségek összesítése
+          gpotrasgananciasres:
+            heading: A megtakarítási adóalapba tartozó egyéb vagyoni nyereségek összesítése
+          gpotroscriptomonedasres:
+            heading: Virtuális pénznemek átruházásának összesítése
+          gpotroselementos:
+            heading: Egyéb vagyonelemek átruházása
+          gpotroselementos-2:
+            heading: 'Halasztott vételárú egyéb vagyonelem-átruházások: még betudandó
+              nyereségek és veszteségek'
+          gpotroselementosres:
+            heading: Egyéb vagyonelemek átruházásának összesítése
+          gpotrosinmuebles:
+            heading: Ingatlanok és ingatlanon fennálló dologi jogok átruházása
+          gpotrosinmuebles-2:
+            heading: 'Halasztott vételárú ingatlan-átruházások: még betudandó nyereségek'
+          gpotrosinmuebles-3:
+            heading: Lakóingatlanba történő újrabefektetés miatti mentesség
+          gpotrosinmueblesres:
+            heading: Ingatlanok és ingatlanon fennálló dologi jogok átruházásának
+              összesítése
+          gppremios:
+            heading: 'Nem átruházásból eredő vagyoni nyereségek és veszteségek: szerencsejáték,
+              nyeremények és egyebek'
+          gppremiosres:
+            heading: Nem átruházásból eredő vagyoni nyereségek és veszteségek összesítése
+          gpreinversion:
+            heading: Újrabefektetés miatt halasztott, erre az adóévre betudható nyereségek
+          gpreinversionres:
+            heading: Újrabefektetés miatt halasztott, erre az adóévre betudható nyereségek
+              összesítése
+          hijo:
+            heading: Az egyes leszármazottak adatai
+          ingresodevolucionres:
+            heading: Befizetendő vagy visszajáró összeg
+          inmuebles:
+            heading: A tulajdonosok rendelkezésére álló, bérbe adott vagy harmadik
+              félnek átengedett, illetve gazdasági tevékenységhez rendelt ingatlanok
+          inmuebles-2:
+            heading: A tulajdonosok rendelkezésére álló, bérbe adott vagy harmadik
+              félnek átengedett, illetve gazdasági tevékenységhez rendelt ingatlanok
+          inmuebles-3:
+            heading: A tulajdonosok rendelkezésére álló, bérbe adott vagy harmadik
+              félnek átengedett, illetve gazdasági tevékenységhez rendelt ingatlanok
+          inmueblesres:
+            heading: Ingatlanból származó és betudott ingatlanjövedelem összesítése
+          integracionres:
+            heading: Vagyoni nyereségek és veszteségek összevonása és beszámítása
+          integracionres-2:
+            heading: Az ingó tőkéből származó jövedelem negatív nettó egyenlege a
+              megtakarítási adóalapban
+          irpfccaares:
+            heading: A lakóhely szerinti autonóm közösséget megillető személyi jövedelemadó
+          minimoperfamres:
+            heading: Személyi és családi minimum
+          rdtocapitalmobiliario:
+            heading: Ingó tőkéből származó jövedelem
+          rdtocapitalmobiliariores:
+            heading: Ingó tőkéből származó jövedelem összesítése
+          rdtotrabajores:
+            heading: Munkaviszonyból származó jövedelem összesítése
+          redbaseimponible:
+            heading: 'Adóalap-csökkentések: nyugdíj-előtakarékosság, fogyatékosság,
+              védett vagyon, kompenzációs járadék és sportolók'
+          redbaseimponibleres:
+            heading: Az adóalap csökkentései
+          regestimadirecta:
+            heading: Gazdasági tevékenységek (közvetlen jövedelemmeghatározás)
+          regestimadirectares:
+            heading: Gazdasági tevékenységek összesítése (közvetlen jövedelemmeghatározás)
+          regestimaobj:
+            heading: Gazdasági tevékenységek (objektív jövedelemmeghatározás, a mező-,
+              állat- és erdőgazdálkodás kivételével)
+          regestimaobjagricola:
+            heading: Mező-, állat- és erdőgazdálkodási tevékenységek (objektív jövedelemmeghatározás)
+          regestimaobjagricolares:
+            heading: Mező-, állat- és erdőgazdálkodási tevékenységek összesítése (objektív
+              jövedelemmeghatározás)
+          regestimaobjres:
+            heading: Gazdasági tevékenységek összesítése (objektív jövedelemmeghatározás,
+              a mező-, állat- és erdőgazdálkodás kivételével)
+          regimenesespeciales:
+            heading: 'Jövedelmek hozzárendelése és betudása: hozzárendelési rendszerű
+              jogalanyok, gazdasági érdekcsoportok és UTE-k, nemzetközi adóátláthatóság,
+              képmáshoz fűződő jogok és adóparadicsomi kollektív befektetések'
+          regimenesespecialesres:
+            heading: Jövedelem-hozzárendelési rendszerű jogalanyok által hozzárendelt
+              jövedelmek összesítése
+          regimenesespecialesres-2:
+            heading: Gazdasági érdekcsoportok és ideiglenes vállalkozási társulások
+              (UTE) által betudott adóalapok összesítése
+          regimenesespecialesres-3:
+            heading: Nemzetközi adóátláthatóság, képmáshoz fűződő jogok és adóparadicsomi
+              kollektív befektetések miatti betudások összesítése
+          regimenespecial:
+            heading: Fúzió, szétválás vagy részesedéscsere által érintett külföldi
+              illetőségű jogalanyok tagjai
+          regimenespecial-2:
+            heading: Egyesülés, szétválás, eszközátruházás és részesedéscsere
+          regularizacionres:
+            heading: Korábbi önadózás vagy hatósági adómegállapítás rendezése
           rendimientos-de-trabajo:
             heading: Munkaviszonyból származó jövedelem
           transmision-de-acciones-negociadas:
@@ -16047,6 +16261,20 @@ modelo:
                   adatai'
           field:
             label: Adóév 2024
+          form:
+            section:
+              calculoimpuestores:
+                heading: Eltérés a hatósági értelmezéstől
+              calculoimpuestores-2:
+                heading: Jövedelem-hozzárendelési rendszerű jogalanyok által hozzárendelt
+                  forrásadók és adóelőlegek
+              calculoimpuestores-3:
+                heading: Gazdasági érdekcsoportok és ideiglenes vállalkozási társulások
+                  (UTE) által betudott forrásadók és adóelőlegek
+              calculoimpuestores-4:
+                heading: 'Az adó kiszámítása: adó, kedvezmények, forrásadók és adóelőlegek'
+              calculoimpuestores-5:
+                heading: A lakóingatlan bérléséért járó kedvezmény összege
         '2025':
           casilla:
             '0003':
@@ -18317,66 +18545,7 @@ modelo:
           field:
             label: Adóév 2025
           form:
-            page:
-              datoseconomicos:
-                heading: A jövedelmek jogosultjai
-              datoseconomicos-resultados:
-                heading: A bevallás összesítése és számítása
-              datoseconomicos-tomadatosampliada:
-                heading: Jövedelmek és kedvezmények részletes adatai
-              datosidentificativos:
-                heading: Azonosító adatok
-              datosidentificativos-ascendientes:
-                heading: Felmenők
-              datosidentificativos-conyuge:
-                heading: Házastárs
-              datosidentificativos-declarante:
-                heading: Bevalló
-              datosidentificativos-hijos:
-                heading: Gyermekek és más leszármazottak
-              declaracion:
-                heading: Bevallás
             section:
-              anexoa:
-                heading: Lakások energetikai korszerűsítése, elektromos járművek és
-                  töltőpontok (A melléklet)
-              anexoares:
-                heading: Kedvezmény a lakóingatlanba történő befektetésért (A melléklet)
-              anexoares-10:
-                heading: Vállalkozási beruházásösztönző kedvezmények (A melléklet)
-              anexoares-2:
-                heading: A lakóingatlan adatai és befektetés új vagy nemrég alapított
-                  vállalkozásokba (A melléklet)
-              anexoares-3:
-                heading: Kedvezmény a lakóingatlan bérléséért (A melléklet)
-              anexoares-4:
-                heading: Adományok és egyéb hozzájárulások utáni kedvezmények (A melléklet)
-              anexoares-5:
-                heading: Ceutában vagy Melillában szerzett jövedelem utáni kedvezmény
-                  (A melléklet)
-              anexoares-6:
-                heading: La Palma szigetén való szokásos és tényleges tartózkodás
-                  utáni kedvezmény (A melléklet)
-              anexoares-7:
-                heading: Kulturális értékű javakra fordított befektetések és kiadások
-                  utáni kedvezmény (A melléklet)
-              anexoares-8:
-                heading: Energiahatékonysági felújítások, elektromos járművek és töltőpontok
-                  utáni kedvezmények (A melléklet)
-              anexoares-9:
-                heading: Kanári- és Baleár-szigeteki beruházási tartalék és az Európai
-                  Unióban illetőségű adózók kedvezménye (A melléklet)
-              anexocres:
-                heading: Áthozott tételek és egyéb információk (C melléklet)
-              ascendiente:
-                heading: Az egyes felmenők adatai
-              baseimponibleres:
-                heading: Az ingó tőkéből származó jövedelem pozitív nettó egyenlege
-                  a megtakarítási adóalapban
-              baseimponibleres-2:
-                heading: Általános adóalap és megtakarítási adóalap
-              baseliquidableres:
-                heading: Általános és megtakarítási adóköteles alap
               calculoimpuestores:
                 heading: Eltérés a hatósági értelmezéstől
               calculoimpuestores-2:
@@ -18389,142 +18558,3 @@ modelo:
                 heading: 'Az adó kiszámítása: adó, kedvezmények, forrásadók és adóelőlegek'
               calculoimpuestores-5:
                 heading: A lakóingatlan bérléséért járó kedvezmény összege
-              calculoimpuestores-6:
-                heading: Vállalkozási beruházásösztönző kedvezmények összesen
-              calculoimpuestores-7:
-                heading: A helyesbítésből esetleg eredő visszatérítés
-              compensacionconyugesres:
-                heading: Befizetés felfüggesztése és visszatérítésről való lemondás
-                  a házastársak között
-              datosadicionalesanexob:
-                heading: Az autonóm közösségi kedvezmények kiegészítő adatai (B melléklet)
-              datosadicionalesanexob-2:
-                heading: 'Baleár-szigeteki születési és örökbefogadási kedvezmények:
-                  előleg (B melléklet)'
-              datosadicionalesres:
-                heading: Az adókulcsnál figyelembe vett mentes jövedelmek és a gyermekek
-                  javára fizetett tartásdíj
-              deduccionautonomicares:
-                heading: Autonóm közösségi adókedvezmények (B melléklet)
-              dt9:
-                heading: A kilencedik átmeneti rendelkezés szerint halmozott átruházási
-                  érték
-              gcambioresidenciaextres:
-                heading: A spanyol területen kívülre történő lakóhely-változás miatti
-                  vagyoni nyereségek összesítése
-              general:
-                heading: Az egyes jövedelmek jogosult adózója
-              gpaccionesres:
-                heading: Forgalmazott részvények átruházásának összesítése
-              gpderechosres:
-                heading: Jegyzési jogok átruházásának összesítése
-              gpfondoscotires:
-                heading: Tőzsdén jegyzett alapok (ETF) és jegyzett index SICAV-részvények
-                  átruházásának összesítése
-              gpfondosres:
-                heading: Kollektív befektetési formák részvényei vagy befektetési
-                  jegyei átruházásának összesítése
-              gpotrasganancias:
-                heading: A megtakarítási adóalapba tartozó egyéb vagyoni nyereségek
-              gpotrasgananciasejerant:
-                heading: Korábbi évek átruházásaiból eredő, 2025-re betudható nyereségek
-                  és veszteségek
-              gpotrasgananciasejerantres:
-                heading: Korábbi évek átruházásaiból eredő, 2025-re betudható nyereségek
-                  és veszteségek összesítése
-              gpotrasgananciasres:
-                heading: A megtakarítási adóalapba tartozó egyéb vagyoni nyereségek
-                  összesítése
-              gpotroscriptomonedasres:
-                heading: Virtuális pénznemek átruházásának összesítése
-              gpotroselementos:
-                heading: Egyéb vagyonelemek átruházása
-              gpotroselementos-2:
-                heading: 'Halasztott vételárú egyéb vagyonelem-átruházások: még betudandó
-                  nyereségek és veszteségek'
-              gpotroselementosres:
-                heading: Egyéb vagyonelemek átruházásának összesítése
-              gpotrosinmuebles:
-                heading: Ingatlanok és ingatlanon fennálló dologi jogok átruházása
-              gpotrosinmuebles-2:
-                heading: 'Halasztott vételárú ingatlan-átruházások: még betudandó
-                  nyereségek'
-              gpotrosinmuebles-3:
-                heading: Lakóingatlanba történő újrabefektetés miatti mentesség
-              gpotrosinmueblesres:
-                heading: Ingatlanok és ingatlanon fennálló dologi jogok átruházásának
-                  összesítése
-              gppremios:
-                heading: 'Nem átruházásból eredő vagyoni nyereségek és veszteségek:
-                  szerencsejáték, nyeremények és egyebek'
-              gppremiosres:
-                heading: Nem átruházásból eredő vagyoni nyereségek és veszteségek
-                  összesítése
-              gpreinversion:
-                heading: Újrabefektetés miatt halasztott, 2025-re betudható nyereségek
-              gpreinversionres:
-                heading: Újrabefektetés miatt halasztott, 2025-re betudható nyereségek
-                  összesítése
-              hijo:
-                heading: Az egyes leszármazottak adatai
-              ingresodevolucionres:
-                heading: Befizetendő vagy visszajáró összeg
-              inmueblesres:
-                heading: Ingatlanból származó és betudott ingatlanjövedelem összesítése
-              integracionres:
-                heading: Vagyoni nyereségek és veszteségek összevonása és beszámítása
-              integracionres-2:
-                heading: Az ingó tőkéből származó jövedelem negatív nettó egyenlege
-                  a megtakarítási adóalapban
-              irpfccaares:
-                heading: A lakóhely szerinti autonóm közösséget megillető személyi
-                  jövedelemadó
-              minimoperfamres:
-                heading: Személyi és családi minimum
-              rdtocapitalmobiliario:
-                heading: Ingó tőkéből származó jövedelem
-              rdtocapitalmobiliariores:
-                heading: Ingó tőkéből származó jövedelem összesítése
-              rdtotrabajores:
-                heading: Munkaviszonyból származó jövedelem összesítése
-              redbaseimponible:
-                heading: 'Adóalap-csökkentések: nyugdíj-előtakarékosság, fogyatékosság,
-                  védett vagyon, kompenzációs járadék és sportolók'
-              redbaseimponibleres:
-                heading: Az adóalap csökkentései
-              regestimadirecta:
-                heading: Gazdasági tevékenységek (közvetlen jövedelemmeghatározás)
-              regestimadirectares:
-                heading: Gazdasági tevékenységek összesítése (közvetlen jövedelemmeghatározás)
-              regestimaobj:
-                heading: Gazdasági tevékenységek (objektív jövedelemmeghatározás,
-                  a mező-, állat- és erdőgazdálkodás kivételével)
-              regestimaobjagricola:
-                heading: Mező-, állat- és erdőgazdálkodási tevékenységek (objektív
-                  jövedelemmeghatározás)
-              regestimaobjagricolares:
-                heading: Mező-, állat- és erdőgazdálkodási tevékenységek összesítése
-                  (objektív jövedelemmeghatározás)
-              regestimaobjres:
-                heading: Gazdasági tevékenységek összesítése (objektív jövedelemmeghatározás,
-                  a mező-, állat- és erdőgazdálkodás kivételével)
-              regimenesespeciales:
-                heading: 'Jövedelmek hozzárendelése és betudása: hozzárendelési rendszerű
-                  jogalanyok, gazdasági érdekcsoportok és UTE-k, nemzetközi adóátláthatóság,
-                  képmáshoz fűződő jogok és adóparadicsomi kollektív befektetések'
-              regimenesespecialesres:
-                heading: Jövedelem-hozzárendelési rendszerű jogalanyok által hozzárendelt
-                  jövedelmek összesítése
-              regimenesespecialesres-2:
-                heading: Gazdasági érdekcsoportok és ideiglenes vállalkozási társulások
-                  (UTE) által betudott adóalapok összesítése
-              regimenesespecialesres-3:
-                heading: Nemzetközi adóátláthatóság, képmáshoz fűződő jogok és adóparadicsomi
-                  kollektív befektetések miatti betudások összesítése
-              regimenespecial:
-                heading: Fúzió, szétválás vagy részesedéscsere által érintett külföldi
-                  illetőségű jogalanyok tagjai
-              regimenespecial-2:
-                heading: Egyesülés, szétválás, eszközátruházás és részesedéscsere
-              regularizacionres:
-                heading: Korábbi önadózás vagy hatósági adómegállapítás rendezése
