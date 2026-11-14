@@ -125,21 +125,21 @@ def test_a_casilla_in_two_blocks_is_two_rows_and_a_repeated_line_is_not_collapse
 
 def test_a_text_value_of_one_row_is_kept_as_printed_and_a_text_casilla_in_several_rows_has_no_figure() -> None:
     values = parse_form_lines(
-        "record\tb\t1\t0066\t0000002VK0000N0001LH\nrecord\tb\t1\t0093\t2024-06-01\n"
+        "record\tb\t1\t0066\t0000002VK0000N0001LH\nrecord\tb\t1\t0093\tref-b\n"
         "record\tb\t1\t0063\t5\nrecord\tb\t2\t0063\tn/a\n"
-        "record\tb\t1\t0120\t2023-03-15\nrecord\tb\t2\t0120\t2023-04-01\n"
+        "record\tb\t1\t0120\tref-c\nrecord\tb\t2\t0120\tref-d\n"
     )
 
-    assert form_row_figures(values) == {"0066": "0000002VK0000N0001LH", "0093": "2024-06-01"}
+    assert form_row_figures(values) == {"0066": "0000002VK0000N0001LH", "0093": "ref-b"}
 
 
 def test_a_text_row_figure_fills_an_absent_scalar_and_a_differing_printed_text_is_a_conflict() -> None:
-    merged, conflicts = merge_form_figures((("0100", "1"),), {"0093": "2024-06-01"})
+    merged, conflicts = merge_form_figures((("0100", "1"),), {"0093": "ref-b"})
 
-    assert merged == (("0093", "2024-06-01"), ("0100", "1"))
+    assert merged == (("0093", "ref-b"), ("0100", "1"))
     assert conflicts == []
-    _, conflicts = merge_form_figures((("0093", "2023-01-01"),), {"0093": "2024-06-01"})
-    assert conflicts == ["casilla 0093 scalar 2023-01-01 differs from its row figure 2024-06-01"]
+    _, conflicts = merge_form_figures((("0093", "ref-a"),), {"0093": "ref-b"})
+    assert conflicts == ["casilla 0093 scalar ref-a differs from its row figure ref-b"]
 
 
 def test_a_row_figure_fills_an_absent_or_zero_scalar_and_a_differing_nonzero_scalar_is_a_conflict() -> None:

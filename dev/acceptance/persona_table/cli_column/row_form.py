@@ -116,6 +116,22 @@ def _cell_value(block: str, index: object, cell: object) -> FormValue | None:
     return _row_value(_RECORD, block, index, casilla, cell["value"])
 
 
+def _record_values(block_id: str, record: object) -> list[FormValue] | None:
+    """The values of one record of a block; none when the record or one of its cells is malformed."""
+    cells = record.get("values") if isinstance(record, Mapping) else None
+    if not isinstance(record, Mapping) or not isinstance(cells, list):
+        return None
+    found: list[FormValue] = []
+    for cell in cells:
+        if isinstance(cell, Mapping) and "casilla_id" in cell and cell["casilla_id"] is None:
+            continue
+        item = _cell_value(block_id, record.get("index"), cell)
+        if item is None:
+            return None
+        found.append(item)
+    return found
+
+
 def _block_values(block: object) -> list[FormValue] | None:
     """The values of one block of the JSON form; none when the block is malformed, empty when its rows are unknown."""
     if not isinstance(block, Mapping) or not isinstance(block.get("block_id"), str):
@@ -127,16 +143,10 @@ def _block_values(block: object) -> list[FormValue] | None:
         return [] if not records else None
     found: list[FormValue] = []
     for record in records:
-        cells = record.get("values") if isinstance(record, Mapping) else None
-        if not isinstance(cells, list) or not isinstance(record, Mapping):
+        values = _record_values(str(block["block_id"]), record)
+        if values is None:
             return None
-        for cell in cells:
-            if isinstance(cell, Mapping) and "casilla_id" in cell and cell["casilla_id"] is None:
-                continue
-            item = _cell_value(str(block["block_id"]), record.get("index"), cell)
-            if item is None:
-                return None
-            found.append(item)
+        found.extend(values)
     return found
 
 
