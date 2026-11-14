@@ -37,7 +37,7 @@ Account numbers pass through here in memory only, into the exported file;
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import StrEnum
@@ -53,7 +53,12 @@ from ...core.payment_instalment_election import (
 from ...core.result_disposition import ResultDisposition
 from ...domain.deadlines.models import ChargeAccount, RefundAccount
 from ...domain.iva.sepa_marca import SepaMarca, derive_sepa_marca
-from .action_errors import instalment_election_refusal, own_account_missing_error
+from .action_errors import (
+    ModeloChargeAccountMissingError,
+    ModeloRefundAccountMissingError,
+    instalment_election_refusal,
+    own_account_missing_error,
+)
 from .export_contracts import ModeloExportDesignIntegrityError, ModeloExportSettlementRefusedError
 from .export_field_refusal import export_design_fault_refusal
 from .preconditions import build_modelo_precondition_failure_for_scenario
@@ -168,6 +173,7 @@ def settlement_dictionary_values(
     first_instalment_share: Decimal | None,
     charge_account: ChargeAccount | None,
     refund_account: RefundAccount | None,
+    refund_legal_refs: Callable[[], tuple[str, ...]] | None = None,
 ) -> dict[str, object]:
     """Compose the settlement rows of the official record, keyed by dictionary field id.
 
@@ -179,6 +185,7 @@ def settlement_dictionary_values(
             ``None`` where the modelo declares no split.
         charge_account: The account AEAT debits, when a payment is direct-debited.
         refund_account: The account AEAT pays a refund into.
+        refund_legal_refs: Reads the law a refund without an account is refused under, only when it is.
 
     Raises:
         ModeloExportSettlementRefusedError: When the settled amount is unknown or
@@ -202,7 +209,7 @@ def settlement_dictionary_values(
         values.update(_payment_values(disposition, amount, instalment, first_instalment_share, charge_account))
         return values
     if disposition in _TO_REFUND:
-        values.update(_refund_values(-amount, refund_account))
+        values.update(_refund_values(-amount, refund_account, refund_legal_refs))
         return values
     raise _uncomposed(disposition, cause="disposition_not_composed")
 
@@ -247,9 +254,22 @@ def _payment_values(
     }
 
 
-def _refund_values(amount: Decimal, refund_account: RefundAccount | None) -> dict[str, object]:
+def _refund_account_missing(
+    legal_refs: Callable[[], tuple[str, ...]] | None,
+) -> ModeloChargeAccountMissingError | ModeloRefundAccountMissingError:
+    """The refusal of a refund with no account to pay it into, citing the law ``legal_refs`` reads."""
+    context: dict[str, object] = {"result_disposition": ResultDisposition.DEVOLUCION.value}
+    cited = () if legal_refs is None else legal_refs()
+    if cited:
+        context["legal_refs"] = ", ".join(cited)
+    return own_account_missing_error("refund", context=context)
+
+
+def _refund_values(
+    amount: Decimal, refund_account: RefundAccount | None, legal_refs: Callable[[], tuple[str, ...]] | None
+) -> dict[str, object]:
     if refund_account is None or refund_account.iban is None:
-        raise own_account_missing_error("refund", context={"result_disposition": ResultDisposition.DEVOLUCION.value})
+        raise _refund_account_missing(legal_refs)
     values: dict[str, object] = {_REFUND_AMOUNT_FIELD: amount}
     marca = derive_sepa_marca(iban=refund_account.iban, bank_country_code=refund_account.bank_country_code)
     if marca is SepaMarca.ESPANA:
