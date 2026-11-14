@@ -5085,6 +5085,12 @@ application:
         stale_revision: A profil vagy a tételei megváltoztak a lista beolvasása óta.
           Olvasd be újra a listát.
       relation:
+        iae_elemento_tributario:
+          actividad: A tevékenység adóeleme
+        iae_local:
+          actividad: A tevékenység helyisége
+        iae_local_superficie:
+          local: A helyiség területosztálya
         prevision_social_contribution: Az év igazolása
         renta_arrendamiento:
           inmueble: Az ingatlan bérlete

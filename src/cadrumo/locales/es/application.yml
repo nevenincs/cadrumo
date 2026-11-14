@@ -5159,6 +5159,12 @@ application:
         stale_revision: El perfil o sus movimientos han cambiado después de leer esta
           lista. Vuelve a leer la lista.
       relation:
+        iae_elemento_tributario:
+          actividad: Elemento tributario de esta actividad
+        iae_local:
+          actividad: Local de esta actividad
+        iae_local_superficie:
+          local: Clase de superficie de este local
         prevision_social_contribution: Certificado del ejercicio
         renta_arrendamiento:
           inmueble: Arrendamiento de este inmueble

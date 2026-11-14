@@ -4907,6 +4907,12 @@ application:
         stale_revision: The profile or its ledger entries changed after this list
           was read. Read the list again.
       relation:
+        iae_elemento_tributario:
+          actividad: Tax element of this activity
+        iae_local:
+          actividad: Premises of this activity
+        iae_local_superficie:
+          local: Surface class of these premises
         prevision_social_contribution: Certificate of the year
         renta_arrendamiento:
           inmueble: Lease of this property
