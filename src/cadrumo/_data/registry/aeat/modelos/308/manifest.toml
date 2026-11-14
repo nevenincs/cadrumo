@@ -11,7 +11,6 @@ legal_refs = [
     "ley-37-1992:art-161",
 ]
 source_refs = [
-    "aeat-dr-308-2009",
     "aeat-dr-308-2019",
     "aeat-modelo-308-procedure",
     "boe-modelo-308-2008-form",

@@ -193,7 +193,7 @@ form_number = "02"
 section = ["declarante", "liquidacion"]
 data_type = "ratio"
 # The design prints [02] as "MTN - Liquidación - Tipo (%)" at 3 enteros y 2 decimales, a percentage.
-constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-308-2009"] }
+constraints = { min_value = "0", max_value = "100" }
 semantic_role = "mtn_tipo_01"
 legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
 continuidad_id = "mtn-tipo-01"
@@ -229,7 +229,7 @@ form_number = "05"
 section = ["declarante", "liquidacion"]
 data_type = "ratio"
 # The design prints [05] as "MTN - Liquidación - Tipo (%)" at 3 enteros y 2 decimales, a percentage.
-constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-308-2009"] }
+constraints = { min_value = "0", max_value = "100" }
 semantic_role = "mtn_tipo_04"
 legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
 continuidad_id = "mtn-tipo-04"
@@ -290,7 +290,7 @@ form_number = "09"
 section = ["declarante", "liquidacion"]
 data_type = "ratio"
 # The design prints [09] as "REQ - Liquidación - Tipo (%)" at 3 enteros y 2 decimales, a percentage.
-constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-308-2009"] }
+constraints = { min_value = "0", max_value = "100" }
 semantic_role = "req_tipo_09"
 legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
 continuidad_id = "req-tipo-09"
@@ -328,7 +328,7 @@ form_number = "12"
 section = ["declarante", "liquidacion"]
 data_type = "ratio"
 # The design prints [12] as "REQ - Liquidación - Tipo (%)" at 3 enteros y 2 decimales, a percentage.
-constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-308-2009"] }
+constraints = { min_value = "0", max_value = "100" }
 semantic_role = "req_tipo_12"
 legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
 continuidad_id = "req-tipo-12"
@@ -366,7 +366,7 @@ form_number = "15"
 section = ["declarante", "liquidacion"]
 data_type = "ratio"
 # The design prints [15] as "REQ - Liquidación - Tipo (%)" at 3 enteros y 2 decimales, a percentage.
-constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-308-2009"] }
+constraints = { min_value = "0", max_value = "100" }
 semantic_role = "req_tipo_15"
 legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
 continuidad_id = "req-tipo-15"

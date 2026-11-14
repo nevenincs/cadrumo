@@ -24,7 +24,7 @@ section = ["iva", "regimen_general", "intragrupo", "devengado"]
 semantic_role = "m322_liquidacion_iva_devengado_operaciones_intragrupo_tipo"
 data_type = "ratio"
 # The design prints [02] as "IVA DEVENGADO. Operaciones intragrupo. Tipo %" at 3 enteros + 2 decimales, a percentage.
-constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-322-2022"] }
+constraints = { min_value = "0", max_value = "100" }
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 
 [[revisions."2008-2022".casillas]]
@@ -51,7 +51,7 @@ section = ["iva", "regimen_general", "intragrupo", "devengado"]
 semantic_role = "m322_liquidacion_iva_devengado_operaciones_intragrupo_tipo"
 data_type = "ratio"
 # The design prints [05] as "IVA DEVENGADO. Operaciones intragrupo. Tipo %" at 3 enteros + 2 decimales, a percentage.
-constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-322-2022"] }
+constraints = { min_value = "0", max_value = "100" }
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 
 [[revisions."2008-2022".casillas]]
@@ -78,7 +78,7 @@ section = ["iva", "regimen_general", "intragrupo", "devengado"]
 semantic_role = "m322_liquidacion_iva_devengado_operaciones_intragrupo_tipo"
 data_type = "ratio"
 # The design prints [08] as "IVA DEVENGADO. Operaciones intragrupo. Tipo %" at 3 enteros + 2 decimales, a percentage.
-constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-322-2022"] }
+constraints = { min_value = "0", max_value = "100" }
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 
 [[revisions."2008-2022".casillas]]
@@ -105,7 +105,7 @@ section = ["iva", "tributacion_territorio"]
 semantic_role = "m322_informacion_tributacion_territorio_comun"
 data_type = "ratio"
 # The design prints [107] "Información de la tributación por territorio - Territorio común" at 3 enteros y 2 decimales, a share of 100, a percentage.
-constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-322-2022"] }
+constraints = { min_value = "0", max_value = "100" }
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 
 [[revisions."2008-2022".casillas]]
@@ -195,7 +195,7 @@ section = ["iva", "regimen_general", "devengado"]
 semantic_role = "m322_liquidacion_iva_devengado_resto_de_operaciones_en_regimen_general_tipo"
 data_type = "ratio"
 # The design prints [13] as "IVA DEVENGADO. Resto de operaciones en régimen general. Tipo %" at 3 enteros + 2 decimales, a percentage.
-constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-322-2022"] }
+constraints = { min_value = "0", max_value = "100" }
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 
 [[revisions."2008-2022".casillas]]
@@ -222,7 +222,7 @@ section = ["iva", "regimen_general", "devengado"]
 semantic_role = "m322_liquidacion_iva_devengado_resto_de_operaciones_en_regimen_general_tipo"
 data_type = "ratio"
 # The design prints [16] as "IVA DEVENGADO. Resto de operaciones en régimen general. Tipo %" at 3 enteros + 2 decimales, a percentage.
-constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-322-2022"] }
+constraints = { min_value = "0", max_value = "100" }
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 
 [[revisions."2008-2022".casillas]]
@@ -249,7 +249,7 @@ section = ["iva", "regimen_general", "devengado"]
 semantic_role = "m322_liquidacion_iva_devengado_resto_de_operaciones_en_regimen_general_tipo"
 data_type = "ratio"
 # The design prints [19] as "IVA DEVENGADO. Resto de operaciones en régimen general. Tipo %" at 3 enteros + 2 decimales, a percentage.
-constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-322-2022"] }
+constraints = { min_value = "0", max_value = "100" }
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 
 [[revisions."2008-2022".casillas]]
@@ -325,7 +325,7 @@ section = ["iva", "regimen_general", "recargo"]
 semantic_role = "m322_liquidacion_iva_devengado_recargo_de_equivalencia_tipo"
 data_type = "ratio"
 # The design prints [28] as "IVA DEVENGADO. Recargo de Equivalencia. Tipo %" at 3 enteros + 2 decimales, a percentage.
-constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-322-2022"] }
+constraints = { min_value = "0", max_value = "100" }
 legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 
 [[revisions."2008-2022".casillas]]
@@ -352,7 +352,7 @@ section = ["iva", "regimen_general", "recargo"]
 semantic_role = "m322_liquidacion_iva_devengado_recargo_de_equivalencia_tipo"
 data_type = "ratio"
 # The design prints [31] as "IVA DEVENGADO. Recargo de Equivalencia. Tipo %" at 3 enteros + 2 decimales, a percentage.
-constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-322-2022"] }
+constraints = { min_value = "0", max_value = "100" }
 legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 
 [[revisions."2008-2022".casillas]]
@@ -379,7 +379,7 @@ section = ["iva", "regimen_general", "recargo"]
 semantic_role = "m322_liquidacion_iva_devengado_recargo_de_equivalencia_tipo"
 data_type = "ratio"
 # The design prints [34] as "IVA DEVENGADO. Recargo de Equivalencia. Tipo %" at 3 enteros + 2 decimales, a percentage.
-constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-322-2022"] }
+constraints = { min_value = "0", max_value = "100" }
 legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 
 [[revisions."2008-2022".casillas]]
@@ -553,7 +553,7 @@ section = ["iva", "prorratas"]
 semantic_role = "m322_prorratas_1_porcentaje_de_prorrata"
 data_type = "ratio"
 # The design prints [504] as "% de prorrata" at 3 enteros 2 decimales, "menor o igual que 100", a percentage.
-constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-322-2022"] }
+constraints = { min_value = "0", max_value = "100" }
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 
 [[revisions."2008-2022".casillas]]
@@ -597,7 +597,7 @@ section = ["iva", "prorratas"]
 semantic_role = "m322_prorratas_2_porcentaje_de_prorrata"
 data_type = "ratio"
 # The design prints [509] as "% de prorrata" at 3 enteros 2 decimales, "menor o igual que 100", a percentage.
-constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-322-2022"] }
+constraints = { min_value = "0", max_value = "100" }
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 
 [[revisions."2008-2022".casillas]]
@@ -649,7 +649,7 @@ section = ["iva", "prorratas"]
 semantic_role = "m322_prorratas_3_porcentaje_de_prorrata"
 data_type = "ratio"
 # The design prints [514] as "% de prorrata" at 3 enteros 2 decimales, "menor o igual que 100", a percentage.
-constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-322-2022"] }
+constraints = { min_value = "0", max_value = "100" }
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 
 [[revisions."2008-2022".casillas]]
@@ -693,7 +693,7 @@ section = ["iva", "prorratas"]
 semantic_role = "m322_prorratas_4_porcentaje_de_prorrata"
 data_type = "ratio"
 # The design prints [519] as "% de prorrata" at 3 enteros 2 decimales, "menor o igual que 100", a percentage.
-constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-322-2022"] }
+constraints = { min_value = "0", max_value = "100" }
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 
 [[revisions."2008-2022".casillas]]
@@ -745,7 +745,7 @@ section = ["iva", "prorratas"]
 semantic_role = "m322_prorratas_5_porcentaje_de_prorrata"
 data_type = "ratio"
 # The design prints [524] as "% de prorrata" at 3 enteros 2 decimales, "menor o igual que 100", a percentage.
-constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-322-2022"] }
+constraints = { min_value = "0", max_value = "100" }
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 
 [[revisions."2008-2022".casillas]]
@@ -849,7 +849,7 @@ section = ["iva", "regimen_general", "devengado"]
 semantic_role = "m322_liquidacion_atribuible_administracion_del_estado_porcentaje"
 data_type = "ratio"
 # The design prints [64] as "Atribuible a la Administración del Estado (%)" at 3 enteros y 2 decimales, a percentage.
-constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-322-2022"] }
+constraints = { min_value = "0", max_value = "100" }
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 
 [[revisions."2008-2022".casillas]]
@@ -1325,7 +1325,7 @@ section = ["iva", "tributacion_territorio"]
 semantic_role = "m322_informacion_tributacion_territorio_alava"
 data_type = "ratio"
 # The design prints [89] "Información de la tributación por territorio - Álava" at 3 enteros y 2 decimales, a share of 100, a percentage.
-constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-322-2022"] }
+constraints = { min_value = "0", max_value = "100" }
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 
 [[revisions."2008-2022".casillas]]
@@ -1336,7 +1336,7 @@ section = ["iva", "tributacion_territorio"]
 semantic_role = "m322_informacion_tributacion_territorio_guipuzcoa"
 data_type = "ratio"
 # The design prints [90] "Información de la tributación por territorio - Guipúzcoa" at 3 enteros y 2 decimales, a share of 100, a percentage.
-constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-322-2022"] }
+constraints = { min_value = "0", max_value = "100" }
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 
 [[revisions."2008-2022".casillas]]
@@ -1347,7 +1347,7 @@ section = ["iva", "tributacion_territorio"]
 semantic_role = "m322_informacion_tributacion_territorio_vizcaya"
 data_type = "ratio"
 # The design prints [91] "Información de la tributación por territorio - Vizcaya" at 3 enteros y 2 decimales, a share of 100, a percentage.
-constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-322-2022"] }
+constraints = { min_value = "0", max_value = "100" }
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 
 
@@ -1359,7 +1359,7 @@ section = ["iva", "tributacion_territorio"]
 semantic_role = "m322_informacion_tributacion_territorio_navarra"
 data_type = "ratio"
 # The design prints [92] "Información de la tributación por territorio - Navarra" at 3 enteros y 2 decimales, a share of 100, a percentage.
-constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-322-2022"] }
+constraints = { min_value = "0", max_value = "100" }
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 
 [[revisions."2008-2022".casillas]]
