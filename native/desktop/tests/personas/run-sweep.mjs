@@ -92,6 +92,9 @@ const KEYS = [
   "reason",
   "log",
 ];
+// Row keys the spec states only when they apply: export_served says whether a
+// return whose verification did not pass was served an export door.
+const OPTIONAL_ROW_KEYS = ["export_served"];
 const PERSONA_KEYS = KEYS.filter(
   (key) => !["calculate", "verify", "export"].includes(key),
 );
@@ -261,12 +264,18 @@ export function lineProblem(lines, world, tree, persona) {
   const seen = new Set();
   let personaLines = 0;
   for (const line of lines) {
-    const keys = Object.keys(line).sort();
+    const optional = line.modelo === null ? [] : OPTIONAL_ROW_KEYS;
+    const keys = Object.keys(line)
+      .filter((key) => !optional.includes(key))
+      .sort();
     const expected = (line.modelo === null ? PERSONA_KEYS : KEYS)
       .slice()
       .sort();
     if (JSON.stringify(keys) !== JSON.stringify(expected))
-      return `line keys differ: ${keys.join(",")}`;
+      return `line keys differ: ${Object.keys(line).sort().join(",")}`;
+    for (const key of optional)
+      if (key in line && typeof line[key] !== "boolean")
+        return `${key} is not a boolean`;
     if (line.surface !== "window") return "surface is not window";
     if (line.tree !== tree) return `tree ${line.tree} is not ${tree}`;
     if (line.persona !== persona) return `persona ${line.persona}`;
