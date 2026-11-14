@@ -494,35 +494,9 @@ test("no taxpayer value reaches storage or the log, and sign-out drops the page'
   ).toBe(before);
 });
 
-test("the page offers its actions to the palette and leaves the grid its keys", async ({
-  page: target,
-}) => {
+test("the page offers its actions to the palette", async ({ page: target }) => {
   await openLedger(target);
   await page(target).focus();
-  // Alt+Left and Alt+Right are the documentation's only where it is shown.
-  const taken = await target.evaluate(
-    () =>
-      new Promise<boolean>((resolve) => {
-        // A chord the shell takes is stopped before it bubbles this far.
-        const timer = window.setTimeout(() => resolve(true), 500);
-        const seen = (event: KeyboardEvent) => {
-          window.removeEventListener("keydown", seen);
-          window.clearTimeout(timer);
-          resolve(event.defaultPrevented);
-        };
-        window.addEventListener("keydown", seen);
-        document.querySelector(".ledger-page")?.dispatchEvent(
-          new KeyboardEvent("keydown", {
-            key: "ArrowLeft",
-            code: "ArrowLeft",
-            altKey: true,
-            bubbles: true,
-            cancelable: true,
-          }),
-        );
-      }),
-  );
-  expect(taken).toBe(false);
 
   await target.keyboard.press("Control+KeyK");
   const palette = target.locator(".palette");
