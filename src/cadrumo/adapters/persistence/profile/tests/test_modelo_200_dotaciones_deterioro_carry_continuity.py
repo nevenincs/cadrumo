@@ -83,7 +83,7 @@ _YEAR_N = 2025
 _YEAR_N_PLUS_1 = 2026
 
 #: Net turnover (00255) every filed prior return states; the current rate reads it.
-_M200_TURNOVER: CasillaId = validated_casilla_id("00255", surface="_M200_TURNOVER")
+_M200_TURNOVER: CasillaId = validated_casilla_id("DP200007:00255", surface="_M200_TURNOVER")
 _PRIOR_TURNOVER = Decimal("500000")
 
 #: Distinct prior-year stock per source year + condition-state so a cross-year

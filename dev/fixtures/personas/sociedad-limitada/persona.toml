@@ -174,7 +174,7 @@ binding = "modelo-200-incn-periodo-impositivo-anterior"
 value = "28500.00"
 where_declared = true
 sources = [{ modelo = "200", year = "horizon-2", period = "0A" }]
-derivation = "Casilla 00255 (importe neto de la cifra de negocios) del Modelo 200 del período impositivo inmediato anterior, el de horizon-2: el operador declara 28500.00 (historia sintética: la persona no conserva ningún Modelo 200 anterior, así que ninguna casilla 00255 conservada compite). Horizon-2 fue un período de doce meses, por lo que coincide con el importe neto de la cifra de negocios de los doce meses anteriores del perfil. La casilla 00255 de 30800.00 de las expectativas es la del propio período declarado (horizon-1), no la del anterior."
+derivation = "Casilla 00255 (importe neto de la cifra de negocios) del Modelo 200 del período impositivo inmediato anterior, el de horizon-2: el operador declara 28500.00 (historia sintética: la persona no conserva ningún Modelo 200 anterior, así que ninguna casilla 00255 conservada compite). Horizon-2 fue un período de doce meses, por lo que coincide con el importe neto de la cifra de negocios de los doce meses anteriores del perfil. La casilla 00255 de 30800.00 que la sociedad consigna en [[work_inputs]] es la del propio período declarado (horizon-1), no la del anterior."
 legal_ref = ["ley-27-2014:art-29"]
 
 # Each art. 40.2 instalment (casilla 03 of the 202) is 18 % of the cuota íntegra, less deducciones,
@@ -245,13 +245,65 @@ iva_compensation_carried_in = "0.00"
 # 00501)"). No record the application holds produces it, so the company enters it
 # as the closed accounts give it. No closing entry is authored here: each one the
 # accounts could carry is stated below as absent, with the persona fact behind it.
+#
+# The same closed accounts fill the cuenta de pérdidas y ganancias of pages 7 and 8
+# (Manual práctico de Sociedades 2024, corpus manuals/sociedades/2024
+# source.pdf.extracted.md:5032-5056; 2025 :5095-5119), each line by the PGC accounts
+# the manual assigns it. A line the accounts leave empty stays absent. A gasto is a
+# negative partida, entered with the minus sign: "Cualquier partida de estados
+# contables que sea negativa ... deberá de consignarse precedida del signo menos (-)"
+# (2024 :5055-5056; 2025 :5118-5119), the parenthesised accounts being Debe accounts
+# (2024 :5386; 2025 :5449), and the subtotals add their lines with that sign
+# (00296 = 00255 + ... + 00279 + ..., 2024 :5235-5249; 00325 = 00296 + 00324,
+# 2024 :5358; 2025 :5298, :5421). The record design types these boxes N, the signed
+# type ("signo igual a Cta. de Pérd. y Gan.", aeat-dr-200-2024 DP200020, design
+# :3240), not the unsigned Num.
 [[work_inputs]]
 modelo = "200"
 year = "horizon-1"
 period = "0A"
-roles = { "is-liquidacion-i-importe" = "25400.00", "is-liquidacion-iii-compensacion-bin-aplicada" = "16300.00" }
-reason = "El resultado contable antes del Impuesto sobre Sociedades sale de las cuentas cerradas del ejercicio, que ningún registro de la aplicación produce; la sociedad lo consigna en la casilla 00501."
+reason = "El resultado contable antes del Impuesto sobre Sociedades y la cuenta de pérdidas y ganancias salen de las cuentas cerradas del ejercicio, que ningún registro de la aplicación produce; la sociedad los consigna en la casilla 00501 y en las páginas 7 y 8."
+[work_inputs.roles]
+"is-liquidacion-i-importe" = "25400.00"
+"is-liquidacion-iii-compensacion-bin-aplicada" = "16300.00"
+"is-pyg-continuadas-importe-neto-de-la-cifra-de-negocios" = "30800.00"
+"is-pyg-continuadas-prestaciones-de-servicios" = "30800.00"
+"is-pyg-continuadas-otros-gastos-de-explotacion" = "-5400.00"
+"is-pyg-continuadas-servicios-exteriores" = "-5400.00"
+"is-pyg-importe" = "-5400.00"
+"is-pyg-continuadas-resultado-de-explotacion" = "25400.00"
+"is-pyg-continuadas-resultado-antes-de-impuestos" = "25400.00"
 [work_inputs.sources]
+"is-pyg-continuadas-importe-neto-de-la-cifra-de-negocios" = """
+Casilla 00255, importe neto de la cifra de negocios (cuentas 700 a 705, manual 2024 :5062-5064; 2025 :5125-5127): \
+las ocho ventas del extracto, SOC-VTA-1..8, 30800.00 de base imponible sin IVA, todas prestaciones de servicios \
+(cuenta 705). Es la suma de 00256 ventas (ausente: la sociedad no vende bienes) y 00257 prestaciones de servicios."""
+"is-pyg-continuadas-prestaciones-de-servicios" = """
+Casilla 00257, prestaciones de servicios (cuenta 705, manual 2024 :5068; 2025 :5131): los desarrollos y \
+mantenimientos de software facturados en SOC-VTA-1..8, 30800.00."""
+"is-pyg-continuadas-otros-gastos-de-explotacion" = """
+Casilla 00279, otros gastos de explotación (cuentas (62), (631), (634), 636, 639, (65), (694), (695), 794, 7954; \
+manual 2024 :5173-5175; 2025 :5236-5238): solo los servicios exteriores de 00280, -5400.00. Sin tributos (00281), \
+pérdidas por operaciones comerciales (00282) ni otros gastos de gestión corriente (00283): el extracto no tiene \
+ninguna de esas filas. Gasto del Debe, con signo menos."""
+"is-pyg-continuadas-servicios-exteriores" = """
+Casilla 00280, servicios exteriores (cuenta (62), manual 2024 :5176; 2025 :5239): el alquiler trimestral de \
+equipos y licencias, SOC-ALQ-1..4, 4 x 1350.00 = 5400.00 de base sin IVA (el IVA soportado es deducible en su \
+totalidad), -5400.00. Es la suma de 00253 servicios profesionales independientes (cuenta 623, ausente: ningún \
+profesional factura a la sociedad) y 00254 resto."""
+"is-pyg-importe" = """
+Casilla 00254, servicios exteriores - resto (cuentas (620), (621), (622), (624) a (629), manual 2024 :5179-5181; \
+2025 :5242-5244): el alquiler de equipos y la cesión de licencias son arrendamientos y cánones, cuenta 621, \
+SOC-ALQ-1..4, -5400.00."""
+"is-pyg-continuadas-resultado-de-explotacion" = """
+Casilla 00296, resultado de explotación = 00255 + 00258 + 00259 + 00260 + 00265 + 00270 + 00279 + 00284 + 00285 + \
+00286 + 00287 + 00294 + 00295 (manual 2024 :5235-5249; 2025 :5298-5312) = 30800.00 + (-5400.00) = 25400.00; las \
+demás partidas están ausentes (sin existencias, aprovisionamientos, otros ingresos, personal, amortización ni \
+inmovilizado, como dice la fuente de is-liquidacion-i-importe)."""
+"is-pyg-continuadas-resultado-antes-de-impuestos" = """
+Casilla 00325, resultado antes de impuestos = 00296 + 00324 (manual 2024 :5358; 2025 :5421). El resultado \
+financiero 00324 está ausente: el extracto no tiene ingresos ni gastos financieros. 25400.00 + 0 = 25400.00, el \
+mismo resultado contable antes del Impuesto sobre Sociedades que la sociedad consigna en 00501."""
 "is-liquidacion-i-importe" = """
 Cuenta de pérdidas y ganancias del ejercicio con las filas del extracto (ledger.csv, base imponible sin IVA, \
 deducible en su totalidad). Ingresos: SOC-VTA-1 5200.00 + SOC-VTA-2 1800.00 + SOC-VTA-3 6400.00 + \
