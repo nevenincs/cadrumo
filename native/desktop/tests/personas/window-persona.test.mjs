@@ -1662,9 +1662,7 @@ async function openWork(row) {
 function pageCalendar(modelo, period) {
   const norm = (text) => (text ?? "").replace(/\s+/g, " ").trim();
   const key = `${modelo}:${period}`;
-  const owed = document.querySelector(
-    `[data-entry="${CSS.escape(key)}"]`,
-  );
+  const owed = document.querySelector(`[data-entry="${CSS.escape(key)}"]`);
   const apart = document.querySelector(
     `[data-suppressed="${CSS.escape(key)}"]`,
   );
@@ -2312,7 +2310,10 @@ async function probeExportDoor(out) {
       );
     }
   } catch (error) {
-    sayExport(out, `export door not measured: ${String(error?.message ?? error)}`);
+    sayExport(
+      out,
+      `export door not measured: ${String(error?.message ?? error)}`,
+    );
   }
   try {
     await openView("desktop.modelo.view.form");
