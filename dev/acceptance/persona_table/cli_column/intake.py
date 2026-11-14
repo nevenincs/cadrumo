@@ -78,6 +78,8 @@ class RowResult:
     export: StageResult = UNREACHED
     file: StageResult | None = None
     figures: tuple[tuple[str, str], ...] = ()
+    workaround: str | None = None
+    """The diagnostic substitute that produced the stage values in place of what a person runs; never a match."""
 
     def stages(self) -> tuple[StageResult, ...]:
         """The stages that ran, in lifecycle order."""
@@ -271,6 +273,8 @@ def return_line(scope: ReturnScope, result: RowResult, log: str) -> dict[str, ob
     }
     if result.file is not None:
         line["file"] = result.file.word
+    if result.workaround is not None:
+        line["workaround"] = result.workaround
     return line
 
 

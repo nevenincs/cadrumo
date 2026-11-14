@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -318,3 +319,18 @@ def test_a_file_that_holds_a_secret_is_removed_and_the_others_stay(tmp_path: Pat
 
 def test_a_short_value_is_not_treated_as_a_secret() -> None:
     assert Redactor(["abc"]).text("abc abc") == "abc abc"
+
+
+def test_a_workaround_is_written_read_back_and_keeps_the_row_from_matching(tmp_path: Path) -> None:
+    figures = (("0505", "1200.5"),)
+    writer = _writer(tmp_path)
+    plain = RowResult(StageResult("pass"), StageResult("pass"), StageResult("pass"), figures=figures)
+    substituted = replace(plain, workaround="cli_calculate_drops_statements")
+
+    assert "workaround" not in return_line(_scope(), plain, "l")
+    writer.write(return_line(_scope(), substituted, "l"))
+    shown = read_results(tmp_path)["cli", "persona-x", "303", _YEAR, "1T"]
+
+    assert shown.workaround == "cli_calculate_drops_statements"
+    outcome = parity(_row(figures), "cli", shown)
+    assert (outcome.outcome, outcome.causes) == (DIFFERS, ("workaround cli_calculate_drops_statements",))

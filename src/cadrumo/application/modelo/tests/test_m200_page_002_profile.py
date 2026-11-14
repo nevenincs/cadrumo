@@ -45,7 +45,6 @@ _AT = datetime.fromtimestamp(0, tz=UTC)
 _ADMINISTRADOR_NIF = "Y0000000Z"
 _SOCIO_NIF = "Y0000001S"
 _ANSWERED_NONE = (
-    "has_representante_legal",
     "has_secretario_consejo",
     "has_participacion_directa",
     "has_establecimiento_permanente",
@@ -105,6 +104,11 @@ def _sociedad_limitada(**overrides: UserProfileFactValue | None) -> dict[str, Us
         "m200_participacion_socio.0.nominal": Decimal("3000.00"),
         "m200_participacion_socio.0.porcentaje_participacion": Decimal("100"),
         "m200_relaciones.has_participacion_socio": True,
+        "m200_representante_legal.0.apellidos_y_nombre": "ADMINISTRADORA PRUEBA",
+        "m200_representante_legal.0.nif": _ADMINISTRADOR_NIF,
+        "m200_representante_legal.0.fecha_poder": _AT.date(),
+        "m200_representante_legal.0.notaria_otros": "MADRID",
+        "m200_relaciones.has_representante_legal": True,
         **{f"m200_relaciones.{field}": False for field in _ANSWERED_NONE},
     }
     facts.update(overrides)
@@ -158,7 +162,17 @@ def test_a_sociedad_limitada_profile_fills_the_administrador_and_socio_rows(
         "nominal": "3000.00",
         "porcentaje_participacion": "100",
     }
-    filled = {families["m200_administrador"], families["m200_participacion_socio"]}
+    (representante,) = getattr(rows, families["m200_representante_legal"])
+    assert (representante.nif, representante.apellidos_y_nombre, representante.notaria_otros) == (
+        _ADMINISTRADOR_NIF,
+        "ADMINISTRADORA PRUEBA",
+        "MADRID",
+    )
+    filled = {
+        families["m200_administrador"],
+        families["m200_participacion_socio"],
+        families["m200_representante_legal"],
+    }
     assert all(getattr(rows, name) == () for name in type(rows).model_fields if name not in filled)
 
 
@@ -214,6 +228,18 @@ def test_a_sociedad_limitada_cannot_state_it_has_no_socios(operation: PinnedAuth
     assert refusal.context is not None
     assert refusal.context["reason"] == M200Page002Refusal.NONE_REFUSED_FOR_FORM.value
     assert refusal.context["entity_form"] == "sl"
+
+
+def test_a_declarant_cannot_state_it_has_no_representante_legal(operation: PinnedAuthorityOperation) -> None:
+    representante_paths = {path: None for path in _sociedad_limitada() if path.startswith("m200_representante_legal.")}
+    refusal = _refusal(
+        operation,
+        _sociedad_limitada(**representante_paths, **{"m200_relaciones.has_representante_legal": False}),
+    )
+
+    assert refusal.context is not None
+    assert refusal.context["reason"] == M200Page002Refusal.NONE_REFUSED_FOR_FORM.value
+    assert refusal.context["profile_section"] == "m200_representante_legal"
 
 
 def test_socio_percentages_short_of_one_hundred_refuse(operation: PinnedAuthorityOperation) -> None:
