@@ -166,6 +166,10 @@ class TableRow:
     """The calculated values of the return's casillas on the form, every non-zero one, by casilla id; see
     :func:`canonical_figures`. Empty for a return that never calculated, and for a row written before figures were
     recorded. A surface can show exactly these, so the surface comparison reads them."""
+    figures_recorded: bool = False
+    """Whether the calculation's figures were recorded, which is how a calculated return with no non-zero figure
+    (empty ``figures``) differs from a row written before figures were recorded. A row with figures is recorded; a
+    line carries it as the presence of its ``figures`` object, so it adds no key of its own."""
     internal_figures: tuple[tuple[str, str], ...] = ()
     """The non-zero calculated values the revision's form layout does not place on the form (its working figures
     and unplaced casillas), same shape as ``figures``. No surface is held to show them. Empty for a row written
@@ -180,6 +184,8 @@ class TableRow:
     def __post_init__(self) -> None:
         """Derive the verdict from the stages, the grounding and the oracle."""
         object.__setattr__(self, "verdict", classify(self))
+        if self.figures:
+            object.__setattr__(self, "figures_recorded", True)
 
     @property
     def key(self) -> tuple[str, str, int, str]:
@@ -196,10 +202,13 @@ class TableRow:
         export: Stage = Stage.NOT_REACHED,
         reason: str = "",
         export_detail: str = "",
-        figures: tuple[tuple[str, str], ...] = (),
+        figures: tuple[tuple[str, str], ...] | None = None,
         internal_figures: tuple[tuple[str, str], ...] = (),
     ) -> TableRow:
-        """The row of ``plan`` with the stages it reached and the figures its calculation produced."""
+        """The row of ``plan`` with the stages it reached and the figures its calculation produced.
+
+        Giving ``figures``, even none, records them: the calculation ran and had exactly these non-zero values.
+        """
         return cls(
             persona=plan.persona,
             modelo=plan.modelo,
@@ -216,17 +225,26 @@ class TableRow:
             export_detail=export_detail,
             floor_source_dropped=plan.floor_source_dropped,
             unchecked=plan.unchecked,
-            figures=figures,
+            figures=figures or (),
+            figures_recorded=figures is not None,
             internal_figures=internal_figures,
             sources_returns=plan.sources_returns,
         )
 
     def to_json(self) -> str:
-        """One JSON line; the verdict is written for readers and re-derived on load."""
+        """One JSON line; the verdict is written for readers and re-derived on load.
+
+        The ``figures`` object is written only for a row whose figures were recorded, so its absence reads back as
+        not recorded.
+        """
         data = asdict(self)
         data["sources"] = list(self.sources)
         data["unchecked"] = list(self.unchecked)
-        data["figures"] = dict(self.figures)
+        del data["figures_recorded"]
+        if self.figures_recorded:
+            data["figures"] = dict(self.figures)
+        else:
+            del data["figures"]
         data["internal_figures"] = dict(self.internal_figures)
         data["sources_returns"] = list(self.sources_returns)
         return json.dumps(data, ensure_ascii=False, sort_keys=True)
@@ -265,6 +283,7 @@ class TableRow:
                 data[name] = _resolved(data[name], horizon)
         data["sources"] = tuple(data["sources"])
         data["unchecked"] = tuple(data.get("unchecked", ()))
+        data["figures_recorded"] = "figures" in data
         data["figures"] = _read_figures(data.get("figures", {}))
         data["internal_figures"] = _read_figures(data.get("internal_figures", {}))
         data["sources_returns"] = tuple(data.get("sources_returns", ()))
