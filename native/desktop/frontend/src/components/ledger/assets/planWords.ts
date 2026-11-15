@@ -1,12 +1,9 @@
 import { formatDay } from "../../../shared/dateFormats";
 import { formatAmount, formatPercent } from "../../../shared/numbers";
 import { facts } from "../../../shell/compose";
+import type { PublicDecimal } from "../../../shell/ledger";
 import { canonicalDecimal } from "../../../shell/ledgerGrammar";
-import type {
-  Amount,
-  PlanRow,
-  TimelineChange,
-} from "../../../shell/ledgerSetup";
+import type { PlanRow, TimelineChange } from "../../../shell/ledgerSetup";
 import type { Translate } from "../../../shell/strings";
 import { ASSET_KEYS, tokenWord, unindexed, wordOfKey } from "./assetsWords";
 
@@ -15,6 +12,9 @@ import { ASSET_KEYS, tokenWord, unindexed, wordOfKey } from "./assetsWords";
 // backend states reads. Every figure and date arrives ready; here it is only
 // drawn. A token the catalogue has no word for reads as the generic word,
 // never raw.
+
+/** An amount the backend states or does not: null is unknown, never zero. */
+type Amount = PublicDecimal | null;
 
 /** The labels only the plan and the timeline name directly. */
 export const PLAN_KEYS = {

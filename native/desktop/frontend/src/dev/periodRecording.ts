@@ -93,7 +93,7 @@ export function answerPeriods(
     if (found === null) return null;
     days.push(found);
   }
-  let covering: LedgerServedPeriods["covering"];
+  let covering: LedgerServedPeriods["covering"] = null;
   if (query.covering) {
     const found = spanPeriod(
       language,
@@ -108,7 +108,7 @@ export function answerPeriods(
     annual_code: recording.annual_code,
     periods: table,
     containing: reference,
-    ...(covering ? { covering } : {}),
+    covering,
     days,
   };
 }

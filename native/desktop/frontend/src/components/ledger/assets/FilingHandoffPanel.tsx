@@ -6,6 +6,7 @@ import type {
   OutputLanguage,
   PublicDecimal,
 } from "../../../shell/ledger";
+import type { AssetKind } from "../../../shell/ledgerSetup";
 import { useStrings } from "../../../shell/strings";
 import { formatAmount } from "../../../shared/numbers";
 import {
@@ -58,7 +59,7 @@ export function FilingHandoffPanel({
   year: number | null;
   /** The kind of any element the register lists, which the registry's
    * options for the year are read under; null while there is none. */
-  assetKind: string | null;
+  assetKind: AssetKind | null;
 }) {
   const t = useStrings();
   const [open, setOpen] = useState(false);

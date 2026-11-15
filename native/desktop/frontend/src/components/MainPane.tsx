@@ -529,6 +529,10 @@ export function MainPane({
           locale={locale}
           refreshing={calendar.refreshing}
           onRefresh={calendar.refresh}
+          year={calendar.year}
+          yearFailed={calendar.yearFailed}
+          onYearStep={calendar.step}
+          onYearCurrent={calendar.current}
         />
       )}
       {/* Put aside, not unloaded: the page it was on is there on return. */}

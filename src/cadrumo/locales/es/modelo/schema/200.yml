@@ -6686,6 +6686,92 @@ modelo:
           incentive-deductions-detail-total-applied:
             label: Deducc. para incentivar determ.actividades - Total - Aplicado en
               esta liquidación [00588]
+          is-202-alimentaria-2022-y-hostelco-2022-ah-deduccion-pendiente-generada-dp200018b-01267:
+            label: Deducc. para incentivar determ.actividades - 202 ALIMENTARIA 2022
+              y HOSTELCO 2022 (AH) - Deducción pendiente/generada [01267]
+          is-2020-derecho-reducir-b-i-generado-periodo-pendiente-aplicar-inicio-periodo-dp200020b-01985:
+            label: Reserva Capitalización - 2020 - Derecho reducir B.I. generado periodo/pendiente
+              aplicar inicio periodo [01985]
+          is-2020-reduccion-b-i-aplicada-dp200020b-01986:
+            label: Reserva Capitalización - 2020 - Reducción B.I. aplicada [01986]
+          is-2021-reduccion-b-i-pdte-de-aplicar-en-periodos-futuros-dp200020b-02409:
+            label: Reserva Capitalización - 2021 - Reducción B.I. pdte. De aplicar
+              en períodos futuros [02409]
+          is-2022-ano-santo-jacobeo-2021-j21-pendiente-de-aplicacion-en-periodos-futuros-dp200018-01909:
+            label: Deducc. para incentivar determ.actividades - 2022 Año Santo Jacobeo
+              2021 (J21) - Pendiente de aplicación en periodos futuros [01909]
+          is-2022-el-tiempo-de-la-libertad-comuneros-v-centenario-cvc-aplicado-en-esta-liquidacion-dp200018-00255:
+            label: Deducc. para incentivar determ.actividades - 2022 El tiempo de
+              la Libertad. Comuneros V Centenario (CVC) - Aplicado en esta liquidación
+              [00255]
+          is-2022-el-tiempo-de-la-libertad-comuneros-v-centenario-cvc-deduccion-pendiente-generada-dp200018-00254:
+            label: Deducc. para incentivar determ.actividades - 2022 El tiempo de
+              la Libertad. Comuneros V Centenario (CVC) - Deducción pendiente/generada
+              [00254]
+          ? is-2022-enfermedades-neurodegenerativas-ano-internacional-de-la-investigacion-e-innovacion-periodo-2021-2022-e-dp200018-00801
+          : label: Deducc. para incentivar determ.actividades - 2022 Enfermedades
+              Neurodegenerativas. Año Internacional de la Investigación e Innovación.
+              Período 2021-2022 (EN21) - Aplicado en esta liquidación [00801]
+          ? is-2022-enfermedades-neurodegenerativas-ano-internacional-de-la-investigacion-e-innovacion-periodo-2021-2022-e-dp200018-00811
+          : label: Deducc. para incentivar determ.actividades - 2022 Enfermedades
+              Neurodegenerativas. Año Internacional de la Investigación e Innovación.
+              Período 2021-2022 (EN21) - Pendiente de aplicación en periodos futuros
+              [00811]
+          ? is-2022-espana-pais-invitado-de-honor-en-la-feria-del-libro-de-francfort-en-2022-e22-aplicado-en-esta-liquidac-dp200018-02369
+          : label: Deducc. para incentivar determ.actividades - 2022 España País Invitado
+              de Honor en la Feria del Libro de Fráncfort en 2022(E22) - Aplicado
+              en esta liquidación [02369]
+          ? is-2022-espana-pais-invitado-de-honor-en-la-feria-del-libro-de-francfort-en-2022-e22-deduccion-pendiente-gener-dp200018-02368
+          : label: Deducc. para incentivar determ.actividades - 2022 España País Invitado
+              de Honor en la Feria del Libro de Fráncfort en 2022(E22) - Deducción
+              pendiente/generada [02368]
+          ? is-2022-espana-pais-invitado-de-honor-en-la-feria-del-libro-de-francfort-en-2022-e22-pendiente-de-aplicacion-e-dp200018-02370
+          : label: Deducc. para incentivar determ.actividades - 2022 España País Invitado
+              de Honor en la Feria del Libro de Fráncfort en 2022(E22) - Pendiente
+              de aplicación en periodos futuros [02370]
+          is-2022-expo-dubai-2020-d20-aplicado-en-esta-liquidacion-dp200018-01935:
+            label: Deducc. para incentivar determ.actividades - 2022 Expo Dubai 2020
+              (D20) - Aplicado en esta liquidación [01935]
+          is-2022-expo-dubai-2020-d20-deduccion-pendiente-generada-dp200018-01934:
+            label: Deducc. para incentivar determ.actividades - 2022 Expo Dubai 2020
+              (D20) - Deducción pendiente/generada [01934]
+          is-2022-expo-dubai-2020-d20-pendiente-de-aplicacion-en-periodos-futuros-dp200018-01936:
+            label: Deducc. para incentivar determ.actividades - 2022 Expo Dubai 2020
+              (D20) - Pendiente de aplicación en periodos futuros [01936]
+          is-2022-global-mobility-call-gm-aplicado-en-esta-liquidacion-dp200018b-01278:
+            label: Deducc. para incentivar determ.actividades - 2022 Global Mobility
+              Call (GM) - Aplicado en esta liquidación [01278]
+          is-2022-global-mobility-call-gm-deduccion-pendiente-generada-dp200018b-01277:
+            label: Deducc. para incentivar determ.actividades - 2022 Global Mobility
+              Call (GM) - Deducción pendiente/generada [01277]
+          is-2022-global-mobility-call-gm-pendiente-de-aplicacion-en-periodos-futuros-dp200018b-01279:
+            label: Deducc. para incentivar determ.actividades - 2022 Global Mobility
+              Call (GM) - Pendiente de aplicación en periodos futuros [01279]
+          ? is-2022-v-centenario-de-la-expedicion-de-la-primera-vuelta-al-mundo-de-fernando-de-magallanes-y-juan-sebastian-dp200018-01638
+          : label: Deducc. para incentivar determ.actividades - 2022 V Centenario
+              de la expedición de la primera vuelta al mundo de Fernando de Magallanes
+              y Juan Sebastián Elcano (EPVM) - Deducción pendiente/generada [01638]
+          ? is-2022-v-centenario-de-la-expedicion-de-la-primera-vuelta-al-mundo-de-fernando-de-magallanes-y-juan-sebastian-dp200018-01639
+          : label: Deducc. para incentivar determ.actividades - 2022 V Centenario
+              de la expedición de la primera vuelta al mundo de Fernando de Magallanes
+              y Juan Sebastián Elcano (EPVM) - Aplicado en esta liquidación [01639]
+          ? is-2022-v-centenario-de-la-expedicion-de-la-primera-vuelta-al-mundo-de-fernando-de-magallanes-y-juan-sebastian-dp200018-01640
+          : label: Deducc. para incentivar determ.actividades - 2022 V Centenario
+              de la expedición de la primera vuelta al mundo de Fernando de Magallanes
+              y Juan Sebastián Elcano (EPVM) - Pendiente de aplicación en periodos
+              futuros [01640]
+          is-2022-viii-centenario-de-la-catedral-de-burgos-2021-cb21-aplicado-en-esta-liquidacion-dp200018-01911:
+            label: Deducc. para incentivar determ.actividades - 2022 VIII Centenario
+              de la Catedral de Burgos 2021 (CB21) - Aplicado en esta liquidación
+              [01911]
+          is-2022-viii-centenario-de-la-catedral-de-burgos-2021-cb21-deduccion-pendiente-generada-dp200018-01910:
+            label: Deducc. para incentivar determ.actividades - 2022 VIII Centenario
+              de la Catedral de Burgos 2021 (CB21) - Deducción pendiente/generada
+              [01910]
+          is-2022-viii-centenario-de-la-catedral-de-burgos-2021-cb21-pendiente-de-aplicacion-en-periodos-futuros-dp200018-01912:
+            label: Deducc. para incentivar determ.actividades - 2022 VIII Centenario
+              de la Catedral de Burgos 2021 (CB21) - Pendiente de aplicación en periodos
+              futuros [01912]
           is-abono-deducciones-id-i-insuficiencia-cuota-estado:
             label: Liquidación IV - Resultado de la autoliquidación - Abono deducciones
               I+D+i por insuficiencia de cuota - Estado [00083]
@@ -7332,6 +7418,11 @@ modelo:
           is-compensacion-bases-negativas:
             label: Detalle compensación bases imponibles negativas - 1999 - Aplicado
               en esta liquidación [00647]
+          is-compensacion-de-base-imponible-resto-actividades-ano-2022-aplicado-en-esta-liquidacion-dp200015-02465:
+            label: 'Régimen especial de buques y empresas navieras en Canarias: desglose
+              de la compensación de bases imponibles negativas - Compensación de base
+              imponible resto actividades año 2022 - Aplicado en esta liquidación
+              [02465]'
           is-comunidades-titulares-de-montes-vecinales-en-mano-comun:
             help: Indicador de comunidades titulares de montes vecinales en mano común
               [00005].
@@ -8850,6 +8941,34 @@ modelo:
               [01230]
           is-cuota-liquida:
             label: Liquidación IV - Otras deducciones - Cuota líquida [00592]
+          is-deducc-art-42-rdleg-4-2004-2007-aplicado-en-esta-liquidacion-dp200016-00005:
+            label: Deducc. Disposic.Transit. 24ª.7 LIS - Deducc. Art. 42 RDLeg. 4/2004
+              2007 - Aplicado en esta liquidación [00005]
+          is-deducc-art-42-rdleg-4-2004-2007-deduccion-pendiente-generada-dp200016-00004:
+            label: Deducc. Disposic.Transit. 24ª.7 LIS - Deducc. Art. 42 RDLeg. 4/2004
+              2007 - Deducción pendiente/generada [00004]
+          is-deduccion-125-aniversario-athletic-club-aplicado-periodo:
+            label: 'Deducc. para incentivar determ.actividades - 2023: 125 aniversario
+              del Athletic Club 1898-2023 (AC) - Aplicado en esta liquidación [02024]'
+          is-deduccion-125-aniversario-athletic-club-pendiente-futuro:
+            label: 'Deducc. para incentivar determ.actividades - 2023: 125 aniversario
+              del Athletic Club 1898-2023 (AC) - Pendiente de aplicación en periodos
+              futuros [02025]'
+          is-deduccion-125-aniversario-athletic-club-pendiente-generada:
+            label: 'Deducc. para incentivar determ.actividades - 2023: 125 aniversario
+              del Athletic Club 1898-2023 (AC) - Deducción pendiente/generada [02000]'
+          is-deduccion-60-aniversario-rally-blendio-aplicado-periodo:
+            label: 'Deducc. para incentivar determ.actividades - 2023: 60 Aniversario
+              Rally Blendio Princesa de Asturias Ciudad de Oviedo (60RB) - Aplicado
+              en esta liquidación [01995]'
+          is-deduccion-60-aniversario-rally-blendio-pendiente-futuro:
+            label: 'Deducc. para incentivar determ.actividades - 2023: 60 Aniversario
+              Rally Blendio Princesa de Asturias Ciudad de Oviedo (60RB) - Pendiente
+              de aplicación en periodos futuros [01996]'
+          is-deduccion-60-aniversario-rally-blendio-pendiente-generada:
+            label: 'Deducc. para incentivar determ.actividades - 2023: 60 Aniversario
+              Rally Blendio Princesa de Asturias Ciudad de Oviedo (60RB) - Deducción
+              pendiente/generada [01987]'
           is-deduccion-acontecimiento-interes-publico-otras:
             label: Deducc. para incentivar determ.actividades - N+1(****) Otras deducciones
               relativas a programas de apoyo a acontecimientos de excepcional interés
@@ -8946,6 +9065,33 @@ modelo:
             label: Deducción donativos entidades sin fines lucro - Donaciones de carácter
               general - 2024 Sin reiteración de donaciones a una misma entidad- Deducción
               pendiente/generada [00369]
+          is-deduccion-donativos-general-subtotal-2013-2014-aplicado-periodo:
+            label: Deducción donativos entidades sin fines lucro - Donaciones de carácter
+              general - Subtotal donaciones 2013 y 2014 - Aplicado en esta liquidación
+              [01690]
+          is-deduccion-donativos-general-subtotal-2013-2014-pendiente-futuro:
+            label: Deducción donativos entidades sin fines lucro - Donaciones de carácter
+              general - Subtotal donaciones 2013 y 2014 - Pendiente de aplicación
+              en periodos futuros [01691]
+          is-deduccion-donativos-general-subtotal-2013-2014-pendiente-generada:
+            label: Deducción donativos entidades sin fines lucro - Donaciones de carácter
+              general - Subtotal donaciones 2013 y 2014 - Deducción pendiente/generada
+              [01689]
+          is-deduccion-donativos-prioritarias-subtotal-2013-2014-aplicado-periodo:
+            label: Deducción donativos entidades sin fines lucro - Donaciones para
+              actividades prioritarias de mecenazgo y otras con derecho a deducción
+              incrementada - Subtotal donaciones 2013 y 2014 - Aplicado en esta liquidación
+              [01702]
+          is-deduccion-donativos-prioritarias-subtotal-2013-2014-pendiente-futuro:
+            label: Deducción donativos entidades sin fines lucro - Donaciones para
+              actividades prioritarias de mecenazgo y otras con derecho a deducción
+              incrementada - Subtotal donaciones 2013 y 2014 - Pendiente de aplicación
+              en periodos futuros [01703]
+          is-deduccion-donativos-prioritarias-subtotal-2013-2014-pendiente-generada:
+            label: Deducción donativos entidades sin fines lucro - Donaciones para
+              actividades prioritarias de mecenazgo y otras con derecho a deducción
+              incrementada - Subtotal donaciones 2013 y 2014 - Deducción pendiente/generada
+              [01701]
           is-deduccion-donativos-total:
             label: Deducción donativos entidades sin fines lucro - Total deducciones
               donaciones a entidades sin fines lucro - Pendiente de aplicación en
@@ -9186,6 +9332,39 @@ modelo:
           is-diocesis-provincia-religiosa-o-entidad-eclesiastica-que-integra-entidades-menores-de-ellas-dependientes:
             label: Diócesis, provincia religiosa o entidad eclesiástica que integra
               entidades menores de ellas dependientes [00078]
+          is-donaciones-de-caracter-general-2012-aplicado-en-esta-liquidacion-dp200018c-00905:
+            label: Deducción donativos entidades sin fines lucro - Donaciones de carácter
+              general - 2012 - Aplicado en esta liquidación [00905]
+          is-donaciones-de-caracter-general-2012-deduccion-pendiente-generada-dp200018c-00904:
+            label: Deducción donativos entidades sin fines lucro - Donaciones de carácter
+              general - 2012 - Deducción pendiente/generada [00904]
+          is-donaciones-de-caracter-general-2013-pendiente-de-aplicacion-en-periodos-futuros-dp200018c-00992:
+            label: Deducción donativos entidades sin fines lucro - Donaciones de carácter
+              general - 2013 - Pendiente de aplicación en periodos futuros [00992]
+          ? is-donaciones-para-actividades-prioritarias-de-mecenazgo-y-otras-con-derecho-a-deduccion-incrementada-2012-apl-dp200018c-00901
+          : label: Deducción donativos entidades sin fines lucro - Donaciones para
+              actividades prioritarias de mecenazgo y otras con derecho a deducción
+              incrementada - 2012 - Aplicado en esta liquidación [00901]
+          ? is-donaciones-para-actividades-prioritarias-de-mecenazgo-y-otras-con-derecho-a-deduccion-incrementada-2012-ded-dp200018c-00899
+          : label: Deducción donativos entidades sin fines lucro - Donaciones para
+              actividades prioritarias de mecenazgo y otras con derecho a deducción
+              incrementada - 2012 - Deducción pendiente/generada [00899]
+          ? is-donaciones-para-actividades-prioritarias-de-mecenazgo-y-otras-con-derecho-a-deduccion-incrementada-2013-pen-dp200018c-00929
+          : label: Deducción donativos entidades sin fines lucro - Donaciones para
+              actividades prioritarias de mecenazgo y otras con derecho a deducción
+              incrementada - 2013 - Pendiente de aplicación en periodos futuros [00929]
+          is-dotacion-de-la-reserva-ejercicio-generacion-2017-importe-reserva-a-dotar-dp200020b-01458:
+            label: Reserva de nivelación - Dotación de la reserva - Ejercicio generación
+              2017 - Importe reserva a dotar [01458]
+          is-dotacion-de-la-reserva-ejercicio-generacion-2017-importe-reserva-dotada-dp200020b-01459:
+            label: Reserva de nivelación - Dotación de la reserva - Ejercicio generación
+              2017 - Importe reserva dotada [01459]
+          is-dotacion-de-la-reserva-ejercicio-generacion-2017-importe-reserva-pendiente-dotacion-dp200020b-01460:
+            label: Reserva de nivelación - Dotación de la reserva - Ejercicio generación
+              2017 - Importe reserva pendiente dotación [01460]
+          is-dotacion-de-la-reserva-ejercicio-generacion-2017-reserva-dispuesta-dp200020b-01461:
+            label: Reserva de nivelación - Dotación de la reserva - Ejercicio generación
+              2017 - Reserva dispuesta [01461]
           is-dotaciones-deterioro-creditos-aplicadas-conversion-aid:
             label: Dotaciones deterioro créditos u otros activos - Ejercicio generación
               - 2022 - Dotaciones aplicadas conversión activos imp. diferido [01163]
@@ -9684,6 +9863,16 @@ modelo:
             label: Entidades aseguradoras - Estado cambios patrimonio propio (II)
               -Operaciones con socios o mutualistas - Otras operaciones con socios
               o mutualistas. (Acciones en patrimonio propias) [00573]
+          is-ejercicio-generacion-2017-aplicado-en-esta-liquidacion-dp200020-01468:
+            label: Pendiente adición por límite beneficio operativo no aplicado -
+              Ejercicio generación 2017 - Aplicado en esta liquidación [01468]
+          is-ejercicio-generacion-2017-pendiente-aplicacion-a-principio-del-periodo-dp200020-01467:
+            label: Pendiente adición por límite beneficio operativo no aplicado -
+              Ejercicio generación 2017 - Pendiente aplicación a principio del período
+              [01467]
+          is-ejercicio-generacion-2018-pendiente-aplicacion-periodos-futuros-dp200020-01743:
+            label: Pendiente adición por límite beneficio operativo no aplicado -
+              Ejercicio generación 2018 - Pendiente aplicación períodos futuros [01743]
           is-entidad-aseguradora:
             help: Indicador de entidad aseguradora [00025].
             label: Entidad aseguradora [00025]
@@ -9799,6 +9988,23 @@ modelo:
             label: Régimen fiscal entidades de tenencia de valores extranjeros (capítulo
               XIII del título VII LIS) - Disminución - Correcciones del ejercicio
               - Temporarias (con origen en el ejercicio) [03227]
+          ? is-exceso-cuota-liquida-positiva-ejercicio-generacion-2020-exceso-cuota-liquida-positiva-aplicado-periodos-imp-dp200020c-02278
+          : label: Conversión activos impuesto diferido crédito exigible frente Admón.tributaria
+              - Exceso cuota líquida positiva - Ejercicio generación - 2020 - Exceso
+              cuota líquida positiva aplicado periodos impositivos 2008 a 2015 [02278]
+          ? is-exceso-cuota-liquida-positiva-ejercicio-generacion-2020-exceso-cuota-liquida-positiva-aplicado-periodos-imp-dp200020c-02279
+          : label: Conversión activos impuesto diferido crédito exigible frente Admón.tributaria
+              - Exceso cuota líquida positiva - Ejercicio generación - 2020 - Exceso
+              cuota líquida positiva aplicado periodos impositivos iniciados a partir
+              2016 [02279]
+          ? is-exceso-cuota-liquida-positiva-ejercicio-generacion-2020-exceso-cuota-liquida-positiva-pendiente-a-principio-dp200020c-02277
+          : label: Conversión activos impuesto diferido crédito exigible frente Admón.tributaria
+              - Exceso cuota líquida positiva - Ejercicio generación - 2020 - Exceso
+              cuota líquida positiva pendiente a principio periodo [02277]
+          ? is-exceso-cuota-liquida-positiva-ejercicio-generacion-2021-exceso-cuota-liquida-positiva-pendiente-aplicacion-dp200020c-02430
+          : label: Conversión activos impuesto diferido crédito exigible frente Admón.tributaria
+              - Exceso cuota líquida positiva - Ejercicio generación - 2021 - Exceso
+              cuota líquida positiva pendiente aplicación periodos futuros [02430]
           is-exencion-rentas-ajuste-saldo-inicio:
             label: Exención sobre la renta obtenida en la transmisión de valores entidades
               residentes (art. 21.3, 21.10 y DT 40ª LIS) - Aumento - Saldo pendiente
@@ -9905,6 +10111,18 @@ modelo:
             label: 'Información adicional para el cálculo de límites de deducciones
               - N: Financiador: deducción por producciones cinematográficas españolas
               en Canarias generada en el período impositivo [02079]'
+          is-inversiones-anticipadas-2017-pendiente-de-dotar-ric-a-principio-del-periodo-dp200022-02442:
+            label: Rég. especial reserva inversiones Canarias - Inversiones anticipadas
+              2017 - Pendiente de dotar RIC a principio del período [02442]
+          is-inversiones-anticipadas-2018-pendiente-de-dotar-ric-a-principio-del-periodo-dp200022-02444:
+            label: Rég. especial reserva inversiones Canarias - Inversiones anticipadas
+              2018 - Pendiente de dotar RIC a principio del período [02444]
+          is-inversiones-anticipadas-2019-pendiente-de-dotar-ric-al-final-del-periodo-dp200022-02447:
+            label: Rég. especial reserva inversiones Canarias - Inversiones anticipadas
+              2019 - Pendiente de dotar RIC al final del período [02447]
+          is-inversiones-anticipadas-2022-inversiones-previstas-letras-a-y-b-art-27-4-ley-19-1994-dp200022-01523:
+            label: Rég. especial reserva inversiones Canarias - Inversiones anticipadas
+              2022 - Inversiones previstas letras A y B, art. 27.4 Ley 19/1994 [01523]
           is-inversiones-anticipadas-reserva-inversiones-en-canarias-art-27-11-ley-19-1994:
             help: Indicador de inversiones anticipadas para la reserva para inversiones
               en Canarias conforme al artículo 27.11 de la Ley 19/1994 [00045].
@@ -9913,6 +10131,15 @@ modelo:
           is-inversiones-anticipadas-reserva-inversiones-en-illes-balears-da-70a-cuatro-10-ley-31-2022:
             label: Inversiones anticipadas-reserva inversiones en Illes Balears (DA
               70ª.Cuatro.10 Ley 31/2022) [00087]
+          is-inversiones-canarias-2004-aplicado-en-esta-liquidacion-dp200016b-00881:
+            label: Deducciones inversión Canarias - Inversiones Canarias 2004 - Aplicado
+              en esta liquidación [00881]
+          is-inversiones-canarias-2004-deduccion-pendiente-generada-dp200016b-00880:
+            label: Deducciones inversión Canarias - Inversiones Canarias 2004 - Deducción
+              pendiente/generada [00880]
+          is-inversiones-canarias-2005-pendiente-de-aplicacion-en-periodos-futuros-dp200016b-00870:
+            label: Deducciones inversión Canarias - Inversiones Canarias 2005 - Pendiente
+              de aplicación en periodos futuros [00870]
           is-liquidacion-i-amortizacion-contable-fiscal-art-12-1-aumentos:
             label: Liquidación I - Detalle correcciones resultado cta. pérdidas y
               ganancias - Diferencias entre amortización contable y fiscal (arts.
@@ -10065,6 +10292,8 @@ modelo:
             label: Opción art. 39.2 LIS [00059]
           is-opcion-art-39-3-lis:
             label: Opción art. 39.3 LIS [00090]
+          is-opcion-art-46-2-lis-dp200001-00016:
+            label: Opción art. 46.2 LIS [00016]
           is-opcion-de-fraccionamiento-art-19-1-lis:
             help: Indicador de la opción de fraccionamiento conforme al artículo 19.1
               de la LIS [00037].
@@ -10462,6 +10691,20 @@ modelo:
             label: Liquidación IV - Resultado de la autoliquidación - Discrepancia
               de criterio administrativo para determinados supuestos de autoliquidación
               rectificativa que no deban incluirse en otras casillas - Total [00031]
+          is-reduccion-base-imponible-ejercicio-generacion-2017-importe-adicionado-base-imponible-en-periodo-dp200020b-01456:
+            label: Reserva de nivelación - Reducción base imponible - Ejercicio generación
+              2017 - Importe adicionado base imponible en periodo [01456]
+          ? is-reduccion-base-imponible-ejercicio-generacion-2017-importe-integrado-en-la-declaracion-por-incumplimiento-d-dp200020b-01601
+          : label: Reserva de nivelación - Reducción base imponible - Ejercicio generación
+              2017 - Importe integrado en la declaración por incumplimiento de requisitos
+              [01601]
+          ? is-reduccion-base-imponible-ejercicio-generacion-2017-importe-minoracion-b-i-periodo-pendiente-adicionar-inici-dp200020b-01455
+          : label: Reserva de nivelación - Reducción base imponible - Ejercicio generación
+              2017 - Importe minoración B.I. periodo/pendiente adicionar inicio periodo
+              [01455]
+          is-reduccion-base-imponible-ejercicio-generacion-2018-importe-pendiente-adicionar-en-periodos-futuros-dp200020b-01963:
+            label: Reserva de nivelación - Reducción base imponible - Ejercicio generación
+              2018 - Importe pendiente adicionar en periodos futuros [01963]
           is-reg-fiscal-de-operac-de-aportacion-de-activos-a-sdades-para-la-gestion-de-activos-ley-8-2012:
             help: Indicador del régimen fiscal de operaciones de aportación de activos
               a sociedades para la gestión de activos conforme a la Ley 8/2012 [00062].
@@ -10549,6 +10792,28 @@ modelo:
           is-retenciones-ingresos-a-cuenta:
             label: Liquidación IV - Cuota del ejercicio a ingresar o a devolver -
               Total retenciones e ingresos a cuenta - Efectuados a la entidad [01766]
+          ? is-ric-2017-aplicado-materializado-en-esta-liquidacion-inversiones-anticipadas-consideradas-materializacion-de-dp200022-02438
+          : label: Rég. especial reserva inversiones Canarias - RIC 2017 - Aplicado/materializado
+              en esta liquidación - Inversiones anticipadas consideradas materialización
+              de la RIC en esta liquidación [02438]
+          ? is-ric-2017-aplicado-materializado-en-esta-liquidacion-inversiones-previstas-letras-a-y-b-art-27-4-ley-19-1994-dp200022-00098
+          : label: Rég. especial reserva inversiones Canarias - RIC 2017 - Aplicado/materializado
+              en esta liquidación - Inversiones previstas letras A y B, art. 27.4
+              Ley 19/1994 [00098]
+          ? is-ric-2017-aplicado-materializado-en-esta-liquidacion-inversiones-previstas-letras-b-bis-c-y-d-art-27-4-ley-1-dp200022-00047
+          : label: Rég. especial reserva inversiones Canarias - RIC 2017 - Aplicado/materializado
+              en esta liquidación - Inversiones previstas letras B bis, C y D art.
+              27.4 Ley 19/1994 [00047]
+          is-ric-2017-pendiente-de-materializar-ric-a-principio-de-periodo-dp200022-00097:
+            label: Rég. especial reserva inversiones Canarias - RIC 2017 - Pendiente
+              de materializar RIC a principio de período [00097]
+          is-ric-2018-integrado-base-imponible-incumplimiento:
+            label: Rég. especial reserva inversiones Canarias - RIC 2018 - Aplicado/materializado
+              en esta liquidación - Integrado en BI por incumplimiento de requisitos
+              [01936]
+          is-ric-2018-pendiente-de-materializar-ric-al-final-de-periodo-dp200022-00527:
+            label: Rég. especial reserva inversiones Canarias - RIC 2018 - Pendiente
+              de materializar RIC al final de período [00527]
           is-sal-reserva-especial-dotacion:
             label: Liquidación III - Base Imponible - Sociedades Laborales - Reserva
               especial dotación Ley 44/2015 Art. 14 [SAL_RESERVA_DOTACION]

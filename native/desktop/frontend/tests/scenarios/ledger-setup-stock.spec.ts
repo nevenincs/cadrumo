@@ -126,7 +126,7 @@ test("a purchase says it states nothing about the ledger, until the person state
     .click();
   const purchase = target.locator(".ledger-stock-movements tbody tr").first();
   await expect(purchase).toContainText(
-    label("desktop.ledger.stock.claim.row_unstated"),
+    label("application.inventory.labels.purchase_ledger_row.unstated"),
   );
   await button(target, "desktop.ledger.stock.action.movement_claim")
     .first()
@@ -135,9 +135,9 @@ test("a purchase says it states nothing about the ledger, until the person state
   await field(form, "desktop.ledger.stock.claim.row").selectOption("none");
   await button(form, "desktop.ledger.stock.submit.movement_claim").click();
   await expect(purchase).toContainText(
-    label("desktop.ledger.stock.claim.row_none"),
+    label("application.inventory.labels.purchase_ledger_row.none"),
   );
   await expect(purchase).not.toContainText(
-    label("desktop.ledger.stock.claim.row_unstated"),
+    label("application.inventory.labels.purchase_ledger_row.unstated"),
   );
 });

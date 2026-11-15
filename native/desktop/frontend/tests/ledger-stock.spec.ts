@@ -1,4 +1,5 @@
 import "./support/servedLimits";
+import { movement } from "./support/stockFixtures";
 import { windowFixture } from "./support/windowFixtures";
 import { expect, test } from "@playwright/test";
 import { readFileSync, readdirSync } from "node:fs";
@@ -50,7 +51,6 @@ import {
   type StockField,
 } from "../src/components/ledger/assets/stockFieldDefinitions";
 import { slotKinds } from "../src/components/ledger/assets/stockVocabulary";
-import { historyRows } from "../src/components/ledger/assets/stockHistory";
 import {
   LABEL_FAMILY,
   NO_VOCABULARY,
@@ -62,7 +62,6 @@ import {
   type Offers,
 } from "../src/components/ledger/assets/stockVocabulary";
 import type {
-  InventoryBook,
   InventoryEvidenceAddResult,
   InventoryBookRow,
   InventoryHistoryEntry,
@@ -159,7 +158,12 @@ const SERVED: Record<string, string[]> = {
   valuation_method: ["fifo", "pmp", "coste_medio"],
 };
 /** The part the options read gives a member, as it gives it. */
-const SERVED_ROLES: Record<string, string> = {
+const SERVED_ROLES: Record<
+  string,
+  NonNullable<
+    InventoryOptionsResult["families"][number]["options"][number]["role"]
+  >
+> = {
   attributable_cost_review: "cost_check",
   iva_recoverability_review: "iva_check",
   physical_observation: "count_authority",
@@ -180,6 +184,7 @@ const OPTIONS: InventoryOptionsResult = {
       role: ROLED_FAMILIES.includes(family)
         ? (SERVED_ROLES[value] ?? null)
         : null,
+      effect_key: null,
     })),
   })),
 };
@@ -753,6 +758,10 @@ const row = (
   opening_stock: { decimal: "0" },
   movement_count: movements,
   label,
+  retired: false,
+  retirement_reason: null,
+  correction_count: 0,
+  advisories: [],
 });
 
 test("a book is listed under the name given to it, else the activity it was started for", () => {
@@ -934,137 +943,6 @@ test("a change held in doubt landed only if the book's history now holds its ref
   expect(changeLanded(null, "b")).toBe("untold");
 });
 
-// ---- The history ----------------------------------------------------------------------
-
-const movement = (id: string, quantity: string): InventoryMovement => ({
-  movement_id: id,
-  movement_date: fixtureDay(11, 20, -1),
-  kind: "cogs",
-  sku: "papel-a3",
-  quantity: { decimal: quantity },
-  unit_cost: null,
-  taxable_base: null,
-  iva_rate: { decimal: "0.21" },
-  iva_amount: null,
-  deductible_iva_ratio: { decimal: "1" },
-});
-
-const change = (
-  id: string,
-  day: string,
-  kind: InventoryHistoryEntry["kind"],
-  facts: Partial<InventoryHistoryEntry> = {},
-): InventoryHistoryEntry => ({
-  correction_id: id,
-  kind,
-  recorded_at: `${day}T09:30:00Z`,
-  actor: "runtime",
-  correction_reason: null,
-  retirement_reason: null,
-  superseded_movement: null,
-  replacement_movement_id: null,
-  prior_opening_stock: null,
-  prior_valuation_method: null,
-  prior_descriptor: null,
-  ...facts,
-});
-
-const ledgerOf = (history: InventoryHistoryEntry[]): InventoryBook => ({
-  actividad_id: "Papelería",
-  year: PRIOR,
-  valuation_method: "pmp",
-  opening_stock: { decimal: "400" },
-  period_movements: [movement("current", "60")],
-  closing_authority_fingerprints: null,
-  schema_version: "1",
-  descriptor: { label: "Tienda", description: null },
-  history,
-});
-
-test("the history lists the newest change first, with what each displaced and what took its place", () => {
-  const rows = historyRows(
-    ledgerOf([
-      change("a", fixtureDay(2, 10, -1), "opening_corrected", {
-        correction_reason: "keying_error",
-        prior_opening_stock: { decimal: "308" },
-      }),
-      change("b", fixtureDay(3, 1, -1), "opening_corrected", {
-        correction_reason: "keying_error",
-        prior_opening_stock: { decimal: "380" },
-        prior_valuation_method: "fifo",
-      }),
-      change("c", fixtureDay(11, 24, -1), "movement_corrected", {
-        correction_reason: "source_document_corrected",
-        superseded_movement: movement("old", "50"),
-        replacement_movement_id: "current",
-      }),
-      change("d", fixtureDay(11, 25, -1), "movement_reversed", {
-        correction_reason: "duplicate_entry",
-        superseded_movement: movement("gone", "5"),
-      }),
-      change("e", fixtureDay(12, 1, -1), "described", {
-        prior_descriptor: { label: "Papel", description: "Antes" },
-      }),
-      change("f", fixtureDay(12, 31, -1), "retired", {
-        retirement_reason: "activity_ceased",
-      }),
-    ]),
-  );
-
-  expect(rows.map((row) => row.kind)).toEqual([
-    "retired",
-    "described",
-    "movement_reversed",
-    "movement_corrected",
-    "opening_corrected",
-    "opening_corrected",
-  ]);
-  expect(rows[0]).toMatchObject({
-    day: fixtureDay(12, 31, -1),
-    reason: { family: "retirement", token: "activity_ceased" },
-    before: [],
-    after: [],
-  });
-  // Each opening value is found in the next change of it, else in the book.
-  const second = rows[4];
-  const first = rows[5];
-  expect(first?.before).toEqual([{ kind: "opening", value: "308" }]);
-  expect(first?.after).toEqual([{ kind: "opening", value: "380" }]);
-  expect(second?.before).toEqual([
-    { kind: "opening", value: "380" },
-    { kind: "method", value: "fifo" },
-  ]);
-  expect(second?.after).toEqual([
-    { kind: "opening", value: "400" },
-    { kind: "method", value: "pmp" },
-  ]);
-  // What replaced a movement is the movement the book holds under its reference.
-  expect(rows[3]?.after).toEqual([
-    { kind: "movement", value: movement("current", "60") },
-  ]);
-  expect(rows[2]?.after).toEqual([{ kind: "removed" }]);
-  expect(rows[1]?.before).toEqual([
-    { kind: "label", value: "Papel" },
-    { kind: "description", value: "Antes" },
-  ]);
-  expect(rows[1]?.after).toEqual([
-    { kind: "label", value: "Tienda" },
-    { kind: "description", value: null },
-  ]);
-});
-
-test("a book never changed has no history, and the history carries no reference to show", () => {
-  expect(historyRows(ledgerOf([]))).toEqual([]);
-  const rows = historyRows(
-    ledgerOf([
-      change("secret-reference", fixtureDay(2, 10, -1), "opening_corrected", {
-        prior_opening_stock: { decimal: "308" },
-      }),
-    ]),
-  );
-  expect(JSON.stringify(rows)).not.toContain("secret-reference");
-});
-
 // ---- A closing value ---------------------------------------------------------------
 
 const DECISION = {
@@ -1194,7 +1072,14 @@ test("a closing value held in doubt landed only if the book now holds one", () =
     "not_saved",
   );
   expect(
-    closingLanded({ closing_authority_fingerprints: { record: "x" } }),
+    closingLanded({
+      closing_authority_fingerprints: {
+        record: "x",
+        decision: "y",
+        physical_observation: null,
+        prior_closing_link: "z",
+      },
+    }),
   ).toBe("saved");
 });
 
@@ -1209,6 +1094,7 @@ test("correcting a purchase starts from what the book kept of it, so only what w
     reference: `attachment:${digest}`,
     evidence_kind,
     content_digest: digest,
+    file_name: null,
   });
   const bought: InventoryMovement = {
     ...movement("p1", "100"),
@@ -1243,16 +1129,19 @@ test("correcting a purchase starts from what the book kept of it, so only what w
           reference: `attachment:${transport}`,
           evidence_kind: "transport_document",
           content_digest: transport,
+          file_name: null,
         },
         {
           reference: `attachment:${costCheck}`,
           evidence_kind: "attributable_cost_review",
           content_digest: costCheck,
+          file_name: null,
         },
         {
           reference: `attachment:${ivaCheck}`,
           evidence_kind: "iva_recoverability_review",
           content_digest: ivaCheck,
+          file_name: null,
         },
       ],
       consideration_evidence: `attachment:${invoice}`,
@@ -1303,16 +1192,36 @@ test("the parts a form treats specially are read from the roles the options serv
       {
         family: "movement_kind",
         options: [
-          { value: "alta", label_key: "k.alta", role: null },
-          { value: "compra", label_key: "k.compra", role: "purchase" },
+          { value: "alta", label_key: "k.alta", role: null, effect_key: null },
+          {
+            value: "compra",
+            label_key: "k.compra",
+            role: "purchase",
+            effect_key: null,
+          },
         ],
       },
       {
         family: "acquisition_evidence_kind",
         options: [
-          { value: "factura", label_key: "k.factura", role: null },
-          { value: "nota_costes", label_key: "k.nc", role: "cost_check" },
-          { value: "nota_iva", label_key: "k.ni", role: "iva_check" },
+          {
+            value: "factura",
+            label_key: "k.factura",
+            role: null,
+            effect_key: null,
+          },
+          {
+            value: "nota_costes",
+            label_key: "k.nc",
+            role: "cost_check",
+            effect_key: null,
+          },
+          {
+            value: "nota_iva",
+            label_key: "k.ni",
+            role: "iva_check",
+            effect_key: null,
+          },
         ],
       },
     ],
@@ -1402,6 +1311,8 @@ test("a file the book did not keep makes no proof, and one it kept makes one und
       reason_key:
         "application.inventory.service.errors.evidence_file_not_admitted",
       reason_facts: [],
+      refusal_words: null,
+      refusal_words_language: null,
     },
   };
   expect(proofFromKept(refused, "nota.docx")).toBeNull();
@@ -1458,6 +1369,7 @@ test("a purchase's files come back named where the book knows the name, and as a
           reference: `document-${MARK("c")}`,
           evidence_kind: "iva_recoverability_review",
           content_digest: MARK("c"),
+          file_name: null,
         },
       ],
       consideration_evidence: `attachment:${named}`,

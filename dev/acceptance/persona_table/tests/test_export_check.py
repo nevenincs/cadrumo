@@ -16,12 +16,12 @@ from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefin
 from cadrumo.entrypoints.tests.persona_materialisation import year_envelope
 from cadrumo.tests.personas import ExpectedObligation, ExpectedValue, Persona, YearToken, persona_ids
 
-from ..cli_column.case import CaseSpec, build_case, export_check_for
+from ..cli_column.case import CaseSpec, build_case, expected_values, export_check_for
 from ..cli_column.hygiene import Redactor
 from ..cli_column.intake import LineWriter, Outcome
 from ..cli_column.world_report import RowPlan, WorldReport
 from ..export_check import export_layout, export_readback_reason, export_reason, export_text_reason
-from ..planner import last_owed_period, owed_periods, persona_under_horizon
+from ..planner import last_owed_period, owed_periods, persona_under_horizon, plan_rows, registry_envelope, stated_values
 from ..rows import PlannedRow
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -193,3 +193,24 @@ def test_a_return_the_replay_does_not_plan_leaves_the_export_checks_unavailable(
     check = export_check_for(persona_ids()[0], _year() + 1)
     unplanned = RowPlan("000", _year(), "1T", True, True, False, "1T")
     assert check(unplanned, tmp_path / "absent.txt") is None
+
+
+def _figures(values: Sequence[ExpectedValue]) -> list[tuple[str, str]]:
+    return sorted(casilla for value in values for casilla in value.casillas) + sorted(
+        role for value in values for role in value.roles
+    )
+
+
+def test_the_readback_expects_the_figures_of_the_case_horizon_not_of_the_registry_horizon() -> None:
+    real = registry_envelope()
+    differing: list[tuple[str, int, PlannedRow]] = []
+    for persona_id in persona_ids():
+        for horizon in range(real.floor, real.horizon):
+            rows, _emitted = plan_rows(persona_id, horizon)
+            persona = persona_under_horizon(persona_id, horizon)
+            for row in rows:
+                moved = _figures(stated_values(persona, dataclasses.replace(real, horizon=horizon), row))
+                if moved != _figures(stated_values(persona, real, row)):
+                    differing.append((persona_id, horizon, row))
+                    assert _figures(expected_values(persona_id, horizon, row)) == moved
+    assert differing, "no persona states a figure that moves with the horizon; the test no longer detects the defect"

@@ -25,7 +25,10 @@ from pathlib import Path
 import pytest
 from pydantic import BaseModel, ConfigDict
 
+from .....application.modelo.edit_services import calculation_head_digest
 from .....core.classification.policies import SensitivityClass
+from .....core.hashing import canonical_json_bytes, sha256_hex
+from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...storage.secure_object_namespaces import MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE
 from ...storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ..modelos_calculation import CalculationRevisionCatalogueRepository
@@ -97,7 +100,7 @@ def _store_saved_payload(profile: TestRuntimeProfile, payload: bytes) -> None:
 
 @pytest.mark.parametrize("revisioned", (False, True))
 def test_a_catalogue_saved_before_a_registry_field_existed_loads_with_its_saved_identity(
-    tmp_path: Path, revisioned: bool
+    tmp_path: Path, revisioned: bool, authority_operation: PinnedAuthorityOperation
 ) -> None:
     payload = _saved_payload()
     saved = _saved_renderings(payload)
@@ -114,10 +117,15 @@ def test_a_catalogue_saved_before_a_registry_field_existed_loads_with_its_saved_
         assert revision.calculation_revision_id == revision_id
         rendering = revision.rendering_snapshot
         assert rendering is not None
+        assert rendering.authority_generation != authority_operation.pin().logical_generation
         assert (rendering.authority_generation, rendering.registry_digest, rendering.rendering_digest) == saved[
             revision_id
         ]
         assert all(binding.absence_attestation is None for binding in rendering.registry_snapshot.revision.bindings)
+        # Current edit admission must hash the reloaded historical capture with
+        # exactly the original full-head encoding, not today's registry body.
+        original = canonical_json_bytes({"calculation_head": revision.model_dump(mode="json")})
+        assert calculation_head_digest(revision) == sha256_hex(original)
 
 
 def test_a_catalogue_saved_before_a_registry_field_existed_is_written_again_unchanged_in_meaning(

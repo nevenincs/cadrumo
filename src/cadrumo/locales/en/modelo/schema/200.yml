@@ -6731,6 +6731,91 @@ modelo:
           incentive-deductions-detail-total-applied:
             label: Deductions to incentivise certain activities - Total - applied
               in this settlement [00588]
+          is-202-alimentaria-2022-y-hostelco-2022-ah-deduccion-pendiente-generada-dp200018b-01267:
+            label: Deductions to incentivise certain activities - 202 ALIMENTARIA
+              2022 and HOSTELCO 2022 (AH) - Deduction carried forward/generated [01267]
+          is-2020-derecho-reducir-b-i-generado-periodo-pendiente-aplicar-inicio-periodo-dp200020b-01985:
+            label: Capitalisation reserve - 2020 - Right to reduce tax base generated
+              in period/pending application at start of period [01985]
+          is-2020-reduccion-b-i-aplicada-dp200020b-01986:
+            label: Capitalisation reserve - 2020 - Tax base reduction applied [01986]
+          is-2021-reduccion-b-i-pdte-de-aplicar-en-periodos-futuros-dp200020b-02409:
+            label: Capitalisation reserve - 2021 - Taxable-base reduction carried
+              forward for application in future periods [02409]
+          is-2022-ano-santo-jacobeo-2021-j21-pendiente-de-aplicacion-en-periodos-futuros-dp200018-01909:
+            label: Deductions to incentivise certain activities - 2022 Jacobean Holy
+              Year 2021 (J21) - Carried forward for application in future periods
+              [01909]
+          is-2022-el-tiempo-de-la-libertad-comuneros-v-centenario-cvc-aplicado-en-esta-liquidacion-dp200018-00255:
+            label: Deductions to incentivise certain activities - 2022 The time of
+              Freedom. Comuneros 5th Centenary (CVC) - Applied in this settlement
+              [00255]
+          is-2022-el-tiempo-de-la-libertad-comuneros-v-centenario-cvc-deduccion-pendiente-generada-dp200018-00254:
+            label: Deductions to incentivise certain activities - 2022 The time of
+              Freedom. Comuneros 5th Centenary (CVC) - Deduction carried forward/generated
+              [00254]
+          ? is-2022-enfermedades-neurodegenerativas-ano-internacional-de-la-investigacion-e-innovacion-periodo-2021-2022-e-dp200018-00801
+          : label: Deductions to incentivise certain activities - 2022 Neurodegenerative
+              Diseases. International Year of Research and Innovation. Period 2021-2022
+              (EN21) - Applied in this settlement [00801]
+          ? is-2022-enfermedades-neurodegenerativas-ano-internacional-de-la-investigacion-e-innovacion-periodo-2021-2022-e-dp200018-00811
+          : label: Deductions to incentivise certain activities - 2022 Neurodegenerative
+              Diseases. International Year of Research and Innovation. Period 2021-2022
+              (EN21) - Carried forward for application in future periods [00811]
+          ? is-2022-espana-pais-invitado-de-honor-en-la-feria-del-libro-de-francfort-en-2022-e22-aplicado-en-esta-liquidac-dp200018-02369
+          : label: Deductions to incentivise certain activities - 2022 Spain Guest
+              of Honour Country at the Frankfurt Book Fair in 2022 (E22) - Applied
+              in this settlement [02369]
+          ? is-2022-espana-pais-invitado-de-honor-en-la-feria-del-libro-de-francfort-en-2022-e22-deduccion-pendiente-gener-dp200018-02368
+          : label: Deductions to incentivise certain activities - 2022 Spain Guest
+              of Honour Country at the Frankfurt Book Fair in 2022 (E22) - Deduction
+              carried forward/generated [02368]
+          ? is-2022-espana-pais-invitado-de-honor-en-la-feria-del-libro-de-francfort-en-2022-e22-pendiente-de-aplicacion-e-dp200018-02370
+          : label: Deductions to incentivise certain activities - 2022 Spain Guest
+              of Honour Country at the Frankfurt Book Fair in 2022 (E22) - Carried
+              forward for application in future periods [02370]
+          is-2022-expo-dubai-2020-d20-aplicado-en-esta-liquidacion-dp200018-01935:
+            label: Deductions to incentivise certain activities - 2022 Expo Dubai
+              2020 (D20) - Applied in this settlement [01935]
+          is-2022-expo-dubai-2020-d20-deduccion-pendiente-generada-dp200018-01934:
+            label: Deductions to incentivise certain activities - 2022 Expo Dubai
+              2020 (D20) - Deduction carried forward/generated [01934]
+          is-2022-expo-dubai-2020-d20-pendiente-de-aplicacion-en-periodos-futuros-dp200018-01936:
+            label: Deductions to incentivise certain activities - 2022 Expo Dubai
+              2020 (D20) - Carried forward for application in future periods [01936]
+          is-2022-global-mobility-call-gm-aplicado-en-esta-liquidacion-dp200018b-01278:
+            label: Deductions to incentivise certain activities - 2022 Global Mobility
+              Call (GM) - Applied in this settlement [01278]
+          is-2022-global-mobility-call-gm-deduccion-pendiente-generada-dp200018b-01277:
+            label: Deductions to incentivise certain activities - 2022 Global Mobility
+              Call (GM) - Deduction carried forward/generated [01277]
+          is-2022-global-mobility-call-gm-pendiente-de-aplicacion-en-periodos-futuros-dp200018b-01279:
+            label: Deductions to incentivise certain activities - 2022 Global Mobility
+              Call (GM) - Carried forward for application in future periods [01279]
+          ? is-2022-v-centenario-de-la-expedicion-de-la-primera-vuelta-al-mundo-de-fernando-de-magallanes-y-juan-sebastian-dp200018-01638
+          : label: Deductions to incentivise certain activities - 2022 5th Centenary
+              of the first circumnavigation expedition of Ferdinand Magellan and Juan
+              Sebastián Elcano (EPVM) - Deduction carried forward/generated [01638]
+          ? is-2022-v-centenario-de-la-expedicion-de-la-primera-vuelta-al-mundo-de-fernando-de-magallanes-y-juan-sebastian-dp200018-01639
+          : label: Deductions to incentivise certain activities - 2022 5th Centenary
+              of the first circumnavigation expedition of Ferdinand Magellan and Juan
+              Sebastián Elcano (EPVM) - Applied in this settlement [01639]
+          ? is-2022-v-centenario-de-la-expedicion-de-la-primera-vuelta-al-mundo-de-fernando-de-magallanes-y-juan-sebastian-dp200018-01640
+          : label: Deductions to incentivise certain activities - 2022 5th Centenary
+              of the first circumnavigation expedition of Ferdinand Magellan and Juan
+              Sebastián Elcano (EPVM) - Carried forward for application in future
+              periods [01640]
+          is-2022-viii-centenario-de-la-catedral-de-burgos-2021-cb21-aplicado-en-esta-liquidacion-dp200018-01911:
+            label: Deductions to incentivise certain activities - 2022 8th Centenary
+              of Burgos Cathedral 2021 (CB21) - Applied in this settlement [01911]
+          is-2022-viii-centenario-de-la-catedral-de-burgos-2021-cb21-deduccion-pendiente-generada-dp200018-01910:
+            label: Deductions to incentivise certain activities - 2022 8th Centenary
+              of Burgos Cathedral 2021 (CB21) - Deduction carried forward/generated
+              [01910]
+          is-2022-viii-centenario-de-la-catedral-de-burgos-2021-cb21-pendiente-de-aplicacion-en-periodos-futuros-dp200018-01912:
+            label: Deductions to incentivise certain activities - 2022 8th Centenary
+              of Burgos Cathedral 2021 (CB21) - Carried forward for application in
+              future periods [01912]
           is-abono-deducciones-id-i-insuficiencia-cuota-estado:
             label: Settlement IV - Self-assessment result - Credit of R&D&I deductions
               due to insufficient tax liability - State [00083]
@@ -7365,6 +7450,11 @@ modelo:
           is-compensacion-bases-negativas:
             label: Detail of offset of negative tax bases - 1999 - Applied in this
               settlement [00647]
+          is-compensacion-de-base-imponible-resto-actividades-ano-2022-aplicado-en-esta-liquidacion-dp200015-02465:
+            label: 'Special regime for ships and shipping companies in the Canary
+              Islands: breakdown of the offsetting of negative taxable bases - Offset
+              of the taxable base for other activities for 2022 - Applied in this
+              return [02465]'
           is-comunidades-titulares-de-montes-vecinales-en-mano-comun:
             help: Flag indicating communities holding common neighborhood forests
               [00005].
@@ -8888,6 +8978,35 @@ modelo:
               accounting result referring to the tax group - Increases [01230]
           is-cuota-liquida:
             label: Settlement IV - Other deductions - Net tax liability [00592]
+          is-deducc-art-42-rdleg-4-2004-2007-aplicado-en-esta-liquidacion-dp200016-00005:
+            label: Deductions under Transitional Provision 24.7 LIS - Deduction art.
+              42 RDLeg. 4/2004 2007 - Applied in this settlement [00005]
+          is-deducc-art-42-rdleg-4-2004-2007-deduccion-pendiente-generada-dp200016-00004:
+            label: Deductions under Transitional Provision 24.7 LIS - Deduction art.
+              42 RDLeg. 4/2004 2007 - Deduction carried forward/generated [00004]
+          is-deduccion-125-aniversario-athletic-club-aplicado-periodo:
+            label: 'Deductions to incentivise certain activities - 2023: 125th anniversary
+              of Athletic Club 1898-2023 (AC) - Applied in this settlement [02024]'
+          is-deduccion-125-aniversario-athletic-club-pendiente-futuro:
+            label: 'Deductions to incentivise certain activities - 2023: 125th anniversary
+              of Athletic Club 1898-2023 (AC) - Pending application in future periods
+              [02025]'
+          is-deduccion-125-aniversario-athletic-club-pendiente-generada:
+            label: 'Deductions to incentivise certain activities - 2023: 125th anniversary
+              of Athletic Club 1898-2023 (AC) - Deduction carried forward/generated
+              [02000]'
+          is-deduccion-60-aniversario-rally-blendio-aplicado-periodo:
+            label: 'Deductions to incentivise certain activities - 2023: 60th Anniversary
+              of the Rally Blendio Princesa de Asturias Ciudad de Oviedo (60RB) -
+              Applied in this settlement [01995]'
+          is-deduccion-60-aniversario-rally-blendio-pendiente-futuro:
+            label: 'Deductions to incentivise certain activities - 2023: 60th Anniversary
+              of the Rally Blendio Princesa de Asturias Ciudad de Oviedo (60RB) -
+              Pending application in future periods [01996]'
+          is-deduccion-60-aniversario-rally-blendio-pendiente-generada:
+            label: 'Deductions to incentivise certain activities - 2023: 60th Anniversary
+              of the Rally Blendio Princesa de Asturias Ciudad de Oviedo (60RB) -
+              Deduction carried forward/generated [01987]'
           is-deduccion-acontecimiento-interes-publico-otras:
             label: Deductions to incentivise certain activities - N+1(****) other
               deductions relating to support programmes for events of exceptional
@@ -8984,6 +9103,31 @@ modelo:
             label: Deduction for donations to non-profit entities - General donations
               - 2024 Without repeated donations to the same entity - Pending/generated
               deduction [00369]
+          is-deduccion-donativos-general-subtotal-2013-2014-aplicado-periodo:
+            label: Deduction for donations to non-profit entities - General donations
+              - Donations subtotal 2013 and 2014 - Applied in this settlement [01690]
+          is-deduccion-donativos-general-subtotal-2013-2014-pendiente-futuro:
+            label: Deduction for donations to non-profit entities - General donations
+              - Donations subtotal 2013 and 2014 - Pending application in future periods
+              [01691]
+          is-deduccion-donativos-general-subtotal-2013-2014-pendiente-generada:
+            label: Deduction for donations to non-profit entities - General donations
+              - Donations subtotal 2013 and 2014 - Deduction carried forward/generated
+              [01689]
+          is-deduccion-donativos-prioritarias-subtotal-2013-2014-aplicado-periodo:
+            label: Deduction for donations to non-profit entities - Donations for
+              priority patronage activities and others entitled to increased deduction
+              - Donations subtotal 2013 and 2014 - Applied in this settlement [01702]
+          is-deduccion-donativos-prioritarias-subtotal-2013-2014-pendiente-futuro:
+            label: Deduction for donations to non-profit entities - Donations for
+              priority patronage activities and others entitled to increased deduction
+              - Donations subtotal 2013 and 2014 - Pending application in future periods
+              [01703]
+          is-deduccion-donativos-prioritarias-subtotal-2013-2014-pendiente-generada:
+            label: Deduction for donations to non-profit entities - Donations for
+              priority patronage activities and others entitled to increased deduction
+              - Donations subtotal 2013 and 2014 - Deduction carried forward/generated
+              [01701]
           is-deduccion-donativos-total:
             label: Deduction for donations to non-profit entities - Total deductions
               for donations to non-profit entities - Pending application in future
@@ -9221,6 +9365,39 @@ modelo:
           is-diocesis-provincia-religiosa-o-entidad-eclesiastica-que-integra-entidades-menores-de-ellas-dependientes:
             label: Diocese, religious province or ecclesiastical entity that includes
               dependent smaller entities [00078]
+          is-donaciones-de-caracter-general-2012-aplicado-en-esta-liquidacion-dp200018c-00905:
+            label: Deduction for donations to non-profit entities - General donations
+              - 2012 - Applied in this settlement [00905]
+          is-donaciones-de-caracter-general-2012-deduccion-pendiente-generada-dp200018c-00904:
+            label: Deduction for donations to non-profit entities - General donations
+              - 2012 - Deduction carried forward/generated [00904]
+          is-donaciones-de-caracter-general-2013-pendiente-de-aplicacion-en-periodos-futuros-dp200018c-00992:
+            label: Deduction for donations to non-profit entities - General donations
+              - 2013 - Carried forward for application in future periods [00992]
+          ? is-donaciones-para-actividades-prioritarias-de-mecenazgo-y-otras-con-derecho-a-deduccion-incrementada-2012-apl-dp200018c-00901
+          : label: Deduction for donations to non-profit entities - Donations for
+              priority patronage activities and others entitled to increased deduction
+              - 2012 - Applied in this settlement [00901]
+          ? is-donaciones-para-actividades-prioritarias-de-mecenazgo-y-otras-con-derecho-a-deduccion-incrementada-2012-ded-dp200018c-00899
+          : label: Deduction for donations to non-profit entities - Donations for
+              priority patronage activities and others entitled to increased deduction
+              - 2012 - Deduction carried forward/generated [00899]
+          ? is-donaciones-para-actividades-prioritarias-de-mecenazgo-y-otras-con-derecho-a-deduccion-incrementada-2013-pen-dp200018c-00929
+          : label: Deduction for donations to non-profit entities - Donations for
+              priority patronage activities and others entitled to increased deduction
+              - 2013 - Carried forward for application in future periods [00929]
+          is-dotacion-de-la-reserva-ejercicio-generacion-2017-importe-reserva-a-dotar-dp200020b-01458:
+            label: Levelling reserve - Reserve allocation - Generation year 2017 -
+              Amount of reserve to be allocated [01458]
+          is-dotacion-de-la-reserva-ejercicio-generacion-2017-importe-reserva-dotada-dp200020b-01459:
+            label: Levelling reserve - Reserve allocation - Generation year 2017 -
+              Amount of reserve allocated [01459]
+          is-dotacion-de-la-reserva-ejercicio-generacion-2017-importe-reserva-pendiente-dotacion-dp200020b-01460:
+            label: Levelling reserve - Reserve allocation - Generation year 2017 -
+              Reserve amount pending allocation [01460]
+          is-dotacion-de-la-reserva-ejercicio-generacion-2017-reserva-dispuesta-dp200020b-01461:
+            label: Levelling reserve - Reserve allocation - Generation year 2017 -
+              Reserve used [01461]
           is-dotaciones-deterioro-creditos-aplicadas-conversion-aid:
             label: Allowances for impairment of receivables or other assets - Generation
               year - 2022 - Allowances applied to conversion of deferred tax assets
@@ -9707,6 +9884,17 @@ modelo:
             label: Insurance undertakings - Statement of changes in own equity (II)
               -Transactions with shareholders or mutual members - Other transactions
               with shareholders or mutual members (treasury shares) [00573]
+          is-ejercicio-generacion-2017-aplicado-en-esta-liquidacion-dp200020-01468:
+            label: Carried forward for addition due to unapplied operating-profit
+              limit - Generation year 2017 - Applied in this settlement [01468]
+          is-ejercicio-generacion-2017-pendiente-aplicacion-a-principio-del-periodo-dp200020-01467:
+            label: Carried forward for addition due to unapplied operating-profit
+              limit - Generation year 2017 - Pending application at the start of the
+              period [01467]
+          is-ejercicio-generacion-2018-pendiente-aplicacion-periodos-futuros-dp200020-01743:
+            label: Carried forward for addition due to unapplied operating-profit
+              limit - Year of generation 2018 - Carried forward for application in
+              future periods [01743]
           is-entidad-aseguradora:
             help: Flag indicating an insurance entity [00025].
             label: Insurance entity [00025]
@@ -9820,6 +10008,26 @@ modelo:
             label: Tax regime for foreign-securities holding entities (chapter XIII
               of title VII LIS) - Decrease - Adjustments for the tax year - Temporary
               (originating in this tax year) [03227]
+          ? is-exceso-cuota-liquida-positiva-ejercicio-generacion-2020-exceso-cuota-liquida-positiva-aplicado-periodos-imp-dp200020c-02278
+          : label: Conversion of deferred tax assets into enforceable credit against
+              the Tax Administration - Excess positive net tax liability - Generation
+              year - 2020 - Excess positive net tax due applied in tax periods 2008
+              to 2015 [02278]
+          ? is-exceso-cuota-liquida-positiva-ejercicio-generacion-2020-exceso-cuota-liquida-positiva-aplicado-periodos-imp-dp200020c-02279
+          : label: Conversion of deferred tax assets into enforceable credit against
+              the Tax Administration - Excess positive net tax liability - Generation
+              year - 2020 - Excess positive net tax due applied in tax periods beginning
+              from 2016 [02279]
+          ? is-exceso-cuota-liquida-positiva-ejercicio-generacion-2020-exceso-cuota-liquida-positiva-pendiente-a-principio-dp200020c-02277
+          : label: Conversion of deferred tax assets into enforceable credit against
+              the Tax Administration - Excess positive net tax liability - Generation
+              year - 2020 - Excess positive net tax due outstanding at the start of
+              the period [02277]
+          ? is-exceso-cuota-liquida-positiva-ejercicio-generacion-2021-exceso-cuota-liquida-positiva-pendiente-aplicacion-dp200020c-02430
+          : label: Conversion of deferred tax assets into enforceable credit against
+              the Tax Administration - Excess positive net tax liability - Generation
+              year - 2021 - Excess positive net tax due pending application in future
+              periods [02430]
           is-exencion-rentas-ajuste-saldo-inicio:
             label: Exemption on income obtained from the transfer of securities of
               resident entities (art. 21.3, 21.10 and Transitional Provision 40 LIS)
@@ -9924,6 +10132,22 @@ modelo:
             label: 'Additional information for calculating deduction limits - N: financier:
               deduction for Spanish film productions in the Canary Islands generated
               in the tax period [02079]'
+          is-inversiones-anticipadas-2017-pendiente-de-dotar-ric-a-principio-del-periodo-dp200022-02442:
+            label: Special regime for the Canary Islands investment reserve - Advance
+              investments 2017 - Canary Islands investment reserve pending allocation
+              at start of period [02442]
+          is-inversiones-anticipadas-2018-pendiente-de-dotar-ric-a-principio-del-periodo-dp200022-02444:
+            label: Special regime for the Canary Islands investment reserve - Advance
+              investments 2018 - Canary Islands investment reserve pending allocation
+              at start of period [02444]
+          is-inversiones-anticipadas-2019-pendiente-de-dotar-ric-al-final-del-periodo-dp200022-02447:
+            label: Special regime for the Canary Islands investment reserve - Advance
+              investments 2019 - Canary Islands investment reserve pending allocation
+              at period-end [02447]
+          is-inversiones-anticipadas-2022-inversiones-previstas-letras-a-y-b-art-27-4-ley-19-1994-dp200022-01523:
+            label: Special regime for the Canary Islands investment reserve - Advance
+              investments 2022 - Investments provided for in letters A and B, art.
+              27.4, Law 19/1994 [01523]
           is-inversiones-anticipadas-reserva-inversiones-en-canarias-art-27-11-ley-19-1994:
             help: Flag indicating advance investments for the Canary Islands investment
               reserve under article 27.11 of Law 19/1994 [00045].
@@ -9932,6 +10156,16 @@ modelo:
           is-inversiones-anticipadas-reserva-inversiones-en-illes-balears-da-70a-cuatro-10-ley-31-2022:
             label: Early investments - reserve for investments in the Balearic Islands
               (DA 70.Four.10 Law 31/2022) [00087]
+          is-inversiones-canarias-2004-aplicado-en-esta-liquidacion-dp200016b-00881:
+            label: Deductions for investment in the Canary Islands - Canary Islands
+              investments 2004 - Applied in this settlement [00881]
+          is-inversiones-canarias-2004-deduccion-pendiente-generada-dp200016b-00880:
+            label: Deductions for investment in the Canary Islands - Canary Islands
+              investments 2004 - Deduction carried forward/generated [00880]
+          is-inversiones-canarias-2005-pendiente-de-aplicacion-en-periodos-futuros-dp200016b-00870:
+            label: Deductions for investment in the Canary Islands - Canary Islands
+              investments 2005 - Carried forward for application in future periods
+              [00870]
           is-liquidacion-i-amortizacion-contable-fiscal-art-12-1-aumentos:
             label: Settlement I - Detail of adjustments to the profit and loss account
               result - Differences between accounting and tax depreciation (arts.
@@ -10088,6 +10322,8 @@ modelo:
             label: Option under article 39.2 LIS [00059]
           is-opcion-art-39-3-lis:
             label: Option under art. 39.3 LIS [00090]
+          is-opcion-art-46-2-lis-dp200001-00016:
+            label: Option under art. 46.2 LIS [00016]
           is-opcion-de-fraccionamiento-art-19-1-lis:
             help: Flag indicating the installment payment option under article 19.1
               of the Corporate Income Tax Law [00037].
@@ -10461,6 +10697,20 @@ modelo:
             label: Settlement IV - Self-assessment result - Disagreement with the
               administrative position for certain corrective self-assessment cases
               that do not belong in other boxes - Total [00031]
+          is-reduccion-base-imponible-ejercicio-generacion-2017-importe-adicionado-base-imponible-en-periodo-dp200020b-01456:
+            label: Levelling reserve - Reduction of the taxable base - Generation
+              year 2017 - Amount added to tax base in the period [01456]
+          ? is-reduccion-base-imponible-ejercicio-generacion-2017-importe-integrado-en-la-declaracion-por-incumplimiento-d-dp200020b-01601
+          : label: Levelling reserve - Reduction of the taxable base - Generation
+              year 2017 - Amount included in the return due to non-compliance with
+              requirements [01601]
+          ? is-reduccion-base-imponible-ejercicio-generacion-2017-importe-minoracion-b-i-periodo-pendiente-adicionar-inici-dp200020b-01455
+          : label: Levelling reserve - Reduction of the taxable base - Generation
+              year 2017 - Amount reducing tax base for period/pending addition at
+              start of period [01455]
+          is-reduccion-base-imponible-ejercicio-generacion-2018-importe-pendiente-adicionar-en-periodos-futuros-dp200020b-01963:
+            label: Levelling reserve - Reduction of the taxable base - Year of generation
+              2018 - Amount pending addition in future periods [01963]
           is-reg-fiscal-de-operac-de-aportacion-de-activos-a-sdades-para-la-gestion-de-activos-ley-8-2012:
             help: Flag indicating the tax regime for asset contributions to companies
               for asset management under Law 8/2012 [00062].
@@ -10548,6 +10798,34 @@ modelo:
           is-retenciones-ingresos-a-cuenta:
             label: Settlement IV - Tax due for the year, payable or refundable - Total
               withholdings and payments on account - Made to the entity [01766]
+          ? is-ric-2017-aplicado-materializado-en-esta-liquidacion-inversiones-anticipadas-consideradas-materializacion-de-dp200022-02438
+          : label: Special regime for the Canary Islands investment reserve - Canary
+              Islands investment reserve 2017 - Applied/materialised in this settlement
+              - Advance investments treated as materialising the RIC in this settlement
+              [02438]
+          ? is-ric-2017-aplicado-materializado-en-esta-liquidacion-inversiones-previstas-letras-a-y-b-art-27-4-ley-19-1994-dp200022-00098
+          : label: Special regime for the Canary Islands investment reserve - Canary
+              Islands investment reserve 2017 - Applied/materialised in this settlement
+              - Investments provided for in letters A and B, art. 27.4, Law 19/1994
+              [00098]
+          ? is-ric-2017-aplicado-materializado-en-esta-liquidacion-inversiones-previstas-letras-b-bis-c-y-d-art-27-4-ley-1-dp200022-00047
+          : label: Special regime for the Canary Islands investment reserve - Canary
+              Islands investment reserve 2017 - Applied/materialised in this settlement
+              - Investments provided for in letters B bis, C and D, art. 27.4, Law
+              19/1994 [00047]
+          is-ric-2017-pendiente-de-materializar-ric-a-principio-de-periodo-dp200022-00097:
+            label: Special regime for the Canary Islands investment reserve - Canary
+              Islands investment reserve 2017 - Canary Islands investment reserve
+              pending materialisation at start of period [00097]
+          is-ric-2018-integrado-base-imponible-incumplimiento:
+            label: Special regime for the Canary Islands investment reserve - Canary
+              Islands investment reserve 2018 - Applied/materialised in this settlement
+              - Reincorporated into the taxable base for failure to meet requirements
+              [01936]
+          is-ric-2018-pendiente-de-materializar-ric-al-final-de-periodo-dp200022-00527:
+            label: Special regime for the Canary Islands investment reserve - Canary
+              Islands investment reserve 2018 - Canary Islands investment reserve
+              pending materialisation at period-end [00527]
           is-sal-reserva-especial-dotacion:
             label: Settlement III - Taxable base - Employee-owned companies - Special
               reserve allocation, Law 44/2015 Art. 14 [SAL_RESERVA_DOTACION]

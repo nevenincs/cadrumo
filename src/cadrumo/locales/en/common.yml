@@ -1419,6 +1419,11 @@ desktop:
     view_months: Calendar
     window_label: '{modelo} {period}, {days}, {state}'
     window_unknown: Opening date not reported
+    year: Filing year
+    year_current: Back to the current view
+    year_failed: That year could not be read. What is shown has not changed.
+    year_next: Next year
+    year_previous: Previous year
   canvas:
     lead: Choose a work area below, or open one from the sidebar. You can open the
       documentation from either place.
@@ -2813,7 +2818,7 @@ desktop:
       'no': 'No'
       none: None
       partial: Only part of this was saved. Refresh to check what was kept.
-      reading: Reading…
+      reading: Loading…
       refused: Not saved.
       reread: Refresh
       save: Save
