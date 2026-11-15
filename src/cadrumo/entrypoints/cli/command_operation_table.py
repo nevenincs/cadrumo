@@ -518,6 +518,7 @@ OPERATIONS_WITHOUT_COMMAND: Final[tuple[str, ...]] = (
     "modelo.history.timeline",
     "modelo.readiness.summary",
     "modelo.work.casilla_help",
+    "modelo.work.filing_state",
     "profile.history.timeline",
     "user-profile.automation-approve",
     "user-profile.automation-decline",

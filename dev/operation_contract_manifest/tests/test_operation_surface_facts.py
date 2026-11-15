@@ -54,6 +54,7 @@ _HOLDS_A_COMMIT_DOOR_WITHOUT_A_DECLARED_EFFECT: Mapping[str, str] = {
         "modelo.edit.preflight",
         "modelo.edit.renew",
         "modelo.work.casilla_help",
+        "modelo.work.filing_state",
         "modelo.work.form",
         "workbench.generation",
     )

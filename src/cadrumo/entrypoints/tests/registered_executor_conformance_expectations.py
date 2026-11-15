@@ -247,6 +247,7 @@ EXPECTATIONS: Mapping[str, RegisteredExecutorConformanceCase] = expectations_own
             )
             for definition_id in (
                 "modelo.work.form",
+                "modelo.work.filing_state",
                 "modelo.work.casilla_help",
                 "modelo.edit.renew",
                 "modelo.edit.preflight",

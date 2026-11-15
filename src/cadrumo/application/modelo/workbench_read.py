@@ -2,7 +2,9 @@
 
 These are the reads behind the workbench's registered operations: the form with
 its lazily admitted edit baseline and the facts every action is judged against,
-one casilla's help, and the source boxes a refused Apply's prerequisite names.
+one casilla's help, the source boxes a refused Apply's prerequisite names, and
+the filing state: what exporting and recording the filing rest on, from the
+same form and the same builders as the form read, with no edit admitted.
 They run under the worker's pinned authority against the profile's repositories;
 the frontend receives only their typed results.
 
@@ -58,7 +60,13 @@ from .reconciliation_sources import (
 )
 from .verification_report_facts import granting_verification_report
 from .work_form_export_offer import ModeloFormExportOffer, ModeloFormReceipt, form_export_offer, form_receipt
-from .work_form_header import ModeloFormHeader, form_header, form_recorded
+from .work_form_header import (
+    ModeloFormFilingHeader,
+    ModeloFormHeader,
+    form_filing_header,
+    form_header,
+    form_recorded,
+)
 from .work_form_issue_lines import ModeloFormIssueLine, ModeloFormVerdict, form_issue_lines
 from .work_form_next_step import ModeloFormNextStep, form_next_step, registry_grade_refusal
 from .work_form_service import ModeloWorkFormLoadV1, load_modelo_work_form, modelo_form_snapshot
@@ -68,6 +76,7 @@ if TYPE_CHECKING:
     from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.calculations.registry.schema import RegistrySnapshot
+    from ...domain.modelos.calculation_revision import CalculationRevisionCatalogue
     from ...domain.modelos.filing_record import ModeloRecordCatalogue
     from ...domain.modelos.protocols import (
         CalculationRevisionCatalogueRepositoryProtocol,
@@ -247,6 +256,103 @@ def _work_unit(work_unit_id: str, *, bucket_id: str, ports: ModeloWorkbenchReadP
     return unit
 
 
+@dataclass(frozen=True, slots=True)
+class ModeloWorkbenchFilingStateReadV1:
+    """What exporting and recording one declaration's filing rest on, read as the form read reads it.
+
+    Every field is the one :class:`ModeloWorkbenchFormReadV1` holds under its
+    name, built by the same functions from the same form, so the two reads of
+    one stored state agree. It admits no edit baseline: nothing it states
+    depends on what may be edited.
+    """
+
+    load: ModeloWorkFormLoadV1
+    calculation_revision_id: str | None
+    verification_report_id: str | None
+    #: What exporting offers: the artefacts, whether recording is available, the elections and the file format.
+    export_offer: ModeloFormExportOffer
+    #: The recorded filing's AEAT receipt state; ``None`` when the declaration is not recorded as filed.
+    receipt: ModeloFormReceipt | None
+
+    @property
+    def header(self) -> ModeloFormFilingHeader:
+        """The result, the latest file and the export hold the form's header states, in the form's language."""
+        load = self.load
+        return form_filing_header(load.form, load.form.language, verified=load.verified, filed=load.filed)
+
+
+@dataclass(frozen=True, slots=True)
+class _FilingFacts:
+    """The calculation head, its granting report and what exporting and recording the form offer."""
+
+    head: CalculationRevision | None
+    verification_report_id: str | None
+    snapshot: RegistrySnapshot
+    export_offer: ModeloFormExportOffer
+    receipt: ModeloFormReceipt | None
+
+
+def _load_form(
+    unit: WorkUnit,
+    *,
+    ports: ModeloWorkbenchReadPorts,
+    operation: PinnedAuthorityOperation,
+    calculation_catalogue: CalculationRevisionCatalogue,
+    admission: ModeloEditAdmissionResultV1 | None,
+    language: OutputLanguage,
+) -> ModeloWorkFormLoadV1:
+    """The declaration's form, read from the workbench's repositories."""
+    return load_modelo_work_form(
+        unit.bucket_id,
+        unit.modelo,
+        unit.filing_year,
+        unit.period,
+        operation=operation,
+        work_unit_repository=ports.work_units,
+        calculation_repository=ports.calculations,
+        verification_repository=ports.verifications,
+        calculation_catalogue=calculation_catalogue,
+        admission=admission,
+        language=language,
+        borrador_snapshots=ports.borrador_snapshots,
+        bucket_events=ports.bucket_events,
+        activity_assets=ports.activity_assets,
+        credit_resolutions=ports.credit_resolutions,
+        transactions=_ledger_transactions(ports),
+        m303_arrivals=ports.m303_arrivals,
+    )
+
+
+def _filing_facts(
+    unit: WorkUnit,
+    loaded: ModeloWorkFormLoadV1,
+    *,
+    ports: ModeloWorkbenchReadPorts,
+    operation: PinnedAuthorityOperation,
+    language: OutputLanguage,
+) -> _FilingFacts:
+    """The head the form shows, the report granting it, and what exporting and recording offer now."""
+    form = loaded.form
+    head, report = _head_and_report(form.calculation_revision_id, ports=ports, operation=operation)
+    snapshot = modelo_form_snapshot(operation, unit.modelo, unit.filing_year, unit.period, form.registry_revision_id)
+    return _FilingFacts(
+        head=head,
+        verification_report_id=None if report is None else report.verification_report_id,
+        snapshot=snapshot,
+        export_offer=form_export_offer(
+            str(unit.modelo),
+            snapshot,
+            language,
+            form=form,
+            verified=loaded.verified,
+            filed=loaded.filed,
+            own_accounts=_own_accounts(ports),
+            amended=_is_amendment(head),
+        ),
+        receipt=_receipt(unit, loaded, ports=ports, language=language),
+    )
+
+
 def read_modelo_workbench_form(
     work_unit_id: str,
     *,
@@ -269,56 +375,67 @@ def read_modelo_workbench_form(
         observation_repository=ports.observations,
         filing_catalogue=_filing_catalogue(ports),
     )
-    loaded = load_modelo_work_form(
-        bucket_id,
-        unit.modelo,
-        unit.filing_year,
-        unit.period,
+    loaded = _load_form(
+        unit,
+        ports=ports,
         operation=operation,
-        work_unit_repository=ports.work_units,
-        calculation_repository=ports.calculations,
-        verification_repository=ports.verifications,
         calculation_catalogue=calculation_catalogue,
         admission=admission,
         language=language,
-        borrador_snapshots=ports.borrador_snapshots,
-        bucket_events=ports.bucket_events,
-        activity_assets=ports.activity_assets,
-        credit_resolutions=ports.credit_resolutions,
-        transactions=_ledger_transactions(ports),
-        m303_arrivals=ports.m303_arrivals,
     )
     form = loaded.form
-    head_id = form.calculation_revision_id
-    head, report = _head_and_report(head_id, ports=ports, operation=operation)
+    facts = _filing_facts(unit, loaded, ports=ports, operation=operation, language=language)
     is_m303 = str(unit.modelo) == form_for_role("iva.periodic")
     profile = _loaded_profile(ports)
-    snapshot = modelo_form_snapshot(operation, unit.modelo, unit.filing_year, unit.period, form.registry_revision_id)
     return ModeloWorkbenchFormReadV1(
         load=loaded,
         admission=admission,
-        calculation_revision_id=head_id,
-        verification_report_id=None if report is None else report.verification_report_id,
-        asks_m303_evidence=is_m303 and _lacks_filing_instance_evidence(head),
+        calculation_revision_id=form.calculation_revision_id,
+        verification_report_id=facts.verification_report_id,
+        asks_m303_evidence=is_m303 and _lacks_filing_instance_evidence(facts.head),
         asks_modelo_390=is_m303 and modelo_390_question_asked(unit.period, operation=operation),
         registry_revision_id=form.registry_revision_id,
         tax_id_format=runtime_tax_id_format(authority=operation),
-        export_offer=form_export_offer(
-            str(unit.modelo),
-            snapshot,
-            language,
-            form=form,
-            verified=loaded.verified,
-            filed=loaded.filed,
-            own_accounts=_own_accounts(ports),
-            amended=_is_amendment(head),
-        ),
-        receipt=_receipt(unit, loaded, ports=ports, language=language),
+        export_offer=facts.export_offer,
+        receipt=facts.receipt,
         profile_requirements=_profile_requirements(unit, profile, operation=operation, language=language),
         ledger_hold=_ledger_hold(
             unit, form.registry_revision_id, profile, ports=ports, operation=operation, language=language
         ),
-        source_requirements=_source_requirements(unit, snapshot, ports=ports, language=language),
+        source_requirements=_source_requirements(unit, facts.snapshot, ports=ports, language=language),
+    )
+
+
+def read_modelo_workbench_filing_state(
+    work_unit_id: str,
+    *,
+    bucket_id: str,
+    ports: ModeloWorkbenchReadPorts,
+    operation: PinnedAuthorityOperation,
+    language: OutputLanguage,
+) -> ModeloWorkbenchFilingStateReadV1:
+    """Read the declaration's form and what exporting and recording its filing rest on, admitting no edit.
+
+    The form is the one the form read builds: the export hold, the result and
+    the elections count over its classified boxes. What may be edited never
+    enters those answers, so no edit baseline is admitted.
+    """
+    unit = _work_unit(work_unit_id, bucket_id=bucket_id, ports=ports)
+    loaded = _load_form(
+        unit,
+        ports=ports,
+        operation=operation,
+        calculation_catalogue=ports.calculations.load(operation=operation),
+        admission=None,
+        language=language,
+    )
+    facts = _filing_facts(unit, loaded, ports=ports, operation=operation, language=language)
+    return ModeloWorkbenchFilingStateReadV1(
+        load=loaded,
+        calculation_revision_id=loaded.form.calculation_revision_id,
+        verification_report_id=facts.verification_report_id,
+        export_offer=facts.export_offer,
+        receipt=facts.receipt,
     )
 
 
@@ -517,10 +634,12 @@ def modelo_edit_prerequisite_source_boxes(
 
 
 __all__ = [
+    "ModeloWorkbenchFilingStateReadV1",
     "ModeloWorkbenchFormReadV1",
     "ModeloWorkbenchReadPorts",
     "ModeloWorkbenchReadPortsFactory",
     "modelo_edit_prerequisite_source_boxes",
     "read_modelo_casilla_help",
+    "read_modelo_workbench_filing_state",
     "read_modelo_workbench_form",
 ]

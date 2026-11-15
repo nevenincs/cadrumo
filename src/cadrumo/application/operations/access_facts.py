@@ -280,7 +280,7 @@ _LOCAL_WRITES: Final = (
     "modelo.036.record",
     "modelo.aggregate.capture_received_invoice_retencion",
     "modelo.audit.export",
-    # The next six, the workbench reads and the workbench generation, declare
+    # The next seven, the workbench reads and the workbench generation, declare
     # no committed effect, yet their resolver holds the commit action for
     # every submission, and a form read admits an edit baseline. Reading did
     # not settle that nothing is stored, so each is recorded as able to commit.
@@ -288,6 +288,7 @@ _LOCAL_WRITES: Final = (
     "modelo.edit.preflight",
     "modelo.edit.renew",
     "modelo.work.casilla_help",
+    "modelo.work.filing_state",
     "modelo.work.form",
     "workbench.generation",
     "modelo.export",
