@@ -63,6 +63,7 @@ import {
   fromCents,
   json,
   later,
+  admits,
   textOf,
   toCents,
   withThrough,
@@ -237,8 +238,8 @@ export function makeRegister(
   };
   const record = (
     element: Element,
-    kind: string,
-    eventKind: string,
+    kind: TimelineEvent["kind"],
+    eventKind: TimelineEvent["event_kind"],
     origin: string,
     effect: string | null,
     changes: { field: string; before: string | null; after: string | null }[],
@@ -605,7 +606,7 @@ export function makeRegister(
     const kind = textOf(revision.asset_kind);
     if (kind === null || !Object.hasOwn(TABLE_GROUPS, kind)) return invalid();
     const acquiredAs = textOf(revision.acquisition_shape);
-    if (acquiredAs === null || !ACQUISITION_SHAPES.includes(acquiredAs))
+    if (acquiredAs === null || !admits(ACQUISITION_SHAPES, acquiredAs))
       return invalid();
     const inService = textOf(revision.in_service_date);
     if (inService === null || !DATE.test(inService)) return invalid();
@@ -642,7 +643,7 @@ export function makeRegister(
           shape,
         );
       const activity = textOf(revision.declared_activity);
-      if (activity === null || !DECLARED_ACTIVITIES.includes(activity))
+      if (activity === null || !admits(DECLARED_ACTIVITIES, activity))
         return refuse(VALIDATION, "declared_activity_required", {}, shape);
       // Later ledger payments the element owns: each is a payment that
       // exists, named once.
@@ -655,7 +656,7 @@ export function makeRegister(
         if (
           !given ||
           !lineage ||
-          !FURTHER_ACQUISITION_SHAPES.includes(String(given.shape)) ||
+          !admits(FURTHER_ACQUISITION_SHAPES, String(given.shape)) ||
           typeof lineage.observed_transaction_id !== "string"
         )
           return invalid();
@@ -774,7 +775,7 @@ export function makeRegister(
     if (election.regime !== SCENARIO_REGIME) return invalid();
     const method = textOf(election.method);
     if (method === null) return invalid();
-    if (!ADMITTED_METHODS[kind]!.includes(method))
+    if (!admits(ADMITTED_METHODS[kind]!, method))
       return refuse(
         UNSUPPORTED,
         "method_not_enrolled_for_kind",

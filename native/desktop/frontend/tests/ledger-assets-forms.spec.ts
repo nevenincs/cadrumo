@@ -347,7 +347,7 @@ test("a cleared fact is taken out of the corrected revision, and the baja the re
 });
 
 test("each act's fields and requests come from the backend's choices", () => {
-  const methods = ["linear", "low_value_free"];
+  const methods: FormOptions["methods"] = ["linear", "low_value_free"];
   const options: FormOptions = {
     tax_year: servedSupport.horizon,
     asset_kind: "material",
@@ -357,7 +357,7 @@ test("each act's fields and requests come from the backend's choices", () => {
     declared_activities: [...DECLARED_ACTIVITIES],
     methods,
     method_facts: METHOD_FACTS.material!.filter((found) =>
-      methods.includes(found.method),
+      methods.some((method) => method === found.method),
     ) as unknown as FormOptions["method_facts"],
     table_groups: TABLE_GROUPS.material!.slice(0, 2),
     disposal_reasons: [...DISPOSAL_REASONS],
@@ -455,7 +455,7 @@ test("each act's fields and requests come from the backend's choices", () => {
 
 test("the add form offers the methods the options serve, each with the facts they serve, and a correction keeps the element's own", async () => {
   const port = portOf();
-  for (const kind of ["material", "intangible"]) {
+  for (const kind of ["material", "intangible"] as const) {
     const options = (await optionsOf(port, kind)) as FormOptions;
     // Every served fact has a word, and no method is offered without its facts.
     expect(unlabelledFacts(options)).toEqual([]);
@@ -922,7 +922,8 @@ test("a method with a fact that has no form is not offered, and its repeated row
     regime: "normal",
     edition: servedEditionOf(servedSupport.horizon)!,
     disposal_reasons: [],
-    methods: ["plain", "rows", "unworded"],
+    // Methods the registry does not define: they exercise facts with no form.
+    methods: ["plain", "rows", "unworded"] as unknown as FormOptions["methods"],
     acquisition_shapes: [...ACQUISITION_SHAPES],
     declared_activities: [...DECLARED_ACTIVITIES],
     method_facts: [
@@ -953,7 +954,7 @@ test("a method with a fact that has no form is not offered, and its repeated row
           },
         ],
       },
-    ],
+    ] as unknown as FormOptions["method_facts"],
     table_groups: [],
     basis_stages: [],
     opening_statuses: [],

@@ -108,6 +108,9 @@ export type Element = Omit<ScenarioElement, "id"> & {
   baja: DisposalFacts | null;
 };
 
+/** Whether a stated token is one of the served list of them. */
+export const admits = (served: readonly string[], token: string): boolean =>
+  served.includes(token);
 export const textOf = (found: unknown): string | null =>
   typeof found === "string" && found !== "" ? found : null;
 export const decimalOf = (found: unknown): string | null =>
