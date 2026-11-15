@@ -5,7 +5,7 @@ tags:
 date: '2026-11-14'
 modified: '2026-11-15'
 body_schema: 'body-v2'
-body_hash: 'sha256:4b64e070adc3294fa4432c35db1d4cc4ba21bbd0c7a9089866735d6dd4f18861'
+body_hash: 'sha256:741d0ecacedf9ec2b4344dfafd512d7b035e7c71c2e58332e450ddd6c5469e5d'
 related:
   - "[[2026-11-14-source-casilla-integration-plan]]"
 ---
@@ -67,3 +67,11 @@ related:
 - `S06` `M` `src/cadrumo/locales/hu/application.yml`
 - `S06` `verify:` `test_every_cited_producer_key_is_resolvable` -> `pass`
 - `S06` `verify:` `landed t24b tui 4bfa37a867` -> `pass`
+- `S07` `M` `dev/registry/pipeline/export_tree.py`
+- `S07` `M` `dev/registry/compiler/validate_export_layout_coverage.py`
+- `S07` `M` `dev/registry/compiler/record_design_layout_markers.py`
+- `S07` `M` `dev/registry/compiler/tests/test_export_layout_source_coverage.py`
+- `S07` `A` `src/cadrumo/application/filing/tests/test_m840_export_round_trip.py`
+- `S07` `M` `src/cadrumo/application/filing/tests/test_m840_anexo_sheets.py`
+- `S07` `M` `src/cadrumo/_data/registry/aeat/modelos/840/revisions/2003-y-siguientes/export`
+- `S07` `verify:` `pytest src/cadrumo/application/filing/tests/test_m840_export_round_trip.py` -> `pass`
