@@ -203,20 +203,4 @@ signed = false
 legal_refs = ["orden-hac-2572-2003:apartado-1"]
 source_refs = ["aeat-dr-840"]
 
-[[revisions.2003-y-siguientes.export_layouts.records.fields]]
-id = "m840-2003.pagina02.f110"
-offset = 1164
-length = 2
-kind = "literal"
-literal = """
-\r
-"""
-data_type = "text"
-required = true
-padding = "none"
-justification = "none"
-signed = false
-legal_refs = ["orden-hac-2572-2003:apartado-1"]
-source_refs = ["aeat-dr-840"]
-
 [revisions.2003-y-siguientes.export_layouts.records.row_field_casilla_ids]
