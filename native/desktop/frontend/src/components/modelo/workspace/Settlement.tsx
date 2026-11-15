@@ -1,13 +1,14 @@
 import { Badge } from "@/components/ui/badge";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { NativeSelect } from "@/components/ui/native-select";
+
+import { useStrings } from "../../../shell/strings";
 import type {
   ModeloFormElection,
   PublicModeloFormElectionFigure,
   PublicModeloFormElectionQuestion,
   ModeloFormElectionReason,
-} from "../../../shell/modeloContract/modeloWorkForm";
-import { useStrings } from "../../../shell/strings";
+} from "../../../shell/modeloContract/modeloWork";
 
 // How the result is settled, as the export offer served it: each election the
 // declaration asks, with its answers and, where the answer states amounts,

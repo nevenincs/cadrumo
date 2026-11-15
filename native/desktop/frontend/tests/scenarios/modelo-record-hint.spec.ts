@@ -42,13 +42,14 @@ test("while the window re-reads after an export, the record button's words say w
       releaseRead: null,
       holdReads: false,
     });
-    const form = port.form;
-    port.form = async (...args) => {
-      if (state.holdReads)
+    const submit = port.submit;
+    port.submit = async (...args) => {
+      // The read after an export is the filing state, not the whole form.
+      if (args[0] === "modelo.work.filing_state" && state.holdReads)
         await new Promise<void>((release) => {
           state.releaseRead = release;
         });
-      return form(...args);
+      return submit(...args);
     };
   });
   await expect(recordButton(target)).toBeEnabled();

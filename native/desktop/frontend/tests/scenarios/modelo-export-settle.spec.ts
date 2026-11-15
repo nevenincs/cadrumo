@@ -50,6 +50,11 @@ async function gate(target: Page) {
     // runtime's does; it settles when released.
     let settled: Awaited<ReturnType<typeof submit>> | null = null;
     port.submit = async (...args) => {
+      // The read after the export is the filing state, held once asked.
+      if (args[0] === "modelo.work.filing_state" && state.holdReads)
+        await new Promise<void>((release) => {
+          state.releaseRead = release;
+        });
       const result = await submit(...args);
       if (args[0] !== "modelo.export") return result;
       settled = result;
@@ -75,14 +80,6 @@ async function gate(target: Page) {
             revision: 1,
             cancellable: false,
           } as Awaited<ReturnType<typeof port.observe>>);
-    };
-    const form = port.form;
-    port.form = async (...args) => {
-      if (state.holdReads)
-        await new Promise<void>((release) => {
-          state.releaseRead = release;
-        });
-      return form(...args);
     };
   });
 }
@@ -132,7 +129,9 @@ test("an export shows that it is working from the press to the answer, then open
   await expect(recordButton(target)).toBeDisabled();
   await expect(readAgain(target)).toHaveCount(0);
   await expect(target.locator(".modelo-write-hold")).toHaveCount(0);
-  const reads = (await calls(target, "modelo form")).length;
+  const forms = (await calls(target, "modelo form")).length;
+  const reads = (await calls(target, "modelo submit modelo.work.filing_state"))
+    .length;
   await target.evaluate(() => {
     window.__settleGates!.holdReads = false;
     window.__settleGates!.releaseRead!();
@@ -156,8 +155,9 @@ test("an export shows that it is working from the press to the answer, then open
   // Not drawn before the press is taken, drawn without a break until the
   // read answers, then not drawn: "01", never "0101".
   expect(frames.runs).toMatch(/^0?10$/);
-  expect((await calls(target, "modelo form")).length).toBeLessThanOrEqual(
-    reads + 1,
-  );
+  expect(
+    (await calls(target, "modelo submit modelo.work.filing_state")).length,
+  ).toBeLessThanOrEqual(reads + 1);
+  expect(await calls(target, "modelo form")).toHaveLength(forms);
   expect(await calls(target, "modelo submit modelo.export")).toHaveLength(1);
 });
