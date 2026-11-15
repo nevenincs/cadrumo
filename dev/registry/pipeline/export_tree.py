@@ -384,6 +384,9 @@ def render_records(
             )
             for field in joined_record.fields
         )
+        record_derivations = without_design_line_terminator(
+            record_derivations, transport_profile, export_record_id=record_id
+        )
         derivations.extend(record_derivations)
         records.append(
             ExportRecordDefinition.model_validate(
@@ -409,6 +412,47 @@ def render_records(
     if not records:
         raise RegistryValidationError("joined record design contains no records to render")
     return tuple(records), tuple(derivations)
+
+
+#: The record line endings a design can number as its own last positions.
+_LINE_ENDING_LITERALS = {"\r\n": "crlf", "\n": "lf"}
+
+
+def without_design_line_terminator(
+    record_derivations: tuple[ExportFieldDerivation, ...],
+    transport_profile: ExportTreeTransportProfile,
+    *,
+    export_record_id: str,
+) -> tuple[ExportFieldDerivation, ...]:
+    """Carry a design-numbered closing line break as the record's line ending, not as a field.
+
+    Most designs leave the line break outside their numbered positions; Modelo 840
+    numbers it as the page's last row ("Salto de línea. Constante CRLF"), so the joined
+    geometry above checks the full design total with those two positions included.
+    The renderer appends the declared line ending after the fields and the parser
+    reads it after them, so keeping the row as a literal too would emit the break
+    twice and its control bytes would be refused as field text. The 232 envelope's
+    relative CRLF row is carried the same way, as ``record_terminator``.
+    """
+    breaks = [
+        index
+        for index, derivation in enumerate(record_derivations)
+        if derivation.field.kind is CasillaFieldKind.LITERAL and derivation.field.literal in _LINE_ENDING_LITERALS
+    ]
+    if not breaks:
+        return record_derivations
+    last = len(record_derivations) - 1
+    if breaks != [last]:
+        raise RegistryValidationError(
+            f"export record {export_record_id!r} numbers a line break before its last position",
+        )
+    declared = _LINE_ENDING_LITERALS[str(record_derivations[last].field.literal)]
+    if declared != transport_profile.line_ending:
+        raise RegistryValidationError(
+            f"export record {export_record_id!r} closes with a {declared!r} line break but its transport "
+            f"declares {transport_profile.line_ending!r}",
+        )
+    return record_derivations[:last]
 
 
 def _alphanumeric_text_declaration(render_profile: RenderProfile) -> dict[str, object]:
