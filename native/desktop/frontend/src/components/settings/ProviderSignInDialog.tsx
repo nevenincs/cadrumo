@@ -175,7 +175,28 @@ function snapshotFailureCode(
     : "unknown";
 }
 
-const TIMED_OUT: Failure = { code: "timeout", detail: {} };
+/** The last cause and log reference said of an attempt while it was live. */
+type SeenDetail = { attemptId: string; detail: FailureDetail };
+
+/** The window's own timeout of an attempt: it says what the service last said
+ * of that attempt, and what the cancel answered, and nothing else. */
+function timedOut(
+  seen: SeenDetail | null,
+  attemptId: string,
+  answered: FailureDetail = {},
+): Failure {
+  return {
+    code: "timeout",
+    detail: {
+      ...(seen?.attemptId === attemptId ? seen.detail : {}),
+      ...answered,
+    },
+  };
+}
+
+function hasDetail(detail: FailureDetail): boolean {
+  return Object.keys(detail).length > 0;
+}
 
 /** The failure a failed attempt's snapshot says, or none for another. */
 function snapshotFailure(snapshot: ProviderSignInSnapshot): Failure | null {
@@ -293,6 +314,7 @@ function snapshotOf(
     provider: providerId,
     event,
     ...(reason ? { reason } : {}),
+    ...detailOf(raw),
     ...(url ? { url } : {}),
     ...(userCode ? { user_code: userCode } : {}),
   };
@@ -446,6 +468,7 @@ export function ProviderSignInDialog({
   const generation = useRef(0);
   const deadline = useRef(0);
   const openedAttempt = useRef<string | null>(null);
+  const seenDetail = useRef<SeenDetail | null>(null);
   const clearedAttempt = useRef<string | null>(null);
   const api = useRef(signIn);
   const completed = useRef(onTerminal);
@@ -453,6 +476,13 @@ export function ProviderSignInDialog({
   api.current = signIn;
   completed.current = onTerminal;
   close.current = onOpenChange;
+
+  /** Keeps what the service said of a live attempt, for a timeout to say. */
+  const noteSeen = useCallback((next: ProviderSignInSnapshot) => {
+    const detail = detailOf(next);
+    if (ACTIVE.has(next.event) && hasDetail(detail))
+      seenDetail.current = { attemptId: next.attempt_id, detail };
+  }, []);
 
   const refreshAfterTerminal = useCallback(
     (retryable: boolean, forGeneration: number) => {
@@ -485,11 +515,16 @@ export function ProviderSignInDialog({
   );
 
   const cancelQuietly = useCallback(
-    (attemptId: string, retryGeneration?: number) => {
+    (
+      attemptId: string,
+      retryGeneration?: number,
+      answered?: (detail: FailureDetail) => void,
+    ) => {
       void api.current
         .cancel({ attemptId })
         .then((answer) => {
-          snapshotOf(answer, provider.id, attemptId);
+          const next = snapshotOf(answer, provider.id, attemptId);
+          answered?.(detailOf(next));
         })
         .catch(() => undefined)
         .finally(() =>
@@ -500,6 +535,21 @@ export function ProviderSignInDialog({
         );
     },
     [provider.id, refreshAfterTerminal],
+  );
+
+  /** The window gave up on the attempt: it says the timeout, with the cause
+   * and log reference the cancel's answer adds to what was seen. */
+  const cancelTimedOut = useCallback(
+    (attemptId: string, forGeneration: number) =>
+      cancelQuietly(attemptId, forGeneration, (detail) => {
+        if (!hasDetail(detail)) return;
+        setFailure((shown) =>
+          shown?.code === "timeout" && generation.current === forGeneration
+            ? { ...shown, detail: { ...shown.detail, ...detail } }
+            : shown,
+        );
+      }),
+    [cancelQuietly],
   );
 
   const activeAttemptId =
@@ -524,9 +574,9 @@ export function ProviderSignInDialog({
         currentAttempt.current = null;
         setSnapshot(null);
         setCode("");
-        setFailure(TIMED_OUT);
+        setFailure(timedOut(seenDetail.current, attemptId));
         setCancelling(false);
-        cancelQuietly(attemptId, generation.current);
+        cancelTimedOut(attemptId, generation.current);
         return;
       }
       try {
@@ -534,6 +584,7 @@ export function ProviderSignInDialog({
         if (!current || currentAttempt.current !== attemptId) return;
         const next = snapshotOf(answer, provider.id, attemptId);
         misses = 0;
+        noteSeen(next);
         if (ACTIVE.has(next.event)) {
           currentAttempt.current = attemptId;
           setSnapshot(
@@ -576,13 +627,15 @@ export function ProviderSignInDialog({
         setSnapshot(null);
         // Reads that kept failing lost the attempt: said as lost contact,
         // with whatever cause and reference the last refusal carried.
+        const lateTimeout = Date.now() >= deadline.current;
         setFailure(
-          Date.now() >= deadline.current
-            ? { ...rejectionOf(error), code: "timeout" }
+          lateTimeout
+            ? timedOut(seenDetail.current, attemptId, rejectionOf(error).detail)
             : rejectionOf(error, passing ? "host_disconnected" : "unknown"),
         );
         setCancelling(false);
-        cancelQuietly(attemptId, generation.current);
+        if (lateTimeout) cancelTimedOut(attemptId, generation.current);
+        else cancelQuietly(attemptId, generation.current);
       }
       if (current && currentAttempt.current === attemptId) schedule();
     };
@@ -594,7 +647,9 @@ export function ProviderSignInDialog({
   }, [
     activeAttemptId,
     cancelQuietly,
+    cancelTimedOut,
     identity,
+    noteSeen,
     open,
     provider.id,
     refreshAfterTerminal,
@@ -615,6 +670,7 @@ export function ProviderSignInDialog({
     next: ProviderSignInSnapshot,
     forGeneration = generation.current,
   ) => {
+    noteSeen(next);
     if (ACTIVE.has(next.event)) {
       currentAttempt.current = next.attempt_id;
       setSnapshot(
@@ -653,6 +709,7 @@ export function ProviderSignInDialog({
     openedAttempt.current = null;
     clearedAttempt.current = null;
     submittedAttempt.current = null;
+    seenDetail.current = null;
     setCode("");
     setSubmitting(false);
     setMethod(nextMethod);
@@ -678,8 +735,9 @@ export function ProviderSignInDialog({
         currentAttempt.current = next.attempt_id;
         setStarting(false);
         currentAttempt.current = null;
-        setFailure(TIMED_OUT);
-        cancelQuietly(next.attempt_id, mine);
+        noteSeen(next);
+        setFailure(timedOut(seenDetail.current, next.attempt_id));
+        cancelTimedOut(next.attempt_id, mine);
         return;
       }
       setStarting(false);
@@ -915,7 +973,11 @@ export function ProviderSignInDialog({
         </DialogHeader>
 
         {active && snapshot && (
-          <div className="grid gap-2">
+          <div
+            data-slot="sign-in-attempt"
+            data-attempt-id={snapshot.attempt_id}
+            className="grid gap-2"
+          >
             {checkingCode && <Spinner className="size-4" />}
             {snapshot.event === "authorization_code_required" &&
               submittedAttempt.current !== snapshot.attempt_id &&
@@ -954,7 +1016,15 @@ export function ProviderSignInDialog({
           </p>
         )}
         {shownFailure && (
-          <p role="alert" className="text-sm text-destructive">
+          <p
+            role="alert"
+            data-reason={shownFailure.code}
+            data-cause={shownFailure.detail.cause}
+            data-next-step={shownFailure.detail.next_step}
+            data-status-cause={shownFailure.detail.status_cause}
+            data-log-ref={shownFailure.detail.log_ref}
+            className="text-sm text-destructive"
+          >
             {failureWords(t, shownFailure.code, provider.name, method)}
           </p>
         )}

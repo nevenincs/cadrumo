@@ -324,6 +324,8 @@ function WayRow({
   return (
     <li
       data-lane={provider.id}
+      data-transport={provider.transport}
+      data-auth-kind={provider.authKind}
       hidden={hidden}
       aria-labelledby={headingId}
       className={`way ${hidden ? "hidden" : "grid"} gap-2 rounded-lg bg-accent p-3`}
