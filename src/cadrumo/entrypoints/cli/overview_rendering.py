@@ -32,6 +32,7 @@ from ...application.operator_actions.models import ActionReference, DeclaredNext
 from ...application.overview.agenda import OverviewAgenda
 from ...application.overview.backlog import OverviewBacklog
 from ...application.overview.calendar import holiday_coverage_statement, shift_reason_statement
+from ...application.overview.calendar_envelope import OverviewCalendarSupport
 from ...application.overview.calendar_events import actionable_post_filing_events
 from ...application.overview.calendar_evidence import NO_AEAT_HISTORY_NOTICE_CODE
 from ...application.overview.calendar_models import (
@@ -67,6 +68,7 @@ from ...core.operator_action_enums import ActionArgumentSource, ActionArgumentSt
 from ...domain.deadlines.models import ObligationStatus
 from .common import resolve_notice_action
 from .ledger_results import LedgerStatusResult
+from .overview_calendar_support import calendar_support_line, calendar_support_notices
 from .overview_results import (
     OverviewAgendaResult,
     OverviewBacklogResult,
@@ -553,6 +555,7 @@ def overview_calendar_output(
     cal: OverviewCalendar,
     rng: OverviewCalendarRange,
     *,
+    support: OverviewCalendarSupport,
     evidence_notices: Sequence[Notice],
     deemed_served_legal_ref: str | None = None,
 ) -> tuple[OverviewCalendarResult, list[str], list[Notice]]:
@@ -610,6 +613,7 @@ def overview_calendar_output(
                 "incomplete_reason": cal.incomplete_reason,
                 "suppressed_entries": [_suppressed_entry_payload(entry) for entry in cal.suppressed_entries],
                 "coverage": cal.coverage.model_dump(mode="json"),
+                "support": support.model_dump(mode="json"),
             },
         ),
     )
@@ -618,9 +622,11 @@ def overview_calendar_output(
         f"to\t{rng.to_date.isoformat()}",
         f"entries\t{len(cal.entries)}",
         f"events\t{len(cal.events)}",
+        calendar_support_line(support),
     ]
     calendar_lines, calendar_notices = _calendar_lines_and_notices(cal, deemed_served_legal_ref=deemed_served_legal_ref)
     lines.extend(calendar_lines)
+    calendar_notices.extend(calendar_support_notices(support))
     for evidence_notice in evidence_notices:
         notice = _calendar_evidence_notice_with_action(evidence_notice)
         lines.append(f"{notice.code}\t{notice.message}")
@@ -633,6 +639,7 @@ def overview_calendar_profile_output(
     bucket_id: str,
     label: str,
     cal: OverviewCalendar,
+    support: OverviewCalendarSupport,
     deemed_served_legal_ref: str | None = None,
 ) -> tuple[dict[str, object], list[str], list[Notice]]:
     """Project one profile block for ``overview calendar --all-profiles``."""
@@ -640,11 +647,13 @@ def overview_calendar_profile_output(
         f"profile\t{bucket_id}\t{label}",
         f"entries\t{len(cal.entries)}",
         f"events\t{len(cal.events)}",
+        calendar_support_line(support),
     ]
     profile_lines, notices = _profile_calendar_lines_and_notices(
         cal, label=label, deemed_served_legal_ref=deemed_served_legal_ref
     )
     lines.extend(profile_lines)
+    notices.extend(calendar_support_notices(support))
     payload: dict[str, object] = {
         "profile_id": bucket_id,
         "label": label,
@@ -652,6 +661,7 @@ def overview_calendar_profile_output(
         "event_count": len(cal.events),
         "warning_count": len(cal.warnings),
         "suppressed_entry_count": len(cal.suppressed_entries),
+        "support_state": support.state,
     }
     next_due = _next_due_entry(cal)
     if next_due is not None:
