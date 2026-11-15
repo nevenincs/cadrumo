@@ -302,21 +302,52 @@ pub(crate) async fn follow(
     relayed: &Relayed<'_>,
     stop: impl Fn(&Value) -> bool,
 ) -> Result<Value> {
+    let mut recheck = FOLLOW_RECHECK_FIRST;
     loop {
         let projection = observe(relayed).await?;
         if projection["lifecycle"] == "terminal" || stop(&projection) {
             return Ok(projection);
         }
+        // The runtime's cue is how a settlement is normally learned; looking
+        // again after a bound keeps a late or lost cue from holding a settled
+        // answer back until some unrelated change wakes this wait.
+        recheck = next_recheck(recheck, next_cue(events, recheck).await?);
+    }
+}
+
+/// The first wait for an operation cue before observing again, and the
+/// longest it grows to while no cue arrives.
+const FOLLOW_RECHECK_FIRST: Duration = Duration::from_millis(250);
+const FOLLOW_RECHECK_LONGEST: Duration = Duration::from_secs(1);
+
+/// The next wait: back to the first after a cue, else twice the last, at most the longest.
+fn next_recheck(last: Duration, cued: bool) -> Duration {
+    if cued {
+        FOLLOW_RECHECK_FIRST
+    } else {
+        (last * 2).min(FOLLOW_RECHECK_LONGEST)
+    }
+}
+
+/// Waits up to `wait` for a cue that an operation may have advanced: true for
+/// a cue (or missed events), false when the wait ran out, an error when the
+/// session is gone.
+async fn next_cue(
+    events: &mut tokio::sync::broadcast::Receiver<PersonEvent>,
+    wait: Duration,
+) -> Result<bool> {
+    let cue = async {
         loop {
             match events.recv().await {
                 Ok(PersonEvent::OperationChanged)
-                | Err(tokio::sync::broadcast::error::RecvError::Lagged(_)) => break,
+                | Err(tokio::sync::broadcast::error::RecvError::Lagged(_)) => return Ok(true),
                 Ok(PersonEvent::Retired)
                 | Err(tokio::sync::broadcast::error::RecvError::Closed) => return Err(protocol()),
                 _ => {}
             }
         }
-    }
+    };
+    tokio::time::timeout(wait, cue).await.unwrap_or(Ok(false))
 }
 
 /// The settled operation's result document, or its declared refusal detail.
@@ -338,6 +369,56 @@ pub(crate) async fn result(relayed: &Relayed<'_>) -> Result<Value> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[tokio::test(start_paused = true)]
+    async fn a_follow_looks_again_when_no_cue_arrives_within_its_bound() {
+        let (sender, mut events) = tokio::sync::broadcast::channel(4);
+        let started = tokio::time::Instant::now();
+        assert!(!next_cue(&mut events, FOLLOW_RECHECK_FIRST).await.unwrap());
+        assert_eq!(started.elapsed(), FOLLOW_RECHECK_FIRST);
+        // Other cues are not an operation's and do not end the wait early.
+        sender.send(PersonEvent::RecordsChanged).unwrap();
+        sender.send(PersonEvent::LanguageChanged).unwrap();
+        let started = tokio::time::Instant::now();
+        assert!(!next_cue(&mut events, FOLLOW_RECHECK_LONGEST).await.unwrap());
+        assert_eq!(started.elapsed(), FOLLOW_RECHECK_LONGEST);
+    }
+
+    #[test]
+    fn the_recheck_backs_off_to_one_second_and_a_cue_resets_it() {
+        let ms = Duration::from_millis;
+        let mut wait = FOLLOW_RECHECK_FIRST;
+        let mut seen = vec![wait];
+        for _ in 0..4 {
+            wait = next_recheck(wait, false);
+            seen.push(wait);
+        }
+        assert_eq!(seen, [ms(250), ms(500), ms(1000), ms(1000), ms(1000)]);
+        assert_eq!(next_recheck(ms(1000), true), ms(250));
+        assert_eq!(next_recheck(ms(250), true), ms(250));
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn an_operation_cue_or_missed_events_end_the_wait_at_once() {
+        let (sender, mut events) = tokio::sync::broadcast::channel(2);
+        sender.send(PersonEvent::OperationChanged).unwrap();
+        let started = tokio::time::Instant::now();
+        assert!(next_cue(&mut events, FOLLOW_RECHECK_LONGEST).await.unwrap());
+        assert_eq!(started.elapsed(), Duration::ZERO);
+        for _ in 0..3 {
+            sender.send(PersonEvent::RecordsChanged).unwrap();
+        }
+        assert!(next_cue(&mut events, FOLLOW_RECHECK_LONGEST).await.unwrap());
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn a_retired_or_closed_session_ends_the_follow() {
+        let (sender, mut events) = tokio::sync::broadcast::channel(2);
+        sender.send(PersonEvent::Retired).unwrap();
+        assert!(next_cue(&mut events, FOLLOW_RECHECK_LONGEST).await.is_err());
+        drop(sender);
+        assert!(next_cue(&mut events, FOLLOW_RECHECK_LONGEST).await.is_err());
+    }
 
     #[test]
     fn a_raw_body_is_read_only_as_one_bounded_object() {
