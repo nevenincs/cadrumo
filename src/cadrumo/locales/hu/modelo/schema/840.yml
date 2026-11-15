@@ -165,6 +165,8 @@ modelo:
               label: A képviselő címének kilométerjelzése
             x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbdeln6ior9e1kmu:
               label: A képviselő címének településkódja
+            x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbdeln6ior9e1kmubbedtmm4sj5:
+              label: A képviselő címének településneve
             x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbeelmmasjf:
               label: A képviselő címének házszáma
             x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbgd5pmu:

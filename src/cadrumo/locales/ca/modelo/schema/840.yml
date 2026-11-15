@@ -159,6 +159,8 @@ modelo:
               label: Quilòmetre del domicili del representant
             x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbdeln6ior9e1kmu:
               label: Codi de municipi del domicili del representant
+            x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbdeln6ior9e1kmubbedtmm4sj5:
+              label: Nom del municipi del domicili del representant
             x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbeelmmasjf:
               label: Número del domicili del representant
             x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbgd5pmu:

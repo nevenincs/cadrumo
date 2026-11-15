@@ -161,6 +161,8 @@ modelo:
               label: Kilometre marker of the representative's address
             x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbdeln6ior9e1kmu:
               label: Municipality code of the representative's address
+            x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbdeln6ior9e1kmubbedtmm4sj5:
+              label: Municipality name of the representative's address
             x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbeelmmasjf:
               label: Street number of the representative's address
             x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbgd5pmu:

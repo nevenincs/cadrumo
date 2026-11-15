@@ -161,6 +161,8 @@ modelo:
               label: Kilómetro del domicilio del representante
             x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbdeln6ior9e1kmu:
               label: Código de municipio del domicilio del representante
+            x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbdeln6ior9e1kmubbedtmm4sj5:
+              label: Nombre del municipio del domicilio del representante
             x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbeelmmasjf:
               label: Número del domicilio del representante
             x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbgd5pmu:

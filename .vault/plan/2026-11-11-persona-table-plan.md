@@ -8,9 +8,9 @@ related:
   - '[[2026-11-05-per-activity-estimation-regime-adr]]'
   - '[[2026-11-03-backend-served-surface-adr]]'
   - '[[2026-10-18-runtime-authority-boundary-adr]]'
-modified: '2026-11-14'
+modified: '2026-11-15'
 body_schema: body-v2
-body_hash: 'sha256:c7f6dd2fff155cf1f8390c8f0e3784947b77f29a9aa7d2b7f03b8293b90e2188'
+body_hash: 'sha256:622625829ec8e2d036c441fa1416457dcd0c71c5e19d39401167641a90671002'
 ---
 
 <!-- RETIRED: S44 -->
@@ -75,7 +75,7 @@ Every persona row passes calculate, verify and export, proven in Python with no 
 - [ ] `P01.S62` - Build the Modelo 232 related-party operations record per the accepted 2026-11-12-modelo-232-related-party-operations-adr: an encrypted per-ejercicio record of operations aggregated per person and type, with the turnover and its source and a withdrawable none statement; a record-backed payer-fact source applying the 232 parameters; state, list and withdraw operations with CLI and a TUI door; a profile schema version only if needed, in landing order; decides the sociedad Modelo 232 undecided row (PRIME ORDER 21:48); owner CALC-PAGOS; `src/cadrumo/domain, src/cadrumo/application, src/cadrumo/_data/registry/aeat/modelos/232, src/cadrumo/entrypoints`.
 - [x] `P01.S63` - Served next step puts verify ahead of fill when every remaining MISSING calculation note has withholds_filing=false (PRIME ORDER 10:55, RULINGS 10:55); owner LIFECYCLE; closes when the TUI column reads matched for asalariada-familia Modelo 100 2022-2025, arrendador-jubilado Modelo 100 and minorista-recargo Modelo 100, 130 and 347 on a published table; `src/cadrumo/application/modelo, src/cadrumo/entrypoints/tui`.
 - [x] `P01.S64` - Probe verify on the unstated state of every persona and horizon: run verify once before the trabajo boxes are stated (persona_materialisation.py:795) and require typed findings, with no exception and no unknown settlement; a check reported with the failing persona, horizon and owner, not a table row (PRIME ORDER 14:46, RULINGS 14:46); owner ACCEPTANCE, finding producers LIFECYCLE; closes when the probe runs on a published head and lists no failure or each failure has an owner; `dev/acceptance/persona_table`.
-- [ ] `P01.S65` - Prune orphaned OS-credential-store entries the runtime no longer owns at startup or login (profile-session acceleration keys of sessions it does not hold; automation grant-wrap, control-anchor and client-key entries whose grant has ended or whose profile is gone, if they leak), with typed unavailability never failing startup (PRIME RULINGS 22:49 and 23:05; 89 profile-session, 37 grant-wrap, 37 control-anchor entries found; ACCEPTANCE writes the spec and test, the runtime owner implements); `src/cadrumo_runtime, src/cadrumo/adapters/persistence/storage/custody`.
+- [x] `P01.S65` - Prune orphaned OS-credential-store entries the runtime no longer owns at startup or login (profile-session acceleration keys of sessions it does not hold; automation grant-wrap, control-anchor and client-key entries whose grant has ended or whose profile is gone, if they leak), with typed unavailability never failing startup (PRIME RULINGS 22:49 and 23:05; 89 profile-session, 37 grant-wrap, 37 control-anchor entries found; ACCEPTANCE writes the spec and test, the runtime owner implements); `src/cadrumo_runtime, src/cadrumo/adapters/persistence/storage/custody`.
 
 ### Phase `P02` - Deferred backend scope
 
