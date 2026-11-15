@@ -77,8 +77,17 @@ after(teardown);
 const STAGED_SHA256 = (process.env.CADRUMO_UX_STAGED_SHA256 ?? "")
   .trim()
   .toLowerCase();
+// The tree the build was made from and the authority generation it carries,
+// as the pipeline that built and staged it names them.
+const BUILT_TREE = (process.env.CADRUMO_UX_TREE ?? "").trim();
+const AUTHORITY_GENERATION = (
+  process.env.CADRUMO_UX_AUTHORITY_GENERATION ?? ""
+).trim();
 const identityProblem = () =>
   runIdentity.error ??
+  (!BUILT_TREE || !AUTHORITY_GENERATION
+    ? "CADRUMO_UX_TREE and CADRUMO_UX_AUTHORITY_GENERATION name no built head and authority generation"
+    : null) ??
   (!runIdentity.bundle?.length || !runIdentity.exeSha256
     ? "no bundle name or executable hash was recorded"
     : !STAGED_SHA256
@@ -130,6 +139,8 @@ ux("UX-00 the run records the live bundle and the host executable", (t) => {
       bundle: runIdentity.bundle,
       exe: runIdentity.exe,
       exeSha256: runIdentity.exeSha256,
+      tree: BUILT_TREE,
+      logicalGeneration: AUTHORITY_GENERATION,
       wheel: win.devtools ? "devtools" : "webdriver",
     }),
   );

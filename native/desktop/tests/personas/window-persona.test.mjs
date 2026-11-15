@@ -865,14 +865,28 @@ async function openView(key) {
 }
 
 /** Wait for a write the header started to answer; dialogs return at once. */
+// When the last settle first saw the window busy, last saw it busy, and first
+// saw it served (idle with a changed header or a fresh notice): the press
+// timings of the run log read the app's time from these, not the harness's.
+let settled = { busyFrom: null, busyTo: null, servedAt: null };
+
 async function settle(before, timeout) {
   const started = Date.now();
   let busySeen = false;
+  settled = { busyFrom: null, busyTo: null, servedAt: null };
   for (;;) {
     await sleep(400);
     await live();
     const state = await readState();
-    if (state.dialogTitle) return state;
+    const now = Date.now();
+    if (state.busy) {
+      settled.busyFrom ??= now;
+      settled.busyTo = now;
+    }
+    if (state.dialogTitle) {
+      settled.servedAt ??= now;
+      return state;
+    }
     busySeen ||= state.busy;
     const fresh =
       state.alerts.some((text) => !before.alerts.includes(text)) ||
@@ -880,6 +894,7 @@ async function settle(before, timeout) {
     const changed =
       state.action !== before.action || fresh || state.unresolved !== "";
     const waited = Date.now() - started;
+    if (!state.busy && changed) settled.servedAt ??= now;
     if (!state.busy && changed && waited >= 1500) return state;
     if (!state.busy && !changed && !busySeen && waited > 8000) return state;
     if (waited > timeout) return { ...state, timedOut: true };
@@ -1113,12 +1128,39 @@ async function formReadAfterWrite(mark, timeout) {
   return seen === true;
 }
 
+/**
+ * Press the header's `action` and log how long the app took to serve its
+ * result (press to the first served state) apart from the harness's own
+ * waits after it (re-read, quiet, dialogs), so a slow row names its owner.
+ */
 async function runAction(action, before, timeout, row) {
+  const pressed = Date.now();
+  let clickedAt = null;
+  const result = await pressAndSettle(action, before, timeout, row, (at) => {
+    clickedAt = at;
+  });
+  const ended = Date.now();
+  const served = settled.servedAt ?? ended;
+  log("press-timing", {
+    action,
+    clickMs: (clickedAt ?? pressed) - pressed,
+    servedMs: served - (clickedAt ?? pressed),
+    busyMs:
+      settled.busyFrom === null ? 0 : settled.busyTo - settled.busyFrom + 400,
+    afterServedMs: ended - served,
+    totalMs: ended - pressed,
+    timedOut: Boolean(result.state?.timedOut),
+  });
+  return result;
+}
+
+async function pressAndSettle(action, before, timeout, row, onClicked) {
   const mark = runtimeLines().length;
   const clicked = await clickText("header", "button", [
     label(`workspace.modelo.next_button.${action}`),
   ]);
   if (!clicked) throw new Error(`the ${action} button is not shown`);
+  onClicked(Date.now());
   const notes = [];
   const started = Date.now();
   for (;;) {
@@ -1344,6 +1386,7 @@ async function enterWorkInput(entry, language) {
  * (`judged`, null when nothing was applied) and what the window did not offer.
  */
 async function enterStatements(list, row) {
+  const entryStarted = Date.now();
   const problems = [];
   const entered = [];
   try {
@@ -1419,6 +1462,7 @@ async function enterStatements(list, row) {
     if (problem) problems.push(problem);
     else entered.push(`c:${entry.target} = ${entry.value}`);
   }
+  log("statements-timing", { entryMs: Date.now() - entryStarted });
   const before = await readState();
   if (before.action !== "apply" || entered.length === 0)
     return {
@@ -1434,6 +1478,12 @@ async function enterStatements(list, row) {
 
 /** Every box the form shows, page by page, scrolling to draw the lazy sections. */
 async function readFigures() {
+  const readStarted = Date.now();
+  let slept = 0;
+  const pause = (ms) => {
+    slept += ms;
+    return sleep(ms);
+  };
   await openView("desktop.modelo.view.form");
   const pages = await exec(
     pageTexts,
@@ -1456,13 +1506,13 @@ async function readFigures() {
     // viewport, and pixel steps can pass a section before it draws.
     for (const id of (await exec(pageSections)) ?? []) {
       await exec(pageShowSection, id);
-      await sleep(150);
+      await pause(150);
       await collect();
     }
     await exec(pageScroll, "top");
     let atEnd = 0;
     for (let step = 0; step < 400 && atEnd < 2; step += 1) {
-      await sleep(250);
+      await pause(250);
       for (const box of (await exec(pageBoxes)) ?? [])
         if (!seen.has(box.key)) seen.set(box.key, box);
       const where = await exec(pageScroll, "down");
@@ -1481,9 +1531,14 @@ async function readFigures() {
       index,
     );
     log("form-tab", { index, chosen });
-    await sleep(700);
+    await pause(700);
     await readPage(pages[index]);
   }
+  log("form-read-timing", {
+    pages: pages.length,
+    totalMs: Date.now() - readStarted,
+    sleptMs: slept,
+  });
   const figures = {};
   const conflicts = [];
   const language = await exec(() => document.documentElement.lang);
