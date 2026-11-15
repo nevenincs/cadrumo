@@ -1671,10 +1671,20 @@ async function showList() {
   log("rail", { rail });
   if (rail?.pressed !== "true")
     await clickSelector('[data-rail="declarations"]');
+  // The declarations page comes back on the declaration it last showed; its
+  // header's overview button leads to the list.
+  const listed = async () => {
+    const list = await ready();
+    if (list) return list;
+    if ((await readState()).workspace)
+      await clickText("header", "button", [overview]);
+    return null;
+  };
   try {
-    return await waitFor(ready, {
+    return await waitFor(listed, {
       timeout: TIMEOUT.list,
       what: "the declarations list",
+      interval: 2000,
     });
   } catch (error) {
     log("list-diagnosis", {
@@ -1780,8 +1790,69 @@ function pageRailPressed(rail) {
   return node ? node.getAttribute("aria-pressed") : null;
 }
 
+/**
+ * Record every calendar read the page makes from now on: the range it asked
+ * for and the host's answer, kept in the page until collected.
+ */
+function pageWatchCalendarReads() {
+  if (window.__personaCalendarReads) return true;
+  const reads = [];
+  const original = window.fetch;
+  window.fetch = function (input, init) {
+    const url = typeof input === "string" ? input : (input?.url ?? "");
+    const answer = original.call(this, input, init);
+    if (!/profile_views_calendar(\?|$)/.test(url.split("/").pop() ?? ""))
+      return answer;
+    let asked = {};
+    try {
+      const body = JSON.parse(typeof init?.body === "string" ? init.body : "");
+      asked = { from: body.from ?? null, to: body.to ?? null };
+    } catch {
+      asked = { from: null, to: null };
+    }
+    const read = { at: Date.now(), ...asked, answer: null };
+    reads.push(read);
+    answer.then(
+      (response) =>
+        response
+          .clone()
+          .text()
+          .then((text) => {
+            read.answer = text;
+          }),
+      () => {},
+    );
+    return answer;
+  };
+  window.__personaCalendarReads = reads;
+  return true;
+}
+
+/** The recorded calendar reads: their range and the rows naming `modelo`. */
+function pageCalendarReads(modelo) {
+  const naming = (value) => JSON.stringify(value).includes(`"${modelo}"`);
+  return (window.__personaCalendarReads ?? []).map((read) => {
+    let answer = null;
+    try {
+      answer = JSON.parse(read.answer ?? "");
+    } catch {
+      return { from: read.from, to: read.to, answered: read.answer !== null };
+    }
+    return {
+      from: read.from,
+      to: read.to,
+      range: answer?.range ?? null,
+      entries: (answer?.entries ?? []).filter(naming),
+      suppressed: (answer?.suppressed ?? []).filter(naming),
+      entryCount: (answer?.entries ?? []).length,
+      suppressedCount: (answer?.suppressed ?? []).length,
+    };
+  });
+}
+
 /** A return the persona states not owed: what the overview calendar shows of it. */
 async function readCalendarApplicability(row) {
+  await exec(pageWatchCalendarReads);
   if ((await exec(pageRailPressed, "calendar")) !== "true")
     await clickSelector('[data-rail="calendar"]');
   const shown = await waitFor(
@@ -1792,9 +1863,15 @@ async function readCalendarApplicability(row) {
     { timeout: 30_000, what: "the calendar to show the return", soft: true },
   );
   const read = shown ?? (await exec(pageCalendar, row.modelo, row.period));
-  // Leave the calendar as it was found, so the list is the next page.
-  if ((await exec(pageRailPressed, "calendar")) === "true")
-    await clickSelector('[data-rail="calendar"]');
+  log("calendar-reads", {
+    modelo: row.modelo,
+    period: row.period,
+    reads: await exec(pageCalendarReads, row.modelo),
+  });
+  // Go back through the declarations rail: pressing the shown calendar's own
+  // rail again switches the pane to the documentation, not to the declarations.
+  if ((await exec(pageRailPressed, "declarations")) !== "true")
+    await clickSelector('[data-rail="declarations"]');
   return read;
 }
 
