@@ -69,6 +69,7 @@ from ..operations.registry import (
 )
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
+from ..workbench_capture_memory import WorkbenchCaptureMemoryOwner
 from .carry_family_selection import prior_carry_binding_ids
 from .casilla_help import ModeloCasillaHelpCardV1
 from .edit_admission import ModeloEditRenewedV1, renew_modelo_edit_baseline
@@ -76,6 +77,7 @@ from .edit_apply_scalar_contracts import ModeloEditWireScalar, wire_scalar_value
 from .edit_baseline_projection import ModeloEditApplyBaselineV1
 from .edit_carry_withdrawal import calculation_refusing_carry_bindings
 from .edit_models import (
+    ModeloEditAdmittedV1,
     ModeloEditCorrectionAddressV1,
     ModeloEditNormalisation,
     ModeloEditParsedValueV1,
@@ -113,6 +115,7 @@ from .workbench_projection import (
     project_modelo_work_filing_state,
     project_modelo_workbench_form,
 )
+from .workbench_projection_memory import FormProjectionContext
 from .workbench_read import (
     ModeloWorkbenchReadPorts,
     ModeloWorkbenchReadPortsFactory,
@@ -370,10 +373,15 @@ class ModeloWorkbenchFormExecutor:
     """Read one declaration's form and admit its edit baseline."""
 
     def __init__(
-        self, *, ports_factory: ModeloWorkbenchReadPortsFactory, contracts: OperationContractsProvider
+        self,
+        *,
+        ports_factory: ModeloWorkbenchReadPortsFactory,
+        contracts: OperationContractsProvider,
+        capture_memory: WorkbenchCaptureMemoryOwner | None = None,
     ) -> None:
         self._ports_factory = ports_factory
         self._contracts = contracts
+        self._capture_memory = capture_memory
 
     async def execute(
         self, request: OperationRequest[ModeloWorkbenchFormRequest], context: OperationExecutorContext
@@ -384,6 +392,11 @@ class ModeloWorkbenchFormExecutor:
             request.definition_id, request.subject_ref, MODELO_WORK_FORM_OPERATION_DEFINITION_ID, payload.work_unit_id
         )
         operation = context.authority_operation
+        memory = (
+            self._capture_memory.for_profile(str(payload.profile_id)).form_projection
+            if self._capture_memory is not None
+            else None
+        )
 
         def read() -> ModeloWorkbenchFormProjectionV1:
             bucket_id = _bucket_id(payload.profile_id)
@@ -395,7 +408,22 @@ class ModeloWorkbenchFormExecutor:
                 operation_contracts=self._contracts(),
                 language=payload.output_language,
             )
-            return project_modelo_workbench_form(payload.profile_id, payload.work_unit_id, form)
+            admission = form.admission
+            projection_context = None
+            if isinstance(admission, ModeloEditAdmittedV1):
+                baseline = admission.baseline
+                projection_context = FormProjectionContext(
+                    profile_id=payload.profile_id,
+                    work_unit_id=payload.work_unit_id,
+                    work_unit_record_digest=baseline.work_unit_record_digest,
+                    calculation_head_digest=baseline.calculation_head_digest,
+                    calculation_revision_id=baseline.current_calculation_revision_id,
+                    logical_generation=operation.generation.logical_generation,
+                    language=payload.output_language,
+                )
+            return project_modelo_workbench_form(
+                payload.profile_id, payload.work_unit_id, form, memory=memory, context=projection_context
+            )
 
         return await _read(
             context, phase=MODELO_WORK_FORM_OPERATION_DEFINITION_ID, task_name="modelo-work-form-read", read=read
@@ -802,6 +830,7 @@ def build_modelo_workbench_operation_definitions(
     ports_factory: ModeloWorkbenchReadPortsFactory,
     contracts: OperationContractsProvider,
     prerequisites: ModeloEditRefusalProjectionStore,
+    capture_memory: WorkbenchCaptureMemoryOwner | None = None,
 ) -> tuple[OperationDefinition, ...]:
     """Bind the workbench's six worker reads to the profile repositories and this registry's contracts."""
     return (
@@ -811,7 +840,9 @@ def build_modelo_workbench_operation_definitions(
             _WORK_UNIT_SUBJECT,
             ModeloWorkbenchFormProjectionV1,
             ModeloWorkbenchFormExecutor,
-            lambda: ModeloWorkbenchFormExecutor(ports_factory=ports_factory, contracts=contracts),
+            lambda: ModeloWorkbenchFormExecutor(
+                ports_factory=ports_factory, contracts=contracts, capture_memory=capture_memory
+            ),
         ),
         _definition(
             MODELO_WORK_FILING_STATE_OPERATION_DEFINITION_ID,
