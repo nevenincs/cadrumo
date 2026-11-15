@@ -4663,6 +4663,7 @@
         "dev.acceptance.persona_table.export_readback",
         "dev.acceptance.persona_table.export_text",
         "dev.acceptance.persona_table.figure_compare",
+        "dev.acceptance.persona_table.file_stage",
         "dev.acceptance.persona_table.form_text_figures",
         "dev.acceptance.persona_table.frontend",
         "dev.acceptance.persona_table.planner",
