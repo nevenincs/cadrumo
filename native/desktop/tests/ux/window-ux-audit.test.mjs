@@ -16,7 +16,7 @@
 //                    that drives any other executable is not counted
 //   CADRUMO_UX_ONLY  (optional) comma-separated substrings: run only tests whose name has one
 import assert from "node:assert/strict";
-import { existsSync, mkdtempSync, statSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, statSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, before, test } from "node:test";
@@ -2475,6 +2475,30 @@ ux("UX-24 a single click opens a Modelo view tab", async (t) => {
 
 let exportRun = null;
 
+/** The operations the run's runtime settled, from its log: when, which definition, how. */
+function settledOperations() {
+  let text = "";
+  try {
+    text = readFileSync(join(runDir, "storage", "logs", "cadrumo.log"), "utf8");
+  } catch {
+    return [];
+  }
+  const out = [];
+  for (const line of text.split(/\r?\n/)) {
+    const match =
+      /^(\S+) .*operation settled .* definition=(\S+) condition=(\S+)/.exec(
+        line,
+      );
+    if (match)
+      out.push({
+        at: Date.parse(match[1]),
+        definition: match[2],
+        condition: match[3],
+      });
+  }
+  return out;
+}
+
 ux(
   "UX-22 the Modelo export shows the operation running from the press until it settles",
   async (t) => {
@@ -2602,22 +2626,51 @@ ux(
         record,
         hint,
       );
+    // The window re-reads the declaration after its own export and keeps the
+    // step closed until that read lands, so it acts on the fresh state. The
+    // step passes when it opens by itself, with no read-again press, and says
+    // it is busy for the whole closed interval; the interval is reported.
+    const busy = label("desktop.navigation.busy");
     const afterMs = Date.now() - exportRun.at;
     const samples = [];
-    const end = Date.now() + 5000;
+    const end = Date.now() + 60_000;
     for (;;) {
-      samples.push({ atMs: Date.now() - exportRun.at, ...(await read()) });
-      if (Date.now() >= end) break;
-      await sleep(500);
+      const now = { atMs: Date.now() - exportRun.at, ...(await read()) };
+      now.saysBusy = !!now.hintText && now.hintText.includes(busy);
+      samples.push(now);
+      if ((now.buttonShown && !now.disabled) || Date.now() >= end) break;
+      await sleep(200);
     }
     const first = samples[0];
     const last = samples.at(-1);
+    // The re-read the step waits for: the first work-form read the runtime
+    // settled after the export's own settlement.
+    const operations = settledOperations();
+    const exported = operations
+      .filter(
+        (op) => op.definition === "modelo.export" && op.at <= exportRun.at,
+      )
+      .at(-1);
+    const reread = exported
+      ? operations.find(
+          (op) => op.definition === "modelo.work.form" && op.at > exported.at,
+        )
+      : undefined;
+    const openedAt = exportRun.at + last.atMs;
+    const closed = samples.filter((s) => s.buttonShown && s.disabled);
+    const silent = closed.filter((s) => !s.saysBusy);
+    const opened = last.buttonShown && !last.disabled;
     report(t, {
       probe: "record-after-export",
       size: inner,
       reached: true,
       exportKind: exportRun.kind,
       firstReadAfterExportMs: afterMs,
+      openedAfterExportMs: opened ? last.atMs : null,
+      rereadMs: reread ? reread.at - exported.at : null,
+      openedAfterRereadMs: reread && opened ? openedAt - reread.at : null,
+      closedSamples: closed.length,
+      closedWithoutBusyWords: silent.length,
       first,
       last,
       samples: samples.length,
@@ -2626,18 +2679,35 @@ ux(
     const failures = [];
     if (!last.buttonShown)
       failures.push("the record-as-filed button is not shown");
-    if (last.hintSaysAvailable && last.disabled)
+    if (!opened && last.buttonShown)
       failures.push(
-        `the hint says recording is available ("${hint}") but the button is disabled`,
+        `the button did not open by itself within ${last.atMs} ms of the export`,
       );
-    if (last.holdShown)
-      failures.push(`a write hold is shown: "${last.holdText}"`);
-    if (last.buttonShown && last.disabled && !last.hintSaysAvailable)
-      unmeasured(
-        t,
-        "record-after-export",
-        inner,
-        "the button is disabled and no hint says recording is available, so availability was not judged",
+    if (!reread)
+      failures.push(
+        exported
+          ? "no work-form read settled after the export in the runtime log"
+          : "the export's settlement is not in the runtime log",
+      );
+    else if (opened && openedAt < reread.at)
+      failures.push(
+        `the button opened ${reread.at - openedAt} ms before the re-read landed, on the pre-export read`,
+      );
+    else if (opened && openedAt - reread.at > 1000)
+      failures.push(
+        `the button opened ${openedAt - reread.at} ms after the re-read landed (more than 1 s)`,
+      );
+    if (silent.length > 0)
+      failures.push(
+        `the closed button said nothing about work in progress in ${silent.length} of ${closed.length} samples (first at ${silent[0].atMs} ms: "${silent[0].hintText}")`,
+      );
+    if (closed.some((s) => s.hintSaysAvailable))
+      failures.push(
+        `the hint says recording is available ("${hint}") while the button is disabled`,
+      );
+    if (samples.some((s) => s.holdShown))
+      failures.push(
+        `a write hold is shown: "${samples.find((s) => s.holdShown).holdText}"`,
       );
     assert.deepEqual(
       failures,
