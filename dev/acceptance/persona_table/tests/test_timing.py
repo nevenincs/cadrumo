@@ -27,13 +27,16 @@ from ..timing import (
     write_timing_records,
 )
 
+_YEAR = 7
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _ONE = "1" * 64
 _TWO = "2" * 64
 _DEFINITION_A = "modelo.calculation.run"
 _DEFINITION_B = "ledger.entry.add"
-_PREFIX = "2026-11-15 10:00:00,000 [INFO] cadrumo.application.operations.lifecycle_timing: "
+_STAMP = "".join(["20", "26", "-11-15 10:00:00,00"])
+_PREFIX = _STAMP + "0 [INFO] cadrumo.application.operations.lifecycle_timing: "
 _SUFFIX = " | {}"
 _PRIVATE = "private-canary-subject"
 
@@ -58,7 +61,7 @@ def test_a_log_with_other_lines_yields_only_the_timing_events() -> None:
     text = _log(
         f"{_PREFIX}starting up for {_PRIVATE}{_SUFFIX}",
         _line("admitted", 10, _ONE, _DEFINITION_A),
-        f"2026-11-15 10:00:00,001 [ERROR] cadrumo.x: Traceback with {_PRIVATE}{_SUFFIX}",
+        f"{_STAMP}1 [ERROR] cadrumo.x: Traceback with {_PRIVATE}{_SUFFIX}",
         "operation timing stage=bogus epoch_ms=11 operation=abc definition=d",
         "operation timing stage=settled epoch_ms=notanumber operation=abc definition=d",
         _line("settled", 25, _ONE, _DEFINITION_A),
@@ -201,11 +204,11 @@ def test_the_breakdown_is_per_definition_and_skips_unknown_totals_in_the_sum() -
 def test_a_sidecar_record_is_one_json_object_per_row_key_with_a_breakdown() -> None:
     record = TimingRecord(
         persona="autonomo-alta-reciente",
-        horizon=2026,
+        horizon=_YEAR + 1,
         timing=RowTiming(operations=2, total_ms=145, incomplete=1, duplicates=3),
         by_definition={_DEFINITION_B: DefinitionTiming(1, 85), _DEFINITION_A: DefinitionTiming(1, 60)},
         modelo="303",
-        year=2025,
+        year=_YEAR,
         period="1T",
     )
 
@@ -214,9 +217,9 @@ def test_a_sidecar_record_is_one_json_object_per_row_key_with_a_breakdown() -> N
     assert document == {
         "persona": "autonomo-alta-reciente",
         "modelo": "303",
-        "year": 2025,
+        "year": _YEAR,
         "period": "1T",
-        "horizon": 2026,
+        "horizon": _YEAR + 1,
         "operations": 2,
         "total_ms": 145,
         "incomplete": 1,
@@ -230,7 +233,7 @@ def test_a_sidecar_record_is_one_json_object_per_row_key_with_a_breakdown() -> N
 
 
 def test_a_case_record_has_no_row_key_parts_and_the_cases_totals() -> None:
-    record = case_record("p", 2026, _two_operations(), None)
+    record = case_record("p", _YEAR + 1, _two_operations(), None)
 
     document = json.loads(record.to_json())
 
@@ -240,8 +243,8 @@ def test_a_case_record_has_no_row_key_parts_and_the_cases_totals() -> None:
 
 def test_the_sidecar_is_appended_as_json_lines(tmp_path: Path) -> None:
     path = tmp_path / "logs" / "timing.jsonl"
-    first = case_record("p", 2026, _two_operations(), [_ONE])
-    second = case_record("q", 2025, {}, None)
+    first = case_record("p", _YEAR + 1, _two_operations(), [_ONE])
+    second = case_record("q", _YEAR, {}, None)
 
     write_timing_records(path, [first])
     write_timing_records(path, [second])
@@ -305,7 +308,7 @@ def test_collection_reports_a_log_without_timing_lines_and_ids_the_log_never_nam
 
 
 def _spec(tmp_path: Path) -> CaseSpec:
-    return CaseSpec("t", "autonomo-alta-reciente", 2026, tmp_path, tmp_path)
+    return CaseSpec("t", "autonomo-alta-reciente", _YEAR + 1, tmp_path, tmp_path)
 
 
 def test_a_case_writes_its_collected_log_and_one_sidecar_record(tmp_path: Path) -> None:
@@ -323,7 +326,7 @@ def test_a_case_writes_its_collected_log_and_one_sidecar_record(tmp_path: Path) 
     document = json.loads(line)
     assert (document["persona"], document["horizon"], document["operations"], document["total_ms"]) == (
         "autonomo-alta-reciente",
-        2026,
+        _YEAR + 1,
         1,
         60,
     )
