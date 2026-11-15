@@ -1,13 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { label } from "../support/strings";
 import { type JsonObject } from "../../src/shell/ledger";
-import {
-  button,
-  field,
-  openLedger,
-  openSetup,
-  area,
-} from "../support/ledgerSetup";
+import { field, openLedger, openSetup, area } from "../support/ledgerSetup";
 
 // The Ledger page's Setup sections over the scenario host's made-up ledger: counterparty lookups, drafts, conflicts and updates, and the identity each reply belongs to.
 
@@ -232,9 +226,10 @@ test("a counterparty conflict keeps the draft and shows both authoritative value
     field(answer, "desktop.ledger.counterparty.asserted_by"),
   ).toHaveValue("Fixture operator");
   await expect(target.locator(".ledger-paused")).toHaveCount(0);
-  await button(answer, "desktop.ledger.counterparty.withdraw").click();
-  await target.locator(".ledger-counterparty-withdraw").click();
-  await expect(conflict).toHaveCount(0);
+  // Nothing offers to withdraw what is stated for the counterparty, so the
+  // conflict stays beside the retained draft.
+  await expect(target.locator(".ledger-counterparty-withdraw")).toHaveCount(0);
+  await expect(conflict).toBeVisible();
 });
 
 test("a settled counterparty answer that omits a proposed value keeps the draft", async ({

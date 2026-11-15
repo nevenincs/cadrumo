@@ -1453,6 +1453,11 @@ desktop:
     view_months: Naptár
     window_label: '{modelo} {period}, {days}, {state}'
     window_unknown: A kezdő dátum nincs megadva
+    year: Adóév
+    year_current: Vissza az aktuális nézethez
+    year_failed: Ezt az adóévet nem sikerült beolvasni. Amit látsz, nem változott.
+    year_next: Következő adóév
+    year_previous: Előző adóév
   canvas:
     lead: Válassz munkaterületet alább, vagy nyisd meg az oldalsávból. A dokumentációt
       mindkét helyről megnyithatod.

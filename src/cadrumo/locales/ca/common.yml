@@ -1474,6 +1474,11 @@ desktop:
     view_months: Calendari
     window_label: '{modelo} {period}, {days}, {state}'
     window_unknown: Data d'obertura no indicada
+    year: Exercici
+    year_current: Torna a la vista actual
+    year_failed: No s'ha pogut llegir aquest exercici. El que veus no ha canviat.
+    year_next: Exercici següent
+    year_previous: Exercici anterior
   canvas:
     lead: Tria una àrea de treball a continuació o obre-la des de la barra lateral.
       També pots obrir la documentació des de qualsevol d’aquests llocs.

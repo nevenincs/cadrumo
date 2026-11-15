@@ -2633,3 +2633,130 @@ position = 2674
 [[revisions."2023".casilla_positions]]
 id = "DP200014:bin-aplicada-maxima"
 position = 2675
+
+# Modelo 200 ejercicio 2022 boxes the 2023 design does not print. The 2022 edition
+# declares them in casillas/0002-floor-only-boxes.toml; this edition removes them so
+# that it, and every edition after it, keeps exactly the casillas it declared before.
+
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200001:00016" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200015:02465" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200016:00004" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200016:00005" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200016B:00880" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200016B:00881" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200016B:00870" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200018:01638" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200018:01639" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200018:01640" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200018:01909" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200018:01910" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200018:01911" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200018:01912" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200018:01934" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200018:01935" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200018:01936" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200018:02368" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200018:02369" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200018:02370" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200018:00254" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200018:00255" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200018:00801" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200018:00811" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200018B:01267" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200018B:01277" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200018B:01278" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200018B:01279" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200018C:00904" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200018C:00905" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200018C:00992" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200018C:00899" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200018C:00901" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200018C:00929" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200020:01467" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200020:01468" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200020:01743" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200020B:01985" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200020B:01986" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200020B:02409" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200020B:01455" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200020B:01456" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200020B:01601" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200020B:01963" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200020B:01458" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200020B:01459" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200020B:01460" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200020B:01461" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200020C:02277" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200020C:02278" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200020C:02279" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200020C:02430" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200022:00097" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200022:00098" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200022:00047" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200022:02438" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200022:00527" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200022:02442" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200022:02444" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200022:02447" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200022:01523" }

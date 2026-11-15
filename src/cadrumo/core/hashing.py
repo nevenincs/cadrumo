@@ -30,7 +30,10 @@ from __future__ import annotations
 import hashlib
 import json
 from collections.abc import Sequence
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Final, NoReturn
+
+from .type_guards import is_str_keyed_dict
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -135,6 +138,70 @@ def canonical_json_bytes(payload: object) -> bytes:
         separators=(",", ":"),
         sort_keys=True,
     ).encode(_UTF_8)
+
+
+@dataclass(frozen=True, init=False)
+class CanonicalJsonValue:
+    """An immutable canonical value, retaining only bytes produced by our encoder.
+
+    Construct from an ordinary JSON-compatible value, never pre-encoded JSON.
+    The source value is released after encoding and later mutations cannot alter it.
+    """
+
+    _encoded: bytes = field(repr=False)
+
+    def __init__(self, payload: object) -> None:
+        """Encode an ordinary JSON-compatible value with the canonical encoder."""
+        object.__setattr__(self, "_encoded", canonical_json_bytes(payload))
+
+    @property
+    def encoded(self) -> bytes:
+        """The immutable bytes produced by canonical encoding at construction."""
+        return self._encoded
+
+
+def canonical_json_bytes_with_member(
+    payload: object, *, object_path: tuple[object, ...], member: str, value: CanonicalJsonValue
+) -> bytes:
+    """Encode an object with one previously canonicalized member inserted.
+
+    Only objects along ``object_path`` are composed; all other values use the
+    ordinary canonical encoder. Existing members, absent paths and non-object
+    paths are refused. No caller can supply unchecked JSON fragments.
+    """
+    if not isinstance(member, str):
+        raise TypeError("canonical member paths require string keys")
+    parts: list[str] = []
+    for part in object_path:
+        if not isinstance(part, str):
+            raise TypeError("canonical member paths require string keys")
+        parts.append(part)
+    if not isinstance(value, CanonicalJsonValue):
+        raise TypeError("canonical member requires a CanonicalJsonValue")
+    return _canonical_json_member(payload, tuple(parts), member, value.encoded)
+
+
+def _canonical_json_member(payload: object, path: tuple[str, ...], member: str, encoded: bytes) -> bytes:
+    if not is_str_keyed_dict(payload):
+        raise TypeError("canonical member path must contain string-keyed objects")
+    if path:
+        key = path[0]
+        replacement = _canonical_json_member(payload[key], path[1:], member, encoded)
+        keys = sorted(payload)
+    else:
+        key = member
+        if key in payload:
+            raise ValueError("canonical member already exists")
+        replacement = encoded
+        keys = sorted((*payload, key))
+    return (
+        b"{"
+        + b",".join(
+            canonical_json_bytes(name) + b":" + (replacement if name == key else canonical_json_bytes(payload[name]))
+            for name in keys
+        )
+        + b"}"
+    )
 
 
 def bounded_canonical_json_bytes(payload: object, *, maximum_bytes: int, subject: str) -> bytes:
@@ -260,8 +327,10 @@ __all__ = [
     "CONTENT_DIGEST_PREFIX",
     "HEX_ALPHABET",
     "SHA256_HEX_LENGTH",
+    "CanonicalJsonValue",
     "bounded_canonical_json_bytes",
     "canonical_json_bytes",
+    "canonical_json_bytes_with_member",
     "canonical_json_digest",
     "content_hash_hex",
     "hash_file",
