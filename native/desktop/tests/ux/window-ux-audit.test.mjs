@@ -16,7 +16,7 @@
 //                    that drives any other executable is not counted
 //   CADRUMO_UX_ONLY  (optional) comma-separated substrings: run only tests whose name has one
 import assert from "node:assert/strict";
-import { existsSync, mkdtempSync, statSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, statSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, before, test } from "node:test";
@@ -77,8 +77,17 @@ after(teardown);
 const STAGED_SHA256 = (process.env.CADRUMO_UX_STAGED_SHA256 ?? "")
   .trim()
   .toLowerCase();
+// The tree the build was made from and the authority generation it carries,
+// as the pipeline that built and staged it names them.
+const BUILT_TREE = (process.env.CADRUMO_UX_TREE ?? "").trim();
+const AUTHORITY_GENERATION = (
+  process.env.CADRUMO_UX_AUTHORITY_GENERATION ?? ""
+).trim();
 const identityProblem = () =>
   runIdentity.error ??
+  (!BUILT_TREE || !AUTHORITY_GENERATION
+    ? "CADRUMO_UX_TREE and CADRUMO_UX_AUTHORITY_GENERATION name no built head and authority generation"
+    : null) ??
   (!runIdentity.bundle?.length || !runIdentity.exeSha256
     ? "no bundle name or executable hash was recorded"
     : !STAGED_SHA256
@@ -130,6 +139,8 @@ ux("UX-00 the run records the live bundle and the host executable", (t) => {
       bundle: runIdentity.bundle,
       exe: runIdentity.exe,
       exeSha256: runIdentity.exeSha256,
+      tree: BUILT_TREE,
+      logicalGeneration: AUTHORITY_GENERATION,
       wheel: win.devtools ? "devtools" : "webdriver",
     }),
   );
@@ -1023,6 +1034,17 @@ async function arrangeDetails(placement) {
   return splitNow();
 }
 
+/** Whether the placement toggle is held (aria-disabled) and the reason it gives. */
+function pagePlacementHold() {
+  const el = document.querySelector(
+    'section.declarations-workspace [data-pane-toggle="placement"]',
+  );
+  return {
+    disabled: el?.getAttribute("aria-disabled") === "true",
+    reason: el?.getAttribute("aria-description") ?? "",
+  };
+}
+
 /** Focus the details separator and send keys to it. */
 async function keyLine(...keys) {
   const focused = await exec((name) => {
@@ -1140,6 +1162,32 @@ ux(
               const sideState = await setPaneToggle("side", railOn);
               const detailsState = await setPaneToggle("details", true);
               const arranged = await arrangeDetails(placement);
+              // The window holds the details beside the form where there is
+              // no room under it: the toggle is aria-disabled and must say
+              // why. A held arrangement is measured, not unreached.
+              const held =
+                arranged.placement !== placement
+                  ? await exec(pagePlacementHold)
+                  : null;
+              if (held?.disabled) {
+                const reason = held.reason.trim();
+                const readable =
+                  reason.length > 0 &&
+                  reason !== "desktop.modelo.details.under_held";
+                report(t, {
+                  page,
+                  size: inner,
+                  held: true,
+                  reason,
+                  readable,
+                  placement: arranged.placement,
+                });
+                if (!readable)
+                  failures.push(
+                    `${page} at ${inner.join("x")}: the placement toggle is held without a readable reason (${JSON.stringify(reason)})`,
+                  );
+                continue;
+              }
               if (
                 sideState !== String(railOn) ||
                 detailsState !== "true" ||
@@ -1570,6 +1618,19 @@ ux(
           await setPaneToggle("details", true);
           await arrangeDetails("bottom");
           const start = await splitNow();
+          // Where the window holds the details beside the form there is no
+          // stacked line to move; UX-16 judges the held toggle's reason.
+          const held =
+            start.placement !== "bottom" ? await exec(pagePlacementHold) : null;
+          if (held?.disabled) {
+            report(t, {
+              probe: "stacked-separator",
+              size: inner,
+              held: true,
+              placement: start.placement,
+            });
+            continue;
+          }
           if (start.placement !== "bottom")
             unmeasured(
               t,
@@ -2286,18 +2347,36 @@ ux("UX-24 a single click opens a Modelo view tab", async (t) => {
   const applyOffered = await clickText(`${SECTION} header`, "button", [
     label("workspace.modelo.next_button.apply"),
   ]);
-  if (!applyOffered) {
+  // An earlier check in the same world may have applied every statement the
+  // form offers; the header's own next write (recalculate, calculate or
+  // verify) then settles the same way and the clicks land during it.
+  let otherWrite = null;
+  if (!applyOffered)
+    for (const action of ["recalculate", "calculate", "verify"])
+      if (
+        await clickText(`${SECTION} header`, "button", [
+          label(`workspace.modelo.next_button.${action}`),
+        ])
+      ) {
+        otherWrite = action;
+        break;
+      }
+  report(t, {
+    probe: "view-tab-write",
+    pressed: applyOffered ? "apply" : otherWrite,
+  });
+  if (!applyOffered && !otherWrite) {
     report(t, {
       probe: "view-tab-click",
       reached: false,
-      reason: "no apply was offered",
+      reason: "no apply and no other header write was offered",
     });
     assert.fail(
-      "UNMEASURED: no apply was offered, so no click landed while a write settled " +
+      "UNMEASURED: no apply and no other header write was offered, so no click landed while a write settled " +
         `(the form offered ${staging.offered}; ${staging.note})`,
     );
   }
-  const applyProblem = await answerReview([]);
+  const applyProblem = applyOffered ? await answerReview([]) : null;
   if (applyProblem) {
     report(t, {
       probe: "view-tab-click",
@@ -2395,6 +2474,32 @@ ux("UX-24 a single click opens a Modelo view tab", async (t) => {
 });
 
 let exportRun = null;
+// The work-form read that followed UX-22's export, as UX-23 measured it.
+let postExportRead = null;
+
+/** The operations the run's runtime settled, from its log: when, which definition, how. */
+function settledOperations() {
+  let text = "";
+  try {
+    text = readFileSync(join(runDir, "storage", "logs", "cadrumo.log"), "utf8");
+  } catch {
+    return [];
+  }
+  const out = [];
+  for (const line of text.split(/\r?\n/)) {
+    const match =
+      /^(\S+) .*operation settled .* definition=(\S+) condition=(\S+)/.exec(
+        line,
+      );
+    if (match)
+      out.push({
+        at: Date.parse(match[1]),
+        definition: match[2],
+        condition: match[3],
+      });
+  }
+  return out;
+}
 
 ux(
   "UX-22 the Modelo export shows the operation running from the press until it settles",
@@ -2523,22 +2628,54 @@ ux(
         record,
         hint,
       );
+    // The window re-reads the declaration after its own export and keeps the
+    // step closed until that read lands, so it acts on the fresh state. The
+    // step passes when it opens by itself, with no read-again press, and says
+    // it is busy for the whole closed interval; the interval is reported.
+    const busy = label("desktop.navigation.busy");
     const afterMs = Date.now() - exportRun.at;
     const samples = [];
-    const end = Date.now() + 5000;
+    const end = Date.now() + 60_000;
     for (;;) {
-      samples.push({ atMs: Date.now() - exportRun.at, ...(await read()) });
-      if (Date.now() >= end) break;
-      await sleep(500);
+      const now = { atMs: Date.now() - exportRun.at, ...(await read()) };
+      now.saysBusy = !!now.hintText && now.hintText.includes(busy);
+      samples.push(now);
+      if ((now.buttonShown && !now.disabled) || Date.now() >= end) break;
+      await sleep(200);
     }
     const first = samples[0];
     const last = samples.at(-1);
+    // The re-read the step waits for: the first work-form read the runtime
+    // settled after the export's own settlement.
+    const operations = settledOperations();
+    const exported = operations
+      .filter(
+        (op) => op.definition === "modelo.export" && op.at <= exportRun.at,
+      )
+      .at(-1);
+    const reread = exported
+      ? operations.find(
+          (op) => op.definition === "modelo.work.form" && op.at > exported.at,
+        )
+      : undefined;
+    const openedAt = exportRun.at + last.atMs;
+    postExportRead = reread
+      ? { ms: reread.at - exported.at, condition: reread.condition }
+      : null;
+    const closed = samples.filter((s) => s.buttonShown && s.disabled);
+    const silent = closed.filter((s) => !s.saysBusy);
+    const opened = last.buttonShown && !last.disabled;
     report(t, {
       probe: "record-after-export",
       size: inner,
       reached: true,
       exportKind: exportRun.kind,
       firstReadAfterExportMs: afterMs,
+      openedAfterExportMs: opened ? last.atMs : null,
+      rereadMs: reread ? reread.at - exported.at : null,
+      openedAfterRereadMs: reread && opened ? openedAt - reread.at : null,
+      closedSamples: closed.length,
+      closedWithoutBusyWords: silent.length,
       first,
       last,
       samples: samples.length,
@@ -2547,23 +2684,107 @@ ux(
     const failures = [];
     if (!last.buttonShown)
       failures.push("the record-as-filed button is not shown");
-    if (last.hintSaysAvailable && last.disabled)
+    if (!opened && last.buttonShown)
       failures.push(
-        `the hint says recording is available ("${hint}") but the button is disabled`,
+        `the button did not open by itself within ${last.atMs} ms of the export`,
       );
-    if (last.holdShown)
-      failures.push(`a write hold is shown: "${last.holdText}"`);
-    if (last.buttonShown && last.disabled && !last.hintSaysAvailable)
-      unmeasured(
-        t,
-        "record-after-export",
-        inner,
-        "the button is disabled and no hint says recording is available, so availability was not judged",
+    if (!reread)
+      failures.push(
+        exported
+          ? "no work-form read settled after the export in the runtime log"
+          : "the export's settlement is not in the runtime log",
+      );
+    else if (opened && openedAt < reread.at)
+      failures.push(
+        `the button opened ${reread.at - openedAt} ms before the re-read landed, on the pre-export read`,
+      );
+    else if (opened && openedAt - reread.at > 1000)
+      failures.push(
+        `the button opened ${openedAt - reread.at} ms after the re-read landed (more than 1 s)`,
+      );
+    if (silent.length > 0)
+      failures.push(
+        `the closed button said nothing about work in progress in ${silent.length} of ${closed.length} samples (first at ${silent[0].atMs} ms: "${silent[0].hintText}")`,
+      );
+    if (closed.some((s) => s.hintSaysAvailable))
+      failures.push(
+        `the hint says recording is available ("${hint}") while the button is disabled`,
+      );
+    if (samples.some((s) => s.holdShown))
+      failures.push(
+        `a write hold is shown: "${samples.find((s) => s.holdShown).holdText}"`,
       );
     assert.deepEqual(
       failures,
       [],
       `record-as-filed is not available 5 s after the export without reading the declaration again: ${failures.join("; ")}`,
     );
+  },
+);
+
+ux(
+  "UX-25 the Modelo form is read again quickly after an export and after a page return",
+  async (t) => {
+    // The runtime log has one settle line per operation and no start line, so a
+    // read's time runs from the event that asks for it: the export's own
+    // settlement (UX-23) and the press that returns to the page (here).
+    await open("100");
+    await chooseTab(VIEWS, label("desktop.modelo.view.form"));
+    const away = await openRailPage("ledger", "section.ledger-page");
+    if (!away.reached)
+      assert.fail(`UNMEASURED: the page was not left: ${away.reason}`);
+    await sleep(700);
+    const pressed = Date.now();
+    const back = await openRailPage("declarations", SECTION);
+    if (!back.reached) await openDeclaration(rowOf("100"));
+    const read = await waitFor(
+      async () =>
+        settledOperations().find(
+          (op) => op.definition === "modelo.work.form" && op.at > pressed,
+        ) ?? null,
+      {
+        timeout: 60_000,
+        what: "the work-form read after the page return",
+        soft: true,
+        interval: 250,
+      },
+    );
+    const pageReturn = read
+      ? { ms: read.at - pressed, condition: read.condition }
+      : null;
+    report(t, {
+      probe: "form-read-timing",
+      postExport: postExportRead,
+      pageReturn,
+      bounds: { postExportMs: 1000, pageReturnMs: 3000 },
+    });
+    const failures = [];
+    if (!postExportRead)
+      unmeasured(
+        t,
+        "post-export-read",
+        null,
+        "UX-23 saw no post-export re-read",
+      );
+    else if (postExportRead.condition !== "succeeded")
+      failures.push(`the post-export re-read ${postExportRead.condition}`);
+    else if (postExportRead.ms >= 1000)
+      failures.push(
+        `the post-export re-read took ${postExportRead.ms} ms (bound 1000)`,
+      );
+    if (!pageReturn)
+      unmeasured(
+        t,
+        "page-return-read",
+        null,
+        "no work-form read settled within 60 s of the page return",
+      );
+    else if (pageReturn.condition !== "succeeded")
+      failures.push(`the page-return read ${pageReturn.condition}`);
+    else if (pageReturn.ms >= 3000)
+      failures.push(
+        `the page-return read took ${pageReturn.ms} ms (bound 3000)`,
+      );
+    assert.deepEqual(failures, [], failures.join("; "));
   },
 );

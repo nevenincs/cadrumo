@@ -10,8 +10,9 @@
 // A persona's lines are appended to the output file as soon as its last case
 // finishes, and only for cases whose lines all validate. A case that fails to
 // validate contributes nothing and is reported; a case that times out
-// contributes the lines the spec wrote plus a stage `error` line (reason
-// `timeout`) for each row it did not reach. A persona-level line (modelo
+// contributes the lines the spec wrote, and each row it did not reach is
+// reported as not run, with its cause, in <out>.not-run.jsonl (never written
+// as a window result and never dropped). A persona-level line (modelo
 // null) is kept once per persona, from its first case. The spec's logs are
 // copied to --logs and each line's `log` points at the copy.
 //
@@ -19,7 +20,8 @@
 //   node native/desktop/tests/personas/run-sweep.mjs --tree <sha> \
 //     --build <CMake binary dir of the packaged host> [--rows <rows-<sha>.jsonl>] \
 //     [--config Release] [--jobs 1] [--persona <id>[@<horizon>][,...]] [--out <file>] \
-//     [--case-timeout-min 30] [--logs <dir>] [--fresh] [--no-stop-on-load-failure]
+//     [--case-timeout-min 30] [--durations <dir>[,<dir>...]] [--logs <dir>]
+//     [--fresh] [--no-stop-on-load-failure]
 //     [--loads-only] [--world-tree <dir>] [--staged-package <dir>] [--dry-run]
 //
 //   --rows       default: the newest rows-*.jsonl in the table directory; the
@@ -28,6 +30,11 @@
 //                persona run one after another. Default 1.
 //   --fresh      truncate the output file first; otherwise lines are appended.
 //   --logs       where the per-case logs are kept.
+//   --durations  spec logs of earlier sweeps (default: --logs). Each case's
+//                timeout is sized from its own rows: the longest recorded
+//                start-up plus, per row, the longest recorded duration of
+//                that modelo (a default where none is recorded), times a
+//                margin; --case-timeout-min is only the floor.
 //   By default no further case starts once a case's window did not load the
 //   profile (loads false) or its world was not prepared;
 //   --no-stop-on-load-failure runs on.
@@ -301,43 +308,78 @@ export function lineProblem(lines, world, tree, persona) {
   return null;
 }
 
-/** The spec's lines for a timed-out case, completed with an `error` line per row it did not reach. */
-function withTimeoutLines(lines, world, tree, item) {
-  const base = { surface: "window", tree, persona: item.persona };
-  const out = [...lines];
-  if (!out.some((line) => line.modelo === null))
-    out.unshift({
-      ...base,
-      modelo: null,
-      year: null,
-      period: null,
-      loads: false,
-      refusal_code: null,
-      figures: {},
-      reason: `${item.id}: timeout`,
-      log: "",
-    });
+/** The world rows a timed-out case's spec wrote no line for. */
+export function unreachedRows(lines, world) {
   const have = new Set(
-    out.map((line) => `${line.modelo}|${line.year}|${line.period}`),
+    lines.map((line) => `${line.modelo}|${line.year}|${line.period}`),
   );
-  for (const row of world.rows) {
-    if (have.has(`${row.modelo}|${row.year}|${row.period}`)) continue;
-    out.push({
-      ...base,
-      modelo: row.modelo,
-      year: Number(row.year),
-      period: row.period,
-      loads: true,
-      calculate: "error",
-      verify: "not-reached",
-      export: "not-reached",
-      refusal_code: null,
-      figures: {},
-      reason: `${item.id}: timeout`,
-      log: "",
-    });
+  return world.rows.filter(
+    (row) => !have.has(`${row.modelo}|${Number(row.year)}|${row.period}`),
+  );
+}
+
+const MODELO_OF_HEADER = /^Declaraciones(\d{3})/;
+
+/**
+ * The longest recorded start-up and per-modelo row durations (ms) in the spec
+ * logs (`<persona>-<horizon>.log`, one JSON event per line) under `dirs`. A row
+ * runs from its `workspace` event to the next one, the last to the log's last
+ * event; start-up runs from `launched` to the first `workspace`.
+ */
+export function recordedDurations(dirs) {
+  const rows = new Map();
+  let startup = 0;
+  for (const dir of dirs) {
+    let names = [];
+    try {
+      names = readdirSync(dir).filter((name) => /-\d{4}\.log$/.test(name));
+    } catch {
+      continue;
+    }
+    for (const name of names) {
+      const events = [];
+      for (const text of readFileSync(join(dir, name), "utf8").split(/\r?\n/)) {
+        if (!text.trim()) continue;
+        try {
+          const event = JSON.parse(text);
+          const at = Date.parse(event.at);
+          if (Number.isFinite(at)) events.push({ ...event, at });
+        } catch {
+          // a torn last line of a killed spec
+        }
+      }
+      if (events.length === 0) continue;
+      const opened = events.filter((event) => event.event === "workspace");
+      const launched = events.find((event) => event.event === "launched");
+      if (launched && opened.length)
+        startup = Math.max(startup, opened[0].at - launched.at);
+      const last = events[events.length - 1].at;
+      opened.forEach((event, index) => {
+        const modelo = MODELO_OF_HEADER.exec(event.header ?? "")?.[1];
+        if (!modelo) return;
+        const end = index + 1 < opened.length ? opened[index + 1].at : last;
+        rows.set(modelo, Math.max(rows.get(modelo) ?? 0, end - event.at));
+      });
+    }
   }
-  return out;
+  return { startup, rows };
+}
+
+export const BUDGET = {
+  defaultStartupMs: 5 * 60_000,
+  defaultRowMs: 5 * 60_000,
+  margin: 1.5,
+};
+
+/** A case's timeout: recorded start-up and row durations for its rows, with a margin, never below `floorMs`. */
+export function caseBudgetMs(worldRows, recorded, floorMs, budget = BUDGET) {
+  const startup = recorded.startup || budget.defaultStartupMs;
+  const rows = worldRows.reduce(
+    (sum, row) =>
+      sum + (recorded.rows.get(String(row.modelo)) ?? budget.defaultRowMs),
+    0,
+  );
+  return Math.max(floorMs, Math.ceil((startup + rows) * budget.margin));
 }
 
 async function runCase(item, context) {
@@ -398,6 +440,14 @@ async function runCase(item, context) {
     // credential guard, so the sweep removes the keys the case added itself.
     const profileIds = storageProfileIds(worldJson.storage_root);
     const keysBefore = sessionKeyTargets(profileIds);
+    const caseMs = context.loadsOnly
+      ? timeoutMs
+      : caseBudgetMs(
+          worldJson.rows,
+          recordedDurations(context.durationDirs ?? [logsDir]),
+          timeoutMs,
+        );
+    result.budgetMin = Math.round(caseMs / 60_000);
     const window = await run(
       process.execPath,
       ["--test", spec],
@@ -416,7 +466,7 @@ async function runCase(item, context) {
           PYTHONDONTWRITEBYTECODE: "1",
         },
       },
-      timeoutMs,
+      caseMs,
     );
     let lines = existsSync(results)
       ? readFileSync(results, "utf8")
@@ -424,7 +474,23 @@ async function runCase(item, context) {
           .filter((text) => text.trim())
           .map((text) => JSON.parse(text))
       : [];
-    if (window.timedOut) lines = withTimeoutLines(lines, worldJson, tree, item);
+    // A timed-out case keeps what the window measured; every row it did not
+    // reach is not run, with the cause, and is never written as a result.
+    const unreached =
+      window.timedOut && !context.loadsOnly
+        ? unreachedRows(lines, worldJson)
+        : [];
+    const cause = `case timeout after ${result.budgetMin} min (sized from ${worldJson.rows.length} rows and recorded durations)`;
+    result.notRun = unreached.map((row) => ({
+      surface: "window",
+      tree,
+      persona: item.persona,
+      horizon: item.horizon,
+      modelo: row.modelo,
+      year: Number(row.year),
+      period: row.period,
+      cause,
+    }));
     const keys = removeLeftSessionKeys(profileIds, keysBefore);
     const keyNote =
       keys.left.length > 0
@@ -451,14 +517,24 @@ async function runCase(item, context) {
       `${window.stdout}\n--- stderr ---\n${window.stderr}`,
     );
     if (lines.length === 0) {
-      result.note = [`the spec wrote no lines (exit ${window.status})`, keyNote]
+      result.note = [
+        window.timedOut
+          ? `${cause}; the spec wrote no lines`
+          : `the spec wrote no lines (exit ${window.status})`,
+        keyNote,
+      ]
         .filter(Boolean)
         .join("; ");
       return result;
     }
     const problem = lineProblem(
       lines,
-      context.loadsOnly ? { rows: [] } : worldJson,
+      context.loadsOnly
+        ? { rows: [] }
+        : {
+            ...worldJson,
+            rows: worldJson.rows.filter((row) => !unreached.includes(row)),
+          },
       tree,
       item.persona,
     );
@@ -469,7 +545,11 @@ async function runCase(item, context) {
     result.lines = lines.map((line) => ({ ...line, log: kept }));
     result.ok = true;
     result.note = [
-      window.status === 0 ? "" : `spec exit ${window.status}`,
+      window.timedOut
+        ? `${cause}: ${unreached.length} of ${worldJson.rows.length} rows not run`
+        : window.status === 0
+          ? ""
+          : `spec exit ${window.status}`,
       keyNote,
     ]
       .filter(Boolean)
@@ -546,7 +626,11 @@ async function main() {
   );
   mkdirSync(dirname(out), { recursive: true });
   mkdirSync(logsDir, { recursive: true });
-  if (args.fresh) writeFileSync(out, "");
+  const notRunOut = out.replace(/\.jsonl$/, "") + ".not-run.jsonl";
+  if (args.fresh) {
+    writeFileSync(out, "");
+    writeFileSync(notRunOut, "");
+  }
   // Stage the packaged host once, before any window runs: staging mirrors the
   // package over the previous one, which a running host holds open. Every
   // window then starts from the same staged package.
@@ -597,6 +681,12 @@ async function main() {
     parent: windowsTemp(),
     logsDir,
     timeoutMs: Number(args["case-timeout-min"] ?? 30) * 60_000,
+    durationDirs: args.durations
+      ? String(args.durations)
+          .split(",")
+          .filter(Boolean)
+          .map((dir) => resolve(dir))
+      : [logsDir],
     loadsOnly,
     worldTree: args["world-tree"] ? resolve(args["world-tree"]) : repository,
   };
@@ -619,6 +709,16 @@ async function main() {
           `case ${item.id} ${done.ok ? "ok" : "FAILED"} ${done.note}`,
         );
         results.set(item.id, done);
+        if (done.notRun?.length)
+          appendFileSync(
+            notRunOut,
+            done.notRun
+              .map(
+                (row) => `${JSON.stringify(row)}
+`,
+              )
+              .join(""),
+          );
         let unloaded = done.lines.find(
           (line) => line.modelo === null && line.loads === false,
         );
