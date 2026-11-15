@@ -2347,18 +2347,36 @@ ux("UX-24 a single click opens a Modelo view tab", async (t) => {
   const applyOffered = await clickText(`${SECTION} header`, "button", [
     label("workspace.modelo.next_button.apply"),
   ]);
-  if (!applyOffered) {
+  // An earlier check in the same world may have applied every statement the
+  // form offers; the header's own next write (recalculate, calculate or
+  // verify) then settles the same way and the clicks land during it.
+  let otherWrite = null;
+  if (!applyOffered)
+    for (const action of ["recalculate", "calculate", "verify"])
+      if (
+        await clickText(`${SECTION} header`, "button", [
+          label(`workspace.modelo.next_button.${action}`),
+        ])
+      ) {
+        otherWrite = action;
+        break;
+      }
+  report(t, {
+    probe: "view-tab-write",
+    pressed: applyOffered ? "apply" : otherWrite,
+  });
+  if (!applyOffered && !otherWrite) {
     report(t, {
       probe: "view-tab-click",
       reached: false,
-      reason: "no apply was offered",
+      reason: "no apply and no other header write was offered",
     });
     assert.fail(
-      "UNMEASURED: no apply was offered, so no click landed while a write settled " +
+      "UNMEASURED: no apply and no other header write was offered, so no click landed while a write settled " +
         `(the form offered ${staging.offered}; ${staging.note})`,
     );
   }
-  const applyProblem = await answerReview([]);
+  const applyProblem = applyOffered ? await answerReview([]) : null;
   if (applyProblem) {
     report(t, {
       probe: "view-tab-click",
