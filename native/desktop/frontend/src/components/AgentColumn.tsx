@@ -320,14 +320,19 @@ export function AgentColumn({
     settingsOpen && shown,
     opened,
   );
-  // The lanes the agent serves follow the engine it runs under. Once an engine
-  // is chosen the provider settings are read again, and again each time the
-  // agent is ready after that, so the lanes served for the new engine show
-  // without the settings being opened again.
-  const refreshSettings = settings.refresh;
+  // The host cannot read the settings while the service starts the agent, so
+  // they are read again each time the service publishes the agent ready. The
+  // lanes the agent serves follow the engine it runs under, so they are also
+  // read again once an engine is chosen, without the settings being opened
+  // again.
+  const { refresh: refreshSettings, reread: rereadSettings } = settings;
+  const wasReady = useRef(ready);
   useEffect(() => {
+    const turnedReady = ready && !wasReady.current;
+    wasReady.current = ready;
     if (engineChanges > 0 && ready) refreshSettings();
-  }, [engineChanges, ready, refreshSettings]);
+    else if (turnedReady) rereadSettings();
+  }, [engineChanges, ready, refreshSettings, rereadSettings]);
   const ranWith =
     conversationId !== null && live.read.kind === "ready"
       ? newestRanWith(live.read.value)
