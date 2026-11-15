@@ -56,33 +56,6 @@ data_type = "decimal"
 semantic_role = "is_identificacion_opcion_flag"
 legal_refs = ["ley-27-2014:art-39"]
 [[revisions."2024".casillas]]
-id = "00075"
-continuidad_id = "is-correccion-amortizacion-acelerada-vehiculos-saldo-inicial"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:4726 (DP200026B field 131): Amortización acelerada de determinados vehículos y de nuevas infraestructuras de recarga (DA 18ª LIS RDL 5/2023) - Aumento - Saldo pendiente a prin.... aeat-dr-200-2023 prints box [00075] on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4654 (DP200026B field 131) as 'Amortización acelerada de determinados vehículos y de nuevas infraestructuras de recarga (DA 18ª LIS) - Aumento - Saldo pendiente a principio de ej...', a reworded caption of the same field; the 2023 edition leaves the rewording unadjudicated and does not declare the row."
-number = "00075"
-section = ["amortizacion_acelerada_de_determinados_vehiculos_y", "aumento"]
-semantic_role = "is_correccion_amortizacion_acelerada_vehiculos_saldo_inicial"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2024".casillas]]
-id = "00076"
-continuidad_id = "is-correccion-amortizacion-acelerada-vehiculos-permanente-aumento"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:4727 (DP200026B field 132): Amortización acelerada de determinados vehículos y de nuevas infraestructuras de recarga (DA 18ª LIS RDL 5/2023) - Aumento - Correcciones del ejerc.... aeat-dr-200-2023 prints box [00076] on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4655 (DP200026B field 132) as 'Amortización acelerada de determinados vehículos y de nuevas infraestructuras de recarga (DA 18ª LIS) - Aumento - Correcciones del ejercicio - Perm...', a reworded caption of the same field; the 2023 edition leaves the rewording unadjudicated and does not declare the row."
-number = "00076"
-section = ["amortizacion_acelerada_de_determinados_vehiculos_y", "aumento"]
-semantic_role = "is_correccion_amortizacion_acelerada_vehiculos_permanente_aumento"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2024".casillas]]
-id = "00077"
-continuidad_id = "is-correccion-amortizacion-acelerada-vehiculos-importe"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:4728 (DP200026B field 133): Amortización acelerada de determinados vehículos y de nuevas infraestructuras de recarga (DA 18ª LIS RDL 5/2023) - Aumento - Correcciones del ejerc.... aeat-dr-200-2023 prints box [00077] on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4656 (DP200026B field 133) as 'Amortización acelerada de determinados vehículos y de nuevas infraestructuras de recarga (DA 18ª LIS) - Aumento - Correcciones del ejercicio - Temp...', a reworded caption of the same field; the 2023 edition leaves the rewording unadjudicated and does not declare the row."
-number = "00077"
-section = ["amortizacion_acelerada_de_determinados_vehiculos_y", "aumento"]
-semantic_role = "is_correccion_amortizacion_acelerada_vehiculos_importe"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2024".casillas]]
 id = "00090"
 continuidad_id = "is-opcion-art-39-3-lis"
 continuidad_origin = "new_on_form"
@@ -298,24 +271,6 @@ continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10
 number = "00772"
 section = ["cuenta_de_perdidas_y_ganancias_i", "operaciones_continuadas"]
 semantic_role = "is_pyg_importe"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2024".casillas]]
-id = "00775"
-continuidad_id = "00775"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1281 (DP200012 field 40): Liquidación I - Detalle correcciones resultado cta. pérdidas y ganancias - Amortización acelerada de determinados vehículos y de nuevas infraestruc.... aeat-dr-200-2023 prints box [00775] on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1229 (DP200012 field 39) as 'Liquidación I - Detalle correcciones resultado cta. pérdidas y ganancias -Amortización acelerada de determinados vehículos y de nuevas infraestruct...', a reworded caption of the same field; the 2023 edition leaves the rewording unadjudicated and does not declare the row."
-number = "00775"
-section = ["liquidacion_i", "detalle_correcciones_resultado_cta_perdidas_y_gana"]
-semantic_role = "is_correcciones_aumentos"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2024".casillas]]
-id = "00776"
-continuidad_id = "is-correcciones-disminuciones"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1282 (DP200012 field 41): Liquidación I - Detalle correcciones resultado cta. pérdidas y ganancias - Amortización acelerada de determinados vehículos y de nuevas infraestruc.... aeat-dr-200-2023 prints box [00776] on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1230 (DP200012 field 40) as 'Liquidación I - Detalle correcciones resultado cta. pérdidas y ganancias -Amortización acelerada de determinados vehículos y de nuevas infraestruct...', a reworded caption of the same field; the 2023 edition leaves the rewording unadjudicated and does not declare the row."
-number = "00776"
-section = ["liquidacion_i", "detalle_correcciones_resultado_cta_perdidas_y_gana"]
-semantic_role = "is_correcciones_disminuciones"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2024".casillas]]
 id = "00780"
@@ -985,15 +940,6 @@ section = ["tributacion_conjunta_estado_y_adm_forales", "conversion_de_activos_p
 semantic_role = "is_conversion_aid_conjunta_importe"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2024".casillas]]
-id = "01329"
-continuidad_id = "01329"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2942 (DP200018C field 135): Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada .... aeat-dr-200-2023 prints box [01329] on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2926 (DP200018C field 136) as 'Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada ...', a reworded caption of the same field; the 2023 edition leaves the rewording unadjudicated and does not declare the row."
-number = "01329"
-section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecena"]
-semantic_role = "is_deduccion_donativos_prioritarias"
-legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
-[[revisions."2024".casillas]]
 id = "01331"
 continuidad_id = "is-cooperativa-cuota-integra-previa"
 continuidad_origin = "predecessor_edition_silent"
@@ -1056,24 +1002,6 @@ number = "01340"
 section = ["tributacion_conjunta_estado_y_adm_forales", "abono_deducciones_producciones_extranjeras"]
 semantic_role = "is_tributacion_conjunta_abono_cinematografica"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2024".casillas]]
-id = "01372"
-continuidad_id = "01372"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2943 (DP200018C field 136): Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada .... aeat-dr-200-2023 prints box [01372] on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2927 (DP200018C field 137) as 'Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada ...', a reworded caption of the same field; the 2023 edition leaves the rewording unadjudicated and does not declare the row."
-number = "01372"
-section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecena"]
-semantic_role = "is_deduccion_donativos_prioritarias"
-legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
-[[revisions."2024".casillas]]
-id = "01373"
-continuidad_id = "01373"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2944 (DP200018C field 137): Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada .... aeat-dr-200-2023 prints box [01373] on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2928 (DP200018C field 138) as 'Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada ...', a reworded caption of the same field; the 2023 edition leaves the rewording unadjudicated and does not declare the row."
-number = "01373"
-section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecena"]
-semantic_role = "is_deduccion_donativos_prioritarias"
-legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
 [[revisions."2024".casillas]]
 id = "01423"
 continuidad_id = "01423"

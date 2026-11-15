@@ -7,7 +7,7 @@ revision_id = "2023"
 seed_source = "design_box_number"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "c11b84cac8f0dac221f04596bb58f5b698286f9f9427cd95fedd77a0af871230"
+source_state_digest = "c496c939d48328225d0125592fefe85e8188fcdf766d31ad5520a39edb6455a0"
 design_sources = [
     { source_ref = "aeat-dr-200-2023", sha256 = "60ee0cb4ab7aa4fa2ae3dc61cb22f6a1a0797d1626a28d7bba013b44375a19aa" },
 ]
@@ -73,6 +73,9 @@ placements = [
     { casilla_id = "00072", kind = "on_form", box_number = "00072" },
     { casilla_id = "00073", kind = "on_form", box_number = "00073" },
     { casilla_id = "00074", kind = "on_form", box_number = "00074" },
+    { casilla_id = "00075", kind = "on_form", box_number = "00075" },
+    { casilla_id = "00076", kind = "on_form", box_number = "00076" },
+    { casilla_id = "00077", kind = "on_form", box_number = "00077" },
     { casilla_id = "00078", kind = "on_form", box_number = "00078" },
     { casilla_id = "00079", kind = "on_form", box_number = "00079" },
     { casilla_id = "00080", kind = "on_form", box_number = "00080" },
@@ -683,6 +686,8 @@ placements = [
     { casilla_id = "00763", kind = "on_form", box_number = "00763" },
     { casilla_id = "00773", kind = "on_form", box_number = "00773" },
     { casilla_id = "00774", kind = "on_form", box_number = "00774" },
+    { casilla_id = "00775", kind = "on_form", box_number = "00775" },
+    { casilla_id = "00776", kind = "on_form", box_number = "00776" },
     { casilla_id = "00777", kind = "on_form", box_number = "00777" },
     { casilla_id = "00778", kind = "on_form", box_number = "00778" },
     { casilla_id = "00779", kind = "on_form", box_number = "00779" },
@@ -1162,6 +1167,7 @@ placements = [
     { casilla_id = "01326", kind = "on_form", box_number = "01326" },
     { casilla_id = "01327", kind = "on_form", box_number = "01327" },
     { casilla_id = "01328", kind = "on_form", box_number = "01328" },
+    { casilla_id = "01329", kind = "on_form", box_number = "01329" },
     { casilla_id = "01332", kind = "on_form", box_number = "01332" },
     { casilla_id = "01333", kind = "on_form", box_number = "01333" },
     { casilla_id = "01337", kind = "on_form", box_number = "01337" },
@@ -1196,6 +1202,8 @@ placements = [
     { casilla_id = "01369", kind = "on_form", box_number = "01369" },
     { casilla_id = "01370", kind = "on_form", box_number = "01370" },
     { casilla_id = "01371", kind = "on_form", box_number = "01371" },
+    { casilla_id = "01372", kind = "on_form", box_number = "01372" },
+    { casilla_id = "01373", kind = "on_form", box_number = "01373" },
     { casilla_id = "01374", kind = "on_form", box_number = "01374" },
     { casilla_id = "01375", kind = "on_form", box_number = "01375" },
     { casilla_id = "01376", kind = "on_form", box_number = "01376" },
@@ -4295,7 +4303,7 @@ blocks = [
     { kind = "grid", id = "grid-2", columns = [{ key = "aumentos", heading_key = "modelo.form.column.aumentos", official_heading = "Aumentos" }, { key = "disminuciones", heading_key = "modelo.form.column.disminuciones", official_heading = "Disminuciones" }], rows = [{ key = "diferencias-entre-amortizacion-contable-y-6b5ec8", heading_key = "modelo.schema.200.form.row.diferencias-entre-amortizacion-contable-y-6b5ec8.heading", official_heading = "Diferencias entre amortización contable y fiscal (arts. 12.1 LIS)", cells = [{ kind = "casilla", casilla_id = "DP200012:00303" }, { kind = "casilla", casilla_id = "DP200012:00304" }] }] },
     { kind = "field", id = "field-8", casilla_id = "01005" },
     { kind = "field", id = "field-9", casilla_id = "01006" },
-    { kind = "grid", id = "grid-3", columns = [{ key = "aumentos", heading_key = "modelo.form.column.aumentos", official_heading = "Aumentos" }, { key = "disminuciones", heading_key = "modelo.form.column.disminuciones", official_heading = "Disminuciones" }], rows = [{ key = "amortizacion-inmovilizado-afecto-investig-b2365c", heading_key = "modelo.schema.200.form.row.amortizacion-inmovilizado-afecto-investig-b2365c.heading", official_heading = "Amortización inmovilizado afecto investigación y desarrollo (art. 12.3.b) LIS)", cells = [{ kind = "casilla", casilla_id = "DP200012:00305" }, { kind = "casilla", casilla_id = "DP200012:00306" }] }, { key = "libertad-de-amortizacion-de-gastos-de-inv-ef8596", heading_key = "modelo.schema.200.form.row.libertad-de-amortizacion-de-gastos-de-inv-ef8596.heading", official_heading = "Libertad de amortización de gastos de investigación y desarrollo (art. 12.3.c) LIS)", cells = [{ kind = "casilla", casilla_id = "DP200012:00307" }, { kind = "casilla", casilla_id = "DP200012:00308" }] }, { key = "libertad-de-amortizacion-inmovilizado-mat-e46d93", heading_key = "modelo.schema.200.form.row.libertad-de-amortizacion-inmovilizado-mat-e46d93.heading", official_heading = "Libertad de amortización inmovilizado material nuevo (art. 12.3 e) LIS)", cells = [{ kind = "casilla", casilla_id = "01003" }, { kind = "casilla", casilla_id = "01004" }] }, { key = "otros-supuestos-de-libertad-de-amortizaci-ead207", heading_key = "modelo.schema.200.form.row.otros-supuestos-de-libertad-de-amortizaci-ead207.heading", official_heading = "Otros supuestos de libertad de amortización (art. 12.3 a) y d) y DA 16ª y 17ª LIS)", cells = [{ kind = "casilla", casilla_id = "DP200012:00309" }, { kind = "casilla", casilla_id = "DP200012:00310" }] }] },
+    { kind = "grid", id = "grid-3", columns = [{ key = "aumentos", heading_key = "modelo.form.column.aumentos", official_heading = "Aumentos" }, { key = "disminuciones", heading_key = "modelo.form.column.disminuciones", official_heading = "Disminuciones" }], rows = [{ key = "amortizacion-inmovilizado-afecto-investig-b2365c", heading_key = "modelo.schema.200.form.row.amortizacion-inmovilizado-afecto-investig-b2365c.heading", official_heading = "Amortización inmovilizado afecto investigación y desarrollo (art. 12.3.b) LIS)", cells = [{ kind = "casilla", casilla_id = "DP200012:00305" }, { kind = "casilla", casilla_id = "DP200012:00306" }] }, { key = "libertad-de-amortizacion-de-gastos-de-inv-ef8596", heading_key = "modelo.schema.200.form.row.libertad-de-amortizacion-de-gastos-de-inv-ef8596.heading", official_heading = "Libertad de amortización de gastos de investigación y desarrollo (art. 12.3.c) LIS)", cells = [{ kind = "casilla", casilla_id = "DP200012:00307" }, { kind = "casilla", casilla_id = "DP200012:00308" }] }, { key = "libertad-de-amortizacion-inmovilizado-mat-e46d93", heading_key = "modelo.schema.200.form.row.libertad-de-amortizacion-inmovilizado-mat-e46d93.heading", official_heading = "Libertad de amortización inmovilizado material nuevo (art. 12.3 e) LIS)", cells = [{ kind = "casilla", casilla_id = "01003" }, { kind = "casilla", casilla_id = "01004" }] }, { key = "otros-supuestos-de-libertad-de-amortizaci-ead207", heading_key = "modelo.schema.200.form.row.otros-supuestos-de-libertad-de-amortizaci-ead207.heading", official_heading = "Otros supuestos de libertad de amortización (art. 12.3 a) y d) y DA 16ª y 17ª LIS)", cells = [{ kind = "casilla", casilla_id = "DP200012:00309" }, { kind = "casilla", casilla_id = "DP200012:00310" }] }, { key = "amortizacion-acelerada-de-determinados-ve-4738d0", heading_key = "modelo.schema.200.form.row.amortizacion-acelerada-de-determinados-ve-4738d0.heading", official_heading = "Amortización acelerada de determinados vehículos y de nuevas infraestructuras de recarga (DA 18ª LIS)", cells = [{ kind = "casilla", casilla_id = "00775" }, { kind = "casilla", casilla_id = "00776" }] }] },
     { kind = "field", id = "field-10", casilla_id = "DP200012:00325" },
     { kind = "field", id = "field-11", casilla_id = "00335" },
     { kind = "field", id = "field-12", casilla_id = "00368" },
@@ -5162,6 +5170,14 @@ blocks = [
 ]
 
 [[revisions.2023.form_layouts.pages.sections]]
+id = "deduccion-donativos-entidades-sin-fines-l-490b0e-9"
+heading_key = "modelo.schema.200.form.section.deduccion-donativos-entidades-sin-fines-l-490b0e.heading"
+official_heading = "Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada"
+blocks = [
+    { kind = "grid", id = "grid", columns = [{ key = "pendiente_generada", heading_key = "modelo.form.column.pendiente_generada", official_heading = "Deducción pendiente/generada" }, { key = "aplicado", heading_key = "modelo.form.column.aplicado", official_heading = "Aplicado en esta liquidación" }, { key = "pendiente_futuro", heading_key = "modelo.form.column.pendiente_futuro", official_heading = "Pendiente de aplicación en periodos futuros" }], rows = [{ key = "2023-sin-reiteracion-de-donaciones-a-una-f30164", heading_key = "modelo.schema.200.form.row.2023-sin-reiteracion-de-donaciones-a-una-f30164.heading", official_heading = "2023(*) Sin reiteración de donaciones a una misma entidad", cells = [{ kind = "casilla", casilla_id = "01329" }, { kind = "casilla", casilla_id = "01372" }, { kind = "casilla", casilla_id = "01373" }] }] },
+]
+
+[[revisions.2023.form_layouts.pages.sections]]
 id = "deduccion-donativos-entidades-sin-fines-l-23f6a4"
 heading_key = "modelo.schema.200.form.section.deduccion-donativos-entidades-sin-fines-l-23f6a4.heading"
 official_heading = "Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - 2023(*)"
@@ -5170,7 +5186,7 @@ blocks = [
 ]
 
 [[revisions.2023.form_layouts.pages.sections]]
-id = "deduccion-donativos-entidades-sin-fines-l-490b0e-9"
+id = "deduccion-donativos-entidades-sin-fines-l-490b0e-10"
 heading_key = "modelo.schema.200.form.section.deduccion-donativos-entidades-sin-fines-l-490b0e.heading"
 official_heading = "Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada"
 blocks = [
@@ -7152,6 +7168,22 @@ heading_key = "modelo.schema.200.form.section.otros-supuestos-de-libertad-de-amo
 official_heading = "Otros supuestos de libertad de amortización (art. 12.3 a) y d) y DA 16ª y 17ª LIS)"
 blocks = [
     { kind = "field", id = "field", casilla_id = "02630" },
+]
+
+[[revisions.2023.form_layouts.pages.sections]]
+id = "amortizacion-acelerada-de-determinados-ve-4738d0"
+heading_key = "modelo.schema.200.form.section.amortizacion-acelerada-de-determinados-ve-4738d0.heading"
+official_heading = "Amortización acelerada de determinados vehículos y de nuevas infraestructuras de recarga (DA 18ª LIS)"
+blocks = [
+    { kind = "field", id = "field", casilla_id = "00075" },
+]
+
+[[revisions.2023.form_layouts.pages.sections]]
+id = "amortizacion-acelerada-de-determinados-ve-ef71c3"
+heading_key = "modelo.schema.200.form.section.amortizacion-acelerada-de-determinados-ve-ef71c3.heading"
+official_heading = "Amortización acelerada de determinados vehículos y de nuevas infraestructuras de recarga (DA 18ª LIS) - Aumento"
+blocks = [
+    { kind = "grid", id = "grid", columns = [{ key = "diferencias_permanentes", heading_key = "modelo.form.column.diferencias_permanentes", official_heading = "Permanentes" }, { key = "diferencias_temporarias_ejercicio", heading_key = "modelo.form.column.diferencias_temporarias_ejercicio", official_heading = "Temporarias (con origen en el ejercicio)" }], rows = [{ key = "correcciones-del-ejercicio", heading_key = "modelo.schema.200.form.row.correcciones-del-ejercicio.heading", official_heading = "Correcciones del ejercicio", cells = [{ kind = "casilla", casilla_id = "00076" }, { kind = "casilla", casilla_id = "00077" }] }] },
 ]
 
 [[revisions.2023.form_layouts.pages.sections]]
