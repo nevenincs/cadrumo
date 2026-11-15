@@ -11,6 +11,25 @@ required = false
 repeat = "projection_rows"
 
 [[revisions.2003-y-siguientes.export_layouts.records.fields]]
+id = "m840-2003.anexo.f157"
+offset = 1008
+length = 7
+kind = "projection"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+design_type = "Num"
+value_policy = "unsigned-integer"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+[revisions.2003-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = "m840_anexo_hoja"
+field = "suma_parcial_rectificada"
+
+[[revisions.2003-y-siguientes.export_layouts.records.fields]]
 id = "m840-2003.anexo.f158"
 offset = 1015
 length = 7

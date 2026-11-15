@@ -29,6 +29,8 @@ _Name = Annotated[str, StringConstraints(min_length=1, max_length=30)]
 _Digits = Annotated[str, StringConstraints(pattern=r"^\d+$")]
 _SquareMetres = Annotated[int, Field(ge=0, le=SURFACE_MAXIMUM)]
 _Units = Annotated[int, Field(ge=0, le=9_999_999)]
+#: DR840 types the Anexo "Núm." Num, so a street number is a whole number; its field width bounds it.
+_StreetNumber = Annotated[int, Field(ge=0)]
 
 
 class Modelo840LocalRow(BaseModel):
@@ -43,7 +45,7 @@ class Modelo840LocalRow(BaseModel):
 
     sg_tabla: _Text | None = None
     nombre_via: _Text | None = None
-    numero: _Digits | None = None
+    numero: _StreetNumber | None = None
     km: _Text | None = None
     escalera: _Text | None = None
     piso: _Text | None = None

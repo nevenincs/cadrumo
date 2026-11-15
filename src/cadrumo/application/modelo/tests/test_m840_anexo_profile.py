@@ -71,7 +71,7 @@ def test_only_exercised_premises_fill_the_anexo_in_stored_order() -> None:
 
     assert facts.local_rows == (
         Modelo840LocalRow(codigo_postal="50001", municipio_nombre="ZARAGOZA"),
-        Modelo840LocalRow(nombre_via="CALLE MAYOR", numero="7", total=120),
+        Modelo840LocalRow(nombre_via="CALLE MAYOR", numero=7, total=120),
     )
 
 

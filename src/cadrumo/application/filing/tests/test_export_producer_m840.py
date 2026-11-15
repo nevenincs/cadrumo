@@ -76,7 +76,7 @@ _EXPECTED_WIRE: dict[tuple[str, int, int], str] = {
     ("m840-pagina02", 123, 9): "0" * 9,
     ("m840-pagina02", 158, 32): "KW".ljust(32),
     ("m840-pagina02", 190, 9): "000001250",
-    ("m840-pagina02", 573, 7): " " * 7,
+    ("m840-pagina02", 573, 7): "0" * 7,
     ("m840-pagina02", 606, 7): "1234567",
     ("m840-pagina02", 685, 5): "00120",
     ("m840-pagina02", 690, 5): "0" * 5,
@@ -166,11 +166,11 @@ def test_an_empty_profile_hands_every_producer_field_an_absent_value(exercise: i
                 assert _wire(record, headers, field.offset or 0) == render_empty_block_slot(field), field.id
 
 
-def test_a_machine_count_prints_as_its_digits() -> None:
+def test_a_machine_count_is_its_whole_number() -> None:
     values = m840_producer_values(Modelo840ProfileFacts(maquinas_tipo_a=0, expositores_autoventa=12))
 
-    assert values[FilingProducerKey.M840_ELEMENTOS_TRIBUTARIOS_MAQUINAS_TIPO_A_NUMERO] == "0"
-    assert values[FilingProducerKey.M840_ELEMENTOS_TRIBUTARIOS_EXPOSITORES_AUTOVENTA_NUMERO] == "12"
+    assert values[FilingProducerKey.M840_ELEMENTOS_TRIBUTARIOS_MAQUINAS_TIPO_A_NUMERO] == Decimal(0)
+    assert values[FilingProducerKey.M840_ELEMENTOS_TRIBUTARIOS_EXPOSITORES_AUTOVENTA_NUMERO] == Decimal(12)
     assert values[FilingProducerKey.M840_ELEMENTOS_TRIBUTARIOS_MAQUINAS_TIPO_B_NUMERO] is None
 
 
