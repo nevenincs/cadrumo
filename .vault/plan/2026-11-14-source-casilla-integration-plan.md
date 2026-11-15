@@ -7,9 +7,9 @@ tier: L2
 related:
   - '[[2026-11-14-source-casilla-integration-modelo-840-profile-facts-and-premises-repeat-adr]]'
   - '[[2026-08-25-source-casilla-integration-modelo-840-source-and-repeated-row-owner-deferral-adr]]'
-modified: '2026-11-14'
+modified: '2026-11-15'
 body_schema: body-v2
-body_hash: 'sha256:2cced88733a748590d9ff79861fccac1f917d541aea9d121a431c4378ea11963'
+body_hash: 'sha256:580724a3bcf6941f7d8f0a277baf9dab3acf0c56ed75830f52edbe7ce4659181'
 ---
 
 # `source-casilla-integration` plan
@@ -48,15 +48,15 @@ Hand 1 stores the structured fiscal address with INE codes, the AEAT delegacion 
 
 Hand 2 gives the export generator repeat semantics for the anexo premises slots keyed by a durable per-local identity and regenerates only the Modelo 840 editions whose layout changes.
 
-- [ ] `P02.S04` - Give the export generator repeat semantics for the anexo Relacion de locales slots keyed by the per-local identity, proven against the official slot positions; `dev/registry/pipeline`.
-- [ ] `P02.S05` - Regenerate only the Modelo 840 export editions whose layout changes, declaring any new registry member once at its earliest edition, including an informational casilla for the representante's municipality name (design Apart. III position 492) that the operator enters with the other representante address casillas, mapped to that export field instead of a profile producer; `src/cadrumo/_data/registry/aeat/modelos/840`.
+- [x] `P02.S04` - Give the export generator repeat semantics for the anexo Relacion de locales slots keyed by the per-local identity, proven against the official slot positions; `dev/registry/pipeline`.
+- [x] `P02.S05` - Regenerate only the Modelo 840 export editions whose layout changes, declaring any new registry member once at its earliest edition, including an informational casilla for the representante's municipality name (design Apart. III position 492) that the operator enters with the other representante address casillas, mapped to that export field instead of a profile producer; `src/cadrumo/_data/registry/aeat/modelos/840`.
 
 ### Phase `P03` - producers and the official round trip
 
 Hand 3 writes producers that read only the stored facts, proves the export round trip against the official design and turns the known red green without stubs.
 
-- [ ] `P03.S06` - Write the Modelo 840 producers over the stored facts only, keeping the typed refusal for any key without a stored fact; `src/cadrumo/application/filing`.
-- [ ] `P03.S07` - Prove the Modelo 840 export round trip against the official design per own-edition year and turn test_every_cited_producer_key_is_resolvable green with no refusing stubs; `src/cadrumo/application/filing/tests`.
+- [x] `P03.S06` - Write the Modelo 840 producers over the stored facts only, keeping the typed refusal for any key without a stored fact; `src/cadrumo/application/filing`.
+- [x] `P03.S07` - Prove the Modelo 840 export round trip against the official design per own-edition year and turn test_every_cited_producer_key_is_resolvable green with no refusing stubs; `src/cadrumo/application/filing/tests`.
 
 ## Parallelization
 
