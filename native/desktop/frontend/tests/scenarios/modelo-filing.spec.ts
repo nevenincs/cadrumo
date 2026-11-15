@@ -388,17 +388,20 @@ test("recording the filing reads the declaration again by itself, with no hold t
   page: target,
 }) => {
   await filing(target, "exported");
-  const before = (await calls(target, "modelo form")).length;
-  // The window's own read after the write is held open, as a slow host's is.
+  const before = (await calls(target, "modelo submit modelo.work.filing_state"))
+    .length;
+  // The window's own read after the write, the filing state, is held open as
+  // a slow host's is.
   await target.evaluate(() => {
     const port = window.__fixtureModelo!;
-    const form = port.form;
+    const submit = port.submit;
     const gate = window as unknown as { __releaseRead?: () => void };
-    port.form = async (...args) => {
-      await new Promise<void>((release) => {
-        gate.__releaseRead = release;
-      });
-      return form(...args);
+    port.submit = async (...args) => {
+      if (args[0] === "modelo.work.filing_state")
+        await new Promise<void>((release) => {
+          gate.__releaseRead = release;
+        });
+      return submit(...args);
     };
   });
   await target
@@ -434,7 +437,11 @@ test("recording the filing reads the declaration again by itself, with no hold t
     target.getByText(label("workspace.modelo.filing.recorded_here")).first(),
   ).toBeVisible();
   await expect
-    .poll(async () => (await calls(target, "modelo form")).length - before)
+    .poll(
+      async () =>
+        (await calls(target, "modelo submit modelo.work.filing_state")).length -
+        before,
+    )
     .toBe(1);
   await expect(target.locator(".modelo-write-hold")).toHaveCount(0);
 });

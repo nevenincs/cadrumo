@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
-import type { PublicModeloFormPriorValueAttestation } from "../../../shell/modeloContract/modeloWorkFormPart2";
+
 import type { RefusalIntent, WindowPlace } from "../../../shell/refusal";
 import { usePanePreference } from "../../../shell/panePreference";
 import { useStrings } from "../../../shell/strings";
@@ -16,6 +16,7 @@ import {
   type FormSession,
   type PriorWithdrawal,
 } from "./session";
+import type { PublicModeloFormPriorValueAttestation } from "../../../shell/modeloContract/modeloWorkForm";
 
 // The figures the filer can state for earlier returns the application does
 // not hold, as the form serves them: grouped by the earlier returns they
