@@ -11,7 +11,8 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
-from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition
+from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition, ExportRecordDefinition
+from cadrumo.domain.calculations.registry.schema_references import SourceReference
 from cadrumo.domain.calculations.registry.tests.authored_editions import (
     authored_revisions,
     open_ended_revision,
@@ -274,3 +275,49 @@ def test_unjoined_single_record_checks_its_own_reserved_bytes() -> None:
     assert missing >= 1
     assert unresolved == 0
     assert any("@220..239" in line for line in lines)
+
+
+_M840_REVISION = str(open_ended_revision("840").id)
+
+
+def _m840_page_one() -> tuple[RecordDesignSheet, SourceReference, ExportRecordDefinition]:
+    source = _catalogue()["aeat-dr-840"]
+    assert isinstance(source, SourceReference)
+    sheet = _sheet("aeat-dr-840", "Pág. 1")
+    layout = _layout("840", _M840_REVISION)
+    record = record_join.join_record(sheet, layout.records, source=source)
+    assert record is not None
+    return sheet, source, record
+
+
+def test_m840_numbered_line_break_is_written_by_the_record_line_ending() -> None:
+    sheet, source, record = _m840_page_one()
+    last_row = sheet.fields[-1]
+    assert (last_row.offset, last_row.length) == (max((f.offset or 0) + (f.length or 0) for f in record.fields), 2)
+
+    _required, missing, unresolved, lines = missing_report(((sheet, source),), (record,))
+
+    assert (missing, unresolved, lines) == (0, 0, [])
+
+
+def test_m840_line_break_is_unwritten_without_a_line_ending() -> None:
+    sheet, source, record = _m840_page_one()
+    without_ending = record.model_copy(update={"line_ending": "none"})
+
+    _required, missing, _unresolved, lines = missing_report(((sheet, source),), (without_ending,))
+
+    assert missing == 1
+    assert any("Salto de l" in line for line in lines)
+
+
+def test_m840_line_ending_does_not_cover_a_record_that_stops_short() -> None:
+    sheet, source, record = _m840_page_one()
+    closing_end = max((f.offset or 0) + (f.length or 0) for f in record.fields)
+    truncated = record.model_copy(
+        update={"fields": tuple(f for f in record.fields if (f.offset or 0) + (f.length or 0) != closing_end)}
+    )
+
+    _required, missing, _unresolved, lines = missing_report(((sheet, source),), (truncated,))
+
+    assert missing == 2
+    assert any("Salto de l" in line for line in lines)

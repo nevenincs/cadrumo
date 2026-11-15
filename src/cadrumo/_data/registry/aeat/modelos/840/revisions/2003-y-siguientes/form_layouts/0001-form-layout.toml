@@ -7,7 +7,7 @@ revision_id = "2003-y-siguientes"
 seed_source = "casilla_number"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "fa0a32f99cb7a81d8e23c1d7c50f73eada19941fba2ba963a9829d8b8f9f6f27"
+source_state_digest = "9cdbfab4c2c7f3c4a6eaa0a07c016c79f37be70b8b79b7325f48c53955f1bf55"
 placements = [
     { casilla_id = "act.actividad-principal", kind = "on_form", box_number = "59" },
     { casilla_id = "act.ano-inicio-primera-vez", kind = "on_form", box_number = "65" },
