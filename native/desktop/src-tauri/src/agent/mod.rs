@@ -176,6 +176,11 @@ impl AgentHost {
         &self.package_root
     }
 
+    /// The host's diagnostics, where a command records why it failed.
+    pub(crate) fn diagnostics(&self) -> &Diagnostics {
+        &self.diagnostics
+    }
+
     /// Hands the person's local engine setting on to the runtime manager's selection
     /// record: a stored choice is written unless the record holds it, no choice removes
     /// the record so the package's defaults apply, and a setting nobody can read leaves it
