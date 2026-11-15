@@ -78,6 +78,9 @@ STAGE_WORDS = ("pass", "incomplete", "refused", "not-owed", NOT_REACHED, "error"
 CALCULATE_INHERITED = "calculate_inherited"
 """The calculate stage of a surface that did not run the calculation; one was already present in its world."""
 CALCULATE_WORDS = (*STAGE_WORDS, CALCULATE_INHERITED)
+NOT_SHOWN = "not-shown"
+FILE_WORDS = (*STAGE_WORDS, NOT_SHOWN)
+"""The vocabulary of the file stage: the stage words, and ``not-shown`` for a surface that shows no filed state."""
 INHERITED_CAUSE = "calculate inherited (the surface did not run the calculation)"
 LEGACY_INHERITED_REASON = "calculate: a calculation was already present; none was run"
 """How the window wrote an inherited calculation (as ``pass``) before the word existed."""
@@ -219,8 +222,10 @@ def read_results(directory: Path) -> dict[ResultKey, SurfaceResult]:
     A line is a JSON object with ``surface`` (``tui``, ``window`` or ``cli``), ``tree`` (the commit the surface ran),
     ``persona``, ``modelo`` (null on a persona-level line, which reports whether the profile loaded), ``year``,
     ``period`` (null with a null ``modelo``), ``loads``, and, when ``modelo`` is set, ``calculate``, ``verify``
-    and ``export`` in the stage vocabulary; the optional ``file`` states a fifth stage in the same vocabulary (absent
-    means not stated; the table row has no file stage yet, so parity ignores it). The optional ``export_served`` is
+    and ``export`` in the stage vocabulary; the optional ``file`` states the filed state in that vocabulary plus
+    ``not-shown``. A row the backend filed locally (``filed_locally``) is held to ``file`` ``pass``: absent or
+    ``not-shown`` makes the row differ (the surface shows no filed state), as does any other word; a row not filed
+    locally is not held to it. The optional ``export_served`` is
     true or false: false states the form served no export door for the return (served state, never the pilot's choice);
     absent means unknown. ``refusal_code``, ``reason`` and
     ``log`` are optional text;
@@ -335,7 +340,7 @@ def _stage_words(data: Mapping[str, object], modelo: str | None, *, window_inher
 
 def _optional_stage(data: Mapping[str, object], name: str) -> str | None:
     """The stage word of an optional stage field, ``None`` when absent or null."""
-    return None if data.get(name) is None else _choice(data, name, STAGE_WORDS)
+    return None if data.get(name) is None else _choice(data, name, FILE_WORDS)
 
 
 def _optional_workaround(data: Mapping[str, object]) -> str | None:
@@ -464,11 +469,29 @@ def parity(
         return RowParity(row.key, surface, NOT_COMPARABLE, (why,), tree)
     table, shown = dict(row.figures), dict(result.figures)
     stage_causes, gated = _stage_causes(surface, stages, result, export_refusal_code(row.reason))
-    causes = _substitute_causes(result) + stage_causes + figure_causes(surface, table, shown, dict(row.text_figures))
+    causes = (
+        _substitute_causes(result)
+        + stage_causes
+        + _file_causes(row, surface, result)
+        + figure_causes(surface, table, shown, dict(row.text_figures))
+    )
     outcome = DIFFERS if causes else MATCHED
     extras = extra_figures(table | dict(row.internal_figures), shown)
     redacted = () if causes else redacted_casillas(shown)
     return RowParity(row.key, surface, outcome, tuple(causes), tree, extras, gated, redacted)
+
+
+def _file_causes(row: TableRow, surface: str, result: SurfaceResult) -> list[str]:
+    """The cause of a row the backend filed locally when the surface does not show that state by itself.
+
+    A surface shows it with ``file`` ``pass``. An absent ``file`` and ``not-shown`` state that the surface shows no
+    filed state; any other word disagrees. A row the backend did not file locally is not held to a file stage.
+    """
+    if not row.filed_locally or result.file == "pass":
+        return []
+    if result.file is None or result.file == NOT_SHOWN:
+        return [f"file not shown by {surface}, table filed locally"]
+    return [f"file {surface} {result.file}, table filed locally"]
 
 
 def _substitute_causes(result: SurfaceResult) -> list[str]:

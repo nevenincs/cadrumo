@@ -55,6 +55,7 @@ def _row(
     figures: tuple[tuple[str, str], ...] | None = _FIGURES,
     internal_figures: tuple[tuple[str, str], ...] = (),
     text_figures: tuple[tuple[str, str], ...] = (),
+    filed_locally: bool = False,
     reason: str = "",
 ) -> TableRow:
     plan = PlannedRow(
@@ -75,6 +76,7 @@ def _row(
         figures=figures,
         internal_figures=internal_figures,
         text_figures=text_figures,
+        filed_locally=filed_locally,
         reason=reason,
     )
 
@@ -1045,3 +1047,35 @@ def test_the_cell_counts_an_inherited_row_as_differing_and_the_legacy_line_too()
     rendered = render_table(rows, head="abc", frontend=comparison)
     assert f"- {row_id(rows[0].key)}: window differs: {INHERITED_CAUSE}" in rendered
     assert f"- {row_id(rows[1].key)}: window differs: {INHERITED_CAUSE}" in rendered
+
+
+def test_a_row_filed_locally_matches_only_a_surface_that_shows_the_filed_state() -> None:
+    filed = _row(filed_locally=True)
+    shown = parity(filed, "tui", _result(file="pass"))
+    assert (shown.outcome, shown.causes) == ("matched", ())
+    for line in ({}, {"file": "not-shown"}):
+        hidden = parity(filed, "tui", _result(**line))
+        assert (hidden.outcome, hidden.causes) == ("differs", ("file not shown by tui, table filed locally",))
+
+
+def test_a_surface_that_shows_another_filed_state_differs_and_an_unfiled_row_is_not_held_to_one() -> None:
+    refused = parity(_row(filed_locally=True), "cli", _result(file="refused"))
+    assert (refused.outcome, refused.causes) == ("differs", ("file cli refused, table filed locally",))
+    for line in ({}, {"file": "not-shown"}, {"file": "refused"}):
+        assert parity(_row(), "window", _result(**line)).outcome == "matched"
+
+
+def test_a_file_word_outside_the_vocabulary_is_refused_and_not_shown_is_read() -> None:
+    assert parse_result(json.dumps(_line(file="not-shown"))).file == "not-shown"
+    with pytest.raises(ValueError, match="file"):
+        parse_result(json.dumps(_line(file="shown")))
+
+
+def test_a_row_reads_that_it_was_filed_locally_from_its_record_or_from_an_older_reason() -> None:
+    assert TableRow.from_json(_row(filed_locally=True).to_json()).filed_locally
+    assert not TableRow.from_json(_row().to_json()).filed_locally
+    older = json.loads(_row(reason="export ok | filed locally").to_json())
+    del older["filed_locally"]
+    assert TableRow.from_json(json.dumps(older)).filed_locally
+    del older["reason"]
+    assert not TableRow.from_json(json.dumps(older)).filed_locally

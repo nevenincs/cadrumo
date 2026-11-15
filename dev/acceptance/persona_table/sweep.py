@@ -90,6 +90,7 @@ from .planner import (
 from .roles import StatedCasilla, compared, differing, mismatch_text, revision_identities
 from .row_figures import merge_row_figures, on_form_casillas, row_figures, split_figures
 from .rows import (
+    FILED_LOCALLY,
     PlannedRow,
     Stage,
     TableRow,
@@ -220,6 +221,7 @@ def run_return(
         figures=figures,
         internal_figures=internal_figures,
         text_figures=text_figures,
+        filed_locally=lifecycle.filed,
     )
 
 
@@ -234,6 +236,8 @@ class Lifecycle:
     export_reason: str
     file_reason: str
     """The local filing outcome after the export; empty when nothing was filed or the legacy order filed in verify."""
+    filed: bool = False
+    """Whether the return was filed locally, in whichever order."""
 
 
 def run_lifecycle(
@@ -258,10 +262,14 @@ def run_lifecycle(
     if order == "legacy":
         filed = _file_locally(world, work_unit_id, revision_id, verified) if verified is not None else ""
         export, export_detail, export_reason = _export(world, plan, values, exports, work_unit_id, revision_id)
-        return Lifecycle(verify, verify_reason or filed, export, export_detail, export_reason, "")
+        return Lifecycle(
+            verify, verify_reason or filed, export, export_detail, export_reason, "", filed == FILED_LOCALLY
+        )
     export, export_detail, export_reason = _export(world, plan, values, exports, work_unit_id, revision_id)
     file_reason = _file_locally(world, work_unit_id, revision_id, verified) if verified is not None else ""
-    return Lifecycle(verify, verify_reason, export, export_detail, export_reason, file_reason)
+    return Lifecycle(
+        verify, verify_reason, export, export_detail, export_reason, file_reason, file_reason == FILED_LOCALLY
+    )
 
 
 def _figures(calculated: ModeloWorkCalculatePublicResultV3, rows: Mapping[str, str]) -> tuple[tuple[str, str], ...]:
@@ -645,7 +653,7 @@ def _file_locally(
         )
     except PersonaMaterialisationError as error:
         return f"file: {refusal_text(error)}"
-    return "filed locally"
+    return FILED_LOCALLY
 
 
 @pytest.mark.parametrize(("persona_id", "horizon"), cases())
