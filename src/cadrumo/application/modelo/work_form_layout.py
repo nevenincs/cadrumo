@@ -279,7 +279,9 @@ class LayoutWalker:
             if block.casilla_id is not None
             else project_binding_field(str(block.binding_id), self.context)
         )
-        return ModeloFormFieldBlock(id=block.id, field=field)
+        # Both parts are validated: the id by the hydrated layout, the field as it was built. Validating
+        # the block would only run the field's own checks again on the same frozen field.
+        return ModeloFormFieldBlock.model_construct(id=block.id, field=field)
 
     def _grid_block(self, block: FormGridBlock) -> ModeloFormGridBlock:
         language = self.context.language
