@@ -3887,3 +3887,75 @@ id = "DP200018C:01703"
 [revisions."2024".casilla_removals.selector]
 revision = "2023"
 id = "DP200022:01936"
+
+[[revisions."2024".casilla_overrides]]
+[revisions."2024".casilla_overrides.selector]
+revision = "2023"
+id = "00775"
+
+[revisions."2024".casilla_overrides.fields]
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1229 (DP200012 field 39): Liquidación I - Detalle correcciones resultado cta. pérdidas y ganancias -Amortización acelerada de determinados vehículos y de nuevas infraestructuras de recarga (DA 18ª LIS) - Aumentos [00775]. aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1281 (DP200012 field 40): Liquidación I - Detalle correcciones resultado cta. pérdidas y ganancias - Amortización acelerada de determinados vehículos y de nuevas infraestructuras de recarga (DA 18ª LIS RDL 5/2023) - Aumentos [00775]. Both print the same box on the same sheet for the same field; the 2024 caption only rewords it."
+
+[[revisions."2024".casilla_overrides]]
+[revisions."2024".casilla_overrides.selector]
+revision = "2023"
+id = "00776"
+
+[revisions."2024".casilla_overrides.fields]
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1230 (DP200012 field 40): Liquidación I - Detalle correcciones resultado cta. pérdidas y ganancias -Amortización acelerada de determinados vehículos y de nuevas infraestructuras de recarga (DA 18ª LIS) - Disminuciones [00776]. aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1282 (DP200012 field 41): Liquidación I - Detalle correcciones resultado cta. pérdidas y ganancias - Amortización acelerada de determinados vehículos y de nuevas infraestructuras de recarga (DA 18ª LIS RDL 5/2023) - Disminuciones [00776]. Both print the same box on the same sheet for the same field; the 2024 caption only rewords it."
+
+[[revisions."2024".casilla_overrides]]
+[revisions."2024".casilla_overrides.selector]
+revision = "2023"
+id = "00075"
+
+[revisions."2024".casilla_overrides.fields]
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4654 (DP200026B field 131): Amortización acelerada de determinados vehículos y de nuevas infraestructuras de recarga (DA 18ª LIS) - Aumento - Saldo pendiente a principio de ejercicio [00075]. aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:4726 (DP200026B field 131): Amortización acelerada de determinados vehículos y de nuevas infraestructuras de recarga (DA 18ª LIS RDL 5/2023) - Aumento - Saldo pendiente a principio de ejercicio [00075]. Both print the same box on the same sheet for the same field; the 2024 caption only rewords it."
+
+[[revisions."2024".casilla_overrides]]
+[revisions."2024".casilla_overrides.selector]
+revision = "2023"
+id = "00076"
+
+[revisions."2024".casilla_overrides.fields]
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4655 (DP200026B field 132): Amortización acelerada de determinados vehículos y de nuevas infraestructuras de recarga (DA 18ª LIS) - Aumento - Correcciones del ejercicio - Permanentes [00076]. aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:4727 (DP200026B field 132): Amortización acelerada de determinados vehículos y de nuevas infraestructuras de recarga (DA 18ª LIS RDL 5/2023) - Aumento - Correcciones del ejercicio - Permanentes [00076]. Both print the same box on the same sheet for the same field; the 2024 caption only rewords it."
+
+[[revisions."2024".casilla_overrides]]
+[revisions."2024".casilla_overrides.selector]
+revision = "2023"
+id = "00077"
+
+[revisions."2024".casilla_overrides.fields]
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4656 (DP200026B field 133): Amortización acelerada de determinados vehículos y de nuevas infraestructuras de recarga (DA 18ª LIS) - Aumento - Correcciones del ejercicio - Temporarias (con origen en el ejercicio) [00077]. aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:4728 (DP200026B field 133): Amortización acelerada de determinados vehículos y de nuevas infraestructuras de recarga (DA 18ª LIS RDL 5/2023) - Aumento - Correcciones del ejercicio - Temporarias (con origen en el ejercicio) [00077]. Both print the same box on the same sheet for the same field; the 2024 caption only rewords it."
+
+[[revisions."2024".casilla_overrides]]
+[revisions."2024".casilla_overrides.selector]
+revision = "2023"
+id = "01329"
+
+[revisions."2024".casilla_overrides.fields]
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2926 (DP200018C field 136): Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - 2023(*) Sin reiteración de donaciones a una misma entidad - Deducción pendiente/generada [01329]. aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2942 (DP200018C field 135): Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - 2023 - Sin reiteración de donaciones a una misma entidad - Deducción pendiente/generada [01329]. Both print the same box on the same sheet for the same field; the 2024 caption only rewords it."
+
+[[revisions."2024".casilla_overrides]]
+[revisions."2024".casilla_overrides.selector]
+revision = "2023"
+id = "01372"
+
+[revisions."2024".casilla_overrides.fields]
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2927 (DP200018C field 137): Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - 2023(*) Sin reiteración de donaciones a una misma entidad - Aplicado en esta liquidación [01372]. aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2943 (DP200018C field 136): Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - 2023 - Sin reiteración de donaciones a una misma entidad - Aplicado en esta liquidación [01372]. Both print the same box on the same sheet for the same field; the 2024 caption only rewords it."
+
+[[revisions."2024".casilla_overrides]]
+[revisions."2024".casilla_overrides.selector]
+revision = "2023"
+id = "01373"
+
+[revisions."2024".casilla_overrides.fields]
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2928 (DP200018C field 138): Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - 2023(*) Sin reiteración de donaciones a una misma entidad - Pendiente de aplicación en periodos futuros [01373]. aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2944 (DP200018C field 137): Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - 2023 - Sin reiteración de donaciones a una misma entidad - Pendiente de aplicación en periodos futuros [01373]. Both print the same box on the same sheet for the same field; the 2024 caption only rewords it."
