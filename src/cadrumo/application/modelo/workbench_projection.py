@@ -13,6 +13,13 @@ so a mirror that loses a type, a precision or a field fails before anything is
 stored. The canonical models' own excluded fields are an empty, reviewed
 inventory; a new excluded field fails the projection until it is reviewed.
 
+An authenticated session may retain the immutable form subtree together with
+its strictly validated inverse. Exact value, admission and live-schema keys
+permit reuse. Strict public-to-canonical restoration is proved at pair build
+time; a hit reuses that proof and compares the previously validated inverse
+with the fresh read, including every outer and derived field. Admission,
+baseline issuance and the outer read are never retained.
+
 The filing-state projection carries only what exporting and recording the
 filing rest on, and proves each of those fields restores to the read's own
 value; it never mirrors the whole form.
@@ -20,6 +27,7 @@ value; it never mirrors the whole form.
 
 from __future__ import annotations
 
+from collections.abc import Hashable
 from typing import Annotated, Literal, Self
 from uuid import UUID
 
@@ -51,6 +59,7 @@ from ..operations.public_mirror import (
 )
 from ..operations.public_period import PublicPeriod
 from ..operator_actions.projection import PreconditionVerdictSnapshot
+from ..workbench_capture_memory import WorkbenchMemoSlot
 from ..workbench_generation_modelo_contracts import PublicCasillaConstraints, PublicModeloVerificationFinding
 from .calculation_report import CalculationReportRowRole
 from .edit_apply_scalar_contracts import ModeloEditWireScalar
@@ -113,6 +122,12 @@ from .work_form_prior_value_models import ModeloFormPriorValueRefusal, ModeloFor
 from .work_form_service import ModeloWorkFormLoadV1
 from .work_form_typing_effect import ModeloFormTypingEffect
 from .work_review import ModeloWorkProgress
+from .workbench_projection_memory import (
+    FormProjectionContext,
+    FormProjectionPair,
+    form_projection_identity,
+    form_projection_is_immutable,
+)
 from .workbench_read import ModeloFormLedgerHold, ModeloWorkbenchFilingStateReadV1, ModeloWorkbenchFormReadV1
 
 
@@ -694,7 +709,9 @@ def _restore_tax_id_format(public: PublicSpanishTaxIdFormat) -> SpanishTaxIdForm
     return restored
 
 
-def _restore(projection: ModeloWorkbenchFormProjectionV1) -> ModeloWorkbenchFormReadV1:
+def _restore(
+    projection: ModeloWorkbenchFormProjectionV1, pair: FormProjectionPair | None = None
+) -> ModeloWorkbenchFormReadV1:
     baseline = projection.admitted_baseline
     admission = (
         ModeloEditAdmittedV1(baseline=baseline.to_baseline()) if baseline is not None else projection.admission_refusal
@@ -702,7 +719,7 @@ def _restore(projection: ModeloWorkbenchFormProjectionV1) -> ModeloWorkbenchForm
     if admission is None:
         raise ValueError("workbench projection has no edit admission outcome")
     return ModeloWorkbenchFormReadV1(
-        load=_restore_form(projection.form),
+        load=pair.canonical if pair is not None and projection.form is pair.public else _restore_form(projection.form),
         admission=admission,
         calculation_revision_id=projection.calculation_revision_id,
         verification_report_id=projection.verification_report_id,
@@ -718,8 +735,12 @@ def _restore(projection: ModeloWorkbenchFormProjectionV1) -> ModeloWorkbenchForm
     )
 
 
-def _require_projection_roundtrip(read: ModeloWorkbenchFormReadV1, projection: ModeloWorkbenchFormProjectionV1) -> None:
-    restored = _restore(projection)
+def _require_projection_roundtrip(
+    read: ModeloWorkbenchFormReadV1,
+    projection: ModeloWorkbenchFormProjectionV1,
+    pair: FormProjectionPair | None = None,
+) -> None:
+    restored = _restore(projection, pair)
     if (
         restored != read
         or restored.typing_effects != projection.typing_effects
@@ -734,16 +755,25 @@ def _require_projection_roundtrip(read: ModeloWorkbenchFormReadV1, projection: M
 
 
 def project_modelo_workbench_form(
-    profile_id: UUID, work_unit_id: str, read: ModeloWorkbenchFormReadV1
+    profile_id: UUID,
+    work_unit_id: str,
+    read: ModeloWorkbenchFormReadV1,
+    *,
+    memory: WorkbenchMemoSlot[Hashable, FormProjectionPair | None] | None = None,
+    context: FormProjectionContext | None = None,
 ) -> ModeloWorkbenchFormProjectionV1:
     """Project one workbench read for its exact profile and prove nothing was lost."""
     _require_reviewed_exclusions()
     admission = read.admission
+    pair = _reusable_form(read, memory, context)
+    public_form = pair.public if pair is not None else _project_form(read.load)
+    if not isinstance(public_form, PublicModeloWorkFormLoadV1):
+        raise TypeError("workbench form public projection failed")
     projection = ModeloWorkbenchFormProjectionV1(
         result_version=1,
         profile_id=profile_id,
         work_unit_id=work_unit_id,
-        form=_project_form(read.load),
+        form=public_form,
         admitted_baseline=(
             ModeloEditApplyBaselineV1.from_baseline(admission.baseline)
             if isinstance(admission, ModeloEditAdmittedV1)
@@ -769,8 +799,41 @@ def project_modelo_workbench_form(
         ledger_hold=read.ledger_hold,
         source_requirements=read.source_requirements,
     )
-    _require_projection_roundtrip(read, projection)
+    try:
+        _require_projection_roundtrip(read, projection, pair)
+    except ValueError:
+        if pair is not None and memory is not None:
+            memory.clear()
+        raise
     return projection
+
+
+def _reusable_form(
+    read: ModeloWorkbenchFormReadV1,
+    memory: WorkbenchMemoSlot[Hashable, FormProjectionPair | None] | None,
+    context: FormProjectionContext | None,
+) -> FormProjectionPair | None:
+    if memory is None or context is None or not isinstance(read.admission, ModeloEditAdmittedV1):
+        return None
+    identity = form_projection_identity(read.load, PublicModeloWorkFormLoadV1)
+    if identity is None:
+        return None
+    built: FormProjectionPair | None = None
+
+    def build() -> FormProjectionPair | None:
+        nonlocal built
+        public = _project_form(read.load)
+        canonical = _restore_form(public)
+        if canonical != read.load:
+            raise ValueError("workbench form public projection changed canonical meaning")
+        built = FormProjectionPair(public, canonical)
+        if not form_projection_is_immutable(public, PublicModeloWorkFormLoadV1) or not form_projection_is_immutable(
+            canonical, PublicModeloWorkFormLoadV1
+        ):
+            return None
+        return built
+
+    return memory.reuse((context, identity), build) or built
 
 
 def _require_filing_state_roundtrip(
