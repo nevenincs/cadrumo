@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import sys
+from datetime import date
 from pathlib import Path
 from uuid import UUID, uuid4
 
@@ -30,7 +31,11 @@ from cadrumo.core.config import load_settings
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import create_m130_work_unit, operator_profile_facts
+from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import (
+    SCENARIO_FILING_YEAR,
+    create_m130_work_unit,
+    operator_profile_facts,
+)
 from cadrumo.tests.cli_envelope import require_schema_envelope, unwrap_envelope_notices
 from cadrumo_client.contracts.access_vocabulary import (
     AccessAction,
@@ -132,7 +137,9 @@ def test_native_cli_api_key_obeys_exact_enrolled_modelo_scope(
             authority_operation.profile_schema(),
             facts=tuple(
                 UserProfileFact(path=path, value=value)
-                for path, value in operator_profile_facts(activity_start_date="2025-10-01").items()
+                for path, value in operator_profile_facts(
+                    activity_start_date=date(SCENARIO_FILING_YEAR, 10, 1).isoformat()
+                ).items()
             ),
         )
         populated = upsert_test_profile_facts(profile_id, facts, root=root)
@@ -185,7 +192,7 @@ def test_native_cli_api_key_obeys_exact_enrolled_modelo_scope(
                     ),
                 )
             ),
-            periods=frozenset((Period.from_year_and_code(2025, "4T"),)),
+            periods=frozenset((Period.from_year_and_code(SCENARIO_FILING_YEAR, "4T"),)),
             allow_period_independent=False,
             allow_delegation=False,
         )
