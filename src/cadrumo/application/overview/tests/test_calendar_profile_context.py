@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from datetime import UTC, date, datetime
 
 import pytest
@@ -18,12 +19,34 @@ from ..calendar import build_overview_calendar
 from ..calendar_models import OverviewCalendar, OverviewCalendarRange
 from ..calendar_warnings import PROFILE_FIELD_WARNING_LOCALE_KEYS
 from ..coverage import AdvisedObligation, CoverageAdviceReason, ObligationCoverageReport
+from ..read_calendar_item_projection import OverviewCalendarEntrySnapshot
 from ..read_calendar_projection import OverviewAgendaSnapshot, OverviewBacklogSnapshot, OverviewCalendarSnapshot
 from .calendar_test_support import profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _YEAR = filing_year_envelope().horizon
+
+
+def _assert_profile_gap_row(row: OverviewCalendarEntrySnapshot, *, answered: bool) -> None:
+    assert row.profile_confirmation_required is not answered
+    assert bool(row.missing_profile_information) is not answered
+    assert all(not text.startswith("cli.") for text in row.missing_profile_information)
+    if not answered:
+        assert "70" in " ".join(row.missing_profile_information)
+        assert row.missing_profile_information[0].startswith("Your profile does not yet record")
+
+
+def _assert_modelo_130_profile_gap(rows: Sequence[OverviewCalendarEntrySnapshot], *, answered: bool) -> None:
+    target = [row for row in rows if row.modelo == "130"]
+    assert target
+    for row in target:
+        _assert_profile_gap_row(row, answered=answered)
+    assert all(not row.profile_confirmation_required for row in rows if row.modelo == "303")
+
+
+def _window_missing(coverage: ObligationCoverageReport) -> tuple[str, ...]:
+    return tuple(row.modelo for row in coverage.advised if row.reason is CoverageAdviceReason.APPLICABLE_WINDOW_MISSING)
 
 
 @pytest.mark.parametrize("answered", [False, True])
@@ -65,32 +88,20 @@ def test_saved_false_and_unknown_are_distinct_on_calendar_agenda_and_backlog_row
         )
         agenda = build_overview_agenda(profile(), as_of=today, operation=authority_operation, raw_values=raw)
         backlog = build_overview_backlog(profile(), as_of=today, operation=authority_operation, raw_values=raw)
-        captured = OverviewCalendarSnapshot.from_calendar(calendar)
+        captured = OverviewCalendarSnapshot.from_calendar(
+            calendar, envelope=authority_operation.supported_filing_years()
+        )
         agenda_capture = OverviewAgendaSnapshot.from_agenda(agenda)
         backlog_capture = OverviewBacklogSnapshot.from_backlog(backlog)
 
     for rows in (captured.entries, (*agenda_capture.due_soon, *agenda_capture.overdue), backlog_capture.items):
-        target = [row for row in rows if row.modelo == "130"]
-        assert target
-        for row in target:
-            assert row.profile_confirmation_required is not answered
-            assert bool(row.missing_profile_information) is not answered
-            assert all(not text.startswith("cli.") for text in row.missing_profile_information)
-            if not answered:
-                assert "70" in " ".join(row.missing_profile_information)
-                assert row.missing_profile_information[0].startswith("Your profile does not yet record")
-        assert all(not row.profile_confirmation_required for row in rows if row.modelo == "303")
+        _assert_modelo_130_profile_gap(rows, answered=answered)
 
     assert captured.to_calendar() == calendar
     assert agenda_capture.to_agenda() == agenda
     assert backlog_capture.to_backlog() == backlog
     for snapshot in (captured, agenda_capture, backlog_capture):
-        expected = tuple(
-            row.modelo
-            for row in snapshot.coverage.advised
-            if row.reason is CoverageAdviceReason.APPLICABLE_WINDOW_MISSING
-        )
-        assert snapshot.applicable_modelos_without_deadline == expected
+        assert snapshot.applicable_modelos_without_deadline == _window_missing(snapshot.coverage)
     assert captured.late_count == sum(row.status is ObligationStatus.OVERDUE for row in calendar.entries)
     assert any(row.status is ObligationStatus.DUE_SOON for row in captured.entries)
     data = captured.model_dump(mode="python")
@@ -112,7 +123,9 @@ def test_calendar_warnings_carry_their_sentence_in_the_read_language(
                 today=date(_YEAR, 10, 19),
                 raw_values={"iva.regime": "GENERAL", "irpf.estimation_regime": "directa_normal"},
             )
-            captured = OverviewCalendarSnapshot.from_calendar(calendar)
+            captured = OverviewCalendarSnapshot.from_calendar(
+                calendar, envelope=authority_operation.supported_filing_years()
+            )
     finally:
         I18N_STRICT_MISSING_KEYS.reset(token)
 
@@ -151,6 +164,6 @@ def test_undated_obligations_are_not_hidden_among_undetermined_or_excluded_forms
             confidently_excluded=("200",),
         ),
     )
-    snapshot = OverviewCalendarSnapshot.from_calendar(calendar)
+    snapshot = OverviewCalendarSnapshot.from_calendar(calendar, envelope=filing_year_envelope())
     assert snapshot.applicable_modelos_without_deadline == ("100",)
     assert snapshot.to_calendar() == calendar

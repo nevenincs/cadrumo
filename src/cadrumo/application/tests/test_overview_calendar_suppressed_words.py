@@ -54,12 +54,16 @@ def _calendar(operation: PinnedAuthorityOperation) -> OverviewCalendar:
     )
 
 
+def _snapshot(operation: PinnedAuthorityOperation) -> OverviewCalendarSnapshot:
+    return OverviewCalendarSnapshot.from_calendar(_calendar(operation), envelope=operation.supported_filing_years())
+
+
 @pytest.mark.parametrize("language", _LANGUAGES)
 def test_each_suppressed_row_of_the_read_carries_its_verdict_words_in_the_requested_language(
     authority_operation: PinnedAuthorityOperation, language: OutputLanguage
 ) -> None:
     with override_settings(cadrumo_output_language=language.value):
-        snapshot = OverviewCalendarSnapshot.from_calendar(_calendar(authority_operation))
+        snapshot = _snapshot(authority_operation)
 
     verdicts = {row.verdict for row in snapshot.suppressed_entries}
     assert ApplicabilityVerdict.NOT_APPLICABLE in verdicts
@@ -79,7 +83,7 @@ def test_the_undecided_words_say_neither_owed_nor_excluded(
     authority_operation: PinnedAuthorityOperation, language: OutputLanguage
 ) -> None:
     with override_settings(cadrumo_output_language=language.value):
-        snapshot = OverviewCalendarSnapshot.from_calendar(_calendar(authority_operation))
+        snapshot = _snapshot(authority_operation)
 
     by_verdict = {row.verdict: row.verdict_words for row in snapshot.suppressed_entries}
     undecided = by_verdict[ApplicabilityVerdict.INCOMPLETE]
@@ -96,7 +100,9 @@ def test_the_snapshot_round_trips_the_canonical_calendar_and_the_registered_resu
 ) -> None:
     calendar = _calendar(authority_operation)
     with override_settings(cadrumo_output_language="en"):
-        snapshot = OverviewCalendarSnapshot.from_calendar(calendar)
+        snapshot = OverviewCalendarSnapshot.from_calendar(
+            calendar, envelope=authority_operation.supported_filing_years()
+        )
 
     decoded = OverviewCalendarSnapshot.model_validate_json(snapshot.model_dump_json(), strict=True)
 
