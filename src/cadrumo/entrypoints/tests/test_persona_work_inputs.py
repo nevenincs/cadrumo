@@ -96,7 +96,14 @@ def _role_naming(revision: ModeloRevision, casilla: str) -> str | None:
     """The registry identity that names ``casilla`` and no other casilla of ``revision``, if any."""
     (definition,) = (item for item in revision.casillas if str(item.id) == casilla)
     for key in (definition.continuidad_id, definition.semantic_role):
-        if key is not None and resolved_casillas(revision, _keyed(key), where="probe") == ((casilla, "1.00"),):
+        if key is None:
+            continue
+        try:
+            named = resolved_casillas(revision, _keyed(key), where="probe")
+        except WorkInputError:
+            # The key names several casillas, so it names none of them alone.
+            continue
+        if named == ((casilla, "1.00"),):
             return key
     return None
 
@@ -183,7 +190,7 @@ def test_a_given_role_naming_a_casilla_a_formula_of_the_edition_produces_is_refu
 def test_a_given_role_no_edition_declares_is_refused(
     persona: Persona, envelope: YearEnvelope, operation: PinnedAuthorityOperation
 ) -> None:
-    ((role, _),) = _given(persona).roles
+    role, _ = _given(persona).roles[0]
     misspelt = f"{role}-sin-casilla"
     with pytest.raises(WorkInputError, match=f"role {misspelt} names no casilla in any edition"):
         check_work_inputs(_giving(persona, misspelt), envelope, operation)
@@ -193,17 +200,37 @@ def test_a_role_only_a_later_edition_declares_is_admitted_under_a_horizon_before
     persona: Persona, envelope: YearEnvelope, operation: PinnedAuthorityOperation
 ) -> None:
     entry = _given(persona)
-    declaring = [
-        year
+    editions = {
+        year: operation.revision_for_context(entry.modelo, filing_year=year, period=entry.period)
         for year in range(envelope.floor, envelope.horizon + 1)
-        if resolved_casillas(
-            operation.revision_for_context(entry.modelo, filing_year=year, period=entry.period), entry, where="probe"
+    }
+    # Each registry identity that names a manual casilla alone in some edition, with the first envelope year
+    # whose edition declares it at all.
+    named = {
+        role
+        for edition in editions.values()
+        for casilla in edition.casillas
+        if casilla.input_kind is InputKind.MANUAL and (role := _role_naming(edition, str(casilla.id))) is not None
+    }
+    first_declaring = {
+        role: min(
+            year
+            for year, edition in editions.items()
+            if any(role in (casilla.continuidad_id, casilla.semantic_role) for casilla in edition.casillas)
         )
-    ]
-    # A horizon whose envelope ends before the first edition that declares the role, still above the floor.
-    lowered = dataclasses.replace(envelope, horizon=min(declaring) - 1)
-    assert lowered.horizon > lowered.floor
-    check_work_inputs(read_persona(_PERSONA, envelope=lowered), lowered, operation)
+        for role in named
+    }
+    # The role the latest edition introduces, so the lowered envelope keeps as many years as the registry allows.
+    year, role = max((year, role) for role, year in first_declaring.items() if year > envelope.floor)
+    lowered = dataclasses.replace(envelope, horizon=year - 1)
+    later = _giving(read_persona(_PERSONA, envelope=lowered), role, year=YearToken.parse("horizon", where="probe"))
+    # No edition the lowered envelope reaches declares the role, yet the role is admitted.
+    assert all(
+        resolved_casillas(edition, _given(later), where="probe") == ()
+        for covered, edition in editions.items()
+        if covered <= lowered.horizon
+    )
+    check_work_inputs(later, lowered, operation)
 
 
 def test_a_given_role_naming_several_casillas_of_the_edition_is_refused_as_ambiguous(
@@ -262,12 +289,17 @@ def test_a_given_value_an_expectation_of_its_return_names_by_role_is_refused(
     persona: Persona, envelope: YearEnvelope, operation: PinnedAuthorityOperation
 ) -> None:
     entry = _given(persona)
-    ((casilla, amount),) = resolved_casillas(_edition(persona, envelope, operation), entry, where="probe")
     revision = _edition(persona, envelope, operation)
-    (definition,) = (item for item in revision.casillas if str(item.id) == casilla)
-    assert definition.semantic_role is not None
-    asserted_back = _asserting(persona, entry, roles=((definition.semantic_role, amount),))
-    with pytest.raises(WorkInputError, match=f"expected role {definition.semantic_role} names"):
+    definitions = {str(item.id): item for item in revision.casillas}
+    # A given casilla whose semantic role names it alone, so the expectation asserts exactly that value back.
+    casilla, amount, role = next(
+        (casilla, amount, role)
+        for casilla, amount in resolved_casillas(revision, entry, where="probe")
+        if (role := definitions[casilla].semantic_role) is not None
+        and resolved_casillas(revision, _keyed(role), where="probe") == ((casilla, "1.00"),)
+    )
+    asserted_back = _asserting(persona, entry, roles=((role, amount),))
+    with pytest.raises(WorkInputError, match=f"gives casilla {casilla}, which the expected role {role} names"):
         check_work_inputs(asserted_back, envelope, operation)
 
 
@@ -275,7 +307,7 @@ def test_a_given_value_an_expectation_of_its_return_states_by_casilla_is_refused
     persona: Persona, envelope: YearEnvelope, operation: PinnedAuthorityOperation
 ) -> None:
     entry = _given(persona)
-    ((casilla, amount),) = resolved_casillas(_edition(persona, envelope, operation), entry, where="probe")
+    casilla, amount = resolved_casillas(_edition(persona, envelope, operation), entry, where="probe")[0]
     with pytest.raises(WorkInputError, match=f"gives casilla {casilla}, which an expectation of the return states"):
         check_work_inputs(_asserting(persona, entry, casillas=((casilla, amount),)), envelope, operation)
 
