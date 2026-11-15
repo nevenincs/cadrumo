@@ -7507,12 +7507,12 @@ modelo:
               en el ejercicio) [03337]
           is-correccion-amortizacion-acelerada-vehiculos-permanente-aumento:
             label: Amortización acelerada de determinados vehículos y de nuevas infraestructuras
-              de recarga (DA 18ª LIS RDL 5/2023) - Aumento - Correcciones del ejercicio
-              - Permanentes [00076]
+              de recarga (DA 18ª LIS) - Aumento - Correcciones del ejercicio - Permanentes
+              [00076]
           is-correccion-amortizacion-acelerada-vehiculos-saldo-inicial:
             label: Amortización acelerada de determinados vehículos y de nuevas infraestructuras
-              de recarga (DA 18ª LIS RDL 5/2023) - Aumento - Saldo pendiente a principio
-              de ejercicio [00075]
+              de recarga (DA 18ª LIS) - Aumento - Saldo pendiente a principio de ejercicio
+              [00075]
           is-correccion-amortizacion-inmovilizado-idi-permanente-aumento:
             label: Amortización de inmovilizado afecto a actividades de investigación
               y desarrollo (art. 12.3 b) LIS) - Aumento - Correcciones del ejercicio
@@ -12593,11 +12593,23 @@ modelo:
             label: Modelo 200, ejercicio 2022
         '2023':
           casilla:
+            '00077':
+              label: Amortización acelerada de determinados vehículos y de nuevas
+                infraestructuras de recarga (DA 18ª LIS) - Aumento - Correcciones
+                del ejercicio - Temporarias (con origen en el ejercicio) [00077]
             '00370':
               label: Liquidación II - Detalle correcciones resultado cta. pérdidas
                 y ganancias - Exención sobre dividendos o participaciones en beneficios
                 de entidades residentes (art. 21.1, 21.10 y DT 40ª LIS) - Disminuciones
                 [00370]
+            '00775':
+              label: Liquidación I - Detalle correcciones resultado cta. pérdidas
+                y ganancias -Amortización acelerada de determinados vehículos y de
+                nuevas infraestructuras de recarga (DA 18ª LIS) - Aumentos [00775]
+            '00776':
+              label: Liquidación I - Detalle correcciones resultado cta. pérdidas
+                y ganancias -Amortización acelerada de determinados vehículos y de
+                nuevas infraestructuras de recarga (DA 18ª LIS) - Disminuciones [00776]
             '01020':
               label: Conversión de activos por impuesto diferido en crédito exigible
                 frente a la Administración tributaria (art. 130 LIS) - Abono por conversión
@@ -12674,6 +12686,21 @@ modelo:
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
                 Ejercicio generación - 2022 - AID pendientes aplicación periodos futuros
                 - Sin derecho conversión crédito exigible [01133]
+            01329:
+              label: Deducción donativos entidades sin fines lucro - Donaciones para
+                actividades prioritarias de mecenazgo y otras con derecho a deducción
+                incrementada - 2023(*) Sin reiteración de donaciones a una misma entidad
+                - Deducción pendiente/generada [01329]
+            '01372':
+              label: Deducción donativos entidades sin fines lucro - Donaciones para
+                actividades prioritarias de mecenazgo y otras con derecho a deducción
+                incrementada - 2023(*) Sin reiteración de donaciones a una misma entidad
+                - Aplicado en esta liquidación [01372]
+            '01373':
+              label: Deducción donativos entidades sin fines lucro - Donaciones para
+                actividades prioritarias de mecenazgo y otras con derecho a deducción
+                incrementada - 2023(*) Sin reiteración de donaciones a una misma entidad
+                - Pendiente de aplicación en periodos futuros [01373]
             01887:
               label: Liquidación III - Base imponible - Régimen especial de buques
                 y empresas navieras en Canarias - Compensación de bases imponibles

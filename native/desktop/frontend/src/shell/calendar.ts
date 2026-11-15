@@ -9,6 +9,7 @@ import {
   useState,
 } from "react";
 import { failureCode } from "../errors";
+import type { OverviewCalendarSupport } from "./calendarContract";
 import { facts } from "./compose";
 import type { Translate } from "./strings";
 import type { FilingCalendar, ProfileViews } from "./views";
@@ -40,6 +41,25 @@ export function yearRange(year: number): { from: string; to: string } {
   return {
     from: localDay(new Date(year, 0, 1)),
     to: localDay(new Date(year + 1, 0, 0)),
+  };
+}
+
+/**
+ * Which neighbouring years the person may step to from `year`, the year on
+ * screen or, while the rolling range is shown, the year it falls in. The
+ * bounds are the ones the read was served under; a read that served none
+ * bounds nothing, and an envelope with no hard ceiling is open above.
+ */
+export function yearSteps(
+  support: OverviewCalendarSupport | null | undefined,
+  year: number,
+): { previous: boolean; next: boolean } {
+  return {
+    previous: !support || year - 1 >= support.floor,
+    next:
+      !support ||
+      support.hard_ceiling === null ||
+      year + 1 <= support.hard_ceiling,
   };
 }
 

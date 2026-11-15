@@ -1445,6 +1445,19 @@ desktop:
       filed: Benyújtva
       late: Lejárt
       unknown: Ismeretlen
+    support_above_ceiling: 'Ez a tartomány nem támogatott adóévre esik (utolsó támogatott
+      év: {ceiling}), ezért nem mutat dátumokat. Ez nem jelenti azt, hogy nem lesz
+      teendő.'
+    support_below_floor: 'Ez a tartomány nem támogatott adóévre esik (első támogatott
+      év: {floor}), ezért nem mutat dátumokat. Ez nem jelenti azt, hogy nem volt teendő.'
+    support_partial: 'A tartomány egy része kívül esik a támogatott adóéveken (első
+      támogatott év: {floor}). Ez a rész nem mutat dátumokat, de ez nem jelenti azt,
+      hogy nincs teendő.'
+    support_partial_bounded: 'A tartomány egy része kívül esik a támogatott adóéveken
+      (támogatott évek: {floor}–{ceiling}). Ez a rész nem mutat dátumokat, de ez nem
+      jelenti azt, hogy nincs teendő.'
+    support_projected: A {horizon} utáni adóévek dátumai a szabályok legújabb kiadásából
+      előre vetített értékek.
     suppressed: Nem szerepel a naptáradban
     title: Bevallási naptár
     to_day: 'Ugrás ide: {date}'
