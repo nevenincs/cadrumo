@@ -13,6 +13,7 @@ from ...core.hashing import content_hash_hex
 from ...core.operations import OperationLifecycle
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from .capabilities import OperationRequestStoragePolicy
+from .lifecycle_timing import log_operation_timing
 from .models import OperationId, OperationIdentity, OperationRequest, new_operation_id
 from .operation_definition import OperationDefinition
 from .persistence.idempotency import OperationIdempotencyClaim
@@ -197,6 +198,8 @@ class SupervisorSubmissionMixin(SupervisorHost):
             raise
         if created_operation_id != identity.operation_id:
             await self._release_exact_lease(lease, observed_at=self._clock())
+        else:
+            log_operation_timing(identity, "admitted")
         return created_operation_id
 
 
