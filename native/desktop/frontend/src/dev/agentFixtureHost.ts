@@ -32,6 +32,7 @@ import type {
   AgentLocalPlacement,
 } from "../ipc/contract";
 import {
+  catalogsUnderEngine,
   FIXTURE_CATALOG,
   FIXTURE_DECLARED_CATALOG,
   withEngineHealth,
@@ -988,21 +989,23 @@ export function fixtureAgent({
       if (catalogBusy) throw coded("agent_service_busy");
       say("agentProviderCatalogResolved");
       // A lane turned off in the settings is not offered, as the service
-      // leaves it out of the catalog it serves.
+      // leaves it out of the catalog it serves; nor is the keyless lane of a
+      // local engine other than the one the engine record selects.
       const off = turnedOff();
+      const { served: scoped, declared } = catalogsUnderEngine(engine.engine);
       if (catalogDeclared)
         return {
-          ...FIXTURE_DECLARED_CATALOG,
+          ...declared,
           catalog: {
-            ...FIXTURE_DECLARED_CATALOG.catalog,
-            providers: (
-              FIXTURE_DECLARED_CATALOG.catalog.providers ?? []
-            ).filter((lane) => !off.has(lane.id)),
+            ...declared.catalog,
+            providers: (declared.catalog.providers ?? []).filter(
+              (lane) => !off.has(lane.id),
+            ),
           },
         };
       const served = {
-        ...FIXTURE_CATALOG,
-        providers: (FIXTURE_CATALOG.providers ?? []).filter((lane) => {
+        ...scoped,
+        providers: (scoped.providers ?? []).filter((lane) => {
           const id = `${lane.provider_id}_${lane.transport}`;
           return (
             !off.has(id) &&
