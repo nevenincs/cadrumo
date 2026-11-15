@@ -68,26 +68,58 @@ def _folders(path: Path) -> list[Path]:
         return []
 
 
+def _profile_ids_in(root: Path) -> set[str]:
+    """The profile ids named by the ``keystore`` and ``buckets`` folders directly inside ``root``."""
+    return {
+        child.name.lower()
+        for folder in ("keystore", "buckets")
+        for child in _folders(root / folder)
+        if _UUID.match(child.name.lower())
+    }
+
+
+def _storage_roots(root: Path) -> list[Path]:
+    """``root`` and the folders below it, to a bounded depth, that a storage root could be."""
+    found: list[Path] = []
+    stack = [(root, 0)]
+    while stack:
+        path, level = stack.pop()
+        if path.name in _SKIPPED:
+            continue
+        found.append(path)
+        if level < _ROOT_DEPTH:
+            stack.extend((child, level + 1) for child in _folders(path) if child.name not in {"keystore", "buckets"})
+    return found
+
+
 def owned_profile_ids(roots: Iterable[Path]) -> frozenset[str]:
     """The profile ids (``keystore`` and ``buckets`` folder names) of ``roots`` and of the storage roots under them."""
     found: set[str] = set()
     for root in roots:
-        stack = [(root, 0)]
-        while stack:
-            path, level = stack.pop()
-            if path.name in _SKIPPED:
-                continue
-            for folder in ("keystore", "buckets"):
-                found.update(child.name.lower() for child in _folders(path / folder) if _UUID.match(child.name.lower()))
-            if level < _ROOT_DEPTH:
-                stack.extend(
-                    (child, level + 1) for child in _folders(path) if child.name not in {"keystore", "buckets"}
-                )
+        for storage_root in _storage_roots(root):
+            found.update(_profile_ids_in(storage_root))
     return frozenset(found)
 
 
+def _report_check(added: list[str], owned: frozenset[str], present: int) -> int:
+    """Print the added entries by whose they are, and return the exit code: 1 only for the run's own."""
+    mine = [target for target in added if target.split(":", 1)[0].lower() in owned]
+    others = [target for target in added if target not in mine]
+    if others:
+        print(f"credential guard: {len(others)} added entries are not this run's (other roots), listed only:")
+        for target in others:
+            print(f"  {target}")
+    if mine:
+        print(f"credential guard: {len(mine)} profile-session entries left behind by the run:", file=sys.stderr)
+        for target in mine:
+            print(f"  {target}", file=sys.stderr)
+        return 1
+    print(f"credential guard: no profile-session entry of the run's own roots left behind ({present} present)")
+    return 0
+
+
 def main(argv: Sequence[str] | None = None) -> int:
-    """``snapshot FILE`` writes the current entries; ``check FILE`` exits 1 naming the entries added since."""
+    """``snapshot FILE`` writes the current entries; ``check FILE`` exits 1 naming the run's own entries added since."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("action", choices=("snapshot", "check"))
     parser.add_argument("file", type=Path)
@@ -102,21 +134,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(f"credential guard: {len(now)} profile-session entries recorded")
         return 0
     before = json.loads(arguments.file.read_text(encoding="utf-8"))
-    added = leaked(before, now)
-    owned = owned_profile_ids(arguments.own_roots)
-    mine = [target for target in added if target.split(":", 1)[0].lower() in owned]
-    others = [target for target in added if target not in mine]
-    if others:
-        print(f"credential guard: {len(others)} added entries are not this run's (other roots), listed only:")
-        for target in others:
-            print(f"  {target}")
-    if mine:
-        print(f"credential guard: {len(mine)} profile-session entries left behind by the run:", file=sys.stderr)
-        for target in mine:
-            print(f"  {target}", file=sys.stderr)
-        return 1
-    print(f"credential guard: no profile-session entry of the run's own roots left behind ({len(now)} present)")
-    return 0
+    return _report_check(leaked(before, now), owned_profile_ids(arguments.own_roots), len(now))
 
 
 if __name__ == "__main__":
