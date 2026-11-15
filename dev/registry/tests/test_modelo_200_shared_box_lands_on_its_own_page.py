@@ -4,8 +4,13 @@ The record designs print one box number on several pages with a different meanin
 on each: ``[00009]`` is "Entidad dominante de grupo fiscal" on DP200001 and also a
 bases imponibles negativas cohort on DP200015; ``[00017]`` is "Cooperativa
 protegida" on DP200001 and also a cooperativas cuota-compensation cohort on
-DP200022. A value the taxpayer states for the DP200001 flag must reach the DP200001
-cell and nothing else. These tests run the real ``build_draft`` then
+DP200022; ``[00088]``, ``[00089]`` and ``[00090]`` are identification flags on
+DP200001 and also the three cells of the Festival Porta Ferrada deduction row on
+the deducciones page. A value the taxpayer states for the DP200001 flag must reach
+the DP200001 cell and nothing else, and a stated deduction amount must reach its own
+deduction cell and leave the flag of the same number alone, although it does feed
+the deduction totals the design derives from it. These tests run the real
+``build_draft`` then
 ``export_draft`` path for every year a filing-grade Modelo 200 edition serves, and
 compare the fichero against the one exported with the box never supplied: the only
 bytes that may change are the flag's own cell.
@@ -49,7 +54,25 @@ _M200 = "200"
 
 # Each flag's continuity identity, the record sheet whose design prints it as that
 # flag, and the byte the design gives a selected flag (DP200001, type Num, length 1).
-_FLAGS = (pytest.param("is-entidad-dominante-de-grupo-fiscal", "DP200001", id="00009-entidad-dominante"),)
+_FLAGS = (
+    pytest.param("is-entidad-dominante-de-grupo-fiscal", "DP200001", id="00009-entidad-dominante"),
+    pytest.param(
+        "is-participe-de-agrupacion-de-interes-economico-o-de-union-temporal-de-empresas",
+        "DP200001",
+        id="00089-participe-aie-ute",
+    ),
+    pytest.param("is-opcion-art-39-3-lis", "DP200001", id="00090-opcion-art-39-3"),
+)
+# The Festival Porta Ferrada deduction row, whose three boxes repeat the identification
+# page's [00088], [00089] and [00090]. Only the editions with an export layout are
+# exercised here, and their designs print the row on DP200018; the 2023 design prints it
+# on DP200018B, which that edition declares under its own ids.
+_PORTA_FERRADA = (
+    pytest.param("is-deduccion-porta-ferrada-pendiente-generada", "DP200018", id="00088-porta-ferrada-pendiente"),
+    pytest.param("is-deduccion-porta-ferrada-aplicado-periodo", "DP200018", id="00089-porta-ferrada-aplicado"),
+    pytest.param("is-deduccion-porta-ferrada-pendiente-futuro", "DP200018", id="00090-porta-ferrada-futuro"),
+)
+_PORTA_FERRADA_AMOUNT = Decimal("1234.56")
 _COOPERATIVA_PROTEGIDA = "is-cooperativa-protegida"
 # The liquidación boxes a protected cooperative's unsupported cuota leaves unrendered.
 _UNSUPPORTED_COOPERATIVE_CUOTA = (
@@ -174,6 +197,35 @@ def test_a_stated_flag_lands_only_in_its_own_page_cell(year: int, continuidad_id
     assert len(stated) == len(absent)
     changed = [index for index, (left, right) in enumerate(zip(absent, stated, strict=True)) if left != right]
     assert changed == [position]
+
+
+@pytest.mark.parametrize("year", _YEARS)
+@pytest.mark.parametrize(("continuidad_id", "sheet"), _PORTA_FERRADA)
+def test_a_stated_porta_ferrada_amount_lands_in_its_own_cell_and_not_in_the_flag_of_the_same_number(
+    year: int, continuidad_id: str, sheet: str
+) -> None:
+    absent, revision = _export(year, {})
+    casilla_id = _casilla_id(revision, continuidad_id)
+    (cell,) = _cells(revision, casilla_id)
+    assert f".{sheet.lower()}." in str(cell.id)
+    assert cell.offset is not None and cell.length == 17
+    # The identification flag the same printed number names on page one.
+    number = str(next(casilla for casilla in revision.casillas if str(casilla.id) == casilla_id).number)
+    (flag_cell,) = _cells(revision, f"DP200001:{number}")
+    assert flag_cell.offset is not None and flag_cell.length == 1
+
+    stated, _ = _export(year, {casilla_id: _PORTA_FERRADA_AMOUNT})
+
+    assert len(stated) == len(absent)
+    start, _line = _record_line(stated, revision, sheet)
+    position = start + cell.offset - 1
+    assert absent[position : position + cell.length] == b"00000000000000000"
+    assert stated[position : position + cell.length] == b"00000000000123456"
+    flag_start, _flag_line = _record_line(stated, revision, "DP200001")
+    flag_position = flag_start + flag_cell.offset - 1
+    assert stated[flag_position : flag_position + flag_cell.length] == absent[flag_position : flag_position + 1]
+    changed = {index for index, (left, right) in enumerate(zip(absent, stated, strict=True)) if left != right}
+    assert flag_position not in changed
 
 
 @pytest.mark.parametrize("year", _YEARS)

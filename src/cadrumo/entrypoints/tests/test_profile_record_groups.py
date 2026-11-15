@@ -492,6 +492,10 @@ def test_the_profile_field_view_marks_each_field_that_names_another_sections_row
         f"{INMUEBLE_SECTION}.{world.principal}.inmueble_principal": INMUEBLE_SECTION,
         f"{INMUEBLE_SECTION}.{world.accessory}.inmueble_principal": INMUEBLE_SECTION,
         f"{ARRENDAMIENTO_SECTION}.{world.lease}.inmueble": INMUEBLE_SECTION,
+        # The Modelo 840 IAE sections are empty here, so the view shows their unfilled fields, references included.
+        "iae_elemento_tributario.actividad": "activities",
+        "iae_local.actividad": "activities",
+        "iae_local_superficie.local": "iae_local",
     }
 
 
