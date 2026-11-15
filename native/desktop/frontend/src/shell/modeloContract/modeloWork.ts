@@ -42,10 +42,10 @@ import type {
   SourceDisagreementRole,
   SourceRefId,
   TransactionId,
-  VerificationReportId,
+  VerificationCompletenessStatus,
   WorkUnitId,
 } from "./modelo";
-import type { BindingId } from "./modeloEditWork";
+import type { BindingId, ModeloFormAddressV1 } from "./modeloEditWork";
 
 /**
  * Every current canonical diagnostic field, with no open-ended wire payload.
@@ -433,14 +433,6 @@ export type ModeloCalculationObservationSnapshot = {
   absent_by_design: boolean;
 };
 
-export type ModeloCalculationRevisionDefault = "verify" | "file" | "export";
-
-/**
- * Closed selector set for calculation revisions under a work unit.
- */
-export type ModeloCalculationRevisionSelector =
-  "current" | "latest-draft" | "latest-verified" | "filed" | "explicit";
-
 /**
  * Public calculation facts, pinned to the exact parent and registry revision.
  */
@@ -573,6 +565,11 @@ export type ModeloFormAvailability = {
 };
 
 /**
+ * Why nothing on the form may be edited, whatever the edit admission says.
+ */
+export type ModeloFormEditClosure = "recorded_as_filed";
+
+/**
  * One declaration-shaping choice an export asks.
  */
 export type ModeloFormElection =
@@ -654,9 +651,29 @@ export type ModeloFormFiling = {
 };
 
 /**
+ * The first box that needs the filer, on a page that applies this period.
+ */
+export type ModeloFormFirstAttention = {
+  address: ModeloFormAddressV1;
+  page_id: string | null;
+};
+
+/**
  * One instalment of an amount to pay in two.
  */
 export type ModeloFormInstalment = "first" | "second";
+
+/**
+ * The journey's state, the next action it offers, and where the filer starts.
+ */
+export type ModeloFormJourney = {
+  steps: ModeloFormStepState[];
+  steps_while_changes_held: ModeloFormStepState[];
+  next_step: ModeloFormNextStep;
+  held_prerequisite_next_step: ModeloFormNextStep;
+  first_attention: ModeloFormFirstAttention | null;
+  verdict: ModeloFormVerdict;
+};
 
 /**
  * The one action a form offers the filer next.
@@ -673,6 +690,18 @@ export type ModeloFormNextAction =
   | "export_again"
   | "record_after_file"
   | "recorded";
+
+/**
+ * The next action, what it counts, and the dates its words name.
+ */
+export type ModeloFormNextStep = {
+  action: ModeloFormNextAction;
+  count: number;
+  findings_lead: boolean;
+  recorded_at: string | null;
+  file_created_at: string | null;
+  receipt_to_add: boolean;
+};
 
 /**
  * Whether the AEAT receipt of the recorded filing has been verified, and when.
@@ -739,6 +768,24 @@ export type ModeloFormReviewPackageOffer = {
 };
 
 /**
+ * The steps of filing one declaration, in order.
+ */
+export type ModeloFormStep = "fill" | "calculate" | "review" | "file";
+
+/**
+ * One step and how far it has got.
+ */
+export type ModeloFormStepState = {
+  step: ModeloFormStep;
+  status: ModeloFormStepStatus;
+};
+
+/**
+ * How far one step has got.
+ */
+export type ModeloFormStepStatus = "done" | "current" | "blocked" | "pending";
+
+/**
  * Why an export, or recording the filing, cannot be done now.
  */
 export type ModeloFormUnavailable =
@@ -748,6 +795,21 @@ export type ModeloFormUnavailable =
   | "confirm"
   | "file_out_of_date"
   | "recorded";
+
+/**
+ * What the last check concluded about the declaration, in the form's language.
+ *
+ * `status` is `None` when the declaration has not been checked.
+ * `unapplied_words` replaces `words` while a frontend holds changes not yet
+ * applied, and exists only after a check that passed.
+ */
+export type ModeloFormVerdict = {
+  status: VerificationCompletenessStatus | null;
+  words: string;
+  unapplied_words: string | null;
+  checked_words: string | null;
+  checked_resolves: boolean;
+};
 
 /**
  * What kind of caller-supplied statement a calculation head recorded.
@@ -960,43 +1022,6 @@ export type ModeloWorkDeadlinePostureSnapshot = {
 };
 
 /**
- * The exact unit an operator approved for discard.
- *
- * Discard is destructive, so approval is bound to a state rather than to an
- * id: the unit must still be the one that was shown. Carrying the observed
- * `updated_at` is what makes a stale approval refusable instead of silently
- * discarding a unit that moved after the operator looked at it.
- */
-export type ModeloWorkDiscardBaseline = {
-  work_unit_id: string;
-  name: string;
-  observed_updated_at: string;
-};
-
-/**
- * The committed discard and its writer-returned private metadata snapshot.
- */
-export type ModeloWorkDiscardPublicResultV2 = {
-  result_version: 2;
-  work_unit_id: string;
-  bucket_id: string;
-  discarded: true;
-  unit: ModeloWorkMetadataSnapshot;
-};
-
-/**
- * The approved unit and the reason recorded against its discard.
- *
- * `actor` is recorded as sent for a person's session. An automation's session
- * is recorded under its own session label, whatever the request carries.
- */
-export type ModeloWorkDiscardRequest = {
-  baseline: ModeloWorkDiscardBaseline;
-  reason?: string | null;
-  actor: string;
-};
-
-/**
  * The selected canonical filing and its exact owning work unit.
  */
 export type ModeloWorkFilingRecordProjection = {
@@ -1148,34 +1173,6 @@ export type ModeloWorkRenameRequest = {
   observed_name: string;
   observed_updated_at: string;
   actor: string;
-};
-
-/**
- * Bounded selection and existing granting report, without financial values.
- */
-export type ModeloWorkRevisionProjection = {
-  result_version: 1;
-  profile_id: string;
-  unit: ModeloWorkMetadataSnapshot;
-  calculation_revision_id: CalculationRevisionId;
-  calculation_state: CalculationRevisionState;
-  verification_report_id: VerificationReportId | null;
-  granted_verificado_completo: boolean;
-};
-
-/**
- * Exact or natural work address and canonical calculation-revision pick.
- */
-export type ModeloWorkRevisionRequest = {
-  profile_id: string;
-  calculation_revision_id?: CalculationRevisionId | null;
-  work_unit_id?: string | null;
-  modelo?: string | null;
-  year?: number | null;
-  period?: PublicPeriod | null;
-  revision?: RevisionId | null;
-  selector?: ModeloCalculationRevisionSelector;
-  default_for?: ModeloCalculationRevisionDefault | null;
 };
 
 /**

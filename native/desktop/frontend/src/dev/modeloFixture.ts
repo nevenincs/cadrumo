@@ -1148,6 +1148,11 @@ export function modeloFixture(options: Options): ModeloPort {
               modelo: whole.form.form.modelo,
               period: whole.form.form.period,
               filing: whole.form.form.filing,
+              filed: whole.form.filed,
+              edit_closure: whole.form.form.edit_closure,
+              journey: whole.form.journey,
+              rules_incomplete: whole.rules_incomplete,
+              next_step: whole.next_step,
               header: {
                 result: whole.header.result,
                 file: whole.header.file,
