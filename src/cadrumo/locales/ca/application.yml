@@ -3339,10 +3339,13 @@ application:
       m390_attestation_period_year_differs: El període de l'atestació d'aplicabilitat
         del Modelo 390 pertany a l'any %{period_year}, però l'atestació és de l'exercici
         de presentació %{filing_year}. Usa un període d'aquest exercici.
-      m840_anexo_activities_ambiguous: 'Model %{modelo} %{filing_year}: els locals
-        on s''exerceixen activitats pertanyen a més d''una activitat (%{activities}),
-        però un Model 840 declara una sola activitat. Revisa quina activitat indica
-        cada local a %{profile_section}.'
+      m840_anexo_activities_ambiguous: 'Model %{modelo} %{filing_year}: les dades
+        del Model 840 a %{profile_section} pertanyen a més d''una activitat (%{activities}),
+        però un Model 840 declara una sola activitat. Revisa a quina activitat pertany
+        cadascuna d''aquestes files.'
+      m840_apartado_locales_ambiguous: 'Model %{modelo} %{filing_year}: l''apartat
+        %{apartado} descriu un sol local, però el teu perfil l''indica per a més d''un
+        local de l''activitat %{activity} (%{locales}). Revisa les files de %{profile_section}.'
       novel_source_kind_rejected: 'Tipus d''origen de càlcul no reconegut(s) %{novel_source_kinds}
         a la versió %{revision_id}: les definicions del model declaren un origen de
         valor que cap resolutor de càlcul gestiona. Afegeix un resolutor o marca''l
