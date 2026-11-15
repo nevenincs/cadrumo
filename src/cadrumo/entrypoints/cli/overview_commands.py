@@ -216,6 +216,7 @@ def overview_calendar(
             typed, lines, notices = overview_calendar_output(
                 calendar,
                 calendar.range,
+                support=payload.calendar.support,
                 evidence_notices=tuple(_notice(row) for row in payload.notices),
                 deemed_served_legal_ref=payload.deemed_served_legal_ref,
             )
@@ -394,6 +395,7 @@ def _overview_calendar_survey_output(
             bucket_id=survey.active_profile_id,
             label=survey.active_label,
             cal=calendar,
+            support=survey.active_calendar.support,
             deemed_served_legal_ref=payload.deemed_served_legal_ref,
         )
         profiles.append(profile)

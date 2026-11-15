@@ -31,6 +31,7 @@ from typing import ClassVar, Literal, Self
 from pydantic import ConfigDict, NonNegativeInt, model_validator
 
 from ...application.operator_actions.models import ActionReference
+from ...application.overview.calendar_envelope import OverviewCalendarSupport, OverviewCalendarSupportState
 from ...application.overview.calendar_models import (
     OverviewAeatSubmissionState,
     OverviewAeatSubmissionStateValue,
@@ -332,6 +333,7 @@ class OverviewCalendarProfilePayload(OutputSchema):
     event_count: int
     warning_count: int
     suppressed_entry_count: int
+    support_state: OverviewCalendarSupportState
     next_due_modelo: str | None = None
     next_due_period: str | None = None
     next_due_closes_on: str | None = None
@@ -396,12 +398,15 @@ class OverviewCalendarResult(OutputSchema):
     suppressed_entries: list[OverviewSuppressedCalendarEntryPayload] = []
     profiles: list[OverviewCalendarProfilePayload] = []
     coverage: OverviewObligationCoveragePayload | None = None
+    support: OverviewCalendarSupport | None = None
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _require_single_profile_coverage(self) -> Self:
         if self.range is not None and self.coverage is None:
             raise ValueError("single-profile calendar results must include obligation coverage")
+        if self.range is not None and self.support is None:
+            raise ValueError("single-profile calendar results must include the filing-year support")
         return self
 
 

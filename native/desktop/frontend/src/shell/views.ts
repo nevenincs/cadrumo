@@ -12,6 +12,7 @@ import type {
   OverviewCalendarEntrySnapshot,
   OverviewCalendarEventSnapshot,
   OverviewCalendarRange,
+  OverviewCalendarSupport,
   OverviewCalendarWarningSnapshot,
   OverviewFilingEvidenceSnapshot,
   OverviewSuppressedEntrySnapshot,
@@ -92,6 +93,10 @@ export type FilingCalendar = {
    * where the host did not ask for them or pass them on; an empty list is
    * the read saying there are none. */
   suppressed_entries?: CalendarSuppressedEntry[];
+  /** The filing-year envelope the read was served under and where the
+   * range sits in it, as served. Left out or null where the host does not
+   * pass it on: the page then draws the calendar as supported. */
+  support?: OverviewCalendarSupport | null;
 };
 
 /** What the last capture of the tax agency's notifications held, as counts.
