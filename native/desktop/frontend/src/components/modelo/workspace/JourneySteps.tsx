@@ -3,7 +3,7 @@ import { Icon, type IconName } from "@/components/ui/icon";
 import type {
   ModeloFormStepState,
   ModeloFormStepStatus,
-} from "../../../shell/modeloContract/modeloWorkForm";
+} from "../../../shell/modeloContract/modeloWork";
 import { useStrings } from "../../../shell/strings";
 
 // The steps of filing one declaration and how far each has got, as the read
