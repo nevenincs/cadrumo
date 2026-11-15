@@ -5,7 +5,7 @@ tags:
 date: '2026-11-14'
 modified: '2026-11-15'
 body_schema: 'body-v2'
-body_hash: 'sha256:741d0ecacedf9ec2b4344dfafd512d7b035e7c71c2e58332e450ddd6c5469e5d'
+body_hash: 'sha256:08c204d1c3758bde2f295a833a0bf791db2eb87283ef7f26c601c9f22eb35ca2'
 related:
   - "[[2026-11-14-source-casilla-integration-plan]]"
 ---
@@ -75,3 +75,18 @@ related:
 - `S07` `M` `src/cadrumo/application/filing/tests/test_m840_anexo_sheets.py`
 - `S07` `M` `src/cadrumo/_data/registry/aeat/modelos/840/revisions/2003-y-siguientes/export`
 - `S07` `verify:` `pytest src/cadrumo/application/filing/tests/test_m840_export_round_trip.py` -> `pass`
+- `S04` `M` `dev/registry/mappings/modelo_840/2003/0001-records.toml`
+- `S04` `M` `dev/registry/mappings/modelo_840/2003/0004-anexo.toml`
+- `S04` `M` `src/cadrumo/_data/registry/aeat/modelos/840/revisions/2003-y-siguientes/casillas/0001-declarations.toml`
+- `S04` `M` `src/cadrumo/_data/registry/aeat/modelos/840/revisions/2003-y-siguientes/constructs/0001-declarations.toml`
+- `S04` `M` `src/cadrumo/_data/registry/aeat/modelos/840/revisions/2003-y-siguientes/export/0005-record-m840-anexo.toml`
+- `S04` `M` `src/cadrumo/_data/registry/aeat/modelos/840/revisions/2003-y-siguientes/export/0006-record-m840-anexo.toml`
+- `S04` `M` `src/cadrumo/_data/registry/aeat/modelos/840/revisions/2003-y-siguientes/export/0007-record-m840-anexo.toml`
+- `S04` `M` `src/cadrumo/_data/registry/aeat/modelos/840/revisions/2003-y-siguientes/export/_generation.provenance.json`
+- `S04` `M` `src/cadrumo/_data/registry/aeat/modelos/840/revisions/2003-y-siguientes/form_layouts/0001-form-layout.toml`
+- `S04` `M` `src/cadrumo/_data/registry/aeat/modelos/840/revisions/2003-y-siguientes/projection_endpoints/0001-declarations.toml`
+- `S04` `M` `src/cadrumo/application/filing/tests/test_m840_anexo_sheets.py`
+- `S04` `M` `src/cadrumo/core/filing_producer_key.py`
+- `S04` `M` `src/cadrumo/core/filing_projection_m840.py`
+- `S04` `M` `src/cadrumo/core/filing_projection_ref.py`
+- `S04` `verify:` `test_m840_anexo_sheets` -> `pass`
