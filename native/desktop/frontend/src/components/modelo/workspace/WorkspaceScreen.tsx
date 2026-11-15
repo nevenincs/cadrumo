@@ -151,9 +151,9 @@ function Ready({
   /** Reads the declaration again; false when the read failed and the one
    * shown stays. */
   reread(): Promise<boolean>;
-  /** Reads what the Export and record view rests on, and the whole
-   * declaration behind it with `whole`; false when it failed. */
-  rereadFiling(whole?: boolean): Promise<boolean>;
+  /** Reads what the Export and record view and the header rest on; false
+   * when it failed. */
+  rereadFiling(): Promise<boolean>;
   onBack(): void;
   onOpenSurface(surface: OpenableSurface): void;
   canOpenSurface: (surface: OpenableSurface) => boolean;
