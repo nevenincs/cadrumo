@@ -264,10 +264,15 @@ def _numbered_line_break_bytes(sheet: RecordDesignSheet, record: ExportRecordDef
     if not width or not sheet.fields or not record.fields:
         return set()
     row = sheet.fields[-1]
-    fields_end = max((field.offset or 0) + (field.length or 0) for field in record.fields)
-    if row.length != width or row.offset != fields_end or not is_record_terminator_caption(row.description or ""):
+    if not _closes_the_record(row, record, width):
         return set()
-    return set(range(row.offset, row.offset + row.length))
+    return set(range(row.offset or 0, (row.offset or 0) + width))
+
+
+def _closes_the_record(row: RecordDesignField, record: ExportRecordDefinition, width: int) -> bool:
+    """Whether the design row is a line-break caption of ``width`` bytes right after the record's last field."""
+    fields_end = max((field.offset or 0) + (field.length or 0) for field in record.fields)
+    return row.length == width and row.offset == fields_end and is_record_terminator_caption(row.description or "")
 
 
 def joined_variable_header_coverage_inputs(
