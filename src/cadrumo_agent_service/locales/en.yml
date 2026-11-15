@@ -382,6 +382,7 @@ desktop:
     refresh: Try again
     refused_base_url_rejected: Check the server address and try again.
     refused_invalid_key_format: That doesn't look like a key for this provider.
+    refused_model_list_full: 'The model list is full. Remove a model before adding another.'
     refused_not_signed_in: Sign in to change these settings.
     refused_person_act_required: Only you can change these settings, from this window.
     refused_profile_locked: Unlock your profile to change these settings.
@@ -405,6 +406,7 @@ desktop:
     sign_in_cancelled: Sign-in was cancelled.
     sign_in_cause:
       agent_stop_failed: The agent couldn't be stopped to finish the sign-in.
+      agent_tree_running: 'The agent was still running, so the sign-in couldn''t start.'
       browser_relay_unavailable: The sign-in page couldn't be passed on to your browser.
       cleanup_unconfirmed: It couldn't be confirmed that the sign-in closed cleanly.
       cli_exited_early: The provider's app stopped before the sign-in finished.
@@ -423,8 +425,11 @@ desktop:
       host_disconnected: Contact with the sign-in was lost while it was running.
       host_input_invalid: The sign-in was given an input it couldn't use.
       internal_error: The sign-in hit an internal error.
+      lane_not_signable: 'This provider can''t be signed in to from here.'
       login_already_running: Another sign-in is already running for this profile.
       login_not_completed: The sign-in wasn't completed.
+      prepare_failed: 'The sign-in couldn''t be prepared.'
+      previous_cleanup_unconfirmed: 'It couldn''t be confirmed that the previous sign-in closed cleanly.'
       probe_cleanup_unconfirmed: It couldn't be confirmed that the check of the provider's
         sign-in closed cleanly.
       probe_output_unreadable: The check of the provider's sign-in gave an answer
@@ -432,6 +437,11 @@ desktop:
       probe_start_failed: The check of the provider's sign-in couldn't be started.
       probe_timed_out: The check of the provider's sign-in took too long.
       profile_missing: The profile for this sign-in couldn't be found.
+      profile_signed_out: 'Your profile was signed out during the sign-in.'
+      settings_change_failed: 'The provider settings couldn''t be saved.'
+      settings_refused: 'The provider settings refused the change.'
+      sign_in_in_progress: 'Another sign-in to this provider was already running.'
+      sign_in_owner_held: 'Another window was signing in to this provider.'
       status_context_unavailable: There was no open profile to check the sign-in against.
       status_not_confirmed: The sign-in finished, but it couldn't be confirmed that
         you're signed in.
