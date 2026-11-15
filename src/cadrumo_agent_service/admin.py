@@ -65,6 +65,7 @@ type AdminAction = Literal[
     "attachment_grants",
     "attachment_grant_revoke",
     "attachment_conversation_forget",
+    "console_environment",
 ]
 
 
