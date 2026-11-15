@@ -10,12 +10,17 @@ import pytest
 from click.testing import Result
 
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
+from cadrumo.adapters.persistence.profile.tests.retencion_soportada_seed import seed_payer_certificate
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import bound_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
     isolated_cli_backend,
 )
 from cadrumo.application.user_profile.language_resolver import mirror_profile_output_language_hint
 from cadrumo.core.config import load_settings
 from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.core.retencion_soportada import RetencionSoportadaClase
+from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 from cadrumo.tests.cli_envelope import unwrap_schema_envelope
 from cadrumo_runtime.host.tests.frontend.cli.config.tests.isolated_storage_fixture import native_profile_view_server
@@ -182,6 +187,20 @@ def test_no_business_landlord_can_create_m100_while_quarterly_activity_modelos_r
         log_in=False,
     )
     mirror_profile_output_language_hint(profile_id, OutputLanguage.EN)
+    # The newest authored Renta edition, a closed exercise the registry calculates at filing grade.
+    exercise = str(newest_authored_edition("100"))
+    # A retirement pension is work income (LIRPF art. 17.2.a), so its gross reaches box 0003 from the
+    # payer's certificate, never from a typed casilla.
+    with bound_test_profile_record(profile_id):
+        seed_payer_certificate(
+            operation=published_authority_operation(),
+            taxpayer_tax_id="12345678Z",
+            ejercicio=int(exercise),
+            payer_tax_id="B00010082",
+            income_class=RetencionSoportadaClase.TRABAJO,
+            retencion=Decimal("2700"),
+            importe_integro_dinerario=Decimal("27000"),
+        )
 
     with native_profile_view_server(load_settings().cadrumo_storage_root):
         validate = invoke_protected_profile("pere-landlord", "validate", "pere-landlord")
@@ -217,7 +236,7 @@ def test_no_business_landlord_can_create_m100_while_quarterly_activity_modelos_r
             "pere-landlord",
             [
                 "app", "modelo", "readiness",
-                "--modelo", "100", "--revision-id", "2025", "--year", "2025", "--period", "0A",
+                "--modelo", "100", "--revision-id", exercise, "--year", exercise, "--period", "0A",
             ],
         )  # fmt: skip
         assert readiness.exit_code == 2, readiness.output
@@ -227,8 +246,8 @@ def test_no_business_landlord_can_create_m100_while_quarterly_activity_modelos_r
             "pere-landlord",
             [
                 "app", "modelo", "work", "create",
-                "--modelo", "100", "--year", "2025", "--period", "0A",
-                "--name", "Pere renta 2025", "--by", "continuity-test",
+                "--modelo", "100", "--year", exercise, "--period", "0A",
+                "--name", f"Pere renta {exercise}", "--by", "continuity-test",
             ],
         )  # fmt: skip
         assert renta.exit_code == 0, renta.output
@@ -238,8 +257,8 @@ def test_no_business_landlord_can_create_m100_while_quarterly_activity_modelos_r
             "pere-landlord",
             [
                 "--format", "json", "app", "modelo", "work", "calculate",
-                "--modelo", "100", "--year", "2025", "--period", "0A",
-                "--casilla", "0003=27000", "--casilla", "0102=8400",
+                "--modelo", "100", "--year", exercise, "--period", "0A",
+                "--casilla", "0102=8400",
                 "--binding", "renta-base-liquidable-negativa-general-anterior=0",
                 "--binding", "renta-base-liquidable-negativa-general-em4-pendiente-inicio=0",
                 "--binding", "renta-saldo-negativo-gyp-ahorro-em4-pendiente-inicio=0",
@@ -343,7 +362,6 @@ def test_economic_activity_m100_derives_the_direct_estimation_modality_from_the_
             [
                 "app", "modelo", "work", "calculate",
                 "--modelo", "100", "--year", "2025", "--period", "0A",
-                "--casilla", "0003=27000",
                 "--binding", "renta-base-liquidable-negativa-general-anterior=0",
                 "--binding", "renta-base-liquidable-negativa-general-em4-pendiente-inicio=0",
                 "--binding", "renta-saldo-negativo-gyp-ahorro-em4-pendiente-inicio=0",
