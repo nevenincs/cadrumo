@@ -46,7 +46,7 @@ from ..user_profile.projections import record_to_path_values
 from .calculation_preparation import ledger_hold_words, ledger_preflight_hold
 from .casilla_help import ModeloCasillaHelpCardV1, build_casilla_help_card
 from .credit_resolution_repository import CreditResolutionReader
-from .edit_admission import admit_modelo_edit_baseline
+from .edit_admission import admit_modelo_edit_baseline, modelo_edit_ground
 from .edit_models import ModeloEditAdmissionResultV1, ModeloEditRefusedV1
 from .edit_refusal_projection import ModeloEditCalculationPrerequisiteV1
 from .edit_review_wording import edit_refusal_words
@@ -83,6 +83,7 @@ if TYPE_CHECKING:
         ModeloRecordCatalogueRepositoryProtocol,
         VerificationReportCatalogueRepositoryProtocol,
     )
+    from ...domain.modelos.work_unit import WorkUnitCatalogue
     from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
     from ...domain.transactions.own_accounts import OwnAccountRegister
     from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
@@ -205,8 +206,7 @@ class ModeloWorkbenchFormReadV1:
     @property
     def receipt_confirmed(self) -> bool | None:
         """Whether the recorded filing's AEAT receipt is verified; ``None`` when nothing is recorded or read."""
-        receipt = self.receipt
-        return None if receipt is None else receipt.verified
+        return _receipt_confirmed(self.receipt)
 
     @property
     def rules_incomplete(self) -> bool:
@@ -224,12 +224,7 @@ class ModeloWorkbenchFormReadV1:
     @property
     def next_step(self) -> ModeloFormNextStep | None:
         """The one action the form offers next; ``None`` when the registry rules cannot calculate it at all."""
-        if self.rules_incomplete:
-            return None
-        load = self.load
-        return form_next_step(
-            load.form, verified=load.verified, filed=load.filed, receipt_confirmed=self.receipt_confirmed
-        )
+        return _offered_next_step(self.load, rules_incomplete=self.rules_incomplete, receipt=self.receipt)
 
     @property
     def header(self) -> ModeloFormHeader:
@@ -249,8 +244,27 @@ class ModeloWorkbenchFormReadV1:
         return self.load.journey.verdict
 
 
+def _receipt_confirmed(receipt: ModeloFormReceipt | None) -> bool | None:
+    return None if receipt is None else receipt.verified
+
+
+def _offered_next_step(
+    load: ModeloWorkFormLoadV1, *, rules_incomplete: bool, receipt: ModeloFormReceipt | None
+) -> ModeloFormNextStep | None:
+    """The one action the form offers next, as both workbench reads state it; ``None`` when nothing is calculable."""
+    if rules_incomplete:
+        return None
+    return form_next_step(
+        load.form, verified=load.verified, filed=load.filed, receipt_confirmed=_receipt_confirmed(receipt)
+    )
+
+
 def _work_unit(work_unit_id: str, *, bucket_id: str, ports: ModeloWorkbenchReadPorts) -> WorkUnit:
-    unit = ports.work_units.load().get(work_unit_id)
+    return _owned_work_unit(ports.work_units.load(), work_unit_id, bucket_id=bucket_id)
+
+
+def _owned_work_unit(catalogue: WorkUnitCatalogue, work_unit_id: str, *, bucket_id: str) -> WorkUnit:
+    unit = catalogue.get(work_unit_id)
     if unit is None or unit.bucket_id != bucket_id:
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
     return unit
@@ -263,7 +277,8 @@ class ModeloWorkbenchFilingStateReadV1:
     Every field is the one :class:`ModeloWorkbenchFormReadV1` holds under its
     name, built by the same functions from the same form, so the two reads of
     one stored state agree. It admits no edit baseline: nothing it states
-    depends on what may be edited.
+    depends on what may be edited, and whether the rules reach calculation
+    grade is decided by the admission's own checks without issuing one.
     """
 
     load: ModeloWorkFormLoadV1
@@ -273,12 +288,19 @@ class ModeloWorkbenchFilingStateReadV1:
     export_offer: ModeloFormExportOffer
     #: The recorded filing's AEAT receipt state; ``None`` when the declaration is not recorded as filed.
     receipt: ModeloFormReceipt | None
+    #: Whether the registry rules for the revision stop short of calculation grade, so nothing can be worked out.
+    rules_incomplete: bool
 
     @property
     def header(self) -> ModeloFormFilingHeader:
         """The result, the latest file and the export hold the form's header states, in the form's language."""
         load = self.load
         return form_filing_header(load.form, load.form.language, verified=load.verified, filed=load.filed)
+
+    @property
+    def next_step(self) -> ModeloFormNextStep | None:
+        """The one action the form offers next; ``None`` when the registry rules cannot calculate it at all."""
+        return _offered_next_step(self.load, rules_incomplete=self.rules_incomplete, receipt=self.receipt)
 
 
 @dataclass(frozen=True, slots=True)
@@ -416,16 +438,27 @@ def read_modelo_workbench_filing_state(
 ) -> ModeloWorkbenchFilingStateReadV1:
     """Read the declaration's form and what exporting and recording its filing rest on, admitting no edit.
 
-    The form is the one the form read builds: the export hold, the result and
-    the elections count over its classified boxes. What may be edited never
-    enters those answers, so no edit baseline is admitted.
+    The form is the one the form read builds: the export hold, the result, the
+    next step, the journey and the elections count over its classified boxes.
+    What may be edited never enters those answers, so no edit baseline is
+    admitted. Whether the rules reach calculation grade is the refusal the
+    admission's own ground checks reach, so the next step is withheld exactly
+    where the form read withholds it.
     """
-    unit = _work_unit(work_unit_id, bucket_id=bucket_id, ports=ports)
+    work_catalogue = ports.work_units.load()
+    unit = _owned_work_unit(work_catalogue, work_unit_id, bucket_id=bucket_id)
+    calculation_catalogue = ports.calculations.load(operation=operation)
+    ground = modelo_edit_ground(
+        work_unit_id=work_unit_id,
+        work_catalogue=work_catalogue,
+        calculation_catalogue=calculation_catalogue,
+        operation=operation,
+    )
     loaded = _load_form(
         unit,
         ports=ports,
         operation=operation,
-        calculation_catalogue=ports.calculations.load(operation=operation),
+        calculation_catalogue=calculation_catalogue,
         admission=None,
         language=language,
     )
@@ -436,6 +469,7 @@ def read_modelo_workbench_filing_state(
         verification_report_id=facts.verification_report_id,
         export_offer=facts.export_offer,
         receipt=facts.receipt,
+        rules_incomplete=isinstance(ground, ModeloEditRefusedV1) and registry_grade_refusal(ground),
     )
 
 
