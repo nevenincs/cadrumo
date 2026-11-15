@@ -24,12 +24,14 @@ from cadrumo.domain.contribuyente.entity_type import EntityType
 from cadrumo.domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory, IVARegime, ModeloEnrollment
 
 from ....application.overview.calendar import build_overview_calendar
+from ....application.overview.calendar_envelope import OverviewCalendarSupport
 from ....application.overview.calendar_models import OverviewCalendarRange, OverviewStatusReport
 from ....application.overview.coverage import AdvisedObligation, CoverageAdviceReason, ObligationCoverageReport
 from ....application.overview.next_actions import OverviewStatusNextStepId
 from ....core.i18n.render import lookup_translation
 from ....core.json_contract import Notice, ResolvedNoticeAction
 from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.deadlines.models import TaxpayerProfile
 from ..common import action_text_lines
 from ..overview_rendering import (
@@ -358,7 +360,9 @@ def test_calendar_warning_messages_are_translated_for_simplificado_forfait_gap()
     with bundled_indexed_authority().operation() as operation:
         calendar = build_overview_calendar(profile, rng, operation=operation, today=date(2026, 4, 1))
 
-    _, lines, notices = overview_calendar_output(calendar, rng, evidence_notices=())
+    _, lines, notices = overview_calendar_output(
+        calendar, rng, support=OverviewCalendarSupport.for_range(rng, filing_year_envelope()), evidence_notices=()
+    )
 
     warning_line = next(line for line in lines if line.startswith("warning\tiva.regime.m303_simplificado"))
     assert "cli.overview.warning" not in warning_line
