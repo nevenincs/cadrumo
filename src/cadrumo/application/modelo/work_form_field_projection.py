@@ -45,6 +45,7 @@ from .work_form_field_vocabulary import (
 from .work_form_localization import (
     casilla_help,
     fed_box_label,
+    localized_casilla_label,
     localized_text,
     normalized_help_text,
     unnamed_casilla_label,
@@ -63,7 +64,9 @@ def project_casilla_field(
 ) -> ModeloFormField:
     """Build one classified casilla field."""
     row, casilla = _casilla_source(casilla_id, context)
-    label = localized_text(casilla.localization_keys, context.language) or unnamed_casilla_label(context.language)
+    label = localized_casilla_label(
+        casilla, context.language, ejercicio=context.review.period.filing_year
+    ) or unnamed_casilla_label(context.language)
     required = casilla_id in context.required
     editability, reason = casilla_editability(row, context)
     origin = casilla_origin(row, context, required=required or casilla_id in context.calculation_required.casilla_ids)
@@ -177,7 +180,8 @@ def _binding_presentation(
 def _binding_field_label(
     modelo: str, binding_id: str, casillas: tuple[CasillaDefinition, ...], context: WorkFormContext
 ) -> ModeloFormText:
-    labels = (localized_text(casilla.localization_keys, context.language) for casilla in casillas)
+    ejercicio = context.review.period.filing_year
+    labels = (localized_casilla_label(casilla, context.language, ejercicio=ejercicio) for casilla in casillas)
     return (
         localized_text((binding_locale_key(modelo, binding_id, "label"),), context.language)
         or next((text for text in labels if text is not None), None)

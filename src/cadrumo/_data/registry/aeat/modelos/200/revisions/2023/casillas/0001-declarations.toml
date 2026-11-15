@@ -461,6 +461,7 @@ continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07
 continuidad_id = "public-interest-alimentaria-hostelco-credit-2024-generated"
 # AEAT aeat-dr-200-2024 DP200018 campo 117: fila del acontecimiento alimentaria-hostelco, ejercicio 2024, columna pendiente/generada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01267'
+rotating_year_offset = 0
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
     'deducc_para_incentivar_determ_actividades',
@@ -1444,6 +1445,7 @@ continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07
 continuidad_id = "public-interest-hockey-centenary-credit-2024-generated"
 # AEAT aeat-dr-200-2024 DP200018 campo 129: fila del acontecimiento hockey-centenary, ejercicio 2024, columna pendiente/generada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01903'
+rotating_year_offset = 0
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
     'deducc_para_incentivar_determ_actividades',
@@ -1466,6 +1468,7 @@ continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07
 continuidad_id = "public-interest-hockey-centenary-credit-2024-applied"
 # AEAT aeat-dr-200-2024 DP200018 campo 130: fila del acontecimiento hockey-centenary, ejercicio 2024, columna aplicada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01904'
+rotating_year_offset = 0
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
     'deducc_para_incentivar_determ_actividades',
@@ -1579,6 +1582,7 @@ continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07
 continuidad_id = "public-interest-hockey-centenary-credit-2024-remaining"
 # AEAT aeat-dr-200-2024 DP200018 campo 131: fila del acontecimiento hockey-centenary, ejercicio 2024, columna pendiente futura. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01976'
+rotating_year_offset = 0
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
     'deducc_para_incentivar_determ_actividades',
@@ -1937,6 +1941,7 @@ continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07
 continuidad_id = "public-interest-manifesta-fifteen-credit-2024-generated"
 # AEAT aeat-dr-200-2024 DP200018 campo 159: fila del acontecimiento manifesta-fifteen, ejercicio 2024, columna pendiente/generada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '02284'
+rotating_year_offset = 0
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
     'deducc_para_incentivar_determ_actividades',
@@ -1959,6 +1964,7 @@ continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07
 continuidad_id = "public-interest-manifesta-fifteen-credit-2024-applied"
 # AEAT aeat-dr-200-2024 DP200018 campo 160: fila del acontecimiento manifesta-fifteen, ejercicio 2024, columna aplicada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '02285'
+rotating_year_offset = 0
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
     'deducc_para_incentivar_determ_actividades',
@@ -1981,6 +1987,7 @@ continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07
 continuidad_id = "public-interest-manifesta-fifteen-credit-2024-remaining"
 # AEAT aeat-dr-200-2024 DP200018 campo 161: fila del acontecimiento manifesta-fifteen, ejercicio 2024, columna pendiente futura. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '02286'
+rotating_year_offset = 0
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
     'deducc_para_incentivar_determ_actividades',
@@ -2254,6 +2261,7 @@ continuidad_origin = "new_on_form"
 continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3907 (DP200022B field 10): Rég. especial reserva inversiones Illes Balears - Importe de la dotación RIIB con cargo a beneficios de 2023 [02918]. aeat-dr-200-2022 prints no field with this caption. It prints no box [02918]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
 continuidad_id = "02918"
 number = "02918"
+rotating_year_offset = 0
 section = ["reg_especial_reserva_inversiones_illes_balears", "importe_de_la_dotacion_riib_con_cargo_a_beneficios"]
 semantic_role = "is_reserva_inversiones_illes_balears_importe"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
