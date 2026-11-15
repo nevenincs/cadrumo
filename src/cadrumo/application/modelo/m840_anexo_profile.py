@@ -78,7 +78,7 @@ _MUNICIPIO_WIDTH: Final = 30
 
 _APARTADO_V: Final = "V"
 _APARTADO_VI_C: Final = "VI C"
-_NO_ROW: Final[Mapping[str, str]] = MappingProxyType({})
+_NO_ROW: Final[Mapping[str, str]] = MappingProxyType[str, str]({})
 
 
 def modelo_840_profile_facts(*, work_unit: WorkUnit, path_values: Mapping[str, object]) -> Modelo840ProfileFacts:
