@@ -2506,8 +2506,17 @@ ux("UX-24 a single click opens a Modelo view tab", async (t) => {
 });
 
 let exportRun = null;
-// The work-form read that followed UX-22's export, as UX-23 measured it.
+// The read that followed UX-22's export, as UX-23 measured it.
 let postExportRead = null;
+
+// The window's post-export read: the product's filing-state read, which serves
+// the filed state, the next step, the journey and the edit closure, so the
+// window need not read the whole declaration again; a whole-form read is also
+// a fresh read.
+const POST_EXPORT_READS = new Set([
+  "modelo.work.filing_state",
+  "modelo.work.form",
+]);
 
 /**
  * Wrap the page's fetch, which carries every host call over Tauri's ipc
@@ -2660,7 +2669,7 @@ ux(
 );
 
 ux(
-  "UX-23 record-as-filed is available right after an export without reading the declaration again",
+  "UX-23 record-as-filed is available right after an export, drawn from the filing-state read without reading the declaration again",
   async (t) => {
     const inner = await setSize(...DEFAULT_SIZE);
     if (!exportRun) {
@@ -2692,7 +2701,11 @@ ux(
             .filter(shown)
             .map((e) => norm(e.innerText).slice(0, 300));
           const around = button ? norm(button.parentElement?.innerText) : null;
+          const step = document.querySelector(
+            '[data-journey] [aria-current="step"]',
+          );
           return {
+            currentStep: step ? step.getAttribute("data-step") : null,
             buttonShown: !!button,
             disabled: button ? button.disabled : null,
             hintText: around,
@@ -2704,10 +2717,11 @@ ux(
         record,
         hint,
       );
-    // The window re-reads the declaration after its own export and keeps the
+    // After its own export the window reads the filing state and keeps the
     // step closed until that read lands, so it acts on the fresh state. The
-    // step passes when it opens by itself, with no read-again press, and says
-    // it is busy for the whole closed interval; the interval is reported.
+    // step passes when the header's current step is the filing step and the
+    // record door opens by itself within 1 s of that read, with no read-again
+    // press, saying it is busy for the whole closed interval.
     const busy = label("desktop.navigation.busy");
     const afterMs = Date.now() - exportRun.at;
     const samples = [];
@@ -2721,8 +2735,8 @@ ux(
     }
     const first = samples[0];
     const last = samples.at(-1);
-    // The re-read the step waits for: the first work-form read the runtime
-    // settled after the export's own settlement.
+    // The read the step waits for: the first filing-state or work-form read
+    // the runtime settled after the export's own settlement.
     const operations = settledOperations();
     // The file can appear before the runtime logs the export's settlement, so
     // the settlement is the first one after the press, not before the file.
@@ -2731,12 +2745,16 @@ ux(
     );
     const reread = exported
       ? operations.find(
-          (op) => op.definition === "modelo.work.form" && op.at > exported.at,
+          (op) => POST_EXPORT_READS.has(op.definition) && op.at > exported.at,
         )
       : undefined;
     const openedAt = exportRun.at + last.atMs;
     postExportRead = reread
-      ? { ms: reread.at - exported.at, condition: reread.condition }
+      ? {
+          ms: reread.at - exported.at,
+          condition: reread.condition,
+          definition: reread.definition,
+        }
       : null;
     const closed = samples.filter((s) => s.buttonShown && s.disabled);
     const silent = closed.filter((s) => !s.saysBusy);
@@ -2748,6 +2766,7 @@ ux(
       exportKind: exportRun.kind,
       firstReadAfterExportMs: afterMs,
       openedAfterExportMs: opened ? last.atMs : null,
+      readDefinition: reread ? reread.definition : null,
       rereadMs: reread ? reread.at - exported.at : null,
       openedAfterRereadMs: reread && opened ? openedAt - reread.at : null,
       closedSamples: closed.length,
@@ -2767,16 +2786,20 @@ ux(
     if (!reread)
       failures.push(
         exported
-          ? "no work-form read settled after the export in the runtime log"
+          ? "no filing-state or work-form read settled after the export in the runtime log"
           : "the export's settlement is not in the runtime log",
       );
     else if (opened && openedAt < reread.at)
       failures.push(
-        `the button opened ${reread.at - openedAt} ms before the re-read landed, on the pre-export read`,
+        `the button opened ${reread.at - openedAt} ms before the post-export ${reread.definition} read landed, on the pre-export read`,
       );
     else if (opened && openedAt - reread.at > 1000)
       failures.push(
-        `the button opened ${openedAt - reread.at} ms after the re-read landed (more than 1 s)`,
+        `the button opened ${openedAt - reread.at} ms after the post-export ${reread.definition} read landed (more than 1 s)`,
+      );
+    if (opened && last.currentStep !== "file")
+      failures.push(
+        `the header's current step is ${last.currentStep ?? "not shown"} when the record door opens, not the filing step`,
       );
     if (silent.length > 0)
       failures.push(
@@ -2877,17 +2900,14 @@ ux(
     });
     const failures = [];
     if (!postExportRead)
-      unmeasured(
-        t,
-        "post-export-read",
-        null,
-        "UX-23 saw no post-export re-read",
-      );
+      unmeasured(t, "post-export-read", null, "UX-23 saw no post-export read");
     else if (postExportRead.condition !== "succeeded")
-      failures.push(`the post-export re-read ${postExportRead.condition}`);
+      failures.push(
+        `the post-export ${postExportRead.definition} read ${postExportRead.condition}`,
+      );
     else if (postExportRead.ms >= 1000)
       failures.push(
-        `the post-export re-read took ${postExportRead.ms} ms (bound 1000)`,
+        `the post-export ${postExportRead.definition} read took ${postExportRead.ms} ms (bound 1000)`,
       );
     if (!pageReturn)
       unmeasured(
