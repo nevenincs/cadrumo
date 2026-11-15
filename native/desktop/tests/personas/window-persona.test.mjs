@@ -1671,10 +1671,20 @@ async function showList() {
   log("rail", { rail });
   if (rail?.pressed !== "true")
     await clickSelector('[data-rail="declarations"]');
+  // The declarations page comes back on the declaration it last showed; its
+  // header's overview button leads to the list.
+  const listed = async () => {
+    const list = await ready();
+    if (list) return list;
+    if ((await readState()).workspace)
+      await clickText("header", "button", [overview]);
+    return null;
+  };
   try {
-    return await waitFor(ready, {
+    return await waitFor(listed, {
       timeout: TIMEOUT.list,
       what: "the declarations list",
+      interval: 2000,
     });
   } catch (error) {
     log("list-diagnosis", {
@@ -1751,13 +1761,23 @@ async function openWork(row) {
  * not applicable (suppressed, with the words the product served), or neither.
  * The calendar keys an obligation by modelo and period.
  */
-function pageCalendar(modelo, period) {
+function pageCalendar(modelo, period, year) {
   const norm = (text) => (text ?? "").replace(/\s+/g, " ").trim();
-  const key = `${modelo}:${period}`;
-  const owed = document.querySelector(`[data-entry="${CSS.escape(key)}"]`);
-  const apart = document.querySelector(
-    `[data-suppressed="${CSS.escape(key)}"]`,
-  );
+  // The window keys an entry by the served modelo and period; some modelos
+  // (Modelo 202) serve the period with its year ("<year> 2P"), others without.
+  const keys = [`${modelo}:${period}`, `${modelo}:${year} ${period}`];
+  const first = (attribute) =>
+    keys
+      .map((key) =>
+        document.querySelector(`[${attribute}="${CSS.escape(key)}"]`),
+      )
+      .find(Boolean) ?? null;
+  const owed = first("data-entry");
+  const apart = first("data-suppressed");
+  const key =
+    owed?.getAttribute("data-entry") ??
+    apart?.getAttribute("data-suppressed") ??
+    keys[0];
   return {
     key,
     owed: !!owed,
@@ -1780,21 +1800,166 @@ function pageRailPressed(rail) {
   return node ? node.getAttribute("aria-pressed") : null;
 }
 
+/**
+ * Record every calendar read the page makes from now on: the range it asked
+ * for and the host's answer, kept in the page until collected.
+ */
+function pageWatchCalendarReads() {
+  if (window.__personaCalendarReads) return true;
+  const reads = [];
+  const original = window.fetch;
+  window.fetch = function (input, init) {
+    const url = typeof input === "string" ? input : (input?.url ?? "");
+    const answer = original.call(this, input, init);
+    if (!/profile_views_calendar(\?|$)/.test(url.split("/").pop() ?? ""))
+      return answer;
+    let asked = {};
+    try {
+      const body = JSON.parse(typeof init?.body === "string" ? init.body : "");
+      asked = { from: body.from ?? null, to: body.to ?? null };
+    } catch {
+      asked = { from: null, to: null };
+    }
+    const read = { at: Date.now(), ...asked, answer: null };
+    reads.push(read);
+    answer.then(
+      (response) =>
+        response
+          .clone()
+          .text()
+          .then((text) => {
+            read.answer = text;
+          }),
+      () => {},
+    );
+    return answer;
+  };
+  window.__personaCalendarReads = reads;
+  return true;
+}
+
+/** The recorded calendar reads: their range and the rows naming `modelo`. */
+function pageCalendarReads(modelo) {
+  const naming = (value) => JSON.stringify(value).includes(`"${modelo}"`);
+  return (window.__personaCalendarReads ?? []).map((read) => {
+    let answer = null;
+    try {
+      answer = JSON.parse(read.answer ?? "");
+    } catch {
+      return { from: read.from, to: read.to, answered: read.answer !== null };
+    }
+    return {
+      from: read.from,
+      to: read.to,
+      range: answer?.range ?? null,
+      entries: (answer?.entries ?? []).filter(naming),
+      suppressed: (answer?.suppressed ?? []).filter(naming),
+      entryCount: (answer?.entries ?? []).length,
+      suppressedCount: (answer?.suppressed ?? []).length,
+    };
+  });
+}
+
+/**
+ * The calendar's filing-year control: whether it is drawn, the year on screen
+ * (null while the range around today is shown) and the current calendar year.
+ */
+function pageCalendarYear() {
+  const group = document.querySelector(".calendar-year");
+  if (!group) return { present: false };
+  const shown = group.querySelector("span")?.textContent?.trim() ?? "";
+  return {
+    present: true,
+    year: /^\d+$/.test(shown) ? Number(shown) : null,
+    today: new Date().getFullYear(),
+    failed: !!document.querySelector(".calendar-year ~ [role='status']"),
+  };
+}
+
+/** Press the control's previous (-1) or next (+1) year button. */
+function pageStepCalendarYear(by) {
+  const buttons = document.querySelectorAll(".calendar-year button");
+  const button = buttons[by < 0 ? 0 : 1];
+  if (!button) return false;
+  button.click();
+  return true;
+}
+
+/** Back to the range around today, when a year is on screen. */
+function pageCalendarYearCurrent() {
+  const buttons = document.querySelectorAll(".calendar-year button");
+  if (buttons.length < 3) return false;
+  buttons[2].click();
+  return true;
+}
+
+/**
+ * Step the calendar's year control to `target`, one press at a time, waiting
+ * for each year to be shown; false when the control is absent or stalls.
+ */
+async function showCalendarYear(target) {
+  for (let presses = 0; presses < 12; presses += 1) {
+    const at = await exec(pageCalendarYear);
+    if (!at.present || at.failed) return false;
+    const year = at.year ?? at.today;
+    if (at.year === target) return true;
+    if (!(await exec(pageStepCalendarYear, target < year ? -1 : 1)))
+      return false;
+    const moved = await waitFor(
+      async () => {
+        const now = await exec(pageCalendarYear);
+        return now.failed || now.year !== at.year ? now : null;
+      },
+      { timeout: 15_000, what: "the calendar year to change", soft: true },
+    );
+    if (!moved || moved.failed) return false;
+  }
+  return false;
+}
+
 /** A return the persona states not owed: what the overview calendar shows of it. */
 async function readCalendarApplicability(row) {
+  await exec(pageWatchCalendarReads);
   if ((await exec(pageRailPressed, "calendar")) !== "true")
     await clickSelector('[data-rail="calendar"]');
-  const shown = await waitFor(
-    async () => {
-      const read = await exec(pageCalendar, row.modelo, row.period);
-      return read.owed || read.suppressed ? read : null;
-    },
-    { timeout: 30_000, what: "the calendar to show the return", soft: true },
-  );
-  const read = shown ?? (await exec(pageCalendar, row.modelo, row.period));
-  // Leave the calendar as it was found, so the list is the next page.
-  if ((await exec(pageRailPressed, "calendar")) === "true")
-    await clickSelector('[data-rail="calendar"]');
+  const presented = async () => {
+    const read = await exec(pageCalendar, row.modelo, row.period, row.year);
+    return read.owed || read.suppressed ? read : null;
+  };
+  const control = (await exec(pageCalendarYear)).present;
+  let shown = await waitFor(presented, {
+    timeout: control ? 10_000 : 30_000,
+    what: "the calendar to show the return",
+    soft: true,
+  });
+  // A past period can fall outside the range around today: look at the
+  // return's own filing year, then the year after it, where its deadline can
+  // fall, with the calendar's year control when the window draws one.
+  const looked = [];
+  for (const year of control && !shown ? [row.year, row.year + 1] : []) {
+    const reached = await showCalendarYear(year);
+    looked.push({ year, reached });
+    if (!reached) continue;
+    shown = await waitFor(presented, {
+      timeout: 10_000,
+      what: `the calendar for ${year} to show the return`,
+      soft: true,
+    });
+    if (shown) break;
+  }
+  const read =
+    shown ?? (await exec(pageCalendar, row.modelo, row.period, row.year));
+  if (looked.length > 0) log("calendar-years", { looked });
+  await exec(pageCalendarYearCurrent);
+  log("calendar-reads", {
+    modelo: row.modelo,
+    period: row.period,
+    reads: await exec(pageCalendarReads, row.modelo),
+  });
+  // Go back through the declarations rail: pressing the shown calendar's own
+  // rail again switches the pane to the documentation, not to the declarations.
+  if ((await exec(pageRailPressed, "declarations")) !== "true")
+    await clickSelector('[data-rail="declarations"]');
   return read;
 }
 
@@ -2124,10 +2289,12 @@ async function recordFiling(out) {
       // A filing can leave the header's step as it was; the runtime's settled
       // filing and the window's read after it end the wait, which otherwise
       // runs past the attended session's idle expiry and signs the window out.
-      return !state.busy &&
-        (state.action !== before.action || settledReadAfter(mark))
-        ? { state }
-        : null;
+      // A finished filing that holds the declaration unread asks for a read
+      // the window does not start by itself, so the hold ends the wait too.
+      if (state.busy) return null;
+      if (state.action !== before.action || settledReadAfter(mark))
+        return { state };
+      return (await exec(pageVisible, ".modelo-write-hold")) ? { state } : null;
     },
     { timeout: TIMEOUT.verify, what: "the local filing", soft: true },
   );

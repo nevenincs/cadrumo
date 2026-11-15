@@ -31,7 +31,10 @@ import type {
 import { tauriLedger } from "./tauriLedger";
 import { tauriModelo } from "./tauriModelo";
 import { tauriSedeView } from "./tauriSedeView";
-import { openTauriTerminal } from "./tauriTerminal";
+import {
+  observeTauriConsoleEnvironment,
+  openTauriTerminal,
+} from "./tauriTerminal";
 
 const TOKEN_PATTERN = /^[0-9a-f]{64}$/;
 const PROFILE_HEADER = "x-cadrumo-profile";
@@ -408,6 +411,7 @@ export function tauriHost(): Host {
         : Promise.reject(
             new Error("The desktop host did not provide a launch token."),
           ),
+    observeConsoleEnvironment: observeTauriConsoleEnvironment,
     async subscribeLogs(listener: (batch: LogBatch) => void) {
       const records = new Channel<LogBatch>();
       records.onmessage = listener;

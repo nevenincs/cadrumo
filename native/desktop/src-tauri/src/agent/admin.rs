@@ -108,6 +108,7 @@ fn action_reason(action: &str) -> &'static str {
         "attachment_grants" => "admin_attachment_grants",
         "attachment_grant_revoke" => "admin_attachment_grant_revoke",
         "attachment_conversation_forget" => "admin_attachment_conversation_forget",
+        "console_environment" => "admin_console_environment",
         _ => "admin_undeclared_action",
     }
 }
@@ -465,6 +466,7 @@ mod tests {
             ("local_engine", "admin_local_engine"),
             ("local_engine_choose", "admin_local_engine_choose"),
             ("attachment_release", "admin_attachment_release"),
+            ("console_environment", "admin_console_environment"),
             ("unheard_of", "admin_undeclared_action"),
         ] {
             let error = endpoint(port)

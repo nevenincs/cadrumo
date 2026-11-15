@@ -11,10 +11,12 @@
 // finishes, and only for cases whose lines all validate. A case that fails to
 // validate contributes nothing and is reported; a case that times out
 // contributes the lines the spec wrote, and each row it did not reach is
-// reported as not run, with its cause, in <out>.not-run.jsonl (never written
-// as a window result and never dropped). A persona-level line (modelo
-// null) is kept once per persona, from its first case. The spec's logs are
-// copied to --logs and each line's `log` points at the copy.
+// reported as not run, with its cause, in <out>.not-run.txt (one JSON object
+// per line, never written as a window result and never dropped; not .jsonl,
+// because the table's render reads every .jsonl beside the output as results).
+// A persona-level line (modelo null) is kept once per persona, from its first
+// case. The spec's logs are copied to --logs and each line's `log` points at
+// the copy.
 //
 // Usage:
 //   node native/desktop/tests/personas/run-sweep.mjs --tree <sha> \
@@ -644,7 +646,7 @@ async function main() {
   );
   mkdirSync(dirname(out), { recursive: true });
   mkdirSync(logsDir, { recursive: true });
-  const notRunOut = out.replace(/\.jsonl$/, "") + ".not-run.jsonl";
+  const notRunOut = out.replace(/\.jsonl$/, "") + ".not-run.txt";
   if (args.fresh) {
     writeFileSync(out, "");
     writeFileSync(notRunOut, "");

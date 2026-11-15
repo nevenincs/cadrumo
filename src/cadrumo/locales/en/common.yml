@@ -4991,6 +4991,7 @@ desktop:
     action_unroutable: Not available here.
   session:
     enter_restarts: Enter restarts
+    environment_changed: The environment changed. Restart the console to use it.
     exit_line: '[Process exited with code {code}. Press Enter to start again.]'
     exited: exited {code}
     failed: 'The session failed: {reason}'
@@ -5004,6 +5005,7 @@ desktop:
       slow: it took too long
       start: the program could not be started
       stopped: the program stopped with an error
+    restart_console: Restart console
   settings:
     agent_search: Search settings
     agent_search_empty: No matching settings. Try another search.
