@@ -225,7 +225,7 @@ def _row(local: IaeLocalRecord) -> Modelo840LocalRow:
     return Modelo840LocalRow(
         sg_tabla=local.via_sg,
         nombre_via=local.via_nombre,
-        numero=None if local.numero is None else str(local.numero),
+        numero=local.numero,
         km=local.km,
         escalera=local.escalera,
         piso=local.piso,
