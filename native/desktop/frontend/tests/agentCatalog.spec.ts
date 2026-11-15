@@ -6,7 +6,9 @@ import {
 } from "../src/dev/fixtures/agentCatalog";
 import {
   catalogChoices,
+  intendedProvider,
   offeredSelection,
+  providerModelsToDownload,
   restoredSelection,
   selectionRecord,
   startingSelection,
@@ -24,6 +26,8 @@ import { connectionWords } from "../src/shell/providerConnection";
 
 const words = (key: string) => key;
 const choices = catalogChoices(words, FIXTURE_CATALOG);
+const localProvider = (offered: typeof choices) =>
+  offered.providers.find((provider) => provider.id === "local")!;
 
 test("a provider is one entry however many lanes reach it", () => {
   const served = FIXTURE_CATALOG.providers ?? [];
@@ -347,7 +351,15 @@ test("a model the catalog says this computer lacks is listed, marked and never c
     .find((way) => way.id === LOCAL);
   expect(local?.selectable).toBe(true);
   expect(local?.modelsToDownload).toBe(true);
-  expect(choices.modelsToDownload).toBe(true);
+  expect(providerModelsToDownload(localProvider(choices))).toBe(true);
+  // Only a lane on this computer has a model to download: no hosted provider
+  // does.
+  const hosted = choices.providers.filter((provider) =>
+    provider.ways.every((way) => way.authKind !== "none"),
+  );
+  expect(hosted.length).toBeGreaterThan(0);
+  for (const provider of hosted)
+    expect(providerModelsToDownload(provider)).toBe(false);
   const chosen = {
     providerId: "local",
     wayId: LOCAL,
@@ -393,7 +405,7 @@ test("with no model of the local lane on this computer, the lane cannot be chose
     "desktop.agent.lane_no_installed_model",
   );
   expect(local?.modelsToDownload).toBe(true);
-  expect(offered.modelsToDownload).toBe(true);
+  expect(providerModelsToDownload(localProvider(offered))).toBe(true);
   for (const model of offered.models[LOCAL] ?? [])
     expect(model.installed).toBe(false);
   // No kept choice of the lane survives, and a run never names its models.
@@ -538,4 +550,37 @@ test("a declared lane carries what the declared catalogue states, and one that s
   expect(bare.providers.map((provider) => provider.id)).not.toContain(
     "llamacpp",
   );
+});
+
+test("the provider the person is on is the one kept, even where none of its ways can run, else the first served", () => {
+  const presence = fixtureModelPresence();
+  for (const entry of servedLocal()?.catalog.models ?? [])
+    presence.mark(entry.model, false);
+  const offered = catalogChoices(words, presence.report(FIXTURE_CATALOG));
+  const kept = (providerId: string, wayId: string) => ({
+    providerId,
+    wayId,
+    modelId: "",
+  });
+  // A kept choice of a way held back still names its provider.
+  expect(intendedProvider(offered, [kept("alpha", "alpha/cli")])?.id).toBe(
+    "alpha",
+  );
+  expect(intendedProvider(offered, [kept("local", LOCAL)])?.id).toBe("local");
+  // The first that names a provider the catalog serves.
+  expect(
+    intendedProvider(offered, [
+      null,
+      kept("retired", "retired/api"),
+      kept("local", LOCAL),
+      kept("alpha", "alpha/cli"),
+    ])?.id,
+  ).toBe("local");
+  // Nothing kept: where a start begins, the first provider served.
+  expect(intendedProvider(offered, [null, undefined])?.id).toBe(
+    offered.providers[0]?.id,
+  );
+  expect(
+    intendedProvider({ ...offered, providers: [] }, [null]),
+  ).toBeUndefined();
 });
