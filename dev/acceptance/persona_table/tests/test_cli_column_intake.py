@@ -31,7 +31,7 @@ from ..cli_column.intake import (
     return_line,
     verify_stage,
 )
-from ..frontend import DIFFERS, MATCHED, parity, parse_result, read_results
+from ..frontend import DIFFERS, MATCHED, compare_frontend, parity, parse_result, read_results
 from ..rows import PlannedRow, Stage, TableRow
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -169,7 +169,7 @@ def test_file_states_filed_locally_and_a_refusal_keeps_its_code() -> None:
 
 
 def _scope() -> ReturnScope:
-    return ReturnScope("abc123", "persona-x", "303", _YEAR, "1T")
+    return ReturnScope("abc123", "persona-x", "303", _YEAR, "1T", _YEAR + 1)
 
 
 def _row(figures: tuple[tuple[str, str], ...]) -> TableRow:
@@ -210,12 +210,23 @@ def test_a_written_line_reads_back_as_the_result_the_intake_expects(tmp_path: Pa
 
     held = read_results(tmp_path)
 
-    shown = held["cli", "persona-x", "303", _YEAR, "1T"]
+    shown = held["cli", "persona-x", "303", _YEAR, "1T", _YEAR + 1]
     assert (shown.calculate, shown.verify, shown.export, shown.file) == ("pass", "pass", "pass", "pass")
     assert shown.figures == figures
     assert shown.reason == "filed locally"
     assert held["cli", "persona-x", None, None, None].loads is True
     assert parity(_row(figures), "cli", shown).outcome == MATCHED
+
+
+def test_a_return_line_states_its_horizon_and_pairs_only_with_the_row_of_that_horizon() -> None:
+    line = return_line(_scope(), _passed((("0505", "1200.5"),)), "l")
+    assert line["horizon"] == _YEAR + 1
+    shown = parse_result(json.dumps(line))
+    assert shown.horizon == _YEAR + 1
+    other = replace(_row((("0505", "1200.5"),)), horizon=_YEAR + 2)
+    assert parity(_row((("0505", "1200.5"),)), "cli", shown).outcome == MATCHED
+    comparison = compare_frontend([other], {shown.key: shown})
+    assert comparison.matched("cli") == 0
 
 
 def test_a_row_whose_stage_or_figure_differs_does_not_match_the_table_row() -> None:
@@ -330,7 +341,7 @@ def test_a_workaround_is_written_read_back_and_keeps_the_row_from_matching(tmp_p
 
     assert "workaround" not in return_line(_scope(), plain, "l")
     writer.write(return_line(_scope(), substituted, "l"))
-    shown = read_results(tmp_path)["cli", "persona-x", "303", _YEAR, "1T"]
+    shown = read_results(tmp_path)["cli", "persona-x", "303", _YEAR, "1T", _YEAR + 1]
 
     assert shown.workaround == "cli_calculate_drops_statements"
     outcome = parity(_row(figures), "cli", shown)

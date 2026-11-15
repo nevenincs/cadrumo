@@ -55,6 +55,7 @@ def _row(
     figures: tuple[tuple[str, str], ...] | None = _FIGURES,
     internal_figures: tuple[tuple[str, str], ...] = (),
     text_figures: tuple[tuple[str, str], ...] = (),
+    filed_locally: bool = False,
     reason: str = "",
 ) -> TableRow:
     plan = PlannedRow(
@@ -75,6 +76,7 @@ def _row(
         figures=figures,
         internal_figures=internal_figures,
         text_figures=text_figures,
+        filed_locally=filed_locally,
         reason=reason,
     )
 
@@ -1045,3 +1047,51 @@ def test_the_cell_counts_an_inherited_row_as_differing_and_the_legacy_line_too()
     rendered = render_table(rows, head="abc", frontend=comparison)
     assert f"- {row_id(rows[0].key)}: window differs: {INHERITED_CAUSE}" in rendered
     assert f"- {row_id(rows[1].key)}: window differs: {INHERITED_CAUSE}" in rendered
+
+
+def test_a_row_filed_locally_matches_a_surface_that_shows_the_filed_state() -> None:
+    shown = parity(_row(filed_locally=True), "tui", _result(file="pass"))
+    assert (shown.outcome, shown.causes) == ("matched", ())
+
+
+def test_a_recorded_not_shown_filing_differs() -> None:
+    hidden = parity(_row(filed_locally=True), "tui", _result(file="not-shown"))
+    assert (hidden.outcome, hidden.causes) == ("differs", ("file not shown by tui, table filed locally",))
+
+
+def test_a_result_line_without_a_file_stage_is_not_measured_neither_matched_nor_different() -> None:
+    row = _row(filed_locally=True)
+    unmeasured = parity(row, "window", _result(surface="window", tree="abc"))
+    assert (unmeasured.outcome, unmeasured.causes) == ("file-not-measured", ("file not measured by window",))
+    line = _result(surface="window", tree="abc")
+    comparison = compare_frontend([row], {line.key: line})
+    assert comparison.matched("window") == 0
+    assert dict(comparison.file_not_measured("window")) == {"abc": 1}
+    assert "file not measured" in frontend_line(comparison)
+    measured = _result(file="pass")
+    assert "file not measured" not in frontend_line(compare_frontend([row], {measured.key: measured}))
+    other = parity(row, "window", _result(surface="window", figures={"0700": "-1.00"}))
+    assert other.outcome == "differs"
+
+
+def test_a_measured_filing_that_is_not_the_filed_state_differs_and_an_unfiled_row_is_not_held_to_one() -> None:
+    refused = parity(_row(filed_locally=True), "cli", _result(file="refused"))
+    assert (refused.outcome, refused.causes) == ("differs", ("file cli refused, table filed locally",))
+    for line in ({}, {"file": "not-shown"}, {"file": "refused"}):
+        assert parity(_row(), "window", _result(**line)).outcome == "matched"
+
+
+def test_a_file_word_outside_the_vocabulary_is_refused_and_not_shown_is_read() -> None:
+    assert parse_result(json.dumps(_line(file="not-shown"))).file == "not-shown"
+    with pytest.raises(ValueError, match="file"):
+        parse_result(json.dumps(_line(file="shown")))
+
+
+def test_a_row_reads_that_it_was_filed_locally_from_its_record_or_from_an_older_reason() -> None:
+    assert TableRow.from_json(_row(filed_locally=True).to_json()).filed_locally
+    assert not TableRow.from_json(_row().to_json()).filed_locally
+    older = json.loads(_row(reason="export ok | filed locally").to_json())
+    del older["filed_locally"]
+    assert TableRow.from_json(json.dumps(older)).filed_locally
+    del older["reason"]
+    assert not TableRow.from_json(json.dumps(older)).filed_locally

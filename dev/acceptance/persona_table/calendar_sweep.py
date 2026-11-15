@@ -12,7 +12,9 @@ suppressed row with its verdict. A refused read is one line naming the refusal.
 
 from __future__ import annotations
 
+import json
 import os
+from collections.abc import Iterable
 from datetime import date
 from functools import cache
 from pathlib import Path
@@ -87,10 +89,8 @@ def _observations(
     return found
 
 
-def calendar_observations(
-    world: PersonaWorld, persona_id: str, envelope: YearEnvelope, *, from_date: date, to_date: date
-) -> list[CalendarObservation]:
-    """The returns of ``envelope``'s years the overview calendar of ``world`` projects, suppressed ones shown.
+def read_calendar(world: PersonaWorld, *, from_date: date, to_date: date) -> OverviewCalendarSnapshot:
+    """The overview calendar of ``world`` over the inclusive range, suppressed obligations shown.
 
     A refused read, or one that returns no calendar, raises ``PersonaMaterialisationError``.
     """
@@ -105,7 +105,60 @@ def calendar_observations(
     payload = run_operation(world, OVERVIEW_READ_DEFINITION_IDS[request.kind], request, OverviewReadProjection).payload
     if not isinstance(payload, OverviewCalendarRead) or payload.calendar is None:
         raise PersonaMaterialisationError(f"the calendar read returned {type(payload).__name__} without a calendar")
-    return _observations(persona_id, payload.calendar, envelope)
+    return payload.calendar
+
+
+def calendar_observations(
+    world: PersonaWorld, persona_id: str, envelope: YearEnvelope, *, from_date: date, to_date: date
+) -> list[CalendarObservation]:
+    """The returns of ``envelope``'s years the overview calendar of ``world`` projects, suppressed ones shown.
+
+    A refused read, or one that returns no calendar, raises ``PersonaMaterialisationError``.
+    """
+    return _observations(persona_id, read_calendar(world, from_date=from_date, to_date=to_date), envelope)
+
+
+SUPPORT_FILE = "calendar-support.jsonl"
+"""The file beside a table run's rows that holds the calendar support state of each replayed year."""
+
+
+def support_line(
+    persona_id: str, case_horizon: int, year: int, calendar: OverviewCalendarSnapshot | None, refusal: str = ""
+) -> str:
+    """One JSON line: the support the calendar read of ``year``'s two-year range was served under.
+
+    ``state`` is ``not-served`` when the calendar carries no support (a tree before the envelope was served) and
+    ``refused`` when the read was refused, with its words in ``refusal``.
+    """
+    support = getattr(calendar, "support", None)
+    data: dict[str, object] = {
+        "persona": persona_id,
+        "case_horizon": case_horizon,
+        "year": year,
+        "range": [f"{year}-01-01", f"{year + 1}-12-31"],
+        "state": "refused" if calendar is None else (str(support.state) if support is not None else "not-served"),
+    }
+    if support is not None:
+        data["floor"], data["horizon"], data["hard_ceiling"] = support.floor, support.horizon, support.hard_ceiling
+    if refusal:
+        data["refusal"] = refusal
+    return json.dumps(data, sort_keys=True)
+
+
+def record_calendar_support(
+    world: PersonaWorld, persona_id: str, case_horizon: int, years: Iterable[int], out: Path
+) -> None:
+    """Append the calendar support state of each of ``years`` as the replay under ``case_horizon`` reads it."""
+    lines = []
+    for year in sorted(set(years)):
+        try:
+            calendar = read_calendar(world, from_date=date(year, 1, 1), to_date=date(year + 1, 12, 31))
+            lines.append(support_line(persona_id, case_horizon, year, calendar))
+        except PersonaMaterialisationError as error:
+            lines.append(support_line(persona_id, case_horizon, year, None, f"{type(error).__name__}: {error}"[:300]))
+    out.parent.mkdir(parents=True, exist_ok=True)
+    with out.open("a", encoding="utf-8", newline="\n") as handle:
+        handle.write("".join(line + "\n" for line in lines))
 
 
 @pytest.mark.parametrize("persona_id", [p for p in persona_ids() if not _wanted() or p in _wanted()])
