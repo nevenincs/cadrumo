@@ -132,6 +132,9 @@ function DetailsToggles({
   const t = useStrings();
   const beside = placement.open;
   const controls = details.open ? details.controls : undefined;
+  // Why the arrangement control does nothing while the window holds it.
+  const reason = t("desktop.modelo.details.under_held");
+  const name = t("desktop.modelo.details.beside");
   return (
     <>
       <IconButton
@@ -149,11 +152,14 @@ function DetailsToggles({
         <Icon name={beside ? "panelRight" : "panelBottom"} />
       </IconButton>
       <IconButton
-        label={t("desktop.modelo.details.beside")}
+        label={name}
         size="sm"
         aria-pressed={beside}
         aria-controls={controls}
         aria-disabled={placement.held || undefined}
+        accessibleName={name}
+        hint={placement.held ? reason : undefined}
+        aria-description={placement.held ? reason : undefined}
         data-pane-toggle="placement"
         onClick={placement.toggle}
       >

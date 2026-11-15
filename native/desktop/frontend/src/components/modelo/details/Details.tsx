@@ -469,6 +469,7 @@ export function Details({
   // family of earlier returns is likewise withdrawn with the whole family.
   const own =
     editsAdmitted(envelope) &&
+    !session.locked &&
     field.stated_absent === null &&
     !field.stated_prior_value?.family_id;
   const restore = own ? restoreIntent(field) : null;

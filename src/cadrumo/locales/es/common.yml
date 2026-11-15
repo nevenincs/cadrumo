@@ -4680,6 +4680,8 @@ desktop:
       label: Detalles
       resize: Cambiar el tamaño de los detalles
       show: Mostrar detalles
+      under_held: La ventana es demasiado baja para poner los detalles debajo del
+        formulario
     disagreement:
       accept: Aceptar con un motivo
       accept_title: Aceptar esta discrepancia
