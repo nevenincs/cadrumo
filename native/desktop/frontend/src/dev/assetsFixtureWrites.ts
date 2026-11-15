@@ -3,6 +3,7 @@
 // handoff and a baja's figures.
 
 import type {
+  AssetListRow,
   DescriptorFacts,
   DisposalCalculation,
   DisposalFacts,
@@ -306,7 +307,9 @@ export function makeWrites(register: Register) {
     }
     element.list.revision_number = number;
     element.list.in_service_date = textOf(revision.in_service_date)!;
-    element.list.method = textOf(obj(revision.amortization)!.method)!;
+    element.list.method = textOf(
+      obj(revision.amortization)!.method,
+    )! as AssetListRow["method"];
     element.list.basis = dec(fromCents(toCents(newBasis)));
     recount(element);
     return json({ ...ok, history: history(element) });
@@ -719,8 +722,10 @@ export function makeWrites(register: Register) {
         ...(!withdrawal && result > 0
           ? [
               {
-                kind: "exemption_not_computed",
+                kind: "exemption_not_computed" as const,
                 label_key: `${FINDING}exemption_not_computed`,
+                words: null,
+                words_language: null,
                 tax_year: null,
                 effect_on_cost: null,
               },

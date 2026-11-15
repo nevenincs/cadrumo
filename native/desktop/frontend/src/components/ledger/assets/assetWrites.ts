@@ -32,6 +32,11 @@ import { fieldWord } from "./assetsWords";
 
 const textOf = (found: FormValue | undefined): string | null =>
   typeof found === "string" ? found : null;
+/** A token the form's field offers from the options the backend served, as the
+ * closed type the request names: the options are the only list of them. */
+const tokenOf = <Token extends string>(
+  found: FormValue | undefined,
+): Token | null => (typeof found === "string" ? (found as Token) : null);
 const amountOf = (found: FormValue | undefined) =>
   found !== null && typeof found === "object" ? found : null;
 
@@ -45,7 +50,9 @@ export const describeRequest = (
     name: textOf(values.name) ?? "",
     serial_number: textOf(values.serial_number),
     description: textOf(values.description),
-    document_kind: textOf(values.document_kind),
+    document_kind: tokenOf<NonNullable<DescriptorFacts["document_kind"]>>(
+      values.document_kind,
+    ),
     document_number: textOf(values.document_number),
     supplier_name: textOf(values.supplier_name),
     supplier_tax_id: textOf(values.supplier_tax_id),
@@ -109,7 +116,7 @@ export function purchaseInvoiceFacts(
  * missing: none is read as zero. The backend judges the rest by the reason. */
 export function disposalOf(values: FormValues): DisposalFacts | null {
   const date = textOf(values.date);
-  const reason = textOf(values.reason);
+  const reason = tokenOf<DisposalFacts["reason"]>(values.reason);
   const proceeds = amountOf(values.proceeds);
   const costs = amountOf(values.transmission_costs);
   if (date === null || reason === null || proceeds === null || costs === null)
@@ -120,9 +127,9 @@ export function disposalOf(values: FormValues): DisposalFacts | null {
     proceeds,
     transmission_costs: costs,
     market_value: amountOf(values.market_value),
-    prior_free_depreciation_regime: textOf(
-      values.prior_free_depreciation_regime,
-    ),
+    prior_free_depreciation_regime: tokenOf<
+      NonNullable<DisposalFacts["prior_free_depreciation_regime"]>
+    >(values.prior_free_depreciation_regime),
     later_affectation_on: textOf(values.later_affectation_on),
   };
 }
@@ -315,7 +322,9 @@ export function currentDescriptor(
     name: facts.name ?? "",
     serial_number: facts.serial_number ?? null,
     description: facts.description ?? null,
-    document_kind: facts.document_kind ?? null,
+    // The timeline words the token the descriptor held.
+    document_kind: (facts.document_kind ??
+      null) as DescriptorFacts["document_kind"],
     document_number: facts.document_number ?? null,
     supplier_name: facts.supplier_name ?? null,
     supplier_tax_id: facts.supplier_tax_id ?? null,

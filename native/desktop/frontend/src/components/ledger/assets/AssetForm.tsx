@@ -8,6 +8,7 @@ import { facts, listed } from "../../../shell/compose";
 import type { LedgerPort } from "../../../shell/ledger";
 import type {
   AcquisitionCandidate,
+  AssetKind,
   FormOptions,
 } from "../../../shell/ledgerSetup";
 import { tokensOf, useStrings } from "../../../shell/strings";
@@ -152,8 +153,12 @@ export function AssetForm({
   // The options the registry admits depend on the element's kind and year,
   // which a new element states in its own form.
   const [typed, setTyped] = useState({ asset_kind: "", in_service_date: "" });
-  const optionsKind =
-    kind === "element" ? typed.asset_kind : (asset.row?.asset_kind ?? "");
+  // The kind a new element states is one of those its own field offers from the
+  // served tokens, so the typed text is the kind the options read is asked for.
+  const optionsKind: AssetKind | "" =
+    kind === "element"
+      ? (typed.asset_kind as AssetKind | "")
+      : (asset.row?.asset_kind ?? "");
   // A baja is read for the year the page stands on: the reasons it offers do
   // not depend on the year the element came into service.
   const optionsYear =
