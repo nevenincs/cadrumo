@@ -1618,6 +1618,19 @@ ux(
           await setPaneToggle("details", true);
           await arrangeDetails("bottom");
           const start = await splitNow();
+          // Where the window holds the details beside the form there is no
+          // stacked line to move; UX-16 judges the held toggle's reason.
+          const held =
+            start.placement !== "bottom" ? await exec(pagePlacementHold) : null;
+          if (held?.disabled) {
+            report(t, {
+              probe: "stacked-separator",
+              size: inner,
+              held: true,
+              placement: start.placement,
+            });
+            continue;
+          }
           if (start.placement !== "bottom")
             unmeasured(
               t,
