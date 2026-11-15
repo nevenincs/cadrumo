@@ -229,10 +229,8 @@ def _binding_value_state(
     data_type: str,
     context: WorkFormContext,
 ) -> tuple[ModeloFormScalar, ModeloFormOrigin, bool]:
-    overridden = context.overridden is not None and binding_id in context.overridden
     value = _binding_value(raw, data_type)
-    typed_unattributed = not overridden and raw is not None and binding.source is BindingSourceKind.MANUAL_INPUT
-    if overridden:
+    if context.overridden is not None and binding_id in context.overridden:
         origin = ModeloFormOrigin.ENTERED
     elif raw is None:
         origin = (
@@ -240,11 +238,29 @@ def _binding_value_state(
             if binding_id in context.calculation_required.binding_ids or _feeds_an_unworked_box(binding_id, context)
             else ModeloFormOrigin.OPTIONAL_EMPTY
         )
-    elif binding.source is not BindingSourceKind.MANUAL_INPUT:
-        origin = ModeloFormOrigin.IMPORTED
     else:
-        origin = held_value_origin(value, required=binding_id in context.calculation_required.binding_ids)
+        origin = _held_binding_origin(binding, binding_id, value, context)
+    # Read from the classified origin, as the casilla side reads it (``_unattributed``): a value waiting to be
+    # confirmed, or an optional box holding what the calculation gave it, is nobody's recorded entry.
+    typed_unattributed = origin is ModeloFormOrigin.DEFAULT_TO_CONFIRM or (
+        origin is ModeloFormOrigin.OPTIONAL_EMPTY and raw is not None
+    )
     return value, origin, typed_unattributed
+
+
+def _held_binding_origin(
+    binding: BindingDefinition, binding_id: str, value: ModeloFormScalar, context: WorkFormContext
+) -> ModeloFormOrigin:
+    """Classify a value the calculation holds for a binding nobody is recorded as entering."""
+    if binding.source is not BindingSourceKind.MANUAL_INPUT:
+        return ModeloFormOrigin.IMPORTED
+    if context.source_supplied_bindings.get(binding_id) is not None and context.overridden is not None:
+        # The revision's own source trace names the resolver that supplied this slot and the operator's
+        # overrides are recorded, so the value is derived from the filer's records, not assumed. Absence of
+        # a node proves nothing: a held value no resolver claims stays assumed, as it does on the casilla
+        # side (``_operator_entry_origin``).
+        return ModeloFormOrigin.IMPORTED
+    return held_value_origin(value, required=binding_id in context.calculation_required.binding_ids)
 
 
 def _feeds_an_unworked_box(binding_id: str, context: WorkFormContext) -> bool:
@@ -295,17 +311,27 @@ def project_binding_field(binding_id: str, context: WorkFormContext) -> ModeloFo
         required=False,
         unattributed=typed_unattributed,
         bindings=(ModeloFormBinding(binding_id=binding.id, policy=policy, resolved=raw is not None),),
-        source=bound_value_source(
-            (binding.id,),
-            bindings=context.bindings,
-            aeat_data_binding_ids=context.aeat_data_bindings,
-            target=context.review.period,
-        ),
+        source=_binding_field_source(binding, origin, context),
         legal_refs=tuple(binding.legal_refs),
         standing=field_standing(origin, recorded=context.filed),
         stated_absent=context.stated.get(binding.id) if origin is ModeloFormOrigin.ENTERED else None,
     )
     return with_binding_statements(field, context)
+
+
+def _binding_field_source(
+    binding: BindingDefinition, origin: ModeloFormOrigin, context: WorkFormContext
+) -> ModeloFormValueSource | None:
+    """Name where a binding field's value comes from: its own declaration, else the resolver that supplied it."""
+    supplied = context.source_supplied_bindings.get(binding.id)
+    if supplied is not None and origin is ModeloFormOrigin.IMPORTED:
+        return resolver_value_source(supplied)
+    return bound_value_source(
+        (binding.id,),
+        bindings=context.bindings,
+        aeat_data_binding_ids=context.aeat_data_bindings,
+        target=context.review.period,
+    )
 
 
 def _binding_value(raw: str | None, data_type: str) -> ModeloFormScalar:

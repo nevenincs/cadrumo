@@ -980,21 +980,25 @@ def declarable_ledger_iva_observations(
     the taxpayer makes keeps its devengado routing and its screens.
     """
     rows = tuple(observations)
-    outside_by_date: dict[date, frozenset[IvaCategory] | None] = {}
+    outside_by_date: dict[date, frozenset[IvaCategory]] = {}
     for observation in rows:
         on_date = observation.transaction_date
-        if on_date not in outside_by_date:
-            outside_by_date[on_date] = (
-                registry_category_projection("received_outside_iva_scope", effective_date=on_date)
-                if observation.flow_direction == received_flow_direction(effective_date=on_date)
-                else None
+        # Keyed by the date alone, so a supply read first cannot decide the date for a received row beside it.
+        if _is_received_observation(observation) and on_date not in outside_by_date:
+            outside_by_date[on_date] = registry_category_projection(
+                "received_outside_iva_scope", effective_date=on_date
             )
     return tuple(
         observation
         for observation in rows
-        if observation.flow_direction != received_flow_direction(effective_date=observation.transaction_date)
-        or observation.category not in (outside_by_date[observation.transaction_date] or frozenset())
+        if not _is_received_observation(observation)
+        or observation.category not in outside_by_date[observation.transaction_date]
     )
+
+
+def _is_received_observation(observation: IvaLedgerObservation) -> bool:
+    """Whether the row stands on the received side, under the flow vocabulary of its own date."""
+    return observation.flow_direction == received_flow_direction(effective_date=observation.transaction_date)
 
 
 def unrouted_ledger_iva_quantities(

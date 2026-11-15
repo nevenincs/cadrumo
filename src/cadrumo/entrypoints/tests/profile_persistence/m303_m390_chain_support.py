@@ -432,6 +432,8 @@ def calculate_m303_quarter(
                 "modelo-303-autoconsumo-promotor-base": Decimal("0.00"),
                 **(extra_binding_values or {}),
             },
+            # Calculated as the operator's executor does, so the figures stated here are recorded as theirs.
+            record_operator_layer=True,
             iva_compensation_decision=decision,
             filing_instance_evidence=general_m303_filing_evidence(
                 typed_period,

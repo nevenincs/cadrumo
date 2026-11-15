@@ -120,6 +120,8 @@ def test_wallet_only_modelo_303_can_be_locally_filed_with_real_clave_provider_pr
                     "iva.prorrata-volumen-total": Decimal("100.00"),
                 },
                 binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
+                # Calculated as the operator's executor does, so the volumes stated here are recorded as theirs.
+                record_operator_layer=True,
                 iva_compensation_decision=report.decision,
                 filing_period_date=date(2026, 6, 30),
                 ports=_calculation_ports_97,
@@ -237,6 +239,8 @@ def _calculate_verify_and_file_303_with_wallet_credit(
                 "iva.prorrata-volumen-total": Decimal("100.00"),
             },
             binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
+            # Calculated as the operator's executor does, so the volumes stated here are recorded as theirs.
+            record_operator_layer=True,
             iva_compensation_decision=report.decision,
             filing_period_date=date(2026, 6, 30),
             ports=calculation_ports,
