@@ -58,6 +58,7 @@ from cadrumo_client.transport.frame_io import read_secret, write_document
 from cadrumo_runtime.contracts.profile_worker import ProfileWorkerOperationReceipt
 from cadrumo_runtime.contracts.worker_authorization import WorkerAuthorityRequest
 
+from ..application.operation_cue_timing import log_operation_cue_timing
 from .operation_projection import prepare_operation_projection
 from .profile_connection import ProfileConnection
 from .profile_host import RuntimeProfileHost
@@ -534,6 +535,8 @@ class ProfileConnectionOperationMixin:
         records_changed: bool = False,
     ) -> None:
         """Cue each connection of this profile still observing one of the operations its worker reported."""
+        log_operation_cue_timing("fanout_start", operation_ids)
+        cue_attempt_count = 0
         if records_changed:
             with self._guard:
                 record_cues = [
@@ -547,12 +550,15 @@ class ProfileConnectionOperationMixin:
                     if connection.profile_id == profile_id and connection.session_id is not None
                 ]
             for cue in record_cues:
+                cue_attempt_count += 1
                 self._events.publish_cue(cue)
         reported = set(operation_ids)
         with self._guard:
             cues = operation_change_cues(self.boot, profile_id, reported, self._operation_watches, self._connections)
         for cue in cues:
+            cue_attempt_count += 1
             self._events.publish_cue(cue)
+        log_operation_cue_timing("publish_cues_complete", operation_ids, cue_attempt_count=cue_attempt_count)
 
     @contextmanager
     def _language_observed_after(self: RuntimeProfileConnections, context: ConnectionContext) -> Generator[None]:

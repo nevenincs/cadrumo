@@ -4253,6 +4253,7 @@
         "cadrumo_runtime.application.automation_lifecycle_service",
         "cadrumo_runtime.application.development_root",
         "cadrumo_runtime.application.enrollment_recipient",
+        "cadrumo_runtime.application.operation_cue_timing",
         "cadrumo_runtime.application.session_admission_candidates",
         "cadrumo_runtime.application.session_authority",
         "cadrumo_runtime.application.session_authority_access",
