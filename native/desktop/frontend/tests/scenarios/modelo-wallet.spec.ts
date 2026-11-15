@@ -439,35 +439,15 @@ test("an unknown wallet write survives dialog close and requires both balance an
     .first()
     .getByRole("row")
     .filter({ has: page.getByRole("gridcell", { name: "06", exact: true }) });
-  await row.getByRole("gridcell").nth(2).getByRole("button").click();
-  const entry = page.getByRole("textbox", {
-    name: label("workspace.modelo.editor.new_value_for_box", { box: "06" }),
-  });
-  await entry.fill("1,234.56");
-  await entry.press("Enter");
-  await expect(row).toContainText(label("workspace.modelo.attention.staged"));
+  // The wallet write is unresolved, so another declaration's boxes are shown
+  // and take no edit: nothing can be staged to be left behind.
+  await expect(
+    row.getByRole("gridcell").nth(2).getByRole("button"),
+  ).toBeDisabled();
   const ownerLink = page.getByRole("button", {
     name: new RegExp(`^${words("title")}.*303`),
   });
   await ownerLink.click();
-  const leaving = page.getByRole("dialog", {
-    name: label("desktop.ledger.leave.title"),
-  });
-  await leaving
-    .getByRole("button", {
-      name: label("desktop.ledger.leave.cancel"),
-      exact: true,
-    })
-    .last()
-    .click();
-  await expect(row).toContainText(label("workspace.modelo.attention.staged"));
-  await ownerLink.click();
-  await leaving
-    .getByRole("button", {
-      name: label("workspace.modelo.leave.discard"),
-      exact: true,
-    })
-    .click();
   await page
     .getByRole("tab", {
       name: label("desktop.modelo.view.iva_wallet"),
