@@ -982,12 +982,12 @@ def test_export_resolves_visible_target_to_current_verified_revision(
     assert out.exists()
 
 
-def test_export_prefers_filed_pointer_over_current_verified_revision(
+def test_export_selects_the_filed_revision_when_asked_and_the_current_calculation_by_default(
     tmp_path: Path,
     *,
     operation: PinnedAuthorityOperation,
 ) -> None:
-    """Natural-key export prefers filed pointer before current verified pointer."""
+    """Natural-key export takes the declaration's current calculation unless ``--select filed`` names the filed one."""
 
     _set_export_profile_name()
     _, revision_ids = _seed_modelo_111_revisions(
@@ -996,30 +996,15 @@ def test_export_prefers_filed_pointer_over_current_verified_revision(
         filed_index=1,
         operation=operation,
     )
-    out = tmp_path / "modelo-111-filed.txt"
+    target = ["--format", "json", "app", "modelo", "export", "--modelo", "111", "--year", "2026", "--period", "1T"]
 
-    result = _invoke(
-        [
-            "--format",
-            "json",
-            "app",
-            "modelo",
-            "export",
-            "--modelo",
-            "111",
-            "--year",
-            "2026",
-            "--period",
-            "1T",
-            "--output",
-            str(out),
-        ],
-    )
+    for select, index in (("filed", 1), (None, 0)):
+        out = tmp_path / f"modelo-111-{select or 'default'}.txt"
+        result = _invoke([*target, "--output", str(out), *(("--select", select) if select else ())])
 
-    assert result.exit_code == 0, result.output
-    payload = unwrap_schema_envelope(result.output)
-    assert payload["calculation_revision_id"] == revision_ids[1]
-    assert out.exists()
+        assert result.exit_code == 0, result.output
+        assert unwrap_schema_envelope(result.output)["calculation_revision_id"] == revision_ids[index]
+        assert out.exists()
 
 
 def test_export_refuses_a_work_unit_with_no_current_calculation_despite_stored_verified_revisions(

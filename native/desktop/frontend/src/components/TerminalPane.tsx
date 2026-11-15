@@ -29,6 +29,9 @@ export type TerminalApi = {
   selectAll(): void;
   clear(): void;
   paste(text: string): void;
+  /** Closes the session, running or ended, then opens a new one of the
+   * same kind. */
+  restart(): void;
 };
 
 const DIM = "\x1b[2m";
@@ -136,7 +139,15 @@ export function TerminalPane({
 
     let disposed = false;
     let session: TerminalSession | null = null;
+    // The session whose process has ended: the host keeps it until it is
+    // closed or replaced.
+    let ended: TerminalSession | null = null;
     let exited = false;
+    // Each open is one attempt; the events and the open of an earlier
+    // attempt are stale once a restart begins.
+    let attempt = 0;
+    let opening: Promise<void> = Promise.resolve();
+    let restarting = false;
     let mouseTracking = false;
     let queue = Promise.resolve();
     let openingInput: Uint8Array[] = [];
@@ -171,11 +182,14 @@ export function TerminalPane({
     const start = () => {
       clearOpeningInput();
       exited = false;
+      ended = null;
+      const current = ++attempt;
       term.reset();
       status({ phase: "starting" });
-      host
+      let opened: TerminalSession | null = null;
+      opening = host
         .openTerminal(kind, { cols: term.cols, rows: term.rows }, (event) => {
-          if (disposed) return;
+          if (disposed || current !== attempt) return;
           if (event.type === "data") {
             // Acknowledge only what xterm has drawn: the host pauses the PTY
             // instead of dropping output when the view falls behind.
@@ -184,6 +198,7 @@ export function TerminalPane({
             status({ phase: "running" });
           } else if (event.type === "exited") {
             clearOpeningInput();
+            ended = session ?? opened;
             session = null;
             exited = true;
             mouseTracking = false;
@@ -193,6 +208,7 @@ export function TerminalPane({
             status({ phase: "exited", code: event.code });
           } else {
             clearOpeningInput();
+            ended = session ?? opened;
             session = null;
             exited = true;
             term.write(
@@ -201,19 +217,26 @@ export function TerminalPane({
             status({ phase: "failed", message: event.message });
           }
         })
-        .then((opened) => {
-          if (disposed || exited) {
-            clearOpeningInput();
-            void opened.close();
+        .then(async (handle) => {
+          opened = handle;
+          if (disposed || current !== attempt) {
+            await handle.close().catch(() => undefined);
             return;
           }
-          session = opened;
+          if (exited) {
+            // Ended before the open answered: kept to be closed or replaced.
+            clearOpeningInput();
+            ended = handle;
+            return;
+          }
+          session = handle;
           const pending = openingInput;
           openingInput = [];
           for (const bytes of pending) send(bytes);
-          void opened.resize(term.cols, term.rows);
+          void handle.resize(term.cols, term.rows);
         })
         .catch((error: unknown) => {
+          if (disposed || current !== attempt) return;
           clearOpeningInput();
           if (error instanceof HostUnavailable) {
             setUnavailable(true);
@@ -225,8 +248,32 @@ export function TerminalPane({
         });
     };
 
+    // A restart closes first: the host refuses a second live session of a
+    // kind, so the new one opens only once the old one has settled.
+    const restart = () => {
+      if (disposed || restarting) return;
+      restarting = true;
+      const previous = session ?? ended;
+      const settling = opening;
+      attempt++;
+      session = null;
+      ended = null;
+      exited = true;
+      mouseTracking = false;
+      clearOpeningInput();
+      status({ phase: "starting" });
+      void settling
+        .then(() => previous?.close())
+        .catch(() => undefined)
+        .then(() => {
+          restarting = false;
+          if (!disposed) start();
+        });
+    };
+
     const encoder = new TextEncoder();
     const input = term.onData((data) => {
+      if (restarting) return;
       if (exited && data === "\r") start();
       else send(encoder.encode(data));
     });
@@ -270,6 +317,7 @@ export function TerminalPane({
       selectAll: () => term.selectAll(),
       clear: () => term.clear(),
       paste: (text) => term.paste(text),
+      restart,
     });
 
     let frame = 0;
@@ -297,6 +345,7 @@ export function TerminalPane({
       // Close at once: closing stops any write still waiting on the host's
       // queue, so it cannot hold the session open.
       void session?.close().catch(() => undefined);
+      void ended?.close().catch(() => undefined);
       disposeRenderer();
       term.dispose();
       terminal.current = null;
