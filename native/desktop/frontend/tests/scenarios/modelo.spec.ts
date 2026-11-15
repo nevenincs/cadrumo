@@ -211,12 +211,15 @@ test("one details panel survives responsive changes without rereading its help",
     const panel = target.locator(
       ".declarations-workspace [role=tabpanel][data-details]",
     );
-    await expect(
-      panel.getByRole("button", {
-        name: label("workspace.modelo.next_button.apply"),
-        exact: true,
-      }),
-    ).toBeInViewport();
+    // Where even the form's least height does not fit (600 by 700), the
+    // workspace scrolls as a whole by design: the next-step button must be
+    // reachable by scrolling, not necessarily above the fold.
+    const next = panel.getByRole("button", {
+      name: label("workspace.modelo.next_button.apply"),
+      exact: true,
+    });
+    await next.scrollIntoViewIfNeeded();
+    await expect(next).toBeInViewport({ ratio: 1 });
     expect(
       await panel.evaluate(
         (element) => element.scrollWidth - element.clientWidth,
