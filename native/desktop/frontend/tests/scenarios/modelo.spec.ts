@@ -211,12 +211,13 @@ test("one details panel survives responsive changes without rereading its help",
     const panel = target.locator(
       ".declarations-workspace [role=tabpanel][data-details]",
     );
+    // The staged-edit bar stays in view at every size, without scrolling.
     await expect(
       panel.getByRole("button", {
         name: label("workspace.modelo.next_button.apply"),
         exact: true,
       }),
-    ).toBeInViewport();
+    ).toBeInViewport({ ratio: 1 });
     expect(
       await panel.evaluate(
         (element) => element.scrollWidth - element.clientWidth,

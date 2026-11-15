@@ -4,7 +4,11 @@ import type {
   ProviderSettings,
   ProviderSettingsRecord,
 } from "../shell/providerSettings";
-import { FIXTURE_CATALOG, fixtureAuthKind } from "./fixtures/agentCatalog";
+import {
+  FIXTURE_CATALOG,
+  fixtureAuthKind,
+  servedUnderEngine,
+} from "./fixtures/agentCatalog";
 
 // The scenario host's model providers: one lane per lane of the made-up
 // catalog the host serves, each in its own way of signing in, starting with
@@ -80,6 +84,17 @@ export const FIXTURE_SETTINGS_LANES: readonly Seed[] = (
   );
 
 const SEEDS: readonly Seed[] = FIXTURE_SETTINGS_LANES;
+
+/** The engine a profile that chose none runs, as the made-up agent's own
+ * record starts. */
+const DEFAULT_ENGINE = "llamacpp";
+
+/** The settings lanes the service serves while the engine record selects
+ * `selected`: the keyless lane of an engine it does not select is not listed. */
+export const settingsLanesUnderEngine = (selected: string): readonly Seed[] =>
+  FIXTURE_SETTINGS_LANES.filter((seed) =>
+    servedUnderEngine(seed.provider, seed.transport, selected),
+  );
 
 /** Only one made-up provider advertises GUI sign-in in scenario evidence. */
 export const FIXTURE_SIGN_IN_PROVIDERS: readonly string[] = [
@@ -174,6 +189,11 @@ export type ProviderSignInFixtureControls = {
   /** The current attempt succeeds; `signedIn` also leaves the lane signed
    * in, as the next settings read reports it. */
   succeedCurrentAttempt: (signedIn?: boolean) => void;
+  /** The current attempt, still active, is reported with `detail` beside its
+   * event from the next status read on, as a host may while it works. */
+  noteCurrentAttempt: (detail: ProviderSignInFixtureDetail) => void;
+  /** The next cancel is answered with `detail` beside its still-active event. */
+  answerNextCancelWith: (detail: ProviderSignInFixtureDetail) => void;
 };
 
 // React StrictMode may evaluate the scenario host factory twice in dev mode.
@@ -208,6 +228,7 @@ let completeDeferredOpenExternal: ((fail: boolean) => void) | null = null;
 let fixtureAttemptNumber = 0;
 let fixtureAttempt: ProviderSignInSnapshot | null = null;
 let fixtureCancelRequestedFor: string | null = null;
+let fixtureCancelDetail: ProviderSignInFixtureDetail | null = null;
 let rejectNextSettingsRead = false;
 let fixtureSignInMethods: readonly ProviderSignInMethod[] = [
   "browser",
@@ -287,17 +308,22 @@ export function providerSettingsFixture({
   say,
   wait,
   readable,
+  selectedEngine = () => DEFAULT_ENGINE,
 }: {
   say: (call: string) => void;
   wait: () => Promise<void>;
   /** A profile is signed in whose providers these are. */
   readable: () => boolean;
+  /** The local engine the agent's record selects, read at each status: only
+   * its keyless lane is listed, as the service lists. */
+  selectedEngine?: () => string;
 }): ProviderSettingsFixture {
   // React StrictMode may construct more than one host fixture. Mutable
   // sign-in state is shared so the exposed controls reach the mounted host.
   fixtureAttemptNumber = 0;
   fixtureAttempt = null;
   fixtureCancelRequestedFor = null;
+  fixtureCancelDetail = null;
   rejectNextSettingsRead = false;
   failNextStatus = null;
   fixtureSignInCalls = [];
@@ -332,11 +358,17 @@ export function providerSettingsFixture({
   };
 
   const AUTH_URL = "https://provider.example/sign-in";
-  const cancelReply = (target: ProviderSignInSnapshot) => ({
-    attempt_id: target.attempt_id,
-    provider: target.provider,
-    event: "browser_action" as const,
-  });
+  const cancelReply = (target: ProviderSignInSnapshot) => {
+    const detail = fixtureCancelDetail ?? {};
+    fixtureCancelDetail = null;
+    return {
+      attempt_id: target.attempt_id,
+      provider: target.provider,
+      event: "browser_action" as const,
+      // What a host sends beside the event; the window checks it.
+      ...(detail as Partial<ProviderSignInSnapshot>),
+    };
+  };
   const signInControls: ProviderSignInFixtureControls = {
     failNextSettingsRead() {
       rejectNextSettingsRead = true;
@@ -433,6 +465,16 @@ export function providerSettingsFixture({
           reason: null,
         });
       say("providerSignInAttemptSucceeded");
+    },
+    noteCurrentAttempt(detail) {
+      if (!fixtureAttempt) return;
+      fixtureAttempt = {
+        ...fixtureAttempt,
+        ...(detail as Partial<ProviderSignInSnapshot>),
+      };
+    },
+    answerNextCancelWith(detail) {
+      fixtureCancelDetail = detail;
     },
   };
   const makeAttempt = async (
@@ -624,8 +666,13 @@ export function providerSettingsFixture({
       await wait();
       if (!readable()) throw coded("not_signed_in");
       say("providerStatusResolved");
+      const listed = new Set(
+        settingsLanesUnderEngine(selectedEngine()).map((seed) => seed.id),
+      );
       return {
-        providers: [...records.values()],
+        providers: [...records.values()].filter((record) =>
+          listed.has(record.id),
+        ),
         sign_in_providers: [...fixtureSignInProviders],
         sign_in_methods: Object.fromEntries(
           fixtureSignInProviders.map((provider) => [

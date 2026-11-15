@@ -7,6 +7,7 @@
 //! The launcher admits the agent bundled by CMake or returns a typed refusal.
 
 pub(crate) mod admin;
+mod console_environment;
 mod dropping;
 mod gateway;
 mod launcher;
@@ -473,6 +474,7 @@ pub fn plugin<R: Runtime>(launch: &Launch) -> TauriPlugin<R> {
                 package_root.clone(),
             ));
             host.sync_local_engine_when_ready();
+            console_environment::watch(app.clone(), &host);
             app.manage(host);
             Ok(())
         })

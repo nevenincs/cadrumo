@@ -181,12 +181,14 @@ test("a send for a model this computer no longer holds is refused in words with 
 
 // A model this computer cannot run is refused with its own sentence and the
 // way on, the local AI's settings, on either engine's lane; the generic
-// failure is never shown for it.
-for (const lane of ["llamacpp/api", "ollama/api"]) {
+// failure is never shown for it. The service serves an engine's lane only
+// while that engine is selected, so the window starts on it.
+for (const engine of ["llamacpp", "ollama"]) {
+  const lane = `${engine}/api`;
   test(`a send for a model that does not fit on ${lane} is refused in the served words with the way on`, async ({
     page: target,
   }) => {
-    await open(target);
+    await open(target, `&engine=${engine}`);
     const picker = await openModelPicker(target);
     await pickWay(target, picker, lane);
     await target.keyboard.press("Escape");

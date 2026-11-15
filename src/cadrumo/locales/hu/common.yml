@@ -5067,6 +5067,7 @@ desktop:
     action_unroutable: Itt nem érhető el.
   session:
     enter_restarts: Enter újraindítja
+    environment_changed: A környezet megváltozott. Indítsd újra a konzolt az új környezethez.
     exit_line: '[A folyamat {code} kóddal kilépett. Nyomd meg az Entert az újraindításhoz.]'
     exited: kilépett ({code})
     failed: 'A munkamenet hibába ütközött: {reason}'
@@ -5080,6 +5081,7 @@ desktop:
       slow: túl sokáig tartott
       start: nem sikerült elindítani a programot
       stopped: a program hibával leállt
+    restart_console: Konzol újraindítása
   settings:
     agent_search: Keresés a beállításokban
     agent_search_empty: Nincs találat a beállításokban. Próbálj más keresést.

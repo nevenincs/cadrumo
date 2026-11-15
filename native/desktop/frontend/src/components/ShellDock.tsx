@@ -5,6 +5,8 @@ import type {
   RefObject,
   SetStateAction,
 } from "react";
+import { Alert } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/components/ui/cn";
 import { Icon } from "@/components/ui/icon";
 import { IconButton } from "@/components/ui/icon-button";
@@ -20,6 +22,7 @@ import type { Translate } from "../shell/strings";
 import type { useFullscreen } from "../shell/useFullscreen";
 import type { useShellShortcuts } from "../shell/useShellShortcuts";
 import type { useShellMenus } from "../shell/useShellMenus";
+import { useConsoleEnvironment } from "../shell/useConsoleEnvironment";
 import type { useWindowSetup } from "../shell/useWindowSetup";
 import { WORKSPACE_COLUMNS } from "../shell/useWorkspaceFocus";
 import type { AgentColumn } from "./AgentColumn";
@@ -196,6 +199,11 @@ export function ShellDock({
   revealLogs: () => void;
 }) {
   const tabOpen = (tab: PanelTab) => panelVisible && activePanes.includes(tab);
+  const consoleEnvironment = useConsoleEnvironment({
+    host,
+    status: status.console,
+    terminals,
+  });
   const wiring: TerminalWiring = {
     host,
     t,
@@ -389,7 +397,26 @@ export function ShellDock({
           ),
           title: t("desktop.rail.console"),
           content: (
-            <div className="relative flex min-h-0 flex-1">
+            <div className="relative flex min-h-0 flex-1 flex-col">
+              {consoleEnvironment.pending && (
+                <Alert
+                  data-slot="console-environment-notice"
+                  tone="warning"
+                  icon={<Icon name="info" />}
+                  className="mx-2 mt-1.5 w-auto shrink-0 items-center"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span>{t("desktop.session.environment_changed")}</span>
+                    <Button
+                      size="xs"
+                      variant="outline"
+                      onClick={consoleEnvironment.restart}
+                    >
+                      {t("desktop.session.restart_console")}
+                    </Button>
+                  </div>
+                </Alert>
+              )}
               <ShellTerminal
                 kind="console"
                 shown={tabOpen("console")}

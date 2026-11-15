@@ -33,7 +33,8 @@ import { aeatSyncFixture } from "./aeatSyncFixture";
 import { aeatSyncPrepareFixture } from "./aeatSyncPrepareFixture";
 import { aeatSyncResultsFixture } from "./aeatSyncResultsFixture";
 import { aeatSyncRunFixture } from "./aeatSyncRunFixture";
-import type { Host } from "../shell/host";
+import type { ConsoleEnvironmentChange, Host } from "../shell/host";
+import { parseConsoleEnvironmentChange } from "../shell/consoleEnvironment";
 import type { AgentServiceStatus } from "../shell/agentSession";
 import type { ProfileAccounts } from "../shell/profiles";
 import type { ProfileViews } from "../shell/views";
@@ -234,6 +235,9 @@ declare global {
     __scenarioCalendarRefused?: boolean;
     /** The signed-in profile's runtime stops answering, or answers again. */
     __scenarioRuntime?: { lose(): void; restore(): void };
+    /** Plays the host's console environment event with this payload, as
+     * a sign-in, a sign-out or a change of profile emits it. */
+    __scenarioConsoleEnvironment?: { emit(payload: unknown): void };
   }
 }
 
@@ -352,6 +356,18 @@ export function scenarioHost(
   options: ScenarioHostOptions,
 ): Host {
   const say = (call: string) => options.onCall?.(call);
+  // The host's event reaches the window through the same parser the Tauri
+  // host applies, so a malformed payload is refused here too.
+  const consoleEnvironmentListeners = new Set<
+    (change: ConsoleEnvironmentChange) => void
+  >();
+  window.__scenarioConsoleEnvironment = {
+    emit(payload) {
+      const change = parseConsoleEnvironmentChange(payload);
+      if (!change) return;
+      for (const listener of consoleEnvironmentListeners) listener(change);
+    },
+  };
   let logAttachFailures = options.logAttachFailures ?? 0;
   let presence = scenario.signIn.status.state;
   let runtimeAvailable = scenario.signIn.status.runtimeAvailable;
@@ -615,10 +631,14 @@ export function scenarioHost(
   // them, and the agent's catalog reports them.
   const modelPresence = fixtureModelPresence();
   window.__scenarioModelPresence = modelPresence;
+  // The engine the agent's record selects is the agent's to say, and the
+  // agent is made after the settings that name its turned-off lanes.
+  let agentEngine: () => string = () => options.localEngine ?? "llamacpp";
   const providerFixture = providerSettingsFixture({
     say,
     wait: () => wait(options.latencyMs),
     readable,
+    selectedEngine: () => agentEngine(),
   });
 
   // The agent goes with the profile's views: offered, empty, refused or not
@@ -629,6 +649,7 @@ export function scenarioHost(
     session: agentSession,
     publishStatus,
     changeListElsewhere,
+    selectedEngine,
   } = fixtureAgent({
     say,
     wait: () => wait(options.latencyMs),
@@ -651,6 +672,7 @@ export function scenarioHost(
       ? { readingDefault: options.readingDefault }
       : {}),
   });
+  agentEngine = selectedEngine;
   // Every host this page made publishes, as one service would for each.
   const publishedBefore = window.__scenarioAgentPublishStatus;
   window.__scenarioAgentPublishStatus = (status) => {
@@ -1077,9 +1099,27 @@ export function scenarioHost(
       if (scenario.terminals === "pending") return never();
       if (scenario.terminals === "failed")
         return Promise.reject(failure("spawn_failed", "terminal"));
-      return Promise.resolve(
-        openFixtureTerminal(kind, size, listener, scenario.terminals),
+      const session = openFixtureTerminal(
+        kind,
+        size,
+        listener,
+        scenario.terminals,
       );
+      return Promise.resolve({
+        ...session,
+        close() {
+          say(`terminalClose ${kind}`);
+          return session.close();
+        },
+      });
+    },
+
+    observeConsoleEnvironment(listener) {
+      say("observeConsoleEnvironment");
+      consoleEnvironmentListeners.add(listener);
+      return Promise.resolve(() => {
+        consoleEnvironmentListeners.delete(listener);
+      });
     },
 
     subscribeLogs(listener) {

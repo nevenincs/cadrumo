@@ -56,7 +56,8 @@ data_type = "decimal"
 semantic_role = "is_identificacion_opcion_flag"
 legal_refs = ["ley-27-2014:art-39"]
 [[revisions."2024".casillas]]
-id = "00090"
+id = "DP200001:00090"
+segmento = "DP200001"
 continuidad_id = "is-opcion-art-39-3-lis"
 continuidad_origin = "new_on_form"
 continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:122 (DP200001 field 92): Opción art. 39.3 LIS [00090]. aeat-dr-200-2023 prints no field with this caption. Its box [00090] is a different field: 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2665 (DP200018B field 56): Deducc. para incentivar determ.actividades - 2023: 60 aniversario del Festival Porta Ferrada (PF) - Pendiente de apli.... The cell is new on the 2024 design; this does not claim the underlying concept is new in law."
@@ -3450,3 +3451,57 @@ semantic_role = "is_bin_detalle_compensacion"
 semantic_role_cardinality = "shared"
 data_type = "money"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+
+# The "60 aniversario del Festival Porta Ferrada (PF)" deduction row as the 2024 record design
+# prints it. The 2023 design prints the same row on sheet DP200018B; the 2024 design moves the
+# whole deducciones block onto the preceding sheet DP200018, as it does for every event row. Each
+# of these three boxes is page-qualified because the identification sheet DP200001 prints the same
+# number as an unrelated flag, so the id names the sheet whose design prints it: the 2023 rows are
+# DP200018B:<n> and these are DP200018:<n>.
+#
+# The concept continues: each row keeps the continuidad_id the 2023 row carries, the 2023 member is
+# removed by this edition's casilla_removals, and the move is recorded as a section_evolved
+# evolution at the 2023 to 2024 boundary. This is a sheet move, not a retirement.
+#
+# The caption's leading year is the edition's own filing year, so the label stays year-free. Each
+# box is an input: it carries a value only when the declarant states one. The comment above each
+# row cites its line in 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md.
+
+# 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2654 DP200018 162|2617|17|Num
+[[revisions."2024".casillas]]
+id = "DP200018:00088"
+number = "00088"
+segmento = "DP200018"
+continuidad_id = "is-deduccion-porta-ferrada-pendiente-generada"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2663 (DP200018B field 54): Deducc. para incentivar determ.actividades - 2023: 60 aniversario del Festival Porta Ferrada (PF) - Deducción pendiente/generada [00088]. aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2654 (DP200018 field 162): Deducc. para incentivar determ.actividades - 2024: 60 aniversario del Festival Porta Ferrada (PF) - Deducción pendiente/generada [00088]. Both print the same box for the same event column; the 2024 design moves it to another sheet and rotates the event year, as it does for every event row. Box [00088] on DP200001 is the tipo gravamen reducido flag, another field."
+section = ["deducc_para_incentivar_determ_actividades", "60_aniversario_del_festival_porta_ferrada_pf"]
+data_type = "money"
+semantic_role = "is_deduccion_porta_ferrada_pendiente_generada"
+legal_refs = ["ley-27-2014:art-39"]
+
+# 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2655 DP200018 163|2634|17|Num
+[[revisions."2024".casillas]]
+id = "DP200018:00089"
+number = "00089"
+segmento = "DP200018"
+continuidad_id = "is-deduccion-porta-ferrada-aplicado-periodo"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2664 (DP200018B field 55): Deducc. para incentivar determ.actividades - 2023: 60 aniversario del Festival Porta Ferrada (PF) - Aplicado en esta liquidación [00089]. aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2655 (DP200018 field 163): Deducc. para incentivar determ.actividades - 2024: 60 aniversario del Festival Porta Ferrada (PF) - Aplicado en esta liquidación [00089]. Both print the same box for the same event column; the 2024 design moves it to another sheet and rotates the event year, as it does for every event row. Box [00089] on DP200001 is the partícipe de AIE o UTE flag, another field."
+section = ["deducc_para_incentivar_determ_actividades", "60_aniversario_del_festival_porta_ferrada_pf"]
+data_type = "money"
+semantic_role = "is_deduccion_porta_ferrada_aplicado_periodo"
+legal_refs = ["ley-27-2014:art-39"]
+
+# 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2656 DP200018 164|2651|17|Num
+[[revisions."2024".casillas]]
+id = "DP200018:00090"
+number = "00090"
+segmento = "DP200018"
+continuidad_id = "is-deduccion-porta-ferrada-pendiente-futuro"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2665 (DP200018B field 56): Deducc. para incentivar determ.actividades - 2023: 60 aniversario del Festival Porta Ferrada (PF) - Pendiente de aplicación en periodos futuros [00090]. aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2656 (DP200018 field 164): Deducc. para incentivar determ.actividades - 2024: 60 aniversario del Festival Porta Ferrada (PF) - Pendiente de aplicación en periodos futuros [00090]. Both print the same box for the same event column; the 2024 design moves it to another sheet and rotates the event year, as it does for every event row. The 2024 design also prints box [00090] on DP200001 as the Opción art. 39.3 LIS flag, another field."
+section = ["deducc_para_incentivar_determ_actividades", "60_aniversario_del_festival_porta_ferrada_pf"]
+data_type = "money"
+semantic_role = "is_deduccion_porta_ferrada_pendiente_futuro"
+legal_refs = ["ley-27-2014:art-39"]

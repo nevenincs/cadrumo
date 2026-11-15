@@ -587,7 +587,13 @@ export function FormPanes({
             {details}
           </ResizablePane>
         )}
-        <div ref={below} className="col-start-2 row-start-3 min-w-0">
+        {/* Where the workspace scrolls as a whole, the staged-edit bar is
+            held at the bottom of what is drawn of it, over the form's end,
+            so applying or discarding never takes a scroll. */}
+        <div
+          ref={below}
+          className="sticky bottom-0 col-start-2 row-start-3 min-w-0"
+        >
           {staged}
         </div>
       </div>

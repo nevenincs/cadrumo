@@ -1,4 +1,5 @@
 import { Channel } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
 import {
   TerminalFrameTag,
   type TerminalWriteBody,
@@ -6,7 +7,15 @@ import {
   type TerminalKind,
 } from "../ipc/terminalFrames";
 import type { HostFailure, ShellToken } from "../ipc/contract";
-import type { TerminalEvent, TerminalSession } from "./host";
+import {
+  CONSOLE_ENVIRONMENT_EVENT,
+  parseConsoleEnvironmentChange,
+} from "./consoleEnvironment";
+import type {
+  ConsoleEnvironmentChange,
+  TerminalEvent,
+  TerminalSession,
+} from "./host";
 import { observedInvoke, type HostCall } from "./hostCall";
 
 // One channel per session carries tagged frames in order: a tag byte, then
@@ -198,4 +207,15 @@ export async function openTauriTerminal(
       await call("terminal_close", { session: id });
     },
   };
+}
+
+/** Subscribes to the host's console environment event. A malformed payload
+ * is refused and reaches no listener. */
+export function observeTauriConsoleEnvironment(
+  listener: (change: ConsoleEnvironmentChange) => void,
+): Promise<() => void> {
+  return listen<unknown>(CONSOLE_ENVIRONMENT_EVENT, (event) => {
+    const change = parseConsoleEnvironmentChange(event.payload);
+    if (change) listener(change);
+  });
 }

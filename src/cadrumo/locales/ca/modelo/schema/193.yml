@@ -39,6 +39,10 @@ modelo:
           gasto-importe-anual:
             label: Import de despeses
           gastos-total-declarante:
+            help: Suma dels imports de despeses (posicions 195 a 207) dels registres
+              de relació de despeses que declares. Si consignes «S» a NATURALESA DEL
+              DECLARANT, escriu zeros i no incloguis registres de despeses (Orden
+              HAC/56/2024, registre de tipus 1, posicions 220 a 234).
             label: Despeses deduïbles (art. 26.1.a Llei 35/2006)
           payee-base-retenciones-193:
             label: Base de retencions i ingressos a compte

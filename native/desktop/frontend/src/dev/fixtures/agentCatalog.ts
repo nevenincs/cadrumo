@@ -564,3 +564,41 @@ export const FIXTURE_DECLARED_CATALOG: AgentDeclaredCatalog = {
     })),
   },
 };
+
+/** Whether the service serves a lane while the engine record selects
+ * `selected`: the keyless lane of a local engine it does not select is not
+ * served, in the catalog or in the provider settings. */
+export const servedUnderEngine = (
+  provider: string,
+  transport: string,
+  selected: string,
+): boolean =>
+  !(ENGINE_LANES.has(`${provider}/${transport}`) && provider !== selected);
+
+/** The fixture catalog and the declared catalog as the service serves them
+ * while the engine record selects `selected`: the keyless lane of a local
+ * engine it does not select is served in neither. */
+export function catalogsUnderEngine(selected: string): {
+  served: AgentProviderCatalog;
+  declared: AgentDeclaredCatalog;
+} {
+  const held = (provider: string, transport: string) =>
+    !servedUnderEngine(provider, transport, selected);
+  return {
+    served: {
+      ...FIXTURE_CATALOG,
+      providers: (FIXTURE_CATALOG.providers ?? []).filter(
+        (lane) => !held(lane.provider_id, lane.transport),
+      ),
+    },
+    declared: {
+      ...FIXTURE_DECLARED_CATALOG,
+      catalog: {
+        ...FIXTURE_DECLARED_CATALOG.catalog,
+        providers: (FIXTURE_DECLARED_CATALOG.catalog.providers ?? []).filter(
+          (lane) => !held(lane.provider, lane.transport),
+        ),
+      },
+    },
+  };
+}
