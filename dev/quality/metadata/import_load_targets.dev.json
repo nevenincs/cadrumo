@@ -187,6 +187,7 @@
         "dev.acceptance.persona_table.file_stage",
         "dev.acceptance.persona_table.form_text_figures",
         "dev.acceptance.persona_table.frontend",
+        "dev.acceptance.persona_table.frontend_summary",
         "dev.acceptance.persona_table.planner",
         "dev.acceptance.persona_table.probe",
         "dev.acceptance.persona_table.probe_sweep",
