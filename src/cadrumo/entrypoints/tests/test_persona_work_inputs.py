@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import dataclasses
 from collections import Counter
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Iterator, Mapping
 from decimal import Decimal
 
 import pytest
@@ -196,6 +196,29 @@ def test_a_given_role_no_edition_declares_is_refused(
         check_work_inputs(_giving(persona, misspelt), envelope, operation)
 
 
+def _first_declaring_year(role: str, editions: Mapping[int, ModeloRevision]) -> int:
+    """The first envelope year whose edition declares ``role`` on any casilla."""
+    return min(
+        year
+        for year, edition in editions.items()
+        if any(role in (casilla.continuidad_id, casilla.semantic_role) for casilla in edition.casillas)
+    )
+
+
+def _latest_introduced_manual_role(editions: Mapping[int, ModeloRevision], *, floor: int) -> tuple[int, str]:
+    """The identity naming a manual casilla alone that the latest edition above the floor introduces, with that year.
+
+    The latest one keeps the lowered envelope as wide as the registry allows.
+    """
+    named = {
+        role
+        for edition in editions.values()
+        for casilla in edition.casillas
+        if casilla.input_kind is InputKind.MANUAL and (role := _role_naming(edition, str(casilla.id))) is not None
+    }
+    return max((year, role) for role in named if (year := _first_declaring_year(role, editions)) > floor)
+
+
 def test_a_role_only_a_later_edition_declares_is_admitted_under_a_horizon_before_it(
     persona: Persona, envelope: YearEnvelope, operation: PinnedAuthorityOperation
 ) -> None:
@@ -204,24 +227,7 @@ def test_a_role_only_a_later_edition_declares_is_admitted_under_a_horizon_before
         year: operation.revision_for_context(entry.modelo, filing_year=year, period=entry.period)
         for year in range(envelope.floor, envelope.horizon + 1)
     }
-    # Each registry identity that names a manual casilla alone in some edition, with the first envelope year
-    # whose edition declares it at all.
-    named = {
-        role
-        for edition in editions.values()
-        for casilla in edition.casillas
-        if casilla.input_kind is InputKind.MANUAL and (role := _role_naming(edition, str(casilla.id))) is not None
-    }
-    first_declaring = {
-        role: min(
-            year
-            for year, edition in editions.items()
-            if any(role in (casilla.continuidad_id, casilla.semantic_role) for casilla in edition.casillas)
-        )
-        for role in named
-    }
-    # The role the latest edition introduces, so the lowered envelope keeps as many years as the registry allows.
-    year, role = max((year, role) for role, year in first_declaring.items() if year > envelope.floor)
+    year, role = _latest_introduced_manual_role(editions, floor=envelope.floor)
     lowered = dataclasses.replace(envelope, horizon=year - 1)
     later = _giving(read_persona(_PERSONA, envelope=lowered), role, year=YearToken.parse("horizon", where="probe"))
     # No edition the lowered envelope reaches declares the role, yet the role is admitted.
