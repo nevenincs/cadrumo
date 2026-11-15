@@ -15,6 +15,7 @@
 //! to the AEAT: an export writes a local file and a filing is recorded
 //! locally.
 mod admitted;
+mod serial_timing;
 
 use super::picked_files::{self, Files, Pick, Picks, Purpose};
 use super::relay::{self, Failure, Result, Wiped, protocol};
@@ -517,7 +518,7 @@ impl ModeloHost {
             definition,
             payload.0.as_object().ok_or_else(|| failure("invalid"))?,
         )?;
-        let _serial = self.profile.serial().await;
+        let mut serial = serial_timing::serial(&self.profile, "submit", definition.id).await;
         let (person, identity, profile) = self.held().await?;
         substitute(
             &self.files,
@@ -541,6 +542,7 @@ impl ModeloHost {
             request,
         )
         .await?;
+        serial.operation(outcome.operation_id());
         settle::still_held(&self.profile, &person, outcome, definition.mutation()).await
     }
     /// Submits an edit's amounts as the relay's financial operand.
@@ -548,7 +550,7 @@ impl ModeloHost {
         let definition = admitted(definition)
             .filter(|definition| definition.financial())
             .ok_or_else(protocol)?;
-        let _serial = self.profile.serial().await;
+        let mut serial = serial_timing::serial(&self.profile, "financial", definition.id).await;
         let (person, identity, profile) = self.held().await?;
         let (input, work_unit) = financial_body(body, &profile)?;
         let request = financial_submission(definition.id, &work_unit, input)?;
@@ -563,6 +565,7 @@ impl ModeloHost {
             request,
         )
         .await?;
+        serial.operation(outcome.operation_id());
         settle::still_held(&self.profile, &person, outcome, definition.mutation()).await
     }
     /// Runs one of the workspace's named reads to its answer.
@@ -578,11 +581,12 @@ impl ModeloHost {
         }
         let definition = admitted(definition).ok_or_else(protocol)?;
         tokio::time::timeout(READ_LIMIT, async {
-            let _serial = self.profile.serial().await;
+            let mut serial = serial_timing::serial(&self.profile, "read", definition.id).await;
             let (person, identity, profile) = self.held().await?;
             let (request, subject) = plain_submission(definition, &profile, Wiped(payload), None)?;
             let mut events = self.profile.sign_in().person_events();
             let operation = relay::submit_wiping(&person, request, false).await?;
+            serial.operation(&operation);
             // A named read is followed here, never by the window.
             let tracked = Tracked::new(
                 operation,
@@ -630,7 +634,8 @@ impl ModeloHost {
         review_digest: &str,
         decision: Decision,
     ) -> Result<Outcome> {
-        let _serial = self.profile.serial().await;
+        let mut serial = serial_timing::serial(&self.profile, "answer", "-").await;
+        serial.operation(operation);
         let tracked = self.operations.find(operation)?;
         let person = settle::holding(&self.profile, &tracked).await?;
         let mut events = self.profile.sign_in().person_events();
@@ -646,7 +651,8 @@ impl ModeloHost {
         .await
     }
     async fn cancel(&self, operation: &str, revision: u64) -> Result<Outcome> {
-        let _serial = self.profile.serial().await;
+        let mut serial = serial_timing::serial(&self.profile, "cancel", "-").await;
+        serial.operation(operation);
         let tracked = self.operations.find(operation)?;
         let person = settle::holding(&self.profile, &tracked).await?;
         settle::cancel_on(&tracked, &person, revision).await

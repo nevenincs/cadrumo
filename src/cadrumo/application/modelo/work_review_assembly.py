@@ -103,7 +103,6 @@ if TYPE_CHECKING:
 class _ReviewRowContext:
     """Precomputed registry and persistence facts shared by every review row."""
 
-    revision: CalculationRevision | None
     bindings_by_id: Mapping[BindingId, BindingDefinition]
     formulas_by_id: Mapping[FormulaId, FormulaDefinition]
     binding_to_casillas: Mapping[BindingId, tuple[CasillaId, ...]]
@@ -114,6 +113,8 @@ class _ReviewRowContext:
     estados_casillas_oficiales: Mapping[CasillaId, EstadoCasillaOficial]
     official_references: Mapping[CasillaId, str | None]
     blocking_findings: tuple[ModeloVerificationFinding, ...]
+    #: Each casilla's first persisted observation, so every row reads its own without scanning them all.
+    observations: Mapping[CasillaId, CasillaObservation]
 
 
 def _work_unit_for_target(
@@ -310,16 +311,12 @@ def _calculation_note_blockers(
     return tuple(_calculation_note_blocker_ref(issue) for issue in blocking_calculation_issues(revision, resolutions))
 
 
-def _casilla_observation(
-    revision: CalculationRevision | None,
-    casilla_id: CasillaId,
-) -> CasillaObservation | None:
-    if revision is None:
-        return None
-    return next(
-        (item for item in revision.observations if item.casilla_id == casilla_id),
-        None,
-    )
+def _casilla_observations(revision: CalculationRevision | None) -> dict[CasillaId, CasillaObservation]:
+    """Each casilla's first observation in ``revision``, the one a scan in persisted order meets first."""
+    observations: dict[CasillaId, CasillaObservation] = {}
+    for item in () if revision is None else revision.observations:
+        observations.setdefault(item.casilla_id, item)
+    return observations
 
 
 def _persisted_binding_values(
@@ -364,11 +361,10 @@ def _holds_date_placeholder(observation: CasillaObservation, data_type: str) -> 
 
 def _realised_value(
     *,
-    casilla_id: CasillaId,
     input_kind: InputKind,
     formula_id: FormulaId | None,
     binding_ids: tuple[BindingId, ...],
-    revision: CalculationRevision | None,
+    observation: CasillaObservation | None,
     resolved_bindings: Mapping[BindingId, Decimal],
     data_type: str,
 ) -> tuple[ModeloValueKind, ModeloScalar, ModeloWorkOriginAnomaly | None]:
@@ -380,7 +376,6 @@ def _realised_value(
     durable evidence of an override. An equal-value explicit input is not
     distinguishable after persistence and therefore does not claim an anomaly.
     """
-    observation = _casilla_observation(revision, casilla_id)
     if observation is None:
         anomaly = ModeloWorkOriginAnomaly.BROKEN_CALCULATION_CHAIN if input_kind is InputKind.COMPUTED else None
         return ModeloValueKind.EMPTY, None, anomaly
@@ -452,12 +447,8 @@ def _binding_origins(
     )
 
 
-def _observation_is_absent_by_design(
-    revision: CalculationRevision | None,
-    casilla_id: CasillaId,
-) -> bool:
+def _observation_is_absent_by_design(observation: CasillaObservation | None) -> bool:
     """Return whether the persisted observation marks the casilla absent by design."""
-    observation = _casilla_observation(revision, casilla_id)
     return observation is not None and observation.absent_by_design
 
 
@@ -467,12 +458,12 @@ def _review_casilla(
 ) -> ModeloWorkReviewCasilla:
     binding_ids = _casilla_binding_ids(casilla.id, context.binding_to_casillas)
     formula = context.formulas_by_id.get(casilla.formula) if casilla.formula is not None else None
+    observation = context.observations.get(casilla.id)
     realised_kind, value, anomaly = _realised_value(
-        casilla_id=casilla.id,
         input_kind=casilla.input_kind,
         formula_id=casilla.formula,
         binding_ids=binding_ids,
-        revision=context.revision,
+        observation=observation,
         resolved_bindings=context.persisted_decimal_bindings,
         data_type=casilla.data_type,
     )
@@ -496,7 +487,7 @@ def _review_casilla(
         ),
         realised_kind=realised_kind,
         value=value,
-        absent_by_design=_observation_is_absent_by_design(context.revision, casilla.id),
+        absent_by_design=_observation_is_absent_by_design(observation),
         origin_anomaly=anomaly,
         estado_casilla_oficial=context.estados_casillas_oficiales[casilla.id],
         legal_refs=tuple(casilla.legal_refs),
@@ -527,7 +518,6 @@ def _review_row_context(
     )
     consumption_index = relation_consumption_index(snapshot.revision)
     return _ReviewRowContext(
-        revision=revision,
         bindings_by_id={binding.id: binding for binding in snapshot.revision.bindings},
         formulas_by_id={formula.id: formula for formula in snapshot.revision.formulas},
         binding_to_casillas=casillas_by_binding(snapshot.revision),
@@ -547,6 +537,7 @@ def _review_row_context(
             source_payloads=source_payloads,
         ),
         blocking_findings=blocking_findings,
+        observations=_casilla_observations(revision),
     )
 
 
