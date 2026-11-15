@@ -287,11 +287,16 @@ class ProfileWorkerOperationHost:
         # The first view usually follows the sign-in reply at once: give it the quiet window first.
         restart_quiet_window()
         self._grounding_warmup = asyncio.create_task(
-            asyncio.to_thread(self._warm_profile_grounding), name="profile-grounding-warmup"
+            asyncio.to_thread(self._warm_profile_grounding, None if self._warm_heap is None else self._warm_heap.epoch),
+            name="profile-grounding-warmup",
         )
 
-    def _warm_profile_grounding(self) -> None:
-        """Walk the grounding index under this worker's own pinned lease and governed facts."""
+    def _warm_profile_grounding(self, freeze_epoch: int | None) -> None:
+        """Walk the grounding index under this worker's own pinned lease and governed facts.
+
+        ``freeze_epoch`` is the warm heap's epoch at the admission that started
+        the walk; the heap is frozen afterwards only if no session ended since.
+        """
         if self.closed:
             return
         from cadrumo.domain.calculations.registry.profile_grounding import warm_profile_grounding_index
@@ -313,8 +318,8 @@ class ProfileWorkerOperationHost:
             fields={"computed": computed, "elapsed_seconds": round(monotonic() - started, 3)},
         )
         # A host closing meanwhile joins this walk before it releases the freeze.
-        if self._warm_heap is not None:
-            self._warm_heap.freeze()
+        if self._warm_heap is not None and freeze_epoch is not None:
+            self._warm_heap.freeze(freeze_epoch)
 
     async def _join_profile_grounding_warmup(self) -> None:
         """Wait for a walk under way, which stops at its next revision once the host is closed."""

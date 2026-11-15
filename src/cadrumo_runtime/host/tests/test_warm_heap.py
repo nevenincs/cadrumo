@@ -50,15 +50,27 @@ def test_a_freeze_collects_first_and_a_release_returns_every_object() -> None:
     cycle: list[object] = []
     cycle.append(cycle)
     del cycle
-    warm_heap.freeze()
+    epoch = warm_heap.epoch
+    warm_heap.freeze(epoch)
     frozen = gc.get_freeze_count()
     assert warm_heap.frozen and frozen > 0
-    warm_heap.freeze()
+    warm_heap.freeze(epoch)
     assert gc.get_freeze_count() == frozen
     warm_heap.release()
     assert not warm_heap.frozen and gc.get_freeze_count() == 0
     warm_heap.release()
     assert gc.get_freeze_count() == 0
+
+
+def test_a_freeze_for_an_ended_epoch_freezes_nothing() -> None:
+    warm_heap = WarmHeapFreeze()
+    admitted = warm_heap.epoch
+    warm_heap.release()
+    warm_heap.freeze(admitted)
+    assert not warm_heap.frozen and gc.get_freeze_count() == 0
+    warm_heap.freeze(warm_heap.epoch)
+    assert warm_heap.frozen
+    warm_heap.release()
 
 
 @pytest.mark.asyncio
@@ -87,6 +99,23 @@ async def test_the_walk_freezes_the_heap_until_the_session_ends_and_each_admissi
         result = await host.close()
         assert not result.needs_containment
         assert not warm_heap.frozen and gc.get_freeze_count() == 0
+        database.unlink()
+
+
+@pytest.mark.asyncio
+async def test_a_session_ended_during_the_walk_leaves_nothing_frozen_after_it(tmp_path: Path) -> None:
+    with isolated_shared_authority(tmp_path) as database:
+        warm_heap = WarmHeapFreeze()
+        host = _host(warm_heap)
+
+        host.start_profile_grounding_warmup()
+        warmup = host._grounding_warmup
+        assert warmup is not None and not warmup.done()
+        host.end_session_reads()
+        await warmup
+        assert not warm_heap.frozen and gc.get_freeze_count() == 0
+
+        await host.close()
         database.unlink()
 
 

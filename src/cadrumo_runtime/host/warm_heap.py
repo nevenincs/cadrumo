@@ -8,7 +8,9 @@ objects created afterwards are collected exactly as before.
 
 A freeze also covers whatever else is alive at that moment, including session
 state, so it lasts only as long as the session: when a session ends, the heap is
-unfrozen and every object again becomes collectable on the normal schedule.
+unfrozen and every object again becomes collectable on the normal schedule. A
+walk still running when its session ends must not freeze afterwards, so each
+freeze names the epoch of the admission it serves and every release ends one.
 Reference counting frees frozen objects regardless; only cyclic garbage waits.
 """
 
@@ -31,24 +33,37 @@ class WarmHeapFreeze:
         """Start unfrozen."""
         self._lock = Lock()
         self._frozen = False
+        self._epoch = 0
 
     @property
     def frozen(self) -> bool:
         """Whether this owner currently holds the heap frozen."""
         return self._frozen
 
-    def freeze(self) -> None:
-        """Collect the garbage present now, then freeze every surviving object; a second call does nothing."""
+    @property
+    def epoch(self) -> int:
+        """The current session epoch; every release starts a new one."""
+        return self._epoch
+
+    def freeze(self, epoch: int) -> None:
+        """Collect the garbage present now, then freeze every surviving object, unless a release ended ``epoch``.
+
+        A second call within one epoch does nothing.
+        """
         with self._lock:
-            if self._frozen:
+            if self._frozen or epoch != self._epoch:
                 return
             gc.collect()
             gc.freeze()
             self._frozen = True
 
     def release(self) -> None:
-        """Return every frozen object to the collector; a call while unfrozen does nothing."""
+        """End the epoch and return every frozen object to the collector.
+
+        A walk admitted in the ended epoch then freezes nothing when it finishes.
+        """
         with self._lock:
+            self._epoch += 1
             if not self._frozen:
                 return
             gc.unfreeze()
