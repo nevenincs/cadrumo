@@ -241,6 +241,29 @@ def test_prior_holding_the_turnover_under_both_ids_with_different_values_is_refu
     assert str(_PRIOR_TURNOVER) not in str(context)
 
 
+def test_prior_holding_an_identification_flag_under_both_ids_with_different_values_is_refused(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    profile = _Profile()
+    year = max(_turnover_reading_years())
+    stored = profile.qualified_prior(year)
+    flag_bare = validated_casilla_id("00017", surface="flag_bare")
+    flag = MODELO_200_PAGE_QUALIFIED_CASILLAS[flag_bare]
+    profile.replace_prior(
+        stored,
+        generation=_EARLIER_GENERATION,
+        box=lambda _key: ((_TURNOVER, _PRIOR_TURNOVER), (flag_bare, Decimal("1")), (flag, Decimal("0"))),
+    )
+
+    with pytest.raises(PriorFilingPageQualifiedConflictError) as refusal:
+        profile.calculate(year)
+
+    context = refusal.value.context
+    assert context is not None
+    assert context["casilla_ids"] == flag == "DP200001:00017"
+    assert context["source_filing_year"] == year - 1
+
+
 def test_identical_values_under_both_ids_read_once(secure_objects: SecureObjectRepository) -> None:
     profile = _Profile()
     year = max(_turnover_reading_years())

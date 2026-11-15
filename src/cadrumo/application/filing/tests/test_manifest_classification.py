@@ -37,7 +37,6 @@ from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.calculations.registry.tests.authored_editions import (
     authored_revisions_where,
-    filing_grade_exercises,
     filing_year_envelope,
     revision_covering,
 )
@@ -57,7 +56,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 # ``test_calculation_grade_coordinate_refuses_at_the_manifest_gate`` below, and the
 # module asserts that one of the two always covers Modelo 200.
 _NEWEST_EXERCISE = filing_year_envelope().horizon
-_M200_NEWEST_IS_FILING_GRADE = _NEWEST_EXERCISE in filing_grade_exercises("200")
+_M200_NEWEST_IS_FILING_GRADE = str(revision_covering("200", _NEWEST_EXERCISE).id) in {
+    str(revision.id)
+    for revision in authored_revisions_where(
+        "200", lambda revision: revision.authority_grade is RegistryAuthorityGrade.FILING
+    )
+}
 _MANIFEST_MODELOS = [
     (modelo, _NEWEST_EXERCISE, period, date(_NEWEST_EXERCISE + (1 if period == "0A" else 0), 6, 1))
     for modelo, period in (

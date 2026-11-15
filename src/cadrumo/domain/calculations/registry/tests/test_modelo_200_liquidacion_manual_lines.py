@@ -271,7 +271,7 @@ def test_sin_fines_lucrativos_without_its_regime_is_refused(exercise: int) -> No
 @pytest.mark.parametrize("exercise", _EXERCISES)
 def test_cooperativa_protegida_states_twenty_and_leaves_its_cuota_to_the_cooperative_split(exercise: int) -> None:
     """00017 marked: 00558 = 20 (L14704-14712, nota L14752-14755); 00562 refused (L26990)."""
-    result = _calculate(exercise, resultado=Decimal("100000"), form="cooperativa", marked=("00017",))
+    result = _calculate(exercise, resultado=Decimal("100000"), form="cooperativa", marked=("DP200001:00017",))
 
     assert result.values[_TIPO_GRAVAMEN] == _tipo(exercise, "20")
     assert _reason(result, M200_CUOTA_INTEGRA_CASILLA) is RegistryUnresolvedOutcomeReason.M200_TAX_REGIME_UNSUPPORTED
