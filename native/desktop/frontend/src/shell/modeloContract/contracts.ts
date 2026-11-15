@@ -155,18 +155,12 @@ import type {
   CreditResolutionListRequest,
   CreditResolutionMutationProjection,
   CreditResolutionRevokeRequest,
-  ModeloMaritimePreviewProjection,
-  ModeloMaritimePreviewRequest,
-  ModeloTaxationComparisonProjection,
-  ModeloTaxationComparisonRequest,
   ModeloWorkCalculatePublicResultV3,
   ModeloWorkCalculateRequest,
   ModeloWorkDiscardPublicResultV2,
   ModeloWorkDiscardRequest,
   ModeloWorkFilingRecordProjection,
   ModeloWorkFilingRecordRequest,
-  ModeloWorkHistoryProjection,
-  ModeloWorkHistoryRequest,
   ModeloWorkListProjection,
   ModeloWorkListRequest,
   ModeloWorkM303AttestationPublicResultV2,
@@ -181,8 +175,6 @@ import type {
   ModeloWorkRevisionSnapshotRequest,
   ModeloWorkRevisionsProjection,
   ModeloWorkRevisionsRequest,
-  ModeloWorkWizardAttemptProjection,
-  ModeloWorkWizardAttemptRequest,
   ModeloWorkWizardContextProjection,
   ModeloWorkWizardContextRequest,
 } from "./modeloWork";
@@ -199,6 +191,10 @@ import type {
   ModeloCasillaHelpRequest,
 } from "./modeloWorkCasillaHelp";
 import type {
+  ModeloTaxationComparisonProjection,
+  ModeloTaxationComparisonRequest,
+} from "./modeloWorkCompareTaxation";
+import type {
   ModeloWorkCreateProjection,
   ModeloWorkCreateRequest,
 } from "./modeloWorkCreate";
@@ -211,9 +207,21 @@ import type {
   ModeloWorkFileRequest,
 } from "./modeloWorkFile";
 import type {
+  ModeloWorkFilingStateProjectionV1,
+  ModeloWorkFilingStateRequest,
+} from "./modeloWorkFilingState";
+import type {
   ModeloWorkbenchFormProjectionV1,
   ModeloWorkbenchFormRequest,
 } from "./modeloWorkForm";
+import type {
+  ModeloWorkHistoryProjection,
+  ModeloWorkHistoryRequest,
+} from "./modeloWorkHistory";
+import type {
+  ModeloMaritimePreviewProjection,
+  ModeloMaritimePreviewRequest,
+} from "./modeloWorkPreviewMaritimeExemption";
 import type {
   ModeloCalculationReportVerificationProjection,
   ModeloCalculationReportVerificationRequest,
@@ -226,6 +234,10 @@ import type {
   ModeloWorkVerifyPublicResultV2,
   ModeloWorkVerifyRequest,
 } from "./modeloWorkVerify";
+import type {
+  ModeloWorkWizardAttemptProjection,
+  ModeloWorkWizardAttemptRequest,
+} from "./modeloWorkWizardAttempt";
 
 /** The definitions the host admits, mirroring its closed list. */
 export const MODELO_DEFINITIONS = [
@@ -295,6 +307,7 @@ export const MODELO_DEFINITIONS = [
   "modelo.work.discard",
   "modelo.work.file",
   "modelo.work.filing_record",
+  "modelo.work.filing_state",
   "modelo.work.form",
   "modelo.work.history",
   "modelo.work.list",
@@ -682,6 +695,10 @@ type ModeloWorkContracts = {
   "modelo.work.filing_record": {
     request: ModeloWorkFilingRecordRequest;
     result: ModeloWorkFilingRecordProjection;
+  };
+  "modelo.work.filing_state": {
+    request: ModeloWorkFilingStateRequest;
+    result: ModeloWorkFilingStateProjectionV1;
   };
   "modelo.work.form": {
     request: ModeloWorkbenchFormRequest;

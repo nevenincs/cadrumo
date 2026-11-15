@@ -7,15 +7,16 @@ import { servedYears, type ServedYear } from "@/dev/servedRentaYears";
 import { translator } from "../../../shell/strings";
 import type { ModeloPort } from "../../../shell/modelo";
 import type { OutputLanguage } from "../../../shell/modeloContract/modelo";
-import type { ModeloTaxationComparisonProjection } from "../../../shell/modeloContract/modeloWork";
-import type {
-  ModeloFormElection,
-  PublicModeloFormExportOffer,
-} from "../../../shell/modeloContract/modeloWorkForm";
+
 import type { LedgerErrorDetail } from "../../../shell/ledger";
 import { Settlement } from "./Settlement";
 import { WorkspaceScreen } from "./WorkspaceScreen";
 import { byName } from "@/dev/globByName";
+import type { ModeloTaxationComparisonProjection } from "../../../shell/modeloContract/modeloWorkCompareTaxation";
+import type {
+  ModeloFormElection,
+  PublicModeloFormExportOffer,
+} from "../../../shell/modeloContract/modeloWork";
 
 // What the Modelo 100 of each supported filing year offers, in the real
 // workspace over the envelopes the application read for the same couple in

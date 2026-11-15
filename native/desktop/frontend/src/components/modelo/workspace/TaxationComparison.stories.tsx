@@ -10,7 +10,7 @@ import {
 } from "../../../shell/ledger";
 import type { ModeloPort } from "../../../shell/modelo";
 import type { OutputLanguage } from "../../../shell/modeloContract/modelo";
-import type { ModeloTaxationComparisonProjection } from "../../../shell/modeloContract/modeloWork";
+
 import { translator } from "../../../shell/strings";
 import { TaxationComparison } from "./TaxationComparison";
 import {
@@ -19,6 +19,7 @@ import {
 } from "./taxationComparisonRead";
 import { WorkspaceScreen } from "./WorkspaceScreen";
 import { byName } from "@/dev/globByName";
+import type { ModeloTaxationComparisonProjection } from "../../../shell/modeloContract/modeloWorkCompareTaxation";
 
 // The comparison of joint and individual filing on what the application read
 // for synthetic households through `modelo.work.compare_taxation`, in every

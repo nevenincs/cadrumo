@@ -15,10 +15,7 @@ import type {
   ModeloFormText,
   PublicModeloFormField,
 } from "../../../shell/modeloContract/modeloWorkForm";
-import type {
-  PublicModeloFormSection,
-  PublicModeloWorkForm,
-} from "../../../shell/modeloContract/modeloWorkFormPart2";
+
 import { useStrings, type Translate } from "../../../shell/strings";
 import { calm } from "../form/FieldRow";
 import {
@@ -26,6 +23,10 @@ import {
   UNPLACED_PAGE,
   WORKING_FIGURES_PAGE,
 } from "../form/session";
+import type {
+  PublicModeloFormSection,
+  PublicModeloWorkForm,
+} from "../../../shell/modeloContract/modeloWorkForm";
 
 // The form's outline as the read model serves it: its groups in order, the
 // sections each gathers, and what each still asks of the filer. Nothing here

@@ -1,6 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
 import type {
-  ModeloFormExportHold,
   ModeloFormJourney,
   ModeloFormNextStep,
   ModeloFormStepState,
@@ -17,6 +16,7 @@ import {
   tab,
 } from "../support/scenarioModelo";
 import { stage, TYPED_06 } from "../support/scenarioModeloWrites";
+import type { ModeloFormExportHold } from "../../src/shell/modeloContract/modeloWork";
 
 // Where a declaration stands on the filing journey is the read model's: the
 // steps and their status (one set while the window holds changes, another

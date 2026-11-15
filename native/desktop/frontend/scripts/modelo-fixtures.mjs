@@ -87,14 +87,19 @@ const CONTRACT_MODULES = [
   "src/shell/modeloContract/modeloWorkAmend.ts",
   "src/shell/modeloContract/modeloWorkAmendmentContext.ts",
   "src/shell/modeloContract/modeloWorkCasillaHelp.ts",
+  "src/shell/modeloContract/modeloWorkCompareTaxation.ts",
   "src/shell/modeloContract/modeloWorkCreate.ts",
   "src/shell/modeloContract/modeloWorkDependencies.ts",
   "src/shell/modeloContract/modeloWorkFile.ts",
+  "src/shell/modeloContract/modeloWorkFilingState.ts",
   "src/shell/modeloContract/modeloWorkForm.ts",
   "src/shell/modeloContract/modeloWorkFormPart2.ts",
+  "src/shell/modeloContract/modeloWorkHistory.ts",
+  "src/shell/modeloContract/modeloWorkPreviewMaritimeExemption.ts",
   "src/shell/modeloContract/modeloWorkReportVerify.ts",
   "src/shell/modeloContract/modeloWorkReview.ts",
   "src/shell/modeloContract/modeloWorkVerify.ts",
+  "src/shell/modeloContract/modeloWorkWizardAttempt.ts",
 ];
 const contractDirectory = resolve(frontend, "src/shell/modeloContract");
 const bounds = resolve(frontend, "src/shell/relayBounds.ts");
