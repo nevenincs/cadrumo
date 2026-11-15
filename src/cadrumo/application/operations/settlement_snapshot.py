@@ -6,6 +6,7 @@ import logging
 
 from ...core.logging import get_logger
 from ...core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
+from .lifecycle_timing import log_operation_timing
 from .models import OperationTerminalReceipt
 from .persistence.events import OperationEvent
 from .persistence.journal import OperationPersistedSnapshot
@@ -54,6 +55,7 @@ def log_settlement(receipt: OperationTerminalReceipt, *, cause: str) -> None:
     Only registered codes and opaque references are written; operands and
     exception text never reach the log.
     """
+    log_operation_timing(receipt.identity, "settled")
     _log.log(
         settlement_log_level(receipt.condition, receipt.effect),
         "operation settled operation=%s definition=%s condition=%s effect=%s cause=%s"
