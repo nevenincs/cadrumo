@@ -24,6 +24,7 @@ from dev.acceptance.installed_cli import authority_generation
 from ..export_check import export_reason
 from ..planner import MODELOS_ENV, YEARS_ENV, persona_under_horizon, plan_rows, registry_envelope, stated_values
 from ..rows import PlannedRow
+from ..timing import TIMING_FILE, case_record, collect_case_timing, write_timing_records
 from .driver import (
     CalculateMode,
     Case,
@@ -247,7 +248,8 @@ def drive_case(
     served_log = place.log_dir / "runtime.stderr.log"
     with served_root(template, storage, spec.authority, PERSONA_PROFILE_CREDENTIAL, served_log) as runner:
         summary = _drive_served(spec, report, runner, writer, redactor, place, (published, selection), done)
-    return with_sign_out_findings(summary, runner.sign_outs, _Trace(place.log_dir / "case.log", redactor))
+    summary = with_sign_out_findings(summary, runner.sign_outs, _Trace(place.log_dir / "case.log", redactor))
+    return replace(summary, notes=(*summary.notes, *record_case_timing(spec, storage, place.log_dir)))
 
 
 def _drive_served(
@@ -281,6 +283,18 @@ def _drive_served(
         done=done,
     )
     return run_case(case, selection)
+
+
+def record_case_timing(spec: CaseSpec, storage: Path, log_dir: Path) -> tuple[str, ...]:
+    """Collect the case's timing lines before its root goes; name what could not be collected.
+
+    The root is the case's own, so every timing line in its log belongs to the case. Collection is best effort: an
+    absent log is a finding and changes no stage result.
+    """
+    collected = collect_case_timing(storage, log_dir, None)
+    record = case_record(spec.persona, spec.horizon, collected.timings, None)
+    write_timing_records(log_dir / TIMING_FILE, [record])
+    return collected.findings
 
 
 def with_sign_out_findings(summary: CaseSummary, sign_outs: Sequence[SignOut], trace: Trace) -> CaseSummary:
