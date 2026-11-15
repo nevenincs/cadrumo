@@ -43,7 +43,6 @@ _DECLARANTE_NAME = "DP_APENOM_D"
 _MARITAL_STATUS = "ECIVIL"
 _DECLARATION_TYPE = "TIPOTRIBUTACION"
 _CALCULATE_FLAGS: tuple[str, ...] = (
-    "--casilla", "0003=24000",
     "--binding", "renta-base-liquidable-negativa-general-anterior=0",
     "--binding", "renta-base-liquidable-negativa-general-em4-pendiente-inicio=0",
     "--binding", "renta-saldo-negativo-gyp-ahorro-em4-pendiente-inicio=0",
@@ -85,7 +84,8 @@ def _seed_salaried_profile(runtime_profile: TestRuntimeProfile, *identity: UserP
                 UserProfileFact(path="renta_taxpayer.marital_status", value=Decimal("1")),
                 UserProfileFact(path="renta_filing.declaration_type", value=Decimal("1")),
             ),
-            without=("irpf.estimation_regime", "censo.activity_start_date"),
+            # The persona's own name is left out, so only ``identity`` declares one.
+            without=("irpf.estimation_regime", "censo.activity_start_date", "identity.name", "identity.surnames"),
         ),
         context=profile_creation_context_for_test(),
     )

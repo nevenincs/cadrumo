@@ -308,6 +308,9 @@ def _seed_prior_m100_zero_carry(exercise: int) -> None:
                         "1479": Decimal("0"),
                         "1553": Decimal("0"),
                         "1577": Decimal("0"),
+                        # The prior return's art. 49 savings-base carries, stated as nil:
+                        # an unprinted box is unknown, not zero.
+                        **dict.fromkeys(("1263", "1266", "1269", "1270", "1276", "1279", "1282", "1283"), Decimal("0")),
                     },
                 ),
             ),
