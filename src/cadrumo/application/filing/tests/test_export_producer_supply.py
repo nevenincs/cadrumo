@@ -1,7 +1,9 @@
 """An export whose layout cites a producer nothing supplies refuses, naming every missing fact.
 
 The header producers resolve exactly the keys the shared snapshot owns, so the
-headers each case hands the guard are that set, as the export builds them. The
+headers each case hands the guard are that set, as the export builds them. Every
+published layout's producers are now supplied, so the refusing case withholds the
+Modelo 840 namespace from the headers, as a resolver that forgot it would. The
 expected missing keys are read from the published Modelo 840 export layout's own
 source, apart from the guard under test.
 """
@@ -47,27 +49,30 @@ def _layout(operation: PinnedAuthorityOperation, modelo: str, period: str) -> Ex
     return layout
 
 
-def _cited_outside_the_headers(modelo: str) -> set[str]:
-    cited: set[str] = {
+def _cited(modelo: str) -> set[str]:
+    return {
         str(key)
         for layout in _MODELOS.glob(f"{modelo}/revisions/*/export/*.toml")
         for key in _PRODUCER_KEY.findall(layout.read_text(encoding="utf-8"))
     }
-    supplied = {key.value for key in _headers()}
-    return cited - supplied
+
+
+def _cited_outside_the_headers(modelo: str) -> set[str]:
+    return _cited(modelo) - {key.value for key in _headers()}
 
 
 def test_a_layout_citing_producers_nothing_supplies_refuses_naming_each_one(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    layout, headers = _layout(operation, "840", "0A"), _headers()
-    expected = _cited_outside_the_headers("840")
+    layout = _layout(operation, "840", "0A")
+    headers = {key: value for key, value in _headers().items() if not key.value.startswith("m840.")}
+    expected = _cited("840") - {key.value for key in headers}
 
     missing = unsupplied_producer_keys(layout, headers)
     with pytest.raises(FilingExportValidationError) as refusal:
         require_supplied_producers(layout, headers, modelo="840")
 
-    assert expected, "the Modelo 840 layout no longer cites an unsupplied producer, so this proves nothing"
+    assert expected, "the Modelo 840 layout cites no m840 producer, so withholding them proves nothing"
     assert {key.value for key in missing} == expected
     assert refusal.value.translated_message == "application.filing.export.errors.producer_facts_unsupplied"
     context = refusal.value.context or {}
