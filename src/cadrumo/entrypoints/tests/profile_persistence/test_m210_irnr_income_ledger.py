@@ -66,7 +66,9 @@ from cadrumo.tests.env_scope import ready_clave_settings
 
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from ....application.ledger.tests.manual_transaction_support import create_manual_transaction
+from ....core.casilla_id import validated_casilla_id
 from ....domain.calculations.registry.iva_regime_vocabulary import default_iva_regime
+from ....domain.modelos.calculation_revision_sources import bound_input_source_ref
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
@@ -243,7 +245,11 @@ def test_bucket_calculation_uses_injected_transaction_store_over_distinct_ambien
 
         assert revision.casilla_values["rendimientos_integros"] == Decimal("1234.56")
         assert revision.source_transaction_ids == (injected_id,)
-        assert {source.source_ref for source in revision.source_provenance} == {f"transaction:{injected_id}"}
+        # The ledger resolver supplies the box directly, so the trace also names that bound input.
+        assert {source.source_ref for source in revision.source_provenance} == {
+            f"transaction:{injected_id}",
+            bound_input_source_ref(validated_casilla_id("rendimientos_integros")),
+        }
         assert ambient_transaction_repository.exists() is False
 
 
@@ -417,7 +423,10 @@ def _assert_ledger_mode_calculation(ledger, manual, es_id) -> None:
     assert ledger.casilla_values["rendimientos_integros"] == Decimal("900.00")
     assert ledger.source_transaction_ids == (es_id,)
     assert ledger.calculation_revision_id != manual.calculation_revision_id
-    assert {source.source_ref for source in ledger.source_provenance} == {f"transaction:{es_id}"}
+    assert {source.source_ref for source in ledger.source_provenance} == {
+        f"transaction:{es_id}",
+        bound_input_source_ref(validated_casilla_id("rendimientos_integros")),
+    }
     assert len(ledger.detail_rows) == 1
     derived_row = ledger.detail_rows[0]
     assert isinstance(derived_row, Modelo210AgrupacionRentaRow)
@@ -671,6 +680,8 @@ def test_m210_ledger_mode_evidence_bundle_records_no_manual_gross_income(
                 m210_official_tipo_renta_code="01",
                 m210_gross_income_source_mode=M210GrossIncomeSourceMode.LEDGER,
                 clock=_CLOCK,
+                # The executor records the operator's own entries; verification reads them to tell typed from assumed.
+                record_operator_layer=True,
             ).revision
 
         with bundled_indexed_authority().operation() as operation:
