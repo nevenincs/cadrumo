@@ -16,6 +16,7 @@ from ..figure_compare import extra_figures, figure_causes, is_redacted
 from ..frontend import (
     CALCULATE_INHERITED,
     EXPORT_WITHHELD_UNVERIFIED,
+    GRADE_HELD_FINDING,
     INHERITED_CAUSE,
     LEGACY_INHERITED_REASON,
     MATCHED,
@@ -648,7 +649,13 @@ def _sealed_row(period: str = "1T", reason: str = _NOT_SEALED_REASON, export: St
 
 
 def _unserved(**overrides: object) -> SurfaceResult:
-    return _result(verify="incomplete", export="not-reached", export_served=False, **overrides)
+    return _result(
+        verify="incomplete",
+        export="not-reached",
+        export_served=False,
+        blocking_findings=[GRADE_HELD_FINDING],
+        **overrides,
+    )
 
 
 def test_an_export_door_not_served_matches_the_unsealed_refusal_and_records_the_code() -> None:
@@ -722,7 +729,13 @@ def test_a_non_boolean_export_served_is_refused(value: object) -> None:
 def test_the_cell_names_rows_matched_by_gating_only_when_there_are_some() -> None:
     rows = [_sealed_row("1T"), _row("2T"), _row("3T")]
     lines = [
-        _line(period="1T", verify="incomplete", export="not-reached", export_served=False),
+        _line(
+            period="1T",
+            verify="incomplete",
+            export="not-reached",
+            export_served=False,
+            blocking_findings=[GRADE_HELD_FINDING],
+        ),
         _line(period="2T"),
         _line(period="3T"),
     ]
@@ -738,7 +751,16 @@ def test_the_cell_names_rows_matched_by_gating_only_when_there_are_some() -> Non
 
 def test_the_report_lists_the_rows_matched_as_export_unavailable_only_when_there_are_some() -> None:
     rows = [_sealed_row("1T"), _row("2T")]
-    lines = [_line(period="1T", verify="incomplete", export="not-reached", export_served=False), _line(period="2T")]
+    lines = [
+        _line(
+            period="1T",
+            verify="incomplete",
+            export="not-reached",
+            export_served=False,
+            blocking_findings=[GRADE_HELD_FINDING],
+        ),
+        _line(period="2T"),
+    ]
     results = {parse_result(json.dumps(line)).key: parse_result(json.dumps(line)) for line in lines}
     comparison = compare_frontend(rows, results)
     assert unavailable_exports_lines(comparison) == [
@@ -1110,3 +1132,25 @@ def test_the_frontend_line_lists_differs_apart_from_not_run_per_surface() -> Non
     clean = compare_frontend(full, {line.key: line})
     assert clean.unmatched("cli") == {}
     assert "CLI" not in frontend_line(clean).split("not matched:")[1]
+
+
+def test_a_withheld_export_door_matches_only_when_the_surface_blocks_on_the_grade_finding() -> None:
+    held = parity(_sealed_row(), "tui", _unserved())
+    assert (held.outcome, held.gated_stages) == ("matched", (_UNAVAILABLE,))
+    for blocking in ([], ["other_finding"], None):
+        line = {} if blocking is None else {"blocking_findings": blocking}
+        other = parity(
+            _sealed_row(),
+            "tui",
+            _result(verify="incomplete", export="not-reached", export_served=False, **line),
+        )
+        assert (other.outcome, other.gated_stages) == ("differs", ())
+        assert "export tui not-reached, table refused" in other.causes
+
+
+def test_the_blocking_findings_of_a_line_are_read_and_a_bad_value_is_refused() -> None:
+    assert _result(blocking_findings=[GRADE_HELD_FINDING]).blocking_findings == (GRADE_HELD_FINDING,)
+    assert _result().blocking_findings == ()
+    for bad in ("registry_authority_grade_insufficient", [""], [1], {"a": 1}):
+        with pytest.raises(ValueError, match="blocking_findings"):
+            parse_result(json.dumps(_line(blocking_findings=bad)))

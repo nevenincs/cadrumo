@@ -85,6 +85,8 @@ INHERITED_CAUSE = "calculate inherited (the surface did not run the calculation)
 LEGACY_INHERITED_REASON = "calculate: a calculation was already present; none was run"
 """How the window wrote an inherited calculation (as ``pass``) before the word existed."""
 
+GRADE_HELD_FINDING = "registry_authority_grade_insufficient"
+"""The blocking finding of a verification the registry authority's grade holds; a withheld door matches only with it."""
 EXPORT_WITHHELD_UNVERIFIED = ("REFUSED_MODELO_REVISION_NOT_SEALED",)
 """The codes the export operation raises for a revision that is not sealed (unverified, so no grant sealed it)."""
 EXPORT_UNAVAILABLE = "export unavailable (refused | not served)"
@@ -155,6 +157,7 @@ _FIELDS = frozenset(
         "verify",
         "export",
         "export_served",
+        "blocking_findings",
         "file",
         "refusal_code",
         "figures",
@@ -188,6 +191,8 @@ class SurfaceResult:
     export: str = NOT_REACHED
     export_served: bool | None = None
     """Whether the form served an export door for the return; ``None`` when the line does not state it."""
+    blocking_findings: tuple[str, ...] = ()
+    """The ids of the findings the surface shows as blocking the return's verification; empty when it states none."""
     file: str | None = None
     """The file stage in the stage vocabulary; ``None`` when the line does not state it. Not compared with the table."""
     refusal_code: str | None = None
@@ -291,6 +296,7 @@ def parse_result(line: str) -> SurfaceResult:
         verify=stages.get("verify", NOT_REACHED),
         export=stages.get("export", NOT_REACHED),
         export_served=_optional_bool(data, "export_served"),
+        blocking_findings=_finding_ids(data),
         file=_optional_stage(data, "file"),
         refusal_code=_optional_text(data, "refusal_code"),
         figures=_figures(data.get("figures", {})),
@@ -348,6 +354,16 @@ def _optional_stage(data: Mapping[str, object], name: str) -> str | None:
 def _optional_workaround(data: Mapping[str, object]) -> str | None:
     """The workaround text of a line: ``None`` when absent or null, else non-empty text."""
     return None if data.get("workaround") is None else _text(data, "workaround")
+
+
+def _finding_ids(data: Mapping[str, object]) -> tuple[str, ...]:
+    """The ``blocking_findings`` of a line: an array of non-empty ids, ``()`` when absent or null."""
+    raw = data.get("blocking_findings")
+    if raw is None:
+        return ()
+    if not isinstance(raw, list) or not all(isinstance(item, str) and item.strip() for item in raw):
+        raise ValueError("blocking_findings must be an array of non-empty finding ids or null")
+    return tuple(cast("list[str]", raw))
 
 
 def _optional_bool(data: Mapping[str, object], name: str) -> bool | None:
@@ -534,13 +550,15 @@ def export_refusal_code(reason: str) -> str | None:
 def _export_unavailable(name: str, word: str | None, result: SurfaceResult, code: str | None) -> bool:
     """Whether the surface's ``not-reached`` export is the table's refusal for an unsealed revision.
 
-    It is, only when the form served no export door (``export_served`` false, never absent) and the table's export
-    refusal code is one of ``EXPORT_WITHHELD_UNVERIFIED``.
+    It is, only when the form served no export door (``export_served`` false, never absent), the surface's blocking
+    findings include ``GRADE_HELD_FINDING`` (the grade holds the verification, not a defect of the return) and the
+    table's export refusal code is one of ``EXPORT_WITHHELD_UNVERIFIED``.
     """
     return (
         name == "export"
         and result.export == NOT_REACHED
         and result.export_served is False
+        and GRADE_HELD_FINDING in result.blocking_findings
         and word == "refused"
         and code in EXPORT_WITHHELD_UNVERIFIED
     )
