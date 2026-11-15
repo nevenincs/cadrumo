@@ -168,18 +168,26 @@ def _declared_activity(
     activity_rows: Mapping[int, Mapping[str, str]],
 ) -> int | None:
     """The one activity the stored Modelo 840 facts name, or ``None`` when none does."""
-    named: dict[str, set[int]] = {
-        IAE_LOCAL_SECTION: {local.actividad for local in locales},
-        IAE_ELEMENTO_TRIBUTARIO_SECTION: {elemento.actividad for elemento in elementos},
-    }
-    if not any(named.values()):
-        named = {
-            _ACTIVITIES_SECTION: {row for row, leaves in activity_rows.items() if _ACTIVITY_LEAVES & leaves.keys()}
-        }
+    named = _named_activities(locales, elementos, activity_rows)
     activities = sorted({activity for ids in named.values() for activity in ids})
     if len(activities) > 1:
         raise _activities_ambiguous(work_unit, activities, sections=[section for section, ids in named.items() if ids])
     return activities[0] if activities else None
+
+
+def _named_activities(
+    locales: tuple[IaeLocalRecord, ...],
+    elementos: tuple[IaeElementoTributarioRecord, ...],
+    activity_rows: Mapping[int, Mapping[str, str]],
+) -> dict[str, set[int]]:
+    """The activities each section names; the activity rows answer only when no IAE row names one."""
+    named: dict[str, set[int]] = {
+        IAE_LOCAL_SECTION: {local.actividad for local in locales},
+        IAE_ELEMENTO_TRIBUTARIO_SECTION: {elemento.actividad for elemento in elementos},
+    }
+    if any(named.values()):
+        return named
+    return {_ACTIVITIES_SECTION: {row for row, leaves in activity_rows.items() if _ACTIVITY_LEAVES & leaves.keys()}}
 
 
 def _activity_locales(
