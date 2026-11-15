@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import contextlib
-import logging
 import time
 from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
@@ -22,6 +21,7 @@ from cadrumo_client.transport.windows_process import WindowsProcessScope, unretu
 from ..providers.application.contracts import HelperCause, ServiceCause
 from .auth_protocol import TERMINAL_EVENTS, AuthEvent, AuthProtocol, append_auth_code, read_event_lines, snapshot
 from .credential_frame import wipe
+from .sign_in_refusal import log_settlement, new_log_ref
 
 _LOGGER = get_logger(__name__)
 
@@ -71,6 +71,11 @@ class AuthAttempt:
         confirm is served as a failure.
         """
         self.id = str(uuid4())
+        self.log_ref = new_log_ref()
+        self.lane = lane
+        self._stderr_bytes = 0
+        self._exit_status: int | None = None
+        self._errors: list[str] = []
         self._lane = lane
         self._protocol = AuthProtocol(provider)
         self._executable = executable
@@ -98,6 +103,11 @@ class AuthAttempt:
     def active(self) -> bool:
         """Unconfirmed cleanup retains ownership even after the worker ends."""
         return not self._done.is_set() or not self._clean
+
+    @property
+    def finished(self) -> bool:
+        """Whether the worker has ended and served its outcome, whether or not its cleanup is confirmed."""
+        return self._done.is_set()
 
     def observe(self) -> dict[str, JsonValue]:
         """A live dialog renews only its helper watchdog, never person authority."""
@@ -164,7 +174,13 @@ class AuthAttempt:
                 self._retire_scope()
                 self._settle_readers()
                 self._clean = True
-            except Exception:
+            except Exception as error:
+                _LOGGER.warning(
+                    "provider sign-in cleanup retry unconfirmed provider=%s error_class=%s log_ref=%s",
+                    self._lane,
+                    type(error).__name__,
+                    self.log_ref,
+                )
                 raise RuntimeError("auth_cleanup_unconfirmed") from None
         if self.active:
             raise RuntimeError("auth_cleanup_unconfirmed")
@@ -189,11 +205,15 @@ class AuthAttempt:
                 value.pop("user_code", None)
             self._snapshot = value
 
-    @staticmethod
-    def _discard(stream: BinaryIO) -> None:
+    def _discard(self, stream: BinaryIO) -> None:
+        """Drain the helper's error output unread: it may hold secrets, so only its size is kept."""
         with stream, contextlib.suppress(OSError, ValueError):
-            while stream.read(4096):
-                pass
+            while chunk := stream.read(4096):
+                self._stderr_bytes += len(chunk)
+
+    def _note(self, stage: str, error: BaseException) -> None:
+        """Keep a swallowed exception's stage and class name for the settle line; never its message."""
+        self._errors.append(f"{stage}:{type(error).__name__}")
 
     @staticmethod
     def _wait(process: WindowsOwnedProcess, timeout: float) -> int | None:
@@ -318,8 +338,9 @@ class AuthAttempt:
             outcome, reason, cause = self._exchange(input_stream, self._start_readers(output, errors))
         except HelperStreamError as error:
             outcome, reason, cause = "failed", "provider_error", error.cause
-        except BaseException:
-            # The exception may contain pipe or provider contents; never retain it.
+        except BaseException as error:
+            # The exception may contain pipe or provider contents; keep only its class name.
+            self._note("exchange" if launched else "launch", error)
             outcome, reason = "failed", "provider_error"
             cause = "helper_ended_without_result" if launched else "helper_start_failed"
         finally:
@@ -332,7 +353,8 @@ class AuthAttempt:
         if self._prepare is not None:
             try:
                 self._prepare()
-            except BaseException:
+            except BaseException as error:
+                self._note("prepare", error)
                 return "failed", "cleanup_failed", "agent_stop_failed"
             if not self._valid() or self._cancel.is_set():
                 return "cancelled", None, None
@@ -372,10 +394,12 @@ class AuthAttempt:
                     input_stream.close()
             if process is not None:
                 status = self._wait(process, 3)
+                self._exit_status = status
                 # A helper that has not exited after its success is not a clean one either.
                 if settlement[0] == "succeeded" and status != 0:
                     return "failed", "provider_error", "helper_exit_nonzero"
-        except Exception:
+        except Exception as error:
+            self._note("close", error)
             return "failed", "provider_error", "cleanup_unconfirmed"
         return settlement
 
@@ -385,8 +409,9 @@ class AuthAttempt:
             return True, None
         try:
             return self._confirm()
-        except Exception:
+        except Exception as error:
             # The exception may carry provider output; only its closed kind is kept.
+            self._note("confirm", error)
             return False, "status_read_failed"
 
     def _cleaned_up(
@@ -404,7 +429,8 @@ class AuthAttempt:
                 self._retire_scope()
             self._settle_readers()
             self._clean = True
-        except Exception:
+        except Exception as error:
+            self._note("cleanup", error)
             return "failed", "cleanup_failed", "cleanup_unconfirmed"
         return settlement
 
@@ -431,19 +457,61 @@ class AuthAttempt:
         reason: str | None,
         cause: HelperCause | ServiceCause | None,
     ) -> None:
-        settlement = self._cleaned_up(process, input_stream, (outcome, reason, cause))
-        (outcome, reason, cause), status_cause = self._confirmed_settlement(settlement)
-        self._publish(snapshot(self.id, self._lane, outcome, reason=reason, cause=cause, status_cause=status_cause))
-        self._done.set()
-        _LOGGER.log(
-            logging.WARNING if outcome == "failed" else logging.INFO,
-            "provider sign-in settled provider=%s event=%s reason=%s cause=%s status_cause=%s cleanup_confirmed=%s",
-            self._lane,
-            outcome,
-            reason or "none",
-            cause or "none",
-            status_cause or "none",
-            self._clean,
-        )
+        """Serve the outcome and always end the attempt, even when settling itself fails."""
+        try:
+            settlement = self._cleaned_up(process, input_stream, (outcome, reason, cause))
+            (outcome, reason, cause), status_cause = self._confirmed_settlement(settlement)
+            log_settlement(
+                _LOGGER,
+                self._lane,
+                outcome,
+                reason,
+                cause,
+                status_cause,
+                cleanup_confirmed=self._clean,
+                exit_status=self._exit_status,
+                stderr_bytes=self._stderr_bytes,
+                errors=self._errors,
+                log_ref=self.log_ref,
+            )
+            self._publish(
+                snapshot(
+                    self.id,
+                    self._lane,
+                    outcome,
+                    reason=reason,
+                    cause=cause,
+                    status_cause=status_cause,
+                    log_ref=self.log_ref if outcome == "failed" else None,
+                )
+            )
+        except BaseException as error:
+            # Nothing may leave the attempt live: a person must always be able to start again.
+            _LOGGER.warning(
+                "provider sign-in settle failed provider=%s error_class=%s log_ref=%s",
+                self._lane,
+                type(error).__name__,
+                self.log_ref,
+            )
+            self._publish(
+                snapshot(
+                    self.id,
+                    self._lane,
+                    "failed",
+                    reason="provider_error",
+                    cause="internal_error",
+                    log_ref=self.log_ref,
+                )
+            )
+        finally:
+            self._done.set()
         if self._settled is not None:
-            self._settled()
+            try:
+                self._settled()
+            except Exception as error:
+                _LOGGER.warning(
+                    "provider sign-in settled callback failed provider=%s error_class=%s log_ref=%s",
+                    self._lane,
+                    type(error).__name__,
+                    self.log_ref,
+                )

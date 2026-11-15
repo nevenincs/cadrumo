@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import os
+import re
 import sys
 import textwrap
 import time
@@ -365,3 +366,20 @@ def test_an_event_published_after_authority_was_withdrawn_cancels_without_a_caus
     assert sentinel.exists()
     assert (settled["event"], settled["reason"], settled["cause"]) == ("cancelled", "none", "none")
     assert settled["cleanup_confirmed"] == "True"
+
+
+def test_a_failure_logs_the_helper_exit_and_the_size_of_its_error_output_never_its_content(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    with caplog.at_level(logging.DEBUG, logger=_LOGGER):
+        attempt = _attempt(tmp_path, "succeeded_nonzero")
+        answer = _settled(attempt)
+        records = _messages(caplog)
+    ((level, message),) = records
+    assert level == logging.WARNING
+    assert answer["log_ref"] == attempt.log_ref
+    assert f"log_ref={attempt.log_ref}" in message
+    assert "helper_exit_status=3" in message
+    assert re.search(r"helper_stderr_bytes=[1-9]\d*", message)
+    assert "STDERR-SECRET" not in message
+    assert "PIPE-SECRET" not in message

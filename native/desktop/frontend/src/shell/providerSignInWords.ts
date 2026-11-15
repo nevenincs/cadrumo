@@ -3,59 +3,17 @@
 // reason outside its set is: nothing the service or a provider wrote as free
 // text is ever shown.
 
-/** Why a sign-in attempt did not succeed: the helper's and the service's words. */
-export const SIGN_IN_CAUSES = [
-  "profile_missing",
-  "unsupported_method",
-  "host_input_invalid",
-  "host_disconnected",
-  "login_already_running",
-  "timed_out",
-  "home_in_git_project",
-  "home_unavailable",
-  "cli_not_found",
-  "browser_relay_unavailable",
-  "cli_start_failed",
-  "cli_exited_early",
-  "cli_protocol_mismatch",
-  "cli_reported_error",
-  "login_not_completed",
-  "cleanup_unconfirmed",
-  "internal_error",
-  "helper_start_failed",
-  "helper_output_invalid",
-  "helper_ended_without_result",
-  "helper_exit_nonzero",
-  "agent_stop_failed",
-  "status_not_confirmed",
-] as const;
-export type SignInCause = (typeof SIGN_IN_CAUSES)[number];
+import {
+  CLI_STATE_CAUSES,
+  NEXT_STEPS,
+  SIGN_IN_CAUSES,
+  type CliStateCause,
+  type NextStep,
+  type SignInCause,
+} from "./providerSignInContract.ts";
 
-/** Why a command-line app's state is not established. */
-export const CLI_STATE_CAUSES = [
-  "cli_not_found",
-  "home_in_git_project",
-  "home_unavailable",
-  "probe_start_failed",
-  "probe_timed_out",
-  "probe_output_unreadable",
-  "probe_cleanup_unconfirmed",
-  "status_read_failed",
-  "status_unreadable",
-  "status_context_unavailable",
-] as const;
-export type CliStateCause = (typeof CLI_STATE_CAUSES)[number];
-
-/** What a person can do about a cause. */
-export const NEXT_STEPS = [
-  "retry",
-  "install_cli",
-  "move_profile_outside_git",
-  "close_other_sign_in",
-  "console_sign_in",
-  "update_app",
-] as const;
-export type NextStep = (typeof NEXT_STEPS)[number];
+export { CLI_STATE_CAUSES, NEXT_STEPS, SIGN_IN_CAUSES };
+export type { CliStateCause, NextStep, SignInCause };
 
 const within =
   <Word extends string>(words: readonly Word[]) =>
