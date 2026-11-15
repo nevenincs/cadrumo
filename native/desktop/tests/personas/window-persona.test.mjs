@@ -1850,19 +1850,96 @@ function pageCalendarReads(modelo) {
   });
 }
 
+/**
+ * The calendar's filing-year control: whether it is drawn, the year on screen
+ * (null while the range around today is shown) and the current calendar year.
+ */
+function pageCalendarYear() {
+  const group = document.querySelector(".calendar-year");
+  if (!group) return { present: false };
+  const shown = group.querySelector("span")?.textContent?.trim() ?? "";
+  return {
+    present: true,
+    year: /^\d+$/.test(shown) ? Number(shown) : null,
+    today: new Date().getFullYear(),
+    failed: !!document.querySelector(".calendar-year ~ [role='status']"),
+  };
+}
+
+/** Press the control's previous (-1) or next (+1) year button. */
+function pageStepCalendarYear(by) {
+  const buttons = document.querySelectorAll(".calendar-year button");
+  const button = buttons[by < 0 ? 0 : 1];
+  if (!button) return false;
+  button.click();
+  return true;
+}
+
+/** Back to the range around today, when a year is on screen. */
+function pageCalendarYearCurrent() {
+  const buttons = document.querySelectorAll(".calendar-year button");
+  if (buttons.length < 3) return false;
+  buttons[2].click();
+  return true;
+}
+
+/**
+ * Step the calendar's year control to `target`, one press at a time, waiting
+ * for each year to be shown; false when the control is absent or stalls.
+ */
+async function showCalendarYear(target) {
+  for (let presses = 0; presses < 12; presses += 1) {
+    const at = await exec(pageCalendarYear);
+    if (!at.present || at.failed) return false;
+    const year = at.year ?? at.today;
+    if (at.year === target) return true;
+    if (!(await exec(pageStepCalendarYear, target < year ? -1 : 1)))
+      return false;
+    const moved = await waitFor(
+      async () => {
+        const now = await exec(pageCalendarYear);
+        return now.failed || now.year !== at.year ? now : null;
+      },
+      { timeout: 15_000, what: "the calendar year to change", soft: true },
+    );
+    if (!moved || moved.failed) return false;
+  }
+  return false;
+}
+
 /** A return the persona states not owed: what the overview calendar shows of it. */
 async function readCalendarApplicability(row) {
   await exec(pageWatchCalendarReads);
   if ((await exec(pageRailPressed, "calendar")) !== "true")
     await clickSelector('[data-rail="calendar"]');
-  const shown = await waitFor(
-    async () => {
-      const read = await exec(pageCalendar, row.modelo, row.period);
-      return read.owed || read.suppressed ? read : null;
-    },
-    { timeout: 30_000, what: "the calendar to show the return", soft: true },
-  );
+  const presented = async () => {
+    const read = await exec(pageCalendar, row.modelo, row.period);
+    return read.owed || read.suppressed ? read : null;
+  };
+  const control = (await exec(pageCalendarYear)).present;
+  let shown = await waitFor(presented, {
+    timeout: control ? 10_000 : 30_000,
+    what: "the calendar to show the return",
+    soft: true,
+  });
+  // A past period can fall outside the range around today: look at the
+  // return's own filing year, then the year after it, where its deadline can
+  // fall, with the calendar's year control when the window draws one.
+  const looked = [];
+  for (const year of control && !shown ? [row.year, row.year + 1] : []) {
+    const reached = await showCalendarYear(year);
+    looked.push({ year, reached });
+    if (!reached) continue;
+    shown = await waitFor(presented, {
+      timeout: 10_000,
+      what: `the calendar for ${year} to show the return`,
+      soft: true,
+    });
+    if (shown) break;
+  }
   const read = shown ?? (await exec(pageCalendar, row.modelo, row.period));
+  if (looked.length > 0) log("calendar-years", { looked });
+  await exec(pageCalendarYearCurrent);
   log("calendar-reads", {
     modelo: row.modelo,
     period: row.period,
