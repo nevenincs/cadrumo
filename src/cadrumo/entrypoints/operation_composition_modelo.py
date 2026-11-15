@@ -93,6 +93,7 @@ def compose_modelo_workbench_operations(inputs: OperationCompositionInputs) -> O
         ports_factory=supplied(inputs.modelo_workbench_read_ports_factory, build_modelo_workbench_read_ports),
         contracts=inputs.registry_contracts,
         prerequisites=inputs.edit_prerequisites,
+        capture_memory=inputs.capture_memory,
     )
     return built(
         definitions,
