@@ -1098,7 +1098,11 @@ function runtimeLines() {
 
 const SETTLED_WRITE =
   /operation settled .* definition=modelo\.[a-z_.]+ condition=\w+ effect=updated/;
-const SETTLED_FORM_READ = /operation settled .* definition=modelo\.work\.form /;
+// The window reads its own write back through the form, or, after a local
+// filing, through the filing state alone (it draws the header and journey from
+// it and reads the form only when asked); either read ends a write's wait.
+const SETTLED_FORM_READ =
+  /operation settled .* definition=modelo\.work\.(?:form|filing_state) /;
 
 /**
  * Wait until the runtime settled a write after `mark` (a line count of its log)
