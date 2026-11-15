@@ -65,7 +65,7 @@ from cadrumo.entrypoints.tests.persona_rental_carries import attest_pending_rent
 from cadrumo.entrypoints.tests.persona_work_income_statements import state_work_income_none, states_for
 from cadrumo.tests.personas import ExpectedValue, Persona, PersonaCatalogueError, persona_ids, read_persona
 
-from .calendar_sweep import calendar_observations
+from .calendar_sweep import SUPPORT_FILE, calendar_observations, record_calendar_support
 from .cli_column.world_report import StatementKind
 from .counterparties import DESIGNS, counterparty_mismatches, is_compared
 from .export_check import export_layout, export_reason
@@ -659,6 +659,9 @@ def test_persona_returns(tmp_path: Path, persona_id: str, horizon: int) -> None:
             persona_id, tmp_path, replay_scope(persona), reuse=True, horizon=horizon
         ) as materialised:
             envelope = materialised.world.envelope
+            record_calendar_support(
+                materialised.world, persona_id, horizon, (plan.year for plan in plans), out.with_name(SUPPORT_FILE)
+            )
             for plan in plans:
                 values = stated_values(materialised.persona, envelope, plan)
                 row = run_return(materialised, plan, values, tmp_path / "exports")
