@@ -587,6 +587,7 @@ impl ModeloHost {
             let mut events = self.profile.sign_in().person_events();
             let operation = relay::submit_wiping(&person, request, false).await?;
             serial.operation(&operation);
+            serial.stage("submitted");
             // A named read is followed here, never by the window.
             let tracked = Tracked::new(
                 operation,
@@ -596,7 +597,9 @@ impl ModeloHost {
                 Vec::new(),
             );
             let answered = settle::settle(&mut events, &tracked, &person).await?;
+            serial.stage("settled");
             settle::still_holding(&self.profile, &person).await?;
+            serial.stage("checked");
             match answered {
                 Outcome::Settled { result, .. } => {
                     let list = matches!(
