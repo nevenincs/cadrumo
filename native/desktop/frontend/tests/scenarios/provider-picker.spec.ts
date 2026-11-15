@@ -1,6 +1,6 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { catalogsUnderEngine } from "../../src/dev/fixtures/agentCatalog";
-import { FIXTURE_SETTINGS_LANES } from "../../src/dev/providerSettingsFixture";
+import { settingsLanesUnderEngine } from "../../src/dev/providerSettingsFixture";
 import {
   agentColumn as column,
   ask,
@@ -600,7 +600,7 @@ test("no “CLI” appears in the agent column, the list or the settings", async
   });
   await expect(providers).toBeVisible();
   await expect(providers.locator("[data-lane]")).toHaveCount(
-    FIXTURE_SETTINGS_LANES.length,
+    settingsLanesUnderEngine(SERVED_ENGINE).length,
   );
   said.push(...(await wording(providers)));
 

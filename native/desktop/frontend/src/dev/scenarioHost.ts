@@ -631,10 +631,14 @@ export function scenarioHost(
   // them, and the agent's catalog reports them.
   const modelPresence = fixtureModelPresence();
   window.__scenarioModelPresence = modelPresence;
+  // The engine the agent's record selects is the agent's to say, and the
+  // agent is made after the settings that name its turned-off lanes.
+  let agentEngine: () => string = () => options.localEngine ?? "llamacpp";
   const providerFixture = providerSettingsFixture({
     say,
     wait: () => wait(options.latencyMs),
     readable,
+    selectedEngine: () => agentEngine(),
   });
 
   // The agent goes with the profile's views: offered, empty, refused or not
@@ -645,6 +649,7 @@ export function scenarioHost(
     session: agentSession,
     publishStatus,
     changeListElsewhere,
+    selectedEngine,
   } = fixtureAgent({
     say,
     wait: () => wait(options.latencyMs),
@@ -667,6 +672,7 @@ export function scenarioHost(
       ? { readingDefault: options.readingDefault }
       : {}),
   });
+  agentEngine = selectedEngine;
   // Every host this page made publishes, as one service would for each.
   const publishedBefore = window.__scenarioAgentPublishStatus;
   window.__scenarioAgentPublishStatus = (status) => {
