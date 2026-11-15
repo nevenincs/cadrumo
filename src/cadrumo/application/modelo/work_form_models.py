@@ -410,17 +410,18 @@ class ModeloFormField(ModeloFormBase):
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _derived_from_the_field_itself(self) -> ModeloFormField:
+        derived = dict(self)
         if self.edit_address != _edit_address_of(self.address, self.editability, self.bindings):
             raise ValueError("a field's edit address is the one its own address, editability and bindings give")
-        if self.confirmable is not _confirmable_of(dict(self)):
+        if self.confirmable is not _confirmable_of(derived):
             raise ValueError("a field is confirmable exactly when its own state makes it so")
         if self.held_zero is not holds_zero(self.value):
             raise ValueError("a field holds zero exactly when its value is an amount of zero")
-        if self.filers_own is not _filers_own_of(dict(self)):
+        if self.filers_own is not _filers_own_of(derived):
             raise ValueError("a field holds the filer's own value exactly when its origin says so")
-        if self.restorable is not _restorable_of(dict(self)):
+        if self.restorable is not _restorable_of(derived):
             raise ValueError("a field can go back to its source exactly when its own state makes it so")
-        if self.confirm_value != _confirm_value_of(dict(self)):
+        if self.confirm_value != _confirm_value_of(derived):
             raise ValueError("a field's confirm value is the value its own state lets a confirmation stage")
         return self
 
