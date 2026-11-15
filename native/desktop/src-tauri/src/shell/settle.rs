@@ -78,7 +78,7 @@ pub enum Outcome {
     },
 }
 impl Outcome {
-    fn operation_id(&self) -> &str {
+    pub(crate) fn operation_id(&self) -> &str {
         match self {
             Self::Settled { operation_id, .. }
             | Self::Refused { operation_id, .. }
