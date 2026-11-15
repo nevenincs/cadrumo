@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { LedgerErrorDetail } from "../../../shell/ledger";
 import type { ModeloPort } from "../../../shell/modelo";
-import type { ModeloTaxationComparisonProjection } from "../../../shell/modeloContract/modeloWork";
+
 import { runOperation } from "../dialogs/operationRun";
+import type { ModeloTaxationComparisonProjection } from "../../../shell/modeloContract/modeloWorkCompareTaxation";
 
 // The comparison of joint and individual filing, asked for on request. The
 // application works both out on the values the declaration holds and words

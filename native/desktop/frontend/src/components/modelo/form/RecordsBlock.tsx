@@ -3,10 +3,11 @@ import { cn } from "@/components/ui/cn";
 import { Icon } from "@/components/ui/icon";
 import { useTableView, type ViewColumn } from "@/components/ui/table-view";
 import type { PublicModeloFormContextFieldBlock } from "../../../shell/modeloContract/modeloWorkForm";
-import type { PublicModeloFormRepeatingBlock } from "../../../shell/modeloContract/modeloWorkFormPart2";
+
 import { useStrings } from "../../../shell/strings";
 import { calm, Label } from "./FieldRow";
 import { BoxNumber } from "./BoxNumber";
+import type { PublicModeloFormRepeatingBlock } from "../../../shell/modeloContract/modeloWorkForm";
 
 /** Data types the table reads as amounts, aligned to the end of the cell. */
 const FIGURES: ReadonlySet<string> = new Set([

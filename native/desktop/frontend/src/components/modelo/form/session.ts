@@ -27,10 +27,7 @@ import type {
   ModeloFormCarryAttestation,
   ModeloFormPriorValueWithdrawal,
 } from "../../../shell/modeloContract/modeloWorkForm";
-import type {
-  PublicModeloFormPriorValueAttestation,
-  PublicModeloWorkForm,
-} from "../../../shell/modeloContract/modeloWorkFormPart2";
+
 import { takesEntry } from "./entryField";
 import {
   chosenRowStatements,
@@ -40,6 +37,10 @@ import {
   wholeRowStatements,
   type RowStatementEdit,
 } from "./rowStatements";
+import type {
+  PublicModeloFormPriorValueAttestation,
+  PublicModeloWorkForm,
+} from "../../../shell/modeloContract/modeloWorkForm";
 
 // The form's working state: the edits staged on it and the box chosen. It
 // lives in memory only, for one declaration, and is handed to the review and
