@@ -181,12 +181,8 @@ def select_modelo_calculation_revision(
         )
 
     selected = {
-        ModeloCalculationRevisionSelector.CURRENT: lambda: _revision_by_pointer(
-            work_unit,
-            work_unit.current_calculation_revision_id,
-            catalogue=catalogue,
-            pointer_name="current_calculation_revision_id",
-            operation=operation,
+        ModeloCalculationRevisionSelector.CURRENT: lambda: _current_revision(
+            work_unit, catalogue=catalogue, operation=operation
         ),
         ModeloCalculationRevisionSelector.LATEST_DRAFT: lambda: _latest_revision_with_state(
             revisions,
@@ -484,6 +480,23 @@ def _explicit_revision_for_work_unit(
         )
     require_calculation_revision_coordinates_current(revision, operation=operation)
     return revision
+
+
+def _current_revision(
+    work_unit: WorkUnit,
+    *,
+    catalogue: CalculationRevisionCatalogue,
+    operation: PinnedAuthorityOperation,
+) -> CalculationRevision:
+    """The work unit's current calculation; with none, the door is calculating it, as verify and file refuse."""
+    require_work_unit_holds_a_calculation(work_unit)
+    return _revision_by_pointer(
+        work_unit,
+        work_unit.current_calculation_revision_id,
+        catalogue=catalogue,
+        pointer_name="current_calculation_revision_id",
+        operation=operation,
+    )
 
 
 def _revision_by_pointer(
