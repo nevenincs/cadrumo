@@ -104,4 +104,43 @@ def picker_lanes(
                 return False
         return (provider, fields.get("transport")) not in turned_off
 
-    return {**document, "providers": [lane for lane in cast(list[object], lanes) if kept(lane)]}
+    return {
+        **document,
+        "providers": [_with_model_download(lane, provider_field) for lane in cast(list[object], lanes) if kept(lane)],
+    }
+
+
+MODEL_DOWNLOAD_REQUIRED = "required"
+"""A local engine's lane: the person downloads models to this computer for it."""
+MODEL_DOWNLOAD_NONE = "none"
+"""A hosted lane: no model is downloaded, so the window offers no installation for it."""
+_ENGINE_LANES = frozenset(engine.value for engine in LocalEngine)
+
+
+def _with_model_download(lane: object, provider_field: str) -> object:
+    """Stamp ``model_download`` on a lane and leave ``installed`` only on a local engine's models."""
+    if not isinstance(lane, dict):
+        return lane
+    fields = dict(cast(dict[str, object], lane))
+    local = fields.get(provider_field) in _ENGINE_LANES
+    fields["model_download"] = MODEL_DOWNLOAD_REQUIRED if local else MODEL_DOWNLOAD_NONE
+    if not local and "catalog" in fields:
+        fields["catalog"] = _without_installed(fields.get("catalog"))
+    return fields
+
+
+def _without_installed(catalog: object) -> object:
+    """Drop ``installed`` from a hosted lane's catalog models; a catalog without a model list is kept as served."""
+    models = catalog.get("models") if isinstance(catalog, dict) else None
+    if not isinstance(catalog, dict) or not isinstance(models, list):
+        return catalog
+    return {
+        **cast(dict[str, object], catalog),
+        "models": [_model_without_installed(model) for model in cast(list[object], models)],
+    }
+
+
+def _model_without_installed(model: object) -> object:
+    if not isinstance(model, dict):
+        return model
+    return {key: value for key, value in cast(dict[str, object], model).items() if key != "installed"}
