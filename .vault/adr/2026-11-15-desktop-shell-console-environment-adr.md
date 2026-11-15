@@ -5,7 +5,7 @@ tags:
 date: '2026-11-15'
 modified: '2026-11-15'
 body_schema: 'body-v2'
-body_hash: 'sha256:d21480b76e493bee9fef1e78c8c34123fada7533243968ed2dd7cf48ba1de2b6'
+body_hash: 'sha256:ceaef05d742dc6a2b5535dcd05d2ee8779cc341c4333a41af79e185bfb6319f8'
 related:
   - '[[2026-11-15-desktop-shell-console-environment-reference]]'
   - '[[2026-10-04-desktop-shell-adr]]'
@@ -18,7 +18,9 @@ related:
   - '[[2026-10-04-canonical-environment-adr]]'
   - '[[2026-10-04-application-sign-in-adr]]'
 ---
-# `desktop-shell` adr: `The desktop console takes the agent service's provider homes, harness workspace and tool server for the signed-in profile` | (**status:** `proposed`)
+# `desktop-shell` adr: `The desktop console takes the agent service's provider homes, harness workspace and tool server for the signed-in profile` | (**status:** `accepted`)
+
+Accepted by the operator on 2026-11-15 16:59 (relayed by PRIME, ruling 16:59) as written, including plaintext provider program transcripts in the profile's provider home and the console-kind amendment of `2026-10-04-desktop-shell-adr`. Option B was rejected by the operator on 2026-11-15 15:59.
 
 ## Problem Statement
 
@@ -36,7 +38,7 @@ The desktop console starts provider command-line programs (`claude`, `codex`) th
 ## Considered options
 
 - **A: an agent-service read that the host composes into the console.** Chosen: one owner per fact, no agent layout in Rust, nothing private in the window.
-- **B: a per-profile list of environment variables the person edits.** Not decided here; it is put to the operator and is not started.
+- **B: a per-profile list of environment variables the person edits.** Rejected by the operator (2026-11-15 15:59).
 - **C: the host derives provider homes and the workspace itself.** Rejected: it duplicates cadrumo-agent's layout in the Rust host and drifts when that layout changes.
 
 ## Constraints

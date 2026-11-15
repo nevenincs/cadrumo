@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#desktop-shell'
 date: '2026-10-04'
-modified: '2026-11-03'
+modified: '2026-11-15'
 body_schema: 'body-v2'
-body_hash: 'sha256:346cb3958c5a6efeaead78a3bbd13546aeaf4a4a718ecafb30a7554c8a68efe0'
+body_hash: 'sha256:e68709893d39350c3b892b4d7c2dff5dd59e5ffca3817fe5e242d7bea47c83ae'
 related:
   - "[[2026-10-04-desktop-shell-reference]]"
   - "[[2026-10-03-application-packaging-adr]]"
@@ -102,6 +102,8 @@ Evidence is in `2026-10-04-desktop-shell-reference`.
 - This record replaces these items in `2026-10-03-application-packaging-adr`: the separate Tauri `index.html` landing page, `docs/index.html` exposed through asset integration, and the runtime-control UI listed for desktop integration, which moves to the runtime manager. That record's author reconciles the wording.
 
 Amendment approved 2026-10-07 under the user's environment-readiness instruction: the earlier requirement for console and Python REPL to start in the generic user home is replaced by a dedicated console workspace declared in the canonical storage taxonomy beneath the resolved CADRUMO root. This workspace is for operator-authored scripts and scratch files, not encrypted profile custody. All desktop terminal kinds use this workspace and the same pinned storage/environment and bundled command search path. Standalone command invocations retain the caller's cwd for relative arguments. Authentication still uses native peer verification and the existing profile receipt flow; profile identifiers or credentials are not conveyed through new environment variables. Runtime start/supervision remains with the manager. This amendment also supersedes the home-cwd sentence in the terminal implementation specification below; all other shell authority constraints stand.
+
+Amendment (2026-11-15, under `2026-11-15-desktop-shell-console-environment-adr`, accepted by the operator 2026-11-15 16:59): the `console` kind adds the agent service's console environment for the signed-in profile over the pinned environment, and starts in that environment's working directory when one is given; otherwise it keeps this workspace. The `python` and `tui` kinds are unchanged. The added values name per-profile provider homes, the harness workspace and the tool server registration; they carry no credential, session, receipt or key. Authentication still uses native peer verification and the profile receipt flow, and none of these values grants authority.
 
 ### 2026-10-09 authorized scoped installation command
 
