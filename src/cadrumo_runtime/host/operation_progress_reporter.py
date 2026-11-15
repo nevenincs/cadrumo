@@ -11,6 +11,7 @@ from cadrumo.application.operations.models import OperationId
 from cadrumo.core.diagnostic_log import diagnostic_error_fields, diagnostic_event
 from cadrumo.core.logging import get_logger
 
+from ..application.operation_cue_timing import log_operation_cue_timing
 from ..contracts.worker_authorization import WORKER_OPERATIONS_ADVANCED_MAX
 
 _LOGGER = get_logger(__name__)
@@ -42,6 +43,7 @@ class OperationProgressReporter:
 
     def committed(self, operation_id: OperationId) -> None:
         """Record one committed operation for the next report; never blocks on the runtime."""
+        log_operation_cue_timing("commit_observed", (operation_id,))
         with self._condition:
             if self._closed:
                 return
@@ -80,9 +82,11 @@ class OperationProgressReporter:
             batch = self._take_pending(backoff)
             if batch is None:
                 return
+            log_operation_cue_timing("report_send", batch)
             try:
                 self._send(batch)
             except Exception as error:
+                log_operation_cue_timing("report_unacknowledged", batch, primary_error=error)
                 diagnostic_event(
                     _LOGGER,
                     "profile_operation_progress_unreported",
@@ -96,6 +100,7 @@ class OperationProgressReporter:
                         self._pending = dict.fromkeys(batch) | self._pending
                 backoff = min(max(backoff * 2, _RETRY_FIRST_SECONDS), _RETRY_LONGEST_SECONDS)
             else:
+                log_operation_cue_timing("report_send_returned", batch)
                 backoff = 0.0
 
     def _take_pending(self, backoff: float) -> tuple[OperationId, ...] | None:
