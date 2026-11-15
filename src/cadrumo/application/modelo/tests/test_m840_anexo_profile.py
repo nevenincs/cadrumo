@@ -13,7 +13,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....core.errors.hierarchy import ProfileAnswerTypeError
+from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import tr
 from ....core.period import Period
 from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
@@ -223,15 +223,29 @@ def test_two_locales_afectos_indirectamente_are_refused_for_apartado_v() -> None
         ("activities.0.maquinas_recreativas_tipo_a", "12345678"),
     ],
 )
-def test_a_fact_outside_its_design_shape_is_refused_naming_it(path: str, value: str) -> None:
-    with pytest.raises(ProfileAnswerTypeError) as refused:
+def test_a_fact_outside_its_design_shape_is_refused_naming_it_and_its_door(path: str, value: str) -> None:
+    with pytest.raises(ModeloProfileReadinessError) as refused:
         modelo_840_profile_facts(work_unit=_work_unit(), path_values={path: value})
 
-    assert (refused.value.context or {})["key"] == path.replace(".0.", ".")
+    field = path.replace(".0.", ".")
+    context = refused.value.context or {}
+    assert (context["key"], context["profile_path"]) == (field, field)
+    assert (refused.value.translated_message or "").startswith("application.modelo.errors.m840_fact_")
+    assert refused.value.operation_next_step(OutputLanguage.EN) is not None
+    assert refused.value.terminal_precondition_verdict is not None
 
 
 @pytest.mark.parametrize("locale", ["en", "es", "ca", "hu"])
-@pytest.mark.parametrize("key", ["m840_anexo_activities_ambiguous", "m840_apartado_locales_ambiguous"])
+@pytest.mark.parametrize(
+    "key",
+    [
+        "m840_anexo_activities_ambiguous",
+        "m840_apartado_locales_ambiguous",
+        "m840_fact_code_digits",
+        "m840_fact_text_width",
+        "m840_fact_units",
+    ],
+)
 def test_each_refusal_reads_in_every_locale(locale: str, key: str) -> None:
     sentence = tr(
         f"application.modelo.errors.{key}",
@@ -243,6 +257,9 @@ def test_each_refusal_reads_in_every_locale(locale: str, key: str) -> None:
         activity="0",
         locales="1, 4",
         profile_section=IAE_LOCAL_SECTION,
+        profile_path=IAE_LOCAL_SECTION,
+        digits="2",
+        width="30",
     )
 
     assert "%{" not in sentence and "840" in sentence
