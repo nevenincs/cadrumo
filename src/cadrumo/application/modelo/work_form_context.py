@@ -21,7 +21,11 @@ from ...domain.calculations.registry.schema import BindingDefinition, RegistrySn
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.iva.refund_eligibility import RedemeEnrolmentState
 from ...domain.modelos.calculation_revision import FILED_REVISION_STATES, CalculationRevision
-from ...domain.modelos.calculation_revision_sources import CalculationSourceRef, bound_input_source_refs
+from ...domain.modelos.calculation_revision_sources import (
+    CalculationSourceRef,
+    bound_binding_source_refs,
+    bound_input_source_refs,
+)
 from .calculation_note_gate import NO_SOURCE_DISAGREEMENT_RESOLUTIONS, SourceDisagreementResolutions
 from .calculation_required_inputs import calculation_required_inputs
 from .caller_context import caller_context_of
@@ -168,6 +172,10 @@ class WorkFormContext:
         # The boxes a source resolver handed the calculation a value for, apart from any binding.
         self.source_supplied: Mapping[CasillaId, CalculationSourceRef] = (
             {} if revision is None else bound_input_source_refs(revision.source_provenance)
+        )
+        # The bindings a source resolver supplied where the registry leaves the value to the filer.
+        self.source_supplied_bindings: Mapping[BindingId, CalculationSourceRef] = (
+            {} if revision is None else bound_binding_source_refs(revision.source_provenance)
         )
         self.stated = _stated_absences(revision, self.bindings)
         self.placed_boxes: dict[str, str] = {}

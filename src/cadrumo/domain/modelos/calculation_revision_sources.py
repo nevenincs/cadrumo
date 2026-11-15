@@ -16,6 +16,7 @@ from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.filing_year import FilingYear
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operator_action_enums import NoRecoveryOutcome
+from ..calculations.registry.ids import BindingId
 from .errors import ModeloValidatedRecord, ModeloValidationError
 from .source_disagreement import SourceDisagreementFact
 
@@ -153,6 +154,33 @@ def bound_input_source_refs(rows: Iterable[CalculationSourceRef]) -> Mapping[Cas
             if row.lineage_role is CalculationSourceLineageRole.PRIMARY
             and row.source_ref.startswith(BOUND_INPUT_SOURCE_REF_PREFIX)
             for casilla_id in row.source_casilla_ids
+        }
+    )
+
+
+BOUND_BINDING_SOURCE_REF_PREFIX: Final[str] = "bound_binding:"
+"""Marks a source node that names one binding value a resolver supplied where the registry leaves it to the filer."""
+
+
+def bound_binding_source_ref(binding_id: BindingId) -> str:
+    """Return the source reference of the node recording that a resolver supplied ``binding_id``."""
+    return f"{BOUND_BINDING_SOURCE_REF_PREFIX}{binding_id}"
+
+
+def bound_binding_source_refs(rows: Iterable[CalculationSourceRef]) -> Mapping[BindingId, CalculationSourceRef]:
+    """Index the nodes recording a resolver-supplied binding value by that binding, without reading any value.
+
+    The binding-keyed sibling of :func:`bound_input_source_refs`: a value the
+    registry leaves to the filer that a resolver supplied from the filer's own
+    records is derived, and the node is the only evidence of it on a stored
+    revision. Absence is not evidence of the opposite.
+    """
+    return MappingProxyType(
+        {
+            row.source_ref.removeprefix(BOUND_BINDING_SOURCE_REF_PREFIX): row
+            for row in rows
+            if row.lineage_role is CalculationSourceLineageRole.PRIMARY
+            and row.source_ref.startswith(BOUND_BINDING_SOURCE_REF_PREFIX)
         }
     )
 
