@@ -1704,6 +1704,7 @@
         "cadrumo.application.modelo.work_wizard",
         "cadrumo.application.modelo.workbench_operations",
         "cadrumo.application.modelo.workbench_projection",
+        "cadrumo.application.modelo.workbench_projection_memory",
         "cadrumo.application.modelo.workbench_read",
         "cadrumo.application.modelo.workflow_gate",
         "cadrumo.application.modelo.workflow_gate_ports",

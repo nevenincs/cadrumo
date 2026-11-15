@@ -96,7 +96,13 @@ from ...application.modelo.workbench_projection import (
     ModeloWorkFilingStateProjectionV1,
     PublicModeloFormField,
     PublicModeloWorkForm,
+    project_modelo_workbench_form,
     restore_modelo_workbench_form,
+)
+from ...application.modelo.workbench_projection_memory import (
+    FormProjectionContext,
+    FormProjectionPair,
+    form_projection_identity,
 )
 from ...application.modelo.workbench_read import ModeloWorkbenchReadPorts, read_modelo_workbench_form
 from ...application.operations.financial_operand_contract import (
@@ -107,6 +113,7 @@ from ...application.operations.models import OperationIdentity, OperationRequest
 from ...application.operations.owner import OperationExecutorContext
 from ...application.operations.tests.financial_operand_delivery import deliver_financial_operand
 from ...application.operations.typed_financial_operand_context import BoundTypedFinancialOperandAccess
+from ...application.workbench_capture_memory import WorkbenchCaptureMemoryOwner
 from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.casilla_id import validated_casilla_id
 from ...core.errors.error_codes import resolve_error_message
@@ -129,6 +136,86 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _YEAR = filing_year_envelope().horizon
 _ANNUAL = "0A"
+
+
+def test_steady_form_reuses_only_the_validated_subtree_and_admits_a_fresh_baseline(tmp_path: Path) -> None:
+    with seeded_operator_work(tmp_path) as work:
+        work.recalculate()
+        owner = WorkbenchCaptureMemoryOwner()
+        contracts = production_operation_registry().public_contract_set
+        executor = ModeloWorkbenchFormExecutor(
+            ports_factory=_ports_factory(work), contracts=lambda: contracts, capture_memory=owner
+        )
+        request = ModeloWorkbenchFormRequest(
+            profile_id=_profile_id(work), work_unit_id=work.work_unit_id, output_language=OutputLanguage.EN
+        )
+
+        def read() -> ModeloWorkbenchFormProjectionV1:
+            result, _context = _run(
+                work, executor, MODELO_WORK_FORM_OPERATION_DEFINITION_ID, request, ModeloWorkbenchFormProjectionV1
+            )
+            return result
+
+        read()  # The first strict restoration may finish deferred canonical schemas.
+        first, second = read(), read()
+        _assert_steady_pair_has_fresh_admission(first, second)
+        _assert_poisoned_pair_is_cleared(work, second)
+        owner.close()
+        third = read()
+        assert third.form == second.form
+        assert third.form is not second.form, "a new authenticated session must rebuild the graph"
+        applied = work.apply(scalar=(_SET_06,))
+        assert applied.refusal is None
+        fourth = read()
+        assert fourth.form is not third.form
+        assert fourth.calculation_revision_id != third.calculation_revision_id
+        owner.close()
+
+
+def _assert_steady_pair_has_fresh_admission(
+    first: ModeloWorkbenchFormProjectionV1, second: ModeloWorkbenchFormProjectionV1
+) -> None:
+    assert first.form == second.form
+    assert form_projection_identity(first.form, type(first.form)) is not None, "public eligibility"
+    assert form_projection_identity(restore_modelo_workbench_form(first).load, type(first.form)) is not None, (
+        "inverse eligibility"
+    )
+    assert first.form is second.form, "an exact steady form must not reconstruct its validated graph"
+    assert first.admitted_baseline is not None and second.admitted_baseline is not None
+    assert first.admitted_baseline.baseline_id != second.admitted_baseline.baseline_id
+    assert restore_modelo_workbench_form(first).load == restore_modelo_workbench_form(second).load
+
+
+def _assert_poisoned_pair_is_cleared(work: SeededOperatorWork, projection: ModeloWorkbenchFormProjectionV1) -> None:
+    canonical = restore_modelo_workbench_form(projection)
+    baseline = projection.admitted_baseline
+    assert baseline is not None
+    coordinates = FormProjectionContext(
+        _profile_id(work),
+        work.work_unit_id,
+        baseline.work_unit_record_digest,
+        baseline.calculation_head_digest,
+        baseline.current_calculation_revision_id,
+        work.operation.generation.logical_generation,
+        OutputLanguage.EN,
+    )
+    poisoned = WorkbenchCaptureMemoryOwner().for_profile(str(_profile_id(work))).form_projection
+    identity = form_projection_identity(canonical.load, type(projection.form))
+    assert identity is not None
+    wrong = FormProjectionPair(
+        projection.form, canonical.load.model_copy(update={"verified": not canonical.load.verified})
+    )
+    poisoned.reuse((coordinates, identity), lambda: wrong)
+    with pytest.raises(ValueError, match="changed canonical meaning"):
+        project_modelo_workbench_form(
+            _profile_id(work), work.work_unit_id, canonical, memory=poisoned, context=coordinates
+        )
+    recovered = project_modelo_workbench_form(
+        _profile_id(work), work.work_unit_id, canonical, memory=poisoned, context=coordinates
+    )
+    assert recovered == projection, "the failed read clears its pair; the next read validates normally"
+    poisoned.close()
+
 
 _SET_06 = ModeloScalarEditIntentV1(
     address=ModeloEditScalarAddressV1(casilla_id=validated_casilla_id("06")),
