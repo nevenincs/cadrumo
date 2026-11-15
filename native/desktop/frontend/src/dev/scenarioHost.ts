@@ -68,6 +68,15 @@ import {
   NEVER_CAPTURED,
 } from "./fixtures/calendar";
 import {
+  ABOVE_CEILING_CALENDAR,
+  BELOW_FLOOR_CALENDAR,
+  BOUNDED_CALENDAR,
+  PARTIAL_BOUNDED_CALENDAR,
+  PARTIAL_CALENDAR,
+  PROJECTED_CALENDAR,
+  SUPPORTED_CALENDAR,
+} from "./fixtures/calendarSupport";
+import {
   AVAILABLE,
   FIXTURE_DROPPED,
   FIXTURE_RECORDS,
@@ -182,6 +191,14 @@ export const CALENDAR_SHAPES = {
   busy: BUSY_CALENDAR,
   evidence: EVIDENCE_CALENDAR,
   close_unknown: CLOSE_UNKNOWN_CALENDAR,
+  // The filing-year envelope the read was served under, in each state.
+  support_supported: SUPPORTED_CALENDAR,
+  support_bounded: BOUNDED_CALENDAR,
+  support_projected: PROJECTED_CALENDAR,
+  support_partial: PARTIAL_CALENDAR,
+  support_partial_bounded: PARTIAL_BOUNDED_CALENDAR,
+  support_below_floor: BELOW_FLOOR_CALENDAR,
+  support_above_ceiling: ABOVE_CEILING_CALENDAR,
 } as const;
 export type CalendarShape = keyof typeof CALENDAR_SHAPES;
 

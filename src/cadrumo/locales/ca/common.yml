@@ -1466,6 +1466,18 @@ desktop:
       filed: Presentat
       late: Fora de termini
       unknown: Desconegut
+    support_above_ceiling: Els anys posteriors a {ceiling} no són admesos, així que
+      aquest interval no mostra dates. Això no vol dir que no hi hagi res pendent.
+    support_below_floor: Els anys anteriors a {floor} no són admesos, així que aquest
+      interval no mostra dates. Això no vol dir que no hi hagués res pendent.
+    support_partial: Una part d'aquest interval queda fora dels anys admesos, que
+      comencen l'any {floor}. Aquesta part no mostra dates, i això no vol dir que
+      no hi hagi res pendent.
+    support_partial_bounded: Una part d'aquest interval queda fora dels anys admesos,
+      del {floor} al {ceiling}. Aquesta part no mostra dates, i això no vol dir que
+      no hi hagi res pendent.
+    support_projected: Les dates dels anys posteriors a {horizon} es projecten a partir
+      de l'edició més recent de les normes.
     suppressed: Fora del teu calendari
     title: Calendari de presentacions
     to_day: Ves al {date}
