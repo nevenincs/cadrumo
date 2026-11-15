@@ -8850,6 +8850,28 @@ modelo:
               [01230]
           is-cuota-liquida:
             label: Liquidación IV - Otras deducciones - Cuota líquida [00592]
+          is-deduccion-125-aniversario-athletic-club-aplicado-periodo:
+            label: 'Deducc. para incentivar determ.actividades - 2023: 125 aniversario
+              del Athletic Club 1898-2023 (AC) - Aplicado en esta liquidación [02024]'
+          is-deduccion-125-aniversario-athletic-club-pendiente-futuro:
+            label: 'Deducc. para incentivar determ.actividades - 2023: 125 aniversario
+              del Athletic Club 1898-2023 (AC) - Pendiente de aplicación en periodos
+              futuros [02025]'
+          is-deduccion-125-aniversario-athletic-club-pendiente-generada:
+            label: 'Deducc. para incentivar determ.actividades - 2023: 125 aniversario
+              del Athletic Club 1898-2023 (AC) - Deducción pendiente/generada [02000]'
+          is-deduccion-60-aniversario-rally-blendio-aplicado-periodo:
+            label: 'Deducc. para incentivar determ.actividades - 2023: 60 Aniversario
+              Rally Blendio Princesa de Asturias Ciudad de Oviedo (60RB) - Aplicado
+              en esta liquidación [01995]'
+          is-deduccion-60-aniversario-rally-blendio-pendiente-futuro:
+            label: 'Deducc. para incentivar determ.actividades - 2023: 60 Aniversario
+              Rally Blendio Princesa de Asturias Ciudad de Oviedo (60RB) - Pendiente
+              de aplicación en periodos futuros [01996]'
+          is-deduccion-60-aniversario-rally-blendio-pendiente-generada:
+            label: 'Deducc. para incentivar determ.actividades - 2023: 60 Aniversario
+              Rally Blendio Princesa de Asturias Ciudad de Oviedo (60RB) - Deducción
+              pendiente/generada [01987]'
           is-deduccion-acontecimiento-interes-publico-otras:
             label: Deducc. para incentivar determ.actividades - N+1(****) Otras deducciones
               relativas a programas de apoyo a acontecimientos de excepcional interés
@@ -8946,6 +8968,33 @@ modelo:
             label: Deducción donativos entidades sin fines lucro - Donaciones de carácter
               general - 2024 Sin reiteración de donaciones a una misma entidad- Deducción
               pendiente/generada [00369]
+          is-deduccion-donativos-general-subtotal-2013-2014-aplicado-periodo:
+            label: Deducción donativos entidades sin fines lucro - Donaciones de carácter
+              general - Subtotal donaciones 2013 y 2014 - Aplicado en esta liquidación
+              [01690]
+          is-deduccion-donativos-general-subtotal-2013-2014-pendiente-futuro:
+            label: Deducción donativos entidades sin fines lucro - Donaciones de carácter
+              general - Subtotal donaciones 2013 y 2014 - Pendiente de aplicación
+              en periodos futuros [01691]
+          is-deduccion-donativos-general-subtotal-2013-2014-pendiente-generada:
+            label: Deducción donativos entidades sin fines lucro - Donaciones de carácter
+              general - Subtotal donaciones 2013 y 2014 - Deducción pendiente/generada
+              [01689]
+          is-deduccion-donativos-prioritarias-subtotal-2013-2014-aplicado-periodo:
+            label: Deducción donativos entidades sin fines lucro - Donaciones para
+              actividades prioritarias de mecenazgo y otras con derecho a deducción
+              incrementada - Subtotal donaciones 2013 y 2014 - Aplicado en esta liquidación
+              [01702]
+          is-deduccion-donativos-prioritarias-subtotal-2013-2014-pendiente-futuro:
+            label: Deducción donativos entidades sin fines lucro - Donaciones para
+              actividades prioritarias de mecenazgo y otras con derecho a deducción
+              incrementada - Subtotal donaciones 2013 y 2014 - Pendiente de aplicación
+              en periodos futuros [01703]
+          is-deduccion-donativos-prioritarias-subtotal-2013-2014-pendiente-generada:
+            label: Deducción donativos entidades sin fines lucro - Donaciones para
+              actividades prioritarias de mecenazgo y otras con derecho a deducción
+              incrementada - Subtotal donaciones 2013 y 2014 - Deducción pendiente/generada
+              [01701]
           is-deduccion-donativos-total:
             label: Deducción donativos entidades sin fines lucro - Total deducciones
               donaciones a entidades sin fines lucro - Pendiente de aplicación en
@@ -10549,6 +10598,10 @@ modelo:
           is-retenciones-ingresos-a-cuenta:
             label: Liquidación IV - Cuota del ejercicio a ingresar o a devolver -
               Total retenciones e ingresos a cuenta - Efectuados a la entidad [01766]
+          is-ric-2018-integrado-base-imponible-incumplimiento:
+            label: Rég. especial reserva inversiones Canarias - RIC 2018 - Aplicado/materializado
+              en esta liquidación - Integrado en BI por incumplimiento de requisitos
+              [01936]
           is-sal-reserva-especial-dotacion:
             label: Liquidación III - Base Imponible - Sociedades Laborales - Reserva
               especial dotación Ley 44/2015 Art. 14 [SAL_RESERVA_DOTACION]
