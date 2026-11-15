@@ -76,6 +76,7 @@ from .acceleration_keychain import (
     read_acceleration_secret,
     store_acceleration_secret,
 )
+from .acceleration_minted_sessions import record_minted_session
 from .acceleration_receipt_crypto import encryption_error
 from .acceleration_receipt_document import (
     AccelerationReceiptDocument,
@@ -703,6 +704,7 @@ def _mint_profile_session(
                     replacement=journal,
                     maximum_bytes=_PROFILE_SESSION_RETIREMENT_MAX_BYTES,
                 )
+                record_minted_session(receipt_path, session_id)
             try:
                 with diagnostic_phase(_log, _MINT_PHASE_EVENT, "keychain_store"):
                     store_acceleration_secret(
@@ -1139,6 +1141,26 @@ def delete_refused_receipt(*, path: Path, payload: bytes, decoded: DecodedReceip
     return ReceiptDeletion.KEYCHAIN_ENTRY_RETAINED if keychain_retained else ReceiptDeletion.DELETED
 
 
+def retained_profile_sessions(*, profile_id: UUID, receipt_path: Path) -> frozenset[UUID]:
+    """Return the sessions whose keys must stay: the receipt's, of any schema, and both a pending journal names.
+
+    The caller holds the receipt's local lock.
+    """
+    sessions: set[UUID] = set()
+    captured = _read_receipt(receipt_path)
+    if captured is not None:
+        if captured[1].profile_id != profile_id:
+            raise StorageValidationError("profile-session receipt profile differs")
+        sessions.add(captured[1].session_id)
+    pending = _read_pending_retirement(_retirement_path_beside(receipt_path), profile_id=profile_id)
+    if pending is not None:
+        _payload, predecessor, successor = pending
+        if predecessor is not None:
+            sessions.add(decode_receipt(predecessor).session_id)
+        sessions.add(decode_receipt(successor).session_id)
+    return frozenset(sessions)
+
+
 __all__ = [
     "ProfileSessionResumeOutcome",
     "ReceiptBindingRefusal",
@@ -1148,4 +1170,5 @@ __all__ = [
     "mint_profile_session",
     "profile_session_path",
     "resume_profile_session_with_key",
+    "retained_profile_sessions",
 ]
