@@ -19,10 +19,9 @@ from .frontend import (
     SURFACES,
     FrontendComparison,
     cell_text,
-    frontend_line,
     row_cell,
-    trees_line,
 )
+from .frontend_summary import frontend_line, trees_line
 from .rows import GREEN, VERDICT_MEANING, Stage, TableRow, Verdict
 
 _RED_CALCULATE = frozenset({Stage.MISMATCH, Stage.REFUSED, Stage.REFUSAL_NOT_RAISED})
