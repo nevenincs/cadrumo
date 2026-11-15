@@ -65,7 +65,7 @@ from cadrumo.entrypoints.tests.persona_rental_carries import attest_pending_rent
 from cadrumo.entrypoints.tests.persona_work_income_statements import state_work_income_none, states_for
 from cadrumo.tests.personas import ExpectedValue, Persona, PersonaCatalogueError, persona_ids, read_persona
 
-from .calendar_sweep import calendar_observations
+from .calendar_sweep import SUPPORT_FILE, calendar_observations, record_calendar_support
 from .cli_column.world_report import StatementKind
 from .counterparties import DESIGNS, counterparty_mismatches, is_compared
 from .export_check import export_layout, export_reason
@@ -90,6 +90,7 @@ from .planner import (
 from .roles import StatedCasilla, compared, differing, mismatch_text, revision_identities
 from .row_figures import merge_row_figures, on_form_casillas, row_figures, split_figures
 from .rows import (
+    FILED_LOCALLY,
     PlannedRow,
     Stage,
     TableRow,
@@ -220,6 +221,7 @@ def run_return(
         figures=figures,
         internal_figures=internal_figures,
         text_figures=text_figures,
+        filed_locally=lifecycle.filed,
     )
 
 
@@ -234,6 +236,8 @@ class Lifecycle:
     export_reason: str
     file_reason: str
     """The local filing outcome after the export; empty when nothing was filed or the legacy order filed in verify."""
+    filed: bool = False
+    """Whether the return was filed locally, in whichever order."""
 
 
 def run_lifecycle(
@@ -258,10 +262,14 @@ def run_lifecycle(
     if order == "legacy":
         filed = _file_locally(world, work_unit_id, revision_id, verified) if verified is not None else ""
         export, export_detail, export_reason = _export(world, plan, values, exports, work_unit_id, revision_id)
-        return Lifecycle(verify, verify_reason or filed, export, export_detail, export_reason, "")
+        return Lifecycle(
+            verify, verify_reason or filed, export, export_detail, export_reason, "", filed == FILED_LOCALLY
+        )
     export, export_detail, export_reason = _export(world, plan, values, exports, work_unit_id, revision_id)
     file_reason = _file_locally(world, work_unit_id, revision_id, verified) if verified is not None else ""
-    return Lifecycle(verify, verify_reason, export, export_detail, export_reason, file_reason)
+    return Lifecycle(
+        verify, verify_reason, export, export_detail, export_reason, file_reason, file_reason == FILED_LOCALLY
+    )
 
 
 def _figures(calculated: ModeloWorkCalculatePublicResultV3, rows: Mapping[str, str]) -> tuple[tuple[str, str], ...]:
@@ -645,7 +653,7 @@ def _file_locally(
         )
     except PersonaMaterialisationError as error:
         return f"file: {refusal_text(error)}"
-    return "filed locally"
+    return FILED_LOCALLY
 
 
 @pytest.mark.parametrize(("persona_id", "horizon"), cases())
@@ -659,6 +667,9 @@ def test_persona_returns(tmp_path: Path, persona_id: str, horizon: int) -> None:
             persona_id, tmp_path, replay_scope(persona), reuse=True, horizon=horizon
         ) as materialised:
             envelope = materialised.world.envelope
+            record_calendar_support(
+                materialised.world, persona_id, horizon, (plan.year for plan in plans), out.with_name(SUPPORT_FILE)
+            )
             for plan in plans:
                 values = stated_values(materialised.persona, envelope, plan)
                 row = run_return(materialised, plan, values, tmp_path / "exports")

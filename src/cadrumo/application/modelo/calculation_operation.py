@@ -63,6 +63,7 @@ if TYPE_CHECKING:
     from .calculate_input import ModeloWorkCalculationServiceResult, WorkCalculateInputBundle
     from .calculation_action_ports import CalculationActionPorts
     from .caller_context import CalculationCallerContext
+    from .work_profile import ModeloWorkProfile
 
 
 from ..operations.first_write_effect import FirstWriteEffectAnnouncement
@@ -330,9 +331,13 @@ def calculation_public_result_replacing(
 
 
 def calculate_prepared_modelo_work(
-    prepared: PreparedModeloWorkCalculation, *, actor: str
+    prepared: PreparedModeloWorkCalculation, *, actor: str, profile: ModeloWorkProfile | None = None
 ) -> ModeloWorkCalculationServiceResult:
-    """Run the one canonical calculation service for prepared worker inputs."""
+    """Run the one canonical calculation service for prepared worker inputs.
+
+    ``profile`` is the record a preflight already checked; without it the
+    calculation loads the profile itself.
+    """
     from .calculate_input import calculate_modelo_work_revision
 
     return calculate_modelo_work_revision(
@@ -340,6 +345,7 @@ def calculate_prepared_modelo_work(
         actor=actor,
         inputs=prepared.inputs,
         ports=prepared.ports,
+        profile=profile,
     )
 
 
@@ -436,8 +442,9 @@ class ModeloWorkCalculateExecutor:
         )
 
         # A blocked ledger is a refusal with nothing written, so it is checked
-        # before publication declares that records may change.
-        await await_cancellation_complete(
+        # before publication declares that records may change. The profile the
+        # preflights check is the one the calculation reads: it is decrypted once.
+        profile = await await_cancellation_complete(
             asyncio.to_thread(
                 refuse_blocked_ledger_preflight,
                 prepared.work_unit.work_unit_id,
@@ -446,11 +453,12 @@ class ModeloWorkCalculateExecutor:
             task_name="modelo-work-calculate-ledger-preflight",
         )
         # So is a withholding period with no retención and no answer saying none was paid.
-        await await_cancellation_complete(
+        profile = await await_cancellation_complete(
             asyncio.to_thread(
                 refuse_empty_retenciones_window,
                 prepared.work_unit.work_unit_id,
                 ports=prepared.ports,
+                profile=profile,
             ),
             task_name="modelo-work-calculate-retenciones-preflight",
         )
@@ -466,6 +474,7 @@ class ModeloWorkCalculateExecutor:
                     calculate_prepared_modelo_work,
                     prepared,
                     actor=actor,
+                    profile=profile,
                 )
                 # A revision no-op alone cannot establish that preparatory
                 # migrations and IVA decisions also made no changes.

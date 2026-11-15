@@ -11,7 +11,9 @@ the table row shown with an equal value. A differing row gets one cause key, the
 - ``assumed_value_unconfirmed``, ``next_step_fill_before_<stage>`` or ``other:next_step_<action>``: the form served a
   step the pilot cannot take (it asks the filer to confirm, fill in, resolve or apply), before or after calculate;
 - ``other:calculate_<code or stage>``: the return did not calculate;
-- ``other:figures_differ``, ``other:verify_<stage>``, ``export_<code or stage>``: the first remaining difference.
+- ``other:figures_differ``, ``other:verify_<stage>``, ``export_<code or stage>``: the first remaining difference;
+- ``other:file_<word>``: the three stages match and the workbench's own file stage is not ``pass`` for a return the
+  table filed locally.
 """
 
 from __future__ import annotations
@@ -31,6 +33,24 @@ _EDIT_REFUSED: Final = "REFUSED_MODELO_EDIT_REFUSED"
 _CONFIRM: Final = "confirm"
 _FILL: Final = "fill"
 _STAGES: Final = ("calculate", "verify", "export")
+TABLE_FILED_LOCALLY: Final = "filed locally"
+"""What the table's row reason says of a return its backend run filed locally."""
+
+
+def table_filed_locally(table: TableRow) -> bool:
+    """Whether the table's backend run filed the return locally, as its row says."""
+    return TABLE_FILED_LOCALLY in table.reason
+
+
+def file_stage_of(row: PilotRow, table: TableRow) -> str | None:
+    """The file stage the row reports: the workbench's own, for a return the table filed locally; else none.
+
+    The workbench's word is whatever the drive recorded from what the form showed. A filed return the drive never
+    reached the recording step of is ``not-reached``; a return the table did not file has no file stage.
+    """
+    if not table_filed_locally(table):
+        return None
+    return row.file if row.file is not None else NOT_REACHED
 
 
 def outcome(row: PilotRow, table: TableRow) -> str:
@@ -89,7 +109,18 @@ def _differing_cause(row: PilotRow, table: TableRow, earlier: Sequence[PilotRow]
         return "tui_calendar_omits_not_applicable_verdict", words
     if _figures_differ(row, table):
         return "other:figures_differ", words
+    if row.file not in (None, PASSED) and _stages_match(row, table):
+        return f"other:file_{(row.file or '').replace('-', '_')}", words
     return _first_step_missed(row, STAGE_OF[table.verify]), words
+
+
+def _stages_match(row: PilotRow, table: TableRow) -> bool:
+    """Whether the row's calculate, verify and export words are the table row's."""
+    return (row.calculate, row.verify, row.export) == (
+        STAGE_OF[table.calculate],
+        STAGE_OF[table.verify],
+        STAGE_OF[table.export],
+    )
 
 
 def _figures_differ(row: PilotRow, table: TableRow) -> bool:

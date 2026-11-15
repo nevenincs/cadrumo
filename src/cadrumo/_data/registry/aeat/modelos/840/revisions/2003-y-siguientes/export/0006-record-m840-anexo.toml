@@ -11,6 +11,25 @@ required = false
 repeat = "projection_rows"
 
 [[revisions.2003-y-siguientes.export_layouts.records.fields]]
+id = "m840-2003.anexo.f079"
+offset = 496
+length = 5
+kind = "projection"
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+value_policy = "digit-string"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+[revisions.2003-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = "m840_local"
+slot = 5
+field = "codigo_postal"
+
+[[revisions.2003-y-siguientes.export_layouts.records.fields]]
 id = "m840-2003.anexo.f080"
 offset = 501
 length = 2
@@ -204,12 +223,13 @@ id = "m840-2003.anexo.f091"
 offset = 590
 length = 5
 kind = "projection"
-data_type = "text"
+data_type = "integer"
 required = false
-padding = "none"
-justification = "none"
+padding = "left_zero"
+justification = "right"
 signed = false
-value_policy = "digit-string"
+design_type = "Num"
+value_policy = "unsigned-integer"
 legal_refs = ["orden-hac-2572-2003:apartado-1"]
 source_refs = ["aeat-dr-840"]
 
@@ -503,12 +523,13 @@ id = "m840-2003.anexo.f108"
 offset = 700
 length = 5
 kind = "projection"
-data_type = "text"
+data_type = "integer"
 required = false
-padding = "none"
-justification = "none"
+padding = "left_zero"
+justification = "right"
 signed = false
-value_policy = "digit-string"
+design_type = "Num"
+value_policy = "unsigned-integer"
 legal_refs = ["orden-hac-2572-2003:apartado-1"]
 source_refs = ["aeat-dr-840"]
 
@@ -802,12 +823,13 @@ id = "m840-2003.anexo.f125"
 offset = 810
 length = 5
 kind = "projection"
-data_type = "text"
+data_type = "integer"
 required = false
-padding = "none"
-justification = "none"
+padding = "left_zero"
+justification = "right"
 signed = false
-value_policy = "digit-string"
+design_type = "Num"
+value_policy = "unsigned-integer"
 legal_refs = ["orden-hac-2572-2003:apartado-1"]
 source_refs = ["aeat-dr-840"]
 
@@ -1101,12 +1123,13 @@ id = "m840-2003.anexo.f142"
 offset = 920
 length = 5
 kind = "projection"
-data_type = "text"
+data_type = "integer"
 required = false
-padding = "none"
-justification = "none"
+padding = "left_zero"
+justification = "right"
 signed = false
-value_policy = "digit-string"
+design_type = "Num"
+value_policy = "unsigned-integer"
 legal_refs = ["orden-hac-2572-2003:apartado-1"]
 source_refs = ["aeat-dr-840"]
 
@@ -1364,24 +1387,5 @@ source_refs = ["aeat-dr-840"]
 [revisions.2003-y-siguientes.export_layouts.records.fields.projection_ref]
 projection_kind = "m840_anexo_hoja"
 field = "suma_parcial_total"
-
-[[revisions.2003-y-siguientes.export_layouts.records.fields]]
-id = "m840-2003.anexo.f157"
-offset = 1008
-length = 7
-kind = "projection"
-data_type = "integer"
-required = false
-padding = "left_zero"
-justification = "right"
-signed = false
-design_type = "Num"
-value_policy = "unsigned-integer"
-legal_refs = ["orden-hac-2572-2003:apartado-1"]
-source_refs = ["aeat-dr-840"]
-
-[revisions.2003-y-siguientes.export_layouts.records.fields.projection_ref]
-projection_kind = "m840_anexo_hoja"
-field = "suma_parcial_rectificada"
 
 [revisions.2003-y-siguientes.export_layouts.records.row_field_casilla_ids]

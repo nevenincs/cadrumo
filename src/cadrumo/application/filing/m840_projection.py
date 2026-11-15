@@ -102,7 +102,7 @@ def _row_value(row: Modelo840LocalRow, field: M840LocalField) -> str | Decimal |
         return value
     if isinstance(value, int):
         return Decimal(value)
-    raise TypeError(f"Modelo 840 premises member {field.value!r} is neither text nor a surface")
+    raise TypeError(f"Modelo 840 premises member {field.value!r} is neither text nor a whole number")
 
 
 def _partial_sum(sheet: tuple[Modelo840LocalRow, ...], field: M840LocalField) -> Decimal | None:

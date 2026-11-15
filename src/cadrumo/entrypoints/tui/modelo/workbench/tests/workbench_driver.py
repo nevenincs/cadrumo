@@ -17,7 +17,7 @@ from __future__ import annotations
 import asyncio
 import dataclasses
 import re
-from collections.abc import AsyncGenerator, Callable
+from collections.abc import AsyncGenerator, Callable, Iterable
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -43,7 +43,8 @@ from ......application.modelo.work_form_field_vocabulary import (
     ModeloFormOrigin,
     ModeloFormScalar,
 )
-from ......application.modelo.work_form_findings import ModeloFormAttention
+from ......application.modelo.work_form_findings import ModeloFormAttention, ModeloFormIssue
+from ......application.modelo.work_form_journey import ModeloFormStep
 from ......application.modelo.work_form_models import ModeloFormRepeatingBlock, ModeloWorkForm
 from ......application.modelo.work_form_next_step import ModeloFormNextAction, applicable_fields
 from ......application.modelo.workbench_read import ModeloWorkbenchFormReadV1
@@ -65,9 +66,13 @@ from ......application.operations.frontend_requests import (
     OperationResultProjectionSuccessV1,
 )
 from ......application.operations.models import OperationId, OperationRequest, OperationRevision
+from ......core.i18n.render import tr
 from ......core.modelo_export_artefact import ModeloExportArtefact
 from ......core.operations import OperationTerminalCondition
-from ......domain.modelos.verification_report import VerificationCompletenessStatus
+from ......domain.modelos.verification_report import (
+    ModeloVerificationFindingSeverity,
+    VerificationCompletenessStatus,
+)
 from .....tests.persona_materialisation import PERSONA_ACTOR, PersonaWorld, public_result, run_operation
 from ....components.dialogs import ConfirmScreen
 from ....components.host import ScreenHostApp
@@ -88,8 +93,10 @@ from ..factory import InstalledModeloWorkbench
 from ..result import WorkbenchResultScreen
 from ..screen import ModeloWorkbenchScreen
 from ..screen_constants import FINDINGS_KEY, NEXT_KEYS
+from ..vocabulary import DONE_MARK
 
 _SIZE: Final = (200, 60)
+_DATE_SLOT: Final = "<DATE>"
 #: A calculation of a dense annual return over a full ledger takes well over the default settle wait.
 _OPERATION_WAIT: Final = 900.0
 _TUI_ACTOR: Final = "operator:tui-modelo"
@@ -285,6 +292,24 @@ class DialogAnswers:
 
 
 @dataclass(frozen=True, slots=True)
+class ShownFiling:
+    """What the workbench's next-step line says about the filing, as a filer reads it."""
+
+    next_line: str
+    """The rendered next-step line, whitespace collapsed."""
+    recorded: bool
+    """Whether that line is the workbench's own recorded-as-filed sentence (dated, or the done filing step)."""
+
+
+def recorded_sentence_shown(next_line: str) -> bool:
+    """Whether ``next_line`` is the workbench's recorded-as-filed sentence, dated or the undated done step."""
+    dated = re.escape(" ".join(tr("workspace.modelo.next.recorded", date=_DATE_SLOT).split()))
+    dated = dated.replace(re.escape(_DATE_SLOT), r".+")
+    undated = f"{DONE_MARK.glyph} {tr(f'workspace.modelo.step.{ModeloFormStep.FILE.value}')}"
+    return re.fullmatch(dated, next_line) is not None or next_line == undated
+
+
+@dataclass(frozen=True, slots=True)
 class ShownOutcome:
     """How one pressed step settled, as the workbench showed it."""
 
@@ -303,6 +328,10 @@ class ShownOutcome:
     """The export result screen's result, when one was shown."""
     export_offered: tuple[str, ...] = ()
     """The artefacts the export dialog offered, when it did not offer the one asked for."""
+    filing: ShownFiling | None = None
+    """The next-step line after the step, as the filing state the workbench shows."""
+    blocking_findings: tuple[str, ...] = ()
+    """The ids of the blocking findings on the issues the form shows afterwards, each once, in the order shown."""
 
     @property
     def condition(self) -> OperationTerminalCondition | None:
@@ -317,6 +346,20 @@ class ShownOutcome:
         if self.terminal.terminal_condition is OperationTerminalCondition.REFUSED:
             return self.terminal.refusal_ref
         return self.terminal.failure_error_code
+
+
+def blocking_finding_ids(issues: Iterable[ModeloFormIssue]) -> tuple[str, ...]:
+    """The ids of the blocking findings among ``issues``, each once in the order the issues list shows them.
+
+    A finding's id is the last segment of its catalogue key, the word the persona table's verify reason names it by.
+    """
+    return tuple(
+        dict.fromkeys(
+            issue.finding.message_locale_key.rsplit(".", 1)[-1]
+            for issue in issues
+            if issue.finding.severity is ModeloVerificationFindingSeverity.BLOCKING
+        )
+    )
 
 
 def _shown(value: ModeloFormScalar) -> bool:
@@ -400,6 +443,8 @@ class WorkbenchDriver:
             verification=None if form is None else form.verification,
             export=self._exported,
             export_offered=self._export_offered,
+            filing=self.shown_filing(),
+            blocking_findings=() if form is None else blocking_finding_ids(form.issues),
         )
         return self._outcome
 
@@ -458,6 +503,11 @@ class WorkbenchDriver:
     def notice(self) -> str:
         """The workbench's notice line."""
         return " ".join(str(self._screen.query_one("#wb-notice", Static).render()).split())
+
+    def shown_filing(self) -> ShownFiling:
+        """The filing state the next-step line shows now: its words, and whether they say the filing is recorded."""
+        line = " ".join(str(self._screen.query_one("#wb-next", Static).render()).split())
+        return ShownFiling(next_line=line, recorded=recorded_sentence_shown(line))
 
     def refusal(self) -> str:
         """The refusal sentence the workbench shows beneath its notice, if any."""

@@ -24,6 +24,14 @@ export const signInCause = within<SignInCause>(SIGN_IN_CAUSES);
 export const cliStateCause = within<CliStateCause>(CLI_STATE_CAUSES);
 export const nextStep = within<NextStep>(NEXT_STEPS);
 
+const LOG_REF = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/;
+
+/** The diagnostic id a host names a failure by in its log, when it is a
+ * bounded token; anything else is dropped. */
+export function logRef(value: unknown): string | undefined {
+  return typeof value === "string" && LOG_REF.test(value) ? value : undefined;
+}
+
 const COMMAND_LIMIT = 200;
 const SLOT = "{provider}";
 const PROVIDER_ID = /^[a-z][a-z0-9_]{0,39}$/;

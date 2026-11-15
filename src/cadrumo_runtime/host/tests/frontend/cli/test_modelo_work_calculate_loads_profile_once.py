@@ -70,6 +70,7 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.entrypoints.adapter_composition_ports import build_retencion_observation_ports
 from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import (
+    SCENARIO_FILING_YEAR,
     m111_withholding_aggregate_arguments,
     m111_withholding_invoice_arguments,
     operator_profile_facts,
@@ -183,7 +184,10 @@ def _create_work_unit(
 
 
 def _capture_m111_invoice_withholding(session: NativeApiCliSession[None]) -> None:
-    """Record one received professional invoice's paid retención, so Modelo 111 is not an all-blank quarter."""
+    """Record one received professional invoice's paid retención in the scenario year's first quarter.
+
+    Modelo 111 is then not an all-blank quarter.
+    """
     exit_code, output = _invoke(session, *m111_withholding_invoice_arguments())
     assert exit_code == 0, output
     invoice_id = unwrap_schema_envelope(output)["invoice_id"]
@@ -268,7 +272,8 @@ def test_m111_calculate_succeeds_through_its_worker_without_a_client_decrypt(
     tmp_path: Path, authority_operation: PinnedAuthorityOperation, run_cadrumo_cli, profile_decrypts: list[str]
 ) -> None:
     with _operator_session(tmp_path, authority_operation, run_cadrumo_cli) as session:
-        work_unit_id = _create_work_unit(session, modelo="111", year=2025, period="1T", revision="2019-y-siguientes")
+        # The captured retención is dated in the scenario year's first quarter, so the work is too.
+        work_unit_id = _create_work_unit(session, modelo="111", year=SCENARIO_FILING_YEAR, period="1T")
         _capture_m111_invoice_withholding(session)
 
         exit_code, output = _calculate(session, profile_decrypts, work_unit_id)

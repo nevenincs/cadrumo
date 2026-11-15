@@ -11,9 +11,12 @@
 
 import type { OutputLanguage, PublicPeriod, WorkUnitId } from "./modelo";
 import type {
+  ModeloFormEditClosure,
   ModeloFormExportHold,
   ModeloFormFileView,
   ModeloFormFiling,
+  ModeloFormJourney,
+  ModeloFormNextStep,
   ModeloFormReceipt,
   ModeloFormResultView,
   PublicModeloFormExportOffer,
@@ -36,8 +39,9 @@ export type ModeloFormFilingHeader = {
  * declaration's filing rest on.
  *
  * Each field is the one `ModeloWorkbenchFormProjectionV1` carries for the same
- * stored state: `modelo`, `period` and `filing` are its form's, `header` its
- * header's result, latest file and export hold.
+ * stored state: `modelo`, `period`, `filing` and `edit_closure` are its
+ * form's, `filed` and `journey` its load's, `header` its header's result,
+ * latest file and export hold, and `rules_incomplete` and `next_step` its own.
  */
 export type ModeloWorkFilingStateProjectionV1 = {
   result_version: 1;
@@ -46,6 +50,11 @@ export type ModeloWorkFilingStateProjectionV1 = {
   modelo: string;
   period: PublicPeriod;
   filing: ModeloFormFiling | null;
+  filed: boolean;
+  edit_closure: ModeloFormEditClosure | null;
+  journey: ModeloFormJourney;
+  rules_incomplete: boolean;
+  next_step: ModeloFormNextStep | null;
   header: ModeloFormFilingHeader;
   calculation_revision_id: string | null;
   verification_report_id: string | null;

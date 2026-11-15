@@ -3959,3 +3959,80 @@ id = "01373"
 [revisions."2024".casilla_overrides.fields]
 continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2928 (DP200018C field 138): Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - 2023(*) Sin reiteración de donaciones a una misma entidad - Pendiente de aplicación en periodos futuros [01373]. aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2944 (DP200018C field 137): Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - 2023 - Sin reiteración de donaciones a una misma entidad - Pendiente de aplicación en periodos futuros [01373]. Both print the same box on the same sheet for the same field; the 2024 caption only rewords it."
+
+[[revisions."2024".casilla_removals]]
+[revisions."2024".casilla_removals.selector]
+revision = "2023"
+id = "DP200018B:02445"
+
+[[revisions."2024".casilla_removals]]
+[revisions."2024".casilla_removals.selector]
+revision = "2023"
+id = "DP200018B:02466"
+
+[[revisions."2024".casilla_removals]]
+[revisions."2024".casilla_removals.selector]
+revision = "2023"
+id = "DP200018B:02467"
+
+[[revisions."2024".casilla_removals]]
+[revisions."2024".casilla_removals.selector]
+revision = "2023"
+id = "DP200018B:02468"
+
+[[revisions."2024".casilla_removals]]
+[revisions."2024".casilla_removals.selector]
+revision = "2023"
+id = "DP200020:02766"
+
+[[revisions."2024".casilla_removals]]
+[revisions."2024".casilla_removals.selector]
+revision = "2023"
+id = "DP200020:02767"
+
+[[revisions."2024".casilla_removals]]
+[revisions."2024".casilla_removals.selector]
+revision = "2023"
+id = "DP200020:02768"
+
+[[revisions."2024".casilla_removals]]
+[revisions."2024".casilla_removals.selector]
+revision = "2023"
+id = "DP200020:02769"
+
+[[revisions."2024".casilla_removals]]
+[revisions."2024".casilla_removals.selector]
+revision = "2023"
+id = "DP200020:02770"
+
+[[revisions."2024".casilla_removals]]
+[revisions."2024".casilla_removals.selector]
+revision = "2023"
+id = "DP200020:02772"
+
+[[revisions."2024".casilla_overrides]]
+[revisions."2024".casilla_overrides.selector]
+revision = "2023"
+id = "02029"
+
+[revisions."2024".casilla_overrides.fields]
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2639 (DP200018B field 30): Deducc. para incentivar determ.actividades - 2023: Open Barceona-Trofeo Conde de Godó (OB) - Deducción pendiente/generada [02029]. aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2630 (DP200018 field 138): Deducc. para incentivar determ.actividades - 2024: Open Barcelona-Trofeo Conde de Godó (OB) - Deducción pendiente/generada [02029]. Both print the same box for the same event column; the 2024 design moves it to another sheet and rotates the event year, as it does for every event row."
+
+[[revisions."2024".casilla_overrides]]
+[revisions."2024".casilla_overrides.selector]
+revision = "2023"
+id = "02030"
+
+[revisions."2024".casilla_overrides.fields]
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2640 (DP200018B field 31): Deducc. para incentivar determ.actividades - 2023: Open Barceona-Trofeo Conde de Godó (OB) - Aplicado en esta liquidación [02030]. aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2631 (DP200018 field 139): Deducc. para incentivar determ.actividades - 2024: Open Barcelona-Trofeo Conde de Godó (OB) - Aplicado en esta liquidación [02030]. Both print the same box for the same event column; the 2024 design moves it to another sheet and rotates the event year, as it does for every event row."
+
+[[revisions."2024".casilla_overrides]]
+[revisions."2024".casilla_overrides.selector]
+revision = "2023"
+id = "02031"
+
+[revisions."2024".casilla_overrides.fields]
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2641 (DP200018B field 32): Deducc. para incentivar determ.actividades - 2023: Open Barceona-Trofeo Conde de Godó (OB) - Pendiente de aplicación en periodos futuros [02031]. aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2632 (DP200018 field 140): Deducc. para incentivar determ.actividades - 2024: Open Barcelona-Trofeo Conde de Godó (OB) - Pendiente de aplicación en periodos futuros [02031]. Both print the same box for the same event column; the 2024 design moves it to another sheet and rotates the event year, as it does for every event row."

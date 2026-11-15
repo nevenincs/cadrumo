@@ -25,7 +25,8 @@ from ...application.ledger.evidence_review_advisories import (
     CountryVocabularyAdvisoryProjection,
     PartyAttributionAdvisoryProjection,
 )
-from ...application.ledger.invoice_draft_payloads import EvidenceDraftDiscrepancyPayload
+from ...application.ledger.finding_words_projection import FindingWordsProjectionV1
+from ...application.ledger.invoice_draft_payloads import EvidenceDraftDiscrepancyPayload, EvidenceFindingWordsPayload
 from ...application.ledger.invoice_evidence_operation_dtos import (
     ConfirmationBlockerProjectionV1,
     FieldProvenanceProjectionV1,
@@ -68,6 +69,13 @@ def _candidate_payloads(blocker_or_envelope: object) -> list[dict[str, object]]:
     return [candidate.model_dump(mode="json") for candidate in candidates]
 
 
+def _words_payload(words: FindingWordsProjectionV1 | None) -> EvidenceFindingWordsPayload | None:
+    """Carry a finding's sentence and quoted values; each value stays a (name, value) pair."""
+    if words is None:
+        return None
+    return EvidenceFindingWordsPayload(wording=words.wording.value, params=list(words.params))
+
+
 def _blocker_payload(blocker: ConfirmationBlockerProjectionV1) -> EvidenceReviewBlockerPayload:
     return EvidenceReviewBlockerPayload.model_validate(
         {
@@ -75,7 +83,7 @@ def _blocker_payload(blocker: ConfirmationBlockerProjectionV1) -> EvidenceReview
             "reason": blocker.reason.value,
             "field": blocker.field,
             "detail": blocker.detail,
-            "words": None if blocker.words is None else blocker.words.model_dump(mode="json"),
+            "words": _words_payload(blocker.words),
             "detail_words": blocker.detail_words,
             "detail_words_language": None
             if blocker.detail_words_language is None
@@ -408,7 +416,7 @@ def _review_view_payload(
                     "kind": finding.kind.value,
                     "field": finding.field,
                     "detail": finding.detail,
-                    "words": None if finding.words is None else finding.words.model_dump(mode="json"),
+                    "words": _words_payload(finding.words),
                     "detail_words": finding.detail_words,
                     "detail_words_language": (
                         None if finding.detail_words_language is None else finding.detail_words_language.value
@@ -416,10 +424,10 @@ def _review_view_payload(
                     "expected": None if finding.expected is None else finding.expected.decimal,
                     "observed": None if finding.observed is None else finding.observed.decimal,
                 }
-            ).model_dump(mode="json")
+            ).model_dump()
             for finding in draft.discrepancies
         ],
-        "blockers": [_blocker_payload(blocker).model_dump(mode="json") for blocker in blockers],
+        "blockers": [_blocker_payload(blocker).model_dump() for blocker in blockers],
     }
 
 

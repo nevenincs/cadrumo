@@ -92,12 +92,13 @@ id = "m840-2003.anexo.f006"
 offset = 40
 length = 5
 kind = "projection"
-data_type = "text"
+data_type = "integer"
 required = false
-padding = "none"
-justification = "none"
+padding = "left_zero"
+justification = "right"
 signed = false
-value_policy = "digit-string"
+design_type = "Num"
+value_policy = "unsigned-integer"
 legal_refs = ["orden-hac-2572-2003:apartado-1"]
 source_refs = ["aeat-dr-840"]
 
@@ -391,12 +392,13 @@ id = "m840-2003.anexo.f023"
 offset = 150
 length = 5
 kind = "projection"
-data_type = "text"
+data_type = "integer"
 required = false
-padding = "none"
-justification = "none"
+padding = "left_zero"
+justification = "right"
 signed = false
-value_policy = "digit-string"
+design_type = "Num"
+value_policy = "unsigned-integer"
 legal_refs = ["orden-hac-2572-2003:apartado-1"]
 source_refs = ["aeat-dr-840"]
 
@@ -690,12 +692,13 @@ id = "m840-2003.anexo.f040"
 offset = 260
 length = 5
 kind = "projection"
-data_type = "text"
+data_type = "integer"
 required = false
-padding = "none"
-justification = "none"
+padding = "left_zero"
+justification = "right"
 signed = false
-value_policy = "digit-string"
+design_type = "Num"
+value_policy = "unsigned-integer"
 legal_refs = ["orden-hac-2572-2003:apartado-1"]
 source_refs = ["aeat-dr-840"]
 
@@ -989,12 +992,13 @@ id = "m840-2003.anexo.f057"
 offset = 370
 length = 5
 kind = "projection"
-data_type = "text"
+data_type = "integer"
 required = false
-padding = "none"
-justification = "none"
+padding = "left_zero"
+justification = "right"
 signed = false
-value_policy = "digit-string"
+design_type = "Num"
+value_policy = "unsigned-integer"
 legal_refs = ["orden-hac-2572-2003:apartado-1"]
 source_refs = ["aeat-dr-840"]
 
@@ -1288,12 +1292,13 @@ id = "m840-2003.anexo.f074"
 offset = 480
 length = 5
 kind = "projection"
-data_type = "text"
+data_type = "integer"
 required = false
-padding = "none"
-justification = "none"
+padding = "left_zero"
+justification = "right"
 signed = false
-value_policy = "digit-string"
+design_type = "Num"
+value_policy = "unsigned-integer"
 legal_refs = ["orden-hac-2572-2003:apartado-1"]
 source_refs = ["aeat-dr-840"]
 
@@ -1373,24 +1378,5 @@ source_refs = ["aeat-dr-840"]
 projection_kind = "m840_local"
 slot = 5
 field = "puerta"
-
-[[revisions.2003-y-siguientes.export_layouts.records.fields]]
-id = "m840-2003.anexo.f079"
-offset = 496
-length = 5
-kind = "projection"
-data_type = "text"
-required = false
-padding = "none"
-justification = "none"
-signed = false
-value_policy = "digit-string"
-legal_refs = ["orden-hac-2572-2003:apartado-1"]
-source_refs = ["aeat-dr-840"]
-
-[revisions.2003-y-siguientes.export_layouts.records.fields.projection_ref]
-projection_kind = "m840_local"
-slot = 5
-field = "codigo_postal"
 
 [revisions.2003-y-siguientes.export_layouts.records.row_field_casilla_ids]

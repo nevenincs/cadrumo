@@ -28,6 +28,8 @@ INCOMPLETE: Final = "incomplete"
 REFUSED: Final = "refused"
 ERROR: Final = "error"
 NOT_OWED: Final = "not-owed"
+NOT_SHOWN: Final = "not-shown"
+"""The file word of a recorded filing the workbench shows no filed state for."""
 
 
 class IntakeConfigurationError(RuntimeError):
@@ -54,12 +56,20 @@ class PilotRow:
     """The served next action the pilot stopped at because it is no step it can take; ``None`` when none stopped it."""
     filed: bool = False
     """Whether the workbench recorded the return filed locally, so later returns read it filed."""
+    file: str | None = None
+    """The file stage as the workbench itself showed it: ``pass`` when its next-step line says the filing is recorded,
+    ``refused`` when it withheld or refused the recording, ``not-shown`` when the recording settled and the line
+    shows nothing of it, ``error`` when the recording failed, ``not-reached`` when the drive never took the step.
+    ``None`` until a filing is attempted, and for a return the table did not file locally (no file stage)."""
     cause: str | None = None
     """The one cause key of a row that differs from the table's; ``None`` for a matched row."""
     cause_words: str = ""
     export_served: bool | None = None
     """Whether the form served an export door for the return once its check had run; ``None`` when the drive never
     reached that question. Served state, not a pilot choice."""
+    blocking_findings: tuple[str, ...] = ()
+    """The ids of the blocking findings the workbench's issues list showed once the check had not passed; empty when
+    it showed none. The line carries them only when there are some."""
 
     @property
     def label(self) -> str:
@@ -94,6 +104,10 @@ class PilotRow:
         }
         if self.export_served is not None and _schema_takes_export_served():
             document["export_served"] = self.export_served
+        if self.blocking_findings:
+            document["blocking_findings"] = list(self.blocking_findings)
+        if self.file is not None and _schema_takes_file(self.file):
+            document["file"] = self.file
         return document
 
     def line(self, *, tree: str, log: str) -> str:
@@ -110,6 +124,22 @@ def _schema_takes_export_served() -> bool:
     """Whether the persona table's intake schema already knows the served-export field; older ones refuse it."""
     probe = json.loads(PilotRow(persona="probe").line(tree="-", log=""))
     probe["export_served"] = False
+    try:
+        parse_result(json.dumps(probe))
+    except ValueError:
+        return False
+    return True
+
+
+@cache
+def _schema_takes_file(word: str) -> bool:
+    """Whether the persona table's intake schema knows ``word`` as a file stage; older schemas refuse some words.
+
+    A row whose word the schema refuses is written without the field, and its reason keeps the file words, so the
+    line stays readable and the field is never invented.
+    """
+    probe = json.loads(PilotRow(persona="probe").line(tree="-", log=""))
+    probe["file"] = word
     try:
         parse_result(json.dumps(probe))
     except ValueError:

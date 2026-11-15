@@ -68,6 +68,7 @@ from pathlib import Path
 from typing import cast
 
 from .figure_compare import extra_figures, figure_causes, redacted_casillas
+from .file_stage import NOT_SHOWN, file_causes, file_unmeasured
 from .rows import Stage, TableRow
 
 SURFACES = ("tui", "window", "cli")
@@ -78,10 +79,14 @@ STAGE_WORDS = ("pass", "incomplete", "refused", "not-owed", NOT_REACHED, "error"
 CALCULATE_INHERITED = "calculate_inherited"
 """The calculate stage of a surface that did not run the calculation; one was already present in its world."""
 CALCULATE_WORDS = (*STAGE_WORDS, CALCULATE_INHERITED)
+FILE_WORDS = (*STAGE_WORDS, NOT_SHOWN)
+"""The vocabulary of the file stage: the stage words, and ``not-shown`` for a surface that shows no filed state."""
 INHERITED_CAUSE = "calculate inherited (the surface did not run the calculation)"
 LEGACY_INHERITED_REASON = "calculate: a calculation was already present; none was run"
 """How the window wrote an inherited calculation (as ``pass``) before the word existed."""
 
+GRADE_HELD_FINDING = "registry_authority_grade_insufficient"
+"""The blocking finding of a verification the registry authority's grade holds; a withheld door matches only with it."""
 EXPORT_WITHHELD_UNVERIFIED = ("REFUSED_MODELO_REVISION_NOT_SEALED",)
 """The codes the export operation raises for a revision that is not sealed (unverified, so no grant sealed it)."""
 EXPORT_UNAVAILABLE = "export unavailable (refused | not served)"
@@ -111,13 +116,14 @@ A calculation that was produced counts as ``pass`` whatever the persona states a
 compared through the figures.
 """
 
-MATCHED, DIFFERS, NOT_COMPARABLE, LOAD_FAILED, NOT_RUN, EXTRA = (
+MATCHED, DIFFERS, NOT_COMPARABLE, LOAD_FAILED, NOT_RUN, EXTRA, FILE_NOT_MEASURED = (
     "matched",
     "differs",
     "not-comparable",
     "load-failed",
     "not-run",
     "extra",
+    "file-not-measured",
 )
 CELL_WORDS = {
     MATCHED: "matched",
@@ -125,6 +131,7 @@ CELL_WORDS = {
     NOT_COMPARABLE: "not comparable",
     LOAD_FAILED: "load failed",
     NOT_RUN: "not run",
+    FILE_NOT_MEASURED: "file not measured",
 }
 
 type RowKey = tuple[str, str, int, str]
@@ -150,6 +157,7 @@ _FIELDS = frozenset(
         "verify",
         "export",
         "export_served",
+        "blocking_findings",
         "file",
         "refusal_code",
         "figures",
@@ -183,6 +191,8 @@ class SurfaceResult:
     export: str = NOT_REACHED
     export_served: bool | None = None
     """Whether the form served an export door for the return; ``None`` when the line does not state it."""
+    blocking_findings: tuple[str, ...] = ()
+    """The ids of the findings the surface shows as blocking the return's verification; empty when it states none."""
     file: str | None = None
     """The file stage in the stage vocabulary; ``None`` when the line does not state it. Not compared with the table."""
     refusal_code: str | None = None
@@ -219,8 +229,10 @@ def read_results(directory: Path) -> dict[ResultKey, SurfaceResult]:
     A line is a JSON object with ``surface`` (``tui``, ``window`` or ``cli``), ``tree`` (the commit the surface ran),
     ``persona``, ``modelo`` (null on a persona-level line, which reports whether the profile loaded), ``year``,
     ``period`` (null with a null ``modelo``), ``loads``, and, when ``modelo`` is set, ``calculate``, ``verify``
-    and ``export`` in the stage vocabulary; the optional ``file`` states a fifth stage in the same vocabulary (absent
-    means not stated; the table row has no file stage yet, so parity ignores it). The optional ``export_served`` is
+    and ``export`` in the stage vocabulary; the optional ``file`` states the filed state in that vocabulary plus
+    ``not-shown``. A row the backend filed locally (``filed_locally``) is held to ``file`` ``pass``: absent or
+    ``not-shown`` makes the row differ (the surface shows no filed state), as does any other word; a row not filed
+    locally is not held to it. The optional ``export_served`` is
     true or false: false states the form served no export door for the return (served state, never the pilot's choice);
     absent means unknown. ``refusal_code``, ``reason`` and
     ``log`` are optional text;
@@ -284,6 +296,7 @@ def parse_result(line: str) -> SurfaceResult:
         verify=stages.get("verify", NOT_REACHED),
         export=stages.get("export", NOT_REACHED),
         export_served=_optional_bool(data, "export_served"),
+        blocking_findings=_finding_ids(data),
         file=_optional_stage(data, "file"),
         refusal_code=_optional_text(data, "refusal_code"),
         figures=_figures(data.get("figures", {})),
@@ -335,12 +348,22 @@ def _stage_words(data: Mapping[str, object], modelo: str | None, *, window_inher
 
 def _optional_stage(data: Mapping[str, object], name: str) -> str | None:
     """The stage word of an optional stage field, ``None`` when absent or null."""
-    return None if data.get(name) is None else _choice(data, name, STAGE_WORDS)
+    return None if data.get(name) is None else _choice(data, name, FILE_WORDS)
 
 
 def _optional_workaround(data: Mapping[str, object]) -> str | None:
     """The workaround text of a line: ``None`` when absent or null, else non-empty text."""
     return None if data.get("workaround") is None else _text(data, "workaround")
+
+
+def _finding_ids(data: Mapping[str, object]) -> tuple[str, ...]:
+    """The ``blocking_findings`` of a line: an array of non-empty ids, ``()`` when absent or null."""
+    raw = data.get("blocking_findings")
+    if raw is None:
+        return ()
+    if not isinstance(raw, list) or not all(isinstance(item, str) and item.strip() for item in raw):
+        raise ValueError("blocking_findings must be an array of non-empty finding ids or null")
+    return tuple(cast("list[str]", raw))
 
 
 def _optional_bool(data: Mapping[str, object], name: str) -> bool | None:
@@ -464,11 +487,35 @@ def parity(
         return RowParity(row.key, surface, NOT_COMPARABLE, (why,), tree)
     table, shown = dict(row.figures), dict(result.figures)
     stage_causes, gated = _stage_causes(surface, stages, result, export_refusal_code(row.reason))
-    causes = _substitute_causes(result) + stage_causes + figure_causes(surface, table, shown, dict(row.text_figures))
-    outcome = DIFFERS if causes else MATCHED
+    outcome, causes, redacted = _judged(row, surface, result, stage_causes, table, shown)
     extras = extra_figures(table | dict(row.internal_figures), shown)
-    redacted = () if causes else redacted_casillas(shown)
-    return RowParity(row.key, surface, outcome, tuple(causes), tree, extras, gated, redacted)
+    return RowParity(row.key, surface, outcome, causes, tree, extras, gated, redacted)
+
+
+def _judged(
+    row: TableRow,
+    surface: str,
+    result: SurfaceResult,
+    stage_causes: list[str],
+    table: Mapping[str, str],
+    shown: Mapping[str, str],
+) -> tuple[str, tuple[str, ...], tuple[str, ...]]:
+    """The outcome of a comparable row, its causes and the redacted casillas it was matched on.
+
+    Any cause makes it differ. Without one it matches, unless the backend filed it locally and the surface's line
+    states no file stage: it is then ``file-not-measured``, neither matched nor different.
+    """
+    causes = (
+        _substitute_causes(result)
+        + stage_causes
+        + file_causes(row.filed_locally, result.file, surface)
+        + figure_causes(surface, table, shown, dict(row.text_figures))
+    )
+    if causes:
+        return DIFFERS, tuple(causes), ()
+    if file_unmeasured(row.filed_locally, result.file):
+        return FILE_NOT_MEASURED, (f"file not measured by {surface}",), ()
+    return MATCHED, (), redacted_casillas(shown)
 
 
 def _substitute_causes(result: SurfaceResult) -> list[str]:
@@ -503,13 +550,15 @@ def export_refusal_code(reason: str) -> str | None:
 def _export_unavailable(name: str, word: str | None, result: SurfaceResult, code: str | None) -> bool:
     """Whether the surface's ``not-reached`` export is the table's refusal for an unsealed revision.
 
-    It is, only when the form served no export door (``export_served`` false, never absent) and the table's export
-    refusal code is one of ``EXPORT_WITHHELD_UNVERIFIED``.
+    It is, only when the form served no export door (``export_served`` false, never absent), the surface's blocking
+    findings include ``GRADE_HELD_FINDING`` (the grade holds the verification, not a defect of the return) and the
+    table's export refusal code is one of ``EXPORT_WITHHELD_UNVERIFIED``.
     """
     return (
         name == "export"
         and result.export == NOT_REACHED
         and result.export_served is False
+        and GRADE_HELD_FINDING in result.blocking_findings
         and word == "refused"
         and code in EXPORT_WITHHELD_UNVERIFIED
     )
@@ -551,6 +600,15 @@ class FrontendComparison:
     def matched(self, surface: str) -> int:
         """The table rows ``surface`` matched."""
         return sum(item.outcome == MATCHED for item in self.parities[surface])
+
+    def unmatched(self, surface: str) -> dict[str, int]:
+        """The rows of ``surface`` that are not matched, by the cell word of why: differs apart from not run."""
+        counts = Counter(item.outcome for item in self.parities[surface])
+        return {CELL_WORDS[outcome]: counts[outcome] for outcome in _UNMATCHED_WORDS if counts[outcome]}
+
+    def file_not_measured(self, surface: str) -> Counter[str]:
+        """Per tree, the rows of ``surface`` that are not matched or different because it measured no filed state."""
+        return Counter(item.tree or "unknown" for item in self.parities[surface] if item.outcome == FILE_NOT_MEASURED)
 
     def matched_on_redacted(self, surface: str) -> int:
         """The matched table rows of ``surface`` that were matched on a redacted casilla compared by presence."""
@@ -694,6 +752,8 @@ def _cell_parts(cell: PersonaCell) -> list[str]:
     ]
     if counts.get(NOT_COMPARABLE, 0):
         parts.append(f"{counts.get(NOT_COMPARABLE, 0)} not comparable")
+    if counts.get(FILE_NOT_MEASURED, 0):
+        parts.append(f"{counts.get(FILE_NOT_MEASURED, 0)} file not measured")
     if counts.get(LOAD_FAILED, 0):
         parts.append(f"{counts.get(LOAD_FAILED, 0)} load failed")
     if cell.extra_rows:
@@ -709,39 +769,8 @@ def row_cell(item: RowParity, head: str) -> str:
     return f"{text} @{item.tree}" if item.tree is not None and item.tree != head else text
 
 
-def frontend_line(comparison: FrontendComparison) -> str:
-    """The summary sentence, ``Frontend: TUI matched a / N, window matched b / N, CLI matched c / N (N rows)``.
-
-    It ends with the rows matched on redacted casillas per surface, when there are any.
-    """
-    total = len(comparison.rows)
-    matched = ", ".join(
-        f"{SURFACE_LABELS[surface]} matched {comparison.matched(surface)} / {total}" for surface in SURFACES
-    )
-    redacted = ", ".join(
-        f"{SURFACE_LABELS[surface]} {count}"
-        for surface in SURFACES
-        if (count := comparison.matched_on_redacted(surface))
-    )
-    suffix = (
-        f"; rows matched on redacted casillas (by presence, against the backend row's text value): {redacted}"
-        if redacted
-        else ""
-    )
-    return f"Frontend: {matched} ({total} rows){suffix}"
-
-
-def trees_line(comparison: FrontendComparison) -> str:
-    """``Trees folded: tui abc (5), def (2); window abc (3)``: per surface, each tree and the table rows it covers.
-
-    A surface with no result is omitted; ``none`` stands when no surface has one.
-    """
-    groups = []
-    for surface in SURFACES:
-        folded = comparison.trees_folded(surface)
-        if folded:
-            groups.append(f"{surface} " + ", ".join(f"{tree} ({count})" for tree, count in sorted(folded.items())))
-    return "Trees folded: " + ("; ".join(groups) or "none")
+_UNMATCHED_WORDS = (DIFFERS, NOT_RUN, NOT_COMPARABLE, LOAD_FAILED)
+"""The outcomes of a row that is not matched, listed apart in the Frontend line (a file not measured has its own)."""
 
 
 __all__ = [
@@ -760,10 +789,8 @@ __all__ = [
     "cell_text",
     "compare_frontend",
     "export_refusal_code",
-    "frontend_line",
     "parity",
     "parse_result",
     "read_results",
     "row_cell",
-    "trees_line",
 ]

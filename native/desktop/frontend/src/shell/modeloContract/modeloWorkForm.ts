@@ -39,26 +39,20 @@ import type {
 } from "./modeloEditWork";
 import type {
   DeadlineHolidayCoverage,
+  ModeloFormEditClosure,
   ModeloFormExportHold,
   ModeloFormFileView,
   ModeloFormFiling,
-  ModeloFormNextAction,
+  ModeloFormJourney,
+  ModeloFormNextStep,
   ModeloFormReceipt,
   ModeloFormResultDirection,
   ModeloFormResultView,
+  ModeloFormVerdict,
   ModeloWorkProgressState,
   PublicModeloFormExportOffer,
   SourceSurface,
 } from "./modeloWork";
-import type {
-  PublicSpanishTaxIdFormat,
-  ReconciliationSourceRequirementV1,
-  RefundEligibilityBasis,
-  RefundEligibilityOutcome,
-  SourceFamily,
-  SourcePolicyV1,
-  TemporalProjectionDirection,
-} from "./modeloWorkFormPart2";
 
 /**
  * The closed families of earlier-filing carries a filer may state hold
@@ -353,11 +347,6 @@ export type ModeloFormDisplacement =
   "nothing" | "source" | "calculation" | "filer";
 
 /**
- * Why nothing on the form may be edited, whatever the edit admission says.
- */
-export type ModeloFormEditClosure = "recorded_as_filed";
-
-/**
  * What may be done about one field's value; exactly one per field.
  */
 export type ModeloFormEditability =
@@ -385,14 +374,6 @@ export type ModeloFormExport = {
   exported_at: string;
   calculation_revision_id: string;
   current: boolean;
-};
-
-/**
- * The first box that needs the filer, on a page that applies this period.
- */
-export type ModeloFormFirstAttention = {
-  address: ModeloFormAddressV1;
-  page_id: string | null;
 };
 
 /**
@@ -455,18 +436,6 @@ export type ModeloFormIssueLine = {
 };
 
 /**
- * The journey's state, the next action it offers, and where the filer starts.
- */
-export type ModeloFormJourney = {
-  steps: ModeloFormStepState[];
-  steps_while_changes_held: ModeloFormStepState[];
-  next_step: ModeloFormNextStep;
-  held_prerequisite_next_step: ModeloFormNextStep;
-  first_attention: ModeloFormFirstAttention | null;
-  verdict: ModeloFormVerdict;
-};
-
-/**
  * Where the form's arrangement comes from.
  */
 export type ModeloFormLayoutProvenance =
@@ -491,18 +460,6 @@ export type ModeloFormLedgerHold = {
 export type ModeloFormMissingElsewhere = {
   count: number;
   words: string;
-};
-
-/**
- * The next action, what it counts, and the dates its words name.
- */
-export type ModeloFormNextStep = {
-  action: ModeloFormNextAction;
-  count: number;
-  findings_lead: boolean;
-  recorded_at: string | null;
-  file_created_at: string | null;
-  receipt_to_add: boolean;
 };
 
 /**
@@ -653,24 +610,6 @@ export type ModeloFormStatedPriorValue = {
 };
 
 /**
- * The steps of filing one declaration, in order.
- */
-export type ModeloFormStep = "fill" | "calculate" | "review" | "file";
-
-/**
- * One step and how far it has got.
- */
-export type ModeloFormStepState = {
-  step: ModeloFormStep;
-  status: ModeloFormStepStatus;
-};
-
-/**
- * How far one step has got.
- */
-export type ModeloFormStepStatus = "done" | "current" | "blocked" | "pending";
-
-/**
  * One displayed text and the honest account of where it came from.
  */
 export type ModeloFormText = {
@@ -699,21 +638,6 @@ export type ModeloFormTypingEffect = {
   address: ModeloFormAddressV1;
   displaces: ModeloFormDisplacement;
   words: string;
-};
-
-/**
- * What the last check concluded about the declaration, in the form's language.
- *
- * `status` is `None` when the declaration has not been checked.
- * `unapplied_words` replaces `words` while a frontend holds changes not yet
- * applied, and exists only after a check that passed.
- */
-export type ModeloFormVerdict = {
-  status: VerificationCompletenessStatus | null;
-  words: string;
-  unapplied_words: string | null;
-  checked_words: string | null;
-  checked_resolves: boolean;
 };
 
 /**
@@ -1300,3 +1224,81 @@ export type PublicScalarValueV1 = {
   kind: "string" | "integer" | "boolean" | "decimal" | "date" | "null";
   text: string;
 };
+
+/**
+ * Typed local-human workbench view of the governed SpanishTaxIdFormat.
+ */
+export type PublicSpanishTaxIdFormat = {
+  width: number;
+  country_prefix: string;
+  country_prefixed_width: number;
+  country_prefix_strip_width: number;
+  prefixed_nif_leaders: string;
+  nie_leaders: string;
+  cif_leaders: string;
+  nif_letters: string;
+  nif_check_modulus: number;
+  nie_prefix_substitutions: [string, string][];
+  cif_digit_only_kinds: string;
+  cif_letter_only_kinds: string;
+  cif_letter_table: string;
+};
+
+/**
+ * One source declaration the to-do list names before the summary can be worked
+ * out, and its door.
+ */
+export type ReconciliationSourceRequirementV1 = {
+  words: string;
+  next_step: OperationNextStepV1;
+};
+
+/**
+ * Which fact settled the outcome.
+ */
+export type RefundEligibilityBasis =
+  "final_period" | "redeme" | "non_final_period";
+
+/**
+ * What may be done with a negative Modelo 303 result in one period.
+ */
+export type RefundEligibilityOutcome =
+  "refund_allowed" | "carry_forward_only" | "undetermined_redeme_unstated";
+
+/**
+ * The kind of place a value comes from, as a filer thinks of it.
+ */
+export type SourceFamily =
+  | "records"
+  | "registers"
+  | "profile"
+  | "earlier_filings"
+  | "aeat_draft"
+  | "your_entries"
+  | "fixed_by_design";
+
+/**
+ * What a filer may do about a value this source supplies.
+ */
+export type SourceOverridePolicy =
+  | "fix_at_source"
+  | "override_with_reason"
+  | "edit_at_home"
+  | "enter"
+  | "fixed"
+  | "undecided";
+
+/**
+ * The family, policy and owning surface of one binding source kind.
+ */
+export type SourcePolicyV1 = {
+  source_kind: BindingSourceKind;
+  family: SourceFamily;
+  override_policy: SourceOverridePolicy;
+  surface: SourceSurface;
+};
+
+/**
+ * How a resolved coordinate relates to the declaration supplying it.
+ */
+export type TemporalProjectionDirection = "authored" | "backward" | "forward";

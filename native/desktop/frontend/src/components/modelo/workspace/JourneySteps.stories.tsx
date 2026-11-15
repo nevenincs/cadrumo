@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, within } from "storybook/test";
-import type { ModeloFormStepState } from "../../../shell/modeloContract/modeloWorkForm";
+import type { ModeloFormStepState } from "../../../shell/modeloContract/modeloWork";
 import { translator } from "../../../shell/strings";
 import { JourneySteps } from "./JourneySteps";
 

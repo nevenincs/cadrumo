@@ -385,18 +385,19 @@ def _resolved_m210_gross_income_mode(
     return mode
 
 
-def refuse_blocked_ledger_preflight(work_unit_id: str, *, ports: CalculationActionPorts) -> None:
+def refuse_blocked_ledger_preflight(
+    work_unit_id: str, *, ports: CalculationActionPorts, profile: ModeloWorkProfile | None = None
+) -> ModeloWorkProfile:
     """Refuse, before anything is written, a calculation the period's ledger readiness blocks.
 
-    Calculation itself runs the same check after its preparatory writes; this
-    one runs first, so a refusal the person can put right leaves no record
-    changed and is reported as a refusal, not as an operation that may have
-    written.
+    Calculation itself runs the same check after its preparatory writes; this one runs first, so a refusal
+    the person can put right leaves no record changed and is reported as a refusal, not as an operation that
+    may have written. It returns the checked profile, so the command decrypts it once.
     """
     work_unit, snapshot, checked_profile = load_bucket_aggregation_context(
         work_unit_id,
         work_unit_repository=ports.work_unit_repository,
-        profile=None,
+        profile=profile,
         operation=ports.operation,
     )
     raise_if_ledger_preflight_blocks_calculation(
@@ -408,15 +409,17 @@ def refuse_blocked_ledger_preflight(work_unit_id: str, *, ports: CalculationActi
         operation=ports.operation,
         profile_values=record_to_path_values(checked_profile.record),
     )
+    return checked_profile
 
 
-def refuse_empty_retenciones_window(work_unit_id: str, *, ports: CalculationActionPorts) -> None:
+def refuse_empty_retenciones_window(
+    work_unit_id: str, *, ports: CalculationActionPorts, profile: ModeloWorkProfile | None = None
+) -> ModeloWorkProfile:
     """Refuse, before anything is written, a withholding period that holds no retención.
 
-    The retenciones resolver refuses the same window during source
-    resolution, which runs after the calculation's preparatory writes; this
-    applies its rule first, so the person's missing answer is reported as a
-    refusal with nothing changed.
+    The retenciones resolver refuses the same window during source resolution, which runs after the
+    calculation's preparatory writes; this applies its rule first, so the person's missing answer is
+    reported as a refusal with nothing changed. It returns the checked profile.
     """
     from ..aggregation.modelo_bindings_retenciones import RetencionesAggregationSourceResolver
     from ..aggregation.source_mesh import CalculationSourceContext
@@ -426,7 +429,7 @@ def refuse_empty_retenciones_window(work_unit_id: str, *, ports: CalculationActi
     work_unit, snapshot, checked_profile = load_bucket_aggregation_context(
         work_unit_id,
         work_unit_repository=ports.work_unit_repository,
-        profile=None,
+        profile=profile,
         operation=ports.operation,
     )
     resolver = RetencionesAggregationSourceResolver(
@@ -451,6 +454,7 @@ def refuse_empty_retenciones_window(work_unit_id: str, *, ports: CalculationActi
     )
     if refusal is not None:
         raise refusal
+    return checked_profile
 
 
 def _prepare_bucket_aggregation_calculation(

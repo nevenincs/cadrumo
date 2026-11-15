@@ -16,6 +16,7 @@ from ..figure_compare import extra_figures, figure_causes, is_redacted
 from ..frontend import (
     CALCULATE_INHERITED,
     EXPORT_WITHHELD_UNVERIFIED,
+    GRADE_HELD_FINDING,
     INHERITED_CAUSE,
     LEGACY_INHERITED_REASON,
     MATCHED,
@@ -29,11 +30,11 @@ from ..frontend import (
     cell_text,
     compare_frontend,
     export_refusal_code,
-    frontend_line,
     parity,
     parse_result,
     read_results,
 )
+from ..frontend_summary import frontend_line
 from ..render import render_table, unavailable_exports_lines
 from ..rows import PlannedRow, Stage, TableRow, canonical_figures, latest_rows, write_rows
 
@@ -55,6 +56,7 @@ def _row(
     figures: tuple[tuple[str, str], ...] | None = _FIGURES,
     internal_figures: tuple[tuple[str, str], ...] = (),
     text_figures: tuple[tuple[str, str], ...] = (),
+    filed_locally: bool = False,
     reason: str = "",
 ) -> TableRow:
     plan = PlannedRow(
@@ -75,6 +77,7 @@ def _row(
         figures=figures,
         internal_figures=internal_figures,
         text_figures=text_figures,
+        filed_locally=filed_locally,
         reason=reason,
     )
 
@@ -488,7 +491,10 @@ def test_a_render_without_a_frontend_is_unchanged_and_with_one_adds_columns_line
     assert "Frontend" not in plain
     assert plain.count("| tui |") == 0
     text = render_table(rows, head="abc", frontend=compare_frontend(rows, results))
-    assert "Frontend: TUI matched 1 / 7, window matched 0 / 7, CLI matched 0 / 7 (7 rows)\n" in text
+    assert (
+        "Frontend: TUI matched 1 / 7, window matched 0 / 7, CLI matched 0 / 7 (7 rows); "
+        "not matched: TUI differs 1, not run 2, not comparable 1, load failed 2; window not run 7; CLI not run 7\n"
+    ) in text
     assert "| grounding | run | reason | tui | window | cli |" in text
     assert "\nTrees folded: tui abc (3)\n" in text
     lines = text.splitlines()
@@ -643,7 +649,13 @@ def _sealed_row(period: str = "1T", reason: str = _NOT_SEALED_REASON, export: St
 
 
 def _unserved(**overrides: object) -> SurfaceResult:
-    return _result(verify="incomplete", export="not-reached", export_served=False, **overrides)
+    return _result(
+        verify="incomplete",
+        export="not-reached",
+        export_served=False,
+        blocking_findings=[GRADE_HELD_FINDING],
+        **overrides,
+    )
 
 
 def test_an_export_door_not_served_matches_the_unsealed_refusal_and_records_the_code() -> None:
@@ -717,7 +729,13 @@ def test_a_non_boolean_export_served_is_refused(value: object) -> None:
 def test_the_cell_names_rows_matched_by_gating_only_when_there_are_some() -> None:
     rows = [_sealed_row("1T"), _row("2T"), _row("3T")]
     lines = [
-        _line(period="1T", verify="incomplete", export="not-reached", export_served=False),
+        _line(
+            period="1T",
+            verify="incomplete",
+            export="not-reached",
+            export_served=False,
+            blocking_findings=[GRADE_HELD_FINDING],
+        ),
         _line(period="2T"),
         _line(period="3T"),
     ]
@@ -733,7 +751,16 @@ def test_the_cell_names_rows_matched_by_gating_only_when_there_are_some() -> Non
 
 def test_the_report_lists_the_rows_matched_as_export_unavailable_only_when_there_are_some() -> None:
     rows = [_sealed_row("1T"), _row("2T")]
-    lines = [_line(period="1T", verify="incomplete", export="not-reached", export_served=False), _line(period="2T")]
+    lines = [
+        _line(
+            period="1T",
+            verify="incomplete",
+            export="not-reached",
+            export_served=False,
+            blocking_findings=[GRADE_HELD_FINDING],
+        ),
+        _line(period="2T"),
+    ]
     results = {parse_result(json.dumps(line)).key: parse_result(json.dumps(line)) for line in lines}
     comparison = compare_frontend(rows, results)
     assert unavailable_exports_lines(comparison) == [
@@ -1045,3 +1072,85 @@ def test_the_cell_counts_an_inherited_row_as_differing_and_the_legacy_line_too()
     rendered = render_table(rows, head="abc", frontend=comparison)
     assert f"- {row_id(rows[0].key)}: window differs: {INHERITED_CAUSE}" in rendered
     assert f"- {row_id(rows[1].key)}: window differs: {INHERITED_CAUSE}" in rendered
+
+
+def test_a_row_filed_locally_matches_a_surface_that_shows_the_filed_state() -> None:
+    shown = parity(_row(filed_locally=True), "tui", _result(file="pass"))
+    assert (shown.outcome, shown.causes) == ("matched", ())
+
+
+def test_a_recorded_not_shown_filing_differs() -> None:
+    hidden = parity(_row(filed_locally=True), "tui", _result(file="not-shown"))
+    assert (hidden.outcome, hidden.causes) == ("differs", ("file not shown by tui, table filed locally",))
+
+
+def test_a_result_line_without_a_file_stage_is_not_measured_neither_matched_nor_different() -> None:
+    row = _row(filed_locally=True)
+    unmeasured = parity(row, "window", _result(surface="window", tree="abc"))
+    assert (unmeasured.outcome, unmeasured.causes) == ("file-not-measured", ("file not measured by window",))
+    line = _result(surface="window", tree="abc")
+    comparison = compare_frontend([row], {line.key: line})
+    assert comparison.matched("window") == 0
+    assert dict(comparison.file_not_measured("window")) == {"abc": 1}
+    assert "file not measured" in frontend_line(comparison)
+    measured = _result(file="pass")
+    assert "file not measured" not in frontend_line(compare_frontend([row], {measured.key: measured}))
+    other = parity(row, "window", _result(surface="window", figures={"0700": "-1.00"}))
+    assert other.outcome == "differs"
+
+
+def test_a_measured_filing_that_is_not_the_filed_state_differs_and_an_unfiled_row_is_not_held_to_one() -> None:
+    refused = parity(_row(filed_locally=True), "cli", _result(file="refused"))
+    assert (refused.outcome, refused.causes) == ("differs", ("file cli refused, table filed locally",))
+    for line in ({}, {"file": "not-shown"}, {"file": "refused"}):
+        assert parity(_row(), "window", _result(**line)).outcome == "matched"
+
+
+def test_a_file_word_outside_the_vocabulary_is_refused_and_not_shown_is_read() -> None:
+    assert parse_result(json.dumps(_line(file="not-shown"))).file == "not-shown"
+    with pytest.raises(ValueError, match="file"):
+        parse_result(json.dumps(_line(file="shown")))
+
+
+def test_a_row_reads_that_it_was_filed_locally_from_its_record_or_from_an_older_reason() -> None:
+    assert TableRow.from_json(_row(filed_locally=True).to_json()).filed_locally
+    assert not TableRow.from_json(_row().to_json()).filed_locally
+    older = json.loads(_row(reason="export ok | filed locally").to_json())
+    del older["filed_locally"]
+    assert TableRow.from_json(json.dumps(older)).filed_locally
+    del older["reason"]
+    assert not TableRow.from_json(json.dumps(older)).filed_locally
+
+
+def test_the_frontend_line_lists_differs_apart_from_not_run_per_surface() -> None:
+    rows, results = _comparison()
+    comparison = compare_frontend(rows, results)
+    assert comparison.unmatched("tui") == {"differs": 1, "not run": 2, "not comparable": 1, "load failed": 2}
+    assert comparison.unmatched("window") == {"not run": 7}
+    full = [_row()]
+    line = _result(surface="cli")
+    clean = compare_frontend(full, {line.key: line})
+    assert clean.unmatched("cli") == {}
+    assert "CLI" not in frontend_line(clean).split("not matched:")[1]
+
+
+def test_a_withheld_export_door_matches_only_when_the_surface_blocks_on_the_grade_finding() -> None:
+    held = parity(_sealed_row(), "tui", _unserved())
+    assert (held.outcome, held.gated_stages) == ("matched", (_UNAVAILABLE,))
+    for blocking in ([], ["other_finding"], None):
+        line = {} if blocking is None else {"blocking_findings": blocking}
+        other = parity(
+            _sealed_row(),
+            "tui",
+            _result(verify="incomplete", export="not-reached", export_served=False, **line),
+        )
+        assert (other.outcome, other.gated_stages) == ("differs", ())
+        assert "export tui not-reached, table refused" in other.causes
+
+
+def test_the_blocking_findings_of_a_line_are_read_and_a_bad_value_is_refused() -> None:
+    assert _result(blocking_findings=[GRADE_HELD_FINDING]).blocking_findings == (GRADE_HELD_FINDING,)
+    assert _result().blocking_findings == ()
+    for bad in ("registry_authority_grade_insufficient", [""], [1], {"a": 1}):
+        with pytest.raises(ValueError, match="blocking_findings"):
+            parse_result(json.dumps(_line(blocking_findings=bad)))

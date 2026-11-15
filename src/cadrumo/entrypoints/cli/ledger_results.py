@@ -209,6 +209,7 @@ class LedgerStagedDraftPayload(OutputSchema):
     """The backend's answer for one new movement."""
 
     key: str
+    takes_expense_category: bool
     blockers: list[LedgerStagedBlockerPayload]
 
 

@@ -99,6 +99,20 @@ export type ProviderSignInFixtureDetail = {
   cause?: string;
   next_step?: string;
   status_cause?: string;
+  /** The diagnostic id the host wrote the failure under in its log. */
+  log_ref?: string;
+};
+
+/** What a refused call carries beside its code, as a host sends it on the
+ * rejection: a reason, a cause, a next step and a diagnostic id. */
+export type ProviderSignInFixtureRefusal = ProviderSignInFixtureDetail & {
+  reason?: string;
+};
+
+/** One sign-in call the scenario host was asked, with the attempt it named. */
+export type ProviderSignInFixtureCall = {
+  op: "start" | "status" | "cancel" | "submit_code";
+  attempt_id?: string;
 };
 
 /** What a lane says of its state when the probe could not confirm it: its
@@ -121,19 +135,45 @@ export type ProviderSignInFixtureControls = {
     reason: ProviderSignInFixtureFailure,
     detail?: ProviderSignInFixtureDetail,
   ) => void;
+  /** The next start is refused: it rejects with `code` and `detail`, and no
+   * attempt is made. */
+  rejectNextStart: (
+    code: string,
+    detail?: ProviderSignInFixtureRefusal,
+  ) => void;
+  /** Which providers the service declares GUI sign-in for. */
+  offerSignIn: (providers: readonly string[]) => void;
+  /** A browser sign-in asks for an authorization code to be pasted back. */
+  askForCode: () => void;
+  /** The sign-in calls asked so far, with the attempt each named. */
+  signInCalls: () => ProviderSignInFixtureCall[];
   /** Sets what a lane's app reports; the next settings read serves it. */
   leaveLaneUnconfirmed: (id: string, state: ProviderLaneFixtureState) => void;
   setMethods: (methods: readonly ProviderSignInMethod[]) => void;
-  failNextStatus: () => void;
-  failNextSubmit: () => void;
+  /** The next `times` status reads reject with `code` (`read_failed` once
+   * unless given) and `detail`. */
+  failNextStatus: (
+    code?: string,
+    detail?: ProviderSignInFixtureRefusal,
+    times?: number,
+  ) => void;
+  /** The next code submission rejects with `code` (`busy` unless given). */
+  failNextSubmit: (
+    code?: string,
+    detail?: ProviderSignInFixtureRefusal,
+  ) => void;
   deferNextStatus: () => void;
   completeStatus: () => void;
   deferNextCancel: () => void;
   completeCancel: () => void;
   deferNextOpenExternal: () => void;
   completeOpenExternal: (fail?: boolean) => void;
-  failCurrentAttempt: () => void;
-  succeedCurrentAttempt: () => void;
+  /** The current attempt turns failed, with `detail` beside its reason
+   * (`provider_unavailable` unless given). */
+  failCurrentAttempt: (detail?: ProviderSignInFixtureRefusal) => void;
+  /** The current attempt succeeds; `signedIn` also leaves the lane signed
+   * in, as the next settings read reports it. */
+  succeedCurrentAttempt: (signedIn?: boolean) => void;
 };
 
 // React StrictMode may evaluate the scenario host factory twice in dev mode.
@@ -143,8 +183,22 @@ let failNextStart: ProviderSignInFixtureFailure | null = null;
 let failNextDetail: ProviderSignInFixtureDetail = {};
 let deferNextStart = false;
 let completeDeferredStart: (() => void) | null = null;
-let failNextStatus = false;
-let failNextSubmit = false;
+let rejectNextStart: {
+  code: string;
+  detail: ProviderSignInFixtureRefusal;
+} | null = null;
+let fixtureSignInProviders: readonly string[] = FIXTURE_SIGN_IN_PROVIDERS;
+let askForCode = false;
+let fixtureSignInCalls: ProviderSignInFixtureCall[] = [];
+let failNextStatus: {
+  code: string;
+  detail: ProviderSignInFixtureRefusal;
+  times: number;
+} | null = null;
+let failNextSubmit: {
+  code: string;
+  detail: ProviderSignInFixtureRefusal;
+} | null = null;
 let deferNextStatus = false;
 let completeDeferredStatus: (() => void) | null = null;
 let deferNextCancel = false;
@@ -218,7 +272,8 @@ function initial(
   }
 }
 
-const coded = (code: string) => Object.assign(new Error(code), { code });
+const coded = (code: string, detail: ProviderSignInFixtureRefusal = {}) =>
+  Object.assign(new Error(code), { ...detail, code });
 
 const withoutAddress = (
   record: ProviderSettingsRecord,
@@ -244,7 +299,8 @@ export function providerSettingsFixture({
   fixtureAttempt = null;
   fixtureCancelRequestedFor = null;
   rejectNextSettingsRead = false;
-  failNextStatus = false;
+  failNextStatus = null;
+  fixtureSignInCalls = [];
   let changes = 0;
   const records = new Map<string, ProviderSettingsRecord>(
     SEEDS.map((seed) => [
@@ -298,6 +354,19 @@ export function providerSettingsFixture({
       failNextDetail = detail;
       say(`providerSignInFailureQueued ${reason}`);
     },
+    rejectNextStart(code, detail = {}) {
+      rejectNextStart = { code, detail };
+      say(`providerSignInRefusalQueued ${code}`);
+    },
+    offerSignIn(providers) {
+      fixtureSignInProviders = [...providers];
+    },
+    askForCode() {
+      askForCode = true;
+    },
+    signInCalls() {
+      return fixtureSignInCalls.map((call) => ({ ...call }));
+    },
     leaveLaneUnconfirmed(id, state) {
       const record = records.get(id);
       if (record) records.set(id, { ...record, ...state });
@@ -305,11 +374,11 @@ export function providerSettingsFixture({
     setMethods(methods) {
       fixtureSignInMethods = [...methods];
     },
-    failNextSubmit() {
-      failNextSubmit = true;
+    failNextSubmit(code = "busy", detail = {}) {
+      failNextSubmit = { code, detail };
     },
-    failNextStatus() {
-      failNextStatus = true;
+    failNextStatus(code = "read_failed", detail = {}, times = 1) {
+      failNextStatus = { code, detail, times };
     },
     deferNextStatus() {
       deferNextStatus = true;
@@ -332,17 +401,20 @@ export function providerSettingsFixture({
       completeDeferredOpenExternal?.(fail);
       completeDeferredOpenExternal = null;
     },
-    failCurrentAttempt() {
+    failCurrentAttempt(detail = {}) {
       if (!fixtureAttempt) return;
+      const reason = detail.reason ?? "provider_unavailable";
       fixtureAttempt = {
         attempt_id: fixtureAttempt.attempt_id,
         provider: fixtureAttempt.provider,
         event: "failed",
-        reason: "provider_unavailable",
+        // What a host sends beside the reason; the window checks it.
+        ...(detail as Partial<ProviderSignInSnapshot>),
+        reason,
       };
-      say("providerSignInAttemptFailed provider_unavailable");
+      say(`providerSignInAttemptFailed ${reason}`);
     },
-    succeedCurrentAttempt() {
+    succeedCurrentAttempt(signedIn = false) {
       if (!fixtureAttempt) return;
       fixtureAttempt = {
         attempt_id: fixtureAttempt.attempt_id,
@@ -350,6 +422,16 @@ export function providerSettingsFixture({
         event: "succeeded",
       };
       fixtureCancelRequestedFor = null;
+      const record = records.get(fixtureAttempt.provider);
+      if (signedIn && record)
+        records.set(record.id, {
+          ...record,
+          cli_state: "installed_signed_in",
+          mode: "provider_sign_in",
+          available: true,
+          readiness: "ready",
+          reason: null,
+        });
       say("providerSignInAttemptSucceeded");
     },
   };
@@ -361,7 +443,7 @@ export function providerSettingsFixture({
     if (
       !record ||
       record.auth_kind !== "provider_sign_in_only" ||
-      !FIXTURE_SIGN_IN_PROVIDERS.includes(record.provider)
+      !fixtureSignInProviders.includes(record.provider)
     )
       throw coded("unsupported");
     records.set(provider, {
@@ -397,7 +479,7 @@ export function providerSettingsFixture({
           attempt_id: attemptId,
           provider,
           event:
-            method === "browser-code"
+            method === "browser-code" || (method === "browser" && askForCode)
               ? "authorization_code_required"
               : method === "browser"
                 ? "browser_action"
@@ -413,7 +495,15 @@ export function providerSettingsFixture({
   const signInControlsSettings: NonNullable<ProviderSettings["signIn"]> = {
     async start({ provider, revision, method }) {
       say(`providerSignInStart ${provider} ${method}`);
+      fixtureSignInCalls.push({ op: "start" });
       if (!readable()) throw coded("not_signed_in");
+      if (rejectNextStart) {
+        const refusal = rejectNextStart;
+        rejectNextStart = null;
+        await wait();
+        say(`providerSignInRefusalReturned ${refusal.code}`);
+        throw coded(refusal.code, refusal.detail);
+      }
       const record = records.get(provider);
       if (!record || record.revision !== revision)
         throw coded("revision_conflict");
@@ -431,10 +521,13 @@ export function providerSettingsFixture({
     },
     async status({ attemptId }) {
       say("providerSignInStatus");
+      fixtureSignInCalls.push({ op: "status", attempt_id: attemptId });
       if (failNextStatus) {
-        failNextStatus = false;
-        say("providerSignInStatusFailureReturned read_failed");
-        throw coded("read_failed");
+        const failure = failNextStatus;
+        failNextStatus =
+          failure.times > 1 ? { ...failure, times: failure.times - 1 } : null;
+        say(`providerSignInStatusFailureReturned ${failure.code}`);
+        throw coded(failure.code, failure.detail);
       }
       await wait();
       if (!fixtureAttempt || fixtureAttempt.attempt_id !== attemptId)
@@ -456,6 +549,7 @@ export function providerSettingsFixture({
       return fixtureAttempt;
     },
     async submitCode({ attemptId, code }) {
+      fixtureSignInCalls.push({ op: "submit_code", attempt_id: attemptId });
       if (
         !fixtureAttempt ||
         fixtureAttempt.attempt_id !== attemptId ||
@@ -465,8 +559,9 @@ export function providerSettingsFixture({
         throw coded("invalid_request");
       say("providerSignInSubmitCode");
       if (failNextSubmit) {
-        failNextSubmit = false;
-        throw coded("busy");
+        const refusal = failNextSubmit;
+        failNextSubmit = null;
+        throw coded(refusal.code, refusal.detail);
       }
       fixtureAttempt = {
         attempt_id: attemptId,
@@ -477,6 +572,7 @@ export function providerSettingsFixture({
     },
     async cancel({ attemptId }) {
       say("providerSignInCancel");
+      fixtureSignInCalls.push({ op: "cancel", attempt_id: attemptId });
       if (!fixtureAttempt || fixtureAttempt.attempt_id !== attemptId)
         throw coded("unknown");
       const target = fixtureAttempt;
@@ -530,9 +626,9 @@ export function providerSettingsFixture({
       say("providerStatusResolved");
       return {
         providers: [...records.values()],
-        sign_in_providers: [...FIXTURE_SIGN_IN_PROVIDERS],
+        sign_in_providers: [...fixtureSignInProviders],
         sign_in_methods: Object.fromEntries(
-          FIXTURE_SIGN_IN_PROVIDERS.map((provider) => [
+          fixtureSignInProviders.map((provider) => [
             provider,
             [...fixtureSignInMethods],
           ]),

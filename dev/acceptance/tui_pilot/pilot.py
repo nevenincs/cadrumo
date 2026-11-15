@@ -65,8 +65,8 @@ from cadrumo.tests.personas import Persona, PersonaCatalogueError, read_persona
 
 from ..persona_table.frontend import DIFFERS, NOT_REACHED
 from ..persona_table.rows import PlannedRow, TableRow
-from .causes import CRASH_CAUSE, export_unavailable_note, outcome, row_cause, unreported_cause
-from .intake import ERROR, INCOMPLETE, NOT_OWED, PASSED, REFUSED, PilotRow, write_rows
+from .causes import CRASH_CAUSE, export_unavailable_note, file_stage_of, outcome, row_cause, unreported_cause
+from .intake import ERROR, INCOMPLETE, NOT_OWED, NOT_SHOWN, PASSED, REFUSED, PilotRow, write_rows
 from .plan import pilot_envelope, pilot_plan, table_rows_path
 
 _CALCULATE: Final = frozenset({ModeloFormNextAction.CALCULATE, ModeloFormNextAction.RECALCULATE})
@@ -204,6 +204,7 @@ def _verified(shown: ShownOutcome, row: PilotRow) -> bool:
         stage = INCOMPLETE
     row.verify = stage if shown.submitted else ERROR
     if row.verify != PASSED:
+        row.blocking_findings = shown.blocking_findings
         row.refusal_code = row.refusal_code or shown.code
         row.reasons.append(f"verify: {shown.verification} {shown.refusal or shown.notice}")
     return row.verify == PASSED
@@ -236,12 +237,23 @@ def _note_export(shown: ShownOutcome, row: PilotRow, stage: str) -> None:
 
 
 def _recorded(shown: ShownOutcome, row: PilotRow) -> bool:
-    if shown.submitted and _settled_stage(shown) == PASSED:
-        row.filed = True
-        row.reasons.append("filed locally")
-        return True
-    row.reasons.append(f"file: {shown.code} {shown.refusal or shown.notice}")
-    return False
+    """Record the file stage from what the workbench itself shows after the key: its refusal or its filed state."""
+    if not shown.submitted:
+        row.file = REFUSED
+        row.reasons.append(f"file: withheld by the workbench: {shown.notice}")
+        return False
+    stage = _settled_stage(shown)
+    if stage != PASSED:
+        row.file = stage
+        row.reasons.append(f"file: {shown.code} {shown.refusal or shown.notice}")
+        return False
+    row.filed = True
+    row.reasons.append("filed locally")
+    filing = shown.filing
+    row.file = PASSED if filing is not None and filing.recorded else NOT_SHOWN
+    words = "nothing" if filing is None else filing.next_line
+    row.reasons.append(f"file: the workbench shows {words!r}")
+    return True
 
 
 def _stop(driver: WorkbenchDriver, row: PilotRow, action: ModeloFormNextAction | None) -> None:
@@ -503,6 +515,7 @@ def run_persona(persona_id: str, tmp_path: Path) -> PersonaRun:
                     row = run_return(materialised, planned, root / "exports")
                     if planned.key in replay.reported:
                         table = plan.expected[planned.key]
+                        row.file = file_stage_of(row, table)
                         row.cause, row.cause_words = row_cause(row, table, ran)
                         note = export_unavailable_note(row, table)
                         if note is not None:

@@ -1,23 +1,23 @@
 import { expect, test, type Page } from "@playwright/test";
 import { label } from "../support/strings";
 import { filing } from "../support/scenarioModeloWrites";
+import { openDeclaration, tab } from "../support/scenarioModelo";
 
 // Recording the filing locally. The runtime answers the write as running and
-// the window follows it; the filing state it then reads is slow. The filed
-// state is the whole declaration's: the header's step and the journey's last
-// step are served only by the whole form read, the filing words by the filing
-// state. After the write settles the window reads by itself, says it is
-// reading while it does, shows the filing words as soon as the filing state
-// answers and the filed header when the form answers, and never leaves a
-// write hold asking the person to read again.
+// the window follows it; the filing state it then reads is slow. The filing
+// state serves the filed header's step, the journey and the next step as well
+// as the filing words, so after the write settles the window reads by itself,
+// says it is reading while it does, draws all of them when the filing state
+// answers, never reads the whole form behind it and never leaves a write hold
+// asking the person to read again.
 
 const BUSY = () => label("desktop.navigation.busy");
 const recordButton = (target: Page) =>
   target.getByRole("button", {
     name: label("workspace.modelo.filing.record_as_filed"),
   });
-/** The header's words once the declaration is recorded; they are served with
- * the whole form's next step. */
+/** The header's words once the declaration is recorded; they are the served
+ * next step's. */
 const headerRecorded = (target: Page) =>
   target
     .locator("header")
@@ -186,36 +186,92 @@ test("while the filing state is read the page says it is reading and asks nobody
   await expect(target.locator(".modelo-write-hold")).toHaveCount(0);
 });
 
-test("the filing words show within a second of the filing state, the filed header within a second of the form, and the page reads in between", async ({
+test("the filed header, the next step and the filing words show within a second of the filing state, with the whole form held and never read", async ({
   page: target,
 }) => {
   await ready(target, 0);
+  // The whole form read is held and never released: nothing the header shows
+  // may wait for it.
   await target.evaluate(() => {
     window.__fileGates!.holdForm = true;
   });
   await recordFiling(target);
-  // The form read is the one the header's filed step waits for.
   await expect
-    .poll(() => target.evaluate(() => !!window.__fileGates!.releaseForm))
-    .toBe(true);
-  // The filing state has answered: the filing words are drawn at once, and the
-  // page still says it is reading, with no one asked to read again.
+    .poll(() => target.evaluate(() => window.__fileGates!.answeredFilingState))
+    .not.toBeNull();
+  const answered = await target.evaluate(
+    () => window.__fileGates!.answeredFilingState!,
+  );
   await expect(recordedHere(target)).toBeVisible({ timeout: 1000 });
-  for (let at = 0; at < 4; at++) {
-    await expect(busyNotice(target)).toHaveCount(1);
-    await expect(target.locator(".modelo-write-hold")).toHaveCount(0);
-    await expect(readAgain(target)).toHaveCount(0);
-    await target.waitForTimeout(250);
-  }
-  await target.evaluate(() => {
-    window.__fileGates!.holdForm = false;
-    window.__fileGates!.releaseForm!();
-  });
   await expect(fileStep(target)).toHaveAttribute("data-status", "done", {
     timeout: 1000,
   });
-  await expect(headerRecorded(target)).toBeVisible();
-  await expect(busyNotice(target)).toHaveCount(0);
-  await expect(target.locator(".modelo-write-hold")).toHaveCount(0);
+  await expect(headerRecorded(target)).toBeVisible({ timeout: 1000 });
+  await expect(busyNotice(target)).toHaveCount(0, { timeout: 1000 });
+  await expect(target.locator(".modelo-write-hold")).toHaveCount(0, {
+    timeout: 1000,
+  });
   await expect(readAgain(target)).toHaveCount(0);
+  const drawn = await target.evaluate(() => performance.now());
+  expect(drawn - answered).toBeLessThan(2000);
+  // It stays so, and the whole form is never read after the record.
+  await target.waitForTimeout(1500);
+  await expect(fileStep(target)).toHaveAttribute("data-status", "done");
+  await expect(target.locator(".modelo-write-hold")).toHaveCount(0);
+  expect(
+    await target.evaluate(() => ({
+      forms: window.__fileGates!.forms,
+      filingStates: window.__fileGates!.filingStates,
+    })),
+  ).toEqual({ forms: 0, filingStates: 1 });
+});
+
+test("after a receipt write the filing state alone renews the page, with the whole form held and never read", async ({
+  page: target,
+}) => {
+  await openDeclaration(target, "130", { shape: "filed" });
+  await tab(target, "workspace.modelo.filing.title").click();
+  const addReceipt = target.getByRole("button", {
+    name: label("workspace.modelo.filing.add_receipt_pdf"),
+  });
+  await expect(addReceipt).toBeEnabled();
+  await target.evaluate(() => {
+    const port = window.__fixtureModelo!;
+    const state = {
+      forms: 0,
+      filingStates: 0,
+      holdForm: true,
+    };
+    (window as unknown as { __receiptReads: typeof state }).__receiptReads =
+      state;
+    const submit = port.submit;
+    const form = port.form;
+    port.submit = (...args) => {
+      if (args[0] === "modelo.work.filing_state") state.filingStates += 1;
+      return submit(...args);
+    };
+    port.form = async (...args) => {
+      state.forms += 1;
+      if (state.holdForm) await new Promise<void>(() => undefined);
+      return form(...args);
+    };
+  });
+  await addReceipt.click();
+  await expect(target.locator(".modelo-reconciliation")).toBeVisible();
+  await expect(target.locator(".modelo-write-hold")).toHaveCount(0, {
+    timeout: 1000,
+  });
+  await expect(busyNotice(target)).toHaveCount(0, { timeout: 1000 });
+  await target.waitForTimeout(1500);
+  await expect(target.locator(".modelo-write-hold")).toHaveCount(0);
+  expect(
+    await target.evaluate(
+      () =>
+        (
+          window as unknown as {
+            __receiptReads: { forms: number; filingStates: number };
+          }
+        ).__receiptReads,
+    ),
+  ).toMatchObject({ forms: 0, filingStates: 1 });
 });
