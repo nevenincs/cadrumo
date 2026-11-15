@@ -7450,12 +7450,12 @@ modelo:
               l'exercici) [03337]
           is-correccion-amortizacion-acelerada-vehiculos-permanente-aumento:
             label: Amortització accelerada de determinats vehicles i de noves infraestructures
-              de recàrrega (DA 18a LIS RDL 5/2023) - Augment - Correccions de l'exercici
-              - Permanents [00076]
+              de recàrrega (DA 18a LIS) - Augment - Correccions de l'exercici - Permanents
+              [00076]
           is-correccion-amortizacion-acelerada-vehiculos-saldo-inicial:
             label: Amortització accelerada de determinats vehicles i de noves infraestructures
-              de recàrrega (DA 18a LIS RDL 5/2023) - Augment - Saldo pendent al principi
-              de l'exercici [00075]
+              de recàrrega (DA 18a LIS) - Augment - Saldo pendent al principi de l'exercici
+              [00075]
           is-correccion-amortizacion-inmovilizado-idi-permanente-aumento:
             label: Amortització de l'immobilitzat afecte a activitats de recerca i
               desenvolupament (art. 12.3 b) LIS) - Augment - Correccions de l'exercici
@@ -12440,10 +12440,22 @@ modelo:
             label: Model 200, exercici 2022
         '2023':
           casilla:
+            '00077':
+              label: Amortització accelerada de determinats vehicles i de noves infraestructures
+                de recàrrega (DA 18a LIS) - Augment - Correccions de l'exercici -
+                Temporànies (amb origen en l'exercici) [00077]
             '00370':
               label: Liquidació II - Detall correccions resultat cte. pèrdues i guanys
                 - Exempció sobre dividends o participacions en beneficis d'entitats
                 residents (art. 21.1, 21.10 i DT 40a LIS) - Disminucions [00370]
+            '00775':
+              label: Liquidació I - Detall correccions resultat cte. pèrdues i guanys
+                - Amortització accelerada de determinats vehicles i de noves infraestructures
+                de recàrrega (DA 18a LIS) - Augments [00775]
+            '00776':
+              label: Liquidació I - Detall correccions resultat cte. pèrdues i guanys
+                - Amortització accelerada de determinats vehicles i de noves infraestructures
+                de recàrrega (DA 18a LIS) - Disminucions [00776]
             '01020':
               label: Conversió d'actius per impost diferit en crèdit exigible davant
                 l'Administració tributària (art. 130 LIS) - Abonament per conversió
@@ -12518,6 +12530,21 @@ modelo:
                 - Actius impost diferit (AID). Art. 130 LIS - Exercici generació -
                 2022 - AID pendents d'aplicació en períodes futurs - Sense dret de
                 conversió en crèdit exigible [01133]
+            01329:
+              label: Deducció donatius entitats sense fins lucratius - Donacions per
+                a activitats prioritàries de mecenatge i altres amb dret a deducció
+                incrementada - 2023(*) Sense reiteració de donacions a una mateixa
+                entitat - Deducció pendent/generada [01329]
+            '01372':
+              label: Deducció donatius entitats sense fins lucratius - Donacions per
+                a activitats prioritàries de mecenatge i altres amb dret a deducció
+                incrementada - 2023(*) Sense reiteració de donacions a una mateixa
+                entitat - Aplicat en aquesta liquidació [01372]
+            '01373':
+              label: Deducció donatius entitats sense fins lucratius - Donacions per
+                a activitats prioritàries de mecenatge i altres amb dret a deducció
+                incrementada - 2023(*) Sense reiteració de donacions a una mateixa
+                entitat - Pendent d'aplicació en períodes futurs [01373]
             01887:
               label: Liquidació III - base imposable - Règim especial de vaixells
                 i empreses navilieres a Canàries - Compensació de bases imposables

@@ -7547,12 +7547,12 @@ modelo:
               (originating in this tax year) [03337]
           is-correccion-amortizacion-acelerada-vehiculos-permanente-aumento:
             label: Accelerated depreciation of certain vehicles and new charging infrastructure
-              (Additional Provision 18 LIS, RDL 5/2023) - Increase - Adjustments for
-              the tax year - Permanent [00076]
+              (Additional Provision 18 LIS) - Increase - Adjustments for the tax year
+              - Permanent [00076]
           is-correccion-amortizacion-acelerada-vehiculos-saldo-inicial:
             label: Accelerated depreciation of certain vehicles and new charging infrastructure
-              (Additional Provision 18 LIS, RDL 5/2023) - Increase - Balance pending
-              at the beginning of the period [00075]
+              (Additional Provision 18 LIS) - Increase - Balance pending at the beginning
+              of the period [00075]
           is-correccion-amortizacion-inmovilizado-idi-permanente-aumento:
             label: Depreciation of fixed assets used in research and development activities
               (art. 12.3 b) LIS) - Increase - Adjustments for the tax year - Permanent
@@ -12626,11 +12626,23 @@ modelo:
             label: Modelo 200, tax year 2022
         '2023':
           casilla:
+            '00077':
+              label: Accelerated depreciation of certain vehicles and new charging
+                infrastructure (Additional Provision 18 LIS) - Increase - Adjustments
+                for the tax year - Temporary (originating in this tax year) [00077]
             '00370':
               label: Settlement II - Detail of adjustments to the profit and loss
                 account result - Exemption on dividends or profit-sharing income from
                 resident entities (art. 21.1, 21.10 and Transitional Provision 40
                 LIS) - Decreases [00370]
+            '00775':
+              label: Settlement I - Detail of adjustments to the profit and loss account
+                result - Accelerated depreciation of certain vehicles and new charging
+                infrastructure (Additional Provision 18 LIS) - Increases [00775]
+            '00776':
+              label: Settlement I - Detail of adjustments to the profit and loss account
+                result - Accelerated depreciation of certain vehicles and new charging
+                infrastructure (Additional Provision 18 LIS) - Decreases [00776]
             '01020':
               label: Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration (art. 130 LIS) - Credit for converting deferred
@@ -12709,6 +12721,21 @@ modelo:
                 the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
                 Generation year - 2022 - DTAs pending application in future periods
                 - Without a right of conversion into a claimable credit [01133]
+            01329:
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - 2023(*) Without repeated donations to the same entity - Deduction
+                carried forward/generated [01329]
+            '01372':
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - 2023(*) Without repeated donations to the same entity - Applied
+                in this settlement [01372]
+            '01373':
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - 2023(*) Without repeated donations to the same entity - Carried
+                forward for application in future periods [01373]
             01887:
               label: Settlement III - Taxable base - Special regime for ships and
                 shipping companies in the Canary Islands - Offset of negative taxable

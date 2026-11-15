@@ -7565,12 +7565,12 @@ modelo:
               keletkezett) [03337]
           is-correccion-amortizacion-acelerada-vehiculos-permanente-aumento:
             label: Egyes járművek és új töltőinfrastruktúrák gyorsított értékcsökkenése
-              (LIS 18. kiegészítő rendelkezés, RDL 5/2023) - Növekedés - Évi korrekciók
-              - Végleges [00076]
+              (LIS 18. kiegészítő rendelkezés) - Növekedés - Évi korrekciók - Végleges
+              [00076]
           is-correccion-amortizacion-acelerada-vehiculos-saldo-inicial:
             label: Egyes járművek és új töltőinfrastruktúrák gyorsított értékcsökkenése
-              (LIS 18. kiegészítő rendelkezés, RDL 5/2023) - Növekedés - Az időszak
-              elején fennálló egyenleg [00075]
+              (LIS 18. kiegészítő rendelkezés) - Növekedés - Az időszak elején fennálló
+              egyenleg [00075]
           is-correccion-amortizacion-inmovilizado-idi-permanente-aumento:
             label: Kutatási és fejlesztési tevékenységhez rendelt tárgyi eszközök
               értékcsökkenése (LIS 12.3. b) cikk) - Növekedés - Évi korrekciók - Végleges
@@ -12597,11 +12597,23 @@ modelo:
             label: 200-es modelo, 2022. adóév
         '2023':
           casilla:
+            '00077':
+              label: Egyes járművek és új töltőinfrastruktúrák gyorsított értékcsökkenése
+                (LIS 18. kiegészítő rendelkezés) - Növekedés - Évi korrekciók - Időleges
+                (az évben keletkezett) [00077]
             '00370':
               label: Elszámolás II - Az eredménykimutatás eredményét érintő korrekciók
                 részletezése - Belföldi illetőségű jogalanyok osztalékaira vagy nyereségrészesedéseire
                 vonatkozó mentesség (LIS 21.1., 21.10. cikk és 40. átmeneti rendelkezés)
                 - Csökkentések [00370]
+            '00775':
+              label: Elszámolás I - Az eredménykimutatás eredményét érintő korrekciók
+                részletezése - Egyes járművek és új töltőinfrastruktúrák gyorsított
+                értékcsökkenése (LIS 18. kiegészítő rendelkezés) - Növelések [00775]
+            '00776':
+              label: Elszámolás I - Az eredménykimutatás eredményét érintő korrekciók
+                részletezése - Egyes járművek és új töltőinfrastruktúrák gyorsított
+                értékcsökkenése (LIS 18. kiegészítő rendelkezés) - Csökkentések [00776]
             '01020':
               label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
                 érvényesíthető követeléssé (LIS 130. cikk) - Halasztott adókövetelések
@@ -12681,6 +12693,21 @@ modelo:
                 érvényesíthető követeléssé - Halasztott adókövetelések (AID). LIS
                 130. cikk - Keletkezés éve - 2022 - Jövőbeli időszakokban alkalmazásra
                 váró AID - Érvényesíthető követeléssé alakítás joga nélkül [01133]
+            01329:
+              label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
+                és más, növelt levonásra jogosító célokra adott adományok - 2023(*)
+                Ugyanazon szervezetnek ismételten nem nyújtott adományok - Függőben
+                lévő/keletkezett levonás [01329]
+            '01372':
+              label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
+                és más, növelt levonásra jogosító célokra adott adományok - 2023(*)
+                Ugyanazon szervezetnek ismételten nem nyújtott adományok - Ebben az
+                elszámolásban alkalmazva [01372]
+            '01373':
+              label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
+                és más, növelt levonásra jogosító célokra adott adományok - 2023(*)
+                Ugyanazon szervezetnek ismételten nem nyújtott adományok - Jövőbeli
+                időszakokban alkalmazandó [01373]
             01887:
               label: Elszámolás III - adóalap - A Kanári-szigeteki hajók és hajózási
                 társaságok különleges rendszere - Korábbi időszakok negatív adóalapjainak
