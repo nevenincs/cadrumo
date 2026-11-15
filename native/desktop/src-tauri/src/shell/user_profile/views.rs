@@ -164,9 +164,20 @@ struct Coverage {
     advised: Vec<Advised>,
     out_of_scope: Vec<String>,
 }
+/// The filing-year envelope a calendar read was served under and where the
+/// range sits in it, passed to the window as the product served it.
+#[derive(Debug, Deserialize, Serialize)]
+struct Support {
+    floor: u32,
+    horizon: u32,
+    hard_ceiling: Option<u32>,
+    state: String,
+}
 #[derive(Deserialize)]
 struct Snapshot {
     range: Range,
+    #[serde(default)]
+    support: Option<Support>,
     entries: Vec<EntryIn>,
     #[serde(default)]
     suppressed_entries: Vec<Value>,
@@ -192,6 +203,8 @@ struct Projection {
 #[derive(Debug, Serialize)]
 pub struct FilingCalendar {
     range: Range,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    support: Option<Support>,
     entries: Vec<Entry>,
     // Rows the calendar holds off its schedule, as the product served them.
     suppressed: Vec<Value>,
@@ -299,6 +312,7 @@ fn filing_calendar(
     }
     Ok(FilingCalendar {
         range: snapshot.range,
+        support: snapshot.support,
         entries: snapshot
             .entries
             .into_iter()
@@ -565,6 +579,41 @@ mod tests {
         assert_eq!(rows[1]["modelo"], "347");
         assert_eq!(rows[1]["verdict"], "incomplete");
         assert_eq!(rows[0]["actions"], json!([]));
+    }
+
+    #[test]
+    fn the_served_support_envelope_reaches_the_window_unchanged() {
+        let mut read = projection(true);
+        read["payload"]["calendar"]["support"] =
+            json!({"floor": 7, "horizon": 9, "hard_ceiling": null, "state": "below_floor"});
+        let calendar = filing_calendar(read, PROFILE, "2026-07-01", "2027-06-30").unwrap();
+        let shown = serde_json::to_value(&calendar).unwrap();
+        assert_eq!(
+            shown["support"],
+            json!({"floor": 7, "horizon": 9, "hard_ceiling": null, "state": "below_floor"})
+        );
+        let mut read = projection(true);
+        read["payload"]["calendar"]["support"] =
+            json!({"floor": 7, "horizon": 9, "hard_ceiling": 11, "state": "projected"});
+        let calendar = filing_calendar(read, PROFILE, "2026-07-01", "2027-06-30").unwrap();
+        let shown = serde_json::to_value(&calendar).unwrap();
+        assert_eq!(shown["support"]["hard_ceiling"], 11);
+        assert_eq!(shown["support"]["state"], "projected");
+    }
+
+    #[test]
+    fn a_read_without_support_passes_none_on() {
+        let calendar =
+            filing_calendar(projection(true), PROFILE, "2026-07-01", "2027-06-30").unwrap();
+        let shown = serde_json::to_value(&calendar).unwrap();
+        assert!(shown.get("support").is_none());
+    }
+
+    #[test]
+    fn a_malformed_support_envelope_is_refused() {
+        let mut read = projection(true);
+        read["payload"]["calendar"]["support"] = json!({"floor": "low", "state": "supported"});
+        assert!(filing_calendar(read, PROFILE, "2026-07-01", "2027-06-30").is_err());
     }
 
     #[test]
