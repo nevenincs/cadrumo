@@ -124,14 +124,23 @@ def _with_model_download(lane: object, provider_field: str) -> object:
     fields = dict(cast(dict[str, object], lane))
     local = fields.get(provider_field) in _ENGINE_LANES
     fields["model_download"] = MODEL_DOWNLOAD_REQUIRED if local else MODEL_DOWNLOAD_NONE
-    catalog = fields.get("catalog")
-    models = catalog.get("models") if isinstance(catalog, dict) else None
-    if not local and isinstance(catalog, dict) and isinstance(models, list):
-        fields["catalog"] = {
-            **cast(dict[str, object], catalog),
-            "models": [
-                {key: value for key, value in model.items() if key != "installed"} if isinstance(model, dict) else model
-                for model in cast(list[object], models)
-            ],
-        }
+    if not local and "catalog" in fields:
+        fields["catalog"] = _without_installed(fields.get("catalog"))
     return fields
+
+
+def _without_installed(catalog: object) -> object:
+    """Drop ``installed`` from a hosted lane's catalog models; a catalog without a model list is kept as served."""
+    models = catalog.get("models") if isinstance(catalog, dict) else None
+    if not isinstance(catalog, dict) or not isinstance(models, list):
+        return catalog
+    return {
+        **cast(dict[str, object], catalog),
+        "models": [_model_without_installed(model) for model in cast(list[object], models)],
+    }
+
+
+def _model_without_installed(model: object) -> object:
+    if not isinstance(model, dict):
+        return model
+    return {key: value for key, value in cast(dict[str, object], model).items() if key != "installed"}
