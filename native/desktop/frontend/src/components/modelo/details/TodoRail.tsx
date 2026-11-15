@@ -154,10 +154,12 @@ function TodoList({
         {sourcesLine}
         <p className="flex gap-2 p-2 text-sm text-muted-foreground">
           <Icon name="lock" size="xs" className="mt-0.5" />
-          {envelope.rules_incomplete
-            ? t("workspace.modelo.editor.rules_incomplete")
-            : (envelope.admission_refusal_words ??
-              t("workspace.modelo.editability.no_admission"))}
+          {envelope.form.form.edit_closure
+            ? t("workspace.modelo.filed.read_only")
+            : envelope.rules_incomplete
+              ? t("workspace.modelo.editor.rules_incomplete")
+              : (envelope.admission_refusal_words ??
+                t("workspace.modelo.editability.no_admission"))}
         </p>
       </div>
     );
