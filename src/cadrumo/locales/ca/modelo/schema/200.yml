@@ -7252,6 +7252,9 @@ modelo:
           is-base-imponible-zec-importe:
             label: Liquidació III - base imposable - Només entitats ZEC - Base imposable
               a tipus de gravamen especial - Disminucions [00559]
+          is-bin-detalle-2023-pendiente-inicio:
+            label: Detall compensació bases imposables negatives - 2023 - Pendent
+              d'aplicació a principi del període/generada en el període [00009]
           is-bin-detalle-compensacion:
             label: Detall compensació bases imposables negatives - 1999 - Pendent
               d'aplicació a principi del període/generada en el període [00646]
@@ -7308,6 +7311,9 @@ modelo:
           is-cooperativa-compensacion-cuotas-2008-pendiente-inicio:
             label: Règ. cooperatives - Detall compensació quotes. 2008 Pendent d'aplicació
               a l'inici del període [00279]
+          is-cooperativa-compensacion-cuotas-2011-pendiente-inicio:
+            label: Règ. cooperatives - Detall compensació quotes. 2011 Pendent d'aplicació
+              al principi del període [00017]
           is-cooperativa-cuota-integra-previa:
             label: Liquidació III - base imposable - Només societats cooperatives
               - Quota íntegra prèvia després de la reserva de nivellació [01331]

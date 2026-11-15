@@ -68,7 +68,7 @@ _PERIOD_END_BEFORE_DT44 = date(_DT44_FIRST_TRANSITIONAL_EXERCISE, 1, 1) - timede
 _DISPATCH_BINDING = "modelo-200-profile-legal-entity-form"
 _M200_TIPO_GRAVAMEN_CASILLA: CasillaId = validated_casilla_id("DP200014:00558", surface="_M200_TIPO_GRAVAMEN_CASILLA")
 # Caracteres de la declaración (page 1): cooperativa protegida, and entidad acogida a la Ley 49/2002.
-_COOPERATIVA_PROTEGIDA: CasillaId = validated_casilla_id("00017", surface="_COOPERATIVA_PROTEGIDA")
+_COOPERATIVA_PROTEGIDA: CasillaId = validated_casilla_id("DP200001:00017", surface="_COOPERATIVA_PROTEGIDA")
 _REGIMEN_LEY_49_2002: CasillaId = validated_casilla_id("00001", surface="_REGIMEN_LEY_49_2002")
 
 

@@ -1,15 +1,17 @@
-"""Read an earlier Modelo 200 return's bare PyG boxes under their page-qualified ids.
+"""Read an earlier Modelo 200 return's bare boxes under their page-qualified ids.
 
 The Modelo 200 record designs print the same box number on several pages with
 different meanings: ``[00255]`` is the net turnover on the cuenta de pérdidas y
-ganancias page and also, for example, a Banco de España line on another page. The
-registry therefore names each of these PyG lines by its page-qualified id
-(``DP200007:00255``). Before that rename it declared the PyG line under the bare
-number and declared no other page's box of that number, so a bare id in a row
-written then names exactly the PyG line.
+ganancias page and also, for example, a Banco de España line on another page, and
+``[00017]`` is the cooperativa protegida flag on the identification page and also a
+cooperativas cuota-compensation cohort on another page. The registry therefore
+names each such box by its page-qualified id (``DP200007:00255``,
+``DP200001:00017``). Before that rename it declared the box under the bare number
+and declared no other page's box of that number, so a bare id in a row written
+then names exactly that box.
 
 A carry reads an earlier return through its page-qualified id, so without this
-seam the PyG figure of a return stored before the rename would read as never
+seam the figure of a return stored before the rename would read as never
 observed: the turnover that decides the next year's microempresa rate, for one.
 The stored row is not rewritten. It is read through the frozen table below, and
 only when the row itself shows it was written under an earlier authority:
@@ -45,6 +47,8 @@ MODELO_200: Final[str] = "200"
 
 MODELO_200_PAGE_QUALIFIED_CASILLAS: Final[MappingProxyType[CasillaId, CasillaId]] = MappingProxyType(
     {
+        "00009": "DP200001:00009",
+        "00017": "DP200001:00017",
         "00254": "DP200007:00254",
         "00255": "DP200007:00255",
         "00257": "DP200007:00257",
@@ -54,7 +58,7 @@ MODELO_200_PAGE_QUALIFIED_CASILLAS: Final[MappingProxyType[CasillaId, CasillaId]
         "00325": "DP200008:00325",
     },
 )
-"""Each retired bare PyG casilla id and the page-qualified id that replaced it. Frozen product data."""
+"""Each retired bare casilla id and the page-qualified id that replaced it. Frozen product data."""
 
 
 def _retired_bare_ids(
@@ -122,7 +126,7 @@ def page_qualified_prior_observation(
     *,
     operation: PinnedAuthorityOperation,
 ) -> ObservationEnvelopePayload:
-    """Return ``payload`` with the bare PyG boxes an earlier authority wrote read under their qualified ids.
+    """Return ``payload`` with the bare boxes an earlier authority wrote read under their qualified ids.
 
     Any row the table does not apply to is returned unchanged, the same object.
 
@@ -146,8 +150,7 @@ def page_qualified_prior_observation(
     read, conflicts = _read_under_qualified_ids(observation.observations, retired)
     if conflicts:
         raise PriorFilingPageQualifiedConflictError(
-            "an earlier Modelo 200 return holds a PyG box under its bare and its page-qualified id "
-            "with different values",
+            "an earlier Modelo 200 return holds a box under its bare and its page-qualified id with different values",
             translated_message="errors.calc.previous_filing_casillas_conflicting",
             context={
                 "source_modelo": str(observation.modelo),
