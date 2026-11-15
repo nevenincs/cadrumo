@@ -243,8 +243,6 @@ export type CatalogChoices = {
   /** False while the lanes are only the agent's declared ones, which no
    * running agent has observed yet. */
   observed: boolean;
-  /** Some way lists a model this computer does not hold yet. */
-  modelsToDownload: boolean;
 };
 
 const declaredUnderstood = (lane: AgentDeclaredLane) =>
@@ -300,7 +298,6 @@ function declaredChoices(
     models,
     incompatible: declared.length > 0 && lanes.length === 0,
     observed: false,
-    modelsToDownload: false,
   };
 }
 
@@ -323,6 +320,16 @@ function listedOn(
     recommended.includes(entry.model) ||
     lists.added(`${lane.provider_id}_${lane.transport}`).includes(entry.model)
   );
+}
+
+/** Whether downloading a model is a way on for `lane`, the one place that
+ * decides it: the lane lists a model the catalog says this computer does not
+ * hold. Only a lane run on this computer has one; a hosted lane has none. */
+function laneModelsToDownload(
+  lane: AgentProviderLane,
+  listed: readonly ModelOption[],
+): boolean {
+  return !writesModel(lane) && listed.some((model) => !heldModel(model));
 }
 
 /** The providers and models the column offers, as the catalog has them. A
@@ -381,7 +388,7 @@ export function catalogChoices(
           !listed.some((model) => heldModel(model));
         const usable =
           runs && (writesModel(lane) || (listed.length > 0 && !noneHeld));
-        const toDownload = listed.some((model) => !heldModel(model));
+        const toDownload = laneModelsToDownload(lane, listed);
         const engine = parseEngineHealth(lane);
         const notRunning =
           engine !== null && engine !== "malformed"
@@ -432,10 +439,32 @@ export function catalogChoices(
     models,
     incompatible: served.length > 0 && lanes.length === 0,
     observed: true,
-    modelsToDownload: providers.some((provider) =>
-      provider.ways.some((way) => way.modelsToDownload === true),
-    ),
   };
+}
+
+/** Whether some way into `provider` lists a model this computer does not hold
+ * yet, so that downloading one is a way on for it. A hosted provider has no
+ * model to download. */
+export const providerModelsToDownload = (provider: ProviderOption) =>
+  provider.ways.some((way) => way.modelsToDownload === true);
+
+/**
+ * The provider the person is on, even where none of its ways can run now: the
+ * provider of the first of `held` the catalog serves, else the first provider
+ * served, which is where a start with nothing kept begins. Undefined only for
+ * a catalog serving no provider.
+ */
+export function intendedProvider(
+  choices: CatalogChoices,
+  held: readonly (AgentSelection | null | undefined)[],
+): ProviderOption | undefined {
+  for (const selection of held) {
+    const provider = choices.providers.find(
+      (one) => one.id === selection?.providerId,
+    );
+    if (provider) return provider;
+  }
+  return choices.providers[0];
 }
 
 /** The model a way starts with: the catalog's recommendation where it lists
