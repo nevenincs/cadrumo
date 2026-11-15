@@ -205,3 +205,102 @@ for (const lane of ["llamacpp/api", "ollama/api"]) {
     await expect(settings(target)).toBeVisible();
   });
 }
+
+// The model notice and its download door belong to the local lane alone: a
+// hosted provider has no model to download. Where nothing can run, the column
+// says what holds back the provider the person is on, which is the one they
+// chose last, else the first the catalog serves.
+const HOSTED = "alpha/cli";
+const hostedLane = (FIXTURE_CATALOG.providers ?? []).find(
+  (served) => `${served.provider_id}/${served.transport}` === HOSTED,
+)!;
+const STORE = "cadrumo-agent-choice";
+
+const heldBack = "&catalog=hosted-signed-out&models=none";
+
+const noticeOf = (target: Page, key: string) =>
+  column(target)
+    .getByRole("status")
+    .filter({ hasText: label(key) });
+
+/** Rewrites the choice the shell kept for the signed-in profile. */
+async function keepChoice(target: Page, choice: Record<string, string>) {
+  const [key, value] =
+    Object.entries(
+      await target.evaluate((prefix) => {
+        const held: Record<string, string> = {};
+        for (let index = 0; index < localStorage.length; index += 1) {
+          const name = localStorage.key(index);
+          if (name?.startsWith(prefix))
+            held[name] = localStorage.getItem(name) ?? "";
+        }
+        return held;
+      }, STORE),
+    )[0] ?? [];
+  if (!key || !value) throw new Error("The choice was not kept.");
+  await target.evaluate(([at, text]) => localStorage.setItem(at, text), [
+    key,
+    JSON.stringify({ ...JSON.parse(value), ...choice }),
+  ] as const);
+}
+
+test("with a hosted provider that is signed out and no local model, the column names the provider and offers no download", async ({
+  page: target,
+}) => {
+  expect(hostedLane.health.selectable).toBe(false);
+  expect(hostedLane.auth_kind).not.toBe("none");
+  await open(target, heldBack);
+  const notice = noticeOf(target, "desktop.agent.no_provider");
+  await expect(notice).toBeVisible();
+  await expect(
+    notice.getByRole("button", {
+      name: label("desktop.agent.set_up_providers"),
+    }),
+  ).toBeVisible();
+  await expect(
+    noticeOf(target, "desktop.agent.no_installed_model"),
+  ).toHaveCount(0);
+  await expect(download(column(target))).toHaveCount(0);
+});
+
+test("the notice follows the provider the person is on: the model notice for the local one, the provider's own for a hosted one", async ({
+  page: target,
+}) => {
+  // Choose the local lane where it can run, so the shell keeps the choice.
+  await open(target);
+  const picker = await openModelPicker(target);
+  await pickWay(target, picker, LOCAL);
+  await target.keyboard.press("Escape");
+  await expect(picker).toBeHidden();
+
+  // Nothing can run now; the person is still on the local lane.
+  await target.goto(
+    `/scenarios.html?scenario=signed-in&latency=0&bar=off&setup=ready${heldBack}`,
+  );
+  const model = noticeOf(target, "desktop.agent.no_installed_model");
+  await expect(model).toBeVisible();
+  await expect(download(model)).toBeVisible();
+  await expect(noticeOf(target, "desktop.agent.no_provider")).toHaveCount(0);
+
+  // The same person on the hosted provider.
+  await keepChoice(target, {
+    providerId: hostedLane.provider_id,
+    wayId: HOSTED,
+    modelId: "",
+  });
+  await target.reload();
+  await expect(noticeOf(target, "desktop.agent.no_provider")).toBeVisible();
+  await expect(model).toHaveCount(0);
+  await expect(download(column(target))).toHaveCount(0);
+
+  // And back on the local lane.
+  await keepChoice(target, {
+    providerId: servedLocal.provider_id,
+    wayId: LOCAL,
+    modelId: held[0]!.entry_id,
+  });
+  await target.reload();
+  await expect(model).toBeVisible();
+  await expect(download(model)).toBeVisible();
+  await expect(noticeOf(target, "desktop.agent.no_provider")).toHaveCount(0);
+});

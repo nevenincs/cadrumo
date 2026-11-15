@@ -13,6 +13,7 @@ import { isCadrumoLink } from "../shell/navigation/links";
 import { Icon } from "@/components/ui/icon";
 import { failureCode } from "../errors";
 import { useAgentAccess, type AgentAccess } from "../shell/agentAccess";
+import { providerModelsToDownload } from "../shell/agentCatalog";
 import { DocumentLister } from "../shell/agentDocuments";
 import { useDocumentInventory } from "../shell/agentDocumentInventory";
 import { useStagedDocuments } from "../shell/agentStaging";
@@ -351,6 +352,7 @@ export function AgentColumn({
     engines,
     offer,
     selection,
+    provider: onProvider,
     remember,
   } = agentCatalog;
 
@@ -666,8 +668,13 @@ export function AgentColumn({
       )
     : [];
   const engineHeld = engineNotices.length > 0 && !catalogBusy;
+  // Only the local lane has models to download: a hosted provider that holds
+  // nothing back is told by its own notice, whatever the local lane lacks.
   const noModelHeld =
-    noProvider && !engineHeld && offer?.modelsToDownload === true;
+    noProvider &&
+    !engineHeld &&
+    onProvider !== undefined &&
+    providerModelsToDownload(onProvider);
   const serviceNotice = status ? serviceWords(t, status) : null;
   const notice = incompatible
     ? t("desktop.agent.service_incompatible")

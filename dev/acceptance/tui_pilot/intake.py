@@ -67,6 +67,9 @@ class PilotRow:
     export_served: bool | None = None
     """Whether the form served an export door for the return once its check had run; ``None`` when the drive never
     reached that question. Served state, not a pilot choice."""
+    blocking_findings: tuple[str, ...] = ()
+    """The ids of the blocking findings the workbench's issues list showed once the check had not passed; empty when
+    it showed none. The line carries them only when there are some."""
 
     @property
     def label(self) -> str:
@@ -101,6 +104,8 @@ class PilotRow:
         }
         if self.export_served is not None and _schema_takes_export_served():
             document["export_served"] = self.export_served
+        if self.blocking_findings:
+            document["blocking_findings"] = list(self.blocking_findings)
         if self.file is not None and _schema_takes_file(self.file):
             document["file"] = self.file
         return document
