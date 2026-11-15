@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
-from collections.abc import Sequence
+from collections.abc import Collection, Sequence
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -19,6 +19,11 @@ from cadrumo.adapters.persistence.profile.tests.filing_report_support import see
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import set_active_test_profile_facts
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_cli_backend
 from cadrumo.application.modelo.calculation_screen import calculation_screen_stamp
+from cadrumo.application.modelo.export_m202_profile import (
+    MARK_FACT_BY_PRODUCER_KEY,
+    PRINCIPAL_CNAE_CLASSIFICATION_PATH,
+    PRINCIPAL_CNAE_PATH,
+)
 from cadrumo.application.modelo.operation_shared import MODELO_EXPORT_OPERATION_DEFINITION_ID
 from cadrumo.application.modelo.tests.registry_revision import active_registry_revision_id
 from cadrumo.application.modelo.work_export_contracts import ModeloExportRequest
@@ -275,7 +280,10 @@ def _set_export_profile_name() -> None:
 
 
 def _set_emilio_legal_entity_export_profile(
-    *, activity_start_date: date | None = None, constitution_date: date | None = None
+    *,
+    activity_start_date: date | None = None,
+    constitution_date: date | None = None,
+    without: Collection[str] = (),
 ) -> None:
     activity_start = (
         (UserProfileFact(path="censo.activity_start_date", value=activity_start_date.isoformat()),)
@@ -308,6 +316,7 @@ def _set_emilio_legal_entity_export_profile(
                 UserProfileFact(path="taxpayer_type.incn_prior_12_months", value="500000"),
             ),
             persona_id="sociedad-limitada",
+            without=without,
         ),
     )
 
@@ -697,7 +706,12 @@ def test_export_modelo_202_without_page_01_entity_facts_refuses_with_the_door_to
     # The company started after the periodo impositivo the 1P art. 40.2 base reads, so that
     # instalment has no earlier Modelo 200 to take a base from and the export reaches the producer.
     started = date(_PRE_B2_LAST_EXERCISE - 1, 1, 1)
-    _set_emilio_legal_entity_export_profile(activity_start_date=started, constitution_date=started)
+    # The sociedad persona states its page 01 entity facts; this profile leaves them unstated.
+    _set_emilio_legal_entity_export_profile(
+        activity_start_date=started,
+        constitution_date=started,
+        without=(PRINCIPAL_CNAE_PATH, PRINCIPAL_CNAE_CLASSIFICATION_PATH, *MARK_FACT_BY_PRODUCER_KEY.values()),
+    )
     _, calculation_revision_id = _seed_exportable_modelo_202_pre_b2_revision(operation=operation)
     out = tmp_path / f"modelo-202-{_PRE_B2_LAST_EXERCISE}-1P.boe"
 
