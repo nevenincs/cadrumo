@@ -7,9 +7,9 @@ tier: L2
 related:
   - '[[2026-11-14-source-casilla-integration-modelo-840-profile-facts-and-premises-repeat-adr]]'
   - '[[2026-08-25-source-casilla-integration-modelo-840-source-and-repeated-row-owner-deferral-adr]]'
-modified: '2026-11-14'
+modified: '2026-11-15'
 body_schema: body-v2
-body_hash: 'sha256:e555364eb38233e668ef13c8d9ce0ff376f23d0b8cfe94e5136d006036cdad83'
+body_hash: 'sha256:c6806b1ff98f017063725854ce86409aa27bf765d95522fb58d56db2acd75029'
 ---
 
 # `source-casilla-integration` plan
@@ -55,7 +55,7 @@ Hand 2 gives the export generator repeat semantics for the anexo premises slots 
 
 Hand 3 writes producers that read only the stored facts, proves the export round trip against the official design and turns the known red green without stubs.
 
-- [ ] `P03.S06` - Write the Modelo 840 producers over the stored facts only, keeping the typed refusal for any key without a stored fact; `src/cadrumo/application/filing`.
+- [x] `P03.S06` - Write the Modelo 840 producers over the stored facts only, keeping the typed refusal for any key without a stored fact; `src/cadrumo/application/filing`.
 - [ ] `P03.S07` - Prove the Modelo 840 export round trip against the official design per own-edition year and turn test_every_cited_producer_key_is_resolvable green with no refusing stubs; `src/cadrumo/application/filing/tests`.
 
 ## Parallelization

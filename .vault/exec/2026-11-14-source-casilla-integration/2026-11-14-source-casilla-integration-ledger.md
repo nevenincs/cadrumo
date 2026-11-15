@@ -5,7 +5,7 @@ tags:
 date: '2026-11-14'
 modified: '2026-11-15'
 body_schema: 'body-v2'
-body_hash: 'sha256:9d3f62983609fde0c36537d197ea1eb0e213d008d61b4a1e8fd225bfad3e09b3'
+body_hash: 'sha256:4b64e070adc3294fa4432c35db1d4cc4ba21bbd0c7a9089866735d6dd4f18861'
 related:
   - "[[2026-11-14-source-casilla-integration-plan]]"
 ---
@@ -53,3 +53,17 @@ related:
 - `S05` `M` `src/cadrumo/locales/hu/modelo/schema/840.yml`
 - `S05` `verify:` `target-current 840` -> `pass`
 - `S05` `verify:` `conformance valid/runtime-load/integrity` -> `pass`
+- `S06` `M` `native/desktop/tests/ux/window-ux-audit.test.mjs`
+- `S06` `M` `src/cadrumo/application/filing/export_producer.py`
+- `S06` `M` `src/cadrumo/application/filing/export_producer_m840.py`
+- `S06` `M` `src/cadrumo/application/filing/producer_snapshot_m840.py`
+- `S06` `M` `src/cadrumo/application/filing/tests/test_export_producer_m840.py`
+- `S06` `M` `src/cadrumo/application/filing/tests/test_export_producer_supply.py`
+- `S06` `M` `src/cadrumo/application/modelo/m840_anexo_profile.py`
+- `S06` `M` `src/cadrumo/application/modelo/tests/test_m840_anexo_profile.py`
+- `S06` `M` `src/cadrumo/locales/ca/application.yml`
+- `S06` `M` `src/cadrumo/locales/en/application.yml`
+- `S06` `M` `src/cadrumo/locales/es/application.yml`
+- `S06` `M` `src/cadrumo/locales/hu/application.yml`
+- `S06` `verify:` `test_every_cited_producer_key_is_resolvable` -> `pass`
+- `S06` `verify:` `landed t24b tui 4bfa37a867` -> `pass`
