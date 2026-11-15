@@ -86,6 +86,7 @@ export function StatementsOffer({ session }: { session: FormSession }) {
                   <Checkbox
                     className="mt-1"
                     checked={now[at] ?? false}
+                    disabled={session.locked}
                     aria-describedby={`${listId}-${at}`}
                     onChange={(event) => {
                       const next = [...now];
@@ -128,7 +129,7 @@ export function StatementsOffer({ session }: { session: FormSession }) {
             <Button
               size="sm"
               variant="secondary"
-              disabled={!changed}
+              disabled={!changed || session.locked}
               onClick={stageTicked}
             >
               {t("desktop.modelo.statements.stage")}

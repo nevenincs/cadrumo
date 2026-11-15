@@ -4672,6 +4672,7 @@ desktop:
       label: Detalls
       resize: Canvia la mida dels detalls
       show: Mostrar els detalls
+      under_held: La finestra és massa baixa per posar els detalls sota el formulari
     disagreement:
       accept: Acceptar amb un motiu
       accept_title: Acceptar aquesta discrepància
