@@ -38,7 +38,7 @@ import {
   nothingOpen,
   recordedMark,
 } from "../src/components/ledger/assets/planWords";
-import { type JsonObject, type LedgerResult } from "../src/shell/ledger";
+import { type LedgerResult } from "../src/shell/ledger";
 import type { Translate } from "../src/shell/strings";
 import {
   SCENARIO_ELEMENTS,
@@ -222,7 +222,7 @@ test("a baja form offers exactly the reasons the options serve, each worded by t
       },
       {},
     ).find((found) => found.key === "reason")!.choices;
-  for (const kind of ["material", "intangible"]) {
+  for (const kind of ["material", "intangible"] as const) {
     const options = (await optionsOf(port, kind)) as FormOptions;
     const reasons = reasonsOf(options);
     expect(options.disposal_reasons.length).toBeGreaterThan(0);
@@ -677,7 +677,7 @@ test("an element bought outside the ledger can own a later ledger payment, which
     reason_key: "ledger.actividad_asset.errors.acquisition_transaction_missing",
   });
   const twice = build(withPayment, "made-8");
-  const row = (twice.revision.further_acquisitions as JsonObject[])[0]!;
+  const row = twice.revision.further_acquisitions![0]!;
   twice.revision.further_acquisitions = [row, row];
   expect(
     (await refused(port.submit(CREATE, twice as never))).detail.refusal
@@ -883,7 +883,7 @@ test("the shapes of a later payment are the ones the options serve", async () =>
     "split_payment",
     "ancillary_cost",
   ]);
-  const choices = (served: readonly string[]) =>
+  const choices = (served: FormOptions["further_acquisition_shapes"]) =>
     fieldsFor(
       {
         kind: "element",
