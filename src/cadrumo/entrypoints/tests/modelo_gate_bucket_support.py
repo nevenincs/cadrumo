@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import date, datetime
+from decimal import Decimal
 
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -12,6 +14,7 @@ from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObject
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.application.modelo.calculate_input import WorkCalculateInputBundle, calculate_modelo_work_revision
 from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
+from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.identity.hex_ids import CalculationRevisionId
 from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
 from cadrumo.domain.user_profile.tests.profile_creation_authority import profile_creation_context_for_test
@@ -48,9 +51,13 @@ def seed_ready_capital_payer_profile(*, bucket_id: str, at: datetime, tax_id: st
 
 
 def calculate_without_inputs(
-    *, bucket_id: str, objects: SecureObjectRepository, work_unit_id: str
+    *,
+    bucket_id: str,
+    objects: SecureObjectRepository,
+    work_unit_id: str,
+    casilla_inputs: Mapping[CasillaId, Decimal] | None = None,
 ) -> CalculationRevisionId:
-    """Calculate one work unit with no operator inputs and return the persisted revision id."""
+    """Calculate one work unit with no operator inputs, or only the stated ``casilla_inputs``, and return the persisted revision id."""
     with calculation_ports_for_test(
         bucket_id=bucket_id,
         calculation_repository=CalculationRevisionCatalogueRepository(objects=objects),
@@ -62,12 +69,13 @@ def calculate_without_inputs(
             work_unit_id=work_unit_id,
             actor="test",
             inputs=WorkCalculateInputBundle.build(
-                casilla_inputs={},
+                casilla_inputs=casilla_inputs or {},
                 binding_values={},
                 enum_binding_values={},
                 relation_values={},
                 detail_rows=(),
                 borrador_snapshot_id=None,
+                record_operator_layer=True,
             ),
             ports=ports,
         )
