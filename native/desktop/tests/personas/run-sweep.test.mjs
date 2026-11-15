@@ -5,7 +5,14 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
-import { lineProblem, selectCases } from "./run-sweep.mjs";
+import {
+  BUDGET,
+  caseBudgetMs,
+  lineProblem,
+  recordedDurations,
+  selectCases,
+  unreachedRows,
+} from "./run-sweep.mjs";
 
 const planned = [
   { persona: "sociedad-limitada", horizon: 2025, rows: 4 },
@@ -126,5 +133,90 @@ test("a row line may state export_served, as a boolean only", () => {
       "sociedad-limitada",
     ),
     /line keys differ/,
+  );
+});
+
+const at = (ms) => new Date(Date.UTC(2030, 0, 1) + ms).toISOString();
+const event = (ms, name, extra = {}) =>
+  JSON.stringify({ at: at(ms), event: name, ...extra });
+const opened = (ms, modelo) =>
+  event(ms, "workspace", { header: `Declaraciones${modelo}Some title` });
+
+test("recorded durations are the longest start-up and per-modelo row times in the spec logs", () => {
+  const dir = mkdtempSync(join(tmpdir(), "cadrumo-run-sweep-"));
+  try {
+    writeFileSync(
+      join(dir, "sociedad-limitada-2030.log"),
+      [
+        event(0, "launched"),
+        opened(60_000, "303"),
+        opened(120_000, "200"),
+        event(900_000, "form-tab"),
+        '{"at":', // a killed spec's torn last line
+      ].join("\n"),
+    );
+    writeFileSync(
+      join(dir, "minorista-recargo-2030.log"),
+      [
+        event(0, "launched"),
+        opened(90_000, "303"),
+        opened(300_000, "390"),
+      ].join("\n"),
+    );
+    writeFileSync(join(dir, "runner.log"), "not a spec log");
+    const recorded = recordedDurations([dir, join(dir, "absent")]);
+    assert.equal(recorded.startup, 90_000);
+    assert.deepEqual([...recorded.rows].sort(), [
+      ["200", 780_000],
+      ["303", 210_000],
+      ["390", 0],
+    ]);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("a case's budget grows with its own rows and recorded durations; the floor is only a minimum", () => {
+  const recorded = {
+    startup: 60_000,
+    rows: new Map([
+      ["200", 780_000],
+      ["303", 60_000],
+    ]),
+  };
+  const floor = 30 * 60_000;
+  const quarters = [1, 2, 3, 4].map(() => ({ modelo: "303" }));
+  assert.equal(caseBudgetMs(quarters, recorded, floor), floor);
+  const heavy = [...quarters, { modelo: "200" }, { modelo: "200" }];
+  assert.equal(
+    caseBudgetMs(heavy, recorded, floor),
+    Math.ceil((60_000 + 4 * 60_000 + 2 * 780_000) * BUDGET.margin),
+  );
+  const unknown = [{ modelo: "840" }];
+  assert.equal(
+    caseBudgetMs(unknown, { startup: 0, rows: new Map() }, 0),
+    Math.ceil((BUDGET.defaultStartupMs + BUDGET.defaultRowMs) * BUDGET.margin),
+  );
+});
+
+test("a timed-out case's unreached rows are the world rows its spec wrote no line for", () => {
+  const rows = [
+    { modelo: "303", year: "2030", period: "1T" },
+    { modelo: "303", year: "2030", period: "2T" },
+    { modelo: "200", year: "2030", period: "0A" },
+  ];
+  const lines = [
+    personaLine,
+    { ...rowLine, modelo: "303", year: 2030, period: "1T" },
+  ];
+  assert.deepEqual(unreachedRows(lines, { rows }), rows.slice(1));
+  assert.equal(
+    lineProblem(
+      lines.map((line) => ({ ...line, tree: "t" })),
+      { rows: rows.slice(0, 1).map((row) => ({ ...row, year: 2030 })) },
+      "t",
+      "sociedad-limitada",
+    ),
+    null,
   );
 });
