@@ -10,6 +10,19 @@ line_ending = "crlf"
 required = true
 
 [[revisions.2003-y-siguientes.export_layouts.records.fields]]
+id = "m840-2003.pagina02.f095"
+offset = 974
+length = 13
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+[[revisions.2003-y-siguientes.export_layouts.records.fields]]
 id = "m840-2003.pagina02.f096"
 offset = 987
 length = 13

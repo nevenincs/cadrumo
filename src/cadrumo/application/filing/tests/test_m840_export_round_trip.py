@@ -23,9 +23,11 @@ from ....core.period import Period
 from ....core.prior_domiciliation_election import PriorDomiciliationElection
 from ....core.refund_election import RefundElection
 from ....core.result_disposition import ResultDisposition
+from ....domain.calculations.registry.errors import FixedWidthValueOverflowError
 from ....domain.calculations.registry.export_parse import parse_export_payload
+from ....domain.calculations.registry.fixed_width_codec import render_fixed_width_export_field
 from ....domain.calculations.registry.schema import RegistrySnapshot
-from ....domain.calculations.registry.schema_exports import ExportLayoutDefinition
+from ....domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportLayoutDefinition
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.contribuyente.iae_local_record import SuperficieRegla14Clase
@@ -69,7 +71,7 @@ _PROFILE = Modelo840ProfileFacts(
     actividad_municipio="ZARAGOZA",
     local_indirecto_municipio="UTEBO",
     elementos=(Modelo840ElementoLinea(linea=1, codigo="OB", descripcion="OBREROS", numero=Decimal("3.00")),),
-    maquinas_tipo_b=1234567,
+    maquinas_tipo_b=2,
     superficies=(Modelo840SuperficieClase(clase=SuperficieRegla14Clase.SIN_REDUCCION, total=120, computable=114),),
     local_rows=tuple(Modelo840LocalRow(nombre_via=f"CALLE {index}", total=index * 10) for index in range(1, 10)),
 )
@@ -224,3 +226,71 @@ def test_premises_beyond_one_sheet_open_a_second_anexo_sheet_that_reads_back_in_
         if str(item.field_id) in names and item.value is not None and item.value != ""
     ]
     assert read_names == [row.nombre_via for row in rows]
+
+
+def _producer_field(layout: ExportLayoutDefinition, key: FilingProducerKey) -> ExportFieldDefinition:
+    (field,) = (field for record in layout.records for field in record.fields if field.producer_key == key)
+    return field
+
+
+def _page_two(payload: bytes) -> bytes:
+    (line,) = (line for line in payload.split(_CRLF) if line.startswith(b"<T840020>"))
+    return line
+
+
+def _slot(line: bytes, field: ExportFieldDefinition) -> bytes:
+    assert field.offset is not None
+    assert field.length is not None
+    return line[field.offset - 1 : field.offset - 1 + field.length]
+
+
+def test_a_short_apartado_vi_b_count_prints_right_aligned_and_reads_back(exercise: int) -> None:
+    """DR840 types each Apartado VI B "Número" "Num" over 7 positions, so 2 machines is 0000002."""
+    snapshot, layout, _headers, payload = _render(exercise)
+
+    field = _producer_field(layout, FilingProducerKey.M840_ELEMENTOS_TRIBUTARIOS_MAQUINAS_TIPO_B_NUMERO)
+    assert _slot(_page_two(payload), field) == b"0000002"
+    parsed = parse_export_payload(layout, payload, sources=snapshot.sources)
+    (value,) = (item.value for item in parsed.fields if item.field_id == field.id)
+    assert value == Decimal(2)
+
+
+def test_an_apartado_vi_b_count_wider_than_its_field_is_refused(exercise: int) -> None:
+    _snapshot, layout, _headers, _payload = _render(exercise)
+
+    field = _producer_field(layout, FilingProducerKey.M840_ELEMENTOS_TRIBUTARIOS_EXPOSITORES_AUTOVENTA_NUMERO)
+    assert render_fixed_width_export_field(field, Decimal(9_999_999)) == "9999999"
+    with pytest.raises(FixedWidthValueOverflowError):
+        render_fixed_width_export_field(field, Decimal(10_000_000))
+
+
+def test_absent_apartado_vi_quantities_print_the_numeric_fields_zero_fill(exercise: int) -> None:
+    """DR840 states no fill of its own for an empty "Num" field, so the codec's zero fill applies."""
+    _snapshot, layout, headers, payload = _render(exercise)
+    line = _page_two(payload)
+
+    absent = (
+        FilingProducerKey.M840_ELEMENTOS_TRIBUTARIOS_GRUPO_A2_NUMERO,
+        FilingProducerKey.M840_ELEMENTOS_TRIBUTARIOS_MAQUINAS_TIPO_A_NUMERO,
+        FilingProducerKey.M840_ELEMENTOS_TRIBUTARIOS_LOCAL_C0_1_RECTIFICADA,
+    )
+    for key in absent:
+        assert headers[key] is None
+        field = _producer_field(layout, key)
+        assert field.absent_fill is None
+        assert _slot(line, field) == b"0" * (field.length or 0), key
+
+
+def test_a_declaration_without_premises_has_no_anexo_sheet_and_reads_back(exercise: int) -> None:
+    """DR840 prints the Anexo as the relación de locales; without premises there is no sheet."""
+    snapshot, layout, headers, payload = _render(exercise, _PROFILE.model_copy(update={"local_rows": ()}))
+    (anexo,) = (record for record in layout.records if str(record.id) == "m840-anexo")
+    assert not anexo.required
+
+    parsed = parse_export_payload(layout, payload, sources=snapshot.sources)
+
+    sheets = [str(item.record_id) for item in parsed.fields if str(item.field_id).endswith(".f001")]
+    assert sheets == ["m840-pagina01", "m840-pagina02"]
+    field = _producer_field(layout, FilingProducerKey.M840_ELEMENTOS_TRIBUTARIOS_MAQUINAS_TIPO_B_NUMERO)
+    (value,) = (item.value for item in parsed.fields if item.field_id == field.id)
+    assert value == headers[FilingProducerKey.M840_ELEMENTOS_TRIBUTARIOS_MAQUINAS_TIPO_B_NUMERO]
