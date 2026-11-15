@@ -19,7 +19,11 @@ from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import RegistryError, RegistryFailureCondition, RegistryValidationError
-from cadrumo.domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
+from cadrumo.domain.calculations.registry.export_parse import parse_export_payload
+from cadrumo.domain.calculations.registry.governed_fact_scope import (
+    governed_facts_in_scope,
+    validating_governed_facts,
+)
 from cadrumo.domain.calculations.registry.tests.authored_editions import (
     newest_authored_editions,
     open_ended_revision,
@@ -38,10 +42,12 @@ from ..filing_export_proof_authority import (
     CanonicalTwoChannelFilingExportProofAuthority,
 )
 from ..filing_export_proof_contracts import FilingExportConformanceRenderInputs
+from ..filing_export_writer import export
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
-_PINNED = Path(__file__).resolve().parents[1] / "conformance_vectors" / "modelo_200_2025_y_siguientes.toml"
+_PINNED_DIR = Path(__file__).resolve().parents[1] / "conformance_vectors"
+_PINNED = _PINNED_DIR / "modelo_200_2025_y_siguientes.toml"
 _REGISTRY_ROOT = bundled_path("registry", "aeat")
 #: The pin covers the open-ended edition of Modelo 200.
 _PINNED_M200_REVISION = str(open_ended_revision("200").id)
@@ -50,23 +56,47 @@ _PINNED_FILING_GRADE_MODELO = "165"
 _PINNED_FILING_GRADE_REVISION = str(open_ended_revision(_PINNED_FILING_GRADE_MODELO).id)
 
 
-def _pinned_revision_is_filing_grade(authority: ValidatedRegistryAuthority) -> bool:
+#: Every Modelo 200 revision a committed pin declares, read from the pins themselves.
+_PINNED_M200_REVISIONS = tuple(
+    sorted(
+        {
+            document.coordinate.revision
+            for document in map(load_pinned_conformance_document, sorted(_PINNED_DIR.glob("*.toml")))
+            if document.coordinate.modelo == "200"
+        }
+    )
+)
+
+
+def _pinned_revision_is_filing_grade(authority: ValidatedRegistryAuthority, revision_id: str) -> bool:
     (revision,) = (
-        revision for revision in authority.modelo("200").revisions.values() if str(revision.id) == _PINNED_M200_REVISION
+        revision for revision in authority.modelo("200").revisions.values() if str(revision.id) == revision_id
     )
     return revision.authority_grade is RegistryAuthorityGrade.FILING
+
+
+def _filing_grade_m200_revisions(authority: ValidatedRegistryAuthority) -> set[str]:
+    return {
+        str(revision.id)
+        for revision in authority.modelo("200").revisions.values()
+        if revision.authority_grade is RegistryAuthorityGrade.FILING
+    }
 
 
 def test_the_shipped_pin_admits_the_current_generated_tree_and_enrolls_by_grade(
     canonical_filing_export_proof: CanonicalTwoChannelFilingExportProofAuthority,
     registry_authority: ValidatedRegistryAuthority,
 ) -> None:
-    """The committed pin admits the tree as generated today, and enrolls only while its revision is filing grade.
+    """The committed pins admit the tree as generated today, and enroll only while their revision is filing grade.
 
     Loading the vectors checks the live generation manifest against the pinned
-    digest, so the pin admits the tree whatever the grade. A revision held below
-    filing grade is refused with its own residue rather than dropped.
+    digest, so a pin admits the tree whatever the grade. Every filing-grade
+    Modelo 200 revision must carry its own pin, so an unpinned edition fails
+    here rather than being tolerated. The open-ended pin is kept whatever its
+    grade; held below filing grade it is refused with its own residue rather
+    than dropped.
     """
+    filing_grade_m200 = _filing_grade_m200_revisions(registry_authority)
     vectors = canonical_filing_export_conformance_vectors(
         registry_root=_REGISTRY_ROOT,
         source_root=bundled_path(),
@@ -74,7 +104,7 @@ def test_the_shipped_pin_admits_the_current_generated_tree_and_enrolls_by_grade(
     assert {
         (str(vector.evidence.coordinate.modelo), str(vector.evidence.coordinate.revision)) for vector in vectors
     } == {
-        ("200", _PINNED_M200_REVISION),
+        *(("200", revision) for revision in filing_grade_m200 | {_PINNED_M200_REVISION}),
         (_PINNED_FILING_GRADE_MODELO, _PINNED_FILING_GRADE_REVISION),
     }
 
@@ -91,8 +121,8 @@ def test_the_shipped_pin_admits_the_current_generated_tree_and_enrolls_by_grade(
         for residue in enrollment.residues
         if str(residue.modelo) == "200"
     ]
-    if _pinned_revision_is_filing_grade(registry_authority):
-        assert ("200", _PINNED_M200_REVISION) in materialized, m200_residues
+    assert {("200", revision) for revision in filing_grade_m200} <= materialized, m200_residues
+    if _pinned_revision_is_filing_grade(registry_authority, _PINNED_M200_REVISION):
         assert not m200_residues
     else:
         assert ("200", _PINNED_M200_REVISION) not in materialized
@@ -115,9 +145,51 @@ def test_the_shipped_pin_admits_the_current_generated_tree_and_enrolls_by_grade(
 def _pinned_vector(
     vectors: tuple[FilingExportConformanceVector, ...],
     modelo: str,
+    revision: str,
 ) -> FilingExportConformanceVector:
-    (vector,) = (vector for vector in vectors if str(vector.evidence.coordinate.modelo) == modelo)
+    (vector,) = (
+        vector
+        for vector in vectors
+        if str(vector.evidence.coordinate.modelo) == modelo and str(vector.evidence.coordinate.revision) == revision
+    )
     return vector
+
+
+def _assert_payload_parses_back(
+    tmp_path: Path,
+    *,
+    proof: CanonicalTwoChannelFilingExportProofAuthority,
+    authority: ValidatedRegistryAuthority,
+    render: FilingExportConformanceRenderInputs,
+    vector: FilingExportConformanceVector,
+) -> None:
+    """The writer's bytes read back through the registry codec in layout order with the draft's typed values."""
+    evidence = vector.evidence
+    output_path = tmp_path / "parse-back" / "payload"
+    output_path.parent.mkdir(parents=True)
+    with validating_governed_facts(authority):
+        provider = proof.schema_provider_for_conformance(evidence)
+        (layout,) = authority.snapshot(
+            evidence.coordinate.modelo,
+            filing_year=evidence.filing_year,
+            period=evidence.period.registry_token,
+            grade=RegistryAuthorityGrade.FILING,
+        ).revision.export_layouts
+        export(render, output_path=output_path, schema_provider=provider)
+        parsed = parse_export_payload(
+            layout,
+            output_path.read_bytes(),
+            sources=provider.sources,
+            source_payloads=provider.source_payloads,
+        )
+    record_order = {record.id: record.order for record in layout.records}
+    parsed_orders = [record_order[value.record_id] for value in parsed.fields]
+    assert parsed_orders == sorted(parsed_orders)
+    assert {value.record_id for value in parsed.fields} >= {record.id for record in layout.records if record.required}
+    parsed_by_casilla = {value.casilla_id: value.value for value in parsed.casillas if value.casilla_id is not None}
+    stated = {value.casilla_id: value.value for value in render.draft.values if isinstance(value.value, Decimal)}
+    for casilla_id in stated.keys() & parsed_by_casilla.keys():
+        assert parsed_by_casilla[casilla_id] == stated[casilla_id], casilla_id
 
 
 def _corrupt_candidate_output_is_refused(
@@ -171,6 +243,8 @@ def _prove_through_the_real_writer(
     assert receipt.taxpayer_truth_claimed is False
     assert receipt.source_owned_replay_claimed is False
     assert governed_facts_in_scope() is before
+    _assert_payload_parses_back(tmp_path, proof=proof, authority=authority, render=render, vector=vector)
+    assert governed_facts_in_scope() is before
     _corrupt_candidate_output_is_refused(tmp_path, proof=proof, authority=authority, vector=vector, request=request)
     assert governed_facts_in_scope() is before
     return render
@@ -181,18 +255,30 @@ def test_a_filing_grade_pin_proves_through_the_real_writer(
     canonical_filing_export_proof: CanonicalTwoChannelFilingExportProofAuthority,
     registry_authority: ValidatedRegistryAuthority,
 ) -> None:
-    """The pin of a revision held at filing grade runs the proof's success path whatever Modelo 200's grade is."""
-    vector = _pinned_vector(
-        canonical_filing_export_proof.conformance_enrollment.materializable_vectors,
-        _PINNED_FILING_GRADE_MODELO,
-    )
-    assert str(vector.evidence.coordinate.revision) == _PINNED_FILING_GRADE_REVISION
-    _prove_through_the_real_writer(
-        tmp_path, proof=canonical_filing_export_proof, authority=registry_authority, vector=vector
-    )
+    """Every materializable pin runs the proof's success path, and its emitted bytes parse back.
+
+    The Modelo 165 pin is held at filing grade, so the success path runs
+    whatever Modelo 200's grade is; every filing-grade Modelo 200 edition runs
+    through the same writer under its own pin.
+    """
+    proved = set()
+    for vector in canonical_filing_export_proof.conformance_enrollment.materializable_vectors:
+        modelo = str(vector.evidence.coordinate.modelo)
+        revision = str(vector.evidence.coordinate.revision)
+        _prove_through_the_real_writer(
+            tmp_path / f"{modelo}-{revision}",
+            proof=canonical_filing_export_proof,
+            authority=registry_authority,
+            vector=vector,
+        )
+        proved.add((modelo, revision))
+    assert (_PINNED_FILING_GRADE_MODELO, _PINNED_FILING_GRADE_REVISION) in proved
+    assert {("200", revision) for revision in _filing_grade_m200_revisions(registry_authority)} <= proved
 
 
+@pytest.mark.parametrize("pinned_revision", _PINNED_M200_REVISIONS)
 def test_the_modelo_200_pin_follows_the_declared_grade(
+    pinned_revision: str,
     tmp_path: Path,
     canonical_filing_export_proof: CanonicalTwoChannelFilingExportProofAuthority,
     registry_authority: ValidatedRegistryAuthority,
@@ -209,10 +295,11 @@ def test_the_modelo_200_pin_follows_the_declared_grade(
     authority = registry_authority
     proof = canonical_filing_export_proof
     before = governed_facts_in_scope()
-    if not _pinned_revision_is_filing_grade(authority):
+    if not _pinned_revision_is_filing_grade(authority, pinned_revision):
         pinned = _pinned_vector(
             canonical_filing_export_conformance_vectors(registry_root=_REGISTRY_ROOT, source_root=bundled_path()),
             "200",
+            pinned_revision,
         )
         with pytest.raises(RegistryError) as refused:
             pinned.builder.build(pinned.evidence)
@@ -224,7 +311,7 @@ def test_the_modelo_200_pin_follows_the_declared_grade(
             proof.prove_conformance(FilingExportConformanceRequest(coordinate=pinned.evidence.coordinate))
         assert governed_facts_in_scope() is before
         return
-    vector = _pinned_vector(proof.conformance_enrollment.materializable_vectors, "200")
+    vector = _pinned_vector(proof.conformance_enrollment.materializable_vectors, "200", pinned_revision)
     render = _prove_through_the_real_writer(tmp_path, proof=proof, authority=authority, vector=vector)
     values = {value.casilla_id: value.value for value in render.draft.values}
     assert values["DP200014:00562"] == Decimal("25000")

@@ -37,6 +37,7 @@ from cadrumo_client.transport.model_run_frames import read_secret_chunks, write_
 from cadrumo_client.transport.native_wake import NativeWake
 from cadrumo_client.transport.product_version import installed_product_version
 from cadrumo_runtime.adapters.connection_handshake import accept_connection_handshake
+from cadrumo_runtime.application.operation_cue_timing import log_operation_cue_timing
 from cadrumo_runtime.contracts.worker_authorization import (
     WORKER_AUTOMATION_INVENTORY_MAX_BYTES,
     WORKER_AUTOMATION_INVENTORY_PERMIT_MAX_BYTES,
@@ -341,11 +342,12 @@ class WorkerAuthorizationServer:
 
         Return whether the acknowledgement was sent, which ends the exchange cleanly.
         """
+        log_operation_cue_timing("parent_received", report.operation_ids)
         if self._owner is not None:
             try:
                 self._owner.operations_advanced(report.operation_ids, records_changed=report.records_changed)
             except Exception as error:
-                # A missed cue costs a client its wait, bounded by its deadline.
+                # An incomplete publication must not acknowledge and discard the report.
                 diagnostic_event(
                     _LOGGER,
                     "profile_worker_progress_cue_failed",
@@ -353,6 +355,7 @@ class WorkerAuthorizationServer:
                     level=logging.WARNING,
                     primary_error=error,
                 )
+                return False
         try:
             write_document(
                 channel,
@@ -361,6 +364,7 @@ class WorkerAuthorizationServer:
             )
         except RefusalError:
             return False
+        log_operation_cue_timing("parent_ack_written", report.operation_ids)
         return True
 
     def _approval_phase(self, channel: WorkerChannel, request: WorkerApprovalRequest, replied: list[bool]) -> None:

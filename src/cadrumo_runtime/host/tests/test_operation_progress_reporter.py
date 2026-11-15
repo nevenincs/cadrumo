@@ -2,16 +2,42 @@
 
 from __future__ import annotations
 
-from threading import Condition, Event, Lock
+from threading import Condition, Event, Lock, Thread
 from time import monotonic
 
 import pytest
 
 from cadrumo.application.operations.models import OperationId, new_operation_id
 
+from .. import operation_progress_reporter
 from ..operation_progress_reporter import OperationProgressReporter
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
+
+def test_stage_markers_run_outside_the_reporter_condition(monkeypatch: pytest.MonkeyPatch) -> None:
+    stages: list[str] = []
+    reporter = OperationProgressReporter(lambda _batch: None)
+    operation_id = new_operation_id()
+
+    def record(stage: str, identifiers: tuple[OperationId, ...], **_kwargs: object) -> None:
+        assert identifiers == (operation_id,)
+        available = Event()
+
+        def probe() -> None:
+            with reporter._condition:
+                available.set()
+
+        thread = Thread(target=probe, daemon=True)
+        thread.start()
+        assert available.wait(2), "diagnostic emission must not hold the commit condition"
+        thread.join(2)
+        stages.append(stage)
+
+    monkeypatch.setattr(operation_progress_reporter, "log_operation_cue_timing", record)
+    reporter.committed(operation_id)
+    reporter.close()
+    assert stages == ["commit_observed", "report_send", "report_send_returned"]
 
 
 class _Runtime:
