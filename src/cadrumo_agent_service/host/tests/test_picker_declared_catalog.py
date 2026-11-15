@@ -62,6 +62,18 @@ def _declared_document() -> dict[str, Any]:
     return document
 
 
+def _served_lane(lane: dict[str, Any], *, local: bool) -> dict[str, Any]:
+    """A declared lane as the picker serves it: ``model_download`` stated, ``installed`` kept only on a local engine."""
+    served = {**lane, "model_download": "required" if local else "none"}
+    catalog = lane.get("catalog")
+    if not local and isinstance(catalog, dict) and isinstance(catalog.get("models"), list):
+        served["catalog"] = {
+            **catalog,
+            "models": [{k: v for k, v in model.items() if k != "installed"} for model in catalog["models"]],
+        }
+    return served
+
+
 def test_the_fallback_serves_the_agents_declared_document_scoped_to_the_selected_engine(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -88,8 +100,17 @@ def test_the_fallback_serves_the_agents_declared_document_scoped_to_the_selected
 
     catalog = service.admin("catalog")
 
-    # The declared document is served whole except the other engine's keyless lane.
-    scoped = {**document, "providers": [lane for lane in document["providers"] if lane["id"] != "ollama_api"]}
+    # The declared document is served whole except the other engine's keyless lane,
+    # each lane stating whether its models are downloaded to this computer.
+    engines = {engine.value for engine in LocalEngine}
+    scoped = {
+        **document,
+        "providers": [
+            _served_lane(lane, local=lane["provider"] in engines)
+            for lane in document["providers"]
+            if lane["id"] != "ollama_api"
+        ],
+    }
     assert any(lane["id"] == "ollama_api" for lane in document["providers"])
     assert catalog == {"kind": "declared", "catalog": scoped}
     lanes = document["providers"]
