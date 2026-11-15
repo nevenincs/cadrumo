@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#persona-table'
 date: '2026-11-11'
-modified: '2026-11-14'
+modified: '2026-11-15'
 body_schema: 'body-v2'
-body_hash: 'sha256:d1196141adbf3c5e9d476ab2b02e33b2d1c0d315d031da49151776af728ad589'
+body_hash: 'sha256:5199eab5665f9d44e0ec8666a1ab53722eb1db192b06c4de688b4ead81f6bbba'
 related:
   - "[[2026-11-11-persona-table-plan]]"
 ---
@@ -202,6 +202,10 @@ related:
 - `S64` `by:` `ACCEPTANCE`
 - `S11` `M` `.vault/plan/2026-11-11-persona-table-plan.md`
 - `S11` `verify:` `test_refund_account_authority.py + test_export_refusal_doors.py on tui 1397b95ef6 (7 passed); t80/t82 tables 0 red` -> `pass`
+- `S65` `M` `src/cadrumo_runtime/host/credential_prune.py`
+- `S65` `M` `src/cadrumo/adapters/persistence/storage/custody/acceleration_minted_sessions.py`
+- `S65` `verify:` `custody and runtime prune tests 92 passed with -m override incl. real Credential Manager on test service names` -> `pass`
+- `S65` `by:` `ACCEPTANCE`
 
 ## Notes
 
