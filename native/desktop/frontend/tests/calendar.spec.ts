@@ -1,5 +1,9 @@
 import { expect, test } from "@playwright/test";
-import { calendarRange, deadlineDistance } from "../src/shell/calendar";
+import {
+  calendarRange,
+  deadlineDistance,
+  yearRange,
+} from "../src/shell/calendar";
 import {
   calendarMonths,
   crowded,
@@ -127,6 +131,19 @@ test("the range asked for is a year of whole months around today", () => {
     from: fixtureDay(10, 1, -1),
     to: fixtureDay(9, 30),
   });
+});
+
+test("a viewed filing year is asked for whole, inside what the host admits", () => {
+  const range = yearRange(fixtureYear - 1);
+  expect(range).toEqual({
+    from: fixtureDay(1, 1, -1),
+    to: fixtureDay(12, 31, -1),
+  });
+  // The host admits at most one year between the ends' years.
+  expect(Number(range.to.slice(0, 4)) - Number(range.from.slice(0, 4))).toBe(0);
+  // October 20 of that year, where an annual instalment falls due, is in it.
+  expect(range.from <= fixtureDay(10, 20, -1)).toBe(true);
+  expect(range.to >= fixtureDay(10, 20, -1)).toBe(true);
 });
 
 // The month grid's arithmetic: which column a day falls in, which weeks a
