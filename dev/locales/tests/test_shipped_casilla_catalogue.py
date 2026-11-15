@@ -10,6 +10,9 @@ from functools import cache
 
 import pytest
 
+from cadrumo.domain.calculations.registry.modelo_localization import render_rotating_year
+from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+
 from ..casilla_catalogue_models import CatalogueFindings
 from ..casilla_reviewed_wording import REVIEWED_EQUIVALENT_SPANISH
 from ..casilla_source_inventory import edition_text_gaps, repeated_edition_text
@@ -153,6 +156,19 @@ def test_no_lineage_keeps_a_translation_the_spanish_outgrew() -> None:
     assert not any(findings.stale_translations.values()), findings.stale_translations
 
 
+def _as_the_product_renders(text: str | None, casilla: CasillaDefinition) -> str | None:
+    """Put a catalogue text on the product reader's layer.
+
+    The product's casilla reader renders a rotating slot's ``{year}`` before it
+    returns the caption, while this module reads the text as stored. Rendering
+    the stored text the same way compares the two readers at one layer, so the
+    comparison still fails for any text collapse moved to the wrong key.
+    """
+    if text is None:
+        return None
+    return render_rotating_year(text, offset=casilla.rotating_year_offset, ejercicio=None)
+
+
 def test_the_product_reads_every_collapsed_value_the_catalogue_resolves() -> None:
     """The product's own reader returns what the delta-keyed catalogue resolves.
 
@@ -186,7 +202,11 @@ def test_the_product_reads_every_collapsed_value_the_catalogue_resolves() -> Non
                     if coordinate not in resolved:
                         unknown.append(f"{modelo.id}/{revision_id}/{casilla.id} {locale}")
                         continue
-                    served = resolved[coordinate]
+                    stored_label, stored_help = resolved[coordinate]
+                    served = (
+                        _as_the_product_renders(stored_label, casilla),
+                        _as_the_product_renders(stored_help, casilla),
+                    )
                     read += 1
                     product = (casilla.get_label(locale), casilla.get_help(locale))
                     if product != served:
