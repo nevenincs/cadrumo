@@ -384,7 +384,7 @@ export function disposalDraft(revision: ActivityAssetRevision): FormDraft {
 /** The claim's end for display: the last day it covers. */
 export const throughOf = (found: {
   covered_until: string;
-  covered_through?: string;
+  covered_through?: string | null;
 }) => found.covered_through ?? found.covered_until;
 
 /** The span a claim form starts from: the claim being replaced or else a

@@ -120,6 +120,59 @@ FAMILIES: dict[str, tuple[str, tuple[str, ...]]] = {
             "ledger.track",
         ),
     ),
+    "inventory": (
+        "LedgerInventoryContracts",
+        (
+            "ledger.inventory.closing-authority.record",
+            "ledger.inventory.closing-value.record",
+            "ledger.inventory.correct",
+            "ledger.inventory.create",
+            "ledger.inventory.describe",
+            "ledger.inventory.evidence.add",
+            "ledger.inventory.inspect",
+            "ledger.inventory.list",
+            "ledger.inventory.movement.add",
+            "ledger.inventory.movement.claim",
+            "ledger.inventory.movement.correct",
+            "ledger.inventory.movement.reverse",
+            "ledger.inventory.options",
+            "ledger.inventory.restore",
+            "ledger.inventory.retire",
+            "ledger.inventory.valuation.preview",
+        ),
+    ),
+    "activityAsset": (
+        "LedgerActivityAssetContracts",
+        (
+            "ledger.actividad-asset.claim",
+            "ledger.actividad-asset.correct",
+            "ledger.actividad-asset.create",
+            "ledger.actividad-asset.describe",
+            "ledger.actividad-asset.dispose",
+            "ledger.actividad-asset.forecast",
+            "ledger.actividad-asset.inspect",
+        ),
+    ),
+    "activityAssetRead": (
+        "LedgerActivityAssetReadContracts",
+        (
+            "ledger.actividad-asset.acquisition-candidates",
+            "ledger.actividad-asset.disposal-calculate",
+            "ledger.actividad-asset.filing-handoff",
+            "ledger.actividad-asset.form-options",
+            "ledger.actividad-asset.list",
+            "ledger.actividad-asset.plan",
+            "ledger.actividad-asset.timeline",
+        ),
+    ),
+    "entry": (
+        "LedgerEntryContracts",
+        (
+            "ledger.entry-options",
+            "ledger.participation.rebuild",
+            "ledger.reset",
+        ),
+    ),
 }
 
 #: The families whose modules a family imports its types from rather than writing them again, in the order
@@ -129,6 +182,37 @@ EARLIER: dict[str, tuple[str, ...]] = {
     "documentReview": ("invoice", "document"),
     "movement": ("classification", "invoice", "document", "documentReview"),
     "movementCheck": ("classification", "invoice", "document", "documentReview", "movement"),
+    "inventory": ("classification", "invoice", "document", "documentReview", "movement", "movementCheck"),
+    "activityAsset": (
+        "classification",
+        "invoice",
+        "document",
+        "documentReview",
+        "movement",
+        "movementCheck",
+        "inventory",
+    ),
+    "activityAssetRead": (
+        "classification",
+        "invoice",
+        "document",
+        "documentReview",
+        "movement",
+        "movementCheck",
+        "inventory",
+        "activityAsset",
+    ),
+    "entry": (
+        "classification",
+        "invoice",
+        "document",
+        "documentReview",
+        "movement",
+        "movementCheck",
+        "inventory",
+        "activityAsset",
+        "activityAssetRead",
+    ),
 }
 
 _FILE_TOKEN = WindowType("FileToken", "./ledger")
@@ -142,6 +226,9 @@ FIELD_TYPES: dict[str, dict[tuple[str, str], WindowType]] = {
     "document": {
         ("LedgerEvidenceAddRequest", "source_path"): _FILE_TOKEN,
         ("LedgerEvidenceBatchRequest", "sources"): _FILE_TOKEN,
+    },
+    "inventory": {
+        ("InventoryEvidenceAddRequest", "source_path"): _FILE_TOKEN,
     },
 }
 

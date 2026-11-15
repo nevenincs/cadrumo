@@ -214,8 +214,8 @@ def _render_sheet(
 ) -> str:
     """Render one Anexo sheet's marker and projected fields at their declared positions.
 
-    The record's literal envelope is left out: its closing "Salto de línea" row is a
-    separate, pre-existing question the Modelo 840 round trip owns.
+    The record's literal envelope is left out: the whole record, its closing line break
+    included, is proven by the Modelo 840 export round trip.
     """
     context = FilingRecordRenderContext(registry_snapshot=snapshot, layout=layout, record=record, occurrence=occurrence)
     sheet = [" "] * max((field.offset or 0) + (field.length or 0) for field in record.fields)

@@ -20,7 +20,6 @@ import type {
   InventoryAcquisitionCostRequest,
   InventoryBook,
   InventoryBookRow,
-  InventoryClosingDocument,
   InventoryClosingValueRequest,
   InventoryCorrectRequest,
   InventoryCreateRequest,
@@ -89,15 +88,17 @@ function collector() {
       if (parsed.kind === "refused") problems[key] = parsed.refusal;
       return null;
     },
-    /** A choice among the values the backend serves. */
-    choice(
+    /** A choice among the values the backend serves: the served list is
+     * the only list of them, so what it holds is the closed type the
+     * request names. */
+    choice<Token extends string>(
       key: string,
       raw: string | undefined,
       options: readonly string[] | undefined,
-    ): string | null {
+    ): Token | null {
       const found = (options ?? []).find((option) => option === raw);
       if (found === undefined) missing.add(key);
-      return found ?? null;
+      return (found ?? null) as Token | null;
     },
     lack(key: string) {
       missing.add(key);
@@ -116,7 +117,7 @@ export function bookRequest(
 ): Built<InventoryCreateRequest> {
   const c = collector();
   const name = c.need("name", parseLine(draft.name));
-  const method = c.choice(
+  const method = c.choice<InventoryCreateRequest["valuation_method"]>(
     "method",
     draft.method,
     vocabulary.values.valuation_method,
@@ -148,7 +149,7 @@ function proofOf(
   draft: ProofDraft,
   kinds: readonly string[],
 ): InventoryProof | null {
-  const kind = c.choice(
+  const kind = c.choice<InventoryProof["evidence_kind"]>(
     `${key}:kind`,
     draft.kind === "" && kinds.length === 1 ? kinds[0] : draft.kind,
     kinds,
@@ -195,11 +196,9 @@ function acquisitionOf(
 
   const components = draft.extras.map((extra) => {
     const at = (field: string) => `extra:${extra.key}:${field}`;
-    const kind = c.choice(
-      at("kind"),
-      extra.kind,
-      vocabulary.values.attributable_cost_kind,
-    );
+    const kind = c.choice<
+      InventoryAcquisitionCostRequest["attributable_cost_components"][number]["kind"]
+    >(at("kind"), extra.kind, vocabulary.values.attributable_cost_kind);
     const base = c.need(at("price"), parseDecimal(extra.price, AMOUNT_RULE));
     const tax = c.need(at("iva"), parseDecimal(extra.iva, TAX_AMOUNT_RULE));
     const ratio = c.need(at("share"), parseFractionPercent(extra.share));
@@ -273,7 +272,11 @@ export function movementRequest(
   const c = collector();
   const text = (key: string) => draft.values[key] ?? "";
   const date = c.need("date", parseIsoDate(text("date")));
-  const kind = c.choice("kind", text("kind"), vocabulary.values.movement_kind);
+  const kind = c.choice<InventoryMovementAddRequest["kind"]>(
+    "kind",
+    text("kind"),
+    vocabulary.values.movement_kind,
+  );
   const quantity = c.need(
     "quantity",
     parseDecimal(text("quantity"), QUANTITY_RULE),
@@ -347,20 +350,33 @@ export function proofFromKept(
   };
 }
 
+type CountFacts = NonNullable<
+  InventoryClosingValueRequest["facts"]["physical_count"]
+>;
+type DecisionRole =
+  InventoryClosingValueRequest["facts"]["decision_evidence"][number]["role"];
+type CountRole = CountFacts["evidence"][number]["role"];
+
 /** A document of a closing value, with the role it plays. */
-function documentOf(
+type ClosingDocument<Role extends string> = Omit<
+  InventoryProof,
+  "evidence_kind"
+> & { role: Role };
+
+function documentOf<Role extends string>(
   c: Collector,
   key: string,
   draft: ProofDraft | undefined,
   role: string,
-): InventoryClosingDocument | null {
+): ClosingDocument<Role> | null {
   if (draft === undefined || !proofKept(draft)) {
     c.lack(`${key}:file`);
     return null;
   }
   return {
     reference: { reference: draft.reference },
-    role,
+    // The role is one the options served for this kind of document.
+    role: role as Role,
     content_digest: draft.digest,
   };
 }
@@ -379,14 +395,18 @@ export function closingRequest(
 ): Built<InventoryClosingValueRequest> {
   const c = collector();
   const text = (key: string) => draft.values[key] ?? "";
-  const authority = c.choice(
-    "authority",
-    text("authority"),
-    vocabulary.values.closing_authority,
-  );
+  const authority = c.choice<
+    InventoryClosingValueRequest["facts"]["authority"]
+  >("authority", text("authority"), vocabulary.values.closing_authority);
   const reason = c.need("reason", parseLine(text("reason")));
   const decision = (vocabulary.values.decision_evidence_role ?? []).map(
-    (role) => documentOf(c, `decision:${role}`, draft.decision[role], role),
+    (role) =>
+      documentOf<DecisionRole>(
+        c,
+        `decision:${role}`,
+        draft.decision[role],
+        role,
+      ),
   );
   if (decision.length === 0) c.lack("decision:file");
   let count: NonNullable<
@@ -398,13 +418,14 @@ export function closingRequest(
       "closing_value",
       parseDecimal(text("closing_value"), TAX_AMOUNT_RULE),
     );
-    const basis = c.choice(
-      "basis",
-      text("basis"),
-      vocabulary.values.closing_valuation_basis,
-    );
+    const basis = c.choice<
+      NonNullable<
+        InventoryClosingValueRequest["facts"]["physical_count"]
+      >["valuation_basis"]
+    >("basis", text("basis"), vocabulary.values.closing_valuation_basis);
     const evidence = (vocabulary.values.physical_evidence_role ?? []).map(
-      (role) => documentOf(c, `count:${role}`, draft.count[role], role),
+      (role) =>
+        documentOf<CountRole>(c, `count:${role}`, draft.count[role], role),
     );
     if (evidence.length === 0) c.lack("count:file");
     const documents = evidence.filter((found) => found !== null);
@@ -506,7 +527,7 @@ export function correctRequest(
   vocabulary: Vocabulary,
 ): Built<InventoryCorrectRequest> {
   const c = collector();
-  const reason = c.choice(
+  const reason = c.choice<InventoryCorrectRequest["reason"]>(
     "reason",
     draft.reason,
     vocabulary.values.correction_reason,
@@ -518,7 +539,11 @@ export function correctRequest(
   const method =
     draft.method === ""
       ? null
-      : c.choice("method", draft.method, vocabulary.values.valuation_method);
+      : c.choice<NonNullable<InventoryCorrectRequest["valuation_method"]>>(
+          "method",
+          draft.method,
+          vocabulary.values.valuation_method,
+        );
   return {
     request:
       c.ready() && reason !== null
@@ -544,10 +569,11 @@ export function movementCorrectionRequest(
   vocabulary: Vocabulary,
 ): Built<InventoryMovementCorrectRequest> {
   const made = movementRequest(book, ids.movement, draft, vocabulary);
-  const why =
-    (vocabulary.values.correction_reason ?? []).find(
-      (found) => found === reason,
-    ) ?? null;
+  const why = collector().choice<InventoryMovementCorrectRequest["reason"]>(
+    "reason",
+    reason,
+    vocabulary.values.correction_reason,
+  );
   const missing = new Set(made.missing);
   if (why === null) missing.add("reason");
   if (made.request === null || why === null)
@@ -575,7 +601,11 @@ export function reverseRequest(
   vocabulary: Vocabulary,
 ): Built<InventoryMovementReverseRequest> {
   const c = collector();
-  const why = c.choice("reason", reason, vocabulary.values.correction_reason);
+  const why = c.choice<InventoryMovementReverseRequest["reason"]>(
+    "reason",
+    reason,
+    vocabulary.values.correction_reason,
+  );
   return {
     request:
       why === null
@@ -644,7 +674,11 @@ export function retireRequest(
   vocabulary: Vocabulary,
 ): Built<InventoryRetireRequest> {
   const c = collector();
-  const why = c.choice("reason", reason, vocabulary.values.retirement_reason);
+  const why = c.choice<InventoryRetireRequest["reason"]>(
+    "reason",
+    reason,
+    vocabulary.values.retirement_reason,
+  );
   return {
     request:
       why === null ? null : { ...changeOf(book, correction), reason: why },

@@ -3,7 +3,9 @@ import { fieldsFor } from "../../src/components/ledger/assets/assetFields";
 import { answer } from "../../src/components/ledger/assets/assetFormValues";
 import {
   type ActivityAssetListResult as AssetListResult,
+  type AssetKind,
   type AssetListRow,
+  type DisposalFacts,
   type PlanRow,
   type TimelineEvent,
   type FormOptions,
@@ -143,7 +145,11 @@ export async function optionsOf(
   kind = "material",
 ): Promise<Options> {
   const read = await settled<LedgerResult<typeof OPTIONS>>(
-    port.submit(OPTIONS, { asset_kind: kind, tax_year: scenarioYear }),
+    // A scenario names only kinds the register defines.
+    port.submit(OPTIONS, {
+      asset_kind: kind as AssetKind,
+      tax_year: scenarioYear,
+    }),
   );
   return read.options!;
 }
@@ -206,7 +212,7 @@ export const WHOLE_PROPERTY = creationDraft("whole_property");
 export const VEHICLE_ELEMENT = creationDraft("vehicle");
 export const SHIFT_HOURS = creationDraft("shift_hours");
 
-export const sale = {
+export const sale: DisposalFacts = {
   disposal_date: "2025-06-30",
   reason: "sale",
   proceeds: { decimal: "9000.00" },

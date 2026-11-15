@@ -16,6 +16,7 @@ import type {
   DisposalCalculation,
   DisposalFinding,
   DisposalReasonOption,
+  FormOptions as ServedFormOptions,
   ElectionLimits,
   OpeningStatusOption,
   PlanRow,
@@ -62,20 +63,22 @@ export type ScenarioElement = {
   disposal: ScenarioDisposal | null;
 };
 
-/** What the registry admits for one asset kind and tax year. */
-type FormOptions = {
-  regime: string;
-  methods: string[];
-  method_facts: { method: string; facts: JsonObject[] }[];
-  table_groups: TableGroup[];
-  acquisition_shapes: string[];
-  declared_activities: string[];
-  disposal_reasons: DisposalReasonOption[];
-  basis_stages: BasisStageOption[];
-  opening_statuses: OpeningStatusOption[];
-  acquired_conditions: ConditionOption[];
-  further_acquisition_shapes: string[];
-};
+/** What the registry admits for one asset kind and tax year, as the
+ * recording keeps it. */
+type FormOptions = Pick<
+  ServedFormOptions,
+  | "regime"
+  | "methods"
+  | "method_facts"
+  | "table_groups"
+  | "acquisition_shapes"
+  | "declared_activities"
+  | "disposal_reasons"
+  | "basis_stages"
+  | "opening_statuses"
+  | "acquired_conditions"
+  | "further_acquisition_shapes"
+>;
 
 type RecordedElement = Omit<
   ScenarioElement,
@@ -245,7 +248,7 @@ const anyKind = opening(firstKind);
 export const TABLE_GROUPS: Record<string, readonly TableGroup[]> = byKind(
   (options) => options.table_groups,
 );
-export const ADMITTED_METHODS: Record<string, readonly string[]> = byKind(
+export const ADMITTED_METHODS: Record<string, FormOptions["methods"]> = byKind(
   (options) => options.methods,
 );
 export const METHOD_FACTS: Record<
@@ -254,8 +257,9 @@ export const METHOD_FACTS: Record<
 > = byKind((options) => options.method_facts);
 /** The modality the scenario's taxpayer files in. */
 export const SCENARIO_REGIME: string = anyKind.regime;
-export const ACQUISITION_SHAPES: readonly string[] = anyKind.acquisition_shapes;
-export const DECLARED_ACTIVITIES: readonly string[] =
+export const ACQUISITION_SHAPES: FormOptions["acquisition_shapes"] =
+  anyKind.acquisition_shapes;
+export const DECLARED_ACTIVITIES: FormOptions["declared_activities"] =
   anyKind.declared_activities;
 export const DISPOSAL_REASONS: readonly DisposalReasonOption[] =
   anyKind.disposal_reasons;
@@ -264,7 +268,7 @@ export const OPENING_STATUSES: readonly OpeningStatusOption[] =
   anyKind.opening_statuses;
 export const ACQUIRED_CONDITIONS: readonly ConditionOption[] =
   anyKind.acquired_conditions;
-export const FURTHER_ACQUISITION_SHAPES: readonly string[] =
+export const FURTHER_ACQUISITION_SHAPES: FormOptions["further_acquisition_shapes"] =
   anyKind.further_acquisition_shapes;
 
 /** The methods whose corridor is the registry's amortization table, so an
