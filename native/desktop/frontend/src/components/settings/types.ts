@@ -65,6 +65,9 @@ export type ProviderStatus = {
   baseUrl?: string;
   /** The gateway address used when none is stored, if there is one. */
   defaultBaseUrl?: string;
+  /** Whether a conversation on it leaves this computer, as the service
+   * serves the agent's declaration; absent where it serves none. */
+  readsOffHost?: boolean;
 };
 
 /** How the last change to a provider ended, as the section says it. */

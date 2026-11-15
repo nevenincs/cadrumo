@@ -384,6 +384,8 @@ desktop:
         próbáld újra.
       retry: Próbáld újra egy pillanat múlva.
       update_app: Frissítsd ezt az alkalmazást a legújabb verzióra, majd próbáld újra.
+    reads_off_host: A beszélgetésed elhagyja ezt a számítógépet, és a szolgáltatóhoz kerül.
+    reads_on_host: A beszélgetésed ezen a számítógépen marad.
     reason_check_settings: Ellenőrizd a beállításokat, és próbáld újra.
     reason_record_unreadable: A mentett API-kulcs nem olvasható. Add hozzá újra.
     refresh: Újrapróbálkozás

@@ -46,6 +46,11 @@ const DEFAULT_BASE_URL: Record<string, string> = {
   local_api: "http://127.0.0.1:41000",
 };
 
+/** The lanes the made-up agent declares run on this computer. It declares
+ * every other lane to send a conversation off it, as the agent declares
+ * each lane itself. */
+const ON_THIS_COMPUTER = new Set(["local_api", "ollama_api", "llamacpp_api"]);
+
 /** The settings lanes of the made-up catalog: id `<provider>_<transport>`. */
 export const FIXTURE_SETTINGS_LANES: readonly Seed[] = (
   FIXTURE_CATALOG.providers ?? []
@@ -61,6 +66,7 @@ export const FIXTURE_SETTINGS_LANES: readonly Seed[] = (
       auth_kind: fixtureAuthKind(lane.provider_id, lane.transport),
       ...(base ? { default_base_url: base } : {}),
       ...(lane.transport === "cli" ? { cli_state: "unknown" as const } : {}),
+      reads_off_host: !ON_THIS_COMPUTER.has(id),
     };
   })
   .concat(
@@ -80,6 +86,7 @@ export const FIXTURE_SETTINGS_LANES: readonly Seed[] = (
         ...artwork,
         transport: "api",
         auth_kind: "api_key",
+        reads_off_host: true,
       })),
   );
 
