@@ -292,7 +292,7 @@ export type AgentProviderLane = {
   model_source: "catalog" | "declared";
   /** Served by the agent service: `required` on a local engine's lane, whose
    * models are downloaded to this computer; `none` on every hosted lane. */
-  model_download?: "required" | "none";
+  model_download: "required" | "none";
   health: {
     configured: AgentHealthState;
     transport: AgentHealthState;

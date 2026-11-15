@@ -177,8 +177,10 @@ type FixtureModel = {
   installed?: boolean;
 };
 
-/** The lane's models and the controls they take, as the catalog serves them. */
-function modelsOf(models: FixtureModel[]) {
+/** The lane's models and the controls they take, as the catalog serves them:
+ * whether this computer holds a model only on a lane whose models are
+ * downloaded to it. */
+function modelsOf(models: FixtureModel[], downloaded: boolean) {
   const controls = new Map<string, AgentNativeControl>();
   const entries = models.map((model): AgentCatalogEntry => {
     const control = model.efforts.length
@@ -197,7 +199,7 @@ function modelsOf(models: FixtureModel[]) {
       size_bytes: model.size_bytes ?? null,
       context_length: null,
       licence: model.licence ?? null,
-      installed: model.installed ?? true,
+      ...(downloaded ? { installed: model.installed ?? true } : {}),
     };
   });
   return { entries, controls: [...controls.values()] };
@@ -358,6 +360,9 @@ const KEYED = new Set(["gateway/cli"]);
 
 /** The lanes of the local engines, which state whether the engine runs. */
 const ENGINE_LANES = new Set(["ollama/api", "llamacpp/api"]);
+/** The lanes whose models are downloaded to this computer: the generic local
+ * lane and each engine's. */
+const DOWNLOAD_LANES = new Set(["local/api", ...ENGINE_LANES]);
 
 const runningEngine = (key: string): AgentEngineWire => ({
   engine: key.split("/")[0] ?? "",
@@ -369,7 +374,8 @@ const runningEngine = (key: string): AgentEngineWire => ({
 function lane(declared: DeclaredLane): AgentProviderLane {
   const key = `${declared.provider_id}/${declared.transport}`;
   const fixture = FIXTURES[key] ?? {};
-  const { entries, controls } = modelsOf(fixture.models ?? []);
+  const downloaded = DOWNLOAD_LANES.has(key);
+  const { entries, controls } = modelsOf(fixture.models ?? [], downloaded);
   const declaredModels = declared.model_source === "declared";
   // A gateway with no key is held back; every other lane is as written above.
   const held =
@@ -383,6 +389,7 @@ function lane(declared: DeclaredLane): AgentProviderLane {
     execution_mode: declared.execution_mode,
     executable: declared.executable,
     model_source: declared.model_source,
+    model_download: downloaded ? "required" : "none",
     health: {
       ...HEALTHY,
       ...(held ? HELD[held] : {}),
