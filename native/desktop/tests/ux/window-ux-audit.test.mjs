@@ -1034,6 +1034,17 @@ async function arrangeDetails(placement) {
   return splitNow();
 }
 
+/** Whether the placement toggle is held (aria-disabled) and the reason it gives. */
+function pagePlacementHold() {
+  const el = document.querySelector(
+    'section.declarations-workspace [data-pane-toggle="placement"]',
+  );
+  return {
+    disabled: el?.getAttribute("aria-disabled") === "true",
+    reason: el?.getAttribute("aria-description") ?? "",
+  };
+}
+
 /** Focus the details separator and send keys to it. */
 async function keyLine(...keys) {
   const focused = await exec((name) => {
@@ -1151,6 +1162,32 @@ ux(
               const sideState = await setPaneToggle("side", railOn);
               const detailsState = await setPaneToggle("details", true);
               const arranged = await arrangeDetails(placement);
+              // The window holds the details beside the form where there is
+              // no room under it: the toggle is aria-disabled and must say
+              // why. A held arrangement is measured, not unreached.
+              const held =
+                arranged.placement !== placement
+                  ? await exec(pagePlacementHold)
+                  : null;
+              if (held?.disabled) {
+                const reason = held.reason.trim();
+                const readable =
+                  reason.length > 0 &&
+                  reason !== "desktop.modelo.details.under_held";
+                report(t, {
+                  page,
+                  size: inner,
+                  held: true,
+                  reason,
+                  readable,
+                  placement: arranged.placement,
+                });
+                if (!readable)
+                  failures.push(
+                    `${page} at ${inner.join("x")}: the placement toggle is held without a readable reason (${JSON.stringify(reason)})`,
+                  );
+                continue;
+              }
               if (
                 sideState !== String(railOn) ||
                 detailsState !== "true" ||
