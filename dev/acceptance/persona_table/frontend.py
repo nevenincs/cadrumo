@@ -68,6 +68,7 @@ from pathlib import Path
 from typing import cast
 
 from .figure_compare import extra_figures, figure_causes, redacted_casillas
+from .file_stage import NOT_SHOWN, file_causes, file_unmeasured
 from .rows import Stage, TableRow
 
 SURFACES = ("tui", "window", "cli")
@@ -78,7 +79,6 @@ STAGE_WORDS = ("pass", "incomplete", "refused", "not-owed", NOT_REACHED, "error"
 CALCULATE_INHERITED = "calculate_inherited"
 """The calculate stage of a surface that did not run the calculation; one was already present in its world."""
 CALCULATE_WORDS = (*STAGE_WORDS, CALCULATE_INHERITED)
-NOT_SHOWN = "not-shown"
 FILE_WORDS = (*STAGE_WORDS, NOT_SHOWN)
 """The vocabulary of the file stage: the stage words, and ``not-shown`` for a surface that shows no filed state."""
 INHERITED_CAUSE = "calculate inherited (the surface did not run the calculation)"
@@ -114,13 +114,14 @@ A calculation that was produced counts as ``pass`` whatever the persona states a
 compared through the figures.
 """
 
-MATCHED, DIFFERS, NOT_COMPARABLE, LOAD_FAILED, NOT_RUN, EXTRA = (
+MATCHED, DIFFERS, NOT_COMPARABLE, LOAD_FAILED, NOT_RUN, EXTRA, FILE_NOT_MEASURED = (
     "matched",
     "differs",
     "not-comparable",
     "load-failed",
     "not-run",
     "extra",
+    "file-not-measured",
 )
 CELL_WORDS = {
     MATCHED: "matched",
@@ -128,6 +129,7 @@ CELL_WORDS = {
     NOT_COMPARABLE: "not comparable",
     LOAD_FAILED: "load failed",
     NOT_RUN: "not run",
+    FILE_NOT_MEASURED: "file not measured",
 }
 
 type RowKey = tuple[str, str, int, str]
@@ -469,29 +471,35 @@ def parity(
         return RowParity(row.key, surface, NOT_COMPARABLE, (why,), tree)
     table, shown = dict(row.figures), dict(result.figures)
     stage_causes, gated = _stage_causes(surface, stages, result, export_refusal_code(row.reason))
+    outcome, causes, redacted = _judged(row, surface, result, stage_causes, table, shown)
+    extras = extra_figures(table | dict(row.internal_figures), shown)
+    return RowParity(row.key, surface, outcome, causes, tree, extras, gated, redacted)
+
+
+def _judged(
+    row: TableRow,
+    surface: str,
+    result: SurfaceResult,
+    stage_causes: list[str],
+    table: Mapping[str, str],
+    shown: Mapping[str, str],
+) -> tuple[str, tuple[str, ...], tuple[str, ...]]:
+    """The outcome of a comparable row, its causes and the redacted casillas it was matched on.
+
+    Any cause makes it differ. Without one it matches, unless the backend filed it locally and the surface's line
+    states no file stage: it is then ``file-not-measured``, neither matched nor different.
+    """
     causes = (
         _substitute_causes(result)
         + stage_causes
-        + _file_causes(row, surface, result)
+        + file_causes(row.filed_locally, result.file, surface)
         + figure_causes(surface, table, shown, dict(row.text_figures))
     )
-    outcome = DIFFERS if causes else MATCHED
-    extras = extra_figures(table | dict(row.internal_figures), shown)
-    redacted = () if causes else redacted_casillas(shown)
-    return RowParity(row.key, surface, outcome, tuple(causes), tree, extras, gated, redacted)
-
-
-def _file_causes(row: TableRow, surface: str, result: SurfaceResult) -> list[str]:
-    """The cause of a row the backend filed locally when the surface does not show that state by itself.
-
-    A surface shows it with ``file`` ``pass``. An absent ``file`` and ``not-shown`` state that the surface shows no
-    filed state; any other word disagrees. A row the backend did not file locally is not held to a file stage.
-    """
-    if not row.filed_locally or result.file == "pass":
-        return []
-    if result.file is None or result.file == NOT_SHOWN:
-        return [f"file not shown by {surface}, table filed locally"]
-    return [f"file {surface} {result.file}, table filed locally"]
+    if causes:
+        return DIFFERS, tuple(causes), ()
+    if file_unmeasured(row.filed_locally, result.file):
+        return FILE_NOT_MEASURED, (f"file not measured by {surface}",), ()
+    return MATCHED, (), redacted_casillas(shown)
 
 
 def _substitute_causes(result: SurfaceResult) -> list[str]:
@@ -574,6 +582,10 @@ class FrontendComparison:
     def matched(self, surface: str) -> int:
         """The table rows ``surface`` matched."""
         return sum(item.outcome == MATCHED for item in self.parities[surface])
+
+    def file_not_measured(self, surface: str) -> Counter[str]:
+        """Per tree, the rows of ``surface`` that are not matched or different because it measured no filed state."""
+        return Counter(item.tree or "unknown" for item in self.parities[surface] if item.outcome == FILE_NOT_MEASURED)
 
     def matched_on_redacted(self, surface: str) -> int:
         """The matched table rows of ``surface`` that were matched on a redacted casilla compared by presence."""
@@ -717,6 +729,8 @@ def _cell_parts(cell: PersonaCell) -> list[str]:
     ]
     if counts.get(NOT_COMPARABLE, 0):
         parts.append(f"{counts.get(NOT_COMPARABLE, 0)} not comparable")
+    if counts.get(FILE_NOT_MEASURED, 0):
+        parts.append(f"{counts.get(FILE_NOT_MEASURED, 0)} file not measured")
     if counts.get(LOAD_FAILED, 0):
         parts.append(f"{counts.get(LOAD_FAILED, 0)} load failed")
     if cell.extra_rows:
@@ -735,7 +749,8 @@ def row_cell(item: RowParity, head: str) -> str:
 def frontend_line(comparison: FrontendComparison) -> str:
     """The summary sentence, ``Frontend: TUI matched a / N, window matched b / N, CLI matched c / N (N rows)``.
 
-    It ends with the rows matched on redacted casillas per surface, when there are any.
+    It ends with the rows matched on redacted casillas per surface and, aged by the tree of the surface line, the filed
+    rows whose surface states no file stage, when there are any.
     """
     total = len(comparison.rows)
     matched = ", ".join(
@@ -751,7 +766,23 @@ def frontend_line(comparison: FrontendComparison) -> str:
         if redacted
         else ""
     )
-    return f"Frontend: {matched} ({total} rows){suffix}"
+    return f"Frontend: {matched} ({total} rows){suffix}{_file_not_measured_suffix(comparison)}"
+
+
+def _file_not_measured_suffix(comparison: FrontendComparison) -> str:
+    """``; file not measured (filed rows whose surface line states no file stage): TUI 12 (tree abc 7, def 5)``."""
+    groups = []
+    for surface in SURFACES:
+        unmeasured = comparison.file_not_measured(surface)
+        if unmeasured:
+            ages = ", ".join(f"{tree} {count}" for tree, count in sorted(unmeasured.items()))
+            groups.append(f"{SURFACE_LABELS[surface]} {sum(unmeasured.values())} (trees {ages})")
+    if not groups:
+        return ""
+    return (
+        "; file not measured (filed rows whose surface line states no file stage, neither matched nor different): "
+        + ", ".join(groups)
+    )
 
 
 def trees_line(comparison: FrontendComparison) -> str:
