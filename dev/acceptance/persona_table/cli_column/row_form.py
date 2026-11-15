@@ -9,10 +9,11 @@ module is pure: it parses either form, fails closed (an output it cannot read wh
 one), and maps the values to figures with the table's own single-row rule (:mod:`..row_figures`), which it reuses and
 does not restate. A block whose rows are not known contributes no value: its records are unknown, never empty. A
 cell no casilla owns is not a figure of any casilla and is skipped.
-A value the central privacy boundary printed redacted (``sha256:<8 hex>``, see :func:`..frontend.is_redacted`, e.g.
-the tenant NIF 0091) is kept as the text it was printed. It is a figure of a casilla held by exactly one row, and
-fills the merge only where the printed figure is absent or zero; the single-row and conflict rules of the table stay
-those of numeric casillas, and the merge names the casillas kept redacted.
+A value the central privacy boundary printed redacted (``sha256:<8 hex>``, see
+:func:`..figure_compare.is_redacted`, e.g. the tenant NIF 0091) is kept as the text it was printed. It is a figure of
+a casilla held by exactly one row, and fills the merge only where the printed figure is absent or zero; the
+single-row and conflict rules of the table stay those of numeric casillas, and the merge names the casillas kept
+redacted.
 """
 
 from __future__ import annotations
@@ -25,7 +26,7 @@ from decimal import Decimal, InvalidOperation
 import typer
 from typer.core import TyperGroup
 
-from ..frontend import is_redacted
+from ..figure_compare import is_redacted
 from ..row_figures import merge_row_figures, single_row_figures
 from ..rows import canonical_figures
 
@@ -190,10 +191,10 @@ def form_row_figures(values: Sequence[FormValue]) -> Mapping[str, str]:
     }
     single = single_row_figures(rows, {casilla: casilla for casilla in rows})
     numeric = dict(canonical_figures({casilla: Decimal(text) for casilla, text in single.items()}))
-    return numeric | _text_figures(values)
+    return numeric | text_figures(values)
 
 
-def _text_figures(values: Sequence[FormValue]) -> dict[str, str]:
+def text_figures(values: Sequence[FormValue]) -> dict[str, str]:
     """The value of each casilla held by exactly one printed value that is not a number, as printed."""
     held = Counter(item.casilla for item in values)
     return {item.casilla: item.value for item in values if held[item.casilla] == 1 and _number(item.value) is None}

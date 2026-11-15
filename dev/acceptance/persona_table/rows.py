@@ -178,6 +178,11 @@ class TableRow:
     """The non-zero calculated values the revision's form layout does not place on the form (its working figures
     and unplaced casillas), same shape as ``figures``. No surface is held to show them. Empty for a row written
     before they were kept apart."""
+    text_figures: tuple[tuple[str, str], ...] = ()
+    """The value of each casilla the saved repeating records of the work form hold in exactly one value that is not a
+    number (a descendant's NIF, a payee's NIF), as the live backend read them; the plain text, never a digest. The CLI
+    prints such a value redacted, so its presence here is what a redacted casilla is compared with. Empty for a row
+    written before they were kept."""
     sources_returns: tuple[str, ...] = ()
     """The modelos whose returns this return reads, sorted, as the registry's bindings and dependency classifications
     of the modelo declare (``planner.source_returns``). It names modelos, not periods or years, and can name the
@@ -208,6 +213,7 @@ class TableRow:
         export_detail: str = "",
         figures: tuple[tuple[str, str], ...] | None = None,
         internal_figures: tuple[tuple[str, str], ...] = (),
+        text_figures: tuple[tuple[str, str], ...] = (),
     ) -> TableRow:
         """The row of ``plan`` with the stages it reached and the figures its calculation produced.
 
@@ -232,6 +238,7 @@ class TableRow:
             figures=figures or (),
             figures_recorded=figures is not None,
             internal_figures=internal_figures,
+            text_figures=text_figures,
             sources_returns=plan.sources_returns,
         )
 
@@ -250,6 +257,7 @@ class TableRow:
         else:
             del data["figures"]
         data["internal_figures"] = dict(self.internal_figures)
+        data["text_figures"] = dict(self.text_figures)
         data["sources_returns"] = list(self.sources_returns)
         return json.dumps(data, ensure_ascii=False, sort_keys=True)
 
@@ -290,6 +298,7 @@ class TableRow:
         data["figures_recorded"] = "figures" in data
         data["figures"] = _read_figures(data.get("figures", {}))
         data["internal_figures"] = _read_figures(data.get("internal_figures", {}))
+        data["text_figures"] = _read_figures(data.get("text_figures", {}))
         data["sources_returns"] = tuple(data.get("sources_returns", ()))
         for name in ("calculate", "verify", "export"):
             data[name] = Stage(data[name])
