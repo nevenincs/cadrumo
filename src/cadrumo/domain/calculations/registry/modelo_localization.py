@@ -343,6 +343,17 @@ def modelo_localization_source(
     return None if served is None else (served[0], served[1])
 
 
+def served_modelo_localization_text(keys: tuple[str, ...], *, locale: str) -> tuple[str, str] | None:
+    """Return the ``(locale, text)`` that serves a chain from one selection, or ``None``.
+
+    The locale is the one :func:`modelo_localization_source` reports and the
+    text is the one :func:`resolve_modelo_localization` returns without a year,
+    read once instead of selecting the chain twice.
+    """
+    served = _served_modelo_localization(keys, locale=locale)
+    return None if served is None else (served[1], served[2])
+
+
 def _served_modelo_localization(
     keys: tuple[str, ...],
     *,
@@ -424,4 +435,5 @@ __all__ = [
     "require_modelo_localization",
     "resolve_modelo_localization",
     "revision_locale_key",
+    "served_modelo_localization_text",
 ]
