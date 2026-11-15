@@ -31,6 +31,7 @@ from ...application.operations.public_period import PublicPeriod
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.period import Period
 from ...core.time.clock import now
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from .conformance_family_contract import (
     ConformanceFamily,
@@ -68,7 +69,11 @@ def _prepare(context: ConformanceFamilyContext) -> ConformancePreparation:
     return ConformancePreparation(
         subject_ref=profile_operation_subject(str(profile_id)),
         request=ModeloMaritimePreviewRequest(
-            profile_id=profile_id, annual_salary="42000.00", qualifying_days=200, gross_navigation_income="30000.00"
+            profile_id=profile_id,
+            annual_salary="42000.00",
+            qualifying_days=200,
+            gross_navigation_income="30000.00",
+            filing_year=filing_year_envelope().horizon,
         ),
         expected_result=ModeloMaritimePreviewProjection(
             profile_id=profile_id,
@@ -136,7 +141,12 @@ def _retained_maritime_quickfile_prepare(context: ConformanceFamilyContext) -> C
 
         return ConformancePreparation(
             profile_operation_subject(profile),
-            ModeloMaritimePreviewRequest(profile_id=context.profile_id, annual_salary="36500.00", qualifying_days=100),
+            ModeloMaritimePreviewRequest(
+                profile_id=context.profile_id,
+                annual_salary="36500.00",
+                qualifying_days=100,
+                filing_year=filing_year_envelope().horizon,
+            ),
             verify=verify,
         )
     seed_modelo_ready_profile(bucket_id=profile, at=datetime(2026, 4, 1, tzinfo=UTC))
