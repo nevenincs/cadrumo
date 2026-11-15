@@ -333,4 +333,31 @@ mod tests {
             "{admitted:?}"
         );
     }
+
+    /// The main window may listen for host events and stop listening; it emits
+    /// none, and no other window listens.
+    #[test]
+    fn only_the_main_window_listens_for_host_events() {
+        let app = tauri::test::mock_builder()
+            .build(tauri::generate_context!(test = true))
+            .unwrap();
+        let main = tauri::WebviewWindowBuilder::new(&app, "main", Default::default())
+            .build()
+            .unwrap();
+        let other = tauri::WebviewWindowBuilder::new(&app, "startup", Default::default())
+            .build()
+            .unwrap();
+        let refused = |window: &tauri::WebviewWindow<tauri::test::MockRuntime>, cmd: &str| {
+            invoke(window, cmd)
+                .err()
+                .and_then(|m| m.as_str().map(|m| m.contains("not allowed")))
+                .unwrap_or(false)
+        };
+        for cmd in ["plugin:event|listen", "plugin:event|unlisten"] {
+            assert!(!refused(&main, cmd), "{cmd}");
+            assert!(refused(&other, cmd), "{cmd}");
+        }
+        assert!(refused(&main, "plugin:event|emit"));
+        assert!(refused(&main, "plugin:event|emit_to"));
+    }
 }
