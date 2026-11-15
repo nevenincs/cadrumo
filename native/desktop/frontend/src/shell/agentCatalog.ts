@@ -323,13 +323,17 @@ function listedOn(
 }
 
 /** Whether downloading a model is a way on for `lane`, the one place that
- * decides it: the lane lists a model the catalog says this computer does not
- * hold. Only a lane run on this computer has one; a hosted lane has none. */
+ * decides it: the service says the lane's models are downloaded to this
+ * computer, and the lane lists one the catalog says is not held yet. A hosted
+ * lane, which the service says downloads none, never has one. */
 function laneModelsToDownload(
   lane: AgentProviderLane,
   listed: readonly ModelOption[],
 ): boolean {
-  return !writesModel(lane) && listed.some((model) => !heldModel(model));
+  return (
+    lane.model_download === "required" &&
+    listed.some((model) => !heldModel(model))
+  );
 }
 
 /** The providers and models the column offers, as the catalog has them. A

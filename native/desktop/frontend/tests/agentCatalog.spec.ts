@@ -372,6 +372,47 @@ test("a model the catalog says this computer lacks is listed, marked and never c
   expect(offeredSelection(choices, chosen)?.modelId).not.toBe(missing.entry_id);
 });
 
+test("whether a lane has a model to download is the service's model_download, not a model the window finds missing", () => {
+  const served = (lanes: (lane: AgentProviderLane) => AgentProviderLane) =>
+    catalogChoices(words, {
+      ...FIXTURE_CATALOG,
+      providers: (FIXTURE_CATALOG.providers ?? []).map(lanes),
+    });
+  const localWay = (catalog: ReturnType<typeof catalogChoices>) =>
+    catalog.providers
+      .flatMap((provider) => provider.ways)
+      .find((way) => way.id === LOCAL);
+  expect(servedLocal()?.model_download).toBe("required");
+  // A lane the service says downloads nothing has no model to download, even
+  // where one of its models is marked as not held.
+  const none = served((lane) =>
+    `${lane.provider_id}/${lane.transport}` === LOCAL
+      ? { ...lane, model_download: "none" }
+      : lane,
+  );
+  expect(localWay(none)?.modelsToDownload).toBeUndefined();
+  expect(providerModelsToDownload(localProvider(none))).toBe(false);
+  // A lane that downloads its models, all of them held, has none to download.
+  const held = served((lane) => ({
+    ...lane,
+    catalog: {
+      ...lane.catalog,
+      models: lane.catalog.models?.map((entry) => ({
+        ...entry,
+        installed: true,
+      })),
+    },
+  }));
+  expect(localWay(held)?.modelsToDownload).toBeUndefined();
+  // Every hosted lane is served as downloading none.
+  for (const lane of FIXTURE_CATALOG.providers ?? [])
+    if (
+      `${lane.provider_id}/${lane.transport}` !== LOCAL &&
+      !lane.health.engine
+    )
+      expect(lane.model_download).toBe("none");
+});
+
 test("a way starts with a model this computer holds, even where the catalog recommends one it lacks", () => {
   const catalog = structuredClone(FIXTURE_CATALOG);
   const local = catalog.providers?.find(
