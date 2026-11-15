@@ -412,8 +412,15 @@ export function ModeloWorkspace({
 
   return (
     // Too short for the header, the tabs and the form's least room, the
-    // workspace scrolls as a whole rather than clipping what does not fit.
-    <div className="@container flex h-full min-h-0 flex-col overflow-y-auto bg-background">
+    // workspace scrolls as a whole rather than clipping what does not fit;
+    // what the keyboard reaches is scrolled clear of the staged-edit bar
+    // held at its bottom.
+    <div
+      className={cn(
+        "@container flex h-full min-h-0 flex-col overflow-y-auto bg-background",
+        view === "form" && stagedCount > 0 && "scroll-pb-16",
+      )}
+    >
       <header className="flex flex-wrap items-center gap-x-8 gap-y-3 px-6 pt-3 pb-3">
         <div className="flex min-w-0 flex-col gap-1">
           <Button
