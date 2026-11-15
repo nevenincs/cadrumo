@@ -163,8 +163,9 @@ class ModeloWorkWizardAttemptExecutor:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
 
         # A blocked ledger is a refusal with nothing written, so it is checked
-        # before publication declares that records may change.
-        await await_cancellation_complete(
+        # before publication declares that records may change. The calculation
+        # reads the profile this preflight checked rather than decrypting it again.
+        profile = await await_cancellation_complete(
             asyncio.to_thread(
                 refuse_blocked_ledger_preflight,
                 prepared.work_unit.work_unit_id,
@@ -183,6 +184,7 @@ class ModeloWorkWizardAttemptExecutor:
                         calculate_prepared_modelo_work,
                         prepared,
                         actor=actor,
+                        profile=profile,
                     )
                 except ModeloWorkMissingInputError as error:
                     missing_error = error
