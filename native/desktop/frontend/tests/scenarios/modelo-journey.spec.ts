@@ -1,11 +1,11 @@
 import { expect, test, type Page } from "@playwright/test";
+import type { ModeloWorkbenchFormProjectionV1 } from "../../src/shell/modeloContract/modeloWorkForm";
 import type {
   ModeloFormJourney,
   ModeloFormNextStep,
   ModeloFormStepState,
   ModeloFormVerdict,
-  ModeloWorkbenchFormProjectionV1,
-} from "../../src/shell/modeloContract/modeloWorkForm";
+} from "../../src/shell/modeloContract/modeloWork";
 import type { ModeloPort } from "../../src/shell/modelo";
 import { label } from "../support/strings";
 import {
