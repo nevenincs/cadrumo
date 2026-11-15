@@ -661,8 +661,6 @@ class FilingProducerKey(StrEnum):
     M840_ADMINISTRACION_CODIGO = "m840.administracion_codigo"
     #: Apart. I: Datos ident. del sujeto pasivo. Municipio
     M840_SUJETO_PASIVO_MUNICIPIO = "m840.sujeto_pasivo.municipio"
-    #: Apart. III: Representante. Municipio.
-    M840_REPRESENTANTE_MUNICIPIO = "m840.representante.municipio"
     #: Apart. IV: Datos de la act. Provincial (provincia) Tabla
     M840_ACTIVIDAD_PROVINCIA_CODIGO = "m840.actividad.provincia_codigo"
     #: Apart. IV: Datos de la act. Municipio
