@@ -465,6 +465,8 @@ def test_m369_exterior_period_calculate_review_export_e2e(
         result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=_calculation_ports_311,
+            # Calculated as the operator's executor does: the caller's own entries, if any, are recorded as theirs.
+            record_operator_layer=True,
             # The no-activity flag is consumed arithmetically by the current
             # formula; the declarant's text fields remain on the string channel.
             binding_values={
@@ -591,6 +593,8 @@ def test_m369_exterior_quarter_with_a_rate_change_files_one_row_per_rate(
         result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=calculation_ports,
+            # Calculated as the operator's executor does: the caller's own entries, if any, are recorded as theirs.
+            record_operator_layer=True,
             binding_values={
                 "modelo-369-exterior-fichero.2-ejercicio-y-periodo-declaracion-sin-actividad": Decimal("0"),
             },
@@ -782,6 +786,8 @@ def test_m369_live_path_folds_oss_invoices_not_no_live_source_advisory(
             result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 work_unit.work_unit_id,
                 ports=_calculation_ports_488,
+                # Calculated as the operator's executor does: the caller's own entries, if any, are recorded as theirs.
+                record_operator_layer=True,
                 clock=T1,
             )
 
@@ -944,6 +950,8 @@ def test_m369_unresolved_oss_source_refuses_verification_and_export(
         result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=_calculation_ports_638,
+            # Calculated as the operator's executor does: the caller's own entries, if any, are recorded as theirs.
+            record_operator_layer=True,
             clock=T1,
         )
 
@@ -1050,6 +1058,8 @@ def test_m369_unrouted_observation_refuses_verification_and_export(
         result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=_calculation_ports_744,
+            # Calculated as the operator's executor does: the caller's own entries, if any, are recorded as theirs.
+            record_operator_layer=True,
             clock=T1,
         )
 
@@ -1187,6 +1197,8 @@ def test_m369_zero_valued_oss_invoice_remains_verifiable(
         result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=_calculation_ports_878,
+            # Calculated as the operator's executor does: the caller's own entries, if any, are recorded as theirs.
+            record_operator_layer=True,
             clock=T1,
         )
 
