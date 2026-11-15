@@ -1,6 +1,9 @@
 //! Provider administration through the dedicated service's authenticated endpoint.
 pub(crate) mod wire;
-use crate::{agent::AgentHost, shell::sign_in::wire::Outcome};
+use crate::{
+    agent::{AgentHost, supervisor::AdminWait},
+    shell::sign_in::wire::Outcome,
+};
 use cadrumo_application::diagnostics::{
     Diagnostics,
     desktop::{
@@ -183,15 +186,36 @@ pub(crate) fn read_status(
     }
     unreachable!("the last attempt returns its result")
 }
+/// Settings are read and changed only through an admitted admin endpoint. The
+/// window asks for them as soon as the service starts, and admission follows
+/// some seconds later, so a call made meanwhile waits for it instead of failing
+/// the settings until the window asks again. A service still starting when the
+/// bound elapses answers the busy word the window retries; a service that is
+/// not starting reaches `call`, which refuses as it always has.
+pub(crate) fn when_admitted<T>(
+    wait: impl FnOnce() -> AdminWait,
+    call: impl FnOnce() -> Result<T, CommandFailure>,
+) -> Result<T, CommandFailure> {
+    match wait() {
+        AdminWait::StillStarting => Err(Refusal::Busy.into()),
+        AdminWait::Admitted | AdminWait::NotStarting => call(),
+    }
+}
+
 async fn execute(
     host: &State<'_, Arc<AgentHost>>,
     request: Value,
     secret: Option<Zeroizing<Vec<u8>>>,
 ) -> Result<Outcome, CommandFailure> {
     let host = host.inner().clone();
-    let result = tauri::async_runtime::spawn_blocking(move || host.administer(request, secret))
-        .await
-        .map_err(|_| invalid().with_reason("provider_settings_task_failed"))??;
+    let result = tauri::async_runtime::spawn_blocking(move || {
+        when_admitted(
+            || host.await_admin(),
+            || Ok(host.administer(request, secret)?),
+        )
+    })
+    .await
+    .map_err(|_| invalid().with_reason("provider_settings_task_failed"))??;
     Ok(outcome(result))
 }
 pub fn commands<R: tauri::Runtime>() -> crate::app::Commands<R> {
@@ -215,9 +239,14 @@ pub async fn provider_settings_status(
     let read = tauri::async_runtime::spawn_blocking({
         let host = host.clone();
         move || {
-            read_status(
-                || host.administer(json!({"action":"status"}), None),
-                Duration::from_millis(250),
+            when_admitted(
+                || host.await_admin(),
+                || {
+                    read_status(
+                        || host.administer(json!({"action":"status"}), None),
+                        Duration::from_millis(250),
+                    )
+                },
             )
         }
     })
