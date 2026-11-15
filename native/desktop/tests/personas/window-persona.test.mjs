@@ -1761,13 +1761,23 @@ async function openWork(row) {
  * not applicable (suppressed, with the words the product served), or neither.
  * The calendar keys an obligation by modelo and period.
  */
-function pageCalendar(modelo, period) {
+function pageCalendar(modelo, period, year) {
   const norm = (text) => (text ?? "").replace(/\s+/g, " ").trim();
-  const key = `${modelo}:${period}`;
-  const owed = document.querySelector(`[data-entry="${CSS.escape(key)}"]`);
-  const apart = document.querySelector(
-    `[data-suppressed="${CSS.escape(key)}"]`,
-  );
+  // The window keys an entry by the served modelo and period; some modelos
+  // (Modelo 202) serve the period with its year ("<year> 2P"), others without.
+  const keys = [`${modelo}:${period}`, `${modelo}:${year} ${period}`];
+  const first = (attribute) =>
+    keys
+      .map((key) =>
+        document.querySelector(`[${attribute}="${CSS.escape(key)}"]`),
+      )
+      .find(Boolean) ?? null;
+  const owed = first("data-entry");
+  const apart = first("data-suppressed");
+  const key =
+    owed?.getAttribute("data-entry") ??
+    apart?.getAttribute("data-suppressed") ??
+    keys[0];
   return {
     key,
     owed: !!owed,
@@ -1913,7 +1923,7 @@ async function readCalendarApplicability(row) {
   if ((await exec(pageRailPressed, "calendar")) !== "true")
     await clickSelector('[data-rail="calendar"]');
   const presented = async () => {
-    const read = await exec(pageCalendar, row.modelo, row.period);
+    const read = await exec(pageCalendar, row.modelo, row.period, row.year);
     return read.owed || read.suppressed ? read : null;
   };
   const control = (await exec(pageCalendarYear)).present;
@@ -1937,7 +1947,8 @@ async function readCalendarApplicability(row) {
     });
     if (shown) break;
   }
-  const read = shown ?? (await exec(pageCalendar, row.modelo, row.period));
+  const read =
+    shown ?? (await exec(pageCalendar, row.modelo, row.period, row.year));
   if (looked.length > 0) log("calendar-years", { looked });
   await exec(pageCalendarYearCurrent);
   log("calendar-reads", {
