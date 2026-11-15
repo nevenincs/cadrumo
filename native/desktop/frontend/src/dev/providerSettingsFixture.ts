@@ -189,6 +189,11 @@ export type ProviderSignInFixtureControls = {
   /** The current attempt succeeds; `signedIn` also leaves the lane signed
    * in, as the next settings read reports it. */
   succeedCurrentAttempt: (signedIn?: boolean) => void;
+  /** The current attempt, still active, is reported with `detail` beside its
+   * event from the next status read on, as a host may while it works. */
+  noteCurrentAttempt: (detail: ProviderSignInFixtureDetail) => void;
+  /** The next cancel is answered with `detail` beside its still-active event. */
+  answerNextCancelWith: (detail: ProviderSignInFixtureDetail) => void;
 };
 
 // React StrictMode may evaluate the scenario host factory twice in dev mode.
@@ -223,6 +228,7 @@ let completeDeferredOpenExternal: ((fail: boolean) => void) | null = null;
 let fixtureAttemptNumber = 0;
 let fixtureAttempt: ProviderSignInSnapshot | null = null;
 let fixtureCancelRequestedFor: string | null = null;
+let fixtureCancelDetail: ProviderSignInFixtureDetail | null = null;
 let rejectNextSettingsRead = false;
 let fixtureSignInMethods: readonly ProviderSignInMethod[] = [
   "browser",
@@ -317,6 +323,7 @@ export function providerSettingsFixture({
   fixtureAttemptNumber = 0;
   fixtureAttempt = null;
   fixtureCancelRequestedFor = null;
+  fixtureCancelDetail = null;
   rejectNextSettingsRead = false;
   failNextStatus = null;
   fixtureSignInCalls = [];
@@ -351,11 +358,17 @@ export function providerSettingsFixture({
   };
 
   const AUTH_URL = "https://provider.example/sign-in";
-  const cancelReply = (target: ProviderSignInSnapshot) => ({
-    attempt_id: target.attempt_id,
-    provider: target.provider,
-    event: "browser_action" as const,
-  });
+  const cancelReply = (target: ProviderSignInSnapshot) => {
+    const detail = fixtureCancelDetail ?? {};
+    fixtureCancelDetail = null;
+    return {
+      attempt_id: target.attempt_id,
+      provider: target.provider,
+      event: "browser_action" as const,
+      // What a host sends beside the event; the window checks it.
+      ...(detail as Partial<ProviderSignInSnapshot>),
+    };
+  };
   const signInControls: ProviderSignInFixtureControls = {
     failNextSettingsRead() {
       rejectNextSettingsRead = true;
@@ -452,6 +465,16 @@ export function providerSettingsFixture({
           reason: null,
         });
       say("providerSignInAttemptSucceeded");
+    },
+    noteCurrentAttempt(detail) {
+      if (!fixtureAttempt) return;
+      fixtureAttempt = {
+        ...fixtureAttempt,
+        ...(detail as Partial<ProviderSignInSnapshot>),
+      };
+    },
+    answerNextCancelWith(detail) {
+      fixtureCancelDetail = detail;
     },
   };
   const makeAttempt = async (

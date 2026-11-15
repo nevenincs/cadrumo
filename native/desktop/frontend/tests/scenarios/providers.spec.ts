@@ -571,6 +571,29 @@ test("a lane with an app says in plain words where it stands, and the API lane s
   await expect(settings(target)).not.toContainText("Reading documents");
 });
 
+test("each lane row states its transport and its auth kind as served", async ({
+  page: target,
+}) => {
+  await open(target);
+  await openSettings(target);
+  await expect(settings(target).locator("li[data-lane]")).toHaveCount(
+    SERVED_LANES.length,
+  );
+  for (const declared of SERVED_LANES) {
+    const row = lane(target, declared.id);
+    await expect(row, declared.id).toHaveAttribute(
+      "data-transport",
+      declared.transport,
+    );
+    await expect(row, declared.id).toHaveAttribute(
+      "data-auth-kind",
+      declared.auth_kind,
+    );
+  }
+  const kinds = new Set(SERVED_LANES.map((declared) => declared.auth_kind));
+  expect(kinds.size).toBeGreaterThan(1);
+});
+
 test("a key is saved from the agent's settings and never kept anywhere", async ({
   page: target,
 }) => {
