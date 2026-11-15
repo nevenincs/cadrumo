@@ -359,11 +359,21 @@ test("F6 reaches the calendar where the documentation would be", async ({
   await target.keyboard.press("Shift+F6");
   await expect(page).toBeFocused();
   // Inside the page the keyboard reaches its controls in order: the choice
-  // of face, which is one stop, then the way back to today, then the fresh
+  // of face, which is one stop, then the two arrows that step the filing
+  // year (one stop each, the way back to the rolling view appearing only
+  // once a year is chosen), then the way back to today, then the fresh
   // read, then the obligations.
   await target.keyboard.press("Tab");
   await expect(
     page.getByRole("radio", { name: label("desktop.calendar.view_months") }),
+  ).toBeFocused();
+  await target.keyboard.press("Tab");
+  await expect(
+    page.getByRole("button", { name: label("desktop.calendar.year_previous") }),
+  ).toBeFocused();
+  await target.keyboard.press("Tab");
+  await expect(
+    page.getByRole("button", { name: label("desktop.calendar.year_next") }),
   ).toBeFocused();
   await target.keyboard.press("Tab");
   await expect(page.locator(".calendar-to-today")).toBeFocused();
@@ -396,7 +406,7 @@ test("F6 reaches the calendar where the documentation would be", async ({
   await expect(first).toHaveAttribute("aria-pressed", "true");
   // The arrow keys move the choice of face, and the list comes with what
   // was chosen among the months marked in it.
-  for (let back = 0; back < 5; back++) await target.keyboard.press("Shift+Tab");
+  for (let back = 0; back < 7; back++) await target.keyboard.press("Shift+Tab");
   await target.keyboard.press("ArrowRight");
   await expect(
     page.getByRole("radio", { name: label("desktop.calendar.view_list") }),
