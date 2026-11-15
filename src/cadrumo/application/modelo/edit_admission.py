@@ -18,6 +18,7 @@ Core types: :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevi
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Annotated, Final, Literal
 
@@ -417,6 +418,48 @@ def _offered_attestable_binding_ids(
     ) | set_aside_declaring_binding_ids(snapshot.revision)
 
 
+@dataclass(frozen=True, slots=True)
+class ModeloEditGround:
+    """What an edit of one declaration rests on: its active work unit, its head and its calculation-grade snapshot."""
+
+    work_unit: WorkUnit
+    head: CalculationRevision | None
+    snapshot: RegistrySnapshot
+
+
+def modelo_edit_ground(
+    *,
+    work_unit_id: str,
+    work_catalogue: WorkUnitCatalogue,
+    calculation_catalogue: CalculationRevisionCatalogue,
+    operation: PinnedAuthorityOperation,
+) -> ModeloEditGround | ModeloEditRefusedV1:
+    """Decide whether the declaration can be worked on at all, issuing no baseline.
+
+    These are the admission's own first checks, in its order: an active work
+    unit, a current head of its own, a registry revision reaching calculation
+    grade, and that revision being the one the unit was worked under. A read
+    that only needs to know whether the declaration can be worked out applies
+    the same checks here, so it reaches the refusal the admission would.
+    """
+    work_unit = _active_work_unit(work_unit_id, work_catalogue)
+    if isinstance(work_unit, ModeloEditRefusedV1):
+        return work_unit
+    head = _current_edit_calculation_head(work_unit, calculation_catalogue, work_unit.current_calculation_revision_id)
+    if isinstance(head, ModeloEditRefusedV1):
+        return head
+    snapshot = _calculation_grade_snapshot(work_unit, operation=operation)
+    if isinstance(snapshot, ModeloEditRefusedV1):
+        return snapshot
+    if snapshot.revision.id != work_unit.revision_id:
+        return _refused(
+            ModeloEditRefusalCode.REGISTRY_SCHEMA_CONFLICT,
+            "refresh the selected work unit against its pinned authority revision",
+            "law_selected_revision_id",
+        )
+    return ModeloEditGround(work_unit=work_unit, head=head, snapshot=snapshot)
+
+
 def admit_modelo_edit_baseline(
     *,
     work_unit_id: str,
@@ -442,22 +485,16 @@ def admit_modelo_edit_baseline(
     supplies the ``observation_repository`` and ``filing_catalogue`` that show
     the application holds no source for the carry; without them none is offered.
     """
-    work_unit = _active_work_unit(work_unit_id, work_catalogue)
-    if isinstance(work_unit, ModeloEditRefusedV1):
-        return work_unit
+    ground = modelo_edit_ground(
+        work_unit_id=work_unit_id,
+        work_catalogue=work_catalogue,
+        calculation_catalogue=calculation_catalogue,
+        operation=operation,
+    )
+    if isinstance(ground, ModeloEditRefusedV1):
+        return ground
+    work_unit, head, snapshot = ground.work_unit, ground.head, ground.snapshot
     current_revision_id = work_unit.current_calculation_revision_id
-    head = _current_edit_calculation_head(work_unit, calculation_catalogue, current_revision_id)
-    if isinstance(head, ModeloEditRefusedV1):
-        return head
-    snapshot = _calculation_grade_snapshot(work_unit, operation=operation)
-    if isinstance(snapshot, ModeloEditRefusedV1):
-        return snapshot
-    if snapshot.revision.id != work_unit.revision_id:
-        return _refused(
-            ModeloEditRefusalCode.REGISTRY_SCHEMA_CONFLICT,
-            "refresh the selected work unit against its pinned authority revision",
-            "law_selected_revision_id",
-        )
     compatibility = _operation_compatibility(operation_contracts)
     if isinstance(compatibility, ModeloEditRefusedV1):
         return compatibility
@@ -613,9 +650,11 @@ def renew_modelo_edit_baseline(
 __all__ = [
     "MODELO_EDIT_APPLY_DEFINITION_ID",
     "RESPONSIBLE_OWNER",
+    "ModeloEditGround",
     "ModeloEditRenewalResultV1",
     "ModeloEditRenewedV1",
     "admit_modelo_edit_baseline",
+    "modelo_edit_ground",
     "permitted_binding_entry",
     "renew_modelo_edit_baseline",
     "row_statement_entry",

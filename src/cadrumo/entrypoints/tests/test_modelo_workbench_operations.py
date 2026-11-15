@@ -107,6 +107,7 @@ from ...application.operations.models import OperationIdentity, OperationRequest
 from ...application.operations.owner import OperationExecutorContext
 from ...application.operations.tests.financial_operand_delivery import deliver_financial_operand
 from ...application.operations.typed_financial_operand_context import BoundTypedFinancialOperandAccess
+from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.casilla_id import validated_casilla_id
 from ...core.errors.error_codes import resolve_error_message
 from ...core.external_constants import OutputLanguage
@@ -114,7 +115,7 @@ from ...core.hashing import content_hash_hex
 from ...core.i18n.render import tr
 from ...core.operations import OperationEffect
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_selected_for
 from ...domain.modelos.calculation_repository import CalculationRevisionPersistenceError
 from ...domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from ...domain.modelos.work_unit import WorkUnitCatalogue
@@ -127,6 +128,7 @@ from .production_operation_registry import production_operation_registry
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _YEAR = filing_year_envelope().horizon
+_ANNUAL = "0A"
 
 _SET_06 = ModeloScalarEditIntentV1(
     address=ModeloEditScalarAddressV1(casilla_id=validated_casilla_id("06")),
@@ -911,31 +913,68 @@ def test_a_renewed_baseline_keeps_offering_the_statement_while_nothing_is_held(t
     )
 
 
+def _form_and_filing_state(
+    work: SeededOperatorWork,
+) -> tuple[ModeloWorkbenchFormProjectionV1, ModeloWorkFilingStateProjectionV1]:
+    """Run the form read and the filing-state read of the same stored state as registered operations."""
+    contracts = production_operation_registry().public_contract_set
+    form, _ = _run(
+        work,
+        ModeloWorkbenchFormExecutor(ports_factory=build_modelo_workbench_read_ports, contracts=lambda: contracts),
+        MODELO_WORK_FORM_OPERATION_DEFINITION_ID,
+        ModeloWorkbenchFormRequest(
+            profile_id=_profile_id(work), work_unit_id=work.work_unit_id, output_language=OutputLanguage.ES
+        ),
+        ModeloWorkbenchFormProjectionV1,
+    )
+    state, _ = _run(
+        work,
+        ModeloWorkFilingStateExecutor(ports_factory=build_modelo_workbench_read_ports),
+        MODELO_WORK_FILING_STATE_OPERATION_DEFINITION_ID,
+        ModeloWorkFilingStateRequest(
+            profile_id=_profile_id(work), work_unit_id=work.work_unit_id, output_language=OutputLanguage.ES
+        ),
+        ModeloWorkFilingStateProjectionV1,
+    )
+    return form, state
+
+
+def test_the_filing_state_of_an_uncalculated_declaration_offers_the_form_reads_next_step(tmp_path: Path) -> None:
+    with seeded_operator_work(tmp_path) as work:
+        form, state = _form_and_filing_state(work)
+
+    assert form.admitted_baseline is not None
+    assert state.calculation_revision_id is None
+    assert not state.filed and state.edit_closure is None and not state.rules_incomplete
+    assert state.next_step is not None and state.next_step.action is form.form.journey.next_step.action
+    assert state == filing_state_of_form(form)
+
+
+_APPLICABILITY_ONLY_MODELO = "345"
+"""A modelo whose newest edition the registry holds at applicability grade only, so nothing can be worked out."""
+
+
+def test_the_filing_state_withholds_the_next_step_where_the_rules_stop_short_of_calculation(tmp_path: Path) -> None:
+    grade = revision_selected_for(_APPLICABILITY_ONLY_MODELO, _YEAR, _ANNUAL).effective_authority_grade
+    assert grade is RegistryAuthorityGrade.APPLICABILITY, "the revision reaches calculation, so this proves nothing"
+    with seeded_operator_work(
+        tmp_path, modelo=_APPLICABILITY_ONLY_MODELO, filing_year=_YEAR, period_code=_ANNUAL
+    ) as work:
+        form, state = _form_and_filing_state(work)
+
+    assert form.rules_incomplete and form.next_step is None
+    assert state.rules_incomplete and state.next_step is None
+    assert state == filing_state_of_form(form)
+
+
 def test_the_filing_state_read_states_the_form_reads_filing_fields_and_admits_no_edit(tmp_path: Path) -> None:
     with seeded_operator_work(tmp_path) as work:
         work.recalculate()
-        contracts = production_operation_registry().public_contract_set
-        form, _ = _run(
-            work,
-            ModeloWorkbenchFormExecutor(ports_factory=build_modelo_workbench_read_ports, contracts=lambda: contracts),
-            MODELO_WORK_FORM_OPERATION_DEFINITION_ID,
-            ModeloWorkbenchFormRequest(
-                profile_id=_profile_id(work), work_unit_id=work.work_unit_id, output_language=OutputLanguage.ES
-            ),
-            ModeloWorkbenchFormProjectionV1,
-        )
-        state, _ = _run(
-            work,
-            ModeloWorkFilingStateExecutor(ports_factory=build_modelo_workbench_read_ports),
-            MODELO_WORK_FILING_STATE_OPERATION_DEFINITION_ID,
-            ModeloWorkFilingStateRequest(
-                profile_id=_profile_id(work), work_unit_id=work.work_unit_id, output_language=OutputLanguage.ES
-            ),
-            ModeloWorkFilingStateProjectionV1,
-        )
+        form, state = _form_and_filing_state(work)
 
     assert form.admitted_baseline is not None
     assert state.calculation_revision_id is not None
+    assert state.next_step is not None and state.journey == form.form.journey
     assert state == filing_state_of_form(form)
     with pytest.raises(ValidationError, match="granting verification report requires its calculation"):
         ModeloWorkFilingStateProjectionV1.model_validate_json(

@@ -597,8 +597,10 @@ class ModeloWorkFilingStateProjectionV1(BaseModel):
     """Public exact-profile envelope around what exporting and recording one declaration's filing rest on.
 
     Each field is the one :class:`ModeloWorkbenchFormProjectionV1` carries for
-    the same stored state: ``modelo``, ``period`` and ``filing`` are its form's,
-    ``header`` its header's result, latest file and export hold.
+    the same stored state: ``modelo``, ``period``, ``filing`` and
+    ``edit_closure`` are its form's, ``filed`` and ``journey`` its load's,
+    ``header`` its header's result, latest file and export hold, and
+    ``rules_incomplete`` and ``next_step`` its own.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -610,6 +612,16 @@ class ModeloWorkFilingStateProjectionV1(BaseModel):
     period: PublicPeriod
     #: The filing recorded in Cadrumo; ``None`` while the declaration is not recorded as filed.
     filing: ModeloFormFiling | None
+    #: Whether the declaration is recorded as filed.
+    filed: bool
+    #: Why the form no longer takes edits; ``None`` while it may still be edited.
+    edit_closure: ModeloFormEditClosure | None
+    #: Where the declaration stands on the filing journey.
+    journey: ModeloFormJourney
+    #: Whether the registry rules for the revision stop short of calculation grade, so nothing can be worked out.
+    rules_incomplete: bool
+    #: The one action the form offers next, ``None`` when the registry rules for the revision cannot calculate it.
+    next_step: ModeloFormNextStep | None
     header: ModeloFormFilingHeader
     calculation_revision_id: str | None
     verification_report_id: str | None
@@ -771,6 +783,11 @@ def _require_filing_state_roundtrip(
         (ModeloCode(projection.modelo), form.modelo),
         (projection.period.to_period(), form.period),
         (projection.filing, form.filing),
+        (projection.filed, read.load.filed),
+        (projection.edit_closure, form.edit_closure),
+        (projection.journey, read.load.journey),
+        (projection.rules_incomplete, read.rules_incomplete),
+        (projection.next_step, read.next_step),
         (projection.header, read.header),
         (projection.work_unit_id, form.work_unit_id),
         (projection.calculation_revision_id, read.calculation_revision_id),
@@ -799,6 +816,11 @@ def project_modelo_work_filing_state(
         modelo=str(form.modelo),
         period=PublicPeriod.from_period(form.period),
         filing=form.filing,
+        filed=read.load.filed,
+        edit_closure=form.edit_closure,
+        journey=read.load.journey,
+        rules_incomplete=read.rules_incomplete,
+        next_step=read.next_step,
         header=read.header,
         calculation_revision_id=read.calculation_revision_id,
         verification_report_id=read.verification_report_id,
