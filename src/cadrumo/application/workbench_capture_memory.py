@@ -13,10 +13,13 @@ journal record, and a record's definition never changes, so the memory keeps
 the last classification and the next capture brings it up to date from the
 records created or removed since instead of classifying every record again.
 
-One memory belongs to one authenticated session. It holds only projections
-the session already publishes and journal record identifiers, never a
-decrypted catalogue, and the composition that owns the session closes it on
-sign-out, handover or expiry.
+One memory belongs to one authenticated session. In addition to calendar
+projections and journal identifiers, it retains decrypted derived taxpayer
+form values in a public subtree, its strictly validated canonical inverse and
+an exact copied value key. It does not retain a repository catalogue, edit
+admission or an issued baseline. The form reader checks those afresh before
+lookup. The owning composition clears this private session memory on sign-out,
+lock, handover, expiry and shutdown.
 """
 
 from __future__ import annotations
@@ -30,6 +33,7 @@ from uuid import UUID
 
 if TYPE_CHECKING:
     from ..domain.calculations.registry.authority_artifact import AuthorityGenerationPin
+    from .modelo.workbench_projection_memory import FormProjectionPair
     from .overview.agenda import OverviewAgenda
     from .overview.calendar_models import OverviewCalendar
     from .user_profile.censal_readback import CensalHistoryRead
@@ -78,6 +82,11 @@ class WorkbenchMemoSlot[KeyT: Hashable, ValueT]:
         """Drop the stored result and store nothing further."""
         with self._lock:
             self._closed = True
+            self._entry = None
+
+    def clear(self) -> None:
+        """Discard a result without reopening a closed slot or ending its session."""
+        with self._lock:
             self._entry = None
 
 
@@ -163,11 +172,13 @@ class WorkbenchCaptureMemory:
         """Create the empty slots one session reuses."""
         self.calendar: WorkbenchMemoSlot[WorkbenchCalendarMemoKey, WorkbenchCalendarWork] = WorkbenchMemoSlot()
         self.census = WorkbenchCensusMemo()
+        self.form_projection: WorkbenchMemoSlot[Hashable, FormProjectionPair | None] = WorkbenchMemoSlot()
 
     def close(self) -> None:
         """Drop every stored result deterministically when the session ends."""
         self.calendar.close()
         self.census.close()
+        self.form_projection.close()
 
 
 class WorkbenchCaptureMemoryOwner:

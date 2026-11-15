@@ -21,6 +21,7 @@ from cadrumo.application.operator_actions.models import (
     ConditionEvidence,
     PreconditionVerdict,
 )
+from cadrumo.application.operator_actions.served_actions import served_action_fields
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation, resolve_login_target
 from cadrumo.application.workflow.abort import WorkflowAbortReason
 from cadrumo.application.workflow.persistence import list_runs, load_run, save_run
@@ -32,6 +33,7 @@ from cadrumo.application.workflow.run_models import (
     WorkflowStep,
 )
 from cadrumo.core.config import override_settings
+from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.operator_action_enums import (
     ActionArgumentStatus,
@@ -370,6 +372,8 @@ def _assert_json_runs_projection(run: WorkflowResult) -> None:
         "missing_argument_names": ["work_unit_id"],
         "conditionality": "requires_arguments",
         "no_recovery_outcome": None,
+        # The served words and routing of the offered action, in the language the CLI answers in.
+        **json.loads(json.dumps(served_action_fields("operator.modelo.work.calculate", OutputLanguage.ES))),
     }
 
 
