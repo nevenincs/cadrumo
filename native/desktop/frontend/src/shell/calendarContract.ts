@@ -405,9 +405,14 @@ export type OverviewCalendarRead = {
 
 /**
  * Full current calendar output without private input records.
+ *
+ * `support` carries the filing-year envelope the read was served under and
+ * where the requested range sits in it, so a range outside the envelope reads
+ * as unsupported rather than as a calendar with nothing due.
  */
 export type OverviewCalendarSnapshot = {
   range: OverviewCalendarRange;
+  support: OverviewCalendarSupport;
   evaluated_on: string;
   entries: OverviewCalendarEntrySnapshot[];
   generated_at: string;
@@ -421,6 +426,36 @@ export type OverviewCalendarSnapshot = {
   late_count: number | null;
   applicable_modelos_without_deadline: string[] | null;
 };
+
+/**
+ * The envelope a calendar read was served under, and the requested range's
+ * place in it.
+ *
+ * `floor`, `horizon` and `hard_ceiling` are the pinned authority's bounds as
+ * its catalogue resolves them; `hard_ceiling` is `None` when the envelope
+ * stays open above the horizon.
+ */
+export type OverviewCalendarSupport = {
+  floor: number;
+  horizon: number;
+  hard_ceiling: number | null;
+  state: OverviewCalendarSupportState;
+};
+
+/**
+ * How much of a requested calendar range the filing-year envelope serves.
+ *
+ * Attributes: SUPPORTED: Every calendar year is served, and no served filing
+ * year lies above the horizon. PROJECTED: Every calendar year is served, and
+ * some served filing year lies above the horizon, answered from the newest
+ * authored edition at calculation grade at most. PARTIAL: Some calendar years
+ * are served and others are outside the envelope; the unserved years carry no
+ * obligations, not an empty calendar. BELOW_FLOOR: The whole range lies below
+ * the envelope's floor. ABOVE_CEILING: The whole range lies above the
+ * envelope's declared hard ceiling.
+ */
+export type OverviewCalendarSupportState =
+  "supported" | "projected" | "partial" | "below_floor" | "above_ceiling";
 
 /**
  * One bound profile calendar and public locked-profile pointers.

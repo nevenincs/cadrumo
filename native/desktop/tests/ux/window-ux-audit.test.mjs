@@ -776,7 +776,25 @@ ux(
       // after its own settled write; a view change never triggers it, so the
       // check presses the header's own write and samples the read after it.
       const busyText = label("desktop.navigation.busy");
-      let head = await exec(pageHeaderStep, nextActionLabels(), busyText);
+      // Opening the form reads it; until that read lands the header offers no
+      // step, so the check waits for the header to name one before judging.
+      let head =
+        (await waitFor(
+          async () => {
+            const now = await exec(
+              pageHeaderStep,
+              nextActionLabels(),
+              busyText,
+            );
+            return now.action && !now.busy ? now : null;
+          },
+          {
+            timeout: 30_000,
+            what: "the header to offer its next step",
+            soft: true,
+            interval: 500,
+          },
+        )) ?? (await exec(pageHeaderStep, nextActionLabels(), busyText));
       // A fresh declaration asks to be filled first; the form's statements
       // answer it as a filer does, and the header then offers apply.
       if (head.action === "fill") {
@@ -1324,7 +1342,21 @@ async function auditScrollContainers(
   failures,
   wheelFailures,
 ) {
-  const found = await exec(pageScrollContainers, root);
+  // A page reached for the first time may still be drawing its scroller, so
+  // an empty answer is asked again until the page has drawn or the wait ends.
+  const found =
+    (await waitFor(
+      async () => {
+        const now = await exec(pageScrollContainers, root);
+        return now.found && now.containers.length > 0 ? now : null;
+      },
+      {
+        timeout: 15_000,
+        what: `a scroll container under ${root}`,
+        soft: true,
+        interval: 500,
+      },
+    )) ?? (await exec(pageScrollContainers, root));
   if (!found.found) {
     report(t, {
       probe: "scroll",
@@ -2478,33 +2510,36 @@ let exportRun = null;
 let postExportRead = null;
 
 /**
- * Wrap the page's host-call entry so each call records its command, the
- * definition it carries, and when it started and answered (epoch ms). Answers
- * whether the calls are now timed.
+ * Wrap the page's fetch, which carries every host call over Tauri's ipc
+ * protocol (its invoke is defined read-only), so each call records its
+ * command, the definition it carries, and when it started and answered
+ * (epoch ms). Answers whether the calls are now timed.
  */
 function pageTimeInvokes() {
-  const internals = window.__TAURI_INTERNALS__;
-  if (!internals || typeof internals.invoke !== "function") return false;
-  if (internals.__uxCalls) return true;
-  const original = internals.invoke.bind(internals);
+  if (window.__uxCalls) return window.fetch === window.__uxFetch;
+  const original = window.fetch;
+  if (typeof original !== "function") return false;
   const calls = [];
-  const now = () => performance.timeOrigin + performance.now();
-  try {
-    internals.invoke = (cmd, args, options) => {
-      const call = { cmd, definition: args?.definition ?? null, start: now() };
-      calls.push(call);
-      const answer = original(cmd, args, options);
-      Promise.resolve(answer).then(
-        () => Object.assign(call, { end: now(), ok: true }),
-        () => Object.assign(call, { end: now(), ok: false }),
-      );
-      return answer;
-    };
-  } catch {
-    return false;
-  }
-  internals.__uxCalls = calls;
-  return internals.invoke !== original;
+  const wrapped = function (input, init) {
+    const url = typeof input === "string" ? input : (input?.url ?? "");
+    const ipc = /^ipc:|\/\/ipc\.localhost\//.test(url);
+    if (!ipc) return original.call(this, input, init);
+    const cmd = decodeURIComponent(url.split("?")[0].split("/").pop() ?? "");
+    const body = typeof init?.body === "string" ? init.body : "";
+    const definition = /"definition"\s*:\s*"([^"]+)"/.exec(body)?.[1] ?? null;
+    const call = { cmd, definition, start: Date.now() };
+    calls.push(call);
+    const answer = original.call(this, input, init);
+    answer.then(
+      () => Object.assign(call, { end: Date.now(), ok: true }),
+      () => Object.assign(call, { end: Date.now(), ok: false }),
+    );
+    return answer;
+  };
+  window.fetch = wrapped;
+  window.__uxCalls = calls;
+  window.__uxFetch = wrapped;
+  return window.fetch === wrapped;
 }
 
 /** Whether the Modelo form is drawn with its boxes and the header is not busy. */
@@ -2561,6 +2596,7 @@ ux(
     const unwritten = [];
     for (const kind of FILING_FILE_KINDS) {
       let run;
+      const pressedAt = Date.now();
       try {
         run = await pressExport(kind);
       } catch (error) {
@@ -2590,7 +2626,7 @@ ux(
         unwritten.push(`${kind}: no file within ${EXPORT_WAIT_MS} ms`);
         break;
       }
-      exportRun = { kind, tookMs: run.tookMs, at: Date.now() };
+      exportRun = { kind, tookMs: run.tookMs, at: Date.now(), pressedAt };
       if (!run.secondPress.attempted || run.secondPress.buttonFound === false)
         unmeasured(
           t,
@@ -2688,11 +2724,11 @@ ux(
     // The re-read the step waits for: the first work-form read the runtime
     // settled after the export's own settlement.
     const operations = settledOperations();
-    const exported = operations
-      .filter(
-        (op) => op.definition === "modelo.export" && op.at <= exportRun.at,
-      )
-      .at(-1);
+    // The file can appear before the runtime logs the export's settlement, so
+    // the settlement is the first one after the press, not before the file.
+    const exported = operations.find(
+      (op) => op.definition === "modelo.export" && op.at >= exportRun.pressedAt,
+    );
     const reread = exported
       ? operations.find(
           (op) => op.definition === "modelo.work.form" && op.at > exported.at,
@@ -2808,7 +2844,7 @@ ux(
       : null;
     await sleep(3000);
     const calls = timed
-      ? ((await exec(() => window.__TAURI_INTERNALS__?.__uxCalls ?? [])) ?? [])
+      ? ((await exec(() => window.__uxCalls ?? [])) ?? [])
           .filter((call) => call.start >= pressed)
           .map((call) => ({
             cmd: call.cmd,
