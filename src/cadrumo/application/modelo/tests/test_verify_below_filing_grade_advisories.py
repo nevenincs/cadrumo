@@ -28,7 +28,6 @@ from ....domain.calculations.registry.schema_verification import (
 from ....domain.calculations.registry.tests.authored_editions import (
     filing_grade_exercises,
     filing_year_envelope,
-    newest_authored_edition,
 )
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....domain.modelos.calculation_revision import (
@@ -153,13 +152,19 @@ def _predicate(
 
 
 def _below_filing_m200(operation: PinnedAuthorityOperation) -> tuple[WorkUnit, RegistryAuthorityGrade]:
-    """Return the newest Modelo 200 edition and its grade, which must be below filing grade."""
-    work_unit = _work_unit(operation, _M200, newest_authored_edition(_M200), _ANNUAL)
-    grade = operation.reachable_authority_grade(
-        _M200, filing_year=work_unit.filing_year, period=work_unit.period.registry_token
-    )
-    assert grade is not RegistryAuthorityGrade.FILING, "precondition: the edition under test must be below filing grade"
-    return work_unit, grade
+    """Return the newest envelope year whose Modelo 200 edition is below filing grade and declares the advisory.
+
+    Editions rise to filing grade as their evidence lands, so the year is read from the authority, never fixed.
+    """
+    for year in sorted(filing_year_envelope().years, reverse=True):
+        grade = operation.reachable_authority_grade(_M200, filing_year=year, period=_ANNUAL)
+        if grade is RegistryAuthorityGrade.FILING:
+            continue
+        work_unit = _work_unit(operation, _M200, year, _ANNUAL)
+        revision = operation.revision(work_unit.modelo, work_unit.revision_id)
+        if any(predicate.predicate_id == _UNDER_DECLARATION for predicate in revision.verification_predicates):
+            return work_unit, grade
+    raise AssertionError("precondition: a Modelo 200 edition below filing grade declares the advisory under test")
 
 
 def _under_declaration_values(predicate: VerificationPredicateDefinition) -> dict[CasillaId, Decimal]:
