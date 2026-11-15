@@ -1506,13 +1506,15 @@ async function readFigures() {
     // viewport, and pixel steps can pass a section before it draws.
     for (const id of (await exec(pageSections)) ?? []) {
       await exec(pageShowSection, id);
-      await pause(150);
+      await pause(80);
       await collect();
     }
     await exec(pageScroll, "top");
+    // The scroll pass is the backstop for boxes the section pass did not
+    // draw; three still steps in a row mean the page's end was reached.
     let atEnd = 0;
-    for (let step = 0; step < 400 && atEnd < 2; step += 1) {
-      await pause(250);
+    for (let step = 0; step < 400 && atEnd < 3; step += 1) {
+      await pause(120);
       for (const box of (await exec(pageBoxes)) ?? [])
         if (!seen.has(box.key)) seen.set(box.key, box);
       const where = await exec(pageScroll, "down");
@@ -1531,7 +1533,34 @@ async function readFigures() {
       index,
     );
     log("form-tab", { index, chosen });
-    await pause(700);
+    // The page is read once its tab is selected and the panel drew, not after
+    // a fixed wait.
+    const waitStarted = Date.now();
+    await waitFor(
+      async () =>
+        (await exec(
+          (scope, at) =>
+            [
+              ...(document
+                .querySelector(scope)
+                ?.querySelectorAll('[role="tab"]') ?? []),
+            ]
+              .filter((tab) => tab.getClientRects().length > 0)
+              [at]?.getAttribute("aria-selected") === "true",
+          tablist("desktop.modelo.form.pages"),
+          index,
+        ))
+          ? true
+          : null,
+      {
+        timeout: 5_000,
+        what: `form page ${index} to be selected`,
+        soft: true,
+        interval: 100,
+      },
+    );
+    slept += Date.now() - waitStarted;
+    await pause(150);
     await readPage(pages[index]);
   }
   log("form-read-timing", {
