@@ -45,6 +45,11 @@ import type { CoverageAdviceReason } from "../shell/calendarContract";
 import type { CalendarEntry, CalendarEvent } from "../shell/views";
 import type { UserProfile } from "../shell/userProfile";
 import { CalendarMonths } from "./calendar/CalendarMonths";
+import {
+  CalendarSupportNote,
+  CalendarUnsupported,
+  outsideEnvelope,
+} from "./calendar/CalendarSupport";
 import { CalendarSuppressed } from "./calendar/CalendarSuppressed";
 import { CalendarYear } from "./calendar/CalendarYear";
 import { EVENT_MARK, STATE_MARK, STATE_TONE } from "./calendar/calendarMarks";
@@ -727,7 +732,11 @@ export function FilingCalendarView({
         ] as const,
     ).filter(([, count]) => count > 0);
     const short = dateFormats(locale).short;
-    const nothing = months.length === 0;
+    const { support } = state.calendar;
+    // A range wholly outside the supported years has no rows to draw, and
+    // is said so rather than drawn as an empty calendar.
+    const unsupported = outsideEnvelope(support);
+    const nothing = months.length === 0 || unsupported;
     const observedKinds = (["filing", "message"] as const).filter((kind) =>
       state.calendar.events.some((event) => event.event_type === kind),
     );
@@ -942,6 +951,7 @@ export function FilingCalendarView({
                   <CalendarYear
                     year={year}
                     failed={yearFailed}
+                    support={support}
                     onStep={onYearStep}
                     onCurrent={onYearCurrent}
                   />
@@ -982,6 +992,7 @@ export function FilingCalendarView({
               </div>
             )}
           </div>
+          <CalendarSupportNote support={support} />
           {unknownWords.length > 0 && (
             <Alert
               tone="warning"
@@ -1000,7 +1011,9 @@ export function FilingCalendarView({
             onNavigate={onNavigate}
             className="mx-4 mt-3 w-auto"
           />
-          {nothing ? (
+          {unsupported && support ? (
+            <CalendarUnsupported support={support} />
+          ) : nothing ? (
             <EmptyState
               role="status"
               icon="calendar"

@@ -1411,6 +1411,16 @@ desktop:
       filed: Filed
       late: Late
       unknown: Unknown
+    support_above_ceiling: Years after {ceiling} are not supported, so this range
+      shows no dates. That does not mean nothing will be due.
+    support_below_floor: Years before {floor} are not supported, so this range shows
+      no dates. That does not mean nothing was due.
+    support_partial: Part of this range is outside the supported years, which start
+      at {floor}. That part shows no dates, which does not mean nothing is due.
+    support_partial_bounded: Part of this range is outside the supported years, {floor}
+      to {ceiling}. That part shows no dates, which does not mean nothing is due.
+    support_projected: Dates for years after {horizon} are projected from the newest
+      edition of the rules.
     suppressed: Not in your calendar
     title: Filing calendar
     to_day: Go to {date}

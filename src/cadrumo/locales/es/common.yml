@@ -1475,6 +1475,19 @@ desktop:
       filed: Presentado
       late: Fuera de plazo
       unknown: Desconocido
+    support_above_ceiling: Los años posteriores a {ceiling} no están admitidos, así
+      que este intervalo no muestra fechas. Eso no significa que no vaya a haber nada
+      pendiente.
+    support_below_floor: Los años anteriores a {floor} no están admitidos, así que
+      este intervalo no muestra fechas. Eso no significa que no hubiera nada pendiente.
+    support_partial: Una parte de este intervalo queda fuera de los años admitidos,
+      que empiezan en {floor}. Esa parte no muestra fechas, y eso no significa que
+      no haya nada pendiente.
+    support_partial_bounded: Una parte de este intervalo queda fuera de los años admitidos,
+      de {floor} a {ceiling}. Esa parte no muestra fechas, y eso no significa que
+      no haya nada pendiente.
+    support_projected: Las fechas de los años posteriores a {horizon} se proyectan
+      a partir de la edición más reciente de las normas.
     suppressed: Fuera de tu calendario
     title: Calendario de presentaciones
     to_day: Ir al {date}
