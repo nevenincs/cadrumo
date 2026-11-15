@@ -17,7 +17,7 @@ pub(crate) mod runner;
 mod session;
 mod sse;
 mod stream;
-mod supervisor;
+pub(crate) mod supervisor;
 mod upload;
 
 use crate::{
@@ -294,6 +294,11 @@ impl AgentHost {
             self.require_person()?;
         }
         self.supervisor.administer(request, secret)
+    }
+
+    /// Waits while the service is starting for its admin endpoint; see the supervisor.
+    pub(crate) fn await_admin(&self) -> supervisor::AdminWait {
+        self.supervisor.await_admin()
     }
 
     pub(crate) fn admin_generation(&self) -> Result<u64> {

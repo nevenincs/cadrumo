@@ -29,7 +29,7 @@ use cadrumo_application::diagnostics::{Diagnostics, HostStage};
 use cadrumo_application::error::application::{ApplicationError, ErrorCode, Operation, Result};
 use std::fmt::Write as _;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Condvar, Mutex};
 use std::time::{Duration, Instant};
 use tauri::ipc::Channel;
 use tokio::sync::{Notify, mpsc};
@@ -83,6 +83,9 @@ struct Shared {
     ready: Mutex<Option<Ready>>,
     gateway: Mutex<Option<Gateway>>,
     admin: Mutex<Option<super::admin::Endpoint>>,
+    /// Signalled, under `admin`, whenever the endpoint, the status or the close
+    /// changes, so administration waiting on a starting service looks again.
+    admitted: Condvar,
     running: Mutex<Option<Running>>,
     preparing: Mutex<Option<Preparing>>,
     admitting: Mutex<Option<Admitting>>,
@@ -107,6 +110,30 @@ pub struct Supervisor {
     observe: Observe,
     changed: Changed,
     launch: Option<Launch>,
+}
+
+/// What administration found while it waited for a starting service.
+#[derive(Debug, Eq, PartialEq)]
+pub enum AdminWait {
+    /// The endpoint is admitted; administration may exchange with it.
+    Admitted,
+    /// The service is not starting, so no endpoint is on its way.
+    NotStarting,
+    /// The service was still starting when the bound elapsed.
+    StillStarting,
+}
+
+/// Wakes administration waiting on `admitted` after a change it must see. Taking
+/// `admin` orders the signal after any waiter's look at the state.
+fn signal_admission(shared: &Shared) {
+    drop(lock(&shared.admin));
+    shared.admitted.notify_all();
+}
+
+/// Holds the admitted endpoint and wakes administration waiting for it.
+fn admit(shared: &Shared, endpoint: super::admin::Endpoint) {
+    *lock(&shared.admin) = Some(endpoint);
+    shared.admitted.notify_all();
 }
 
 fn lock<T>(mutex: &Mutex<T>) -> std::sync::MutexGuard<'_, T> {
@@ -194,6 +221,7 @@ impl Supervisor {
                 ready: Mutex::new(None),
                 gateway: Mutex::new(None),
                 admin: Mutex::new(None),
+                admitted: Condvar::new(),
                 running: Mutex::new(None),
                 preparing: Mutex::new(None),
                 admitting: Mutex::new(None),
@@ -283,6 +311,36 @@ impl Supervisor {
                 .with_reason("agent_admin_unavailable")
         })?;
         endpoint.exchange(request, secret)
+    }
+
+    /// Waits, off the window's thread, while the service is starting and its
+    /// admin endpoint is not yet admitted. A service that is not starting
+    /// answers at once. The bound is the start limit the supervisor itself
+    /// gives a launcher before it refuses the start as timed out.
+    pub fn await_admin(&self) -> AdminWait {
+        self.begin();
+        let deadline = Instant::now() + self.shared.startup_timeout;
+        let mut admin = lock(&self.shared.admin);
+        loop {
+            if admin.is_some() {
+                return AdminWait::Admitted;
+            }
+            if self.shared.closed.load(Ordering::Acquire)
+                || lock(&self.shared.status).state != State::Starting
+            {
+                return AdminWait::NotStarting;
+            }
+            let left = deadline.saturating_duration_since(Instant::now());
+            if left.is_zero() {
+                return AdminWait::StillStarting;
+            }
+            admin = self
+                .shared
+                .admitted
+                .wait_timeout(admin, left)
+                .unwrap_or_else(|poisoned| poisoned.into_inner())
+                .0;
+        }
     }
 
     /// The admitted service identity for a sequence of related administration reads.
@@ -383,6 +441,7 @@ impl Supervisor {
     pub async fn close(&self) -> Result<()> {
         self.shared.closed.store(true, Ordering::Release);
         self.shared.wake.notify_one();
+        signal_admission(&self.shared);
         let worker = lock(&self.shared.worker).take();
         let stopped = stop_running(&self.shared, None, AgentStopCause::WindowClosing).await;
         if let Some(worker) = worker
@@ -409,6 +468,7 @@ fn publish(shared: &Shared, state: State) {
         current.state = state;
         current.clone()
     };
+    signal_admission(shared);
     if let State::Refused { code } = status.state {
         shared
             .diagnostics
@@ -468,6 +528,7 @@ async fn stop_running(
             .is_some_and(|endpoint| endpoint.generation == running.generation)
         {
             *admin = None;
+            shared.admitted.notify_all();
         }
     }
     {
@@ -823,7 +884,7 @@ async fn supervise(shared: Arc<Shared>, observe: Observe, changed: Changed, laun
                     {
                         match result {
                             Ok(endpoint) => {
-                                *lock(&shared.admin) = Some(endpoint);
+                                admit(&shared, endpoint);
                                 if let Some(ready) = pending.ready {
                                     let _ = handle(&shared, generation, Signal::Event(ready)).await;
                                 }
