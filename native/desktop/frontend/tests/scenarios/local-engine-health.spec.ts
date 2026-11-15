@@ -8,12 +8,16 @@ import {
 import { label } from "../support/strings";
 
 // A keyless local lane whose engine the agent measured as not running: the
-// lane row in the provider settings and the agent column's notice say it in
-// the served words, with the reason, and offer the served door, which opens
-// the provisioning panel on the local AI row. A running engine says nothing;
-// a door the window does not know opens nothing and has no stand-in; an
-// answer outside the contract states nothing. The scenario host stands in for
-// the agent service.
+// agent column's notice and the picker say it in the served words, with the
+// reason, and the notice offers the served door, which opens the provisioning
+// panel on the local AI row. The lane row in the provider settings shows the
+// local AI's setup row as the setup host serves it, already combined from the
+// engine's server and its last start, and offers no engine door of its own. A
+// running engine says nothing; a door the window does not know opens nothing
+// and has no stand-in; an answer outside the contract states nothing. The
+// service serves the keyless lane of the selected engine alone, so each
+// engine's case starts the window on that engine. The scenario host stands in
+// for the agent service.
 
 test.beforeEach(() => {
   scenarioOnly("The scenario host stands in for the agent service.");
@@ -54,14 +58,37 @@ const noticed = (engine: Engine, reason: string) =>
     value: stated(reason),
   });
 
-const open = (target: Page, health?: object) =>
-  target.goto(
-    `/scenarios.html?scenario=signed-in&latency=0&bar=off&setup=ready&catalog=engines-only${
+/** The local AI's setup row whose server failed the start a read demanded,
+ * as the setup host serves it beside an engine that does not run. */
+const START_FAILED = "start_failed";
+const startFailed = () => label("desktop.setup.failure.program_not_running");
+
+async function open(
+  target: Page,
+  health?: object,
+  {
+    engine = "llamacpp",
+    setup = "ready",
+    catalog = "engines-only",
+  }: { engine?: Engine; setup?: string; catalog?: string } = {},
+) {
+  await target.goto(
+    `/scenarios.html?scenario=signed-in&latency=0&bar=off&setup=${setup}&catalog=${catalog}&engine=${engine}${
       health
         ? `&engine_health=${encodeURIComponent(JSON.stringify(health))}`
         : ""
     }`,
   );
+  // A local AI that is not ready opens the setup panel at the start; the
+  // column is reached once it is closed.
+  if (setup !== "ready") {
+    await expect(setupPanel(target)).toBeVisible();
+    await setupPanel(target)
+      .getByLabel(label("desktop.setup.close"), { exact: true })
+      .click();
+    await expect(setupPanel(target)).toBeHidden();
+  }
+}
 
 const settings = (target: Page) =>
   column(target).getByRole("region", {
@@ -106,11 +133,11 @@ async function expectLocalAiSetup(target: Page) {
 }
 
 for (const engine of ENGINES) {
-  test(`${engine}: an engine that does not run is said on its lane row and in the column, with the door to the local AI setup`, async ({
+  test(`${engine}: an engine that does not run is said in the column with the door to the local AI setup, and its lane row shows the served setup row`, async ({
     page: target,
   }) => {
-    await open(target, bothDown());
-    // No lane can run, so the column says why, once for each engine lane.
+    await open(target, bothDown(), { engine, setup: START_FAILED });
+    // No lane can run, so the column says why, for the engine's lane.
     await expect(notice(target, engine)).toContainText(
       noticed(engine, REASONS[engine]),
     );
@@ -119,29 +146,24 @@ for (const engine of ENGINES) {
       column(target).getByText(label("desktop.agent.no_provider")),
     ).toHaveCount(0);
 
+    // The lane row says the setup row in the setup's words and is not set up
+    // while that row is not ready; the engine's door is the column's.
     await openSettings(target);
     const row = laneRow(target, engine);
-    await expect(row).toContainText(stated(REASONS[engine]));
+    await expect(row).toContainText(startFailed());
     await expect(
-      row.locator(
-        "[data-slot=provider-status][data-status=engine_not_running]",
-      ),
+      row.locator("[data-slot=provider-status][data-status=setup_needed]"),
     ).toHaveCount(1);
-    await expect(doors(row)).toHaveCount(1);
-
-    // The row door opens the setup panel on the local AI row.
-    await doorButton(row).click();
-    await expectLocalAiSetup(target);
-    await setupPanel(target)
-      .getByLabel(label("desktop.setup.close"), { exact: true })
-      .click();
-    await expect(setupPanel(target)).toBeHidden();
+    await expect(row).not.toContainText(
+      label("desktop.agent.engine_not_running"),
+    );
+    await expect(doors(row)).toHaveCount(0);
   });
 
   test(`${engine}: the door in the column opens the local AI setup row`, async ({
     page: target,
   }) => {
-    await open(target, bothDown());
+    await open(target, bothDown(), { engine });
     await doorButton(notice(target, engine)).click();
     await expectLocalAiSetup(target);
   });
@@ -161,58 +183,63 @@ test("an engine that does not run holds its lane back before its transport, and 
   await expect(lane).not.toContainText(label("desktop.agent.lane_unreachable"));
 });
 
-test("one engine that does not run leaves the other lane usable and the column quiet", async ({
+test("an engine that does not run leaves the other lanes usable and the column quiet", async ({
   page: target,
 }) => {
-  await open(target, { llamacpp: down("llamacpp", "answer_unreadable") });
-  // The ollama lane can run, so the column has nothing to say about the
-  // engine that does not.
+  await open(
+    target,
+    { llamacpp: down("llamacpp", "answer_unreadable") },
+    { setup: START_FAILED, catalog: "served" },
+  );
+  // Other lanes can run, so the column has nothing to say about the engine
+  // that does not.
   await expect(column(target).locator("[data-engine-notice]")).toHaveCount(0);
   await expect(
     column(target).getByText(label("desktop.agent.engine_not_running")),
   ).toHaveCount(0);
+  // The picker holds the engine's lane back and says why.
+  const picker = await openModelPicker(target);
+  await picker
+    .getByRole("button", { name: label("desktop.agent.provider") })
+    .click();
+  const lane = target.locator('[role=option][data-way="llamacpp/api"]');
+  await expect(lane).toHaveAttribute("data-disabled", "true");
+  await expect(lane).toContainText(stated("answer_unreadable"));
+  await target.keyboard.press("Escape");
+  await target.keyboard.press("Escape");
+  // Its lane row shows the served setup row, with no engine door.
   await openSettings(target);
-  await expect(laneRow(target, "llamacpp")).toContainText(
-    stated("answer_unreadable"),
-  );
-  await expect(doors(laneRow(target, "llamacpp"))).toHaveCount(1);
-  // The other engine states it runs: its row says nothing of the engine.
-  await expect(laneRow(target, "ollama")).not.toContainText(
-    label("desktop.agent.engine_not_running"),
-  );
-  await expect(doors(laneRow(target, "ollama"))).toHaveCount(0);
+  await expect(laneRow(target, "llamacpp")).toContainText(startFailed());
+  await expect(doors(laneRow(target, "llamacpp"))).toHaveCount(0);
 });
 
-test("a running engine says nothing on its row or in the column", async ({
-  page: target,
-}) => {
-  await open(target);
-  await expect(column(target).locator("[data-engine-notice]")).toHaveCount(0);
-  await expect(
-    column(target).getByText(label("desktop.agent.engine_not_running")),
-  ).toHaveCount(0);
-  await openSettings(target);
-  for (const engine of ENGINES) {
+for (const engine of ENGINES)
+  test(`${engine}: a running engine says nothing on its row or in the column`, async ({
+    page: target,
+  }) => {
+    await open(target, undefined, { engine });
+    await expect(column(target).locator("[data-engine-notice]")).toHaveCount(0);
+    await expect(
+      column(target).getByText(label("desktop.agent.engine_not_running")),
+    ).toHaveCount(0);
+    await openSettings(target);
+    await expect(laneRow(target, engine)).toBeVisible();
     await expect(laneRow(target, engine)).not.toContainText(
       label("desktop.agent.engine_not_running"),
     );
     await expect(doors(laneRow(target, engine))).toHaveCount(0);
-  }
-});
+  });
 
 test("a door the window does not know renders no door and no stand-in", async ({
   page: target,
 }) => {
-  await open(target, bothDown("elsewhere"));
-  for (const engine of ENGINES)
-    await expect(notice(target, engine)).toContainText(
-      noticed(engine, REASONS[engine]),
-    );
+  await open(target, bothDown("elsewhere"), { setup: START_FAILED });
+  await expect(notice(target, "llamacpp")).toContainText(
+    noticed("llamacpp", REASONS.llamacpp),
+  );
   await expect(notice(target, "llamacpp").getByRole("button")).toHaveCount(0);
   await openSettings(target);
-  await expect(laneRow(target, "llamacpp")).toContainText(
-    stated(REASONS.llamacpp),
-  );
+  await expect(laneRow(target, "llamacpp")).toContainText(startFailed());
   await expect(doors(column(target))).toHaveCount(0);
   await expect(
     laneRow(target, "llamacpp").getByRole("button", {
@@ -221,28 +248,32 @@ test("a door the window does not know renders no door and no stand-in", async ({
   ).toHaveCount(0);
 });
 
-test("an answer outside the contract states nothing", async ({
-  page: target,
-}) => {
-  // A reason the contract does not name, and a running engine that names one.
-  await open(target, {
-    llamacpp: down("llamacpp", "unplugged"),
-    ollama: {
-      engine: "ollama",
-      state: "running",
-      reason: "not_reachable",
-      door: null,
-    },
-  });
-  await expect(column(target).locator("[data-engine-notice]")).toHaveCount(0);
-  await openSettings(target);
-  for (const engine of ENGINES) {
+for (const engine of ENGINES)
+  test(`${engine}: an answer outside the contract states nothing`, async ({
+    page: target,
+  }) => {
+    // A reason the contract does not name, and a running engine that names one.
+    await open(
+      target,
+      {
+        llamacpp: down("llamacpp", "unplugged"),
+        ollama: {
+          engine: "ollama",
+          state: "running",
+          reason: "not_reachable",
+          door: null,
+        },
+      },
+      { engine },
+    );
+    await expect(column(target).locator("[data-engine-notice]")).toHaveCount(0);
+    await openSettings(target);
+    await expect(laneRow(target, engine)).toBeVisible();
     await expect(laneRow(target, engine)).not.toContainText(
       label("desktop.agent.engine_not_running"),
     );
     await expect(doors(laneRow(target, engine))).toHaveCount(0);
-  }
-});
+  });
 
 // A way that takes no key is a server on this computer: it is named as that
 // and offers no key to add, on either engine's lane.
@@ -250,7 +281,7 @@ for (const engine of ENGINES) {
   test(`${engine}: the keyless lane is not called a key connection and offers no key`, async ({
     page: target,
   }) => {
-    await open(target);
+    await open(target, undefined, { engine });
     await openSettings(target);
     const row = laneRow(target, engine);
     await expect(

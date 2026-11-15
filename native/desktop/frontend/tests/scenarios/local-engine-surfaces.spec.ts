@@ -5,11 +5,12 @@ import { label } from "../support/strings";
 // A computer whose local AI program is set up and which holds no model. Two
 // surfaces speak of the local AI, and each says which fact it states. The
 // setup panel's local AI element states the program that runs the models,
-// named as that, from the component setup. The provider settings state the
-// lane's engine from what the agent serves of it: not running with its
-// reason, running, or, where the agent measured none, only what the lane's
-// settings say. Neither calls the lane unchecked while the agent serves its
-// engine, and neither takes the other's word.
+// named as that, from the component setup. Where the agent serves its
+// engine, the provider settings show the lane as that setup row, which the
+// setup host serves already combined from the engine's server and its last
+// start, whatever the engine answers; where the agent measured none, only
+// what the lane's settings say. Neither calls the lane unchecked while the
+// agent serves its engine.
 
 test.beforeEach(() => {
   scenarioOnly("The scenario host stands in for the agent service.");
@@ -87,7 +88,7 @@ const programFact = (sentence: string) =>
     value: sentence,
   });
 
-test("the setup panel says its status is the program's, and the provider settings say the engine does not run", async ({
+test("the setup panel says its status is the program's, and the provider settings show that row while the agent measures the engine as not running", async ({
   page: target,
 }) => {
   await open(target, DOWN);
@@ -111,18 +112,14 @@ test("the setup panel says its status is the program's, and the provider setting
   );
   await closeSetupPanel(target);
 
-  // The same computer's lane states what the agent serves of its engine, with
-  // its reason, and is not called unchecked.
+  // The same computer's lane is ready as its served setup row is, does not
+  // weigh the engine's measurement against that row, and is not called
+  // unchecked.
   const row = await laneRow(target);
-  await expect(status(row)).toHaveAttribute(
-    "data-status",
-    "engine_not_running",
-  );
-  await expect(row).toContainText(
-    label("desktop.compose.noted", {
-      text: label("desktop.agent.engine_not_running"),
-      note: label("desktop.agent.engine_reason_not_reachable"),
-    }),
+  await expect(status(row)).toHaveAttribute("data-status", "ready");
+  await expect(row).toContainText(label("desktop.setup.state.ready"));
+  await expect(row).not.toContainText(
+    label("desktop.agent.engine_not_running"),
   );
   await expect(row).not.toContainText(
     label("desktop.providers.status_not_checked"),
