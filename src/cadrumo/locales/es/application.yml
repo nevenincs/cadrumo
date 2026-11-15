@@ -3352,6 +3352,14 @@ application:
       m840_apartado_locales_ambiguous: 'Modelo %{modelo} %{filing_year}: el apartado
         %{apartado} describe un solo local, pero tu perfil lo indica para más de un
         local de la actividad %{activity} (%{locales}). Revisa las filas de %{profile_section}.'
+      m840_fact_code_digits: 'Modelo %{modelo}: el dato del perfil %{profile_path}
+        se imprime como un código de exactamente %{digits} dígitos; corrígelo en tu
+        perfil.'
+      m840_fact_text_width: 'Modelo %{modelo}: el dato del perfil %{profile_path}
+        se imprime en una casilla de %{width} caracteres; escribe entre 1 y %{width}
+        caracteres en tu perfil.'
+      m840_fact_units: 'Modelo %{modelo}: el dato del perfil %{profile_path} se imprime
+        como un número entero de como máximo %{digits} dígitos; corrígelo en tu perfil.'
       novel_source_kind_rejected: 'Tipo(s) de origen de cálculo no reconocido(s) %{novel_source_kinds}
         en la versión %{revision_id}: las definiciones del modelo declaran un origen
         de valor que ningún resolutor de cálculo gestiona. Añade un resolutor o márcalo
