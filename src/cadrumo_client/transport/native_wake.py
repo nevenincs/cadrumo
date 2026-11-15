@@ -34,8 +34,8 @@ class NativeWake:
         """Set the flag and wake any wait that includes it."""
         with self._guard:
             if not self._set:
-                self._set = True
                 self._signal.raise_signal()
+                self._set = True
 
     def clear(self) -> None:
         """Clear the flag before the next wait."""

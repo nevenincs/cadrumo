@@ -1,5 +1,6 @@
 """Per-connection event overflow closes only that stream without delaying retirement, and queuing wakes its writer."""
 
+from typing import override
 from uuid import uuid4
 
 import pytest
@@ -76,9 +77,9 @@ def test_a_queued_event_wakes_only_its_own_writer_and_an_overflow_wakes_it_to_cl
     events.publish_cue(cue)
     assert queued.is_set() and not idle.is_set()
     queued.clear()
-    # A cue already waiting answers the next change too: nothing new is queued or woken.
+    # A queued cue remains unique; another publication also repairs a missed wake.
     events.publish_cue(cue)
-    assert not queued.is_set()
+    assert queued.is_set()
     assert events.take(context) == (cue,)
     notice = SessionEvent(
         runtime_boot_id=boot,
@@ -96,3 +97,65 @@ def test_a_queued_event_wakes_only_its_own_writer_and_an_overflow_wakes_it_to_cl
     with pytest.raises(RefusalError):
         events.take(context)
     assert not idle.is_set()
+
+
+class _FailOnceWake(NativeWake):
+    failed = False
+
+    @override
+    def set(self) -> None:
+        if not self.failed:
+            self.failed = True
+            raise OSError("synthetic failed wake")
+        super().set()
+
+
+def test_failed_wake_keeps_one_pending_cue_and_retry_wakes_it() -> None:
+    context = ConnectionContext(uuid4(), uuid4(), Peer(os_owner_id="synthetic-owner", process_id=1))
+    wake = _FailOnceWake()
+    events = RuntimeSessionEvents()
+    events.connect(context, wake)
+    cue = SignInChanged(runtime_boot_id=context.runtime_boot_id, connection_id=context.connection_id)
+    with pytest.raises(OSError, match="synthetic failed wake"):
+        events.publish_cue(cue)
+    assert not wake.is_set()
+    events.publish_cue(cue)
+    events.publish_cue(cue)
+    assert wake.is_set()
+    assert events.take(context) == (cue,)
+    wake.clear()
+    events.disconnect(context)
+    events.publish_cue(cue)
+    assert not wake.is_set()
+    with pytest.raises(RefusalError) as closed:
+        events.take(context)
+    assert closed.value.reason is RefusalCode.CONNECTION_CLOSED
+
+
+def test_overflow_wake_failure_is_retried_before_the_stream_closes() -> None:
+    context = ConnectionContext(uuid4(), uuid4(), Peer(os_owner_id="synthetic-owner", process_id=1))
+    wake = _FailOnceWake()
+    wake.failed = True
+    events = RuntimeSessionEvents()
+    events.connect(context, wake)
+    notice = SessionEvent(
+        runtime_boot_id=context.runtime_boot_id,
+        connection_id=context.connection_id,
+        profile_id=uuid4(),
+        session_id=uuid4(),
+        event=SessionRetirementKind.SIGNED_OUT,
+        reason=AccessDenialCode.AUTHENTICATION_REQUIRED,
+    )
+    for _ in range(SESSION_EVENT_QUEUE_LIMIT):
+        events.publish(notice)
+    wake.clear()
+    wake.failed = False
+    cue = SignInChanged(runtime_boot_id=context.runtime_boot_id, connection_id=context.connection_id)
+    with pytest.raises(OSError, match="synthetic failed wake"):
+        events.publish_cue(cue)
+    assert not wake.is_set()
+    events.publish_cue(cue)
+    assert wake.is_set()
+    with pytest.raises(RefusalError) as closed:
+        events.take(context)
+    assert closed.value.reason is RefusalCode.CONNECTION_CLOSED

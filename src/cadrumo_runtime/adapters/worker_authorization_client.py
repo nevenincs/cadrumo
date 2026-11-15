@@ -37,6 +37,7 @@ from cadrumo_runtime.contracts.worker_enrollment import (
     WorkerApprovalRequest,
 )
 
+from ..application.operation_cue_timing import log_operation_cue_timing
 from .worker_authorization_connections import WorkerAuthorizationConnections
 from .worker_authorization_lease import WorkerAuthorizationLease
 from .worker_authorization_refusals import raise_worker_access_refusal
@@ -110,6 +111,7 @@ class WorkerAuthorizationClient:
             if acknowledged.request_id != report.request_id:
                 raise RefusalError(RefusalCode.INVALID_FRAME)
             clean = True
+            log_operation_cue_timing("worker_ack_received", operation_ids)
         finally:
             self.connections.checkin(channel, reusable=clean)
 
