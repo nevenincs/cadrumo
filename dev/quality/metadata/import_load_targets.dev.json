@@ -193,6 +193,7 @@
         "dev.acceptance.persona_table.row_figures",
         "dev.acceptance.persona_table.rows",
         "dev.acceptance.persona_table.sweep",
+        "dev.acceptance.persona_table.timing",
         "dev.acceptance.persona_table.unchecked",
         "dev.acceptance.personas",
         "dev.acceptance.personas.__main__",
