@@ -9252,6 +9252,18 @@ modelo:
               valamint reklám- és hirdetési kiadások (art. 27 bis Ley 19/1994) (TAP)
             label: Beruházások Nyugat-Afrika területein, valamint reklám- és hirdetési
               kiadások (art. 27 bis Ley 19/1994) (TAP). Ebben az elszámolásban alkalmazva
+          is-deduccion-porta-ferrada-aplicado-periodo:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - A Festival
+              Porta Ferrada 60. évfordulója (PF) - Ebben az elszámolásban alkalmazva
+              [00089]
+          is-deduccion-porta-ferrada-pendiente-futuro:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - A Festival
+              Porta Ferrada 60. évfordulója (PF) - Jövőbeli időszakokban alkalmazandó
+              [00090]
+          is-deduccion-porta-ferrada-pendiente-generada:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - A Festival
+              Porta Ferrada 60. évfordulója (PF) - Függőben lévő/keletkezett levonás
+              [00088]
           is-deduccion-produccion-cinematografica-espanola-financiador:
             help: 'Függőben lévő vagy keletkezett levonás - Finanszírozó: spanyol
               filmgyártások (FPC)'

@@ -89,6 +89,7 @@ import {
   TOOL_REFUSALS,
   UNEXPECTED_PROVIDER_CONDITION,
 } from "./agentFixtureTriggers";
+import { pieces } from "./fixtures/textPieces";
 
 // The scenario host's agent: its views over the fixture conversations, and
 // a session that answers every message with a made-up reply, streamed as
@@ -175,8 +176,6 @@ const UPLOAD_STEP_MS = 150;
 
 /** Between one streamed event and the next, in milliseconds. */
 const STEP_MS = 40;
-/** The length of each streamed piece of text. */
-const PIECE = 8;
 
 declare global {
   interface Window {
@@ -199,15 +198,6 @@ declare global {
 }
 
 const coded = (code: string) => Object.assign(new Error(code), { code });
-
-/** `text` in pieces of a few characters, whole characters each. */
-const pieces = (text: string) => {
-  const out: string[] = [];
-  const characters = [...text];
-  for (let at = 0; at < characters.length; at += PIECE)
-    out.push(characters.slice(at, at + PIECE).join(""));
-  return out;
-};
 
 /** How long a reply takes to stop, once the person asks, in milliseconds. */
 const STOPPING_MS = 600;
@@ -303,6 +293,8 @@ export function fixtureAgent({
   publishStatus: (status?: AgentServiceStatus) => void;
   /** Changes the stored model list from elsewhere. */
   changeListElsewhere: () => void;
+  /** The local engine the stored record selects now. */
+  selectedEngine: () => string;
 } {
   let catalogBusy = catalog === "busy" || catalog === "busy-past-ready";
   let catalogDeclared = catalog === "declared";
@@ -1495,5 +1487,11 @@ export function fixtureAgent({
   const changeListElsewhere = () => {
     committed += 1;
   };
-  return { agent, session, publishStatus, changeListElsewhere };
+  return {
+    agent,
+    session,
+    publishStatus,
+    changeListElsewhere,
+    selectedEngine: () => engine.engine,
+  };
 }
