@@ -105,6 +105,8 @@ function refusalWords(t: Translate, code: string): string {
       return t("desktop.providers.refused_runtime_unavailable");
     case "person_act_required":
       return t("desktop.providers.refused_person_act_required");
+    case "model_list_full":
+      return t("desktop.providers.refused_model_list_full");
     default:
       return t("desktop.providers.change_failed");
   }

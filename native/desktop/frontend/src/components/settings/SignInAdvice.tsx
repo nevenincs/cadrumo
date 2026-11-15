@@ -37,6 +37,17 @@ const CAUSE_WORDS = {
   helper_exit_nonzero: "desktop.providers.sign_in_cause.helper_exit_nonzero",
   agent_stop_failed: "desktop.providers.sign_in_cause.agent_stop_failed",
   status_not_confirmed: "desktop.providers.sign_in_cause.status_not_confirmed",
+  lane_not_signable: "desktop.providers.sign_in_cause.lane_not_signable",
+  profile_signed_out: "desktop.providers.sign_in_cause.profile_signed_out",
+  sign_in_in_progress: "desktop.providers.sign_in_cause.sign_in_in_progress",
+  sign_in_owner_held: "desktop.providers.sign_in_cause.sign_in_owner_held",
+  agent_tree_running: "desktop.providers.sign_in_cause.agent_tree_running",
+  settings_refused: "desktop.providers.sign_in_cause.settings_refused",
+  settings_change_failed:
+    "desktop.providers.sign_in_cause.settings_change_failed",
+  prepare_failed: "desktop.providers.sign_in_cause.prepare_failed",
+  previous_cleanup_unconfirmed:
+    "desktop.providers.sign_in_cause.previous_cleanup_unconfirmed",
   probe_start_failed: "desktop.providers.sign_in_cause.probe_start_failed",
   probe_timed_out: "desktop.providers.sign_in_cause.probe_timed_out",
   probe_output_unreadable:
