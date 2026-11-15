@@ -1,0 +1,566 @@
+# Modelo 200 ejercicio 2022 boxes that only the 2022 record design aeat-dr-200-2022
+# prints: no later design prints a field with the same meaning on any sheet (an
+# aged-out cohort or a deduction event of its own year). Each row is declared on
+# the record sheet that prints it, with that sheet as its segment, so its id stays
+# apart from the unrelated fields later designs print under the same number. The
+# comment above each row cites its design line in
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md. The
+# rows are operator entered: the design defines each as an input amount or flag.
+# Section and semantic role follow the nearest row this edition already declares on
+# the same sheet and in the same block. A row carries legal_refs only for a provision
+# its own design caption names; the others carry the design source alone.
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:105 DP200001 75|214|1|Num
+[[revisions."2022".casillas]]
+id = "DP200001:00016"
+number = "00016"
+segmento = "DP200001"
+continuidad_id = "is-opcion-art-46-2-lis-dp200001-00016"
+section = ["opcion_art_46_2_lis"]
+data_type = "decimal"
+semantic_role = "is_identificacion_regimen_flag"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1694 DP200015 113|1832|17|Num
+[[revisions."2022".casillas]]
+id = "DP200015:02465"
+number = "02465"
+segmento = "DP200015"
+continuidad_id = "is-compensacion-de-base-imponible-resto-actividades-ano-2022-aplicado-en-esta-liquidacion-dp200015-02465"
+section = ["regimen_especial_de_buques_y_empresas_navieras_en", "compensacion_de_base_imponible_resto_actividades_ano_2022"]
+semantic_role = "is_naviera_base_imponible_negativa"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1926 DP200016 60|817|17|Num
+[[revisions."2022".casillas]]
+id = "DP200016:00004"
+number = "00004"
+segmento = "DP200016"
+continuidad_id = "is-deducc-art-42-rdleg-4-2004-2007-deduccion-pendiente-generada-dp200016-00004"
+section = ["deducc_disposic_transit_24a_7_lis", "deducc_art_42_rdleg_4_2004_2007"]
+semantic_role = "is_deduccion_reinversion_beneficios_dt24a7_periodo"
+legal_refs = ["ley-27-2014:dt-24"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1927 DP200016 61|834|17|Num
+[[revisions."2022".casillas]]
+id = "DP200016:00005"
+number = "00005"
+segmento = "DP200016"
+continuidad_id = "is-deducc-art-42-rdleg-4-2004-2007-aplicado-en-esta-liquidacion-dp200016-00005"
+section = ["deducc_disposic_transit_24a_7_lis", "deducc_art_42_rdleg_4_2004_2007"]
+semantic_role = "is_deduccion_reinversion_beneficios_dt24a7_periodo"
+legal_refs = ["ley-27-2014:dt-24"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2077 DP200016B 66|1033|17|Num
+[[revisions."2022".casillas]]
+id = "DP200016B:00880"
+number = "00880"
+segmento = "DP200016B"
+continuidad_id = "is-inversiones-canarias-2004-deduccion-pendiente-generada-dp200016b-00880"
+section = ["deducciones_inversion_canarias", "inversiones_canarias_2004"]
+semantic_role = "is_deduccion_inversion_canarias_importe"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2078 DP200016B 67|1050|17|Num
+[[revisions."2022".casillas]]
+id = "DP200016B:00881"
+number = "00881"
+segmento = "DP200016B"
+continuidad_id = "is-inversiones-canarias-2004-aplicado-en-esta-liquidacion-dp200016b-00881"
+section = ["deducciones_inversion_canarias", "inversiones_canarias_2004"]
+semantic_role = "is_deduccion_inversion_canarias_importe"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2081 DP200016B 70|1101|17|Num
+[[revisions."2022".casillas]]
+id = "DP200016B:00870"
+number = "00870"
+segmento = "DP200016B"
+continuidad_id = "is-inversiones-canarias-2005-pendiente-de-aplicacion-en-periodos-futuros-dp200016b-00870"
+section = ["deducciones_inversion_canarias", "inversiones_canarias_2005"]
+semantic_role = "is_deduccion_inversion_canarias_importe"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2378 DP200018 15|118|17|Num
+[[revisions."2022".casillas]]
+id = "DP200018:01638"
+number = "01638"
+segmento = "DP200018"
+continuidad_id = "is-2022-v-centenario-de-la-expedicion-de-la-primera-vuelta-al-mundo-de-fernando-de-magallanes-y-juan-sebastian-dp200018-01638"
+section = ["deducc_para_incentivar_determ_actividades", "2022_v_centenario_de_la_expedicion_de_la_primera_vuelta_al_mundo_de_fernando_de_magallanes_y_juan_sebastian_elcano_epvm"]
+semantic_role = "is_deduccion_idi_evento_especial"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2379 DP200018 16|135|17|Num
+[[revisions."2022".casillas]]
+id = "DP200018:01639"
+number = "01639"
+segmento = "DP200018"
+continuidad_id = "is-2022-v-centenario-de-la-expedicion-de-la-primera-vuelta-al-mundo-de-fernando-de-magallanes-y-juan-sebastian-dp200018-01639"
+section = ["deducc_para_incentivar_determ_actividades", "2022_v_centenario_de_la_expedicion_de_la_primera_vuelta_al_mundo_de_fernando_de_magallanes_y_juan_sebastian_elcano_epvm"]
+semantic_role = "is_deduccion_idi_evento_especial"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2380 DP200018 17|152|17|Num
+[[revisions."2022".casillas]]
+id = "DP200018:01640"
+number = "01640"
+segmento = "DP200018"
+continuidad_id = "is-2022-v-centenario-de-la-expedicion-de-la-primera-vuelta-al-mundo-de-fernando-de-magallanes-y-juan-sebastian-dp200018-01640"
+section = ["deducc_para_incentivar_determ_actividades", "2022_v_centenario_de_la_expedicion_de_la_primera_vuelta_al_mundo_de_fernando_de_magallanes_y_juan_sebastian_elcano_epvm"]
+semantic_role = "is_deduccion_idi_evento_especial"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2386 DP200018 23|254|17|Num
+[[revisions."2022".casillas]]
+id = "DP200018:01909"
+number = "01909"
+segmento = "DP200018"
+continuidad_id = "is-2022-ano-santo-jacobeo-2021-j21-pendiente-de-aplicacion-en-periodos-futuros-dp200018-01909"
+section = ["deducc_para_incentivar_determ_actividades", "2022_ano_santo_jacobeo_2021_j21"]
+semantic_role = "is_deduccion_idi_evento_especial"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2387 DP200018 24|271|17|Num
+[[revisions."2022".casillas]]
+id = "DP200018:01910"
+number = "01910"
+segmento = "DP200018"
+continuidad_id = "is-2022-viii-centenario-de-la-catedral-de-burgos-2021-cb21-deduccion-pendiente-generada-dp200018-01910"
+section = ["deducc_para_incentivar_determ_actividades", "2022_viii_centenario_de_la_catedral_de_burgos_2021_cb21"]
+semantic_role = "is_deduccion_idi_evento_especial"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2388 DP200018 25|288|17|Num
+[[revisions."2022".casillas]]
+id = "DP200018:01911"
+number = "01911"
+segmento = "DP200018"
+continuidad_id = "is-2022-viii-centenario-de-la-catedral-de-burgos-2021-cb21-aplicado-en-esta-liquidacion-dp200018-01911"
+section = ["deducc_para_incentivar_determ_actividades", "2022_viii_centenario_de_la_catedral_de_burgos_2021_cb21"]
+semantic_role = "is_deduccion_idi_evento_especial"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2389 DP200018 26|305|17|Num
+[[revisions."2022".casillas]]
+id = "DP200018:01912"
+number = "01912"
+segmento = "DP200018"
+continuidad_id = "is-2022-viii-centenario-de-la-catedral-de-burgos-2021-cb21-pendiente-de-aplicacion-en-periodos-futuros-dp200018-01912"
+section = ["deducc_para_incentivar_determ_actividades", "2022_viii_centenario_de_la_catedral_de_burgos_2021_cb21"]
+semantic_role = "is_deduccion_idi_evento_especial"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2390 DP200018 27|322|17|Num
+[[revisions."2022".casillas]]
+id = "DP200018:01934"
+number = "01934"
+segmento = "DP200018"
+continuidad_id = "is-2022-expo-dubai-2020-d20-deduccion-pendiente-generada-dp200018-01934"
+section = ["deducc_para_incentivar_determ_actividades", "2022_expo_dubai_2020_d20"]
+semantic_role = "is_deduccion_idi_evento_especial"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2391 DP200018 28|339|17|Num
+[[revisions."2022".casillas]]
+id = "DP200018:01935"
+number = "01935"
+segmento = "DP200018"
+continuidad_id = "is-2022-expo-dubai-2020-d20-aplicado-en-esta-liquidacion-dp200018-01935"
+section = ["deducc_para_incentivar_determ_actividades", "2022_expo_dubai_2020_d20"]
+semantic_role = "is_deduccion_idi_evento_especial"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2392 DP200018 29|356|17|Num
+[[revisions."2022".casillas]]
+id = "DP200018:01936"
+number = "01936"
+segmento = "DP200018"
+continuidad_id = "is-2022-expo-dubai-2020-d20-pendiente-de-aplicacion-en-periodos-futuros-dp200018-01936"
+section = ["deducc_para_incentivar_determ_actividades", "2022_expo_dubai_2020_d20"]
+semantic_role = "is_deduccion_idi_evento_especial"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2399 DP200018 36|475|17|Num
+[[revisions."2022".casillas]]
+id = "DP200018:02368"
+number = "02368"
+segmento = "DP200018"
+continuidad_id = "is-2022-espana-pais-invitado-de-honor-en-la-feria-del-libro-de-francfort-en-2022-e22-deduccion-pendiente-gener-dp200018-02368"
+section = ["deducc_para_incentivar_determ_actividades", "2022_espana_pais_invitado_de_honor_en_la_feria_del_libro_de_francfort_en_2022_e22"]
+semantic_role = "is_deduccion_idi_evento_especial"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2400 DP200018 37|492|17|Num
+[[revisions."2022".casillas]]
+id = "DP200018:02369"
+number = "02369"
+segmento = "DP200018"
+continuidad_id = "is-2022-espana-pais-invitado-de-honor-en-la-feria-del-libro-de-francfort-en-2022-e22-aplicado-en-esta-liquidac-dp200018-02369"
+section = ["deducc_para_incentivar_determ_actividades", "2022_espana_pais_invitado_de_honor_en_la_feria_del_libro_de_francfort_en_2022_e22"]
+semantic_role = "is_deduccion_idi_evento_especial"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2401 DP200018 38|509|17|Num
+[[revisions."2022".casillas]]
+id = "DP200018:02370"
+number = "02370"
+segmento = "DP200018"
+continuidad_id = "is-2022-espana-pais-invitado-de-honor-en-la-feria-del-libro-de-francfort-en-2022-e22-pendiente-de-aplicacion-e-dp200018-02370"
+section = ["deducc_para_incentivar_determ_actividades", "2022_espana_pais_invitado_de_honor_en_la_feria_del_libro_de_francfort_en_2022_e22"]
+semantic_role = "is_deduccion_idi_evento_especial"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2411 DP200018 48|679|17|Num
+[[revisions."2022".casillas]]
+id = "DP200018:00254"
+number = "00254"
+segmento = "DP200018"
+continuidad_id = "is-2022-el-tiempo-de-la-libertad-comuneros-v-centenario-cvc-deduccion-pendiente-generada-dp200018-00254"
+section = ["deducc_para_incentivar_determ_actividades", "2022_el_tiempo_de_la_libertad_comuneros_v_centenario_cvc"]
+semantic_role = "is_deduccion_eventos_especiales_pendiente"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2412 DP200018 49|696|17|Num
+[[revisions."2022".casillas]]
+id = "DP200018:00255"
+number = "00255"
+segmento = "DP200018"
+continuidad_id = "is-2022-el-tiempo-de-la-libertad-comuneros-v-centenario-cvc-aplicado-en-esta-liquidacion-dp200018-00255"
+section = ["deducc_para_incentivar_determ_actividades", "2022_el_tiempo_de_la_libertad_comuneros_v_centenario_cvc"]
+semantic_role = "is_deduccion_eventos_especiales_pendiente"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2505 DP200018 130|2073|17|Num
+[[revisions."2022".casillas]]
+id = "DP200018:00801"
+number = "00801"
+segmento = "DP200018"
+continuidad_id = "is-2022-enfermedades-neurodegenerativas-ano-internacional-de-la-investigacion-e-innovacion-periodo-2021-2022-e-dp200018-00801"
+section = ["deducc_para_incentivar_determ_actividades", "2022_enfermedades_neurodegenerativas_ano_internacional_de_la_investigacion_e_innovacion_periodo_2021_2022_en21"]
+semantic_role = "is_deduccion_idi_evento_especial"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2506 DP200018 131|2090|17|Num
+[[revisions."2022".casillas]]
+id = "DP200018:00811"
+number = "00811"
+segmento = "DP200018"
+continuidad_id = "is-2022-enfermedades-neurodegenerativas-ano-internacional-de-la-investigacion-e-innovacion-periodo-2021-2022-e-dp200018-00811"
+section = ["deducc_para_incentivar_determ_actividades", "2022_enfermedades_neurodegenerativas_ano_internacional_de_la_investigacion_e_innovacion_periodo_2021_2022_en21"]
+semantic_role = "is_deduccion_idi_evento_especial"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2588 DP200018B 30|421|17|Num
+[[revisions."2022".casillas]]
+id = "DP200018B:01267"
+number = "01267"
+segmento = "DP200018B"
+continuidad_id = "is-202-alimentaria-2022-y-hostelco-2022-ah-deduccion-pendiente-generada-dp200018b-01267"
+section = ["deducc_para_incentivar_determ_actividades", "202_alimentaria_2022_y_hostelco_2022_ah"]
+semantic_role = "is_deduccion_eventos_especiales_pendiente"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2594 DP200018B 36|523|17|Num
+[[revisions."2022".casillas]]
+id = "DP200018B:01277"
+number = "01277"
+segmento = "DP200018B"
+continuidad_id = "is-2022-global-mobility-call-gm-deduccion-pendiente-generada-dp200018b-01277"
+section = ["deducc_para_incentivar_determ_actividades", "2022_global_mobility_call_gm"]
+semantic_role = "is_deduccion_actividades_total_pendiente"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2595 DP200018B 37|540|17|Num
+[[revisions."2022".casillas]]
+id = "DP200018B:01278"
+number = "01278"
+segmento = "DP200018B"
+continuidad_id = "is-2022-global-mobility-call-gm-aplicado-en-esta-liquidacion-dp200018b-01278"
+section = ["deducc_para_incentivar_determ_actividades", "2022_global_mobility_call_gm"]
+semantic_role = "is_deduccion_actividades_total_pendiente"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2596 DP200018B 38|557|17|Num
+[[revisions."2022".casillas]]
+id = "DP200018B:01279"
+number = "01279"
+segmento = "DP200018B"
+continuidad_id = "is-2022-global-mobility-call-gm-pendiente-de-aplicacion-en-periodos-futuros-dp200018b-01279"
+section = ["deducc_para_incentivar_determ_actividades", "2022_global_mobility_call_gm"]
+semantic_role = "is_deduccion_actividades_total_pendiente"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2722 DP200018C 6|13|17|Num
+[[revisions."2022".casillas]]
+id = "DP200018C:00904"
+number = "00904"
+segmento = "DP200018C"
+continuidad_id = "is-donaciones-de-caracter-general-2012-deduccion-pendiente-generada-dp200018c-00904"
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
+semantic_role = "is_deduccion_donativos_general"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2723 DP200018C 7|30|17|Num
+[[revisions."2022".casillas]]
+id = "DP200018C:00905"
+number = "00905"
+segmento = "DP200018C"
+continuidad_id = "is-donaciones-de-caracter-general-2012-aplicado-en-esta-liquidacion-dp200018c-00905"
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
+semantic_role = "is_deduccion_donativos_general"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2726 DP200018C 10|81|17|Num
+[[revisions."2022".casillas]]
+id = "DP200018C:00992"
+number = "00992"
+segmento = "DP200018C"
+continuidad_id = "is-donaciones-de-caracter-general-2013-pendiente-de-aplicacion-en-periodos-futuros-dp200018c-00992"
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
+semantic_role = "is_deduccion_donativos_general"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2796 DP200018C 80|1271|17|Num
+[[revisions."2022".casillas]]
+id = "DP200018C:00899"
+number = "00899"
+segmento = "DP200018C"
+continuidad_id = "is-donaciones-para-actividades-prioritarias-de-mecenazgo-y-otras-con-derecho-a-deduccion-incrementada-2012-ded-dp200018c-00899"
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecenazgo_y_otras_con_derecho_a_deduccion_incrementada"]
+semantic_role = "is_deduccion_donativos_general"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2797 DP200018C 81|1288|17|Num
+[[revisions."2022".casillas]]
+id = "DP200018C:00901"
+number = "00901"
+segmento = "DP200018C"
+continuidad_id = "is-donaciones-para-actividades-prioritarias-de-mecenazgo-y-otras-con-derecho-a-deduccion-incrementada-2012-apl-dp200018c-00901"
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecenazgo_y_otras_con_derecho_a_deduccion_incrementada"]
+semantic_role = "is_deduccion_donativos_general"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2800 DP200018C 84|1339|17|Num
+[[revisions."2022".casillas]]
+id = "DP200018C:00929"
+number = "00929"
+segmento = "DP200018C"
+continuidad_id = "is-donaciones-para-actividades-prioritarias-de-mecenazgo-y-otras-con-derecho-a-deduccion-incrementada-2013-pen-dp200018c-00929"
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecenazgo_y_otras_con_derecho_a_deduccion_incrementada"]
+semantic_role = "is_deduccion_donativos_general"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3180 DP200020 84|1339|17|Num
+[[revisions."2022".casillas]]
+id = "DP200020:01467"
+number = "01467"
+segmento = "DP200020"
+continuidad_id = "is-ejercicio-generacion-2017-pendiente-aplicacion-a-principio-del-periodo-dp200020-01467"
+section = ["pendiente_adicion_por_limite_beneficio_operativo_n", "ejercicio_generacion_2017"]
+semantic_role = "is_correccion_limite_beneficio_operativo_saldo_inicial"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3181 DP200020 85|1356|17|Num
+[[revisions."2022".casillas]]
+id = "DP200020:01468"
+number = "01468"
+segmento = "DP200020"
+continuidad_id = "is-ejercicio-generacion-2017-aplicado-en-esta-liquidacion-dp200020-01468"
+section = ["pendiente_adicion_por_limite_beneficio_operativo_n", "ejercicio_generacion_2017"]
+semantic_role = "is_correccion_limite_beneficio_operativo_saldo_inicial"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3184 DP200020 88|1407|17|Num
+[[revisions."2022".casillas]]
+id = "DP200020:01743"
+number = "01743"
+segmento = "DP200020"
+continuidad_id = "is-ejercicio-generacion-2018-pendiente-aplicacion-periodos-futuros-dp200020-01743"
+section = ["pendiente_adicion_por_limite_beneficio_operativo_n", "ejercicio_generacion_2018"]
+semantic_role = "is_correccion_limite_beneficio_operativo_saldo_inicial"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3218 DP200020B 6|13|17|Num
+[[revisions."2022".casillas]]
+id = "DP200020B:01985"
+number = "01985"
+segmento = "DP200020B"
+continuidad_id = "is-2020-derecho-reducir-b-i-generado-periodo-pendiente-aplicar-inicio-periodo-dp200020b-01985"
+section = ["reserva_capitalizacion", "2020"]
+semantic_role = "is_reserva_capitalizacion_derecho_generado"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3219 DP200020B 7|30|17|Num
+[[revisions."2022".casillas]]
+id = "DP200020B:01986"
+number = "01986"
+segmento = "DP200020B"
+continuidad_id = "is-2020-reduccion-b-i-aplicada-dp200020b-01986"
+section = ["reserva_capitalizacion", "2020"]
+semantic_role = "is_reserva_capitalizacion_derecho_generado"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3222 DP200020B 10|81|17|Num
+[[revisions."2022".casillas]]
+id = "DP200020B:02409"
+number = "02409"
+segmento = "DP200020B"
+continuidad_id = "is-2021-reduccion-b-i-pdte-de-aplicar-en-periodos-futuros-dp200020b-02409"
+section = ["reserva_capitalizacion", "2021"]
+semantic_role = "is_reserva_capitalizacion_derecho_generado"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3233 DP200020B 21|268|17|Num
+[[revisions."2022".casillas]]
+id = "DP200020B:01455"
+number = "01455"
+segmento = "DP200020B"
+continuidad_id = "is-reduccion-base-imponible-ejercicio-generacion-2017-importe-minoracion-b-i-periodo-pendiente-adicionar-inici-dp200020b-01455"
+section = ["reserva_de_nivelacion", "reduccion_base_imponible"]
+semantic_role = "is_reserva_nivelacion_adicion_pendiente"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3234 DP200020B 22|285|17|Num
+[[revisions."2022".casillas]]
+id = "DP200020B:01456"
+number = "01456"
+segmento = "DP200020B"
+continuidad_id = "is-reduccion-base-imponible-ejercicio-generacion-2017-importe-adicionado-base-imponible-en-periodo-dp200020b-01456"
+section = ["reserva_de_nivelacion", "reduccion_base_imponible"]
+semantic_role = "is_reserva_nivelacion_adicion_pendiente"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3235 DP200020B 23|302|17|Num
+[[revisions."2022".casillas]]
+id = "DP200020B:01601"
+number = "01601"
+segmento = "DP200020B"
+continuidad_id = "is-reduccion-base-imponible-ejercicio-generacion-2017-importe-integrado-en-la-declaracion-por-incumplimiento-d-dp200020b-01601"
+section = ["reserva_de_nivelacion", "reduccion_base_imponible"]
+semantic_role = "is_reserva_nivelacion_adicion_pendiente"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3239 DP200020B 27|370|17|Num
+[[revisions."2022".casillas]]
+id = "DP200020B:01963"
+number = "01963"
+segmento = "DP200020B"
+continuidad_id = "is-reduccion-base-imponible-ejercicio-generacion-2018-importe-pendiente-adicionar-en-periodos-futuros-dp200020b-01963"
+section = ["reserva_de_nivelacion", "reduccion_base_imponible"]
+semantic_role = "is_reserva_nivelacion_adicion_pendiente"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3262 DP200020B 50|761|17|Num
+[[revisions."2022".casillas]]
+id = "DP200020B:01458"
+number = "01458"
+segmento = "DP200020B"
+continuidad_id = "is-dotacion-de-la-reserva-ejercicio-generacion-2017-importe-reserva-a-dotar-dp200020b-01458"
+section = ["reserva_de_nivelacion", "dotacion_de_la_reserva"]
+semantic_role = "is_reserva_nivelacion_adicion_pendiente"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3263 DP200020B 51|778|17|Num
+[[revisions."2022".casillas]]
+id = "DP200020B:01459"
+number = "01459"
+segmento = "DP200020B"
+continuidad_id = "is-dotacion-de-la-reserva-ejercicio-generacion-2017-importe-reserva-dotada-dp200020b-01459"
+section = ["reserva_de_nivelacion", "dotacion_de_la_reserva"]
+semantic_role = "is_reserva_nivelacion_adicion_pendiente"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3264 DP200020B 52|795|17|Num
+[[revisions."2022".casillas]]
+id = "DP200020B:01460"
+number = "01460"
+segmento = "DP200020B"
+continuidad_id = "is-dotacion-de-la-reserva-ejercicio-generacion-2017-importe-reserva-pendiente-dotacion-dp200020b-01460"
+section = ["reserva_de_nivelacion", "dotacion_de_la_reserva"]
+semantic_role = "is_reserva_nivelacion_adicion_pendiente"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3265 DP200020B 53|812|17|Num
+[[revisions."2022".casillas]]
+id = "DP200020B:01461"
+number = "01461"
+segmento = "DP200020B"
+continuidad_id = "is-dotacion-de-la-reserva-ejercicio-generacion-2017-reserva-dispuesta-dp200020b-01461"
+section = ["reserva_de_nivelacion", "dotacion_de_la_reserva"]
+semantic_role = "is_reserva_nivelacion_adicion_pendiente"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3421 DP200020C 118|1917|17|Num
+[[revisions."2022".casillas]]
+id = "DP200020C:02277"
+number = "02277"
+segmento = "DP200020C"
+continuidad_id = "is-exceso-cuota-liquida-positiva-ejercicio-generacion-2020-exceso-cuota-liquida-positiva-pendiente-a-principio-dp200020c-02277"
+section = ["conversion_activos_impuesto_diferido_credito_exigi", "exceso_cuota_liquida_positiva"]
+semantic_role = "is_conversion_aid_art130_importe"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3422 DP200020C 119|1934|17|Num
+[[revisions."2022".casillas]]
+id = "DP200020C:02278"
+number = "02278"
+segmento = "DP200020C"
+continuidad_id = "is-exceso-cuota-liquida-positiva-ejercicio-generacion-2020-exceso-cuota-liquida-positiva-aplicado-periodos-imp-dp200020c-02278"
+section = ["conversion_activos_impuesto_diferido_credito_exigi", "exceso_cuota_liquida_positiva"]
+semantic_role = "is_conversion_aid_art130_importe"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3423 DP200020C 120|1951|17|Num
+[[revisions."2022".casillas]]
+id = "DP200020C:02279"
+number = "02279"
+segmento = "DP200020C"
+continuidad_id = "is-exceso-cuota-liquida-positiva-ejercicio-generacion-2020-exceso-cuota-liquida-positiva-aplicado-periodos-imp-dp200020c-02279"
+section = ["conversion_activos_impuesto_diferido_credito_exigi", "exceso_cuota_liquida_positiva"]
+semantic_role = "is_conversion_aid_art130_importe"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3427 DP200020C 124|2019|17|Num
+[[revisions."2022".casillas]]
+id = "DP200020C:02430"
+number = "02430"
+segmento = "DP200020C"
+continuidad_id = "is-exceso-cuota-liquida-positiva-ejercicio-generacion-2021-exceso-cuota-liquida-positiva-pendiente-aplicacion-dp200020c-02430"
+section = ["conversion_activos_impuesto_diferido_credito_exigi", "exceso_cuota_liquida_positiva"]
+semantic_role = "is_conversion_aid_exceso_cuota_importe"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3612 DP200022 6|13|17|Num
+[[revisions."2022".casillas]]
+id = "DP200022:00097"
+number = "00097"
+segmento = "DP200022"
+continuidad_id = "is-ric-2017-pendiente-de-materializar-ric-a-principio-de-periodo-dp200022-00097"
+section = ["reg_especial_reserva_inversiones_canarias", "ric_2017"]
+semantic_role = "is_reserva_inversiones_canarias_importe"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3613 DP200022 7|30|17|Num
+[[revisions."2022".casillas]]
+id = "DP200022:00098"
+number = "00098"
+segmento = "DP200022"
+continuidad_id = "is-ric-2017-aplicado-materializado-en-esta-liquidacion-inversiones-previstas-letras-a-y-b-art-27-4-ley-19-1994-dp200022-00098"
+section = ["reg_especial_reserva_inversiones_canarias", "ric_2017"]
+semantic_role = "is_reserva_inversiones_canarias_importe"
+legal_refs = ["ley-19-1994:art-27"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3614 DP200022 8|47|17|Num
+[[revisions."2022".casillas]]
+id = "DP200022:00047"
+number = "00047"
+segmento = "DP200022"
+continuidad_id = "is-ric-2017-aplicado-materializado-en-esta-liquidacion-inversiones-previstas-letras-b-bis-c-y-d-art-27-4-ley-1-dp200022-00047"
+section = ["reg_especial_reserva_inversiones_canarias", "ric_2017"]
+semantic_role = "is_reserva_inversiones_canarias_importe"
+legal_refs = ["ley-19-1994:art-27"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3615 DP200022 9|64|17|Num
+[[revisions."2022".casillas]]
+id = "DP200022:02438"
+number = "02438"
+segmento = "DP200022"
+continuidad_id = "is-ric-2017-aplicado-materializado-en-esta-liquidacion-inversiones-anticipadas-consideradas-materializacion-de-dp200022-02438"
+section = ["reg_especial_reserva_inversiones_canarias", "ric_2017"]
+semantic_role = "is_reserva_inversiones_canarias_importe"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3620 DP200022 14|149|17|Num
+[[revisions."2022".casillas]]
+id = "DP200022:00527"
+number = "00527"
+segmento = "DP200022"
+continuidad_id = "is-ric-2018-pendiente-de-materializar-ric-al-final-de-periodo-dp200022-00527"
+section = ["reg_especial_reserva_inversiones_canarias", "ric_2018"]
+semantic_role = "is_reserva_inversiones_canarias_importe"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3641 DP200022 35|506|17|Num
+[[revisions."2022".casillas]]
+id = "DP200022:02442"
+number = "02442"
+segmento = "DP200022"
+continuidad_id = "is-inversiones-anticipadas-2017-pendiente-de-dotar-ric-a-principio-del-periodo-dp200022-02442"
+section = ["reg_especial_reserva_inversiones_canarias", "inversiones_anticipadas_2017"]
+semantic_role = "is_reserva_inversiones_canarias_importe"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3642 DP200022 36|523|17|Num
+[[revisions."2022".casillas]]
+id = "DP200022:02444"
+number = "02444"
+segmento = "DP200022"
+continuidad_id = "is-inversiones-anticipadas-2018-pendiente-de-dotar-ric-a-principio-del-periodo-dp200022-02444"
+section = ["reg_especial_reserva_inversiones_canarias", "inversiones_anticipadas_2018"]
+semantic_role = "is_reserva_inversiones_canarias_importe"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3644 DP200022 38|557|17|Num
+[[revisions."2022".casillas]]
+id = "DP200022:02447"
+number = "02447"
+segmento = "DP200022"
+continuidad_id = "is-inversiones-anticipadas-2019-pendiente-de-dotar-ric-al-final-del-periodo-dp200022-02447"
+section = ["reg_especial_reserva_inversiones_canarias", "inversiones_anticipadas_2019"]
+semantic_role = "is_reserva_inversiones_canarias_importe"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3649 DP200022 43|642|17|Num
+[[revisions."2022".casillas]]
+id = "DP200022:01523"
+number = "01523"
+segmento = "DP200022"
+continuidad_id = "is-inversiones-anticipadas-2022-inversiones-previstas-letras-a-y-b-art-27-4-ley-19-1994-dp200022-01523"
+section = ["reg_especial_reserva_inversiones_canarias", "inversiones_anticipadas_2022"]
+semantic_role = "is_reserva_inversiones_canarias_importe"
+legal_refs = ["ley-19-1994:art-27"]

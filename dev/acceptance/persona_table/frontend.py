@@ -50,9 +50,10 @@ Redacted figures compare by presence. The central privacy boundary of the CLI pr
 casilla 0091) as ``sha256:<8 hex>`` while the table's figure is the plain text, and neither side may compare the
 content. A surface figure whose value is exactly ``sha256:`` and eight lowercase hexadecimal characters is redacted
 (any casilla, any surface). It equals the table's figure of that casilla whenever the table holds a non-empty value
-for it, whatever the value; when the table holds none the row differs with the cause ``casilla <id> redacted but the
-table has no value``. Seven or nine characters, uppercase hexadecimal or a different prefix are not redacted and
-compare as ordinary text.
+for it, whatever the value. When the table holds none, the casilla is graded ``redacted, present``: the row is not
+matched and not different for it (``not comparable`` with the cause ``casilla <id> redacted, present; the table row
+carries no value for it``), unless another cause makes the row differ. Seven or nine characters, uppercase
+hexadecimal or a different prefix are not redacted and compare as ordinary text.
 """
 
 from __future__ import annotations
@@ -465,8 +466,9 @@ def is_redacted(text: str) -> bool:
 def figure_causes(surface: str, table: Mapping[str, str], shown: Mapping[str, str]) -> list[str]:
     """Each way the figures ``shown`` by a surface miss or disagree with the table row's ``table`` figures.
 
-    The table row is the oracle for calculated values, so a casilla shown beyond ``table`` is not a cause, except a
-    redacted figure (compared by presence, see the module docstring), which needs a table value to stand for.
+    The table row is the oracle for calculated values, so a casilla shown beyond ``table`` is not a cause. A redacted
+    figure compares by presence (see the module docstring) and is a cause only when a table value is present and the
+    figure disagrees in kind; with no table value it is :func:`redacted_present`, never a cause.
     ``table`` holds only the casillas the revision's form places; the row's internal figures (working figures and
     unplaced casillas, which no surface is held to show) are never compared and are not extras when shown.
     """
@@ -474,14 +476,38 @@ def figure_causes(surface: str, table: Mapping[str, str], shown: Mapping[str, st
     for casilla in sorted(table):
         if casilla not in shown:
             causes.append(f"casilla {casilla} not shown")
+        elif casilla in redacted_present(table, shown):
+            continue
         elif not _equal(table[casilla], shown[casilla]):
             causes.append(f"casilla {casilla} {surface} {shown[casilla]}, table {table[casilla]}")
-    causes.extend(
-        f"casilla {casilla} redacted but the table has no value"
-        for casilla in sorted(set(shown) - set(table))
-        if is_redacted(shown[casilla])
-    )
     return causes
+
+
+def _graded(causes: list[str], table: Mapping[str, str], shown: Mapping[str, str]) -> tuple[str, list[str]]:
+    """The outcome of a row whose other causes are ``causes``, and the causes it states.
+
+    A row with a cause differs. Without one it is matched, unless a shown casilla is redacted with no table value to
+    stand for it: that row is not comparable and says so, since nothing was compared for that casilla.
+    """
+    if causes:
+        return DIFFERS, causes
+    present = redacted_present(table, shown)
+    if present:
+        return NOT_COMPARABLE, [
+            f"casilla {casilla} redacted, present; the table row carries no value for it" for casilla in present
+        ]
+    return MATCHED, causes
+
+
+def redacted_present(table: Mapping[str, str], shown: Mapping[str, str]) -> tuple[str, ...]:
+    """The casillas ``shown`` redacted while the table row holds no non-empty value for them, sorted.
+
+    Such a casilla is present on the surface but there is nothing to stand for it: it is graded apart, neither a match
+    nor a difference.
+    """
+    return tuple(
+        casilla for casilla in sorted(shown) if is_redacted(shown[casilla]) and not table.get(casilla, "").strip()
+    )
 
 
 def extra_figures(table: Mapping[str, str], shown: Mapping[str, str]) -> tuple[str, ...]:
@@ -515,7 +541,7 @@ def parity(
     table, shown = dict(row.figures), dict(result.figures)
     stage_causes, gated = _stage_causes(surface, stages, result, export_refusal_code(row.reason))
     causes = _substitute_causes(result) + stage_causes + figure_causes(surface, table, shown)
-    outcome = DIFFERS if causes else MATCHED
+    outcome, causes = _graded(causes, table, shown)
     extras = extra_figures(table | dict(row.internal_figures), shown)
     return RowParity(row.key, surface, outcome, tuple(causes), tree, extras, gated)
 

@@ -1483,6 +1483,11 @@ desktop:
     view_months: Calendario
     window_label: '{modelo} {period}, {days}, {state}'
     window_unknown: Fecha de apertura no indicada
+    year: Ejercicio
+    year_current: Volver a la vista actual
+    year_failed: No se ha podido leer ese ejercicio. Lo que ves no ha cambiado.
+    year_next: Ejercicio siguiente
+    year_previous: Ejercicio anterior
   canvas:
     lead: Elige un área de trabajo a continuación o ábrela desde la barra lateral.
       También puedes abrir la documentación desde cualquiera de esos lugares.
