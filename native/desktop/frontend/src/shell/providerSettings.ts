@@ -194,6 +194,9 @@ export type ProviderSettingsView = {
   turnOn: (providerId: string) => void;
   reset: (providerId: string) => void;
   refresh: () => void;
+  /** Reads the settings again, as when the agent turns ready, without
+   * invalidating the agent's provider list. */
+  reread: () => void;
   /** Invalidations of the agent's provider list, including authentication
    * observed by a status refresh or a read made elsewhere. */
   changes: number;
@@ -359,6 +362,10 @@ export function useProviderSettings(
       })),
     [],
   );
+  const reread = useCallback(
+    () => setState((held) => ({ ...held, again: held.again + 1 })),
+    [],
+  );
   return {
     read,
     busyId: state.busyId,
@@ -385,6 +392,7 @@ export function useProviderSettings(
         served.reset({ provider: providerId, revision }),
       ),
     refresh,
+    reread,
     changes: state.changes,
     accept: (status) => {
       put(status);

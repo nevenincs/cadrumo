@@ -143,7 +143,9 @@ const CONSOLE_SIGN_IN_COMMAND =
   "cadrumo-agent-service provider-login --provider {provider}";
 
 export type ProviderSignInFixtureControls = {
-  failNextSettingsRead: () => void;
+  /** The next settings read rejects `read_failed`, with `detail` beside it
+   * as the host sends it. */
+  failNextSettingsRead: (detail?: ProviderSignInFixtureRefusal) => void;
   deferNextStart: () => void;
   completeStart: () => void;
   failNextStart: (
@@ -229,7 +231,7 @@ let fixtureAttemptNumber = 0;
 let fixtureAttempt: ProviderSignInSnapshot | null = null;
 let fixtureCancelRequestedFor: string | null = null;
 let fixtureCancelDetail: ProviderSignInFixtureDetail | null = null;
-let rejectNextSettingsRead = false;
+let rejectNextSettingsRead: ProviderSignInFixtureRefusal | null = null;
 let fixtureSignInMethods: readonly ProviderSignInMethod[] = [
   "browser",
   "device",
@@ -324,7 +326,7 @@ export function providerSettingsFixture({
   fixtureAttempt = null;
   fixtureCancelRequestedFor = null;
   fixtureCancelDetail = null;
-  rejectNextSettingsRead = false;
+  rejectNextSettingsRead = null;
   failNextStatus = null;
   fixtureSignInCalls = [];
   let changes = 0;
@@ -370,8 +372,8 @@ export function providerSettingsFixture({
     };
   };
   const signInControls: ProviderSignInFixtureControls = {
-    failNextSettingsRead() {
-      rejectNextSettingsRead = true;
+    failNextSettingsRead(detail = {}) {
+      rejectNextSettingsRead = detail;
       say("providerStatusFailureQueued");
     },
     deferNextStart() {
@@ -654,8 +656,9 @@ export function providerSettingsFixture({
     async status() {
       say("providerStatus");
       if (rejectNextSettingsRead) {
-        rejectNextSettingsRead = false;
-        throw coded("read_failed");
+        const detail = rejectNextSettingsRead;
+        rejectNextSettingsRead = null;
+        throw coded("read_failed", detail);
       }
       if (deferNextStatus) {
         deferNextStatus = false;
