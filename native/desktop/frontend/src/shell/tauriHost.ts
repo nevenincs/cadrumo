@@ -453,6 +453,9 @@ function refusal(code: string): Error & { code: string } {
   return Object.assign(new Error(code), { code });
 }
 
+/** Every provider settings command may reject with its service's refusal. */
+const SERVICE_REFUSALS: CallPlan = { serviceRefusals: true };
+
 function tauriProviderSettings(
   token: ShellToken | null,
   openExternal: (url: string) => Promise<void>,
@@ -465,7 +468,10 @@ function tauriProviderSettings(
     plan?: CallPlan,
   ): Promise<Result> =>
     token
-      ? observedInvoke<Result>(token, name, { ...args, token }, undefined, plan)
+      ? observedInvoke<Result>(token, name, { ...args, token }, undefined, {
+          ...plan,
+          ...SERVICE_REFUSALS,
+        })
       : unavailable();
   return {
     status: (plan) =>
@@ -497,6 +503,7 @@ function tauriProviderSettings(
                   : { [BASE_URL_HEADER]: base_url }),
             },
           },
+          SERVICE_REFUSALS,
         );
       } finally {
         key.fill(0);
@@ -546,6 +553,7 @@ function tauriProviderSettings(
                 "x-cadrumo-attempt-id": attemptId,
               },
             },
+            SERVICE_REFUSALS,
           );
         } finally {
           bytes.fill(0);

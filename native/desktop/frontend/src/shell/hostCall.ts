@@ -140,6 +140,12 @@ export type CallPlan = {
    * call was made. Nothing is left that wants its answer, so its refusal is
    * noted like any refusal for an ended session. */
   sessionEnded?(): boolean;
+  /** Whether the command may also reject with its service's own refusal, a
+   * closed code with no `operation` beside the host's application errors.
+   * The relay admits only its own codes, so such a refusal is recorded as
+   * the relay's `refused`, with its code as the reason, as the host records
+   * it. */
+  serviceRefusals?: boolean;
 };
 
 /** Refusals the host answers for what the person did or for where the
@@ -164,13 +170,14 @@ const INTERNAL_FAULT: readonly string[] = [
 
 function rejectionLevel(
   code: string | null,
+  recorded: string | null,
   plan: CallPlan | undefined,
 ): "DEBUG" | "WARNING" | "ERROR" {
-  if (code === null) return "ERROR";
+  if (code === null || recorded === null) return "ERROR";
   if (plan?.retryable?.(code) && plan.scheduled?.())
     return plan.expected?.() ? "DEBUG" : "WARNING";
   if (plan?.answered?.(code)) return "WARNING";
-  return REFUSAL_LEVEL[code] ?? "ERROR";
+  return REFUSAL_LEVEL[recorded] ?? "ERROR";
 }
 
 /** Records a refused call. The caller has its refusal already; only the
@@ -182,8 +189,12 @@ async function reportRejection(
   code: string | null,
   reason: string | null,
   plan: CallPlan | undefined,
+  serviceRefusal: boolean,
 ): Promise<void> {
   const fault = code === null || INTERNAL_FAULT.includes(code);
+  const recorded = serviceRefusal
+    ? { code: "refused", reason: code }
+    : { code, reason };
   const ended = () => plan?.sessionEnded?.() === true || sessionEnded();
   if (!fault && !ended() && code === "not_signed_in")
     await sessionEndConfirmed();
@@ -195,7 +206,7 @@ async function reportRejection(
         event: "command_rejected",
         level: "INFO",
         command,
-        code,
+        code: recorded.code,
       });
     return;
   }
@@ -203,10 +214,10 @@ async function reportRejection(
   if (code === "queue_full" || code === "installation_cancelled") return;
   reportDiagnostic(token, {
     event: "command_rejected",
-    level: rejectionLevel(code, plan),
+    level: rejectionLevel(code, recorded.code, plan),
     command,
-    code,
-    ...(reason !== null ? { reason } : {}),
+    code: recorded.code,
+    ...(recorded.reason !== null ? { reason: recorded.reason } : {}),
   });
   // Typed refusals are worded by their owning view. Missing metadata and
   // native faults must also surface when a caller deliberately catches.
@@ -232,7 +243,14 @@ export async function observedInvoke<T>(
         : null;
     const code = field("code");
     const reason = field("reason");
-    void reportRejection(token, command, code, reason, plan);
+    // A refusal for a missing session keeps its own code, which the relay
+    // admits and the session's end is learned from.
+    const serviceRefusal =
+      plan?.serviceRefusals === true &&
+      code !== null &&
+      code !== "not_signed_in" &&
+      !(typeof error === "object" && error !== null && "operation" in error);
+    void reportRejection(token, command, code, reason, plan, serviceRefusal);
     throw error;
   }
 }
