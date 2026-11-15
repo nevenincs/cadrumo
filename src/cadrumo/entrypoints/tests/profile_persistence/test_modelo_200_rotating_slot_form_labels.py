@@ -86,14 +86,14 @@ def test_every_rotating_slot_on_the_form_names_its_year(tmp_path: Path, year: in
         form = _form(work, language)
 
     slots = [
-        (field, offsets[field.address.casilla_id])
+        (field.address.casilla_id, field, offsets[field.address.casilla_id])
         for field in form.fields()
         if isinstance(field.address, ModeloFormCasillaAddressV1) and field.address.casilla_id in offsets
     ]
     assert slots, f"the {year} form shows no rotating slot, so this check proves nothing"
     wrong = [
-        f"{field.address.casilla_id}: {field.label.text!r}"
-        for field, offset in slots
+        f"{casilla_id}: {field.label.text!r}"
+        for casilla_id, field, offset in slots
         if str(year - offset) not in field.label.text or "{year}" in field.label.text
     ]
     assert wrong == []
