@@ -7,6 +7,7 @@ import {
 } from "../../shell/catalogReadPolicy";
 import {
   catalogChoices,
+  intendedProvider,
   laneEngines,
   ranSelection,
   readingSelection,
@@ -257,16 +258,22 @@ export function useAgentCatalog({
     stored?.state === "readable" && stored.reading && catalog.kind === "ready"
       ? readingSelection(catalog.value, stored.reading)
       : null;
-  const selection = offer
-    ? restoredSelection(offer, [
-        chosen,
-        ranWith && catalog.kind === "ready"
-          ? ranSelection(catalog.value, ranWith)
-          : null,
-        remembered,
-        servedReading,
-      ])
-    : null;
+  const heldChoices = [
+    chosen,
+    ranWith && catalog.kind === "ready"
+      ? ranSelection(catalog.value, ranWith)
+      : null,
+    remembered,
+    servedReading,
+  ];
+  const selection = offer ? restoredSelection(offer, heldChoices) : null;
+  // The provider the person is on. Where no way can run there is no selection,
+  // and it is the provider they chose last, else the first the catalog serves.
+  const provider = offer
+    ? selection
+      ? offer.providers.find((one) => one.id === selection.providerId)
+      : intendedProvider(offer, heldChoices)
+    : undefined;
   return {
     catalog,
     catalogBusy,
@@ -274,6 +281,7 @@ export function useAgentCatalog({
     engines,
     offer,
     selection,
+    provider,
     remember,
     /** Reads the catalog again after a failed read, at once, and starts the
      * pauses before any busy re-read afresh. */
