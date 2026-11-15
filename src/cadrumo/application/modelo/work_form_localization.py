@@ -16,7 +16,11 @@ from ...core.errors.hierarchy import InternalInvariantError
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import lookup_translation, tr
 from ...core.type_guards import is_object_tuple
-from ...domain.calculations.registry.modelo_localization import modelo_localization_source, resolve_modelo_localization
+from ...domain.calculations.registry.modelo_localization import (
+    modelo_localization_source,
+    render_rotating_year,
+    resolve_modelo_localization,
+)
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ..operator_actions.invariant_verdicts import internal_invariant_verdict
 from .printed_boxes import printed_box_number
@@ -71,6 +75,17 @@ def localized_text(keys: tuple[str, ...], language: OutputLanguage) -> ModeloFor
         else ModeloFormTextDisclosure.SPANISH_FALLBACK
     )
     return ModeloFormText(text=text, disclosure=disclosure)
+
+
+def localized_casilla_label(
+    casilla: CasillaDefinition, language: OutputLanguage, *, ejercicio: int | None
+) -> ModeloFormText | None:
+    """Resolve a casilla's label, naming a rotating slot's year for ``ejercicio``."""
+    label = localized_text(casilla.localization_keys, language)
+    if label is None:
+        return None
+    text = render_rotating_year(label.text, offset=casilla.rotating_year_offset, ejercicio=ejercicio)
+    return label.model_copy(update={"text": text})
 
 
 def localized_heading(
@@ -148,7 +163,13 @@ def fed_box_label(binding_id: str, context: WorkFormContext) -> ModeloFormText |
 
 def casilla_help(casilla: CasillaDefinition, label: str, context: WorkFormContext) -> str | None:
     """Return the casilla's help unless it only restates the label or names the box."""
-    return casilla_help_text(casilla, label, language=context.language, box_locators=context.box_locators)
+    return casilla_help_text(
+        casilla,
+        label,
+        language=context.language,
+        box_locators=context.box_locators,
+        ejercicio=context.review.period.filing_year,
+    )
 
 
 def casilla_help_text(
@@ -157,12 +178,14 @@ def casilla_help_text(
     *,
     language: OutputLanguage,
     box_locators: tuple[re.Pattern[str], ...],
+    ejercicio: int | None,
 ) -> str | None:
     """Return the casilla's help in ``language`` unless it only restates ``label`` or names the box."""
     keys = tuple(f"{key.removesuffix('.label')}.help" for key in casilla.localization_keys)
     text = resolve_modelo_localization(keys, locale=language.value)
     if not (text is not None and text):
         return None
+    text = render_rotating_year(text, offset=casilla.rotating_year_offset, ejercicio=ejercicio)
     if normalized_help_text(text) == normalized_help_text(label) or names_only_its_box(text, box_locators):
         return None
     return text
