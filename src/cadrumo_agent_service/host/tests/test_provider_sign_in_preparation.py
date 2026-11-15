@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import sys
 from pathlib import Path
 from types import SimpleNamespace
@@ -31,6 +32,12 @@ from ..auth_attempt import AuthAttempt
 from ..launch_environment import EXTERNAL_BIN_DIRECTORIES_VARIABLE, HOSTED_ROOT_VARIABLE
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+def _served(answer: dict[str, Any]) -> dict[str, Any]:
+    """The answer without its log reference, which must be a short id."""
+    assert re.fullmatch(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}", answer["log_ref"])
+    return {key: value for key, value in answer.items() if key != "log_ref"}
 
 
 def _entry() -> ProviderStatusEntry:
@@ -156,14 +163,14 @@ def test_sign_in_preparation_preserves_authority_and_never_claims_login(
         "gui_method_unsupported",
     }:
         assert calls == []
-        assert answer == {"kind": "refused", "code": "sign_in_unavailable"}
+        assert _served(answer) == {"kind": "refused", "code": "sign_in_unavailable", "cause": "lane_not_signable"}
         assert not (tmp_path / "agent").exists()
         return
     assert calls == ["example_cli"]
     if outcome == "revision_conflict":
-        assert answer == {"code": "revision_conflict"}
+        assert _served(answer) == {"code": "revision_conflict", "cause": "settings_refused"}
     elif outcome == "revoked":
-        assert answer == {"kind": "refused", "code": "signed_out"}
+        assert _served(answer) == {"kind": "refused", "code": "signed_out", "cause": "profile_signed_out"}
     else:
         assert answer["kind"] == "sign_in_prepared"
         assert answer["entry"]["readiness"] == "sign_in_required"

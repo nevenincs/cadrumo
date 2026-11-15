@@ -36,6 +36,7 @@ from .host.controller import (
     AgentHostState,
     AgentReady,
 )
+from .host.sign_in_refusal import refuse, sign_in_in_flight
 from .host.store_lifecycle import (
     InvocationCancellation,
 )
@@ -163,6 +164,7 @@ class AgentServiceAdministration(ABC):
         )
         self._controller: AgentHostController | None = None
         self._auth_attempt: AuthAttempt | None = None
+        self._abandoned_attempts: list[AuthAttempt] = []
         self._auth_resume_valid: Callable[[], bool] | None = None
         self._wake = wake
         self._hosted_certification_lock = Lock()
@@ -382,15 +384,14 @@ class AgentServiceAdministration(ABC):
             return self._connect(provider, expected_revision=expected_revision, method=method)
         return self._change_provider(action, provider, expected_revision, base_url, choice, secret)
 
-    def _admin_refusal(self) -> dict[str, str] | None:
+    def _admin_refusal(self) -> dict[str, Any] | None:
         """Refuse a tree or provider change while stopping, signed out or during a sign-in attempt."""
         if self._closing.is_set():
             return {"kind": "refused", "code": "service_stopping"}
         if self.client.lease is None:
             return {"kind": "refused", "code": "signed_out"}
-        if self._auth_attempt is not None and self._auth_attempt.active:
-            return {"kind": "refused", "code": "busy"}
-        return None
+        blocks, self._auth_attempt = sign_in_in_flight(self._auth_attempt, self._abandoned_attempts)
+        return refuse("busy", cause="sign_in_in_progress") if blocks else None
 
     def _admin(
         self,
