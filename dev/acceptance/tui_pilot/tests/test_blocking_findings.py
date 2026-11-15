@@ -11,6 +11,7 @@ import json
 import pytest
 
 from cadrumo.application.modelo.work_form_findings import ModeloFormIssue
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.modelos.verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
@@ -24,6 +25,7 @@ from ..intake import INCOMPLETE, PilotRow
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
+_ENVELOPE = filing_year_envelope()
 _NOT_SEALED = "REFUSED_MODELO_REVISION_NOT_SEALED"
 _FIGURES = (("0505", "1200.5"),)
 _GRADE_KEY = f"application.modelo.findings.{GRADE_HELD_FINDING}"
@@ -48,7 +50,7 @@ def _blocked(*findings: str) -> PilotRow:
     return PilotRow(
         persona="p",
         modelo="303",
-        year=2023,
+        year=_ENVELOPE.floor,
         period="1T",
         calculate="pass",
         verify=INCOMPLETE,
@@ -63,9 +65,9 @@ def _table_row() -> TableRow:
     plan = PlannedRow(
         persona="p",
         modelo="303",
-        year=2023,
+        year=_ENVELOPE.floor,
         period="1T",
-        horizon=2024,
+        horizon=_ENVELOPE.horizon,
         has_values=True,
         grounding="verified",
         sources=("ley:art-1",),
