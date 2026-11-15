@@ -3195,6 +3195,13 @@ application:
       m840_apartado_locales_ambiguous: 'Modelo %{modelo} %{filing_year}: Apartado
         %{apartado} describes one local, but your profile states it for more than
         one local of activity %{activity} (%{locales}). Check the rows in %{profile_section}.'
+      m840_fact_code_digits: 'Modelo %{modelo}: the profile detail %{profile_path}
+        prints as a code of exactly %{digits} digits; correct it in your profile.'
+      m840_fact_text_width: 'Modelo %{modelo}: the profile detail %{profile_path}
+        prints in a box of %{width} characters; write between 1 and %{width} characters
+        in your profile.'
+      m840_fact_units: 'Modelo %{modelo}: the profile detail %{profile_path} prints
+        as a whole number of at most %{digits} digits; correct it in your profile.'
       novel_source_kind_rejected: 'Unrecognized calculation source kind(s) %{novel_source_kinds}
         on version %{revision_id}: the modelo definitions declare a value source that
         no calculation resolver handles. Add a resolver or mark it as deferred before

@@ -3302,6 +3302,13 @@ application:
         apartado egyetlen helyiséget ír le, de a profilod a(z) %{activity} tevékenység
         több helyiségére is megadja (%{locales}). Ellenőrizd a(z) %{profile_section}
         szakasz sorait.'
+      m840_fact_code_digits: 'Modelo %{modelo}: a(z) %{profile_path} profiladat pontosan
+        %{digits} számjegyű kódként jelenik meg; javítsd a profilodban.'
+      m840_fact_text_width: 'Modelo %{modelo}: a(z) %{profile_path} profiladat egy
+        %{width} karakteres mezőben jelenik meg; írj 1 és %{width} közötti számú karaktert
+        a profilodba.'
+      m840_fact_units: 'Modelo %{modelo}: a(z) %{profile_path} profiladat legfeljebb
+        %{digits} számjegyű egész számként jelenik meg; javítsd a profilodban.'
       novel_source_kind_rejected: 'Ismeretlen számítási forrástípus(ok) %{novel_source_kinds}
         a(z) %{revision_id} változatban: a nyomtatványdefiníciók olyan értékforrást
         deklarálnak, amelyet egyetlen számítási feloldó sem kezel. Adj hozzá egy feloldót,

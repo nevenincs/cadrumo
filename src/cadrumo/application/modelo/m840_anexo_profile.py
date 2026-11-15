@@ -24,7 +24,6 @@ from collections.abc import Mapping
 from types import MappingProxyType
 from typing import Final
 
-from ...core.errors.hierarchy import ProfileAnswerTypeError
 from ...domain.contribuyente.iae_local_facts import (
     IAE_ELEMENTO_TRIBUTARIO_SECTION,
     IAE_LOCAL_SECTION,
@@ -72,10 +71,13 @@ _ACTIVITY_LEAVES: Final = frozenset(
 _DELEGACION_DIGITS: Final = 2
 _ADMINISTRACION_DIGITS: Final = 3
 _PROVINCIA_DIGITS: Final = 2
-_UNITS: Final = re.compile(r"^\d{1,7}$")
+_UNITS_DIGITS: Final = 7
+_UNITS: Final = re.compile(rf"^\d{{1,{_UNITS_DIGITS}}}$")
 _ADMINISTRACION_NAME_WIDTH: Final = 20
 _MUNICIPIO_WIDTH: Final = 30
 
+#: This module reads the facts of one modelo; its refusals name it.
+_MODELO: Final = "840"
 _APARTADO_V: Final = "V"
 _APARTADO_VI_C: Final = "VI C"
 _NO_ROW: Final[Mapping[str, str]] = MappingProxyType[str, str]({})
@@ -87,9 +89,9 @@ def modelo_840_profile_facts(*, work_unit: WorkUnit, path_values: Mapping[str, o
     ``path_values`` is the profile in force, keyed by canonical schema path.
 
     Raises:
-        ModeloProfileReadinessError: When the facts name more than one activity, or when
-            Apartado V or VI C would have to describe more than one local.
-        ProfileAnswerTypeError: When a stored fact does not have the shape DR840 prints.
+        ModeloProfileReadinessError: When the facts name more than one activity, when
+            Apartado V or VI C would have to describe more than one local, or when a stored
+            fact does not have the shape DR840 prints.
     """
     locales = iae_locales_from_facts(path_values)
     elementos = iae_elementos_from_facts(path_values)
@@ -134,21 +136,35 @@ def _stated(values: Mapping[str, object], key: str) -> str | None:
     return text or None
 
 
-def _refuse(message: str, *, field: str) -> ProfileAnswerTypeError:
-    return ProfileAnswerTypeError(message, context={"key": field})
+def _refuse(reason: str, *, field: str, **shape: int) -> ModeloProfileReadinessError:
+    """Refuse a stored fact DR840 cannot print, offering the profile detail that states it."""
+    return ModeloProfileReadinessError(
+        translated_message=f"application.modelo.errors.{reason}",
+        context={
+            "modelo": _MODELO,
+            "reason": reason,
+            "key": field,
+            "profile_section": field.partition(".")[0],
+            "profile_path": field,
+            "profile_requirements": field,
+            **{name: str(value) for name, value in shape.items()},
+        },
+        profile_precondition_verdict=profile_facts_verdict((field,), modelo=_MODELO),
+        next_step=open_profile_path_step(field),
+    )
 
 
 def _code(values: Mapping[str, object], key: str, digits: int, *, field: str) -> str | None:
     value = _stated(values, key)
     if value is not None and not (len(value) == digits and value.isascii() and value.isdigit()):
-        raise _refuse(f"write the code as {digits} digits", field=field)
+        raise _refuse("m840_fact_code_digits", field=field, digits=digits)
     return value
 
 
 def _text(values: Mapping[str, object], key: str, width: int, *, field: str) -> str | None:
     value = _stated(values, key)
     if value is not None and (not value.strip() or len(value) > width):
-        raise _refuse(f"write between 1 and {width} characters", field=field)
+        raise _refuse("m840_fact_text_width", field=field, width=width)
     return value
 
 
@@ -157,7 +173,7 @@ def _units(row: Mapping[str, str], leaf: str) -> int | None:
     if value is None:
         return None
     if not _UNITS.fullmatch(value):
-        raise _refuse("write a whole number of at most seven digits", field=_activity_path(leaf))
+        raise _refuse("m840_fact_units", field=_activity_path(leaf), digits=_UNITS_DIGITS)
     return int(value)
 
 
