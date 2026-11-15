@@ -13,6 +13,11 @@ RECORD_TERMINATOR_PHRASE = r"fin de registro|salto de l[íi]nea|\bCRLF\b"
 _RECORD_TERMINATOR = re.compile(RECORD_TERMINATOR_PHRASE, re.IGNORECASE)
 
 
+def is_record_terminator_caption(text: str) -> bool:
+    """Whether a design row's caption declares the physical end of its record."""
+    return _RECORD_TERMINATOR.search(text) is not None
+
+
 def split_record_terminator(
     suffixes: list[RecordDesignRelativeSuffixMarker],
 ) -> tuple[list[RecordDesignRelativeSuffixMarker], RecordDesignRelativeSuffixMarker | None]:
@@ -31,6 +36,6 @@ def split_record_terminator(
     if not suffixes:
         return suffixes, None
     last = suffixes[-1]
-    if last.length == 2 and _RECORD_TERMINATOR.search(last.description):
+    if last.length == 2 and is_record_terminator_caption(last.description):
         return suffixes[:-1], last
     return suffixes, None

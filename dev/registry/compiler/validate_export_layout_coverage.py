@@ -131,6 +131,7 @@ from cadrumo.domain.calculations.registry.schema_exports import (
     FilingEnvelopeDefinition,
 )
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
+from dev.registry.compiler.record_design_layout_markers import is_record_terminator_caption
 from dev.registry.compiler.record_design_schema import (
     AUXILIARY_ENVELOPE_HEADER_LENGTHS,
     RecordDesignField,
@@ -148,6 +149,9 @@ from . import export_layout_required_positions as required_positions
 #: message is the entry point into it, and a refusal listing a thousand
 #: coordinates is one nobody reads.
 _ENUMERATED_PER_RECORD: Final = 8
+
+#: The byte width of each record line ending a design can number as positions.
+_LINE_ENDING_WIDTHS: Final = {"crlf": 2, "lf": 1}
 
 
 @dataclass(frozen=True, slots=True)
@@ -215,21 +219,13 @@ def _sheet_coverage_inputs(
 
     joined = record_join.join_record(sheet, records, constants_by_binding, source=source)
     if joined is not None:
-        consulted = tuple(joined.fields)
-        return _CoverageInputs(
-            consulted,
-            record_join.written_bytes(consulted, data_only=True),
-            record_join.written_bytes(consulted, data_only=False),
-            f"authored record {joined.id!r} (record_type {joined.record_type!r})",
+        return _record_coverage_inputs(
+            sheet, joined, f"authored record {joined.id!r} (record_type {joined.record_type!r})"
         )
 
     if len(records) == 1:
-        consulted = tuple(records[0].fields)
-        return _CoverageInputs(
-            consulted,
-            record_join.written_bytes(consulted, data_only=True),
-            record_join.written_bytes(consulted, data_only=False),
-            f"sole authored record {records[0].id!r} (source identity unjoined)",
+        return _record_coverage_inputs(
+            sheet, records[0], f"sole authored record {records[0].id!r} (source identity unjoined)"
         )
 
     return _CoverageInputs(
@@ -241,6 +237,37 @@ def _sheet_coverage_inputs(
         "question, so this count is a floor, not the whole gap",
         unresolved_record=len(records) > 1,
     )
+
+
+def _record_coverage_inputs(sheet: RecordDesignSheet, record: ExportRecordDefinition, scope: str) -> _CoverageInputs:
+    """Measure one authored record's bytes, its declared line ending included where the design numbers it."""
+    consulted = tuple(record.fields)
+    line_break = _numbered_line_break_bytes(sheet, record)
+    return _CoverageInputs(
+        consulted,
+        record_join.written_bytes(consulted, data_only=True) | line_break,
+        record_join.written_bytes(consulted, data_only=False) | line_break,
+        scope,
+    )
+
+
+def _numbered_line_break_bytes(sheet: RecordDesignSheet, record: ExportRecordDefinition) -> set[int]:
+    """Return the design's numbered closing line break when the record's line ending writes it.
+
+    Modelo 840 numbers "Salto de línea. Constante CRLF" as each page's last two
+    positions, and the generated record carries those bytes as its line ending
+    rather than as a field. Credited only for the design's own last row, captioned
+    as a line break, of the ending's exact width, directly after the last field, so
+    a layout that merely stops short of its design is still refused.
+    """
+    width = _LINE_ENDING_WIDTHS.get(str(record.line_ending), 0)
+    if not width or not sheet.fields or not record.fields:
+        return set()
+    row = sheet.fields[-1]
+    fields_end = max((field.offset or 0) + (field.length or 0) for field in record.fields)
+    if row.length != width or row.offset != fields_end or not is_record_terminator_caption(row.description or ""):
+        return set()
+    return set(range(row.offset, row.offset + row.length))
 
 
 def joined_variable_header_coverage_inputs(
