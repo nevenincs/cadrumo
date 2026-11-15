@@ -73,6 +73,7 @@ from ...application.modelo.workbench_operations import (
     MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID,
     MODELO_EDIT_RENEW_OPERATION_DEFINITION_ID,
     MODELO_WORK_CASILLA_HELP_OPERATION_DEFINITION_ID,
+    MODELO_WORK_FILING_STATE_OPERATION_DEFINITION_ID,
     MODELO_WORK_FORM_OPERATION_DEFINITION_ID,
     ModeloCasillaHelpExecutor,
     ModeloCasillaHelpProjectionV1,
@@ -87,8 +88,16 @@ from ...application.modelo.workbench_operations import (
     ModeloEditRenewRequest,
     ModeloWorkbenchFormExecutor,
     ModeloWorkbenchFormRequest,
+    ModeloWorkFilingStateExecutor,
+    ModeloWorkFilingStateRequest,
 )
-from ...application.modelo.workbench_projection import ModeloWorkbenchFormProjectionV1, restore_modelo_workbench_form
+from ...application.modelo.workbench_projection import (
+    ModeloWorkbenchFormProjectionV1,
+    ModeloWorkFilingStateProjectionV1,
+    PublicModeloFormField,
+    PublicModeloWorkForm,
+    restore_modelo_workbench_form,
+)
 from ...application.modelo.workbench_read import ModeloWorkbenchReadPorts, read_modelo_workbench_form
 from ...application.operations.financial_operand_contract import (
     OperationFinancialOperandRefusalCode,
@@ -112,6 +121,7 @@ from ...domain.modelos.work_unit import WorkUnitCatalogue
 from ..adapter_composition_work_ports import build_calculation_action_ports
 from ..operation_composition_inputs import build_modelo_workbench_read_ports
 from .executor_context_stand_ins import RecordedEvents, RecordedOperands, UninterruptedCancellation
+from .modelo_filing_state_support import filing_state_of_form
 from .production_operation_registry import production_operation_registry
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -899,3 +909,46 @@ def test_a_renewed_baseline_keeps_offering_the_statement_while_nothing_is_held(t
     assert ModeloEditBindingIntentKind.ATTEST_PRIOR_VALUE in _offered_intents(
         renewed.renewed_baseline.to_baseline().permitted_surface
     )
+
+
+def test_the_filing_state_read_states_the_form_reads_filing_fields_and_admits_no_edit(tmp_path: Path) -> None:
+    with seeded_operator_work(tmp_path) as work:
+        work.recalculate()
+        contracts = production_operation_registry().public_contract_set
+        form, _ = _run(
+            work,
+            ModeloWorkbenchFormExecutor(ports_factory=build_modelo_workbench_read_ports, contracts=lambda: contracts),
+            MODELO_WORK_FORM_OPERATION_DEFINITION_ID,
+            ModeloWorkbenchFormRequest(
+                profile_id=_profile_id(work), work_unit_id=work.work_unit_id, output_language=OutputLanguage.ES
+            ),
+            ModeloWorkbenchFormProjectionV1,
+        )
+        state, _ = _run(
+            work,
+            ModeloWorkFilingStateExecutor(ports_factory=build_modelo_workbench_read_ports),
+            MODELO_WORK_FILING_STATE_OPERATION_DEFINITION_ID,
+            ModeloWorkFilingStateRequest(
+                profile_id=_profile_id(work), work_unit_id=work.work_unit_id, output_language=OutputLanguage.ES
+            ),
+            ModeloWorkFilingStateProjectionV1,
+        )
+
+    assert form.admitted_baseline is not None
+    assert state.calculation_revision_id is not None
+    assert state == filing_state_of_form(form)
+    with pytest.raises(ValidationError, match="granting verification report requires its calculation"):
+        ModeloWorkFilingStateProjectionV1.model_validate_json(
+            state.model_copy(
+                update={"calculation_revision_id": None, "verification_report_id": "0" * 64}
+            ).model_dump_json()
+        )
+
+
+def test_the_filing_state_result_carries_no_form_box_and_no_edit_baseline() -> None:
+    whole_form = {PublicModeloWorkForm.__name__, PublicModeloFormField.__name__, ModeloEditApplyBaselineV1.__name__}
+    form_models = set(ModeloWorkbenchFormProjectionV1.model_json_schema()["$defs"])
+    state_models = set(ModeloWorkFilingStateProjectionV1.model_json_schema()["$defs"])
+
+    assert whole_form <= form_models
+    assert not whole_form & state_models
