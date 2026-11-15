@@ -40,6 +40,7 @@ from .interactions import (
     OperationConsumedInteraction,
     OperationRejectResponse,
 )
+from .lifecycle_timing import log_operation_timing
 from .model_runs import operation_model_run_port, run_with_model_runs
 from .models import (
     OperationId,
@@ -230,6 +231,7 @@ class SupervisorExecutionMixin(SupervisorHost):
                 executor_entered_at=now,
             ),
         )
+        log_operation_timing(running.identity, "running")
         context = self._build_context(running)
         executor_context = supervisor_context.SupervisorExecutorContext(
             context=context,
