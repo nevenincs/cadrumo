@@ -584,5 +584,167 @@ async fn a_profile_change_invalidates_preparation_before_its_result_can_launch()
     assert!(supervisor.gateway().is_none());
 }
 
+/// A supervisor whose service never launches here, so a test drives its
+/// status and admission itself, with `limit` as its start bound.
+fn starting_supervisor(limit: Duration) -> Arc<Supervisor> {
+    let observe: Observe = Arc::new(|| Box::pin(async { observed(false, true, None) }));
+    let supervisor = Supervisor::new(
+        observe,
+        every(Duration::from_secs(60)),
+        None,
+        Arc::new(Diagnostics::default()),
+    )
+    .timeout_within(limit);
+    super::publish(&supervisor.shared, State::Starting);
+    Arc::new(supervisor)
+}
+
+/// The provider settings status read the window asks for.
+fn provider_settings_status(
+    supervisor: &Supervisor,
+) -> std::result::Result<
+    crate::shell::provider_settings::wire::Status,
+    crate::shell::provider_settings::wire::CommandFailure,
+> {
+    crate::shell::provider_settings::when_admitted(
+        || supervisor.await_admin(),
+        || {
+            crate::shell::provider_settings::read_status(
+                || supervisor.administer(serde_json::json!({"action":"status"}), None),
+                Duration::ZERO,
+            )
+        },
+    )
+}
+
+fn admin_unavailable(
+    result: std::result::Result<
+        crate::shell::provider_settings::wire::Status,
+        crate::shell::provider_settings::wire::CommandFailure,
+    >,
+) -> bool {
+    matches!(
+        result,
+        Err(crate::shell::provider_settings::wire::CommandFailure::Host(error))
+            if error.code == ErrorCode::ReadFailed
+                && error.reason.as_deref() == Some("agent_admin_unavailable")
+    )
+}
+
+#[test]
+fn provider_settings_status_asked_while_starting_waits_for_admission_and_answers() {
+    use std::io::{Read, Write};
+    use std::net::TcpListener;
+    let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+    let port = listener.local_addr().unwrap().port();
+    let server = std::thread::spawn(move || {
+        let (mut stream, _) = listener.accept().unwrap();
+        let mut frame = || {
+            let mut header = [0; 4];
+            stream.read_exact(&mut header).unwrap();
+            let mut data = vec![0; u32::from_be_bytes(header) as usize];
+            stream.read_exact(&mut data).unwrap();
+            data
+        };
+        let _bearer = frame();
+        let request: serde_json::Value = serde_json::from_slice(&frame()).unwrap();
+        assert_eq!(request["action"], "status");
+        let reply = serde_json::to_vec(&serde_json::json!({"version":1,"request_id":request["request_id"],"result":{"providers":[]}})).unwrap();
+        stream
+            .write_all(&(reply.len() as u32).to_be_bytes())
+            .unwrap();
+        stream.write_all(&reply).unwrap();
+    });
+    let supervisor = starting_supervisor(Duration::from_secs(60));
+    let read = {
+        let supervisor = supervisor.clone();
+        std::thread::spawn(move || provider_settings_status(&supervisor))
+    };
+    // The read is asked before the endpoint is admitted, as the window does.
+    std::thread::sleep(Duration::from_millis(100));
+    assert!(!read.is_finished());
+    super::admit(
+        &supervisor.shared,
+        super::super::admin::Endpoint {
+            port,
+            bearer: Arc::new(Zeroizing::new("test".to_owned())),
+            generation: 1,
+            gate: Default::default(),
+        },
+    );
+    let status = read
+        .join()
+        .unwrap()
+        .expect("the read answers once admitted");
+    assert!(status.providers.is_empty());
+    server.join().unwrap();
+}
+
+#[test]
+fn provider_settings_status_without_a_starting_service_is_refused_at_once() {
+    for state in [
+        State::Stopped,
+        State::Refused {
+            code: Refusal::SignedOut,
+        },
+    ] {
+        let supervisor = starting_supervisor(Duration::from_secs(60));
+        super::publish(&supervisor.shared, state.clone());
+        let asked = std::time::Instant::now();
+        assert_eq!(supervisor.await_admin(), super::AdminWait::NotStarting);
+        assert!(
+            admin_unavailable(provider_settings_status(&supervisor)),
+            "{state:?}"
+        );
+        assert!(asked.elapsed() < Duration::from_secs(10), "{state:?}");
+    }
+}
+
+#[test]
+fn provider_settings_status_waiting_on_a_start_that_fails_is_released_with_its_refusal() {
+    let supervisor = starting_supervisor(Duration::from_secs(60));
+    let read = {
+        let supervisor = supervisor.clone();
+        std::thread::spawn(move || provider_settings_status(&supervisor))
+    };
+    std::thread::sleep(Duration::from_millis(100));
+    assert!(!read.is_finished());
+    let asked = std::time::Instant::now();
+    super::publish(
+        &supervisor.shared,
+        State::Refused {
+            code: Refusal::ServiceFailed,
+        },
+    );
+    assert!(admin_unavailable(read.join().unwrap()));
+    assert!(asked.elapsed() < Duration::from_secs(10));
+}
+
+#[test]
+fn provider_settings_status_past_the_start_bound_answers_busy() {
+    let supervisor = starting_supervisor(Duration::from_millis(50));
+    let mut called = false;
+    let result = crate::shell::provider_settings::when_admitted(
+        || supervisor.await_admin(),
+        || {
+            called = true;
+            Ok(())
+        },
+    );
+    assert!(!called);
+    let Err(crate::shell::provider_settings::wire::CommandFailure::Refused(refused)) = result
+    else {
+        panic!("a service still starting past the bound is busy");
+    };
+    assert_eq!(
+        serde_json::to_value(refused).unwrap(),
+        serde_json::json!({"code":"busy"})
+    );
+    assert!(matches!(
+        provider_settings_status(&supervisor),
+        Err(crate::shell::provider_settings::wire::CommandFailure::Refused(_))
+    ));
+}
+
 #[cfg(windows)]
 mod live;
