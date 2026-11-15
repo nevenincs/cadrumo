@@ -8857,6 +8857,30 @@ modelo:
               számviteli eredmény korrekciói - Növelések [01230]
           is-cuota-liquida:
             label: Elszámolás IV - Egyéb levonások - Nettó adókötelezettség [00592]
+          is-deduccion-125-aniversario-athletic-club-aplicado-periodo:
+            label: 'Egyes tevékenységek ösztönzésére szolgáló levonások - 2023: Az
+              Athletic Club 125. évfordulója 1898-2023 (AC) - Ebben az elszámolásban
+              alkalmazva [02024]'
+          is-deduccion-125-aniversario-athletic-club-pendiente-futuro:
+            label: 'Egyes tevékenységek ösztönzésére szolgáló levonások - 2023: Az
+              Athletic Club 125. évfordulója 1898-2023 (AC) - Jövőbeli időszakokban
+              alkalmazandó [02025]'
+          is-deduccion-125-aniversario-athletic-club-pendiente-generada:
+            label: 'Egyes tevékenységek ösztönzésére szolgáló levonások - 2023: Az
+              Athletic Club 125. évfordulója 1898-2023 (AC) - Függőben lévő/keletkezett
+              levonás [02000]'
+          is-deduccion-60-aniversario-rally-blendio-aplicado-periodo:
+            label: 'Egyes tevékenységek ösztönzésére szolgáló levonások - 2023: A
+              Rally Blendio Princesa de Asturias Ciudad de Oviedo 60. évfordulója
+              (60RB) - Ebben az elszámolásban alkalmazva [01995]'
+          is-deduccion-60-aniversario-rally-blendio-pendiente-futuro:
+            label: 'Egyes tevékenységek ösztönzésére szolgáló levonások - 2023: A
+              Rally Blendio Princesa de Asturias Ciudad de Oviedo 60. évfordulója
+              (60RB) - Jövőbeli időszakokban alkalmazandó [01996]'
+          is-deduccion-60-aniversario-rally-blendio-pendiente-generada:
+            label: 'Egyes tevékenységek ösztönzésére szolgáló levonások - 2023: A
+              Rally Blendio Princesa de Asturias Ciudad de Oviedo 60. évfordulója
+              (60RB) - Függőben lévő/keletkezett levonás [01987]'
           is-deduccion-acontecimiento-interes-publico-otras:
             label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year}(****)
               egyéb levonások a kiemelt közérdekű eseményeket támogató programokhoz
@@ -8953,6 +8977,30 @@ modelo:
             label: Nonprofit szervezeteknek adott adományok levonása - Általános adományok
               - 2024 Ugyanazon szervezetnek ismételt adományozás nélkül - Függőben
               lévő/keletkezett levonás [00369]
+          is-deduccion-donativos-general-subtotal-2013-2014-aplicado-periodo:
+            label: Nonprofit szervezeteknek adott adományok levonása - Általános adományok
+              - Adományok részösszege 2013 és 2014 - Ebben az elszámolásban alkalmazva
+              [01690]
+          is-deduccion-donativos-general-subtotal-2013-2014-pendiente-futuro:
+            label: Nonprofit szervezeteknek adott adományok levonása - Általános adományok
+              - Adományok részösszege 2013 és 2014 - Jövőbeli időszakokban alkalmazandó
+              [01691]
+          is-deduccion-donativos-general-subtotal-2013-2014-pendiente-generada:
+            label: Nonprofit szervezeteknek adott adományok levonása - Általános adományok
+              - Adományok részösszege 2013 és 2014 - Függőben lévő/keletkezett levonás
+              [01689]
+          is-deduccion-donativos-prioritarias-subtotal-2013-2014-aplicado-periodo:
+            label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
+              és más, növelt levonásra jogosító célokra adott adományok - Adományok
+              részösszege 2013 és 2014 - Ebben az elszámolásban alkalmazva [01702]
+          is-deduccion-donativos-prioritarias-subtotal-2013-2014-pendiente-futuro:
+            label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
+              és más, növelt levonásra jogosító célokra adott adományok - Adományok
+              részösszege 2013 és 2014 - Jövőbeli időszakokban alkalmazandó [01703]
+          is-deduccion-donativos-prioritarias-subtotal-2013-2014-pendiente-generada:
+            label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
+              és más, növelt levonásra jogosító célokra adott adományok - Adományok
+              részösszege 2013 és 2014 - Függőben lévő/keletkezett levonás [01701]
           is-deduccion-donativos-total:
             label: Nonprofit szervezeteknek adott adományok levonása - Nonprofit szervezeteknek
               adott adományok összes levonása - Jövőbeli időszakokban alkalmazandó
@@ -10535,6 +10583,10 @@ modelo:
             label: Elszámolás IV - Az üzleti év fizetendő vagy visszajáró adója -
               Forrásadó és részletfizetés összesen - A jogalany részére teljesítve
               [01766]
+          is-ric-2018-integrado-base-imponible-incumplimiento:
+            label: Kanári-szigeteki beruházási tartalék különös rendszere - RIC 2018
+              - Ebben az elszámolásban alkalmazva/materializálva - Az adóalapba beépítve
+              a feltételek nem teljesítése miatt [01936]
           is-sal-reserva-especial-dotacion:
             label: Elszámolás III - Adóalap - Munkavállalói társaságok - Különleges
               tartalék képzése (44/2015. törvény 14. cikk) [SAL_RESERVA_DOTACION]

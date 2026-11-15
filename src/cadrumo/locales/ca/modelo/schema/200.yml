@@ -8765,6 +8765,28 @@ modelo:
               al resultat comptable referides al grup fiscal - Augments [01230]
           is-cuota-liquida:
             label: Liquidació IV - Altres deduccions - Quota líquida [00592]
+          is-deduccion-125-aniversario-athletic-club-aplicado-periodo:
+            label: 'Deduccions per incentivar determ. activitats - 2023: 125è aniversari
+              de l''Athletic Club 1898-2023 (AC) - Aplicat en aquesta liquidació [02024]'
+          is-deduccion-125-aniversario-athletic-club-pendiente-futuro:
+            label: 'Deduccions per incentivar determ. activitats - 2023: 125è aniversari
+              de l''Athletic Club 1898-2023 (AC) - Pendent d''aplicació en períodes
+              futurs [02025]'
+          is-deduccion-125-aniversario-athletic-club-pendiente-generada:
+            label: 'Deduccions per incentivar determ. activitats - 2023: 125è aniversari
+              de l''Athletic Club 1898-2023 (AC) - Deducció pendent/generada [02000]'
+          is-deduccion-60-aniversario-rally-blendio-aplicado-periodo:
+            label: 'Deduccions per incentivar determ. activitats - 2023: 60è Aniversari
+              del Ral·li Blendio Princesa d''Astúries Ciutat d''Oviedo (60RB) - Aplicat
+              en aquesta liquidació [01995]'
+          is-deduccion-60-aniversario-rally-blendio-pendiente-futuro:
+            label: 'Deduccions per incentivar determ. activitats - 2023: 60è Aniversari
+              del Ral·li Blendio Princesa d''Astúries Ciutat d''Oviedo (60RB) - Pendent
+              d''aplicació en períodes futurs [01996]'
+          is-deduccion-60-aniversario-rally-blendio-pendiente-generada:
+            label: 'Deduccions per incentivar determ. activitats - 2023: 60è Aniversari
+              del Ral·li Blendio Princesa d''Astúries Ciutat d''Oviedo (60RB) - Deducció
+              pendent/generada [01987]'
           is-deduccion-acontecimiento-interes-publico-otras:
             label: Deduccions per incentivar determ. activitats - {year}(****) altres
               deduccions relatives a programes de suport a esdeveniments d'excepcional
@@ -8861,6 +8883,33 @@ modelo:
             label: Deducció donatius entitats sense fins lucratius - Donacions de
               caràcter general - 2024 Sense reiteració de donacions a una mateixa
               entitat - Deducció pendent/generada [00369]
+          is-deduccion-donativos-general-subtotal-2013-2014-aplicado-periodo:
+            label: Deducció donatius entitats sense fins lucratius - Donacions de
+              caràcter general - Subtotal de donacions 2013 i 2014 - Aplicat en aquesta
+              liquidació [01690]
+          is-deduccion-donativos-general-subtotal-2013-2014-pendiente-futuro:
+            label: Deducció donatius entitats sense fins lucratius - Donacions de
+              caràcter general - Subtotal de donacions 2013 i 2014 - Pendent d'aplicació
+              en períodes futurs [01691]
+          is-deduccion-donativos-general-subtotal-2013-2014-pendiente-generada:
+            label: Deducció donatius entitats sense fins lucratius - Donacions de
+              caràcter general - Subtotal de donacions 2013 i 2014 - Deducció pendent/generada
+              [01689]
+          is-deduccion-donativos-prioritarias-subtotal-2013-2014-aplicado-periodo:
+            label: Deducció donatius entitats sense fins lucratius - Donacions per
+              a activitats prioritàries de mecenatge i altres amb dret a deducció
+              incrementada - Subtotal de donacions 2013 i 2014 - Aplicat en aquesta
+              liquidació [01702]
+          is-deduccion-donativos-prioritarias-subtotal-2013-2014-pendiente-futuro:
+            label: Deducció donatius entitats sense fins lucratius - Donacions per
+              a activitats prioritàries de mecenatge i altres amb dret a deducció
+              incrementada - Subtotal de donacions 2013 i 2014 - Pendent d'aplicació
+              en períodes futurs [01703]
+          is-deduccion-donativos-prioritarias-subtotal-2013-2014-pendiente-generada:
+            label: Deducció donatius entitats sense fins lucratius - Donacions per
+              a activitats prioritàries de mecenatge i altres amb dret a deducció
+              incrementada - Subtotal de donacions 2013 i 2014 - Deducció pendent/generada
+              [01701]
           is-deduccion-donativos-total:
             label: Deducció donatius entitats sense fins lucratius - Total deduccions
               donacions a entitats sense fins lucratius - Pendent d'aplicació en períodes
@@ -10447,6 +10496,10 @@ modelo:
           is-retenciones-ingresos-a-cuenta:
             label: Liquidació IV - Quota de l'exercici a ingressar o a retornar -
               Total retencions i ingressos a compte - Efectuats a l'entitat [01766]
+          is-ric-2018-integrado-base-imponible-incumplimiento:
+            label: Règ. especial reserva per a inversions a Canàries - RIC 2018 -
+              Aplicat/materialitzat en aquesta liquidació - Integrat en la BI per
+              incompliment de requisits [01936]
           is-sal-reserva-especial-dotacion:
             label: Liquidació III - Base imposable - Societats Laborals - Reserva
               especial de dotació Llei 44/2015 Art. 14 [SAL_RESERVA_DOTACION]

@@ -8893,6 +8893,29 @@ modelo:
               accounting result referring to the tax group - Increases [01230]
           is-cuota-liquida:
             label: Settlement IV - Other deductions - Net tax liability [00592]
+          is-deduccion-125-aniversario-athletic-club-aplicado-periodo:
+            label: 'Deductions to incentivise certain activities - 2023: 125th anniversary
+              of Athletic Club 1898-2023 (AC) - Applied in this settlement [02024]'
+          is-deduccion-125-aniversario-athletic-club-pendiente-futuro:
+            label: 'Deductions to incentivise certain activities - 2023: 125th anniversary
+              of Athletic Club 1898-2023 (AC) - Pending application in future periods
+              [02025]'
+          is-deduccion-125-aniversario-athletic-club-pendiente-generada:
+            label: 'Deductions to incentivise certain activities - 2023: 125th anniversary
+              of Athletic Club 1898-2023 (AC) - Deduction carried forward/generated
+              [02000]'
+          is-deduccion-60-aniversario-rally-blendio-aplicado-periodo:
+            label: 'Deductions to incentivise certain activities - 2023: 60th Anniversary
+              of the Rally Blendio Princesa de Asturias Ciudad de Oviedo (60RB) -
+              Applied in this settlement [01995]'
+          is-deduccion-60-aniversario-rally-blendio-pendiente-futuro:
+            label: 'Deductions to incentivise certain activities - 2023: 60th Anniversary
+              of the Rally Blendio Princesa de Asturias Ciudad de Oviedo (60RB) -
+              Pending application in future periods [01996]'
+          is-deduccion-60-aniversario-rally-blendio-pendiente-generada:
+            label: 'Deductions to incentivise certain activities - 2023: 60th Anniversary
+              of the Rally Blendio Princesa de Asturias Ciudad de Oviedo (60RB) -
+              Deduction carried forward/generated [01987]'
           is-deduccion-acontecimiento-interes-publico-otras:
             label: Deductions to incentivise certain activities - {year}(****) other
               deductions relating to support programmes for events of exceptional
@@ -8989,6 +9012,31 @@ modelo:
             label: Deduction for donations to non-profit entities - General donations
               - 2024 Without repeated donations to the same entity - Pending/generated
               deduction [00369]
+          is-deduccion-donativos-general-subtotal-2013-2014-aplicado-periodo:
+            label: Deduction for donations to non-profit entities - General donations
+              - Donations subtotal 2013 and 2014 - Applied in this settlement [01690]
+          is-deduccion-donativos-general-subtotal-2013-2014-pendiente-futuro:
+            label: Deduction for donations to non-profit entities - General donations
+              - Donations subtotal 2013 and 2014 - Pending application in future periods
+              [01691]
+          is-deduccion-donativos-general-subtotal-2013-2014-pendiente-generada:
+            label: Deduction for donations to non-profit entities - General donations
+              - Donations subtotal 2013 and 2014 - Deduction carried forward/generated
+              [01689]
+          is-deduccion-donativos-prioritarias-subtotal-2013-2014-aplicado-periodo:
+            label: Deduction for donations to non-profit entities - Donations for
+              priority patronage activities and others entitled to increased deduction
+              - Donations subtotal 2013 and 2014 - Applied in this settlement [01702]
+          is-deduccion-donativos-prioritarias-subtotal-2013-2014-pendiente-futuro:
+            label: Deduction for donations to non-profit entities - Donations for
+              priority patronage activities and others entitled to increased deduction
+              - Donations subtotal 2013 and 2014 - Pending application in future periods
+              [01703]
+          is-deduccion-donativos-prioritarias-subtotal-2013-2014-pendiente-generada:
+            label: Deduction for donations to non-profit entities - Donations for
+              priority patronage activities and others entitled to increased deduction
+              - Donations subtotal 2013 and 2014 - Deduction carried forward/generated
+              [01701]
           is-deduccion-donativos-total:
             label: Deduction for donations to non-profit entities - Total deductions
               for donations to non-profit entities - Pending application in future
@@ -10553,6 +10601,10 @@ modelo:
           is-retenciones-ingresos-a-cuenta:
             label: Settlement IV - Tax due for the year, payable or refundable - Total
               withholdings and payments on account - Made to the entity [01766]
+          is-ric-2018-integrado-base-imponible-incumplimiento:
+            label: Special regime for the Canary Islands investment reserve - RIC
+              2018 - Applied/materialised in this settlement - Reincorporated into
+              the taxable base for failure to meet requirements [01936]
           is-sal-reserva-especial-dotacion:
             label: Settlement III - Taxable base - Employee-owned companies - Special
               reserve allocation, Law 44/2015 Art. 14 [SAL_RESERVA_DOTACION]
