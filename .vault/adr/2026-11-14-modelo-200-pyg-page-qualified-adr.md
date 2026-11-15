@@ -118,6 +118,24 @@ current-generation bare id left unmapped. Residual: cross-period clean-state and
 reads do not use the map, so a pre-rename prior row can still be reported as missing its source
 box there; that is a refusal, not a wrong value.
 
+Amendment 2026-11-15 (PRIME ruling 00:12, option b), applied under the operator's conditional
+approval and placed on the operator's review list. Scope widens beyond the PyG lines to the
+casilla numbers printed on the DP200001 identification page (about 60 owners, including `00009`
+and `00017`) and to every other-page printing of those numbers. A stated `00009` or `00017`
+currently refuses the 2025 export with `shared_casilla_cells_unadjudicated`; this scope removes
+that refusal. Each such number is declared page-qualified once, at the earliest edition whose
+design prints it identically; the home bare id is retired with it, because the loader refuses a
+bare id once any sibling is page-qualified. One field is kept only where the design text and the
+meaning are identical across pages; otherwise each printing is its own field. The step 2 A2
+mechanism applies unchanged: sealed revisions are immutable, drafts are recalculated, the frozen
+map in `src/cadrumo/application/calculations/prior_filing_page_qualified_reads.py` grows only by
+these ids, and a conflicting dual-id row is refused. Labels are authored through `dev.locales`.
+Required proofs: typed equality of the materialised 2024 and 2025 casillas on untouched fields, a
+real-export test that a stated `00009` lands on its own page, a migration refusal test, and green
+`delta_minimality` and `edition_delta_assessment` lanes. Mapping other-page cells to filler or an
+absent kind (option c) is rejected: it misstates the official design. The remaining shared owners
+(about 680 per edition) are later hands under this same mechanism, each needing its own scope.
+
 ## Rationale
 
 Option (a) is the only path that lets the four rows verify the PyG instead of declaring it

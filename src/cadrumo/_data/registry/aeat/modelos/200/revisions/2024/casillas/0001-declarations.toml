@@ -3536,3 +3536,16 @@ semantic_role = "is_deduccion_inversion_canarias_islas_menores_pendiente"
 semantic_role_cardinality = "shared"
 data_type = "money"
 legal_refs = ["ley-27-2014:art-39"]
+# aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1746 DP200015 field 102, offset 1645, length 17, type Num: Detalle compensación bases imponibles negativas - 2023 - Pendiente aplicación a principio del período/generada en el período [00009]
+[[revisions."2024".casillas]]
+id = "DP200015:00009"
+continuidad_id = "is-bin-detalle-2023-pendiente-inicio"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1746 (DP200015 field 102): Detalle compensación bases imponibles negativas - 2023 - Pendiente aplicación a principio del período/generada en el período [00009]. aeat-dr-200-2023 prints no box [00009] on DP200015, so the row is new on the 2024 form; box [00009] on DP200001 is the entidad dominante flag, another field."
+number = "00009"
+segmento = "DP200015"
+section = ["detalle_compensacion_bases_imponibles_negativas", "2023"]
+semantic_role = "is_bin_detalle_compensacion"
+semantic_role_cardinality = "shared"
+data_type = "money"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
