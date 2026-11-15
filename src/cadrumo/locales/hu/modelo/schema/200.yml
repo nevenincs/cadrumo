@@ -7360,6 +7360,9 @@ modelo:
           is-base-imponible-zec-importe:
             label: Elszámolás III - adóalap - Csak ZEC szervezetek - Különleges adókulccsal
               adózó adóalap - Csökkentések [00559]
+          is-bin-detalle-2023-pendiente-inicio:
+            label: Negatív adóalapok kompenzálásának részletezése - 2023 - Az időszak
+              elején alkalmazásra vár/az időszakban keletkezett [00009]
           is-bin-detalle-compensacion:
             label: Negatív adóalapok kompenzálásának részletezése - 1999 - Az időszak
               elején alkalmazásra vár/az időszakban keletkezett [00646]
@@ -7417,6 +7420,9 @@ modelo:
           is-cooperativa-compensacion-cuotas-2008-pendiente-inicio:
             label: Szövetkezeti rendszer - Kvótakompenzáció részletezése. 2008 Az
               időszak elején alkalmazásra váró [00279]
+          is-cooperativa-compensacion-cuotas-2011-pendiente-inicio:
+            label: Szövetkezeti rendszer - Adókötelezettségek kompenzációjának részletezése.
+              2011 Az időszak elején alkalmazásra vár [00017]
           is-cooperativa-cuota-integra-previa:
             label: Elszámolás III - adóalap - Csak szövetkezetek - Kiegyenlítési tartalék
               utáni előzetes teljes adókötelezettség [01331]

@@ -1,6 +1,6 @@
 """The frozen Modelo 200 page-qualified table agrees with every edition the registry serves.
 
-The read seam moves a bare PyG id only when the row's stamped revision no longer
+The read seam moves a bare id only when the row's stamped revision no longer
 declares it and declares its qualified replacement. If a table entry named a
 qualified id no edition declares, the move would never happen and the earlier
 return's box would read as unobserved; this check catches such a typo per year.

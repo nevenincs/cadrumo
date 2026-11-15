@@ -7340,6 +7340,9 @@ modelo:
           is-base-imponible-zec-importe:
             label: Settlement III - Taxable base - ZEC entities only - Tax base at
               special tax rate - Decreases [00559]
+          is-bin-detalle-2023-pendiente-inicio:
+            label: Detail of offset of negative tax bases - 2023 - Pending application
+              at the beginning of the period/generated in the period [00009]
           is-bin-detalle-compensacion:
             label: Detail of offset of negative tax bases - 1999 - Pending application
               at the beginning of the period/generated in the period [00646]
@@ -7396,6 +7399,9 @@ modelo:
           is-cooperativa-compensacion-cuotas-2008-pendiente-inicio:
             label: Cooperative regime - Detail of offsetting quotas. 2008 Pending
               application at the start of the period [00279]
+          is-cooperativa-compensacion-cuotas-2011-pendiente-inicio:
+            label: Cooperative regime - Detail of tax liability offset. 2011 Pending
+              application at the beginning of the period [00017]
           is-cooperativa-cuota-integra-previa:
             label: Settlement III - Taxable base - Only cooperative companies - Prior
               gross tax liability after the equalization reserve [01331]

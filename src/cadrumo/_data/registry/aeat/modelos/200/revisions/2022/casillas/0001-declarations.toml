@@ -112,9 +112,10 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 # 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:101 DP200001 71|210|1|Num
 [[revisions."2022".casillas]]
-id = "00009"
+id = "DP200001:00009"
 continuidad_id = "is-entidad-dominante-de-grupo-fiscal"
 number = "00009"
+segmento = "DP200001"
 section = ["entidad_dominante_de_grupo_fiscal"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"
@@ -172,9 +173,10 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 # 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:64 DP200001 34|173|1|Num
 [[revisions."2022".casillas]]
-id = "00017"
+id = "DP200001:00017"
 continuidad_id = "is-cooperativa-protegida"
 number = "00017"
+segmento = "DP200001"
 section = ["cooperativa_protegida"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"
@@ -26289,3 +26291,15 @@ semantic_role = "is_ecpn_operaciones_socios_importe"
 semantic_role_cardinality = "shared"
 data_type = "money"
 legal_refs = ["ley-27-2014:art-124"]
+
+# aeat-dr-200-2022 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3708 DP200022 field 102, offset 1645, length 17, type Num: Rég. cooperativas - Detalle compensación cuotas. 2011 Pendiente aplicación al principio del periodo [00017]
+[[revisions."2022".casillas]]
+id = "DP200022:00017"
+continuidad_id = "is-cooperativa-compensacion-cuotas-2011-pendiente-inicio"
+number = "00017"
+segmento = "DP200022"
+section = ["reg_cooperativas", "detalle_compensacion_cuotas_2011_pendiente_aplicac"]
+semantic_role = "is_cooperativa_compensacion_cuotas"
+semantic_role_cardinality = "shared"
+data_type = "money"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
