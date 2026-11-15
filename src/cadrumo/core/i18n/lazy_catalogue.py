@@ -290,6 +290,9 @@ class LazyLocaleCatalogue(Mapping[str, str | None]):
         if key in self.key_cache:
             return
         rel_shard = route_key_to_shard(key)
+        # A loaded shard's keys are all in the cache already: a key still missing is not in it.
+        if rel_shard in self.loaded_shards:
+            return
         if not self._scan_shard_file(rel_shard, key):
             self._load_shard_file(rel_shard)
 
