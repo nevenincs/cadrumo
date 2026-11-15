@@ -14,11 +14,13 @@ from cadrumo.adapters.persistence.storage.master_key.active_session import close
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import set_active_test_profile_facts
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE
+from cadrumo.application.operator_actions.served_actions import served_action_fields
 from cadrumo.application.operator_surface.verb_input_contracts import cli_argv_for
 from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket
 from cadrumo.core.bucket_pointer import BucketPointer, read_pointer
 from cadrumo.core.config import load_settings
 from cadrumo.core.errors.error_codes import ErrorCategory, get_error_exit_code
+from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.domain.user_profile.values import UserProfileFact
 from cadrumo.entrypoints.cli.verb_input_schema import build_verb_input_schemas
 from cadrumo_runtime.host.tests.frontend.cli.config.tests.isolated_storage_fixture import native_profile_view_server
@@ -102,6 +104,8 @@ def _json_refusal_projection() -> dict[str, object]:
     error = cast(dict[str, object], refusal_document["error"])
     assert "suggestion" not in error
     projected = cast(dict[str, object], error["action"])
+    # The offered action's served words and routing, in the language the command answered in.
+    served = served_action_fields(_RECOVERY_ACTION_ID, OutputLanguage(str(projected["action_words_language"])))
     assert projected == {
         "failed_condition_id": _FAILED_CONDITION_ID,
         "evidence": [
@@ -133,6 +137,7 @@ def _json_refusal_projection() -> dict[str, object]:
         "missing_argument_names": ["profile_name"],
         "conditionality": "requires_arguments",
         "no_recovery_outcome": None,
+        **json.loads(json.dumps(served)),
     }
     return projected
 
