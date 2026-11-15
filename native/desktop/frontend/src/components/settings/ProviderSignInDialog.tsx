@@ -20,8 +20,12 @@ import type {
 } from "../../shell/providerSettings";
 import {
   cliStateCause,
+  logRef,
   nextStep,
   signInCause,
+  type CliStateCause,
+  type NextStep,
+  type SignInCause,
 } from "../../shell/providerSignInWords";
 import { SignInAdvice } from "./SignInAdvice";
 import type { ProviderStatus } from "./types";
@@ -46,6 +50,10 @@ const UUID =
 const REVISION = /^[0-9a-f]{64}$/;
 const LIFETIME_MS = 300_000;
 const OBSERVE_MS = 1_000;
+/** Status reads in a row that may fail for a passing reason before the
+ * attempt is given up and the failure is said, rather than waited out until
+ * the attempt's lifetime ends. */
+const STATUS_MISSES = 5;
 const TRANSIENT_STATUS_FAILURES = new Set([
   "read_failed",
   "timed_out",
@@ -108,9 +116,49 @@ function isProviderSignInFailureCode(
   return typeof code === "string" && FAILURE_CODES.has(code);
 }
 
-function safeFailureCode(error: unknown): ProviderSignInFailureCode {
+/** Why a failure happened and where the host logged it, in the closed words
+ * a snapshot or a refusal carries; any other word is dropped. */
+type FailureDetail = {
+  cause?: SignInCause;
+  next_step?: NextStep;
+  status_cause?: CliStateCause;
+  log_ref?: string;
+};
+
+type Failure = { code: ProviderSignInFailureCode; detail: FailureDetail };
+
+function detailOf(value: object): FailureDetail {
+  const raw = value as Record<string, unknown>;
+  const cause = signInCause(raw.cause);
+  const step = nextStep(raw.next_step);
+  const statusCause = cliStateCause(raw.status_cause);
+  const reference = logRef(raw.log_ref);
+  return {
+    ...(cause ? { cause } : {}),
+    ...(step ? { next_step: step } : {}),
+    ...(statusCause ? { status_cause: statusCause } : {}),
+    ...(reference ? { log_ref: reference } : {}),
+  };
+}
+
+/** A rejected call as the window words it: its code where the window names
+ * it, else the closed reason it carries, with its cause and log reference. */
+function rejectionOf(
+  error: unknown,
+  fallback: ProviderSignInFailureCode = "unknown",
+): Failure {
+  const raw: object = typeof error === "object" && error !== null ? error : {};
   const code = failureCode(error);
-  return isProviderSignInFailureCode(code) ? code : "unknown";
+  const reason = (raw as { reason?: unknown }).reason;
+  return {
+    code:
+      isProviderSignInFailureCode(code) && code !== "unknown"
+        ? code
+        : isProviderSignInFailureCode(reason) && reason !== "unknown"
+          ? reason
+          : fallback,
+    detail: detailOf(raw),
+  };
 }
 
 /** A missing status reply is not evidence that sign-in failed. Keep observing
@@ -125,6 +173,18 @@ function snapshotFailureCode(
   return isProviderSignInFailureCode(snapshot?.reason)
     ? snapshot.reason
     : "unknown";
+}
+
+const TIMED_OUT: Failure = { code: "timeout", detail: {} };
+
+/** The failure a failed attempt's snapshot says, or none for another. */
+function snapshotFailure(snapshot: ProviderSignInSnapshot): Failure | null {
+  return snapshot.event === "failed"
+    ? {
+        code: snapshotFailureCode(snapshot),
+        detail: detailOf(snapshot),
+      }
+    : null;
 }
 
 function hasControlCharacter(value: string): boolean {
@@ -206,18 +266,13 @@ function snapshotOf(
   // Why and what next are the service's closed words, on a failed or
   // cancelled attempt only; any other word is dropped.
   const advised = event === "failed" || event === "cancelled";
-  const cause = advised ? signInCause(raw.cause) : undefined;
-  const step = advised ? nextStep(raw.next_step) : undefined;
-  const statusCause = advised ? cliStateCause(raw.status_cause) : undefined;
   if (terminal)
     return {
       attempt_id: raw.attempt_id,
       provider: providerId,
       event,
       ...(reason ? { reason } : {}),
-      ...(cause ? { cause } : {}),
-      ...(step ? { next_step: step } : {}),
-      ...(statusCause ? { status_cause: statusCause } : {}),
+      ...(advised ? detailOf(raw) : {}),
     };
 
   // During cancellation the service may still report browser_action while it
@@ -376,9 +431,7 @@ export function ProviderSignInDialog({
 }: Props) {
   const t = useStrings();
   const [snapshot, setSnapshot] = useState<ProviderSignInSnapshot | null>(null);
-  const [failure, setFailure] = useState<ProviderSignInFailureCode | null>(
-    null,
-  );
+  const [failure, setFailure] = useState<Failure | null>(null);
   const [method, setMethod] = useState<ProviderSignInMethod | null>(null);
   const [starting, setStarting] = useState(false);
   const [code, setCode] = useState("");
@@ -456,6 +509,7 @@ export function ProviderSignInDialog({
     if (!open || !activeAttemptId) return;
     let current = true;
     let timer: ReturnType<typeof setTimeout> | undefined;
+    let misses = 0;
     const attemptId = activeAttemptId;
     const schedule = () => {
       const remaining = deadline.current - Date.now();
@@ -470,7 +524,7 @@ export function ProviderSignInDialog({
         currentAttempt.current = null;
         setSnapshot(null);
         setCode("");
-        setFailure("timeout");
+        setFailure(TIMED_OUT);
         setCancelling(false);
         cancelQuietly(attemptId, generation.current);
         return;
@@ -479,6 +533,7 @@ export function ProviderSignInDialog({
         const answer = await api.current.status({ attemptId });
         if (!current || currentAttempt.current !== attemptId) return;
         const next = snapshotOf(answer, provider.id, attemptId);
+        misses = 0;
         if (ACTIVE.has(next.event)) {
           currentAttempt.current = attemptId;
           setSnapshot(
@@ -493,9 +548,7 @@ export function ProviderSignInDialog({
           currentAttempt.current = null;
           setCode("");
           setSnapshot(next);
-          setFailure(
-            next.event === "failed" ? snapshotFailureCode(next) : null,
-          );
+          setFailure(snapshotFailure(next));
           setCancelling(false);
           refreshAfterTerminal(
             next.event === "failed" ||
@@ -505,7 +558,13 @@ export function ProviderSignInDialog({
         }
       } catch (error) {
         if (!current || currentAttempt.current !== attemptId) return;
-        if (canRetryStatus(error) && Date.now() < deadline.current) {
+        const passing = canRetryStatus(error);
+        misses = passing ? misses + 1 : 0;
+        if (
+          passing &&
+          misses < STATUS_MISSES &&
+          Date.now() < deadline.current
+        ) {
           // The host may be temporarily unable to read its status while it
           // starts or cleans up the helper. Preserve the active presentation
           // and let the next bounded poll determine the terminal result.
@@ -515,8 +574,12 @@ export function ProviderSignInDialog({
         currentAttempt.current = null;
         setCode("");
         setSnapshot(null);
+        // Reads that kept failing lost the attempt: said as lost contact,
+        // with whatever cause and reference the last refusal carried.
         setFailure(
-          Date.now() >= deadline.current ? "timeout" : safeFailureCode(error),
+          Date.now() >= deadline.current
+            ? { ...rejectionOf(error), code: "timeout" }
+            : rejectionOf(error, passing ? "host_disconnected" : "unknown"),
         );
         setCancelling(false);
         cancelQuietly(attemptId, generation.current);
@@ -570,7 +633,7 @@ export function ProviderSignInDialog({
     openedAttempt.current = null;
     clearedAttempt.current = null;
     setSnapshot(next);
-    setFailure(next.event === "failed" ? snapshotFailureCode(next) : null);
+    setFailure(snapshotFailure(next));
     setStarting(false);
     setCancelling(false);
     deadline.current = 0;
@@ -615,7 +678,7 @@ export function ProviderSignInDialog({
         currentAttempt.current = next.attempt_id;
         setStarting(false);
         currentAttempt.current = null;
-        setFailure("timeout");
+        setFailure(TIMED_OUT);
         cancelQuietly(next.attempt_id, mine);
         return;
       }
@@ -626,7 +689,7 @@ export function ProviderSignInDialog({
       currentAttempt.current = null;
       setSnapshot(null);
       setStarting(false);
-      setFailure(safeFailureCode(error));
+      setFailure(rejectionOf(error));
       deadline.current = 0;
       refreshAfterTerminal(true, mine);
     }
@@ -690,7 +753,7 @@ export function ProviderSignInDialog({
           ? { ...current, url: undefined, user_code: undefined }
           : current,
       );
-      setFailure("cancel_failed");
+      setFailure({ code: "cancel_failed", detail: {} });
       setCancelling(false);
       refreshAfterTerminal(false, -1);
     }
@@ -725,7 +788,7 @@ export function ProviderSignInDialog({
         }
         currentAttempt.current = null;
         setSnapshot(null);
-        setFailure("open_external_failed");
+        setFailure({ code: "open_external_failed", detail: {} });
         cancelQuietly(attemptId, mine);
       }
     },
@@ -747,7 +810,7 @@ export function ProviderSignInDialog({
         if (currentAttempt.current === attemptId) {
           currentAttempt.current = null;
           setSnapshot(null);
-          setFailure("open_external_failed");
+          setFailure({ code: "open_external_failed", detail: {} });
           cancelQuietly(attemptId, mine);
         }
         return;
@@ -791,7 +854,7 @@ export function ProviderSignInDialog({
       ) {
         currentAttempt.current = null;
         setSnapshot(null);
-        setFailure(safeFailureCode(error));
+        setFailure(rejectionOf(error));
         cancelQuietly(attemptId, mine);
       }
     } finally {
@@ -807,6 +870,12 @@ export function ProviderSignInDialog({
   const terminalFailure = snapshot?.event === "failed";
   const terminalFailureReason =
     terminalFailure || (terminalCancelled && snapshot?.reason !== undefined);
+  // What is said of a failure: an ended attempt's own snapshot first, else
+  // the refusal or local failure that ended it.
+  const shownFailure: Failure | null =
+    terminalFailureReason && snapshot
+      ? { code: snapshotFailureCode(snapshot), detail: detailOf(snapshot) }
+      : failure;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -848,8 +917,7 @@ export function ProviderSignInDialog({
         {active && snapshot && (
           <div className="grid gap-2">
             {checkingCode && <Spinner className="size-4" />}
-            {method === "browser-code" &&
-              snapshot.event === "authorization_code_required" &&
+            {snapshot.event === "authorization_code_required" &&
               submittedAttempt.current !== snapshot.attempt_id &&
               clearedAttempt.current !== snapshot.attempt_id && (
                 <div className="grid gap-2">
@@ -885,25 +953,32 @@ export function ProviderSignInDialog({
             {t("desktop.providers.sign_in_cancelled")}
           </p>
         )}
-        {(failure || terminalFailureReason) && (
+        {shownFailure && (
           <p role="alert" className="text-sm text-destructive">
-            {failureWords(
-              t,
-              terminalFailureReason
-                ? snapshotFailureCode(snapshot)
-                : (failure ?? "unknown"),
-              provider.name,
-              method,
-            )}
+            {failureWords(t, shownFailure.code, provider.name, method)}
           </p>
         )}
-        {terminalFailureReason && snapshot && (
+        {shownFailure && (
           <SignInAdvice
-            causes={[snapshot.cause, snapshot.status_cause]}
-            step={snapshot.next_step}
+            causes={[
+              shownFailure.detail.cause,
+              shownFailure.detail.status_cause,
+            ]}
+            step={shownFailure.detail.next_step}
             command={consoleSignInCommand}
             provider={provider.provider}
           />
+        )}
+        {shownFailure?.detail.log_ref && (
+          <p
+            data-slot="sign-in-log-ref"
+            className="text-sm text-muted-foreground"
+          >
+            {t("desktop.providers.sign_in_log_ref")}{" "}
+            <code className="font-mono text-foreground select-all">
+              {shownFailure.detail.log_ref}
+            </code>
+          </p>
         )}
         {retryState === "checking" && (
           <p role="status" className="text-sm text-muted-foreground">

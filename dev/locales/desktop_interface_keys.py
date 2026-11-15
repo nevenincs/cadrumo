@@ -1030,6 +1030,7 @@ DESKTOP_INTERFACE_KEYS: Final[frozenset[str]] = _PROFILE_AND_ENGINE_KEYS | froze
         "desktop.providers.sign_in_failure",
         "desktop.providers.sign_in_host_disconnected",
         "desktop.providers.sign_in_invalid_request",
+        "desktop.providers.sign_in_log_ref",
         "desktop.providers.sign_in_open_failed",
         "desktop.providers.sign_in_profile_required",
         "desktop.providers.sign_in_provider_error",

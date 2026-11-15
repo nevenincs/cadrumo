@@ -475,6 +475,7 @@ desktop:
     sign_in_host_disconnected: El Cadrumo ha perdut el contacte amb aquest inici de
       sessió i l'ha cancel·lat. Torna'l a iniciar per continuar.
     sign_in_invalid_request: Tanca aquesta finestra i torna a iniciar la sessió.
+    sign_in_log_ref: 'Referència de diagnòstic a cadrumo.log:'
     sign_in_open_failed: El Cadrumo no ha pogut obrir la pàgina d'inici de sessió
       del proveïdor.
     sign_in_profile_required: Inicia la sessió al Cadrumo per continuar iniciant-la

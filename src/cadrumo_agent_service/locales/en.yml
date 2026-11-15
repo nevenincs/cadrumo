@@ -450,6 +450,7 @@ desktop:
     sign_in_host_disconnected: Cadrumo lost contact with this sign-in and cancelled
       it. Start again to continue.
     sign_in_invalid_request: Close this window and try signing in again.
+    sign_in_log_ref: 'Diagnostic reference in cadrumo.log:'
     sign_in_open_failed: Cadrumo couldn't open the provider's sign-in page.
     sign_in_profile_required: Sign in to Cadrumo to continue signing in with {provider}.
     sign_in_provider_error: Could not sign in to {provider}. Try again.

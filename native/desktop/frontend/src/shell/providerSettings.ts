@@ -97,6 +97,9 @@ export type ProviderSignInSnapshot = {
   next_step?: NextStep;
   /** Why the status read after the attempt did not establish a sign-in. */
   status_cause?: CliStateCause;
+  /** The id the host logged a failed or cancelled attempt under in
+   * cadrumo.log; it names the entry and carries nothing else. */
+  log_ref?: string;
   /** Present only while the person can open the provider's sign-in page. */
   url?: string;
   /** Device-flow code; shown only while this attempt is active. */

@@ -465,6 +465,7 @@ desktop:
     sign_in_host_disconnected: A Cadrumo elvesztette a kapcsolatot ezzel a bejelentkezéssel,
       és megszakította. A folytatáshoz indítsd újra.
     sign_in_invalid_request: Zárd be ezt az ablakot, és próbálj újra bejelentkezni.
+    sign_in_log_ref: 'Diagnosztikai azonosító a cadrumo.log fájlban:'
     sign_in_open_failed: A Cadrumo nem tudta megnyitni a szolgáltató bejelentkezési
       oldalát.
     sign_in_profile_required: A {provider} használatához előbb jelentkezz be a Cadrumóba.
