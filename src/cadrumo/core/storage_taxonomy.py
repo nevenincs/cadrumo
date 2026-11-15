@@ -309,6 +309,7 @@ class StorageCategory(StrEnum):
     # destructive local reset, never by a read-tolerant rename.
     KEYSTORE_PROFILE_SESSION = "keystore.profile-session"
     KEYSTORE_PROFILE_SESSION_RETIREMENT = "keystore.profile-session-retirement"
+    KEYSTORE_PROFILE_SESSION_MINTED = "keystore.profile-session-minted"
     KEYSTORE_LOGIN_THROTTLE = "keystore.login-throttle"
     KEYSTORE_SIGN_IN_GENERATION = "keystore.sign-in-generation"
 

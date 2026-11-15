@@ -759,6 +759,18 @@ _BUCKET_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
         grouping=StorageGrouping.STATE,
     ),
     _location(
+        # The session ids this root minted whose keychain entries it has not yet
+        # seen removed. Only this record lets a pruning pass delete an entry,
+        # because the keychain account names no storage root.
+        StorageCategory.KEYSTORE_PROFILE_SESSION_MINTED,
+        "session.v2.minted.json",
+        consumer_module="adapters/persistence/storage/storage_path_definitions.py",
+        node_kind=StorageNodeKind.FILE,
+        scope=StorageScope.KEYSTORE_RELATIVE,
+        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
+        grouping=StorageGrouping.STATE,
+    ),
+    _location(
         StorageCategory.KEYSTORE_LOGIN_THROTTLE,
         "login-throttle.json",
         consumer_module="adapters/persistence/storage/storage_path_definitions.py",

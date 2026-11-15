@@ -5,7 +5,9 @@ from __future__ import annotations
 import os
 import sys
 from contextlib import ExitStack
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Protocol
 from uuid import UUID
 
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
@@ -17,11 +19,13 @@ from .automation_crypto import (
     canonical_record,
     parse_record,
 )
+from .automation_native_identity import CONTROL_NAMESPACE, WRAP_NAMESPACE, automation_root_digest
 from .automation_records import (
     AutomationRetirementIntent,
     ProfileGlobalLockRecord,
 )
-from .automation_secret_store import native_automation_secret_store
+from .automation_secret_store import WindowsAutomationSecretStore, native_automation_secret_store
+from .errors import ProfileCustodyRecordError
 from .filesystem import (
     profile_custody_root_lock,
     read_optional_profile_custody_local_record,
@@ -137,3 +141,94 @@ def _retire_profile_directories(
     except AutomationCustodyError:
         return False
     return True
+
+
+class AutomationSecretListing(Protocol):
+    """The native-store calls an ownership prune needs: names-only listing and verified deletion."""
+
+    def list_accounts(self, namespace: str, account_prefix: str) -> tuple[str, ...]:
+        """Return the account names under ``namespace`` that start with ``account_prefix``; never a secret."""
+        ...
+
+    def delete(self, namespace: str, account: str) -> None:
+        """Delete one owned item and verify absence."""
+        ...
+
+
+@dataclass(frozen=True, slots=True)
+class AutomationPruneOutcome:
+    """How many unowned native automation entries one pass removed, and why it stopped early if it did.
+
+    ``retained`` counts the unowned entries a failure left for the next pass.
+    """
+
+    removed: int
+    retained: int
+    failure: AutomationCustodyCode | None
+
+
+_ACCOUNT_PARTS = {CONTROL_NAMESPACE: 3, WRAP_NAMESPACE: 4}
+"""Control anchors name ``<root>/<installation>/<profile>``; grant wraps add ``/<wrap>``."""
+
+
+def _unowned_by_root(account: str, *, root_digest: str, parts: int, base: Path) -> bool:
+    """Return whether a root-scoped account names an automation directory that is positively absent.
+
+    A malformed account, or a directory whose absence cannot be observed, is
+    not proven unowned and is kept.
+    """
+    fields = account.split("/")
+    if len(fields) != parts or fields[0] != root_digest:
+        return False
+    try:
+        identities = [UUID(field) for field in fields[1:]]
+    except ValueError:
+        return False
+    if any(str(identity) != field for identity, field in zip(identities, fields[1:], strict=True)):
+        return False
+    try:
+        (base / fields[1] / fields[2]).lstat()
+    except FileNotFoundError:
+        return True
+    except OSError:
+        return False
+    return False
+
+
+def prune_unowned_automation_entries(
+    *, root: Path, secrets_store: AutomationSecretListing | None = None
+) -> AutomationPruneOutcome:
+    """Delete this root's control-anchor and grant-wrap entries whose automation directory is gone.
+
+    Only accounts that start with this root's own digest are listed, so no
+    other root's entry is touched. A live directory's anchor and wraps stay:
+    its publication intents and retirement own them. Client keys carry no root
+    or profile and are never pruned here. Every publication holds the custody
+    root lock and creates its directory before its native entries, so under
+    that lock an entry without a directory belongs to nothing.
+    """
+    if secrets_store is None:
+        if sys.platform != "win32":
+            return AutomationPruneOutcome(removed=0, retained=0, failure=AutomationCustodyCode.UNSUPPORTED)
+        secrets_store = WindowsAutomationSecretStore()
+    candidates: list[tuple[str, str]] = []
+    try:
+        with profile_custody_root_lock(root):
+            root_digest = automation_root_digest(root)
+            base = root / ".automation-v1"
+            for namespace, parts in _ACCOUNT_PARTS.items():
+                candidates.extend(
+                    (namespace, account)
+                    for account in secrets_store.list_accounts(namespace, root_digest + "/")
+                    if _unowned_by_root(account, root_digest=root_digest, parts=parts, base=base)
+                )
+            for index, (namespace, account) in enumerate(candidates):
+                try:
+                    secrets_store.delete(namespace, account)
+                except AutomationCustodyError as error:
+                    return AutomationPruneOutcome(removed=index, retained=len(candidates) - index, failure=error.reason)
+    except AutomationCustodyError as error:
+        return AutomationPruneOutcome(removed=0, retained=len(candidates), failure=error.reason)
+    except (OSError, ProfileCustodyRecordError):
+        return AutomationPruneOutcome(removed=0, retained=len(candidates), failure=AutomationCustodyCode.UNAVAILABLE)
+    return AutomationPruneOutcome(removed=len(candidates), retained=0, failure=None)

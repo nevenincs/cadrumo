@@ -276,6 +276,8 @@ class ProfileConnectionSessionMixin:
                     root=self.root, installation=installation, keep=keep, hosted_profiles=frozenset(hosts)
                 )
             )
+        # The kept profile's fresh session stays through its receipt; the sign-outs above left keys no record names.
+        self.prune_credentials()
         return tuple(signed_out)
 
     def admit_human_login(

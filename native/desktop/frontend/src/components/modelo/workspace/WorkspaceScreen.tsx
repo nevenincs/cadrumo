@@ -44,7 +44,12 @@ import type {
 import { usePanePreference } from "../../../shell/panePreference";
 import type { WindowPlace } from "../../../shell/refusal";
 import { useStrings, type Translate } from "../../../shell/strings";
-import { keptRead, type KeptWorkspaceRead } from "./keptRead";
+import {
+  keptRead,
+  ownerOf,
+  useKeptReadHold,
+  type KeptWorkspaceRead,
+} from "./keptRead";
 import type { LeaveGuard } from "../../ledger/editing/LedgerEditing";
 import { Details, type OpenableSurface } from "../details/Details";
 import { TodoRail } from "../details/TodoRail";
@@ -211,7 +216,17 @@ function Ready({
   borrador?: BorradorPort;
 }) {
   const t = useStrings();
-  const session: FormSession = useFormSession({ envelope, port, language });
+  const operation = useModeloOperation();
+  const held = operation.hold !== undefined;
+  // A write the window has not read the result of holds the form: its boxes
+  // are shown and take no edit until the read lands, the last read of a
+  // declaration put away included.
+  const session: FormSession = useFormSession({
+    envelope,
+    port,
+    language,
+    locked: held,
+  });
   const [ownView, setOwnView] = useState<WorkspaceView>(initialView);
   // Where the window holds the view, as its back and forward do, the view
   // shown is the window's; otherwise the workspace's own.
@@ -247,8 +262,6 @@ function Ready({
     latestEnvelope.current = envelope;
   }, [envelope]);
   const [prerequisiteHeld, setPrerequisiteHeld] = useState(false);
-  const operation = useModeloOperation();
-  const held = operation.hold !== undefined;
   const busy = operation.hold?.phase === "running";
   // The window's own read of its own settled write has not answered yet.
   const reading = useModeloReading(operation.holds, operation.target);
@@ -1340,22 +1353,11 @@ export function WorkspaceScreen({
   const [read, setRead] = useState<Read>(() =>
     keptRead(kept, workUnitId, language),
   );
-  const owner = useMemo(() => {
-    if (read.phase !== "ready") return undefined;
-    const form = read.envelope.form.form;
-    return {
-      workUnitId,
-      label: [
-        form.modelo,
-        form.modelo_name ?? form.modelo_title,
-        form.period_words,
-      ]
-        .filter(Boolean)
-        .join(" · "),
-      filingYear: form.filing_year,
-      readsIvaWallet: form.offers_iva_wallet,
-    };
-  }, [read, workUnitId]);
+  const owner = useMemo(
+    () =>
+      read.phase === "ready" ? ownerOf(workUnitId, read.envelope) : undefined,
+    [read, workUnitId],
+  );
   const latest = useRef(0);
   useLayoutEffect(
     () => () => {
@@ -1427,6 +1429,7 @@ export function WorkspaceScreen({
     },
     [port, workUnitId, holds, target, reread],
   );
+  useKeptReadHold(kept, workUnitId, language, holds, target);
   useEffect(() => {
     const first = keptRead(kept, workUnitId, language);
     shown.current = first.phase === "ready";

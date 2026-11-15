@@ -54,6 +54,7 @@ from ..application.session_authority_core import CustodyRecoveryPolicy
 from .access_management import RuntimeAccessManagement
 from .bootstrap_delete import RuntimeBootstrapDeleteMixin
 from .bootstrap_reset import RuntimeBootstrapMixin
+from .credential_prune import CredentialPruneReport, CredentialPruneSkipped, prune_owned_credentials
 from .enrollment_connections import RuntimeEnrollmentConnections
 from .installation_door import RuntimeInstallationDoorMixin
 from .lifecycle_guard import RuntimeLifecycleGuard
@@ -589,6 +590,17 @@ class RuntimeProfileConnections(
             if not self._admitting():
                 raise RefusalError(RefusalCode.DRAINING)
             return registry
+
+    def prune_credentials(self) -> CredentialPruneReport | CredentialPruneSkipped:
+        """Remove this root's OS credential-store entries that no receipt, journal or automation tree names.
+
+        Only sessions this root recorded minting are candidates, and the ones
+        its receipts and pending journals name stay. A hosted profile holds no
+        other: its worker reseals its receipt under the same session and never
+        mints outside the custody root lock this pass holds. It never raises;
+        see :func:`prune_owned_credentials`.
+        """
+        return prune_owned_credentials(self.root)
 
     def poll(self) -> None:
         """Run a lifecycle pass when one is called for or due, never racing custody containment or shutdown."""

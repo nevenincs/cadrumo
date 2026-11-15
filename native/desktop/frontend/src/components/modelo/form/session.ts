@@ -902,6 +902,13 @@ export type FormSession = {
   /** Whether a box can be typed into here: the form admits edits, the
    * application says the box takes a typed value, and its grammar takes one. */
   editable(field: PublicModeloFormField): boolean;
+  /** Whether the box takes a typed value once the form is no longer locked:
+   * what `editable` answers apart from `locked`. */
+  admitsEntry(field: PublicModeloFormField): boolean;
+  /** The form is the last read of the declaration while a fresh one is
+   * read, or an unresolved write holds it: its boxes and offers are shown
+   * and take no edit until the read lands. */
+  locked: boolean;
   selectedKey: string | null;
   selected: PublicModeloFormField | null;
   select(key: string | null): void;
@@ -931,10 +938,12 @@ export function useFormSession({
   envelope,
   port,
   language,
+  locked = false,
 }: {
   envelope: ModeloWorkbenchFormProjectionV1;
   port: ModeloPort;
   language: OutputLanguage;
+  locked?: boolean;
 }): FormSession {
   const form = envelope.form.form;
   const placed = useMemo(() => placedFields(form), [form]);
@@ -1088,7 +1097,7 @@ export function useFormSession({
     [grammars],
   );
   const admitted = editsAdmitted(envelope);
-  const editable = useCallback(
+  const admitsEntry = useCallback(
     (field: PublicModeloFormField) => {
       const grammar = grammarOf(field);
       return (
@@ -1099,6 +1108,10 @@ export function useFormSession({
       );
     },
     [admitted, grammarOf],
+  );
+  const editable = useCallback(
+    (field: PublicModeloFormField) => !locked && admitsEntry(field),
+    [locked, admitsEntry],
   );
   // What the baseline admits at each binding, for the statements' boxes.
   const intents = useMemo(() => bindingIntents(baseline), [baseline]);
@@ -1427,6 +1440,8 @@ export function useFormSession({
     enter,
     grammarOf,
     editable,
+    admitsEntry,
+    locked,
     selectedKey,
     selected: selectedKey ? (byKey.get(selectedKey)?.field ?? null) : null,
     select: setSelectedKey,
