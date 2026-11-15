@@ -107,8 +107,25 @@ const KEYS = [
   "log",
 ];
 // Row keys the spec states only when they apply: export_served says whether a
-// return whose verification did not pass was served an export door.
-const OPTIONAL_ROW_KEYS = ["export_served"];
+// return whose verification did not pass was served an export door, and file
+// is the stage of the local filing the window recorded (the acceptance
+// intake's stage words plus not-shown).
+const OPTIONAL_ROW_KEYS = ["export_served", "file"];
+const FILE_WORDS = [
+  "pass",
+  "incomplete",
+  "refused",
+  "not-owed",
+  "not-reached",
+  "error",
+  "not-shown",
+];
+const optionalProblem = {
+  export_served: (value) =>
+    typeof value === "boolean" ? null : "export_served is not a boolean",
+  file: (value) =>
+    FILE_WORDS.includes(value) ? null : `file ${value} is not a stage word`,
+};
 const PERSONA_KEYS = KEYS.filter(
   (key) => !["calculate", "verify", "export"].includes(key),
 );
@@ -287,9 +304,10 @@ export function lineProblem(lines, world, tree, persona) {
       .sort();
     if (JSON.stringify(keys) !== JSON.stringify(expected))
       return `line keys differ: ${Object.keys(line).sort().join(",")}`;
-    for (const key of optional)
-      if (key in line && typeof line[key] !== "boolean")
-        return `${key} is not a boolean`;
+    for (const key of optional) {
+      const problem = key in line ? optionalProblem[key](line[key]) : null;
+      if (problem) return problem;
+    }
     if (line.surface !== "window") return "surface is not window";
     if (line.tree !== tree) return `tree ${line.tree} is not ${tree}`;
     if (line.persona !== persona) return `persona ${line.persona}`;

@@ -136,6 +136,38 @@ test("a row line may state export_served, as a boolean only", () => {
   );
 });
 
+test("a row line may state file, as a stage word only", () => {
+  for (const file of ["pass", "not-shown", "refused", "not-reached", "error"])
+    assert.equal(
+      lineProblem(
+        [personaLine, { ...rowLine, file }],
+        world,
+        "t",
+        "sociedad-limitada",
+      ),
+      null,
+      file,
+    );
+  assert.match(
+    lineProblem(
+      [personaLine, { ...rowLine, file: "shown" }],
+      world,
+      "t",
+      "sociedad-limitada",
+    ),
+    /file shown is not a stage word/,
+  );
+  assert.match(
+    lineProblem(
+      [{ ...personaLine, file: "pass" }, rowLine],
+      world,
+      "t",
+      "sociedad-limitada",
+    ),
+    /line keys differ/,
+  );
+});
+
 const at = (ms) => new Date(Date.UTC(2030, 0, 1) + ms).toISOString();
 const event = (ms, name, extra = {}) =>
   JSON.stringify({ at: at(ms), event: name, ...extra });
