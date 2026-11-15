@@ -12,6 +12,10 @@ Projection proves itself: the restored canonical read must equal the original,
 so a mirror that loses a type, a precision or a field fails before anything is
 stored. The canonical models' own excluded fields are an empty, reviewed
 inventory; a new excluded field fails the projection until it is reviewed.
+
+The filing-state projection carries only what exporting and recording the
+filing rest on, and proves each of those fields restores to the read's own
+value; it never mirrors the whole form.
 """
 
 from __future__ import annotations
@@ -37,6 +41,7 @@ from ...domain.calculations.registry.schema_form_layouts import (
     FormUnplacedReason,
 )
 from ...domain.iva.refund_eligibility import RefundEligibilityBasis, RefundEligibilityOutcome
+from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.verification_report import VerificationCompletenessStatus
 from ..operations.public_mirror import (
     PublicScalarValueV1,
@@ -88,7 +93,7 @@ from .work_form_field_vocabulary import (
     ModeloFormText,
 )
 from .work_form_findings import ModeloFormAttention
-from .work_form_header import ModeloFormHeader
+from .work_form_header import ModeloFormFilingHeader, ModeloFormHeader
 from .work_form_issue_lines import ModeloFormIssueLine, ModeloFormVerdict
 from .work_form_journey import ModeloFormJourney
 from .work_form_models import (
@@ -108,7 +113,7 @@ from .work_form_prior_value_models import ModeloFormPriorValueRefusal, ModeloFor
 from .work_form_service import ModeloWorkFormLoadV1
 from .work_form_typing_effect import ModeloFormTypingEffect
 from .work_review import ModeloWorkProgress
-from .workbench_read import ModeloFormLedgerHold, ModeloWorkbenchFormReadV1
+from .workbench_read import ModeloFormLedgerHold, ModeloWorkbenchFilingStateReadV1, ModeloWorkbenchFormReadV1
 
 
 class PublicModeloFormEarlierFiling(BaseModel):
@@ -588,6 +593,39 @@ class ModeloWorkbenchFormProjectionV1(BaseModel):
         return self
 
 
+class ModeloWorkFilingStateProjectionV1(BaseModel):
+    """Public exact-profile envelope around what exporting and recording one declaration's filing rest on.
+
+    Each field is the one :class:`ModeloWorkbenchFormProjectionV1` carries for
+    the same stored state: ``modelo``, ``period`` and ``filing`` are its form's,
+    ``header`` its header's result, latest file and export hold.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    result_version: Literal[1]
+    profile_id: UUID
+    work_unit_id: str
+    modelo: str
+    period: PublicPeriod
+    #: The filing recorded in Cadrumo; ``None`` while the declaration is not recorded as filed.
+    filing: ModeloFormFiling | None
+    header: ModeloFormFilingHeader
+    calculation_revision_id: str | None
+    verification_report_id: str | None
+    #: What exporting offers: the artefacts, whether recording is available, the elections and the file format.
+    export_offer: PublicModeloFormExportOffer
+    #: The recorded filing's AEAT receipt state; ``None`` when the declaration is not recorded as filed.
+    receipt: ModeloFormReceipt | None = None
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _report_follows_its_calculation(self) -> Self:
+        if self.verification_report_id is not None and self.calculation_revision_id is None:
+            raise ValueError("a granting verification report requires its calculation")
+        return self
+
+
 _REVIEWED_EXCLUDED_FIELDS: frozenset[tuple[type[BaseModel], str]] = frozenset[tuple[type[BaseModel], str]]()
 """No canonical workbench form field is excluded from its own serializer today."""
 
@@ -723,6 +761,54 @@ def project_modelo_workbench_form(
     return projection
 
 
+def _require_filing_state_roundtrip(
+    read: ModeloWorkbenchFilingStateReadV1, projection: ModeloWorkFilingStateProjectionV1
+) -> None:
+    """Prove every field the projection carries restores to the read's own value."""
+    form = read.load.form
+    restored: tuple[tuple[object, object], ...] = (
+        (_restore_export_offer(projection.export_offer), read.export_offer),
+        (ModeloCode(projection.modelo), form.modelo),
+        (projection.period.to_period(), form.period),
+        (projection.filing, form.filing),
+        (projection.header, read.header),
+        (projection.work_unit_id, form.work_unit_id),
+        (projection.calculation_revision_id, read.calculation_revision_id),
+        (projection.verification_report_id, read.verification_report_id),
+        (projection.receipt, read.receipt),
+    )
+    if any(public != canonical for public, canonical in restored):
+        raise ValueError("filing state public projection changed canonical meaning")
+
+
+def project_modelo_work_filing_state(
+    profile_id: UUID, work_unit_id: str, read: ModeloWorkbenchFilingStateReadV1
+) -> ModeloWorkFilingStateProjectionV1:
+    """Project one filing-state read for its exact profile and prove none of its fields lost anything."""
+    _require_reviewed_exclusions()
+    form = read.load.form
+    if form.work_unit_id != work_unit_id or form.calculation_revision_id != read.calculation_revision_id:
+        raise ValueError("the filing state belongs to another declaration or calculation")
+    export_offer = _project_export_offer(read.export_offer)
+    if export_offer is None:
+        raise TypeError("filing state export offer public projection failed")
+    projection = ModeloWorkFilingStateProjectionV1(
+        result_version=1,
+        profile_id=profile_id,
+        work_unit_id=work_unit_id,
+        modelo=str(form.modelo),
+        period=PublicPeriod.from_period(form.period),
+        filing=form.filing,
+        header=read.header,
+        calculation_revision_id=read.calculation_revision_id,
+        verification_report_id=read.verification_report_id,
+        export_offer=export_offer,
+        receipt=read.receipt,
+    )
+    _require_filing_state_roundtrip(read, projection)
+    return projection
+
+
 def restore_modelo_workbench_form(projection: ModeloWorkbenchFormProjectionV1) -> ModeloWorkbenchFormReadV1:
     """Rebuild the canonical workbench read and prove it projects back unchanged."""
     _require_reviewed_exclusions()
@@ -754,6 +840,7 @@ def public_form_fields(form: PublicModeloWorkForm) -> tuple[PublicModeloFormFiel
 
 
 __all__ = [
+    "ModeloWorkFilingStateProjectionV1",
     "ModeloWorkbenchFormProjectionV1",
     "PublicModeloFormBindingInputsBlock",
     "PublicModeloFormContextFieldBlock",
@@ -780,6 +867,7 @@ __all__ = [
     "PublicModeloWorkForm",
     "PublicModeloWorkFormLoadV1",
     "PublicSpanishTaxIdFormat",
+    "project_modelo_work_filing_state",
     "project_modelo_workbench_form",
     "public_form_fields",
     "restore_modelo_workbench_form",

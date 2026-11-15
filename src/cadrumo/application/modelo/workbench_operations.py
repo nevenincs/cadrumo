@@ -7,6 +7,8 @@ human session may receive, on any frontend:
 
 - ``modelo.work.form`` reads the editor form, admitting the edit baseline the
   session's parses and applies are judged against;
+- ``modelo.work.filing_state`` reads only what exporting and recording the
+  filing rest on, from the same form and builders, admitting no baseline;
 - ``modelo.work.casilla_help`` assembles one casilla's help;
 - ``modelo.edit.renew`` renews a baseline when only its lifetime changed;
 - ``modelo.edit.preflight`` checks staged intents without applying them;
@@ -105,12 +107,18 @@ from .work_form_scalar_values import comparable_entry
 from .work_form_service import modelo_form_snapshot
 from .work_lifecycle import get_work_unit
 from .work_lifecycle_ports import ActiveWorkLifecyclePortsFactory
-from .workbench_projection import ModeloWorkbenchFormProjectionV1, project_modelo_workbench_form
+from .workbench_projection import (
+    ModeloWorkbenchFormProjectionV1,
+    ModeloWorkFilingStateProjectionV1,
+    project_modelo_work_filing_state,
+    project_modelo_workbench_form,
+)
 from .workbench_read import (
     ModeloWorkbenchReadPorts,
     ModeloWorkbenchReadPortsFactory,
     modelo_edit_prerequisite_source_boxes,
     read_modelo_casilla_help,
+    read_modelo_workbench_filing_state,
     read_modelo_workbench_form,
 )
 
@@ -118,6 +126,7 @@ if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 MODELO_WORK_FORM_OPERATION_DEFINITION_ID = "modelo.work.form"
+MODELO_WORK_FILING_STATE_OPERATION_DEFINITION_ID = "modelo.work.filing_state"
 MODELO_WORK_CASILLA_HELP_OPERATION_DEFINITION_ID = "modelo.work.casilla_help"
 MODELO_EDIT_RENEW_OPERATION_DEFINITION_ID = "modelo.edit.renew"
 MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID = "modelo.edit.preflight"
@@ -134,6 +143,14 @@ _BoundedText = Annotated[str, Field(min_length=1, max_length=128)]
 
 class ModeloWorkbenchFormRequest(CredentialFreeOperationRequest):
     """Exact profile, one declaration and the language its form is read in."""
+
+    profile_id: UUID
+    work_unit_id: WorkUnitId
+    output_language: OutputLanguage
+
+
+class ModeloWorkFilingStateRequest(CredentialFreeOperationRequest):
+    """Exact profile, one declaration and the language its filing state is read in."""
 
     profile_id: UUID
     work_unit_id: WorkUnitId
@@ -382,6 +399,44 @@ class ModeloWorkbenchFormExecutor:
 
         return await _read(
             context, phase=MODELO_WORK_FORM_OPERATION_DEFINITION_ID, task_name="modelo-work-form-read", read=read
+        )
+
+
+class ModeloWorkFilingStateExecutor:
+    """Read what exporting and recording one declaration's filing rest on."""
+
+    def __init__(self, *, ports_factory: ModeloWorkbenchReadPortsFactory) -> None:
+        self._ports_factory = ports_factory
+
+    async def execute(
+        self, request: OperationRequest[ModeloWorkFilingStateRequest], context: OperationExecutorContext
+    ) -> str:
+        """Read the filing state under the pinned authority and project it for the exact profile."""
+        payload = request.payload
+        _require_subject(
+            request.definition_id,
+            request.subject_ref,
+            MODELO_WORK_FILING_STATE_OPERATION_DEFINITION_ID,
+            payload.work_unit_id,
+        )
+        operation = context.authority_operation
+
+        def read() -> ModeloWorkFilingStateProjectionV1:
+            bucket_id = _bucket_id(payload.profile_id)
+            state = read_modelo_workbench_filing_state(
+                payload.work_unit_id,
+                bucket_id=bucket_id,
+                ports=self._ports_factory(bucket_id, operation),
+                operation=operation,
+                language=payload.output_language,
+            )
+            return project_modelo_work_filing_state(payload.profile_id, payload.work_unit_id, state)
+
+        return await _read(
+            context,
+            phase=MODELO_WORK_FILING_STATE_OPERATION_DEFINITION_ID,
+            task_name="modelo-work-filing-state-read",
+            read=read,
         )
 
 
@@ -695,12 +750,16 @@ class ModeloEditApplyPrerequisiteExecutor:
 
 
 _READ_CAPABILITIES = RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES
-#: Four of the reads name their declaration directly; the renewal names it inside the baseline it renews.
+#: Five of the reads name their declaration directly; the renewal names it inside the baseline it renews.
 _WORK_UNIT_SUBJECT = OperationSubjectReferenceV1.payload_field("work_unit_id")
 #: Each read's public request and result models, in registration order.
 _SCHEMAS: Final[Mapping[str, tuple[type[BaseModel], type[BaseModel]]]] = MappingProxyType(
     {
         MODELO_WORK_FORM_OPERATION_DEFINITION_ID: (ModeloWorkbenchFormRequest, ModeloWorkbenchFormProjectionV1),
+        MODELO_WORK_FILING_STATE_OPERATION_DEFINITION_ID: (
+            ModeloWorkFilingStateRequest,
+            ModeloWorkFilingStateProjectionV1,
+        ),
         MODELO_WORK_CASILLA_HELP_OPERATION_DEFINITION_ID: (ModeloCasillaHelpRequest, ModeloCasillaHelpProjectionV1),
         MODELO_EDIT_RENEW_OPERATION_DEFINITION_ID: (ModeloEditRenewRequest, ModeloEditRenewalProjectionV1),
         MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID: (ModeloEditPreflightRequestV2, ModeloEditPreflightProjectionV1),
@@ -744,7 +803,7 @@ def build_modelo_workbench_operation_definitions(
     contracts: OperationContractsProvider,
     prerequisites: ModeloEditRefusalProjectionStore,
 ) -> tuple[OperationDefinition, ...]:
-    """Bind the workbench's five worker reads to the profile repositories and this registry's contracts."""
+    """Bind the workbench's six worker reads to the profile repositories and this registry's contracts."""
     return (
         _definition(
             MODELO_WORK_FORM_OPERATION_DEFINITION_ID,
@@ -753,6 +812,14 @@ def build_modelo_workbench_operation_definitions(
             ModeloWorkbenchFormProjectionV1,
             ModeloWorkbenchFormExecutor,
             lambda: ModeloWorkbenchFormExecutor(ports_factory=ports_factory, contracts=contracts),
+        ),
+        _definition(
+            MODELO_WORK_FILING_STATE_OPERATION_DEFINITION_ID,
+            ModeloWorkFilingStateRequest,
+            _WORK_UNIT_SUBJECT,
+            ModeloWorkFilingStateProjectionV1,
+            ModeloWorkFilingStateExecutor,
+            lambda: ModeloWorkFilingStateExecutor(ports_factory=ports_factory),
         ),
         _definition(
             MODELO_WORK_CASILLA_HELP_OPERATION_DEFINITION_ID,
@@ -814,7 +881,13 @@ def build_modelo_workbench_operation_registrations(
 def _addressed_work_unit(request: OperationRequest[BaseModel], context: OperationAccessContext) -> str:
     """The declaration a workbench request addresses, refusing a request for another profile."""
     payload = request.payload
-    if isinstance(payload, ModeloWorkbenchFormRequest | ModeloCasillaHelpRequest | ModeloEditApplyPrerequisiteRequest):
+    if isinstance(
+        payload,
+        ModeloWorkbenchFormRequest
+        | ModeloWorkFilingStateRequest
+        | ModeloCasillaHelpRequest
+        | ModeloEditApplyPrerequisiteRequest,
+    ):
         profile_id, work_unit_id = payload.profile_id, payload.work_unit_id
     elif isinstance(payload, ModeloEditRenewRequest):
         if payload.baseline.bucket_id != str(context.profile_id):
@@ -882,6 +955,7 @@ __all__ = [
     "MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID",
     "MODELO_EDIT_RENEW_OPERATION_DEFINITION_ID",
     "MODELO_WORK_CASILLA_HELP_OPERATION_DEFINITION_ID",
+    "MODELO_WORK_FILING_STATE_OPERATION_DEFINITION_ID",
     "MODELO_WORK_FORM_OPERATION_DEFINITION_ID",
     "ModeloCasillaHelpProjectionV1",
     "ModeloCasillaHelpRequest",
@@ -892,6 +966,7 @@ __all__ = [
     "ModeloEditRenewRequest",
     "ModeloEditRenewalProjectionV1",
     "ModeloEditTypedEntryV1",
+    "ModeloWorkFilingStateRequest",
     "ModeloWorkbenchFormRequest",
     "OperationContractsProvider",
     "build_modelo_workbench_operation_definitions",
