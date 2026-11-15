@@ -36,7 +36,10 @@ from cadrumo.application.modelo.calculation_bucket_actions import (
 )
 from cadrumo.application.modelo.export import export_modelo_revision
 from cadrumo.application.modelo.export_amendment_evidence import resolve_persisted_amendment_export_evidence
-from cadrumo.application.modelo.export_contracts import ModeloExportCommand
+from cadrumo.application.modelo.export_contracts import (
+    ModeloExportCommand,
+    ModeloExportFieldUnrenderableError,
+)
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from cadrumo.application.modelo.work_form import build_modelo_work_form
 from cadrumo.application.modelo.work_form_field_vocabulary import address_key
@@ -67,7 +70,6 @@ from cadrumo.domain.modelos.calculation_revision_amendment import (
     AMENDMENT_DECLARATION_KINDS,
     CalculationRevisionAmendmentIdentity,
 )
-from cadrumo.domain.modelos.errors import ModeloExportError
 from cadrumo.domain.modelos.verification_report import VerificationReport
 from cadrumo.domain.modelos.work_unit import WorkUnit
 from cadrumo.domain.user_profile.values import UserProfileFact
@@ -254,6 +256,7 @@ def _calculate(
     *,
     extra_rows: dict[str, Decimal] | None = None,
     extra_enums: dict[str, str] | None = None,
+    record_operator_layer: bool = True,
 ) -> tuple[BucketAggregationCalculationResult, WorkUnit]:
     wu_repo = WorkUnitCatalogueRepository(objects=objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=objects)
@@ -281,6 +284,9 @@ def _calculate(
         result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=ports,
+            # Calculated as the operator's executor does: the header the operator answers is recorded as theirs.
+            # A caller that records nothing stands for a revision whose operator entries are unknown.
+            record_operator_layer=record_operator_layer,
             binding_values={**_period_rows(scenario), **(extra_rows or {})},
             enum_binding_values={
                 **{f"{scenario.fichero}.{key}": value for key, value in scenario.declarant.items()},
@@ -755,9 +761,12 @@ def test_a_direct_ioss_filer_without_intermediary_number_still_refuses_at_export
         objects, scenario, (_invoice(scenario, "IOSS-D", "FR", "general", "100.00", "20.00"),), operation
     )
     assert _verify(result).granted_verificado_completo is True
-    with pytest.raises(ModeloExportError) as refused:
+    with pytest.raises(ModeloExportFieldUnrenderableError) as refused:
         _export(objects, tmp_path, scenario, result)
-    assert refused.value.translated_message == "application.modelo.errors.export_draft_write_failed"
+    # The refusal names the obligatory field the design leaves nothing to render.
+    refusal_context = refused.value.context
+    assert refusal_context is not None
+    assert refusal_context["field_id"] == "m369-importacion-10-214-1-no-de-identificacion-del-intermediario-niossin"
     assert not (tmp_path / f"modelo-369-{scenario.revision_id}.txt").exists()
 
 

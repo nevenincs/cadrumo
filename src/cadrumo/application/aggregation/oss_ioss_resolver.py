@@ -5,7 +5,7 @@ This module uses :class:`InvoiceCatalogue`, the profile's invoice catalogue.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from datetime import date
 from decimal import Decimal
 from typing import ClassVar
@@ -31,6 +31,7 @@ from ...domain.invoices.enums import iva_rate_kind
 from ...domain.invoices.models import Invoice, InvoiceLine
 from ...domain.iva.lookup import lookup_rate
 from ...domain.iva.schema import InvoiceKind
+from ...domain.modelos.calculation_revision_sources import bound_binding_source_ref
 from ..exchange_rate_provider import exchange_rate_provider
 from ..invoices.catalogue_reads_ports import (
     BucketBoundCatalogueReader,
@@ -555,13 +556,14 @@ class OssIossLedgerSourceResolver:
         # Fail-closed advisory parity with the IVA screen: a non-zero declarable
         # OSS line that no detail table can take would otherwise be silently
         # dropped (no-silent-under-declaration).
+        aggregation_values = {
+            **row_level_binding_values(context.revision, at_row_level),
+            **detail_values,
+        }
         return CalculationSourceResolution(
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
-            binding_values={
-                **row_level_binding_values(context.revision, at_row_level),
-                **detail_values,
-            },
+            binding_values=aggregation_values,
             enum_binding_values=detail_enum_values,
             closed_record_row_sets=closed_rows,
             source_transaction_ids=tuple(
@@ -576,19 +578,52 @@ class OssIossLedgerSourceResolver:
             + _unrouted_observation_diagnostics(
                 unrouted, revision_id=context.revision.id, resolver_id=self.resolver_id
             ),
-            provenance=tuple(
-                CalculationSourceProvenance(
-                    resolver_id=self.resolver_id,
-                    resolved_binding_source=BindingSourceKind.LEDGER_OSS_AGGREGATION,
-                    contributor_source_kind="ledger_oss_aggregation",
-                    contributor_binding_source=BindingSourceKind.LEDGER_OSS_AGGREGATION,
-                    lineage_role=CalculationSourceLineageRole.PRIMARY,
-                    source_ref=f"transaction:{observation.ledger_id}",
-                    parent_source_ref=None,
-                    terminal_origin=TerminalOriginClass.LEDGER_AGGREGATE,
-                )
-                for observation in observations
+            provenance=(
+                *(
+                    CalculationSourceProvenance(
+                        resolver_id=self.resolver_id,
+                        resolved_binding_source=BindingSourceKind.LEDGER_OSS_AGGREGATION,
+                        contributor_source_kind="ledger_oss_aggregation",
+                        contributor_binding_source=BindingSourceKind.LEDGER_OSS_AGGREGATION,
+                        lineage_role=CalculationSourceLineageRole.PRIMARY,
+                        source_ref=f"transaction:{observation.ledger_id}",
+                        parent_source_ref=None,
+                        terminal_origin=TerminalOriginClass.LEDGER_AGGREGATE,
+                    )
+                    for observation in observations
+                ),
+                *self._supplied_slot_source_nodes(context, aggregation_values, detail_enum_values),
             ),
+        )
+
+    def _supplied_slot_source_nodes(
+        self,
+        context: CalculationSourceContext,
+        binding_values: Mapping[BindingId, Decimal],
+        enum_binding_values: Mapping[BindingId, str],
+    ) -> tuple[CalculationSourceProvenance, ...]:
+        """Name this fold as the source of each return slot it fills that the registry leaves to the filer.
+
+        The detail and correction rows of Modelo 369 are ``manual_input`` slots of
+        the official record: the filer may state a row, and this resolver states
+        the rows the issued invoices declare. Without this record a stored
+        revision keeps no evidence of which of the two stated a slot, and a
+        figure derived from the invoice catalogue would read as an assumption.
+        """
+        declared = {binding.id: binding for binding in context.revision.bindings}
+        return tuple(
+            CalculationSourceProvenance(
+                resolver_id=self.resolver_id,
+                resolved_binding_source=BindingSourceKind.LEDGER_OSS_AGGREGATION,
+                contributor_source_kind="ledger_oss_aggregation",
+                contributor_binding_source=BindingSourceKind.LEDGER_OSS_AGGREGATION,
+                lineage_role=CalculationSourceLineageRole.PRIMARY,
+                source_ref=bound_binding_source_ref(binding_id),
+                parent_source_ref=None,
+                terminal_origin=TerminalOriginClass.LEDGER_AGGREGATE,
+            )
+            for binding_id in sorted({*binding_values, *enum_binding_values})
+            if (binding := declared.get(binding_id)) is not None and binding.source is BindingSourceKind.MANUAL_INPUT
         )
 
     def _require_source_bucket(self, context: CalculationSourceContext) -> None:

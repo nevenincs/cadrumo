@@ -652,7 +652,18 @@ def test_oss_source_mesh_resolver_matches_candidate_binding_aggregation() -> Non
     assert {binding_id: resolution.binding_values[binding_id] for binding_id in aggregated} == aggregated
     assert resolution.source_transaction_ids == ("oss-ledger-1",)
     assert resolution.diagnostics == ()
-    assert tuple(item.source_ref for item in resolution.provenance) == ("transaction:oss-ledger-1",)
+    references = tuple(item.source_ref for item in resolution.provenance)
+    assert tuple(ref for ref in references if ref.startswith("transaction:")) == ("transaction:oss-ledger-1",)
+    # The fold also names itself as the source of each slot it filled that the record leaves to the filer,
+    # so a stored revision keeps the evidence the form reads before it shows the figure as derived.
+    supplied_slots = {
+        f"bound_binding:{binding.id}"
+        for binding in revision.bindings
+        if binding.source is BindingSourceKind.MANUAL_INPUT
+        and binding.id in {*resolution.binding_values, *resolution.enum_binding_values}
+    }
+    assert supplied_slots
+    assert {ref for ref in references if ref.startswith("bound_binding:")} == supplied_slots
 
 
 def test_oss_source_mesh_resolver_surfaces_advisory_for_unrouted_observation() -> None:
