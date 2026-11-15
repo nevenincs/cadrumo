@@ -289,7 +289,8 @@ def test_requires_warns_about_unresolved_profile_coefficients(
     assert "renta-profile-marital-status" in unresolved
     assert "renta_taxpayer.marital_status" in result["unresolved_profile_keys"]
     assert "Marital status" in warning["message"]
-    assert "orden-hac-277-2026:art-3" in warning["message"]
+    # The order approving this exercise's form is cited in readable words, as the requirement renderer cites it.
+    assert "Orden HAC/277/2026, art.\u00a03" in warning["message"]
     for binding_id in unresolved:
         assert binding_id in warning["context"]["missing_bindings"]
 
