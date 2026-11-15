@@ -143,7 +143,14 @@ async function expectControlsReachable(target: Page) {
 
 /** The panes are drawn as the controls say, with the icons that say it. */
 async function expectDrawnAs(target: Page, asked: Shown) {
-  const shown = { ...asked, beside: asked.beside || (await held(target)) };
+  const isHeld = await held(target);
+  const shown = { ...asked, beside: asked.beside || isHeld };
+  // A held arrangement control says why, as its description; one that is not
+  // held gives no reason. The pointer is away, so no tooltip describes it.
+  await target.mouse.move(0, 0);
+  await expect(toggle(target, "placement")).toHaveAccessibleDescription(
+    isHeld ? label("desktop.modelo.details.under_held") : "",
+  );
   for (const [control, on] of [
     ["side", shown.side],
     ["details", shown.details],

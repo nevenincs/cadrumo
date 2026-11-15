@@ -146,7 +146,8 @@ export function FieldRow({ field }: { field: PublicModeloFormField }) {
   const selected = session.selectedKey === key;
   const open = editing?.key === key ? editing.request : null;
   const editable = session.editable(field);
-  const confirm = !staged && editable ? confirmIntent(field) : null;
+  const confirm =
+    !staged && session.admitsEntry(field) ? confirmIntent(field) : null;
   const withdrawal = staged ? null : session.withdrawal(field);
   // The served withdrawal of every figure stated for the same earlier
   // returns as this box's, which takes them all out together.
@@ -259,6 +260,7 @@ export function FieldRow({ field }: { field: PublicModeloFormField }) {
             size="xs"
             variant="outline"
             data-withdraw=""
+            disabled={session.locked}
             onClick={(event) => {
               event.stopPropagation();
               const outcome = session.withdraw(field);
@@ -274,6 +276,7 @@ export function FieldRow({ field }: { field: PublicModeloFormField }) {
             size="xs"
             variant="outline"
             data-withdraw-prior=""
+            disabled={session.locked}
             onClick={(event) => {
               event.stopPropagation();
               const outcome = session.withdrawPriorValues(priorWithdrawal);
@@ -311,6 +314,7 @@ export function FieldRow({ field }: { field: PublicModeloFormField }) {
           <Button
             size="xs"
             variant="outline"
+            disabled={session.locked}
             onClick={(event) => {
               event.stopPropagation();
               session.stage(field, confirm);

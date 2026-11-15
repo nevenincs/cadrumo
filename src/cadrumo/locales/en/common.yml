@@ -4584,6 +4584,7 @@ desktop:
       label: Details
       resize: Resize the details
       show: Show details
+      under_held: The window is too short to put the details under the form
     disagreement:
       accept: Accept with a reason
       accept_title: Accept this disagreement

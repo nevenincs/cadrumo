@@ -4645,6 +4645,8 @@ desktop:
       label: Részletek
       resize: Részletek átméretezése
       show: Részletek megjelenítése
+      under_held: Az ablak túl alacsony ahhoz, hogy a részletek a nyomtatvány alatt
+        elférjenek
     disagreement:
       accept: Elfogadás indoklással
       accept_title: Az eltérés elfogadása
