@@ -192,6 +192,8 @@ def _serve_runtime_endpoint(
         attach = partial(supervision.attach, profiles=profiles, ready=ready, publish_boot_record=publication.publish)
     with startup_phase(_LOGGER, "registry_prepare"):
         profiles.prepare_registry()
+    with startup_phase(_LOGGER, "credential_prune"):
+        profiles.prune_credentials()
     # Logon, logoff, lock and unlock wake the lifecycle pass; where Windows will
     # not report them, the pass observes logins on an interval instead.
     notifications = WindowsSessionNotifications(profiles.os_session_changed)

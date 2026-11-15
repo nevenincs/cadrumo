@@ -591,6 +591,7 @@ def test_windows_credential_ffi_preserves_raw_blob_layout(monkeypatch: pytest.Mo
         CredReadW: FakeFunction
         CredWriteW: FakeFunction
         CredDeleteW: FakeFunction
+        CredEnumerateW: FakeFunction
         CredFree: FakeFunction
 
     api = FakeAdvapi32()
@@ -645,6 +646,7 @@ def test_windows_credential_ffi_preserves_raw_blob_layout(monkeypatch: pytest.Mo
     api.CredReadW = FakeFunction(cred_read)
     api.CredWriteW = FakeFunction(cred_write)
     api.CredDeleteW = FakeFunction(cred_delete)
+    api.CredEnumerateW = FakeFunction()
     api.CredFree = FakeFunction(cred_free)
     monkeypatch.setattr(windows_secret_store.sys, "platform", "win32")
     monkeypatch.setattr(windows_secret_store.ctypes, "WinDLL", lambda _name, **_kwargs: api, raising=False)

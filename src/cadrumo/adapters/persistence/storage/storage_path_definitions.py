@@ -60,6 +60,9 @@ PROFILE_SESSION_FILENAME = storage_location(StorageCategory.KEYSTORE_PROFILE_SES
 #: derived from the receipt above at the call site, which is why the name is
 #: declared once in the taxonomy and read here rather than typed at the writer.
 PROFILE_SESSION_RETIREMENT_FILENAME = storage_location(StorageCategory.KEYSTORE_PROFILE_SESSION_RETIREMENT).subpath
+#: The receipt's sibling naming the session ids this root minted, so a pruning
+#: pass deletes only keychain entries this root itself created.
+PROFILE_SESSION_MINTED_FILENAME = storage_location(StorageCategory.KEYSTORE_PROFILE_SESSION_MINTED).subpath
 LOGIN_THROTTLE_FILENAME = storage_location(StorageCategory.KEYSTORE_LOGIN_THROTTLE).subpath
 SIGN_IN_GENERATION_FILENAME = storage_location(StorageCategory.KEYSTORE_SIGN_IN_GENERATION).subpath
 #: The three owner directories below the hold-evidence root, each the home of one
@@ -321,6 +324,14 @@ STORAGE_PATH_DEFINITIONS: Final[tuple[StoragePathDefinition, ...]] = (
         owner="cadrumo.adapters.persistence.storage.custody",
         anchor=StoragePathAnchor.STORAGE_ROOT,
         segment=PROFILE_SESSION_RETIREMENT_FILENAME,
+    ),
+    StoragePathDefinition(
+        key="profile_session_minted_record",
+        kind=StoragePathKind.FILE,
+        grammar=f"<root>/{KEYSTORE_DIRNAME}/<bucket_id>/{PROFILE_SESSION_MINTED_FILENAME}",
+        owner="cadrumo.adapters.persistence.storage.custody",
+        anchor=StoragePathAnchor.STORAGE_ROOT,
+        segment=PROFILE_SESSION_MINTED_FILENAME,
     ),
     StoragePathDefinition(
         key="login_throttle",
