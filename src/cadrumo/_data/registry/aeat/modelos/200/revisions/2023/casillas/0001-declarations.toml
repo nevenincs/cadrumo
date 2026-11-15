@@ -132,7 +132,8 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 # 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:115 DP200001 85|224|1|Num
 [[revisions."2023".casillas]]
-id = "00088"
+id = "DP200001:00088"
+segmento = "DP200001"
 continuidad_origin = "new_on_form"
 continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:115 (DP200001 field 85): Tipo gravamen reducido para entidades con INCN periodo anterior inferior a 1 millón euros (art. 29.1 LIS) [00088]. aeat-dr-200-2022 prints no field with this caption. It prints no box [00088]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
 continuidad_id = "is-tipo-gravamen-reducido-para-entidades-con-incn-periodo-anterior-inferior-a-1-millon-euros-art-29-1-lis"
@@ -144,7 +145,8 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 # 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:126 DP200001 96|235|1|Num
 [[revisions."2023".casillas]]
-id = "00089"
+id = "DP200001:00089"
+segmento = "DP200001"
 continuidad_origin = "new_on_form"
 continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:126 (DP200001 field 96): Partícipe de agrupación de interés económico o de unión temporal de empresas [00089]. aeat-dr-200-2022 prints no field with this caption. It prints no box [00089]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
 continuidad_id = "is-participe-de-agrupacion-de-interes-economico-o-de-union-temporal-de-empresas"
@@ -3808,3 +3810,503 @@ input_kind = "computed"
 formula = "modelo-200-bin-aplicada-maxima"
 internal_only = true
 legal_refs = ["ley-27-2014:art-26", "ley-27-2014:art-25"]
+
+# Modelo 200 ejercicio 2023 boxes that only the 2023 record design prints: neither the 2022 design
+# nor the 2024 and 2025 designs print a field with the same meaning, so each is declared here
+# once, page-qualified because later designs reuse its number for unrelated fields. Each is an
+# input box: it carries a value only when the declarant states one. The comment above each row
+# cites its line in 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md.
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2627 DP200018B 18|217|17|Num
+[[revisions."2023".casillas]]
+id = "DP200018B:01987"
+number = "01987"
+segmento = "DP200018B"
+continuidad_id = "is-deduccion-60-aniversario-rally-blendio-pendiente-generada"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2627 (DP200018B field 18): Deducc. para incentivar determ.actividades - 2023: 60 Aniversario Rally Blendio Princesa de Asturias Ciudad de Oviedo (60RB) - Deducción pendiente/generada [01987]. aeat-dr-200-2022 prints no field with this caption. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+section = ["deducc_para_incentivar_determ_actividades", "2023_60_aniversario_rally_blendio_princesa_de_asturias_ciudad_de_oviedo_60rb"]
+data_type = "money"
+semantic_role = "is_deduccion_60_aniversario_rally_blendio_pendiente_generada"
+legal_refs = ["ley-31-2022:da-61"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2628 DP200018B 19|234|17|Num
+[[revisions."2023".casillas]]
+id = "DP200018B:01995"
+number = "01995"
+segmento = "DP200018B"
+continuidad_id = "is-deduccion-60-aniversario-rally-blendio-aplicado-periodo"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2628 (DP200018B field 19): Deducc. para incentivar determ.actividades - 2023: 60 Aniversario Rally Blendio Princesa de Asturias Ciudad de Oviedo (60RB) - Aplicado en esta liquidación [01995]. aeat-dr-200-2022 prints no field with this caption. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+section = ["deducc_para_incentivar_determ_actividades", "2023_60_aniversario_rally_blendio_princesa_de_asturias_ciudad_de_oviedo_60rb"]
+data_type = "money"
+semantic_role = "is_deduccion_60_aniversario_rally_blendio_aplicado_periodo"
+legal_refs = ["ley-31-2022:da-61"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2629 DP200018B 20|251|17|Num
+[[revisions."2023".casillas]]
+id = "DP200018B:01996"
+number = "01996"
+segmento = "DP200018B"
+continuidad_id = "is-deduccion-60-aniversario-rally-blendio-pendiente-futuro"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2629 (DP200018B field 20): Deducc. para incentivar determ.actividades - 2023: 60 Aniversario Rally Blendio Princesa de Asturias Ciudad de Oviedo (60RB) - Pendiente de aplicación en periodos futuros [01996]. aeat-dr-200-2022 prints no field with this caption. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+section = ["deducc_para_incentivar_determ_actividades", "2023_60_aniversario_rally_blendio_princesa_de_asturias_ciudad_de_oviedo_60rb"]
+data_type = "money"
+semantic_role = "is_deduccion_60_aniversario_rally_blendio_pendiente_futuro"
+legal_refs = ["ley-31-2022:da-61"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2633 DP200018B 24|319|17|Num
+[[revisions."2023".casillas]]
+id = "DP200018B:02000"
+number = "02000"
+segmento = "DP200018B"
+continuidad_id = "is-deduccion-125-aniversario-athletic-club-pendiente-generada"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2633 (DP200018B field 24): Deducc. para incentivar determ.actividades - 2023: 125 aniversario del Athletic Club 1898-2023 (AC) - Deducción pendiente/generada [02000]. aeat-dr-200-2022 prints no field with this caption. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+section = ["deducc_para_incentivar_determ_actividades", "2023_125_aniversario_del_athletic_club_1898_2023_ac"]
+data_type = "money"
+semantic_role = "is_deduccion_125_aniversario_athletic_club_pendiente_generada"
+legal_refs = ["ley-31-2022:da-64"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2634 DP200018B 25|336|17|Num
+[[revisions."2023".casillas]]
+id = "DP200018B:02024"
+number = "02024"
+segmento = "DP200018B"
+continuidad_id = "is-deduccion-125-aniversario-athletic-club-aplicado-periodo"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2634 (DP200018B field 25): Deducc. para incentivar determ.actividades - 2023: 125 aniversario del Athletic Club 1898-2023 (AC) - Aplicado en esta liquidación [02024]. aeat-dr-200-2022 prints no field with this caption. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+section = ["deducc_para_incentivar_determ_actividades", "2023_125_aniversario_del_athletic_club_1898_2023_ac"]
+data_type = "money"
+semantic_role = "is_deduccion_125_aniversario_athletic_club_aplicado_periodo"
+legal_refs = ["ley-31-2022:da-64"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2635 DP200018B 26|353|17|Num
+[[revisions."2023".casillas]]
+id = "DP200018B:02025"
+number = "02025"
+segmento = "DP200018B"
+continuidad_id = "is-deduccion-125-aniversario-athletic-club-pendiente-futuro"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2635 (DP200018B field 26): Deducc. para incentivar determ.actividades - 2023: 125 aniversario del Athletic Club 1898-2023 (AC) - Pendiente de aplicación en periodos futuros [02025]. aeat-dr-200-2022 prints no field with this caption. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+section = ["deducc_para_incentivar_determ_actividades", "2023_125_aniversario_del_athletic_club_1898_2023_ac"]
+data_type = "money"
+semantic_role = "is_deduccion_125_aniversario_athletic_club_pendiente_futuro"
+legal_refs = ["ley-31-2022:da-64"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2861 DP200018C 71|1118|17|Num
+[[revisions."2023".casillas]]
+id = "DP200018C:01689"
+number = "01689"
+segmento = "DP200018C"
+continuidad_id = "is-deduccion-donativos-general-subtotal-2013-2014-pendiente-generada"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2861 (DP200018C field 71): Deducción donativos entidades sin fines lucro - Donaciones de carácter general - Subtotal donaciones 2013 y 2014 - Deducción pendiente/generada [01689]. aeat-dr-200-2022 prints no field with this caption. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general", "subtotal_donaciones_2013_y_2014"]
+data_type = "money"
+semantic_role = "is_deduccion_donativos_general_subtotal_2013_2014_pendiente_generada"
+legal_refs = ["ley-49-2002:art-20"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2862 DP200018C 72|1135|17|Num
+[[revisions."2023".casillas]]
+id = "DP200018C:01690"
+number = "01690"
+segmento = "DP200018C"
+continuidad_id = "is-deduccion-donativos-general-subtotal-2013-2014-aplicado-periodo"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2862 (DP200018C field 72): Deducción donativos entidades sin fines lucro - Donaciones de carácter general - Subtotal donaciones 2013 y 2014 - Aplicado en esta liquidación [01690]. aeat-dr-200-2022 prints no field with this caption. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general", "subtotal_donaciones_2013_y_2014"]
+data_type = "money"
+semantic_role = "is_deduccion_donativos_general_subtotal_2013_2014_aplicado_periodo"
+legal_refs = ["ley-49-2002:art-20"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2863 DP200018C 73|1152|17|Num
+[[revisions."2023".casillas]]
+id = "DP200018C:01691"
+number = "01691"
+segmento = "DP200018C"
+continuidad_id = "is-deduccion-donativos-general-subtotal-2013-2014-pendiente-futuro"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2863 (DP200018C field 73): Deducción donativos entidades sin fines lucro - Donaciones de carácter general - Subtotal donaciones 2013 y 2014 - Pendiente de aplicación en periodos futuros [01691]. aeat-dr-200-2022 prints no field with this caption. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general", "subtotal_donaciones_2013_y_2014"]
+data_type = "money"
+semantic_role = "is_deduccion_donativos_general_subtotal_2013_2014_pendiente_futuro"
+legal_refs = ["ley-49-2002:art-20"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2938 DP200018C 148|2427|17|Num
+[[revisions."2023".casillas]]
+id = "DP200018C:01701"
+number = "01701"
+segmento = "DP200018C"
+continuidad_id = "is-deduccion-donativos-prioritarias-subtotal-2013-2014-pendiente-generada"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2938 (DP200018C field 148): Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - Subtotal donaciones 2013 y 2014 - Deducción pendiente/generada [01701]. aeat-dr-200-2022 prints no field with this caption. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecenazgo_y_otras_con_derecho_a_deduccion_incrementada", "subtotal_donaciones_2013_y_2014"]
+data_type = "money"
+semantic_role = "is_deduccion_donativos_prioritarias_subtotal_2013_2014_pendiente_generada"
+legal_refs = ["ley-49-2002:art-20"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2939 DP200018C 149|2444|17|Num
+[[revisions."2023".casillas]]
+id = "DP200018C:01702"
+number = "01702"
+segmento = "DP200018C"
+continuidad_id = "is-deduccion-donativos-prioritarias-subtotal-2013-2014-aplicado-periodo"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2939 (DP200018C field 149): Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - Subtotal donaciones 2013 y 2014 - Aplicado en esta liquidación [01702]. aeat-dr-200-2022 prints no field with this caption. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecenazgo_y_otras_con_derecho_a_deduccion_incrementada", "subtotal_donaciones_2013_y_2014"]
+data_type = "money"
+semantic_role = "is_deduccion_donativos_prioritarias_subtotal_2013_2014_aplicado_periodo"
+legal_refs = ["ley-49-2002:art-20"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2940 DP200018C 150|2461|17|Num
+[[revisions."2023".casillas]]
+id = "DP200018C:01703"
+number = "01703"
+segmento = "DP200018C"
+continuidad_id = "is-deduccion-donativos-prioritarias-subtotal-2013-2014-pendiente-futuro"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2940 (DP200018C field 150): Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - Subtotal donaciones 2013 y 2014 - Pendiente de aplicación en periodos futuros [01703]. aeat-dr-200-2022 prints no field with this caption. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecenazgo_y_otras_con_derecho_a_deduccion_incrementada", "subtotal_donaciones_2013_y_2014"]
+data_type = "money"
+semantic_role = "is_deduccion_donativos_prioritarias_subtotal_2013_2014_pendiente_futuro"
+legal_refs = ["ley-49-2002:art-20"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3746 DP200022 10|81|17|Num
+[[revisions."2023".casillas]]
+id = "DP200022:01936"
+number = "01936"
+segmento = "DP200022"
+continuidad_id = "is-ric-2018-integrado-base-imponible-incumplimiento"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3746 (DP200022 field 10): Rég. especial reserva inversiones Canarias - RIC 2018 - Aplicado/materializado en esta liquidación - Integrado en BI por incumplimiento de requisitos [01936]. aeat-dr-200-2022 prints no field with this caption. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+section = ["reg_especial_reserva_inversiones_canarias", "ric_2018", "aplicado_materializado_en_esta_liquidacion"]
+data_type = "money"
+semantic_role = "is_ric_2018_integrado_base_imponible_incumplimiento"
+legal_refs = ["ley-19-1994:art-27"]
+
+# Modelo 200 ejercicio 2023 boxes the 2023 record design prints with the meaning the 2024
+# design gives the same box, declared here at the earliest edition that prints them; the 2024
+# edition inherits them. The comment above each row cites its line in
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md.
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1229 DP200012 field 39
+[[revisions."2023".casillas]]
+id = "00775"
+continuidad_id = "00775"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1229 (DP200012 field 39): Liquidación I - Detalle correcciones resultado cta. pérdidas y ganancias -Amortización acelerada de determinados vehículos y de nuevas infraestructuras de recarga (DA 18ª LIS) - Aumentos [00775]. aeat-dr-200-2022 prints no box [00775]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+number = "00775"
+section = ["liquidacion_i", "detalle_correcciones_resultado_cta_perdidas_y_gana"]
+semantic_role = "is_correcciones_aumentos"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1230 DP200012 field 40
+[[revisions."2023".casillas]]
+id = "00776"
+continuidad_id = "is-correcciones-disminuciones"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1230 (DP200012 field 40): Liquidación I - Detalle correcciones resultado cta. pérdidas y ganancias -Amortización acelerada de determinados vehículos y de nuevas infraestructuras de recarga (DA 18ª LIS) - Disminuciones [00776]. aeat-dr-200-2022 prints no box [00776]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+number = "00776"
+section = ["liquidacion_i", "detalle_correcciones_resultado_cta_perdidas_y_gana"]
+semantic_role = "is_correcciones_disminuciones"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4654 DP200026B field 131
+[[revisions."2023".casillas]]
+id = "00075"
+continuidad_id = "is-correccion-amortizacion-acelerada-vehiculos-saldo-inicial"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4654 (DP200026B field 131): Amortización acelerada de determinados vehículos y de nuevas infraestructuras de recarga (DA 18ª LIS) - Aumento - Saldo pendiente a principio de ejercicio [00075]. aeat-dr-200-2022 prints no field with this caption. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+number = "00075"
+section = ["amortizacion_acelerada_de_determinados_vehiculos_y", "aumento"]
+semantic_role = "is_correccion_amortizacion_acelerada_vehiculos_saldo_inicial"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4655 DP200026B field 132
+[[revisions."2023".casillas]]
+id = "00076"
+continuidad_id = "is-correccion-amortizacion-acelerada-vehiculos-permanente-aumento"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4655 (DP200026B field 132): Amortización acelerada de determinados vehículos y de nuevas infraestructuras de recarga (DA 18ª LIS) - Aumento - Correcciones del ejercicio - Permanentes [00076]. aeat-dr-200-2022 prints no field with this caption. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+number = "00076"
+section = ["amortizacion_acelerada_de_determinados_vehiculos_y", "aumento"]
+semantic_role = "is_correccion_amortizacion_acelerada_vehiculos_permanente_aumento"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4656 DP200026B field 133
+[[revisions."2023".casillas]]
+id = "00077"
+continuidad_id = "is-correccion-amortizacion-acelerada-vehiculos-importe"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4656 (DP200026B field 133): Amortización acelerada de determinados vehículos y de nuevas infraestructuras de recarga (DA 18ª LIS) - Aumento - Correcciones del ejercicio - Temporarias (con origen en el ejercicio) [00077]. aeat-dr-200-2022 prints no field with this caption. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+number = "00077"
+section = ["amortizacion_acelerada_de_determinados_vehiculos_y", "aumento"]
+semantic_role = "is_correccion_amortizacion_acelerada_vehiculos_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2926 DP200018C field 136
+[[revisions."2023".casillas]]
+id = "01329"
+continuidad_id = "01329"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2926 (DP200018C field 136): Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - 2023(*) Sin reiteración de donaciones a una misma entidad - Deducción pendiente/generada [01329]. aeat-dr-200-2022 prints box [01329] at 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2852 for the 2022 donations, another cohort. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+number = "01329"
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecena"]
+semantic_role = "is_deduccion_donativos_prioritarias"
+legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2927 DP200018C field 137
+[[revisions."2023".casillas]]
+id = "01372"
+continuidad_id = "01372"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2927 (DP200018C field 137): Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - 2023(*) Sin reiteración de donaciones a una misma entidad - Aplicado en esta liquidación [01372]. aeat-dr-200-2022 prints box [01372] at 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2853 for the 2022 donations, another cohort. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+number = "01372"
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecena"]
+semantic_role = "is_deduccion_donativos_prioritarias"
+legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2928 DP200018C field 138
+[[revisions."2023".casillas]]
+id = "01373"
+continuidad_id = "01373"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2928 (DP200018C field 138): Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - 2023(*) Sin reiteración de donaciones a una misma entidad - Pendiente de aplicación en periodos futuros [01373]. aeat-dr-200-2022 prints box [01373] at 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2854 for the 2022 donations, another cohort. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+number = "01373"
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecena"]
+semantic_role = "is_deduccion_donativos_prioritarias"
+legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
+
+# Modelo 200 ejercicio 2023 cohort boxes the 2023 record design prints and the 2023 edition did not
+# declare. Each is page-qualified because the 2024 design reuses its number for another field: the
+# 2023-cohort rows of DP200018B and DP200020, whose cohort the 2024 design prints under another box.
+# Each is an input box: it carries a value only when the declarant states one. The 2024 edition
+# removes each row with a retired continuity record. The comment above each row cites its line in
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md.
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2773 DP200018B 164|2699|17|Num
+[[revisions."2023".casillas]]
+id = "DP200018B:02445"
+number = "02445"
+segmento = "DP200018B"
+continuidad_id = "m200-dp200018b-02445-2023"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2773 (DP200018B field 164): Deducciones por producciones cinematográficas extranjeras en Canarias (art. 36.2 LIS y DA 14ª Ley 19/1994) - 2023 - Deducción pendiente/generada [02445]. aeat-dr-200-2022 prints no box [02445]. aeat-dr-200-2024 prints this cohort as box [01313] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2782 (DP200018B field 107) and reuses box [02445] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2786 (DP200018B field 111) for another cohort. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+section = ["deducciones_por_producciones_cinematograficas_extr", "2023"]
+data_type = "money"
+semantic_role = "is_deduccion_cinematografica_pendiente_generada"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2774 DP200018B 165|2716|17|Num
+[[revisions."2023".casillas]]
+id = "DP200018B:02466"
+number = "02466"
+segmento = "DP200018B"
+continuidad_id = "m200-dp200018b-02466-2023"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2774 (DP200018B field 165): Deducciones por producciones cinematográficas extranjeras en Canarias (art. 36.2 LIS y DA 14ª Ley 19/1994) - 2023 - Aplicado en esta liquidación [02466]. aeat-dr-200-2022 prints no box [02466]. aeat-dr-200-2024 prints this cohort as box [01314] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2783 (DP200018B field 108) and reuses box [02466] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2787 (DP200018B field 112) for another cohort. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+section = ["deducciones_por_producciones_cinematograficas_extr", "2023"]
+data_type = "money"
+semantic_role = "is_deduccion_cinematografica_extranjera_aplicado_periodo"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2775 DP200018B 166|2733|17|Num
+[[revisions."2023".casillas]]
+id = "DP200018B:02467"
+number = "02467"
+segmento = "DP200018B"
+continuidad_id = "m200-dp200018b-02467-2023"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2775 (DP200018B field 166): Deducciones por producciones cinematográficas extranjeras en Canarias (art. 36.2 LIS y DA 14ª Ley 19/1994) - 2023 - Importe abonado por insuficiencia de cuota [02467]. aeat-dr-200-2022 prints no box [02467]. aeat-dr-200-2024 prints this cohort as box [01315] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2784 (DP200018B field 109) and reuses box [02467] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2788 (DP200018B field 113) for another cohort. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+section = ["deducciones_por_producciones_cinematograficas_extr", "2023"]
+data_type = "money"
+semantic_role = "is_deduccion_cinematografica_extranjera_aplicado_periodo"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2776 DP200018B 167|2750|17|Num
+[[revisions."2023".casillas]]
+id = "DP200018B:02468"
+number = "02468"
+segmento = "DP200018B"
+continuidad_id = "m200-dp200018b-02468-2023"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2776 (DP200018B field 167): Deducciones por producciones cinematográficas extranjeras en Canarias (art. 36.2 LIS y DA 14ª Ley 19/1994) - 2023 - Pendiente de aplicación en períodos futuros [02468]. aeat-dr-200-2022 prints no box [02468]. aeat-dr-200-2024 prints this cohort as box [01316] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2785 (DP200018B field 110) and reuses box [02468] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2789 (DP200018B field 114) for another cohort. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+section = ["deducciones_por_producciones_cinematograficas_extr", "2023"]
+data_type = "money"
+semantic_role = "is_deduccion_cinematografica_extranjera_pendiente_futuros"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3266 DP200020 81|1288|17|Num
+[[revisions."2023".casillas]]
+id = "DP200020:02766"
+number = "02766"
+segmento = "DP200020"
+continuidad_id = "m200-dp200020-02766-2023"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3266 (DP200020 field 81): Limitación deducibilidad gastos financieros. gastos financieros pendientes deducir - Ejercicio generación 2023(**) - Aplicado en esta liquidación [02766]. aeat-dr-200-2022 prints no box [02766]. aeat-dr-200-2024 prints this cohort as box [01395] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3304 (DP200020 field 80) and reuses box [02766] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3309 (DP200020 field 85) for another cohort. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+section = ["limitacion_deducibilidad_gastos_financieros_gastos", "ejercicio_generacion_2023"]
+data_type = "money"
+semantic_role = "is_gastos_financieros_pendiente_deducir"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3267 DP200020 82|1305|17|Num
+[[revisions."2023".casillas]]
+id = "DP200020:02767"
+number = "02767"
+segmento = "DP200020"
+continuidad_id = "m200-dp200020-02767-2023"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3267 (DP200020 field 82): Limitación deducibilidad gastos financieros. gastos financieros pendientes deducir - Ejercicio generación 2023(**) - Pendiente aplicación en períodos futuros - Por límite [02767]. aeat-dr-200-2022 prints no box [02767]. aeat-dr-200-2024 prints this cohort as box [01396] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3305 (DP200020 field 81) and reuses box [02767] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3310 (DP200020 field 86) for another cohort. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+section = ["limitacion_deducibilidad_gastos_financieros_gastos", "ejercicio_generacion_2023"]
+data_type = "money"
+semantic_role = "is_gastos_financieros_pendiente_deducir"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3268 DP200020 83|1322|17|Num
+[[revisions."2023".casillas]]
+id = "DP200020:02768"
+number = "02768"
+segmento = "DP200020"
+continuidad_id = "m200-dp200020-02768-2023"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3268 (DP200020 field 83): Limitación deducibilidad gastos financieros. gastos financieros pendientes deducir - Ejercicio generación 2023(**) - Pendiente aplicación en períodos futuros - Resto [02768]. aeat-dr-200-2022 prints no box [02768]. aeat-dr-200-2024 prints this cohort as box [01397] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3306 (DP200020 field 82) and reuses box [02768] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3311 (DP200020 field 87) for another cohort. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+section = ["limitacion_deducibilidad_gastos_financieros_gastos", "ejercicio_generacion_2023"]
+data_type = "money"
+semantic_role = "is_gastos_financieros_pendiente_deducir"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3291 DP200020 106|1713|17|Num
+[[revisions."2023".casillas]]
+id = "DP200020:02769"
+number = "02769"
+segmento = "DP200020"
+continuidad_id = "m200-dp200020-02769-2023"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3291 (DP200020 field 106): Pendiente adición por límite beneficio operativo no aplicado - Ejercicio generación 2023(**) - Pendiente aplicación a principio del período  [02769]. aeat-dr-200-2022 prints no box [02769]. aeat-dr-200-2024 prints this cohort as box [01398] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3331 (DP200020 field 107) and reuses box [02769] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3334 (DP200020 field 110) for another cohort. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+section = ["pendiente_adicion_por_limite_beneficio_operativo_n", "ejercicio_generacion_2023"]
+data_type = "money"
+semantic_role = "is_correccion_limite_beneficio_operativo_saldo_inicial"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3292 DP200020 107|1730|17|Num
+[[revisions."2023".casillas]]
+id = "DP200020:02770"
+number = "02770"
+segmento = "DP200020"
+continuidad_id = "m200-dp200020-02770-2023"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3292 (DP200020 field 107): Pendiente adición por límite beneficio operativo no aplicado - Ejercicio generación 2023(**) - Aplicado en esta liquidación [02770]. aeat-dr-200-2022 prints no box [02770]. aeat-dr-200-2024 prints this cohort as box [01399] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3332 (DP200020 field 108) and reuses box [02770] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3335 (DP200020 field 111) for another cohort. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+section = ["pendiente_adicion_por_limite_beneficio_operativo_n", "ejercicio_generacion_2023"]
+data_type = "money"
+semantic_role = "is_correccion_limite_beneficio_operativo_pendiente_adicion_aplicado"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3293 DP200020 108|1747|17|Num
+[[revisions."2023".casillas]]
+id = "DP200020:02772"
+number = "02772"
+segmento = "DP200020"
+continuidad_id = "m200-dp200020-02772-2023"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3293 (DP200020 field 108): Pendiente adición por límite beneficio operativo no aplicado - Ejercicio generación 2023(**) - Pendiente aplicación períodos futuros [02772]. aeat-dr-200-2022 prints no box [02772]. aeat-dr-200-2024 prints this cohort as box [01400] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3333 (DP200020 field 109) and reuses box [02772] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3336 (DP200020 field 112) for another cohort. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+section = ["pendiente_adicion_por_limite_beneficio_operativo_n", "ejercicio_generacion_2023"]
+data_type = "money"
+semantic_role = "is_correccion_limite_beneficio_operativo_pendiente"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# Open Barcelona-Trofeo Conde de Godó: the 2023 design prints boxes 02029-02031 on DP200018B with the
+# meaning the 2024 design gives them on DP200018, the event year rotating as for every event row. They
+# are declared here at the earliest edition that prints them; the 2024 edition inherits them.
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2639 DP200018B 30|421|17|Num
+[[revisions."2023".casillas]]
+id = "02029"
+continuidad_id = "02029"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2639 (DP200018B field 30): Deducc. para incentivar determ.actividades - 2023: Open Barceona-Trofeo Conde de Godó (OB) - Deducción pendiente/generada [02029]. aeat-dr-200-2022 prints no box [02029]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+number = "02029"
+section = ["deducc_para_incentivar_determ_actividades", "2025_open_barcelona_trofeo_conde_de_godo_ob"]
+semantic_role = "is_deduccion_idi_evento_especial"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2640 DP200018B 31|438|17|Num
+[[revisions."2023".casillas]]
+id = "02030"
+continuidad_id = "02030"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2640 (DP200018B field 31): Deducc. para incentivar determ.actividades - 2023: Open Barceona-Trofeo Conde de Godó (OB) - Aplicado en esta liquidación [02030]. aeat-dr-200-2022 prints no box [02030]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+number = "02030"
+section = ["deducc_para_incentivar_determ_actividades", "2025_open_barcelona_trofeo_conde_de_godo_ob"]
+semantic_role = "is_deduccion_eventos_especiales_aplicado_periodo"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2641 DP200018B 32|455|17|Num
+[[revisions."2023".casillas]]
+id = "02031"
+continuidad_id = "02031"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2641 (DP200018B field 32): Deducc. para incentivar determ.actividades - 2023: Open Barceona-Trofeo Conde de Godó (OB) - Pendiente de aplicación en periodos futuros [02031]. aeat-dr-200-2022 prints no box [02031]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+number = "02031"
+section = ["deducc_para_incentivar_determ_actividades", "2025_open_barcelona_trofeo_conde_de_godo_ob"]
+semantic_role = "is_deduccion_eventos_especiales_pendiente"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# Modelo 200 "60 aniversario del Festival Porta Ferrada (PF)" deduction row as the 2023 record
+# design prints it, the earliest design that prints it. Each of its three boxes is page-qualified
+# because the identification sheet DP200001 prints the same number as an unrelated flag: [00088]
+# and [00089] from the 2023 design and [00090] from the 2024 design. Without the qualification one
+# casilla would own both cells and the export would refuse a stated value before any byte.
+#
+# The 2024 and 2025 designs print the same deduction row, but on sheet DP200018 rather than on
+# DP200018B: the deducciones block reflowed onto the preceding sheet, as it did for every event
+# row. A page-qualified id names the sheet its own edition's design prints, so the 2024 edition
+# removes these three members and declares DP200018:<n> instead, keeping each continuidad_id and
+# recording the move as a section_evolved evolution. The concept continues; it is not retired.
+#
+# The caption's leading year is the edition's own filing year, not a cohort year: the 2023 design
+# prints "2023:", the 2024 design "2024:" and the 2025 design "2025:" against the same boxes. The
+# label is therefore authored without a year, as the rotating "N+1(****) Otras deducciones" row is.
+#
+# Each box is an input: it carries a value only when the declarant states one. The comment above
+# each row cites its line in 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md.
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2663 DP200018B 54|829|17|Num
+[[revisions."2023".casillas]]
+id = "DP200018B:00088"
+number = "00088"
+segmento = "DP200018B"
+continuidad_id = "is-deduccion-porta-ferrada-pendiente-generada"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2663 (DP200018B field 54): Deducc. para incentivar determ.actividades - 2023: 60 aniversario del Festival Porta Ferrada (PF) - Deducción pendiente/generada [00088]. aeat-dr-200-2022 prints no field with this caption and no box [00088]. aeat-dr-200-2024 prints the same row at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2654 (DP200018 field 162) and aeat-dr-200-2025 at 01-200-ejercicio-2025-10-9-mb-xls.xls.extracted.md:2629 (DP200018 field 90), each with its own edition year in the caption, so both later editions inherit this row. Box [00088] on DP200001 is the tipo gravamen reducido flag, another field. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+section = ["deducc_para_incentivar_determ_actividades", "60_aniversario_del_festival_porta_ferrada_pf"]
+data_type = "money"
+semantic_role = "is_deduccion_porta_ferrada_pendiente_generada"
+legal_refs = ["ley-27-2014:art-39"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2664 DP200018B 55|846|17|Num
+[[revisions."2023".casillas]]
+id = "DP200018B:00089"
+number = "00089"
+segmento = "DP200018B"
+continuidad_id = "is-deduccion-porta-ferrada-aplicado-periodo"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2664 (DP200018B field 55): Deducc. para incentivar determ.actividades - 2023: 60 aniversario del Festival Porta Ferrada (PF) - Aplicado en esta liquidación [00089]. aeat-dr-200-2022 prints no field with this caption and no box [00089]. aeat-dr-200-2024 prints the same row at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2655 (DP200018 field 163) and aeat-dr-200-2025 at 01-200-ejercicio-2025-10-9-mb-xls.xls.extracted.md:2630 (DP200018 field 91), each with its own edition year in the caption, so both later editions inherit this row. Box [00089] on DP200001 is the partícipe de AIE o UTE flag, another field. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+section = ["deducc_para_incentivar_determ_actividades", "60_aniversario_del_festival_porta_ferrada_pf"]
+data_type = "money"
+semantic_role = "is_deduccion_porta_ferrada_aplicado_periodo"
+legal_refs = ["ley-27-2014:art-39"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2665 DP200018B 56|863|17|Num
+[[revisions."2023".casillas]]
+id = "DP200018B:00090"
+number = "00090"
+segmento = "DP200018B"
+continuidad_id = "is-deduccion-porta-ferrada-pendiente-futuro"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2665 (DP200018B field 56): Deducc. para incentivar determ.actividades - 2023: 60 aniversario del Festival Porta Ferrada (PF) - Pendiente de aplicación en periodos futuros [00090]. aeat-dr-200-2022 prints no field with this caption and no box [00090]. aeat-dr-200-2024 prints the same row at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2656 (DP200018 field 164) and aeat-dr-200-2025 at 01-200-ejercicio-2025-10-9-mb-xls.xls.extracted.md:2631 (DP200018 field 92), each with its own edition year in the caption, so both later editions inherit this row. The 2024 design also prints box [00090] on DP200001 as the Opción art. 39.3 LIS flag, another field. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+section = ["deducc_para_incentivar_determ_actividades", "60_aniversario_del_festival_porta_ferrada_pf"]
+data_type = "money"
+semantic_role = "is_deduccion_porta_ferrada_pendiente_futuro"
+legal_refs = ["ley-27-2014:art-39"]
