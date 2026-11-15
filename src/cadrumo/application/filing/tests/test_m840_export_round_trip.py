@@ -82,7 +82,7 @@ def exercise(request: pytest.FixtureRequest) -> int:
     return year
 
 
-def _producer_snapshot() -> FilingProducerSnapshot:
+def _producer_snapshot(profile: Modelo840ProfileFacts = _PROFILE) -> FilingProducerSnapshot:
     return build_filing_producer_snapshot(
         modelo=Modelo(_MODELO),
         taxpayer_tax_id="12345678Z",
@@ -90,7 +90,7 @@ def _producer_snapshot() -> FilingProducerSnapshot:
             legal_name=None, given_name="Ana", surnames="Prueba", full_name="Ana Prueba"
         ),
         presenter=PresenterIdentity(tax_id="00000000T", full_name="Gestoría Prueba"),
-        model_profile=_PROFILE,
+        model_profile=profile,
         elections=FilingElectionFacts(
             result_disposition=ResultDisposition.NEGATIVA,
             payment=PaymentElection.INGRESO,
@@ -128,10 +128,12 @@ def _draft(snapshot: RegistrySnapshot, exercise: int) -> ModeloDraft:
     )
 
 
-def _render(exercise: int) -> tuple[RegistrySnapshot, ExportLayoutDefinition, dict[FilingProducerKey, object], bytes]:
+def _render(
+    exercise: int, profile: Modelo840ProfileFacts = _PROFILE
+) -> tuple[RegistrySnapshot, ExportLayoutDefinition, dict[FilingProducerKey, object], bytes]:
     snapshot = published_snapshot(_MODELO, filing_year=exercise, period=_PERIOD)
     (layout,) = snapshot.revision.export_layouts
-    producer_snapshot = _producer_snapshot()
+    producer_snapshot = _producer_snapshot(profile)
     headers = filing_producer_values(producer_snapshot)
     payload = render_filing_layout(
         layout,
@@ -199,3 +201,26 @@ def test_the_rendered_declaration_reads_back_to_its_stored_facts(exercise: int) 
     for slot, row in enumerate(_PROFILE.local_rows, start=1):
         assert premises[(slot, M840LocalField.NOMBRE_VIA)] == row.nombre_via
         assert premises[(slot, M840LocalField.TOTAL)] == row.total
+
+
+def test_premises_beyond_one_sheet_open_a_second_anexo_sheet_that_reads_back_in_order(exercise: int) -> None:
+    rows = tuple(Modelo840LocalRow(nombre_via=f"CALLE {index}", total=index) for index in range(1, 12))
+    snapshot, layout, _headers, payload = _render(exercise, _PROFILE.model_copy(update={"local_rows": rows}))
+
+    parsed = parse_export_payload(layout, payload, sources=snapshot.sources)
+
+    sheets = [str(item.record_id) for item in parsed.fields if str(item.field_id).endswith(".f001")]
+    assert sheets == ["m840-pagina01", "m840-pagina02", "m840-anexo", "m840-anexo"]
+    names = {
+        str(field.id)
+        for record in layout.records
+        for field in record.fields
+        if isinstance(field.projection_ref, M840LocalProjectionRef)
+        and field.projection_ref.field is M840LocalField.NOMBRE_VIA
+    }
+    read_names = [
+        item.value
+        for item in parsed.fields
+        if str(item.field_id) in names and item.value is not None and item.value != ""
+    ]
+    assert read_names == [row.nombre_via for row in rows]

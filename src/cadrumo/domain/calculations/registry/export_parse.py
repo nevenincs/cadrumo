@@ -208,11 +208,13 @@ def _consume_record_block(
 ) -> int:
     """Consume zero or more instances of ``record`` from ``payload`` at ``cursor``.
 
-    Three record shapes:
+    Four record shapes:
 
     * ``repeat == "binding_rows"`` — read records repeatedly until
       the payload exhausts or the next record's start marker is
       reached.
+    * ``repeat == "projection_rows"`` whose start marker matches —
+      read records while each one opens with that marker.
     * unmatched optional — skipped.
     * unmatched required, or matched once — read exactly once.
 
@@ -221,6 +223,13 @@ def _consume_record_block(
     """
     if record.repeat == "binding_rows":
         while cursor < len(payload) and not _matches_record_start(next_record, payload, cursor):
+            record_values, cursor = _read_record(layout_id, record, payload, cursor, filed=filed, compact=compact)
+            parsed.extend(record_values)
+        return cursor
+    if record.repeat == "projection_rows" and _matches_record_start(record, payload, cursor):
+        # The renderer emits one occurrence per projected row group (a Modelo 840 Anexo sheet each),
+        # and every occurrence opens with the record's own start marker.
+        while cursor < len(payload) and _matches_record_start(record, payload, cursor):
             record_values, cursor = _read_record(layout_id, record, payload, cursor, filed=filed, compact=compact)
             parsed.extend(record_values)
         return cursor
