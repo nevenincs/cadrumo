@@ -390,11 +390,9 @@ def refuse_blocked_ledger_preflight(
 ) -> ModeloWorkProfile:
     """Refuse, before anything is written, a calculation the period's ledger readiness blocks.
 
-    Calculation itself runs the same check after its preparatory writes; this
-    one runs first, so a refusal the person can put right leaves no record
-    changed and is reported as a refusal, not as an operation that may have
-    written. It returns the profile the readiness gate checked, so the rest of
-    the command reads that record instead of decrypting the profile again.
+    Calculation itself runs the same check after its preparatory writes; this one runs first, so a refusal
+    the person can put right leaves no record changed and is reported as a refusal, not as an operation that
+    may have written. It returns the checked profile, so the command decrypts it once.
     """
     work_unit, snapshot, checked_profile = load_bucket_aggregation_context(
         work_unit_id,
@@ -419,11 +417,9 @@ def refuse_empty_retenciones_window(
 ) -> ModeloWorkProfile:
     """Refuse, before anything is written, a withholding period that holds no retención.
 
-    The retenciones resolver refuses the same window during source
-    resolution, which runs after the calculation's preparatory writes; this
-    applies its rule first, so the person's missing answer is reported as a
-    refusal with nothing changed. Like the ledger preflight, it returns the
-    profile the readiness gate checked.
+    The retenciones resolver refuses the same window during source resolution, which runs after the
+    calculation's preparatory writes; this applies its rule first, so the person's missing answer is
+    reported as a refusal with nothing changed. It returns the checked profile.
     """
     from ..aggregation.modelo_bindings_retenciones import RetencionesAggregationSourceResolver
     from ..aggregation.source_mesh import CalculationSourceContext
