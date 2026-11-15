@@ -2272,10 +2272,12 @@ async function recordFiling(out) {
       // A filing can leave the header's step as it was; the runtime's settled
       // filing and the window's read after it end the wait, which otherwise
       // runs past the attended session's idle expiry and signs the window out.
-      return !state.busy &&
-        (state.action !== before.action || settledReadAfter(mark))
-        ? { state }
-        : null;
+      // A finished filing that holds the declaration unread asks for a read
+      // the window does not start by itself, so the hold ends the wait too.
+      if (state.busy) return null;
+      if (state.action !== before.action || settledReadAfter(mark))
+        return { state };
+      return (await exec(pageVisible, ".modelo-write-hold")) ? { state } : null;
     },
     { timeout: TIMEOUT.verify, what: "the local filing", soft: true },
   );
