@@ -5094,6 +5094,7 @@ desktop:
     action_unroutable: No está disponible aquí.
   session:
     enter_restarts: Intro lo reinicia
+    environment_changed: El entorno ha cambiado. Reinicia la consola para usarlo.
     exit_line: '[El proceso terminó con el código {code}. Pulsa Intro para volver
       a empezar.]'
     exited: terminó ({code})
@@ -5108,6 +5109,7 @@ desktop:
       slow: ha tardado demasiado
       start: no se ha podido iniciar el programa
       stopped: el programa se ha detenido con un error
+    restart_console: Reiniciar la consola
   settings:
     agent_search: Buscar en ajustes
     agent_search_empty: No hay ajustes que coincidan. Prueba otra búsqueda.
