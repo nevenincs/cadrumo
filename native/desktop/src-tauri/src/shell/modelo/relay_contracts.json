@@ -857,6 +857,20 @@
         "path": []
       }
     },
+    "modelo.work.filing_state": {
+      "bucket_field": false,
+      "file_fields": {},
+      "financial": false,
+      "may_write": false,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "payload_field",
+        "path": [
+          "work_unit_id"
+        ]
+      }
+    },
     "modelo.work.form": {
       "bucket_field": false,
       "file_fields": {},

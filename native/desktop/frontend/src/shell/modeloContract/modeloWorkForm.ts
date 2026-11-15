@@ -13,12 +13,14 @@ import type {
   BindingSourceKind,
   CalculationNoteFact,
   CasillaId,
-  ModeloExportArtefact,
   ModeloFormDeadlineTone,
+  ModeloVerificationFindingKind,
+  ModeloVerificationFindingSeverity,
   OutputLanguage,
   PreconditionVerdictSnapshot,
   PublicPeriod,
   RegistryAuthorityGrade,
+  ResultDisposition,
   RevisionId,
   SourceRefId,
   TransactionId,
@@ -32,23 +34,28 @@ import type {
   ModeloEditRefusedV1,
   ModeloEditWireScalar,
   ModeloFormAddressV1,
+  ModeloFormBindingAddressV1,
   ModeloFormCasillaAddressV1,
 } from "./modeloEditWork";
 import type {
   DeadlineHolidayCoverage,
+  ModeloFormExportHold,
+  ModeloFormFileView,
+  ModeloFormFiling,
+  ModeloFormNextAction,
+  ModeloFormReceipt,
+  ModeloFormResultDirection,
+  ModeloFormResultView,
   ModeloWorkProgressState,
+  PublicModeloFormExportOffer,
   SourceSurface,
 } from "./modeloWork";
 import type {
-  PublicModeloFormRate,
-  PublicModeloFormRepeatingBlock,
-  PublicModeloFormSection,
-  PublicModeloFormValueSource,
-  PublicModeloVerificationFinding,
-  PublicModeloWorkFormLoadV1,
-  PublicScalarValueV1,
   PublicSpanishTaxIdFormat,
   ReconciliationSourceRequirementV1,
+  RefundEligibilityBasis,
+  RefundEligibilityOutcome,
+  SourceFamily,
   SourcePolicyV1,
   TemporalProjectionDirection,
 } from "./modeloWorkFormPart2";
@@ -100,15 +107,6 @@ export type CalculationReportRowRole =
 export type CasillaSignConstraint = "any" | "non_negative" | "non_positive";
 
 /**
- * Wire shapes a modelo registry export layout may declare.
- *
- * Members carry the exact tokens the registry TOML stores, so hydration is a
- * behaviour-preserving lift rather than a re-spelling: a member compares,
- * hashes, and JSON-serialises identically to the string it replaces.
- */
-export type ExportLayoutFormat = "fixed_width" | "xml_dictionary";
-
-/**
  * What one grid cell holds.
  */
 export type FormCellKind =
@@ -145,14 +143,6 @@ export type FormUnplacedReason =
 
 export type InvoiceId = string;
 
-export type ModeloExportRequestField =
-  | "refund_election"
-  | "payment_election"
-  | "prior_domiciliation_election"
-  | "instalment_election"
-  | "charge_account_id"
-  | "refund_account_id";
-
 /**
  * The AEAT tax data (borrador) the current calculation took values from.
  *
@@ -165,17 +155,6 @@ export type ModeloFormAeatData = {
   snapshot_id: string;
   imported_at: string | null;
   binding_ids: BindingId[];
-};
-
-/**
- * One artefact the export offers, in the filer's words, and whether it can be
- * created now.
- */
-export type ModeloFormArtefactOption = {
-  artefact: ModeloExportArtefact;
-  words: string;
-  save_format: string | null;
-  availability: ModeloFormAvailability;
 };
 
 /**
@@ -192,16 +171,6 @@ export type ModeloFormAttentionCount = {
   level: ModeloFormAttention;
   count: number;
   words: string;
-};
-
-/**
- * Whether an export, or recording the filing, can be done now, and if not why,
- * in the filer's words.
- */
-export type ModeloFormAvailability = {
-  available: boolean;
-  reason: ModeloFormUnavailable | null;
-  words: string | null;
 };
 
 /**
@@ -405,49 +374,6 @@ export type ModeloFormEditability =
   | "no_admission";
 
 /**
- * One declaration-shaping choice an export asks.
- */
-export type ModeloFormElection =
-  | "refund"
-  | "payment"
-  | "prior_domiciliation"
-  | "instalment"
-  | "charge_account"
-  | "refund_account";
-
-/**
- * One answer an election takes: the value the export request carries, and its
- * words.
- */
-export type ModeloFormElectionChoice = {
-  value: string;
-  words: string;
-};
-
-/**
- * Why an election is not applicable or cannot be answered now.
- */
-export type ModeloFormElectionReason =
-  | "nothing_to_pay"
-  | "nothing_to_refund"
-  | "result_unknown"
-  | "amendment"
-  | "past_filing_window"
-  | "filing_window_unknown"
-  | "no_open_account"
-  | "no_spanish_account"
-  | "settlement_unsupported"
-  | "second_instalment_nothing"
-  | "carry_forward_only"
-  | "redeme_unstated";
-
-/**
- * Whether the filer can answer an election now.
- */
-export type ModeloFormElectionState =
-  "available" | "not_applicable" | "unavailable";
-
-/**
  * The latest file exported for this declaration, and whether it was made from
  * the current calculation.
  *
@@ -459,44 +385,6 @@ export type ModeloFormExport = {
   exported_at: string;
   calculation_revision_id: string;
   current: boolean;
-};
-
-/**
- * Why the file for the AEAT, and recording the filing, are withheld, with what
- * the reason counts.
- */
-export type ModeloFormExportHold = {
-  reason: ModeloFormExportHoldReason;
-  count: number;
-  words: string;
-  action: ModeloFormNextAction;
-};
-
-/**
- * Why the file for the AEAT is withheld, most pressing first.
- */
-export type ModeloFormExportHoldReason = "blocks" | "confirm" | "verify";
-
-/**
- * The latest file for the AEAT, and whether it no longer matches the
- * declaration.
- *
- * `words` say when it was created or, for a file made from an earlier
- * calculation, that it is out of date and is to be created again.
- */
-export type ModeloFormFileView = {
-  exported_at: string;
-  created_on: string;
-  current: boolean;
-  words: string;
-};
-
-/**
- * The declaration is recorded in Cadrumo as filed; nothing was sent to AEAT
- * from here.
- */
-export type ModeloFormFiling = {
-  recorded_at: string | null;
 };
 
 /**
@@ -532,11 +420,6 @@ export type ModeloFormHeader = {
  */
 export type ModeloFormInspectionReason =
   "layout_absent" | "layout_for_another_revision";
-
-/**
- * One instalment of an amount to pay in two.
- */
-export type ModeloFormInstalment = "first" | "second";
 
 /**
  * One finding or calculation note as the check view lists it, in the form's
@@ -609,22 +492,6 @@ export type ModeloFormMissingElsewhere = {
   count: number;
   words: string;
 };
-
-/**
- * The one action a form offers the filer next.
- */
-export type ModeloFormNextAction =
-  | "apply"
-  | "fill"
-  | "confirm"
-  | "calculate"
-  | "recalculate"
-  | "resolve"
-  | "verify"
-  | "export"
-  | "export_again"
-  | "record_after_file"
-  | "recorded";
 
 /**
  * The next action, what it counts, and the dates its words name.
@@ -710,74 +577,10 @@ export type ModeloFormPriorValueWithdrawal = {
 export type ModeloFormRateUnit = "fraction";
 
 /**
- * Whether the AEAT receipt of the recorded filing has been verified, and when.
- *
- * `verified_at` is when the verified receipt was imported, and is set only
- * when `verified` is.
- */
-export type ModeloFormReceipt = {
-  recorded_at: string | null;
-  verified: boolean;
-  verified_at: string | null;
-  words: string;
-};
-
-/**
  * Which answer a source disagreement's line offers the operator, decided from
  * the resolutions held.
  */
 export type ModeloFormResolutionAnswer = "accept" | "revoke";
-
-/**
- * Which way the declaration's result settles, as its official design declares
- * it.
- */
-export type ModeloFormResultDirection =
-  | "to_pay"
-  | "to_refund"
-  | "to_carry_forward"
-  | "to_deduct_later"
-  | "negative"
-  | "nil"
-  | "unknown";
-
-/**
- * What the result can say yet.
- */
-export type ModeloFormResultState =
-  "stated" | "choice_pending" | "not_calculated" | "failed";
-
-/**
- * The declaration's result as the header states it.
- *
- * `text` names the box, `short_text` drops it and `brief_text` is the fewest
- * words that still state the result; a result with no figure says why in all
- * three. `words` and `amount_text` are the direction and the amount it
- * carries, set together where the result states both.
- */
-export type ModeloFormResultView = {
-  state: ModeloFormResultState;
-  casilla_id: CasillaId;
-  box: string | null;
-  settles: boolean;
-  direction: ModeloFormResultDirection;
-  words: string | null;
-  amount_text: string | null;
-  text: string;
-  short_text: string;
-  brief_text: string;
-  help: string[];
-  out_of_date_words: string | null;
-};
-
-/**
- * The package for the filer's accountant, in the filer's words, and whether it
- * can be built now.
- */
-export type ModeloFormReviewPackageOffer = {
-  words: string;
-  availability: ModeloFormAvailability;
-};
 
 /**
  * One group of where the form's values come from: its boxes, its sources, and
@@ -897,17 +700,6 @@ export type ModeloFormTypingEffect = {
   displaces: ModeloFormDisplacement;
   words: string;
 };
-
-/**
- * Why an export, or recording the filing, cannot be done now.
- */
-export type ModeloFormUnavailable =
-  | "not_calculated"
-  | "not_verified"
-  | "blocks"
-  | "confirm"
-  | "file_out_of_date"
-  | "recorded";
 
 /**
  * What the last check concluded about the declaration, in the form's language.
@@ -1190,46 +982,6 @@ export type PublicModeloFormEarlierFiling = {
 };
 
 /**
- * Public figure preserving the canonical exact amount and advisory validation.
- */
-export type PublicModeloFormElectionFigure = {
-  instalment: ModeloFormInstalment;
-  amount: string;
-  words: string;
-  advisory: boolean;
-  advisory_words: string | null;
-};
-
-/**
- * Public election question whose figures preserve their decimal precision.
- */
-export type PublicModeloFormElectionQuestion = {
-  election: ModeloFormElection;
-  request_field: ModeloExportRequestField;
-  words: string;
-  state: ModeloFormElectionState;
-  reason: ModeloFormElectionReason | null;
-  state_words: string | null;
-  help: string | null;
-  default: string | null;
-  choices: ModeloFormElectionChoice[];
-  figures: PublicModeloFormElectionFigure[];
-};
-
-/**
- * Public export offer carrying decimal-safe election questions.
- */
-export type PublicModeloFormExportOffer = {
-  artefacts: ModeloFormArtefactOption[];
-  record: ModeloFormAvailability;
-  review_package: ModeloFormReviewPackageOffer;
-  asks_elections: boolean;
-  elections: PublicModeloFormElectionQuestion[];
-  file_format: ExportLayoutFormat | null;
-  file_format_words: string | null;
-};
-
-/**
  * Typed local-human workbench view of ModeloFormField.
  */
 export type PublicModeloFormField = {
@@ -1348,4 +1100,203 @@ export type PublicModeloFormPrintedRate = {
   ratio: string;
   unit: ModeloFormRateUnit;
   literal: string;
+};
+
+/**
+ * Typed local-human workbench view of ModeloFormPriorValueAttestation.
+ */
+export type PublicModeloFormPriorValueAttestation = {
+  binding_id: string;
+  edit_address: ModeloFormBindingAddressV1;
+  intent: ModeloEditBindingIntentKind;
+  family_id: string;
+  earlier_filings: PublicModeloFormEarlierFiling[];
+  source_words: string;
+  action_words: string;
+  statement_words: string;
+  effect_words: string;
+  stated: boolean;
+  admitted: boolean;
+  refusal_reason: ModeloFormPriorValueRefusal | null;
+  refusal_words: string | null;
+  refusal: PreconditionVerdictSnapshot | null;
+  withdrawal: ModeloFormPriorValueWithdrawal | null;
+};
+
+/**
+ * Typed local-human workbench view of ModeloFormRate; the ratio keeps its
+ * exact decimal text.
+ */
+export type PublicModeloFormRate = {
+  ratio: string;
+  unit: ModeloFormRateUnit;
+  binding_id: string;
+};
+
+/**
+ * Typed local-human workbench view of ModeloFormRepeatingBlock.
+ */
+export type PublicModeloFormRepeatingBlock = {
+  kind: "repeating";
+  id: string;
+  columns: ModeloFormGridColumn[];
+  column_casilla_ids: (string | null)[];
+  column_data_types: string[];
+  min_rows: number;
+  max_rows: number | null;
+  rows_known: boolean;
+  rows: PublicModeloFormRepeatingRow[];
+};
+
+/**
+ * Typed local-human workbench view of ModeloFormRepeatingRow.
+ */
+export type PublicModeloFormRepeatingRow = {
+  index: number;
+  values: (PublicScalarValueV1 | null)[];
+  value_texts: (string | null)[];
+};
+
+/**
+ * Typed local-human workbench view of ModeloFormResult; the value keeps its
+ * exact decimal text.
+ */
+export type PublicModeloFormResult = {
+  casilla_id: CasillaId;
+  box: string | null;
+  value: string | null;
+  direction: ModeloFormResultDirection;
+  disposition: ResultDisposition | null;
+  election_may_change: boolean;
+  refund_eligibility: PublicRefundEligibility | null;
+};
+
+/**
+ * Typed local-human workbench view of ModeloFormSection.
+ */
+export type PublicModeloFormSection = {
+  id: string;
+  heading: ModeloFormText;
+  official_heading: string | null;
+  blocks: PublicModeloFormBlock[];
+  counts: ModeloFormCounts;
+  applies: boolean | null;
+};
+
+/**
+ * Typed local-human workbench view of ModeloFormUnplacedField.
+ */
+export type PublicModeloFormUnplacedField = {
+  field: PublicModeloFormField;
+  reason: FormUnplacedReason | null;
+};
+
+/**
+ * Typed local-human workbench view of ModeloFormValueSource.
+ */
+export type PublicModeloFormValueSource = {
+  family: SourceFamily;
+  binding_id: string | null;
+  source_kind: BindingSourceKind | null;
+  earlier_filings: PublicModeloFormEarlierFiling[];
+};
+
+/**
+ * Typed local-human workbench view of ModeloVerificationFinding.
+ */
+export type PublicModeloVerificationFinding = {
+  kind: ModeloVerificationFindingKind;
+  severity: ModeloVerificationFindingSeverity;
+  casilla_id: string | null;
+  expectation_id: string | null;
+  message_locale_key: string;
+  message_facts: PublicFactEntryV1[];
+  legal_refs: string[];
+  source_refs: string[];
+  disclosed_limitation?: boolean;
+  below_filing_grade?: RegistryAuthorityGrade | null;
+};
+
+/**
+ * Typed local-human workbench view of ModeloWorkForm.
+ */
+export type PublicModeloWorkForm = {
+  modelo: string;
+  filing_year: number;
+  period: PublicPeriod;
+  registry_revision_id: string;
+  year_projection: ModeloFormYearProjection;
+  work_unit_id: string;
+  calculation_revision_id: string | null;
+  language: OutputLanguage;
+  layout_provenance: ModeloFormLayoutProvenance;
+  inspection_reason: ModeloFormInspectionReason | null;
+  seed_source: FormLayoutSeedSource | null;
+  pages: PublicModeloFormPage[];
+  outline: ModeloFormOutlineGroup[];
+  working_figures: PublicModeloFormField[];
+  unplaced: PublicModeloFormUnplacedField[];
+  answers: PublicModeloFormField[];
+  result_addresses: CasillaId[];
+  withholding_credits: ModeloFormCredit[];
+  withholding_credits_heading: string | null;
+  counts: ModeloFormCounts;
+  progress: ModeloWorkProgress;
+  operator_entries_known: boolean;
+  edit_admitted: boolean;
+  verification: VerificationCompletenessStatus | null;
+  issues: PublicModeloFormIssue[];
+  calculation_notes: ModeloFormCalculationNote[];
+  calculation_notes_held: boolean;
+  source_groups: ModeloFormSourceGroup[];
+  result: PublicModeloFormResult | null;
+  deadline: ModeloFormDeadline | null;
+  aeat_data: ModeloFormAeatData | null;
+  projectable: boolean;
+  asks_imputation_election: boolean;
+  compares_taxation: boolean;
+  compares_borrador: boolean;
+  offers_iva_wallet: boolean;
+  verification_out_of_date: boolean;
+  filing: ModeloFormFiling | null;
+  last_export: ModeloFormExport | null;
+  edit_closure: ModeloFormEditClosure | null;
+  carry_attestations: ModeloFormCarryAttestation[];
+  prior_value_attestations?: PublicModeloFormPriorValueAttestation[];
+  modelo_title: string | null;
+  modelo_name: string | null;
+  modelo_number: string | null;
+  period_words: string | null;
+};
+
+/**
+ * Typed local-human workbench view of ModeloWorkFormLoadV1.
+ */
+export type PublicModeloWorkFormLoadV1 = {
+  form: PublicModeloWorkForm;
+  verified: boolean;
+  filed: boolean;
+  journey: ModeloFormJourney;
+};
+
+/**
+ * Typed local-human view of RefundEligibility: whether the IVA refund may be
+ * asked for, and why.
+ *
+ * `legal_refs` are the registry's declared references for the provisions the
+ * outcome rests on. A frontend renders the header's words; this carries the
+ * machine-readable outcome beside them so none of it is re-derived there.
+ */
+export type PublicRefundEligibility = {
+  outcome: RefundEligibilityOutcome;
+  basis: RefundEligibilityBasis;
+  legal_refs: string[];
+};
+
+/**
+ * Preserve scalar kind and decimal precision across the public schema.
+ */
+export type PublicScalarValueV1 = {
+  kind: "string" | "integer" | "boolean" | "decimal" | "date" | "null";
+  text: string;
 };

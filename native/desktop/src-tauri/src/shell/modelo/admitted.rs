@@ -173,6 +173,7 @@ const ADMITTED: [(&str, Kind, Subject, bool); 82] = [
         SESSION,
     ),
     ("modelo.work.filing_record", Read, Profile, NAMED),
+    ("modelo.work.filing_state", Read, WORK_UNIT, NAMED),
     ("modelo.work.form", Read, WORK_UNIT, NAMED),
     ("modelo.work.history", Read, WORK_UNIT, NAMED),
     ("modelo.work.list", Read, Profile, NAMED),

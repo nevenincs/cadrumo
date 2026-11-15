@@ -1,10 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import type { OutputLanguage } from "../../../shell/modeloContract/modelo";
-import type { ModeloWorkHistoryEntryV1 } from "../../../shell/modeloContract/modeloWork";
+
 import { useStrings, type Translate } from "../../../shell/strings";
 import { HistoryView } from "./HistoryView";
 import { fixtureInstant, fixtureYear } from "@/dev/fixtureDates";
+import type { ModeloWorkHistoryEntryV1 } from "../../../shell/modeloContract/modeloWorkHistory";
 
 // Synthetic timeline entries exercise presentation only. Correction behavior
 // is covered by the canonical application envelopes in Corrections.stories.

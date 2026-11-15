@@ -51,6 +51,7 @@ import {
   type ModeloWorkbenchFormProjectionV1,
   type PublicModeloFormField,
 } from "../shell/modeloContract/modeloWorkForm";
+import { type ModeloWorkFilingStateProjectionV1 } from "../shell/modeloContract/modeloWorkFilingState";
 import type { Translate } from "../shell/strings";
 import { ASSET_NOTES } from "./modeloAssetNotes";
 import { EXPORT_DISCLOSURE } from "./modeloExportDisclosure";
@@ -484,6 +485,8 @@ declare global {
   interface Window {
     /** Active synthetic modelo port, for controlled operation observations. */
     __fixtureModelo?: ModeloPort;
+    /** While true the filing-state read fails as an unavailable application. */
+    __filingStateFails?: boolean;
   }
 }
 
@@ -1126,6 +1129,37 @@ export function modeloFixture(options: Options): ModeloPort {
             return port.declarations(language);
           case "modelo.work.form":
             return readForm(String(request.work_unit_id), language);
+          case "modelo.work.filing_state": {
+            // A spec can make this read fail, so the window's fallback to the
+            // whole form read is observable.
+            if (typeof window !== "undefined" && window.__filingStateFails)
+              reject("unavailable");
+            // The fields of the form read answered right now, so the two reads
+            // cannot disagree.
+            const whole = await readForm(
+              String(request.work_unit_id),
+              language,
+            );
+            if (!whole.export_offer) return unserved();
+            const state: ModeloWorkFilingStateProjectionV1 = {
+              result_version: 1,
+              profile_id: whole.profile_id,
+              work_unit_id: whole.work_unit_id,
+              modelo: whole.form.form.modelo,
+              period: whole.form.form.period,
+              filing: whole.form.form.filing,
+              header: {
+                result: whole.header.result,
+                file: whole.header.file,
+                export_hold: whole.header.export_hold,
+              },
+              calculation_revision_id: whole.calculation_revision_id,
+              verification_report_id: whole.verification_report_id,
+              export_offer: whole.export_offer,
+              receipt: whole.receipt,
+            };
+            return state;
+          }
           case "modelo.work.casilla_help":
             return readHelp(
               String(request.work_unit_id),

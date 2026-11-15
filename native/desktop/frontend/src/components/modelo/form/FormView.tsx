@@ -30,7 +30,7 @@ import type {
   ModeloWorkbenchFormProjectionV1,
   PublicModeloFormField,
 } from "../../../shell/modeloContract/modeloWorkForm";
-import type { PublicModeloWorkForm } from "../../../shell/modeloContract/modeloWorkFormPart2";
+
 import type { RefusalIntent, WindowPlace } from "../../../shell/refusal";
 import { useStrings, type Translate } from "../../../shell/strings";
 import { FormBand } from "./FormBand";
@@ -55,6 +55,7 @@ import {
   type FormSession,
 } from "./session";
 import type { EditRequest } from "./ValueCell";
+import type { PublicModeloWorkForm } from "../../../shell/modeloContract/modeloWorkForm";
 
 // The form as a document, one page at a time: the official sections in
 // order, each box on one line with its printed number, its words, its value

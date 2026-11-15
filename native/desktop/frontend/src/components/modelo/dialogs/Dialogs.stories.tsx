@@ -3,13 +3,11 @@ import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 import type { ModeloShape } from "../../../dev/modeloFixture";
 import { EXPORT_DISCLOSURE } from "../../../dev/modeloExportDisclosure";
 import { translator } from "../../../shell/strings";
-import type {
-  ModeloFormExportHold,
-  ModeloWorkbenchFormProjectionV1,
-} from "../../../shell/modeloContract/modeloWorkForm";
+import type { ModeloWorkbenchFormProjectionV1 } from "../../../shell/modeloContract/modeloWorkForm";
 import { StorySession, typedAmount } from "../details/Details.stories";
 import { FilingView } from "./FilingView";
 import { ReviewDialog } from "./ReviewDialog";
+import type { ModeloFormExportHold } from "../../../shell/modeloContract/modeloWork";
 
 // The review dialog and the Export and record view on the modelo 130
 // envelope the application's read path produced for the synthetic taxpayer.
@@ -173,6 +171,7 @@ function Filing({
             session={props.session}
             onTakeAction={onTakeAction}
             onReread={props.reread}
+            onRereadFiling={props.reread}
             openLink={() => undefined}
           />
         </div>

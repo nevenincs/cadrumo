@@ -39,13 +39,7 @@ import type {
   ModeloExportDisclosure,
   ModeloExportRequest,
 } from "../../../shell/modeloContract/modeloExport";
-import type {
-  ModeloExportRequestField,
-  ModeloFormArtefactOption,
-  ModeloFormElection,
-  ModeloFormNextAction,
-  ModeloWorkbenchFormProjectionV1,
-} from "../../../shell/modeloContract/modeloWorkForm";
+import type { ModeloWorkbenchFormProjectionV1 } from "../../../shell/modeloContract/modeloWorkForm";
 import { formatTime } from "../../../shared/dateFormats";
 import { AEAT_SEDE } from "../../../shell/links";
 import { useStrings } from "../../../shell/strings";
@@ -62,6 +56,12 @@ import {
   ReconciliationResult,
   type ReconciliationReport,
 } from "./ReconciliationResult";
+import type {
+  ModeloExportRequestField,
+  ModeloFormArtefactOption,
+  ModeloFormElection,
+  ModeloFormNextAction,
+} from "../../../shell/modeloContract/modeloWork";
 
 // Export and record: the official file written to a place the filer picks,
 // the filing recorded here, the AEAT's receipt added, and the other copies.
@@ -176,6 +176,7 @@ export function FilingView({
   session,
   onTakeAction,
   onReread,
+  onRereadFiling,
   openLink,
 }: {
   envelope: ModeloWorkbenchFormProjectionV1;
@@ -184,6 +185,9 @@ export function FilingView({
   session: FormSession;
   onTakeAction: (action: ModeloFormNextAction) => void;
   onReread: () => Promise<boolean>;
+  /** Reads only what this view rests on, which an export, a local filing or
+   * a receipt changes; the whole declaration is read for anything else. */
+  onRereadFiling: () => Promise<boolean>;
   openLink: (url: string) => void;
 }) {
   const t = useStrings();
@@ -308,9 +312,9 @@ export function FilingView({
         return;
       }
       if (outcome.kind === "settled" || outcome.kind === "saved_unread")
-        await onReread();
+        await (write === "declaration" ? onReread() : onRereadFiling());
     },
-    [port, onReread, runWrite],
+    [port, onReread, onRereadFiling, runWrite],
   );
 
   const stem = `modelo-${form.modelo}-${form.period.filing_year}-${form.period.code}`;

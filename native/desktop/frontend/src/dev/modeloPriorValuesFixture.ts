@@ -9,8 +9,9 @@ import type {
   ModeloWorkbenchFormProjectionV1,
   PublicModeloFormField,
 } from "../shell/modeloContract/modeloWorkForm";
-import type { PublicModeloFormPriorValueAttestation } from "../shell/modeloContract/modeloWorkFormPart2";
+
 import { placedFields } from "../components/modelo/form/session";
+import type { PublicModeloFormPriorValueAttestation } from "../shell/modeloContract/modeloWorkForm";
 
 // What the stories of figures stated for earlier returns need that no seeded
 // envelope holds yet: two carries of one family of earlier returns served

@@ -6,7 +6,7 @@ import type {
   ModeloWorkbenchFormProjectionV1,
   OperationNextStepV1,
 } from "../../../shell/modeloContract/modeloWorkForm";
-import type { PublicModeloWorkForm } from "../../../shell/modeloContract/modeloWorkFormPart2";
+
 import { useStrings } from "../../../shell/strings";
 import { BoxNumber } from "../form/BoxNumber";
 import { OutlineNavigator } from "../workspace/OutlineNavigator";
@@ -16,6 +16,7 @@ import {
   type FormSession,
   type PlacedField,
 } from "../form/session";
+import type { PublicModeloWorkForm } from "../../../shell/modeloContract/modeloWorkForm";
 
 // Beside the form: the boxes the read model says need the filer, and the
 // form's outline. A box leaves To do once the filer has staged a change for

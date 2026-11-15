@@ -30,20 +30,16 @@ import type {
   ProjectUnresolvedBindingProjection,
   ProjectUnresolvedCasillaProjection,
 } from "../../../shell/modeloContract/modelo";
-import type {
-  ModeloWorkHistoryEntryV1,
-  ModeloWorkMetadataSnapshot,
-} from "../../../shell/modeloContract/modeloWork";
+import type { ModeloWorkMetadataSnapshot } from "../../../shell/modeloContract/modeloWork";
 import type { ModeloAmendmentCorrectionContextV1 } from "../../../shell/modeloContract/modeloWorkAmendmentContext";
 import type {
   ModeloFormIssueLine,
-  ModeloFormNextAction,
   ModeloWorkbenchFormProjectionV1,
   OperationNextStepV1,
 } from "../../../shell/modeloContract/modeloWorkForm";
 import { usePanePreference } from "../../../shell/panePreference";
 import type { WindowPlace } from "../../../shell/refusal";
-import { useStrings, type Translate } from "../../../shell/strings";
+import { useStrings } from "../../../shell/strings";
 import {
   keptRead,
   ownerOf,
@@ -55,6 +51,8 @@ import { Details, type OpenableSurface } from "../details/Details";
 import { TodoRail } from "../details/TodoRail";
 import { FilingView } from "../dialogs/FilingView";
 import { runOperation, type OperationRun } from "../dialogs/operationRun";
+import { answersFor, withFilingState } from "./filingStateRead";
+import { runNotice } from "./runNotice";
 import {
   createModeloWriteHolds,
   declarationWriteKey,
@@ -109,60 +107,13 @@ import { BoxName } from "./BoxName";
 import { languageName, UnresolvedFindings } from "./UnresolvedFindings";
 import { ACTION_VIEW, ModeloWorkspace, type WorkspaceView } from "./Workspace";
 import { WORKSPACE_PANE_IDS } from "./WorkspacePanes";
+import type { ModeloWorkHistoryEntryV1 } from "../../../shell/modeloContract/modeloWorkHistory";
+import type { ModeloFormNextAction } from "../../../shell/modeloContract/modeloWork";
 
 type Read =
   | { phase: "reading" }
   | { phase: "failed"; code: string }
   | { phase: "ready"; envelope: ModeloWorkbenchFormProjectionV1 };
-
-/** What an operation came to, said for the person; null when it settled. */
-function runNotice(t: Translate, run: OperationRun<unknown>): HistoryNotice {
-  switch (run.kind) {
-    case "settled":
-    case "saved_unread":
-      return null;
-    case "refused":
-      // The backend words why; the window shows it as served, with the
-      // movement it names one step away.
-      return {
-        tone: "warning",
-        words: run.words ?? t("workspace.modelo.outcome.refused"),
-        ...(run.step?.kind === "open_movement"
-          ? {
-              movement: {
-                transactionId: run.step.transaction_id,
-                words: run.step.words,
-              },
-            }
-          : {}),
-        ...(run.step?.kind === "open_iva_wallet_opening_balance"
-          ? {
-              openingBalance: {
-                modelo: run.step.modelo,
-                filingYear: run.step.filing_year,
-                periodCode: run.step.period_code,
-                words: run.step.words,
-              },
-            }
-          : {}),
-        ...(run.step?.kind === "open_iva_wallet"
-          ? {
-              ivaWallet: {
-                workUnitId: run.step.work_unit_id,
-                words: run.step.words,
-              },
-            }
-          : {}),
-      };
-    case "not_sent":
-      return {
-        tone: "warning",
-        words: t("workspace.modelo.outcome.failed"),
-      };
-    case "unknown":
-      return null;
-  }
-}
 
 type CalculationUnresolved = {
   revision: string;
@@ -177,6 +128,7 @@ function Ready({
   language,
   locale,
   reread,
+  rereadFiling,
   onBack,
   onOpenSurface,
   canOpenSurface,
@@ -199,6 +151,8 @@ function Ready({
   /** Reads the declaration again; false when the read failed and the one
    * shown stays. */
   reread(): Promise<boolean>;
+  /** Reads what the Export and record view rests on; false when it failed. */
+  rereadFiling(): Promise<boolean>;
   onBack(): void;
   onOpenSurface(surface: OpenableSurface): void;
   canOpenSurface: (surface: OpenableSurface) => boolean;
@@ -982,6 +936,7 @@ function Ready({
             openLink={openLink}
             onTakeAction={takeAction}
             onReread={reread}
+            onRereadFiling={rereadFiling}
           />
         ),
         check: (
@@ -1359,6 +1314,8 @@ export function WorkspaceScreen({
     [read, workUnitId],
   );
   const latest = useRef(0);
+  // The declaration shown now, for the read that takes only a part of it.
+  const shownEnvelope = useRef<ModeloWorkbenchFormProjectionV1 | null>(null);
   useLayoutEffect(
     () => () => {
       latest.current += 1;
@@ -1390,6 +1347,7 @@ export function WorkspaceScreen({
         const envelope = await port.form(workUnitId, language);
         if (ticket !== latest.current) return overtaken();
         shown.current = true;
+        shownEnvelope.current = envelope;
         if (kept) kept.form = { workUnitId, language, envelope };
         setRead({ phase: "ready", envelope });
         if (before) holds.readCompleted(before);
@@ -1406,6 +1364,46 @@ export function WorkspaceScreen({
     newest.current = { ticket, result };
     return result;
   }, [port, workUnitId, language, holds, target, kept]);
+  // After an export, a filing or a receipt the Export and record view reads
+  // only the filing state; a read that does not settle, or answers for
+  // another declaration, falls back to the whole read.
+  const rereadFiling = useCallback(async () => {
+    const base = shownEnvelope.current;
+    if (!base) return reread();
+    const ticket = ++latest.current;
+    const before = holds.get(target);
+    const marked = before ? holds.readBegan(before) : false;
+    const overtaken = () =>
+      newest.current !== null && newest.current.ticket > ticket
+        ? newest.current.result
+        : false;
+    const result = (async () => {
+      try {
+        const run = await runOperation(
+          port,
+          () =>
+            port.submit("modelo.work.filing_state", {
+              work_unit_id: workUnitId,
+              output_language: language,
+            }),
+          () => ticket === latest.current,
+        );
+        if (ticket !== latest.current) return overtaken();
+        if (run.kind !== "settled" || !answersFor(base, run.result))
+          return await reread();
+        const next = withFilingState(base, run.result);
+        shownEnvelope.current = next;
+        if (kept) kept.form = { workUnitId, language, envelope: next };
+        setRead({ phase: "ready", envelope: next });
+        if (before) holds.readCompleted(before);
+        return true;
+      } finally {
+        if (marked && before) holds.readEnded(before);
+      }
+    })();
+    newest.current = { ticket, result };
+    return result;
+  }, [port, workUnitId, language, holds, target, kept, reread]);
   const reloadHold = useCallback(
     async (hold: ModeloWriteHold) => {
       if (hold.phase !== "refresh") return false;
@@ -1433,6 +1431,7 @@ export function WorkspaceScreen({
   useEffect(() => {
     const first = keptRead(kept, workUnitId, language);
     shown.current = first.phase === "ready";
+    shownEnvelope.current = first.phase === "ready" ? first.envelope : null;
     setRead(first);
     void reread();
   }, [reread, kept, workUnitId, language]);
@@ -1463,6 +1462,7 @@ export function WorkspaceScreen({
         language={language}
         locale={locale}
         reread={reread}
+        rereadFiling={rereadFiling}
         onBack={onBack}
         onOpenSurface={onOpenSurface}
         canOpenSurface={canOpenSurface}
