@@ -204,6 +204,7 @@ def _verified(shown: ShownOutcome, row: PilotRow) -> bool:
         stage = INCOMPLETE
     row.verify = stage if shown.submitted else ERROR
     if row.verify != PASSED:
+        row.blocking_findings = shown.blocking_findings
         row.refusal_code = row.refusal_code or shown.code
         row.reasons.append(f"verify: {shown.verification} {shown.refusal or shown.notice}")
     return row.verify == PASSED

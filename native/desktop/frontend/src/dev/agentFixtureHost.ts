@@ -125,7 +125,8 @@ export type FixtureLocalModels = "none" | "all";
  * starts and for a moment after the scenario publishes it ready, or starting
  * with only the agent's declared catalog until the scenario publishes it
  * ready, or served with the local lane alone, as on a computer where no
- * other provider is set up, or with the two local engines' lanes alone. */
+ * other provider is set up, or with the two local engines' lanes alone, or
+ * with the local lane and one hosted provider's lane that is signed out. */
 export type FixtureCatalog =
   | "served"
   | "busy"
@@ -133,7 +134,8 @@ export type FixtureCatalog =
   | "declared"
   | "unsupported"
   | "local-only"
-  | "engines-only";
+  | "engines-only"
+  | "hosted-signed-out";
 
 /** What the made-up service offers to choose among for the local engine and
  * its placement, where not every engine and placement it knows: each list is
@@ -150,6 +152,9 @@ const BUSY_PAST_READY_MS = 1_000;
 
 /** The generic local lane, the one the "local-only" catalog serves alone. */
 const FIXTURE_LOCAL_LANE = "local_api";
+/** The hosted lane the "hosted-signed-out" catalog serves beside the local
+ * lane: the fixture catalog holds it back as signed out. */
+const FIXTURE_HOSTED_SIGNED_OUT_LANE = "alpha_cli";
 /** The lanes whose model lists the made-up service keeps: every keyless lane
  * on this computer, the generic local lane and each engine's lane. */
 const FIXTURE_LISTED_LANES: readonly string[] = FIXTURE_SETTINGS_LANES.filter(
@@ -1004,7 +1009,10 @@ export function fixtureAgent({
             (catalog !== "local-only" || id === FIXTURE_LOCAL_LANE) &&
             (catalog !== "engines-only" ||
               lane.provider_id === "llamacpp" ||
-              lane.provider_id === "ollama")
+              lane.provider_id === "ollama") &&
+            (catalog !== "hosted-signed-out" ||
+              id === FIXTURE_LOCAL_LANE ||
+              id === FIXTURE_HOSTED_SIGNED_OUT_LANE)
           );
         }),
       };
