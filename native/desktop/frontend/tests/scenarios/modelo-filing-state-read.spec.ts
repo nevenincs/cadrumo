@@ -125,7 +125,7 @@ test("after an export the window reads the filing state, not the whole form", as
   expect(counted.filingState).toBe(1);
 });
 
-test("after recording the filing the window reads the filing state, not the whole form", async ({
+test("after recording the filing the window reads the filing state, then the whole form for the header", async ({
   page: target,
 }) => {
   await ready(target);
@@ -142,7 +142,9 @@ test("after recording the filing the window reads the filing state, not the whol
   await target.waitForTimeout(1500);
   const counted = await reads(target);
   expect(counted.files).toBe(1);
-  expect(counted.form).toBe(0);
+  // The header's step and the journey are the whole form's: one read of it
+  // follows the filing state, and no more.
+  expect(counted.form).toBe(1);
   expect(counted.filingState).toBe(1);
 });
 
