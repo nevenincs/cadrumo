@@ -2818,7 +2818,7 @@ desktop:
       'no': 'No'
       none: None
       partial: Only part of this was saved. Refresh to check what was kept.
-      reading: Reading…
+      reading: Loading…
       refused: Not saved.
       reread: Refresh
       save: Save
