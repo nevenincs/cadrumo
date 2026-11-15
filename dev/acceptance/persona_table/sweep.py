@@ -69,6 +69,7 @@ from .calendar_sweep import calendar_observations
 from .cli_column.world_report import StatementKind
 from .counterparties import DESIGNS, counterparty_mismatches, is_compared
 from .export_check import export_layout, export_reason
+from .form_text_figures import read_text_figures
 from .planner import (
     MODELOS_ENV,
     REASON_LIMIT,
@@ -186,6 +187,7 @@ def run_return(
         on_form_casillas(world.operation, str(calculated.unit.modelo), calculated.unit.revision_id),
     )
     calculate, reasons = _compare(plan, values, at_calculate, calculated, rows)
+    text_figures = read_text_figures(world, work_unit_id)
     if not plan.owed:
         verify, not_owed_reason = _not_owed(materialised, plan)
         reasons += [not_owed_reason] if not_owed_reason else []
@@ -196,6 +198,7 @@ def run_return(
             reason=" | ".join(reasons)[:REASON_LIMIT],
             figures=figures,
             internal_figures=internal_figures,
+            text_figures=text_figures,
         )
     revision_id = calculated.calculation_revision_id
     lifecycle = run_lifecycle(world, plan, values, exports, work_unit_id, revision_id, stage_order=stage_order_in_use())
@@ -216,6 +219,7 @@ def run_return(
         export_detail=lifecycle.export_detail,
         figures=figures,
         internal_figures=internal_figures,
+        text_figures=text_figures,
     )
 
 

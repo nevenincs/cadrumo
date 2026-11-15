@@ -49,10 +49,11 @@ ordinary text. The python-stage vocabulary of the table rows does not change.
 Redacted figures compare by presence. The central privacy boundary of the CLI prints some values (the tenant NIF,
 casilla 0091) as ``sha256:<8 hex>`` while the table's figure is the plain text, and neither side may compare the
 content. A surface figure whose value is exactly ``sha256:`` and eight lowercase hexadecimal characters is redacted
-(any casilla, any surface). It equals the table's figure of that casilla whenever the table holds a non-empty value
-for it, whatever the value. When the table holds none, the casilla is graded ``redacted, present``: the row is not
-matched and not different for it (``not comparable`` with the cause ``casilla <id> redacted, present; the table row
-carries no value for it``), unless another cause makes the row differ. Seven or nine characters, uppercase
+(any casilla, any surface). It equals the casilla's value whenever the table row holds a non-empty one, whatever the
+value: its figure, or its text figure, the plain text the backend read from the same run's saved repeating records
+(the table's figures are numbers, so a NIF lives only there). When the row holds neither, the row differs with the
+cause ``casilla <id> redacted but the backend row has no value for it``; a redacted casilla is never graded apart.
+Seven or nine characters, uppercase
 hexadecimal or a different prefix are not redacted and compare as ordinary text.
 """
 
@@ -63,10 +64,10 @@ import re
 from collections import Counter
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
-from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import cast
 
+from .figure_compare import extra_figures, figure_causes, redacted_casillas
 from .rows import Stage, TableRow
 
 SURFACES = ("tui", "window", "cli")
@@ -87,7 +88,6 @@ EXPORT_UNAVAILABLE = "export unavailable (refused | not served)"
 """How the comparison of a not-served export door with the table's withheld export is recorded."""
 _EXPORT_CODE = re.compile(r"\bexport:.*?\b((?:REFUSED|ERROR)_[A-Z0-9_]+)")
 _HORIZON_PREFIX = re.compile(r"horizon (\d{4})\b")
-_REDACTED = re.compile(r"sha256:[0-9a-f]{8}")
 
 STAGE_OF: Mapping[Stage, str | None] = {
     Stage.PASSED: "pass",
@@ -414,6 +414,8 @@ class RowParity:
     """The non-zero casillas the surface showed that the table row has no figure for; never a cause of a difference."""
     gated_stages: tuple[str, ...] = ()
     """``export unavailable (refused | not served)`` and the table's refusal code, when the export stage matched so."""
+    redacted: tuple[str, ...] = ()
+    """The redacted casillas a matched row was matched on by presence, sorted; empty when none was shown redacted."""
 
     @property
     def extra_casillas(self) -> int:
@@ -435,84 +437,6 @@ class PersonaCell:
     """The trees of the results the cell summarises (rows and the persona's own line), sorted and distinct."""
     gated_rows: int = 0
     """The rows with a stage that matched by gating."""
-
-
-def _number(text: str) -> Decimal | None:
-    try:
-        number = Decimal(text.strip())
-    except InvalidOperation:
-        return None
-    return number if number.is_finite() else None
-
-
-def _equal(table: str, shown: str) -> bool:
-    """Whether two figure texts are equal: redacted by presence, numbers as numbers, else as text."""
-    if is_redacted(shown):
-        return bool(table.strip())
-    first, second = _number(table), _number(shown)
-    return first == second if first is not None and second is not None else table == shown
-
-
-def _is_zero(text: str) -> bool:
-    number = _number(text)
-    return number is not None and number == 0
-
-
-def is_redacted(text: str) -> bool:
-    """Whether a figure text is a redacted value: exactly ``sha256:`` and eight lowercase hexadecimal characters."""
-    return _REDACTED.fullmatch(text) is not None
-
-
-def figure_causes(surface: str, table: Mapping[str, str], shown: Mapping[str, str]) -> list[str]:
-    """Each way the figures ``shown`` by a surface miss or disagree with the table row's ``table`` figures.
-
-    The table row is the oracle for calculated values, so a casilla shown beyond ``table`` is not a cause. A redacted
-    figure compares by presence (see the module docstring) and is a cause only when a table value is present and the
-    figure disagrees in kind; with no table value it is :func:`redacted_present`, never a cause.
-    ``table`` holds only the casillas the revision's form places; the row's internal figures (working figures and
-    unplaced casillas, which no surface is held to show) are never compared and are not extras when shown.
-    """
-    causes: list[str] = []
-    for casilla in sorted(table):
-        if casilla not in shown:
-            causes.append(f"casilla {casilla} not shown")
-        elif casilla in redacted_present(table, shown):
-            continue
-        elif not _equal(table[casilla], shown[casilla]):
-            causes.append(f"casilla {casilla} {surface} {shown[casilla]}, table {table[casilla]}")
-    return causes
-
-
-def _graded(causes: list[str], table: Mapping[str, str], shown: Mapping[str, str]) -> tuple[str, list[str]]:
-    """The outcome of a row whose other causes are ``causes``, and the causes it states.
-
-    A row with a cause differs. Without one it is matched, unless a shown casilla is redacted with no table value to
-    stand for it: that row is not comparable and says so, since nothing was compared for that casilla.
-    """
-    if causes:
-        return DIFFERS, causes
-    present = redacted_present(table, shown)
-    if present:
-        return NOT_COMPARABLE, [
-            f"casilla {casilla} redacted, present; the table row carries no value for it" for casilla in present
-        ]
-    return MATCHED, causes
-
-
-def redacted_present(table: Mapping[str, str], shown: Mapping[str, str]) -> tuple[str, ...]:
-    """The casillas ``shown`` redacted while the table row holds no non-empty value for them, sorted.
-
-    Such a casilla is present on the surface but there is nothing to stand for it: it is graded apart, neither a match
-    nor a difference.
-    """
-    return tuple(
-        casilla for casilla in sorted(shown) if is_redacted(shown[casilla]) and not table.get(casilla, "").strip()
-    )
-
-
-def extra_figures(table: Mapping[str, str], shown: Mapping[str, str]) -> tuple[str, ...]:
-    """The non-zero casillas ``shown`` that the table row has no figure for, sorted."""
-    return tuple(casilla for casilla in sorted(set(shown) - set(table)) if not _is_zero(shown[casilla]))
 
 
 def parity(
@@ -540,10 +464,11 @@ def parity(
         return RowParity(row.key, surface, NOT_COMPARABLE, (why,), tree)
     table, shown = dict(row.figures), dict(result.figures)
     stage_causes, gated = _stage_causes(surface, stages, result, export_refusal_code(row.reason))
-    causes = _substitute_causes(result) + stage_causes + figure_causes(surface, table, shown)
-    outcome, causes = _graded(causes, table, shown)
+    causes = _substitute_causes(result) + stage_causes + figure_causes(surface, table, shown, dict(row.text_figures))
+    outcome = DIFFERS if causes else MATCHED
     extras = extra_figures(table | dict(row.internal_figures), shown)
-    return RowParity(row.key, surface, outcome, tuple(causes), tree, extras, gated)
+    redacted = () if causes else redacted_casillas(shown)
+    return RowParity(row.key, surface, outcome, tuple(causes), tree, extras, gated, redacted)
 
 
 def _substitute_causes(result: SurfaceResult) -> list[str]:
@@ -626,6 +551,10 @@ class FrontendComparison:
     def matched(self, surface: str) -> int:
         """The table rows ``surface`` matched."""
         return sum(item.outcome == MATCHED for item in self.parities[surface])
+
+    def matched_on_redacted(self, surface: str) -> int:
+        """The matched table rows of ``surface`` that were matched on a redacted casilla compared by presence."""
+        return sum(item.outcome == MATCHED and bool(item.redacted) for item in self.parities[surface])
 
     def trees_folded(self, surface: str) -> Counter[str]:
         """Per tree, the table rows whose result on ``surface`` came from it."""
@@ -781,12 +710,25 @@ def row_cell(item: RowParity, head: str) -> str:
 
 
 def frontend_line(comparison: FrontendComparison) -> str:
-    """The summary sentence, ``Frontend: TUI matched a / N, window matched b / N, CLI matched c / N (N rows)``."""
+    """The summary sentence, ``Frontend: TUI matched a / N, window matched b / N, CLI matched c / N (N rows)``.
+
+    It ends with the rows matched on redacted casillas per surface, when there are any.
+    """
     total = len(comparison.rows)
     matched = ", ".join(
         f"{SURFACE_LABELS[surface]} matched {comparison.matched(surface)} / {total}" for surface in SURFACES
     )
-    return f"Frontend: {matched} ({total} rows)"
+    redacted = ", ".join(
+        f"{SURFACE_LABELS[surface]} {count}"
+        for surface in SURFACES
+        if (count := comparison.matched_on_redacted(surface))
+    )
+    suffix = (
+        f"; rows matched on redacted casillas (by presence, against the backend row's text value): {redacted}"
+        if redacted
+        else ""
+    )
+    return f"Frontend: {matched} ({total} rows){suffix}"
 
 
 def trees_line(comparison: FrontendComparison) -> str:
@@ -818,10 +760,7 @@ __all__ = [
     "cell_text",
     "compare_frontend",
     "export_refusal_code",
-    "extra_figures",
-    "figure_causes",
     "frontend_line",
-    "is_redacted",
     "parity",
     "parse_result",
     "read_results",
