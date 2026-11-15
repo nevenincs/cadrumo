@@ -46,6 +46,7 @@ import type { CalendarEntry, CalendarEvent } from "../shell/views";
 import type { UserProfile } from "../shell/userProfile";
 import { CalendarMonths } from "./calendar/CalendarMonths";
 import { CalendarSuppressed } from "./calendar/CalendarSuppressed";
+import { CalendarYear } from "./calendar/CalendarYear";
 import { EVENT_MARK, STATE_MARK, STATE_TONE } from "./calendar/calendarMarks";
 import { ProfileCompletionNotice } from "./profile/ProfileCompletionNotice";
 
@@ -99,6 +100,10 @@ export function FilingCalendarView({
   refreshing = false,
   page,
   onRefresh,
+  year = null,
+  yearFailed = false,
+  onYearStep,
+  onYearCurrent,
   onOpen,
   profile = null,
   onNavigate,
@@ -126,6 +131,13 @@ export function FilingCalendarView({
   /** The page's own element, for whoever sends focus to it. */
   page?: RefObject<HTMLElement | null>;
   onRefresh: () => void;
+  /** The filing year on screen; null while it is the range around today.
+   * Left out with its handlers, the page offers no choice of year. */
+  year?: number | null;
+  /** The year asked for last could not be read; what is shown is unchanged. */
+  yearFailed?: boolean;
+  onYearStep?: (by: -1 | 1) => void;
+  onYearCurrent?: () => void;
   /** Take the person to where this obligation is worked on. Left out where
    * the window cannot: no row then offers a way it does not have. */
   onOpen?: (entry: CalendarEntry) => void;
@@ -925,6 +937,14 @@ export function FilingCalendarView({
                       {t("desktop.calendar.view_list")}
                     </SegmentedControlItem>
                   </SegmentedControl>
+                )}
+                {onYearStep && onYearCurrent && (
+                  <CalendarYear
+                    year={year}
+                    failed={yearFailed}
+                    onStep={onYearStep}
+                    onCurrent={onYearCurrent}
+                  />
                 )}
                 {/* The way back to where the calendar stands, from
                     wherever the reader has gone in it. */}

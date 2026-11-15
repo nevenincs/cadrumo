@@ -213,6 +213,8 @@ declare global {
     __scenarioPassword?: { uncertain(): void; changes(): number };
     /** The made-up window port, where the scenario offers one. */
     __scenarioWindow?: ScenarioWindowControls;
+    /** The filing calendar read is refused while this is true. */
+    __scenarioCalendarRefused?: boolean;
     /** The signed-in profile's runtime stops answering, or answers again. */
     __scenarioRuntime?: { lose(): void; restore(): void };
   }
@@ -567,7 +569,8 @@ export function scenarioHost(
     async filingCalendar(range) {
       say(`filingCalendar ${range.from} ${range.to}`);
       await wait(options.latencyMs);
-      if (!readable()) throw failure("timed_out", "cli");
+      if (!readable() || window.__scenarioCalendarRefused)
+        throw failure("timed_out", "cli");
       if (scenario.views === "empty") return EMPTY_CALENDAR;
       return options.calendar
         ? CALENDAR_SHAPES[options.calendar]
