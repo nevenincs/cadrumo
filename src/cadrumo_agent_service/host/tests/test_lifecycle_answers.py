@@ -16,6 +16,7 @@ settings - is the in-memory store the service's own tests use.
 from __future__ import annotations
 
 import os
+import re
 import secrets
 import time
 from pathlib import Path
@@ -199,7 +200,12 @@ def test_unsupported_sign_in_is_refused_before_retirement_or_auth_work(
         )
         answered = time.monotonic() - started
 
-        assert answer == {"kind": "refused", "code": "sign_in_unavailable"}
+        assert (answer["kind"], answer["code"], answer["cause"]) == (
+            "refused",
+            "sign_in_unavailable",
+            "lane_not_signable",
+        )
+        assert re.fullmatch(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}", answer["log_ref"])
         assert answered < ANSWER_BOUND_SECONDS, f"the sign-in took {answered:.3f} s to answer"
         assert service._auth_attempt is None
         assert service._auth_resume_valid is None

@@ -124,18 +124,6 @@ export interface ProviderSignIn {
 
 /** Why a change was refused, as a stable code. `committed_readback_failed`
  * means the change was saved but its status could not be read back. */
-export type ProviderSettingsRefusal =
-  | "not_signed_in"
-  | "profile_locked"
-  | "invalid_key_format"
-  | "base_url_rejected"
-  | "revision_conflict"
-  | "committed_readback_failed"
-  | "catalog_unavailable"
-  | "runtime_unavailable"
-  | "person_act_required"
-  | "unknown";
-
 export interface ProviderSettings {
   status(plan?: CallPlan): Promise<ProviderSettingsAnswer>;
   /** Attended GUI sign-in is absent unless this host implements it. */

@@ -326,4 +326,5 @@ def test_a_failed_preparation_is_an_agent_stop_failure(tmp_path: Path) -> None:
         "reason": "cleanup_failed",
         "cause": "agent_stop_failed",
         "next_step": "retry",
+        "log_ref": attempt.log_ref,
     }

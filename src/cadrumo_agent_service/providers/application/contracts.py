@@ -115,8 +115,17 @@ ServiceCause = Literal[
     "helper_exit_nonzero",
     "agent_stop_failed",
     "status_not_confirmed",
+    "lane_not_signable",
+    "profile_signed_out",
+    "sign_in_in_progress",
+    "sign_in_owner_held",
+    "agent_tree_running",
+    "settings_refused",
+    "settings_change_failed",
+    "prepare_failed",
+    "previous_cleanup_unconfirmed",
 ]
-"""The closed words the service adds when it, not the helper, settles an attempt."""
+"""The closed words the service adds when it, not the helper, settles or refuses an attempt."""
 
 
 class CliStateCause(StrEnum):
