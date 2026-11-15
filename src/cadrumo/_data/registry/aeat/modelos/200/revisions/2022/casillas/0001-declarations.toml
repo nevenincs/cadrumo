@@ -22628,6 +22628,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 id = "02316"
 continuidad_id = "02316"
 number = "02316"
+rotating_year_offset = 0
 section = ["detalle_compensacion_bases_imponibles_negativas", "2025"]
 semantic_role = "is_bin_detalle_compensacion"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
@@ -22638,6 +22639,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 id = "02317"
 continuidad_id = "02317"
 number = "02317"
+rotating_year_offset = 0
 section = ["detalle_compensacion_bases_imponibles_negativas", "2025"]
 semantic_role = "is_compensacion_bases_negativas"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
@@ -22648,6 +22650,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 id = "02318"
 continuidad_id = "02318"
 number = "02318"
+rotating_year_offset = 0
 section = ["detalle_compensacion_bases_imponibles_negativas", "2025"]
 semantic_role = "is_bin_detalle_compensacion"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
@@ -22658,6 +22661,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 id = "01048"
 continuidad_id = "01048"
 number = "01048"
+rotating_year_offset = 0
 section = ["detalle_compensacion_bases_imponibles_negativas", "2025"]
 semantic_role = "is_bin_detalle_compensacion"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
@@ -22668,6 +22672,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 id = "01049"
 continuidad_id = "01049"
 number = "01049"
+rotating_year_offset = 0
 section = ["detalle_compensacion_bases_imponibles_negativas", "2025"]
 semantic_role = "is_bin_detalle_compensacion"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
@@ -22678,6 +22683,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 id = "00846"
 continuidad_id = "00846"
 number = "00846"
+rotating_year_offset = 0
 section = ["deducciones_doble_imposicion_interna_rdleg_4_2004", "di_interna_2008"]
 semantic_role = "is_deduccion_di_interna_rdleg_detalle"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
@@ -22688,6 +22694,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 id = "00714"
 continuidad_id = "is-deduccion-di-interna-rdleg-detalle"
 number = "00714"
+rotating_year_offset = 0
 section = ["deducciones_doble_imposicion_interna_rdleg_4_2004", "di_interna_2013"]
 semantic_role = "is_deduccion_di_interna_rdleg_detalle"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
@@ -22698,6 +22705,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 id = "01597"
 continuidad_id = "01597"
 number = "01597"
+rotating_year_offset = 0
 section = ["deducciones_doble_imposicion_interna_dt_23_1_lis", "di_interna_2017"]
 semantic_role = "is_deduccion_di_interna_dt231_detalle"
 legal_refs = ["ley-27-2014:dt-23"]
@@ -22708,6 +22716,7 @@ legal_refs = ["ley-27-2014:dt-23"]
 id = "01830"
 continuidad_id = "01830"
 number = "01830"
+rotating_year_offset = 0
 section = ["deducciones_doble_imposicion_interna_dt_23_1_lis", "di_interna_2018"]
 semantic_role = "is_deduccion_di_interna_dt231_detalle"
 legal_refs = ["ley-27-2014:dt-23"]
@@ -22718,6 +22727,7 @@ legal_refs = ["ley-27-2014:dt-23"]
 id = "02198"
 continuidad_id = "02198"
 number = "02198"
+rotating_year_offset = 0
 section = ["deducciones_doble_imposicion_interna_dt_23_1_lis", "di_interna_2019"]
 semantic_role = "is_deduccion_di_interna_dt231_detalle"
 legal_refs = ["ley-27-2014:dt-23"]
@@ -22728,6 +22738,7 @@ legal_refs = ["ley-27-2014:dt-23"]
 id = "02321"
 continuidad_id = "02321"
 number = "02321"
+rotating_year_offset = 0
 section = ["deducciones_doble_imposicion_interna_dt_23_1_lis", "di_interna_2020"]
 semantic_role = "is_deduccion_di_interna_dt231_detalle"
 legal_refs = ["ley-27-2014:dt-23"]
@@ -22738,6 +22749,7 @@ legal_refs = ["ley-27-2014:dt-23"]
 id = "01343"
 continuidad_id = "01343"
 number = "01343"
+rotating_year_offset = 0
 section = ["deducciones_doble_imposicion_interna_dt_23_1_lis", "total"]
 semantic_role = "is_deduccion_di_interna_dt231_detalle"
 legal_refs = ["ley-27-2014:dt-23"]
@@ -22748,6 +22760,7 @@ legal_refs = ["ley-27-2014:dt-23"]
 id = "00849"
 continuidad_id = "00849"
 number = "00849"
+rotating_year_offset = 0
 section = ["deducciones_doble_imposicion_internacional_rdleg_4", "di_internacional_2006"]
 semantic_role = "is_deduccion_di_internacional_rdleg_importe"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
@@ -22758,6 +22771,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 id = "00825"
 continuidad_id = "is-deduccion-di-internacional-rdleg-importe"
 number = "00825"
+rotating_year_offset = 0
 section = ["deducciones_doble_imposicion_internacional_rdleg_4", "di_internacional_2008"]
 semantic_role = "is_deduccion_di_internacional_rdleg_importe"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
@@ -22768,6 +22782,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 id = "01051"
 continuidad_id = "01051"
 number = "01051"
+rotating_year_offset = 0
 section = ["deducciones_doble_imposicion_internacional_lis", "di_internacional_2015"]
 semantic_role = "is_deduccion_di_internacional_detalle"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
@@ -22778,6 +22793,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 id = "01350"
 continuidad_id = "01350"
 number = "01350"
+rotating_year_offset = 0
 section = ["deducciones_doble_imposicion_internacional_lis", "di_internacional_2016"]
 semantic_role = "is_deduccion_di_internacional_detalle"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
@@ -22788,6 +22804,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 id = "01772"
 continuidad_id = "01772"
 number = "01772"
+rotating_year_offset = 0
 section = ["deducciones_doble_imposicion_internacional_lis", "di_internacional_2017"]
 semantic_role = "is_deduccion_di_internacional_detalle"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
@@ -22798,6 +22815,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 id = "01835"
 continuidad_id = "01835"
 number = "01835"
+rotating_year_offset = 0
 section = ["deducciones_doble_imposicion_internacional_lis", "di_internacional_2018"]
 semantic_role = "is_deduccion_di_internacional_detalle"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
@@ -22808,6 +22826,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 id = "02203"
 continuidad_id = "02203"
 number = "02203"
+rotating_year_offset = 0
 section = ["deducciones_doble_imposicion_internacional_lis", "di_internacional_2019"]
 semantic_role = "is_deduccion_di_internacional_detalle"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
@@ -22818,6 +22837,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 id = "02326"
 continuidad_id = "02326"
 number = "02326"
+rotating_year_offset = 0
 section = ["deducciones_doble_imposicion_internacional_lis", "di_internacional_2020"]
 semantic_role = "is_deduccion_di_internacional_detalle"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
@@ -22828,6 +22848,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 id = "00749"
 continuidad_id = "00749"
 number = "00749"
+rotating_year_offset = 5
 section = ["deducciones_dt_24a_1_lis", "2020_periodificacion"]
 semantic_role = "is_deduccion_dt24a1_periodificacion"
 legal_refs = ["ley-27-2014:dt-24"]
@@ -22838,6 +22859,7 @@ legal_refs = ["ley-27-2014:dt-24"]
 id = "00750"
 continuidad_id = "00750"
 number = "00750"
+rotating_year_offset = 5
 section = ["deducciones_dt_24a_1_lis", "2020_periodificacion"]
 semantic_role = "is_deduccion_dt24a1_periodificacion"
 legal_refs = ["ley-27-2014:dt-24"]
@@ -22848,6 +22870,7 @@ legal_refs = ["ley-27-2014:dt-24"]
 id = "00752"
 continuidad_id = "00752"
 number = "00752"
+rotating_year_offset = 4
 section = ["deducciones_dt_24a_1_lis", "2021_periodificacion"]
 semantic_role = "is_deduccion_dt24a1_periodificacion"
 legal_refs = ["ley-27-2014:dt-24"]
@@ -22858,6 +22881,7 @@ legal_refs = ["ley-27-2014:dt-24"]
 id = "00753"
 continuidad_id = "00753"
 number = "00753"
+rotating_year_offset = 4
 section = ["deducciones_dt_24a_1_lis", "2021_periodificacion"]
 semantic_role = "is_deduccion_dt24a1_periodificacion"
 legal_refs = ["ley-27-2014:dt-24"]
@@ -22868,6 +22892,7 @@ legal_refs = ["ley-27-2014:dt-24"]
 id = "00754"
 continuidad_id = "00754"
 number = "00754"
+rotating_year_offset = 4
 section = ["deducciones_dt_24a_1_lis", "2021_periodificacion"]
 semantic_role = "is_deduccion_dt24a1_periodificacion"
 legal_refs = ["ley-27-2014:dt-24"]
@@ -22878,6 +22903,7 @@ legal_refs = ["ley-27-2014:dt-24"]
 id = "00755"
 continuidad_id = "00755"
 number = "00755"
+rotating_year_offset = 3
 section = ["deducciones_dt_24a_1_lis", "2022_periodificacion"]
 semantic_role = "is_deduccion_dt24a1_periodificacion"
 legal_refs = ["ley-27-2014:dt-24"]
@@ -22888,6 +22914,7 @@ legal_refs = ["ley-27-2014:dt-24"]
 id = "00756"
 continuidad_id = "00756"
 number = "00756"
+rotating_year_offset = 3
 section = ["deducciones_dt_24a_1_lis", "2022_periodificacion"]
 semantic_role = "is_deduccion_dt24a1_periodificacion"
 legal_refs = ["ley-27-2014:dt-24"]
@@ -22898,6 +22925,7 @@ legal_refs = ["ley-27-2014:dt-24"]
 id = "00757"
 continuidad_id = "00757"
 number = "00757"
+rotating_year_offset = 3
 section = ["deducciones_dt_24a_1_lis", "2022_periodificacion"]
 semantic_role = "is_deduccion_dt24a1_periodificacion"
 legal_refs = ["ley-27-2014:dt-24"]
@@ -22908,6 +22936,7 @@ legal_refs = ["ley-27-2014:dt-24"]
 id = "00758"
 continuidad_id = "00758"
 number = "00758"
+rotating_year_offset = 2
 section = ["deducciones_dt_24a_1_lis", "2023_periodificacion"]
 semantic_role = "is_deduccion_dt24a1_periodificacion"
 legal_refs = ["ley-27-2014:dt-24"]
@@ -22918,6 +22947,7 @@ legal_refs = ["ley-27-2014:dt-24"]
 id = "00759"
 continuidad_id = "00759"
 number = "00759"
+rotating_year_offset = 2
 section = ["deducciones_dt_24a_1_lis", "2023_periodificacion"]
 semantic_role = "is_deduccion_dt24a1_periodificacion"
 legal_refs = ["ley-27-2014:dt-24"]
@@ -22928,6 +22958,7 @@ legal_refs = ["ley-27-2014:dt-24"]
 id = "00744"
 continuidad_id = "is-deduccion-dt24a1-periodificacion"
 number = "00744"
+rotating_year_offset = 0
 section = ["deducciones_dt_24a_1_lis", "2025_periodificacion"]
 semantic_role = "is_deduccion_dt24a1_periodificacion"
 legal_refs = ["ley-27-2014:dt-24"]
@@ -22938,6 +22969,7 @@ legal_refs = ["ley-27-2014:dt-24"]
 id = "00745"
 continuidad_id = "00745"
 number = "00745"
+rotating_year_offset = 0
 section = ["deducciones_dt_24a_1_lis", "2025_periodificacion"]
 semantic_role = "is_deduccion_dt24a1_periodificacion"
 legal_refs = ["ley-27-2014:dt-24"]
@@ -22948,6 +22980,7 @@ legal_refs = ["ley-27-2014:dt-24"]
 id = "00746"
 continuidad_id = "00746"
 number = "00746"
+rotating_year_offset = 0
 section = ["deducciones_dt_24a_1_lis", "2025_periodificacion"]
 semantic_role = "is_deduccion_dt24a1_periodificacion"
 legal_refs = ["ley-27-2014:dt-24"]
@@ -22958,6 +22991,7 @@ legal_refs = ["ley-27-2014:dt-24"]
 id = "00779"
 continuidad_id = "00779"
 number = "00779"
+rotating_year_offset = 0
 section = ["deducciones_dt_24a_1_lis", "2025_periodificacion"]
 semantic_role = "is_deduccion_dt24a1_periodificacion"
 legal_refs = ["ley-27-2014:dt-24"]
@@ -22968,6 +23002,7 @@ legal_refs = ["ley-27-2014:dt-24"]
 id = '02287'
 continuidad_id = "02287"
 number = '02287'
+rotating_year_offset = 0
 semantic_role = 'is_informacion_adicional_limites_deducciones_canarias_generada'
 section = [
     'informacion_adicional_para_el_calculo_de_limites_d',
@@ -22987,6 +23022,7 @@ legal_refs = [
 id = '02288'
 continuidad_id = "02288"
 number = '02288'
+rotating_year_offset = 0
 semantic_role = 'is_informacion_adicional_limites_deducciones_canarias_generada'
 section = [
     'informacion_adicional_para_el_calculo_de_limites_d',
@@ -23006,6 +23042,7 @@ legal_refs = [
 id = '02495'
 continuidad_id = "02495"
 number = '02495'
+rotating_year_offset = 0
 semantic_role = 'is_informacion_adicional_limites_deducciones_canarias_generada'
 section = [
     'informacion_adicional_para_el_calculo_de_limites_d',
@@ -23025,6 +23062,7 @@ legal_refs = [
 id = '02079'
 continuidad_id = "is-informacion-adicional-limites-deducciones-canarias-generada"
 number = '02079'
+rotating_year_offset = 0
 semantic_role = 'is_informacion_adicional_limites_deducciones_canarias_generada'
 section = [
     'informacion_adicional_para_el_calculo_de_limites_d',
@@ -23044,6 +23082,7 @@ legal_refs = [
 id = '02496'
 continuidad_id = "02496"
 number = '02496'
+rotating_year_offset = 0
 semantic_role = 'is_informacion_adicional_limites_deducciones_canarias_generada'
 section = [
     'informacion_adicional_para_el_calculo_de_limites_d',
@@ -23063,6 +23102,7 @@ legal_refs = [
 id = '02080'
 continuidad_id = "02080"
 number = '02080'
+rotating_year_offset = 0
 semantic_role = 'is_informacion_adicional_limites_deducciones_canarias_generada'
 section = [
     'informacion_adicional_para_el_calculo_de_limites_d',
@@ -23082,6 +23122,7 @@ legal_refs = [
 id = "02449"
 continuidad_id = "02449"
 number = "02449"
+rotating_year_offset = 0
 section = ["deducc_para_incentivar_determ_actividades", "2025_suma_deducciones_cap_iv_tit_vi_ley_43_95_rdle"]
 semantic_role = "is_deduccion_cap_iv_tit_vi_suma_periodo"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
@@ -23092,6 +23133,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 id = "02450"
 continuidad_id = "02450"
 number = "02450"
+rotating_year_offset = 0
 section = ["deducc_para_incentivar_determ_actividades", "2025_suma_deducciones_cap_iv_tit_vi_ley_43_95_rdle"]
 semantic_role = "is_deduccion_cap_iv_tit_vi_suma_periodo"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
@@ -23102,6 +23144,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 id = "02461"
 continuidad_id = "02461"
 number = "02461"
+rotating_year_offset = 0
 section = ["deducc_para_incentivar_determ_actividades", "2025_suma_deducciones_cap_iv_tit_vi_ley_43_95_rdle"]
 semantic_role = "is_deduccion_cap_iv_tit_vi_suma_periodo"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
@@ -23112,6 +23155,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 id = "01363"
 continuidad_id = "01363"
 number = "01363"
+rotating_year_offset = 0
 section = ["deducc_para_incentivar_determ_actividades", "2025_investigacion_y_desarrollo_ct"]
 semantic_role = "is_deduccion_idi_investigacion_desarrollo_periodo"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
@@ -23122,6 +23166,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 id = "01364"
 continuidad_id = "01364"
 number = "01364"
+rotating_year_offset = 0
 section = ["deducc_para_incentivar_determ_actividades", "2025_investigacion_y_desarrollo_ct"]
 semantic_role = "is_deduccion_idi_investigacion_desarrollo_periodo"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
@@ -23132,6 +23177,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 id = "01365"
 continuidad_id = "01365"
 number = "01365"
+rotating_year_offset = 0
 section = ["deducc_para_incentivar_determ_actividades", "2025_investigacion_y_desarrollo_ct"]
 semantic_role = "is_deduccion_idi_investigacion_pendiente"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
@@ -23142,6 +23188,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 id = "01366"
 continuidad_id = "01366"
 number = "01366"
+rotating_year_offset = 0
 section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
 semantic_role = "is_deduccion_idi_innovacion_tecnologica"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
@@ -23152,6 +23199,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 id = "01367"
 continuidad_id = "01367"
 number = "01367"
+rotating_year_offset = 0
 section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
 semantic_role = "is_deduccion_idi_innovacion_tecnologica"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
@@ -23162,6 +23210,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 id = "01368"
 continuidad_id = "01368"
 number = "01368"
+rotating_year_offset = 0
 section = ["deducc_para_incentivar_determ_actividades", "2025_innovacion_tecnologica_it"]
 semantic_role = "is_deduccion_idi_innovacion_pendiente"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
@@ -23172,6 +23221,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 id = "01928"
 continuidad_id = "01928"
 number = "01928"
+rotating_year_offset = 0
 section = ["deducc_para_incentivar_determ_actividades", "2025_inversiones_en_territ_africa_occidental_y_gas"]
 semantic_role = "is_deduccion_inversiones_africa_canarias"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
@@ -23182,6 +23232,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 id = "01929"
 continuidad_id = "01929"
 number = "01929"
+rotating_year_offset = 0
 section = ["deducc_para_incentivar_determ_actividades", "2025_inversiones_en_territ_africa_occidental_y_gas"]
 semantic_role = "is_deduccion_inversiones_africa_canarias_periodo"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
@@ -23192,6 +23243,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 id = "01930"
 continuidad_id = "01930"
 number = "01930"
+rotating_year_offset = 0
 section = ["deducc_para_incentivar_determ_actividades", "2025_inversiones_en_territ_africa_occidental_y_gas"]
 semantic_role = "is_deduccion_inversiones_africa_canarias_pendiente"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
@@ -23202,6 +23254,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 id = "00828"
 continuidad_id = "is-deduccion-idi-diferimiento"
 number = "00828"
+rotating_year_offset = 0
 section = ["deducc_para_incentivar_determ_actividades", "2025_diferim_deducciones_cap_iv_tit_vi_ley_43_95_r"]
 semantic_role = "is_deduccion_idi_diferimiento"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
@@ -23212,6 +23265,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 id = "00829"
 continuidad_id = "is-deduccion-idi-diferimiento-aplicado-periodo"
 number = "00829"
+rotating_year_offset = 0
 section = ["deducc_para_incentivar_determ_actividades", "2025_diferim_deducciones_cap_iv_tit_vi_ley_43_95_r"]
 semantic_role = "is_deduccion_idi_diferimiento_aplicado_periodo"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
@@ -23222,6 +23276,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 id = "00830"
 continuidad_id = "is-deduccion-idi-diferimiento-pendiente"
 number = "00830"
+rotating_year_offset = 0
 section = ["deducc_para_incentivar_determ_actividades", "2025_diferim_deducciones_cap_iv_tit_vi_ley_43_95_r"]
 semantic_role = "is_deduccion_idi_diferimiento_pendiente"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
@@ -23513,6 +23568,7 @@ id = '02365'
 continuidad_id = "public-interest-alicante-sailing-departure-credit-2024-generated"
 # AEAT aeat-dr-200-2024 DP200018 campo 45: fila del acontecimiento alicante-sailing-departure, ejercicio 2024, columna pendiente/generada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '02365'
+rotating_year_offset = 0
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
     'deducc_para_incentivar_determ_actividades',
@@ -23533,6 +23589,7 @@ id = '02366'
 continuidad_id = "public-interest-alicante-sailing-departure-credit-2024-applied"
 # AEAT aeat-dr-200-2024 DP200018 campo 46: fila del acontecimiento alicante-sailing-departure, ejercicio 2024, columna aplicada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '02366'
+rotating_year_offset = 0
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
     'deducc_para_incentivar_determ_actividades',
@@ -23553,6 +23610,7 @@ id = '02367'
 continuidad_id = "public-interest-alicante-sailing-departure-credit-2024-remaining"
 # AEAT aeat-dr-200-2024 DP200018 campo 47: fila del acontecimiento alicante-sailing-departure, ejercicio 2024, columna pendiente futura. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '02367'
+rotating_year_offset = 0
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
     'deducc_para_incentivar_determ_actividades',
@@ -23693,6 +23751,7 @@ id = '00902'
 continuidad_id = "public-interest-plan-2030-base-sport-credit-2024-generated"
 # AEAT aeat-dr-200-2024 DP200018 campo 69: fila del acontecimiento plan-2030-base-sport, ejercicio 2024, columna pendiente/generada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '00902'
+rotating_year_offset = 0
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
     'deducc_para_incentivar_determ_actividades',
@@ -23713,6 +23772,7 @@ id = '00906'
 continuidad_id = "public-interest-plan-2030-base-sport-credit-2024-applied"
 # AEAT aeat-dr-200-2024 DP200018 campo 70: fila del acontecimiento plan-2030-base-sport, ejercicio 2024, columna aplicada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '00906'
+rotating_year_offset = 0
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
     'deducc_para_incentivar_determ_actividades',
@@ -23733,6 +23793,7 @@ id = '01870'
 continuidad_id = "public-interest-plan-2030-base-sport-credit-2024-remaining"
 # AEAT aeat-dr-200-2024 DP200018 campo 71: fila del acontecimiento plan-2030-base-sport, ejercicio 2024, columna pendiente futura. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01870'
+rotating_year_offset = 0
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
     'deducc_para_incentivar_determ_actividades',
@@ -23753,6 +23814,7 @@ id = '01914'
 continuidad_id = "public-interest-universo-mujer-three-credit-2024-generated"
 # AEAT aeat-dr-200-2024 DP200018 campo 72: fila del acontecimiento universo-mujer-three, ejercicio 2024, columna pendiente/generada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01914'
+rotating_year_offset = 0
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
     'deducc_para_incentivar_determ_actividades',
@@ -23773,6 +23835,7 @@ id = '00955'
 continuidad_id = "public-interest-universo-mujer-three-credit-2024-applied"
 # AEAT aeat-dr-200-2024 DP200018 campo 73: fila del acontecimiento universo-mujer-three, ejercicio 2024, columna aplicada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '00955'
+rotating_year_offset = 0
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
     'deducc_para_incentivar_determ_actividades',
@@ -23793,6 +23856,7 @@ id = '00956'
 continuidad_id = "public-interest-universo-mujer-three-credit-2024-remaining"
 # AEAT aeat-dr-200-2024 DP200018 campo 74: fila del acontecimiento universo-mujer-three, ejercicio 2024, columna pendiente futura. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '00956'
+rotating_year_offset = 0
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
     'deducc_para_incentivar_determ_actividades',
@@ -23873,6 +23937,7 @@ id = '01089'
 continuidad_id = "public-interest-joaquin-sorolla-centenary-credit-2024-generated"
 # AEAT aeat-dr-200-2024 DP200018 campo 78: fila del acontecimiento joaquin-sorolla-centenary, ejercicio 2024, columna pendiente/generada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01089'
+rotating_year_offset = 0
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
     'deducc_para_incentivar_determ_actividades',
@@ -23893,6 +23958,7 @@ id = '01110'
 continuidad_id = "public-interest-joaquin-sorolla-centenary-credit-2024-applied"
 # AEAT aeat-dr-200-2024 DP200018 campo 79: fila del acontecimiento joaquin-sorolla-centenary, ejercicio 2024, columna aplicada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01110'
+rotating_year_offset = 0
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
     'deducc_para_incentivar_determ_actividades',
@@ -23913,6 +23979,7 @@ id = '01141'
 continuidad_id = "public-interest-joaquin-sorolla-centenary-credit-2024-remaining"
 # AEAT aeat-dr-200-2024 DP200018 campo 80: fila del acontecimiento joaquin-sorolla-centenary, ejercicio 2024, columna pendiente futura. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01141'
+rotating_year_offset = 0
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
     'deducc_para_incentivar_determ_actividades',
@@ -23933,6 +24000,7 @@ id = '01142'
 continuidad_id = "public-interest-primavera-sound-anniversary-credit-2024-generated"
 # AEAT aeat-dr-200-2024 DP200018 campo 81: fila del acontecimiento primavera-sound-anniversary, ejercicio 2024, columna pendiente/generada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01142'
+rotating_year_offset = 0
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
     'deducc_para_incentivar_determ_actividades',
@@ -23953,6 +24021,7 @@ id = '01144'
 continuidad_id = "public-interest-primavera-sound-anniversary-credit-2024-applied"
 # AEAT aeat-dr-200-2024 DP200018 campo 82: fila del acontecimiento primavera-sound-anniversary, ejercicio 2024, columna aplicada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01144'
+rotating_year_offset = 0
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
     'deducc_para_incentivar_determ_actividades',
@@ -23973,6 +24042,7 @@ id = '01145'
 continuidad_id = "public-interest-primavera-sound-anniversary-credit-2024-remaining"
 # AEAT aeat-dr-200-2024 DP200018 campo 83: fila del acontecimiento primavera-sound-anniversary, ejercicio 2024, columna pendiente futura. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01145'
+rotating_year_offset = 0
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
     'deducc_para_incentivar_determ_actividades',
@@ -23993,6 +24063,7 @@ id = '01146'
 continuidad_id = "public-interest-victoria-angeles-centenary-credit-2024-generated"
 # AEAT aeat-dr-200-2024 DP200018 campo 84: fila del acontecimiento victoria-angeles-centenary, ejercicio 2024, columna pendiente/generada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01146'
+rotating_year_offset = 0
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
     'deducc_para_incentivar_determ_actividades',
@@ -24013,6 +24084,7 @@ id = '01150'
 continuidad_id = "public-interest-victoria-angeles-centenary-credit-2024-applied"
 # AEAT aeat-dr-200-2024 DP200018 campo 85: fila del acontecimiento victoria-angeles-centenary, ejercicio 2024, columna aplicada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01150'
+rotating_year_offset = 0
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
     'deducc_para_incentivar_determ_actividades',
@@ -24033,6 +24105,7 @@ id = '01151'
 continuidad_id = "public-interest-victoria-angeles-centenary-credit-2024-remaining"
 # AEAT aeat-dr-200-2024 DP200018 campo 86: fila del acontecimiento victoria-angeles-centenary, ejercicio 2024, columna pendiente futura. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01151'
+rotating_year_offset = 0
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
     'deducc_para_incentivar_determ_actividades',
@@ -24053,6 +24126,7 @@ id = '01152'
 continuidad_id = "public-interest-picasso-death-anniversary-credit-2024-generated"
 # AEAT aeat-dr-200-2024 DP200018 campo 87: fila del acontecimiento picasso-death-anniversary, ejercicio 2024, columna pendiente/generada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01152'
+rotating_year_offset = 0
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
     'deducc_para_incentivar_determ_actividades',
@@ -24073,6 +24147,7 @@ id = '01153'
 continuidad_id = "public-interest-picasso-death-anniversary-credit-2024-applied"
 # AEAT aeat-dr-200-2024 DP200018 campo 88: fila del acontecimiento picasso-death-anniversary, ejercicio 2024, columna aplicada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01153'
+rotating_year_offset = 0
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
     'deducc_para_incentivar_determ_actividades',
@@ -24093,6 +24168,7 @@ id = '01154'
 continuidad_id = "public-interest-picasso-death-anniversary-credit-2024-remaining"
 # AEAT aeat-dr-200-2024 DP200018 campo 89: fila del acontecimiento picasso-death-anniversary, ejercicio 2024, columna pendiente futura. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01154'
+rotating_year_offset = 0
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
     'deducc_para_incentivar_determ_actividades',
@@ -24113,6 +24189,7 @@ id = '01155'
 continuidad_id = "public-interest-todos-contra-cancer-credit-2024-generated"
 # AEAT aeat-dr-200-2024 DP200018 campo 90: fila del acontecimiento todos-contra-cancer, ejercicio 2024, columna pendiente/generada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01155'
+rotating_year_offset = 0
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
     'deducc_para_incentivar_determ_actividades',
@@ -24133,6 +24210,7 @@ id = '01156'
 continuidad_id = "public-interest-todos-contra-cancer-credit-2024-applied"
 # AEAT aeat-dr-200-2024 DP200018 campo 91: fila del acontecimiento todos-contra-cancer, ejercicio 2024, columna aplicada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01156'
+rotating_year_offset = 0
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
     'deducc_para_incentivar_determ_actividades',
@@ -24153,6 +24231,7 @@ id = '01157'
 continuidad_id = "public-interest-todos-contra-cancer-credit-2024-remaining"
 # AEAT aeat-dr-200-2024 DP200018 campo 92: fila del acontecimiento todos-contra-cancer, ejercicio 2024, columna pendiente futura. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01157'
+rotating_year_offset = 0
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
     'deducc_para_incentivar_determ_actividades',
@@ -24233,6 +24312,7 @@ id = '01220'
 continuidad_id = "public-interest-wine-tourism-conference-credit-2024-generated"
 # AEAT aeat-dr-200-2024 DP200018 campo 99: fila del acontecimiento wine-tourism-conference, ejercicio 2024, columna pendiente/generada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01220'
+rotating_year_offset = 0
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
     'deducc_para_incentivar_determ_actividades',
@@ -24253,6 +24333,7 @@ id = '01221'
 continuidad_id = "public-interest-wine-tourism-conference-credit-2024-applied"
 # AEAT aeat-dr-200-2024 DP200018 campo 100: fila del acontecimiento wine-tourism-conference, ejercicio 2024, columna aplicada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01221'
+rotating_year_offset = 0
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
     'deducc_para_incentivar_determ_actividades',
@@ -24273,6 +24354,7 @@ id = '01222'
 continuidad_id = "public-interest-wine-tourism-conference-credit-2024-remaining"
 # AEAT aeat-dr-200-2024 DP200018 campo 101: fila del acontecimiento wine-tourism-conference, ejercicio 2024, columna pendiente futura. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01222'
+rotating_year_offset = 0
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
     'deducc_para_incentivar_determ_actividades',
@@ -24323,6 +24405,7 @@ id = '01233'
 continuidad_id = "public-interest-ateneo-madrid-bicentenary-credit-2024-generated"
 # AEAT aeat-dr-200-2024 DP200018 campo 105: fila del acontecimiento ateneo-madrid-bicentenary, ejercicio 2024, columna pendiente/generada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01233'
+rotating_year_offset = 0
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
     'deducc_para_incentivar_determ_actividades',
@@ -24343,6 +24426,7 @@ id = '01235'
 continuidad_id = "public-interest-ateneo-madrid-bicentenary-credit-2024-applied"
 # AEAT aeat-dr-200-2024 DP200018 campo 106: fila del acontecimiento ateneo-madrid-bicentenary, ejercicio 2024, columna aplicada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01235'
+rotating_year_offset = 0
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
     'deducc_para_incentivar_determ_actividades',
@@ -24363,6 +24447,7 @@ id = '01236'
 continuidad_id = "public-interest-ateneo-madrid-bicentenary-credit-2024-remaining"
 # AEAT aeat-dr-200-2024 DP200018 campo 107: fila del acontecimiento ateneo-madrid-bicentenary, ejercicio 2024, columna pendiente futura. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01236'
+rotating_year_offset = 0
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
     'deducc_para_incentivar_determ_actividades',
@@ -24383,6 +24468,7 @@ id = '01237'
 continuidad_id = "public-interest-barcelona-equestrian-challenge-four-credit-2024-generated"
 # AEAT aeat-dr-200-2024 DP200018 campo 108: fila del acontecimiento barcelona-equestrian-challenge-four, ejercicio 2024, columna pendiente/generada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01237'
+rotating_year_offset = 0
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
     'deducc_para_incentivar_determ_actividades',
@@ -24403,6 +24489,7 @@ id = '01238'
 continuidad_id = "public-interest-barcelona-equestrian-challenge-four-credit-2024-applied"
 # AEAT aeat-dr-200-2024 DP200018 campo 109: fila del acontecimiento barcelona-equestrian-challenge-four, ejercicio 2024, columna aplicada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01238'
+rotating_year_offset = 0
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
     'deducc_para_incentivar_determ_actividades',
@@ -24423,6 +24510,7 @@ id = '01239'
 continuidad_id = "public-interest-barcelona-equestrian-challenge-four-credit-2024-remaining"
 # AEAT aeat-dr-200-2024 DP200018 campo 110: fila del acontecimiento barcelona-equestrian-challenge-four, ejercicio 2024, columna pendiente futura. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01239'
+rotating_year_offset = 0
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
     'deducc_para_incentivar_determ_actividades',
@@ -24443,6 +24531,7 @@ id = '01261'
 continuidad_id = "public-interest-passeig-gracia-bicentenary-credit-2024-generated"
 # AEAT aeat-dr-200-2024 DP200018 campo 111: fila del acontecimiento passeig-gracia-bicentenary, ejercicio 2024, columna pendiente/generada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01261'
+rotating_year_offset = 0
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
     'deducc_para_incentivar_determ_actividades',
@@ -24463,6 +24552,7 @@ id = '01262'
 continuidad_id = "public-interest-passeig-gracia-bicentenary-credit-2024-applied"
 # AEAT aeat-dr-200-2024 DP200018 campo 112: fila del acontecimiento passeig-gracia-bicentenary, ejercicio 2024, columna aplicada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01262'
+rotating_year_offset = 0
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
     'deducc_para_incentivar_determ_actividades',
@@ -24483,6 +24573,7 @@ id = '01263'
 continuidad_id = "public-interest-passeig-gracia-bicentenary-credit-2024-remaining"
 # AEAT aeat-dr-200-2024 DP200018 campo 113: fila del acontecimiento passeig-gracia-bicentenary, ejercicio 2024, columna pendiente futura. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01263'
+rotating_year_offset = 0
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
     'deducc_para_incentivar_determ_actividades',
@@ -24503,6 +24594,7 @@ id = '01264'
 continuidad_id = "public-interest-club-natacio-barcelona-credit-2024-generated"
 # AEAT aeat-dr-200-2024 DP200018 campo 114: fila del acontecimiento club-natacio-barcelona, ejercicio 2024, columna pendiente/generada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01264'
+rotating_year_offset = 0
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
     'deducc_para_incentivar_determ_actividades',
@@ -24523,6 +24615,7 @@ id = '01265'
 continuidad_id = "public-interest-club-natacio-barcelona-credit-2024-applied"
 # AEAT aeat-dr-200-2024 DP200018 campo 115: fila del acontecimiento club-natacio-barcelona, ejercicio 2024, columna aplicada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01265'
+rotating_year_offset = 0
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
     'deducc_para_incentivar_determ_actividades',
@@ -24543,6 +24636,7 @@ id = '01266'
 continuidad_id = "public-interest-club-natacio-barcelona-credit-2024-remaining"
 # AEAT aeat-dr-200-2024 DP200018 campo 116: fila del acontecimiento club-natacio-barcelona, ejercicio 2024, columna pendiente futura. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01266'
+rotating_year_offset = 0
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
     'deducc_para_incentivar_determ_actividades',
@@ -24563,6 +24657,7 @@ id = '01268'
 continuidad_id = "public-interest-alimentaria-hostelco-credit-2024-applied"
 # AEAT aeat-dr-200-2024 DP200018 campo 118: fila del acontecimiento alimentaria-hostelco, ejercicio 2024, columna aplicada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01268'
+rotating_year_offset = 0
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
     'deducc_para_incentivar_determ_actividades',
@@ -24583,6 +24678,7 @@ id = '01269'
 continuidad_id = "public-interest-alimentaria-hostelco-credit-2024-remaining"
 # AEAT aeat-dr-200-2024 DP200018 campo 119: fila del acontecimiento alimentaria-hostelco, ejercicio 2024, columna pendiente futura. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01269'
+rotating_year_offset = 0
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
     'deducc_para_incentivar_determ_actividades',
@@ -24603,6 +24699,7 @@ id = '01272'
 continuidad_id = "public-interest-barcelona-music-lab-credit-2024-generated"
 # AEAT aeat-dr-200-2024 DP200018 campo 120: fila del acontecimiento barcelona-music-lab, ejercicio 2024, columna pendiente/generada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01272'
+rotating_year_offset = 0
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
     'deducc_para_incentivar_determ_actividades',
@@ -24623,6 +24720,7 @@ id = '01273'
 continuidad_id = "public-interest-barcelona-music-lab-credit-2024-applied"
 # AEAT aeat-dr-200-2024 DP200018 campo 121: fila del acontecimiento barcelona-music-lab, ejercicio 2024, columna aplicada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01273'
+rotating_year_offset = 0
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
     'deducc_para_incentivar_determ_actividades',
@@ -24643,6 +24741,7 @@ id = '01274'
 continuidad_id = "public-interest-barcelona-music-lab-credit-2024-remaining"
 # AEAT aeat-dr-200-2024 DP200018 campo 122: fila del acontecimiento barcelona-music-lab, ejercicio 2024, columna pendiente futura. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01274'
+rotating_year_offset = 0
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
     'deducc_para_incentivar_determ_actividades',
@@ -24722,6 +24821,7 @@ legal_refs = [
 id = '01683'
 continuidad_id = "is-deduccion-acontecimiento-interes-publico-otras"
 number = '01683'
+rotating_year_offset = -1
 semantic_role = 'is_deduccion_acontecimiento_interes_publico_otras'
 section = [
     'deducc_para_incentivar_determ_actividades',
@@ -24741,6 +24841,7 @@ legal_refs = [
 id = '01684'
 continuidad_id = "01684"
 number = '01684'
+rotating_year_offset = -1
 semantic_role = 'is_deduccion_eventos_especiales_aplicado_periodo'
 section = [
     'deducc_para_incentivar_determ_actividades',
@@ -24760,6 +24861,7 @@ legal_refs = [
 id = '01685'
 continuidad_id = "01685"
 number = '01685'
+rotating_year_offset = -1
 semantic_role = 'is_deduccion_eventos_especiales_pendiente'
 section = [
     'deducc_para_incentivar_determ_actividades',
@@ -24779,6 +24881,7 @@ legal_refs = [
 id = "01692"
 continuidad_id = "01692"
 number = "01692"
+rotating_year_offset = 0
 section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
 semantic_role = "is_deduccion_donativos_general"
 legal_refs = ["ley-49-2002:art-20"]
@@ -24789,6 +24892,7 @@ legal_refs = ["ley-49-2002:art-20"]
 id = "01693"
 continuidad_id = "01693"
 number = "01693"
+rotating_year_offset = 0
 section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
 semantic_role = "is_deduccion_donativos_general"
 legal_refs = ["ley-49-2002:art-20"]
@@ -24799,6 +24903,7 @@ legal_refs = ["ley-49-2002:art-20"]
 id = "01694"
 continuidad_id = "01694"
 number = "01694"
+rotating_year_offset = 0
 section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
 semantic_role = "is_deduccion_donativos_general"
 legal_refs = ["ley-49-2002:art-20"]
@@ -24809,6 +24914,7 @@ legal_refs = ["ley-49-2002:art-20"]
 id = "01695"
 continuidad_id = "01695"
 number = "01695"
+rotating_year_offset = 0
 section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
 semantic_role = "is_deduccion_donativos_general"
 legal_refs = ["ley-49-2002:art-20"]
@@ -24819,6 +24925,7 @@ legal_refs = ["ley-49-2002:art-20"]
 id = "01696"
 continuidad_id = "01696"
 number = "01696"
+rotating_year_offset = 0
 section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
 semantic_role = "is_deduccion_donativos_general"
 legal_refs = ["ley-49-2002:art-20"]
@@ -24829,6 +24936,7 @@ legal_refs = ["ley-49-2002:art-20"]
 id = "01697"
 continuidad_id = "01697"
 number = "01697"
+rotating_year_offset = 0
 section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
 semantic_role = "is_deduccion_donativos_general"
 legal_refs = ["ley-49-2002:art-20"]
@@ -24839,6 +24947,7 @@ legal_refs = ["ley-49-2002:art-20"]
 id = "01704"
 continuidad_id = "01704"
 number = "01704"
+rotating_year_offset = 0
 section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecena"]
 semantic_role = "is_deduccion_donativos_prioritarias"
 legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
@@ -24849,6 +24958,7 @@ legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
 id = "01705"
 continuidad_id = "01705"
 number = "01705"
+rotating_year_offset = 0
 section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecena"]
 semantic_role = "is_deduccion_donativos_prioritarias"
 legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
@@ -24859,6 +24969,7 @@ legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
 id = "01706"
 continuidad_id = "01706"
 number = "01706"
+rotating_year_offset = 0
 section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecena"]
 semantic_role = "is_deduccion_donativos_prioritarias"
 legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
@@ -24869,6 +24980,7 @@ legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
 id = "01729"
 continuidad_id = "01729"
 number = "01729"
+rotating_year_offset = 0
 section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecena"]
 semantic_role = "is_deduccion_donativos_prioritarias"
 legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
@@ -24879,6 +24991,7 @@ legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
 id = "02475"
 continuidad_id = "02475"
 number = "02475"
+rotating_year_offset = 0
 section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecena"]
 semantic_role = "is_deduccion_donativos_prioritarias"
 legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
@@ -24889,6 +25002,7 @@ legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
 id = "02476"
 continuidad_id = "02476"
 number = "02476"
+rotating_year_offset = 0
 section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecena"]
 semantic_role = "is_deduccion_donativos_prioritarias"
 legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
@@ -24899,6 +25013,7 @@ legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
 id = "01731"
 continuidad_id = "01731"
 number = "01731"
+rotating_year_offset = 0
 section = ["reserva_de_nivelacion", "reduccion_base_imponible"]
 semantic_role = "is_reserva_nivelacion_adicion_pendiente"
 legal_refs = ["ley-27-2014:art-105"]
@@ -24909,6 +25024,7 @@ legal_refs = ["ley-27-2014:art-105"]
 id = "00927"
 continuidad_id = "is-reserva-inversiones-canarias-importe"
 number = "00927"
+rotating_year_offset = 0
 section = ["reg_especial_reserva_inversiones_canarias", "importe_de_la_dotacion_ric_con_cargo_a_beneficios"]
 semantic_role = "is_reserva_inversiones_canarias_importe"
 legal_refs = ["ley-19-1994:art-27"]
@@ -24920,6 +25036,7 @@ legal_refs = ["ley-19-1994:art-27"]
 id = "01225"
 continuidad_id = "01225"
 number = "01225"
+rotating_year_offset = 0
 section = ["reg_cooperativas", "detalle_compensacion_cuotas_2024_pendiente_aplicac"]
 semantic_role = "is_cooperativa_compensacion_cuotas"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
@@ -24930,6 +25047,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 id = "01226"
 continuidad_id = "01226"
 number = "01226"
+rotating_year_offset = 0
 section = ["reg_cooperativas", "detalle_compensacion_cuotas_2024_pendiente_aplicac"]
 semantic_role = "is_cooperativa_compensacion_cuotas"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]

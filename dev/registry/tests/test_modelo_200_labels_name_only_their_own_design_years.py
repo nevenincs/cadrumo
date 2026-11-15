@@ -31,14 +31,14 @@ _MODELO = "200"
 _LOCALES = ("es", "ca", "en", "hu")
 _PRINTED_BOX = re.compile(r"\[([0-9]{3,6})\]")
 _NUMBERED = re.compile(r"[0-9]{3,6}")
-_YEAR = re.compile(r"(?<![0-9])(?:19|20)[0-9]{2}(?![0-9])")
+YEAR = re.compile(r"(?<![0-9])(?:19|20)[0-9]{2}(?![0-9])")
 
 type Captions = dict[tuple[str, str], frozenset[str]]
 """Captions an edition's design prints, keyed by (sheet, number) and by (``""``, number) for any sheet."""
 
 
 @cache
-def _design_captions(revision_id: str) -> Captions:
+def design_captions(revision_id: str) -> Captions:
     """Return every caption the record design an edition cites prints, per sheet and per number."""
     revision = compiled_bundled_authority().modelo(_MODELO).revisions[revision_id]
     sources = compiled_bundled_authority().catalogues.sources
@@ -55,22 +55,22 @@ def _design_captions(revision_id: str) -> Captions:
 
 def foreign_years(texts: Iterable[str | None], captions: Iterable[str]) -> list[str]:
     """Return the years the texts name that none of the captions prints."""
-    printed = {year for caption in captions for year in _YEAR.findall(caption)}
-    return sorted({year for text in texts if text is not None for year in _YEAR.findall(text)} - printed)
+    printed = {year for caption in captions for year in YEAR.findall(caption)}
+    return sorted({year for text in texts if text is not None for year in YEAR.findall(text)} - printed)
 
 
-def _box_captions(casilla: CasillaDefinition, captions: Captions) -> frozenset[str]:
+def box_captions(casilla: CasillaDefinition, captions: Captions) -> frozenset[str]:
     """Return the captions of the box a row stands for: its own sheet, or any sheet for an unsheeted row."""
     return captions.get((casilla.segmento or "", str(casilla.number)), frozenset[str]())
 
 
 def _violations(revision: ModeloRevision) -> list[str]:
-    captions = _design_captions(str(revision.id))
+    captions = design_captions(str(revision.id))
     found = []
     for casilla in revision.casillas:
         if not _NUMBERED.fullmatch(str(casilla.number)):
             continue
-        box = _box_captions(casilla, captions)
+        box = box_captions(casilla, captions)
         for locale in _LOCALES:
             years = foreign_years((casilla.get_label(locale), casilla.get_help(locale)), box)
             if years:
@@ -87,14 +87,14 @@ def test_every_label_and_help_names_only_years_its_own_design_caption_prints(rev
 def test_the_check_detects_a_label_naming_another_editions_year() -> None:
     """A real caption with a year passes against itself and fails once its year is moved."""
     revision = authored_revisions(_MODELO)[0]
-    captions = _design_captions(str(revision.id))
+    captions = design_captions(str(revision.id))
     caption = next(
         text
         for texts in captions.values()
         for text in texts
-        if len(set(_YEAR.findall(text))) == 1 and str(int(_YEAR.findall(text)[0]) + 1) not in text
+        if len(set(YEAR.findall(text))) == 1 and str(int(YEAR.findall(text)[0]) + 1) not in text
     )
-    (year,) = set(_YEAR.findall(caption))
+    (year,) = set(YEAR.findall(caption))
     moved = str(int(year) + 1)
     assert foreign_years([caption], [caption]) == []
     assert foreign_years([caption.replace(year, moved)], [caption]) == [moved]
