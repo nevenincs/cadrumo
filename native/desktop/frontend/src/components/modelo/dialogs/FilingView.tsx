@@ -186,8 +186,10 @@ export function FilingView({
   onTakeAction: (action: ModeloFormNextAction) => void;
   onReread: () => Promise<boolean>;
   /** Reads only what this view rests on, which an export, a local filing or
-   * a receipt changes; the whole declaration is read for anything else. */
-  onRereadFiling: () => Promise<boolean>;
+   * a receipt changes; the whole declaration is read for anything else, and
+   * behind it with `whole`, as the header's step and the journey change
+   * with a local filing. */
+  onRereadFiling: (whole: boolean) => Promise<boolean>;
   openLink: (url: string) => void;
 }) {
   const t = useStrings();
@@ -312,7 +314,9 @@ export function FilingView({
         return;
       }
       if (outcome.kind === "settled" || outcome.kind === "saved_unread")
-        await (write === "declaration" ? onReread() : onRereadFiling());
+        await (write === "declaration"
+          ? onReread()
+          : onRereadFiling(write === "record"));
     },
     [port, onReread, onRereadFiling, runWrite],
   );
