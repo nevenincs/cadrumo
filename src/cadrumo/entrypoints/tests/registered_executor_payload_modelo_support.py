@@ -775,6 +775,7 @@ MODELO_BUILDERS: dict[str, PayloadBuilder] = {
     "modelo.work.history": _modelo_work_history,
     "modelo.work.review": _modelo_work_review,
     "modelo.work.form": _modelo_work_form,
+    "modelo.work.filing_state": _modelo_work_form,
     "modelo.work.casilla_help": _modelo_work_casilla_help,
     "modelo.edit.renew": _modelo_edit_renew,
     "modelo.edit.preflight": _modelo_edit_submission,

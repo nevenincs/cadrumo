@@ -294,6 +294,22 @@ class ModeloFormHeader(BaseModel):
     missing_elsewhere: ModeloFormMissingElsewhere | None = None
 
 
+class ModeloFormFilingHeader(BaseModel):
+    """What the header states that exporting and recording the filing rest on, decided once with the header.
+
+    Each field is the same answer :class:`ModeloFormHeader` gives under its name.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    #: ``None`` when the form names no result box at all.
+    result: ModeloFormResultView | None = None
+    #: ``None`` when no file was ever created, or once the declaration is recorded as filed.
+    file: ModeloFormFileView | None = None
+    #: ``None`` when nothing withholds the file, or once the declaration is recorded as filed.
+    export_hold: ModeloFormExportHold | None = None
+
+
 def form_recorded(form: ModeloWorkForm, *, filed: bool) -> bool:
     """Whether the declaration is recorded as filed, by its lifecycle or by the form's own filing record."""
     return filed or form.filing is not None
@@ -676,13 +692,26 @@ def result_view(form: ModeloWorkForm, language: OutputLanguage, *, recorded: boo
 def form_header(form: ModeloWorkForm, language: OutputLanguage, *, verified: bool, filed: bool) -> ModeloFormHeader:
     """Everything the header states about the declaration, in ``language``, from its form and lifecycle."""
     recorded = form_recorded(form, filed=filed)
+    filing = form_filing_header(form, language, verified=verified, filed=filed)
     return ModeloFormHeader(
         attention=attention_counts(form, language, recorded=recorded),
-        result=result_view(form, language, recorded=recorded),
+        result=filing.result,
         deadline=deadline_view(form, language, recorded=recorded),
+        file=filing.file,
+        export_hold=filing.export_hold,
+        missing_elsewhere=missing_elsewhere(form, language, recorded=recorded),
+    )
+
+
+def form_filing_header(
+    form: ModeloWorkForm, language: OutputLanguage, *, verified: bool, filed: bool
+) -> ModeloFormFilingHeader:
+    """The result, the latest file and the export hold the header states, in ``language``."""
+    recorded = form_recorded(form, filed=filed)
+    return ModeloFormFilingHeader(
+        result=result_view(form, language, recorded=recorded),
         file=file_view(form, language, recorded=recorded),
         export_hold=export_hold(form, language, verified=verified, recorded=recorded),
-        missing_elsewhere=missing_elsewhere(form, language, recorded=recorded),
     )
 
 
@@ -695,6 +724,7 @@ __all__ = [
     "ModeloFormExportHold",
     "ModeloFormExportHoldReason",
     "ModeloFormFileView",
+    "ModeloFormFilingHeader",
     "ModeloFormHeader",
     "ModeloFormMissingElsewhere",
     "ModeloFormResultState",
@@ -705,6 +735,7 @@ __all__ = [
     "deadline_words",
     "export_hold",
     "file_view",
+    "form_filing_header",
     "form_header",
     "form_recorded",
     "missing_elsewhere",
