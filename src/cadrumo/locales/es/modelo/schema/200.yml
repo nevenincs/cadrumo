@@ -11622,11 +11622,77 @@ modelo:
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
                 incrementada - 2021 - Con reiteración de donaciones a una misma entidad
                 - Pendiente de aplicación en periodos futuros [01036]
+            '01061':
+              label: Deducción donativos entidades sin fines lucro - Donaciones para
+                actividades prioritarias de mecenazgo y otras con derecho a deducción
+                incrementada - 2022(*) Sin reiteración de donaciones a una misma entidad
+                - Deducción pendiente/generada [01061]
+            '01062':
+              label: Deducción donativos entidades sin fines lucro - Donaciones para
+                actividades prioritarias de mecenazgo y otras con derecho a deducción
+                incrementada - 2022(*) Sin reiteración de donaciones a una misma entidad
+                - Aplicado en esta liquidación [01062]
+            '01072':
+              label: Deducción donativos entidades sin fines lucro - Donaciones para
+                actividades prioritarias de mecenazgo y otras con derecho a deducción
+                incrementada - 2022(*) Sin reiteración de donaciones a una misma entidad
+                - Pendiente de aplicación en periodos futuros [01072]
+            '01074':
+              label: Deducción donativos entidades sin fines lucro - Donaciones para
+                actividades prioritarias de mecenazgo y otras con derecho a deducción
+                incrementada - 2022(*) - Con reiteración de donaciones a una misma
+                entidad - Aplicado en esta liquidación [01074]
+            01078:
+              label: Deducción donativos entidades sin fines lucro - Donaciones para
+                actividades prioritarias de mecenazgo y otras con derecho a deducción
+                incrementada - 2022(*) - Con reiteración de donaciones a una misma
+                entidad - Pendiente de aplicación en periodos futuros [01078]
             01081:
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
                 incrementada - Total - Pendiente de aplicación en periodos futuros
                 [01081]
+            '01117':
+              label: Conversión activos impuesto diferido crédito exigible frente
+                Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
+                Ejercicio generación - 2022(*) - Importe total AID (art. 130.6 a)
+                pendiente aplicación a principio periodo [01117]
+            01119:
+              label: Conversión activos impuesto diferido crédito exigible frente
+                Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
+                Ejercicio generación - 2022(*) - AID pendientes aplicación a principio
+                periodo - Con derecho conversión crédito exigible [01119]
+            '01120':
+              label: Conversión activos impuesto diferido crédito exigible frente
+                Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
+                Ejercicio generación - 2022(*) - AID pendientes aplicación a principio
+                periodo - Con derecho conversión crédito exigible por exceso cuota
+                [01120]
+            '01121':
+              label: Conversión activos impuesto diferido crédito exigible frente
+                Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
+                Ejercicio generación - 2022(*) - AID pendientes aplicación a principio
+                periodo - Sin derecho conversión crédito exigible [01121]
+            '01122':
+              label: Conversión activos impuesto diferido crédito exigible frente
+                Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
+                Ejercicio generación - 2022(*) - AID convertidos en crédito exigible
+                periodo [01122]
+            '01131':
+              label: Conversión activos impuesto diferido crédito exigible frente
+                Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
+                Ejercicio generación - 2022(*) - AID pendientes aplicación periodos
+                futuros - Con derecho conversión crédito exigible [01131]
+            '01132':
+              label: Conversión activos impuesto diferido crédito exigible frente
+                Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
+                Ejercicio generación - 2022(*) - AID pendientes aplicación periodos
+                futuros - Con derecho conversión crédito exigible exceso cuota [01132]
+            '01133':
+              label: Conversión activos impuesto diferido crédito exigible frente
+                Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
+                Ejercicio generación - 2022(*) - AID pendientes aplicación periodos
+                futuros - Sin derecho conversión crédito exigible [01133]
             '01240':
               label: Limitación deducibilidad gastos financieros - Límite art. 16.5
                 y/o 83 LIS - a) Gastos financieros del período impositivo derivados
@@ -12864,11 +12930,77 @@ modelo:
                 por conversión de activos por impuesto diferido en crédito exigible
                 frente a la admón.tribut. (art. 130 LIS) - D. Forales/Navarra (Totales)
                 [01044]
+            '01061':
+              label: Deducción donativos entidades sin fines lucro - Donaciones para
+                actividades prioritarias de mecenazgo y otras con derecho a deducción
+                incrementada - 2022 Sin reiteración de donaciones a una misma entidad
+                - Deducción pendiente/generada [01061]
+            '01062':
+              label: Deducción donativos entidades sin fines lucro - Donaciones para
+                actividades prioritarias de mecenazgo y otras con derecho a deducción
+                incrementada - 2022 Sin reiteración de donaciones a una misma entidad
+                - Aplicado en esta liquidación [01062]
+            '01072':
+              label: Deducción donativos entidades sin fines lucro - Donaciones para
+                actividades prioritarias de mecenazgo y otras con derecho a deducción
+                incrementada - 2022 Sin reiteración de donaciones a una misma entidad
+                - Pendiente de aplicación en periodos futuros [01072]
             '01073':
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
                 incrementada - 2022 - Con reiteración de donaciones a una misma entidad
                 - Deducción pendiente/generada [01073]
+            '01074':
+              label: Deducción donativos entidades sin fines lucro - Donaciones para
+                actividades prioritarias de mecenazgo y otras con derecho a deducción
+                incrementada - 2022 - Con reiteración de donaciones a una misma entidad
+                - Aplicado en esta liquidación [01074]
+            01078:
+              label: Deducción donativos entidades sin fines lucro - Donaciones para
+                actividades prioritarias de mecenazgo y otras con derecho a deducción
+                incrementada - 2022 - Con reiteración de donaciones a una misma entidad
+                - Pendiente de aplicación en periodos futuros [01078]
+            '01117':
+              label: Conversión activos impuesto diferido crédito exigible frente
+                Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
+                Ejercicio generación - 2022 - Importe total AID (art. 130.6 a) pendiente
+                aplicación a principio periodo [01117]
+            01119:
+              label: Conversión activos impuesto diferido crédito exigible frente
+                Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
+                Ejercicio generación - 2022 - AID pendientes aplicación a principio
+                periodo - Con derecho conversión crédito exigible [01119]
+            '01120':
+              label: Conversión activos impuesto diferido crédito exigible frente
+                Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
+                Ejercicio generación - 2022 - AID pendientes aplicación a principio
+                periodo - Con derecho conversión crédito exigible por exceso cuota
+                [01120]
+            '01121':
+              label: Conversión activos impuesto diferido crédito exigible frente
+                Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
+                Ejercicio generación - 2022 - AID pendientes aplicación a principio
+                periodo - Sin derecho conversión crédito exigible [01121]
+            '01122':
+              label: Conversión activos impuesto diferido crédito exigible frente
+                Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
+                Ejercicio generación - 2022 - AID convertidos en crédito exigible
+                periodo [01122]
+            '01131':
+              label: Conversión activos impuesto diferido crédito exigible frente
+                Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
+                Ejercicio generación - 2022 - AID pendientes aplicación periodos futuros
+                - Con derecho conversión crédito exigible [01131]
+            '01132':
+              label: Conversión activos impuesto diferido crédito exigible frente
+                Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
+                Ejercicio generación - 2022 - AID pendientes aplicación periodos futuros
+                - Con derecho conversión crédito exigible exceso cuota [01132]
+            '01133':
+              label: Conversión activos impuesto diferido crédito exigible frente
+                Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
+                Ejercicio generación - 2022 - AID pendientes aplicación periodos futuros
+                - Sin derecho conversión crédito exigible [01133]
             01258:
               label: Limitación deducibilidad gastos financieros - Límite art. 16.1
                 y 16.2 LIS - m) Gastos financieros pendientes de deducir en períodos

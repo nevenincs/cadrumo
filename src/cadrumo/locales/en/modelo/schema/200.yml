@@ -11641,10 +11641,79 @@ modelo:
                 priority patronage activities and others entitled to increased deduction
                 - 2021 - With repeated donations to the same entity - Carried forward
                 for application in future periods [01036]
+            '01061':
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - 2022(*) without repeated donations to the same entity - Deduction
+                carried forward/generated [01061]
+            '01062':
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - 2022(*) without repeated donations to the same entity - Applied
+                in this settlement [01062]
+            '01072':
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - 2022(*) without repeated donations to the same entity - Carried
+                forward for application in future periods [01072]
+            '01074':
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - 2022(*) - With repeated donations to the same entity - Applied in
+                this settlement [01074]
+            01078:
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - 2022(*) - With repeated donations to the same entity - Carried forward
+                for application in future periods [01078]
             01081:
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others entitled to increased deduction
                 - Total - Carried forward for application in future periods [01081]
+            '01117':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2022(*) - Total DTAs (art. 130.6 a) pending application
+                at the start of the period [01117]
+            01119:
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2022(*) - DTAs pending application at the start
+                of the period - With a right of conversion into a claimable credit
+                [01119]
+            '01120':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2022(*) - DTAs pending application at the start
+                of the period - With a right of conversion into a claimable credit
+                for excess tax due [01120]
+            '01121':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2022(*) - DTAs pending application at the start
+                of the period - Without a right of conversion into a claimable credit
+                [01121]
+            '01122':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2022(*) - DTAs converted into a claimable credit
+                in the period [01122]
+            '01131':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2022(*) - DTAs pending application in future periods
+                - With a right of conversion into a claimable credit [01131]
+            '01132':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2022(*) - DTAs pending application in future periods
+                - With a right of conversion into a claimable credit, excess tax due
+                [01132]
+            '01133':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2022(*) - DTAs pending application in future periods
+                - Without a right of conversion into a claimable credit [01133]
             '01240':
               label: Limitation on deductibility of financial expenses - Limit art.
                 16.5 and/or 83 LIS - a) Finance costs of the tax period arising from
@@ -12889,11 +12958,79 @@ modelo:
                 tax assets into a credit claimable against the tax administration
                 (art. 130 LIS) - Regional (foral) administrations/Navarre (Totals)
                 [01044]
+            '01061':
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - 2022 without repeated donations to the same entity - Deduction carried
+                forward/generated [01061]
+            '01062':
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - 2022 without repeated donations to the same entity - Applied in
+                this settlement [01062]
+            '01072':
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - 2022 without repeated donations to the same entity - Carried forward
+                for application in future periods [01072]
             '01073':
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others entitled to increased deduction
                 - 2022 - With repeated donations to the same entity - Deduction carried
                 forward/generated [01073]
+            '01074':
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - 2022 - With repeated donations to the same entity - Applied in this
+                settlement [01074]
+            01078:
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - 2022 - With repeated donations to the same entity - Carried forward
+                for application in future periods [01078]
+            '01117':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2022 - Total DTAs (art. 130.6 a) pending application
+                at the start of the period [01117]
+            01119:
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2022 - DTAs pending application at the start of
+                the period - With a right of conversion into a claimable credit [01119]
+            '01120':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2022 - DTAs pending application at the start of
+                the period - With a right of conversion into a claimable credit for
+                excess tax due [01120]
+            '01121':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2022 - DTAs pending application at the start of
+                the period - Without a right of conversion into a claimable credit
+                [01121]
+            '01122':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2022 - DTAs converted into a claimable credit in
+                the period [01122]
+            '01131':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2022 - DTAs pending application in future periods
+                - With a right of conversion into a claimable credit [01131]
+            '01132':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2022 - DTAs pending application in future periods
+                - With a right of conversion into a claimable credit, excess tax due
+                [01132]
+            '01133':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2022 - DTAs pending application in future periods
+                - Without a right of conversion into a claimable credit [01133]
             01258:
               label: Limitation on deductibility of financial expenses - Limit art.
                 16.1 and 16.2 LIS - m) Finance costs pending deduction from earlier

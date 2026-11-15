@@ -11616,10 +11616,81 @@ modelo:
                 és más, növelt levonásra jogosító célokra adott adományok - 2021 -
                 Ugyanazon szervezetnek ismételt adományozással - Jövőbeli időszakokban
                 alkalmazandó [01036]
+            '01061':
+              label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
+                és más, növelt levonásra jogosító célokra adott adományok - 2022(*)
+                Ugyanazon szervezetnek ismételt adományozás nélkül - Függőben lévő/keletkezett
+                levonás [01061]
+            '01062':
+              label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
+                és más, növelt levonásra jogosító célokra adott adományok - 2022(*)
+                Ugyanazon szervezetnek ismételt adományozás nélkül - Ebben az elszámolásban
+                alkalmazva [01062]
+            '01072':
+              label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
+                és más, növelt levonásra jogosító célokra adott adományok - 2022(*)
+                Ugyanazon szervezetnek ismételt adományozás nélkül - Jövőbeli időszakokban
+                alkalmazandó [01072]
+            '01074':
+              label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
+                és más, növelt levonásra jogosító célokra adott adományok - 2022(*)
+                - Ugyanazon szervezetnek ismételt adományozással - Ebben az elszámolásban
+                alkalmazva [01074]
+            01078:
+              label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
+                és más, növelt levonásra jogosító célokra adott adományok - 2022(*)
+                - Ugyanazon szervezetnek ismételt adományozással - Jövőbeli időszakokban
+                alkalmazandó [01078]
             01081:
               label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
                 és más, növelt levonásra jogosító célokra adott adományok - Összesen
                 - Jövőbeli időszakokban alkalmazandó [01081]
+            '01117':
+              label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
+                érvényesíthető követeléssé - Halasztott adókövetelések (DTA). LIS
+                130. cikk - Keletkezés éve - 2022(*) - Az időszak elején felhasználásra
+                váró halasztott adókövetelések összesen (130.6 a) cikk) [01117]
+            01119:
+              label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
+                érvényesíthető követeléssé - Halasztott adókövetelések (DTA). LIS
+                130. cikk - Keletkezés éve - 2022(*) - Az időszak elején felhasználásra
+                váró halasztott adókövetelések - Érvényesíthető követeléssé alakítás
+                jogával [01119]
+            '01120':
+              label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
+                érvényesíthető követeléssé - Halasztott adókövetelések (DTA). LIS
+                130. cikk - Keletkezés éve - 2022(*) - Az időszak elején felhasználásra
+                váró halasztott adókövetelések - Érvényesíthető követeléssé alakítás
+                joga adótöbblet miatt [01120]
+            '01121':
+              label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
+                érvényesíthető követeléssé - Halasztott adókövetelések (DTA). LIS
+                130. cikk - Keletkezés éve - 2022(*) - Az időszak elején felhasználásra
+                váró halasztott adókövetelések - Érvényesíthető követeléssé alakítás
+                joga nélkül [01121]
+            '01122':
+              label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
+                érvényesíthető követeléssé - Halasztott adókövetelések (DTA). LIS
+                130. cikk - Keletkezés éve - 2022(*) - Az időszakban érvényesíthető
+                követeléssé alakított halasztott adókövetelések [01122]
+            '01131':
+              label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
+                érvényesíthető követeléssé - Halasztott adókövetelések (DTA). LIS
+                130. cikk - Keletkezés éve - 2022(*) - Jövőbeli időszakokban felhasználásra
+                váró halasztott adókövetelések - Érvényesíthető követeléssé alakítás
+                jogával [01131]
+            '01132':
+              label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
+                érvényesíthető követeléssé - Halasztott adókövetelések (DTA). LIS
+                130. cikk - Keletkezés éve - 2022(*) - Jövőbeli időszakokban felhasználásra
+                váró halasztott adókövetelések - Érvényesíthető követeléssé alakítás
+                jogával, adótöbblet [01132]
+            '01133':
+              label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
+                érvényesíthető követeléssé - Halasztott adókövetelések (DTA). LIS
+                130. cikk - Keletkezés éve - 2022(*) - Jövőbeli időszakokban felhasználásra
+                váró halasztott adókövetelések - Érvényesíthető követeléssé alakítás
+                joga nélkül [01133]
             '01240':
               label: Pénzügyi ráfordítások levonhatóságának korlátozása - LIS 16.5.
                 és/vagy 83. cikke szerinti korlát - a) Az adómegállapítási időszak
@@ -12861,11 +12932,82 @@ modelo:
                 adóhatósággal szemben érvényesíthető követeléssé alakításából eredő
                 beszámítás (LIS 130. cikk) - Tartományi adóhatóságok/Navarra (Összesen)
                 [01044]
+            '01061':
+              label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
+                és más, növelt levonásra jogosító célokra adott adományok - 2022 Ugyanazon
+                szervezetnek ismételt adományozás nélkül - Függőben lévő/keletkezett
+                levonás [01061]
+            '01062':
+              label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
+                és más, növelt levonásra jogosító célokra adott adományok - 2022 Ugyanazon
+                szervezetnek ismételt adományozás nélkül - Ebben az elszámolásban
+                alkalmazva [01062]
+            '01072':
+              label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
+                és más, növelt levonásra jogosító célokra adott adományok - 2022 Ugyanazon
+                szervezetnek ismételt adományozás nélkül - Jövőbeli időszakokban alkalmazandó
+                [01072]
             '01073':
               label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
                 és más, növelt levonásra jogosító célokra adott adományok - 2022 -
                 Ugyanazon szervezetnek ismételt adományozással - Függőben lévő/keletkezett
                 levonás [01073]
+            '01074':
+              label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
+                és más, növelt levonásra jogosító célokra adott adományok - 2022 -
+                Ugyanazon szervezetnek ismételt adományozással - Ebben az elszámolásban
+                alkalmazva [01074]
+            01078:
+              label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
+                és más, növelt levonásra jogosító célokra adott adományok - 2022 -
+                Ugyanazon szervezetnek ismételt adományozással - Jövőbeli időszakokban
+                alkalmazandó [01078]
+            '01117':
+              label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
+                érvényesíthető követeléssé - Halasztott adókövetelések (DTA). LIS
+                130. cikk - Keletkezés éve - 2022 - Az időszak elején felhasználásra
+                váró halasztott adókövetelések összesen (130.6 a) cikk) [01117]
+            01119:
+              label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
+                érvényesíthető követeléssé - Halasztott adókövetelések (DTA). LIS
+                130. cikk - Keletkezés éve - 2022 - Az időszak elején felhasználásra
+                váró halasztott adókövetelések - Érvényesíthető követeléssé alakítás
+                jogával [01119]
+            '01120':
+              label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
+                érvényesíthető követeléssé - Halasztott adókövetelések (DTA). LIS
+                130. cikk - Keletkezés éve - 2022 - Az időszak elején felhasználásra
+                váró halasztott adókövetelések - Érvényesíthető követeléssé alakítás
+                joga adótöbblet miatt [01120]
+            '01121':
+              label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
+                érvényesíthető követeléssé - Halasztott adókövetelések (DTA). LIS
+                130. cikk - Keletkezés éve - 2022 - Az időszak elején felhasználásra
+                váró halasztott adókövetelések - Érvényesíthető követeléssé alakítás
+                joga nélkül [01121]
+            '01122':
+              label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
+                érvényesíthető követeléssé - Halasztott adókövetelések (DTA). LIS
+                130. cikk - Keletkezés éve - 2022 - Az időszakban érvényesíthető követeléssé
+                alakított halasztott adókövetelések [01122]
+            '01131':
+              label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
+                érvényesíthető követeléssé - Halasztott adókövetelések (DTA). LIS
+                130. cikk - Keletkezés éve - 2022 - Jövőbeli időszakokban felhasználásra
+                váró halasztott adókövetelések - Érvényesíthető követeléssé alakítás
+                jogával [01131]
+            '01132':
+              label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
+                érvényesíthető követeléssé - Halasztott adókövetelések (DTA). LIS
+                130. cikk - Keletkezés éve - 2022 - Jövőbeli időszakokban felhasználásra
+                váró halasztott adókövetelések - Érvényesíthető követeléssé alakítás
+                jogával, adótöbblet [01132]
+            '01133':
+              label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
+                érvényesíthető követeléssé - Halasztott adókövetelések (DTA). LIS
+                130. cikk - Keletkezés éve - 2022 - Jövőbeli időszakokban felhasználásra
+                váró halasztott adókövetelések - Érvényesíthető követeléssé alakítás
+                joga nélkül [01133]
             01258:
               label: Pénzügyi ráfordítások levonhatóságának korlátozása - LIS 16.1.
                 és 16.2. cikke szerinti korlát - m) Korábbi adómegállapítási időszakokból

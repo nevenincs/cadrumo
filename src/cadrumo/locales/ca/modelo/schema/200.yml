@@ -11517,10 +11517,74 @@ modelo:
                 a activitats prioritàries de mecenatge i altres amb dret a deducció
                 incrementada - 2021 - Amb reiteració de donacions a una mateixa entitat
                 - Pendent d'aplicació en períodes futurs [01036]
+            '01061':
+              label: Deducció donatius entitats sense fins lucratius - Donacions per
+                a activitats prioritàries de mecenatge i altres amb dret a deducció
+                incrementada - 2022(*) Sense reiteració de donacions a una mateixa
+                entitat - Deducció pendent/generada [01061]
+            '01062':
+              label: Deducció donatius entitats sense fins lucratius - Donacions per
+                a activitats prioritàries de mecenatge i altres amb dret a deducció
+                incrementada - 2022(*) Sense reiteració de donacions a una mateixa
+                entitat - Aplicat en aquesta liquidació [01062]
+            '01072':
+              label: Deducció donatius entitats sense fins lucratius - Donacions per
+                a activitats prioritàries de mecenatge i altres amb dret a deducció
+                incrementada - 2022(*) Sense reiteració de donacions a una mateixa
+                entitat - Pendent d'aplicació en períodes futurs [01072]
+            '01074':
+              label: Deducció donatius entitats sense fins lucratius - Donacions per
+                a activitats prioritàries de mecenatge i altres amb dret a deducció
+                incrementada - 2022(*) - Amb reiteració de donacions a una mateixa
+                entitat - Aplicat en aquesta liquidació [01074]
+            01078:
+              label: Deducció donatius entitats sense fins lucratius - Donacions per
+                a activitats prioritàries de mecenatge i altres amb dret a deducció
+                incrementada - 2022(*) - Amb reiteració de donacions a una mateixa
+                entitat - Pendent d'aplicació en períodes futurs [01078]
             01081:
               label: Deducció donatius entitats sense fins lucratius - Donacions per
                 a activitats prioritàries de mecenatge i altres amb dret a deducció
                 incrementada - Total - Pendent d'aplicació en períodes futurs [01081]
+            '01117':
+              label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
+                - Actius impost diferit (AID). Art. 130 LIS - Exercici generació -
+                2022(*) - Import total d'AID (art. 130.6 a) pendent d'aplicació a
+                l'inici del període [01117]
+            01119:
+              label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
+                - Actius impost diferit (AID). Art. 130 LIS - Exercici generació -
+                2022(*) - AID pendents d'aplicació a l'inici del període - Amb dret
+                de conversió en crèdit exigible [01119]
+            '01120':
+              label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
+                - Actius impost diferit (AID). Art. 130 LIS - Exercici generació -
+                2022(*) - AID pendents d'aplicació a l'inici del període - Amb dret
+                de conversió en crèdit exigible per excés de quota [01120]
+            '01121':
+              label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
+                - Actius impost diferit (AID). Art. 130 LIS - Exercici generació -
+                2022(*) - AID pendents d'aplicació a l'inici del període - Sense dret
+                de conversió en crèdit exigible [01121]
+            '01122':
+              label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
+                - Actius impost diferit (AID). Art. 130 LIS - Exercici generació -
+                2022(*) - AID convertits en crèdit exigible en el període [01122]
+            '01131':
+              label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
+                - Actius impost diferit (AID). Art. 130 LIS - Exercici generació -
+                2022(*) - AID pendents d'aplicació en períodes futurs - Amb dret de
+                conversió en crèdit exigible [01131]
+            '01132':
+              label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
+                - Actius impost diferit (AID). Art. 130 LIS - Exercici generació -
+                2022(*) - AID pendents d'aplicació en períodes futurs - Amb dret de
+                conversió en crèdit exigible, excés de quota [01132]
+            '01133':
+              label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
+                - Actius impost diferit (AID). Art. 130 LIS - Exercici generació -
+                2022(*) - AID pendents d'aplicació en períodes futurs - Sense dret
+                de conversió en crèdit exigible [01133]
             '01240':
               label: Limitació deduïbilitat despeses financeres - Límit art. 16.5
                 i/o 83 LIS - a) Despeses financeres del període impositiu derivades
@@ -12687,11 +12751,75 @@ modelo:
                 l'Administració tributària (art. 130 LIS) - Compensació per conversió
                 d'actius per impost diferit en crèdit exigible davant l'administració
                 tributària (art. 130 LIS) - D. Forals/Navarra (Totals) [01044]
+            '01061':
+              label: Deducció donatius entitats sense fins lucratius - Donacions per
+                a activitats prioritàries de mecenatge i altres amb dret a deducció
+                incrementada - 2022 Sense reiteració de donacions a una mateixa entitat
+                - Deducció pendent/generada [01061]
+            '01062':
+              label: Deducció donatius entitats sense fins lucratius - Donacions per
+                a activitats prioritàries de mecenatge i altres amb dret a deducció
+                incrementada - 2022 Sense reiteració de donacions a una mateixa entitat
+                - Aplicat en aquesta liquidació [01062]
+            '01072':
+              label: Deducció donatius entitats sense fins lucratius - Donacions per
+                a activitats prioritàries de mecenatge i altres amb dret a deducció
+                incrementada - 2022 Sense reiteració de donacions a una mateixa entitat
+                - Pendent d'aplicació en períodes futurs [01072]
             '01073':
               label: Deducció donatius entitats sense fins lucratius - Donacions per
                 a activitats prioritàries de mecenatge i altres amb dret a deducció
                 incrementada - 2022 - Amb reiteració de donacions a una mateixa entitat
                 - Deducció pendent/generada [01073]
+            '01074':
+              label: Deducció donatius entitats sense fins lucratius - Donacions per
+                a activitats prioritàries de mecenatge i altres amb dret a deducció
+                incrementada - 2022 - Amb reiteració de donacions a una mateixa entitat
+                - Aplicat en aquesta liquidació [01074]
+            01078:
+              label: Deducció donatius entitats sense fins lucratius - Donacions per
+                a activitats prioritàries de mecenatge i altres amb dret a deducció
+                incrementada - 2022 - Amb reiteració de donacions a una mateixa entitat
+                - Pendent d'aplicació en períodes futurs [01078]
+            '01117':
+              label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
+                - Actius impost diferit (AID). Art. 130 LIS - Exercici generació -
+                2022 - Import total d'AID (art. 130.6 a) pendent d'aplicació a l'inici
+                del període [01117]
+            01119:
+              label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
+                - Actius impost diferit (AID). Art. 130 LIS - Exercici generació -
+                2022 - AID pendents d'aplicació a l'inici del període - Amb dret de
+                conversió en crèdit exigible [01119]
+            '01120':
+              label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
+                - Actius impost diferit (AID). Art. 130 LIS - Exercici generació -
+                2022 - AID pendents d'aplicació a l'inici del període - Amb dret de
+                conversió en crèdit exigible per excés de quota [01120]
+            '01121':
+              label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
+                - Actius impost diferit (AID). Art. 130 LIS - Exercici generació -
+                2022 - AID pendents d'aplicació a l'inici del període - Sense dret
+                de conversió en crèdit exigible [01121]
+            '01122':
+              label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
+                - Actius impost diferit (AID). Art. 130 LIS - Exercici generació -
+                2022 - AID convertits en crèdit exigible en el període [01122]
+            '01131':
+              label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
+                - Actius impost diferit (AID). Art. 130 LIS - Exercici generació -
+                2022 - AID pendents d'aplicació en períodes futurs - Amb dret de conversió
+                en crèdit exigible [01131]
+            '01132':
+              label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
+                - Actius impost diferit (AID). Art. 130 LIS - Exercici generació -
+                2022 - AID pendents d'aplicació en períodes futurs - Amb dret de conversió
+                en crèdit exigible, excés de quota [01132]
+            '01133':
+              label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
+                - Actius impost diferit (AID). Art. 130 LIS - Exercici generació -
+                2022 - AID pendents d'aplicació en períodes futurs - Sense dret de
+                conversió en crèdit exigible [01133]
             01258:
               label: Limitació deduïbilitat despeses financeres - Límit art. 16.1
                 i 16.2 LIS - m) Despeses financeres pendents de deduir de períodes
