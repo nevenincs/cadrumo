@@ -303,12 +303,13 @@ def test_contact_reaches_encrypted_revision_form_and_export_with_caller_preceden
             charge_account=None,
         ),
     )
-    # Independent wire positions come from DR720, printed page 15.
+    # Independent wire positions come from DR720, printed page 15. DR720 writes every
+    # alphanumeric field in upper case without accents; the synthetic names carry none.
     header, declared = output.read_bytes().splitlines()
     assert header[58:67] == b"900000000"
-    assert header[67:107] == name.encode("iso-8859-1").ljust(40, b" ")
+    assert header[67:107] == name.upper().encode("iso-8859-1").ljust(40, b" ")
     assert declared[17:26] == header[8:17] == presenter.tax_id.encode("iso-8859-1")
-    assert declared[35:75] == header[17:57] == presenter.full_name.encode("iso-8859-1").ljust(40, b" ")
+    assert declared[35:75] == header[17:57] == presenter.full_name.upper().encode("iso-8859-1").ljust(40, b" ")
     assert header[67:107] != declared[35:75]
 
 
