@@ -276,7 +276,11 @@ def _assert_persisted_chain(
     report = reports_before.get(projection.verification_report.verification_report_id)
     assert report is not None and report.calculation_revision_id == calculation.calculation_revision_id
     assert not report.granted_verificado_completo
-    assert any(row.message_locale_key.endswith("cross_period_dependency_unclean") for row in report.findings)
+    # No earlier return is held, so the dependency is one the operator may attest.
+    assert any(
+        row.message_locale_key == "application.modelo.findings.cross_period_dependency_unclean_attestable"
+        for row in report.findings
+    )
     return work_before, calculations_before, reports_before
 
 
