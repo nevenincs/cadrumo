@@ -4,7 +4,8 @@ The receipt module's writers are reachable through one chain: the storage
 adapter behind the login-session port, the application login service that
 the runtime drives, and the runtime's own profile host and sweep. Profile
 deletion removes the receipt through the custody transaction, which fences
-the sign-in generation first. Any other production module naming a writer,
+the sign-in generation first. The session prune deletes only keychain
+entries the receipt's root recorded minting and no receipt names. Any other production module naming a writer,
 the receipt's keychain service or its file is a second owner and fails here.
 """
 
@@ -30,6 +31,7 @@ _MCP_ROOT = REPO_ROOT / "src/cadrumo_mcp"
 
 _RECEIPT = "adapters/persistence/storage/custody/acceleration_receipt.py"
 _KEYCHAIN = "adapters/persistence/storage/custody/acceleration_keychain.py"
+_PRUNE = "adapters/persistence/storage/custody/acceleration_session_prune.py"
 _ADAPTER = "adapters/persistence/storage/profile_login_session.py"
 _PORT = "application/user_profile/login_session_port.py"
 _LOGIN = "application/user_profile/login_session.py"
@@ -44,7 +46,7 @@ _RECEIPT_WRITERS: Mapping[str, frozenset[str]] = {
     # The receipt module's own writers and the keychain material they hold.
     "write_acceleration_receipt": frozenset({_RECEIPT}),
     "store_acceleration_secret": frozenset({_RECEIPT, _KEYCHAIN}),
-    "delete_acceleration_secret": frozenset({_RECEIPT, _KEYCHAIN}),
+    "delete_acceleration_secret": frozenset({_RECEIPT, _KEYCHAIN, _PRUNE}),
     "_delete_keychain_entry": frozenset({_KEYCHAIN}),
     "_delete_profile_session": frozenset({_RECEIPT}),
     "delete_refused_receipt": frozenset({_RECEIPT}),
@@ -54,7 +56,7 @@ _RECEIPT_WRITERS: Mapping[str, frozenset[str]] = {
     "mint_profile_session": frozenset({_RECEIPT, _ADAPTER}),
     "delete_profile_session": frozenset({_RECEIPT, _ADAPTER}),
     "resume_profile_session_with_key": frozenset({_RECEIPT, _ADAPTER}),
-    "profile_session_path": frozenset({_RECEIPT, _ADAPTER}),
+    "profile_session_path": frozenset({_RECEIPT, _ADAPTER, _PRUNE}),
     # The runtime's lock-down and sweep revoke directly, generation first.
     "revoke_profile_sign_in": frozenset({_RECEIPT, _RUNTIME_HOST, _RUNTIME_SWEEP}),
     # The port the application login service drives.

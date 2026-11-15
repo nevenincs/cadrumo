@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
 
-from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import (
+from cadrumo.adapters.persistence.storage.custody.acceleration_session_prune import (
     ProfileSessionPruneOutcome,
     prune_profile_session_entries,
 )

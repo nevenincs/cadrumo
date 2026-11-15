@@ -29,9 +29,9 @@ from ..acceleration_receipt import (
     ReceiptDeletion,
     mint_profile_session,
     profile_session_path,
-    prune_profile_session_entries,
     revoke_profile_sign_in,
 )
+from ..acceleration_session_prune import prune_profile_session_entries
 from ..automation_native_identity import CONTROL_NAMESPACE, WRAP_NAMESPACE, automation_native_account
 from ..automation_retirement import prune_unowned_automation_entries
 from ..automation_secret_store import WindowsAutomationSecretStore, WindowsCredentialManager

@@ -67,19 +67,6 @@ type DecodedReceipt = acceleration_receipt_crypto.PersistedProfileSession | _Rec
 """A current record, or only the header of a record from another schema."""
 
 
-class MintedProfileSessionsDocument(BaseModel):
-    """The session ids this storage root minted whose keychain entries it has not yet seen removed.
-
-    It holds session ids only: the profile is the keystore directory it lives
-    in, and it names no key, receipt or path.
-    """
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    schema_version: int = Field(ge=1)
-    session_ids: tuple[UUID, ...]
-
-
 class PendingReceiptRetirementDocument(BaseModel):
     """Bounded exact-byte receipt for an interrupted session-key rotation.
 
