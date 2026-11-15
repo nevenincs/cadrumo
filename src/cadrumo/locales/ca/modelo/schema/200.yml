@@ -3911,16 +3911,18 @@ modelo:
           02029:
             help: Deducció pendent/generada - Open Barcelona-Trofeo Conde de Godó
               (OB)
-            label: Open Barcelona-Trofeo Conde de Godó (OB). Deducció pendent/generada
+            label: 'Deduccions per incentivar determ. activitats - 2023: Open Barcelona-Trofeo
+              Conde de Godó (OB) - Deducció pendent/generada [02029]'
           '02030':
             help: Aplicat en aquesta liquidació - Open Barcelona-Trofeo Conde de Godó
               (OB)
-            label: Open Barcelona-Trofeo Conde de Godó (OB). Aplicat en aquesta liquidació
+            label: 'Deduccions per incentivar determ. activitats - 2023: Open Barcelona-Trofeo
+              Conde de Godó (OB) - Aplicat en aquesta liquidació [02030]'
           '02031':
             help: Pendent d'aplicació en períodes futurs - Open Barcelona-Trofeo Conde
               de Godó (OB)
-            label: Open Barcelona-Trofeo Conde de Godó (OB). Pendent d'aplicació en
-              períodes futurs
+            label: 'Deduccions per incentivar determ. activitats - 2023: Open Barcelona-Trofeo
+              Conde de Godó (OB) - Pendent d''aplicació en períodes futurs [02031]'
           '02032':
             help: Deducció pendent/generada - 125 aniversario del Real Club de Tenis
               Barcelona (TB)
@@ -10939,6 +10941,43 @@ modelo:
           levelling-reserve-2020-addition-remaining:
             label: Reserva de nivellació - Reducció base imposable - Exercici de generació
               2020 - Import pendent d'afegir en períodes futurs [02412]
+          m200-dp200018b-02445-2023:
+            label: Deduccions per produccions cinematogràfiques estrangeres a Canàries
+              (art. 36.2 LIS i DA 14a Llei 19/1994) - 2023 - Deducció pendent/generada
+              [02445]
+          m200-dp200018b-02466-2023:
+            label: Deduccions per produccions cinematogràfiques estrangeres a Canàries
+              (art. 36.2 LIS i DA 14a Llei 19/1994) - 2023 - Aplicat en aquesta liquidació
+              [02466]
+          m200-dp200018b-02467-2023:
+            label: Deduccions per produccions cinematogràfiques estrangeres a Canàries
+              (art. 36.2 LIS i DA 14a Llei 19/1994) - 2023 - Import abonat per insuficiència
+              de quota [02467]
+          m200-dp200018b-02468-2023:
+            label: Deduccions per produccions cinematogràfiques estrangeres a Canàries
+              (art. 36.2 LIS i DA 14a Llei 19/1994) - 2023 - Pendent d'aplicació en
+              períodes futurs [02468]
+          m200-dp200020-02766-2023:
+            label: Limitació de la deduïbilitat de despeses financeres. Despeses financeres
+              pendents de deduir - Exercici de generació 2023(**) - Aplicat en aquesta
+              liquidació [02766]
+          m200-dp200020-02767-2023:
+            label: Limitació de la deduïbilitat de despeses financeres. Despeses financeres
+              pendents de deduir - Exercici de generació 2023(**) - Pendent d'aplicació
+              en períodes futurs - Per límit [02767]
+          m200-dp200020-02768-2023:
+            label: Limitació de la deduïbilitat de despeses financeres. Despeses financeres
+              pendents de deduir - Exercici de generació 2023(**) - Pendent d'aplicació
+              en períodes futurs - Resta [02768]
+          m200-dp200020-02769-2023:
+            label: Pendent d'addició per límit de benefici operatiu no aplicat - Exercici
+              de generació 2023(**) - Pendent d'aplicació a principi del període [02769]
+          m200-dp200020-02770-2023:
+            label: Pendent d'addició per límit de benefici operatiu no aplicat - Exercici
+              de generació 2023(**) - Aplicat en aquesta liquidació [02770]
+          m200-dp200020-02772-2023:
+            label: Pendent d'addició per límit de benefici operatiu no aplicat - Exercici
+              de generació 2023(**) - Pendent d'aplicació en períodes futurs [02772]
           ordinary-donation-2014-applied:
             label: Deducció donatius entitats sense fins lucratius - Donacions de
               caràcter general - 2014 - Aplicat en aquesta liquidació [00998]
@@ -13004,6 +13043,14 @@ modelo:
               label: Llibertat d'amortització de determinats vehicles i de noves infraestructures
                 de recàrrega (DA 18a LIS RDL 4/2024) - Disminució - Correccions de
                 l'exercici - Temporànies (amb origen en exercicis anteriors) [01962]
+            02029:
+              label: Open Barcelona-Trofeo Conde de Godó (OB). Deducció pendent/generada
+            '02030':
+              label: Open Barcelona-Trofeo Conde de Godó (OB). Aplicat en aquesta
+                liquidació
+            '02031':
+              label: Open Barcelona-Trofeo Conde de Godó (OB). Pendent d'aplicació
+                en períodes futurs
             '02301':
               label: Detall de correccions del resultat de pèrdues i guanys - Correccions
                 al resultat del compte de pèrdues i guanys de l'exercici - Correcció
@@ -14247,6 +14294,14 @@ modelo:
               label: Llibertat d'amortització de determinats vehicles i de noves infraestructures
                 de recàrrega (DA 18a LIS RDL 4/2024) - Disminució - Correccions de
                 l'exercici - Temporànies (amb origen en exercicis anteriors)
+            02029:
+              label: Open Barcelona-Trofeo Conde de Godó (OB). Deducció pendent/generada
+            '02030':
+              label: Open Barcelona-Trofeo Conde de Godó (OB). Aplicat en aquesta
+                liquidació
+            '02031':
+              label: Open Barcelona-Trofeo Conde de Godó (OB). Pendent d'aplicació
+                en períodes futurs
             02079:
               label: 'Informació addicional per al càlcul de límits de deduccions
                 - 2025: Finançador: deducció per produccions cinematogràfiques espanyoles
