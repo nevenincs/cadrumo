@@ -598,19 +598,19 @@ removed_fields = []
 restate_provenance = true
 
 [[revisions."2025-y-siguientes".casilla_overrides]]
-selector = { revision = "2024", id = "00088" }
+selector = { revision = "2024", id = "DP200001:00088" }
 fields = { continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200001/DP200001, campos 88/88, filas 93/93: Tipo gravamen reducido para entidades con INCN periodo anterior inferior a 1 millón euros (art. 29.1 LIS) [00088]. Descripcion legal, tipo, validacion y contenido coinciden; mismo caracter de declaracion (manuales Sociedades 2024/2025, cap. 2).", continuidad_origin = "grounded" }
 removed_fields = []
 restate_provenance = true
 
 [[revisions."2025-y-siguientes".casilla_overrides]]
-selector = { revision = "2024", id = "00089" }
+selector = { revision = "2024", id = "DP200001:00089" }
 fields = { continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200001/DP200001, campos 100/100, filas 105/105: Partícipe de agrupación de interés económico o de unión temporal de empresas [00089]. Descripcion legal, tipo, validacion y contenido coinciden; mismo caracter de declaracion (manuales Sociedades 2024/2025, cap. 2).", continuidad_origin = "grounded" }
 removed_fields = []
 restate_provenance = true
 
 [[revisions."2025-y-siguientes".casilla_overrides]]
-selector = { revision = "2024", id = "00090" }
+selector = { revision = "2024", id = "DP200001:00090" }
 fields = { continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200001/DP200001, campos 92/92, filas 97/97: Opción art. 39.3 LIS  [00090]. Descripcion legal, tipo, validacion y contenido coinciden; mismo caracter de declaracion (manuales Sociedades 2024/2025, cap. 2).", continuidad_origin = "grounded" }
 removed_fields = []
 restate_provenance = true

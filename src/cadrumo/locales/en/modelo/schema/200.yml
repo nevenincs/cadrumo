@@ -9282,6 +9282,17 @@ modelo:
               and advertising and publicity expenses (art. 27 bis Ley 19/1994) (TAP)
             label: Investments in West African territories and advertising and publicity
               expenses (art. 27 bis Ley 19/1994) (TAP). Applied in this settlement
+          is-deduccion-porta-ferrada-aplicado-periodo:
+            label: Deductions to incentivise certain activities - 60th anniversary
+              of the Festival Porta Ferrada (PF) - Applied in this settlement [00089]
+          is-deduccion-porta-ferrada-pendiente-futuro:
+            label: Deductions to incentivise certain activities - 60th anniversary
+              of the Festival Porta Ferrada (PF) - Pending application in future periods
+              [00090]
+          is-deduccion-porta-ferrada-pendiente-generada:
+            label: Deductions to incentivise certain activities - 60th anniversary
+              of the Festival Porta Ferrada (PF) - Deduction carried forward/generated
+              [00088]
           is-deduccion-produccion-cinematografica-espanola-financiador:
             help: 'Deduction pending or generated - Financier: Spanish film productions
               (FPC)'
