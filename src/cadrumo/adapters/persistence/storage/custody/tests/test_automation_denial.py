@@ -4,13 +4,17 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from pathlib import Path
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
 from pydantic import SecretBytes
 
 from cadrumo.adapters.persistence.storage.custody.automation_crypto import api_key_verifier
-from cadrumo.adapters.persistence.storage.custody.automation_native_identity import CONTROL_NAMESPACE, WRAP_NAMESPACE
+from cadrumo.adapters.persistence.storage.custody.automation_native_identity import (
+    CLIENT_NAMESPACE,
+    CONTROL_NAMESPACE,
+    WRAP_NAMESPACE,
+)
 from cadrumo.adapters.persistence.storage.custody.automation_retirement import retire_profile_automation
 from cadrumo.adapters.persistence.storage.custody.automation_store import AutomationControlStore
 from cadrumo.adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
@@ -239,3 +243,72 @@ def test_restoring_pre_delete_backup_in_same_root_cannot_restore_delegation(
     assert error.value.reason is AutomationCustodyCode.MISSING
     assert not subject.native.items
     assert not subject.store.enrollment_state().grants
+
+
+@pytest.fixture
+def shared_store_subject(tmp_path: Path) -> Iterator[AdministrationSubject]:
+    with administration_subject(tmp_path, shared_native_store=True) as subject:
+        yield subject
+
+
+def _enroll(subject: AdministrationSubject) -> UUID:
+    request_id = uuid4()
+    subject.service.request(request_id, subject.proposal)
+    subject.approve(request_id)
+    request = next(item for item in subject.store.enrollment_state().requests if item.request_id == request_id)
+    assert subject.owner.delivery.endpoint.possession(request) is not None
+    assert request.credential_reference is not None
+    return request.credential_reference
+
+
+@pytest.mark.parametrize("kind", [AutomationDenialKind.KEY, AutomationDenialKind.GRANT, AutomationDenialKind.ALL])
+def test_revocation_deletes_the_clients_stored_key(
+    shared_store_subject: AdministrationSubject, kind: AutomationDenialKind
+) -> None:
+    subject = shared_store_subject
+    reference = _enroll(subject)
+    assert (CLIENT_NAMESPACE, str(reference)) in subject.native.items
+    before = subject.store.snapshot()
+    target = before.keys[0].key_id if kind is AutomationDenialKind.KEY else before.grants[0].grant_id
+    change = AutomationDenial(
+        request_id=uuid4(),
+        binding=before.binding,
+        kind=kind,
+        target_id=None if kind is AutomationDenialKind.ALL else target,
+    )
+
+    receipt = subject.store.deny(change)
+
+    assert receipt.access_denied and not receipt.cleanup_pending
+    assert (CLIENT_NAMESPACE, str(reference)) not in subject.native.items
+
+
+def test_profile_lock_keeps_the_clients_stored_key_for_a_resume(shared_store_subject: AdministrationSubject) -> None:
+    subject = shared_store_subject
+    reference = _enroll(subject)
+    change = AutomationDenial(
+        request_id=uuid4(), binding=subject.store.binding, kind=AutomationDenialKind.PROFILE_LOCK, target_id=None
+    )
+
+    assert not subject.store.deny(change).cleanup_pending
+
+    assert (CLIENT_NAMESPACE, str(reference)) in subject.native.items
+
+
+def test_a_failed_client_key_deletion_keeps_the_denial_pending_until_reconcile_removes_it(
+    shared_store_subject: AdministrationSubject,
+) -> None:
+    subject = shared_store_subject
+    reference = _enroll(subject)
+    change = AutomationDenial(request_id=uuid4(), binding=subject.store.binding, kind=AutomationDenialKind.ALL)
+    subject.native.fail_delete = True
+
+    pending = subject.store.deny(change)
+
+    assert pending.access_denied and pending.cleanup_pending
+    assert (CLIENT_NAMESPACE, str(reference)) in subject.native.items
+    subject.native.fail_delete = False
+    settled = subject.store.reconcile_denial()
+    assert settled is not None and settled.access_denied and not settled.cleanup_pending
+    assert (CLIENT_NAMESPACE, str(reference)) not in subject.native.items
+    assert subject.store.reconcile_denial() is None

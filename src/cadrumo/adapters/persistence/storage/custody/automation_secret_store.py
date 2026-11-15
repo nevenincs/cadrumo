@@ -5,6 +5,7 @@ from __future__ import annotations
 import ctypes
 import secrets
 import sys
+from dataclasses import dataclass
 from typing import Any, Protocol, cast
 
 from pydantic import SecretBytes
@@ -36,6 +37,16 @@ class _WindowsCredentialApi(Protocol):
 
     def delete(self, target: str) -> None: ...
 
+    def names(self, target_prefix: str) -> tuple[WindowsCredentialName, ...]: ...
+
+
+@dataclass(frozen=True, slots=True)
+class WindowsCredentialName:
+    """The names of one generic credential; never its secret."""
+
+    target: str
+    user: str | None
+
 
 class WindowsCredentialError(CadrumoError):
     """Retain only a native error code for internal status mapping."""
@@ -54,11 +65,13 @@ class WindowsCredentialManager:
     """Call the wide Windows APIs while preserving their byte-oriented blob."""
 
     _credential_type: Any
+    _dword_type: Any
     _credential_type_generic: int
     _credential_persist_local_machine: int
     _cred_read: Any
     _cred_write: Any
     _cred_delete: Any
+    _cred_enumerate: Any
     _cred_free: Any
 
     def __init__(self) -> None:
@@ -96,6 +109,7 @@ class WindowsCredentialManager:
             ]
 
         self._credential_type = _Credential
+        self._dword_type = wintypes.DWORD
         self._credential_type_generic = 1
         self._credential_persist_local_machine = 2
 
@@ -119,6 +133,15 @@ class WindowsCredentialManager:
         self._cred_delete = advapi32.CredDeleteW
         self._cred_delete.argtypes = [wintypes.LPCWSTR, wintypes.DWORD, wintypes.DWORD]
         self._cred_delete.restype = wintypes.BOOL
+
+        self._cred_enumerate = advapi32.CredEnumerateW
+        self._cred_enumerate.argtypes = [
+            wintypes.LPCWSTR,
+            wintypes.DWORD,
+            ctypes.POINTER(wintypes.DWORD),
+            ctypes.POINTER(ctypes.POINTER(ctypes.POINTER(_Credential))),
+        ]
+        self._cred_enumerate.restype = wintypes.BOOL
 
         self._cred_free = advapi32.CredFree
         self._cred_free.argtypes = [ctypes.c_void_p]
@@ -187,6 +210,36 @@ class WindowsCredentialManager:
         if not self._cred_delete(target, self._credential_type_generic, 0):
             raise WindowsCredentialError(_windows_last_error())
 
+    def names(self, target_prefix: str) -> tuple[WindowsCredentialName, ...]:
+        """Return the target and user names of every generic credential whose target starts with ``target_prefix``.
+
+        The native call returns whole credential copies. Only ``TargetName``,
+        ``UserName`` and ``Type`` are read; the secret blob is never touched,
+        and the array is released on every path.
+        """
+        if not target_prefix or "*" in target_prefix:
+            raise InvalidWindowsCredentialError
+        count = self._dword_type(0)
+        array = cast(Any, ctypes.POINTER(ctypes.POINTER(self._credential_type))())
+        if not self._cred_enumerate(target_prefix + "*", 0, ctypes.byref(count), ctypes.byref(array)):
+            winerror = _windows_last_error()
+            if winerror == _ERROR_NOT_FOUND:
+                return ()
+            raise WindowsCredentialError(winerror)
+        try:
+            names: list[WindowsCredentialName] = []
+            for index in range(int(count.value)):
+                credential = array[index].contents
+                target = credential.TargetName
+                if int(credential.Type) != self._credential_type_generic or not isinstance(target, str):
+                    continue
+                if target.startswith(target_prefix):
+                    user = credential.UserName
+                    names.append(WindowsCredentialName(target=target, user=user if isinstance(user, str) else None))
+            return tuple(names)
+        finally:
+            self._cred_free(ctypes.cast(array, ctypes.c_void_p))
+
 
 def windows_credential_api() -> _WindowsCredentialApi:
     """Create the native API wrapper only after the caller checks the platform."""
@@ -254,6 +307,17 @@ class WindowsAutomationSecretStore:
                 raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE) from None
         if self.read(namespace, account) is not None:
             raise AutomationCustodyError(AutomationCustodyCode.INVALID)
+
+    def list_accounts(self, namespace: str, account_prefix: str) -> tuple[str, ...]:
+        """Return the account names under ``namespace`` that start with ``account_prefix``; never a secret."""
+        prefix = self._target(namespace, account_prefix)
+        try:
+            names = self._api().names(prefix)
+        except WindowsCredentialError:
+            raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE) from None
+        except InvalidWindowsCredentialError:
+            raise AutomationCustodyError(AutomationCustodyCode.INVALID) from None
+        return tuple(sorted({name.target[len(namespace) + 1 :] for name in names}))
 
 
 def native_automation_secret_store(backend: NativeSecretBackend) -> AutomationSecretStore:
