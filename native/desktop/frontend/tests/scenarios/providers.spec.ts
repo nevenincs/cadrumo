@@ -1,11 +1,14 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import {
-  FIXTURE_SETTINGS_LANES,
   FIXTURE_SIGN_IN_PROVIDERS,
+  settingsLanesUnderEngine,
 } from "../../src/dev/providerSettingsFixture";
 import { SERVED_ENGINE } from "../support/servedLocalLanes";
 import { connectionLabel } from "../support/connection";
 import { label } from "../support/strings";
+
+/** The settings lanes the service serves under the engine the scenarios run. */
+const SERVED_LANES = settingsLanesUnderEngine(SERVED_ENGINE);
 
 // The agent's settings: the signed-in profile's model providers, one card
 // for each lane cadrumo-agent has, named as the catalog names it and drawn
@@ -42,8 +45,7 @@ const providerGroup = (target: Page, provider: string) =>
   settings(target).locator(`li[data-provider="${provider}"]`);
 
 const nameOf = (id: string) =>
-  FIXTURE_SETTINGS_LANES.find((declared) => declared.id === id)?.display_name ??
-  id;
+  SERVED_LANES.find((declared) => declared.id === id)?.display_name ?? id;
 
 type Status =
   "ready" | "saved" | "not_checked" | "setup_needed" | "sign_in_needed" | "off";
@@ -92,12 +94,12 @@ async function expectStatus(card: Locator, status: Status) {
   expect(spoken?.height).toBeLessThanOrEqual(1);
 }
 
-const signInCapableLane = FIXTURE_SETTINGS_LANES.find(
+const signInCapableLane = SERVED_LANES.find(
   (declared) =>
     declared.auth_kind === "provider_sign_in_only" &&
     FIXTURE_SIGN_IN_PROVIDERS.includes(declared.provider),
 )!;
-const signInUnavailableLanes = FIXTURE_SETTINGS_LANES.filter(
+const signInUnavailableLanes = SERVED_LANES.filter(
   (declared) =>
     declared.auth_kind === "provider_sign_in_only" &&
     !FIXTURE_SIGN_IN_PROVIDERS.includes(declared.provider),
@@ -189,10 +191,10 @@ test("providers start collapsed and keep each connection separately accessible",
   // One group for each provider, initially collapsed, with each connection
   // still present under the disclosure.
   await expect(settings(target).locator("li[data-provider]")).toHaveCount(
-    new Set(FIXTURE_SETTINGS_LANES.map((declared) => declared.provider)).size,
+    new Set(SERVED_LANES.map((declared) => declared.provider)).size,
   );
   await expect(settings(target).locator("[data-lane]")).toHaveCount(
-    FIXTURE_SETTINGS_LANES.length,
+    SERVED_LANES.length,
   );
   await expect(
     settings(target).locator("li[data-provider] > details[open]"),
@@ -202,7 +204,7 @@ test("providers start collapsed and keep each connection separately accessible",
     .evaluateAll((nodes) =>
       nodes.forEach((node) => ((node as HTMLDetailsElement).open = true)),
     );
-  for (const declared of FIXTURE_SETTINGS_LANES) {
+  for (const declared of SERVED_LANES) {
     const card = lane(target, declared.id);
     await expect(card).toHaveCount(1);
     await expect(card.getByRole("heading", { level: 5 })).toHaveText(
@@ -244,7 +246,7 @@ test("providers start collapsed and keep each connection separately accessible",
     ),
   ).toHaveCount(1);
   const words: { text: string; keyless: boolean }[] = [];
-  for (const declared of FIXTURE_SETTINGS_LANES) {
+  for (const declared of SERVED_LANES) {
     const card = lane(target, declared.id);
     const keyless = declared.auth_kind === "none";
     words.push({
@@ -306,7 +308,7 @@ test("a connection is drawn only when ready or waiting on the person, and is qui
   // The collapsed group says the same for each of its connections: the
   // connection's name, the same glyph or none, and the status in words only
   // for a screen reader.
-  for (const declared of FIXTURE_SETTINGS_LANES) {
+  for (const declared of SERVED_LANES) {
     const chip = providerGroup(target, declared.provider).locator(
       `summary [data-lane-summary="${declared.id}"]`,
     );
@@ -362,7 +364,7 @@ test("settings search finds providers and agent keys", async ({
   await expect(providerGroup(target, "alpha")).toBeHidden();
 
   await search.fill(label("desktop.providers.connection_api"));
-  for (const declared of FIXTURE_SETTINGS_LANES) {
+  for (const declared of SERVED_LANES) {
     const connection = lane(target, declared.id);
     await expect(connection).toHaveCount(1);
     // The search matches the words a connection is shown with.
@@ -371,7 +373,7 @@ test("settings search finds providers and agent keys", async ({
     else await expect(connection).toBeHidden();
   }
   // A lane that takes no key is found by the words it is shown with.
-  const keyless = FIXTURE_SETTINGS_LANES.filter(
+  const keyless = SERVED_LANES.filter(
     (declared) => declared.auth_kind === "none",
   );
   expect(keyless.length).toBeGreaterThan(0);
@@ -459,8 +461,8 @@ for (const language of ["es", "hu"] as const) {
     const providerSettings = settings(target, language);
     await expect(providerSettings).toBeVisible();
 
-    const gamma = FIXTURE_SETTINGS_LANES[0]!;
-    const alpha = FIXTURE_SETTINGS_LANES.find(
+    const gamma = SERVED_LANES[0]!;
+    const alpha = SERVED_LANES.find(
       (declared) => declared.display_name === "Example Alpha",
     )!;
     const measureGroup = async (provider: string) =>
@@ -538,7 +540,7 @@ test("a lane with an app says in plain words where it stands, and the API lane s
   await open(target);
   await openSettings(target);
   await expect(settings(target).locator("[data-lane]")).toHaveCount(
-    FIXTURE_SETTINGS_LANES.length,
+    SERVED_LANES.length,
   );
   const cards = await settings(target)
     .locator("[data-lane]")
@@ -551,7 +553,7 @@ test("a lane with an app says in plain words where it stands, and the API lane s
   // The backend has no safe check yet of a provider's app: a lane that only
   // signs in through it asks for that sign-in, and none says an app is
   // missing.
-  for (const declared of FIXTURE_SETTINGS_LANES) {
+  for (const declared of SERVED_LANES) {
     const text = cards.find((card) => card.id === declared.id)?.text ?? "";
     expect(text, declared.id).not.toContain(
       label("desktop.providers.detail_app_missing", {
@@ -635,7 +637,7 @@ test("a gateway takes its address, and one with no default needs it", async ({
   await open(target);
   await openSettings(target);
   // With a default, the address may be left empty.
-  const gateway = FIXTURE_SETTINGS_LANES.find(
+  const gateway = SERVED_LANES.find(
     (declared) => declared.provider === "gateway",
   );
   expect(gateway?.default_base_url).toBeTruthy();
@@ -701,7 +703,7 @@ test("every connection has one switch, apart from its setup, and one turned off 
   await open(target);
   await openSettings(target);
   // The same one switch on every connection, whatever it signs in with.
-  for (const declared of FIXTURE_SETTINGS_LANES)
+  for (const declared of SERVED_LANES)
     await expect(
       lane(target, declared.id).getByRole("switch"),
       declared.id,
