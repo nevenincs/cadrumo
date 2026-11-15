@@ -614,7 +614,10 @@ test("a local AI whose server sleeps until a document is read reads ready and st
   page: target,
 }) => {
   await open(target, "dormant");
-  await openLocalAi(target);
+  // Everything is set up, so the panel stays closed until asked for.
+  await expect(panel(target)).toHaveCount(0);
+  await (await palette(target, paletteItem(LOCAL_AI))).click();
+  await expect(programRow(target)).toBeVisible();
   const sentence = label("desktop.setup.ready_dormant");
   await expect(programRow(target)).toContainText(sentence);
   await once(localAi(target), sentence);
