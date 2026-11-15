@@ -310,6 +310,154 @@ for (const shape of SHAPES) {
       ).toBeVisible();
     });
 
+    test("the dialog states its live attempt and its failure as data, and a retry is a different attempt", async ({
+      page: target,
+    }) => {
+      await prepare(target, shape);
+      const dialog = await startSignIn(target, shape);
+      const dead = await observedAttempt(target);
+      await expect(dialog.locator("[data-attempt-id]")).toHaveAttribute(
+        "data-attempt-id",
+        dead,
+      );
+      await target.evaluate(
+        (logRef) =>
+          window.__scenarioProviderSignIn!.failCurrentAttempt({
+            reason: "provider_error",
+            cause: "cli_reported_error",
+            next_step: "retry",
+            status_cause: "status_not_confirmed",
+            log_ref: logRef,
+          }),
+        LOG_REF,
+      );
+      const alert = dialog.locator('p[role="alert"]');
+      await expect(alert).toHaveAttribute("data-reason", "provider_error");
+      await expect(alert).toHaveAttribute("data-cause", "cli_reported_error");
+      await expect(alert).toHaveAttribute("data-next-step", "retry");
+      await expect(alert).toHaveAttribute("data-log-ref", LOG_REF);
+      // A failed attempt is no longer live.
+      await expect(dialog.locator("[data-attempt-id]")).toHaveCount(0);
+      await dialog
+        .getByRole("button", { name: label("desktop.providers.sign_in_retry") })
+        .click();
+      const fresh = dialog.locator("[data-attempt-id]");
+      await expect(fresh).toHaveCount(1);
+      const id = await fresh.getAttribute("data-attempt-id");
+      expect(id).toMatch(/^[0-9a-f-]{36}$/);
+      expect(id).not.toBe(dead);
+      await expect(dialog.locator('p[role="alert"]')).toHaveCount(0);
+    });
+
+    test("a failure with no cause or log reference states only its reason as data", async ({
+      page: target,
+    }) => {
+      await prepare(target, shape);
+      await target.evaluate(() =>
+        window.__scenarioProviderSignIn!.rejectNextStart("busy"),
+      );
+      const dialog = await startSignIn(target, shape);
+      const alert = dialog.locator('p[role="alert"]');
+      await expect(alert).toHaveAttribute("data-reason", "busy");
+      await expect(alert).not.toHaveAttribute("data-cause", /.*/);
+      await expect(alert).not.toHaveAttribute("data-next-step", /.*/);
+      await expect(alert).not.toHaveAttribute("data-log-ref", /.*/);
+    });
+
+    test("the window's own timeout says the last cause and log reference it was told, and none it was not", async ({
+      page: target,
+    }) => {
+      await target.clock.install();
+      await prepare(target, shape);
+      const dialog = await startSignIn(target, shape);
+      const dead = await observedAttempt(target);
+      await target.evaluate(
+        (logRef) =>
+          window.__scenarioProviderSignIn!.noteCurrentAttempt({
+            cause: "login_not_completed",
+            next_step: "retry",
+            log_ref: logRef,
+          }),
+        LOG_REF,
+      );
+      // The next status read carries the note.
+      const reads = async () =>
+        (await signInCalls(target)).filter(
+          (call) => call.op === "status" && call.attempt_id === dead,
+        ).length;
+      const before = await reads();
+      await target.clock.runFor(2_500);
+      await expect.poll(reads).toBeGreaterThan(before);
+      await target.clock.fastForward("05:10");
+      const alert = dialog.locator('p[role="alert"]').first();
+      await expect(alert).toContainText(
+        label("desktop.providers.sign_in_timeout"),
+      );
+      await expect(alert).toHaveAttribute("data-reason", "timeout");
+      await expect(alert).toHaveAttribute("data-cause", "login_not_completed");
+      await expect(alert).toHaveAttribute("data-next-step", "retry");
+      await expect(alert).toHaveAttribute("data-log-ref", LOG_REF);
+      await expect(dialog).toContainText(
+        label("desktop.providers.sign_in_cause.login_not_completed"),
+      );
+      await expect(dialog).toContainText(
+        label("desktop.providers.next_step.retry"),
+      );
+      await expectLogRef(dialog);
+    });
+
+    test("a timeout shows what the cancel it sends is answered with, and invents nothing when nothing is said", async ({
+      page: target,
+    }) => {
+      await target.clock.install();
+      await prepare(target, shape);
+      const dialog = await startSignIn(target, shape);
+      await observedAttempt(target);
+      await target.evaluate(
+        (logRef) =>
+          window.__scenarioProviderSignIn!.answerNextCancelWith({
+            cause: "cleanup_unconfirmed",
+            next_step: "close_other_sign_in",
+            log_ref: logRef,
+          }),
+        LOG_REF,
+      );
+      await target.clock.fastForward("05:10");
+      const alert = dialog.locator('p[role="alert"]').first();
+      await expect(alert).toContainText(
+        label("desktop.providers.sign_in_timeout"),
+      );
+      await expect(alert).toHaveAttribute("data-cause", "cleanup_unconfirmed");
+      await expect(alert).toHaveAttribute("data-log-ref", LOG_REF);
+      await expect(dialog).toContainText(
+        label("desktop.providers.sign_in_cause.cleanup_unconfirmed"),
+      );
+      await expectLogRef(dialog);
+    });
+
+    test("a timeout of an attempt about which nothing was said states no cause", async ({
+      page: target,
+    }) => {
+      await target.clock.install();
+      await prepare(target, shape);
+      const dialog = await startSignIn(target, shape);
+      await observedAttempt(target);
+      await target.clock.fastForward("05:10");
+      const alert = dialog.locator('p[role="alert"]').first();
+      await expect(alert).toContainText(
+        label("desktop.providers.sign_in_timeout"),
+      );
+      await expect(alert).toHaveAttribute("data-reason", "timeout");
+      await expect(alert).not.toHaveAttribute("data-cause", /.*/);
+      await expect(alert).not.toHaveAttribute("data-log-ref", /.*/);
+      await expect(dialog.locator('[data-slot="sign-in-log-ref"]')).toHaveCount(
+        0,
+      );
+      await expect(dialog.locator('[data-slot="sign-in-advice"]')).toHaveCount(
+        0,
+      );
+    });
+
     test("a refused code says why, and Retry starts afresh without asking about the abandoned attempt", async ({
       page: target,
     }) => {
