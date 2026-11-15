@@ -51,7 +51,7 @@ import { Details, type OpenableSurface } from "../details/Details";
 import { TodoRail } from "../details/TodoRail";
 import { FilingView } from "../dialogs/FilingView";
 import { runOperation, type OperationRun } from "../dialogs/operationRun";
-import { answersFor, withFilingState } from "./filingStateRead";
+import { useRereadFiling } from "./useRereadFiling";
 import { runNotice } from "./runNotice";
 import {
   createModeloWriteHolds,
@@ -151,8 +151,9 @@ function Ready({
   /** Reads the declaration again; false when the read failed and the one
    * shown stays. */
   reread(): Promise<boolean>;
-  /** Reads what the Export and record view rests on; false when it failed. */
-  rereadFiling(): Promise<boolean>;
+  /** Reads what the Export and record view rests on, and the whole
+   * declaration behind it with `whole`; false when it failed. */
+  rereadFiling(whole?: boolean): Promise<boolean>;
   onBack(): void;
   onOpenSurface(surface: OpenableSurface): void;
   canOpenSurface: (surface: OpenableSurface) => boolean;
@@ -1364,46 +1365,22 @@ export function WorkspaceScreen({
     newest.current = { ticket, result };
     return result;
   }, [port, workUnitId, language, holds, target, kept]);
-  // After an export, a filing or a receipt the Export and record view reads
-  // only the filing state; a read that does not settle, or answers for
-  // another declaration, falls back to the whole read.
-  const rereadFiling = useCallback(async () => {
-    const base = shownEnvelope.current;
-    if (!base) return reread();
-    const ticket = ++latest.current;
-    const before = holds.get(target);
-    const marked = before ? holds.readBegan(before) : false;
-    const overtaken = () =>
-      newest.current !== null && newest.current.ticket > ticket
-        ? newest.current.result
-        : false;
-    const result = (async () => {
-      try {
-        const run = await runOperation(
-          port,
-          () =>
-            port.submit("modelo.work.filing_state", {
-              work_unit_id: workUnitId,
-              output_language: language,
-            }),
-          () => ticket === latest.current,
-        );
-        if (ticket !== latest.current) return overtaken();
-        if (run.kind !== "settled" || !answersFor(base, run.result))
-          return await reread();
-        const next = withFilingState(base, run.result);
-        shownEnvelope.current = next;
-        if (kept) kept.form = { workUnitId, language, envelope: next };
-        setRead({ phase: "ready", envelope: next });
-        if (before) holds.readCompleted(before);
-        return true;
-      } finally {
-        if (marked && before) holds.readEnded(before);
-      }
-    })();
-    newest.current = { ticket, result };
-    return result;
-  }, [port, workUnitId, language, holds, target, kept, reread]);
+  const show = useCallback(
+    (envelope: ModeloWorkbenchFormProjectionV1) =>
+      setRead({ phase: "ready", envelope }),
+    [],
+  );
+  const rereadFiling = useRereadFiling({
+    port,
+    workUnitId,
+    language,
+    holds,
+    target,
+    kept,
+    reads: { latest, newest, shownEnvelope },
+    reread,
+    show,
+  });
   const reloadHold = useCallback(
     async (hold: ModeloWriteHold) => {
       if (hold.phase !== "refresh") return false;

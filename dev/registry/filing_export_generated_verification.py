@@ -113,7 +113,7 @@ def verify_generated_revision(
     verified = verify_export_fragment_provenance_manifest(
         export_root=export_root,
         joined=joined,
-        semantic_map=semantic_map,
+        semantic_map=joined.compiled_semantic_map or semantic_map,
         target=ExportFragmentTarget(
             modelo=entry.modelo,
             revision_id=entry.revision,
