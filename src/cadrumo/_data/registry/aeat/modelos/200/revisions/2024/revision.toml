@@ -3822,3 +3822,68 @@ id = "DP200018:00315"
 revision = "2023"
 id = "DP200018:00316"
 
+
+[[revisions."2024".casilla_removals]]
+[revisions."2024".casilla_removals.selector]
+revision = "2023"
+id = "DP200018B:01987"
+
+[[revisions."2024".casilla_removals]]
+[revisions."2024".casilla_removals.selector]
+revision = "2023"
+id = "DP200018B:01995"
+
+[[revisions."2024".casilla_removals]]
+[revisions."2024".casilla_removals.selector]
+revision = "2023"
+id = "DP200018B:01996"
+
+[[revisions."2024".casilla_removals]]
+[revisions."2024".casilla_removals.selector]
+revision = "2023"
+id = "DP200018B:02000"
+
+[[revisions."2024".casilla_removals]]
+[revisions."2024".casilla_removals.selector]
+revision = "2023"
+id = "DP200018B:02024"
+
+[[revisions."2024".casilla_removals]]
+[revisions."2024".casilla_removals.selector]
+revision = "2023"
+id = "DP200018B:02025"
+
+[[revisions."2024".casilla_removals]]
+[revisions."2024".casilla_removals.selector]
+revision = "2023"
+id = "DP200018C:01689"
+
+[[revisions."2024".casilla_removals]]
+[revisions."2024".casilla_removals.selector]
+revision = "2023"
+id = "DP200018C:01690"
+
+[[revisions."2024".casilla_removals]]
+[revisions."2024".casilla_removals.selector]
+revision = "2023"
+id = "DP200018C:01691"
+
+[[revisions."2024".casilla_removals]]
+[revisions."2024".casilla_removals.selector]
+revision = "2023"
+id = "DP200018C:01701"
+
+[[revisions."2024".casilla_removals]]
+[revisions."2024".casilla_removals.selector]
+revision = "2023"
+id = "DP200018C:01702"
+
+[[revisions."2024".casilla_removals]]
+[revisions."2024".casilla_removals.selector]
+revision = "2023"
+id = "DP200018C:01703"
+
+[[revisions."2024".casilla_removals]]
+[revisions."2024".casilla_removals.selector]
+revision = "2023"
+id = "DP200022:01936"
