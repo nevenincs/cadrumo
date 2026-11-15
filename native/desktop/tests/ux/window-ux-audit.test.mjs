@@ -2474,6 +2474,8 @@ ux("UX-24 a single click opens a Modelo view tab", async (t) => {
 });
 
 let exportRun = null;
+// The work-form read that followed UX-22's export, as UX-23 measured it.
+let postExportRead = null;
 
 /** The operations the run's runtime settled, from its log: when, which definition, how. */
 function settledOperations() {
@@ -2657,6 +2659,9 @@ ux(
         )
       : undefined;
     const openedAt = exportRun.at + last.atMs;
+    postExportRead = reread
+      ? { ms: reread.at - exported.at, condition: reread.condition }
+      : null;
     const closed = samples.filter((s) => s.buttonShown && s.disabled);
     const silent = closed.filter((s) => !s.saysBusy);
     const opened = last.buttonShown && !last.disabled;
@@ -2714,5 +2719,72 @@ ux(
       [],
       `record-as-filed is not available 5 s after the export without reading the declaration again: ${failures.join("; ")}`,
     );
+  },
+);
+
+ux(
+  "UX-25 the Modelo form is read again quickly after an export and after a page return",
+  async (t) => {
+    // The runtime log has one settle line per operation and no start line, so a
+    // read's time runs from the event that asks for it: the export's own
+    // settlement (UX-23) and the press that returns to the page (here).
+    await open("100");
+    await chooseTab(VIEWS, label("desktop.modelo.view.form"));
+    const away = await openRailPage("ledger", "section.ledger-page");
+    if (!away.reached)
+      assert.fail(`UNMEASURED: the page was not left: ${away.reason}`);
+    await sleep(700);
+    const pressed = Date.now();
+    const back = await openRailPage("declarations", SECTION);
+    if (!back.reached) await openDeclaration(rowOf("100"));
+    const read = await waitFor(
+      async () =>
+        settledOperations().find(
+          (op) => op.definition === "modelo.work.form" && op.at > pressed,
+        ) ?? null,
+      {
+        timeout: 60_000,
+        what: "the work-form read after the page return",
+        soft: true,
+        interval: 250,
+      },
+    );
+    const pageReturn = read
+      ? { ms: read.at - pressed, condition: read.condition }
+      : null;
+    report(t, {
+      probe: "form-read-timing",
+      postExport: postExportRead,
+      pageReturn,
+      bounds: { postExportMs: 1000, pageReturnMs: 3000 },
+    });
+    const failures = [];
+    if (!postExportRead)
+      unmeasured(
+        t,
+        "post-export-read",
+        null,
+        "UX-23 saw no post-export re-read",
+      );
+    else if (postExportRead.condition !== "succeeded")
+      failures.push(`the post-export re-read ${postExportRead.condition}`);
+    else if (postExportRead.ms >= 1000)
+      failures.push(
+        `the post-export re-read took ${postExportRead.ms} ms (bound 1000)`,
+      );
+    if (!pageReturn)
+      unmeasured(
+        t,
+        "page-return-read",
+        null,
+        "no work-form read settled within 60 s of the page return",
+      );
+    else if (pageReturn.condition !== "succeeded")
+      failures.push(`the page-return read ${pageReturn.condition}`);
+    else if (pageReturn.ms >= 3000)
+      failures.push(
+        `the page-return read took ${pageReturn.ms} ms (bound 3000)`,
+      );
+    assert.deepEqual(failures, [], failures.join("; "));
   },
 );
