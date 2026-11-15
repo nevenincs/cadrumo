@@ -15,6 +15,12 @@ fn protocol() -> ApplicationError {
     ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli)
 }
 
+/// A protocol failure that names which check refused the answer, so the host
+/// log tells an unreadable answer from an incoherent one.
+fn protocol_because(reason: &'static str) -> ApplicationError {
+    protocol().with_reason(reason)
+}
+
 /// Why a change was refused, as the stable code the window words.
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "snake_case")]
@@ -26,17 +32,25 @@ pub enum Refusal {
     RevisionConflict,
     CommittedReadbackFailed,
     CatalogUnavailable,
+    ModelListFull,
     RuntimeUnavailable,
     PersonActRequired,
     UnsupportedFlow,
     Busy,
+    InvalidRequest,
+    ServiceFailed,
     Unknown,
 }
 
-/// What a command refuses with. Only the code crosses to the window.
+/// What a command refuses with: the stable code, and when the service served
+/// them the closed cause and the reference of the log line that records it.
 #[derive(Debug, Serialize)]
 pub struct Refused {
     pub code: Refusal,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub cause: Option<SignInCause>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub log_ref: Option<String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -52,7 +66,11 @@ impl From<ApplicationError> for CommandFailure {
 }
 impl From<Refusal> for CommandFailure {
     fn from(code: Refusal) -> Self {
-        Self::Refused(Refused { code })
+        Self::Refused(Refused {
+            code,
+            cause: None,
+            log_ref: None,
+        })
     }
 }
 
@@ -313,6 +331,15 @@ pub enum SignInCause {
     HelperExitNonzero,
     AgentStopFailed,
     StatusNotConfirmed,
+    LaneNotSignable,
+    ProfileSignedOut,
+    SignInInProgress,
+    SignInOwnerHeld,
+    AgentTreeRunning,
+    SettingsRefused,
+    SettingsChangeFailed,
+    PrepareFailed,
+    PreviousCleanupUnconfirmed,
 }
 
 /// The snapshot returned to the person during a provider sign-in attempt.
@@ -334,6 +361,9 @@ pub struct SignInSnapshot {
     /// could not establish it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub status_cause: Option<CliStateCause>,
+    /// The reference of the log line that records this failure.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub log_ref: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub url: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -358,6 +388,15 @@ pub fn is_attempt_id(text: &str) -> bool {
             8 | 13 | 18 | 23 => *byte == b'-',
             _ => byte.is_ascii_digit() || (b'a'..=b'f').contains(byte),
         })
+}
+
+/// A log reference: the lower-case UUID the service puts in a log line and in
+/// what it serves for that failure.
+pub fn is_log_ref(text: &str) -> bool {
+    (1..=36).contains(&text.len())
+        && text
+            .bytes()
+            .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b) || b == b'-')
 }
 
 fn is_https_url(text: &str) -> bool {
@@ -431,8 +470,10 @@ impl SignInSnapshot {
             && ((self.reason.is_none()
                 && self.cause.is_none()
                 && self.next_step.is_none()
-                && self.status_cause.is_none())
+                && self.status_cause.is_none()
+                && self.log_ref.is_none())
                 || matches!(self.event, SignInEvent::Cancelled | SignInEvent::Failed))
+            && self.log_ref.as_deref().is_none_or(is_log_ref)
             && (self
                 .url
                 .as_ref()
@@ -452,13 +493,15 @@ pub fn sign_in_snapshot(
     expected_provider: Option<&str>,
     expected_attempt: Option<&str>,
 ) -> Result<SignInSnapshot, CommandFailure> {
-    let snapshot: SignInSnapshot =
-        serde_json::from_value(result_of(outcome)?).map_err(|_| protocol())?;
-    let snapshot = snapshot.checked()?;
+    let snapshot: SignInSnapshot = serde_json::from_value(result_of(outcome)?)
+        .map_err(|_| protocol_because("sign_in_snapshot_unreadable"))?;
+    let snapshot = snapshot
+        .checked()
+        .map_err(|_| protocol_because("sign_in_snapshot_incoherent"))?;
     if expected_provider.is_some_and(|provider| snapshot.provider != provider)
         || expected_attempt.is_some_and(|attempt| snapshot.attempt_id != attempt)
     {
-        return Err(protocol().into());
+        return Err(protocol_because("sign_in_snapshot_not_the_requested_attempt").into());
     }
     Ok(snapshot)
 }
@@ -507,16 +550,32 @@ impl Entry {
 
 /// The refusal a code names, if it is one of the closed set.
 pub fn refusal(code: &str) -> Result<Refusal, ApplicationError> {
-    serde_json::from_value(serde_json::Value::String(code.to_owned())).map_err(|_| protocol())
+    serde_json::from_value(serde_json::Value::String(code.to_owned()))
+        .map_err(|_| protocol_because("refusal_code_not_in_the_closed_set"))
 }
 
-/// A successful envelope can still carry a refusal as its whole result.
-fn refused_result(result: &serde_json::Value) -> Option<Result<Refusal, ApplicationError>> {
+/// A successful envelope can still carry a refusal as its whole result: the
+/// code, and optionally the service's closed cause and log reference. A cause
+/// or reference outside its closed form is dropped, never passed on.
+fn refused_result(result: &serde_json::Value) -> Option<Result<Refused, ApplicationError>> {
     let object = result.as_object()?;
     let code = object.get("refused")?;
-    Some(match (object.len(), code.as_str()) {
-        (1, Some(code)) => refusal(code),
-        _ => Err(protocol()),
+    let only_refusal_fields = object
+        .keys()
+        .all(|key| matches!(key.as_str(), "refused" | "cause" | "log_ref"));
+    Some(match code.as_str() {
+        Some(code) if only_refusal_fields => refusal(code).map(|code| Refused {
+            code,
+            cause: object
+                .get("cause")
+                .and_then(|cause| serde_json::from_value(cause.clone()).ok()),
+            log_ref: object
+                .get("log_ref")
+                .and_then(serde_json::Value::as_str)
+                .filter(|text| is_log_ref(text))
+                .map(str::to_owned),
+        }),
+        _ => Err(protocol_because("refusal_not_closed")),
     })
 }
 
@@ -524,7 +583,7 @@ fn result_of(outcome: Outcome) -> Result<serde_json::Value, CommandFailure> {
     match outcome {
         Outcome::Refused { refusal: row, .. } => Err(refusal(&row.code)?.into()),
         Outcome::Success { result, .. } => match refused_result(&result) {
-            Some(code) => Err(code?.into()),
+            Some(refused) => Err(CommandFailure::Refused(refused?)),
             None => Ok(result),
         },
     }
@@ -532,7 +591,8 @@ fn result_of(outcome: Outcome) -> Result<serde_json::Value, CommandFailure> {
 
 /// Every provider the profile lists.
 pub fn status(outcome: Outcome) -> Result<Status, CommandFailure> {
-    let status: Status = serde_json::from_value(result_of(outcome)?).map_err(|_| protocol())?;
+    let status: Status = serde_json::from_value(result_of(outcome)?)
+        .map_err(|_| protocol_because("status_unreadable"))?;
     let mut seen = BTreeSet::new();
     let mut seen_sign_in = BTreeSet::new();
     let coherent = status.providers.len() <= PROVIDER_LIMIT
@@ -580,7 +640,8 @@ pub fn status(outcome: Outcome) -> Result<Status, CommandFailure> {
 
 /// The new status of the provider a change was made to.
 pub fn changed(outcome: Outcome, provider: &str) -> Result<Entry, CommandFailure> {
-    let entry: Entry = serde_json::from_value(result_of(outcome)?).map_err(|_| protocol())?;
+    let entry: Entry = serde_json::from_value(result_of(outcome)?)
+        .map_err(|_| protocol_because("entry_unreadable"))?;
     let entry = entry.checked()?;
     if entry.id != provider {
         return Err(protocol().into());
@@ -1191,6 +1252,15 @@ mod tests {
             "helper_exit_nonzero",
             "agent_stop_failed",
             "status_not_confirmed",
+            "lane_not_signable",
+            "profile_signed_out",
+            "sign_in_in_progress",
+            "sign_in_owner_held",
+            "agent_tree_running",
+            "settings_refused",
+            "settings_change_failed",
+            "prepare_failed",
+            "previous_cleanup_unconfirmed",
         ] {
             let failed = terminal("failed", json!({"reason": "provider_error", "cause": word}));
             assert_eq!(sent_snapshot(failed)["cause"], word);
@@ -1227,6 +1297,60 @@ mod tests {
             );
             assert_eq!(sent_snapshot(failed)["status_cause"], word);
         }
+    }
+
+    #[test]
+    fn a_failed_sign_in_keeps_the_reference_of_its_log_line() {
+        let failed = terminal(
+            "failed",
+            json!({"reason": "provider_error", "cause": "helper_start_failed", "log_ref": "0a1b2c3d4e5f"}),
+        );
+        assert_eq!(sent_snapshot(failed)["log_ref"], "0a1b2c3d4e5f");
+        let bare = sent_snapshot(terminal("failed", json!({"reason": "provider_error"})));
+        assert!(bare.get("log_ref").is_none());
+        for invalid in [
+            terminal("failed", json!({"log_ref": "NOT A REF"})),
+            terminal("failed", json!({"log_ref": ""})),
+            terminal("failed", json!({"log_ref": 7})),
+            terminal("succeeded", json!({"log_ref": "0a1b2c3d4e5f"})),
+            terminal("started", json!({"log_ref": "0a1b2c3d4e5f"})),
+        ] {
+            assert_eq!(
+                sign_in_failure(sign_in_snapshot(success(invalid.clone()), None, None))["code"],
+                "read_failed",
+                "{invalid}"
+            );
+        }
+    }
+
+    #[test]
+    fn an_unreadable_or_incoherent_snapshot_names_which_check_refused_it() {
+        let reason = |result: Result<SignInSnapshot, CommandFailure>| match result {
+            Err(CommandFailure::Host(error)) => error.reason.map(|reason| reason.to_string()),
+            _ => None,
+        };
+        assert_eq!(
+            reason(sign_in_snapshot(success(json!({"event": 7})), None, None)).as_deref(),
+            Some("sign_in_snapshot_unreadable")
+        );
+        assert_eq!(
+            reason(sign_in_snapshot(
+                success(terminal("succeeded", json!({"cause": "timed_out"}))),
+                None,
+                None
+            ))
+            .as_deref(),
+            Some("sign_in_snapshot_incoherent")
+        );
+        assert_eq!(
+            reason(sign_in_snapshot(
+                success(terminal("started", json!({}))),
+                None,
+                Some("123e4567-e89b-42d3-a456-426614174999")
+            ))
+            .as_deref(),
+            Some("sign_in_snapshot_not_the_requested_attempt")
+        );
     }
 
     #[test]
@@ -1407,6 +1531,8 @@ mod tests {
             "catalog_unavailable",
             "runtime_unavailable",
             "person_act_required",
+            "invalid_request",
+            "service_failed",
             "unknown",
         ] {
             let refused = json!({"refused": code});
@@ -1416,6 +1542,24 @@ mod tests {
             );
             assert_eq!(failed(status(success(refused))), json!({"code": code}));
         }
+    }
+
+    #[test]
+    fn a_refusal_keeps_the_closed_cause_and_log_reference_the_service_served() {
+        let refused =
+            json!({"refused": "busy", "cause": "sign_in_in_progress", "log_ref": "0a1b2c3d4e5f"});
+        assert_eq!(
+            failed(status(success(refused.clone()))),
+            json!({"code": "busy", "cause": "sign_in_in_progress", "log_ref": "0a1b2c3d4e5f"})
+        );
+        assert_eq!(
+            failed(changed(success(refused), "alpha_api")),
+            json!({"code": "busy", "cause": "sign_in_in_progress", "log_ref": "0a1b2c3d4e5f"})
+        );
+        // A word or reference outside its closed form is dropped; the refusal stays.
+        let loose =
+            json!({"refused": "busy", "cause": "raw provider output", "log_ref": "NOT A REF"});
+        assert_eq!(failed(status(success(loose))), json!({"code": "busy"}));
     }
 
     #[test]

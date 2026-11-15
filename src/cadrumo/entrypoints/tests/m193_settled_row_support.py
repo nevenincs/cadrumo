@@ -38,6 +38,7 @@ from cadrumo.core.aggregation import (
     BindingSourceKind,
     RetencionScheme,
 )
+from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.identity.hex_ids import CalculationRevisionId
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -137,8 +138,12 @@ def seed_declarant_retenciones(objects: SecureObjectRepository, *, filing_year: 
 
 def calculate_m193_revision(bucket: M193Bucket) -> CalculationRevision:
     seed_declarant_retenciones(bucket.objects, filing_year=bucket.filing_year)
+    # The declarant pays no gastos rows, and the total nothing derives is stated as the filer would state it.
     revision_id = calculate_without_inputs(
-        bucket_id=BUCKET_ID, objects=bucket.objects, work_unit_id=bucket.work_unit_id
+        bucket_id=BUCKET_ID,
+        objects=bucket.objects,
+        work_unit_id=bucket.work_unit_id,
+        casilla_inputs={validated_casilla_id("decl.gastos-total"): Decimal("0")},
     )
     return stored_revision(bucket, revision_id)
 

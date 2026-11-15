@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 from abc import abstractmethod
+from collections.abc import Callable
 from pathlib import Path
 from threading import Thread
 from time import monotonic
@@ -52,6 +53,7 @@ from .host.launch_environment import (
     auth_browser_executable,
     system_environment,
 )
+from .host.sign_in_refusal import refuse, sign_in_in_flight
 from .host.store_lifecycle import (
     INVOCATION_TERMINATION_TIMEOUT_SECONDS,
     AgentStoreLifecycle,
@@ -110,47 +112,61 @@ class AgentServiceStartup(AgentServiceAdministration):
         with self._guard:
             lease = self.client.lease
             if self._closing.is_set() or lease is None:
-                return {"kind": "refused", "code": "signed_out"}
-            if not self._sign_in_available(provider, gui=gui):
-                return {"kind": "refused", "code": "sign_in_unavailable"}
-            root = profile_agent_root(self._root, lease.profile_id)
-            image = agent_image(agent_root=root)
-            if not self._claim_sign_in_owner(root, gui=gui):
-                return {"kind": "refused", "code": "busy"}
-            if not gui and self._controller is not None:
-                # A terminal login runs only once the tree is gone, and its
-                # retirement takes longer than a request may wait: it is begun
-                # here and announced by the stopped event, and the retry is
-                # prepared at once. Nothing is changed before then.
-                self._schedule_stop()
-                return {"kind": "refused", "code": "busy"}
+                return refuse("signed_out", cause="profile_signed_out", provider=provider)
+            try:
+                return self._prepared_sign_in(provider, lease, expected_revision=expected_revision, gui=gui)
+            except Exception as error:
+                # The exception may carry provider output; only its class name is logged.
+                return refuse("service_failed", cause="prepare_failed", provider=provider, error=error)
+
+    def _prepared_sign_in(self, provider: str, lease: Any, *, expected_revision: str, gui: bool) -> dict[str, Any]:
+        if not self._sign_in_available(provider, gui=gui):
+            return refuse("sign_in_unavailable", cause="lane_not_signable", provider=provider)
+        root = profile_agent_root(self._root, lease.profile_id)
+        image = agent_image(agent_root=root)
+        if not self._claim_sign_in_owner(root, gui=gui):
+            return refuse("busy", cause="sign_in_owner_held", provider=provider)
+        if not gui and self._controller is not None:
+            # A terminal login runs only once the tree is gone, and its
+            # retirement takes longer than a request may wait: it is begun
+            # here and announced by the stopped event, and the retry is
+            # prepared at once. Nothing is changed before then.
+            self._schedule_stop()
+            return refuse("busy", cause="agent_tree_running", provider=provider)
+        try:
             result = self._providers.set_assistant_auth(
                 provider, choice=AssistantAuthChoice.PROVIDER_SIGN_IN, expected_revision=expected_revision
             )
-            if isinstance(result, ProviderSettingsRefusal):
-                return result.model_dump(mode="json")
-            # A browser or device login retires the tree on its own attempt,
-            # before its helper starts, so its request is answered at once.
-            if self._closing.is_set() or self.client.lease != lease:
-                return {"kind": "refused", "code": "signed_out"}
-            environment = self._sign_in_environment(root, gui=gui)
-            return {
-                "kind": "sign_in_prepared",
-                "entry": result.entry.model_dump(mode="json"),
-                "launch": {
-                    "executable": str(image.executable),
-                    "arguments": [*AGENT_COMMAND_LINE, "auth", "login", "--provider", result.entry.provider],
-                    "directory": str(image.directory),
-                    "environment": environment,
-                },
-            }
+        except Exception as error:
+            return refuse("service_failed", cause="settings_change_failed", provider=provider, error=error)
+        if isinstance(result, ProviderSettingsRefusal):
+            dumped = result.model_dump(mode="json")
+            return refuse(dumped["code"], cause="settings_refused", provider=provider, base=dumped)
+        # A browser or device login retires the tree on its own attempt,
+        # before its helper starts, so its request is answered at once.
+        if self._closing.is_set() or self.client.lease != lease:
+            return refuse("signed_out", cause="profile_signed_out", provider=provider)
+        environment = self._sign_in_environment(root, gui=gui)
+        return {
+            "kind": "sign_in_prepared",
+            "entry": result.entry.model_dump(mode="json"),
+            "launch": {
+                "executable": str(image.executable),
+                "arguments": [*AGENT_COMMAND_LINE, "auth", "login", "--provider", result.entry.provider],
+                "directory": str(image.directory),
+                "environment": environment,
+            },
+        }
 
     @override
     def _connect(self, provider: str, *, expected_revision: str, method: str) -> dict[str, Any]:
         """Start a profile-bound helper; its provider owns OAuth and credential storage."""
-        lane = self._catalog.catalog().entry(provider)
-        if lane is None or method not in self._catalog.gui_sign_in_methods().get(lane.provider, ()):
-            return {"kind": "refused", "code": "sign_in_unavailable"}
+        try:
+            lane = self._catalog.catalog().entry(provider)
+            if lane is None or method not in self._catalog.gui_sign_in_methods().get(lane.provider, ()):
+                return refuse("sign_in_unavailable", cause="lane_not_signable", provider=provider)
+        except Exception as error:
+            return refuse("service_failed", cause="prepare_failed", provider=provider, error=error)
         self._auth_resume_valid = None
         lease = self.client.lease
         prepared = self._prepare_sign_in(provider, expected_revision=expected_revision, gui=True)
@@ -158,7 +174,7 @@ class AgentServiceStartup(AgentServiceAdministration):
             return prepared
         generations = self._credentials.current_generations()
         if lease is None or generations is None or self.client.lease != lease:
-            return {"kind": "refused", "code": "signed_out"}
+            return refuse("signed_out", cause="profile_signed_out", provider=provider)
 
         def valid() -> bool:
             if self._closing.is_set() or self.client.lease != lease:
@@ -178,7 +194,33 @@ class AgentServiceStartup(AgentServiceAdministration):
             )
 
         launch = prepared["launch"]
-        attempt = AuthAttempt(
+        try:
+            attempt = self._new_attempt(provider, prepared, method, launch, valid, confirm)
+        except Exception as error:
+            return refuse("service_failed", cause="prepare_failed", provider=provider, error=error)
+        self._auth_attempt = attempt
+        self._auth_resume_valid = valid
+        self._forget_reads()
+        return attempt.observe()
+
+    def _new_attempt(
+        self,
+        provider: str,
+        prepared: dict[str, Any],
+        method: str,
+        launch: dict[str, Any],
+        valid: Callable[[], bool],
+        confirm: Callable[[], tuple[bool, str | None]],
+    ) -> AuthAttempt:
+        """Start a fresh attempt; the ended one it replaces is closed first and never decides the new one."""
+        previous = self._auth_attempt
+        if previous is not None:
+            self._auth_attempt = None
+            try:
+                previous.close()
+            except RuntimeError:
+                self._abandoned_attempts.append(previous)
+        return AuthAttempt(
             provider=prepared["entry"]["provider"],
             lane=provider,
             executable=Path(launch["executable"]),
@@ -201,10 +243,6 @@ class AgentServiceStartup(AgentServiceAdministration):
             prepare=self.stop,
             confirm=confirm,
         )
-        self._auth_attempt = attempt
-        self._auth_resume_valid = valid
-        self._forget_reads()
-        return attempt.observe()
 
     def _sign_in_settled(self) -> None:
         """Serve no kept read of a login that has just ended, then wake the service."""
@@ -327,9 +365,8 @@ class AgentServiceStartup(AgentServiceAdministration):
         if self._reconnecting.is_set():
             # The credentials cannot be read until the lease returns, which is no sign-out: ask again.
             return {"event": "refused", "code": "busy"}
-        if self._auth_attempt is not None and self._auth_attempt.active:
-            return {"event": "refused", "code": "busy"}
-        return None
+        blocks, self._auth_attempt = sign_in_in_flight(self._auth_attempt, self._abandoned_attempts)
+        return {"event": "refused", "code": "busy"} if blocks else None
 
     def _existing_ready(self, deadline: TimeoutDeadline) -> AgentReady | None:
         if self._controller is not None:

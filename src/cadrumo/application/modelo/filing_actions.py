@@ -250,6 +250,7 @@ def _load_filing_context(
                 verification_repository=ports.verification_repository,
                 credit_resolutions=ports.credit_resolution_reader,
                 operation=operation,
+                calculation_catalogue=revisions,
             ),
             stage=ModeloAssumedValueStage.FILE,
         )
