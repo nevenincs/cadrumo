@@ -5087,6 +5087,7 @@ desktop:
     action_unroutable: No està disponible aquí.
   session:
     enter_restarts: Retorn el reinicia
+    environment_changed: L'entorn ha canviat. Reinicia la consola per fer-lo servir.
     exit_line: '[El procés ha acabat amb el codi {code}. Prem Retorn per tornar a
       començar.]'
     exited: ha acabat ({code})
@@ -5101,6 +5102,7 @@ desktop:
       slow: ha trigat massa
       start: no s'ha pogut iniciar el programa
       stopped: el programa s'ha aturat amb un error
+    restart_console: Reiniciar la consola
   settings:
     agent_search: Cerca als ajustos
     agent_search_empty: No hi ha ajustos coincidents. Prova una altra cerca.
