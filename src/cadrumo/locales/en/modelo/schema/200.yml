@@ -3929,17 +3929,19 @@ modelo:
           02029:
             help: Deduction pending or generated - Open Barcelona-Trofeo Conde de
               Godó (OB)
-            label: Open Barcelona-Trofeo Conde de Godó (OB). Deduction pending or
-              generated
+            label: 'Deductions to incentivise certain activities - 2023: Open Barcelona-Trofeo
+              Conde de Godó (OB) - Deduction carried forward/generated [02029]'
           '02030':
             help: Applied in this settlement - Open Barcelona-Trofeo Conde de Godó
               (OB)
-            label: Open Barcelona-Trofeo Conde de Godó (OB). Applied in this settlement
+            label: 'Deductions to incentivise certain activities - 2023: Open Barcelona-Trofeo
+              Conde de Godó (OB) - Applied in this settlement [02030]'
           '02031':
             help: Pending application in future periods - Open Barcelona-Trofeo Conde
               de Godó (OB)
-            label: Open Barcelona-Trofeo Conde de Godó (OB). Pending application in
-              future periods
+            label: 'Deductions to incentivise certain activities - 2023: Open Barcelona-Trofeo
+              Conde de Godó (OB) - Carried forward for application in future periods
+              [02031]'
           '02032':
             help: Deduction pending or generated - 125 aniversario del Real Club de
               Tenis Barcelona (TB)
@@ -11050,6 +11052,45 @@ modelo:
           levelling-reserve-2020-addition-remaining:
             label: Levelling reserve - Reduction of the taxable base - Year of generation
               2020 - Amount pending addition in future periods [02412]
+          m200-dp200018b-02445-2023:
+            label: Deductions for foreign film productions in the Canary Islands (art.
+              36.2 LIS and Additional Provision 14 Law 19/1994) - 2023 - Deduction
+              carried forward/generated [02445]
+          m200-dp200018b-02466-2023:
+            label: Deductions for foreign film productions in the Canary Islands (art.
+              36.2 LIS and 14th Additional Provision, Law 19/1994) - 2023 - Applied
+              in this return [02466]
+          m200-dp200018b-02467-2023:
+            label: Deductions for foreign film productions in the Canary Islands (art.
+              36.2 LIS and 14th Additional Provision, Law 19/1994) - 2023 - Amount
+              paid due to insufficient tax liability [02467]
+          m200-dp200018b-02468-2023:
+            label: Deductions for foreign film productions in the Canary Islands (art.
+              36.2 LIS and 14th Additional Provision, Law 19/1994) - 2023 - Carried
+              forward for application in future periods [02468]
+          m200-dp200020-02766-2023:
+            label: Limitation on deductibility of financial expenses. Financial expenses
+              pending deduction - Year of generation 2023(**) - Applied in this return
+              [02766]
+          m200-dp200020-02767-2023:
+            label: Limitation on deductibility of financial expenses. Financial expenses
+              pending deduction - Year of generation 2023(**) - Pending application
+              in future periods - Due to limit [02767]
+          m200-dp200020-02768-2023:
+            label: Limitation on deductibility of financial expenses. Financial expenses
+              pending deduction - Year of generation 2023(**) - Pending application
+              in future periods - Remainder [02768]
+          m200-dp200020-02769-2023:
+            label: Carried forward for addition due to unapplied operating-profit
+              limit - Year of generation 2023(**) - Carried forward at the start of
+              the period [02769]
+          m200-dp200020-02770-2023:
+            label: Carried forward for addition due to unapplied operating-profit
+              limit - Year of generation 2023(**) - Applied in this return [02770]
+          m200-dp200020-02772-2023:
+            label: Carried forward for addition due to unapplied operating-profit
+              limit - Year of generation 2023(**) - Carried forward for application
+              in future periods [02772]
           ordinary-donation-2014-applied:
             label: Deduction for donations to non-profit entities - General donations
               - 2014 - Applied in this settlement [00998]
@@ -11641,10 +11682,79 @@ modelo:
                 priority patronage activities and others entitled to increased deduction
                 - 2021 - With repeated donations to the same entity - Carried forward
                 for application in future periods [01036]
+            '01061':
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - 2022(*) without repeated donations to the same entity - Deduction
+                carried forward/generated [01061]
+            '01062':
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - 2022(*) without repeated donations to the same entity - Applied
+                in this settlement [01062]
+            '01072':
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - 2022(*) without repeated donations to the same entity - Carried
+                forward for application in future periods [01072]
+            '01074':
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - 2022(*) - With repeated donations to the same entity - Applied in
+                this settlement [01074]
+            01078:
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - 2022(*) - With repeated donations to the same entity - Carried forward
+                for application in future periods [01078]
             01081:
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others entitled to increased deduction
                 - Total - Carried forward for application in future periods [01081]
+            '01117':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2022(*) - Total DTAs (art. 130.6 a) pending application
+                at the start of the period [01117]
+            01119:
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2022(*) - DTAs pending application at the start
+                of the period - With a right of conversion into a claimable credit
+                [01119]
+            '01120':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2022(*) - DTAs pending application at the start
+                of the period - With a right of conversion into a claimable credit
+                for excess tax due [01120]
+            '01121':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2022(*) - DTAs pending application at the start
+                of the period - Without a right of conversion into a claimable credit
+                [01121]
+            '01122':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2022(*) - DTAs converted into a claimable credit
+                in the period [01122]
+            '01131':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2022(*) - DTAs pending application in future periods
+                - With a right of conversion into a claimable credit [01131]
+            '01132':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2022(*) - DTAs pending application in future periods
+                - With a right of conversion into a claimable credit, excess tax due
+                [01132]
+            '01133':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2022(*) - DTAs pending application in future periods
+                - Without a right of conversion into a claimable credit [01133]
             '01240':
               label: Limitation on deductibility of financial expenses - Limit art.
                 16.5 and/or 83 LIS - a) Finance costs of the tax period arising from
@@ -12889,11 +12999,79 @@ modelo:
                 tax assets into a credit claimable against the tax administration
                 (art. 130 LIS) - Regional (foral) administrations/Navarre (Totals)
                 [01044]
+            '01061':
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - 2022 without repeated donations to the same entity - Deduction carried
+                forward/generated [01061]
+            '01062':
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - 2022 without repeated donations to the same entity - Applied in
+                this settlement [01062]
+            '01072':
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - 2022 without repeated donations to the same entity - Carried forward
+                for application in future periods [01072]
             '01073':
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others entitled to increased deduction
                 - 2022 - With repeated donations to the same entity - Deduction carried
                 forward/generated [01073]
+            '01074':
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - 2022 - With repeated donations to the same entity - Applied in this
+                settlement [01074]
+            01078:
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - 2022 - With repeated donations to the same entity - Carried forward
+                for application in future periods [01078]
+            '01117':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2022 - Total DTAs (art. 130.6 a) pending application
+                at the start of the period [01117]
+            01119:
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2022 - DTAs pending application at the start of
+                the period - With a right of conversion into a claimable credit [01119]
+            '01120':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2022 - DTAs pending application at the start of
+                the period - With a right of conversion into a claimable credit for
+                excess tax due [01120]
+            '01121':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2022 - DTAs pending application at the start of
+                the period - Without a right of conversion into a claimable credit
+                [01121]
+            '01122':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2022 - DTAs converted into a claimable credit in
+                the period [01122]
+            '01131':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2022 - DTAs pending application in future periods
+                - With a right of conversion into a claimable credit [01131]
+            '01132':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2022 - DTAs pending application in future periods
+                - With a right of conversion into a claimable credit, excess tax due
+                [01132]
+            '01133':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2022 - DTAs pending application in future periods
+                - Without a right of conversion into a claimable credit [01133]
             01258:
               label: Limitation on deductibility of financial expenses - Limit art.
                 16.1 and 16.2 LIS - m) Finance costs pending deduction from earlier
@@ -13089,6 +13267,14 @@ modelo:
               label: Free depreciation of certain vehicles and new charging infrastructure
                 (Additional Provision 18 LIS, RDL 4/2024) - Decrease - Adjustments
                 for the tax year - Temporary (originating in prior tax years) [01962]
+            02029:
+              label: Open Barcelona-Trofeo Conde de Godó (OB). Deduction pending or
+                generated
+            '02030':
+              label: Open Barcelona-Trofeo Conde de Godó (OB). Applied in this settlement
+            '02031':
+              label: Open Barcelona-Trofeo Conde de Godó (OB). Pending application
+                in future periods
             '02301':
               label: Detail of adjustments to the profit and loss result - Adjustments
                 to the profit and loss account result for the tax year - Permanent
@@ -14374,6 +14560,14 @@ modelo:
               label: Free depreciation of certain vehicles and new charging infrastructure
                 (Additional Provision 18 LIS, RDL 4/2024) - Decrease - Adjustments
                 for the tax year - Temporary (originating in previous tax years)
+            02029:
+              label: Open Barcelona-Trofeo Conde de Godó (OB). Deduction pending or
+                generated
+            '02030':
+              label: Open Barcelona-Trofeo Conde de Godó (OB). Applied in this settlement
+            '02031':
+              label: Open Barcelona-Trofeo Conde de Godó (OB). Pending application
+                in future periods
             02079:
               label: 'Additional information for calculating deduction limits - 2025:
                 Financier: deduction for Spanish film productions in the Canary Islands
