@@ -3188,10 +3188,13 @@ application:
       m390_attestation_period_year_differs: The period of the Modelo 390 applicability
         attestation belongs to the year %{period_year}, but the attestation is for
         the filing year %{filing_year}. Use a period of the filing year.
-      m840_anexo_activities_ambiguous: 'Modelo %{modelo} %{filing_year}: the premises
-        where activities are exercised belong to more than one activity (%{activities}),
-        but one Modelo 840 declares one activity. Check which activity each local
-        in %{profile_section} names.'
+      m840_anexo_activities_ambiguous: 'Modelo %{modelo} %{filing_year}: the Modelo
+        840 facts in %{profile_section} belong to more than one activity (%{activities}),
+        but one Modelo 840 declares one activity. Check which activity each of these
+        rows belongs to.'
+      m840_apartado_locales_ambiguous: 'Modelo %{modelo} %{filing_year}: Apartado
+        %{apartado} describes one local, but your profile states it for more than
+        one local of activity %{activity} (%{locales}). Check the rows in %{profile_section}.'
       novel_source_kind_rejected: 'Unrecognized calculation source kind(s) %{novel_source_kinds}
         on version %{revision_id}: the modelo definitions declare a value source that
         no calculation resolver handles. Add a resolver or mark it as deferred before

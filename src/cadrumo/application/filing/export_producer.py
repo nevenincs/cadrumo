@@ -18,6 +18,7 @@ from .export_producer_m303 import (
     m303_profile_lexicals,
 )
 from .export_producer_m360 import M360_PRODUCER_KEYS, m360_producer_values
+from .export_producer_m840 import M840_PRODUCER_KEYS, m840_producer_values
 from .identity_contact_producer import identity_contact_producer_values
 from .producer_snapshot import (
     AmendmentEvidence,
@@ -389,6 +390,7 @@ SHARED_SNAPSHOT_PRODUCER_KEYS = frozenset(
         # exhaustiveness assertion below would then fire on a key one of them forgot.
         *_M296_DECLARANTE_FIELD_BY_KEY,
         *M360_PRODUCER_KEYS,
+        *M840_PRODUCER_KEYS,
     }
 )
 
@@ -935,6 +937,7 @@ def _model_specific_producer_values(snapshot: FilingProducerSnapshot) -> dict[Fi
     values.update(m296_producer_values(model_profile))
     values.update(m353_producer_values(model_profile))
     values.update(m360_producer_values(snapshot))
+    values.update(m840_producer_values(model_profile))
     return values
 
 
