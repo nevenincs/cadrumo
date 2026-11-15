@@ -36,6 +36,7 @@ from .host.controller import (
     AgentHostState,
     AgentReady,
 )
+from .host.sign_in_refusal import refuse, sign_in_in_flight
 from .host.store_lifecycle import (
     InvocationCancellation,
 )
@@ -55,6 +56,7 @@ from .providers.domain.record import LocalEngine, LocalPlacement
 from .providers.persistence.attachment_disclosures import SecureAttachmentDisclosureStore
 from .providers.persistence.store import SecureLocalModelListStore, SecureProviderSettingsStore
 from .service_attachment_admin import answer_attachment_admin
+from .service_console_environment import answer_console_environment
 from .service_support import (
     ADMIN_READ_FRESH_SECONDS,
     ADMIN_READ_SECONDS,
@@ -163,6 +165,7 @@ class AgentServiceAdministration(ABC):
         )
         self._controller: AgentHostController | None = None
         self._auth_attempt: AuthAttempt | None = None
+        self._abandoned_attempts: list[AuthAttempt] = []
         self._auth_resume_valid: Callable[[], bool] | None = None
         self._wake = wake
         self._hosted_certification_lock = Lock()
@@ -173,6 +176,15 @@ class AgentServiceAdministration(ABC):
         self._catalog_read = BoundedRead(self._catalog_document, name="catalog", fresh_seconds=ADMIN_READ_FRESH_SECONDS)
         self._status_read = BoundedRead(self._provider_status, name="status", fresh_seconds=ADMIN_READ_FRESH_SECONDS)
         self._ownership = ExitStack()
+        # Plain reads that never wait on the agent tree, by their admin action.
+        self._plain_reads: dict[str, Callable[[], dict[str, Any]]] = {
+            "provider_lanes": self._provider_lanes,
+            "local_models": self._local_model_list,
+            "local_engine": self._local_engine,
+            "console_environment": lambda: answer_console_environment(
+                self._root, closing=self._closing.is_set(), lease=lambda: self.client.lease
+            ),
+        }
         self._owned = False
         self._emit = emit
 
@@ -239,12 +251,9 @@ class AgentServiceAdministration(ABC):
             return self._submit_sign_in_code(attempt_id, secret)
         if action in {"connect_status", "connect_cancel"}:
             return self._observe_sign_in(attempt_id, cancel=action == "connect_cancel")
-        if action == "provider_lanes":
-            return self._provider_lanes()
-        if action == "local_models":
-            return self._local_model_list()
-        if action == "local_engine":
-            return self._local_engine()
+        read = self._plain_reads.get(action)
+        if read is not None:
+            return read()
         if action in {"catalog", "status"}:
             return self._cached_read(action)
         arguments: dict[str, Any] = {
@@ -382,15 +391,14 @@ class AgentServiceAdministration(ABC):
             return self._connect(provider, expected_revision=expected_revision, method=method)
         return self._change_provider(action, provider, expected_revision, base_url, choice, secret)
 
-    def _admin_refusal(self) -> dict[str, str] | None:
+    def _admin_refusal(self) -> dict[str, Any] | None:
         """Refuse a tree or provider change while stopping, signed out or during a sign-in attempt."""
         if self._closing.is_set():
             return {"kind": "refused", "code": "service_stopping"}
         if self.client.lease is None:
             return {"kind": "refused", "code": "signed_out"}
-        if self._auth_attempt is not None and self._auth_attempt.active:
-            return {"kind": "refused", "code": "busy"}
-        return None
+        blocks, self._auth_attempt = sign_in_in_flight(self._auth_attempt, self._abandoned_attempts)
+        return refuse("busy", cause="sign_in_in_progress") if blocks else None
 
     def _admin(
         self,

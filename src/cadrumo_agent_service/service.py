@@ -302,6 +302,10 @@ class AgentService(AgentServiceScheduling):
                     raise failure
                 if self._auth_attempt is not None:
                     self._auth_attempt.close()
+                for abandoned in self._abandoned_attempts:
+                    # Already logged when it was abandoned; closing the service retries it once more.
+                    with contextlib.suppress(RuntimeError):
+                        abandoned.close()
                 for thread in (self._start_thread, self._stop_thread):
                     if thread is not None:
                         thread.join()

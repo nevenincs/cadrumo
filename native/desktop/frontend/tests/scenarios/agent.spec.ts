@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
-import { FIXTURE_CATALOG } from "../../src/dev/fixtures/agentCatalog";
+import { catalogsUnderEngine } from "../../src/dev/fixtures/agentCatalog";
 import {
   agentColumn as column,
   agentTurns,
@@ -21,6 +21,7 @@ import {
   toolRows,
   worded,
 } from "../support/agent";
+import { SERVED_ENGINE } from "../support/servedLocalLanes";
 import { label } from "../support/strings";
 
 // The agent column at work: a message goes when the person sends it, its
@@ -884,9 +885,10 @@ test("an agent that cannot serve says why, and nothing can be sent", async ({
   ).toBeVisible();
 });
 
-// What the fixture catalog holds, read straight from it: the checks below
-// compare the column with this, and none restates a provider.
-const lanes = FIXTURE_CATALOG.providers ?? [];
+// What the fixture catalog holds under the default engine, read straight from
+// it: the checks below compare the column with this, and none restates a
+// provider.
+const lanes = catalogsUnderEngine(SERVED_ENGINE).served.providers ?? [];
 const nameOf = (id: string) =>
   lanes.find((lane) => lane.provider_id === id)?.display_name ?? id;
 

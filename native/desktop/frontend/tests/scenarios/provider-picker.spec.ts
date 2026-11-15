@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
-import { FIXTURE_CATALOG } from "../../src/dev/fixtures/agentCatalog";
+import { catalogsUnderEngine } from "../../src/dev/fixtures/agentCatalog";
 import { FIXTURE_SETTINGS_LANES } from "../../src/dev/providerSettingsFixture";
 import {
   agentColumn as column,
@@ -8,6 +8,7 @@ import {
   settled,
 } from "../support/agent";
 import { connectionLabel } from "../support/connection";
+import { SERVED_ENGINE } from "../support/servedLocalLanes";
 import { label } from "../support/strings";
 
 // The agent's provider list: a list of lanes, each with its provider's own
@@ -23,9 +24,10 @@ const FINGER = 44 - 1;
 
 const escaped = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
-/** What the fixture catalog holds, read straight from it: every check below
- * compares the column with this, and none restates a provider. */
-const lanes = FIXTURE_CATALOG.providers ?? [];
+/** What the fixture catalog holds under the default engine, read straight
+ * from it: every check below compares the column with this, and none restates
+ * a provider. */
+const lanes = catalogsUnderEngine(SERVED_ENGINE).served.providers ?? [];
 const wayOf = (served: { provider_id: string; transport: string }) =>
   `${served.provider_id}/${served.transport}`;
 const laneOf = (way: string) => {
@@ -249,9 +251,11 @@ test("a lane the catalogue serves as needing no key is worded as on this compute
   await providerBox(settings).click();
   const keyless = lanes.filter((served) => served.auth_kind === "none");
   const keyed = lanes.filter((served) => served.auth_kind !== "none");
-  // The scenario catalogue serves both kinds, and both local engines.
-  expect(keyless.map(wayOf)).toEqual(
-    expect.arrayContaining(["llamacpp/api", "ollama/api"]),
+  // The scenario catalogue serves both kinds, and the selected local
+  // engine's lane alone.
+  expect(keyless.map(wayOf)).toContain(`${SERVED_ENGINE}/api`);
+  expect(keyless.map((served) => served.provider_id)).not.toContain(
+    SERVED_ENGINE === "llamacpp" ? "ollama" : "llamacpp",
   );
   expect(keyed.length).toBeGreaterThan(0);
   for (const served of keyless) {

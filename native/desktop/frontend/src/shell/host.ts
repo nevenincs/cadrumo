@@ -74,6 +74,11 @@ export type TerminalEvent =
   | { type: "exited"; code: number | null }
   | { type: "failed"; message: string };
 
+/** The host now starts the console with another environment: the signed-in
+ * profile's, after a sign-in, a sign-out or a change of profile. Only an
+ * opaque revision reaches the window, never the environment itself. */
+export type ConsoleEnvironmentChange = { revision: string };
+
 export type TerminalSession = {
   write(bytes: Uint8Array): Promise<void>;
   resize(cols: number, rows: number): Promise<void>;
@@ -179,6 +184,12 @@ export interface Host {
     size: { cols: number; rows: number },
     listener: (event: TerminalEvent) => void,
   ): Promise<TerminalSession>;
+  /** Calls `listener` on each change of the console's environment, until
+   * the returned function unsubscribes. Without it the window never starts
+   * the console again for one. */
+  observeConsoleEnvironment?(
+    listener: (change: ConsoleEnvironmentChange) => void,
+  ): Promise<() => void>;
   subscribeLogs(listener: (batch: LogBatch) => void): Promise<() => void>;
   readClipboard(): Promise<string>;
   writeClipboard(text: string): Promise<void>;

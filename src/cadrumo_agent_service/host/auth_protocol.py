@@ -110,11 +110,12 @@ def snapshot(
     reason: str | None = None,
     cause: HelperCause | ServiceCause | None = None,
     status_cause: str | None = None,
+    log_ref: str | None = None,
 ) -> dict[str, JsonValue]:
     """Build a secret-free outcome; browser data is added only while awaiting login.
 
     ``cause`` and ``status_cause`` are closed words, and the next step is the
-    one declared for the cause.
+    one declared for the cause. ``log_ref`` names the log line of a failure.
     """
     result: dict[str, JsonValue] = {"attempt_id": attempt_id, "provider": provider, "event": event}
     if reason is not None:
@@ -126,6 +127,8 @@ def snapshot(
             result["next_step"] = step.value
     if status_cause is not None:
         result["status_cause"] = status_cause
+    if log_ref is not None:
+        result["log_ref"] = log_ref
     return result
 
 

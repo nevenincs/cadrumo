@@ -13,9 +13,11 @@ import {
   nextStep,
   signInCause,
 } from "../../src/shell/providerSignInWords.ts";
+import { PROVIDER_SETTINGS_REFUSAL_CODES } from "../../src/shell/providerSignInContract.ts";
 
 // The closed words a provider sign-in or status read serves, as the window
-// accepts them, checked against the service's own declaration of them. Run
+// accepts them, checked against the service's own declaration of them read
+// independently of the generator that wrote src/shell/providerSignInContract.ts. Run
 // with `node --test tests/live/provider-sign-in-words.unit.ts`.
 
 const contracts = readFileSync(
@@ -58,6 +60,10 @@ test("the window accepts exactly the words the service closes", () => {
   assert.deepEqual([...CLI_STATE_CAUSES].sort(), [...statusCauses].sort());
   assert.deepEqual([...SIGN_IN_CAUSES].sort(), [...causes].sort());
   assert.deepEqual([...NEXT_STEPS].sort(), enumWords("NextStep").sort());
+  assert.deepEqual(
+    [...PROVIDER_SETTINGS_REFUSAL_CODES].sort(),
+    enumWords("ProviderSettingsRefusalCode").sort(),
+  );
 });
 
 test("a word outside a closed set is dropped, never passed on", () => {

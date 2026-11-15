@@ -7,6 +7,7 @@
 //! The launcher admits the agent bundled by CMake or returns a typed refusal.
 
 pub(crate) mod admin;
+mod console_environment;
 mod dropping;
 mod gateway;
 mod launcher;
@@ -174,6 +175,11 @@ impl AgentHost {
     /// The package this process runs from.
     pub(crate) fn package_root(&self) -> &std::path::Path {
         &self.package_root
+    }
+
+    /// The host's diagnostics, where a command records why it failed.
+    pub(crate) fn diagnostics(&self) -> &Diagnostics {
+        &self.diagnostics
     }
 
     /// Hands the person's local engine setting on to the runtime manager's selection
@@ -463,6 +469,7 @@ pub fn plugin<R: Runtime>(launch: &Launch) -> TauriPlugin<R> {
                 package_root.clone(),
             ));
             host.sync_local_engine_when_ready();
+            console_environment::watch(app.clone(), &host);
             app.manage(host);
             Ok(())
         })
