@@ -3346,6 +3346,14 @@ application:
       m840_apartado_locales_ambiguous: 'Model %{modelo} %{filing_year}: l''apartat
         %{apartado} descriu un sol local, però el teu perfil l''indica per a més d''un
         local de l''activitat %{activity} (%{locales}). Revisa les files de %{profile_section}.'
+      m840_fact_code_digits: 'Model %{modelo}: la dada del perfil %{profile_path}
+        s''imprimeix com un codi d''exactament %{digits} dígits; corregeix-la al teu
+        perfil.'
+      m840_fact_text_width: 'Model %{modelo}: la dada del perfil %{profile_path} s''imprimeix
+        en una casella de %{width} caràcters; escriu entre 1 i %{width} caràcters
+        al teu perfil.'
+      m840_fact_units: 'Model %{modelo}: la dada del perfil %{profile_path} s''imprimeix
+        com un nombre enter de com a màxim %{digits} dígits; corregeix-la al teu perfil.'
       novel_source_kind_rejected: 'Tipus d''origen de càlcul no reconegut(s) %{novel_source_kinds}
         a la versió %{revision_id}: les definicions del model declaren un origen de
         valor que cap resolutor de càlcul gestiona. Afegeix un resolutor o marca''l

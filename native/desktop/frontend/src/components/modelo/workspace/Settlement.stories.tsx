@@ -6,13 +6,14 @@ import { modeloFixture, type ModeloShape } from "@/dev/modeloFixture";
 import { translator } from "../../../shell/strings";
 import type { ModeloPort } from "../../../shell/modelo";
 import type { OutputLanguage } from "../../../shell/modeloContract/modelo";
-import type {
-  ModeloFormElection,
-  PublicModeloFormExportOffer,
-} from "../../../shell/modeloContract/modeloWorkForm";
+
 import { Settlement } from "./Settlement";
 import { WorkspaceScreen } from "./WorkspaceScreen";
 import { byName } from "@/dev/globByName";
+import type {
+  ModeloFormElection,
+  PublicModeloFormExportOffer,
+} from "../../../shell/modeloContract/modeloWork";
 
 // How the result is settled. The component stories draw the export offer the
 // application served for a result in each state a settlement can be in, and

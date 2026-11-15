@@ -27,8 +27,6 @@ import { formatInstantDay } from "../../../shared/dateFormats";
 import { facts } from "../../../shell/compose";
 import type {
   ModeloFormAttention,
-  ModeloFormNextAction,
-  ModeloFormResultView,
   ModeloWorkbenchFormProjectionV1,
 } from "../../../shell/modeloContract/modeloWorkForm";
 import { useStrings, type Translate } from "../../../shell/strings";
@@ -36,6 +34,10 @@ import { JourneySteps } from "./JourneySteps";
 import { AttentionMark, DEADLINE_TONE, GlyphMark } from "./Marks";
 import { useReservedSize } from "./useReservedSize";
 import { FormPanes, type WorkspacePanes } from "./WorkspacePanes";
+import type {
+  ModeloFormNextAction,
+  ModeloFormResultView,
+} from "../../../shell/modeloContract/modeloWork";
 
 /** The views of one declaration, as its tabs name them. */
 export type WorkspaceView =

@@ -13,8 +13,6 @@ import type {
   AeatConfirmationState,
   BindingSourceKind,
   BindingValueOutcome,
-  BucketEventId,
-  BucketEventProjection,
   CalculationNoteFact,
   CalculationRevisionId,
   CalculationRevisionState,
@@ -29,6 +27,7 @@ import type {
   ModeloCalculationDetailSnapshot,
   ModeloCalculationOverride,
   ModeloDetailRowWireV1,
+  ModeloExportArtefact,
   ModeloRecordStatus,
   ModeloRegistrySnapshotCoordinates,
   ModeloWorkCalculateOrdinaryM303EvidenceRequestV2,
@@ -303,29 +302,13 @@ export type DeadlineHolidayCoverage =
   "national_only" | "not_shifted" | "calendar_unavailable";
 
 /**
- * Sanitized lifecycle meanings accepted by the workspace projection.
+ * Wire shapes a modelo registry export layout may declare.
  *
- * `VERIFICATION_REFUSED` exists because a refusal has nowhere else honest to
- * go. Without it a surface reading the kind alone would either drop the event,
- * which turns a refusal into an absence, or fold it into `VERIFIED`, which
- * reports a refused verification as a passed one.
+ * Members carry the exact tokens the registry TOML stores, so hydration is a
+ * behaviour-preserving lift rather than a re-spelling: a member compares,
+ * hashes, and JSON-serialises identically to the string it replaces.
  */
-export type DeclarationsLifecycleKind =
-  | "created"
-  | "renamed"
-  | "calculated"
-  | "edited"
-  | "verified"
-  | "verification_refused"
-  | "filed"
-  | "superseded"
-  | "amended"
-  | "discarded"
-  | "external_evidence_imported"
-  | "exported"
-  | "reconciled"
-  | "observation_overridden"
-  | "observation_override_cleared";
+export type ExportLayoutFormat = "fixed_width" | "xml_dictionary";
 
 /**
  * One typed evidence identity carried by immutable filing facts.
@@ -367,34 +350,6 @@ export type M210GrossIncomeSourceMode = "manual" | "ledger";
  */
 export type M303RectificativaMotive =
   "rectificaciones" | "discrepancia_criterio_administrativo";
-
-/**
- * The existing derived flat view, encoded with a closed row schema.
- */
-export type MaritimePreviewCasillaValue = {
-  casilla_id: CasillaId;
-  value: string;
-};
-
-/**
- * Complete canonical observation, retaining ordered legal and source
- * grounding.
- */
-export type MaritimePreviewObservation = {
-  casilla_id: CasillaId;
-  value: string;
-  formula_id: FormulaId | null;
-  legal_refs: LegalRefId[];
-  source_refs: SourceRefId[];
-};
-
-/**
- * Registered nonblocking warning and its sole canonical interpolation fact.
- */
-export type MaritimePreviewRetmarWarning = {
-  code: "ERROR_RENTA_PROFILE_COMPLETENESS_WARNING";
-  legal_ref: LegalRefId;
-};
 
 /**
  * One member's attributed base and the registry-declared handoff target.
@@ -559,6 +514,14 @@ export type ModeloEvidenceSnapshot = {
   imported_at: string;
 };
 
+export type ModeloExportRequestField =
+  | "refund_election"
+  | "payment_election"
+  | "prior_domiciliation_election"
+  | "instalment_election"
+  | "charge_account_id"
+  | "refund_account_id";
+
 /**
  * One immutable receipt with wire primitives for domain value objects.
  */
@@ -587,6 +550,204 @@ export type ModeloFilingRecordSnapshot = {
   settlement: ModeloSettlementSnapshot | null;
   source_transaction_ids: TransactionId[];
 };
+
+/**
+ * One artefact the export offers, in the filer's words, and whether it can be
+ * created now.
+ */
+export type ModeloFormArtefactOption = {
+  artefact: ModeloExportArtefact;
+  words: string;
+  save_format: string | null;
+  availability: ModeloFormAvailability;
+};
+
+/**
+ * Whether an export, or recording the filing, can be done now, and if not why,
+ * in the filer's words.
+ */
+export type ModeloFormAvailability = {
+  available: boolean;
+  reason: ModeloFormUnavailable | null;
+  words: string | null;
+};
+
+/**
+ * One declaration-shaping choice an export asks.
+ */
+export type ModeloFormElection =
+  | "refund"
+  | "payment"
+  | "prior_domiciliation"
+  | "instalment"
+  | "charge_account"
+  | "refund_account";
+
+/**
+ * One answer an election takes: the value the export request carries, and its
+ * words.
+ */
+export type ModeloFormElectionChoice = {
+  value: string;
+  words: string;
+};
+
+/**
+ * Why an election is not applicable or cannot be answered now.
+ */
+export type ModeloFormElectionReason =
+  | "nothing_to_pay"
+  | "nothing_to_refund"
+  | "result_unknown"
+  | "amendment"
+  | "past_filing_window"
+  | "filing_window_unknown"
+  | "no_open_account"
+  | "no_spanish_account"
+  | "settlement_unsupported"
+  | "second_instalment_nothing"
+  | "carry_forward_only"
+  | "redeme_unstated";
+
+/**
+ * Whether the filer can answer an election now.
+ */
+export type ModeloFormElectionState =
+  "available" | "not_applicable" | "unavailable";
+
+/**
+ * Why the file for the AEAT, and recording the filing, are withheld, with what
+ * the reason counts.
+ */
+export type ModeloFormExportHold = {
+  reason: ModeloFormExportHoldReason;
+  count: number;
+  words: string;
+  action: ModeloFormNextAction;
+};
+
+/**
+ * Why the file for the AEAT is withheld, most pressing first.
+ */
+export type ModeloFormExportHoldReason = "blocks" | "confirm" | "verify";
+
+/**
+ * The latest file for the AEAT, and whether it no longer matches the
+ * declaration.
+ *
+ * `words` say when it was created or, for a file made from an earlier
+ * calculation, that it is out of date and is to be created again.
+ */
+export type ModeloFormFileView = {
+  exported_at: string;
+  created_on: string;
+  current: boolean;
+  words: string;
+};
+
+/**
+ * The declaration is recorded in Cadrumo as filed; nothing was sent to AEAT
+ * from here.
+ */
+export type ModeloFormFiling = {
+  recorded_at: string | null;
+};
+
+/**
+ * One instalment of an amount to pay in two.
+ */
+export type ModeloFormInstalment = "first" | "second";
+
+/**
+ * The one action a form offers the filer next.
+ */
+export type ModeloFormNextAction =
+  | "apply"
+  | "fill"
+  | "confirm"
+  | "calculate"
+  | "recalculate"
+  | "resolve"
+  | "verify"
+  | "export"
+  | "export_again"
+  | "record_after_file"
+  | "recorded";
+
+/**
+ * Whether the AEAT receipt of the recorded filing has been verified, and when.
+ *
+ * `verified_at` is when the verified receipt was imported, and is set only
+ * when `verified` is.
+ */
+export type ModeloFormReceipt = {
+  recorded_at: string | null;
+  verified: boolean;
+  verified_at: string | null;
+  words: string;
+};
+
+/**
+ * Which way the declaration's result settles, as its official design declares
+ * it.
+ */
+export type ModeloFormResultDirection =
+  | "to_pay"
+  | "to_refund"
+  | "to_carry_forward"
+  | "to_deduct_later"
+  | "negative"
+  | "nil"
+  | "unknown";
+
+/**
+ * What the result can say yet.
+ */
+export type ModeloFormResultState =
+  "stated" | "choice_pending" | "not_calculated" | "failed";
+
+/**
+ * The declaration's result as the header states it.
+ *
+ * `text` names the box, `short_text` drops it and `brief_text` is the fewest
+ * words that still state the result; a result with no figure says why in all
+ * three. `words` and `amount_text` are the direction and the amount it
+ * carries, set together where the result states both.
+ */
+export type ModeloFormResultView = {
+  state: ModeloFormResultState;
+  casilla_id: CasillaId;
+  box: string | null;
+  settles: boolean;
+  direction: ModeloFormResultDirection;
+  words: string | null;
+  amount_text: string | null;
+  text: string;
+  short_text: string;
+  brief_text: string;
+  help: string[];
+  out_of_date_words: string | null;
+};
+
+/**
+ * The package for the filer's accountant, in the filer's words, and whether it
+ * can be built now.
+ */
+export type ModeloFormReviewPackageOffer = {
+  words: string;
+  availability: ModeloFormAvailability;
+};
+
+/**
+ * Why an export, or recording the filing, cannot be done now.
+ */
+export type ModeloFormUnavailable =
+  | "not_calculated"
+  | "not_verified"
+  | "blocks"
+  | "confirm"
+  | "file_out_of_date"
+  | "recorded";
 
 /**
  * What kind of caller-supplied statement a calculation head recorded.
@@ -634,33 +795,6 @@ export type ModeloM210PlazoAdvisoryV1 = {
   source_refs: string;
   tipo_renta_code: string | null;
   payment_cutoff_on: string | null;
-};
-
-/**
- * Complete current human preview facts, without raw exception messages.
- */
-export type ModeloMaritimePreviewProjection = {
-  profile_id: string;
-  worker_class: string | null;
-  vessel_flag: string | null;
-  waters_type: string | null;
-  vessel_registry: string | null;
-  retmar_registered: boolean;
-  retmar_mandatory_filing: boolean;
-  retmar_warning: MaritimePreviewRetmarWarning | null;
-  observations: MaritimePreviewObservation[];
-  casilla_values: MaritimePreviewCasillaValue[];
-};
-
-/**
- * Original optional inputs, held in encrypted operation operand custody.
- */
-export type ModeloMaritimePreviewRequest = {
-  profile_id: string;
-  annual_salary?: string | null;
-  qualifying_days?: number | null;
-  gross_navigation_income?: string | null;
-  filing_year?: number | null;
 };
 
 /**
@@ -717,43 +851,6 @@ export type ModeloSettlementSnapshot = {
   refund_payment_evidence_reference: FilingEvidenceReference | null;
   refund_payment_effective_at: string | null;
   credit_snapshot: ModeloCreditSnapshot;
-};
-
-/**
- * Bounded comparison with the single-earner scope caveat intact.
- *
- * `recommendation_reason` is the closed token of why the mode is recommended;
- * `recommendation_reason_words` is the same reason in words naming the results
- * it compares, in `words_language`; `individual_branch_caveat` states in the
- * same language why the individual figure is reliable only for a single-earner
- * household.
- */
-export type ModeloTaxationComparisonProjection = {
-  result_version: 2;
-  profile_id: string;
-  work_unit_id: string;
-  filing_year: number;
-  modelo: string;
-  revision: string;
-  conjunta_cuota_resultante: string;
-  individual_cuota_resultante: string;
-  conjunta_resultado: string;
-  individual_resultado: string;
-  delta_resultado: string;
-  recommendation: TaxationRecommendation;
-  recommendation_reason: TaxationRecommendationReason;
-  recommendation_reason_words: string;
-  words_language: OutputLanguage;
-  individual_branch_single_earner_only: true;
-  individual_branch_caveat: string;
-};
-
-/**
- * Select one work unit inside the authenticated profile.
- */
-export type ModeloTaxationComparisonRequest = {
-  profile_id: string;
-  work_unit_id: string;
 };
 
 /**
@@ -915,53 +1012,6 @@ export type ModeloWorkFilingRecordProjection = {
 export type ModeloWorkFilingRecordRequest = {
   profile_id: string;
   filing_record_id: FilingRecordId;
-};
-
-/**
- * One recorded event of a declaration, said in the language asked for.
- *
- * `kind` is the event's lifecycle meaning, or `other` for an event that has
- * none; `detail` adds what the words alone do not say, when there is something
- * to add.
- */
-export type ModeloWorkHistoryEntryV1 = {
-  event_id: BucketEventId;
-  kind: DeclarationsLifecycleKind | "other";
-  words: string;
-  detail: string | null;
-  occurred_at: string;
-};
-
-/**
- * Retain canonical event constraints within an encrypted profile result.
- *
- * `entries` are the same events said in the request's language, newest first,
- * each with its lifecycle kind, words and any detail.
- */
-export type ModeloWorkHistoryProjection = {
-  result_version: 1;
-  profile_id: string;
-  history: ModeloWorkHistorySnapshot;
-  entries: ModeloWorkHistoryEntryV1[];
-};
-
-/**
- * Address one full work identity in the authenticated profile, and the
- * language its history is said in.
- */
-export type ModeloWorkHistoryRequest = {
-  profile_id: string;
-  work_unit_id: WorkUnitId;
-  output_language: OutputLanguage;
-};
-
-/**
- * Closed transport fields that reconstruct the canonical history losslessly.
- */
-export type ModeloWorkHistorySnapshot = {
-  bucket_id: string;
-  work_unit_id: WorkUnitId;
-  events: BucketEventProjection[];
 };
 
 /**
@@ -1164,47 +1214,6 @@ export type ModeloWorkRevisionsRequest = {
 };
 
 /**
- * A completed attempt carrying the existing calculation publication.
- */
-export type ModeloWorkWizardAttemptCalculated = {
-  kind: "calculated";
-  result: ModeloWorkCalculatePublicResultV3;
-};
-
-/**
- * A pre-publication missing input with canonical unit and grounded step.
- */
-export type ModeloWorkWizardAttemptNeedsInput = {
-  kind: "needs_input";
-  unit: ModeloWorkMetadataSnapshot;
-  step: ModeloWorkWizardStep;
-};
-
-/**
- * Exactly one calculated or needs-input result for one profile.
- */
-export type ModeloWorkWizardAttemptProjection = {
-  result_version: 1;
-  profile_id: string;
-  output_language: OutputLanguage;
-  outcome:
-    ModeloWorkWizardAttemptCalculated | ModeloWorkWizardAttemptNeedsInput;
-};
-
-/**
- * Bind one exact profile and language to the canonical calculate request.
- *
- * `calculation.actor` is recorded as sent for a person's session. An
- * automation's session is recorded under its own session label, whatever the
- * request carries.
- */
-export type ModeloWorkWizardAttemptRequest = {
-  profile_id: string;
-  output_language: OutputLanguage;
-  calculation: ModeloWorkCalculateRequest;
-};
-
-/**
  * One private discovery snapshot for the canonical interactive flow renderer.
  */
 export type ModeloWorkWizardContextProjection = {
@@ -1247,6 +1256,46 @@ export type PrintedBoxNumberSnapshot = {
   number: string;
 };
 
+/**
+ * Public figure preserving the canonical exact amount and advisory validation.
+ */
+export type PublicModeloFormElectionFigure = {
+  instalment: ModeloFormInstalment;
+  amount: string;
+  words: string;
+  advisory: boolean;
+  advisory_words: string | null;
+};
+
+/**
+ * Public election question whose figures preserve their decimal precision.
+ */
+export type PublicModeloFormElectionQuestion = {
+  election: ModeloFormElection;
+  request_field: ModeloExportRequestField;
+  words: string;
+  state: ModeloFormElectionState;
+  reason: ModeloFormElectionReason | null;
+  state_words: string | null;
+  help: string | null;
+  default: string | null;
+  choices: ModeloFormElectionChoice[];
+  figures: PublicModeloFormElectionFigure[];
+};
+
+/**
+ * Public export offer carrying decimal-safe election questions.
+ */
+export type PublicModeloFormExportOffer = {
+  artefacts: ModeloFormArtefactOption[];
+  record: ModeloFormAvailability;
+  review_package: ModeloFormReviewPackageOffer;
+  asks_elections: boolean;
+  elections: PublicModeloFormElectionQuestion[];
+  file_format: ExportLayoutFormat | null;
+  file_format_words: string | null;
+};
+
 export type RelationId = string;
 
 /**
@@ -1276,24 +1325,6 @@ export type ResultSummaryRole =
  */
 export type SourceSurface =
   "ledger" | "withholding" | "profile" | "declarations" | "none";
-
-/**
- * Recommended filing mode based on the computed cuota differential.
- *
- * The enum reports the lower-tax path after applying the materiality
- * threshold, or `INDIFFERENT` when the two calculated results differ by less
- * than one euro.
- */
-export type TaxationRecommendation = "conjunta" | "individual" | "indifferent";
-
-/**
- * Why the comparison recommends what it does, as a closed token.
- *
- * The words for a reason, with the amounts it rests on, are served by
- * `taxation_comparison_words`.
- */
-export type TaxationRecommendationReason =
-  "conjunta_lower_result" | "individual_lower_result" | "below_materiality";
 
 /**
  * Closed enumeration of work-unit lifecycle states.
