@@ -26,7 +26,7 @@ from .ids import (
     RevisionId,
     SourceRefId,
 )
-from .modelo_localization import require_modelo_localization, resolve_modelo_localization
+from .modelo_localization import render_rotating_year, require_modelo_localization, resolve_modelo_localization
 from .schema_base import (
     CasillaDataType,
     CasillaDataTypeField,
@@ -452,6 +452,18 @@ class CasillaDefinition(RegistryModel):
             "undeclared is never read as suffered."
         ),
     )
+    rotating_year_offset: int | None = Field(
+        default=None,
+        exclude_if=lambda value: value is None,
+        description=(
+            "For a box whose caption names a year counted from the ejercicio, so "
+            "each edition's design prints it with the year moved on, how many "
+            "years before the ejercicio that year lies: 0 names the ejercicio "
+            "itself and a negative offset a later year. The label's {year} "
+            "placeholder renders the ejercicio minus this offset. Unset for a "
+            "caption that names no rotating year."
+        ),
+    )
     aliases: tuple[CasillaAlias, ...] = ()
     internal_only: bool = Field(
         default=False,
@@ -479,14 +491,18 @@ class CasillaDefinition(RegistryModel):
     legal_refs: LegalRefs
     source_refs: SourceRefs
 
-    def get_label(self, locale: str) -> str:
-        """Resolve one label scalar through the canonical shared catalogues."""
-        return require_modelo_localization(self.localization_keys, locale=locale)
+    def get_label(self, locale: str, *, ejercicio: int | None = None) -> str:
+        """Resolve one label scalar, naming a rotating slot's year for ``ejercicio`` when given."""
+        label = require_modelo_localization(self.localization_keys, locale=locale)
+        return render_rotating_year(label, offset=self.rotating_year_offset, ejercicio=ejercicio)
 
-    def get_help(self, locale: str) -> str | None:
+    def get_help(self, locale: str, *, ejercicio: int | None = None) -> str | None:
         """Resolve optional help through the same identity and fallback chain."""
         help_keys = tuple(f"{key.removesuffix('.label')}.help" for key in self.localization_keys)
-        return resolve_modelo_localization(help_keys, locale=locale)
+        help_text = resolve_modelo_localization(help_keys, locale=locale)
+        if help_text is None:
+            return None
+        return render_rotating_year(help_text, offset=self.rotating_year_offset, ejercicio=ejercicio)
 
     @property
     def label(self) -> str:
