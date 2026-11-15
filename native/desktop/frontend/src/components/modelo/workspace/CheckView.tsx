@@ -3,10 +3,8 @@ import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/components/ui/cn";
 import { Icon } from "@/components/ui/icon";
-import type {
-  ModeloFormIssueLine,
-  ModeloFormVerdict,
-} from "../../../shell/modeloContract/modeloWorkForm";
+import type { ModeloFormIssueLine } from "../../../shell/modeloContract/modeloWorkForm";
+import type { ModeloFormVerdict } from "../../../shell/modeloContract/modeloWork";
 import { useStrings } from "../../../shell/strings";
 import type { OpenableSurface } from "../details/Details";
 import { BoxNumber } from "../form/BoxNumber";

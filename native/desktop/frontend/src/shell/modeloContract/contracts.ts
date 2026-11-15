@@ -157,8 +157,6 @@ import type {
   CreditResolutionRevokeRequest,
   ModeloWorkCalculatePublicResultV3,
   ModeloWorkCalculateRequest,
-  ModeloWorkDiscardPublicResultV2,
-  ModeloWorkDiscardRequest,
   ModeloWorkFilingRecordProjection,
   ModeloWorkFilingRecordRequest,
   ModeloWorkListProjection,
@@ -169,8 +167,6 @@ import type {
   ModeloWorkMetadataRequest,
   ModeloWorkRenamePublicResultV2,
   ModeloWorkRenameRequest,
-  ModeloWorkRevisionProjection,
-  ModeloWorkRevisionRequest,
   ModeloWorkRevisionSnapshotProjection,
   ModeloWorkRevisionSnapshotRequest,
   ModeloWorkRevisionsProjection,
@@ -203,6 +199,10 @@ import type {
   ModeloDependencyRequest,
 } from "./modeloWorkDependencies";
 import type {
+  ModeloWorkDiscardPublicResultV2,
+  ModeloWorkDiscardRequest,
+} from "./modeloWorkDiscard";
+import type {
   ModeloWorkFilePublicResultV2,
   ModeloWorkFileRequest,
 } from "./modeloWorkFile";
@@ -230,6 +230,10 @@ import type {
   ModeloWorkReviewProjection,
   ModeloWorkReviewRequest,
 } from "./modeloWorkReview";
+import type {
+  ModeloWorkRevisionProjection,
+  ModeloWorkRevisionRequest,
+} from "./modeloWorkRevision";
 import type {
   ModeloWorkVerifyPublicResultV2,
   ModeloWorkVerifyRequest,
