@@ -34,6 +34,7 @@ from ..frontend import (
     parity,
     parse_result,
     read_results,
+    redacted_present,
 )
 from ..render import render_table, unavailable_exports_lines
 from ..rows import PlannedRow, Stage, TableRow, canonical_figures, latest_rows, write_rows
@@ -253,13 +254,23 @@ def test_a_redacted_figure_equals_any_non_empty_table_value_for_its_casilla() ->
     assert figure_causes("cli", {"0001": "ES12"}, {"0001": "sha256:00000000"}) == []
 
 
-def test_a_redacted_figure_without_a_table_value_is_a_difference() -> None:
+def test_a_redacted_figure_without_a_table_value_is_graded_present_and_never_a_difference() -> None:
     shown = _result(figures={**dict(_FIGURES), "0091": "sha256:0123abcd"})
     outcome = parity(_row(), "cli", shown)
-    assert (outcome.outcome, outcome.causes) == ("differs", ("casilla 0091 redacted but the table has no value",))
-    assert figure_causes("cli", {"0091": ""}, {"0091": "sha256:0123abcd"}) == [
-        "casilla 0091 cli sha256:0123abcd, table "
-    ]
+    assert (outcome.outcome, outcome.causes) == (
+        "not-comparable",
+        ("casilla 0091 redacted, present; the table row carries no value for it",),
+    )
+    assert figure_causes("cli", {"0091": ""}, {"0091": "sha256:0123abcd"}) == []
+    assert redacted_present({"0091": ""}, {"0091": "sha256:0123abcd"}) == ("0091",)
+    assert redacted_present({"0091": "12345678Z"}, {"0091": "sha256:0123abcd"}) == ()
+
+
+def test_another_cause_still_makes_a_row_with_a_redacted_present_casilla_differ_without_naming_it() -> None:
+    shown = _result(figures={"0700": "-1.00", "0091": "sha256:0123abcd"})
+    outcome = parity(_row(), "cli", shown)
+    assert outcome.outcome == "differs"
+    assert not any("redacted" in cause for cause in outcome.causes)
 
 
 @pytest.mark.parametrize(
@@ -282,9 +293,7 @@ def test_only_the_exact_redaction_form_is_redacted(text: str) -> None:
 
 def test_a_redacted_figure_is_not_a_cause_for_a_casilla_the_table_lacks_only_when_it_is_not_redacted() -> None:
     assert figure_causes("cli", {}, {"0091": "plain"}) == []
-    assert figure_causes("cli", {"0505": "1"}, {"0505": "1", "0091": "sha256:0123abcd"}) == [
-        "casilla 0091 redacted but the table has no value"
-    ]
+    assert figure_causes("cli", {"0505": "1"}, {"0505": "1", "0091": "sha256:0123abcd"}) == []
 
 
 def test_a_refused_python_row_matches_a_refusing_surface_with_no_figures() -> None:
