@@ -4127,6 +4127,17 @@ cli:
         never contacts AEAT.
       show_suppressed_help: Include filtered (non-applicable) obligations in the output
         with their applicability verdict and reason.
+      support:
+        above_ceiling: This range lies after %{ceiling}, the latest supported filing
+          year. It is not supported, which does not mean nothing is due.
+        below_floor: This range lies before %{floor}, the earliest supported filing
+          year. It is not supported, which does not mean nothing is due.
+        partial: Part of this range lies outside the supported filing years; those
+          years show no obligations because they are not supported, not because nothing
+          is due.
+        projected: Filing years after %{horizon} have no published form of their own
+          yet; their deadlines are estimated from the latest one and can be calculated
+          but not filed.
       to_help: Inclusive end date for the calendar window (ISO YYYY-MM-DD).
     calendar_local_filing_evidence_unavailable: Overview calendar local filing evidence
       could not be loaded; the calendar is derived from the deadline schedule and

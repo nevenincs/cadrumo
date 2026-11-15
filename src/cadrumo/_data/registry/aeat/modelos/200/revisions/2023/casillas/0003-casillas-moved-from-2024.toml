@@ -1,0 +1,92 @@
+# Modelo 200 ejercicio 2023 boxes the 2023 record design prints with the meaning the 2024
+# design gives the same box, declared here at the earliest edition that prints them; the 2024
+# edition inherits them. The comment above each row cites its line in
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md.
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1229 DP200012 field 39
+[[revisions."2023".casillas]]
+id = "00775"
+continuidad_id = "00775"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1229 (DP200012 field 39): Liquidación I - Detalle correcciones resultado cta. pérdidas y ganancias -Amortización acelerada de determinados vehículos y de nuevas infraestructuras de recarga (DA 18ª LIS) - Aumentos [00775]. aeat-dr-200-2022 prints no box [00775]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+number = "00775"
+section = ["liquidacion_i", "detalle_correcciones_resultado_cta_perdidas_y_gana"]
+semantic_role = "is_correcciones_aumentos"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1230 DP200012 field 40
+[[revisions."2023".casillas]]
+id = "00776"
+continuidad_id = "is-correcciones-disminuciones"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1230 (DP200012 field 40): Liquidación I - Detalle correcciones resultado cta. pérdidas y ganancias -Amortización acelerada de determinados vehículos y de nuevas infraestructuras de recarga (DA 18ª LIS) - Disminuciones [00776]. aeat-dr-200-2022 prints no box [00776]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+number = "00776"
+section = ["liquidacion_i", "detalle_correcciones_resultado_cta_perdidas_y_gana"]
+semantic_role = "is_correcciones_disminuciones"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4654 DP200026B field 131
+[[revisions."2023".casillas]]
+id = "00075"
+continuidad_id = "is-correccion-amortizacion-acelerada-vehiculos-saldo-inicial"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4654 (DP200026B field 131): Amortización acelerada de determinados vehículos y de nuevas infraestructuras de recarga (DA 18ª LIS) - Aumento - Saldo pendiente a principio de ejercicio [00075]. aeat-dr-200-2022 prints no field with this caption. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+number = "00075"
+section = ["amortizacion_acelerada_de_determinados_vehiculos_y", "aumento"]
+semantic_role = "is_correccion_amortizacion_acelerada_vehiculos_saldo_inicial"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4655 DP200026B field 132
+[[revisions."2023".casillas]]
+id = "00076"
+continuidad_id = "is-correccion-amortizacion-acelerada-vehiculos-permanente-aumento"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4655 (DP200026B field 132): Amortización acelerada de determinados vehículos y de nuevas infraestructuras de recarga (DA 18ª LIS) - Aumento - Correcciones del ejercicio - Permanentes [00076]. aeat-dr-200-2022 prints no field with this caption. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+number = "00076"
+section = ["amortizacion_acelerada_de_determinados_vehiculos_y", "aumento"]
+semantic_role = "is_correccion_amortizacion_acelerada_vehiculos_permanente_aumento"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4656 DP200026B field 133
+[[revisions."2023".casillas]]
+id = "00077"
+continuidad_id = "is-correccion-amortizacion-acelerada-vehiculos-importe"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4656 (DP200026B field 133): Amortización acelerada de determinados vehículos y de nuevas infraestructuras de recarga (DA 18ª LIS) - Aumento - Correcciones del ejercicio - Temporarias (con origen en el ejercicio) [00077]. aeat-dr-200-2022 prints no field with this caption. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+number = "00077"
+section = ["amortizacion_acelerada_de_determinados_vehiculos_y", "aumento"]
+semantic_role = "is_correccion_amortizacion_acelerada_vehiculos_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2926 DP200018C field 136
+[[revisions."2023".casillas]]
+id = "01329"
+continuidad_id = "01329"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2926 (DP200018C field 136): Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - 2023(*) Sin reiteración de donaciones a una misma entidad - Deducción pendiente/generada [01329]. aeat-dr-200-2022 prints box [01329] at 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2852 for the 2022 donations, another cohort. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+number = "01329"
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecena"]
+semantic_role = "is_deduccion_donativos_prioritarias"
+legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2927 DP200018C field 137
+[[revisions."2023".casillas]]
+id = "01372"
+continuidad_id = "01372"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2927 (DP200018C field 137): Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - 2023(*) Sin reiteración de donaciones a una misma entidad - Aplicado en esta liquidación [01372]. aeat-dr-200-2022 prints box [01372] at 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2853 for the 2022 donations, another cohort. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+number = "01372"
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecena"]
+semantic_role = "is_deduccion_donativos_prioritarias"
+legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2928 DP200018C field 138
+[[revisions."2023".casillas]]
+id = "01373"
+continuidad_id = "01373"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2928 (DP200018C field 138): Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - 2023(*) Sin reiteración de donaciones a una misma entidad - Pendiente de aplicación en periodos futuros [01373]. aeat-dr-200-2022 prints box [01373] at 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2854 for the 2022 donations, another cohort. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+number = "01373"
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecena"]
+semantic_role = "is_deduccion_donativos_prioritarias"
+legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]

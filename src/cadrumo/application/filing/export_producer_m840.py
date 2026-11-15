@@ -89,11 +89,8 @@ def _code_and_description(code: str | None, description: str | None) -> str | No
     return f"{code}{description or ''}"
 
 
-def _digits(value: int | None) -> str | None:
-    return None if value is None else str(value)
-
-
-def _square_metres(value: int | None) -> Decimal | None:
+def _whole_number(value: int | None) -> Decimal | None:
+    """A DR840 "Num" quantity (a count of units or square metres), printed right-aligned."""
     return None if value is None else Decimal(value)
 
 
@@ -107,9 +104,9 @@ def _scalar_values(profile: Modelo840ProfileFacts) -> dict[FilingProducerKey, ob
         FilingProducerKey.M840_ACTIVIDAD_PROVINCIA_CODIGO: profile.actividad_provincia_codigo,
         FilingProducerKey.M840_ACTIVIDAD_MUNICIPIO: profile.actividad_municipio,
         FilingProducerKey.M840_LOCAL_INDIRECTO_MUNICIPIO: profile.local_indirecto_municipio,
-        FilingProducerKey.M840_ELEMENTOS_TRIBUTARIOS_MAQUINAS_TIPO_A_NUMERO: _digits(profile.maquinas_tipo_a),
-        FilingProducerKey.M840_ELEMENTOS_TRIBUTARIOS_MAQUINAS_TIPO_B_NUMERO: _digits(profile.maquinas_tipo_b),
-        FilingProducerKey.M840_ELEMENTOS_TRIBUTARIOS_EXPOSITORES_AUTOVENTA_NUMERO: _digits(
+        FilingProducerKey.M840_ELEMENTOS_TRIBUTARIOS_MAQUINAS_TIPO_A_NUMERO: _whole_number(profile.maquinas_tipo_a),
+        FilingProducerKey.M840_ELEMENTOS_TRIBUTARIOS_MAQUINAS_TIPO_B_NUMERO: _whole_number(profile.maquinas_tipo_b),
+        FilingProducerKey.M840_ELEMENTOS_TRIBUTARIOS_EXPOSITORES_AUTOVENTA_NUMERO: _whole_number(
             profile.expositores_autoventa
         ),
     }
@@ -128,9 +125,9 @@ def _superficie_values(superficies: tuple[Modelo840SuperficieClase, ...]) -> dic
     values: dict[FilingProducerKey, object] = {}
     for superficie in superficies:
         total_key, rectificada_key, computable_key = _SUPERFICIE_KEYS[superficie.clase]
-        values[total_key] = _square_metres(superficie.total)
-        values[rectificada_key] = _square_metres(superficie.rectificada)
-        values[computable_key] = _square_metres(superficie.computable)
+        values[total_key] = _whole_number(superficie.total)
+        values[rectificada_key] = _whole_number(superficie.rectificada)
+        values[computable_key] = _whole_number(superficie.computable)
     return values
 
 

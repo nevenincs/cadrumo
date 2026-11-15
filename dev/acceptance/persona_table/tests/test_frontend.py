@@ -12,6 +12,7 @@ import pytest
 
 from ..__main__ import main
 from ..diff import row_id
+from ..figure_compare import extra_figures, figure_causes, is_redacted
 from ..frontend import (
     CALCULATE_INHERITED,
     EXPORT_WITHHELD_UNVERIFIED,
@@ -28,9 +29,7 @@ from ..frontend import (
     cell_text,
     compare_frontend,
     export_refusal_code,
-    extra_figures,
-    figure_causes,
-    is_redacted,
+    frontend_line,
     parity,
     parse_result,
     read_results,
@@ -55,6 +54,7 @@ def _row(
     horizon: int = _YEAR + 1,
     figures: tuple[tuple[str, str], ...] | None = _FIGURES,
     internal_figures: tuple[tuple[str, str], ...] = (),
+    text_figures: tuple[tuple[str, str], ...] = (),
     reason: str = "",
 ) -> TableRow:
     plan = PlannedRow(
@@ -68,7 +68,14 @@ def _row(
         sources=("ley:art-1",),
     )
     return TableRow.from_plan(
-        plan, calculate, verify=verify, export=export, figures=figures, internal_figures=internal_figures, reason=reason
+        plan,
+        calculate,
+        verify=verify,
+        export=export,
+        figures=figures,
+        internal_figures=internal_figures,
+        text_figures=text_figures,
+        reason=reason,
     )
 
 
@@ -253,13 +260,37 @@ def test_a_redacted_figure_equals_any_non_empty_table_value_for_its_casilla() ->
     assert figure_causes("cli", {"0001": "ES12"}, {"0001": "sha256:00000000"}) == []
 
 
-def test_a_redacted_figure_without_a_table_value_is_a_difference() -> None:
+def test_a_redacted_figure_matches_the_backend_rows_text_value_and_is_counted() -> None:
     shown = _result(figures={**dict(_FIGURES), "0091": "sha256:0123abcd"})
-    outcome = parity(_row(), "cli", shown)
-    assert (outcome.outcome, outcome.causes) == ("differs", ("casilla 0091 redacted but the table has no value",))
+    row = _row(text_figures=(("0091", "12345678Z"),))
+    outcome = parity(row, "cli", shown)
+    assert (outcome.outcome, outcome.causes, outcome.redacted) == ("matched", (), ("0091",))
+    assert figure_causes("cli", {}, {"0091": "sha256:0123abcd"}, {"0091": "12345678Z"}) == []
+    assert parity(_row(), "cli", _result(figures=dict(_FIGURES))).redacted == ()
+
+
+def test_a_redacted_figure_the_backend_row_holds_no_value_for_is_a_difference_never_graded_apart() -> None:
+    shown = _result(figures={**dict(_FIGURES), "0091": "sha256:0123abcd"})
+    for held in ((), (("0091", ""),), (("0092", "12345678Z"),)):
+        outcome = parity(_row(text_figures=held), "cli", shown)
+        assert (outcome.outcome, outcome.causes) == (
+            "differs",
+            ("casilla 0091 redacted but the backend row has no value for it",),
+        )
     assert figure_causes("cli", {"0091": ""}, {"0091": "sha256:0123abcd"}) == [
-        "casilla 0091 cli sha256:0123abcd, table "
+        "casilla 0091 redacted but the backend row has no value for it"
     ]
+
+
+def test_the_frontend_line_counts_the_rows_matched_on_redacted_casillas() -> None:
+    row = _row(text_figures=(("0091", "12345678Z"),))
+    redacted = _result(surface="cli", figures={**dict(_FIGURES), "0091": "sha256:0123abcd"})
+    comparison = compare_frontend([row], {redacted.key: redacted})
+    assert comparison.matched_on_redacted("cli") == 1
+    assert "matched on redacted casillas" in frontend_line(comparison)
+    shown = _result(surface="cli", figures=dict(_FIGURES))
+    plain = compare_frontend([_row()], {shown.key: shown})
+    assert "redacted" not in frontend_line(plain)
 
 
 @pytest.mark.parametrize(
@@ -283,7 +314,7 @@ def test_only_the_exact_redaction_form_is_redacted(text: str) -> None:
 def test_a_redacted_figure_is_not_a_cause_for_a_casilla_the_table_lacks_only_when_it_is_not_redacted() -> None:
     assert figure_causes("cli", {}, {"0091": "plain"}) == []
     assert figure_causes("cli", {"0505": "1"}, {"0505": "1", "0091": "sha256:0123abcd"}) == [
-        "casilla 0091 redacted but the table has no value"
+        "casilla 0091 redacted but the backend row has no value for it"
     ]
 
 

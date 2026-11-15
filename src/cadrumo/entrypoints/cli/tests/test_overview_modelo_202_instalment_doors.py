@@ -17,6 +17,7 @@ import pytest
 
 from ....application.overview.applicability_evidence import FilingYearApplicabilityEvidence
 from ....application.overview.calendar import build_overview_calendar
+from ....application.overview.calendar_envelope import OverviewCalendarSupport
 from ....application.overview.calendar_models import OverviewCalendarRange
 from ....application.overview.modelo202_instalment import (
     Modelo202BaseSource,
@@ -113,7 +114,9 @@ def _suppressed_doors(
         entry.model_dump(mode="json")["period"]: entry.period.registry_token for entry in suppressed
     }
     declared = {entry.period.registry_token: [door.action.action_id for door in entry.actions] for entry in suppressed}
-    result, _lines, _notices = overview_calendar_output(calendar, rng, evidence_notices=())
+    result, _lines, _notices = overview_calendar_output(
+        calendar, rng, support=OverviewCalendarSupport.for_range(rng, filing_year_envelope()), evidence_notices=()
+    )
     payload = result.model_dump(mode="json")
     rendered = {
         token_by_wire_period[entry["period"]]: entry["actions"]

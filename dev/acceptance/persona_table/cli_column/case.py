@@ -19,6 +19,7 @@ from pathlib import Path
 from cadrumo.entrypoints.cli.tests.cli_runner import cadrumo_click_command
 from cadrumo.entrypoints.tests.persona_materialisation import PERSONA_PROFILE_CREDENTIAL
 from cadrumo.tests.env_scope import scoped_env_var
+from cadrumo.tests.personas import ExpectedValue
 from dev.acceptance.installed_cli import authority_generation
 
 from ..export_check import export_reason
@@ -130,6 +131,16 @@ def unfiltered_plan(persona_id: str, horizon: int) -> tuple[list[PlannedRow], fr
         return plan_rows(persona_id, horizon)
 
 
+def expected_values(persona_id: str, horizon: int, row: PlannedRow) -> list[ExpectedValue]:
+    """The persona's stated values in force for ``row`` when the replay runs under ``horizon``.
+
+    The envelope is moved to the case's horizon, as the table run reads it: a value stated relative to the horizon
+    names another year under another horizon, so the registry's own horizon would expect the wrong figures.
+    """
+    envelope = replace(registry_envelope(), horizon=horizon)
+    return stated_values(persona_under_horizon(persona_id, horizon), envelope, row)
+
+
 def export_check_for(persona_id: str, horizon: int) -> ExportCheck:
     """The table's own checks of a written fichero for ``persona_id`` under ``horizon``: text rules, then readback.
 
@@ -148,8 +159,7 @@ def export_check_for(persona_id: str, horizon: int) -> ExportCheck:
         row = planned().get(plan.key)
         if row is None:
             return None
-        values = stated_values(persona_under_horizon(persona_id, horizon), registry_envelope(), row)
-        return export_reason(row, values, output)
+        return export_reason(row, expected_values(persona_id, horizon, row), output)
 
     return check
 

@@ -4408,6 +4408,17 @@ cli:
         amb AEAT.
       show_suppressed_help: Mostra també les entrades suprimides (no aplicables) al
         calendari.
+      support:
+        above_ceiling: Aquest període és posterior a %{ceiling}, l'últim exercici
+          admès. No està admès, cosa que no vol dir que no tinguis res a presentar.
+        below_floor: Aquest període és anterior a %{floor}, el primer exercici admès.
+          No està admès, cosa que no vol dir que no tinguis res a presentar.
+        partial: Part d'aquest període queda fora dels exercicis admesos; aquests
+          anys no mostren obligacions perquè no estan admesos, no perquè no tinguis
+          res a presentar.
+        projected: Els exercicis posteriors a %{horizon} encara no tenen formulari
+          propi publicat; els seus terminis s'estimen a partir del més recent i pots
+          calcular-los, però no presentar-los.
       to_help: Data de fi inclusiva del calendari (ISO YYYY-MM-DD).
     calendar_local_filing_evidence_unavailable: No s'ha pogut carregar l'evidència
       de presentació local del calendari; el calendari es deriva del calendari de

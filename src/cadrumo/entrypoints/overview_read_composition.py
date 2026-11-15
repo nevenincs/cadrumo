@@ -379,7 +379,7 @@ class _OverviewReadPorts:
                 live_censo_verified_profile_keys=live_censo_verified_profile_keys(record),
                 applicability_evidence=evidence,
             )
-            active = OverviewCalendarSnapshot.from_calendar(calendar)
+            active = OverviewCalendarSnapshot.from_calendar(calendar, envelope=operation.supported_filing_years())
             legal_ref = _deemed_served_legal_ref(calendar, operation=operation)
             notices = _calendar_notice_snapshots(
                 (

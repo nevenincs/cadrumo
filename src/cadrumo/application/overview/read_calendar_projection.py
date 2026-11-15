@@ -9,14 +9,17 @@ from pydantic import BaseModel, NonNegativeInt, model_validator
 
 from ...core.i18n.render import tr
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from ...domain.calculations.registry.schema_references import TemporalSupportEnvelope
 from ...domain.deadlines.models import ObligationStatus
 from .agenda import OverviewAgenda
 from .backlog import OverviewBacklog
+from .calendar_envelope import OverviewCalendarSupport, calendar_support_state
 from .calendar_models import (
     CalendarCompleteness,
     CalendarWarning,
     OverviewCalendar,
     OverviewCalendarEntry,
+    OverviewCalendarEntrySource,
     OverviewCalendarRange,
 )
 from .coverage import CoverageAdviceReason, ObligationCoverageReport
@@ -48,11 +51,17 @@ def _without_deadlines(coverage: ObligationCoverageReport) -> tuple[str, ...]:
 
 
 class OverviewCalendarSnapshot(BaseModel):
-    """Full current calendar output without private input records."""
+    """Full current calendar output without private input records.
+
+    ``support`` carries the filing-year envelope the read was served under and
+    where the requested range sits in it, so a range outside the envelope reads
+    as unsupported rather than as a calendar with nothing due.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     range: OverviewCalendarRange
+    support: OverviewCalendarSupport
     evaluated_on: date
     entries: tuple[OverviewCalendarEntrySnapshot, ...]
     generated_at: datetime
@@ -74,11 +83,23 @@ class OverviewCalendarSnapshot(BaseModel):
             raise ValueError("calendar late_count must count only overdue entries")
         return self
 
+    @model_validator(mode="after")
+    def _support_matches_range(self) -> Self:
+        if self.support.state is not calendar_support_state(self.range, self.support.envelope()):
+            raise ValueError("calendar support state differs from its range and envelope")
+        if self.support.unsupported and (
+            self.suppressed_entries
+            or any(row.source is OverviewCalendarEntrySource.REGISTRY_DEADLINE for row in self.entries)
+        ):
+            raise ValueError("a calendar range outside the filing-year envelope cannot carry registry deadlines")
+        return self
+
     @classmethod
-    def from_calendar(cls, value: OverviewCalendar) -> Self:
-        """Copy legal rows, observed events, completeness and total coverage."""
+    def from_calendar(cls, value: OverviewCalendar, *, envelope: TemporalSupportEnvelope) -> Self:
+        """Copy legal rows, observed events, completeness and total coverage under the served envelope."""
         return cls(
             range=value.range,
+            support=OverviewCalendarSupport.for_range(value.range, envelope),
             evaluated_on=value.evaluated_on,
             entries=tuple(_entry(row, value.completeness, value.warnings) for row in value.entries),
             generated_at=value.generated_at,
