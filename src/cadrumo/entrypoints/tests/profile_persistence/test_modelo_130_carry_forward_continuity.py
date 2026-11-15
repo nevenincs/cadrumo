@@ -119,6 +119,7 @@ def _calculate_modelo_revision(work_unit_id: str, **kwargs: Any) -> Any:
         return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit_id,
             ports=build_calculation_action_ports(bucket_id=repository.bucket_id, operation=operation),
+            record_operator_layer=True,
             **kwargs,
         ).revision
 
