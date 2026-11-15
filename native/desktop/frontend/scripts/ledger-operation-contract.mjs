@@ -26,6 +26,10 @@ const outputs = {
   documentReview: "src/shell/ledgerDocumentReviewContract.ts",
   movement: "src/shell/ledgerMovementContract.ts",
   movementCheck: "src/shell/ledgerMovementCheckContract.ts",
+  inventory: "src/shell/ledgerInventoryContract.ts",
+  activityAsset: "src/shell/ledgerActivityAssetContract.ts",
+  activityAssetRead: "src/shell/ledgerActivityAssetReadContract.ts",
+  entry: "src/shell/ledgerEntryContract.ts",
 };
 
 const frontend = fileURLToPath(new URL("..", import.meta.url));

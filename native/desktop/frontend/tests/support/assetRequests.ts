@@ -35,6 +35,7 @@ import {
 import { servedEditionOf } from "../../src/dev/servedYearAuthority";
 import type {
   AcquisitionCandidate,
+  AssetKind,
   DisposalFacts,
   FormOptions,
   LedgerEntryLimits,
@@ -42,18 +43,10 @@ import type {
 import { holdLedgerLimits } from "../../src/shell/ledgerLimits";
 
 /** What the backend serves with the options of a form. */
-type Served = {
-  methods: string[];
-  method_facts: FormOptions["method_facts"];
-  acquisition_shapes: string[];
-  declared_activities: string[];
-  disposal_reasons: FormOptions["disposal_reasons"];
-  basis_stages: FormOptions["basis_stages"];
-  opening_statuses: FormOptions["opening_statuses"];
-  acquired_conditions: FormOptions["acquired_conditions"];
-  further_acquisition_shapes: string[];
-  m130_periods: string[];
-};
+type Served = Omit<
+  FormOptions,
+  "tax_year" | "asset_kind" | "regime" | "edition" | "table_groups"
+>;
 
 type Scenario =
   | { id: string; kind: "create"; draft: FormDraft }
@@ -101,7 +94,8 @@ const scenarioYear = Number(SCENARIO_TODAY.slice(0, 4));
 
 const optionsFor = (kind: string, served: Served): FormOptions => ({
   tax_year: scenarioYear,
-  asset_kind: kind,
+  // A scenario names only kinds the register defines.
+  asset_kind: kind as AssetKind,
   regime: "normal",
   edition: servedEditionOf(scenarioYear)!,
   ...served,
