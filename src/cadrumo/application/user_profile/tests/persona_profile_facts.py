@@ -20,7 +20,7 @@ from cadrumo.application.wizard.catalogue import build_setup_flow
 from cadrumo.application.wizard.imputation_election import YEAR_QUESTION_ID
 from cadrumo.application.wizard.patch_edit import validate_profile_patch
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, compose_legal_full_name
 from cadrumo.tests.personas import IdentityRef, Persona, ProfileValue, YearEnvelope, read_persona
 
 
@@ -33,8 +33,20 @@ def _submitted(persona: Persona, value: ProfileValue, envelope: YearEnvelope) ->
     if isinstance(value, tuple):
         return ",".join(value)
     if isinstance(value, IdentityRef):
-        return persona.identity(value)
+        return _identity_text(persona, value)
     return value.resolve(envelope).isoformat()
+
+
+def _identity_text(persona: Persona, reference: IdentityRef) -> str:
+    """One identity field as the profile takes it; ``full_name`` is the official surnames-first name or razón social."""
+    if reference.field != "full_name":
+        return persona.identity(reference)
+    holder = persona.identities.role(reference.role)
+    if holder.legal_name is not None:
+        return holder.legal_name
+    if holder.surnames is None or holder.name is None:
+        raise ValueError(f"{persona.id}: identity {reference.role} carries no name to compose")
+    return compose_legal_full_name(surnames=holder.surnames, name=holder.name)
 
 
 def _patch_answers(persona: Persona, envelope: YearEnvelope) -> dict[str, str]:
@@ -70,6 +82,11 @@ def persona_profile_facts(persona_id: str) -> tuple[UserProfileFact, ...]:
             section = sections["activities"]
             index = next_section_row_index(section.key, (fact.path for fact in facts))
             facts.extend(section_row_facts(section, row_index=index, values=dict(activity.values)))
+        for row in persona.profile_rows:
+            section = sections[row.section]
+            index = next_section_row_index(section.key, (fact.path for fact in facts))
+            values = {key: _submitted(persona, value, envelope) for key, value in row.values}
+            facts.extend(section_row_facts(section, row_index=index, values=values))
         return tuple(facts)
 
 
