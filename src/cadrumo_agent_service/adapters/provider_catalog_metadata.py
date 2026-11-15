@@ -42,13 +42,8 @@ def _verify_wheel_module(base: Path, records: Mapping[str, PackagePath], module_
         raise ValueError("agent_module_changed")
 
 
-def agent_cohort_module(module_name: str) -> ModuleType:
-    """Load one public module of the agent wheel installed beside this one, verified against its record.
-
-    Raises:
-        ProviderCatalogUnavailableError: When the agent is missing, editable, of
-            another wheel cohort, or the module differs from its wheel record.
-    """
+def _cohort_module() -> ModuleType:
+    """Refuse missing, editable or shadowed agent code before loading the declaration module."""
     try:
         agent = distribution("cadrumo-agent")
         application = distribution("cadrumo")
@@ -56,16 +51,11 @@ def agent_cohort_module(module_name: str) -> ModuleType:
         if base != Path(str(application.locate_file(""))).resolve(strict=True):
             raise ValueError("different_wheel_cohort")
         records = {str(item).replace("\\", "/"): item for item in agent.files or ()}
-        for verified in ("cadrumo_agent", module_name):
-            _verify_wheel_module(base, records, verified)
-        return import_module(module_name)
+        for module_name in ("cadrumo_agent", DECLARED_CATALOG_MODULE):
+            _verify_wheel_module(base, records, module_name)
+        return import_module(DECLARED_CATALOG_MODULE)
     except (PackageNotFoundError, ImportError, OSError, ValueError) as error:
         raise ProviderCatalogUnavailableError(ProviderCatalogUnavailableReason.AGENT_NOT_FOUND) from error
-
-
-def _cohort_module() -> ModuleType:
-    """Refuse missing, editable or shadowed agent code before loading the declaration module."""
-    return agent_cohort_module(DECLARED_CATALOG_MODULE)
 
 
 def declared_catalog_envelope(document: object) -> dict[str, Any]:
@@ -100,7 +90,6 @@ def declared_provider_catalog_response() -> dict[str, Any]:
 __all__ = [
     "DECLARED_CATALOG_KIND",
     "DECLARED_CATALOG_MODULE",
-    "agent_cohort_module",
     "declared_catalog_envelope",
     "declared_provider_catalog_response",
 ]

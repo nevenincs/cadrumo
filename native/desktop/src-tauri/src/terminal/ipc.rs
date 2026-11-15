@@ -1,6 +1,5 @@
 use super::{
     Kind, TerminalState,
-    console_environment::ConsoleEnvironment,
     session::{INPUT_LIMIT, Sink, failure},
 };
 use crate::{app::Commands, shell::channel::Deliveries};
@@ -118,24 +117,15 @@ fn terminal_open<R: Runtime>(invoke: Invoke<R>) -> bool {
         let rows: u16 = CommandArg::from_command(argument("rows"))?;
         let frames: Channel = CommandArg::from_command(argument("frames"))?;
         let sink = frame_sink(message.webview(), frames);
-        let agent = message
-            .webview()
-            .try_state::<Arc<crate::agent::AgentHost>>()
-            .map(|host| host.inner().clone());
-        Ok((state, document, kind, cols, rows, sink, agent))
+        Ok((state, document, kind, cols, rows, sink))
     })();
     match parsed {
-        Ok((state, document, kind, cols, rows, sink, agent)) => {
+        Ok((state, document, kind, cols, rows, sink)) => {
             resolver.respond_async(async move {
                 tauri::async_runtime::spawn_blocking(move || {
-                    // Read when the console starts, so it never carries an earlier profile's values.
-                    let console = match (kind, agent) {
-                        (Kind::Console, Some(agent)) => agent.console_environment(),
-                        _ => ConsoleEnvironment::base(),
-                    };
                     record(
                         &state.launch.diagnostics,
-                        state.open_with(kind, cols, rows, sink, document, &console),
+                        state.open(kind, cols, rows, sink, document),
                     )
                 })
                 .await

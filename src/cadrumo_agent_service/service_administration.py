@@ -56,7 +56,6 @@ from .providers.domain.record import LocalEngine, LocalPlacement
 from .providers.persistence.attachment_disclosures import SecureAttachmentDisclosureStore
 from .providers.persistence.store import SecureLocalModelListStore, SecureProviderSettingsStore
 from .service_attachment_admin import answer_attachment_admin
-from .service_console_environment import answer_console_environment
 from .service_support import (
     ADMIN_READ_FRESH_SECONDS,
     ADMIN_READ_SECONDS,
@@ -176,15 +175,6 @@ class AgentServiceAdministration(ABC):
         self._catalog_read = BoundedRead(self._catalog_document, name="catalog", fresh_seconds=ADMIN_READ_FRESH_SECONDS)
         self._status_read = BoundedRead(self._provider_status, name="status", fresh_seconds=ADMIN_READ_FRESH_SECONDS)
         self._ownership = ExitStack()
-        # Plain reads that never wait on the agent tree, by their admin action.
-        self._plain_reads: dict[str, Callable[[], dict[str, Any]]] = {
-            "provider_lanes": self._provider_lanes,
-            "local_models": self._local_model_list,
-            "local_engine": self._local_engine,
-            "console_environment": lambda: answer_console_environment(
-                self._root, closing=self._closing.is_set(), lease=lambda: self.client.lease
-            ),
-        }
         self._owned = False
         self._emit = emit
 
@@ -251,9 +241,12 @@ class AgentServiceAdministration(ABC):
             return self._submit_sign_in_code(attempt_id, secret)
         if action in {"connect_status", "connect_cancel"}:
             return self._observe_sign_in(attempt_id, cancel=action == "connect_cancel")
-        read = self._plain_reads.get(action)
-        if read is not None:
-            return read()
+        if action == "provider_lanes":
+            return self._provider_lanes()
+        if action == "local_models":
+            return self._local_model_list()
+        if action == "local_engine":
+            return self._local_engine()
         if action in {"catalog", "status"}:
             return self._cached_read(action)
         arguments: dict[str, Any] = {

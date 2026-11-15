@@ -16,13 +16,7 @@
       }
     ],
     "security": {
-      "capabilities": [
-        {
-          "identifier": "main-window-events",
-          "windows": ["main"],
-          "permissions": ["core:event:allow-listen", "core:event:allow-unlisten"]
-        }
-      ],
+      "capabilities": [],
       "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src ipc: http://ipc.localhost; object-src 'none'; frame-src 'none'; base-uri 'self'; form-action 'none'"
     }
   },

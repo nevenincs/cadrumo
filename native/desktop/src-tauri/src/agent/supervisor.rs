@@ -80,7 +80,7 @@ pub type Ready = Arc<dyn Fn() + Send + Sync>;
 struct Shared {
     status: Mutex<Status>,
     listener: Mutex<Option<Listener>>,
-    ready: Mutex<Vec<Ready>>,
+    ready: Mutex<Option<Ready>>,
     gateway: Mutex<Option<Gateway>>,
     admin: Mutex<Option<super::admin::Endpoint>>,
     running: Mutex<Option<Running>>,
@@ -191,7 +191,7 @@ impl Supervisor {
             shared: Arc::new(Shared {
                 status: Mutex::new(status),
                 listener: Mutex::new(None),
-                ready: Mutex::new(Vec::new()),
+                ready: Mutex::new(None),
                 gateway: Mutex::new(None),
                 admin: Mutex::new(None),
                 running: Mutex::new(None),
@@ -347,9 +347,9 @@ impl Supervisor {
         id
     }
 
-    /// Calls `ready` each later time the agent becomes ready, after every earlier hook.
+    /// Calls `ready` each later time the agent becomes ready, replacing any earlier one.
     pub fn on_ready(&self, ready: Ready) {
-        lock(&self.shared.ready).push(ready);
+        *lock(&self.shared.ready) = Some(ready);
     }
 
     /// Removes the listener `subscription`, never a newer one.
@@ -415,8 +415,8 @@ fn publish(shared: &Shared, state: State) {
             .service(None, ServiceFact::AgentRefused { reason: code });
     }
     if matches!(status.state, State::Ready { .. }) {
-        let hooks = lock(&shared.ready).clone();
-        for ready in hooks {
+        let ready = lock(&shared.ready).clone();
+        if let Some(ready) = ready {
             ready();
         }
     }

@@ -1,6 +1,5 @@
 //! Live PTY sessions, at most one per kind, streamed over one channel each.
 mod console;
-pub(crate) mod console_environment;
 mod credit;
 mod frame;
 mod ipc;
@@ -332,29 +331,7 @@ impl TerminalState {
     }
 
     pub fn open(&self, kind: Kind, cols: u16, rows: u16, sink: Sink, document: u64) -> Result<u64> {
-        let base = console_environment::ConsoleEnvironment::base();
-        self.open_with(kind, cols, rows, sink, document, &base)
-    }
-
-    /// Opens `kind` as [`TerminalState::open`] does, composing `console` into
-    /// a console. Its working directory is taken only when it is a real
-    /// directory beneath the storage root, as the shared workspace is.
-    pub fn open_with(
-        &self,
-        kind: Kind,
-        cols: u16,
-        rows: u16,
-        sink: Sink,
-        document: u64,
-        console: &console_environment::ConsoleEnvironment,
-    ) -> Result<u64> {
-        let storage = &self.launch.working_directory;
-        let program = console_environment::composed(
-            kind,
-            Program::for_kind(&self.launch, kind)?,
-            console,
-            |directory| console::validate_workspace(directory, storage).is_ok(),
-        );
+        let program = Program::for_kind(&self.launch, kind)?;
         open_for(&self.registry, &self.documents, document, kind, || {
             Session::start(program, cols, rows, sink, self.launch.diagnostics.clone())
         })
