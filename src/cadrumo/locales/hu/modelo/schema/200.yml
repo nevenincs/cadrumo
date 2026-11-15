@@ -3953,18 +3953,21 @@ modelo:
           02029:
             help: Függőben lévő vagy keletkezett levonás - Open Barcelona-Trofeo Conde
               de Godó (OB)
-            label: Open Barcelona-Trofeo Conde de Godó (OB). Függőben lévő vagy keletkezett
-              levonás
+            label: 'Egyes tevékenységek ösztönzésére szolgáló levonások - 2023: Open
+              Barcelona-Trofeo Conde de Godó (OB) - Függőben lévő/keletkezett levonás
+              [02029]'
           '02030':
             help: Ebben az elszámolásban alkalmazva - Open Barcelona-Trofeo Conde
               de Godó (OB)
-            label: Open Barcelona-Trofeo Conde de Godó (OB). Ebben az elszámolásban
-              alkalmazva
+            label: 'Egyes tevékenységek ösztönzésére szolgáló levonások - 2023: Open
+              Barcelona-Trofeo Conde de Godó (OB) - Ebben az elszámolásban alkalmazva
+              [02030]'
           '02031':
             help: Jövőbeli időszakokban alkalmazandó - Open Barcelona-Trofeo Conde
               de Godó (OB)
-            label: Open Barcelona-Trofeo Conde de Godó (OB). Jövőbeli időszakokban
-              alkalmazandó
+            label: 'Egyes tevékenységek ösztönzésére szolgáló levonások - 2023: Open
+              Barcelona-Trofeo Conde de Godó (OB) - Jövőbeli időszakokban alkalmazandó
+              [02031]'
           '02032':
             help: Függőben lévő vagy keletkezett levonás - 125 aniversario del Real
               Club de Tenis Barcelona (TB)
@@ -11028,6 +11031,43 @@ modelo:
           levelling-reserve-2020-addition-remaining:
             label: Kiegyenlítési tartalék - Adóalap-csökkentés - Exercici generació
               2020 - Jövőbeli időszakokban hozzáadásra váró összeg [02412]
+          m200-dp200018b-02445-2023:
+            label: Kanári-szigeteki külföldi filmgyártások levonásai (LIS 36.2 cikk
+              és 19/1994. törvény DA 14.) - 2023 - Függőben lévő/keletkezett levonás
+              [02445]
+          m200-dp200018b-02466-2023:
+            label: Kanári-szigeteki külföldi filmgyártások levonásai (LIS 36.2 cikk
+              és 19/1994. törvény DA 14.) - 2023 - Ebben az elszámolásban alkalmazva
+              [02466]
+          m200-dp200018b-02467-2023:
+            label: Kanári-szigeteki külföldi filmgyártások levonásai (LIS 36.2 cikk
+              és 19/1994. törvény DA 14.) - 2023 - Elégtelen adókötelezettség miatt
+              kifizetett összeg [02467]
+          m200-dp200018b-02468-2023:
+            label: Kanári-szigeteki külföldi filmgyártások levonásai (LIS 36.2 cikk
+              és 19/1994. törvény DA 14.) - 2023 - Jövőbeli időszakokban alkalmazandó
+              [02468]
+          m200-dp200020-02766-2023:
+            label: Pénzügyi ráfordítások levonhatóságának korlátozása. levonásra váró
+              pénzügyi ráfordítások - Keletkezés éve 2023(**) - Ebben az elszámolásban
+              alkalmazva [02766]
+          m200-dp200020-02767-2023:
+            label: Pénzügyi ráfordítások levonhatóságának korlátozása. levonásra váró
+              pénzügyi ráfordítások - Keletkezés éve 2023(**) - Jövőbeli időszakokban
+              alkalmazandó - Korlát alapján [02767]
+          m200-dp200020-02768-2023:
+            label: Pénzügyi ráfordítások levonhatóságának korlátozása. levonásra váró
+              pénzügyi ráfordítások - Keletkezés éve 2023(**) - Jövőbeli időszakokban
+              alkalmazandó - Maradék [02768]
+          m200-dp200020-02769-2023:
+            label: Alkalmazatlan üzemi eredménykorlát miatti hozzáadás függőben -
+              Keletkezés éve 2023(**) - Időszak elején alkalmazásra váró [02769]
+          m200-dp200020-02770-2023:
+            label: Alkalmazatlan üzemi eredménykorlát miatti hozzáadás függőben -
+              Keletkezés éve 2023(**) - Ebben az elszámolásban alkalmazva [02770]
+          m200-dp200020-02772-2023:
+            label: Alkalmazatlan üzemi eredménykorlát miatti hozzáadás függőben -
+              Keletkezés éve 2023(**) - Jövőbeli időszakokban alkalmazandó [02772]
           ordinary-donation-2014-applied:
             label: Nonprofit szervezeteknek adott adományok levonása - Általános adományok
               - 2014 - Ebben az elszámolásban alkalmazva [00998]
@@ -11616,10 +11656,81 @@ modelo:
                 és más, növelt levonásra jogosító célokra adott adományok - 2021 -
                 Ugyanazon szervezetnek ismételt adományozással - Jövőbeli időszakokban
                 alkalmazandó [01036]
+            '01061':
+              label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
+                és más, növelt levonásra jogosító célokra adott adományok - 2022(*)
+                Ugyanazon szervezetnek ismételt adományozás nélkül - Függőben lévő/keletkezett
+                levonás [01061]
+            '01062':
+              label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
+                és más, növelt levonásra jogosító célokra adott adományok - 2022(*)
+                Ugyanazon szervezetnek ismételt adományozás nélkül - Ebben az elszámolásban
+                alkalmazva [01062]
+            '01072':
+              label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
+                és más, növelt levonásra jogosító célokra adott adományok - 2022(*)
+                Ugyanazon szervezetnek ismételt adományozás nélkül - Jövőbeli időszakokban
+                alkalmazandó [01072]
+            '01074':
+              label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
+                és más, növelt levonásra jogosító célokra adott adományok - 2022(*)
+                - Ugyanazon szervezetnek ismételt adományozással - Ebben az elszámolásban
+                alkalmazva [01074]
+            01078:
+              label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
+                és más, növelt levonásra jogosító célokra adott adományok - 2022(*)
+                - Ugyanazon szervezetnek ismételt adományozással - Jövőbeli időszakokban
+                alkalmazandó [01078]
             01081:
               label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
                 és más, növelt levonásra jogosító célokra adott adományok - Összesen
                 - Jövőbeli időszakokban alkalmazandó [01081]
+            '01117':
+              label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
+                érvényesíthető követeléssé - Halasztott adókövetelések (DTA). LIS
+                130. cikk - Keletkezés éve - 2022(*) - Az időszak elején felhasználásra
+                váró halasztott adókövetelések összesen (130.6 a) cikk) [01117]
+            01119:
+              label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
+                érvényesíthető követeléssé - Halasztott adókövetelések (DTA). LIS
+                130. cikk - Keletkezés éve - 2022(*) - Az időszak elején felhasználásra
+                váró halasztott adókövetelések - Érvényesíthető követeléssé alakítás
+                jogával [01119]
+            '01120':
+              label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
+                érvényesíthető követeléssé - Halasztott adókövetelések (DTA). LIS
+                130. cikk - Keletkezés éve - 2022(*) - Az időszak elején felhasználásra
+                váró halasztott adókövetelések - Érvényesíthető követeléssé alakítás
+                joga adótöbblet miatt [01120]
+            '01121':
+              label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
+                érvényesíthető követeléssé - Halasztott adókövetelések (DTA). LIS
+                130. cikk - Keletkezés éve - 2022(*) - Az időszak elején felhasználásra
+                váró halasztott adókövetelések - Érvényesíthető követeléssé alakítás
+                joga nélkül [01121]
+            '01122':
+              label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
+                érvényesíthető követeléssé - Halasztott adókövetelések (DTA). LIS
+                130. cikk - Keletkezés éve - 2022(*) - Az időszakban érvényesíthető
+                követeléssé alakított halasztott adókövetelések [01122]
+            '01131':
+              label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
+                érvényesíthető követeléssé - Halasztott adókövetelések (DTA). LIS
+                130. cikk - Keletkezés éve - 2022(*) - Jövőbeli időszakokban felhasználásra
+                váró halasztott adókövetelések - Érvényesíthető követeléssé alakítás
+                jogával [01131]
+            '01132':
+              label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
+                érvényesíthető követeléssé - Halasztott adókövetelések (DTA). LIS
+                130. cikk - Keletkezés éve - 2022(*) - Jövőbeli időszakokban felhasználásra
+                váró halasztott adókövetelések - Érvényesíthető követeléssé alakítás
+                jogával, adótöbblet [01132]
+            '01133':
+              label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
+                érvényesíthető követeléssé - Halasztott adókövetelések (DTA). LIS
+                130. cikk - Keletkezés éve - 2022(*) - Jövőbeli időszakokban felhasználásra
+                váró halasztott adókövetelések - Érvényesíthető követeléssé alakítás
+                joga nélkül [01133]
             '01240':
               label: Pénzügyi ráfordítások levonhatóságának korlátozása - LIS 16.5.
                 és/vagy 83. cikke szerinti korlát - a) Az adómegállapítási időszak
@@ -12861,11 +12972,82 @@ modelo:
                 adóhatósággal szemben érvényesíthető követeléssé alakításából eredő
                 beszámítás (LIS 130. cikk) - Tartományi adóhatóságok/Navarra (Összesen)
                 [01044]
+            '01061':
+              label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
+                és más, növelt levonásra jogosító célokra adott adományok - 2022 Ugyanazon
+                szervezetnek ismételt adományozás nélkül - Függőben lévő/keletkezett
+                levonás [01061]
+            '01062':
+              label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
+                és más, növelt levonásra jogosító célokra adott adományok - 2022 Ugyanazon
+                szervezetnek ismételt adományozás nélkül - Ebben az elszámolásban
+                alkalmazva [01062]
+            '01072':
+              label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
+                és más, növelt levonásra jogosító célokra adott adományok - 2022 Ugyanazon
+                szervezetnek ismételt adományozás nélkül - Jövőbeli időszakokban alkalmazandó
+                [01072]
             '01073':
               label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
                 és más, növelt levonásra jogosító célokra adott adományok - 2022 -
                 Ugyanazon szervezetnek ismételt adományozással - Függőben lévő/keletkezett
                 levonás [01073]
+            '01074':
+              label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
+                és más, növelt levonásra jogosító célokra adott adományok - 2022 -
+                Ugyanazon szervezetnek ismételt adományozással - Ebben az elszámolásban
+                alkalmazva [01074]
+            01078:
+              label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
+                és más, növelt levonásra jogosító célokra adott adományok - 2022 -
+                Ugyanazon szervezetnek ismételt adományozással - Jövőbeli időszakokban
+                alkalmazandó [01078]
+            '01117':
+              label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
+                érvényesíthető követeléssé - Halasztott adókövetelések (DTA). LIS
+                130. cikk - Keletkezés éve - 2022 - Az időszak elején felhasználásra
+                váró halasztott adókövetelések összesen (130.6 a) cikk) [01117]
+            01119:
+              label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
+                érvényesíthető követeléssé - Halasztott adókövetelések (DTA). LIS
+                130. cikk - Keletkezés éve - 2022 - Az időszak elején felhasználásra
+                váró halasztott adókövetelések - Érvényesíthető követeléssé alakítás
+                jogával [01119]
+            '01120':
+              label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
+                érvényesíthető követeléssé - Halasztott adókövetelések (DTA). LIS
+                130. cikk - Keletkezés éve - 2022 - Az időszak elején felhasználásra
+                váró halasztott adókövetelések - Érvényesíthető követeléssé alakítás
+                joga adótöbblet miatt [01120]
+            '01121':
+              label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
+                érvényesíthető követeléssé - Halasztott adókövetelések (DTA). LIS
+                130. cikk - Keletkezés éve - 2022 - Az időszak elején felhasználásra
+                váró halasztott adókövetelések - Érvényesíthető követeléssé alakítás
+                joga nélkül [01121]
+            '01122':
+              label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
+                érvényesíthető követeléssé - Halasztott adókövetelések (DTA). LIS
+                130. cikk - Keletkezés éve - 2022 - Az időszakban érvényesíthető követeléssé
+                alakított halasztott adókövetelések [01122]
+            '01131':
+              label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
+                érvényesíthető követeléssé - Halasztott adókövetelések (DTA). LIS
+                130. cikk - Keletkezés éve - 2022 - Jövőbeli időszakokban felhasználásra
+                váró halasztott adókövetelések - Érvényesíthető követeléssé alakítás
+                jogával [01131]
+            '01132':
+              label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
+                érvényesíthető követeléssé - Halasztott adókövetelések (DTA). LIS
+                130. cikk - Keletkezés éve - 2022 - Jövőbeli időszakokban felhasználásra
+                váró halasztott adókövetelések - Érvényesíthető követeléssé alakítás
+                jogával, adótöbblet [01132]
+            '01133':
+              label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
+                érvényesíthető követeléssé - Halasztott adókövetelések (DTA). LIS
+                130. cikk - Keletkezés éve - 2022 - Jövőbeli időszakokban felhasználásra
+                váró halasztott adókövetelések - Érvényesíthető követeléssé alakítás
+                joga nélkül [01133]
             01258:
               label: Pénzügyi ráfordítások levonhatóságának korlátozása - LIS 16.1.
                 és 16.2. cikke szerinti korlát - m) Korábbi adómegállapítási időszakokból
@@ -13064,6 +13246,15 @@ modelo:
               label: Bizonyos járművek és új töltőinfrastruktúrák szabad amortizációja
                 (LIS 18. kiegészítő rendelkezés, RDL 4/2024) - Csökkenés - Évi korrekciók
                 - Átmeneti (korábbi időszakokból eredő) [01962]
+            02029:
+              label: Open Barcelona-Trofeo Conde de Godó (OB). Függőben lévő vagy
+                keletkezett levonás
+            '02030':
+              label: Open Barcelona-Trofeo Conde de Godó (OB). Ebben az elszámolásban
+                alkalmazva
+            '02031':
+              label: Open Barcelona-Trofeo Conde de Godó (OB). Jövőbeli időszakokban
+                alkalmazandó
             '02301':
               label: Az eredmény korrekcióinak részletezése - Az adóévi eredménykimutatás
                 eredményének korrekciói - Állandó jellegű korrekció (az IS és az IC
@@ -14361,6 +14552,15 @@ modelo:
               label: Bizonyos járművek és új töltőinfrastruktúrák szabad amortizációja
                 (LIS 18. kiegészítő rendelkezés, RDL 4/2024) - Csökkenés - Évi korrekciók
                 - Átmeneti (korábbi időszakokból eredő)
+            02029:
+              label: Open Barcelona-Trofeo Conde de Godó (OB). Függőben lévő vagy
+                keletkezett levonás
+            '02030':
+              label: Open Barcelona-Trofeo Conde de Godó (OB). Ebben az elszámolásban
+                alkalmazva
+            '02031':
+              label: Open Barcelona-Trofeo Conde de Godó (OB). Jövőbeli időszakokban
+                alkalmazandó
             02079:
               label: 'Kiegészítő információk a levonási korlátok számításához - 2025:
                 Finanszírozó: az adóidőszakban keletkezett kanári-szigeteki spanyol
