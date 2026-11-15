@@ -234,6 +234,28 @@ def test_an_owner_hands_one_profile_the_same_open_memory() -> None:
     assert _kept(memory)
 
 
+def test_form_memory_cannot_be_filled_after_session_close_or_reused_after_handover() -> None:
+    owner = WorkbenchCaptureMemoryOwner()
+    memory = owner.for_profile(_PROFILE_ID)
+    builds: list[str] = []
+
+    def end_session_during_build() -> None:
+        builds.append("closed-during-build")
+        owner.close()
+
+    memory.form_projection.reuse("same-input", end_session_during_build)
+    memory.form_projection.clear()
+    memory.form_projection.reuse("same-input", lambda: builds.append("closed-reader"))
+    assert builds == ["closed-during-build", "closed-reader"]
+    fresh = owner.for_profile(_PROFILE_ID)
+    fresh.form_projection.reuse("same-input", lambda: builds.append("fresh"))
+    fresh.form_projection.reuse("same-input", lambda: builds.append("must-not-build"))
+    assert builds[-1] == "fresh"
+    owner.for_profile("22222222-2222-4222-8222-222222222222")
+    fresh.form_projection.reuse("same-input", lambda: builds.append("handed-over"))
+    assert builds[-1] == "handed-over"
+
+
 def test_another_profile_closes_the_memory_the_first_kept() -> None:
     owner = WorkbenchCaptureMemoryOwner()
     first = owner.for_profile(_PROFILE_ID)

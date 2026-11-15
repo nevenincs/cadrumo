@@ -1981,15 +1981,21 @@ async function driveRow(row, runDir, persona) {
 /**
  * Record the verified return as filed through the export view's own door:
  * a PRESENTADO revision whose AEAT status stays pending; nothing is sent.
- * Anything short of that is named in the row's reasons.
+ * Sets `out.file` to the stage the table compares: `pass` only when the
+ * window shows the filed state by itself (the served journey's file step
+ * done, with no read-again press); `not-shown` when it does not; `refused`
+ * when the filing was refused; `not-reached` when the door was not usable.
+ * Anything short of `pass` is named in the row's reasons.
  */
 async function recordFiling(out) {
   const say = (text) => out.reasons.push(`file: ${text}`);
   const panel = '[role="tabpanel"]';
   const dialog = '[role="dialog"]';
+  out.file = "not-reached";
   try {
     await openView("workspace.modelo.filing.title");
   } catch (error) {
+    out.file = "error";
     say(String(error?.message ?? error));
     return;
   }
@@ -2135,6 +2141,19 @@ async function recordFiling(out) {
     state = quiet;
     words = freshOf(before, quiet);
   }
+  // Judged before any read-again press: the filed state counts only when the
+  // window draws it from the served journey by itself.
+  const fileStep = () =>
+    exec(
+      () =>
+        document
+          .querySelector('[data-journey] [data-step="file"]')
+          ?.getAttribute("data-status") ?? null,
+    );
+  const byItself = await fileStep();
+  const refused = (state?.refusals ?? []).some(
+    (text) => !before.refusals.includes(text),
+  );
   if (await exec(pageVisible, ".modelo-write-hold")) {
     const reread = await clickText(".modelo-write-hold", "button", [
       label("workspace.modelo.read_again"),
@@ -2158,7 +2177,20 @@ async function recordFiling(out) {
   if (words.length > 0) say(words.join(" | "));
   else if (!state)
     say("the window did not settle the local filing within the wait");
-  log("filed", { action: state?.action ?? null, words });
+  if (refused) out.file = "refused";
+  else if (byItself === "done") out.file = "pass";
+  else {
+    out.file = "not-shown";
+    say(
+      `the filed state is not shown by itself (file step ${byItself ?? "absent"}; after reading again ${(await fileStep()) ?? "absent"})`,
+    );
+  }
+  log("filed", {
+    action: state?.action ?? null,
+    words,
+    file: out.file,
+    byItself,
+  });
 }
 
 async function exportFile(row, runDir, persona, out) {
@@ -2904,7 +2936,7 @@ const KEYS = [
   "log",
 ];
 /** Present only when the export door was measured. */
-const OPTIONAL_KEYS = ["export_served"];
+const OPTIONAL_KEYS = ["export_served", "file"];
 
 /** The acceptance intake refuses unknown keys and unknown stages; so does this. */
 function assertContract(line) {
@@ -2919,6 +2951,8 @@ function assertContract(line) {
   assert.deepEqual(present.sort(), [...expected].sort(), "line keys");
   if ("export_served" in line)
     assert.equal(typeof line.export_served, "boolean", "export_served");
+  if ("file" in line)
+    assert([...STAGES, "not-shown"].includes(line.file), `file: ${line.file}`);
   assert.equal(line.surface, "window");
   assert.equal(typeof line.loads, "boolean");
   if (line.modelo === null) {
@@ -3085,6 +3119,7 @@ test(
             ...(typeof out.export_served === "boolean"
               ? { export_served: out.export_served }
               : {}),
+            ...(typeof out.file === "string" ? { file: out.file } : {}),
             figures: out.figures,
             reason:
               out.reasons.join("; ").slice(0, 1200) ||
