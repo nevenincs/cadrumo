@@ -681,11 +681,8 @@ def evidence_confirm(
         emit_envelope(
             ctx,
             command="ledger.evidence.confirm",
-            result=EvidenceConfirmResult.model_validate(
-                evidence_confirm_payload(
-                    bucket_id=bucket_id,
-                    projection=projection,
-                ),
+            result=EvidenceConfirmResult.model_validate_json(
+                json.dumps(evidence_confirm_payload(bucket_id=bucket_id, projection=projection)),
             ),
             lines=_evidence_confirm_lines(bucket_id, projection),
             notices=evidence_confirm_notices(confirmation),

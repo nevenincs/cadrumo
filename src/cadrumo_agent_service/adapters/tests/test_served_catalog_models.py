@@ -40,7 +40,7 @@ def _entry(model: str, **overrides: Any) -> dict[str, Any]:
 
 
 def _document(
-    *models: object, provider: str = "local", transport: str = "api", health: object | None = None
+    *models: object, provider: str = "llamacpp", transport: str = "api", health: object | None = None
 ) -> dict[str, Any]:
     record = {
         "provider_id": provider,
@@ -61,7 +61,7 @@ def test_the_lanes_entries_are_read_with_their_facts_and_nothing_else() -> None:
         )
     )
 
-    entries = models.lane_models("local", "api")
+    entries = models.lane_models("llamacpp", "api")
 
     assert entries is not None
     assert [entry.id for entry in entries] == ["synthetic-installed:1", "synthetic-plain:1"]
@@ -82,7 +82,7 @@ def test_whether_the_lane_s_server_holds_each_model_is_read_and_an_unstated_one_
         lambda: _document(_entry("synthetic-installed:1"), _entry("synthetic-absent:1", installed=False), unstated)
     )
 
-    entries = models.lane_models("local", "api")
+    entries = models.lane_models("llamacpp", "api")
 
     assert entries is not None
     assert [(entry.id, entry.installed) for entry in entries] == [
@@ -103,7 +103,7 @@ def test_a_server_the_agent_did_not_read_holds_nothing_known_and_keeps_its_model
         _entry("synthetic-held:1"), _entry("synthetic-absent:1", installed=False), health=_engine("not_running")
     )
 
-    entries = ServedCatalogModels(lambda: document).lane_models("local", "api")
+    entries = ServedCatalogModels(lambda: document).lane_models("llamacpp", "api")
 
     assert entries is not None
     assert [(entry.id, entry.installed, entry.vision, entry.size_bytes) for entry in entries] == [
@@ -117,7 +117,7 @@ def test_a_server_the_agent_read_says_what_it_holds() -> None:
         _entry("synthetic-held:1"), _entry("synthetic-absent:1", installed=False), health=_engine("running")
     )
 
-    entries = ServedCatalogModels(lambda: document).lane_models("local", "api")
+    entries = ServedCatalogModels(lambda: document).lane_models("llamacpp", "api")
 
     assert entries is not None
     assert [(entry.id, entry.installed) for entry in entries] == [
@@ -126,8 +126,20 @@ def test_a_server_the_agent_read_says_what_it_holds() -> None:
     ]
 
 
+def test_a_hosted_lane_states_no_install_even_when_its_entries_carry_one() -> None:
+    document = _document(_entry("synthetic-held:1"), _entry("synthetic-absent:1", installed=False), provider="example")
+
+    entries = ServedCatalogModels(lambda: document).lane_models("example", "api")
+
+    assert entries is not None
+    assert [(entry.id, entry.installed) for entry in entries] == [
+        ("synthetic-held:1", None),
+        ("synthetic-absent:1", None),
+    ]
+
+
 def test_no_running_agent_is_no_live_catalogue_and_an_unlisted_lane_lists_nothing() -> None:
-    assert ServedCatalogModels(lambda: None).lane_models("local", "api") is None
+    assert ServedCatalogModels(lambda: None).lane_models("llamacpp", "api") is None
     assert ServedCatalogModels(lambda: _document(_entry("synthetic-installed:1"))).lane_models("absent", "api") == ()
 
 
@@ -140,7 +152,7 @@ def test_an_entry_at_the_agent_s_bounds_is_read() -> None:
     longest = "m" * _AGENT_MODEL_ID_LENGTH
     models = ServedCatalogModels(lambda: _document(_entry("synthetic-empty:1", size_bytes=0), _entry(longest)))
 
-    entries = models.lane_models("local", "api")
+    entries = models.lane_models("llamacpp", "api")
 
     assert entries is not None
     assert [(entry.id, entry.size_bytes) for entry in entries] == [("synthetic-empty:1", 0), (longest, 2_000)]
@@ -176,12 +188,12 @@ def test_an_entry_at_the_agent_s_bounds_is_read() -> None:
         pytest.param(_document(_entry("m" * (_AGENT_MODEL_ID_LENGTH + 1))), id="model-id-past-the-agent-s-bound"),
         pytest.param(_document(_entry("synthetic-installed:1"), "not-an-entry"), id="entry-not-an-object"),
         pytest.param(
-            {"api_version": "v1", "providers": [{"provider_id": "local", "transport": "api"}]}, id="no-catalog"
+            {"api_version": "v1", "providers": [{"provider_id": "llamacpp", "transport": "api"}]}, id="no-catalog"
         ),
     ],
 )
 def test_a_lane_whose_served_entries_do_not_validate_yields_no_live_catalogue(document: dict[str, Any]) -> None:
-    assert ServedCatalogModels(lambda: document).lane_models("local", "api") is None
+    assert ServedCatalogModels(lambda: document).lane_models("llamacpp", "api") is None
 
 
 def _with_background(support: object) -> dict[str, Any]:
@@ -198,7 +210,7 @@ def test_a_lanes_background_support_is_read_as_its_media_and_honoured_options() 
         "options": ["response_schema", "seed", 7, "temperature"],
     }
 
-    background = ServedCatalogModels(lambda: _with_background(support)).lane_background("local", "api")
+    background = ServedCatalogModels(lambda: _with_background(support)).lane_background("llamacpp", "api")
 
     assert background == LiveLaneBackground(
         accepted_media=(ModelRunMediaKind.IMAGE,),
@@ -225,11 +237,11 @@ def test_a_lanes_background_support_is_read_as_its_media_and_honoured_options() 
 def test_background_support_the_document_does_not_state_reads_as_unknown(
     support: object, expected: LiveLaneBackground | None
 ) -> None:
-    assert ServedCatalogModels(lambda: _with_background(support)).lane_background("local", "api") == expected
+    assert ServedCatalogModels(lambda: _with_background(support)).lane_background("llamacpp", "api") == expected
 
 
 def test_no_running_agent_or_an_unlisted_lane_states_no_background_support() -> None:
-    assert ServedCatalogModels(lambda: None).lane_background("local", "api") is None
+    assert ServedCatalogModels(lambda: None).lane_background("llamacpp", "api") is None
     assert (
         ServedCatalogModels(lambda: _document(_entry("synthetic-installed:1"))).lane_background("absent", "api") is None
     )
@@ -246,10 +258,10 @@ def test_a_snapshot_reads_the_document_once_when_first_asked_and_answers_everyth
     snapshot = models.snapshot()
     assert reads == []
 
-    assert snapshot.lane_models("local", "api") is not None
-    assert snapshot.lane_background("local", "api") is not None
+    assert snapshot.lane_models("llamacpp", "api") is not None
+    assert snapshot.lane_background("llamacpp", "api") is not None
     assert snapshot.lane_models("example", "cli") is not None
     assert len(reads) == 1
 
-    models.snapshot().lane_background("local", "api")
+    models.snapshot().lane_background("llamacpp", "api")
     assert len(reads) == 2

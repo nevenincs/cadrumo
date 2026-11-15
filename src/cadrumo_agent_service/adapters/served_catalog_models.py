@@ -30,12 +30,16 @@ from cadrumo_client.contracts.model_runs import ModelRunMediaKind
 
 from ..providers.application.ports import LiveCatalogModels, LiveLaneBackground
 from ..providers.domain.catalog import BackgroundOption, LiveCatalogModel
+from ..providers.domain.record import LocalEngine
 
 _FACT_FIELDS: Final = ("vision", "size_bytes", "context_length", "licence")
 """The served entry fields read besides the model value, each required, null where unstated."""
 
 _INSTALLED_FIELD: Final = "installed"
 """Whether the lane's local server holds the model; an entry that does not state it leaves it unknown."""
+
+_ENGINE_LANES: Final = frozenset(engine.value for engine in LocalEngine)
+"""The provider identities of the lanes whose local server can hold a model."""
 
 _ENGINE_NOT_RUNNING: Final = "not_running"
 """The engine state with which the agent says it could not read the lane's local server."""
@@ -68,7 +72,8 @@ class ServedCatalogModels(LiveCatalogModels):
         models = catalog.get("models") if isinstance(catalog, Mapping) else None
         if not isinstance(models, list):
             return None
-        return _entries(models, server_read=_server_read(record))
+        # Only a local engine's lane has a server that holds models; a hosted lane's entries state no install.
+        return _entries(models, server_read=_server_read(record) and provider in _ENGINE_LANES)
 
     @override
     def lane_background(self, provider: str, transport: str) -> LiveLaneBackground | None:

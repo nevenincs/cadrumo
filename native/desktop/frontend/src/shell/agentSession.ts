@@ -290,6 +290,9 @@ export type AgentProviderLane = {
   /** `catalog`: the lane lists its models and a run names one of them.
    * `declared`: it lists none and a run's model id is passed on as given. */
   model_source: "catalog" | "declared";
+  /** Served by the agent service: `required` on a local engine's lane, whose
+   * models are downloaded to this computer; `none` on every hosted lane. */
+  model_download?: "required" | "none";
   health: {
     configured: AgentHealthState;
     transport: AgentHealthState;
