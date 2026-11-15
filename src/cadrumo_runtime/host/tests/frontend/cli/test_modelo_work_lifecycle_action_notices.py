@@ -15,7 +15,10 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import (
 )
 from cadrumo.application.modelo.work_lifecycle import discard_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
+from cadrumo.application.operator_actions.served_actions import NO_RECOVERY_WORDS_LOCALE_KEYS
 from cadrumo.core.errors.error_codes import ErrorCategory, get_error_exit_code
+from cadrumo.core.i18n.render import tr
+from cadrumo.core.operator_action_enums import NoRecoveryOutcome
 from cadrumo.core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
 from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import (
@@ -88,7 +91,11 @@ def _assert_terminal_refusal(
     assert document["command"] == command
     error = cast(dict[str, object], document["error"])
     assert "suggestion" not in error
-    assert error["action"] == {
+    action = cast(dict[str, object], error["action"])
+    # The terminal outcome is said in the catalogue's sentence, in the language the command answered in.
+    language = str(action["no_recovery_words_language"])
+    assert language in _LOCALES
+    assert action == {
         "failed_condition_id": failed_condition_id,
         "evidence": [
             {
@@ -103,6 +110,8 @@ def _assert_terminal_refusal(
         "missing_argument_names": [],
         "conditionality": "not_applicable",
         "no_recovery_outcome": "terminal",
+        "no_recovery_words": tr(NO_RECOVERY_WORDS_LOCALE_KEYS[NoRecoveryOutcome.TERMINAL], locale=language),
+        "no_recovery_words_language": language,
     }
     return document
 
