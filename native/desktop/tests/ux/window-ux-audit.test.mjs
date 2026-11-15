@@ -2477,6 +2477,46 @@ let exportRun = null;
 // The work-form read that followed UX-22's export, as UX-23 measured it.
 let postExportRead = null;
 
+/**
+ * Wrap the page's host-call entry so each call records its command, the
+ * definition it carries, and when it started and answered (epoch ms). Answers
+ * whether the calls are now timed.
+ */
+function pageTimeInvokes() {
+  const internals = window.__TAURI_INTERNALS__;
+  if (!internals || typeof internals.invoke !== "function") return false;
+  if (internals.__uxCalls) return true;
+  const original = internals.invoke.bind(internals);
+  const calls = [];
+  const now = () => performance.timeOrigin + performance.now();
+  try {
+    internals.invoke = (cmd, args, options) => {
+      const call = { cmd, definition: args?.definition ?? null, start: now() };
+      calls.push(call);
+      const answer = original(cmd, args, options);
+      Promise.resolve(answer).then(
+        () => Object.assign(call, { end: now(), ok: true }),
+        () => Object.assign(call, { end: now(), ok: false }),
+      );
+      return answer;
+    };
+  } catch {
+    return false;
+  }
+  internals.__uxCalls = calls;
+  return internals.invoke !== original;
+}
+
+/** Whether the Modelo form is drawn with its boxes and the header is not busy. */
+function pageFormDrawn() {
+  const form = document.querySelector("[data-modelo-form]");
+  return (
+    !!form &&
+    form.getClientRects().length > 0 &&
+    form.querySelectorAll("[data-key]").length > 0
+  );
+}
+
 /** The operations the run's runtime settled, from its log: when, which definition, how. */
 function settledOperations() {
   let text = "";
@@ -2734,9 +2774,23 @@ ux(
     if (!away.reached)
       assert.fail(`UNMEASURED: the page was not left: ${away.reason}`);
     await sleep(700);
+    // Every host call the window makes on the way back, timed in the page: what
+    // it asked for, when, and when the answer came; the runtime log gives when
+    // Python settled each operation, and the form's drawing closes the span.
+    const timed = await exec(pageTimeInvokes);
     const pressed = Date.now();
     const back = await openRailPage("declarations", SECTION);
     if (!back.reached) await openDeclaration(rowOf("100"));
+    const drawn = await waitFor(
+      async () => (await exec(pageFormDrawn)) || null,
+      {
+        timeout: 60_000,
+        what: "the Modelo form to be drawn after the page return",
+        soft: true,
+        interval: 100,
+      },
+    );
+    const drawnAt = drawn ? Date.now() : null;
     const read = await waitFor(
       async () =>
         settledOperations().find(
@@ -2752,6 +2806,33 @@ ux(
     const pageReturn = read
       ? { ms: read.at - pressed, condition: read.condition }
       : null;
+    await sleep(3000);
+    const calls = timed
+      ? ((await exec(() => window.__TAURI_INTERNALS__?.__uxCalls ?? [])) ?? [])
+          .filter((call) => call.start >= pressed)
+          .map((call) => ({
+            cmd: call.cmd,
+            definition: call.definition,
+            startMs: Math.round(call.start - pressed),
+            endMs:
+              call.end === undefined ? null : Math.round(call.end - pressed),
+            ok: call.ok ?? null,
+          }))
+      : null;
+    const settled = settledOperations()
+      .filter((op) => op.at > pressed)
+      .map((op) => ({
+        definition: op.definition,
+        condition: op.condition,
+        atMs: op.at - pressed,
+      }));
+    report(t, {
+      probe: "page-return-calls",
+      timed,
+      drawnMs: drawnAt === null ? null : drawnAt - pressed,
+      calls,
+      settled,
+    });
     report(t, {
       probe: "form-read-timing",
       postExport: postExportRead,
