@@ -290,13 +290,14 @@ def persona_line(*, tree: str, persona: str, loads: bool, reason: str, log: str)
 
 @dataclass(frozen=True, slots=True)
 class ReturnScope:
-    """Which return of which persona a line reports, on which tree."""
+    """Which return of which persona a line reports, on which tree and under which replay horizon."""
 
     tree: str
     persona: str
     modelo: str
     year: int
     period: str
+    horizon: int
 
 
 def return_line(scope: ReturnScope, result: RowResult, log: str) -> dict[str, object]:
@@ -308,6 +309,7 @@ def return_line(scope: ReturnScope, result: RowResult, log: str) -> dict[str, ob
         "modelo": scope.modelo,
         "year": scope.year,
         "period": scope.period,
+        "horizon": scope.horizon,
         "loads": True,
         "calculate": result.calculate.word,
         "verify": result.verify.word,

@@ -437,7 +437,7 @@ def _export_stage(case: Case, plan: RowPlan, exported: Outcome) -> StageResult:
 
 
 def _scope(case: Case, plan: RowPlan) -> ReturnScope:
-    return ReturnScope(case.tree, case.report.persona, plan.modelo, plan.year, plan.period)
+    return ReturnScope(case.tree, case.report.persona, plan.modelo, plan.year, plan.period, case.report.horizon)
 
 
 def run_case(case: Case, selection: Selection) -> CaseSummary:

@@ -35,6 +35,9 @@ from .counterparties import is_compared
 from .coverage import ABSENT, CalendarObservation, period_end, projection
 from .unchecked import persona_at, unchecked_by_key
 
+FILED_LOCALLY = "filed locally"
+"""The words of a row's reason that state the return was filed locally."""
+
 
 class Stage(StrEnum):
     """How one stage of a row ended."""
@@ -178,6 +181,10 @@ class TableRow:
     """The non-zero calculated values the revision's form layout does not place on the form (its working figures
     and unplaced casillas), same shape as ``figures``. No surface is held to show them. Empty for a row written
     before they were kept apart."""
+    filed_locally: bool = False
+    """Whether the return was filed locally (a PRESENTADO revision, AEAT status pending) after its verification. A
+    surface is held to show the filed state of such a row. A row written before it was recorded reads it from its
+    reason's ``filed locally``, which a long reason can truncate away."""
     text_figures: tuple[tuple[str, str], ...] = ()
     """The value of each casilla the saved repeating records of the work form hold in exactly one value that is not a
     number (a descendant's NIF, a payee's NIF), as the live backend read them; the plain text, never a digest. The CLI
@@ -214,6 +221,7 @@ class TableRow:
         figures: tuple[tuple[str, str], ...] | None = None,
         internal_figures: tuple[tuple[str, str], ...] = (),
         text_figures: tuple[tuple[str, str], ...] = (),
+        filed_locally: bool = False,
     ) -> TableRow:
         """The row of ``plan`` with the stages it reached and the figures its calculation produced.
 
@@ -239,6 +247,7 @@ class TableRow:
             figures_recorded=figures is not None,
             internal_figures=internal_figures,
             text_figures=text_figures,
+            filed_locally=filed_locally,
             sources_returns=plan.sources_returns,
         )
 
@@ -299,6 +308,7 @@ class TableRow:
         data["figures"] = _read_figures(data.get("figures", {}))
         data["internal_figures"] = _read_figures(data.get("internal_figures", {}))
         data["text_figures"] = _read_figures(data.get("text_figures", {}))
+        data["filed_locally"] = bool(data.get("filed_locally", FILED_LOCALLY in data.get("reason", "")))
         data["sources_returns"] = tuple(data.get("sources_returns", ()))
         for name in ("calculate", "verify", "export"):
             data[name] = Stage(data[name])
