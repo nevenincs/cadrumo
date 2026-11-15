@@ -198,7 +198,10 @@ def _review(work: SeededOperatorWork) -> ModeloWorkReview:
     )
 
 
-def test_a_typed_value_reads_as_entered_and_survives_a_recalculation(tmp_path: Path) -> None:
+def test_a_value_typed_over_the_ledger_figure_reads_as_overriding_it_and_survives_a_recalculation(
+    tmp_path: Path,
+) -> None:
+    """Casilla 06 holds the retención the ledger resolver supplies; the filer's typed value overrides that source."""
     with seeded_operator_work(tmp_path) as work:
         fresh = _load(work, work.admit())
         applied = work.apply(
@@ -220,16 +223,20 @@ def test_a_typed_value_reads_as_entered_and_survives_a_recalculation(tmp_path: P
     assert _field(fresh.form, "06").origin is not ModeloFormOrigin.ENTERED
     assert _field(fresh.form, "06").editability is ModeloFormEditability.EDITABLE_VALUE
     entered = _field(edited.form, "06")
-    assert entered.origin is ModeloFormOrigin.ENTERED
+    assert entered.origin is ModeloFormOrigin.OVERRIDES_SOURCE
     assert entered.value == Decimal("100")
-    assert _field(recalculated.form, "06").origin is ModeloFormOrigin.ENTERED
-    assert _field(recalculated.form, "06").editability is ModeloFormEditability.NO_ADMISSION
-    derived = _field(recalculated.form, "07")
-    assert derived.origin is ModeloFormOrigin.CALCULATED
-    assert derived.value == Decimal("-100.00")
-    assert recalculated.form.calculation_revision_id is not None
+    _assert_the_override_survives_recalculation(recalculated.form)
     assert not edited.verified
     assert not edited.filed
+
+
+def _assert_the_override_survives_recalculation(form: ModeloWorkForm) -> None:
+    assert _field(form, "06").origin is ModeloFormOrigin.OVERRIDES_SOURCE
+    assert _field(form, "06").editability is ModeloFormEditability.NO_ADMISSION
+    derived = _field(form, "07")
+    assert derived.origin is ModeloFormOrigin.CALCULATED
+    assert derived.value == Decimal("-100.00")
+    assert form.calculation_revision_id is not None
 
 
 def test_only_the_registry_declared_target_of_the_projection_offers_it(tmp_path: Path) -> None:
