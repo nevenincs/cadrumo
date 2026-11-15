@@ -17,6 +17,7 @@ from cadrumo.core.toml import parse_toml
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    authored_revisions_where,
     filing_year_envelope,
     newest_authored_editions,
     open_ended_revision,
@@ -704,8 +705,13 @@ def test_modelo_200_calculation_grade_does_not_widen_its_runtime_filing_authorit
     """Bootstrap publication can validate static output without promoting Modelo 200."""
     authority = compiled_bundled_authority()
 
-    exercise = newest_authored_editions("200", 2)[0]
-    revision_id = str(revision_covering("200", exercise).id)
+    calculation_grade = authored_revisions_where(
+        "200", lambda revision: revision.authority_grade is RegistryAuthorityGrade.CALCULATION
+    )
+    assert calculation_grade, "Modelo 200 authors no calculation-grade revision to keep from filing"
+    newest = calculation_grade[-1]
+    exercise = newest.valid_from.year
+    revision_id = str(newest.id)
     calculation = authority.snapshot(
         "200",
         filing_year=exercise,

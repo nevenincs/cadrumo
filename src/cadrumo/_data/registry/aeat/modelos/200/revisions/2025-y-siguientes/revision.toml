@@ -136,7 +136,7 @@ removed_fields = []
 restate_provenance = true
 
 [[revisions."2025-y-siguientes".casilla_overrides]]
-selector = { revision = "2024", id = "00009" }
+selector = { revision = "2024", id = "DP200001:00009" }
 fields = { continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200001/DP200001, campos 75/75, filas 80/80: Entidad dominante de grupo fiscal [00009]. Descripcion legal, tipo, validacion y contenido coinciden; mismo caracter de declaracion (manuales Sociedades 2024/2025, cap. 2).", continuidad_origin = "grounded" }
 removed_fields = []
 restate_provenance = true
@@ -184,7 +184,7 @@ removed_fields = []
 restate_provenance = true
 
 [[revisions."2025-y-siguientes".casilla_overrides]]
-selector = { revision = "2024", id = "00017" }
+selector = { revision = "2024", id = "DP200001:00017" }
 fields = { continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200001/DP200001, campos 38/38, filas 43/43: Cooperativa protegida [00017]. Descripcion legal, tipo, validacion y contenido coinciden; mismo caracter de declaracion (manuales Sociedades 2024/2025, cap. 2).", continuidad_origin = "grounded" }
 removed_fields = []
 restate_provenance = true
@@ -21867,7 +21867,7 @@ fields = { expression = { args = [
                 { binding = "modelo-200-profile-legal-entity-form" },
                 { text_literal = "cooperativa" },
             ] },
-            { casilla_id = "00017" },
+            { casilla_id = "DP200001:00017" },
             { casilla_id = "00018" },
             { casilla_id = "00019" },
         ] },
@@ -22022,7 +22022,7 @@ fields = { expression = { op = "multiply", args = [
                                 { binding = "modelo-200-profile-legal-entity-form" },
                                 { text_literal = "cooperativa" },
                             ] },
-                            { casilla_id = "00017" },
+                            { casilla_id = "DP200001:00017" },
                             { casilla_id = "00018" },
                             { casilla_id = "00019" },
                         ] },
@@ -22030,7 +22030,7 @@ fields = { expression = { op = "multiply", args = [
                     ] },
                     { op = "if_then_else", args = [
                         { op = "greater_than", args = [
-                            { op = "add", args = [{ casilla_id = "00017" }, { casilla_id = "00018" }] },
+                            { op = "add", args = [{ casilla_id = "DP200001:00017" }, { casilla_id = "00018" }] },
                             { literal = "0" },
                         ] },
                         { parameter = "is.modelo-200.tipo-gravamen-cooperative-protected" },

@@ -366,7 +366,8 @@ casilla_id = "00015"
 number = "00015"
 
 [[revisions."2023".completeness_manifest.casillas]]
-casilla_id = "00017"
+casilla_id = "DP200001:00017"
+segmento = "DP200001"
 number = "00017"
 
 [[revisions."2023".completeness_manifest.casillas]]
