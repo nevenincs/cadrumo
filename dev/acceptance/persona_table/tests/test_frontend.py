@@ -29,11 +29,11 @@ from ..frontend import (
     cell_text,
     compare_frontend,
     export_refusal_code,
-    frontend_line,
     parity,
     parse_result,
     read_results,
 )
+from ..frontend_summary import frontend_line
 from ..render import render_table, unavailable_exports_lines
 from ..rows import PlannedRow, Stage, TableRow, canonical_figures, latest_rows, write_rows
 
@@ -490,7 +490,10 @@ def test_a_render_without_a_frontend_is_unchanged_and_with_one_adds_columns_line
     assert "Frontend" not in plain
     assert plain.count("| tui |") == 0
     text = render_table(rows, head="abc", frontend=compare_frontend(rows, results))
-    assert "Frontend: TUI matched 1 / 7, window matched 0 / 7, CLI matched 0 / 7 (7 rows)\n" in text
+    assert (
+        "Frontend: TUI matched 1 / 7, window matched 0 / 7, CLI matched 0 / 7 (7 rows); "
+        "not matched: TUI differs 1, not run 2, not comparable 1, load failed 2; window not run 7; CLI not run 7\n"
+    ) in text
     assert "| grounding | run | reason | tui | window | cli |" in text
     assert "\nTrees folded: tui abc (3)\n" in text
     lines = text.splitlines()
@@ -1095,3 +1098,15 @@ def test_a_row_reads_that_it_was_filed_locally_from_its_record_or_from_an_older_
     assert TableRow.from_json(json.dumps(older)).filed_locally
     del older["reason"]
     assert not TableRow.from_json(json.dumps(older)).filed_locally
+
+
+def test_the_frontend_line_lists_differs_apart_from_not_run_per_surface() -> None:
+    rows, results = _comparison()
+    comparison = compare_frontend(rows, results)
+    assert comparison.unmatched("tui") == {"differs": 1, "not run": 2, "not comparable": 1, "load failed": 2}
+    assert comparison.unmatched("window") == {"not run": 7}
+    full = [_row()]
+    line = _result(surface="cli")
+    clean = compare_frontend(full, {line.key: line})
+    assert clean.unmatched("cli") == {}
+    assert "CLI" not in frontend_line(clean).split("not matched:")[1]
