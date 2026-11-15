@@ -627,8 +627,8 @@ record_identity = "Pág. 2"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "digit_string"
-value_policy = "digit-string"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
 integer_digits = 7
 decimal_digits = 0
 sign_policy = "unsigned"
@@ -643,8 +643,8 @@ record_identity = "Pág. 2"
 [singleton_rules.evidence]
 authority_kind = "reviewed_policy"
 decision_id = "m840-p-g-2-37"
-decision_statement = "7 position(s) rendered as digit string."
-justification = "Read from the design text 'Apartado VI: Máquinas recreativas Tipo A. Número': an administrative code or street number: positional digits, never summed, leading zeros significant."
+decision_statement = "7 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado VI: Máquinas recreativas Tipo A. Número': a count of machines the declaration states, a quantity without a decimal part or a sign."
 
 [singleton_rules.evidence.governed_anchor]
 sheet = "Pág. 2"
@@ -655,8 +655,8 @@ record_identity = "Pág. 2"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "digit_string"
-value_policy = "digit-string"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
 integer_digits = 7
 decimal_digits = 0
 sign_policy = "unsigned"
@@ -671,8 +671,8 @@ record_identity = "Pág. 2"
 [singleton_rules.evidence]
 authority_kind = "reviewed_policy"
 decision_id = "m840-p-g-2-40"
-decision_statement = "7 position(s) rendered as digit string."
-justification = "Read from the design text 'Apartado VI: Máquinas recreativas Tipo B. Número': an administrative code or street number: positional digits, never summed, leading zeros significant."
+decision_statement = "7 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado VI: Máquinas recreativas Tipo B. Número': a count of machines the declaration states, a quantity without a decimal part or a sign."
 
 [singleton_rules.evidence.governed_anchor]
 sheet = "Pág. 2"
@@ -683,8 +683,8 @@ record_identity = "Pág. 2"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "digit_string"
-value_policy = "digit-string"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
 integer_digits = 7
 decimal_digits = 0
 sign_policy = "unsigned"
@@ -699,8 +699,8 @@ record_identity = "Pág. 2"
 [singleton_rules.evidence]
 authority_kind = "reviewed_policy"
 decision_id = "m840-p-g-2-43"
-decision_statement = "7 position(s) rendered as digit string."
-justification = "Read from the design text 'Apartado VI: Expositores para autoventa. Número': an administrative code or street number: positional digits, never summed, leading zeros significant."
+decision_statement = "7 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado VI: Expositores para autoventa. Número': a count of expositores the declaration states, a quantity without a decimal part or a sign."
 
 [singleton_rules.evidence.governed_anchor]
 sheet = "Pág. 2"
@@ -1775,8 +1775,8 @@ record_identity = "Pág. 2"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "digit_string"
-value_policy = "digit-string"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
 integer_digits = 5
 decimal_digits = 0
 sign_policy = "unsigned"
@@ -1791,8 +1791,8 @@ record_identity = "Pág. 2"
 [singleton_rules.evidence]
 authority_kind = "reviewed_policy"
 decision_id = "m840-p-g-2-88"
-decision_statement = "5 position(s) rendered as digit string."
-justification = "Read from the design text 'Apartado VI: D) Locales (Cuota provincial o nacional). N. º locales [95]': an administrative code or street number: positional digits, never summed, leading zeros significant."
+decision_statement = "5 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado VI: D) Locales (Cuota provincial o nacional). N. º locales [95]': a count of locales the declaration states, a quantity without a decimal part or a sign."
 
 [singleton_rules.evidence.governed_anchor]
 sheet = "Pág. 2"
@@ -1803,8 +1803,8 @@ record_identity = "Pág. 2"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "digit_string"
-value_policy = "digit-string"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
 integer_digits = 8
 decimal_digits = 0
 sign_policy = "unsigned"
@@ -1819,8 +1819,8 @@ record_identity = "Pág. 2"
 [singleton_rules.evidence]
 authority_kind = "reviewed_policy"
 decision_id = "m840-p-g-2-89"
-decision_statement = "8 position(s) rendered as digit string."
-justification = "Read from the design text 'Apartado VI: D) Locales (Cuota provincial o nacional). Total [96]': an administrative code or street number: positional digits, never summed, leading zeros significant."
+decision_statement = "8 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado VI: D) Locales (Cuota provincial o nacional). Total [96]': the square metres the Anexo's partial sums [96] add up to, a measured quantity without a decimal part or a sign."
 
 [singleton_rules.evidence.governed_anchor]
 sheet = "Pág. 2"
@@ -1831,8 +1831,8 @@ record_identity = "Pág. 2"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "digit_string"
-value_policy = "digit-string"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
 integer_digits = 8
 decimal_digits = 0
 sign_policy = "unsigned"
@@ -1847,8 +1847,8 @@ record_identity = "Pág. 2"
 [singleton_rules.evidence]
 authority_kind = "reviewed_policy"
 decision_id = "m840-p-g-2-90"
-decision_statement = "8 position(s) rendered as digit string."
-justification = "Read from the design text 'Apartado VI: D) Locales (Cuota provincial o nacional). Rectificada [97]': an administrative code or street number: positional digits, never summed, leading zeros significant."
+decision_statement = "8 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado VI: D) Locales (Cuota provincial o nacional). Rectificada [97]': the square metres the Anexo's partial sums [97] add up to, a measured quantity without a decimal part or a sign."
 
 [singleton_rules.evidence.governed_anchor]
 sheet = "Pág. 2"
@@ -1859,8 +1859,8 @@ record_identity = "Pág. 2"
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
-semantic_kind = "digit_string"
-value_policy = "digit-string"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
 integer_digits = 8
 decimal_digits = 0
 sign_policy = "unsigned"
@@ -1875,8 +1875,8 @@ record_identity = "Pág. 2"
 [singleton_rules.evidence]
 authority_kind = "reviewed_policy"
 decision_id = "m840-p-g-2-91"
-decision_statement = "8 position(s) rendered as digit string."
-justification = "Read from the design text 'Apartado VI: D) Locales (Cuota provincial o nacional). Computable [98]': an administrative code or street number: positional digits, never summed, leading zeros significant."
+decision_statement = "8 position(s) rendered as integer."
+justification = "Read from the design text 'Apartado VI: D) Locales (Cuota provincial o nacional). Computable [98]': the square metres the Anexo's partial sums [98] add up to, a measured quantity without a decimal part or a sign."
 
 [singleton_rules.evidence.governed_anchor]
 sheet = "Pág. 2"
