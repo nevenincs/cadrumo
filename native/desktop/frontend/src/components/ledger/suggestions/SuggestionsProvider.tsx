@@ -22,10 +22,8 @@ import { facts } from "../../../shell/compose";
 import type { CatalogueInvoiceSnapshot } from "../../../shell/ledgerInvoiceContract";
 import type { LedgerPort } from "../../../shell/ledger";
 import type { OutputLanguage } from "../../../shell/ledger";
-import type {
-  CapitalGood,
-  ProrrataListedEntry,
-} from "../../../shell/ledgerRegisterOperations";
+import type { ProrrataListedEntryProjection } from "../../../shell/ledgerProrrataContract";
+import type { CapitalGood } from "../../../shell/ledgerRegisterOperations";
 import type { LedgerEntryOptionsResult } from "../../../shell/ledgerSetup";
 import {
   NO_VOCABULARY,
@@ -109,7 +107,7 @@ type Held = {
   /** The capital goods register; null likewise. */
   capitalGoods: readonly CapitalGood[] | null;
   /** The prorrata register; null likewise. */
-  prorrata: readonly ProrrataListedEntry[] | null;
+  prorrata: readonly ProrrataListedEntryProjection[] | null;
   want(kind?: SuggestionKind): void;
 };
 
@@ -368,7 +366,7 @@ export function LedgerSuggestions({
  * backend names what a movement cites, and an entry no reference can name is
  * not offered. Those of the movement's year come first. */
 function prorrataOptions(
-  entries: readonly ProrrataListedEntry[],
+  entries: readonly ProrrataListedEntryProjection[],
   year: number | undefined,
   t: Translate,
   locale: string,

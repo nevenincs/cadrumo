@@ -183,6 +183,21 @@ FAMILIES: dict[str, tuple[str, tuple[str, ...]]] = {
             "ledger.view",
         ),
     ),
+    "prorrata": (
+        "LedgerProrrataContracts",
+        (
+            "ledger.prorrata.declare_gross",
+            "ledger.prorrata.declare_sector",
+            "ledger.prorrata.elect_especial",
+            "ledger.prorrata.elect_general",
+            "ledger.prorrata.list",
+            "ledger.prorrata.remove_gross",
+            "ledger.prorrata.revoke_especial",
+            "ledger.prorrata.seed",
+            "ledger.prorrata.seed_sector",
+            "ledger.prorrata.settle_sector",
+        ),
+    ),
 }
 
 #: The families whose modules a family imports its types from rather than writing them again, in the order
@@ -234,6 +249,19 @@ EARLIER: dict[str, tuple[str, ...]] = {
         "activityAsset",
         "activityAssetRead",
         "entry",
+    ),
+    "prorrata": (
+        "classification",
+        "invoice",
+        "document",
+        "documentReview",
+        "movement",
+        "movementCheck",
+        "inventory",
+        "activityAsset",
+        "activityAssetRead",
+        "entry",
+        "read",
     ),
 }
 

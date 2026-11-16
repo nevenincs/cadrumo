@@ -7,6 +7,7 @@
 // bytes of one call. Results and staged edits live in the page's memory
 // only: never in storage, a log line or an error message.
 
+import type { LedgerProrrataContracts } from "./ledgerProrrataContract";
 import type { LedgerReadContracts } from "./ledgerReadContract";
 import type {
   AttachmentQueueResult,
@@ -154,17 +155,6 @@ import type {
   CapitalGoodsListResult,
   LedgerOwnAccountRequest,
   LedgerOwnAccountResult,
-  ProrrataDeclareGrossRequest,
-  ProrrataDeclareSectorRequest,
-  ProrrataElectEspecialRequest,
-  ProrrataElectionRequest,
-  ProrrataListResult,
-  ProrrataMutationResult,
-  ProrrataRemoveGrossRequest,
-  ProrrataRevokeEspecialRequest,
-  ProrrataSeedRequest,
-  ProrrataSeedSectorRequest,
-  ProrrataSettleSectorRequest,
   WithholdingAbsenceListRequest,
   WithholdingAbsenceListResult,
   WithholdingAbsenceResult,
@@ -884,16 +874,46 @@ export interface LedgerRequests {
   "ledger.counterparty": LedgerCounterpartyRequest;
   "ledger.llm-diagnostics": LedgerLlmDiagnosticsRequest;
   "ledger.own_account": LedgerOwnAccountRequest;
-  "ledger.prorrata.list": Record<string, never>;
-  "ledger.prorrata.seed": ProrrataSeedRequest;
-  "ledger.prorrata.declare_sector": ProrrataDeclareSectorRequest;
-  "ledger.prorrata.elect_general": ProrrataElectionRequest;
-  "ledger.prorrata.elect_especial": ProrrataElectEspecialRequest;
-  "ledger.prorrata.revoke_especial": ProrrataRevokeEspecialRequest;
-  "ledger.prorrata.seed_sector": ProrrataSeedSectorRequest;
-  "ledger.prorrata.settle_sector": ProrrataSettleSectorRequest;
-  "ledger.prorrata.declare_gross": ProrrataDeclareGrossRequest;
-  "ledger.prorrata.remove_gross": ProrrataRemoveGrossRequest;
+  "ledger.prorrata.list": Omit<
+    LedgerProrrataContracts["ledger.prorrata.list"]["request"],
+    "profile_id"
+  >;
+  "ledger.prorrata.seed": Omit<
+    LedgerProrrataContracts["ledger.prorrata.seed"]["request"],
+    "profile_id"
+  >;
+  "ledger.prorrata.declare_sector": Omit<
+    LedgerProrrataContracts["ledger.prorrata.declare_sector"]["request"],
+    "profile_id"
+  >;
+  "ledger.prorrata.elect_general": Omit<
+    LedgerProrrataContracts["ledger.prorrata.elect_general"]["request"],
+    "profile_id"
+  >;
+  "ledger.prorrata.elect_especial": Omit<
+    LedgerProrrataContracts["ledger.prorrata.elect_especial"]["request"],
+    "profile_id"
+  >;
+  "ledger.prorrata.revoke_especial": Omit<
+    LedgerProrrataContracts["ledger.prorrata.revoke_especial"]["request"],
+    "profile_id"
+  >;
+  "ledger.prorrata.seed_sector": Omit<
+    LedgerProrrataContracts["ledger.prorrata.seed_sector"]["request"],
+    "profile_id"
+  >;
+  "ledger.prorrata.settle_sector": Omit<
+    LedgerProrrataContracts["ledger.prorrata.settle_sector"]["request"],
+    "profile_id"
+  >;
+  "ledger.prorrata.declare_gross": Omit<
+    LedgerProrrataContracts["ledger.prorrata.declare_gross"]["request"],
+    "profile_id"
+  >;
+  "ledger.prorrata.remove_gross": Omit<
+    LedgerProrrataContracts["ledger.prorrata.remove_gross"]["request"],
+    "profile_id"
+  >;
   "ledger.retencion_soportada.list": WithholdingListRequest;
   "ledger.retencion_soportada.list_absences": WithholdingAbsenceListRequest;
   "ledger.retencion_soportada.record": WithholdingRecordRequest;
@@ -1002,16 +1022,16 @@ export interface LedgerResults {
   "ledger.counterparty": LedgerCounterpartyResult;
   "ledger.llm-diagnostics": LedgerLlmDiagnosticsResult;
   "ledger.own_account": LedgerOwnAccountResult;
-  "ledger.prorrata.list": ProrrataListResult;
-  "ledger.prorrata.seed": ProrrataMutationResult;
-  "ledger.prorrata.declare_sector": ProrrataMutationResult;
-  "ledger.prorrata.elect_general": ProrrataMutationResult;
-  "ledger.prorrata.elect_especial": ProrrataMutationResult;
-  "ledger.prorrata.revoke_especial": ProrrataMutationResult;
-  "ledger.prorrata.seed_sector": ProrrataMutationResult;
-  "ledger.prorrata.settle_sector": ProrrataMutationResult;
-  "ledger.prorrata.declare_gross": ProrrataMutationResult;
-  "ledger.prorrata.remove_gross": ProrrataMutationResult;
+  "ledger.prorrata.list": LedgerProrrataContracts["ledger.prorrata.list"]["result"];
+  "ledger.prorrata.seed": LedgerProrrataContracts["ledger.prorrata.seed"]["result"];
+  "ledger.prorrata.declare_sector": LedgerProrrataContracts["ledger.prorrata.declare_sector"]["result"];
+  "ledger.prorrata.elect_general": LedgerProrrataContracts["ledger.prorrata.elect_general"]["result"];
+  "ledger.prorrata.elect_especial": LedgerProrrataContracts["ledger.prorrata.elect_especial"]["result"];
+  "ledger.prorrata.revoke_especial": LedgerProrrataContracts["ledger.prorrata.revoke_especial"]["result"];
+  "ledger.prorrata.seed_sector": LedgerProrrataContracts["ledger.prorrata.seed_sector"]["result"];
+  "ledger.prorrata.settle_sector": LedgerProrrataContracts["ledger.prorrata.settle_sector"]["result"];
+  "ledger.prorrata.declare_gross": LedgerProrrataContracts["ledger.prorrata.declare_gross"]["result"];
+  "ledger.prorrata.remove_gross": LedgerProrrataContracts["ledger.prorrata.remove_gross"]["result"];
   "ledger.retencion_soportada.list": WithholdingListResult;
   "ledger.retencion_soportada.list_absences": WithholdingAbsenceListResult;
   "ledger.retencion_soportada.record": WithholdingMutationResult;
