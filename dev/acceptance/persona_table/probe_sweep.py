@@ -39,9 +39,10 @@ from cadrumo.entrypoints.tests.persona_materialisation import (
 )
 from cadrumo.tests.personas import YearEnvelope, read_persona
 
+from .planner import PreparedReturn, plan_rows, replay_scope, stated_values
 from .probe import EXECUTOR_LOGGER, PROBE_OUT_ENV, ProbeLine, classify
 from .rows import PlannedRow
-from .sweep import PreparedReturn, cases, plan_rows, replay_scope, run_return, stated_values
+from .sweep import cases, run_return
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
