@@ -20,9 +20,9 @@ import {
   type LaneModel,
 } from "../../shell/localModelLanes";
 import type {
-  AgentLocalEngineToken,
-  AgentLocalPlacement,
-} from "../../ipc/contract";
+  LocalEngine,
+  LocalPlacement,
+} from "../../shell/localModelsContract";
 import { formatSize } from "../../shared/numbers";
 import type { DeclaredLicence } from "../../shell/agentCatalogContract";
 import {
@@ -200,10 +200,7 @@ const ENGINE_WORDS = {
     label: "desktop.providers.local_engine_ollama",
     detail: "desktop.providers.local_engine_ollama_detail",
   },
-} as const satisfies Record<
-  AgentLocalEngineToken,
-  { label: string; detail: string }
->;
+} as const satisfies Record<LocalEngine, { label: string; detail: string }>;
 
 const PLACEMENT_WORDS = {
   auto: {
@@ -214,22 +211,19 @@ const PLACEMENT_WORDS = {
     label: "desktop.providers.local_placement_cpu_only",
     detail: "desktop.providers.local_placement_cpu_only_detail",
   },
-} as const satisfies Record<
-  AgentLocalPlacement,
-  { label: string; detail: string }
->;
+} as const satisfies Record<LocalPlacement, { label: string; detail: string }>;
 
-const isEngine = (token: string): token is AgentLocalEngineToken =>
+const isEngine = (token: string): token is LocalEngine =>
   Object.hasOwn(ENGINE_WORDS, token);
-const isPlacement = (token: string): token is AgentLocalPlacement =>
+const isPlacement = (token: string): token is LocalPlacement =>
   Object.hasOwn(PLACEMENT_WORDS, token);
 
-function engineWords(t: Translate, engine: AgentLocalEngineToken) {
+function engineWords(t: Translate, engine: LocalEngine) {
   const words = ENGINE_WORDS[engine];
   return { label: t(words.label), detail: t(words.detail) };
 }
 
-function placementWords(t: Translate, placement: AgentLocalPlacement) {
+function placementWords(t: Translate, placement: LocalPlacement) {
   const words = PLACEMENT_WORDS[placement];
   return { label: t(words.label), detail: t(words.detail) };
 }
@@ -304,11 +298,11 @@ function Choice<T extends string>({
 function LocalEngineChoice({ engine }: { engine: LocalEngineState }) {
   const t = useStrings();
   const value = engine.value;
-  if (value?.state !== "readable") return null;
-  const choose = (
-    next: AgentLocalEngineToken,
-    placement: AgentLocalPlacement,
-  ) => void engine.change(next, placement);
+  if (!value || value.unreadable) return null;
+  const { engine: running, placement: placed, choices } = value;
+  if (running === null || placed === null) return null;
+  const choose = (next: LocalEngine, placement: LocalPlacement) =>
+    void engine.change(next, placement);
   return (
     <div data-slot="local-engine" className="grid gap-3">
       <div className="grid gap-1">
@@ -322,20 +316,20 @@ function LocalEngineChoice({ engine }: { engine: LocalEngineState }) {
       <Choice
         name="local-engine-choice"
         title={t("desktop.providers.local_engine_title")}
-        value={value.engine}
-        values={value.choices.engine.filter(isEngine)}
+        value={running}
+        values={choices.engine.filter(isEngine)}
         words={(option) => engineWords(t, option)}
         disabled={engine.busy}
-        onChoose={(next) => choose(next, value.placement)}
+        onChoose={(next) => choose(next, placed)}
       />
       <Choice
         name="local-placement-choice"
         title={t("desktop.providers.local_placement_title")}
-        value={value.placement}
-        values={value.choices.placement.filter(isPlacement)}
+        value={placed}
+        values={choices.placement.filter(isPlacement)}
         words={(option) => placementWords(t, option)}
         disabled={engine.busy}
-        onChoose={(next) => choose(value.engine, next)}
+        onChoose={(next) => choose(running, next)}
       />
       <p className="text-sm text-muted-foreground">
         {t("desktop.providers.local_engine_restarts")}
@@ -530,8 +524,7 @@ export function LocalModels({
   const claim = useContext(ReviewClaimContext);
   const [removing, setRemoving] = useState<string | null>(null);
   const [removals, setRemovals] = useState<Record<string, string>>({});
-  const readable =
-    snapshot.kind === "ready" && snapshot.value.state === "readable";
+  const readable = snapshot.kind === "ready" && !snapshot.value.unreadable;
   const listed =
     lane && snapshot.kind === "ready"
       ? laneModelList(lane, addedTo(snapshot.value, lane.id))

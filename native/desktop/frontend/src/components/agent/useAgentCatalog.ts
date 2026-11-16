@@ -219,7 +219,7 @@ export function useAgentCatalog({
         : {
             lanes: stored.local_lanes,
             added: (lane: string) =>
-              stored.state === "readable"
+              !stored.unreadable
                 ? stored.models
                     .filter((entry) => entry.lane === lane)
                     .map((entry) => entry.model)
@@ -255,7 +255,7 @@ export function useAgentCatalog({
   // default it serves, stands in for a choice the person has not made, so
   // the picker shows what a reading runs with rather than a start of its own.
   const servedReading =
-    stored?.state === "readable" && stored.reading && catalog.kind === "ready"
+    stored?.unreadable === false && stored.reading && catalog.kind === "ready"
       ? readingSelection(catalog.value, stored.reading)
       : null;
   const heldChoices = [
