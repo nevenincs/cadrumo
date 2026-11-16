@@ -21,7 +21,7 @@ test.beforeEach(() => {
   scenarioOnly("The scenario host stands in for the agent service.");
 });
 
-const LOCAL = "local/api";
+const LOCAL = "zai/api";
 const servedLocal = (FIXTURE_CATALOG.providers ?? []).find(
   (lane) => `${lane.provider_id}/${lane.transport}` === LOCAL,
 )!;
@@ -212,7 +212,7 @@ for (const engine of ["llamacpp", "ollama"]) {
 // hosted provider has no model to download. Where nothing can run, the column
 // says what holds back the provider the person is on, which is the one they
 // chose last, else the first the catalog serves.
-const HOSTED = "alpha/cli";
+const HOSTED = "kimi/cli";
 const hostedLane = (FIXTURE_CATALOG.providers ?? []).find(
   (served) => `${served.provider_id}/${served.transport}` === HOSTED,
 )!;

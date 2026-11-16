@@ -12,9 +12,9 @@ test.beforeEach(() => {
 });
 
 // The made-up agent declares a logout for this lane alone.
-const SIGNED_OUT_BY_AGENT = "gamma_cli";
+const SIGNED_OUT_BY_AGENT = "antigravity_cli";
 // Signed in as well, but the made-up agent declares no logout for it.
-const NO_LOGOUT = "beta_cli";
+const NO_LOGOUT = "qwen_cli";
 
 const SIGNED_IN = {
   cli_state: "installed_signed_in",

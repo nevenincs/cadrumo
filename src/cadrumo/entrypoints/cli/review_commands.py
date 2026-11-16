@@ -18,7 +18,7 @@ from ...application.review.read_contracts import (
 from ...application.review.read_projections import (
     ReviewQueueRowProjection,
 )
-from ...core.decimal.coercion import coerce_decimal_strict
+from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import output_language as current_output_language
 from ...core.i18n.render import tr
@@ -56,7 +56,7 @@ def _row_to_payload(row: ReviewQueueRowProjection) -> ReviewQueueRowPayload:
     )
 
 
-def resolve_confidence_threshold(value: float | None) -> Decimal | None:
+def resolve_confidence_threshold(value: str | None) -> Decimal | None:
     """Validate and lift the ``--confidence-below`` option to a Decimal.
 
     ``classification_confidence`` is a share of one, so a threshold outside
@@ -68,12 +68,12 @@ def resolve_confidence_threshold(value: float | None) -> Decimal | None:
     """
     if value is None:
         return None
-    threshold = coerce_decimal_strict(value)
-    if not is_unit_proportion(threshold):
+    threshold = try_parse_canonical_decimal(value)
+    if threshold is None or not is_unit_proportion(threshold):
         raise bad(
             tr(
                 "cli.review.errors.invalid_confidence",
-                value=str(value),
+                value=value,
             ),
         )
     return threshold
@@ -85,7 +85,7 @@ def review_queue(
     source_kinds: list[str],
     state: ReviewState,
     modelo: str | None = None,
-    confidence_below: float | None = None,
+    confidence_below: str | None = None,
     explain: bool = False,
     output_language: OutputLanguage | None = None,
 ) -> None:

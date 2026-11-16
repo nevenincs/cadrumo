@@ -6,16 +6,16 @@ import type {
   ProviderWay,
 } from "@/components/agent/types";
 import type {
-  AgentCatalogAnswer,
-  AgentCatalogEntry,
-  AgentDeclaredCatalog,
-  AgentDeclaredLane,
-  AgentEffort,
-  AgentEngineHealth,
-  AgentProviderLane,
-  AgentSelectionRecord,
-} from "./agentSession";
-import { parseAuthKind, parseEngineHealth } from "./agentSession";
+  Effort,
+  EngineDoor,
+  ServedCatalogAnswer,
+  ServedCatalogModel,
+  ServedDeclaredLane,
+  ServedDeclaredProviderCatalog,
+  ServedProviderLane,
+} from "./agentCatalogContract";
+import type { AgentEngineHealth, AgentSelectionRecord } from "./agentSession";
+import { parseEngineHealth } from "./agentSession";
 import type { AgentListedModel } from "../ipc/contract";
 import type { AgentRanWith } from "./agentViews";
 import { engineNotRunningWords } from "./engineHealth";
@@ -31,11 +31,10 @@ import type { Translate } from "./strings";
 // list the person chooses from has a row for each lane, named as the lane is
 // (`display_name`). The person is never shown the transport. Both are served
 // explicitly by cadrumo-agent's ProviderCatalogResponse
-// (api/schemas/provider_catalog.py), from the lane's own definitions. A
-// service that predates this serves the lanes by their private ids with no
-// transport; those cannot be told apart without a table of cadrumo-agent's
-// lane ids, which Cadrumo does not keep, so such a lane is not offered and the
-// column says the service is incompatible.
+// (api/schemas/provider_catalog.py), from the lane's own definitions, and the
+// service refuses a catalog that departs from its schema. A lane whose engine
+// health breaks the pairing the schema leaves open is not offered, and a
+// catalog of only such lanes is shown as incompatible.
 //
 // A lane is a way into one model list, and the pair (provider, transport) is
 // its identity, as ExecutionLane.selection_key has it. `execution_mode` says
@@ -55,30 +54,27 @@ import type { Translate } from "./strings";
 
 /** The catalog answer is the agent's declared catalog, not a served one. */
 export const isDeclared = (
-  answer: AgentCatalogAnswer,
-): answer is AgentDeclaredCatalog => answer.kind === "declared";
+  answer: ServedCatalogAnswer,
+): answer is ServedDeclaredProviderCatalog =>
+  "kind" in answer && answer.kind === "declared";
 
 /** The served lanes of a catalog answer; a declared catalog serves none. */
-const servedLanes = (answer: AgentCatalogAnswer): AgentProviderLane[] =>
+const servedLanes = (answer: ServedCatalogAnswer): ServedProviderLane[] =>
   isDeclared(answer) ? [] : (answer.providers ?? []);
 
 /** The identity of a lane: one provider, reached one way. */
-const wayId = (lane: AgentProviderLane) =>
+const wayId = (lane: ServedProviderLane) =>
   `${lane.provider_id}/${lane.transport}`;
 
-// A lane that states its engine's health or what it authenticates with
-// outside the contract is not understood, as one without a transport is not:
-// it is not offered.
-const understood = (lane: AgentProviderLane) =>
-  lane.provider_id !== "" &&
-  (lane.transport === "api" || lane.transport === "cli") &&
-  parseAuthKind(lane) !== "malformed" &&
+// A lane that states its engine's health outside the contract is not
+// understood: it is not offered.
+const understood = (lane: ServedProviderLane) =>
   parseEngineHealth(lane) !== "malformed";
 
 /** The health of each local engine's lane the catalog states, by lane id
  * (`<provider>_<transport>`): only a lane whose engine was measured. */
 export function laneEngines(
-  answer: AgentCatalogAnswer,
+  answer: ServedCatalogAnswer,
 ): Record<string, AgentEngineHealth> {
   const engines: Record<string, AgentEngineHealth> = {};
   for (const lane of servedLanes(answer)) {
@@ -97,16 +93,16 @@ const EFFORT_WORDS = {
   xhigh: "desktop.agent.effort_xhigh",
   max: "desktop.agent.effort_max",
   ultra: "desktop.agent.effort_ultra",
-} as const satisfies Record<AgentEffort, string>;
+} as const satisfies Record<Effort, string>;
 
-const isEffort = (value: string): value is AgentEffort =>
+const isEffort = (value: string): value is Effort =>
   Object.hasOwn(EFFORT_WORDS, value);
 
-export function effortWords(t: Translate, effort: AgentEffort): string {
+export function effortWords(t: Translate, effort: Effort): string {
   return t(EFFORT_WORDS[effort]);
 }
 
-const effortChoice = (t: Translate, effort: AgentEffort): Choice => ({
+const effortChoice = (t: Translate, effort: Effort): Choice => ({
   id: effort,
   name: effortWords(t, effort),
 });
@@ -133,7 +129,7 @@ function capabilityWords(t: Translate, capability: string): string | undefined {
  * proofs are shown for the way into a provider and never for a model. A
  * generation-scoped proof is not a claim about the whole way, so it is left
  * out of this lane-level summary. */
-function provenCapabilities(t: Translate, lane: AgentProviderLane): string[] {
+function provenCapabilities(t: Translate, lane: ServedProviderLane): string[] {
   const words = (lane.capability_proofs ?? [])
     .filter(
       (proof) =>
@@ -147,7 +143,7 @@ function provenCapabilities(t: Translate, lane: AgentProviderLane): string[] {
 
 /** Why a lane cannot be chosen, from the first of its health axes that
  * says so. */
-function laneHeldBy(t: Translate, lane: AgentProviderLane): string {
+function laneHeldBy(t: Translate, lane: ServedProviderLane): string {
   const { health } = lane;
   if (health.configured === "unavailable")
     return t("desktop.agent.lane_not_configured");
@@ -175,7 +171,7 @@ function laneHeldBy(t: Translate, lane: AgentProviderLane): string {
 function engineWordsOf(
   t: Translate,
   engine: AgentEngineHealth,
-): { words: string; door: string } | null {
+): { words: string; door: EngineDoor } | null {
   const words = engineNotRunningWords(t, engine);
   return words !== null && engine.state === "not_running"
     ? { words, door: engine.door }
@@ -186,7 +182,7 @@ function engineWordsOf(
  * capability proof. The agent's `selectable` remains the authority for
  * admission and execution policy; this extra check keeps an installed or
  * selected CLI from becoming runnable without live authentication evidence. */
-function hasRunAuthentication(lane: AgentProviderLane): boolean {
+function hasRunAuthentication(lane: ServedProviderLane): boolean {
   const { health } = lane;
   const authenticated =
     health.authentication === "authenticated" ||
@@ -199,14 +195,14 @@ function hasRunAuthentication(lane: AgentProviderLane): boolean {
   );
 }
 
-const writesModel = (lane: AgentProviderLane) =>
+const writesModel = (lane: ServedProviderLane) =>
   lane.model_source === "declared";
 
 /** The efforts a lane that lists no models accepts with any model: the options
  * of its one thought-level control that are efforts, which is how a gateway's
  * declared efforts are served (providers/effort.py `declared_effort_control`
  * makes each option's id the effort's value). */
-function laneEfforts(lane: AgentProviderLane): AgentEffort[] {
+function laneEfforts(lane: ServedProviderLane): Effort[] {
   const levels = (lane.catalog.native_controls ?? []).filter(
     (control) => control.kind === "thought_level",
   );
@@ -216,7 +212,7 @@ function laneEfforts(lane: AgentProviderLane): AgentEffort[] {
   );
 }
 
-function modelOption(t: Translate, entry: AgentCatalogEntry): ModelOption {
+function modelOption(t: Translate, entry: ServedCatalogModel): ModelOption {
   return {
     id: entry.entry_id,
     name: entry.display_name,
@@ -245,25 +241,19 @@ export type CatalogChoices = {
   observed: boolean;
 };
 
-const declaredUnderstood = (lane: AgentDeclaredLane) =>
-  typeof lane.provider === "string" &&
-  lane.provider !== "" &&
-  (lane.transport === "api" || lane.transport === "cli") &&
-  parseAuthKind(lane) !== "malformed";
-
 /** The declared lanes, each listed under its provider and none choosable. */
 function declaredChoices(
   t: Translate,
-  catalog: AgentDeclaredCatalog,
+  catalog: ServedDeclaredProviderCatalog,
 ): CatalogChoices {
-  const declared = catalog.catalog.providers ?? [];
-  const key = (lane: AgentDeclaredLane) => `${lane.provider}/${lane.transport}`;
+  const declared = catalog.catalog.providers;
+  const key = (lane: ServedDeclaredLane) =>
+    `${lane.provider}/${lane.transport}`;
   const lanes = declared.filter(
     (lane, index) =>
-      declaredUnderstood(lane) &&
       declared.findIndex((held) => key(held) === key(lane)) === index,
   );
-  const grouped = new Map<string, AgentDeclaredLane[]>();
+  const grouped = new Map<string, ServedDeclaredLane[]>();
   for (const lane of lanes)
     grouped.set(lane.provider, [...(grouped.get(lane.provider) ?? []), lane]);
   const models: Record<string, ModelOption[]> = {};
@@ -272,19 +262,15 @@ function declaredChoices(
       .sort(
         (a, b) => Number(a.transport === "cli") - Number(b.transport === "cli"),
       )
-      .flatMap((lane): ProviderWay[] => {
-        const authKind = parseAuthKind(lane);
-        if (authKind === "malformed") return [];
+      .map((lane): ProviderWay => {
         models[key(lane)] = [];
-        return [
-          {
-            id: key(lane),
-            transport: lane.transport,
-            authKind,
-            selectable: false,
-            unavailableReason: t("desktop.agent.lane_not_observed"),
-          },
-        ];
+        return {
+          id: key(lane),
+          transport: lane.transport,
+          authKind: lane.auth_kind,
+          selectable: false,
+          unavailableReason: t("desktop.agent.lane_not_observed"),
+        };
       });
     return {
       id,
@@ -293,12 +279,7 @@ function declaredChoices(
       ways,
     };
   });
-  return {
-    providers,
-    models,
-    incompatible: declared.length > 0 && lanes.length === 0,
-    observed: false,
-  };
+  return { providers, models, incompatible: false, observed: false };
 }
 
 /** The person's model lists of the lanes on this computer: which lanes those
@@ -311,9 +292,9 @@ export type LocalLists = {
 /** Whether a local lane's list holds `entry`: a model the lane recommends or
  * one the person added. */
 function listedOn(
-  lane: AgentProviderLane,
+  lane: ServedProviderLane,
   lists: LocalLists,
-  entry: AgentCatalogEntry,
+  entry: ServedCatalogModel,
 ): boolean {
   const recommended = Object.values(lane.catalog.recommended ?? {});
   return (
@@ -327,7 +308,7 @@ function listedOn(
  * computer, and the lane lists one the catalog says is not held yet. A hosted
  * lane, which the service says downloads none, never has one. */
 function laneModelsToDownload(
-  lane: AgentProviderLane,
+  lane: ServedProviderLane,
   listed: readonly ModelOption[],
 ): boolean {
   return (
@@ -341,7 +322,7 @@ function laneModelsToDownload(
  * which those are. */
 export function catalogChoices(
   t: Translate,
-  catalog: AgentCatalogAnswer,
+  catalog: ServedCatalogAnswer,
   lists: LocalLists | null = null,
 ): CatalogChoices {
   if (isDeclared(catalog)) return declaredChoices(t, catalog);
@@ -354,7 +335,7 @@ export function catalogChoices(
   const models: Record<string, ModelOption[]> = {};
   // Providers in the order they were served, each with its lanes: the API
   // before the command-line app, whatever order they were served in.
-  const grouped = new Map<string, AgentProviderLane[]>();
+  const grouped = new Map<string, ServedProviderLane[]>();
   for (const lane of lanes)
     grouped.set(lane.provider_id, [
       ...(grouped.get(lane.provider_id) ?? []),
@@ -366,8 +347,6 @@ export function catalogChoices(
         (a, b) => Number(a.transport === "cli") - Number(b.transport === "cli"),
       )
       .flatMap((lane): ProviderWay[] => {
-        const authKind = parseAuthKind(lane);
-        if (authKind === "malformed") return [];
         const capabilities = provenCapabilities(t, lane);
         const local = lists?.lanes.includes(
           `${lane.provider_id}_${lane.transport}`,
@@ -402,7 +381,7 @@ export function catalogChoices(
           {
             id: wayId(lane),
             transport: lane.transport,
-            authKind,
+            authKind: lane.auth_kind,
             selectable: usable,
             ...(usable
               ? {}
@@ -575,7 +554,7 @@ const isModelId = (id: string) =>
  * not one the way offers or the person has written, or one the catalog says
  * this computer does not hold. */
 export function selectionRecord(
-  catalog: AgentCatalogAnswer,
+  catalog: ServedCatalogAnswer,
   selection: AgentSelection,
 ): AgentSelectionRecord | null {
   const lane = servedLanes(catalog).find(
@@ -601,7 +580,7 @@ export function selectionRecord(
 /** The model the service reads documents with, as the column holds a choice:
  * null where the catalog does not serve its lane or no longer lists it. */
 export function readingSelection(
-  catalog: AgentCatalogAnswer,
+  catalog: ServedCatalogAnswer,
   reading: AgentListedModel,
 ): AgentSelection | null {
   const lane = servedLanes(catalog).find(
@@ -621,7 +600,7 @@ export function readingSelection(
  * `selectionRecord`. Null where the catalog no longer has its lane, or no
  * longer lists its model. */
 export function ranSelection(
-  catalog: AgentCatalogAnswer,
+  catalog: ServedCatalogAnswer,
   ran: AgentRanWith,
 ): AgentSelection | null {
   const lane = servedLanes(catalog).find(

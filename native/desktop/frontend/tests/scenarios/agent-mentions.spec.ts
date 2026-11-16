@@ -202,7 +202,7 @@ test("a chosen document goes with the message by reference and is shown with it"
     .poll(async () =>
       (await calls(target)).filter((call) => call.startsWith("agentSend ")),
     )
-    .toEqual(["agentSend c-iva-t3 alpha/api attachments factura-2026-031.pdf"]);
+    .toEqual(["agentSend c-iva-t3 kimi/api attachments factura-2026-031.pdf"]);
   expect(
     (await calls(target)).filter((call) => /upload|register/i.test(call)),
   ).toEqual([]);
@@ -240,7 +240,7 @@ test("a removed document does not go with the message", async ({
     .poll(async () =>
       (await calls(target)).filter((call) => call.startsWith("agentSend ")),
     )
-    .toEqual(["agentSend c-iva-t3 alpha/api"]);
+    .toEqual(["agentSend c-iva-t3 kimi/api"]);
 });
 
 test("the documents a message named are shown with it when the conversation is read again", async ({
@@ -334,7 +334,7 @@ test("attached files are stored in the conversation, then named like any stored 
     .poll(async () =>
       (await calls(target)).filter((call) => call.startsWith("agentSend ")),
     )
-    .toEqual(["agentSend c-iva-t3 alpha/api attachments recibo-luz.pdf"]);
+    .toEqual(["agentSend c-iva-t3 kimi/api attachments recibo-luz.pdf"]);
 });
 
 test("attaching to a conversation not started yet reserves it first", async ({

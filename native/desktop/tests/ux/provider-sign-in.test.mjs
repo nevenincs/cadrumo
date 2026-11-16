@@ -321,6 +321,7 @@ async function openAgentSettings() {
   // waited on (the panel draws only after its settings and access reads answer).
   const timed = await exec(pageTimeInvokes);
   const since = Date.now();
+  await exec(pageMarkDrawn, since);
   const agentShown = await exec(
     () =>
       document
@@ -347,8 +348,37 @@ async function openAgentSettings() {
     });
   }
   const column = last.reached ? null : await exec(agentColumnText, name);
+  // The access section draws on its own read, possibly after the providers.
+  if (last.reached)
+    await waitFor(() => exec(() => window.__uxDrawn?.access != null), {
+      timeout: 30_000,
+      what: "the agent access section",
+      soft: true,
+    });
   const calls = timed ? await callsSince(since) : null;
-  return { ...last, rounds, column, calls };
+  const drawnMs = await exec(() => window.__uxDrawn ?? null);
+  return { ...last, rounds, column, calls, drawnMs };
+}
+
+/** Record, from `since` (epoch ms), when each agent settings section is first
+ * drawn with its read's answer, on the same clock as the timed host calls. */
+function pageMarkDrawn(since) {
+  const marks = { providers: null, access: null };
+  window.__uxDrawn = marks;
+  const seen = (selector) =>
+    [...document.querySelectorAll(selector)].some(
+      (el) => el.getClientRects().length > 0,
+    );
+  const look = () => {
+    if (marks.providers === null && seen(".provider-settings"))
+      marks.providers = Date.now() - since;
+    if (marks.access === null && seen(".agent-access"))
+      marks.access = Date.now() - since;
+    if (marks.providers === null || marks.access === null)
+      setTimeout(look, 100);
+  };
+  look();
+  return true;
 }
 
 /** The visible words around the agent column's settings door, so a run that
@@ -644,6 +674,7 @@ for (const provider of PROVIDERS) {
       const opened = await openAgentSettings();
       line.settings_rounds = opened.rounds;
       line.settings_calls = opened.calls;
+      line.settings_drawn_ms = opened.drawnMs;
       if (!opened.reached) {
         line.agent_column = opened.column;
         assert.fail(`UNMEASURED: ${opened.reason}`);

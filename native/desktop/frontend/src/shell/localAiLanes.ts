@@ -6,7 +6,8 @@ import {
   useRef,
   useState,
 } from "react";
-import type { AgentCatalogAnswer, AgentSession } from "./agentSession";
+import type { ServedCatalogAnswer } from "./agentCatalogContract";
+import type { AgentSession } from "./agentSession";
 import { failureCode } from "../errors";
 import type { AgentRead } from "./agentViews";
 import {
@@ -154,7 +155,7 @@ export function useLocalAiLanes(
       // publications and fallback timers spend the same bounded budget.
       if (atRead !== published.current) resume();
     };
-    const collectSettings = async (catalog: AgentCatalogAnswer) => {
+    const collectSettings = async (catalog: ServedCatalogAnswer) => {
       if (!current()) return;
       wake.current = null;
       window.clearTimeout(timer);

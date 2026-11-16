@@ -5,8 +5,9 @@ import { MODELO_FIXTURES } from "../support/windowFixtures";
 
 // The new-declaration dialog offers the addresses the backend serves and
 // starts on the one it suggests. A modelo the backend suggests no address for
-// starts with nothing chosen: the window never picks a period of its own, so a
-// quarterly filer is never started on the first month the list happens to hold.
+// starts with nothing chosen: the window never picks a year or a period of its
+// own, so a quarterly filer is never started on the first month the list
+// happens to hold, nor in the first year it happens to list.
 
 const served = JSON.parse(
   readFileSync(new URL("declarations-en.json", MODELO_FIXTURES), "utf8"),
@@ -35,6 +36,17 @@ test("a modelo without a served suggestion starts with no period chosen", async 
   const unsuggested = served.creation_targets[0]?.modelo;
   expect(unsuggested).toBeDefined();
   await choose(target, unsuggested!, "unsuggested");
+  const years = dialog(target).locator("[data-slot=segmented-control-item]");
+  await expect(years).not.toHaveCount(0);
+  await expect(years.and(target.locator("[aria-checked=true]"))).toHaveCount(0);
+  await expect(
+    dialog(target).locator(".new-declaration-period[aria-checked=true]"),
+  ).toHaveCount(0);
+  await expect(
+    dialog(target).locator(".new-declaration-submit"),
+  ).toBeDisabled();
+  // The person names the year; its periods are offered, still none chosen.
+  await years.last().click();
   await expect(
     dialog(target).locator(".new-declaration-period"),
   ).not.toHaveCount(0);

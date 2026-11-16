@@ -18,7 +18,7 @@ test.beforeEach(() => {
   scenarioOnly("The scenario host stands in for the agent service.");
 });
 
-const LOCAL = "local_api";
+const LOCAL = "zai_api";
 declare global {
   interface Window {
     __localAiReadRelease?: () => void;
@@ -51,7 +51,7 @@ async function openLane(target: Page) {
     .click();
   await expect(settings(target)).toBeVisible();
   await settings(target)
-    .locator('li[data-provider="local"] > details')
+    .locator('li[data-provider="zai"] > details')
     .evaluate((node) => ((node as HTMLDetailsElement).open = true));
   return settings(target).locator(`[data-lane="${LOCAL}"]`);
 }
@@ -257,7 +257,7 @@ test("the model picker offers the local lane's list, and a model added to it joi
 }) => {
   await open(target);
   let picker = await openModelPicker(target);
-  await pickWay(target, picker, "local/api");
+  await pickWay(target, picker, "zai/api");
   // The lane serves a model nobody put on its list: the picker leaves it out.
   expect(await offeredModels(picker)).toEqual([
     "synthetic-text:1",
@@ -319,7 +319,7 @@ test("Download plans that model's setup in the lane, sized by the catalog where 
   await expect(review.locator('[data-setup-plan="browser"]')).toHaveCount(0);
   await expect
     .poll(() => calls(target))
-    .toContain("setup.download local_api synthetic-vision:1");
+    .toContain("setup.download zai_api synthetic-vision:1");
   expect(await calls(target)).not.toContain("setup.answer apply");
   await expect(review).toContainText(label("desktop.setup.part_download"));
   await expect(review).toContainText("synthetic-vision:1");
@@ -354,7 +354,7 @@ test("a download still being planned says it is checking, on its row and the loc
     .click();
   await expect
     .poll(() => calls(target))
-    .toContain("setup.download local_api synthetic-vision:1");
+    .toContain("setup.download zai_api synthetic-vision:1");
   // The host has planned nothing yet, so no part is named: the asked model's
   // row and the local AI's row say the same thing, and keep their spinner.
   const checking = label("desktop.setup.step_checking");
@@ -447,7 +447,7 @@ test("from the click on, while the local AI sets up, no model offers its downloa
   await downloads.click();
   await expect
     .poll(() => calls(target))
-    .toContain("setup.download local_api synthetic-vision:1");
+    .toContain("setup.download zai_api synthetic-vision:1");
   // Nothing the window reads carries the run: the program's row shows no
   // planning, yet the model's button is already disabled and says why.
   await expect(
@@ -732,7 +732,7 @@ test("an added model downloads with its size unknown", async ({
     .click();
   await expect
     .poll(() => calls(target))
-    .toContain(`setup.download local_api ${ADDED}`);
+    .toContain(`setup.download zai_api ${ADDED}`);
   const review = laneReview(lane);
   await expect(review).toContainText(ADDED);
   await expect(review).not.toContainText(
