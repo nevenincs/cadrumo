@@ -6,8 +6,6 @@ import json
 import os
 from collections.abc import Iterator
 from pathlib import Path
-from types import SimpleNamespace
-from typing import cast
 from uuid import UUID
 
 import pytest
@@ -26,12 +24,10 @@ from cadrumo.domain.user_profile.values import ProfileSetupState
 from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
 from cadrumo.entrypoints.tests.persona_materialisation import (
     PERSONA_PROFILE_CREDENTIAL,
-    MaterialisedPersona,
     year_envelope,
 )
 
 from .. import desktop_persona_world
-from ..acceptance.persona_table.cli_column import statements as table_statements
 from ..acceptance.persona_table.cli_column.world_report import Phase, Statement, StatementKind
 from ..acceptance.persona_table.rows import PlannedRow
 from ..desktop_agent_live.disposable_root import create_root, remove_root, temporary_parent
@@ -215,11 +211,9 @@ def _statement(
     )
 
 
-def _split(monkeypatch: pytest.MonkeyPatch, made: tuple[Statement, ...]) -> desktop_persona_world.WindowSplit:
-    """Split ``made`` as the world does; the statements the table makes are the only thing replaced."""
-    monkeypatch.setattr(table_statements, "statements_for", lambda _materialised, _plan: made)
-    plan = cast(PlannedRow, SimpleNamespace(modelo="100", year=1, period="0A"))
-    return desktop_persona_world.window_split(cast(MaterialisedPersona, SimpleNamespace()), plan)
+def _split(made: tuple[Statement, ...]) -> desktop_persona_world.WindowSplit:
+    """Split ``made`` as the world splits the statements the table makes."""
+    return desktop_persona_world.split_statements(made)
 
 
 def test_a_carry_a_prior_figure_the_work_income_statement_a_work_input_and_a_rental_carry_have_a_window_door() -> None:
@@ -236,9 +230,7 @@ def test_a_carry_a_prior_figure_the_work_income_statement_a_work_input_and_a_ren
     assert not door(_statement(StatementKind.WORK_INCOME_NONE, Phase.AFTER_CALCULATION, refusal="no"))
 
 
-def test_the_world_records_up_to_the_last_statement_no_window_door_enters_and_leaves_the_rest(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def test_the_world_records_up_to_the_last_statement_no_window_door_enters_and_leaves_the_rest() -> None:
     carries = _statement(StatementKind.PRIOR_CARRIES, Phase.BEFORE_EVIDENCE, families=("f",))
     figure = _statement(StatementKind.PRIOR_VALUE, Phase.BEFORE_EVIDENCE, target="b", value="1")
     figure_again = _statement(StatementKind.PRIOR_VALUE, Phase.AFTER_CALCULATION, target="b", value="1")
@@ -248,7 +240,7 @@ def test_the_world_records_up_to_the_last_statement_no_window_door_enters_and_le
     other_rental = _statement(StatementKind.RENTAL_CARRY, Phase.AFTER_RECALCULATION, target="b", row="s")
     refused_rental = _statement(StatementKind.RENTAL_CARRY, Phase.AFTER_RECALCULATION, refusal="one total")
 
-    everything = _split(monkeypatch, (carries, figure, figure_again, income))
+    everything = _split((carries, figure, figure_again, income))
     assert everything.left == {StatementKind.PRIOR_CARRIES, StatementKind.PRIOR_VALUE, StatementKind.WORK_INCOME_NONE}
     assert [item.kind for item in everything.entered] == [
         StatementKind.PRIOR_CARRIES,
@@ -257,21 +249,21 @@ def test_the_world_records_up_to_the_last_statement_no_window_door_enters_and_le
     ]
     assert everything.without_door == ()
 
-    with_input = _split(monkeypatch, (carries, work_input, income))
+    with_input = _split((carries, work_input, income))
     assert with_input.left == {StatementKind.PRIOR_CARRIES, StatementKind.WORK_INPUT, StatementKind.WORK_INCOME_NONE}
     assert with_input.without_door == ()
 
-    with_rentals = _split(monkeypatch, (carries, income, rental, other_rental))
+    with_rentals = _split((carries, income, rental, other_rental))
     assert StatementKind.RENTAL_CARRY in with_rentals.left
     assert [item.row for item in with_rentals.entered if item.kind is StatementKind.RENTAL_CARRY] == ["r", "s"]
     assert with_rentals.without_door == ()
 
-    behind_refusal = _split(monkeypatch, (carries, figure, income, refused_rental))
+    behind_refusal = _split((carries, figure, income, refused_rental))
     assert behind_refusal.left == frozenset()
     assert behind_refusal.entered == ()
     assert behind_refusal.without_door == (refused_rental,)
 
-    nothing = _split(monkeypatch, ())
+    nothing = _split(())
     assert nothing == desktop_persona_world.WindowSplit()
 
 
@@ -284,11 +276,17 @@ def test_a_carry_stated_as_an_amount_is_entered_on_each_binding_its_box_feeds() 
         revision = operation.snapshot(
             "100", filing_year=_registry_horizon(), period="0A", grade=RegistryAuthorityGrade.CALCULATION
         ).revision
-        world = SimpleNamespace(operation=operation)
-        plan = cast(PlannedRow, SimpleNamespace(modelo="100", year=_registry_horizon(), period="0A"))
-        figures = desktop_persona_world._carry_figures(
-            cast(MaterialisedPersona, SimpleNamespace(world=world)), plan, statement
+        plan = PlannedRow(
+            persona="p",
+            modelo="100",
+            year=_registry_horizon(),
+            period="0A",
+            horizon=_registry_horizon(),
+            has_values=True,
+            grounding="none",
+            sources=(),
         )
+        figures = desktop_persona_world._carry_figures(operation, plan, statement)
         fed = casillas_by_binding(revision)
     assert figures
     assert {item["value"] for item in figures} == {"5.5"}

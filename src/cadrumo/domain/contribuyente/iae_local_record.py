@@ -219,7 +219,7 @@ class IaeElementoTributarioRecord(BaseModel):
     linea: int = Field(ge=ELEMENT_LINES.start, le=ELEMENT_LINES.stop - 1)
     code: str
     description: str | None = None
-    numero: Decimal = Field(ge=0, le=ELEMENT_UNITS_MAXIMUM)
+    numero: Decimal = Field(ge=Decimal(0), le=ELEMENT_UNITS_MAXIMUM)
 
     @field_validator("code")
     @classmethod

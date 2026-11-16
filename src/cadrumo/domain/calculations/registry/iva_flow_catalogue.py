@@ -23,7 +23,7 @@ from .facts.string_mapping import (
     StringMappingPolicy,
     unique_mapping_legal_refs,
 )
-from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
+from .governed_fact_scope import GovernedFactSource
 from .schema_base import DateAxis
 
 _ENTRY_SUBJECT: Final = "IVA flow catalogue"
@@ -326,28 +326,10 @@ def require_iva_flow_direction(
     ).require(value)
 
 
-def require_registry_declared_iva_flow_direction(value: object, *, effective_date: date) -> IvaFlowDirection:
-    """Return one flow token declared by the facts a validation is validating.
-
-    Like the rate-kind check, a registry validator resolves this vocabulary from
-    the candidate in scope and refuses when none is: reading the published bundle
-    while that bundle is being decoded is the deadlock this avoids.
-    """
-    authority = governed_facts_in_scope()
-    if authority is None:
-        raise RegistryValidationError(
-            "IVA flow validation requires the governed facts being validated to be in "
-            "scope; registry validation must not resolve a flow direction through the "
-            "published authority artifact",
-        )
-    return resolve_iva_flow_direction_catalogue(effective_date=effective_date, authority=authority).require(value)
-
-
 __all__ = [
     "IvaFlowDirectionCatalogue",
     "IvaFlowDirectionDefinition",
     "IvaSettlementSideDefinition",
     "require_iva_flow_direction",
-    "require_registry_declared_iva_flow_direction",
     "resolve_iva_flow_direction_catalogue",
 ]
