@@ -6,19 +6,19 @@ import { formatViewLink } from "../../shell/navigation/links";
 import { NAVIGATION } from "../../shell/navigation/projection";
 import { useStrings } from "../../shell/strings";
 import type { UserProfile } from "../../shell/userProfile";
-import type { CalendarWarning } from "../../shell/views";
 
 /** The profile's own completion state and independently reported calendar
- * evidence, kept compact until the person asks to read the details. */
+ * evidence, kept compact until the person asks to read the details.
+ * `evidence` is the calendar's own sentences about what it had to assume. */
 export function ProfileCompletionNotice({
   profile,
-  warnings = [],
+  evidence = [],
   onNavigate,
   actions = {},
   className,
 }: {
   profile: UserProfile | null;
-  warnings?: CalendarWarning[];
+  evidence?: readonly string[];
   onNavigate?: (url: string) => void;
   /** Doors this surface can open, keyed by the catalogue action a served
    * notice names; a notice whose action has no door here shows text only. */
@@ -41,7 +41,7 @@ export function ProfileCompletionNotice({
   const messages = [
     ...new Set([
       ...(profile?.notices.map((notice) => notice.message) ?? []),
-      ...warnings.map((warning) => warning.message),
+      ...evidence,
     ]),
   ];
   const offered = [

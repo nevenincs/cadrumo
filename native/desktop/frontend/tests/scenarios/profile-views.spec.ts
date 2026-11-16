@@ -31,19 +31,38 @@ test("profile reads hide previous snapshots on the first commit and ignore late 
           messageRequests.push({ resolve, reject });
         }),
     };
+    const range = { from_date: "2026-01-01", to_date: "2026-12-31" };
+    const year = Number(range.from_date.slice(0, 4));
     const snapshot: FilingCalendar = {
-      range: { from_date: "2026-01-01", to_date: "2026-12-31" },
+      range,
+      support: {
+        floor: year - 4,
+        horizon: year,
+        hard_ceiling: null,
+        state: "supported",
+      },
+      evaluated_on: range.from_date,
       entries: [],
-      events: [],
-      warnings: [],
       generated_at: "profile-a",
+      warnings: [],
+      completeness: {
+        explicitly_set_keys: [],
+        defaulted_keys: [],
+        computable_modelos: [],
+        defaulted_modelos: [],
+      },
+      taxpayer_model_declared: true,
+      incomplete_reason: null,
+      suppressed_entries: [],
+      events: [],
       coverage: {
         surfaced: [],
         confidently_excluded: [],
         advised: [],
         out_of_scope: [],
       },
-      suppressed_entries: [],
+      late_count: null,
+      applicable_modelos_without_deadline: null,
     };
     let refusals = 0;
     const refused = () => refusals++;
