@@ -3568,7 +3568,7 @@ modelo:
       construct:
         modelo-369-exterior-resultado:
           field:
-            title: Elszamolas a fogyasztas szerinti tagallamonkent
+            title: Elszámolás a fogyasztás szerinti tagállamonként
         modelo-369-importacion-resultado:
           field:
             title: Eredmény a fogyasztás szerinti tagállamonként
@@ -3815,331 +3815,331 @@ modelo:
               label: DE célországba áthárított HÉA - nyújtott szolgáltatások (nem
                 uniós szabályozás)
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisobk5phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
-              label: AT - Negativ korrekciok
+              label: AT - Negatív korrekciók
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisobk5phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
-              label: AT - Pozitiv korrekciok
+              label: AT - Pozitív korrekciók
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisobk5pi6atjfdhr6asg:
-              label: AT - A fogyasztas szerinti tagallam altal visszateritendo
+              label: AT - A fogyasztás szerinti tagállam által visszatérítendő
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisobk5pkmspriclpm2sg:
-              label: AT - Spanyolorszagban fizetendo
+              label: AT - Spanyolországban fizetendő
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisobk5pp6asrldhq62p3f:
-              label: AT - Egyenleg a fogyasztas szerinti tagallamban
+              label: AT - Egyenleg a fogyasztás szerinti tagállamban
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisobk5ppmasjmd5hmirrj:
-              label: AT - Szolgaltatasok afaosszege
+              label: AT - Szolgáltatások áfaösszege
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisoj55phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
-              label: BE - Negativ korrekciok
+              label: BE - Negatív korrekciók
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisoj55phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
-              label: BE - Pozitiv korrekciok
+              label: BE - Pozitív korrekciók
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisoj55pi6atjfdhr6asg:
-              label: BE - A fogyasztas szerinti tagallam altal visszateritendo
+              label: BE - A fogyasztás szerinti tagállam által visszatérítendő
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisoj55pkmspriclpm2sg:
-              label: BE - Spanyolorszagban fizetendo
+              label: BE - Spanyolországban fizetendő
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisoj55pp6asrldhq62p3f:
-              label: BE - Egyenleg a fogyasztas szerinti tagallamban
+              label: BE - Egyenleg a fogyasztás szerinti tagállamban
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisoj55ppmasjmd5hmirrj:
-              label: BE - Szolgaltatasok afaosszege
+              label: BE - Szolgáltatások áfaösszege
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisoj75phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
-              label: BG - Negativ korrekciok
+              label: BG - Negatív korrekciók
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisoj75phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
-              label: BG - Pozitiv korrekciok
+              label: BG - Pozitív korrekciók
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisoj75pi6atjfdhr6asg:
-              label: BG - A fogyasztas szerinti tagallam altal visszateritendo
+              label: BG - A fogyasztás szerinti tagállam által visszatérítendő
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisoj75pkmspriclpm2sg:
-              label: BG - Spanyolorszagban fizetendo
+              label: BG - Spanyolországban fizetendő
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisoj75pp6asrldhq62p3f:
-              label: BG - Egyenleg a fogyasztas szerinti tagallamban
+              label: BG - Egyenleg a fogyasztás szerinti tagállamban
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisoj75ppmasjmd5hmirrj:
-              label: BG - Szolgaltatasok afaosszege
+              label: BG - Szolgáltatások áfaösszege
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisorp5phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
-              label: CY - Negativ korrekciok
+              label: CY - Negatív korrekciók
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisorp5phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
-              label: CY - Pozitiv korrekciok
+              label: CY - Pozitív korrekciók
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisorp5pi6atjfdhr6asg:
-              label: CY - A fogyasztas szerinti tagallam altal visszateritendo
+              label: CY - A fogyasztás szerinti tagállam által visszatérítendő
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisorp5pkmspriclpm2sg:
-              label: CY - Spanyolorszagban fizetendo
+              label: CY - Spanyolországban fizetendő
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisorp5pp6asrldhq62p3f:
-              label: CY - Egyenleg a fogyasztas szerinti tagallamban
+              label: CY - Egyenleg a fogyasztás szerinti tagállamban
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisorp5ppmasjmd5hmirrj:
-              label: CY - Szolgaltatasok afaosszege
+              label: CY - Szolgáltatások áfaösszege
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisorq5phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
-              label: CZ - Negativ korrekciok
+              label: CZ - Negatív korrekciók
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisorq5phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
-              label: CZ - Pozitiv korrekciok
+              label: CZ - Pozitív korrekciók
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisorq5pi6atjfdhr6asg:
-              label: CZ - A fogyasztas szerinti tagallam altal visszateritendo
+              label: CZ - A fogyasztás szerinti tagállam által visszatérítendő
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisorq5pkmspriclpm2sg:
-              label: CZ - Spanyolorszagban fizetendo
+              label: CZ - Spanyolországban fizetendő
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisorq5pp6asrldhq62p3f:
-              label: CZ - Egyenleg a fogyasztas szerinti tagallamban
+              label: CZ - Egyenleg a fogyasztás szerinti tagállamban
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisorq5ppmasjmd5hmirrj:
-              label: CZ - Szolgaltatasok afaosszege
+              label: CZ - Szolgáltatások áfaösszege
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisp355phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
-              label: DE - Negativ korrekciok
+              label: DE - Negatív korrekciók
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisp355phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
-              label: DE - Pozitiv korrekciok
+              label: DE - Pozitív korrekciók
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisp355pi6atjfdhr6asg:
-              label: DE - A fogyasztas szerinti tagallam altal visszateritendo
+              label: DE - A fogyasztás szerinti tagállam által visszatérítendő
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisp355pkmspriclpm2sg:
-              label: DE - Spanyolorszagban fizetendo
+              label: DE - Spanyolországban fizetendő
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisp355pp6asrldhq62p3f:
-              label: DE - Egyenleg a fogyasztas szerinti tagallamban
+              label: DE - Egyenleg a fogyasztás szerinti tagállamban
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisp355ppmasjmd5hmirrj:
-              label: DE - Szolgaltatasok afaosszege
+              label: DE - Szolgáltatások áfaösszege
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisp3b5phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
-              label: DK - Negativ korrekciok
+              label: DK - Negatív korrekciók
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisp3b5phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
-              label: DK - Pozitiv korrekciok
+              label: DK - Pozitív korrekciók
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisp3b5pi6atjfdhr6asg:
-              label: DK - A fogyasztas szerinti tagallam altal visszateritendo
+              label: DK - A fogyasztás szerinti tagállam által visszatérítendő
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisp3b5pkmspriclpm2sg:
-              label: DK - Spanyolorszagban fizetendo
+              label: DK - Spanyolországban fizetendő
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisp3b5pp6asrldhq62p3f:
-              label: DK - Egyenleg a fogyasztas szerinti tagallamban
+              label: DK - Egyenleg a fogyasztás szerinti tagállamban
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisp3b5ppmasjmd5hmirrj:
-              label: DK - Szolgaltatasok afaosszege
+              label: DK - Szolgáltatások áfaösszege
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispb55phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
-              label: EE - Negativ korrekciok
+              label: EE - Negatív korrekciók
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispb55phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
-              label: EE - Pozitiv korrekciok
+              label: EE - Pozitív korrekciók
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispb55pi6atjfdhr6asg:
-              label: EE - A fogyasztas szerinti tagallam altal visszateritendo
+              label: EE - A fogyasztás szerinti tagállam által visszatérítendő
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispb55pkmspriclpm2sg:
-              label: EE - Spanyolorszagban fizetendo
+              label: EE - Spanyolországban fizetendő
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispb55pp6asrldhq62p3f:
-              label: EE - Egyenleg a fogyasztas szerinti tagallamban
+              label: EE - Egyenleg a fogyasztás szerinti tagállamban
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispb55ppmasjmd5hmirrj:
-              label: EE - Szolgaltatasok afaosszege
+              label: EE - Szolgáltatások áfaösszege
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispbj5phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
-              label: ES - Negativ korrekciok
+              label: ES - Negatív korrekciók
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispbj5phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
-              label: ES - Pozitiv korrekciok
+              label: ES - Pozitív korrekciók
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispbj5pi6atjfdhr6asg:
-              label: ES - A fogyasztas szerinti tagallam altal visszateritendo
+              label: ES - A fogyasztás szerinti tagállam által visszatérítendő
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispbj5pkmspriclpm2sg:
-              label: ES - Spanyolorszagban fizetendo
+              label: ES - Spanyolországban fizetendő
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispbj5pp6asrldhq62p3f:
-              label: ES - Egyenleg a fogyasztas szerinti tagallamban
+              label: ES - Egyenleg a fogyasztás szerinti tagállamban
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispbj5ppmasjmd5hmirrj:
-              label: ES - Szolgaltatasok afaosszege
+              label: ES - Szolgáltatások áfaösszege
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispj95phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
-              label: FI - Negativ korrekciok
+              label: FI - Negatív korrekciók
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispj95phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
-              label: FI - Pozitiv korrekciok
+              label: FI - Pozitív korrekciók
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispj95pi6atjfdhr6asg:
-              label: FI - A fogyasztas szerinti tagallam altal visszateritendo
+              label: FI - A fogyasztás szerinti tagállam által visszatérítendő
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispj95pkmspriclpm2sg:
-              label: FI - Spanyolorszagban fizetendo
+              label: FI - Spanyolországban fizetendő
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispj95pp6asrldhq62p3f:
-              label: FI - Egyenleg a fogyasztas szerinti tagallamban
+              label: FI - Egyenleg a fogyasztás szerinti tagállamban
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispj95ppmasjmd5hmirrj:
-              label: FI - Szolgaltatasok afaosszege
+              label: FI - Szolgáltatások áfaösszege
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispji5phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
-              label: FR - Negativ korrekciok
+              label: FR - Negatív korrekciók
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispji5phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
-              label: FR - Pozitiv korrekciok
+              label: FR - Pozitív korrekciók
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispji5pi6atjfdhr6asg:
-              label: FR - A fogyasztas szerinti tagallam altal visszateritendo
+              label: FR - A fogyasztás szerinti tagállam által visszatérítendő
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispji5pkmspriclpm2sg:
-              label: FR - Spanyolorszagban fizetendo
+              label: FR - Spanyolországban fizetendő
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispji5pp6asrldhq62p3f:
-              label: FR - Egyenleg a fogyasztas szerinti tagallamban
+              label: FR - Egyenleg a fogyasztás szerinti tagállamban
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispji5ppmasjmd5hmirrj:
-              label: FR - Szolgaltatasok afaosszege
+              label: FR - Szolgáltatások áfaösszege
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispri5phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
-              label: GR - Negativ korrekciok
+              label: GR - Negatív korrekciók
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispri5phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
-              label: GR - Pozitiv korrekciok
+              label: GR - Pozitív korrekciók
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispri5pi6atjfdhr6asg:
-              label: GR - A fogyasztas szerinti tagallam altal visszateritendo
+              label: GR - A fogyasztás szerinti tagállam által visszatérítendő
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispri5pkmspriclpm2sg:
-              label: GR - Spanyolorszagban fizetendo
+              label: GR - Spanyolországban fizetendő
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispri5pp6asrldhq62p3f:
-              label: GR - Egyenleg a fogyasztas szerinti tagallamban
+              label: GR - Egyenleg a fogyasztás szerinti tagállamban
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispri5ppmasjmd5hmirrj:
-              label: GR - Szolgaltatasok afaosszege
+              label: GR - Szolgáltatások áfaösszege
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisq3i5phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
-              label: HR - Negativ korrekciok
+              label: HR - Negatív korrekciók
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisq3i5phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
-              label: HR - Pozitiv korrekciok
+              label: HR - Pozitív korrekciók
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisq3i5pi6atjfdhr6asg:
-              label: HR - A fogyasztas szerinti tagallam altal visszateritendo
+              label: HR - A fogyasztás szerinti tagállam által visszatérítendő
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisq3i5pkmspriclpm2sg:
-              label: HR - Spanyolorszagban fizetendo
+              label: HR - Spanyolországban fizetendő
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisq3i5pp6asrldhq62p3f:
-              label: HR - Egyenleg a fogyasztas szerinti tagallamban
+              label: HR - Egyenleg a fogyasztás szerinti tagállamban
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisq3i5ppmasjmd5hmirrj:
-              label: HR - Szolgaltatasok afaosszege
+              label: HR - Szolgáltatások áfaösszege
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisq3l5phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
-              label: HU - Negativ korrekciok
+              label: HU - Negatív korrekciók
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisq3l5phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
-              label: HU - Pozitiv korrekciok
+              label: HU - Pozitív korrekciók
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisq3l5pi6atjfdhr6asg:
-              label: HU - A fogyasztas szerinti tagallam altal visszateritendo
+              label: HU - A fogyasztás szerinti tagállam által visszatérítendő
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisq3l5pkmspriclpm2sg:
-              label: HU - Spanyolorszagban fizetendo
+              label: HU - Spanyolországban fizetendő
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisq3l5pp6asrldhq62p3f:
-              label: HU - Egyenleg a fogyasztas szerinti tagallamban
+              label: HU - Egyenleg a fogyasztás szerinti tagállamban
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisq3l5ppmasjmd5hmirrj:
-              label: HU - Szolgaltatasok afaosszege
+              label: HU - Szolgáltatások áfaösszege
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisqb55phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
-              label: IE - Negativ korrekciok
+              label: IE - Negatív korrekciók
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisqb55phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
-              label: IE - Pozitiv korrekciok
+              label: IE - Pozitív korrekciók
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisqb55pi6atjfdhr6asg:
-              label: IE - A fogyasztas szerinti tagallam altal visszateritendo
+              label: IE - A fogyasztás szerinti tagállam által visszatérítendő
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisqb55pkmspriclpm2sg:
-              label: IE - Spanyolorszagban fizetendo
+              label: IE - Spanyolországban fizetendő
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisqb55pp6asrldhq62p3f:
-              label: IE - Egyenleg a fogyasztas szerinti tagallamban
+              label: IE - Egyenleg a fogyasztás szerinti tagállamban
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisqb55ppmasjmd5hmirrj:
-              label: IE - Szolgaltatasok afaosszege
+              label: IE - Szolgáltatások áfaösszege
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisqbk5phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
-              label: IT - Negativ korrekciok
+              label: IT - Negatív korrekciók
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisqbk5phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
-              label: IT - Pozitiv korrekciok
+              label: IT - Pozitív korrekciók
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisqbk5pi6atjfdhr6asg:
-              label: IT - A fogyasztas szerinti tagallam altal visszateritendo
+              label: IT - A fogyasztás szerinti tagállam által visszatérítendő
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisqbk5pkmspriclpm2sg:
-              label: IT - Spanyolorszagban fizetendo
+              label: IT - Spanyolországban fizetendő
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisqbk5pp6asrldhq62p3f:
-              label: IT - Egyenleg a fogyasztas szerinti tagallamban
+              label: IT - Egyenleg a fogyasztás szerinti tagállamban
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisqbk5ppmasjmd5hmirrj:
-              label: IT - Szolgaltatasok afaosszege
+              label: IT - Szolgáltatások áfaösszege
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisr3k5phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
-              label: LT - Negativ korrekciok
+              label: LT - Negatív korrekciók
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisr3k5phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
-              label: LT - Pozitiv korrekciok
+              label: LT - Pozitív korrekciók
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisr3k5pi6atjfdhr6asg:
-              label: LT - A fogyasztas szerinti tagallam altal visszateritendo
+              label: LT - A fogyasztás szerinti tagállam által visszatérítendő
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisr3k5pkmspriclpm2sg:
-              label: LT - Spanyolorszagban fizetendo
+              label: LT - Spanyolországban fizetendő
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisr3k5pp6asrldhq62p3f:
-              label: LT - Egyenleg a fogyasztas szerinti tagallamban
+              label: LT - Egyenleg a fogyasztás szerinti tagállamban
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisr3k5ppmasjmd5hmirrj:
-              label: LT - Szolgaltatasok afaosszege
+              label: LT - Szolgáltatások áfaösszege
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisr3l5phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
-              label: LU - Negativ korrekciok
+              label: LU - Negatív korrekciók
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisr3l5phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
-              label: LU - Pozitiv korrekciok
+              label: LU - Pozitív korrekciók
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisr3l5pi6atjfdhr6asg:
-              label: LU - A fogyasztas szerinti tagallam altal visszateritendo
+              label: LU - A fogyasztás szerinti tagállam által visszatérítendő
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisr3l5pkmspriclpm2sg:
-              label: LU - Spanyolorszagban fizetendo
+              label: LU - Spanyolországban fizetendő
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisr3l5pp6asrldhq62p3f:
-              label: LU - Egyenleg a fogyasztas szerinti tagallamban
+              label: LU - Egyenleg a fogyasztás szerinti tagállamban
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisr3l5ppmasjmd5hmirrj:
-              label: LU - Szolgaltatasok afaosszege
+              label: LU - Szolgáltatások áfaösszege
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisr3m5phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
-              label: LV - Negativ korrekciok
+              label: LV - Negatív korrekciók
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisr3m5phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
-              label: LV - Pozitiv korrekciok
+              label: LV - Pozitív korrekciók
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisr3m5pi6atjfdhr6asg:
-              label: LV - A fogyasztas szerinti tagallam altal visszateritendo
+              label: LV - A fogyasztás szerinti tagállam által visszatérítendő
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisr3m5pkmspriclpm2sg:
-              label: LV - Spanyolorszagban fizetendo
+              label: LV - Spanyolországban fizetendő
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisr3m5pp6asrldhq62p3f:
-              label: LV - Egyenleg a fogyasztas szerinti tagallamban
+              label: LV - Egyenleg a fogyasztás szerinti tagállamban
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisr3m5ppmasjmd5hmirrj:
-              label: LV - Szolgaltatasok afaosszege
+              label: LV - Szolgáltatások áfaösszege
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisrbk5phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
-              label: MT - Negativ korrekciok
+              label: MT - Negatív korrekciók
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisrbk5phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
-              label: MT - Pozitiv korrekciok
+              label: MT - Pozitív korrekciók
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisrbk5pi6atjfdhr6asg:
-              label: MT - A fogyasztas szerinti tagallam altal visszateritendo
+              label: MT - A fogyasztás szerinti tagállam által visszatérítendő
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisrbk5pkmspriclpm2sg:
-              label: MT - Spanyolorszagban fizetendo
+              label: MT - Spanyolországban fizetendő
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisrbk5pp6asrldhq62p3f:
-              label: MT - Egyenleg a fogyasztas szerinti tagallamban
+              label: MT - Egyenleg a fogyasztás szerinti tagállamban
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisrbk5ppmasjmd5hmirrj:
-              label: MT - Szolgaltatasok afaosszege
+              label: MT - Szolgáltatások áfaösszege
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisrjc5phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
-              label: NL - Negativ korrekciok
+              label: NL - Negatív korrekciók
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisrjc5phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
-              label: NL - Pozitiv korrekciok
+              label: NL - Pozitív korrekciók
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisrjc5pi6atjfdhr6asg:
-              label: NL - A fogyasztas szerinti tagallam altal visszateritendo
+              label: NL - A fogyasztás szerinti tagállam által visszatérítendő
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisrjc5pkmspriclpm2sg:
-              label: NL - Spanyolorszagban fizetendo
+              label: NL - Spanyolországban fizetendő
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisrjc5pp6asrldhq62p3f:
-              label: NL - Egyenleg a fogyasztas szerinti tagallamban
+              label: NL - Egyenleg a fogyasztás szerinti tagállamban
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisrjc5ppmasjmd5hmirrj:
-              label: NL - Szolgaltatasok afaosszege
+              label: NL - Szolgáltatások áfaösszege
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chniss3c5phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
-              label: PL - Negativ korrekciok
+              label: PL - Negatív korrekciók
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chniss3c5phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
-              label: PL - Pozitiv korrekciok
+              label: PL - Pozitív korrekciók
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chniss3c5pi6atjfdhr6asg:
-              label: PL - A fogyasztas szerinti tagallam altal visszateritendo
+              label: PL - A fogyasztás szerinti tagállam által visszatérítendő
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chniss3c5pkmspriclpm2sg:
-              label: PL - Spanyolorszagban fizetendo
+              label: PL - Spanyolországban fizetendő
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chniss3c5pp6asrldhq62p3f:
-              label: PL - Egyenleg a fogyasztas szerinti tagallamban
+              label: PL - Egyenleg a fogyasztás szerinti tagállamban
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chniss3c5ppmasjmd5hmirrj:
-              label: PL - Szolgaltatasok afaosszege
+              label: PL - Szolgáltatások áfaösszege
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chniss3k5phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
-              label: PT - Negativ korrekciok
+              label: PT - Negatív korrekciók
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chniss3k5phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
-              label: PT - Pozitiv korrekciok
+              label: PT - Pozitív korrekciók
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chniss3k5pi6atjfdhr6asg:
-              label: PT - A fogyasztas szerinti tagallam altal visszateritendo
+              label: PT - A fogyasztás szerinti tagállam által visszatérítendő
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chniss3k5pkmspriclpm2sg:
-              label: PT - Spanyolorszagban fizetendo
+              label: PT - Spanyolországban fizetendő
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chniss3k5pp6asrldhq62p3f:
-              label: PT - Egyenleg a fogyasztas szerinti tagallamban
+              label: PT - Egyenleg a fogyasztás szerinti tagállamban
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chniss3k5ppmasjmd5hmirrj:
-              label: PT - Szolgaltatasok afaosszege
+              label: PT - Szolgáltatások áfaösszege
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissjf5phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
-              label: RO - Negativ korrekciok
+              label: RO - Negatív korrekciók
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissjf5phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
-              label: RO - Pozitiv korrekciok
+              label: RO - Pozitív korrekciók
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissjf5pi6atjfdhr6asg:
-              label: RO - A fogyasztas szerinti tagallam altal visszateritendo
+              label: RO - A fogyasztás szerinti tagállam által visszatérítendő
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissjf5pkmspriclpm2sg:
-              label: RO - Spanyolorszagban fizetendo
+              label: RO - Spanyolországban fizetendő
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissjf5pp6asrldhq62p3f:
-              label: RO - Egyenleg a fogyasztas szerinti tagallamban
+              label: RO - Egyenleg a fogyasztás szerinti tagállamban
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissjf5ppmasjmd5hmirrj:
-              label: RO - Szolgaltatasok afaosszege
+              label: RO - Szolgáltatások áfaösszege
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissr1dhi6ubb9dpjn4pbjc5p2qpbje1gmso8:
-              label: Spanyolorszagban fizetendo osszesen
+              label: Spanyolországban fizetendő összesen
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissr55phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
-              label: SE - Negativ korrekciok
+              label: SE - Negatív korrekciók
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissr55phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
-              label: SE - Pozitiv korrekciok
+              label: SE - Pozitív korrekciók
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissr55pi6atjfdhr6asg:
-              label: SE - A fogyasztas szerinti tagallam altal visszateritendo
+              label: SE - A fogyasztás szerinti tagállam által visszatérítendő
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissr55pkmspriclpm2sg:
-              label: SE - Spanyolorszagban fizetendo
+              label: SE - Spanyolországban fizetendő
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissr55pp6asrldhq62p3f:
-              label: SE - Egyenleg a fogyasztas szerinti tagallamban
+              label: SE - Egyenleg a fogyasztás szerinti tagállamban
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissr55ppmasjmd5hmirrj:
-              label: SE - Szolgaltatasok afaosszege
+              label: SE - Szolgáltatások áfaösszege
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissr95phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
-              label: SI - Negativ korrekciok
+              label: SI - Negatív korrekciók
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissr95phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
-              label: SI - Pozitiv korrekciok
+              label: SI - Pozitív korrekciók
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissr95pi6atjfdhr6asg:
-              label: SI - A fogyasztas szerinti tagallam altal visszateritendo
+              label: SI - A fogyasztás szerinti tagállam által visszatérítendő
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissr95pkmspriclpm2sg:
-              label: SI - Spanyolorszagban fizetendo
+              label: SI - Spanyolországban fizetendő
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissr95pp6asrldhq62p3f:
-              label: SI - Egyenleg a fogyasztas szerinti tagallamban
+              label: SI - Egyenleg a fogyasztás szerinti tagállamban
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissr95ppmasjmd5hmirrj:
-              label: SI - Szolgaltatasok afaosszege
+              label: SI - Szolgáltatások áfaösszege
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissrb5phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
-              label: SK - Negativ korrekciok
+              label: SK - Negatív korrekciók
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissrb5phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
-              label: SK - Pozitiv korrekciok
+              label: SK - Pozitív korrekciók
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissrb5pi6atjfdhr6asg:
-              label: SK - A fogyasztas szerinti tagallam altal visszateritendo
+              label: SK - A fogyasztás szerinti tagállam által visszatérítendő
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissrb5pkmspriclpm2sg:
-              label: SK - Spanyolorszagban fizetendo
+              label: SK - Spanyolországban fizetendő
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissrb5pp6asrldhq62p3f:
-              label: SK - Egyenleg a fogyasztas szerinti tagallamban
+              label: SK - Egyenleg a fogyasztás szerinti tagállamban
             x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissrb5ppmasjmd5hmirrj:
-              label: SK - Szolgaltatasok afaosszege
+              label: SK - Szolgáltatások áfaösszege
           construct:
             modelo-369:
               field:
