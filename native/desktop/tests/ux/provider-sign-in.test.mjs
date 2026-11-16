@@ -314,7 +314,7 @@ async function openAgentSettings() {
         (el) => el.getClientRects().length > 0,
       ),
     );
-  if (await drawn()) return { reached: true };
+  if (await drawn()) return { reached: true, rounds: [], column: null };
   const agentShown = await exec(
     () =>
       document
@@ -328,10 +328,34 @@ async function openAgentSettings() {
   const name = label("desktop.agent.settings");
   // The first press can land before the agent column has drawn its settings
   // door, and a door already pressed may show nothing yet: press again.
+  // Each round is kept, so a slow first draw names the round it waited in.
+  const began = Date.now();
+  const rounds = [];
   let last = { reached: false, reason: "the provider settings were not drawn" };
-  for (let round = 0; round < 3 && !last.reached; round += 1)
+  for (let round = 0; round < 3 && !last.reached; round += 1) {
     last = await pressAgentSettings(name, drawn, round > 0);
-  return last;
+    rounds.push({
+      door: last.door,
+      drawn: last.reached,
+      at_ms: Date.now() - began,
+    });
+  }
+  const column = last.reached ? null : await exec(agentColumnText, name);
+  return { ...last, rounds, column };
+}
+
+/** The visible words around the agent column's settings door, so a run that
+ * never drew the provider settings shows what the column offered instead. */
+function agentColumnText(name) {
+  const door = [
+    ...document.querySelectorAll('button[data-slot="icon-button"]'),
+  ].find((el) => (el.getAttribute("aria-label") ?? "").startsWith(name));
+  const column = door?.closest(
+    "aside, section, [data-rail-panel], [role='complementary']",
+  );
+  return (
+    (column?.innerText ?? "").replace(/\s+/g, " ").trim().slice(0, 400) || null
+  );
 }
 
 async function pressAgentSettings(name, drawn, again) {
@@ -354,6 +378,7 @@ async function pressAgentSettings(name, drawn, again) {
     await sleep(5000);
     return {
       reached: false,
+      door: marked,
       reason: `the agent column's "${name}" button is ${marked}`,
     };
   }
@@ -368,8 +393,12 @@ async function pressAgentSettings(name, drawn, again) {
     soft: true,
   });
   return ok
-    ? { reached: true }
-    : { reached: false, reason: "the provider settings were not drawn" };
+    ? { reached: true, door: marked }
+    : {
+        reached: false,
+        door: marked,
+        reason: "the provider settings were not drawn",
+      };
 }
 
 const signInWords = () => label("desktop.providers.sign_in_action");
@@ -606,7 +635,11 @@ for (const provider of PROVIDERS) {
     "model-notice",
     async (t, line) => {
       const opened = await openAgentSettings();
-      if (!opened.reached) assert.fail(`UNMEASURED: ${opened.reason}`);
+      line.settings_rounds = opened.rounds;
+      if (!opened.reached) {
+        line.agent_column = opened.column;
+        assert.fail(`UNMEASURED: ${opened.reason}`);
+      }
       const group = await waitFor(
         async () => {
           const read = await readGroup(provider);
