@@ -9,7 +9,7 @@
 // then the property is optional. A field of what the window sends may be left
 // out where the model gives it a default.
 
-import type { PublicPeriod } from "./modelo";
+import type { OutputLanguage, PublicPeriod } from "./modelo";
 
 export type IvaCompensationAuthority =
   | "aeat_wallet"
@@ -61,6 +61,11 @@ export type ModeloIvaWalletBalanceProjection = {
   lot_count: number;
   next_expiry_year: number | null;
   unallocated_applied_amount: string;
+  words_language: OutputLanguage;
+  total_balance_words: string;
+  active_balance_words: string;
+  expired_balance_words: string;
+  unallocated_applied_amount_words: string;
 };
 
 /**

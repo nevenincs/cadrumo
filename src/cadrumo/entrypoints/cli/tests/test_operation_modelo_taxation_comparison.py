@@ -20,6 +20,7 @@ from ....application.modelo.taxation_comparison_operation import (
     ModeloTaxationComparisonProjection,
     ModeloTaxationComparisonRequest,
 )
+from ....application.modelo.value_presentation import money_words
 from ....core.external_constants import OutputLanguage
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....core.period import Period
@@ -87,6 +88,10 @@ def _projection(
         recommendation_reason=TaxationRecommendationReason.CONJUNTA_LOWER_RESULT,
         recommendation_reason_words="Joint filing comes out lower, by 550.00 €.",
         words_language=OutputLanguage.EN,
+        conjunta_cuota_resultante_words=money_words("1250.00", OutputLanguage.EN),
+        individual_cuota_resultante_words=money_words("1800.00", OutputLanguage.EN),
+        conjunta_resultado_words=money_words("900.00", OutputLanguage.EN),
+        individual_resultado_words=money_words("1450.00", OutputLanguage.EN),
         individual_branch_single_earner_only=True,
         individual_branch_caveat=(
             "The individual-mode figure is faithful only for a single-earner household; "

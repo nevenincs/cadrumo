@@ -66,7 +66,7 @@ _REFUSAL_SENTENCE: Final = "Served sentence: the opening balance was not admitte
 def _balance(
     *, total: str = "300.00", active: str = "200.00", expired: str = "100.00", lots: int = 2, expiry: int | None = None
 ) -> ModeloIvaWalletBalanceProjection:
-    return ModeloIvaWalletBalanceProjection(
+    return ModeloIvaWalletBalanceProjection.worded(
         profile_id=_PROFILE,
         as_of_year=_FORM.filing_year,
         total_balance=total,
@@ -75,6 +75,7 @@ def _balance(
         lot_count=lots,
         next_expiry_year=expiry if expiry is not None else _FORM.filing_year + 3,
         unallocated_applied_amount="12.50",
+        language=OutputLanguage.EN,
     )
 
 

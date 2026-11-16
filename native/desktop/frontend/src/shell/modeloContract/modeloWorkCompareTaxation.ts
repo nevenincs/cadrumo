@@ -36,6 +36,10 @@ export type ModeloTaxationComparisonProjection = {
   recommendation_reason: TaxationRecommendationReason;
   recommendation_reason_words: string;
   words_language: OutputLanguage;
+  conjunta_cuota_resultante_words: string;
+  individual_cuota_resultante_words: string;
+  conjunta_resultado_words: string;
+  individual_resultado_words: string;
   individual_branch_single_earner_only: true;
   individual_branch_caveat: string;
 };
