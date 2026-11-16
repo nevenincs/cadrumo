@@ -58,7 +58,6 @@ function SettingsDisclosure({
  * outside Cadrumo.
  */
 export function AgentSettingsPanel({
-  loading,
   query: settingsQuery,
   onQuery,
   providerMatches,
@@ -81,8 +80,6 @@ export function AgentSettingsPanel({
   onRetryCatalog,
   onLocalModelRemoved,
 }: {
-  /** Some section has not been read the first time yet. */
-  loading: boolean;
   query: string;
   onQuery: (query: string) => void;
   providerMatches: boolean;
@@ -120,16 +117,21 @@ export function AgentSettingsPanel({
     Boolean(query) && title.toLocaleLowerCase().includes(query);
   const providerTitleMatches = titleMatches(t("desktop.providers.title"));
   const accessTitleMatches = titleMatches(t("desktop.automation_access.title"));
+  // Each section is drawn as soon as its own read answers, and says on its
+  // own while it is read; one that has not answered yet cannot be said not to
+  // match a search, so it stays shown.
   const providerVisible =
     Boolean(providerSettings) &&
-    (!query || providerTitleMatches || providerMatches);
+    (!query ||
+      providerTitleMatches ||
+      providerMatches ||
+      settings.read.kind === "loading");
   const accessVisible =
-    Boolean(agentAccess) && (!query || accessTitleMatches || accessMatches);
-
-  // One loader for the whole panel, and only until its sections have first
-  // been read: after that the last answers stay on screen while they are read
-  // again.
-  if (loading) return <ReadState read={{ kind: "loading" }} icon="settings" />;
+    Boolean(agentAccess) &&
+    (!query ||
+      accessTitleMatches ||
+      accessMatches ||
+      access.read.kind === "loading");
   return (
     <div className="grid gap-6 p-3">
       <Field>
