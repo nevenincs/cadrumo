@@ -27,7 +27,7 @@ PyPI is the primary target. Homebrew and Scoop are downstream of what it serves.
 | --- | --- | --- |
 | Propose | `release-please.yml` | Keeps a release pull request current from conventional commits on `main` |
 | Release | `release-please.yml` | On merge: writes version surfaces and changelog, tags `vX.Y.Z`, creates the GitHub release |
-| Prove | `release.yml` (`phase=prove`) | Runs the merge gate and full suites, builds and seals the cohort once, and proves it on every runtime and channel |
+| Prove | `release.yml` (`phase=prove`) | Runs the headless merge gate, the native lane and the full suites, builds and seals the cohort once, and proves it on every runtime and channel |
 | Publish | `release.yml` (`phase=publish`) | Locates the proven cohort for the tag, uploads it to PyPI over OIDC without rebuilding, then updates and reacquires the channels |
 
 The workflow runs and their logs are the authoritative operational record.
@@ -454,7 +454,9 @@ checks locally with `just docs-availability-check`.
 
 - `.github/workflows/release-please.yml` — computes the version, cuts the release, dispatches proof and publication
 - `.github/workflows/release.yml` — sole proof and publication authority
-- `.github/workflows/merge-gate.yml` — the required pull request verdict, reused by the prove phase
+- `.github/workflows/merge-gate.yml` — the headless lane and the required pull request verdict, on hosted runners, reused by the prove phase
+- `.github/workflows/native.yml` — the native lane on self-hosted runners: advisory on a pull request, required by the prove phase
+- `.github/ci-control-plane.md` — which lane runs what, on which machines, and who may start it
 - `dev/smoke/smoke_check.py` — the check that proves an installed artifact
 - `dev/packaging/distribution_limits.py` — the index file cap, declared once
 - `SECURITY.md` — private security reporting

@@ -53,11 +53,14 @@ jobs:
 
   merge-gate:
     name: "Check: Merge gate (Linux)"
-    needs: [check-prove-ref, publish-authority]
+    needs: check-prove-ref
     if: inputs.phase == 'prove'
+    # A called workflow may hold no more than its caller grants, and the gate
+    # declares the read of pull request metadata its plan job uses.
+    permissions:
+      contents: read
+      pull-requests: read
     uses: ./.github/workflows/merge-gate.yml
-    with:
-      authority-artifact: cadrumo-registry-authority
 
   # Compiling the authority costs minutes and every prove job below reads the
   # same one, so it is compiled once here and restored everywhere else. Each
@@ -860,63 +863,16 @@ jobs:
             --with "cadrumo==${INPUT_VERSION#v}" \
             dev/smoke/smoke_check.py
 
-  test-windows-only:
-    name: "Test: Windows-only contracts (Windows)"
+  # Everything that needs a compiler toolchain, a desktop session or Windows
+  # lives in the native lane. It is advisory on a pull request and mandatory
+  # here: the proof needs every one of its jobs.
+  native:
+    name: "Test: Native lane"
     needs: [check-prove-ref, publish-authority]
     if: inputs.phase == 'prove'
-    runs-on: [self-hosted, Windows, X64]
-    timeout-minutes: 106
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: ${{ github.sha }}
-          persist-credentials: false
-
-      - name: Set up toolchain
-        uses: ./.github/actions/setup
-        with:
-          authority-artifact: cadrumo-registry-authority
-
-      - name: Windows-only contracts
-        run: just test-windows
-
-      - name: PowerShell action literals
-        if: ${{ !cancelled() }}
-        run: just test-powershell-literal
-
-  test-native-ci:
-    name: "Test: Native package verification (Windows)"
-    needs: [check-prove-ref, publish-authority]
-    if: inputs.phase == 'prove'
-    runs-on: [self-hosted, Windows, X64]
-    timeout-minutes: 150
-    env:
-      CADRUMO_PACKAGE_AGENT_SOURCE_DIR: ${{ vars.CADRUMO_PACKAGE_AGENT_SOURCE_DIR }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: ${{ github.sha }}
-          persist-credentials: false
-
-      - name: Set up toolchain
-        uses: ./.github/actions/setup
-        with:
-          authority-artifact: cadrumo-registry-authority
-
-      - name: Require the repository agent-source variable
-        shell: pwsh
-        run: |
-          if ([string]::IsNullOrWhiteSpace($env:CADRUMO_PACKAGE_AGENT_SOURCE_DIR)) {
-            throw 'Repository variable CADRUMO_PACKAGE_AGENT_SOURCE_DIR must name the cadrumo-agent project directory.'
-          }
-
-      - name: Native package verification
-        shell: pwsh
-        run: |
-          just test-native-ci "$env:CADRUMO_PACKAGE_AGENT_SOURCE_DIR"
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    uses: ./.github/workflows/native.yml
+    with:
+      authority-artifact: cadrumo-registry-authority
 
   check-proven:
     name: "Check: Release proven (Linux)"
@@ -932,8 +888,7 @@ jobs:
       - test-installer-campaign
       - test-homebrew
       - test-scoop
-      - test-windows-only
-      - test-native-ci
+      - native
       - test-runtime-smoke
     if: ${{ !cancelled() && inputs.phase == 'prove' }}
     runs-on: [self-hosted, Linux, X64]
