@@ -54,7 +54,7 @@ class PartyNameComposition(RegistryModel):
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _parts_belong_to_their_branch(self) -> PartyNameComposition:
-        if len(set(self.natural_person)) != len(self.natural_person) or set(self.natural_person) != (
+        if len(set(self.natural_person)) != len(self.natural_person) or frozenset(self.natural_person) != (
             NATURAL_PERSON_COMPONENTS
         ):
             raise RegistryValidationError(

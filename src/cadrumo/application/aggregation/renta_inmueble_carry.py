@@ -38,9 +38,9 @@ _ZERO: Final = Decimal(0)
 class PendingStatements:
     """The filer's statements of what earlier ejercicios left pending, by property row."""
 
-    by_origin: Mapping[int, Mapping[str, Decimal]] = field(default_factory=dict)
+    by_origin: Mapping[int, Mapping[str, Decimal]] = field(default_factory=dict[int, Mapping[str, Decimal]])
     """Each origin year's statements, by origin back and then by the property's row identity."""
-    totals: Mapping[str, Decimal] = field(default_factory=dict)
+    totals: Mapping[str, Decimal] = field(default_factory=dict[str, Decimal])
     """The one total a property's carry was stated as before it was split by origin year, by row identity."""
 
 

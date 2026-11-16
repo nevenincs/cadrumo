@@ -164,8 +164,8 @@ class ValorCatastral(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     year: int = Field(gt=0)
-    total: Decimal = Field(ge=0)
-    construccion: Decimal = Field(ge=0)
+    total: Decimal = Field(ge=Decimal(0))
+    construccion: Decimal = Field(ge=Decimal(0))
     vigor: int | None = Field(default=None, gt=0)
 
     @model_validator(mode="after")
@@ -209,7 +209,7 @@ class MejoraInmueble(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     fecha: date
-    importe: Decimal = Field(gt=0)
+    importe: Decimal = Field(gt=Decimal(0))
 
 
 def canonical_referencia_catastral(raw: str, *, field: str) -> str:
@@ -234,15 +234,15 @@ class InmuebleRecord(BaseModel):
     adquisicion_titulo: AdquisicionTitulo | None = None
     fecha_adquisicion: date | None = None
     fecha_transmision: date | None = None
-    importe_adquisicion: Decimal | None = Field(default=None, ge=0)
-    gastos_tributos_adquisicion: Decimal | None = Field(default=None, ge=0)
-    valor_suelo: Decimal | None = Field(default=None, ge=0)
+    importe_adquisicion: Decimal | None = Field(default=None, ge=Decimal(0))
+    gastos_tributos_adquisicion: Decimal | None = Field(default=None, ge=Decimal(0))
+    valor_suelo: Decimal | None = Field(default=None, ge=Decimal(0))
     mejoras: tuple[MejoraInmueble, ...] = ()
     valores_catastrales: tuple[ValorCatastral, ...] = ()
     usos: tuple[UsoInmueble, ...] = ()
     inmueble_principal: int | None = Field(default=None, ge=0)
     importes_movimientos: ImportesMovimientos | None = None
-    amortizacion_acumulada: Decimal | None = Field(default=None, ge=0)
+    amortizacion_acumulada: Decimal | None = Field(default=None, ge=Decimal(0))
     amortizacion_acumulada_desde: date | None = None
     arrendado_desde: date | None = None
     sin_arrendar: bool = False

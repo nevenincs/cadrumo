@@ -29,7 +29,7 @@ from typing import Final
 from pydantic import BaseModel, ValidationError
 
 from ...core.decimal.grammar import try_parse_canonical_decimal
-from ...core.errors.hierarchy import ProfileAnswerTypeError
+from ...core.errors.hierarchy import CadrumoError, ProfileAnswerTypeError
 from ...core.parsing.dates import parse_iso8601_date
 from .arrendamiento_record import ArrendamientoRecord, Inquilino
 from .inmueble_record import (
@@ -66,7 +66,10 @@ def _refuse(message: str, *, leaf: str) -> ProfileAnswerTypeError:
 
 def _error_leaf(error: ValidationError) -> str:
     for item in error.errors():
-        context = getattr(getattr(item.get("ctx", {}).get("error"), "__cause__", None), "context", None) or {}
+        ctx = item.get("ctx")
+        raised = ctx.get("error") if ctx is not None else None
+        cause = raised.__cause__ if isinstance(raised, BaseException) else None
+        context = (cause.context if isinstance(cause, CadrumoError) else None) or {}
         key = context.get("key")
         if isinstance(key, str):
             return key

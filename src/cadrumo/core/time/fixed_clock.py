@@ -33,6 +33,7 @@ from ..errors.hierarchy import CoreValidationError
 from ..storage_environment import host_installed_default_root, normalize_storage_path
 from ..storage_taxonomy import StorageCategory
 from ..storage_taxonomy_locations import storage_location
+from ..type_guards import is_str_keyed_dict
 from .clock import live_tests_opt_in_active
 
 FIXED_CLOCK_INSTANT_VARIABLE: Final = "CADRUMO_FIXED_CLOCK_INSTANT"
@@ -203,10 +204,10 @@ def read_fixed_clock_marker(root: Path) -> FixedClockMarker | None:
     except OSError:
         return FixedClockMarker(instant=None)
     try:
-        document = json.loads(payload)
+        document: object = json.loads(payload)
     except ValueError:
         return FixedClockMarker(instant=None)
-    if not isinstance(document, dict) or set(document) != {_MARKER_INSTANT_KEY}:
+    if not is_str_keyed_dict(document) or set(document) != {_MARKER_INSTANT_KEY}:
         return FixedClockMarker(instant=None)
     value = document[_MARKER_INSTANT_KEY]
     if not isinstance(value, str):
