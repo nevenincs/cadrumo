@@ -7,6 +7,8 @@ them out for a terminal and adds the keys that act.
 
 from __future__ import annotations
 
+from enum import StrEnum
+
 from rich.text import Text
 
 from ....application.modelo.declarations_list import (
@@ -112,20 +114,40 @@ def portfolio_enter_action(
     return row_enter_action(row, controller)
 
 
-def row_enter_action(row: DeclarationListRow, controller: DeclarationsWorkspaceController) -> str:
-    """Reflect the row's route without implying unavailable local work."""
+class RowAction(StrEnum):
+    """What Enter does on one declarations row in this session."""
+
+    OPEN = "open"
+    OPEN_LOCAL_DRAFT = "open_local_draft"
+    START = "start"
+    EXTERNAL_DETAILS = "external_details"
+
+
+_ROW_ACTION_WORDS = {
+    RowAction.OPEN: "workspace.declarations.calendar.action.open",
+    RowAction.OPEN_LOCAL_DRAFT: "workspace.declarations.list.next.open_local_draft",
+    RowAction.START: "workspace.declarations.list.next.start",
+    RowAction.EXTERNAL_DETAILS: "workspace.declarations.calendar.action.open",
+}
+
+
+def row_action(row: DeclarationListRow, controller: DeclarationsWorkspaceController) -> RowAction | None:
+    """The one step Enter takes on this row, or None where this session has none to take."""
     if row.declaration is not None and row.state != "unreadable":
-        if controller.modelo_workspace_factory is not None:
-            return "Enter " + tr(
-                "workspace.declarations.list.next.open_local_draft"
-                if is_unlinked_local_draft(row)
-                else "workspace.declarations.calendar.action.open"
-            )
-    elif row.state == "not_started" and row.period is not None and controller.work_create_handoff is not None:
-        return "Enter " + tr("workspace.declarations.list.next.start")
-    elif row.state == "aeat_unlinked":
-        return "Enter " + tr("workspace.declarations.calendar.action.open")
-    return ""
+        if controller.modelo_workspace_factory is None:
+            return None
+        return RowAction.OPEN_LOCAL_DRAFT if is_unlinked_local_draft(row) else RowAction.OPEN
+    if row.state == "not_started" and row.period is not None and controller.work_create_handoff is not None:
+        return RowAction.START
+    if row.state == "aeat_unlinked":
+        return RowAction.EXTERNAL_DETAILS
+    return None
+
+
+def row_enter_action(row: DeclarationListRow, controller: DeclarationsWorkspaceController) -> str:
+    """Say the row's Enter step, and nothing where Enter has none."""
+    action = row_action(row, controller)
+    return "" if action is None else "Enter " + tr(_ROW_ACTION_WORDS[action])
 
 
 def add_portfolio_row(
