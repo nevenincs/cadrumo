@@ -6,7 +6,6 @@ import type {
   LedgerHistoryTypedResult,
   LedgerTrackResult,
 } from "../../../shell/ledgerMovementOperations";
-import type { LedgerRow } from "../../../shell/ledger";
 import type { StagedRowChanges } from "../../../shell/ledgerStage";
 import { useStrings } from "../../../shell/strings";
 import { fieldName } from "../editing/editingWords";
@@ -23,6 +22,7 @@ import {
 import type { InspectorRead } from "./useInspectorReads";
 import { formatAmount } from "../../../shared/numbers";
 import { formatTime } from "../../../shared/dateFormats";
+import type { LedgerTransactionReviewProjection } from "../../../shell/ledgerReadContract";
 
 /**
  * The inspector's History section: what is not saved yet, the movement's
@@ -39,12 +39,12 @@ export function HistorySection({
   locale,
   onShow,
 }: {
-  row: LedgerRow;
+  row: LedgerTransactionReviewProjection;
   changes: StagedRowChanges | undefined;
   history: InspectorRead<LedgerHistoryTypedResult> | null;
   track: InspectorRead<LedgerTrackResult> | null;
   /** The window's movements, by id, for the split's other parts. */
-  rows: ReadonlyMap<string, LedgerRow>;
+  rows: ReadonlyMap<string, LedgerTransactionReviewProjection>;
   locale: string;
   /** Shows another movement in the inspector. */
   onShow: (id: string) => void;

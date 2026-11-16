@@ -7,7 +7,7 @@ revision_id = "2023"
 seed_source = "design_box_number"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "eae516aa12249993cb5d8d258d0509a9c65870d93053e923c05aa10f938da4f7"
+source_state_digest = "72ed0957f2ef04379ea2edf750c6150965cb1af79df893ae7616350f1e699552"
 design_sources = [
     { source_ref = "aeat-dr-200-2023", sha256 = "60ee0cb4ab7aa4fa2ae3dc61cb22f6a1a0797d1626a28d7bba013b44375a19aa" },
 ]
@@ -2999,6 +2999,9 @@ placements = [
     { casilla_id = "DP200008:00316", kind = "on_form", box_number = "00316" },
     { casilla_id = "DP200008:00325", kind = "on_form", box_number = "00325" },
     { casilla_id = "DP200010:00399", kind = "on_form", box_number = "00399" },
+    { casilla_id = "DP200010:00524", kind = "on_form", box_number = "00524" },
+    { casilla_id = "DP200010:00525", kind = "on_form", box_number = "00525" },
+    { casilla_id = "DP200010:00526", kind = "on_form", box_number = "00526" },
     { casilla_id = "DP200010:00550", kind = "on_form", box_number = "00550" },
     { casilla_id = "DP200010:00552", kind = "on_form", box_number = "00552" },
     { casilla_id = "DP200010:00562", kind = "on_form", box_number = "00562" },
@@ -3979,10 +3982,7 @@ id = "estado-de-cambios-patrimonio-neto-ii-5"
 heading_key = "modelo.schema.200.form.section.estado-de-cambios-patrimonio-neto-ii.heading"
 official_heading = "Estado de cambios patrimonio neto (II)"
 blocks = [
-    { kind = "field", id = "field", casilla_id = "00439" },
-    { kind = "field", id = "field-2", casilla_id = "00440" },
-    { kind = "field", id = "field-3", casilla_id = "00441" },
-    { kind = "field", id = "field-4", casilla_id = "00442" },
+    { kind = "grid", id = "grid", columns = [{ key = "reservas", heading_key = "modelo.schema.200.form.column.reservas.heading", official_heading = "Reservas" }, { key = "acciones-y-participaciones-en-patrimonio-propias", heading_key = "modelo.schema.200.form.column.acciones-y-participaciones-en-patrimonio-propias.heading", official_heading = "Acciones y participaciones en patrimonio propias" }, { key = "resultados-ejercicios-anteriores", heading_key = "modelo.schema.200.form.column.resultados-ejercicios-anteriores.heading", official_heading = "Resultados ejercicios anteriores" }, { key = "otras-aportaciones-de-socios", heading_key = "modelo.schema.200.form.column.otras-aportaciones-de-socios.heading", official_heading = "Otras aportaciones de socios" }], rows = [{ key = "total-ingresos-y-gastos-reconocidos", heading_key = "modelo.schema.200.form.row.total-ingresos-y-gastos-reconocidos.heading", official_heading = "Total ingresos y gastos reconocidos", cells = [{ kind = "casilla", casilla_id = "00439" }, { kind = "casilla", casilla_id = "00440" }, { kind = "casilla", casilla_id = "00441" }, { kind = "casilla", casilla_id = "00442" }] }] },
 ]
 
 [[revisions.2023.form_layouts.pages.sections]]
@@ -4079,7 +4079,7 @@ id = "estado-de-cambios-patrimonio-neto-ii-oper-bb7f03-2"
 heading_key = "modelo.schema.200.form.section.estado-de-cambios-patrimonio-neto-ii-oper-bb7f03.heading"
 official_heading = "Estado de cambios patrimonio neto (II) - Operaciones con socios o propietarios"
 blocks = [
-    { kind = "field", id = "field", casilla_id = "00523" },
+    { kind = "grid", id = "grid", columns = [{ key = "reservas", heading_key = "modelo.schema.200.form.column.reservas.heading", official_heading = "Reservas" }, { key = "acciones-y-participaciones-en-patrimonio-propias", heading_key = "modelo.schema.200.form.column.acciones-y-participaciones-en-patrimonio-propias.heading", official_heading = "Acciones y participaciones en patrimonio propias" }, { key = "resultados-ejercicios-anteriores", heading_key = "modelo.schema.200.form.column.resultados-ejercicios-anteriores.heading", official_heading = "Resultados ejercicios anteriores" }, { key = "otras-aportaciones-de-socios", heading_key = "modelo.schema.200.form.column.otras-aportaciones-de-socios.heading", official_heading = "Otras aportaciones de socios" }], rows = [{ key = "aumentos-de-capital", heading_key = "modelo.schema.200.form.row.aumentos-de-capital.heading", official_heading = "Aumentos de capital", cells = [{ kind = "casilla", casilla_id = "00523" }, { kind = "casilla", casilla_id = "DP200010:00524" }, { kind = "casilla", casilla_id = "DP200010:00525" }, { kind = "casilla", casilla_id = "DP200010:00526" }] }] },
 ]
 
 [[revisions.2023.form_layouts.pages.sections]]

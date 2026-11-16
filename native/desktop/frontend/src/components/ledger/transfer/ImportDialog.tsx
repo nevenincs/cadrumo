@@ -17,10 +17,12 @@ import type {
   FilePurpose,
   LedgerPort,
   LedgerProvider,
-  LedgerTransaction,
   PickedFile,
 } from "../../../shell/ledger";
-import type { InvoiceKind } from "../../../shell/ledgerInvoiceContract";
+import type {
+  InvoiceKind,
+  LedgerTransactionProjection,
+} from "../../../shell/ledgerInvoiceContract";
 import { publicPeriod, type LedgerPeriod } from "../../../shell/ledgerGrammar";
 import type { ShowImportBatch } from "../../../shell/ledgerImports";
 import { useStrings } from "../../../shell/strings";
@@ -171,7 +173,9 @@ export function ImportDialog({
   const [reading, setReading] = useState<Set<string>>(new Set());
   const [progress, setProgress] = useState<Progress>(null);
   const [outcome, setOutcome] = useState<ImportOutcome | null>(null);
-  const [duplicates, setDuplicates] = useState<LedgerTransaction[]>([]);
+  const [duplicates, setDuplicates] = useState<LedgerTransactionProjection[]>(
+    [],
+  );
   const [showing, setShowing] = useState<"idle" | "reading" | "failed">("idle");
   const kindName = useId();
 
@@ -454,7 +458,7 @@ export function ImportDialog({
             )
           : [],
       );
-      const read: LedgerTransaction[] = [];
+      const read: LedgerTransactionProjection[] = [];
       for (const id of flagged.slice(0, DUPLICATES_SHOWN)) {
         const movement = await readImported(port, id);
         if (movement) read.push(movement);

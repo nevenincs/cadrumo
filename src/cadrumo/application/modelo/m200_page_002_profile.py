@@ -313,7 +313,7 @@ def _row(
     field_widths: Mapping[tuple[str, str], int],
     at: _Coordinates,
 ) -> dict[str, str | None]:
-    resident_blank = set() if non_resident else set(rule.non_resident_only_fields)
+    resident_blank: set[str] = set() if non_resident else set(rule.non_resident_only_fields)
     required = {field.key for field in section.fields if field.required}
     if non_resident:
         required |= set(rule.non_resident_only_fields)

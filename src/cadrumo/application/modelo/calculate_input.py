@@ -227,7 +227,7 @@ class WorkCalculateInputBundle:
     """
     attested_binding_ids: tuple[BindingId, ...] = ()
     """Binding overrides the operator stated hold nothing, replayed from the head's layer."""
-    value_attestations: Mapping[BindingId, ValueAttestation] = field(default_factory=dict)
+    value_attestations: Mapping[BindingId, ValueAttestation] = field(default_factory=dict[BindingId, ValueAttestation])
     """Figures the operator stated for earlier filings outside the envelope, replayed from the head layer."""
     income_family_entry_digests: Mapping[str, str] = field(default_factory=dict[str, str])
     """Per uncomputed income family, its ledger-row digest at the operator's entry, replayed from the head layer."""

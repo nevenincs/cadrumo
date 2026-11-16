@@ -25,7 +25,8 @@ from ....application.modelo.edit_models import (
     ModeloEditBindingAddressV1,
     ModeloEditBindingIntentKind,
 )
-from ....application.modelo.work_form_models import ModeloFormBindingAddressV1, ModeloFormField, ModeloWorkForm
+from ....application.modelo.work_form_field_vocabulary import ModeloFormBindingAddressV1
+from ....application.modelo.work_form_models import ModeloFormField, ModeloWorkForm
 from ....application.modelo.work_form_service import load_modelo_work_form
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import lookup_translation

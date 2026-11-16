@@ -34,11 +34,10 @@ from ..m145_communication_records_ports import M145CommunicationRecordsPorts
 from ..reconcile_casilla import CasillaDivergence, CasillaDivergenceKind
 from ..reconciliation import (
     ModeloReconciliationBytesCommand,
-    ReconciliationDeclaracionSourceUnsupportedError,
     prepare_modelo_reconcile_bytes,
 )
-from ..reconciliation_comparison import _casilla_divergence_diff
-from ..reconciliation_records import ModeloReconciliationEvidenceKind
+from ..reconciliation_comparison import ReconciliationDeclaracionSourceUnsupportedError, _casilla_divergence_diff
+from ..reconciliation_evidence_kind import ModeloReconciliationEvidenceKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

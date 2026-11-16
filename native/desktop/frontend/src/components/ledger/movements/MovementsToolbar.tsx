@@ -22,7 +22,6 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Switch } from "@/components/ui/switch";
-import type { LedgerReviewStatus } from "../../../shell/ledger";
 import type { OwnAccountChoice } from "../../../shell/ledgerMovementReads";
 import {
   CLASSIFICATIONS,
@@ -52,6 +51,7 @@ import {
   lifecycleLabel,
   reasonShort,
 } from "./movementWords";
+import type { LedgerReviewStatus } from "../../../shell/ledgerInvoiceContract";
 
 const REVIEW_STATUSES: readonly LedgerReviewStatus[] = [
   "pending",

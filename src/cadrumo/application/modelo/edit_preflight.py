@@ -45,7 +45,6 @@ from .edit_models import (
     ModeloEditAddressV1,
     ModeloEditBindingAddressV1,
     ModeloEditBindingIntentKind,
-    ModeloEditCarryWithdrawalBlock,
     ModeloEditFindingSeverity,
     ModeloEditFindingV1,
     ModeloEditParseRefusalV1,
@@ -70,8 +69,6 @@ OPERATOR_LAYER_UNKNOWN = "operator_layer_unknown"
 NOTHING_TO_RESTORE = "nothing_to_restore"
 CARRY_LEFT_OPEN = "carry_left_open"
 CALCULATION_WITHDRAWN = "calculation_withdrawn"
-CARRY_WITHDRAWAL_FILED = ModeloEditCarryWithdrawalBlock.FILED.value
-CARRY_WITHDRAWAL_KEEPS_ENTRIES = ModeloEditCarryWithdrawalBlock.KEEPS_ENTRIES.value
 VALUE_REFUSED_PREFIX = "value."
 """A refused value's finding code is this prefix plus its :class:`~.edit_models.ModeloEditParseReason`."""
 
@@ -347,8 +344,6 @@ def preflight_modelo_edit(
 __all__ = [
     "CALCULATION_WITHDRAWN",
     "CARRY_LEFT_OPEN",
-    "CARRY_WITHDRAWAL_FILED",
-    "CARRY_WITHDRAWAL_KEEPS_ENTRIES",
     "CLEAR_OF_SOURCE_FED_CASILLA",
     "INTENT_NOT_ADMITTED",
     "NOTHING_TO_RESTORE",

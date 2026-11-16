@@ -8,9 +8,6 @@ import { isClassification, isDirection } from "../shell/ledgerContract";
 import type {
   JsonObject,
   JsonValue,
-  LedgerReviewStatus,
-  LedgerRow,
-  LedgerSortField,
   OutputLanguage,
   PublicPeriod,
 } from "../shell/ledger";
@@ -22,6 +19,11 @@ import {
 } from "./fixtures/ledger";
 import { invalid } from "./ledgerRequestFixture";
 import { fixtureDay } from "@/dev/fixtureDates";
+import type { LedgerReviewStatus } from "../shell/ledgerInvoiceContract";
+import type {
+  LedgerSortField,
+  LedgerTransactionReviewProjection,
+} from "../shell/ledgerReadContract";
 
 export function reviewStatus(classification: string): LedgerReviewStatus {
   if (classification === "NOT_YET_PROCESSED") return "pending";
@@ -56,7 +58,7 @@ function reasonOf(
   reason: string,
   language: OutputLanguage,
 ): Pick<
-  LedgerRow,
+  LedgerTransactionReviewProjection,
   | "classification_reason_source"
   | "classification_reason_words"
   | "classification_reason_words_language"
@@ -93,13 +95,15 @@ function outputLanguage(asked: JsonValue | undefined): OutputLanguage {
 export const row = (
   movement: FixtureMovement,
   language: OutputLanguage = "es",
-): LedgerRow => ({
+): LedgerTransactionReviewProjection => ({
   transaction: { ...movement.transaction },
   review_status: reviewStatus(movement.transaction.business_classification),
   group_label: movement.group_label,
   own_account_id: movement.own_account_id,
   ...reasonOf(movement.transaction.classification_reason, language),
   withholding: movement.withholding.map((entry) => ({ ...entry })),
+  gasto_capital_inmobiliario_words: null,
+  gasto_capital_inmobiliario_words_language: null,
 });
 
 /** The days of a period, from the recording of what the backend serves; null

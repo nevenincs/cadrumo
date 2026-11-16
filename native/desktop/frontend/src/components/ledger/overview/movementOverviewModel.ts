@@ -3,7 +3,6 @@
 // works nothing out: a tax fact is shown as stored, or as not set.
 
 import { facts, listed, noted } from "../../../shell/compose";
-import type { LedgerRow } from "../../../shell/ledger";
 import { takesBusinessShare } from "../../../shell/ledgerClassifications";
 import { isDecidedClassification } from "../../../shell/ledgerContract";
 import type { LedgerTrackResult } from "../../../shell/ledgerMovementOperations";
@@ -39,6 +38,7 @@ import {
   type OverviewModel,
   type OverviewValue,
 } from "./overviewModel";
+import type { LedgerTransactionReviewProjection } from "../../../shell/ledgerReadContract";
 
 /** The tax facts a movement carries, in the order the grid's columns show
  * them. */
@@ -54,7 +54,7 @@ const TAX_FIELDS = [
 export type MovementOverviewInput = {
   t: Translate;
   locale: string;
-  row: LedgerRow;
+  row: LedgerTransactionReviewProjection;
   /** What readiness found on the movement; null until it was measured. */
   issues: readonly string[] | null;
   /** An import flagged it as a likely duplicate. */
@@ -73,7 +73,7 @@ export type MovementOverviewInput = {
 function euroValue(
   t: Translate,
   locale: string,
-  row: LedgerRow,
+  row: LedgerTransactionReviewProjection,
 ): OverviewValue | null {
   const tx = row.transaction;
   if (tx.currency === "EUR") return null;

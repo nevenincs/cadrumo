@@ -586,7 +586,6 @@ def _read_form(
         calculation_catalogue=calculation_catalogue,
     )
     caller = caller_context_of(head)
-    target = {"modelo": str(modelo), "filing_year": filing_year, "period": period, "operation": operation}
     return _FormReads(
         review=review,
         snapshot=snapshot,
@@ -601,8 +600,15 @@ def _read_form(
         known_truths=_known_profile_truths(snapshot, bucket_id, operation=operation),
         redeme=_redeme_enrolment(bucket_id),
         element_names=read_element_names(activity_assets),
-        screen_outdated=head is not None and calculation_screen_outdated(head, **target),
-        filed_before_grade_cap=None if head is None else calculation_filed_before_grade_cap(head, **target),
+        screen_outdated=head is not None
+        and calculation_screen_outdated(
+            head, modelo=str(modelo), filing_year=filing_year, period=period, operation=operation
+        ),
+        filed_before_grade_cap=None
+        if head is None
+        else calculation_filed_before_grade_cap(
+            head, modelo=str(modelo), filing_year=filing_year, period=period, operation=operation
+        ),
         filed_findings=_filed_findings(head, review.work_unit_id, work_unit_repository, operation=operation),
         last_export=_last_export(bucket_events, bucket_id, review.work_unit_id, review.calculation_revision_id),
         verification_out_of_date=_verification_out_of_date(review, head, transactions),

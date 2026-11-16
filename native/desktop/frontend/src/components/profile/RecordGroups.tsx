@@ -244,7 +244,11 @@ function Reduction({
   );
 }
 
-function LedgerRow({ row }: { row: ProfileRecordLedgerRowItem }) {
+function LedgerTransactionReviewProjection({
+  row,
+}: {
+  row: ProfileRecordLedgerRowItem;
+}) {
   const t = useStrings();
   const locale = t.locale ?? SOURCE_LOCALE;
   return (
@@ -308,7 +312,10 @@ function LinkedRows({ block }: { block: RecordGroupBlock }) {
       ) : (
         <ul className="flex flex-col gap-1">
           {block.ledgerRows.map((row) => (
-            <LedgerRow key={row.transaction_id} row={row} />
+            <LedgerTransactionReviewProjection
+              key={row.transaction_id}
+              row={row}
+            />
           ))}
         </ul>
       )}

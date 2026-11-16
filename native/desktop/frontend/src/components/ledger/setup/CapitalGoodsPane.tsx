@@ -17,7 +17,7 @@ import type {
   CapitalGood,
   CapitalGoodDeclareResult,
 } from "../../../shell/ledgerRegisterOperations";
-import { servedRefusalWords, type LedgerRow } from "../../../shell/ledger";
+import { servedRefusalWords } from "../../../shell/ledger";
 import { takesCapitalGoodAcquisition } from "../../../shell/ledgerContract";
 import { LEDGER_PAGE_SIZE } from "../../../shell/ledgerWindow";
 import { vocabularyEmpty } from "../movements/movementWords";
@@ -44,6 +44,7 @@ import { EditorField } from "./EditorField";
 import type { SetupProps } from "./setupProps";
 import { parsePoints, setupCall, wholeYear } from "./setupModel";
 import { grammarText, tokenText } from "./setupWords";
+import type { LedgerTransactionReviewProjection } from "../../../shell/ledgerReadContract";
 
 /**
  * Bienes de inversión: capital goods whose IVA deduction is regularised over
@@ -112,7 +113,7 @@ export function CapitalGoodsPane({ port, reader, locale, rows }: SetupProps) {
   const declared = read?.kind === "done" ? read.result.rows : null;
   const purchases = useMemo(() => {
     const used = new Set(declared?.map((good) => good.acquisition_ledger_id));
-    const pool: readonly LedgerRow[] =
+    const pool: readonly LedgerTransactionReviewProjection[] =
       acquired === null ? (rows ?? []) : (yearResult?.rows ?? []);
     return pool
       .map((row) => row.transaction)

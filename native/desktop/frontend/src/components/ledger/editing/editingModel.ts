@@ -6,7 +6,6 @@
 // product's one grammar.
 
 import type { LedgerInvoiceMatchMismatch } from "../../../shell/ledgerInvoiceContract";
-import type { LedgerRow } from "../../../shell/ledger";
 import {
   AMOUNT_RULE,
   TAX_AMOUNT_RULE,
@@ -56,6 +55,7 @@ import {
   takesBusinessShare,
 } from "../../../shell/ledgerClassifications";
 import type { ColumnId } from "../movements/movementsModel";
+import type { LedgerTransactionReviewProjection } from "../../../shell/ledgerReadContract";
 
 // ---- Columns and fields --------------------------------------------------------
 
@@ -125,7 +125,7 @@ export const NO_CATEGORY = "none:category";
  * the one shown. */
 export function columnField(
   column: ColumnId,
-  row: LedgerRow,
+  row: LedgerTransactionReviewProjection,
 ): StageField | null {
   if (!EDIT_KINDS[column]) return null;
   if (column === "date")
@@ -152,7 +152,7 @@ export function draftField(column: ColumnId): DraftField | null {
 export type EditSubject =
   | {
       kind: "row";
-      row: LedgerRow;
+      row: LedgerTransactionReviewProjection;
       changes: StagedRowChanges | undefined;
       /** A finalized declaration cites it. */
       sealed: boolean;
@@ -378,7 +378,7 @@ export function clearRefusal(
  * share is left as it is. */
 export function rowCells(
   id: string,
-  row: LedgerRow,
+  row: LedgerTransactionReviewProjection,
   field: StageField,
   input: CellValue | null,
 ): StageCell[] {
@@ -849,7 +849,7 @@ export type ChangeGroup = {
 };
 export function changeGroups(
   content: StagedContent,
-  rows: ReadonlyMap<string, LedgerRow>,
+  rows: ReadonlyMap<string, LedgerTransactionReviewProjection>,
 ): ChangeGroup[] {
   const groups = new Map<string, ChangeGroup>();
   for (const [id, changes] of Object.entries(content.rows)) {
@@ -875,11 +875,15 @@ export type AskedConflict =
   | {
       kind: "changed";
       transactionId: string;
-      before: LedgerRow;
-      after: LedgerRow;
+      before: LedgerTransactionReviewProjection;
+      after: LedgerTransactionReviewProjection;
       fields: StageField[];
     }
-  | { kind: "gone"; transactionId: string; before: LedgerRow | null };
+  | {
+      kind: "gone";
+      transactionId: string;
+      before: LedgerTransactionReviewProjection | null;
+    };
 
 const DECIMAL_FIELDS: ReadonlySet<StageField> = new Set([
   "amount",
@@ -973,7 +977,7 @@ export function outcomeTally(
 
 /** A new movement drawn as a grid row: nothing filled in is assumed, and its
  * cells are drawn from the draft itself, never from these blanks. */
-export function draftRow(draft: Draft): LedgerRow {
+export function draftRow(draft: Draft): LedgerTransactionReviewProjection {
   const fields = draft.fields;
   return {
     transaction: {
@@ -1004,6 +1008,10 @@ export function draftRow(draft: Draft): LedgerRow {
       m210_income_classification: null,
       usage_ratio_id: null,
       prorrata_reference: null,
+      arrendamiento_ref: null,
+      inmueble_ref: null,
+      gasto_capital_inmobiliario: null,
+      link_fields: [],
       purchase_invoice_evidence_id: null,
       invoice_id: null,
       attachment_ids: [],
@@ -1027,6 +1035,8 @@ export function draftRow(draft: Draft): LedgerRow {
     classification_reason_words: "",
     classification_reason_words_language: null,
     withholding: [],
+    gasto_capital_inmobiliario_words: null,
+    gasto_capital_inmobiliario_words_language: null,
   };
 }
 

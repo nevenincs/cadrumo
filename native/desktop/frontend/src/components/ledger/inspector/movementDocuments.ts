@@ -1,11 +1,11 @@
 import type { LedgerEvidenceRecordProjection } from "../../../shell/ledgerDocumentContract";
-import type { LedgerTransaction } from "../../../shell/ledger";
+import type { LedgerTransactionProjection } from "../../../shell/ledgerInvoiceContract";
 
 /** A purchase evidence reference and supplementary blob references are
  * independent canonical facts. Linking one never implies storing the other. */
 export function movementDocuments(
   transaction: Pick<
-    LedgerTransaction,
+    LedgerTransactionProjection,
     "purchase_invoice_evidence_id" | "attachment_ids"
   >,
   records: readonly LedgerEvidenceRecordProjection[],
@@ -31,7 +31,10 @@ export function movementDocuments(
 /** Once purchase evidence is linked it is immutable. A later document is
  * supplementary, so its blob is attached without replacing that reference. */
 export function documentAttachmentReference(
-  transaction: Pick<LedgerTransaction, "purchase_invoice_evidence_id">,
+  transaction: Pick<
+    LedgerTransactionProjection,
+    "purchase_invoice_evidence_id"
+  >,
   record: LedgerEvidenceRecordProjection,
 ) {
   return transaction.purchase_invoice_evidence_id

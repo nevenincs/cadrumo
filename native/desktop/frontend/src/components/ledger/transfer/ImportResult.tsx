@@ -13,7 +13,6 @@ import { facts } from "../../../shell/compose";
 import type {
   LedgerImportResult,
   LedgerPort,
-  LedgerTransaction,
   PickedFile,
 } from "../../../shell/ledger";
 import type { InvoiceImportResult } from "../../../shell/ledgerInvoiceOperations";
@@ -30,6 +29,7 @@ import {
   type DocumentsApplied,
 } from "./importModel";
 import { importRefusal } from "./transferWords";
+import type { LedgerTransactionProjection } from "../../../shell/ledgerInvoiceContract";
 
 /** What an import's apply answered, by the kind of import. */
 export type ImportOutcome =
@@ -45,11 +45,13 @@ function DuplicateCompare({
 }: {
   port: LedgerPort;
   locale: string;
-  imported: LedgerTransaction;
+  imported: LedgerTransactionProjection;
 }) {
   const t = useStrings();
   const [open, setOpen] = useState(false);
-  const [existing, setExisting] = useState<LedgerTransaction[] | null>(null);
+  const [existing, setExisting] = useState<
+    LedgerTransactionProjection[] | null
+  >(null);
   const [failed, setFailed] = useState(false);
   useEffect(() => {
     if (!open || existing !== null || failed) return;
@@ -63,7 +65,7 @@ function DuplicateCompare({
       active = false;
     };
   }, [open, existing, failed, port, imported]);
-  const card = (movement: LedgerTransaction) => (
+  const card = (movement: LedgerTransactionProjection) => (
     <div className="grid gap-0.5 rounded-md bg-accent p-2 text-sm">
       <span className="font-medium [overflow-wrap:anywhere]">
         {movement.description}
@@ -205,7 +207,7 @@ export function ImportResultStep({
   count(value: number): string;
   port: LedgerPort;
   outcome: ImportOutcome;
-  duplicates: LedgerTransaction[];
+  duplicates: LedgerTransactionProjection[];
   progressText: string | null;
   showFailed: boolean;
 }) {
