@@ -39,6 +39,7 @@ from ..adapters.worker_transport import WorkerChannel, worker_endpoint
 from . import worker_cleanup, worker_service
 from .operation_host import ProfileWorkerOperationHost
 from .profile_login import ProfileWorkerHumanLogin
+from .warm_heap import WarmHeapFreeze
 from .worker_stall_watchdog import watch_event_loop
 from .worker_view_stream import WorkerViewStreams, require_native_parent
 
@@ -212,6 +213,7 @@ def _serve_connected_worker(
                 product_version=options.expected_version,
             ),
             fixed_clock_instant=None if fixed_clock is None else fixed_clock.instant,
+            warm_heap=WarmHeapFreeze(),
         )
         human = ProfileWorkerHumanLogin(custody, decode=operations.profile_decode_context)
         asyncio.run(serve_watched(channel, operation_channel, proof_channel, custody, human, operations))
