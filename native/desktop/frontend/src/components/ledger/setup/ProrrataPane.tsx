@@ -16,10 +16,10 @@ import {
 } from "../../../shell/ledgerGrammar";
 import { servedYear, usePeriods } from "../../../shell/ledgerPeriods";
 import type {
-  ProrrataEntry,
-  ProrrataGrossDeclaration,
-  ProrrataMutationResult,
-} from "../../../shell/ledgerRegisterOperations";
+  ProrrataEntryProjection,
+  ProrrataGrossDeclarationProjection,
+  ProrrataMutationProjection,
+} from "../../../shell/ledgerProrrataContract";
 import { vocabularyEmpty } from "../movements/movementWords";
 import { useVocabulary } from "../suggestions/SuggestionsProvider";
 import { useStrings } from "../../../shell/strings";
@@ -99,9 +99,8 @@ export function ProrrataPane({
   const [grossCuota, setGrossCuota] = useState("");
   const [replace, setReplace] = useState(false);
   /** The declaration the person is asked to confirm removing. */
-  const [removing, setRemoving] = useState<ProrrataGrossDeclaration | null>(
-    null,
-  );
+  const [removing, setRemoving] =
+    useState<ProrrataGrossDeclarationProjection | null>(null);
   const replaceId = useId();
   // A form with anything typed into it that is not yet written.
   useSetupDraft(
@@ -287,7 +286,7 @@ export function ProrrataPane({
       sector_id: sector || null,
     });
     const done = await write.run(
-      (): Promise<SetupCall<ProrrataMutationResult>> => {
+      (): Promise<SetupCall<ProrrataMutationProjection>> => {
         switch (action) {
           case "seed":
             return setupCall(port, "ledger.prorrata.seed", { ejercicio }, true);
@@ -373,14 +372,14 @@ export function ProrrataPane({
     reload();
   };
 
-  const grossKey = (found: ProrrataGrossDeclaration) =>
+  const grossKey = (found: ProrrataGrossDeclarationProjection) =>
     `${found.ejercicio}:${found.period}:${found.sector_id ?? ""}`;
   /** A declaration named by what identifies it: its year, period and sector. */
-  const grossName = (found: ProrrataGrossDeclaration) =>
+  const grossName = (found: ProrrataGrossDeclarationProjection) =>
     facts(t, [found.ejercicio, found.period, found.sector_id]);
   /** Withdraws one declared gross cuota; it landed where the register,
    * listed again, no longer holds that period and sector. */
-  const removeGross = async (found: ProrrataGrossDeclaration) => {
+  const removeGross = async (found: ProrrataGrossDeclarationProjection) => {
     await write.run(
       () =>
         setupCall(
@@ -412,14 +411,14 @@ export function ProrrataPane({
     if (last?.kind !== "refused") return null;
     return (
       servedRefusalWords(
-        (last.detail as ProrrataMutationResult | null)?.refusal,
+        (last.detail as ProrrataMutationProjection | null)?.refusal,
       ) ?? servedRefusalWords(last.detail)
     );
   };
   const percent = (value: { decimal: string } | null) =>
     value ? formatPercent(locale, value.decimal, { unit: "points" }) : "—";
 
-  const columns: Column<ProrrataEntry>[] = [
+  const columns: Column<ProrrataEntryProjection>[] = [
     {
       key: "ejercicio",
       label: t("desktop.ledger.prorrata.column.ejercicio"),
@@ -500,7 +499,7 @@ export function ProrrataPane({
     },
   ];
 
-  const grossColumns: Column<ProrrataGrossDeclaration>[] = [
+  const grossColumns: Column<ProrrataGrossDeclarationProjection>[] = [
     {
       key: "ejercicio",
       label: t("desktop.ledger.prorrata.column.ejercicio"),

@@ -241,6 +241,60 @@ def deadline_scopes(
     return tuple(scope for scope in OverviewCalendarScope if held.get(scope, False))
 
 
+_ATTENTION_RANK: MappingProxyType[OverviewPeriodState, int] = MappingProxyType(
+    {
+        OverviewPeriodState.LATE: 0,
+        OverviewPeriodState.DUE: 1,
+        OverviewPeriodState.UNKNOWN: 2,
+        OverviewPeriodState.FILED: 3,
+    }
+)
+
+
+def calendar_list_order_key(
+    *,
+    adjusted_closes_on: date,
+    status: ObligationStatus,
+    modelo: str,
+    period: str,
+    local_work_unit_id: str | None,
+) -> tuple[int, int, bool, date, str, str, str]:
+    """The calendar's served order: by the month a window closes in, known closes first, then date and identity.
+
+    An unknown close sorts by its earliest date only as a steady order, after
+    the known closes of its month.
+    """
+    return (
+        adjusted_closes_on.year,
+        adjusted_closes_on.month,
+        status is ObligationStatus.UNKNOWN,
+        adjusted_closes_on,
+        modelo,
+        period,
+        local_work_unit_id or "",
+    )
+
+
+def calendar_attention_order_key(
+    *,
+    adjusted_closes_on: date,
+    status: ObligationStatus,
+    user_state: OverviewPeriodState,
+    modelo: str,
+    period: str,
+    local_work_unit_id: str | None,
+) -> tuple[int, bool, date, str, str, str]:
+    """The order rows need the operator in: late, due, unknown, filed; then known closes first, date and identity."""
+    return (
+        _ATTENTION_RANK[user_state],
+        status is ObligationStatus.UNKNOWN,
+        adjusted_closes_on,
+        modelo,
+        period,
+        local_work_unit_id or "",
+    )
+
+
 def days_until_close(
     *, adjusted_closes_on: date, evaluated_on: date, holiday_coverage: DeadlineHolidayCoverage
 ) -> int | None:
@@ -764,6 +818,8 @@ __all__ = [
     "OverviewPeriodState",
     "OverviewStatusReport",
     "SuppressedCalendarEntry",
+    "calendar_attention_order_key",
+    "calendar_list_order_key",
     "days_until_close",
     "deadline_scopes",
     "decide_filing_status",

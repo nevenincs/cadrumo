@@ -29,7 +29,6 @@ import {
   type LedgerExportFormat,
   type LedgerExportResult,
   type LedgerPort,
-  type LedgerStatusResult,
   type PickedFile,
 } from "../../../shell/ledger";
 import { publicPeriod, type LedgerPeriod } from "../../../shell/ledgerGrammar";
@@ -56,7 +55,10 @@ import {
   movementsTsv,
 } from "./tsv";
 import { exportFileName } from "./transferWords";
-import type { LedgerTransactionReviewProjection } from "../../../shell/ledgerReadContract";
+import type {
+  LedgerStatusProjection,
+  LedgerTransactionReviewProjection,
+} from "../../../shell/ledgerReadContract";
 
 const samePeriod = (left: LedgerPeriod | null, right: LedgerPeriod | null) =>
   left === right ||
@@ -78,7 +80,7 @@ type Status =
 
 /** The status read's counts span the whole ledger: they are the counts of
  * "All periods", and of no single period. */
-const ledgerCounts = (status: LedgerStatusResult): Counts => ({
+const ledgerCounts = (status: LedgerStatusProjection): Counts => ({
   total: status.total_count,
   active: status.active_count,
   archived: status.archived_count,

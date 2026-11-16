@@ -7,7 +7,7 @@ import { EmptyState } from "@/components/ui/empty";
 import { Icon } from "@/components/ui/icon";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio";
 import { Toast } from "@/components/ui/toast";
-import type { LedgerPort, LedgerStatusResult } from "../../../shell/ledger";
+import type { LedgerPort } from "../../../shell/ledger";
 import { useInvoiceMatches } from "../../../shell/ledgerInvoiceMatch";
 import type { StageEvent, StageState } from "../../../shell/ledgerStage";
 import { useStrings, type Translate } from "../../../shell/strings";
@@ -34,9 +34,13 @@ import {
   settlesText,
 } from "./matchingWords";
 import { useMatchingFacts, type Facts } from "./useMatchingFacts";
-import type { LedgerTransactionReviewProjection } from "../../../shell/ledgerReadContract";
+import type {
+  LedgerStatusProjection,
+  LedgerTransactionReviewProjection,
+} from "../../../shell/ledgerReadContract";
 
-export type AffectedDeclaration = LedgerStatusResult["stale_filings"][number];
+export type AffectedDeclaration =
+  LedgerStatusProjection["stale_filings"][number];
 
 const movementAmount = (
   locale: string,
