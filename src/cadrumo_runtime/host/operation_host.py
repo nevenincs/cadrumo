@@ -96,6 +96,7 @@ if TYPE_CHECKING:
     from ..adapters.worker_authorization_client import WorkerAuthorizationClient
     from .automation_execution import WorkerAutomationAdministration
     from .operation_authority import ProfileWorkerOperationAuthority
+    from .warm_heap import WarmHeapFreeze
 
 _log = get_logger(__name__)
 _PRIVATE_RESULT_RELEASE_ACTIONS = frozenset({AccessAction.RESULT, AccessAction.REVIEW})
@@ -125,15 +126,19 @@ class ProfileWorkerOperationHost:
         authorization: WorkerAuthorizationClient,
         view_streams: ViewStreamSinks | None = None,
         fixed_clock_instant: datetime | None = None,
+        warm_heap: WarmHeapFreeze | None = None,
     ) -> None:
         """Defer publication and backend loading until a governed capability needs it.
 
         ``view_streams`` opens the worker's view channel for a running Sede view;
         without it the view refuses every run. ``fixed_clock_instant`` is the
         fixed clock this worker admitted at its entry; its supervisor runs each
-        registered operation's application work at that instant.
+        registered operation's application work at that instant. ``warm_heap``
+        is the process's freeze of its warm heap, held from each completed
+        grounding walk until the session ends; without it nothing is frozen.
         """
         self.custody = custody
+        self._warm_heap = warm_heap
         self._fixed_clock_instant = fixed_clock_instant
         self._view_streams = view_streams
         self._lifetime = ExitStack()
@@ -275,16 +280,23 @@ class ProfileWorkerOperationHost:
         waits for a walk that has not begun: it joins one already under way or
         walks itself, and a failed walk leaves it to walk on demand.
         """
-        if self.closed or self._grounding_warmup is not None:
+        running = self._grounding_warmup
+        # A later admission walks again only to freeze its warm heap; the cached index returns at once.
+        if self.closed or (running is not None and (self._warm_heap is None or not running.done())):
             return
         # The first view usually follows the sign-in reply at once: give it the quiet window first.
         restart_quiet_window()
         self._grounding_warmup = asyncio.create_task(
-            asyncio.to_thread(self._warm_profile_grounding), name="profile-grounding-warmup"
+            asyncio.to_thread(self._warm_profile_grounding, None if self._warm_heap is None else self._warm_heap.epoch),
+            name="profile-grounding-warmup",
         )
 
-    def _warm_profile_grounding(self) -> None:
-        """Walk the grounding index under this worker's own pinned lease and governed facts."""
+    def _warm_profile_grounding(self, freeze_epoch: int | None) -> None:
+        """Walk the grounding index under this worker's own pinned lease and governed facts.
+
+        ``freeze_epoch`` is the warm heap's epoch at the admission that started
+        the walk; the heap is frozen afterwards only if no session ended since.
+        """
         if self.closed:
             return
         from cadrumo.domain.calculations.registry.profile_grounding import warm_profile_grounding_index
@@ -305,6 +317,9 @@ class ProfileWorkerOperationHost:
             "profile_grounding_warmup_finished",
             fields={"computed": computed, "elapsed_seconds": round(monotonic() - started, 3)},
         )
+        # A host closing meanwhile joins this walk before it releases the freeze.
+        if self._warm_heap is not None and freeze_epoch is not None:
+            self._warm_heap.freeze(freeze_epoch)
 
     async def _join_profile_grounding_warmup(self) -> None:
         """Wait for a walk under way, which stops at its next revision once the host is closed."""
@@ -491,6 +506,8 @@ class ProfileWorkerOperationHost:
 
         The composed services also drop it when they drain, so a closed host keeps none.
         """
+        if self._warm_heap is not None:
+            self._warm_heap.release()
         services = self.services
         if services is not None:
             services.end_session_reads()
@@ -930,6 +947,8 @@ class ProfileWorkerOperationHost:
         )
         # The walk reads through the lifetime lease, so it ends before that lease can close.
         await self._join_profile_grounding_warmup()
+        if self._warm_heap is not None:
+            self._warm_heap.release()
         result = (
             await await_cancellation_complete(
                 self.services.drain(timedelta(seconds=5)), task_name="profile-operation-drain"
