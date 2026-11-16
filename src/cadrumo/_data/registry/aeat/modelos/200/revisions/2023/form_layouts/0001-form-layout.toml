@@ -7,7 +7,7 @@ revision_id = "2023"
 seed_source = "design_box_number"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "dcf505ba6c207d095a2609a136a08a1925314c720ad066a9b9e7548d86492958"
+source_state_digest = "eae516aa12249993cb5d8d258d0509a9c65870d93053e923c05aa10f938da4f7"
 design_sources = [
     { source_ref = "aeat-dr-200-2023", sha256 = "60ee0cb4ab7aa4fa2ae3dc61cb22f6a1a0797d1626a28d7bba013b44375a19aa" },
 ]
@@ -54,6 +54,9 @@ placements = [
     { casilla_id = "00049", kind = "on_form", box_number = "00049" },
     { casilla_id = "00050", kind = "on_form", box_number = "00050" },
     { casilla_id = "00051", kind = "on_form", box_number = "00051" },
+    { casilla_id = "00052", kind = "on_form", box_number = "00052" },
+    { casilla_id = "00053", kind = "on_form", box_number = "00053" },
+    { casilla_id = "00054", kind = "on_form", box_number = "00054" },
     { casilla_id = "00055", kind = "on_form", box_number = "00055" },
     { casilla_id = "00056", kind = "on_form", box_number = "00056" },
     { casilla_id = "00057", kind = "on_form", box_number = "00057" },
@@ -407,6 +410,7 @@ placements = [
     { casilla_id = "00444", kind = "on_form", box_number = "00444" },
     { casilla_id = "00445", kind = "on_form", box_number = "00445" },
     { casilla_id = "00446", kind = "on_form", box_number = "00446" },
+    { casilla_id = "00447", kind = "on_form", box_number = "00447" },
     { casilla_id = "00448", kind = "on_form", box_number = "00448" },
     { casilla_id = "00449", kind = "on_form", box_number = "00449" },
     { casilla_id = "00450", kind = "on_form", box_number = "00450" },
@@ -433,6 +437,7 @@ placements = [
     { casilla_id = "00471", kind = "on_form", box_number = "00471" },
     { casilla_id = "00472", kind = "on_form", box_number = "00472" },
     { casilla_id = "00473", kind = "on_form", box_number = "00473" },
+    { casilla_id = "00474", kind = "on_form", box_number = "00474" },
     { casilla_id = "00475", kind = "on_form", box_number = "00475" },
     { casilla_id = "00476", kind = "unplaced", unplaced_reason = "ambiguous_anchor", box_number = "00476" },
     { casilla_id = "00477", kind = "unplaced", unplaced_reason = "ambiguous_anchor", box_number = "00477" },
@@ -445,6 +450,8 @@ placements = [
     { casilla_id = "00484", kind = "on_form", box_number = "00484" },
     { casilla_id = "00485", kind = "unplaced", unplaced_reason = "ambiguous_anchor", box_number = "00485" },
     { casilla_id = "00486", kind = "unplaced", unplaced_reason = "ambiguous_anchor", box_number = "00486" },
+    { casilla_id = "00487", kind = "on_form", box_number = "00487" },
+    { casilla_id = "00488", kind = "on_form", box_number = "00488" },
     { casilla_id = "00489", kind = "on_form", box_number = "00489" },
     { casilla_id = "00490", kind = "on_form", box_number = "00490" },
     { casilla_id = "00491", kind = "on_form", box_number = "00491" },
@@ -790,6 +797,9 @@ placements = [
     { casilla_id = "00910", kind = "on_form", box_number = "00910" },
     { casilla_id = "00911", kind = "on_form", box_number = "00911" },
     { casilla_id = "00912", kind = "on_form", box_number = "00912" },
+    { casilla_id = "00913", kind = "on_form", box_number = "00913" },
+    { casilla_id = "00914", kind = "on_form", box_number = "00914" },
+    { casilla_id = "00915", kind = "on_form", box_number = "00915" },
     { casilla_id = "00916", kind = "on_form", box_number = "00916" },
     { casilla_id = "00918", kind = "on_form", box_number = "00918" },
     { casilla_id = "00919", kind = "on_form", box_number = "00919" },
@@ -1142,8 +1152,14 @@ placements = [
     { casilla_id = "01296", kind = "on_form", box_number = "01296" },
     { casilla_id = "01297", kind = "on_form", box_number = "01297" },
     { casilla_id = "01298", kind = "on_form", box_number = "01298" },
+    { casilla_id = "01300", kind = "on_form", box_number = "01300" },
+    { casilla_id = "01301", kind = "on_form", box_number = "01301" },
+    { casilla_id = "01302", kind = "on_form", box_number = "01302" },
     { casilla_id = "01303", kind = "on_form", box_number = "01303" },
     { casilla_id = "01304", kind = "on_form", box_number = "01304" },
+    { casilla_id = "01305", kind = "on_form", box_number = "01305" },
+    { casilla_id = "01306", kind = "on_form", box_number = "01306" },
+    { casilla_id = "01307", kind = "on_form", box_number = "01307" },
     { casilla_id = "01308", kind = "on_form", box_number = "01308" },
     { casilla_id = "01309", kind = "on_form", box_number = "01309" },
     { casilla_id = "01310", kind = "on_form", box_number = "01310" },
@@ -1168,7 +1184,13 @@ placements = [
     { casilla_id = "01329", kind = "on_form", box_number = "01329" },
     { casilla_id = "01332", kind = "on_form", box_number = "01332" },
     { casilla_id = "01333", kind = "on_form", box_number = "01333" },
+    { casilla_id = "01334", kind = "on_form", box_number = "01334" },
+    { casilla_id = "01335", kind = "on_form", box_number = "01335" },
+    { casilla_id = "01336", kind = "on_form", box_number = "01336" },
     { casilla_id = "01337", kind = "on_form", box_number = "01337" },
+    { casilla_id = "01338", kind = "on_form", box_number = "01338" },
+    { casilla_id = "01339", kind = "on_form", box_number = "01339" },
+    { casilla_id = "01340", kind = "on_form", box_number = "01340" },
     { casilla_id = "01341", kind = "on_form", box_number = "01341" },
     { casilla_id = "01342", kind = "on_form", box_number = "01342" },
     { casilla_id = "01343", kind = "on_form", box_number = "01343" },
@@ -1418,16 +1440,40 @@ placements = [
     { casilla_id = "01620", kind = "on_form", box_number = "01620" },
     { casilla_id = "01621", kind = "on_form", box_number = "01621" },
     { casilla_id = "01622", kind = "on_form", box_number = "01622" },
+    { casilla_id = "01624", kind = "on_form", box_number = "01624" },
+    { casilla_id = "01625", kind = "on_form", box_number = "01625" },
+    { casilla_id = "01629", kind = "on_form", box_number = "01629" },
     { casilla_id = "01630", kind = "on_form", box_number = "01630" },
+    { casilla_id = "01631", kind = "on_form", box_number = "01631" },
+    { casilla_id = "01632", kind = "on_form", box_number = "01632" },
+    { casilla_id = "01633", kind = "on_form", box_number = "01633" },
     { casilla_id = "01634", kind = "on_form", box_number = "01634" },
+    { casilla_id = "01635", kind = "on_form", box_number = "01635" },
+    { casilla_id = "01636", kind = "on_form", box_number = "01636" },
+    { casilla_id = "01637", kind = "on_form", box_number = "01637" },
     { casilla_id = "01638", kind = "on_form", box_number = "01638" },
     { casilla_id = "01639", kind = "on_form", box_number = "01639" },
     { casilla_id = "01640", kind = "on_form", box_number = "01640" },
     { casilla_id = "01641", kind = "on_form", box_number = "01641" },
+    { casilla_id = "01642", kind = "on_form", box_number = "01642" },
+    { casilla_id = "01643", kind = "on_form", box_number = "01643" },
+    { casilla_id = "01644", kind = "on_form", box_number = "01644" },
     { casilla_id = "01645", kind = "on_form", box_number = "01645" },
+    { casilla_id = "01646", kind = "on_form", box_number = "01646" },
+    { casilla_id = "01647", kind = "on_form", box_number = "01647" },
+    { casilla_id = "01648", kind = "on_form", box_number = "01648" },
     { casilla_id = "01649", kind = "on_form", box_number = "01649" },
+    { casilla_id = "01662", kind = "on_form", box_number = "01662" },
+    { casilla_id = "01663", kind = "on_form", box_number = "01663" },
+    { casilla_id = "01664", kind = "on_form", box_number = "01664" },
     { casilla_id = "01665", kind = "on_form", box_number = "01665" },
+    { casilla_id = "01666", kind = "on_form", box_number = "01666" },
+    { casilla_id = "01667", kind = "on_form", box_number = "01667" },
+    { casilla_id = "01668", kind = "on_form", box_number = "01668" },
     { casilla_id = "01669", kind = "on_form", box_number = "01669" },
+    { casilla_id = "01670", kind = "on_form", box_number = "01670" },
+    { casilla_id = "01671", kind = "on_form", box_number = "01671" },
+    { casilla_id = "01672", kind = "on_form", box_number = "01672" },
     { casilla_id = "01673", kind = "on_form", box_number = "01673" },
     { casilla_id = "01674", kind = "on_form", box_number = "01674" },
     { casilla_id = "01675", kind = "on_form", box_number = "01675" },
@@ -1592,6 +1638,9 @@ placements = [
     { casilla_id = "01874", kind = "on_form", box_number = "01874" },
     { casilla_id = "01875", kind = "on_form", box_number = "01875" },
     { casilla_id = "01876", kind = "on_form", box_number = "01876" },
+    { casilla_id = "01877", kind = "on_form", box_number = "01877" },
+    { casilla_id = "01878", kind = "on_form", box_number = "01878" },
+    { casilla_id = "01879", kind = "on_form", box_number = "01879" },
     { casilla_id = "01880", kind = "on_form", box_number = "01880" },
     { casilla_id = "01881", kind = "on_form", box_number = "01881" },
     { casilla_id = "01882", kind = "on_form", box_number = "01882" },
@@ -6642,13 +6691,23 @@ official_heading = "Tributación conjunta Estado y Adm.Forales"
 blocks = [
     { kind = "field", id = "field", casilla_id = "00050" },
     { kind = "field", id = "field-2", casilla_id = "00051" },
-    { kind = "field", id = "field-3", casilla_id = "00055" },
-    { kind = "field", id = "field-4", casilla_id = "DP200026:00625" },
-    { kind = "field", id = "field-5", casilla_id = "00916" },
-    { kind = "field", id = "field-6", casilla_id = "01337" },
-    { kind = "field", id = "field-7", casilla_id = "01341" },
-    { kind = "grid", id = "grid", columns = [{ key = "territorio_navarra", heading_key = "modelo.form.column.territorio_navarra", official_heading = "Navarra" }, { key = "total", heading_key = "modelo.form.column.total", official_heading = "Total" }], rows = [{ key = "abono-deducciones-producciones-extranjera-b28cd8", heading_key = "modelo.schema.200.form.row.abono-deducciones-producciones-extranjera-b28cd8.heading", official_heading = "Abono deducciones producciones extranjeras en Canarias", cells = [{ kind = "casilla", casilla_id = "01880" }, { kind = "casilla", casilla_id = "01881" }] }] },
-    { kind = "field", id = "field-8", casilla_id = "01630" },
+    { kind = "field", id = "field-3", casilla_id = "00052" },
+    { kind = "field", id = "field-4", casilla_id = "00053" },
+    { kind = "field", id = "field-5", casilla_id = "00054" },
+    { kind = "field", id = "field-6", casilla_id = "00055" },
+    { kind = "field", id = "field-7", casilla_id = "DP200026:00625" },
+    { kind = "field", id = "field-8", casilla_id = "00447" },
+    { kind = "field", id = "field-9", casilla_id = "00474" },
+    { kind = "grid", id = "grid", columns = [{ key = "alava", heading_key = "modelo.schema.200.form.column.alava.heading", official_heading = "Álava" }, { key = "guipuzcoa", heading_key = "modelo.schema.200.form.column.guipuzcoa.heading", official_heading = "Guipúzcoa" }, { key = "vizcaya", heading_key = "modelo.schema.200.form.column.vizcaya.heading", official_heading = "Vizcaya" }, { key = "territorio_navarra", heading_key = "modelo.form.column.territorio_navarra", official_heading = "Navarra" }], rows = [{ key = "incremento-por-incumplimiento-requisitos-socimi", heading_key = "modelo.schema.200.form.row.incremento-por-incumplimiento-requisitos-socimi.heading", official_heading = "Incremento por incumplimiento requisitos SOCIMI", cells = [{ kind = "casilla", casilla_id = "00913" }, { kind = "casilla", casilla_id = "00914" }, { kind = "casilla", casilla_id = "00915" }, { kind = "casilla", casilla_id = "00916" }] }] },
+    { kind = "field", id = "field-10", casilla_id = "00487" },
+    { kind = "field", id = "field-11", casilla_id = "00488" },
+    { kind = "grid", id = "grid-2", columns = [{ key = "alava", heading_key = "modelo.schema.200.form.column.alava.heading", official_heading = "Álava" }, { key = "guipuzcoa", heading_key = "modelo.schema.200.form.column.guipuzcoa.heading", official_heading = "Guipúzcoa" }, { key = "vizcaya", heading_key = "modelo.schema.200.form.column.vizcaya.heading", official_heading = "Vizcaya" }, { key = "territorio_navarra", heading_key = "modelo.form.column.territorio_navarra", official_heading = "Navarra" }], rows = [{ key = "abono-deducciones-i-d-i-insuf-cuota", heading_key = "modelo.schema.200.form.row.abono-deducciones-i-d-i-insuf-cuota.heading", official_heading = "Abono deducciones I+D+i insuf. cuota", cells = [{ kind = "casilla", casilla_id = "01334" }, { kind = "casilla", casilla_id = "01335" }, { kind = "casilla", casilla_id = "01336" }, { kind = "casilla", casilla_id = "01337" }] }, { key = "abono-deducciones-producciones-extranjeras", heading_key = "modelo.schema.200.form.row.abono-deducciones-producciones-extranjeras.heading", official_heading = "Abono deducciones producciones extranjeras", cells = [{ kind = "casilla", casilla_id = "01338" }, { kind = "casilla", casilla_id = "01339" }, { kind = "casilla", casilla_id = "01340" }, { kind = "casilla", casilla_id = "01341" }] }] },
+    { kind = "field", id = "field-12", casilla_id = "01877" },
+    { kind = "field", id = "field-13", casilla_id = "01878" },
+    { kind = "field", id = "field-14", casilla_id = "01879" },
+    { kind = "field", id = "field-15", casilla_id = "01880" },
+    { kind = "field", id = "field-16", casilla_id = "01881" },
+    { kind = "grid", id = "grid-3", columns = [{ key = "alava", heading_key = "modelo.schema.200.form.column.alava.heading", official_heading = "Álava" }, { key = "guipuzcoa", heading_key = "modelo.schema.200.form.column.guipuzcoa.heading", official_heading = "Guipúzcoa" }, { key = "vizcaya", heading_key = "modelo.schema.200.form.column.vizcaya.heading", official_heading = "Vizcaya" }, { key = "territorio_navarra", heading_key = "modelo.form.column.territorio_navarra", official_heading = "Navarra" }], rows = [{ key = "resultado-de-la-autoliquidacion", heading_key = "modelo.schema.200.form.row.resultado-de-la-autoliquidacion.heading", official_heading = "Resultado de la autoliquidación", cells = [{ kind = "casilla", casilla_id = "01624" }, { kind = "casilla", casilla_id = "01625" }, { kind = "casilla", casilla_id = "01629" }, { kind = "casilla", casilla_id = "01630" }] }] },
 ]
 
 [[revisions.2023.form_layouts.pages.sections]]
@@ -6656,9 +6715,7 @@ id = "tributacion-conjunta-estado-y-adm-forales-78d29c"
 heading_key = "modelo.schema.200.form.section.tributacion-conjunta-estado-y-adm-forales-78d29c.heading"
 official_heading = "Tributación conjunta Estado y Adm.Forales - Opción de fraccionamiento art. 19.1 LIS"
 blocks = [
-    { kind = "field", id = "field", casilla_id = "01634" },
-    { kind = "field", id = "field-2", casilla_id = "01641" },
-    { kind = "field", id = "field-3", casilla_id = "01645" },
+    { kind = "grid", id = "grid", columns = [{ key = "alava", heading_key = "modelo.schema.200.form.column.alava.heading", official_heading = "Álava" }, { key = "guipuzcoa", heading_key = "modelo.schema.200.form.column.guipuzcoa.heading", official_heading = "Guipúzcoa" }, { key = "vizcaya", heading_key = "modelo.schema.200.form.column.vizcaya.heading", official_heading = "Vizcaya" }, { key = "territorio_navarra", heading_key = "modelo.form.column.territorio_navarra", official_heading = "Navarra" }], rows = [{ key = "importe-integrado", heading_key = "modelo.schema.200.form.row.importe-integrado.heading", official_heading = "Importe integrado", cells = [{ kind = "casilla", casilla_id = "01631" }, { kind = "casilla", casilla_id = "01632" }, { kind = "casilla", casilla_id = "01633" }, { kind = "casilla", casilla_id = "01634" }] }, { key = "deuda-tributaria", heading_key = "modelo.schema.200.form.row.deuda-tributaria.heading", official_heading = "Deuda tributaria", cells = [{ kind = "casilla", casilla_id = "01635" }, { kind = "casilla", casilla_id = "01636" }, { kind = "casilla", casilla_id = "01637" }, { kind = "casilla", casilla_id = "01641" }] }, { key = "1o-fraccionamiento", heading_key = "modelo.schema.200.form.row.1o-fraccionamiento.heading", official_heading = "1º fraccionamiento", cells = [{ kind = "casilla", casilla_id = "01642" }, { kind = "casilla", casilla_id = "01643" }, { kind = "casilla", casilla_id = "01644" }, { kind = "casilla", casilla_id = "01645" }] }] },
 ]
 
 [[revisions.2023.form_layouts.pages.sections]]
@@ -6666,7 +6723,7 @@ id = "tributacion-conjunta-estado-y-adm-forales-2"
 heading_key = "modelo.schema.200.form.section.tributacion-conjunta-estado-y-adm-forales.heading"
 official_heading = "Tributación conjunta Estado y Adm.Forales"
 blocks = [
-    { kind = "field", id = "field", casilla_id = "01649" },
+    { kind = "grid", id = "grid", columns = [{ key = "alava", heading_key = "modelo.schema.200.form.column.alava.heading", official_heading = "Álava" }, { key = "guipuzcoa", heading_key = "modelo.schema.200.form.column.guipuzcoa.heading", official_heading = "Guipúzcoa" }, { key = "vizcaya", heading_key = "modelo.schema.200.form.column.vizcaya.heading", official_heading = "Vizcaya" }, { key = "territorio_navarra", heading_key = "modelo.form.column.territorio_navarra", official_heading = "Navarra" }], rows = [{ key = "resultado-de-la-autoliquidacion-incluido-1c3547", heading_key = "modelo.schema.200.form.row.resultado-de-la-autoliquidacion-incluido-1c3547.heading", official_heading = "Resultado de la autoliquidación incluido el 1º fraccionamiento", cells = [{ kind = "casilla", casilla_id = "01646" }, { kind = "casilla", casilla_id = "01647" }, { kind = "casilla", casilla_id = "01648" }, { kind = "casilla", casilla_id = "01649" }] }] },
 ]
 
 [[revisions.2023.form_layouts.pages.sections]]
@@ -6674,11 +6731,7 @@ id = "tributacion-conjunta-estado-y-adm-forales-715fbc"
 heading_key = "modelo.schema.200.form.section.tributacion-conjunta-estado-y-adm-forales-715fbc.heading"
 official_heading = "Tributación conjunta Estado y Adm.Forales - Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS)"
 blocks = [
-    { kind = "field", id = "field", casilla_id = "01303" },
-    { kind = "field", id = "field-2", casilla_id = "01308" },
-    { kind = "field", id = "field-3", casilla_id = "01665" },
-    { kind = "field", id = "field-4", casilla_id = "01669" },
-    { kind = "field", id = "field-5", casilla_id = "01673" },
+    { kind = "grid", id = "grid", columns = [{ key = "alava", heading_key = "modelo.schema.200.form.column.alava.heading", official_heading = "Álava" }, { key = "guipuzcoa", heading_key = "modelo.schema.200.form.column.guipuzcoa.heading", official_heading = "Guipúzcoa" }, { key = "vizcaya", heading_key = "modelo.schema.200.form.column.vizcaya.heading", official_heading = "Vizcaya" }, { key = "territorio_navarra", heading_key = "modelo.form.column.territorio_navarra", official_heading = "Navarra" }], rows = [{ key = "abono-por-conversion-activos", heading_key = "modelo.schema.200.form.row.abono-por-conversion-activos.heading", official_heading = "Abono por conversión activos", cells = [{ kind = "casilla", casilla_id = "01300" }, { kind = "casilla", casilla_id = "01301" }, { kind = "casilla", casilla_id = "01302" }, { kind = "casilla", casilla_id = "01303" }] }, { key = "compensacion-conversion-activos", heading_key = "modelo.schema.200.form.row.compensacion-conversion-activos.heading", official_heading = "Compensación conversión activos", cells = [{ kind = "casilla", casilla_id = "01305" }, { kind = "casilla", casilla_id = "01306" }, { kind = "casilla", casilla_id = "01307" }, { kind = "casilla", casilla_id = "01308" }] }, { key = "resultado-de-conversion-abono", heading_key = "modelo.schema.200.form.row.resultado-de-conversion-abono.heading", official_heading = "Resultado de conversión: Abono", cells = [{ kind = "casilla", casilla_id = "01662" }, { kind = "casilla", casilla_id = "01663" }, { kind = "casilla", casilla_id = "01664" }, { kind = "casilla", casilla_id = "01665" }] }, { key = "resultado-de-conversion-compensacion", heading_key = "modelo.schema.200.form.row.resultado-de-conversion-compensacion.heading", official_heading = "Resultado de conversión: Compensación", cells = [{ kind = "casilla", casilla_id = "01666" }, { kind = "casilla", casilla_id = "01667" }, { kind = "casilla", casilla_id = "01668" }, { kind = "casilla", casilla_id = "01669" }] }, { key = "resultado-de-conversion-a-ingresar", heading_key = "modelo.schema.200.form.row.resultado-de-conversion-a-ingresar.heading", official_heading = "Resultado de conversión: A Ingresar", cells = [{ kind = "casilla", casilla_id = "01670" }, { kind = "casilla", casilla_id = "01671" }, { kind = "casilla", casilla_id = "01672" }, { kind = "casilla", casilla_id = "01673" }] }] },
 ]
 
 [[revisions.2023.form_layouts.pages]]
