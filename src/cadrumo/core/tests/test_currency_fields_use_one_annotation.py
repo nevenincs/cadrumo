@@ -105,13 +105,6 @@ DECLARED_EXCEPTIONS: dict[str, str] = {
     # before/plain/wrap validators. A public operation field therefore cannot
     # normalise at all -- it declares shape and nothing else -- so the canonical
     # policy stays at the boundary each field feeds or is projected from.
-    "application/invoices/catalogue_add_contracts.py::currency": (
-        "a registered operation's public request schema, which the operation "
-        "model contract forbids from carrying a core-schema-customising "
-        "annotation; build_catalogue_invoice constructs the domain Invoice, "
-        "whose currency IS IsoCurrencyCode, so the canonical policy applies one "
-        "step later rather than not at all"
-    ),
     "application/invoices/catalogue_read_projection.py::currency": (
         "a public projection of the domain Invoice, under the same operation "
         "schema contract; it does not merely omit the policy -- its _bounds "

@@ -64,7 +64,13 @@ _REFUSAL_SENTENCE: Final = "Served sentence: the opening balance was not admitte
 
 
 def _balance(
-    *, total: str = "300.00", active: str = "200.00", expired: str = "100.00", lots: int = 2, expiry: int | None = None
+    *,
+    total: str = "300.00",
+    active: str = "200.00",
+    expired: str = "100.00",
+    lots: int = 2,
+    expiry: int | None = None,
+    language: OutputLanguage = OutputLanguage.EN,
 ) -> ModeloIvaWalletBalanceProjection:
     return ModeloIvaWalletBalanceProjection.worded(
         profile_id=_PROFILE,
@@ -75,7 +81,7 @@ def _balance(
         lot_count=lots,
         next_expiry_year=expiry if expiry is not None else _FORM.filing_year + 3,
         unallocated_applied_amount="12.50",
-        language=OutputLanguage.EN,
+        language=language,
     )
 
 
@@ -185,7 +191,7 @@ async def test_the_served_balance_is_drawn_figure_by_figure_off_the_event_loop()
         shown = _text(screen, "#wallet-balance")
         status_shown = screen.query_one("#wallet-status").display
         phase = screen.phase
-    expected = "\n".join(balance_lines(_balance(), OutputLanguage.EN))
+    expected = "\n".join(balance_lines(_balance()))
 
     assert door.read == [_FORM.filing_year]
     assert door.on_loop == []
@@ -203,10 +209,26 @@ async def test_a_balance_without_lots_is_drawn_with_its_served_zeros_and_says_no
         await settle(pilot)
         shown = _text(screen, "#wallet-balance")
 
-    assert shown.splitlines()[:-1] == list(
-        balance_lines(_balance(total="0", active="0", expired="0", lots=0), OutputLanguage.EN)
-    )
+    assert shown.splitlines()[:-1] == list(balance_lines(_balance(total="0", active="0", expired="0", lots=0)))
     assert shown.splitlines()[-1] == tr("tui.modelo.wallet.no_lots")
+
+
+@pytest.mark.asyncio
+async def test_each_balance_amount_is_drawn_in_the_words_it_was_served_in() -> None:
+    served = _balance(total="1300.00", active="1200.00", expired="100.00", language=OutputLanguage.ES)
+    door = FakeDoor(balances=[served])
+    screen = _screen(door)
+    async with ScreenHostApp(screen).run_test(size=(120, 50)) as pilot:
+        await settle(pilot)
+        shown = _text(screen, "#wallet-balance").splitlines()
+
+    for name, words in (
+        ("total_balance", served.total_balance_words),
+        ("active_balance", served.active_balance_words),
+        ("expired_balance", served.expired_balance_words),
+        ("unallocated_applied_amount", served.unallocated_applied_amount_words),
+    ):
+        assert f"{tr(f'workspace.modelo.iva_wallet.{name}')}: {words}" in shown, (name, shown)
 
 
 @pytest.mark.asyncio
@@ -454,14 +476,14 @@ async def test_the_balance_read_before_a_recording_is_not_shown_while_it_is_read
 
 @pytest.mark.asyncio
 async def test_the_dialog_is_reworded_in_another_language() -> None:
-    door = FakeDoor(balances=[_balance()])
+    door = FakeDoor(balances=[_balance(language=OutputLanguage.ES)])
     with override_settings(cadrumo_output_language="es"):
         screen = _screen(door)
         async with ScreenHostApp(screen).run_test(size=(120, 50)) as pilot:
             await settle(pilot)
             title = _text(screen, "#wallet-title")
             shown = _text(screen, "#wallet-balance")
-        expected = "\n".join(balance_lines(_balance(), OutputLanguage.ES))
+        expected = "\n".join(balance_lines(_balance(language=OutputLanguage.ES)))
         expected_title = tr("workspace.modelo.iva_wallet.title")
 
     assert title == expected_title

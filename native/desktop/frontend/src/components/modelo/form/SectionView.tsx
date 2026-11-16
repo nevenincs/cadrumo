@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/tooltip";
 import type {
   ModeloFormCounts,
+  ModeloFormRecordAttention,
   ModeloFormText,
   PublicModeloFormBlock,
   PublicModeloFormContextFieldBlock,
@@ -15,6 +16,7 @@ import type {
 } from "../../../shell/modeloContract/modeloWorkForm";
 import { factsGap } from "../../../shell/compose";
 import { useStrings, type Translate } from "../../../shell/strings";
+import { ATTENTION_ICON, ATTENTION_TONE, GlyphMark } from "../workspace/Marks";
 import { calm, FieldRow } from "./FieldRow";
 import { useForm } from "./formContext";
 import { GridBlock } from "./GridBlock";
@@ -29,6 +31,9 @@ export type DrawnSection = {
   official_heading: string | null;
   blocks: PublicModeloFormBlock[];
   counts: ModeloFormCounts | null;
+  /** What the last check found about the values of the section's tables of
+   * records, per attention level, as the read model counted it. */
+  recordAttention: ModeloFormRecordAttention[];
 };
 
 /** Which boxes a filter or a search keeps, or null when it keeps all. */
@@ -224,30 +229,45 @@ export function SectionView({
             {t("workspace.modelo.legend.meaning.origin.not_calculated_yet")}
           </span>
         )}
-        {todo > 0 && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Badge
-                variant="warning"
-                className="ml-auto"
-                tabIndex={0}
-                aria-label={t("workspace.modelo.section.pending", {
+        <span className="ml-auto flex items-center gap-2">
+          {section.recordAttention.map((entry) => (
+            <span
+              key={entry.level}
+              data-record-attention={entry.level}
+              className="inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-xs font-medium tabular-nums text-secondary-foreground"
+            >
+              <GlyphMark
+                icon={ATTENTION_ICON[entry.level]}
+                words={t(`workspace.modelo.level.${entry.level}`)}
+                className={ATTENTION_TONE[entry.level]}
+              />
+              {entry.count}
+            </span>
+          ))}
+          {todo > 0 && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Badge
+                  variant="warning"
+                  tabIndex={0}
+                  aria-label={t("workspace.modelo.section.pending", {
+                    heading: section.heading.text,
+                    count: todo,
+                  })}
+                >
+                  <Icon name="alert" size="xs" />
+                  {todo}
+                </Badge>
+              </TooltipTrigger>
+              <TooltipContent>
+                {t("workspace.modelo.section.pending", {
                   heading: section.heading.text,
                   count: todo,
                 })}
-              >
-                <Icon name="alert" size="xs" />
-                {todo}
-              </Badge>
-            </TooltipTrigger>
-            <TooltipContent>
-              {t("workspace.modelo.section.pending", {
-                heading: section.heading.text,
-                count: todo,
-              })}
-            </TooltipContent>
-          </Tooltip>
-        )}
+              </TooltipContent>
+            </Tooltip>
+          )}
+        </span>
       </header>
       {body && <div className="flex flex-col gap-2">{body}</div>}
     </section>

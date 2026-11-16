@@ -4,7 +4,6 @@ import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Spinner } from "@/components/ui/spinner";
-import { formatAmount } from "../../../shared/numbers";
 import { parseYear, type LedgerPeriod } from "../../../shell/ledgerGrammar";
 import {
   declarationWriteKey,
@@ -86,14 +85,12 @@ function WalletBalance({
       setManaging(true);
     }
   }, [openingBalanceAsk, hold]);
-  const amount = (value: string) =>
-    formatAmount(locale, value, { currency: "EUR" });
   const values =
     read.phase === "ready"
       ? [
-          ["total_balance", amount(read.result.total_balance)],
-          ["active_balance", amount(read.result.active_balance)],
-          ["expired_balance", amount(read.result.expired_balance)],
+          ["total_balance", read.result.total_balance_words],
+          ["active_balance", read.result.active_balance_words],
+          ["expired_balance", read.result.expired_balance_words],
           ["lot_count", String(read.result.lot_count)],
           [
             "next_expiry_year",
@@ -103,7 +100,7 @@ function WalletBalance({
           ],
           [
             "unallocated_applied_amount",
-            amount(read.result.unallocated_applied_amount),
+            read.result.unallocated_applied_amount_words,
           ],
         ]
       : [];

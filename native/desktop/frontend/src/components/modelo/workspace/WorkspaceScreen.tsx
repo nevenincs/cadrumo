@@ -5,6 +5,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type ComponentProps,
 } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -30,7 +31,6 @@ import type {
   ProjectUnresolvedBindingProjection,
   ProjectUnresolvedCasillaProjection,
 } from "../../../shell/modeloContract/modelo";
-import type { ModeloWorkMetadataSnapshot } from "../../../shell/modeloContract/modeloWork";
 import type { ModeloAmendmentCorrectionContextV1 } from "../../../shell/modeloContract/modeloWorkAmendmentContext";
 import type {
   ModeloFormIssueLine,
@@ -102,12 +102,12 @@ import {
   ProfileCompanions,
   type ProfileCompanionKit,
 } from "./ProfileCompanions";
+import { useHistoryRead } from "./historyRead";
 import { SourcesView } from "./SourcesView";
 import { BoxName } from "./BoxName";
 import { languageName, UnresolvedFindings } from "./UnresolvedFindings";
 import { ACTION_VIEW, ModeloWorkspace, type WorkspaceView } from "./Workspace";
 import { WORKSPACE_PANE_IDS } from "./WorkspacePanes";
-import type { ModeloWorkHistoryEntryV1 } from "../../../shell/modeloContract/modeloWorkHistory";
 import type { ModeloFormNextAction } from "../../../shell/modeloContract/modeloWork";
 
 type Read =
@@ -143,9 +143,17 @@ function Ready({
   onLeaveGuard,
   profileCompanions,
   borrador,
+  historyMemory,
+  profileMemory,
 }: {
   envelope: ModeloWorkbenchFormProjectionV1;
   port: ModeloPort;
+  /** Where the History view's answers are held while the page is away. */
+  historyMemory: KeptWorkspaceRead;
+  /** Where the profile's answers are held while the declaration is open. */
+  profileMemory: NonNullable<
+    ComponentProps<typeof ProfileCompanions>["memory"]
+  >;
   language: OutputLanguage;
   locale: string;
   /** Reads the declaration again; false when the read failed and the one
@@ -246,10 +254,13 @@ function Ready({
   const [unresolved, setUnresolved] = useState<CalculationUnresolved | null>(
     null,
   );
-  const [unit, setUnit] = useState<ModeloWorkMetadataSnapshot | null>(null);
-  const [entries, setEntries] = useState<ModeloWorkHistoryEntryV1[] | null>(
-    null,
-  );
+  const { unit, entries } = useHistoryRead({
+    port,
+    envelope,
+    language,
+    wanted: view === "history",
+    memory: historyMemory,
+  });
   const [correctionRead, setCorrectionRead] = useState<{
     filingRecord: string;
     language: OutputLanguage;
@@ -341,33 +352,6 @@ function Ready({
         port.submit("modelo.work.create", createWorkRequest(step)),
       );
   };
-
-  const readUnit = useCallback(async () => {
-    try {
-      const outcome = await port.submit("modelo.work.metadata", {
-        work_unit_id: workUnit,
-      });
-      if (outcome.kind === "settled") setUnit(outcome.result.unit);
-    } catch {
-      setUnit(null);
-    }
-  }, [port, workUnit]);
-  const readHistory = useCallback(async () => {
-    try {
-      const outcome = await port.submit("modelo.work.history", {
-        work_unit_id: workUnit,
-        output_language: language,
-      });
-      setEntries(outcome.kind === "settled" ? outcome.result.entries : null);
-    } catch {
-      setEntries(null);
-    }
-  }, [port, workUnit, language]);
-  useEffect(() => {
-    if (view !== "history") return;
-    void readUnit();
-    void readHistory();
-  }, [view, readUnit, readHistory, envelope]);
 
   // What a correction of the recorded filing offers, read when it is asked
   // for.
@@ -701,7 +685,9 @@ function Ready({
 
   const rename = async (name: string) => {
     if (!unit) return false;
-    const done = await settledThenReread(() =>
+    // The write retires the record read before it; the form read after it
+    // has the History view ask once more.
+    return settledThenReread(() =>
       port.submit("modelo.work.rename", {
         work_unit_id: workUnit,
         new_name: name,
@@ -710,8 +696,6 @@ function Ready({
         actor: MODELO_ACTOR,
       }),
     );
-    if (done) await readUnit();
-    return done;
   };
   const discard = async (reason: string) => {
     if (!unit) return false;
@@ -1021,6 +1005,7 @@ function Ready({
               envelope.form.form.asks_imputation_election && (
                 <ProfileCompanions
                   kit={profileCompanions}
+                  memory={profileMemory}
                   profile={envelope.profile_id}
                   taxYear={envelope.form.form.filing_year}
                   language={language}
@@ -1305,6 +1290,18 @@ export function WorkspaceScreen({
   const t = useStrings();
   const [localHolds] = useState(createModeloWriteHolds);
   const holds = suppliedHolds ?? localHolds;
+  // The History view's answers outlive the page where the caller keeps the
+  // form read; the profile's are asked again on each return, since the
+  // profile can be changed on its own page meanwhile.
+  const [ownMemory] = useState<KeptWorkspaceRead>(() => ({}));
+  const historyMemory: KeptWorkspaceRead = kept ?? ownMemory;
+  const [profileMemory] = useState<
+    NonNullable<ComponentProps<typeof ProfileCompanions>["memory"]>
+  >(() => ({}));
+  const written = useCallback(() => {
+    historyMemory.written = (historyMemory.written ?? 0) + 1;
+    onWritten?.();
+  }, [historyMemory, onWritten]);
   const target = declarationWriteKey(workUnitId);
   const [read, setRead] = useState<Read>(() =>
     keptRead(kept, workUnitId, language),
@@ -1454,6 +1451,8 @@ export function WorkspaceScreen({
         onLeaveGuard={onLeaveGuard}
         profileCompanions={profileCompanions}
         borrador={borrador}
+        historyMemory={historyMemory}
+        profileMemory={profileMemory}
       />
     );
   return (
@@ -1461,7 +1460,7 @@ export function WorkspaceScreen({
       holds={holds}
       target={target}
       port={port}
-      onWritten={onWritten}
+      onWritten={written}
       reload={reread}
       reloadHold={reloadHold}
       owner={owner}
