@@ -20,7 +20,7 @@ from ..models import (
 from ..portfolio_rendering import RowAction, row_action, row_enter_action
 from .portfolio_fixtures import portfolio_projection
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
 def _action(action_id: str) -> ActionReference:
