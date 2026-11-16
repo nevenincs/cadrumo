@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 import json
-from datetime import date
+from datetime import date, timedelta
 
 import pytest
 from pydantic import ValidationError
 
 from ....core.period import Period
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.deadlines.festivos import DeadlineHolidayCoverage
 from ....domain.deadlines.models import ObligationStatus
 from ...workbench_generation_public_contracts import PublicHomeAgendaEntry
@@ -35,9 +36,11 @@ _PERIOD = OverviewPeriodState
 _STATUS = OverviewFilingStatus
 _SCOPE = OverviewCalendarScope
 
-_CLOSE = date(2026, 10, 20)
-_BEFORE = date(2026, 10, 15)
-_AFTER = date(2026, 10, 23)
+_YEAR = filing_year_envelope().horizon
+_CLOSE = date(_YEAR, 10, 20)
+_BEFORE = _CLOSE - timedelta(days=5)
+_AFTER = _CLOSE + timedelta(days=3)
+_OPENS = _CLOSE - timedelta(days=19)
 
 _REFUSAL = "it does not decide"
 
@@ -109,8 +112,8 @@ def test_without_stronger_evidence_the_period_state_decides(
 def _home_entry_payload(**overrides: object) -> dict[str, object]:
     payload: dict[str, object] = {
         "modelo": "303",
-        "filing_year": 2026,
-        "period": Period.from_year_and_code(2026, "3T"),
+        "filing_year": _YEAR,
+        "period": Period.from_year_and_code(_YEAR, "3T"),
         "due_on": _CLOSE,
         "period_state": _PERIOD.FILED,
         "local_filing_state": _LOCAL.NOT_READY_TO_FILE,
@@ -141,9 +144,9 @@ def test_home_entry_canonical_round_trip_skips_the_computed_status() -> None:
 def _public_home_payload(filing_status: str) -> dict[str, object]:
     return {
         "modelo": "303",
-        "filing_year": 2026,
-        "period": {"filing_year": 2026, "code": "3T"},
-        "due_on": "2026-10-20",
+        "filing_year": _YEAR,
+        "period": {"filing_year": _YEAR, "code": "3T"},
+        "due_on": _CLOSE.isoformat(),
         "period_state": "filed",
         "local_filing_state": "not_ready_to_file",
         "aeat_submission_state": "not_observed",
@@ -262,8 +265,8 @@ def _entry(
 ) -> OverviewCalendarEntry:
     return OverviewCalendarEntry(
         modelo="303",
-        period=Period.from_year_and_code(2026, "3T"),
-        opens_on=date(2026, 10, 1),
+        period=Period.from_year_and_code(_YEAR, "3T"),
+        opens_on=_OPENS,
         closes_on=_CLOSE,
         adjusted_closes_on=_CLOSE,
         shift_reason="none",
@@ -272,7 +275,7 @@ def _entry(
         days_overdue=days_overdue,
         status=status,
         user_state=user_state,
-        filing_year=2026,
+        filing_year=_YEAR,
         filing_evidence=evidence if evidence is not None else OverviewCalendarFilingEvidence(),
     )
 
