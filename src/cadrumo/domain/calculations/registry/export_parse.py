@@ -12,7 +12,7 @@ from .export_components import reconstruct_component_values
 from .export_parse_models import ParsedExportFieldValue, ParsedExportPayload
 from .export_value_policy import ParsedExportPolicyValue
 from .export_xml_dictionary import XmlDictionaryEntry, parse_xml_dictionary_payload
-from .fixed_width_codec import render_empty_block_slot
+from .fixed_width_codec import fixed_width_field_order, render_empty_block_slot
 from .fixed_width_parser import parse_fixed_width_export_field
 from .schema_exports import (
     ExportFieldDefinition,
@@ -369,7 +369,7 @@ def _parse_record_fields(
     filed: bool,
 ) -> tuple[ParsedExportFieldValue, ...]:
     parsed: list[ParsedExportFieldValue] = []
-    ordered_fields = tuple(sorted(fields, key=lambda item: item.offset or 0))
+    ordered_fields = fixed_width_field_order(fields)
     empty_blocks = _empty_occurrence_blocks(record_text, ordered_fields)
     for field in ordered_fields:
         raw = _record_field_raw(field, record_text)
