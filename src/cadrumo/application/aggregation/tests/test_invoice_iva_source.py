@@ -241,6 +241,19 @@ def test_a_eur_invoice_whose_cuota_alone_disagrees_is_contradicted() -> None:
     assert _contradicted(_received("E-2", base=Decimal("1000.00"), paid_by=(own,)), own)
 
 
+def test_the_period_side_keeps_a_foreign_invoice_paid_in_its_own_currency() -> None:
+    paid = _usd_movement("usd-side")
+    invoice = _foreign_invoice(fx_rate=Decimal("0.5"), paid_by=(paid,))
+    wrong = _usd_movement("usd-side-wrong")
+    differing = _foreign_invoice(base="1100.00", fx_rate=Decimal("0.5"), paid_by=(wrong,)).model_copy(
+        update={"invoice_number": "F-2"}
+    )
+
+    side = _side((invoice, differing), (paid, wrong))
+
+    assert side.contradicted == (differing,)
+
+
 def test_a_refund_movement_takes_off_what_the_payment_stated() -> None:
     overpaid = _eur_movement("eur-overpaid", base="1200.00", cuota="252.00")
     refund = _eur_movement("eur-refund", base="200.00", cuota="42.00").model_copy(
