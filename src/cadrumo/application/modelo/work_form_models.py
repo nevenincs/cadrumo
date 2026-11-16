@@ -656,6 +656,13 @@ type ModeloFormBlock = Annotated[
 ]
 
 
+class ModeloFormRecordAttention(ModeloFormBase):
+    """How many of the last check's findings about a section's tables of records sit at one attention level."""
+
+    level: ModeloFormAttention
+    count: int = Field(gt=0)
+
+
 class ModeloFormSection(ModeloFormBase):
     """One apartado with its heading, ordered blocks, counts and whether it applies."""
 
@@ -666,6 +673,9 @@ class ModeloFormSection(ModeloFormBase):
     counts: ModeloFormCounts
     #: ``False`` when its page does not apply or every box on it is proven not to apply; otherwise its page's answer.
     applies: bool | None
+    #: What the last check found about the values of the section's tables of records, most urgent level first;
+    #: see :func:`~cadrumo.application.modelo.work_form_record_attention.record_attention`.
+    record_attention: tuple[ModeloFormRecordAttention, ...] = ()
 
 
 class ModeloFormPage(ModeloFormBase):
@@ -1142,6 +1152,7 @@ __all__ = [
     "ModeloFormLayoutProvenance",
     "ModeloFormOutlineGroup",
     "ModeloFormPage",
+    "ModeloFormRecordAttention",
     "ModeloFormRepeatingBlock",
     "ModeloFormRepeatingRow",
     "ModeloFormSection",

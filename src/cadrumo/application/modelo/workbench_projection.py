@@ -114,6 +114,7 @@ from .work_form_models import (
     ModeloFormInspectionReason,
     ModeloFormLayoutProvenance,
     ModeloFormOutlineGroup,
+    ModeloFormRecordAttention,
     ModeloFormSourceGroup,
     ModeloFormStatedPriorValue,
 )
@@ -383,6 +384,7 @@ class PublicModeloFormSection(BaseModel):
     blocks: tuple[PublicModeloFormBlock, ...]
     counts: ModeloFormCounts
     applies: bool | None
+    record_attention: tuple[ModeloFormRecordAttention, ...]
 
 
 class PublicModeloFormPage(BaseModel):
