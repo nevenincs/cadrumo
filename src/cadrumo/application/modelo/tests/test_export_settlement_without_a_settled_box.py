@@ -28,7 +28,7 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from ....domain.calculations.registry.payment_instalment_split import first_instalment_share
-from ....domain.calculations.registry.result_casillas import derive_result_disposition
+from ....domain.calculations.registry.result_casillas import derive_result_disposition, settlement_casilla_role
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.calculations.registry.tests.authored_editions import supported_authored_exercises
@@ -44,7 +44,6 @@ from ..export_settlement import SettlementRefusal, declared_settlement, settleme
 from ..settlement_casilla import (
     declaration_settlement_casilla_id,
     declaration_settlement_remainder_casilla_ids,
-    settlement_casilla_role,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]

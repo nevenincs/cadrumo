@@ -36,6 +36,7 @@ from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.transactions.m210_income_classification import resolve_m210_payer_mode
 from .. import casilla_help as casilla_help_module
 from .. import source_policy as source_policy_module
+from ..action_errors import ModeloApplicabilityFilterError
 from ..calculation_report_verification import ExistingSigningKeypairCapability
 from ..casilla_help import CasillaHelpCatalogueError, _phrase
 from ..dt12_advisory import DT12_TRABAJO_REDUCCION_ROLE
@@ -74,7 +75,7 @@ from ..value_presentation import (
     _catalogue_text,
     value_presentation_kind,
 )
-from ..verification_predicates import ModeloApplicabilityFilterError, evaluate_applicability_filter
+from ..verification_predicates import evaluate_applicability_filter
 from .calculation_report_fixture import BUCKET_ID, EXPORTED_AT
 from .review_package_signing_support import InMemoryReviewPackageSigningKeypairCapability
 

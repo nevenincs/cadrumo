@@ -37,7 +37,7 @@ from ....domain.modelos.row_models import (
     validate_m184_member_share_sum,
     validate_m349_country_prefix_context,
 )
-from ....domain.modelos.tests.test_snapshot_evidence_coverage_validator import _TX_A, _TX_B, _revision
+from ....domain.modelos.tests.snapshot_evidence_coverage_support import TX_A, TX_B, ledger_filing_revision
 from ....domain.modelos.work_unit import WorkUnitCatalogue
 from ...cli_exception_preconditions import nested_terminal_precondition_verdict
 from ...operations.models import OperationIdentity, OperationRequest
@@ -212,7 +212,7 @@ def test_a_stored_casilla_printed_number_that_is_not_its_id_is_terminal() -> Non
 
 
 def test_a_ledger_evidence_that_dropped_a_contributor_is_terminal() -> None:
-    revision = _revision(snapshot_ids=(_TX_A, _TX_B), evidence_ids=(_TX_A,))
+    revision = ledger_filing_revision(snapshot_ids=(TX_A, TX_B), evidence_ids=(TX_A,))
 
     with pytest.raises(LedgerFilingCoverageError) as refused:
         assert_revision_snapshot_evidence_coverage(revision)
