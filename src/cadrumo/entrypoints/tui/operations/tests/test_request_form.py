@@ -208,6 +208,7 @@ def test_a_valid_request_is_the_request_model_the_operation_registers() -> None:
         "expected_revision": None,
         "expected_content_digest": None,
         "output_language": "es",
+        "household_draft": None,
     }
 
 

@@ -143,7 +143,7 @@ class RecordedProfileView[Value](dict[str, Value]):
         ``sections`` are the prefixes an enumeration of this view reads: the
         whole profile, unless the view was cut down to some sections.
         """
-        super().__init__(dict.items(values) if isinstance(values, dict) else values.items())
+        super().__init__(values.stored_items() if isinstance(values, RecordedProfileView) else values.items())
         self._recorder = recorder
         self._key_paths = key_paths
         self._sections = sections
@@ -151,7 +151,7 @@ class RecordedProfileView[Value](dict[str, Value]):
     def under(self, prefixes: tuple[str, ...]) -> RecordedProfileView[Value]:
         """Return the view cut down to ``prefixes``, whose enumeration reads only them."""
         return RecordedProfileView(
-            {key: value for key, value in dict.items(self) if key.startswith(prefixes)},
+            {key: value for key, value in self.stored_items() if key.startswith(prefixes)},
             recorder=self._recorder,
             key_paths=self._key_paths,
             sections=prefixes,
@@ -166,10 +166,14 @@ class RecordedProfileView[Value](dict[str, Value]):
         for section in self._sections:
             self._recorder.note_prefix(section)
 
+    def stored_items(self) -> dict_items[str, Value]:
+        """Return the stored pairs without noting a read."""
+        return super().items()
+
     def items_under(self, prefix: str) -> dict[str, Value]:
         """Note a read of every path under ``prefix`` and return those keys with their values."""
         self._recorder.note_prefix(prefix)
-        return {key: value for key, value in dict.items(self) if key.startswith(prefix)}
+        return {key: value for key, value in self.stored_items() if key.startswith(prefix)}
 
     @override
     def __getitem__(self, key: str) -> Value:
@@ -190,6 +194,8 @@ class RecordedProfileView[Value](dict[str, Value]):
     def get(self, key: object, default: object = None, /) -> object:
         """Note and return one key's value, or ``default`` when it is absent."""
         self._note(key)
+        if not isinstance(key, str):
+            return default
         return super().get(key, default)
 
     @override
