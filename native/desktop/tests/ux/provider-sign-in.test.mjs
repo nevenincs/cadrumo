@@ -45,6 +45,7 @@ import {
   waitFor,
   win,
 } from "./ux-driver.mjs";
+import { callsSince, pageTimeInvokes } from "./ux-calls.mjs";
 import { dismissSetup } from "./ux-nav.mjs";
 
 const PROVIDERS = (process.env.CADRUMO_SIGN_IN_PROVIDERS ?? "claude,codex")
@@ -314,7 +315,12 @@ async function openAgentSettings() {
         (el) => el.getClientRects().length > 0,
       ),
     );
-  if (await drawn()) return { reached: true, rounds: [], column: null };
+  if (await drawn())
+    return { reached: true, rounds: [], column: null, calls: [] };
+  // Every host call from here is timed, so a slow first draw names the read it
+  // waited on (the panel draws only after its settings and access reads answer).
+  const timed = await exec(pageTimeInvokes);
+  const since = Date.now();
   const agentShown = await exec(
     () =>
       document
@@ -341,7 +347,8 @@ async function openAgentSettings() {
     });
   }
   const column = last.reached ? null : await exec(agentColumnText, name);
-  return { ...last, rounds, column };
+  const calls = timed ? await callsSince(since) : null;
+  return { ...last, rounds, column, calls };
 }
 
 /** The visible words around the agent column's settings door, so a run that
@@ -636,6 +643,7 @@ for (const provider of PROVIDERS) {
     async (t, line) => {
       const opened = await openAgentSettings();
       line.settings_rounds = opened.rounds;
+      line.settings_calls = opened.calls;
       if (!opened.reached) {
         line.agent_column = opened.column;
         assert.fail(`UNMEASURED: ${opened.reason}`);

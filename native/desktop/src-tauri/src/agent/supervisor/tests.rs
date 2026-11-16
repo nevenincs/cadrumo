@@ -607,7 +607,7 @@ fn provider_settings_status(
     crate::shell::provider_settings::wire::CommandFailure,
 > {
     crate::shell::provider_settings::when_admitted(
-        || supervisor.await_admin(),
+        || supervisor.admin_now(),
         || {
             crate::shell::provider_settings::read_status(
                 || supervisor.administer(serde_json::json!({"action":"status"}), None),
@@ -632,7 +632,7 @@ fn admin_unavailable(
 }
 
 #[test]
-fn provider_settings_status_asked_while_starting_waits_for_admission_and_answers() {
+fn provider_settings_status_asked_while_starting_answers_busy_at_once_then_reads_once_admitted() {
     use std::io::{Read, Write};
     use std::net::TcpListener;
     let listener = TcpListener::bind("127.0.0.1:0").unwrap();
@@ -656,13 +656,15 @@ fn provider_settings_status_asked_while_starting_waits_for_admission_and_answers
         stream.write_all(&reply).unwrap();
     });
     let supervisor = starting_supervisor(Duration::from_secs(60));
-    let read = {
-        let supervisor = supervisor.clone();
-        std::thread::spawn(move || provider_settings_status(&supervisor))
-    };
-    // The read is asked before the endpoint is admitted, as the window does.
-    std::thread::sleep(Duration::from_millis(100));
-    assert!(!read.is_finished());
+    // Asked before the endpoint is admitted, as the window does on its first
+    // open, the read answers busy at once instead of waiting for the start.
+    let asked = std::time::Instant::now();
+    assert!(matches!(
+        provider_settings_status(&supervisor),
+        Err(crate::shell::provider_settings::wire::CommandFailure::Refused(refused))
+            if refused.code == crate::shell::provider_settings::wire::Refusal::Busy
+    ));
+    assert!(asked.elapsed() < Duration::from_secs(1));
     super::admit(
         &supervisor.shared,
         super::super::admin::Endpoint {
@@ -672,10 +674,7 @@ fn provider_settings_status_asked_while_starting_waits_for_admission_and_answers
             gate: Default::default(),
         },
     );
-    let status = read
-        .join()
-        .unwrap()
-        .expect("the read answers once admitted");
+    let status = provider_settings_status(&supervisor).expect("the read answers once admitted");
     assert!(status.providers.is_empty());
     server.join().unwrap();
 }
@@ -701,11 +700,21 @@ fn provider_settings_status_without_a_starting_service_is_refused_at_once() {
 }
 
 #[test]
-fn provider_settings_status_waiting_on_a_start_that_fails_is_released_with_its_refusal() {
+fn administration_waiting_on_a_start_that_fails_is_released_with_its_refusal() {
     let supervisor = starting_supervisor(Duration::from_secs(60));
     let read = {
         let supervisor = supervisor.clone();
-        std::thread::spawn(move || provider_settings_status(&supervisor))
+        std::thread::spawn(move || {
+            crate::shell::provider_settings::when_admitted(
+                || supervisor.await_admin(),
+                || {
+                    crate::shell::provider_settings::read_status(
+                        || supervisor.administer(serde_json::json!({"action":"status"}), None),
+                        Duration::ZERO,
+                    )
+                },
+            )
+        })
     };
     std::thread::sleep(Duration::from_millis(100));
     assert!(!read.is_finished());
