@@ -52,6 +52,7 @@ import {
 } from "./fixtures/agentSkills";
 import {
   FIXTURE_CONVERSATIONS,
+  FIXTURE_ATTACHMENT_POLICY,
   FIXTURE_DOCUMENTS,
   FIXTURE_RUNS,
   conversationRecords,
@@ -1172,10 +1173,7 @@ export function fixtureAgent({
           },
           async attachmentPolicy() {
             await check();
-            return {
-              max_file_bytes: 100_000_000,
-              extensions: ["pdf", "png", "jpg", "xlsx", "csv", "xml", "txt"],
-            };
+            return FIXTURE_ATTACHMENT_POLICY;
           },
           async attach(conversationId, filterLabel, onEvent, dropId) {
             say(`agentAttach ${conversationId} ${filterLabel}`);

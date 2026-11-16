@@ -12,7 +12,15 @@ test("document removal distinguishes a stored name from the whole store, and pol
         async invoke(command: string, args: unknown) {
           calls.push({ command, args });
           return command === "agent_attachment_policy"
-            ? { max_file_bytes: 25, extensions: ["pdf", "txt"] }
+            ? {
+                max_file_bytes: 25,
+                max_files_per_conversation: 2,
+                max_total_bytes_per_conversation: 50,
+                formats: [
+                  { media_type: "application/pdf", extensions: [".pdf"] },
+                  { media_type: "text/plain", extensions: [".txt"] },
+                ],
+              }
             : null;
         },
       },
@@ -41,7 +49,12 @@ test("document removal distinguishes a stored name from the whole store, and pol
   ]);
   expect(result.policy).toEqual({
     max_file_bytes: 25,
-    extensions: ["pdf", "txt"],
+    max_files_per_conversation: 2,
+    max_total_bytes_per_conversation: 50,
+    formats: [
+      { media_type: "application/pdf", extensions: [".pdf"] },
+      { media_type: "text/plain", extensions: [".txt"] },
+    ],
   });
 });
 

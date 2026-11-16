@@ -27,12 +27,28 @@ const REPORT_EVERY: u64 = 512 * 1024;
 /// The most files one pick stages.
 const PICK_LIMIT: usize = 200;
 
-/// What a conversation's storage takes: `GET /v1/attachments/policy`.
-#[derive(Debug, PartialEq, Eq, Serialize)]
+/// What a conversation's storage takes, as the host checks a pick against it:
+/// `GET /v1/attachments/policy`.
+#[derive(Debug, PartialEq, Eq)]
 pub struct Policy {
     pub max_file_bytes: u64,
     /// The extensions it takes, lowercase and without their dot.
     pub extensions: Vec<String>,
+}
+
+/// The agent's policy as the window reads it: its answer unchanged, once it reads as
+/// the policy and states both conversation bounds; else unreadable.
+pub fn served_policy(value: Value) -> Result<Value, Refused> {
+    policy_of(&value)?;
+    for bound in [
+        "max_files_per_conversation",
+        "max_total_bytes_per_conversation",
+    ] {
+        if value.get(bound).and_then(Value::as_u64).is_none() {
+            return Err(Refused::new("agent_gateway_unreadable".to_owned()));
+        }
+    }
+    Ok(value)
 }
 
 /// The policy as the agent serves it, or unreadable.
@@ -328,11 +344,33 @@ mod tests {
     }
 
     #[test]
-    fn the_policy_reads_its_bound_and_extensions_once_each() {
+    fn the_window_reads_the_agents_policy_unchanged() {
+        let served = json!({"max_file_bytes": 10, "max_files_per_conversation": 200,
+            "max_total_bytes_per_conversation": 1_000,
+            "formats": [{"media_type": "application/pdf", "extensions": [".pdf"]}]});
+        assert_eq!(served_policy(served.clone()).unwrap(), served);
+        for bound in [
+            "max_files_per_conversation",
+            "max_total_bytes_per_conversation",
+        ] {
+            let mut missing = served.clone();
+            missing.as_object_mut().unwrap().remove(bound);
+            assert_eq!(
+                served_policy(missing).unwrap_err().code,
+                "agent_gateway_unreadable",
+                "{bound}"
+            );
+        }
+        let mut flat = served.clone();
+        flat["formats"] = json!([]);
         assert_eq!(
-            serde_json::to_value(policy()).unwrap(),
-            json!({ "max_file_bytes": 10, "extensions": ["pdf", "txt"] })
+            served_policy(flat).unwrap_err().code,
+            "agent_gateway_unreadable"
         );
+    }
+
+    #[test]
+    fn the_policy_reads_its_bound_and_extensions_once_each() {
         assert_eq!(
             policy(),
             Policy {
