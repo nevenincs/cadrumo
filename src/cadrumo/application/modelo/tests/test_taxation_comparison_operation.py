@@ -364,6 +364,8 @@ def test_executor_passes_exact_bucket_and_owner_authority_and_stores_closed_proj
         f"a difference of 550.00{euro}."
     )
     assert "two separate returns" in projection.individual_branch_caveat
+    assert projection.conjunta_resultado_words == f"900.00{euro}"
+    assert projection.individual_resultado_words == f"1,450.00{euro}"
     assert set(ModeloTaxationComparisonProjection.model_fields) == {
         "result_version",
         "profile_id",
@@ -380,6 +382,10 @@ def test_executor_passes_exact_bucket_and_owner_authority_and_stores_closed_proj
         "recommendation_reason",
         "recommendation_reason_words",
         "words_language",
+        "conjunta_cuota_resultante_words",
+        "individual_cuota_resultante_words",
+        "conjunta_resultado_words",
+        "individual_resultado_words",
         "individual_branch_single_earner_only",
         "individual_branch_caveat",
     }
@@ -550,6 +556,14 @@ def test_projection_rejects_non_finite_amount_and_unmodeled_scope() -> None:
                 _comparison(), profile_id=_PROFILE, work_unit_id=_unit().work_unit_id
             ).model_dump()
             | {"recommendation_reason": TaxationRecommendationReason.INDIVIDUAL_LOWER_RESULT}
+        )
+
+    with pytest.raises(ValidationError, match="conjunta_resultado_words does not say conjunta_resultado"):
+        ModeloTaxationComparisonProjection.model_validate(
+            ModeloTaxationComparisonProjection.from_comparison(
+                _comparison(), profile_id=_PROFILE, work_unit_id=_unit().work_unit_id
+            ).model_dump()
+            | {"conjunta_resultado_words": "1.00"}
         )
 
     unsupported = _comparison().model_copy(update={"modelo": "303"})

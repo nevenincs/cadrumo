@@ -52,6 +52,7 @@ from .taxation_comparison import (
 )
 from .taxation_comparison_ports import TaxationComparisonPortsFactory
 from .taxation_comparison_words import individual_branch_caveat_words, recommendation_reason_words
+from .value_presentation import money_words
 
 MODELO_TAXATION_COMPARISON_OPERATION_DEFINITION_ID = "modelo.work.compare_taxation"
 _WorkUnitId = Annotated[str, Field(pattern=r"^(?:[0-9a-f]{12}|[0-9a-f]{64})$")]
@@ -72,6 +73,15 @@ class ModeloTaxationComparisonRequest(CredentialFreeOperationRequest):
 
     profile_id: UUID
     work_unit_id: _WorkUnitId
+
+
+_WORDED_AMOUNTS: Final[tuple[str, ...]] = (
+    "conjunta_cuota_resultante",
+    "individual_cuota_resultante",
+    "conjunta_resultado",
+    "individual_resultado",
+)
+"""The amounts the comparison also serves in words."""
 
 
 class ModeloTaxationComparisonProjection(BaseModel):
@@ -101,6 +111,11 @@ class ModeloTaxationComparisonProjection(BaseModel):
     recommendation_reason: TaxationRecommendationReason
     recommendation_reason_words: Annotated[str, Field(min_length=1, max_length=512)]
     words_language: OutputLanguage
+    #: Each result amount written as a box writes money, in ``words_language``.
+    conjunta_cuota_resultante_words: Annotated[str, Field(min_length=1, max_length=128)]
+    individual_cuota_resultante_words: Annotated[str, Field(min_length=1, max_length=128)]
+    conjunta_resultado_words: Annotated[str, Field(min_length=1, max_length=128)]
+    individual_resultado_words: Annotated[str, Field(min_length=1, max_length=128)]
     individual_branch_single_earner_only: Literal[True]
     individual_branch_caveat: Annotated[str, Field(min_length=1, max_length=1_024)]
 
@@ -126,6 +141,13 @@ class ModeloTaxationComparisonProjection(BaseModel):
     def _reason_matches_recommendation(self) -> ModeloTaxationComparisonProjection:
         if _REASON_OF_RECOMMENDATION[self.recommendation] is not self.recommendation_reason:
             raise ValueError("taxation comparison reason does not belong to its recommendation")
+        return self
+
+    @model_validator(mode="after")
+    def _amount_words_say_the_amounts(self) -> ModeloTaxationComparisonProjection:
+        for name in _WORDED_AMOUNTS:
+            if getattr(self, f"{name}_words") != money_words(getattr(self, name), self.words_language):
+                raise ValueError(f"taxation comparison {name}_words does not say {name}")
         return self
 
     @classmethod
@@ -160,6 +182,10 @@ class ModeloTaxationComparisonProjection(BaseModel):
                 language=language,
             ),
             words_language=language,
+            conjunta_cuota_resultante_words=money_words(comparison.conjunta_cuota_resultante, language),
+            individual_cuota_resultante_words=money_words(comparison.individual_cuota_resultante, language),
+            conjunta_resultado_words=money_words(comparison.conjunta_resultado, language),
+            individual_resultado_words=money_words(comparison.individual_resultado, language),
             individual_branch_single_earner_only=True,
             individual_branch_caveat=individual_branch_caveat_words(language),
         )
