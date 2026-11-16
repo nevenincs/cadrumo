@@ -1,11 +1,8 @@
 import { useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Icon } from "@/components/ui/icon";
-import type {
-  LedgerPort,
-  OutputLanguage,
-  PublicDecimal,
-} from "../../../shell/ledger";
+import type { LedgerPort, PublicDecimal } from "../../../shell/ledger";
+import type { OutputLanguage } from "../../../shell/ledgerClassificationContract";
 import type { AssetKind } from "../../../shell/ledgerSetup";
 import { useStrings } from "../../../shell/strings";
 import { formatAmount } from "../../../shared/numbers";

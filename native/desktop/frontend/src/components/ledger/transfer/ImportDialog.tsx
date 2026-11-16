@@ -16,9 +16,9 @@ import type {
   FilePick,
   FilePurpose,
   LedgerPort,
-  LedgerProvider,
   PickedFile,
 } from "../../../shell/ledger";
+import type { LedgerProviderID } from "../../../shell/ledgerTransferContract";
 import type {
   InvoiceKind,
   LedgerTransactionProjection,
@@ -161,7 +161,7 @@ export function ImportDialog({
   const [over, setOver] = useState(false);
   const [picking, setPicking] = useState(false);
   const [pickFailed, setPickFailed] = useState(false);
-  const [provider, setProvider] = useState<LedgerProvider>("auto");
+  const [provider, setProvider] = useState<LedgerProviderID>("auto");
   const [onlyPeriod, setOnlyPeriod] = useState<LedgerPeriod | null>(null);
   const [verify, setVerify] = useState(true);
   const [bookKind, setBookKind] = useState<InvoiceKind | null>(null);

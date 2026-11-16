@@ -5,7 +5,7 @@
 // as a ledger that did not answer. A test in the owning Python package holds
 // every recorded answer equal to the live one and records new questions.
 
-import type { OutputLanguage } from "../shell/ledger";
+import type { OutputLanguage } from "../shell/ledgerClassificationContract";
 import type {
   LedgerStagedCheckRequest,
   LedgerStagedCheckResult,

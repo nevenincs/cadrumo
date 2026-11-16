@@ -21,9 +21,9 @@ import { formatPercent } from "../../../shared/numbers";
 import { facts } from "../../../shell/compose";
 import type { CatalogueInvoiceSnapshot } from "../../../shell/ledgerInvoiceContract";
 import type { LedgerPort } from "../../../shell/ledger";
-import type { OutputLanguage } from "../../../shell/ledger";
+import type { OutputLanguage } from "../../../shell/ledgerClassificationContract";
 import type { ProrrataListedEntryProjection } from "../../../shell/ledgerProrrataContract";
-import type { CapitalGood } from "../../../shell/ledgerRegisterOperations";
+import type { BienInversionRecordProjection } from "../../../shell/ledgerCapitalGoodsContract";
 import type { LedgerEntryOptionsResult } from "../../../shell/ledgerSetup";
 import {
   NO_VOCABULARY,
@@ -105,7 +105,7 @@ type Held = {
   /** The references the activity assets state; null likewise. */
   assetReferences: LedgerKnownValuesProjection["asset_references"] | null;
   /** The capital goods register; null likewise. */
-  capitalGoods: readonly CapitalGood[] | null;
+  capitalGoods: readonly BienInversionRecordProjection[] | null;
   /** The prorrata register; null likewise. */
   prorrata: readonly ProrrataListedEntryProjection[] | null;
   want(kind?: SuggestionKind): void;

@@ -26,11 +26,13 @@ import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
 import {
   ledgerFailure,
-  type LedgerExportFormat,
-  type LedgerExportResult,
   type LedgerPort,
   type PickedFile,
 } from "../../../shell/ledger";
+import type {
+  ExportSerializationFormat,
+  LedgerExportProjection,
+} from "../../../shell/ledgerTransferContract";
 import { publicPeriod, type LedgerPeriod } from "../../../shell/ledgerGrammar";
 import { periodBounds, usePeriods } from "../../../shell/ledgerPeriods";
 import {
@@ -104,7 +106,7 @@ function periodCounts(
 type Sent =
   | { kind: "idle" }
   | { kind: "sending" }
-  | { kind: "done"; result: LedgerExportResult }
+  | { kind: "done"; result: LedgerExportProjection }
   | { kind: "refused"; reason: string }
   /** Sent and not seen to settle: the file may have been written. */
   | { kind: "unknown" };
@@ -138,8 +140,8 @@ export function ExportDialog({
   years: readonly number[] | null;
   fallbackYear: number;
   /** The format chosen last time, kept as a presentation preference. */
-  format: LedgerExportFormat;
-  onFormat(format: LedgerExportFormat): void;
+  format: string;
+  onFormat(format: ExportSerializationFormat): void;
   /** How many changes are staged and not saved. */
   staged: number;
   /** Opens the review of the staged changes, where the page has one. */
@@ -160,11 +162,11 @@ export function ExportDialog({
   const count = (value: number) => formatCount(locale, value);
   // The formats are those the ledger serves; the last one chosen holds only
   // while it is still served.
-  const formats = useVocabulary().exportFormats;
-  const [chosenFormat, setFormatNow] = useState<LedgerExportFormat>(lastFormat);
-  const format = formats.includes(chosenFormat)
-    ? chosenFormat
-    : (formats[0] ?? "");
+  const formats = useVocabulary()
+    .exportFormats as readonly ExportSerializationFormat[];
+  const [chosenFormat, setFormatNow] = useState<string>(lastFormat);
+  const format: ExportSerializationFormat | "" =
+    formats.find((served) => served === chosenFormat) ?? formats[0] ?? "";
   const [period, setPeriodNow] = useState<LedgerPeriod | null>(pagePeriod);
   usePeriods({ years: period ? [period.year] : [] });
   const [inactive, setInactive] = useState(false);
@@ -200,7 +202,7 @@ export function ExportDialog({
     setTarget(file);
   };
   // The file was chosen for one format and one period's export.
-  const setFormat = (next: LedgerExportFormat) => {
+  const setFormat = (next: ExportSerializationFormat) => {
     if (sending.current || picking.current) return;
     if (next === format) return;
     destination(null);
@@ -351,7 +353,13 @@ export function ExportDialog({
     });
   };
   const send = async () => {
-    if (!target || pause.held !== null || sending.current || picking.current)
+    if (
+      !target ||
+      format === "" ||
+      pause.held !== null ||
+      sending.current ||
+      picking.current
+    )
       return;
     sending.current = true;
     setSent({ kind: "sending" });
@@ -524,7 +532,9 @@ export function ExportDialog({
               <SegmentedControl
                 aria-labelledby={`${ids}-format`}
                 value={format}
-                onValueChange={(next) => setFormat(next as LedgerExportFormat)}
+                onValueChange={(next) =>
+                  setFormat(next as ExportSerializationFormat)
+                }
               >
                 {formats.map((value) => (
                   <SegmentedControlItem key={value} value={value}>

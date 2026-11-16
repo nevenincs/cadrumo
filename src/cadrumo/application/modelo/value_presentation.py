@@ -303,6 +303,11 @@ def _format_percentage(value: object, *, shift: int, language: OutputLanguage) -
     return None if grouped is None else f"{grouped}{_PERCENT_SUFFIX}"
 
 
+def money_words(amount: Decimal | str, language: OutputLanguage) -> str:
+    """Write a served amount as a box writes money in ``language``, keeping its sign."""
+    return format_casilla_value(Decimal(amount), data_type="money", language=language)
+
+
 def absent_value_text(language: OutputLanguage) -> str:
     """Return the words that stand in for a value nobody supplied."""
     return _catalogue_text(VALUE_ABSENT_LOCALE_KEY, language)
@@ -321,5 +326,6 @@ __all__ = [
     "absent_value_text",
     "format_casilla_value",
     "group_decimal_text",
+    "money_words",
     "value_presentation_kind",
 ]

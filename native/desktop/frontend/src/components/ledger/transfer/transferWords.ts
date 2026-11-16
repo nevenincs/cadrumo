@@ -2,10 +2,10 @@
 // diagnostic and a provider are named, and what the save dialog suggests.
 
 import type {
-  LedgerExportFormat,
+  ExportSerializationFormat,
   LedgerImportDiagnosticMessage,
-  LedgerProvider,
-} from "../../../shell/ledger";
+  LedgerProviderID,
+} from "../../../shell/ledgerTransferContract";
 import type { LedgerPeriod } from "../../../shell/ledgerGrammar";
 import type { Translate } from "../../../shell/strings";
 
@@ -51,7 +51,7 @@ export const diagnosticText = (
 ) =>
   t(`desktop.ledger.import.diagnostic.${DIAGNOSTICS[message] ?? "unreadable"}`);
 
-export const providerName = (t: Translate, provider: LedgerProvider) =>
+export const providerName = (t: Translate, provider: LedgerProviderID) =>
   t(`desktop.ledger.import.provider.${provider.replace("-", "_")}`);
 
 /** The name the save dialog suggests: the ledger, its period and format,
@@ -59,7 +59,7 @@ export const providerName = (t: Translate, provider: LedgerProvider) =>
 export function exportFileName(
   t: Translate,
   period: LedgerPeriod | null,
-  format: LedgerExportFormat,
+  format: ExportSerializationFormat,
 ): string {
   const stem = t("desktop.ledger.export.file_stem");
   const when = period ? `-${period.year}-${period.code}` : "";

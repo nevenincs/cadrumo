@@ -7,7 +7,7 @@
 
 import { useCallback, useMemo, useState, type RefObject } from "react";
 import type { LedgerView } from "../../../shell/layout";
-import type { OutputLanguage } from "../../../shell/ledger";
+import type { OutputLanguage } from "../../../shell/ledgerClassificationContract";
 import type { LedgerWindowScope } from "../../../shell/ledgerWindow";
 import {
   DEFAULT_SORT,

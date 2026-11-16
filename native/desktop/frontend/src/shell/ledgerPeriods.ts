@@ -12,7 +12,8 @@
 // A read that fails stays unknown until the page is opened again.
 
 import { useEffect, useRef, useSyncExternalStore } from "react";
-import type { LedgerPort, PublicPeriod } from "./ledger";
+import type { LedgerPort } from "./ledger";
+import type { PublicPeriod } from "./ledgerInvoiceContract";
 import { parseIsoDate, type LedgerPeriod } from "./ledgerGrammar";
 import type {
   LedgerEntryOptionsRequest,

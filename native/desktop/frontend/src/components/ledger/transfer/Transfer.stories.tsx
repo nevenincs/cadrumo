@@ -8,7 +8,7 @@ import {
   useLedgerRead,
 } from "@/dev/LedgerStage";
 import type { LedgerShape } from "@/dev/ledgerFixture";
-import type { LedgerExportFormat } from "../../../shell/ledger";
+import type { ExportSerializationFormat } from "../../../shell/ledgerTransferContract";
 import type { LedgerPeriod } from "../../../shell/ledgerGrammar";
 import { translator } from "../../../shell/strings";
 import { ExportDialog } from "./ExportDialog";
@@ -28,7 +28,7 @@ const YEARS = STORY_YEARS.slice(-2);
 type ExportArgs = {
   shape?: LedgerShape;
   period?: LedgerPeriod | null;
-  format?: LedgerExportFormat;
+  format?: ExportSerializationFormat;
   staged?: number;
   selected?: number;
   locale: string;

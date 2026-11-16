@@ -156,49 +156,23 @@ class WorkbenchPage:
         return tuple(collected)
 
 
-def records_attention(
-    form: ModeloWorkForm, sections: tuple[ModeloFormSection, ...], *, recorded: bool, applies: bool
-) -> Mapping[str, AttentionCounts]:
+def records_attention(sections: tuple[ModeloFormSection, ...]) -> Mapping[str, AttentionCounts]:
     """What the last check found about the values of each section's tables of records, by section id.
 
-    A finding about a value every record of a table carries names no box, so
-    it stands for the section that holds the table: a section is not done
-    while one of its tables misses a value. As for boxes, nothing is asked of
-    a declaration recorded as filed or of a page that does not apply.
+    The form serves each section's count (``record_attention``); a finding
+    about a value every record of a table carries names no box, so it keeps
+    its section from being done. A limitation is counted with what is worth
+    checking, and anything else is something to do.
     """
-    asked = not recorded and applies
     counts: dict[str, AttentionCounts] = {}
     for section in sections:
-        columns = _record_columns(section)
-        if not columns:
-            continue
-        total = _section_record_attention(form, columns, asked=asked)
+        total = AttentionCounts()
+        for served in section.record_attention:
+            level = _RECORD_FINDING_LEVELS[served.level]
+            total = total + AttentionCounts(**{level: served.count, "pending": 0 if level == "check" else served.count})
         if total != AttentionCounts():
             counts[section.id] = total
     return MappingProxyType(counts)
-
-
-def _record_columns(section: ModeloFormSection) -> set[str]:
-    return {
-        casilla_id
-        for block in section.blocks
-        if isinstance(block, ModeloFormRepeatingBlock)
-        for casilla_id in block.column_casilla_ids
-        if casilla_id is not None
-    }
-
-
-def _section_record_attention(form: ModeloWorkForm, columns: set[str], *, asked: bool) -> AttentionCounts:
-    total = AttentionCounts()
-    for issue in form.issues:
-        casilla_id = issue.finding.casilla_id
-        if casilla_id is None or str(casilla_id) not in columns:
-            continue
-        level = _RECORD_FINDING_LEVELS.get(issue.attention)
-        if level is None or (level != "check" and not asked):
-            continue
-        total = total + AttentionCounts(**{level: 1, "pending": int(level != "check")})
-    return total
 
 
 def workbench_pages(form: ModeloWorkForm) -> tuple[WorkbenchPage, ...]:
@@ -213,7 +187,7 @@ def workbench_pages(form: ModeloWorkForm) -> tuple[WorkbenchPage, ...]:
             recorded=recorded,
             calculated=calculated,
             applies=page.applies is not False,
-            records=records_attention(form, page.sections, recorded=recorded, applies=page.applies is not False),
+            records=records_attention(page.sections),
         )
         for page in form.pages
     ]

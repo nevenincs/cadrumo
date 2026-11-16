@@ -534,6 +534,15 @@ export type ModeloFormPriorValueWithdrawal = {
 export type ModeloFormRateUnit = "fraction";
 
 /**
+ * How many of the last check's findings about a section's tables of records
+ * sit at one attention level.
+ */
+export type ModeloFormRecordAttention = {
+  level: ModeloFormAttention;
+  count: number;
+};
+
+/**
  * Which answer a source disagreement's line offers the operator, decided from
  * the resolutions held.
  */
@@ -932,6 +941,7 @@ export type PublicModeloFormField = {
   legal_refs: string[];
   also_appears_on: string[];
   standing: ModeloFormStanding;
+  attention_rank: number;
   edit_address: ModeloFormAddressV1;
   confirmable: boolean;
   held_zero: boolean;
@@ -1105,6 +1115,7 @@ export type PublicModeloFormSection = {
   blocks: PublicModeloFormBlock[];
   counts: ModeloFormCounts;
   applies: boolean | null;
+  record_attention: ModeloFormRecordAttention[];
 };
 
 /**

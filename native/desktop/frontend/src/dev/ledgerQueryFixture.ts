@@ -5,12 +5,9 @@
 import { recordedSpan } from "./periodRecording";
 import { SCENARIO_LEDGER_PAYMENTS } from "./assetsRegister";
 import { isClassification, isDirection } from "../shell/ledgerContract";
-import type {
-  JsonObject,
-  JsonValue,
-  OutputLanguage,
-  PublicPeriod,
-} from "../shell/ledger";
+import type { JsonObject, JsonValue } from "../shell/ledger";
+import type { OutputLanguage } from "../shell/ledgerClassificationContract";
+import type { PublicPeriod } from "../shell/ledgerInvoiceContract";
 import servedWords from "@fixtures/ledger-served-words/ledgerServedWords.json" with { type: "json" };
 import {
   type FixtureLedger,

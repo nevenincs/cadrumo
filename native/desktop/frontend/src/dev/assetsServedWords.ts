@@ -8,7 +8,7 @@
 // holds every recorded sentence equal to the backend's own and records the
 // questions the fixtures could not answer.
 
-import type { OutputLanguage } from "../shell/ledger";
+import type { OutputLanguage } from "../shell/ledgerClassificationContract";
 import type { ReasonFact } from "../shell/ledgerSetup";
 import recorded from "@fixtures/assets-served-words/assetsServedWords.json" with { type: "json" };
 

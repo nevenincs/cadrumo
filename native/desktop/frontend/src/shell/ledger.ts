@@ -149,23 +149,14 @@ import type {
   LedgerResetRequest,
   LedgerResetResult,
 } from "./ledgerSetup";
+import type { WithholdingRecordRequest } from "./ledgerRegisterOperations";
+import type { LedgerCapitalGoodsContracts } from "./ledgerCapitalGoodsContract";
+import type { LedgerOwnAccountContracts } from "./ledgerOwnAccountContract";
 import type {
-  CapitalGoodDeclareRequest,
-  CapitalGoodDeclareResult,
-  CapitalGoodsListResult,
-  LedgerOwnAccountRequest,
-  LedgerOwnAccountResult,
-  WithholdingAbsenceListRequest,
-  WithholdingAbsenceListResult,
-  WithholdingAbsenceResult,
-  WithholdingAttestRequest,
-  WithholdingListRequest,
-  WithholdingListResult,
-  WithholdingMutationResult,
-  WithholdingRecordRequest,
-  WithholdingRemoveRequest,
-  WithholdingWithdrawRequest,
-} from "./ledgerRegisterOperations";
+  ExportSerializationFormat,
+  LedgerTransferContracts,
+} from "./ledgerTransferContract";
+import type { LedgerWithholdingContracts } from "./ledgerWithholdingContract";
 import type {
   LedgerCounterpartyRequest,
   LedgerCounterpartyResult,
@@ -667,130 +658,10 @@ export type LedgerDropSignal =
 // Field names are the registered Python contracts' own. A request omits the
 // profile, which the host fills.
 
-export type PublicPeriod = { filing_year: number; code: string };
-
 export type PublicDecimal = { decimal: string };
 
-export type OutputLanguage = "es" | "en" | "ca" | "hu";
-
-/** A statement format as `ledger.entry-options` serves it; the ledger refuses
- * one it does not parse. */
-export type LedgerProvider = string;
-
-/** A bank statement import. Preview with `dry_run`, then apply naming the
- * previewed files' digests in `expected_source_sha256`: a file that changed
- * since the preview is refused. */
-export type LedgerImportRequest = {
-  files: FileToken[];
-  provider: LedgerProvider;
-  dry_run?: boolean;
-  verify?: boolean;
-  verify_source?: FileToken | null;
-  period?: PublicPeriod | null;
-  own_account_id?: string | null;
-  expected_source_sha256?: string[] | null;
-};
-
-export type LedgerTransactionRef = {
-  bucket_id: string;
-  transaction_id: string;
-};
-
-export type LedgerImportRefusalCode =
-  | "transaction_validation"
-  | "own_account_mismatch"
-  | "result_limit"
-  | "source_changed"
-  | "empty_directory"
-  | "file_limit"
-  /** Only the local AI reads this file and it could not be asked; the
-   * file's verdict names its setup when setting it up lets the file be
-   * read. */
-  | "reader_unavailable";
-
-export type LedgerImportDiagnosticKind =
-  "original-file" | "gap" | "duplicate" | "parser";
-
-/** The translation keys a diagnostic names, from the product's closed set. */
-export type LedgerImportDiagnosticMessage =
-  | "transactions.import.message_185962"
-  | "transactions.import.all_rows_already_in_ledger"
-  | "transactions.import.some_rows_already_in_ledger"
-  | "transactions.import.batch_id_collision"
-  | "transactions.import.message_053465"
-  | "transactions.import.message_829073"
-  | "transactions.import.verified"
-  | "transactions.import.unreadable";
-
-/** One import's outcome over every file it planned, without paths or
- * provider prose. A likely duplicate is imported and listed, never skipped;
- * `skipped` rows were already in the ledger. Each planned file's digest is
- * named by its position in the plan, for an apply to bind to. */
-export type LedgerImportResult = {
-  profile_id: string;
-  rows: number;
-  imported: number;
-  skipped: number;
-  likely_duplicates: number;
-  dry_run: boolean;
-  verify: boolean;
-  period: PublicPeriod | null;
-  bucket_id: string;
-  /** Set where one file's rows were imported; a request of several files
-   * that each import has no single batch. */
-  import_batch_id: string | null;
-  bucket_event_ids: string[];
-  imported_transaction_refs: LedgerTransactionRef[];
-  skipped_transaction_refs: LedgerTransactionRef[];
-  likely_duplicate_transaction_refs: LedgerTransactionRef[];
-  validations: {
-    valid: boolean;
-    warning_count: number;
-    encoding: string | null;
-  }[];
-  sources: { requested: boolean; sha256: string | null }[];
-  diagnostics: {
-    kind: LedgerImportDiagnosticKind;
-    severity: "info" | "warning" | "error";
-    message: LedgerImportDiagnosticMessage;
-    affected_transaction_ids: string[];
-  }[];
-  refused_files: {
-    file_name: string;
-    reason_code: LedgerImportRefusalCode;
-  }[];
-  source_digests: { file_index: number; sha256: string }[];
-};
-
-/** An export serialisation as `ledger.entry-options` serves it. */
+/** An export format as the host's save dialog command names it. */
 export type LedgerExportFormat = string;
-
-/** An export replaces the file the person chose in the save dialog, for
- * the same format. */
-export type LedgerExportRequest = {
-  output_path: FileToken;
-  export_format?: LedgerExportFormat;
-  include_inactive?: boolean;
-  period?: PublicPeriod | null;
-  actor?: string | null;
-};
-
-export type LedgerExportResult = {
-  profile_id: string;
-  bucket_id: string;
-  export_id: string;
-  export_format: LedgerExportFormat;
-  media_type: string;
-  filename_extension: string;
-  row_count: number;
-  byte_size: number;
-  sha256: string;
-  fieldnames: string[];
-  rows: Record<string, string>[];
-  bucket_event_ids: string[];
-  /** The file's name; the host keeps where it is. */
-  output_path: string;
-};
 
 export interface LedgerRequests {
   "ledger.known-values": Omit<
@@ -830,8 +701,14 @@ export interface LedgerRequests {
     LedgerReadContracts["ledger.preflight"]["request"],
     "profile_id"
   >;
-  "ledger.import": LedgerImportRequest;
-  "ledger.export": LedgerExportRequest;
+  "ledger.import": Omit<
+    LedgerTransferContracts["ledger.import"]["request"],
+    "profile_id"
+  >;
+  "ledger.export": Omit<
+    LedgerTransferContracts["ledger.export"]["request"],
+    "profile_id"
+  >;
   "ledger.invoice.import": InvoiceImportRequest;
   "ledger.evidence.batch": EvidenceBatchRequest;
   "ledger.evidence.add": EvidenceAddRequest;
@@ -873,7 +750,10 @@ export interface LedgerRequests {
   "ledger.ratios.unset": LedgerRatiosUnsetRequest;
   "ledger.counterparty": LedgerCounterpartyRequest;
   "ledger.llm-diagnostics": LedgerLlmDiagnosticsRequest;
-  "ledger.own_account": LedgerOwnAccountRequest;
+  "ledger.own_account": Omit<
+    LedgerOwnAccountContracts["ledger.own_account"]["request"],
+    "profile_id" | OwnAccountSecret
+  >;
   "ledger.prorrata.list": Omit<
     LedgerProrrataContracts["ledger.prorrata.list"]["request"],
     "profile_id"
@@ -914,14 +794,35 @@ export interface LedgerRequests {
     LedgerProrrataContracts["ledger.prorrata.remove_gross"]["request"],
     "profile_id"
   >;
-  "ledger.retencion_soportada.list": WithholdingListRequest;
-  "ledger.retencion_soportada.list_absences": WithholdingAbsenceListRequest;
+  "ledger.retencion_soportada.list": Omit<
+    LedgerWithholdingContracts["ledger.retencion_soportada.list"]["request"],
+    "profile_id"
+  >;
+  "ledger.retencion_soportada.list_absences": Omit<
+    LedgerWithholdingContracts["ledger.retencion_soportada.list_absences"]["request"],
+    "profile_id"
+  >;
   "ledger.retencion_soportada.record": WithholdingRecordRequest;
-  "ledger.retencion_soportada.remove": WithholdingRemoveRequest;
-  "ledger.retencion_soportada.attest_absence": WithholdingAttestRequest;
-  "ledger.retencion_soportada.withdraw_absence": WithholdingWithdrawRequest;
-  "ledger.bienes_inversion.list": Record<string, never>;
-  "ledger.bienes_inversion.declare": CapitalGoodDeclareRequest;
+  "ledger.retencion_soportada.remove": Omit<
+    LedgerWithholdingContracts["ledger.retencion_soportada.remove"]["request"],
+    "profile_id"
+  >;
+  "ledger.retencion_soportada.attest_absence": Omit<
+    LedgerWithholdingContracts["ledger.retencion_soportada.attest_absence"]["request"],
+    "profile_id"
+  >;
+  "ledger.retencion_soportada.withdraw_absence": Omit<
+    LedgerWithholdingContracts["ledger.retencion_soportada.withdraw_absence"]["request"],
+    "profile_id"
+  >;
+  "ledger.bienes_inversion.list": Omit<
+    LedgerCapitalGoodsContracts["ledger.bienes_inversion.list"]["request"],
+    "profile_id"
+  >;
+  "ledger.bienes_inversion.declare": Omit<
+    LedgerCapitalGoodsContracts["ledger.bienes_inversion.declare"]["request"],
+    "profile_id"
+  >;
   "ledger.inventory.list": Record<string, never>;
   "ledger.inventory.create": InventoryCreateRequest;
   "ledger.inventory.movement.add": InventoryMovementAddRequest;
@@ -979,8 +880,8 @@ export interface LedgerResults {
   "ledger.invoice.attach_document": InvoiceDocumentAttachResult;
   "ledger.status": LedgerReadContracts["ledger.status"]["result"];
   "ledger.preflight": LedgerReadContracts["ledger.preflight"]["result"];
-  "ledger.import": LedgerImportResult;
-  "ledger.export": LedgerExportResult;
+  "ledger.import": LedgerTransferContracts["ledger.import"]["result"];
+  "ledger.export": LedgerTransferContracts["ledger.export"]["result"];
   "ledger.invoice.import": InvoiceImportResult;
   "ledger.evidence.batch": EvidenceBatchResult;
   "ledger.evidence.add": EvidenceRecordResult;
@@ -1021,7 +922,7 @@ export interface LedgerResults {
   "ledger.ratios.unset": LedgerRatiosUnsetResult;
   "ledger.counterparty": LedgerCounterpartyResult;
   "ledger.llm-diagnostics": LedgerLlmDiagnosticsResult;
-  "ledger.own_account": LedgerOwnAccountResult;
+  "ledger.own_account": LedgerOwnAccountContracts["ledger.own_account"]["result"];
   "ledger.prorrata.list": LedgerProrrataContracts["ledger.prorrata.list"]["result"];
   "ledger.prorrata.seed": LedgerProrrataContracts["ledger.prorrata.seed"]["result"];
   "ledger.prorrata.declare_sector": LedgerProrrataContracts["ledger.prorrata.declare_sector"]["result"];
@@ -1032,14 +933,14 @@ export interface LedgerResults {
   "ledger.prorrata.settle_sector": LedgerProrrataContracts["ledger.prorrata.settle_sector"]["result"];
   "ledger.prorrata.declare_gross": LedgerProrrataContracts["ledger.prorrata.declare_gross"]["result"];
   "ledger.prorrata.remove_gross": LedgerProrrataContracts["ledger.prorrata.remove_gross"]["result"];
-  "ledger.retencion_soportada.list": WithholdingListResult;
-  "ledger.retencion_soportada.list_absences": WithholdingAbsenceListResult;
-  "ledger.retencion_soportada.record": WithholdingMutationResult;
-  "ledger.retencion_soportada.remove": WithholdingMutationResult;
-  "ledger.retencion_soportada.attest_absence": WithholdingAbsenceResult;
-  "ledger.retencion_soportada.withdraw_absence": WithholdingAbsenceResult;
-  "ledger.bienes_inversion.list": CapitalGoodsListResult;
-  "ledger.bienes_inversion.declare": CapitalGoodDeclareResult;
+  "ledger.retencion_soportada.list": LedgerWithholdingContracts["ledger.retencion_soportada.list"]["result"];
+  "ledger.retencion_soportada.list_absences": LedgerWithholdingContracts["ledger.retencion_soportada.list_absences"]["result"];
+  "ledger.retencion_soportada.record": LedgerWithholdingContracts["ledger.retencion_soportada.record"]["result"];
+  "ledger.retencion_soportada.remove": LedgerWithholdingContracts["ledger.retencion_soportada.remove"]["result"];
+  "ledger.retencion_soportada.attest_absence": LedgerWithholdingContracts["ledger.retencion_soportada.attest_absence"]["result"];
+  "ledger.retencion_soportada.withdraw_absence": LedgerWithholdingContracts["ledger.retencion_soportada.withdraw_absence"]["result"];
+  "ledger.bienes_inversion.list": LedgerCapitalGoodsContracts["ledger.bienes_inversion.list"]["result"];
+  "ledger.bienes_inversion.declare": LedgerCapitalGoodsContracts["ledger.bienes_inversion.declare"]["result"];
   "ledger.inventory.list": InventoryListResult;
   "ledger.inventory.create": InventoryCreateResult;
   "ledger.inventory.movement.add": InventoryMovementAddResult;
@@ -1081,21 +982,24 @@ export type LedgerRequest<D extends LedgerDefinitionId> =
 export type LedgerResult<D extends LedgerDefinitionId> =
   D extends keyof LedgerResults ? LedgerResults[D] : JsonObject;
 
+/** An own account's number and bank block: private input the host refuses
+ * in an ordinary request, so it travels only in `changeOwnAccount`'s bytes. */
+type OwnAccountSecret =
+  | "iban"
+  | "swift_bic"
+  | "bank_name"
+  | "bank_address"
+  | "bank_city"
+  | "bank_country_code";
+
+type OwnAccountRequest =
+  LedgerOwnAccountContracts["ledger.own_account"]["request"];
+
 /** An own account added or changed, with its number or bank block. */
-export type OwnAccountChange = {
-  action: "add" | "update";
-  own_account_id?: string;
-  label?: string;
-  holding?: string;
-  iban?: string;
-  swift_bic?: string;
-  bank_name?: string;
-  bank_address?: string;
-  bank_city?: string;
-  bank_country_code?: string;
-  currency?: string;
-  opened_on?: string;
-};
+export type OwnAccountChange = Omit<
+  OwnAccountRequest,
+  "profile_id" | "action" | "closed_on" | "role" | "modelo"
+> & { action: Extract<OwnAccountRequest["action"], "add" | "update"> };
 
 /** The one document an own account change sends, as UTF-8 bytes. */
 export function ownAccountChange(change: OwnAccountChange): Uint8Array {
@@ -1130,7 +1034,7 @@ export type LedgerPort = {
   ): Promise<FilePicks>;
   /** Opens the native save dialog for an export in `format`. */
   saveFile(
-    format: LedgerExportFormat,
+    format: ExportSerializationFormat,
     filterLabel: string,
     suggestedName?: string,
   ): Promise<FilePicks>;

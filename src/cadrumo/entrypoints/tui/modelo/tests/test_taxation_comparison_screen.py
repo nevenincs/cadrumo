@@ -30,6 +30,7 @@ from .....application.modelo.taxation_comparison_words import (
     individual_branch_caveat_words,
     recommendation_reason_words,
 )
+from .....application.modelo.value_presentation import money_words
 from .....core.config import override_settings
 from .....core.errors.hierarchy import CadrumoError
 from .....core.external_constants import OutputLanguage
@@ -98,6 +99,10 @@ def _projection(
             language=language,
         ),
         words_language=language,
+        conjunta_cuota_resultante_words=money_words(joint_tax, language),
+        individual_cuota_resultante_words=money_words(individual_tax, language),
+        conjunta_resultado_words=money_words(joint, language),
+        individual_resultado_words=money_words(individual, language),
         individual_branch_single_earner_only=True,
         individual_branch_caveat=individual_branch_caveat_words(language),
     )
