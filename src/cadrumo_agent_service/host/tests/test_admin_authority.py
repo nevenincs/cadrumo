@@ -15,6 +15,7 @@ from cadrumo_client.contracts.deadline_budget import TimeoutDeadline
 from ...admin import AdminRequest, AdminServer
 from ...contracts import ServiceStartupFrame
 from ...gateway_credentials import GatewayCredentials
+from ...providers.application.tests.served_catalog_documents import served_catalog
 from ...providers.domain.record import LocalEngine, LocalPlacement
 from ..controller import AgentGenerations, ResolvedAgentCredentials
 from ..credential_frame import build_credential_frame, wipe
@@ -31,6 +32,10 @@ class _CredentialSource:
         return AgentGenerations("synthetic-session", "synthetic-settings")
 
 
+_CATALOG = served_catalog()
+"""One catalog answer as the service relays it, the same document asked for and expected."""
+
+
 class _AdminRecorder:
     def __init__(self) -> None:
         self.actions: list[str] = []
@@ -43,7 +48,8 @@ class _AdminRecorder:
         self.metadata = metadata
         if action == "set":
             assert secret == bytearray(b"synthetic-provider-secret")
-        return {"kind": "served", "action": action}
+        # A catalog answer is relayed only when it is the catalog the agent's schema states.
+        return _CATALOG if action == "catalog" else {"kind": "served", "action": action}
 
 
 def _startup(**fields: object) -> ServiceStartupFrame:
@@ -126,7 +132,7 @@ def test_gateway_frame_secret_is_refused_and_parent_admin_secret_dispatches(acti
             assert read_frame(stream) == {
                 "version": 1,
                 "request_id": request["request_id"],
-                "result": {"kind": "served", "action": action},
+                "result": _CATALOG if action == "catalog" else {"kind": "served", "action": action},
             }
         assert target.actions == [action]
         if action == "local_engine_choose":

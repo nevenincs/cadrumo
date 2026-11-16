@@ -157,7 +157,7 @@ test("the stored model lists are not asked for while the agent starts, and are r
   // put on its list, and the picker leaves it out. Lists left unread would
   // offer it.
   const picker = await openModelPicker(target);
-  await pickWay(target, picker, "local/api");
+  await pickWay(target, picker, "zai/api");
   expect(await offeredModels(picker)).toEqual([
     "synthetic-text:1",
     "synthetic-vision:1",
@@ -251,11 +251,11 @@ test("a service that stays busy is asked again until it answers, and a person's 
     name: label("desktop.providers.title"),
   });
   await providers
-    .locator('li[data-provider="local"] > details')
+    .locator('li[data-provider="zai"] > details')
     .evaluate((node) => ((node as HTMLDetailsElement).open = true));
   const asked = await catalogReads(target);
   await providers
-    .locator('li[data-provider="local"]')
+    .locator('li[data-provider="zai"]')
     .getByRole("alert")
     .filter({ hasText: label("desktop.providers.load_failed") })
     .getByRole("button", { name: label("desktop.agent.retry"), exact: true })

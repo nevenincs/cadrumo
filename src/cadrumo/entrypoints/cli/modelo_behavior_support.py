@@ -10,6 +10,9 @@ from typing import TYPE_CHECKING
 
 import typer
 
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
+
+from ...application.modelo.period_admission import ModeloPeriodAdmission, admit_modelo_period
 from ...application.modelo.registry_discovery import declared_modelo_period_tokens
 from ...application.modelo.work_address_errors import ModeloWorkPeriodTokenError
 from ...application.modelo.work_addressing import ModeloWorkAddress, modelo_work_address_from_operator_target
@@ -21,7 +24,6 @@ from ...core.period import Period, PeriodError
 from .common import no_active_profile_refusal
 from .modelo_cli_support import (
     bad_parameter_from_localized_context,
-    unsupported_local_work_period_refusal,
     validate_work_unit_selector,
 )
 
@@ -115,12 +117,32 @@ def resolve_year_period(year: int, period: str, *, modelo: str | None = None) ->
     ``modelo`` is supplied the error instead explains the composition
     and enumerates the registry-declared period tokens for that modelo.
     """
+    admission = _period_admission(modelo, year, period)
+    if admission is None:
+        try:
+            return Period.from_year_and_code(year, period.strip())
+        except PeriodError as exc:
+            raise typer.BadParameter(_period_token_error(year, period, modelo, fallback=str(exc))) from exc
+    if admission.period is not None:
+        return admission.period
+    if admission.refusal_locale_key is not None and modelo is not None:
+        raise CliRefusedBoundaryError(
+            translated_message=admission.refusal_locale_key, context={"modelo": modelo.strip()}
+        )
+    raise typer.BadParameter(_period_token_error(year, period, modelo))
+
+
+def _period_admission(modelo: str | None, year: int, period: str) -> ModeloPeriodAdmission | None:
+    """The registry's admission of ``period`` for ``modelo``, or ``None`` without a modelo or a readable registry."""
+    if modelo is None or not modelo.strip():
+        return None
+    from ...domain.calculations.registry.authority import bundled_indexed_authority
+
     try:
-        return Period.from_year_and_code(year, period.strip())
-    except PeriodError as exc:
-        if refusal := unsupported_local_work_period_refusal(modelo=modelo, token=period):
-            raise refusal from exc
-        raise typer.BadParameter(_period_token_error(year, period, modelo, fallback=str(exc))) from exc
+        with bundled_indexed_authority().operation() as operation:
+            return admit_modelo_period(modelo.strip(), year, period, operation=operation)
+    except CadrumoError:
+        return None
 
 
 def resolve_optional_cli_period(*, year: int | None, period: str | None, modelo: str | None) -> Period | None:

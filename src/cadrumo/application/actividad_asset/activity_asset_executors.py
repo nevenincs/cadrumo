@@ -19,7 +19,7 @@ from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.external_constants import OutputLanguage
 from ...core.operations import OperationEffect, profile_operation_subject
-from ...core.time.clock import now
+from ...core.time.clock import now, today_madrid
 from ...core.tipos_actividad import TipoActividad
 from ...domain.calculations.registry.actividad_asset_bindings import (
     resolve_activity_asset_schedule_authority,
@@ -238,7 +238,7 @@ def _activity_asset_operations(
             agrarian_activities=agrarian_activities,
             residence_territory=lambda on: resident_territory(bucket_id=bucket_id, operation=operation, as_of=on),
             claim_consumers=ports.claim_consumers,
-            today=lambda: now().date(),
+            today=today_madrid,
             schedule_authority=schedule_authority,
             class_labels=lambda regime, tax_year: resolve_activity_asset_class_labels(
                 operation,

@@ -13,6 +13,7 @@ from .adapters.agent_programs import AgentProgramRefusalError
 from .host.controller import AgentHostController, AgentHostError, AgentHostState
 from .host.launcher_protocol import launcher_refusal_for, runtime_launcher_refusal_for
 from .providers.application.local_model_list import serves_engine_lane
+from .providers.application.served_catalog import ModelDownload
 from .providers.domain.record import LocalEngine
 
 _LOGGER = get_logger("cadrumo_agent_service.service")
@@ -21,17 +22,17 @@ HOSTED_CERTIFICATION_CACHE_SECONDS = 5.0
 LIFECYCLE_ADMISSION_SECONDS = 2.0
 """How long a request waits for tree lifecycle work, well inside the desktop's shortest exchange bound."""
 ADMIN_READ_SECONDS = 3.0
-"""How long a catalog or status request waits for its work before it is told the service is busy.
+"""How long a catalog request waits for its work before it is told the service is busy.
 
 The work goes on, and a request in the next few seconds is served its result:
-a cold catalog or a provider's sign-in probe can take longer than an
+a cold catalog can take longer than an
 administration exchange may hold one of the service's few slots. The bound
 must exceed the agent's own bound on one provider probe plus the service's
 work around the read, or a cold catalog whose slowest probe runs to its bound
 is told busy every time; it stays well inside the desktop's six-second
 catalog exchange."""
 ADMIN_READ_FRESH_SECONDS = 5.0
-"""How long a finished catalog or status read is served to the requests that follow it."""
+"""How long a finished catalog read is served to the requests that follow it."""
 SERVED_CATALOG_READ_POLICY = TimeoutPolicy(timeout_seconds=6.0)
 """How long one read of the running agent's served catalog may take before it is refused as timed out.
 
@@ -110,10 +111,6 @@ def picker_lanes(
     }
 
 
-MODEL_DOWNLOAD_REQUIRED = "required"
-"""A local engine's lane: the person downloads models to this computer for it."""
-MODEL_DOWNLOAD_NONE = "none"
-"""A hosted lane: no model is downloaded, so the window offers no installation for it."""
 _ENGINE_LANES = frozenset(engine.value for engine in LocalEngine)
 
 
@@ -123,7 +120,7 @@ def _with_model_download(lane: object, provider_field: str) -> object:
         return lane
     fields = dict(cast(dict[str, object], lane))
     local = fields.get(provider_field) in _ENGINE_LANES
-    fields["model_download"] = MODEL_DOWNLOAD_REQUIRED if local else MODEL_DOWNLOAD_NONE
+    fields["model_download"] = (ModelDownload.REQUIRED if local else ModelDownload.NONE).value
     if not local and "catalog" in fields:
         fields["catalog"] = _without_installed(fields.get("catalog"))
     return fields

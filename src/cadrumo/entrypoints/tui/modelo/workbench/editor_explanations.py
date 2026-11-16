@@ -13,6 +13,7 @@ from .....application.modelo.work_form_field_vocabulary import (
     ModeloFormOrigin,
     ModeloFormValueSource,
 )
+from .....application.modelo.work_form_header import ModeloFormResultState
 from .....application.modelo.work_form_models import (
     ModeloFormField,
     ModeloWorkForm,
@@ -31,7 +32,7 @@ from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import tr
 
 if TYPE_CHECKING:
-    from .header import ResultView
+    from .header import HeaderResult
 
 _CHAIN_JOIN = " → "
 _OTHERS_NAMED = 3
@@ -132,29 +133,29 @@ def _label(form: ModeloWorkForm | None, step: ModeloHelpBoxV1) -> str | None:
     return None
 
 
+def _settles_calculated(form: ModeloWorkForm | None, step: ModeloHelpBoxV1) -> bool:
+    """Whether a saved calculation settles the declaration in the box ``step`` passes through."""
+    if form is None or form.calculation_revision_id is None:
+        return False
+    settling = form.result
+    return settling is not None and settling.casilla_id == step.casilla_id and settling.value is not None
+
+
 def _calculated_result_text(
     form: ModeloWorkForm | None,
     step: ModeloHelpBoxV1,
-    result: ResultView | None,
+    result: HeaderResult | None,
 ) -> str | None:
-    settling = None if form is None else form.result
-    calculated = (
-        form is not None
-        and settling is not None
-        and settling.casilla_id == step.casilla_id
-        and settling.value is not None
-        and form.calculation_revision_id is not None
-    )
-    if not calculated or result is None or result.failed:
+    if not _settles_calculated(form, step) or result is None or result.served.state is ModeloFormResultState.FAILED:
         return None
-    if result.settled is not None:
-        words, amount = result.settled
+    words, amount = result.served.words, result.served.amount_text
+    if words is not None and amount is not None:
         now = tr("workspace.modelo.editor.affects.now", amount=amount)
         return f"{step.box} {words} {now}"
     return f"{step.box} {result.short_text}"
 
 
-def _result_step(form: ModeloWorkForm | None, step: ModeloHelpBoxV1, result: ResultView | None) -> str:
+def _result_step(form: ModeloWorkForm | None, step: ModeloHelpBoxV1, result: HeaderResult | None) -> str:
     """The result box at the chain's end, with what the declaration settles now once calculated."""
     calculated = _calculated_result_text(form, step, result)
     if calculated is not None:
@@ -175,7 +176,7 @@ def _non_result_affects_text(card: ModeloCasillaHelpCardV1, reach: ModeloHelpRea
 def _reachable_affects_text(
     reach: ModeloHelpReachV1,
     form: ModeloWorkForm | None,
-    result: ResultView | None,
+    result: HeaderResult | None,
 ) -> str:
     steps = [step.box for step in reach.path]
     first = reach.path[0]
@@ -194,7 +195,7 @@ def affects_text(
     card: ModeloCasillaHelpCardV1 | None,
     form: ModeloWorkForm | None = None,
     *,
-    result: ResultView | None = None,
+    result: HeaderResult | None = None,
 ) -> str | None:
     """Say what a change reaches: the chain to the result or that it does not change it.
 

@@ -6,7 +6,7 @@ import { FIXTURE_CATALOG } from "@/dev/fixtures/agentCatalog";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { catalogChoices, offeredSelection } from "../../shell/agentCatalog";
-import type { AgentProviderCatalog } from "../../shell/agentSession";
+import type { ServedProviderCatalog } from "../../shell/agentCatalogContract";
 import { useStrings } from "../../shell/strings";
 import { AgentSettingsPopover } from "./AgentSettingsPopover";
 import { APPEARANCE_NOTE } from "./Composer.stories";
@@ -24,7 +24,7 @@ const DEEP: Record<string, string> = {
   ca: "Un model inventat que admet tots els esforços fins al màxim.",
   hu: "Egy kitalált modell, amely a legnagyobb erőfeszítésig minden szintet elfogad.",
 };
-const catalogIn = (locale: string | undefined): AgentProviderCatalog => ({
+const catalogIn = (locale: string | undefined): ServedProviderCatalog => ({
   ...FIXTURE_CATALOG,
   providers: (FIXTURE_CATALOG.providers ?? []).map((lane) => ({
     ...lane,
@@ -111,8 +111,8 @@ export const SecondLaneOfOneProvider: Story = {
   name: "Open, the second lane of a provider",
   args: {
     start: {
-      providerId: "beta",
-      wayId: "beta/cli",
+      providerId: "qwen",
+      wayId: "qwen/cli",
       modelId: "fixture-tiered",
       effort: "medium",
     },
@@ -124,8 +124,8 @@ export const NoEffortChosen: Story = {
   name: "Open, the provider's own effort",
   args: {
     start: {
-      providerId: "alpha",
-      wayId: "alpha/api",
+      providerId: "kimi",
+      wayId: "kimi/api",
       modelId: "fixture-deep",
       effort: undefined,
     },
@@ -137,8 +137,8 @@ export const ModelWithoutEfforts: Story = {
   name: "Open, model without efforts",
   args: {
     start: {
-      providerId: "alpha",
-      wayId: "alpha/api",
+      providerId: "kimi",
+      wayId: "kimi/api",
       modelId: "fixture-plain",
       effort: undefined,
     },
@@ -149,7 +149,7 @@ export const ModelWithoutEfforts: Story = {
 export const WrittenModel: Story = {
   name: "Open, a provider that lists no models",
   args: {
-    start: { providerId: "gateway", wayId: "gateway/cli", modelId: "" },
+    start: { providerId: "zhipu", wayId: "zhipu/cli", modelId: "" },
   },
   play: opened,
 };

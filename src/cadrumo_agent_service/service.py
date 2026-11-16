@@ -13,7 +13,6 @@ import httpx
 from cadrumo_client.contracts.deadline_budget import TimeoutDeadline
 
 from .adapters.agent_background_runs import BackgroundRunEndpoint
-from .adapters.provider_catalog_metadata import DECLARED_CATALOG_KIND
 from .contracts import HostedCertificationStatus
 from .host.controller import (
     AgentHostController,
@@ -24,6 +23,7 @@ from .host.controller import (
 from .host.credential_frame import wipe
 from .providers.application.model_runs import ModelRunService
 from .providers.application.ports import ProviderCatalogUnavailableError, ProviderCatalogUnavailableReason
+from .providers.application.served_catalog import DECLARED_CATALOG_KIND
 from .providers.domain.catalog import MAX_CATALOG_LANES
 from .providers.domain.record import LocalEngine
 from .service_scheduling import AgentServiceScheduling
@@ -251,9 +251,14 @@ class AgentService(AgentServiceScheduling):
         return self._model_runs
 
     def runtime_changed(self) -> None:
-        """Forget observed generations: a pushed frame may mean a new lease or a retired session."""
+        """Forget observed generations: a pushed frame may mean a new lease or a retired session.
+
+        The kept login reading stays: it is served only under the lease and
+        generations it was read under, which the next observation reads anew,
+        so a push that changed neither does not withdraw a reading still under way.
+        """
         self._store.invalidate_generations()
-        self._forget_reads()
+        self._catalog_read.forget()
 
     def observe(self) -> bool:
         """Revalidate exact generations: replace a superseded tree, or answer ``False`` for the caller to retire it."""

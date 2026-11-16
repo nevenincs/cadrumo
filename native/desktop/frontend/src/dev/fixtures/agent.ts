@@ -210,7 +210,7 @@ export const FIXTURE_CONVERSATIONS: AgentConversationRecord[] = [
 ];
 
 const ALPHA_API: AgentRanWith = {
-  provider: "alpha",
+  provider: "kimi",
   transport: "api",
   provider_display_name: "Example Alpha",
   model: "fixture-deep",

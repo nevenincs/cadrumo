@@ -22,11 +22,7 @@ from textual.message import Message
 from textual.widgets import DataTable, Static
 
 from ...application.modelo.declarations_list import observed_text
-from ...application.overview.calendar_models import (
-    OverviewAeatSubmissionState,
-    OverviewLocalFilingState,
-    OverviewPeriodState,
-)
+from ...application.overview.filing_status_words import filing_status_words
 from ...application.overview.home import (
     HomeAgendaEntry,
     HomeAvailability,
@@ -114,16 +110,6 @@ _DECLARATION_LOCALE_KEYS: Final = {
     HomeDeclarationState.FILED: "tui.home.declaration_state.filed",
     HomeDeclarationState.DISCARDED: "tui.home.declaration_state.discarded",
 }
-_AEAT_FILING_STATUS_LOCALE_KEYS: Final = {
-    OverviewAeatSubmissionState.SUBMITTED_OBSERVED: "tui.home.filing_status.submitted",
-    OverviewAeatSubmissionState.ACCEPTED: "tui.home.filing_status.accepted",
-    OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED: "tui.home.filing_status.receipt_verified",
-}
-_UNFILED_STATUS_LOCALE_KEYS: Final = {
-    OverviewPeriodState.DUE: "tui.home.filing_status.due",
-    OverviewPeriodState.LATE: "tui.home.filing_status.overdue",
-    OverviewPeriodState.UNKNOWN: "tui.home.filing_status.unknown",
-}
 _LINK_LABEL_LOCALE_KEYS: Final = {
     HomeLinkV1.DECLARATIONS: "tui.destination.declarations",
     HomeLinkV1.NEW_DECLARATION: "workspace.declarations.list.key.new",
@@ -163,8 +149,6 @@ _LINK_STATE_LOCALE_KEYS: Final = {
     WorkbenchDestinationAdmissionState.UNAVAILABLE: "tui.home.link_state.unavailable",
 }
 _LINK_ROW_PREFIX: Final = "link:"
-_IMPORTED_STATUS_LOCALE_KEY: Final = "tui.home.filing_status.imported"
-_MARKED_FILED_STATUS_LOCALE_KEY: Final = "tui.home.filing_status.marked_filed"
 
 
 def _has_copy(translation_key: str) -> bool:
@@ -275,26 +259,6 @@ def _declaration_cells(item: HomeDeclarationResume) -> tuple[str, str, str]:
     )
 
 
-def _filing_status_key(item: HomeAgendaEntry) -> str:
-    """Name the one status an agenda row shows.
-
-    AEAT evidence outranks the local record and the local record outranks the
-    deadline, so a row never repeats a claim a stronger source already settled.
-    A locally recorded filing still says AEAT has not confirmed it.
-    """
-    aeat_key = _AEAT_FILING_STATUS_LOCALE_KEYS.get(item.aeat_submission_state)
-    if aeat_key is not None:
-        return aeat_key
-    if item.local_filing_state is OverviewLocalFilingState.EXTERNAL_BASELINE_IMPORTED:
-        return _IMPORTED_STATUS_LOCALE_KEY
-    if (
-        item.local_filing_state is OverviewLocalFilingState.READY_TO_FILE
-        or item.period_state is OverviewPeriodState.FILED
-    ):
-        return _MARKED_FILED_STATUS_LOCALE_KEY
-    return _UNFILED_STATUS_LOCALE_KEYS[item.period_state]
-
-
 def _link_label(link: HomeLinkV1) -> str:
     """Name one link after the key that opens it."""
     return f"{_LINK_KEY_GLYPHS.get(link, ''):<3} {tr(_LINK_LABEL_LOCALE_KEYS[link])}"
@@ -314,9 +278,9 @@ def _link_cell(link: HomeLinkV1, state: WorkbenchDestinationAdmissionState) -> t
 
 def _agenda_cells(item: HomeAgendaEntry) -> tuple[str, str, str]:
     return (
-        item.due_on.strftime("%d/%m"),
-        f"M{item.modelo} {item.period.registry_token}",
-        tr(_filing_status_key(item)),
+        item.due_on_text,
+        f"M{item.modelo} {item.period_words}",
+        filing_status_words(item.filing_status, OutputLanguage(output_language())),
     )
 
 

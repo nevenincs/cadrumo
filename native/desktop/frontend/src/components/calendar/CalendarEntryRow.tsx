@@ -4,7 +4,7 @@ import { Icon } from "@/components/ui/icon";
 import { IconButton } from "@/components/ui/icon-button";
 import { deadlineDistance } from "@/shell/calendar";
 import { facts, labelled } from "@/shell/compose";
-import { daysBetween, isoDay as day } from "@/shared/dates";
+import { isoDay as day } from "@/shared/dates";
 import { dateFormats } from "@/shared/dateFormats";
 import { closeUnknown, entryKey } from "@/shell/calendarEntries";
 import { useStrings } from "@/shell/strings";
@@ -36,18 +36,16 @@ export const CalendarEntryRow = memo(function CalendarEntryRow({
   const earliest = unknown
     ? t("desktop.calendar.earliest_close", { date: short.format(closes) })
     : null;
-  // How far the binding date is from the day the product evaluated: the
-  // product's own count where it gives one.
-  const away =
-    entry.days_overdue !== null
-      ? -entry.days_overdue
-      : daysBetween(entry.evaluated_on, entry.adjusted_closes_on);
+  // How far the binding date is from the day the product evaluated, as the
+  // product counts it; it gives no count for a close it does not know.
+  const away = entry.days_until_close;
+  const said =
+    away === null ? null : deadlineDistance(away, entry.days_overdue !== null);
   // A filed obligation has no distance left to say.
-  const { value, unit } = deadlineDistance(away, entry.days_overdue !== null);
   const relative =
-    entry.user_state === "filed" || unknown
+    entry.user_state === "filed" || said === null
       ? null
-      : distance.format(value, unit);
+      : distance.format(said.value, said.unit);
   const name = t("desktop.calendar.modelo", { modelo: entry.modelo });
   const notes = [
     earliest,

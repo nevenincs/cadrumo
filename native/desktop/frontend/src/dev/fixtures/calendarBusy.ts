@@ -3,6 +3,7 @@ import {
   calendarEntry,
   calendarEvent,
   FIXTURE_CALENDAR,
+  servedCalendar,
   type EntryChange,
 } from "./calendar";
 import { fixtureDay, fixtureInstant, fixtureYear } from "@/dev/fixtureDates";
@@ -39,7 +40,7 @@ const moved = {
   shift_reason: "weekend",
 };
 
-export const BUSY_CALENDAR: FilingCalendar = {
+export const BUSY_CALENDAR: FilingCalendar = servedCalendar({
   ...FIXTURE_CALENDAR,
   range: { from_date: fixtureDay(11, 1), to_date: fixtureDay(4, 30, 1) },
   generated_at: `${BUSY_TODAY}T08:02:00Z`,
@@ -110,4 +111,4 @@ export const BUSY_CALENDAR: FilingCalendar = {
       { reference_id: `busy-message-${fixtureDay(1, 8, 1)}` },
     ),
   ],
-};
+});

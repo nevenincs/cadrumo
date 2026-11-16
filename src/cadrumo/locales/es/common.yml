@@ -7335,15 +7335,6 @@ tui:
       actions: sin acciones sugeridas
       agenda: sin próximas fechas de presentación
       declarations: sin declaraciones que retomar
-    filing_status:
-      accepted: Presentada, aceptada por la AEAT
-      due: Sin presentar
-      imported: Presentada por otra vía, importada
-      marked_filed: Marcada como presentada, sin confirmar por la AEAT
-      overdue: Vencida, sin presentar
-      receipt_verified: Presentada, justificante de la AEAT verificado
-      submitted: Presentada en la AEAT
-      unknown: Sin presentar, plazo desconocido
     heading:
       account: Cuenta
       actions: Próximas acciones
@@ -9999,6 +9990,7 @@ workspace:
         success: Se ha creado {address}. Aparecerá en Declaraciones cuando vuelvas
           allí.
       scope:
+        ahead: Aún abiertas
         all: Todas
         evidence_unknown: Estado en la AEAT desconocido
         filed: Registradas como presentadas

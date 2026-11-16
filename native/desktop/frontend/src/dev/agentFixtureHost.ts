@@ -34,8 +34,10 @@ import type {
 import {
   catalogsUnderEngine,
   FIXTURE_CATALOG,
+  fixtureCatalogRefusal,
   FIXTURE_DECLARED_CATALOG,
   withEngineHealth,
+  type FixtureCatalog,
   type FixtureEngineHealth,
   type FixtureModelPresence,
 } from "./fixtures/agentCatalog";
@@ -122,22 +124,6 @@ export type FixtureDocuments = "stored" | "none" | "unavailable" | "failed";
 /** Which of the local lane's models the made-up computer holds: none, as
  * before any setup, or all, as after every download. */
 export type FixtureLocalModels = "none" | "all";
-/** How the service answers the catalog: served, busy starting the agent
- * until the scenario publishes the agent's status, busy while the agent
- * starts and for a moment after the scenario publishes it ready, or starting
- * with only the agent's declared catalog until the scenario publishes it
- * ready, or served with the local lane alone, as on a computer where no
- * other provider is set up, or with the two local engines' lanes alone, or
- * with the local lane and one hosted provider's lane that is signed out. */
-export type FixtureCatalog =
-  | "served"
-  | "busy"
-  | "busy-past-ready"
-  | "declared"
-  | "unsupported"
-  | "local-only"
-  | "engines-only"
-  | "hosted-signed-out";
 
 /** What the made-up service offers to choose among for the local engine and
  * its placement, where not every engine and placement it knows: each list is
@@ -153,10 +139,10 @@ export type FixtureEngineChoices = {
 const BUSY_PAST_READY_MS = 1_000;
 
 /** The generic local lane, the one the "local-only" catalog serves alone. */
-const FIXTURE_LOCAL_LANE = "local_api";
+const FIXTURE_LOCAL_LANE = "zai_api";
 /** The hosted lane the "hosted-signed-out" catalog serves beside the local
  * lane: the fixture catalog holds it back as signed out. */
-const FIXTURE_HOSTED_SIGNED_OUT_LANE = "alpha_cli";
+const FIXTURE_HOSTED_SIGNED_OUT_LANE = "kimi_cli";
 /** The lanes whose model lists the made-up service keeps: every keyless lane
  * on this computer, the generic local lane and each engine's lane. */
 const FIXTURE_LISTED_LANES: readonly string[] = FIXTURE_SETTINGS_LANES.filter(
@@ -979,6 +965,8 @@ export function fixtureAgent({
       say("agentProviderCatalog");
       await check();
       if (catalogBusy) throw coded("agent_service_busy");
+      const refused = fixtureCatalogRefusal(catalog);
+      if (refused) throw refused;
       say("agentProviderCatalogResolved");
       // A lane turned off in the settings is not offered, as the service
       // leaves it out of the catalog it serves; nor is the keyless lane of a

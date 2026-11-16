@@ -759,6 +759,7 @@ def _declarations_workspace_registrations() -> tuple[FStringKeyRegistration, ...
     )
     from cadrumo.application.overview.calendar_models import (
         OverviewAeatSubmissionState,
+        OverviewCalendarScope,
         OverviewLocalFilingState,
         OverviewPeriodState,
     )
@@ -767,7 +768,6 @@ def _declarations_workspace_registrations() -> tuple[FStringKeyRegistration, ...
     from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
     from cadrumo.domain.modelos.filing_record import AeatConfirmationState, FilingDeclarationKind, ModeloRecordStatus
     from cadrumo.domain.modelos.work_unit import WorkUnitState
-    from cadrumo.entrypoints.tui.declarations.models import DeclarationsCalendarScopeV1
 
     def _values(enum: type[Enum]) -> tuple[str, ...]:
         return tuple(str(member.value) for member in enum)
@@ -853,9 +853,9 @@ def _declarations_workspace_registrations() -> tuple[FStringKeyRegistration, ...
             values=_values(CalculationRevisionState),
         ),
         FStringKeyRegistration(
-            description="workspace.declarations.calendar.scope.* (DeclarationsCalendarScopeV1)",
+            description="workspace.declarations.calendar.scope.* (all, then OverviewCalendarScope)",
             key_factory=lambda v: f"workspace.declarations.calendar.scope.{v}",
-            values=_values(DeclarationsCalendarScopeV1),
+            values=("all", *_values(OverviewCalendarScope)),
         ),
         FStringKeyRegistration(
             description="workspace.declarations.calendar.source.* (DeclarationsCalendarSource)",

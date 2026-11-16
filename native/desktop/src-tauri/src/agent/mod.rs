@@ -47,6 +47,9 @@ pub struct Refused {
     /// agent's refusal states it.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub context_tokens: Option<u32>,
+    /// The reference of the service's log line that says why, where it gives one.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub log_ref: Option<String>,
 }
 
 impl Refused {
@@ -55,6 +58,7 @@ impl Refused {
             code,
             needed_tokens: None,
             context_tokens: None,
+            log_ref: None,
         }
     }
 }
@@ -679,9 +683,34 @@ fn selection_refusal(
     }
 }
 
-/// Whether the service answered that it is still working on the request.
-fn catalog_busy(answer: &Value) -> bool {
-    answer["kind"] == "refused" && answer["code"] == "busy"
+/// The catalog the service relayed, or the refusal it answered under the code the
+/// column words. A catalog the agent served outside its pinned schema is refused as
+/// unavailable with the service log line's reference; the service still working on
+/// it answers busy and keeps the answer for the next read, which the column makes.
+fn catalog_answer(answer: Value) -> std::result::Result<Value, Refused> {
+    if answer["kind"] != "refused" {
+        return Ok(answer);
+    }
+    let code = match answer["code"].as_str() {
+        Some("catalog_unavailable") => "agent_catalog_unavailable",
+        _ => local_models::refusal(&answer).unwrap_or("agent_service_failed"),
+    };
+    Err(Refused {
+        log_ref: answer["log_ref"]
+            .as_str()
+            .filter(|reference| log_reference(reference))
+            .map(str::to_owned),
+        ..Refused::new(code.to_owned())
+    })
+}
+
+/// A log reference as the service mints one: a short token of hex digits and hyphens.
+fn log_reference(reference: &str) -> bool {
+    !reference.is_empty()
+        && reference.len() <= 64
+        && reference
+            .bytes()
+            .all(|b| b.is_ascii_hexdigit() || b == b'-')
 }
 
 fn refused<T>(code: &str) -> std::result::Result<T, Refused> {
@@ -739,12 +768,7 @@ async fn agent_provider_catalog<R: Runtime>(
         let catalog = host
             .administer(catalog_request(facts), None)
             .map_err(|error| host.refuse(admin_refusal(&error), error))?;
-        // The service still working on it answers busy and keeps the answer
-        // for the next read, which the column makes.
-        if catalog_busy(&catalog) {
-            return refused("agent_service_busy");
-        }
-        Ok(catalog)
+        catalog_answer(catalog)
     })
     .await
 }
@@ -1483,6 +1507,35 @@ async fn agent_attachment_policy(
 mod tests {
     use super::*;
     use cadrumo_application::error::application::{ApplicationError, ErrorCode, Operation};
+
+    #[test]
+    fn a_refused_catalog_crosses_as_a_refusal_never_as_a_catalog() {
+        let catalog = serde_json::json!({"kind": "catalog", "providers": []});
+        assert_eq!(catalog_answer(catalog.clone()), Ok(catalog));
+        let reference = "123e4567-e89b-42d3-a456-426614174000";
+        let departed = catalog_answer(serde_json::json!(
+            {"kind": "refused", "code": "catalog_unavailable", "log_ref": reference}
+        ))
+        .unwrap_err();
+        assert_eq!(departed.code, "agent_catalog_unavailable");
+        assert_eq!(departed.log_ref.as_deref(), Some(reference));
+        for (code, crossed) in [
+            ("busy", "agent_service_busy"),
+            ("signed_out", "agent_signed_out"),
+            ("service_stopping", "agent_service_not_ready"),
+            ("invented", "agent_service_failed"),
+        ] {
+            let refused =
+                catalog_answer(serde_json::json!({"kind": "refused", "code": code})).unwrap_err();
+            assert_eq!((refused.code.as_str(), refused.log_ref), (crossed, None));
+        }
+        // A reference that is not one the service mints is dropped, not relayed.
+        let odd = catalog_answer(serde_json::json!(
+            {"kind": "refused", "code": "catalog_unavailable", "log_ref": "../log <b>"}
+        ))
+        .unwrap_err();
+        assert_eq!(odd.log_ref, None);
+    }
 
     #[test]
     fn a_catalog_read_carries_the_local_ai_facts_only_where_they_fit() {

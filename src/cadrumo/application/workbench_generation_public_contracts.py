@@ -533,6 +533,9 @@ class PublicHomeAgendaEntry(BaseModel):
     period_state: OverviewPeriodState
     local_filing_state: OverviewLocalFilingState
     aeat_submission_state: OverviewAeatSubmissionState
+    due_on_text: str
+    period_words: str
+    words_language: OutputLanguage
     filing_status: OverviewFilingStatus
 
     @model_validator(mode="after")

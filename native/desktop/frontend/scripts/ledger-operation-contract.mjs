@@ -31,6 +31,7 @@ const outputs = {
   activityAssetRead: "src/shell/ledgerActivityAssetReadContract.ts",
   entry: "src/shell/ledgerEntryContract.ts",
   read: "src/shell/ledgerReadContract.ts",
+  prorrata: "src/shell/ledgerProrrataContract.ts",
 };
 
 const frontend = fileURLToPath(new URL("..", import.meta.url));

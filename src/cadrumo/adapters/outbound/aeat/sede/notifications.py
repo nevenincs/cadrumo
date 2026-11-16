@@ -46,7 +46,7 @@ from .....core.identity.digest import ContentDigest
 from .....core.logging import get_logger
 from .....core.models import STRICT_FROZEN_CONFIG
 from .....core.parsing.dates import parse_date
-from .....core.time.clock import now
+from .....core.time.clock import now, today_madrid
 from .....domain.calculations.registry.remote_state_guard import RemoteStateGuardPolicy
 from .....domain.calculations.registry.schema_base import EvidenceTier
 from ..browser.api_request_guard import GuardedApiRequests
@@ -690,7 +690,7 @@ async def fetch_notifications_query(
     """
     return await _fetch_and_parse(
         session,
-        url=notifications_query_url(today=today or now().date()),
+        url=notifications_query_url(today=today or today_madrid()),
         parser=parse_notifications_query,
         settings=settings,
     )

@@ -26,9 +26,9 @@ const laneOf = (way: string) => {
 };
 // The lane the column starts on, another it lists models for, and one it
 // holds back.
-const START = "alpha/api";
-const OTHER = "beta/cli";
-const HELD = "alpha/cli";
+const START = "kimi/api";
+const OTHER = "qwen/cli";
+const HELD = "kimi/cli";
 
 const escaped = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 

@@ -21,7 +21,7 @@ from .editor import (
     read_only_reason,
 )
 from .editor_explanations import affects_text
-from .header import ResultView, result_view
+from .header import HeaderResult, header_result
 from .ports import ModeloWorkbenchActionsV1, WorkbenchChangeKind
 from .screen_constants import (
     DOCKED_FROM,
@@ -60,10 +60,10 @@ class WorkbenchEditorMixin:
         panel = self._editor_panel(entry, actions, card, form, result, recorded, docked)
         self._show_editor(entry, panel, docked)
 
-    def _editor_result(self: ModeloWorkbenchScreen, form: ModeloWorkForm | None, recorded: bool) -> ResultView | None:
+    def _editor_result(self: ModeloWorkbenchScreen, form: ModeloWorkForm | None, recorded: bool) -> HeaderResult | None:
         if form is None:
             return None
-        return result_view(form, self._language, staged=len(self._session.changes), recorded=recorded)
+        return header_result(form, self._language, staged=len(self._session.changes), recorded=recorded)
 
     def _editor_panel(
         self: ModeloWorkbenchScreen,
@@ -71,7 +71,7 @@ class WorkbenchEditorMixin:
         actions: ModeloWorkbenchActionsV1,
         card: ModeloCasillaHelpCardV1 | None,
         form: ModeloWorkForm | None,
-        result: ResultView | None,
+        result: HeaderResult | None,
         recorded: bool,
         docked: bool,
     ) -> CasillaEditorPanel:

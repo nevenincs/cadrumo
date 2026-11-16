@@ -40,19 +40,19 @@ async function revisionOf(id: string, change: number): Promise<string> {
 
 /** The address a gateway lane is reached at unless the person gives one. */
 const DEFAULT_BASE_URL: Record<string, string> = {
-  gateway_cli: "https://gateway.example/v1",
+  zhipu_cli: "https://gateway.example/v1",
   // The address the made-up agent declares for its keyless lane; the agent
   // runs against the one the desktop launches it with, so none is shown.
-  local_api: "http://127.0.0.1:41000",
+  zai_api: "http://127.0.0.1:41000",
 };
 
 /** The lanes the made-up agent declares run on this computer. It declares
  * every other lane to send a conversation off it, as the agent declares
  * each lane itself. */
-const ON_THIS_COMPUTER = new Set(["local_api", "ollama_api", "llamacpp_api"]);
+const ON_THIS_COMPUTER = new Set(["zai_api", "ollama_api", "llamacpp_api"]);
 
 /** The command-line lanes the made-up agent declares a logout for. */
-const LOGOUT_DECLARED = new Set(["gamma_cli"]);
+const LOGOUT_DECLARED = new Set(["antigravity_cli"]);
 
 /** A lane as the service serves it: it can be signed out while it is signed
  * in and its agent declares a logout for it. */

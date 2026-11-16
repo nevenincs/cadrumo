@@ -20,7 +20,7 @@ import { SOURCE_LOCALE, useStrings } from "../../shell/strings";
 
 const LOCAL_LANE =
   catalogLanes(FIXTURE_CATALOG).find(
-    (lane) => lane.recommended.length > 0 && lane.provider === "local",
+    (lane) => lane.recommended.length > 0 && lane.provider === "zai",
   ) ?? null;
 const MODEL_DOWNLOAD = LOCAL_LANE
   ? { lane: LOCAL_LANE.id, model: LOCAL_LANE.recommended[0] ?? "" }

@@ -1,10 +1,5 @@
 import { DAY_MS, dayOrdinal, isoDate } from "../shared/dates";
-import {
-  closeUnknown,
-  compareCalendarEntries,
-  entryKey,
-  entrySpan,
-} from "./calendarEntries";
+import { closeUnknown, entryKey, entrySpan } from "./calendarEntries";
 import type { CalendarEntry, CalendarEvent } from "./views";
 
 // The filing calendar laid out as months of weeks. This is arithmetic on the
@@ -21,6 +16,9 @@ export type GridBar = {
   to: number;
   /** The row it takes among the week's windows, from 0. */
   lane: number;
+  /** Its obligation's place in the order the product serves them as
+   * needing the person, from 0. */
+  attention: number;
   /** Whether the window opens, and closes, inside this segment. A segment
    * that does neither is the middle of a longer window. A window whose
    * close is not known is never drawn closing: it runs on at its earliest
@@ -60,6 +58,9 @@ export type GridMonth = {
  * last window open in it closes, each as weeks that
  * begin on `weekStart` (0 Sunday to 6 Saturday), with the windows that cross
  * each week placed in rows and the day's observed events on their days.
+ * `attention` is the entries' indices in the order the product serves them
+ * as needing the person, the calendar's `attention_order`; left out, the
+ * entries are taken to come in that order.
  */
 export function calendarMonths(
   range: { from_date: string; to_date: string },
@@ -67,18 +68,22 @@ export function calendarMonths(
   events: readonly CalendarEvent[],
   today: string | null,
   weekStart: number,
+  attention: readonly number[] = entries.map((_, index) => index),
 ): GridMonth[] {
+  const rank = new Map(attention.map((index, place) => [index, place]));
   const spans = entries
-    .map((entry) => {
+    .map((entry, index) => {
       const span = entrySpan(entry);
-      return { entry, from: dayOrdinal(span.from), to: dayOrdinal(span.to) };
+      return {
+        entry,
+        from: dayOrdinal(span.from),
+        to: dayOrdinal(span.to),
+        attention: rank.get(index) ?? attention.length + index,
+      };
     })
-    // Earlier first, and of two that open together the one that needs the
-    // person first: what is late, then the nearest deadline, takes the
-    // first row.
-    .sort(
-      (a, b) => a.from - b.from || compareCalendarEntries(a.entry, b.entry),
-    );
+    // Earlier first, and of two that open together the one the product
+    // serves as needing the person first takes the first row.
+    .sort((a, b) => a.from - b.from || a.attention - b.attention);
   const observed = new Map<string, CalendarEvent[]>();
   for (const event of events) {
     const day = event.event_date.slice(0, 10);
@@ -143,6 +148,7 @@ export function calendarMonths(
           from: begin - start,
           to: end - start,
           lane,
+          attention: span.attention,
           opens: span.from >= begin,
           closes: span.to <= end && !closeUnknown(span.entry),
         });
@@ -206,8 +212,7 @@ function kept(
   const ranked = [...week.bars].sort(
     (a, b) =>
       Number(entryKey(b.entry) === chosen) -
-        Number(entryKey(a.entry) === chosen) ||
-      compareCalendarEntries(a.entry, b.entry),
+        Number(entryKey(a.entry) === chosen) || a.attention - b.attention,
   );
   const order = new Map(week.bars.map((bar, index) => [bar, index]));
   const byOrder = (a: GridBar, b: GridBar) =>

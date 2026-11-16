@@ -44,6 +44,10 @@ class PilotRow:
     modelo: str | None = None
     year: int | None = None
     period: str | None = None
+    horizon: int | None = None
+    """The replay horizon the line was run at; the table pairs a return line only with its row of that horizon, and a
+    persona line speaks only for the rows of its horizon. ``None`` on the line announcing the persona before any
+    replay, which speaks for every row no horizon line answers for."""
     loads: bool = True
     calculate: str | None = None
     verify: str | None = None
@@ -73,8 +77,9 @@ class PilotRow:
 
     @property
     def label(self) -> str:
-        """``persona modelo year period``, as a failure names the row."""
-        return f"{self.persona} {self.modelo} {self.year} {self.period}"
+        """``persona modelo year period``, and ``at horizon <year>`` when it has one, as a failure names the row."""
+        at = "" if self.horizon is None else f" at horizon {self.horizon}"
+        return f"{self.persona} {self.modelo} {self.year} {self.period}{at}"
 
     def reason(self) -> str:
         """The row's free text: its cause key, what each stage said, then its time."""
@@ -102,6 +107,8 @@ class PilotRow:
             "reason": self.reason(),
             "log": log,
         }
+        if self.horizon is not None:
+            document["horizon"] = self.horizon
         if self.export_served is not None and _schema_takes_export_served():
             document["export_served"] = self.export_served
         if self.blocking_findings:
@@ -147,10 +154,28 @@ def _schema_takes_file(word: str) -> bool:
     return True
 
 
-def write_rows(rows: Iterable[PilotRow]) -> None:
-    """Append ``rows`` to the file :data:`OUT_ENV` names, when it names one, refusing any line the schema refuses."""
+def output_path() -> Path | None:
+    """The file :data:`OUT_ENV` names, or ``None`` when it names none; the operator supplies an absolute path."""
     out = os.environ.get(OUT_ENV, "")
     if not out:
+        return None
+    destination = Path(out)
+    if not destination.is_absolute():
+        raise IntakeConfigurationError(f"{OUT_ENV} must name an absolute path, not {out!r}")
+    return destination
+
+
+def append_lines(destination: Path, lines: Iterable[str]) -> None:
+    """Append ``lines`` to ``destination`` in one write, so parallel workers append whole lines."""
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    with destination.open("a", encoding="utf-8") as handle:
+        handle.write("".join(line + "\n" for line in lines))
+
+
+def write_rows(rows: Iterable[PilotRow]) -> None:
+    """Append ``rows`` to the file :data:`OUT_ENV` names, when it names one, refusing any line the schema refuses."""
+    destination = output_path()
+    if destination is None:
         return
     tree = os.environ.get(TREE_ENV, "")
     if not tree:
@@ -159,8 +184,4 @@ def write_rows(rows: Iterable[PilotRow]) -> None:
     lines = [row.line(tree=tree, log=log) for row in rows]
     for line in lines:
         parse_result(line)
-    path = Path(out)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    # One write per call, so personas run in parallel workers append whole lines.
-    with path.open("a", encoding="utf-8") as handle:
-        handle.write("".join(line + "\n" for line in lines))
+    append_lines(destination, lines)

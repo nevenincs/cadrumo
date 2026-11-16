@@ -26,6 +26,7 @@ export function ColumnNotice({
   failure,
   fit = null,
   notice,
+  logRef,
   engines,
   onRetry,
   onSetUpProviders,
@@ -37,6 +38,8 @@ export function ColumnNotice({
   /** The context sizes the refusal stated, said with its code. */
   fit?: ContextFit | null;
   notice: string | null;
+  /** The reference of the log line that says why, said with `notice`. */
+  logRef?: string;
   /** The local engines that do not run, said in place of `notice`. */
   engines?: readonly EngineNotice[];
   onRetry?: () => void;
@@ -92,6 +95,14 @@ export function ColumnNotice({
         <Icon name="info" className="mt-0.5" />
         <span className="grid justify-items-start gap-1.5">
           {notice}
+          {logRef && (
+            <span data-slot="notice-log-ref">
+              {t("desktop.providers.sign_in_log_ref")}{" "}
+              <code className="font-mono text-foreground select-all">
+                {logRef}
+              </code>
+            </span>
+          )}
           {onRetry && (
             <Button variant="outline" size="xs" onClick={onRetry}>
               {t("desktop.agent.retry")}

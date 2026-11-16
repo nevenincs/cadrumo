@@ -13,15 +13,15 @@ import {
 import { formatCount } from "../shared/numbers";
 import { effortWords } from "./agentCatalog";
 import { sentFiles } from "./agentDocuments";
+import type { Effort, ProviderTransport } from "./agentCatalogContract";
 import type {
   AgentApproval,
   AgentQuestionnaire,
-  AgentEffort,
   AgentToolKind,
-  AgentTransport,
 } from "./agentSession";
 import { conditionWords, toolKindWords } from "./agentWords";
 import { listed } from "./compose";
+import { logRef } from "./providerSignInWords";
 import type { Translate } from "./strings";
 
 // What a host serves the agent column, as the host answers it. A desktop
@@ -87,11 +87,11 @@ export type AgentToolCall = {
  * display names are the agent's own and are absent where it served none. */
 export type AgentRanWith = {
   provider: string;
-  transport: AgentTransport;
+  transport: ProviderTransport;
   provider_display_name?: string | null;
   model: string;
   model_display_name?: string | null;
-  effort?: AgentEffort | null;
+  effort?: Effort | null;
 };
 
 /** The tokens a run's provider reported, as the agent counts them. The agent
@@ -243,12 +243,32 @@ export interface AgentViews {
 }
 
 /** A read the column makes: not offered by the host, on its way, refused,
- * or answered. Not offered is its own state, never shown as empty. */
+ * or answered. Not offered is its own state, never shown as empty. A refusal
+ * keeps the reference of the log line that says why, where it carries one. */
 export type AgentRead<T> =
   | { kind: "unavailable" }
   | { kind: "loading" }
-  | { kind: "failed"; code: string }
+  | { kind: "failed"; code: string; logRef?: string }
   | { kind: "ready"; value: T };
+
+/** A refused read: its code, and its log reference where it is a bounded
+ * token. */
+function failedRead(error: unknown): {
+  kind: "failed";
+  code: string;
+  logRef?: string;
+} {
+  const served =
+    typeof error === "object" && error !== null
+      ? (error as { log_ref?: unknown })
+      : {};
+  const ref = logRef(served.log_ref);
+  return {
+    kind: "failed",
+    code: failureCode(error),
+    ...(ref ? { logRef: ref } : {}),
+  };
+}
 
 /**
  * Reads what `read` asks for whenever it changes, and drops the answer to a
@@ -275,7 +295,7 @@ export function useAgentRead<T>(
         if (current)
           setState({
             for: read,
-            read: { kind: "failed", code: failureCode(error) },
+            read: failedRead(error),
           });
       },
     );
@@ -335,7 +355,7 @@ export function useCachedRead<T>(
           setState((held) =>
             held.owner === owner && held.read.kind === "ready"
               ? held
-              : { owner, read: { kind: "failed", code: failureCode(error) } },
+              : { owner, read: failedRead(error) },
           );
       },
     );

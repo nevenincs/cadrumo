@@ -8,6 +8,7 @@
 
 import type { Channel } from "@tauri-apps/api/core";
 import type { AgentAccessAnswer } from "../shell/agentAccess";
+import type { ServedCatalogAnswer } from "../shell/agentCatalogContract";
 import type {
   AgentAnswerResult,
   AgentApproval,
@@ -17,7 +18,6 @@ import type {
   AgentAttachmentRefusal,
   AgentAttachmentRelease,
   AgentAttachmentScope,
-  AgentCatalogAnswer,
   AgentDropSignal,
   AgentModelLicence,
   AgentQuestionnaire,
@@ -1071,7 +1071,7 @@ export interface HostCommands {
   };
   /** cadrumo-agent's catalog, unchanged, less the lanes the profile turned
    * off; while no agent is ready, its declared catalog in an envelope. */
-  agent_provider_catalog: { args: Authorized; result: AgentCatalogAnswer };
+  agent_provider_catalog: { args: Authorized; result: ServedCatalogAnswer };
   /** The models the person added to the local lanes' lists, as the agent
    * service stores them. */
   agent_local_models: { args: Authorized; result: AgentLocalModels };
