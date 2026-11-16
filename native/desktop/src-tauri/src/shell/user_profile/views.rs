@@ -1,7 +1,10 @@
 //! Named read-only views of the signed-in profile: the filing calendar and
 //! the counts of the last notifications capture. Each runs fixed registered
 //! reads over the held person's relay; the window names no operation. Nothing
-//! read here is kept, logged or written: it is passed on and dropped.
+//! read here is kept, logged or written: it is passed on and dropped. The
+//! calendar is passed on as the product served it, under the product's names,
+//! so the window's types are generated from the product's schema alone; the
+//! one thing the host takes out is where an observed event was read from.
 use super::{Failure, PROFILE_READ_LIMIT, ProfileHost, Result, protocol};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
@@ -33,165 +36,18 @@ struct Row {
     leida: Option<bool>,
 }
 
-#[derive(Debug, Deserialize, Serialize, PartialEq)]
-#[serde(rename_all = "snake_case")]
-enum UserState {
-    Due,
-    Late,
-    Filed,
-    Unknown,
-}
-// The deadline engine's status of an obligation, in its own spelling. `Unknown`
-// is a projected window whose close is not known: its closing dates are only
-// the earliest it can close, and the window must not show them as a deadline.
-#[derive(Debug, Deserialize, Serialize, PartialEq)]
-#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
-enum ObligationStatus {
-    Upcoming,
-    DueSoon,
-    DueToday,
-    Overdue,
-    Filed,
-    NotApplicable,
-    Unknown,
-}
-#[derive(Debug, Deserialize, Serialize, PartialEq)]
-#[serde(rename_all = "snake_case")]
-enum LocalFilingState {
-    NotReadyToFile,
-    ReadyToFile,
-    ExternalBaselineImported,
-}
-#[derive(Debug, Deserialize, Serialize, PartialEq)]
-#[serde(rename_all = "snake_case")]
-enum AeatSubmissionState {
-    NotObserved,
-    SubmittedObserved,
-    Accepted,
-    JustificanteVerified,
-}
-#[derive(Debug, Deserialize, Serialize, PartialEq)]
-#[serde(rename_all = "snake_case")]
-enum EventType {
-    Filing,
-    Message,
-}
-#[derive(Debug, Deserialize, Serialize, PartialEq)]
-#[serde(rename_all = "snake_case")]
-enum AdviceReason {
-    ApplicableWindowMissing,
-    ApplicabilityUndetermined,
-    RegistryUnmodeled,
-}
-
-#[derive(Debug, Deserialize, Serialize, PartialEq)]
+// Only what the host checks before passing the calendar on: whose it is,
+// which read it is, and that it covers exactly the requested range. The
+// snapshot itself stays the product's value.
+#[derive(Deserialize)]
 struct Range {
     from_date: String,
     to_date: String,
 }
 #[derive(Deserialize)]
-struct Evidence {
-    local_filing_state: LocalFilingState,
-    aeat_submission_state: AeatSubmissionState,
-    justificante_verified: bool,
-}
-#[derive(Deserialize)]
-struct EntryIn {
-    modelo: String,
-    period: String,
-    opens_on: String,
-    closes_on: String,
-    adjusted_closes_on: String,
-    shift_reason: String,
-    payment_cutoff_on: Option<String>,
-    evaluated_on: String,
-    days_overdue: Option<u64>,
-    status: ObligationStatus,
-    user_state: UserState,
-    filing_evidence: Evidence,
-}
-#[derive(Debug, Serialize)]
-struct Entry {
-    modelo: String,
-    period: String,
-    opens_on: Option<String>,
-    closes_on: String,
-    adjusted_closes_on: String,
-    shift_reason: String,
-    payment_cutoff_on: Option<String>,
-    evaluated_on: String,
-    days_overdue: Option<u64>,
-    status: ObligationStatus,
-    user_state: UserState,
-    local_filing_state: LocalFilingState,
-    aeat_submission_state: AeatSubmissionState,
-    justificante_verified: bool,
-}
-#[derive(Debug, Deserialize, Serialize)]
-struct Event {
-    event_type: EventType,
-    event_date: String,
-    source: String,
-    summary: String,
-    reference_id: String,
-    status: Option<String>,
-    aeat_submission_state: Option<AeatSubmissionState>,
-    aeat_submitted_at: Option<String>,
-    justificante_verified: Option<bool>,
-}
-#[derive(Deserialize)]
-struct WarningIn {
-    code: String,
-    // The product's sentence in the read's language; `message` is its key.
-    text: String,
-    affected_modelos: Vec<String>,
-}
-#[derive(Debug, Serialize)]
-struct Warning {
-    code: String,
-    message: String,
-    affected_modelos: Vec<String>,
-}
-#[derive(Debug, Deserialize, Serialize)]
-struct Advised {
-    modelo: String,
-    reason: AdviceReason,
-}
-#[derive(Debug, Deserialize, Serialize)]
-struct Coverage {
-    surfaced: Vec<String>,
-    confidently_excluded: Vec<String>,
-    advised: Vec<Advised>,
-    out_of_scope: Vec<String>,
-}
-/// The filing-year envelope a calendar read was served under and where the
-/// range sits in it, passed to the window as the product served it.
-#[derive(Debug, Deserialize, Serialize)]
-struct Support {
-    floor: u32,
-    horizon: u32,
-    hard_ceiling: Option<u32>,
-    state: String,
-}
-#[derive(Deserialize)]
-struct Snapshot {
-    range: Range,
-    #[serde(default)]
-    support: Option<Support>,
-    entries: Vec<EntryIn>,
-    #[serde(default)]
-    suppressed_entries: Vec<Value>,
-    events: Vec<Event>,
-    warnings: Vec<WarningIn>,
-    generated_at: String,
-    taxpayer_model_declared: bool,
-    incomplete_reason: Option<String>,
-    coverage: Coverage,
-}
-#[derive(Deserialize)]
 struct CalendarRead {
     kind: String,
-    calendar: Option<Snapshot>,
+    calendar: Option<Value>,
 }
 #[derive(Deserialize)]
 struct Projection {
@@ -199,20 +55,10 @@ struct Projection {
     payload: CalendarRead,
 }
 
-/// The calendar as the shell's `FilingCalendar` type has it.
+/// The calendar snapshot of the product's `overview.calendar` read, unchanged.
 #[derive(Debug, Serialize)]
-pub struct FilingCalendar {
-    range: Range,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    support: Option<Support>,
-    entries: Vec<Entry>,
-    // Rows the calendar holds off its schedule, as the product served them.
-    suppressed_entries: Vec<Value>,
-    events: Vec<Event>,
-    warnings: Vec<Warning>,
-    generated_at: Option<String>,
-    coverage: Coverage,
-}
+#[serde(transparent)]
+pub struct FilingCalendar(Value);
 
 /// A calendar day as the product writes it, `YYYY-MM-DD`, as its year.
 fn iso_year(day: &str) -> Option<u32> {
@@ -279,66 +125,32 @@ fn filing_calendar(
     to: &str,
 ) -> Result<FilingCalendar> {
     let projection: Projection = serde_json::from_value(projection).map_err(|_| protocol())?;
-    let snapshot = match projection.payload {
+    let calendar = match projection.payload {
         CalendarRead {
             kind,
-            calendar: Some(snapshot),
-        } if kind == "calendar" && projection.profile_id == profile => snapshot,
+            calendar: Some(calendar),
+        } if kind == "calendar" && projection.profile_id == profile => calendar,
         _ => return Err(protocol()),
     };
-    if snapshot.range.from_date != from || snapshot.range.to_date != to {
+    let range = calendar
+        .get("range")
+        .and_then(|range| Range::deserialize(range).ok())
+        .ok_or_else(protocol)?;
+    if range.from_date != from || range.to_date != to {
         return Err(protocol());
     }
-    let mut warnings: Vec<Warning> = snapshot
-        .warnings
-        .into_iter()
-        .map(|warning| Warning {
-            code: warning.code,
-            message: warning.text,
-            affected_modelos: warning.affected_modelos,
-        })
-        .collect();
-    // Without the taxpayer's model the product places no obligation: say so,
-    // in its own words, rather than show an empty calendar.
-    if !snapshot.taxpayer_model_declared {
-        warnings.insert(
-            0,
-            Warning {
-                code: "taxpayer_model_undeclared".into(),
-                message: snapshot.incomplete_reason.ok_or_else(protocol)?,
-                affected_modelos: Vec::new(),
-            },
-        );
+    Ok(FilingCalendar(without_event_sources(calendar)))
+}
+
+/// The host's own disclosure policy: an observed event reaches the window
+/// without the address it was read from.
+fn without_event_sources(mut calendar: Value) -> Value {
+    if let Some(events) = calendar.get_mut("events").and_then(Value::as_array_mut) {
+        for event in events.iter_mut().filter_map(Value::as_object_mut) {
+            event.remove("source_url");
+        }
     }
-    Ok(FilingCalendar {
-        range: snapshot.range,
-        support: snapshot.support,
-        entries: snapshot
-            .entries
-            .into_iter()
-            .map(|entry| Entry {
-                modelo: entry.modelo,
-                period: entry.period,
-                opens_on: Some(entry.opens_on),
-                closes_on: entry.closes_on,
-                adjusted_closes_on: entry.adjusted_closes_on,
-                shift_reason: entry.shift_reason,
-                payment_cutoff_on: entry.payment_cutoff_on,
-                evaluated_on: entry.evaluated_on,
-                days_overdue: entry.days_overdue,
-                status: entry.status,
-                user_state: entry.user_state,
-                local_filing_state: entry.filing_evidence.local_filing_state,
-                aeat_submission_state: entry.filing_evidence.aeat_submission_state,
-                justificante_verified: entry.filing_evidence.justificante_verified,
-            })
-            .collect(),
-        suppressed_entries: snapshot.suppressed_entries,
-        events: snapshot.events,
-        warnings,
-        generated_at: Some(snapshot.generated_at),
-        coverage: snapshot.coverage,
-    })
+    calendar
 }
 
 /// The registered read the record groups come from.
@@ -487,211 +299,14 @@ impl ProfileHost {
 }
 
 #[cfg(test)]
+#[path = "views_calendar_contract_tests.rs"]
+mod calendar_contract_tests;
+
+#[cfg(test)]
 mod tests {
     use super::*;
 
     const PROFILE: &str = "0b4f6c2e-8f0a-4a8e-9a43-5b1a6e0d7c11";
-
-    fn entry() -> Value {
-        json!({
-            "modelo":"303", "period":"3T", "opens_on":"2026-10-01", "closes_on":"2026-10-20",
-            "adjusted_closes_on":"2026-10-20", "shift_reason":"none", "payment_cutoff_on":"2026-10-15",
-            "evaluated_on":"2026-10-22", "days_overdue":2, "status":"OVERDUE", "user_state":"late",
-            "holiday_refs":[], "filing_evidence":{"local_filing_state":"ready_to_file",
-            "aeat_submission_state":"not_observed", "justificante_verified":false,
-            "justificante_required":true}
-        })
-    }
-    fn projection(declared: bool) -> Value {
-        json!({
-            "profile_id": PROFILE,
-            "request": {"kind":"calendar"},
-            "payload": {
-                "kind":"calendar",
-                "calendar": {
-                    "range":{"from_date":"2026-07-01","to_date":"2027-06-30"},
-                    "evaluated_on":"2026-10-22",
-                    "entries":[entry()],
-                    "generated_at":"2026-10-22T08:00:00Z",
-                    "warnings":[{"code":"iva.regime","message":"cli.overview.warning.x",
-                        "text":"Tu perfil no indica el régimen","fix_action":{},
-                        "affected_modelos":["303"]}],
-                    "taxpayer_model_declared":declared,
-                    "incomplete_reason": if declared { Value::Null } else { json!("Falta el modelo del contribuyente") },
-                    "events":[{"event_type":"message","event_date":"2026-09-01","source":"aeat_sede_notifications",
-                        "summary":"Notificación","reference_id":"A1","status":null,"aeat_submission_state":null,
-                        "aeat_submitted_at":null,"justificante_verified":null,"source_url":"https://example.invalid"}],
-                    "coverage":{"surfaced":["303"],"confidently_excluded":[],"advised":[
-                        {"modelo":"190","reason":"applicable_window_missing"}],"out_of_scope":[]}
-                }
-            }
-        })
-    }
-
-    #[test]
-    fn the_calendar_keeps_the_products_states_and_opening_days() {
-        let calendar =
-            filing_calendar(projection(true), PROFILE, "2026-07-01", "2027-06-30").unwrap();
-        let shown = serde_json::to_value(&calendar).unwrap();
-        let entry = &shown["entries"][0];
-        assert_eq!(entry["opens_on"], "2026-10-01");
-        assert_eq!(entry["user_state"], "late");
-        assert_eq!(entry["local_filing_state"], "ready_to_file");
-        assert_eq!(entry["aeat_submission_state"], "not_observed");
-        assert_eq!(entry["days_overdue"], 2);
-        assert_eq!(entry["status"], "OVERDUE");
-        assert_eq!(
-            shown["warnings"][0]["message"],
-            "Tu perfil no indica el régimen"
-        );
-        assert_eq!(
-            shown["coverage"]["advised"][0]["reason"],
-            "applicable_window_missing"
-        );
-        assert!(shown["events"][0].get("source_url").is_none());
-    }
-
-    fn suppressed(modelo: &str, verdict: &str) -> Value {
-        json!({"modelo":modelo, "period":"2026", "opens_on":"2027-04-07", "closes_on":"2027-06-30",
-            "adjusted_closes_on":"2027-06-30", "verdict":verdict,
-            "verdict_words":"Synthetic words", "verdict_words_language":"en",
-            "reason":"synthetic reason", "actions":[]})
-    }
-
-    #[test]
-    fn suppressed_rows_are_carried_unchanged_including_an_undecided_one() {
-        let mut read = projection(true);
-        read["payload"]["calendar"]["suppressed_entries"] = json!([
-            suppressed("100", "not_applicable"),
-            suppressed("347", "incomplete")
-        ]);
-        let calendar = filing_calendar(read, PROFILE, "2026-07-01", "2027-06-30").unwrap();
-        let shown = serde_json::to_value(&calendar).unwrap();
-        let rows = shown["suppressed_entries"].as_array().unwrap();
-        assert_eq!(rows.len(), 2);
-        assert_eq!(rows[0]["modelo"], "100");
-        assert_eq!(rows[0]["verdict"], "not_applicable");
-        assert_eq!(rows[0]["verdict_words"], "Synthetic words");
-        assert_eq!(rows[0]["verdict_words_language"], "en");
-        assert_eq!(rows[0]["opens_on"], "2027-04-07");
-        assert_eq!(rows[0]["adjusted_closes_on"], "2027-06-30");
-        assert_eq!(rows[0]["reason"], "synthetic reason");
-        assert_eq!(rows[1]["modelo"], "347");
-        assert_eq!(rows[1]["verdict"], "incomplete");
-        assert_eq!(rows[0]["actions"], json!([]));
-    }
-
-    #[test]
-    fn the_served_support_envelope_reaches_the_window_unchanged() {
-        let mut read = projection(true);
-        read["payload"]["calendar"]["support"] =
-            json!({"floor": 7, "horizon": 9, "hard_ceiling": null, "state": "below_floor"});
-        let calendar = filing_calendar(read, PROFILE, "2026-07-01", "2027-06-30").unwrap();
-        let shown = serde_json::to_value(&calendar).unwrap();
-        assert_eq!(
-            shown["support"],
-            json!({"floor": 7, "horizon": 9, "hard_ceiling": null, "state": "below_floor"})
-        );
-        let mut read = projection(true);
-        read["payload"]["calendar"]["support"] =
-            json!({"floor": 7, "horizon": 9, "hard_ceiling": 11, "state": "projected"});
-        let calendar = filing_calendar(read, PROFILE, "2026-07-01", "2027-06-30").unwrap();
-        let shown = serde_json::to_value(&calendar).unwrap();
-        assert_eq!(shown["support"]["hard_ceiling"], 11);
-        assert_eq!(shown["support"]["state"], "projected");
-    }
-
-    #[test]
-    fn a_read_without_support_passes_none_on() {
-        let calendar =
-            filing_calendar(projection(true), PROFILE, "2026-07-01", "2027-06-30").unwrap();
-        let shown = serde_json::to_value(&calendar).unwrap();
-        assert!(shown.get("support").is_none());
-    }
-
-    #[test]
-    fn a_malformed_support_envelope_is_refused() {
-        let mut read = projection(true);
-        read["payload"]["calendar"]["support"] = json!({"floor": "low", "state": "supported"});
-        assert!(filing_calendar(read, PROFILE, "2026-07-01", "2027-06-30").is_err());
-    }
-
-    #[test]
-    fn a_snapshot_without_suppressed_entries_has_none() {
-        let calendar =
-            filing_calendar(projection(true), PROFILE, "2026-07-01", "2027-06-30").unwrap();
-        assert!(calendar.suppressed_entries.is_empty());
-        let shown = serde_json::to_value(&calendar).unwrap();
-        assert_eq!(shown["suppressed_entries"], json!([]));
-    }
-
-    #[test]
-    fn the_calendar_request_asks_for_the_suppressed_rows() {
-        let request = calendar_request(PROFILE, "es", "2026-07-01", "2027-06-30");
-        assert_eq!(request["show_suppressed"], true);
-        assert_eq!(request["kind"], "calendar");
-        assert_eq!(request["profile_id"], PROFILE);
-        assert_eq!(request["from_date"], "2026-07-01");
-    }
-
-    #[test]
-    fn a_close_the_product_does_not_know_reaches_the_window_as_unknown() {
-        let mut read = projection(true);
-        read["payload"]["calendar"]["entries"][0] = json!({
-            "modelo":"303", "period":"1T", "opens_on":"2027-04-01", "closes_on":"2027-04-20",
-            "adjusted_closes_on":"2027-04-20", "shift_reason":"none", "payment_cutoff_on":null,
-            "evaluated_on":"2027-06-01", "days_overdue":null, "status":"UNKNOWN",
-            "user_state":"unknown", "holiday_coverage":"calendar_unavailable", "holiday_refs":[],
-            "filing_evidence":{"local_filing_state":"not_ready_to_file",
-            "aeat_submission_state":"not_observed", "justificante_verified":false,
-            "justificante_required":true}
-        });
-        let calendar = filing_calendar(read, PROFILE, "2026-07-01", "2027-06-30").unwrap();
-        let shown = serde_json::to_value(&calendar).unwrap();
-        let entry = &shown["entries"][0];
-        assert_eq!(entry["status"], "UNKNOWN");
-        assert_eq!(entry["user_state"], "unknown");
-        assert_eq!(entry["adjusted_closes_on"], "2027-04-20");
-        assert_eq!(entry["days_overdue"], Value::Null);
-        assert_eq!(entry["payment_cutoff_on"], Value::Null);
-    }
-
-    #[test]
-    fn an_undeclared_taxpayer_model_is_said_not_drawn_as_nothing_due() {
-        let calendar =
-            filing_calendar(projection(false), PROFILE, "2026-07-01", "2027-06-30").unwrap();
-        assert_eq!(calendar.warnings[0].code, "taxpayer_model_undeclared");
-        assert_eq!(
-            calendar.warnings[0].message,
-            "Falta el modelo del contribuyente"
-        );
-    }
-
-    #[test]
-    fn a_calendar_for_another_profile_range_or_state_is_refused() {
-        assert!(filing_calendar(projection(true), "another", "2026-07-01", "2027-06-30").is_err());
-        assert!(filing_calendar(projection(true), PROFILE, "2026-07-02", "2027-06-30").is_err());
-        let mut unknown = projection(true);
-        unknown["payload"]["calendar"]["entries"][0]["user_state"] = json!("maybe");
-        assert!(filing_calendar(unknown, PROFILE, "2026-07-01", "2027-06-30").is_err());
-        for status in [json!("maybe"), json!("unknown"), Value::Null] {
-            let mut unread = projection(true);
-            unread["payload"]["calendar"]["entries"][0]["status"] = status;
-            assert!(filing_calendar(unread, PROFILE, "2026-07-01", "2027-06-30").is_err());
-        }
-        let mut statusless = projection(true);
-        statusless["payload"]["calendar"]["entries"][0]
-            .as_object_mut()
-            .unwrap()
-            .remove("status");
-        assert!(filing_calendar(statusless, PROFILE, "2026-07-01", "2027-06-30").is_err());
-        let mut untranslated = projection(true);
-        untranslated["payload"]["calendar"]["warnings"][0]
-            .as_object_mut()
-            .unwrap()
-            .remove("text");
-        assert!(filing_calendar(untranslated, PROFILE, "2026-07-01", "2027-06-30").is_err());
-    }
 
     #[test]
     fn only_a_bounded_range_of_real_days_is_read() {
