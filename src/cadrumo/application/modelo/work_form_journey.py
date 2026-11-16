@@ -29,10 +29,10 @@ from pydantic import BaseModel
 
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.modelos.verification_report import VerificationCompletenessStatus
+from .work_form_facts import ModeloFormFacts
 from .work_form_field_vocabulary import ModeloFormAddressV1, ModeloFormStanding
 from .work_form_header import form_recorded
 from .work_form_issue_lines import ModeloFormVerdict, form_verdict
-from .work_form_models import ModeloWorkForm, section_fields
 from .work_form_next_step import (
     ModeloFormNextStep,
     awaiting_the_check,
@@ -100,7 +100,7 @@ class ModeloFormJourney(BaseModel):
     verdict: ModeloFormVerdict
 
 
-def form_journey(form: ModeloWorkForm, *, verified: bool, filed: bool) -> ModeloFormJourney:
+def form_journey(form: ModeloFormFacts, *, verified: bool, filed: bool) -> ModeloFormJourney:
     """Place a declaration on the filing journey from its form and lifecycle facts.
 
     A declaration recorded as filed is done whatever its form still marks. A
@@ -121,7 +121,9 @@ def form_journey(form: ModeloWorkForm, *, verified: bool, filed: bool) -> Modelo
     )
 
 
-def _steps(form: ModeloWorkForm, *, verified: bool, filed: bool, changes_held: bool) -> tuple[ModeloFormStepState, ...]:
+def _steps(
+    form: ModeloFormFacts, *, verified: bool, filed: bool, changes_held: bool
+) -> tuple[ModeloFormStepState, ...]:
     counts = to_do_counts(form)
     blocked = counts.blocked
     blocking = blocking_count(form)
@@ -139,7 +141,7 @@ def _filling_is_done(filed: bool, verified: bool, to_fill: int, assumed: int) ->
     return filed or ((verified or to_fill == 0) and assumed == 0)
 
 
-def _calculation_is_done(form: ModeloWorkForm, filed: bool) -> bool:
+def _calculation_is_done(form: ModeloFormFacts, filed: bool) -> bool:
     return form.calculation_revision_id is not None and (filed or not form.calculation_out_of_date)
 
 
@@ -148,7 +150,7 @@ def _review_is_done(filed: bool, verified: bool, blocked: int, blocking: int) ->
 
 
 def _step_states(
-    done: Mapping[ModeloFormStep, bool], *, blocked: int, blocking: int, awaiting: int, form: ModeloWorkForm
+    done: Mapping[ModeloFormStep, bool], *, blocked: int, blocking: int, awaiting: int, form: ModeloFormFacts
 ) -> tuple[ModeloFormStepState, ...]:
     steps: list[ModeloFormStepState] = []
     current_found = False
@@ -167,18 +169,16 @@ def _step_states(
     return tuple(steps)
 
 
-def _first_attention(form: ModeloWorkForm) -> ModeloFormFirstAttention | None:
+def _first_attention(form: ModeloFormFacts) -> ModeloFormFirstAttention | None:
     """The first box standing on the filer, in reading order, on a page that applies this period."""
     set_aside = inapplicable_pages(form)
-    for page in form.pages:
-        if page.id in set_aside:
+    for page_id, fields in form.page_fields():
+        if page_id in set_aside:
             continue
-        for section in page.sections:
-            for field in section_fields(section):
-                if field.standing is ModeloFormStanding.NEEDS_YOU:
-                    return ModeloFormFirstAttention(address=field.address, page_id=page.id)
-    detail_fields = [*form.working_figures, *(item.field for item in form.unplaced), *form.answers]
-    for field in detail_fields:
+        for field in fields:
+            if field.standing is ModeloFormStanding.NEEDS_YOU:
+                return ModeloFormFirstAttention(address=field.address, page_id=page_id)
+    for field in form.detail_fields():
         if field.standing is ModeloFormStanding.NEEDS_YOU:
             return ModeloFormFirstAttention(address=field.address)
     return None

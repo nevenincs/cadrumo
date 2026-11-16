@@ -981,48 +981,93 @@ class ModeloWorkForm(ModeloFormBase):
 
     @property
     def calculation_out_of_date(self) -> bool:
-        """Whether the calculation must be worked out again before it can be checked, exported or recorded.
-
-        The last check found the records changed after the calculation, unless
-        what it read has itself changed since, or the calculation was screened
-        against other registry declarations than the pinned ones, which the gate
-        refuses until it is calculated again.
-        """
-        stale_finding = not self.verification_out_of_date and any(
-            issue.finding.kind is ModeloVerificationFindingKind.STALE_CALCULATION for issue in self.issues
-        )
-        return stale_finding or any(
-            note.reason == CALCULATION_SCREEN_OUTDATED_REASON for note in self.calculation_notes
+        """Whether the calculation must be worked out again before it can be checked, exported or recorded."""
+        return form_calculation_out_of_date(
+            self.issues, self.calculation_notes, verification_out_of_date=self.verification_out_of_date
         )
 
     @property
     def filed_before_grade_cap(self) -> bool:
-        """Whether the declaration was recorded before screens existed with a figure in a capped box.
-
-        Its export is refused until it is calculated again, checked and recorded
-        anew, so the form offers that recalculation in place of the recorded state.
-        """
-        return any(note.reason == FILED_BEFORE_GRADE_CAP_REASON for note in self.calculation_notes)
+        """Whether the declaration was recorded before screens existed with a figure in a capped box."""
+        return form_filed_before_grade_cap(self.calculation_notes)
 
     @property
     def blocking_calculation_notes(self) -> tuple[ModeloFormCalculationNote, ...]:
         """The latest calculation's notes that withhold filing, as blocking findings do: at that level or gated."""
+        return form_blocking_calculation_notes(self.calculation_notes)
+
+    def page_fields(self) -> tuple[tuple[str, tuple[ModeloFormField, ...]], ...]:
+        """Every page's id with the fields its sections show, in reading order."""
         return tuple(
-            note
-            for note in self.calculation_notes
-            if note.attention is ModeloFormAttention.BLOCKS or note.withholds_filing
+            (page.id, tuple(field for section in page.sections for field in section_fields(section)))
+            for page in self.pages
         )
+
+    def detail_fields(self) -> tuple[ModeloFormField, ...]:
+        """The fields no page shows, in reading order: working figures, unplaced, then answers."""
+        return (*self.working_figures, *(item.field for item in self.unplaced), *self.answers)
 
     def fields(self) -> tuple[ModeloFormField, ...]:
         """Return every field once, in reading order: pages, then working figures, unplaced, then answers."""
-        collected: list[ModeloFormField] = []
-        for page in self.pages:
-            for section in page.sections:
-                collected.extend(section_fields(section))
-        collected.extend(self.working_figures)
-        collected.extend(item.field for item in self.unplaced)
-        collected.extend(self.answers)
-        return tuple(collected)
+        return (*(field for _, fields in self.page_fields() for field in fields), *self.detail_fields())
+
+    def record_casilla_ids(self) -> frozenset[str]:
+        """The casillas a table of records carries a value of, in every record."""
+        return frozenset(
+            casilla_id
+            for page in self.pages
+            for section in page.sections
+            for block in section.blocks
+            if isinstance(block, ModeloFormRepeatingBlock)
+            for casilla_id in block.column_casilla_ids
+            if casilla_id is not None
+        )
+
+    def presented_casilla(self, casilla_id: str) -> ModeloFormField | None:
+        """The field the form shows for one casilla, the first in reading order; ``None`` when it shows none."""
+        return next(
+            (
+                field
+                for field in self.fields()
+                if isinstance(field.address, ModeloFormCasillaAddressV1) and str(field.address.casilla_id) == casilla_id
+            ),
+            None,
+        )
+
+
+def form_calculation_out_of_date(
+    issues: tuple[ModeloFormIssue, ...],
+    notes: tuple[ModeloFormCalculationNote, ...],
+    *,
+    verification_out_of_date: bool,
+) -> bool:
+    """Whether a calculation must be worked out again before it can be checked, exported or recorded.
+
+    The last check found the records changed after the calculation, unless
+    what it read has itself changed since, or the calculation was screened
+    against other registry declarations than the pinned ones, which the gate
+    refuses until it is calculated again.
+    """
+    stale_finding = not verification_out_of_date and any(
+        issue.finding.kind is ModeloVerificationFindingKind.STALE_CALCULATION for issue in issues
+    )
+    return stale_finding or any(note.reason == CALCULATION_SCREEN_OUTDATED_REASON for note in notes)
+
+
+def form_filed_before_grade_cap(notes: tuple[ModeloFormCalculationNote, ...]) -> bool:
+    """Whether a declaration was recorded before screens existed with a figure in a capped box.
+
+    Its export is refused until it is calculated again, checked and recorded
+    anew, so the form offers that recalculation in place of the recorded state.
+    """
+    return any(note.reason == FILED_BEFORE_GRADE_CAP_REASON for note in notes)
+
+
+def form_blocking_calculation_notes(
+    notes: tuple[ModeloFormCalculationNote, ...],
+) -> tuple[ModeloFormCalculationNote, ...]:
+    """The calculation notes that withhold filing, as blocking findings do: at that level or gated."""
+    return tuple(note for note in notes if note.attention is ModeloFormAttention.BLOCKS or note.withholds_filing)
 
 
 def map_section_fields(
@@ -1108,6 +1153,9 @@ __all__ = [
     "ModeloWorkForm",
     "confirmable",
     "edit_address",
+    "form_blocking_calculation_notes",
+    "form_calculation_out_of_date",
+    "form_filed_before_grade_cap",
     "map_form_fields",
     "map_section_fields",
     "revised_field",
