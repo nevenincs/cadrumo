@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+import json
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -25,12 +26,14 @@ from ...overview.calendar_models import (
     OverviewCalendarEventType,
     OverviewCalendarFilingEvidence,
     OverviewCalendarRange,
+    OverviewCalendarScope,
     OverviewLocalFilingState,
     OverviewPeriodState,
 )
 from ...overview.evidence import CalendarEvidenceProjection
 from ...overview.home import HomeAvailability, HomeZoneState
 from ...overview.next_actions import declare_next_action
+from ...workbench_generation_public_contracts import PublicDeclarationsCalendarEntryRefV1
 from ..declarations_calendar import (
     DeclarationsCalendarEntryRefV1,
     DeclarationsCalendarProjectionError,
@@ -461,7 +464,7 @@ def _entry_ref_payload() -> dict[str, object]:
         as_of=date(_YEAR, 3, 1),
         schedule_observation=_schedule(),
     )
-    dumped = projection.entries[0].model_dump()
+    dumped = projection.entries[0].model_dump(exclude_computed_fields=True)
     # Rebuild rather than cast: model_dump() is dict[str, Any], and the
     # declared return promises object values, which this comprehension
     # actually produces instead of merely asserting.
@@ -498,3 +501,80 @@ def test_a_directly_built_entry_refuses_a_recovery_bound_to_another_address() ->
 
     with pytest.raises(ValidationError, match="contradicts its natural address"):
         DeclarationsCalendarEntryRefV1.model_validate(payload)
+
+
+def _served_ref(*, aeat: OverviewAeatSubmissionState | None) -> DeclarationsCalendarEntryRefV1:
+    """An overdue row closed on the 20th and evaluated three days later."""
+    closes = date(_YEAR, 10, 20)
+    evaluated = date(_YEAR, 10, 23)
+    return DeclarationsCalendarEntryRefV1(
+        modelo="130",
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "3T"),
+        opens_on=date(_YEAR, 10, 1),
+        closes_on=closes,
+        adjusted_closes_on=closes,
+        shift_reason="fixture",
+        holiday_coverage=DeadlineHolidayCoverage.NATIONAL_ONLY,
+        evaluated_on=evaluated,
+        days_overdue=3,
+        legal_status=ObligationStatus.OVERDUE,
+        user_state=OverviewPeriodState.LATE,
+        local_filing_state=None if aeat is None else OverviewLocalFilingState.NOT_READY_TO_FILE,
+        aeat_submission_state=aeat,
+        justificante_verified=None if aeat is None else False,
+        evidence_conflicted=False,
+        source=OverviewCalendarEntrySource.REGISTRY_DEADLINE,
+    )
+
+
+def test_an_entry_ref_with_withheld_evidence_serves_its_decided_values() -> None:
+    served = _served_ref(aeat=None).model_dump(mode="json")
+    assert served["days_until_close"] == -3
+    assert served["filing_status"] == "overdue"
+    assert served["scopes"] == ["past", "overdue", "evidence_unknown"]
+
+
+def test_an_entry_ref_with_observed_evidence_is_not_evidence_unknown() -> None:
+    served = _served_ref(aeat=OverviewAeatSubmissionState.NOT_OBSERVED).model_dump(mode="json")
+    assert served["scopes"] == ["past", "overdue"]
+    assert served["filing_status"] == "overdue"
+
+
+def test_an_entry_ref_reads_back_without_its_computed_values() -> None:
+    entry = _served_ref(aeat=None)
+    assert (
+        DeclarationsCalendarEntryRefV1.model_validate_json(entry.model_dump_json(exclude_computed_fields=True)) == entry
+    )
+
+
+def test_a_public_entry_ref_stores_the_derivations_its_fields_decide() -> None:
+    payload = _public_ref_payload(_served_ref(aeat=None))
+    public = PublicDeclarationsCalendarEntryRefV1.model_validate_json(json.dumps(payload))
+    assert public.days_until_close == -3
+    assert public.scopes == (
+        OverviewCalendarScope.PAST,
+        OverviewCalendarScope.OVERDUE,
+        OverviewCalendarScope.EVIDENCE_UNKNOWN,
+    )
+    assert PublicDeclarationsCalendarEntryRefV1.model_validate_json(public.model_dump_json()) == public
+
+
+@pytest.mark.parametrize(
+    ("name", "foreign"),
+    [("filing_status", "submitted"), ("days_until_close", 3), ("scopes", ["past"])],
+)
+def test_a_public_entry_ref_refuses_a_derivation_it_does_not_decide(name: str, foreign: object) -> None:
+    payload = _public_ref_payload(_served_ref(aeat=None))
+    payload[name] = foreign
+    with pytest.raises(ValidationError, match="it does not decide"):
+        PublicDeclarationsCalendarEntryRefV1.model_validate_json(json.dumps(payload))
+
+
+def _public_ref_payload(entry: DeclarationsCalendarEntryRefV1) -> dict[str, object]:
+    """The canonical row's served JSON, with its period as the public coordinates."""
+    payload: dict[str, object] = {str(key): value for key, value in json.loads(entry.model_dump_json()).items()}
+    payload["period"] = {"filing_year": entry.period.filing_year, "code": entry.period.registry_token}
+    for name in ("aeat_reference_id", "recovery_action", "conditional_recargo_preview"):
+        payload.setdefault(name, None)
+    return payload

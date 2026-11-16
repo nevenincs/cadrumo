@@ -344,6 +344,11 @@ export type OverviewCalendarEntrySnapshot = {
   local_work_unit_revision_id: string | null;
   profile_confirmation_required: boolean;
   missing_profile_information: string[];
+  filing_status_words: string;
+  filing_status_words_language: OutputLanguage;
+  days_until_close: number | null;
+  filing_status: OverviewFilingStatus;
+  scopes: OverviewCalendarScope[];
 };
 
 /**
@@ -402,6 +407,13 @@ export type OverviewCalendarRead = {
   deemed_served_legal_ref: string | null;
   refusal_requirements: string[];
 };
+
+/**
+ * A calendar scope a row belongs to; a row belongs to every scope that holds
+ * for it.
+ */
+export type OverviewCalendarScope =
+  "past" | "ahead" | "upcoming" | "overdue" | "filed" | "evidence_unknown";
 
 /**
  * Full current calendar output without private input records.
@@ -544,6 +556,28 @@ export type OverviewFilingEvidenceSnapshot = {
   justificante_verified: boolean;
   evidence_source: string | null;
 };
+
+/**
+ * The one filing status a calendar row states, decided from its evidence axes.
+ *
+ * AEAT evidence outranks the local record and the local record outranks the
+ * deadline, so a row never repeats a claim a stronger source already settled.
+ * A local record never claims AEAT: `recorded_locally` says the application
+ * holds a filing record that AEAT has not been observed to confirm.
+ * `evidence_withheld` is a period its evidence shows filed, read where that
+ * evidence is withheld, so it claims neither an AEAT submission nor a local
+ * record.
+ */
+export type OverviewFilingStatus =
+  | "receipt_verified"
+  | "accepted"
+  | "submitted"
+  | "imported"
+  | "recorded_locally"
+  | "evidence_withheld"
+  | "due"
+  | "overdue"
+  | "unknown";
 
 /**
  * Local application-side filing axis for one calendar obligation.
