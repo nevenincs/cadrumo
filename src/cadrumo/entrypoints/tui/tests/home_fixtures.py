@@ -32,6 +32,7 @@ from ....application.overview.home import (
     HomeSessionPosture,
     HomeZoneState,
 )
+from ....core.external_constants import OutputLanguage
 from ....core.period import Period
 
 _GENERATED_AT: Final[datetime] = datetime(2026, 9, 3, 10, 0, tzinfo=UTC)
@@ -144,7 +145,7 @@ def _agenda(
     local_state: OverviewLocalFilingState,
     aeat_state: OverviewAeatSubmissionState,
 ) -> HomeAgendaEntry:
-    return HomeAgendaEntry(
+    return HomeAgendaEntry.worded(
         modelo=modelo,
         filing_year=2026,
         period=_period(period_code),
@@ -152,6 +153,7 @@ def _agenda(
         period_state=period_state,
         local_filing_state=local_state,
         aeat_submission_state=aeat_state,
+        language=OutputLanguage.ES,
     )
 
 

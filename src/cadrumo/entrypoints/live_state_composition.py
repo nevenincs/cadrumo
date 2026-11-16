@@ -137,7 +137,7 @@ from ..core.modelo import Modelo
 from ..core.period import Period
 from ..core.storage_taxonomy import StorageCategory
 from ..core.storage_taxonomy_locations import storage_path
-from ..core.time.clock import now
+from ..core.time.clock import today_madrid
 from ..domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ..domain.iva_compensation.carry_forward import (
     IvaCompensationCarryForwardLot,
@@ -543,7 +543,7 @@ class AppIvaRemoteStatePort:
         decisions = IvaWalletDecisionRepository(objects=self._objects).list_decisions()
         carry_forward = build_iva_compensation_carry_forward_report(
             states,
-            as_of_year=as_of_year or now().year,
+            as_of_year=as_of_year or today_madrid().year,
             operation=self._authority_operation,
         )
         return IvaCompensationHistoryReport(
