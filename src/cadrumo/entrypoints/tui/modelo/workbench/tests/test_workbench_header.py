@@ -14,16 +14,20 @@ then the least urgent chips.
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
 from rich.cells import cell_len
 from textual.widgets import Static
 
-from ......application.modelo.work_form_declaration_facts import ModeloFormResultDirection
+from ......application.modelo.work_form_declaration_facts import ModeloFormExport, ModeloFormResultDirection
 from ......application.modelo.work_form_field_vocabulary import ModeloFormOrigin
 from ......application.modelo.work_form_findings import ModeloFormAttention
 from ......application.modelo.work_form_header import ModeloFormAttentionCount, ModeloFormDeadlineTone
+from ......application.modelo.work_form_header import deadline_view as form_deadline_view
+from ......application.modelo.work_form_header import file_view as form_file_view
+from ......application.modelo.work_form_header import result_view as form_result_view
 from ......application.modelo.work_form_models import ModeloWorkForm
 from ......application.modelo.work_form_wording import modelo_number, period_words
 from ......core.config import override_settings
@@ -36,10 +40,10 @@ from ..header import (
     AttentionChip,
     StatusLine,
     attention_chips,
-    deadline_help,
-    deadline_view,
+    deadline_text,
+    file_text,
     fit_result_line,
-    result_view,
+    header_result,
     status_line,
 )
 from ..screen import ModeloWorkbenchScreen
@@ -56,9 +60,9 @@ _OWN = "Cadrumo's calculation. AEAT has not seen it."
 
 def _view(form: ModeloWorkForm, *, staged: int = 0, recorded: bool = False) -> tuple[str, tuple[str, ...]]:
     with override_settings(cadrumo_output_language="en"):
-        view = result_view(form, _EN, staged=staged, recorded=recorded)
+        view = header_result(form, _EN, staged=staged, recorded=recorded)
     assert view is not None
-    return view.text, view.help
+    return view.text, view.served.help
 
 
 @pytest.mark.parametrize(
@@ -156,13 +160,13 @@ def test_an_informative_declaration_states_no_result() -> None:
     form = synthetic_form().model_copy(update={"result_addresses": ()})
 
     with override_settings(cadrumo_output_language="en"):
-        assert result_view(form, _EN, staged=0, recorded=False) is None
+        assert header_result(form, _EN, staged=0, recorded=False) is None
 
 
 def test_staged_changes_mark_the_result_out_of_date_until_recorded() -> None:
     with override_settings(cadrumo_output_language="en"):
-        staged = result_view(synthetic_form(), _EN, staged=2, recorded=False)
-        recorded = result_view(recorded_as_filed(synthetic_form()), _EN, staged=2, recorded=True)
+        staged = header_result(synthetic_form(), _EN, staged=2, recorded=False)
+        recorded = header_result(recorded_as_filed(synthetic_form()), _EN, staged=2, recorded=True)
 
     assert staged is not None and staged.stale == "◷ out of date: changes not applied yet: 2 [R]"
     assert recorded is not None and recorded.stale is None
@@ -181,7 +185,7 @@ def test_staged_changes_mark_the_result_out_of_date_until_recorded() -> None:
 )
 def test_the_deadline_reads_in_days_and_grows_urgent(days: int, text: str, tone: ModeloFormDeadlineTone) -> None:
     with override_settings(cadrumo_output_language="en"):
-        view = deadline_view(with_deadline(synthetic_form(), days_left=days), _EN, recorded=False)
+        view = form_deadline_view(with_deadline(synthetic_form(), days_left=days), _EN, recorded=False)
 
     assert view is not None
     assert (view.text, view.tone) == (text, tone)
@@ -191,19 +195,46 @@ def test_the_deadline_reads_in_days_and_grows_urgent(days: int, text: str, tone:
 def test_a_passed_a_missing_a_moved_and_a_recorded_deadline() -> None:
     form = synthetic_form()
     with override_settings(cadrumo_output_language="en"):
-        passed = deadline_view(with_deadline(form, days_late=3), _EN, recorded=False)
-        missing = deadline_view(form, _EN, recorded=False)
-        moved = deadline_help(with_deadline(form, days_left=10, shifted_by=2), _EN, recorded=False)
-        unmoved = deadline_help(with_deadline(form, days_left=10), _EN, recorded=False)
-        recorded = deadline_view(with_deadline(form, days_left=10), _EN, recorded=True)
+        passed = form_deadline_view(with_deadline(form, days_late=3), _EN, recorded=False)
+        missing = form_deadline_view(form, _EN, recorded=False)
+        moved = form_deadline_view(with_deadline(form, days_left=10, shifted_by=2), _EN, recorded=False)
+        unmoved = form_deadline_view(with_deadline(form, days_left=10), _EN, recorded=False)
+        recorded = form_deadline_view(with_deadline(form, days_left=10), _EN, recorded=True)
 
     assert passed is not None and passed.text == "Deadline passed on Apr 5, 2026: filing now is late"
     assert passed.tone is ModeloFormDeadlineTone.URGENT
     assert missing is not None and missing.tone is ModeloFormDeadlineTone.MUTED
     assert missing.text == "No deadline on record for this period"
-    assert moved == "The usual deadline is Apr 16, 2026. It moves to Apr 18, 2026 because of a weekend or holiday."
-    assert unmoved is None
+    assert moved is not None
+    assert moved.help == "The usual deadline is Apr 16, 2026. It moves to Apr 18, 2026 because of a weekend or holiday."
+    assert unmoved is not None and unmoved.help is None
     assert recorded is None
+
+
+@pytest.mark.parametrize("current", [True, False])
+def test_the_header_renders_the_served_result_deadline_and_file_whole(current: bool) -> None:
+    form = with_deadline(synthetic_form(needs_input=False), days_left=10, shifted_by=2)
+    revision = form.calculation_revision_id
+    assert revision is not None
+    export = ModeloFormExport(
+        exported_at=datetime.now(UTC), calculation_revision_id=revision if current else "c" * 64, current=current
+    )
+    form = form.model_copy(update={"last_export": export})
+    undated = synthetic_form()
+    with override_settings(cadrumo_output_language="en"):
+        served_result = form_result_view(form, _EN, recorded=False)
+        served_deadline = form_deadline_view(form, _EN, recorded=False)
+        served_undated = form_deadline_view(undated, _EN, recorded=False)
+        served_file = form_file_view(form, _EN, recorded=False)
+        result = header_result(form, _EN, staged=0, recorded=False)
+        assert served_deadline is not None and served_undated is not None and served_file is not None
+        wide = deadline_text(form, _EN, served_deadline, width=200)
+        narrow = deadline_text(undated, _EN, served_undated, width=cell_len(served_undated.short_text))
+
+    assert result is not None and result.served == served_result
+    assert wide == served_deadline.text
+    assert served_undated.short_text != served_undated.text and narrow == served_undated.short_text
+    assert file_text(served_file) == (served_file.words if current else f"{served_file.words} [e]")
 
 
 def test_every_attention_level_with_something_in_it_has_a_chip_and_none_once_recorded() -> None:
@@ -224,7 +255,7 @@ def test_every_attention_level_with_something_in_it_has_a_chip_and_none_once_rec
 def test_a_narrow_line_keeps_the_result_and_what_blocks_taking_a_second_line_before_dropping_either() -> None:
     form = with_findings(synthetic_form(), blocking=("06",), worth_checking=("01",))
     with override_settings(cadrumo_output_language="en"):
-        view = result_view(form, _EN, staged=3, recorded=False)
+        view = header_result(form, _EN, staged=3, recorded=False)
         chips = attention_chips(form, recorded=False)
         assert view is not None
         wide = fit_result_line(view, chips, 200)
@@ -442,7 +473,7 @@ def test_a_loss_carried_forward_keeps_its_words_whole_dropping_the_box_first(
         worth_checking=(None,),
     )
     with override_settings(cadrumo_output_language=language.value):
-        view = result_view(form, language, staged=0, recorded=False)
+        view = header_result(form, language, staged=0, recorded=False)
         assert view is not None
         line = fit_result_line(view, attention_chips(form, recorded=False), width)
         widest = cell_len(line.marks_text() if line.stacked else line.text())
