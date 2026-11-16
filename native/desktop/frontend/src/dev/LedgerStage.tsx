@@ -15,7 +15,7 @@ import {
 import type { MovementsMemory } from "@/components/ledger/movements/useMovementsView";
 import type { PaneControl } from "@/components/PaneHeader";
 import { DEFAULT_LAYOUT, type LedgerView } from "../shell/layout";
-import type { LedgerPort, LedgerRow, OutputLanguage } from "../shell/ledger";
+import type { LedgerPort, OutputLanguage } from "../shell/ledger";
 import type { LedgerPeriod } from "../shell/ledgerGrammar";
 import { REGISTER_YEARS, SCENARIO_TODAY } from "./assetsRegister";
 import {
@@ -37,6 +37,7 @@ import { useStrings } from "../shell/strings";
 import { fixtureLedger, type FixtureMovement } from "./fixtures/ledger";
 import { ledgerFixture, type LedgerShape } from "./ledgerFixture";
 import { fixtureMonth } from "@/dev/fixtureDates";
+import type { LedgerTransactionReviewProjection } from "../shell/ledgerReadContract";
 
 // What the Ledger stories share: the scenario's ledger port, made once for a
 // story, the page laid out the way the window lays it out with its view held
@@ -208,7 +209,7 @@ export function useLedgerRead(
 ): {
   window: LedgerWindow | null;
   reread: () => void;
-  rows: LedgerRow[] | null;
+  rows: LedgerTransactionReviewProjection[] | null;
   generation: number | null;
   years: number[] | null;
   readiness: Readiness;

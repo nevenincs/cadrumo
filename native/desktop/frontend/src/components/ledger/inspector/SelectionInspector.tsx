@@ -23,7 +23,6 @@ import {
   ledgerFailure,
   type LedgerPort,
   type LedgerReview,
-  type LedgerRow,
 } from "../../../shell/ledger";
 import type { LedgerLlmSuggestion } from "../../../shell/ledgerMovementOperations";
 import {
@@ -92,6 +91,7 @@ import {
 } from "../suggestions/SuggestionsProvider";
 import { useWritePause, WriteHold } from "../WritePause";
 import { formatAmount } from "../../../shared/numbers";
+import type { LedgerTransactionReviewProjection } from "../../../shell/ledgerReadContract";
 
 const CLASSIFICATION_OF: Record<ClassifyKind, string> = {
   business: "BUSINESS",
@@ -109,7 +109,7 @@ const COMMON_FIELDS: readonly (readonly [
     | "own_account_id"
     | "group_label"
   ),
-  (row: LedgerRow) => string | null,
+  (row: LedgerTransactionReviewProjection) => string | null,
 ])[] = [
   ["category_id", (row) => row.transaction.category_id],
   ["iva_category", (row) => row.transaction.iva_category],
@@ -166,7 +166,7 @@ export function SelectionInspector({
 }: {
   port: LedgerPort;
   ids: readonly string[];
-  rows: ReadonlyMap<string, LedgerRow>;
+  rows: ReadonlyMap<string, LedgerTransactionReviewProjection>;
   context: SectionInspectorContext | null;
   generation: number | string;
   stage: StageState;
@@ -294,8 +294,9 @@ export function SelectionInspector({
     history?.kind === "ready" &&
     completeCohort(ids, history.result.object_ids, rows);
 
-  const common = (read: (row: LedgerRow) => string | null): CommonValue =>
-    commonValue(selected.map(read));
+  const common = (
+    read: (row: LedgerTransactionReviewProjection) => string | null,
+  ): CommonValue => commonValue(selected.map(read));
   const commonText = (value: CommonValue, show: (value: string) => string) =>
     value.kind === "mixed"
       ? t("desktop.ledger.inspector.selection.mixed_values", {

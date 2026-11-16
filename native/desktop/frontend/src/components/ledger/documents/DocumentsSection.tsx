@@ -13,7 +13,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { facts } from "../../../shell/compose";
-import type { LedgerPort, LedgerRow } from "../../../shell/ledger";
+import type { LedgerPort } from "../../../shell/ledger";
 import type { StageEvent, StageState } from "../../../shell/ledgerStage";
 import { useStrings } from "../../../shell/strings";
 import { formatInstantDay } from "../../../shared/dateFormats";
@@ -28,6 +28,7 @@ import { fileName, referenceOf } from "./documentsModel";
 import { reasonLabel } from "./documentWords";
 import { EvidenceRecords } from "./EvidenceRecords";
 import { useLedgerRead } from "./useLedgerRead";
+import type { LedgerTransactionReviewProjection } from "../../../shell/ledgerReadContract";
 
 /** The viewer's share of the review's width, in percent, at first. */
 const VIEWER_SHARE = 45;
@@ -62,7 +63,7 @@ export function DocumentsSection({
   shown: boolean;
   /** The period's movements as read, for the links a confirmation offers
    * and the records attached to them. */
-  rows: LedgerRow[] | null;
+  rows: LedgerTransactionReviewProjection[] | null;
   stage: StageState;
   onStage(event: StageEvent): void;
 }) {

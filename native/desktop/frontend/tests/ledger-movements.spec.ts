@@ -25,7 +25,7 @@ import {
   classificationText,
   statusWord,
 } from "../src/components/ledger/movements/movementWords";
-import type { LedgerRow, LedgerStatusResult } from "../src/shell/ledger";
+import type { LedgerStatusResult } from "../src/shell/ledger";
 import type { LedgerPreflightReason } from "../src/shell/ledgerContract";
 import {
   categoryCells,
@@ -40,6 +40,7 @@ import { hexId, movement } from "./support/ledger";
 import { SERVED } from "./support/servedVocabulary";
 import { recordedCheck } from "./support/stagedCheck";
 import { fixtureDay, fixtureYear } from "../src/dev/fixtureDates";
+import type { LedgerTransactionReviewProjection } from "../src/shell/ledgerReadContract";
 
 // What the movements grid makes of a window, and the one classify command.
 // No page is opened.
@@ -48,7 +49,7 @@ import { fixtureDay, fixtureYear } from "../src/dev/fixtureDates";
  * would leave them and the category given. Personal asks for none. */
 const classifying = (
   request: Omit<ClassifyRequest, "check">,
-  rows: ReadonlyMap<string, LedgerRow>,
+  rows: ReadonlyMap<string, LedgerTransactionReviewProjection>,
   content: StagedContent = EMPTY_CONTENT,
 ) =>
   classifyCells(
@@ -129,7 +130,7 @@ const B = hexId("b");
 const C = hexId("c");
 const D = hexId("d");
 const E = hexId("e");
-const rows: LedgerRow[] = [
+const rows: LedgerTransactionReviewProjection[] = [
   movement(A),
   movement(B, {
     business_classification: "BUSINESS",
@@ -343,7 +344,7 @@ const labels: SortLabels = {
 };
 
 test("sorting puts an empty value last both ways and amounts by value", () => {
-  const ids = (sorted: LedgerRow[]) =>
+  const ids = (sorted: LedgerTransactionReviewProjection[]) =>
     sorted.map((row) => row.transaction.transaction_id);
   expect(
     ids(sortRows(rows, { key: "amount", direction: "asc" }, labels)),

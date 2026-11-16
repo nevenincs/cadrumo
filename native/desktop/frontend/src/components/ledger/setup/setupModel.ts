@@ -12,7 +12,6 @@ import type {
   LedgerPort,
   LedgerRequest,
   LedgerResult,
-  LedgerRow,
 } from "../../../shell/ledger";
 import { ledgerFailure } from "../../../shell/ledger";
 import { isDecidedClassification } from "../../../shell/ledgerContract";
@@ -26,6 +25,7 @@ import {
 import type { RuleSeed } from "../../../shell/ledgerCommands";
 import type { LedgerRuleRowProjection } from "../../../shell/ledgerClassificationContract";
 import { normalisedDescription } from "../movements/movementsModel";
+import type { LedgerTransactionReviewProjection } from "../../../shell/ledgerReadContract";
 
 // ---- Calls ---------------------------------------------------------------
 
@@ -176,12 +176,16 @@ export function commonWords(descriptions: readonly string[]): string {
  * the movements disagree. */
 export function rulePrefill(
   seed: RuleSeed,
-  rows: ReadonlyMap<string, LedgerRow>,
+  rows: ReadonlyMap<string, LedgerTransactionReviewProjection>,
 ): RulePrefill {
   const chosen = seed.ids
     .map((id) => rows.get(id))
-    .filter((row): row is LedgerRow => row !== undefined);
-  const shared = <T>(read: (row: LedgerRow) => T): T | null => {
+    .filter(
+      (row): row is LedgerTransactionReviewProjection => row !== undefined,
+    );
+  const shared = <T>(
+    read: (row: LedgerTransactionReviewProjection) => T,
+  ): T | null => {
     const values = new Set(chosen.map(read));
     return values.size === 1 ? ([...values][0] ?? null) : null;
   };

@@ -1,4 +1,3 @@
-import type { LedgerRow } from "../../../shell/ledger";
 import {
   CLASSIFICATION_OF,
   categoryCells,
@@ -12,6 +11,7 @@ import { typedPoints } from "../editing/editingModel";
 import { ClassifyDialog } from "./ClassifyDialog";
 import { categoryLabel } from "./movementWords";
 import type { Asking, ClassifyCommand } from "./useClassifyCommand";
+import type { LedgerTransactionReviewProjection } from "../../../shell/ledgerReadContract";
 
 /**
  * The dialog the classify command asked for, and what its answer stages: a
@@ -32,7 +32,7 @@ export function MovementClassifyDialog({
 }: {
   asking: Asking;
   command: ClassifyCommand;
-  byId: ReadonlyMap<string, LedgerRow>;
+  byId: ReadonlyMap<string, LedgerTransactionReviewProjection>;
   ratios: ConfiguredRatios;
   onOpenRatios?: () => void;
   onStage: (event: StageEvent) => void;

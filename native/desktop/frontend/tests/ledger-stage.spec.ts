@@ -14,14 +14,17 @@ import {
   type StagedAction,
   type StagedRowChanges,
 } from "../src/shell/ledgerStage";
-import type { LedgerRow } from "../src/shell/ledger";
 import { hexId, movement } from "./support/ledger";
 import { recordedCheck } from "./support/stagedCheck";
+import type { LedgerTransactionReviewProjection } from "../src/shell/ledgerReadContract";
 
 // The staged-changes store. No page is opened.
 
 /** The fields the backend names as giving `row` a new id under `changes`. */
-const changesIdentity = (row: LedgerRow, changes: StagedRowChanges) => {
+const changesIdentity = (
+  row: LedgerTransactionReviewProjection,
+  changes: StagedRowChanges,
+) => {
   const id = row.transaction.transaction_id;
   return recordedCheck(
     { rows: { [id]: changes }, actions: [], drafts: [] },

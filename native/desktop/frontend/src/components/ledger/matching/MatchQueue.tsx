@@ -7,11 +7,7 @@ import { EmptyState } from "@/components/ui/empty";
 import { Icon } from "@/components/ui/icon";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio";
 import { Toast } from "@/components/ui/toast";
-import type {
-  LedgerPort,
-  LedgerRow,
-  LedgerStatusResult,
-} from "../../../shell/ledger";
+import type { LedgerPort, LedgerStatusResult } from "../../../shell/ledger";
 import { useInvoiceMatches } from "../../../shell/ledgerInvoiceMatch";
 import type { StageEvent, StageState } from "../../../shell/ledgerStage";
 import { useStrings, type Translate } from "../../../shell/strings";
@@ -38,10 +34,14 @@ import {
   settlesText,
 } from "./matchingWords";
 import { useMatchingFacts, type Facts } from "./useMatchingFacts";
+import type { LedgerTransactionReviewProjection } from "../../../shell/ledgerReadContract";
 
 export type AffectedDeclaration = LedgerStatusResult["stale_filings"][number];
 
-const movementAmount = (locale: string, row: LedgerRow) =>
+const movementAmount = (
+  locale: string,
+  row: LedgerTransactionReviewProjection,
+) =>
   formatAmount(locale, row.transaction.amount, {
     currency: row.transaction.currency,
   });
@@ -408,7 +408,7 @@ export function MatchQueue({
   reader: string | null;
   shown: boolean;
   /** The period's movements as read, or null while they are not. */
-  rows: LedgerRow[] | null;
+  rows: LedgerTransactionReviewProjection[] | null;
   /** Which read of the movements `rows` is: a new one reads the rest
    * again. */
   generation: number | null;

@@ -4,7 +4,6 @@
 // stage and why it cannot; the page asks the person for what is missing,
 // stages the cells it returns and says what it staged. Nothing here writes.
 
-import type { LedgerRow } from "./ledger";
 import {
   fieldsDroppedBy,
   keepsCategory,
@@ -20,6 +19,7 @@ import {
   type StageEvent,
   type StageField,
 } from "./ledgerStage";
+import type { LedgerTransactionReviewProjection } from "./ledgerReadContract";
 
 export const CLASSIFY_KINDS = ["business", "personal", "mixed"] as const;
 export type ClassifyKind = (typeof CLASSIFY_KINDS)[number];
@@ -94,7 +94,7 @@ export type ClassifyAvailability =
  * the ledger answers: a spending category, or none, being income. */
 export function categorySplit(
   ids: readonly string[],
-  rows: ReadonlyMap<string, LedgerRow>,
+  rows: ReadonlyMap<string, LedgerTransactionReviewProjection>,
   check: StagedCheck,
 ): { expenses: number; income: number } {
   let expenses = 0;
@@ -111,7 +111,7 @@ export function categorySplit(
 export function classifyAvailability(
   kind: ClassifyKind,
   target: ClassifyTarget,
-  rows: ReadonlyMap<string, LedgerRow>,
+  rows: ReadonlyMap<string, LedgerTransactionReviewProjection>,
 ): ClassifyAvailability {
   if (target.hidden > 0) {
     if (!target.ids.some((id) => rows.has(id)))
@@ -157,7 +157,8 @@ export function classifyAvailability(
 export type ConfiguredRatios = ReadonlyMap<number, ReadonlySet<string> | null>;
 
 /** The movement's year, which its usage ratio is configured for. */
-const yearOf = (row: LedgerRow) => Number(row.transaction.date.slice(0, 4));
+const yearOf = (row: LedgerTransactionReviewProjection) =>
+  Number(row.transaction.date.slice(0, 4));
 
 /** How Mixed with `category` stands on the movements that take one: those
  * whose year has a ratio configured for it, those whose year has none,
@@ -165,7 +166,7 @@ const yearOf = (row: LedgerRow) => Number(row.transaction.date.slice(0, 4));
 export type RatioCoverage = { staged: number; missing: number; unread: number };
 export function ratioCoverage(
   ids: readonly string[],
-  rows: ReadonlyMap<string, LedgerRow>,
+  rows: ReadonlyMap<string, LedgerTransactionReviewProjection>,
   category: string,
   ratios: ConfiguredRatios | undefined,
   check: StagedCheck,
@@ -225,7 +226,7 @@ export type ClassifyOutcome =
  */
 export function classifyCells(
   request: ClassifyRequest,
-  rows: ReadonlyMap<string, LedgerRow>,
+  rows: ReadonlyMap<string, LedgerTransactionReviewProjection>,
 ): ClassifyOutcome {
   let category: string | null = null;
   let share: string | null = null;
@@ -339,7 +340,7 @@ export type ClassifyScope = {
 export function categoryCells(
   ids: readonly string[],
   category: string,
-  rows: ReadonlyMap<string, LedgerRow>,
+  rows: ReadonlyMap<string, LedgerTransactionReviewProjection>,
   check: StagedCheck,
 ):
   | {
@@ -385,7 +386,7 @@ export function categoryCells(
  */
 export function clearCategoryCells(
   ids: readonly string[],
-  rows: ReadonlyMap<string, LedgerRow>,
+  rows: ReadonlyMap<string, LedgerTransactionReviewProjection>,
   check: StagedCheck,
 ):
   | {

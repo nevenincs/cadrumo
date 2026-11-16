@@ -5,7 +5,7 @@
 // as a ledger that did not answer. A test in the owning Python package holds
 // every recorded answer equal to the live one and records new questions.
 
-import type { LedgerRow, OutputLanguage } from "../shell/ledger";
+import type { OutputLanguage } from "../shell/ledger";
 import type {
   LedgerStagedCheckRequest,
   LedgerStagedCheckResult,
@@ -17,6 +17,7 @@ import type {
   LedgerStagedRowAnswer,
 } from "../shell/ledgerMovementCheckContract";
 import { STAGE_FIELDS, storedFieldValue } from "../shell/ledgerStage";
+import type { LedgerTransactionReviewProjection } from "../shell/ledgerReadContract";
 import entryOptions from "@fixtures/ledger-entry-options/ledgerEntryOptions.json" with { type: "json" };
 import recorded from "@fixtures/ledger-staged-check/ledgerStagedCheck.json" with { type: "json" };
 
@@ -60,7 +61,10 @@ const unrecordedHook = () =>
 /** What the answer about a movement rests on: all it stores of what can be
  * staged, its lifecycle and evidence, and what was asked. The id is left out
  * since no answer rests on it. */
-export function rowQuestion(row: LedgerRow, asked: LedgerStagedRow): string {
+export function rowQuestion(
+  row: LedgerTransactionReviewProjection,
+  asked: LedgerStagedRow,
+): string {
   const stored: Record<string, string | null> = {};
   for (const field of STAGE_FIELDS)
     stored[field] = storedFieldValue(row, field) ?? null;
@@ -86,7 +90,7 @@ const family = (name: string): readonly string[] =>
  * recorded. */
 export function answerStagedCheck(
   request: LedgerStagedCheckRequest,
-  rows: (id: string) => LedgerRow | undefined,
+  rows: (id: string) => LedgerTransactionReviewProjection | undefined,
   profileId: string,
 ): LedgerStagedCheckResult | null {
   const language = request.output_language ?? DEFAULT_LANGUAGE;

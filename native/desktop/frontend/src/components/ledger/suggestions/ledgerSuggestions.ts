@@ -9,12 +9,9 @@ import type { Suggestion } from "@/components/ui/suggestions";
 import { countryName, currencyName } from "../../../shared/codeNames";
 import { formatDay } from "../../../shared/dateFormats";
 import type { CatalogueInvoiceSnapshot } from "../../../shell/ledgerInvoiceContract";
-import type {
-  KnownCounterparty,
-  KnownText,
-  LedgerRow,
-} from "../../../shell/ledger";
+import type { KnownCounterparty, KnownText } from "../../../shell/ledger";
 import type { CapitalGood } from "../../../shell/ledgerRegisterOperations";
+import type { LedgerTransactionReviewProjection } from "../../../shell/ledgerReadContract";
 
 /** The sibling fields a counterparty pick can fill. */
 export type PartyFill = "name" | "tax_id" | "country";
@@ -241,7 +238,7 @@ export function usedCodeOptions(
   return [...used, ...others];
 }
 
-const newestRowsFirst = (rows: readonly LedgerRow[]) =>
+const newestRowsFirst = (rows: readonly LedgerTransactionReviewProjection[]) =>
   [...rows].sort((left, right) =>
     right.transaction.date.localeCompare(left.transaction.date),
   );
@@ -249,7 +246,7 @@ const newestRowsFirst = (rows: readonly LedgerRow[]) =>
 /** Movement descriptions, each offering the counterparty it was last used
  * with: staged, then held rows, then the rest of the history. */
 export function descriptionOptions(
-  rows: readonly LedgerRow[],
+  rows: readonly LedgerTransactionReviewProjection[],
   staged: readonly string[] = [],
   known: readonly KnownText[] = [],
 ): Suggestion[] {
@@ -278,7 +275,7 @@ export function descriptionOptions(
  * the catalogue's parties. A party's country and identification state come
  * along as fills; a tax id only tells two apart, as a movement states none. */
 export function counterpartyOptions(
-  rows: readonly LedgerRow[],
+  rows: readonly LedgerTransactionReviewProjection[],
   invoices: readonly CatalogueInvoiceSnapshot[] | null,
   staged: readonly string[] = [],
   known: readonly KnownCounterparty[] = [],
@@ -343,7 +340,7 @@ export function counterpartyOptions(
 
 /** Group labels in use: staged, then held rows, then the history. */
 export function groupOptions(
-  rows: readonly LedgerRow[],
+  rows: readonly LedgerTransactionReviewProjection[],
   staged: readonly string[] = [],
   known: readonly KnownText[] = [],
 ): Suggestion[] {

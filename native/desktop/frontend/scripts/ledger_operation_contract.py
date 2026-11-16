@@ -173,6 +173,10 @@ FAMILIES: dict[str, tuple[str, tuple[str, ...]]] = {
             "ledger.reset",
         ),
     ),
+    "read": (
+        "LedgerReadContracts",
+        ("ledger.list",),
+    ),
 }
 
 #: The families whose modules a family imports its types from rather than writing them again, in the order
@@ -212,6 +216,18 @@ EARLIER: dict[str, tuple[str, ...]] = {
         "inventory",
         "activityAsset",
         "activityAssetRead",
+    ),
+    "read": (
+        "classification",
+        "invoice",
+        "document",
+        "documentReview",
+        "movement",
+        "movementCheck",
+        "inventory",
+        "activityAsset",
+        "activityAssetRead",
+        "entry",
     ),
 }
 

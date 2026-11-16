@@ -3,11 +3,6 @@
 // year only where the window spans more than one, and an id the page does
 // not know as the id itself, never a guess.
 
-import type {
-  LedgerMovementWithholding,
-  LedgerReviewStatus,
-  LedgerTransaction,
-} from "../../../shell/ledger";
 import {
   isClassification,
   isDirection,
@@ -19,6 +14,11 @@ import type { ServedVocabulary } from "../../../shell/ledgerServedVocabulary";
 import type { Translate } from "../../../shell/strings";
 import { wordOrToken } from "../../../shell/tokenWords";
 import { formatPercent } from "../../../shared/numbers";
+import type { LedgerMovementWithholdingProjection } from "../../../shell/ledgerReadContract";
+import type {
+  LedgerReviewStatus,
+  LedgerTransactionProjection,
+} from "../../../shell/ledgerInvoiceContract";
 
 const lower = (token: string) => token.toLowerCase();
 
@@ -81,7 +81,7 @@ export const classificationLabel = (t: Translate, classification: string) =>
  * A reason the catalogue has no word for shows as its served token. */
 export function withholdingTitle(
   t: Translate,
-  entry: LedgerMovementWithholding,
+  entry: LedgerMovementWithholdingProjection,
 ): string {
   if (entry.held_back !== null)
     return wordOrToken(
@@ -100,7 +100,7 @@ export function classificationText(
   t: Translate,
   locale: string,
   transaction: Pick<
-    LedgerTransaction,
+    LedgerTransactionProjection,
     "business_classification" | "business_pct"
   >,
 ): string {
