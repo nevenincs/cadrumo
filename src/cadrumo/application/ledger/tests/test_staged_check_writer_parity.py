@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from datetime import UTC, date, datetime
 from decimal import Decimal
+from typing import get_args
 from uuid import uuid4
 
 import pytest
@@ -16,7 +17,7 @@ from pydantic import ValidationError
 
 from ....core.iva_deduction_fact import IvaDeductionFactKind
 from ....domain.iva.schema import IvaCategory
-from ....domain.transactions.classification_effects import lifecycle_actions_taken
+from ....domain.transactions.classification_effects import fields_cleared_by_classification, lifecycle_actions_taken
 from ....domain.transactions.classification_rule import require_new_rule_decision
 from ....domain.transactions.enums import (
     RULE_CATEGORY_STATES,
@@ -30,8 +31,15 @@ from ....domain.transactions.models import Transaction
 from ..actions_manual import transaction_from_command
 from ..manual_update import command_from_patch
 from ..models import ManualLedgerTransactionCommand, ManualLedgerTransactionPatch
-from ..staged_check import TRANSFER_LOCKED_FIELDS, check_draft, check_stored_row
-from ..staged_check_contracts import LedgerStagedCell, LedgerStagedDraft, LedgerStagedDraftField, LedgerStagedRow
+from ..staged_check import check_draft, check_stored_row
+from ..staged_check_contracts import (
+    LedgerStagedCell,
+    LedgerStagedDraft,
+    LedgerStagedDraftField,
+    LedgerStagedRow,
+    StageFieldName,
+)
+from ..staged_check_tax_set import TRANSFER_LOCKED_FIELDS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
@@ -219,6 +227,21 @@ def test_a_row_is_asked_for_a_category_as_it_will_be_saved_and_income_is_asked_b
     income = _stored(direction=TransactionDirection.INCOMING, classification=BusinessClassification.BUSINESS)
     answer = check_stored_row(_row(), income)
     assert (answer.category_askable, answer.category_settable) == (True, False)
+
+
+def test_each_row_serves_the_tax_set_fields_it_skips_as_its_writer_drops_or_refuses_them() -> None:
+    """A personal row skips what a Personal write drops, a transfer every field its writer refuses there."""
+    personal = check_stored_row(_row(), _stored(classification=BusinessClassification.PERSONAL))
+    assert {"category_id", "irpf_category", "business_pct"} <= set(personal.tax_set_skipped_fields)
+    assert "iva_category" not in personal.tax_set_skipped_fields
+    assert set(personal.tax_set_skipped_fields) == fields_cleared_by_classification(
+        BusinessClassification.PERSONAL
+    ) & set(get_args(StageFieldName))
+    transfer = check_stored_row(_row(("direction", "INTERNAL_TRANSFER")), _stored())
+    assert transfer.tax_set_skipped_fields == TRANSFER_LOCKED_FIELDS
+    assert "iva_category" in transfer.tax_set_skipped_fields
+    business = check_stored_row(_row(), _stored(classification=BusinessClassification.BUSINESS))
+    assert business.tax_set_skipped_fields == ()
 
 
 def test_a_set_for_all_skips_personal_for_what_its_write_drops_and_no_longer_skips_the_unclassified() -> None:

@@ -203,6 +203,7 @@ class LedgerStagedRowAnswer(BaseModel):
     lifecycle_actions: tuple[LifecycleAction, ...] = ()
     tax_set_skip: TaxSetSkip | None = None
     transfer_locked_fields: tuple[StageFieldName, ...] = ()
+    tax_set_skipped_fields: tuple[StageFieldName, ...] = ()
     classifying_fields: tuple[StageFieldName, ...] = ()
     identity_fields: tuple[StageFieldName, ...] = ()
     routes: tuple[LedgerStagedRoute, ...] = ()

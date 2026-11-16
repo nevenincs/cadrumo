@@ -89,6 +89,40 @@ function lineColumns(invoice: EvidenceStructuredInvoiceV1): string[] {
   return columns;
 }
 
+/** One shown page: a structured e-invoice as the facts its record states,
+ * never as an image; any other document as the image the runtime drew. */
+export function DocumentPage({
+  t,
+  shown,
+  scale,
+  fileName,
+}: {
+  t: Translate;
+  shown: EvidencePageResult;
+  scale: number;
+  fileName: string;
+}) {
+  return (
+    <>
+      {shown.structured_invoice && (
+        <StructuredInvoice t={t} invoice={shown.structured_invoice} />
+      )}
+      {shown.media_type !== "application/xml" && (
+        <img
+          className="ledger-document-image block max-w-none"
+          style={{ width: `${scale * 100}%` }}
+          src={shown.image_data_url ?? undefined}
+          alt={t("desktop.ledger.documents.viewer.image", {
+            file: shown.file_name ?? fileName,
+            page: shown.page,
+          })}
+          draggable={false}
+        />
+      )}
+    </>
+  );
+}
+
 /** A structured e-invoice as the facts its record states. Every word is a
  * key the backend serves, and nothing is read from the document here. */
 function StructuredInvoice({
@@ -279,20 +313,8 @@ export function DocumentViewer({
         className="ledger-document-frame relative min-h-0 flex-1 overflow-auto rounded-md border bg-muted"
         aria-busy={reading || undefined}
       >
-        {shown?.structured_invoice && (
-          <StructuredInvoice t={t} invoice={shown.structured_invoice} />
-        )}
-        {shown && shown.media_type !== "application/xml" && (
-          <img
-            className="ledger-document-image block max-w-none"
-            style={{ width: `${scale * 100}%` }}
-            src={shown.image_data_url ?? undefined}
-            alt={t("desktop.ledger.documents.viewer.image", {
-              file: shown.file_name ?? fileName,
-              page: shown.page,
-            })}
-            draggable={false}
-          />
+        {shown && (
+          <DocumentPage t={t} shown={shown} scale={scale} fileName={fileName} />
         )}
         {reading && (
           <div
