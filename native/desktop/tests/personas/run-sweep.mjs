@@ -54,6 +54,9 @@
 //   `Access is denied` is a harness failure: its lines carry the reason prefix
 //   `cause harness: ` and the sweep goes on; only a real sign-in or version
 //   refusal stops it.
+//   --only-listed open only the declarations the rows file lists for each case
+//                (CADRUMO_PERSONA_ONLY), so a rerun of moved rows re-measures
+//                those rows and no other return of the persona's world.
 //   --dry-run    print the planned cases and exit; nothing is launched.
 //
 // The packaged host is staged once at the start and shared by every window;
@@ -142,6 +145,7 @@ function parseArguments(argv) {
     "fresh",
     "loads-only",
     "no-stop-on-load-failure",
+    "only-listed",
   ]);
   const values = {};
   for (let index = 0; index < argv.length; index += 1) {
@@ -182,8 +186,11 @@ export function plannedCases(rowsPath) {
       persona: row.persona,
       horizon: row.horizon,
       rows: 0,
+      listed: [],
     };
     found.rows += 1;
+    if (row.modelo != null)
+      found.listed.push(`${row.modelo}/${row.year}/${row.period}`);
     cases.set(id, found);
   });
   return [...cases.values()];
@@ -489,6 +496,9 @@ async function runCase(item, context) {
           CADRUMO_BUILD_CONFIG: config,
           CADRUMO_PERSONA_HOST: host,
           ...(context.loadsOnly ? { CADRUMO_PERSONA_LOADS_ONLY: "1" } : {}),
+          ...(context.onlyListed
+            ? { CADRUMO_PERSONA_ONLY: item.listed.join(",") }
+            : {}),
           PYTHONDONTWRITEBYTECODE: "1",
         },
       },
@@ -714,6 +724,7 @@ async function main() {
           .map((dir) => resolve(dir))
       : [logsDir],
     loadsOnly,
+    onlyListed: args["only-listed"] === true,
     worldTree: args["world-tree"] ? resolve(args["world-tree"]) : repository,
   };
   const ordinals = new Map(cases.map((item, index) => [item.id, index + 1]));
