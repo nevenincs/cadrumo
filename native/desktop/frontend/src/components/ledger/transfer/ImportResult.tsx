@@ -10,11 +10,8 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 import { useTableView, type ViewColumn } from "@/components/ui/table-view";
 import { facts } from "../../../shell/compose";
-import type {
-  LedgerImportResult,
-  LedgerPort,
-  PickedFile,
-} from "../../../shell/ledger";
+import type { LedgerPort, PickedFile } from "../../../shell/ledger";
+import type { LedgerImportResultProjection } from "../../../shell/ledgerTransferContract";
 import type { InvoiceImportResult } from "../../../shell/ledgerInvoiceOperations";
 import { useStrings, type Translate } from "../../../shell/strings";
 import { formatDay } from "../../../shared/dateFormats";
@@ -226,7 +223,7 @@ export function ImportResultStep({
       (item): item is Extract<BankApplied, { kind: "imported" }> =>
         item.kind === "imported",
     );
-    const sum = (pick: (result: LedgerImportResult) => number) =>
+    const sum = (pick: (result: LedgerImportResultProjection) => number) =>
       imported.reduce((total, item) => total + pick(item.result), 0);
     const flagged = sum((result) => result.likely_duplicates);
     const unknownFiles = outcome.applied.filter(

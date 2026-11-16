@@ -1,6 +1,7 @@
 import { listed } from "../../../shell/compose";
 import type { CatalogueInvoiceSnapshot } from "../../../shell/ledgerInvoiceContract";
-import type { LedgerPort, OutputLanguage } from "../../../shell/ledger";
+import type { LedgerPort } from "../../../shell/ledger";
+import type { OutputLanguage } from "../../../shell/ledgerClassificationContract";
 import { sameDecimal } from "../../../shell/ledgerGrammar";
 import type {
   AcquisitionCandidate,

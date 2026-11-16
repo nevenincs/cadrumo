@@ -29,6 +29,7 @@ from cadrumo.application.actividad_asset.operation_dtos import (
 )
 from cadrumo.application.actividad_asset.request_restoration import restoring
 from cadrumo.core.i18n.render import lookup_translation
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.renta.actividad_asset.election import AcquiredCondition, AmortizationMethod
 from cadrumo.domain.renta.actividad_asset.errors import ActividadAssetError, ActividadAssetValidationError
 from cadrumo.domain.renta.actividad_asset.lifecycle import (
@@ -192,8 +193,11 @@ def test_a_period_that_is_not_one_of_the_tax_year_is_refused_with_its_reason() -
         json.dumps({"profile_id": str(_PROFILE), "tax_year": FIRST_YEAR, "m130_period": "9T"})
     )
 
-    with pytest.raises(ActividadAssetValidationError, match="m130_period_invalid") as refused:
-        request.requested_period()
+    with (
+        bundled_indexed_authority().operation() as operation,
+        pytest.raises(ActividadAssetValidationError, match="m130_period_invalid") as refused,
+    ):
+        request.requested_period(operation=operation)
 
     refusal = activity_asset_executors_refusal(refused.value)
     assert refusal is not None

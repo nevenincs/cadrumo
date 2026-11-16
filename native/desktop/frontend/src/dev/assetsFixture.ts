@@ -8,7 +8,7 @@
 // none for any other; the request it is made from is judged as the backend
 // judges a revision.
 
-import type { OutputLanguage } from "../shell/ledger";
+import type { OutputLanguage } from "../shell/ledgerClassificationContract";
 import { ledgerLanguage } from "../shell/ledgerLanguage";
 import { type Handler, TAKES_LANGUAGE, type Tools } from "./assetsFixtureBase";
 import { makeRegister } from "./assetsFixtureRegister";

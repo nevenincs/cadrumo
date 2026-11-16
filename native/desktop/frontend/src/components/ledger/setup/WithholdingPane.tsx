@@ -18,11 +18,11 @@ import {
   type WithholdingOrigin,
 } from "../../../shell/ledgerContract";
 import type {
-  WithholdingAbsence,
-  WithholdingAmountColumn,
-  WithholdingMutationResult,
-  WithholdingRow,
-} from "../../../shell/ledgerRegisterOperations";
+  RetencionSoportadaAbsenceRowProjection,
+  RetencionSoportadaAmountColumnProjection,
+  RetencionSoportadaMutationProjection,
+  RetencionSoportadaRowProjection,
+} from "../../../shell/ledgerWithholdingContract";
 import { formatAmount } from "../../../shared/numbers";
 import { formatInstantDay } from "../../../shared/dateFormats";
 import { useStrings } from "../../../shell/strings";
@@ -58,7 +58,7 @@ import {
 const ACTIONS = ["record", "attest"] as const;
 type Action = (typeof ACTIONS)[number];
 
-const NO_COLUMNS: readonly WithholdingAmountColumn[] = [];
+const NO_COLUMNS: readonly RetencionSoportadaAmountColumnProjection[] = [];
 
 /** The characters of a fingerprint or reference the table shows. */
 const SHOWN_HEX = 12;
@@ -76,8 +76,8 @@ const SHOWN_HEX = 12;
 /** The amount a row holds under the field a served column names; the
  * backend names the fields, so the window does not list them. */
 const servedAmount = (
-  found: WithholdingRow,
-  column: WithholdingAmountColumn,
+  found: RetencionSoportadaRowProjection,
+  column: RetencionSoportadaAmountColumnProjection,
 ): PublicDecimal | null | undefined =>
   (found as unknown as Record<string, PublicDecimal | null | undefined>)[
     column.field
@@ -124,7 +124,8 @@ export function WithholdingPane({
   const [file, setFile] = useState<PickedFile | null>(null);
   const [note, setNote] = useState("");
   /** The row the person is asked to confirm removing. */
-  const [removing, setRemoving] = useState<WithholdingRow | null>(null);
+  const [removing, setRemoving] =
+    useState<RetencionSoportadaRowProjection | null>(null);
   useSetupDraft(
     action !== null &&
       ([taxId, legalName, fingerprint, note].some(Boolean) ||
@@ -255,7 +256,7 @@ export function WithholdingPane({
           ),
       );
       const done = await write.run(
-        (): Promise<SetupCall<WithholdingMutationResult>> =>
+        (): Promise<SetupCall<RetencionSoportadaMutationProjection>> =>
           setupCall(
             port,
             "ledger.retencion_soportada.record",
@@ -320,7 +321,7 @@ export function WithholdingPane({
     }
     reloadAbsences();
   };
-  const withdraw = async (found: WithholdingAbsence) => {
+  const withdraw = async (found: RetencionSoportadaAbsenceRowProjection) => {
     await write.run(
       () =>
         setupCall(
@@ -351,7 +352,7 @@ export function WithholdingPane({
   };
   /** Removes one stored record; it landed where the ejercicio, listed
    * again, no longer holds that payer under that class. */
-  const remove = async (found: WithholdingRow) => {
+  const remove = async (found: RetencionSoportadaRowProjection) => {
     await write.run(
       () =>
         setupCall(
@@ -400,7 +401,10 @@ export function WithholdingPane({
       : null;
 
   /** An amount as the record states it; blank where it states none. */
-  const amountOf = (found: WithholdingRow, column: WithholdingAmountColumn) => {
+  const amountOf = (
+    found: RetencionSoportadaRowProjection,
+    column: RetencionSoportadaAmountColumnProjection,
+  ) => {
     const value = servedAmount(found, column);
     return value ? formatAmount(locale, value.decimal) : "";
   };
@@ -411,7 +415,7 @@ export function WithholdingPane({
     label: classWords(value),
   }));
 
-  const columns: Column<WithholdingRow>[] = [
+  const columns: Column<RetencionSoportadaRowProjection>[] = [
     {
       key: "class",
       label: t("desktop.ledger.withholding.column.class"),
@@ -431,7 +435,7 @@ export function WithholdingPane({
       sort: (found) => found.origin_label,
       cell: (found) => found.origin_label,
     },
-    ...amountColumns.map((column): Column<WithholdingRow> => ({
+    ...amountColumns.map((column): Column<RetencionSoportadaRowProjection> => ({
       key: column.field,
       label: column.label,
       numeric: true,
@@ -478,7 +482,7 @@ export function WithholdingPane({
   const absenceColumns = (
     withWithdraw: boolean,
     withdrawn: boolean,
-  ): Column<WithholdingAbsence>[] => [
+  ): Column<RetencionSoportadaAbsenceRowProjection>[] => [
     {
       key: "class",
       label: t("desktop.ledger.withholding.column.class"),
@@ -504,8 +508,9 @@ export function WithholdingPane({
             key: "withdrawn_on",
             label: t("desktop.ledger.withholding.column.withdrawn_on"),
             keepWords: true,
-            sort: (found: WithholdingAbsence) => found.withdrawn_at ?? "",
-            cell: (found: WithholdingAbsence) =>
+            sort: (found: RetencionSoportadaAbsenceRowProjection) =>
+              found.withdrawn_at ?? "",
+            cell: (found: RetencionSoportadaAbsenceRowProjection) =>
               found.withdrawn_at
                 ? formatInstantDay(locale, found.withdrawn_at)
                 : "—",
@@ -524,7 +529,7 @@ export function WithholdingPane({
             label: t("desktop.ledger.form.actions"),
             hidden: true,
             resizable: false,
-            cell: (found: WithholdingAbsence) => (
+            cell: (found: RetencionSoportadaAbsenceRowProjection) => (
               <WriteHold>
                 <Button
                   size="xs"

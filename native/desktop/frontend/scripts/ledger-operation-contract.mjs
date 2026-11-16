@@ -32,6 +32,10 @@ const outputs = {
   entry: "src/shell/ledgerEntryContract.ts",
   read: "src/shell/ledgerReadContract.ts",
   prorrata: "src/shell/ledgerProrrataContract.ts",
+  withholding: "src/shell/ledgerWithholdingContract.ts",
+  capitalGoods: "src/shell/ledgerCapitalGoodsContract.ts",
+  ownAccount: "src/shell/ledgerOwnAccountContract.ts",
+  transfer: "src/shell/ledgerTransferContract.ts",
 };
 
 const frontend = fileURLToPath(new URL("..", import.meta.url));
