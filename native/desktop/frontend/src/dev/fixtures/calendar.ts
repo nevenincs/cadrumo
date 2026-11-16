@@ -1,5 +1,7 @@
 import type {
   ObligationStatus,
+  OverviewCalendarScope,
+  OverviewFilingStatus,
   OverviewPeriodState,
 } from "../../shell/calendarContract";
 import type {
@@ -15,6 +17,7 @@ import {
   fixtureMonth,
   fixtureYear,
 } from "@/dev/fixtureDates";
+import { daysBetween } from "@/shared/dates";
 
 // A filing calendar in the shape the product reports, for the scenario host
 // and the stories. The dates are fixed around `TODAY`, so a story looks the
@@ -41,6 +44,78 @@ export type EntryChange = Partial<Omit<CalendarEntry, "filing_evidence">> & {
   filing_evidence?: Partial<CalendarEntry["filing_evidence"]>;
 };
 
+/** The fields the product decides from a calendar row rather than stores. */
+type ProductDecided =
+  | "days_until_close"
+  | "filing_status"
+  | "filing_status_words"
+  | "filing_status_words_language"
+  | "scopes";
+type ServedRow = Omit<CalendarEntry, ProductDecided>;
+
+// The fixture stands in for the product, so it serves these as the
+// product's calendar_models decides them: signed days from the evaluated
+// day to the binding close, none where the holiday calendar could not fix
+// the close; the strongest evidence's one filing status; and every scope
+// that holds on the evaluated day. A row may name its own, as a test that
+// serves what its dates would not give does.
+const productDaysUntilClose = (row: ServedRow): number | null =>
+  row.holiday_coverage === "calendar_unavailable"
+    ? null
+    : daysBetween(row.evaluated_on, row.adjusted_closes_on);
+
+const AEAT_FILING_STATUS: Partial<
+  Record<
+    CalendarEntry["filing_evidence"]["aeat_submission_state"],
+    OverviewFilingStatus
+  >
+> = {
+  justificante_verified: "receipt_verified",
+  accepted: "accepted",
+  submitted_observed: "submitted",
+};
+const PERIOD_FILING_STATUS: Record<OverviewPeriodState, OverviewFilingStatus> =
+  {
+    due: "due",
+    late: "overdue",
+    unknown: "unknown",
+    filed: "evidence_withheld",
+  };
+
+function productFilingStatus(row: ServedRow): OverviewFilingStatus {
+  const { aeat_submission_state: aeat, local_filing_state: local } =
+    row.filing_evidence;
+  const observed = AEAT_FILING_STATUS[aeat];
+  if (observed) return observed;
+  if (local === "external_baseline_imported") return "imported";
+  if (local === "ready_to_file") return "recorded_locally";
+  return PERIOD_FILING_STATUS[row.user_state];
+}
+
+/** The product's scopes in their declaration order, the order it serves them in. */
+const SCOPE_ORDER: readonly OverviewCalendarScope[] = [
+  "past",
+  "ahead",
+  "upcoming",
+  "overdue",
+  "filed",
+  "evidence_unknown",
+];
+
+function productScopes(row: ServedRow): OverviewCalendarScope[] {
+  const closed = row.adjusted_closes_on < row.evaluated_on;
+  const held: Record<OverviewCalendarScope, boolean> = {
+    past: closed && row.status !== "UNKNOWN",
+    ahead: !closed,
+    upcoming: !closed && row.user_state === "due",
+    overdue: closed && row.user_state === "late",
+    filed: row.user_state === "filed",
+    // The calendar read never withholds a row's own AEAT axis.
+    evidence_unknown: false,
+  };
+  return SCOPE_ORDER.filter((scope) => held[scope]);
+}
+
 /** A served calendar row as the product writes it, due and not filed unless
  * `change` says otherwise. */
 export function calendarEntry(
@@ -51,8 +126,16 @@ export function calendarEntry(
   change: EntryChange = {},
   evaluatedOn: string = FIXTURE_TODAY,
 ): CalendarEntry {
-  const { filing_evidence: evidence = {}, ...row } = change;
-  return {
+  const {
+    filing_evidence: evidence = {},
+    days_until_close: count,
+    filing_status: filingStatus,
+    filing_status_words: words,
+    filing_status_words_language: wordsLanguage,
+    scopes,
+    ...row
+  } = change;
+  const served: ServedRow = {
     modelo,
     period,
     opens_on: opens,
@@ -61,7 +144,10 @@ export function calendarEntry(
     shift_reason: "none",
     holiday_refs: [],
     jurisdictions: [],
-    holiday_coverage: "national_only",
+    // The product reports the holiday calendar unavailable for every close
+    // it could not work out.
+    holiday_coverage:
+      change.status === "UNKNOWN" ? "calendar_unavailable" : "national_only",
     payment_cutoff_on: null,
     evaluated_on: evaluatedOn,
     days_overdue: null,
@@ -100,6 +186,71 @@ export function calendarEntry(
       ...evidence,
     },
   };
+  const status = filingStatus ?? productFilingStatus(served);
+  return {
+    ...served,
+    days_until_close:
+      "days_until_close" in change
+        ? (count ?? null)
+        : productDaysUntilClose(served),
+    filing_status: status,
+    // SYNTHETIC: the product serves the words of its locale catalogue; the
+    // window does not draw them, so the fixture serves placeholder words.
+    filing_status_words:
+      words ?? `Synthetic words served for the ${status} filing status.`,
+    filing_status_words_language: wordsLanguage ?? "en",
+    scopes: scopes ?? productScopes(served),
+  };
+}
+
+// The product's two orders, as its calendar_models decides them: the list
+// by the month a window closes in, known closes before unknown ones, then
+// close date and identity; attention by reading (late, due, unknown,
+// filed), then the same tie-breaks.
+const ATTENTION_RANK: Record<OverviewPeriodState, number> = {
+  late: 0,
+  due: 1,
+  unknown: 2,
+  filed: 3,
+};
+const identity = (row: CalendarEntry): string[] => [
+  row.adjusted_closes_on,
+  row.modelo,
+  row.period,
+  row.local_work_unit_id ?? "",
+];
+const byKey = (a: (string | number)[], b: (string | number)[]): number => {
+  for (let at = 0; at < a.length; at += 1) {
+    const [left, right] = [a[at]!, b[at]!];
+    if (left !== right) return left < right ? -1 : 1;
+  }
+  return 0;
+};
+const listKey = (row: CalendarEntry) => [
+  row.adjusted_closes_on.slice(0, 7),
+  Number(row.status === "UNKNOWN"),
+  ...identity(row),
+];
+const attentionKey = (row: CalendarEntry) => [
+  ATTENTION_RANK[row.user_state],
+  Number(row.status === "UNKNOWN"),
+  ...identity(row),
+];
+
+/** A calendar as the product serves it: its entries in list order and its
+ * attention order over them, whatever order the fixture wrote them in. */
+export function servedCalendar(
+  calendar: Omit<FilingCalendar, "attention_order">,
+): FilingCalendar {
+  const entries = [...calendar.entries].sort((a, b) =>
+    byKey(listKey(a), listKey(b)),
+  );
+  const attention_order = entries
+    .map((_, index) => index)
+    .sort((a, b) =>
+      byKey(attentionKey(entries[a]!), attentionKey(entries[b]!)),
+    );
+  return { ...calendar, entries, attention_order };
 }
 
 const entry = calendarEntry;
@@ -153,7 +304,7 @@ export function calendarWarning(
   };
 }
 
-export const FIXTURE_CALENDAR: FilingCalendar = {
+export const FIXTURE_CALENDAR: FilingCalendar = servedCalendar({
   range: { from_date: fixtureDay(7, 1), to_date: fixtureDay(6, 30, 1) },
   support: {
     floor: fixtureYear - 4,
@@ -264,7 +415,7 @@ export const FIXTURE_CALENDAR: FilingCalendar = {
     advised: [{ modelo: "347", reason: "applicability_undetermined" }],
     out_of_scope: ["720"],
   },
-};
+});
 
 /** Counts from a capture earlier the same morning. */
 export const FIXTURE_NOTIFICATIONS: NotificationsSummary = {
@@ -280,11 +431,12 @@ export const NEVER_CAPTURED: NotificationsSummary = {
   unread: 0,
 };
 
-const without = (keep: (entry: CalendarEntry) => boolean): FilingCalendar => ({
-  ...FIXTURE_CALENDAR,
-  entries: FIXTURE_CALENDAR.entries.filter(keep),
-  warnings: [],
-});
+const without = (keep: (entry: CalendarEntry) => boolean): FilingCalendar =>
+  servedCalendar({
+    ...FIXTURE_CALENDAR,
+    entries: FIXTURE_CALENDAR.entries.filter(keep),
+    warnings: [],
+  });
 
 /** Only what is behind today: the mark for today closes the list. */
 export const BEHIND_CALENDAR = without(
@@ -297,7 +449,7 @@ export const AHEAD_CALENDAR = without(
 );
 
 /** Today falls between two dates of one month: the month is split by it. */
-export const STRADDLING_CALENDAR: FilingCalendar = {
+export const STRADDLING_CALENDAR: FilingCalendar = servedCalendar({
   ...AHEAD_CALENDAR,
   entries: [
     entry("216", fixtureMonth(9), fixtureDay(9, 21), fixtureDay(10, 1), {
@@ -309,13 +461,13 @@ export const STRADDLING_CALENDAR: FilingCalendar = {
     }),
     ...AHEAD_CALENDAR.entries,
   ],
-};
+});
 
 /** Windows whose close the product could not work out, beside known ones:
  * one whose earliest close is still ahead of today, among the closes of its
  * month, and one whose earliest close has passed, which is not known to be
  * late. Their dates are only the earliest each can close. */
-export const CLOSE_UNKNOWN_CALENDAR: FilingCalendar = {
+export const CLOSE_UNKNOWN_CALENDAR: FilingCalendar = servedCalendar({
   ...FIXTURE_CALENDAR,
   warnings: [],
   entries: [
@@ -329,12 +481,13 @@ export const CLOSE_UNKNOWN_CALENDAR: FilingCalendar = {
       user_state: "unknown",
     }),
   ],
-};
+});
 
 /** The same calendar with nothing due: an empty range is not a failed read. */
 export const EMPTY_CALENDAR: FilingCalendar = {
   ...FIXTURE_CALENDAR,
   entries: [],
+  attention_order: [],
   events: [],
   warnings: [],
   coverage: { ...FIXTURE_CALENDAR.coverage, surfaced: [], advised: [] },

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+from datetime import timedelta
 from pathlib import Path
 
 import pytest
@@ -13,9 +14,11 @@ from textual.widgets import Button, DataTable, Input, Select, Static
 from .....application.modelo.action_errors import ModeloProfileReadinessError
 from .....application.modelo.declarations_calendar import (
     DeclarationsCalendarEntryRefV1,
+    DeclarationsCalendarProjectionV1,
     DeclarationsCalendarSource,
 )
 from .....application.operator_actions.preconditions import profile_setup_incomplete_verdict
+from .....application.overview.calendar_models import OverviewCalendarScope
 from .....application.overview.coverage import AdvisedObligation, CoverageAdviceReason, ObligationCoverageReport
 from .....application.overview.next_actions import declare_next_action
 from .....core.config import override_settings
@@ -30,7 +33,6 @@ from ...tests.frame import geometry_band
 from ...tests.settling import settle
 from ..calendar import DeclarationsCalendarScreen
 from ..controller import calendar_address_focus_key, calendar_focus_key
-from ..models import DeclarationsCalendarScopeV1
 from .calendar_fixtures import calendar_controller, calendar_projection
 
 _YEAR = filing_year_envelope().horizon
@@ -103,32 +105,81 @@ def _rendered(screen: DeclarationsCalendarScreen) -> str:
     return "\n".join(values)
 
 
-def test_exact_scope_overlap_and_evidence_unknown_uses_source_observability() -> None:
+def test_exact_scope_overlap_and_evidence_unknown_is_served_per_row() -> None:
     controller = calendar_controller(calendar_projection())
-    assert [row.modelo for row in controller.visible_entries(DeclarationsCalendarScopeV1.ALL, "")] == [
+    assert [row.modelo for row in controller.visible_entries(None, "")] == [
         "130",
         "303",
         "111",
     ]
-    assert [row.modelo for row in controller.visible_entries(DeclarationsCalendarScopeV1.PAST, "")] == [
+    assert [row.modelo for row in controller.visible_entries(OverviewCalendarScope.PAST, "")] == [
         "130",
         "303",
     ]
-    assert [row.modelo for row in controller.visible_entries(DeclarationsCalendarScopeV1.OVERDUE, "")] == ["130"]
-    assert [row.modelo for row in controller.visible_entries(DeclarationsCalendarScopeV1.FILED, "")] == ["303"]
-    assert [row.modelo for row in controller.visible_entries(DeclarationsCalendarScopeV1.UPCOMING, "")] == ["111"]
-    assert controller.visible_entries(DeclarationsCalendarScopeV1.EVIDENCE_UNKNOWN, "") == ()
+    assert [row.modelo for row in controller.visible_entries(OverviewCalendarScope.OVERDUE, "")] == ["130"]
+    assert [row.modelo for row in controller.visible_entries(OverviewCalendarScope.FILED, "")] == ["303"]
+    assert [row.modelo for row in controller.visible_entries(OverviewCalendarScope.UPCOMING, "")] == ["111"]
+    assert controller.visible_entries(OverviewCalendarScope.EVIDENCE_UNKNOWN, "") == ()
     unknown = calendar_controller(calendar_projection(evidence_unobservable=True))
-    assert len(unknown.visible_entries(DeclarationsCalendarScopeV1.EVIDENCE_UNKNOWN, "")) == 3
+    assert len(unknown.visible_entries(OverviewCalendarScope.EVIDENCE_UNKNOWN, "")) == 3
+
+
+def _served_against_the_day() -> DeclarationsCalendarProjectionV1:
+    """A projection whose rows serve scopes that its own day and sources would not give them.
+
+    Its rows were evaluated on an earlier day than the projection's, so by the
+    projection's day the upcoming close has already passed; and the upcoming
+    row alone withholds its AEAT evidence although the AEAT source is observable.
+    """
+    base = calendar_projection()
+    overdue, filed, upcoming = base.entries
+    withheld = upcoming.model_copy(update={"aeat_submission_state": None, "justificante_verified": None})
+    served = base.model_copy(
+        update={"entries": (overdue, filed, withheld), "as_of": upcoming.adjusted_closes_on + timedelta(days=1)}
+    )
+    assert calendar_controller(served).source(DeclarationsCalendarSource.AEAT_EVIDENCE).availability.is_observable
+    assert all(row.adjusted_closes_on < served.as_of for row in served.entries)
+    return served
+
+
+def test_scope_keeps_exactly_the_entries_the_projection_serves_in_it_whatever_the_day() -> None:
+    """The agenda filters by each row's served membership, in served order, and decides none of it itself."""
+    projection = _served_against_the_day()
+    controller = calendar_controller(projection)
+    for scope in OverviewCalendarScope:
+        expected = tuple(row for row in projection.entries if scope in row.scopes)
+        assert controller.visible_entries(scope, "") == expected, scope
+    assert [row.modelo for row in controller.visible_entries(OverviewCalendarScope.PAST, "")] == ["130", "303"]
+    assert [row.modelo for row in controller.visible_entries(OverviewCalendarScope.UPCOMING, "")] == ["111"]
+    assert [row.modelo for row in controller.visible_entries(OverviewCalendarScope.EVIDENCE_UNKNOWN, "")] == ["111"]
+    assert len(controller.visible_entries(None, "")) == len(projection.entries)
+
+
+@pytest.mark.asyncio
+async def test_scope_picker_offers_all_then_each_served_scope_and_filters_by_served_membership() -> None:
+    projection = _served_against_the_day()
+    screen = DeclarationsCalendarScreen(calendar_controller(projection))
+    app = ScreenHostApp[None](screen)
+    async with app.run_test(size=(120, 40)) as pilot:
+        await settle(pilot)
+        scope = screen.query_one("#declarations-calendar-scope", Select)
+        table = screen.query_one("#declarations-calendar-agenda", DataTable)
+        assert table.row_count == len(projection.entries)
+        # A value the picker does not offer is refused by Select itself.
+        for item in OverviewCalendarScope:
+            scope.value = item.value
+            await settle(pilot)
+            assert table.row_count == sum(item in row.scopes for row in projection.entries), item
+        scope.value = "all"
+        await settle(pilot)
+        assert table.row_count == len(projection.entries)
 
 
 def test_unicode_and_search_uses_only_safe_localized_fields() -> None:
     controller = calendar_controller(calendar_projection())
-    assert [row.modelo for row in controller.visible_entries(DeclarationsCalendarScopeV1.ALL, "VENCIDA 130")] == ["130"]
-    assert [row.modelo for row in controller.visible_entries(DeclarationsCalendarScopeV1.ALL, "20 oct 2026 111")] == [
-        "111"
-    ]
-    assert controller.visible_entries(DeclarationsCalendarScopeV1.ALL, "private-work-name nif-token") == ()
+    assert [row.modelo for row in controller.visible_entries(None, "VENCIDA 130")] == ["130"]
+    assert [row.modelo for row in controller.visible_entries(None, "20 oct 2026 111")] == ["111"]
+    assert controller.visible_entries(None, "private-work-name nif-token") == ()
 
 
 def test_recovery_action_must_match_catalogue_and_natural_address() -> None:

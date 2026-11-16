@@ -13,12 +13,11 @@ import {
 import { formatCount } from "../shared/numbers";
 import { effortWords } from "./agentCatalog";
 import { sentFiles } from "./agentDocuments";
+import type { Effort, ProviderTransport } from "./agentCatalogContract";
 import type {
   AgentApproval,
   AgentQuestionnaire,
-  AgentEffort,
   AgentToolKind,
-  AgentTransport,
 } from "./agentSession";
 import { conditionWords, toolKindWords } from "./agentWords";
 import { listed } from "./compose";
@@ -87,11 +86,11 @@ export type AgentToolCall = {
  * display names are the agent's own and are absent where it served none. */
 export type AgentRanWith = {
   provider: string;
-  transport: AgentTransport;
+  transport: ProviderTransport;
   provider_display_name?: string | null;
   model: string;
   model_display_name?: string | null;
-  effort?: AgentEffort | null;
+  effort?: Effort | null;
 };
 
 /** The tokens a run's provider reported, as the agent counts them. The agent

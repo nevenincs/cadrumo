@@ -17,7 +17,7 @@ import { catalogue } from "./support/strings";
 // project's JSX setting. No page is opened.
 
 const LANE = catalogLanes(FIXTURE_CATALOG).find(
-  (lane) => lane.id === "local_api",
+  (lane) => lane.id === "zai_api",
 )!;
 const VISION = "synthetic-vision:1";
 /** A second keyless lane of the same catalog, which lists other models. */
@@ -119,7 +119,7 @@ async function compiled(): Promise<Draw> {
             item, kind: "local_ai", mode: "quick", state: "ready",
             stale_reason: null, blocked_reason: null, failure: null,
             recovery: null, recovery_action_id: null, version: "1.0",
-            size_bytes: null,
+            size_bytes: null, removals: [],
           }],
           rows_mode: "quick", complete: true, hardware_limited: false,
           check: null,

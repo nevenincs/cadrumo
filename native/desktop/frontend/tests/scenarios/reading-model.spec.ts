@@ -30,35 +30,35 @@ test("the model picked in the agent column is the one documents are read with, o
   // Nothing is stored for reading until the person picks.
   expect(await storedReading(target)).toBeNull();
   let picker = await openModelPicker(target);
-  await pickWay(target, picker, "beta/cli");
+  await pickWay(target, picker, "qwen/cli");
   await target.keyboard.press("Escape");
   await expect(picker).toBeHidden();
   await expect
     .poll(() => storedReading(target))
-    .toMatchObject({ lane: "beta_cli" });
+    .toMatchObject({ lane: "qwen_cli" });
   picker = await openModelPicker(target);
-  await pickWay(target, picker, "local/api");
+  await pickWay(target, picker, "zai/api");
   const model = picker.getByLabel(label("desktop.agent.model"));
   // The lane starts on another model, so the store changes only by the pick.
   await expect(model).not.toHaveValue("synthetic-vision:1");
   await expect
     .poll(() => storedReading(target))
-    .toMatchObject({ lane: "local_api" });
+    .toMatchObject({ lane: "zai_api" });
   expect(await storedReading(target)).not.toEqual({
-    lane: "local_api",
+    lane: "zai_api",
     model: "synthetic-vision:1",
   });
   await model.selectOption("synthetic-vision:1");
   await expect
     .poll(() => storedReading(target))
-    .toEqual({ lane: "local_api", model: "synthetic-vision:1" });
+    .toEqual({ lane: "zai_api", model: "synthetic-vision:1" });
 });
 
 test("on a fresh profile the picker shows the installed model the service reads documents with, without a pick", async ({
   page: target,
 }) => {
   await target.goto(
-    "/scenarios.html?scenario=signed-in&latency=0&bar=off&setup=ready&models=all&reading_default=local_api:synthetic-vision:1",
+    "/scenarios.html?scenario=signed-in&latency=0&bar=off&setup=ready&models=all&reading_default=zai_api:synthetic-vision:1",
   );
   // Nothing is stored: the service serves its installed default.
   await expect
@@ -71,7 +71,7 @@ test("on a fresh profile the picker shows the installed model the service reads 
       }),
     )
     .toEqual({
-      reading: { lane: "local_api", model: "synthetic-vision:1" },
+      reading: { lane: "zai_api", model: "synthetic-vision:1" },
       source: "default",
     });
   const picker = await openModelPicker(target);

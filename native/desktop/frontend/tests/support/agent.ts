@@ -266,7 +266,7 @@ export async function refusalOfSend(
         conversation_id,
         text,
         selection: {
-          provider: "alpha",
+          provider: "kimi",
           transport: "api",
           model: "fixture-deep",
         },

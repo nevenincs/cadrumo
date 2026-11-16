@@ -1,22 +1,29 @@
 import type {
-  AgentCatalogEntry,
-  AgentDeclaredCatalog,
-  AgentEffort,
-  AgentEngineWire,
-  AgentLaneCapability,
-  AgentModelLicenceFacts,
-  AgentNativeControl,
-  AgentProviderCatalog,
-  AgentProviderLane,
-  AgentRecommendedCapability,
-} from "../../shell/agentSession";
-import type { ProviderAuthKind } from "@/components/settings/types";
+  AuthKind,
+  BackgroundRequestSupportResponse,
+  DeclaredLicence,
+  DeclaredModel,
+  Effort,
+  EffortCapability,
+  EngineHealthResponse,
+  LaneCapability,
+  LocalEngine,
+  Provider,
+  ProviderNativeControlResponse,
+  ProviderTransport,
+  ServedCatalogModel,
+  ServedDeclaredProviderCatalog,
+  ServedProviderCatalog,
+  ServedProviderLane,
+} from "../../shell/agentCatalogContract";
 import { fixtureInstant } from "@/dev/fixtureDates";
 
 // A provider catalog in the shape cadrumo-agent serves it, for the scenario
-// host. Cadrumo keeps no list of the agent's providers: every provider, lane
-// and model here is made up for this host, named "Example ..." or
-// "Fixture ...", and a real desktop reads the catalog from the running agent.
+// host. Cadrumo keeps no list of the agent's providers: each lane takes a
+// provider id from the agent's closed set only because the schema demands
+// one, and every name, lane and model here is made up for this host, named
+// "Example ..." or "Fixture ...". A real desktop reads the catalog from the
+// running agent.
 // The lanes below cover each way a lane can differ (a catalog or a declared
 // model list, an API or a program, held back or free). Each lane's health,
 // so that every way a lane can be held back is shown, and the models of a
@@ -24,20 +31,20 @@ import { fixtureInstant } from "@/dev/fixtureDates";
 
 /** What the made-up agent states of one lane. */
 type DeclaredLane = Pick<
-  AgentProviderLane,
+  ServedProviderLane,
   | "provider_id"
   | "transport"
   | "display_name"
+  | "auth_kind"
   | "execution_mode"
   | "executable"
   | "model_source"
 > & {
-  auth_kind: ProviderAuthKind;
   catalog_revision: string | null;
-  native_controls: NonNullable<AgentProviderLane["catalog"]["native_controls"]>;
+  native_controls: ProviderNativeControlResponse[];
 };
 
-const CAPABILITIES: AgentLaneCapability[] = [
+const CAPABILITIES: LaneCapability[] = [
   "tool_access",
   "writing",
   "web_retrieval",
@@ -47,12 +54,12 @@ const CAPABILITIES: AgentLaneCapability[] = [
 
 /** What each made-up lane is authenticated with, by `<provider>/<transport>`;
  * a lane not named here takes a key. */
-const AUTH_KINDS: Record<string, ProviderAuthKind> = {
-  "gamma/cli": "provider_sign_in_only",
-  "beta/cli": "provider_sign_in_only",
-  "gateway/cli": "api_key_with_base_url",
-  "relay/cli": "api_key_with_base_url",
-  "local/api": "none",
+const AUTH_KINDS: Record<string, AuthKind> = {
+  "antigravity/cli": "provider_sign_in_only",
+  "qwen/cli": "provider_sign_in_only",
+  "zhipu/cli": "api_key_with_base_url",
+  "minimax/cli": "api_key_with_base_url",
+  "zai/api": "none",
   "ollama/api": "none",
   "llamacpp/api": "none",
 };
@@ -61,19 +68,21 @@ const AUTH_KINDS: Record<string, ProviderAuthKind> = {
  * authenticated with. */
 export const fixtureAuthKind = (
   provider: string,
-  transport: "api" | "cli",
-): ProviderAuthKind => AUTH_KINDS[`${provider}/${transport}`] ?? "api_key";
+  transport: ProviderTransport,
+): AuthKind => AUTH_KINDS[`${provider}/${transport}`] ?? "api_key";
 
+/** A made-up lane of `provider_id`, shown by the made-up `name`. */
 const declare = (
-  provider_id: string,
-  transport: "api" | "cli",
+  provider_id: Provider,
+  name: string,
+  transport: ProviderTransport,
   model_source: "catalog" | "declared",
   native_controls: DeclaredLane["native_controls"] = [],
 ): DeclaredLane => ({
   provider_id,
   transport,
   auth_kind: fixtureAuthKind(provider_id, transport),
-  display_name: `Example ${provider_id[0]?.toUpperCase()}${provider_id.slice(1)}`,
+  display_name: `Example ${name}`,
   execution_mode: `example-${transport}`,
   executable: true,
   model_source,
@@ -82,12 +91,12 @@ const declare = (
 });
 
 const DECLARED_LANES: readonly DeclaredLane[] = [
-  declare("gamma", "cli", "catalog"),
-  declare("alpha", "api", "catalog"),
-  declare("alpha", "cli", "catalog"),
-  declare("beta", "api", "catalog"),
-  declare("beta", "cli", "catalog"),
-  declare("gateway", "cli", "declared", [
+  declare("antigravity", "Gamma", "cli", "catalog"),
+  declare("kimi", "Alpha", "api", "catalog"),
+  declare("kimi", "Alpha", "cli", "catalog"),
+  declare("qwen", "Beta", "api", "catalog"),
+  declare("qwen", "Beta", "cli", "catalog"),
+  declare("zhipu", "Gateway", "cli", "declared", [
     {
       control_id: "effort",
       kind: "thought_level",
@@ -97,22 +106,19 @@ const DECLARED_LANES: readonly DeclaredLane[] = [
       description: null,
     },
   ]),
-  declare("delta", "cli", "catalog"),
-  declare("relay", "cli", "declared"),
-  declare("epsilon", "cli", "declared"),
-  declare("zeta", "cli", "declared"),
-  declare("eta", "cli", "declared"),
-  declare("theta", "cli", "declared"),
+  declare("deepseek", "Delta", "cli", "catalog"),
+  declare("minimax", "Relay", "cli", "declared"),
+  declare("moonshot", "Zeta", "cli", "declared"),
   // A lane run on this computer, with no key: its models state what they are.
-  declare("local", "api", "catalog"),
+  declare("zai", "Local", "api", "catalog"),
   // The two engines' keyless lanes: the engine setting shows one of them.
-  declare("ollama", "api", "catalog"),
-  declare("llamacpp", "api", "catalog"),
+  declare("ollama", "Ollama", "api", "catalog"),
+  declare("llamacpp", "Llamacpp", "api", "catalog"),
 ];
 
 const CHECKED = fixtureInstant(10, 13, "08:00:00Z");
 
-type Health = AgentProviderLane["health"];
+type Health = ServedProviderLane["health"];
 
 const HEALTHY: Health = {
   configured: "available",
@@ -153,7 +159,7 @@ const HELD: Record<string, Partial<Health>> = {
 
 /** The effort control a lane advertises for models that take `efforts`; the
  * catalog serves a model's efforts through it. */
-const effortControl = (efforts: AgentEffort[]): AgentNativeControl => ({
+const effortControl = (efforts: Effort[]): ProviderNativeControlResponse => ({
   control_id: `effort:${efforts.join("-")}`,
   kind: "thought_level",
   display_name: "Effort",
@@ -168,11 +174,11 @@ type FixtureModel = {
   entry_id: string;
   display_name: string;
   description?: string;
-  efforts: AgentEffort[];
-  default_effort?: AgentEffort;
+  efforts: Effort[];
+  default_effort?: Effort;
   vision?: boolean | null;
   size_bytes?: number | null;
-  licence?: AgentModelLicenceFacts | null;
+  licence?: DeclaredLicence | null;
   /** False for a model this computer does not hold yet. */
   installed?: boolean;
 };
@@ -181,8 +187,8 @@ type FixtureModel = {
  * whether this computer holds a model only on a lane whose models are
  * downloaded to it. */
 function modelsOf(models: FixtureModel[], downloaded: boolean) {
-  const controls = new Map<string, AgentNativeControl>();
-  const entries = models.map((model): AgentCatalogEntry => {
+  const controls = new Map<string, ProviderNativeControlResponse>();
+  const entries = models.map((model): ServedCatalogModel => {
     const control = model.efforts.length
       ? effortControl(model.efforts)
       : undefined;
@@ -199,6 +205,7 @@ function modelsOf(models: FixtureModel[], downloaded: boolean) {
       size_bytes: model.size_bytes ?? null,
       context_length: null,
       licence: model.licence ?? null,
+      llamacpp_default_context: null,
       ...(downloaded ? { installed: model.installed ?? true } : {}),
     };
   });
@@ -210,12 +217,12 @@ type Fixture = {
   models?: FixtureModel[];
   recommended?: string;
   /** What the lane recommends per capability, by model. */
-  recommendedFor?: Partial<Record<AgentRecommendedCapability, string>>;
+  recommendedFor?: Partial<Record<"vision" | "text", string>>;
   /** Controls beyond efforts that the lane advertises; the column offers none. */
-  extraControls?: AgentNativeControl[];
+  extraControls?: ProviderNativeControlResponse[];
   /** The capabilities that have been proven on this made-up host; every
    * other one the agent states for the lane is not. */
-  proven?: AgentLaneCapability[];
+  proven?: LaneCapability[];
 };
 
 /** What this fixture makes up for one engine's lane. */
@@ -253,7 +260,7 @@ function engineLane(engine: string, name: string): Fixture {
 /** What this fixture makes up, by lane. A lane not listed has nothing made up
  * but a gateway's key, which is not set. */
 const FIXTURES: Record<string, Fixture> = {
-  "alpha/api": {
+  "kimi/api": {
     models: [
       {
         entry_id: "fixture-deep",
@@ -271,15 +278,15 @@ const FIXTURES: Record<string, Fixture> = {
     ],
     proven: ["tool_access", "web_retrieval", "pdf_reading"],
   },
-  "alpha/cli": { held: "signedOut" },
+  "kimi/cli": { held: "signedOut" },
   // The compatible API contract advertises no efforts or controls.
-  "beta/api": {
+  "qwen/api": {
     models: [
       { entry_id: "fixture-coder", display_name: "Fixture Coder", efforts: [] },
       { entry_id: "fixture-chat", display_name: "Fixture Chat", efforts: [] },
     ],
   },
-  "beta/cli": {
+  "qwen/cli": {
     recommended: "fixture-ultra",
     models: [
       {
@@ -309,11 +316,11 @@ const FIXTURES: Record<string, Fixture> = {
     ],
     proven: ["tool_access"],
   },
-  "gamma/cli": { held: "unreachable" },
-  "delta/cli": { held: "notConfigured" },
+  "antigravity/cli": { held: "unreachable" },
+  "deepseek/cli": { held: "notConfigured" },
   // The one gateway whose key is set: its models are written, not listed.
-  "gateway/cli": {},
-  "local/api": {
+  "zhipu/cli": {},
+  "zai/api": {
     models: [
       {
         entry_id: "synthetic-text:1",
@@ -356,22 +363,36 @@ const FIXTURES: Record<string, Fixture> = {
   "llamacpp/api": engineLane("llamacpp", "Llamacpp"),
 };
 
-const KEYED = new Set(["gateway/cli"]);
+const KEYED = new Set(["zhipu/cli"]);
 
 /** The lanes of the local engines, which state whether the engine runs. */
 const ENGINE_LANES = new Set(["ollama/api", "llamacpp/api"]);
 /** The lanes whose models are downloaded to this computer: the generic local
  * lane and each engine's. */
-const DOWNLOAD_LANES = new Set(["local/api", ...ENGINE_LANES]);
+const DOWNLOAD_LANES = new Set(["zai/api", ...ENGINE_LANES]);
 
-const runningEngine = (key: string): AgentEngineWire => ({
-  engine: key.split("/")[0] ?? "",
+const runningEngine = (engine: LocalEngine): EngineHealthResponse => ({
+  engine,
   state: "running",
   reason: null,
   door: null,
 });
 
-function lane(declared: DeclaredLane): AgentProviderLane {
+const isEngine = (provider: Provider): provider is LocalEngine =>
+  provider === "llamacpp" || provider === "ollama";
+
+/** What a background request on a made-up lane may carry: text alone, which
+ * no live request has proven on this made-up host. */
+const BACKGROUND: BackgroundRequestSupportResponse = {
+  text: "unproven",
+  image: "unsupported",
+  pdf: "unsupported",
+  options: [],
+  accepts_images: false,
+  accepts_pdfs: false,
+};
+
+function lane(declared: DeclaredLane): ServedProviderLane {
   const key = `${declared.provider_id}/${declared.transport}`;
   const fixture = FIXTURES[key] ?? {};
   const downloaded = DOWNLOAD_LANES.has(key);
@@ -393,10 +414,12 @@ function lane(declared: DeclaredLane): AgentProviderLane {
     health: {
       ...HEALTHY,
       ...(held ? HELD[held] : {}),
-      ...(ENGINE_LANES.has(key) ? { engine: runningEngine(key) } : {}),
+      ...(ENGINE_LANES.has(key) && isEngine(declared.provider_id)
+        ? { engine: runningEngine(declared.provider_id) }
+        : {}),
     },
     catalog: {
-      schema_version: 1,
+      schema_version: 2,
       state: held
         ? { status: "unknown", checked_at: CHECKED }
         : {
@@ -423,45 +446,47 @@ function lane(declared: DeclaredLane): AgentProviderLane {
           : null,
       state: fixture.proven?.includes(capability) ? "proven" : "unproven",
     })),
+    background_requests: BACKGROUND,
   };
 }
 
-export const FIXTURE_CATALOG: AgentProviderCatalog = {
+export const FIXTURE_CATALOG: ServedProviderCatalog = {
   api_version: "v1",
   providers: DECLARED_LANES.map(lane),
 };
 
 /** What a scenario makes the made-up service say of each local engine, by
  * engine token: the answer exactly as written, so a scenario can also state
- * one that breaks the contract. Null states none was measured. */
+ * one that pairs its fields outside the contract. Null states none was
+ * measured. */
 export type FixtureEngineHealth = Partial<
-  Record<"llamacpp" | "ollama", unknown>
+  Record<LocalEngine, EngineHealthResponse | null>
 >;
 
 /** `catalog` with each stated engine's health as written. An engine stated
  * as not running is held back as the service holds back a lane it cannot
  * reach. */
 export function withEngineHealth(
-  catalog: AgentProviderCatalog,
+  catalog: ServedProviderCatalog,
   health: FixtureEngineHealth,
-): AgentProviderCatalog {
+): ServedProviderCatalog {
   return {
     ...catalog,
     providers: (catalog.providers ?? []).map((served) => {
       const key = `${served.provider_id}/${served.transport}`;
-      if (!ENGINE_LANES.has(key) || !(served.provider_id in health))
+      if (
+        !ENGINE_LANES.has(key) ||
+        !isEngine(served.provider_id) ||
+        !(served.provider_id in health)
+      )
         return served;
-      const stated = health[served.provider_id as "llamacpp" | "ollama"];
-      const down =
-        typeof stated === "object" &&
-        stated !== null &&
-        "state" in stated &&
-        stated.state === "not_running";
+      const stated = health[served.provider_id] ?? null;
+      const down = stated?.state === "not_running";
       return {
         ...served,
         health: {
           ...served.health,
-          engine: stated as AgentEngineWire | null,
+          engine: stated,
           ...(down
             ? {
                 transport: "unavailable" as const,
@@ -504,7 +529,7 @@ export type FixtureModelPresence = {
    * this is as marked. */
   markAll(installed: boolean): void;
   /** `catalog` with each marked model's `installed` as marked. */
-  report(catalog: AgentProviderCatalog): AgentProviderCatalog;
+  report(catalog: ServedProviderCatalog): ServedProviderCatalog;
 };
 
 export function fixtureModelPresence(): FixtureModelPresence {
@@ -538,30 +563,77 @@ export function fixtureModelPresence(): FixtureModelPresence {
   };
 }
 
+/** What a served model's efforts say of its effort control, as the declared
+ * catalog states it: the levels it takes, or no control. */
+const effortOf = (entry: ServedCatalogModel): EffortCapability => {
+  const levels = entry.efforts ?? [];
+  return levels.length > 0
+    ? {
+        reasoning: "supported",
+        control: "levels",
+        levels,
+        default: entry.default_effort ?? null,
+      }
+    : { reasoning: "unsupported", control: "none", levels: [], default: null };
+};
+
+const declaredModel = (entry: ServedCatalogModel): DeclaredModel => ({
+  id: entry.model,
+  display_name: entry.display_name,
+  effort: effortOf(entry),
+  vision: entry.vision,
+  size_bytes: entry.size_bytes,
+  context_length: entry.context_length,
+  licence: entry.licence,
+  artefacts: null,
+});
+
 /** The same made-up lanes as cadrumo-agent's declared catalog states them,
  * in the envelope the service answers with while no agent is ready. */
-export const FIXTURE_DECLARED_CATALOG: AgentDeclaredCatalog = {
+export const FIXTURE_DECLARED_CATALOG: ServedDeclaredProviderCatalog = {
   kind: "declared",
   catalog: {
-    schema_version: 5,
-    providers: (FIXTURE_CATALOG.providers ?? []).map((served) => ({
-      id: `${served.provider_id}_${served.transport}`,
-      provider: served.provider_id,
-      transport: served.transport,
-      display_name: served.display_name,
-      ...(served.auth_kind === undefined
-        ? {}
-        : { auth_kind: served.auth_kind }),
-      recommended: served.catalog.recommended ?? {},
-      models: (served.catalog.models ?? []).map((entry) => ({
-        id: entry.model,
-        display_name: entry.display_name,
-        vision: entry.vision ?? null,
-        size_bytes: entry.size_bytes ?? null,
-        context_length: entry.context_length ?? null,
-        licence: entry.licence ?? null,
-      })),
-    })),
+    schema_version: 6,
+    providers: (FIXTURE_CATALOG.providers ?? []).map((served) => {
+      const id = `${served.provider_id}_${served.transport}`;
+      const models = (served.catalog.models ?? []).map(declaredModel);
+      const keyed =
+        served.auth_kind === "api_key" ||
+        served.auth_kind === "api_key_with_base_url";
+      return {
+        id,
+        provider: served.provider_id,
+        transport: served.transport,
+        display_name: served.display_name,
+        description: `A made-up lane of ${served.display_name}.`,
+        auth_kind: served.auth_kind,
+        default_base_url: null,
+        agent_credential_id: keyed ? `fixture-${id}` : null,
+        reads_off_host: served.model_download === "none",
+        cli_programs:
+          served.transport === "cli" ? [`example-${served.provider_id}`] : [],
+        icon: null,
+        platform: {
+          docs_url: null,
+          models_url: null,
+          status: { kind: "none", page_url: null, api_url: null },
+        },
+        default_model: models[0]?.id ?? null,
+        models,
+        recommended: served.catalog.recommended ?? {},
+        background: { runnable: false, inputs: [], options: [] },
+        unread: [],
+        model_download: served.model_download,
+      };
+    }),
+    icon_attribution: {
+      title: "Example icon set",
+      url: "https://icons.example/",
+      pin: "0.0.0",
+      licence: "Example licence",
+      notice: "Made-up artwork notice for the scenario host.",
+      trademarks: "Every mark shown is its holder's.",
+    },
   },
 };
 
@@ -579,8 +651,8 @@ export const servedUnderEngine = (
  * while the engine record selects `selected`: the keyless lane of a local
  * engine it does not select is served in neither. */
 export function catalogsUnderEngine(selected: string): {
-  served: AgentProviderCatalog;
-  declared: AgentDeclaredCatalog;
+  served: ServedProviderCatalog;
+  declared: ServedDeclaredProviderCatalog;
 } {
   const held = (provider: string, transport: string) =>
     !servedUnderEngine(provider, transport, selected);
@@ -595,7 +667,7 @@ export function catalogsUnderEngine(selected: string): {
       ...FIXTURE_DECLARED_CATALOG,
       catalog: {
         ...FIXTURE_DECLARED_CATALOG.catalog,
-        providers: (FIXTURE_DECLARED_CATALOG.catalog.providers ?? []).filter(
+        providers: FIXTURE_DECLARED_CATALOG.catalog.providers.filter(
           (lane) => !held(lane.provider, lane.transport),
         ),
       },

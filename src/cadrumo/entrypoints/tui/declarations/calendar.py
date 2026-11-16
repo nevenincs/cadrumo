@@ -17,6 +17,7 @@ from ....application.modelo.declarations_calendar import (
 from ....application.modelo.declarations_list import source_words
 from ....application.operator_actions.models import DeclaredNextAction
 from ....application.overview.calendar import holiday_coverage_statement, shift_reason_statement
+from ....application.overview.calendar_models import OverviewCalendarScope
 from ....application.overview.coverage import CoverageAdviceReason
 from ....application.overview.home import HomeAvailability
 from ....core.errors.error_codes import resolve_error_message
@@ -37,7 +38,18 @@ from .controller import (
     natural_address,
     timestamp_label,
 )
-from .models import CalendarRecoveryHandoffV1, DeclarationsCalendarScopeV1
+from .models import CalendarRecoveryHandoffV1
+
+#: The choice that keeps every entry: the agenda unfiltered, not a scope the projection serves.
+_ALL_SCOPES = "all"
+
+
+def _scope_options() -> tuple[tuple[str, str], ...]:
+    """Every served scope, after the choice of none."""
+    return tuple(
+        (tr(f"workspace.declarations.calendar.scope.{token}"), token)
+        for token in (_ALL_SCOPES, *(scope.value for scope in OverviewCalendarScope))
+    )
 
 
 def _identity(row: DeclarationsCalendarEntryRefV1) -> str:
@@ -68,7 +80,7 @@ class DeclarationsCalendarScreen(AccountChromeScreen):
         """Retain the injected pure calendar controller."""
         super().__init__(id="declarations-calendar-screen")
         self.controller = controller
-        self._scope = DeclarationsCalendarScopeV1.ALL
+        self._scope: OverviewCalendarScope | None = None
         self._selected_identity: str | None = controller.context_identity()
         self._hidden_restore_identity: str | None = None
         self._rows_by_identity: dict[str, DeclarationsCalendarEntryRefV1] = {}
@@ -97,14 +109,8 @@ class DeclarationsCalendarScreen(AccountChromeScreen):
                 "workspace.declarations.calendar.search.placeholder",
             )
             yield Select[str](
-                tuple(
-                    (
-                        tr(f"workspace.declarations.calendar.scope.{scope.value}"),
-                        scope.value,
-                    )
-                    for scope in DeclarationsCalendarScopeV1
-                ),
-                value=self._scope.value,
+                _scope_options(),
+                value=_ALL_SCOPES if self._scope is None else self._scope.value,
                 allow_blank=False,
                 id="declarations-calendar-scope",
             )
@@ -135,12 +141,7 @@ class DeclarationsCalendarScreen(AccountChromeScreen):
         scope = self.query_one("#declarations-calendar-scope", Select)
         chosen = scope.value
         with self.prevent(Select.Changed):
-            scope.set_options(
-                tuple(
-                    (tr(f"workspace.declarations.calendar.scope.{item.value}"), item.value)
-                    for item in DeclarationsCalendarScopeV1
-                )
-            )
+            scope.set_options(_scope_options())
             scope.value = chosen
 
         def paint() -> None:
@@ -329,7 +330,7 @@ class DeclarationsCalendarScreen(AccountChromeScreen):
         """Apply the selected closed agenda scope."""
         if event.select.id != "declarations-calendar-scope" or not isinstance(event.value, str):
             return
-        self._scope = DeclarationsCalendarScopeV1(event.value)
+        self._scope = None if event.value == _ALL_SCOPES else OverviewCalendarScope(event.value)
         self._refresh()
 
     def on_data_table_row_highlighted(self, event: DataTable.RowHighlighted) -> None:
