@@ -28,7 +28,6 @@ from ..calculations.registry.iva_category_catalogue import (
 )
 from .component_fact_projection import (
     component_vocabulary_from_entries,
-    cuota_settlement_catalogue_from_entries,
     resolve_component_catalogue_entries,
 )
 from .component_row_projection import (
@@ -472,24 +471,6 @@ CategoryProjectionName = Literal[
 ]
 
 
-def registry_cuota_settlement_catalogue(
-    *,
-    effective_date: date,
-    authority: GovernedFactSource | None = None,
-) -> IvaCuotaSettlementCatalogue:
-    """Resolve the explicit cuota-settlement vocabulary from published 0084."""
-    authority = authority or governed_facts_in_scope()
-    if authority is None:
-        raise IvaValidationError(
-            "IVA cuota-settlement catalogue requires an explicit authority operation or scope",
-        )
-    entries = resolve_component_catalogue_entries(
-        effective_date=effective_date,
-        authority=authority,
-    )
-    return cuota_settlement_catalogue_from_entries(entries)
-
-
 def component_axis_membership[IvaRegistryTokenT: StrictRegistryToken](
     entries: Mapping[str, str],
     *,
@@ -783,7 +764,6 @@ __all__ = [
     "registry_component_catalogue",
     "registry_component_presence_token",
     "registry_component_vocabulary",
-    "registry_cuota_settlement_catalogue",
     "registry_kind_applicability_token",
     "registry_retencion_role_token",
     "retencion_role_of_kind",

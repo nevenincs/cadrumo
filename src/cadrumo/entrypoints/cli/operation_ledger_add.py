@@ -21,13 +21,18 @@ from ...application.ledger.ledger_add_contracts import (
     LedgerAddRequest,
 )
 from ...application.ledger.transaction_projection import LedgerTransactionProjection
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.i18n.render import tr
 from ...core.iva_deduction_fact import IvaDeductionFactKind
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.parsing.codes import normalise_iso_4217_currency
 from ...core.prorrata_exclusions import Art104TresExclusion
 from ...domain.iva.schema import EUMemberState, IvaCategory
-from ...domain.transactions.enums import BusinessClassification, TransactionDirection
+from ...domain.transactions.enums import (
+    BusinessClassification,
+    ManualEntryClassificationToken,
+    TransactionDirection,
+)
 from .common import bad
 
 
@@ -154,7 +159,7 @@ def run_ledger_add(
         accrual_date=accrual_date,
         currency=currency,
         counterparty=counterparty,
-        business_classification=business_classification.value,
+        business_classification=_manual_classification_token(business_classification),
         business_pct=business_pct,
         category_id=category_id,
         taxable_base=taxable_base,
@@ -220,6 +225,19 @@ def run_ledger_add(
         business_pct,
     )
     return projection
+
+
+def _manual_classification_token(classification: BusinessClassification) -> ManualEntryClassificationToken:
+    """Narrow a CLI classification to the tokens a person may assign by hand."""
+    if classification is BusinessClassification.BUSINESS:
+        return "BUSINESS"
+    if classification is BusinessClassification.PERSONAL:
+        return "PERSONAL"
+    if classification is BusinessClassification.MIXED:
+        return "MIXED"
+    if classification is BusinessClassification.NOT_YET_PROCESSED:
+        return "NOT_YET_PROCESSED"
+    raise InternalInvariantError(f"ledger add received a pipeline-assigned classification: {classification.value}")
 
 
 def _wire_token(value: object | None) -> str | None:

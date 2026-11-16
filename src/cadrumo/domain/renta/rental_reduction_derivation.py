@@ -130,11 +130,13 @@ def derive_rental_reduction(
     One lease is supported: the reduction applies per contract, and until the
     return carries a row per property the single scalar box can hold only one.
     """
-    if not leases:
-        return RentalReductionDerivation(aplicable=None, refusal=RentalReductionRefusal.NO_LEASE)
-    if len(leases) > 1:
-        return RentalReductionDerivation(aplicable=None, refusal=RentalReductionRefusal.SEVERAL_LEASES)
-    lease = leases[0]
+    match leases:
+        case ():
+            return RentalReductionDerivation(aplicable=None, refusal=RentalReductionRefusal.NO_LEASE)
+        case (lease,):
+            pass
+        case _:
+            return RentalReductionDerivation(aplicable=None, refusal=RentalReductionRefusal.SEVERAL_LEASES)
     if lease.uso_vivienda is None:
         return _refused(lease, RentalReductionRefusal.USO_VIVIENDA_UNSTATED)
     if not lease.uso_vivienda:

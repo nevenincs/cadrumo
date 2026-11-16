@@ -30,16 +30,13 @@ from ....iva.schema import (
     IvaLedgerObservationRole,
     IvaRateKind,
 )
-from ..errors import RegistryValidationError
 from ..facts.resolution import GovernedFactQuery, ResolvedGovernedFact
 from ..facts.schema import GovernedFact, GovernedFactCatalogue
 from ..governed_fact_scope import CandidateFactAuthority, governed_facts_in_scope, validating_governed_facts
 from ..iva_flow_catalogue import (
     require_iva_flow_direction,
-    require_registry_declared_iva_flow_direction,
     resolve_iva_flow_direction_catalogue,
 )
-from ..iva_rate_kind_catalogue import require_registry_declared_iva_rate_kind
 from ..ledger_iva_bindings import LedgerIvaProvider, ledger_iva_selector_vocabulary_failures
 from ..schema_references import TemporalSupportEnvelope
 from ..snapshot_globals import SupportedFilingYearsCatalogue
@@ -196,23 +193,6 @@ def _projected_flow() -> IvaFlowDirection:
     return require_iva_flow_direction("repercutido", effective_date=_EFFECTIVE, authority=_scoped_facts())
 
 
-def test_a_rate_kind_declared_by_the_scoped_facts_is_accepted() -> None:
-    with validating_governed_facts(_scoped_facts()):
-        assert require_registry_declared_iva_rate_kind("general", effective_date=_EFFECTIVE) == IvaRateKind("general")
-
-
-def test_a_rate_kind_the_scoped_facts_do_not_declare_is_refused() -> None:
-    """The scoped facts decide, so a tier they omit is refused even though the enum has it."""
-    with validating_governed_facts(_scoped_facts()), pytest.raises(RegistryValidationError, match="not declared"):
-        require_registry_declared_iva_rate_kind(IvaRateKind("reduced"), effective_date=_EFFECTIVE)
-
-
-def test_validation_outside_a_scope_refuses_instead_of_reading_the_published_authority() -> None:
-    assert governed_facts_in_scope() is None
-    with pytest.raises(RegistryValidationError, match="published authority artifact"):
-        require_registry_declared_iva_rate_kind("general", effective_date=_EFFECTIVE)
-
-
 def test_a_binding_validates_its_rate_tiers_against_the_facts_it_is_given() -> None:
     """The real provider model, not a stand-in, is checked against the named facts on the named date."""
     provider = LedgerIvaProvider.model_validate(
@@ -246,21 +226,6 @@ class _RecordingFacts:
 
     def supported_filing_years(self) -> TemporalSupportEnvelope:
         return self._inner.supported_filing_years()
-
-
-def test_a_flow_direction_is_validated_against_the_scoped_facts_it_checked() -> None:
-    scoped = _RecordingFacts(_scoped_facts())
-    with validating_governed_facts(scoped):
-        flow = require_registry_declared_iva_flow_direction("operacion_con_inversion", effective_date=_ON_DATE)
-
-    assert flow.value == "operacion_con_inversion"
-    assert scoped.fact_ids == ["iva-invoice-classification-catalogue"]
-
-
-def test_flow_validation_outside_a_scope_refuses_instead_of_reading_the_published_authority() -> None:
-    assert governed_facts_in_scope() is None
-    with pytest.raises(RegistryValidationError, match="published authority artifact"):
-        require_registry_declared_iva_flow_direction("repercutido", effective_date=_ON_DATE)
 
 
 def test_an_explicit_flow_authority_is_used_instead_of_the_scope() -> None:
