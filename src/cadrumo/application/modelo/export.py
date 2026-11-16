@@ -1067,7 +1067,9 @@ def _prepare_modelo_export(
         retencion_ports=export_ports.retencion_observation_ports,
         stage=Modelo123CountAuthorityStage.EXPORT,
     )
-    require_modelo_193_settled_row_amount_authority(work_unit, revision, stage=Modelo193SettledRowStage.EXPORT)
+    require_modelo_193_settled_row_amount_authority(
+        work_unit, revision, stage=Modelo193SettledRowStage.EXPORT, operation=operation
+    )
     # A filed revision is already declared: only a declaration still being prepared holds assumed values.
     if revision.state not in FILED_REVISION_STATES:
         require_assumed_values_confirmed(

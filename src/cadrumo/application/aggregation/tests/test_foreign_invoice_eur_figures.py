@@ -41,7 +41,7 @@ from ..modelo_bindings import LedgerRentaIncomeAggregationSourceResolver
 from ..modelo_bindings_renta_expenses import accrual_coverage_gap
 from ..renta_imputation import ImputationCriteria, ImputationFilingHistory
 from ..renta_income_diagnostics import rectification_diagnostics
-from ..renta_income_evidence import income_withheld_amount
+from ..renta_income_evidence import income_withheld_amount, taxable_base_comparison
 from ..renta_ledger_classification import classify_renta_transaction
 from ..renta_ledger_models import RentaLedgerAggregationIssue, RentaLedgerAggregationIssueReason
 from ..source_mesh import CalculationSourceContext, CalculationSourceResolution
@@ -499,3 +499,60 @@ def test_the_durable_expense_question_quotes_the_row_in_eur() -> None:
     assert findings[0].fact is not None
     assert "100.00" in str(findings[0].fact.model_dump())
     assert "200.00" not in str(findings[0].fact.model_dump())
+
+
+def _expense_row(cash: str, *, currency: str, base: str | None = None, iva: str | None = None) -> Transaction:
+    return _row(cash, currency=currency, base=base, iva=iva, direction=TransactionDirection.OUTGOING)
+
+
+def test_a_row_stating_no_base_leaves_the_base_comparison_unknown_in_the_invoice_currency() -> None:
+    """No base is not a base of zero: 400,00 stated beside an unstated row compares nothing."""
+    stated = _expense_row("484.00", currency="USD", base="400.00", iva="84.00")
+    unstated = _expense_row("726.00", currency="USD")
+
+    assert taxable_base_comparison(_received(), (stated, unstated)) is None
+    assert taxable_base_comparison(_received(), (unstated,)) is None
+
+
+def test_a_row_stating_no_base_leaves_the_base_comparison_unknown_in_eur() -> None:
+    stated = _expense_row("242.00", currency="EUR", base="200.00", iva="42.00")
+    unstated = _expense_row("363.00", currency="EUR")
+
+    assert taxable_base_comparison(_received(), (stated, unstated)) is None
+
+
+def test_stated_bases_compare_as_before_in_the_invoice_currency() -> None:
+    """USD 400,00 + 600,00 of base against the invoice's USD 1.000,00."""
+    first = _expense_row("484.00", currency="USD", base="400.00", iva="84.00")
+    second = _expense_row("726.00", currency="USD", base="600.00", iva="126.00")
+
+    comparison = taxable_base_comparison(_received(), (first, second))
+
+    assert comparison is not None
+    assert comparison.cash == Decimal("1000.00")
+    assert comparison.owed == Decimal("1000.00")
+
+
+def test_stated_bases_compare_as_before_in_eur() -> None:
+    """EUR 200,00 + 300,00 against the USD 1.000,00 invoice at 0,50, a EUR base of 500,00."""
+    first = _expense_row("242.00", currency="EUR", base="200.00", iva="42.00")
+    second = _expense_row("363.00", currency="EUR", base="300.00", iva="63.00")
+
+    comparison = taxable_base_comparison(_received(), (first, second))
+
+    assert comparison is not None
+    assert comparison.cash == Decimal("500.00")
+    assert comparison.owed == Decimal("500.00")
+
+
+def test_a_stated_zero_base_still_compares() -> None:
+    """A base stated as 0,00 is a proven zero: it covers nothing of the invoice, and says so."""
+    zero = _expense_row("0.00", currency="EUR", base="0.00", iva="0.00")
+
+    same_currency = taxable_base_comparison(_received(currency="EUR", fx_rate=None), (zero,))
+    in_eur = taxable_base_comparison(_received(), (zero,))
+
+    assert same_currency is not None
+    assert (same_currency.cash, same_currency.owed) == (Decimal("0.00"), Decimal("1000.00"))
+    assert in_eur is not None
+    assert (in_eur.cash, in_eur.owed) == (Decimal("0.00"), Decimal("500.00"))
