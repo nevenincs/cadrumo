@@ -326,18 +326,12 @@ impl TerminalState {
             .map_err(|_| failure(ErrorCode::LockPoisoned))
     }
 
-    /// The current top-frame document, for [`TerminalState::open`].
+    /// The current top-frame document, for [`TerminalState::open_with`].
     pub fn document(&self) -> u64 {
         self.documents.current()
     }
 
-    pub fn open(&self, kind: Kind, cols: u16, rows: u16, sink: Sink, document: u64) -> Result<u64> {
-        let base = console_environment::ConsoleEnvironment::base();
-        self.open_with(kind, cols, rows, sink, document, &base)
-    }
-
-    /// Opens `kind` as [`TerminalState::open`] does, composing `console` into
-    /// a console. Its working directory is taken only when it is a real
+    /// Opens `kind`, composing `console` into a console. Its working directory is taken only when it is a real
     /// directory beneath the storage root, as the shared workspace is.
     pub fn open_with(
         &self,

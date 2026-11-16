@@ -10,7 +10,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, JsonValue, field_validator
 
-from ..providers.application.contracts import HelperCause, ServiceCause
+from ..providers.application.contracts import HelperCause, ServiceCause, SignInReason
 from ..providers.application.next_steps import next_step_for
 
 MAX_AUTH_LINE = 16 * 1024
@@ -27,20 +27,7 @@ class AuthEvent(BaseModel):
     event: Literal[
         "ready", "started", "browser_action", "authorization_code_required", "succeeded", "cancelled", "failed"
     ]
-    reason: (
-        Literal[
-            "invalid_request",
-            "host_disconnected",
-            "timeout",
-            "busy",
-            "provider_unavailable",
-            "provider_error",
-            "unsupported_flow",
-            "cleanup_failed",
-            "profile_required",
-        ]
-        | None
-    ) = None
+    reason: SignInReason | None = None
     cause: HelperCause | None = None
     """The helper's closed word for why a terminal event is not a success."""
     url: str | None = Field(default=None, max_length=8192, repr=False)

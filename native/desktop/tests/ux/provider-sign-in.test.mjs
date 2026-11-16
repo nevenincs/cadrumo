@@ -206,8 +206,11 @@ function pageDialog() {
   const description = dialog.querySelector('[data-slot="dialog-description"]');
   const advice = dialog.querySelector('[data-slot="sign-in-advice"]');
   const reference = dialog.querySelector('[data-slot="sign-in-log-ref"] code');
+  const attempt = dialog.querySelector('[data-slot="sign-in-attempt"]');
   return {
     open: true,
+    // Shown only once the service has answered the start with an attempt.
+    attemptId: attempt?.getAttribute("data-attempt-id") || null,
     title: norm(
       dialog.querySelector('[data-slot="dialog-title"]')?.textContent,
     ),
@@ -456,6 +459,8 @@ const isSettled = (dialog) =>
     (button) => button.text === norm(label("desktop.providers.sign_in_close")),
   );
 
+const answeredStart = (dialog) => !!dialog.attemptId || isSettled(dialog);
+
 /** Cancel a live attempt from the dialog, then close it; answers how. */
 async function cancelAndClose() {
   let dialog = await exec(pageDialog);
@@ -463,8 +468,20 @@ async function cancelAndClose() {
   let how = "closed";
   const cancel = norm(label("desktop.providers.sign_in_cancel"));
   if (dialog.buttons.some((button) => button.text === cancel)) {
+    // A cancel before the start is answered leaves the start in flight, and a
+    // later sign-out then refuses it.
+    const answered = await waitFor(
+      async () => {
+        const now = await exec(pageDialog);
+        return !now.open || now.attemptId || isSettled(now) ? now : null;
+      },
+      { timeout: 60_000, what: "the start to be answered", soft: true },
+    );
+    dialog = answered ?? (await exec(pageDialog));
+  }
+  if (dialog.open && dialog.buttons.some((button) => button.text === cancel)) {
     await press('[data-slot="dialog-footer"]', "button", cancel);
-    how = "cancelled";
+    how = answeredStart(dialog) ? "cancelled" : "start-unanswered";
     dialog = await waitFor(
       async () => {
         const now = await exec(pageDialog);
@@ -699,7 +716,11 @@ for (const provider of PROVIDERS) {
       line.log_ref_present = judged.logRef ? "yes" : "no";
       line.log_ref_uuid = judged.logRefUuid;
       line.log_line_found = logLineFound(runDir, judged.logRef);
-      stateOf(provider).failure = { logRef: judged.logRef, laneId };
+      stateOf(provider).failure = {
+        logRef: judged.logRef,
+        laneId,
+        attemptId: failure.attemptId,
+      };
       assert.deepEqual(
         judged.foreign,
         [],
@@ -734,6 +755,7 @@ for (const provider of PROVIDERS) {
         );
       const retry = norm(label("desktop.providers.sign_in_retry"));
       const seenRefs = new Set([earlier.logRef]);
+      const failedId = earlier.attemptId ?? null;
       let fresh = null;
       for (let tries = 1; tries <= 6 && !fresh; tries += 1) {
         line.tries = tries;
@@ -753,7 +775,10 @@ for (const provider of PROVIDERS) {
         const answer = await waitFor(
           async () => {
             const now = await exec(pageDialog);
-            if (isActive(now)) return { active: true, now };
+            // Stale dialog state is not a retry: the fresh attempt carries an id
+            // the failed one did not.
+            if (isActive(now) && now.attemptId && now.attemptId !== failedId)
+              return { active: true, now };
             if (
               now.alerts.length > 0 &&
               isSettled(now) &&
@@ -858,6 +883,13 @@ for (const provider of PROVIDERS) {
 
 test("PSI-99 every test sign-in is gone: no credential-store growth", async (t) => {
   let teardownError = null;
+  let lastDialog = null;
+  try {
+    // No attempt may be in flight when the profile signs out.
+    if ((await exec(pageDialog)).open) lastDialog = await cancelAndClose();
+  } catch (error) {
+    lastDialog = `close-failed: ${error.message}`;
+  }
   try {
     await teardown();
   } catch (error) {
@@ -875,6 +907,7 @@ test("PSI-99 every test sign-in is gone: no credential-store growth", async (t) 
     after: counts,
     teardown_error: teardownError,
     signed_out: win.closed,
+    dialog_before_sign_out: lastDialog,
   });
   if (process.platform !== "win32") {
     t.skip("the credential store is counted on Windows only");
