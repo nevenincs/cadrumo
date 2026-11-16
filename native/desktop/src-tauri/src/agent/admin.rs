@@ -90,6 +90,7 @@ fn action_reason(action: &str) -> &'static str {
         "reset" => "admin_reset",
         "auth" => "admin_auth",
         "sign_in" => "admin_sign_in",
+        "sign_out" => "admin_sign_out",
         "start" => "admin_start",
         "stop" => "admin_stop",
         "connect" => "admin_connect_provider",

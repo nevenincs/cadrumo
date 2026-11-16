@@ -181,6 +181,7 @@ def status_entry(
         provider=entry.provider,
         transport=entry.transport,
         display_name=entry.display_name,
+        reads_off_host=entry.reads_off_host,
         auth_kind=entry.auth_kind,
         consumers=entry.consumers,
         mode=mode,
@@ -194,6 +195,7 @@ def status_entry(
         cli_state=cli_state,
         cli_state_cause=cli_state_cause,
         next_step=next_step_for(cli_state_cause.value if cli_state_cause is not None else None),
+        sign_out_available=entry.logout and cli_state is CliState.INSTALLED_SIGNED_IN,
         revision=read_revision(read),
     )
 
