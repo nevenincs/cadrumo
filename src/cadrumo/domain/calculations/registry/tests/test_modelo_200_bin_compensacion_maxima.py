@@ -35,6 +35,7 @@ from .modelo_200_casilla_ids import (
     M200_DEDUCCION_DOBLE_IMPOSICION_CASILLA,
     M200_RESERVA_CAPITALIZACION_CASILLA,
     M200_RESULTADO_CONTABLE_CASILLA,
+    edition_casilla_id,
 )
 from .modelo_200_turnover import PRIOR_TWELVE_MONTHS_TURNOVER, turnover_binding_values
 from .published_authority import published_snapshot
@@ -47,8 +48,8 @@ _CEILING_FORMULA = "modelo-200-bin-aplicada-maxima"
 _QUITAS: CasillaId = validated_casilla_id("DP200014:00545", surface="_QUITAS")
 _REVERSION_DETERIOROS: CasillaId = validated_casilla_id("01509", surface="_REVERSION_DETERIOROS")
 _REVERSION_PARTICIPACIONES: CasillaId = validated_casilla_id("00925", surface="_REVERSION_PARTICIPACIONES")
-_EXTINCION: CasillaId = validated_casilla_id("00072", surface="_EXTINCION")
-_NUEVA_CREACION: CasillaId = validated_casilla_id("00070", surface="_NUEVA_CREACION")
+_EXTINCION: CasillaId = validated_casilla_id("DP200001:00072", surface="_EXTINCION")
+_NUEVA_CREACION: CasillaId = validated_casilla_id("DP200001:00070", surface="_NUEVA_CREACION")
 _TIER_PARAMETER = "is.modelo-200.bin-limite-da15-tramo-alto-porcentaje"
 _STOCK_BINDING = "modelo-200-bin-pendiente-ejercicios-anteriores"
 
@@ -140,8 +141,9 @@ def _calculate(
     }
     inputs = {_in_edition(snapshot, casilla_id): value for casilla_id, value in inputs.items()}
     for casilla_id, value in (marked or {}).items():
-        assert casilla_id in declared, f"{casilla_id} is not declared by the {exercise} edition"
-        inputs[casilla_id] = value
+        resolved = edition_casilla_id(declared, casilla_id)
+        assert resolved in declared, f"{casilla_id} is not declared by the {exercise} edition"
+        inputs[resolved] = value
     return calculate_registry_snapshot(
         snapshot,
         inputs=inputs,

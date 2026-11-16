@@ -10,12 +10,15 @@ import pytest
 import typer
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
+from cadrumo.domain.calculations.registry.errors import (
+    RegistryLoadError,
+    RegistryValidationError,
+    UndeclaredExportTargetError,
+)
 from cadrumo.domain.calculations.registry.tests.authored_editions import revision_covering
 
 from ...compiler.authority import compiled_bundled_authority
 from ...compiler.loader import load_modelo_directory
-from ...compiler.revision_export_projection import UndeclaredExportTargetError
 from ...form_layout.generator import generate_revision_layout
 from ...form_layout.serialization import form_layout_fragment_path, render_form_layout_toml
 from .. import cli

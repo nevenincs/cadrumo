@@ -10,6 +10,7 @@ from pydantic import ValidationError
 from cadrumo.domain.calculations.registry.errors import (
     RegistryLoadError,
     RegistryValidationError,
+    UndeclaredExportTargetError,
 )
 from cadrumo.domain.calculations.registry.export_field_casilla import derive_casilla_export_refs
 from cadrumo.domain.calculations.registry.modelo_localization import (
@@ -30,25 +31,6 @@ from .loader_semantics import (
     passthrough_toml_row,
 )
 from .toml_helpers import as_toml_table
-
-
-class UndeclaredExportTargetError(RegistryLoadError):
-    """A committed export names casillas its edition no longer declares.
-
-    The typed refusal a stale generated export raises after a reviewed casilla
-    rename, carrying the exact identities so a reviewed repair can admit this
-    refusal alone and nothing broader.
-    """
-
-    def __init__(self, source_path: Path, revision_id: str, casilla_ids: tuple[str, ...]) -> None:
-        """Keep the modelo, revision and unknown casilla ids beside the message."""
-        self.modelo_id = source_path.name
-        self.revision_id = revision_id
-        self.casilla_ids = casilla_ids
-        super().__init__(
-            f"{source_path}: invalid revision {revision_id!r}: export fields resolve to casillas "
-            f"{list(casilla_ids)!r}, which the edition does not declare",
-        )
 
 
 def refuse_authored_export_refs(source_path: Path, revision_id: str, payload: Mapping[str, object]) -> None:

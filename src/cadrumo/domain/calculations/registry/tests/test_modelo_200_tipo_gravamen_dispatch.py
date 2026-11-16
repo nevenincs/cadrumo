@@ -69,7 +69,7 @@ _DISPATCH_BINDING = "modelo-200-profile-legal-entity-form"
 _M200_TIPO_GRAVAMEN_CASILLA: CasillaId = validated_casilla_id("DP200014:00558", surface="_M200_TIPO_GRAVAMEN_CASILLA")
 # Caracteres de la declaración (page 1): cooperativa protegida, and entidad acogida a la Ley 49/2002.
 _COOPERATIVA_PROTEGIDA: CasillaId = validated_casilla_id("DP200001:00017", surface="_COOPERATIVA_PROTEGIDA")
-_REGIMEN_LEY_49_2002: CasillaId = validated_casilla_id("00001", surface="_REGIMEN_LEY_49_2002")
+_REGIMEN_LEY_49_2002: CasillaId = validated_casilla_id("DP200001:00001", surface="_REGIMEN_LEY_49_2002")
 
 
 # Both M202 pagos-fraccionados fold relations (modalidad 40.2 casilla 03 + 40.3 casilla 34)

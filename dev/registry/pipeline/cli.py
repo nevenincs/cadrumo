@@ -21,11 +21,14 @@ import typer
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
-from cadrumo.domain.calculations.registry.errors import RegistryError, RegistryValidationError
+from cadrumo.domain.calculations.registry.errors import (
+    RegistryError,
+    RegistryValidationError,
+    UndeclaredExportTargetError,
+)
 from dev.temporary_output import prepare_temp_root
 
 from ..compiler.authority import compile_validated_authority, compiled_bundled_authority
-from ..compiler.revision_export_projection import UndeclaredExportTargetError
 from .authored_form_bridge import AuthoredFormBridge, prepare_authored_form_bridge
 from .authority_cli import publish_authority
 from .bootstrap_supersession import (
