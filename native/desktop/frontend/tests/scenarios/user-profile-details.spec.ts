@@ -2,6 +2,8 @@ import { expect, test, type Page } from "@playwright/test";
 import { label } from "../support/strings";
 import {
   PROFILE_NAME,
+  PROFILE_REQUIRED_MISSING,
+  PROFILE_REQUIRED_MISSING_AFTER_CENSO,
   PROFILE_SECTION_TITLES,
   profileStated,
 } from "../support/profileFixture";
@@ -45,7 +47,11 @@ for (const language of ["en", "es", "ca", "hu"]) {
       }),
     ).toBeEnabled();
     await expect(profile.locator("header")).toContainText(
-      label("desktop.profile.required_missing", { count: 2 }, language),
+      label(
+        "desktop.profile.required_missing",
+        { count: PROFILE_REQUIRED_MISSING_AFTER_CENSO },
+        language,
+      ),
     );
     await expect(profile).not.toContainText(/[ÃÂ�]|â€|Å[‘’±]/);
   });
@@ -66,13 +72,19 @@ test("the summary names the taxpayer and filters to what is required and missing
   await expect(header).toContainText(label("desktop.profile.missing"));
   await header
     .getByRole("button", {
-      name: label("desktop.profile.required_missing", { count: 3 }),
+      name: label("desktop.profile.required_missing", {
+        count: PROFILE_REQUIRED_MISSING,
+      }),
     })
     .click();
   await expect(row(profile, "identity.tax_id")).toBeVisible();
   await expect(row(profile, "identity.name")).toHaveCount(0);
   await expect(
-    profile.getByText(label("desktop.profile.view.results", { count: 3 })),
+    profile.getByText(
+      label("desktop.profile.view.results", {
+        count: PROFILE_REQUIRED_MISSING,
+      }),
+    ),
   ).toBeVisible();
   // Required details carry a star and are never told apart by colour alone.
   await expect(
@@ -105,7 +117,9 @@ test("search, show, group and sort arrange the saved details", async ({
   const required = profile.getByRole("region", {
     name: new RegExp(`^${label("desktop.profile.view.status_required")}`),
   });
-  await expect(required.locator("[data-kind='row']")).toHaveCount(3);
+  await expect(required.locator("[data-kind='row']")).toHaveCount(
+    PROFILE_REQUIRED_MISSING,
+  );
   // Grouped by status, each detail names its section.
   await expect(required).toContainText("Tax residence and jurisdiction");
   await viewOption(page, "desktop.profile.view.group_none");
