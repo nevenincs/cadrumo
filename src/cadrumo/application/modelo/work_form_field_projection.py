@@ -48,6 +48,7 @@ from .work_form_field_vocabulary import (
 from .work_form_localization import (
     casilla_help,
     fed_box_label,
+    localized_casilla_label,
     localized_text,
     normalized_help_text,
     unnamed_casilla_label,
@@ -92,8 +93,11 @@ def design_constant_facts(
 
 
 def casilla_label(casilla: CasillaDefinition, context: WorkFormContext) -> ModeloFormText:
-    """A casilla's label in the form's language; one the catalogue does not name reads as an unnamed box."""
-    return localized_text(casilla.localization_keys, context.language) or unnamed_casilla_label(context.language)
+    """A casilla's label in the form's language, a rotating slot naming its own year; an unnamed box otherwise."""
+    ejercicio = context.review.period.filing_year
+    return localized_casilla_label(casilla, context.language, ejercicio=ejercicio) or unnamed_casilla_label(
+        context.language
+    )
 
 
 def project_casilla_field(
@@ -248,7 +252,8 @@ def _binding_presentation(
 def _binding_field_label(
     modelo: str, binding_id: str, casillas: tuple[CasillaDefinition, ...], context: WorkFormContext
 ) -> ModeloFormText:
-    labels = (localized_text(casilla.localization_keys, context.language) for casilla in casillas)
+    ejercicio = context.review.period.filing_year
+    labels = (localized_casilla_label(casilla, context.language, ejercicio=ejercicio) for casilla in casillas)
     return (
         localized_text((binding_locale_key(modelo, binding_id, "label"),), context.language)
         or next((text for text in labels if text is not None), None)

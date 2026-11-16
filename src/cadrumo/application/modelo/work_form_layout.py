@@ -46,7 +46,7 @@ from .work_form_field_vocabulary import (
     address_key,
 )
 from .work_form_layout_facts import placement_aliases
-from .work_form_localization import localized_heading, localized_text
+from .work_form_localization import localized_casilla_label, localized_heading
 from .work_form_models import (
     ModeloFormBindingInputsBlock,
     ModeloFormBlock,
@@ -320,7 +320,11 @@ class LayoutWalker:
         if heading.disclosure is not ModeloFormTextDisclosure.TECHNICAL or column.casilla_id is None:
             return heading
         casilla = self.context.casillas.get(column.casilla_id)
-        label = None if casilla is None else localized_text(casilla.localization_keys, language)
+        label = (
+            None
+            if casilla is None
+            else localized_casilla_label(casilla, language, ejercicio=self.context.review.period.filing_year)
+        )
         return heading if label is None else label
 
 

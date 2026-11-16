@@ -24,6 +24,13 @@ export const PROFILE_SURNAMES = profileStated("identity.surnames");
 /** The taxpayer's full name as the profile page's summary heads it. */
 export const PROFILE_NAME = `${profileStated("identity.name")} ${PROFILE_SURNAMES}`;
 
+/** How many required details the served profile reports missing. */
+export const PROFILE_REQUIRED_MISSING = profile.missing_required.length;
+
+/** How many are still missing once the Censo setup has stated the tax ID. */
+export const PROFILE_REQUIRED_MISSING_AFTER_CENSO =
+  profile.missing_required.filter((path) => path !== "identity.tax_id").length;
+
 /** The titles of the sections the profile schema declares, in order. */
 export const PROFILE_SECTION_TITLES = profile.sections.map(
   (section) => section.title,

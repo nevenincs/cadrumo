@@ -394,6 +394,28 @@ def catalogue_lookup(key: str, locale: str) -> str | None:
     return lookup_translation(key, locale=locale)
 
 
+_ROTATING_YEAR_PLACEHOLDER: Final[str] = "{year}"
+_RELATIVE_YEAR: Final[str] = "N"
+
+
+def render_rotating_year(text: str, *, offset: int | None, ejercicio: int | None) -> str:
+    """Render a rotating-slot caption's ``{year}`` placeholder for one ejercicio.
+
+    A rotating slot's caption names the year ``offset`` years before the
+    ejercicio, so the year comes from the ejercicio being filed, never from the
+    catalogue. With no ejercicio to count from, the placeholder becomes the
+    relative ``N``, ``N-<offset>`` or, for a later year, ``N+<years>``, so the
+    text never names a year it cannot know. Text without the placeholder, or a casilla without an offset, is
+    returned unchanged.
+    """
+    if offset is None or _ROTATING_YEAR_PLACEHOLDER not in text:
+        return text
+    if ejercicio is not None:
+        return text.replace(_ROTATING_YEAR_PLACEHOLDER, str(ejercicio - offset))
+    relative = _RELATIVE_YEAR if offset == 0 else f"{_RELATIVE_YEAR}{-offset:+d}"
+    return text.replace(_ROTATING_YEAR_PLACEHOLDER, relative)
+
+
 def _format_year(value: str, year: int | None) -> str:
     """Substitute the ``{year}`` placeholder when a year is supplied."""
     return value.format(year=year) if year is not None and "{year}" in value else value
@@ -432,6 +454,7 @@ __all__ = [
     "form_heading_edition_locale_key",
     "modelo_locale_key",
     "modelo_localization_source",
+    "render_rotating_year",
     "require_modelo_localization",
     "resolve_modelo_localization",
     "revision_locale_key",

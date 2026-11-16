@@ -38,7 +38,7 @@ from .printed_boxes import printed_box_number
 from .value_presentation import format_casilla_value
 from .work_form_localization import (
     casilla_help_text,
-    localized_text,
+    localized_casilla_label,
     render_box_locator_patterns,
     unnamed_casilla_label,
 )
@@ -258,7 +258,7 @@ def worded_amendment_context(
             else ()
         ),
         reason_prompt=tr(_REASON_PROMPT_LOCALE_KEY, locale=locale),
-        rows=_correction_rows(snapshot, casilla_rows, filed_values, language),
+        rows=_correction_rows(snapshot, casilla_rows, filed_values, language, ejercicio=unit.period.filing_year),
     )
 
 
@@ -267,6 +267,8 @@ def _correction_rows(
     casilla_rows: tuple[ModeloCasillaRow, ...],
     filed_values: Mapping[str, Decimal],
     language: OutputLanguage,
+    *,
+    ejercicio: int,
 ) -> tuple[ModeloAmendmentCorrectionRowV1, ...]:
     casillas = {casilla.id: casilla for casilla in snapshot.revision.casillas}
     locators = render_box_locator_patterns(snapshot.modelo.id)
@@ -275,7 +277,9 @@ def _correction_rows(
         casilla = casillas.get(row.casilla_id)
         if casilla is None:
             raise ValueError("the amendment lists a casilla its revision does not define")
-        label = (localized_text(casilla.localization_keys, language) or unnamed_casilla_label(language)).text
+        label = (
+            localized_casilla_label(casilla, language, ejercicio=ejercicio) or unnamed_casilla_label(language)
+        ).text
         grammar = correction_value_grammar(casilla)
         filed = filed_values[row.casilla_id]
         rows.append(
@@ -283,7 +287,7 @@ def _correction_rows(
                 casilla_id=row.casilla_id,
                 box=printed_box_number(casilla, None),
                 label=label,
-                help=casilla_help_text(casilla, label, language=language, box_locators=locators),
+                help=casilla_help_text(casilla, label, language=language, box_locators=locators, ejercicio=ejercicio),
                 data_type=grammar.data_type,
                 filed_value=canonical_decimal_string(filed),
                 filed_value_text=format_casilla_value(
