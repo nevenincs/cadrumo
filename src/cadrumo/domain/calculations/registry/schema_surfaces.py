@@ -18,6 +18,7 @@ from ....core.identity.continuidad import ContinuidadId
 from .casilla_lineage import CasillaLineageOriginField
 from .credit_reconciliation import WithholdingSideField
 from .errors import RegistryValidationError
+from .field_absence import later_absent_when_none
 from .ids import (
     BindingId,
     ExportFieldId,
@@ -454,7 +455,7 @@ class CasillaDefinition(RegistryModel):
     )
     rotating_year_offset: int | None = Field(
         default=None,
-        exclude_if=lambda value: value is None,
+        exclude_if=later_absent_when_none,
         description=(
             "For a box whose caption names a year counted from the ejercicio, so "
             "each edition's design prints it with the year moved on, how many "
