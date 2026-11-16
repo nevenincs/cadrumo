@@ -36,6 +36,14 @@ KNOWN_FOREIGN_CARRIERS: tuple[ForeignCarrier, ...] = (
 )
 """The cells found carrying DP200010's casillas, each with the cell that owns the identity."""
 
+CLASSIFIED_MODELOS: frozenset[str] = frozenset({"200"})
+"""The modelos whose export map is held red while a bare casilla identity is bound on more than one page.
+
+Cross-page reuse of a bare identity is legitimate only where the registry admits a repeat of one box. Until the
+registry's classification leaves only admitted repeats, every reuse counts; the expectation then reads the admitted
+set from the registry instead of counting all of them.
+"""
+
 
 def _cell(field: ParsedExportFieldValue) -> str:
     """The design cell of a parsed field: its id without the leading edition token."""
@@ -61,3 +69,20 @@ def foreign_carrier_mismatches(modelo: str, parsed: Iterable[ParsedExportFieldVa
         if item is not None:
             found.append(f"{_label(item.cell)} carries casilla {item.casilla} of {_label(item.owner_cell)}")
     return found
+
+
+def cross_page_reuse_mismatches(modelo: str, parsed: Iterable[ParsedExportFieldValue]) -> list[str]:
+    """The bare casilla identities the map binds to fields on more than one page, as one counted reason."""
+    if modelo not in CLASSIFIED_MODELOS:
+        return []
+    pages: dict[str, set[str]] = {}
+    for field in parsed:
+        if field.casilla_id is not None:
+            pages.setdefault(str(field.casilla_id), set()).add(_cell(field).partition(".")[0])
+    reused = sorted(casilla for casilla, sheets in pages.items() if len(sheets) > 1)
+    if not reused:
+        return []
+    first = ", ".join(reused[:3])
+    return [
+        f"{len(reused)} casilla identities are bound on more than one page (first {first}), not classified as repeats"
+    ]
