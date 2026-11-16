@@ -38,6 +38,7 @@ for (const transition of ["profile", "sign-out", "host"] as const)
             readiness: "ready",
             revision: "0".repeat(64),
             reads_off_host: true,
+            sign_out_available: false,
           };
           const change = () =>
             new Promise<ProviderSettingsRecord>((resolve, reject) =>
@@ -49,6 +50,7 @@ for (const transition of ["profile", "sign-out", "host"] as const)
             turnOff: change,
             turnOn: change,
             reset: change,
+            signOut: change,
           };
           const replacement = { ...host };
           let view!: ProviderSettingsView;

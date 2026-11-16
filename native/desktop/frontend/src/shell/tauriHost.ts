@@ -524,6 +524,11 @@ function tauriProviderSettings(
         provider,
         revision,
       }),
+    signOut: ({ provider, revision }) =>
+      command<ProviderSettingsRecord>("provider_sign_out", {
+        provider,
+        revision,
+      }),
     signIn: {
       start: ({ provider, revision, method }) =>
         command<ProviderSignInSnapshot>("provider_sign_in_start", {

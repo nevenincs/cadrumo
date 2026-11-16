@@ -1060,6 +1060,8 @@ DESKTOP_INTERFACE_KEYS: Final[frozenset[str]] = _PROFILE_AND_ENGINE_KEYS | froze
         "desktop.providers.sign_in_user_code",
         "desktop.providers.sign_in_waiting",
         "desktop.providers.sign_in_waiting_device",
+        "desktop.providers.sign_out_action",
+        "desktop.providers.sign_out_label",
         "desktop.providers.status_not_checked",
         "desktop.providers.status_off",
         "desktop.providers.status_ready",

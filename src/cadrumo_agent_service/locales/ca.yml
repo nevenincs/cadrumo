@@ -515,6 +515,8 @@ desktop:
     sign_in_waiting: Acaba d'iniciar la sessió a la pàgina del proveïdor i torna aquí.
     sign_in_waiting_device: Escriu aquest codi a la pàgina del proveïdor per acabar
       d'iniciar la sessió.
+    sign_out_action: Tanca la sessió
+    sign_out_label: Tanca la sessió de {provider}
     status_not_checked: Sense comprovar
     status_off: Desactivat
     status_ready: A punt

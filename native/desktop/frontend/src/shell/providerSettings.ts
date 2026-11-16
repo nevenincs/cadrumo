@@ -10,7 +10,9 @@ import { useCachedRead, type AgentRead } from "./agentViews";
 import {
   cliStateCause,
   consoleCommandTemplate,
+  logRef,
   nextStep,
+  signInCause,
   type CliStateCause,
   type NextStep,
   type SignInCause,
@@ -47,6 +49,9 @@ export type ProviderSettingsRecord = {
   /** Whether a conversation on the lane leaves this computer for the
    * provider: the agent's own declaration, which the service serves. */
   reads_off_host: boolean;
+  /** Whether the service can sign the lane out: a command-line lane signed
+   * in, whose agent declares a logout for it. */
+  sign_out_available: boolean;
   /** Sent back with a change, so a record changed elsewhere is not
    * overwritten: 64 lowercase hex digits, all zeros for a lane that has no
    * record. */
@@ -155,6 +160,12 @@ export interface ProviderSettings {
     provider: string;
     revision: string;
   }): Promise<ProviderSettingsRecord>;
+  /** Signs a command-line lane out of its provider; it answers with the lane
+   * signed out. Offered only where the lane serves `sign_out_available`. */
+  signOut(change: {
+    provider: string;
+    revision: string;
+  }): Promise<ProviderSettingsRecord>;
 }
 
 const providerStatus = (record: ProviderSettingsRecord): ProviderStatus => ({
@@ -184,6 +195,7 @@ const providerStatus = (record: ProviderSettingsRecord): ProviderStatus => ({
   ...(typeof record.reads_off_host === "boolean"
     ? { readsOffHost: record.reads_off_host }
     : {}),
+  ...(record.sign_out_available === true ? { signOutAvailable: true } : {}),
 });
 
 export type ProviderSettingsView = {
@@ -200,6 +212,7 @@ export type ProviderSettingsView = {
   turnOff: (providerId: string) => void;
   turnOn: (providerId: string) => void;
   reset: (providerId: string) => void;
+  signOut: (providerId: string) => void;
   refresh: () => void;
   /** Reads the settings again, as when the agent turns ready, without
    * invalidating the agent's provider list. */
@@ -334,10 +347,21 @@ export function useProviderSettings(
         ),
       (error: unknown) => {
         const code = failureCode(error);
+        const served =
+          typeof error === "object" && error !== null
+            ? (error as { cause?: unknown; log_ref?: unknown })
+            : {};
+        const cause = signInCause(served.cause);
+        const ref = logRef(served.log_ref);
         const outcome: ProviderOutcome =
           code === "committed_readback_failed"
             ? { kind: "saved_unread" }
-            : { kind: "refused", code };
+            : {
+                kind: "refused",
+                code,
+                ...(cause ? { cause } : {}),
+                ...(ref ? { logRef: ref } : {}),
+              };
         setState((held) =>
           mine !== generation.current
             ? held
@@ -397,6 +421,10 @@ export function useProviderSettings(
     reset: (providerId) =>
       change(providerId, (served, revision) =>
         served.reset({ provider: providerId, revision }),
+      ),
+    signOut: (providerId) =>
+      change(providerId, (served, revision) =>
+        served.signOut({ provider: providerId, revision }),
       ),
     refresh,
     reread,
