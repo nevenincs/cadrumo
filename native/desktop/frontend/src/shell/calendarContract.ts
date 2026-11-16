@@ -413,7 +413,7 @@ export type OverviewCalendarRead = {
  * for it.
  */
 export type OverviewCalendarScope =
-  "past" | "upcoming" | "overdue" | "filed" | "evidence_unknown";
+  "past" | "ahead" | "upcoming" | "overdue" | "filed" | "evidence_unknown";
 
 /**
  * Full current calendar output without private input records.

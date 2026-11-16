@@ -204,6 +204,7 @@ class OverviewCalendarScope(StrEnum):
     """A calendar scope a row belongs to; a row belongs to every scope that holds for it."""
 
     PAST = "past"
+    AHEAD = "ahead"
     UPCOMING = "upcoming"
     OVERDUE = "overdue"
     FILED = "filed"
@@ -221,7 +222,9 @@ def deadline_scopes(
     """The deadline scopes a row belongs to on ``evaluated_on``, in declaration order.
 
     An unknown close is only bounded below by its nominal date, so its window
-    is not known to have closed and the row is not past. Overdue needs both a
+    is not known to have closed and the row is not past; it is ahead only
+    while that earliest date is on or after ``evaluated_on``. Any row whose
+    close is on or after ``evaluated_on`` is ahead, whatever its state. Overdue needs both a
     passed close and the overdue posture; upcoming needs an open close and a
     due posture. A row whose AEAT evidence the read withholds is also in
     ``evidence_unknown``.
@@ -229,6 +232,7 @@ def deadline_scopes(
     closed = adjusted_closes_on < evaluated_on
     held = {
         OverviewCalendarScope.PAST: closed and status is not ObligationStatus.UNKNOWN,
+        OverviewCalendarScope.AHEAD: not closed,
         OverviewCalendarScope.UPCOMING: not closed and user_state is OverviewPeriodState.DUE,
         OverviewCalendarScope.OVERDUE: closed and user_state is OverviewPeriodState.LATE,
         OverviewCalendarScope.FILED: user_state is OverviewPeriodState.FILED,

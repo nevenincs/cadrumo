@@ -193,9 +193,10 @@ def _scopes(
     )
 
 
-def test_an_open_due_row_is_upcoming_only_including_on_the_closing_day() -> None:
-    assert _scopes(evaluated_on=_BEFORE, status=ObligationStatus.DUE_SOON, user_state=_PERIOD.DUE) == (_SCOPE.UPCOMING,)
-    assert _scopes(evaluated_on=_CLOSE, status=ObligationStatus.DUE_TODAY, user_state=_PERIOD.DUE) == (_SCOPE.UPCOMING,)
+def test_an_open_due_row_is_ahead_and_upcoming_including_on_the_closing_day() -> None:
+    open_due = (_SCOPE.AHEAD, _SCOPE.UPCOMING)
+    assert _scopes(evaluated_on=_BEFORE, status=ObligationStatus.DUE_SOON, user_state=_PERIOD.DUE) == open_due
+    assert _scopes(evaluated_on=_CLOSE, status=ObligationStatus.DUE_TODAY, user_state=_PERIOD.DUE) == open_due
 
 
 def test_a_closed_late_row_is_past_and_overdue() -> None:
@@ -206,15 +207,23 @@ def test_a_closed_late_row_is_past_and_overdue() -> None:
 
 
 def test_filed_rows_are_filed_and_past_only_once_closed() -> None:
-    assert _scopes(evaluated_on=_BEFORE, status=ObligationStatus.FILED, user_state=_PERIOD.FILED) == (_SCOPE.FILED,)
+    assert _scopes(evaluated_on=_BEFORE, status=ObligationStatus.FILED, user_state=_PERIOD.FILED) == (
+        _SCOPE.AHEAD,
+        _SCOPE.FILED,
+    )
     assert _scopes(evaluated_on=_AFTER, status=ObligationStatus.FILED, user_state=_PERIOD.FILED) == (
         _SCOPE.PAST,
         _SCOPE.FILED,
     )
 
 
-def test_an_unknown_close_that_nominally_passed_is_not_past() -> None:
+def test_an_unknown_close_that_nominally_passed_is_neither_past_nor_ahead() -> None:
     assert _scopes(evaluated_on=_AFTER, status=ObligationStatus.UNKNOWN, user_state=_PERIOD.UNKNOWN) == ()
+
+
+def test_an_unknown_close_whose_earliest_date_is_still_to_come_is_ahead() -> None:
+    assert _scopes(evaluated_on=_BEFORE, status=ObligationStatus.UNKNOWN, user_state=_PERIOD.UNKNOWN) == (_SCOPE.AHEAD,)
+    assert _scopes(evaluated_on=_CLOSE, status=ObligationStatus.UNKNOWN, user_state=_PERIOD.UNKNOWN) == (_SCOPE.AHEAD,)
 
 
 def test_a_closed_not_applicable_row_is_past_but_neither_late_nor_upcoming() -> None:
@@ -224,8 +233,12 @@ def test_a_closed_not_applicable_row_is_past_but_neither_late_nor_upcoming() -> 
 
 
 def test_evidence_unknown_only_when_aeat_evidence_is_withheld() -> None:
-    assert _scopes(evaluated_on=_BEFORE, status=ObligationStatus.UPCOMING, user_state=_PERIOD.DUE) == (_SCOPE.UPCOMING,)
+    assert _scopes(evaluated_on=_BEFORE, status=ObligationStatus.UPCOMING, user_state=_PERIOD.DUE) == (
+        _SCOPE.AHEAD,
+        _SCOPE.UPCOMING,
+    )
     assert _scopes(evaluated_on=_BEFORE, status=ObligationStatus.UPCOMING, user_state=_PERIOD.DUE, withheld=True) == (
+        _SCOPE.AHEAD,
         _SCOPE.UPCOMING,
         _SCOPE.EVIDENCE_UNKNOWN,
     )
@@ -236,7 +249,7 @@ def test_evidence_unknown_only_when_aeat_evidence_is_withheld() -> None:
 def test_scopes_follow_enum_declaration_order() -> None:
     scopes = _scopes(evaluated_on=_AFTER, status=ObligationStatus.OVERDUE, user_state=_PERIOD.LATE, withheld=True)
     assert scopes == (_SCOPE.PAST, _SCOPE.OVERDUE, _SCOPE.EVIDENCE_UNKNOWN)
-    assert [scope.value for scope in _SCOPE] == ["past", "upcoming", "overdue", "filed", "evidence_unknown"]
+    assert [scope.value for scope in _SCOPE] == ["past", "ahead", "upcoming", "overdue", "filed", "evidence_unknown"]
 
 
 def _entry(
@@ -268,7 +281,7 @@ def test_a_row_serves_the_values_its_own_fields_decide() -> None:
     served = _entry().model_dump(mode="json")
     assert served["days_until_close"] == 5
     assert served["filing_status"] == "due"
-    assert served["scopes"] == ["upcoming"]
+    assert served["scopes"] == ["ahead", "upcoming"]
 
 
 def test_a_row_with_a_ready_local_record_serves_recorded_locally() -> None:
@@ -299,7 +312,7 @@ def test_a_snapshot_stores_the_derivations_its_row_decides_and_round_trips() -> 
     snapshot = OverviewCalendarEntrySnapshot.from_entry(_entry())
     assert snapshot.days_until_close == 5
     assert snapshot.filing_status is _STATUS.DUE
-    assert snapshot.scopes == (_SCOPE.UPCOMING,)
+    assert snapshot.scopes == (_SCOPE.AHEAD, _SCOPE.UPCOMING)
     assert OverviewCalendarEntrySnapshot.model_validate_json(snapshot.model_dump_json()) == snapshot
 
 
