@@ -64,7 +64,9 @@ class LocalAiFacts(BaseModel):
 def relay_local_ai(document: JsonValue, facts: LocalAiFacts | None) -> JsonValue:
     """``document`` with the local engines' lanes described by ``facts``, or unknown where the agent read no server.
 
-    A document that lists no lanes, such as a refusal, is returned as it is.
+    A document that lists no lanes, such as a refusal, is returned as it is, and
+    so is the catalogue the agent declares before it runs: a declared lane holds
+    no health and no installed models for the facts to describe.
     """
     if not isinstance(document, dict):
         return document
@@ -72,9 +74,6 @@ def relay_local_ai(document: JsonValue, facts: LocalAiFacts | None) -> JsonValue
     if isinstance(lanes, list):
         relayed: list[JsonValue] = [cast(JsonValue, _lane(lane, facts)) for lane in lanes]
         return {**document, "providers": relayed}
-    catalog = document.get("catalog")
-    if isinstance(catalog, dict) and isinstance(catalog.get("providers"), list):
-        return {**document, "catalog": relay_local_ai(catalog, facts)}
     return document
 
 
