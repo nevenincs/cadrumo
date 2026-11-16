@@ -44,6 +44,7 @@ import {
 import { FIXTURE_SETTINGS_LANES } from "./providerSettingsFixture";
 import {
   FIXTURE_SKILLS,
+  FIXTURE_SKILLS_REVISION,
   MANY_FIXTURE_SKILLS,
   fixtureSkillDetail,
   fixtureSkillVerification,
@@ -1084,11 +1085,13 @@ export function fixtureAgent({
       );
       if (!entry?.licence) throw coded("agent_gateway_licence_unknown");
       return {
-        ...entry.licence,
         provider,
         transport,
         model,
         installed: true,
+        spdx: entry.licence.spdx,
+        name: entry.licence.name,
+        digest: entry.licence.digest,
         text: `${entry.licence.name}\n\nA made-up licence text for ${model}, served by the scenario host.`,
       };
     },
@@ -1101,7 +1104,7 @@ export function fixtureAgent({
             if (skills === "failed")
               throw coded("agent_gateway_skills_unavailable");
             return {
-              revision: "fixture",
+              revision: FIXTURE_SKILLS_REVISION,
               skills: structuredClone([...inventory]),
             };
           },

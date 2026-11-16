@@ -12,6 +12,7 @@ import {
   MAX_CONTINUATION_CHARS,
   characters,
 } from "../../shell/agentClarification";
+import type { SkillRecord } from "../../shell/agentGatewayContract";
 import { described, facts } from "../../shell/compose";
 import { readPx } from "../../shell/metrics";
 import { useStrings, type Translate } from "../../shell/strings";
@@ -29,7 +30,6 @@ import {
   MAX_SKILLS_PER_MESSAGE,
   skillCommand,
   skillReferences,
-  type AgentSkillSummary,
   type SkillCommand,
 } from "../../shell/agentSkills";
 import type {
@@ -138,7 +138,7 @@ export function Composer({
   onRemoveAllAttachments?: () => void;
   onShowAllAttachments?: () => void;
   /** cadrumo-agent's skills; without it `/` lists nothing. */
-  skills?: () => Promise<readonly AgentSkillSummary[]>;
+  skills?: () => Promise<readonly SkillRecord[]>;
   /** Runs a skill command: reviewing or verifying a skill. */
   onSkillCommand?: (command: SkillCommand) => void;
   /** Further suggestion lists, after the `/` list; memoized. */

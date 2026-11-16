@@ -32,6 +32,7 @@ from ...core.filing_year import FilingYear
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operations import profile_operation_subject
+from ...core.parsing.codes import IsoCurrencyCodeText
 from ...domain.renta.rental_reduction_derivation import RentalReductionRefusal
 from ...domain.transactions.enums import TransactionDirection, TransactionLifecycleState
 from ..operations.models import CredentialFreeOperationRequest, OperationTerminalReceipt
@@ -269,7 +270,7 @@ class ProfileRecordLedgerRowItem(BaseModel):
     transaction_id: str
     booked_date: date
     amount: PublicDecimal
-    currency: str
+    currency: IsoCurrencyCodeText
     direction: TransactionDirection
     description: str
     lifecycle_state: TransactionLifecycleState

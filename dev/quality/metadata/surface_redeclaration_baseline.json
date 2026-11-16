@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "counts": {
-    "wire-type": 1211,
+    "wire-type": 1206,
     "tui-date-decision": 1,
     "tui-precedence": 8,
     "duplicated-helper": 97
@@ -637,7 +637,6 @@
       "wire-type:native/desktop/frontend/src/shell/agentSession.ts:AgentDocumentRef",
       "wire-type:native/desktop/frontend/src/shell/agentSession.ts:AgentDropSignal",
       "wire-type:native/desktop/frontend/src/shell/agentSession.ts:AgentEngineHealth",
-      "wire-type:native/desktop/frontend/src/shell/agentSession.ts:AgentModelLicence",
       "wire-type:native/desktop/frontend/src/shell/agentSession.ts:AgentQuestion",
       "wire-type:native/desktop/frontend/src/shell/agentSession.ts:AgentQuestionnaire",
       "wire-type:native/desktop/frontend/src/shell/agentSession.ts:AgentQuestionnaireAnswer",
@@ -652,12 +651,8 @@
       "wire-type:native/desktop/frontend/src/shell/agentSession.ts:AgentToolRefusal",
       "wire-type:native/desktop/frontend/src/shell/agentSession.ts:AgentUploadEvent",
       "wire-type:native/desktop/frontend/src/shell/agentSession.ts:AgentUploadPick",
-      "wire-type:native/desktop/frontend/src/shell/agentSkills.ts:AgentSkillAppliesWhen",
       "wire-type:native/desktop/frontend/src/shell/agentSkills.ts:AgentSkillDetail",
-      "wire-type:native/desktop/frontend/src/shell/agentSkills.ts:AgentSkillFile",
       "wire-type:native/desktop/frontend/src/shell/agentSkills.ts:AgentSkillFinding",
-      "wire-type:native/desktop/frontend/src/shell/agentSkills.ts:AgentSkillInventory",
-      "wire-type:native/desktop/frontend/src/shell/agentSkills.ts:AgentSkillSummary",
       "wire-type:native/desktop/frontend/src/shell/agentSkills.ts:AgentSkillVerification",
       "wire-type:native/desktop/frontend/src/shell/agentSkills.ts:SkillCommand",
       "wire-type:native/desktop/frontend/src/shell/agentSkills.ts:SkillCommandKind",
