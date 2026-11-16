@@ -105,6 +105,7 @@ from .work_form_models import (
 from .work_form_notes import NoteSource, collect_note_sources
 from .work_form_outline import form_outline
 from .work_form_prior_value_attestation import form_prior_value_attestations
+from .work_form_record_attention import with_record_attention
 from .work_form_source_groups import worded_source_groups
 from .work_form_summary import inspection_reason, summarize_work_form
 from .work_form_wording import worded_form
@@ -446,7 +447,7 @@ def _assemble_work_form(
         language=language,
         layout_provenance=provenance,
         seed_source=layout.seed_source,
-        pages=pages,
+        pages=with_record_attention(pages, summary.issues, recorded=context.filed or summary.filing is not None),
         outline=form_outline(
             layout.outline,
             pages,
