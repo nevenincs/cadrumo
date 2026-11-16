@@ -57,6 +57,8 @@ from .authority_store import (
 from .errors import RegistrySnapshotError, RegistryValidationError
 
 if TYPE_CHECKING:
+    from collections.abc import Callable, Hashable
+
     # The typed registry -- modelo schema, governed facts, snapshots and
     # temporal selection -- is imported by the methods that evaluate it. A
     # profile decode needs only the generation pin and the profile schema, and
@@ -731,6 +733,24 @@ class PinnedAuthorityOperation:
         )
         if not isinstance(value, RegistrySnapshot):
             raise RegistryValidationError("registry snapshot projection resolved to an unexpected type")
+        return value
+
+    def retained_projection[T](self, key: Hashable, *, kind: type[T], build: Callable[[], T]) -> T:
+        """Share one immutable derivation of this generation's published registry content.
+
+        ``key`` names every input ``build`` reads besides the generation, and
+        ``build`` reads only this operation's authority: never profile data,
+        and never a snapshot saved with a calculation, whose bytes are not this
+        generation's. The value lives in the reader's accounted cache under the
+        pinned generation, so a reader for another generation recomputes it.
+        Any other reader builds afresh on every call, as :meth:`snapshot` does.
+        """
+        reader = self.reader
+        if not isinstance(reader, SQLiteAuthorityReader):
+            return build()
+        value = reader.retain_projection(key, pin=self.generation, build=build)
+        if not isinstance(value, kind):
+            raise RegistryValidationError("registry projection resolved to an unexpected type")
         return value
 
     def build_unretained_snapshot(

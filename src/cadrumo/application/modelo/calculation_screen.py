@@ -20,9 +20,11 @@ and raises :data:`CALCULATION_SCREEN_CONTRACT_VERSION`;
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final
 
 from ...core.hashing import content_hash_hex
+from ...core.modelo import Modelo
 from ...domain.calculations.registry.binding_grade_cap_reach import (
     capped_binding_reach,
     capped_binding_reach_digest,
@@ -71,6 +73,38 @@ def calculation_screen_stamp(
     )
 
 
+@dataclass(frozen=True, slots=True)
+class _ReadingScreenStampKey:
+    """The reading-snapshot coordinate a shared stamp is derived from, besides the generation."""
+
+    modelo_id: str
+    filing_year: int
+    period: str
+
+
+def reading_calculation_screen_stamp(
+    operation: PinnedAuthorityOperation, *, modelo: str, filing_year: int, period: str
+) -> CalculationScreenStamp:
+    """Return :func:`calculation_screen_stamp` of the reading snapshot ``operation`` selects for this coordinate.
+
+    The stamp reads only the published registry of ``operation``'s pinned
+    generation, so it is derived once per generation and coordinate and shared
+    by every later read; a reader of another generation derives it afresh.
+    ``period`` is the registry period token.
+    """
+    modelo_id = Modelo(modelo).value
+
+    def build() -> CalculationScreenStamp:
+        snapshot = operation.reading_snapshot(modelo_id, filing_year=filing_year, period=period)
+        return calculation_screen_stamp(snapshot, operation=operation)
+
+    return operation.retained_projection(
+        _ReadingScreenStampKey(modelo_id=modelo_id, filing_year=filing_year, period=period),
+        kind=CalculationScreenStamp,
+        build=build,
+    )
+
+
 def calculation_screen_is_current(revision: CalculationRevision, expected: CalculationScreenStamp) -> bool:
     """Whether ``revision`` was screened against exactly the ``expected`` declarations under this contract.
 
@@ -90,4 +124,5 @@ __all__ = [
     "calculation_screen_is_current",
     "calculation_screen_outdated_message_key",
     "calculation_screen_stamp",
+    "reading_calculation_screen_stamp",
 ]
