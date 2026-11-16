@@ -12,12 +12,12 @@ import {
 } from "@/components/ui/dialog";
 import { failureCode } from "../../errors";
 import { useStrings, type Translate } from "../../shell/strings";
+import type { ProviderSignIn } from "../../shell/providerSettings";
 import type {
-  ProviderSignIn,
   ProviderSignInEvent,
   ProviderSignInMethod,
   ProviderSignInSnapshot,
-} from "../../shell/providerSettings";
+} from "../../shell/providerSettingsContract";
 import {
   cliStateCause,
   logRef,

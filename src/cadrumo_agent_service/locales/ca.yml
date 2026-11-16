@@ -387,6 +387,8 @@ desktop:
         i torna-ho a provar.
       retry: Torna-ho a provar d'aquí a un moment.
       update_app: Actualitza aquesta aplicació a l'última versió i torna-ho a provar.
+    reads_off_host: La teva conversa surt d’aquest ordinador cap al proveïdor.
+    reads_on_host: La teva conversa es queda en aquest ordinador.
     reason_check_settings: Revisa aquesta configuració i torna-ho a provar.
     reason_record_unreadable: No es pot llegir la clau API desada. Torna-la a afegir.
     refresh: Torna-ho a provar
@@ -513,6 +515,8 @@ desktop:
     sign_in_waiting: Acaba d'iniciar la sessió a la pàgina del proveïdor i torna aquí.
     sign_in_waiting_device: Escriu aquest codi a la pàgina del proveïdor per acabar
       d'iniciar la sessió.
+    sign_out_action: Tanca la sessió
+    sign_out_label: Tanca la sessió de {provider}
     status_not_checked: Sense comprovar
     status_off: Desactivat
     status_ready: A punt

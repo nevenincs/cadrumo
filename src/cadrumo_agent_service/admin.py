@@ -21,6 +21,7 @@ from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedEr
 
 from .host.credential_frame import wipe
 from .local_ai_relay import LocalAiFacts, relay_local_ai
+from .providers.application.contracts import SignInMethod
 from .providers.application.ports import ProviderCatalogUnavailableError
 from .providers.domain.record import LocalEngine, LocalPlacement
 
@@ -47,6 +48,7 @@ type AdminAction = Literal[
     "reset",
     "auth",
     "sign_in",
+    "sign_out",
     "start",
     "stop",
     "connect",
@@ -80,7 +82,7 @@ class AdminTarget(Protocol):
         expected_revision: str | None = None,
         base_url: str | None = None,
         choice: Literal["direct_api", "provider_sign_in"] | None = None,
-        method: Literal["browser", "browser-code", "device"] | None = None,
+        method: SignInMethod | None = None,
         attempt_id: str | None = None,
         model: str | None = None,
         secret: bytearray | None = None,
@@ -107,7 +109,7 @@ class AdminRequest(BaseModel):
     expected_revision: Annotated[str, Field(pattern=r"^[0-9a-f]{64}$")] | None = None
     base_url: Annotated[str, Field(max_length=2048)] | None = None
     choice: Literal["direct_api", "provider_sign_in"] | None = None
-    method: Literal["browser", "browser-code", "device"] | None = None
+    method: SignInMethod | None = None
     attempt_id: UUID | None = None
     model: Annotated[str, Field(pattern=MODEL_RUN_MODEL_ID_PATTERN)] | None = None
     secret_bytes: Annotated[int, Field(ge=1, le=ADMIN_SECRET_MAX_BYTES)] | None = None

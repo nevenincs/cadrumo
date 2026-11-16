@@ -15,7 +15,7 @@ from collections.abc import Callable
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any, cast
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
 
@@ -202,11 +202,17 @@ def test_administration_answers_busy_while_lifecycle_work_holds_the_tree_instead
         # Each of these changes the tree or its settings, so each is admitted only
         # under the lifecycle lock; stop is answered without it and is covered
         # by its own exchange tests.
-        for action in ("remove", "turn_on", "sign_in"):
+        for action in ("remove", "turn_on", "sign_in", "connect", "sign_out"):
             started = time.monotonic()
-            answer = service.admin(action, provider="example", expected_revision="0" * 64)
+            answer = service.admin(action, provider="example", expected_revision="0" * 64, method="browser")
             elapsed = time.monotonic() - started
-            assert answer == {"kind": "refused", "code": "busy"}
+            if action in {"sign_in", "connect", "sign_out"}:
+                # A refused sign-in or sign-out reaches the person, so it names its cause and its log line.
+                log_ref = answer.pop("log_ref")
+                assert answer == {"kind": "refused", "code": "busy", "cause": "agent_tree_running"}
+                assert str(UUID(log_ref)) == log_ref
+            else:
+                assert answer == {"kind": "refused", "code": "busy"}
             assert LIFECYCLE_ADMISSION_SECONDS <= elapsed < LIFECYCLE_ADMISSION_SECONDS + 1
         assert controller.state is AgentHostState.READY
         assert events == []

@@ -138,25 +138,45 @@ class AgentProviderAuthStatusProbe:
         with self._lock:
             return self._read(root, CONFIRMATION_SECONDS).observe(provider)
 
+    def log_out(self, provider: str, *, root: Path) -> bool:
+        """Run the agent's logout for ``provider`` within the confirmation bound; drop the kept read either way.
+
+        Only the exit status is read: whatever the agent prints is provider output and is never kept.
+        """
+        try:
+            with self._lock:
+                return self._run(root, ("auth", "logout", "--provider", provider), CONFIRMATION_SECONDS).status == 0
+        except (AgentProgramRefusalError, AgentHostError, RefusalError, OSError, ValueError):
+            return False
+        finally:
+            self.forget()
+
+    def _run(self, root: Path, verb: tuple[str, ...], timeout: float) -> AgentInvocationResult:
+        """Run one agent verb against the profile's agent root, refusing beside an unsettled earlier one.
+
+        Raises:
+            OSError: When an earlier invocation's scope is still unconfirmed.
+        """
+        image = agent_image(agent_root=root)
+        environment = _status_environment(root)
+        runner = self._claim_runner()
+        if runner is None:
+            raise OSError("an earlier agent invocation is unsettled")
+        try:
+            return runner.run(
+                executable=image.executable,
+                arguments=(*AGENT_COMMAND_LINE, *verb),
+                directory=image.directory,
+                environment=environment,
+                timeout=timeout,
+                output_limit=4096,
+            )
+        finally:
+            self._release_runner(runner)
+
     def _read(self, root: Path, timeout: float) -> _Reading:
         try:
-            image = agent_image(agent_root=root)
-            environment = _status_environment(root)
-            runner = self._claim_runner()
-            if runner is None:
-                return _failed(CliStateCause.STATUS_READ_FAILED)
-            try:
-                completed = runner.run(
-                    executable=image.executable,
-                    arguments=(*AGENT_COMMAND_LINE, "auth", "status", "--json", "--causes"),
-                    directory=image.directory,
-                    environment=environment,
-                    timeout=timeout,
-                    output_limit=4096,
-                )
-            finally:
-                self._release_runner(runner)
-            return _parsed_statuses(completed)
+            return _parsed_statuses(self._run(root, ("auth", "status", "--json", "--causes"), timeout))
         except (AgentProgramRefusalError, AgentHostError, RefusalError, OSError, ValueError):
             return _failed(CliStateCause.STATUS_READ_FAILED)
 

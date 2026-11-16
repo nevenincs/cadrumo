@@ -82,6 +82,8 @@ pub fn list(added: &[&str]) -> Value {
 fn lane(id: &str, provider: &str, auth_kind: &str, mode: &str, saved: bool) -> Value {
     json!({
         "id": id, "provider": provider, "display_name": provider, "transport": "api",
+        "reads_off_host": auth_kind != "none",
+        "sign_out_available": false,
         "auth_kind": auth_kind, "consumers": [], "mode": mode, "credential_saved": saved,
         "available": true, "source": if saved { "profile" } else { "none" },
         "readiness": "ready", "reason": null, "revision": revision(),

@@ -384,6 +384,8 @@ desktop:
         próbáld újra.
       retry: Próbáld újra egy pillanat múlva.
       update_app: Frissítsd ezt az alkalmazást a legújabb verzióra, majd próbáld újra.
+    reads_off_host: A beszélgetésed elhagyja ezt a számítógépet, és a szolgáltatóhoz kerül.
+    reads_on_host: A beszélgetésed ezen a számítógépen marad.
     reason_check_settings: Ellenőrizd a beállításokat, és próbáld újra.
     reason_record_unreadable: A mentett API-kulcs nem olvasható. Add hozzá újra.
     refresh: Újrapróbálkozás
@@ -503,6 +505,8 @@ desktop:
       ide.
     sign_in_waiting_device: A bejelentkezés befejezéséhez írd be ezt a kódot a szolgáltató
       oldalán.
+    sign_out_action: Kijelentkezés
+    sign_out_label: 'Kijelentkezés innen: {provider}'
     status_not_checked: Nincs ellenőrizve
     status_off: Kikapcsolva
     status_ready: Kész
