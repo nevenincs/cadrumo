@@ -291,10 +291,12 @@ def build_manual_classification_patch(
         payload.patch, payload.patch_fields, current=current, operation=operation
     )
     if "recargo_amount" in patch_values:
+        # The resolver reads recargo_amount as a Decimal, or None when the patch blanks it.
+        recargo = patch_values["recargo_amount"]
         require_recargo_regime_for_purchase(
             bucket_id=bucket_id,
             direction=current.direction,
-            recargo_amount=cast(Decimal | None, patch_values["recargo_amount"]),
+            recargo_amount=recargo if isinstance(recargo, Decimal) else None,
             effective_date=current.raw.booked_date,
             operation=operation,
         )
