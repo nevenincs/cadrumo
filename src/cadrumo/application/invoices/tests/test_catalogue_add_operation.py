@@ -75,6 +75,16 @@ def _request(**overrides: object) -> InvoiceAddRequest:
     return InvoiceAddRequest.model_validate(values)
 
 
+@pytest.mark.parametrize("currency", ["eur", "EURO", "€", "EU", ""])
+def test_the_request_refuses_a_currency_that_is_not_an_iso_4217_code(currency: str) -> None:
+    with pytest.raises(ValidationError):
+        _request(currency=currency)
+
+
+def test_the_request_admits_an_iso_4217_code() -> None:
+    assert _request(currency="USD").currency == "USD"
+
+
 def test_request_json_roundtrip_keeps_decimal_meaning_and_refuses_incomplete_line_modes() -> None:
     request = _request(retention_amount=PublicDecimal(decimal="0.00"))
 
@@ -578,7 +588,6 @@ def test_invalid_invoice_is_a_typed_refusal_with_no_effect_or_write(monkeypatch)
 @pytest.mark.parametrize(
     "overrides",
     (
-        pytest.param({"currency": "E1"}, id="malformed-currency"),
         pytest.param(
             {
                 "taxable_base": None,

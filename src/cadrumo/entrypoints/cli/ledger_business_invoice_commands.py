@@ -39,6 +39,7 @@ from ...application.invoices.catalogue_intake_contracts import (
 from ...application.invoices.catalogue_lifecycle import CatalogueInvoicePatch
 from ...application.invoices.catalogue_read_projection import CatalogueInvoiceSnapshot
 from ...application.invoices.catalogue_update_operation import InvoiceUpdatePatch
+from ...application.invoices.figures_preview_contracts import INVOICE_FIGURES_PREVIEW_LABEL_PREFIX
 from ...application.invoices.simplificada_advisory import (
     SimplificadaTaxIdAdvisory,
     resolve_simplificada_tax_id_advisory,
@@ -47,9 +48,11 @@ from ...application.invoices.simplificada_advisory import (
 from ...application.invoices.source_observations import iva_category_for_operation_type
 from ...application.operations.public_scalar import PublicDecimal
 from ...core.aggregation import IntracomOperationType
+from ...core.errors.hierarchy import CoreValidationError
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
+from ...core.parsing.codes import normalise_iso_4217_currency
 from ...domain.invoices.enums import (
     InvoiceClass,
     InvoiceOperationDateRole,
@@ -59,6 +62,7 @@ from ...domain.invoices.enums import (
 )
 from ...domain.invoices.errors import InvoiceValidationError
 from ...domain.invoices.models import Invoice, InvoiceLine
+from ...domain.invoices.rule_findings import InvoiceRuleFindingCode
 from ...domain.iva.schema import InvoiceKind, IvaCategory, IvaRateKind
 from .common import (
     active_bucket_id_or_refuse,
@@ -857,6 +861,15 @@ def invoice_update(
         ) from None
 
 
+def _invoice_currency(raw: str) -> str:
+    """Fold a typed currency to its upper-case ISO 4217 code, or refuse it in the served words."""
+    try:
+        return normalise_iso_4217_currency(raw)
+    except CoreValidationError as error:
+        words = tr(f"{INVOICE_FIGURES_PREVIEW_LABEL_PREFIX}rule_finding.{InvoiceRuleFindingCode.CURRENCY_INVALID}")
+        raise bad(f"--currency {raw!r}: {words}") from error
+
+
 def _invoice_add_request(
     *,
     bucket_id: str,
@@ -902,7 +915,7 @@ def _invoice_add_request(
         issued_at=parse_iso_date(invoice_date, label="invoice-date"),
         taxable_base=None if parsed_taxable_base is None else PublicDecimal(decimal=str(parsed_taxable_base)),
         iva_rate=None if parsed_iva_rate is None else PublicDecimal(decimal=str(parsed_iva_rate)),
-        currency=currency,
+        currency=_invoice_currency(currency),
         notes=notes,
         iva_category=None if resolved_iva_category is None else str(resolved_iva_category),
         operation_type=operation_type,
