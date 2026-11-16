@@ -198,6 +198,35 @@ FAMILIES: dict[str, tuple[str, tuple[str, ...]]] = {
             "ledger.prorrata.settle_sector",
         ),
     ),
+    "withholding": (
+        "LedgerWithholdingContracts",
+        (
+            "ledger.retencion_soportada.attest_absence",
+            "ledger.retencion_soportada.list",
+            "ledger.retencion_soportada.list_absences",
+            "ledger.retencion_soportada.record",
+            "ledger.retencion_soportada.remove",
+            "ledger.retencion_soportada.withdraw_absence",
+        ),
+    ),
+    "capitalGoods": (
+        "LedgerCapitalGoodsContracts",
+        (
+            "ledger.bienes_inversion.declare",
+            "ledger.bienes_inversion.list",
+        ),
+    ),
+    "ownAccount": (
+        "LedgerOwnAccountContracts",
+        ("ledger.own_account",),
+    ),
+    "transfer": (
+        "LedgerTransferContracts",
+        (
+            "ledger.export",
+            "ledger.import",
+        ),
+    ),
 }
 
 #: The families whose modules a family imports its types from rather than writing them again, in the order
@@ -263,6 +292,68 @@ EARLIER: dict[str, tuple[str, ...]] = {
         "entry",
         "read",
     ),
+    "withholding": (
+        "classification",
+        "invoice",
+        "document",
+        "documentReview",
+        "movement",
+        "movementCheck",
+        "inventory",
+        "activityAsset",
+        "activityAssetRead",
+        "entry",
+        "read",
+        "prorrata",
+    ),
+    "capitalGoods": (
+        "classification",
+        "invoice",
+        "document",
+        "documentReview",
+        "movement",
+        "movementCheck",
+        "inventory",
+        "activityAsset",
+        "activityAssetRead",
+        "entry",
+        "read",
+        "prorrata",
+        "withholding",
+    ),
+    "ownAccount": (
+        "classification",
+        "invoice",
+        "document",
+        "documentReview",
+        "movement",
+        "movementCheck",
+        "inventory",
+        "activityAsset",
+        "activityAssetRead",
+        "entry",
+        "read",
+        "prorrata",
+        "withholding",
+        "capitalGoods",
+    ),
+    "transfer": (
+        "classification",
+        "invoice",
+        "document",
+        "documentReview",
+        "movement",
+        "movementCheck",
+        "inventory",
+        "activityAsset",
+        "activityAssetRead",
+        "entry",
+        "read",
+        "prorrata",
+        "withholding",
+        "capitalGoods",
+        "ownAccount",
+    ),
 }
 
 _FILE_TOKEN = WindowType("FileToken", "./ledger")
@@ -279,6 +370,14 @@ FIELD_TYPES: dict[str, dict[tuple[str, str], WindowType]] = {
     },
     "inventory": {
         ("InventoryEvidenceAddRequest", "source_path"): _FILE_TOKEN,
+    },
+    "withholding": {
+        ("RetencionSoportadaRecordRequest", "source_path"): _FILE_TOKEN,
+    },
+    "transfer": {
+        ("LedgerExportRequest", "output_path"): _FILE_TOKEN,
+        ("LedgerImportRequest", "files"): _FILE_TOKEN,
+        ("LedgerImportRequest", "verify_source"): _FILE_TOKEN,
     },
 }
 

@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { ExportDialog } from "@/components/ledger/transfer/ExportDialog";
 import { LedgerSuggestions } from "@/components/ledger/suggestions/SuggestionsProvider";
-import type { LedgerExportFormat } from "@/shell/ledger";
+import type { ExportSerializationFormat } from "@/shell/ledgerTransferContract";
 import { EMPTY_CONTENT } from "@/shell/ledgerStage";
 import { STORY_READER } from "../LedgerStage";
 import { SCENARIO_TODAY } from "../assetsRegister";
@@ -32,7 +32,7 @@ export function LedgerExportHarness({ staged }: { staged: number }) {
       }),
     [],
   );
-  const [format, setFormat] = useState<LedgerExportFormat>("csv");
+  const [format, setFormat] = useState<ExportSerializationFormat>("csv");
   const [open, setOpen] = useState(true);
   const record = (event: string) => {
     window.__exportEvents = [...(window.__exportEvents ?? []), event];

@@ -12,15 +12,17 @@ import {
   ledgerFailure,
   type JsonObject,
   type LedgerDefinitionId,
-  type LedgerImportRefusalCode,
-  type LedgerImportResult,
   type LedgerPort,
-  type LedgerProvider,
   type LedgerRequest,
   type LedgerResult,
   type PickedFile,
-  type PublicPeriod,
 } from "../../../shell/ledger";
+import type { PublicPeriod } from "../../../shell/ledgerInvoiceContract";
+import type {
+  LedgerImportFileRefusal,
+  LedgerImportResultProjection,
+  LedgerProviderID,
+} from "../../../shell/ledgerTransferContract";
 import type { EvidenceBatchResult } from "../../../shell/ledgerDocumentOperations";
 import type { InvoiceImportResult } from "../../../shell/ledgerInvoiceOperations";
 import type {
@@ -119,7 +121,7 @@ export async function readOwnAccounts(
 }
 
 export type BankOptions = {
-  provider: LedgerProvider;
+  provider: LedgerProviderID;
   period: PublicPeriod | null;
   /** Reports gaps, duplicates and parser notes as well. */
   verify: boolean;
@@ -134,7 +136,7 @@ export type BankFilePreview =
        * rows, which leaves nothing to import. */
       digest: string | null;
       /** The dry run for each account read so far, and with no account. */
-      byAccount: Partial<Record<AccountKey, LedgerImportResult>>;
+      byAccount: Partial<Record<AccountKey, LedgerImportResultProjection>>;
       /** Accounts whose choice the file's own rows refuse. */
       mismatched: string[];
       /** The account the file's rows name, where they name a registered
@@ -146,7 +148,7 @@ export type BankFilePreview =
   | {
       kind: "refused";
       file: PickedFile;
-      reason: LedgerImportRefusalCode;
+      reason: LedgerImportFileRefusal["reason_code"];
       /** The setup action the file's refusal names, if any. */
       setup?: string | null;
     }
@@ -166,7 +168,7 @@ const dryRun = (
 });
 
 /** The movements a dry run would write or skip, as one sorted list. */
-const rowIds = (result: LedgerImportResult) =>
+const rowIds = (result: LedgerImportResultProjection) =>
   [...result.imported_transaction_refs, ...result.skipped_transaction_refs]
     .map((ref) => ref.transaction_id)
     .sort()
@@ -174,7 +176,7 @@ const rowIds = (result: LedgerImportResult) =>
 
 /** The file's own refusal, the setup action it names, and its digest in
  * one dry run's answer. */
-function readOf(result: LedgerImportResult) {
+function readOf(result: LedgerImportResultProjection) {
   const refused = result.refused_files[0] ?? null;
   return {
     refusal: refused?.reason_code ?? null,
@@ -247,8 +249,8 @@ export async function previewForAccount(
 ): Promise<
   | {
       kind: "read";
-      result: LedgerImportResult;
-      refusal: LedgerImportRefusalCode | null;
+      result: LedgerImportResultProjection;
+      refusal: LedgerImportFileRefusal["reason_code"] | null;
       setup: string | null;
       digest: string | null;
     }
@@ -305,11 +307,11 @@ export function accountFor(
 
 /** One file's apply, in the order they were sent. */
 export type BankApplied =
-  | { kind: "imported"; file: PickedFile; result: LedgerImportResult }
+  | { kind: "imported"; file: PickedFile; result: LedgerImportResultProjection }
   | {
       kind: "refused";
       file: PickedFile;
-      reason: LedgerImportRefusalCode | string;
+      reason: LedgerImportFileRefusal["reason_code"] | string;
       /** The setup action the file's refusal names, if any. */
       setup?: string | null;
     }
