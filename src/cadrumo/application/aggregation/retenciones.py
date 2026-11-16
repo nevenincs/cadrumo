@@ -119,6 +119,10 @@ class Modelo180StructuredAddress(BaseModel):
 _M180_FORM_CODES_FACT = "modelo-180-perceptor-form-codes"
 
 
+def _modelo180_sign(taxable_base: Decimal) -> Literal["positive", "reimbursement"]:
+    return "reimbursement" if taxable_base < 0 else "positive"
+
+
 def _require_m180_percentage(value: Decimal) -> Decimal:
     """Refuse a percentage above the maximum the Modelo 180 record design can carry."""
     codes = form_codes_in_scope(_M180_FORM_CODES_FACT)
@@ -324,7 +328,7 @@ class Modelo180Type2Row(BaseModel):
     @property
     def sign(self) -> Literal["positive", "reimbursement"]:
         """Return the sign axis required for reimbursement separation."""
-        return "reimbursement" if self.taxable_base < 0 else "positive"
+        return _modelo180_sign(self.taxable_base)
 
 
 class RetencionesAggregation(BaseModel):
@@ -712,7 +716,7 @@ def _modelo180_type2_rows(
 def _modelo180_type2_group_key(
     row: RetencionObservation, detail: Modelo180PropertyEvidence, *, filing_year: int
 ) -> tuple[object, ...]:
-    sign = "reimbursement" if row.taxable_base < 0 else "positive"
+    sign = _modelo180_sign(row.taxable_base)
     return filing_year, row.perceptor_nif, detail.modality, detail.accrual_year, detail.identity, sign
 
 
