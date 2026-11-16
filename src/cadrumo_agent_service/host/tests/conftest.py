@@ -19,10 +19,6 @@ def _git_ancestor(directory: Path) -> Path | None:
     return None
 
 
-HOSTED_ROOT_BASE_VARIABLE = "CADRUMO_DEV_AGENT_HOSTED_ROOT"
-"""The documented directory, outside every Git checkout, that holds the hosted roots of tests starting the real agent."""
-
-
 @pytest.fixture
 def outside_git_path() -> Iterator[Path]:
     """Yield a fresh directory under ``CADRUMO_DEV_AGENT_HOSTED_ROOT`` and remove it afterwards.
@@ -32,10 +28,10 @@ def outside_git_path() -> Iterator[Path]:
     checkout, so a test that starts the agent keeps its roots in the directory
     the operator names for it in ``env/.env.example``.
     """
-    configured = os.environ.get(HOSTED_ROOT_BASE_VARIABLE, "").strip()
+    configured = os.environ.get("CADRUMO_DEV_AGENT_HOSTED_ROOT", "").strip()
     if not configured or not Path(configured).is_absolute():
         pytest.fail(
-            f"{HOSTED_ROOT_BASE_VARIABLE} must name an absolute directory outside every Git checkout "
+            "CADRUMO_DEV_AGENT_HOSTED_ROOT must name an absolute directory outside every Git checkout "
             "for tests that start the real agent",
             pytrace=False,
         )
