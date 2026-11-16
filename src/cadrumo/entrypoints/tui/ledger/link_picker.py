@@ -24,8 +24,8 @@ from textual.app import ComposeResult
 from textual.containers import Vertical
 from textual.widgets import Select, Static
 
+from ....application.ledger.entry_option_families import EntryOptionFamily
 from ....application.ledger.entry_options_operation import (
-    EntryOptionFamily,
     LedgerEntryOptionFamilyProjection,
     LedgerEntryOptionProjection,
     LedgerEntryOptionsProjection,

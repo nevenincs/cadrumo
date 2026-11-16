@@ -35,7 +35,7 @@ number = "166"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "ratio"
 # The design prints [166] as "Tipo %", a percentage in a five-digit field with two decimals.
-constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-303-2024-late"] }
+constraints = { min_value = "0", max_value = "100" }
 semantic_role = "dr303_166"
 continuidad_id = "dr303-166"
 continuidad_origin = "new_on_form"
@@ -72,7 +72,7 @@ number = "169"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "ratio"
 # The design prints [169] as "Tipo %", a percentage in a five-digit field with two decimals.
-constraints = { min_value = "0", max_value = "100", source_refs = ["aeat-dr-303-2024-late"] }
+constraints = { min_value = "0", max_value = "100" }
 semantic_role = "dr303_169"
 continuidad_id = "dr303-169"
 continuidad_origin = "new_on_form"

@@ -49,7 +49,7 @@ HOST_WITHHELD: dict[str, tuple[str, ...]] = {"events": ("source_url",)}
 
 def _row_definition(defs: dict[str, Any], snapshot: str, field: str) -> str:
     """The definition of the rows a list field of the snapshot holds."""
-    reference = defs[snapshot].get("properties", {}).get(field, {}).get("items", {}).get("$ref")
+    reference: object = defs[snapshot].get("properties", {}).get(field, {}).get("items", {}).get("$ref")
     if not isinstance(reference, str):
         raise SystemExit(f"the calendar snapshot serves no list of rows {field}")
     return reference.removeprefix("#/$defs/")

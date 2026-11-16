@@ -20,9 +20,12 @@ from .....application.ledger.counterparty_filing_name_rendering import Counterpa
 from .....application.ledger.counterparty_filing_name_slots import (
     CounterpartyFilingNamePartLimit,
     CounterpartyFilingNameSlot,
-    FilingNameSlotRefusal,
 )
-from .....application.ledger.counterparty_filing_name_words import FilingNameSlotState, kind_words
+from .....application.ledger.counterparty_filing_name_words import (
+    FilingNameSlotRefusal,
+    FilingNameSlotState,
+    kind_words,
+)
 from .....application.ledger.counterparty_operation import (
     CounterpartyFactProjection,
     CounterpartyFilingNameProjection,

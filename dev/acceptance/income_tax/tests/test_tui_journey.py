@@ -279,34 +279,16 @@ def _form_with_assumed_withholding(*, entries_known: bool) -> Any:
     own panel instead, since keeping a value there would replace the source.
     """
     from cadrumo.application.modelo.work_form_field_vocabulary import ModeloFormOrigin
-    from cadrumo.application.modelo.work_form_models import (
-        ModeloFormField,
-        ModeloFormFieldBlock,
-    )
+    from cadrumo.application.modelo.work_form_models import ModeloFormFieldBlock, revised_field
     from cadrumo.entrypoints.tui.modelo.workbench.tests.workbench_fixture import synthetic_form
 
     form = synthetic_form(needs_input=False)
 
     def swap(block: object) -> object:
         if isinstance(block, ModeloFormFieldBlock) and block.field.box == "06":
-            derived = {
-                "standing",
-                "edit_address",
-                "confirmable",
-                "held_zero",
-                "takes_typed_value",
-                "clearable",
-                "removable",
-                "own_value",
-                "confirm_comparable",
-                "state_digest",
-                "restorable",
-                "filers_own",
-                "confirm_value",
-            }
-            values = block.field.model_dump(exclude=derived)
-            values.update(origin=ModeloFormOrigin.DEFAULT_TO_CONFIRM, bindings=(), unattributed=True)
-            field = ModeloFormField.model_validate(values)
+            field = revised_field(
+                block.field, origin=ModeloFormOrigin.DEFAULT_TO_CONFIRM, bindings=(), unattributed=True
+            )
             return block.model_copy(update={"field": field})
         return block
 

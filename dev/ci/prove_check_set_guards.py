@@ -69,7 +69,7 @@ def _proofs() -> tuple[Proof, ...]:
         Proof(
             "test_every_self_hosted_job_has_a_timeout",
             workflow,
-            "    timeout-minutes: 30\n",
+            "    timeout-minutes: 5\n",
             "",
             "self-hosted jobs without timeout-minutes",
         ),

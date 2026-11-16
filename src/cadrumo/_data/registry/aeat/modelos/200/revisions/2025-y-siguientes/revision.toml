@@ -3358,19 +3358,19 @@ removed_fields = []
 restate_provenance = true
 
 [[revisions."2025-y-siguientes".casilla_overrides]]
-selector = { revision = "2024", id = "00524" }
+selector = { revision = "2024", id = "DP200010:00524" }
 fields = { continuidad_origin = "seeded" }
 removed_fields = []
 restate_provenance = true
 
 [[revisions."2025-y-siguientes".casilla_overrides]]
-selector = { revision = "2024", id = "00525" }
+selector = { revision = "2024", id = "DP200010:00525" }
 fields = { continuidad_origin = "seeded" }
 removed_fields = []
 restate_provenance = true
 
 [[revisions."2025-y-siguientes".casilla_overrides]]
-selector = { revision = "2024", id = "00526" }
+selector = { revision = "2024", id = "DP200010:00526" }
 fields = { continuidad_origin = "seeded" }
 removed_fields = []
 restate_provenance = true
@@ -19694,6 +19694,16 @@ restate_provenance = true
 [[revisions."2025-y-siguientes".casilla_overrides]]
 selector = { revision = "2024", id = "DP200012:00006" }
 fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2024 DP200012 field 43, row 48: Liquidación I - Detalle correcciones resultado cta. pérdidas y ganancias - Libertad de amortización de determinados vehículos y de nuevas infraestructuras de recarga (DA 18ª LIS RDL 4/2024) - Disminuciones [00006]. aeat-dr-200-2025 DP200012 field 42, row 47: Liquidación I - Detalle correcciones resultado cta. pérdidas y ganancias - Libertad de amortización de determinados vehículos y de nuevas infraestructuras de recarga (DA 18ª LIS RDL 4/2024 y RDL 7/2026) - Disminuciones [00006]. Both identify the same concept; this sheet-scoped identity does not inherit the unrelated field with the same printed number.", source_refs = ["aeat-dr-200-2025"] }
+removed_fields = []
+restate_provenance = true
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "DP200012:00524" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1301 (DP200012 field 60, offset 931, length 17, type Num): Liquidación I - Detalle correcciones resultado cta. pérdidas y ganancias - Ajustes por deterioro de valores repr. de partic. en el capital o fondos propios (DT 16ª.3 LIS) - Aumentos [00524]. aeat-dr-200-2025 01-200-ejercicio-2025-10-9-mb-xls.xls.extracted.md:1300 (DP200012 field 59, offset 914, length 17, type Num) prints the identical caption. Both identify the same concept; this sheet-scoped identity does not inherit the unrelated fields with the same printed number.", source_refs = ["aeat-dr-200-2025"] }
+removed_fields = []
+restate_provenance = true
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "DP200012:00525" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1302 (DP200012 field 61, offset 948, length 17, type Num): Liquidación I - Detalle correcciones resultado cta. pérdidas y ganancias - Ajustes por deterioro de valores repr. de partic. en el capital o fondos propios (DT 16ª.3 LIS) - Disminuciones [00525]. aeat-dr-200-2025 01-200-ejercicio-2025-10-9-mb-xls.xls.extracted.md:1301 (DP200012 field 60, offset 931, length 17, type Num) prints the identical caption. Both identify the same concept; this sheet-scoped identity does not inherit the unrelated fields with the same printed number.", source_refs = ["aeat-dr-200-2025"] }
 removed_fields = []
 restate_provenance = true
 [[revisions."2025-y-siguientes".casilla_overrides]]

@@ -18,6 +18,7 @@ from ...form_layout.cli import synchronise_form_layouts
 from .. import cli
 from ..generated_form_bridge import generated_form_companion_changed, prepare_generated_form_bridge
 from ..generated_tree_dispositions import GeneratedTreeRecordDriftDisposition
+from ..target_currentness_fact import TargetCurrentnessState
 from ..tree_publication_contracts import GeneratedExportTransactionPaths
 
 pytestmark = [pytest.mark.hex_core]
@@ -149,7 +150,7 @@ def test_m190_republication_preserves_other_authority_and_closes_the_generated_f
     assert synchronise_form_layouts(registry_root, source_root, modelos=("190",), check=True) == ([], [])
     authority = source_authority()
     assert cli.target_currentness("190", _REVISION, _SOURCE, _EXERCISE, "0A", authority=authority).state is (
-        cli.TargetCurrentnessState.CURRENT
+        TargetCurrentnessState.CURRENT
     )
     assert all((registry_root / path).read_bytes() == data for path, data in other_before.items())
     assert not GeneratedExportTransactionPaths(
