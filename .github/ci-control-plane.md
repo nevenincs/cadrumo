@@ -1,36 +1,127 @@
 # CI control plane
 
-Why the workflows pin explicit worker counts instead of letting tooling choose.
+Which workflow runs what, on which machines, and why. The contract tests under
+`dev/ci/tests/` assert the shape described here; a change to one is a change
+to both.
 
-Workflow comments across the three lanes cite this file as the authority for
-their `-n 8` and lane-concurrency numbers, so the next person tuning a pin
-reads a measurement rather than re-deriving one.
+## Branches
 
-## The three lanes
+`feature/tui` is the development branch. Every landing goes there, and a push
+to it starts no workflow. `main` is the release branch, reached only by a
+promotion pull request from `feature/tui`. Release automation reads, proposes
+and tags `main` alone.
 
-Branches: `feature/tui` is the development branch, where every landing goes and
-which is pushed after each one; a push to it starts no workflow. `main` is the
-release branch, reached only by a promotion pull request from `feature/tui`.
-Release automation reads, proposes and tags `main` alone.
+## Two lanes: headless and native
 
-- **Merge gate** (`merge-gate.yml`) is the only pull request workflow, for pull
-  requests into `feature/tui` or `main`. It runs
-  two Linux jobs, lint then gate (security scan, registry gate, import
-  boundaries, scoped tests, committed sequence goldens); the required check is
-  `Check: Merge gate (Linux)`. A pull request reaches the self-hosted runners
-  only from this repository and from an owner, a collaborator or the
-  `nevenincs-release` App; any other pull request starts no job and its
-  verdict reports as `Check: Merge gate withheld (Linux)`, so the required
-  check never reports and the pull request cannot merge.
-- **Release** (`release.yml`) is dispatched only by release-please, using the
-  default `GITHUB_TOKEN`. `phase=prove` runs against the release pull request's
-  head: the merge gate's full scan, the full test suites, conformance checks, the
-  sealed release cohort build, and smoke tests across Linux, Windows, and
-  macOS plus Homebrew and Scoop acquisition — macOS is mandatory, not
-  optional. `phase=publish` runs against the tag: PyPI via trusted
-  publishing, then the Homebrew tap and Scoop bucket
-  (`HOMEBREW_TAP_TOKEN`, `SCOOP_BUCKET_TOKEN`, `SCOOP_BUCKET_REPOSITORY`),
-  then the documentation site.
+Testing is split by what a job needs, not by what it tests.
+
+**The headless lane** (`merge-gate.yml`, "Cadrumo Merge Gate") needs a Linux
+shell, Python and Node, and nothing else: no display, no compiler toolchain, no
+secret, no repository variable. Every job runs on a GitHub-hosted
+`ubuntu-24.04` runner, a fresh machine per job. It holds lint, the registry
+authority, the security scan, the registry gate, import boundaries, the fixture
+and persona check, the committed sequence goldens, the unit and integration
+tests, the CI contracts and the verification harness.
+
+**The native lane** (`native.yml`, "Cadrumo Native") holds everything that
+needs a compiler toolchain, a desktop session or Windows: the desktop
+frontend's checks and browser specs (they run through the CMake build
+directory), the Rust tests, the Windows-only contracts and the native package
+verification. Every job runs on a self-hosted runner.
+
+Tests are separated by the markers `pyproject.toml` registers. The headless
+selection excludes `windows_only`, `os_keychain`, `external_tool`,
+`resident_service`, `private_ingest_corpus` and `perf`; the native lane's
+recipes select what they need. A test that fails on a hosted runner because it
+needs a window, a credential store or a native tool is missing one of those
+markers: mark it, never skip it.
+
+## Who may run what
+
+The repository is public, so a pull request can come from anyone, and its run
+executes that pull request's workflow file and code.
+
+| | headless lane | native lane |
+| --- | --- | --- |
+| runner | GitHub-hosted, disposable | self-hosted, keeps state between jobs |
+| pull request from a fork | runs, once a maintainer approves the run | starts no job |
+| pull request from this repository | runs | runs for an owner, a collaborator or the `nevenincs-release` App |
+| secrets and repository variables | none | the agent-source path variable only |
+| token | read-only | read-only |
+| decides a merge | yes | no |
+
+A fork's code therefore never reaches a self-hosted machine. The admission
+clause sits in each native job's `if:`, which a fork could delete from its own
+copy of the file; what actually holds a fork back is the repository setting
+that requires approval before any outside contributor's run starts. The clause
+keeps an approved run of the headless lane from also starting the native one.
+
+No workflow runs on `pull_request_target`. Every checkout drops its
+credentials. A newer push to a pull request cancels the run it supersedes.
+
+A hosted job's caches (uv downloads, npm) are restored and saved only when the
+run is not a fork's, so nothing a fork ran outlives its job. A pull request can
+read caches written by its own earlier runs and by its base branch. No workflow
+runs on a push to `feature/tui`, so the base branch holds none, and a cache
+pays only from a pull request's second run onward.
+
+## The merge gate, job by job
+
+Triggered by a pull request into `feature/tui` or `main`, and called by the
+release proof. It is never dispatched by hand: a dispatched run attaches its
+checks to no pull request.
+
+| job | check name | needs | what it does |
+| --- | --- | --- | --- |
+| `plan` | Check: Change scope (Linux) | | reads the changed paths, plans the test shards |
+| `lint` | Check: Lint (Linux) | | style, format, types, module size, year literals, actionlint, zizmor |
+| `authority` | Build: Registry authority (Linux) | | publishes the registry authority once, uploads it |
+| `checks` | Check: Security, registry and import boundaries (Linux) | authority | semgrep, registry gate, import linter |
+| `fixtures` | Check: Fixtures and personas (Linux) | authority | validates the personas, runs every fixture producer check |
+| `goldens` | Check: Committed sequence goldens (Linux) | plan, authority | replays the documented CLI sequences a change can alter |
+| `tests` | Test: Scoped tests (Linux, shard i/n) | plan, authority | one shard of the selected tests, parallel then serial |
+| `contracts` | Test: CI contracts (Linux) | plan, authority | the workflow, deployment and release contracts |
+| `harness` | Test: Verification harness (Linux) | authority | the harness proofs, outside every worker pool |
+| `verdict` | **Check: Merge gate (Linux)** | all of the above | fails unless every job succeeded |
+
+`Check: Merge gate (Linux)` is the one required check on both branches. It
+runs after a failure, a skip or a cancellation alike, so it is never the
+skipped check GitHub would count as passing, and it runs no repository code.
+No other job in the gate may be skipped or advisory.
+
+**Scope.** For a pull request into `feature/tui`, `dev.ci.change_scope` maps
+the changed paths to the test directories they can affect, and the plan deals
+those test files into shards (`dev.ci.gate_shards`): about 900 files to a
+shard, eight shards at most, largest files first onto the lightest shard. A
+typical pull request is one shard. A promotion pull request into `main`, and a
+call from the release proof, read no change list and run the full population
+in eight shards.
+
+**Speed.** The expected critical path for a pull request is `authority`
+(toolchain, then compiling the registry) followed by the longest of `tests`,
+`goldens`, `checks`, `fixtures`, `contracts` and `harness`, then `verdict`:
+three job starts in sequence, everything else in parallel. The target is a
+verdict within fifteen minutes. The shard size and ceiling in
+`dev/ci/gate_shards.py` are working figures; correct them from real run times.
+
+## The native lane, job by job
+
+Triggered by a pull request that touches `native/`, the CMake project files,
+this workflow or the setup action; by manual dispatch; and by the release
+proof.
+
+| job | check name | runner | runs for |
+| --- | --- | --- | --- |
+| `desktop` | Check: Frontend and Rust (Linux) | self-hosted Linux X64 | pull request, dispatch, release proof |
+| `windows-contracts` | Test: Windows-only contracts (Windows) | self-hosted Windows X64 | dispatch, release proof |
+| `native-package` | Test: Native package verification (Windows) | self-hosted Windows X64 | dispatch, release proof |
+
+The Windows runner is a shared workstation, so its two jobs never run for a
+pull request. On a pull request the lane is advisory. In the release proof
+every job is required.
+
+## Release
+
 - **Release-please** (`release-please.yml`) is the only workflow that runs on
   a push, and only on a push to `main` (plus manual dispatch from `main` for
   recovery; a dispatch from any other ref runs no job). It cuts tags and
@@ -39,37 +130,54 @@ Release automation reads, proposes and tags `main` alone.
   run the merge gate, and dispatches `release.yml`'s prove and publish phases.
   The release commit carries the `uv.lock` version bump itself, through
   release-please's `extra-files`, so the release branch has one head.
+- **Release** (`release.yml`) is dispatched only by release-please.
+  `phase=prove` runs against the release pull request's head: the headless
+  merge gate over the full population, the native lane, the full suites on
+  each supported interpreter, the conformance checks, the sealed release
+  cohort build, and smoke tests across Linux, Windows and macOS plus Homebrew
+  and Scoop acquisition. macOS is mandatory, not optional. `phase=publish`
+  runs against the tag: PyPI via trusted publishing, then the Homebrew tap and
+  Scoop bucket (`HOMEBREW_TAP_TOKEN`, `SCOOP_BUCKET_TOKEN`,
+  `SCOOP_BUCKET_REPOSITORY`), then the documentation site.
 
-## The runners are shared, not a cloud
+Apart from the two lanes it calls, the release proof still runs on the
+self-hosted fleet.
 
-Every job runs on a small self-hosted fleet. Two consequences the pins exist
-for:
+## Worker counts
 
-**The host's CPUs are not cadrumo's alone.** Other runners and interactive work
-share the machine, so `-n auto` sizes as though the box were idle and
-oversubscribes it. Most of the interpreters measured on the host during queued
-cadrumo runs belonged to other tenants.
+Every pytest invocation a workflow reaches carries an explicit worker count,
+never `-n auto`.
 
-**cadrumo has ONE Linux X64 runner.** Every self-hosted Linux job across the
-three lanes above shares it. Anything that holds it blocks everything else on
-it, which is why job duration on that lane matters more than raw throughput.
-The macOS runner is power-gated by policy, so its absence is not a fault.
+A hosted runner has four cores and one tenant, so the headless lane pins
+`CADRUMO_PYTEST_WORKERS` to 4.
 
-## The pins
+The self-hosted fleet is shared, not a cloud. Other runners and interactive
+work share each host, so `-n auto` sizes as though the box were idle and
+oversubscribes it. Cadrumo has one Linux X64 runner, which every self-hosted
+Linux job shares, so job duration on it matters more than raw throughput. The
+macOS runner is power-gated by policy, so its absence is not a fault.
 
 | where | pin | reason |
 | --- | --- | --- |
-| preflight pytest, Linux and Windows lanes | `-n 8` | A working pin, NOT a derivation. It leaves room for co-resident runners. Nobody has measured the optimum. |
-| packaging lane pool, Linux | 3 | The lanes are venv- and disk-bound rather than CPU-wide, so more parallelism buys little and costs disk contention. |
-| packaging lane pool, Windows | 2 | Same reasoning, lower because Windows venv installs are slower and the box carries co-resident jobs. |
+| headless lane | `-n 4` | The hosted runner's core count. |
+| release proof pytest, self-hosted Linux and Windows | `-n 8` | A working pin, not a derivation. It leaves room for co-resident runners. |
+| packaging lane pool, Linux | 3 | The lanes are venv- and disk-bound rather than CPU-wide. |
+| packaging lane pool, Windows | 2 | Same reasoning, lower because Windows venv installs are slower. |
 | homebrew acquisition matrix | `max-parallel: 2` | Two of its three legs share one host. |
 
-`-n auto` is never correct here and no workflow should reintroduce it.
+Before changing a self-hosted pin, measure the host, not the repository.
+`dev/ci/perf_measurement.py` stamps CPU, memory and process counts into a
+failure. A timing taken while the machine is saturated says nothing about the
+change that produced it.
 
-## Before changing a pin
+## Repository settings this design relies on
 
-Measure the host, not the repository. `dev/ci/perf_measurement.py` stamps CPU,
-memory and process counts into a failure, and it is the only reason a wedged
-test can be told from a broken one on a box carrying other tenants. A timing
-result taken while the machine is saturated says nothing about the change that
-produced it.
+- Rulesets on `feature/tui` and `main` require the check
+  `Check: Merge gate (Linux)`.
+- Fork pull request workflows require approval for all outside contributors.
+- The allowed-actions list admits every action the workflows pin, including
+  `actions/cache` (through `setup-uv` and `setup-node`) and
+  `lukka/get-cmake`, which the native lane's desktop job uses.
+- The workflow token's default permission is read-only.
+- The repository variable `CADRUMO_PACKAGE_AGENT_SOURCE_DIR` names the
+  cadrumo-agent checkout on each self-hosted runner that builds the desktop.
