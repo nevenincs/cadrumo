@@ -26,6 +26,8 @@
 //   CADRUMO_PERSONA_LOADS_ONLY (optional) 1: sign in and wait for the
 //                            declarations list, write only the persona line
 //                            and open no declaration
+//   CADRUMO_PERSONA_ONLY     (optional) comma-separated modelo/year/period:
+//                            open only these of the world's declarations
 //   CADRUMO_PERSONA_LANGUAGE (optional) chrome-string locale; default: the
 //                            window's own document language, else "en"
 import assert from "node:assert/strict";
@@ -3364,7 +3366,19 @@ test(
             ? `signed in to profile ${PROFILE}; the declarations list shows ${rowCount} rows`
             : `the window did not load the profile: ${loadError.message}`,
       });
-      for (const row of loadsOnly ? [] : world.rows) {
+      const only = process.env.CADRUMO_PERSONA_ONLY
+        ? new Set(process.env.CADRUMO_PERSONA_ONLY.split(","))
+        : null;
+      const listed = only
+        ? world.rows.filter((row) =>
+            only.has(`${row.modelo}/${row.year}/${row.period}`),
+          )
+        : world.rows;
+      if (only && listed.length !== only.size)
+        throw new Error(
+          `CADRUMO_PERSONA_ONLY lists ${only.size} declarations, the world prepares ${listed.length} of them`,
+        );
+      for (const row of loadsOnly ? [] : listed) {
         await t.test(`${row.modelo} ${row.year} ${row.period}`, async () => {
           const base = {
             modelo: row.modelo,
