@@ -7325,15 +7325,6 @@ tui:
       actions: sense accions suggerides
       agenda: sense properes dates de presentació
       declarations: sense declaracions per reprendre
-    filing_status:
-      accepted: Presentada, acceptada per l'AEAT
-      due: Sense presentar
-      imported: Presentada per una altra via, importada
-      marked_filed: Marcada com a presentada, sense confirmar per l'AEAT
-      overdue: Vençuda, sense presentar
-      receipt_verified: Presentada, justificant de l'AEAT verificat
-      submitted: Presentada a l'AEAT
-      unknown: Sense presentar, termini desconegut
     heading:
       account: Compte
       actions: Properes accions
@@ -9977,6 +9968,7 @@ workspace:
         progress: S'està creant la declaració…
         success: S'ha creat {address}. Apareixerà a Declaracions quan hi tornis.
       scope:
+        ahead: Encara obertes
         all: Totes
         evidence_unknown: Estat a l'AEAT desconegut
         filed: Registrades com a presentades

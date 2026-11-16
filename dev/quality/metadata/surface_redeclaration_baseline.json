@@ -2,7 +2,7 @@
   "schema_version": 1,
   "counts": {
     "wire-type": 1233,
-    "tui-date-decision": 2,
+    "tui-date-decision": 1,
     "tui-precedence": 8,
     "duplicated-helper": 100
   },
@@ -1243,8 +1243,7 @@
       "wire-type:native/desktop/frontend/src/shell/views.ts:ProfileViews"
     ],
     "tui-date-decision": [
-      "tui-date-decision:src/cadrumo/entrypoints/tui/account_session_app.py:AccountSessionApp._session_expired",
-      "tui-date-decision:src/cadrumo/entrypoints/tui/declarations/controller.py:_scope_matches"
+      "tui-date-decision:src/cadrumo/entrypoints/tui/account_session_app.py:AccountSessionApp._session_expired"
     ],
     "tui-precedence": [
       "tui-precedence:src/cadrumo/entrypoints/tui/ledger/entries_browse_layout.py:_ORDER_LOCALE_KEYS",
