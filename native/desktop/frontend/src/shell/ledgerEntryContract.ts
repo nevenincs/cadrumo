@@ -59,6 +59,7 @@ export type LedgerEntryLimitsProjection = {
   rule_pattern_max: number;
   payment_id_pattern: string;
   text_limits: LedgerEntryTextLimit[];
+  entry_years: LedgerEntryYearWindow;
 };
 
 /**
@@ -131,6 +132,19 @@ export type LedgerEntryPercentField = {
 export type LedgerEntryTextLimit = {
   name: TextLimitName;
   max: number;
+};
+
+/**
+ * The years a typed ledger year takes, both inclusive: the four-digit year the
+ * backend admits.
+ *
+ * Not the filing envelope: a ledger holds history from before the supported
+ * filing years (an asset bought long ago, a carried fact), and which years a
+ * filing period exists for is served with the periods themselves.
+ */
+export type LedgerEntryYearWindow = {
+  earliest: number;
+  latest: number;
 };
 
 /**

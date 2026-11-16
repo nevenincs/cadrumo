@@ -130,6 +130,7 @@ _CODE_GATES: Final[frozenset[str]] = frozenset(
         "complexity-gate",
         "check-module-size",
         "check-year-literals",
+        "check-surface-redeclaration",
         "check-import-boundaries",
         "check-dependency-declarations",
         "check-module-reachability",
