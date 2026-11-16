@@ -10,11 +10,17 @@
 // A caller names what it needs with `usePeriods`; the page's reader asks the
 // backend for what is missing, once, and the caller draws again when it comes.
 // A read that fails stays unknown until the page is opened again.
+//
+// The same answer serves the years a typed year takes; each read holds them
+// with the limits (`./ledgerLimits`), and `useEntryYears` asks for them where
+// no read has served them yet.
 
 import { useEffect, useRef, useSyncExternalStore } from "react";
 import type { LedgerPort } from "./ledger";
 import type { PublicPeriod } from "./ledgerInvoiceContract";
 import { parseIsoDate, type LedgerPeriod } from "./ledgerGrammar";
+import { entryYears, holdEntryYears, useHeldEntryYears } from "./ledgerLimits";
+import type { LedgerEntryYearWindow } from "./ledgerEntryContract";
 import type {
   LedgerEntryOptionsRequest,
   LedgerServedDay,
@@ -36,8 +42,15 @@ export type PeriodWants = {
   spans?: readonly { from: string; to: string }[];
 };
 
+/** What one read serves: the periods asked for, and the years a typed year
+ * takes. */
+type Served = {
+  periods: LedgerServedPeriods;
+  years: LedgerEntryYearWindow;
+};
+
 /** Asks the backend for periods in one language. Null where it could not. */
-type Ask = (query: Query) => Promise<LedgerServedPeriods | null>;
+type Ask = (query: Query) => Promise<Served | null>;
 
 type Held = {
   language: OutputLanguage | null;
@@ -98,6 +111,13 @@ function merge(language: OutputLanguage, served: LedgerServedPeriods): void {
   });
 }
 
+/** Holds what one read served: its periods, and the years a typed year
+ * takes. */
+function take(language: OutputLanguage, answer: Served): void {
+  holdEntryYears(answer.years);
+  merge(language, answer.periods);
+}
+
 /** Holds periods served elsewhere: the answer of a read the page made, or a
  * recording. Null drops everything held. */
 export function holdLedgerPeriods(
@@ -139,6 +159,7 @@ export function registerPeriodsReader(
   asked = new Set();
   epoch += 1;
   todayFailed = false;
+  holdEntryYears(null);
   changed(EMPTY);
 }
 
@@ -150,10 +171,11 @@ function read(query: Query, key: string): void {
   void current
     .ask(query)
     .catch(() => null)
-    .then((served) => {
+    .then((answer) => {
       if (mine !== epoch) return;
-      if (served === null) return;
-      merge(current.language, served);
+      if (answer === null) return;
+      take(current.language, answer);
+      const served = answer.periods;
       // A day names periods whose own years are wanted to say their words.
       if (query.days)
         wantPeriods({
@@ -192,6 +214,24 @@ export function wantPeriods(wants: PeriodWants): void {
       );
 }
 
+/** Asks for the years a typed year takes where no read has served them. */
+export function wantEntryYears(): void {
+  if (reader === null || entryYears() !== null) return;
+  read({}, "entry-years");
+}
+
+/** The years a typed ledger year takes, as served, or null while they are
+ * not: they are asked for then, and the caller draws again when they come. */
+export function useEntryYears(): LedgerEntryYearWindow | null {
+  const years = useHeldEntryYears();
+  // A reader registered after the caller drew asks again.
+  const served = useSyncExternalStore(subscribe, () => version);
+  useEffect(() => {
+    if (years === null) wantEntryYears();
+  }, [years, served]);
+  return years;
+}
+
 function subscribe(listener: () => void): () => void {
   listeners.add(listener);
   return () => listeners.delete(listener);
@@ -214,7 +254,12 @@ export function useLedgerPeriodsReader(
           periods,
         }),
       );
-      return answer.kind === "answer" ? answer.result.periods : null;
+      return answer.kind === "answer"
+        ? {
+            periods: answer.result.periods,
+            years: answer.result.limits.entry_years,
+          }
+        : null;
     });
     return () => registerPeriodsReader(null, null);
   }, [port, who, language]);
@@ -355,7 +400,7 @@ export async function readPeriodHoldingSpan(span: {
     .ask({ covering: { first_day: span.from, last_day: span.to } })
     .catch(() => null);
   if (answer === null || reader !== current) return null;
-  merge(current.language, answer);
+  take(current.language, answer);
   return periodHoldingSpan(span);
 }
 
@@ -368,6 +413,6 @@ export async function readPeriodsHolding(day: string): Promise<Holding | null> {
   if (served !== null) return served;
   const answer = await current.ask({ days: [day] }).catch(() => null);
   if (answer === null || reader !== current) return null;
-  merge(current.language, answer);
+  take(current.language, answer);
   return periodsHolding(day);
 }

@@ -2,11 +2,18 @@
 // with `ledger.entry-options`. This is the one place the window holds them, and
 // only while the Ledger page is open: there is no copy to fall back on, so with
 // nothing served a draft stays as typed and is not taken.
+//
+// The years a typed year takes are served with the same answer. The periods
+// reader asks for that answer wherever a period is read, so the years it
+// served are held here too, for a year typed outside the Ledger page.
 
 import { useSyncExternalStore } from "react";
+import type { LedgerEntryYearWindow } from "./ledgerEntryContract";
 import type { LedgerEntryLimits, TextLimitName } from "./ledgerSetup";
 
 let held: LedgerEntryLimits | null = null;
+// The years the periods reader was served, held while it is registered.
+let servedYears: LedgerEntryYearWindow | null = null;
 const listeners = new Set<() => void>();
 
 /** Holds what the backend served, or null where it has served nothing. */
@@ -15,6 +22,22 @@ export function holdLedgerLimits(limits: LedgerEntryLimits | null): void {
   held = limits;
   for (const listener of listeners) listener();
 }
+
+/** Holds the years the periods reader was served, or null to drop them. */
+export function holdEntryYears(years: LedgerEntryYearWindow | null): void {
+  if (servedYears === years) return;
+  servedYears = years;
+  for (const listener of listeners) listener();
+}
+
+/** The years a typed ledger year takes, as served, or null where none are:
+ * no year is checked against a window of the window's own. */
+export const entryYears = (): LedgerEntryYearWindow | null =>
+  held?.entry_years ?? servedYears;
+
+/** The years served, drawing again when they arrive or go. */
+export const useHeldEntryYears = (): LedgerEntryYearWindow | null =>
+  useSyncExternalStore(subscribe, entryYears);
 
 /** The limits served, or null where none are. */
 export const ledgerLimits = (): LedgerEntryLimits | null => held;
