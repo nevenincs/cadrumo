@@ -10,9 +10,11 @@ key.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Annotated, Literal, Self
+from types import MappingProxyType
+from typing import Annotated, Final, Literal, Self
 
 from pydantic import BaseModel, Field, StringConstraints, computed_field, model_validator
 
@@ -157,6 +159,28 @@ class NextStep(StrEnum):
     UPDATE_APP = "update_app"
 
 
+SignInMethod = Literal["browser", "device", "browser-code"]
+"""The attended sign-in routes a person can select for a provider."""
+
+SignInEvent = Literal[
+    "starting", "started", "browser_action", "authorization_code_required", "succeeded", "cancelled", "failed"
+]
+"""A service-owned sign-in attempt's current transient event."""
+
+SignInReason = Literal[
+    "invalid_request",
+    "host_disconnected",
+    "timeout",
+    "busy",
+    "provider_unavailable",
+    "provider_error",
+    "unsupported_flow",
+    "cleanup_failed",
+    "profile_required",
+]
+"""The helper's closed protocol reasons for a terminal event."""
+
+
 @dataclass(frozen=True, slots=True)
 class CliObservation:
     """One cli lane's observed state with the cause when it is not signed in or not established."""
@@ -174,6 +198,8 @@ class ProviderStatusEntry(OutputSchema):
     """The provider identity the lane reaches; frontends key icons by it."""
     transport: ProviderTransport
     display_name: str
+    reads_off_host: bool
+    """Whether this lane's conversation data leaves this computer, as the agent declares it."""
     auth_kind: ProviderAuthKind
     consumers: tuple[ProviderConsumer, ...]
     mode: ProviderSettingsMode
@@ -192,6 +218,8 @@ class ProviderStatusEntry(OutputSchema):
     """Why a cli lane is not established or not signed in, when the probe says; never provider output."""
     next_step: NextStep | None = None
     """What the person can do about ``cli_state_cause``; ``None`` when no step is declared for it."""
+    sign_out_available: bool
+    """Whether the window may offer a sign-out: a signed-in cli lane whose agent declares a logout for it."""
     revision: ProviderSettingsRevision
 
 
@@ -199,6 +227,62 @@ class ProviderSettingsStatus(OutputSchema):
     """Masked status of every catalogued provider, in catalog order."""
 
     providers: tuple[ProviderStatusEntry, ...] = Field(min_length=1)
+
+
+class ProviderSettingsAnswer(OutputSchema):
+    """The provider-settings read as the window receives it: every provider and the sign-in routes on offer."""
+
+    providers: tuple[ProviderStatusEntry, ...]
+    sign_in_providers: tuple[str, ...] = ()
+    """Canonical providers the agent declares usable from the GUI sign-in flow; empty means none."""
+    sign_in_methods: dict[str, tuple[SignInMethod, ...]] = Field(default_factory=dict)
+    """GUI sign-in methods supported per canonical provider slug."""
+    console_sign_in_command: str | None = None
+    """The console command that signs a provider in by hand, with a ``{provider}`` slot; absent when not served."""
+
+
+class ProviderSignInSnapshot(OutputSchema):
+    """Transient progress for a person-started provider sign-in attempt; never carries a secret."""
+
+    attempt_id: str
+    provider: str
+    """The lane id, such as ``codex_cli``."""
+    event: SignInEvent
+    reason: SignInReason | None = None
+    cause: HelperCause | ServiceCause | None = None
+    """Why the attempt did not succeed, on a failed or cancelled attempt."""
+    next_step: NextStep | None = None
+    """What to do about ``cause``."""
+    status_cause: CliStateCause | None = None
+    """Why the status read after the attempt did not establish a sign-in."""
+    log_ref: str | None = None
+    """The id the failure was logged under; it names the entry and carries nothing else."""
+    url: str | None = None
+    """Present only while the person can open the provider's sign-in page."""
+    user_code: str | None = None
+    """Device-flow code; shown only while this attempt is active."""
+
+
+class ServiceRefusalCode(StrEnum):
+    """Closed codes the service refuses a provider-settings or sign-in request with before any read or change runs."""
+
+    BUSY = "busy"
+    """Another attempt, a start or a recovery holds the request; it may be asked again."""
+    INVALID_REQUEST = "invalid_request"
+    SERVICE_FAILED = "service_failed"
+    SIGNED_OUT = "signed_out"
+    SIGN_IN_UNAVAILABLE = "sign_in_unavailable"
+    SERVICE_STOPPING = "service_stopping"
+
+
+HOST_REFUSAL_NAMES: Final[Mapping[ServiceRefusalCode, str]] = MappingProxyType(
+    {
+        ServiceRefusalCode.SIGNED_OUT: "not_signed_in",
+        ServiceRefusalCode.SIGN_IN_UNAVAILABLE: "unsupported_flow",
+        ServiceRefusalCode.SERVICE_STOPPING: "runtime_unavailable",
+    }
+)
+"""The desktop host's word for a service code it renames; every other code reaches the window unchanged."""
 
 
 class ProviderSettingsRefusalCode(StrEnum):
@@ -345,6 +429,7 @@ type LocalEngineResult = LocalEngineStatus | ProviderSettingsRefusal
 
 
 __all__ = [
+    "HOST_REFUSAL_NAMES",
     "CliState",
     "LocalEngineChoices",
     "LocalEngineResult",
@@ -364,5 +449,6 @@ __all__ = [
     "ProviderStatusEntry",
     "ProviderStatusReason",
     "ReadingSource",
+    "ServiceRefusalCode",
     "is_provider_settings_revision",
 ]
