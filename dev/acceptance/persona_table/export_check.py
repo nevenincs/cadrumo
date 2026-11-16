@@ -14,7 +14,7 @@ from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefi
 from cadrumo.domain.filing.errors import ModeloBuilderError
 from cadrumo.tests.personas import ExpectedValue
 
-from .export_carriers import foreign_carrier_mismatches
+from .export_carriers import cross_page_reuse_mismatches, foreign_carrier_mismatches
 from .export_readback import read_fields, readback_mismatches, readback_reason, unreadable_reason
 from .export_text import check_export_text, violation_reason
 from .roles import edition_identities
@@ -49,7 +49,8 @@ def export_readback_reason(plan: PlannedRow, values: list[ExpectedValue], output
         except (RegistryError, ModeloBuilderError) as error:
             return unreadable_reason(error)
     mismatches = readback_mismatches(values, casillas, plan.unchecked, parsed)
-    return readback_reason([*mismatches, *foreign_carrier_mismatches(plan.modelo, parsed)])
+    found = [*foreign_carrier_mismatches(plan.modelo, parsed), *cross_page_reuse_mismatches(plan.modelo, parsed)]
+    return readback_reason([*mismatches, *found])
 
 
 def export_text_reason(plan: PlannedRow, output: Path) -> str:
