@@ -8,7 +8,8 @@ It reads every provider in one answer and performs the person's acts:
 * turn the lane off, which persists ``disabled`` for the assistant (so the
   lane is not used) and keeps any stored key;
 * turn an off lane back on, restoring the way it authenticates;
-* reset, which deletes the record and returns the provider to ``unset``.
+* reset, which deletes the record and returns the provider to ``unset``;
+* sign a cli lane's provider out through the agent, which leaves the record as it is.
 
 Every action carries the revision the caller read as its guard and is
 committed with a compare-and-swap, then read back. Setting only stores: there
@@ -264,6 +265,29 @@ class ProviderSettingsService:
             credential=previous.credential,
         )
         return self._commit(entry, record, expected_revision)
+
+    def sign_out(
+        self,
+        provider_id: str,
+        *,
+        expected_revision: str,
+        log_out: Callable[[ProviderCatalogEntry], None],
+    ) -> ProviderSettingsActionResult:
+        """Sign the lane's provider out with ``log_out``, then read the lane back.
+
+        The sign-in is the provider's own, so the profile's record is left as it
+        is; its revision guards the act all the same, so a person signs out the
+        lane they were shown. ``log_out`` raises when the provider is not signed
+        out, and nothing is read back then.
+        """
+        entry = self._lane(provider_id)
+        if isinstance(entry, ProviderSettingsRefusal):
+            return entry
+        current = self._current(entry, expected_revision)
+        if isinstance(current, ProviderSettingsRefusal):
+            return current
+        log_out(entry)
+        return self._accepted(entry, current)
 
     def turned_off_lanes(self) -> frozenset[tuple[str, str]] | None:
         """Return the ``(provider, transport)`` of every lane turned off, from the store alone.

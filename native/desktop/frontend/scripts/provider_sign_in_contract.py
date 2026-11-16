@@ -21,11 +21,13 @@ from typing import get_args
 from dev.quality.typescript_module_size import MAX_PHYSICAL_LINES
 
 from cadrumo_agent_service.providers.application.contracts import (
+    HOST_REFUSAL_NAMES,
     CliStateCause,
     HelperCause,
     NextStep,
     ProviderSettingsRefusalCode,
     ServiceCause,
+    ServiceRefusalCode,
 )
 
 _HEADER = """\
@@ -50,6 +52,12 @@ def _block(const: str, type_name: str, doc: str, words: list[str]) -> str:
     )
 
 
+def _host_refusals() -> list[str]:
+    """The settings refusal codes, then the service's own codes under the names the host gives them."""
+    service = [HOST_REFUSAL_NAMES.get(code, code.value) for code in ServiceRefusalCode]
+    return list(dict.fromkeys([*_words(ProviderSettingsRefusalCode), *service]))
+
+
 def render() -> str:
     """The generated module, before the frontend's formatter writes it."""
     sign_in = list(dict.fromkeys([*_words(HelperCause), *_words(ServiceCause)]))
@@ -72,6 +80,12 @@ def render() -> str:
             "ProviderSettingsRefusalCode",
             "The closed refusal codes of a provider-settings read or change.",
             _words(ProviderSettingsRefusalCode),
+        ),
+        _block(
+            "HOST_REFUSAL_CODES",
+            "HostRefusalCode",
+            "Every refusal code the desktop host relays for a provider-settings or sign-in command.",
+            _host_refusals(),
         ),
     ]
     return _HEADER + "\n" + "\n\n".join(blocks) + "\n"

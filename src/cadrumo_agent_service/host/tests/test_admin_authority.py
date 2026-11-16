@@ -64,6 +64,7 @@ def _startup(**fields: object) -> ServiceStartupFrame:
         "reset",
         "auth",
         "sign_in",
+        "sign_out",
         "start",
         "stop",
         "connect",
@@ -94,7 +95,7 @@ def test_gateway_frame_secret_is_refused_and_parent_admin_secret_dispatches(acti
     target = _AdminRecorder()
     server = AdminServer(target, bearer=parent)
     request: dict[str, object] = {"version": 1, "request_id": str(uuid4()), "action": action}
-    if action in {"set", "remove", "turn_on", "reset", "auth", "sign_in", "connect"}:
+    if action in {"set", "remove", "turn_on", "reset", "auth", "sign_in", "sign_out", "connect"}:
         request.update(provider="synthetic", expected_revision="0" * 64)
     if action == "connect":
         request["method"] = "browser"
