@@ -138,6 +138,29 @@ def test_a_quarterly_filer_captures_into_the_recognition_quarter(
     assert period == Period.from_year_and_code(2025, "2T")
 
 
+@pytest.mark.parametrize(
+    ("recognized_on", "code"),
+    [
+        (date(2025, 1, 1), "1T"),
+        (date(2025, 3, 31), "1T"),
+        (date(2025, 4, 1), "2T"),
+        (date(2025, 6, 30), "2T"),
+        (date(2025, 7, 1), "3T"),
+        (date(2025, 9, 30), "3T"),
+        (date(2025, 10, 1), "4T"),
+        (date(2025, 12, 31), "4T"),
+    ],
+)
+def test_the_capture_quarter_changes_exactly_on_the_quarter_boundaries(
+    authority_operation: PinnedAuthorityOperation, recognized_on: date, code: str
+) -> None:
+    cadence = withholding_filer_cadence(authority_operation, filing_year=2025)
+
+    period = quarterly_withholding_capture_period(cadence, modelo="111", recognized_on=recognized_on)
+
+    assert period == Period.from_year_and_code(2025, code)
+
+
 def test_a_monthly_filer_capture_is_refused_with_a_no_action_verdict(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:

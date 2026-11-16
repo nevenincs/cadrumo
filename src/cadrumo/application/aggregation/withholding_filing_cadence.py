@@ -26,7 +26,7 @@ from ...core.filing_year import FilingYear
 from ...core.i18n.translatable import Translatable as tr
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.period import Period, StandardPeriodCode
+from ...core.period import Period, PeriodKind, StandardPeriodCode
 from ...domain.calculations.registry.schedules import applicable_filing_schedules
 from ...domain.calculations.registry.temporal import select_revision_metadata
 from .errors import AggregationError
@@ -240,7 +240,7 @@ def quarterly_withholding_capture_period(
     """
     if cadence.filing_year != recognized_on.year:
         raise ValueError("withholding filer cadence was resolved for a different year than the recognition")
-    quarter = f"{((recognized_on.month - 1) // 3) + 1}T"
+    quarter = Period.containing(recognized_on, PeriodKind.QUARTERLY).code
     schedule = cadence.schedule_for(modelo)
     if quarter not in schedule.quarterly_periods:
         raise WithholdingFilingCadenceError(
