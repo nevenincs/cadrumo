@@ -21,7 +21,8 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import Final
 
-from ..persona_table.frontend import MATCHED, NOT_COMPARABLE, NOT_REACHED, STAGE_OF, figure_causes, parity
+from ..persona_table.figure_compare import figure_causes
+from ..persona_table.frontend import MATCHED, NOT_COMPARABLE, NOT_REACHED, STAGE_OF, parity
 from ..persona_table.rows import TableRow
 from .intake import ERROR, NOT_OWED, PASSED, SURFACE, PilotRow
 
