@@ -32,17 +32,16 @@ import {
   type CalendarState,
 } from "../shell/calendar";
 import {
-  closeUnknown,
-  compareListedEntries,
+  attentionStates,
   entryKey,
-  STATE_ORDER,
+  listedMonths,
 } from "../shell/calendarEntries";
 import { factsGap, listed } from "../shell/compose";
 import { useScrolls } from "@/components/ui/useScrolls";
 import { useMetric } from "../shell/metrics";
 import { useStrings } from "../shell/strings";
 import type { CoverageAdviceReason } from "../shell/calendarContract";
-import type { CalendarEntry, CalendarEvent } from "../shell/views";
+import type { CalendarEntry } from "../shell/views";
 import type { UserProfile } from "../shell/userProfile";
 import { CalendarMonths } from "./calendar/CalendarMonths";
 import {
@@ -617,60 +616,15 @@ export function FilingCalendarView({
 
   const months = useMemo(() => {
     const month = dateFormats(locale).month;
-    const groups = new Map<
-      string,
-      {
-        title: string;
-        entries: CalendarEntry[];
-        events: CalendarEvent[];
-        ahead: number;
-        behind: number;
-      }
-    >();
-    // A close that is not known is listed in the month of its earliest
-    // close, after the month's known closes: a steady place, not a date.
-    for (const entry of [...(calendar?.entries ?? [])].sort(
-      compareListedEntries,
-    )) {
-      const key = entry.adjusted_closes_on.slice(0, 7);
-      const group = groups.get(key) ?? {
-        title: month.format(day(entry.adjusted_closes_on)),
-        entries: [],
-        events: [],
-        ahead: 0,
-        behind: 0,
-      };
-      // How many of the month's known closes fall before the day the
-      // product evaluated: they are listed first, being sorted by date.
-      // What is ahead of it is what closes on or after that day; a close
-      // that is not known is ahead only where even its earliest close is.
-      if (evaluatedOn !== null && entry.adjusted_closes_on >= evaluatedOn)
-        group.ahead += 1;
-      else if (evaluatedOn !== null && !closeUnknown(entry)) group.behind += 1;
-      group.entries.push(entry);
-      groups.set(key, group);
-    }
-    // What was observed, in the month it happened, whether or not anything
-    // falls due in that month.
-    for (const event of [...(calendar?.events ?? [])].sort((a, b) =>
-      a.event_date.localeCompare(b.event_date),
-    )) {
-      const key = event.event_date.slice(0, 7);
-      const group = groups.get(key) ?? {
-        title: month.format(day(event.event_date)),
-        entries: [],
-        events: [],
-        ahead: 0,
-        behind: 0,
-      };
-      group.events.push(event);
-      groups.set(key, group);
-    }
-    return [...groups].sort(([a], [b]) => a.localeCompare(b));
-  }, [calendar, locale, evaluatedOn]);
+    return listedMonths(
+      { entries: calendar?.entries ?? [], events: calendar?.events ?? [] },
+      (iso) => month.format(day(iso)),
+    );
+  }, [calendar, locale]);
   // The day the product worked the states out for, and the month in which
-  // the first obligation still ahead falls: the mark for today stands just
-  // before that obligation, or after the last one when none is ahead.
+  // the first obligation the product serves as ahead of it falls: the mark
+  // for today stands just before that obligation, or after the last one
+  // when none is ahead.
   const today = evaluatedOn;
   const turning = months.find(([, month]) => month.ahead > 0)?.[0] ?? null;
 
@@ -736,16 +690,19 @@ export function FilingCalendarView({
     ];
     const unknownWords = [...new Set(sentences(unknown))];
     const asOf = formatTime(locale, generated_at);
-    // How the range stands, in the product's own four readings: counted,
-    // never combined into a verdict.
-    const standing = STATE_ORDER.map(
-      (kind) =>
-        [
-          kind,
-          state.calendar.entries.filter((entry) => entry.user_state === kind)
-            .length,
-        ] as const,
-    ).filter(([, count]) => count > 0);
+    // How the range stands, in the product's own four readings, in the order
+    // its attention order reaches them: counted, never combined into a
+    // verdict.
+    const standing = attentionStates(state.calendar)
+      .map(
+        (kind) =>
+          [
+            kind,
+            state.calendar.entries.filter((entry) => entry.user_state === kind)
+              .length,
+          ] as const,
+      )
+      .filter(([, count]) => count > 0);
     const short = dateFormats(locale).short;
     const { support } = state.calendar;
     // A range wholly outside the supported years has no rows to draw, and
