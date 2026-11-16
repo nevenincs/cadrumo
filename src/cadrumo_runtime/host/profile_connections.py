@@ -28,7 +28,7 @@ from cadrumo.application.user_profile.automation_custody_port import AutomationS
 from cadrumo.core.diagnostic_log import DiagnosticValue, diagnostic_event
 from cadrumo.core.logging import get_logger
 from cadrumo.core.storage_taxonomy import StorageCategory
-from cadrumo.core.time.clock import now
+from cadrumo.core.time.clock import wall_now
 from cadrumo.core.time.fixed_clock import FixedClock
 from cadrumo.entrypoints.operation_composition import build_manifest_operation_registry
 from cadrumo_client.contracts.access_vocabulary import Availability
@@ -136,7 +136,7 @@ class RuntimeProfileConnections(
         login_inventory: Callable[[], LoginInventory] | None = None,
         secret_store: Callable[[], AutomationSecretStore] = installed_automation_secret_store,
         worker_script: Path | None = None,
-        wall_clock: Callable[[], datetime] = now,
+        wall_clock: Callable[[], datetime] = wall_now,
         os_owner_id: str | None = None,
         installation_acts: InstallationActRegistry | None = None,
         service_descriptors: tuple[InstalledServiceDescriptor, ...] | None = None,

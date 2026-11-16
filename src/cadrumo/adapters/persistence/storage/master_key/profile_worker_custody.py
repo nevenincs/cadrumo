@@ -26,7 +26,7 @@ from .....core.async_cleanup import await_cancellation_complete
 from .....core.diagnostic_log import diagnostic_phase
 from .....core.logging import get_logger
 from .....core.storage_taxonomy import StorageCategory
-from .....core.time.clock import now
+from .....core.time.clock import wall_now
 from .....core.time.utc import UtcInstant
 from ..custody.automation_profile import validate_automation_profile_binding
 from ..custody.change_witness import CustodyChangeWitness, WatchedDirectory
@@ -120,7 +120,7 @@ class ProfileWorkerCustody:
         identity: ProfileWorkerIdentity,
         *,
         storage_root: Path,
-        clock: Callable[[], UtcInstant] = now,
+        clock: Callable[[], UtcInstant] = wall_now,
         monotonic: Callable[[], float] = time.monotonic,
     ) -> None:
         """Pin an empty worker before any profile material can be delivered."""
