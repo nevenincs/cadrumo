@@ -1,6 +1,7 @@
 """Build the editor form of one modelo work target from the review and the declared layout.
 
-:func:`build_modelo_work_form` is a pure join. It reads the canonical work
+:func:`build_modelo_work_form` is a pure join, presented over the summary
+:func:`summarize_modelo_work_form` classifies. It reads the canonical work
 review for values and origins, the revision's declared form layout for pages,
 sections, grids and placements, the registry snapshot for localized labels,
 help, required inputs and bindings, the current calculation revision for what
@@ -73,7 +74,6 @@ from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.schema_form_layouts import (
     FormLayoutDefinition,
     FormLayoutReviewState,
-    FormPlacementKind,
 )
 from ...domain.iva.refund_eligibility import RedemeEnrolmentState
 from ...domain.modelos.calculation_revision import CalculationRevision
@@ -84,45 +84,29 @@ from .calculation_notes import UNWORKED_BOX_REASONS
 from .edit_models import (
     ModeloEditPermittedSurfaceEntryV1,
 )
-from .work_form_answers import answer_fields
 from .work_form_carry_attestation import form_carry_attestations
 from .work_form_context import WorkFormContext
-from .work_form_counts import count_work_form_fields
 from .work_form_credits import withholding_credits, withholding_credits_heading
-from .work_form_declaration_facts import ModeloFormDeadline, ModeloFormEditClosure, year_projection
-from .work_form_errors import ModeloWorkFormLayoutError
-from .work_form_field_projection import project_casilla_field
-from .work_form_field_vocabulary import (
-    ModeloFormCasillaAddressV1,
-    ModeloFormScalar,
-)
-from .work_form_findings import ModeloFormIssue
-from .work_form_inspection import (
-    build_inspection_only_form,
-    project_aeat_data,
-    project_filing_summary,
-    project_settlement_result,
-    result_casilla_ids,
-)
+from .work_form_declaration_facts import ModeloFormDeadline, ModeloFormExport, year_projection
+from .work_form_facts import ModeloWorkFormSummary
+from .work_form_field_projection import facts_casilla_id, project_binding_field
+from .work_form_field_vocabulary import ModeloFormScalar
+from .work_form_inspection import build_inspection_only_form, project_aeat_data
 from .work_form_layout import LayoutWalker
+from .work_form_layout_facts import layout_presenter
 from .work_form_models import (
     ModeloFormField,
-    ModeloFormInspectionReason,
     ModeloFormLayoutProvenance,
     ModeloFormPage,
     ModeloFormUnplacedField,
     ModeloWorkForm,
     section_fields,
 )
-from .work_form_notes import (
-    NoteSource,
-    collect_note_sources,
-    project_calculation_notes,
-    project_verification_issues,
-)
+from .work_form_notes import NoteSource, collect_note_sources
 from .work_form_outline import form_outline
 from .work_form_prior_value_attestation import form_prior_value_attestations
 from .work_form_source_groups import worded_source_groups
+from .work_form_summary import inspection_reason, summarize_work_form
 from .work_form_wording import worded_form
 from .work_review import ModeloWorkReview
 
@@ -149,8 +133,15 @@ def build_modelo_work_form(
     resolutions: SourceDisagreementResolutions = NO_SOURCE_DISAGREEMENT_RESOLUTIONS,
     redeme: RedemeEnrolmentState = RedemeEnrolmentState.UNSTATED,
     filed_findings: tuple[ModeloVerificationFinding, ...] = (),
+    last_export: ModeloFormExport | None = None,
+    verification_out_of_date: bool = False,
 ) -> ModeloWorkForm:
     """Join one work review with its revision's declared layout into a classified editor form.
+
+    The form is its summary (:func:`summarize_modelo_work_form`) presented:
+    every box, page and filing fact is classified there, and this adds each
+    field's words and controls, the layout's structure and what only an
+    editor reads.
 
     ``entered_casilla_ids`` and ``overridden_binding_ids`` are the operator's own
     recorded entries on the current revision; ``None`` means the revision does
@@ -162,7 +153,10 @@ def build_modelo_work_form(
 
     ``deadline`` is the resolved filing deadline, and ``aeat_data_imported_at``
     when the AEAT tax data the revision replays was imported; the caller reads
-    both, since neither is a fact of the review or the layout.
+    both, since neither is a fact of the review or the layout. ``last_export``
+    is the latest file exported for the declaration and
+    ``verification_out_of_date`` whether the movements the last check read
+    changed since; the caller reads both as well.
 
     ``element_names`` are the names the register's elements go by now, for the
     notes that speak of them.
@@ -218,11 +212,8 @@ def build_modelo_work_form(
         :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`
             The pinned registry snapshot supplying the selected modelo revision.
     """
-    sources = collect_note_sources(
-        revision,
-        calculation_diagnostics,
-        screen_outdated=calculation_screen_outdated,
-        filed_before_grade_cap=calculation_filed_before_grade_cap,
+    sources = _note_sources(
+        revision, calculation_diagnostics, calculation_screen_outdated, calculation_filed_before_grade_cap
     )
     context = _work_form_context(
         review=review,
@@ -238,36 +229,105 @@ def build_modelo_work_form(
         resolutions=resolutions,
         redeme=redeme,
     )
-    held = calculation_diagnostics is not None
-    inspection = _inspection_only_for_unusable_layout(
-        layout,
+    summary = summarize_work_form(
         context,
-        snapshot,
+        layout,
+        notes=(sources, calculation_diagnostics is not None),
         deadline=deadline,
-        aeat_data_imported_at=aeat_data_imported_at,
-        notes=(sources, held),
-    )
-    if inspection is not None:
-        return _worded(
-            inspection.model_copy(update={"issues": (*inspection.issues, *_filed_issues(context, filed_findings))})
-        )
-    if layout is None:
-        raise ValueError("usable form layout is absent")
-    form = _projected_work_form(
-        review=review,
-        snapshot=snapshot,
-        layout=layout,
-        context=context,
-        entered_casilla_ids=entered_casilla_ids,
-        producer_values=producer_values,
-        profile_binding_values=profile_binding_values,
-        deadline=deadline,
-        aeat_data_imported_at=aeat_data_imported_at,
-        sources=sources,
-        held=held,
+        last_export=last_export,
+        verification_out_of_date=verification_out_of_date,
         filed_findings=filed_findings,
     )
-    return _worded(form)
+    reason = inspection_reason(layout, context)
+    if reason is not None or layout is None:
+        if reason is None:
+            raise ValueError("usable form layout is absent")
+        return _worded(
+            build_inspection_only_form(summary, context, snapshot, reason, aeat_data_imported_at=aeat_data_imported_at)
+        )
+    return _worded(
+        _projected_work_form(
+            summary,
+            layout=layout,
+            context=context,
+            producer_values=producer_values,
+            profile_binding_values=profile_binding_values,
+            aeat_data_imported_at=aeat_data_imported_at,
+        )
+    )
+
+
+def summarize_modelo_work_form(
+    *,
+    review: ModeloWorkReview,
+    snapshot: RegistrySnapshot,
+    layout: FormLayoutDefinition | None,
+    revision: CalculationRevision | None,
+    entered_casilla_ids: frozenset[CasillaId] | None,
+    overridden_binding_ids: frozenset[BindingId] | None,
+    language: OutputLanguage,
+    deadline: ModeloFormDeadline | None = None,
+    calculation_diagnostics: tuple[CalculationSourceDiagnostic, ...] | None = None,
+    element_names: Mapping[str, str] | None = None,
+    calculation_screen_outdated: bool = False,
+    calculation_filed_before_grade_cap: CasillaId | None = None,
+    known_truths: Mapping[BindingId, bool] | None = None,
+    resolutions: SourceDisagreementResolutions = NO_SOURCE_DISAGREEMENT_RESOLUTIONS,
+    redeme: RedemeEnrolmentState = RedemeEnrolmentState.UNSTATED,
+    filed_findings: tuple[ModeloVerificationFinding, ...] = (),
+    last_export: ModeloFormExport | None = None,
+    verification_out_of_date: bool = False,
+) -> ModeloWorkFormSummary:
+    """Classify one work review against its revision's declared layout, without presenting a field.
+
+    It is the summary :func:`build_modelo_work_form` presents, taken from the
+    same arguments, which mean what they mean there. Nothing it holds depends
+    on what may be edited, so no edit surface is taken.
+
+    Raises:
+        ModeloWorkFormLayoutError: the layout places a casilla the revision does
+            not define, places one twice, or leaves one without a placement.
+    """
+    sources = _note_sources(
+        revision, calculation_diagnostics, calculation_screen_outdated, calculation_filed_before_grade_cap
+    )
+    context = _work_form_context(
+        review=review,
+        snapshot=snapshot,
+        revision=revision,
+        permitted_surface=None,
+        entered_casilla_ids=entered_casilla_ids,
+        overridden_binding_ids=overridden_binding_ids,
+        language=language,
+        sources=sources,
+        element_names=element_names,
+        known_truths=known_truths,
+        resolutions=resolutions,
+        redeme=redeme,
+    )
+    return summarize_work_form(
+        context,
+        layout,
+        notes=(sources, calculation_diagnostics is not None),
+        deadline=deadline,
+        last_export=last_export,
+        verification_out_of_date=verification_out_of_date,
+        filed_findings=filed_findings,
+    )
+
+
+def _note_sources(
+    revision: CalculationRevision | None,
+    calculation_diagnostics: tuple[CalculationSourceDiagnostic, ...] | None,
+    screen_outdated: bool,
+    filed_before_grade_cap: CasillaId | None,
+) -> tuple[NoteSource, ...]:
+    return collect_note_sources(
+        revision,
+        calculation_diagnostics,
+        screen_outdated=screen_outdated,
+        filed_before_grade_cap=filed_before_grade_cap,
+    )
 
 
 def _work_form_context(
@@ -306,171 +366,83 @@ def _work_form_context(
 
 
 def _projected_work_form(
+    summary: ModeloWorkFormSummary,
     *,
-    review: ModeloWorkReview,
-    snapshot: RegistrySnapshot,
     layout: FormLayoutDefinition,
     context: WorkFormContext,
     producer_values: Mapping[FilingProducerKey, ModeloFormScalar] | None,
     profile_binding_values: Mapping[BindingId, ModeloFormScalar] | None,
-    deadline: ModeloFormDeadline | None,
     aeat_data_imported_at: datetime | None,
-    sources: tuple[NoteSource, ...],
-    held: bool,
-    entered_casilla_ids: frozenset[CasillaId] | None,
-    filed_findings: tuple[ModeloVerificationFinding, ...],
 ) -> ModeloWorkForm:
-    usable_layout = layout
-    pages, working, unplaced = _project_layout(
-        usable_layout, context, producer_values=producer_values, profile_binding_values=profile_binding_values
+    """Present the summary's pages, working figures, unplaced casillas and answers at the layout's placements."""
+    walk = LayoutWalker(
+        layout, context, summary, producer_values=producer_values, profile_binding_values=profile_binding_values
     )
-    form_fields = [field for page in pages for section in page.sections for field in section_fields(section)]
-    laid_out = [*form_fields, *working, *(item.field for item in unplaced)]
-    answers = list(answer_fields(usable_layout, context, laid_out))
-    every_field = [*laid_out, *answers]
+    pages = tuple(walk.page(page) for page in layout.pages)
+    working, unplaced, answers = _presented_details(summary, layout, context)
+    every_field = (
+        *(field for page in pages for section in page.sections for field in section_fields(section)),
+        *working,
+        *(item.field for item in unplaced),
+        *answers,
+    )
     return _assemble_work_form(
-        review=review,
-        snapshot=snapshot,
-        layout=usable_layout,
+        summary,
+        layout=layout,
         context=context,
         pages=pages,
         working=working,
         unplaced=unplaced,
         answers=answers,
         every_field=every_field,
-        language=context.language,
-        entered_casilla_ids=entered_casilla_ids,
-        deadline=deadline,
         aeat_data_imported_at=aeat_data_imported_at,
-        sources=sources,
-        held=held,
-        filed_findings=filed_findings,
     )
 
 
-def _inspection_only_for_unusable_layout(
-    layout: FormLayoutDefinition | None,
-    context: WorkFormContext,
-    snapshot: RegistrySnapshot,
-    *,
-    deadline: ModeloFormDeadline | None,
-    aeat_data_imported_at: datetime | None,
-    notes: tuple[tuple[NoteSource, ...], bool],
-) -> ModeloWorkForm | None:
-    if layout is None:
-        reason = ModeloFormInspectionReason.LAYOUT_ABSENT
-    elif layout.revision_id != snapshot.revision.id:
-        reason = ModeloFormInspectionReason.LAYOUT_FOR_ANOTHER_REVISION
-    else:
-        return None
-    return build_inspection_only_form(
-        context,
-        snapshot,
-        reason,
-        deadline=deadline,
-        aeat_data_imported_at=aeat_data_imported_at,
-        notes=notes,
+def _presented_details(
+    summary: ModeloWorkFormSummary, layout: FormLayoutDefinition, context: WorkFormContext
+) -> tuple[tuple[ModeloFormField, ...], tuple[ModeloFormUnplacedField, ...], tuple[ModeloFormField, ...]]:
+    """The summary's working figures, unplaced casillas, each with why the design leaves it off, and answers."""
+    present = layout_presenter(layout, context)
+    placements = {placement.casilla_id: placement for placement in layout.placements}
+    details = summary.details
+    working = tuple(present(facts) for facts in details.working_figures)
+    unplaced = tuple(
+        ModeloFormUnplacedField(field=present(facts), reason=placements[facts_casilla_id(facts)].unplaced_reason)
+        for facts in details.unplaced
     )
-
-
-def _project_layout(
-    layout: FormLayoutDefinition,
-    context: WorkFormContext,
-    *,
-    producer_values: Mapping[FilingProducerKey, ModeloFormScalar] | None,
-    profile_binding_values: Mapping[BindingId, ModeloFormScalar] | None,
-) -> tuple[tuple[ModeloFormPage, ...], list[ModeloFormField], list[ModeloFormUnplacedField]]:
-    context.placed_boxes = {
-        placement.casilla_id: placement.box_number
-        for placement in layout.placements
-        if placement.box_number is not None
-    }
-    walk = LayoutWalker(layout, context, producer_values=producer_values, profile_binding_values=profile_binding_values)
-    pages = tuple(walk.page(page) for page in layout.pages)
-    working, unplaced = _project_other_placements(layout, context, walk)
-    _ensure_layout_is_total(context, walk, working, unplaced)
-    return pages, working, unplaced
-
-
-def _project_other_placements(
-    layout: FormLayoutDefinition, context: WorkFormContext, walk: LayoutWalker
-) -> tuple[list[ModeloFormField], list[ModeloFormUnplacedField]]:
-    working: list[ModeloFormField] = []
-    unplaced: list[ModeloFormUnplacedField] = []
-    for placement in layout.placements:
-        casilla_id = placement.casilla_id
-        if placement.kind is FormPlacementKind.WORKING_FIGURE:
-            working.append(project_casilla_field(casilla_id, context, placement))
-        elif placement.kind is FormPlacementKind.UNPLACED:
-            unplaced.append(
-                ModeloFormUnplacedField(
-                    field=project_casilla_field(casilla_id, context, placement), reason=placement.unplaced_reason
-                )
-            )
-        elif casilla_id not in walk.seen:
-            raise ModeloWorkFormLayoutError(
-                f"casilla {casilla_id!r} is placed on the form but no page shows it",
-                translated_message="application.modelo.errors.work_form_layout_casilla_not_shown",
-                context={"casilla_id": str(casilla_id)},
-            )
-    return working, unplaced
-
-
-def _ensure_layout_is_total(
-    context: WorkFormContext,
-    walk: LayoutWalker,
-    working: list[ModeloFormField],
-    unplaced: list[ModeloFormUnplacedField],
-) -> None:
-    placed = walk.seen | {
-        field.address.casilla_id for field in working if isinstance(field.address, ModeloFormCasillaAddressV1)
-    }
-    placed |= {
-        item.field.address.casilla_id for item in unplaced if isinstance(item.field.address, ModeloFormCasillaAddressV1)
-    }
-    missing = sorted(set(context.rows) - placed)
-    if missing:
-        raise ModeloWorkFormLayoutError(
-            f"the layout gives no placement to casillas {missing[:10]!r}",
-            translated_message="application.modelo.errors.work_form_layout_casillas_unplaced",
-            context={"casillas": ", ".join(str(casilla_id) for casilla_id in missing[:10])},
-        )
+    return working, unplaced, tuple(project_binding_field(facts, context) for facts in details.answers)
 
 
 def _assemble_work_form(
+    summary: ModeloWorkFormSummary,
     *,
-    review: ModeloWorkReview,
-    snapshot: RegistrySnapshot,
     layout: FormLayoutDefinition,
     context: WorkFormContext,
     pages: tuple[ModeloFormPage, ...],
-    working: list[ModeloFormField],
-    unplaced: list[ModeloFormUnplacedField],
-    answers: list[ModeloFormField],
-    every_field: list[ModeloFormField],
-    language: OutputLanguage,
-    entered_casilla_ids: frozenset[CasillaId] | None,
-    deadline: ModeloFormDeadline | None,
+    working: tuple[ModeloFormField, ...],
+    unplaced: tuple[ModeloFormUnplacedField, ...],
+    answers: tuple[ModeloFormField, ...],
+    every_field: tuple[ModeloFormField, ...],
     aeat_data_imported_at: datetime | None,
-    sources: tuple[NoteSource, ...],
-    held: bool,
-    filed_findings: tuple[ModeloVerificationFinding, ...],
 ) -> ModeloWorkForm:
+    review = context.review
+    language = context.language
     provenance = (
         ModeloFormLayoutProvenance.REVIEWED
         if layout.review.state is FormLayoutReviewState.REVIEWED
         else ModeloFormLayoutProvenance.GENERATED
     )
     return ModeloWorkForm(
-        modelo=review.modelo,
-        filing_year=review.filing_year,
-        period=review.period,
-        registry_revision_id=snapshot.revision.id,
+        modelo=summary.modelo,
+        filing_year=summary.filing_year,
+        period=summary.period,
+        registry_revision_id=summary.registry_revision_id,
         year_projection=year_projection(
-            snapshot, modelo=str(review.modelo), period=review.period.registry_token, language=language
+            context.snapshot, modelo=str(review.modelo), period=review.period.registry_token, language=language
         ),
-        work_unit_id=review.work_unit_id,
-        calculation_revision_id=review.calculation_revision_id,
+        work_unit_id=summary.work_unit_id,
+        calculation_revision_id=summary.calculation_revision_id,
         language=language,
         layout_provenance=provenance,
         seed_source=layout.seed_source,
@@ -480,42 +452,34 @@ def _assemble_work_form(
             pages,
             language,
             filed=context.filed,
-            unplaced=tuple(unplaced),
-            working_figures=tuple(working),
-            answers=tuple(answers),
+            unplaced=unplaced,
+            working_figures=working,
+            answers=answers,
         ),
-        working_figures=tuple(working),
-        unplaced=tuple(unplaced),
-        answers=tuple(answers),
-        result_addresses=result_casilla_ids(context),
-        withholding_credits=withholding_credits(tuple(every_field), snapshot.revision),
-        withholding_credits_heading=withholding_credits_heading(tuple(every_field), language),
-        counts=count_work_form_fields(every_field, filed=context.filed),
+        working_figures=working,
+        unplaced=unplaced,
+        answers=answers,
+        result_addresses=summary.result_addresses,
+        withholding_credits=withholding_credits(every_field, context.snapshot.revision),
+        withholding_credits_heading=withholding_credits_heading(every_field, language),
+        counts=summary.counts,
         progress=review.progress,
-        operator_entries_known=entered_casilla_ids is not None,
+        operator_entries_known=context.entered is not None,
         edit_admitted=context.surface is not None,
-        verification=review.verification_outcome,
-        issues=(
-            *project_verification_issues(review, every_field),
-            *_filed_issues(context, filed_findings),
-        ),
-        calculation_notes=project_calculation_notes(context, sources, every_field),
-        calculation_notes_held=held,
-        result=project_settlement_result(context, every_field),
-        deadline=deadline,
+        verification=summary.verification,
+        issues=summary.issues,
+        calculation_notes=summary.calculation_notes,
+        calculation_notes_held=summary.calculation_notes_held,
+        result=summary.result,
+        deadline=summary.deadline,
         aeat_data=project_aeat_data(context, aeat_data_imported_at),
-        filing=project_filing_summary(context),
-        edit_closure=ModeloFormEditClosure.RECORDED_AS_FILED if context.filed else None,
+        verification_out_of_date=summary.verification_out_of_date,
+        filing=summary.filing,
+        last_export=summary.last_export,
+        edit_closure=summary.edit_closure,
         carry_attestations=form_carry_attestations(context),
         prior_value_attestations=form_prior_value_attestations(context),
     )
-
-
-def _filed_issues(
-    context: WorkFormContext, filed_findings: tuple[ModeloVerificationFinding, ...]
-) -> tuple[ModeloFormIssue, ...]:
-    """The caller's findings about a filed declaration, shown only while the form shows one."""
-    return tuple(ModeloFormIssue(finding=finding) for finding in filed_findings) if context.filed else ()
 
 
 def _worded(form: ModeloWorkForm) -> ModeloWorkForm:
@@ -524,4 +488,4 @@ def _worded(form: ModeloWorkForm) -> ModeloWorkForm:
     return worded.model_copy(update={"source_groups": worded_source_groups(worded)})
 
 
-__all__ = ["build_modelo_work_form"]
+__all__ = ["build_modelo_work_form", "summarize_modelo_work_form"]

@@ -49,12 +49,10 @@ from ...domain.iva.refund_eligibility import RefundEligibility, RefundEligibilit
 from .value_presentation import format_casilla_value
 from .work_form_assumed import assumed_fields
 from .work_form_declaration_facts import AMOUNTLESS_RESULT_DIRECTIONS, ModeloFormResultDirection
+from .work_form_facts import ModeloFormFacts
 from .work_form_field_vocabulary import ModeloFormOrigin
 from .work_form_findings import ModeloFormAttention
-from .work_form_models import (
-    ModeloFormField,
-    ModeloWorkForm,
-)
+from .work_form_models import ModeloFormField
 from .work_form_next_step import (
     ModeloFormNextAction,
     blocking_count,
@@ -310,13 +308,13 @@ class ModeloFormFilingHeader(BaseModel):
     export_hold: ModeloFormExportHold | None = None
 
 
-def form_recorded(form: ModeloWorkForm, *, filed: bool) -> bool:
+def form_recorded(form: ModeloFormFacts, *, filed: bool) -> bool:
     """Whether the declaration is recorded as filed, by its lifecycle or by the form's own filing record."""
     return filed or form.filing is not None
 
 
 def attention_counts(
-    form: ModeloWorkForm, language: OutputLanguage, *, recorded: bool
+    form: ModeloFormFacts, language: OutputLanguage, *, recorded: bool
 ) -> tuple[ModeloFormAttentionCount, ...]:
     """One count per attention level with anything in it, most urgent first; none once recorded.
 
@@ -343,7 +341,7 @@ def attention_counts(
 
 
 def missing_elsewhere(
-    form: ModeloWorkForm, language: OutputLanguage, *, recorded: bool
+    form: ModeloFormFacts, language: OutputLanguage, *, recorded: bool
 ) -> ModeloFormMissingElsewhere | None:
     """The missing values only a finding or a note names, which the check lists; ``None`` when there are none."""
     count = 0 if recorded else missing_findings(form)
@@ -381,7 +379,7 @@ def deadline_words(
     return tr("workspace.modelo.header.deadline", date=closes, days=days, locale=locale)
 
 
-def deadline_view(form: ModeloWorkForm, language: OutputLanguage, *, recorded: bool) -> ModeloFormDeadlineView | None:
+def deadline_view(form: ModeloFormFacts, language: OutputLanguage, *, recorded: bool) -> ModeloFormDeadlineView | None:
     """Say when the filing window closes, or ``None`` once the declaration is recorded as filed.
 
     The date is the effective one, after any weekend or holiday shift; the days
@@ -418,7 +416,7 @@ def deadline_view(form: ModeloWorkForm, language: OutputLanguage, *, recorded: b
     )
 
 
-def file_view(form: ModeloWorkForm, language: OutputLanguage, *, recorded: bool) -> ModeloFormFileView | None:
+def file_view(form: ModeloFormFacts, language: OutputLanguage, *, recorded: bool) -> ModeloFormFileView | None:
     """Say when the latest file for the AEAT was created, or that it is out of date; ``None`` when there is none.
 
     Nothing is said once the declaration is recorded as filed.
@@ -437,7 +435,7 @@ def file_view(form: ModeloWorkForm, language: OutputLanguage, *, recorded: bool)
 
 
 def export_hold(
-    form: ModeloWorkForm, language: OutputLanguage, *, verified: bool, recorded: bool
+    form: ModeloFormFacts, language: OutputLanguage, *, verified: bool, recorded: bool
 ) -> ModeloFormExportHold | None:
     """Why the file for the AEAT is withheld, or ``None`` when nothing withholds it.
 
@@ -496,7 +494,7 @@ def _boxed(parts: list[str], box: str | None) -> tuple[str, str]:
     return (f"{short}{_WORD_GAP}[{box}]" if (box is not None and box) else short), short
 
 
-def _selected_result(form: ModeloWorkForm) -> _SelectedResult | None:
+def _selected_result(form: ModeloFormFacts) -> _SelectedResult | None:
     fields = result_fields(form)
     result = form.result
     if result is not None:
@@ -535,7 +533,7 @@ def _figure(field: ModeloFormField, language: OutputLanguage, *, calculated: boo
     return figure if figure is not None else origin_words(field, language=language, calculated=calculated)
 
 
-def _other_boxes_help(selected: _SelectedResult, form: ModeloWorkForm, language: OutputLanguage) -> str | None:
+def _other_boxes_help(selected: _SelectedResult, form: ModeloFormFacts, language: OutputLanguage) -> str | None:
     others = [
         selected.fields[str(casilla_id)]
         for casilla_id in form.result_addresses
@@ -616,7 +614,7 @@ def _show_sign_help(selected: _SelectedResult, value: Decimal, presentation: _Pr
 
 
 def _stated(
-    selected: _SelectedResult, form: ModeloWorkForm, language: OutputLanguage, out_of_date: str | None
+    selected: _SelectedResult, form: ModeloFormFacts, language: OutputLanguage, out_of_date: str | None
 ) -> ModeloFormResultView:
     value = selected.value
     if value is None:
@@ -667,7 +665,7 @@ def _unstated(
     return _view(selected, state, text=said, short_text=said, brief_text=said, **words)
 
 
-def result_view(form: ModeloWorkForm, language: OutputLanguage, *, recorded: bool) -> ModeloFormResultView | None:
+def result_view(form: ModeloFormFacts, language: OutputLanguage, *, recorded: bool) -> ModeloFormResultView | None:
     """The result as the header states it, or ``None`` when the form names no result box at all.
 
     Without a declared settlement box the first result box in form order
@@ -689,7 +687,7 @@ def result_view(form: ModeloWorkForm, language: OutputLanguage, *, recorded: boo
     return _stated(selected, form, language, out_of_date)
 
 
-def form_header(form: ModeloWorkForm, language: OutputLanguage, *, verified: bool, filed: bool) -> ModeloFormHeader:
+def form_header(form: ModeloFormFacts, language: OutputLanguage, *, verified: bool, filed: bool) -> ModeloFormHeader:
     """Everything the header states about the declaration, in ``language``, from its form and lifecycle."""
     recorded = form_recorded(form, filed=filed)
     filing = form_filing_header(form, language, verified=verified, filed=filed)
@@ -704,7 +702,7 @@ def form_header(form: ModeloWorkForm, language: OutputLanguage, *, verified: boo
 
 
 def form_filing_header(
-    form: ModeloWorkForm, language: OutputLanguage, *, verified: bool, filed: bool
+    form: ModeloFormFacts, language: OutputLanguage, *, verified: bool, filed: bool
 ) -> ModeloFormFilingHeader:
     """The result, the latest file and the export hold the header states, in ``language``."""
     recorded = form_recorded(form, filed=filed)

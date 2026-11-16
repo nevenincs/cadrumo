@@ -46,18 +46,14 @@ from .edit_models import (
     ModeloEditRefusalCode,
     ModeloEditRefusedV1,
 )
+from .work_form_declaration_facts import ModeloFormResult
+from .work_form_facts import ModeloFormFacts, ModeloFormFieldFactsLike, ModeloFormFieldSource
 from .work_form_field_vocabulary import (
     ModeloFormCasillaAddressV1,
     ModeloFormOrigin,
 )
 from .work_form_findings import ModeloFormAttention, ModeloFormIssue
-from .work_form_models import (
-    ModeloFormCounts,
-    ModeloFormField,
-    ModeloFormRepeatingBlock,
-    ModeloWorkForm,
-    section_fields,
-)
+from .work_form_models import ModeloFormCounts, ModeloFormField
 
 _REGISTRY_GRADE_FACT: Final[str] = "registry_authority_grade"
 """The admission fact that says the registry rules for the revision stop short of calculation grade."""
@@ -104,32 +100,24 @@ class ModeloFormNextStep(BaseModel):
     receipt_to_add: bool = False
 
 
-def inapplicable_pages(form: ModeloWorkForm) -> frozenset[str]:
+def inapplicable_pages(form: ModeloFormFacts) -> frozenset[str]:
     """The official pages the read model states do not apply to this filing, by id."""
     return frozenset(page.id for page in form.pages if page.applies is False)
 
 
-def applicable_fields(form: ModeloWorkForm) -> tuple[ModeloFormField, ...]:
+def applicable_fields[F: ModeloFormFieldFactsLike](form: ModeloFormFieldSource[F]) -> tuple[F, ...]:
     """Every field the filer may be asked about: all but those on pages the read model states do not apply.
 
     It is the population :func:`to_do_counts` counts over, so a list of what
     is missing or assumed names exactly the boxes the counts count.
     """
-    set_aside = inapplicable_pages(form)
-    kept = [
-        field
-        for page in form.pages
-        if page.id not in set_aside
-        for section in page.sections
-        for field in section_fields(section)
-    ]
-    kept.extend(form.working_figures)
-    kept.extend(item.field for item in form.unplaced)
-    kept.extend(form.answers)
+    set_aside = frozenset(page.id for page in form.pages if page.applies is False)
+    kept = [field for page_id, fields in form.page_fields() if page_id not in set_aside for field in fields]
+    kept.extend(form.detail_fields())
     return tuple(kept)
 
 
-def to_do_counts(form: ModeloWorkForm) -> ModeloFormCounts:
+def to_do_counts(form: ModeloFormFacts) -> ModeloFormCounts:
     """The form's counts without what the pages that do not apply hold as missing or assumed.
 
     Those pages ask nothing of the filer, so their boxes are never to do; every
@@ -149,20 +137,31 @@ def to_do_counts(form: ModeloWorkForm) -> ModeloFormCounts:
     )
 
 
-def result_fields(form: ModeloWorkForm) -> dict[str, ModeloFormField]:
+def stated_result_casilla_ids(result_addresses: tuple[str, ...], result: ModeloFormResult | None) -> frozenset[str]:
+    """The casillas whose boxes state the declaration's result: the declared result boxes and the settlement box."""
+    wanted = {str(casilla_id) for casilla_id in result_addresses}
+    if result is not None:
+        wanted.add(str(result.casilla_id))
+    return frozenset(wanted)
+
+
+def result_fields(form: ModeloFormFacts) -> dict[str, ModeloFormField]:
     """The boxes that state the declaration's result, by casilla, each once."""
-    wanted = {str(casilla_id) for casilla_id in form.result_addresses}
-    if form.result is not None:
-        wanted.add(str(form.result.casilla_id))
+    wanted = stated_result_casilla_ids(form.result_addresses, form.result)
     fields: dict[str, ModeloFormField] = {}
     for field in form.fields():
         address = field.address
-        if isinstance(address, ModeloFormCasillaAddressV1) and str(address.casilla_id) in wanted:
-            fields.setdefault(str(address.casilla_id), field)
+        if not isinstance(address, ModeloFormCasillaAddressV1):
+            continue
+        casilla_id = str(address.casilla_id)
+        if casilla_id in wanted and casilla_id not in fields:
+            presented = form.presented_casilla(casilla_id)
+            if presented is not None:
+                fields[casilla_id] = presented
     return fields
 
 
-def is_result_field(form: ModeloWorkForm, field: ModeloFormField) -> bool:
+def is_result_field(form: ModeloFormFacts, field: ModeloFormFieldFactsLike) -> bool:
     """Whether ``field`` is one of the boxes that state the declaration's result."""
     address = field.address
     if not isinstance(address, ModeloFormCasillaAddressV1):
@@ -171,7 +170,7 @@ def is_result_field(form: ModeloWorkForm, field: ModeloFormField) -> bool:
     return address.casilla_id == settling or address.casilla_id in form.result_addresses
 
 
-def _blocking_named_boxes(form: ModeloWorkForm) -> set[str]:
+def _blocking_named_boxes(form: ModeloFormFacts) -> set[str]:
     return {
         issue.box
         for issue in form.issues
@@ -179,7 +178,7 @@ def _blocking_named_boxes(form: ModeloWorkForm) -> set[str]:
     } | {note.box for note in form.blocking_calculation_notes if note.box is not None}
 
 
-def failed_results(form: ModeloWorkForm) -> tuple[ModeloFormField, ...]:
+def failed_results(form: ModeloFormFacts) -> tuple[ModeloFormField, ...]:
     """The result boxes the calculation could not produce that no blocking finding or note already names.
 
     Each blocks filing on its own: the counts count it once, and the check view
@@ -195,7 +194,7 @@ def failed_results(form: ModeloWorkForm) -> tuple[ModeloFormField, ...]:
     )
 
 
-def blocking_count(form: ModeloWorkForm) -> int:
+def blocking_count(form: ModeloFormFacts) -> int:
     """How many things block filing: the check's blocking findings, the calculation's blocking notes, and failed boxes.
 
     A result box the calculation could not produce counts once, when neither a
@@ -206,12 +205,12 @@ def blocking_count(form: ModeloWorkForm) -> int:
     return blocking + len(form.blocking_calculation_notes) + len(failed_results(form))
 
 
-def confirm_count(form: ModeloWorkForm) -> int:
+def confirm_count(form: ModeloFormFacts) -> int:
     """How many values wait for the filer to confirm: the assumed values on pages that apply."""
     return to_do_counts(form).default_to_confirm
 
 
-def check_count(form: ModeloWorkForm) -> int:
+def check_count(form: ModeloFormFacts) -> int:
     """How many things are worth checking: the check's warnings and the calculation's notes at that level.
 
     A note the gate withholds filing on counts with what blocks, never here as well.
@@ -225,25 +224,12 @@ def check_count(form: ModeloWorkForm) -> int:
     return findings + notes
 
 
-def limitation_count(form: ModeloWorkForm) -> int:
+def limitation_count(form: ModeloFormFacts) -> int:
     """How many disclosed limitations the check's findings state: figures the calculation leaves out and says so."""
     return sum(1 for issue in form.issues if issue.attention is ModeloFormAttention.LIMITATION)
 
 
-def _record_casillas(form: ModeloWorkForm) -> frozenset[str]:
-    """The casillas a table of records carries a value of, in every record."""
-    return frozenset(
-        casilla_id
-        for page in form.pages
-        for section in page.sections
-        for block in section.blocks
-        if isinstance(block, ModeloFormRepeatingBlock)
-        for casilla_id in block.column_casilla_ids
-        if casilla_id is not None
-    )
-
-
-def _missing_boxes(form: ModeloWorkForm) -> frozenset[str]:
+def _missing_boxes(form: ModeloFormFacts) -> frozenset[str]:
     """The casillas of the missing boxes the counts list; none once the declaration is recorded as filed."""
     if form.filing is not None:
         return frozenset[str]()
@@ -261,7 +247,7 @@ def _named_by_a_missing_box(issue: ModeloFormIssue, listed: frozenset[str], reco
     return str(casilla_id) in listed
 
 
-def missing_findings(form: ModeloWorkForm) -> int:
+def missing_findings(form: ModeloFormFacts) -> int:
     """How many missing values only a finding or a calculation note names, such as a record's value.
 
     A finding about a box the missing boxes already list is not counted again:
@@ -272,10 +258,10 @@ def missing_findings(form: ModeloWorkForm) -> int:
     )
 
 
-def _missing_issue_findings(form: ModeloWorkForm) -> int:
+def _missing_issue_findings(form: ModeloFormFacts) -> int:
     """How many missing values the check's findings name that no listed missing box already names."""
     listed = _missing_boxes(form)
-    records = _record_casillas(form)
+    records = form.record_casilla_ids()
     return sum(
         1
         for issue in form.issues
@@ -283,7 +269,7 @@ def _missing_issue_findings(form: ModeloWorkForm) -> int:
     )
 
 
-def _only_ungated_missing_notes(form: ModeloWorkForm) -> bool:
+def _only_ungated_missing_notes(form: ModeloFormFacts) -> bool:
     """Whether every missing value left is a calculation note that does not withhold filing.
 
     The check, not the filer, decides whether such a note stands, so it is
@@ -294,12 +280,12 @@ def _only_ungated_missing_notes(form: ModeloWorkForm) -> bool:
     )
 
 
-def missing_count(form: ModeloWorkForm) -> int:
+def missing_count(form: ModeloFormFacts) -> int:
     """How many values the declaration still needs: boxes on pages that apply, and findings no such box answers."""
     return to_do_counts(form).needs_input + missing_findings(form)
 
 
-def awaiting_the_check(form: ModeloWorkForm) -> int:
+def awaiting_the_check(form: ModeloFormFacts) -> int:
     """How many of what blocks filing are calculation notes only the check can decide, the calculation unchecked.
 
     Once the current calculation is checked the form leaves these notes out
@@ -323,7 +309,7 @@ def registry_grade_refusal(admission: ModeloEditAdmissionResultV1) -> bool:
 
 
 def form_next_step(
-    form: ModeloWorkForm, *, verified: bool, filed: bool, receipt_confirmed: bool | None = None
+    form: ModeloFormFacts, *, verified: bool, filed: bool, receipt_confirmed: bool | None = None
 ) -> ModeloFormNextStep:
     """The one action the form offers next, from its own facts and its lifecycle.
 
@@ -357,7 +343,7 @@ def held_prerequisite_step(step: ModeloFormNextStep) -> ModeloFormNextStep:
     )
 
 
-def _next(form: ModeloWorkForm, *, verified: bool, filed: bool) -> tuple[ModeloFormNextAction, int, bool]:
+def _next(form: ModeloFormFacts, *, verified: bool, filed: bool) -> tuple[ModeloFormNextAction, int, bool]:
     counts = to_do_counts(form)
     to_fill = counts.needs_input
     unboxed = missing_findings(form)
@@ -376,7 +362,7 @@ def _next(form: ModeloWorkForm, *, verified: bool, filed: bool) -> tuple[ModeloF
     return _next_after_review(form, unboxed=unboxed, to_fill=to_fill, blocked=counts.blocked, verified=verified)
 
 
-def _after_verified_review(form: ModeloWorkForm) -> tuple[ModeloFormNextAction, int, bool]:
+def _after_verified_review(form: ModeloFormFacts) -> tuple[ModeloFormNextAction, int, bool]:
     export = form.last_export
     if export is None:
         return ModeloFormNextAction.EXPORT, 0, False
@@ -385,7 +371,7 @@ def _after_verified_review(form: ModeloWorkForm) -> tuple[ModeloFormNextAction, 
 
 
 def _check_precedes_ungated_notes(
-    form: ModeloWorkForm, *, unboxed: int, to_fill: int, blocked: int, blocking: int
+    form: ModeloFormFacts, *, unboxed: int, to_fill: int, blocked: int, blocking: int
 ) -> bool:
     """Whether the check comes before filling: every value left missing is a note the gates do not refuse on.
 
@@ -398,13 +384,13 @@ def _check_precedes_ungated_notes(
     )
 
 
-def _only_values_missing(form: ModeloWorkForm, *, unboxed: int, blocked: int, blocking: int) -> bool:
+def _only_values_missing(form: ModeloFormFacts, *, unboxed: int, blocked: int, blocking: int) -> bool:
     """Whether values only a finding or a note names are missing and nothing else blocks filing."""
     return bool(unboxed and not (blocked or blocking or form.verification is VerificationCompletenessStatus.BLOCKED))
 
 
 def _remaining_review_step(
-    form: ModeloWorkForm, *, unboxed: int, to_fill: int, blocked: int, blocking: int
+    form: ModeloFormFacts, *, unboxed: int, to_fill: int, blocked: int, blocking: int
 ) -> tuple[ModeloFormNextAction, int, bool]:
     if _check_precedes_ungated_notes(form, unboxed=unboxed, to_fill=to_fill, blocked=blocked, blocking=blocking):
         return ModeloFormNextAction.VERIFY, 0, False
@@ -421,7 +407,7 @@ def _remaining_review_step(
 
 
 def _next_after_review(
-    form: ModeloWorkForm, *, unboxed: int, to_fill: int, blocked: int, verified: bool
+    form: ModeloFormFacts, *, unboxed: int, to_fill: int, blocked: int, verified: bool
 ) -> tuple[ModeloFormNextAction, int, bool]:
     blocking = blocking_count(form)
     awaiting = awaiting_the_check(form)
@@ -458,5 +444,6 @@ __all__ = [
     "missing_findings",
     "registry_grade_refusal",
     "result_fields",
+    "stated_result_casilla_ids",
     "to_do_counts",
 ]
