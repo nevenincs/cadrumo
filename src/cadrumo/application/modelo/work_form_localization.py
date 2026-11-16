@@ -17,9 +17,9 @@ from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import lookup_translation, tr
 from ...core.type_guards import is_object_tuple
 from ...domain.calculations.registry.modelo_localization import (
-    modelo_localization_source,
     render_rotating_year,
     resolve_modelo_localization,
+    served_modelo_localization_text,
 )
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ..operator_actions.invariant_verdicts import internal_invariant_verdict
@@ -64,11 +64,10 @@ _FIGURES: Final[str] = "[0-9-]+"
 
 def localized_text(keys: tuple[str, ...], language: OutputLanguage) -> ModeloFormText | None:
     """Resolve a modelo catalogue chain and say which language actually served it."""
-    source = modelo_localization_source(keys, locale=language.value)
-    text = resolve_modelo_localization(keys, locale=language.value)
-    if source is None or not (text is not None and text):
+    served = served_modelo_localization_text(keys, locale=language.value)
+    if served is None or not served[1]:
         return None
-    served_locale = source[1]
+    served_locale, text = served
     disclosure = (
         ModeloFormTextDisclosure.LOCALIZED
         if served_locale == language.value

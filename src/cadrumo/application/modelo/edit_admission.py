@@ -68,7 +68,12 @@ from .edit_models import (
     ModeloEditWritableScalarSurfaceEntryV1,
 )
 from .edit_services import calculation_head_digest, work_unit_record_digest
-from .edit_value_grammar import ModeloEditValueGrammarV1, binding_value_grammar, casilla_value_grammar
+from .edit_value_grammar import (
+    ConsumedBindingChannels,
+    ModeloEditValueGrammarV1,
+    binding_value_grammar,
+    casilla_value_grammar,
+)
 from .row_filled_bindings import row_filled_binding_ids
 
 if TYPE_CHECKING:
@@ -224,6 +229,7 @@ def permitted_binding_entry(
     period: str,
     row_filled: frozenset[str],
     attestable_binding_ids: frozenset[str] = frozenset(),
+    channels: ConsumedBindingChannels | None = None,
 ) -> ModeloEditPermittedSurfaceEntryV1:
     """Classify one binding's override by its source's grounded override policy.
 
@@ -257,7 +263,7 @@ def permitted_binding_entry(
     source_refusal = _source_refusal(binding)
     if source_refusal is not None:
         return ModeloEditNonWritableBindingOverrideSurfaceEntryV1(binding_id=binding.id, reason=source_refusal)
-    grammar = binding_value_grammar(binding, revision=revision)
+    grammar = binding_value_grammar(binding, revision=revision, channels=channels)
     placement_refusal = _placement_refusal(binding, grammar=grammar, period=period, row_filled=row_filled)
     if placement_refusal is not None:
         return ModeloEditNonWritableBindingOverrideSurfaceEntryV1(binding_id=binding.id, reason=placement_refusal)
@@ -278,7 +284,11 @@ def permitted_binding_entry(
 
 
 def row_statement_entry(
-    binding: BindingDefinition, *, revision: ModeloRevision, period: str
+    binding: BindingDefinition,
+    *,
+    revision: ModeloRevision,
+    period: str,
+    channels: ConsumedBindingChannels | None = None,
 ) -> ModeloEditWritableBindingOverrideSurfaceEntryV1 | None:
     """Admit the per-row statements of a column whose carry the filer states row by row, or ``None``.
 
@@ -298,7 +308,7 @@ def row_statement_entry(
             ModeloEditBindingIntentKind.ATTEST_NO_AMOUNT,
             ModeloEditBindingIntentKind.ATTEST_PRIOR_VALUE,
         ),
-        grammar=binding_value_grammar(binding, revision=revision),
+        grammar=binding_value_grammar(binding, revision=revision, channels=channels),
     )
 
 
@@ -316,14 +326,16 @@ def _permitted_surface(
     entries: list[ModeloEditPermittedSurfaceEntryV1] = [
         _scalar_entry(casilla, row_field_casilla_ids=row_field_casilla_ids) for casilla in revision.casillas
     ]
+    channels = ConsumedBindingChannels.of(revision)
     entries.extend(
-        row_statement_entry(binding, revision=revision, period=period)
+        row_statement_entry(binding, revision=revision, period=period, channels=channels)
         or permitted_binding_entry(
             binding,
             revision=revision,
             period=period,
             row_filled=row_filled,
             attestable_binding_ids=attestable_binding_ids,
+            channels=channels,
         )
         for binding in revision.bindings
     )
