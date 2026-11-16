@@ -48,12 +48,10 @@ from .providers.application.attachment_releases import (
 from .providers.application.contracts import (
     LocalEngineStatus,
     LocalModelListResult,
-    ProviderSettingsRefusal,
     SignInMethod,
 )
 from .providers.application.local_model_list import LocalModelListService
 from .providers.application.model_runs import ModelRunService
-from .providers.application.next_steps import CONSOLE_SIGN_IN_COMMAND
 from .providers.application.ports import ProviderCatalogUnavailableError
 from .providers.application.resolution import ProviderCredentialResolver
 from .providers.application.service import AssistantAuthChoice, BaseUrlChange, ProviderSettingsService
@@ -62,6 +60,7 @@ from .providers.persistence.attachment_disclosures import SecureAttachmentDisclo
 from .providers.persistence.store import SecureLocalModelListStore, SecureProviderSettingsStore
 from .service_attachment_admin import answer_attachment_admin
 from .service_console_environment import answer_console_environment
+from .service_provider_status import ProviderStatusRead
 from .service_sign_out import answer_sign_out, signed_out_refusal
 from .service_support import (
     ADMIN_READ_FRESH_SECONDS,
@@ -167,7 +166,7 @@ class AgentServiceAdministration(ABC):
             store=self._store,
             catalog_source=self._catalog,
             selected_engine=self._local_models.selected_engine,
-            cli_state_probe=self._login_status.probe,
+            cli_state_probe=self._login_status.kept,
         )
         self._controller: AgentHostController | None = None
         self._auth_attempt: AuthAttempt | None = None
@@ -180,11 +179,20 @@ class AgentServiceAdministration(ABC):
         ) = None
         self._workspace: Path | None = None
         self._catalog_read = BoundedRead(self._catalog_document, name="catalog", fresh_seconds=ADMIN_READ_FRESH_SECONDS)
-        self._status_read = BoundedRead(self._provider_status, name="status", fresh_seconds=ADMIN_READ_FRESH_SECONDS)
+        # The status serves what its slow reads last kept and never waits for them.
+        self._provider_status = ProviderStatusRead(
+            providers=lambda: self._providers,
+            catalog=lambda: self._catalog,
+            login_status=lambda: self._login_status,
+            closing=self._closing,
+            lease=lambda: self.client.lease,
+            hosted_certifications=self._hosted_certifications,
+        )
         self._ownership = ExitStack()
         # Plain reads that never wait on the agent tree, by their admin action.
         self._plain_reads: dict[str, Callable[[], dict[str, Any]]] = {
             "provider_lanes": self._provider_lanes,
+            "status": self._provider_status.answer,
             "local_models": self._local_model_list,
             "local_engine": self._local_engine,
             "console_environment": lambda: answer_console_environment(
@@ -260,8 +268,8 @@ class AgentServiceAdministration(ABC):
         read = self._plain_reads.get(action)
         if read is not None:
             return read()
-        if action in {"catalog", "status"}:
-            return self._cached_read(action)
+        if action == "catalog":
+            return self._cached_catalog()
         arguments: dict[str, Any] = {
             "provider": provider,
             "expected_revision": expected_revision,
@@ -276,18 +284,17 @@ class AgentServiceAdministration(ABC):
         }
         return self._lifecycle_admin(action, arguments)
 
-    def _cached_read(self, action: str) -> Any:
+    def _cached_catalog(self) -> Any:
         if self._closing.is_set():
             return {"kind": "refused", "code": "service_stopping"}
-        # Each reads what the profile and the tree are now; a result is
-        # served only for the lease and tree it was read under. The lease is
-        # compared by value: a claim replaces the client's lease object with an
-        # equal one, and claims land during a slow read from any thread (the
-        # status read's generation observation, the main loop's reclaim, the
-        # reread after an inactive lease). Only a newly issued lease differs.
+        # It reads what the profile and the tree are now; a result is served
+        # only for the lease and tree it was read under. The lease is compared
+        # by value: a claim replaces the client's lease object with an equal
+        # one, and claims land during a slow read from any thread (a store's
+        # generation observation, the main loop's reclaim, the reread after an
+        # inactive lease). Only a newly issued lease differs.
         key = (self.client.lease, Identity(self._controller))
-        read = self._catalog_read if action == "catalog" else self._status_read
-        return read.answer(key, within=ADMIN_READ_SECONDS)
+        return self._catalog_read.answer(key, within=ADMIN_READ_SECONDS)
 
     def _lifecycle_admin(self, action: str, arguments: dict[str, Any]) -> Any:
         if action == "start":
@@ -570,42 +577,9 @@ class AgentServiceAdministration(ABC):
         return self._picker_catalog(declared_provider_catalog_response())
 
     def _forget_reads(self) -> None:
-        """Serve no kept catalog or status once what they were read from has changed."""
+        """Serve no kept catalog or login reading once what they were read from has changed."""
         self._catalog_read.forget()
-        self._status_read.forget()
         self._login_status.forget()
-
-    def _provider_status(self) -> dict[str, Any]:
-        """Observe settings without waiting for gateway startup after sign-in.
-
-        Store reads and login observations carry their own profile authority.
-        The controller snapshot has its own lock; the lifecycle lock only
-        serializes changes to the process tree, not these independent reads.
-        """
-        if self._closing.is_set():
-            return {"kind": "refused", "code": "service_stopping"}
-        lease = self.client.lease
-        if lease is None:
-            return {"kind": "refused", "code": "signed_out"}
-        observed = self._providers.status()
-        if isinstance(observed, ProviderSettingsRefusal):
-            return observed.model_dump(mode="json")
-        status = observed.model_dump(mode="json")
-        status["hosted_certifications"] = self._hosted_certifications()
-        status["console_sign_in_command"] = CONSOLE_SIGN_IN_COMMAND
-        try:
-            methods = self._catalog.gui_sign_in_methods()
-            status["sign_in_providers"] = list(methods)
-            status["sign_in_methods"] = {provider: list(choices) for provider, choices in methods.items()}
-        except ProviderCatalogUnavailableError:
-            # Missing GUI capability disables login, not existing key management.
-            status["sign_in_providers"] = []
-            status["sign_in_methods"] = {}
-        if self._closing.is_set():
-            return {"kind": "refused", "code": "service_stopping"}
-        if self.client.lease != lease:
-            return {"kind": "refused", "code": "signed_out"}
-        return status
 
     @abstractmethod
     def _admit_stop(self) -> dict[str, Any]:

@@ -1,8 +1,7 @@
 """Answer an administration read within a bound, from work that may take longer.
 
-A read such as the provider catalog or the provider status can take seconds:
-the agent may still be building its catalog, and a provider's sign-in state is
-read by running the provider's own program. The desktop waits a few seconds
+A read such as the provider catalog can take seconds: the agent may still be
+building its catalog, probing each provider's own program. The desktop waits a few seconds
 for each answer, and an exchange left waiting also holds one of the service's
 few administration slots. So the work runs on its own thread, once at a time,
 and the request waits for it only up to its bound. A request that finds the
