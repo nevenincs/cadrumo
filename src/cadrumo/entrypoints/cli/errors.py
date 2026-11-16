@@ -548,7 +548,7 @@ def render_error_payload(
     if action is not None:
         text = _render_precondition_action_text(text, command=command, action=action)
     if authentication_notices:
-        from .common import notice_lines
+        from ...application.operator_output.text_transport import notice_lines
 
         text = "\n".join((*notice_lines(authentication_notices), text))
     if notice is None:

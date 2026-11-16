@@ -1,9 +1,10 @@
 import fixtures from "@fixtures/desktop-imputation-election/imputationElection.json" with { type: "json" };
 import type {
-  ElectionAnswer,
-  ImputationElection,
-  ProfileCompanionPort,
-} from "../shell/profileHousehold";
+  ProfileFieldEjercicioStatement,
+  ProfileImputationElectionAnswer,
+  ProfileImputationElectionReadProjection,
+} from "../shell/profileContract";
+import type { ProfileCompanionPort } from "../shell/profileHousehold";
 import type { ProfileChange } from "../shell/userProfile";
 
 // The imputation election the application read for synthetic profiles through
@@ -39,8 +40,6 @@ declare global {
  * to the window: its code and the finished sentence the application served. */
 export type ElectionRefusal = keyof typeof fixtures.refusals;
 
-type Statement = { ejercicio: number; value: string };
-
 export type ElectionFixture = {
   reads: Pick<ProfileCompanionPort, "imputationElection">;
   change(change: ProfileChange): Promise<void>;
@@ -58,11 +57,12 @@ export type ElectionFixture = {
 function read(scenario: ElectionScenario, language: string) {
   const byLanguage = fixtures.reads[scenario] as Record<string, unknown>;
   return structuredClone(
-    (byLanguage[language] ?? byLanguage.en) as ImputationElection,
+    (byLanguage[language] ??
+      byLanguage.en) as ProfileImputationElectionReadProjection,
   );
 }
 
-function answer(token: string | null): ElectionAnswer {
+function answer(token: string | null): ProfileImputationElectionAnswer {
   return token === null
     ? { state: "undeclared", value: null }
     : { state: "declared", value: token };
@@ -89,9 +89,10 @@ export function imputationElectionFixture(
   let revision = start.record_revision;
   let criterion = start.criterion;
   let accounting = start.codigo_comercio_accounting;
-  let statements: Statement[] = start.criterion_statements.map((s) => ({
-    ...s,
-  }));
+  let statements: ProfileFieldEjercicioStatement[] =
+    start.criterion_statements.map((s) => ({
+      ...s,
+    }));
   const taken: ProfileChange[] = [];
   let reads = 0;
   let refusal: ElectionRefusal | null = null;
