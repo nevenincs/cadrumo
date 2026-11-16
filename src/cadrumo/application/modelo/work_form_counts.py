@@ -5,21 +5,19 @@ from __future__ import annotations
 from collections.abc import Iterable
 from typing import Final
 
+from .work_form_facts import ModeloFormFieldFactsLike
 from .work_form_field_vocabulary import (
     ModeloFormOrigin,
     ModeloFormStanding,
 )
-from .work_form_models import (
-    ModeloFormCounts,
-    ModeloFormField,
-)
+from .work_form_models import ModeloFormCounts
 
 _TO_DO_TALLIES: Final[tuple[str, ...]] = ("needs_input", "default_to_confirm", "needs_you")
 
 """The counts of what the filer still has to enter or confirm."""
 
 
-def count_work_form_fields(fields: Iterable[ModeloFormField], *, filed: bool) -> ModeloFormCounts:
+def count_work_form_fields(fields: Iterable[ModeloFormFieldFactsLike], *, filed: bool) -> ModeloFormCounts:
     """Tally fields by origin and by what they ask of the filer; a filed declaration has nothing left to do."""
     tallies = {
         "total": 0,

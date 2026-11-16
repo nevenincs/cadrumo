@@ -6,8 +6,10 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .work_form_context import WorkFormContext
+    from .work_form_facts import ModeloFormFieldFactsLike
 
 import re
+from collections.abc import Iterable
 from decimal import Decimal, InvalidOperation
 from typing import Final
 
@@ -27,9 +29,6 @@ from .work_form_models import (
     ModeloFormField,
     ModeloFormGridCell,
     ModeloFormGridRow,
-    ModeloFormRepeatingBlock,
-    ModeloFormSection,
-    section_fields,
 )
 
 _PERCENT_LITERAL: Final[re.Pattern[str]] = re.compile(r"\s*([0-9]+(?:[.,][0-9]+)?)\s*%\s*")
@@ -37,6 +36,11 @@ _PERCENT_LITERAL: Final[re.Pattern[str]] = re.compile(r"\s*([0-9]+(?:[.,][0-9]+)
 """A design literal that states a percentage outright, such as ``21 %`` or ``1,75%``."""
 
 _DIGIT_LITERAL: Final[re.Pattern[str]] = re.compile(r"[0-9]+")
+
+_VALUE_HOLDING_ORIGINS: Final[frozenset[ModeloFormOrigin]] = frozenset(
+    {ModeloFormOrigin.ENTERED, ModeloFormOrigin.IMPORTED, ModeloFormOrigin.OVERRIDES_SOURCE}
+)
+"""The origins of a box holding a value someone gave it, which shows a page the data cannot settle applies."""
 
 
 def parse_form_number(value: ModeloFormScalar) -> Decimal | None:
@@ -54,36 +58,31 @@ def parse_form_number(value: ModeloFormScalar) -> Decimal | None:
 
 
 def page_applies_for_values(
-    page: FormPageDefinition, context: WorkFormContext, sections: tuple[ModeloFormSection, ...]
+    page: FormPageDefinition,
+    context: WorkFormContext,
+    fields: Iterable[ModeloFormFieldFactsLike],
+    *,
+    has_records: bool,
 ) -> bool | None:
-    """Decide from declared facts alone whether a page applies; ``None`` when the data cannot say."""
+    """Decide from declared facts alone whether a page applies; ``None`` when the data cannot say.
+
+    ``fields`` are the boxes the page's sections show and ``has_records`` says
+    whether any table of records on it holds a saved row.
+    """
     if page.condition is FormPageCondition.ALWAYS:
         return True
     if page.condition is FormPageCondition.PERIOD_RESTRICTED:
         return context.review.period.registry_token in page.condition_periods
     if page.condition is FormPageCondition.REQUIRES_POSITIVE_CASILLA and page.condition_casilla_id is not None:
         return _positive_casilla_page_applies(page.condition_casilla_id, context)
-    return _page_has_value_or_records(sections)
+    has_value = any(field.origin in _VALUE_HOLDING_ORIGINS for field in fields)
+    return True if has_value or has_records else None
 
 
 def _positive_casilla_page_applies(casilla_id: str, context: WorkFormContext) -> bool | None:
     row = context.rows.get(casilla_id)
     amount = None if row is None else parse_form_number(row.value)
     return None if amount is None else amount > 0
-
-
-def _page_has_value_or_records(sections: tuple[ModeloFormSection, ...]) -> bool | None:
-    has_value = any(
-        field.origin in {ModeloFormOrigin.ENTERED, ModeloFormOrigin.IMPORTED, ModeloFormOrigin.OVERRIDES_SOURCE}
-        for section in sections
-        for field in section_fields(section)
-    )
-    has_records = any(
-        isinstance(block, ModeloFormRepeatingBlock) and bool(block.rows)
-        for section in sections
-        for block in section.blocks
-    )
-    return True if has_value or has_records else None
 
 
 def _grounded_rate(field: ModeloFormField, context: WorkFormContext) -> ModeloFormRate | None:

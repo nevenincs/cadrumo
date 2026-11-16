@@ -61,6 +61,7 @@ from .finding_message_text import finding_message_text
 from .source_policy import SourceSurface
 from .withholding_total_reconciliation import WITHHOLDING_TOTAL_MISMATCH_KEY
 from .work_form_declaration_facts import ModeloFormCalculationNote, ModeloFormResolutionAnswer
+from .work_form_facts import ModeloFormFacts
 from .work_form_field_vocabulary import (
     ModeloFormAddressV1,
     ModeloFormBindingAddressV1,
@@ -613,7 +614,7 @@ def form_issue_lines(form: ModeloWorkForm, language: OutputLanguage) -> tuple[Mo
     return tuple(sorted(lines, key=lambda line: _ATTENTION_ORDER.index(line.level)))
 
 
-def form_verdict(form: ModeloWorkForm, language: OutputLanguage) -> ModeloFormVerdict:
+def form_verdict(form: ModeloFormFacts, language: OutputLanguage) -> ModeloFormVerdict:
     """What the last check concluded, in ``language``, or that the declaration has not been checked."""
     status = form.verification
     if status is None:

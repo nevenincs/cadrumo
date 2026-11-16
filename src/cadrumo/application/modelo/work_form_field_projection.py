@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -20,6 +21,7 @@ from .printed_boxes import printed_box_number
 from .source_policy import source_policy
 from .work_form_binding_statement import with_binding_statements
 from .work_form_errors import ModeloWorkFormLayoutError
+from .work_form_facts import ModeloFormFieldFacts
 from .work_form_field_state import (
     BINDING_DATA_TYPE,
     BOOLEAN_VALUE_TOKENS,
@@ -36,6 +38,7 @@ from .work_form_field_vocabulary import (
     ModeloFormBindingAddressV1,
     ModeloFormBlocker,
     ModeloFormCasillaAddressV1,
+    ModeloFormEditability,
     ModeloFormOrigin,
     ModeloFormScalar,
     ModeloFormText,
@@ -49,48 +52,116 @@ from .work_form_localization import (
     normalized_help_text,
     unnamed_casilla_label,
 )
-from .work_form_models import ModeloFormField
+from .work_form_models import ModeloFormField, revised_field
 from .work_form_rates import parse_form_number
-from .work_form_sources import bound_value_source, resolver_value_source
+from .work_form_sources import FIXED_BY_THE_FORM, bound_value_source, resolver_value_source
 from .work_review import ModeloWorkReviewCasilla
 
 
+def casilla_facts(
+    casilla_id: str, context: WorkFormContext, placement: FormPlacementDefinition | None
+) -> ModeloFormFieldFacts:
+    """Classify one casilla: its printed box, its value, where the value stands and what blocks it."""
+    row, casilla = _casilla_source(casilla_id, context)
+    required = casilla_id in context.required
+    origin = casilla_origin(row, context, required=required or casilla_id in context.calculation_required.casilla_ids)
+    origin, value = _unworked_origin(casilla_id, origin, row.value, context)
+    blockers = tuple(ModeloFormBlocker(code=blocker.native_code) for blocker in row.blocked_by)
+    return ModeloFormFieldFacts(
+        address=ModeloFormCasillaAddressV1(casilla_id=row.casilla_id),
+        box=printed_box_number(casilla, placement),
+        value=value,
+        origin=origin,
+        standing=field_standing(origin, blockers, recorded=context.filed),
+        blockers=blockers,
+        first_binding_id=row.concrete_bindings[0].binding_id if row.concrete_bindings else None,
+    )
+
+
+def design_constant_facts(
+    facts: ModeloFormFieldFacts, fixed: ModeloFormScalar, *, recorded: bool
+) -> ModeloFormFieldFacts:
+    """A casilla whose value the official design fixes: informational, holding the design's figure."""
+    return replace(
+        facts,
+        origin=ModeloFormOrigin.INFORMATIONAL,
+        value=fixed,
+        standing=field_standing(ModeloFormOrigin.INFORMATIONAL, facts.blockers, recorded=recorded),
+        design_constant=True,
+    )
+
+
+def casilla_label(casilla: CasillaDefinition, context: WorkFormContext) -> ModeloFormText:
+    """A casilla's label in the form's language; one the catalogue does not name reads as an unnamed box."""
+    return localized_text(casilla.localization_keys, context.language) or unnamed_casilla_label(context.language)
+
+
 def project_casilla_field(
-    casilla_id: str,
+    facts: ModeloFormFieldFacts,
     context: WorkFormContext,
     placement: FormPlacementDefinition | None,
     also_appears_on: tuple[str, ...] = (),
 ) -> ModeloFormField:
-    """Build one classified casilla field."""
-    row, casilla = _casilla_source(casilla_id, context)
-    label = localized_text(casilla.localization_keys, context.language) or unnamed_casilla_label(context.language)
-    required = casilla_id in context.required
+    """Present one classified casilla as a field: its words, its edit controls and where its value comes from.
+
+    A box the design fixes is presented from its own classification and then
+    fixed, so it keeps every mark its own value gives and shows the design's.
+    """
+    if not facts.design_constant:
+        return _casilla_field(facts, context, placement, also_appears_on)
+    own = casilla_facts(facts_casilla_id(facts), context, placement)
+    return revised_field(
+        _casilla_field(own, context, placement, also_appears_on),
+        editability=ModeloFormEditability.DESIGN_CONSTANT,
+        not_writable_reason=None,
+        origin=facts.origin,
+        unattributed=False,
+        value=facts.value,
+        source=FIXED_BY_THE_FORM,
+        standing=facts.standing,
+    )
+
+
+def facts_casilla_id(facts: ModeloFormFieldFacts) -> str:
+    """The casilla a casilla's facts classify."""
+    address = facts.address
+    if not isinstance(address, ModeloFormCasillaAddressV1):
+        raise TypeError("a casilla field is presented from a casilla's facts")
+    return str(address.casilla_id)
+
+
+def _casilla_field(
+    facts: ModeloFormFieldFacts,
+    context: WorkFormContext,
+    placement: FormPlacementDefinition | None,
+    also_appears_on: tuple[str, ...],
+) -> ModeloFormField:
+    row, casilla = _casilla_source(facts_casilla_id(facts), context)
+    label = casilla_label(casilla, context)
+    origin = facts.origin
     editability, reason = casilla_editability(row, context)
-    origin = casilla_origin(row, context, required=required or casilla_id in context.calculation_required.casilla_ids)
-    origin, value = _unworked_origin(casilla_id, origin, row.value, context)
-    blockers = tuple(ModeloFormBlocker(code=blocker.native_code) for blocker in row.blocked_by)
     field = ModeloFormField(
-        address=ModeloFormCasillaAddressV1(casilla_id=row.casilla_id),
-        box=printed_box_number(casilla, placement),
+        address=facts.address,
+        box=facts.box,
         label=label,
         help=casilla_help(casilla, label.text, context),
         data_type=row.data_type,
-        value=value,
+        value=facts.value,
         origin=origin,
         editability=editability,
         not_writable_reason=reason,
-        required=required,
+        required=row.casilla_id in context.required,
         unattributed=_unattributed(origin, row),
         role=casilla_field_role(row),
         bindings=summarize_bindings(row),
         source=_value_source(row, context),
         formula_id=row.formula_id,
         formula_operands=() if row.concrete_formula is None else row.concrete_formula.operand_refs,
-        blockers=blockers,
+        blockers=facts.blockers,
         constraints=row.constraints,
         legal_refs=row.legal_refs,
         also_appears_on=also_appears_on,
-        standing=field_standing(origin, blockers, recorded=context.filed),
+        standing=facts.standing,
         stated_absent=_stated_absence(origin, row, context),
     )
     return with_binding_statements(field, context)
@@ -228,24 +299,22 @@ def _binding_value_state(
     raw: str | None,
     data_type: str,
     context: WorkFormContext,
-) -> tuple[ModeloFormScalar, ModeloFormOrigin, bool]:
+) -> tuple[ModeloFormScalar, ModeloFormOrigin]:
     value = _binding_value(raw, data_type)
     if context.overridden is not None and binding_id in context.overridden:
-        origin = ModeloFormOrigin.ENTERED
-    elif raw is None:
-        origin = (
-            ModeloFormOrigin.NEEDS_INPUT
-            if binding_id in context.calculation_required.binding_ids or _feeds_an_unworked_box(binding_id, context)
-            else ModeloFormOrigin.OPTIONAL_EMPTY
-        )
-    else:
-        origin = _held_binding_origin(binding, binding_id, value, context)
+        return value, ModeloFormOrigin.ENTERED
+    if raw is None:
+        needed = binding_id in context.calculation_required.binding_ids or _feeds_an_unworked_box(binding_id, context)
+        return value, ModeloFormOrigin.NEEDS_INPUT if needed else ModeloFormOrigin.OPTIONAL_EMPTY
+    return value, _held_binding_origin(binding, binding_id, value, context)
+
+
+def _typed_unattributed(origin: ModeloFormOrigin, raw: str | None) -> bool:
     # Read from the classified origin, as the casilla side reads it (``_unattributed``): a value waiting to be
     # confirmed, or an optional box holding what the calculation gave it, is nobody's recorded entry.
-    typed_unattributed = origin is ModeloFormOrigin.DEFAULT_TO_CONFIRM or (
+    return origin is ModeloFormOrigin.DEFAULT_TO_CONFIRM or (
         origin is ModeloFormOrigin.OPTIONAL_EMPTY and raw is not None
     )
-    return value, origin, typed_unattributed
 
 
 def _held_binding_origin(
@@ -282,8 +351,24 @@ def _feeds_an_unworked_box(binding_id: str, context: WorkFormContext) -> bool:
     return False
 
 
-def project_binding_field(binding_id: str, context: WorkFormContext) -> ModeloFormField:
-    """Build one field for a binding input no casilla owns."""
+def binding_facts(binding_id: str, context: WorkFormContext) -> ModeloFormFieldFacts:
+    """Classify one binding input no casilla owns: its value and where the value stands."""
+    binding = _binding_definition(binding_id, context)
+    raw = None if context.revision is None else context.revision.binding_overrides.get(binding.id)
+    data_type = BINDING_DATA_TYPE.get(binding.value.data_type.value, "text")
+    value, origin = _binding_value_state(binding, binding_id, raw, data_type, context)
+    return ModeloFormFieldFacts(
+        address=ModeloFormBindingAddressV1(binding_id=binding.id),
+        box=None,
+        value=value,
+        origin=origin,
+        standing=field_standing(origin, recorded=context.filed),
+        blockers=(),
+        first_binding_id=binding.id,
+    )
+
+
+def _binding_definition(binding_id: str, context: WorkFormContext) -> BindingDefinition:
     binding = context.bindings.get(binding_id)
     if binding is None:
         raise ModeloWorkFormLayoutError(
@@ -291,29 +376,38 @@ def project_binding_field(binding_id: str, context: WorkFormContext) -> ModeloFo
             translated_message="application.modelo.errors.work_form_layout_binding_undefined",
             context={"binding_id": str(binding_id)},
         )
+    return binding
+
+
+def project_binding_field(facts: ModeloFormFieldFacts, context: WorkFormContext) -> ModeloFormField:
+    """Present one classified binding input no casilla owns as a field."""
+    address = facts.address
+    if not isinstance(address, ModeloFormBindingAddressV1):
+        raise TypeError("a binding field is presented from a binding's facts")
+    binding_id = address.binding_id
+    binding = _binding_definition(binding_id, context)
     casillas = _binding_casillas(binding, context)
     label, help_text, box = _binding_presentation(binding, binding_id, context, casillas)
     raw = None if context.revision is None else context.revision.binding_overrides.get(binding.id)
-    data_type = BINDING_DATA_TYPE.get(binding.value.data_type.value, "text")
     policy = source_policy(binding.source)
     editability, reason = binding_input_editability(binding_id, policy.override_policy, context)
-    value, origin, typed_unattributed = _binding_value_state(binding, binding_id, raw, data_type, context)
+    origin = facts.origin
     field = ModeloFormField(
-        address=ModeloFormBindingAddressV1(binding_id=binding.id),
+        address=address,
         box=box,
         label=label,
         help=help_text,
-        data_type=data_type,
-        value=value,
+        data_type=BINDING_DATA_TYPE.get(binding.value.data_type.value, "text"),
+        value=facts.value,
         origin=origin,
         editability=editability,
         not_writable_reason=reason,
         required=False,
-        unattributed=typed_unattributed,
+        unattributed=_typed_unattributed(origin, raw),
         bindings=(ModeloFormBinding(binding_id=binding.id, policy=policy, resolved=raw is not None),),
         source=_binding_field_source(binding, origin, context),
         legal_refs=tuple(binding.legal_refs),
-        standing=field_standing(origin, recorded=context.filed),
+        standing=facts.standing,
         stated_absent=context.stated.get(binding.id) if origin is ModeloFormOrigin.ENTERED else None,
     )
     return with_binding_statements(field, context)
