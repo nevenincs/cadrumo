@@ -11047,13 +11047,6 @@ reason = "not examined; its lineage is its own campaign: no in-registry oracle: 
 [[refusal]]
 modelo = "100"
 revision = "2024"
-casilla = "0700"
-category = "not_examined"
-reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; continuidad_id 'resultado-ingresar-o-devolver-irpf' starts its chain in this edition"
-
-[[refusal]]
-modelo = "100"
-revision = "2024"
 casilla = "0701"
 category = "not_examined"
 reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; continuidad_id 'irpf-resultado-rectificacion-devolucion' starts its chain in this edition"
