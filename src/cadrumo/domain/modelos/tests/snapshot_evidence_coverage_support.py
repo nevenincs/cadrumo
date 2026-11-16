@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ...calculations.registry.schema_references import RegistrySnapshotRef
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
+from ...calculations.registry.tests.published_authority import published_selected_revision_id
 from ..calculation_revision import CalculationRevision, CalculationRevisionState, derive_calculation_revision_id
 from ..ledger_filing_snapshot import (
     LedgerEvidenceRow,
@@ -16,7 +18,8 @@ from ..ledger_filing_snapshot import (
     snapshot_fingerprint,
 )
 
-CAPTURED_AT = datetime(2024, 7, 1, 9, 0, 0, tzinfo=UTC)
+FILING_YEAR = filing_year_envelope().horizon
+CAPTURED_AT = datetime(FILING_YEAR, 7, 1, 9, 0, 0, tzinfo=UTC)
 
 
 def hex_seed(seed: str) -> str:
@@ -33,19 +36,19 @@ EVIDENCE_INPUT_CASILLA: CasillaId = validated_casilla_id(
 )
 REGISTRY_SNAPSHOT_REF = RegistrySnapshotRef(
     modelo="303",
-    revision_id="2024-hasta-08-y-2t",
-    modelo_year=2024,
+    revision_id=published_selected_revision_id("303", filing_year=FILING_YEAR, period="2T"),
+    modelo_year=FILING_YEAR,
     period="2T",
 )
 _LEGAL_REFS = ("ley-37-1992:art-99",)
-_SOURCE_REFS = ("boe-modelo-303-2025-form",)
+_SOURCE_REFS = ("boe-modelo-303-form",)
 
 
 def _evidence_row(transaction_id: str) -> LedgerEvidenceRow:
     return LedgerEvidenceRow(
         transaction_id=transaction_id,
         fingerprint=ROW_FINGERPRINT,
-        booked_date="2024-06-15",
+        booked_date=(CAPTURED_AT - timedelta(days=16)).date().isoformat(),
         amount=Decimal("100.00"),
         currency="EUR",
         direction="incoming",
