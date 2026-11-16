@@ -402,7 +402,7 @@ export interface HostCommands {
    * the setup wizard's own questions and words in `language`. */
   user_profile_imputation_election: {
     args: { profile: string; taxYear: number; language: string };
-    result: import("../shell/profileHousehold").ImputationElection;
+    result: import("../shell/profileContract").ProfileImputationElectionReadProjection;
   };
   profile_censo_readiness: {
     args: { profile: string };

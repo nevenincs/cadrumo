@@ -148,6 +148,8 @@ export type ProviderSignInFixtureDetail = {
  * rejection: a reason, a cause, a next step and a diagnostic id. */
 export type ProviderSignInFixtureRefusal = ProviderSignInFixtureDetail & {
   reason?: string;
+  /** The refusal's code, where it is not the generic `read_failed`. */
+  code?: string;
 };
 
 /** One sign-in call the scenario host was asked, with the attempt it named. */
@@ -698,7 +700,7 @@ export function providerSettingsFixture({
       if (rejectNextSettingsRead) {
         const detail = rejectNextSettingsRead;
         rejectNextSettingsRead = null;
-        throw coded("read_failed", detail);
+        throw coded(detail.code ?? "read_failed", detail);
       }
       if (deferNextStatus) {
         deferNextStatus = false;

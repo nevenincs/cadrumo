@@ -38,6 +38,7 @@ from ...application.live.remote_state_models import (
     SourceFiledDataCaptureReport,
 )
 from ...application.operator_actions.models import ActionReference
+from ...application.operator_output.text_transport import notice_lines
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from .app_live_auth_preflight import emit_live_auth_preflight, metric_line
@@ -45,7 +46,6 @@ from .app_live_period import live_period_option, required_live_period_option
 from .app_live_rendering import filed_capture_lines, source_filed_capture_lines
 from .common import (
     emit_envelope,
-    notice_lines,
     resolve_notice_action,
     resolve_optional_root,
     resolve_pull_year_range,

@@ -208,6 +208,14 @@ export function AgentSettingsPanel({
                     : undefined
                 }
               />
+            ) : settings.read.kind === "failed" &&
+              settings.read.code === "busy" ? (
+              // The host answers busy while the service starts the agent, and
+              // the settings are read again once it is published ready: this
+              // is a wait, not a failure to retry.
+              <p role="status" className="py-2 text-sm text-muted-foreground">
+                {t("desktop.providers.agent_starting")}
+              </p>
             ) : settings.read.kind === "failed" ? (
               <SectionFailure
                 words={t("desktop.providers.load_failed")}

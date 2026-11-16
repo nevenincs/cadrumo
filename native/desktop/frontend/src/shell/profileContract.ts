@@ -57,6 +57,75 @@ export type PrevisionSocialRowProjection = {
 export type PrevisionSocialSubclave = "01" | "02" | "03" | "04";
 
 /**
+ * What one stored fact states for the ejercicio its window starts in.
+ */
+export type ProfileFieldEjercicioStatement = {
+  ejercicio: number;
+  value: string;
+};
+
+/**
+ * What the profile states for one question in the requested ejercicio.
+ *
+ * `value` is the stated choice token only when `state` is `declared`. An
+ * undeclared answer is never read as either choice.
+ */
+export type ProfileImputationElectionAnswer = {
+  state: ProfileImputationStatementState;
+  value: string | null;
+};
+
+/**
+ * One setup question in the words the setup wizard asks it.
+ */
+export type ProfileImputationElectionQuestion = {
+  question_id: string;
+  path: string | null;
+  prompt: string;
+  help: string | null;
+  choices: ProfileQuestionChoice[];
+};
+
+/**
+ * The registered read result, released only after PROFILE_VALUES disclosure.
+ */
+export type ProfileImputationElectionReadProjection = {
+  profile_id: string;
+  record_revision: number;
+  content_digest: ContentDigest;
+  tax_year: number;
+  criterion: ProfileImputationElectionAnswer;
+  codigo_comercio_accounting: ProfileImputationElectionAnswer;
+  criterion_statements: ProfileFieldEjercicioStatement[];
+  criterion_question: ProfileImputationElectionQuestion;
+  year_question: ProfileImputationElectionQuestion;
+  accounting_question: ProfileImputationElectionQuestion;
+  accounting_asked_for_criteria: string[];
+  words_language: OutputLanguage;
+};
+
+/**
+ * Read what the active profile states about the election for one ejercicio.
+ */
+export type ProfileImputationElectionReadRequest = {
+  profile_id: string;
+  tax_year: number;
+  output_language?: OutputLanguage;
+};
+
+export type ProfileImputationStatementState =
+  "declared" | "undeclared" | "contradictory";
+
+/**
+ * Accepted answer and its wording from the setup catalogue.
+ */
+export type ProfileQuestionChoice = {
+  value: string;
+  label: string;
+  description: string | null;
+};
+
+/**
  * One door of one stored row: the registered operation it submits and the
  * words that label it.
  *
@@ -292,6 +361,10 @@ export type TransactionLifecycleState =
 /** Each profile definition's registered request and result, as the runtime's
  * contract names them; a request names the profile the host fills. */
 export type ProfileContracts = {
+  "user-profile.imputation-election.read": {
+    request: ProfileImputationElectionReadRequest;
+    result: ProfileImputationElectionReadProjection;
+  };
   "user-profile.record-groups": {
     request: ProfileRecordGroupsRequest;
     result: ProfileRecordGroupsProjection;
