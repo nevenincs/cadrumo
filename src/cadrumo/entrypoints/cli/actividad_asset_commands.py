@@ -25,6 +25,7 @@ from .actividad_asset_payloads import (
 from .actividad_asset_receipts import claim_receipt, inspection_receipt
 from .common import emit_envelope
 from .date_parsing import parse_iso_date
+from .decimal_parsing import parse_decimal_amount
 from .operation_ledger_actividad_asset import (
     acquisition_candidates_activity_asset,
     calculate_activity_asset_disposal,
@@ -258,6 +259,11 @@ def actividad_asset_describe(
     )
 
 
+def _euro_amount(raw: str, *, label: str) -> PublicDecimal:
+    """Read a hand-typed euro amount with the canonical grammar, so ``1.000`` is refused rather than one euro."""
+    return PublicDecimal(decimal=str(parse_decimal_amount(raw, label=label, signed=False)))
+
+
 def _disposal(
     disposal_date: str,
     reason: str,
@@ -270,9 +276,9 @@ def _disposal(
     return ActivityAssetDisposalSnapshot(
         disposal_date=parse_iso_date(disposal_date, label="disposal-date"),
         reason=ActivityAssetDisposalReason(reason),
-        proceeds=PublicDecimal(decimal=proceeds),
-        transmission_costs=PublicDecimal(decimal=transmission_costs),
-        market_value=None if market_value is None else PublicDecimal(decimal=market_value),
+        proceeds=_euro_amount(proceeds, label="--proceeds"),
+        transmission_costs=_euro_amount(transmission_costs, label="--transmission-costs"),
+        market_value=None if market_value is None else _euro_amount(market_value, label="--market-value"),
         prior_free_depreciation_regime=(
             None
             if prior_free_depreciation_regime is None

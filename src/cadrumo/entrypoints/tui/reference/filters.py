@@ -13,6 +13,7 @@ from enum import StrEnum
 from typing import Final
 
 from ....core.errors.hierarchy import CadrumoError
+from ....core.parsing.dates import require_iso8601_date
 from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.portals.categories import PortalCategory
 from .reads import ReferenceQuery, ReferenceRead
@@ -111,7 +112,7 @@ def _coordinate(reference_filter: ReferenceFilter, raw: object) -> object:
     if reference_filter.kind is ReferenceFilterKind.INTEGER:
         return int(text)
     if reference_filter.kind is ReferenceFilterKind.DATE:
-        return date.fromisoformat(text)
+        return require_iso8601_date(text)
     if reference_filter.kind is ReferenceFilterKind.CHOICE and text not in reference_filter.choices:
         raise ValueError(reference_filter.name)
     return text

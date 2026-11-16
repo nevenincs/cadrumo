@@ -714,7 +714,7 @@ async def test_activity_asset_creation_takes_the_typed_facts_over_the_revision_i
 
     async with app.run_test(size=(100, 70)) as pilot:
         screen.query_one("#asset-revision-json", Input).value = revision.model_dump_json()
-        screen.query_one("#asset-price", Input).value = "1.500,00"
+        screen.query_one("#asset-price", Input).value = "1500.00"
         screen.query_one("#asset-non-deductible-iva", Input).value = "315.00"
         screen.query_one("#asset-in-service-date", Input).value = date(ASSET_IN_SERVICE_YEAR, 3, 1).isoformat()
         screen.query_one("#asset-method", Input).value = "linear"
