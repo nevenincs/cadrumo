@@ -492,24 +492,37 @@ class CalculationRevisionCatalogueRepository:
         if held is not None and held.inputs.matches(inputs) and len(rendering_revisions) == len(referenced):
             catalogue = held.catalogue
         else:
-            reused = {} if held is None else held.reusable_rendering_bodies(inputs)
-            rendering_bodies = {
-                **reused,
-                **self._verified_rendering_bodies(tuple(digest for digest in referenced if digest not in reused)),
-            }
-            catalogue = self._validated_catalogue(
-                record.payload, aggregate_context=aggregate_context, rendering_bodies=rendering_bodies
-            )
-            self._last_validated = _ValidatedCatalogue(
-                inputs=inputs,
-                catalogue=catalogue,
-                referenced_digests=referenced,
-                rendering_bodies=MappingProxyType(rendering_bodies),
-            )
-            _SESSION_VALIDATED_CATALOGUES.remember(engine, self._last_validated)
+            catalogue = self._validate_afresh(record.payload, inputs=inputs, held=held, referenced=referenced)
         _catalogue_phase("load_validation_end")
         _OVERRIDE_FREE_PAYLOADS.remember(record.payload, catalogue)
         return catalogue, record.revision_id
+
+    def _validate_afresh(
+        self,
+        payload: bytes,
+        *,
+        inputs: _ValidationInputs,
+        held: _ValidatedCatalogue | None,
+        referenced: tuple[str, ...],
+    ) -> CalculationRevisionCatalogue:
+        """Validate and hold ``payload``, verifying only the rendering bodies ``held`` cannot vouch for."""
+        reused = {} if held is None else held.reusable_rendering_bodies(inputs)
+        rendering_bodies = {
+            **reused,
+            **self._verified_rendering_bodies(tuple(digest for digest in referenced if digest not in reused)),
+        }
+        catalogue = self._validated_catalogue(
+            payload, aggregate_context=inputs.aggregate_context, rendering_bodies=rendering_bodies
+        )
+        validated = _ValidatedCatalogue(
+            inputs=inputs,
+            catalogue=catalogue,
+            referenced_digests=referenced,
+            rendering_bodies=MappingProxyType(rendering_bodies),
+        )
+        self._last_validated = validated
+        _SESSION_VALIDATED_CATALOGUES.remember(self._objects.engine, validated)
+        return catalogue
 
     def _held_validation(self, engine: Engine) -> _ValidatedCatalogue | None:
         """This repository's last validation, else the one an earlier operation left with the session."""
