@@ -21,7 +21,7 @@ from typing import TYPE_CHECKING, Final
 
 from ...core.aggregation import BindingSourceKind, BindingValueOutcome
 from ...core.parsing.utils import parse_bool
-from ...core.period import Period
+from ...core.period import Period, PeriodKind
 from ...domain.calculations.registry.cash_election_minimum_years import cash_election_minimum_years
 from ...domain.calculations.registry.errors import GovernedFactNotApplicableError
 from ...domain.calculations.registry.invoice_legal_classification import advance_payment_received_role
@@ -451,8 +451,11 @@ def accrual_entry_date(accrual: date, criteria: ImputationCriteria, *, through_y
     return None
 
 
-def _quarter(on: date) -> int:
-    return (on.month - 1) // 3
+def _same_quarter(first: date, second: date) -> bool:
+    return (
+        Period.containing(first, PeriodKind.QUARTERLY).quarter_ordinal
+        == Period.containing(second, PeriodKind.QUARTERLY).quarter_ordinal
+    )
 
 
 def _impute_without_accrual(cash: date, at_cash: ActivityImputationCriterion | None) -> date | ImputationUnresolved:
@@ -470,7 +473,7 @@ def _impute_within_year(
         return cash
     if at_cash is ActivityImputationCriterion.DEVENGO:
         return accrual
-    return cash if _quarter(cash) == _quarter(accrual) else ImputationUnresolved.CRITERION_UNDECLARED
+    return cash if _same_quarter(cash, accrual) else ImputationUnresolved.CRITERION_UNDECLARED
 
 
 def _impute_accrued_before_cash(
