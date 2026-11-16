@@ -64,7 +64,7 @@ def config_storage_list(
     result = ConfigStorageListResult.from_report(report)
     notices = (_relocation_notice(str(report.storage_root)),)
     lines = _inventory_lines(report)
-    lines.extend(_notice_lines(notices))
+    lines.extend(_storage_notice_block_lines(notices))
     emit_envelope(
         ctx,
         command="config.storage.list",
@@ -157,7 +157,7 @@ def config_storage_check(
                 context={"issue_count": str(len(report.issues))},
             ),
         )
-    lines.extend(_notice_lines(notices))
+    lines.extend(_storage_notice_block_lines(notices))
     emit_envelope(ctx, command="config.storage.check", result=result, lines=tuple(lines), notices=tuple(notices))
     if not report.healthy:
         raise typer.Exit(code=2)
@@ -192,7 +192,7 @@ def config_storage_init(
                 context={"storage_root": str(report.storage_root)},
             ),
         )
-    lines.extend(_notice_lines(notices))
+    lines.extend(_storage_notice_block_lines(notices))
     emit_envelope(ctx, command="config.storage.init", result=result, lines=tuple(lines), notices=notices)
 
 
@@ -237,7 +237,7 @@ def config_storage_reclaim(
                 },
             ),
         )
-    lines.extend(_notice_lines(notices))
+    lines.extend(_storage_notice_block_lines(notices))
     emit_envelope(ctx, command="config.storage.reclaim", result=result, lines=tuple(lines), notices=notices)
 
 
@@ -326,7 +326,7 @@ def _table_lines(headers: tuple[str, ...], rows: Iterable[tuple[str, ...]]) -> l
     return [render(headers), render(tuple("-" * width for width in widths)), *(render(row) for row in materialised)]
 
 
-def _notice_lines(notices: Sequence[Notice]) -> list[str]:
+def _storage_notice_block_lines(notices: Sequence[Notice]) -> list[str]:
     """Render typed notices visibly in text mode as well as JSON mode."""
     lines: list[str] = []
     for notice in notices:

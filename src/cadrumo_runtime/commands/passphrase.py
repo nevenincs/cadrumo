@@ -8,6 +8,7 @@ from uuid import UUID
 import typer
 from pydantic import SecretStr
 
+from cadrumo.application.operator_output.text_transport import notice_lines
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import tr
 from cadrumo.core.json_contract import Notice, NoticeSeverity
@@ -18,7 +19,7 @@ from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedEr
 from cadrumo_client.transport.profile_password_rotation import run_profile_password_rotation
 
 from ..host.frontend.cli.profile_client import open_cli_profile_client
-from .presentation import emit_envelope, notice_lines
+from .presentation import emit_envelope
 
 if TYPE_CHECKING:
     from cadrumo.application.user_profile.passphrase_rotation import ProfilePassphraseRotationOutcome
