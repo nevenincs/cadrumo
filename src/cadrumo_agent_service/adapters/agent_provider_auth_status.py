@@ -13,7 +13,6 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict
 
 from cadrumo_client.contracts.contracts import RefusalError
-from cadrumo_client.contracts.deadline_budget import DEFAULT_TIMEOUT_POLICY
 
 from ..host.controller import AgentHostError
 from ..host.launch_environment import (
@@ -38,7 +37,9 @@ _ProbeCause = Literal[
     "probe_cleanup_unconfirmed",
 ]
 CONFIRMATION_SECONDS = 20.0
-"""The bound on the one fresh read that confirms a completed sign-in."""
+"""The bound on one fresh read of every provider's status: the read that confirms a sign-in, and each refresh."""
+_FRESH_SECONDS = 5.0
+"""How long a kept reading is served before a status read asks for it again."""
 
 
 class _Statuses(BaseModel):
@@ -66,7 +67,7 @@ def _failed(cause: CliStateCause) -> _Reading:
 
 
 class AgentProviderAuthStatusProbe:
-    """Cache bounded, masked observations under the exact live profile authority."""
+    """Keep bounded, masked observations under the exact live profile authority, read off the request path."""
 
     def __init__(
         self, *, context: Callable[[], tuple[Path, str] | None], cancellation: InvocationCancellation | None = None
@@ -109,29 +110,56 @@ class AgentProviderAuthStatusProbe:
         if failure is not None:
             raise failure
 
-    def probe(self, entry: ProviderCatalogEntry) -> CliObservation:
-        """Read masked provider status, rejecting results from a retired context."""
+    def kept(self, entry: ProviderCatalogEntry) -> CliObservation:
+        """Return the last reading kept for the current context, never running the agent.
+
+        A lane whose state no reading under the current context has established
+        yet is ``unknown`` with no cause, as one no probe can read is.
+        """
         if not entry.auth_kind.accepts_provider_sign_in:
             return CliObservation(CliState.UNKNOWN)
         context = self._context()
         if context is None:
             return CliObservation(CliState.UNKNOWN)
-        with self._lock:
+        with self._epoch_lock:
             cached = self._cached
-            if cached is None or cached[0] != context or monotonic() - cached[1] >= 5:
-                with self._epoch_lock:
-                    epoch = self._epoch
-                reading = self._read(context[0], DEFAULT_TIMEOUT_POLICY.timeout_seconds)
-                if self._context() != context:
-                    return CliObservation(CliState.UNKNOWN)
-                # A failed read, or one begun before the cache was dropped, is never kept.
-                if reading.failure is None:
-                    with self._epoch_lock:
-                        if epoch == self._epoch:
-                            self._cached = (context, monotonic(), reading)
-            else:
-                reading = cached[2]
-            return reading.observe(entry.provider)
+        if cached is None or cached[0] != context:
+            return CliObservation(CliState.UNKNOWN)
+        return cached[2].observe(entry.provider)
+
+    def due(self) -> bool:
+        """Say whether the current context has no reading, a failed one, or one older than the freshness window."""
+        context = self._context()
+        if context is None:
+            return False
+        with self._epoch_lock:
+            cached = self._cached
+        return (
+            cached is None
+            or cached[0] != context
+            or cached[2].failure is not None
+            or monotonic() - cached[1] >= _FRESH_SECONDS
+        )
+
+    def refresh(self) -> None:
+        """Read every provider's status within the confirmation bound and keep it for the context it was read under.
+
+        A failed read is kept as well, so the status shows its cause until the
+        next refresh reads again. A read whose context retired while it ran, or
+        begun before the kept read was dropped, is not kept.
+        """
+        context = self._context()
+        if context is None:
+            return
+        with self._lock:
+            with self._epoch_lock:
+                epoch = self._epoch
+            reading = self._read(context[0], CONFIRMATION_SECONDS)
+        if self._context() != context:
+            return
+        with self._epoch_lock:
+            if epoch == self._epoch:
+                self._cached = (context, monotonic(), reading)
 
     def confirm(self, provider: str, *, root: Path) -> CliObservation:
         """Read one provider's status fresh, within its own bound, and keep nothing."""

@@ -678,19 +678,27 @@ export function AgentColumn({
     onProvider !== undefined &&
     providerModelsToDownload(onProvider);
   const serviceNotice = status ? serviceWords(t, status) : null;
+  // A catalog the service refused as unavailable is said with the reference
+  // of the service's log line, rather than as no providers.
+  const catalogRefused =
+    catalog.kind === "failed" && catalog.code === "agent_catalog_unavailable"
+      ? catalog
+      : null;
   const notice = incompatible
     ? t("desktop.agent.service_incompatible")
     : catalogBusy
       ? t("desktop.agent.service_starting")
-      : engineHeld
-        ? null
-        : noModelHeld
-          ? t("desktop.agent.no_installed_model")
-          : noProvider
-            ? t("desktop.agent.no_provider")
-            : offer !== null && !offer.observed
-              ? (serviceNotice ?? t("desktop.agent.lane_not_observed"))
-              : serviceNotice;
+      : catalogRefused
+        ? refusalWords(t, catalogRefused.code)
+        : engineHeld
+          ? null
+          : noModelHeld
+            ? t("desktop.agent.no_installed_model")
+            : noProvider
+              ? t("desktop.agent.no_provider")
+              : offer !== null && !offer.observed
+                ? (serviceNotice ?? t("desktop.agent.lane_not_observed"))
+                : serviceNotice;
 
   return (
     <div
@@ -942,17 +950,20 @@ export function AgentColumn({
             failure={view.sendFailure}
             fit={view.sendFit}
             notice={notice}
+            logRef={catalogRefused?.logRef}
             engines={engineHeld ? engineNotices : undefined}
             onRetry={
-              status?.state === "refused" && !unsupported && session?.retry
-                ? () => {
-                    void session
-                      .retry?.()
-                      .catch((error: unknown) =>
-                        change({ sendFailure: failureCode(error) }),
-                      );
-                  }
-                : undefined
+              catalogRefused
+                ? agentCatalog.retry
+                : status?.state === "refused" && !unsupported && session?.retry
+                  ? () => {
+                      void session
+                        .retry?.()
+                        .catch((error: unknown) =>
+                          change({ sendFailure: failureCode(error) }),
+                        );
+                    }
+                  : undefined
             }
             onSetUpProviders={
               noProvider && !noModelHeld && !engineHeld
