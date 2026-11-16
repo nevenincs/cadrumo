@@ -53,11 +53,14 @@ jobs:
 
   merge-gate:
     name: "Check: Merge gate (Linux)"
-    needs: [check-prove-ref, publish-authority]
+    needs: check-prove-ref
     if: inputs.phase == 'prove'
+    # A called workflow may hold no more than its caller grants, and the gate
+    # declares the read of pull request metadata its plan job uses.
+    permissions:
+      contents: read
+      pull-requests: read
     uses: ./.github/workflows/merge-gate.yml
-    with:
-      authority-artifact: cadrumo-registry-authority
 
   # Compiling the authority costs minutes and every prove job below reads the
   # same one, so it is compiled once here and restored everywhere else. Each

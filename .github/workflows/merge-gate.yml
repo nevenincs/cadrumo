@@ -4,15 +4,8 @@ on:
   pull_request:
     branches: [feature/tui, main]
     types: [opened, reopened, synchronize]
-  # A calling run that already published the registry authority names its
-  # artifact here, so the scoped gate restores it instead of compiling another.
+  # The release proof calls this gate for its full, unscoped population.
   workflow_call:
-    inputs:
-      authority-artifact:
-        description: This run's published-authority artifact; empty publishes locally.
-        type: string
-        required: false
-        default: ""
 
 permissions:
   contents: read
@@ -26,17 +19,92 @@ concurrency:
   group: merge-gate-${{ github.event.pull_request.number || github.ref }}-${{ github.event_name }}
   cancel-in-progress: true
 
-# Every job runs on a self-hosted runner, so a pull request reaches one only
-# from this repository and from an owner, a collaborator or the release App.
-# Any other pull request starts no job. The withheld verdict reports under a
-# different name, because GitHub treats a skipped required check as passing:
-# the required check then never reports and the pull request cannot merge.
+env:
+  # A cache a pull request writes is restored by that pull request's later
+  # runs. A fork's run therefore neither restores nor saves one, so nothing a
+  # fork ran outlives its job.
+  CADRUMO_CI_CACHE: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
+
+# The headless lane. Every job runs on a GitHub-hosted runner: a fresh machine
+# per job, no display, no native toolchain, no secret and no repository
+# variable. A pull request from a fork therefore runs here like any other, once
+# a maintainer approves its run, and never reaches a self-hosted machine. The
+# native lane (`native.yml`) holds everything that needs one.
 jobs:
+  plan:
+    name: "Check: Change scope (Linux)"
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    outputs:
+      shards: ${{ steps.plan.outputs.shards }}
+      ci-contracts: ${{ steps.plan.outputs.ci-contracts }}
+      sequence-goldens: ${{ steps.plan.outputs.sequence-goldens }}
+      scoped: ${{ steps.changes.outputs.path != '' }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # A promotion into main and a call from the release proof read no change
+      # list, so they select the full population.
+      - name: Read changed paths from the pull request
+        id: changes
+        if: github.event_name == 'pull_request' && github.base_ref != 'main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+          EXPECTED_BASE: ${{ github.event.pull_request.base.sha }}
+          EXPECTED_FILES: ${{ github.event.pull_request.changed_files }}
+        run: |
+          set -euo pipefail
+          mkdir -p var/ci
+          # The API caps this listing at 3,000 files. Incomplete or stale
+          # metadata must leave the path unset so the full population runs.
+          if [ "$EXPECTED_FILES" -ge 3000 ]; then
+            echo "Change listing exceeds the API limit; selecting the full gate"
+            exit 0
+          fi
+          gh api --paginate --slurp "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}/files" \
+            > var/ci/changed-files.json
+          actual_files="$(jq '[.[][]] | length' var/ci/changed-files.json)"
+          current="$(gh api "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}" --jq '.head.sha + ":" + .base.sha')"
+          if [ "$actual_files" != "$EXPECTED_FILES" ] || [ "$current" != "${EXPECTED_HEAD}:${EXPECTED_BASE}" ]; then
+            echo "Change listing is incomplete or belongs to another revision; selecting the full gate"
+            exit 0
+          fi
+          jq -r '.[][] | .filename, (.previous_filename // empty)' var/ci/changed-files.json \
+            > var/ci/changed-paths.txt
+          echo "path=var/ci/changed-paths.txt" >> "$GITHUB_OUTPUT"
+
+      - name: Set up toolchain
+        uses: ./.github/actions/setup
+        with:
+          authority: "false"
+          cache: ${{ env.CADRUMO_CI_CACHE }}
+
+      - name: Plan the test shards
+        id: plan
+        shell: bash
+        env:
+          CHANGED_FILES: ${{ steps.changes.outputs.path }}
+        run: just test-gate-plan "$CHANGED_FILES" >> "$GITHUB_OUTPUT"
+
+      # Every later job reads the same list this plan was made from.
+      - name: Upload the changed paths
+        if: steps.changes.outputs.path != ''
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: cadrumo-changed-paths
+          path: var/ci/changed-paths.txt
+          if-no-files-found: error
+          retention-days: 1
+
   lint:
     name: "Check: Lint (Linux)"
-    if: ${{ (github.event_name != 'pull_request' || (github.event.pull_request.head.repo.full_name == github.repository && (github.event.pull_request.author_association == 'OWNER' || github.event.pull_request.author_association == 'COLLABORATOR' || github.event.pull_request.user.login == 'nevenincs-release[bot]'))) }}
-    runs-on: [self-hosted, Linux, X64]
-    timeout-minutes: 150
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -50,6 +118,7 @@ jobs:
         uses: ./.github/actions/setup
         with:
           authority: "false"
+          cache: ${{ env.CADRUMO_CI_CACHE }}
 
       # `!cancelled()` keeps every independent gate reporting its own verdict
       # instead of stopping at the first red one. The setup guard is the other
@@ -84,123 +153,141 @@ jobs:
         if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
         run: just check-workflow-security
 
-  gate:
-    name: "Check: Scoped gate (Linux)"
-    needs: lint
-    if: ${{ (github.event_name != 'pull_request' || (github.event.pull_request.head.repo.full_name == github.repository && (github.event.pull_request.author_association == 'OWNER' || github.event.pull_request.author_association == 'COLLABORATOR' || github.event.pull_request.user.login == 'nevenincs-release[bot]'))) && needs.lint.result == 'success' }}
-    runs-on: [self-hosted, Linux, X64]
-    timeout-minutes: 180
-    env:
-      CADRUMO_PYTEST_WORKERS: "8"
+  # Compiling the authority costs minutes and every job below reads the same
+  # one, so it is compiled once here and restored everywhere else. Each
+  # consumer still runs the currency check against its own checkout, which
+  # republishes rather than trusting an artifact that does not match.
+  authority:
+    name: "Build: Registry authority (Linux)"
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          fetch-depth: 1
           persist-credentials: false
 
-      - name: Read changed paths from the pull request
-        id: changes
-        if: github.event_name == 'pull_request'
-        env:
-          GH_TOKEN: ${{ github.token }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
-          EXPECTED_BASE: ${{ github.event.pull_request.base.sha }}
-          EXPECTED_FILES: ${{ github.event.pull_request.changed_files }}
-        run: |
-          set -euo pipefail
-          mkdir -p var/ci
-          # The API caps this listing at 3,000 files. Incomplete or stale
-          # metadata must leave the path unset so both gates run in full.
-          if [ "$EXPECTED_FILES" -ge 3000 ]; then
-            echo "Change listing exceeds the API limit; selecting the full gate"
-            exit 0
-          fi
-          gh api --paginate --slurp "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}/files" \
-            > var/ci/changed-files.json
-          actual_files="$(jq '[.[][]] | length' var/ci/changed-files.json)"
-          current="$(gh api "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}" --jq '.head.sha + ":" + .base.sha')"
-          if [ "$actual_files" != "$EXPECTED_FILES" ] || [ "$current" != "${EXPECTED_HEAD}:${EXPECTED_BASE}" ]; then
-            echo "Change listing is incomplete or belongs to another revision; selecting the full gate"
-            exit 0
-          fi
-          jq -r '.[][] | .filename, (.previous_filename // empty)' var/ci/changed-files.json \
-            > var/ci/changed-paths.txt
-          echo "path=var/ci/changed-paths.txt" >> "$GITHUB_OUTPUT"
-
-      - name: Set up just
-        uses: taiki-e/install-action@6012bba2f8e3e666a2b212f8823c06831704ce92 # just
+      - name: Set up toolchain
+        uses: ./.github/actions/setup
         with:
-          tool: just@1.38.0
+          cache: ${{ env.CADRUMO_CI_CACHE }}
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
+      - name: Upload the published registry authority
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          prune-cache: false
-          version: "0.11.29"
-          enable-cache: false
+          name: cadrumo-registry-authority-headless
+          path: |
+            .authority/authority.current.json
+            .authority/authority-*.sqlite3
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 1
 
-      - name: Semgrep full scan
-        shell: bash
-        run: just check-security-full
+  checks:
+    name: "Check: Security, registry and import boundaries (Linux)"
+    needs: authority
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Set up toolchain
         id: setup
-        if: ${{ !cancelled() }}
         uses: ./.github/actions/setup
         with:
-          authority-artifact: ${{ inputs.authority-artifact }}
+          authority-artifact: cadrumo-registry-authority-headless
+          cache: ${{ env.CADRUMO_CI_CACHE }}
+
+      - name: Semgrep full scan
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        shell: bash
+        run: just check-security-full
 
       - name: Registry gate
         if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
         shell: bash
         run: just check-registry-gate
 
-      # One fixture producer runs from the frontend's installed packages, so
-      # they come before the check; the check reads the sources and writes no
-      # fixture. Node is provisioned here rather than taken from the runner.
-      - name: Set up Node
-        id: node
-        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
-        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version: "24"
-
-      - name: Frontend packages
-        id: frontend-packages
-        if: ${{ !cancelled() && steps.node.outcome == 'success' }}
-        shell: bash
-        run: just setup-desktop-frontend
-
-      - name: Fixture projections
-        if: ${{ !cancelled() && steps.frontend-packages.outcome == 'success' }}
-        shell: bash
-        run: just fixtures-check
-
       - name: Import boundaries
         if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
         shell: bash
         run: just check-import-boundaries
 
-      - name: Scoped tests
-        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
-        shell: bash
-        env:
-          CHANGED_FILES: ${{ steps.changes.outputs.path }}
-        run: just test-gate "$CHANGED_FILES"
+  # The personas and every fixture producer check. One producer runs from the
+  # frontend's installed packages, so Node and those packages come first; the
+  # check reads the sources and writes no fixture.
+  fixtures:
+    name: "Check: Fixtures and personas (Linux)"
+    needs: authority
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
-      # Its own step because a cache miss executes every documented CLI
-      # sequence, minutes the scoped tests' step budget cannot absorb. The
-      # checkout's `.cache` is wiped on every run, so the verdict records live in
-      # the runner's tool cache instead: an input set that already passed on
-      # this runner reuses its clean verdict rather than executing again.
+      - name: Set up toolchain
+        uses: ./.github/actions/setup
+        with:
+          authority-artifact: cadrumo-registry-authority-headless
+          cache: ${{ env.CADRUMO_CI_CACHE }}
+
+      - name: Set up Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24"
+          cache: ${{ env.CADRUMO_CI_CACHE == 'true' && 'npm' || '' }}
+          cache-dependency-path: native/desktop/frontend/package-lock.json
+
+      - name: Frontend packages
+        shell: bash
+        run: just setup-desktop-frontend
+
+      - name: Fixture projections
+        shell: bash
+        run: just fixtures-check
+
+  # A job of its own because a selected change executes every documented CLI
+  # sequence, minutes no other job's budget should absorb. The gate decides
+  # from the changed paths whether anything is selected; the plan's answer only
+  # spares an unselected run the toolchain. No verdict is kept between runs: a
+  # record a pull request could write would let it clear its own later run.
+  goldens:
+    name: "Check: Committed sequence goldens (Linux)"
+    needs: [plan, authority]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - name: Checkout repository
+        if: needs.plan.outputs.sequence-goldens == 'true'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Download the changed paths
+        if: needs.plan.outputs.sequence-goldens == 'true' && needs.plan.outputs.scoped == 'true'
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: cadrumo-changed-paths
+          path: var/ci
+
+      - name: Set up toolchain
+        id: setup
+        if: needs.plan.outputs.sequence-goldens == 'true'
+        uses: ./.github/actions/setup
+        with:
+          authority-artifact: cadrumo-registry-authority-headless
+          cache: ${{ env.CADRUMO_CI_CACHE }}
+
       - name: Committed sequence goldens
-        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        if: needs.plan.outputs.sequence-goldens == 'true'
         shell: bash
         env:
-          CADRUMO_DEV_CACHE_ROOT: ${{ runner.tool_cache }}/cadrumo-dev-cache
-          CHANGED_FILES: ${{ steps.changes.outputs.path }}
+          CHANGED_FILES: ${{ needs.plan.outputs.scoped == 'true' && 'var/ci/changed-paths.txt' || '' }}
         run: |
           if [ -n "$CHANGED_FILES" ]; then
             just test-sequence-goldens-gate --changed-files "$CHANGED_FILES"
@@ -208,100 +295,116 @@ jobs:
             just test-sequence-goldens-gate
           fi
 
-  desktop:
-    name: "Check: Frontend and Rust (Linux)"
-    needs: lint
-    if: ${{ (github.event_name != 'pull_request' || (github.event.pull_request.head.repo.full_name == github.repository && (github.event.pull_request.author_association == 'OWNER' || github.event.pull_request.author_association == 'COLLABORATOR' || github.event.pull_request.user.login == 'nevenincs-release[bot]'))) && needs.lint.result == 'success' }}
-    runs-on: [self-hosted, Linux, X64]
-    timeout-minutes: 150
-    # The host preset configures the desktop targets only with the payload,
-    # and the payload needs the runner's cadrumo-agent checkout, exactly as the
-    # release's native verification does.
+  # The scoped test population, dealt over the matrix the plan printed. Four
+  # workers match the hosted runner's four cores.
+  tests:
+    name: "Test: Scoped tests (Linux, shard ${{ matrix.shard }})"
+    needs: [plan, authority]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: ${{ fromJSON(needs.plan.outputs.shards) }}
     env:
-      CADRUMO_PACKAGE_AGENT_SOURCE_DIR: ${{ vars.CADRUMO_PACKAGE_AGENT_SOURCE_DIR }}
+      CADRUMO_PYTEST_WORKERS: "4"
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          fetch-depth: 1
           persist-credentials: false
 
-      - name: Require the repository agent-source variable
-        shell: bash
-        run: |
-          if [ -z "${CADRUMO_PACKAGE_AGENT_SOURCE_DIR// /}" ]; then
-            echo "Repository variable CADRUMO_PACKAGE_AGENT_SOURCE_DIR must name the cadrumo-agent project directory." >&2
-            exit 1
-          fi
+      - name: Download the changed paths
+        if: needs.plan.outputs.scoped == 'true'
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: cadrumo-changed-paths
+          path: var/ci
 
-      # The recipes below seed the fixture projections themselves, and the
-      # producers read the registry authority, so this job restores it. The
-      # window's specs launch the frontend's own Playwright browser, provisioned
-      # below, not the Python Playwright's.
       - name: Set up toolchain
-        id: setup
         uses: ./.github/actions/setup
         with:
-          authority-artifact: ${{ inputs.authority-artifact }}
+          authority-artifact: cadrumo-registry-authority-headless
+          cache: ${{ env.CADRUMO_CI_CACHE }}
 
-      # Every native tool is provisioned here rather than taken from whatever
-      # the runner holds; Rust and CMake follow native/toolchain.json.
-      - name: Read the native toolchain pins
-        id: pins
-        shell: bash
-        run: |
-          set -euo pipefail
-          echo "rust=$(jq -er .rust native/toolchain.json)" >> "$GITHUB_OUTPUT"
-          echo "cmake=$(jq -er .cmake native/toolchain.json)" >> "$GITHUB_OUTPUT"
-
+      # Some tests bundle frontend sources, so the packages are installed as
+      # they were in the single gate job these shards replace.
       - name: Set up Node
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: "24"
+          cache: ${{ env.CADRUMO_CI_CACHE == 'true' && 'npm' || '' }}
+          cache-dependency-path: native/desktop/frontend/package-lock.json
 
-      - name: Set up CMake and Ninja
-        uses: lukka/get-cmake@f86dd60acae0d132056913e248bdabf0e0580b7a # v4.4.5
-        with:
-          cmakeVersion: ${{ steps.pins.outputs.cmake }}
+      - name: Frontend packages
+        shell: bash
+        run: just setup-desktop-frontend
 
-      - name: Set up Rust
+      - name: Scoped tests
         shell: bash
         env:
-          RUST_PIN: ${{ steps.pins.outputs.rust }}
-        run: |
-          set -euo pipefail
-          rustup toolchain install "$RUST_PIN" --profile minimal --component rustfmt,clippy
-          echo "RUSTUP_TOOLCHAIN=$RUST_PIN" >> "$GITHUB_ENV"
+          SHARD: ${{ matrix.shard }}
+          CHANGED_FILES: ${{ needs.plan.outputs.scoped == 'true' && 'var/ci/changed-paths.txt' || '' }}
+        run: just test-gate-shard "$SHARD" "$CHANGED_FILES"
 
-      - name: Configure the native build with the agent checkout
-        id: configure
+  contracts:
+    name: "Test: CI contracts (Linux)"
+    needs: [plan, authority]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      CADRUMO_PYTEST_WORKERS: "4"
+    steps:
+      - name: Checkout repository
+        if: needs.plan.outputs.ci-contracts == 'true'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up toolchain
+        if: needs.plan.outputs.ci-contracts == 'true'
+        uses: ./.github/actions/setup
+        with:
+          authority-artifact: cadrumo-registry-authority-headless
+          cache: ${{ env.CADRUMO_CI_CACHE }}
+
+      - name: CI contracts
+        if: needs.plan.outputs.ci-contracts == 'true'
         shell: bash
-        run: just configure-native-agent "$CADRUMO_PACKAGE_AGENT_SOURCE_DIR"
+        run: just test-ci-contracts-gate
 
-      - name: Frontend packages and browser
-        id: frontend-browser
-        if: ${{ !cancelled() && steps.configure.outcome == 'success' }}
+  # The harness proofs own a worker pool of their own, so they run outside
+  # every shard's pool, once per run and on every run.
+  harness:
+    name: "Test: Verification harness (Linux)"
+    needs: authority
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up toolchain
+        uses: ./.github/actions/setup
+        with:
+          authority-artifact: cadrumo-registry-authority-headless
+          cache: ${{ env.CADRUMO_CI_CACHE }}
+
+      - name: Verification harness
         shell: bash
-        run: just setup-desktop-browser
+        run: just test-pytest-harness
 
-      - name: Frontend checks and specs
-        if: ${{ !cancelled() && steps.frontend-browser.outcome == 'success' }}
-        shell: bash
-        run: just test-frontend
-
-      - name: Native Rust tests
-        if: ${{ !cancelled() && steps.frontend-browser.outcome == 'success' }}
-        shell: bash
-        run: just test-native
-
+  # The one required check. `always()` runs it after a failure, a skip or a
+  # cancellation alike, so it is never the skipped check GitHub would count as
+  # passing; it holds no checkout and runs no repository code.
   verdict:
-    name: "${{ (github.event_name != 'pull_request' || (github.event.pull_request.head.repo.full_name == github.repository && (github.event.pull_request.author_association == 'OWNER' || github.event.pull_request.author_association == 'COLLABORATOR' || github.event.pull_request.user.login == 'nevenincs-release[bot]'))) && 'Check: Merge gate (Linux)' || 'Check: Merge gate withheld (Linux)' }}"
-    # `desktop` stays out until one real runner run of it is green: its
-    # configure, toolchain and browser provisioning are unproven on the runner.
-    needs: [lint, gate]
-    if: ${{ !cancelled() && (github.event_name != 'pull_request' || (github.event.pull_request.head.repo.full_name == github.repository && (github.event.pull_request.author_association == 'OWNER' || github.event.pull_request.author_association == 'COLLABORATOR' || github.event.pull_request.user.login == 'nevenincs-release[bot]'))) }}
-    runs-on: [self-hosted, Linux, X64]
-    timeout-minutes: 66
+    name: "Check: Merge gate (Linux)"
+    needs: [plan, lint, authority, checks, fixtures, goldens, tests, contracts, harness]
+    if: ${{ always() }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
     steps:
       - name: Require every gate job to succeed
         shell: bash

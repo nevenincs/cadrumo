@@ -431,34 +431,33 @@ def test_product_integration_parallel_recipe_carries_the_canonical_selection() -
     assert "not perf and not external_tool and not os_keychain" in body
 
 
-def test_the_merge_gate_runs_the_goldens_gate_as_its_own_step_with_a_persistent_verdict_cache() -> None:
-    """The goldens gate reaches pull requests, in a step of its own, keeping its verdicts.
+def test_the_merge_gate_runs_the_goldens_gate_in_a_job_of_its_own_and_keeps_no_verdict() -> None:
+    """The goldens gate reaches pull requests in its own job, and no run can clear a later one.
 
-    Inside the scoped-tests step a cache miss would share that step's budget.
-    Without a runner-persistent cache root every run starts from a wiped
-    `.cache`, so the verdict cache could never reuse anything and every
-    selected pull request would pay the full execution.
+    Inside a test shard a selected change would share that shard's budget. The
+    hosted runner starts empty, and the job restores no verdict record: a
+    record a pull request could write would let it clear its own later run.
     """
-    job = yaml.safe_load(_MERGE_GATE.read_text(encoding="utf-8"))["jobs"]["gate"]
+    document = yaml.safe_load(_MERGE_GATE.read_text(encoding="utf-8"))
+    job = document["jobs"]["goldens"]
     names = [step.get("name") for step in job["steps"]]
     step = next((step for step in job["steps"] if step.get("name") == "Committed sequence goldens"), None)
     assert step is not None, "the merge gate no longer runs the committed-goldens gate"
 
     assert 'just test-sequence-goldens-gate --changed-files "$CHANGED_FILES"' in step["run"]
-    scoped = next(item for item in job["steps"] if item.get("name") == "Scoped tests")
-    assert step["env"]["CHANGED_FILES"] == scoped["env"]["CHANGED_FILES"]
     assert "else" in step["run"] and "just test-sequence-goldens-gate\n" in step["run"]
+    assert "var/ci/changed-paths.txt" in step["env"]["CHANGED_FILES"], (
+        "the goldens gate must read the changed paths the plan was made from"
+    )
     assert names.index("Set up toolchain") < names.index("Committed sequence goldens"), (
         "the goldens gate reads the published authority the setup step provides"
     )
-    assert "steps.setup.outcome == 'success'" in step["if"]
     assert step.get("continue-on-error") is not True
-    assert step["env"]["CADRUMO_DEV_CACHE_ROOT"].startswith("${{ runner.tool_cache }}/"), (
-        "the verdict cache must live in runner-owned storage that survives the checkout"
+    assert "goldens" in document["jobs"]["verdict"]["needs"]
+    assert not any("actions/cache" in str(item.get("uses", "")) for item in job["steps"]), (
+        "a verdict cache on a hosted runner is written by the pull request it would later clear"
     )
-    assert "CADRUMO_DEV_CACHE_ROOT" not in job.get("env", {}), (
-        "the persistent root is scoped to the goldens step, not every cache the job's other steps keep"
-    )
+    assert "CADRUMO_DEV_CACHE_ROOT" not in yaml.safe_dump(job)
 
     commands = resolved_recipe_commands(_REPOSITORY_ROOT, "test-sequence-goldens-gate")
     assert any("python -m dev.ci.sequence_goldens_gate" in command for command in commands), (

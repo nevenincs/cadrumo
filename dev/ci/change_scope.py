@@ -52,6 +52,7 @@ __all__ = [
     "compute_change_scope",
     "main",
     "read_changed_files",
+    "scope_for_manifest",
     "selects_sequence_goldens",
 ]
 
@@ -365,26 +366,33 @@ def compute_change_scope(
     )
 
 
-def main(argv: Sequence[str] | None = None) -> int:
-    """Select tests from supplied paths, or select the full tree when absent."""
-    parser = argparse.ArgumentParser(prog="python -m dev.ci.change_scope", description=__doc__)
-    parser.add_argument("--changed-files", type=Path, help="file of repository-relative changed paths")
-    parser.add_argument("--json", action="store_true", help="emit the full selection as JSON")
-    arguments = parser.parse_args(argv)
-    if arguments.changed_files is None:
-        scope = ChangeScope(
+def scope_for_manifest(changed_files: Path | None) -> ChangeScope:
+    """Return the selection for a changed-path manifest, or the full tree when there is none.
+
+    Raises ``OSError`` or ``ValueError`` when the manifest cannot be read or
+    names a path outside the repository.
+    """
+    if changed_files is None:
+        return ChangeScope(
             targets=(*SOURCE_PACKAGES, DEVELOPMENT_TOOLING, "native", PACKAGING_HOOKS),
             ci_contracts=True,
             sequence_goldens=True,
             too_broad=False,
             reason=None,
         )
-    else:
-        try:
-            changed = read_changed_files(arguments.changed_files)
-        except (OSError, ValueError) as error:
-            parser.error(str(error))
-        scope = compute_change_scope(changed)
+    return compute_change_scope(read_changed_files(changed_files))
+
+
+def main(argv: Sequence[str] | None = None) -> int:
+    """Select tests from supplied paths, or select the full tree when absent."""
+    parser = argparse.ArgumentParser(prog="python -m dev.ci.change_scope", description=__doc__)
+    parser.add_argument("--changed-files", type=Path, help="file of repository-relative changed paths")
+    parser.add_argument("--json", action="store_true", help="emit the full selection as JSON")
+    arguments = parser.parse_args(argv)
+    try:
+        scope = scope_for_manifest(arguments.changed_files)
+    except (OSError, ValueError) as error:
+        parser.error(str(error))
     if arguments.json:
         print(json.dumps(scope.to_json(), indent=2))
     else:
