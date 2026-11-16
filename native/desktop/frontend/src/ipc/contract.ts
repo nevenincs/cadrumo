@@ -16,6 +16,7 @@ import type {
   LocalPlacement,
 } from "../shell/localModelsContract";
 import type {
+  AttachmentPolicyResponse,
   ModelLicenceResponse,
   SkillListResponse,
 } from "../shell/agentGatewayContract";
@@ -24,7 +25,6 @@ import type {
   AgentApproval,
   AgentAttachmentCard,
   AgentAttachmentGrants,
-  AgentAttachmentPolicy,
   AgentAttachmentRefusal,
   AgentAttachmentRelease,
   AgentAttachmentScope,
@@ -1119,7 +1119,10 @@ export interface HostCommands {
     args: Authorized<{ conversationId: string; name?: string }>;
     result: null;
   };
-  agent_attachment_policy: { args: Authorized; result: AgentAttachmentPolicy };
+  agent_attachment_policy: {
+    args: Authorized;
+    result: AttachmentPolicyResponse;
+  };
   agent_send: {
     args: Authorized<{ request: AgentSendRequest }>;
     result: AgentSendResult;

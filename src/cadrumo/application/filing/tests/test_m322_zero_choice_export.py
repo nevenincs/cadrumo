@@ -21,7 +21,8 @@ from ....domain.calculations.registry.tests.published_authority import (
     published_snapshot,
     published_supported_filing_years,
 )
-from ....domain.filing.schema import ModeloDraft, ModeloDraftStatus
+from ....domain.filing.schema import ModeloDraft
+from ....domain.submission.models import ModeloDraftStatus
 from ..draft_construction import build_draft
 from ..runtime import ModeloOperatorProfile, RegistrySchemaAccessor
 from .export_support import export_schema_provider

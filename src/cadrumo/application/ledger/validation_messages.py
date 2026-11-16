@@ -2,10 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from typing import cast
-
 from pydantic import ValidationError
+from pydantic_core import ErrorDetails
 
 from ...core.errors.error_codes import resolve_error_message
 from ...core.errors.hierarchy import CadrumoError
@@ -38,7 +36,7 @@ def bounded_validation_messages(error: Exception, *, limit: int, fallback: str) 
     return tuple(messages[:limit])
 
 
-def _registered_cause(item: Mapping[str, object]) -> CadrumoError | None:
+def _registered_cause(item: ErrorDetails) -> CadrumoError | None:
     """Find the registered refusal a Pydantic entry was raised from, if any.
 
     A domain rule that crosses Pydantic's validator protocol is re-raised as a
@@ -48,9 +46,9 @@ def _registered_cause(item: Mapping[str, object]) -> CadrumoError | None:
     it never leaves this function.
     """
     context = item.get("ctx")
-    if not isinstance(context, Mapping):
+    if context is None:
         return None
-    found: object = cast("Mapping[str, object]", context).get("error")
+    found: object = context.get("error")
     while isinstance(found, BaseException):
         if isinstance(found, CadrumoError):
             return found
@@ -72,12 +70,10 @@ def registered_refusal_causes(error: Exception) -> tuple[CadrumoError, ...]:
     return tuple(cause for cause in found if cause is not None)
 
 
-def _located(item: Mapping[str, object]) -> str:
+def _located(item: ErrorDetails) -> str:
     """One Pydantic entry as its dotted field location and its own sentence."""
-    location = item.get("loc", ())
-    parts: tuple[object, ...] = cast("tuple[object, ...]", location) if isinstance(location, tuple) else ()
-    field_path = ".".join(str(part) for part in parts if part != "__root__")
-    message = str(item.get("msg", "")).removeprefix("Value error, ").strip()
+    field_path = ".".join(str(part) for part in item["loc"] if part != "__root__")
+    message = item["msg"].removeprefix("Value error, ").strip()
     return f"{field_path}: {message}" if field_path and message else message
 
 

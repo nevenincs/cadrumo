@@ -254,7 +254,9 @@ def _written(row: PilotRow, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> 
     monkeypatch.setenv(TREE_ENV, "abc123")
     write_rows([row])
     (line,) = out.read_text(encoding="utf-8").splitlines()
-    return json.loads(line)
+    written = json.loads(line)
+    assert isinstance(written, dict)
+    return {str(key): value for key, value in written.items()}
 
 
 @pytest.mark.parametrize("word", [PASSED, REFUSED])

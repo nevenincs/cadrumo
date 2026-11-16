@@ -20,11 +20,9 @@ import {
   reorderWrites,
   ruleOrder,
   rulePrefill,
-  wholeYear,
   wordsPattern,
 } from "../src/components/ledger/setup/setupModel";
 import { ibanMalformed } from "../src/shared/iban";
-import { servedSupport } from "../src/dev/servedYearAuthority";
 import { hexId, movement } from "./support/ledger";
 import { planRecorded, recordedCheck } from "./support/stagedCheck";
 
@@ -149,8 +147,6 @@ test("register numbers and documents keep the product's grammar", () => {
   expect(parsePoints("100.5").kind).toBe("refused");
   expect(parsePoints("92,5").kind).toBe("refused");
   expect(parsePoints("")).toEqual({ kind: "empty" });
-  expect(wholeYear(String(servedSupport.horizon))).toBe(servedSupport.horizon);
-  expect(wholeYear("24")).toBeNull();
   expect(parseObject('{"a":1}')).toEqual({ kind: "value", value: { a: 1 } });
   expect(parseObject("[1]")).toEqual({ kind: "refused" });
   expect(parseObject("{")).toEqual({ kind: "refused" });

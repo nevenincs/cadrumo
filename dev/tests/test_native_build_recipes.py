@@ -449,8 +449,8 @@ def test_windows_recipe_provisions_the_component_only_installer_before_pytest() 
     assert selected["cacheVariables"]["CADRUMO_CONFIGURE_PAYLOAD"] == "OFF"
     assert selected["environment"]["CADRUMO_BUILD_DIR"] == "${sourceDir}/build/windows-tests-x64"
     assert _presets("buildPresets")["windows-tests-debug"]["configuration"] == "Debug"
-    workflow = yaml.safe_load((REPO_ROOT / ".github/workflows/release.yml").read_text(encoding="utf-8"))
-    assert any(step.get("run") == "just test-windows" for step in workflow["jobs"]["test-windows-only"]["steps"])
+    workflow = yaml.safe_load((REPO_ROOT / ".github/workflows/native.yml").read_text(encoding="utf-8"))
+    assert any(step.get("run") == "just test-windows" for step in workflow["jobs"]["windows-contracts"]["steps"])
 
 
 @pytest.mark.parametrize("configuration", ("Debug", "Release"))
