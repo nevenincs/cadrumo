@@ -8,7 +8,13 @@ reads a measurement rather than re-deriving one.
 
 ## The three lanes
 
-- **Merge gate** (`merge-gate.yml`) is the only pull request workflow. It runs
+Branches: `feature/tui` is the development branch, where every landing goes and
+which is pushed after each one; a push to it starts no workflow. `main` is the
+release branch, reached only by a promotion pull request from `feature/tui`.
+Release automation reads, proposes and tags `main` alone.
+
+- **Merge gate** (`merge-gate.yml`) is the only pull request workflow, for pull
+  requests into `feature/tui` or `main`. It runs
   two Linux jobs, lint then gate (security scan, registry gate, import
   boundaries, scoped tests, committed sequence goldens); the required check is
   `Check: Merge gate (Linux)`. A pull request reaches the self-hosted runners
@@ -26,7 +32,8 @@ reads a measurement rather than re-deriving one.
   (`HOMEBREW_TAP_TOKEN`, `SCOOP_BUCKET_TOKEN`, `SCOOP_BUCKET_REPOSITORY`),
   then the documentation site.
 - **Release-please** (`release-please.yml`) is the only workflow that runs on
-  a push to `feature/tui` (plus manual dispatch for recovery). It cuts tags and
+  a push, and only on a push to `main` (plus manual dispatch from `main` for
+  recovery; a dispatch from any other ref runs no job). It cuts tags and
   releases with the default token, opens or updates the release pull request
   with the `nevenincs-release` App's token, so that pull request's own events
   run the merge gate, and dispatches `release.yml`'s prove and publish phases.
