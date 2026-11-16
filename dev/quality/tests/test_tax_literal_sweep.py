@@ -68,6 +68,9 @@ What this sweep cannot see, because catching it would drown the findings in posi
 from __future__ import annotations
 
 import ast
+import json
+import re
+from collections import Counter
 from pathlib import Path
 from typing import Final
 
@@ -881,7 +884,42 @@ def test_no_validator_turns_a_valid_client_result_into_an_error() -> None:
     assert not findings, "\n".join(findings)
 
 
-def test_the_tax_code_holds_no_tax_literal() -> None:
+_BASELINE: Final = Path(__file__).resolve().parents[1] / "metadata" / "tax_literal_baseline.json"
+_LINE_SUFFIX: Final = re.compile(r"@\d+$")
+
+
+def _occurrences(found: dict[str, list[str]]) -> Counter[str]:
+    """Each finding keyed by its module and literal, without the line an edit above it moves."""
+    return Counter(f"{path}: {_LINE_SUFFIX.sub('', entry)}" for path, entries in found.items() for entry in entries)
+
+
+def _baseline() -> Counter[str]:
+    return Counter(json.loads(_BASELINE.read_text(encoding="utf-8"))["occurrences"])
+
+
+def test_the_tax_code_gains_no_tax_literal() -> None:
+    """No literal beyond the shrink-only record of those still waiting to move to the registry."""
     found = current()
-    listing = "\n".join(f"{path}: {entry}" for path, entries in sorted(found.items()) for entry in entries)
-    assert not found, f"a tax value belongs to the registry:\n{listing}"
+    grown = _occurrences(found) - _baseline()
+    listing = "\n".join(
+        f"{path}: {entry}"
+        for path, entries in sorted(found.items())
+        for entry in entries
+        if f"{path}: {_LINE_SUFFIX.sub('', entry)}" in grown
+    )
+    assert not grown, f"a tax value belongs to the registry:\n{listing}"
+
+
+def test_the_tax_literal_baseline_only_shrinks() -> None:
+    """A literal that moved to the registry leaves the record in the same change."""
+    gone = _baseline() - _occurrences(current())
+    assert not gone, f"delete these from {_BASELINE.name}, they no longer occur: {sorted(gone)}"
+
+
+def test_the_baseline_reading_drops_only_the_line() -> None:
+    """Planted: the same literal on another line is the same occurrence; a second copy is growth."""
+    once = {"application/x.py": ["code:'200'@47"]}
+    moved = {"application/x.py": ["code:'200'@90"]}
+    twice = {"application/x.py": ["code:'200'@47", "code:'200'@91"]}
+    assert _occurrences(moved) == _occurrences(once)
+    assert _occurrences(twice) - _occurrences(once) == Counter({"application/x.py: code:'200'": 1})
