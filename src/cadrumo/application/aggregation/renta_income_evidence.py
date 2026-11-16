@@ -138,6 +138,19 @@ def settlement_comparison(invoice: Invoice, receipts: Sequence[Transaction]) -> 
     )
 
 
+def _settling_figure_sum(
+    invoice: Invoice, rows: Sequence[Transaction], stated: Callable[[Transaction], Decimal | None]
+) -> Decimal | None:
+    """Sum the figure each row states in the settling direction, or ``None`` when a row states none."""
+    total = Decimal("0")
+    for row in rows:
+        figure = stated(row)
+        if figure is None:
+            return None
+        total += _in_settling_direction(invoice, row, figure)
+    return total
+
+
 def _figure_comparison(
     invoice: Invoice,
     rows: Sequence[Transaction],
@@ -147,29 +160,25 @@ def _figure_comparison(
     eur_stated: Callable[[Transaction], Decimal | None],
     eur_owed: Decimal | None,
 ) -> SettlementComparison | None:
-    """Compare one figure ``rows`` state with the invoice's, by the settlement-currency rule."""
+    """Compare one figure ``rows`` state with the invoice's, by the settlement-currency rule.
+
+    A row that states no figure leaves nothing to compare: an unstated figure is not zero.
+    """
     if all(row.raw.currency == invoice.currency for row in rows):
-        return SettlementComparison(
-            cash=sum(
-                (_in_settling_direction(invoice, row, native_stated(row) or Decimal("0")) for row in rows), Decimal("0")
-            ),
-            owed=native_owed,
-        )
+        native = _settling_figure_sum(invoice, rows, native_stated)
+        return None if native is None else SettlementComparison(cash=native, owed=native_owed)
     if eur_owed is None or any(is_non_eur_without_conversion(row) for row in rows):
         return None
-    return SettlementComparison(
-        cash=round_to_cents(
-            sum((_in_settling_direction(invoice, row, eur_stated(row) or Decimal("0")) for row in rows), Decimal("0"))
-        ),
-        owed=eur_owed,
-    )
+    eur = _settling_figure_sum(invoice, rows, eur_stated)
+    return None if eur is None else SettlementComparison(cash=round_to_cents(eur), owed=eur_owed)
 
 
 def taxable_base_comparison(invoice: Invoice, rows: Sequence[Transaction]) -> SettlementComparison | None:
     """Put the bases ``rows`` state and the base of ``invoice`` in one currency, by the settlement rule.
 
     Bases stated in the invoice's own currency compare as stated. Any other row compares
-    in EUR, and a side with no EUR value leaves nothing to compare.
+    in EUR, and a side with no EUR value leaves nothing to compare. A row that states no
+    base leaves nothing to compare either: an unstated base is not a base of zero.
     """
     return _figure_comparison(
         invoice,

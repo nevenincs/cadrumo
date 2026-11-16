@@ -818,3 +818,10 @@ export type CalendarContracts = {
     result: OverviewReadProjection;
   };
 };
+
+/** The fields of the calendar the desktop host passes on to the window as the
+ * product served them, under the product's own names. */
+export type FilingCalendarPassedOn = Pick<
+  OverviewCalendarSnapshot,
+  "suppressed_entries"
+>;

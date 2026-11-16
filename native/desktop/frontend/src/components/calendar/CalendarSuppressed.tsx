@@ -1,6 +1,6 @@
 import { useId } from "react";
 import { useStrings } from "@/shell/strings";
-import type { CalendarSuppressedEntry } from "@/shell/views";
+import type { OverviewSuppressedEntrySnapshot } from "@/shell/calendarContract";
 
 /**
  * The obligations the calendar holds off its schedule, each with the
@@ -13,7 +13,7 @@ import type { CalendarSuppressedEntry } from "@/shell/views";
 export function CalendarSuppressed({
   entries,
 }: {
-  entries: readonly CalendarSuppressedEntry[];
+  entries: readonly OverviewSuppressedEntrySnapshot[];
 }) {
   const t = useStrings();
   const heading = useId();
