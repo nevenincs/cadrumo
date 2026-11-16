@@ -23,12 +23,9 @@ import {
 } from "../src/components/ledger/assets/assetFields";
 import { shownSuggestions } from "../src/components/ui/suggestions";
 import type { CatalogueInvoiceSnapshot } from "../src/shell/ledgerInvoiceContract";
-import type {
-  KnownCounterparty,
-  KnownText,
-  LedgerRow,
-} from "../src/shell/ledger";
+import type { KnownCounterparty, KnownText } from "../src/shell/ledger";
 import type { CapitalGood } from "../src/shell/ledgerRegisterOperations";
+import type { LedgerTransactionReviewProjection } from "../src/shell/ledgerReadContract";
 
 // What the ledger's own records offer a field. No page is opened.
 
@@ -46,7 +43,9 @@ const invoice = (changes: Partial<CatalogueInvoiceSnapshot>) =>
     ...changes,
   }) as unknown as CatalogueInvoiceSnapshot;
 
-const row = (changes: Partial<LedgerRow["transaction"]>) =>
+const row = (
+  changes: Partial<LedgerTransactionReviewProjection["transaction"]>,
+) =>
   ({
     group_label: null,
     transaction: {
@@ -57,7 +56,7 @@ const row = (changes: Partial<LedgerRow["transaction"]>) =>
       counterparty_identification_state: null,
       ...changes,
     },
-  }) as unknown as LedgerRow;
+  }) as unknown as LedgerTransactionReviewProjection;
 
 const knownText = (text: string, counterparty: string | null = null) =>
   ({ text, uses: 1, last_used: "2020-01-01", counterparty }) as KnownText;

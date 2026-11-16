@@ -3,7 +3,6 @@
 // movement clears only what hides it and leaves the rest of the view alone.
 
 import type { ServedVocabulary } from "../../../shell/ledgerServedVocabulary";
-import type { LedgerRow } from "../../../shell/ledger";
 import {
   NO_FILTERS,
   groupRows,
@@ -14,6 +13,7 @@ import {
   type ReadinessSets,
   type SearchContext,
 } from "./movementsModel";
+import type { LedgerTransactionReviewProjection } from "../../../shell/ledgerReadContract";
 
 /** The filters only the product applies, read from the ledger. */
 const SERVER_KEYS: readonly (keyof MovementFilters)[] = [
@@ -38,7 +38,7 @@ const inForce = (filters: MovementFilters, key: keyof MovementFilters) =>
  * The filters are a conjunction, so one that alone drops the row is one
  * that has to go; the product's own filters drop it through `members`. */
 export function movementHiding(
-  row: LedgerRow,
+  row: LedgerTransactionReviewProjection,
   view: {
     readonly filters: MovementFilters;
     readonly sets: ReadinessSets;

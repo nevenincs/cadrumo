@@ -25,7 +25,6 @@ import {
   type EditSubject,
 } from "../src/components/ledger/editing/editingModel";
 import type { LedgerInvoiceMatchMismatch } from "../src/shell/ledgerInvoiceContract";
-import type { LedgerRow } from "../src/shell/ledger";
 import type { StepReport } from "../src/shell/ledgerApply";
 import {
   EMPTY_STAGE,
@@ -37,6 +36,7 @@ import {
 } from "../src/shell/ledgerStage";
 import { hexId, movement } from "./support/ledger";
 import { planRecorded, recordedCheck } from "./support/stagedCheck";
+import type { LedgerTransactionReviewProjection } from "../src/shell/ledgerReadContract";
 
 // What editing the movements grid makes of typed, pasted and filled text,
 // and how the page counts and reviews what is staged. No page is opened.
@@ -67,7 +67,10 @@ const labels: ChoiceLabels & { mixedShare: (share: string) => string } = {
   noAccount: "Sin cuenta",
   mixedShare: (share) => `Mixto ${share}`,
 };
-const rowSubject = (row: LedgerRow, sealed = false): EditSubject => ({
+const rowSubject = (
+  row: LedgerTransactionReviewProjection,
+  sealed = false,
+): EditSubject => ({
   kind: "row",
   row,
   changes: undefined,

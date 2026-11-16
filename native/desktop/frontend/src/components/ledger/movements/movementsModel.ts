@@ -5,11 +5,6 @@
 // a filter or a sum. The page refines a window this way only once it is
 // read whole; a window read in part is filtered and sorted by the product.
 
-import type {
-  LedgerReviewStatus,
-  LedgerRow,
-  LedgerSortField,
-} from "../../../shell/ledger";
 import { classificationsCarryingBusinessFigures } from "../../../shell/ledgerClassifications";
 import { compareDecimal, sameDecimal } from "../../../shell/ledgerGrammar";
 import { importBatchFilters } from "../../../shell/ledgerImports";
@@ -23,6 +18,11 @@ import type {
   LedgerWindowScope,
   ReadinessSnapshot,
 } from "../../../shell/ledgerWindow";
+import type { LedgerReviewStatus } from "../../../shell/ledgerInvoiceContract";
+import type {
+  LedgerSortField,
+  LedgerTransactionReviewProjection,
+} from "../../../shell/ledgerReadContract";
 
 // ---- Columns -----------------------------------------------------------------
 
@@ -143,7 +143,7 @@ export const statusWidth = (density: "compact" | "comfortable", marks = 0) =>
 /** How many kinds of mark the movements carry beside their status: the
  * likely-duplicate flag, and a state other than active. */
 export function statusMarks(
-  rows: readonly LedgerRow[],
+  rows: readonly LedgerTransactionReviewProjection[],
   duplicates: ReadonlySet<string>,
 ): number {
   const lifecycle = rows.some(
@@ -403,7 +403,7 @@ export function stagedClassifyCount(
 
 /** Whether a movement is foreign and has no euro value: the EUR column
  * says "No rate", never zero. */
-export const lacksRate = (row: LedgerRow) =>
+export const lacksRate = (row: LedgerTransactionReviewProjection) =>
   row.transaction.currency !== "EUR" && row.transaction.value_in_eur === null;
 
 /** What the readiness strip counts, as the last check found the period:
@@ -441,7 +441,7 @@ export type ReadinessSets = {
 };
 
 export function readinessSets(
-  rows: readonly LedgerRow[],
+  rows: readonly LedgerTransactionReviewProjection[],
   snapshot: ReadinessSnapshot | null,
 ): ReadinessSets {
   const issues = new Map<string, string[]>();
@@ -599,7 +599,7 @@ export function activeFilters(filters: MovementFilters): number {
  * `members` holds the rows the product's own filters keep, where any is in
  * force. */
 export function keepsRow(
-  row: LedgerRow,
+  row: LedgerTransactionReviewProjection,
   filters: MovementFilters,
   readiness: ReadinessSets,
   members: ReadonlySet<string> | null,
@@ -642,7 +642,7 @@ export function keepsRow(
 
 /** Whether a movement still waits for its invoice: an active business
  * movement, not a transfer, with none linked. */
-export function needsInvoice(row: LedgerRow): boolean {
+export function needsInvoice(row: LedgerTransactionReviewProjection): boolean {
   const t = row.transaction;
   return awaitsInvoice(
     t.lifecycle_state,
@@ -712,7 +712,7 @@ const AMOUNT_TERM = /^\d+([.,]\d{1,2})?$/;
  * notes, group label or category, its month by name, or one of its figures
  * written with a dot or a comma. */
 export function matchesSearch(
-  row: LedgerRow,
+  row: LedgerTransactionReviewProjection,
   terms: readonly string[],
   context: SearchContext,
 ): boolean {
@@ -799,11 +799,11 @@ export type SortLabels = {
   category: (id: string) => string;
   ivaCategory: (id: string) => string;
   irpfCategory: (id: string) => string;
-  classification: (row: LedgerRow) => string;
+  classification: (row: LedgerTransactionReviewProjection) => string;
   direction: (direction: string) => string;
   lifecycle: (state: string) => string;
   classifiedBy: (source: string) => string;
-  status: (row: LedgerRow) => string;
+  status: (row: LedgerTransactionReviewProjection) => string;
   /** An own account's label; null where the row names none. */
   account: (id: string) => string;
 };
@@ -812,7 +812,7 @@ type SortValue =
   { kind: "text"; text: string } | { kind: "decimal"; text: string };
 
 function sortValue(
-  row: LedgerRow,
+  row: LedgerTransactionReviewProjection,
   key: SortKey,
   labels: SortLabels,
 ): SortValue | null {
@@ -878,10 +878,10 @@ const collator = new Intl.Collator(undefined, { sensitivity: "base" });
 /** The rows in `sort`'s order. An empty value sorts last either way, and
  * ties keep the window's own order, which is the product's. */
 export function sortRows(
-  rows: readonly LedgerRow[],
+  rows: readonly LedgerTransactionReviewProjection[],
   sort: MovementSort,
   labels: SortLabels,
-): LedgerRow[] {
+): LedgerTransactionReviewProjection[] {
   const factor = sort.direction === "asc" ? 1 : -1;
   const keyed = rows.map((row, at) => ({
     row,
@@ -937,7 +937,7 @@ export function normalisedDescription(text: string): string {
 
 /** The value a row is grouped by, or "" where it has none. */
 export function groupValue(
-  row: LedgerRow,
+  row: LedgerTransactionReviewProjection,
   by: GroupingId,
   vocabulary: ServedVocabulary,
 ): string {
@@ -1000,7 +1000,9 @@ function textOfExact(value: Exact): string {
 
 /** The movements' amounts summed per currency and direction, euros first.
  * Currencies are never mixed. */
-export function currencySums(rows: readonly LedgerRow[]): CurrencySum[] {
+export function currencySums(
+  rows: readonly LedgerTransactionReviewProjection[],
+): CurrencySum[] {
   const sums = new Map<
     string,
     { incoming: Exact | null; outgoing: Exact | null; transfer: Exact | null }
@@ -1040,7 +1042,7 @@ export type MovementGroup = {
   /** The grid's key for the group's header row. */
   key: string;
   value: string;
-  rows: LedgerRow[];
+  rows: LedgerTransactionReviewProjection[];
 };
 
 /**
@@ -1051,7 +1053,7 @@ export type MovementGroup = {
  * value is last.
  */
 export function groupRows(
-  rows: readonly LedgerRow[],
+  rows: readonly LedgerTransactionReviewProjection[],
   by: GroupingId,
   options: {
     label: (value: string) => string;
@@ -1064,14 +1066,14 @@ export function groupRows(
   const familyOrder = new Map<string, number>(
     options.vocabulary.categoryFamilies.map(([family], at) => [family, at]),
   );
-  const groups = new Map<string, LedgerRow[]>();
+  const groups = new Map<string, LedgerTransactionReviewProjection[]>();
   for (const row of rows) {
     const value = groupValue(row, by, options.vocabulary);
     const members = groups.get(value);
     if (members) members.push(row);
     else groups.set(value, [row]);
   }
-  const pending = (members: LedgerRow[]) =>
+  const pending = (members: LedgerTransactionReviewProjection[]) =>
     members.filter((row) => row.review_status === "pending").length;
   const entries = [...groups];
   entries.sort(([a, left], [b, right]) => {

@@ -3,12 +3,7 @@
 // preflight of a period. Everything it answers is synthetic.
 
 import { isDirection } from "../shell/ledgerContract";
-import type {
-  JsonObject,
-  JsonValue,
-  LedgerReviewStatus,
-  LedgerTransaction,
-} from "../shell/ledger";
+import type { JsonObject, JsonValue } from "../shell/ledger";
 import {
   LEDGER_UPDATE_FIELDS,
   type LedgerUpdateField,
@@ -35,6 +30,10 @@ import {
 } from "./ledgerRequestFixture";
 import { inPeriod, issues, resolve, reviewStatus } from "./ledgerQueryFixture";
 import { parseCsv } from "./ledgerFileFixture";
+import type {
+  LedgerReviewStatus,
+  LedgerTransactionProjection,
+} from "../shell/ledgerInvoiceContract";
 
 /** The scenario ledger's entry answers over its movements. */
 export function entryOperations(
@@ -93,7 +92,7 @@ export function entryOperations(
     if (movement.transaction.lifecycle_state !== "ACTIVE")
       return refused("Only an active movement can be updated.");
     if (movement.sealed) return refused(SEALED_MESSAGE);
-    const next: LedgerTransaction = { ...movement.transaction };
+    const next: LedgerTransactionProjection = { ...movement.transaction };
     let group = movement.group_label;
     let account = movement.own_account_id;
     for (const field of fields as LedgerUpdateField[]) {
@@ -183,7 +182,7 @@ export function entryOperations(
     values: Record<string, string | null>,
     by: string,
   ): "applied" | "skipped" {
-    const next: LedgerTransaction = { ...movement.transaction };
+    const next: LedgerTransactionProjection = { ...movement.transaction };
     for (const [field, value] of Object.entries(values)) {
       if (field === "classification")
         next.business_classification = value ?? next.business_classification;
@@ -373,7 +372,7 @@ export function entryOperations(
     const key = text(request.idempotency_key);
     const date = text(request.value_date) ?? booked;
     const account = text(request.own_account_id);
-    const facts: LedgerTransaction = {
+    const facts: LedgerTransactionProjection = {
       transaction_id: "",
       date,
       booked_date: booked,
@@ -403,6 +402,10 @@ export function entryOperations(
       m210_income_classification: null,
       usage_ratio_id: text(request.usage_ratio_id),
       prorrata_reference: text(request.prorrata_reference),
+      arrendamiento_ref: text(request.arrendamiento_ref),
+      inmueble_ref: text(request.inmueble_ref),
+      gasto_capital_inmobiliario: text(request.gasto_capital_inmobiliario),
+      link_fields: [],
       purchase_invoice_evidence_id: text(request.purchase_invoice_evidence_id),
       invoice_id: null,
       attachment_ids: [],
@@ -420,7 +423,7 @@ export function entryOperations(
       modified_at: "",
     };
     const result = (
-      transaction: LedgerTransaction,
+      transaction: LedgerTransactionProjection,
       written: boolean,
     ): JsonObject => ({
       outcome: "created",
@@ -440,7 +443,9 @@ export function entryOperations(
         (movement) => movement.idempotency_key === key,
       );
       if (stored) {
-        const same = (Object.keys(facts) as (keyof LedgerTransaction)[])
+        const same = (
+          Object.keys(facts) as (keyof LedgerTransactionProjection)[]
+        )
           .filter(
             (field) =>
               ![

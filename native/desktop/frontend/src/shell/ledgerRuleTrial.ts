@@ -6,10 +6,11 @@
 // says nothing, and with no answer the draft stays and the save waits.
 
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
-import type { LedgerPort, LedgerRow } from "./ledger";
+import type { LedgerPort } from "./ledger";
 import type { LedgerRuleTrialResult } from "./ledgerMovementOperations";
 import { LatestAnswerSession, type LatestAnswer } from "./ledgerLatestAnswer";
 import { readAnswer } from "./ledgerWindow";
+import type { LedgerTransactionReviewProjection } from "./ledgerReadContract";
 
 /** How long typing rests before the pattern is asked about. */
 const REST_MS = 250;
@@ -61,7 +62,7 @@ export class RuleTrialSession extends LatestAnswerSession<
 export function useRuleTrial(
   port: LedgerPort,
   pattern: string,
-  rows: readonly LedgerRow[] | null | undefined,
+  rows: readonly LedgerTransactionReviewProjection[] | null | undefined,
 ): RuleTrialView {
   const ids = useMemo(
     () => (rows ?? []).map((row) => row.transaction.transaction_id),

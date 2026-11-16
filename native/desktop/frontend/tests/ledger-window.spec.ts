@@ -1,9 +1,5 @@
 import { expect, test } from "@playwright/test";
-import type {
-  LedgerListResult,
-  LedgerRow,
-  LedgerStatusResult,
-} from "../src/shell/ledger";
+import type { LedgerResult, LedgerStatusResult } from "../src/shell/ledger";
 import {
   checkReadiness,
   LEDGER_OPEN_WINDOW_ROWS,
@@ -20,22 +16,30 @@ import {
 } from "../src/shell/ledgerWindow";
 import { fakePort, hexId, listPage, movement, PROFILE } from "./support/ledger";
 import { fixtureYear } from "../src/dev/fixtureDates";
+import type { LedgerTransactionReviewProjection } from "../src/shell/ledgerReadContract";
 
 // The period window and the frozen readiness checks. No page is opened.
 
 const Q3 = { year: fixtureYear, code: "3T" } as const;
-const rows = (count: number, from = 0): LedgerRow[] =>
+const rows = (count: number, from = 0): LedgerTransactionReviewProjection[] =>
   Array.from({ length: count }, (_, at) => movement(hexId(`m${from + at}`)));
-const page = (all: LedgerRow[], offset: number, limit = LEDGER_PAGE_SIZE) =>
+const page = (
+  all: LedgerTransactionReviewProjection[],
+  offset: number,
+  limit = LEDGER_PAGE_SIZE,
+) =>
   listPage(
     all.slice(offset, offset + limit),
     all.length,
     offset,
     limit,
-  ) as unknown as LedgerListResult;
+  ) as unknown as LedgerResult<"ledger.list">;
 
 /** Feeds a window the pages it asks for from `all` until it stops. */
-function readAll(window: LedgerWindow, all: LedgerRow[]): LedgerWindow {
+function readAll(
+  window: LedgerWindow,
+  all: LedgerTransactionReviewProjection[],
+): LedgerWindow {
   for (let request = nextPageRequest(window); request;) {
     window = reduceWindow(window, {
       type: "page",

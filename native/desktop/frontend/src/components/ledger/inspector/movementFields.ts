@@ -6,7 +6,6 @@
 
 import type { ComboboxOption } from "@/components/ui/combobox";
 import type { Suggestion } from "@/components/ui/suggestions";
-import type { LedgerRow } from "../../../shell/ledger";
 import { takesChanges } from "../../../shell/ledgerContract";
 import { parseFractionPercent } from "../../../shell/ledgerGrammar";
 import { textLimit } from "../../../shell/ledgerLimits";
@@ -49,6 +48,7 @@ import {
   irpfCategoryOptions,
   ivaCategoryOptions,
 } from "./inspectorWords";
+import type { LedgerTransactionReviewProjection } from "../../../shell/ledgerReadContract";
 
 /** How a field is edited in the inspector: the grid's kinds, and the
  * classification facts the grid has no column for. */
@@ -102,7 +102,7 @@ function parseEntry(
 export type FieldScope = {
   t: Translate;
   locale: string;
-  row: LedgerRow;
+  row: LedgerTransactionReviewProjection;
   changes: StagedRowChanges | undefined;
   /** A finalized declaration cites the movement. */
   sealed: boolean;

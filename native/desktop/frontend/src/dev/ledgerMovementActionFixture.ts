@@ -7,7 +7,7 @@
 // is not active, is refused as the product refuses it. Results are the flat
 // projections the host passes on. Everything it answers is synthetic.
 
-import type { JsonObject, JsonValue, LedgerTransaction } from "../shell/ledger";
+import type { JsonObject, JsonValue } from "../shell/ledger";
 import type {
   LedgerParticipation,
   LedgerRevisionReference,
@@ -21,6 +21,7 @@ import {
   type FixtureMovement,
 } from "./fixtures/ledger";
 import { fixtureInstant } from "@/dev/fixtureDates";
+import type { LedgerTransactionProjection } from "../shell/ledgerInvoiceContract";
 
 /** A request its registered contract would not decode. */
 export class MovementActionInvalid extends Error {}
@@ -474,7 +475,7 @@ export function movementActionOperations(ledger: FixtureLedger, tools: Tools) {
         salt: `${groupId}:${index}`,
       });
       ids.push(id);
-      const child: LedgerTransaction = {
+      const child: LedgerTransactionProjection = {
         ...t,
         transaction_id: id,
         amount,

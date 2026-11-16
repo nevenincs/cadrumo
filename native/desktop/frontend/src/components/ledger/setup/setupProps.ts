@@ -1,8 +1,9 @@
 // What every Setup section is given by the Ledger page.
 
-import type { LedgerPort, LedgerRow } from "../../../shell/ledger";
+import type { LedgerPort } from "../../../shell/ledger";
 import type { LedgerPeriod } from "../../../shell/ledgerGrammar";
 import type { StageEvent, StagedContent } from "../../../shell/ledgerStage";
+import type { LedgerTransactionReviewProjection } from "../../../shell/ledgerReadContract";
 
 export type SetupProps = {
   port: LedgerPort;
@@ -10,7 +11,7 @@ export type SetupProps = {
   reader: string | null;
   locale: string;
   /** The movements the page has loaded, or null where it has none. */
-  rows: readonly LedgerRow[] | null;
+  rows: readonly LedgerTransactionReviewProjection[] | null;
   /** What is staged on the page, and how a section stages more. */
   stage: StagedContent;
   onStage(event: StageEvent): void;

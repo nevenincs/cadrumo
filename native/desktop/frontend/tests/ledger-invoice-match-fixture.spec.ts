@@ -5,9 +5,9 @@ import type {
   CatalogueInvoiceSnapshot,
   LedgerInvoiceMatchPair,
 } from "../src/shell/ledgerInvoiceContract";
-import type { LedgerRow } from "../src/shell/ledger";
 import recorded from "@fixtures/ledger-recordings/ledgerInvoiceMatch.json" with { type: "json" };
 import { catalogueInvoice, hexId, movement } from "./support/ledger";
+import type { LedgerTransactionReviewProjection } from "../src/shell/ledgerReadContract";
 
 // The stand-in stories use for `ledger.invoice.match`, held to what the real
 // backend answered. A test in the owning Python package holds the recording to
@@ -32,7 +32,7 @@ function answeredOrder(scenario: Scenario): Map<string, number> {
 }
 
 function recordsOf(scenario: Scenario): {
-  rows: LedgerRow[];
+  rows: LedgerTransactionReviewProjection[];
   invoices: CatalogueInvoiceSnapshot[];
   numberOf: Map<string, string>;
 } {
@@ -61,7 +61,8 @@ function recordsOf(scenario: Scenario): {
   const rows = scenario.movements.map((entry: Entry) =>
     movement(entry.name as string, {
       amount: entry.amount as string,
-      direction: entry.direction as LedgerRow["transaction"]["direction"],
+      direction:
+        entry.direction as LedgerTransactionReviewProjection["transaction"]["direction"],
       date: entry.on as string,
       description: entry.description as string,
       counterparty: (entry.counterparty as string | null) ?? "",

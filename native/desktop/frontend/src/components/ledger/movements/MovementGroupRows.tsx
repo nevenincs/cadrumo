@@ -1,6 +1,5 @@
 import { useMemo, type RefObject } from "react";
 import type { GridRow } from "@/components/ui/dataGridTypes";
-import type { LedgerRow } from "../../../shell/ledger";
 import { CLASSIFICATION_OF } from "../../../shell/ledgerCommands";
 import { takesClassification } from "../../../shell/ledgerContract";
 import type { ServedVocabulary } from "../../../shell/ledgerServedVocabulary";
@@ -25,8 +24,10 @@ import {
   familyLabel,
   ivaCategoryLabel,
 } from "./movementWords";
+import type { LedgerTransactionReviewProjection } from "../../../shell/ledgerReadContract";
 
-const idOf = (row: LedgerRow) => row.transaction.transaction_id;
+const idOf = (row: LedgerTransactionReviewProjection) =>
+  row.transaction.transaction_id;
 
 function SumLine({ sums, locale }: { sums: CurrencySum[]; locale: string }) {
   const t = useStrings();
@@ -65,7 +66,7 @@ function groupLabelOf(
   locale: string,
   by: GroupingId,
   value: string,
-  first: LedgerRow,
+  first: LedgerTransactionReviewProjection,
 ): string {
   if (value === "") return t(`desktop.ledger.group.empty.${by}`);
   switch (by) {
@@ -116,7 +117,7 @@ export function useMovementGroupRows({
   vocabulary,
   commands,
 }: {
-  sorted: LedgerRow[];
+  sorted: LedgerTransactionReviewProjection[];
   grouping: GroupingId | null;
   collapsed: ReadonlySet<string>;
   /** The window is read whole, so a group's sums and actions are whole. */
@@ -133,7 +134,7 @@ export function useMovementGroupRows({
   const t = useStrings();
   const groups = useMemo(() => {
     if (!grouping) return null;
-    const firstOf = new Map<string, LedgerRow>();
+    const firstOf = new Map<string, LedgerTransactionReviewProjection>();
     for (const row of sorted) {
       const value = groupValue(row, grouping, vocabulary);
       if (!firstOf.has(value)) firstOf.set(value, row);
@@ -149,10 +150,10 @@ export function useMovementGroupRows({
     });
   }, [grouping, sorted, savedView, sort, t, locale, accounts, vocabulary]);
 
-  const gridRows = useMemo<GridRow<LedgerRow>[]>(() => {
+  const gridRows = useMemo<GridRow<LedgerTransactionReviewProjection>[]>(() => {
     if (!groups)
       return sorted.map((row) => ({ kind: "data", key: idOf(row), data: row }));
-    const out: GridRow<LedgerRow>[] = [];
+    const out: GridRow<LedgerTransactionReviewProjection>[] = [];
     for (const group of groups) {
       const first = group.rows[0]!;
       const folded = collapsed.has(group.key);
