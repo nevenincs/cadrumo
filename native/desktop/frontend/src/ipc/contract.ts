@@ -40,7 +40,7 @@ import type {
   ProviderSettingsAnswer,
   ProviderSettingsRecord,
   ProviderSignInSnapshot,
-} from "../shell/providerSettings";
+} from "../shell/providerSettingsContract";
 import type {
   ManagerSignal,
   ManagerStatus,
@@ -1265,6 +1265,10 @@ export interface HostCommands {
     result: ProviderSettingsRecord;
   };
   provider_settings_reset: {
+    args: Authorized<{ provider: string; revision: string }>;
+    result: ProviderSettingsRecord;
+  };
+  provider_sign_out: {
     args: Authorized<{ provider: string; revision: string }>;
     result: ProviderSettingsRecord;
   };

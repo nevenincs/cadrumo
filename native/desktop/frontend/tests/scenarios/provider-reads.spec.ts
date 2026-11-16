@@ -1,9 +1,9 @@
 import { expect, test } from "@playwright/test";
 import type {
   ProviderSettings,
-  ProviderSettingsRecord,
   ProviderSettingsView,
 } from "../../src/shell/providerSettings";
+import type { ProviderSettingsRecord } from "../../src/shell/providerSettingsContract";
 import type { AgentRead } from "../../src/shell/agentViews";
 import { servedLocalLanes } from "../support/servedLocalLanes";
 
@@ -37,6 +37,8 @@ for (const transition of ["profile", "sign-out", "host"] as const)
             source: "profile",
             readiness: "ready",
             revision: "0".repeat(64),
+            consumers: ["assistant"],
+            credential_saved: false,
             reads_off_host: true,
             sign_out_available: false,
           };

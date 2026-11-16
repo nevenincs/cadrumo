@@ -22,12 +22,12 @@ import type { Host } from "./host";
 import type { CallPlan, HostCall } from "./hostCall";
 import { hostCall, observedInvoke } from "./hostCall";
 import { refuseIfEnded, sessionBound } from "./sessionGate";
+import type { ProviderSettings } from "./providerSettings";
 import type {
   ProviderSignInSnapshot,
-  ProviderSettings,
   ProviderSettingsAnswer,
   ProviderSettingsRecord,
-} from "./providerSettings";
+} from "./providerSettingsContract";
 import { tauriLedger } from "./tauriLedger";
 import { tauriModelo } from "./tauriModelo";
 import { tauriSedeView } from "./tauriSedeView";
