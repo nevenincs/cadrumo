@@ -455,6 +455,42 @@ export const FIXTURE_CATALOG: ServedProviderCatalog = {
   providers: DECLARED_LANES.map(lane),
 };
 
+/** How the service answers the catalog: served, busy starting the agent
+ * until the scenario publishes the agent's status, busy while the agent
+ * starts and for a moment after the scenario publishes it ready, or starting
+ * with only the agent's declared catalog until the scenario publishes it
+ * ready, or served with the local lane alone, as on a computer where no
+ * other provider is set up, or with the two local engines' lanes alone, or
+ * with the local lane and one hosted provider's lane that is signed out, or
+ * refused, as `fixtureCatalogRefusal` says. */
+export type FixtureCatalog =
+  | "served"
+  | "busy"
+  | "busy-past-ready"
+  | "declared"
+  | "unsupported"
+  | "local-only"
+  | "engines-only"
+  | "hosted-signed-out"
+  | "unavailable"
+  | "unavailable-unreferenced";
+
+/** The made-up reference of the service's log line a refused catalog
+ * carries, in the hex and hyphen form the service mints. */
+export const FIXTURE_CATALOG_LOG_REF = "0f1e2d3c-4b5a-4968-8776-655443322110";
+
+/** The refusal the host hands the window for a catalog the scenario has the
+ * service refuse as unavailable, with its log line's reference or without
+ * one, as the host relays it; null for a catalog the service answers. */
+export function fixtureCatalogRefusal(catalog: string): Error | null {
+  if (catalog !== "unavailable" && catalog !== "unavailable-unreferenced")
+    return null;
+  return Object.assign(new Error("agent_catalog_unavailable"), {
+    code: "agent_catalog_unavailable",
+    ...(catalog === "unavailable" ? { log_ref: FIXTURE_CATALOG_LOG_REF } : {}),
+  });
+}
+
 /** What a scenario makes the made-up service say of each local engine, by
  * engine token: the answer exactly as written, so a scenario can also state
  * one that pairs its fields outside the contract. Null states none was
