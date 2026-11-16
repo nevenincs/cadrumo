@@ -819,9 +819,8 @@ export type CalendarContracts = {
   };
 };
 
-/** The fields of the calendar the desktop host passes on to the window as the
- * product served them, under the product's own names. */
-export type FilingCalendarPassedOn = Pick<
-  OverviewCalendarSnapshot,
-  "suppressed_entries"
->;
+/** The calendar the desktop host serves the window: the product's snapshot
+ * under its own names, less what the host withholds. */
+export type FilingCalendarServed = Omit<OverviewCalendarSnapshot, "events"> & {
+  events: Omit<OverviewCalendarEventSnapshot, "source_url">[];
+};

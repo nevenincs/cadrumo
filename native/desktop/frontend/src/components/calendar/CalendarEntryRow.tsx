@@ -51,8 +51,8 @@ export const CalendarEntryRow = memo(function CalendarEntryRow({
   const name = t("desktop.calendar.modelo", { modelo: entry.modelo });
   const notes = [
     earliest,
-    t(`desktop.calendar.local.${entry.local_filing_state}`),
-    t(`desktop.calendar.aeat.${entry.aeat_submission_state}`),
+    t(`desktop.calendar.local.${entry.filing_evidence.local_filing_state}`),
+    t(`desktop.calendar.aeat.${entry.filing_evidence.aeat_submission_state}`),
     !unknown && entry.adjusted_closes_on !== entry.closes_on
       ? t("desktop.calendar.moved", {
           date: short.format(day(entry.closes_on)),

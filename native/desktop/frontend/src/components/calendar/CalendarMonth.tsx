@@ -63,18 +63,10 @@ export function CalendarMonth({
       date: formats.short.format(day(span.to)),
     });
     const days = closeUnknown(bar.entry)
-      ? bar.entry.opens_on === null
-        ? noted(t, earliest, t("desktop.calendar.window_unknown"))
-        : span.from === span.to
-          ? earliest
-          : noted(t, formats.short.format(day(span.from)), earliest)
-      : bar.entry.opens_on === null
-        ? noted(
-            t,
-            formats.short.format(day(span.to)),
-            t("desktop.calendar.window_unknown"),
-          )
-        : formats.short.formatRange(day(span.from), day(span.to));
+      ? span.from === span.to
+        ? earliest
+        : noted(t, formats.short.format(day(span.from)), earliest)
+      : formats.short.formatRange(day(span.from), day(span.to));
     return t("desktop.calendar.window_label", {
       modelo: t("desktop.calendar.modelo", { modelo: bar.entry.modelo }),
       period: bar.entry.period,
