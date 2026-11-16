@@ -181,5 +181,7 @@ change that produced it.
   `actions/cache` (through `setup-uv` and `setup-node`) and
   `lukka/get-cmake`, which the native lane's desktop job uses.
 - The workflow token's default permission is read-only.
-- The repository variable `CADRUMO_PACKAGE_AGENT_SOURCE_DIR` names the
-  cadrumo-agent checkout on each self-hosted runner that builds the desktop.
+- The repository variables `CADRUMO_PACKAGE_AGENT_SOURCE_DIR_LINUX` and
+  `CADRUMO_PACKAGE_AGENT_SOURCE_DIR_WINDOWS` name the cadrumo-agent checkout on
+  the Linux and the Windows self-hosted runner; one path cannot serve both
+  machines. Each job passes its own as `CADRUMO_PACKAGE_AGENT_SOURCE_DIR`.
