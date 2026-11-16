@@ -164,6 +164,7 @@ def build_modelo_workbench_read_ports(bucket_id: str, operation: PinnedAuthority
             unit, snapshot, ports=ports
         ),
         observations=ports.observation_repository,
+        store_epoch=objects.content_epoch,
     )
 
 

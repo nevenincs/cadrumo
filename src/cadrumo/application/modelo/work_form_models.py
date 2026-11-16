@@ -418,7 +418,8 @@ class ModeloFormField(ModeloFormBase):
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _derived_from_the_field_itself(self) -> ModeloFormField:
-        derived = dict(self)
+        # ``dict(self)`` would first look the model up for ``keys``; pydantic answers that miss slowly.
+        derived = dict(iter(self))
         if self.edit_address != _edit_address_of(self.address, self.editability, self.bindings):
             raise ValueError("a field's edit address is the one its own address, editability and bindings give")
         if self.confirmable is not _confirmable_of(derived):
@@ -436,7 +437,7 @@ class ModeloFormField(ModeloFormBase):
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _derived_edit_values_match(self) -> ModeloFormField:
-        derived = dict(self)
+        derived = dict(iter(self))
         if (self.takes_typed_value, self.clearable, self.removable) != (
             _takes_typed_value_of(derived),
             _clearable_of(derived),
