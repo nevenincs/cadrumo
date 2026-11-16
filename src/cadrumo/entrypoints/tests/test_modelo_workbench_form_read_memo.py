@@ -23,7 +23,11 @@ from typing import Any, cast, override
 from uuid import UUID, uuid4
 
 import pytest
+from sqlalchemy import event
+from sqlalchemy.engine import Engine
 
+from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+from ...adapters.persistence.storage.secure_object_namespaces import OPERATION_SECURE_REFERENCE_NAMESPACE
 from ...application.modelo.edit_models import (
     ModeloEditScalarAddressV1,
     ModeloEditScalarIntentKind,
@@ -45,6 +49,7 @@ from ...application.operations.models import OperationIdentity, OperationRequest
 from ...application.operations.owner import OperationExecutorContext
 from ...application.workbench_capture_memory import WorkbenchCaptureMemoryOwner, WorkbenchMemoSlot
 from ...core.casilla_id import validated_casilla_id
+from ...core.classification.policies import SensitivityClass
 from ...core.external_constants import OutputLanguage
 from ...core.hashing import content_hash_hex
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -290,3 +295,26 @@ def test_the_form_read_takes_no_input_the_key_does_not_name() -> None:
 
     assert parameters == _FORM_READ_PARAMETERS, "a new form read input belongs in the memo key first"
     assert admission <= _FORM_READ_PARAMETERS
+
+
+def test_the_namespace_the_store_epoch_leaves_out_is_one_no_form_read_queries(reader: _Reader) -> None:
+    namespace = OPERATION_SECURE_REFERENCE_NAMESPACE.namespace
+    queried: list[str] = []
+
+    def observe(_conn: object, _cursor: object, statement: str, parameters: object, *_rest: object) -> None:
+        if namespace in repr(parameters) and "NOT IN" not in statement.upper():
+            queried.append(statement)
+
+    event.listen(Engine, "before_cursor_execute", observe)
+    try:
+        reader.read()
+        read_queries = list(queried)
+        secure_object_repository_for_bucket(reader.work.work_unit.bucket_id).load(
+            namespace, "0" * 64, expected_class=SensitivityClass.FINANCIAL, max_supported_version=1
+        )
+    finally:
+        event.remove(Engine, "before_cursor_execute", observe)
+
+    assert reader.builds == 1
+    assert read_queries == []
+    assert queried, "a load of that namespace is seen, so the empty read above is evidence"

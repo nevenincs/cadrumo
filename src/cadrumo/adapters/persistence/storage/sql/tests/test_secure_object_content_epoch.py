@@ -53,3 +53,18 @@ def test_an_insert_a_rewrite_and_a_deletion_in_any_namespace_each_move_the_epoch
         epochs = [empty, inserted, rewritten, elsewhere]
         assert len(set(epochs)) == len(epochs)
         assert deleted == rewritten, "removing the only row added since restores the store it was"
+
+
+def test_a_write_to_an_excluded_namespace_leaves_the_epoch_and_any_other_moves_it(tmp_path: Path) -> None:
+    excluded = frozenset({_OTHER_NAMESPACE})
+    with ephemeral_secure_repo(tmp_path, "epoch.db") as (_path, _engine, repo):
+        repo.save_many((_write("alpha", b"one"),))
+        before = repo.content_epoch(excluding=excluded)
+        repo.save_many((_write("beta", b"one", namespace=_OTHER_NAMESPACE),))
+
+        assert repo.content_epoch(excluding=excluded) == before
+        assert repo.content_epoch() != before
+
+        repo.save_many((_write("alpha", b"two"),))
+
+        assert repo.content_epoch(excluding=excluded) != before

@@ -14,7 +14,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
-from functools import cached_property
+from functools import cached_property, partial
 from typing import TYPE_CHECKING
 from uuid import UUID
 
@@ -120,6 +120,7 @@ def build_modelo_workbench_read_ports(bucket_id: str, operation: PinnedAuthority
     """Bind the repositories one declaration's workbench reads from to the worker's profile."""
     from ..adapters.persistence.profile.own_accounts import OwnAccountRepository
     from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+    from ..adapters.persistence.storage.secure_object_namespaces import OPERATION_SECURE_REFERENCE_NAMESPACE
     from ..application.modelo.calculation_actions import calculation_reconciliation_source_needs
     from ..application.modelo.export_ports import M303ArrivalPorts
     from ..application.modelo.profile_readiness_gate import load_modelo_work_profile
@@ -129,6 +130,8 @@ def build_modelo_workbench_read_ports(bucket_id: str, operation: PinnedAuthority
     from .calculation_revision_composition import bind_calculation_revision_persistence_from_profile
 
     objects = secure_object_repository_for_bucket(bucket_id)
+    # Every operation, this read included, keeps its request and result there; no form input is.
+    unread = frozenset({OPERATION_SECURE_REFERENCE_NAMESPACE.namespace})
     calculation_binding = bind_calculation_revision_persistence_from_profile(
         bucket_id=bucket_id,
         objects=objects,
@@ -164,7 +167,7 @@ def build_modelo_workbench_read_ports(bucket_id: str, operation: PinnedAuthority
             unit, snapshot, ports=ports
         ),
         observations=ports.observation_repository,
-        store_epoch=objects.content_epoch,
+        store_epoch=partial(objects.content_epoch, excluding=unread),
     )
 
 

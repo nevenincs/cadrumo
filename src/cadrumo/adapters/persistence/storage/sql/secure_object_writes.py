@@ -187,12 +187,13 @@ class SecureObjectWriteOperations:
             ).all()
         return {object_key: payload_hash for object_key, payload_hash in rows}
 
-    def content_epoch(self) -> str:
+    def content_epoch(self, *, excluding: frozenset[str] = frozenset()) -> str:
         """Return a digest that changes whenever any stored object or date-index row of this store changes.
 
         A decryption-free scan of each row's identity, revision and hashes in one read transaction: an
         insert, an update, a deletion or a revision change of any object in any namespace yields another
         epoch, so a reader keyed on it never serves a result computed from rows that have since changed.
+        ``excluding`` names namespaces the reader provably never reads, whose rows the digest leaves out.
         """
         self._check_session_freshness()
         digest = hashlib.sha256()
@@ -204,7 +205,9 @@ class SecureObjectWriteOperations:
                     secure_objects_table.c.revision_id,
                     secure_objects_table.c.payload_hash,
                     secure_objects_table.c.ciphertext_hash,
-                ).order_by(secure_objects_table.c.id)
+                )
+                .where(secure_objects_table.c.namespace.not_in(sorted(excluding)))
+                .order_by(secure_objects_table.c.id)
             ).all()
             dated = session.execute(
                 select(
