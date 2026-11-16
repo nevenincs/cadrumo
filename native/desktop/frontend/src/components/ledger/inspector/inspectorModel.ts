@@ -7,10 +7,7 @@
 
 import type { LedgerLlmSuggestion } from "../../../shell/ledgerMovementOperations";
 import type { LedgerStagedRowAnswer } from "../../../shell/ledgerMovementCheckContract";
-import {
-  FIELDS_DROPPED_BY_PERSONAL,
-  takesChanges,
-} from "../../../shell/ledgerContract";
+import { takesChanges } from "../../../shell/ledgerContract";
 import { takesBusinessShare } from "../../../shell/ledgerClassifications";
 import { periodsHolding } from "../../../shell/ledgerPeriods";
 import type { StagedCheck } from "../../../shell/ledgerStagedCheck";
@@ -153,11 +150,6 @@ export type SetForAllField = (typeof SET_FOR_ALL_FIELDS)[number];
 export type SkipReason =
   "not_active" | "sealed" | "sealed_unread" | "transfer" | "personal";
 
-const TAX_SETS: ReadonlySet<SetForAllField> = new Set([
-  "category_id",
-  "iva_category",
-  "irpf_category",
-]);
 /** Why `field` set on `row` would be skipped, judged on the movement as it
  * will be once what is staged on it is saved. */
 export function setSkip(
@@ -172,12 +164,13 @@ export function setSkip(
   if (!takesChanges(row.transaction.lifecycle_state)) return "not_active";
   if (sealed.has(id)) return "sealed";
   if (unread?.has(id)) return "sealed_unread";
-  if (!TAX_SETS.has(field)) return null;
-  const skip = check.rows.get(id)?.tax_set_skip ?? null;
-  return skip === "personal" &&
-    !(FIELDS_DROPPED_BY_PERSONAL as readonly string[]).includes(field)
-    ? null
-    : skip;
+  // The ledger serves the exact fields a set for all leaves out of this
+  // movement, and why; the window keeps no list of its own.
+  const answer = check.rows.get(id);
+  return answer &&
+    (answer.tax_set_skipped_fields as readonly string[]).includes(field)
+    ? answer.tax_set_skip
+    : null;
 }
 
 export type SetForAll = {

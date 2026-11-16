@@ -257,6 +257,48 @@ test("set for all judges a movement as staged: a staged Personal skips tax field
   expect(found.skipped).toEqual({ personal: 1 });
 });
 
+test("set for all leaves out exactly the fields the ledger serves for a movement", () => {
+  const row = movement(hexId("srv"), { business_classification: "PERSONAL" });
+  const id = row.transaction.transaction_id;
+  const recorded = checkOf(EMPTY_CONTENT, [row]);
+  const answer = recorded.rows.get(id)!;
+  // Whatever the window would guess from the classification, the served
+  // field list decides: here the ledger leaves out the IVA category only.
+  const check = {
+    ...recorded,
+    rows: new Map([
+      [
+        id,
+        {
+          ...answer,
+          tax_set_skip: "personal" as const,
+          tax_set_skipped_fields: ["iva_category" as const],
+        },
+      ],
+    ]),
+  };
+  const context = { check, sealed: NONE, visible: new Set([id]) };
+  const rows = new Map([[id, row]]);
+  const iva = setForAll(
+    "iva_category",
+    "domestic_general",
+    [id],
+    rows,
+    context,
+  );
+  expect(iva.cells).toEqual([]);
+  expect(iva.skipped).toEqual({ personal: 1 });
+  const category = setForAll(
+    "category_id",
+    "office_supplies",
+    [id],
+    rows,
+    context,
+  );
+  expect(category.cells.map((cell) => cell.id)).toEqual([id]);
+  expect(category.skipped).toEqual({});
+});
+
 test("set-for-all cells plan as one bulk save", () => {
   const rows = Array.from({ length: 12 }, (_, at) =>
     movement(hexId(`r${at}`), { business_classification: "BUSINESS" }),

@@ -60,7 +60,7 @@ def _terminal_integrity_verdict(current: BaseException) -> PreconditionVerdict |
     """Return the terminal verdict of a stored record that failed its integrity check."""
     # Imported here: the revision module pulls in the typed registry, which the
     # runtime client reaches through this module's importers but never evaluates.
-    from ..domain.modelos.calculation_revision import LedgerFilingCoverageError
+    from ..domain.modelos.errors import LedgerFilingCoverageError
 
     records = {**_TERMINAL_INTEGRITY_RECORDS, LedgerFilingCoverageError: _LEDGER_FILING_COVERAGE_RECORD}
     for integrity_class, (precondition, record) in records.items():

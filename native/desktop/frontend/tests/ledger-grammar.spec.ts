@@ -19,7 +19,6 @@ import {
   compareDecimal,
   copyAmount,
   copyPercent,
-  decadeYears,
   parseAmount,
   parseDecimal,
   parseFractionPercent,
@@ -62,6 +61,9 @@ function verdict(parsed: Parsed<string | number>): Expected {
   if (parsed.kind === "refused") return parsed.refusal.key;
   return String(parsed.value);
 }
+
+/** The years a typed ledger year takes, as the backend served them. */
+const servedYears = servedLimits.entry_years;
 
 test("amounts take a dot decimal to the cent and refuse every other shape", () => {
   const cases: [string, Expected][] = [
@@ -282,7 +284,36 @@ test("a year is four digits, whichever it is, and period tokens are the product'
     ["twenty", "year_not_a_number"],
   ];
   for (const [raw, expected] of years)
-    expect(verdict(parseYear(raw)), raw).toBe(expected);
+    expect(verdict(parseYear(raw, servedYears)), raw).toBe(expected);
+});
+
+test("a typed year is held to the year window served, never to one of its own", () => {
+  // The window served is the four-digit year the backend's year type admits.
+  expect(servedYears).toEqual({
+    earliest: servedYearBounds.first,
+    latest: servedYearBounds.last,
+  });
+  // A narrower window, served or not, is the one a year is held to: a year
+  // of four digits outside it is refused.
+  const narrow = {
+    earliest: servedSupport.floor,
+    latest: servedSupport.horizon,
+  };
+  const cases: [number, Expected][] = [
+    [narrow.earliest, String(narrow.earliest)],
+    [narrow.latest, String(narrow.latest)],
+    [narrow.earliest - 1, "year_not_a_number"],
+    [narrow.latest + 1, "year_not_a_number"],
+  ];
+  for (const [year, expected] of cases)
+    expect(verdict(parseYear(String(year), narrow)), String(year)).toBe(
+      expected,
+    );
+  // With no window served a year cannot be checked yet.
+  expect(verdict(parseYear(String(narrow.latest), null))).toBe(
+    "limits_unavailable",
+  );
+  expect(verdict(parseYear("", null))).toBe(null);
 });
 
 test("the periods held are the ones served, with their neighbours across year ends", () => {
@@ -382,28 +413,29 @@ test("the periods that hold a day and a span are the ones the backend answered",
   }
 });
 
-test("the year field steps by one and by ten and stays on years that can be written", () => {
-  // Stepping is arithmetic on any written year, inside the support envelope or
-  // far from it; only the four-digit edges hold it.
+test("the year field steps by one and by ten inside the served window only", () => {
+  const { earliest, latest } = servedYears;
   const inside = servedSupport.horizon;
-  const outside = servedSupport.horizon + 169;
-  expect(stepYear(inside, 1)).toBe(inside + 1);
-  expect(stepYear(inside, -10)).toBe(inside - 10);
-  expect(stepYear(servedSupport.floor - 37, -10)).toBe(
+  expect(stepYear(inside, 1, servedYears)).toBe(inside + 1);
+  expect(stepYear(inside, -10, servedYears)).toBe(inside - 10);
+  expect(stepYear(servedSupport.floor - 37, -10, servedYears)).toBe(
     servedSupport.floor - 47,
   );
-  expect(stepYear(outside, 10)).toBe(outside + 10);
-  const { first, last } = servedYearBounds;
-  expect(stepYear(first + 5, -10)).toBe(first + 5);
-  expect(stepYear(last - 4, 10)).toBe(last - 4);
-  const decade = inside - (inside % 10);
-  expect(decadeYears(inside)).toEqual(
-    Array.from({ length: 10 }, (_, at) => decade + at),
-  );
-  expect(decadeYears(decade + 3)[0]).toBe(decade);
-  expect(decadeYears(last - 4).at(-1)).toBe(last);
-  expect(decadeYears(first)[0]).toBe(first);
-  expect(decadeYears(outside - (outside % 10))).toHaveLength(10);
+  expect(stepYear(earliest, -1, servedYears)).toBeNull();
+  expect(stepYear(earliest + 5, -10, servedYears)).toBeNull();
+  expect(stepYear(latest, 1, servedYears)).toBeNull();
+  expect(stepYear(latest - 4, 10, servedYears)).toBeNull();
+  expect(stepYear(latest - 4, 4, servedYears)).toBe(latest);
+  // A narrower window stops the step at its own edges.
+  const narrow = {
+    earliest: servedSupport.floor,
+    latest: servedSupport.horizon,
+  };
+  expect(stepYear(narrow.earliest, -1, narrow)).toBeNull();
+  expect(stepYear(narrow.latest, 1, narrow)).toBeNull();
+  expect(stepYear(narrow.earliest, 1, narrow)).toBe(narrow.earliest + 1);
+  // With no window served there is nowhere to step.
+  expect(stepYear(inside, 1, null)).toBeNull();
 });
 
 test("a period's list clauses are its token and its year", () => {
