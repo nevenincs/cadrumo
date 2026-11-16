@@ -19,18 +19,27 @@ def _git_ancestor(directory: Path) -> Path | None:
     return None
 
 
+HOSTED_ROOT_BASE_VARIABLE = "CADRUMO_DEV_AGENT_HOSTED_ROOT"
+"""The documented directory, outside every Git checkout, that holds the hosted roots of tests starting the real agent."""
+
+
 @pytest.fixture
 def outside_git_path() -> Iterator[Path]:
-    r"""Yield a fresh directory under ``%LOCALAPPDATA%\Temp`` and remove it afterwards.
+    """Yield a fresh directory under ``CADRUMO_DEV_AGENT_HOSTED_ROOT`` and remove it afterwards.
 
     The agent refuses a hosted root with a ``.git`` entry at or above it, and
-    the test run's own temporary directory sits inside the checkout, so a
-    test that starts the agent keeps its roots here instead.
+    the run's storage root and pinned temporary directory both sit inside the
+    checkout, so a test that starts the agent keeps its roots in the directory
+    the operator names for it in ``env/.env.example``.
     """
-    local = os.environ.get("LOCALAPPDATA", "").strip()
-    if not local:
-        pytest.fail(r"LOCALAPPDATA is not set; the agent's test roots live in %LOCALAPPDATA%\Temp", pytrace=False)
-    base = Path(local) / "Temp"
+    configured = os.environ.get(HOSTED_ROOT_BASE_VARIABLE, "").strip()
+    if not configured or not Path(configured).is_absolute():
+        pytest.fail(
+            f"{HOSTED_ROOT_BASE_VARIABLE} must name an absolute directory outside every Git checkout "
+            "for tests that start the real agent",
+            pytrace=False,
+        )
+    base = Path(configured)
     base.mkdir(parents=True, exist_ok=True)
     directory = Path(tempfile.mkdtemp(prefix="cadrumo-agent-test-", dir=base)).resolve()
     try:
