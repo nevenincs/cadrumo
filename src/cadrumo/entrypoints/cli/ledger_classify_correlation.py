@@ -24,7 +24,7 @@ from ...application.ledger.operator_iva_contracts import (
 )
 from ...application.ledger.transaction_projection import LedgerTransactionProjection
 from ...core.operations import OperationEffect, OperationTerminalCondition
-from ...domain.transactions.enums import BusinessClassification
+from ...domain.transactions.enums import BusinessClassification, takes_business_share
 
 
 def classification_fields_mismatch(
@@ -88,9 +88,7 @@ def correlate_classification_success(
     prefix = transaction_id.strip().lower()
     expected_classification = classification.value
     expected_business_pct = (
-        display_decimal(business_pct)
-        if classification is BusinessClassification.MIXED and business_pct is not None
-        else None
+        display_decimal(business_pct) if takes_business_share(classification) and business_pct is not None else None
     )
     expected_effect = OperationEffect.UPDATED if projection.bucket_event_ids else OperationEffect.NONE
     invalid = classification_fields_mismatch(

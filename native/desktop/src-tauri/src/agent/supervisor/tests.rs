@@ -612,6 +612,7 @@ fn provider_settings_status(
             crate::shell::provider_settings::read_status(
                 || supervisor.administer(serde_json::json!({"action":"status"}), None),
                 Duration::ZERO,
+                crate::shell::provider_settings::STATUS_BUSY_PATIENCE,
             )
         },
     )
@@ -711,6 +712,7 @@ fn administration_waiting_on_a_start_that_fails_is_released_with_its_refusal() {
                     crate::shell::provider_settings::read_status(
                         || supervisor.administer(serde_json::json!({"action":"status"}), None),
                         Duration::ZERO,
+                        crate::shell::provider_settings::STATUS_BUSY_PATIENCE,
                     )
                 },
             )
