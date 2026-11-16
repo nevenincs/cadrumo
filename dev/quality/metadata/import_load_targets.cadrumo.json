@@ -1813,6 +1813,7 @@
         "cadrumo.application.operator_output.emit",
         "cadrumo.application.operator_output.result_document",
         "cadrumo.application.operator_output.sandbox_notice",
+        "cadrumo.application.operator_output.text_transport",
         "cadrumo.application.operator_surface",
         "cadrumo.application.operator_surface.action_resolution",
         "cadrumo.application.operator_surface.action_target_operations",

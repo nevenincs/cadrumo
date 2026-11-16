@@ -27,13 +27,16 @@ from ..core.tax_domain import TaxDomain
 from ..domain.auth.apoderamientos.catalogue import load_default_catalogue
 from ..domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ..domain.calculations.registry.authority_artifact import AuthorityGenerationPin
-from ..domain.calculations.registry.query_reports import ModeloCasillasReport, ModeloListRow
+from ..domain.calculations.registry.query_reports import ModeloBindingsReport, ModeloCasillasReport, ModeloListRow
 from ..domain.calculations.registry.schema_input_kind import InputKind
 from ..domain.portals.categories import PortalCategory
 from ..domain.portals.metadata import PortalMetadata
 from .auth.output import AuthProviderRow, AuthProvidersResult
 from .modelo.registry_discovery import (
     declared_modelo_period_tokens,
+    registry_bindings,
+    registry_bindings_for_registry_scope,
+    registry_bindings_for_year,
     registry_casilla,
     registry_casilla_for_registry_scope,
     registry_casillas,
@@ -376,6 +379,33 @@ def describe_casilla(
         binding=report.binding,
         formula_id=report.formula_id,
         formula_expression=dict(report.formula_expression) if report.formula_expression is not None else None,
+    )
+
+
+def list_bindings(
+    modelo: str,
+    *,
+    year: int | None = None,
+    period: str | None = None,
+    as_of: date | None = None,
+    operation: PinnedAuthorityOperation,
+) -> ModeloBindingsReport:
+    """List the bindings of one modelo revision, scoped as every other registry read is scoped.
+
+    A filing year alone selects that year's revision; a year with a period
+    composes the exact registry scope; neither leaves the revision to the
+    period token and ``as_of``.
+    """
+    refuse_ceded_autonomic_modelo(modelo)
+    if year is None:
+        return registry_bindings(modelo, period=period, as_of=as_of, operation=operation)
+    if period is None or not period.strip():
+        return registry_bindings_for_year(modelo, filing_year=year, as_of=as_of, operation=operation)
+    scope = _registry_scope(modelo, filing_year=year, period=period, operation=operation)
+    if scope is None:
+        raise DiscoveryScopeIncompleteError
+    return registry_bindings_for_registry_scope(
+        modelo, filing_year=scope.filing_year, period=scope.period, as_of=as_of, operation=operation
     )
 
 

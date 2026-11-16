@@ -155,11 +155,6 @@ def _runtime_action_target_reconciliation(graph: CommandSpecGraph, command_key: 
     )
 
 
-def notice_lines(notices: Sequence[Notice]) -> tuple[str, ...]:
-    """Render the notice channel into the text transport's corresponding rows."""
-    return tuple(f"notice\t{notice.code}\t{notice.message}" for notice in notices)
-
-
 def _format_name(ctx: typer.Context) -> str:
     root = ctx.find_root()
     state = root.obj if isinstance(root.obj, dict) else {}
@@ -313,7 +308,9 @@ def emit_envelope(
         return
     rendered_lines = tuple(lines)
     if not metadata_only:
-        rendered_lines = (*rendered_lines, *notice_lines(supplied))
+        from cadrumo.application.operator_output.text_transport import notice_lines, with_sandbox_banner
+
+        rendered_lines = with_sandbox_banner((*rendered_lines, *notice_lines(supplied)))
     rendered = render_command_output(format_name=output_format, payload=result, lines=rendered_lines)
     if rendered.text:
         typer.echo(rendered.text)
@@ -322,7 +319,6 @@ def emit_envelope(
 __all__ = [
     "capture_runtime_error_context",
     "emit_envelope",
-    "notice_lines",
     "resolve_cli_precondition_action",
     "runtime_error_context",
 ]

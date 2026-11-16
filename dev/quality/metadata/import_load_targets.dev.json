@@ -180,6 +180,7 @@
         "dev.acceptance.persona_table.coverage",
         "dev.acceptance.persona_table.credential_guard",
         "dev.acceptance.persona_table.diff",
+        "dev.acceptance.persona_table.export_carriers",
         "dev.acceptance.persona_table.export_check",
         "dev.acceptance.persona_table.export_readback",
         "dev.acceptance.persona_table.export_text",

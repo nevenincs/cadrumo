@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { windowFixture } from "../support/windowFixtures";
 import { readFileSync } from "node:fs";
-import type { ImputationElection } from "../../src/shell/profileHousehold";
+import type { ProfileImputationElectionReadProjection } from "../../src/shell/profileContract";
 import { label } from "../support/strings";
 
 // The imputation election element in the Renta's Sources view, shown because
@@ -11,7 +11,10 @@ import { label } from "../support/strings";
 // of the window.
 
 type Served = {
-  reads: Record<string, Record<string, ImputationElection>>;
+  reads: Record<
+    string,
+    Record<string, ProfileImputationElectionReadProjection>
+  >;
   refusals: Record<string, Record<string, { refusal_words: string }>>;
 };
 const served = JSON.parse(

@@ -237,11 +237,14 @@ pub async fn provider_settings_status(
     state: State<'_, Arc<AgentHost>>,
 ) -> Result<Status, CommandFailure> {
     let host = state.inner().clone();
+    // The status is not waited for while the service starts the agent: the
+    // window draws the busy answer at once and reads again when the service
+    // publishes the agent ready, which it does only after admission.
     let read = tauri::async_runtime::spawn_blocking({
         let host = host.clone();
         move || {
             when_admitted(
-                || host.await_admin(),
+                || host.admin_now(),
                 || {
                     read_status(
                         || host.administer(json!({"action":"status"}), None),

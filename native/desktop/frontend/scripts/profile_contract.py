@@ -39,7 +39,10 @@ _HEADER = """\
 """
 
 #: The profile definitions whose request and result the window reads, by definition id.
-PROFILE_DEFINITIONS: tuple[str, ...] = ("user-profile.record-groups",)
+PROFILE_DEFINITIONS: tuple[str, ...] = (
+    "user-profile.imputation-election.read",
+    "user-profile.record-groups",
+)
 
 
 def _model_roots() -> list[tuple[str, str, type[BaseModel]]]:

@@ -14,14 +14,18 @@ import pytest
 from pydantic import BaseModel
 
 from ...core.modelo import Modelo
+from ...core.period import Period
 from ...core.tax_domain import TaxDomain
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.schema_input_kind import InputKind
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...domain.portals.categories import PortalCategory
 from ...domain.portals.errors import PortalRegistryError
 from ...domain.portals.registry import PORTAL_REGISTRY
 from .. import reference_catalogue as catalogue
 from ..modelo.registry_discovery import (
+    registry_bindings_for_scope,
+    registry_bindings_for_year,
     registry_casilla,
     registry_casilla_for_registry_scope,
     registry_casillas,
@@ -146,6 +150,7 @@ def test_a_ceded_autonomic_tax_is_redirected_before_any_registry_lookup(
         lambda: catalogue.list_casillas(modelo, operation=operation),
         lambda: catalogue.describe_casilla(modelo, "01", operation=operation),
         lambda: catalogue.list_formulas(modelo, operation=operation),
+        lambda: catalogue.list_bindings(modelo, operation=operation),
     ):
         with pytest.raises(catalogue.CededAutonomicModeloError) as refused:
             call()
@@ -410,3 +415,27 @@ def test_a_pinned_reference_read_lets_the_readers_refusal_through_unchanged() ->
         catalogue.read_pinned_reference(
             lambda pinned: catalogue.describe_modelo(_CEDED[0], year=None, period=None, as_of=None, operation=pinned)
         )
+
+
+_BINDINGS_YEAR = filing_year_envelope().floor
+
+
+def test_bindings_for_a_year_alone_are_that_years_revision(operation: PinnedAuthorityOperation) -> None:
+    listed = catalogue.list_bindings("130", year=_BINDINGS_YEAR, operation=operation)
+
+    assert listed == registry_bindings_for_year("130", filing_year=_BINDINGS_YEAR, operation=operation)
+
+
+def test_bindings_for_a_year_and_period_are_that_exact_scope(operation: PinnedAuthorityOperation) -> None:
+    listed = catalogue.list_bindings("130", year=_BINDINGS_YEAR, period=" 1T ", operation=operation)
+
+    assert listed == registry_bindings_for_scope(
+        "130", period=Period.from_year_and_code(_BINDINGS_YEAR, "1T"), operation=operation
+    )
+
+
+def test_bindings_refuse_a_period_the_modelo_does_not_declare(operation: PinnedAuthorityOperation) -> None:
+    with pytest.raises(catalogue.DiscoveryPeriodTokenError) as refused:
+        catalogue.list_bindings("130", year=_BINDINGS_YEAR, period="ZZ", operation=operation)
+
+    assert refused.value.declared_tokens == ("1T", "2T", "3T", "4T")

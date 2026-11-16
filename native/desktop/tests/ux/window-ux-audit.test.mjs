@@ -58,6 +58,7 @@ import {
   tablist,
   wheelContainer,
 } from "./ux-nav.mjs";
+import { pageTimeInvokes } from "./ux-calls.mjs";
 
 const ONLY = process.env.CADRUMO_UX_ONLY;
 let world;
@@ -2517,39 +2518,6 @@ const POST_EXPORT_READS = new Set([
   "modelo.work.filing_state",
   "modelo.work.form",
 ]);
-
-/**
- * Wrap the page's fetch, which carries every host call over Tauri's ipc
- * protocol (its invoke is defined read-only), so each call records its
- * command, the definition it carries, and when it started and answered
- * (epoch ms). Answers whether the calls are now timed.
- */
-function pageTimeInvokes() {
-  if (window.__uxCalls) return window.fetch === window.__uxFetch;
-  const original = window.fetch;
-  if (typeof original !== "function") return false;
-  const calls = [];
-  const wrapped = function (input, init) {
-    const url = typeof input === "string" ? input : (input?.url ?? "");
-    const ipc = /^ipc:|\/\/ipc\.localhost\//.test(url);
-    if (!ipc) return original.call(this, input, init);
-    const cmd = decodeURIComponent(url.split("?")[0].split("/").pop() ?? "");
-    const body = typeof init?.body === "string" ? init.body : "";
-    const definition = /"definition"\s*:\s*"([^"]+)"/.exec(body)?.[1] ?? null;
-    const call = { cmd, definition, start: Date.now() };
-    calls.push(call);
-    const answer = original.call(this, input, init);
-    answer.then(
-      () => Object.assign(call, { end: Date.now(), ok: true }),
-      () => Object.assign(call, { end: Date.now(), ok: false }),
-    );
-    return answer;
-  };
-  window.fetch = wrapped;
-  window.__uxCalls = calls;
-  window.__uxFetch = wrapped;
-  return window.fetch === wrapped;
-}
 
 /** Whether the Modelo form is drawn with its boxes and the header is not busy. */
 function pageFormDrawn() {

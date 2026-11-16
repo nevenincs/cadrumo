@@ -324,6 +324,26 @@ def registry_bindings_for_scope(
     )
 
 
+def registry_bindings_for_registry_scope(
+    modelo: str,
+    *,
+    filing_year: int,
+    period: str,
+    as_of: date | None = None,
+    operation: PinnedAuthorityOperation,
+) -> ModeloBindingsReport:
+    """Return bindings for an explicit filing-year registry scope."""
+    return _with_service(
+        operation,
+        lambda service: service.bindings_for_scope(
+            modelo,
+            filing_year=filing_year,
+            period=period,
+            as_of=as_of,
+        ),
+    )
+
+
 def registry_formulas(
     modelo: str,
     *,
@@ -378,6 +398,7 @@ def registry_formulas_for_registry_scope(
 __all__ = [
     "declared_modelo_period_tokens",
     "registry_bindings",
+    "registry_bindings_for_registry_scope",
     "registry_bindings_for_scope",
     "registry_bindings_for_year",
     "registry_casilla",

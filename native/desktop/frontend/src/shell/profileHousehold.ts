@@ -9,6 +9,7 @@
 // that group at all. The four are never drawn as the same.
 
 import type { CallPlan } from "./hostCall";
+import type { ProfileImputationElectionReadProjection } from "./profileContract";
 
 /** What the profile says about one group of people. */
 export type HouseholdGroupState =
@@ -150,41 +151,6 @@ export type ProfileHousehold = {
   pages: number;
 };
 
-/** What the profile states for one question of one ejercicio: a value only
- * when it is declared. An undeclared or contradictory ejercicio is never one
- * of the choices. */
-export type ElectionAnswer =
-  | { state: "declared"; value: string }
-  | { state: "undeclared" | "contradictory"; value: null };
-
-/** One setup question in the words the setup wizard asks it. */
-export type ElectionQuestion = {
-  question_id: string;
-  path: string | null;
-  prompt: string;
-  help: string | null;
-  choices: { value: string; label: string; description: string | null }[];
-};
-
-/** The imputation election of one ejercicio. `record_revision` and
- * `content_digest` are the baseline an `imputation_election` edit names. */
-export type ImputationElection = {
-  profile_id: string;
-  record_revision: number;
-  content_digest: string;
-  tax_year: number;
-  criterion: ElectionAnswer;
-  codigo_comercio_accounting: ElectionAnswer;
-  /** The criterion each ejercicio states, in ejercicio order. */
-  criterion_statements: { ejercicio: number; value: string }[];
-  criterion_question: ElectionQuestion;
-  year_question: ElectionQuestion;
-  accounting_question: ElectionQuestion;
-  /** The criterion tokens under which the accounting question is asked. */
-  accounting_asked_for_criteria: string[];
-  words_language: string;
-};
-
 /** The profile's companion reads. A rejection carries `{ code }`: one of
  * `not_signed_in` or `unavailable`; a refused draft read is `refused` with
  * `reason: "invalid_household_draft"`. */
@@ -196,9 +162,11 @@ export type ProfileCompanionPort = {
     draft: HouseholdDraft,
     plan?: CallPlan,
   ): Promise<HouseholdDraftAnswer>;
+  /** The imputation election of one ejercicio. Its `record_revision` and
+   * `content_digest` are the baseline an `imputation_election` edit names. */
   imputationElection(
     profile: string,
     taxYear: number,
     language: string,
-  ): Promise<ImputationElection>;
+  ): Promise<ProfileImputationElectionReadProjection>;
 };

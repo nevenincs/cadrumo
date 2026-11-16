@@ -5,18 +5,19 @@ import { Icon, type IconName } from "@/components/ui/icon";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio";
 import { Spinner } from "@/components/ui/spinner";
 import type {
-  ElectionAnswer,
-  ElectionQuestion,
-  ImputationElection as Election,
-  ProfileCompanionPort,
-} from "../../../shell/profileHousehold";
+  ProfileImputationElectionAnswer,
+  ProfileImputationElectionQuestion,
+  ProfileImputationElectionReadProjection,
+  ProfileImputationStatementState,
+} from "../../../shell/profileContract";
+import type { ProfileCompanionPort } from "../../../shell/profileHousehold";
 import { useStrings } from "../../../shell/strings";
 import type { ProfileChange } from "../../../shell/userProfile";
 
 /** How the window draws what the profile states for the year: the state's
  * icon, tone and words. The states are the application's closed three. */
 const STATE: Record<
-  ElectionAnswer["state"],
+  ProfileImputationStatementState,
   { icon: IconName; tone: string; words: string }
 > = {
   declared: {
@@ -65,7 +66,7 @@ function failureOf(error: unknown): Failure {
 type Read =
   | { phase: "reading" }
   | { phase: "failed"; failure: Failure }
-  | { phase: "ready"; election: Election };
+  | { phase: "ready"; election: ProfileImputationElectionReadProjection };
 
 /** What the person chose and has not saved; null leaves what is stated. */
 type Draft = { criterion: string | null; accounting: string | null };
@@ -74,7 +75,7 @@ const NO_DRAFT: Draft = { criterion: null, accounting: null };
 type Notice = { kind: "saved" } | { kind: "failed"; failure: Failure } | null;
 
 /** The token a question's answer states, or null when it states none. */
-function stated(answer: ElectionAnswer): string | null {
+function stated(answer: ProfileImputationElectionAnswer): string | null {
   return answer.state === "declared" ? answer.value : null;
 }
 
@@ -84,7 +85,7 @@ function Choices({
   disabled,
   onChange,
 }: {
-  question: ElectionQuestion;
+  question: ProfileImputationElectionQuestion;
   value: string | null;
   disabled: boolean;
   onChange(value: string): void;
@@ -193,7 +194,10 @@ export function ImputationElection({
     };
   }, [load]);
 
-  const write = async (election: Election, edit: ChangeEdit) => {
+  const write = async (
+    election: ProfileImputationElectionReadProjection,
+    edit: ChangeEdit,
+  ) => {
     if (saving) return;
     setSaving(true);
     setNotice(null);

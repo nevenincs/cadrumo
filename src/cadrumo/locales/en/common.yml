@@ -1428,7 +1428,6 @@ desktop:
     view_list: List
     view_months: Calendar
     window_label: '{modelo} {period}, {days}, {state}'
-    window_unknown: Opening date not reported
     year: Filing year
     year_current: Back to the current view
     year_failed: That year could not be read. What is shown has not changed.
