@@ -8,6 +8,7 @@ import type {
   ServedProviderLane,
 } from "./agentCatalogContract";
 import type {
+  AttachmentPolicyResponse,
   ModelLicenceResponse,
   Provider,
   SkillListResponse,
@@ -163,11 +164,6 @@ export type AgentUploadPick = {
   state: "queued" | "refused";
   /** Why the file was refused before anything was sent. */
   code: string | null;
-};
-
-export type AgentAttachmentPolicy = {
-  max_file_bytes: number;
-  extensions: string[];
 };
 
 /** Where one upload is: how far it has been sent, stored, or refused. */
@@ -523,8 +519,9 @@ export interface AgentSession {
   /** Deletes one stored file, or all of this conversation's stored files.
    * Removing a staged reference alone does not call this. */
   removeDocuments?(conversationId: string, name?: string): Promise<void>;
-  /** The storage's admitted formats and per-file bound. */
-  attachmentPolicy?(): Promise<AgentAttachmentPolicy>;
+  /** The storage's admitted formats and its per-file and per-conversation
+   * bounds, as the agent serves them. */
+  attachmentPolicy?(): Promise<AttachmentPolicyResponse>;
   /** Stops a reply that is still working. The run is `cancelling` until it
    * is `cancelled`. */
   cancel(replyId: string): Promise<void>;
