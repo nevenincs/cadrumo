@@ -35,6 +35,7 @@ from ..export_field_kind import CasillaFieldKind
 from .binding_aggregation import binding_aggregation_op
 from .binding_selector_utils import binding_row_set_selector
 from .errors import RegistryValidationError
+from .fixed_width_codec import fixed_width_field_order
 from .ids import ExportFieldId
 from .schema import BindingDefinition
 from .schema_exports import ExportFieldDefinition, ExportLayoutDefinition, ExportRecordDefinition
@@ -55,7 +56,7 @@ def layout_fields_in_emission_order(
     return tuple(
         (record, field)
         for record in sorted(layout.records, key=lambda item: item.order)
-        for field in sorted(record.fields, key=lambda item: (-1 if item.offset is None else item.offset, item.id))
+        for field in fixed_width_field_order(record.fields)
     )
 
 
