@@ -23,10 +23,22 @@ export const STRUCTURED_SAMPLE_NAMES = {
 const text = (key: string, value: string) => ({
   label_key: `${FACT}${key}`,
   text: value,
+  number: null,
 });
 const figure = (key: string, value: string) => ({
   label_key: `${FACT}${key}`,
-  number: value,
+  text: null,
+  number: { decimal: value },
+});
+const lineText = (key: string, value: string) => ({
+  label_key: `${LINE}${key}`,
+  text: value,
+  number: null,
+});
+const lineFigure = (key: string, value: string) => ({
+  label_key: `${LINE}${key}`,
+  text: null,
+  number: { decimal: value },
 });
 const lineFacts = (
   description: string,
@@ -37,12 +49,12 @@ const lineFacts = (
   iva: string,
 ) => ({
   facts: [
-    { label_key: `${LINE}description`, text: description },
-    { label_key: `${LINE}quantity`, number: quantity },
-    { label_key: `${LINE}unit_price`, number: price },
-    { label_key: `${LINE}taxable_base`, number: base },
-    { label_key: `${LINE}iva_rate`, number: rate },
-    { label_key: `${LINE}iva_amount`, number: iva },
+    lineText("description", description),
+    lineFigure("quantity", quantity),
+    lineFigure("unit_price", price),
+    lineFigure("taxable_base", base),
+    lineFigure("iva_rate", rate),
+    lineFigure("iva_amount", iva),
   ],
 });
 
