@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from uuid import UUID
 
 import pytest
@@ -11,6 +11,7 @@ from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import tr
 from ....core.period import Period
 from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
+from ....domain.deadlines.effective_close import DEFAULT_DUE_SOON_DAYS
 from ....domain.deadlines.festivos import DeadlineHolidayCoverage
 from ....domain.deadlines.models import ObligationStatus
 from ....domain.modelos.work_unit import WorkUnitState
@@ -246,6 +247,24 @@ def test_an_overdue_unstarted_period_and_a_conflicted_submission_both_need_atten
         rows = declaration_list_rows(_workspace(), _calendar(entry))
         assert len(rows) == 1 and rows[0].group is DeclarationListGroup.ATTENTION
         assert rows[0].state == ("aeat_needs_check" if entry.evidence_conflicted else "not_started")
+
+
+def test_a_close_needs_attention_exactly_within_the_deadline_engines_due_soon_window() -> None:
+    """The list and the calendar share one due-soon window: its last day needs attention, the day after does not."""
+    window = timedelta(days=DEFAULT_DUE_SOON_DAYS)
+    for close, group in (
+        (_AS_OF + window, DeclarationListGroup.ATTENTION),
+        (_AS_OF + window + timedelta(days=1), DeclarationListGroup.NOT_STARTED),
+    ):
+        unstarted = _entry(external=False, close=close)
+        (row,) = declaration_list_rows(_workspace(), _calendar(unstarted))
+        assert row.group is group
+        local = next(
+            row
+            for row in declaration_list_rows(_workspace(_local(DeclarationSummaryState.DRAFT)), _calendar(unstarted))
+            if row.declaration
+        )
+        assert local.group is (group if group is DeclarationListGroup.ATTENTION else DeclarationListGroup.IN_PROGRESS)
 
 
 def test_a_later_period_is_not_hidden_by_this_periods_local_draft() -> None:
