@@ -29,10 +29,8 @@ import {
 } from "./connectionStatus";
 import { ProviderSignInDialog } from "./ProviderSignInDialog";
 import { SignInAdvice } from "./SignInAdvice";
-import type {
-  ProviderSignIn,
-  ProviderSignInMethod,
-} from "../../shell/providerSettings";
+import type { ProviderSignIn } from "../../shell/providerSettings";
+import type { ProviderSignInMethod } from "../../shell/providerSettingsContract";
 import type { ProviderOutcome, ProviderSecret, ProviderStatus } from "./types";
 
 const STATUS_WORDS = {
@@ -279,6 +277,7 @@ function WayRow({
   onRefresh,
   signInSupported,
   onSignIn,
+  onSignOut,
   consoleSignInCommand,
   models,
   engine,
@@ -295,6 +294,8 @@ function WayRow({
   onRefresh: () => void;
   signInSupported: boolean;
   onSignIn: () => void;
+  /** Signs the lane out, where the host offers it. */
+  onSignOut?: () => void;
   /** The served console command template, with its `{provider}` slot. */
   consoleSignInCommand?: string;
   /** The models of a keyless lane on this computer, shown while it is on. */
@@ -326,6 +327,11 @@ function WayRow({
       data-lane={provider.id}
       data-transport={provider.transport}
       data-auth-kind={provider.authKind}
+      data-reads-off-host={
+        provider.readsOffHost === undefined
+          ? undefined
+          : String(provider.readsOffHost)
+      }
       hidden={hidden}
       aria-labelledby={headingId}
       className={`way ${hidden ? "hidden" : "grid"} gap-2 rounded-lg bg-accent p-3`}
@@ -345,17 +351,41 @@ function WayRow({
             </span>
           )}
         </div>
-        <Switch
-          checked={!off}
-          disabled={busy}
-          aria-label={t("desktop.providers.use_in_agent", {
-            provider: provider.name,
-            connection,
-          })}
-          onCheckedChange={(on) => (on ? onTurnOn() : onTurnOff())}
-        />
+        <div className="flex shrink-0 items-center gap-2">
+          {provider.signOutAvailable && !off && onSignOut && (
+            <Button
+              variant="outline"
+              size="xs"
+              disabled={busy}
+              aria-label={t("desktop.providers.sign_out_label", {
+                provider: provider.name,
+              })}
+              onClick={onSignOut}
+            >
+              {t("desktop.providers.sign_out_action")}
+            </Button>
+          )}
+          <Switch
+            checked={!off}
+            disabled={busy}
+            aria-label={t("desktop.providers.use_in_agent", {
+              provider: provider.name,
+              connection,
+            })}
+            onCheckedChange={(on) => (on ? onTurnOn() : onTurnOff())}
+          />
+        </div>
       </div>
       {detail && <p className="text-sm text-foreground">{detail}</p>}
+      {provider.readsOffHost !== undefined && (
+        <p className="text-sm text-muted-foreground">
+          {t(
+            provider.readsOffHost
+              ? "desktop.providers.reads_off_host"
+              : "desktop.providers.reads_on_host",
+          )}
+        </p>
+      )}
       {state === "engine_not_running" && engine?.state === "not_running" && (
         <div className="flex flex-wrap gap-2">
           <EngineDoor door={engine.door} />
@@ -387,10 +417,24 @@ function WayRow({
         </p>
       )}
       {outcome?.kind === "refused" && (
-        <p role="alert" className="flex items-start gap-2 text-sm">
+        <div role="alert" className="flex items-start gap-2 text-sm">
           <Icon name="alert" className="mt-0.5 text-destructive" />
-          <span>{refusalWords(t, outcome.code)}</span>
-        </p>
+          <div className="grid gap-1">
+            <span>{refusalWords(t, outcome.code)}</span>
+            <SignInAdvice
+              causes={[outcome.cause]}
+              provider={provider.provider}
+            />
+            {outcome.logRef && (
+              <p data-slot="change-log-ref" className="text-muted-foreground">
+                {t("desktop.providers.sign_in_log_ref")}{" "}
+                <code className="font-mono text-foreground select-all">
+                  {outcome.logRef}
+                </code>
+              </p>
+            )}
+          </div>
+        </div>
       )}
       {!off && keyless && models}
       {!off && !keyless && (
@@ -570,6 +614,7 @@ export function ProviderSettings({
   onTurnOff,
   onTurnOn,
   onReset,
+  onSignOut,
   onRefresh,
   onSignInTerminal,
   signIn,
@@ -594,6 +639,8 @@ export function ProviderSettings({
   onTurnOff: (providerId: string) => void;
   onTurnOn: (providerId: string) => void;
   onReset: (providerId: string) => void;
+  /** Signs a lane out, where the host offers it. */
+  onSignOut?: (providerId: string) => void;
   onRefresh: () => void;
   /** Refreshes the lane after sign-in and returns its freshly read revision. */
   onSignInTerminal?: (
@@ -714,6 +761,7 @@ export function ProviderSettings({
                 onTurnOff={() => onTurnOff(lane.id)}
                 onTurnOn={() => onTurnOn(lane.id)}
                 onReset={() => onReset(lane.id)}
+                {...(onSignOut ? { onSignOut: () => onSignOut(lane.id) } : {})}
                 onRefresh={onRefresh}
                 models={
                   lane.authKind === "none" ? localModels?.(lane) : undefined
