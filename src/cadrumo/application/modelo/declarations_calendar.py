@@ -13,7 +13,7 @@ from datetime import date, datetime
 from enum import StrEnum
 from typing import Final, Self
 
-from pydantic import BaseModel, Field, NonNegativeInt, model_validator
+from pydantic import BaseModel, Field, NonNegativeInt, computed_field, model_validator
 
 from ...core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
 from ...core.filing_year import FilingYear
@@ -31,8 +31,13 @@ from ..overview.calendar_models import (
     OverviewCalendarEntrySource,
     OverviewCalendarFilingEvidence,
     OverviewCalendarRange,
+    OverviewCalendarScope,
+    OverviewFilingStatus,
     OverviewLocalFilingState,
     OverviewPeriodState,
+    days_until_close,
+    deadline_scopes,
+    decide_filing_status,
 )
 from ..overview.coverage import ObligationCoverageReport
 from ..overview.evidence import CalendarEvidenceProjection
@@ -144,6 +149,38 @@ class DeclarationsCalendarEntryRefV1(BaseModel):
     source: OverviewCalendarEntrySource
     conditional_recargo_preview: ModeloWorkConditionalRecargoPreview | None = None
     recovery_action: DeclaredNextAction | None = Field(default=None, exclude=True, repr=False)
+
+    @computed_field
+    @property
+    def days_until_close(self) -> int | None:
+        """Signed days to the effective close; ``None`` while the close is unknown."""
+        return days_until_close(
+            adjusted_closes_on=self.adjusted_closes_on,
+            evaluated_on=self.evaluated_on,
+            holiday_coverage=self.holiday_coverage,
+        )
+
+    @computed_field
+    @property
+    def filing_status(self) -> OverviewFilingStatus:
+        """The one filing status this row states; a withheld axis states nothing from it."""
+        return decide_filing_status(
+            aeat_submission_state=self.aeat_submission_state,
+            local_filing_state=self.local_filing_state,
+            period_state=self.user_state,
+        )
+
+    @computed_field
+    @property
+    def scopes(self) -> tuple[OverviewCalendarScope, ...]:
+        """The scopes this row belongs to; ``evidence_unknown`` while its AEAT evidence is withheld."""
+        return deadline_scopes(
+            adjusted_closes_on=self.adjusted_closes_on,
+            evaluated_on=self.evaluated_on,
+            status=self.legal_status,
+            user_state=self.user_state,
+            aeat_evidence_withheld=self.aeat_submission_state is None,
+        )
 
     @model_validator(mode="after")
     @pydantic_validation_boundary

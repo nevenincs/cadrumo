@@ -6383,6 +6383,16 @@ operation:
       it expires in about two minutes. Check that the code %{code} matches in the
       app.'
 overview:
+  filing_status:
+    accepted: Filed, accepted by AEAT
+    due: Not filed yet
+    evidence_withheld: Filed, receipt not shown here
+    imported: Filed elsewhere, imported
+    overdue: Overdue, not filed
+    receipt_verified: Filed, AEAT receipt verified
+    recorded_locally: Marked as filed, not yet confirmed by AEAT
+    submitted: Filed with AEAT
+    unknown: Not filed, deadline unknown
   no_aeat_history: This profile holds no filing evidence AEAT confirmed.
   no_aeat_history_sociedades: This profile holds no filing evidence AEAT confirmed.
     The automated retrieval sweep cannot fetch Impuesto sobre Sociedades filing history

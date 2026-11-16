@@ -7,9 +7,9 @@ existing typed models. Projection and restoration validate the original models.
 from __future__ import annotations
 
 from datetime import date, datetime
-from typing import Literal
+from typing import Literal, Self
 
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator
 
 from cadrumo.application.aeat_sync.workspace import (
     AeatSyncAeatObservationState,
@@ -43,8 +43,14 @@ from cadrumo.application.overview.calendar_models import (
     OverviewAeatSubmissionState,
     OverviewCalendarEntrySource,
     OverviewCalendarRange,
+    OverviewCalendarScope,
+    OverviewFilingStatus,
     OverviewLocalFilingState,
     OverviewPeriodState,
+    days_until_close,
+    deadline_scopes,
+    decide_filing_status,
+    require_decided_derivations,
 )
 from cadrumo.application.overview.coverage import ObligationCoverageReport
 from cadrumo.application.overview.home import (
@@ -414,6 +420,35 @@ class PublicDeclarationsCalendarEntryRefV1(BaseModel):
     source: OverviewCalendarEntrySource
     conditional_recargo_preview: PublicModeloWorkConditionalRecargoPreview | None
     recovery_action: PublicDeclaredNextAction | None
+    days_until_close: int | None
+    filing_status: OverviewFilingStatus
+    scopes: tuple[OverviewCalendarScope, ...]
+
+    @model_validator(mode="after")
+    def _derivations_are_decided(self) -> Self:
+        require_decided_derivations(
+            self,
+            {
+                "days_until_close": days_until_close(
+                    adjusted_closes_on=self.adjusted_closes_on,
+                    evaluated_on=self.evaluated_on,
+                    holiday_coverage=self.holiday_coverage,
+                ),
+                "filing_status": decide_filing_status(
+                    aeat_submission_state=self.aeat_submission_state,
+                    local_filing_state=self.local_filing_state,
+                    period_state=self.user_state,
+                ),
+                "scopes": deadline_scopes(
+                    adjusted_closes_on=self.adjusted_closes_on,
+                    evaluated_on=self.evaluated_on,
+                    status=self.legal_status,
+                    user_state=self.user_state,
+                    aeat_evidence_withheld=self.aeat_submission_state is None,
+                ),
+            },
+        )
+        return self
 
 
 class PublicDeclarationsCalendarSuppressedEntryV1(BaseModel):
@@ -498,6 +533,21 @@ class PublicHomeAgendaEntry(BaseModel):
     period_state: OverviewPeriodState
     local_filing_state: OverviewLocalFilingState
     aeat_submission_state: OverviewAeatSubmissionState
+    filing_status: OverviewFilingStatus
+
+    @model_validator(mode="after")
+    def _filing_status_is_decided(self) -> Self:
+        require_decided_derivations(
+            self,
+            {
+                "filing_status": decide_filing_status(
+                    aeat_submission_state=self.aeat_submission_state,
+                    local_filing_state=self.local_filing_state,
+                    period_state=self.period_state,
+                )
+            },
+        )
+        return self
 
 
 class PublicHomeDeclarationResume(BaseModel):

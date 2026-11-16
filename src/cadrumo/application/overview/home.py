@@ -12,7 +12,7 @@ from datetime import date, datetime
 from enum import StrEnum
 from typing import Final, Self
 
-from pydantic import BaseModel, Field, NonNegativeInt, model_validator
+from pydantic import BaseModel, Field, NonNegativeInt, computed_field, model_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.filing_year import FilingYear
@@ -25,8 +25,10 @@ from .agenda import OverviewAgenda
 from .calendar_models import (
     OverviewAeatSubmissionState,
     OverviewCalendarEntry,
+    OverviewFilingStatus,
     OverviewLocalFilingState,
     OverviewPeriodState,
+    decide_filing_status,
 )
 
 HOME_PREVIEW_LIMIT: Final = 3
@@ -243,6 +245,16 @@ class HomeAgendaEntry(BaseModel):
     period_state: OverviewPeriodState
     local_filing_state: OverviewLocalFilingState
     aeat_submission_state: OverviewAeatSubmissionState
+
+    @computed_field
+    @property
+    def filing_status(self) -> OverviewFilingStatus:
+        """The one filing status this row states, from the AEAT evidence Home may show."""
+        return decide_filing_status(
+            aeat_submission_state=self.aeat_submission_state,
+            local_filing_state=self.local_filing_state,
+            period_state=self.period_state,
+        )
 
 
 class HomeProjectionV1(BaseModel):

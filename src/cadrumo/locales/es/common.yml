@@ -6534,6 +6534,16 @@ operation:
       la solicitud de la AEAT antes de que caduque, en unos dos minutos. Comprueba
       que el código %{code} coincide en la aplicación.'
 overview:
+  filing_status:
+    accepted: Presentada, aceptada por la AEAT
+    due: Sin presentar
+    evidence_withheld: Presentada, justificante no mostrado aquí
+    imported: Presentada por otra vía, importada
+    overdue: Vencida, sin presentar
+    receipt_verified: Presentada, justificante de la AEAT verificado
+    recorded_locally: Marcada como presentada, sin confirmar por la AEAT
+    submitted: Presentada en la AEAT
+    unknown: Sin presentar, plazo desconocido
   no_aeat_history: Este perfil no tiene ninguna presentación confirmada por la AEAT.
   no_aeat_history_sociedades: Este perfil no tiene ninguna presentación confirmada
     por la AEAT. La recuperación automática no puede obtener el historial de presentaciones
