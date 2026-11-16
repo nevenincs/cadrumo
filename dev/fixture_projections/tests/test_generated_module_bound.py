@@ -25,6 +25,7 @@ _DRIVERS = {
     "ledger-contract.mjs": ("if (values.check)", "writeFileSync(contract"),
     "profile-contract.mjs": ("if (values.check)", "writeFileSync(contract"),
     "calendar-contract.mjs": ("if (values.check)", "writeFileSync(contract"),
+    "borrador-contract.mjs": ("if (values.check)", "writeFileSync(contract"),
     "ledger-operation-contract.mjs": ("if (values.check)", "writeFileSync(resolve(frontend"),
 }
 _SOURCES = (
@@ -34,6 +35,7 @@ _SOURCES = (
     "ledger_contract.py",
     "profile_contract.py",
     "calendar_contract.py",
+    "borrador_contract.py",
     "ledger_operation_contract.py",
 )
 _REFUSAL = "refuseOversizedModules("

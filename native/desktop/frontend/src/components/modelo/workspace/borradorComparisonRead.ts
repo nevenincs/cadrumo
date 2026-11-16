@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { BorradorComparison, BorradorPort } from "../../../shell/borrador";
+import type { BorradorPort } from "../../../shell/borrador";
+import type { Borrador100ComparisonProjection } from "../../../shell/borradorContract";
 import { ledgerFailure } from "../../../shell/ledger";
 
 // The year's AEAT draft beside the saved calculation, asked for on request.
@@ -11,7 +12,7 @@ import { ledgerFailure } from "../../../shell/ledger";
 export type BorradorComparisonRead =
   | { phase: "idle" }
   | { phase: "reading" }
-  | { phase: "ready"; comparison: BorradorComparison }
+  | { phase: "ready"; comparison: Borrador100ComparisonProjection }
   /** The read did not answer; `code` is the host's closed reason. */
   | { phase: "failed"; code: string };
 
