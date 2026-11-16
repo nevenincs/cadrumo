@@ -43,12 +43,11 @@ export const compareListedEntries = (a: CalendarEntry, b: CalendarEntry) =>
   a.adjusted_closes_on.localeCompare(b.adjusted_closes_on) ||
   a.modelo.localeCompare(b.modelo);
 
-/** Where an opening is unknown or after its close, draw only the closing
- * day; never invent a filing window. Where the close is unknown the span
- * ends on the earliest close: the days it is known to be open. */
+/** Where an opening is after its close, draw only the closing day; never
+ * invent a filing window. Where the close is unknown the span ends on the
+ * earliest close: the days it is known to be open. */
 export function entrySpan(entry: CalendarEntry): { from: string; to: string } {
   const to = entry.adjusted_closes_on;
-  const from =
-    entry.opens_on !== null && entry.opens_on <= to ? entry.opens_on : to;
+  const from = entry.opens_on <= to ? entry.opens_on : to;
   return { from, to };
 }

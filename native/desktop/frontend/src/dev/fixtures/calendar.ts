@@ -5,6 +5,7 @@ import type {
 import type {
   CalendarEntry,
   CalendarEvent,
+  CalendarWarning,
   FilingCalendar,
   NotificationsSummary,
 } from "../../shell/views";
@@ -34,13 +35,23 @@ export const FIXTURE_STATUS: Record<OverviewPeriodState, ObligationStatus> = {
   unknown: "NOT_APPLICABLE",
 };
 
-function entry(
+/** What a fixture row sets beyond its Modelo, period and dates: any field of
+ * the served row, and any of its filing evidence. */
+export type EntryChange = Partial<Omit<CalendarEntry, "filing_evidence">> & {
+  filing_evidence?: Partial<CalendarEntry["filing_evidence"]>;
+};
+
+/** A served calendar row as the product writes it, due and not filed unless
+ * `change` says otherwise. */
+export function calendarEntry(
   modelo: string,
   period: string,
-  opens: string | null,
+  opens: string,
   closes: string,
-  change: Partial<CalendarEntry> = {},
+  change: EntryChange = {},
+  evaluatedOn: string = FIXTURE_TODAY,
 ): CalendarEntry {
+  const { filing_evidence: evidence = {}, ...row } = change;
   return {
     modelo,
     period,
@@ -48,19 +59,53 @@ function entry(
     closes_on: closes,
     adjusted_closes_on: closes,
     shift_reason: "none",
+    holiday_refs: [],
+    jurisdictions: [],
+    holiday_coverage: "national_only",
     payment_cutoff_on: null,
-    evaluated_on: FIXTURE_TODAY,
+    evaluated_on: evaluatedOn,
     days_overdue: null,
     status: FIXTURE_STATUS[change.user_state ?? "due"],
     user_state: "due",
-    local_filing_state: "not_ready_to_file",
-    aeat_submission_state: "not_observed",
-    justificante_verified: false,
-    ...change,
+    recovery: null,
+    recovery_action: null,
+    filing_year: null,
+    censo_enrolment_state: "not_checked",
+    source: "registry_deadline",
+    local_work_unit_id: null,
+    local_work_unit_name: null,
+    local_work_unit_revision_id: null,
+    profile_confirmation_required: false,
+    missing_profile_information: [],
+    ...row,
+    filing_evidence: {
+      modelo,
+      filing_year: null,
+      period,
+      local_filing_state: "not_ready_to_file",
+      local_filing_record_id: null,
+      local_calculation_revision_id: null,
+      local_filed_at: null,
+      aeat_submission_state: "not_observed",
+      aeat_submitted_at: null,
+      aeat_reference_id: null,
+      aeat_snapshot_id: null,
+      aeat_evidence_kind: null,
+      aeat_evidence_conflict_reference_ids: [],
+      aeat_evidence_concerns: [],
+      verified_justificante_csv: null,
+      justificante_required: true,
+      justificante_verified: false,
+      evidence_source: null,
+      ...evidence,
+    },
   };
 }
 
-function observed(
+const entry = calendarEntry;
+
+/** Something the product observed, as it serves it to the window. */
+export function calendarEvent(
   type: CalendarEvent["event_type"],
   on: string,
   summary: string,
@@ -68,46 +113,95 @@ function observed(
 ): CalendarEvent {
   return {
     event_type: type,
+    post_filing_kind: null,
+    notificacion_estado_servicio: null,
     event_date: on,
     source: type === "filing" ? "filed_declarations" : "notifications",
     summary,
     reference_id: `fixture-${type}-${on}`,
+    snapshot_id: null,
+    modelo: null,
+    filing_year: null,
+    period: null,
     status: null,
     aeat_submission_state: null,
     aeat_submitted_at: null,
     justificante_verified: null,
+    verified_justificante_csv: null,
     ...change,
+  };
+}
+
+const observed = calendarEvent;
+
+/** A profile detail the calendar had to assume: its locale key in `message`,
+ * which the window never shows, and the sentence it renders in `text`. */
+export function calendarWarning(
+  code: string,
+  text: string | null,
+  affected: string[] = [],
+): CalendarWarning {
+  return {
+    code,
+    message: `cli.overview.warning.${code}`,
+    fix_action: {
+      action: { action_id: "operator.profile.edit" },
+      argument_bindings: [],
+    },
+    affected_modelos: affected,
+    text,
   };
 }
 
 export const FIXTURE_CALENDAR: FilingCalendar = {
   range: { from_date: fixtureDay(7, 1), to_date: fixtureDay(6, 30, 1) },
+  support: {
+    floor: fixtureYear - 4,
+    horizon: fixtureYear,
+    hard_ceiling: null,
+    state: "supported",
+  },
+  evaluated_on: FIXTURE_TODAY,
   generated_at: `${FIXTURE_TODAY}T09:14:05Z`,
+  completeness: {
+    explicitly_set_keys: [],
+    defaulted_keys: [],
+    computable_modelos: [],
+    defaulted_modelos: [],
+  },
+  taxpayer_model_declared: true,
+  incomplete_reason: null,
+  late_count: null,
+  applicable_modelos_without_deadline: null,
   suppressed_entries: [],
   entries: [
     entry("303", `${FIXTURE_YEAR}-2T`, fixtureDay(7, 1), fixtureDay(7, 20), {
       user_state: "filed",
-      local_filing_state: "ready_to_file",
-      aeat_submission_state: "justificante_verified",
-      justificante_verified: true,
+      filing_evidence: {
+        local_filing_state: "ready_to_file",
+        aeat_submission_state: "justificante_verified",
+        justificante_verified: true,
+      },
     }),
     entry("130", `${FIXTURE_YEAR}-2T`, fixtureDay(7, 1), fixtureDay(7, 20), {
       user_state: "late",
       days_overdue: 78,
-      local_filing_state: "ready_to_file",
+      filing_evidence: { local_filing_state: "ready_to_file" },
     }),
     entry("303", `${FIXTURE_YEAR}-3T`, fixtureDay(10, 1), fixtureDay(10, 20), {
       payment_cutoff_on: fixtureDay(10, 15),
-      local_filing_state: "ready_to_file",
+      filing_evidence: { local_filing_state: "ready_to_file" },
     }),
     entry("130", `${FIXTURE_YEAR}-3T`, fixtureDay(10, 1), fixtureDay(10, 20)),
     entry("111", `${FIXTURE_YEAR}-3T`, fixtureDay(10, 1), fixtureDay(10, 20), {
-      aeat_submission_state: "submitted_observed",
       user_state: "filed",
-      local_filing_state: "external_baseline_imported",
+      filing_evidence: {
+        aeat_submission_state: "submitted_observed",
+        local_filing_state: "external_baseline_imported",
+      },
     }),
-    // A host that could not say when this window opens: only its close.
-    entry("349", `${FIXTURE_YEAR}-3T`, null, fixtureDay(10, 20), {
+    // A window that opens on its closing day: that day alone is drawn.
+    entry("349", `${FIXTURE_YEAR}-3T`, fixtureDay(10, 20), fixtureDay(10, 20), {
       user_state: "unknown",
     }),
     entry(
@@ -158,12 +252,11 @@ export const FIXTURE_CALENDAR: FilingCalendar = {
     ),
   ],
   warnings: [
-    {
-      code: "profile_key_defaulted",
-      message:
-        "The foral territory is not set, so common-territory dates are used.",
-      affected_modelos: ["303", "390"],
-    },
+    calendarWarning(
+      "profile_key_defaulted",
+      "The foral territory is not set, so common-territory dates are used.",
+      ["303", "390"],
+    ),
   ],
   coverage: {
     surfaced: ["100", "111", "130", "303", "349", "390"],
@@ -209,8 +302,10 @@ export const STRADDLING_CALENDAR: FilingCalendar = {
   entries: [
     entry("216", fixtureMonth(9), fixtureDay(9, 21), fixtureDay(10, 1), {
       user_state: "filed",
-      local_filing_state: "ready_to_file",
-      aeat_submission_state: "accepted",
+      filing_evidence: {
+        local_filing_state: "ready_to_file",
+        aeat_submission_state: "accepted",
+      },
     }),
     ...AHEAD_CALENDAR.entries,
   ],
@@ -268,12 +363,10 @@ export const ADVICE_ONLY_CALENDAR: FilingCalendar = {
 
 // SYNTHETIC: built by hand from the served shape (code "deadline.windows_unavailable.<year>"
 // and the sentence of its locale key), not seeded from a host. Replace on the next reseed.
-const WINDOWS_UNAVAILABLE_WARNING = {
-  code: `deadline.windows_unavailable.${FIXTURE_YEAR}`,
-  message:
-    "The registry has no deadline windows for part of this range, so nothing is known about the obligations that fall in it. Check the overview status; an empty list here does not mean nothing is due.",
-  affected_modelos: [],
-};
+const WINDOWS_UNAVAILABLE_WARNING = calendarWarning(
+  `deadline.windows_unavailable.${FIXTURE_YEAR}`,
+  "The registry has no deadline windows for part of this range, so nothing is known about the obligations that fall in it. Check the overview status; an empty list here does not mean nothing is due.",
+);
 
 /** A year with no deadline windows and so no rows: unknown, not nothing due. */
 export const UNKNOWN_YEAR_EMPTY_CALENDAR: FilingCalendar = {

@@ -6,10 +6,9 @@ import { Spinner } from "@/components/ui/spinner";
 import { formatInstantDay } from "../../../shared/dateFormats";
 import { formatDecimal } from "../../../shared/numbers";
 import type {
-  BorradorCompared,
-  BorradorComparison as Comparison,
-  BorradorScalar,
-} from "../../../shell/borrador";
+  Borrador100ComparisonProjection as Comparison,
+  Borrador100ComparisonRow,
+} from "../../../shell/borradorContract";
 import { useStrings, type Translate } from "../../../shell/strings";
 import { BoxNumber } from "../form/BoxNumber";
 import { BoxLabel } from "./BoxLabel";
@@ -50,7 +49,7 @@ function Value({
   locale,
   t,
 }: {
-  value: BorradorScalar | null;
+  value: Borrador100ComparisonRow["calculation_value"];
   locale: string;
   t: Translate;
 }) {
@@ -80,7 +79,7 @@ function Row({
   locale,
   t,
 }: {
-  row: BorradorCompared;
+  row: Borrador100ComparisonRow;
   locale: string;
   t: Translate;
 }) {
@@ -134,7 +133,7 @@ function Rows({
   locale: string;
   t: Translate;
 }) {
-  const groups = new Map<string, BorradorCompared[]>();
+  const groups = new Map<string, Borrador100ComparisonRow[]>();
   for (const row of comparison.rows)
     groups.set(row.classification.token, [
       ...(groups.get(row.classification.token) ?? []),

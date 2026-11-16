@@ -19,6 +19,7 @@ import {
   STATE_ORDER,
 } from "../src/shell/calendarEntries";
 import type { CalendarEntry } from "../src/shell/views";
+import { calendarEntry, calendarEvent } from "../src/dev/fixtures/calendar";
 import { fixtureDay, fixtureYear } from "../src/dev/fixtureDates";
 
 // The calendar's pure rules, checked at their boundaries. No page is opened.
@@ -150,31 +151,24 @@ test("a viewed filing year is asked for whole, inside what the host admits", () 
 // filing window crosses, and which row of a week it takes.
 const obligation = (
   modelo: string,
-  opens: string | null,
+  opens: string,
   closes: string,
   adjusted = closes,
-): CalendarEntry => ({
-  modelo,
-  period: PERIOD,
-  opens_on: opens,
-  closes_on: closes,
-  adjusted_closes_on: adjusted,
-  shift_reason: "none",
-  payment_cutoff_on: null,
-  evaluated_on: day(6),
-  days_overdue: null,
-  status: "UPCOMING",
-  user_state: "due",
-  local_filing_state: "not_ready_to_file",
-  aeat_submission_state: "not_observed",
-  justificante_verified: false,
-});
+): CalendarEntry =>
+  calendarEntry(
+    modelo,
+    PERIOD,
+    opens,
+    closes,
+    { adjusted_closes_on: adjusted, status: "UPCOMING" },
+    day(6),
+  );
 
 /** A projected window whose close the product could not work out: its
  * closing dates are only the earliest it can close. */
 const unknownClose = (
   modelo: string,
-  opens: string | null,
+  opens: string,
   earliest: string,
 ): CalendarEntry => ({
   ...obligation(modelo, opens, earliest),
@@ -190,7 +184,7 @@ test("only the product's unknown status makes a close unknown, never a reading o
   // work out.
   expect(
     closeUnknown({
-      ...obligation("349", null, day(20)),
+      ...obligation("349", day(1), day(20)),
       status: "NOT_APPLICABLE",
       user_state: "unknown",
     }),
@@ -202,14 +196,14 @@ test("a close that is not known follows the known ones, in its reading and in it
   const entries = [
     unknownClose("111", day(1), day(2)),
     {
-      ...obligation("349", null, day(25)),
+      ...obligation("349", day(1), day(25)),
       status: "NOT_APPLICABLE" as const,
       user_state: "unknown" as const,
     },
-    obligation("303", null, day(30)),
+    obligation("303", day(1), day(30)),
     unknownClose("123", isoDay(PRIOR, 1), isoDay(PRIOR, 20)),
-    obligation("130", null, day(20)),
-    obligation("202", null, isoDay(PRIOR, 25)),
+    obligation("130", day(1), day(20)),
+    obligation("202", isoDay(PRIOR, 1), isoDay(PRIOR, 25)),
   ];
   // Among what needs the person, by reading: the known closes of the
   // unknown reading first, by date; the closes not known after them.
@@ -253,15 +247,15 @@ test("a window whose close is not known runs to its earliest close and is never 
 
 test("calendar faces share urgency ordering with deterministic date and identity ties", () => {
   const entries = [
-    { ...obligation("303", null, day(20)), user_state: "filed" as const },
+    { ...obligation("303", day(1), day(20)), user_state: "filed" as const },
     {
-      ...obligation("130", null, day(19)),
+      ...obligation("130", day(1), day(19)),
       user_state: "unknown" as const,
     },
-    obligation("349", null, day(20)),
-    obligation("303", null, day(20)),
-    obligation("130", null, day(19)),
-    { ...obligation("303", null, day(30)), user_state: "late" as const },
+    obligation("349", day(1), day(20)),
+    obligation("303", day(1), day(20)),
+    obligation("130", day(1), day(19)),
+    { ...obligation("303", day(1), day(30)), user_state: "late" as const },
   ];
   expect(STATE_ORDER).toEqual(["late", "due", "unknown", "filed"]);
   expect(
@@ -339,13 +333,13 @@ test("a filing window is drawn across every week it crosses", () => {
   ]);
 });
 
-test("the window ends on the day that binds, and an unknown opening is not guessed", () => {
+test("the window ends on the day that binds, and one that opens on its close is that day alone", () => {
   const [month] = calendarMonths(
     RANGE,
     [
       // Closes on a Saturday, moved to the Monday.
       obligation("130", day(1), day(17), day(19)),
-      obligation("349", null, day(20)),
+      obligation("349", day(20), day(20)),
     ],
     [],
     null,
@@ -355,7 +349,7 @@ test("the window ends on the day that binds, and an unknown opening is not guess
     from: day(1),
     to: day(19),
   });
-  expect(entrySpan(obligation("349", null, day(20)))).toEqual({
+  expect(entrySpan(obligation("349", day(20), day(20)))).toEqual({
     from: day(20),
     to: day(20),
   });
@@ -433,17 +427,13 @@ test("a window across months is drawn in each, open at the edge it continues fro
 });
 
 test("what was observed stands on its own day", () => {
-  const event = {
-    event_type: "filing" as const,
-    event_date: day(2),
-    source: "filed_declarations",
-    summary: `Modelo 111 ${PERIOD} filed`,
+  const event = calendarEvent("filing", day(2), `Modelo 111 ${PERIOD} filed`, {
     reference_id: "ref-1",
     status: "presentado",
-    aeat_submission_state: "submitted_observed" as const,
+    aeat_submission_state: "submitted_observed",
     aeat_submitted_at: `${day(2)}T08:15:00Z`,
     justificante_verified: false,
-  };
+  });
   const [month] = calendarMonths(RANGE, [], [event], null, 1);
   const withEvents = month?.weeks.flatMap((week) =>
     week.days.filter((day) => day && day.events.length > 0),
@@ -682,17 +672,9 @@ test("a leap February has its twenty-ninth day", () => {
 });
 
 test("what was observed with a time of day stands on its date", () => {
-  const event = {
-    event_type: "filing" as const,
-    event_date: `${day(2)}T08:15:00Z`,
-    source: "filed_declarations",
-    summary: "Filed",
+  const event = calendarEvent("filing", `${day(2)}T08:15:00Z`, "Filed", {
     reference_id: "a",
-    status: null,
-    aeat_submission_state: null,
-    aeat_submitted_at: null,
-    justificante_verified: null,
-  };
+  });
   const [october] = calendarMonths(RANGE, [], [event], null, 1);
   const on = october?.weeks.flatMap((week) =>
     week.days.filter((day) => (day?.events.length ?? 0) > 0),
@@ -980,32 +962,6 @@ test("windows that do not share a day share a row of what a crowded week keeps",
     ],
     hidden: ["349", "390"],
   });
-});
-
-test("a window whose opening is not known and that closes after the range is drawn on its closing day", () => {
-  const months = calendarMonths(
-    { from_date: isoDay(CROWDED, 1), to_date: isoDay(CROWDED, 31) },
-    [obligation("349", null, isoDay(monthAfter(CROWDED, 2), 28))],
-    [],
-    null,
-    1,
-  );
-  expect(months.map((month) => month.key)).toEqual([
-    monthKey(CROWDED),
-    monthKey(AFTER_CROWDED),
-    monthKey(monthAfter(CROWDED, 2)),
-  ]);
-  expect(bars(months)).toEqual([
-    {
-      month: monthKey(monthAfter(CROWDED, 2)),
-      days: [28, 28],
-      lane: 0,
-      opens: true,
-      closes: true,
-      first: true,
-      modelo: "349",
-    },
-  ]);
 });
 
 test("a week with exactly as many windows as it shows leaves none out", () => {
