@@ -290,8 +290,8 @@ class _StatedFilingNames:
             for invoice in invoices
         }
 
-    def filing_name_of(self, tax_identifier: str, *, country_code: str) -> DeclaredPartyFilingName | None:
-        name = self._names.get((country_code, tax_identifier))
+    def filing_name_of(self, tax_identifier: str, *, country_code: str | None) -> DeclaredPartyFilingName | None:
+        name = None if country_code is None else self._names.get((country_code, tax_identifier))
         return None if name is None else DeclaredPartyFilingName(kind=DeclaredPartyKind.ENTITY, razon_social=name)
 
 

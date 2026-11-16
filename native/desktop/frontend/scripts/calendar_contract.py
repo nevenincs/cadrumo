@@ -41,16 +41,26 @@ _HEADER = """\
 #: The calendar definitions whose request and result the window reads, by definition id.
 CALENDAR_DEFINITIONS: tuple[str, ...] = ("overview.calendar",)
 
-#: The fields of the ``overview.calendar`` result the desktop host passes on to the window as the
-#: product served them, under the product's own names. The host reshapes every other field.
-HOST_PASSED_ON: tuple[str, ...] = ("suppressed_entries",)
+#: What the desktop host withholds from the calendar snapshot it passes on to the window, as
+#: ``list field of the snapshot: fields of each of its rows``. It passes everything else on as the
+#: product served it, under the product's own names.
+HOST_WITHHELD: dict[str, tuple[str, ...]] = {"events": ("source_url",)}
 
 
-def _passed_on(defs: dict[str, Any]) -> str:
-    """The window's type for the calendar fields the host passes on unchanged.
+def _row_definition(defs: dict[str, Any], snapshot: str, field: str) -> str:
+    """The definition of the rows a list field of the snapshot holds."""
+    reference = defs[snapshot].get("properties", {}).get(field, {}).get("items", {}).get("$ref")
+    if not isinstance(reference, str):
+        raise SystemExit(f"the calendar snapshot serves no list of rows {field}")
+    return reference.removeprefix("#/$defs/")
 
-    The host reads the calendar the ``calendar`` read carries, so the fields are picked from that
-    snapshot's definition, found through the read rather than by its class name.
+
+def _served(defs: dict[str, Any]) -> str:
+    """The window's type for the calendar the host serves: the product's snapshot, less what it withholds.
+
+    The host passes on the calendar the ``calendar`` read carries, so the type is that snapshot's
+    definition, found through the read rather than by its class name; a withheld field the product
+    no longer serves refuses generation.
     """
     reads = [
         properties
@@ -67,14 +77,19 @@ def _passed_on(defs: dict[str, Any]) -> str:
     if len(snapshots) != 1:
         raise SystemExit("the calendar read carries no single calendar snapshot")
     snapshot = snapshots[0]
-    missing = [name for name in HOST_PASSED_ON if name not in defs[snapshot].get("properties", {})]
-    if missing:
-        raise SystemExit(f"the calendar snapshot serves no field {', '.join(missing)}")
-    picked = " | ".join(literal(name) for name in HOST_PASSED_ON)
+    lists = " | ".join(literal(field) for field in HOST_WITHHELD)
+    rows: list[str] = []
+    for field, withheld in HOST_WITHHELD.items():
+        row = _row_definition(defs, snapshot, field)
+        missing = [name for name in withheld if name not in defs[row].get("properties", {})]
+        if missing:
+            raise SystemExit(f"the calendar's {field} serve no field {', '.join(missing)}")
+        names = " | ".join(literal(name) for name in withheld)
+        rows.append(f"  {field}: Omit<{ts_name(row)}, {names}>[];")
     return (
-        "/** The fields of the calendar the desktop host passes on to the window as the\n"
-        " * product served them, under the product's own names. */\n"
-        f"export type FilingCalendarPassedOn = Pick<{ts_name(snapshot)}, {picked}>;"
+        "/** The calendar the desktop host serves the window: the product's snapshot\n"
+        " * under its own names, less what the host withholds. */\n"
+        f"export type FilingCalendarServed = Omit<{ts_name(snapshot)}, {lists}> & {{\n" + "\n".join(rows) + "\n};"
     )
 
 
@@ -125,7 +140,7 @@ def render() -> str:
         )
         + "\n};"
     )
-    blocks.append(_passed_on(defs))
+    blocks.append(_served(defs))
     return _HEADER + "\n" + "\n\n".join(blocks) + "\n"
 
 

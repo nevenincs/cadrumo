@@ -708,19 +708,34 @@ export function FilingCalendarView({
     );
   } else {
     const { warnings, coverage, generated_at } = state.calendar;
+    // The served sentence of a warning is its `text`; its `message` is a
+    // locale key and never shown. A warning served without a sentence says
+    // nothing here rather than its key.
     // A year the registry has no deadline windows for comes back as a warning
     // with this code, not as rows: the range is unknown there, which an empty
     // list must not be read as "nothing due".
     const unknown = warnings.filter((warning) =>
       warning.code.startsWith(UNKNOWN_WINDOWS_CODE),
     );
-    const profileWarnings = warnings.filter(
-      (warning) => !warning.code.startsWith(UNKNOWN_WINDOWS_CODE),
-    );
-    const unknownWords = [
-      ...new Set(unknown.map((warning) => warning.message)),
+    const sentences = (served: typeof warnings) =>
+      served.flatMap((warning) => (warning.text ? [warning.text] : []));
+    // Without the taxpayer's model the product places no obligation, and its
+    // reason says so first, in its own words, rather than an empty calendar.
+    const undeclared =
+      !state.calendar.taxpayer_model_declared &&
+      state.calendar.incomplete_reason
+        ? [state.calendar.incomplete_reason]
+        : [];
+    const profileEvidence = [
+      ...undeclared,
+      ...sentences(
+        warnings.filter(
+          (warning) => !warning.code.startsWith(UNKNOWN_WINDOWS_CODE),
+        ),
+      ),
     ];
-    const asOf = generated_at ? formatTime(locale, generated_at) : "—";
+    const unknownWords = [...new Set(sentences(unknown))];
+    const asOf = formatTime(locale, generated_at);
     // How the range stands, in the product's own four readings: counted,
     // never combined into a verdict.
     const standing = STATE_ORDER.map(
@@ -1007,7 +1022,7 @@ export function FilingCalendarView({
           <ProfileCompletionNotice
             key={profile?.profile_id ?? "unknown"}
             profile={profile}
-            warnings={profileWarnings}
+            evidence={profileEvidence}
             onNavigate={onNavigate}
             className="mx-4 mt-3 w-auto"
           />

@@ -77,7 +77,7 @@ _SUBCLAVES_BY_CLAVE: Final[Mapping[PrevisionSocialClave, frozenset[PrevisionSoci
                 PrevisionSocialSubclave.SUBCLAVE_03,
             }
         ),
-        PrevisionSocialClave.CLAVE_B: frozenset(),
+        PrevisionSocialClave.CLAVE_B: frozenset[PrevisionSocialSubclave](),
         PrevisionSocialClave.CLAVE_C: frozenset(PrevisionSocialSubclave),
         PrevisionSocialClave.CLAVE_D: frozenset(
             {
@@ -95,12 +95,12 @@ _SUBCLAVES_BY_CLAVE: Final[Mapping[PrevisionSocialClave, frozenset[PrevisionSoci
         PrevisionSocialClave.CLAVE_G: frozenset(
             {PrevisionSocialSubclave.SUBCLAVE_01, PrevisionSocialSubclave.SUBCLAVE_02}
         ),
-        PrevisionSocialClave.CLAVE_H: frozenset(),
+        PrevisionSocialClave.CLAVE_H: frozenset[PrevisionSocialSubclave](),
         PrevisionSocialClave.CLAVE_I: frozenset(
             {PrevisionSocialSubclave.SUBCLAVE_01, PrevisionSocialSubclave.SUBCLAVE_02}
         ),
         PrevisionSocialClave.CLAVE_J: frozenset(PrevisionSocialSubclave),
-        PrevisionSocialClave.CLAVE_K: frozenset(),
+        PrevisionSocialClave.CLAVE_K: frozenset[PrevisionSocialSubclave](),
         PrevisionSocialClave.CLAVE_L: frozenset(
             {
                 PrevisionSocialSubclave.SUBCLAVE_01,
@@ -108,7 +108,7 @@ _SUBCLAVES_BY_CLAVE: Final[Mapping[PrevisionSocialClave, frozenset[PrevisionSoci
                 PrevisionSocialSubclave.SUBCLAVE_03,
             }
         ),
-        PrevisionSocialClave.CLAVE_M: frozenset(),
+        PrevisionSocialClave.CLAVE_M: frozenset[PrevisionSocialSubclave](),
     }
 )
 """The subclaves each clave takes in the Modelo 345 designs; an empty set means the clave takes none."""

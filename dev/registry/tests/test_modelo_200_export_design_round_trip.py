@@ -42,6 +42,7 @@ from cadrumo.domain.calculations.registry.export_parse import parse_export_paylo
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition
+from cadrumo.domain.calculations.registry.schema_references import SourceReference
 from cadrumo.domain.filing.schema import ModeloDraft
 from cadrumo.domain.submission.models import ModeloDraftStatus
 from dev.registry.compiler.loader import modelo_fact_scope
@@ -145,9 +146,11 @@ class _PayloadSink:
 
 def _render(
     authority: ValidatedRegistryAuthority, revision_id: str
-) -> tuple[bytes, ModeloDraft, Mapping[str, object], Mapping[str, bytes]]:
+) -> tuple[bytes, ModeloDraft, Mapping[str, SourceReference], Mapping[str, bytes]]:
     period = _first_supported_annual_period(authority, authority.modelo(_M200).revisions[revision_id])
     scenario = m200_export_scenario(period)
+    identity_factory = scenario.product_software_identity_factory
+    assert identity_factory is not None
     staged = with_filing_reach(authority, _M200, revision_id)
     with modelo_fact_scope(bundled_path("registry", "aeat", "modelos", _M200)), validating_governed_facts(staged):
         provider = schema_provider_from_authority(
@@ -167,7 +170,7 @@ def _render(
             payload_consumer=sink,
             producer_snapshot=scenario.producer_snapshot(),
             prior_domiciliation_election=scenario.prior_domiciliation_election,
-            product_software_identity=scenario.product_software_identity_factory(),
+            product_software_identity=identity_factory(),
             schema_provider=provider,
         )
     return sink.payload, draft, provider.sources, provider.source_payloads

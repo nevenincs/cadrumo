@@ -83,7 +83,8 @@ def _complete_model_fields(value: BaseModel) -> dict[str, object]:
     completed: dict[str, object] = {}
     for name, model_field in type(value).model_fields.items():
         item = getattr(value, name)
-        if model_field.exclude_if in _LATER_FIELD_EXCLUSIONS and model_field.exclude_if(item):
+        exclude_if = model_field.exclude_if
+        if exclude_if is not None and exclude_if in _LATER_FIELD_EXCLUSIONS and exclude_if(item):
             continue
         completed[name] = _complete_registry_value(item)
     return completed

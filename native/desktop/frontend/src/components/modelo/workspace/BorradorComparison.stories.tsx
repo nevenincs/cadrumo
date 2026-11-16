@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { expect, fn, userEvent, waitFor } from "storybook/test";
 import { borradorFixture, type BorradorScenario } from "@/dev/borradorFixture";
 import { modeloFixture } from "@/dev/modeloFixture";
-import type { BorradorComparison as Comparison } from "../../../shell/borrador";
+import type { Borrador100ComparisonProjection as Comparison } from "../../../shell/borradorContract";
 import type { ModeloPort } from "../../../shell/modelo";
 import type { OutputLanguage } from "../../../shell/modeloContract/modelo";
 import { translator } from "../../../shell/strings";
