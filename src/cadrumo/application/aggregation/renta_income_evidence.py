@@ -9,7 +9,7 @@ bounded retención can be inferred from the transaction itself.
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from decimal import Decimal
 from enum import StrEnum
 from typing import NamedTuple
@@ -138,16 +138,39 @@ def settlement_comparison(invoice: Invoice, receipts: Sequence[Transaction]) -> 
     )
 
 
-def _settling_base_sum(
-    invoice: Invoice, rows: Sequence[Transaction], bases: Sequence[Decimal | None]
+def _settling_figure_sum(
+    invoice: Invoice, rows: Sequence[Transaction], stated: Callable[[Transaction], Decimal | None]
 ) -> Decimal | None:
-    """Sum ``bases`` in the settling direction, or ``None`` when a row states no base: an unstated base is not zero."""
+    """Sum the figure each row states in the settling direction, or ``None`` when a row states none."""
     total = Decimal("0")
-    for row, base in zip(rows, bases, strict=True):
-        if base is None:
+    for row in rows:
+        figure = stated(row)
+        if figure is None:
             return None
-        total += _in_settling_direction(invoice, row, base)
+        total += _in_settling_direction(invoice, row, figure)
     return total
+
+
+def _figure_comparison(
+    invoice: Invoice,
+    rows: Sequence[Transaction],
+    *,
+    native_stated: Callable[[Transaction], Decimal | None],
+    native_owed: Decimal,
+    eur_stated: Callable[[Transaction], Decimal | None],
+    eur_owed: Decimal | None,
+) -> SettlementComparison | None:
+    """Compare one figure ``rows`` state with the invoice's, by the settlement-currency rule.
+
+    A row that states no figure leaves nothing to compare: an unstated figure is not zero.
+    """
+    if all(row.raw.currency == invoice.currency for row in rows):
+        native = _settling_figure_sum(invoice, rows, native_stated)
+        return None if native is None else SettlementComparison(cash=native, owed=native_owed)
+    if eur_owed is None or any(is_non_eur_without_conversion(row) for row in rows):
+        return None
+    eur = _settling_figure_sum(invoice, rows, eur_stated)
+    return None if eur is None else SettlementComparison(cash=round_to_cents(eur), owed=eur_owed)
 
 
 def taxable_base_comparison(invoice: Invoice, rows: Sequence[Transaction]) -> SettlementComparison | None:
@@ -157,14 +180,30 @@ def taxable_base_comparison(invoice: Invoice, rows: Sequence[Transaction]) -> Se
     in EUR, and a side with no EUR value leaves nothing to compare. A row that states no
     base leaves nothing to compare either: an unstated base is not a base of zero.
     """
-    if all(row.raw.currency == invoice.currency for row in rows):
-        native = _settling_base_sum(invoice, rows, [row.taxable_base for row in rows])
-        return None if native is None else SettlementComparison(cash=native, owed=invoice.base_total)
-    base_eur = invoice.base_total_eur
-    if base_eur is None or any(is_non_eur_without_conversion(row) for row in rows):
-        return None
-    eur = _settling_base_sum(invoice, rows, [effective_eur_taxable_base(row) for row in rows])
-    return None if eur is None else SettlementComparison(cash=round_to_cents(eur), owed=base_eur)
+    return _figure_comparison(
+        invoice,
+        rows,
+        native_stated=lambda row: row.taxable_base,
+        native_owed=invoice.base_total,
+        eur_stated=effective_eur_taxable_base,
+        eur_owed=invoice.base_total_eur,
+    )
+
+
+def iva_amount_comparison(invoice: Invoice, rows: Sequence[Transaction]) -> SettlementComparison | None:
+    """Put the cuotas ``rows`` state and the cuota of ``invoice`` in one currency, by the settlement rule.
+
+    The same rule as :func:`taxable_base_comparison`, applied to ``iva_amount`` and
+    the invoice's ``iva_total``.
+    """
+    return _figure_comparison(
+        invoice,
+        rows,
+        native_stated=lambda row: row.iva_amount,
+        native_owed=invoice.iva_total,
+        eur_stated=effective_eur_iva_amount,
+        eur_owed=invoice.iva_total_eur,
+    )
 
 
 def part_payment_share(invoice: Invoice, transaction: Transaction) -> Decimal | None:
