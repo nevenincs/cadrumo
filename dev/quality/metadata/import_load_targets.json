@@ -1494,6 +1494,7 @@
         "cadrumo.application.modelo.participation_index_rebuild",
         "cadrumo.application.modelo.participation_index_rebuild_ports",
         "cadrumo.application.modelo.participation_writes",
+        "cadrumo.application.modelo.period_admission",
         "cadrumo.application.modelo.ports",
         "cadrumo.application.modelo.precondition_action_bindings",
         "cadrumo.application.modelo.preconditions",
