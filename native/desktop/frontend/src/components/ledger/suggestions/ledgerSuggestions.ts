@@ -9,9 +9,12 @@ import type { Suggestion } from "@/components/ui/suggestions";
 import { countryName, currencyName } from "../../../shared/codeNames";
 import { formatDay } from "../../../shared/dateFormats";
 import type { CatalogueInvoiceSnapshot } from "../../../shell/ledgerInvoiceContract";
-import type { KnownCounterparty, KnownText } from "../../../shell/ledger";
 import type { CapitalGood } from "../../../shell/ledgerRegisterOperations";
-import type { LedgerTransactionReviewProjection } from "../../../shell/ledgerReadContract";
+import type {
+  KnownCounterparty,
+  KnownText,
+  LedgerTransactionReviewProjection,
+} from "../../../shell/ledgerReadContract";
 
 /** The sibling fields a counterparty pick can fill. */
 export type PartyFill = "name" | "tax_id" | "country";

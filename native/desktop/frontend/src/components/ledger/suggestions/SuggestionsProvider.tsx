@@ -20,11 +20,7 @@ import { countryName, currencyName } from "../../../shared/codeNames";
 import { formatPercent } from "../../../shared/numbers";
 import { facts } from "../../../shell/compose";
 import type { CatalogueInvoiceSnapshot } from "../../../shell/ledgerInvoiceContract";
-import type {
-  LedgerKnownValueKind,
-  LedgerKnownValuesResult,
-  LedgerPort,
-} from "../../../shell/ledger";
+import type { LedgerPort } from "../../../shell/ledger";
 import type { OutputLanguage } from "../../../shell/ledger";
 import type {
   CapitalGood,
@@ -60,7 +56,11 @@ import {
   partyTaxIdOptions,
   usedCodeOptions,
 } from "./ledgerSuggestions";
-import type { LedgerTransactionReviewProjection } from "../../../shell/ledgerReadContract";
+import type {
+  LedgerKnownValueKind,
+  LedgerKnownValuesProjection,
+  LedgerTransactionReviewProjection,
+} from "../../../shell/ledgerReadContract";
 
 export type SuggestionKind =
   | "counterparty"
@@ -103,9 +103,9 @@ type Held = {
    * be; the window holds no list to show meanwhile. */
   vocabulary: ServedVocabulary;
   /** The whole history's movement values; null likewise. */
-  known: LedgerKnownValuesResult | null;
+  known: LedgerKnownValuesProjection | null;
   /** The references the activity assets state; null likewise. */
-  assetReferences: LedgerKnownValuesResult["asset_references"] | null;
+  assetReferences: LedgerKnownValuesProjection["asset_references"] | null;
   /** The capital goods register; null likewise. */
   capitalGoods: readonly CapitalGood[] | null;
   /** The prorrata register; null likewise. */

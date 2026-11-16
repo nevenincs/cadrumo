@@ -3,9 +3,76 @@
 // `node scripts/ledger-operation-contract.mjs`; `--check` fails when it is stale.
 import type { OutputLanguage } from "./ledgerClassificationContract";
 import type {
+  LedgerCheckIssueProjection,
   LedgerReviewStatus,
   LedgerTransactionProjection,
+  PublicPeriod,
 } from "./ledgerInvoiceContract";
+
+/**
+ * How a sealed revision's recorded asset-register state compares with the
+ * register now.
+ *
+ * `UNAVAILABLE` means the comparison could not run, which proves neither drift
+ * nor currency.
+ */
+export type FiledRegisterState = "current" | "changed" | "unavailable";
+
+/**
+ * One party as the records name it, most recently used spelling first.
+ */
+export type KnownCounterparty = {
+  name: string;
+  tax_id: string | null;
+  country: string | null;
+  identification_state: string | null;
+  uses: number;
+  last_used: string;
+};
+
+/**
+ * One free text as the records use it.
+ */
+export type KnownText = {
+  text: string;
+  uses: number;
+  last_used: string;
+  counterparty: string | null;
+};
+
+/**
+ * One family of text the ledger, its invoices and its assets already state.
+ */
+export type LedgerKnownValueKind =
+  | "counterparty"
+  | "description"
+  | "group_label"
+  | "m210_payer"
+  | "m210_asset"
+  | "asset_reference";
+
+/**
+ * The values of each requested kind, most recent first, and which kinds were
+ * cut short.
+ */
+export type LedgerKnownValuesProjection = {
+  profile_id: string;
+  counterparties: KnownCounterparty[];
+  descriptions: KnownText[];
+  group_labels: KnownText[];
+  m210_payers: KnownText[];
+  m210_assets: KnownText[];
+  asset_references: KnownText[];
+  truncated: LedgerKnownValueKind[];
+};
+
+/**
+ * Which kinds to read. It names no record, so the journal can retain it.
+ */
+export type LedgerKnownValuesRequest = {
+  profile_id: string;
+  kinds: LedgerKnownValueKind[];
+};
 
 /**
  * Canonical selected rows and truthful paging facts captured in custody.
@@ -52,6 +119,26 @@ export type LedgerMovementWithholdingProjection = {
   retencion: string | null;
   recognised_on: string | null;
   held_back: string | null;
+};
+
+/**
+ * Closed encrypted copy of every canonical preflight report fact.
+ */
+export type LedgerPreflightProjection = {
+  profile_id: string;
+  period: PublicPeriod;
+  bucket_id: string;
+  checked_transaction_count: number;
+  issues: LedgerCheckIssueProjection[];
+  ready: boolean;
+};
+
+/**
+ * The exact profile and mandatory canonical period for one preflight.
+ */
+export type LedgerPreflightRequest = {
+  profile_id: string;
+  period: PublicPeriod;
 };
 
 export type LedgerReasonSource = "none" | "stated" | "command";
@@ -104,6 +191,74 @@ export type LedgerSortField =
 export type LedgerSortOrder = "asc" | "desc";
 
 /**
+ * One finalized filing whose ledger basis has since changed.
+ *
+ * Carries the natural filing address rather than only the revision id, because
+ * that is what an operator can act on.
+ */
+export type LedgerStaleFilingV1 = {
+  modelo: string;
+  filing_year: number;
+  period: string;
+  calculation_revision_id: string;
+  work_unit_id: string;
+  changed_count: number;
+  removed_count: number;
+  covers_current_fact_set: boolean;
+  register_state: FiledRegisterState;
+  register_change_count: number;
+};
+
+/**
+ * Strict encrypted snapshot preserving all existing status result facts.
+ */
+export type LedgerStatusProjection = {
+  profile_id: string;
+  period: PublicPeriod | null;
+  business_income_total: string;
+  business_expense_total: string;
+  business_net_total: string;
+  total_count: number;
+  active_count: number;
+  archived_count: number;
+  stashed_count: number;
+  split_count: number;
+  pending_review_count: number;
+  reviewed_count: number;
+  skipped_count: number;
+  checked_transaction_count: number;
+  readiness_issue_count: number;
+  unconverted_currency_count: number;
+  ready: boolean | null;
+  readiness_issues: LedgerStatusReadinessIssueProjection[];
+  stale_filings: LedgerStaleFilingV1[];
+};
+
+/**
+ * JSON-stable readiness facts with exact decimal strings for encrypted
+ * storage.
+ */
+export type LedgerStatusReadinessIssueProjection = {
+  transaction_id: string;
+  reason: string;
+  detail: string;
+  transaction_present: boolean;
+  business_classification: string | null;
+  category_id: string | null;
+  taxable_base: string | null;
+  iva_rate: string | null;
+  iva_amount: string | null;
+};
+
+/**
+ * Optional money/readiness period; counts and filing history remain global.
+ */
+export type LedgerStatusRequest = {
+  profile_id: string;
+  period?: PublicPeriod | null;
+};
+
+/**
  * A reviewed transaction with the group used by canonical list ordering.
  *
  * The own account is the register id the row is bound to, never its account
@@ -131,8 +286,52 @@ export type LedgerTransactionReviewProjection = {
   gasto_capital_inmobiliario_words_language: OutputLanguage | null;
 };
 
+/**
+ * Admitted transaction display facts and its latest standing rejection.
+ */
+export type LedgerViewProjection = {
+  profile_id: string;
+  transaction_prefix: string;
+  transaction: LedgerTransactionProjection;
+  review_status: LedgerReviewStatus;
+  latest_llm_rejection: LedgerViewRejectionProjection | null;
+};
+
+/**
+ * The existing notice's decision facts, without a frontend repository read.
+ */
+export type LedgerViewRejectionProjection = {
+  occurred_at: string;
+  operator_reason: string;
+};
+
+/**
+ * An exact profile and a current or superseded transaction handle.
+ *
+ * `output_language` is the language the transaction's link fields are named
+ * in.
+ */
+export type LedgerViewRequest = {
+  profile_id: string;
+  transaction_prefix: string;
+  output_language?: OutputLanguage;
+};
+
 /** Each ledger definition's registered request and result, as the runtime's
  * contract names them; a request names the profile the host fills. */
 export type LedgerReadContracts = {
+  "ledger.known-values": {
+    request: LedgerKnownValuesRequest;
+    result: LedgerKnownValuesProjection;
+  };
   "ledger.list": { request: LedgerListRequest; result: LedgerListProjection };
+  "ledger.preflight": {
+    request: LedgerPreflightRequest;
+    result: LedgerPreflightProjection;
+  };
+  "ledger.status": {
+    request: LedgerStatusRequest;
+    result: LedgerStatusProjection;
+  };
+  "ledger.view": { request: LedgerViewRequest; result: LedgerViewProjection };
 };
