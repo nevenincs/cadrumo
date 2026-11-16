@@ -11,11 +11,14 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
+from types import MappingProxyType
 from typing import TYPE_CHECKING
 
+from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.casilla_id import CasillaId
 from ...core.estado_casilla_oficial import EstadoCasillaOficial
 from ...core.identity.bucket import BucketId
+from ...core.modelo import Modelo
 from ...core.modelo_work_progress_state import ModeloWorkProgressState
 from ...core.operator_action_enums import OperatorActionAxis
 from ...core.period import Period
@@ -499,23 +502,66 @@ def _review_casilla(
     )
 
 
-def _review_row_context(
-    *,
-    snapshot: RegistrySnapshot,
-    revision: CalculationRevision | None,
-    blocking_findings: tuple[ModeloVerificationFinding, ...],
-    operation: PinnedAuthorityOperation,
-) -> _ReviewRowContext:
+@dataclass(frozen=True, slots=True)
+class _OfficialCasillaReading:
+    """How the filed return carries each casilla of one registry revision, read from published content alone."""
+
+    estados: Mapping[CasillaId, EstadoCasillaOficial]
+    references: Mapping[CasillaId, str | None]
+
+
+@dataclass(frozen=True, slots=True)
+class _OfficialReadingKey:
+    """The pinned snapshot coordinate a shared official reading is derived from, besides the generation."""
+
+    modelo_id: str
+    filing_year: int
+    period: str
+    grade: RegistryAuthorityGrade
+
+
+def _official_casilla_reading(
+    snapshot: RegistrySnapshot, *, operation: PinnedAuthorityOperation
+) -> _OfficialCasillaReading:
     # Only embedded dictionary and XSD bytes are fetched; the rows still cite
     # every casilla source reference, including record designs without bytes.
     layouts = derive_export_layouts_from_bindings(snapshot.revision)
     source_ids = layout_embedded_source_ids(layouts, sources=snapshot.sources)
     source_payloads = {source_id: operation.source_evidence(source_id).payload for source_id in source_ids}
-    estados_casillas_oficiales = clasificar_casillas_oficiales(
+    estados = clasificar_casillas_oficiales(
         snapshot.revision,
         sources=snapshot.sources,
         source_payloads=source_payloads,
     )
+    references = _official_references(snapshot, estados, source_payloads=source_payloads)
+    return _OfficialCasillaReading(
+        estados=MappingProxyType(dict(estados)), references=MappingProxyType(dict(references))
+    )
+
+
+def _shared_official_casilla_reading(
+    key: _OfficialReadingKey, *, operation: PinnedAuthorityOperation
+) -> _OfficialCasillaReading:
+    """The official reading of the snapshot ``operation`` selects for ``key``, derived once per generation.
+
+    It reads only the pinned generation's registry and source evidence, never
+    a calculation revision, so every later read of the coordinate shares it.
+    """
+
+    def build() -> _OfficialCasillaReading:
+        snapshot = operation.snapshot(key.modelo_id, filing_year=key.filing_year, period=key.period, grade=key.grade)
+        return _official_casilla_reading(snapshot, operation=operation)
+
+    return operation.retained_projection(key, kind=_OfficialCasillaReading, build=build)
+
+
+def _review_row_context(
+    *,
+    snapshot: RegistrySnapshot,
+    revision: CalculationRevision | None,
+    blocking_findings: tuple[ModeloVerificationFinding, ...],
+    official: _OfficialCasillaReading,
+) -> _ReviewRowContext:
     consumption_index = relation_consumption_index(snapshot.revision)
     return _ReviewRowContext(
         bindings_by_id={binding.id: binding for binding in snapshot.revision.bindings},
@@ -530,15 +576,27 @@ def _review_row_context(
         },
         persisted_decimal_bindings=_persisted_decimal_bindings(snapshot=snapshot, revision=revision),
         persisted_binding_ids=frozenset(() if revision is None else revision.binding_overrides),
-        estados_casillas_oficiales=estados_casillas_oficiales,
-        official_references=_official_references(
-            snapshot,
-            estados_casillas_oficiales,
-            source_payloads=source_payloads,
-        ),
+        estados_casillas_oficiales=official.estados,
+        official_references=official.references,
         blocking_findings=blocking_findings,
         observations=_casilla_observations(revision),
     )
+
+
+def _review_casillas(
+    *,
+    snapshot: RegistrySnapshot,
+    revision: CalculationRevision | None,
+    blocking_findings: tuple[ModeloVerificationFinding, ...],
+    official: _OfficialCasillaReading,
+) -> tuple[ModeloWorkReviewCasilla, ...]:
+    context = _review_row_context(
+        snapshot=snapshot,
+        revision=revision,
+        blocking_findings=blocking_findings,
+        official=official,
+    )
+    return tuple(_review_casilla(casilla, context) for casilla in snapshot.revision.casillas)
 
 
 def assemble_modelo_work_review_casillas(
@@ -552,13 +610,12 @@ def assemble_modelo_work_review_casillas(
 
     Each row is realised from the :class:`CalculationRevision` when one is given.
     """
-    context = _review_row_context(
+    return _review_casillas(
         snapshot=snapshot,
         revision=revision,
         blocking_findings=blocking_findings,
-        operation=operation,
+        official=_official_casilla_reading(snapshot, operation=operation),
     )
-    return tuple(_review_casilla(casilla, context) for casilla in snapshot.revision.casillas)
 
 
 def _work_progress(
@@ -615,11 +672,14 @@ def assemble_modelo_work_review(
     persisted calculation note that refuses the check, judged with
     ``resolutions`` as the check judges them.
     """
-    snapshot = operation.snapshot(
-        modelo,
+    reading_key = _OfficialReadingKey(
+        modelo_id=Modelo(modelo).value,
         filing_year=filing_year,
         period=period.registry_token,
         grade=operation.reachable_authority_grade(modelo, filing_year=filing_year, period=period.registry_token),
+    )
+    snapshot = operation.snapshot(
+        reading_key.modelo_id, filing_year=filing_year, period=reading_key.period, grade=reading_key.grade
     )
     work_units = work_unit_repository.load()
     calculation_repo = calculation_repository
@@ -647,11 +707,11 @@ def assemble_modelo_work_review(
         *(_blocker_ref(finding) for finding in blocking_findings),
         *_calculation_note_blockers(revision, resolutions),
     )
-    rows = assemble_modelo_work_review_casillas(
+    rows = _review_casillas(
         snapshot=snapshot,
         revision=revision,
         blocking_findings=blocking_findings,
-        operation=operation,
+        official=_shared_official_casilla_reading(reading_key, operation=operation),
     )
     return ModeloWorkReview(
         bucket_id=bucket_id,
