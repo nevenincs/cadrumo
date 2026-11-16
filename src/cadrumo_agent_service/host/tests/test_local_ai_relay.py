@@ -9,6 +9,8 @@ import pytest
 
 from ...admin import AdminRequest
 from ...local_ai_relay import LocalAiFacts, LocalAiModel, LocalAiServer, relay_local_ai
+from ...providers.application.served_catalog import catalog_nonconformance
+from ...providers.application.tests.served_catalog_documents import declared_catalog, served_catalog
 from ...providers.domain.record import LocalEngine
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -128,14 +130,47 @@ def test_facts_of_the_other_engine_leave_a_lane_as_the_agent_served_it() -> None
     assert _relayed(unread, _facts(LocalAiServer.DORMANT)) == unread
 
 
-def test_a_declared_catalogue_and_a_refusal_are_relayed_through() -> None:
-    declared = {"kind": "declared", "catalog": {"providers": [_lane("llamacpp", read=False)]}}
+def _declared_with_local_engines() -> dict[str, Any]:
+    """The catalogue the agent declares before it runs, with both local engines' lanes beside a hosted one."""
+    declared = declared_catalog()
+    catalog = cast(dict[str, Any], declared["catalog"])
+    hosted = catalog["providers"][0]
+    local = [
+        {
+            **hosted,
+            "id": f"{engine.value}_api",
+            "provider": engine.value,
+            "auth_kind": "none",
+            "model_download": "required",
+        }
+        for engine in LocalEngine
+    ]
+    return {**declared, "catalog": {**catalog, "providers": [hosted, *local]}}
 
-    relayed = _relay(declared, _facts(LocalAiServer.DORMANT))
 
-    assert relayed["kind"] == "declared"
-    assert relayed["catalog"]["providers"][0]["health"]["selectable"] is True
+_EVERY_FACT: tuple[LocalAiFacts | None, ...] = (
+    None,
+    *(_facts(server, engine) for engine in LocalEngine for server in LocalAiServer),
+)
+
+
+@pytest.mark.parametrize("facts", _EVERY_FACT)
+def test_a_declared_catalogue_is_relayed_as_the_agent_declared_it(facts: LocalAiFacts | None) -> None:
+    declared = _declared_with_local_engines()
+
+    assert catalog_nonconformance(declared) is None
+    assert _relay(declared, facts) == declared
+
+
+@pytest.mark.parametrize("facts", _EVERY_FACT)
+def test_every_relayed_lane_conforms_to_the_served_catalogue(facts: LocalAiFacts | None) -> None:
+    for document in (served_catalog(), _declared_with_local_engines()):
+        assert catalog_nonconformance(_relay(document, facts)) is None
+
+
+def test_a_refusal_is_relayed_through() -> None:
     refusal = {"kind": "refused", "code": "service_stopping"}
+
     assert _relay(refusal, None) == refusal
 
 
