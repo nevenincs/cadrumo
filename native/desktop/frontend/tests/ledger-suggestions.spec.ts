@@ -23,9 +23,12 @@ import {
 } from "../src/components/ledger/assets/assetFields";
 import { shownSuggestions } from "../src/components/ui/suggestions";
 import type { CatalogueInvoiceSnapshot } from "../src/shell/ledgerInvoiceContract";
-import type { KnownCounterparty, KnownText } from "../src/shell/ledger";
 import type { CapitalGood } from "../src/shell/ledgerRegisterOperations";
-import type { LedgerTransactionReviewProjection } from "../src/shell/ledgerReadContract";
+import type {
+  KnownCounterparty,
+  KnownText,
+  LedgerTransactionReviewProjection,
+} from "../src/shell/ledgerReadContract";
 
 // What the ledger's own records offer a field. No page is opened.
 
