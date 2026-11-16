@@ -111,9 +111,8 @@ _WORDED_MODULES = (
     "value_presentation.py",
     "verification_actions.py",
     "verification_predicates.py",
-    "work_form.py",
     "work_form_field_projection.py",
-    "work_form_layout.py",
+    "work_form_layout_facts.py",
 )
 _YEAR = filing_year_envelope().horizon
 

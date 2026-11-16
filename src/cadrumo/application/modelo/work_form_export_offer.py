@@ -69,12 +69,12 @@ from .export_settlement import SettlementRefusal, declared_settlement
 from .settlement_casilla import declaration_settlement_casilla_id
 from .value_presentation import format_casilla_value
 from .work_form_declaration_facts import ModeloFormResult, ModeloFormResultDirection
+from .work_form_facts import ModeloFormFacts
 from .work_form_field_vocabulary import (
     ModeloFormCasillaAddressV1,
     ModeloFormOrigin,
 )
 from .work_form_header import ModeloFormExportHoldReason, export_hold, form_recorded
-from .work_form_models import ModeloWorkForm
 from .work_form_wording import day_text
 
 if TYPE_CHECKING:
@@ -600,7 +600,7 @@ def _account_question(
     )
 
 
-def _result_direction(form: ModeloWorkForm) -> ModeloFormResultDirection:
+def _result_direction(form: ModeloFormFacts) -> ModeloFormResultDirection:
     result = form.result
     if form.calculation_revision_id is None or result is None:
         return ModeloFormResultDirection.UNKNOWN
@@ -632,7 +632,7 @@ class _Settlement:
     held: ModeloFormElectionReason | None
 
 
-def _form_values(form: ModeloWorkForm) -> dict[CasillaId, object]:
+def _form_values(form: ModeloFormFacts) -> dict[CasillaId, object]:
     """Every box the form shows a value for; a box that could not be worked out holds none."""
     return {
         field.address.casilla_id: field.value
@@ -643,7 +643,7 @@ def _form_values(form: ModeloWorkForm) -> dict[CasillaId, object]:
     }
 
 
-def _settlement(modelo: str, snapshot: RegistrySnapshot, form: ModeloWorkForm) -> _Settlement:
+def _settlement(modelo: str, snapshot: RegistrySnapshot, form: ModeloFormFacts) -> _Settlement:
     """The settled amount, read as the export reads it, where the revision names a box it settles."""
     result = form.result
     if (
@@ -658,7 +658,7 @@ def _settlement(modelo: str, snapshot: RegistrySnapshot, form: ModeloWorkForm) -
     return _Settlement(settled.amount, None)
 
 
-def _payable(form: ModeloWorkForm, settlement: _Settlement) -> ModeloFormElectionReason | None:
+def _payable(form: ModeloFormFacts, settlement: _Settlement) -> ModeloFormElectionReason | None:
     """Why the result is not one to pay, or its settlement cannot be answered, or ``None`` when it can."""
     direction = _result_direction(form)
     if direction is ModeloFormResultDirection.UNKNOWN:
@@ -668,7 +668,7 @@ def _payable(form: ModeloWorkForm, settlement: _Settlement) -> ModeloFormElectio
     return ModeloFormElectionReason.NOTHING_TO_PAY
 
 
-def _refundable(form: ModeloWorkForm, settlement: _Settlement) -> ModeloFormElectionReason | None:
+def _refundable(form: ModeloFormFacts, settlement: _Settlement) -> ModeloFormElectionReason | None:
     """Why AEAT would not pay the result out, or ``None`` when it would or the refund election can make it."""
     direction = _result_direction(form)
     if direction is ModeloFormResultDirection.UNKNOWN:
@@ -699,7 +699,7 @@ def _refund_election_withheld(result: ModeloFormResult | None) -> ModeloFormElec
 
 
 def _instalment_figures(
-    modelo: str, form: ModeloWorkForm, settlement: _Settlement, language: OutputLanguage
+    modelo: str, form: ModeloFormFacts, settlement: _Settlement, language: OutputLanguage
 ) -> tuple[ModeloFormElectionFigure, ...]:
     """Both instalments of the amount to pay, each advisory because no official rule rounds the cent."""
     share = _instalment_share(modelo, form.period)
@@ -732,7 +732,7 @@ def _instalment_figures(
 
 
 def _splittable(
-    modelo: str, form: ModeloWorkForm, settlement: _Settlement, *, amended: bool
+    modelo: str, form: ModeloFormFacts, settlement: _Settlement, *, amended: bool
 ) -> ModeloFormElectionReason | None:
     """Why the result may not be paid in two instalments, or ``None`` when it may.
 
@@ -777,7 +777,7 @@ def _payment_keys(modelo: str) -> Mapping[PaymentElection, str]:
 def _settlement_question(
     election: ModeloFormElection,
     modelo: str,
-    form: ModeloWorkForm,
+    form: ModeloFormFacts,
     language: OutputLanguage,
     settlement: _Settlement,
     *,
@@ -815,7 +815,7 @@ def _settlement_question(
 def _own_account_question(
     election: ModeloFormElection,
     modelo: str,
-    form: ModeloWorkForm,
+    form: ModeloFormFacts,
     locale: str,
     register: OwnAccountRegister,
     settlement: _Settlement,
@@ -849,7 +849,7 @@ _ACCOUNT_ELECTIONS: Final = frozenset({ModeloFormElection.CHARGE_ACCOUNT, Modelo
 def _election_questions(
     modelo: str,
     snapshot: RegistrySnapshot,
-    form: ModeloWorkForm,
+    form: ModeloFormFacts,
     language: OutputLanguage,
     *,
     own_accounts: OwnAccountRegister | None,
@@ -891,7 +891,7 @@ def _unavailable(reason: ModeloFormUnavailable, words: str) -> ModeloFormAvailab
     return ModeloFormAvailability(available=False, reason=reason, words=words)
 
 
-def _held(form: ModeloWorkForm, language: OutputLanguage, *, verified: bool) -> ModeloFormAvailability | None:
+def _held(form: ModeloFormFacts, language: OutputLanguage, *, verified: bool) -> ModeloFormAvailability | None:
     """What withholds the file for the AEAT and recording the filing, as the header's hold says; ``None`` if nothing."""
     locale = language.value
     if form.calculation_revision_id is None:
@@ -903,7 +903,7 @@ def _held(form: ModeloWorkForm, language: OutputLanguage, *, verified: bool) -> 
 
 
 def artefact_availability(
-    artefact: ModeloExportArtefact, form: ModeloWorkForm, language: OutputLanguage, *, verified: bool
+    artefact: ModeloExportArtefact, form: ModeloFormFacts, language: OutputLanguage, *, verified: bool
 ) -> ModeloFormAvailability:
     """Whether ``artefact`` can be created from the declaration now, by the rules its export applies.
 
@@ -924,7 +924,7 @@ def artefact_availability(
 
 
 def review_package_availability(
-    form: ModeloWorkForm, language: OutputLanguage, *, verified: bool
+    form: ModeloFormFacts, language: OutputLanguage, *, verified: bool
 ) -> ModeloFormAvailability:
     """Whether the package for the filer's accountant can be built now.
 
@@ -935,7 +935,7 @@ def review_package_availability(
 
 
 def record_availability(
-    form: ModeloWorkForm, language: OutputLanguage, *, verified: bool, filed: bool
+    form: ModeloFormFacts, language: OutputLanguage, *, verified: bool, filed: bool
 ) -> ModeloFormAvailability:
     """Whether the filing can be recorded now: not again, not while anything withholds it, not from a stale file."""
     locale = language.value
@@ -956,7 +956,7 @@ def form_export_offer(
     snapshot: RegistrySnapshot,
     language: OutputLanguage,
     *,
-    form: ModeloWorkForm,
+    form: ModeloFormFacts,
     verified: bool,
     filed: bool,
     own_accounts: OwnAccountRegister | None = None,
