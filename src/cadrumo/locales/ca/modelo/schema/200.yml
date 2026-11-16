@@ -7686,6 +7686,14 @@ modelo:
             label: Ajustos per deteriorament de valors repr. de partic. en el capital
               o fons propis (DT 16a.3 LIS) - Disminució - Correccions de l'exercici
               - Temporàries (amb origen en l'exercici) [01733]
+          is-correccion-deterioro-participaciones-dt16-3-aumentos:
+            label: Liquidació I - Detall correccions resultat cte. pèrdues i guanys
+              - Ajustos per deteriorament de valors repr. de partic. en el capital
+              o fons propis (DT 16a.3 LIS) - Augments [00524]
+          is-correccion-deterioro-participaciones-dt16-3-disminuciones:
+            label: Liquidació I - Detall correccions resultat cte. pèrdues i guanys
+              - Ajustos per deteriorament de valors repr. de partic. en el capital
+              o fons propis (DT 16a.3 LIS) - Disminucions [00525]
           is-correccion-deterioro-participaciones-dt16-all-temporaria-ejercicio-aumento:
             label: Ajustos per deteriorament de valors repr. de partic. en el capital
               o fons propis (DT 16a.3 LIS) - Augment - Correccions de l'exercici -
@@ -9303,6 +9311,10 @@ modelo:
             label: Comptabilitat Banc d'Espanya - Estat de canvis en el patrimoni
               net (II) - Estat total de canvis - Conversió de deute en patrimoni net
               - Guanys acumulats [00417]
+          is-ecpn-bde-total-cambios-pagos-basados-acciones-otros-elementos-patrimonio-neto:
+            label: Comptabilitat Banc d'Espanya - Estat de canvis en el patrimoni
+              net (II) - Estat total de canvis - Pagaments basats en accions - Altres
+              elements del patrimoni net [00524]
           is-ecpn-bde-total-cambios-saldo-cierre-dividendos-cuenta:
             label: Comptabilitat Banc d'Espanya - Estat de canvis en el patrimoni
               net (II) - Estat total de canvis - Saldo de tancament (període corrent)
@@ -9671,6 +9683,18 @@ modelo:
             label: Entitats asseguradores - Estat de canvis en el patrimoni propi
               (III) - Operacions amb socis o mutualistes - Increment (reducció) de
               patrimoni net resultant d'una combinació de negocis - Total [00568]
+          is-ecpp-aseguradoras-iii-conversion-pasivos-dividendo-cuenta:
+            label: Entitats asseguradores - Estat de canvis en el patrimoni propi
+              (III) - Operacions amb socis o mutualistes - Conversió de passius financers
+              en patrimoni net - (Dividend a compte) [00525]
+          is-ecpp-aseguradoras-iii-conversion-pasivos-otros-instrumentos-patrimonio:
+            label: Entitats asseguradores - Estat de canvis en el patrimoni propi
+              (III) - Operacions amb socis o mutualistes - Conversió de passius financers
+              en patrimoni net - Altres instruments de patrimoni [00526]
+          is-ecpp-aseguradoras-iii-conversion-pasivos-resultado-ejercicio:
+            label: Entitats asseguradores - Estat de canvis en el patrimoni propi
+              (III) - Operacions amb socis o mutualistes - Conversió de passius financers
+              en patrimoni net - Resultat de l'exercici [00524]
           is-ecpp-aseguradoras-iii-otras-operaciones-socios-dividendo-cuenta:
             label: Entitats asseguradores - Estat de canvis en el patrimoni propi
               (III) - Operacions amb socis o mutualistes - Altres operacions amb socis

@@ -105,33 +105,6 @@ section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_carac
 semantic_role = "is_deduccion_donativos_general"
 legal_refs = ["ley-49-2002:art-20"]
 [[revisions."2024".casillas]]
-id = "00524"
-continuidad_id = "00524"
-continuidad_origin = "grounded"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:958 (DP200010 field 80): Estado de cambios patrimonio neto (II) - Operaciones con socios o propietarios - Aumentos de capital - Acciones y participaciones en patrimonio propias [00524]. aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1009 (DP200010 field 80): Estado de cambios patrimonio neto (II) - Operaciones con socios o propietarios - Aumentos de capital - Acciones y participaciones en patrimonio propias [00524]. Both print the same box on the same sheet for the same field with the same caption. The 2023 edition declares that field as DP200010:00524, because the 2023 design also prints box [00524] as a reserve cohort box; the 2024 edition declares it unsheeted."
-number = "00524"
-section = ["estado_de_cambios_patrimonio_neto_ii", "operaciones_con_socios_o_propietarios"]
-semantic_role = "is_ecpn_operaciones_socios_importe"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2024".casillas]]
-id = "00525"
-continuidad_id = "00525"
-continuidad_origin = "grounded"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:959 (DP200010 field 81): Estado de cambios patrimonio neto (II) - Operaciones con socios o propietarios - Aumentos de capital - Resultados ejercicios anteriores [00525]. aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1010 (DP200010 field 81): Estado de cambios patrimonio neto (II) - Operaciones con socios o propietarios - Aumentos de capital - Resultados ejercicios anteriores [00525]. Both print the same box on the same sheet for the same field with the same caption. The 2023 edition declares that field as DP200010:00525, because the 2023 design also prints box [00525] as a reserve cohort box; the 2024 edition declares it unsheeted."
-number = "00525"
-section = ["estado_de_cambios_patrimonio_neto_ii", "operaciones_con_socios_o_propietarios"]
-semantic_role = "is_ecpn_operaciones_socios_importe"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2024".casillas]]
-id = "00526"
-continuidad_id = "00526"
-continuidad_origin = "grounded"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:960 (DP200010 field 82): Estado de cambios patrimonio neto (II) - Operaciones con socios o propietarios - Aumentos de capital - Otras aportaciones de socios [00526]. aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1011 (DP200010 field 82): Estado de cambios patrimonio neto (II) - Operaciones con socios o propietarios - Aumentos de capital - Otras aportaciones de socios [00526]. Both print the same box on the same sheet for the same field with the same caption. The 2023 edition declares that field as DP200010:00526, because the 2023 design also prints box [00526] as a reserve cohort box; the 2024 edition declares it unsheeted."
-number = "00526"
-section = ["estado_de_cambios_patrimonio_neto_ii", "operaciones_con_socios_o_propietarios"]
-semantic_role = "is_ecpn_operaciones_socios_importe"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2024".casillas]]
 id = "00764"
 continuidad_id = "is-balance-patrimonio-neto-capital-cooperativo-suscrito-cooperativas"
 continuidad_origin = "new_on_form"
@@ -3109,3 +3082,24 @@ section = ["deducc_para_incentivar_determ_actividades", "60_aniversario_del_fest
 data_type = "money"
 semantic_role = "is_deduccion_porta_ferrada_pendiente_futuro"
 legal_refs = ["ley-27-2014:art-39"]
+[[revisions."2024".casillas]]
+id = "DP200012:00524"
+number = "00524"
+segmento = "DP200012"
+continuidad_id = "is-correccion-deterioro-participaciones-dt16-3-aumentos"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1301 (DP200012 field 60): Liquidación I - Detalle correcciones resultado cta. pérdidas y ganancias - Ajustes por deterioro de valores repr. de partic. en el capital o fondos propios (DT 16ª.3 LIS) - Aumentos [00524]. aeat-dr-200-2023 prints no field with this caption; its DP200012 prints no box [00524], and its box [00524] is a reserva para inversiones en Canarias cohort at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3742. The same 2024 box number on DP200010 is an estado de cambios en el patrimonio neto cell, a different concept. The cell is new on the 2024 design; this does not claim the underlying concept is new in law."
+section = ["liquidacion_i", "detalle_correcciones_resultado_cta_perdidas_y_gana"]
+semantic_role = "is_correcciones_aumentos"
+source_refs = ["aeat-dr-200-2024"]
+
+[[revisions."2024".casillas]]
+id = "DP200012:00525"
+number = "00525"
+segmento = "DP200012"
+continuidad_id = "is-correccion-deterioro-participaciones-dt16-3-disminuciones"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1302 (DP200012 field 61): Liquidación I - Detalle correcciones resultado cta. pérdidas y ganancias - Ajustes por deterioro de valores repr. de partic. en el capital o fondos propios (DT 16ª.3 LIS) - Disminuciones [00525]. aeat-dr-200-2023 prints no field with this caption; its DP200012 prints no box [00525], and its box [00525] is a reserva para inversiones en Canarias cohort at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3743. The same 2024 box number on DP200010 is an estado de cambios en el patrimonio neto cell, a different concept. The cell is new on the 2024 design; this does not claim the underlying concept is new in law."
+section = ["liquidacion_i", "detalle_correcciones_resultado_cta_perdidas_y_gana"]
+semantic_role = "is_correcciones_disminuciones"
+source_refs = ["aeat-dr-200-2024"]
