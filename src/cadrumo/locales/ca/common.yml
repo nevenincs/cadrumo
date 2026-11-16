@@ -1485,7 +1485,6 @@ desktop:
     view_list: Llista
     view_months: Calendari
     window_label: '{modelo} {period}, {days}, {state}'
-    window_unknown: Data d'obertura no indicada
     year: Exercici
     year_current: Torna a la vista actual
     year_failed: No s'ha pogut llegir aquest exercici. El que veus no ha canviat.
