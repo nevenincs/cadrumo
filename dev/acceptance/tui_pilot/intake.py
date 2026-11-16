@@ -147,10 +147,28 @@ def _schema_takes_file(word: str) -> bool:
     return True
 
 
-def write_rows(rows: Iterable[PilotRow]) -> None:
-    """Append ``rows`` to the file :data:`OUT_ENV` names, when it names one, refusing any line the schema refuses."""
+def output_path() -> Path | None:
+    """The file :data:`OUT_ENV` names, or ``None`` when it names none; the operator supplies an absolute path."""
     out = os.environ.get(OUT_ENV, "")
     if not out:
+        return None
+    destination = Path(out)
+    if not destination.is_absolute():
+        raise IntakeConfigurationError(f"{OUT_ENV} must name an absolute path, not {out!r}")
+    return destination
+
+
+def append_lines(destination: Path, lines: Iterable[str]) -> None:
+    """Append ``lines`` to ``destination`` in one write, so parallel workers append whole lines."""
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    with destination.open("a", encoding="utf-8") as handle:
+        handle.write("".join(line + "\n" for line in lines))
+
+
+def write_rows(rows: Iterable[PilotRow]) -> None:
+    """Append ``rows`` to the file :data:`OUT_ENV` names, when it names one, refusing any line the schema refuses."""
+    destination = output_path()
+    if destination is None:
         return
     tree = os.environ.get(TREE_ENV, "")
     if not tree:
@@ -159,8 +177,4 @@ def write_rows(rows: Iterable[PilotRow]) -> None:
     lines = [row.line(tree=tree, log=log) for row in rows]
     for line in lines:
         parse_result(line)
-    path = Path(out)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    # One write per call, so personas run in parallel workers append whole lines.
-    with path.open("a", encoding="utf-8") as handle:
-        handle.write("".join(line + "\n" for line in lines))
+    append_lines(destination, lines)

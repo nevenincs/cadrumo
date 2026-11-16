@@ -149,6 +149,14 @@ def test_a_return_the_table_holds_not_owed_differs_by_the_missing_calendar_verdi
     assert row_cause(_row(), table, [])[0] == "tui_calendar_omits_not_applicable_verdict"
 
 
+def test_the_intake_refuses_an_output_path_that_is_not_absolute(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv(OUT_ENV, "tui.jsonl")
+    monkeypatch.setenv(TREE_ENV, "synthetic-tree")
+
+    with pytest.raises(IntakeConfigurationError):
+        write_rows([PilotRow(persona=_PERSONA)])
+
+
 def test_the_intake_line_is_the_persona_tables_schema_and_needs_the_tree(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
