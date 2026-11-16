@@ -83,6 +83,19 @@ def _verify_socket_incarnation(endpoint: PosixEndpoint, original: os.stat_result
         raise RefusalError(RefusalCode.ENDPOINT_UNTRUSTED)
 
 
+def _socket_address(endpoint: PosixEndpoint) -> str:
+    """The address that names the endpoint's socket through the directory it holds.
+
+    Linux resolves procfs's alias of the held directory descriptor, so the
+    address stays short whatever the storage root's length and cannot be
+    redirected by a renamed or replaced parent. Other kernels use the path,
+    which the endpoint refused at construction when it does not fit.
+    """
+    if sys.platform == "linux":
+        return f"/proc/self/fd/{endpoint._directory_fd}/{endpoint._name}"
+    return str(endpoint._path)
+
+
 def _connect_verified_socket(
     endpoint: PosixEndpoint,
     sock: socket.socket,
@@ -90,7 +103,7 @@ def _connect_verified_socket(
     timeout: float,
 ) -> PosixChannel:
     sock.settimeout(timeout)
-    sock.connect(str(endpoint._path))
+    sock.connect(_socket_address(endpoint))
     _verify_socket_incarnation(endpoint, original)
     return PosixChannel(sock)
 
@@ -131,7 +144,7 @@ def _bind_endpoint_listener(endpoint: PosixEndpoint, backlog: int) -> None:
     endpoint._remove_stale_socket()
     listener = unix_socket()
     endpoint._listener = listener
-    listener.bind(str(endpoint._path))
+    listener.bind(_socket_address(endpoint))
     metadata = _owned_socket_metadata(endpoint)
     endpoint._socket_identity = (metadata.st_dev, metadata.st_ino)
     _restrict_socket_permissions(endpoint, metadata)
@@ -215,7 +228,7 @@ class PosixEndpoint:
         self._lock_fd: int | None = None
         self._listener: socket.socket | None = None
         self._socket_identity: tuple[int, int] | None = None
-        if len(os.fsencode(self._path)) >= SOCKET_PATH_LIMIT:
+        if sys.platform != "linux" and len(os.fsencode(self._path)) >= SOCKET_PATH_LIMIT:
             self.close()
             raise RefusalError(RefusalCode.UNAVAILABLE)
         if self._external_namespace and create_namespace:
@@ -274,7 +287,7 @@ class PosixEndpoint:
             with unix_socket() as probe:
                 probe.settimeout(_PRESENCE_PROBE_SECONDS)
                 try:
-                    probe.connect(str(self._path))
+                    probe.connect(_socket_address(self))
                 except OSError as error:
                     return _presence_after_failed_connect(error)
         except OSError:
@@ -312,7 +325,7 @@ class PosixEndpoint:
             with unix_socket() as probe:
                 probe.settimeout(0.25)
                 try:
-                    probe.connect(str(self._path))
+                    probe.connect(_socket_address(self))
                 except OSError as error:
                     if error.errno != errno.ECONNREFUSED:
                         raise RefusalError(RefusalCode.ENDPOINT_UNTRUSTED) from None
