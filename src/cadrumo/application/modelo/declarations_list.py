@@ -25,9 +25,8 @@ from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import tr
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
-from ...core.time.clock import today_madrid
 from ...domain.calculations.registry.schema_base import CasillaDataType
-from ...domain.deadlines.effective_close import EffectiveFilingDeadline
+from ...domain.deadlines.effective_close import DeadlinePosture, EffectiveFilingDeadline
 from ...domain.deadlines.festivos import DeadlineHolidayCoverage
 from ...domain.deadlines.models import ObligationStatus
 from ...domain.iva.refund_eligibility import RefundEligibilityOutcome
@@ -95,18 +94,38 @@ def _external_completion(calendar: DeclarationsCalendarEntryRefV1) -> bool:
     )
 
 
+#: The deadline postures that put a return in front of the operator.
+_PRESSING_STATUSES: Final = frozenset({ObligationStatus.OVERDUE, ObligationStatus.DUE_TODAY, ObligationStatus.DUE_SOON})
+
+
+def _deadline_posture(calendar: DeclarationsCalendarEntryRefV1) -> DeadlinePosture:
+    """The canonical posture of the entry's effective close on the day the calendar was evaluated."""
+    return EffectiveFilingDeadline(
+        nominal_closes_on=calendar.closes_on,
+        closes_on=calendar.adjusted_closes_on,
+        holiday_coverage=calendar.holiday_coverage,
+        shift_reason=calendar.shift_reason,
+    ).posture_on(calendar.evaluated_on)
+
+
+def _closes_soon(calendar: DeclarationsCalendarEntryRefV1) -> bool:
+    """Whether the entry's close is overdue or within the deadline engine's due-soon window.
+
+    Judged from the close itself rather than the calendar's status, because an
+    externally filed return reads as filed there while a correction of it still
+    has its close to meet.
+    """
+    return _deadline_posture(calendar).status in _PRESSING_STATUSES
+
+
 def _local_group(
-    state: str, calendar: DeclarationsCalendarEntryRefV1 | None, today: date, *, is_correction: bool = False
+    state: str, calendar: DeclarationsCalendarEntryRefV1 | None, *, is_correction: bool = False
 ) -> DeclarationListGroup:
     if state in {"recorded", "superseded", "discarded"}:
         return DeclarationListGroup.RECORDED
     if state in {"blocked", "unreadable"}:
         return DeclarationListGroup.ATTENTION
-    if (
-        calendar is not None
-        and (is_correction or not _external_completion(calendar))
-        and (calendar.adjusted_closes_on - today).days <= 7
-    ):
+    if calendar is not None and (is_correction or not _external_completion(calendar)) and _closes_soon(calendar):
         return DeclarationListGroup.ATTENTION
     return DeclarationListGroup.READY if state == "checked" else DeclarationListGroup.IN_PROGRESS
 
@@ -129,15 +148,14 @@ def declaration_list_rows(
 ) -> tuple[DeclarationListRow, ...]:
     """Project every local row plus due, externally completed and advised obligations."""
     dates = {} if calendar is None else {item.semantic_key(): item for item in calendar.entries}
-    today = today_madrid() if calendar is None else calendar.as_of
     local_addresses: set[tuple[str, int, str]] = set()
     rows: list[DeclarationListRow] = []
     for declaration in workspace.declarations:
         key = (str(declaration.modelo), declaration.filing_year, declaration.period.registry_token)
         local_addresses.add(key)
         deadline = dates.get(key)
-        rows.append(_local_declaration_row(declaration, deadline, today))
-    rows.extend(_calendar_declaration_rows(dates, local_addresses, today))
+        rows.append(_local_declaration_row(declaration, deadline))
+    rows.extend(_calendar_declaration_rows(dates, local_addresses))
     if calendar is not None:
         rows.extend(
             DeclarationListRow(
@@ -150,7 +168,7 @@ def declaration_list_rows(
 
 
 def _local_declaration_row(
-    declaration: DeclarationsWorkspaceDeclarationRefV1, deadline: DeclarationsCalendarEntryRefV1 | None, today: date
+    declaration: DeclarationsWorkspaceDeclarationRefV1, deadline: DeclarationsCalendarEntryRefV1 | None
 ) -> DeclarationListRow:
     """Keep local work status and correction urgency separate from external filing."""
     state = (
@@ -172,7 +190,6 @@ def _local_declaration_row(
         _local_group(
             state,
             deadline,
-            today,
             is_correction=declaration.summary is not None and declaration.summary.is_correction,
         ),
         declaration=declaration,
@@ -183,7 +200,6 @@ def _local_declaration_row(
 def _calendar_declaration_rows(
     dates: dict[tuple[str, int, str], DeclarationsCalendarEntryRefV1],
     local_addresses: set[tuple[str, int, str]],
-    today: date,
 ) -> list[DeclarationListRow]:
     """Append external unlinked returns and uncovered obligations in calendar order."""
     rows: list[DeclarationListRow] = []
@@ -206,7 +222,7 @@ def _calendar_declaration_rows(
             state = "aeat_needs_check" if item.evidence_conflicted or item.aeat_needs_check else "not_started"
             group = (
                 DeclarationListGroup.ATTENTION
-                if state == "aeat_needs_check" or (item.adjusted_closes_on - today).days <= 7
+                if state == "aeat_needs_check" or _closes_soon(item)
                 else DeclarationListGroup.NOT_STARTED
             )
             rows.append(DeclarationListRow(f"due:{key}", str(item.modelo), item.period, state, group, calendar=item))
@@ -466,12 +482,7 @@ def row_days(row: DeclarationListRow) -> tuple[int | None, int | None]:
     if calendar.legal_status is ObligationStatus.FILED:
         # Official evidence shows it filed, so it is never counted overdue.
         return max((calendar.adjusted_closes_on - calendar.evaluated_on).days, 0), None
-    posture = EffectiveFilingDeadline(
-        nominal_closes_on=calendar.closes_on,
-        closes_on=calendar.adjusted_closes_on,
-        holiday_coverage=calendar.holiday_coverage,
-        shift_reason=calendar.shift_reason,
-    ).posture_on(calendar.evaluated_on)
+    posture = _deadline_posture(calendar)
     return posture.days_remaining, posture.days_overdue
 
 

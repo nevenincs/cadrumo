@@ -237,7 +237,9 @@ def _load_filing_context(
         retencion_ports=ports.retencion_observation_ports,
         stage=Modelo123CountAuthorityStage.FILE,
     )
-    require_modelo_193_settled_row_amount_authority(work_unit, target, stage=Modelo193SettledRowStage.FILE)
+    require_modelo_193_settled_row_amount_authority(
+        work_unit, target, stage=Modelo193SettledRowStage.FILE, operation=operation
+    )
     # Before the idempotent re-file no-op too: a verified revision whose assumed value was never
     # confirmed must not be recorded as filed, nor returned as the filed answer.
     if target.state not in FILED_REVISION_STATES:

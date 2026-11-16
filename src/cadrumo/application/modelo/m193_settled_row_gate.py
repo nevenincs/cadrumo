@@ -38,7 +38,7 @@ from enum import StrEnum
 
 from ...core.aggregation import BindingAggregationOp, BindingSourceKind, CalculationSourceLineageRole
 from ...core.operator_action_enums import ActionEvidenceProvenance
-from ...domain.calculations.registry.authority import bundled_indexed_authority
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.binding_aggregation import binding_aggregation_op
 from ...domain.calculations.registry.binding_selector_utils import binding_row_set_selector
 from ...domain.calculations.registry.form_codes import form_for_role
@@ -87,33 +87,39 @@ class Modelo193SettledRowAmountAuthorityUnresolvedError(ModeloPreconditionErrorM
     """Raised when a Modelo 193 revision carries a settled prior-accrual row whose amounts no source settles."""
 
 
-def _phase_row_is_settled_prior_accrual(ref: CalculationSourceRef, *, filing_year: int) -> bool:
-    if ref.source_filing_year is not None:
-        return ref.source_filing_year < filing_year
-    with bundled_indexed_authority().operation() as operation:
-        pending_disclosure_years = modelo_193_pending_disclosure_years(operation)
-    return modelo_193_phase_rows_may_settle_prior_accruals(
-        filing_year, pending_disclosure_years=pending_disclosure_years
-    )
-
-
 def modelo_193_settled_prior_accrual_contributors(
     work_unit: WorkUnit,
     revision: CalculationRevision,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[CalculationSourceRef, ...]:
     """Return the persisted Modelo 193 phase contributors that are settled prior-accrual rows.
+
+    A contributor persisted without its accrual year is judged by the
+    accrual-year bound of the generation ``operation`` pins, the generation
+    the rest of the operation reads.
 
     Core types:
     :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`.
     """
     if work_unit.modelo != form_for_role(_CAPITAL_ANNUAL_ROLE):
         return ()
-    return tuple(
+    filing_year = work_unit.filing_year
+    contributors = tuple(
         ref
         for ref in revision.source_provenance
         if ref.resolver_id == WithholdingSourceResolver.resolver_id
         and ref.lineage_role is CalculationSourceLineageRole.CONTRIBUTOR
-        and _phase_row_is_settled_prior_accrual(ref, filing_year=work_unit.filing_year)
+    )
+    yearless_settled = any(ref.source_filing_year is None for ref in contributors) and (
+        modelo_193_phase_rows_may_settle_prior_accruals(
+            filing_year, pending_disclosure_years=modelo_193_pending_disclosure_years(operation)
+        )
+    )
+    return tuple(
+        ref
+        for ref in contributors
+        if (ref.source_filing_year < filing_year if ref.source_filing_year is not None else yearless_settled)
     )
 
 
@@ -142,12 +148,13 @@ def _devengo_year_precedes(text: str, *, filing_year: int) -> bool:
         return True
 
 
-def _prior_accrual_row_count(work_unit: WorkUnit, revision: CalculationRevision) -> int:
+def _prior_accrual_row_count(
+    work_unit: WorkUnit, revision: CalculationRevision, *, operation: PinnedAuthorityOperation
+) -> int:
     """Count the persisted perceptor rows whose EJERCICIO DEVENGO is before the filing year."""
     if work_unit.modelo != form_for_role(_CAPITAL_ANNUAL_ROLE) or not revision.row_binding_values:
         return 0
-    with bundled_indexed_authority().operation() as operation:
-        registry_revision = operation.revision(work_unit.modelo, revision.registry_snapshot_ref.revision_id)
+    registry_revision = operation.revision(work_unit.modelo, revision.registry_snapshot_ref.revision_id)
     return sum(
         1
         for binding_id in _devengo_year_binding_ids(registry_revision)
@@ -156,14 +163,16 @@ def _prior_accrual_row_count(work_unit: WorkUnit, revision: CalculationRevision)
     )
 
 
-def modelo_193_settled_prior_accrual_row_count(work_unit: WorkUnit, revision: CalculationRevision) -> int:
+def modelo_193_settled_prior_accrual_row_count(
+    work_unit: WorkUnit, revision: CalculationRevision, *, operation: PinnedAuthorityOperation
+) -> int:
     """Return how many settled prior-accrual rows ``revision`` carries, derived or declared by hand.
 
     Core types:
     :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`.
     """
-    contributors = modelo_193_settled_prior_accrual_contributors(work_unit, revision)
-    return max(len(contributors), _prior_accrual_row_count(work_unit, revision))
+    contributors = modelo_193_settled_prior_accrual_contributors(work_unit, revision, operation=operation)
+    return max(len(contributors), _prior_accrual_row_count(work_unit, revision, operation=operation))
 
 
 def require_modelo_193_settled_row_amount_authority(
@@ -171,13 +180,14 @@ def require_modelo_193_settled_row_amount_authority(
     revision: CalculationRevision,
     *,
     stage: Modelo193SettledRowStage,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """Refuse to file or export a Modelo 193 revision that carries a settled prior-accrual row.
 
     Core types:
     :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`.
     """
-    settled_rows = modelo_193_settled_prior_accrual_row_count(work_unit, revision)
+    settled_rows = modelo_193_settled_prior_accrual_row_count(work_unit, revision, operation=operation)
     if not settled_rows:
         return
     raise Modelo193SettledRowAmountAuthorityUnresolvedError(
@@ -230,6 +240,8 @@ def modelo_193_settled_row_amount_authority_unresolved_failure(
 def modelo_193_settled_row_verification_finding(
     work_unit: WorkUnit,
     revision: CalculationRevision,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> ModeloVerificationFinding | None:
     """Return the non-blocking verification finding for a revision that filing and export will refuse.
 
@@ -243,7 +255,7 @@ def modelo_193_settled_row_verification_finding(
     Core types:
     :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`.
     """
-    settled_rows = modelo_193_settled_prior_accrual_row_count(work_unit, revision)
+    settled_rows = modelo_193_settled_prior_accrual_row_count(work_unit, revision, operation=operation)
     if not settled_rows:
         return None
     return ModeloVerificationFinding(

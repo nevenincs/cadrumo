@@ -106,7 +106,7 @@ def append_model_specific_findings(
     )
     # Non-blocking and without a precondition failure: filing and export refuse
     # the revision themselves, and this tells the operator before they try.
-    settled_row_finding = modelo_193_settled_row_verification_finding(work_unit, target)
+    settled_row_finding = modelo_193_settled_row_verification_finding(work_unit, target, operation=operation)
     if settled_row_finding is not None:
         findings.append(settled_row_finding)
     # A warning without a precondition failure: the summary keeps its records' sum, and a
