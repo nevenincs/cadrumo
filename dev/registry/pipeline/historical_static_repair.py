@@ -22,7 +22,11 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from dev.temporary_output import prepare_temp_root
 
-from ..compiler.authority import AuthoringCandidateInspection, compile_validated_authority, inspect_authoring_candidate
+from ..compiler.authority import (
+    AuthoringCandidateInspection,
+    compile_validated_authority,
+    inspect_authoring_candidate,
+)
 from ..compiler.identity import RegistryIdentity, resolve_registry_identity
 from ..compiler.loader import load_modelo_directory
 from ..compiler.loader_fingerprints import collect_registry_tree_fingerprints
@@ -264,7 +268,7 @@ def validated_historical_repair_source(
         )
         if ordinary != preliminary:
             raise RegistryValidationError("historical repair validated render inputs differ from structural inputs")
-        _require_reproduced_repair(ordinary, preliminary_render, overlay_export, modelo, revision, source_ref)
+        require_reproduced_repair(ordinary, preliminary_render, overlay_export, modelo, revision, source_ref)
         _require_unchanged_repair_inputs(
             registry_root,
             source_root,
@@ -357,7 +361,7 @@ def _require_unchanged_repair_inputs(
         )
 
 
-def _require_reproduced_repair(
+def require_reproduced_repair(
     ordinary: RevisionRenderInputs,
     preliminary_render: RenderedExportTree,
     overlay_export: Path,
@@ -365,6 +369,7 @@ def _require_reproduced_repair(
     revision: str,
     source_ref: str,
 ) -> None:
+    """Refuse a repair witness the validated authority does not reproduce byte for byte."""
     with tempfile.TemporaryDirectory(prefix=f"cadrumo-m{modelo}-static-rerender-", dir=prepare_temp_root()) as rerender:
         confirmed_root = Path(rerender) / "export"
         confirmed = render_complete_export_tree(
