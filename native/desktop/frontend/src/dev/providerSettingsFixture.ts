@@ -1,9 +1,9 @@
+import type { ProviderSettings } from "../shell/providerSettings";
 import type {
   ProviderSignInMethod,
   ProviderSignInSnapshot,
-  ProviderSettings,
   ProviderSettingsRecord,
-} from "../shell/providerSettings";
+} from "../shell/providerSettingsContract";
 import {
   FIXTURE_CATALOG,
   fixtureAuthKind,
@@ -46,6 +46,24 @@ const DEFAULT_BASE_URL: Record<string, string> = {
   local_api: "http://127.0.0.1:41000",
 };
 
+/** The lanes the made-up agent declares run on this computer. It declares
+ * every other lane to send a conversation off it, as the agent declares
+ * each lane itself. */
+const ON_THIS_COMPUTER = new Set(["local_api", "ollama_api", "llamacpp_api"]);
+
+/** The command-line lanes the made-up agent declares a logout for. */
+const LOGOUT_DECLARED = new Set(["gamma_cli"]);
+
+/** A lane as the service serves it: it can be signed out while it is signed
+ * in and its agent declares a logout for it. */
+const served = (record: ProviderSettingsRecord): ProviderSettingsRecord => ({
+  ...record,
+  sign_out_available:
+    LOGOUT_DECLARED.has(record.id) &&
+    record.mode !== "disabled" &&
+    record.cli_state === "installed_signed_in",
+});
+
 /** The settings lanes of the made-up catalog: id `<provider>_<transport>`. */
 export const FIXTURE_SETTINGS_LANES: readonly Seed[] = (
   FIXTURE_CATALOG.providers ?? []
@@ -59,8 +77,12 @@ export const FIXTURE_SETTINGS_LANES: readonly Seed[] = (
       transport: lane.transport as "api" | "cli",
       display_name: lane.display_name,
       auth_kind: fixtureAuthKind(lane.provider_id, lane.transport),
+      consumers: ["assistant"],
+      credential_saved: false,
       ...(base ? { default_base_url: base } : {}),
       ...(lane.transport === "cli" ? { cli_state: "unknown" as const } : {}),
+      reads_off_host: !ON_THIS_COMPUTER.has(id),
+      sign_out_available: false,
     };
   })
   .concat(
@@ -80,6 +102,10 @@ export const FIXTURE_SETTINGS_LANES: readonly Seed[] = (
         ...artwork,
         transport: "api",
         auth_kind: "api_key",
+        consumers: ["assistant"],
+        credential_saved: false,
+        reads_off_host: true,
+        sign_out_available: false,
       })),
   );
 
@@ -174,6 +200,11 @@ export type ProviderSignInFixtureControls = {
     detail?: ProviderSignInFixtureRefusal,
     times?: number,
   ) => void;
+  /** The next sign-out rejects with `code` and `detail` beside it. */
+  failNextSignOut: (
+    code: string,
+    detail?: ProviderSignInFixtureRefusal,
+  ) => void;
   /** The next code submission rejects with `code` (`busy` unless given). */
   failNextSubmit: (
     code?: string,
@@ -232,6 +263,10 @@ let fixtureAttempt: ProviderSignInSnapshot | null = null;
 let fixtureCancelRequestedFor: string | null = null;
 let fixtureCancelDetail: ProviderSignInFixtureDetail | null = null;
 let rejectNextSettingsRead: ProviderSignInFixtureRefusal | null = null;
+let rejectNextSignOut: {
+  code: string;
+  detail: ProviderSignInFixtureRefusal;
+} | null = null;
 let fixtureSignInMethods: readonly ProviderSignInMethod[] = [
   "browser",
   "device",
@@ -327,6 +362,7 @@ export function providerSettingsFixture({
   fixtureCancelRequestedFor = null;
   fixtureCancelDetail = null;
   rejectNextSettingsRead = null;
+  rejectNextSignOut = null;
   failNextStatus = null;
   fixtureSignInCalls = [];
   let changes = 0;
@@ -356,7 +392,7 @@ export function providerSettingsFixture({
       revision: await revisionOf(record.id, ++changes),
     };
     records.set(record.id, kept);
-    return kept;
+    return served(kept);
   };
 
   const AUTH_URL = "https://provider.example/sign-in";
@@ -411,6 +447,9 @@ export function providerSettingsFixture({
     failNextSubmit(code = "busy", detail = {}) {
       failNextSubmit = { code, detail };
     },
+    failNextSignOut(code, detail = {}) {
+      rejectNextSignOut = { code, detail };
+    },
     failNextStatus(code = "read_failed", detail = {}, times = 1) {
       failNextStatus = { code, detail, times };
     },
@@ -444,7 +483,8 @@ export function providerSettingsFixture({
         event: "failed",
         // What a host sends beside the reason; the window checks it.
         ...(detail as Partial<ProviderSignInSnapshot>),
-        reason,
+        // A made-up host may send any word; the window keeps only the closed ones.
+        reason: reason as ProviderSignInSnapshot["reason"],
       };
       say(`providerSignInAttemptFailed ${reason}`);
     },
@@ -673,9 +713,9 @@ export function providerSettingsFixture({
         settingsLanesUnderEngine(selectedEngine()).map((seed) => seed.id),
       );
       return {
-        providers: [...records.values()].filter((record) =>
-          listed.has(record.id),
-        ),
+        providers: [...records.values()]
+          .filter((record) => listed.has(record.id))
+          .map(served),
         sign_in_providers: [...fixtureSignInProviders],
         sign_in_methods: Object.fromEntries(
           fixtureSignInProviders.map((provider) => [
@@ -739,6 +779,26 @@ export function providerSettingsFixture({
             reason: null,
           };
       return await keep(restored);
+    },
+    async signOut({ provider, revision }) {
+      say(`providerSignOut ${provider}`);
+      if (rejectNextSignOut) {
+        const { code, detail } = rejectNextSignOut;
+        rejectNextSignOut = null;
+        await wait();
+        throw coded(code, detail);
+      }
+      const record = await take(provider, revision, true);
+      if (!served(record).sign_out_available) throw coded("unsupported_flow");
+      return await keep({
+        ...record,
+        cli_state: "installed_signed_out",
+        mode: "unset",
+        available: false,
+        source: "none",
+        readiness: "sign_in_required",
+        reason: "sign_in_with_provider_tool",
+      });
     },
     async reset({ provider, revision }) {
       say(`providerReset ${provider}`);

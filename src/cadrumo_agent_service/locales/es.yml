@@ -388,6 +388,8 @@ desktop:
         Git y vuelve a intentarlo.
       retry: Vuelve a intentarlo en un momento.
       update_app: Actualiza esta aplicación a la última versión y vuelve a intentarlo.
+    reads_off_host: Tu conversación sale de este ordenador hacia el proveedor.
+    reads_on_host: Tu conversación se queda en este ordenador.
     reason_check_settings: Revisa esta configuración y vuelve a intentarlo.
     reason_record_unreadable: No se puede leer la clave API guardada. Vuelve a añadirla.
     refresh: Volver a intentar
@@ -511,6 +513,8 @@ desktop:
       aquí.
     sign_in_waiting_device: Escribe este código en la página del proveedor para terminar
       de iniciar sesión.
+    sign_out_action: Cerrar sesión
+    sign_out_label: Cerrar sesión en {provider}
     status_not_checked: Sin comprobar
     status_off: Desactivado
     status_ready: Listo

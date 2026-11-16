@@ -169,6 +169,7 @@ export function AgentSettingsPanel({
                 onTurnOff={settings.turnOff}
                 onTurnOn={settings.turnOn}
                 onReset={settings.reset}
+                onSignOut={settings.signOut}
                 onRefresh={settings.refresh}
                 onSignInTerminal={onSignInTerminal}
                 engines={engines}
