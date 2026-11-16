@@ -26,6 +26,7 @@ from ....application.ledger.ratios_contracts import (
     LedgerRatiosValidateRequest,
 )
 from ....core.external_constants import OutputLanguage
+from ....core.filing_year import four_digit_year_in
 from ....core.i18n.render import output_language, tr
 from ....core.time.clock import now
 from ..components.widgets import ContentDataTable
@@ -183,10 +184,10 @@ class LedgerRatiosScreen(CategorisationScreen):
         return category if served is None else f"{served.label} ({category})"
 
     def _typed_year(self) -> int:
-        text = self.query_one("#categorisation-ratios-year", Input).value.strip()
-        if not text.isdigit():
+        year = four_digit_year_in(self.query_one("#categorisation-ratios-year", Input).value)
+        if year is None:
             raise ValueError(tr("tui.ledger.categorisation.ratios.year_invalid"))
-        return int(text)
+        return year
 
     async def _read(self) -> None:
         year = self._typed_year()
