@@ -10,11 +10,9 @@ import {
   type LedgerFailureCode,
   type LedgerOutcome,
   type LedgerPort,
-  type LedgerPreflightResult,
   type LedgerRequest,
   type LedgerResult,
   type OutputLanguage,
-  type LedgerStatusResult,
 } from "./ledger";
 import {
   periodFilters,
@@ -23,8 +21,10 @@ import {
   type LedgerPeriod,
 } from "./ledgerGrammar";
 import type {
+  LedgerPreflightProjection,
   LedgerSortField,
   LedgerSortOrder,
+  LedgerStatusProjection,
   LedgerTransactionReviewProjection,
 } from "./ledgerReadContract";
 
@@ -488,9 +488,9 @@ export type ReadinessSnapshot = {
   period: LedgerPeriod | null;
   /** When the checks ran, in the clock's milliseconds. */
   checkedAt: number;
-  status: LedgerStatusResult;
+  status: LedgerStatusProjection;
   /** The period's preflight; "All periods" has none. */
-  preflight: LedgerPreflightResult | null;
+  preflight: LedgerPreflightProjection | null;
   /** Changes saved since the checks ran. */
   savedSince: number;
 };
@@ -520,7 +520,7 @@ export async function checkReadiness(
       await port.submit("ledger.status", { period: wire }),
     );
     if (status.kind === "failed") return status;
-    let preflight: LedgerPreflightResult | null = null;
+    let preflight: LedgerPreflightProjection | null = null;
     if (wire) {
       const answer = readAnswer(
         await port.submit("ledger.preflight", { period: wire }),

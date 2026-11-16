@@ -3,6 +3,10 @@
 A Cadrumo release is cut by merging a pull request. There is no dispatch to start one,
 no rehearsal mode, and no sealed candidate to retire afterwards.
 
+`main` is the release branch and `feature/tui` the development branch. Work reaches
+`main` only through a promotion pull request from `feature/tui`; a push to `feature/tui`
+starts no release run, and release-please never targets it.
+
 `release-please` watches `main`, keeps a release pull request up to date from the
 conventional commits merged since the last release, and dispatches `release.yml` in its
 prove phase against that pull request's branch. The `nevenincs-release` GitHub App opens

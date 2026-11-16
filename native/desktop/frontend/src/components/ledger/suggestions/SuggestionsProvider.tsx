@@ -20,16 +20,10 @@ import { countryName, currencyName } from "../../../shared/codeNames";
 import { formatPercent } from "../../../shared/numbers";
 import { facts } from "../../../shell/compose";
 import type { CatalogueInvoiceSnapshot } from "../../../shell/ledgerInvoiceContract";
-import type {
-  LedgerKnownValueKind,
-  LedgerKnownValuesResult,
-  LedgerPort,
-} from "../../../shell/ledger";
+import type { LedgerPort } from "../../../shell/ledger";
 import type { OutputLanguage } from "../../../shell/ledger";
-import type {
-  CapitalGood,
-  ProrrataListedEntry,
-} from "../../../shell/ledgerRegisterOperations";
+import type { ProrrataListedEntryProjection } from "../../../shell/ledgerProrrataContract";
+import type { CapitalGood } from "../../../shell/ledgerRegisterOperations";
 import type { LedgerEntryOptionsResult } from "../../../shell/ledgerSetup";
 import {
   NO_VOCABULARY,
@@ -60,7 +54,11 @@ import {
   partyTaxIdOptions,
   usedCodeOptions,
 } from "./ledgerSuggestions";
-import type { LedgerTransactionReviewProjection } from "../../../shell/ledgerReadContract";
+import type {
+  LedgerKnownValueKind,
+  LedgerKnownValuesProjection,
+  LedgerTransactionReviewProjection,
+} from "../../../shell/ledgerReadContract";
 
 export type SuggestionKind =
   | "counterparty"
@@ -103,13 +101,13 @@ type Held = {
    * be; the window holds no list to show meanwhile. */
   vocabulary: ServedVocabulary;
   /** The whole history's movement values; null likewise. */
-  known: LedgerKnownValuesResult | null;
+  known: LedgerKnownValuesProjection | null;
   /** The references the activity assets state; null likewise. */
-  assetReferences: LedgerKnownValuesResult["asset_references"] | null;
+  assetReferences: LedgerKnownValuesProjection["asset_references"] | null;
   /** The capital goods register; null likewise. */
   capitalGoods: readonly CapitalGood[] | null;
   /** The prorrata register; null likewise. */
-  prorrata: readonly ProrrataListedEntry[] | null;
+  prorrata: readonly ProrrataListedEntryProjection[] | null;
   want(kind?: SuggestionKind): void;
 };
 
@@ -368,7 +366,7 @@ export function LedgerSuggestions({
  * backend names what a movement cites, and an entry no reference can name is
  * not offered. Those of the movement's year come first. */
 function prorrataOptions(
-  entries: readonly ProrrataListedEntry[],
+  entries: readonly ProrrataListedEntryProjection[],
   year: number | undefined,
   t: Translate,
   locale: string,

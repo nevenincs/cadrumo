@@ -43,11 +43,13 @@ from .external_details import ExternalFilingDetailsScreen
 from .picker import NewDeclarationPicker
 from .portfolio_interactions import creation_notice, reveal_portfolio_row
 from .portfolio_rendering import (
+    RowAction,
     configure_portfolio_columns,
     populate_portfolio_groups,
     portfolio_key_guidance,
     portfolio_row_refusal,
     portfolio_source_lines,
+    row_action,
 )
 from .portfolio_rows import visible_portfolio_rows
 
@@ -228,17 +230,21 @@ class GroupedDeclarationsScreen(DeclarationsWorkspaceScreen):
             self._populate()
 
     def _activate_row(self, row: DeclarationListRow) -> None:
-        """Open exactly the selected row or confirm its supported creation."""
-        if row.declaration is not None and row.state != "unreadable":
+        """Take the row's one Enter step, the one its hint names, or say why it has none."""
+        action = row_action(row, self.controller)
+        if action in {RowAction.OPEN, RowAction.OPEN_LOCAL_DRAFT} and row.declaration is not None:
             self._open(row.declaration)
-        elif row.state == "not_started" and row.period is not None and self.controller.work_create_handoff is not None:
+        elif action is RowAction.START and row.period is not None:
             target = DeclarationTarget(row.modelo, row.period)
             self.app.push_screen(
                 NewDeclarationPicker((target,), frozenset({row.modelo}), preferred=target, confirmation=True),
                 self._create_selected,
             )
-        elif row.state == "aeat_unlinked":
+        elif action is RowAction.EXTERNAL_DETAILS:
             self.app.push_screen(ExternalFilingDetailsScreen(row))
+        elif row.declaration is not None and row.state != "unreadable":
+            # Local work this session has no workspace to open it in.
+            self.refuse_handoff()
         else:
             self.query_one("#declarations-refusal", Static).update(
                 portfolio_row_refusal(row, OutputLanguage(output_language()))
