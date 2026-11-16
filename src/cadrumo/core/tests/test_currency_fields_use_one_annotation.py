@@ -32,8 +32,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _SRC = Path(__file__).resolve().parent.parent.parent
 
-#: The canonical annotation, and the spellings a field may use to name it.
-_CANONICAL = {"IsoCurrencyCode", "IsoCurrencyCode | None"}
+#: The canonical annotations, and the spellings a field may use to name them:
+#: ``IsoCurrencyCode`` folds through the normaliser, and its declared wire twin
+#: ``IsoCurrencyCodeText`` states the same three-letter shape as a pattern, for a
+#: public operation schema that may not customise its Pydantic core schema.
+_CANONICAL = {"IsoCurrencyCode", "IsoCurrencyCode | None", "IsoCurrencyCodeText", "IsoCurrencyCodeText | None"}
 
 #: Field names that carry an ISO 4217 code. Deliberately narrow: a name like
 #: ``local_recurrence_amount`` contains no currency code however it reads, and
@@ -146,12 +149,6 @@ DECLARED_EXCEPTIONS: dict[str, str] = {
         "walk does not enter a union, which is a gap rather than a licence to "
         "carry a policy its non-optional siblings cannot; prepare_invoice_"
         "confirmation_from_evidence reaches the domain Invoice that owns it"
-    ),
-    "application/modelo/aggregate_public.py::currency_code": (
-        "a public projection of ForeignAssetIngestObservation.currency_code, "
-        "which is IsoCurrencyCode, under the same operation schema contract; "
-        "to_domain revalidates through that model and refuses a value its "
-        "canonical round trip would change"
     ),
     "application/invoices/catalogue_intake_contracts.py::currency": (
         "a wizard request field held as raw transport text because "

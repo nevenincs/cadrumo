@@ -14,6 +14,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, StringConstraints
 
+from ...core.country_code import CountryCodeAlpha2
 from ...core.filing_year import FilingYear
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...domain.modelos.m232_related_party import (
@@ -71,7 +72,7 @@ class Modelo232OperationStateRequest(Modelo232RelatedPartyWriteRequest):
     operation_kind: Modelo232OperationKind
     counterparty_tax_id: _Text | None = None
     counterparty_name: _Text
-    counterparty_country: Annotated[str, Field(min_length=1, max_length=8)]
+    counterparty_country: CountryCodeAlpha2
     tipo_vinculacion: _Code | None = None
     tipo_operacion: _Code | None = None
     valuation_method: _Code | None = None
