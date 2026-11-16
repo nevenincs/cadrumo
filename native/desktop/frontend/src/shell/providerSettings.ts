@@ -13,106 +13,18 @@ import {
   logRef,
   nextStep,
   signInCause,
-  type CliStateCause,
-  type NextStep,
-  type SignInCause,
 } from "./providerSignInWords";
+import type {
+  ProviderSettingsAnswer,
+  ProviderSettingsRecord,
+  ProviderSignInMethod,
+  ProviderSignInSnapshot,
+} from "./providerSettingsContract";
 
 // The model providers of the signed-in profile, as a host serves them: the
 // masked status of each lane (a provider's API, or its command-line app),
 // and the person's ways to set, disable or reset its key. A key goes to the host once, in the call that saves it, and comes
 // back from nowhere: no answer here carries a key, and nothing keeps one.
-
-export type ProviderSettingsRecord = {
-  /** The lane's id, `<provider>_<transport>`, which each change names. One
-   * provider has a lane for its API and one for its command-line app. */
-  id: string;
-  /** The provider the lane reaches, as cadrumo-agent names it: shared by
-   * every lane of that provider. */
-  provider: string;
-  /** The provider's product name, the same in every language and on each of
-   * its lanes. */
-  display_name: string;
-  /** Its web API, or its command-line app. */
-  transport: ProviderStatus["transport"];
-  auth_kind: ProviderStatus["authKind"];
-  mode: ProviderStatus["mode"];
-  available: boolean;
-  source: ProviderStatus["source"];
-  readiness: ProviderStatus["readiness"];
-  /** Null when ready, else a closed code: a refusal code, or
-   * `not_configured`, `turned_off`, `sign_in_with_provider_tool` or
-   * `record_unreadable`. */
-  reason?: string | null;
-  base_url?: string | null;
-  default_base_url?: string | null;
-  /** Whether a conversation on the lane leaves this computer for the
-   * provider: the agent's own declaration, which the service serves. */
-  reads_off_host: boolean;
-  /** Whether the service can sign the lane out: a command-line lane signed
-   * in, whose agent declares a logout for it. */
-  sign_out_available: boolean;
-  /** Sent back with a change, so a record changed elsewhere is not
-   * overwritten: 64 lowercase hex digits, all zeros for a lane that has no
-   * record. */
-  revision: string;
-  /** Where the lane's command-line app stands on this computer; only a
-   * command-line lane has one. */
-  cli_state?: ProviderStatus["cliState"] | null;
-  /** Why the app's state is not established, as a closed word; a word this
-   * window does not know is dropped. */
-  cli_state_cause?: CliStateCause | null;
-  /** What to do about `cli_state_cause`, as a closed word. */
-  next_step?: NextStep | null;
-  /** Whether a key is stored for the lane, whatever its mode: one that is
-   * turned off keeps it for when it is turned on again. */
-  credential_saved?: boolean;
-};
-
-export type ProviderSettingsAnswer = {
-  providers: ProviderSettingsRecord[];
-  /** Canonical providers the agent declares usable from the GUI sign-in flow.
-   * Missing means no provider supports it. */
-  sign_in_providers?: string[];
-  /** GUI sign-in methods supported per canonical provider slug. */
-  sign_in_methods?: Record<string, ProviderSignInMethod[]>;
-  /** The console command that signs a provider in by hand, with a
-   * `{provider}` slot for the provider's id. Absent when not served. */
-  console_sign_in_command?: string;
-};
-
-export type ProviderSignInMethod = "browser" | "device" | "browser-code";
-export type ProviderSignInEvent =
-  | "starting"
-  | "started"
-  | "browser_action"
-  | "authorization_code_required"
-  | "succeeded"
-  | "cancelled"
-  | "failed";
-
-/** Transient progress for a person-started provider sign-in attempt. */
-export type ProviderSignInSnapshot = {
-  attempt_id: string;
-  /** Lane id, such as `codex_cli`. */
-  provider: string;
-  event: ProviderSignInEvent;
-  reason?: string;
-  /** Why the attempt did not succeed, as a closed word, on a failed or
-   * cancelled attempt. */
-  cause?: SignInCause;
-  /** What to do about `cause`, as a closed word. */
-  next_step?: NextStep;
-  /** Why the status read after the attempt did not establish a sign-in. */
-  status_cause?: CliStateCause;
-  /** The id the host logged a failed or cancelled attempt under in
-   * cadrumo.log; it names the entry and carries nothing else. */
-  log_ref?: string;
-  /** Present only while the person can open the provider's sign-in page. */
-  url?: string;
-  /** Device-flow code; shown only while this attempt is active. */
-  user_code?: string;
-};
 
 export interface ProviderSignIn {
   start(change: {
@@ -167,6 +79,12 @@ export interface ProviderSettings {
     revision: string;
   }): Promise<ProviderSettingsRecord>;
 }
+
+/** The console command the service serves, where it is a command template. */
+const servedCommand = (value: unknown): { consoleSignInCommand?: string } => {
+  const command = consoleCommandTemplate(value);
+  return command ? { consoleSignInCommand: command } : {};
+};
 
 const providerStatus = (record: ProviderSettingsRecord): ProviderStatus => ({
   id: record.id,
@@ -271,7 +189,7 @@ export function useProviderSettings(
             value: {
               providers: answer.value.providers.map(providerStatus),
               signInProviders: Array.isArray(answer.value.sign_in_providers)
-                ? [...new Set(answer.value.sign_in_providers)]
+                ? [...new Set<string>(answer.value.sign_in_providers)]
                 : [],
               signInMethods: Object.fromEntries(
                 Object.entries(answer.value.sign_in_methods ?? {}).flatMap(
@@ -295,11 +213,7 @@ export function useProviderSettings(
                       : [],
                 ),
               ),
-              ...(consoleCommandTemplate(answer.value.console_sign_in_command)
-                ? {
-                    consoleSignInCommand: answer.value.console_sign_in_command,
-                  }
-                : {}),
+              ...servedCommand(answer.value.console_sign_in_command),
               revisions: Object.fromEntries(
                 answer.value.providers.map(
                   ({ id, revision }) => [id, revision] as const,

@@ -29,10 +29,8 @@ import {
 } from "./connectionStatus";
 import { ProviderSignInDialog } from "./ProviderSignInDialog";
 import { SignInAdvice } from "./SignInAdvice";
-import type {
-  ProviderSignIn,
-  ProviderSignInMethod,
-} from "../../shell/providerSettings";
+import type { ProviderSignIn } from "../../shell/providerSettings";
+import type { ProviderSignInMethod } from "../../shell/providerSettingsContract";
 import type { ProviderOutcome, ProviderSecret, ProviderStatus } from "./types";
 
 const STATUS_WORDS = {

@@ -3,7 +3,7 @@ import {
   FIXTURE_SETTINGS_LANES,
   type ProviderSignInFixtureCall,
 } from "../../src/dev/providerSettingsFixture";
-import type { ProviderSignInMethod } from "../../src/shell/providerSettings";
+import type { ProviderSignInMethod } from "../../src/shell/providerSettingsContract";
 import { label } from "../support/strings";
 
 // Every way a provider sign-in can fail is said in the dialog with its cause,

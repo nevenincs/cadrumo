@@ -1,9 +1,9 @@
+import type { ProviderSettings } from "../shell/providerSettings";
 import type {
   ProviderSignInMethod,
   ProviderSignInSnapshot,
-  ProviderSettings,
   ProviderSettingsRecord,
-} from "../shell/providerSettings";
+} from "../shell/providerSettingsContract";
 import {
   FIXTURE_CATALOG,
   fixtureAuthKind,
@@ -77,6 +77,8 @@ export const FIXTURE_SETTINGS_LANES: readonly Seed[] = (
       transport: lane.transport as "api" | "cli",
       display_name: lane.display_name,
       auth_kind: fixtureAuthKind(lane.provider_id, lane.transport),
+      consumers: ["assistant"],
+      credential_saved: false,
       ...(base ? { default_base_url: base } : {}),
       ...(lane.transport === "cli" ? { cli_state: "unknown" as const } : {}),
       reads_off_host: !ON_THIS_COMPUTER.has(id),
@@ -100,6 +102,8 @@ export const FIXTURE_SETTINGS_LANES: readonly Seed[] = (
         ...artwork,
         transport: "api",
         auth_kind: "api_key",
+        consumers: ["assistant"],
+        credential_saved: false,
         reads_off_host: true,
         sign_out_available: false,
       })),
@@ -479,7 +483,8 @@ export function providerSettingsFixture({
         event: "failed",
         // What a host sends beside the reason; the window checks it.
         ...(detail as Partial<ProviderSignInSnapshot>),
-        reason,
+        // A made-up host may send any word; the window keeps only the closed ones.
+        reason: reason as ProviderSignInSnapshot["reason"],
       };
       say(`providerSignInAttemptFailed ${reason}`);
     },
