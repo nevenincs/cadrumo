@@ -7803,13 +7803,13 @@ modelo:
           is-correccion-deterioro-participaciones-dt16-3-aumentos:
             label: Elszámolás I - Az eredménykimutatás eredményét érintő korrekciók
               részletezése - Tőkében vagy saját tőkében való részesedést megtestesítő
-              értékpapírok értékvesztési korrekciói (LIS DT 16.3. cikk) - Növelések
-              [00524]
+              értékpapírok értékvesztésének kiigazításai (LIS 16.3 átmeneti rendelkezés)
+              - Növelések [00524]
           is-correccion-deterioro-participaciones-dt16-3-disminuciones:
             label: Elszámolás I - Az eredménykimutatás eredményét érintő korrekciók
               részletezése - Tőkében vagy saját tőkében való részesedést megtestesítő
-              értékpapírok értékvesztési korrekciói (LIS DT 16.3. cikk) - Csökkentések
-              [00525]
+              értékpapírok értékvesztésének kiigazításai (LIS 16.3 átmeneti rendelkezés)
+              - Csökkentések [00525]
           is-correccion-deterioro-participaciones-dt16-all-temporaria-ejercicio-aumento:
             label: Tőkében vagy saját tőkében való részesedést megtestesítő értékpapírok
               értékvesztésének kiigazításai (LIS 16.3 átmeneti rendelkezés) - Növekedés
@@ -9416,8 +9416,8 @@ modelo:
               tőkévé - Felhalmozott nyereség [00417]
           is-ecpn-bde-total-cambios-pagos-basados-acciones-otros-elementos-patrimonio-neto:
             label: Spanyol Nemzeti Bank szerinti számvitel - Saját tőke változásainak
-              kimutatása (II) - Összes változás kimutatása - Részvényalapú kifizetések
-              - Saját tőke egyéb elemei [00524]
+              kimutatása (II) - Összes változás kimutatása - Részvényeken alapuló
+              kifizetések - Saját tőke egyéb elemei [00524]
           is-ecpn-bde-total-cambios-saldo-cierre-dividendos-cuenta:
             label: Spanyol Nemzeti Bank szerinti számvitel - Saját tőke változásainak
               kimutatása (II) - Összes változás kimutatása - Záró egyenleg (tárgyidőszak)

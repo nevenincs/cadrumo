@@ -9440,8 +9440,8 @@ modelo:
               earnings [00417]
           is-ecpn-bde-total-cambios-pagos-basados-acciones-otros-elementos-patrimonio-neto:
             label: Bank of Spain accounting - Statement of changes in equity (II)
-              - Total statement of changes - Share-based payments - Other equity items
-              [00524]
+              - Total statement of changes - Payments based on shares - Other equity
+              items [00524]
           is-ecpn-bde-total-cambios-saldo-cierre-dividendos-cuenta:
             label: Bank of Spain accounting - Statement of changes in equity (II)
               - Total statement of changes - Closing balance (current period) - (-)

@@ -7688,12 +7688,12 @@ modelo:
               - Temporàries (amb origen en l'exercici) [01733]
           is-correccion-deterioro-participaciones-dt16-3-aumentos:
             label: Liquidació I - Detall correccions resultat cte. pèrdues i guanys
-              - Ajustaments per deteriorament de valors repr. de participacions en
-              el capital o fons propis (DT 16a.3 LIS) - Augments [00524]
+              - Ajustos per deteriorament de valors repr. de partic. en el capital
+              o fons propis (DT 16a.3 LIS) - Augments [00524]
           is-correccion-deterioro-participaciones-dt16-3-disminuciones:
             label: Liquidació I - Detall correccions resultat cte. pèrdues i guanys
-              - Ajustaments per deteriorament de valors repr. de participacions en
-              el capital o fons propis (DT 16a.3 LIS) - Disminucions [00525]
+              - Ajustos per deteriorament de valors repr. de partic. en el capital
+              o fons propis (DT 16a.3 LIS) - Disminucions [00525]
           is-correccion-deterioro-participaciones-dt16-all-temporaria-ejercicio-aumento:
             label: Ajustos per deteriorament de valors repr. de partic. en el capital
               o fons propis (DT 16a.3 LIS) - Augment - Correccions de l'exercici -
