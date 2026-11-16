@@ -3,41 +3,42 @@ import { expect, within } from "storybook/test";
 import { ModeloEnvelope } from "@/dev/ModeloEnvelope";
 import { Tabs, TabsList } from "@/components/ui/tabs";
 import { storyLanguage } from "../details/Details.stories";
-import { PageTab } from "./PageTab";
+import { PageTab, type PageTabPage } from "./PageTab";
 
-// The tabs of a form's pages, drawn from the headings the application served
-// for the pages of two Modelo 100 reads: the 2025 edition, which serves words
-// for every page, and the 2024 edition, which serves only each page's
-// registry path with the disclosure `technical`. The window words nothing of
-// its own: a tab reads exactly what was served, and a path is drawn as the
-// key it is.
+// The tabs of a form's pages, drawn from the headings the application served.
+// A Modelo 100 read serves words for every page; a page the application could
+// name only by its registry path serves that path with the disclosure
+// `technical`, which no scenario world serves today, so that case is drawn
+// from served heading objects that carry no tax facts. The window words
+// nothing of its own: a tab reads exactly what was served, and a path is
+// drawn as the key it is.
+
+function Tabbed({ pages }: { pages: PageTabPage[] }) {
+  return (
+    <div data-served={JSON.stringify(pages.map((page) => page.heading))}>
+      <Tabs value={pages[0]?.id} className="p-4">
+        <TabsList aria-label="pages" className="overflow-x-auto">
+          {pages.map((page) => (
+            <PageTab key={page.id} page={page} panel="panel" />
+          ))}
+        </TabsList>
+      </Tabs>
+    </div>
+  );
+}
 
 function Pages({ name }: { name: string }) {
   return (
     <ModeloEnvelope name={name}>
-      {(read) => (
-        <div
-          data-served={JSON.stringify(
-            read.form.form.pages.map((page) => page.heading),
-          )}
-        >
-          <Tabs value={read.form.form.pages[0]?.id} className="p-4">
-            <TabsList aria-label="pages" className="overflow-x-auto">
-              {read.form.form.pages.map((page) => (
-                <PageTab key={page.id} page={page} panel="panel" />
-              ))}
-            </TabsList>
-          </Tabs>
-        </div>
-      )}
+      {(read) => <Tabbed pages={read.form.form.pages} />}
     </ModeloEnvelope>
   );
 }
 
 /** Every tab reads what its page served, and is drawn as a key only where the
- * page served one. */
+ * page served one; `technical` says whether some page here served a key. */
 const readsWhatWasServed =
-  (kind: "words" | "technical"): Story["play"] =>
+  (technical: boolean): Story["play"] =>
   async ({ canvasElement }) => {
     const tabs = await within(canvasElement).findAllByRole("tab");
     const served = JSON.parse(
@@ -47,16 +48,16 @@ const readsWhatWasServed =
     ) as { text: string; disclosure: string }[];
     await expect(tabs.length).toBe(served.length);
     await expect(tabs.length).toBeGreaterThan(1);
+    await expect(served.some((h) => h.disclosure === "technical")).toBe(
+      technical,
+    );
     for (const [index, tab] of tabs.entries()) {
       const heading = served[index]!;
-      await expect(heading.disclosure === "technical").toBe(
-        kind === "technical",
-      );
       await expect(tab.getAttribute("data-heading-disclosure")).toBe(
         heading.disclosure,
       );
       const key = tab.querySelector("[data-key]");
-      if (kind === "technical") {
+      if (heading.disclosure === "technical") {
         await expect(key?.getAttribute("data-key")).toBe(heading.text);
         await expect(tab.textContent).toBe(heading.text);
       } else {
@@ -80,13 +81,28 @@ export const ServedWords: Story = {
   render: (_, { globals }) => (
     <Pages name={`modelo-100-0A-${storyLanguage(globals.locale)}`} />
   ),
-  play: readsWhatWasServed("words"),
+  play: readsWhatWasServed(false),
 };
 
 export const ServedKeyOnly: Story = {
-  name: "100 · pages served with only their registry path",
-  render: (_, { globals }) => (
-    <Pages name={`modelo-100-0A-y2024-${storyLanguage(globals.locale)}`} />
+  name: "a page served with only its registry path, beside one in words",
+  render: () => (
+    <Tabbed
+      pages={[
+        {
+          id: "page-key",
+          heading: { text: "page-key", disclosure: "technical" },
+          applies: true,
+          counts: null,
+        },
+        {
+          id: "page-words",
+          heading: { text: "Served words", disclosure: "localized" },
+          applies: true,
+          counts: null,
+        },
+      ]}
+    />
   ),
-  play: readsWhatWasServed("technical"),
+  play: readsWhatWasServed(true),
 };

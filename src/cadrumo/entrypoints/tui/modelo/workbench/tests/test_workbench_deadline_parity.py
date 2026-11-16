@@ -14,6 +14,7 @@ from datetime import date
 
 import pytest
 
+from ......application.modelo.work_form_header import deadline_view
 from ......application.modelo.work_form_service import modelo_form_deadline
 from ......application.modelo.work_form_wording import date_text
 from ......application.overview.calendar import build_overview_calendar
@@ -25,7 +26,6 @@ from ......core.i18n.render import tr
 from ......domain.calculations.registry.authority import bundled_indexed_authority
 from ......domain.deadlines.engine import DeadlineEngine
 from ......domain.modelos.codes import ModeloCode
-from ..header import deadline_view
 from .workbench_fixture import synthetic_form
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

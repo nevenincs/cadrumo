@@ -9,6 +9,7 @@ from .....application.modelo.work_form_field_vocabulary import (
     ModeloFormCasillaAddressV1,
     ModeloFormTextDisclosure,
 )
+from .....application.modelo.work_form_header import result_view
 from .....application.modelo.work_form_models import ModeloFormField
 from .....application.modelo.work_form_next_step import is_result_field
 from .....application.modelo.work_form_wording import (
@@ -21,7 +22,6 @@ from .....core.i18n.render import lookup_translation, tr
 from .casilla_list_models import CasillaListEntry
 from .casilla_list_values import description_text, grid_cell_title, rate_note
 from .editor import read_only_reason
-from .header import result_view
 from .screen_constants import (
     FOOTER_PRIORITY,
     FRAGMENT_SEPARATOR,
@@ -59,7 +59,7 @@ class WorkbenchHelpContentMixin:
             lines.extend(self._card_lines(card, field))
         form = self.form
         if form is not None and is_result_field(form, field):
-            view = result_view(form, self._language, staged=len(self._session.changes), recorded=self.recorded)
+            view = result_view(form, self._language, recorded=self.recorded)
             if view is not None:
                 lines.extend(view.help)
         return lines
