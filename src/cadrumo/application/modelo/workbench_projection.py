@@ -840,7 +840,7 @@ def _require_filing_state_roundtrip(
     read: ModeloWorkbenchFilingStateReadV1, projection: ModeloWorkFilingStateProjectionV1
 ) -> None:
     """Prove every field the projection carries restores to the read's own value."""
-    form = read.load.form
+    form = read.load.summary
     restored: tuple[tuple[object, object], ...] = (
         (_restore_export_offer(projection.export_offer), read.export_offer),
         (ModeloCode(projection.modelo), form.modelo),
@@ -866,7 +866,7 @@ def project_modelo_work_filing_state(
 ) -> ModeloWorkFilingStateProjectionV1:
     """Project one filing-state read for its exact profile and prove none of its fields lost anything."""
     _require_reviewed_exclusions()
-    form = read.load.form
+    form = read.load.summary
     if form.work_unit_id != work_unit_id or form.calculation_revision_id != read.calculation_revision_id:
         raise ValueError("the filing state belongs to another declaration or calculation")
     export_offer = _project_export_offer(read.export_offer)
