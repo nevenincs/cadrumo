@@ -15,15 +15,20 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, JsonValue, ValidationError
 
+from cadrumo.core.logging import get_logger
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.model_runs import MODEL_RUN_MODEL_ID_PATTERN
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 
 from .host.credential_frame import wipe
+from .host.sign_in_refusal import new_log_ref
 from .local_ai_relay import LocalAiFacts, relay_local_ai
 from .providers.application.contracts import SignInMethod
 from .providers.application.ports import ProviderCatalogUnavailableError
+from .providers.application.served_catalog import catalog_nonconformance
 from .providers.domain.record import LocalEngine, LocalPlacement
+
+_LOGGER = get_logger(__name__)
 
 ADMIN_DOCUMENT_MAX_BYTES = 4096
 ADMIN_RESPONSE_MAX_BYTES = 256 * 1024
@@ -312,8 +317,10 @@ class AdminServer:
             engine=request.engine,
             placement=request.placement,
         )
+        if request.action != "catalog":
+            return answer
         # The manager owns the local server's state; its facts describe that lane.
-        return relay_local_ai(answer, request.local_ai) if request.action == "catalog" else answer
+        return _conforming_catalog(relay_local_ai(answer, request.local_ai))
 
     def close(self) -> None:
         """Close admission and await the bounded current exchange."""
@@ -330,6 +337,22 @@ class AdminServer:
                 stream.close()
         self._thread.join(6)
         self._workers.shutdown(wait=True, cancel_futures=True)
+
+
+def _conforming_catalog(answer: JsonValue) -> JsonValue:
+    """``answer`` when it is a refusal or the served catalog the agent's pinned schema states, else a refusal.
+
+    A catalog that departs from the schema is never relayed: the departure is logged by place and rule,
+    and the frontend is told the catalog is unavailable, with the log line's reference.
+    """
+    if isinstance(answer, dict) and answer.get("kind") == "refused":
+        return answer
+    departure = catalog_nonconformance(answer)
+    if departure is None:
+        return answer
+    log_ref = new_log_ref()
+    _LOGGER.error("provider catalog departs from the pinned agent schema at=%s log_ref=%s", departure, log_ref)
+    return {"kind": "refused", "code": "catalog_unavailable", "log_ref": log_ref}
 
 
 def _read_request_secret(stream: socket.socket, request: AdminRequest, deadline: float) -> bytearray | None:

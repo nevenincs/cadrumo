@@ -39,7 +39,7 @@ class _HeldTarget:
 def _exchange(port: int, request_id: str) -> dict[str, object]:
     with socket.create_connection(("127.0.0.1", port), timeout=15) as stream:
         send_frame(stream, _BEARER)
-        send_frame(stream, json.dumps({"version": 1, "request_id": request_id, "action": "catalog"}).encode())
+        send_frame(stream, json.dumps({"version": 1, "request_id": request_id, "action": "status"}).encode())
         return read_frame(stream)
 
 
@@ -70,14 +70,14 @@ def test_exchanges_past_the_served_ones_are_answered_busy_and_the_served_ones_co
 
             target.release.set()
             assert [future.result(10) for future in held] == [
-                {"version": 1, "request_id": request_id, "result": {"kind": "served", "action": "catalog"}}
+                {"version": 1, "request_id": request_id, "result": {"kind": "served", "action": "status"}}
                 for request_id in held_ids
             ]
         # Every slot is free again.
         assert _exchange(server.port, request_id := str(uuid4())) == {
             "version": 1,
             "request_id": request_id,
-            "result": {"kind": "served", "action": "catalog"},
+            "result": {"kind": "served", "action": "status"},
         }
     finally:
         target.release.set()
