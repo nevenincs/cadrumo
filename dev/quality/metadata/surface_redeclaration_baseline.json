@@ -3,7 +3,7 @@
   "counts": {
     "wire-type": 1163,
     "tui-date-decision": 1,
-    "tui-precedence": 8,
+    "tui-precedence": 7,
     "duplicated-helper": 97
   },
   "occurrences": {
@@ -1182,8 +1182,7 @@
       "tui-precedence:src/cadrumo/entrypoints/tui/modelo/workbench/issue_scale.py:TO_DO_LEVELS",
       "tui-precedence:src/cadrumo/entrypoints/tui/modelo/workbench/issue_scale.py:_ATTENTION_LEVELS",
       "tui-precedence:src/cadrumo/entrypoints/tui/modelo/workbench/page_items.py:_RECORD_FINDING_LEVELS",
-      "tui-precedence:src/cadrumo/entrypoints/tui/modelo/workbench/screen_constants.py:FILTER_ORDER",
-      "tui-precedence:src/cadrumo/entrypoints/tui/modelo/workbench/sorting.py:_ATTENTION_RANKS"
+      "tui-precedence:src/cadrumo/entrypoints/tui/modelo/workbench/screen_constants.py:FILTER_ORDER"
     ],
     "duplicated-helper": [
       "duplicated-helper:src/cadrumo/entrypoints/cli/app_ledger_m232_related_party_command_specs.py:result_schema",
