@@ -2,7 +2,8 @@
 // the statements and invoice books the import reads, and the readers of
 // their rows. Everything it answers is synthetic.
 
-import type { FilePurpose, LedgerTransaction } from "../shell/ledger";
+import type { FilePurpose } from "../shell/ledger";
+import type { LedgerTransactionProjection } from "../shell/ledgerInvoiceContract";
 
 export const PURPOSE_KINDS: Record<FilePurpose, readonly string[]> = {
   bank_statements: ["csv", "txt", "tsv", "xlsx", "xls", "ofx", "qfx", "pdf"],
@@ -92,7 +93,7 @@ export const BOOK_REFUSALS: Record<
 };
 
 /** A blank imported movement the import fills in. */
-export function fixtureTemplate(): LedgerTransaction {
+export function fixtureTemplate(): LedgerTransactionProjection {
   return {
     transaction_id: "",
     date: "",
@@ -121,6 +122,10 @@ export function fixtureTemplate(): LedgerTransaction {
     m210_income_classification: null,
     usage_ratio_id: null,
     prorrata_reference: null,
+    arrendamiento_ref: null,
+    inmueble_ref: null,
+    gasto_capital_inmobiliario: null,
+    link_fields: [],
     purchase_invoice_evidence_id: null,
     invoice_id: null,
     attachment_ids: [],

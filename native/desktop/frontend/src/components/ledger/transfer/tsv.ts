@@ -5,7 +5,8 @@
 // so a value never spills into the next cell or row.
 
 import type { CatalogueInvoiceSnapshot } from "../../../shell/ledgerInvoiceContract";
-import type { LedgerRow, PublicDecimal } from "../../../shell/ledger";
+import type { PublicDecimal } from "../../../shell/ledger";
+import type { LedgerTransactionReviewProjection } from "../../../shell/ledgerReadContract";
 
 const FORMULA = /^\s*[=+\-@\t\r]/;
 const SIGNED_DECIMAL = /^[+-]?\d+(\.\d+)?$/;
@@ -66,7 +67,7 @@ export const INVOICE_TSV_COLUMNS = [
 /** The movements' stored facts, in canonical decimals. */
 export function movementsTsv(
   header: readonly string[],
-  rows: readonly LedgerRow[],
+  rows: readonly LedgerTransactionReviewProjection[],
 ): string {
   return tsvText(
     header,

@@ -16,7 +16,6 @@ import {
 } from "@/components/ui/dataGridTypes";
 import { Icon } from "@/components/ui/icon";
 import { facts, listed } from "@/shell/compose";
-import type { LedgerRow } from "../../../shell/ledger";
 import { useStrings, type Translate } from "../../../shell/strings";
 import { draftedWidth } from "../editing/editingModel";
 import { GridRoomContext } from "../gridRoom";
@@ -53,6 +52,7 @@ import {
 } from "./movementWords";
 import { formatAmount, formatPercent } from "../../../shared/numbers";
 import { formatDay, formatTime } from "../../../shared/dateFormats";
+import type { LedgerTransactionReviewProjection } from "../../../shell/ledgerReadContract";
 
 /** What staged editing adds to the columns: each one's editor and why a
  * cell takes none, what a cell draws while a change is staged on it, and
@@ -61,13 +61,19 @@ export type ColumnEditing = {
   editor: (
     column: ColumnId,
   ) =>
-    ((row: LedgerRow, context: EditorContext) => ReactNode | null) | undefined;
+    | ((
+        row: LedgerTransactionReviewProjection,
+        context: EditorContext,
+      ) => ReactNode | null)
+    | undefined;
   readOnlyReason: (
     column: ColumnId,
-  ) => ((row: LedgerRow) => string | undefined) | undefined;
+  ) =>
+    | ((row: LedgerTransactionReviewProjection) => string | undefined)
+    | undefined;
   /** Draws a cell over its stored drawing, which `stored` gives. */
   decorate: (
-    row: LedgerRow,
+    row: LedgerTransactionReviewProjection,
     column: ColumnId,
     stored: () => ReactNode,
   ) => ReactNode;
@@ -105,12 +111,13 @@ export type ColumnContext = {
   editing?: ColumnEditing;
 };
 
-const id = (row: LedgerRow) => row.transaction.transaction_id;
+const id = (row: LedgerTransactionReviewProjection) =>
+  row.transaction.transaction_id;
 
 /** Whether readiness found `column` missing on `row`. */
 function isMissing(
   context: Pick<ColumnContext, "missing" | "readiness">,
-  row: LedgerRow,
+  row: LedgerTransactionReviewProjection,
   column: string,
 ): boolean {
   const missing = context.missing;
@@ -136,15 +143,18 @@ function Missing({ t }: { t: Translate }) {
 function movementColumns(
   order: readonly ColumnId[],
   context: ColumnContext,
-): GridColumn<LedgerRow>[] {
+): GridColumn<LedgerTransactionReviewProjection>[] {
   const { t, locale } = context;
   const missingOr =
-    (column: ColumnId, draw: (row: LedgerRow) => ReactNode) =>
-    (row: LedgerRow) =>
+    (
+      column: ColumnId,
+      draw: (row: LedgerTransactionReviewProjection) => ReactNode,
+    ) =>
+    (row: LedgerTransactionReviewProjection) =>
       isMissing(context, row, column) ? <Missing t={t} /> : draw(row);
   const draw: Record<
     ColumnId,
-    (row: LedgerRow, cell?: CellContext) => ReactNode
+    (row: LedgerTransactionReviewProjection, cell?: CellContext) => ReactNode
   > = {
     select: (row) => (
       <DataGridRowCheckbox
@@ -284,7 +294,7 @@ function movementColumns(
     ),
   };
   const editing = context.editing;
-  return order.map((column): GridColumn<LedgerRow> => {
+  return order.map((column): GridColumn<LedgerTransactionReviewProjection> => {
     const spec = COLUMN_SPECS[column];
     const name = t(`desktop.ledger.column.${column}`);
     const width = context.widths[column];
@@ -351,7 +361,9 @@ function movementColumns(
   });
 }
 
-type GridProps = ComponentProps<typeof DataGrid<LedgerRow>>;
+type GridProps = ComponentProps<
+  typeof DataGrid<LedgerTransactionReviewProjection>
+>;
 
 /**
  * The movements grid: the period's stored movements, in groups where asked,
@@ -372,7 +384,7 @@ export function MovementsGrid({
   gridRef: Ref<DataGridHandle>;
   order: readonly ColumnId[];
   context: Omit<ColumnContext, "t">;
-  byId: ReadonlyMap<string, LedgerRow>;
+  byId: ReadonlyMap<string, LedgerTransactionReviewProjection>;
 }) {
   const t = useStrings();
   const full = { ...context, t };

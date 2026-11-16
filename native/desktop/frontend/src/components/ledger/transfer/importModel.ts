@@ -18,13 +18,15 @@ import {
   type LedgerProvider,
   type LedgerRequest,
   type LedgerResult,
-  type LedgerTransaction,
   type PickedFile,
   type PublicPeriod,
 } from "../../../shell/ledger";
 import type { EvidenceBatchResult } from "../../../shell/ledgerDocumentOperations";
 import type { InvoiceImportResult } from "../../../shell/ledgerInvoiceOperations";
-import type { InvoiceKind } from "../../../shell/ledgerInvoiceContract";
+import type {
+  InvoiceKind,
+  LedgerTransactionProjection,
+} from "../../../shell/ledgerInvoiceContract";
 import { sameDecimal, periodFilters } from "../../../shell/ledgerGrammar";
 import { importBatchFilters } from "../../../shell/ledgerImports";
 import { readPeriodsHolding } from "../../../shell/ledgerPeriods";
@@ -500,15 +502,15 @@ export async function readBatchSpan(
 /** A likely duplicate as imported, and the movements already in the
  * ledger on its day with its amount. */
 export type DuplicatePair = {
-  imported: LedgerTransaction;
-  existing: LedgerTransaction[];
+  imported: LedgerTransactionProjection;
+  existing: LedgerTransactionProjection[];
 };
 
 /** Reads an imported likely duplicate. */
 export async function readImported(
   port: LedgerPort,
   id: string,
-): Promise<LedgerTransaction | null> {
+): Promise<LedgerTransactionProjection | null> {
   const read = await attempt(
     port,
     "ledger.view",
@@ -547,11 +549,11 @@ export async function importLanding(
  * against: those on its day with its amount, other than itself. */
 export async function readExisting(
   port: LedgerPort,
-  imported: LedgerTransaction,
-): Promise<LedgerTransaction[] | null> {
+  imported: LedgerTransactionProjection,
+): Promise<LedgerTransactionProjection[] | null> {
   const month = (await readPeriodsHolding(imported.date))?.monthly;
   if (!month) return null;
-  const found: LedgerTransaction[] = [];
+  const found: LedgerTransactionProjection[] = [];
   for (let offset = 0; ;) {
     const read = await readPage(port, {
       filters: periodFilters(month),

@@ -7,7 +7,7 @@
 
 import { useCallback, useRef, useState } from "react";
 import type { CatalogueInvoiceSnapshot } from "../../../shell/ledgerInvoiceContract";
-import type { LedgerPort, LedgerRow } from "../../../shell/ledger";
+import type { LedgerPort } from "../../../shell/ledger";
 import {
   changedSinceRead,
   resolveUnknown,
@@ -40,6 +40,7 @@ import type { SealedProgress, SealedRead } from "../useSealedMovements";
 import type { Finding, WritePause } from "../WritePause";
 import { askedConflicts, type AskedConflict } from "./editingModel";
 import { actionText } from "./ReviewDialog";
+import type { LedgerTransactionReviewProjection } from "../../../shell/ledgerReadContract";
 
 /** How far a read of the staged movements' locks has got. */
 export type LockProgress = { done: number; total: number };
@@ -55,7 +56,7 @@ export type ReviewState =
   | {
       phase: "ready";
       /** The stored rows as read now, which the plan is built from. */
-      rows: Map<string, LedgerRow>;
+      rows: Map<string, LedgerTransactionReviewProjection>;
       /** Movements changed elsewhere in a field the person changed, or
        * gone, still to be looked at. */
       conflicts: AskedConflict[];
@@ -74,15 +75,15 @@ export type ReviewState =
       phase: "applying";
       plan: LedgerPlan;
       reports: StepReport[];
-      rows: Map<string, LedgerRow>;
+      rows: Map<string, LedgerTransactionReviewProjection>;
     }
   | {
       phase: "done";
       plan: LedgerPlan;
       report: ApplyReport;
       /** The rows read after the apply, for what was unchanged. */
-      fresh: Map<string, LedgerRow> | null;
-      rows: Map<string, LedgerRow>;
+      fresh: Map<string, LedgerTransactionReviewProjection> | null;
+      rows: Map<string, LedgerTransactionReviewProjection>;
       /** When the readiness checks ran again. */
       checkedAt: number;
     };
@@ -90,7 +91,7 @@ export type ReviewState =
 /** The name of a movement or new movement, as the page shows it. */
 function movementName(
   id: string,
-  rows: ReadonlyMap<string, LedgerRow>,
+  rows: ReadonlyMap<string, LedgerTransactionReviewProjection>,
   content: StagedContent,
 ): string {
   return (
@@ -105,7 +106,7 @@ function movementName(
 function stepName(
   t: Translate,
   step: PlanStep,
-  rows: ReadonlyMap<string, LedgerRow>,
+  rows: ReadonlyMap<string, LedgerTransactionReviewProjection>,
   content: StagedContent,
 ): string {
   const ids =
@@ -139,8 +140,8 @@ async function readInvoices(
 async function readMissing(
   port: LedgerPort,
   ids: readonly string[],
-  rows: Map<string, LedgerRow>,
-  read: ReadonlyMap<string, LedgerRow>,
+  rows: Map<string, LedgerTransactionReviewProjection>,
+  read: ReadonlyMap<string, LedgerTransactionReviewProjection>,
 ): Promise<LedgerReadFailure | null> {
   for (const id of ids) {
     if (rows.has(id)) continue;
@@ -169,6 +170,10 @@ async function readMissing(
         classification_reason_words_language:
           read.get(id)?.classification_reason_words_language ?? null,
         withholding: read.get(id)?.withholding ?? [],
+        gasto_capital_inmobiliario_words:
+          read.get(id)?.gasto_capital_inmobiliario_words ?? null,
+        gasto_capital_inmobiliario_words_language:
+          read.get(id)?.gasto_capital_inmobiliario_words_language ?? null,
       });
     } catch (error) {
       return readFailure(error);
@@ -182,9 +187,9 @@ async function readStaged(
   port: LedgerPort,
   period: LedgerPeriod | null,
   content: StagedContent,
-  read: ReadonlyMap<string, LedgerRow>,
+  read: ReadonlyMap<string, LedgerTransactionReviewProjection>,
 ): Promise<
-  | { kind: "read"; rows: Map<string, LedgerRow> }
+  | { kind: "read"; rows: Map<string, LedgerTransactionReviewProjection> }
   | { kind: "failed"; failure: LedgerReadFailure }
 > {
   const answer = await readWindow(port, period);
@@ -263,16 +268,18 @@ export function useLedgerApply({
   period: LedgerPeriod | null;
   content: StagedContent;
   /** The rows as the page read them when the changes were staged. */
-  read: () => ReadonlyMap<string, LedgerRow>;
+  read: () => ReadonlyMap<string, LedgerTransactionReviewProjection>;
   dispatch: (event: StageEvent) => void;
   /** Reads the window again, with the readiness checks after it, and
    * follows new ids. */
   afterApply: (
     report: ApplyReport,
-    rows: ReadonlyMap<string, LedgerRow>,
+    rows: ReadonlyMap<string, LedgerTransactionReviewProjection>,
   ) => void;
   /** Compares what stays staged with the rows a re-read found. */
-  rebase: (rows: ReadonlyMap<string, LedgerRow>) => void;
+  rebase: (
+    rows: ReadonlyMap<string, LedgerTransactionReviewProjection>,
+  ) => void;
   /** The page's one write pause. */
   pause: WritePause;
   /** Which of `ids` a finalized declaration cites, read where not known. */

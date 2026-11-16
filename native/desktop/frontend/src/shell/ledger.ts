@@ -9,6 +9,11 @@
 
 import type { LedgerPreflightReason } from "./ledgerContract";
 import type {
+  LedgerReviewStatus,
+  LedgerTransactionProjection,
+} from "./ledgerInvoiceContract";
+import type { LedgerReadContracts } from "./ledgerReadContract";
+import type {
   AttachmentQueueResult,
   AttachmentViewRequest,
   AttachmentViewResult,
@@ -681,143 +686,7 @@ export type PublicPeriod = { filing_year: number; code: string };
 
 export type PublicDecimal = { decimal: string };
 
-export type LedgerReviewStatus =
-  "pending" | "reviewed" | "skipped" | "excluded";
-
-export type LedgerSortField =
-  | "date"
-  | "value_date"
-  | "amount"
-  | "description"
-  | "created_at"
-  | "modified_at"
-  | "classified_at"
-  | "lifecycle_state"
-  | "classification";
-
-export type LedgerSortOrder = "asc" | "desc";
-
 export type OutputLanguage = "es" | "en" | "ca" | "hu";
-
-export type LedgerM210Income = {
-  official_tipo_renta_code: string;
-  gross_income_amount: string;
-  applicable_rate: string;
-  payer_mode: string;
-  payer_id: string | null;
-  asset_or_right_id: string | null;
-};
-
-/** The retención a received invoice leaves on the movement that pays it, as
- * the declarations read it. `retencion` is the euro amount recognised on this
- * payment, canonical decimal text; `held_back` names why the invoice reaches
- * no declaration yet, so a payment the declaration waits on is never shown
- * as a payment without retención. Exactly one of the two is set. */
-export type LedgerMovementWithholding = {
-  invoice_id: string;
-  invoice_number: string;
-  modelo: string | null;
-  scheme: string | null;
-  retencion: string | null;
-  recognised_on: string | null;
-  held_back: string | null;
-};
-
-/** One movement as the product projects it. Amounts are canonical decimal
- * text; the amount is a magnitude and `direction` carries its sense. */
-export type LedgerTransaction = {
-  transaction_id: string;
-  date: string;
-  booked_date: string;
-  value_date: string | null;
-  operation_date: string | null;
-  accrual_date: string | null;
-  amount: string;
-  currency: string;
-  direction: string;
-  counterparty: string;
-  description: string;
-  business_classification: string;
-  business_pct: string | null;
-  category_id: string | null;
-  taxable_base: string | null;
-  iva_rate: string | null;
-  iva_amount: string | null;
-  recargo_amount: string | null;
-  iva_category: string | null;
-  deduction_fact_kind: string | null;
-  investment_asset_id: string | null;
-  counterparty_country: string | null;
-  counterparty_identification_state: string | null;
-  irpf_category: string | null;
-  m210_income_classification: LedgerM210Income | null;
-  usage_ratio_id: string | null;
-  prorrata_reference: string | null;
-  purchase_invoice_evidence_id: string | null;
-  invoice_id: string | null;
-  attachment_ids: string[];
-  notes: string;
-  lifecycle_state: string;
-  classified_by: string;
-  classified_at: string | null;
-  classification_reason: string;
-  classification_confidence: string | null;
-  source_jurisdiction: string | null;
-  /** The reference the bank statement printed; null when it printed none
-   * or the movement was added by hand. */
-  statement_reference: string | null;
-  value_in_eur: string | null;
-  fx_rate: string | null;
-  created_at: string;
-  modified_at: string;
-};
-
-/** Whose words a row's classification reason is: nobody's (none is stored),
- * the person's own, or the name of the command that wrote the row. */
-export type LedgerReasonSource = "none" | "stated" | "command";
-
-export type LedgerRow = {
-  transaction: LedgerTransaction;
-  review_status: LedgerReviewStatus;
-  group_label: string | null;
-  /** The own account's register id, never its number; null for none. */
-  own_account_id: string | null;
-  /** Whether `transaction.classification_reason` is the person's own words
-   * (shown as stored) or a command's name (not shown: its word is served). */
-  classification_reason_source: LedgerReasonSource;
-  /** The word served for a command's name, in the language asked; empty
-   * unless the source is a command. */
-  classification_reason_words: string;
-  classification_reason_words_language: OutputLanguage | null;
-  /** What the invoices this movement pays leave on it; empty where it pays
-   * none that states a retención, which is absent, not zero. */
-  withholding: LedgerMovementWithholding[];
-};
-
-/** The order is the product's: filter, group selection, sort, group
- * partition, then the page. `filters` are `key=value` clauses. */
-export type LedgerListRequest = {
-  filters?: string[];
-  group?: string | null;
-  by_group?: boolean;
-  limit?: number | null;
-  offset?: number;
-  sort_by?: LedgerSortField | null;
-  sort_order?: LedgerSortOrder;
-  exclude_llm_rejected?: boolean;
-  /** The language the rows' reason words are said in. */
-  output_language?: OutputLanguage;
-};
-
-export type LedgerListResult = {
-  profile_id: string;
-  rows: LedgerRow[];
-  total: number;
-  truncated: boolean;
-  offset: number;
-  limit: number | null;
-  by_group: boolean;
-};
 
 /** The kinds of text a profile's own records can offer. */
 export type LedgerKnownValueKind =
@@ -866,7 +735,7 @@ export type LedgerViewRequest = { transaction_prefix: string };
 export type LedgerViewResult = {
   profile_id: string;
   transaction_prefix: string;
-  transaction: LedgerTransaction;
+  transaction: LedgerTransactionProjection;
   review_status: LedgerReviewStatus;
   latest_llm_rejection: { occurred_at: string; operator_reason: string } | null;
 };
@@ -1051,7 +920,10 @@ export type LedgerExportResult = {
 
 export interface LedgerRequests {
   "ledger.known-values": LedgerKnownValuesRequest;
-  "ledger.list": LedgerListRequest;
+  "ledger.list": Omit<
+    LedgerReadContracts["ledger.list"]["request"],
+    "profile_id"
+  >;
   "ledger.view": LedgerViewRequest;
   "ledger.update": LedgerUpdateRequest;
   "ledger.classify.single": LedgerClassifyRequest;
@@ -1171,7 +1043,7 @@ export interface LedgerRequests {
 
 export interface LedgerResults {
   "ledger.known-values": LedgerKnownValuesResult;
-  "ledger.list": LedgerListResult;
+  "ledger.list": LedgerReadContracts["ledger.list"]["result"];
   "ledger.view": LedgerViewResult;
   "ledger.update": LedgerUpdateResult;
   "ledger.classify.single": LedgerClassifyResult;

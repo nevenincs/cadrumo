@@ -5,7 +5,7 @@ import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 import { Icon } from "@/components/ui/icon";
 import { facts, listed } from "@/shell/compose";
 import type { EvidenceListResult } from "../../../shell/ledgerDocumentOperations";
-import type { LedgerPort, LedgerRow } from "../../../shell/ledger";
+import type { LedgerPort } from "../../../shell/ledger";
 import type { LedgerStagedRowAnswer } from "../../../shell/ledgerMovementCheckContract";
 import {
   newIdempotencyKey,
@@ -20,6 +20,7 @@ import {
   documentAttachmentReference,
   movementDocuments,
 } from "./movementDocuments";
+import type { LedgerTransactionReviewProjection } from "../../../shell/ledgerReadContract";
 
 type DocumentAction = Extract<
   StagedAction,
@@ -44,7 +45,7 @@ export function DocumentsSection({
   say,
 }: {
   port: LedgerPort;
-  row: LedgerRow;
+  row: LedgerTransactionReviewProjection;
   /** The ledger's answer about the movement; absent until it has answered. */
   answer: LedgerStagedRowAnswer | undefined;
   evidence: InspectorRead<EvidenceListResult> | null;

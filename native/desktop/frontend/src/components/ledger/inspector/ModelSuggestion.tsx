@@ -16,7 +16,6 @@ import {
   ledgerFailure,
   type LedgerPort,
   type LedgerReview,
-  type LedgerRow,
 } from "../../../shell/ledger";
 import type {
   LedgerLlmReviewMode,
@@ -33,6 +32,7 @@ import { fieldName, refusalText, valueText } from "../editing/editingWords";
 import { needsShare, suggestionWrites } from "./inspectorModel";
 import { modelFailureText } from "./inspectorWords";
 import { formatPercent } from "../../../shared/numbers";
+import type { LedgerTransactionReviewProjection } from "../../../shell/ledgerReadContract";
 
 type Ask = "suggest" | "share" | "reject";
 type Shown = {
@@ -79,7 +79,7 @@ export function ModelSuggestion({
   say,
 }: {
   port: LedgerPort;
-  row: LedgerRow;
+  row: LedgerTransactionReviewProjection;
   /** The answer staged for this movement, if any. */
   staged: Extract<StagedAction, { kind: "suggestion" }> | undefined;
   onStage: (event: StageEvent) => void;

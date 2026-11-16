@@ -7,7 +7,6 @@
 
 import type { LedgerLlmSuggestion } from "../../../shell/ledgerMovementOperations";
 import type { LedgerStagedRowAnswer } from "../../../shell/ledgerMovementCheckContract";
-import type { LedgerRow, LedgerTransaction } from "../../../shell/ledger";
 import {
   FIELDS_DROPPED_BY_PERSONAL,
   takesChanges,
@@ -24,6 +23,8 @@ import {
   type StagedAction,
 } from "../../../shell/ledgerStage";
 import { statusWord, type StatusWord } from "../movements/movementWords";
+import type { LedgerTransactionReviewProjection } from "../../../shell/ledgerReadContract";
+import type { LedgerTransactionProjection } from "../../../shell/ledgerInvoiceContract";
 
 // ---- The jump index ------------------------------------------------------------
 
@@ -98,7 +99,7 @@ export function commonValue(
  * most first. `issues` is null while readiness is not measured, so a
  * reviewed movement counts as not measured rather than done. */
 export function selectionCounts(
-  rows: readonly LedgerRow[],
+  rows: readonly LedgerTransactionReviewProjection[],
   issues: ReadonlyMap<string, readonly string[]> | null,
 ): {
   classifications: [string, number][];
@@ -130,7 +131,7 @@ export function selectionCounts(
  * be, classified: the tax fields take nothing until one is. With no answer the
  * tax fields wait too. */
 export function noneClassified(
-  rows: readonly LedgerRow[],
+  rows: readonly LedgerTransactionReviewProjection[],
   check: StagedCheck | null,
 ): boolean {
   return rows.every(
@@ -161,7 +162,7 @@ const TAX_SETS: ReadonlySet<SetForAllField> = new Set([
  * will be once what is staged on it is saved. */
 export function setSkip(
   field: SetForAllField,
-  row: LedgerRow,
+  row: LedgerTransactionReviewProjection,
   check: StagedCheck,
   sealed: ReadonlySet<string>,
   /** Movements whose sealed state the page could not read. */
@@ -193,7 +194,7 @@ export function setForAll(
   field: SetForAllField,
   value: string,
   ids: readonly string[],
-  rows: ReadonlyMap<string, LedgerRow>,
+  rows: ReadonlyMap<string, LedgerTransactionReviewProjection>,
   context: {
     check: StagedCheck;
     sealed: ReadonlySet<string>;
@@ -263,7 +264,7 @@ export function lifecycleAction(
 export function completeCohort(
   selected: readonly string[],
   objectIds: readonly string[],
-  rows: ReadonlyMap<string, LedgerRow>,
+  rows: ReadonlyMap<string, LedgerTransactionReviewProjection>,
 ): boolean {
   const parts = objectIds.filter((id) => {
     const state = rows.get(id)?.transaction.lifecycle_state;
@@ -335,7 +336,7 @@ export const effectiveDay = (facts: ReturnType<typeof effectiveFacts>) =>
 /** The quarter a movement leaves and the one it moves to when its staged
  * dates change its effective date across a quarter, or null. */
 export function quarterMove(
-  transaction: LedgerTransaction,
+  transaction: LedgerTransactionProjection,
   facts: ReturnType<typeof effectiveFacts>,
 ): { from: LedgerPeriod; to: LedgerPeriod } | null {
   const from = periodsHolding(transaction.date)?.quarterly;

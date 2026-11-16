@@ -13,11 +13,7 @@ import {
 import { Icon } from "@/components/ui/icon";
 import { Spinner } from "@/components/ui/spinner";
 import { listed } from "@/shell/compose";
-import {
-  ledgerFailure,
-  type LedgerPort,
-  type LedgerRow,
-} from "../../../shell/ledger";
+import { ledgerFailure, type LedgerPort } from "../../../shell/ledger";
 import type { LedgerRemoveResult } from "../../../shell/ledgerMovementOperations";
 import { EMPTY_CONTENT, type StageEvent } from "../../../shell/ledgerStage";
 import {
@@ -33,6 +29,7 @@ import {
   type LifecycleAction,
 } from "./inspectorModel";
 import { declarationName, lifecycleName } from "./inspectorWords";
+import type { LedgerTransactionReviewProjection } from "../../../shell/ledgerReadContract";
 
 /** The action a dialog stages, on the movements it names. */
 export type ActionRequest =
@@ -70,7 +67,7 @@ export function ActionDialog({
 }: {
   port: LedgerPort;
   request: ActionRequest;
-  rows: ReadonlyMap<string, LedgerRow>;
+  rows: ReadonlyMap<string, LedgerTransactionReviewProjection>;
   sealed: ReadonlySet<string>;
   onStage: (event: StageEvent) => void;
   onClose: () => void;

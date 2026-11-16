@@ -3963,6 +3963,21 @@ continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07
 [[revisions."2024".casilla_removals]]
 [revisions."2024".casilla_removals.selector]
 revision = "2023"
+id = "DP200010:00524"
+
+[[revisions."2024".casilla_removals]]
+[revisions."2024".casilla_removals.selector]
+revision = "2023"
+id = "DP200010:00525"
+
+[[revisions."2024".casilla_removals]]
+[revisions."2024".casilla_removals.selector]
+revision = "2023"
+id = "DP200010:00526"
+
+[[revisions."2024".casilla_removals]]
+[revisions."2024".casilla_removals.selector]
+revision = "2023"
 id = "DP200018B:02445"
 
 [[revisions."2024".casilla_removals]]
