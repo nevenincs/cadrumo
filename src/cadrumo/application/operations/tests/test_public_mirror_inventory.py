@@ -55,7 +55,10 @@ def _is_model(annotation: object) -> bool:
 def _fields(model: type) -> Mapping[str, object]:
     if issubclass(model, BaseModel):
         model.model_rebuild()
-        return {name: field.annotation for name, field in model.model_fields.items()}
+        return {
+            **{name: field.annotation for name, field in model.model_fields.items()},
+            **{name: field.return_type for name, field in model.model_computed_fields.items()},
+        }
     return dataclass_type_hints(model)
 
 

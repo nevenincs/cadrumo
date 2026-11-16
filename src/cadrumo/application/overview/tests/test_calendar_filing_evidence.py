@@ -303,7 +303,7 @@ def test_period_bearing_calendar_models_roundtrip_through_json() -> None:
 
     assert OverviewCalendarFilingEvidence.model_validate_json(evidence.model_dump_json()) == evidence
     assert OverviewCalendarEvent.model_validate_json(event.model_dump_json()) == event
-    assert type(entry).model_validate_json(entry.model_dump_json()) == entry
+    assert type(entry).model_validate_json(entry.model_dump_json(exclude_computed_fields=True)) == entry
     assert SuppressedCalendarEntry.model_validate_json(suppressed.model_dump_json()) == suppressed
 
 

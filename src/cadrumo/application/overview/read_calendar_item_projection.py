@@ -30,11 +30,18 @@ from .calendar_models import (
     OverviewCalendarEvent,
     OverviewCalendarEventType,
     OverviewCalendarFilingEvidence,
+    OverviewCalendarScope,
     OverviewCensoEnrolmentState,
+    OverviewFilingStatus,
     OverviewLocalFilingState,
     OverviewPeriodState,
     SuppressedCalendarEntry,
+    days_until_close,
+    deadline_scopes,
+    decide_filing_status,
+    require_decided_derivations,
 )
+from .filing_status_words import filing_status_words
 from .pipeline_projection import PipelineNextActionSnapshot
 from .suppressed_verdict_words import suppressed_verdict_words
 
@@ -174,6 +181,37 @@ class OverviewCalendarEntrySnapshot(BaseModel):
     local_work_unit_revision_id: str | None
     profile_confirmation_required: bool = False
     missing_profile_information: tuple[str, ...] = ()
+    filing_status_words: str = Field(min_length=1, max_length=MAX_OPERATION_ERROR_WORDS_LENGTH)
+    filing_status_words_language: OutputLanguage
+
+    days_until_close: int | None
+    filing_status: OverviewFilingStatus
+    scopes: tuple[OverviewCalendarScope, ...]
+
+    @model_validator(mode="after")
+    def _derivations_are_decided(self) -> Self:
+        require_decided_derivations(
+            self,
+            {
+                "days_until_close": days_until_close(
+                    adjusted_closes_on=self.adjusted_closes_on,
+                    evaluated_on=self.evaluated_on,
+                    holiday_coverage=self.holiday_coverage,
+                ),
+                "filing_status": decide_filing_status(
+                    aeat_submission_state=self.filing_evidence.aeat_submission_state,
+                    local_filing_state=self.filing_evidence.local_filing_state,
+                    period_state=self.user_state,
+                ),
+                "scopes": deadline_scopes(
+                    adjusted_closes_on=self.adjusted_closes_on,
+                    evaluated_on=self.evaluated_on,
+                    status=self.status,
+                    user_state=self.user_state,
+                ),
+            },
+        )
+        return self
 
     @model_validator(mode="after")
     def _canonical(self) -> Self:
@@ -189,11 +227,22 @@ class OverviewCalendarEntrySnapshot(BaseModel):
         missing_profile_information: tuple[str, ...] = (),
     ) -> Self:
         """Copy the canonical row while replacing its custom period and actions."""
-        data = value.model_dump(mode="python", exclude={"period", "filing_evidence", "recovery", "recovery_action"})
+        data = value.model_dump(
+            mode="python",
+            exclude={
+                "period",
+                "filing_evidence",
+                "recovery",
+                "recovery_action",
+            },
+        )
+        language = served_words_language()
         return cls.model_validate(
             data
             | {
                 "period": str(value.period),
+                "filing_status_words": filing_status_words(value.filing_status, language),
+                "filing_status_words_language": language,
                 "profile_confirmation_required": profile_confirmation_required,
                 "missing_profile_information": missing_profile_information,
                 "filing_evidence": OverviewFilingEvidenceSnapshot.from_evidence(value.filing_evidence),
@@ -216,6 +265,11 @@ class OverviewCalendarEntrySnapshot(BaseModel):
                     "recovery_action",
                     "profile_confirmation_required",
                     "missing_profile_information",
+                    "filing_status_words",
+                    "filing_status_words_language",
+                    "days_until_close",
+                    "filing_status",
+                    "scopes",
                 },
             )
             | {
