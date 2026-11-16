@@ -322,13 +322,8 @@ impl Supervisor {
         let deadline = Instant::now() + self.shared.startup_timeout;
         let mut admin = lock(&self.shared.admin);
         loop {
-            if admin.is_some() {
-                return AdminWait::Admitted;
-            }
-            if self.shared.closed.load(Ordering::Acquire)
-                || lock(&self.shared.status).state != State::Starting
-            {
-                return AdminWait::NotStarting;
+            if let Some(settled) = self.settled_admission(admin.is_some()) {
+                return settled;
             }
             let left = deadline.saturating_duration_since(Instant::now());
             if left.is_zero() {
@@ -341,6 +336,29 @@ impl Supervisor {
                 .unwrap_or_else(|poisoned| poisoned.into_inner())
                 .0;
         }
+    }
+
+    /// The admission as it stands, without waiting: a service still starting
+    /// answers [`AdminWait::StillStarting`] at once, for a read the window
+    /// makes again when the service publishes the agent ready.
+    pub fn admin_now(&self) -> AdminWait {
+        self.begin();
+        let admitted = lock(&self.shared.admin).is_some();
+        self.settled_admission(admitted)
+            .unwrap_or(AdminWait::StillStarting)
+    }
+
+    /// Admitted, or not starting, or `None` while the service is still starting.
+    fn settled_admission(&self, admitted: bool) -> Option<AdminWait> {
+        if admitted {
+            return Some(AdminWait::Admitted);
+        }
+        if self.shared.closed.load(Ordering::Acquire)
+            || lock(&self.shared.status).state != State::Starting
+        {
+            return Some(AdminWait::NotStarting);
+        }
+        None
     }
 
     /// The admitted service identity for a sequence of related administration reads.
