@@ -357,7 +357,7 @@ def test_the_ci_invoked_model_is_strictly_stronger_than_the_declared_one() -> No
     # contracts are split the same way: `test-ci-contracts` is the local
     # convenience over its deterministic and CPU-budget legs.
     expected_invoked = {
-        "test-gate",
+        "test-gate-shard",
         "test-unit",
         "test-ci-contracts-gate",
         "test-ci-perf",

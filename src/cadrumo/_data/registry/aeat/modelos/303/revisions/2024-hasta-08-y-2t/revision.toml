@@ -1907,3 +1907,13 @@ fields = { legal_refs = ["ley-37-1992:art-161", "real-decreto-ley-4-2024:art-1",
 family = "formulas"
 selector = {revision = "2023", id = "modelo-303-dr303-18-projection"}
 fields = { legal_refs = ["ley-37-1992:art-161", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"] }
+
+[[revisions."2024-hasta-08-y-2t".casilla_overrides]]
+selector = { revision = "2023", id = "151" }
+fields = { constraints = { source_refs = ["aeat-dr-303-2023"] } }
+removed_fields = []
+
+[[revisions."2024-hasta-08-y-2t".casilla_overrides]]
+selector = { revision = "2023", id = "154" }
+fields = { constraints = { source_refs = ["aeat-dr-303-2023"] } }
+removed_fields = []

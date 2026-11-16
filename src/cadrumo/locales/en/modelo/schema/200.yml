@@ -7784,6 +7784,14 @@ modelo:
             label: Adjustments for impairment of securities representing holdings
               in capital or equity (Transitional Provision 16.3 LIS) - Decrease -
               Adjustments for the tax year - Temporary (originating in the year) [01733]
+          is-correccion-deterioro-participaciones-dt16-3-aumentos:
+            label: Settlement I - Detail of adjustments to the profit and loss account
+              result - Adjustments for impairment of securities representing holdings
+              in capital or equity (Transitional Provision 16.3 LIS) - Increases [00524]
+          is-correccion-deterioro-participaciones-dt16-3-disminuciones:
+            label: Settlement I - Detail of adjustments to the profit and loss account
+              result - Adjustments for impairment of securities representing holdings
+              in capital or equity (Transitional Provision 16.3 LIS) - Decreases [00525]
           is-correccion-deterioro-participaciones-dt16-all-temporaria-ejercicio-aumento:
             label: Adjustments for impairment of securities representing holdings
               in capital or equity (Transitional Provision 16.3 LIS) - Increase -
@@ -9430,6 +9438,10 @@ modelo:
             label: Bank of Spain accounting - Statement of changes in equity (II)
               - Total statement of changes - Conversion of debt into equity - Retained
               earnings [00417]
+          is-ecpn-bde-total-cambios-pagos-basados-acciones-otros-elementos-patrimonio-neto:
+            label: Bank of Spain accounting - Statement of changes in equity (II)
+              - Total statement of changes - Payments based on shares - Other equity
+              items [00524]
           is-ecpn-bde-total-cambios-saldo-cierre-dividendos-cuenta:
             label: Bank of Spain accounting - Statement of changes in equity (II)
               - Total statement of changes - Closing balance (current period) - (-)
@@ -9787,6 +9799,18 @@ modelo:
             label: Insurance undertakings - Statement of changes in own equity (III)
               - Transactions with shareholders or mutual members - Increase (reduction)
               in equity resulting from a business combination - Total [00568]
+          is-ecpp-aseguradoras-iii-conversion-pasivos-dividendo-cuenta:
+            label: Insurance undertakings - Statement of changes in own equity (III)
+              - Transactions with shareholders or mutual members - Conversion of financial
+              liabilities into equity - (Interim dividend) [00525]
+          is-ecpp-aseguradoras-iii-conversion-pasivos-otros-instrumentos-patrimonio:
+            label: Insurance undertakings - Statement of changes in own equity (III)
+              - Transactions with shareholders or mutual members - Conversion of financial
+              liabilities into equity - Other equity instruments [00526]
+          is-ecpp-aseguradoras-iii-conversion-pasivos-resultado-ejercicio:
+            label: Insurance undertakings - Statement of changes in own equity (III)
+              - Transactions with shareholders or mutual members - Conversion of financial
+              liabilities into equity - Profit or loss for the year [00524]
           is-ecpp-aseguradoras-iii-otras-operaciones-socios-dividendo-cuenta:
             label: Insurance undertakings - Statement of changes in own equity (III)
               - Transactions with shareholders or mutual members - Other transactions

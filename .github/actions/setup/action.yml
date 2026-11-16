@@ -25,6 +25,12 @@ inputs:
     description: When true, also provision the Playwright browser channels.
     required: false
     default: "false"
+  cache:
+    description: >-
+      When true, restore and save the uv download cache between runs. For
+      hosted runners, which start empty; a self-hosted runner keeps its own.
+    required: false
+    default: "false"
 
 runs:
   using: composite
@@ -47,9 +53,10 @@ runs:
     - name: Install uv
       uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
       with:
-        prune-cache: false
+        prune-cache: ${{ inputs.cache == 'true' }}
         version: "0.11.29"
-        enable-cache: false
+        enable-cache: ${{ inputs.cache == 'true' }}
+        cache-dependency-glob: uv.lock
         python-version: ${{ inputs.python-version }}
 
     - name: Initialize the worktree

@@ -442,6 +442,15 @@ fixtures-status FAMILY="":
 fixtures-check FAMILY="":
     @uv run --no-sync python -m dev.fixture_projections check {{FAMILY}}
 
+# A hosted runner starts from a bare checkout, which holds no generated window
+# projection for `fixtures-check` to compare. This gate produces the generated
+# families whose check compares stored output, then runs every check, so a
+# failing producer or a rendering that differs between the two runs still fails.
+[doc('Produce the generated fixture projections a bare checkout lacks, then run fixtures-check; the merge gate lane.')]
+[group('check')]
+fixtures-gate:
+    @uv run --no-sync python -m dev.ci.fixture_gate
+
 # A full Modelo envelope build takes many minutes, so the two-build proof runs
 # on a schedule or by hand rather than in every fixtures-check.
 [doc('Run fixtures-check and also build each producer family twice in .tmp/, comparing the bytes; a family with no such build fails as determinism undeclared.')]
@@ -1392,6 +1401,45 @@ test-gate changed_files="":
     if ($LASTEXITCODE -ne 0 -and $LASTEXITCODE -ne 5) { exit $LASTEXITCODE }
     just test-pytest-harness
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+# The hosted merge gate spreads `test-gate`'s test passes over a job matrix.
+# `dev.ci.gate_shards` reads the same change scope, enumerates the test files
+# it selects and deals them into shards; the plan recipe prints the matrix as
+# workflow step outputs, and each matrix job runs one shard through the two
+# passes below, which are `test-gate`'s own. The CI contracts and the harness
+# verdict run once per workflow run in jobs of their own, so no shard repeats
+# them. The harness members are held out of the file list as well as ignored,
+# because pytest collects a file named on its command line. A pass that selects
+# nothing exits 5; one empty pass is a shard with no serial test, two are a
+# shard that ran nothing and fail.
+[doc('Print the merge gate shard matrix for a changed-path list, or the full tree, as workflow step outputs.')]
+[group('test')]
+test-gate-plan changed_files="":
+    @uv run --no-sync python -m dev.ci.gate_shards plan --github-output {{prepend("--exclude=", harness_members)}} {{ if changed_files == "" { "" } else { "--changed-files " + quote(changed_files) } }}
+
+[doc('Run one shard (INDEX/COUNT) of the change-scoped merge gate tests: the parallel pass, then the serial pass.')]
+[group('test')]
+test-gate-shard shard changed_files="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    select_args=(--shard "{{shard}}" --output var/ci/shard-files.txt {{prepend("--exclude=", harness_members)}})
+    [ -z "{{changed_files}}" ] || select_args+=(--changed-files "{{changed_files}}")
+    uv run --no-sync python -m dev.ci.gate_shards select "${select_args[@]}"
+    mapfile -t targets < var/ci/shard-files.txt
+    parallel_status=0
+    uv run --no-sync pytest -v -n {{pytest_workers}} --dist=loadfile -m '(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus' {{harness_exclusions}} "${targets[@]}" || parallel_status=$?
+    if [ "$parallel_status" -ne 0 ] && [ "$parallel_status" -ne 5 ]; then
+        exit "$parallel_status"
+    fi
+    serial_status=0
+    uv run --no-sync pytest -v -n0 -m '(unit or integration) and serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus' {{harness_exclusions}} "${targets[@]}" || serial_status=$?
+    if [ "$serial_status" -ne 0 ] && [ "$serial_status" -ne 5 ]; then
+        exit "$serial_status"
+    fi
+    if [ "$parallel_status" -eq 5 ] && [ "$serial_status" -eq 5 ]; then
+        echo "shard {{shard}} selected no test in either pass" >&2
+        exit 1
+    fi
 
 # Run the same registry conformance population exposed inside `test-registry`
 # as a directly addressable recipe. The registry aggregate guards it with

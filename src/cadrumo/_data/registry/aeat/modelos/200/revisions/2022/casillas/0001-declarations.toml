@@ -4503,6 +4503,51 @@ section = ["estado_de_cambios_patrimonio_neto_ii", "operaciones_con_socios_o_pro
 semantic_role = "is_ecpn_operaciones_socios_importe"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:943 DP200010 80|1271|17|N
+# The 2021-2024 designs print this field identically (DP200010 field 80, offset 1271, length 17, type N, caption 'Estado de cambios patrimonio neto (II) - Operaciones con socios o propietarios - Aumentos de capital - Acciones y participaciones en patrimonio propias [00524]'):
+# 13-200-ejercicio-2021-actualizado-22-06-2022-11-1-mb-xls.xls.extracted.md:929
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:958
+# 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1009
+# Box [00524] is also a reserve cohort box on DP200022 (14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3616, RIC 2018), so the row is declared under its sheet.
+[[revisions."2022".casillas]]
+id = "DP200010:00524"
+continuidad_id = "00524"
+number = "00524"
+segmento = "DP200010"
+section = ["estado_de_cambios_patrimonio_neto_ii", "operaciones_con_socios_o_propietarios"]
+semantic_role = "is_ecpn_operaciones_socios_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:944 DP200010 81|1288|17|N
+# The 2021-2024 designs print this field identically (DP200010 field 81, offset 1288, length 17, type N, caption 'Estado de cambios patrimonio neto (II) - Operaciones con socios o propietarios - Aumentos de capital - Resultados ejercicios anteriores [00525]'):
+# 13-200-ejercicio-2021-actualizado-22-06-2022-11-1-mb-xls.xls.extracted.md:930
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:959
+# 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1010
+# Box [00525] is also a reserve cohort box on DP200022 (14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3617, RIC 2018), so the row is declared under its sheet.
+[[revisions."2022".casillas]]
+id = "DP200010:00525"
+continuidad_id = "00525"
+number = "00525"
+segmento = "DP200010"
+section = ["estado_de_cambios_patrimonio_neto_ii", "operaciones_con_socios_o_propietarios"]
+semantic_role = "is_ecpn_operaciones_socios_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:945 DP200010 82|1305|17|N
+# The 2021-2024 designs print this field identically (DP200010 field 82, offset 1305, length 17, type N, caption 'Estado de cambios patrimonio neto (II) - Operaciones con socios o propietarios - Aumentos de capital - Otras aportaciones de socios [00526]'):
+# 13-200-ejercicio-2021-actualizado-22-06-2022-11-1-mb-xls.xls.extracted.md:931
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:960
+# 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1011
+# Box [00526] is also a reserve cohort box on DP200022 (14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3618, RIC 2018), so the row is declared under its sheet.
+[[revisions."2022".casillas]]
+id = "DP200010:00526"
+continuidad_id = "00526"
+number = "00526"
+segmento = "DP200010"
+section = ["estado_de_cambios_patrimonio_neto_ii", "operaciones_con_socios_o_propietarios"]
+semantic_role = "is_ecpn_operaciones_socios_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
 # 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1094 DP200011 68|1067|17|N
 [[revisions."2022".casillas]]
 id = "00528"
@@ -22187,6 +22232,20 @@ section = ["banco_de_espana_estado_cambios_patrimonio_neto_ii", "conversion_de_d
 semantic_role = "is_ecpn_banco_espana_importe"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:5429 DP200032 92|1475|17|N
+# The 2021-2024 designs print this field identically (DP200032 field 92, offset 1475, length 17, type N, caption 'Contabilidad Banco de España - Estado cambios patrimonio neto (II) - Estado total cambios - Pagos basados en acciones - Otros elementos del patrimonio neto [00524]'):
+# 13-200-ejercicio-2021-actualizado-22-06-2022-11-1-mb-xls.xls.extracted.md:5083
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:5801
+# 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:5908
+# Box [00524] is also a reserve cohort box on DP200022 (14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3616, RIC 2018), so the row is declared under its sheet.
+[[revisions."2022".casillas]]
+id = "DP200032:00524"
+continuidad_id = "is-ecpn-bde-total-cambios-pagos-basados-acciones-otros-elementos-patrimonio-neto"
+number = "00524"
+segmento = "DP200032"
+section = ["banco_de_espana_estado_cambios_patrimonio_neto_ii", "pagos_basados_en_acciones"]
+semantic_role = "is_ecpn_banco_espana_importe"
+
 # 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:5436 DP200032 99|1594|17|N
 [[revisions."2022".casillas]]
 id = "DP200032:00558"
@@ -22466,6 +22525,48 @@ segmento = "DP200042"
 section = ["aseguradoras_estado_cambios_patrimonio_propio_ii", "otras_variaciones_del_patrimonio_neto"]
 semantic_role = "is_ecpp_aseguradoras_importe"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:6186 DP200043 54|829|17|N
+# The 2021-2024 designs print this field identically (DP200043 field 54, offset 829, length 17, type N, caption 'Entidades aseguradoras - Estado cambios patrimonio propio (III) - Operaciones con socios o mutualistas - Conversión de pasivos financ. en patr. neto - Resultado del ejercicio [00524]'):
+# 13-200-ejercicio-2021-actualizado-22-06-2022-11-1-mb-xls.xls.extracted.md:5840
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:6558
+# 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:6665
+# Box [00524] is also a reserve cohort box on DP200022 (14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3616, RIC 2018), so the row is declared under its sheet.
+[[revisions."2022".casillas]]
+id = "DP200043:00524"
+continuidad_id = "is-ecpp-aseguradoras-iii-conversion-pasivos-resultado-ejercicio"
+number = "00524"
+segmento = "DP200043"
+section = ["aseguradoras_estado_cambios_patrimonio_propio_iii", "conversion_de_pasivos_financieros_en_patrimonio_neto"]
+semantic_role = "is_ecpp_aseguradoras_importe"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:6187 DP200043 55|846|17|N
+# The 2021-2024 designs print this field identically (DP200043 field 55, offset 846, length 17, type N, caption 'Entidades aseguradoras - Estado cambios patrimonio propio (III) - Operaciones con socios o mutualistas - Conversión de pasivos financ. en patr. neto - (Dividendo a cuenta) [00525]'):
+# 13-200-ejercicio-2021-actualizado-22-06-2022-11-1-mb-xls.xls.extracted.md:5841
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:6559
+# 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:6666
+# Box [00525] is also a reserve cohort box on DP200022 (14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3617, RIC 2018), so the row is declared under its sheet.
+[[revisions."2022".casillas]]
+id = "DP200043:00525"
+continuidad_id = "is-ecpp-aseguradoras-iii-conversion-pasivos-dividendo-cuenta"
+number = "00525"
+segmento = "DP200043"
+section = ["aseguradoras_estado_cambios_patrimonio_propio_iii", "conversion_de_pasivos_financieros_en_patrimonio_neto"]
+semantic_role = "is_ecpp_aseguradoras_importe"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:6188 DP200043 56|863|17|N
+# The 2021-2024 designs print this field identically (DP200043 field 56, offset 863, length 17, type N, caption 'Entidades aseguradoras - Estado cambios patrimonio propio (III) - Operaciones con socios o mutualistas - Conversión de pasivos financ. en patr. neto - Otros instrumentos de patrimonio [00526]'):
+# 13-200-ejercicio-2021-actualizado-22-06-2022-11-1-mb-xls.xls.extracted.md:5842
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:6560
+# 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:6667
+# Box [00526] is also a reserve cohort box on DP200022 (14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3618, RIC 2018), so the row is declared under its sheet.
+[[revisions."2022".casillas]]
+id = "DP200043:00526"
+continuidad_id = "is-ecpp-aseguradoras-iii-conversion-pasivos-otros-instrumentos-patrimonio"
+number = "00526"
+segmento = "DP200043"
+section = ["aseguradoras_estado_cambios_patrimonio_propio_iii", "conversion_de_pasivos_financieros_en_patrimonio_neto"]
+semantic_role = "is_ecpp_aseguradoras_importe"
 
 # 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:6198 DP200043 66|1033|17|N
 [[revisions."2022".casillas]]

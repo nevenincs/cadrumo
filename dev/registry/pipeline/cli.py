@@ -13,7 +13,6 @@ import re
 import tempfile
 from collections.abc import Callable
 from dataclasses import dataclass, replace
-from enum import StrEnum
 from pathlib import Path
 from typing import Annotated, Literal
 
@@ -26,6 +25,7 @@ from cadrumo.domain.calculations.registry.errors import RegistryError, RegistryV
 from dev.temporary_output import prepare_temp_root
 
 from ..compiler.authority import compile_validated_authority, compiled_bundled_authority
+from ..compiler.revision_export_projection import UndeclaredExportTargetError
 from .authored_form_bridge import AuthoredFormBridge, prepare_authored_form_bridge
 from .authority_cli import publish_authority
 from .bootstrap_supersession import (
@@ -54,6 +54,7 @@ from .generated_form_bridge import (
 from .generated_tree_dispositions import GeneratedTreeRecordDriftDisposition, record_drift_dispositions
 from .historical_static_repair import validated_historical_repair_source
 from .published_edition_staging import stage_published_modelo, supporting_modelos
+from .rename_set_static_repair import validated_rename_repair_source
 from .render_check import (
     GeneratedExportBootstrapTransport,
     RenderComparison,
@@ -63,8 +64,17 @@ from .render_check import (
     select_revision_record_design_source,
 )
 from .source_defects import source_defects_for
+from .target_currentness_fact import (
+    TargetCurrentnessFact,
+    TargetCurrentnessState,
+    target_currentness_comparison_fact,
+)
 from .tree_check import CheckedGeneratedExportTree, GeneratedExportTreeCheckContext, check_generated_export_tree
-from .tree_publication import publish_validated_generated_export_tree
+from .tree_publication import (
+    GeneratedExportSetMember,
+    publish_validated_generated_export_tree,
+    publish_validated_generated_export_tree_set,
+)
 from .tree_publication_contracts import (
     GeneratedExportSupersession,
     GeneratedExportTreePublicationContext,
@@ -221,9 +231,17 @@ def prepare_generated_tree_invocation(
     root: Path,
     *,
     authority: ValidatedRegistryAuthority | None = None,
+    staging_root: Path | None = None,
 ) -> PreparedGeneratedTreeInvocation:
-    """Stage one narrow candidate and derive its render inputs from authority."""
+    """Stage one narrow candidate and derive its render inputs from authority.
+
+    ``staging_root`` is the validated overlay of a reviewed repair set. Its
+    members' committed exports cannot load, so the candidate and the inherited
+    baseline are read from the overlay that authority was validated from, and
+    no published witness is staged; publication still targets the live tree.
+    """
     target_root = bundled_path("registry", "aeat")
+    source_registry_root = target_root if staging_root is None else staging_root
     if authority is None:
         recover_interrupted_supersession_bundle(
             target_root=target_root,
@@ -248,7 +266,7 @@ def prepare_generated_tree_invocation(
     target_export_root = target_root / "modelos" / invocation.modelo / "revisions" / invocation.revision / "export"
     inheritance = select_generated_export_inheritance(
         authority,
-        target_root,
+        source_registry_root,
         modelo=invocation.modelo,
         revision=invocation.revision,
         retain_source_chain=True,
@@ -275,7 +293,7 @@ def prepare_generated_tree_invocation(
         invocation, authority, target_root, inheritance
     )
     stage_generated_export_candidate(
-        target_root,
+        source_registry_root,
         candidate_root,
         modelo=invocation.modelo,
         revision=invocation.revision,
@@ -318,12 +336,16 @@ def prepare_generated_tree_invocation(
         candidate_root=candidate_root,
         target_root=target_root,
         target_export_root=target_export_root,
-        published_modelo_root=stage_published_modelo(
-            root,
-            modelo=invocation.modelo,
-            revision=invocation.revision,
-            inheritance=inheritance,
-            retain_source_chain=retain_source_chain,
+        published_modelo_root=(
+            stage_published_modelo(
+                root,
+                modelo=invocation.modelo,
+                revision=invocation.revision,
+                inheritance=inheritance,
+                retain_source_chain=retain_source_chain,
+            )
+            if staging_root is None
+            else None
         ),
         supersession=supersession,
         inheritance=inheritance,
@@ -626,6 +648,81 @@ def _republish(prepared: PreparedGeneratedTreeInvocation, target_state: Generate
         )
 
 
+def republish_rename_set(invocation: GeneratedTreeInvocation, refusal: UndeclaredExportTargetError, root: Path) -> None:
+    """Republish every member of the reviewed rename set as one set transaction.
+
+    Each member is prepared from the validated overlay, must pass the ordinary
+    digest-bound republication proof against its live tree, and carries the
+    form fragment the overlay's form owner generated for it.
+    """
+    repair = validated_rename_repair_source(
+        refusal=refusal,
+        modelo=invocation.modelo,
+        revision=invocation.revision,
+        source_ref=invocation.source_ref,
+        filing_year=invocation.filing_year,
+        period=invocation.period,
+        expected_manifest_sha256=invocation.expected_manifest_sha256,
+        overlay_parent=root / "rename-repair-overlay",
+    )
+    members: list[GeneratedExportSetMember] = []
+    for target in repair.targets:
+        member = GeneratedTreeInvocation(
+            invocation.modelo,
+            target.revision,
+            target.source_ref,
+            target.filing_year,
+            target.period,
+            target.expected_manifest_sha256,
+        )
+        prepared = prepare_generated_tree_invocation(
+            member,
+            root / "rename-repair-members" / target.revision,
+            authority=repair.authority,
+            staging_root=repair.overlay_root,
+        )
+        target_state = GeneratedExportTreeTargetStateReceipt.observe(prepared.target_export_root)
+        rendered = render_candidate(prepared)
+        candidate_revision_root = prepared.candidate_root / "modelos" / member.modelo / "revisions" / member.revision
+        comparison = compare_export_tree_roots(
+            modelo=member.modelo,
+            revision=member.revision,
+            layout_id=prepared.inputs.layout_id,
+            committed_root=prepared.target_export_root,
+            rendered_root=candidate_revision_root / "export",
+        )
+        require_republication_eligibility(
+            member, target_state, comparison, source_sha256=str(prepared.inputs.transport_profile.source_sha256)
+        )
+        members.append(
+            GeneratedExportSetMember(
+                context=GeneratedExportTreePublicationContext(
+                    validation=prepared.validation,
+                    temporary_root=prepared.candidate_root.parents[2],
+                    target_root=prepared.target_root,
+                    target_export_root=prepared.target_export_root,
+                    expected_target_state=target_state,
+                ),
+                joined=prepared.inputs.joined,
+                semantic_map=prepared.inputs.semantic_map,
+                rendered=rendered,
+                render_profile=prepared.inputs.render_profile,
+                render_profile_source_evidence=prepared.inputs.render_profile_source_evidence,
+                form_fragment=repair.form_fragments[target.revision],
+            )
+        )
+    publish_validated_generated_export_tree_set(members=members, final_live_validator=_compile_live_registry)
+    for target in repair.targets:
+        typer.echo(
+            f"republished-set-member\tmodelo={invocation.modelo}\trevision={target.revision}\tsource={target.source_ref}"
+        )
+
+
+def _compile_live_registry() -> None:
+    """Compile the complete live registry once every set member is installed."""
+    compile_validated_authority(bundled_path("registry", "aeat"), bundled_path(), verify_evidence_bytes=True)
+
+
 def finish_form_republication(
     registry_root: Path,
     bridge: GeneratedFormBridge | AuthoredFormBridge,
@@ -795,7 +892,22 @@ def run(
     try:
         with temporary_directory(prefix="cadrumo-generated-export-") as temporary_name:
             root = Path(temporary_name)
-            prepared = prepare_generated_tree_invocation(invocation, root)
+            try:
+                prepared = prepare_generated_tree_invocation(invocation, root)
+            except UndeclaredExportTargetError as refusal:
+                # Only the typed stale-export refusal of a reviewed rename reaches
+                # the set repair; every other load refusal stays closed.
+                if action != "republish" or any(
+                    (
+                        reconcile_authored_form,
+                        reconcile_casilla_splits,
+                        reconcile_row_bindings,
+                        reconcile_scalar_sources,
+                    )
+                ):
+                    raise
+                republish_rename_set(invocation, refusal, root)
+                return
             if any(
                 (reconcile_authored_form, reconcile_casilla_splits, reconcile_row_bindings, reconcile_scalar_sources)
             ):
@@ -827,30 +939,6 @@ def run(
     except (RegistryError, ValueError) as error:
         typer.echo(f"refused: {error}", err=True)
         raise typer.Exit(code=1) from error
-
-
-class TargetCurrentnessState(StrEnum):
-    """Read-only state of one named generated export target."""
-
-    CURRENT = "current"
-    STALE = "stale"
-    DRIFTED = "drifted"
-    NEVER_COMMITTED = "never-committed"
-
-
-@dataclass(frozen=True, slots=True)
-class TargetCurrentnessFact:
-    """Canonical generated-tree currentness fact and its comparison evidence."""
-
-    modelo: str
-    revision: str
-    state: TargetCurrentnessState
-    differing: tuple[str, ...] = ()
-    only_committed: tuple[str, ...] = ()
-    only_rendered: tuple[str, ...] = ()
-    serialization_only: tuple[str, ...] = ()
-    provenance_fields: tuple[str, ...] = ()
-    detail: str = ""
 
 
 def at_edition_grade(
@@ -966,32 +1054,7 @@ def _classify_target_currentness_failure(
             state=TargetCurrentnessState.DRIFTED,
             detail=str(error),
         )
-    return _target_currentness_comparison_fact(modelo, revision, comparison, error)
-
-
-def _target_currentness_comparison_fact(
-    modelo: str,
-    revision: str,
-    comparison: RenderComparison,
-    error: OSError | RegistryError | ValueError,
-) -> TargetCurrentnessFact:
-    state = TargetCurrentnessState.STALE if comparison.provenance_only else TargetCurrentnessState.DRIFTED
-    # A stale manifest's refusal names the digest that failed; the members that
-    # differ from a fresh render say which input moved.
-    detail = str(error)
-    if comparison.provenance_fields:
-        detail = f"{detail}; manifest members differing from a fresh render: " + ", ".join(comparison.provenance_fields)
-    return TargetCurrentnessFact(
-        modelo=modelo,
-        revision=revision,
-        state=state,
-        differing=comparison.differing,
-        only_committed=comparison.only_committed,
-        only_rendered=comparison.only_rendered,
-        serialization_only=comparison.serialization_only,
-        provenance_fields=comparison.provenance_fields,
-        detail=detail,
-    )
+    return target_currentness_comparison_fact(modelo, revision, comparison, error)
 
 
 _MODELO = Annotated[str, typer.Argument(help="Three-digit AEAT modelo identifier.")]
@@ -1156,8 +1219,6 @@ def republish_command(
 
 
 __all__ = [
-    "TargetCurrentnessFact",
-    "TargetCurrentnessState",
     "app",
     "at_edition_grade",
     "target_currentness",
