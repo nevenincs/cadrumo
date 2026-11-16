@@ -51,6 +51,7 @@ export const CalendarMonths = memo(function CalendarMonths({
         calendar.events,
         evaluatedDay(calendar),
         weekStart,
+        calendar.attention_order,
       ),
     [calendar, weekStart],
   );

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from enum import StrEnum
 from typing import Literal, Protocol
 
 from pydantic import BaseModel
@@ -33,17 +32,6 @@ type DeclarationsDestinationIdV1 = Literal[
     "declarations.calendar",
     "declarations.modelo_workspace",
 ]
-
-
-class DeclarationsCalendarScopeV1(StrEnum):
-    """Closed, presentation-only calendar scopes."""
-
-    ALL = "all"
-    PAST = "past"
-    UPCOMING = "upcoming"
-    OVERDUE = "overdue"
-    FILED = "filed"
-    EVIDENCE_UNKNOWN = "evidence_unknown"
 
 
 class DeclarationsRouteTargetV1(BaseModel):
@@ -140,7 +128,6 @@ class DeclarationsWorkspaceWiringV1:
 __all__ = [
     "CalendarEntryHandoffV1",
     "CalendarRecoveryHandoffV1",
-    "DeclarationsCalendarScopeV1",
     "DeclarationsDestinationIdV1",
     "DeclarationsRouteTargetV1",
     "DeclarationsWorkspaceWiringV1",

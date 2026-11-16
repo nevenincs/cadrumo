@@ -7300,15 +7300,6 @@ tui:
       actions: nincs javasolt teendő
       agenda: nincs közelgő benyújtási határidő
       declarations: nincs folytatható bevallás
-    filing_status:
-      accepted: Benyújtva, az AEAT elfogadta
-      due: Még nincs benyújtva
-      imported: Máshol benyújtva, importálva
-      marked_filed: Benyújtottként jelölve, az AEAT még nem igazolta
-      overdue: Lejárt, nincs benyújtva
-      receipt_verified: Benyújtva, AEAT-igazolás ellenőrizve
-      submitted: Benyújtva az AEAT adatai szerint
-      unknown: Nincs benyújtva, ismeretlen határidő
     heading:
       account: Fiók
       actions: Következő teendők
@@ -9948,6 +9939,7 @@ workspace:
         success: '{address} létrejött. A Bevallások között jelenik meg, amikor visszatér
           oda.'
       scope:
+        ahead: Még nyitva
         all: Mind
         evidence_unknown: Ismeretlen AEAT-állapot
         filed: Benyújtottként rögzítve

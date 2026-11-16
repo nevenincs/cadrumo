@@ -29,6 +29,7 @@ from ....application.modelo.declarations_workspace_contracts import (
 from ....application.modelo.work_form_wording import date_text
 from ....application.overview.calendar_models import (
     OverviewAeatSubmissionState,
+    OverviewCalendarScope,
     OverviewLocalFilingState,
     OverviewPeriodState,
 )
@@ -52,7 +53,6 @@ from .action_guards import require_canonical_declarations_actions
 from .models import (
     CalendarEntryHandoffV1,
     CalendarRecoveryHandoffV1,
-    DeclarationsCalendarScopeV1,
     DeclarationsDestinationIdV1,
     DeclarationsRouteTargetV1,
     DeclarationsWorkspaceWiringV1,
@@ -402,17 +402,14 @@ class DeclarationsCalendarController:
         self.projection = projection
 
     def visible_entries(
-        self, scope: DeclarationsCalendarScopeV1, query: str
+        self, scope: OverviewCalendarScope | None, query: str
     ) -> tuple[DeclarationsCalendarEntryRefV1, ...]:
-        """Apply closed scope semantics and Unicode AND search to safe fields only."""
-        aeat_observable = self.source(DeclarationsCalendarSource.AEAT_EVIDENCE).availability.is_observable
-        rows = [
-            row for row in self.projection.entries if _scope_matches(row, scope, self.projection.as_of, aeat_observable)
-        ]
+        """Keep the rows served in *scope*, or all, in served order; then Unicode AND search safe fields."""
+        rows = [row for row in self.projection.entries if scope is None or scope in row.scopes]
         terms = tuple(part for part in fold_for_matching(query).split() if part)
         if terms:
             rows = [row for row in rows if all(term in _calendar_search_text(row) for term in terms)]
-        return tuple(sorted(rows, key=lambda row: (row.adjusted_closes_on, *row.semantic_key())))
+        return tuple(rows)
 
     def context_identity(self) -> str | None:
         """Resolve a safe natural row identity carried by the route focus key."""
@@ -499,27 +496,6 @@ def _calendar_search_text(row: DeclarationsCalendarEntryRefV1) -> str:
         row.shift_reason,
     )
     return fold_for_matching(" ".join(values))
-
-
-def _scope_matches(
-    row: DeclarationsCalendarEntryRefV1,
-    scope: DeclarationsCalendarScopeV1,
-    as_of: date,
-    aeat_observable: bool,
-) -> bool:
-    if scope is DeclarationsCalendarScopeV1.ALL:
-        return True
-    if scope is DeclarationsCalendarScopeV1.PAST:
-        # An unknown close is only bounded below by its nominal date, so its
-        # window is not known to have closed.
-        return row.adjusted_closes_on < as_of and row.legal_status is not ObligationStatus.UNKNOWN
-    if scope is DeclarationsCalendarScopeV1.UPCOMING:
-        return row.adjusted_closes_on >= as_of and row.user_state is OverviewPeriodState.DUE
-    if scope is DeclarationsCalendarScopeV1.OVERDUE:
-        return row.adjusted_closes_on < as_of and row.user_state is OverviewPeriodState.LATE
-    if scope is DeclarationsCalendarScopeV1.FILED:
-        return row.user_state is OverviewPeriodState.FILED
-    return not aeat_observable
 
 
 def calendar_legal_label(value: ObligationStatus) -> str:

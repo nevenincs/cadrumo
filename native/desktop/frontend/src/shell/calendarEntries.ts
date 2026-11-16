@@ -1,13 +1,5 @@
 import type { OverviewPeriodState } from "./calendarContract";
-import type { CalendarEntry } from "./views";
-
-/** The product's readings in the order they need the person. */
-export const STATE_ORDER: readonly OverviewPeriodState[] = [
-  "late",
-  "due",
-  "unknown",
-  "filed",
-];
+import type { CalendarEntry, CalendarEvent, FilingCalendar } from "./views";
 
 /** The identity of an obligation: its Modelo and period. */
 export const entryKey = (entry: CalendarEntry) =>
@@ -19,29 +11,75 @@ export const entryKey = (entry: CalendarEntry) =>
 export const closeUnknown = (entry: CalendarEntry) =>
   entry.status === "UNKNOWN";
 
-/** Of two obligations, the one with a known close first. */
-const datedFirst = (a: CalendarEntry, b: CalendarEntry) =>
-  Number(closeUnknown(a)) - Number(closeUnknown(b));
+/** The calendar's entries in the order the product serves them as needing
+ * the person: its attention order, read over its entries. */
+export const inAttentionOrder = (
+  calendar: Pick<FilingCalendar, "entries" | "attention_order">,
+): CalendarEntry[] =>
+  calendar.attention_order.flatMap((index) => {
+    const entry = calendar.entries[index];
+    return entry === undefined ? [] : [entry];
+  });
 
-/** By reading, then binding date and identity, the sooner first. A close
- * that is not known comes after the known ones of its reading, and among
- * its kind keeps its earliest close only as a steady order. */
-export const compareCalendarEntries = (a: CalendarEntry, b: CalendarEntry) =>
-  STATE_ORDER.indexOf(a.user_state) - STATE_ORDER.indexOf(b.user_state) ||
-  datedFirst(a, b) ||
-  a.adjusted_closes_on.localeCompare(b.adjusted_closes_on) ||
-  entryKey(a).localeCompare(entryKey(b));
+/** The readings the calendar holds, in the order its attention order first
+ * reaches each. */
+export const attentionStates = (
+  calendar: Pick<FilingCalendar, "entries" | "attention_order">,
+): OverviewPeriodState[] => [
+  ...new Set(inAttentionOrder(calendar).map((entry) => entry.user_state)),
+];
 
-/** The list's order: by the month a window closes in, or at the earliest
- * closes in where that is all that is known; within a month the known
- * closes by date, then those not known. */
-export const compareListedEntries = (a: CalendarEntry, b: CalendarEntry) =>
-  a.adjusted_closes_on
-    .slice(0, 7)
-    .localeCompare(b.adjusted_closes_on.slice(0, 7)) ||
-  datedFirst(a, b) ||
-  a.adjusted_closes_on.localeCompare(b.adjusted_closes_on) ||
-  a.modelo.localeCompare(b.modelo);
+/** The list's months, each with its obligations in the order the product
+ * serves them and what was observed in it, and how many of its obligations
+ * the product serves as past and as ahead of the day it evaluated: the mark
+ * for that day stands between them. A close the product could not work out
+ * whose earliest has passed is neither. */
+export function listedMonths(
+  calendar: Pick<FilingCalendar, "entries" | "events">,
+  title: (iso: string) => string,
+) {
+  const groups = new Map<
+    string,
+    {
+      title: string;
+      entries: CalendarEntry[];
+      events: CalendarEvent[];
+      ahead: number;
+      behind: number;
+    }
+  >();
+  for (const entry of calendar.entries) {
+    const key = entry.adjusted_closes_on.slice(0, 7);
+    const group = groups.get(key) ?? {
+      title: title(entry.adjusted_closes_on),
+      entries: [],
+      events: [],
+      ahead: 0,
+      behind: 0,
+    };
+    if (entry.scopes.includes("ahead")) group.ahead += 1;
+    else if (entry.scopes.includes("past")) group.behind += 1;
+    group.entries.push(entry);
+    groups.set(key, group);
+  }
+  // What was observed, in the month it happened, whether or not anything
+  // falls due in that month.
+  for (const event of [...calendar.events].sort((a, b) =>
+    a.event_date.localeCompare(b.event_date),
+  )) {
+    const key = event.event_date.slice(0, 7);
+    const group = groups.get(key) ?? {
+      title: title(event.event_date),
+      entries: [],
+      events: [],
+      ahead: 0,
+      behind: 0,
+    };
+    group.events.push(event);
+    groups.set(key, group);
+  }
+  return [...groups].sort(([a], [b]) => a.localeCompare(b));
+}
 
 /** Where an opening is after its close, draw only the closing day; never
  * invent a filing window. Where the close is unknown the span ends on the
