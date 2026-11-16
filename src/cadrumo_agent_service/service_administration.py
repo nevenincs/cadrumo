@@ -6,7 +6,7 @@ import os
 import secrets
 from abc import ABC, abstractmethod
 from collections.abc import Callable
-from contextlib import ExitStack, suppress
+from contextlib import ExitStack
 from pathlib import Path
 from threading import Event, Lock, RLock, Thread
 from typing import Any, get_args
@@ -30,7 +30,6 @@ from .adapters.served_catalog_models import ServedCatalogModels
 from .contracts import HostedCertificationStatus
 from .gateway_credentials import GatewayCredentials
 from .host.auth_attempt import AuthAttempt
-from .host.background_refresh import BackgroundRefresh
 from .host.bounded_read import BoundedRead, Identity
 from .host.controller import (
     AgentHostController,
@@ -49,12 +48,10 @@ from .providers.application.attachment_releases import (
 from .providers.application.contracts import (
     LocalEngineStatus,
     LocalModelListResult,
-    ProviderSettingsRefusal,
     SignInMethod,
 )
 from .providers.application.local_model_list import LocalModelListService
 from .providers.application.model_runs import ModelRunService
-from .providers.application.next_steps import CONSOLE_SIGN_IN_COMMAND
 from .providers.application.ports import ProviderCatalogUnavailableError
 from .providers.application.resolution import ProviderCredentialResolver
 from .providers.application.service import AssistantAuthChoice, BaseUrlChange, ProviderSettingsService
@@ -63,6 +60,7 @@ from .providers.persistence.attachment_disclosures import SecureAttachmentDisclo
 from .providers.persistence.store import SecureLocalModelListStore, SecureProviderSettingsStore
 from .service_attachment_admin import answer_attachment_admin
 from .service_console_environment import answer_console_environment
+from .service_provider_status import ProviderStatusRead
 from .service_sign_out import answer_sign_out, signed_out_refusal
 from .service_support import (
     ADMIN_READ_FRESH_SECONDS,
@@ -181,16 +179,20 @@ class AgentServiceAdministration(ABC):
         ) = None
         self._workspace: Path | None = None
         self._catalog_read = BoundedRead(self._catalog_document, name="catalog", fresh_seconds=ADMIN_READ_FRESH_SECONDS)
-        # The status serves what these slow reads last kept and never waits for them.
-        self._login_reading_wanted = False
-        self._status_refresh = BackgroundRefresh(
-            self._refresh_provider_status, due=self._provider_status_due, name="provider-status"
+        # The status serves what its slow reads last kept and never waits for them.
+        self._provider_status = ProviderStatusRead(
+            providers=lambda: self._providers,
+            catalog=lambda: self._catalog,
+            login_status=lambda: self._login_status,
+            closing=self._closing,
+            lease=lambda: self.client.lease,
+            hosted_certifications=self._hosted_certifications,
         )
         self._ownership = ExitStack()
         # Plain reads that never wait on the agent tree, by their admin action.
         self._plain_reads: dict[str, Callable[[], dict[str, Any]]] = {
             "provider_lanes": self._provider_lanes,
-            "status": self._provider_status,
+            "status": self._provider_status.answer,
             "local_models": self._local_model_list,
             "local_engine": self._local_engine,
             "console_environment": lambda: answer_console_environment(
@@ -578,62 +580,6 @@ class AgentServiceAdministration(ABC):
         """Serve no kept catalog or login reading once what they were read from has changed."""
         self._catalog_read.forget()
         self._login_status.forget()
-
-    def _provider_status(self) -> dict[str, Any]:
-        """Observe settings without waiting for gateway startup after sign-in, or for any agent program.
-
-        A plain store read like ``provider_lanes``, with each command-line
-        lane's program state and the sign-in methods as last kept: a lane no
-        reading has reached yet is ``unknown``, and no method is offered before
-        the agent has named its methods. Reading them runs the agent, which can
-        take longer than an administration exchange, so the read is asked for
-        in the background and a later status serves it. Store reads and login
-        observations carry their own profile authority; the lifecycle lock
-        only serializes changes to the process tree, not these reads.
-        """
-        if self._closing.is_set():
-            return {"kind": "refused", "code": "service_stopping"}
-        lease = self.client.lease
-        if lease is None:
-            return {"kind": "refused", "code": "signed_out"}
-        observed = self._providers.status()
-        if isinstance(observed, ProviderSettingsRefusal):
-            return observed.model_dump(mode="json")
-        status = observed.model_dump(mode="json")
-        # Only a command-line lane carries a program state for the login reading to establish.
-        self._login_reading_wanted = any(entry.get("cli_state") is not None for entry in status.get("providers", ()))
-        self._status_refresh.request()
-        status["hosted_certifications"] = self._hosted_certifications()
-        status["console_sign_in_command"] = CONSOLE_SIGN_IN_COMMAND
-        # Before the methods are read, and while the agent cannot name them,
-        # login is offered nowhere; existing key management is unaffected.
-        methods = self._catalog.kept_gui_sign_in_methods() or {}
-        status["sign_in_providers"] = list(methods)
-        status["sign_in_methods"] = {provider: list(choices) for provider, choices in methods.items()}
-        if self._closing.is_set():
-            return {"kind": "refused", "code": "service_stopping"}
-        if self.client.lease != lease:
-            return {"kind": "refused", "code": "signed_out"}
-        return status
-
-    def _provider_status_due(self) -> bool:
-        """Say whether a kept login reading or the sign-in methods need reading again."""
-        if self._closing.is_set() or self.client.lease is None:
-            return False
-        if self._catalog.kept_gui_sign_in_methods() is None:
-            return True
-        return self._login_reading_wanted and self._login_status.due()
-
-    def _refresh_provider_status(self) -> None:
-        """Read what the status serves as last kept, off the request path, each within its own bound."""
-        if self._closing.is_set():
-            return
-        if self._catalog.kept_gui_sign_in_methods() is None:
-            # The next status read asks again; until then login is offered nowhere.
-            with suppress(ProviderCatalogUnavailableError):
-                self._catalog.gui_sign_in_methods()
-        if self._login_reading_wanted and self._login_status.due():
-            self._login_status.refresh()
 
     @abstractmethod
     def _admit_stop(self) -> dict[str, Any]:
