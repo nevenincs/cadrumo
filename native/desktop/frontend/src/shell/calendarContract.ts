@@ -421,6 +421,10 @@ export type OverviewCalendarScope =
  * `support` carries the filing-year envelope the read was served under and
  * where the requested range sits in it, so a range outside the envelope reads
  * as unsupported rather than as a calendar with nothing due.
+ *
+ * `entries` come in the calendar's list order and `attention_order` holds
+ * their indices in the order they need the operator, so no frontend orders
+ * obligations itself.
  */
 export type OverviewCalendarSnapshot = {
   range: OverviewCalendarRange;
@@ -437,6 +441,7 @@ export type OverviewCalendarSnapshot = {
   coverage: ObligationCoverageReport;
   late_count: number | null;
   applicable_modelos_without_deadline: string[] | null;
+  attention_order: number[];
 };
 
 /**

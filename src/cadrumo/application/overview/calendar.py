@@ -74,6 +74,7 @@ from .calendar_models import (
     OverviewCensoEnrolmentState,
     OverviewLocalFilingState,
     SuppressedCalendarEntry,
+    calendar_list_order_key,
     user_state_for,
 )
 from .calendar_warnings import (
@@ -436,12 +437,12 @@ def _merge_work_units_into_entries(
     return tuple(
         sorted(
             merged,
-            key=lambda entry: (
-                entry.closes_on,
-                entry.modelo,
-                entry.period.filing_year,
-                entry.period.registry_token,
-                entry.local_work_unit_id or "",
+            key=lambda entry: calendar_list_order_key(
+                adjusted_closes_on=entry.adjusted_closes_on,
+                status=entry.status,
+                modelo=entry.modelo,
+                period=str(entry.period),
+                local_work_unit_id=entry.local_work_unit_id,
             ),
         ),
     )
