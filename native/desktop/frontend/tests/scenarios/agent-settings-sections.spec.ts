@@ -54,3 +54,33 @@ test("the provider settings are drawn while the agent access read is still pendi
   await expect(accessSection(page).locator("[aria-busy=true]")).toHaveCount(0);
   await expect(providers(page)).toBeVisible();
 });
+
+test("provider settings answered busy while the agent starts say so, and appear once it is ready", async ({
+  page,
+}) => {
+  await open(page);
+  await page.evaluate(() =>
+    window.__scenarioProviderSignIn!.failNextSettingsRead({ code: "busy" }),
+  );
+  await page
+    .locator(".pane-agent")
+    .getByRole("button", { name: label("desktop.agent.settings") })
+    .click();
+  // Not a failure to retry: the agent is starting, and the settings come.
+  await expect(
+    page
+      .locator(".pane-agent")
+      .getByRole("status")
+      .filter({ hasText: label("desktop.providers.agent_starting") }),
+  ).toBeVisible();
+  await expect(
+    page
+      .locator(".pane-agent")
+      .getByText(label("desktop.providers.load_failed")),
+  ).toHaveCount(0);
+  await page.evaluate(() =>
+    window.__scenarioAgentPublishStatus?.({ state: "starting" }),
+  );
+  await page.evaluate(() => window.__scenarioAgentPublishStatus?.());
+  await expect(providers(page)).toBeVisible();
+});

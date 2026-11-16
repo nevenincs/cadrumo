@@ -1465,7 +1465,6 @@ desktop:
     view_list: Lista
     view_months: Naptár
     window_label: '{modelo} {period}, {days}, {state}'
-    window_unknown: A kezdő dátum nincs megadva
     year: Adóév
     year_current: Vissza az aktuális nézethez
     year_failed: Ezt az adóévet nem sikerült beolvasni. Amit látsz, nem változott.
