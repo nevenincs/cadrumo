@@ -54,6 +54,10 @@
 //   `Access is denied` is a harness failure: its lines carry the reason prefix
 //   `cause harness: ` and the sweep goes on; only a real sign-in or version
 //   refusal stops it.
+//   --only-listed open only the declarations the rows file lists for each case,
+//                each with its year's earlier ones (CADRUMO_PERSONA_ONLY), so a
+//                rerun of moved rows re-measures those rows and what they
+//                read, not every return of the persona's world.
 //   --dry-run    print the planned cases and exit; nothing is launched.
 //
 // The packaged host is staged once at the start and shared by every window;
@@ -142,6 +146,7 @@ function parseArguments(argv) {
     "fresh",
     "loads-only",
     "no-stop-on-load-failure",
+    "only-listed",
   ]);
   const values = {};
   for (let index = 0; index < argv.length; index += 1) {
@@ -182,8 +187,11 @@ export function plannedCases(rowsPath) {
       persona: row.persona,
       horizon: row.horizon,
       rows: 0,
+      listed: [],
     };
     found.rows += 1;
+    if (row.modelo != null)
+      found.listed.push(`${row.modelo}/${row.year}/${row.period}`);
     cases.set(id, found);
   });
   return [...cases.values()];
@@ -334,6 +342,19 @@ export function lineProblem(lines, world, tree, persona) {
   return null;
 }
 
+const rowKey = (row) => `${row.modelo}/${row.year}/${row.period}`;
+
+/** The listed rows, each with the rows of its year the world orders before it. */
+export function listedWithTheirYear(rows, listed) {
+  const last = new Map();
+  rows.forEach((row, index) => {
+    if (listed.includes(rowKey(row))) last.set(String(row.year), index);
+  });
+  return rows.filter(
+    (row, index) => index <= (last.get(String(row.year)) ?? -1),
+  );
+}
+
 /** The world rows a timed-out case's spec wrote no line for. */
 export function unreachedRows(lines, world) {
   const have = new Set(
@@ -459,7 +480,14 @@ async function runCase(item, context) {
     }
     const worldPath = join(root, "world.json");
     writeFileSync(worldPath, world.stdout);
-    const worldJson = JSON.parse(world.stdout);
+    const built = JSON.parse(world.stdout);
+    // Under --only-listed the spec opens each listed declaration and the ones
+    // of its year the world files before it, because a return reads those
+    // (a Modelo 100 its year's Modelo 130 instalments); the case is sized and
+    // checked against those rows, not the whole world.
+    const worldJson = context.onlyListed
+      ? { ...built, rows: listedWithTheirYear(built.rows, item.listed) }
+      : built;
     const results = join(root, "results", "window.jsonl");
     mkdirSync(dirname(results), { recursive: true });
     // A spec killed at the case timeout never reaches its own sign-out and
@@ -489,6 +517,9 @@ async function runCase(item, context) {
           CADRUMO_BUILD_CONFIG: config,
           CADRUMO_PERSONA_HOST: host,
           ...(context.loadsOnly ? { CADRUMO_PERSONA_LOADS_ONLY: "1" } : {}),
+          ...(context.onlyListed
+            ? { CADRUMO_PERSONA_ONLY: worldJson.rows.map(rowKey).join(",") }
+            : {}),
           PYTHONDONTWRITEBYTECODE: "1",
         },
       },
@@ -714,6 +745,7 @@ async function main() {
           .map((dir) => resolve(dir))
       : [logsDir],
     loadsOnly,
+    onlyListed: args["only-listed"] === true,
     worldTree: args["world-tree"] ? resolve(args["world-tree"]) : repository,
   };
   const ordinals = new Map(cases.map((item, index) => [item.id, index + 1]));
