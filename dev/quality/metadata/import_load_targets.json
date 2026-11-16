@@ -4467,6 +4467,7 @@
         "cadrumo_runtime.host.view_stream_relay",
         "cadrumo_runtime.host.view_stream_state",
         "cadrumo_runtime.host.view_stream_worker_link",
+        "cadrumo_runtime.host.warm_heap",
         "cadrumo_runtime.host.windows_secret_bootstrap",
         "cadrumo_runtime.host.worker",
         "cadrumo_runtime.host.worker_activity",
