@@ -31,6 +31,7 @@ from cadrumo_client.contracts.deadline_budget import DEFAULT_TIMEOUT_POLICY, Orc
 from ..host.controller import CALLER_ENDED_REFUSALS, AgentHostError, AgentHostRefusal
 from ..host.launch_environment import system_environment
 from ..host.store_lifecycle import AgentInvocationResult, AgentInvocationRunner, InvocationCancellation
+from ..providers.application.contracts import SignInMethod
 from ..providers.application.ports import (
     ProviderCatalogSource,
     ProviderCatalogUnavailableError,
@@ -61,9 +62,7 @@ class _GuiSignInCapabilities(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid", hide_input_in_errors=True)
 
     schema_version: Literal[2, 3]
-    providers: dict[ProviderId, tuple[Literal["browser", "browser-code", "device"], ...]] = Field(
-        max_length=MAX_CATALOG_LANES
-    )
+    providers: dict[ProviderId, tuple[SignInMethod, ...]] = Field(max_length=MAX_CATALOG_LANES)
 
 
 class AgentProviderCatalogSource(ProviderCatalogSource):
@@ -90,7 +89,7 @@ class AgentProviderCatalogSource(ProviderCatalogSource):
         self._gui_sign_in_lock = Lock()
         self._catalog: ProviderCatalog | None = None
         self._sign_ins: tuple[str, ...] | None = None
-        self._gui_sign_ins: dict[str, tuple[Literal["browser", "browser-code", "device"], ...]] | None = None
+        self._gui_sign_ins: dict[str, tuple[SignInMethod, ...]] | None = None
 
     def request_close(self) -> None:
         """Wake source-owned invocations without performing cleanup on the request thread."""
@@ -181,7 +180,7 @@ class AgentProviderCatalogSource(ProviderCatalogSource):
         """Read GUI support from the agent, separately from terminal handlers."""
         return tuple(self.gui_sign_in_methods())
 
-    def gui_sign_in_methods(self) -> dict[str, tuple[Literal["browser", "browser-code", "device"], ...]]:
+    def gui_sign_in_methods(self) -> dict[str, tuple[SignInMethod, ...]]:
         """Return the provider-owned methods; the service invents no login capability."""
         with self._gui_sign_in_lock:
             if self._gui_sign_ins is None:

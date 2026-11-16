@@ -454,6 +454,8 @@ class ProviderCatalogEntry(BaseModel):
     """The agent's recommended model id per capability; empty when it states none, never applied by Cadrumo."""
     background: LaneBackground
     """What a background run on this lane takes."""
+    logout: bool = False
+    """Whether the agent's ``auth logout --provider`` signs this lane's provider out; absent when it declares none."""
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -467,6 +469,7 @@ class ProviderCatalogEntry(BaseModel):
         if (self.agent_credential_id is not None) != self.auth_kind.accepts_direct_credential:
             raise ValueError("a lane declares a credential id exactly when it takes a credential")
         self._validate_endpoint()
+        self._validate_logout()
         model_ids = [model.id for model in self.models]
         if len(model_ids) != len(set(model_ids)):
             raise ValueError("a lane's model ids must be unique")
@@ -481,6 +484,10 @@ class ProviderCatalogEntry(BaseModel):
             validate_loopback_http_base_url(self.default_base_url)
         elif self.default_base_url is not None:
             validate_https_base_url(self.default_base_url)
+
+    def _validate_logout(self) -> None:
+        if self.logout and not (self.transport is ProviderTransport.CLI and self.auth_kind.accepts_provider_sign_in):
+            raise ValueError("only a cli lane that takes its provider's sign-in declares a logout")
 
     def model(self, model_id: str) -> ProviderCatalogModel | None:
         """Return the model this lane declares under ``model_id``, or ``None`` when it declares none."""

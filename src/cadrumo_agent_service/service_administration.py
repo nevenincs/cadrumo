@@ -9,7 +9,7 @@ from collections.abc import Callable
 from contextlib import ExitStack
 from pathlib import Path
 from threading import Event, Lock, RLock, Thread
-from typing import Any
+from typing import Any, get_args
 
 from pydantic import SecretStr
 
@@ -45,7 +45,12 @@ from .providers.application.attachment_releases import (
     AttachmentReleases,
     DisclosureRefusalCode,
 )
-from .providers.application.contracts import LocalEngineStatus, LocalModelListResult, ProviderSettingsRefusal
+from .providers.application.contracts import (
+    LocalEngineStatus,
+    LocalModelListResult,
+    ProviderSettingsRefusal,
+    SignInMethod,
+)
 from .providers.application.local_model_list import LocalModelListService
 from .providers.application.model_runs import ModelRunService
 from .providers.application.next_steps import CONSOLE_SIGN_IN_COMMAND
@@ -57,6 +62,7 @@ from .providers.persistence.attachment_disclosures import SecureAttachmentDisclo
 from .providers.persistence.store import SecureLocalModelListStore, SecureProviderSettingsStore
 from .service_attachment_admin import answer_attachment_admin
 from .service_console_environment import answer_console_environment
+from .service_sign_out import answer_sign_out, signed_out_refusal
 from .service_support import (
     ADMIN_READ_FRESH_SECONDS,
     ADMIN_READ_SECONDS,
@@ -295,6 +301,10 @@ class AgentServiceAdministration(ABC):
         # the tree takes; a request answers that it is busy instead of waiting
         # for its caller's deadline.
         if not self._guard.acquire(timeout=LIFECYCLE_ADMISSION_SECONDS):
+            if action in {"sign_in", "connect", "sign_out"}:
+                # A sign-in or sign-out refused while another attempt or a tree change holds the
+                # lifecycle is shown to the person, so it carries its cause and log line.
+                return refuse("busy", cause="agent_tree_running", provider=arguments.get("provider"))
             return {"kind": "refused", "code": "busy"}
         try:
             return self._admin(action, **arguments)
@@ -387,16 +397,26 @@ class AgentServiceAdministration(ABC):
     ) -> dict[str, Any]:
         if action == "sign_in":
             return self._prepare_sign_in(provider, expected_revision=expected_revision)
-        if action == "connect" and method in {"browser", "browser-code", "device"}:
+        if action == "sign_out":
+            return answer_sign_out(
+                lane=provider,
+                expected_revision=expected_revision,
+                catalog=self._catalog,
+                providers=self._providers,
+                login_context=self._login_context,
+                login_status=self._login_status,
+                forget=self._forget_reads,
+            )
+        if action == "connect" and method is not None and method in get_args(SignInMethod):
             return self._connect(provider, expected_revision=expected_revision, method=method)
         return self._change_provider(action, provider, expected_revision, base_url, choice, secret)
 
-    def _admin_refusal(self) -> dict[str, Any] | None:
+    def _admin_refusal(self, action: str) -> dict[str, Any] | None:
         """Refuse a tree or provider change while stopping, signed out or during a sign-in attempt."""
         if self._closing.is_set():
             return {"kind": "refused", "code": "service_stopping"}
         if self.client.lease is None:
-            return {"kind": "refused", "code": "signed_out"}
+            return signed_out_refusal(action)
         blocks, self._auth_attempt = sign_in_in_flight(self._auth_attempt, self._abandoned_attempts)
         return refuse("busy", cause="sign_in_in_progress") if blocks else None
 
@@ -415,7 +435,7 @@ class AgentServiceAdministration(ABC):
         engine: str | None = None,
         placement: str | None = None,
     ) -> Any:
-        refusal = self._admin_refusal()
+        refusal = self._admin_refusal(action)
         if refusal is not None:
             return refusal
         if action == "start":

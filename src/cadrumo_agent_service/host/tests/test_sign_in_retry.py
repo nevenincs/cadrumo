@@ -48,6 +48,8 @@ def _entry() -> ProviderStatusEntry:
             "provider": "example",
             "transport": "cli",
             "display_name": "Example",
+            "reads_off_host": True,
+            "sign_out_available": False,
             "auth_kind": "provider_sign_in_only",
             "consumers": ["assistant"],
             "mode": "provider_sign_in",
