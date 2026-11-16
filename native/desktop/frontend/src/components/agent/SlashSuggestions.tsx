@@ -1,10 +1,10 @@
 import { useLayoutEffect, useMemo, useRef } from "react";
+import type { SkillRecord } from "../../shell/agentGatewayContract";
 import type { AgentSession } from "../../shell/agentSession";
 import {
   SKILL_COMMANDS,
   matchingSkills,
   partialSkillCommand,
-  type AgentSkillSummary,
   type SkillCommand,
   type SkillCommandKind,
 } from "../../shell/agentSkills";
@@ -15,17 +15,17 @@ import type { AnySource, SuggestionSource } from "./ComposerSuggestions";
 /** What the `/` list offers: one of the composer's commands, or a skill. */
 type SlashItem =
   | { kind: "command"; command: SkillCommandKind }
-  | { kind: "skill"; skill: AgentSkillSummary };
+  | { kind: "skill"; skill: SkillRecord };
 
 const COMMAND_KINDS = Object.keys(SKILL_COMMANDS) as SkillCommandKind[];
 
 /** Reads the skills once for a session, and again after a failed read. */
 export function useSkillInventory(
   session: Pick<AgentSession, "skills"> | null | undefined,
-): (() => Promise<readonly AgentSkillSummary[]>) | undefined {
+): (() => Promise<readonly SkillRecord[]>) | undefined {
   const held = useRef<{
     session: unknown;
-    read: Promise<readonly AgentSkillSummary[]>;
+    read: Promise<readonly SkillRecord[]>;
   } | null>(null);
   return useMemo(() => {
     const skills = session?.skills?.bind(session);
@@ -70,7 +70,7 @@ function SkillWords({
  * words out of the message.
  */
 export function useSlashSources(
-  skills: (() => Promise<readonly AgentSkillSummary[]>) | undefined,
+  skills: (() => Promise<readonly SkillRecord[]>) | undefined,
   onSkillCommand: ((command: SkillCommand) => void) | undefined,
 ): readonly AnySource[] {
   const t = useStrings();
@@ -137,7 +137,7 @@ export function useSlashSources(
           : `/${item.skill.name} `,
     };
     const commandArguments = COMMAND_KINDS.map(
-      (kind): SuggestionSource<AgentSkillSummary> => ({
+      (kind): SuggestionSource<SkillRecord> => ({
         ...common,
         id: `skill-${kind}`,
         label: commandWords[kind],
