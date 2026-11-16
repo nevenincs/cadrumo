@@ -217,8 +217,9 @@ jobs:
         run: just check-import-boundaries
 
   # The personas and every fixture producer check. One producer runs from the
-  # frontend's installed packages, so Node and those packages come first; the
-  # check reads the sources and writes no fixture.
+  # frontend's installed packages, so Node and those packages come first. The
+  # window projections are build output and a fresh runner holds none, so the
+  # gate produces the ones a check compares before it runs the checks.
   fixtures:
     name: "Check: Fixtures and personas (Linux)"
     needs: authority
@@ -249,7 +250,7 @@ jobs:
 
       - name: Fixture projections
         shell: bash
-        run: just fixtures-check
+        run: just fixtures-gate
 
   # A job of its own because a selected change executes every documented CLI
   # sequence, minutes no other job's budget should absorb. The gate decides

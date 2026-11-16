@@ -77,7 +77,7 @@ checks to no pull request.
 | `lint` | Check: Lint (Linux) | | style, format, types, module size, year literals, actionlint, zizmor |
 | `authority` | Build: Registry authority (Linux) | | publishes the registry authority once, uploads it |
 | `checks` | Check: Security, registry and import boundaries (Linux) | authority | semgrep, registry gate, import linter |
-| `fixtures` | Check: Fixtures and personas (Linux) | authority | validates the personas, runs every fixture producer check |
+| `fixtures` | Check: Fixtures and personas (Linux) | authority | validates the personas, produces the generated window projections a fresh runner lacks, runs every fixture producer check (`just fixtures-gate`) |
 | `goldens` | Check: Committed sequence goldens (Linux) | plan, authority | replays the documented CLI sequences a change can alter |
 | `tests` | Test: Scoped tests (Linux, shard i/n) | plan, authority | one shard of the selected tests, parallel then serial |
 | `contracts` | Test: CI contracts (Linux) | plan, authority | the workflow, deployment and release contracts |

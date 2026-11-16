@@ -442,6 +442,15 @@ fixtures-status FAMILY="":
 fixtures-check FAMILY="":
     @uv run --no-sync python -m dev.fixture_projections check {{FAMILY}}
 
+# A hosted runner starts from a bare checkout, which holds no generated window
+# projection for `fixtures-check` to compare. This gate produces the generated
+# families whose check compares stored output, then runs every check, so a
+# failing producer or a rendering that differs between the two runs still fails.
+[doc('Produce the generated fixture projections a bare checkout lacks, then run fixtures-check; the merge gate lane.')]
+[group('check')]
+fixtures-gate:
+    @uv run --no-sync python -m dev.ci.fixture_gate
+
 # A full Modelo envelope build takes many minutes, so the two-build proof runs
 # on a schedule or by hand rather than in every fixtures-check.
 [doc('Run fixtures-check and also build each producer family twice in .tmp/, comparing the bytes; a family with no such build fails as determinism undeclared.')]
