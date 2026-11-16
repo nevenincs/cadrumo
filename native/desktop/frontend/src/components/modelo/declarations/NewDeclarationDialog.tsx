@@ -186,12 +186,16 @@ function Chooser({
   }, [targets]);
   const forModelo = targets.filter((x) => x.modelo === modelo);
   const years = [...new Set(forModelo.map((x) => x.filing_year))];
-  const suggested = forModelo.find((x) => x.suggested) ?? forModelo[0] ?? null;
-  const shownYear = year ?? suggested?.filing_year ?? null;
-  const periods = forModelo.filter((x) => x.filing_year === shownYear);
   // Only the person's choice or the backend's suggestion is ever picked: the
-  // window holds no rule for which period a filer is due, so with neither it
-  // waits for the person.
+  // window holds no rule for which year or period a filer is due, so with
+  // neither it waits for the person. A single served year is the only one
+  // there is to show, not a choice made for them.
+  const suggested = forModelo.find((x) => x.suggested) ?? null;
+  const shownYear =
+    year ??
+    suggested?.filing_year ??
+    (years.length === 1 ? (years[0] ?? null) : null);
+  const periods = forModelo.filter((x) => x.filing_year === shownYear);
   const picked =
     periods.find((x) => at(x, chosen)) ??
     periods.find((x) => x.suggested) ??
@@ -417,7 +421,7 @@ function Chooser({
           {!yearly && years.length > 1 && (
             <SegmentedControl
               aria-label={t("workspace.declarations.list.new.year")}
-              value={String(shownYear)}
+              value={shownYear === null ? "" : String(shownYear)}
               onValueChange={(value) => {
                 setYear(Number(value));
                 setChosen(null);
