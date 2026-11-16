@@ -2,11 +2,11 @@ import { createContext, useCallback, useEffect, useState } from "react";
 import type { AgentSession } from "./agentSession";
 import { failureCode } from "../errors";
 import type {
-  AgentLocalEngine,
-  AgentLocalEngineToken,
-  AgentLocalModels,
-  AgentLocalPlacement,
-} from "../ipc/contract";
+  LocalEngine,
+  LocalEngineStatus,
+  LocalModelListStatus,
+  LocalPlacement,
+} from "./localModelsContract";
 import type { CatalogLane, LaneModel } from "./localModelLanes";
 import type { AskedModel } from "./provisioning";
 
@@ -17,18 +17,18 @@ import type { AskedModel } from "./provisioning";
 
 /** What a view can do with the person's lists, as the host offers it. */
 export type LocalModelHost = {
-  read: () => Promise<AgentLocalModels>;
+  read: () => Promise<LocalModelListStatus>;
   add: (
     lane: string,
     model: string,
     expectedRevision: string,
-  ) => Promise<AgentLocalModels>;
+  ) => Promise<LocalModelListStatus>;
   remove: (
     lane: string,
     model: string,
     expectedRevision: string,
-  ) => Promise<AgentLocalModels>;
-  reset: (expectedRevision: string) => Promise<AgentLocalModels>;
+  ) => Promise<LocalModelListStatus>;
+  reset: (expectedRevision: string) => Promise<LocalModelListStatus>;
   /** The local engine, where the host offers it. It shares the lists'
    * revision, so a change to either is read again from the other. */
   engine?: LocalEngineHost;
@@ -37,12 +37,12 @@ export type LocalModelHost = {
 };
 
 export type LocalEngineHost = {
-  read: () => Promise<AgentLocalEngine>;
+  read: () => Promise<LocalEngineStatus>;
   choose: (
-    engine: AgentLocalEngineToken,
-    placement: AgentLocalPlacement,
+    engine: LocalEngine,
+    placement: LocalPlacement,
     expectedRevision: string,
-  ) => Promise<AgentLocalEngine>;
+  ) => Promise<LocalEngineStatus>;
 };
 
 /**
@@ -105,7 +105,7 @@ export const ReviewClaimContext = createContext<
 export type ListSnapshot =
   | { kind: "loading" }
   | { kind: "failed"; code: string }
-  | { kind: "ready"; value: AgentLocalModels };
+  | { kind: "ready"; value: LocalModelListStatus };
 
 export type ListOutcome = { kind: "saved" } | { kind: "refused"; code: string };
 
@@ -120,7 +120,7 @@ export type LocalModelLists = {
    * it is stored. A refusal is recorded under `key`. */
   change: (
     key: string,
-    act: (revision: string) => Promise<AgentLocalModels>,
+    act: (revision: string) => Promise<LocalModelListStatus>,
   ) => Promise<boolean>;
 };
 
@@ -160,7 +160,7 @@ export function useLocalModels(
   const change = useCallback(
     async (
       key: string,
-      act: (revision: string) => Promise<AgentLocalModels>,
+      act: (revision: string) => Promise<LocalModelListStatus>,
     ): Promise<boolean> => {
       if (snapshot.kind !== "ready") return false;
       setBusy(key);
@@ -194,20 +194,17 @@ export type EngineSnapshot =
   | { kind: "none" }
   | { kind: "loading" }
   | { kind: "failed"; code: string }
-  | { kind: "ready"; value: AgentLocalEngine };
+  | { kind: "ready"; value: LocalEngineStatus };
 
 export type LocalEngineState = {
   snapshot: EngineSnapshot;
   /** The engine and placement as read, null until a readable record. */
-  value: AgentLocalEngine | null;
+  value: LocalEngineStatus | null;
   /** True while a change is being stored. */
   busy: boolean;
   /** The last change's refusal code, if it was refused. */
   refusal: string | null;
-  change: (
-    engine: AgentLocalEngineToken,
-    placement: AgentLocalPlacement,
-  ) => Promise<boolean>;
+  change: (engine: LocalEngine, placement: LocalPlacement) => Promise<boolean>;
 };
 
 /** The local engine and placement of `host`, read again after any change to
@@ -243,8 +240,8 @@ export function useLocalEngine(host: LocalModelHost | null): LocalEngineState {
   }, [source, reads]);
   const change = useCallback(
     async (
-      engine: AgentLocalEngineToken,
-      placement: AgentLocalPlacement,
+      engine: LocalEngine,
+      placement: LocalPlacement,
     ): Promise<boolean> => {
       if (!source || snapshot.kind !== "ready" || busy) return false;
       setBusy(true);

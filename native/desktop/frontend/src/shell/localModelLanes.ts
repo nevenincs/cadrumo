@@ -1,4 +1,4 @@
-import type { AgentLocalModels } from "../ipc/contract";
+import type { LocalModelListStatus } from "./localModelsContract";
 import { isDeclared } from "./agentCatalog";
 import type {
   DeclaredLicence,
@@ -115,8 +115,8 @@ export function catalogLanes(answer: ServedCatalogAnswer): CatalogLane[] {
 }
 
 /** The models the person added to `lane`, in the order added. */
-export function addedTo(lists: AgentLocalModels, lane: string): string[] {
-  return lists.state === "readable"
+export function addedTo(lists: LocalModelListStatus, lane: string): string[] {
+  return !lists.unreadable
     ? lists.models
         .filter((entry) => entry.lane === lane)
         .map((entry) => entry.model)

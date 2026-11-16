@@ -16,7 +16,7 @@ import type {
 } from "./agentCatalogContract";
 import type { AgentEngineHealth, AgentSelectionRecord } from "./agentSession";
 import { parseEngineHealth } from "./agentSession";
-import type { AgentListedModel } from "../ipc/contract";
+import type { LocalModelListEntry } from "./localModelsContract";
 import type { AgentRanWith } from "./agentViews";
 import { engineNotRunningWords } from "./engineHealth";
 import type { Translate } from "./strings";
@@ -581,7 +581,7 @@ export function selectionRecord(
  * null where the catalog does not serve its lane or no longer lists it. */
 export function readingSelection(
   catalog: ServedCatalogAnswer,
-  reading: AgentListedModel,
+  reading: LocalModelListEntry,
 ): AgentSelection | null {
   const lane = servedLanes(catalog).find(
     (held) =>

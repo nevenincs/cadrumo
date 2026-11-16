@@ -8,8 +8,8 @@
 // one: its answers are design and test evidence only.
 
 import type { DocsLanguage, DesktopLanguage } from "../ipc/environment";
+import type { LocalEngine } from "../shell/localModelsContract";
 import type {
-  AgentLocalEngineToken,
   HostFailure,
   LogBatch,
   LogLevel,
@@ -149,7 +149,7 @@ export type ScenarioHostOptions = {
   engineChoices?: FixtureEngineChoices;
   /** The local engine the made-up agent's stored record names at the start;
    * where left out, the bundled llama.cpp. */
-  localEngine?: AgentLocalEngineToken;
+  localEngine?: LocalEngine;
   /** The installed model the made-up service serves as the one documents
    * are read with while no choice is stored; where left out, none. */
   readingDefault?: { lane: string; model: string };
