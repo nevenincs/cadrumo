@@ -466,7 +466,17 @@ async function runCase(item, context) {
     }
     const worldPath = join(root, "world.json");
     writeFileSync(worldPath, world.stdout);
-    const worldJson = JSON.parse(world.stdout);
+    const built = JSON.parse(world.stdout);
+    // Under --only-listed the spec opens only the listed declarations, so the
+    // case is sized and checked against those rows, not the whole world.
+    const worldJson = context.onlyListed
+      ? {
+          ...built,
+          rows: built.rows.filter((row) =>
+            item.listed.includes(`${row.modelo}/${row.year}/${row.period}`),
+          ),
+        }
+      : built;
     const results = join(root, "results", "window.jsonl");
     mkdirSync(dirname(results), { recursive: true });
     // A spec killed at the case timeout never reaches its own sign-out and
