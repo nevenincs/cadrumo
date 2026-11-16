@@ -130,8 +130,9 @@ function filled(
     issuedAt: fixtureDay(10, 23),
     counterpartyName: "Norte Digital S. Coop.",
     taxId: RECORDED_TAX_ID,
-    country: "es",
-    currency: "eur",
+    // The code editors hold what is typed in capitals.
+    country: "ES",
+    currency: "EUR",
     lines: [
       line(first),
       line({
@@ -355,6 +356,34 @@ test("a figure typed badly keeps the add back even if an answer accepts", () => 
     kind: "grammar",
     refusal: { key: "ambiguous_grouping" },
   });
+});
+
+test("a currency or country is sent as held, and the ledger's answer is what refuses it", () => {
+  for (const [facts, name, field, code] of [
+    [{ currency: "EU" }, "currency_not_iso", "currency", "currency_invalid"],
+    [
+      { country: "ESP" },
+      "country_not_alpha2",
+      "counterparty_country",
+      "counterparty_country_invalid",
+    ],
+  ] as const) {
+    const draft = filled(facts);
+    const reading = readDraft(draft, CORRECTIVE);
+    expect(reading.problems).toEqual({});
+    expect(reading.preview).toMatchObject(
+      recorded[name]!.request as Record<string, unknown>,
+    );
+    const check = checked(draft, name);
+    expect(check.request).toBeNull();
+    expect(check.problems[field]).toMatchObject({
+      kind: "finding",
+      finding: { code },
+    });
+  }
+  expect(
+    checked(filled({ country: "ESP" }), "country_not_alpha2").invariants,
+  ).toMatchObject({ country: false });
 });
 
 test("nothing is assumed: the ledger names what a bare draft lacks", () => {
