@@ -16,7 +16,6 @@ filer reads the balance again and decides.
 from __future__ import annotations
 
 import asyncio
-from decimal import Decimal, InvalidOperation
 from functools import partial
 from typing import ClassVar, Final, Literal, override
 
@@ -31,7 +30,6 @@ from textual.widgets.option_list import Option
 from ....application.modelo.iva_wallet_balance_operation import ModeloIvaWalletBalanceProjection
 from ....application.modelo.iva_wallet_correction_operation import ModeloIvaWalletCorrectionProjection
 from ....application.modelo.iva_wallet_override_operation import ModeloIvaWalletOverrideProjection
-from ....application.modelo.value_presentation import format_casilla_value
 from ....application.modelo.work_form_models import ModeloWorkForm
 from ....application.modelo.work_form_wording import period_words
 from ....core.external_constants import OutputLanguage
@@ -109,29 +107,20 @@ def mode_help_key(kind: IvaWalletActionKind) -> str:
     return f"{_PREFIX}.help.{kind.value}"
 
 
-def written_amount(text: str, language: OutputLanguage) -> str:
-    """A served amount written as a box writes money; text that is not a number stays as served."""
-    try:
-        value = Decimal(text)
-    except InvalidOperation:
-        return text
-    return format_casilla_value(value, data_type="money", language=language)
-
-
-def balance_lines(balance: ModeloIvaWalletBalanceProjection, language: OutputLanguage) -> tuple[str, ...]:
-    """The released balance facts, each with the catalogue's label for it, in the application's field order."""
+def balance_lines(balance: ModeloIvaWalletBalanceProjection) -> tuple[str, ...]:
+    """The released balance facts, each with the catalogue's label for it and its amounts as served in words."""
 
     def line(name: str, value: str) -> str:
         return f"{tr(f'{_PREFIX}.{name}')}: {value}"
 
     expiry = tr(EXPIRY_NOT_REPORTED_LOCALE_KEY) if balance.next_expiry_year is None else str(balance.next_expiry_year)
     return (
-        line("total_balance", written_amount(balance.total_balance, language)),
-        line("active_balance", written_amount(balance.active_balance, language)),
-        line("expired_balance", written_amount(balance.expired_balance, language)),
+        line("total_balance", balance.total_balance_words),
+        line("active_balance", balance.active_balance_words),
+        line("expired_balance", balance.expired_balance_words),
         line("lot_count", str(balance.lot_count)),
         line("next_expiry_year", expiry),
-        line("unallocated_applied_amount", written_amount(balance.unallocated_applied_amount, language)),
+        line("unallocated_applied_amount", balance.unallocated_applied_amount_words),
     )
 
 
@@ -145,10 +134,10 @@ def receipt_lines(receipt: IvaWalletReceiptV1, language: OutputLanguage) -> tupl
     lines = [
         tr(RECORDED_LOCALE_KEY),
         f"{tr(PERIOD_LOCALE_KEY)}: {period_words(receipt.period.to_period(), language)}",
-        f"{tr(AMOUNT_LOCALE_KEY)}: {written_amount(receipt.amount, language)}",
+        f"{tr(AMOUNT_LOCALE_KEY)}: {receipt.amount_words}",
     ]
     if isinstance(receipt, ModeloIvaWalletCorrectionProjection):
-        lines.append(f"{tr(PREVIOUS_AMOUNT_LOCALE_KEY)}: {written_amount(receipt.previous_amount, language)}")
+        lines.append(f"{tr(PREVIOUS_AMOUNT_LOCALE_KEY)}: {receipt.previous_amount_words}")
     if isinstance(receipt, ModeloIvaWalletCorrectionProjection | ModeloIvaWalletOverrideProjection):
         lines.append(f"{tr(REASON_LOCALE_KEY)}: {receipt.reason}")
     if isinstance(receipt, ModeloIvaWalletOverrideProjection):
@@ -376,7 +365,7 @@ class ModeloIvaWalletScreen(ModalScreen[str | None]):
         status.display = bool(said)
         lines: tuple[str, ...] = ()
         if self._phase == "ready" and self._balance is not None:
-            lines = balance_lines(self._balance, self._language)
+            lines = balance_lines(self._balance)
             if self._balance.lot_count == 0:
                 lines = (*lines, tr(NO_LOTS_LOCALE_KEY))
         balance = self.query_one("#wallet-balance", Static)
@@ -527,5 +516,4 @@ __all__ = [
     "mode_help_key",
     "mode_label_key",
     "receipt_lines",
-    "written_amount",
 ]
