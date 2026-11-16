@@ -4,6 +4,27 @@
 // when it is stale.
 
 /**
+ * One admitted format: its media type and the extensions that name it.
+ */
+export type AttachmentFormatRecord = {
+  media_type: string;
+  /**
+   * Lowercase, each with its leading dot, e.g. '.pdf'.
+   */
+  extensions: string[];
+};
+
+/**
+ * The limits every conversation's attachments are held to, and the formats.
+ */
+export type AttachmentPolicyResponse = {
+  max_file_bytes: number;
+  max_files_per_conversation: number;
+  max_total_bytes_per_conversation: number;
+  formats: AttachmentFormatRecord[];
+};
+
+/**
  * One model's licence, as its lane's catalog states it, with the text.
  *
  * `spdx`, `name` and `digest` are the catalog entry's `licence`; `digest` is

@@ -1497,10 +1497,10 @@ fn agent_drop_unobserve(host: State<'_, Arc<AgentHost>>, subscription: u32) {
 #[tauri::command]
 async fn agent_attachment_policy(
     host: State<'_, Arc<AgentHost>>,
-) -> std::result::Result<upload::Policy, Refused> {
+) -> std::result::Result<Value, Refused> {
     blocking(&host, |host| {
         let gateway = Session::gateway(&host.supervisor)?;
-        upload::policy_of(&gateway::Client::new(&gateway).attachment_policy()?)
+        upload::served_policy(gateway::Client::new(&gateway).attachment_policy()?)
     })
     .await
 }

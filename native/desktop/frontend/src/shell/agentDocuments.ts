@@ -3,6 +3,7 @@ import type {
   SentFile,
   StagedAttachment,
 } from "@/components/agent/types";
+import type { AttachmentPolicyResponse } from "./agentGatewayContract";
 import type { AgentDocumentRef } from "./agentSession";
 import type {
   AgentDocumentRecord,
@@ -51,6 +52,18 @@ const EXTENSION_KINDS: Record<string, FileKind> = {
 export function extensionOf(name: string): string {
   const dot = name.lastIndexOf(".");
   return dot > 0 && dot < name.length - 1 ? name.slice(dot + 1) : "";
+}
+
+/** The extensions the agent's served formats admit, each without its dot,
+ * once each, in the order the formats name them. */
+export function acceptedExtensions(policy: AttachmentPolicyResponse): string[] {
+  return [
+    ...new Set(
+      policy.formats.flatMap((format) =>
+        format.extensions.map((extension) => extension.replace(/^\./, "")),
+      ),
+    ),
+  ];
 }
 
 /** What a stored file is, as far as how it is drawn goes: from its type
