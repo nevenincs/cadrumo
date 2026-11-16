@@ -125,6 +125,8 @@ function readParams() {
         "local-only",
         "engines-only",
         "hosted-signed-out",
+        "unavailable",
+        "unavailable-unreferenced",
       ] as const
     ).find((catalog) => catalog === params.get("catalog")),
     // Which of the local lane's models the made-up computer holds.

@@ -41,13 +41,15 @@ import type { ProfileViews } from "../shell/views";
 import {
   fixtureAgent,
   type FixtureAsks,
-  type FixtureCatalog,
   type FixtureDocuments,
   type FixtureEngineChoices,
   type FixtureLocalModels,
   type FixtureStream,
 } from "./agentFixtureHost";
-import type { FixtureEngineHealth } from "./fixtures/agentCatalog";
+import type {
+  FixtureCatalog,
+  FixtureEngineHealth,
+} from "./fixtures/agentCatalog";
 import { agentAccessFixture } from "./agentAccessFixture";
 import { ABOUT_FIXTURE } from "./fixtures/about";
 import type { FixtureSkills } from "./fixtures/agentSkills";

@@ -39,6 +39,8 @@ export function refusalWords(
       return t("desktop.agent.service_timeout");
     case "agent_service_busy":
       return t("desktop.agent.service_starting");
+    case "agent_catalog_unavailable":
+      return t("desktop.agent.catalog_unavailable");
     case "agent_reconnecting":
       return t("desktop.account.reconnecting");
     case "agent_reply_in_progress":

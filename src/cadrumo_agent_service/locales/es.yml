@@ -48,6 +48,7 @@ desktop:
     can_write: escribir archivos
     cancel: Cancelar
     capabilities: 'Puede: {list}'
+    catalog_unavailable: No se ha podido leer la lista de proveedores del agente.
     choose_model: Elige un modelo
     choose_provider: Elige un proveedor
     close_documents: Cerrar los documentos
