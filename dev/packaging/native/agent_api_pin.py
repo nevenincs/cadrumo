@@ -37,8 +37,8 @@ class AgentApiPin:
     pinned: Path
 
 
-def _pin(directory: Path) -> AgentApiPin:
-    record_path = directory / PIN_RECORD
+def _read_record(record_path: Path) -> dict[str, str]:
+    """The pin record's text fields, refused unless it holds exactly the expected keys."""
     try:
         record = json.loads(record_path.read_text(encoding="utf-8"))
     except (OSError, ValueError) as error:
@@ -48,6 +48,11 @@ def _pin(directory: Path) -> AgentApiPin:
             f"The agent API pin record {record_path} must be an object with exactly the text keys "
             f"{', '.join(sorted(_PIN_KEYS))}"
         )
+    return {str(key): str(value) for key, value in record.items()}
+
+
+def _validate_record(record: dict[str, str], record_path: Path) -> Path:
+    """Refuse a record naming another source, a path outside the checkout or a malformed digest; answer its path."""
     if record["source"] != "cadrumo-agent":
         raise AgentApiPinError(
             f"The agent API pin record {record_path} names source {record['source']!r}, not 'cadrumo-agent'"
@@ -61,19 +66,28 @@ def _pin(directory: Path) -> AgentApiPin:
         raise AgentApiPinError(
             f"The agent API pin record {record_path} must name a full 40-hex commit and a 64-hex sha256"
         )
-    pinned = directory / relative.name
+    return relative
+
+
+def _require_digest(pinned: Path, sha256: str, record_path: Path) -> None:
+    """Refuse a pinned document that does not hash to the digest its record names."""
     try:
         pinned_bytes = pinned.read_bytes()
     except OSError as error:
         raise AgentApiPinError(f"The pinned agent API {pinned} cannot be read: {error}") from error
-    if hashlib.sha256(pinned_bytes).hexdigest() != record["sha256"]:
+    if hashlib.sha256(pinned_bytes).hexdigest() != sha256:
         raise AgentApiPinError(
             f"The pinned agent API {pinned} does not hash to the sha256 its pin record {record_path} names; "
             "re-pin both together"
         )
-    return AgentApiPin(
-        path=str(record["path"]), commit=str(record["commit"]), sha256=str(record["sha256"]), pinned=pinned
-    )
+
+
+def _pin(directory: Path) -> AgentApiPin:
+    record_path = directory / PIN_RECORD
+    record = _read_record(record_path)
+    pinned = directory / _validate_record(record, record_path).name
+    _require_digest(pinned, record["sha256"], record_path)
+    return AgentApiPin(path=record["path"], commit=record["commit"], sha256=record["sha256"], pinned=pinned)
 
 
 def require_pinned_agent_api(source: Path, directory: Path = PIN_DIRECTORY) -> None:
