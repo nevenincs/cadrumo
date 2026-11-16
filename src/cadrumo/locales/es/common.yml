@@ -5946,6 +5946,8 @@ ledger:
       low_value_unit_value_not_cents: El valor unitario de adquisición del elemento
         debe estar en céntimos enteros.
       m130_period_invalid: Ese no es un periodo del Modelo 130 del ejercicio.
+      m130_period_not_declared: 'El Modelo 130 no tiene ese periodo. Elige uno de
+        estos: {tokens}.'
       method_admission_invalid: Las tablas tributarias no indican con claridad si
         este método se admite para este tipo de elemento, así que todavía no se puede
         aceptar.

@@ -5935,6 +5935,8 @@ ledger:
       low_value_unit_value_not_cents: El valor unitari d'adquisició de l'element ha
         d'estar en cèntims sencers.
       m130_period_invalid: Aquest no és un període del Modelo 130 de l'exercici.
+      m130_period_not_declared: 'El Modelo 130 no té aquest període. Tria''n un d''aquests:
+        {tokens}.'
       method_admission_invalid: Les taules tributàries no indiquen amb claredat si
         aquest mètode s'admet per a aquest tipus d'element, així que encara no es
         pot acceptar.

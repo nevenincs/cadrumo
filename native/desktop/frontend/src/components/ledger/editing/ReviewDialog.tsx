@@ -20,7 +20,8 @@ import type {
   CatalogueInvoiceSnapshot,
   LedgerInvoiceMatchJudgement,
 } from "../../../shell/ledgerInvoiceContract";
-import type { LedgerPort, OutputLanguage } from "../../../shell/ledger";
+import type { LedgerPort } from "../../../shell/ledger";
+import type { OutputLanguage } from "../../../shell/ledgerClassificationContract";
 import { useInvoiceMatches } from "../../../shell/ledgerInvoiceMatch";
 import {
   plannedStepsReported,

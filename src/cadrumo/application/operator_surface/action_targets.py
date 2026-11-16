@@ -283,7 +283,6 @@ ACTION_TARGETS: Final[tuple[ActionTarget, ...]] = (
         "modelo.work.amend_wizard",
         ("app", "modelo", "work", "amend-wizard"),
         "WorkAmendWizardResult",
-        required_inputs=("work_unit_id",),
         profile_bound_write=True,
     ),
     ActionTarget(

@@ -22,6 +22,7 @@ from ...core.filing_year import FourDigitYear
 from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect, profile_operation_subject
+from ...core.parsing.codes import IsoCurrencyCodeText
 from ...core.time.clock import now
 from ..ledger.read_access import resolve_ledger_request_read_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
@@ -71,7 +72,7 @@ class InventoryClaimCandidateProjection(BaseModel):
     booked_date: date
     counterparty: str | None
     description: str
-    currency: str
+    currency: IsoCurrencyCodeText
     taxable_base: PublicDecimal | None
     iva_amount: PublicDecimal | None
     recargo_amount: PublicDecimal | None

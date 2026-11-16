@@ -15,8 +15,9 @@ from ...core.external_constants import DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
 from ...core.filing_year import FourDigitYear
 from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.period import Period, PeriodError
+from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.renta.actividad_asset.errors import (
     ActividadAssetAcceleratedDa18DepreciationError,
     ActividadAssetClaimConflictError,
@@ -28,6 +29,7 @@ from ...domain.renta.actividad_asset.errors import (
 from ...domain.renta.actividad_asset.lifecycle import AssetKind
 from ...domain.renta.actividad_asset.register_records import ActivityAssetDescriptorFacts
 from ...domain.renta.actividad_asset.schedule import covered_until_after, last_day_covered
+from ..modelo.period_admission import ModeloPeriodAdmissionOutcome, admit_modelo_period
 from ..operations.models import CredentialFreeOperationRequest
 from ..operations.public_scalar import PublicDecimal
 from ..operator_actions.projection import PreconditionVerdictSnapshot
@@ -395,14 +397,29 @@ class ActivityAssetFilingHandoffRequest(CredentialFreeOperationRequest):
     output_language: OutputLanguage = DEFAULT_OUTPUT_LANGUAGE
     """The language the boxes are named in."""
 
-    def requested_period(self) -> Period | None:
-        """Read the stated Modelo 130 period, refusing a code that is no period of the tax year."""
+    def requested_period(self, *, operation: PinnedAuthorityOperation) -> Period | None:
+        """Read the stated Modelo 130 period, refusing a code the Modelo 130 does not declare for the tax year.
+
+        The period is admitted by the one rule every frontend's period goes through, so a code the
+        terminal refuses for the Modelo 130 is refused here too.
+        """
         if self.m130_period is None:
             return None
-        try:
-            return Period.from_year_and_code(self.tax_year, self.m130_period)
-        except PeriodError as error:
+        modelo = form_for_role("renta.direct_instalment", authority=operation)
+        admission = admit_modelo_period(modelo, self.tax_year, self.m130_period, operation=operation)
+        if admission.period is not None:
+            return admission.period
+        if admission.outcome is ModeloPeriodAdmissionOutcome.NOT_DECLARED:
             raise ActividadAssetValidationError(
-                context={"field": "m130_period"},
-                translated_message="ledger.actividad_asset.errors.m130_period_invalid",
-            ) from error
+                context={"field": "m130_period", "tokens": ", ".join(admission.declared_tokens)},
+                translated_message="ledger.actividad_asset.errors.m130_period_not_declared",
+            )
+        if admission.refusal_locale_key is not None:
+            raise ActividadAssetValidationError(
+                context={"field": "m130_period", "modelo": modelo},
+                translated_message=admission.refusal_locale_key,
+            )
+        raise ActividadAssetValidationError(
+            context={"field": "m130_period"},
+            translated_message="ledger.actividad_asset.errors.m130_period_invalid",
+        )

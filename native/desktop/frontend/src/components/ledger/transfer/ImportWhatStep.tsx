@@ -16,11 +16,8 @@ import {
   SegmentedControlItem,
 } from "@/components/ui/segmented-control";
 import { Switch } from "@/components/ui/switch";
-import type {
-  FilePick,
-  LedgerProvider,
-  PickedFile,
-} from "../../../shell/ledger";
+import type { FilePick, PickedFile } from "../../../shell/ledger";
+import type { LedgerProviderID } from "../../../shell/ledgerTransferContract";
 import type { InvoiceKind } from "../../../shell/ledgerInvoiceContract";
 import type { LedgerPeriod } from "../../../shell/ledgerGrammar";
 import { periodsHoldingToday, usePeriods } from "../../../shell/ledgerPeriods";
@@ -82,8 +79,8 @@ export function ImportWhatStep({
   pickFailed: boolean;
   onPick(how: FilePick): void;
   onRemove(file: PickedFile): void;
-  provider: LedgerProvider;
-  onProvider(provider: LedgerProvider): void;
+  provider: LedgerProviderID;
+  onProvider(provider: LedgerProviderID): void;
   onlyPeriod: LedgerPeriod | null;
   onOnlyPeriod(period: LedgerPeriod | null): void;
   pagePeriod: LedgerPeriod | null;
@@ -104,7 +101,7 @@ export function ImportWhatStep({
   usePeriods();
   const countries = useFieldSuggestions("country");
   // The formats are those this installation parses, as the ledger serves them.
-  const formats = useVocabulary().importFormats as readonly LedgerProvider[];
+  const formats = useVocabulary().importFormats as readonly LedgerProviderID[];
   const named = formats.filter((format) => format !== "auto");
   const directionChoice = (
     value: InvoiceKind | null,
@@ -241,7 +238,7 @@ export function ImportWhatStep({
               id={`${ids}-provider`}
               value={provider}
               onChange={(event) =>
-                onProvider(event.target.value as LedgerProvider)
+                onProvider(event.target.value as LedgerProviderID)
               }
             >
               {formats.map((value) => (

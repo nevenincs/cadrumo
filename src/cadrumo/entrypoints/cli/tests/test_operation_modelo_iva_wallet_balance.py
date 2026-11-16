@@ -17,6 +17,7 @@ from ....application.modelo.iva_wallet_balance_operation import (
     ModeloIvaWalletBalanceProjection,
     ModeloIvaWalletBalanceRequest,
 )
+from ....core.external_constants import OutputLanguage
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from .. import operation_modelo_iva_wallet_balance as bridge
 from .operation_bridge_support import bind_profile_submission
@@ -28,7 +29,7 @@ _OPERATION_ID = "b" * 64
 
 
 def _projection() -> ModeloIvaWalletBalanceProjection:
-    return ModeloIvaWalletBalanceProjection(
+    return ModeloIvaWalletBalanceProjection.worded(
         profile_id=_PROFILE,
         as_of_year=2024,
         total_balance="500.00",
@@ -37,6 +38,7 @@ def _projection() -> ModeloIvaWalletBalanceProjection:
         lot_count=1,
         next_expiry_year=2028,
         unallocated_applied_amount="0.00",
+        language=OutputLanguage.EN,
     )
 
 

@@ -12,7 +12,8 @@ import {
   type LedgerUpdateRequest,
 } from "./ledgerMovementOperations";
 import { type LedgerStagedBlocker } from "./ledgerMovementCheckContract";
-import type { JsonObject, LedgerDefinitionId, OutputLanguage } from "./ledger";
+import type { JsonObject, LedgerDefinitionId } from "./ledger";
+import type { OutputLanguage } from "./ledgerClassificationContract";
 import {
   LEDGER_BULK_CLASSIFY_COLUMNS,
   LEDGER_UPDATE_FIELDS,

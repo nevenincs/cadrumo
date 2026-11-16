@@ -255,6 +255,10 @@ _RUNTIME_CLASSIFICATION: dict[str, tuple[str, str]] = {
         _WALL,
         "Diagnostic stamp beside a stall timer; a fixed instant would make dumps unorderable.",
     ),
+    "application/operation_cue_timing.py::log_operation_cue_timing": (
+        _WALL,
+        "Diagnostic epoch that joins one operation's cue lines across processes; a fixed instant would unjoin them.",
+    ),
     "adapters/worker_authorization_client.py::WorkerAuthorizationClient._check": (
         _WALL,
         "Lease reply expiry check in the worker process; authority expires on real time.",

@@ -5814,6 +5814,8 @@ ledger:
       low_value_unit_value_not_cents: The element's unit acquisition value must be
         in whole cents.
       m130_period_invalid: That is not a Modelo 130 period of the tax year.
+      m130_period_not_declared: 'The Modelo 130 has no such period. Choose one of
+        these: {tokens}.'
       method_admission_invalid: The tax tables don't say clearly whether this method
         is allowed for this kind of asset, so it can't be accepted yet.
       method_excluded_by_law: This method is excluded by law for this kind of asset

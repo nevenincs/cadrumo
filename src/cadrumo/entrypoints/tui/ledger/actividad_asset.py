@@ -467,7 +467,12 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
             raise InputRefusedError(tr("tui.ledger.activity_asset.errors.year_invalid")) from None
 
     def _stated_quarter(self, tax_year: int) -> Period | None:
-        """Read the quarter the operator chose, or none when the annual figures alone are asked for."""
+        """Read the quarter the operator chose, or none when the annual figures alone are asked for.
+
+        Only the shape of a period is read here. Whether the Modelo 130 declares the quarter is the filing
+        handoff's admission, made under the authority the operation pins, so the screen and the terminal
+        refuse the same quarters with the same words.
+        """
         text = self.query_one("#asset-filing-m130-period", Input).value.strip()
         if not text:
             return None

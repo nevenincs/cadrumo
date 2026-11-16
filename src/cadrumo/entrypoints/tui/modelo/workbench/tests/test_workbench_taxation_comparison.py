@@ -30,6 +30,7 @@ from ......application.modelo.taxation_comparison_words import (
     individual_branch_caveat_words,
     recommendation_reason_words,
 )
+from ......application.modelo.value_presentation import money_words
 from ......application.modelo.work_form_models import ModeloWorkForm
 from ......core.config import override_settings
 from ......core.errors.hierarchy import CadrumoError
@@ -85,6 +86,10 @@ def _served() -> ModeloTaxationComparisonProjection:
             language=OutputLanguage.EN,
         ),
         words_language=OutputLanguage.EN,
+        conjunta_cuota_resultante_words=money_words("1800.00", OutputLanguage.EN),
+        individual_cuota_resultante_words=money_words("1900.00", OutputLanguage.EN),
+        conjunta_resultado_words=money_words(joint, OutputLanguage.EN),
+        individual_resultado_words=money_words(individual, OutputLanguage.EN),
         individual_branch_single_earner_only=True,
         individual_branch_caveat=individual_branch_caveat_words(OutputLanguage.EN),
     )
