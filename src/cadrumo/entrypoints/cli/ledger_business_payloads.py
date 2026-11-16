@@ -252,7 +252,7 @@ class InventoryClaimCandidatePayload(OutputSchema):
     booked_date: IsoDateText
     counterparty: str | None = None
     description: NonEmptyStr
-    currency: NonEmptyStr
+    currency: IsoCurrencyCode
     taxable_base: str | None = None
     iva_amount: str | None = None
     recargo_amount: str | None = None

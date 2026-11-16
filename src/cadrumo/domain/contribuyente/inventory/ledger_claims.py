@@ -17,6 +17,7 @@ from typing import Literal
 from ....core.decimal.constants import MONEY_ZERO
 from ....core.external_constants import DEFAULT_CURRENCY
 from ....core.identity.transaction_ids import TransactionId
+from ....core.parsing.codes import IsoCurrencyCode
 from .records import InventoryLedger, InventoryLedgerDocument, MovementKind, MovementRecord, PurchaseLedgerRow
 
 InventoryClaimRefusalReason = Literal[
@@ -44,7 +45,7 @@ class ClaimedTransactionFacts:
     """The tax substrate of one ledger transaction a purchase may claim, in its own currency."""
 
     transaction_id: TransactionId
-    currency: str
+    currency: IsoCurrencyCode
     taxable_base: Decimal | None
     iva_amount: Decimal | None
     recargo_amount: Decimal | None
