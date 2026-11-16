@@ -142,22 +142,38 @@ def taxable_base_comparison(invoice: Invoice, rows: Sequence[Transaction]) -> Se
     """Put the bases ``rows`` state and the base of ``invoice`` in one currency, by the settlement rule.
 
     Bases stated in the invoice's own currency compare as stated. Any other row compares
-    in EUR, and a side with no EUR value leaves nothing to compare.
+    in EUR, and a side with no EUR value leaves nothing to compare. A row that states no
+    base leaves nothing to compare either: an unstated base is not a base of zero.
     """
     if all(row.raw.currency == invoice.currency for row in rows):
+        native_bases = [row.taxable_base for row in rows]
+        if any(base is None for base in native_bases):
+            return None
         return SettlementComparison(
             cash=sum(
-                (_in_settling_direction(invoice, row, row.taxable_base or Decimal("0")) for row in rows), Decimal("0")
+                (
+                    _in_settling_direction(invoice, row, base)
+                    for row, base in zip(rows, native_bases, strict=True)
+                    if base is not None
+                ),
+                Decimal("0"),
             ),
             owed=invoice.base_total,
         )
     base_eur = invoice.base_total_eur
     if base_eur is None or any(is_non_eur_without_conversion(row) for row in rows):
         return None
+    eur_bases = [effective_eur_taxable_base(row) for row in rows]
+    if any(base is None for base in eur_bases):
+        return None
     return SettlementComparison(
         cash=round_to_cents(
             sum(
-                (_in_settling_direction(invoice, row, effective_eur_taxable_base(row) or Decimal("0")) for row in rows),
+                (
+                    _in_settling_direction(invoice, row, base)
+                    for row, base in zip(rows, eur_bases, strict=True)
+                    if base is not None
+                ),
                 Decimal("0"),
             )
         ),
