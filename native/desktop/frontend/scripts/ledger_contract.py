@@ -36,7 +36,8 @@ from cadrumo.application.ledger.evidence_mutation_operation import LedgerEvidenc
 from cadrumo.application.ledger.models import BULK_CLASSIFY_ALLOWED_COLUMNS
 from cadrumo.application.ledger.preflight import LedgerPreflightIssueReason
 from cadrumo.application.ledger.readiness_routes import IVA_DERIVABLE_REASONS, READINESS_REASON_FIELDS
-from cadrumo.application.ledger.staged_check import DRAFT_REQUIRED_FIELDS, TRANSFER_LOCKED_FIELDS
+from cadrumo.application.ledger.staged_check import DRAFT_REQUIRED_FIELDS
+from cadrumo.application.ledger.staged_check_tax_set import TRANSFER_LOCKED_FIELDS
 from cadrumo.application.ledger.staged_identity import TRANSACTION_IDENTITY_FIELDS
 from cadrumo.application.ledger.update_contracts import LEDGER_UPDATE_REQUIRED_FIELD_NAMES, LedgerUpdatePatch
 from cadrumo.application.transactions.diagnostics import LedgerImportDiagnosticKind
