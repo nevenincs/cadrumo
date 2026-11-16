@@ -110,7 +110,10 @@ def mode_help_key(kind: IvaWalletActionKind) -> str:
 
 
 def written_amount(text: str, language: OutputLanguage) -> str:
-    """A served amount written as a box writes money; text that is not a number stays as served."""
+    """A recording's amount written as a box writes money; text that is not a number stays as served.
+
+    A recording's receipt serves its amounts as numbers only; the balance serves its own in words.
+    """
     try:
         value = Decimal(text)
     except InvalidOperation:
@@ -118,20 +121,23 @@ def written_amount(text: str, language: OutputLanguage) -> str:
     return format_casilla_value(value, data_type="money", language=language)
 
 
-def balance_lines(balance: ModeloIvaWalletBalanceProjection, language: OutputLanguage) -> tuple[str, ...]:
-    """The released balance facts, each with the catalogue's label for it, in the application's field order."""
+def balance_lines(balance: ModeloIvaWalletBalanceProjection) -> tuple[str, ...]:
+    """The released balance facts, each with the catalogue's label for it, in the application's field order.
+
+    Each amount is the words it was served in.
+    """
 
     def line(name: str, value: str) -> str:
         return f"{tr(f'{_PREFIX}.{name}')}: {value}"
 
     expiry = tr(EXPIRY_NOT_REPORTED_LOCALE_KEY) if balance.next_expiry_year is None else str(balance.next_expiry_year)
     return (
-        line("total_balance", written_amount(balance.total_balance, language)),
-        line("active_balance", written_amount(balance.active_balance, language)),
-        line("expired_balance", written_amount(balance.expired_balance, language)),
+        line("total_balance", balance.total_balance_words),
+        line("active_balance", balance.active_balance_words),
+        line("expired_balance", balance.expired_balance_words),
         line("lot_count", str(balance.lot_count)),
         line("next_expiry_year", expiry),
-        line("unallocated_applied_amount", written_amount(balance.unallocated_applied_amount, language)),
+        line("unallocated_applied_amount", balance.unallocated_applied_amount_words),
     )
 
 
@@ -376,7 +382,7 @@ class ModeloIvaWalletScreen(ModalScreen[str | None]):
         status.display = bool(said)
         lines: tuple[str, ...] = ()
         if self._phase == "ready" and self._balance is not None:
-            lines = balance_lines(self._balance, self._language)
+            lines = balance_lines(self._balance)
             if self._balance.lot_count == 0:
                 lines = (*lines, tr(NO_LOTS_LOCALE_KEY))
         balance = self.query_one("#wallet-balance", Static)
