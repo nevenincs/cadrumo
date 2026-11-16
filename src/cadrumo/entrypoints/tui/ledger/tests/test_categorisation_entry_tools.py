@@ -5,6 +5,8 @@ from __future__ import annotations
 import pytest
 from textual.widgets import Button
 
+from .....application.ledger import entry_limits
+from .....application.ledger.entry_limits import LedgerEntryTextLimit, ledger_entry_limits
 from .....core.config import override_settings
 from .....core.i18n.render import tr
 from .....domain.transactions.enums import BusinessClassification
@@ -158,6 +160,26 @@ async def test_a_split_needs_two_children_and_positive_amounts() -> None:
             assert text(screen, "#ledger-refusal") == tr("tui.ledger.categorisation.split.too_few")
             await press(pilot, screen, "categorisation-split-remove")
             assert keys(screen, "#categorisation-split-children") == []
+
+
+@pytest.mark.asyncio
+async def test_a_split_stops_at_the_parts_limit_the_ledger_serves(monkeypatch: pytest.MonkeyPatch) -> None:
+    served = tuple(
+        LedgerEntryTextLimit(name=limit.name, max=2) if limit.name == "split_parts" else limit
+        for limit in ledger_entry_limits().text_limits
+    )
+    monkeypatch.setattr(entry_limits, "_TEXT_LIMITS", served)
+    doors = MemoryCategorisationProfile().doors()
+    screen = LedgerSplitScreen(categorisation_controller(), split_door=doors.split, review_door=doors.split_review)
+    with override_settings(cadrumo_output_language="en"):
+        async with WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
+            await settle(pilot)
+            for amount, description in (("1000", "Ordenador"), ("200", "Monitor"), ("50", "Cables")):
+                type_into(screen, "#categorisation-split-amount", amount)
+                type_into(screen, "#categorisation-split-description", description)
+                await press(pilot, screen, "categorisation-split-add")
+            assert keys(screen, "#categorisation-split-children") == ["child-1", "child-2"]
+            assert text(screen, "#ledger-refusal") == tr("tui.ledger.categorisation.split.too_many", limit=2)
 
 
 @pytest.mark.asyncio
