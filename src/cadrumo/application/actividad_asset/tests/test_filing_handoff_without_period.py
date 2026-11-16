@@ -141,8 +141,11 @@ def test_a_stated_period_that_is_not_one_decodes_and_is_refused_with_its_reason(
         f'{{"profile_id":"{uuid4()}","tax_year":{_FIRST},"m130_period":"{period}"}}'
     )
 
-    with pytest.raises(ActividadAssetValidationError, match="m130_period_invalid"):
-        request.requested_period()
+    with (
+        bundled_indexed_authority().operation() as operation,
+        pytest.raises(ActividadAssetValidationError, match="m130_period_invalid"),
+    ):
+        request.requested_period(operation=operation)
 
 
 def test_an_empty_period_does_not_decode() -> None:
