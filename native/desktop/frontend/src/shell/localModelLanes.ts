@@ -1,12 +1,11 @@
 import type { AgentLocalModels } from "../ipc/contract";
 import { isDeclared } from "./agentCatalog";
 import type {
-  AgentCatalogAnswer,
-  AgentModelLicenceFacts,
-  AgentRecommendedCapability,
-  AgentTransport,
-} from "./agentSession";
-import { parseAuthKind, parseEngineHealth } from "./agentSession";
+  DeclaredLicence,
+  ProviderTransport,
+  ServedCatalogAnswer,
+} from "./agentCatalogContract";
+import { parseEngineHealth } from "./agentSession";
 import type { Translate } from "./strings";
 
 // A local lane's model list: the models cadrumo-agent's catalog recommends
@@ -21,7 +20,7 @@ export type LaneModel = {
   id: string;
   name: string;
   sizeBytes: number | null;
-  licence: AgentModelLicenceFacts | null;
+  licence: DeclaredLicence | null;
   /** Whether this computer holds the model; null where the catalog does not
    * say, as the declared one does not. */
   installed: boolean | null;
@@ -32,7 +31,7 @@ export type CatalogLane = {
   /** The catalogue lane id the lists store. */
   id: string;
   provider: string;
-  transport: AgentTransport;
+  transport: ProviderTransport;
   name: string;
   models: LaneModel[];
   /** What cadrumo-agent recommends on this lane, in its capability order,
@@ -48,10 +47,12 @@ export type ListedLaneModel = {
   added: boolean;
 };
 
-const CAPABILITIES: readonly AgentRecommendedCapability[] = ["vision", "text"];
+/** The capabilities cadrumo-agent recommends a lane's model for, in the
+ * order the list shows them. */
+const CAPABILITIES = ["vision", "text"] as const;
 
 function recommendedOf(
-  recommended: Partial<Record<AgentRecommendedCapability, string>> | undefined,
+  recommended: Readonly<Record<string, string>> | undefined,
   models: readonly LaneModel[],
 ): string[] {
   const named = CAPABILITIES.flatMap((capability) => {
@@ -61,21 +62,16 @@ function recommendedOf(
   return named.filter((id, index) => named.indexOf(id) === index);
 }
 
-const understood = (transport: string): transport is AgentTransport =>
-  transport === "api" || transport === "cli";
-
 /** Every lane of `answer` that lists models. A lane whose models the person
  * writes lists none, so it is not one. */
-export function catalogLanes(answer: AgentCatalogAnswer): CatalogLane[] {
+export function catalogLanes(answer: ServedCatalogAnswer): CatalogLane[] {
   if (isDeclared(answer))
-    return (answer.catalog.providers ?? []).flatMap((lane): CatalogLane[] => {
-      if (!understood(lane.transport) || parseAuthKind(lane) === "malformed")
-        return [];
-      const models = (lane.models ?? []).map((model): LaneModel => ({
+    return answer.catalog.providers.flatMap((lane): CatalogLane[] => {
+      const models = lane.models.map((model): LaneModel => ({
         id: model.id,
         name: model.display_name,
-        sizeBytes: model.size_bytes ?? null,
-        licence: model.licence ?? null,
+        sizeBytes: model.size_bytes,
+        licence: model.licence,
         installed: null,
       }));
       if (models.length === 0) return [];
@@ -92,17 +88,15 @@ export function catalogLanes(answer: AgentCatalogAnswer): CatalogLane[] {
     });
   return (answer.providers ?? []).flatMap((lane): CatalogLane[] => {
     if (
-      !understood(lane.transport) ||
       lane.model_source !== "catalog" ||
-      parseAuthKind(lane) === "malformed" ||
       parseEngineHealth(lane) === "malformed"
     )
       return [];
     const models = (lane.catalog.models ?? []).map((entry): LaneModel => ({
       id: entry.model,
       name: entry.display_name,
-      sizeBytes: entry.size_bytes ?? null,
-      licence: entry.licence ?? null,
+      sizeBytes: entry.size_bytes,
+      licence: entry.licence,
       // The served catalog marks only a model this computer lacks.
       installed: entry.installed ?? true,
     }));

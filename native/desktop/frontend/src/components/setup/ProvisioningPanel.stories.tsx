@@ -22,7 +22,7 @@ import { SOURCE_LOCALE, useStrings } from "../../shell/strings";
 
 /** The made-up lane on this computer and the first model it recommends. */
 const LOCAL_LANE = catalogLanes(FIXTURE_CATALOG).find(
-  (lane) => lane.recommended.length > 0 && lane.provider === "local",
+  (lane) => lane.recommended.length > 0 && lane.provider === "zai",
 );
 const MODEL_DOWNLOAD = LOCAL_LANE
   ? { lane: LOCAL_LANE.id, model: LOCAL_LANE.recommended[0] ?? "" }

@@ -1,4 +1,13 @@
-import type { ProviderAuthKind } from "@/components/settings/types";
+import type {
+  DeclaredLicence,
+  Effort,
+  EngineDoor,
+  EngineDownReason,
+  LocalEngine,
+  ProviderTransport,
+  ServedCatalogAnswer,
+  ServedProviderLane,
+} from "./agentCatalogContract";
 import type { CallPlan } from "./hostCall";
 import type {
   AgentLocalEngine,
@@ -65,317 +74,64 @@ export type AgentServiceStatus = (
 };
 
 // The providers, models and what each can do are cadrumo-agent's own
-// provider catalog, field for field as its `/v1/provider-catalog` serves it:
-// the host relays the answer and the column deduces every choice from it.
-// Nothing here names a provider, a model, an effort a model takes or what it
-// can do. Each record is one lane: one provider reached over its API or its
-// command-line app.
-
-/** One axis of a lane's health. */
-export type AgentHealthState = "available" | "unavailable" | "unknown";
-
-export type AgentAuthenticationState =
-  "authenticated" | "unauthenticated" | "unknown" | "not_applicable";
-
-export type AgentCatalogStatus =
-  "available" | "unavailable" | "stale" | "unknown";
-
-export type AgentAdmissionState =
-  "admitted" | "unproven" | "not_admitted" | "unknown";
-
-/** Why a local engine does not answer, as the service names it. */
-export type AgentEngineReason =
-  "no_answer_in_time" | "not_reachable" | "answer_unreadable";
-
-/** What the service measured of a local engine, as it serves it. Kept open at
- * the wire boundary: `parseEngineHealth` is what reads it. */
-export type AgentEngineWire = {
-  engine: string;
-  state: string;
-  reason: string | null;
-  /** The way on the service names, which the window opens where it knows it. */
-  door: string | null;
-};
+// provider catalog, as the agent service relays it after checking it against
+// the agent's pinned schema: its types are generated in agentCatalogContract.
+// The column deduces every choice from it and names no provider, model,
+// effort a model takes or what it can do.
 
 /** Whether a keyless local lane's engine answers. A running engine names no
- * reason and no door; one that does not run names both. */
+ * reason and no door; one that does not run names both. The schema leaves
+ * these pairings open, so `parseEngineHealth` is what reads them. */
 export type AgentEngineHealth =
   | {
-      engine: AgentLocalEngineToken;
+      engine: LocalEngine;
       state: "running";
       reason: null;
       door: null;
     }
   | {
-      engine: AgentLocalEngineToken;
+      engine: LocalEngine;
       state: "not_running";
-      reason: AgentEngineReason;
-      door: string;
+      reason: EngineDownReason;
+      door: EngineDoor;
     };
-
-const ENGINE_TOKENS: readonly string[] = [
-  "llamacpp",
-  "ollama",
-] satisfies AgentLocalEngineToken[];
-const ENGINE_REASONS: readonly string[] = [
-  "no_answer_in_time",
-  "not_reachable",
-  "answer_unreadable",
-] satisfies AgentEngineReason[];
 
 /**
  * The engine health of `lane`: the measured state, null where the service
  * measured none (the lane has no local engine, or it was not measured), or
  * `"malformed"` for an answer outside the contract. The contract: only the
  * API lane of an engine states one, naming that engine; a running engine has
- * no reason or door and one that does not run has a known reason and a door.
- * A door the window does not know is kept as served and opens nothing.
+ * no reason or door and one that does not run has a reason and a door.
  */
 export function parseEngineHealth(
-  lane: Pick<AgentProviderLane, "provider_id" | "transport" | "health">,
+  lane: Pick<ServedProviderLane, "provider_id" | "transport" | "health">,
 ): AgentEngineHealth | null | "malformed" {
-  const served: unknown = lane.health.engine;
+  const served = lane.health.engine;
   if (served === undefined || served === null) return null;
-  if (typeof served !== "object" || Array.isArray(served)) return "malformed";
-  const { engine, state, reason, door } = served as Record<string, unknown>;
-  if (
-    typeof engine !== "string" ||
-    !ENGINE_TOKENS.includes(engine) ||
-    engine !== lane.provider_id ||
-    lane.transport !== "api"
-  )
+  const { engine, state } = served;
+  // An absent reason or door is the schema's default, null.
+  const reason = served.reason ?? null;
+  const door = served.door ?? null;
+  if (engine !== lane.provider_id || lane.transport !== "api")
     return "malformed";
-  const token = engine as AgentLocalEngineToken;
   if (state === "running")
     return reason === null && door === null
-      ? { engine: token, state, reason, door }
+      ? { engine, state, reason, door }
       : "malformed";
-  if (
-    state === "not_running" &&
-    typeof reason === "string" &&
-    ENGINE_REASONS.includes(reason) &&
-    typeof door === "string" &&
-    door !== ""
-  )
-    return {
-      engine: token,
-      state,
-      reason: reason as AgentEngineReason,
-      door,
-    };
-  return "malformed";
-}
-
-const AUTH_KINDS: readonly string[] = [
-  "api_key",
-  "api_key_with_base_url",
-  "provider_sign_in_only",
-  "none",
-] satisfies ProviderAuthKind[];
-
-/**
- * What a host supplies for `lane` to authenticate, as the service states it
- * on every lane of its catalog: a closed set. A lane that states none, or one
- * outside the set, is malformed: the window does not tell a keyless lane from
- * a keyed one by its name or its transport.
- */
-export function parseAuthKind(lane: {
-  auth_kind?: unknown;
-}): ProviderAuthKind | "malformed" {
-  const { auth_kind: served } = lane;
-  return typeof served === "string" && AUTH_KINDS.includes(served)
-    ? (served as ProviderAuthKind)
+  return reason !== null && door !== null
+    ? { engine, state, reason, door }
     : "malformed";
 }
 
-/** How much reasoning a run asks its model for, lowest first. Which of these
- * a model accepts is the model's own, in its catalog entry. */
-export type AgentEffort = "low" | "medium" | "high" | "xhigh" | "max" | "ultra";
-
-/** The provider runtime a model's native subagents use. */
-export type AgentMultiAgentGeneration = "disabled" | "v1" | "v2";
-
-/** A capability for which a lane may report a proof. */
-export type AgentLaneCapability =
-  | "tool_access"
-  | "writing"
-  | "web_retrieval"
-  | "image_reading"
-  | "pdf_reading"
-  | "subagents"
-  | "subagent_cancel";
-
-export type AgentLaneVerification =
-  "proven" | "unproven_version" | "unproven" | "not_applicable";
-
-/** One model a lane offers, as its catalog lists it. */
-export type AgentCatalogEntry = {
-  entry_id: string;
-  /** The model's id, as a run names it. */
-  model: string;
-  display_name: string;
-  description?: string | null;
-  capabilities?: string[];
-  /** The provider runtime this model's native subagents use, if any. */
-  multi_agent_generation?: AgentMultiAgentGeneration | null;
-  /** The lane's native controls this model takes. */
-  native_control_ids?: string[];
-  /** The efforts this model accepts; none when it takes no effort. */
-  efforts?: AgentEffort[];
-  default_effort?: AgentEffort | null;
-  /** What is known of the model itself, each null where nothing states it. */
-  vision?: boolean | null;
-  size_bytes?: number | null;
-  context_length?: number | null;
-  licence?: AgentModelLicenceFacts | null;
-  /** False only for a model a lane on this computer recommends but this
-   * computer does not hold. */
-  installed?: boolean;
-};
-
-/** The licence a model is distributed under, without its text; the text is
- * the agent's licence route's. */
-export type AgentModelLicenceFacts = {
-  spdx: string | null;
-  name: string;
-  digest?: string;
-};
-
-/** A model's licence in full, as the agent's licence route serves it. */
-export type AgentModelLicence = AgentModelLicenceFacts & {
+/** A model's licence in full, as the agent's licence route serves it: the
+ * catalog entry's licence with the text. */
+export type AgentModelLicence = DeclaredLicence & {
   provider: string;
-  transport: AgentTransport;
+  transport: ProviderTransport;
   model: string;
   installed: boolean;
   text: string;
 };
-
-/** A capability cadrumo-agent recommends a lane's model for. */
-export type AgentRecommendedCapability = "vision" | "text";
-
-export type AgentNativeControlOption = {
-  option_id: string;
-  display_name: string;
-  description?: string | null;
-};
-
-/** A setting of the lane's own, such as a model configuration or a
- * service tier, that some of its models take. */
-export type AgentNativeControl = {
-  control_id: string;
-  kind: "model_config" | "thought_level" | "service_tier" | "other";
-  display_name: string;
-  options?: AgentNativeControlOption[];
-  default_option_id?: string | null;
-  description?: string | null;
-};
-
-/** How a lane reaches its provider: the provider's web API, or its own
- * command-line app on this computer. */
-export type AgentTransport = "api" | "cli";
-
-/** One way of running one provider, its health and its models. */
-export type AgentProviderLane = {
-  /** The provider, as cadrumo-agent names it: one for every lane that
-   * reaches it, whichever way. */
-  provider_id: string;
-  transport: AgentTransport;
-  /** The provider's product name, the same on each of its lanes. */
-  display_name: string;
-  /** What a host supplies for the lane to authenticate. Kept open at the wire
-   * boundary: `parseAuthKind` is what reads it. */
-  auth_kind?: string;
-  execution_mode: string;
-  executable: boolean;
-  /** `catalog`: the lane lists its models and a run names one of them.
-   * `declared`: it lists none and a run's model id is passed on as given. */
-  model_source: "catalog" | "declared";
-  /** Served by the agent service: `required` on a local engine's lane, whose
-   * models are downloaded to this computer; `none` on every hosted lane. */
-  model_download: "required" | "none";
-  health: {
-    configured: AgentHealthState;
-    transport: AgentHealthState;
-    authentication: AgentAuthenticationState;
-    catalog: AgentCatalogStatus;
-    admission: AgentAdmissionState;
-    selectable: boolean;
-    reasons?: string[];
-    checked_at: string;
-    /** Whether the lane's local engine answers: stated only by the API lanes
-     * of the local engines, and null elsewhere and where it was not measured. */
-    engine?: AgentEngineWire | null;
-  };
-  catalog: {
-    schema_version?: number;
-    state: {
-      status: AgentCatalogStatus;
-      checked_at: string;
-      revision?: string | null;
-      expires_at?: string | null;
-      reason?: string | null;
-    };
-    recommended_entry_id?: string | null;
-    /** The model the lane recommends for each capability, by the value a run
-     * names it by. An offer only: nothing applies it. */
-    recommended?: Partial<Record<AgentRecommendedCapability, string>>;
-    models?: AgentCatalogEntry[];
-    native_controls?: AgentNativeControl[];
-  };
-  capability_proofs?: {
-    /** Kept open at the wire boundary so a newer service can add a value. */
-    capability: string;
-    /** Tool-server entry, present for tool access and writing proofs only. */
-    entry?: string | null;
-    /** A generation-scoped proof does not describe the whole lane. */
-    generation?: AgentMultiAgentGeneration | null;
-    state: AgentLaneVerification;
-  }[];
-};
-
-/** cadrumo-agent's provider catalog: every lane it knows, runnable or not. */
-export type AgentProviderCatalog = {
-  /** A served catalog is never an envelope. */
-  kind?: never;
-  api_version?: string;
-  providers?: AgentProviderLane[];
-};
-
-/** One model a lane declares, as cadrumo-agent's declared catalog states it. */
-export type AgentDeclaredModel = {
-  id: string;
-  display_name: string;
-  vision?: boolean | null;
-  size_bytes?: number | null;
-  context_length?: number | null;
-  licence?: AgentModelLicenceFacts | null;
-};
-
-/** One lane cadrumo-agent declares. It says what exists, never whether the
- * lane is configured, signed in or runnable here. */
-export type AgentDeclaredLane = {
-  /** The catalogue lane id a role selection names. */
-  id: string;
-  provider: string;
-  transport: AgentTransport;
-  display_name: string;
-  /** What a host supplies for the lane to authenticate; read by
-   * `parseAuthKind`. */
-  auth_kind?: string;
-  recommended?: Partial<Record<AgentRecommendedCapability, string>>;
-  models?: AgentDeclaredModel[];
-};
-
-/** What the service answers while no agent is ready: the agent's declared
- * catalog in an envelope, so it is never read as a served one. */
-export type AgentDeclaredCatalog = {
-  kind: "declared";
-  catalog: { schema_version?: number; providers?: AgentDeclaredLane[] };
-};
-
-/** What a catalog read answers: the ready agent's served catalog, or its
- * declared one while none is ready. */
-export type AgentCatalogAnswer = AgentProviderCatalog | AgentDeclaredCatalog;
 
 /** What a turn runs with, field for field what cadrumo-agent's run start
  * takes of an agent (`AgentSpec`): the provider and the way into it, the model
@@ -384,9 +140,9 @@ export type AgentCatalogAnswer = AgentProviderCatalog | AgentDeclaredCatalog;
  * itself, and not a model's native controls. */
 export type AgentSelectionRecord = {
   provider: string;
-  transport: AgentTransport;
+  transport: ProviderTransport;
   model: string;
-  effort?: AgentEffort;
+  effort?: Effort;
 };
 
 /** One message the person sends, of one to 65536 characters that say
@@ -694,7 +450,7 @@ export interface AgentSession {
   ): Promise<() => void>;
   /** cadrumo-agent's provider catalog, as it serves it, or its declared
    * catalog while no agent is ready. */
-  providerCatalog(retry?: CallPlan): Promise<AgentCatalogAnswer>;
+  providerCatalog(retry?: CallPlan): Promise<ServedCatalogAnswer>;
   /** The models the person added to the local lanes' lists and the model
    * documents are read with. Absent where the host offers none. */
   localModels?(): Promise<AgentLocalModels>;
@@ -735,7 +491,7 @@ export interface AgentSession {
   /** The licence text of one model a lane lists; only a ready agent has it. */
   modelLicence?(
     provider: string,
-    transport: AgentTransport,
+    transport: ProviderTransport,
     model: string,
   ): Promise<AgentModelLicence>;
   /** cadrumo-agent's own skills, every one, by name. Absent where the host

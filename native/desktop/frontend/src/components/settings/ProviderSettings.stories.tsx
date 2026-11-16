@@ -15,27 +15,31 @@ const NOOP = () => undefined;
 
 /** Where each made-up lane stands; the rest have nothing set. */
 const STANDING: Record<string, Partial<ProviderStatus>> = {
-  alpha_api: { mode: "key", readiness: "ready", source: "profile" },
-  alpha_cli: {
+  kimi_api: { mode: "key", readiness: "ready", source: "profile" },
+  kimi_cli: {
     mode: "provider_sign_in",
     readiness: "ready",
     source: "profile",
     cliState: "installed_signed_in",
   },
-  beta_api: { mode: "key", readiness: "not_verified", source: "profile" },
-  beta_cli: {
+  qwen_api: { mode: "key", readiness: "not_verified", source: "profile" },
+  qwen_cli: {
     mode: "provider_sign_in",
     readiness: "sign_in_required",
     reason: "sign_in_with_provider_tool",
     cliState: "installed_signed_out",
   },
-  gamma_cli: {
+  antigravity_cli: {
     readiness: "unusable",
     reason: "not_configured",
     cliState: "not_installed",
   },
-  delta_cli: { mode: "disabled", readiness: "disabled", cliState: "unknown" },
-  relay_cli: {
+  deepseek_cli: {
+    mode: "disabled",
+    readiness: "disabled",
+    cliState: "unknown",
+  },
+  minimax_cli: {
     mode: "key",
     readiness: "unusable",
     source: "profile",
@@ -90,16 +94,16 @@ type Story = StoryObj<typeof meta>;
 export const Installed: Story = {};
 
 export const Saving: Story = {
-  args: { busyId: "alpha_api" },
+  args: { busyId: "kimi_api" },
 };
 
 export const Outcomes: Story = {
   name: "Saved but unread, and refused",
   args: {
     outcomes: {
-      beta_api: { kind: "saved_unread" },
-      relay_cli: { kind: "refused", code: "base_url_rejected" },
-      delta_cli: { kind: "refused", code: "revision_conflict" },
+      qwen_api: { kind: "saved_unread" },
+      minimax_cli: { kind: "refused", code: "base_url_rejected" },
+      deepseek_cli: { kind: "refused", code: "revision_conflict" },
     },
   },
 };

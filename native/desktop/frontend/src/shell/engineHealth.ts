@@ -1,4 +1,5 @@
-import type { AgentEngineHealth, AgentEngineReason } from "./agentSession";
+import type { EngineDoor, EngineDownReason } from "./agentCatalogContract";
+import type { AgentEngineHealth } from "./agentSession";
 import { noted } from "./compose";
 import type { Translate } from "./strings";
 
@@ -11,12 +12,12 @@ const REASON_WORDS = {
   no_answer_in_time: "desktop.agent.engine_reason_no_answer_in_time",
   not_reachable: "desktop.agent.engine_reason_not_reachable",
   answer_unreadable: "desktop.agent.engine_reason_answer_unreadable",
-} as const satisfies Record<AgentEngineReason, string>;
+} as const satisfies Record<EngineDownReason, string>;
 
 /** The door ids the window opens, with the words on each one's button. */
 const DOOR_WORDS = {
   local_ai_setup: "desktop.agent.engine_door_local_ai_setup",
-} as const;
+} as const satisfies Record<EngineDoor, string>;
 
 export type EngineDoorId = keyof typeof DOOR_WORDS;
 
