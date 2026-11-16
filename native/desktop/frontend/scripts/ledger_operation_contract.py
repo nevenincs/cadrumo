@@ -175,7 +175,13 @@ FAMILIES: dict[str, tuple[str, tuple[str, ...]]] = {
     ),
     "read": (
         "LedgerReadContracts",
-        ("ledger.list",),
+        (
+            "ledger.known-values",
+            "ledger.list",
+            "ledger.preflight",
+            "ledger.status",
+            "ledger.view",
+        ),
     ),
 }
 
