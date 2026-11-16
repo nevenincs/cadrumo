@@ -143,6 +143,7 @@ legal_refs = [
 ]
 source_refs = [
     "lirpf-cuota-chain-authority",
+    "aeat-renta-2020-manual-parte1",
 ]
 formulas = [
     "renta-cuota-irpf-comunidad-autonoma",
