@@ -38,6 +38,7 @@ from cadrumo.tests.personas import PersonaCatalogueError, persona_ids, read_pers
 from dev.desktop_persona_world import refuse_storage_root
 from dev.exit_codes import FAILED, OK
 from dev.paths import STORAGE_ROOT_ENV
+from dev.temporary_output import prepare_temp_root
 
 from ..planner import (
     MODELOS_ENV,
@@ -85,7 +86,7 @@ def prepare_world(
         # directory of its own, not at the checkout's default storage root.
         scope.enter_context(profile_adapter_composition())
         scope.enter_context(bind_exchange_rate_provider_factory(recorded_ecb_rate_provider))
-        ambient = scope.enter_context(tempfile.TemporaryDirectory(prefix="persona-world-"))
+        ambient = scope.enter_context(tempfile.TemporaryDirectory(prefix="persona-world-", dir=prepare_temp_root()))
         scope.enter_context(scoped_env_var(STORAGE_ROOT_ENV, str(Path(ambient) / "storage")))
         scope.enter_context(scoped_env_var(MODELOS_ENV, ",".join(modelos) or None))
         scope.enter_context(scoped_env_var(YEARS_ENV, ",".join(str(year) for year in years) or None))
