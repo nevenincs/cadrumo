@@ -15,6 +15,7 @@ from ..authority import PinnedAuthorityOperation
 from ..authority_artifact import AuthorityComponentQuery, AuthorityGenerationPin
 from ..authority_location import bundled_authority_descriptor_path
 from ..authority_store import SQLiteAuthorityReader
+from ..errors import RegistryValidationError
 from ..schema import RegistrySnapshot
 from .authored_editions import filing_year_envelope
 
@@ -142,3 +143,59 @@ def test_a_shared_snapshot_is_charged_for_its_own_members_not_again_for_its_comp
     assert shared.entries == components.entries + 1
     assert 0 < shared.retained_weight - components.retained_weight <= 64 * 1024
     assert shared.retained_weight <= shared.budget
+
+
+class _CountingBuild:
+    """A derivation that records each time it is computed."""
+
+    def __init__(self) -> None:
+        self.builds = 0
+
+    def __call__(self) -> str:
+        self.builds += 1
+        return f"derived-{self.builds}"
+
+
+def test_a_retained_projection_is_built_once_per_generation_and_key(reader: SQLiteAuthorityReader) -> None:
+    build = _CountingBuild()
+    operation = PinnedAuthorityOperation(reader, reader.pin())
+
+    first = operation.retained_projection(("derivation", _MODELO), kind=str, build=build)
+
+    assert operation.retained_projection(("derivation", _MODELO), kind=str, build=build) is first
+    later_operation = PinnedAuthorityOperation(reader, reader.pin())
+    assert later_operation.retained_projection(("derivation", _MODELO), kind=str, build=build) is first
+    assert operation.retained_projection(("derivation", "other"), kind=str, build=build) == "derived-2"
+    assert build.builds == 2
+
+
+def test_another_generation_pin_recomputes_a_retained_projection(reader: SQLiteAuthorityReader) -> None:
+    build = _CountingBuild()
+    first = PinnedAuthorityOperation(reader, reader.pin()).retained_projection("derivation", kind=str, build=build)
+    other = SQLiteAuthorityReader(bundled_authority_descriptor_path())
+    try:
+        other_operation = PinnedAuthorityOperation(other, other.pin())
+
+        assert other_operation.retained_projection("derivation", kind=str, build=build) != first
+        assert build.builds == 2
+    finally:
+        other.close()
+
+
+def test_a_reader_without_the_accounted_cache_rebuilds_every_projection(reader: SQLiteAuthorityReader) -> None:
+    build = _CountingBuild()
+    forwarding = _ForwardingReader(reader)
+    operation = PinnedAuthorityOperation(forwarding, forwarding.pin())
+
+    operation.retained_projection("derivation", kind=str, build=build)
+    operation.retained_projection("derivation", kind=str, build=build)
+
+    assert build.builds == 2
+
+
+def test_a_retained_projection_of_another_type_is_refused(reader: SQLiteAuthorityReader) -> None:
+    operation = PinnedAuthorityOperation(reader, reader.pin())
+    operation.retained_projection("derivation", kind=str, build=_CountingBuild())
+
+    with pytest.raises(RegistryValidationError):
+        operation.retained_projection("derivation", kind=int, build=int)
