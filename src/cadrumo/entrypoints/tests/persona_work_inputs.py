@@ -24,8 +24,8 @@ from uuid import UUID
 from pydantic import BaseModel
 
 from ...application.modelo.edit_apply_contracts import ModeloEditApplyPublicResultV1, ModeloEditApplySubmissionV1
+from ...application.modelo.edit_contract import ModeloEditMutationFamily
 from ...application.modelo.edit_models import (
-    ModeloEditMutationFamily,
     ModeloEditScalarAddressV1,
     ModeloEditScalarIntentKind,
     ModeloEditSubmissionV1,

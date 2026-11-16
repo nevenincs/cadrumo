@@ -30,6 +30,7 @@ from .action_errors import modelo_edit_refusal_error
 from .edit_models import (
     ModeloEditAddressV1,
     ModeloEditBindingAddressV1,
+    ModeloEditCarryWithdrawalBlock,
     ModeloEditFindingSeverity,
     ModeloEditFindingV1,
     ModeloEditParseReason,
@@ -42,8 +43,6 @@ from .edit_parse_text import parse_refusal_text
 from .edit_preflight import (
     CALCULATION_WITHDRAWN,
     CARRY_LEFT_OPEN,
-    CARRY_WITHDRAWAL_FILED,
-    CARRY_WITHDRAWAL_KEEPS_ENTRIES,
     CLEAR_OF_SOURCE_FED_CASILLA,
     INTENT_NOT_ADMITTED,
     NOTHING_TO_RESTORE,
@@ -68,8 +67,8 @@ WORDED_FINDING_CODES: Final[tuple[str, ...]] = (
     NOTHING_TO_RESTORE,
     CARRY_LEFT_OPEN,
     CALCULATION_WITHDRAWN,
-    CARRY_WITHDRAWAL_FILED,
-    CARRY_WITHDRAWAL_KEEPS_ENTRIES,
+    ModeloEditCarryWithdrawalBlock.FILED.value,
+    ModeloEditCarryWithdrawalBlock.KEEPS_ENTRIES.value,
 )
 """The check's findings worded by their own catalogue sentence; a refused value says how to fix it instead."""
 

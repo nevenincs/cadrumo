@@ -49,7 +49,7 @@ class RecordingFactIndex(dict[str, UserProfileFactValue]):
         The copy goes through the plain dictionary items, so a projection that
         notes its own reads does not count this index's construction as one.
         """
-        super().__init__(dict.items(facts) if isinstance(facts, dict) else facts.items())
+        super().__init__(dict[str, UserProfileFactValue].items(facts) if isinstance(facts, dict) else facts.items())
         self._paths: set[str] = set()
         self._prefixes: set[str] = set()
 
@@ -71,8 +71,9 @@ class RecordingFactIndex(dict[str, UserProfileFactValue]):
     @override
     def get(self, path: object, default: object = None, /) -> object:
         """Record and return one path's value, or ``default`` when it is absent."""
-        if isinstance(path, str):
-            self._paths.add(path)
+        if not isinstance(path, str):
+            return default
+        self._paths.add(path)
         return super().get(path, default)
 
     @override
@@ -115,12 +116,12 @@ class RecordingFactIndex(dict[str, UserProfileFactValue]):
     def record_prefix(self, prefix: str) -> dict[str, UserProfileFactValue]:
         """Record a read of every path under ``prefix`` and return those paths with their values."""
         self._prefixes.add(prefix)
-        return {path: value for path, value in dict.items(self) if path.startswith(prefix)}
+        return {path: value for path, value in dict[str, UserProfileFactValue].items(self) if path.startswith(prefix)}
 
     def read_fingerprint(self) -> ProfileReadFingerprint:
         """Digest the recorded reads over the index as it stands now."""
         return digest_profile_reads(
-            dict(dict.items(self)),
+            dict(dict[str, UserProfileFactValue].items(self)),
             paths=frozenset(self._paths),
             prefixes=frozenset(self._prefixes),
         )

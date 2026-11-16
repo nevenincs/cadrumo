@@ -22,13 +22,14 @@ from ....domain.calculations.registry.tests.published_authority import (
     published_snapshot,
     published_supported_filing_years,
 )
-from ....domain.filing.schema import ModeloDraft, ModeloDraftStatus
+from ....domain.filing.schema import ModeloDraft
+from ....domain.submission.models import ModeloDraftStatus
 from ..draft_construction import build_draft
 from ..export import render_filing_layout
 from ..export_producer import filing_producer_values
 from ..export_verification import mismatched_casilla_ids
 from ..runtime import ModeloOperatorProfile, RegistrySchemaAccessor
-from .export_support import _field_slice, _general_ingreso_producer_snapshot, export_schema_provider
+from .export_support import export_schema_provider, field_slice, general_ingreso_producer_snapshot
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -69,7 +70,7 @@ def _draft(filing_year: int) -> ModeloDraft:
 
 def _rendered(filing_year: int, draft: ModeloDraft) -> bytes:
     snapshot = _provider(filing_year).get_snapshot(_MODELO)
-    producer_snapshot = _general_ingreso_producer_snapshot(_MODELO)
+    producer_snapshot = general_ingreso_producer_snapshot(_MODELO)
     headers = {
         **filing_producer_values(producer_snapshot),
         FilingProducerKey.IRNR_DECLARACION_TIPO: "N",
@@ -92,7 +93,7 @@ def _field_slice_of(filing_year: int, casilla_id: CasillaId) -> slice:
     record, field = next(
         (record, field) for record in layout.records for field in record.fields if field.casilla_id == casilla_id
     )
-    return _field_slice(layout, record.id, field.id)
+    return field_slice(layout, record.id, field.id)
 
 
 def _field_bytes(filing_year: int, payload: bytes, casilla_id: CasillaId) -> bytes:
