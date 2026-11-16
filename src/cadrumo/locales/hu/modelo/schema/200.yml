@@ -40,18 +40,12 @@ modelo:
           '00052':
             help: Add meg a gazdasági megállapodás szerinti közös adózáshoz kapcsolódó
               Araba/Álava ügyleteinek volumenét [00052].
-            label: Állami és tartományi adóhatóságok együttes adóztatása - gazdasági
-              megállapodás - Araba/Álava ügyleteinek volumene [00052]
           '00053':
             help: Add meg a gazdasági megállapodás szerinti közös adózáshoz kapcsolódó
               Gipuzkoa ügyleteinek volumenét [00053].
-            label: Állami és tartományi adóhatóságok együttes adóztatása - gazdasági
-              megállapodás - Gipuzkoa ügyleteinek volumene [00053]
           '00054':
             help: Add meg a gazdasági megállapodás szerinti közös adózáshoz kapcsolódó
               Bizkaia ügyleteinek volumenét [00054].
-            label: Állami és tartományi adóhatóságok együttes adóztatása - gazdasági
-              megállapodás - Bizkaia ügyleteinek volumene [00054]
           '00055':
             help: Add meg a gazdasági egyezmény szerinti közös adózáshoz kapcsolódó
               navarrai ügyletek volumenét [00055].
@@ -522,9 +516,6 @@ modelo:
             label: Saját tőke változásainak kimutatása (III) - Saját tőkében elszámolt
               bevételek és ráfordítások - Több időszak között felosztandó adóbevételek
               - Előlegosztalék [00486]
-          00488:
-            label: Állami és tartományi adóhatóságok együttes adóztatása - Késedelmi
-              kamatok - Bizkaia [00488]
           00489:
             label: Saját tőke változásainak kimutatása (III) - Saját tőkében elszámolt
               bevételek és ráfordítások - Több időszak között felosztandó adóbevételek
@@ -1493,12 +1484,6 @@ modelo:
           00912:
             label: Szövetkezeti rendszer - Adókötelezettség-kompenzáció részletezése.
               2014 Jövőbeli időszakokban alkalmazandó [00912]
-          00914:
-            label: Állami és tartományi adóhatóságok együttes adóztatása - Növekmény
-              a SOCIMI követelmények nem teljesítése miatt - Gipuzkoa [00914]
-          00915:
-            label: Állami és tartományi adóhatóságok együttes adóztatása - Növekmény
-              a SOCIMI követelmények nem teljesítése miatt - Bizkaia [00915]
           00916:
             label: Állami és tartományi adóhatóságok együttes adóztatása - Növekmény
               a SOCIMI követelmények nem teljesítése miatt - Navarra [00916]
@@ -2196,18 +2181,6 @@ modelo:
           '01304':
             label: Kikötői hatóságok által végzett beruházások és ráfordítások levonása
               (LIS 38 bis cikk) - Összesen - Jövőbeli időszakokban alkalmazandó [01304]
-          '01305':
-            label: Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
-              adókövetelések átalakítása az adóhatósággal szemben érvényesíthető követeléssé
-              (LIS 130. cikk) - Eszközátalakítás miatti beszámítás - Araba/Alava [01305]
-          '01306':
-            label: Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
-              adókövetelések átalakítása az adóhatósággal szemben érvényesíthető követeléssé
-              (LIS 130. cikk) - Eszközátalakítás miatti beszámítás - Gipuzkoa [01306]
-          '01307':
-            label: Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
-              adókövetelések átalakítása az adóhatósággal szemben érvényesíthető követeléssé
-              (LIS 130. cikk) - Eszközátalakítás miatti beszámítás - Bizkaia [01307]
           01309:
             label: Kanári-szigeteki külföldi filmgyártások levonásai (LIS 36.2 cikk
               és 19/1994. törvény DA 14.) - 2022) - Függőben lévő/keletkezett levonás
@@ -2291,18 +2264,9 @@ modelo:
           '01333':
             label: Elszámolás IV - Az önadózás eredménye - Külföldi filmgyártások
               utáni levonások kifizetése - Tartományi adóhatóságok/Navarra [01333]
-          '01335':
-            label: Állami és tartományi adóhatóságok együttes adóztatása - K+F+i levonások
-              jóváírása elégtelen adókötelezettség miatt - Gipuzkoa [01335]
-          '01336':
-            label: Állami és tartományi adóhatóságok együttes adóztatása - K+F+i levonások
-              jóváírása elégtelen adókötelezettség miatt - Bizkaia [01336]
           '01337':
             label: Állami és tartományi adóhatóságok együttes adóztatása - K+F+i levonások
               jóváírása elégtelen adókötelezettség miatt - Navarra [01337]
-          '01340':
-            label: Állami és tartományi adóhatóságok együttes adóztatása - Külföldi
-              produkciók levonásainak kifizetése - Bizkaia [01340]
           '01341':
             label: Állami és tartományi adóhatóságok együttes adóztatása - Külföldi
               produkciók levonásainak kifizetése - Navarra [01341]
@@ -2976,9 +2940,6 @@ modelo:
           '01622':
             label: Egyes tevékenységek ösztönzésére szolgáló levonások - 2016 Technológiai
               innováció (IT) - Jövőbeli időszakokban alkalmazandó [01622]
-          '01625':
-            label: Állami és tartományi adóhatóságok együttes adóztatása - Az önadózás
-              eredménye - Gipuzkoa [01625]
           '01626':
             label: Követelések vagy egyéb eszközök értékvesztési ráfordításai - Keletkezés
               éve - {year} - Időszak elején beépítésre váró ráfordítások - Amelyek
@@ -2991,27 +2952,12 @@ modelo:
             label: Követelések vagy egyéb eszközök értékvesztési ráfordításai - Keletkezés
               éve - {year} - Jövőbeli időszakokban beépítésre váró ráfordítások -
               Amelyek nem teljesítették az adóügyi levonhatósági feltételeket [01628]
-          01629:
-            label: Állami és tartományi adóhatóságok együttes adóztatása - Az önadózás
-              eredménye - Bizkaia [01629]
           '01630':
             label: Állami és tartományi adóhatóságok együttes adóztatása - Az önadózás
               eredménye - Navarra [01630]
-          '01633':
-            label: Állami és tartományi adóhatóságok együttes adóztatása - Részletfizetési
-              lehetőség LIS 19.1 cikk - Beépített összeg - Bizkaia [01633]
           '01634':
             label: Állami és tartományi adóhatóságok együttes adóztatása - Részletfizetési
               lehetőség LIS 19.1 cikk - Beépített összeg - Navarra [01634]
-          '01635':
-            label: Állami és tartományi adóhatóságok együttes adóztatása - Részletfizetési
-              lehetőség LIS 19.1 cikk - Adótartozás - Araba/Alava [01635]
-          '01636':
-            label: Állami és tartományi adóhatóságok együttes adóztatása - Részletfizetési
-              lehetőség LIS 19.1 cikk - Adótartozás - Gipuzkoa [01636]
-          '01637':
-            label: Állami és tartományi adóhatóságok együttes adóztatása - Részletfizetési
-              lehetőség LIS 19.1 cikk - Adótartozás - Bizkaia [01637]
           01638:
             help: 'Betudott összegek: A betudott Kanári-szigeteki beruházási levonásokból
               keletkezett levonás spanyol filmgyártásra és élő előadó-művészeti produkciókra'
@@ -3030,24 +2976,9 @@ modelo:
           '01641':
             label: Állami és tartományi adóhatóságok együttes adóztatása - Részletfizetési
               lehetőség LIS 19.1 cikk - Adótartozás - Navarra [01641]
-          '01642':
-            label: Állami és tartományi adóhatóságok együttes adóztatása - Részletfizetési
-              lehetőség LIS 19.1 cikk - Első részlet - Araba/Alava [01642]
-          '01643':
-            label: Állami és tartományi adóhatóságok együttes adóztatása - Részletfizetési
-              lehetőség LIS 19.1 cikk - Első részlet - Gipuzkoa [01643]
-          '01644':
-            label: Állami és tartományi adóhatóságok együttes adóztatása - Részletfizetési
-              lehetőség LIS 19.1 cikk - Első részlet - Bizkaia [01644]
           '01645':
             label: Állami és tartományi adóhatóságok együttes adóztatása - Részletfizetési
               lehetőség LIS 19.1 cikk - Első részlet - Navarra [01645]
-          '01646':
-            label: Állami és tartományi adóhatóságok együttes adóztatása - Önbevallás
-              eredménye az első részlettel együtt - Araba/Alava [01646]
-          01648:
-            label: Állami és tartományi adóhatóságok együttes adóztatása - Önbevallás
-              eredménye az első részlettel együtt - Bizkaia [01648]
           01649:
             label: Állami és tartományi adóhatóságok együttes adóztatása - Önbevallás
               eredménye az első részlettel együtt - Navarra [01649]
@@ -3625,15 +3556,6 @@ modelo:
           01876:
             label: Egyes tevékenységek ösztönzésére szolgáló levonások - 2022 Kutatás
               és fejlesztés (CT) - Jövőbeli időszakokban alkalmazandó [01876]
-          01877:
-            label: Állami és tartományi adóhatóságok együttes adóztatása - Kanári-szigeteki
-              külföldi produkciók levonásainak jóváírása - Araba/Álava [01877]
-          01878:
-            label: Állami és tartományi adóhatóságok együttes adóztatása - Kanári-szigeteki
-              külföldi produkciók levonásainak jóváírása - Gipuzkoa [01878]
-          01879:
-            label: Állami és tartományi adóhatóságok együttes adóztatása - Kanári-szigeteki
-              külföldi produkciók levonásainak jóváírása - Bizkaia [01879]
           01880:
             label: Állami és tartományi adóhatóságok együttes adóztatása - Kanári-szigeteki
               külföldi produkciók levonásainak jóváírása - Navarra [01880]
@@ -10323,9 +10245,6 @@ modelo:
           is-otros-regimenes-especiales:
             help: Jelölő egyéb különleges rendszerek esetén [00020].
             label: Egyéb különleges rendszerek [00020]
-          is-pagos-fraccionados:
-            label: Állami és tartományi adóhatóságok együttes adóztatása - 2. részletfizetések
-              - Bizkaia [00447]
           is-participaciones-directas-b-reversion-de-perdidas-por-deterioro-de-valores:
             help: b) Értékpapírok értékvesztésének visszaírása (LIS 16. átmeneti rendelkezés)
               - B.1. A nyilatkozattevő részesedései más gazdálkodó egységekben
@@ -10947,18 +10866,6 @@ modelo:
             help: Jelölő vagyonelemeknek a társasági adóról szóló törvény 27.2.d)
               és 77.1 cikke szerinti átruházása esetén [00030].
             label: Vagyonelemek átruházása a LIS 27.2.d) és 77.1 cikke szerint [00030]
-          is-tributacion-conjunta-abono-cinematografica:
-            label: Állami és tartományi adóhatóságok együttes adóztatása - Külföldi
-              produkciók levonásainak kifizetése - Gipuzkoa [01339]
-          is-tributacion-conjunta-abono-deducciones-cinematograficas:
-            label: Állami és tartományi adóhatóságok együttes adóztatása - Külföldi
-              produkciók levonásainak kifizetése - Araba/Alava [01338]
-          is-tributacion-conjunta-abono-idi:
-            label: Állami és tartományi adóhatóságok együttes adóztatása - K+F+i levonások
-              jóváírása elégtelen adókötelezettség miatt - Araba/Alava [01334]
-          is-tributacion-conjunta-cuota-diferencial:
-            label: Állami és tartományi adóhatóságok együttes adóztatása - Különbözeti
-              adó - Araba/Álava [00474]
           is-tributacion-conjunta-estado-diput-cdad-forales:
             help: Jelölő az állam, a tartományi tanácsok és a forális közösségek közötti
               közös adózás esetén [00028].
@@ -10969,21 +10876,6 @@ modelo:
               a {year}. adómegállapítási időszakra vonatkozó korábbi önadózások vagy
               hatósági megállapítások feldolgozása nyomán fizetendő összeg - Araba/Alava
               [01607]'
-          is-tributacion-conjunta-fraccionamiento-importe:
-            label: Állami és tartományi adóhatóságok együttes adóztatása - Részletfizetési
-              lehetőség LIS 19.1 cikk - Beépített összeg - Gipuzkoa [01632]
-          is-tributacion-conjunta-fraccionamiento-y-rectificativa:
-            label: Állami és tartományi adóhatóságok együttes adóztatása - Önbevallás
-              eredménye az első részlettel együtt - Gipuzkoa [01647]
-          is-tributacion-conjunta-incremento:
-            label: Állami és tartományi adóhatóságok együttes adóztatása - Növekmény
-              a SOCIMI követelmények nem teljesítése miatt - Araba/Alava [00913]
-          is-tributacion-conjunta-intereses:
-            label: Állami és tartományi adóhatóságok együttes adóztatása - Késedelmi
-              kamatok - Gipuzkoa [00487]
-          is-tributacion-conjunta-opcion-0-7:
-            label: Állami és tartományi adóhatóságok együttes adóztatása - Részletfizetési
-              lehetőség LIS 19.1 cikk - Beépített összeg - Araba/Alava [01631]
           is-tributacion-conjunta-porcentaje-estado:
             label: Állami és tartományi adóhatóságok együttes adóztatása - Adóztatási
               százalékok számítása - Állami közigazgatás [00625]
@@ -10992,9 +10884,6 @@ modelo:
               megállapodás szerinti közös adózás ügyleteinek teljes volumenét [00050].
             label: Állami és tartományi adóhatóságok együttes adóztatása - gazdasági
               megállapodás - ügyletek teljes volumene [00050]
-          is-tributacion-conjunta-resultado:
-            label: Állami és tartományi adóhatóságok együttes adóztatása - Az önadózás
-              eredménye - Araba/Alava [01624]
           is-union-temporal-de-empresas:
             label: Vállalkozások ideiglenes társulása [00085]
           is-uniones-federaciones-y-confederaciones-de-cooperativas:
@@ -12720,6 +12609,15 @@ modelo:
             label: 200-es modelo, 2022. adóév
         '2023':
           casilla:
+            '00052':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - gazdasági
+                megállapodás - Álava ügyleteinek volumene [00052]
+            '00053':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - gazdasági
+                megállapodás - Guipúzcoa ügyleteinek volumene [00053]
+            '00054':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - gazdasági
+                megállapodás - Vizcaya ügyleteinek volumene [00054]
             '00077':
               label: Egyes járművek és új töltőinfrastruktúrák gyorsított értékcsökkenése
                 (LIS 18. kiegészítő rendelkezés) - Növekedés - Évi korrekciók - Időleges
@@ -12729,6 +12627,18 @@ modelo:
                 részletezése - Belföldi illetőségű jogalanyok osztalékaira vagy nyereségrészesedéseire
                 vonatkozó mentesség (LIS 21.1., 21.10. cikk és 40. átmeneti rendelkezés)
                 - Csökkentések [00370]
+            '00447':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - 2. részletfizetések
+                - Vizcaya [00447]
+            '00474':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Különbözeti
+                adó - Álava [00474]
+            00487:
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Késedelmi
+                kamatok - Guipúzcoa [00487]
+            00488:
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Késedelmi
+                kamatok - Vizcaya [00488]
             '00775':
               label: Elszámolás I - Az eredménykimutatás eredményét érintő korrekciók
                 részletezése - Egyes járművek és új töltőinfrastruktúrák gyorsított
@@ -12737,6 +12647,15 @@ modelo:
               label: Elszámolás I - Az eredménykimutatás eredményét érintő korrekciók
                 részletezése - Egyes járművek és új töltőinfrastruktúrák gyorsított
                 értékcsökkenése (LIS 18. kiegészítő rendelkezés) - Csökkentések [00776]
+            00913:
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Növekmény
+                a SOCIMI követelmények nem teljesítése miatt - Álava [00913]
+            00914:
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Növekmény
+                a SOCIMI követelmények nem teljesítése miatt - Guipúzcoa [00914]
+            00915:
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Növekmény
+                a SOCIMI követelmények nem teljesítése miatt - Vizcaya [00915]
             '01020':
               label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
                 érvényesíthető követeléssé (LIS 130. cikk) - Halasztott adókövetelések
@@ -12816,11 +12735,59 @@ modelo:
                 érvényesíthető követeléssé - Halasztott adókövetelések (AID). LIS
                 130. cikk - Keletkezés éve - 2022 - Jövőbeli időszakokban alkalmazásra
                 váró AID - Érvényesíthető követeléssé alakítás joga nélkül [01133]
+            '01300':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
+                adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
+                követeléssé (LIS 130. cikk) - Eszközátalakítás miatti jóváírás - Álava
+                [01300]
+            '01301':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
+                adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
+                követeléssé (LIS 130. cikk) - Eszközátalakítás miatti jóváírás - Guipúzcoa
+                [01301]
+            '01302':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
+                adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
+                követeléssé (LIS 130. cikk) - Eszközátalakítás miatti jóváírás - Vizcaya
+                [01302]
+            '01305':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
+                adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
+                követeléssé (LIS 130. cikk) - Eszközátalakítás miatti beszámítás -
+                Álava [01305]
+            '01306':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
+                adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
+                követeléssé (LIS 130. cikk) - Eszközátalakítás miatti beszámítás -
+                Guipúzcoa [01306]
+            '01307':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
+                adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
+                követeléssé (LIS 130. cikk) - Eszközátalakítás miatti beszámítás -
+                Vizcaya [01307]
             01329:
               label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
                 és más, növelt levonásra jogosító célokra adott adományok - 2023(*)
                 Ugyanazon szervezetnek ismételten nem nyújtott adományok - Függőben
                 lévő/keletkezett levonás [01329]
+            '01334':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - K+F+i
+                levonások jóváírása elégtelen adókötelezettség miatt - Álava [01334]
+            '01335':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - K+F+i
+                levonások jóváírása elégtelen adókötelezettség miatt - Guipúzcoa [01335]
+            '01336':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - K+F+i
+                levonások jóváírása elégtelen adókötelezettség miatt - Vizcaya [01336]
+            01338:
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Külföldi
+                produkciók levonásainak kifizetése - Álava [01338]
+            01339:
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Külföldi
+                produkciók levonásainak kifizetése - Guipúzcoa [01339]
+            '01340':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Külföldi
+                produkciók levonásainak kifizetése - Vizcaya [01340]
             '01372':
               label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
                 és más, növelt levonásra jogosító célokra adott adományok - 2023(*)
@@ -12831,6 +12798,105 @@ modelo:
                 és más, növelt levonásra jogosító célokra adott adományok - 2023(*)
                 Ugyanazon szervezetnek ismételten nem nyújtott adományok - Jövőbeli
                 időszakokban alkalmazandó [01373]
+            '01624':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Az önadózás
+                eredménye - Álava [01624]
+            '01625':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Az önadózás
+                eredménye - Guipúzcoa [01625]
+            01629:
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Az önadózás
+                eredménye - Vizcaya [01629]
+            '01631':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Részletfizetési
+                lehetőség LIS 19.1 cikk - Beépített összeg - Álava [01631]
+            '01632':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Részletfizetési
+                lehetőség LIS 19.1 cikk - Beépített összeg - Guipúzcoa [01632]
+            '01633':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Részletfizetési
+                lehetőség LIS 19.1 cikk - Beépített összeg - Vizcaya [01633]
+            '01635':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Részletfizetési
+                lehetőség LIS 19.1 cikk - Adótartozás - Álava [01635]
+            '01636':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Részletfizetési
+                lehetőség LIS 19.1 cikk - Adótartozás - Guipúzcoa [01636]
+            '01637':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Részletfizetési
+                lehetőség LIS 19.1 cikk - Adótartozás - Vizcaya [01637]
+            '01642':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Részletfizetési
+                lehetőség LIS 19.1 cikk - Első részlet - Álava [01642]
+            '01643':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Részletfizetési
+                lehetőség LIS 19.1 cikk - Első részlet - Guipúzcoa [01643]
+            '01644':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Részletfizetési
+                lehetőség LIS 19.1 cikk - Első részlet - Vizcaya [01644]
+            '01646':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Önbevallás
+                eredménye az első részlettel együtt - Álava [01646]
+            '01647':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Önbevallás
+                eredménye az első részlettel együtt - Guipúzcoa [01647]
+            01648:
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Önbevallás
+                eredménye az első részlettel együtt - Vizcaya [01648]
+            '01662':
+              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
+                adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
+                követeléssé (LIS 130. cikk) - Az átalakítás eredménye: Jóváírás -
+                Álava [01662]'
+            '01663':
+              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
+                adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
+                követeléssé (LIS 130. cikk) - Az átalakítás eredménye: Jóváírás -
+                Guipúzcoa [01663]'
+            '01664':
+              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
+                adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
+                követeléssé (LIS 130. cikk) - Az átalakítás eredménye: Jóváírás -
+                Vizcaya [01664]'
+            '01666':
+              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
+                adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
+                követeléssé (LIS 130. cikk) - Az átalakítás eredménye: Beszámítás
+                - Álava [01666]'
+            '01667':
+              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
+                adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
+                követeléssé (LIS 130. cikk) - Az átalakítás eredménye: Beszámítás
+                - Guipúzcoa [01667]'
+            01668:
+              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
+                adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
+                követeléssé (LIS 130. cikk) - Az átalakítás eredménye: Beszámítás
+                - Vizcaya [01668]'
+            '01670':
+              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
+                adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
+                követeléssé (LIS 130. cikk) - Az átalakítás eredménye: Fizetendő -
+                Álava [01670]'
+            '01671':
+              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
+                adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
+                követeléssé (LIS 130. cikk) - Az átalakítás eredménye: Fizetendő -
+                Guipúzcoa [01671]'
+            '01672':
+              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
+                adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
+                követeléssé (LIS 130. cikk) - Az átalakítás eredménye: Fizetendő -
+                Vizcaya [01672]'
+            01877:
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Kanári-szigeteki
+                külföldi produkciók levonásainak jóváírása - Álava [01877]
+            01878:
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Kanári-szigeteki
+                külföldi produkciók levonásainak jóváírása - Guipúzcoa [01878]
+            01879:
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Kanári-szigeteki
+                külföldi produkciók levonásainak jóváírása - Vizcaya [01879]
             01887:
               label: Elszámolás III - adóalap - A Kanári-szigeteki hajók és hajózási
                 társaságok különleges rendszere - Korábbi időszakok negatív adóalapjainak
@@ -12894,6 +12960,15 @@ modelo:
             label: 200-es modelo, 2023. adóév
         '2024':
           casilla:
+            '00052':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - gazdasági
+                megállapodás - Araba/Álava ügyleteinek volumene [00052]
+            '00053':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - gazdasági
+                megállapodás - Gipuzkoa ügyleteinek volumene [00053]
+            '00054':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - gazdasági
+                megállapodás - Bizkaia ügyleteinek volumene [00054]
             '00077':
               label: Egyes járművek és új töltőinfrastruktúrák gyorsított értékcsökkenése
                 (LIS 18. kiegészítő rendelkezés, RDL 5/2023) - Növekedés - Évi korrekciók
@@ -12917,6 +12992,18 @@ modelo:
                 a negatív adóalapok beszámításának részletezése - A 2024. évi egyéb
                 tevékenységek adóalapjának beszámítása - Jövőbeli időszakokban alkalmazandó
                 [00098]'
+            '00447':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - 2. részletfizetések
+                - Bizkaia [00447]
+            '00474':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Különbözeti
+                adó - Araba/Álava [00474]
+            00487:
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Késedelmi
+                kamatok - Gipuzkoa [00487]
+            00488:
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Késedelmi
+                kamatok - Bizkaia [00488]
             '00775':
               label: Elszámolás I - Az eredménykimutatás eredményét érintő korrekciók
                 részletezése - Egyes járművek és új töltőinfrastruktúrák gyorsított
@@ -12966,6 +13053,15 @@ modelo:
                 érvényesíthető követeléssé - Pozitív nettó adókötelezettség többlete
                 - Keletkezés éve - {year} - Jövőbeli időszakokban felhasználandó pozitív
                 nettó adótöbblet [00882]
+            00913:
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Növekmény
+                a SOCIMI követelmények nem teljesítése miatt - Araba/Alava [00913]
+            00914:
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Növekmény
+                a SOCIMI követelmények nem teljesítése miatt - Gipuzkoa [00914]
+            00915:
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Növekmény
+                a SOCIMI követelmények nem teljesítése miatt - Bizkaia [00915]
             00925:
               label: Elszámolás III - adóalap - Az adóalapok beszámítását nem korlátozó
                 jövedelmek - A tőkében vagy saját tőkében fennálló részesedést megtestesítő
@@ -13090,11 +13186,45 @@ modelo:
                 adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
                 követeléssé (LIS 130. cikk) - Eszközátalakítás miatti jóváírás - Bizkaia
                 [01302]
+            '01305':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
+                adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
+                követeléssé (LIS 130. cikk) - Eszközátalakítás miatti beszámítás -
+                Araba/Alava [01305]
+            '01306':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
+                adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
+                követeléssé (LIS 130. cikk) - Eszközátalakítás miatti beszámítás -
+                Gipuzkoa [01306]
+            '01307':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
+                adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
+                követeléssé (LIS 130. cikk) - Eszközátalakítás miatti beszámítás -
+                Bizkaia [01307]
             01329:
               label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
                 és más, növelt levonásra jogosító célokra adott adományok - 2023 -
                 Ugyanazon szervezetnek ismételten nem nyújtott adományok - Függőben
                 lévő/keletkezett levonás [01329]
+            '01334':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - K+F+i
+                levonások jóváírása elégtelen adókötelezettség miatt - Araba/Alava
+                [01334]
+            '01335':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - K+F+i
+                levonások jóváírása elégtelen adókötelezettség miatt - Gipuzkoa [01335]
+            '01336':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - K+F+i
+                levonások jóváírása elégtelen adókötelezettség miatt - Bizkaia [01336]
+            01338:
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Külföldi
+                produkciók levonásainak kifizetése - Araba/Alava [01338]
+            01339:
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Külföldi
+                produkciók levonásainak kifizetése - Gipuzkoa [01339]
+            '01340':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Külföldi
+                produkciók levonásainak kifizetése - Bizkaia [01340]
             '01372':
               label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
                 és más, növelt levonásra jogosító célokra adott adományok - 2023 -
@@ -13162,6 +13292,51 @@ modelo:
                 bevallás: Az Adóhatóság által a {year}. adóidőszakra vonatkozó korábbi
                 önadózások vagy hatósági megállapítások feldolgozása nyomán megítélt
                 visszatérítés - Navarra [01623]'
+            '01624':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Az önadózás
+                eredménye - Araba/Alava [01624]
+            '01625':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Az önadózás
+                eredménye - Gipuzkoa [01625]
+            01629:
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Az önadózás
+                eredménye - Bizkaia [01629]
+            '01631':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Részletfizetési
+                lehetőség LIS 19.1 cikk - Beépített összeg - Araba/Alava [01631]
+            '01632':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Részletfizetési
+                lehetőség LIS 19.1 cikk - Beépített összeg - Gipuzkoa [01632]
+            '01633':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Részletfizetési
+                lehetőség LIS 19.1 cikk - Beépített összeg - Bizkaia [01633]
+            '01635':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Részletfizetési
+                lehetőség LIS 19.1 cikk - Adótartozás - Araba/Alava [01635]
+            '01636':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Részletfizetési
+                lehetőség LIS 19.1 cikk - Adótartozás - Gipuzkoa [01636]
+            '01637':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Részletfizetési
+                lehetőség LIS 19.1 cikk - Adótartozás - Bizkaia [01637]
+            '01642':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Részletfizetési
+                lehetőség LIS 19.1 cikk - Első részlet - Araba/Alava [01642]
+            '01643':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Részletfizetési
+                lehetőség LIS 19.1 cikk - Első részlet - Gipuzkoa [01643]
+            '01644':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Részletfizetési
+                lehetőség LIS 19.1 cikk - Első részlet - Bizkaia [01644]
+            '01646':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Önbevallás
+                eredménye az első részlettel együtt - Araba/Alava [01646]
+            '01647':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Önbevallás
+                eredménye az első részlettel együtt - Gipuzkoa [01647]
+            01648:
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Önbevallás
+                eredménye az első részlettel együtt - Bizkaia [01648]
             '01650':
               label: 'Állami és tartományi adóhatóságok együttes adóztatása - Helyesbítő
                 bevallás: az önadózás eredménye, beleértve a LIS 19.1. cikke szerinti
@@ -13255,6 +13430,15 @@ modelo:
               label: Bizonyos járművek és új töltőinfrastruktúrák szabad amortizációja
                 (LIS 18. kiegészítő rendelkezés, RDL 4/2024) - Növekedés - Évi korrekciók
                 - Átmeneti (korábbi időszakokból eredő) [01820]
+            01877:
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Kanári-szigeteki
+                külföldi produkciók levonásainak jóváírása - Araba/Álava [01877]
+            01878:
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Kanári-szigeteki
+                külföldi produkciók levonásainak jóváírása - Gipuzkoa [01878]
+            01879:
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Kanári-szigeteki
+                külföldi produkciók levonásainak jóváírása - Bizkaia [01879]
             01961:
               label: Bizonyos járművek és új töltőinfrastruktúrák szabad amortizációja
                 (LIS 18. kiegészítő rendelkezés, RDL 4/2024) - Csökkenés - Évi korrekciók
@@ -13426,6 +13610,15 @@ modelo:
             label: 200-es modelo, 2024. adóév
         2025-y-siguientes:
           casilla:
+            '00052':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - gazdasági
+                megállapodás - Araba/Álava ügyleteinek volumene [00052]
+            '00053':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - gazdasági
+                megállapodás - Gipuzkoa ügyleteinek volumene [00053]
+            '00054':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - gazdasági
+                megállapodás - Bizkaia ügyleteinek volumene [00054]
             '00077':
               label: Egyes járművek és új töltőinfrastruktúrák gyorsított értékcsökkenése
                 (LIS 18. kiegészítő rendelkezés, RDL 5/2023 és RDL 7/2026) - Növekedés
@@ -13455,6 +13648,18 @@ modelo:
                 részletezése - Belföldi illetőségű jogalanyok osztalékaira vagy nyereségrészesedéseire
                 vonatkozó mentesség (LIS 21.1., 21.10. cikk és 40. átmeneti rendelkezés)
                 - Csökkenések
+            '00447':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - 2. részletfizetések
+                - Bizkaia [00447]
+            '00474':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Különbözeti
+                adó - Araba/Álava [00474]
+            00487:
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Késedelmi
+                kamatok - Gipuzkoa [00487]
+            00488:
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Késedelmi
+                kamatok - Bizkaia [00488]
             00496:
               label: Saját tőke változásainak kimutatása (II) - Saját tőkében elszámolt
                 bevételek és ráfordítások - Saját tőkében elszámolt egyéb bevételek
@@ -13506,6 +13711,15 @@ modelo:
                 érvényesíthető követeléssé - Pozitív nettó adókötelezettség többlete
                 - Keletkezés éve - 2025(*) - A jövőbeli időszakokban alkalmazásra
                 váró pozitív nettó adókötelezettség-többlet
+            00913:
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Növekmény
+                a SOCIMI követelmények nem teljesítése miatt - Araba/Alava [00913]
+            00914:
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Növekmény
+                a SOCIMI követelmények nem teljesítése miatt - Gipuzkoa [00914]
+            00915:
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Növekmény
+                a SOCIMI követelmények nem teljesítése miatt - Bizkaia [00915]
             00925:
               label: Elszámolás III - adóalap - Az adóalapok beszámítását nem korlátozó
                 jövedelmek - A tőkében vagy saját tőkében fennálló részesedést megtestesítő
@@ -13882,6 +14096,21 @@ modelo:
               label: Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
                 adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
                 követeléssé (LIS 130. cikk) - Eszközátalakítás miatti jóváírás - Navarra
+            '01305':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
+                adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
+                követeléssé (LIS 130. cikk) - Eszközátalakítás miatti beszámítás -
+                Araba/Alava [01305]
+            '01306':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
+                adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
+                követeléssé (LIS 130. cikk) - Eszközátalakítás miatti beszámítás -
+                Gipuzkoa [01306]
+            '01307':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
+                adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
+                követeléssé (LIS 130. cikk) - Eszközátalakítás miatti beszámítás -
+                Bizkaia [01307]
             01308:
               label: Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
                 adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
@@ -13892,6 +14121,25 @@ modelo:
                 és más, növelt levonásra jogosító célokra adott adományok - 2023 -
                 Ugyanazon szervezetnek ismételt adományozás nélkül - Függőben lévő/keletkezett
                 levonás
+            '01334':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - K+F+i
+                levonások jóváírása elégtelen adókötelezettség miatt - Araba/Alava
+                [01334]
+            '01335':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - K+F+i
+                levonások jóváírása elégtelen adókötelezettség miatt - Gipuzkoa [01335]
+            '01336':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - K+F+i
+                levonások jóváírása elégtelen adókötelezettség miatt - Bizkaia [01336]
+            01338:
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Külföldi
+                produkciók levonásainak kifizetése - Araba/Alava [01338]
+            01339:
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Külföldi
+                produkciók levonásainak kifizetése - Gipuzkoa [01339]
+            '01340':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Külföldi
+                produkciók levonásainak kifizetése - Bizkaia [01340]
             '01372':
               label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
                 és más, növelt levonásra jogosító célokra adott adományok - 2023 -
@@ -14289,6 +14537,51 @@ modelo:
                 bevallás: Az Adóhatóság által a 2025. adóidőszakra vonatkozó korábbi
                 önadózások vagy hatósági megállapítások feldolgozása nyomán megítélt
                 visszatérítés - Navarra'
+            '01624':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Az önadózás
+                eredménye - Araba/Alava [01624]
+            '01625':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Az önadózás
+                eredménye - Gipuzkoa [01625]
+            01629:
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Az önadózás
+                eredménye - Bizkaia [01629]
+            '01631':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Részletfizetési
+                lehetőség LIS 19.1 cikk - Beépített összeg - Araba/Alava [01631]
+            '01632':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Részletfizetési
+                lehetőség LIS 19.1 cikk - Beépített összeg - Gipuzkoa [01632]
+            '01633':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Részletfizetési
+                lehetőség LIS 19.1 cikk - Beépített összeg - Bizkaia [01633]
+            '01635':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Részletfizetési
+                lehetőség LIS 19.1 cikk - Adótartozás - Araba/Alava [01635]
+            '01636':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Részletfizetési
+                lehetőség LIS 19.1 cikk - Adótartozás - Gipuzkoa [01636]
+            '01637':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Részletfizetési
+                lehetőség LIS 19.1 cikk - Adótartozás - Bizkaia [01637]
+            '01642':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Részletfizetési
+                lehetőség LIS 19.1 cikk - Első részlet - Araba/Alava [01642]
+            '01643':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Részletfizetési
+                lehetőség LIS 19.1 cikk - Első részlet - Gipuzkoa [01643]
+            '01644':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Részletfizetési
+                lehetőség LIS 19.1 cikk - Első részlet - Bizkaia [01644]
+            '01646':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Önbevallás
+                eredménye az első részlettel együtt - Araba/Alava [01646]
+            '01647':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Önbevallás
+                eredménye az első részlettel együtt - Gipuzkoa [01647]
+            01648:
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Önbevallás
+                eredménye az első részlettel együtt - Bizkaia [01648]
             '01650':
               label: 'Állami és tartományi adóhatóságok együttes adóztatása - Helyesbítő
                 bevallás: az önadózás eredménye, beleértve a LIS 19.1. cikke szerinti
@@ -14503,6 +14796,15 @@ modelo:
                 részletezése - A kikötői hatóságok által a tárgyi eszközök átruházásából
                 szerzett jövedelmek (6/2018. sz. törvény 68. kiegészítő rendelkezése)
                 - Csökkenések
+            01877:
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Kanári-szigeteki
+                külföldi produkciók levonásainak jóváírása - Araba/Álava [01877]
+            01878:
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Kanári-szigeteki
+                külföldi produkciók levonásainak jóváírása - Gipuzkoa [01878]
+            01879:
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Kanári-szigeteki
+                külföldi produkciók levonásainak jóváírása - Bizkaia [01879]
             01886:
               label: 'A Kanári-szigeteki hajók és hajózási társaságok különleges rendszere:
                 a negatív adóalapok beszámításának részletezése - A különleges adóalap
