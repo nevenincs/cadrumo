@@ -29,6 +29,7 @@ from cadrumo.application.user_profile.projections import projection_for_taxpayer
 from cadrumo.core.operator_action_enums import ActionConditionality, NoRecoveryOutcome
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.deadlines.engine import DeadlineEngine
 from cadrumo.domain.user_profile.values import UserProfileFact
 
@@ -139,26 +140,27 @@ def test_a_quarterly_filer_captures_into_the_recognition_quarter(
 
 
 @pytest.mark.parametrize(
-    ("recognized_on", "code"),
+    ("month", "day", "code"),
     [
-        (date(2025, 1, 1), "1T"),
-        (date(2025, 3, 31), "1T"),
-        (date(2025, 4, 1), "2T"),
-        (date(2025, 6, 30), "2T"),
-        (date(2025, 7, 1), "3T"),
-        (date(2025, 9, 30), "3T"),
-        (date(2025, 10, 1), "4T"),
-        (date(2025, 12, 31), "4T"),
+        (1, 1, "1T"),
+        (3, 31, "1T"),
+        (4, 1, "2T"),
+        (6, 30, "2T"),
+        (7, 1, "3T"),
+        (9, 30, "3T"),
+        (10, 1, "4T"),
+        (12, 31, "4T"),
     ],
 )
 def test_the_capture_quarter_changes_exactly_on_the_quarter_boundaries(
-    authority_operation: PinnedAuthorityOperation, recognized_on: date, code: str
+    authority_operation: PinnedAuthorityOperation, month: int, day: int, code: str
 ) -> None:
-    cadence = withholding_filer_cadence(authority_operation, filing_year=2025)
+    year = filing_year_envelope().horizon
+    cadence = withholding_filer_cadence(authority_operation, filing_year=year)
 
-    period = quarterly_withholding_capture_period(cadence, modelo="111", recognized_on=recognized_on)
+    period = quarterly_withholding_capture_period(cadence, modelo="111", recognized_on=date(year, month, day))
 
-    assert period == Period.from_year_and_code(2025, code)
+    assert period == Period.from_year_and_code(year, code)
 
 
 def test_a_monthly_filer_capture_is_refused_with_a_no_action_verdict(

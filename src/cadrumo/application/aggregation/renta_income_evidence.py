@@ -138,6 +138,18 @@ def settlement_comparison(invoice: Invoice, receipts: Sequence[Transaction]) -> 
     )
 
 
+def _settling_base_sum(
+    invoice: Invoice, rows: Sequence[Transaction], bases: Sequence[Decimal | None]
+) -> Decimal | None:
+    """Sum ``bases`` in the settling direction, or ``None`` when a row states no base: an unstated base is not zero."""
+    total = Decimal("0")
+    for row, base in zip(rows, bases, strict=True):
+        if base is None:
+            return None
+        total += _in_settling_direction(invoice, row, base)
+    return total
+
+
 def taxable_base_comparison(invoice: Invoice, rows: Sequence[Transaction]) -> SettlementComparison | None:
     """Put the bases ``rows`` state and the base of ``invoice`` in one currency, by the settlement rule.
 
@@ -146,39 +158,13 @@ def taxable_base_comparison(invoice: Invoice, rows: Sequence[Transaction]) -> Se
     base leaves nothing to compare either: an unstated base is not a base of zero.
     """
     if all(row.raw.currency == invoice.currency for row in rows):
-        native_bases = [row.taxable_base for row in rows]
-        if any(base is None for base in native_bases):
-            return None
-        return SettlementComparison(
-            cash=sum(
-                (
-                    _in_settling_direction(invoice, row, base)
-                    for row, base in zip(rows, native_bases, strict=True)
-                    if base is not None
-                ),
-                Decimal("0"),
-            ),
-            owed=invoice.base_total,
-        )
+        native = _settling_base_sum(invoice, rows, [row.taxable_base for row in rows])
+        return None if native is None else SettlementComparison(cash=native, owed=invoice.base_total)
     base_eur = invoice.base_total_eur
     if base_eur is None or any(is_non_eur_without_conversion(row) for row in rows):
         return None
-    eur_bases = [effective_eur_taxable_base(row) for row in rows]
-    if any(base is None for base in eur_bases):
-        return None
-    return SettlementComparison(
-        cash=round_to_cents(
-            sum(
-                (
-                    _in_settling_direction(invoice, row, base)
-                    for row, base in zip(rows, eur_bases, strict=True)
-                    if base is not None
-                ),
-                Decimal("0"),
-            )
-        ),
-        owed=base_eur,
-    )
+    eur = _settling_base_sum(invoice, rows, [effective_eur_taxable_base(row) for row in rows])
+    return None if eur is None else SettlementComparison(cash=round_to_cents(eur), owed=base_eur)
 
 
 def part_payment_share(invoice: Invoice, transaction: Transaction) -> Decimal | None:
