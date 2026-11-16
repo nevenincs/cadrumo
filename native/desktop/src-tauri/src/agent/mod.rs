@@ -302,6 +302,11 @@ impl AgentHost {
         self.supervisor.await_admin()
     }
 
+    /// The admission as it stands, without waiting; see the supervisor.
+    pub(crate) fn admin_now(&self) -> supervisor::AdminWait {
+        self.supervisor.admin_now()
+    }
+
     pub(crate) fn admin_generation(&self) -> Result<u64> {
         self.supervisor.admin_generation()
     }
