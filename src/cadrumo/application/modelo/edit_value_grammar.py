@@ -18,6 +18,7 @@ See Also:
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from decimal import Decimal
 from enum import StrEnum
 from typing import Annotated, Final
@@ -228,7 +229,42 @@ _BINDING_DECIMAL_TYPES: Final = frozenset(
 )
 
 
-def binding_value_grammar(binding: BindingDefinition, *, revision: ModeloRevision) -> ModeloEditValueGrammarV1:
+@dataclass(frozen=True, slots=True)
+class ConsumedBindingChannels:
+    """The bindings a revision's formulas read as dates or enum keys, computed once per revision."""
+
+    date_ids: frozenset[str]
+    enum_ids: frozenset[str]
+
+    @classmethod
+    def of(cls, revision: ModeloRevision) -> ConsumedBindingChannels:
+        """Walk the revision's formula graph once for both sets."""
+        return cls(
+            date_ids=frozenset(revision_date_binding_ids(revision)),
+            enum_ids=frozenset(enum_consumed_binding_ids(revision)),
+        )
+
+
+def _date_consumed(
+    binding: BindingDefinition, revision: ModeloRevision, channels: ConsumedBindingChannels | None
+) -> bool:
+    ids = revision_date_binding_ids(revision) if channels is None else channels.date_ids
+    return binding.id in ids
+
+
+def _enum_consumed(
+    binding: BindingDefinition, revision: ModeloRevision, channels: ConsumedBindingChannels | None
+) -> bool:
+    ids = enum_consumed_binding_ids(revision) if channels is None else channels.enum_ids
+    return binding.id in ids
+
+
+def binding_value_grammar(
+    binding: BindingDefinition,
+    *,
+    revision: ModeloRevision,
+    channels: ConsumedBindingChannels | None = None,
+) -> ModeloEditValueGrammarV1:
     """Project one binding onto the entry grammar of its override.
 
     The override reaches the engine the way the explicit ``--binding`` path
@@ -254,13 +290,13 @@ def binding_value_grammar(binding: BindingDefinition, *, revision: ModeloRevisio
             sign=CasillaSignConstraint.NON_NEGATIVE,
             money_operand_bound=True,
         )
-    if binding.id in revision_date_binding_ids(revision) or value.channel in {
+    if _date_consumed(binding, revision, channels) or value.channel in {
         BindingValueChannel.DATE,
         BindingValueChannel.ROW_SET,
     }:
         channel = ModeloEditValueChannel.UNAVAILABLE
         family = ModeloEditValueFamily.DATE if data_type is BindingDataType.DATE else ModeloEditValueFamily.TEXT
-    elif binding.id in enum_consumed_binding_ids(revision):
+    elif _enum_consumed(binding, revision, channels):
         channel, family = ModeloEditValueChannel.TEXT, ModeloEditValueFamily.TEXT
     elif data_type in _BINDING_DECIMAL_TYPES:
         channel = ModeloEditValueChannel.DECIMAL
@@ -286,6 +322,7 @@ __all__ = [
     "EDIT_CHOICE_LABEL_PREFIX",
     "MONEY_FRACTION_DIGITS",
     "MONEY_OPERAND_MAXIMUM",
+    "ConsumedBindingChannels",
     "ModeloEditChoiceV1",
     "ModeloEditRatioUnit",
     "ModeloEditValueChannel",
