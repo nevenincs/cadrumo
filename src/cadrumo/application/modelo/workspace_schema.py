@@ -123,10 +123,19 @@ def formula_expression_operand_references(
     record's plural, multi-kind-discriminated ``formula_operands`` field
     exists to carry exactly this INPUT set, not the single producing edge.
     """
+    # A read is one edge however often the expression repeats it: a sum guarded
+    # per comunidad reads the same box in every branch.
+    return tuple(dict.fromkeys(_operand_leaves(formula_id, expression)))
+
+
+def _operand_leaves(
+    formula_id: str,
+    expression: FormulaExpression,
+) -> tuple[ModeloWorkspaceFormulaOperandReferenceV1, ...]:
     if expression.op is not None:
         references: list[ModeloWorkspaceFormulaOperandReferenceV1] = []
         for arg in expression.args:
-            references.extend(formula_expression_operand_references(formula_id, arg))
+            references.extend(_operand_leaves(formula_id, arg))
         return tuple(references)
     if expression.casilla_id is not None:
         return (
