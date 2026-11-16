@@ -1,94 +1,28 @@
 // Read-only views of the signed-in profile that a host may offer the shell.
-// The calendar is the product's own calendar read, field for field, for the
-// fields the shell shows: every type here takes its fields from the wire
-// types generated in calendarContract.ts, so nothing in it is computed,
-// renamed or spelled by hand, and a state the product keeps apart stays
-// apart on screen. The
-// notifications are counts only, taken by the host, so that no row of them
-// reaches the window.
+// The calendar is the product's own calendar read, served whole by the host
+// under the product's names: its type is generated in calendarContract.ts,
+// so nothing in it is computed, renamed or spelled by hand, and a state the
+// product keeps apart stays apart on screen. The notifications are counts
+// only, taken by the host, so that no row of them reaches the window.
 
-import type {
-  ObligationCoverageReport,
-  OverviewCalendarEntrySnapshot,
-  OverviewCalendarEventSnapshot,
-  OverviewCalendarRange,
-  OverviewCalendarSupport,
-  OverviewCalendarWarningSnapshot,
-  OverviewFilingEvidenceSnapshot,
-  FilingCalendarPassedOn,
-} from "./calendarContract";
+import type { FilingCalendarServed } from "./calendarContract";
 
-/** One obligation of the calendar: a Modelo and its period. The host takes
- * these fields from the served calendar row and flattens the three filing
- * states out of the row's filing evidence; none is computed or renamed. */
-export type CalendarEntry = Pick<
-  OverviewCalendarEntrySnapshot,
-  | "modelo"
-  | "period"
-  | "closes_on"
-  | "adjusted_closes_on"
-  | "shift_reason"
-  | "payment_cutoff_on"
-  | "evaluated_on"
-  | "days_overdue"
-  | "status"
-  | "user_state"
-> &
-  Pick<
-    OverviewFilingEvidenceSnapshot,
-    "local_filing_state" | "aeat_submission_state" | "justificante_verified"
-  > & {
-    /** The day the filing window opens, as an ISO date; null where a host
-     * has no source for it. The window is then not drawn, only its close:
-     * an opening is never guessed. */
-    opens_on: OverviewCalendarEntrySnapshot["opens_on"] | null;
-  };
+/** The filing calendar of one profile over a range of dates, from local
+ * records only. Reading it never asks the tax agency anything. */
+export type FilingCalendar = FilingCalendarServed;
+
+/** One obligation of the calendar: a Modelo and its period, with its filing
+ * evidence as the product keeps it. */
+export type CalendarEntry = FilingCalendar["entries"][number];
 
 /** Something observed beside the legal calendar: a filing that was made, or
  * a message from the agency. It is a record of what was seen and when, and
  * never by itself a statement that an obligation is met. */
-export type CalendarEvent = Pick<
-  OverviewCalendarEventSnapshot,
-  | "event_type"
-  | "event_date"
-  | "source"
-  | "summary"
-  | "reference_id"
-  | "status"
-  | "aeat_submission_state"
-  | "aeat_submitted_at"
-  | "justificante_verified"
->;
+export type CalendarEvent = FilingCalendar["events"][number];
 
 /** A profile detail the calendar had to assume, with the product's own
- * sentence about it in the output language: the served warning's `text`
- * arrives here as `message`. */
-export type CalendarWarning = Pick<
-  OverviewCalendarWarningSnapshot,
-  "code" | "affected_modelos"
-> & { message: string };
-
-/** The filing calendar of one profile over a range of dates, from local
- * records only. Reading it never asks the tax agency anything. The
- * obligations the read held off the schedule (`suppressed_entries`) come as
- * the product served them, typed by the generated contract; an empty list is
- * the read saying there are none. */
-export type FilingCalendar = FilingCalendarPassedOn & {
-  range: OverviewCalendarRange;
-  entries: CalendarEntry[];
-  /** What was observed in the range: the profile's own filing history and
-   * the agency's messages, as the product recorded them. */
-  events: CalendarEvent[];
-  warnings: CalendarWarning[];
-  /** When the product worked this out. */
-  generated_at: string | null;
-  /** Every Modelo the calendar considered, in exactly one disposition. */
-  coverage: ObligationCoverageReport;
-  /** The filing-year envelope the read was served under and where the
-   * range sits in it, as served. Left out or null where the host does not
-   * pass it on: the page then draws the calendar as supported. */
-  support?: OverviewCalendarSupport | null;
-};
+ * sentence about it in the output language (`text`). */
+export type CalendarWarning = FilingCalendar["warnings"][number];
 
 /** What the last capture of the tax agency's notifications held, as counts.
  * The rows carry names and tax numbers, and the window has no use for them:

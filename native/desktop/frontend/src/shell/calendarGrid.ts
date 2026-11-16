@@ -92,13 +92,8 @@ export function calendarMonths(
   // calendar is for, and the list names that month. Never more than a year
   // past the range, whatever a date says.
   const rangeEnd = dayOrdinal(range.to_date);
-  // A window whose opening is not known was returned for the range too:
-  // its closing day is all there is of it to draw.
   const latest = spans.reduce(
-    (far, span) =>
-      (span.from <= rangeEnd || span.entry.opens_on === null) && span.to > far
-        ? span.to
-        : far,
+    (far, span) => (span.from <= rangeEnd && span.to > far ? span.to : far),
     rangeEnd,
   );
   const until = new Date(Math.min(latest, rangeEnd + 366) * DAY_MS);

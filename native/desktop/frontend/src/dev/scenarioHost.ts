@@ -61,6 +61,7 @@ import {
   ADVICE_ONLY_CALENDAR,
   AHEAD_CALENDAR,
   BEHIND_CALENDAR,
+  calendarWarning,
   CLOSE_UNKNOWN_CALENDAR,
   EMPTY_CALENDAR,
   FIXTURE_CALENDAR,
@@ -176,11 +177,11 @@ export type ScenarioHostOptions = {
 const EVIDENCE_CALENDAR: typeof FIXTURE_CALENDAR = {
   ...FIXTURE_CALENDAR,
   warnings: [
-    {
-      code: "filing.justificante_unverified",
-      message: "The filing receipt has not been verified.",
-      affected_modelos: ["111"],
-    },
+    calendarWarning(
+      "filing.justificante_unverified",
+      "The filing receipt has not been verified.",
+      ["111"],
+    ),
   ],
 };
 export const CALENDAR_SHAPES = {
