@@ -43,6 +43,7 @@ test("profile reads hide previous snapshots on the first commit and ignore late 
       },
       evaluated_on: range.from_date,
       entries: [],
+      attention_order: [],
       generated_at: "profile-a",
       warnings: [],
       completeness: {

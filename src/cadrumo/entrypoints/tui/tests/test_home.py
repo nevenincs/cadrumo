@@ -10,6 +10,14 @@ import pytest
 from textual.containers import VerticalScroll
 from textual.widgets import DataTable, Static
 
+from ....application.overview.calendar_models import (
+    OverviewAeatSubmissionState,
+    OverviewFilingStatus,
+    OverviewLocalFilingState,
+    OverviewPeriodState,
+)
+from ....application.overview.filing_status_words import filing_status_words
+from ....application.overview.home import HomeProjectionV1
 from ....application.search.workbench import WorkbenchDestinationAdmissionState
 from ....core.config import override_settings
 from ....core.external_constants import OutputLanguage
@@ -93,23 +101,23 @@ async def test_home_renders_the_selected_due_driven_projection_without_overflow(
         (
             HomeFixtureScenario.READY,
             {
-                "M130 2T": "Filed with AEAT",
-                "M303 3T": "Marked as filed, not yet confirmed by AEAT",
-                "M390 0A": "Filed, AEAT receipt verified",
+                "M130": OverviewFilingStatus.SUBMITTED,
+                "M303": OverviewFilingStatus.RECORDED_LOCALLY,
+                "M390": OverviewFilingStatus.RECEIPT_VERIFIED,
             },
         ),
         (
             HomeFixtureScenario.BLOCKED,
             {
-                "M130 2T": "Filed with AEAT",
-                "M303 3T": "Not filed yet",
-                "M390 0A": "Filed, accepted by AEAT",
+                "M130": OverviewFilingStatus.SUBMITTED,
+                "M303": OverviewFilingStatus.DUE,
+                "M390": OverviewFilingStatus.ACCEPTED,
             },
         ),
     ),
 )
 async def test_home_agenda_rows_carry_one_filing_status_each(
-    scenario: HomeFixtureScenario, expected: dict[str, str]
+    scenario: HomeFixtureScenario, expected: dict[str, OverviewFilingStatus]
 ) -> None:
     screen = HomeScreen(build_home_projection_fixture(scenario))
     app = ScreenHostApp[None](screen)
@@ -119,11 +127,120 @@ async def test_home_agenda_rows_carry_one_filing_status_each(
         rows = tuple(str(table.get_row_at(index)[0]) for index in range(table.row_count))
         evidence = screen.query_one("#home-evidence", Static)
         text = "\n".join(str(widget.render()) for widget in screen.query(Static) if widget.display)
-    statuses = {row.split(" · ")[1]: row.split(" · ", 2)[2] for row in rows}
-    assert statuses == expected
+    statuses = {row.split(" · ")[1].split()[0]: row.split(" · ", 2)[2] for row in rows}
+    assert statuses == {address: filing_status_words(status, OutputLanguage.EN) for address, status in expected.items()}
     assert not evidence.display
     assert "Local:" not in text
     assert "observed" not in text
+
+
+type _RowAxes = tuple[OverviewPeriodState, OverviewLocalFilingState, OverviewAeatSubmissionState]
+
+_AXES_BY_AGENDA: tuple[tuple[_RowAxes, ...], ...] = (
+    (
+        (
+            OverviewPeriodState.LATE,
+            OverviewLocalFilingState.NOT_READY_TO_FILE,
+            OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED,
+        ),
+        (OverviewPeriodState.DUE, OverviewLocalFilingState.NOT_READY_TO_FILE, OverviewAeatSubmissionState.ACCEPTED),
+        (
+            OverviewPeriodState.FILED,
+            OverviewLocalFilingState.NOT_READY_TO_FILE,
+            OverviewAeatSubmissionState.SUBMITTED_OBSERVED,
+        ),
+    ),
+    (
+        (
+            OverviewPeriodState.FILED,
+            OverviewLocalFilingState.EXTERNAL_BASELINE_IMPORTED,
+            OverviewAeatSubmissionState.NOT_OBSERVED,
+        ),
+        (OverviewPeriodState.DUE, OverviewLocalFilingState.READY_TO_FILE, OverviewAeatSubmissionState.NOT_OBSERVED),
+        (
+            OverviewPeriodState.FILED,
+            OverviewLocalFilingState.NOT_READY_TO_FILE,
+            OverviewAeatSubmissionState.NOT_OBSERVED,
+        ),
+    ),
+    (
+        (OverviewPeriodState.DUE, OverviewLocalFilingState.NOT_READY_TO_FILE, OverviewAeatSubmissionState.NOT_OBSERVED),
+        (
+            OverviewPeriodState.LATE,
+            OverviewLocalFilingState.NOT_READY_TO_FILE,
+            OverviewAeatSubmissionState.NOT_OBSERVED,
+        ),
+        (
+            OverviewPeriodState.UNKNOWN,
+            OverviewLocalFilingState.NOT_READY_TO_FILE,
+            OverviewAeatSubmissionState.NOT_OBSERVED,
+        ),
+    ),
+)
+"""Evidence axes for three previewed agendas, which between them the projection serves every filing status for."""
+
+
+def _served_agenda(axes: tuple[_RowAxes, ...]) -> HomeProjectionV1:
+    projection = build_home_projection_fixture(HomeFixtureScenario.READY)
+    agenda = tuple(
+        entry.model_copy(update={"period_state": period, "local_filing_state": local, "aeat_submission_state": aeat})
+        for entry, (period, local, aeat) in zip(projection.agenda, axes, strict=True)
+    )
+    return projection.model_copy(update={"agenda": agenda})
+
+
+def test_the_home_agendas_cover_every_filing_status_the_projection_serves() -> None:
+    served = {entry.filing_status for axes in _AXES_BY_AGENDA for entry in _served_agenda(axes).agenda}
+    assert served == set(OverviewFilingStatus)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("axes", _AXES_BY_AGENDA)
+async def test_home_agenda_words_each_row_by_the_filing_status_the_projection_serves(
+    axes: tuple[_RowAxes, ...],
+) -> None:
+    """Home says the status the projection decided for each row; it ranks no evidence of its own."""
+    projection = _served_agenda(axes)
+    screen = HomeScreen(projection)
+    app = ScreenHostApp[None](screen)
+    async with app.run_test(size=(120, 40)) as pilot:
+        await settle(pilot)
+        table = cast("DataTable[str]", screen.query_one("#home-agenda", DataTable))
+        rows = tuple(str(table.get_row_at(index)[0]) for index in range(table.row_count))
+    assert len(rows) == len(projection.agenda)
+    assert {row.split(" · ")[1].split()[0]: row.split(" · ", 2)[2] for row in rows} == {
+        f"M{entry.modelo}": filing_status_words(entry.filing_status, OutputLanguage.EN) for entry in projection.agenda
+    }
+
+
+@pytest.mark.asyncio
+async def test_home_agenda_says_the_served_date_and_period_words() -> None:
+    """Home shows the date and period words the projection serves; it formats neither itself."""
+    projection = build_home_projection_fixture(HomeFixtureScenario.READY)
+    screen = HomeScreen(projection)
+    app = ScreenHostApp[None](screen)
+    async with app.run_test(size=(120, 40)) as pilot:
+        await settle(pilot)
+        table = cast("DataTable[str]", screen.query_one("#home-agenda", DataTable))
+        rows = tuple(str(table.get_row_at(index)[0]) for index in range(table.row_count))
+    assert rows == tuple(
+        f"{entry.due_on_text} · M{entry.modelo} {entry.period_words} · "
+        f"{filing_status_words(entry.filing_status, OutputLanguage.EN)}"
+        for entry in projection.agenda
+    )
+
+
+def test_home_module_reads_no_filing_evidence_axis() -> None:
+    module = Path(__file__).parents[1] / "home.py"
+    source = module.read_text(encoding="utf-8")
+    for axis in (
+        "OverviewAeatSubmissionState",
+        "OverviewLocalFilingState",
+        "OverviewPeriodState",
+        "tui.home.filing_status",
+        "overview.filing_status.",
+    ):
+        assert axis not in source, axis
 
 
 @pytest.mark.asyncio
