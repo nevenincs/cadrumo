@@ -481,12 +481,14 @@ def _require_tools_installed(result: CommandResult) -> None:
 
 def _agent_action(paths: dict[str, Path], arguments: argparse.Namespace, configured: dict[str, Any]) -> Path:
     from .agent import build_agent, gate_agent_dependencies
+    from .agent_api_pin import require_pinned_agent_api
     from .agent_runtime import build_agent_runtime
 
     if arguments.agent_source is None:
         raise ValueError("Agent construction requires the configured source folder")
     destination = paths["agent"]
     destination.mkdir(parents=True, exist_ok=True)
+    require_pinned_agent_api(arguments.agent_source)
     build_agent(destination, arguments.agent_source, selected_uv(configured))
     gate_agent_dependencies(destination, arguments.agent_source, arguments.target, selected_uv(configured))
     tools = configured["desktop_tools"]

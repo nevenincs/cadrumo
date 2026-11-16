@@ -40,6 +40,7 @@ from .bienes_inversion_results import (
     BienInversionDisposalPayload,
     BienInversionRecordPayload,
 )
+from .decimal_parsing import parse_decimal_amount
 
 
 def _client(ctx: typer.Context, profile_id: UUID) -> FrontendClient:
@@ -155,6 +156,11 @@ def read_bienes_inversion_register(
     return completed, result
 
 
+def _unsigned_decimal(text: str, *, label: str) -> PublicDecimal:
+    """Read a hand-typed non-negative decimal, so ``1.000`` is refused rather than read as one."""
+    return PublicDecimal(decimal=str(parse_decimal_amount(text, label=label, signed=False)))
+
+
 def declare_bien_inversion(
     ctx: typer.Context,
     *,
@@ -170,7 +176,13 @@ def declare_bien_inversion(
     disposal_year: int | None = None,
     disposal_regime: str | None = None,
 ) -> tuple[RegisteredOperationCompletion[BienesInversionDeclareProjection], BienesInversionDeclareResult]:
-    """Submit one operator declaration and preserve the established result schema."""
+    """Submit one operator declaration and preserve the established result schema.
+
+    The cuota and the prorrata are read with the canonical decimal grammar before
+    the profile is asked for; the domain's ``Percentage`` bounds the prorrata.
+    """
+    cuota = _unsigned_decimal(cuota_soportada, label="--cuota-soportada")
+    prorrata = _unsigned_decimal(prorrata_inicial_pct, label="--prorrata-inicial")
     profile_id = UUID(require_active_bucket_id())
     request = BienesInversionDeclareRequest(
         profile_id=profile_id,
@@ -178,8 +190,8 @@ def declare_bien_inversion(
         description=description,
         acquisition_year=acquisition_year,
         acquisition_ledger_id=acquisition_ledger_id,
-        cuota_soportada=PublicDecimal(decimal=cuota_soportada),
-        prorrata_inicial_pct=PublicDecimal(decimal=prorrata_inicial_pct),
+        cuota_soportada=cuota,
+        prorrata_inicial_pct=prorrata,
         kind=kind,
         art108_elegible=art108_elegible,
         prorrata_sector_id=prorrata_sector_id,

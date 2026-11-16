@@ -473,6 +473,15 @@ class ProfileOverview(BaseModel):
         missing = frozenset(self.missing_required)
         return tuple(field for section in self.sections for field in section.fields if field.path in missing)
 
+    def requires_now(self, field: ProfileFieldView) -> bool:
+        """Whether setup requires ``field`` now: listed as missing, or required and answered.
+
+        A repeatable section's template row is marked required but owes nothing
+        until the operator adds a row, so only :attr:`missing_required` decides
+        what an unanswered field owes.
+        """
+        return field.path in self.missing_required or (field.required and field.present)
+
 
 def mask_profile_field(*, path: str, label: str, sensitivity: SensitivityClass | None) -> bool:
     """Decide whether a profile field's value must be masked before display.

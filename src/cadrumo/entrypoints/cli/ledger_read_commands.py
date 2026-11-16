@@ -37,10 +37,10 @@ if TYPE_CHECKING:
 
 
 def ledger_llm_diagnostics(
-    ctx: typer.Context, since: str | None = None, until: str | None = None, low_confidence_below: float = 0.5
+    ctx: typer.Context, since: str | None = None, until: str | None = None, low_confidence_below: str = "0.5"
 ) -> None:
     """Report existing LLM usage, cost, and classification-confidence metrics."""
-    from ...core.decimal.coercion import coerce_decimal_strict
+    from ...core.decimal.grammar import try_parse_canonical_decimal
     from ...core.i18n.render import tr
     from ...core.unit_proportion import is_unit_proportion
     from .common import bad, emit_envelope
@@ -48,8 +48,8 @@ def ledger_llm_diagnostics(
 
     since_date = parse_iso_date(since, "--since")
     until_date = parse_iso_date(until, "--until")
-    threshold = coerce_decimal_strict(low_confidence_below)
-    if not is_unit_proportion(threshold):
+    threshold = try_parse_canonical_decimal(low_confidence_below)
+    if threshold is None or not is_unit_proportion(threshold):
         raise bad(tr("cli.ledger.llm_diagnostics.threshold_range"))
     report = read_ledger_llm_diagnostics_for_cli(
         ctx,

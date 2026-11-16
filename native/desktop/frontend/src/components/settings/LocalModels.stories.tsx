@@ -19,7 +19,7 @@ import { SOURCE_LOCALE, useStrings } from "../../shell/strings";
 // Everything is kept in memory and forgotten on reload, and nothing is
 // downloaded. Every lane and model is made up.
 
-const LANE = "local_api";
+const LANE = "zai_api";
 
 const LOCAL_LANE =
   catalogLanes(FIXTURE_CATALOG).find((held) => held.id === LANE) ?? null;

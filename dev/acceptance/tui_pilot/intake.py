@@ -44,6 +44,10 @@ class PilotRow:
     modelo: str | None = None
     year: int | None = None
     period: str | None = None
+    horizon: int | None = None
+    """The replay horizon the line was run at; the table pairs a return line only with its row of that horizon, and a
+    persona line speaks only for the rows of its horizon. ``None`` on the line announcing the persona before any
+    replay, which speaks for every row no horizon line answers for."""
     loads: bool = True
     calculate: str | None = None
     verify: str | None = None
@@ -73,8 +77,9 @@ class PilotRow:
 
     @property
     def label(self) -> str:
-        """``persona modelo year period``, as a failure names the row."""
-        return f"{self.persona} {self.modelo} {self.year} {self.period}"
+        """``persona modelo year period``, and ``at horizon <year>`` when it has one, as a failure names the row."""
+        at = "" if self.horizon is None else f" at horizon {self.horizon}"
+        return f"{self.persona} {self.modelo} {self.year} {self.period}{at}"
 
     def reason(self) -> str:
         """The row's free text: its cause key, what each stage said, then its time."""
@@ -102,6 +107,8 @@ class PilotRow:
             "reason": self.reason(),
             "log": log,
         }
+        if self.horizon is not None:
+            document["horizon"] = self.horizon
         if self.export_served is not None and _schema_takes_export_served():
             document["export_served"] = self.export_served
         if self.blocking_findings:

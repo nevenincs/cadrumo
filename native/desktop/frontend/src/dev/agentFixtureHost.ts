@@ -153,10 +153,10 @@ export type FixtureEngineChoices = {
 const BUSY_PAST_READY_MS = 1_000;
 
 /** The generic local lane, the one the "local-only" catalog serves alone. */
-const FIXTURE_LOCAL_LANE = "local_api";
+const FIXTURE_LOCAL_LANE = "zai_api";
 /** The hosted lane the "hosted-signed-out" catalog serves beside the local
  * lane: the fixture catalog holds it back as signed out. */
-const FIXTURE_HOSTED_SIGNED_OUT_LANE = "alpha_cli";
+const FIXTURE_HOSTED_SIGNED_OUT_LANE = "kimi_cli";
 /** The lanes whose model lists the made-up service keeps: every keyless lane
  * on this computer, the generic local lane and each engine's lane. */
 const FIXTURE_LISTED_LANES: readonly string[] = FIXTURE_SETTINGS_LANES.filter(

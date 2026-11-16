@@ -11,12 +11,14 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from decimal import Decimal
-from typing import Final, cast, override
+from typing import cast, override
 
 from textual.widget import Widget
 from textual.widgets import DataTable, Input, Static
 
 from ....application.ledger.actions_common import display_decimal
+from ....application.ledger.actions_split_merge import SPLIT_CHILDREN_MIN
+from ....application.ledger.entry_limits import ledger_entry_limits
 from ....application.ledger.llm_review_contracts import LedgerLlmReviewRequest
 from ....application.ledger.llm_review_workflow import LlmReviewInvocationOrigin
 from ....application.ledger.split_operation import LedgerSplitChildRequest, LedgerSplitRequest
@@ -29,8 +31,10 @@ from .categorisation_doors import LedgerSplitDoorV1, LedgerSuggestionReviewDoorV
 from .categorisation_review import ReviewingCategorisationScreen
 from .controller import LedgerWorkspaceController
 
-SPLIT_MAX_CHILDREN: Final = 128
-"""The most children one split may have, as the operation declares."""
+
+def most_children() -> int:
+    """The most children one split may have, as the ledger serves it."""
+    return next(limit.max for limit in ledger_entry_limits().text_limits if limit.name == "split_parts")
 
 
 def parse_child_amount(raw: str) -> Decimal:
@@ -175,8 +179,9 @@ class LedgerSplitScreen(ReviewingCategorisationScreen):
         if not description:
             self.refuse(tr("tui.ledger.categorisation.split.description_required"))
             return
-        if len(self.children_staged) >= SPLIT_MAX_CHILDREN:
-            self.refuse(tr("tui.ledger.categorisation.split.too_many", limit=SPLIT_MAX_CHILDREN))
+        most = most_children()
+        if len(self.children_staged) >= most:
+            self.refuse(tr("tui.ledger.categorisation.split.too_many", limit=most))
             return
         self.refuse("")
         self.children_staged.append((amount, description))
@@ -186,7 +191,7 @@ class LedgerSplitScreen(ReviewingCategorisationScreen):
         amount_input.focus()
 
     def _stage_split(self) -> StagedChangeV1:
-        if len(self.children_staged) < 2:
+        if len(self.children_staged) < SPLIT_CHILDREN_MIN:
             raise ValueError(tr("tui.ledger.categorisation.split.too_few"))
         parent = self.parent_entry()
         total = self.children_total()
@@ -236,4 +241,4 @@ class LedgerSplitScreen(ReviewingCategorisationScreen):
         self.paint_tables()
 
 
-__all__ = ["SPLIT_MAX_CHILDREN", "LedgerSplitScreen", "parse_child_amount"]
+__all__ = ["LedgerSplitScreen", "most_children", "parse_child_amount"]

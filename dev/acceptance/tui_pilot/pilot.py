@@ -10,8 +10,9 @@ calculation, the prior carries and figures it attests, the statements a calculat
 the same registered operations between the key presses, as the persona table does. A return the table holds not owed
 is driven through calculate only, as the table stops it: its check, export and record are not pressed.
 
-Each row is compared with the table's row for the return (:mod:`.causes`) and appended to the intake
-(:mod:`.intake`) as soon as it is known.
+Each row is compared with the table's row for the return at the replay's horizon (:mod:`.causes`) and appended to
+the intake (:mod:`.intake`) as soon as it is known, stating that horizon, so a return the table reports at several
+horizons is driven and compared at each.
 """
 
 from __future__ import annotations
@@ -67,7 +68,7 @@ from ..persona_table.frontend import DIFFERS, NOT_REACHED
 from ..persona_table.rows import PlannedRow, TableRow
 from .causes import CRASH_CAUSE, export_unavailable_note, file_stage_of, outcome, row_cause, unreported_cause
 from .intake import ERROR, INCOMPLETE, NOT_OWED, NOT_SHOWN, PASSED, REFUSED, PilotRow, write_rows
-from .plan import pilot_envelope, pilot_plan, table_rows_path
+from .plan import PilotPlan, PilotReplay, pilot_envelope, pilot_plan, table_rows_path
 
 _CALCULATE: Final = frozenset({ModeloFormNextAction.CALCULATE, ModeloFormNextAction.RECALCULATE})
 _EXPORT: Final = frozenset({ModeloFormNextAction.EXPORT, ModeloFormNextAction.EXPORT_AGAIN})
@@ -448,6 +449,7 @@ def run_return(materialised: MaterialisedPersona, plan: PlannedRow, exports: Pat
             cause=f"{CRASH_CAUSE}{type(crash).__qualname__}",
             cause_words=lines[0][:300] if lines else "",
         )
+    row.horizon = plan.horizon
     row.calculate = row.calculate or NOT_REACHED
     row.verify = row.verify or NOT_REACHED
     row.export = row.export or NOT_REACHED
@@ -464,6 +466,7 @@ def _failed(table: TableRow, reason: str, cause: str) -> PilotRow:
         modelo=table.modelo,
         year=table.year,
         period=table.period,
+        horizon=table.horizon,
         calculate=ERROR,
         verify=NOT_REACHED,
         export=NOT_REACHED,
@@ -477,66 +480,83 @@ def _reported(table: TableRow, row: PilotRow) -> ReportedRow:
     return ReportedRow(table=table, row=row, outcome=outcome(row, table))
 
 
+def _not_planned(table: TableRow) -> ReportedRow:
+    reason = f"the table reports it at horizon {table.horizon}, which does not owe it"
+    return _reported(table, _failed(table, reason, "other:not_planned_at_horizon"))
+
+
+def _drive_replay(
+    materialised: MaterialisedPersona,
+    plan: PilotPlan,
+    replay: PilotReplay,
+    exports: Path,
+    reported: list[ReportedRow],
+) -> None:
+    """Drive the replay's returns in order; each one the table reports at this horizon goes to ``reported``."""
+    ran: list[PilotRow] = []
+    for planned in replay.returns:
+        row = run_return(materialised, planned, exports)
+        if planned.key in replay.reported:
+            table = plan.expected[planned.key, replay.horizon]
+            row.file = file_stage_of(row, table)
+            row.cause, row.cause_words = row_cause(row, table, ran)
+            note = export_unavailable_note(row, table)
+            if note is not None:
+                row.reasons.append(note)
+            reported.append(_reported(table, row))
+        else:
+            row.cause, row.cause_words = unreported_cause(row, ran)
+        ran.append(row)
+
+
+def _run_replay(
+    persona: Persona, plan: PilotPlan, replay: PilotReplay, tmp_path: Path
+) -> tuple[PilotRow, list[ReportedRow]]:
+    """Replay the persona at one horizon and drive its returns; the persona line of that horizon and the rows."""
+    root = tmp_path / f"horizon-{replay.horizon}"
+    reported: list[ReportedRow] = []
+    at_horizon = PilotRow(persona=persona.id, horizon=replay.horizon)
+    try:
+        with materialised_persona(
+            persona.id, root, replay_scope(persona), reuse=True, horizon=replay.horizon
+        ) as materialised:
+            at_horizon.reasons += [
+                f"horizon {replay.horizon}: not loaded {block.block}: {block.reason}"
+                for block in materialised.not_loaded
+            ]
+            _drive_replay(materialised, plan, replay, root / "exports", reported)
+    except (PersonaMaterialisationError, PersonaCatalogueError) as error:
+        at_horizon.loads = False
+        at_horizon.reasons.append(f"horizon {replay.horizon}: {' '.join(str(error).split())[:_REASON_LIMIT]}")
+        done = {item.table.key for item in reported}
+        failed = f"replay under horizon {replay.horizon} failed"
+        reported += [
+            _reported(table, _failed(table, failed, "other:replay_failed"))
+            for table in (plan.expected[key, replay.horizon] for key in sorted(replay.reported - done))
+        ]
+    return at_horizon, reported
+
+
 def run_persona(persona_id: str, tmp_path: Path) -> PersonaRun:
     """Replay the persona at each horizon the table reports its returns at, and drive every return in the workbench.
 
     With the intake file named, the persona's line is appended first and each reported return's row as soon as it
-    finishes, so nothing a crash comes after is lost; the persona's line is appended again when the replays changed
-    it.
+    finishes, so nothing a crash comes after is lost. A replay that did not load, or loaded without some block,
+    appends a persona line of its own horizon, which speaks only for the table rows of that horizon.
     """
     envelope = pilot_envelope()
     persona = read_persona(persona_id, envelope=envelope)
     plan = pilot_plan(persona_id, table_rows_path(), envelope)
     loaded = PilotRow(persona=persona_id)
     write_rows([replace(loaded, reasons=[])])
-    announced = (loaded.loads, list(loaded.reasons))
-    reported: list[ReportedRow] = [
-        _reported(
-            table,
-            _failed(
-                table,
-                f"the table reports it at horizon {table.horizon}, which does not owe it",
-                "other:not_planned_at_horizon",
-            ),
-        )
-        for table in plan.unplanned
-    ]
+    reported = [_not_planned(table) for table in plan.unplanned]
     for replay in plan.replays:
-        root = tmp_path / f"horizon-{replay.horizon}"
-        done: set[tuple[str, str, int, str]] = set()
-        try:
-            with materialised_persona(
-                persona_id, root, replay_scope(persona), reuse=True, horizon=replay.horizon
-            ) as materialised:
-                for block in materialised.not_loaded:
-                    loaded.reasons.append(f"horizon {replay.horizon}: not loaded {block.block}: {block.reason}")
-                ran: list[PilotRow] = []
-                for planned in replay.returns:
-                    row = run_return(materialised, planned, root / "exports")
-                    if planned.key in replay.reported:
-                        table = plan.expected[planned.key]
-                        row.file = file_stage_of(row, table)
-                        row.cause, row.cause_words = row_cause(row, table, ran)
-                        note = export_unavailable_note(row, table)
-                        if note is not None:
-                            row.reasons.append(note)
-                        done.add(planned.key)
-                        reported.append(_reported(table, row))
-                    else:
-                        row.cause, row.cause_words = unreported_cause(row, ran)
-                    ran.append(row)
-        except (PersonaMaterialisationError, PersonaCatalogueError) as error:
-            loaded.loads = False
-            loaded.reasons.append(f"horizon {replay.horizon}: {' '.join(str(error).split())[:_REASON_LIMIT]}")
-            reported += [
-                _reported(
-                    plan.expected[key],
-                    _failed(plan.expected[key], f"replay under horizon {replay.horizon} failed", "other:replay_failed"),
-                )
-                for key in sorted(replay.reported - done)
-            ]
-    if (loaded.loads, loaded.reasons) != announced:
-        write_rows([loaded])
+        at_horizon, rows = _run_replay(persona, plan, replay, tmp_path)
+        reported += rows
+        if not at_horizon.loads or at_horizon.reasons:
+            write_rows([at_horizon])
+            loaded.loads = loaded.loads and at_horizon.loads
+            loaded.reasons += at_horizon.reasons
     return PersonaRun(loaded=loaded, reported=tuple(reported))
 
 
