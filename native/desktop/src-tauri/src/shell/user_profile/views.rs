@@ -207,7 +207,7 @@ pub struct FilingCalendar {
     support: Option<Support>,
     entries: Vec<Entry>,
     // Rows the calendar holds off its schedule, as the product served them.
-    suppressed: Vec<Value>,
+    suppressed_entries: Vec<Value>,
     events: Vec<Event>,
     warnings: Vec<Warning>,
     generated_at: Option<String>,
@@ -333,7 +333,7 @@ fn filing_calendar(
                 justificante_verified: entry.filing_evidence.justificante_verified,
             })
             .collect(),
-        suppressed: snapshot.suppressed_entries,
+        suppressed_entries: snapshot.suppressed_entries,
         events: snapshot.events,
         warnings,
         generated_at: Some(snapshot.generated_at),
@@ -567,7 +567,7 @@ mod tests {
         ]);
         let calendar = filing_calendar(read, PROFILE, "2026-07-01", "2027-06-30").unwrap();
         let shown = serde_json::to_value(&calendar).unwrap();
-        let rows = shown["suppressed"].as_array().unwrap();
+        let rows = shown["suppressed_entries"].as_array().unwrap();
         assert_eq!(rows.len(), 2);
         assert_eq!(rows[0]["modelo"], "100");
         assert_eq!(rows[0]["verdict"], "not_applicable");
@@ -620,9 +620,9 @@ mod tests {
     fn a_snapshot_without_suppressed_entries_has_none() {
         let calendar =
             filing_calendar(projection(true), PROFILE, "2026-07-01", "2027-06-30").unwrap();
-        assert!(calendar.suppressed.is_empty());
+        assert!(calendar.suppressed_entries.is_empty());
         let shown = serde_json::to_value(&calendar).unwrap();
-        assert_eq!(shown["suppressed"], json!([]));
+        assert_eq!(shown["suppressed_entries"], json!([]));
     }
 
     #[test]
