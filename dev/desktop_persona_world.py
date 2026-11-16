@@ -402,7 +402,9 @@ def prepare_world(persona_id: str, horizon: int, root: Path) -> dict[str, Any]:
         scope.enter_context(profile_adapter_composition())
         # The table runs on recorded ECB rates, as the repository's test composition binds them.
         scope.enter_context(bind_exchange_rate_provider_factory(recorded_ecb_rate_provider))
-        ambient = scope.enter_context(tempfile.TemporaryDirectory(prefix="persona-world-"))
+        # It sits beside the world under the caller's root, never in the host's temp directory.
+        root.parent.mkdir(parents=True, exist_ok=True)
+        ambient = scope.enter_context(tempfile.TemporaryDirectory(prefix="persona-world-settings-", dir=root.parent))
         scope.enter_context(scoped_env_var(STORAGE_ROOT_ENV, str(Path(ambient) / "storage")))
         # The table's collector parametrizes every persona it is allowed to collect when it is imported.
         scope.enter_context(scoped_env_var(TABLE_PERSONAS_ENV, persona_id))

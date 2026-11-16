@@ -12,7 +12,7 @@ from pydantic import ValidationError
 from ....application.actividad_asset.operation_dtos import ActivityAssetDisposalSnapshot
 from ....application.actividad_asset.request_restoration import restoring
 from ....application.operations.public_scalar import PublicDecimal
-from ....core.decimal.coercion import coerce_finite_european_decimal
+from ....core.decimal.grammar import CENT_FRACTION_DIGITS, try_parse_canonical_decimal
 from ....core.errors.hierarchy import CadrumoError
 from ....core.i18n.render import tr
 from ....core.parsing.dates import require_iso8601_date
@@ -33,12 +33,12 @@ def stated_date(text: str) -> date:
         raise InputRefusedError(tr("tui.ledger.activity_asset.errors.date_invalid")) from None
 
 
-def stated_amount(text: str) -> PublicDecimal:
-    """Read an amount, or say how to write it."""
-    try:
-        return PublicDecimal(decimal=text)
-    except ValidationError:
-        raise InputRefusedError(tr("tui.ledger.activity_asset.errors.amount_invalid")) from None
+def _amount(text: str) -> Decimal:
+    """Read a hand-typed euro amount, or say how to write it; ``1.000`` and ``1e3`` are refused."""
+    parsed = try_parse_canonical_decimal(text, signed=False, max_fraction_digits=CENT_FRACTION_DIGITS)
+    if parsed is None:
+        raise InputRefusedError(tr("tui.ledger.activity_asset.errors.amount_invalid"))
+    return parsed
 
 
 def stated_choice[Choice: StrEnum](choices: type[Choice], text: str) -> Choice:
@@ -65,7 +65,7 @@ def stated_disposal(read_value: Callable[[str], str]) -> ActivityAssetDisposalSn
         transmission_costs=_required_amount(
             read_value("asset-disposal-costs"), field=tr("tui.ledger.activity_asset.disposal_costs")
         ),
-        market_value=stated_amount(market_value) if market_value else None,
+        market_value=_public_amount(market_value) if market_value else None,
         prior_free_depreciation_regime=stated_choice(PriorFreeDepreciationRegime, prior_regime)
         if prior_regime
         else None,
@@ -77,7 +77,11 @@ def _required_amount(text: str, *, field: str) -> PublicDecimal:
     """Read an amount that must be stated, naming the field left blank."""
     if not text:
         raise InputRefusedError(tr("tui.ledger.activity_asset.errors.amount_required", field=field))
-    return stated_amount(text)
+    return _public_amount(text)
+
+
+def _public_amount(text: str) -> PublicDecimal:
+    return PublicDecimal(decimal=str(_amount(text)))
 
 
 def stated_revision(read_value: Callable[[str], str], revision_json: str) -> ActivityAssetRevision:
@@ -112,19 +116,13 @@ def stated_revision(read_value: Callable[[str], str], revision_json: str) -> Act
 
 
 def _fact_amount(read_value: Callable[[str], str], input_id: str) -> Decimal | None:
-    """Read a stated amount; an empty field is no statement, and an ambiguous number is refused."""
+    """Read a stated amount; an empty field is no statement."""
     text = read_value(input_id)
-    if not text:
-        return None
-    amount = coerce_finite_european_decimal(text)
-    if amount is None:
-        raise InputRefusedError(tr("tui.ledger.activity_asset.errors.amount_invalid"))
-    return amount
+    return _amount(text) if text else None
 
 
 __all__ = [
     "InputRefusedError",
-    "stated_amount",
     "stated_choice",
     "stated_date",
     "stated_disposal",
