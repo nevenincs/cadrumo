@@ -22,10 +22,11 @@ import { ownAccountChange, type OwnAccountChange } from "../../../shell/ledger";
 import { parseIsoDate } from "../../../shell/ledgerGrammar";
 import type {
   LedgerOwnAccountResult,
-  OwnAccount,
-  OwnAccountDesignation,
+  OwnAccountDesignationProjection,
+  OwnAccountHolding,
+  OwnAccountProjection,
   OwnAccountRole,
-} from "../../../shell/ledgerRegisterOperations";
+} from "../../../shell/ledgerOwnAccountContract";
 import { useTextLimit } from "../../../shell/ledgerLimits";
 import { useStrings } from "../../../shell/strings";
 import { useWritePause, WriteHold, type Landing } from "../WritePause";
@@ -55,7 +56,7 @@ import {
 import { grammarText } from "./setupWords";
 
 const ROLES: readonly OwnAccountRole[] = ["charge", "refund"];
-const HOLDINGS = ["titular", "cotitular"] as const;
+const HOLDINGS: readonly OwnAccountHolding[] = ["titular", "cotitular"];
 const MODELO = /^\d{3}$/;
 const CURRENCY = /^[A-Za-z]{3}$/;
 
@@ -80,9 +81,9 @@ const NO_SECRETS: Secrets = {
 
 type Form =
   | { kind: "add" }
-  | { kind: "update"; account: OwnAccount }
-  | { kind: "close"; account: OwnAccount }
-  | { kind: "designate"; account: OwnAccount };
+  | { kind: "update"; account: OwnAccountProjection }
+  | { kind: "close"; account: OwnAccountProjection }
+  | { kind: "designate"; account: OwnAccountProjection };
 
 /** Sends an own account's details through the host's raw body: the only
  * way an account number leaves the window. The bytes are zeroed by the
@@ -224,7 +225,7 @@ export function AccountsPane({ port, reader, locale }: SetupProps) {
           await sendChange(port, {
             action: "add",
             label: label.trim(),
-            holding,
+            holding: HOLDINGS.find((value) => value === holding) ?? null,
             currency: currency.toUpperCase(),
             opened_on: openedOn.kind === "value" ? openedOn.value : undefined,
             ...details(),
@@ -240,7 +241,7 @@ export function AccountsPane({ port, reader, locale }: SetupProps) {
       ),
     );
   };
-  const update = (account: OwnAccount) => {
+  const update = (account: OwnAccountProjection) => {
     const secretsGiven = iban !== "" || bankBlock.length > 0;
     const renamed = label.trim() !== "" && label.trim() !== account.label;
     const named = label.trim();
@@ -281,12 +282,12 @@ export function AccountsPane({ port, reader, locale }: SetupProps) {
           async () => "repeatable",
     );
   };
-  const updateReady = (account: OwnAccount) =>
+  const updateReady = (account: OwnAccountProjection) =>
     !ibanWrong &&
     (iban !== "" ||
       bankBlock.length > 0 ||
       (label.trim() !== "" && label.trim() !== account.label));
-  const close = (account: OwnAccount) =>
+  const close = (account: OwnAccountProjection) =>
     write.run(
       async () =>
         finish(
@@ -308,7 +309,7 @@ export function AccountsPane({ port, reader, locale }: SetupProps) {
           : "not_saved",
       ),
     );
-  const designate = (account: OwnAccount) =>
+  const designate = (account: OwnAccountProjection) =>
     write.run(
       async () =>
         finish(
@@ -335,7 +336,7 @@ export function AccountsPane({ port, reader, locale }: SetupProps) {
           : "not_saved",
       ),
     );
-  const undesignate = (found: OwnAccountDesignation) =>
+  const undesignate = (found: OwnAccountDesignationProjection) =>
     write.run(
       async () =>
         finish(
@@ -354,7 +355,7 @@ export function AccountsPane({ port, reader, locale }: SetupProps) {
           : "saved",
       ),
     );
-  const remove = (account: OwnAccount) =>
+  const remove = (account: OwnAccountProjection) =>
     write.run(
       async () =>
         finish(
@@ -370,7 +371,7 @@ export function AccountsPane({ port, reader, locale }: SetupProps) {
       ),
     );
 
-  const designationText = (found: OwnAccountDesignation) =>
+  const designationText = (found: OwnAccountDesignationProjection) =>
     facts(t, [
       t(`desktop.ledger.accounts.role.${found.role}`),
       found.modelo
@@ -380,7 +381,7 @@ export function AccountsPane({ port, reader, locale }: SetupProps) {
   const day = (value: string | null) =>
     value ? formatDay(locale, value) : null;
 
-  const columns: Column<OwnAccount>[] = [
+  const columns: Column<OwnAccountProjection>[] = [
     {
       key: "label",
       label: t("desktop.ledger.accounts.column.label"),

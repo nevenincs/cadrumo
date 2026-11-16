@@ -11,7 +11,8 @@ import {
   useLedgerRead,
 } from "@/dev/LedgerStage";
 import type { LedgerShape } from "@/dev/ledgerFixture";
-import type { LedgerPort, OutputLanguage } from "../../../shell/ledger";
+import type { LedgerPort } from "../../../shell/ledger";
+import type { OutputLanguage } from "../../../shell/ledgerClassificationContract";
 import type { CatalogueInvoiceSnapshot } from "../../../shell/ledgerInvoiceContract";
 import { useOwnAccounts } from "../../../shell/ledgerMovementReads";
 import { useStrings } from "../../../shell/strings";

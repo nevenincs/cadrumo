@@ -15,7 +15,8 @@ import {
 import type { MovementsMemory } from "@/components/ledger/movements/useMovementsView";
 import type { PaneControl } from "@/components/PaneHeader";
 import { DEFAULT_LAYOUT, type LedgerView } from "../shell/layout";
-import type { LedgerPort, OutputLanguage } from "../shell/ledger";
+import type { LedgerPort } from "../shell/ledger";
+import type { OutputLanguage } from "../shell/ledgerClassificationContract";
 import type { LedgerPeriod } from "../shell/ledgerGrammar";
 import { REGISTER_YEARS, SCENARIO_TODAY } from "./assetsRegister";
 import {

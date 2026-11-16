@@ -10,11 +10,8 @@ import type {
   TimelineClaimUse,
   TimelineEvent,
 } from "@/shell/ledgerSetup";
-import type {
-  JsonObject,
-  LedgerDefinitionId,
-  OutputLanguage,
-} from "../shell/ledger";
+import type { JsonObject, LedgerDefinitionId } from "../shell/ledger";
+import type { OutputLanguage } from "../shell/ledgerClassificationContract";
 import {
   ACQUIRED_CONDITIONS,
   ACQUISITION_SHAPES,

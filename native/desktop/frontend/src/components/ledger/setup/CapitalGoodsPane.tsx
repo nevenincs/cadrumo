@@ -14,9 +14,9 @@ import {
   parseYear,
 } from "../../../shell/ledgerGrammar";
 import type {
-  CapitalGood,
-  CapitalGoodDeclareResult,
-} from "../../../shell/ledgerRegisterOperations";
+  BienInversionRecordProjection,
+  BienesInversionDeclareProjection,
+} from "../../../shell/ledgerCapitalGoodsContract";
 import { servedRefusalWords } from "../../../shell/ledger";
 import { takesCapitalGoodAcquisition } from "../../../shell/ledgerContract";
 import { LEDGER_PAGE_SIZE } from "../../../shell/ledgerWindow";
@@ -198,12 +198,12 @@ export function CapitalGoodsPane({ port, reader, locale, rows }: SetupProps) {
     if (last?.kind !== "refused") return null;
     return (
       servedRefusalWords(
-        (last.detail as CapitalGoodDeclareResult | null)?.refusal,
+        (last.detail as BienesInversionDeclareProjection | null)?.refusal,
       ) ?? servedRefusalWords(last.detail)
     );
   };
 
-  const columns: Column<CapitalGood>[] = [
+  const columns: Column<BienInversionRecordProjection>[] = [
     {
       key: "identifier",
       label: t("desktop.ledger.capital.column.identifier"),

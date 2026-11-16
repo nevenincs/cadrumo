@@ -10,7 +10,8 @@ import {
 } from "@/components/ui/popover";
 import { Spinner } from "@/components/ui/spinner";
 import { facts } from "../../../shell/compose";
-import type { LedgerImportResult, PickedFile } from "../../../shell/ledger";
+import type { PickedFile } from "../../../shell/ledger";
+import type { LedgerImportResultProjection } from "../../../shell/ledgerTransferContract";
 import type { InvoiceKind } from "../../../shell/ledgerInvoiceContract";
 import type { Translate } from "../../../shell/strings";
 import { formatSize } from "../../../shared/numbers";
@@ -108,7 +109,7 @@ export function ImportBankPreview({
   choices: Record<string, AccountKey>;
   reading: Set<string>;
   onChoose(preview: ReadPreview, account: AccountKey): void;
-  shown(preview: ReadPreview): LedgerImportResult;
+  shown(preview: ReadPreview): LedgerImportResultProjection;
   nothingNew: boolean;
 }) {
   const ids = useId();
@@ -122,7 +123,7 @@ export function ImportBankPreview({
   const read = previews.filter(
     (preview): preview is ReadPreview => preview.kind === "read",
   );
-  const total = (pick: (result: LedgerImportResult) => number) =>
+  const total = (pick: (result: LedgerImportResultProjection) => number) =>
     read.reduce((sum, preview) => sum + pick(shown(preview)), 0);
   const accountName = (id: string) => {
     const account = accounts.find((held) => held.id === id);
