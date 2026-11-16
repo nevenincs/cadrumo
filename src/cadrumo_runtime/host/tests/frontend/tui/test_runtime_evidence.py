@@ -729,6 +729,7 @@ async def test_a_refused_extraction_raises_its_recorded_reason_with_the_verdict_
     assert restored is not None
     # Crossing the process boundary, the verdict carries the sentence served for a
     # refusal with no way out; everything else is the verdict the reader raised.
+    assert restored.no_recovery_words is not None
     assert restored.no_recovery_words
     assert restored.no_recovery_words_language is not None
     assert restored.model_copy(update={"no_recovery_words": None, "no_recovery_words_language": None}) == verdict

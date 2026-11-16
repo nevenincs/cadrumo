@@ -2,6 +2,7 @@
 //! A value outside a closed set is a protocol failure, never passed on, and
 //! nothing the product's inventory carries beyond the named fields is
 //! forwarded.
+use crate::shell::relay::Failure;
 use crate::shell::sign_in::wire::Outcome;
 use cadrumo_application::error::application::{ApplicationError, ErrorCode, Operation};
 use serde::{Deserialize, Serialize};
@@ -74,6 +75,18 @@ pub fn refusal(reason: &str) -> Refusal {
     }
 }
 
+/// What a read over the person's relay failed with. A runtime refusal keeps
+/// the meaning of its reason; a lost sign-in is one; a relay that did not
+/// answer, or answered what the host cannot pass on, is a failed read.
+pub fn read_failure(failure: Failure) -> CommandFailure {
+    match (failure.code, failure.reason.as_deref()) {
+        ("not_signed_in", _) => Refusal::NotSignedIn.into(),
+        ("refused", Some(reason)) if reason != "unavailable" => refusal(reason).into(),
+        ("refused", None) => Refusal::Unknown.into(),
+        _ => protocol().into(),
+    }
+}
+
 /// Where a grant stands in the profile.
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "snake_case")]
@@ -116,10 +129,6 @@ pub struct Revoked {
     pub cleanup_pending: bool,
 }
 
-#[derive(Deserialize)]
-struct ListResult {
-    inventory: Inventory,
-}
 #[derive(Deserialize)]
 struct Inventory {
     grants: Vec<Grant>,
@@ -234,13 +243,10 @@ fn instant(text: &str) -> Option<(i64, u32)> {
     ))
 }
 
-/// Every grant the profile lists, each with the latest use of its keys.
-pub fn list(outcome: Outcome) -> Result<Answer, CommandFailure> {
-    let result = match outcome {
-        Outcome::Refused { refusal: row, .. } => return Err(refusal(&row.code).into()),
-        Outcome::Success { result, .. } => result,
-    };
-    let ListResult { inventory } = serde_json::from_value(result).map_err(|_| protocol())?;
+/// Every grant the profile's inventory projection lists, each with the
+/// latest use of its keys.
+pub fn inventory(projection: serde_json::Value) -> Result<Answer, CommandFailure> {
+    let inventory: Inventory = serde_json::from_value(projection).map_err(|_| protocol())?;
     if inventory.grants.len() > CREDENTIAL_LIMIT || inventory.keys.len() > CREDENTIAL_LIMIT * 8 {
         return Err(protocol().into());
     }
@@ -360,11 +366,8 @@ mod tests {
         }
     }
 
-    fn inventory(grants: &[Value], keys: &[Value]) -> Outcome {
-        success(json!({
-            "profile_id": OTHER, "operation_id": "op-1",
-            "inventory": {"grants": grants, "keys": keys, "requests": []}
-        }))
+    fn projection(grants: &[Value], keys: &[Value]) -> Value {
+        json!({"grants": grants, "keys": keys, "requests": []})
     }
 
     fn failed<T: std::fmt::Debug>(result: Result<T, CommandFailure>) -> Value {
@@ -383,7 +386,7 @@ mod tests {
 
     #[test]
     fn a_listing_is_read_into_the_closed_shapes_the_window_reads() {
-        let answer = list(inventory(
+        let answer = inventory(projection(
             &[grant(GRANT)],
             &[key(GRANT, json!("2026-10-14T10:00:00Z"))],
         ))
@@ -404,12 +407,18 @@ mod tests {
 
     #[test]
     fn an_empty_inventory_is_a_listing_and_a_grant_never_used_has_no_last_use() {
-        assert!(list(inventory(&[], &[])).unwrap().credentials.is_empty());
+        assert!(
+            inventory(projection(&[], &[]))
+                .unwrap()
+                .credentials
+                .is_empty()
+        );
         let mut bare = grant(GRANT);
         bare["scope"] = json!({});
-        let sent =
-            serde_json::to_value(list(inventory(&[bare], &[key(GRANT, Value::Null)])).unwrap())
-                .unwrap();
+        let sent = serde_json::to_value(
+            inventory(projection(&[bare], &[key(GRANT, Value::Null)])).unwrap(),
+        )
+        .unwrap();
         assert_eq!(sent["credentials"][0]["last_used_at"], Value::Null);
         assert_eq!(sent["credentials"][0]["categories"], json!([]));
         assert_eq!(sent["credentials"][0]["all_operations"], false);
@@ -425,7 +434,8 @@ mod tests {
             key(OTHER, json!("2030-01-01T00:00:00Z")),
             key(GRANT, Value::Null),
         ];
-        let sent = serde_json::to_value(list(inventory(&[grant(GRANT)], &keys)).unwrap()).unwrap();
+        let sent =
+            serde_json::to_value(inventory(projection(&[grant(GRANT)], &keys)).unwrap()).unwrap();
         // 11:30 at +02:00 is 09:30Z, before 10:00Z: the first stays.
         assert_eq!(
             sent["credentials"][0]["last_used_at"],
@@ -435,7 +445,8 @@ mod tests {
             key(GRANT, json!("2026-10-14T10:00:00Z")),
             key(GRANT, json!("2026-10-14T13:30:00+02:00")),
         ];
-        let sent = serde_json::to_value(list(inventory(&[grant(GRANT)], &keys)).unwrap()).unwrap();
+        let sent =
+            serde_json::to_value(inventory(projection(&[grant(GRANT)], &keys)).unwrap()).unwrap();
         assert_eq!(
             sent["credentials"][0]["last_used_at"],
             "2026-10-14T13:30:00+02:00"
@@ -499,31 +510,39 @@ mod tests {
         no_issue.as_object_mut().unwrap().remove("valid_from");
         for row in [state, category, id, instant_bad, flag, no_state, no_issue] {
             assert_eq!(
-                failed(list(inventory(std::slice::from_ref(&row), &[])))["code"],
+                failed(inventory(projection(std::slice::from_ref(&row), &[])))["code"],
                 "read_failed",
                 "{row}"
             );
         }
         assert_eq!(
-            failed(list(inventory(
+            failed(inventory(projection(
                 &[grant(GRANT), grant(&GRANT.to_uppercase())],
                 &[]
             )))["code"],
             "read_failed"
         );
         assert_eq!(
-            failed(list(inventory(&[grant(GRANT)], &[key("x", Value::Null)])))["code"],
+            failed(inventory(projection(
+                &[grant(GRANT)],
+                &[key("x", Value::Null)]
+            )))["code"],
             "read_failed"
         );
         assert_eq!(
-            failed(list(inventory(
+            failed(inventory(projection(
                 &[grant(GRANT)],
                 &[key(GRANT, json!("soon"))]
             )))["code"],
             "read_failed"
         );
-        for result in [json!({}), json!({"inventory": {"grants": []}}), json!([])] {
-            assert_eq!(failed(list(success(result)))["code"], "read_failed");
+        for result in [
+            json!({}),
+            json!({"grants": []}),
+            json!({"inventory": {"grants": [], "keys": []}}),
+            json!([]),
+        ] {
+            assert_eq!(failed(inventory(result))["code"], "read_failed");
         }
     }
 
@@ -532,9 +551,12 @@ mod tests {
         let many: Vec<Value> = (0..=CREDENTIAL_LIMIT)
             .map(|n| grant(&format!("00000000-0000-4000-8000-{n:012x}")))
             .collect();
-        assert_eq!(failed(list(inventory(&many, &[])))["code"], "read_failed");
         assert_eq!(
-            list(inventory(&many[..CREDENTIAL_LIMIT], &[]))
+            failed(inventory(projection(&many, &[])))["code"],
+            "read_failed"
+        );
+        assert_eq!(
+            inventory(projection(&many[..CREDENTIAL_LIMIT], &[]))
                 .unwrap()
                 .credentials
                 .len(),
@@ -549,7 +571,7 @@ mod tests {
         row["label"] = json!("laptop");
         let mut used = key(GRANT, Value::Null);
         used["verifier"] = json!("also-private");
-        let sent = serde_json::to_string(&list(inventory(&[row], &[used])).unwrap()).unwrap();
+        let sent = serde_json::to_string(&inventory(projection(&[row], &[used])).unwrap()).unwrap();
         assert!(!sent.contains("must-not-travel") && !sent.contains("laptop"));
         assert!(!sent.contains("also-private") && !sent.contains("destination"));
     }
@@ -587,15 +609,50 @@ mod tests {
             ("", "unknown"),
         ] {
             assert_eq!(
-                failed(list(refused(reason))),
-                json!({"code": code}),
-                "{reason}"
-            );
-            assert_eq!(
                 failed(revoked(refused(reason), GRANT)),
                 json!({"code": code}),
                 "{reason}"
             );
+        }
+    }
+
+    fn relayed(code: &'static str, reason: Option<&str>) -> Value {
+        let mut failure = Failure::new(code);
+        failure.reason = reason.map(str::to_owned);
+        serde_json::to_value(read_failure(failure)).unwrap()
+    }
+
+    #[test]
+    fn a_relayed_read_failure_keeps_the_runtimes_reason_and_an_unanswered_read_failed() {
+        for (reason, code) in [
+            ("human_authority_required", "person_act_required"),
+            ("administration_denied", "person_act_required"),
+            ("profile_locked", "profile_locked"),
+            ("session_expired", "not_signed_in"),
+            ("authentication_required", "not_signed_in"),
+            ("conflict", "unknown"),
+        ] {
+            assert_eq!(
+                relayed("refused", Some(reason)),
+                json!({"code": code}),
+                "{reason}"
+            );
+        }
+        assert_eq!(relayed("refused", None), json!({"code": "unknown"}));
+        assert_eq!(
+            relayed("not_signed_in", None),
+            json!({"code": "not_signed_in"})
+        );
+        // The relay's own unavailability, a lost operation and a result the
+        // host refused are a read that failed, as before.
+        for (code, reason) in [
+            ("refused", Some("unavailable")),
+            ("unavailable", None),
+            ("not_admitted", Some("unknown_operation")),
+        ] {
+            let sent = relayed(code, reason);
+            assert_eq!(sent["code"], "read_failed", "{code} {reason:?}");
+            assert_eq!(sent["operation"], "cli");
         }
     }
 

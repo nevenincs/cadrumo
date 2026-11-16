@@ -469,28 +469,22 @@ impl Mapping {
             .and_then(Value::as_array)
             .ok_or(())?
             .iter()
-            .filter_map(|option| {
-                let kind = text(option, "kind")?;
-                if !matches!(
-                    kind,
-                    "allow_once"
-                        | "allow_session"
-                        | "allow_always"
-                        | "reject_once"
-                        | "reject_always"
-                ) {
-                    return None;
-                }
-                Some(ApprovalOption {
+            .map(|option| {
+                // The agent offers only these: nothing it serves outlives the session.
+                let kind = text(option, "kind")
+                    .filter(|kind| matches!(*kind, "allow_once" | "allow_session" | "reject_once"))
+                    .ok_or(())?;
+                Ok(ApprovalOption {
                     option_id: text(option, "option_id")
-                        .filter(|id| !id.is_empty())?
+                        .filter(|id| !id.is_empty())
+                        .ok_or(())?
                         .to_owned(),
                     name: text(option, "name").map(str::to_owned),
                     kind: kind.to_owned(),
                 })
             })
-            .collect();
-        // An option the column cannot word is left out; none at all cannot be answered.
+            .collect::<Result<_, ()>>()?;
+        // An option outside the agent's schema refuses the frame; none at all cannot be answered.
         if options.is_empty() {
             return Err(());
         }
@@ -991,6 +985,28 @@ mod tests {
                 )],
             ),
             (
+                "an approval offering a remembering kind the agent never serves",
+                vec![frame(
+                    "permission_request",
+                    Some(1),
+                    json!({"request_id": "p1", "options": [
+                        {"option_id": "a", "name": "A", "kind": "allow_once"},
+                        {"option_id": "b", "name": "B", "kind": "allow_always"}
+                    ]}),
+                )],
+            ),
+            (
+                "an approval with an option outside the agent's kinds",
+                vec![frame(
+                    "permission_request",
+                    Some(1),
+                    json!({"request_id": "p1", "options": [
+                        {"option_id": "a", "name": "A", "kind": "reject_once"},
+                        {"option_id": "b", "name": "B", "kind": "reject_always"}
+                    ]}),
+                )],
+            ),
+            (
                 "unanswerable approval",
                 vec![frame(
                     "permission_request",
@@ -1068,8 +1084,7 @@ mod tests {
                 "options": [
                     {"option_id": "allow", "name": "Allow once", "kind": "allow_once"},
                     {"option_id": "session", "name": "Allow for this session", "kind": "allow_session"},
-                    {"option_id": "never", "kind": "reject_always"},
-                    {"option_id": "odd", "name": "Odd", "kind": "sometimes"}
+                    {"option_id": "never", "kind": "reject_once"}
                 ]
             }),
         )));
@@ -1083,7 +1098,7 @@ mod tests {
                 "options": [
                     {"option_id": "allow", "name": "Allow once", "kind": "allow_once"},
                     {"option_id": "session", "name": "Allow for this session", "kind": "allow_session"},
-                    {"option_id": "never", "name": null, "kind": "reject_always"}
+                    {"option_id": "never", "name": null, "kind": "reject_once"}
                 ]
             }})
         );

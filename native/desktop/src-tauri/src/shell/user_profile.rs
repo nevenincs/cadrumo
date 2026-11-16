@@ -1,5 +1,6 @@
 //! Profile presentation over the held person's registered-operation relay.
 //! No repository, credential or profile policy lives in the desktop host.
+mod automation;
 pub(crate) mod censo;
 mod election;
 mod household;

@@ -32,6 +32,7 @@ from cadrumo.entrypoints.tui.ledger.tests.entries_door_fixtures import (
     MemoryEntriesLedger,
     entries_controller,
     entry_id,
+    served_add_form,
 )
 from cadrumo.entrypoints.tui.ledger.workspace_screen import LedgerWorkspaceScreen
 from cadrumo.entrypoints.tui.tests.settling import settle_host, settle_host_until
@@ -279,7 +280,7 @@ def _screen(
             back_to=lambda again: LedgerEntriesBrowseScreen(again, doors),
         )
     if kind == "add":
-        return LedgerEntryAddScreen(controller, doors)
+        return LedgerEntryAddScreen(controller, doors, served_add_form())
     if kind == "export":
         return LedgerEntriesExportScreen(controller, doors)
     if kind == "health":
