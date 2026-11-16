@@ -68,10 +68,11 @@ from .exit_codes import FAILED, OK
 from .paths import STORAGE_ROOT_ENV
 
 if TYPE_CHECKING:
+    from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
     from cadrumo.entrypoints.tests.persona_materialisation import MaterialisedPersona
 
+    from .acceptance.persona_table.planner import PreparedReturn
     from .acceptance.persona_table.rows import PlannedRow
-    from .acceptance.persona_table.sweep import PreparedReturn
 
 CREDENTIAL_SOURCE: Final = "persona_materialisation.PERSONA_PROFILE_CREDENTIAL"
 """Where the profile passphrase is defined; the tool never prints the passphrase itself."""
@@ -207,6 +208,11 @@ def window_split(materialised: MaterialisedPersona, plan: PlannedRow) -> WindowS
         made = statements_for(materialised, plan)
     except PersonaMaterialisationError:
         return WindowSplit()
+    return split_statements(made)
+
+
+def split_statements(made: Sequence[Statement]) -> WindowSplit:
+    """Split the table's ``made`` statements, in its order, between the world and the window."""
     entered = _entered_in_window(made)
     return WindowSplit(
         left=frozenset(statement.kind for statement in entered),
@@ -232,7 +238,7 @@ def _same_entry(first: Statement, second: Statement) -> bool:
     return first.kind is second.kind and first.target == second.target and first.row == second.row
 
 
-def _carry_figures(materialised: MaterialisedPersona, plan: PlannedRow, statement: Statement) -> list[dict[str, str]]:
+def _carry_figures(operation: PinnedAuthorityOperation, plan: PlannedRow, statement: Statement) -> list[dict[str, str]]:
     """The binding each stated carry amount is entered on, as the prior-values offer keys its entries.
 
     Each binding of a family the statement names takes the amount stated for the boxes the year's registry
@@ -241,7 +247,7 @@ def _carry_figures(materialised: MaterialisedPersona, plan: PlannedRow, statemen
     Raises:
         PersonaMaterialisationError: When one binding's boxes are stated with different amounts.
     """
-    revision = materialised.world.operation.snapshot(
+    revision = operation.snapshot(
         plan.modelo, filing_year=plan.year, period=plan.period, grade=RegistryAuthorityGrade.CALCULATION
     ).revision
     fed = casillas_by_binding(revision)
@@ -263,7 +269,7 @@ def _window_statement(statement: Statement, materialised: MaterialisedPersona, p
     record: dict[str, Any] = dict(statement_record(statement))
     record["after_calculation"] = statement.phase in NEEDS_CALCULATION
     if statement.kind is StatementKind.PRIOR_CARRIES and statement.amounts:
-        record["figures"] = _carry_figures(materialised, plan, statement)
+        record["figures"] = _carry_figures(materialised.world.operation, plan, statement)
     if statement.kind is StatementKind.WORK_INCOME_NONE:
         record["families"] = [AbsenceAttestationFamily.RENTA_TRABAJO_INCOME_NOT_STATED.value]
     if statement.kind is StatementKind.RENTAL_CARRY:

@@ -85,8 +85,8 @@ class ArrendamientoRecord(BaseModel):
     arrendatario_entidad_tipo: ArrendatarioEntidadTipo | None = None
     arrendatario_entidad_finalidad: ArrendatarioEntidadFinalidad | None = None
     rehabilitacion_fecha: date | None = None
-    renta_inicial: Decimal | None = Field(default=None, ge=0)
-    renta_ultima_contrato_anterior: Decimal | None = Field(default=None, ge=0)
+    renta_inicial: Decimal | None = Field(default=None, ge=Decimal(0))
+    renta_ultima_contrato_anterior: Decimal | None = Field(default=None, ge=Decimal(0))
     arrendatario_pariente_art24: bool | None = None
     incumple_lau_17_6: bool | None = None
 
