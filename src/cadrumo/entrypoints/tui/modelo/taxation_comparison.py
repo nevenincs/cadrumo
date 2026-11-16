@@ -17,7 +17,6 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from decimal import Decimal, InvalidOperation
 from enum import StrEnum
 from typing import ClassVar, Final, Protocol, override, runtime_checkable
 
@@ -30,7 +29,6 @@ from textual.widgets.option_list import Option
 
 from ....application.modelo.taxation_comparison import TaxationRecommendation
 from ....application.modelo.taxation_comparison_operation import ModeloTaxationComparisonProjection
-from ....application.modelo.value_presentation import format_casilla_value
 from ....application.modelo.work_form_field_vocabulary import ModeloFormCasillaAddressV1
 from ....application.modelo.work_form_models import ModeloWorkForm
 from ....application.operations.error_detail import build_operation_error_detail
@@ -137,15 +135,6 @@ def _refusal_boxes(refusal_context: dict[str, str]) -> tuple[str, ...]:
     """The box ids a refusal lists, comma separated as the application serves them."""
     served = refusal_context.get(_CASILLA_IDS_CONTEXT, "")
     return tuple(part.strip() for part in served.split(",") if part.strip())
-
-
-def _amount(text: str, language: OutputLanguage) -> str:
-    """A served amount written as a box writes money, keeping the sign it was served with."""
-    try:
-        value = Decimal(text)
-    except InvalidOperation:
-        return text
-    return format_casilla_value(value, data_type="money", language=language)
 
 
 def _language_name(code: str) -> str:
@@ -381,15 +370,15 @@ class ModeloTaxationComparisonScreen(ModalScreen[str | None]):
             (
                 "#taxcmp-joint",
                 _JOINT_LOCALE_KEY,
-                projection.conjunta_cuota_resultante,
-                projection.conjunta_resultado,
+                projection.conjunta_cuota_resultante_words,
+                projection.conjunta_resultado_words,
                 TaxationRecommendation.CONJUNTA,
             ),
             (
                 "#taxcmp-individual",
                 _INDIVIDUAL_LOCALE_KEY,
-                projection.individual_cuota_resultante,
-                projection.individual_resultado,
+                projection.individual_cuota_resultante_words,
+                projection.individual_resultado_words,
                 TaxationRecommendation.INDIVIDUAL,
             ),
         ):
@@ -401,8 +390,8 @@ class ModeloTaxationComparisonScreen(ModalScreen[str | None]):
                 "\n".join(
                     (
                         heading,
-                        f"{tr(_TAX_LOCALE_KEY)}: {_amount(tax, language)}",
-                        f"{tr(_RESULT_LOCALE_KEY)}: {_amount(result, language)}",
+                        f"{tr(_TAX_LOCALE_KEY)}: {tax}",
+                        f"{tr(_RESULT_LOCALE_KEY)}: {result}",
                     )
                 )
             )

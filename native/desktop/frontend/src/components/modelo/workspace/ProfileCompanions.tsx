@@ -1,5 +1,6 @@
 import type { ProfileCompanionPort } from "../../../shell/profileHousehold";
 import type { UserProfilePort } from "../../../shell/userProfile";
+import type { ComponentProps } from "react";
 import { ImputationElection } from "./ImputationElection";
 
 /** The profile's reads and its one write door, which the profile's elements
@@ -19,8 +20,11 @@ export function ProfileCompanions({
   profile,
   taxYear,
   language,
+  memory,
 }: {
   kit: ProfileCompanionKit;
+  /** Where the elements hold what they read while the declaration is open. */
+  memory?: ComponentProps<typeof ImputationElection>["memory"];
   profile: string;
   taxYear: number;
   language: string;
@@ -33,6 +37,7 @@ export function ProfileCompanions({
         language={language}
         reads={kit.reads}
         change={kit.change}
+        memory={memory}
       />
     </div>
   );
