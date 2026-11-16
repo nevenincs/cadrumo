@@ -228,6 +228,11 @@ declare global {
     /** Holds the fixture's agent access answers until released, as a slow
      * service would. */
     __scenarioAgentAccessHold?: { hold(): void; release(): void };
+    /** Holds every agent read but the provider settings status (the agent's
+     * status and its watch, its catalog, its local models and engine, its
+     * skills and the access keys) until released, as a service slow
+     * everywhere but the settings would. */
+    __scenarioAgentReadsHold?: { hold(): void; release(): void };
     /** Commits a change to the fixture agent's local model list elsewhere. */
     __scenarioLocalModelsChangeElsewhere?: () => void;
     /** Which models the made-up computer holds, changed behind the window's
@@ -652,7 +657,7 @@ export function scenarioHost(
   // profile's too.
   const {
     agent,
-    session: agentSession,
+    session: servedSession,
     publishStatus,
     changeListElsewhere,
     selectedEngine,
@@ -707,11 +712,45 @@ export function scenarioHost(
       releaseAccess();
     },
   };
+  let readsHeld: Promise<void> | null = null;
+  let releaseReads = () => {};
+  window.__scenarioAgentReadsHold = {
+    hold() {
+      readsHeld = new Promise((release) => {
+        releaseReads = release;
+      });
+    },
+    release() {
+      readsHeld = null;
+      releaseReads();
+    },
+  };
+  const afterReads = async () => {
+    if (readsHeld) await readsHeld;
+  };
+  const heldSession = <Args extends unknown[], Result>(
+    read: ((...args: Args) => Promise<Result>) | undefined,
+  ) =>
+    read &&
+    (async (...args: Args) => {
+      await afterReads();
+      return read(...args);
+    });
+  const agentSession: typeof servedSession = {
+    ...servedSession,
+    status: heldSession(servedSession.status)!,
+    observeStatus: heldSession(servedSession.observeStatus)!,
+    providerCatalog: heldSession(servedSession.providerCatalog)!,
+    localModels: heldSession(servedSession.localModels),
+    localEngine: heldSession(servedSession.localEngine),
+    skills: heldSession(servedSession.skills),
+  };
   const agentAccess = agentAccessFixture({
     say,
     wait: async () => {
       await wait(options.latencyMs);
       if (accessHeld) await accessHeld;
+      await afterReads();
     },
     readable,
   });
