@@ -776,7 +776,7 @@ class ActivityAssetFilingHandoffExecutor:
                 handoff = await asyncio.to_thread(
                     operations.filing_handoff,
                     tax_year=payload.tax_year,
-                    m130_period=payload.requested_period(),
+                    m130_period=payload.requested_period(operation=context.authority_operation),
                     language=payload.output_language,
                 )
             except (
