@@ -41,6 +41,42 @@ _HEADER = """\
 #: The calendar definitions whose request and result the window reads, by definition id.
 CALENDAR_DEFINITIONS: tuple[str, ...] = ("overview.calendar",)
 
+#: The fields of the ``overview.calendar`` result the desktop host passes on to the window as the
+#: product served them, under the product's own names. The host reshapes every other field.
+HOST_PASSED_ON: tuple[str, ...] = ("suppressed_entries",)
+
+
+def _passed_on(defs: dict[str, Any]) -> str:
+    """The window's type for the calendar fields the host passes on unchanged.
+
+    The host reads the calendar the ``calendar`` read carries, so the fields are picked from that
+    snapshot's definition, found through the read rather than by its class name.
+    """
+    reads = [
+        properties
+        for definition in defs.values()
+        if (properties := definition.get("properties", {})).get("kind", {}).get("const") == "calendar"
+    ]
+    if len(reads) != 1:
+        raise SystemExit("overview.calendar serves no single calendar read")
+    snapshots = [
+        branch["$ref"].removeprefix("#/$defs/")
+        for branch in reads[0].get("calendar", {}).get("anyOf", [])
+        if "$ref" in branch
+    ]
+    if len(snapshots) != 1:
+        raise SystemExit("the calendar read carries no single calendar snapshot")
+    snapshot = snapshots[0]
+    missing = [name for name in HOST_PASSED_ON if name not in defs[snapshot].get("properties", {})]
+    if missing:
+        raise SystemExit(f"the calendar snapshot serves no field {', '.join(missing)}")
+    picked = " | ".join(literal(name) for name in HOST_PASSED_ON)
+    return (
+        "/** The fields of the calendar the desktop host passes on to the window as the\n"
+        " * product served them, under the product's own names. */\n"
+        f"export type FilingCalendarPassedOn = Pick<{ts_name(snapshot)}, {picked}>;"
+    )
+
 
 def _model_roots() -> list[tuple[str, str, type[BaseModel]]]:
     """Each definition's registered request and public result model, as ``(definition, role, model)``."""
@@ -89,6 +125,7 @@ def render() -> str:
         )
         + "\n};"
     )
+    blocks.append(_passed_on(defs))
     return _HEADER + "\n" + "\n\n".join(blocks) + "\n"
 
 

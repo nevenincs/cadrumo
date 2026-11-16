@@ -20,11 +20,18 @@ function PopoverAnchor(
   return <PopoverPrimitive.Anchor data-slot="popover-anchor" {...props} />;
 }
 
-/** The popover a popover was opened inside, for what only the inner one sees. */
-const EnclosingPopover = React.createContext<{
+/** What a popover offers the popovers opened inside it. */
+interface PopoverLayer {
   close: () => void;
+  /** Whether the node is in this popover or in one open inside it: a nested
+   * popover's content is portaled out of the enclosing one's. */
   holds: (node: Node) => boolean;
-} | null>(null);
+  /** Counts an inner popover's content as this one's while it is open. */
+  nest: (inner: PopoverLayer) => () => void;
+}
+
+/** The popover a popover was opened inside, for what only the inner one sees. */
+const EnclosingPopover = React.createContext<PopoverLayer | null>(null);
 
 /**
  * A non-modal surface anchored to its trigger. It closes on Escape or a
@@ -38,7 +45,9 @@ const EnclosingPopover = React.createContext<{
  * took focus in between keeps it: a menu opened in that moment would otherwise
  * lose focus to the trigger and close. If what took it is outside the popover
  * around this one, that one closes too: its own watch never saw focus leave,
- * for the element holding it was removed without losing it.
+ * for the element holding it was removed without losing it. Focus inside a
+ * popover opened within that one, as when the inner one is opened again in
+ * that moment, is still inside it.
  */
 function PopoverContent({
   className,
@@ -53,14 +62,20 @@ function PopoverContent({
 }: React.ComponentProps<typeof PopoverPrimitive.Content>) {
   const { ref: layer, button: dismiss } = useEscapeLayer(onEscapeKeyDown);
   const enclosing = React.useContext(EnclosingPopover);
-  const self = React.useMemo(
-    () => ({
+  const self = React.useMemo((): PopoverLayer => {
+    const inner = new Set<PopoverLayer>();
+    return {
       close: () => dismiss.current?.click(),
-      holds: (node: Node) =>
-        dismiss.current?.parentElement?.contains(node) ?? false,
-    }),
-    [dismiss],
-  );
+      holds: (node) =>
+        (dismiss.current?.parentElement?.contains(node) ?? false) ||
+        [...inner].some((layer) => layer.holds(node)),
+      nest: (layer) => {
+        inner.add(layer);
+        return () => inner.delete(layer);
+      },
+    };
+  }, [dismiss]);
+  React.useEffect(() => enclosing?.nest(self), [enclosing, self]);
   return (
     <PopoverPrimitive.Portal>
       <PopoverPrimitive.Content
