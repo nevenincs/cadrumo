@@ -13,7 +13,6 @@ from datetime import date
 from typing import Any, cast
 
 from cadrumo.application import reference_catalogue as catalogue
-from cadrumo.application.modelo.registry_discovery import registry_bindings_for_year
 from cadrumo.application.reference_catalogue import PinnedReferenceRead, ReferenceQueryError
 from cadrumo.core.errors.error_codes import resolve_error_message
 from cadrumo.core.errors.hierarchy import CoreValidationError
@@ -30,7 +29,7 @@ _SCOPED = {"modelo", "filing_year", "period", "as_of"}
 _ALLOWED_COORDINATES = {
     "modelos": {"filing_year", "domain"},
     "support": set(),
-    "bindings": {"modelo", "filing_year", "as_of"},
+    "bindings": _SCOPED,
     "describe": _SCOPED,
     "casillas": _SCOPED | {"input_kind", "required", "form_number", "casilla_number"},
     "casilla": _SCOPED | {"casilla"},
@@ -75,8 +74,8 @@ def _identifier[IdentifierT](build: Callable[[str], IdentifierT], value: str) ->
 def _pinned_report(query: str, args: dict[str, Any], as_of: date | None) -> PinnedReferenceRead[object]:
     if query == "bindings":
         return catalogue.read_pinned_reference(
-            lambda operation: registry_bindings_for_year(
-                args["modelo"], filing_year=args["filing_year"], as_of=as_of, operation=operation
+            lambda operation: catalogue.list_bindings(
+                args["modelo"], year=args["filing_year"], period=args.get("period"), as_of=as_of, operation=operation
             )
         )
     if query == "support":
