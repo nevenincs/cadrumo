@@ -96,6 +96,11 @@ def _socket_address(endpoint: PosixEndpoint) -> str:
     return str(endpoint._path)
 
 
+def _socket_path_fits(path: Path) -> bool:
+    """Whether the socket is addressable: Linux names it through the held directory."""
+    return sys.platform == "linux" or len(os.fsencode(path)) < SOCKET_PATH_LIMIT
+
+
 def _connect_verified_socket(
     endpoint: PosixEndpoint,
     sock: socket.socket,
@@ -228,7 +233,7 @@ class PosixEndpoint:
         self._lock_fd: int | None = None
         self._listener: socket.socket | None = None
         self._socket_identity: tuple[int, int] | None = None
-        if sys.platform != "linux" and len(os.fsencode(self._path)) >= SOCKET_PATH_LIMIT:
+        if not _socket_path_fits(self._path):
             self.close()
             raise RefusalError(RefusalCode.UNAVAILABLE)
         if self._external_namespace and create_namespace:
