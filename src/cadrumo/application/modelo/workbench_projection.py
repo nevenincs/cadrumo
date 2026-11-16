@@ -252,6 +252,7 @@ class PublicModeloFormField(BaseModel):
     legal_refs: tuple[str, ...]
     also_appears_on: tuple[str, ...]
     standing: ModeloFormStanding
+    attention_rank: int
     edit_address: ModeloFormAddressV1
     confirmable: bool
     held_zero: bool
