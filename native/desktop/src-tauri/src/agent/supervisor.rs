@@ -343,9 +343,22 @@ impl Supervisor {
     /// makes again when the service publishes the agent ready.
     pub fn admin_now(&self) -> AdminWait {
         self.begin();
-        let admitted = lock(&self.shared.admin).is_some();
-        self.settled_admission(admitted)
-            .unwrap_or(AdminWait::StillStarting)
+        if lock(&self.shared.admin).is_some() {
+            return AdminWait::Admitted;
+        }
+        // Stopped is the state before the supervisor's first observation and while a
+        // sign-in change awaits its fresh one: a start is on its way unless the
+        // service is closed, has no launch, or published why it does not serve.
+        let not_coming = match lock(&self.shared.status).state {
+            State::Refused { .. } => true,
+            State::Stopped => self.launch.is_none(),
+            State::Starting | State::Ready { .. } => false,
+        };
+        if self.shared.closed.load(Ordering::Acquire) || not_coming {
+            AdminWait::NotStarting
+        } else {
+            AdminWait::StillStarting
+        }
     }
 
     /// Admitted, or not starting, or `None` while the service is still starting.
