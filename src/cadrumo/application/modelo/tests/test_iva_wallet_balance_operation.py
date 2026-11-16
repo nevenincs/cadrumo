@@ -13,6 +13,7 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel, ValidationError
 
+from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from cadrumo.domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
 from cadrumo.domain.iva_compensation.balance import IvaWalletBalanceReport
@@ -106,9 +107,14 @@ def test_operation_has_credential_free_request_and_closed_result() -> None:
         "lot_count",
         "next_expiry_year",
         "unallocated_applied_amount",
+        "words_language",
+        "total_balance_words",
+        "active_balance_words",
+        "expired_balance_words",
+        "unallocated_applied_amount_words",
     }
     with pytest.raises(ValidationError):
-        ModeloIvaWalletBalanceProjection(
+        ModeloIvaWalletBalanceProjection.worded(
             profile_id=_PROFILE,
             as_of_year=_YEAR,
             total_balance="-1",
@@ -117,6 +123,7 @@ def test_operation_has_credential_free_request_and_closed_result() -> None:
             lot_count=0,
             next_expiry_year=None,
             unallocated_applied_amount="0",
+            language=OutputLanguage.EN,
         )
 
 
@@ -259,3 +266,26 @@ def test_executor_refuses_a_factory_bundle_for_another_profile(monkeypatch: pyte
     assert factory.operations == [_AUTHORITY]
     assert events.effects == []
     assert operands.values == []
+
+
+def test_the_balance_serves_each_amount_in_words_and_refuses_words_that_say_another_amount() -> None:
+    projection = ModeloIvaWalletBalanceProjection.worded(
+        profile_id=_PROFILE,
+        as_of_year=_YEAR,
+        total_balance="1234.5",
+        active_balance="1234.5",
+        expired_balance="0",
+        lot_count=1,
+        next_expiry_year=None,
+        unallocated_applied_amount="0",
+        language=OutputLanguage.ES,
+    )
+    euro = chr(0xA0) + "€"
+
+    assert projection.words_language is OutputLanguage.ES
+    assert projection.total_balance_words == f"1.234,50{euro}"
+    assert projection.expired_balance_words == f"0,00{euro}"
+    with pytest.raises(ValidationError, match="total_balance_words does not say total_balance"):
+        ModeloIvaWalletBalanceProjection.model_validate(
+            projection.model_dump() | {"total_balance_words": f"1.000,00{euro}"}
+        )
