@@ -123,6 +123,10 @@ try {
     & $DevPython -B -c 'import runpy, sys; runpy.run_path(sys.argv.pop(1), run_name="__main__")' (Join-Path $repository 'native\desktop\src-tauri\src\shell\provider_settings\status_contract_fixture.py') --build-dir $buildRoot --output $providerStatusFixture
     if ($LASTEXITCODE -ne 0) { throw 'Cannot generate the canonical provider status fixture.' }
     Set-TestEnvironment 'CADRUMO_PROVIDER_STATUS_CONTRACT_FIXTURE' $providerStatusFixture
+    $calendarReadFixture = Join-Path $testing 'calendar-read-contract.json'
+    & $DevPython -B -c 'import runpy, sys; runpy.run_path(sys.argv.pop(1), run_name="__main__")' (Join-Path $repository 'native\desktop\src-tauri\src\shell\user_profile\calendar_read_fixture.py') --build-dir $buildRoot --output $calendarReadFixture
+    if ($LASTEXITCODE -ne 0) { throw 'Cannot generate the canonical calendar read fixture.' }
+    Set-TestEnvironment 'CADRUMO_CALENDAR_READ_CONTRACT_FIXTURE' $calendarReadFixture
     $action = @{ Unit='test-unit'; Package='test-package'; Clippy='clippy-backend' }[$Mode]
     $arguments = @((Join-Path $repository 'native\desktop\scripts\tauri.mjs'), $action)
     if ($Filter) { $arguments += $Filter }
