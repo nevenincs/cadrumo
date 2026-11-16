@@ -33,6 +33,7 @@ from ....application.calculations.cross_period_clean_state import (
 from ....application.calculations.cross_period_models import (
     CrossPeriodCleanStateBlocker,
     CrossPeriodDependencyEvidence,
+    operator_value_attestations,
 )
 from ....application.modelo.edit_models import (
     ModeloBindingEditIntentV1,
@@ -49,7 +50,6 @@ from ....application.modelo.incn_periodo_anterior import (
     IncnPeriodoAnteriorStores,
     resolve_incn_periodo_anterior,
 )
-from ....application.modelo.verification_cross_period import operator_value_attestations
 from ....application.modelo.work_form_service import modelo_form_snapshot
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.casilla_id import CasillaId

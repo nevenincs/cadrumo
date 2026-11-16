@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import type { DataGridHandle } from "@/components/ui/dataGridTypes";
 import { facts } from "@/shell/compose";
-import type { LedgerPort, LedgerRow } from "../../../shell/ledger";
+import type { LedgerPort } from "../../../shell/ledger";
 import {
   CLASSIFICATION_OF,
   categorySplit,
@@ -27,6 +27,7 @@ import {
 import type { Translate } from "../../../shell/strings";
 import { typedPoints } from "../editing/editingModel";
 import { blockText, categoryLabel, classificationLabel } from "./movementWords";
+import type { LedgerTransactionReviewProjection } from "../../../shell/ledgerReadContract";
 
 /** Above this many movements classified otherwise, Personal, which asks
  * nothing else, asks once before it changes them. */
@@ -75,7 +76,7 @@ export function useClassifyCommand({
 }: {
   t: Translate;
   port: LedgerPort;
-  byId: ReadonlyMap<string, LedgerRow>;
+  byId: ReadonlyMap<string, LedgerTransactionReviewProjection>;
   stage: StageState;
   /** The business-use ratios configured for the window's years. */
   ratios: ConfiguredRatios;

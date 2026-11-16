@@ -13,7 +13,6 @@ import {
   type LedgerFailureCode,
   type LedgerOutcome,
   type LedgerPort,
-  type LedgerRow,
 } from "./ledger";
 import type {
   LedgerAddResult,
@@ -41,6 +40,7 @@ import {
   type LedgerPeriod,
 } from "./ledgerGrammar";
 import { readWindow, rowsById, type LedgerReadFailure } from "./ledgerWindow";
+import type { LedgerTransactionReviewProjection } from "./ledgerReadContract";
 
 /** Why a step was not sent. */
 export type NotSentWhy =
@@ -640,22 +640,22 @@ export type SinceReadConflict =
   | {
       kind: "changed";
       transactionId: string;
-      before: LedgerRow;
-      after: LedgerRow;
+      before: LedgerTransactionReviewProjection;
+      after: LedgerTransactionReviewProjection;
     }
   | {
       /** Removed, or moved out of the period, since the page read it. */
       kind: "gone";
       transactionId: string;
-      before: LedgerRow | null;
+      before: LedgerTransactionReviewProjection | null;
     };
 
 /** Compares every staged movement's id and `modified_at` between the read
  * the page staged against and the read at the apply. */
 export function changedSinceRead(
   content: StagedContent,
-  read: ReadonlyMap<string, LedgerRow>,
-  fresh: ReadonlyMap<string, LedgerRow>,
+  read: ReadonlyMap<string, LedgerTransactionReviewProjection>,
+  fresh: ReadonlyMap<string, LedgerTransactionReviewProjection>,
 ): SinceReadConflict[] {
   const conflicts: SinceReadConflict[] = [];
   for (const id of stagedMovements(content)) {
@@ -677,11 +677,11 @@ export async function prepareApply(
   port: LedgerPort,
   period: LedgerPeriod | null,
   content: StagedContent,
-  read: ReadonlyMap<string, LedgerRow>,
+  read: ReadonlyMap<string, LedgerTransactionReviewProjection>,
 ): Promise<
   | {
       kind: "ready";
-      rows: Map<string, LedgerRow>;
+      rows: Map<string, LedgerTransactionReviewProjection>;
       conflicts: SinceReadConflict[];
     }
   | { kind: "failed"; failure: LedgerReadFailure }
@@ -796,7 +796,7 @@ export type UnknownResolution = (typeof UNKNOWN_RESOLUTIONS)[number];
 export function resolveUnknown(
   step: PlanStep,
   content: StagedContent,
-  fresh: ReadonlyMap<string, LedgerRow>,
+  fresh: ReadonlyMap<string, LedgerTransactionReviewProjection>,
 ): Map<string, UnknownResolution> {
   const found = new Map<string, UnknownResolution>();
   const fieldsSaved = (id: string, fields: StageField[]): UnknownResolution => {

@@ -94,7 +94,7 @@ def holds_only_carry_statements(head: CalculationRevision, carry_bindings: froze
     return (
         bool(stated)
         and stated <= carry_bindings
-        and set(layer.binding_overrides) == stated
+        and frozenset(layer.binding_overrides) == stated
         and all(layer.binding_overrides[binding_id] == ATTESTED_ZERO for binding_id in layer.attested_binding_ids)
     )
 

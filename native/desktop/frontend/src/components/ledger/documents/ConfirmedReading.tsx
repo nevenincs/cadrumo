@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 import { Icon } from "@/components/ui/icon";
 import { facts } from "../../../shell/compose";
-import type { LedgerRow } from "../../../shell/ledger";
 import type { EvidenceConfirmResult } from "../../../shell/ledgerDocumentOperations";
 import type { InvoiceMatchView } from "../../../shell/ledgerInvoiceMatch";
 import type { StageEvent, StagedAction } from "../../../shell/ledgerStage";
@@ -19,6 +18,7 @@ import {
   stagedLinks,
 } from "../matching/matchingModel";
 import { invoiceLine } from "../matching/matchingWords";
+import type { LedgerTransactionReviewProjection } from "../../../shell/ledgerReadContract";
 
 /**
  * A confirmed reading: the invoice it became, what differs from what was
@@ -41,7 +41,7 @@ export function ConfirmedReading({
   /** The offered link's button, focused when it arrives in time. */
   linkRef(button: HTMLButtonElement | null): void;
   confirmed: EvidenceConfirmResult;
-  rows: LedgerRow[] | null;
+  rows: LedgerTransactionReviewProjection[] | null;
   linkMatches: InvoiceMatchView;
   actions: StagedAction[];
   locale: string;

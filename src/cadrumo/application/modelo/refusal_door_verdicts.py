@@ -26,14 +26,12 @@ WORK_LIST_ACTION_ID: Final[str] = "operator.modelo.work.list"
 WORK_STATUS_ACTION_ID: Final[str] = "operator.modelo.work.status"
 WORK_REVISIONS_ACTION_ID: Final[str] = "operator.modelo.work.revisions"
 WORK_CALCULATE_ACTION_ID: Final[str] = "operator.modelo.work.calculate"
-WORK_SET_VALUE_ACTION_ID: Final[str] = "operator.modelo.work.set_value"
 WORK_VERIFY_ACTION_ID: Final[str] = "operator.modelo.work.verify"
 WORK_CREATE_ACTION_ID: Final[str] = "operator.modelo.work.create"
 DESCRIBE_ACTION_ID: Final[str] = "operator.modelo.describe"
 CASILLAS_ACTION_ID: Final[str] = "operator.modelo.casillas"
 BINDINGS_ACTION_ID: Final[str] = "operator.modelo.bindings.list"
 FILING_RECORD_LIST_ACTION_ID: Final[str] = "operator.modelo.filing_record.list"
-FILED_PULL_ACTION_ID: Final[str] = "operator.live.filed.pull"
 PROFILE_EDIT_ACTION_ID: Final[str] = "operator.profile.edit"
 PROFILE_LIST_ACTION_ID: Final[str] = "operator.profile.list"
 FILING_RECORD_IMPORT_ACTION_ID: Final[str] = "operator.modelo.filing_record.import"
@@ -167,7 +165,6 @@ __all__ = [
     "BINDINGS_ACTION_ID",
     "CASILLAS_ACTION_ID",
     "DESCRIBE_ACTION_ID",
-    "FILED_PULL_ACTION_ID",
     "FILING_RECORD_IMPORT_ACTION_ID",
     "FILING_RECORD_LIST_ACTION_ID",
     "PROFILE_EDIT_ACTION_ID",
@@ -177,7 +174,6 @@ __all__ = [
     "WORK_CREATE_ACTION_ID",
     "WORK_LIST_ACTION_ID",
     "WORK_REVISIONS_ACTION_ID",
-    "WORK_SET_VALUE_ACTION_ID",
     "WORK_STATUS_ACTION_ID",
     "WORK_VERIFY_ACTION_ID",
     "FactValue",

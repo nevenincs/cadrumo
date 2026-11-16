@@ -1,7 +1,6 @@
 import { expect, test } from "@playwright/test";
 import type { LedgerLlmSuggestion } from "../src/shell/ledgerMovementOperations";
 import type { LedgerStagedRowAnswer } from "../src/shell/ledgerMovementCheckContract";
-import type { LedgerRow } from "../src/shell/ledger";
 import { EMPTY_CONTENT, type StagedContent } from "../src/shell/ledgerStage";
 import {
   commonValue,
@@ -24,6 +23,7 @@ import { holdLedgerPeriods, ledgerPeriod } from "../src/shell/ledgerPeriods";
 import "./support/servedClassifications";
 import { hexId, movement } from "./support/ledger";
 import { planRecorded, recordedCheck } from "./support/stagedCheck";
+import type { LedgerTransactionReviewProjection } from "../src/shell/ledgerReadContract";
 
 // What the movement inspector works out without drawing. No page is
 // opened.
@@ -31,7 +31,10 @@ import { planRecorded, recordedCheck } from "./support/stagedCheck";
 const NONE: ReadonlySet<string> = new Set();
 
 /** The recorded answer about every one of `rows` with `content` staged. */
-const checkOf = (content: StagedContent, rows: readonly LedgerRow[]) =>
+const checkOf = (
+  content: StagedContent,
+  rows: readonly LedgerTransactionReviewProjection[],
+) =>
   recordedCheck(
     content,
     new Map(rows.map((row) => [row.transaction.transaction_id, row])),

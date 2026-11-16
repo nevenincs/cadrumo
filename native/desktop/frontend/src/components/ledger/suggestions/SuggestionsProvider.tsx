@@ -24,7 +24,6 @@ import type {
   LedgerKnownValueKind,
   LedgerKnownValuesResult,
   LedgerPort,
-  LedgerRow,
 } from "../../../shell/ledger";
 import type { OutputLanguage } from "../../../shell/ledger";
 import type {
@@ -61,6 +60,7 @@ import {
   partyTaxIdOptions,
   usedCodeOptions,
 } from "./ledgerSuggestions";
+import type { LedgerTransactionReviewProjection } from "../../../shell/ledgerReadContract";
 
 export type SuggestionKind =
   | "counterparty"
@@ -92,7 +92,7 @@ export type SuggestionScope = {
 
 type Held = {
   /** Every row drawn since the page opened, each as last drawn. */
-  rows: readonly LedgerRow[];
+  rows: readonly LedgerTransactionReviewProjection[];
   /** Values staged, and those saved since the page opened, by field. */
   staged: (field: string) => string[];
   /** Null until read, or where the read failed. */
@@ -190,8 +190,10 @@ function useStagedAndSaved(stage: StagedContent, applied: boolean) {
 }
 
 /** Every row drawn since the page opened, the newest drawing of each. */
-function useRowsSeen(rows: readonly LedgerRow[] | null) {
-  const seen = useRef(new Map<string, LedgerRow>());
+function useRowsSeen(
+  rows: readonly LedgerTransactionReviewProjection[] | null,
+) {
+  const seen = useRef(new Map<string, LedgerTransactionReviewProjection>());
   return useMemo(() => {
     for (const row of rows ?? [])
       seen.current.set(row.transaction.transaction_id, row);
@@ -223,7 +225,7 @@ export function LedgerSuggestions({
 }: {
   port: LedgerPort;
   reader: string | null;
-  rows: readonly LedgerRow[] | null;
+  rows: readonly LedgerTransactionReviewProjection[] | null;
   /** What is staged: what was typed in one movement suggests in the next. */
   stage: StagedContent;
   /** Whether the stage has been through an apply. */

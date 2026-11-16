@@ -106,7 +106,7 @@ def project_filing_summary(context: WorkFormContext) -> ModeloFormFiling | None:
 
 def inspection_facts(context: WorkFormContext) -> tuple[ModeloFormPageFacts, ...]:
     """Classify every casilla of the revision on one page, in official box order, when no usable layout exists."""
-    keyed = []
+    keyed: list[tuple[tuple[int, int, str], ModeloFormFieldFacts]] = []
     for casilla_id in context.rows:
         facts = casilla_facts(casilla_id, context, None)
         label = casilla_label(context.casillas[casilla_id], context).text

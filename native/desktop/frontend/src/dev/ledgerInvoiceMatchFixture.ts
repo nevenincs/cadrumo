@@ -20,10 +20,10 @@ import type {
   LedgerInvoiceMatchPair,
   LedgerInvoiceMatchSuggestion,
 } from "../shell/ledgerInvoiceContract";
-import type { LedgerRow } from "../shell/ledger";
+import type { LedgerTransactionReviewProjection } from "../shell/ledgerReadContract";
 
 /** The movements the stand-in reads need nothing of a row but the movement. */
-type HeldRow = Pick<LedgerRow, "transaction">;
+type HeldRow = Pick<LedgerTransactionReviewProjection, "transaction">;
 
 const SCALE = 6;
 const EARLY_DAYS = 3;

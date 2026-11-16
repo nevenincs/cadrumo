@@ -28,7 +28,7 @@ from ....domain.calculations.registry.tests.published_authority import (
     published_supported_filing_years,
 )
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
-from ....domain.filing.schema import ModeloDraft, ModeloDraftStatus
+from ....domain.filing.schema import ModeloDraft
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
@@ -37,11 +37,12 @@ from ....domain.modelos.calculation_revision import (
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.errors import ModeloError
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
+from ....domain.submission.models import ModeloDraftStatus
 from ...filing.export import render_filing_layout
 from ...filing.export_producer import filing_producer_values
 from ...filing.export_verification import mismatched_casilla_ids
 from ...filing.runtime import RegistrySchemaAccessor
-from ...filing.tests.export_support import _field_slice, _general_ingreso_producer_snapshot, export_schema_provider
+from ...filing.tests.export_support import export_schema_provider, field_slice, general_ingreso_producer_snapshot
 from ..export_preparation import build_revision_export_draft
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
@@ -153,7 +154,7 @@ def _draft(filing_year: int, code: str | None, operation: PinnedAuthorityOperati
 
 def _rendered(filing_year: int, draft: ModeloDraft) -> bytes:
     snapshot = _provider(filing_year).get_snapshot(_MODELO)
-    producer_snapshot = _general_ingreso_producer_snapshot(_MODELO)
+    producer_snapshot = general_ingreso_producer_snapshot(_MODELO)
     headers = {
         **filing_producer_values(producer_snapshot),
         FilingProducerKey.IRNR_DECLARACION_TIPO: "N",
@@ -176,7 +177,7 @@ def _tipo_renta_slice(filing_year: int) -> slice:
     record, field = next(
         (record, field) for record in layout.records for field in record.fields if field.casilla_id == _TIPO_RENTA
     )
-    return _field_slice(layout, record.id, field.id)
+    return field_slice(layout, record.id, field.id)
 
 
 def test_some_supported_year_exports_the_tipo_de_renta() -> None:

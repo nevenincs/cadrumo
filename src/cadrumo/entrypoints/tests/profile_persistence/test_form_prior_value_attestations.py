@@ -32,7 +32,8 @@ from ....application.modelo.edit_models import (
     ModeloEditBindingIntentKind,
     ModeloEditNonWritableBindingOverrideSurfaceEntryV1,
 )
-from ....application.modelo.work_form_models import ModeloFormBindingAddressV1, ModeloFormField, ModeloWorkForm
+from ....application.modelo.work_form_field_vocabulary import ModeloFormBindingAddressV1
+from ....application.modelo.work_form_models import ModeloFormField, ModeloWorkForm
 from ....application.modelo.work_form_prior_value_models import (
     ModeloFormPriorValueAttestation,
     ModeloFormPriorValueRefusal,

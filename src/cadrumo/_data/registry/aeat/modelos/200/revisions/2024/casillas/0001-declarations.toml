@@ -107,8 +107,8 @@ legal_refs = ["ley-49-2002:art-20"]
 [[revisions."2024".casillas]]
 id = "00524"
 continuidad_id = "00524"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1009 (DP200010 field 80): Estado de cambios patrimonio neto (II) - Operaciones con socios o propietarios - Aumentos de capital - Acciones y participaciones en patrimonio pro.... aeat-dr-200-2023 prints the identical field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:958 (DP200010 field 80), but the 2023 edition does not declare the row (its unsheeted box number is also printed as a reserve cohort box, which one unsheeted row cannot stand for)."
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:958 (DP200010 field 80): Estado de cambios patrimonio neto (II) - Operaciones con socios o propietarios - Aumentos de capital - Acciones y participaciones en patrimonio propias [00524]. aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1009 (DP200010 field 80): Estado de cambios patrimonio neto (II) - Operaciones con socios o propietarios - Aumentos de capital - Acciones y participaciones en patrimonio propias [00524]. Both print the same box on the same sheet for the same field with the same caption. The 2023 edition declares that field as DP200010:00524, because the 2023 design also prints box [00524] as a reserve cohort box; the 2024 edition declares it unsheeted."
 number = "00524"
 section = ["estado_de_cambios_patrimonio_neto_ii", "operaciones_con_socios_o_propietarios"]
 semantic_role = "is_ecpn_operaciones_socios_importe"
@@ -116,8 +116,8 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 [[revisions."2024".casillas]]
 id = "00525"
 continuidad_id = "00525"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1010 (DP200010 field 81): Estado de cambios patrimonio neto (II) - Operaciones con socios o propietarios - Aumentos de capital - Resultados ejercicios anteriores [00525]. aeat-dr-200-2023 prints the identical field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:959 (DP200010 field 81), but the 2023 edition does not declare the row (its unsheeted box number is also printed as a reserve cohort box, which one unsheeted row cannot stand for)."
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:959 (DP200010 field 81): Estado de cambios patrimonio neto (II) - Operaciones con socios o propietarios - Aumentos de capital - Resultados ejercicios anteriores [00525]. aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1010 (DP200010 field 81): Estado de cambios patrimonio neto (II) - Operaciones con socios o propietarios - Aumentos de capital - Resultados ejercicios anteriores [00525]. Both print the same box on the same sheet for the same field with the same caption. The 2023 edition declares that field as DP200010:00525, because the 2023 design also prints box [00525] as a reserve cohort box; the 2024 edition declares it unsheeted."
 number = "00525"
 section = ["estado_de_cambios_patrimonio_neto_ii", "operaciones_con_socios_o_propietarios"]
 semantic_role = "is_ecpn_operaciones_socios_importe"
@@ -125,8 +125,8 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 [[revisions."2024".casillas]]
 id = "00526"
 continuidad_id = "00526"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1011 (DP200010 field 82): Estado de cambios patrimonio neto (II) - Operaciones con socios o propietarios - Aumentos de capital - Otras aportaciones de socios [00526]. aeat-dr-200-2023 prints the identical field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:960 (DP200010 field 82), but the 2023 edition does not declare the row (its unsheeted box number is also printed as a reserve cohort box, which one unsheeted row cannot stand for)."
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:960 (DP200010 field 82): Estado de cambios patrimonio neto (II) - Operaciones con socios o propietarios - Aumentos de capital - Otras aportaciones de socios [00526]. aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1011 (DP200010 field 82): Estado de cambios patrimonio neto (II) - Operaciones con socios o propietarios - Aumentos de capital - Otras aportaciones de socios [00526]. Both print the same box on the same sheet for the same field with the same caption. The 2023 edition declares that field as DP200010:00526, because the 2023 design also prints box [00526] as a reserve cohort box; the 2024 edition declares it unsheeted."
 number = "00526"
 section = ["estado_de_cambios_patrimonio_neto_ii", "operaciones_con_socios_o_propietarios"]
 semantic_role = "is_ecpn_operaciones_socios_importe"

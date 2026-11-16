@@ -25,7 +25,7 @@ import {
 } from "../../ContextMenu";
 import type { Action } from "../../../shell/actions";
 import type { LedgerView } from "../../../shell/layout";
-import type { LedgerPort, LedgerRow } from "../../../shell/ledger";
+import type { LedgerPort } from "../../../shell/ledger";
 import {
   classifyAvailability,
   type ClassifyKind,
@@ -125,8 +125,10 @@ import type { InspectorSection } from "../inspector/inspectorModel";
 import { typing } from "../overview/overviewKeys";
 import { OVERVIEW_CHORDS } from "../ledgerChords";
 import { MovementOverview } from "../overview/MovementOverview";
+import type { LedgerTransactionReviewProjection } from "../../../shell/ledgerReadContract";
 
-const idOf = (row: LedgerRow) => row.transaction.transaction_id;
+const idOf = (row: LedgerTransactionReviewProjection) =>
+  row.transaction.transaction_id;
 
 /** The list read that keeps the movements an import flagged as likely
  * duplicates. */
@@ -428,7 +430,7 @@ export function MovementsSection({
   );
   // New movements sit at the top, outside every group and sort.
   const drafts = stage.content.drafts;
-  const draftGridRows = useMemo<GridRow<LedgerRow>[]>(
+  const draftGridRows = useMemo<GridRow<LedgerTransactionReviewProjection>[]>(
     () =>
       drafts.map((draft) => ({
         kind: "data",

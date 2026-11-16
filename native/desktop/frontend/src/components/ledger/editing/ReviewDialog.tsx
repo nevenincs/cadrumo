@@ -20,11 +20,7 @@ import type {
   CatalogueInvoiceSnapshot,
   LedgerInvoiceMatchJudgement,
 } from "../../../shell/ledgerInvoiceContract";
-import type {
-  LedgerPort,
-  LedgerRow,
-  OutputLanguage,
-} from "../../../shell/ledger";
+import type { LedgerPort, OutputLanguage } from "../../../shell/ledger";
 import { useInvoiceMatches } from "../../../shell/ledgerInvoiceMatch";
 import {
   plannedStepsReported,
@@ -75,6 +71,7 @@ import {
   SummaryTable,
 } from "./ReviewOutcomes";
 import { lockProgress, titleOf } from "./reviewLabels";
+import type { LedgerTransactionReviewProjection } from "../../../shell/ledgerReadContract";
 
 type Apply = ReturnType<typeof useLedgerApply>;
 
@@ -186,7 +183,7 @@ function RuleApplies({
   onDrop,
 }: {
   actions: Extract<StagedAction, { kind: "rule_apply" }>[];
-  rows: ReadonlyMap<string, LedgerRow>;
+  rows: ReadonlyMap<string, LedgerTransactionReviewProjection>;
   onDrop: (id: string) => void;
 }) {
   const t = useStrings();
@@ -282,7 +279,7 @@ function PermanentLinks({
 }: {
   links: {
     id: string;
-    row: LedgerRow | undefined;
+    row: LedgerTransactionReviewProjection | undefined;
     invoice: CatalogueInvoiceSnapshot | undefined;
     invoiceId: string;
     /** What the ledger found against the link; null until it has said. */
@@ -428,7 +425,7 @@ function Approvals({
   locale,
 }: {
   approvals: Extract<StagedAction, { kind: "suggestion" }>[];
-  rows: ReadonlyMap<string, LedgerRow>;
+  rows: ReadonlyMap<string, LedgerTransactionReviewProjection>;
   locale: string;
 }) {
   const t = useStrings();
@@ -512,7 +509,7 @@ function entriesOf(
   locale: string,
   content: StagedContent,
   plan: LedgerPlan,
-  rows: ReadonlyMap<string, LedgerRow>,
+  rows: ReadonlyMap<string, LedgerTransactionReviewProjection>,
 ): Entry[] {
   const entries: Entry[] = [];
   for (const entry of plan.entries) {
@@ -689,7 +686,8 @@ function MovementList({
  * Technical details; then the apply with each part's progress and every
  * row's outcome.
  */
-const NO_ROWS: ReadonlyMap<string, LedgerRow> = new Map();
+const NO_ROWS: ReadonlyMap<string, LedgerTransactionReviewProjection> =
+  new Map();
 
 export function ReviewDialog({
   apply,

@@ -4,7 +4,6 @@ import type {
   JsonObject,
   LedgerOutcome,
   LedgerPort,
-  LedgerRow,
 } from "../src/shell/ledger";
 import {
   changedSinceRead,
@@ -47,6 +46,7 @@ import {
   fixtureInstant,
   fixtureYear,
 } from "../src/dev/fixtureDates";
+import type { LedgerTransactionReviewProjection } from "../src/shell/ledgerReadContract";
 
 // The apply runner over a fake port: these check the order and the
 // outcomes of the orchestration, not the ledger's own answers.
@@ -58,7 +58,7 @@ const business = (id: string, extra = {}) =>
     category_id: "material_oficina",
     ...extra,
   });
-const rowsOf = (...rows: LedgerRow[]) =>
+const rowsOf = (...rows: LedgerTransactionReviewProjection[]) =>
   new Map(rows.map((row) => [row.transaction.transaction_id, row]));
 
 const A = hexId("a");
@@ -138,7 +138,7 @@ const definitionOf = (call: Call) =>
  * definition from `answers` in turn. */
 async function apply(
   content: StagedContent,
-  rows: Map<string, LedgerRow>,
+  rows: Map<string, LedgerTransactionReviewProjection>,
   answers: Record<string, FakeAnswer[]>,
 ): Promise<{ plan: LedgerPlan; report: ApplyReport; calls: Call[] }> {
   const plan = planRecorded(content, { rows });

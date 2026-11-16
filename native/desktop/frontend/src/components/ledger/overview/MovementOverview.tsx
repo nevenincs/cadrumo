@@ -1,10 +1,11 @@
-import type { LedgerPort, LedgerRow } from "../../../shell/ledger";
+import type { LedgerPort } from "../../../shell/ledger";
 import { isTransactionPrefix } from "../../../shell/ledgerGrammar";
 import type { OwnAccountChoice } from "../../../shell/ledgerMovementReads";
 import { useStrings } from "../../../shell/strings";
 import { useLedgerRead } from "../inspector/useInspectorReads";
 import { EntryOverview, type OverviewAction } from "./EntryOverview";
 import { movementOverview } from "./movementOverviewModel";
+import type { LedgerTransactionReviewProjection } from "../../../shell/ledgerReadContract";
 
 /**
  * The overview of one stored movement. It reads where the movement came
@@ -25,7 +26,7 @@ export function MovementOverview({
   onClosed,
 }: {
   port: LedgerPort;
-  row: LedgerRow;
+  row: LedgerTransactionReviewProjection;
   /** Which read of the window `row` comes from. */
   generation: number | string;
   /** What readiness found on it; null until readiness was measured. */

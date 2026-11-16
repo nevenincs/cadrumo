@@ -4,11 +4,12 @@
 // apply. The page draws stored values; the effective row here exists to
 // check a staged change against the others before anything is sent.
 
-import type { FileToken, LedgerDecision, LedgerRow } from "./ledger";
+import type { FileToken, LedgerDecision } from "./ledger";
 import type { LedgerClassifyRequest } from "./ledgerMovementOperations";
 import type { LedgerStagedDraftField } from "./ledgerMovementCheckContract";
 import { fieldsDroppedBy } from "./ledgerClassifications";
 import { isTransactionPrefix, sameDecimal } from "./ledgerGrammar";
+import type { LedgerTransactionReviewProjection } from "./ledgerReadContract";
 
 /** Every movement field the page can stage a change to. */
 export const STAGE_FIELDS = [
@@ -577,7 +578,7 @@ export function reconcileMovementSelection(
 /** A movement field as the read shows it: null when empty, undefined when
  * the read does not carry it. */
 export function storedFieldValue(
-  row: LedgerRow,
+  row: LedgerTransactionReviewProjection,
   field: StageField,
 ): string | null | undefined {
   const t = row.transaction;
@@ -599,7 +600,7 @@ export type MovementFacts = Record<StageField, string | null | undefined>;
 /** The movement as it would be once its staged changes are saved. The page
  * draws the stored row; this is for checking staged changes only. */
 export function effectiveFacts(
-  row: LedgerRow,
+  row: LedgerTransactionReviewProjection,
   changes: StagedRowChanges | undefined,
 ): MovementFacts {
   const facts = {} as MovementFacts;

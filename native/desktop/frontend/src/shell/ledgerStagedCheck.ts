@@ -7,7 +7,7 @@ import { ReadSessionScheduler } from "./readSessionScheduler";
 // staged work stays and the action waits.
 
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
-import type { LedgerPort, LedgerRow } from "./ledger";
+import type { LedgerPort } from "./ledger";
 import type {
   LedgerStagedCheckRequest,
   LedgerStagedCheckResult,
@@ -28,6 +28,7 @@ import {
   type StagedContent,
   type StagedRowChanges,
 } from "./ledgerStage";
+import type { LedgerTransactionReviewProjection } from "./ledgerReadContract";
 
 /** The answer, found by what was asked about. */
 export type StagedCheck = {
@@ -91,7 +92,7 @@ function stagedRow(
  * holds are left out; they are gone, which the plan says itself. */
 export function stagedCheckRequest(
   content: StagedContent,
-  rows: ReadonlyMap<string, LedgerRow>,
+  rows: ReadonlyMap<string, LedgerTransactionReviewProjection>,
   also: { ids?: readonly string[]; categories?: readonly string[] } = {},
 ): LedgerStagedCheckRequest {
   const ids = new Set<string>([

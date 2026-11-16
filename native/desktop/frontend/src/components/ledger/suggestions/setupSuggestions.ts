@@ -3,8 +3,8 @@
 // the register still checks it on save.
 
 import type { Suggestion } from "@/components/ui/suggestions";
-import type { LedgerRow } from "../../../shell/ledger";
 import { distinctText } from "./ledgerSuggestions";
+import type { LedgerTransactionReviewProjection } from "../../../shell/ledgerReadContract";
 
 /** The most words a rule offers, the most used first. */
 const MOST_USED_WORDS = 400;
@@ -35,7 +35,9 @@ export function listOptions(
 }
 
 /** The words the held movements' descriptions use, the most used first. */
-export function descriptionWords(rows: readonly LedgerRow[]): string[] {
+export function descriptionWords(
+  rows: readonly LedgerTransactionReviewProjection[],
+): string[] {
   const uses = new Map<string, { word: string; uses: number }>();
   for (const { transaction } of rows)
     for (const word of transaction.description.match(/[\p{L}\p{N}]{3,}/gu) ??

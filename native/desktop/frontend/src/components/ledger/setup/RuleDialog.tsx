@@ -24,7 +24,7 @@ import { Field, FieldLabel } from "@/components/ui/field";
 import { Icon } from "@/components/ui/icon";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import type { LedgerPort, LedgerRow } from "../../../shell/ledger";
+import type { LedgerPort } from "../../../shell/ledger";
 import type { RuleSeed } from "../../../shell/ledgerCommands";
 import { useLedgerLimits } from "../../../shell/ledgerLimits";
 import { useRuleTrial } from "../../../shell/ledgerRuleTrial";
@@ -53,6 +53,7 @@ import {
   type SetupCall,
 } from "./setupModel";
 import { ruleName } from "./setupWords";
+import type { LedgerTransactionReviewProjection } from "../../../shell/ledgerReadContract";
 
 /** Where the dialog opens from: a selection or a group, a stored rule, or
  * nothing. */
@@ -67,7 +68,7 @@ let stagedRuleApplies = 0;
  * movements share. */
 function firstValues(
   target: RuleDialogTarget,
-  rows: ReadonlyMap<string, LedgerRow>,
+  rows: ReadonlyMap<string, LedgerTransactionReviewProjection>,
 ) {
   if (target.kind === "rule") {
     const words = patternWords(target.rule.description_pattern);
@@ -117,7 +118,7 @@ export function RuleDialog({
   reader: string | null;
   target: RuleDialogTarget;
   /** The movements loaded on the page, or null where none are. */
-  rows: readonly LedgerRow[] | null;
+  rows: readonly LedgerTransactionReviewProjection[] | null;
   onStage(event: StageEvent): void;
   /** The rule was saved, at `place` in the order the rules run, from 1. */
   onSaved(rule: LedgerRuleRowProjection, place: number): void;

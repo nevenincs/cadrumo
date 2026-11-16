@@ -9,10 +9,6 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import type {
-  LedgerMovementWithholding,
-  LedgerRow,
-} from "../../../shell/ledger";
 import { useStrings } from "../../../shell/strings";
 import {
   directionLabel,
@@ -23,6 +19,10 @@ import {
   type StatusWord,
 } from "./movementWords";
 import { formatAmount } from "../../../shared/numbers";
+import type {
+  LedgerMovementWithholdingProjection,
+  LedgerTransactionReviewProjection,
+} from "../../../shell/ledgerReadContract";
 
 /** The glyph each review status draws. */
 export const STATUS_ICONS: Record<StatusWord, IconName> = {
@@ -52,7 +52,7 @@ export const StatusCell = memo(function StatusCell({
   wordy,
   duplicate = false,
 }: {
-  row: LedgerRow;
+  row: LedgerTransactionReviewProjection;
   /** Null while readiness is not measured. */
   issues: number | null;
   wordy: boolean;
@@ -214,7 +214,7 @@ export const EuroCell = memo(function EuroCell({
   row,
   locale,
 }: {
-  row: LedgerRow;
+  row: LedgerTransactionReviewProjection;
   locale: string;
 }) {
   const t = useStrings();
@@ -265,7 +265,7 @@ export const RetencionCell = memo(function RetencionCell({
   entries,
   locale,
 }: {
-  entries: readonly LedgerMovementWithholding[];
+  entries: readonly LedgerMovementWithholdingProjection[];
   locale: string;
 }) {
   const t = useStrings();

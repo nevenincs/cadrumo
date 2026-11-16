@@ -8,15 +8,12 @@ import { useCallback, useEffect, useReducer, useRef } from "react";
 import {
   ledgerFailure,
   type LedgerFailureCode,
-  type LedgerListRequest,
-  type LedgerListResult,
   type LedgerOutcome,
   type LedgerPort,
   type LedgerPreflightResult,
-  type LedgerRow,
-  type LedgerSortField,
+  type LedgerRequest,
+  type LedgerResult,
   type OutputLanguage,
-  type LedgerSortOrder,
   type LedgerStatusResult,
 } from "./ledger";
 import {
@@ -25,6 +22,11 @@ import {
   samePeriod,
   type LedgerPeriod,
 } from "./ledgerGrammar";
+import type {
+  LedgerSortField,
+  LedgerSortOrder,
+  LedgerTransactionReviewProjection,
+} from "./ledgerReadContract";
 
 const NO_SCOPE: LedgerWindowScope = {};
 
@@ -56,7 +58,10 @@ export type LedgerReadFailure =
     };
 
 /** The rows of a window read whole, kept on screen while it is read again. */
-export type HeldWindow = { rows: LedgerRow[]; total: number };
+export type HeldWindow = {
+  rows: LedgerTransactionReviewProjection[];
+  total: number;
+};
 
 /** What a window reads beside its period: further filter clauses, and the
  * server's order and group partition where the page cannot sort or group
@@ -111,7 +116,7 @@ export type LedgerWindow = {
   scope: LedgerWindowScope;
   phase: "reading" | "ready" | "failed";
   /** The rows read so far, in the read's order. */
-  rows: LedgerRow[];
+  rows: LedgerTransactionReviewProjection[];
   /** How many rows the period has, once the first page said. */
   total: number | null;
   /** How many rows to read before stopping. */
@@ -137,7 +142,7 @@ export type LedgerWindowEvent =
       type: "page";
       generation: number;
       offset: number;
-      result: LedgerListResult;
+      result: LedgerResult<"ledger.list">;
     }
   | { type: "failed"; generation: number; failure: LedgerReadFailure }
   | { type: "more"; generation: number; wanted: number };
@@ -246,7 +251,7 @@ export function reduceWindow(
  * another, ties by id, so pages join. */
 export function nextPageRequest(
   current: LedgerWindow,
-): LedgerListRequest | null {
+): LedgerRequest<"ledger.list"> | null {
   if (current.phase !== "reading") return null;
   const remaining =
     current.total === null
@@ -307,7 +312,9 @@ export function windowTruncation(
 }
 
 /** A map from id to row for the rows a window shows. */
-export function rowsById(rows: readonly LedgerRow[]): Map<string, LedgerRow> {
+export function rowsById(
+  rows: readonly LedgerTransactionReviewProjection[],
+): Map<string, LedgerTransactionReviewProjection> {
   return new Map(rows.map((row) => [row.transaction.transaction_id, row]));
 }
 
@@ -341,8 +348,8 @@ export function readFailure(error: unknown): LedgerReadFailure {
 /** Reads one page of `window`. */
 export async function readPage(
   port: LedgerPort,
-  request: LedgerListRequest,
-): Promise<ReadAnswer<LedgerListResult>> {
+  request: LedgerRequest<"ledger.list">,
+): Promise<ReadAnswer<LedgerResult<"ledger.list">>> {
   try {
     return readAnswer(await port.submit("ledger.list", request));
   } catch (error) {
@@ -358,7 +365,7 @@ export async function readWindow(
   wanted = Infinity,
   scope: LedgerWindowScope = {},
 ): Promise<
-  | { kind: "read"; rows: LedgerRow[]; total: number }
+  | { kind: "read"; rows: LedgerTransactionReviewProjection[]; total: number }
   | { kind: "failed"; failure: LedgerReadFailure }
 > {
   let state = openWindow(1, period, wanted, scope);
