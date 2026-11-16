@@ -39,18 +39,12 @@ modelo:
           '00052':
             help: Enter the volume of transactions in Araba/Álava for joint taxation
               under the Economic Agreement [00052].
-            label: Joint taxation of State and provincial tax administrations - Economic
-              Agreement - volume of transactions in Araba/Álava [00052]
           '00053':
             help: Enter the volume of transactions in Gipuzkoa for joint taxation
               under the Economic Agreement [00053].
-            label: Joint taxation of State and provincial tax administrations - Economic
-              Agreement - volume of transactions in Gipuzkoa [00053]
           '00054':
             help: Enter the volume of transactions in Bizkaia for joint taxation under
               the Economic Agreement [00054].
-            label: Joint taxation of State and provincial tax administrations - Economic
-              Agreement - volume of transactions in Bizkaia [00054]
           '00055':
             help: Enter the volume of transactions in Navarre for joint taxation under
               the Economic Convention [00055].
@@ -511,9 +505,6 @@ modelo:
             label: Statement of changes in equity (III) - Income and expenses recognized
               in equity - Tax income to be distributed over several periods - Interim
               dividend [00486]
-          00488:
-            label: Joint taxation of State and provincial tax administrations - Late-payment
-              interest - Bizkaia [00488]
           00489:
             label: Statement of changes in equity (III) - Income and expenses recognized
               in equity - Tax income to be distributed over several periods - Adjustments
@@ -1470,12 +1461,6 @@ modelo:
           00912:
             label: Cooperative regime - Tax liability compensation detail. 2014 Pending
               application in future periods [00912]
-          00914:
-            label: Joint taxation of State and provincial tax administrations - Increase
-              for non-compliance with SOCIMI requirements - Gipuzkoa [00914]
-          00915:
-            label: Joint taxation of State and provincial tax administrations - Increase
-              for non-compliance with SOCIMI requirements - Bizkaia [00915]
           00916:
             label: Joint taxation of State and provincial tax administrations - Increase
               for non-compliance with SOCIMI requirements - Navarre [00916]
@@ -2168,18 +2153,6 @@ modelo:
           '01304':
             label: Deduction for investments and expenses made by port authorities
               (art. 38 bis LIS) - Total - Pending application in future periods [01304]
-          '01305':
-            label: Joint taxation of State and provincial tax administrations - Conversion
-              of deferred tax assets into a credit claimable from the Tax Administration
-              (art. 130 LIS) - Offset for asset conversion - Araba/Alava [01305]
-          '01306':
-            label: Joint taxation of State and provincial tax administrations - Conversion
-              of deferred tax assets into a credit claimable from the Tax Administration
-              (art. 130 LIS) - Offset for asset conversion - Gipuzkoa [01306]
-          '01307':
-            label: Joint taxation of State and provincial tax administrations - Conversion
-              of deferred tax assets into a credit claimable from the Tax Administration
-              (art. 130 LIS) - Offset for asset conversion - Bizkaia [01307]
           01309:
             label: Deductions for foreign cinematographic productions in the Canary
               Islands (art. 36.2 LIS and DA 14th Law 19/1994) - 2022) - Pending/generated
@@ -2263,18 +2236,9 @@ modelo:
             label: Settlement IV - Self-assessment result - Credit for deductions
               for foreign film productions - Provincial tax administrations/Navarre
               [01333]
-          '01335':
-            label: Joint taxation of State and provincial tax administrations - Credit
-              of R&D&I deductions due to insufficient tax liability - Gipuzkoa [01335]
-          '01336':
-            label: Joint taxation of State and provincial tax administrations - Credit
-              of R&D&I deductions due to insufficient tax liability - Bizkaia [01336]
           '01337':
             label: Joint taxation of State and provincial tax administrations - Credit
               of R&D&I deductions due to insufficient tax liability - Navarre [01337]
-          '01340':
-            label: Joint taxation of State and provincial tax administrations - Payment
-              of foreign-production deductions - Bizkaia [01340]
           '01341':
             label: Joint taxation of State and provincial tax administrations - Payment
               of foreign-production deductions - Navarre [01341]
@@ -2931,9 +2895,6 @@ modelo:
           '01622':
             label: Deductions to incentivise certain activities - 2016 Technological
               innovation (IT) - Pending application in future periods [01622]
-          '01625':
-            label: Joint taxation of State and provincial tax administrations - Self-assessment
-              result - Gipuzkoa [01625]
           '01626':
             label: Impairment allowances for receivables or other assets - Generation
               year - {year} - Allowances pending integration at start of period -
@@ -2946,27 +2907,12 @@ modelo:
             label: Impairment allowances for receivables or other assets - Generation
               year - {year} - Allowances pending integration in future periods - That
               have not met tax deductibility conditions [01628]
-          01629:
-            label: Joint taxation of State and provincial tax administrations - Self-assessment
-              result - Bizkaia [01629]
           '01630':
             label: Joint taxation of State and provincial tax administrations - Self-assessment
               result - Navarre [01630]
-          '01633':
-            label: Joint taxation of State and provincial tax administrations - Instalment
-              option art. 19.1 LIS - Included amount - Bizkaia [01633]
           '01634':
             label: Joint taxation of State and provincial tax administrations - Instalment
               option art. 19.1 LIS - Included amount - Navarre [01634]
-          '01635':
-            label: Joint taxation of State and provincial tax administrations - Instalment
-              option art. 19.1 LIS - Tax debt - Araba/Alava [01635]
-          '01636':
-            label: Joint taxation of State and provincial tax administrations - Instalment
-              option art. 19.1 LIS - Tax debt - Gipuzkoa [01636]
-          '01637':
-            label: Joint taxation of State and provincial tax administrations - Instalment
-              option art. 19.1 LIS - Tax debt - Bizkaia [01637]
           01638:
             help: 'Amounts attributed: Deduction generated for Spanish film productions
               and live performing-arts and musical shows from the attributed Canary
@@ -2987,24 +2933,9 @@ modelo:
           '01641':
             label: Joint taxation of State and provincial tax administrations - Instalment
               option art. 19.1 LIS - Tax debt - Navarre [01641]
-          '01642':
-            label: Joint taxation of State and provincial tax administrations - Instalment
-              option art. 19.1 LIS - First instalment - Araba/Alava [01642]
-          '01643':
-            label: Joint taxation of State and provincial tax administrations - Instalment
-              option art. 19.1 LIS - First instalment - Gipuzkoa [01643]
-          '01644':
-            label: Joint taxation of State and provincial tax administrations - Instalment
-              option art. 19.1 LIS - First instalment - Bizkaia [01644]
           '01645':
             label: Joint taxation of State and provincial tax administrations - Instalment
               option art. 19.1 LIS - First instalment - Navarre [01645]
-          '01646':
-            label: Joint taxation of State and provincial tax administrations - Self-assessment
-              result including the first instalment - Araba/Alava [01646]
-          01648:
-            label: Joint taxation of State and provincial tax administrations - Self-assessment
-              result including the first instalment - Bizkaia [01648]
           01649:
             label: Joint taxation of State and provincial tax administrations - Self-assessment
               result including the first instalment - Navarre [01649]
@@ -3593,18 +3524,6 @@ modelo:
             label: Deductions to incentivise certain activities - 2022 Research and
               development (CT) - Carried forward for application in future periods
               [01876]
-          01877:
-            label: Joint taxation of State and provincial tax administrations - Payment
-              of deductions for foreign productions in the Canary Islands - Álava
-              [01877]
-          01878:
-            label: Joint taxation of State and provincial tax administrations - Payment
-              of deductions for foreign productions in the Canary Islands - Gipuzkoa
-              [01878]
-          01879:
-            label: Joint taxation of State and provincial tax administrations - Payment
-              of deductions for foreign productions in the Canary Islands - Biscay
-              [01879]
           01880:
             label: Joint taxation of State and provincial tax administrations - Payment
               of deductions for foreign productions in the Canary Islands - Navarre
@@ -10352,9 +10271,6 @@ modelo:
           is-otros-regimenes-especiales:
             help: Flag indicating other special regimes [00020].
             label: Other special regimes [00020]
-          is-pagos-fraccionados:
-            label: Joint taxation of State and provincial tax administrations - Instalment
-              payments 2 - Bizkaia [00447]
           is-participaciones-directas-b-reversion-de-perdidas-por-deterioro-de-valores:
             help: b) Reversal of impairment losses on securities (DT 16ª LIS) - B.1.
               Reporting entity's holdings in other entities
@@ -10962,19 +10878,6 @@ modelo:
             help: Flag indicating transfer of assets under articles 27.2.d) and 77.1
               of the Corporate Income Tax Law [00030].
             label: Transfer of assets under articles 27.2.d) and 77.1 LIS [00030]
-          is-tributacion-conjunta-abono-cinematografica:
-            label: Joint taxation of State and provincial tax administrations - Payment
-              of foreign-production deductions - Gipuzkoa [01339]
-          is-tributacion-conjunta-abono-deducciones-cinematograficas:
-            label: Joint taxation of State and provincial tax administrations - Payment
-              of foreign-production deductions - Araba/Alava [01338]
-          is-tributacion-conjunta-abono-idi:
-            label: Joint taxation of State and provincial tax administrations - Credit
-              of R&D&I deductions due to insufficient tax liability - Araba/Alava
-              [01334]
-          is-tributacion-conjunta-cuota-diferencial:
-            label: Joint taxation of State and provincial tax administrations - Differential
-              tax liability - Araba/Álava [00474]
           is-tributacion-conjunta-estado-diput-cdad-forales:
             help: Flag indicating joint taxation between the State, Provincial Councils,
               and Foral Communities [00028].
@@ -10984,21 +10887,6 @@ modelo:
             label: 'Joint taxation of State and provincial tax administrations - Corrective:
               amount payable following the processing of earlier self-assessments
               or administrative assessments for tax period {year} - Araba/Alava [01607]'
-          is-tributacion-conjunta-fraccionamiento-importe:
-            label: Joint taxation of State and provincial tax administrations - Instalment
-              option art. 19.1 LIS - Included amount - Gipuzkoa [01632]
-          is-tributacion-conjunta-fraccionamiento-y-rectificativa:
-            label: Joint taxation of State and provincial tax administrations - Self-assessment
-              result including the first instalment - Gipuzkoa [01647]
-          is-tributacion-conjunta-incremento:
-            label: Joint taxation of State and provincial tax administrations - Increase
-              for non-compliance with SOCIMI requirements - Araba/Alava [00913]
-          is-tributacion-conjunta-intereses:
-            label: Joint taxation of State and provincial tax administrations - Late-payment
-              interest - Gipuzkoa [00487]
-          is-tributacion-conjunta-opcion-0-7:
-            label: Joint taxation of State and provincial tax administrations - Instalment
-              option art. 19.1 LIS - Included amount - Araba/Alava [01631]
           is-tributacion-conjunta-porcentaje-estado:
             label: Joint taxation of State and provincial tax administrations - Calculation
               of taxation percentages - State Administration [00625]
@@ -11007,9 +10895,6 @@ modelo:
               the State and Foral Administrations under the Economic Agreement [00050].
             label: Joint taxation of State and provincial tax administrations - Economic
               Agreement - total volume of transactions [00050]
-          is-tributacion-conjunta-resultado:
-            label: Joint taxation of State and provincial tax administrations - Self-assessment
-              result - Araba/Alava [01624]
           is-union-temporal-de-empresas:
             label: Temporary consortium of companies [00085]
           is-uniones-federaciones-y-confederaciones-de-cooperativas:
@@ -12747,6 +12632,15 @@ modelo:
             label: Modelo 200, tax year 2022
         '2023':
           casilla:
+            '00052':
+              label: Joint taxation of State and provincial tax administrations -
+                Economic Agreement - volume of transactions in Álava [00052]
+            '00053':
+              label: Joint taxation of State and provincial tax administrations -
+                Economic Agreement - volume of transactions in Guipúzcoa [00053]
+            '00054':
+              label: Joint taxation of State and provincial tax administrations -
+                Economic Agreement - volume of transactions in Vizcaya [00054]
             '00077':
               label: Accelerated depreciation of certain vehicles and new charging
                 infrastructure (Additional Provision 18 LIS) - Increase - Adjustments
@@ -12756,6 +12650,18 @@ modelo:
                 account result - Exemption on dividends or profit-sharing income from
                 resident entities (art. 21.1, 21.10 and Transitional Provision 40
                 LIS) - Decreases [00370]
+            '00447':
+              label: Joint taxation of State and provincial tax administrations -
+                Instalment payments 2 - Vizcaya [00447]
+            '00474':
+              label: Joint taxation of State and provincial tax administrations -
+                Differential tax liability - Álava [00474]
+            00487:
+              label: Joint taxation of State and provincial tax administrations -
+                Late-payment interest - Guipúzcoa [00487]
+            00488:
+              label: Joint taxation of State and provincial tax administrations -
+                Late-payment interest - Vizcaya [00488]
             '00775':
               label: Settlement I - Detail of adjustments to the profit and loss account
                 result - Accelerated depreciation of certain vehicles and new charging
@@ -12764,6 +12670,15 @@ modelo:
               label: Settlement I - Detail of adjustments to the profit and loss account
                 result - Accelerated depreciation of certain vehicles and new charging
                 infrastructure (Additional Provision 18 LIS) - Decreases [00776]
+            00913:
+              label: Joint taxation of State and provincial tax administrations -
+                Increase for non-compliance with SOCIMI requirements - Álava [00913]
+            00914:
+              label: Joint taxation of State and provincial tax administrations -
+                Increase for non-compliance with SOCIMI requirements - Guipúzcoa [00914]
+            00915:
+              label: Joint taxation of State and provincial tax administrations -
+                Increase for non-compliance with SOCIMI requirements - Vizcaya [00915]
             '01020':
               label: Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration (art. 130 LIS) - Credit for converting deferred
@@ -12842,11 +12757,62 @@ modelo:
                 the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
                 Generation year - 2022 - DTAs pending application in future periods
                 - Without a right of conversion into a claimable credit [01133]
+            '01300':
+              label: Joint taxation of State and provincial tax administrations -
+                Conversion of deferred tax assets into a credit claimable from the
+                Tax Administration (art. 130 LIS) - Credit for asset conversion -
+                Álava [01300]
+            '01301':
+              label: Joint taxation of State and provincial tax administrations -
+                Conversion of deferred tax assets into a credit claimable from the
+                Tax Administration (art. 130 LIS) - Credit for asset conversion -
+                Guipúzcoa [01301]
+            '01302':
+              label: Joint taxation of State and provincial tax administrations -
+                Conversion of deferred tax assets into a credit claimable from the
+                Tax Administration (art. 130 LIS) - Credit for asset conversion -
+                Vizcaya [01302]
+            '01305':
+              label: Joint taxation of State and provincial tax administrations -
+                Conversion of deferred tax assets into a credit claimable from the
+                Tax Administration (art. 130 LIS) - Offset for asset conversion -
+                Álava [01305]
+            '01306':
+              label: Joint taxation of State and provincial tax administrations -
+                Conversion of deferred tax assets into a credit claimable from the
+                Tax Administration (art. 130 LIS) - Offset for asset conversion -
+                Guipúzcoa [01306]
+            '01307':
+              label: Joint taxation of State and provincial tax administrations -
+                Conversion of deferred tax assets into a credit claimable from the
+                Tax Administration (art. 130 LIS) - Offset for asset conversion -
+                Vizcaya [01307]
             01329:
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others entitled to increased deduction
                 - 2023(*) Without repeated donations to the same entity - Deduction
                 carried forward/generated [01329]
+            '01334':
+              label: Joint taxation of State and provincial tax administrations -
+                Credit of R&D&I deductions due to insufficient tax liability - Álava
+                [01334]
+            '01335':
+              label: Joint taxation of State and provincial tax administrations -
+                Credit of R&D&I deductions due to insufficient tax liability - Guipúzcoa
+                [01335]
+            '01336':
+              label: Joint taxation of State and provincial tax administrations -
+                Credit of R&D&I deductions due to insufficient tax liability - Vizcaya
+                [01336]
+            01338:
+              label: Joint taxation of State and provincial tax administrations -
+                Payment of foreign-production deductions - Álava [01338]
+            01339:
+              label: Joint taxation of State and provincial tax administrations -
+                Payment of foreign-production deductions - Guipúzcoa [01339]
+            '01340':
+              label: Joint taxation of State and provincial tax administrations -
+                Payment of foreign-production deductions - Vizcaya [01340]
             '01372':
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others entitled to increased deduction
@@ -12857,6 +12823,109 @@ modelo:
                 priority patronage activities and others entitled to increased deduction
                 - 2023(*) Without repeated donations to the same entity - Carried
                 forward for application in future periods [01373]
+            '01624':
+              label: Joint taxation of State and provincial tax administrations -
+                Self-assessment result - Álava [01624]
+            '01625':
+              label: Joint taxation of State and provincial tax administrations -
+                Self-assessment result - Guipúzcoa [01625]
+            01629:
+              label: Joint taxation of State and provincial tax administrations -
+                Self-assessment result - Vizcaya [01629]
+            '01631':
+              label: Joint taxation of State and provincial tax administrations -
+                Instalment option art. 19.1 LIS - Included amount - Álava [01631]
+            '01632':
+              label: Joint taxation of State and provincial tax administrations -
+                Instalment option art. 19.1 LIS - Included amount - Guipúzcoa [01632]
+            '01633':
+              label: Joint taxation of State and provincial tax administrations -
+                Instalment option art. 19.1 LIS - Included amount - Vizcaya [01633]
+            '01635':
+              label: Joint taxation of State and provincial tax administrations -
+                Instalment option art. 19.1 LIS - Tax debt - Álava [01635]
+            '01636':
+              label: Joint taxation of State and provincial tax administrations -
+                Instalment option art. 19.1 LIS - Tax debt - Guipúzcoa [01636]
+            '01637':
+              label: Joint taxation of State and provincial tax administrations -
+                Instalment option art. 19.1 LIS - Tax debt - Vizcaya [01637]
+            '01642':
+              label: Joint taxation of State and provincial tax administrations -
+                Instalment option art. 19.1 LIS - First instalment - Álava [01642]
+            '01643':
+              label: Joint taxation of State and provincial tax administrations -
+                Instalment option art. 19.1 LIS - First instalment - Guipúzcoa [01643]
+            '01644':
+              label: Joint taxation of State and provincial tax administrations -
+                Instalment option art. 19.1 LIS - First instalment - Vizcaya [01644]
+            '01646':
+              label: Joint taxation of State and provincial tax administrations -
+                Self-assessment result including the first instalment - Álava [01646]
+            '01647':
+              label: Joint taxation of State and provincial tax administrations -
+                Self-assessment result including the first instalment - Guipúzcoa
+                [01647]
+            01648:
+              label: Joint taxation of State and provincial tax administrations -
+                Self-assessment result including the first instalment - Vizcaya [01648]
+            '01662':
+              label: 'Joint taxation of State and provincial tax administrations -
+                Conversion of deferred tax assets into a credit claimable from the
+                Tax Administration (art. 130 LIS) - Conversion result: credit - Álava
+                [01662]'
+            '01663':
+              label: 'Joint taxation of State and provincial tax administrations -
+                Conversion of deferred tax assets into a credit claimable from the
+                Tax Administration (art. 130 LIS) - Conversion result: credit - Guipúzcoa
+                [01663]'
+            '01664':
+              label: 'Joint taxation of State and provincial tax administrations -
+                Conversion of deferred tax assets into a credit claimable from the
+                Tax Administration (art. 130 LIS) - Conversion result: credit - Vizcaya
+                [01664]'
+            '01666':
+              label: 'Joint taxation of State and provincial tax administrations -
+                Conversion of deferred tax assets into a credit claimable from the
+                Tax Administration (art. 130 LIS) - Conversion result: Offset - Álava
+                [01666]'
+            '01667':
+              label: 'Joint taxation of State and provincial tax administrations -
+                Conversion of deferred tax assets into a credit claimable from the
+                Tax Administration (art. 130 LIS) - Conversion result: Offset - Guipúzcoa
+                [01667]'
+            01668:
+              label: 'Joint taxation of State and provincial tax administrations -
+                Conversion of deferred tax assets into a credit claimable from the
+                Tax Administration (art. 130 LIS) - Conversion result: Offset - Vizcaya
+                [01668]'
+            '01670':
+              label: 'Joint taxation of State and provincial tax administrations -
+                Conversion of deferred tax assets into a credit claimable from the
+                Tax Administration (art. 130 LIS) - Conversion result: Payable - Álava
+                [01670]'
+            '01671':
+              label: 'Joint taxation of State and provincial tax administrations -
+                Conversion of deferred tax assets into a credit claimable from the
+                Tax Administration (art. 130 LIS) - Conversion result: Payable - Guipúzcoa
+                [01671]'
+            '01672':
+              label: 'Joint taxation of State and provincial tax administrations -
+                Conversion of deferred tax assets into a credit claimable from the
+                Tax Administration (art. 130 LIS) - Conversion result: Payable - Vizcaya
+                [01672]'
+            01877:
+              label: Joint taxation of State and provincial tax administrations -
+                Payment of deductions for foreign productions in the Canary Islands
+                - Álava [01877]
+            01878:
+              label: Joint taxation of State and provincial tax administrations -
+                Payment of deductions for foreign productions in the Canary Islands
+                - Guipúzcoa [01878]
+            01879:
+              label: Joint taxation of State and provincial tax administrations -
+                Payment of deductions for foreign productions in the Canary Islands
+                - Biscay [01879]
             01887:
               label: Settlement III - Taxable base - Special regime for ships and
                 shipping companies in the Canary Islands - Offset of negative taxable
@@ -12923,6 +12992,15 @@ modelo:
             label: Modelo 200, tax year 2023
         '2024':
           casilla:
+            '00052':
+              label: Joint taxation of State and provincial tax administrations -
+                Economic Agreement - volume of transactions in Araba/Álava [00052]
+            '00053':
+              label: Joint taxation of State and provincial tax administrations -
+                Economic Agreement - volume of transactions in Gipuzkoa [00053]
+            '00054':
+              label: Joint taxation of State and provincial tax administrations -
+                Economic Agreement - volume of transactions in Bizkaia [00054]
             '00077':
               label: Accelerated depreciation of certain vehicles and new charging
                 infrastructure (Additional Provision 18 LIS, RDL 5/2023) - Increase
@@ -12948,6 +13026,18 @@ modelo:
                 Islands: breakdown of the offsetting of negative taxable bases - Offset
                 of the taxable base for other activities for 2024 - Pending application
                 in future periods [00098]'
+            '00447':
+              label: Joint taxation of State and provincial tax administrations -
+                Instalment payments 2 - Bizkaia [00447]
+            '00474':
+              label: Joint taxation of State and provincial tax administrations -
+                Differential tax liability - Araba/Álava [00474]
+            00487:
+              label: Joint taxation of State and provincial tax administrations -
+                Late-payment interest - Gipuzkoa [00487]
+            00488:
+              label: Joint taxation of State and provincial tax administrations -
+                Late-payment interest - Bizkaia [00488]
             '00775':
               label: Settlement I - Detail of adjustments to the profit and loss account
                 result - Accelerated depreciation of certain vehicles and new charging
@@ -12998,6 +13088,16 @@ modelo:
                 the Tax Administration - Excess positive net tax liability - Generation
                 year - {year} - Excess positive net tax due pending application in
                 future periods [00882]
+            00913:
+              label: Joint taxation of State and provincial tax administrations -
+                Increase for non-compliance with SOCIMI requirements - Araba/Alava
+                [00913]
+            00914:
+              label: Joint taxation of State and provincial tax administrations -
+                Increase for non-compliance with SOCIMI requirements - Gipuzkoa [00914]
+            00915:
+              label: Joint taxation of State and provincial tax administrations -
+                Increase for non-compliance with SOCIMI requirements - Bizkaia [00915]
             00925:
               label: Settlement III - Taxable base - Income that does not limit the
                 offsetting of negative taxable bases - Income from the reversal of
@@ -13117,11 +13217,47 @@ modelo:
                 Conversion of deferred tax assets into a credit claimable from the
                 Tax Administration (art. 130 LIS) - Credit for asset conversion -
                 Bizkaia [01302]
+            '01305':
+              label: Joint taxation of State and provincial tax administrations -
+                Conversion of deferred tax assets into a credit claimable from the
+                Tax Administration (art. 130 LIS) - Offset for asset conversion -
+                Araba/Alava [01305]
+            '01306':
+              label: Joint taxation of State and provincial tax administrations -
+                Conversion of deferred tax assets into a credit claimable from the
+                Tax Administration (art. 130 LIS) - Offset for asset conversion -
+                Gipuzkoa [01306]
+            '01307':
+              label: Joint taxation of State and provincial tax administrations -
+                Conversion of deferred tax assets into a credit claimable from the
+                Tax Administration (art. 130 LIS) - Offset for asset conversion -
+                Bizkaia [01307]
             01329:
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others entitled to increased deduction
                 - 2023 - Without repeated donations to the same entity - Deduction
                 carried forward/generated [01329]
+            '01334':
+              label: Joint taxation of State and provincial tax administrations -
+                Credit of R&D&I deductions due to insufficient tax liability - Araba/Alava
+                [01334]
+            '01335':
+              label: Joint taxation of State and provincial tax administrations -
+                Credit of R&D&I deductions due to insufficient tax liability - Gipuzkoa
+                [01335]
+            '01336':
+              label: Joint taxation of State and provincial tax administrations -
+                Credit of R&D&I deductions due to insufficient tax liability - Bizkaia
+                [01336]
+            01338:
+              label: Joint taxation of State and provincial tax administrations -
+                Payment of foreign-production deductions - Araba/Alava [01338]
+            01339:
+              label: Joint taxation of State and provincial tax administrations -
+                Payment of foreign-production deductions - Gipuzkoa [01339]
+            '01340':
+              label: Joint taxation of State and provincial tax administrations -
+                Payment of foreign-production deductions - Bizkaia [01340]
             '01372':
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others entitled to increased deduction
@@ -13189,6 +13325,52 @@ modelo:
                 Corrective: refund agreed by the Tax Agency as a result of processing
                 prior self-assessments or administrative assessments corresponding
                 to the {year} tax period - Navarre [01623]'
+            '01624':
+              label: Joint taxation of State and provincial tax administrations -
+                Self-assessment result - Araba/Alava [01624]
+            '01625':
+              label: Joint taxation of State and provincial tax administrations -
+                Self-assessment result - Gipuzkoa [01625]
+            01629:
+              label: Joint taxation of State and provincial tax administrations -
+                Self-assessment result - Bizkaia [01629]
+            '01631':
+              label: Joint taxation of State and provincial tax administrations -
+                Instalment option art. 19.1 LIS - Included amount - Araba/Alava [01631]
+            '01632':
+              label: Joint taxation of State and provincial tax administrations -
+                Instalment option art. 19.1 LIS - Included amount - Gipuzkoa [01632]
+            '01633':
+              label: Joint taxation of State and provincial tax administrations -
+                Instalment option art. 19.1 LIS - Included amount - Bizkaia [01633]
+            '01635':
+              label: Joint taxation of State and provincial tax administrations -
+                Instalment option art. 19.1 LIS - Tax debt - Araba/Alava [01635]
+            '01636':
+              label: Joint taxation of State and provincial tax administrations -
+                Instalment option art. 19.1 LIS - Tax debt - Gipuzkoa [01636]
+            '01637':
+              label: Joint taxation of State and provincial tax administrations -
+                Instalment option art. 19.1 LIS - Tax debt - Bizkaia [01637]
+            '01642':
+              label: Joint taxation of State and provincial tax administrations -
+                Instalment option art. 19.1 LIS - First instalment - Araba/Alava [01642]
+            '01643':
+              label: Joint taxation of State and provincial tax administrations -
+                Instalment option art. 19.1 LIS - First instalment - Gipuzkoa [01643]
+            '01644':
+              label: Joint taxation of State and provincial tax administrations -
+                Instalment option art. 19.1 LIS - First instalment - Bizkaia [01644]
+            '01646':
+              label: Joint taxation of State and provincial tax administrations -
+                Self-assessment result including the first instalment - Araba/Alava
+                [01646]
+            '01647':
+              label: Joint taxation of State and provincial tax administrations -
+                Self-assessment result including the first instalment - Gipuzkoa [01647]
+            01648:
+              label: Joint taxation of State and provincial tax administrations -
+                Self-assessment result including the first instalment - Bizkaia [01648]
             '01650':
               label: 'Joint taxation of State and provincial tax administrations -
                 Corrective: self-assessment result including the first instalment
@@ -13280,6 +13462,18 @@ modelo:
               label: Free depreciation of certain vehicles and new charging infrastructure
                 (Additional Provision 18 LIS, RDL 4/2024) - Increase - Adjustments
                 for the tax year - Temporary (originating in prior tax years) [01820]
+            01877:
+              label: Joint taxation of State and provincial tax administrations -
+                Payment of deductions for foreign productions in the Canary Islands
+                - Araba/Álava [01877]
+            01878:
+              label: Joint taxation of State and provincial tax administrations -
+                Payment of deductions for foreign productions in the Canary Islands
+                - Gipuzkoa [01878]
+            01879:
+              label: Joint taxation of State and provincial tax administrations -
+                Payment of deductions for foreign productions in the Canary Islands
+                - Bizkaia [01879]
             01961:
               label: Free depreciation of certain vehicles and new charging infrastructure
                 (Additional Provision 18 LIS, RDL 4/2024) - Decrease - Adjustments
@@ -13447,6 +13641,15 @@ modelo:
             label: Modelo 200, tax year 2024
         2025-y-siguientes:
           casilla:
+            '00052':
+              label: Joint taxation of State and provincial tax administrations -
+                Economic Agreement - volume of transactions in Araba/Álava [00052]
+            '00053':
+              label: Joint taxation of State and provincial tax administrations -
+                Economic Agreement - volume of transactions in Gipuzkoa [00053]
+            '00054':
+              label: Joint taxation of State and provincial tax administrations -
+                Economic Agreement - volume of transactions in Bizkaia [00054]
             '00077':
               label: Accelerated depreciation of certain vehicles and new charging
                 infrastructure (DA 18 LIS RDL 5/2023 and RDL 7/2026) - Increase -
@@ -13480,6 +13683,18 @@ modelo:
                 account result - Exemption on dividends or profit-sharing income from
                 resident entities (art. 21.1, 21.10 and Transitional Provision 40
                 LIS) - Decreases
+            '00447':
+              label: Joint taxation of State and provincial tax administrations -
+                Instalment payments 2 - Bizkaia [00447]
+            '00474':
+              label: Joint taxation of State and provincial tax administrations -
+                Differential tax liability - Araba/Álava [00474]
+            00487:
+              label: Joint taxation of State and provincial tax administrations -
+                Late-payment interest - Gipuzkoa [00487]
+            00488:
+              label: Joint taxation of State and provincial tax administrations -
+                Late-payment interest - Bizkaia [00488]
             00496:
               label: Statement of changes in equity (II) - Income and expenses recognized
                 in equity - Other income and expenses recognized in equity - Own shares
@@ -13531,6 +13746,16 @@ modelo:
                 the tax administration - Excess positive net tax liability - Generation
                 period - 2025(*) - Excess positive net tax liability pending application
                 for future periods
+            00913:
+              label: Joint taxation of State and provincial tax administrations -
+                Increase for non-compliance with SOCIMI requirements - Araba/Alava
+                [00913]
+            00914:
+              label: Joint taxation of State and provincial tax administrations -
+                Increase for non-compliance with SOCIMI requirements - Gipuzkoa [00914]
+            00915:
+              label: Joint taxation of State and provincial tax administrations -
+                Increase for non-compliance with SOCIMI requirements - Bizkaia [00915]
             00925:
               label: Settlement III - Taxable base - Income that does not limit the
                 offsetting of negative taxable bases - Income from the reversal of
@@ -13914,6 +14139,21 @@ modelo:
                 Conversion of deferred tax assets into a credit claimable from the
                 Tax Administration (art. 130 LIS) - Credit for asset conversion -
                 Navarre
+            '01305':
+              label: Joint taxation of State and provincial tax administrations -
+                Conversion of deferred tax assets into a credit claimable from the
+                Tax Administration (art. 130 LIS) - Offset for asset conversion -
+                Araba/Alava [01305]
+            '01306':
+              label: Joint taxation of State and provincial tax administrations -
+                Conversion of deferred tax assets into a credit claimable from the
+                Tax Administration (art. 130 LIS) - Offset for asset conversion -
+                Gipuzkoa [01306]
+            '01307':
+              label: Joint taxation of State and provincial tax administrations -
+                Conversion of deferred tax assets into a credit claimable from the
+                Tax Administration (art. 130 LIS) - Offset for asset conversion -
+                Bizkaia [01307]
             01308:
               label: Joint taxation of State and provincial tax administrations -
                 Conversion of deferred tax assets into a credit claimable from the
@@ -13924,6 +14164,27 @@ modelo:
                 priority patronage activities and others entitled to increased deduction
                 - 2023 - Without repeated donations to the same entity - Pending/generated
                 deduction
+            '01334':
+              label: Joint taxation of State and provincial tax administrations -
+                Credit of R&D&I deductions due to insufficient tax liability - Araba/Alava
+                [01334]
+            '01335':
+              label: Joint taxation of State and provincial tax administrations -
+                Credit of R&D&I deductions due to insufficient tax liability - Gipuzkoa
+                [01335]
+            '01336':
+              label: Joint taxation of State and provincial tax administrations -
+                Credit of R&D&I deductions due to insufficient tax liability - Bizkaia
+                [01336]
+            01338:
+              label: Joint taxation of State and provincial tax administrations -
+                Payment of foreign-production deductions - Araba/Alava [01338]
+            01339:
+              label: Joint taxation of State and provincial tax administrations -
+                Payment of foreign-production deductions - Gipuzkoa [01339]
+            '01340':
+              label: Joint taxation of State and provincial tax administrations -
+                Payment of foreign-production deductions - Bizkaia [01340]
             '01372':
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and other donations eligible for increased
@@ -14315,6 +14576,52 @@ modelo:
                 Corrective: refund agreed by the Tax Agency as a result of processing
                 prior self-assessments or administrative assessments corresponding
                 to the 2025 tax period - Navarre'
+            '01624':
+              label: Joint taxation of State and provincial tax administrations -
+                Self-assessment result - Araba/Alava [01624]
+            '01625':
+              label: Joint taxation of State and provincial tax administrations -
+                Self-assessment result - Gipuzkoa [01625]
+            01629:
+              label: Joint taxation of State and provincial tax administrations -
+                Self-assessment result - Bizkaia [01629]
+            '01631':
+              label: Joint taxation of State and provincial tax administrations -
+                Instalment option art. 19.1 LIS - Included amount - Araba/Alava [01631]
+            '01632':
+              label: Joint taxation of State and provincial tax administrations -
+                Instalment option art. 19.1 LIS - Included amount - Gipuzkoa [01632]
+            '01633':
+              label: Joint taxation of State and provincial tax administrations -
+                Instalment option art. 19.1 LIS - Included amount - Bizkaia [01633]
+            '01635':
+              label: Joint taxation of State and provincial tax administrations -
+                Instalment option art. 19.1 LIS - Tax debt - Araba/Alava [01635]
+            '01636':
+              label: Joint taxation of State and provincial tax administrations -
+                Instalment option art. 19.1 LIS - Tax debt - Gipuzkoa [01636]
+            '01637':
+              label: Joint taxation of State and provincial tax administrations -
+                Instalment option art. 19.1 LIS - Tax debt - Bizkaia [01637]
+            '01642':
+              label: Joint taxation of State and provincial tax administrations -
+                Instalment option art. 19.1 LIS - First instalment - Araba/Alava [01642]
+            '01643':
+              label: Joint taxation of State and provincial tax administrations -
+                Instalment option art. 19.1 LIS - First instalment - Gipuzkoa [01643]
+            '01644':
+              label: Joint taxation of State and provincial tax administrations -
+                Instalment option art. 19.1 LIS - First instalment - Bizkaia [01644]
+            '01646':
+              label: Joint taxation of State and provincial tax administrations -
+                Self-assessment result including the first instalment - Araba/Alava
+                [01646]
+            '01647':
+              label: Joint taxation of State and provincial tax administrations -
+                Self-assessment result including the first instalment - Gipuzkoa [01647]
+            01648:
+              label: Joint taxation of State and provincial tax administrations -
+                Self-assessment result including the first instalment - Bizkaia [01648]
             '01650':
               label: 'Joint taxation of State and provincial tax administrations -
                 Corrective: self-assessment result including the first instalment
@@ -14513,6 +14820,18 @@ modelo:
               label: Settlement II - Detail of adjustments to the profit and loss
                 account result - Income from the transfer of fixed assets obtained
                 by Port Authorities (Additional Provision 68, Law 6/2018) - Decreases
+            01877:
+              label: Joint taxation of State and provincial tax administrations -
+                Payment of deductions for foreign productions in the Canary Islands
+                - Araba/Álava [01877]
+            01878:
+              label: Joint taxation of State and provincial tax administrations -
+                Payment of deductions for foreign productions in the Canary Islands
+                - Gipuzkoa [01878]
+            01879:
+              label: Joint taxation of State and provincial tax administrations -
+                Payment of deductions for foreign productions in the Canary Islands
+                - Bizkaia [01879]
             01886:
               label: 'Special regime for ships and shipping companies in the Canary
                 Islands: breakdown of the offsetting of negative taxable bases - Subtotal
