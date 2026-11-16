@@ -20,11 +20,10 @@ from types import ModuleType
 from typing import Any, Final
 
 from ..providers.application.ports import ProviderCatalogUnavailableError, ProviderCatalogUnavailableReason
+from ..providers.application.served_catalog import DECLARED_CATALOG_KIND
 
 DECLARED_CATALOG_MODULE: Final = "cadrumo_agent.providers.declared_catalog"
 """The agent's public module that renders its declared catalogue offline."""
-DECLARED_CATALOG_KIND: Final = "declared"
-"""The envelope kind of a declared catalogue; a served catalogue carries no ``kind``."""
 
 
 def _verify_wheel_module(base: Path, records: Mapping[str, PackagePath], module_name: str) -> None:
@@ -98,7 +97,6 @@ def declared_provider_catalog_response() -> dict[str, Any]:
 
 
 __all__ = [
-    "DECLARED_CATALOG_KIND",
     "DECLARED_CATALOG_MODULE",
     "agent_cohort_module",
     "declared_catalog_envelope",
