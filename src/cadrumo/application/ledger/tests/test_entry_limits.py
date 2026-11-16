@@ -11,6 +11,7 @@ import pytest
 from pydantic import BaseModel, TypeAdapter, ValidationError
 
 from ....core.decimal.grammar import european_thousands_reading_is_ambiguous
+from ....core.filing_year import FOUR_DIGIT_YEAR_FIRST, FOUR_DIGIT_YEAR_LAST, FourDigitYear
 from ....core.percentage import Percentage, fraction_of_percentage
 from ....core.unit_proportion import UnitProportion
 from ....domain.buckets.event import BucketEvent
@@ -221,3 +222,16 @@ def test_the_payment_id_shape_served_is_the_one_the_invoice_owner_takes(text: st
     else:
         with pytest.raises(InvoiceValidationError):
             normalise_invoice_payment_id({"payment_id": text.lower()})
+
+
+def test_the_entry_year_window_is_the_four_digit_year_a_ledger_year_field_admits() -> None:
+    """The window bounds a typed year by what the backend admits, not by a bound of its own."""
+    window = ledger_entry_limits().entry_years
+    admits = TypeAdapter(FourDigitYear)
+
+    assert (window.earliest, window.latest) == (FOUR_DIGIT_YEAR_FIRST, FOUR_DIGIT_YEAR_LAST)
+    assert admits.validate_python(window.earliest) == window.earliest
+    assert admits.validate_python(window.latest) == window.latest
+    for outside in (window.earliest - 1, window.latest + 1):
+        with pytest.raises(ValidationError):
+            admits.validate_python(outside)

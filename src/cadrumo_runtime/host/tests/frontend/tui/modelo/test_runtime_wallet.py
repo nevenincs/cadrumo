@@ -55,6 +55,7 @@ from cadrumo.application.operations.frontend_projection import (
 from cadrumo.application.operations.public_period import PublicPeriod
 from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
+from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.iva_compensation_provenance import IvaCompensationStateProvenance
 from cadrumo.core.operations import (
     OperationEffect,
@@ -212,7 +213,7 @@ def _door(client: _Client) -> RuntimeModeloIvaWallet:
 
 
 def _balance(client: _Client, *, year: int = _YEAR) -> ModeloIvaWalletBalanceProjection:
-    return ModeloIvaWalletBalanceProjection(
+    return ModeloIvaWalletBalanceProjection.worded(
         profile_id=client.profile_id,
         as_of_year=year,
         total_balance="30.00",
@@ -221,6 +222,7 @@ def _balance(client: _Client, *, year: int = _YEAR) -> ModeloIvaWalletBalancePro
         lot_count=1,
         next_expiry_year=_YEAR + 3,
         unallocated_applied_amount="0",
+        language=OutputLanguage.EN,
     )
 
 
