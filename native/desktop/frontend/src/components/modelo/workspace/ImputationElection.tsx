@@ -418,7 +418,7 @@ export function ImputationElection({
 
 /** The election read asked for one profile, year and language, answered or
  * not, held while the declaration that shows it stays open. */
-export type ElectionMemory = {
+type ElectionMemory = {
   election?: {
     key: string;
     read: Promise<ProfileImputationElectionReadProjection>;

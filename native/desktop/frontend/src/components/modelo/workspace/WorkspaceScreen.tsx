@@ -5,6 +5,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type ComponentProps,
 } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -100,9 +101,8 @@ import { RelatedFilingsDialog } from "../declarations/RelatedFilingsDialog";
 import {
   ProfileCompanions,
   type ProfileCompanionKit,
-  type ProfileCompanionMemory,
 } from "./ProfileCompanions";
-import { useHistoryRead, type HistoryMemory } from "./historyRead";
+import { useHistoryRead } from "./historyRead";
 import { SourcesView } from "./SourcesView";
 import { BoxName } from "./BoxName";
 import { languageName, UnresolvedFindings } from "./UnresolvedFindings";
@@ -149,9 +149,11 @@ function Ready({
   envelope: ModeloWorkbenchFormProjectionV1;
   port: ModeloPort;
   /** Where the History view's answers are held while the page is away. */
-  historyMemory: HistoryMemory;
+  historyMemory: KeptWorkspaceRead;
   /** Where the profile's answers are held while the declaration is open. */
-  profileMemory: ProfileCompanionMemory;
+  profileMemory: NonNullable<
+    ComponentProps<typeof ProfileCompanions>["memory"]
+  >;
   language: OutputLanguage;
   locale: string;
   /** Reads the declaration again; false when the read failed and the one
@@ -1291,9 +1293,11 @@ export function WorkspaceScreen({
   // The History view's answers outlive the page where the caller keeps the
   // form read; the profile's are asked again on each return, since the
   // profile can be changed on its own page meanwhile.
-  const [ownMemory] = useState<HistoryMemory>(() => ({}));
-  const historyMemory: HistoryMemory = kept ?? ownMemory;
-  const [profileMemory] = useState<ProfileCompanionMemory>(() => ({}));
+  const [ownMemory] = useState<KeptWorkspaceRead>(() => ({}));
+  const historyMemory: KeptWorkspaceRead = kept ?? ownMemory;
+  const [profileMemory] = useState<
+    NonNullable<ComponentProps<typeof ProfileCompanions>["memory"]>
+  >(() => ({}));
   const written = useCallback(() => {
     historyMemory.written = (historyMemory.written ?? 0) + 1;
     onWritten?.();

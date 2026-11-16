@@ -5,12 +5,14 @@ import type {
   ModeloWriteOwner,
 } from "../../../shell/modeloWriteHolds";
 import type { ModeloWorkbenchFormProjectionV1 } from "../../../shell/modeloContract/modeloWorkForm";
-import type { HistoryMemory } from "./historyRead";
+import type { useHistoryRead } from "./historyRead";
 
 /** The last form read of the open declaration, and the History view's
  * answers, kept by the caller while the workspace is put away, in memory
  * only. */
-export type KeptWorkspaceRead = HistoryMemory & {
+export type KeptWorkspaceRead = Parameters<
+  typeof useHistoryRead
+>[0]["memory"] & {
   form?: {
     workUnitId: string;
     language: OutputLanguage;

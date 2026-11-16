@@ -13,7 +13,7 @@ import type { ModeloWorkbenchFormProjectionV1 } from "../../../shell/modeloContr
 // answers while the form read says the same revision and no write was sent.
 
 /** The answers asked for one revision of one declaration, answered or not. */
-export type HeldHistoryRead = {
+type HeldHistoryRead = {
   revision: string;
   unit: Promise<ModeloWorkMetadataSnapshot | null>;
   entries: Promise<ModeloWorkHistoryEntryV1[] | null>;
@@ -22,7 +22,7 @@ export type HeldHistoryRead = {
 /** Where the answers are held while the page is away, with the count of the
  * writes sent on the declarations it holds: a write retires every answer read
  * before it, whatever the form read after it says. */
-export type HistoryMemory = {
+type HistoryMemory = {
   history?: HeldHistoryRead;
   written?: number;
 };

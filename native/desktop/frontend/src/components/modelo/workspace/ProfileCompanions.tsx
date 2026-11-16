@@ -1,6 +1,7 @@
 import type { ProfileCompanionPort } from "../../../shell/profileHousehold";
 import type { UserProfilePort } from "../../../shell/userProfile";
-import { ImputationElection, type ElectionMemory } from "./ImputationElection";
+import type { ComponentProps } from "react";
+import { ImputationElection } from "./ImputationElection";
 
 /** The profile's reads and its one write door, which the profile's elements
  * call. */
@@ -8,9 +9,6 @@ export type ProfileCompanionKit = {
   reads: ProfileCompanionPort;
   change: UserProfilePort["change"];
 };
-
-/** Where the elements hold what they read while the declaration is open. */
-export type ProfileCompanionMemory = ElectionMemory;
 
 /**
  * The companion elements the profile owns, drawn for a declaration whose form
@@ -25,7 +23,8 @@ export function ProfileCompanions({
   memory,
 }: {
   kit: ProfileCompanionKit;
-  memory?: ProfileCompanionMemory;
+  /** Where the elements hold what they read while the declaration is open. */
+  memory?: ComponentProps<typeof ImputationElection>["memory"];
   profile: string;
   taxYear: number;
   language: string;
