@@ -12,9 +12,9 @@ def record_group_dynamic_registrations() -> tuple[FStringKeyRegistration, ...]:
     """Register the row summary sentences and the relation words, read from the schema's row references."""
     from cadrumo.application.user_profile.record_row_words import record_relation_words_key, record_summary_words_keys
     from cadrumo.core.resources.bundled_data import bundled_path
+    from dev.registry.compiler.profile_schema import capture_profile_schema
 
     from .fstring_registry import FStringKeyRegistration
-    from .registry_scanner import capture_profile_schema
 
     _payload, schema = capture_profile_schema(
         bundled_path("registry", "cadrumo", "user_profile", "schema.toml").resolve(),
