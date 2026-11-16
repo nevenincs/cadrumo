@@ -1,8 +1,8 @@
-import type { ApplicabilityVerdict } from "../../shell/calendarContract";
 import type {
-  CalendarSuppressedEntry,
-  FilingCalendar,
-} from "../../shell/views";
+  ApplicabilityVerdict,
+  OverviewSuppressedEntrySnapshot,
+} from "../../shell/calendarContract";
+import type { FilingCalendar } from "../../shell/views";
 import { fixtureDay, fixtureYear } from "@/dev/fixtureDates";
 import { EMPTY_CALENDAR, FIXTURE_CALENDAR } from "./calendar";
 
@@ -16,7 +16,7 @@ const FIXTURE_YEAR = String(fixtureYear);
 function held(
   modelo: string,
   verdict: ApplicabilityVerdict,
-): CalendarSuppressedEntry {
+): OverviewSuppressedEntrySnapshot {
   return {
     modelo,
     period: `${FIXTURE_YEAR}-3T`,
@@ -27,11 +27,12 @@ function held(
     verdict_words: `Synthetic words served for the ${verdict} verdict.`,
     verdict_words_language: "en",
     reason: `Synthetic registry reason for ${modelo}.`,
+    actions: [],
   };
 }
 
 /** The verdicts a read can hold an obligation under, one row each. */
-export const SUPPRESSED_ENTRIES: CalendarSuppressedEntry[] = [
+export const SUPPRESSED_ENTRIES: OverviewSuppressedEntrySnapshot[] = [
   held("115", "not_applicable"),
   held("180", "attribution_pass_through"),
   held("347", "incomplete"),
