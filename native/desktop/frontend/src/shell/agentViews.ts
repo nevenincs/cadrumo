@@ -14,6 +14,7 @@ import { formatCount } from "../shared/numbers";
 import { effortWords } from "./agentCatalog";
 import { sentFiles } from "./agentDocuments";
 import type { Effort, ProviderTransport } from "./agentCatalogContract";
+import type { ProviderCondition } from "./agentGatewayContract";
 import type {
   AgentApproval,
   AgentQuestionnaire,
@@ -50,19 +51,6 @@ export type AgentRunStatus =
   | "repair_needed"
   | "reconciling"
   | "deleting";
-
-/** Why a provider failed a run: cadrumo-agent's `ProviderCondition`. */
-export type AgentProviderCondition =
-  | "network_unreachable"
-  | "provider_overloaded"
-  | "unauthenticated"
-  | "throttled"
-  | "usage_exhausted"
-  | "credits_exhausted"
-  | "budget_exhausted"
-  | "invalid_request"
-  | "no_answer"
-  | "unknown";
 
 /** Where a tool call is: cadrumo-agent's `ToolCallStatus`. */
 export type AgentToolStatus =
@@ -162,7 +150,7 @@ export type AgentReplyRecord = {
   id: string;
   status: AgentRunStatus;
   /** For a failed run, why its provider failed. */
-  provider_condition?: AgentProviderCondition | null;
+  provider_condition?: ProviderCondition | null;
   /** For a failed run, the agent's one line about it. */
   failure_reason?: string | null;
   /** Messages queued behind the run's current turn. */

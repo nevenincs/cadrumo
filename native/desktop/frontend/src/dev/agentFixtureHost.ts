@@ -89,6 +89,7 @@ import {
   RICH_REPLY,
   RICH_THOUGHTS,
   RICH_TOOL_DETAILS,
+  RUN_OUTGROWS_MODEL,
   TOOL_FAILS,
   TOOL_REFUSALS,
   UNEXPECTED_PROVIDER_CONDITION,
@@ -577,6 +578,7 @@ export function fixtureAgent({
     if (
       FAILS_FIRST.test(text) ||
       AUTHENTICATION_REQUIRED.test(text) ||
+      RUN_OUTGROWS_MODEL.test(text) ||
       UNEXPECTED_PROVIDER_CONDITION.test(text)
     ) {
       // It fails before the agent wrote anything.
@@ -585,21 +587,27 @@ export function fixtureAgent({
             provider_condition: "unauthenticated" as const,
             failure_reason: "Internal provider error: auth_required.",
           }
-        : UNEXPECTED_PROVIDER_CONDITION.test(text)
+        : RUN_OUTGROWS_MODEL.test(text)
           ? {
-              // The fixture deliberately sends a value outside the declared
-              // union to prove unknown conditions stay safe at the UI edge.
-              provider_condition:
-                "unexpected_internal_condition" as NonNullable<
-                  FixtureRun["provider_condition"]
-                >,
+              provider_condition: "model_does_not_fit" as const,
               failure_reason:
-                "Internal provider error: permission_requests.subagent_id missing.",
+                "Internal provider error: context exceeds memory.",
             }
-          : {
-              provider_condition: "provider_overloaded" as const,
-              failure_reason: "The provider answered 529 overloaded_error.",
-            };
+          : UNEXPECTED_PROVIDER_CONDITION.test(text)
+            ? {
+                // The fixture deliberately sends a value outside the declared
+                // union to prove unknown conditions stay safe at the UI edge.
+                provider_condition:
+                  "unexpected_internal_condition" as NonNullable<
+                    FixtureRun["provider_condition"]
+                  >,
+                failure_reason:
+                  "Internal provider error: permission_requests.subagent_id missing.",
+              }
+            : {
+                provider_condition: "provider_overloaded" as const,
+                failure_reason: "The provider answered 529 overloaded_error.",
+              };
       schedule(held, [started(held), () => settle(held.run.id, "failed", why)]);
       return;
     }

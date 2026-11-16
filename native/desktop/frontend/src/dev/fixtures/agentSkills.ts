@@ -1,8 +1,8 @@
-import type { SkillRecord } from "../../shell/agentGatewayContract";
 import type {
-  AgentSkillDetail,
-  AgentSkillVerification,
-} from "../../shell/agentSkills";
+  SkillDetailRecord,
+  SkillRecord,
+  SkillVerificationRecord,
+} from "../../shell/agentGatewayContract";
 
 // Made-up skills shaped as cadrumo-agent serves its own: names, words and
 // digests are the fixture's, never the bundled skills'.
@@ -111,7 +111,7 @@ const frontmatter = (summary: SkillRecord) =>
     "---",
   ].join("\n");
 
-export function fixtureSkillDetail(summary: SkillRecord): AgentSkillDetail {
+export function fixtureSkillDetail(summary: SkillRecord): SkillDetailRecord {
   return {
     ...structuredClone(summary),
     content: `${frontmatter(summary)}\n\n# ${summary.name}\n\n${summary.description}\n\n## Pasos\n\n1. Lee los datos del perfil.\n2. Comprueba cada fuente.\n3. Propón el resultado para que la persona lo revise.\n`,
@@ -122,8 +122,8 @@ export function fixtureSkillDetail(summary: SkillRecord): AgentSkillDetail {
  * pass clean. */
 export function fixtureSkillVerification(
   summary: SkillRecord,
-): AgentSkillVerification {
-  const findings: AgentSkillVerification["findings"] =
+): SkillVerificationRecord {
+  const findings: SkillVerificationRecord["findings"] =
     summary.name === "cadrumo-facturas"
       ? [
           {

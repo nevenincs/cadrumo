@@ -10,20 +10,20 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 import { failureCode } from "../../errors";
 import { formatSize } from "../../shared/numbers";
-import type { SkillRecord } from "../../shell/agentGatewayContract";
 import type {
-  AgentSkillDetail,
-  AgentSkillVerification,
-  SkillCommand,
-} from "../../shell/agentSkills";
+  SkillDetailRecord,
+  SkillRecord,
+  SkillVerificationRecord,
+} from "../../shell/agentGatewayContract";
+import type { SkillCommand } from "../../shell/agentSkills";
 import { listed } from "../../shell/compose";
 import { useStrings } from "../../shell/strings";
 
 type Answer =
   | { kind: "loading" }
   | { kind: "failed"; code: string }
-  | { kind: "review"; skill: AgentSkillDetail }
-  | { kind: "verify"; result: AgentSkillVerification };
+  | { kind: "review"; skill: SkillDetailRecord }
+  | { kind: "verify"; result: SkillVerificationRecord };
 
 const valueWords = (values: readonly unknown[]) =>
   values.map((value) =>
@@ -107,7 +107,7 @@ function Review({
   skill,
   locale,
 }: {
-  skill: AgentSkillDetail;
+  skill: SkillDetailRecord;
   locale: string;
 }) {
   const t = useStrings();
@@ -141,7 +141,7 @@ function Review({
   );
 }
 
-function Verification({ result }: { result: AgentSkillVerification }) {
+function Verification({ result }: { result: SkillVerificationRecord }) {
   const t = useStrings();
   return (
     <>
@@ -195,8 +195,8 @@ export function SkillDialog({
 }: {
   command: SkillCommand;
   locale: string;
-  review?: (name: string) => Promise<AgentSkillDetail>;
-  verify?: (name: string) => Promise<AgentSkillVerification>;
+  review?: (name: string) => Promise<SkillDetailRecord>;
+  verify?: (name: string) => Promise<SkillVerificationRecord>;
   onClose: () => void;
 }) {
   const t = useStrings();

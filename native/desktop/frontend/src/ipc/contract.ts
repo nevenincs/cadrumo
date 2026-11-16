@@ -18,7 +18,9 @@ import type {
 import type {
   AttachmentPolicyResponse,
   ModelLicenceResponse,
+  SkillDetailRecord,
   SkillListResponse,
+  SkillVerificationRecord,
 } from "../shell/agentGatewayContract";
 import type {
   AgentAnswerResult,
@@ -1072,9 +1074,15 @@ export interface HostCommands {
    * name outside the skill grammar is refused as `agent_invalid_request`
    * before the agent is asked, and an unknown one as
    * `agent_gateway_skill_not_found`. */
-  agent_skill: { args: Authorized<{ name: string }>; result: unknown };
+  agent_skill: {
+    args: Authorized<{ name: string }>;
+    result: SkillDetailRecord;
+  };
   /** The agent's checks of one skill, from `POST /v1/skills/{name}/verify`. */
-  agent_skill_verify: { args: Authorized<{ name: string }>; result: unknown };
+  agent_skill_verify: {
+    args: Authorized<{ name: string }>;
+    result: SkillVerificationRecord;
+  };
   agent_conversation_start: {
     args: Authorized;
     result: AgentConversationRecord;
