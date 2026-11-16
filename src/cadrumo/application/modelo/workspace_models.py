@@ -64,6 +64,9 @@ _MAX_FACET_PAGE_SIZE = 200
 _MAX_CONTRIBUTORS = 32
 _MAX_SCHEMA_RECORD_FAMILY_DEPTH = 16
 _MAX_SCHEMA_RELATIONSHIPS = 128
+# A formula's distinct reads: the Modelo 100 sum of autonomic deductions reads a box
+# for every enrolled deduction of every comunidad, several hundred.
+_MAX_FORMULA_OPERANDS = 2048
 _MAX_SCHEMA_EVIDENCE_REFERENCES = 64
 _MAX_SAFE_FACTS = 32
 _MAX_SAFE_FACT_TEXT_LENGTH = 256
@@ -603,7 +606,7 @@ class ModeloWorkspaceSchemaRecordV1(_WorkspaceModel):
     check, so it cannot honestly claim "no constraints declared" the way an
     empty tuple would."""
     formula_operands: Annotated[
-        tuple[ModeloWorkspaceFormulaOperandReferenceV1, ...], Field(max_length=_MAX_SCHEMA_RELATIONSHIPS)
+        tuple[ModeloWorkspaceFormulaOperandReferenceV1, ...], Field(max_length=_MAX_FORMULA_OPERANDS)
     ] = ()
     relation_endpoints: Annotated[
         tuple[ModeloWorkspaceRelationEndpointReferenceV1, ...], Field(max_length=_MAX_SCHEMA_RELATIONSHIPS)
