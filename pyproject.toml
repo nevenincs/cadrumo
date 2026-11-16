@@ -66,6 +66,9 @@ dependencies = [
   "defusedxml>=0.7.1,<1",
   # HTTP client
   "httpx>=0.28.1,<1",
+  # The agent service validates the provider catalog it relays against the
+  # agent's pinned published schema (JSON Schema 2020-12).
+  "jsonschema>=4.26,<5",
   # OS-keychain abstraction for the master-key provider (Windows
   # Credential Manager, macOS Keychain, Linux Secret Service via
   # libsecret). Pure-Python, gracefully degrades when no usable backend

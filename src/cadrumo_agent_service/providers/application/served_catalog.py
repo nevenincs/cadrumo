@@ -15,10 +15,15 @@ from __future__ import annotations
 import copy
 import hashlib
 import json
+from datetime import datetime
 from enum import StrEnum
 from functools import cache
 from importlib.resources import files
 from typing import Any, Final, cast
+
+from jsonschema import Draft202012Validator, FormatChecker
+from jsonschema.exceptions import best_match
+from jsonschema.protocols import Validator
 
 AGENT_SCHEMA_DIRECTORY: Final = ("_data", "agent_api")
 """Where the pinned agent schema and its pin record sit inside the service package."""
@@ -182,6 +187,38 @@ def served_schema() -> dict[str, Any]:
     return defs
 
 
+def _is_date_time(value: object) -> bool:
+    """An RFC 3339 date-time: a date and a time joined by ``T``, with its offset stated."""
+    if not isinstance(value, str):
+        return True
+    if len(value) < 11 or value[10] not in "Tt":
+        return False
+    try:
+        return datetime.fromisoformat(value).tzinfo is not None
+    except ValueError:
+        return False
+
+
+@cache
+def _validator() -> Validator:
+    """The served answer's validator, checking the one format its definitions use."""
+    formats = FormatChecker(formats=())
+    formats.checks("date-time")(_is_date_time)
+    schema = {"$defs": served_schema(), "$ref": f"#/$defs/{SERVED_CATALOG_ANSWER}"}
+    Draft202012Validator.check_schema(schema)
+    return Draft202012Validator(schema, format_checker=formats)
+
+
+def catalog_nonconformance(answer: object) -> str | None:
+    """Where ``answer`` departs from the served catalog answer, or ``None`` when it conforms.
+
+    Only the place and the rule broken are said, never the value found there, so the words can be
+    logged: a lane's reasons and names are the agent's text, not the service's.
+    """
+    error = best_match(_validator().iter_errors(answer))
+    return None if error is None else f"{error.json_path} {error.validator}"
+
+
 __all__ = [
     "AGENT_SCHEMA_DIRECTORY",
     "DECLARED_CATALOG_KIND",
@@ -190,6 +227,7 @@ __all__ = [
     "SERVED_DECLARED_CATALOG",
     "ModelDownload",
     "PinnedSchemaError",
+    "catalog_nonconformance",
     "pinned_agent_components",
     "served_schema",
 ]
