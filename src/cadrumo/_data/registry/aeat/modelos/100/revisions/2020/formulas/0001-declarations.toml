@@ -430,13 +430,17 @@ expression = { op = "if_then_else", args = [
     ] },
     { literal = "0" },
 ] }
-rounding = "money-2"
+rounding = "decimal-2-truncated"
 legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-63-2015"]
-source_refs = ["lirpf-cuota-chain-authority"]
+source_refs = ["lirpf-cuota-chain-authority", "aeat-renta-2020-manual-parte1"]
 
 [[revisions."2020".formulas.source_citations]]
 source_ref = "lirpf-cuota-chain-authority"
 required_text = ["cuota íntegra", "base liquidable general"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "aeat-renta-2020-manual-parte1"
+required_text = ["tipo medio de gravamen general estatal se expresará con dos decimales", "sin redondeo"]
 [[revisions."2020".formulas]]
 id = "renta-tipo-medio-gravamen-autonomico-base-liquidable-general"
 target_casilla_id = "0535"
@@ -448,13 +452,17 @@ expression = { op = "if_then_else", args = [
     ] },
     { literal = "0" },
 ] }
-rounding = "money-2"
+rounding = "decimal-2-truncated"
 legal_refs = ["ley-35-2006:art-74"]
-source_refs = ["lirpf-cuota-chain-authority"]
+source_refs = ["lirpf-cuota-chain-authority", "aeat-renta-2020-manual-parte1"]
 
 [[revisions."2020".formulas.source_citations]]
 source_ref = "lirpf-cuota-chain-authority"
 required_text = ["cuota íntegra autonómica", "base liquidable general"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "aeat-renta-2020-manual-parte1"
+required_text = ["tipo medio de gravamen general autonómico se", "expresará con dos decimales sin redondeo"]
 [[revisions."2020".formulas]]
 id = "renta-tipo-medio-gravamen-estatal-base-liquidable-ahorro"
 target_casilla_id = "0542"
