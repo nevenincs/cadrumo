@@ -36,7 +36,7 @@ use super::wire::{ModelDownload, Refusal, Stop};
 use crate::{
     agent::{AgentHost, admin::EXCHANGE, local_models},
     shell::provider_settings::{
-        outcome, read_status,
+        STATUS_BUSY_PATIENCE, outcome, read_status,
         wire::{
             self, AuthKind, CommandFailure, Entry, Mode, Refusal as ProviderRefusal, Transport,
         },
@@ -420,6 +420,7 @@ impl Admission {
             read_status(
                 || self.agent.exchange(json!({"action": "provider_lanes"})),
                 READ_PAUSE,
+                STATUS_BUSY_PATIENCE,
             )
         };
         status

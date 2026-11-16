@@ -16,7 +16,7 @@ use cadrumo_application::error::application::{ApplicationError, ErrorCode, Opera
 use serde::Serialize;
 use serde_json::{Value, json};
 use std::sync::Arc;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 use tauri::{
     State,
     ipc::{InvokeBody, Request},
@@ -154,16 +154,22 @@ pub(crate) fn agent_selection_available(
     read_status(
         || host.administer(json!({"action":"status"}), None),
         Duration::from_millis(250),
+        STATUS_BUSY_PATIENCE,
     )
     .map(|status| status.permits_agent(provider, transport))
 }
 
-/// How many reads a status answered `busy` gets. The service answers `busy`
-/// while it reads its provider catalog, which probes every lane and took
-/// 5.4 s for 13 lanes on a fresh profile; at the 250 ms pause this waits
-/// about 12 s, where four reads gave up after one second and left the
-/// settings page saying the providers could not be loaded.
-const STATUS_BUSY_ATTEMPTS: u32 = 48;
+/// How long a status read answered `busy` is read again. The service answers
+/// `busy` while it reads its provider catalog, which probes every lane and took
+/// 5.4 s for 13 lanes on a fresh profile, where four reads gave up after one
+/// second and left the settings page saying the providers could not be loaded.
+/// The bound is on time, not on reads: each exchange can itself take seconds,
+/// and 48 such reads kept a window waiting minutes.
+pub(crate) const STATUS_BUSY_PATIENCE: Duration = Duration::from_secs(12);
+
+/// The window's own status read waits less: it draws the busy answer as the
+/// agent starting and reads again when the service publishes the agent ready.
+const WINDOW_STATUS_PATIENCE: Duration = Duration::from_secs(4);
 
 /// A cold sign-in probe or catalog read outlives the service's bounded status
 /// exchange. Its work continues after `busy`, and the next read collects that
@@ -172,19 +178,20 @@ const STATUS_BUSY_ATTEMPTS: u32 = 48;
 pub(crate) fn read_status(
     mut request: impl FnMut() -> Result<Value, ApplicationError>,
     pause: Duration,
+    patience: Duration,
 ) -> Result<Status, CommandFailure> {
-    for attempt in 0..STATUS_BUSY_ATTEMPTS {
+    let began = Instant::now();
+    loop {
         match wire::status(outcome(request()?)) {
             Err(CommandFailure::Refused(wire::Refused {
                 code: Refusal::Busy,
                 ..
-            })) if attempt + 1 < STATUS_BUSY_ATTEMPTS => {
+            })) if began.elapsed() + pause < patience => {
                 std::thread::sleep(pause);
             }
             result => return result,
         }
     }
-    unreachable!("the last attempt returns its result")
 }
 /// Settings are read and changed only through an admitted admin endpoint. The
 /// window asks for them as soon as the service starts, and admission follows
@@ -249,6 +256,7 @@ pub async fn provider_settings_status(
                     read_status(
                         || host.administer(json!({"action":"status"}), None),
                         Duration::from_millis(250),
+                        WINDOW_STATUS_PATIENCE,
                     )
                 },
             )
@@ -544,6 +552,7 @@ mod tests {
                 })
             },
             Duration::ZERO,
+            STATUS_BUSY_PATIENCE,
         )
         .unwrap();
         assert_eq!(calls, 3);
@@ -564,6 +573,7 @@ mod tests {
                 })
             },
             Duration::ZERO,
+            STATUS_BUSY_PATIENCE,
         )
         .unwrap();
         assert_eq!(calls, 21);
@@ -579,8 +589,9 @@ mod tests {
                 Ok(json!({"kind":"refused","code":"busy"}))
             },
             Duration::ZERO,
+            STATUS_BUSY_PATIENCE,
         );
-        assert_eq!(calls, STATUS_BUSY_ATTEMPTS);
+        assert!(calls > 1);
         assert!(matches!(
             result,
             Err(CommandFailure::Refused(wire::Refused {
@@ -596,10 +607,37 @@ mod tests {
                     Ok(json!({"kind":"refused","code":code}))
                 },
                 Duration::ZERO,
+                STATUS_BUSY_PATIENCE,
             );
             assert!(result.is_err());
             assert_eq!(calls, 1);
         }
+    }
+
+    #[test]
+    fn a_status_read_whose_exchanges_are_slow_stops_at_its_patience() {
+        // Each exchange took seconds while the service recomputed a busy
+        // status; counted reads let one window read wait minutes.
+        let began = Instant::now();
+        let mut calls = 0;
+        let result = read_status(
+            || {
+                calls += 1;
+                std::thread::sleep(Duration::from_millis(200));
+                Ok(json!({"kind":"refused","code":"busy"}))
+            },
+            Duration::from_millis(10),
+            Duration::from_millis(500),
+        );
+        assert!(began.elapsed() < Duration::from_millis(1500));
+        assert!((2..=4).contains(&calls));
+        assert!(matches!(
+            result,
+            Err(CommandFailure::Refused(wire::Refused {
+                code: Refusal::Busy,
+                ..
+            }))
+        ));
     }
 
     #[test]
@@ -611,6 +649,7 @@ mod tests {
                 Err(ApplicationError::new(ErrorCode::TimedOut, Operation::Cli))
             },
             Duration::ZERO,
+            STATUS_BUSY_PATIENCE,
         );
         assert!(matches!(result, Err(CommandFailure::Host(_))));
         assert_eq!(calls, 1);
