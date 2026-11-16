@@ -315,6 +315,8 @@ class PublicModeloFormGridRow(BaseModel):
     key: str
     heading: ModeloFormText
     cells: tuple[PublicModeloFormGridCell, ...]
+    rate_cell: int | None
+    rate_base_empty: bool | None
 
 
 class PublicModeloFormGridBlock(BaseModel):
