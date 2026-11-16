@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/components/ui/cn";
 import { Icon } from "@/components/ui/icon";
 import { Spinner } from "@/components/ui/spinner";
-import { formatAmount } from "../../../shared/numbers";
 import type { ModeloFormAddressV1 } from "../../../shell/modeloContract/modeloEditWork";
 
 import type { PublicModeloFormField } from "../../../shell/modeloContract/modeloWorkForm";
@@ -21,7 +20,8 @@ import type { ModeloTaxationComparisonProjection } from "../../../shell/modeloCo
 // individual figure are the application's words, said in the language it said
 // them in; a refusal is shown in its own words with the boxes it names as
 // links to the form, and a refusal that the profile puts right leads to the
-// profile. The window words only its own frame and does no arithmetic.
+// profile. Each amount is the words it was served in. The window words only
+// its own frame and does no arithmetic.
 
 /** The refusals the profile puts right: what the household states decides
  * whether the declaration can be filed jointly. */
@@ -30,8 +30,6 @@ const PROFILE_REFUSALS: ReadonlySet<string> = new Set([
   "family_situation_unstated",
   "no_family_unit",
 ]);
-
-const CURRENCY = "EUR";
 
 /** The name of a language, in the window's own. */
 function languageName(locale: string, code: string): string {
@@ -50,14 +48,12 @@ function Mode({
   recommended,
   tax,
   result,
-  locale,
 }: {
   mode: "joint" | "individual";
   title: string;
   recommended: boolean;
   tax: string;
   result: string;
-  locale: string;
 }) {
   const t = useStrings();
   return (
@@ -86,7 +82,7 @@ function Mode({
             data-comparison-tax=""
             className="font-mono text-base tabular-nums"
           >
-            {formatAmount(locale, tax, { currency: CURRENCY })}
+            {tax}
           </dd>
         </div>
         <div className="flex items-baseline justify-between gap-3">
@@ -97,7 +93,7 @@ function Mode({
             data-comparison-result-amount=""
             className="font-mono text-md font-semibold tabular-nums"
           >
-            {formatAmount(locale, result, { currency: CURRENCY })}
+            {result}
           </dd>
         </div>
       </dl>
@@ -124,17 +120,15 @@ function Result({
           mode="joint"
           title={t("desktop.modelo.compare.taxation.joint")}
           recommended={projection.recommendation === "conjunta"}
-          tax={projection.conjunta_cuota_resultante}
-          result={projection.conjunta_resultado}
-          locale={locale}
+          tax={projection.conjunta_cuota_resultante_words}
+          result={projection.conjunta_resultado_words}
         />
         <Mode
           mode="individual"
           title={t("desktop.modelo.compare.taxation.individual")}
           recommended={projection.recommendation === "individual"}
-          tax={projection.individual_cuota_resultante}
-          result={projection.individual_resultado}
-          locale={locale}
+          tax={projection.individual_cuota_resultante_words}
+          result={projection.individual_resultado_words}
         />
       </div>
       <p data-comparison-reason="" className="text-base">

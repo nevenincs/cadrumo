@@ -15,6 +15,7 @@ from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import OutputLanguage
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ...core.parsing.codes import IsoCurrencyCodeText
 from ...domain.calculations.registry.iva_rate_kind_catalogue import IvaRateKindCatalogue
 from ...domain.invoices.business_premises import (
     BusinessPremisesLease,
@@ -184,7 +185,7 @@ class InvoiceAddRequest(BaseModel):
     issued_at: date
     taxable_base: PublicDecimal | None = None
     iva_rate: PublicDecimal | None = None
-    currency: str = Field(min_length=1, max_length=16)
+    currency: IsoCurrencyCodeText
     notes: str = ""
     iva_category: str | None = Field(default=None, min_length=1, max_length=128)
     operation_type: IntracomOperationType | None = None

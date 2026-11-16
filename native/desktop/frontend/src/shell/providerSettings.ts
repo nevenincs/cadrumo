@@ -1,4 +1,11 @@
-import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import type {
   ProviderOutcome,
   ProviderSecret,
@@ -7,6 +14,7 @@ import type {
 import { failureCode } from "../errors";
 import type { CallPlan } from "./hostCall";
 import { useCachedRead, type AgentRead } from "./agentViews";
+import { CATALOG_BUSY_QUIET_MS, catalogBusyPause } from "./catalogReadPolicy";
 import {
   cliStateCause,
   consoleCommandTemplate,
@@ -145,8 +153,11 @@ export type ProviderSettingsView = {
 /**
  * The providers of `reader`'s profile while `open`: read each time they open
  * (`opened` counts the openings), after each change of the person's and when
- * asked to refresh; never on a timer. The last answer stays on screen while
- * it is read again, so the settings load only the first time.
+ * asked to refresh. The last answer stays on screen while it is read again,
+ * so the settings load only the first time. A busy answer (the service still
+ * starting the agent) is read again after a pause, growing to a ceiling,
+ * for as long as they are open: the settings follow their own read, not the
+ * agent's other reads or the ready it publishes, which can come much later.
  */
 export function useProviderSettings(
   host: ProviderSettings | undefined,
@@ -171,8 +182,27 @@ export function useProviderSettings(
   });
   if (state.owner !== owner)
     setState({ owner, again: 0, changes: 0, busyId: null, outcomes: {} });
+  // A busy answer is followed while the settings are open, and since when it
+  // has been, so its refusals are recorded as the wait they are while it is
+  // the one expected.
+  const asking = useRef(open);
+  useLayoutEffect(() => {
+    asking.current = open;
+  }, [open]);
+  const following = useRef<{ since: number } | null>(null);
   const readStatus = useMemo(
-    () => (host && reader !== null ? () => host.status() : null),
+    () =>
+      host && reader !== null
+        ? () =>
+            host.status({
+              retryable: (code) => code === "busy",
+              scheduled: () => asking.current,
+              expected: () =>
+                following.current === null ||
+                performance.now() - following.current.since <
+                  CATALOG_BUSY_QUIET_MS,
+            })
+        : null,
     [host, reader],
   );
   const { read: answer, put } = useCachedRead(
@@ -181,6 +211,26 @@ export function useProviderSettings(
     open,
     state.again + opened,
   );
+  const busy =
+    open &&
+    readStatus !== null &&
+    answer.kind === "failed" &&
+    answer.code === "busy";
+  const pauses = useRef(0);
+  useEffect(() => {
+    if (!busy) {
+      following.current = null;
+      pauses.current = 0;
+      return;
+    }
+    following.current ??= { since: performance.now() };
+    const again = window.setTimeout(
+      () => setState((held) => ({ ...held, again: held.again + 1 })),
+      catalogBusyPause(pauses.current),
+    );
+    pauses.current += 1;
+    return () => window.clearTimeout(again);
+  }, [answer, busy]);
   const read = useMemo(
     (): ProviderSettingsView["read"] =>
       answer.kind === "ready"

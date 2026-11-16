@@ -139,6 +139,19 @@ for (const language of LANGUAGES) {
     expect(await amount(individual)).toBe(
       digits(projection.individual_resultado),
     );
+    // Each amount is the words it was served in, as served.
+    await expect(joint.locator("[data-comparison-tax]")).toHaveText(
+      projection.conjunta_cuota_resultante_words,
+    );
+    await expect(joint.locator("[data-comparison-result-amount]")).toHaveText(
+      projection.conjunta_resultado_words,
+    );
+    await expect(individual.locator("[data-comparison-tax]")).toHaveText(
+      projection.individual_cuota_resultante_words,
+    );
+    await expect(
+      individual.locator("[data-comparison-result-amount]"),
+    ).toHaveText(projection.individual_resultado_words);
     // Only the recommended mode is marked, and the sentence is the served one.
     await expect(joint).toHaveAttribute("data-recommended", "true");
     await expect(individual).toHaveAttribute("data-recommended", "false");

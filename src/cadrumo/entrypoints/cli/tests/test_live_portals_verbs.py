@@ -11,7 +11,9 @@ from collections.abc import Sequence
 import pytest
 from click.testing import Result
 
+from ....application.operator_actions.served_actions import NO_RECOVERY_WORDS_LOCALE_KEYS
 from ....core.i18n.render import tr
+from ....core.operator_action_enums import NoRecoveryOutcome
 from ....domain.portals.errors import PortalRegistryInvariant, portal_integrity_error
 from ....domain.portals.registry import PORTAL_REGISTRY
 from .. import app_live_portals_commands as portals_cli_module
@@ -30,6 +32,14 @@ def _call_name(node: ast.expr) -> str | None:
     if isinstance(node, ast.Attribute):
         return node.attr
     return None
+
+
+def _no_recovery_words(outcome: NoRecoveryOutcome) -> dict[str, str]:
+    """The no-way-out sentence a refusal serves in the CLI's default Spanish."""
+    return {
+        "no_recovery_words": tr(NO_RECOVERY_WORDS_LOCALE_KEYS[outcome], locale="es"),
+        "no_recovery_words_language": "es",
+    }
 
 
 def _invoke_portals(args: Sequence[str]) -> Result:
@@ -61,6 +71,7 @@ def _assert_exact_terminal_action(
         "missing_argument_names": [],
         "conditionality": "not_applicable",
         "no_recovery_outcome": "operator_decision",
+        **_no_recovery_words(NoRecoveryOutcome.OPERATOR_DECISION),
     }
 
 
@@ -223,4 +234,5 @@ def test_portal_integrity_refusal_reaches_the_cli_boundary_as_safety() -> None:
         "missing_argument_names": [],
         "conditionality": "not_applicable",
         "no_recovery_outcome": "safety",
+        **_no_recovery_words(NoRecoveryOutcome.SAFETY),
     }

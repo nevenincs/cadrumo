@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { label } from "../support/strings";
 import { seedLayout } from "../support/layout";
 import { MODELO_FIXTURES } from "../support/windowFixtures";
+import type { ModeloIvaWalletBalanceProjection } from "../../src/shell/modeloContract/modeloIvaWallet";
 
 type Language = "en" | "es" | "ca" | "hu";
 declare global {
@@ -33,10 +34,12 @@ const served = <T>(name: string): T =>
 const SEEDED = served<Written>("iva-wallet-seed");
 const CORRECTED = served<Written>("iva-wallet-correct");
 const OVERRIDDEN = served<Written>("iva-wallet-override");
-/** The year the scenario's balance was read at. */
-const AS_OF_YEAR = served<{ as_of_year: number }>(
+/** The balance the scenario serves before any recording. */
+const EMPTY_BALANCE = served<ModeloIvaWalletBalanceProjection>(
   "iva-wallet-balance-empty",
-).as_of_year;
+);
+/** The year the scenario's balance was read at. */
+const AS_OF_YEAR = EMPTY_BALANCE.as_of_year;
 const words = (key: string, language: Language = "en") =>
   label(`workspace.modelo.iva_wallet.${key}`, {}, language);
 const wallet = (page: Page, language: Language = "en") =>
@@ -191,13 +194,16 @@ for (const language of ["en", "es", "ca", "hu"] as const) {
     await expect(fact(root, "next_expiry_year", language)).toHaveText(
       words("expiry_not_reported", language),
     );
+    // Each amount is the words it was served in, as served.
     for (const key of [
       "total_balance",
       "active_balance",
       "expired_balance",
       "unallocated_applied_amount",
-    ])
-      await expect(fact(root, key, language)).toContainText("0");
+    ] as const)
+      await expect(fact(root, key, language)).toHaveText(
+        EMPTY_BALANCE[`${key}_words`],
+      );
     await expect(root).not.toContainText("workspace.modelo.");
     await page.setViewportSize({ width: 760, height: 900 });
     await expect(
@@ -318,8 +324,10 @@ test("wallet records exact amounts, preserves separate drafts, and does not reca
     })
     .click();
   await expect(fact(wallet(page), "lot_count")).toHaveText("1");
-  await expect(fact(wallet(page), "active_balance")).toContainText(
-    CORRECTED.amount,
+  // The balance read after the recordings, in the words it was served in.
+  await expect(fact(wallet(page), "active_balance")).toHaveText(
+    served<ModeloIvaWalletBalanceProjection>("iva-wallet-balance-override")
+      .active_balance_words,
   );
   const sent = await page.evaluate(() => window.__walletTest!.sent);
   expect(

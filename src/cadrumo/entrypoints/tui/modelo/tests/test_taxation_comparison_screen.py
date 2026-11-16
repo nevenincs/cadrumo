@@ -287,6 +287,35 @@ async def test_words_served_in_another_language_are_shown_as_served_and_the_lang
 
 
 @pytest.mark.asyncio
+async def test_each_amount_is_shown_in_the_words_it_was_served_in(english: None) -> None:
+    served = _projection(
+        joint="1250.00",
+        individual="1400.00",
+        delta="150.00",
+        joint_tax="3000.00",
+        individual_tax="3100.00",
+        recommendation=TaxationRecommendation.CONJUNTA,
+        language=OutputLanguage.ES,
+    )
+    screen = ModeloTaxationComparisonScreen(_serving(served), form=synthetic_form())
+    async with ScreenHostApp(screen).run_test(size=(120, 40)) as pilot:
+        await settle(pilot)
+        await _ask(pilot, screen)
+        joint = _text(screen, "#taxcmp-joint").splitlines()[1:]
+        individual = _text(screen, "#taxcmp-individual").splitlines()[1:]
+
+    tax, result = tr("desktop.modelo.compare.taxation.tax"), tr("desktop.modelo.compare.taxation.result")
+    assert joint == [
+        f"{tax}: {served.conjunta_cuota_resultante_words}",
+        f"{result}: {served.conjunta_resultado_words}",
+    ]
+    assert individual == [
+        f"{tax}: {served.individual_cuota_resultante_words}",
+        f"{result}: {served.individual_resultado_words}",
+    ]
+
+
+@pytest.mark.asyncio
 async def test_while_the_comparison_is_read_the_screen_says_so_and_asks_nothing_more(english: None) -> None:
     release = asyncio.Event()
     served = _projection(joint="1.00", individual="2.00", delta="1.00", recommendation=TaxationRecommendation.CONJUNTA)
