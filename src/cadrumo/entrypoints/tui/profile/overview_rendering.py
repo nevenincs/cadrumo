@@ -208,13 +208,8 @@ class ProfileOverviewRenderingMixin:
         _update_section_search_feedback(self, any_visible)
 
     def _required_now(self: ProfileManagerScreen, overview: ProfileOverview, field: ProfileFieldView) -> bool:
-        """Whether setup requires this row now: missing, or answered and required.
-
-        A repeatable section's template row is marked required but demands
-        nothing until the operator adds a row, so it is not counted here;
-        the overview's own missing list is the authority on what is owed.
-        """
-        return field.path in overview.missing_required or (field.required and field.present)
+        """Whether setup requires this row now, as the overview decides it."""
+        return overview.requires_now(field)
 
     def _visible_fields(
         self: ProfileManagerScreen, overview: ProfileOverview, section: ProfileSectionView
