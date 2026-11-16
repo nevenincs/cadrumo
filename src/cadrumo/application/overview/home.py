@@ -15,11 +15,14 @@ from typing import Final, Self
 from pydantic import BaseModel, Field, NonNegativeInt, computed_field, model_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
+from ...core.external_constants import OutputLanguage
 from ...core.filing_year import FilingYear
 from ...core.identity.hex_ids import WorkUnitId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...domain.calculations.registry.ids import ModeloId, RevisionId
+from ..modelo.work_form_wording import date_text, period_words
+from ..operations.error_detail import served_words_language
 from ..operator_actions.models import DeclaredNextAction
 from .agenda import OverviewAgenda
 from .calendar_models import (
@@ -234,7 +237,12 @@ class HomeLedgerReadiness(BaseModel):
 
 
 class HomeAgendaEntry(BaseModel):
-    """One legal filing date with independent local and observed-AEAT axes."""
+    """One legal filing date with independent local and observed-AEAT axes.
+
+    ``due_on_text`` and ``period_words`` say the date and the period in
+    ``words_language`` the way the declarations list says them, so no frontend
+    formats a date or a period token itself.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -245,6 +253,36 @@ class HomeAgendaEntry(BaseModel):
     period_state: OverviewPeriodState
     local_filing_state: OverviewLocalFilingState
     aeat_submission_state: OverviewAeatSubmissionState
+    due_on_text: str = Field(min_length=1, max_length=64)
+    period_words: str = Field(min_length=1, max_length=128)
+    words_language: OutputLanguage
+
+    @classmethod
+    def worded(
+        cls,
+        *,
+        modelo: ModeloId,
+        filing_year: FilingYear,
+        period: Period,
+        due_on: date,
+        period_state: OverviewPeriodState,
+        local_filing_state: OverviewLocalFilingState,
+        aeat_submission_state: OverviewAeatSubmissionState,
+        language: OutputLanguage,
+    ) -> Self:
+        """Build the row with its date and period said in ``language``."""
+        return cls(
+            modelo=modelo,
+            filing_year=filing_year,
+            period=period,
+            due_on=due_on,
+            period_state=period_state,
+            local_filing_state=local_filing_state,
+            aeat_submission_state=aeat_submission_state,
+            due_on_text=date_text(due_on, language),
+            period_words=period_words(period, language),
+            words_language=language,
+        )
 
     @computed_field
     @property
@@ -453,7 +491,7 @@ def _project_agenda(
 
 def _project_agenda_entry(entry: OverviewCalendarEntry, *, evidence_observable: bool) -> HomeAgendaEntry:
     evidence = entry.filing_evidence
-    return HomeAgendaEntry(
+    return HomeAgendaEntry.worded(
         modelo=entry.modelo,
         filing_year=entry.filing_year or entry.period.filing_year,
         period=entry.period,
@@ -463,6 +501,7 @@ def _project_agenda_entry(entry: OverviewCalendarEntry, *, evidence_observable: 
         aeat_submission_state=(
             evidence.aeat_submission_state if evidence_observable else OverviewAeatSubmissionState.NOT_OBSERVED
         ),
+        language=served_words_language(),
     )
 
 
