@@ -15,7 +15,7 @@ import type {
   OverviewCalendarSupport,
   OverviewCalendarWarningSnapshot,
   OverviewFilingEvidenceSnapshot,
-  OverviewSuppressedEntrySnapshot,
+  FilingCalendarPassedOn,
 } from "./calendarContract";
 
 /** One obligation of the calendar: a Modelo and its period. The host takes
@@ -68,17 +68,12 @@ export type CalendarWarning = Pick<
   "code" | "affected_modelos"
 > & { message: string };
 
-/** One obligation the calendar holds off its schedule, as served: its
- * verdict and the worker's own sentence for it in `verdict_words_language`,
- * shown as it came. The doors that move it on are not part of it. */
-export type CalendarSuppressedEntry = Omit<
-  OverviewSuppressedEntrySnapshot,
-  "actions"
->;
-
 /** The filing calendar of one profile over a range of dates, from local
- * records only. Reading it never asks the tax agency anything. */
-export type FilingCalendar = {
+ * records only. Reading it never asks the tax agency anything. The
+ * obligations the read held off the schedule (`suppressed_entries`) come as
+ * the product served them, typed by the generated contract; an empty list is
+ * the read saying there are none. */
+export type FilingCalendar = FilingCalendarPassedOn & {
   range: OverviewCalendarRange;
   entries: CalendarEntry[];
   /** What was observed in the range: the profile's own filing history and
@@ -89,10 +84,6 @@ export type FilingCalendar = {
   generated_at: string | null;
   /** Every Modelo the calendar considered, in exactly one disposition. */
   coverage: ObligationCoverageReport;
-  /** The obligations the read served as held off the schedule. Left out
-   * where the host did not ask for them or pass them on; an empty list is
-   * the read saying there are none. */
-  suppressed_entries?: CalendarSuppressedEntry[];
   /** The filing-year envelope the read was served under and where the
    * range sits in it, as served. Left out or null where the host does not
    * pass it on: the page then draws the calendar as supported. */

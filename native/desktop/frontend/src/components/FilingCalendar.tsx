@@ -1041,9 +1041,7 @@ export function FilingCalendarView({
             list
           )}
           {note}
-          <CalendarSuppressed
-            entries={state.calendar.suppressed_entries ?? []}
-          />
+          <CalendarSuppressed entries={state.calendar.suppressed_entries} />
         </div>
         {/* Beside the months where the page is wide: the list keeps its own
             place and scrolls by itself, as tall as the page. */}
