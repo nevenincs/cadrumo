@@ -20,7 +20,6 @@ from ...calculations.registry.tests.authored_editions import filing_year_envelop
 from ..components import (
     registry_category_projection,
     registry_component_catalogue,
-    registry_cuota_settlement_catalogue,
 )
 from ..deduction_facts import admits_iva_deduction_classification, required_deduction_evidence_authority
 from ..errors import IvaError
@@ -46,7 +45,6 @@ _READERS: dict[str, Callable[[date], object]] = {
     ),
     "component-catalogue": lambda on: registry_component_catalogue(effective_date=on),
     "category-projection": lambda on: registry_category_projection("evidence_exempt", effective_date=on),
-    "cuota-settlement": lambda on: registry_cuota_settlement_catalogue(effective_date=on),
     "oss-ioss": lambda on: resolve_oss_ioss_regime_catalogue(effective_date=on),
     "statutory-citations": lambda on: registry_citation_catalogue(effective_date=on),
 }

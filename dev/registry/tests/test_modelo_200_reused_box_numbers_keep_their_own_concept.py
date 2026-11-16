@@ -23,7 +23,7 @@ from __future__ import annotations
 
 import re
 import shutil
-from collections.abc import Iterable, Iterator, Mapping
+from collections.abc import Generator, Iterable, Mapping
 from contextlib import contextmanager
 from decimal import Decimal
 from functools import cache
@@ -40,7 +40,11 @@ from cadrumo.application.filing.draft_construction import (
 from cadrumo.application.filing.errors import ModeloApplicationError
 from cadrumo.application.filing.export import export_draft
 from cadrumo.application.filing.export_verification import FilingExportValidatedPayload
-from cadrumo.application.filing.runtime import ModeloOperatorProfile, schema_provider_from_authority
+from cadrumo.application.filing.runtime import (
+    ModeloOperatorProfile,
+    RegistrySchemaAccessor,
+    schema_provider_from_authority,
+)
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
@@ -55,7 +59,7 @@ from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_base import CasillaDataType
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
-from cadrumo.domain.filing.protocols import CasillaSchemaProvider, ModeloInputs
+from cadrumo.domain.filing.protocols import ModeloInputs
 from cadrumo.domain.submission.models import ModeloDraftStatus
 
 from ..compiler.authority import compiled_bundled_authority
@@ -180,7 +184,7 @@ assert _EXPORT_YEARS, "no supported year selects an edition with an export layou
 
 
 @contextmanager
-def _writer_scope(period: Period) -> Iterator[tuple[ModeloRevision, CasillaSchemaProvider]]:
+def _writer_scope(period: Period) -> Generator[tuple[ModeloRevision, RegistrySchemaAccessor]]:
     """Yield the edition selected for ``period`` and a schema provider the export writer accepts.
 
     The writer serves filing-grade snapshots only, and no Modelo 200 edition
@@ -722,7 +726,7 @@ def test_entity_flags_and_tax_adjustments_export_independently(filing_year: int,
 
 
 def _export(
-    provider: CasillaSchemaProvider, period: Period, scenario: EditionExportScenario, inputs: ModeloInputs
+    provider: RegistrySchemaAccessor, period: Period, scenario: EditionExportScenario, inputs: ModeloInputs
 ) -> bytes:
     """Calculate a draft from ``inputs`` and return the payload its export writes."""
     identity = scenario.product_software_identity_factory
@@ -747,7 +751,7 @@ def _export(
 
 
 def _assert_marked_regime_refuses(
-    provider: CasillaSchemaProvider, period: Period, scenario: EditionExportScenario, flag_id: str
+    provider: RegistrySchemaAccessor, period: Period, scenario: EditionExportScenario, flag_id: str
 ) -> None:
     """Marking an unauthored régimen leaves 00558 under its typed reason, and the export refuses."""
     inputs: ModeloInputs = {**scenario.inputs, flag_id: Decimal("1")}
@@ -771,7 +775,9 @@ def _assert_marked_regime_refuses(
     assert refused.value.translated_message == "application.filing.export_parity.errors.required_casillas_omitted"
     context = refused.value.context
     assert context is not None
-    missing = {str(item["casilla_id"]) for item in context["missing_casillas"]}
+    missing_items = context["missing_casillas"]
+    assert isinstance(missing_items, list | tuple)
+    missing = {str(item["casilla_id"]) for item in missing_items}
     assert str(_TIPO_GRAVAMEN) in missing
 
 
@@ -880,7 +886,9 @@ def _assert_box_fields_match_the_design(
     )
 
 
-def _reused_box_renderer(provider: CasillaSchemaProvider, period: Period, scenario: EditionExportScenario, number: str):
+def _reused_box_renderer(
+    provider: RegistrySchemaAccessor, period: Period, scenario: EditionExportScenario, number: str
+):
     """Return a renderer that exports the scenario with only the given reused-box inputs supplied."""
     identity = scenario.product_software_identity_factory
     assert identity is not None

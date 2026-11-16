@@ -17,7 +17,6 @@ from .facts.string_mapping import (
 from .governed_fact_scope import (
     GovernedFactSource,
     cache_governed_projection,
-    governed_facts_in_scope,
     require_governed_fact_authority,
     validating_governed_facts,
 )
@@ -153,30 +152,9 @@ def require_iva_rate_kind(
     ).require(value)
 
 
-def require_registry_declared_iva_rate_kind(value: object, *, effective_date: date) -> IvaRateKind:
-    """Return one rate-kind token declared by the facts a validation is validating.
-
-    A registry validator resolves its vocabulary from the candidate in scope,
-    never from the published authority: the artifact reader validates the
-    document it has just decoded while holding the shared-artifact lock, so a
-    validator reaching for the bundle asks that lock for the artifact it is in
-    the middle of producing and the process stops there. Absence of a scope is a
-    refusal rather than a fallback, because the fallback is the deadlock.
-    """
-    authority = governed_facts_in_scope()
-    if authority is None:
-        raise RegistryValidationError(
-            "IVA rate-kind validation requires the governed facts being validated to be in "
-            "scope; registry validation must not resolve a rate kind through the published "
-            "authority artifact",
-        )
-    return resolve_iva_rate_kind_catalogue(effective_date=effective_date, authority=authority).require(value)
-
-
 __all__ = [
     "IvaRateKindCatalogue",
     "IvaRateKindDefinition",
     "require_iva_rate_kind",
-    "require_registry_declared_iva_rate_kind",
     "resolve_iva_rate_kind_catalogue",
 ]
