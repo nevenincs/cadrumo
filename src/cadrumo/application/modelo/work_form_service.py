@@ -33,12 +33,14 @@ from __future__ import annotations
 
 import contextlib
 from collections.abc import Iterator, Mapping
+from dataclasses import dataclass
 from datetime import date, datetime
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
 from ...core.aggregation import BindingSourceKind
+from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import OutputLanguage
 from ...core.filing_producer_key import FilingProducerKey
@@ -62,6 +64,7 @@ from ...domain.modelos.calculation_revision import (
     CalculationRevisionCatalogue,
     CalculationRevisionState,
 )
+from ...domain.modelos.calculation_revision_operator_layer import CalculationOperatorLayer
 from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
@@ -73,6 +76,7 @@ from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryPr
 from ...domain.user_profile.errors import ProfileSchemaValidationError
 from ..actividad_asset.ports import ActivityAssetHistoryRepository
 from ..aggregation.renta_imputation import revision_reads_imputation_criterion
+from ..aggregation.source_mesh import CalculationSourceDiagnostic
 from ..filing.export_producer_m303 import (
     M303_LEXICAL_PRODUCER_KEYS,
     M303FilingLexicals,
@@ -85,6 +89,7 @@ from ..live.borrador_100_import import borrador_pdf_extraction_profile
 from ..user_profile.projections import declared_redeme_enrolment, profile_path_values_for_bucket
 from .calculation_note_gate import (
     NO_SOURCE_DISAGREEMENT_RESOLUTIONS,
+    SourceDisagreementResolutions,
     calculation_filed_before_grade_cap,
     calculation_screen_outdated,
 )
@@ -103,8 +108,9 @@ from .registry_input_refusals import registry_integrity_verdict
 from .taxation_comparison import revision_compares_taxation
 from .verification_report_facts import verification_sources_digest
 from .work_addressing import law_selected_revision_for_work_target
-from .work_form import build_modelo_work_form
+from .work_form import build_modelo_work_form, summarize_modelo_work_form
 from .work_form_declaration_facts import ModeloFormDeadline, ModeloFormExport
+from .work_form_facts import ModeloWorkFormSummary
 from .work_form_field_vocabulary import (
     ModeloFormAddressV1,
     ModeloFormOrigin,
@@ -470,6 +476,139 @@ def _profile_binding_context_values(
     return {binding_id: value for binding_id, value in values.items() if binding_id in needed}
 
 
+@dataclass(frozen=True, slots=True)
+class ModeloWorkFormSummaryLoad:
+    """One declaration's classified form with how far its filing has got, as the form load states them."""
+
+    summary: ModeloWorkFormSummary
+    verified: bool
+    filed: bool
+    #: Where the declaration stands on the filing journey, decided by the same function as the form load's.
+    journey: ModeloFormJourney
+
+
+@dataclass(frozen=True, slots=True)
+class _FormReads:
+    """What one declaration's form is classified from, read once from the profile and the pinned authority."""
+
+    review: ModeloWorkReview
+    snapshot: RegistrySnapshot
+    layout: FormLayoutDefinition | None
+    head: CalculationRevision | None
+    layer: CalculationOperatorLayer | None
+    borrador_snapshot_id: str | None
+    resolutions: SourceDisagreementResolutions
+    deadline: ModeloFormDeadline | None
+    known_truths: Mapping[BindingId, bool]
+    redeme: RedemeEnrolmentState
+    element_names: Mapping[str, str]
+    screen_outdated: bool
+    filed_before_grade_cap: CasillaId | None
+    filed_findings: tuple[ModeloVerificationFinding, ...]
+    last_export: ModeloFormExport | None
+    verification_out_of_date: bool
+
+    @property
+    def entered_casilla_ids(self) -> frozenset[CasillaId] | None:
+        """The casillas the operator layer records the filer entering; ``None`` when it records none."""
+        return None if self.layer is None else frozenset(self.layer.casilla_ids())
+
+    @property
+    def overridden_binding_ids(self) -> frozenset[BindingId] | None:
+        """The bindings the operator layer records the filer overriding; ``None`` when it records none."""
+        return None if self.layer is None else frozenset(self.layer.binding_overrides)
+
+    @property
+    def calculation_diagnostics(self) -> tuple[CalculationSourceDiagnostic, ...] | None:
+        """The diagnostics the latest calculation raised, when this session ran it."""
+        review = self.review
+        return CALCULATION_NOTES.diagnostics_for(review.work_unit_id, review.calculation_revision_id)
+
+    @property
+    def verified(self) -> bool:
+        """Whether the current calculation is verified."""
+        return self.review.lifecycle_state in SEALED_REVISION_STATES
+
+    @property
+    def filed(self) -> bool:
+        """Whether the current calculation is recorded as filed."""
+        return self.review.lifecycle_state in FILED_REVISION_STATES
+
+
+def _read_form(
+    bucket_id: BucketId,
+    modelo: ModeloCode,
+    filing_year: int,
+    period: Period,
+    *,
+    operation: PinnedAuthorityOperation,
+    repositories: tuple[
+        WorkUnitCatalogueRepositoryProtocol,
+        CalculationRevisionCatalogueRepositoryProtocol,
+        VerificationReportCatalogueRepositoryProtocol,
+    ],
+    calculation_catalogue: CalculationRevisionCatalogue | None,
+    reference_on: date | None,
+    bucket_events: BucketEventHistoryRepositoryProtocol | None,
+    activity_assets: ActivityAssetHistoryRepository | None,
+    credit_resolutions: CreditResolutionReader | None,
+    transactions: TransactionCatalogueRepositoryProtocol | None,
+) -> _FormReads:
+    """Read the review, layout, operator layer and every fact the form classifies its boxes with."""
+    work_unit_repository, calculation_repository, verification_repository = repositories
+    resolutions = (
+        NO_SOURCE_DISAGREEMENT_RESOLUTIONS
+        if credit_resolutions is None
+        else load_credit_resolutions(
+            credit_resolutions,
+            modelo=str(modelo),
+            filing_year=filing_year,
+            period=period.registry_token,
+        ).resolutions
+    )
+    review = build_modelo_work_review(
+        bucket_id,
+        modelo,
+        filing_year,
+        period,
+        operation=operation,
+        work_unit_repository=work_unit_repository,
+        calculation_repository=calculation_repository,
+        verification_repository=verification_repository,
+        calculation_catalogue=calculation_catalogue,
+        resolutions=resolutions,
+    )
+    snapshot = modelo_form_snapshot(operation, modelo, filing_year, period, review.registry_revision_id)
+    resolved, head = _head(
+        review.calculation_revision_id,
+        calculation_repository,
+        operation=operation,
+        calculation_catalogue=calculation_catalogue,
+    )
+    caller = caller_context_of(head)
+    target = {"modelo": str(modelo), "filing_year": filing_year, "period": period, "operation": operation}
+    return _FormReads(
+        review=review,
+        snapshot=snapshot,
+        layout=operation.form_layout(str(modelo), review.registry_revision_id),
+        head=head,
+        layer=caller.operator_layer if resolved else None,
+        borrador_snapshot_id=caller.borrador_snapshot_id,
+        resolutions=resolutions,
+        deadline=modelo_form_deadline(
+            operation, modelo, period, reference_on=reference_on if reference_on is not None else today_madrid()
+        ),
+        known_truths=_known_profile_truths(snapshot, bucket_id, operation=operation),
+        redeme=_redeme_enrolment(bucket_id),
+        element_names=read_element_names(activity_assets),
+        screen_outdated=head is not None and calculation_screen_outdated(head, **target),
+        filed_before_grade_cap=None if head is None else calculation_filed_before_grade_cap(head, **target),
+        filed_findings=_filed_findings(head, review.work_unit_id, work_unit_repository, operation=operation),
+        last_export=_last_export(bucket_events, bucket_id, review.work_unit_id, review.calculation_revision_id),
+        verification_out_of_date=_verification_out_of_date(review, head, transactions),
+    )
+
+
 def load_modelo_work_form(
     bucket_id: BucketId,
     modelo: ModeloCode,
@@ -517,38 +656,21 @@ def load_modelo_work_form(
     ``m303_arrivals`` are the ledger and register repositories a Modelo 303's period
     facts are folded from, as its export folds them; without them those facts stay unknown.
     """
-    resolutions = (
-        NO_SOURCE_DISAGREEMENT_RESOLUTIONS
-        if credit_resolutions is None
-        else load_credit_resolutions(
-            credit_resolutions,
-            modelo=str(modelo),
-            filing_year=filing_year,
-            period=period.registry_token,
-        ).resolutions
-    )
-    review = build_modelo_work_review(
+    reads = _read_form(
         bucket_id,
         modelo,
         filing_year,
         period,
         operation=operation,
-        work_unit_repository=work_unit_repository,
-        calculation_repository=calculation_repository,
-        verification_repository=verification_repository,
+        repositories=(work_unit_repository, calculation_repository, verification_repository),
         calculation_catalogue=calculation_catalogue,
-        resolutions=resolutions,
+        reference_on=reference_on,
+        bucket_events=bucket_events,
+        activity_assets=activity_assets,
+        credit_resolutions=credit_resolutions,
+        transactions=transactions,
     )
-    snapshot = modelo_form_snapshot(operation, modelo, filing_year, period, review.registry_revision_id)
-    layout = operation.form_layout(str(modelo), review.registry_revision_id)
-    resolved, head = _head(
-        review.calculation_revision_id,
-        calculation_repository,
-        operation=operation,
-        calculation_catalogue=calculation_catalogue,
-    )
-    context = caller_context_of(head)
-    layer = context.operator_layer if resolved else None
+    review, snapshot, layout, head = reads.review, reads.snapshot, reads.layout, reads.head
     surface = (
         admission.baseline.permitted_surface
         if isinstance(admission, ModeloEditAdmittedV1) and admission.baseline.work_unit_id == review.work_unit_id
@@ -560,20 +682,15 @@ def load_modelo_work_form(
         layout=layout,
         revision=head,
         permitted_surface=surface,
-        entered_casilla_ids=None if layer is None else frozenset(layer.casilla_ids()),
-        overridden_binding_ids=None if layer is None else frozenset(layer.binding_overrides),
+        entered_casilla_ids=reads.entered_casilla_ids,
+        overridden_binding_ids=reads.overridden_binding_ids,
         language=language,
-        deadline=modelo_form_deadline(
-            operation,
-            modelo,
-            period,
-            reference_on=reference_on if reference_on is not None else today_madrid(),
-        ),
-        aeat_data_imported_at=_aeat_data_imported_at(context.borrador_snapshot_id, borrador_snapshots),
-        calculation_diagnostics=CALCULATION_NOTES.diagnostics_for(review.work_unit_id, review.calculation_revision_id),
-        element_names=read_element_names(activity_assets),
-        known_truths=_known_profile_truths(snapshot, bucket_id, operation=operation),
-        redeme=_redeme_enrolment(bucket_id),
+        deadline=reads.deadline,
+        aeat_data_imported_at=_aeat_data_imported_at(reads.borrador_snapshot_id, borrador_snapshots),
+        calculation_diagnostics=reads.calculation_diagnostics,
+        element_names=reads.element_names,
+        known_truths=reads.known_truths,
+        redeme=reads.redeme,
         producer_values=_profile_context_values(
             layout,
             snapshot,
@@ -587,21 +704,15 @@ def load_modelo_work_form(
         profile_binding_values=_profile_binding_context_values(
             layout, snapshot, head, review.lifecycle_state, bucket_id=bucket_id, operation=operation
         ),
-        resolutions=resolutions,
-        calculation_screen_outdated=head is not None
-        and calculation_screen_outdated(
-            head, modelo=str(modelo), filing_year=filing_year, period=period, operation=operation
-        ),
-        calculation_filed_before_grade_cap=None
-        if head is None
-        else calculation_filed_before_grade_cap(
-            head, modelo=str(modelo), filing_year=filing_year, period=period, operation=operation
-        ),
-        filed_findings=_filed_findings(head, review.work_unit_id, work_unit_repository, operation=operation),
+        resolutions=reads.resolutions,
+        calculation_screen_outdated=reads.screen_outdated,
+        calculation_filed_before_grade_cap=reads.filed_before_grade_cap,
+        filed_findings=reads.filed_findings,
+        last_export=reads.last_export,
+        verification_out_of_date=reads.verification_out_of_date,
     )
     form = form.model_copy(
         update={
-            "last_export": _last_export(bucket_events, bucket_id, review.work_unit_id, review.calculation_revision_id),
             "projectable": modelo_projection_available(
                 modelo=str(modelo),
                 period=period,
@@ -613,11 +724,77 @@ def load_modelo_work_form(
             "compares_taxation": revision_compares_taxation(snapshot),
             "compares_borrador": borrador_pdf_extraction_profile(snapshot) is not None,
             "offers_iva_wallet": revision_offers_iva_wallet(modelo_id=snapshot.modelo.id, revision=snapshot.revision),
-            "verification_out_of_date": _verification_out_of_date(review, head, transactions),
         }
     )
-    state = review.lifecycle_state
-    return modelo_work_form_load(form, verified=state in SEALED_REVISION_STATES, filed=state in FILED_REVISION_STATES)
+    return modelo_work_form_load(form, verified=reads.verified, filed=reads.filed)
+
+
+def load_modelo_work_form_summary(
+    bucket_id: BucketId,
+    modelo: ModeloCode,
+    filing_year: int,
+    period: Period,
+    *,
+    operation: PinnedAuthorityOperation,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
+    verification_repository: VerificationReportCatalogueRepositoryProtocol,
+    calculation_catalogue: CalculationRevisionCatalogue | None = None,
+    language: OutputLanguage,
+    reference_on: date | None = None,
+    bucket_events: BucketEventHistoryRepositoryProtocol | None = None,
+    activity_assets: ActivityAssetHistoryRepository | None = None,
+    credit_resolutions: CreditResolutionReader | None = None,
+    transactions: TransactionCatalogueRepositoryProtocol | None = None,
+) -> ModeloWorkFormSummaryLoad:
+    """Read one declaration as :func:`load_modelo_work_form` reads it and classify its form, presenting no field.
+
+    The summary is the one the form load presents, so every filing fact either
+    states is the same; the arguments mean what they mean there. What only the
+    presented form shows -- the AEAT draft's import time, the identification
+    context and the offered comparisons -- is not read.
+    """
+    reads = _read_form(
+        bucket_id,
+        modelo,
+        filing_year,
+        period,
+        operation=operation,
+        repositories=(work_unit_repository, calculation_repository, verification_repository),
+        calculation_catalogue=calculation_catalogue,
+        reference_on=reference_on,
+        bucket_events=bucket_events,
+        activity_assets=activity_assets,
+        credit_resolutions=credit_resolutions,
+        transactions=transactions,
+    )
+    summary = summarize_modelo_work_form(
+        review=reads.review,
+        snapshot=reads.snapshot,
+        layout=reads.layout,
+        revision=reads.head,
+        entered_casilla_ids=reads.entered_casilla_ids,
+        overridden_binding_ids=reads.overridden_binding_ids,
+        language=language,
+        deadline=reads.deadline,
+        calculation_diagnostics=reads.calculation_diagnostics,
+        element_names=reads.element_names,
+        known_truths=reads.known_truths,
+        redeme=reads.redeme,
+        resolutions=reads.resolutions,
+        calculation_screen_outdated=reads.screen_outdated,
+        calculation_filed_before_grade_cap=reads.filed_before_grade_cap,
+        filed_findings=reads.filed_findings,
+        last_export=reads.last_export,
+        verification_out_of_date=reads.verification_out_of_date,
+    )
+    verified, filed = reads.verified, reads.filed
+    return ModeloWorkFormSummaryLoad(
+        summary=summary,
+        verified=verified,
+        filed=filed,
+        journey=form_journey(summary, verified=verified, filed=filed),
+    )
 
 
 def _filed_findings(
@@ -718,7 +895,9 @@ def _same_form_value(previous: ModeloFormField | None, current: ModeloFormField)
 __all__ = [
     "ModeloFormValueChangeV1",
     "ModeloWorkFormLoadV1",
+    "ModeloWorkFormSummaryLoad",
     "load_modelo_work_form",
+    "load_modelo_work_form_summary",
     "modelo_form_deadline",
     "modelo_form_snapshot",
     "modelo_work_form_changes",
