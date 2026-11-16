@@ -19,7 +19,6 @@ from cadrumo_client.commands.shared_contracts import (
 from cadrumo_client.commands.spec import CommandSpec, InvocationSpec
 from cadrumo_client.contracts.command_ports import CommandNodeKind
 
-_FLOAT = ValueContract(DeferredTarget("builtins", "float"))
 _STATE = ValueContract(
     DeferredTarget("...application.review.enums", "ReviewState", __package__),
     parser=DeferredTarget(".common", "parse_review_state", __package__),
@@ -81,7 +80,7 @@ REVIEW_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
             _option("state", ("--state",), _STATE, "cli.review.queue.state_help"),
             _option("modelo", ("--modelo",), TEXT_VALUE, "cli.review.queue.modelo_help"),
-            _option("confidence_below", ("--confidence-below",), _FLOAT, "cli.review.queue.confidence_below_help"),
+            _option("confidence_below", ("--confidence-below",), TEXT_VALUE, "cli.review.queue.confidence_below_help"),
             _option("explain", ("--explain",), FLAG_VALUE, "cli.review.queue.explain_help", default=False),
             _option(
                 "output_language",
