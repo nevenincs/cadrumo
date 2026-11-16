@@ -41,18 +41,12 @@ modelo:
           '00052':
             help: Consigna el volumen de operaciones en Araba/Álava para la tributación
               conjunta conforme al Concierto Económico [00052].
-            label: Tributación conjunta Estado y Adm.Forales - Concierto económico
-              - Volumen operaciones en Araba/Álava [00052]
           '00053':
             help: Consigna el volumen de operaciones en Gipuzkoa para la tributación
               conjunta conforme al Concierto Económico [00053].
-            label: Tributación conjunta Estado y Adm.Forales - Concierto económico
-              - Volumen operaciones en Gipuzkoa [00053]
           '00054':
             help: Consigna el volumen de operaciones en Bizkaia para la tributación
               conjunta conforme al Concierto Económico [00054].
-            label: Tributación conjunta Estado y Adm.Forales - Concierto económico
-              - Volumen operaciones en Bizkaia [00054]
           '00055':
             help: Consigna el volumen de operaciones en Navarra para la tributación
               conjunta conforme al Convenio Económico [00055].
@@ -517,9 +511,6 @@ modelo:
             label: Estado de cambios patrimonio neto (III) - Ingresos y gastos reconocidos
               en patrimonio neto - Ingresos fiscales a distribuir en varios ejercicios
               - Dividendo a cuenta [00486]
-          00488:
-            label: Tributación conjunta Estado y Adm.Forales - Intereses demora -
-              Bizkaia [00488]
           00489:
             label: Estado de cambios patrimonio neto (III) - Ingresos y gastos reconocidos
               en patrimonio neto - Ingresos fiscales a distribuir en varios ejercicios
@@ -1503,12 +1494,6 @@ modelo:
           00912:
             label: Rég. cooperativas - Detalle compensación cuotas. 2014 Pendiente
               aplicación en períodos futuros [00912]
-          00914:
-            label: Tributación conjunta Estado y Adm.Forales - Incremento por incumplimiento
-              requisitos SOCIMI - Gipuzkoa [00914]
-          00915:
-            label: Tributación conjunta Estado y Adm.Forales - Incremento por incumplimiento
-              requisitos SOCIMI - Bizkaia [00915]
           00916:
             label: Tributación conjunta Estado y Adm.Forales - Incremento por incumplimiento
               requisitos SOCIMI - Navarra [00916]
@@ -2205,21 +2190,6 @@ modelo:
             label: Deducción por inversiones y gastos realizados por las autoridades
               portuarias (art. 38 bis LIS) - Total - Pendiente de aplicación en períodos
               futuros [01304]
-          '01305':
-            label: Tributación conjunta Estado y Adm.Forales - Conversión de activos
-              por impuesto diferido en crédito exigible frente a la Administración
-              tributaria (art. 130 LIS) - Compensación conversión activos - Araba/Álava
-              [01305]
-          '01306':
-            label: Tributación conjunta Estado y Adm.Forales - Conversión de activos
-              por impuesto diferido en crédito exigible frente a la Administración
-              tributaria (art. 130 LIS) - Compensación conversión activos - Gipuzkoa
-              [01306]
-          '01307':
-            label: Tributación conjunta Estado y Adm.Forales - Conversión de activos
-              por impuesto diferido en crédito exigible frente a la Administración
-              tributaria (art. 130 LIS) - Compensación conversión activos - Bizkaia
-              [01307]
           01309:
             label: Deducciones por producciones cinematográficas extranjeras en Canarias
               (art. 36.2 LIS y DA 14ª Ley 19/1994) - 2022) - Deducción pendiente/generada
@@ -2301,18 +2271,9 @@ modelo:
           '01333':
             label: Liquidación IV - Resultado de la autoliquidación - Abono deducciones
               por producciones cinematográficas extranjeras - D. Forales/Navarra [01333]
-          '01335':
-            label: Tributación conjunta Estado y Adm.Forales - Abono deducciones I+D+i
-              insuf. cuota - Gipuzkoa [01335]
-          '01336':
-            label: Tributación conjunta Estado y Adm.Forales - Abono deducciones I+D+i
-              insuf. cuota - Bizkaia [01336]
           '01337':
             label: Tributación conjunta Estado y Adm.Forales - Abono deducciones I+D+i
               insuf. cuota - Navarra [01337]
-          '01340':
-            label: Tributación conjunta Estado y Adm.Forales - Abono deducciones producciones
-              extranjeras - Bizkaia [01340]
           '01341':
             label: Tributación conjunta Estado y Adm.Forales - Abono deducciones producciones
               extranjeras - Navarra [01341]
@@ -2965,9 +2926,6 @@ modelo:
           '01622':
             label: Deducc. para incentivar determ.actividades - 2016 Innovación tecnológica
               (IT) - Pendiente de aplicación en periodos futuros [01622]
-          '01625':
-            label: Tributación conjunta Estado y Adm.Forales - Resultado de la autoliquidación
-              - Gipuzkoa [01625]
           '01626':
             label: Dotaciones deterioro créditos u otros activos - Ejercicio generación
               - {year} - Dotaciones pendientes integración a principio periodo - Que
@@ -2979,27 +2937,12 @@ modelo:
             label: Dotaciones deterioro créditos u otros activos - Ejercicio generación
               - {year} - Dotaciones pendientes integración periodos futuros - Que
               no han cumplido condiciones deducibilidad fiscal [01628]
-          01629:
-            label: Tributación conjunta Estado y Adm.Forales - Resultado de la autoliquidación
-              - Bizkaia [01629]
           '01630':
             label: Tributación conjunta Estado y Adm.Forales - Resultado de la autoliquidación
               - Navarra [01630]
-          '01633':
-            label: Tributación conjunta Estado y Adm.Forales - Opción de fraccionamiento
-              art. 19.1 LIS - Importe integrado - Bizkaia [01633]
           '01634':
             label: Tributación conjunta Estado y Adm.Forales - Opción de fraccionamiento
               art. 19.1 LIS - Importe integrado - Navarra [01634]
-          '01635':
-            label: Tributación conjunta Estado y Adm.Forales - Opción de fraccionamiento
-              art. 19.1 LIS - Deuda tributaria - Araba/Álava [01635]
-          '01636':
-            label: Tributación conjunta Estado y Adm.Forales - Opción de fraccionamiento
-              art. 19.1 LIS - Deuda tributaria - Gipuzkoa [01636]
-          '01637':
-            label: Tributación conjunta Estado y Adm.Forales - Opción de fraccionamiento
-              art. 19.1 LIS - Deuda tributaria - Bizkaia [01637]
           01638:
             help: 'Importes imputados: Importe de la deducción generada de producciones
               cinematográficas españolas y espectáculos en vivo de artes escénicas
@@ -3020,24 +2963,9 @@ modelo:
           '01641':
             label: Tributación conjunta Estado y Adm.Forales - Opción de fraccionamiento
               art. 19.1 LIS - Deuda tributaria - Navarra [01641]
-          '01642':
-            label: Tributación conjunta Estado y Adm.Forales - Opción de fraccionamiento
-              art. 19.1 LIS - 1º fraccionamiento - Araba/Álava [01642]
-          '01643':
-            label: Tributación conjunta Estado y Adm.Forales - Opción de fraccionamiento
-              art. 19.1 LIS - 1º fraccionamiento - Gipuzkoa [01643]
-          '01644':
-            label: Tributación conjunta Estado y Adm.Forales - Opción de fraccionamiento
-              art. 19.1 LIS - 1º fraccionamiento - Bizkaia [01644]
           '01645':
             label: Tributación conjunta Estado y Adm.Forales - Opción de fraccionamiento
               art. 19.1 LIS - 1º fraccionamiento - Navarra [01645]
-          '01646':
-            label: Tributación conjunta Estado y Adm.Forales - Resultado de la autoliquidación
-              incluido el 1º fraccionamiento - Araba/Álava [01646]
-          01648:
-            label: Tributación conjunta Estado y Adm.Forales - Resultado de la autoliquidación
-              incluido el 1º fraccionamiento - Bizkaia [01648]
           01649:
             label: Tributación conjunta Estado y Adm.Forales - Resultado de la autoliquidación
               incluido el 1º fraccionamiento - Navarra [01649]
@@ -3604,15 +3532,6 @@ modelo:
           01876:
             label: Deducc. para incentivar determ.actividades - 2022 Investigación
               y desarrollo (CT) - Pendiente de aplicación en periodos futuros [01876]
-          01877:
-            label: Tributación conjunta Estado y Adm.Forales - Abono deducciones producciones
-              extranjeras en Canarias - Araba/Álava [01877]
-          01878:
-            label: Tributación conjunta Estado y Adm.Forales - Abono deducciones producciones
-              extranjeras en Canarias - Gipuzkoa [01878]
-          01879:
-            label: Tributación conjunta Estado y Adm.Forales - Abono deducciones producciones
-              extranjeras en Canarias - Bizkaia [01879]
           01880:
             label: Tributación conjunta Estado y Adm.Forales - Abono deducciones producciones
               extranjeras en Canarias - Navarra [01880]
@@ -10318,9 +10237,6 @@ modelo:
           is-otros-regimenes-especiales:
             help: Indicador de otros regímenes especiales [00020].
             label: Otros regímenes especiales [00020]
-          is-pagos-fraccionados:
-            label: Tributación conjunta Estado y Adm.Forales - Pagos fraccionados
-              2 - Bizkaia [00447]
           is-participaciones-directas-b-reversion-de-perdidas-por-deterioro-de-valores:
             help: b) Reversión de pérdidas por deterioro de valores (DT 16ª LIS) -
               B.1. Participaciones declarante en otras entidades
@@ -10853,53 +10769,53 @@ modelo:
               neto - Operaciones con socios - Otras operaciones con socios - Fondos
               provisiones técnicas. Aportaciones de terceros [00296]
           is-sgr-otras-variaciones-ajustes-cambio-valor:
-            label: Sociedades de garantia recíproca - Estado total cambios patrimonio
+            label: Sociedades de garantía recíproca - Estado total cambios patrimonio
               neto - Otras variaciones patrimonio neto - Ajustes cambio valor [00304]
           is-sgr-otras-variaciones-fondos-provisiones-tecnicas-aportaciones-terceros:
-            label: Sociedades de garantia recíproca - Estado total cambios patrimonio
+            label: Sociedades de garantía recíproca - Estado total cambios patrimonio
               neto - Otras variaciones patrimonio neto - Fondos provisiones técnicas.
               Aportaciones de terceros [00305]
           is-sgr-otras-variaciones-reservas:
-            label: Sociedades de garantia recíproca - Estado total cambios patrimonio
+            label: Sociedades de garantía recíproca - Estado total cambios patrimonio
               neto - Otras variaciones patrimonio neto - Reservas [00301]
           is-sgr-otras-variaciones-resultado-ejercicio:
-            label: Sociedades de garantia recíproca - Estado total cambios patrimonio
+            label: Sociedades de garantía recíproca - Estado total cambios patrimonio
               neto - Otras variaciones patrimonio neto - Resultado ejercicio [00303]
           is-sgr-otras-variaciones-resultados-ejercicios-anteriores:
-            label: Sociedades de garantia recíproca - Estado total cambios patrimonio
+            label: Sociedades de garantía recíproca - Estado total cambios patrimonio
               neto - Otras variaciones patrimonio neto - Resultados ejercicios anteriores
               [00302]
           is-sgr-otras-variaciones-total:
-            label: Sociedades de garantia recíproca - Estado total cambios patrimonio
+            label: Sociedades de garantía recíproca - Estado total cambios patrimonio
               neto - Otras variaciones patrimonio neto - Total [00306]
           is-sgr-saldo-final-ajustes-cambio-valor:
-            label: Sociedades de garantia recíproca - Estado total cambios patrimonio
+            label: Sociedades de garantía recíproca - Estado total cambios patrimonio
               neto - Saldo, final del ejercicio - Ajustes cambio valor [00313]
           is-sgr-saldo-final-capital-no-exigido:
-            label: 'Sociedades de garantia recíproca - Estado total cambios patrimonio
+            label: 'Sociedades de garantía recíproca - Estado total cambios patrimonio
               neto - SALDO, FINAL DEL EJERCICIO - Capital - Menos: no exigido [00308]'
           is-sgr-saldo-final-capital-reembolsable:
-            label: 'Sociedades de garantia recíproca - Estado total cambios patrimonio
+            label: 'Sociedades de garantía recíproca - Estado total cambios patrimonio
               neto - SALDO, FINAL DEL EJERCICIO - Capital - Menos: reembolsable [00309]'
           is-sgr-saldo-final-capital-suscrito:
-            label: Sociedades de garantia recíproca - Estado total cambios patrimonio
+            label: Sociedades de garantía recíproca - Estado total cambios patrimonio
               neto - SALDO, FINAL DEL EJERCICIO - Capital - Suscrito [00307]
           is-sgr-saldo-final-fondos-provisiones-tecnicas-aportaciones-terceros:
-            label: Sociedades de garantia recíproca - Estado total cambios patrimonio
+            label: Sociedades de garantía recíproca - Estado total cambios patrimonio
               neto - Saldo, final del ejercicio - Fondos provisiones técnicas. Aportaciones
               de terceros [00314]
           is-sgr-saldo-final-reservas:
-            label: Sociedades de garantia recíproca - Estado total cambios patrimonio
+            label: Sociedades de garantía recíproca - Estado total cambios patrimonio
               neto - SALDO, FINAL DEL EJERCICIO - Reservas [00310]
           is-sgr-saldo-final-resultado-ejercicio:
-            label: Sociedades de garantia recíproca - Estado total cambios patrimonio
+            label: Sociedades de garantía recíproca - Estado total cambios patrimonio
               neto - Saldo, final del ejercicio - Resultado ejercicio [00312]
           is-sgr-saldo-final-resultados-ejercicios-anteriores:
-            label: Sociedades de garantia recíproca - Estado total cambios patrimonio
+            label: Sociedades de garantía recíproca - Estado total cambios patrimonio
               neto - SALDO, FINAL DEL EJERCICIO - Resultados ejercicios anteriores
               [00311]
           is-sgr-saldo-final-total:
-            label: Sociedades de garantia recíproca - Estado total cambios patrimonio
+            label: Sociedades de garantía recíproca - Estado total cambios patrimonio
               neto - Saldo, final del ejercicio - Total [00315]
           is-sociedad-de-garantia-reciproca-o-de-reafianzamiento:
             help: Indicador de sociedad de garantía recíproca o de reafianzamiento
@@ -10955,18 +10871,6 @@ modelo:
               artículos 27.2.d) y 77.1 de la LIS [00030].
             label: Transmisión elementos patrimoniales arts. 27.2.d) y 77.1 L.I.S.
               [00030]
-          is-tributacion-conjunta-abono-cinematografica:
-            label: Tributación conjunta Estado y Adm.Forales - Abono deducciones producciones
-              extranjeras - Gipuzkoa [01339]
-          is-tributacion-conjunta-abono-deducciones-cinematograficas:
-            label: Tributación conjunta Estado y Adm.Forales - Abono deducciones producciones
-              extranjeras - Araba/Álava [01338]
-          is-tributacion-conjunta-abono-idi:
-            label: Tributación conjunta Estado y Adm.Forales - Abono deducciones I+D+i
-              insuf. cuota - Araba/Álava [01334]
-          is-tributacion-conjunta-cuota-diferencial:
-            label: Tributación conjunta Estado y Adm.Forales - Cuota diferencial -
-              Araba/Álava [00474]
           is-tributacion-conjunta-estado-diput-cdad-forales:
             help: Indicador de tributación conjunta entre el Estado, las diputaciones
               y las comunidades forales [00028].
@@ -10976,21 +10880,6 @@ modelo:
               a ingresar como consecuencia de la tramitación de autoliquidaciones
               anteriores o liquidaciones administrativas correspondientes al periodo
               impositivo {year} - Araba/Álava [01607]'
-          is-tributacion-conjunta-fraccionamiento-importe:
-            label: Tributación conjunta Estado y Adm.Forales - Opción de fraccionamiento
-              art. 19.1 LIS - Importe integrado - Gipuzkoa [01632]
-          is-tributacion-conjunta-fraccionamiento-y-rectificativa:
-            label: Tributación conjunta Estado y Adm.Forales - Resultado de la autoliquidación
-              incluido el 1º fraccionamiento - Gipuzkoa [01647]
-          is-tributacion-conjunta-incremento:
-            label: Tributación conjunta Estado y Adm.Forales - Incremento por incumplimiento
-              requisitos SOCIMI - Araba/Álava [00913]
-          is-tributacion-conjunta-intereses:
-            label: Tributación conjunta Estado y Adm.Forales - Intereses demora -
-              Gipuzkoa [00487]
-          is-tributacion-conjunta-opcion-0-7:
-            label: Tributación conjunta Estado y Adm.Forales - Opción de fraccionamiento
-              art. 19.1 LIS - Importe integrado - Araba/Álava [01631]
           is-tributacion-conjunta-porcentaje-estado:
             label: Tributación conjunta Estado y Adm.Forales - Cálculo porcentajes
               tributación - Admón.del Estado [00625]
@@ -11000,9 +10889,6 @@ modelo:
               Económico [00050].
             label: Tributación conjunta Estado y Adm.Forales - Concierto económico
               - Volumen total de operaciones [00050]
-          is-tributacion-conjunta-resultado:
-            label: Tributación conjunta Estado y Adm.Forales - Resultado de la autoliquidación
-              - Araba/Álava [01624]
           is-union-temporal-de-empresas:
             label: Unión temporal de empresas [00085]
           is-uniones-federaciones-y-confederaciones-de-cooperativas:
@@ -12719,6 +12605,15 @@ modelo:
             label: Modelo 200, ejercicio 2022
         '2023':
           casilla:
+            '00052':
+              label: Tributación conjunta Estado y Adm.Forales - Concierto económico
+                - Volumen operaciones en Álava [00052]
+            '00053':
+              label: Tributación conjunta Estado y Adm.Forales - Concierto económico
+                - Volumen operaciones en Guipúzcoa [00053]
+            '00054':
+              label: Tributación conjunta Estado y Adm.Forales - Concierto económico
+                - Volumen operaciones en Vizcaya [00054]
             '00077':
               label: Amortización acelerada de determinados vehículos y de nuevas
                 infraestructuras de recarga (DA 18ª LIS) - Aumento - Correcciones
@@ -12728,6 +12623,18 @@ modelo:
                 y ganancias - Exención sobre dividendos o participaciones en beneficios
                 de entidades residentes (art. 21.1, 21.10 y DT 40ª LIS) - Disminuciones
                 [00370]
+            '00447':
+              label: Tributación conjunta Estado y Adm.Forales - Pagos fraccionados
+                2 - Vizcaya [00447]
+            '00474':
+              label: Tributación conjunta Estado y Adm.Forales - Cuota diferencial
+                - Álava [00474]
+            00487:
+              label: Tributación conjunta Estado y Adm.Forales - Intereses demora
+                - Guipúzcoa [00487]
+            00488:
+              label: Tributación conjunta Estado y Adm.Forales - Intereses demora
+                - Vizcaya [00488]
             '00775':
               label: Liquidación I - Detalle correcciones resultado cta. pérdidas
                 y ganancias -Amortización acelerada de determinados vehículos y de
@@ -12736,6 +12643,15 @@ modelo:
               label: Liquidación I - Detalle correcciones resultado cta. pérdidas
                 y ganancias -Amortización acelerada de determinados vehículos y de
                 nuevas infraestructuras de recarga (DA 18ª LIS) - Disminuciones [00776]
+            00913:
+              label: Tributación conjunta Estado y Adm.Forales - Incremento por incumplimiento
+                requisitos SOCIMI - Álava [00913]
+            00914:
+              label: Tributación conjunta Estado y Adm.Forales - Incremento por incumplimiento
+                requisitos SOCIMI - Guipúzcoa [00914]
+            00915:
+              label: Tributación conjunta Estado y Adm.Forales - Incremento por incumplimiento
+                requisitos SOCIMI - Vizcaya [00915]
             '01020':
               label: Conversión de activos por impuesto diferido en crédito exigible
                 frente a la Administración tributaria (art. 130 LIS) - Abono por conversión
@@ -12812,11 +12728,58 @@ modelo:
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
                 Ejercicio generación - 2022 - AID pendientes aplicación periodos futuros
                 - Sin derecho conversión crédito exigible [01133]
+            '01300':
+              label: Tributación conjunta Estado y Adm.Forales - Conversión de activos
+                por impuesto diferido en crédito exigible frente a la Administración
+                tributaria (art. 130 LIS) - Abono por conversión activos - Álava [01300]
+            '01301':
+              label: Tributación conjunta Estado y Adm.Forales - Conversión de activos
+                por impuesto diferido en crédito exigible frente a la Administración
+                tributaria (art. 130 LIS) - Abono por conversión activos - Guipúzcoa
+                [01301]
+            '01302':
+              label: Tributación conjunta Estado y Adm.Forales - Conversión de activos
+                por impuesto diferido en crédito exigible frente a la Administración
+                tributaria (art. 130 LIS) - Abono por conversión activos - Vizcaya
+                [01302]
+            '01305':
+              label: Tributación conjunta Estado y Adm.Forales - Conversión de activos
+                por impuesto diferido en crédito exigible frente a la Administración
+                tributaria (art. 130 LIS) - Compensación conversión activos - Álava
+                [01305]
+            '01306':
+              label: Tributación conjunta Estado y Adm.Forales - Conversión de activos
+                por impuesto diferido en crédito exigible frente a la Administración
+                tributaria (art. 130 LIS) - Compensación conversión activos - Guipúzcoa
+                [01306]
+            '01307':
+              label: Tributación conjunta Estado y Adm.Forales - Conversión de activos
+                por impuesto diferido en crédito exigible frente a la Administración
+                tributaria (art. 130 LIS) - Compensación conversión activos - Vizcaya
+                [01307]
             01329:
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
                 incrementada - 2023(*) Sin reiteración de donaciones a una misma entidad
                 - Deducción pendiente/generada [01329]
+            '01334':
+              label: Tributación conjunta Estado y Adm.Forales - Abono deducciones
+                I+D+i insuf. cuota - Álava [01334]
+            '01335':
+              label: Tributación conjunta Estado y Adm.Forales - Abono deducciones
+                I+D+i insuf. cuota - Guipúzcoa [01335]
+            '01336':
+              label: Tributación conjunta Estado y Adm.Forales - Abono deducciones
+                I+D+i insuf. cuota - Vizcaya [01336]
+            01338:
+              label: Tributación conjunta Estado y Adm.Forales - Abono deducciones
+                producciones extranjeras - Álava [01338]
+            01339:
+              label: Tributación conjunta Estado y Adm.Forales - Abono deducciones
+                producciones extranjeras - Guipúzcoa [01339]
+            '01340':
+              label: Tributación conjunta Estado y Adm.Forales - Abono deducciones
+                producciones extranjeras - Vizcaya [01340]
             '01372':
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
@@ -12827,6 +12790,105 @@ modelo:
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
                 incrementada - 2023(*) Sin reiteración de donaciones a una misma entidad
                 - Pendiente de aplicación en periodos futuros [01373]
+            '01624':
+              label: Tributación conjunta Estado y Adm.Forales - Resultado de la autoliquidación
+                - Álava [01624]
+            '01625':
+              label: Tributación conjunta Estado y Adm.Forales - Resultado de la autoliquidación
+                - Guipúzcoa [01625]
+            01629:
+              label: Tributación conjunta Estado y Adm.Forales - Resultado de la autoliquidación
+                - Vizcaya [01629]
+            '01631':
+              label: Tributación conjunta Estado y Adm.Forales - Opción de fraccionamiento
+                art. 19.1 LIS - Importe integrado - Álava [01631]
+            '01632':
+              label: Tributación conjunta Estado y Adm.Forales - Opción de fraccionamiento
+                art. 19.1 LIS - Importe integrado - Guipúzcoa [01632]
+            '01633':
+              label: Tributación conjunta Estado y Adm.Forales - Opción de fraccionamiento
+                art. 19.1 LIS - Importe integrado - Vizcaya [01633]
+            '01635':
+              label: Tributación conjunta Estado y Adm.Forales - Opción de fraccionamiento
+                art. 19.1 LIS - Deuda tributaria - Álava [01635]
+            '01636':
+              label: Tributación conjunta Estado y Adm.Forales - Opción de fraccionamiento
+                art. 19.1 LIS - Deuda tributaria - Guipúzcoa [01636]
+            '01637':
+              label: Tributación conjunta Estado y Adm.Forales - Opción de fraccionamiento
+                art. 19.1 LIS - Deuda tributaria - Vizcaya [01637]
+            '01642':
+              label: Tributación conjunta Estado y Adm.Forales - Opción de fraccionamiento
+                art. 19.1 LIS - 1º fraccionamiento - Álava [01642]
+            '01643':
+              label: Tributación conjunta Estado y Adm.Forales - Opción de fraccionamiento
+                art. 19.1 LIS - 1º fraccionamiento - Guipúzcoa [01643]
+            '01644':
+              label: Tributación conjunta Estado y Adm.Forales - Opción de fraccionamiento
+                art. 19.1 LIS - 1º fraccionamiento - Vizcaya [01644]
+            '01646':
+              label: Tributación conjunta Estado y Adm.Forales - Resultado de la autoliquidación
+                incluido el 1º fraccionamiento - Álava [01646]
+            '01647':
+              label: Tributación conjunta Estado y Adm.Forales - Resultado de la autoliquidación
+                incluido el 1º fraccionamiento - Guipúzcoa [01647]
+            01648:
+              label: Tributación conjunta Estado y Adm.Forales - Resultado de la autoliquidación
+                incluido el 1º fraccionamiento - Vizcaya [01648]
+            '01662':
+              label: 'Tributación conjunta Estado y Adm.Forales - Conversión de activos
+                por impuesto diferido en crédito exigible frente a la Administración
+                tributaria (art. 130 LIS) - Resultado de conversión: Abono - Álava
+                [01662]'
+            '01663':
+              label: 'Tributación conjunta Estado y Adm.Forales - Conversión de activos
+                por impuesto diferido en crédito exigible frente a la Administración
+                tributaria (art. 130 LIS) - Resultado de conversión: Abono - Guipúzcoa
+                [01663]'
+            '01664':
+              label: 'Tributación conjunta Estado y Adm.Forales - Conversión de activos
+                por impuesto diferido en crédito exigible frente a la Administración
+                tributaria (art. 130 LIS) - Resultado de conversión: Abono - Vizcaya
+                [01664]'
+            '01666':
+              label: 'Tributación conjunta Estado y Adm.Forales - Conversión de activos
+                por impuesto diferido en crédito exigible frente a la Administración
+                tributaria (art. 130 LIS) - Resultado de conversión: Compensación
+                - Álava [01666]'
+            '01667':
+              label: 'Tributación conjunta Estado y Adm.Forales - Conversión de activos
+                por impuesto diferido en crédito exigible frente a la Administración
+                tributaria (art. 130 LIS) - Resultado de conversión: Compensación
+                - Guipúzcoa [01667]'
+            01668:
+              label: 'Tributación conjunta Estado y Adm.Forales - Conversión de activos
+                por impuesto diferido en crédito exigible frente a la Administración
+                tributaria (art. 130 LIS) - Resultado de conversión: Compensación
+                - Vizcaya [01668]'
+            '01670':
+              label: 'Tributación conjunta Estado y Adm.Forales - Conversión de activos
+                por impuesto diferido en crédito exigible frente a la Administración
+                tributaria (art. 130 LIS) - Resultado de conversión: A Ingresar -
+                Álava [01670]'
+            '01671':
+              label: 'Tributación conjunta Estado y Adm.Forales - Conversión de activos
+                por impuesto diferido en crédito exigible frente a la Administración
+                tributaria (art. 130 LIS) - Resultado de conversión: A Ingresar -
+                Guipúzcoa [01671]'
+            '01672':
+              label: 'Tributación conjunta Estado y Adm.Forales - Conversión de activos
+                por impuesto diferido en crédito exigible frente a la Administración
+                tributaria (art. 130 LIS) - Resultado de conversión: A Ingresar -
+                Vizcaya [01672]'
+            01877:
+              label: Tributación conjunta Estado y Adm.Forales - Abono deducciones
+                producciones extranjeras en Canarias - Álava [01877]
+            01878:
+              label: Tributación conjunta Estado y Adm.Forales - Abono deducciones
+                producciones extranjeras en Canarias - Guipúzcoa [01878]
+            01879:
+              label: Tributación conjunta Estado y Adm.Forales - Abono deducciones
+                producciones extranjeras en Canarias - Vizcaya [01879]
             01887:
               label: Liquidación III - Base imponible - Régimen especial de buques
                 y empresas navieras en Canarias - Compensación de bases imponibles
@@ -12893,6 +12955,15 @@ modelo:
             label: Modelo 200, ejercicio 2023
         '2024':
           casilla:
+            '00052':
+              label: Tributación conjunta Estado y Adm.Forales - Concierto económico
+                - Volumen operaciones en Araba/Álava [00052]
+            '00053':
+              label: Tributación conjunta Estado y Adm.Forales - Concierto económico
+                - Volumen operaciones en Gipuzkoa [00053]
+            '00054':
+              label: Tributación conjunta Estado y Adm.Forales - Concierto económico
+                - Volumen operaciones en Bizkaia [00054]
             '00077':
               label: Amortización acelerada de determinados vehículos y de nuevas
                 infraestructuras de recarga (DA 18ª LIS RDL 5/2023) - Aumento - Correcciones
@@ -12917,6 +12988,18 @@ modelo:
                 desglose de la compensación de bases imponibles negativas - Compensación
                 de base imponible resto actividades año 2024 - Pendiente aplicación
                 en períodos futuros [00098]'
+            '00447':
+              label: Tributación conjunta Estado y Adm.Forales - Pagos fraccionados
+                2 - Bizkaia [00447]
+            '00474':
+              label: Tributación conjunta Estado y Adm.Forales - Cuota diferencial
+                - Araba/Álava [00474]
+            00487:
+              label: Tributación conjunta Estado y Adm.Forales - Intereses demora
+                - Gipuzkoa [00487]
+            00488:
+              label: Tributación conjunta Estado y Adm.Forales - Intereses demora
+                - Bizkaia [00488]
             '00775':
               label: Liquidación I - Detalle correcciones resultado cta. pérdidas
                 y ganancias - Amortización acelerada de determinados vehículos y de
@@ -12967,6 +13050,15 @@ modelo:
                 Admón.tributaria - Exceso cuota líquida positiva - Ejercicio generación
                 - {year} - Exceso cuota líquida positiva pendiente aplicación periodos
                 futuros [00882]
+            00913:
+              label: Tributación conjunta Estado y Adm.Forales - Incremento por incumplimiento
+                requisitos SOCIMI - Araba/Álava [00913]
+            00914:
+              label: Tributación conjunta Estado y Adm.Forales - Incremento por incumplimiento
+                requisitos SOCIMI - Gipuzkoa [00914]
+            00915:
+              label: Tributación conjunta Estado y Adm.Forales - Incremento por incumplimiento
+                requisitos SOCIMI - Bizkaia [00915]
             00925:
               label: Liquidación III - Base imponible - Rentas que no limitan compensación
                 de bases imponibles - Rentas correspondientes a la reversión de las
@@ -13086,11 +13178,44 @@ modelo:
                 por impuesto diferido en crédito exigible frente a la Administración
                 tributaria (art. 130 LIS) - Abono por conversión activos - Bizkaia
                 [01302]
+            '01305':
+              label: Tributación conjunta Estado y Adm.Forales - Conversión de activos
+                por impuesto diferido en crédito exigible frente a la Administración
+                tributaria (art. 130 LIS) - Compensación conversión activos - Araba/Álava
+                [01305]
+            '01306':
+              label: Tributación conjunta Estado y Adm.Forales - Conversión de activos
+                por impuesto diferido en crédito exigible frente a la Administración
+                tributaria (art. 130 LIS) - Compensación conversión activos - Gipuzkoa
+                [01306]
+            '01307':
+              label: Tributación conjunta Estado y Adm.Forales - Conversión de activos
+                por impuesto diferido en crédito exigible frente a la Administración
+                tributaria (art. 130 LIS) - Compensación conversión activos - Bizkaia
+                [01307]
             01329:
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
                 incrementada - 2023 - Sin reiteración de donaciones a una misma entidad
                 - Deducción pendiente/generada [01329]
+            '01334':
+              label: Tributación conjunta Estado y Adm.Forales - Abono deducciones
+                I+D+i insuf. cuota - Araba/Álava [01334]
+            '01335':
+              label: Tributación conjunta Estado y Adm.Forales - Abono deducciones
+                I+D+i insuf. cuota - Gipuzkoa [01335]
+            '01336':
+              label: Tributación conjunta Estado y Adm.Forales - Abono deducciones
+                I+D+i insuf. cuota - Bizkaia [01336]
+            01338:
+              label: Tributación conjunta Estado y Adm.Forales - Abono deducciones
+                producciones extranjeras - Araba/Álava [01338]
+            01339:
+              label: Tributación conjunta Estado y Adm.Forales - Abono deducciones
+                producciones extranjeras - Gipuzkoa [01339]
+            '01340':
+              label: Tributación conjunta Estado y Adm.Forales - Abono deducciones
+                producciones extranjeras - Bizkaia [01340]
             '01372':
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
@@ -13161,6 +13286,51 @@ modelo:
                 acordada por la Agencia Tributaria como consecuencia de la tramitación
                 de autoliquidaciones anteriores o liquidaciones administrativas correspondientes
                 al periodo impositivo {year} - Navarra [01623]'
+            '01624':
+              label: Tributación conjunta Estado y Adm.Forales - Resultado de la autoliquidación
+                - Araba/Álava [01624]
+            '01625':
+              label: Tributación conjunta Estado y Adm.Forales - Resultado de la autoliquidación
+                - Gipuzkoa [01625]
+            01629:
+              label: Tributación conjunta Estado y Adm.Forales - Resultado de la autoliquidación
+                - Bizkaia [01629]
+            '01631':
+              label: Tributación conjunta Estado y Adm.Forales - Opción de fraccionamiento
+                art. 19.1 LIS - Importe integrado - Araba/Álava [01631]
+            '01632':
+              label: Tributación conjunta Estado y Adm.Forales - Opción de fraccionamiento
+                art. 19.1 LIS - Importe integrado - Gipuzkoa [01632]
+            '01633':
+              label: Tributación conjunta Estado y Adm.Forales - Opción de fraccionamiento
+                art. 19.1 LIS - Importe integrado - Bizkaia [01633]
+            '01635':
+              label: Tributación conjunta Estado y Adm.Forales - Opción de fraccionamiento
+                art. 19.1 LIS - Deuda tributaria - Araba/Álava [01635]
+            '01636':
+              label: Tributación conjunta Estado y Adm.Forales - Opción de fraccionamiento
+                art. 19.1 LIS - Deuda tributaria - Gipuzkoa [01636]
+            '01637':
+              label: Tributación conjunta Estado y Adm.Forales - Opción de fraccionamiento
+                art. 19.1 LIS - Deuda tributaria - Bizkaia [01637]
+            '01642':
+              label: Tributación conjunta Estado y Adm.Forales - Opción de fraccionamiento
+                art. 19.1 LIS - 1º fraccionamiento - Araba/Álava [01642]
+            '01643':
+              label: Tributación conjunta Estado y Adm.Forales - Opción de fraccionamiento
+                art. 19.1 LIS - 1º fraccionamiento - Gipuzkoa [01643]
+            '01644':
+              label: Tributación conjunta Estado y Adm.Forales - Opción de fraccionamiento
+                art. 19.1 LIS - 1º fraccionamiento - Bizkaia [01644]
+            '01646':
+              label: Tributación conjunta Estado y Adm.Forales - Resultado de la autoliquidación
+                incluido el 1º fraccionamiento - Araba/Álava [01646]
+            '01647':
+              label: Tributación conjunta Estado y Adm.Forales - Resultado de la autoliquidación
+                incluido el 1º fraccionamiento - Gipuzkoa [01647]
+            01648:
+              label: Tributación conjunta Estado y Adm.Forales - Resultado de la autoliquidación
+                incluido el 1º fraccionamiento - Bizkaia [01648]
             '01650':
               label: 'Tributación conjunta Estado y Adm.Forales - Rectificativa: Resultado
                 de la autoliquidación incluido el 1er fraccionamiento del art. 19.1
@@ -13252,6 +13422,15 @@ modelo:
                 infraestructuras de recarga (DA 18ª LIS RDL 4/2024) - Aumento - Correcciones
                 del ejercicio - Temporarias (con origen en ejercicios anteriores)
                 [01820]
+            01877:
+              label: Tributación conjunta Estado y Adm.Forales - Abono deducciones
+                producciones extranjeras en Canarias - Araba/Álava [01877]
+            01878:
+              label: Tributación conjunta Estado y Adm.Forales - Abono deducciones
+                producciones extranjeras en Canarias - Gipuzkoa [01878]
+            01879:
+              label: Tributación conjunta Estado y Adm.Forales - Abono deducciones
+                producciones extranjeras en Canarias - Bizkaia [01879]
             01961:
               label: Libertad de amortización de determinados vehículos y de nuevas
                 infraestructuras de recarga (DA 18ª LIS RDL 4/2024) - Disminución
@@ -13423,6 +13602,15 @@ modelo:
             label: Modelo 200, ejercicio 2024
         2025-y-siguientes:
           casilla:
+            '00052':
+              label: Tributación conjunta Estado y Adm.Forales - Concierto económico
+                - Volumen operaciones en Araba/Álava [00052]
+            '00053':
+              label: Tributación conjunta Estado y Adm.Forales - Concierto económico
+                - Volumen operaciones en Gipuzkoa [00053]
+            '00054':
+              label: Tributación conjunta Estado y Adm.Forales - Concierto económico
+                - Volumen operaciones en Bizkaia [00054]
             '00077':
               label: Amortización acelerada de determinados vehículos y de nuevas
                 infraestructuras de recarga (DA 18ª LIS RDL 5/2023 y RDL 7/2026) -
@@ -13454,6 +13642,18 @@ modelo:
               label: Liquidación II - Detalle correcciones resultado cta. pérdidas
                 y ganancias - Exención sobre dividendos o participaciones en beneficios
                 de entidades residentes (art. 21.1, 21.10 y DT 40ª LIS) - Disminuciones
+            '00447':
+              label: Tributación conjunta Estado y Adm.Forales - Pagos fraccionados
+                2 - Bizkaia [00447]
+            '00474':
+              label: Tributación conjunta Estado y Adm.Forales - Cuota diferencial
+                - Araba/Álava [00474]
+            00487:
+              label: Tributación conjunta Estado y Adm.Forales - Intereses demora
+                - Gipuzkoa [00487]
+            00488:
+              label: Tributación conjunta Estado y Adm.Forales - Intereses demora
+                - Bizkaia [00488]
             00496:
               label: Estado de cambios patrimonio neto (II) - Ingresos y gastos reconocidos
                 en patrimonio neto - Otros ingresos y gastos reconocidos en patrimonio
@@ -13503,6 +13703,15 @@ modelo:
                 Admón.tributaria - Exceso cuota líquida positiva - Ejercicio generación
                 - 2025(*) - Exceso cuota líquida positiva pendiente aplicación periodos
                 futuros
+            00913:
+              label: Tributación conjunta Estado y Adm.Forales - Incremento por incumplimiento
+                requisitos SOCIMI - Araba/Álava [00913]
+            00914:
+              label: Tributación conjunta Estado y Adm.Forales - Incremento por incumplimiento
+                requisitos SOCIMI - Gipuzkoa [00914]
+            00915:
+              label: Tributación conjunta Estado y Adm.Forales - Incremento por incumplimiento
+                requisitos SOCIMI - Bizkaia [00915]
             00925:
               label: Liquidación III - Base imponible - Rentas que no limitan compensación
                 de bases imponibles - Rentas correspondientes a la reversión de las
@@ -13878,6 +14087,21 @@ modelo:
               label: Tributación conjunta Estado y Adm.Forales - Conversión de activos
                 por impuesto diferido en crédito exigible frente a la Administración
                 tributaria (art. 130 LIS) - Abono por conversión activos - Navarra
+            '01305':
+              label: Tributación conjunta Estado y Adm.Forales - Conversión de activos
+                por impuesto diferido en crédito exigible frente a la Administración
+                tributaria (art. 130 LIS) - Compensación conversión activos - Araba/Álava
+                [01305]
+            '01306':
+              label: Tributación conjunta Estado y Adm.Forales - Conversión de activos
+                por impuesto diferido en crédito exigible frente a la Administración
+                tributaria (art. 130 LIS) - Compensación conversión activos - Gipuzkoa
+                [01306]
+            '01307':
+              label: Tributación conjunta Estado y Adm.Forales - Conversión de activos
+                por impuesto diferido en crédito exigible frente a la Administración
+                tributaria (art. 130 LIS) - Compensación conversión activos - Bizkaia
+                [01307]
             01308:
               label: Tributación conjunta Estado y Adm.Forales - Conversión de activos
                 por impuesto diferido en crédito exigible frente a la Administración
@@ -13887,6 +14111,24 @@ modelo:
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
                 incrementada - 2023 - Sin reiteración de donaciones a una misma entidad
                 - Deducción pendiente/generada
+            '01334':
+              label: Tributación conjunta Estado y Adm.Forales - Abono deducciones
+                I+D+i insuf. cuota - Araba/Álava [01334]
+            '01335':
+              label: Tributación conjunta Estado y Adm.Forales - Abono deducciones
+                I+D+i insuf. cuota - Gipuzkoa [01335]
+            '01336':
+              label: Tributación conjunta Estado y Adm.Forales - Abono deducciones
+                I+D+i insuf. cuota - Bizkaia [01336]
+            01338:
+              label: Tributación conjunta Estado y Adm.Forales - Abono deducciones
+                producciones extranjeras - Araba/Álava [01338]
+            01339:
+              label: Tributación conjunta Estado y Adm.Forales - Abono deducciones
+                producciones extranjeras - Gipuzkoa [01339]
+            '01340':
+              label: Tributación conjunta Estado y Adm.Forales - Abono deducciones
+                producciones extranjeras - Bizkaia [01340]
             '01372':
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
@@ -14263,6 +14505,51 @@ modelo:
                 acordada por la Agencia Tributaria como consecuencia de la tramitación
                 de autoliquidaciones anteriores o liquidaciones administrativas correspondientes
                 al periodo impositivo 2025 - Navarra'
+            '01624':
+              label: Tributación conjunta Estado y Adm.Forales - Resultado de la autoliquidación
+                - Araba/Álava [01624]
+            '01625':
+              label: Tributación conjunta Estado y Adm.Forales - Resultado de la autoliquidación
+                - Gipuzkoa [01625]
+            01629:
+              label: Tributación conjunta Estado y Adm.Forales - Resultado de la autoliquidación
+                - Bizkaia [01629]
+            '01631':
+              label: Tributación conjunta Estado y Adm.Forales - Opción de fraccionamiento
+                art. 19.1 LIS - Importe integrado - Araba/Álava [01631]
+            '01632':
+              label: Tributación conjunta Estado y Adm.Forales - Opción de fraccionamiento
+                art. 19.1 LIS - Importe integrado - Gipuzkoa [01632]
+            '01633':
+              label: Tributación conjunta Estado y Adm.Forales - Opción de fraccionamiento
+                art. 19.1 LIS - Importe integrado - Bizkaia [01633]
+            '01635':
+              label: Tributación conjunta Estado y Adm.Forales - Opción de fraccionamiento
+                art. 19.1 LIS - Deuda tributaria - Araba/Álava [01635]
+            '01636':
+              label: Tributación conjunta Estado y Adm.Forales - Opción de fraccionamiento
+                art. 19.1 LIS - Deuda tributaria - Gipuzkoa [01636]
+            '01637':
+              label: Tributación conjunta Estado y Adm.Forales - Opción de fraccionamiento
+                art. 19.1 LIS - Deuda tributaria - Bizkaia [01637]
+            '01642':
+              label: Tributación conjunta Estado y Adm.Forales - Opción de fraccionamiento
+                art. 19.1 LIS - 1º fraccionamiento - Araba/Álava [01642]
+            '01643':
+              label: Tributación conjunta Estado y Adm.Forales - Opción de fraccionamiento
+                art. 19.1 LIS - 1º fraccionamiento - Gipuzkoa [01643]
+            '01644':
+              label: Tributación conjunta Estado y Adm.Forales - Opción de fraccionamiento
+                art. 19.1 LIS - 1º fraccionamiento - Bizkaia [01644]
+            '01646':
+              label: Tributación conjunta Estado y Adm.Forales - Resultado de la autoliquidación
+                incluido el 1º fraccionamiento - Araba/Álava [01646]
+            '01647':
+              label: Tributación conjunta Estado y Adm.Forales - Resultado de la autoliquidación
+                incluido el 1º fraccionamiento - Gipuzkoa [01647]
+            01648:
+              label: Tributación conjunta Estado y Adm.Forales - Resultado de la autoliquidación
+                incluido el 1º fraccionamiento - Bizkaia [01648]
             '01650':
               label: 'Tributación conjunta Estado y Adm.Forales - Rectificativa: Resultado
                 de la autoliquidación incluido el 1er fraccionamiento del art. 19.1
@@ -14468,6 +14755,15 @@ modelo:
               label: Liquidación II - Detalle correcciones resultado cta. pérdidas
                 y ganancias - Rentas procedentes de transmisión de inmovilizado obtenidas
                 por las Autoridades Portuarias (DA 68ª Ley 6/2018) - Disminuciones
+            01877:
+              label: Tributación conjunta Estado y Adm.Forales - Abono deducciones
+                producciones extranjeras en Canarias - Araba/Álava [01877]
+            01878:
+              label: Tributación conjunta Estado y Adm.Forales - Abono deducciones
+                producciones extranjeras en Canarias - Gipuzkoa [01878]
+            01879:
+              label: Tributación conjunta Estado y Adm.Forales - Abono deducciones
+                producciones extranjeras en Canarias - Bizkaia [01879]
             01886:
               label: 'Régimen especial de buques y empresas navieras en Canarias:
                 desglose de la compensación de bases imponibles negativas - Subtotal

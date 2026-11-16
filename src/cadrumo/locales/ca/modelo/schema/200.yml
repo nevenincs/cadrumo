@@ -40,18 +40,12 @@ modelo:
           '00052':
             help: Introdueix el volum d'operacions a Araba/Àlaba per a la tributació
               conjunta segons el concert econòmic [00052].
-            label: Tributació conjunta Estat i Adm. forals - concert econòmic - volum
-              d'operacions a Araba/Àlaba [00052]
           '00053':
             help: Introdueix el volum d'operacions a Gipuzkoa per a la tributació
               conjunta segons el concert econòmic [00053].
-            label: Tributació conjunta Estat i Adm. forals - concert econòmic - volum
-              d'operacions a Gipuzkoa [00053]
           '00054':
             help: Introdueix el volum d'operacions a Bizkaia per a la tributació conjunta
               segons el concert econòmic [00054].
-            label: Tributació conjunta Estat i Adm. forals - concert econòmic - volum
-              d'operacions a Bizkaia [00054]
           '00055':
             help: Introdueix el volum d'operacions a Navarra per a la tributació conjunta
               segons el conveni econòmic [00055].
@@ -508,9 +502,6 @@ modelo:
             label: Estat de canvis en el patrimoni net (III) - Ingressos i despeses
               reconeguts en patrimoni net - Ingressos fiscals a distribuir en diversos
               exercicis - Dividend a compte [00486]
-          00488:
-            label: Tributació conjunta Estat i Adm. forals - Interessos de demora
-              - Bizkaia [00488]
           00489:
             label: Estat de canvis en el patrimoni net (III) - Ingressos i despeses
               reconeguts en patrimoni net - Ingressos fiscals a distribuir en diversos
@@ -1487,12 +1478,6 @@ modelo:
           00912:
             label: Règ. cooperatives - Detall compensació quotes. 2014 Pendent d'aplicació
               en períodes futurs [00912]
-          00914:
-            label: Tributació conjunta Estat i Adm. forals - Increment per incompliment
-              de requisits SOCIMI - Gipuzkoa [00914]
-          00915:
-            label: Tributació conjunta Estat i Adm. forals - Increment per incompliment
-              de requisits SOCIMI - Bizkaia [00915]
           00916:
             label: Tributació conjunta Estat i Adm. forals - Increment per incompliment
               de requisits SOCIMI - Navarra [00916]
@@ -2194,18 +2179,6 @@ modelo:
             label: Deducció per inversions i despeses realitzades per les autoritats
               portuàries (art. 38 bis LIS) - Total - Pendent d'aplicació en períodes
               futurs [01304]
-          '01305':
-            label: Tributació conjunta Estat i Adm. forals - Conversió d'actius per
-              impost diferit en crèdit exigible davant l'Administració tributària
-              (art. 130 LIS) - Compensació per conversió d'actius - Araba/Àlaba [01305]
-          '01306':
-            label: Tributació conjunta Estat i Adm. forals - Conversió d'actius per
-              impost diferit en crèdit exigible davant l'Administració tributària
-              (art. 130 LIS) - Compensació per conversió d'actius - Gipuzkoa [01306]
-          '01307':
-            label: Tributació conjunta Estat i Adm. forals - Conversió d'actius per
-              impost diferit en crèdit exigible davant l'Administració tributària
-              (art. 130 LIS) - Compensació per conversió d'actius - Bizkaia [01307]
           01309:
             label: Deduccions per produccions cinematogràfiques estrangeres a Canàries
               (art. 36.2 LIS i DA 14a Llei 19/1994) - 2022) - Deducció pendent/generada
@@ -2288,18 +2261,9 @@ modelo:
             label: Liquidació IV - Resultat de l'autoliquidació - Abonament de deduccions
               per produccions cinematogràfiques estrangeres - Adm. forals/Navarra
               [01333]
-          '01335':
-            label: Tributació conjunta Estat i Adm. forals - Abonament deduccions
-              I+D+i insuf. quota - Gipuzkoa [01335]
-          '01336':
-            label: Tributació conjunta Estat i Adm. forals - Abonament deduccions
-              I+D+i insuf. quota - Bizkaia [01336]
           '01337':
             label: Tributació conjunta Estat i Adm. forals - Abonament deduccions
               I+D+i insuf. quota - Navarra [01337]
-          '01340':
-            label: Tributació conjunta Estat i Adm. forals - Abonament deduccions
-              produccions estrangeres - Bizkaia [01340]
           '01341':
             label: Tributació conjunta Estat i Adm. forals - Abonament deduccions
               produccions estrangeres - Navarra [01341]
@@ -2948,9 +2912,6 @@ modelo:
           '01622':
             label: Deduccions per incentivar determ. activitats - 2016 Innovació tecnològica
               (IT) - Pendent aplicació en períodes futurs [01622]
-          '01625':
-            label: Tributació conjunta Estat i Adm. forals - Resultat de l'autoliquidació
-              - Gipuzkoa [01625]
           '01626':
             label: Dotacions deteriorament crèdits o altres actius - Exercici generació
               - {year} - Dotacions pendents integració a principi període - Que no
@@ -2962,27 +2923,12 @@ modelo:
             label: Dotacions deteriorament crèdits o altres actius - Exercici generació
               - {year} - Dotacions pendents integració períodes futurs - Que no han
               complert condicions deduïbilitat fiscal [01628]
-          01629:
-            label: Tributació conjunta Estat i Adm. forals - Resultat de l'autoliquidació
-              - Bizkaia [01629]
           '01630':
             label: Tributació conjunta Estat i Adm. forals - Resultat de l'autoliquidació
               - Navarra [01630]
-          '01633':
-            label: Tributació conjunta Estat i Adm. forals - Opció de fraccionament
-              art. 19.1 LIS - Import integrat - Bizkaia [01633]
           '01634':
             label: Tributació conjunta Estat i Adm. forals - Opció de fraccionament
               art. 19.1 LIS - Import integrat - Navarra [01634]
-          '01635':
-            label: Tributació conjunta Estat i Adm. forals - Opció de fraccionament
-              art. 19.1 LIS - Deute tributari - Araba/Àlaba [01635]
-          '01636':
-            label: Tributació conjunta Estat i Adm. forals - Opció de fraccionament
-              art. 19.1 LIS - Deute tributari - Gipuzkoa [01636]
-          '01637':
-            label: Tributació conjunta Estat i Adm. forals - Opció de fraccionament
-              art. 19.1 LIS - Deute tributari - Bizkaia [01637]
           01638:
             help: 'Imports imputats: Import de la deducció generada de produccions
               cinematogràfiques espanyoles i espectacles en viu d''arts escèniques
@@ -3003,24 +2949,9 @@ modelo:
           '01641':
             label: Tributació conjunta Estat i Adm. forals - Opció de fraccionament
               art. 19.1 LIS - Deute tributari - Navarra [01641]
-          '01642':
-            label: Tributació conjunta Estat i Adm. forals - Opció de fraccionament
-              art. 19.1 LIS - 1r fraccionament - Araba/Àlaba [01642]
-          '01643':
-            label: Tributació conjunta Estat i Adm. forals - Opció de fraccionament
-              art. 19.1 LIS - 1r fraccionament - Gipuzkoa [01643]
-          '01644':
-            label: Tributació conjunta Estat i Adm. forals - Opció de fraccionament
-              art. 19.1 LIS - 1r fraccionament - Bizkaia [01644]
           '01645':
             label: Tributació conjunta Estat i Adm. forals - Opció de fraccionament
               art. 19.1 LIS - 1r fraccionament - Navarra [01645]
-          '01646':
-            label: Tributació conjunta Estat i Adm. forals - Resultat de l'autoliquidació
-              inclòs el 1r fraccionament - Araba/Àlaba [01646]
-          01648:
-            label: Tributació conjunta Estat i Adm. forals - Resultat de l'autoliquidació
-              inclòs el 1r fraccionament - Bizkaia [01648]
           01649:
             label: Tributació conjunta Estat i Adm. forals - Resultat de l'autoliquidació
               inclòs el 1r fraccionament - Navarra [01649]
@@ -3586,15 +3517,6 @@ modelo:
           01876:
             label: Deduccions per incentivar determ. activitats - 2022 Recerca i desenvolupament
               (CT) - Pendent d'aplicació en períodes futurs [01876]
-          01877:
-            label: Tributació conjunta Estat i Adm. forals - Abonament de deduccions
-              per produccions estrangeres a Canàries - Àlaba [01877]
-          01878:
-            label: Tributació conjunta Estat i Adm. forals - Abonament de deduccions
-              per produccions estrangeres a Canàries - Guipúscoa [01878]
-          01879:
-            label: Tributació conjunta Estat i Adm. forals - Abonament de deduccions
-              per produccions estrangeres a Canàries - Biscaia [01879]
           01880:
             label: Tributació conjunta Estat i Adm. forals - Abonament de deduccions
               per produccions estrangeres a Canàries - Navarra [01880]
@@ -10222,9 +10144,6 @@ modelo:
           is-otros-regimenes-especiales:
             help: Indicador d'altres règims especials [00020].
             label: Altres règims especials [00020]
-          is-pagos-fraccionados:
-            label: Tributació conjunta Estat i Adm. forals - Pagaments fraccionats
-              2 - Bizkaia [00447]
           is-participaciones-directas-b-reversion-de-perdidas-por-deterioro-de-valores:
             help: b) Reversió de pèrdues per deteriorament de valors (DT 16a LIS)
               - B.1. Participacions declarant en altres entitats
@@ -10848,18 +10767,6 @@ modelo:
             help: Indicador de transmissió d'elements patrimonials segons els articles
               27.2.d) i 77.1 de la LIS [00030].
             label: Transmissió d'elements patrimonials arts. 27.2.d) i 77.1 LIS [00030]
-          is-tributacion-conjunta-abono-cinematografica:
-            label: Tributació conjunta Estat i Adm. forals - Abonament deduccions
-              produccions estrangeres - Gipuzkoa [01339]
-          is-tributacion-conjunta-abono-deducciones-cinematograficas:
-            label: Tributació conjunta Estat i Adm. forals - Abonament deduccions
-              produccions estrangeres - Araba/Àlaba [01338]
-          is-tributacion-conjunta-abono-idi:
-            label: Tributació conjunta Estat i Adm. forals - Abonament deduccions
-              I+D+i insuf. quota - Araba/Àlaba [01334]
-          is-tributacion-conjunta-cuota-diferencial:
-            label: Tributació conjunta Estat i Adm. forals - Quota diferencial - Araba/Àlaba
-              [00474]
           is-tributacion-conjunta-estado-diput-cdad-forales:
             help: Indicador de tributació conjunta entre l'Estat, les diputacions
               i les comunitats forals [00028].
@@ -10869,21 +10776,6 @@ modelo:
               a ingressar com a conseqüència de la tramitació d''autoliquidacions
               anteriors o liquidacions administratives corresponents al període impositiu
               {year} - Araba/Àlaba [01607]'
-          is-tributacion-conjunta-fraccionamiento-importe:
-            label: Tributació conjunta Estat i Adm. forals - Opció de fraccionament
-              art. 19.1 LIS - Import integrat - Gipuzkoa [01632]
-          is-tributacion-conjunta-fraccionamiento-y-rectificativa:
-            label: Tributació conjunta Estat i Adm. forals - Resultat de l'autoliquidació
-              inclòs el 1r fraccionament - Gipuzkoa [01647]
-          is-tributacion-conjunta-incremento:
-            label: Tributació conjunta Estat i Adm. forals - Increment per incompliment
-              de requisits SOCIMI - Araba/Àlaba [00913]
-          is-tributacion-conjunta-intereses:
-            label: Tributació conjunta Estat i Adm. forals - Interessos de demora
-              - Gipuzkoa [00487]
-          is-tributacion-conjunta-opcion-0-7:
-            label: Tributació conjunta Estat i Adm. forals - Opció de fraccionament
-              art. 19.1 LIS - Import integrat - Araba/Àlaba [01631]
           is-tributacion-conjunta-porcentaje-estado:
             label: Tributació conjunta Estat i Adm. forals - Càlcul de percentatges
               de tributació - Adm. de l'Estat [00625]
@@ -10893,9 +10785,6 @@ modelo:
               [00050].
             label: Tributació conjunta Estat i Adm. forals - concert econòmic - volum
               total d'operacions [00050]
-          is-tributacion-conjunta-resultado:
-            label: Tributació conjunta Estat i Adm. forals - Resultat de l'autoliquidació
-              - Araba/Àlaba [01624]
           is-union-temporal-de-empresas:
             label: Unió temporal d'empreses [00085]
           is-uniones-federaciones-y-confederaciones-de-cooperativas:
@@ -12553,6 +12442,15 @@ modelo:
             label: Model 200, exercici 2022
         '2023':
           casilla:
+            '00052':
+              label: Tributació conjunta Estat i Adm. forals - concert econòmic -
+                volum d'operacions a Àlaba [00052]
+            '00053':
+              label: Tributació conjunta Estat i Adm. forals - concert econòmic -
+                volum d'operacions a Guipúscoa [00053]
+            '00054':
+              label: Tributació conjunta Estat i Adm. forals - concert econòmic -
+                volum d'operacions a Biscaia [00054]
             '00077':
               label: Amortització accelerada de determinats vehicles i de noves infraestructures
                 de recàrrega (DA 18a LIS) - Augment - Correccions de l'exercici -
@@ -12561,6 +12459,18 @@ modelo:
               label: Liquidació II - Detall correccions resultat cte. pèrdues i guanys
                 - Exempció sobre dividends o participacions en beneficis d'entitats
                 residents (art. 21.1, 21.10 i DT 40a LIS) - Disminucions [00370]
+            '00447':
+              label: Tributació conjunta Estat i Adm. forals - Pagaments fraccionats
+                2 - Biscaia [00447]
+            '00474':
+              label: Tributació conjunta Estat i Adm. forals - Quota diferencial -
+                Àlaba [00474]
+            00487:
+              label: Tributació conjunta Estat i Adm. forals - Interessos de demora
+                - Guipúscoa [00487]
+            00488:
+              label: Tributació conjunta Estat i Adm. forals - Interessos de demora
+                - Biscaia [00488]
             '00775':
               label: Liquidació I - Detall correccions resultat cte. pèrdues i guanys
                 - Amortització accelerada de determinats vehicles i de noves infraestructures
@@ -12569,6 +12479,15 @@ modelo:
               label: Liquidació I - Detall correccions resultat cte. pèrdues i guanys
                 - Amortització accelerada de determinats vehicles i de noves infraestructures
                 de recàrrega (DA 18a LIS) - Disminucions [00776]
+            00913:
+              label: Tributació conjunta Estat i Adm. forals - Increment per incompliment
+                de requisits SOCIMI - Àlaba [00913]
+            00914:
+              label: Tributació conjunta Estat i Adm. forals - Increment per incompliment
+                de requisits SOCIMI - Guipúscoa [00914]
+            00915:
+              label: Tributació conjunta Estat i Adm. forals - Increment per incompliment
+                de requisits SOCIMI - Biscaia [00915]
             '01020':
               label: Conversió d'actius per impost diferit en crèdit exigible davant
                 l'Administració tributària (art. 130 LIS) - Abonament per conversió
@@ -12643,11 +12562,53 @@ modelo:
                 - Actius impost diferit (AID). Art. 130 LIS - Exercici generació -
                 2022 - AID pendents d'aplicació en períodes futurs - Sense dret de
                 conversió en crèdit exigible [01133]
+            '01300':
+              label: Tributació conjunta Estat i Adm. forals - Conversió d'actius
+                per impost diferit en crèdit exigible davant l'Administració tributària
+                (art. 130 LIS) - Abonament per conversió d'actius - Àlaba [01300]
+            '01301':
+              label: Tributació conjunta Estat i Adm. forals - Conversió d'actius
+                per impost diferit en crèdit exigible davant l'Administració tributària
+                (art. 130 LIS) - Abonament per conversió d'actius - Guipúscoa [01301]
+            '01302':
+              label: Tributació conjunta Estat i Adm. forals - Conversió d'actius
+                per impost diferit en crèdit exigible davant l'Administració tributària
+                (art. 130 LIS) - Abonament per conversió d'actius - Biscaia [01302]
+            '01305':
+              label: Tributació conjunta Estat i Adm. forals - Conversió d'actius
+                per impost diferit en crèdit exigible davant l'Administració tributària
+                (art. 130 LIS) - Compensació per conversió d'actius - Àlaba [01305]
+            '01306':
+              label: Tributació conjunta Estat i Adm. forals - Conversió d'actius
+                per impost diferit en crèdit exigible davant l'Administració tributària
+                (art. 130 LIS) - Compensació per conversió d'actius - Guipúscoa [01306]
+            '01307':
+              label: Tributació conjunta Estat i Adm. forals - Conversió d'actius
+                per impost diferit en crèdit exigible davant l'Administració tributària
+                (art. 130 LIS) - Compensació per conversió d'actius - Biscaia [01307]
             01329:
               label: Deducció donatius entitats sense fins lucratius - Donacions per
                 a activitats prioritàries de mecenatge i altres amb dret a deducció
                 incrementada - 2023(*) Sense reiteració de donacions a una mateixa
                 entitat - Deducció pendent/generada [01329]
+            '01334':
+              label: Tributació conjunta Estat i Adm. forals - Abonament deduccions
+                I+D+i insuf. quota - Àlaba [01334]
+            '01335':
+              label: Tributació conjunta Estat i Adm. forals - Abonament deduccions
+                I+D+i insuf. quota - Guipúscoa [01335]
+            '01336':
+              label: Tributació conjunta Estat i Adm. forals - Abonament deduccions
+                I+D+i insuf. quota - Biscaia [01336]
+            01338:
+              label: Tributació conjunta Estat i Adm. forals - Abonament deduccions
+                produccions estrangeres - Àlaba [01338]
+            01339:
+              label: Tributació conjunta Estat i Adm. forals - Abonament deduccions
+                produccions estrangeres - Guipúscoa [01339]
+            '01340':
+              label: Tributació conjunta Estat i Adm. forals - Abonament deduccions
+                produccions estrangeres - Biscaia [01340]
             '01372':
               label: Deducció donatius entitats sense fins lucratius - Donacions per
                 a activitats prioritàries de mecenatge i altres amb dret a deducció
@@ -12658,6 +12619,96 @@ modelo:
                 a activitats prioritàries de mecenatge i altres amb dret a deducció
                 incrementada - 2023(*) Sense reiteració de donacions a una mateixa
                 entitat - Pendent d'aplicació en períodes futurs [01373]
+            '01624':
+              label: Tributació conjunta Estat i Adm. forals - Resultat de l'autoliquidació
+                - Àlaba [01624]
+            '01625':
+              label: Tributació conjunta Estat i Adm. forals - Resultat de l'autoliquidació
+                - Guipúscoa [01625]
+            01629:
+              label: Tributació conjunta Estat i Adm. forals - Resultat de l'autoliquidació
+                - Biscaia [01629]
+            '01631':
+              label: Tributació conjunta Estat i Adm. forals - Opció de fraccionament
+                art. 19.1 LIS - Import integrat - Àlaba [01631]
+            '01632':
+              label: Tributació conjunta Estat i Adm. forals - Opció de fraccionament
+                art. 19.1 LIS - Import integrat - Guipúscoa [01632]
+            '01633':
+              label: Tributació conjunta Estat i Adm. forals - Opció de fraccionament
+                art. 19.1 LIS - Import integrat - Biscaia [01633]
+            '01635':
+              label: Tributació conjunta Estat i Adm. forals - Opció de fraccionament
+                art. 19.1 LIS - Deute tributari - Àlaba [01635]
+            '01636':
+              label: Tributació conjunta Estat i Adm. forals - Opció de fraccionament
+                art. 19.1 LIS - Deute tributari - Guipúscoa [01636]
+            '01637':
+              label: Tributació conjunta Estat i Adm. forals - Opció de fraccionament
+                art. 19.1 LIS - Deute tributari - Biscaia [01637]
+            '01642':
+              label: Tributació conjunta Estat i Adm. forals - Opció de fraccionament
+                art. 19.1 LIS - 1r fraccionament - Àlaba [01642]
+            '01643':
+              label: Tributació conjunta Estat i Adm. forals - Opció de fraccionament
+                art. 19.1 LIS - 1r fraccionament - Guipúscoa [01643]
+            '01644':
+              label: Tributació conjunta Estat i Adm. forals - Opció de fraccionament
+                art. 19.1 LIS - 1r fraccionament - Biscaia [01644]
+            '01646':
+              label: Tributació conjunta Estat i Adm. forals - Resultat de l'autoliquidació
+                inclòs el 1r fraccionament - Àlaba [01646]
+            '01647':
+              label: Tributació conjunta Estat i Adm. forals - Resultat de l'autoliquidació
+                inclòs el 1r fraccionament - Guipúscoa [01647]
+            01648:
+              label: Tributació conjunta Estat i Adm. forals - Resultat de l'autoliquidació
+                inclòs el 1r fraccionament - Biscaia [01648]
+            '01662':
+              label: 'Tributació conjunta Estat i Adm. forals - Conversió d''actius
+                per impost diferit en crèdit exigible davant l''Administració tributària
+                (art. 130 LIS) - Resultat de conversió: Abonament - Àlaba [01662]'
+            '01663':
+              label: 'Tributació conjunta Estat i Adm. forals - Conversió d''actius
+                per impost diferit en crèdit exigible davant l''Administració tributària
+                (art. 130 LIS) - Resultat de conversió: Abonament - Guipúscoa [01663]'
+            '01664':
+              label: 'Tributació conjunta Estat i Adm. forals - Conversió d''actius
+                per impost diferit en crèdit exigible davant l''Administració tributària
+                (art. 130 LIS) - Resultat de conversió: Abonament - Biscaia [01664]'
+            '01666':
+              label: 'Tributació conjunta Estat i Adm. forals - Conversió d''actius
+                per impost diferit en crèdit exigible davant l''Administració tributària
+                (art. 130 LIS) - Resultat de conversió: Compensació - Àlaba [01666]'
+            '01667':
+              label: 'Tributació conjunta Estat i Adm. forals - Conversió d''actius
+                per impost diferit en crèdit exigible davant l''Administració tributària
+                (art. 130 LIS) - Resultat de conversió: Compensació - Guipúscoa [01667]'
+            01668:
+              label: 'Tributació conjunta Estat i Adm. forals - Conversió d''actius
+                per impost diferit en crèdit exigible davant l''Administració tributària
+                (art. 130 LIS) - Resultat de conversió: Compensació - Biscaia [01668]'
+            '01670':
+              label: 'Tributació conjunta Estat i Adm. forals - Conversió d''actius
+                per impost diferit en crèdit exigible davant l''Administració tributària
+                (art. 130 LIS) - Resultat de conversió: A ingressar - Àlaba [01670]'
+            '01671':
+              label: 'Tributació conjunta Estat i Adm. forals - Conversió d''actius
+                per impost diferit en crèdit exigible davant l''Administració tributària
+                (art. 130 LIS) - Resultat de conversió: A ingressar - Guipúscoa [01671]'
+            '01672':
+              label: 'Tributació conjunta Estat i Adm. forals - Conversió d''actius
+                per impost diferit en crèdit exigible davant l''Administració tributària
+                (art. 130 LIS) - Resultat de conversió: A ingressar - Biscaia [01672]'
+            01877:
+              label: Tributació conjunta Estat i Adm. forals - Abonament de deduccions
+                per produccions estrangeres a Canàries - Àlaba [01877]
+            01878:
+              label: Tributació conjunta Estat i Adm. forals - Abonament de deduccions
+                per produccions estrangeres a Canàries - Guipúscoa [01878]
+            01879:
+              label: Tributació conjunta Estat i Adm. forals - Abonament de deduccions
+                per produccions estrangeres a Canàries - Biscaia [01879]
             01887:
               label: Liquidació III - base imposable - Règim especial de vaixells
                 i empreses navilieres a Canàries - Compensació de bases imposables
@@ -12719,6 +12770,15 @@ modelo:
             label: Model 200, exercici 2023
         '2024':
           casilla:
+            '00052':
+              label: Tributació conjunta Estat i Adm. forals - concert econòmic -
+                volum d'operacions a Araba/Àlaba [00052]
+            '00053':
+              label: Tributació conjunta Estat i Adm. forals - concert econòmic -
+                volum d'operacions a Gipuzkoa [00053]
+            '00054':
+              label: Tributació conjunta Estat i Adm. forals - concert econòmic -
+                volum d'operacions a Bizkaia [00054]
             '00077':
               label: Amortització accelerada de determinats vehicles i de noves infraestructures
                 de recàrrega (DA 18a LIS RDL 5/2023) - Augment - Correccions de l'exercici
@@ -12743,6 +12803,18 @@ modelo:
                 desglossament de la compensació de bases imposables negatives - Compensació
                 de base imposable de la resta d''activitats any 2024 - Pendent d''aplicació
                 en períodes futurs [00098]'
+            '00447':
+              label: Tributació conjunta Estat i Adm. forals - Pagaments fraccionats
+                2 - Bizkaia [00447]
+            '00474':
+              label: Tributació conjunta Estat i Adm. forals - Quota diferencial -
+                Araba/Àlaba [00474]
+            00487:
+              label: Tributació conjunta Estat i Adm. forals - Interessos de demora
+                - Gipuzkoa [00487]
+            00488:
+              label: Tributació conjunta Estat i Adm. forals - Interessos de demora
+                - Bizkaia [00488]
             '00775':
               label: Liquidació I - Detall correccions resultat cte. pèrdues i guanys
                 - Amortització accelerada de determinats vehicles i de noves infraestructures
@@ -12788,6 +12860,15 @@ modelo:
               label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
                 - Excés quota líquida positiva - Exercici generació - {year} - Excés
                 de quota líquida positiva pendent d'aplicació en períodes futurs [00882]
+            00913:
+              label: Tributació conjunta Estat i Adm. forals - Increment per incompliment
+                de requisits SOCIMI - Araba/Àlaba [00913]
+            00914:
+              label: Tributació conjunta Estat i Adm. forals - Increment per incompliment
+                de requisits SOCIMI - Gipuzkoa [00914]
+            00915:
+              label: Tributació conjunta Estat i Adm. forals - Increment per incompliment
+                de requisits SOCIMI - Bizkaia [00915]
             00925:
               label: Liquidació III - base imposable - Rendes que no limiten la compensació
                 de bases imposables - Rendes corresponents a la reversió de les pèrdues
@@ -12900,11 +12981,42 @@ modelo:
               label: Tributació conjunta Estat i Adm. forals - Conversió d'actius
                 per impost diferit en crèdit exigible davant l'Administració tributària
                 (art. 130 LIS) - Abonament per conversió d'actius - Bizkaia [01302]
+            '01305':
+              label: Tributació conjunta Estat i Adm. forals - Conversió d'actius
+                per impost diferit en crèdit exigible davant l'Administració tributària
+                (art. 130 LIS) - Compensació per conversió d'actius - Araba/Àlaba
+                [01305]
+            '01306':
+              label: Tributació conjunta Estat i Adm. forals - Conversió d'actius
+                per impost diferit en crèdit exigible davant l'Administració tributària
+                (art. 130 LIS) - Compensació per conversió d'actius - Gipuzkoa [01306]
+            '01307':
+              label: Tributació conjunta Estat i Adm. forals - Conversió d'actius
+                per impost diferit en crèdit exigible davant l'Administració tributària
+                (art. 130 LIS) - Compensació per conversió d'actius - Bizkaia [01307]
             01329:
               label: Deducció donatius entitats sense fins lucratius - Donacions per
                 a activitats prioritàries de mecenatge i altres amb dret a deducció
                 incrementada - 2023 - Sense reiteració de donacions a una mateixa
                 entitat - Deducció pendent/generada [01329]
+            '01334':
+              label: Tributació conjunta Estat i Adm. forals - Abonament deduccions
+                I+D+i insuf. quota - Araba/Àlaba [01334]
+            '01335':
+              label: Tributació conjunta Estat i Adm. forals - Abonament deduccions
+                I+D+i insuf. quota - Gipuzkoa [01335]
+            '01336':
+              label: Tributació conjunta Estat i Adm. forals - Abonament deduccions
+                I+D+i insuf. quota - Bizkaia [01336]
+            01338:
+              label: Tributació conjunta Estat i Adm. forals - Abonament deduccions
+                produccions estrangeres - Araba/Àlaba [01338]
+            01339:
+              label: Tributació conjunta Estat i Adm. forals - Abonament deduccions
+                produccions estrangeres - Gipuzkoa [01339]
+            '01340':
+              label: Tributació conjunta Estat i Adm. forals - Abonament deduccions
+                produccions estrangeres - Bizkaia [01340]
             '01372':
               label: Deducció donatius entitats sense fins lucratius - Donacions per
                 a activitats prioritàries de mecenatge i altres amb dret a deducció
@@ -12972,6 +13084,51 @@ modelo:
                 acordada per l''Agència Tributària com a conseqüència de la tramitació
                 d''autoliquidacions anteriors o liquidacions administratives corresponents
                 al període impositiu {year} - Navarra [01623]'
+            '01624':
+              label: Tributació conjunta Estat i Adm. forals - Resultat de l'autoliquidació
+                - Araba/Àlaba [01624]
+            '01625':
+              label: Tributació conjunta Estat i Adm. forals - Resultat de l'autoliquidació
+                - Gipuzkoa [01625]
+            01629:
+              label: Tributació conjunta Estat i Adm. forals - Resultat de l'autoliquidació
+                - Bizkaia [01629]
+            '01631':
+              label: Tributació conjunta Estat i Adm. forals - Opció de fraccionament
+                art. 19.1 LIS - Import integrat - Araba/Àlaba [01631]
+            '01632':
+              label: Tributació conjunta Estat i Adm. forals - Opció de fraccionament
+                art. 19.1 LIS - Import integrat - Gipuzkoa [01632]
+            '01633':
+              label: Tributació conjunta Estat i Adm. forals - Opció de fraccionament
+                art. 19.1 LIS - Import integrat - Bizkaia [01633]
+            '01635':
+              label: Tributació conjunta Estat i Adm. forals - Opció de fraccionament
+                art. 19.1 LIS - Deute tributari - Araba/Àlaba [01635]
+            '01636':
+              label: Tributació conjunta Estat i Adm. forals - Opció de fraccionament
+                art. 19.1 LIS - Deute tributari - Gipuzkoa [01636]
+            '01637':
+              label: Tributació conjunta Estat i Adm. forals - Opció de fraccionament
+                art. 19.1 LIS - Deute tributari - Bizkaia [01637]
+            '01642':
+              label: Tributació conjunta Estat i Adm. forals - Opció de fraccionament
+                art. 19.1 LIS - 1r fraccionament - Araba/Àlaba [01642]
+            '01643':
+              label: Tributació conjunta Estat i Adm. forals - Opció de fraccionament
+                art. 19.1 LIS - 1r fraccionament - Gipuzkoa [01643]
+            '01644':
+              label: Tributació conjunta Estat i Adm. forals - Opció de fraccionament
+                art. 19.1 LIS - 1r fraccionament - Bizkaia [01644]
+            '01646':
+              label: Tributació conjunta Estat i Adm. forals - Resultat de l'autoliquidació
+                inclòs el 1r fraccionament - Araba/Àlaba [01646]
+            '01647':
+              label: Tributació conjunta Estat i Adm. forals - Resultat de l'autoliquidació
+                inclòs el 1r fraccionament - Gipuzkoa [01647]
+            01648:
+              label: Tributació conjunta Estat i Adm. forals - Resultat de l'autoliquidació
+                inclòs el 1r fraccionament - Bizkaia [01648]
             '01650':
               label: 'Tributació conjunta Estat i Adm. forals - Rectificativa: Resultat
                 de l''autoliquidació inclòs el 1r fraccionament de l''art. 19.1 LIS
@@ -13054,6 +13211,15 @@ modelo:
               label: Llibertat d'amortització de determinats vehicles i de noves infraestructures
                 de recàrrega (DA 18a LIS RDL 4/2024) - Augment - Correccions de l'exercici
                 - Temporànies (amb origen en exercicis anteriors) [01820]
+            01877:
+              label: Tributació conjunta Estat i Adm. forals - Abonament de deduccions
+                per produccions estrangeres a Canàries - Araba/Àlaba [01877]
+            01878:
+              label: Tributació conjunta Estat i Adm. forals - Abonament de deduccions
+                per produccions estrangeres a Canàries - Gipuzkoa [01878]
+            01879:
+              label: Tributació conjunta Estat i Adm. forals - Abonament de deduccions
+                per produccions estrangeres a Canàries - Bizkaia [01879]
             01961:
               label: Llibertat d'amortització de determinats vehicles i de noves infraestructures
                 de recàrrega (DA 18a LIS RDL 4/2024) - Disminució - Correccions de
@@ -13216,6 +13382,15 @@ modelo:
             label: Model 200, exercici 2024
         2025-y-siguientes:
           casilla:
+            '00052':
+              label: Tributació conjunta Estat i Adm. forals - concert econòmic -
+                volum d'operacions a Araba/Àlaba [00052]
+            '00053':
+              label: Tributació conjunta Estat i Adm. forals - concert econòmic -
+                volum d'operacions a Gipuzkoa [00053]
+            '00054':
+              label: Tributació conjunta Estat i Adm. forals - concert econòmic -
+                volum d'operacions a Bizkaia [00054]
             '00077':
               label: Amortització accelerada de determinats vehicles i de noves infraestructures
                 de recàrrega (DA 18a LIS RDL 5/2023 i RDL 7/2026) - Augment - Correccions
@@ -13247,6 +13422,18 @@ modelo:
               label: Liquidació II - Detall correccions resultat cte. pèrdues i guanys
                 - Exempció sobre dividends o participacions en beneficis d'entitats
                 residents (art. 21.1, 21.10 i DT 40a LIS) - Disminucions
+            '00447':
+              label: Tributació conjunta Estat i Adm. forals - Pagaments fraccionats
+                2 - Bizkaia [00447]
+            '00474':
+              label: Tributació conjunta Estat i Adm. forals - Quota diferencial -
+                Araba/Àlaba [00474]
+            00487:
+              label: Tributació conjunta Estat i Adm. forals - Interessos de demora
+                - Gipuzkoa [00487]
+            00488:
+              label: Tributació conjunta Estat i Adm. forals - Interessos de demora
+                - Bizkaia [00488]
             00496:
               label: Estat de canvis en el patrimoni net (II) - Ingressos i despeses
                 reconeguts en patrimoni net - Altres ingressos i despeses reconeguts
@@ -13295,6 +13482,15 @@ modelo:
               label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
                 - Excés quota líquida positiva - Exercici generació - 2025(*) - Excés
                 quota líquida positiva pendent aplicació períodes futurs
+            00913:
+              label: Tributació conjunta Estat i Adm. forals - Increment per incompliment
+                de requisits SOCIMI - Araba/Àlaba [00913]
+            00914:
+              label: Tributació conjunta Estat i Adm. forals - Increment per incompliment
+                de requisits SOCIMI - Gipuzkoa [00914]
+            00915:
+              label: Tributació conjunta Estat i Adm. forals - Increment per incompliment
+                de requisits SOCIMI - Bizkaia [00915]
             00925:
               label: Liquidació III - base imposable - Rendes que no limiten la compensació
                 de bases imposables - Rendes corresponents a la reversió de les pèrdues
@@ -13669,6 +13865,19 @@ modelo:
               label: Tributació conjunta Estat i Adm. forals - Conversió d'actius
                 per impost diferit en crèdit exigible davant l'Administració tributària
                 (art. 130 LIS) - Abonament per conversió d'actius - Navarra
+            '01305':
+              label: Tributació conjunta Estat i Adm. forals - Conversió d'actius
+                per impost diferit en crèdit exigible davant l'Administració tributària
+                (art. 130 LIS) - Compensació per conversió d'actius - Araba/Àlaba
+                [01305]
+            '01306':
+              label: Tributació conjunta Estat i Adm. forals - Conversió d'actius
+                per impost diferit en crèdit exigible davant l'Administració tributària
+                (art. 130 LIS) - Compensació per conversió d'actius - Gipuzkoa [01306]
+            '01307':
+              label: Tributació conjunta Estat i Adm. forals - Conversió d'actius
+                per impost diferit en crèdit exigible davant l'Administració tributària
+                (art. 130 LIS) - Compensació per conversió d'actius - Bizkaia [01307]
             01308:
               label: Tributació conjunta Estat i Adm. forals - Conversió d'actius
                 per impost diferit en crèdit exigible davant l'Administració tributària
@@ -13678,6 +13887,24 @@ modelo:
                 a activitats prioritàries de mecenatge i altres amb dret a deducció
                 incrementada - 2023 - Sense reiteració de donacions a una mateixa
                 entitat - Deducció pendent/generada
+            '01334':
+              label: Tributació conjunta Estat i Adm. forals - Abonament deduccions
+                I+D+i insuf. quota - Araba/Àlaba [01334]
+            '01335':
+              label: Tributació conjunta Estat i Adm. forals - Abonament deduccions
+                I+D+i insuf. quota - Gipuzkoa [01335]
+            '01336':
+              label: Tributació conjunta Estat i Adm. forals - Abonament deduccions
+                I+D+i insuf. quota - Bizkaia [01336]
+            01338:
+              label: Tributació conjunta Estat i Adm. forals - Abonament deduccions
+                produccions estrangeres - Araba/Àlaba [01338]
+            01339:
+              label: Tributació conjunta Estat i Adm. forals - Abonament deduccions
+                produccions estrangeres - Gipuzkoa [01339]
+            '01340':
+              label: Tributació conjunta Estat i Adm. forals - Abonament deduccions
+                produccions estrangeres - Bizkaia [01340]
             '01372':
               label: Deducció donatius entitats sense ànim de lucre - Donacions per
                 a activitats prioritàries de mecenatge i altres amb dret a deducció
@@ -14040,6 +14267,51 @@ modelo:
                 acordada per l''Agència Tributària com a conseqüència de la tramitació
                 d''autoliquidacions anteriors o liquidacions administratives corresponents
                 al període impositiu 2025 - Navarra'
+            '01624':
+              label: Tributació conjunta Estat i Adm. forals - Resultat de l'autoliquidació
+                - Araba/Àlaba [01624]
+            '01625':
+              label: Tributació conjunta Estat i Adm. forals - Resultat de l'autoliquidació
+                - Gipuzkoa [01625]
+            01629:
+              label: Tributació conjunta Estat i Adm. forals - Resultat de l'autoliquidació
+                - Bizkaia [01629]
+            '01631':
+              label: Tributació conjunta Estat i Adm. forals - Opció de fraccionament
+                art. 19.1 LIS - Import integrat - Araba/Àlaba [01631]
+            '01632':
+              label: Tributació conjunta Estat i Adm. forals - Opció de fraccionament
+                art. 19.1 LIS - Import integrat - Gipuzkoa [01632]
+            '01633':
+              label: Tributació conjunta Estat i Adm. forals - Opció de fraccionament
+                art. 19.1 LIS - Import integrat - Bizkaia [01633]
+            '01635':
+              label: Tributació conjunta Estat i Adm. forals - Opció de fraccionament
+                art. 19.1 LIS - Deute tributari - Araba/Àlaba [01635]
+            '01636':
+              label: Tributació conjunta Estat i Adm. forals - Opció de fraccionament
+                art. 19.1 LIS - Deute tributari - Gipuzkoa [01636]
+            '01637':
+              label: Tributació conjunta Estat i Adm. forals - Opció de fraccionament
+                art. 19.1 LIS - Deute tributari - Bizkaia [01637]
+            '01642':
+              label: Tributació conjunta Estat i Adm. forals - Opció de fraccionament
+                art. 19.1 LIS - 1r fraccionament - Araba/Àlaba [01642]
+            '01643':
+              label: Tributació conjunta Estat i Adm. forals - Opció de fraccionament
+                art. 19.1 LIS - 1r fraccionament - Gipuzkoa [01643]
+            '01644':
+              label: Tributació conjunta Estat i Adm. forals - Opció de fraccionament
+                art. 19.1 LIS - 1r fraccionament - Bizkaia [01644]
+            '01646':
+              label: Tributació conjunta Estat i Adm. forals - Resultat de l'autoliquidació
+                inclòs el 1r fraccionament - Araba/Àlaba [01646]
+            '01647':
+              label: Tributació conjunta Estat i Adm. forals - Resultat de l'autoliquidació
+                inclòs el 1r fraccionament - Gipuzkoa [01647]
+            01648:
+              label: Tributació conjunta Estat i Adm. forals - Resultat de l'autoliquidació
+                inclòs el 1r fraccionament - Bizkaia [01648]
             '01650':
               label: 'Tributació conjunta Estat i Adm. forals - Rectificativa: Resultat
                 de l''autoliquidació inclòs el 1r fraccionament de l''art. 19.1 LIS
@@ -14239,6 +14511,15 @@ modelo:
               label: Liquidació II - Detall correccions resultat cte. pèrdues i guanys
                 - Rendes procedents de la transmissió d'immobilitzat obtingudes per
                 les Autoritats Portuàries (DA 68a Llei 6/2018) - Disminucions
+            01877:
+              label: Tributació conjunta Estat i Adm. forals - Abonament de deduccions
+                per produccions estrangeres a Canàries - Araba/Àlaba [01877]
+            01878:
+              label: Tributació conjunta Estat i Adm. forals - Abonament de deduccions
+                per produccions estrangeres a Canàries - Gipuzkoa [01878]
+            01879:
+              label: Tributació conjunta Estat i Adm. forals - Abonament de deduccions
+                per produccions estrangeres a Canàries - Bizkaia [01879]
             01886:
               label: 'Règim especial de vaixells i empreses navilieres a Canàries:
                 desglossament de la compensació de bases imposables negatives - Subtotal
