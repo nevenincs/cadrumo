@@ -38,7 +38,6 @@ import {
   servedNextStep,
   servedRefusalWords,
   type LedgerPort,
-  type LedgerRow,
 } from "../../../shell/ledger";
 import type { EvidenceConfirmResult } from "../../../shell/ledgerDocumentOperations";
 import type { InvoiceDraftProjectionV1 } from "../../../shell/ledgerDocumentReviewContract";
@@ -103,6 +102,7 @@ import { ReadingTable, shownReadingValue } from "./ReadingTable";
 import { ReviewColumns } from "./ReviewColumns";
 import { Finding } from "./ReviewFinding";
 import { ReviewNotices, type ReviewNotice } from "./ReviewNotices";
+import type { LedgerTransactionReviewProjection } from "../../../shell/ledgerReadContract";
 
 const KINDS: readonly InvoiceKind[] = ["received", "issued"];
 
@@ -140,7 +140,7 @@ export function DraftReview({
   record: LedgerEvidenceRecordProjection | null;
   fileName: string;
   invoices: CatalogueInvoiceSnapshot[] | null;
-  rows: LedgerRow[] | null;
+  rows: LedgerTransactionReviewProjection[] | null;
   stage: StageState;
   onStage(event: StageEvent): void;
   /** Something may have been written: the section reads its lists again. */

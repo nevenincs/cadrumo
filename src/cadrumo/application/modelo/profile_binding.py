@@ -813,7 +813,7 @@ def current_profile_read_fingerprint(
             selected_bindings=_select_profile_bindings(snapshot).bindings,
             operation=operation,
         )
-        fact_index = None if facts is None else dict(dict.items(facts.fact_index))
+        fact_index = None if facts is None else dict(dict[str, UserProfileFactValue].items(facts.fact_index))
     schema = operation.profile_schema()
     return redigest_profile_reads(
         recorded,

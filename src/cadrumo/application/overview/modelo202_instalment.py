@@ -384,7 +384,7 @@ def resolve_modelo_202_instalment(
             kind=Modelo202InstalmentResolutionKind.UNRESOLVED,
             unresolved_reason=Modelo202InstalmentUnresolvedReason.OWED_UNFILED,
         )
-    if modality not in _INGRESO_DECIDED_MODALITIES:
+    if modality is None or modality not in _INGRESO_DECIDED_MODALITIES:
         return Modelo202InstalmentResolution(
             instalment=instalment,
             kind=Modelo202InstalmentResolutionKind.UNRESOLVED,

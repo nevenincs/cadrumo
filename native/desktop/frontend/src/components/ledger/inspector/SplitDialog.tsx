@@ -17,7 +17,7 @@ import { Icon } from "@/components/ui/icon";
 import { IconButton } from "@/components/ui/icon-button";
 import { Label } from "@/components/ui/label";
 import { NativeSelect } from "@/components/ui/native-select";
-import type { LedgerPort, LedgerRow } from "../../../shell/ledger";
+import type { LedgerPort } from "../../../shell/ledger";
 import type { LedgerSplitCheckResult } from "../../../shell/ledgerMovementOperations";
 import { DECIDED_CLASSIFICATIONS } from "../../../shell/ledgerContract";
 import {
@@ -50,6 +50,7 @@ import {
   useVocabulary,
 } from "../suggestions/SuggestionsProvider";
 import { formatAmount } from "../../../shared/numbers";
+import type { LedgerTransactionReviewProjection } from "../../../shell/ledgerReadContract";
 
 type Part = {
   amount: string;
@@ -81,7 +82,7 @@ export function SplitDialog({
   say,
 }: {
   port: LedgerPort;
-  row: LedgerRow;
+  row: LedgerTransactionReviewProjection;
   locale: string;
   onStage: (event: StageEvent) => void;
   onClose: () => void;

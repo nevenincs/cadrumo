@@ -6,7 +6,7 @@ import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 import { Icon } from "@/components/ui/icon";
 import { Spinner } from "@/components/ui/spinner";
 import { facts, listed } from "@/shell/compose";
-import type { LedgerPort, LedgerRow } from "../../../shell/ledger";
+import type { LedgerPort } from "../../../shell/ledger";
 import { classifyCells } from "../../../shell/ledgerCommands";
 import { parsePercent } from "../../../shell/ledgerGrammar";
 import {
@@ -31,6 +31,7 @@ import { pointsText } from "./editingModel";
 import { fieldName } from "./editingWords";
 import type { LockProgress } from "./useLedgerApply";
 import { lockProgress, titleOf } from "./reviewLabels";
+import type { LedgerTransactionReviewProjection } from "../../../shell/ledgerReadContract";
 
 // ---- Needs you first -------------------------------------------------------
 
@@ -54,7 +55,7 @@ function BlockerFixes({
   kind: PlanBlocker["kind"];
   held: Held[];
   content: StagedContent;
-  rows: ReadonlyMap<string, LedgerRow>;
+  rows: ReadonlyMap<string, LedgerTransactionReviewProjection>;
   onStage: (event: StageEvent) => void;
   onShowRows: (ids: string[], fields?: readonly string[]) => void;
   onGoToDraft: (key: string) => void;
@@ -458,7 +459,7 @@ export function NeedsYouFirst({
   port: LedgerPort;
   plan: LedgerPlan;
   content: StagedContent;
-  rows: ReadonlyMap<string, LedgerRow>;
+  rows: ReadonlyMap<string, LedgerTransactionReviewProjection>;
   onStage: (event: StageEvent) => void;
   onShowRows: (ids: string[], fields?: readonly string[]) => void;
   onGoToDraft: (key: string) => void;

@@ -29,7 +29,6 @@ import {
   type LedgerExportFormat,
   type LedgerExportResult,
   type LedgerPort,
-  type LedgerRow,
   type LedgerStatusResult,
   type PickedFile,
 } from "../../../shell/ledger";
@@ -57,6 +56,7 @@ import {
   movementsTsv,
 } from "./tsv";
 import { exportFileName } from "./transferWords";
+import type { LedgerTransactionReviewProjection } from "../../../shell/ledgerReadContract";
 
 const samePeriod = (left: LedgerPeriod | null, right: LedgerPeriod | null) =>
   left === right ||
@@ -86,7 +86,9 @@ const ledgerCounts = (status: LedgerStatusResult): Counts => ({
   split: status.split_count,
 });
 /** A period's counts, from its own movements. */
-function periodCounts(rows: readonly LedgerRow[]): Counts {
+function periodCounts(
+  rows: readonly LedgerTransactionReviewProjection[],
+): Counts {
   const of = (state: string) =>
     rows.filter((row) => row.transaction.lifecycle_state === state).length;
   return {
@@ -141,7 +143,7 @@ export function ExportDialog({
   /** Opens the review of the staged changes, where the page has one. */
   onReviewStaged?: () => void;
   /** The movements selected in the grid, offered as text to copy. */
-  selection?: readonly LedgerRow[];
+  selection?: readonly LedgerTransactionReviewProjection[];
   copy(text: string): Promise<void>;
   onClose(): void;
   /** Where the focus goes once the dialog has gone. */

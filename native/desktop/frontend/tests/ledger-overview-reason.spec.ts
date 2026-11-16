@@ -1,11 +1,11 @@
 import { expect, test } from "@playwright/test";
 import servedWords from "@fixtures/ledger-served-words/ledgerServedWords.json" with { type: "json" };
-import type { LedgerRow } from "../src/shell/ledger";
 import type { Translate } from "../src/shell/strings";
 import { movementOverview } from "../src/components/ledger/overview/movementOverviewModel";
 import "./support/servedClassifications";
 import { movement } from "./support/ledger";
 import { label } from "./support/strings";
+import type { LedgerTransactionReviewProjection } from "../src/shell/ledgerReadContract";
 
 // The Reason line of a movement's overview says what the ledger serves for
 // it: the person's own words as stored, the served word where a command wrote
@@ -20,7 +20,7 @@ const t: Translate = Object.assign(
 const COMMAND_NAME = "aeat app ledger classify";
 const WORD = servedWords.classification_reason.command.en;
 
-function reasonOf(row: LedgerRow) {
+function reasonOf(row: LedgerTransactionReviewProjection) {
   const model = movementOverview({
     t,
     locale: "en",
@@ -47,7 +47,7 @@ test("a reason the person stated is shown as they wrote it", () => {
       classification_reason: "Reparto acordado con la asesoría",
     }),
     classification_reason_source: "stated",
-  } satisfies LedgerRow;
+  } satisfies LedgerTransactionReviewProjection;
   expect(reasonOf(row)?.value).toMatchObject({
     kind: "value",
     text: "Reparto acordado con la asesoría",
@@ -60,7 +60,7 @@ test("a command's name is replaced by the word the ledger serves, and the name i
     classification_reason_source: "command",
     classification_reason_words: WORD,
     classification_reason_words_language: "en",
-  } satisfies LedgerRow;
+  } satisfies LedgerTransactionReviewProjection;
   const value = reasonOf(row)?.value;
   expect(value).toMatchObject({ kind: "value", text: WORD });
   expect(JSON.stringify(value)).not.toContain(COMMAND_NAME);

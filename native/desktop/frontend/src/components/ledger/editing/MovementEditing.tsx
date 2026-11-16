@@ -16,7 +16,7 @@ import type {
 import type { CellRange } from "@/components/ui/dataGridModel";
 import { chordMatches, type ChordKeys } from "@/shared/chords";
 import { REDO_CHORDS, REVIEW_CHORDS, UNDO_CHORD } from "../ledgerChords";
-import type { LedgerPort, LedgerRow } from "../../../shell/ledger";
+import type { LedgerPort } from "../../../shell/ledger";
 import { classifyKindOf } from "../../../shell/ledgerCommands";
 import { carriesBusinessFigures } from "../../../shell/ledgerClassifications";
 import { percentOf, copyAmount } from "../../../shell/ledgerGrammar";
@@ -97,6 +97,7 @@ import {
   heldDecimal,
 } from "../../../shared/numbers";
 import { formatDay } from "../../../shared/dateFormats";
+import type { LedgerTransactionReviewProjection } from "../../../shell/ledgerReadContract";
 
 /** More saves one at a time than this, added by one change, asks first. */
 
@@ -154,7 +155,7 @@ export type MovementEditingInput = {
   /** The ledger, which answers for what is staged. */
   port: LedgerPort;
   /** The stored movements shown, by id. */
-  byId: ReadonlyMap<string, LedgerRow>;
+  byId: ReadonlyMap<string, LedgerTransactionReviewProjection>;
   stage: StageState;
   onStage: (event: StageEvent) => void;
   /** Movements a finalized declaration cites, where the page knows them. */
@@ -368,7 +369,10 @@ export function useMovementEditing(input: MovementEditingInput) {
   );
 
   const editing: ColumnEditing = useMemo(() => {
-    const lockOf = (column: ColumnId, row: LedgerRow) => {
+    const lockOf = (
+      column: ColumnId,
+      row: LedgerTransactionReviewProjection,
+    ) => {
       const subject = subjectOf(row.transaction.transaction_id);
       return subject ? lockReason(column, subject) : null;
     };
@@ -376,7 +380,10 @@ export function useMovementEditing(input: MovementEditingInput) {
       editor: (column) => {
         const kind = EDIT_KINDS[column];
         if (!kind) return undefined;
-        return (row: LedgerRow, context: EditorContext) => {
+        return (
+          row: LedgerTransactionReviewProjection,
+          context: EditorContext,
+        ) => {
           const subject = subjectOf(row.transaction.transaction_id);
           if (!subject || lockReason(column, subject)) return null;
           const { value } = effectiveValue(subject, column);
@@ -439,7 +446,7 @@ export function useMovementEditing(input: MovementEditingInput) {
       },
       readOnlyReason: (column) => {
         if (column === "select") return undefined;
-        return (row: LedgerRow) => {
+        return (row: LedgerTransactionReviewProjection) => {
           const lock = lockOf(column, row);
           return lock ? lockText(t, lock) : undefined;
         };
@@ -900,7 +907,7 @@ export function useMovementEditing(input: MovementEditingInput) {
   };
 
   // ---- New movements -------------------------------------------------------
-  const draftRows = useMemo<GridRow<LedgerRow>[]>(
+  const draftRows = useMemo<GridRow<LedgerTransactionReviewProjection>[]>(
     () =>
       content.drafts.map((draft) => ({
         kind: "data",

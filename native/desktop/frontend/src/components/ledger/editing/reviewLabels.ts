@@ -1,12 +1,12 @@
-import type { LedgerRow } from "../../../shell/ledger";
 import type { Translate } from "../../../shell/strings";
 import { formatCount } from "../../../shared/numbers";
 import type { LockProgress } from "./useLedgerApply";
+import type { LedgerTransactionReviewProjection } from "../../../shell/ledgerReadContract";
 
 /** A movement as the review names it. */
 export function titleOf(
   t: Translate,
-  rows: ReadonlyMap<string, LedgerRow>,
+  rows: ReadonlyMap<string, LedgerTransactionReviewProjection>,
   id: string,
 ): string {
   return (

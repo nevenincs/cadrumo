@@ -3,7 +3,6 @@ import { cn } from "@/components/ui/cn";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { useTableView, type ViewColumn } from "@/components/ui/table-view";
 import { facts, labelled, listed } from "@/shell/compose";
-import type { LedgerRow } from "../../../shell/ledger";
 import type { StepOutcome, StepReport } from "../../../shell/ledgerApply";
 import type { PlanStep } from "../../../shell/ledgerPlan";
 import {
@@ -18,6 +17,7 @@ import type { ChangeGroup } from "./editingModel";
 import { fieldName, valueText } from "./editingWords";
 import { titleOf } from "./reviewLabels";
 import { WindowedList } from "./WindowedList";
+import type { LedgerTransactionReviewProjection } from "../../../shell/ledgerReadContract";
 
 type ActionText = (
   t: Translate,
@@ -48,7 +48,7 @@ export function outcomeTone(kind: StepOutcome["kind"]): string | undefined {
 function stepTitle(
   t: Translate,
   step: PlanStep,
-  rows: ReadonlyMap<string, LedgerRow>,
+  rows: ReadonlyMap<string, LedgerTransactionReviewProjection>,
   content: StagedContent,
   actionText: ActionText,
 ): string {
@@ -153,8 +153,8 @@ export function outcomeItems(
   t: Translate,
   locale: string,
   reports: readonly StepReport[],
-  rows: ReadonlyMap<string, LedgerRow>,
-  fresh: ReadonlyMap<string, LedgerRow> | null,
+  rows: ReadonlyMap<string, LedgerTransactionReviewProjection>,
+  fresh: ReadonlyMap<string, LedgerTransactionReviewProjection> | null,
   content: StagedContent,
   actionText: ActionText,
 ): OutcomeItem[] {

@@ -4,7 +4,6 @@
 // for review is a proposal, said as such.
 
 import { facts } from "../../../shell/compose";
-import type { LedgerRow } from "../../../shell/ledger";
 import type { LedgerEvidenceRecordProjection } from "../../../shell/ledgerDocumentContract";
 import type { EvidenceReviewQueueRowProjection } from "../../../shell/ledgerDocumentReviewContract";
 import { EVIDENCE_UPDATE_FIELDS } from "../../../shell/ledgerContract";
@@ -27,6 +26,7 @@ import {
   type OverviewModel,
   type OverviewValue,
 } from "./overviewModel";
+import type { LedgerTransactionReviewProjection } from "../../../shell/ledgerReadContract";
 
 /** What is known of a record's reading waiting for review: the queue's row
  * for it, none, or that the queue could not be read. */
@@ -40,7 +40,7 @@ export type DocumentReading =
  * found among the period's is said to be not attached in this period, never
  * not attached at all. */
 export type DocumentAttachment =
-  | { kind: "attached"; row: LedgerRow }
+  | { kind: "attached"; row: LedgerTransactionReviewProjection }
   | { kind: "not_found" }
   | { kind: "unknown" };
 

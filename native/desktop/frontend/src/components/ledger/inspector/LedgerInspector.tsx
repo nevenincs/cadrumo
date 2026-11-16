@@ -2,7 +2,7 @@ import settings from "virtual:operational-settings";
 import { useEffect, useMemo, useState, type ReactNode, type Ref } from "react";
 import { EmptyState } from "@/components/ui/empty";
 import { Toast } from "@/components/ui/toast";
-import type { LedgerPort, LedgerRow } from "../../../shell/ledger";
+import type { LedgerPort } from "../../../shell/ledger";
 import { isTransactionPrefix } from "../../../shell/ledgerGrammar";
 import type { OpenRuleFromSelection } from "../../../shell/ledgerCommands";
 import { useOwnAccounts } from "../../../shell/ledgerMovementReads";
@@ -14,6 +14,7 @@ import { MovementInspector, type InspectorFocus } from "./MovementInspector";
 import { RightPanel, type RightPanelMode } from "./RightPanel";
 import { SelectionInspector } from "./SelectionInspector";
 import { SplitDialog } from "./SplitDialog";
+import type { LedgerTransactionReviewProjection } from "../../../shell/ledgerReadContract";
 
 /**
  * The panel beside the Movements grid: the To match pair queue, or the
@@ -50,7 +51,7 @@ export function LedgerInspector({
   port: LedgerPort;
   /** Whose ledger it is. */
   reader: string | null;
-  rows: readonly LedgerRow[];
+  rows: readonly LedgerTransactionReviewProjection[];
   generation: number | string;
   stage: StageState;
   onStage: (event: StageEvent) => void;
@@ -94,7 +95,8 @@ export function LedgerInspector({
     [selection, byId],
   );
   const [action, setAction] = useState<ActionRequest | null>(null);
-  const [splitting, setSplitting] = useState<LedgerRow | null>(null);
+  const [splitting, setSplitting] =
+    useState<LedgerTransactionReviewProjection | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   useEffect(() => {
     if (!toast) return;

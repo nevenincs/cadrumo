@@ -223,6 +223,9 @@ declare global {
     __scenarioProviderSignIn?: ProviderSignInFixtureControls;
     /** Publishes the fixture agent's status, as its service does when ready. */
     __scenarioAgentPublishStatus?: (status?: AgentServiceStatus) => void;
+    /** Holds the fixture's agent access answers until released, as a slow
+     * service would. */
+    __scenarioAgentAccessHold?: { hold(): void; release(): void };
     /** Commits a change to the fixture agent's local model list elsewhere. */
     __scenarioLocalModelsChangeElsewhere?: () => void;
     /** Which models the made-up computer holds, changed behind the window's
@@ -689,9 +692,25 @@ export function scenarioHost(
   const providerSettings = providerFixture.settings;
   window.__scenarioProviderSignIn = providerFixture.signInControls;
 
+  let accessHeld: Promise<void> | null = null;
+  let releaseAccess = () => {};
+  window.__scenarioAgentAccessHold = {
+    hold() {
+      accessHeld = new Promise((release) => {
+        releaseAccess = release;
+      });
+    },
+    release() {
+      accessHeld = null;
+      releaseAccess();
+    },
+  };
   const agentAccess = agentAccessFixture({
     say,
-    wait: () => wait(options.latencyMs),
+    wait: async () => {
+      await wait(options.latencyMs);
+      if (accessHeld) await accessHeld;
+    },
     readable,
   });
 

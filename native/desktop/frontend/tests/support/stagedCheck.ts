@@ -1,6 +1,5 @@
 import { appendFileSync } from "node:fs";
 import { windowLanguage } from "./strings";
-import type { LedgerRow } from "../../src/shell/ledger";
 import { answerStagedCheck } from "../../src/dev/ledgerStagedCheckFixture";
 import recorded from "@fixtures/ledger-staged-check/ledgerStagedCheck.json" with { type: "json" };
 import {
@@ -14,6 +13,7 @@ import {
   type LedgerPlan,
   type PlanContext,
 } from "../../src/shell/ledgerPlan";
+import type { LedgerTransactionReviewProjection } from "../../src/shell/ledgerReadContract";
 
 // Each line captured here has the form of a line in
 // dev/fixtures/ledger-staged-check-questions/questions.jsonl, the questions
@@ -31,7 +31,7 @@ if (capture)
  * question the recording does not hold fails the test rather than guessing. */
 export function recordedCheck(
   content: StagedContent,
-  rows: ReadonlyMap<string, LedgerRow>,
+  rows: ReadonlyMap<string, LedgerTransactionReviewProjection>,
   also: { ids?: readonly string[]; categories?: readonly string[] } = {},
 ): StagedCheck {
   const request = stagedCheckRequest(content, rows, also);

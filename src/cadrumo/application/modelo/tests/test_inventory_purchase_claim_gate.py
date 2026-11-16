@@ -14,12 +14,6 @@ from datetime import UTC, datetime
 import pytest
 
 from cadrumo.application.aggregation.source_mesh import CalculationSourceDiagnostic
-from cadrumo.application.aggregation.tests.test_inventory_book_claims import (
-    YEAR,
-    _claiming,  # pyright: ignore[reportPrivateUsage]
-    _expense_row,  # pyright: ignore[reportPrivateUsage]
-    _resolve,  # pyright: ignore[reportPrivateUsage]
-)
 from cadrumo.application.aggregation.tests.test_inventory_source import inventory_ledger
 
 from ....core.errors.error_codes import get_registered_error_code
@@ -33,6 +27,7 @@ from ....domain.modelos.calculation_revision import (
 )
 from ....domain.modelos.calculation_revision_sources import CalculationSourceIssue
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
+from ...aggregation.tests.inventory_book_claims_support import YEAR, claim_ledger_row, expense_row, resolve_book
 from ...operator_actions.catalogue import lookup_action
 from ..bucket_unrouted_source_issues import unrouted_source_issues
 from ..calculation_note_gate import (
@@ -56,11 +51,11 @@ _DOOR = "operator.ledger.inventory.movement.claim"
 
 def _diagnostics(amount: str, *, claiming: bool) -> tuple[CalculationSourceDiagnostic, ...]:
     """What the inventory resolver says about one purchase and the ledger entry beside it."""
-    row = _expense_row(base=amount)
+    row = expense_row(base=amount)
     ledger = inventory_ledger("comercio")
     if claiming:
-        ledger = _claiming(ledger, row.transaction_id)
-    return _resolve(ledger, row).diagnostics
+        ledger = claim_ledger_row(ledger, row.transaction_id)
+    return resolve_book(ledger, row).diagnostics
 
 
 def _work_unit(operation: PinnedAuthorityOperation) -> WorkUnit:
@@ -172,8 +167,8 @@ def test_the_door_is_the_inventory_claim_command() -> None:
 
 
 def test_a_standing_claim_raises_no_note_and_no_refusal(operation: PinnedAuthorityOperation) -> None:
-    row = _expense_row(base="100.00")
-    diagnostics = _resolve(_claiming(inventory_ledger("comercio"), row.transaction_id), row).diagnostics
+    row = expense_row(base="100.00")
+    diagnostics = resolve_book(claim_ledger_row(inventory_ledger("comercio"), row.transaction_id), row).diagnostics
 
     revision = _revision(operation, _issues(operation, diagnostics))
 

@@ -23,7 +23,7 @@ import { IconButton } from "@/components/ui/icon-button";
 import { chordAria, chordText } from "@/shared/chords";
 import { INSPECTOR_CHORD } from "../ledgerChords";
 import { facts, listed, noted } from "../../../shell/compose";
-import type { LedgerPort, LedgerRow } from "../../../shell/ledger";
+import type { LedgerPort } from "../../../shell/ledger";
 import { isTransactionPrefix } from "../../../shell/ledgerGrammar";
 import type { ClassifySelection } from "../../../shell/ledgerCommands";
 import { takesChanges } from "../../../shell/ledgerContract";
@@ -68,6 +68,7 @@ import { useLedgerRead } from "./useInspectorReads";
 import { useVocabulary } from "../suggestions/SuggestionsProvider";
 import { formatAmount } from "../../../shared/numbers";
 import { formatDay } from "../../../shared/dateFormats";
+import type { LedgerTransactionReviewProjection } from "../../../shell/ledgerReadContract";
 
 /** How far below the top of the scroll a section's heading counts as
  * reached, in CSS pixels. */
@@ -133,9 +134,9 @@ export function MovementInspector({
   say,
 }: {
   port: LedgerPort;
-  row: LedgerRow;
+  row: LedgerTransactionReviewProjection;
   /** The window's movements. */
-  rows: readonly LedgerRow[];
+  rows: readonly LedgerTransactionReviewProjection[];
   /** Which read of the window `row` comes from. */
   generation: number | string;
   stage: StageState;
@@ -154,7 +155,7 @@ export function MovementInspector({
   onShow: (id: string) => void;
   onOpenInvoice: (invoiceId: string) => void;
   onAction: (request: ActionRequest) => void;
-  onSplit: (row: LedgerRow) => void;
+  onSplit: (row: LedgerTransactionReviewProjection) => void;
   onSelectCohort: (ids: string[]) => void;
   say: (text: string) => void;
 }) {

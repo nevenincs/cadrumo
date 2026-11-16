@@ -1,4 +1,7 @@
-import type { CatalogueInvoiceSnapshot } from "../../src/shell/ledgerInvoiceContract";
+import type {
+  CatalogueInvoiceSnapshot,
+  LedgerTransactionProjection,
+} from "../../src/shell/ledgerInvoiceContract";
 import type {
   JsonObject,
   LedgerDecision,
@@ -6,19 +9,18 @@ import type {
   LedgerFailure,
   LedgerOutcome,
   LedgerPort,
-  LedgerRow,
-  LedgerTransaction,
 } from "../../src/shell/ledger";
+import type { LedgerTransactionReviewProjection } from "../../src/shell/ledgerReadContract";
 
 /** A synthetic movement: an active, unclassified outgoing payment unless
  * `facts` says otherwise. Every value is invented. */
 export function movement(
   id: string,
-  facts: Partial<LedgerTransaction> = {},
+  facts: Partial<LedgerTransactionProjection> = {},
   group: string | null = null,
   account: string | null = null,
-): LedgerRow {
-  const transaction: LedgerTransaction = {
+): LedgerTransactionReviewProjection {
+  const transaction: LedgerTransactionProjection = {
     transaction_id: id,
     date: "2026-10-05",
     booked_date: "2026-10-05",
@@ -46,6 +48,10 @@ export function movement(
     m210_income_classification: null,
     usage_ratio_id: null,
     prorrata_reference: null,
+    arrendamiento_ref: null,
+    inmueble_ref: null,
+    gasto_capital_inmobiliario: null,
+    link_fields: [],
     purchase_invoice_evidence_id: null,
     invoice_id: null,
     attachment_ids: [],
@@ -78,6 +84,8 @@ export function movement(
     classification_reason_words: "",
     classification_reason_words_language: null,
     withholding: [],
+    gasto_capital_inmobiliario_words: null,
+    gasto_capital_inmobiliario_words_language: null,
   };
 }
 
@@ -207,7 +215,7 @@ export const PROFILE = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 
 /** A list page as `ledger.list` answers it for `rows` of `total`. */
 export function listPage(
-  rows: LedgerRow[],
+  rows: LedgerTransactionReviewProjection[],
   total: number,
   offset: number,
   limit: number,
