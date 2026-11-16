@@ -83,6 +83,7 @@ function observed(
 export const FIXTURE_CALENDAR: FilingCalendar = {
   range: { from_date: fixtureDay(7, 1), to_date: fixtureDay(6, 30, 1) },
   generated_at: `${FIXTURE_TODAY}T09:14:05Z`,
+  suppressed_entries: [],
   entries: [
     entry("303", `${FIXTURE_YEAR}-2T`, fixtureDay(7, 1), fixtureDay(7, 20), {
       user_state: "filed",
