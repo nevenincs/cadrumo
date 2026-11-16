@@ -13,8 +13,8 @@ import { label } from "../support/strings";
 // panel on the local AI row. The lane row in the provider settings shows the
 // local AI's setup row as the setup host serves it, already combined from the
 // engine's server and its last start, and offers no engine door of its own. A
-// running engine says nothing; a door the window does not know opens nothing
-// and has no stand-in; an answer outside the contract states nothing. The
+// running engine says nothing, and an answer that pairs its fields outside
+// the contract states nothing. The
 // service serves the keyless lane of the selected engine alone, so each
 // engine's case starts the window on that engine. The scenario host stands in
 // for the agent service.
@@ -230,33 +230,16 @@ for (const engine of ENGINES)
     await expect(doors(laneRow(target, engine))).toHaveCount(0);
   });
 
-test("a door the window does not know renders no door and no stand-in", async ({
-  page: target,
-}) => {
-  await open(target, bothDown("elsewhere"), { setup: START_FAILED });
-  await expect(notice(target, "llamacpp")).toContainText(
-    noticed("llamacpp", REASONS.llamacpp),
-  );
-  await expect(notice(target, "llamacpp").getByRole("button")).toHaveCount(0);
-  await openSettings(target);
-  await expect(laneRow(target, "llamacpp")).toContainText(startFailed());
-  await expect(doors(column(target))).toHaveCount(0);
-  await expect(
-    laneRow(target, "llamacpp").getByRole("button", {
-      name: label("desktop.setup.open"),
-    }),
-  ).toHaveCount(0);
-});
-
 for (const engine of ENGINES)
   test(`${engine}: an answer outside the contract states nothing`, async ({
     page: target,
   }) => {
-    // A reason the contract does not name, and a running engine that names one.
+    // An engine that does not run and names no door, and a running engine
+    // that names a reason: the schema admits each field, not the pairing.
     await open(
       target,
       {
-        llamacpp: down("llamacpp", "unplugged"),
+        llamacpp: { ...down("llamacpp", REASONS.llamacpp), door: null },
         ollama: {
           engine: "ollama",
           state: "running",

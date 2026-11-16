@@ -168,7 +168,7 @@ test("a fast dropped upload stays ready and is sent by reference in the selected
     .poll(async () =>
       (await calls(page)).filter((call) => call.startsWith("agentSend ")),
     )
-    .toEqual(["agentSend c-iva-t3 alpha/api attachments recibo-luz.pdf"]);
+    .toEqual(["agentSend c-iva-t3 kimi/api attachments recibo-luz.pdf"]);
 });
 
 test("history stops observing drops and ignores a late native event", async ({

@@ -7,7 +7,7 @@ import {
   messageField,
   settled,
 } from "../support/agent";
-import { connectionLabel } from "../support/connection";
+import { bundledMark, connectionLabel } from "../support/connection";
 import { SERVED_ENGINE } from "../support/servedLocalLanes";
 import { label } from "../support/strings";
 
@@ -194,8 +194,12 @@ test("the searchable list has one entry for each connection, with its provider's
     if (why) expect(row?.text, wayOf(served)).toContain(why);
     expect(row?.disabled, wayOf(served)).toBe(why !== null);
     expect(row?.marks, wayOf(served)).toEqual([
-      // The made-up fixture provider has no bundled mark, so it wears the generic one.
-      { provider: served.provider_id, kind: "generic", tag: "span" },
+      // A provider the agent ships no artwork for wears the generic mark.
+      {
+        provider: served.provider_id,
+        kind: bundledMark(served.provider_id) ? "mono" : "generic",
+        tag: "span",
+      },
     ]);
   }
   // Example Alpha and Example Beta each have two distinguishable choices.
@@ -275,7 +279,7 @@ test("a lane the catalogue serves as needing no key is worded as on this compute
     );
   }
   // An API-transport keyed lane says key; the same transport keyless does not.
-  await expect(entry(target, "alpha/api")).toContainText(
+  await expect(entry(target, "kimi/api")).toContainText(
     label("desktop.providers.connection_api"),
   );
   await expect(entry(target, "llamacpp/api")).not.toContainText(
@@ -313,7 +317,7 @@ test("search keeps duplicate provider connections distinct for keyboard choice",
     `${label("desktop.agent.provider")}: Example Beta, ${label("desktop.providers.connection_app")}`,
   );
   await expect(modelBox(settings).locator("option")).toHaveText(
-    laneOf("beta/cli").catalog.models?.map((model) => model.display_name) ?? [],
+    laneOf("qwen/cli").catalog.models?.map((model) => model.display_name) ?? [],
   );
 });
 
@@ -370,41 +374,39 @@ test("choosing an entry chooses its lane, and a message goes with that lane's tr
   // The program entry of Example Beta: its own models, and a message goes by the
   // transport the catalog gives that lane.
   let settings = await openSettings(target);
-  await chooseLane(target, settings, "beta/cli");
+  await chooseLane(target, settings, "qwen/cli");
   await expect(providerBox(settings)).toContainText("Example Beta");
   await expect(modelBox(settings).locator("option")).toHaveText(
-    laneOf("beta/cli").catalog.models?.map((held) => held.display_name) ?? [],
+    laneOf("qwen/cli").catalog.models?.map((held) => held.display_name) ?? [],
   );
   await target.keyboard.press("Escape");
   await ask(target, "Primera");
   await expect.poll(() => sentSelections(target)).toHaveLength(1);
-  expect((await sentSelections(target)).at(-1)).toEqual(startsWith("beta/cli"));
-  expect(startsWith("beta/cli").transport).toBe("cli");
+  expect((await sentSelections(target)).at(-1)).toEqual(startsWith("qwen/cli"));
+  expect(startsWith("qwen/cli").transport).toBe("cli");
   await settled(target);
 
   // The other entry of the same name: another lane, with models of its own.
   settings = await openSettings(target);
-  await chooseLane(target, settings, "beta/api");
+  await chooseLane(target, settings, "qwen/api");
   await expect(modelBox(settings).locator("option")).toHaveText(
-    laneOf("beta/api").catalog.models?.map((held) => held.display_name) ?? [],
+    laneOf("qwen/api").catalog.models?.map((held) => held.display_name) ?? [],
   );
   await target.keyboard.press("Escape");
   await ask(target, "Segunda");
   await expect.poll(() => sentSelections(target)).toHaveLength(2);
-  expect((await sentSelections(target)).at(-1)).toEqual(startsWith("beta/api"));
-  expect(startsWith("beta/api").transport).toBe("api");
+  expect((await sentSelections(target)).at(-1)).toEqual(startsWith("qwen/api"));
+  expect(startsWith("qwen/api").transport).toBe("api");
   await settled(target);
 
   // The entry the column starts on goes by its own.
   settings = await openSettings(target);
-  await chooseLane(target, settings, "alpha/api");
+  await chooseLane(target, settings, "kimi/api");
   await target.keyboard.press("Escape");
   await ask(target, "Tercera");
   await expect.poll(() => sentSelections(target)).toHaveLength(3);
-  expect((await sentSelections(target)).at(-1)).toEqual(
-    startsWith("alpha/api"),
-  );
-  expect(startsWith("alpha/api").transport).toBe("api");
+  expect((await sentSelections(target)).at(-1)).toEqual(startsWith("kimi/api"));
+  expect(startsWith("kimi/api").transport).toBe("api");
 });
 
 /** Holds a closing popover's fade open, so that what lands in that moment on a
@@ -420,7 +422,7 @@ test("Escape as the list goes closes the settings", async ({
   await open(target);
   const settings = await openSettings(target);
   await holdClosing(target);
-  await chooseLane(target, settings, "beta/api");
+  await chooseLane(target, settings, "qwen/api");
   await expect(providerBox(settings)).toHaveAccessibleName(
     `${label("desktop.agent.provider")}: Example Beta, ${label("desktop.providers.connection_api")}`,
   );
@@ -492,7 +494,7 @@ test("the message box taking focus just as the list goes closes the settings", a
     };
     document.addEventListener("animationend", listGoing);
   });
-  await chooseLane(target, settings, "beta/api");
+  await chooseLane(target, settings, "qwen/api");
   await expect
     .poll(() =>
       target.evaluate(
@@ -534,28 +536,28 @@ test("the efforts offered follow the model of the lane chosen", async ({
       ?.efforts ?? [];
 
   // Example Beta by its program: the lane's recommended model takes its efforts.
-  await chooseLane(target, settings, "beta/cli");
+  await chooseLane(target, settings, "qwen/cli");
   await expect(modelBox(settings)).toHaveValue("fixture-ultra");
   await expect(efforts).toHaveText(
-    effortWords(takes("beta/cli", "fixture-ultra")),
+    effortWords(takes("qwen/cli", "fixture-ultra")),
   );
   await modelBox(settings).selectOption("fixture-tiered");
   await expect(efforts).toHaveText(
-    effortWords(takes("beta/cli", "fixture-tiered")),
+    effortWords(takes("qwen/cli", "fixture-tiered")),
   );
   // The same name by its other entry: its models take none.
-  await chooseLane(target, settings, "beta/api");
+  await chooseLane(target, settings, "qwen/api");
   await expect(effortBox(settings)).toHaveCount(0);
   // Example Alpha's models take their own, and one of them none.
-  await chooseLane(target, settings, "alpha/api");
+  await chooseLane(target, settings, "kimi/api");
   await expect(modelBox(settings)).toHaveValue("fixture-deep");
   await expect(efforts).toHaveText([
     label("desktop.agent.effort_default"),
-    ...effortWords(takes("alpha/api", "fixture-deep")),
+    ...effortWords(takes("kimi/api", "fixture-deep")),
   ]);
   await modelBox(settings).selectOption("fixture-quick");
   await expect(efforts).toHaveText(
-    effortWords(takes("alpha/api", "fixture-quick")),
+    effortWords(takes("kimi/api", "fixture-quick")),
   );
   await modelBox(settings).selectOption("fixture-plain");
   await expect(effortBox(settings)).toHaveCount(0);
@@ -580,7 +582,7 @@ test("no “CLI” appears in the agent column, the list or the settings", async
   await open(target);
   const settings = await openSettings(target);
   // The lane that runs a program: the very one the old wording was for.
-  await chooseLane(target, settings, "beta/cli");
+  await chooseLane(target, settings, "qwen/cli");
   const said = [
     ...(await wording(settings)),
     ...(await column(target).evaluate((node) => [
@@ -672,7 +674,7 @@ for (const mode of ["light", "dark", "forced colours"] as const) {
     }
     // The text colour is the theme's: dark ink on the light list, light on
     // the dark one, so a mark drawn in it can be seen on either.
-    const plain = marks.find((mark) => mark.provider === "beta");
+    const plain = marks.find((mark) => mark.provider === "qwen");
     if (mode === "light")
       expect(luminance(plain?.text ?? ""), mode).toBeLessThan(0.3);
     if (mode === "dark")
@@ -792,11 +794,11 @@ for (const width of [390, 520]) {
       expect(await overflowing(target)).toBe(false);
 
       // A tap on an entry that can be chosen chooses it.
-      await entry(target, "beta/cli").scrollIntoViewIfNeeded();
-      await entry(target, "beta/cli").tap();
+      await entry(target, "qwen/cli").scrollIntoViewIfNeeded();
+      await entry(target, "qwen/cli").tap();
       await expect(providerBox(settings)).toContainText("Example Beta");
       await expect(modelBox(settings).locator("option")).toHaveText(
-        laneOf("beta/cli").catalog.models?.map((held) => held.display_name) ??
+        laneOf("qwen/cli").catalog.models?.map((held) => held.display_name) ??
           [],
       );
       expect(await overflowing(target)).toBe(false);
