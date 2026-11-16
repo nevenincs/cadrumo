@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import unicodedata
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from decimal import ROUND_DOWN, ROUND_HALF_UP, Decimal
 from enum import StrEnum
 from typing import Annotated, Final, Literal, Protocol
@@ -128,6 +128,25 @@ ExportSignPositionValue = (
     ]
     | None
 )
+
+
+class _PositionedField(Protocol):
+    @property
+    def id(self) -> str: ...
+
+    @property
+    def offset(self) -> int | None: ...
+
+
+def fixed_width_field_order[FieldT: _PositionedField](fields: Iterable[FieldT]) -> tuple[FieldT, ...]:
+    """Return ``fields`` in the one order a fixed-width record is read, previewed and emitted.
+
+    Fields are taken by ``offset`` and by field id where two share an offset. A
+    field declaring no offset (a logical-only member, or any field of a layout
+    that is not positional) sorts ahead of every positioned one; the order never
+    gives it a position, so a consumer that needs geometry still refuses it.
+    """
+    return tuple(sorted(fields, key=lambda field: (-1 if field.offset is None else field.offset, field.id)))
 
 
 class ExportField(Protocol):
@@ -419,7 +438,7 @@ def render_fixed_width_export_record_body(
     This is the sole registry-owned record-byte producer. The outbound payload
     assembly owner appends record terminators while composing the final stream.
     """
-    fields = tuple(sorted(record.fields, key=lambda field: (-1 if field.offset is None else field.offset, field.id)))
+    fields = fixed_width_field_order(record.fields)
     if not fields:
         raise FixedWidthRecordRenderError(
             field_id=None,
@@ -866,6 +885,7 @@ __all__ = [
     "ExportTextRecord",
     "FixedWidthRecordRenderError",
     "conform_record_text",
+    "fixed_width_field_order",
     "pad_fixed_width_text",
     "render_empty_block_slot",
     "render_fixed_width_export_field",
