@@ -211,10 +211,17 @@ def test_work_runs_localizes_only_human_text_and_keeps_one_structural_envelope()
         assert health_row["site_health_retry_after_seconds"] == 120
         assert health_row["site_health_detected_marker_count"] == 2
 
+        assert action_row["action"]["action_words_language"] == language
+        assert health_row["action"]["no_recovery_words_language"] == language
+
         structural_rows = []
         for row in rows.values():
             structural = dict(row)
             structural.pop("summary")
+            # The served way-out words are human text in the renderer's language, like the summary.
+            structural["action"] = {
+                key: value for key, value in row["action"].items() if not key.endswith(("_words", "_words_language"))
+            }
             structural_rows.append(structural)
         structural_digests.add(
             hashlib.sha256(

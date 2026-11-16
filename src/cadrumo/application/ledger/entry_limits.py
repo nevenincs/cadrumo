@@ -18,6 +18,7 @@ from typing import Final, Literal
 from pydantic import BaseModel
 
 from ...core.decimal.grammar import AMBIGUOUS_THOUSANDS_PATTERN, CENT_FRACTION_DIGITS, DECIMAL_TEXT_MAX_LENGTH
+from ...core.filing_year import FOUR_DIGIT_YEAR_FIRST, FOUR_DIGIT_YEAR_LAST
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.percentage import PERCENTAGE_BARE_FRACTION_CEILING, PERCENTAGE_ENTRY_FRACTION_DIGITS, PERCENTAGE_MAX
 from ...core.unit_proportion import UNIT_PROPORTION_MAX
@@ -98,6 +99,20 @@ class LedgerEntryTextLimit(BaseModel):
     max: int
 
 
+class LedgerEntryYearWindow(BaseModel):
+    """The years a typed ledger year takes, both inclusive: the four-digit year the backend admits.
+
+    Not the filing envelope: a ledger holds history from before the supported
+    filing years (an asset bought long ago, a carried fact), and which years a
+    filing period exists for is served with the periods themselves.
+    """
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    earliest: int
+    latest: int
+
+
 class LedgerEntryLimitsProjection(BaseModel):
     """Every limit a ledger entry form holds typed text to."""
 
@@ -114,6 +129,7 @@ class LedgerEntryLimitsProjection(BaseModel):
     rule_pattern_max: int
     payment_id_pattern: str
     text_limits: tuple[LedgerEntryTextLimit, ...]
+    entry_years: LedgerEntryYearWindow
 
 
 _INVOICE_LINE_ENTRY_FRACTION_DIGITS: Final = 6
@@ -173,6 +189,7 @@ def ledger_entry_limits() -> LedgerEntryLimitsProjection:
         rule_pattern_max=RULE_PATTERN_ENTRY_MAX_LENGTH,
         payment_id_pattern=INVOICE_PAYMENT_ID_PATTERN,
         text_limits=_TEXT_LIMITS,
+        entry_years=LedgerEntryYearWindow(earliest=FOUR_DIGIT_YEAR_FIRST, latest=FOUR_DIGIT_YEAR_LAST),
     )
 
 
@@ -181,5 +198,6 @@ __all__ = [
     "LedgerEntryLimitsProjection",
     "LedgerEntryPercentField",
     "LedgerEntryTextLimit",
+    "LedgerEntryYearWindow",
     "ledger_entry_limits",
 ]

@@ -336,8 +336,22 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
         refusal,
         composed_length: name === null || single ? null : composed.length,
         uses_rendering: refusal === null && composed.length > slot.width,
+        state:
+          refusal ??
+          (composed.length > slot.width ? "fits_by_rendering" : "fits"),
+        state_words: `Synthetic slot state ${refusal ?? (composed.length > slot.width ? "fits_by_rendering" : "fits")}`,
       };
     });
+  /** The party kinds a filing name can be stated for, with synthetic labels;
+   * the backend labels them in the worker's language. */
+  const PARTY_KINDS = [
+    {
+      kind: "natural_person",
+      words: "Synthetic natural person",
+      words_language: "en",
+    },
+    { kind: "entity", words: "Synthetic entity", words_language: "en" },
+  ];
   function counterparty(request: JsonObject): JsonObject {
     fromKeys(request, [
       "action",
@@ -441,6 +455,9 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
         renderings: renderings as unknown as JsonValue,
         asserted_by: text(request.asserted_by),
         asserted_at: now(),
+        party_kind_words:
+          PARTY_KINDS.find((one) => one.kind === kind)?.words ?? kind,
+        party_kind_words_language: "en",
       });
     }
     const filingName = filingNames.get(tax) ?? null;
@@ -539,12 +556,34 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
       filing_name_part_limits:
         action === "view"
           ? [
-              { part: "primer_apellido", max_length: 36 },
-              { part: "segundo_apellido", max_length: 36 },
-              { part: "nombre", max_length: 36 },
-              { part: "razon_social", max_length: 40 },
+              {
+                part: "primer_apellido",
+                part_words: "Synthetic primer apellido",
+                words_language: "en",
+                max_length: 36,
+              },
+              {
+                part: "segundo_apellido",
+                part_words: "Synthetic segundo apellido",
+                words_language: "en",
+                max_length: 36,
+              },
+              {
+                part: "nombre",
+                part_words: "Synthetic nombre",
+                words_language: "en",
+                max_length: 36,
+              },
+              {
+                part: "razon_social",
+                part_words: "Synthetic razon social",
+                words_language: "en",
+                max_length: 40,
+              },
             ]
           : [],
+      party_kinds:
+        action === "view" || action === "filing_name" ? PARTY_KINDS : [],
     };
   }
 
