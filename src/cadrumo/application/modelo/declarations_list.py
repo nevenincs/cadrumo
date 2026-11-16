@@ -85,6 +85,28 @@ class DeclarationListRow:
         return None if self.calendar is None else self.calendar.adjusted_closes_on
 
 
+_GROUP_RANK: Final[Mapping[DeclarationListGroup, int]] = MappingProxyType(
+    {group: rank for rank, group in enumerate(DeclarationListGroup)}
+)
+
+
+def declaration_list_state_order_key(row: DeclarationListRow) -> tuple[int, bool, date, str, str, str]:
+    """Order rows by state: the group's work order, then the nearest known deadline, then identity.
+
+    A row without a deadline follows those that have one in its group, so every
+    frontend that lists rows by state shows them in this one order.
+    """
+    deadline = row.deadline
+    return (
+        _GROUP_RANK[row.group],
+        deadline is None,
+        deadline or date.max,
+        row.modelo,
+        "" if row.period is None else str(row.period),
+        row.key,
+    )
+
+
 def _external_completion(calendar: DeclarationsCalendarEntryRefV1) -> bool:
     return (
         calendar.aeat_submission_state is not None
@@ -727,6 +749,7 @@ __all__ = [
     "creation_targets",
     "deadline_note_words",
     "declaration_list_rows",
+    "declaration_list_state_order_key",
     "existing_declaration",
     "group_words",
     "is_unlinked_local_draft",

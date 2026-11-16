@@ -5,7 +5,11 @@ from __future__ import annotations
 from datetime import date
 from decimal import Decimal
 
-from ....application.modelo.declarations_list import DeclarationListGroup, DeclarationListRow
+from ....application.modelo.declarations_list import (
+    DeclarationListGroup,
+    DeclarationListRow,
+    declaration_list_state_order_key,
+)
 from ....application.modelo.work_form_wording import modelo_title, period_words
 from ....core.external_constants import OutputLanguage
 from ....core.text_fold import fold_for_matching
@@ -16,7 +20,7 @@ def _sort_portfolio_rows(rows: list[DeclarationListRow], sort: str) -> None:
     if sort == "result":
         rows.sort(key=result_sort_key)
     elif sort == "state":
-        rows.sort(key=lambda row: (row.state, row.modelo, row.deadline or date.max))
+        rows.sort(key=declaration_list_state_order_key)
     elif sort == "modelo":
         rows.sort(key=lambda row: (row.modelo, row.deadline or date.max))
     else:
@@ -46,7 +50,7 @@ def visible_portfolio_rows(
 ) -> list[DeclarationListRow]:
     """Apply Unicode AND search and the selected stable ordering."""
     terms = fold_for_matching(query).split()
-    rows = []
+    rows: list[DeclarationListRow] = []
     for row in portfolio:
         if not matches_filter(row, selected_filter, year):
             continue
