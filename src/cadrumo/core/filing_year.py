@@ -39,11 +39,25 @@ def is_four_digit_year(value: int) -> bool:
     return FOUR_DIGIT_YEAR_FIRST <= value <= FOUR_DIGIT_YEAR_LAST
 
 
+def four_digit_year_in(text: str) -> int | None:
+    """Return the year ``text`` writes with four ASCII digits, or ``None``.
+
+    Surrounding blanks are ignored. A sign, underscores and other scripts'
+    digits are refused although ``int`` would accept them: none is a year an
+    operator types.
+    """
+    stripped = text.strip()
+    if len(stripped) != YEAR_DIGITS or not stripped.isascii() or not stripped.isdigit():
+        return None
+    return int(stripped)
+
+
 __all__ = [
     "FOUR_DIGIT_YEAR_FIRST",
     "FOUR_DIGIT_YEAR_LAST",
     "YEAR_DIGITS",
     "FilingYear",
     "FourDigitYear",
+    "four_digit_year_in",
     "is_four_digit_year",
 ]

@@ -9,7 +9,7 @@ from textual.widgets import Select
 
 from ....application.ledger.transaction_projection import LedgerTransactionProjection
 from ....application.operations.public_period import PublicPeriod
-from ....core.filing_year import FOUR_DIGIT_YEAR_FIRST, FOUR_DIGIT_YEAR_LAST
+from ....core.filing_year import four_digit_year_in
 from ....core.i18n.render import tr
 from ....core.period import INSTALMENT_PERIOD_CODES, Period, PeriodError, StandardPeriodCode
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
@@ -111,10 +111,11 @@ def read_period(year_text: str, code: str | None, *, required: bool = False) -> 
         return None
     if not year_text or code is None:
         raise ValueError(tr("tui.ledger.entry_tools.period.pair"))
-    if not (year_text.isdigit() and FOUR_DIGIT_YEAR_FIRST <= int(year_text) <= FOUR_DIGIT_YEAR_LAST):
+    year = four_digit_year_in(year_text)
+    if year is None:
         raise ValueError(tr("tui.ledger.entry_tools.period.invalid"))
     try:
-        return PublicPeriod.from_period(Period.from_year_and_code(int(year_text), code))
+        return PublicPeriod.from_period(Period.from_year_and_code(year, code))
     except (PeriodError, ValueError):
         raise ValueError(tr("tui.ledger.entry_tools.period.invalid")) from None
 

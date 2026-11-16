@@ -28,6 +28,7 @@ from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.external_constants import OutputLanguage
+from ...core.filing_year import FilingYear
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operations import profile_operation_subject
@@ -144,7 +145,7 @@ class ProfileRecordReductionYear(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     #: The ejercicio of a Modelo 100 return the profile has started; ``None`` when there is none to speak of.
-    ejercicio: int | None = Field(default=None, ge=1)
+    ejercicio: FilingYear | None = None
     outcome: ProfileRecordReductionOutcome
     #: The derived tier's token, for an outcome of ``applies``.
     tier: str | None = Field(default=None, min_length=1)
