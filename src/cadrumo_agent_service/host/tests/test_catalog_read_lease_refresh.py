@@ -1,4 +1,4 @@
-"""A catalog or status read that outlives its request is served to the next request, even though it refreshed the lease."""
+"""A catalog read that outlives its request is served to the next request, even though it refreshed the lease."""
 
 from __future__ import annotations
 
@@ -22,10 +22,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _WITHIN_SECONDS = 0.05
 _SETTLE_SECONDS = 5.0
 
-# Each kept read is named by its admin action and runs the service method that reads it.
+# The kept read is named by its admin action and runs the service method that reads it; the status reads
+# only what is already kept and is not one.
 _READS = {
     "catalog": ("_catalog_document", {"kind": "served", "catalog": {"providers": []}}),
-    "status": ("_provider_status", {"kind": "served", "providers": [], "hosted_certifications": []}),
 }
 
 

@@ -1,18 +1,18 @@
-"""A status read kept past its request is served to a retry after the real claim path replaced the lease.
+"""The status answers at once over the real claim path while the sign-in capability read still waits.
 
-The service client, the provider store, the login observation and the kept read
+The service client, the provider store, the login observation and the status
 all run for real over a connection that answers each claim with a lease decoded
 anew. Only the agent program's output is supplied, since there is no agent
-image to start, and its sign-in capability read is where the read waits.
+image to start, and its sign-in capability read is where the agent waits.
 """
 
 from __future__ import annotations
 
 import json
+import time
 from collections.abc import Iterator
 from pathlib import Path
 from threading import Event
-from time import sleep
 from typing import Any
 from uuid import UUID, uuid4
 
@@ -20,7 +20,6 @@ import pytest
 
 from cadrumo_client.transport.service_client import InstalledServiceClient
 
-from ... import service_administration as service_module
 from ...adapters import agent_provider_catalog
 from ...adapters.agent_programs import PACKAGE_AGENT_VARIABLE
 from ...adapters.agent_provider_catalog import AgentProviderCatalogSource
@@ -31,7 +30,7 @@ from ...service import AgentService
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_WITHIN_SECONDS = 0.05
+_PROMPT_SECONDS = 1.0
 _SETTLE_SECONDS = 5.0
 _BUSY = {"kind": "refused", "code": "busy"}
 
@@ -62,15 +61,12 @@ class _Rig:
     def client(self) -> InstalledServiceClient:
         return self.service.client
 
-    def status_after_release(self) -> dict[str, Any]:
-        self.agent.release.set()
-        for _ in range(500):
-            answer = self.service.admin("status")
-            if answer != _BUSY:
-                return answer
-            # A retry under a different lease is refused until the first read ends.
-            sleep(0.01)
-        raise AssertionError("the status read never settled")
+    def prompt_status(self) -> dict[str, Any]:
+        started = time.monotonic()
+        answer = self.service.admin("status")
+        assert answer != _BUSY
+        assert time.monotonic() - started < _PROMPT_SECONDS
+        return answer
 
 
 @pytest.fixture
@@ -79,7 +75,6 @@ def agent(monkeypatch: pytest.MonkeyPatch) -> Iterator[_Agent]:
     monkeypatch.setattr(AgentProviderCatalogSource, "_invoke", agent.invoke)
     # With no packaged agent image the login observation reads no state, as it would outside a package.
     monkeypatch.delenv(PACKAGE_AGENT_VARIABLE, raising=False)
-    monkeypatch.setattr(service_module, "ADMIN_READ_SECONDS", _WITHIN_SECONDS)
     yield agent
     agent.release.set()
 
@@ -98,44 +93,52 @@ def _rig(tmp_path: Path, agent: _Agent, *, claimed_session: list[UUID | None]) -
     return _Rig(service, connection, agent)
 
 
-def test_a_status_read_kept_past_its_request_is_served_after_the_real_claim_replaces_the_lease(
+def test_status_answers_at_once_after_the_real_claim_replaces_the_lease_and_lists_methods_once_read(
     tmp_path: Path, agent: _Agent
 ) -> None:
     rig = _rig(tmp_path, agent, claimed_session=[None])
     started = rig.client.lease
     claims_before = rig.connection.claims
 
-    assert rig.service.admin("status") == _BUSY
-    assert agent.reached.wait(_SETTLE_SECONDS)
+    first = rig.prompt_status()
 
-    # The login observation made by the read claimed again: an equal lease that is a new object.
+    assert len(first["providers"]) == len(synthetic_catalog().provider_ids)
+    assert (first["sign_in_providers"], first["sign_in_methods"]) == ([], {})
+    assert agent.reached.wait(_SETTLE_SECONDS)
+    # The store's generation observation claimed again: an equal lease that is a new object.
     assert rig.connection.claims == claims_before + 1
     assert rig.client.lease is not started
     assert rig.client.lease == started
 
-    answer = rig.status_after_release()
+    agent.release.set()
+    deadline = time.monotonic() + _SETTLE_SECONDS
+    answer = rig.prompt_status()
+    while answer["sign_in_providers"] == [] and time.monotonic() < deadline:
+        time.sleep(0.01)
+        answer = rig.prompt_status()
 
-    assert len(answer["providers"]) == len(synthetic_catalog().provider_ids)
-    assert rig.connection.record_reads == len(synthetic_catalog().provider_ids), "the work ran once"
+    assert answer["sign_in_methods"] == {"example": ["browser"]}
 
 
-def test_a_status_read_kept_under_one_session_is_not_served_after_a_claim_changes_only_the_session(
+def test_a_status_read_under_a_lease_a_claim_replaced_is_refused_and_the_next_reads_afresh(
     tmp_path: Path, agent: _Agent
 ) -> None:
     claimed_session: list[UUID | None] = [None]
     rig = _rig(tmp_path, agent, claimed_session=claimed_session)
     started = rig.client.lease
     assert started is not None
+    lanes = len(synthetic_catalog().provider_ids)
     claimed_session[0] = uuid4()
 
-    assert rig.service.admin("status") == _BUSY
-    assert agent.reached.wait(_SETTLE_SECONDS)
+    first = rig.prompt_status()
 
-    # Only the session differs between the two leases.
-    answer = rig.status_after_release()
+    # Only the session differs between the two leases, and what was read under the first is not served.
     assert rig.client.lease is not None
     assert rig.client.lease.session_id != started.session_id
     assert rig.client.lease.model_copy(update={"session_id": started.session_id}) == started
+    assert first == {"kind": "refused", "code": "signed_out"}
 
-    assert len(answer["providers"]) == len(synthetic_catalog().provider_ids)
-    assert rig.connection.record_reads == 2 * len(synthetic_catalog().provider_ids), "the kept read was not served"
+    second = rig.prompt_status()
+
+    assert len(second["providers"]) == lanes
+    assert rig.connection.record_reads == 2 * lanes, "the second status read the store again"

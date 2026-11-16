@@ -1,4 +1,4 @@
-"""The sign-in status probe reports the agent's cause per provider and never keeps a failed read."""
+"""The sign-in status probe reports the agent's cause per provider, read in a refresh and served as kept."""
 
 from __future__ import annotations
 
@@ -68,13 +68,47 @@ def test_schema_two_gives_each_provider_its_state_and_cause(
     probe: AgentProviderAuthStatusProbe, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     _Runner.script = [_answer()]
-    claude = probe.probe(_lane_named("claude", monkeypatch))
-    codex = probe.probe(_lane_named("codex", monkeypatch))
-    other = probe.probe(_lane_named("antigravity", monkeypatch))
+    probe.refresh()
+    claude = probe.kept(_lane_named("claude", monkeypatch))
+    codex = probe.kept(_lane_named("codex", monkeypatch))
+    other = probe.kept(_lane_named("antigravity", monkeypatch))
     assert (claude.state, claude.cause) == (CliState.INSTALLED_SIGNED_OUT, CliStateCause.CLI_NOT_FOUND)
     assert (codex.state, codex.cause) == (CliState.INSTALLED_SIGNED_IN, None)
     assert (other.state, other.cause) == (CliState.UNKNOWN, None)
     assert _Runner.calls == [("-m", "cadrumo_agent.cli.main", "auth", "status", "--json", "--causes")]
+
+
+def test_the_kept_reading_never_runs_the_agent_and_is_unknown_until_a_refresh_reads_it(
+    probe: AgentProviderAuthStatusProbe, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    lane = _lane_named("codex", monkeypatch)
+    unread = probe.kept(lane)
+    assert (unread.state, unread.cause) == (CliState.UNKNOWN, None)
+    assert probe.due()
+    assert _Runner.calls == []
+    _Runner.script = [_answer()]
+    probe.refresh()
+    assert probe.kept(lane).state is CliState.INSTALLED_SIGNED_IN
+    assert not probe.due()
+    assert _Runner.timeouts == [status_module.CONFIRMATION_SECONDS]
+
+
+def test_a_reading_is_kept_only_for_the_context_it_was_read_under(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    context = [(tmp_path, "first")]
+    _Runner.calls, _Runner.timeouts = [], []
+    _Runner.script = [_answer()]
+    monkeypatch.setattr(status_module, "WindowsAgentInvocationRunner", _Runner)
+    monkeypatch.setattr(status_module, "agent_image", lambda **_k: AgentImage(tmp_path / "agent.exe", (), tmp_path))
+    monkeypatch.setattr(status_module, "hosted_python", lambda: None)
+    probe = AgentProviderAuthStatusProbe(context=lambda: context[0])
+    lane = _lane_named("codex", monkeypatch)
+    probe.refresh()
+    assert probe.kept(lane).state is CliState.INSTALLED_SIGNED_IN
+    context[0] = (tmp_path, "second")
+    assert probe.kept(lane).state is CliState.UNKNOWN
+    assert probe.due()
 
 
 @pytest.mark.parametrize(
@@ -87,14 +121,17 @@ def test_schema_two_gives_each_provider_its_state_and_cause(
     ],
     ids=["schema_one", "bad_json", "unknown_cause_word", "extra_field"],
 )
-def test_an_answer_that_does_not_parse_is_status_unreadable_and_is_not_kept(
+def test_an_answer_that_does_not_parse_is_status_unreadable_and_is_read_again(
     probe: AgentProviderAuthStatusProbe, monkeypatch: pytest.MonkeyPatch, result: AgentInvocationResult
 ) -> None:
     _Runner.script = [result, _answer()]
     lane = _lane_named("codex", monkeypatch)
-    failed = probe.probe(lane)
+    probe.refresh()
+    failed = probe.kept(lane)
     assert (failed.state, failed.cause) == (CliState.UNKNOWN, CliStateCause.STATUS_UNREADABLE)
-    recovered = probe.probe(lane)
+    assert probe.due()
+    probe.refresh()
+    recovered = probe.kept(lane)
     assert (recovered.state, recovered.cause) == (CliState.INSTALLED_SIGNED_IN, None)
     assert len(_Runner.calls) == 2
 
@@ -108,14 +145,17 @@ def test_an_answer_that_does_not_parse_is_status_unreadable_and_is_not_kept(
     ],
     ids=["nonzero_exit", "ended_at_bound", "os_error"],
 )
-def test_a_failed_read_is_status_read_failed_and_the_next_probe_reads_again(
+def test_a_failed_read_is_status_read_failed_and_the_next_refresh_reads_again(
     probe: AgentProviderAuthStatusProbe, monkeypatch: pytest.MonkeyPatch, step: AgentInvocationResult | BaseException
 ) -> None:
     _Runner.script = [step, _answer()]
     lane = _lane_named("codex", monkeypatch)
-    failed = probe.probe(lane)
+    probe.refresh()
+    failed = probe.kept(lane)
     assert (failed.state, failed.cause) == (CliState.UNKNOWN, CliStateCause.STATUS_READ_FAILED)
-    assert probe.probe(lane).state is CliState.INSTALLED_SIGNED_IN
+    assert probe.due()
+    probe.refresh()
+    assert probe.kept(lane).state is CliState.INSTALLED_SIGNED_IN
 
 
 def test_a_good_read_is_kept_until_the_cache_is_dropped(
@@ -123,11 +163,16 @@ def test_a_good_read_is_kept_until_the_cache_is_dropped(
 ) -> None:
     _Runner.script = [_answer(), _answer(states={"codex": "installed_signed_out"}, causes={"codex": None})]
     lane = _lane_named("codex", monkeypatch)
-    assert probe.probe(lane).state is CliState.INSTALLED_SIGNED_IN
-    assert probe.probe(lane).state is CliState.INSTALLED_SIGNED_IN
+    probe.refresh()
+    assert probe.kept(lane).state is CliState.INSTALLED_SIGNED_IN
+    assert probe.kept(lane).state is CliState.INSTALLED_SIGNED_IN
+    assert not probe.due()
     assert len(_Runner.calls) == 1
     probe.forget()
-    assert probe.probe(lane).state is CliState.INSTALLED_SIGNED_OUT
+    assert probe.kept(lane).state is CliState.UNKNOWN
+    assert probe.due()
+    probe.refresh()
+    assert probe.kept(lane).state is CliState.INSTALLED_SIGNED_OUT
     assert len(_Runner.calls) == 2
 
 
@@ -144,10 +189,10 @@ def test_a_read_begun_before_the_cache_was_dropped_is_not_kept(
             return super().run(**kwargs)
 
     monkeypatch.setattr(status_module, "WindowsAgentInvocationRunner", _Dropping)
-    _Runner.script = [_answer(), _answer()]
-    probe.probe(lane)
-    probe.probe(lane)
-    assert len(_Runner.calls) == 2
+    _Runner.script = [_answer()]
+    probe.refresh()
+    assert probe.kept(lane).state is CliState.UNKNOWN
+    assert probe.due()
 
 
 def test_a_confirmation_reads_fresh_within_its_own_budget_and_keeps_nothing(
