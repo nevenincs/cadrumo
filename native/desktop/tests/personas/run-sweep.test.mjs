@@ -168,6 +168,46 @@ test("a row line may state file, as a stage word only", () => {
   );
 });
 
+test("a row line may state blocking_findings, as finding ids only", () => {
+  assert.equal(
+    lineProblem(
+      [
+        personaLine,
+        {
+          ...rowLine,
+          blocking_findings: ["registry_authority_grade_insufficient"],
+        },
+      ],
+      world,
+      "t",
+      "sociedad-limitada",
+    ),
+    null,
+  );
+  for (const blocking_findings of [
+    [""],
+    "registry_authority_grade_insufficient",
+  ])
+    assert.match(
+      lineProblem(
+        [personaLine, { ...rowLine, blocking_findings }],
+        world,
+        "t",
+        "sociedad-limitada",
+      ),
+      /blocking_findings is not an array of non-empty finding ids/,
+    );
+  assert.match(
+    lineProblem(
+      [{ ...personaLine, blocking_findings: [] }, rowLine],
+      world,
+      "t",
+      "sociedad-limitada",
+    ),
+    /line keys differ/,
+  );
+});
+
 const at = (ms) => new Date(Date.UTC(2030, 0, 1) + ms).toISOString();
 const event = (ms, name, extra = {}) =>
   JSON.stringify({ at: at(ms), event: name, ...extra });
