@@ -47,9 +47,10 @@ _COHORT_BUILD_JOB: Final = "build-cohort"
 #: The command that builds the cohort; exactly one job may run it.
 _COHORT_BUILD_COMMAND: Final = "dev.packaging.release_cohort build"
 
-#: Below this the walk has stopped covering the workflow directory. Live: six
-#: workflows (three lanes, three dispatch-only reports).
-_MINIMUM_WORKFLOWS: Final = 6
+#: Below this the walk has stopped covering the workflow directory. Live: seven
+#: workflows (the merge gate, the native lane, the two release workflows and
+#: three dispatch-only reports).
+_MINIMUM_WORKFLOWS: Final = 7
 
 
 def _document(path: Path) -> dict[str, Any]:
