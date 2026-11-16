@@ -171,23 +171,34 @@ def _assigned_names(statement: ast.stmt) -> tuple[list[str], ast.expr | None]:
     return [], None
 
 
+def _date_decision_keys(relative: str, module: ast.Module) -> set[str]:
+    return {
+        f"tui-date-decision:{relative}:{qualname}"
+        for qualname, function in _functions(module)
+        if _decides_on_dates(function)
+    }
+
+
+def _precedence_table_names(statement: ast.stmt) -> list[str]:
+    names, value = _assigned_names(statement)
+    if value is None or not _holds_enum_members(value):
+        return []
+    return [name for name in names if _TABLE_NAME.search(name.upper())]
+
+
+def _precedence_keys(relative: str, module: ast.Module) -> set[str]:
+    return {
+        f"tui-precedence:{relative}:{name}" for statement in module.body for name in _precedence_table_names(statement)
+    }
+
+
 def tui_state_keys(root: Path = REPO_ROOT) -> set[str]:
     """Workbench date decisions and enum precedence tables, keyed by path and symbol."""
     keys: set[str] = set()
     for relative in _python_modules(root, (TUI_ROOT,)):
         module = _parse(root, relative)
-        if module is None:
-            continue
-        for qualname, function in _functions(module):
-            if _decides_on_dates(function):
-                keys.add(f"tui-date-decision:{relative}:{qualname}")
-        for statement in module.body:
-            names, value = _assigned_names(statement)
-            if value is None or not _holds_enum_members(value):
-                continue
-            for name in names:
-                if _TABLE_NAME.search(name.upper()):
-                    keys.add(f"tui-precedence:{relative}:{name}")
+        if module is not None:
+            keys |= _date_decision_keys(relative, module) | _precedence_keys(relative, module)
     return keys
 
 
