@@ -206,6 +206,7 @@ class LedgerStagedRowPayload(OutputSchema):
     lifecycle_actions: list[str]
     tax_set_skip: str | None
     transfer_locked_fields: list[str]
+    tax_set_skipped_fields: list[str]
     classifying_fields: list[str]
     identity_fields: list[str]
     routes: list[LedgerStagedRoutePayload]
