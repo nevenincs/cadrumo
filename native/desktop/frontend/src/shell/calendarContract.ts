@@ -344,6 +344,11 @@ export type OverviewCalendarEntrySnapshot = {
   local_work_unit_revision_id: string | null;
   profile_confirmation_required: boolean;
   missing_profile_information: string[];
+  filing_status_words: string;
+  filing_status_words_language: OutputLanguage;
+  days_until_close: number | null;
+  filing_status: OverviewFilingStatus;
+  scopes: OverviewCalendarScope[];
 };
 
 /**
@@ -404,11 +409,22 @@ export type OverviewCalendarRead = {
 };
 
 /**
+ * A calendar scope a row belongs to; a row belongs to every scope that holds
+ * for it.
+ */
+export type OverviewCalendarScope =
+  "past" | "ahead" | "upcoming" | "overdue" | "filed" | "evidence_unknown";
+
+/**
  * Full current calendar output without private input records.
  *
  * `support` carries the filing-year envelope the read was served under and
  * where the requested range sits in it, so a range outside the envelope reads
  * as unsupported rather than as a calendar with nothing due.
+ *
+ * `entries` come in the calendar's list order and `attention_order` holds
+ * their indices in the order they need the operator, so no frontend orders
+ * obligations itself.
  */
 export type OverviewCalendarSnapshot = {
   range: OverviewCalendarRange;
@@ -425,6 +441,7 @@ export type OverviewCalendarSnapshot = {
   coverage: ObligationCoverageReport;
   late_count: number | null;
   applicable_modelos_without_deadline: string[] | null;
+  attention_order: number[];
 };
 
 /**
@@ -544,6 +561,28 @@ export type OverviewFilingEvidenceSnapshot = {
   justificante_verified: boolean;
   evidence_source: string | null;
 };
+
+/**
+ * The one filing status a calendar row states, decided from its evidence axes.
+ *
+ * AEAT evidence outranks the local record and the local record outranks the
+ * deadline, so a row never repeats a claim a stronger source already settled.
+ * A local record never claims AEAT: `recorded_locally` says the application
+ * holds a filing record that AEAT has not been observed to confirm.
+ * `evidence_withheld` is a period its evidence shows filed, read where that
+ * evidence is withheld, so it claims neither an AEAT submission nor a local
+ * record.
+ */
+export type OverviewFilingStatus =
+  | "receipt_verified"
+  | "accepted"
+  | "submitted"
+  | "imported"
+  | "recorded_locally"
+  | "evidence_withheld"
+  | "due"
+  | "overdue"
+  | "unknown";
 
 /**
  * Local application-side filing axis for one calendar obligation.

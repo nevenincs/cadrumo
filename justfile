@@ -1640,6 +1640,11 @@ check-module-size:
 check-branch-gate-delta BASE_TREE HEAD_TREE PATHS_FROM:
     @uv run --no-sync python -m dev.quality.branch_gate_delta --base-tree {{BASE_TREE}} --head-tree {{HEAD_TREE}} --paths-from {{PATHS_FROM}}
 
+[doc('Reject new surface redeclarations (hand-written window wire types, workbench date decisions and precedence tables, duplicated entry-point helpers) against the shrink-only baseline; about ten seconds.')]
+[group('check')]
+check-surface-redeclaration:
+    @uv run --no-sync python -m dev.quality.surface_redeclaration
+
 [doc('Reject any year, edition id or year bound written into Python or TypeScript outside the authority data root; read-only and blocking.')]
 [group('check')]
 check-year-literals:

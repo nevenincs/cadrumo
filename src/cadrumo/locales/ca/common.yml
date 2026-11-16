@@ -6523,6 +6523,16 @@ operation:
       l''AEAT abans que caduqui, d''aquí a uns dos minuts. Comprova que el codi %{code}
       coincideix a l''app.'
 overview:
+  filing_status:
+    accepted: Presentada, acceptada per l'AEAT
+    due: Sense presentar
+    evidence_withheld: Presentada, justificant no mostrat aquí
+    imported: Presentada per una altra via, importada
+    overdue: Vençuda, sense presentar
+    receipt_verified: Presentada, justificant de l'AEAT verificat
+    recorded_locally: Marcada com a presentada, sense confirmar per l'AEAT
+    submitted: Presentada a l'AEAT
+    unknown: Sense presentar, termini desconegut
   no_aeat_history: Aquest perfil no té cap presentació confirmada per l'AEAT.
   no_aeat_history_sociedades: Aquest perfil no té cap presentació confirmada per l'AEAT.
     La recuperació automàtica no pot obtenir l'historial de presentacions de l'Impost

@@ -1,9 +1,12 @@
 name: Cadrumo Release Please
 
 on:
+  # Releases are proposed and cut from main only. feature/tui is the
+  # development branch and is pushed after every landing; it never starts a
+  # release run. Promotion to main is a pull request from feature/tui.
   push:
     branches:
-      - feature/tui
+      - main
   # Dispatchable as well as push-driven. release-please keeps its state in the
   # release PR's labels, and a release published by hand leaves that state
   # stale: the run then reports SUCCESS while aborting with "there are
@@ -24,13 +27,16 @@ permissions:
   actions: write
 
 concurrency:
-  group: release-please-${{ github.ref }}${{ github.ref == 'refs/heads/feature/tui' && format('-{0}', github.sha) || '' }}
-  cancel-in-progress: ${{ github.ref != 'refs/heads/feature/tui' }}
+  group: release-please-${{ github.ref }}${{ github.ref == 'refs/heads/main' && format('-{0}', github.sha) || '' }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
   release-please:
     timeout-minutes: 150
     name: "Build: Release proposal (Linux)"
+    # A manual dispatch from a branch other than main would let release-please
+    # compute and cut a release from that branch's history.
+    if: github.ref == 'refs/heads/main'
     runs-on: [self-hosted, Linux, X64]
     steps:
       # Tags and releases stay on the default token: GitHub raises no workflow
@@ -42,6 +48,7 @@ jobs:
         with:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
+          target-branch: main
           skip-github-pull-request: true
 
       - name: Mint the release App token
@@ -64,6 +71,7 @@ jobs:
           token: ${{ steps.app-token.outputs.token }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
+          target-branch: main
           skip-github-release: true
 
       - name: Check out the release branch

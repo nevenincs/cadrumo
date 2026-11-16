@@ -33,6 +33,10 @@ _MERGE_GATE: Final = _WORKFLOWS_DIR / "merge-gate.yml"
 _RELEASE: Final = _WORKFLOWS_DIR / "release.yml"
 _RELEASE_PLEASE: Final = _WORKFLOWS_DIR / "release-please.yml"
 _DEFAULT_BRANCH: Final = "feature/tui"
+#: Releases are proposed and cut from main only; feature/tui never starts one.
+_RELEASE_BRANCH: Final = "main"
+#: Pull requests into either branch run the merge gate.
+_GATED_BRANCHES: Final = [_DEFAULT_BRANCH, _RELEASE_BRANCH]
 
 #: The only workflow a push to the default branch may start.
 _PUSH_WORKFLOWS: Final = frozenset({_RELEASE_PLEASE.name})
@@ -113,11 +117,11 @@ def _push_workflows(documents: list[tuple[Path, dict[str, Any]]]) -> set[str]:
 
 
 def test_no_workflow_but_release_please_starts_on_a_push() -> None:
-    """Pushes to the default branch start only the release proposal; verification runs on the pull request."""
+    """Only a push to main starts a workflow, the release proposal; feature/tui pushes start none."""
     documents = [(path, _document(path)) for path in _workflow_paths()]
     assert _push_workflows(documents) == set(_PUSH_WORKFLOWS)
     release_please = _triggers(_document(_RELEASE_PLEASE))["push"]
-    assert release_please["branches"] == [_DEFAULT_BRANCH]
+    assert release_please["branches"] == [_RELEASE_BRANCH]
 
 
 def test_the_push_gate_refuses_a_second_push_workflow() -> None:
@@ -181,7 +185,7 @@ def _merge_gate_reach_violations(document: dict[str, Any]) -> list[str]:
     for key in ("paths", "paths-ignore", "branches-ignore"):
         if key in pull_request:
             violations.append(f"pull_request carries a {key} filter")
-    if pull_request.get("branches") not in (None, [_DEFAULT_BRANCH]):
+    if pull_request.get("branches") not in (None, _GATED_BRANCHES):
         violations.append(f"pull_request is narrowed to branches {pull_request['branches']}")
     jobs = document.get("jobs") or {}
     verdict = jobs.get(_VERDICT_JOB)

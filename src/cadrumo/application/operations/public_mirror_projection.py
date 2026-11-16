@@ -115,9 +115,17 @@ def _served_value(value: BaseModel | object, served: MirrorServing) -> BaseModel
 
 
 def _source_annotations(value: BaseModel | object) -> Mapping[str, object]:
-    """Each canonical field of ``value`` with its annotation, for a model or a dataclass node."""
+    """Each canonical field of ``value`` with its annotation, for a model or a dataclass node.
+
+    A canonical model's computed fields are values it decides and serves; its
+    public mirror stores them, so they project like stored fields.
+    """
     if isinstance(value, BaseModel):
-        return {name: field.annotation for name, field in type(value).model_fields.items()}
+        model_type = type(value)
+        return {
+            **{name: field.annotation for name, field in model_type.model_fields.items()},
+            **{name: field.return_type for name, field in model_type.model_computed_fields.items()},
+        }
     hints = dataclass_type_hints(type(value))
     return {field.name: hints[field.name] for field in dataclass_instance_fields(value)}
 

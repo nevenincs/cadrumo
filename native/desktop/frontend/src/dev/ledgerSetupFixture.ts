@@ -701,6 +701,8 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
         changed_count: 6,
         removed_count: 0,
         covers_current_fact_set: false,
+        register_state: "current",
+        register_change_count: 0,
       },
     ];
   }

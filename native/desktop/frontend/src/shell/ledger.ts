@@ -7,11 +7,7 @@
 // bytes of one call. Results and staged edits live in the page's memory
 // only: never in storage, a log line or an error message.
 
-import type { LedgerPreflightReason } from "./ledgerContract";
-import type {
-  LedgerReviewStatus,
-  LedgerTransactionProjection,
-} from "./ledgerInvoiceContract";
+import type { LedgerProrrataContracts } from "./ledgerProrrataContract";
 import type { LedgerReadContracts } from "./ledgerReadContract";
 import type {
   AttachmentQueueResult,
@@ -159,17 +155,6 @@ import type {
   CapitalGoodsListResult,
   LedgerOwnAccountRequest,
   LedgerOwnAccountResult,
-  ProrrataDeclareGrossRequest,
-  ProrrataDeclareSectorRequest,
-  ProrrataElectEspecialRequest,
-  ProrrataElectionRequest,
-  ProrrataListResult,
-  ProrrataMutationResult,
-  ProrrataRemoveGrossRequest,
-  ProrrataRevokeEspecialRequest,
-  ProrrataSeedRequest,
-  ProrrataSeedSectorRequest,
-  ProrrataSettleSectorRequest,
   WithholdingAbsenceListRequest,
   WithholdingAbsenceListResult,
   WithholdingAbsenceResult,
@@ -688,117 +673,6 @@ export type PublicDecimal = { decimal: string };
 
 export type OutputLanguage = "es" | "en" | "ca" | "hu";
 
-/** The kinds of text a profile's own records can offer. */
-export type LedgerKnownValueKind =
-  | "counterparty"
-  | "description"
-  | "group_label"
-  | "m210_payer"
-  | "m210_asset"
-  | "asset_reference";
-
-export type LedgerKnownValuesRequest = { kinds: LedgerKnownValueKind[] };
-
-/** One party as the records name it. The tax id comes from an invoice; a
- * movement states none, and joins one only if its name can mean no other. */
-export type KnownCounterparty = {
-  name: string;
-  tax_id: string | null;
-  country: string | null;
-  identification_state: string | null;
-  uses: number;
-  last_used: string;
-};
-
-export type KnownText = {
-  text: string;
-  uses: number;
-  last_used: string;
-  counterparty: string | null;
-};
-
-/** Each list is the newest of its kind; `truncated` names the kinds that hold
- * more than they show. */
-export type LedgerKnownValuesResult = {
-  profile_id: string;
-  counterparties: KnownCounterparty[];
-  descriptions: KnownText[];
-  group_labels: KnownText[];
-  m210_payers: KnownText[];
-  m210_assets: KnownText[];
-  asset_references: KnownText[];
-  truncated: LedgerKnownValueKind[];
-};
-
-export type LedgerViewRequest = { transaction_prefix: string };
-
-export type LedgerViewResult = {
-  profile_id: string;
-  transaction_prefix: string;
-  transaction: LedgerTransactionProjection;
-  review_status: LedgerReviewStatus;
-  latest_llm_rejection: { occurred_at: string; operator_reason: string } | null;
-};
-
-export type LedgerStatusRequest = { period?: PublicPeriod | null };
-
-export type LedgerStatusResult = {
-  profile_id: string;
-  period: PublicPeriod | null;
-  business_income_total: string;
-  business_expense_total: string;
-  business_net_total: string;
-  total_count: number;
-  active_count: number;
-  archived_count: number;
-  stashed_count: number;
-  split_count: number;
-  pending_review_count: number;
-  reviewed_count: number;
-  skipped_count: number;
-  checked_transaction_count: number;
-  readiness_issue_count: number;
-  unconverted_currency_count: number;
-  /** Unknown is not ready: null means readiness was not measured. */
-  ready: boolean | null;
-  readiness_issues: {
-    transaction_id: string;
-    reason: string;
-    detail: string;
-    transaction_present: boolean;
-    business_classification: string | null;
-    category_id: string | null;
-    taxable_base: string | null;
-    iva_rate: string | null;
-    iva_amount: string | null;
-  }[];
-  stale_filings: {
-    modelo: string;
-    filing_year: number;
-    period: string;
-    calculation_revision_id: string;
-    work_unit_id: string;
-    changed_count: number;
-    removed_count: number;
-    covers_current_fact_set: boolean;
-  }[];
-};
-
-export type LedgerPreflightRequest = { period: PublicPeriod };
-
-export type LedgerPreflightResult = {
-  profile_id: string;
-  period: PublicPeriod;
-  bucket_id: string;
-  checked_transaction_count: number;
-  issues: {
-    transaction_id: string;
-    reason: LedgerPreflightReason;
-    detail: string;
-  }[];
-  ready: boolean;
-};
-
 /** A statement format as `ledger.entry-options` serves it; the ledger refuses
  * one it does not parse. */
 export type LedgerProvider = string;
@@ -919,12 +793,18 @@ export type LedgerExportResult = {
 };
 
 export interface LedgerRequests {
-  "ledger.known-values": LedgerKnownValuesRequest;
+  "ledger.known-values": Omit<
+    LedgerReadContracts["ledger.known-values"]["request"],
+    "profile_id"
+  >;
   "ledger.list": Omit<
     LedgerReadContracts["ledger.list"]["request"],
     "profile_id"
   >;
-  "ledger.view": LedgerViewRequest;
+  "ledger.view": Omit<
+    LedgerReadContracts["ledger.view"]["request"],
+    "profile_id"
+  >;
   "ledger.update": LedgerUpdateRequest;
   "ledger.classify.single": LedgerClassifyRequest;
   "ledger.classify.bulk": LedgerBulkClassifyRequest;
@@ -942,8 +822,14 @@ export interface LedgerRequests {
   "ledger.invoice.update": InvoiceUpdateRequest;
   "ledger.invoice.remove": InvoiceRemoveRequest;
   "ledger.invoice.attach_document": InvoiceDocumentAttachRequest;
-  "ledger.status": LedgerStatusRequest;
-  "ledger.preflight": LedgerPreflightRequest;
+  "ledger.status": Omit<
+    LedgerReadContracts["ledger.status"]["request"],
+    "profile_id"
+  >;
+  "ledger.preflight": Omit<
+    LedgerReadContracts["ledger.preflight"]["request"],
+    "profile_id"
+  >;
   "ledger.import": LedgerImportRequest;
   "ledger.export": LedgerExportRequest;
   "ledger.invoice.import": InvoiceImportRequest;
@@ -988,16 +874,46 @@ export interface LedgerRequests {
   "ledger.counterparty": LedgerCounterpartyRequest;
   "ledger.llm-diagnostics": LedgerLlmDiagnosticsRequest;
   "ledger.own_account": LedgerOwnAccountRequest;
-  "ledger.prorrata.list": Record<string, never>;
-  "ledger.prorrata.seed": ProrrataSeedRequest;
-  "ledger.prorrata.declare_sector": ProrrataDeclareSectorRequest;
-  "ledger.prorrata.elect_general": ProrrataElectionRequest;
-  "ledger.prorrata.elect_especial": ProrrataElectEspecialRequest;
-  "ledger.prorrata.revoke_especial": ProrrataRevokeEspecialRequest;
-  "ledger.prorrata.seed_sector": ProrrataSeedSectorRequest;
-  "ledger.prorrata.settle_sector": ProrrataSettleSectorRequest;
-  "ledger.prorrata.declare_gross": ProrrataDeclareGrossRequest;
-  "ledger.prorrata.remove_gross": ProrrataRemoveGrossRequest;
+  "ledger.prorrata.list": Omit<
+    LedgerProrrataContracts["ledger.prorrata.list"]["request"],
+    "profile_id"
+  >;
+  "ledger.prorrata.seed": Omit<
+    LedgerProrrataContracts["ledger.prorrata.seed"]["request"],
+    "profile_id"
+  >;
+  "ledger.prorrata.declare_sector": Omit<
+    LedgerProrrataContracts["ledger.prorrata.declare_sector"]["request"],
+    "profile_id"
+  >;
+  "ledger.prorrata.elect_general": Omit<
+    LedgerProrrataContracts["ledger.prorrata.elect_general"]["request"],
+    "profile_id"
+  >;
+  "ledger.prorrata.elect_especial": Omit<
+    LedgerProrrataContracts["ledger.prorrata.elect_especial"]["request"],
+    "profile_id"
+  >;
+  "ledger.prorrata.revoke_especial": Omit<
+    LedgerProrrataContracts["ledger.prorrata.revoke_especial"]["request"],
+    "profile_id"
+  >;
+  "ledger.prorrata.seed_sector": Omit<
+    LedgerProrrataContracts["ledger.prorrata.seed_sector"]["request"],
+    "profile_id"
+  >;
+  "ledger.prorrata.settle_sector": Omit<
+    LedgerProrrataContracts["ledger.prorrata.settle_sector"]["request"],
+    "profile_id"
+  >;
+  "ledger.prorrata.declare_gross": Omit<
+    LedgerProrrataContracts["ledger.prorrata.declare_gross"]["request"],
+    "profile_id"
+  >;
+  "ledger.prorrata.remove_gross": Omit<
+    LedgerProrrataContracts["ledger.prorrata.remove_gross"]["request"],
+    "profile_id"
+  >;
   "ledger.retencion_soportada.list": WithholdingListRequest;
   "ledger.retencion_soportada.list_absences": WithholdingAbsenceListRequest;
   "ledger.retencion_soportada.record": WithholdingRecordRequest;
@@ -1042,9 +958,9 @@ export interface LedgerRequests {
 }
 
 export interface LedgerResults {
-  "ledger.known-values": LedgerKnownValuesResult;
+  "ledger.known-values": LedgerReadContracts["ledger.known-values"]["result"];
   "ledger.list": LedgerReadContracts["ledger.list"]["result"];
-  "ledger.view": LedgerViewResult;
+  "ledger.view": LedgerReadContracts["ledger.view"]["result"];
   "ledger.update": LedgerUpdateResult;
   "ledger.classify.single": LedgerClassifyResult;
   "ledger.classify.bulk": LedgerBulkClassifyResult;
@@ -1061,8 +977,8 @@ export interface LedgerResults {
   "ledger.invoice.update": InvoiceUpdateResult;
   "ledger.invoice.remove": InvoiceRemoveResult;
   "ledger.invoice.attach_document": InvoiceDocumentAttachResult;
-  "ledger.status": LedgerStatusResult;
-  "ledger.preflight": LedgerPreflightResult;
+  "ledger.status": LedgerReadContracts["ledger.status"]["result"];
+  "ledger.preflight": LedgerReadContracts["ledger.preflight"]["result"];
   "ledger.import": LedgerImportResult;
   "ledger.export": LedgerExportResult;
   "ledger.invoice.import": InvoiceImportResult;
@@ -1106,16 +1022,16 @@ export interface LedgerResults {
   "ledger.counterparty": LedgerCounterpartyResult;
   "ledger.llm-diagnostics": LedgerLlmDiagnosticsResult;
   "ledger.own_account": LedgerOwnAccountResult;
-  "ledger.prorrata.list": ProrrataListResult;
-  "ledger.prorrata.seed": ProrrataMutationResult;
-  "ledger.prorrata.declare_sector": ProrrataMutationResult;
-  "ledger.prorrata.elect_general": ProrrataMutationResult;
-  "ledger.prorrata.elect_especial": ProrrataMutationResult;
-  "ledger.prorrata.revoke_especial": ProrrataMutationResult;
-  "ledger.prorrata.seed_sector": ProrrataMutationResult;
-  "ledger.prorrata.settle_sector": ProrrataMutationResult;
-  "ledger.prorrata.declare_gross": ProrrataMutationResult;
-  "ledger.prorrata.remove_gross": ProrrataMutationResult;
+  "ledger.prorrata.list": LedgerProrrataContracts["ledger.prorrata.list"]["result"];
+  "ledger.prorrata.seed": LedgerProrrataContracts["ledger.prorrata.seed"]["result"];
+  "ledger.prorrata.declare_sector": LedgerProrrataContracts["ledger.prorrata.declare_sector"]["result"];
+  "ledger.prorrata.elect_general": LedgerProrrataContracts["ledger.prorrata.elect_general"]["result"];
+  "ledger.prorrata.elect_especial": LedgerProrrataContracts["ledger.prorrata.elect_especial"]["result"];
+  "ledger.prorrata.revoke_especial": LedgerProrrataContracts["ledger.prorrata.revoke_especial"]["result"];
+  "ledger.prorrata.seed_sector": LedgerProrrataContracts["ledger.prorrata.seed_sector"]["result"];
+  "ledger.prorrata.settle_sector": LedgerProrrataContracts["ledger.prorrata.settle_sector"]["result"];
+  "ledger.prorrata.declare_gross": LedgerProrrataContracts["ledger.prorrata.declare_gross"]["result"];
+  "ledger.prorrata.remove_gross": LedgerProrrataContracts["ledger.prorrata.remove_gross"]["result"];
   "ledger.retencion_soportada.list": WithholdingListResult;
   "ledger.retencion_soportada.list_absences": WithholdingAbsenceListResult;
   "ledger.retencion_soportada.record": WithholdingMutationResult;

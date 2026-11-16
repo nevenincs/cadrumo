@@ -25,7 +25,6 @@ import {
   classificationText,
   statusWord,
 } from "../src/components/ledger/movements/movementWords";
-import type { LedgerStatusResult } from "../src/shell/ledger";
 import type { LedgerPreflightReason } from "../src/shell/ledgerContract";
 import {
   categoryCells,
@@ -40,7 +39,10 @@ import { hexId, movement } from "./support/ledger";
 import { SERVED } from "./support/servedVocabulary";
 import { recordedCheck } from "./support/stagedCheck";
 import { fixtureDay, fixtureYear } from "../src/dev/fixtureDates";
-import type { LedgerTransactionReviewProjection } from "../src/shell/ledgerReadContract";
+import type {
+  LedgerStatusProjection,
+  LedgerTransactionReviewProjection,
+} from "../src/shell/ledgerReadContract";
 
 // What the movements grid makes of a window, and the one classify command.
 // No page is opened.
@@ -68,7 +70,7 @@ const classifying = (
 
 const status = (
   issues: { transaction_id: string; reason: string }[],
-): LedgerStatusResult => ({
+): LedgerStatusProjection => ({
   profile_id: "p",
   period: null,
   business_income_total: "0",
