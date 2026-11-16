@@ -8,6 +8,7 @@ from datetime import date, timedelta
 import pytest
 from pydantic import ValidationError
 
+from ....core.external_constants import OutputLanguage
 from ....core.period import Period
 from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.deadlines.festivos import DeadlineHolidayCoverage
@@ -118,6 +119,9 @@ def _home_entry_payload(**overrides: object) -> dict[str, object]:
         "period_state": _PERIOD.FILED,
         "local_filing_state": _LOCAL.NOT_READY_TO_FILE,
         "aeat_submission_state": _AEAT.NOT_OBSERVED,
+        "due_on_text": "20 oct",
+        "period_words": "3T",
+        "words_language": OutputLanguage.ES,
     }
     payload.update(overrides)
     return payload
@@ -150,6 +154,9 @@ def _public_home_payload(filing_status: str) -> dict[str, object]:
         "period_state": "filed",
         "local_filing_state": "not_ready_to_file",
         "aeat_submission_state": "not_observed",
+        "due_on_text": "20 oct",
+        "period_words": "3T",
+        "words_language": "es",
         "filing_status": filing_status,
     }
 
@@ -328,3 +335,19 @@ def test_a_snapshot_refuses_a_derivation_it_does_not_decide(name: str, foreign: 
     payload[name] = foreign
     with pytest.raises(ValidationError, match=_REFUSAL):
         OverviewCalendarEntrySnapshot.model_validate_json(json.dumps(payload))
+
+
+def test_home_words_its_date_and_period_in_the_served_language() -> None:
+    entry = HomeAgendaEntry.worded(
+        modelo="303",
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "3T"),
+        due_on=_CLOSE,
+        period_state=_PERIOD.DUE,
+        local_filing_state=_LOCAL.NOT_READY_TO_FILE,
+        aeat_submission_state=_AEAT.NOT_OBSERVED,
+        language=OutputLanguage.EN,
+    )
+    assert entry.words_language is OutputLanguage.EN
+    assert entry.due_on_text == f"Oct 20, {_YEAR}"
+    assert entry.period_words == f"3rd quarter {_YEAR}"
