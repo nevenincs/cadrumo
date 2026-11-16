@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "counts": {
-    "wire-type": 1283,
+    "wire-type": 1274,
     "tui-date-decision": 2,
     "tui-precedence": 8,
     "duplicated-helper": 100
@@ -700,18 +700,9 @@
       "wire-type:native/desktop/frontend/src/shell/agentViews.ts:AgentTurnRecord",
       "wire-type:native/desktop/frontend/src/shell/agentViews.ts:AgentUsage",
       "wire-type:native/desktop/frontend/src/shell/agentViews.ts:AgentViews",
-      "wire-type:native/desktop/frontend/src/shell/borrador.ts:BorradorCompared",
-      "wire-type:native/desktop/frontend/src/shell/borrador.ts:BorradorComparison",
-      "wire-type:native/desktop/frontend/src/shell/borrador.ts:BorradorPeriod",
       "wire-type:native/desktop/frontend/src/shell/borrador.ts:BorradorPort",
-      "wire-type:native/desktop/frontend/src/shell/borrador.ts:BorradorRead",
-      "wire-type:native/desktop/frontend/src/shell/borrador.ts:BorradorRefusedSnapshot",
-      "wire-type:native/desktop/frontend/src/shell/borrador.ts:BorradorScalar",
       "wire-type:native/desktop/frontend/src/shell/borrador.ts:BorradorSelector",
-      "wire-type:native/desktop/frontend/src/shell/borrador.ts:BorradorSnapshotDetail",
-      "wire-type:native/desktop/frontend/src/shell/borrador.ts:BorradorSnapshotSummary",
       "wire-type:native/desktop/frontend/src/shell/borrador.ts:BorradorState",
-      "wire-type:native/desktop/frontend/src/shell/borrador.ts:BorradorWords",
       "wire-type:native/desktop/frontend/src/shell/calendar.ts:CalendarState",
       "wire-type:native/desktop/frontend/src/shell/calendarGrid.ts:DrawnWeek",
       "wire-type:native/desktop/frontend/src/shell/calendarGrid.ts:GridBar",
