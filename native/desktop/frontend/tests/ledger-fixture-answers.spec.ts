@@ -121,6 +121,7 @@ test("a missing field and an unserved field both fail the check", () => {
     findings: [],
     filing_name_slots: [],
     filing_name_part_limits: [],
+    party_kinds: [],
   };
   expect(answerViolations("ledger.counterparty", complete)).toEqual([]);
   const short: Record<string, unknown> = { ...complete };
