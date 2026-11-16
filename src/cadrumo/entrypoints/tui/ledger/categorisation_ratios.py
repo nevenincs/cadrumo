@@ -28,7 +28,7 @@ from ....application.ledger.ratios_contracts import (
 from ....core.external_constants import OutputLanguage
 from ....core.filing_year import four_digit_year_in
 from ....core.i18n.render import output_language, tr
-from ....core.time.clock import now
+from ....core.time.clock import today_madrid
 from ..components.widgets import ContentDataTable
 from .categorisation_common import CategorisationScreen, StagedChangeV1, action, action_row, field, heading, line
 from .categorisation_doors import (
@@ -144,7 +144,7 @@ class LedgerRatiosScreen(CategorisationScreen):
 
     @override
     def mount_body(self) -> None:
-        self.query_one("#categorisation-ratios-year", Input).value = str(now().year)
+        self.query_one("#categorisation-ratios-year", Input).value = str(today_madrid().year)
         self.run_read(self._read)
 
     @override
