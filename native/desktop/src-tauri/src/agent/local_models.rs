@@ -1,16 +1,15 @@
 //! The models the person added by name to a local lane's model list, the model
 //! the person selected to read documents with, and the catalogue's local lanes,
-//! read from and changed through the agent service and parsed into the closed
-//! snapshot the window shows. A lane's recommended models are the catalogue's and
-//! never cross here. A value outside the contract is a protocol failure, never
-//! passed on.
+//! read from and changed through the agent service. The window reads the service's
+//! own answer, passed on unchanged once it reads as the closed contract parsed here.
+//! A lane's recommended models are the catalogue's and never cross here. A value
+//! outside the contract is a protocol failure, never passed on.
 //!
 //! The same record holds the local engine and its placement. A readable setting is
 //! handed on to the runtime manager's local engine selection record, which tells the
 //! manager which engine's server to run; the manager owns that record's format.
 
 use cadrumo_application::provisioning::local_ai::{LocalEngine, Placement, package_default_engine};
-use serde::Serialize;
 use serde_json::Value;
 use std::path::Path;
 
@@ -24,7 +23,7 @@ const LANES_LIMIT: usize = 64;
 
 /// One lane and one of its models: added to the lane's list, or selected to
 /// read documents with.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ListedModel {
     pub lane: String,
     pub model: String,
@@ -33,8 +32,7 @@ pub struct ListedModel {
 /// Where the model documents are read with comes from, as the service serves it:
 /// the person's stored choice, the installed default that stands in for a
 /// missing or unusable one, or none when no model reads documents.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
-#[serde(rename_all = "snake_case")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ReadingSource {
     Chosen,
     Default,
@@ -46,8 +44,7 @@ pub enum ReadingSource {
 /// which lists and selects no model and carries the guard of its reset. Either
 /// names the catalogue's local lanes, whose models the picker offers from their
 /// lists.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
-#[serde(tag = "state", rename_all = "snake_case")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum LocalModels {
     Readable {
         models: Vec<ListedModel>,
@@ -108,6 +105,13 @@ pub fn change_refusal(answer: &Value) -> Option<&'static str> {
         Some("unknown") => "agent_local_models_unknown",
         _ => crossed,
     })
+}
+
+/// The service's list answer as the window reads it: unchanged, once it reads as the
+/// contract; `None` when it breaks it.
+pub fn served(answer: Value) -> Option<Value> {
+    parse(&answer)?;
+    Some(answer)
 }
 
 /// The snapshot in `answer`, or `None` when it breaks the contract.
@@ -171,8 +175,7 @@ pub fn parse(answer: &Value) -> Option<LocalModels> {
 /// nobody can read, which names neither and carries the guard of its reset. Either
 /// carries the engines and placements the service offers, which do not depend on the
 /// record being readable.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
-#[serde(tag = "state", rename_all = "snake_case")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum LocalEngineSetting {
     Readable {
         engine: LocalEngine,
@@ -182,7 +185,6 @@ pub enum LocalEngineSetting {
         /// Whether the person stored this setting. An unchosen one is the defaults the
         /// package derives, which the window shows as they are and which the runtime
         /// manager must never keep as a choice.
-        #[serde(skip)]
         chosen: bool,
     },
     Unreadable {
@@ -192,7 +194,7 @@ pub enum LocalEngineSetting {
 }
 
 /// The engines and the placements the service offers, each in its order.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Choices {
     pub engine: Vec<LocalEngine>,
     pub placement: Vec<Placement>,
@@ -223,6 +225,13 @@ impl LocalEngineSetting {
             Self::Unreadable { .. } => RecordSync::Leave,
         }
     }
+}
+
+/// The service's engine answer as the window reads it, unchanged, with the setting the
+/// host hands on to the runtime manager; `None` when it breaks the contract.
+pub fn served_engine(answer: Value) -> Option<(LocalEngineSetting, Value)> {
+    let setting = parse_engine(&answer)?;
+    Some((setting, answer))
 }
 
 /// The local engine setting in `answer`, or `None` when it breaks the contract: exactly
@@ -495,6 +504,47 @@ pub(crate) mod tests {
     }
 
     #[test]
+    fn the_window_reads_the_services_own_answer_unreadable_flag_and_all() {
+        for answer in [
+            json!({
+                "unreadable": true, "models": [], "reading": null, "reading_source": "none", "local_lanes": ["local_api"], "revision": revision(),
+            }),
+            json!({
+                "unreadable": false, "models": [{"lane": "local_api", "model": "synthetic-text:1"}],
+                "reading": {"lane": "local_api", "model": "synthetic-text:1"}, "reading_source": "default",
+                "local_lanes": ["local_api"], "revision": revision(),
+            }),
+        ] {
+            assert_eq!(served(answer.clone()), Some(answer));
+        }
+        assert_eq!(
+            served(json!({"state": "unreadable", "local_lanes": [], "revision": revision()})),
+            None
+        );
+        for unreadable in [true, false] {
+            let answer = engine_answer(
+                unreadable,
+                if unreadable {
+                    Value::Null
+                } else {
+                    json!("ollama")
+                },
+                if unreadable {
+                    Value::Null
+                } else {
+                    json!("cpu_only")
+                },
+            );
+            let (setting, crossed) = served_engine(answer.clone()).unwrap();
+            assert_eq!(crossed, answer);
+            assert_eq!(setting, parse_engine(&answer).unwrap());
+        }
+        let mut broken = engine_answer(false, json!("ollama"), json!("auto"));
+        broken["state"] = json!("readable");
+        assert_eq!(served_engine(broken), None);
+    }
+
+    #[test]
     fn an_unreadable_record_lists_no_model_and_keeps_its_reset_guard() {
         let answer = json!({
             "unreadable": true, "models": [], "reading": null, "reading_source": "none", "local_lanes": ["local_api"], "revision": revision(),
@@ -734,14 +784,10 @@ pub(crate) mod tests {
             parsed.record_sync(),
             RecordSync::Store(LocalEngine::LlamaCpp, Placement::CpuOnly)
         );
-        assert_eq!(
-            serde_json::to_value(&parsed).unwrap(),
-            json!({"state": "readable", "engine": "llamacpp", "placement": "cpu_only", "choices": {"engine": ["llamacpp", "ollama"], "placement": ["auto", "cpu_only"]}, "revision": revision()})
-        );
         let ollama = parse_engine(&engine_answer(false, json!("ollama"), json!("auto"))).unwrap();
         assert_eq!(
-            serde_json::to_value(&ollama).unwrap(),
-            json!({"state": "readable", "engine": "ollama", "placement": "auto", "choices": {"engine": ["llamacpp", "ollama"], "placement": ["auto", "cpu_only"]}, "revision": revision()})
+            ollama.record_sync(),
+            RecordSync::Store(LocalEngine::Ollama, Placement::Auto)
         );
         assert_eq!(
             refusal(&engine_answer(false, json!("ollama"), json!("auto"))),
@@ -760,10 +806,6 @@ pub(crate) mod tests {
             }
         );
         assert_eq!(parsed.record_sync(), RecordSync::Leave);
-        assert_eq!(
-            serde_json::to_value(&parsed).unwrap(),
-            json!({"state": "unreadable", "choices": {"engine": ["llamacpp", "ollama"], "placement": ["auto", "cpu_only"]}, "revision": revision()})
-        );
     }
 
     #[test]
@@ -782,24 +824,23 @@ pub(crate) mod tests {
             }
         );
         assert_eq!(parsed.record_sync(), RecordSync::Clear);
-        // The window reads the same setting whether or not it was chosen.
-        assert_eq!(
-            serde_json::to_value(&parsed).unwrap(),
-            json!({"state": "readable", "engine": "llamacpp", "placement": "auto", "choices": {"engine": ["llamacpp", "ollama"], "placement": ["auto", "cpu_only"]}, "revision": revision()})
-        );
     }
 
     #[test]
     fn the_offered_engines_and_placements_cross_in_the_services_order() {
         let mut answer = engine_answer(false, json!("ollama"), json!("auto"));
         answer["choices"] = json!({"engine": ["ollama"], "placement": ["cpu_only", "auto"]});
-        let parsed = parse_engine(&answer).unwrap();
         assert_eq!(
-            serde_json::to_value(&parsed).unwrap(),
-            json!({
-                "state": "readable", "engine": "ollama", "placement": "auto",
-                "choices": {"engine": ["ollama"], "placement": ["cpu_only", "auto"]},
-                "revision": revision(),
+            parse_engine(&answer),
+            Some(LocalEngineSetting::Readable {
+                engine: LocalEngine::Ollama,
+                placement: Placement::Auto,
+                choices: Choices {
+                    engine: vec![LocalEngine::Ollama],
+                    placement: vec![Placement::CpuOnly, Placement::Auto],
+                },
+                revision: revision(),
+                chosen: true,
             })
         );
         // An unreadable record offers the same lists.

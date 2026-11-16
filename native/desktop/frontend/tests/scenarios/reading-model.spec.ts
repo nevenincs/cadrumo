@@ -20,7 +20,7 @@ const open = (target: Page) =>
 const storedReading = (target: Page) =>
   target.evaluate(async () => {
     const list = await window.__fixtureAgentSession?.localModels?.();
-    return list?.state === "readable" ? list.reading : undefined;
+    return list?.unreadable === false ? list.reading : undefined;
   });
 
 test("the model picked in the agent column is the one documents are read with, on any lane", async ({
@@ -65,7 +65,7 @@ test("on a fresh profile the picker shows the installed model the service reads 
     .poll(() =>
       target.evaluate(async () => {
         const list = await window.__fixtureAgentSession?.localModels?.();
-        return list?.state === "readable"
+        return list?.unreadable === false
           ? { reading: list.reading, source: list.reading_source }
           : undefined;
       }),
@@ -82,7 +82,7 @@ test("on a fresh profile the picker shows the installed model the service reads 
   expect(
     await target.evaluate(async () => {
       const list = await window.__fixtureAgentSession?.localModels?.();
-      return list?.state === "readable" ? list.reading_source : undefined;
+      return list?.unreadable === false ? list.reading_source : undefined;
     }),
   ).toBe("default");
 });

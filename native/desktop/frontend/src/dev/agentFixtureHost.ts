@@ -26,11 +26,11 @@ import {
   type AgentViews,
 } from "../shell/agentViews";
 import type {
-  AgentLocalEngine,
-  AgentLocalEngineToken,
-  AgentLocalModels,
-  AgentLocalPlacement,
-} from "../ipc/contract";
+  LocalEngine,
+  LocalEngineStatus,
+  LocalModelListStatus,
+  LocalPlacement,
+} from "../shell/localModelsContract";
 import {
   catalogsUnderEngine,
   FIXTURE_CATALOG,
@@ -269,7 +269,7 @@ export function fixtureAgent({
   engineChoices?: FixtureEngineChoices;
   /** The engine the stored record names at the start; where left out, the
    * bundled llama.cpp. */
-  localEngine?: AgentLocalEngineToken;
+  localEngine?: LocalEngine;
   /** The installed model the service serves as the one documents are read
    * with while no choice is stored; where left out, none stands in. */
   readingDefault?: { lane: string; model: string };
@@ -301,29 +301,33 @@ export function fixtureAgent({
   // holds both. The bundled llama.cpp is the engine until a scenario starts
   // the record on the other.
   let engine: {
-    engine: AgentLocalEngineToken;
-    placement: AgentLocalPlacement;
+    engine: LocalEngine;
+    placement: LocalPlacement;
   } = { engine: localEngine ?? "llamacpp", placement: "auto" };
+  // Whether the record holds the person's choice: a scenario that starts it
+  // on an engine stored one, and any change stores one.
+  let engineChosen = localEngine !== undefined;
   // The lists are served as written; a scenario that writes a token the
   // contract does not know breaks the contract on purpose.
   const engineChoicesServed = () => ({
     choices: {
       engine: [
         ...(engineChoices?.engines ?? ["llamacpp", "ollama"]),
-      ] as AgentLocalEngineToken[],
+      ] as LocalEngine[],
       placement: [
         ...(engineChoices?.placements ?? ["auto", "cpu_only"]),
-      ] as AgentLocalPlacement[],
+      ] as LocalPlacement[],
     },
   });
-  const engineSnapshot = (): AgentLocalEngine => ({
-    state: "readable",
+  const engineSnapshot = (): LocalEngineStatus => ({
+    unreadable: false,
+    chosen: engineChosen,
     ...engine,
     ...engineChoicesServed(),
     revision: revisionOf(committed),
   });
-  const listSnapshot = (): AgentLocalModels => ({
-    state: "readable",
+  const listSnapshot = (): LocalModelListStatus => ({
+    unreadable: false,
     models: added.map((entry) => ({ ...entry })),
     ...(reading
       ? { reading: { ...reading }, reading_source: "chosen" as const }
@@ -1058,6 +1062,7 @@ export function fixtureAgent({
       if (engine.engine === chosen && engine.placement === placement)
         return engineSnapshot();
       engine = { engine: chosen, placement };
+      engineChosen = true;
       committed += 1;
       return engineSnapshot();
     },

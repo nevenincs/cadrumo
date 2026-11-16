@@ -60,7 +60,7 @@ async function openLane(target: Page) {
 const storedList = (target: Page) =>
   target.evaluate(async () => {
     const list = await window.__fixtureAgentSession?.localModels?.();
-    return list?.state === "readable" ? list.models : null;
+    return list?.unreadable === false ? list.models : null;
   });
 
 const calls = (target: Page) =>

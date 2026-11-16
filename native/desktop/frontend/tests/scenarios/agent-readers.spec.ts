@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import type { AgentLocalModels } from "../../src/ipc/contract";
+import type { LocalModelListStatus } from "../../src/shell/localModelsContract";
 import type {
   AgentSession,
   AgentServiceStatus,
@@ -15,22 +15,25 @@ for (const outcome of ["success", "failure"] as const)
       const { react, dom, client } =
         await window.__scenarioModules!.profileViews();
       const { models } = await window.__scenarioModules!.agentReaders();
-      const reads: ((value: AgentLocalModels) => void)[] = [];
+      const reads: ((value: LocalModelListStatus) => void)[] = [];
       const choices: {
-        resolve(value: AgentLocalModels): void;
+        resolve(value: LocalModelListStatus): void;
         reject(error: { code: string }): void;
       }[] = [];
       const host = {
         read: () =>
-          new Promise<AgentLocalModels>((resolve) => reads.push(resolve)),
+          new Promise<LocalModelListStatus>((resolve) => reads.push(resolve)),
         choose: () =>
-          new Promise<AgentLocalModels>((resolve, reject) =>
+          new Promise<LocalModelListStatus>((resolve, reject) =>
             choices.push({ resolve, reject }),
           ),
       };
       const wanted = { lane: "example", model: "vision" };
-      const answer = (revision: string, chosen = false): AgentLocalModels => ({
-        state: "readable",
+      const answer = (
+        revision: string,
+        chosen = false,
+      ): LocalModelListStatus => ({
+        unreadable: false,
         models: [],
         ...(chosen
           ? { reading: wanted, reading_source: "chosen" as const }
@@ -38,7 +41,7 @@ for (const outcome of ["success", "failure"] as const)
         local_lanes: [],
         revision,
       });
-      let value: AgentLocalModels | null = null;
+      let value: LocalModelListStatus | null = null;
       const commits: (string | null)[] = [];
       function Probe({
         reader,
@@ -98,7 +101,7 @@ for (const outcome of ["success", "failure"] as const)
           choices[0]!.reject({ code: "agent_local_models_revision_conflict" });
         await turn();
         const afterObsolete = {
-          revision: (value as AgentLocalModels | null)?.revision,
+          revision: (value as LocalModelListStatus | null)?.revision,
           reads: reads.length,
           choices: choices.length,
         };
@@ -119,7 +122,7 @@ for (const outcome of ["success", "failure"] as const)
           afterObsolete,
           disabled,
           resumed,
-          final: (value as AgentLocalModels | null)?.revision,
+          final: (value as LocalModelListStatus | null)?.revision,
         };
       } finally {
         dom.flushSync(() => root.unmount());
