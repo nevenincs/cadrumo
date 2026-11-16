@@ -8,7 +8,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { LedgerCheckResult } from "../../../shell/ledgerInvoiceOperations";
 import type { CatalogueInvoiceSnapshot } from "../../../shell/ledgerInvoiceContract";
-import type { LedgerPort, LedgerStatusResult } from "../../../shell/ledger";
+import type { LedgerPort } from "../../../shell/ledger";
+import type { LedgerStatusProjection } from "../../../shell/ledgerReadContract";
 import {
   readAnswer,
   readFailure,
@@ -23,7 +24,7 @@ export type Facts<T> =
 export type MatchingFacts = {
   invoices: Facts<CatalogueInvoiceSnapshot[]>;
   inconsistencies: Facts<LedgerCheckResult["link_inconsistencies"]>;
-  affected: Facts<LedgerStatusResult["stale_filings"]>;
+  affected: Facts<LedgerStatusProjection["stale_filings"]>;
 };
 
 const READING = { phase: "reading", value: null } as const;
@@ -95,7 +96,7 @@ export function useMatchingFacts(
     ).then(settle("inconsistencies"));
     void read(
       () => port.submit("ledger.status", {}),
-      (result: LedgerStatusResult) => result.stale_filings,
+      (result: LedgerStatusProjection) => result.stale_filings,
     ).then(settle("affected"));
   }, [port, reader, shown, generation, wanted]);
 

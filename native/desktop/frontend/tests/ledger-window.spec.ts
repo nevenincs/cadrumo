@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import type { LedgerResult, LedgerStatusResult } from "../src/shell/ledger";
+import type { LedgerResult } from "../src/shell/ledger";
 import {
   checkReadiness,
   LEDGER_OPEN_WINDOW_ROWS,
@@ -16,7 +16,10 @@ import {
 } from "../src/shell/ledgerWindow";
 import { fakePort, hexId, listPage, movement, PROFILE } from "./support/ledger";
 import { fixtureYear } from "../src/dev/fixtureDates";
-import type { LedgerTransactionReviewProjection } from "../src/shell/ledgerReadContract";
+import type {
+  LedgerStatusProjection,
+  LedgerTransactionReviewProjection,
+} from "../src/shell/ledgerReadContract";
 
 // The period window and the frozen readiness checks. No page is opened.
 
@@ -264,7 +267,7 @@ test("a whole-window read follows every page and reports a refusal as such", asy
   });
 });
 
-const status = (ready: boolean | null): LedgerStatusResult => ({
+const status = (ready: boolean | null): LedgerStatusProjection => ({
   profile_id: PROFILE,
   period: { filing_year: fixtureYear, code: "3T" },
   business_income_total: "0",
