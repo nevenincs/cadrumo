@@ -113,6 +113,8 @@ def rounding_rule_for(
         return (SheetRoundingRule.INTEGER, 0)
     if formula.rounding == RegistryRoundingCode.INTEGER_CEILING:
         return (SheetRoundingRule.INTEGER_CEILING, 0)
+    if formula.rounding == RegistryRoundingCode.DECIMAL_2_TRUNCATED:
+        return (SheetRoundingRule.DECIMAL_2_TRUNCATED, 2)
     raise CalcSheetsEngineError(
         context={"formula_id": formula.id},
         translated_message="application.storage.calc_sheets.engine.errors.unsupported_rounding",
@@ -129,6 +131,11 @@ def _wrap_rounded(expression: str, *, rule: str, scale: int | None) -> str:
         # unidad superior"). ROUND(x, 0) would round the ratio to the
         # NEAREST unit and understate the deduction below the half.
         return f"CEILING({expression},1)"
+    if rule == SheetRoundingRule.DECIMAL_2_TRUNCATED:
+        # Spreadsheet counterpart of decimal.ROUND_DOWN at two decimals:
+        # ROUNDDOWN cuts toward zero without carrying, as the tipo medio
+        # "con dos decimales sin redondeo" (LIRPF art. 63.2, 74.2) requires.
+        return f"ROUNDDOWN({expression},{scale})"
     return f"ROUND({expression},{scale})"
 
 

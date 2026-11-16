@@ -241,6 +241,7 @@ class SheetRoundingRule(StrEnum):
     MONEY = "money"
     INTEGER = "integer"
     INTEGER_CEILING = "integer-ceiling"
+    DECIMAL_2_TRUNCATED = "decimal-2-truncated"
     NONE = "none"
 
 
@@ -248,6 +249,7 @@ SheetRoundingRuleValue = Literal[
     SheetRoundingRule.MONEY,
     SheetRoundingRule.INTEGER,
     SheetRoundingRule.INTEGER_CEILING,
+    SheetRoundingRule.DECIMAL_2_TRUNCATED,
     SheetRoundingRule.NONE,
 ]
 """The same rule for a strict record field."""
