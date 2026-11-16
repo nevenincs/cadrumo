@@ -32,6 +32,25 @@ from .loader_semantics import (
 from .toml_helpers import as_toml_table
 
 
+class UndeclaredExportTargetError(RegistryLoadError):
+    """A committed export names casillas its edition no longer declares.
+
+    The typed refusal a stale generated export raises after a reviewed casilla
+    rename, carrying the exact identities so a reviewed repair can admit this
+    refusal alone and nothing broader.
+    """
+
+    def __init__(self, source_path: Path, revision_id: str, casilla_ids: tuple[str, ...]) -> None:
+        """Keep the modelo, revision and unknown casilla ids beside the message."""
+        self.modelo_id = source_path.name
+        self.revision_id = revision_id
+        self.casilla_ids = casilla_ids
+        super().__init__(
+            f"{source_path}: invalid revision {revision_id!r}: export fields resolve to casillas "
+            f"{list(casilla_ids)!r}, which the edition does not declare",
+        )
+
+
 def refuse_authored_export_refs(source_path: Path, revision_id: str, payload: Mapping[str, object]) -> None:
     """Refuse a casilla row that declares ``export_refs``, which the loader derives from the layouts."""
     rows = as_toml_array(payload.get(INHERITED_SECTION, ())) or ()
@@ -77,10 +96,7 @@ def _require_declared_export_targets(
     declared = {casilla.id for casilla in revision.casillas}
     undeclared = sorted(casilla_id for casilla_id in derived if casilla_id not in declared)
     if undeclared:
-        raise RegistryLoadError(
-            f"{source_path}: invalid revision {revision.id!r}: export fields resolve to casillas {undeclared!r}, "
-            "which the edition does not declare",
-        )
+        raise UndeclaredExportTargetError(source_path, str(revision.id), tuple(undeclared))
 
 
 def _casillas_with_export_references(

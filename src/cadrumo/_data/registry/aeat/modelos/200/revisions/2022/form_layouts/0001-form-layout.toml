@@ -7,7 +7,7 @@ revision_id = "2022"
 seed_source = "design_box_number"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "1b8fe597728d02efe6334d412b1ec404efd9161d9166d1551c535e0d8ad4046e"
+source_state_digest = "d09ba2f2eb8476e891eaadbb5958e1d2650c41e4730ef486d2e7ef1f43ac8181"
 design_sources = [
     { source_ref = "aeat-dr-200-2022", sha256 = "8c9fa09e5713dc19ed9235757c314a1afee24108bccee4e39031f0df9a75fae6" },
 ]
@@ -2638,6 +2638,9 @@ placements = [
     { casilla_id = "DP200008:00316", kind = "on_form", box_number = "00316" },
     { casilla_id = "DP200008:00325", kind = "on_form", box_number = "00325" },
     { casilla_id = "DP200010:00399", kind = "on_form", box_number = "00399" },
+    { casilla_id = "DP200010:00524", kind = "on_form", box_number = "00524" },
+    { casilla_id = "DP200010:00525", kind = "on_form", box_number = "00525" },
+    { casilla_id = "DP200010:00526", kind = "on_form", box_number = "00526" },
     { casilla_id = "DP200010:00550", kind = "on_form", box_number = "00550" },
     { casilla_id = "DP200010:00552", kind = "on_form", box_number = "00552" },
     { casilla_id = "DP200010:00562", kind = "on_form", box_number = "00562" },
@@ -2812,6 +2815,7 @@ placements = [
     { casilla_id = "DP200032:00310", kind = "on_form", box_number = "00310" },
     { casilla_id = "DP200032:00417", kind = "on_form", box_number = "00417" },
     { casilla_id = "DP200032:00501", kind = "on_form", box_number = "00501" },
+    { casilla_id = "DP200032:00524", kind = "on_form", box_number = "00524" },
     { casilla_id = "DP200032:00558", kind = "on_form", box_number = "00558" },
     { casilla_id = "DP200032:00562", kind = "on_form", box_number = "00562" },
     { casilla_id = "DP200033:00301", kind = "on_form", box_number = "00301" },
@@ -2876,6 +2880,9 @@ placements = [
     { casilla_id = "DP200042:00611", kind = "on_form", box_number = "00611" },
     { casilla_id = "DP200042:00625", kind = "on_form", box_number = "00625" },
     { casilla_id = "DP200043:00501", kind = "on_form", box_number = "00501" },
+    { casilla_id = "DP200043:00524", kind = "on_form", box_number = "00524" },
+    { casilla_id = "DP200043:00525", kind = "on_form", box_number = "00525" },
+    { casilla_id = "DP200043:00526", kind = "on_form", box_number = "00526" },
     { casilla_id = "DP200043:00550", kind = "on_form", box_number = "00550" },
     { casilla_id = "DP200043:00552", kind = "on_form", box_number = "00552" },
     { casilla_id = "DP200043:00563", kind = "on_form", box_number = "00563" },
@@ -3645,10 +3652,7 @@ id = "estado-de-cambios-patrimonio-neto-ii-5"
 heading_key = "modelo.schema.200.form.section.estado-de-cambios-patrimonio-neto-ii.heading"
 official_heading = "Estado de cambios patrimonio neto (II)"
 blocks = [
-    { kind = "field", id = "field", casilla_id = "00439" },
-    { kind = "field", id = "field-2", casilla_id = "00440" },
-    { kind = "field", id = "field-3", casilla_id = "00441" },
-    { kind = "field", id = "field-4", casilla_id = "00442" },
+    { kind = "grid", id = "grid", columns = [{ key = "reservas", heading_key = "modelo.schema.200.form.column.reservas.heading", official_heading = "Reservas" }, { key = "acciones-y-participaciones-en-patrimonio-propias", heading_key = "modelo.schema.200.form.column.acciones-y-participaciones-en-patrimonio-propias.heading", official_heading = "Acciones y participaciones en patrimonio propias" }, { key = "resultados-ejercicios-anteriores", heading_key = "modelo.schema.200.form.column.resultados-ejercicios-anteriores.heading", official_heading = "Resultados ejercicios anteriores" }, { key = "otras-aportaciones-de-socios", heading_key = "modelo.schema.200.form.column.otras-aportaciones-de-socios.heading", official_heading = "Otras aportaciones de socios" }], rows = [{ key = "total-ingresos-y-gastos-reconocidos", heading_key = "modelo.schema.200.form.row.total-ingresos-y-gastos-reconocidos.heading", official_heading = "Total ingresos y gastos reconocidos", cells = [{ kind = "casilla", casilla_id = "00439" }, { kind = "casilla", casilla_id = "00440" }, { kind = "casilla", casilla_id = "00441" }, { kind = "casilla", casilla_id = "00442" }] }] },
 ]
 
 [[revisions.2022.form_layouts.pages.sections]]
@@ -3745,7 +3749,7 @@ id = "estado-de-cambios-patrimonio-neto-ii-oper-bb7f03-2"
 heading_key = "modelo.schema.200.form.section.estado-de-cambios-patrimonio-neto-ii-oper-bb7f03.heading"
 official_heading = "Estado de cambios patrimonio neto (II) - Operaciones con socios o propietarios"
 blocks = [
-    { kind = "field", id = "field", casilla_id = "00523" },
+    { kind = "grid", id = "grid", columns = [{ key = "reservas", heading_key = "modelo.schema.200.form.column.reservas.heading", official_heading = "Reservas" }, { key = "acciones-y-participaciones-en-patrimonio-propias", heading_key = "modelo.schema.200.form.column.acciones-y-participaciones-en-patrimonio-propias.heading", official_heading = "Acciones y participaciones en patrimonio propias" }, { key = "resultados-ejercicios-anteriores", heading_key = "modelo.schema.200.form.column.resultados-ejercicios-anteriores.heading", official_heading = "Resultados ejercicios anteriores" }, { key = "otras-aportaciones-de-socios", heading_key = "modelo.schema.200.form.column.otras-aportaciones-de-socios.heading", official_heading = "Otras aportaciones de socios" }], rows = [{ key = "aumentos-de-capital", heading_key = "modelo.schema.200.form.row.aumentos-de-capital.heading", official_heading = "Aumentos de capital", cells = [{ kind = "casilla", casilla_id = "00523" }, { kind = "casilla", casilla_id = "DP200010:00524" }, { kind = "casilla", casilla_id = "DP200010:00525" }, { kind = "casilla", casilla_id = "DP200010:00526" }] }] },
 ]
 
 [[revisions.2022.form_layouts.pages.sections]]
@@ -9305,8 +9309,9 @@ blocks = [
     { kind = "field", id = "field-7", casilla_id = "DP200032:00310" },
     { kind = "field", id = "field-8", casilla_id = "DP200032:00417" },
     { kind = "field", id = "field-9", casilla_id = "DP200032:00501" },
-    { kind = "field", id = "field-10", casilla_id = "DP200032:00558" },
-    { kind = "field", id = "field-11", casilla_id = "DP200032:00562" },
+    { kind = "field", id = "field-10", casilla_id = "DP200032:00524" },
+    { kind = "field", id = "field-11", casilla_id = "DP200032:00558" },
+    { kind = "field", id = "field-12", casilla_id = "DP200032:00562" },
 ]
 
 [[revisions.2022.form_layouts.pages]]
@@ -9509,16 +9514,19 @@ heading_key = "modelo.schema.200.form.section.entidades-aseguradoras-estado-camb
 official_heading = "Entidades aseguradoras - Estado cambios patrimonio propio (III) - Operaciones con socios o mutualistas"
 blocks = [
     { kind = "field", id = "field", casilla_id = "DP200043:00501" },
-    { kind = "field", id = "field-2", casilla_id = "DP200043:00550" },
-    { kind = "field", id = "field-3", casilla_id = "DP200043:00552" },
-    { kind = "field", id = "field-4", casilla_id = "DP200043:00563" },
-    { kind = "field", id = "field-5", casilla_id = "DP200043:00565" },
-    { kind = "field", id = "field-6", casilla_id = "DP200043:00566" },
-    { kind = "field", id = "field-7", casilla_id = "DP200043:00567" },
-    { kind = "field", id = "field-8", casilla_id = "DP200043:00568" },
-    { kind = "field", id = "field-9", casilla_id = "DP200043:00576" },
-    { kind = "field", id = "field-10", casilla_id = "DP200043:00577" },
-    { kind = "field", id = "field-11", casilla_id = "DP200043:00581" },
+    { kind = "field", id = "field-2", casilla_id = "DP200043:00524" },
+    { kind = "field", id = "field-3", casilla_id = "DP200043:00525" },
+    { kind = "field", id = "field-4", casilla_id = "DP200043:00526" },
+    { kind = "field", id = "field-5", casilla_id = "DP200043:00550" },
+    { kind = "field", id = "field-6", casilla_id = "DP200043:00552" },
+    { kind = "field", id = "field-7", casilla_id = "DP200043:00563" },
+    { kind = "field", id = "field-8", casilla_id = "DP200043:00565" },
+    { kind = "field", id = "field-9", casilla_id = "DP200043:00566" },
+    { kind = "field", id = "field-10", casilla_id = "DP200043:00567" },
+    { kind = "field", id = "field-11", casilla_id = "DP200043:00568" },
+    { kind = "field", id = "field-12", casilla_id = "DP200043:00576" },
+    { kind = "field", id = "field-13", casilla_id = "DP200043:00577" },
+    { kind = "field", id = "field-14", casilla_id = "DP200043:00581" },
 ]
 
 [[revisions.2022.form_layouts.pages.sections]]

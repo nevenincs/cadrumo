@@ -1728,3 +1728,13 @@ selector = { revision = "2024-desde-09-y-3t", id = "modelo-303-dr303-18-transito
 
 [[revisions."2025".casilla_removals]]
 selector = { revision = "2024-desde-09-y-3t", id = "recargo.reducido.transitorio" }
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024-desde-09-y-3t", id = "166" }
+fields = { constraints = { source_refs = ["aeat-dr-303-2024-late"] } }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024-desde-09-y-3t", id = "169" }
+fields = { constraints = { source_refs = ["aeat-dr-303-2024-late"] } }
+removed_fields = []

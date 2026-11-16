@@ -7745,6 +7745,14 @@ modelo:
             label: Ajustes por deterioro de valores repr. de partic. en el capital
               o fondos propios (DT 16ª.3 LIS) - Disminución - Correcciones del ejercicio
               - Temporarias (con origen en el ejercicio) [01733]
+          is-correccion-deterioro-participaciones-dt16-3-aumentos:
+            label: Liquidación I - Detalle correcciones resultado cta. pérdidas y
+              ganancias - Ajustes por deterioro de valores repr. de partic. en el
+              capital o fondos propios (DT 16ª.3 LIS) - Aumentos [00524]
+          is-correccion-deterioro-participaciones-dt16-3-disminuciones:
+            label: Liquidación I - Detalle correcciones resultado cta. pérdidas y
+              ganancias - Ajustes por deterioro de valores repr. de partic. en el
+              capital o fondos propios (DT 16ª.3 LIS) - Disminuciones [00525]
           is-correccion-deterioro-participaciones-dt16-all-temporaria-ejercicio-aumento:
             label: Ajustes por deterioro de valores repr. de partic. en el capital
               o fondos propios (DT 16ª.3 LIS) - Aumento - Correciones del ejercicio
@@ -9392,6 +9400,10 @@ modelo:
             label: Contabilidad Banco de España - Estado cambios patrimonio neto (II)
               - Estado total cambios - Conversión de deuda en patrimonio neto - Ganancias
               acumuladas [00417]
+          is-ecpn-bde-total-cambios-pagos-basados-acciones-otros-elementos-patrimonio-neto:
+            label: Contabilidad Banco de España - Estado cambios patrimonio neto (II)
+              - Estado total cambios - Pagos basados en acciones - Otros elementos
+              del patrimonio neto [00524]
           is-ecpn-bde-total-cambios-saldo-cierre-dividendos-cuenta:
             label: Contabilidad Banco de España - Estado cambios patrimonio neto (II)
               - Estado total cambios - Saldo de cierre (período corriente) - (-) Dividendos
@@ -9762,6 +9774,18 @@ modelo:
             label: Entidades aseguradoras - Estado cambios patrimonio propio (III)
               - Operaciones con socios o mutualistas - Incremento (reducción) de patr.
               neto resultante de una combinación de negocios - Total [00568]
+          is-ecpp-aseguradoras-iii-conversion-pasivos-dividendo-cuenta:
+            label: Entidades aseguradoras - Estado cambios patrimonio propio (III)
+              - Operaciones con socios o mutualistas - Conversión de pasivos financ.
+              en patr. neto - (Dividendo a cuenta) [00525]
+          is-ecpp-aseguradoras-iii-conversion-pasivos-otros-instrumentos-patrimonio:
+            label: Entidades aseguradoras - Estado cambios patrimonio propio (III)
+              - Operaciones con socios o mutualistas - Conversión de pasivos financ.
+              en patr. neto - Otros instrumentos de patrimonio [00526]
+          is-ecpp-aseguradoras-iii-conversion-pasivos-resultado-ejercicio:
+            label: Entidades aseguradoras - Estado cambios patrimonio propio (III)
+              - Operaciones con socios o mutualistas - Conversión de pasivos financ.
+              en patr. neto - Resultado del ejercicio [00524]
           is-ecpp-aseguradoras-iii-otras-operaciones-socios-dividendo-cuenta:
             label: Entidades aseguradoras - Estado cambios patrimonio propio (III)
               - Operaciones con socios o mutualistas - Otras operaciones con socios
