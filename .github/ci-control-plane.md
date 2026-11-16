@@ -7,9 +7,10 @@ to both.
 ## Branches
 
 `feature/tui` is the development branch. Every landing goes there, and a push
-to it starts no workflow. `main` is the release branch, reached only by a
-promotion pull request from `feature/tui`. Release automation reads, proposes
-and tags `main` alone.
+to it runs the merge gate over the full population on the landed head (a newer
+push supersedes it); it starts no release workflow. `main` is the release
+branch, reached only by a promotion pull request from `feature/tui`. Release
+automation reads, proposes and tags `main` alone.
 
 ## Two lanes: headless and native
 
@@ -61,14 +62,15 @@ credentials. A newer push to a pull request cancels the run it supersedes.
 
 A hosted job's caches (uv downloads, npm) are restored and saved only when the
 run is not a fork's, so nothing a fork ran outlives its job. A pull request can
-read caches written by its own earlier runs and by its base branch. No workflow
-runs on a push to `feature/tui`, so the base branch holds none, and a cache
-pays only from a pull request's second run onward.
+read caches written by its own earlier runs and by its base branch. The merge
+gate's run on each push to `feature/tui` writes the base branch's caches, so a
+pull request's first run restores them.
 
 ## The merge gate, job by job
 
-Triggered by a pull request into `feature/tui` or `main`, and called by the
-release proof. It is never dispatched by hand: a dispatched run attaches its
+Triggered by a pull request into `feature/tui` or `main`, by a push to
+`feature/tui` (full population on the landed head), and called by the release
+proof. It is never dispatched by hand: a dispatched run attaches its
 checks to no pull request.
 
 | job | check name | needs | what it does |
@@ -122,8 +124,8 @@ every job is required.
 
 ## Release
 
-- **Release-please** (`release-please.yml`) is the only workflow that runs on
-  a push, and only on a push to `main` (plus manual dispatch from `main` for
+- **Release-please** (`release-please.yml`) is the only release workflow that
+  runs on a push, and only on a push to `main` (plus manual dispatch from `main` for
   recovery; a dispatch from any other ref runs no job). It cuts tags and
   releases with the default token, opens or updates the release pull request
   with the `nevenincs-release` App's token, so that pull request's own events
