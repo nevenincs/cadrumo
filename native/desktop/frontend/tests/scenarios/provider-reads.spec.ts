@@ -37,6 +37,7 @@ for (const transition of ["profile", "sign-out", "host"] as const)
             source: "profile",
             readiness: "ready",
             revision: "0".repeat(64),
+            reads_off_host: true,
           };
           const change = () =>
             new Promise<ProviderSettingsRecord>((resolve, reject) =>

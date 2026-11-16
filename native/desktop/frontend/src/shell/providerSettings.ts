@@ -44,6 +44,9 @@ export type ProviderSettingsRecord = {
   reason?: string | null;
   base_url?: string | null;
   default_base_url?: string | null;
+  /** Whether a conversation on the lane leaves this computer for the
+   * provider: the agent's own declaration, which the service serves. */
+  reads_off_host: boolean;
   /** Sent back with a change, so a record changed elsewhere is not
    * overwritten: 64 lowercase hex digits, all zeros for a lane that has no
    * record. */
@@ -176,6 +179,10 @@ const providerStatus = (record: ProviderSettingsRecord): ProviderStatus => ({
   ...(record.base_url ? { baseUrl: record.base_url } : {}),
   ...(record.default_base_url
     ? { defaultBaseUrl: record.default_base_url }
+    : {}),
+  // Only the served value says it; nothing about the lane stands in for it.
+  ...(typeof record.reads_off_host === "boolean"
+    ? { readsOffHost: record.reads_off_host }
     : {}),
 });
 

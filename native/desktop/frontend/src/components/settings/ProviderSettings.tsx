@@ -326,6 +326,11 @@ function WayRow({
       data-lane={provider.id}
       data-transport={provider.transport}
       data-auth-kind={provider.authKind}
+      data-reads-off-host={
+        provider.readsOffHost === undefined
+          ? undefined
+          : String(provider.readsOffHost)
+      }
       hidden={hidden}
       aria-labelledby={headingId}
       className={`way ${hidden ? "hidden" : "grid"} gap-2 rounded-lg bg-accent p-3`}
@@ -356,6 +361,15 @@ function WayRow({
         />
       </div>
       {detail && <p className="text-sm text-foreground">{detail}</p>}
+      {provider.readsOffHost !== undefined && (
+        <p className="text-sm text-muted-foreground">
+          {t(
+            provider.readsOffHost
+              ? "desktop.providers.reads_off_host"
+              : "desktop.providers.reads_on_host",
+          )}
+        </p>
+      )}
       {state === "engine_not_running" && engine?.state === "not_running" && (
         <div className="flex flex-wrap gap-2">
           <EngineDoor door={engine.door} />

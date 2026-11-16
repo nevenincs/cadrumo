@@ -967,6 +967,8 @@ DESKTOP_INTERFACE_KEYS: Final[frozenset[str]] = _PROFILE_AND_ENGINE_KEYS | froze
         "desktop.providers.next_step.move_profile_outside_git",
         "desktop.providers.next_step.retry",
         "desktop.providers.next_step.update_app",
+        "desktop.providers.reads_off_host",
+        "desktop.providers.reads_on_host",
         "desktop.providers.reason_check_settings",
         "desktop.providers.reason_record_unreadable",
         "desktop.providers.refresh",
