@@ -19,6 +19,7 @@ from __future__ import annotations
 import ast
 import re
 from functools import cache
+from typing import Final
 
 import pytest
 
@@ -178,6 +179,22 @@ def test_no_orphan_parameters_in_any_revision() -> None:
         for orphan in sorted(orphans):
             offences.append(f"{revision_id}: orphan parameter {orphan!r}")
     assert not offences, "orphan parameters detected:\n  " + "\n  ".join(offences)
+
+
+def test_a_parameter_read_through_a_module_level_name_counts_as_read() -> None:
+    """Planted: a reader's named id counts once loaded; an unused name or a non-reader does not."""
+    reader = ast.parse(
+        'RATE: Final = "rate-id"\nUNUSED = "unused-id"\n'
+        "def f(revision):\n    return read_parameter('100', revision, read(RATE))\n"
+    )
+    scanner = ast.parse(
+        'WINDOW = "window-id"\n'
+        "def f(revision):\n    return [item for item in revision.parameters if item.id == WINDOW]\n"
+    )
+    bystander = ast.parse('NAME = "name-id"\ndef f():\n    return NAME\n')
+    assert _named_parameter_reads(reader) == {"rate-id"}
+    assert _named_parameter_reads(scanner) == {"window-id"}
+    assert _named_parameter_reads(bystander) == frozenset()
 
 
 def _enrolment_axis_parameter_ids(formula: object) -> set[str]:
@@ -441,8 +458,59 @@ def _read_parameter_refs_for_modelo(modelo_id: str) -> frozenset[str]:
             continue
         for param_arg in _iter_read_parameter_arg_nodes(tree, modelo_id=modelo_id):
             refs.update(_expand_parameter_id_node(param_arg))
+    for root in _PARAMETER_READER_ROOTS:
+        for path in scan_directory(root, pattern="*.py", recursive=True):
+            if "tests" in path.parts:
+                continue
+            try:
+                tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+            except (SyntaxError, OSError):
+                continue
+            refs.update(_named_parameter_reads(tree))
     refs.update(_fact_named_parameter_ids())
     return frozenset(refs)
+
+
+_PARAMETER_READER_ROOTS: Final = (
+    REPO_ROOT / "src" / "cadrumo" / "domain",
+    REPO_ROOT / "src" / "cadrumo" / "application",
+)
+
+
+def _named_parameter_reads(tree: ast.Module) -> frozenset[str]:
+    """Return the parameter ids a module reads through a module-level name.
+
+    A resolver that reads ``read_parameter(..., read(_RATE))`` or scans
+    ``revision.parameters`` for ``item.id == CARRY_YEARS`` names the id once
+    at module scope and reads it through that name. A module counts as a
+    parameter reader when it calls ``read_parameter`` or reads a
+    ``.parameters`` attribute; its module-level string constants count as
+    read only where the module loads the name again.
+    """
+    reads_parameters = any(
+        (isinstance(node, ast.Call) and _callee_name(node) == "read_parameter")
+        or (isinstance(node, ast.Attribute) and node.attr == "parameters")
+        for node in ast.walk(tree)
+    )
+    if not reads_parameters:
+        return frozenset[str]()
+    constants: dict[str, str] = {}
+    for statement in tree.body:
+        if isinstance(statement, ast.AnnAssign | ast.Assign):
+            targets = statement.targets if isinstance(statement, ast.Assign) else [statement.target]
+            value = statement.value
+            if isinstance(value, ast.Constant) and isinstance(value.value, str):
+                constants.update({target.id: value.value for target in targets if isinstance(target, ast.Name)})
+    loaded = {node.id for node in ast.walk(tree) if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Load)}
+    return frozenset(value for name, value in constants.items() if name in loaded)
+
+
+def _callee_name(node: ast.Call) -> str | None:
+    if isinstance(node.func, ast.Name):
+        return node.func.id
+    if isinstance(node.func, ast.Attribute):
+        return node.func.attr
+    return None
 
 
 _FACT_PARAMETER_ENTRY = re.compile(r'key = "[^"]*parameter_id", value = "([^"]+)"')

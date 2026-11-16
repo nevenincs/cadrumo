@@ -33,6 +33,7 @@ from cadrumo.application.modelo.taxation_comparison_words import (
     individual_branch_caveat_words,
     recommendation_reason_words,
 )
+from cadrumo.application.modelo.value_presentation import money_words
 from cadrumo.application.operations.error_detail import OperationErrorDetailV1, build_operation_error_detail
 from cadrumo.core.config import override_settings
 from cadrumo.core.errors.hierarchy import RecordedRegisteredError
@@ -87,6 +88,10 @@ def _projection(
             language=OutputLanguage.EN,
         ),
         words_language=OutputLanguage.EN,
+        conjunta_cuota_resultante_words=money_words("900.00", OutputLanguage.EN),
+        individual_cuota_resultante_words=money_words("1000.00", OutputLanguage.EN),
+        conjunta_resultado_words=money_words(joint, OutputLanguage.EN),
+        individual_resultado_words=money_words(individual, OutputLanguage.EN),
         individual_branch_single_earner_only=True,
         individual_branch_caveat=individual_branch_caveat_words(OutputLanguage.EN),
     )

@@ -88,6 +88,7 @@ function drawnPages(form: PublicModeloWorkForm, t: Translate): DrawnPage[] {
       official_heading: section.official_heading,
       blocks: section.blocks,
       counts: section.counts,
+      recordAttention: section.record_attention,
     })),
     counts: page.counts,
   }));
@@ -112,6 +113,7 @@ function drawnPages(form: PublicModeloWorkForm, t: Translate): DrawnPage[] {
             field,
           })),
           counts: null,
+          recordAttention: [],
         },
       ],
       counts: null,

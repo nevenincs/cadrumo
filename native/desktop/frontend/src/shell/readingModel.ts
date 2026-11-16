@@ -1,6 +1,9 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { failureCode } from "../errors";
-import type { AgentListedModel, AgentLocalModels } from "../ipc/contract";
+import type {
+  LocalModelListEntry,
+  LocalModelListStatus,
+} from "./localModelsContract";
 
 // The model documents are read with is the one the person selected in the
 // agent's model picker. The picker keeps that choice in the window; the agent
@@ -10,15 +13,15 @@ import type { AgentListedModel, AgentLocalModels } from "../ipc/contract";
 
 /** Reading and storing the model documents are read with, as the host offers it. */
 export type ReadingModelHost = {
-  read: () => Promise<AgentLocalModels>;
+  read: () => Promise<LocalModelListStatus>;
   choose: (
     lane: string,
     model: string,
     expectedRevision: string,
-  ) => Promise<AgentLocalModels>;
+  ) => Promise<LocalModelListStatus>;
 };
 
-const same = (a: AgentListedModel | null, b: AgentListedModel | null) =>
+const same = (a: LocalModelListEntry | null, b: LocalModelListEntry | null) =>
   a !== null && b !== null && a.lane === b.lane && a.model === b.model;
 
 /**
@@ -30,17 +33,17 @@ const same = (a: AgentListedModel | null, b: AgentListedModel | null) =>
  */
 export function useReadingModel(
   host: ReadingModelHost | null,
-  wanted: AgentListedModel | null,
+  wanted: LocalModelListEntry | null,
   refreshVersion: number,
   reader: string | null,
-): AgentLocalModels | null {
+): LocalModelListStatus | null {
   const owner = useMemo(
     () => ({ host, reader, tried: new Set<string>() }),
     [host, reader],
   );
   const [held, setHeld] = useState<{
     owner: typeof owner;
-    value: AgentLocalModels;
+    value: LocalModelListStatus;
   } | null>(null);
   const stored = held?.owner === owner ? held.value : null;
   const [reads, setReads] = useState(0);
@@ -72,7 +75,7 @@ export function useReadingModel(
   const wantedModel = wanted?.model ?? null;
   useEffect(() => {
     const { host, reader, tried } = owner;
-    if (!host || reader === null || stored?.state !== "readable") return;
+    if (!host || reader === null || stored?.unreadable !== false) return;
     if (wantedLane === null || wantedModel === null) return;
     const chosen = { lane: wantedLane, model: wantedModel };
     if (same(stored.reading, chosen)) return;
