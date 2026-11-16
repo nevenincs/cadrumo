@@ -23,7 +23,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from datetime import date
-from decimal import ROUND_CEILING, ROUND_HALF_UP, Decimal
+from decimal import ROUND_CEILING, ROUND_DOWN, ROUND_HALF_UP, Decimal
 from enum import StrEnum
 from typing import TYPE_CHECKING, Final
 
@@ -46,6 +46,7 @@ if TYPE_CHECKING:
     from .formula_expression import EvalContext
     from .schema import ModeloRevision
 
+_CENTS: Final = Decimal("0.01")
 _COMPARISON_OPS = frozenset({"less_than", "less_equal", "greater_than", "greater_equal", "equal"})
 _UNARY_PASSTHROUGH_OPS = frozenset({"copy", "lookup_parameter", "previous_period_value", "cross_model_sum"})
 
@@ -464,6 +465,13 @@ def apply_rounding(value: Decimal, rounding: RegistryRoundingCode | None) -> Dec
     (``sign = "non_negative"``, ``min_value = "0"``), so the two readings
     coincide; a future negative-capable target must state which reading
     its provision means before enrolling here.
+
+    ``decimal-2-truncated`` quantizes to two decimals with
+    :data:`decimal.ROUND_DOWN` (toward zero) for the figures the law
+    expresses "con dos decimales sin redondeo" (LIRPF art. 63.2 and
+    74.2, the tipo medio de gravamen general). It never carries a
+    fraction up, so 9,235 stays 9,23; for the non-negative results of its
+    enrolled targets toward zero and downward coincide.
     """
     if rounding is None:
         return value
@@ -473,6 +481,8 @@ def apply_rounding(value: Decimal, rounding: RegistryRoundingCode | None) -> Dec
         return value.quantize(ONE, rounding=ROUND_HALF_UP)
     if rounding == RegistryRoundingCode.INTEGER_CEILING:
         return value.quantize(ONE, rounding=ROUND_CEILING)
+    if rounding == RegistryRoundingCode.DECIMAL_2_TRUNCATED:
+        return value.quantize(_CENTS, rounding=ROUND_DOWN)
     raise RegistryValidationError(f"unsupported rounding rule {rounding!r}")
 
 
