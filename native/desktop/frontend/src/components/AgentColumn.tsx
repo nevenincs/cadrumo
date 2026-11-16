@@ -493,9 +493,6 @@ export function AgentColumn({
       ? revision
       : undefined;
   };
-  const settingsLoading =
-    (providerSettings !== undefined && settings.read.kind === "loading") ||
-    (agentAccess !== undefined && access.read.kind === "loading");
   const openSettings =
     (providerSettings || agentAccess) && reader !== null
       ? () => {
@@ -767,7 +764,6 @@ export function AgentColumn({
       >
         {settingsOpen ? (
           <AgentSettingsPanel
-            loading={settingsLoading}
             query={settingsQuery}
             onQuery={setSettingsQuery}
             providerMatches={providerMatches}
