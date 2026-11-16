@@ -64,22 +64,28 @@ test("the withholding register lists a payer's certificate under its class and r
   const group = target.locator(".ledger-withholding-class").first();
   // The class is worded as the backend served it, the payer by name, and the
   // figures as the register holds them.
-  await expect(group.getByRole("heading")).toHaveText("Employment income");
   const row = group.locator(".ledger-withholding-table tr", {
     hasText: "Empresa Ejemplo SL",
   });
+  await expect(row).toContainText("Employment income");
   await expect(row).toContainText("30,000.00");
   await expect(row).toContainText("4,500.00");
-  await expect(row).toContainText(
-    label("desktop.ledger.withholding.origin.payer_certificate"),
-  );
+  // The origin is worded as the backend serves it on the row.
+  await expect(row).toContainText("Payer's certificate");
   // The statements of the year are listed as the backend holds them: the
   // active one in words it served, the withdrawn one in history by its token.
   const active = target.locator(".ledger-withholding-attested tr", {
     hasText: "No professional fees were withheld.",
   });
   await expect(active).toContainText("Economic activity income");
-  await expect(active).toContainText(/Stated on/);
+  await expect(active).toContainText("In force");
+  await expect(
+    target.locator(".ledger-withholding-attested").getByRole("columnheader", {
+      name: new RegExp(
+        `^${label("desktop.ledger.withholding.column.stated_on")}`,
+      ),
+    }),
+  ).toBeVisible();
   await expect(
     active.getByRole("button", {
       name: label("desktop.ledger.withholding.withdraw_of", {
@@ -92,8 +98,15 @@ test("the withholding register lists a payer's certificate under its class and r
     label("desktop.ledger.withholding.absence.history"),
   );
   const history = past.locator("tr", { hasText: "No dividends were paid." });
-  await expect(history).toContainText("capital_mobiliario");
-  await expect(history).toContainText(/Withdrawn on/);
+  await expect(history).toContainText("Income from movable capital");
+  await expect(history).toContainText("Withdrawn");
+  await expect(
+    past.getByRole("columnheader", {
+      name: new RegExp(
+        `^${label("desktop.ledger.withholding.column.withdrawn_on")}`,
+      ),
+    }),
+  ).toBeVisible();
   await expect(history.getByRole("button")).toHaveCount(0);
   await target
     .getByRole("group", { name: label("desktop.ledger.withholding.ejercicio") })
@@ -140,13 +153,8 @@ test("a certificate is recorded, and the payer's tax ID is nowhere in the window
     hasText: "Banco de Ejemplo SA",
   });
   await expect(row).toContainText("150.00");
-  // The class is shown as its token while the backend serves no label.
-  await expect(
-    target
-      .locator(".ledger-withholding-class")
-      .filter({ has: row })
-      .getByRole("heading"),
-  ).toHaveText("capital_mobiliario");
+  // The class is worded as the backend serves it.
+  await expect(row).toContainText("Income from movable capital");
   const held = await target.evaluate(
     (taxId) => ({
       page: document.documentElement.outerHTML.includes(taxId),
@@ -493,14 +501,14 @@ test("an income class is stated to have no withholding, the statement is withdra
   await submit.click();
   await expect(form).toBeHidden();
   const attested = target.locator(".ledger-withholding-attested");
-  const row = attested.locator("tr", { hasText: "ganancia_patrimonial" });
-  // The statement is listed as the backend returned it, by its token where
-  // it served no words for the class.
+  const row = attested.locator("tr", { hasText: "Capital gains" });
+  // The statement is listed as the backend returned it, in the words it
+  // served for the class and its state.
   await expect(row).toContainText("No sales this year.");
-  await expect(row).toContainText(/Stated on/);
+  await expect(row).toContainText("In force");
   const withdraw = row.getByRole("button", {
     name: label("desktop.ledger.withholding.withdraw_of", {
-      class: "ganancia_patrimonial",
+      class: "Capital gains",
     }),
   });
   await withdraw.click();
@@ -508,9 +516,9 @@ test("an income class is stated to have no withholding, the statement is withdra
   await expect(withdraw).toHaveCount(0);
   const history = target
     .locator(".ledger-withholding-history tr")
-    .filter({ hasText: "ganancia_patrimonial" });
+    .filter({ hasText: "Capital gains" });
   await expect(history).toContainText("No sales this year.");
-  await expect(history).toContainText(/Withdrawn on/);
+  await expect(history).toContainText("Withdrawn");
   await expect(history.getByRole("button")).toHaveCount(0);
   // A withdrawn statement is stated again against the revision it was left at.
   await button(target, "desktop.ledger.withholding.action.attest").click();
@@ -524,11 +532,11 @@ test("an income class is stated to have no withholding, the statement is withdra
   await button(restate, "desktop.ledger.withholding.action.attest").click();
   await expect(restate).toBeHidden();
   const again = attested.locator("tr", { hasText: "Still no sales." });
-  await expect(again).toContainText(/Stated on/);
+  await expect(again).toContainText("In force");
   await expect(
     target
       .locator(".ledger-withholding-history tr")
-      .filter({ hasText: "ganancia_patrimonial" }),
+      .filter({ hasText: "Capital gains" }),
   ).toHaveCount(0);
   await expect(target.locator(".setup-call-line")).toBeHidden();
   // A class with certificates cannot be stated to have none.
@@ -623,5 +631,5 @@ test("a statement that is already active offers its withdrawal against the revis
     target
       .locator(".ledger-withholding-history tr")
       .filter({ hasText: "No professional fees were withheld." }),
-  ).toContainText(/Withdrawn on/);
+  ).toContainText("Withdrawn");
 });
