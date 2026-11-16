@@ -144,12 +144,16 @@ export function ImputationElection({
   language,
   reads,
   change,
+  memory,
 }: {
   profile: string;
   taxYear: number;
   language: string;
   reads: Pick<ProfileCompanionPort, "imputationElection">;
   change(change: ProfileChange): Promise<void>;
+  /** Where the election read is held while the element is put away; without
+   * it, each showing reads it. */
+  memory?: ElectionMemory;
 }) {
   const t = useStrings();
   const heading = useId();
@@ -161,25 +165,40 @@ export function ImputationElection({
   const shown = useRef(false);
   const alive = useRef(true);
 
-  const load = useCallback(async (): Promise<boolean> => {
-    const ticket = ++latest.current;
-    try {
-      const election = await reads.imputationElection(
-        profile,
-        taxYear,
-        language,
-      );
-      if (ticket !== latest.current) return false;
-      shown.current = true;
-      setRead({ phase: "ready", election });
-      return true;
-    } catch (error) {
-      // A read that fails while an election is shown keeps it.
-      if (ticket === latest.current && !shown.current)
-        setRead({ phase: "failed", failure: failureOf(error) });
-      return false;
-    }
-  }, [reads, profile, taxYear, language]);
+  /** Reads the election, or with `held` takes the read already asked for
+   * the same profile, year and language. */
+  const load = useCallback(
+    async (held = false): Promise<boolean> => {
+      const ticket = ++latest.current;
+      const key = JSON.stringify([profile, taxYear, language]);
+      const kept = held ? memory?.election : undefined;
+      const asked =
+        kept?.key === key
+          ? kept.read
+          : reads.imputationElection(profile, taxYear, language);
+      if (memory && asked !== kept?.read) {
+        const entry = { key, read: asked };
+        memory.election = entry;
+        // A read that failed is not held: the next showing asks again.
+        asked.catch(() => {
+          if (memory.election === entry) memory.election = undefined;
+        });
+      }
+      try {
+        const election = await asked;
+        if (ticket !== latest.current) return false;
+        shown.current = true;
+        setRead({ phase: "ready", election });
+        return true;
+      } catch (error) {
+        // A read that fails while an election is shown keeps it.
+        if (ticket === latest.current && !shown.current)
+          setRead({ phase: "failed", failure: failureOf(error) });
+        return false;
+      }
+    },
+    [reads, profile, taxYear, language, memory],
+  );
 
   useEffect(() => {
     alive.current = true;
@@ -187,7 +206,7 @@ export function ImputationElection({
     setRead({ phase: "reading" });
     setDraft(NO_DRAFT);
     setNotice(null);
-    void load();
+    void load(true);
     return () => {
       alive.current = false;
       latest.current += 1;
@@ -396,6 +415,15 @@ export function ImputationElection({
     </section>
   );
 }
+
+/** The election read asked for one profile, year and language, answered or
+ * not, held while the declaration that shows it stays open. */
+export type ElectionMemory = {
+  election?: {
+    key: string;
+    read: Promise<ProfileImputationElectionReadProjection>;
+  };
+};
 
 type ChangeEdit = Extract<
   ProfileChange["edit"],
