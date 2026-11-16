@@ -24,27 +24,22 @@ from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity, ResolvedPreconditionAction
 from ...core.payment_election import PaymentElection
-from ...core.period import Period, PeriodError
+from ...core.period import Period
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.refund_election import RefundElection
 from .app_quickfile_results import QuickfileResultPayload, quickfile_stage_message
 from .common import emit_envelope, resolve_cli_precondition_action
+from .modelo_behavior_support import resolve_year_period
 from .modelo_cli_support import (
     calculation_overrides,
     parse_work_calculate_wire_specs,
-    unsupported_local_work_period_refusal,
 )
 from .modelo_rendering import verification_report_notices
 from .operation_quickfile import run_quickfile
 
 
 def _resolve_period(*, modelo: str, year: int, period: str) -> Period:
-    try:
-        return Period.from_year_and_code(year, period.strip())
-    except PeriodError as exc:
-        if refusal := unsupported_local_work_period_refusal(modelo=modelo, token=period):
-            raise refusal from exc
-        raise typer.BadParameter(str(exc)) from exc
+    return resolve_year_period(year, period, modelo=modelo)
 
 
 def _optional_profile_id(raw: str | None) -> UUID | None:
