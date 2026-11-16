@@ -48,10 +48,12 @@ from __future__ import annotations
 
 import contextlib
 from collections import OrderedDict
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from functools import cache
 from threading import Lock
+from types import MappingProxyType
 from typing import TYPE_CHECKING, TypedDict
 from weakref import ReferenceType, WeakKeyDictionary, ref
 
@@ -197,6 +199,29 @@ class _ValidatedCatalogue:
     inputs: _ValidationInputs
     catalogue: CalculationRevisionCatalogue
     referenced_digests: tuple[str, ...]
+    rendering_bodies: Mapping[str, SavedRenderingBody]
+    """The verified body of each referenced rendering digest, as stored under ``inputs.rendering_rows``."""
+
+    def reusable_rendering_bodies(self, inputs: _ValidationInputs) -> dict[str, SavedRenderingBody]:
+        """The verified bodies ``inputs`` may reuse without reading their rows again.
+
+        A rendering row is content addressed: a body is reused only under the
+        same pinned operation, governed facts and day, and only for a digest
+        whose row still has the revision it was verified at.
+        """
+        held = self.inputs
+        if (
+            held.operation is not inputs.operation
+            or held.governed_facts is not inputs.governed_facts
+            or held.validated_on != inputs.validated_on
+        ):
+            return {}
+        verified_rows = {row for row in held.rendering_rows if row[1] is not None}
+        return {
+            digest: self.rendering_bodies[digest]
+            for digest, revision in inputs.rendering_rows
+            if (digest, revision) in verified_rows and digest in self.rendering_bodies
+        }
 
 
 class _SessionValidatedCatalogues:
@@ -467,13 +492,19 @@ class CalculationRevisionCatalogueRepository:
         if held is not None and held.inputs.matches(inputs) and len(rendering_revisions) == len(referenced):
             catalogue = held.catalogue
         else:
+            reused = {} if held is None else held.reusable_rendering_bodies(inputs)
+            rendering_bodies = {
+                **reused,
+                **self._verified_rendering_bodies(tuple(digest for digest in referenced if digest not in reused)),
+            }
             catalogue = self._validated_catalogue(
-                record.payload,
-                aggregate_context=aggregate_context,
-                rendering_bodies=self._verified_rendering_bodies(referenced),
+                record.payload, aggregate_context=aggregate_context, rendering_bodies=rendering_bodies
             )
             self._last_validated = _ValidatedCatalogue(
-                inputs=inputs, catalogue=catalogue, referenced_digests=referenced
+                inputs=inputs,
+                catalogue=catalogue,
+                referenced_digests=referenced,
+                rendering_bodies=MappingProxyType(rendering_bodies),
             )
             _SESSION_VALIDATED_CATALOGUES.remember(engine, self._last_validated)
         _catalogue_phase("load_validation_end")
