@@ -397,6 +397,13 @@ foreach(action IN ITEMS test clippy unit-test unit-clippy)
     "${CMAKE_CURRENT_SOURCE_DIR}/src-tauri/src/shell/provider_settings/status_contract_fixture.py"
     --build-dir "${CMAKE_BINARY_DIR}"
     --output "${CADRUMO_PATH_DESKTOP_TESTING}/provider-status-contract.json")
+  # The calendar tests compare the served calendar with a read the product's models produce.
+  list(APPEND host_fixture_check COMMAND "${CMAKE_COMMAND}" -E chdir "${CADRUMO_SOURCE_ROOT}"
+    "${CADRUMO_DEV_PYTHON}" -B -c
+    "__import__('runpy').run_path(__import__('sys').argv.pop(1), run_name='__main__')"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src-tauri/src/shell/user_profile/calendar_read_fixture.py"
+    --build-dir "${CMAKE_BINARY_DIR}"
+    --output "${CADRUMO_PATH_DESKTOP_TESTING}/calendar-read-contract.json")
   if(action STREQUAL "test" OR action STREQUAL "unit-test")
     set(host_summary "run the desktop host Rust tests")
   else()
@@ -412,6 +419,7 @@ foreach(action IN ITEMS test clippy unit-test unit-clippy)
       "CADRUMO_DESKTOP_PACKAGE_ROOT=${CADRUMO_DESKTOP_PACKAGE_ROOT}"
       "CADRUMO_PACKAGE_USER_DOCS=${desktop_test_user_docs}"
       "CADRUMO_PROVIDER_STATUS_CONTRACT_FIXTURE=${CADRUMO_PATH_DESKTOP_TESTING}/provider-status-contract.json"
+      "CADRUMO_CALENDAR_READ_CONTRACT_FIXTURE=${CADRUMO_PATH_DESKTOP_TESTING}/calendar-read-contract.json"
       "CADRUMO_WINDOW_FIXTURES=${CADRUMO_PATH_WINDOW_FIXTURES}"
       "${CADRUMO_STORAGE_ROOT_VARIABLE}=${CADRUMO_PATH_DESKTOP_TESTING}/storage"
       "${CADRUMO_NODE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/tauri.mjs" ${host_driver_action}
