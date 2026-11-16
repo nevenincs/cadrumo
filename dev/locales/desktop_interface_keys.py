@@ -350,6 +350,7 @@ DESKTOP_INTERFACE_KEYS: Final[frozenset[str]] = _PROFILE_AND_ENGINE_KEYS | froze
         "desktop.agent.can_write",
         "desktop.agent.cancel",
         "desktop.agent.capabilities",
+        "desktop.agent.catalog_unavailable",
         "desktop.agent.choose_model",
         "desktop.agent.choose_provider",
         "desktop.agent.close_documents",

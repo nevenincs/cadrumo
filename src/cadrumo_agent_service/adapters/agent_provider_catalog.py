@@ -197,6 +197,11 @@ class AgentProviderCatalogSource(ProviderCatalogSource):
                 self._gui_sign_ins = result.providers
             return dict(self._gui_sign_ins)
 
+    def kept_gui_sign_in_methods(self) -> dict[str, tuple[SignInMethod, ...]] | None:
+        """Return the methods once a read of them has succeeded, or ``None`` before; never runs the agent."""
+        kept = self._gui_sign_ins
+        return None if kept is None else dict(kept)
+
     def _invoke(
         self,
         arguments: tuple[str, ...],

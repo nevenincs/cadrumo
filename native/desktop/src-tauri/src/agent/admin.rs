@@ -596,6 +596,9 @@ mod tests {
         let reply = endpoint(port)
             .exchange(json!({"action": "catalog"}), None)
             .unwrap();
-        assert!(super::super::catalog_busy(&reply));
+        assert_eq!(
+            super::super::catalog_answer(reply).unwrap_err().code,
+            "agent_service_busy"
+        );
     }
 }
