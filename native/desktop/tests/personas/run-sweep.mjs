@@ -109,8 +109,9 @@ const KEYS = [
 // Row keys the spec states only when they apply: export_served says whether a
 // return whose verification did not pass was served an export door, and file
 // is the stage of the local filing the window recorded (the acceptance
-// intake's stage words plus not-shown).
-const OPTIONAL_ROW_KEYS = ["export_served", "file"];
+// intake's stage words plus not-shown); blocking_findings are the ids of the
+// blocking findings the form served once a check did not pass.
+const OPTIONAL_ROW_KEYS = ["export_served", "file", "blocking_findings"];
 const FILE_WORDS = [
   "pass",
   "incomplete",
@@ -125,6 +126,11 @@ const optionalProblem = {
     typeof value === "boolean" ? null : "export_served is not a boolean",
   file: (value) =>
     FILE_WORDS.includes(value) ? null : `file ${value} is not a stage word`,
+  blocking_findings: (value) =>
+    Array.isArray(value) &&
+    value.every((id) => typeof id === "string" && id.trim() !== "")
+      ? null
+      : "blocking_findings is not an array of non-empty finding ids",
 };
 const PERSONA_KEYS = KEYS.filter(
   (key) => !["calculate", "verify", "export"].includes(key),
