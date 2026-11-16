@@ -1782,10 +1782,31 @@ function pageCalendar(modelo, period, year) {
     owed?.getAttribute("data-entry") ??
     apart?.getAttribute("data-suppressed") ??
     keys[0];
+  // The verdict code the newest answered calendar read served for this
+  // return, as a suppressed row; the page draws its words, never the code.
+  let served = null;
+  for (const read of [...(window.__personaCalendarReads ?? [])].reverse()) {
+    let answer = null;
+    try {
+      answer = JSON.parse(read.answer ?? "");
+    } catch {
+      continue;
+    }
+    const rows = answer?.suppressed ?? answer?.suppressed_entries ?? [];
+    const row = rows.find((each) =>
+      keys.includes(`${each?.modelo}:${each?.period}`),
+    );
+    if (row) {
+      served = { verdict: row.verdict ?? null, from: read.from ?? null };
+      break;
+    }
+  }
   return {
     key,
     owed: !!owed,
     suppressed: !!apart,
+    verdict: served?.verdict ?? null,
+    servedFrom: served?.from ?? null,
     words: apart
       ? norm(apart.querySelector("[lang]")?.textContent) ||
         norm(apart.textContent)
@@ -1842,6 +1863,71 @@ function pageWatchCalendarReads() {
   return true;
 }
 
+/**
+ * Record every read of a declaration's form the page makes from now on: the
+ * work unit it served and, of each issue on it, the served severity and
+ * message key. The check view draws neither, so the codes come from here.
+ */
+function pageWatchFormReads() {
+  if (window.__personaFormReads) return true;
+  const reads = [];
+  const original = window.fetch;
+  window.fetch = function (input, init) {
+    const url = typeof input === "string" ? input : (input?.url ?? "");
+    const answer = original.call(this, input, init);
+    if (!/^modelo_form(\?|$)/.test(url.split("/").pop() ?? "")) return answer;
+    const read = { at: Date.now(), answered: false, work: null, issues: null };
+    reads.push(read);
+    if (reads.length > 40) reads.splice(0, reads.length - 40);
+    answer.then(
+      (response) =>
+        response
+          .clone()
+          .text()
+          .then((text) => {
+            read.answered = true;
+            try {
+              const body = JSON.parse(text);
+              read.work = body?.work_unit_id ?? null;
+              const issues = body?.form?.form?.issues;
+              read.issues = Array.isArray(issues)
+                ? issues.map((issue) => ({
+                    severity: issue?.finding?.severity ?? null,
+                    key: issue?.finding?.message_locale_key ?? null,
+                  }))
+                : null;
+            } catch {
+              read.issues = null;
+            }
+          }),
+      () => {},
+    );
+    return answer;
+  };
+  window.__personaFormReads = reads;
+  return true;
+}
+
+/**
+ * The blocking findings of the newest answered form read of `work`, each id
+ * once in served order: the last segment of the served message key, as the
+ * TUI pilot names them. Only reads asked at or after `since` (page clock)
+ * count; null when no such read carried its issues.
+ */
+function pageFormBlocking(work, since) {
+  const read = [...(window.__personaFormReads ?? [])]
+    .reverse()
+    .find(
+      (each) =>
+        each.answered && each.at >= since && each.work === work && each.issues,
+    );
+  if (!read) return null;
+  const ids = read.issues
+    .filter((issue) => issue.severity === "blocking" && issue.key)
+    .map((issue) => issue.key.split(".").pop());
+  return { at: read.at, ids: [...new Set(ids)] };
+}
+
 /** The recorded calendar reads: their range and the rows naming `modelo`. */
 function pageCalendarReads(modelo) {
   const naming = (value) => JSON.stringify(value).includes(`"${modelo}"`);
@@ -1852,14 +1938,23 @@ function pageCalendarReads(modelo) {
     } catch {
       return { from: read.from, to: read.to, answered: read.answer !== null };
     }
+    const apart = answer?.suppressed ?? answer?.suppressed_entries ?? [];
     return {
       from: read.from,
       to: read.to,
       range: answer?.range ?? null,
       entries: (answer?.entries ?? []).filter(naming),
-      suppressed: (answer?.suppressed ?? []).filter(naming),
+      suppressed: apart.filter(naming),
       entryCount: (answer?.entries ?? []).length,
-      suppressedCount: (answer?.suppressed ?? []).length,
+      suppressedCount: apart.length,
+      // The field the host served the held-off rows under: the window's
+      // calendar draws only `suppressed_entries`.
+      suppressedField:
+        "suppressed" in (answer ?? {})
+          ? "suppressed"
+          : "suppressed_entries" in (answer ?? {})
+            ? "suppressed_entries"
+            : null,
     };
   });
 }
@@ -1930,7 +2025,15 @@ async function readCalendarApplicability(row) {
     const read = await exec(pageCalendar, row.modelo, row.period, row.year);
     return read.owed || read.suppressed ? read : null;
   };
-  const control = (await exec(pageCalendarYear)).present;
+  // The pane draws its year control only once its first read is drawn; asked
+  // at once after the rail press, a calendar opened for the first time in the
+  // run has none yet, and the return's own year would never be looked at.
+  const control = Boolean(
+    await waitFor(
+      async () => ((await exec(pageCalendarYear)).present ? true : null),
+      { timeout: 30_000, what: "the calendar's year control", soft: true },
+    ),
+  );
   let shown = await waitFor(presented, {
     timeout: control ? 10_000 : 30_000,
     what: "the calendar to show the return",
@@ -1977,6 +2080,7 @@ async function driveRow(row, runDir, persona) {
   };
   const say = (stage, text) => text && out.reasons.push(`${stage}: ${text}`);
   await installConsoleHook();
+  await exec(pageWatchFormReads);
   await openWork(row);
   let state = await readState();
   log("opened", {
@@ -2061,28 +2165,35 @@ async function driveRow(row, runDir, persona) {
     out.figures = await readFigures();
 
   // A return the persona states not owed is neither verified, exported nor
-  // filed: the calendar either sets it apart as not applicable, as the table
-  // expects, or it shows something else.
+  // filed. As the table and the CLI read the calendar, it is confirmed not
+  // owed only when the window schedules no window for it and sets it apart
+  // with the served verdict `not_applicable`; a schedule, another verdict or
+  // no mention is the table's owed-shown, `incomplete`, naming what was shown.
   if (row.owed === false) {
     const seen = await readCalendarApplicability(row);
     log("not-owed", { owed: row.owed, calendar: seen });
-    if (seen.suppressed && !seen.owed) {
+    const served = seen.verdict
+      ? ` (the read from ${seen.servedFrom} served it as ${seen.verdict})`
+      : " (no calendar read served it)";
+    if (seen.suppressed && !seen.owed && seen.verdict === "not_applicable") {
       out.verify = "not-owed";
       say(
         "verify",
-        `overview: stated not owed, the calendar sets it apart as not applicable${seen.words ? `: ${seen.words}` : ""}`,
+        `overview: stated not owed, the calendar sets it apart as not_applicable${seen.words ? `: ${seen.words}` : ""}`,
       );
     } else {
-      out.verify = "refused";
+      out.verify = "incomplete";
       say(
         "verify",
         `overview: stated not owed, the window shows ${
           seen.owed
             ? `${seen.key} scheduled as owed`
-            : seen.drawn
-              ? `${seen.key} neither scheduled nor set apart`
-              : "no calendar entries"
-        }`,
+            : seen.suppressed
+              ? `${seen.key} set apart as ${seen.verdict ?? "an unserved verdict"}${seen.words ? `: ${seen.words}` : ""}`
+              : seen.drawn
+                ? `${seen.key} neither scheduled nor set apart`
+                : "no calendar entries"
+        }${served}`,
       );
     }
     say("export", "a not-owed return is not exported");
@@ -2095,8 +2206,11 @@ async function driveRow(row, runDir, persona) {
   const chain =
     ["pass", "calculate_inherited"].includes(out.calculate) ||
     state.action === "verify";
+  // The form read the findings are taken from is one the check settled into.
+  let checkedFrom = 0;
   if (chain && state.action === "verify") {
     const before = await readState();
+    checkedFrom = await exec(() => Date.now());
     const run = await runAction("verify", before, TIMEOUT.verify, row);
     const words = freshOf(before, run.state);
     if (run.state.timedOut) {
@@ -2134,6 +2248,22 @@ async function driveRow(row, runDir, persona) {
     say("verify", describeNotPass(state, await findings()));
   }
   log("verify", { stage: out.verify });
+  // A check that did not pass carries the ids of the blocking findings the
+  // form served once it ran, as the TUI line does; never read from words.
+  if (!["pass", "not-reached"].includes(out.verify)) {
+    const blocking = await exec(
+      pageFormBlocking,
+      String(row.work_unit_id),
+      checkedFrom,
+    );
+    log("blocking-findings", { checkedFrom, blocking });
+    if (blocking === null)
+      say(
+        "verify",
+        "no form read of this return after its check carried its served issues",
+      );
+    else if (blocking.ids.length > 0) out.blocking_findings = blocking.ids;
+  }
 
   // Export. A return that did not verify is not exported, but the table
   // also states whether the form served an export door for it.
@@ -3106,8 +3236,8 @@ const KEYS = [
   "reason",
   "log",
 ];
-/** Present only when the export door was measured. */
-const OPTIONAL_KEYS = ["export_served", "file"];
+/** Present only when measured: the export door, the filing, the served blocking findings. */
+const OPTIONAL_KEYS = ["export_served", "file", "blocking_findings"];
 
 /** The acceptance intake refuses unknown keys and unknown stages; so does this. */
 function assertContract(line) {
@@ -3124,6 +3254,14 @@ function assertContract(line) {
     assert.equal(typeof line.export_served, "boolean", "export_served");
   if ("file" in line)
     assert([...STAGES, "not-shown"].includes(line.file), `file: ${line.file}`);
+  if ("blocking_findings" in line)
+    assert(
+      Array.isArray(line.blocking_findings) &&
+        line.blocking_findings.every(
+          (id) => typeof id === "string" && id.trim() !== "",
+        ),
+      "blocking_findings is an array of non-empty finding ids",
+    );
   assert.equal(line.surface, "window");
   assert.equal(typeof line.loads, "boolean");
   if (line.modelo === null) {
@@ -3291,6 +3429,10 @@ test(
               ? { export_served: out.export_served }
               : {}),
             ...(typeof out.file === "string" ? { file: out.file } : {}),
+            ...(Array.isArray(out.blocking_findings) &&
+            out.blocking_findings.length > 0
+              ? { blocking_findings: out.blocking_findings }
+              : {}),
             figures: out.figures,
             reason:
               out.reasons.join("; ").slice(0, 1200) ||
