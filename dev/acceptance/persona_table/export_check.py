@@ -49,7 +49,7 @@ def export_readback_reason(plan: PlannedRow, values: list[ExpectedValue], output
         except (RegistryError, ModeloBuilderError) as error:
             return unreadable_reason(error)
     mismatches = readback_mismatches(values, casillas, plan.unchecked, parsed)
-    found = [*foreign_carrier_mismatches(plan.modelo, parsed), *cross_page_reuse_mismatches(plan.modelo, parsed)]
+    found = [*cross_page_reuse_mismatches(plan.modelo, parsed), *foreign_carrier_mismatches(plan.modelo, parsed)]
     return readback_reason([*mismatches, *found])
 
 
