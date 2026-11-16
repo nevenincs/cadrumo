@@ -270,7 +270,7 @@ def test_a_pending_row_in_its_accrual_year_draws_no_finding_and_no_filing_refusa
 
     (contributor,) = _phase_contributors(revision)
     assert contributor.source_filing_year == CAPITAL_YEAR
-    assert modelo_193_settled_prior_accrual_contributors(work_unit, revision) == ()
+    assert modelo_193_settled_prior_accrual_contributors(work_unit, revision, operation=operation) == ()
     assert _settled_row_findings(report) == []
 
 
@@ -285,9 +285,9 @@ def test_the_persisted_accrual_year_decides_the_settled_row_exactly(
 
     (contributor,) = _phase_contributors(revision)
     assert contributor.source_filing_year == CAPITAL_YEAR
-    assert modelo_193_settled_prior_accrual_contributors(work_unit, revision) == (contributor,)
+    assert modelo_193_settled_prior_accrual_contributors(work_unit, revision, operation=operation) == (contributor,)
     same_year = _with_source_filing_years(revision, CAPITAL_YEAR + 1)
-    assert modelo_193_settled_prior_accrual_contributors(work_unit, same_year) == ()
+    assert modelo_193_settled_prior_accrual_contributors(work_unit, same_year, operation=operation) == ()
 
 
 @pytest.mark.parametrize("filing_year", [CAPITAL_YEAR, CAPITAL_YEAR + 1])
@@ -310,4 +310,4 @@ def test_a_revision_persisted_without_the_accrual_year_keeps_the_conservative_ru
     legacy = _with_source_filing_years(revision, None)
     assert [ref.source_filing_year for ref in _phase_contributors(legacy)] == [None]
     assert legacy.calculation_revision_id != revision.calculation_revision_id
-    assert len(modelo_193_settled_prior_accrual_contributors(work_unit, legacy)) == settled_rows
+    assert len(modelo_193_settled_prior_accrual_contributors(work_unit, legacy, operation=operation)) == settled_rows
