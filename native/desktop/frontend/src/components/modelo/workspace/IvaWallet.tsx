@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Spinner } from "@/components/ui/spinner";
 import { parseYear, type LedgerPeriod } from "../../../shell/ledgerGrammar";
+import { useEntryYears } from "../../../shell/ledgerPeriods";
 import {
   declarationWriteKey,
   walletWriteKey,
@@ -69,8 +70,12 @@ function WalletBalance({
   const { port, holds, hold, owner } = useModeloOperation();
   const yearId = useId();
   const [yearText, setYear] = useState(String(period.year));
-  const parsed = parseYear(yearText);
+  // The year is held to the window served for a typed year; until it is
+  // served the year is not read and not refused either.
+  const parsed = parseYear(yearText, useEntryYears());
   const year = parsed.kind === "value" ? parsed.value : null;
+  const refused =
+    parsed.kind === "refused" && parsed.refusal.key === "year_not_a_number";
   const { read, reload } = useIvaWalletBalance(port, holds, year);
   const [managing, setManaging] = useState(false);
   // The period the balance entry opens at: the one a refusal's door served,
@@ -122,7 +127,10 @@ function WalletBalance({
         ]}
       />
       <div className="flex flex-wrap items-end gap-3">
-        <Field className="w-32" data-invalid={year === null}>
+        <Field
+          className="w-32"
+          data-invalid={refused || parsed.kind === "empty"}
+        >
           <FieldLabel htmlFor={yearId}>
             {t("workspace.modelo.iva_wallet.as_of_year")}
           </FieldLabel>
@@ -130,10 +138,10 @@ function WalletBalance({
             id={yearId}
             value={yearText}
             onChange={setYear}
-            invalid={year === null}
+            invalid={refused || parsed.kind === "empty"}
             required
           />
-          {year === null && yearText !== "" && (
+          {refused && (
             <FieldError>
               {t("desktop.ledger.edit.refusal.year_not_a_number", {
                 raw: yearText,

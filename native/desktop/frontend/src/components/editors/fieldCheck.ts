@@ -14,6 +14,7 @@ import {
   type GrammarRefusalKey,
   type Parsed,
 } from "@/shell/ledgerGrammar";
+import { entryYears } from "@/shell/ledgerLimits";
 
 const LINE_LIMIT = 4096;
 
@@ -49,7 +50,7 @@ export function checkField(field: FieldSpec, raw: string): Parsed<string> {
     case "date":
       return parseIsoDate(raw);
     case "year": {
-      const year = parseYear(raw);
+      const year = parseYear(raw, entryYears());
       return year.kind === "value"
         ? { kind: "value", value: String(year.value) }
         : year;

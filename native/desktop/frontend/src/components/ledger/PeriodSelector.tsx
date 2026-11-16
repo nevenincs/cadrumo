@@ -8,11 +8,12 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { yearAdmitted, type LedgerPeriod } from "../../shell/ledgerGrammar";
+import { stepYear, type LedgerPeriod } from "../../shell/ledgerGrammar";
 import {
   ledgerPeriod,
   neighbourPeriod,
   servedYear,
+  useEntryYears,
   usePeriods,
 } from "../../shell/ledgerPeriods";
 import type { LedgerServedPeriod } from "../../shell/ledgerSetup";
@@ -82,8 +83,9 @@ type SelectorProps = {
 };
 
 /**
- * One dropdown for a period, any year the period grammar admits, with the
- * previous and next period beside it. Inside, the year is moved by its own
+ * One dropdown for a period, of any year in the window the backend serves for
+ * a typed year, with the previous and next period beside it. While that
+ * window is not served no year is stepped to. Inside, the year is moved by its own
  * buttons, then a whole year, a quarter, a month or every period is chosen,
  * and the years that have movements jump the dropdown to themselves. The
  * periods, their names and their neighbours are the backend's, served for
@@ -135,13 +137,12 @@ export function PeriodSelector(
         ? t("desktop.ledger.form.reading")
         : periodText(t, locale, props.value);
   const table = servedYear(shownYear);
+  const entryYears = useEntryYears();
   const rowsOf = (kind: LedgerServedPeriod["kind"]) =>
     table?.filter((row) => row.kind === kind) ?? [];
   // The step either way: a year, or the neighbour the period serves.
   const steppedYear = (by: -1 | 1): number | null =>
-    chosenYear !== null && yearAdmitted(chosenYear + by)
-      ? chosenYear + by
-      : null;
+    chosenYear === null ? null : stepYear(chosenYear, by, entryYears);
   const steppedPeriod = (by: -1 | 1): LedgerPeriod | null =>
     value === null || pending ? null : neighbourPeriod(value, by);
   const canStep = (by: -1 | 1) =>
@@ -241,7 +242,7 @@ export function PeriodSelector(
           <div className="flex items-center gap-1">
             <IconButton
               label={t("desktop.ledger.period.year_previous")}
-              disabled={!yearAdmitted(shownYear - 1)}
+              disabled={stepYear(shownYear, -1, entryYears) === null}
               onClick={() => setShownYear((year) => year - 1)}
             >
               <Icon name="back" />
@@ -267,7 +268,7 @@ export function PeriodSelector(
             )}
             <IconButton
               label={t("desktop.ledger.period.year_next")}
-              disabled={!yearAdmitted(shownYear + 1)}
+              disabled={stepYear(shownYear, 1, entryYears) === null}
               onClick={() => setShownYear((year) => year + 1)}
             >
               <Icon name="forward" />
