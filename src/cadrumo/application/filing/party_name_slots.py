@@ -64,7 +64,7 @@ def require_declared_party_names(
         length = field.length
         if length is None:
             continue
-        value = binding_values.get((field.binding, row.row_index))
+        value = None if field.binding is None else binding_values.get((field.binding, row.row_index))
         if _is_stated(value) and len(str(value)) <= length:
             continue
         tax_identifier, country_code = _row_party(record, revision=revision, binding_values=binding_values, row=row)

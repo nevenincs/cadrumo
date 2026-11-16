@@ -132,8 +132,11 @@ def _same_day_a_year_earlier(day: date) -> date:
 
 def _missing_paths(closing_day: int | None, closing_month: int | None, constitution: date | None) -> tuple[str, ...]:
     missing: list[str] = []
-    closing_stated = closing_day is not None and closing_month is not None
-    if closing_stated and not ejercicio_closing_is_valid(closing_day=closing_day, closing_month=closing_month):
+    if (
+        closing_day is not None
+        and closing_month is not None
+        and not ejercicio_closing_is_valid(closing_day=closing_day, closing_month=closing_month)
+    ):
         # A day the stated month never has: either half may be the wrong one, so both are named.
         missing.extend((CIERRE_EJERCICIO_DIA_PATH, CIERRE_EJERCICIO_MES_PATH))
     else:
