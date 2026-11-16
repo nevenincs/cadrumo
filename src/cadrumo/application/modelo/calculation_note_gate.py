@@ -55,6 +55,7 @@ from .calculation_screen import (
     calculation_screen_is_current,
     calculation_screen_outdated_message_key,
     calculation_screen_stamp,
+    reading_calculation_screen_stamp,
 )
 from .household_row_fact_gate import household_row_fact_refusal
 from .inventory_purchase_claim_gate import inventory_purchase_claim_refusal
@@ -376,8 +377,14 @@ def calculation_screen_outdated(
         :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`
             The stored calculation head carrying values, provenance and lifecycle facts.
     """
-    snapshot = _read_screened_snapshot(operation, modelo=modelo, filing_year=filing_year, period=period)
-    return _screen_outdated(revision, snapshot, operation)
+    # Selected before the filed test, so a coordinate the registry refuses is refused for a filed revision too.
+    _read_screened_snapshot(operation, modelo=modelo, filing_year=filing_year, period=period)
+    if revision.state in _FILED_STATES:
+        return False
+    expected = reading_calculation_screen_stamp(
+        operation, modelo=modelo, filing_year=filing_year, period=period.registry_token
+    )
+    return not calculation_screen_is_current(revision, expected)
 
 
 def saved_calculation_screen_outdated(

@@ -7,9 +7,9 @@ tier: L2
 related:
   - '[[2026-11-14-source-casilla-integration-modelo-840-profile-facts-and-premises-repeat-adr]]'
   - '[[2026-08-25-source-casilla-integration-modelo-840-source-and-repeated-row-owner-deferral-adr]]'
-modified: '2026-11-15'
+modified: '2026-11-16'
 body_schema: body-v2
-body_hash: 'sha256:580724a3bcf6941f7d8f0a277baf9dab3acf0c56ed75830f52edbe7ce4659181'
+body_hash: 'sha256:b5e58d1711c7b355d90ff5542638979ffce65d83595adc5449f3ae6f4016d9a2'
 ---
 
 # `source-casilla-integration` plan
@@ -40,9 +40,9 @@ this slice only and does not start phase 2 in general.
 
 Hand 1 stores the structured fiscal address with INE codes, the AEAT delegacion and administracion, and per-activity premises with their Regla 14 surfaces and tax elements as typed, custodied, dated profile facts the operator enters.
 
-- [ ] `P01.S01` - Ground the Modelo 840 fact list in the official record design, form and IAE tariff instruction (Regla 14), and declare the fiscal-address INE codes, AEAT delegacion and administracion, and per-activity premises with surfaces and tax elements in the profile schema with sensitivity, effective dates, provenance and custody; `src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml`.
-- [ ] `P01.S02` - Add the typed profile records with a durable per-local identity and distinct total, rectified and computable surfaces, persisted only through encrypted custody, with zero, absent and correction semantics; `src/cadrumo/domain/contribuyente`.
-- [ ] `P01.S03` - Let the operator enter and correct the facts through the registered profile operation and the wizard or CLI, with wording in all four locales through dev.locales; `src/cadrumo/application/user_profile`.
+- [x] `P01.S01` - Ground the Modelo 840 fact list in the official record design, form and IAE tariff instruction (Regla 14), and declare the fiscal-address INE codes, AEAT delegacion and administracion, and per-activity premises with surfaces and tax elements in the profile schema with sensitivity, effective dates, provenance and custody; `src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml`.
+- [x] `P01.S02` - Add the typed profile records with a durable per-local identity and distinct total, rectified and computable surfaces, persisted only through encrypted custody, with zero, absent and correction semantics; `src/cadrumo/domain/contribuyente`.
+- [x] `P01.S03` - Let the operator enter and correct the facts through the registered profile operation and the wizard or CLI, with wording in all four locales through dev.locales; `src/cadrumo/application/user_profile`.
 
 ### Phase `P02` - premises repeat in the export generator
 
