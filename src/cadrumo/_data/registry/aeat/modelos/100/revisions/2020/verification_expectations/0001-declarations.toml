@@ -209,3 +209,29 @@ discrepancy_causes = [
 ]
 legal_refs = ["ley-35-2006:art-49"]
 source_refs = ["aeat-renta-2020-manual-parte1"]
+
+# Casilla 0564, the sum of the autonomic deductions of the comunidad of
+# residence that Ley 35/2006 art. 77 subtracts from the cuota integra
+# autonomica. The official dictionary prints it as the SUMADEDAUT row and each
+# comunidad's DEDAUTx row lists its operands; the Manual practico de Renta 2020
+# (p. 1265, Comunidad de Madrid) names "el importe de las deducciones
+# autonomicas, casilla [0564]". A filing prints it only when the
+# taxpayer claims an autonomic deduction, so it reconciles when present and
+# stays out of the coverage denominator (min_coverage = 0): a return without
+# autonomic deductions, or with one the engine does not compute, keeps its
+# verdict.
+[[revisions."2020".verification_expectations]]
+id = "modelo-100-deducciones-autonomicas-suma-reconcile-when-present"
+computed_casilla_ids = []
+reconcile_when_present_casilla_ids = ["0564"]
+tolerance = "0.01"
+rounding = "money-2"
+min_coverage = "0"
+discrepancy_causes = [
+    "extraction_unreliable",
+    "unmodelled_rule",
+    "rounding",
+    "correctness_divergence",
+]
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-renta-2020-manual-parte1", "aeat-dr-100-2020-dictionary"]
