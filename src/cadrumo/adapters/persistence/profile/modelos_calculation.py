@@ -47,11 +47,14 @@ Core types:
 from __future__ import annotations
 
 import contextlib
+import json
 from collections import OrderedDict
+from collections.abc import Collection, Mapping
 from dataclasses import dataclass
 from datetime import date
 from functools import cache
 from threading import Lock
+from types import MappingProxyType
 from typing import TYPE_CHECKING, TypedDict
 from weakref import ReferenceType, WeakKeyDictionary, ref
 
@@ -79,6 +82,7 @@ from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.modelos.calculation_repository import CalculationRevisionPersistenceError
 from ....domain.modelos.calculation_revision import (
+    CalculationRevision,
     CalculationRevisionCatalogue,
     assert_revision_snapshot_evidence_coverage,
 )
@@ -197,6 +201,59 @@ class _ValidatedCatalogue:
     inputs: _ValidationInputs
     catalogue: CalculationRevisionCatalogue
     referenced_digests: tuple[str, ...]
+    rendering_bodies: Mapping[str, SavedRenderingBody]
+    """The verified body of each referenced rendering digest, as stored under ``inputs.rendering_rows``."""
+    revision_fingerprints: Mapping[str, str]
+    """The fingerprint of each revision's stored JSON, by calculation revision id; empty when not split."""
+
+    def reusable_revisions(
+        self,
+        inputs: _ValidationInputs,
+        stored: _SplitCatalogue,
+        rendering_bodies: Mapping[str, SavedRenderingBody],
+    ) -> dict[str, CalculationRevision]:
+        """The validated revisions ``stored`` may reuse because their stored JSON is unchanged.
+
+        A revision is reused only under the same pinned operation, governed
+        facts, day and aggregate context, and only when the body of its
+        rendering was itself reused rather than read again.
+        """
+        held = self.inputs
+        if (
+            held.operation is not inputs.operation
+            or held.governed_facts is not inputs.governed_facts
+            or held.validated_on != inputs.validated_on
+            or held.aggregate_context != inputs.aggregate_context
+        ):
+            return {}
+        reusable: dict[str, CalculationRevision] = {}
+        for revision_id, fingerprint in stored.fingerprints.items():
+            unchanged = self.revision_fingerprints.get(revision_id) == fingerprint
+            revision = self.catalogue.revisions.get(revision_id) if unchanged else None
+            if revision is not None and _rendering_was_reused(revision, rendering_bodies):
+                reusable[revision_id] = revision
+        return reusable
+
+    def reusable_rendering_bodies(self, inputs: _ValidationInputs) -> dict[str, SavedRenderingBody]:
+        """The verified bodies ``inputs`` may reuse without reading their rows again.
+
+        A rendering row is content addressed: a body is reused only under the
+        same pinned operation, governed facts and day, and only for a digest
+        whose row still has the revision it was verified at.
+        """
+        held = self.inputs
+        if (
+            held.operation is not inputs.operation
+            or held.governed_facts is not inputs.governed_facts
+            or held.validated_on != inputs.validated_on
+        ):
+            return {}
+        verified_rows = {row for row in held.rendering_rows if row[1] is not None}
+        return {
+            digest: self.rendering_bodies[digest]
+            for digest, revision in inputs.rendering_rows
+            if (digest, revision) in verified_rows and digest in self.rendering_bodies
+        }
 
 
 class _SessionValidatedCatalogues:
@@ -262,6 +319,85 @@ class _StoredCatalogueEnvelope(TypedDict):
 @cache
 def _stored_catalogue_renderings() -> TypeAdapter[_StoredCatalogueEnvelope]:
     return TypeAdapter(_StoredCatalogueEnvelope)
+
+
+@dataclass(frozen=True, slots=True)
+class _SplitCatalogue:
+    """A stored catalogue envelope read as plain JSON, each revision with the fingerprint of its JSON."""
+
+    head: dict[str, object]
+    revisions: dict[str, dict[str, object]]
+    fingerprints: dict[str, str]
+
+    def without(self, revision_ids: Collection[str]) -> bytes:
+        """The envelope's JSON holding every revision except ``revision_ids``."""
+        kept = {key: value for key, value in self.revisions.items() if key not in revision_ids}
+        return json.dumps({**self.head, "payload": {"revisions": kept}}, ensure_ascii=False).encode()
+
+
+def _split_catalogue(payload: bytes) -> _SplitCatalogue | None:
+    """Read ``payload`` as plain JSON split by revision, or ``None`` when it cannot be split losslessly.
+
+    A JSON number with a fraction or an exponent would be re-written by the
+    split, so such a payload, like any unexpected shape, is not split: the
+    caller validates it whole.
+    """
+    inexact: list[str] = []
+    try:
+        decoded: object = json.loads(payload, parse_float=inexact.append, parse_constant=inexact.append)
+    except ValueError:
+        return None
+    if inexact or not isinstance(decoded, dict):
+        return None
+    envelope: dict[str, object] = {str(key): value for key, value in decoded.items()}
+    split = _stored_revision_objects(envelope.get("payload"))
+    if split is None:
+        return None
+    return _SplitCatalogue(
+        head=envelope,
+        revisions=split,
+        fingerprints={key: _json_fingerprint(value) for key, value in split.items()},
+    )
+
+
+def _stored_revision_objects(catalogue: object) -> dict[str, dict[str, object]] | None:
+    """The revision objects of a stored catalogue's JSON by id, or ``None`` for any other shape."""
+    if not isinstance(catalogue, dict) or set(catalogue) != {"revisions"}:
+        return None
+    revisions = catalogue["revisions"]
+    if not isinstance(revisions, dict):
+        return None
+    split: dict[str, dict[str, object]] = {}
+    for key, value in revisions.items():
+        if not isinstance(value, dict):
+            return None
+        split[str(key)] = {str(field): item for field, item in value.items()}
+    return split
+
+
+def _json_fingerprint(value: object) -> str:
+    return sha256_hex(json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode())
+
+
+def _rendering_was_reused(revision: CalculationRevision, rendering_bodies: Mapping[str, SavedRenderingBody]) -> bool:
+    rendering = revision.rendering_snapshot
+    return rendering is None or rendering.rendering_digest in rendering_bodies
+
+
+def _with_reused_revisions(
+    validated: CalculationRevisionCatalogue, reused: Mapping[str, CalculationRevision], order: tuple[str, ...]
+) -> CalculationRevisionCatalogue:
+    """``validated`` with ``reused`` put back in the stored ``order``, its key invariant checked again."""
+    if not reused:
+        return validated
+    merged: CalculationRevisionCatalogue | None = None
+    with contextlib.suppress(ValidationError, KeyError):
+        merged = CalculationRevisionCatalogue(
+            revisions={key: reused[key] if key in reused else validated.revisions[key] for key in order}
+        )
+    if merged is None or len(merged) != len(order):
+        raise _persistence_refusal("calculation-revision catalogue payload is invalid", "invalid_payload")
+    return merged
 
 
 def _persistence_refusal(message: str, reason: str) -> CalculationRevisionPersistenceError:
@@ -467,18 +603,43 @@ class CalculationRevisionCatalogueRepository:
         if held is not None and held.inputs.matches(inputs) and len(rendering_revisions) == len(referenced):
             catalogue = held.catalogue
         else:
-            catalogue = self._validated_catalogue(
-                record.payload,
-                aggregate_context=aggregate_context,
-                rendering_bodies=self._verified_rendering_bodies(referenced),
-            )
-            self._last_validated = _ValidatedCatalogue(
-                inputs=inputs, catalogue=catalogue, referenced_digests=referenced
-            )
-            _SESSION_VALIDATED_CATALOGUES.remember(engine, self._last_validated)
+            catalogue = self._validate_afresh(record.payload, inputs=inputs, held=held, referenced=referenced)
         _catalogue_phase("load_validation_end")
         _OVERRIDE_FREE_PAYLOADS.remember(record.payload, catalogue)
         return catalogue, record.revision_id
+
+    def _validate_afresh(
+        self,
+        payload: bytes,
+        *,
+        inputs: _ValidationInputs,
+        held: _ValidatedCatalogue | None,
+        referenced: tuple[str, ...],
+    ) -> CalculationRevisionCatalogue:
+        """Validate and hold ``payload``, verifying only the rendering bodies ``held`` cannot vouch for."""
+        reused = {} if held is None else held.reusable_rendering_bodies(inputs)
+        rendering_bodies = {
+            **reused,
+            **self._verified_rendering_bodies(tuple(digest for digest in referenced if digest not in reused)),
+        }
+        split = _split_catalogue(payload)
+        revisions = {} if held is None or split is None else held.reusable_revisions(inputs, split, reused)
+        catalogue = self._validated_catalogue(
+            payload if split is None or not revisions else split.without(revisions),
+            aggregate_context=inputs.aggregate_context,
+            rendering_bodies=rendering_bodies,
+            reused_revisions=(revisions, () if split is None else tuple(split.revisions)),
+        )
+        validated = _ValidatedCatalogue(
+            inputs=inputs,
+            catalogue=catalogue,
+            referenced_digests=referenced,
+            rendering_bodies=MappingProxyType(rendering_bodies),
+            revision_fingerprints=MappingProxyType({} if split is None else split.fingerprints),
+        )
+        self._last_validated = validated
+        _SESSION_VALIDATED_CATALOGUES.remember(self._objects.engine, validated)
+        return catalogue
 
     def _held_validation(self, engine: Engine) -> _ValidatedCatalogue | None:
         """This repository's last validation, else the one an earlier operation left with the session."""
@@ -575,11 +736,16 @@ class CalculationRevisionCatalogueRepository:
         *,
         aggregate_context: CalculationRevisionAggregateContext,
         rendering_bodies: dict[str, SavedRenderingBody] | None = None,
+        reused_revisions: tuple[Mapping[str, CalculationRevision], tuple[str, ...]] = ({}, ()),
     ) -> CalculationRevisionCatalogue:
         """Decode and validate one stored payload against the authorities it was read with.
 
         ``rendering_bodies`` supplies the verified body of every rendering the
         payload refers to by digest; embedded renderings need none.
+        ``reused_revisions`` holds revisions already validated from unchanged
+        JSON, left out of ``payload``, with the stored order of every revision;
+        the catalogue's own invariants, the evidence coverage and the parent
+        coordinates are checked over the whole catalogue either way.
         """
         from ..storage.envelope.contract import Envelope
         from ..storage.schema_lineage import (
@@ -648,10 +814,11 @@ class CalculationRevisionCatalogueRepository:
         # ledger evidence must cover the same contributor set as its
         # fingerprint snapshot. A row silently dropped after persistence
         # surfaces here on load rather than shipping an unexplainable casilla.
-        for revision in envelope.payload.values():
+        catalogue = _with_reused_revisions(envelope.payload, *reused_revisions)
+        for revision in catalogue.values():
             assert_revision_snapshot_evidence_coverage(revision)
-        self._require_parent_coordinates(envelope.payload, work_units=aggregate_context.work_units)
-        return envelope.payload
+        self._require_parent_coordinates(catalogue, work_units=aggregate_context.work_units)
+        return catalogue
 
     def stored_catalogue_is_known_override_free(self) -> bool:
         """Report whether the stored row's bytes are already known to hold no relation override.
