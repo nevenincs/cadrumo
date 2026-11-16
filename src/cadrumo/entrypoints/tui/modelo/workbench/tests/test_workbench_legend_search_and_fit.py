@@ -35,7 +35,7 @@ from ......core.external_constants import OutputLanguage
 from ....components.host import ScreenHostApp
 from ....tests.settling import settle
 from ..casilla_list import CasillaList
-from ..header import result_view
+from ..header import header_result
 from ..legend import on_screen_text
 from ..navigator import section_title
 from ..page_items import workbench_pages
@@ -198,7 +198,7 @@ def test_a_settlement_result_reads_as_money_whatever_type_its_box_declares() -> 
     form = replace_fields(synthetic_form(), {"19": {"data_type": "decimal"}})
     form = with_result(form, ModeloFormResultDirection.TO_PAY, Decimal("1106.69"))
     with override_settings(cadrumo_output_language="en"):
-        view = result_view(form, OutputLanguage.EN, staged=0, recorded=False)
+        view = header_result(form, OutputLanguage.EN, staged=0, recorded=False)
 
     assert view is not None
     assert view.text == f"To pay  1,106.69{_NBSP}€  [19]"

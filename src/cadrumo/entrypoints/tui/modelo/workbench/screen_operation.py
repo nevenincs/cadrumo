@@ -19,7 +19,7 @@ from .....application.modelo.work_form_export_offer import (
     artefact_availability,
     record_availability,
 )
-from .....application.modelo.work_form_header import ModeloFormExportHoldReason, export_hold
+from .....application.modelo.work_form_header import ModeloFormExportHoldReason, export_hold, result_view
 from .....application.modelo.work_form_next_step import ModeloFormNextAction
 from .....application.modelo.work_form_service import ModeloWorkFormLoadV1, modelo_work_form_changes
 from .....core.errors.error_codes import resolve_error_message
@@ -34,7 +34,6 @@ from ...refusal.panel import RefusalSlot
 from ..export_result import ModeloExportResultScreen
 from .casilla_list_models import AddressKey
 from .export import WorkbenchExportScreen
-from .header import result_view
 from .ports import ModeloWorkbenchActionsV1, WorkbenchExportRequest
 from .result import WorkbenchResultScreen, result_lines
 from .screen_constants import (
@@ -350,11 +349,10 @@ class WorkbenchOperationMixin:
             if not verdict.checked_resolves:
                 return verdict.checked_words
             return f"{verdict.checked_words} [{NEXT_KEYS[ModeloFormNextAction.RESOLVE]}]"
-        view = result_view(load.form, self._language, staged=0, recorded=self.recorded)
-        if view is None or view.settled is None:
+        view = result_view(load.form, self._language, recorded=self.recorded)
+        if view is None or view.words is None or view.amount_text is None:
             return tr("workspace.modelo.operation.done")
-        direction, value = view.settled
-        return tr("workspace.modelo.operation.calculated", direction=direction, value=value)
+        return tr("workspace.modelo.operation.calculated", direction=view.words, value=view.amount_text)
 
     async def _state_export_result(
         self: ModeloWorkbenchScreen, actions: ModeloWorkbenchActionsV1, projection: OperationPublicProjectionV1

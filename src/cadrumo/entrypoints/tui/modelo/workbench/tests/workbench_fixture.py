@@ -20,7 +20,7 @@ from ......application.modelo.casilla_help import ModeloCasillaHelpCardV1
 from ......application.modelo.casilla_help_formula import ModeloHelpFormulaV1
 from ......application.modelo.source_policy import source_policy
 from ......application.modelo.work_form import build_modelo_work_form
-from ......application.modelo.work_form_declaration_facts import ModeloFormYearProjection
+from ......application.modelo.work_form_declaration_facts import ModeloFormResultDirection, ModeloFormYearProjection
 from ......application.modelo.work_form_export_offer import (
     ModeloExportRequestField,
     ModeloFormElection,
@@ -36,6 +36,7 @@ from ......application.modelo.work_form_field_vocabulary import (
     ModeloFormText,
     ModeloFormTextDisclosure,
 )
+from ......application.modelo.work_form_header import ModeloFormResultState, ModeloFormResultView
 from ......application.modelo.work_form_models import (
     ModeloFormCounts,
     ModeloFormField,
@@ -59,7 +60,7 @@ from ......application.modelo.work_review import (
 )
 from ......core.aggregation import BindingSourceKind
 from ......core.authority_grade import RegistryAuthorityGrade
-from ......core.casilla_id import CasillaId
+from ......core.casilla_id import CasillaId, validated_casilla_id
 from ......core.errors.hierarchy import CadrumoError
 from ......core.external_constants import OutputLanguage
 from ......core.modelo_export_artefact import ModeloExportArtefact
@@ -73,7 +74,7 @@ from ......domain.modelos.calculation_revision import CalculationRevisionState
 from ......domain.modelos.codes import ModeloCode
 from ......domain.modelos.verification_report import ModeloVerificationFinding
 from ...m303_evidence import OrdinaryM303FilingEvidenceSubmission
-from ..header import ResultView, StatusLine
+from ..header import HeaderResult, StatusLine
 from ..ports import (
     WorkbenchCalculationEvidence,
     WorkbenchChange,
@@ -444,7 +445,17 @@ class FakeReader:
 
 def status_line_of(text: str) -> StatusLine:
     """The header's result line saying ``text``, with no chip, as a dialog repeats it."""
-    return StatusLine(ResultView(text=text, short_text=text, stale=None, failed=False, help=()), chips=())
+    served = ModeloFormResultView(
+        state=ModeloFormResultState.STATED,
+        casilla_id=validated_casilla_id("19"),
+        box=None,
+        settles=False,
+        direction=ModeloFormResultDirection.UNKNOWN,
+        text=text,
+        short_text=text,
+        brief_text=text,
+    )
+    return StatusLine(HeaderResult(served, None), chips=())
 
 
 @dataclass

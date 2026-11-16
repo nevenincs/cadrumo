@@ -11,6 +11,7 @@ from textual.widgets import Static
 
 from .....application.modelo.casilla_help import ModeloCasillaHelpCardV1
 from .....application.modelo.work_form_field_vocabulary import ModeloFormCasillaAddressV1
+from .....application.modelo.work_form_header import deadline_view
 from .....application.modelo.work_form_models import ModeloFormField
 from .....application.overview.calendar import holiday_coverage_statement
 from .....core.i18n.render import tr
@@ -19,9 +20,6 @@ from ...components.cell_text import wrap_words
 from .casilla_list import CasillaList
 from .casilla_list_models import CasillaListEntry, CasillaListNote
 from .grid import CasillaListRecords
-from .header import (
-    deadline_help,
-)
 from .issue_scale import blocks_marked
 from .legend import legend_panel, more_text, on_screen_text
 from .screen_constants import (
@@ -96,9 +94,9 @@ class WorkbenchHelpMixin:
         lines = self._help_lines(entry, expanded)
         form = self.form
         if expanded and form is not None:
-            shifted = deadline_help(form, self._language, recorded=self.recorded)
-            if shifted is not None:
-                lines.append(shifted)
+            deadline = deadline_view(form, self._language, recorded=self.recorded)
+            if deadline is not None and deadline.help is not None:
+                lines.append(deadline.help)
             if not self.recorded and form.deadline is not None:
                 lines.append(holiday_coverage_statement(form.deadline.holiday_coverage))
             lines.append(tr("workspace.modelo.help.keys", keys=self._all_keys_text()))

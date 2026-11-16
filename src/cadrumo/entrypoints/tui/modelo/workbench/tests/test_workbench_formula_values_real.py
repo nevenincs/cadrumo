@@ -17,6 +17,7 @@ from ......application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from ......application.modelo.work_form_field_vocabulary import address_key
+from ......application.modelo.work_form_header import deadline_view
 from ......application.modelo.work_form_next_step import blocking_count
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
@@ -36,7 +37,7 @@ from ....tests.modelo_workbench_session import application_workbench
 from ....tests.settling import settle, settle_until
 from ..editor import CasillaEditorPanel, CasillaEditorScreen
 from ..factory import InstalledModeloWorkbench
-from ..header import deadline_view, fit_identity
+from ..header import deadline_text, fit_identity
 from ..issues import WorkbenchIssuesScreen
 from ..screen import ModeloWorkbenchScreen
 
@@ -209,12 +210,13 @@ async def test_blocked_small_workbench_keeps_help_reachable_and_the_hungarian_qu
                 # declaration projection. Its caption must leave the worded
                 # quarter visible instead of silently clipping the identity.
                 undated = screen.form.model_copy(update={"deadline": None})
-                deadline = deadline_view(undated, language, recorded=False, width=80)
-                assert deadline is not None
+                served = deadline_view(undated, language, recorded=False)
+                assert served is not None
+                deadline = deadline_text(undated, language, served, 80)
                 name = fit_identity(undated, language, deadline, 80)
                 assert "I. negyedév" in name.text
                 assert not name.stacked
-                assert cell_len(name.text) + 3 + cell_len(deadline.text) <= 80
+                assert cell_len(name.text) + 3 + cell_len(deadline) <= 80
             await pilot.press("question_mark")
             await settle(pilot)
             band = screen.query_one("#wb-help", Static)
