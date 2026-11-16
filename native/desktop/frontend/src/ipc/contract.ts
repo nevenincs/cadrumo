@@ -527,7 +527,7 @@ export interface HostCommands {
       profile: string;
       selector: import("../shell/borrador").BorradorSelector;
     };
-    result: import("../shell/borrador").BorradorRead;
+    result: import("../shell/borradorContract").Borrador100ReadProjection;
   };
   /** The same drafts without each capture's provenance. */
   aeat_sync_borrador_query: {
@@ -535,13 +535,13 @@ export interface HostCommands {
       profile: string;
       selector: import("../shell/borrador").BorradorSelector;
     };
-    result: import("../shell/borrador").BorradorRead;
+    result: import("../shell/borradorContract").Borrador100QueryProjection;
   };
   /** The year's newest readable draft beside the saved Modelo 100
    * calculation, in `language`. It changes no record. */
   aeat_sync_borrador_compare: {
     args: { profile: string; year: number; language: string };
-    result: import("../shell/borrador").BorradorComparison;
+    result: import("../shell/borradorContract").Borrador100ComparisonProjection;
   };
   /** What an update needs before it reads AEAT: the secure browser's row and
    * whether the profile has AEAT access. It reaches no network. */

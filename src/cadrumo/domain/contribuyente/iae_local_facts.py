@@ -21,7 +21,7 @@ from typing import Final
 from pydantic import BaseModel, ValidationError
 
 from ...core.decimal.grammar import try_parse_canonical_decimal
-from ...core.errors.hierarchy import ProfileAnswerTypeError
+from ...core.errors.hierarchy import CadrumoError, ProfileAnswerTypeError
 from .iae_local_record import IaeElementoTributarioRecord, IaeLocalRecord, IaeLocalSuperficieRecord
 from .inmueble_facts import rows_from_facts
 
@@ -77,7 +77,10 @@ def _row_key(raw: str | None, *, leaf: str) -> int:
 
 def _error_leaf(error: ValidationError) -> str:
     for item in error.errors():
-        context = getattr(getattr(item.get("ctx", {}).get("error"), "__cause__", None), "context", None) or {}
+        ctx = item.get("ctx")
+        raised = ctx.get("error") if ctx is not None else None
+        cause = raised.__cause__ if isinstance(raised, BaseException) else None
+        context = (cause.context if isinstance(cause, CadrumoError) else None) or {}
         key = context.get("key")
         if isinstance(key, str):
             return key

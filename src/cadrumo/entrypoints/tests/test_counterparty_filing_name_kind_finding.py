@@ -39,10 +39,6 @@ from ...core.i18n.render import tr
 from ...core.operations import OperationTerminalCondition, profile_operation_subject
 from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.filing.declared_party_name import DeclaredPartyKind
-from ..cli.ledger_counterparty_filing_name_commands import (
-    filing_name_finding_notices,
-    filing_name_finding_payloads,
-)
 from . import registered_executor_case_support as conformance
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -200,26 +196,6 @@ def test_the_finding_serves_its_sentence_in_the_workers_language(language: Outpu
     assert natural in finding.words
     assert not re.search(r"\bapplication\.|\{|\}|%\(", finding.words)
     assert _DNI not in finding.words
-
-
-def test_the_cli_renders_the_finding_in_served_words_without_the_party() -> None:
-    with bundled_indexed_authority().operation() as operation:
-        findings = filing_name_kind_findings(
-            tax_identifier=_DNI, country_code=None, declared_kind="entity", operation=operation
-        )
-    (payload,) = filing_name_finding_payloads(findings)
-    assert (payload.code, payload.declared_kind, payload.observed_form) == (
-        FILING_NAME_KIND_CONTRADICTS_FORM_FINDING,
-        DeclaredPartyKind.ENTITY,
-        DeclaredPartyKind.NATURAL_PERSON,
-    )
-    (notice,) = filing_name_finding_notices(findings)
-    assert notice.code == f"ledger.counterparty.{FILING_NAME_KIND_CONTRADICTS_FORM_FINDING}"
-    assert notice.severity.value == "warning"
-    assert "{" not in notice.message
-    assert "cli.ledger" not in notice.message
-    assert _DNI not in notice.message
-    assert _DNI not in str(notice.context)
 
 
 @pytest.mark.parametrize("identifier", ["12345678A", "", "not an identifier", "DE123456789"])

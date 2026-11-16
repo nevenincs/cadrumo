@@ -241,4 +241,6 @@ def test_a_stated_cooperativa_protegida_flag_is_refused_only_for_its_unsupported
     assert refusal.value.translated_message == "application.filing.export_parity.errors.required_casillas_omitted"
     context = refusal.value.context
     assert context is not None
-    assert tuple(item["casilla_id"] for item in context["missing_casillas"]) == _UNSUPPORTED_COOPERATIVE_CUOTA
+    missing_items = context["missing_casillas"]
+    assert isinstance(missing_items, list | tuple)
+    assert tuple(item["casilla_id"] for item in missing_items) == _UNSUPPORTED_COOPERATIVE_CUOTA

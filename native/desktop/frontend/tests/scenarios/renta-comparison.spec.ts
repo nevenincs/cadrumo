@@ -1,6 +1,6 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
-import type { BorradorComparison } from "../../src/shell/borrador";
+import type { Borrador100ComparisonProjection } from "../../src/shell/borradorContract";
 import type { LedgerErrorDetail } from "../../src/shell/ledger";
 
 import { label } from "../support/strings";
@@ -245,7 +245,10 @@ for (const language of LANGUAGES) {
 }
 
 /** The comparison of the AEAT draft the application read at `state`. */
-const servedDraft = (state: string, language: Language): BorradorComparison =>
+const servedDraft = (
+  state: string,
+  language: Language,
+): Borrador100ComparisonProjection =>
   JSON.parse(
     readFileSync(
       new URL(`borrador-100-0A-${state}-${language}.json`, MODELO_FIXTURES),

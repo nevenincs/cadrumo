@@ -920,10 +920,6 @@ class Transaction(BaseModel):
         if self.exemption_article is None:
             return self
         effective_date = self.operation_date or self.raw.value_date or self.raw.booked_date
-        if effective_date is None:
-            raise TransactionValidationError(
-                "exemption_article requires the transaction's operation, value or booked date for registry resolution",
-            )
         require_iva_exemption_article(self.exemption_article, effective_date=effective_date)
         if self.iva_category != require_iva_category("domestic_exempt", effective_date=effective_date):
             actual = self.iva_category.value if self.iva_category is not None else None

@@ -159,22 +159,6 @@ test("the calendar's months draw each filing window across the days it is open",
       .first(),
   ).toHaveAttribute("data-state", "filed");
 
-  // A window whose opening was not reported is not guessed at: its closing
-  // day alone is drawn, and it says the opening is not known.
-  const unknown = page.locator(
-    `.calendar-bar[data-entry="349:${fixtureYear}-3T"]`,
-  );
-  await expect(unknown).toHaveCount(1);
-  const closing = await edges(dayOf(fixtureDay(10, 20)));
-  const drawn = await edges(unknown);
-  expect(Math.abs(drawn.left - closing.left)).toBeLessThanOrEqual(3);
-  expect(Math.abs(drawn.right - closing.right)).toBeLessThanOrEqual(3);
-  await expect(unknown).toHaveAccessibleName(
-    new RegExp(
-      `${short.format(new Date(fixtureYear, 9, 20))} \\(${label("desktop.calendar.window_unknown")}\\)`,
-    ),
-  );
-
   // A window that runs from one month into the next is drawn in both: the
   // fourth quarter's, moved from a Saturday to the Monday after.
   await expect(

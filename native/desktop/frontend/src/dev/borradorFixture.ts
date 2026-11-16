@@ -1,5 +1,6 @@
 import { requireServed } from "./servedFixtures";
-import type { BorradorComparison, BorradorPort } from "../shell/borrador";
+import type { BorradorPort } from "../shell/borrador";
+import type { Borrador100ComparisonProjection } from "../shell/borradorContract";
 
 // The comparison of the AEAT draft with the saved Modelo 100 calculation that
 // the application read for a synthetic filer through
@@ -66,7 +67,7 @@ export function borradorFixture({
       if (scenario === "unavailable") return reject("unavailable");
       const load = envelopes[`borrador-100-0A-${scenario}-${language}`];
       if (!load) return reject("unavailable");
-      return structuredClone(await load()) as BorradorComparison;
+      return structuredClone(await load()) as Borrador100ComparisonProjection;
     },
   };
 }
