@@ -10,6 +10,10 @@ import type { Channel } from "@tauri-apps/api/core";
 import type { AgentAccessAnswer } from "../shell/agentAccess";
 import type { ServedCatalogAnswer } from "../shell/agentCatalogContract";
 import type {
+  ModelLicenceResponse,
+  SkillListResponse,
+} from "../shell/agentGatewayContract";
+import type {
   AgentAnswerResult,
   AgentApproval,
   AgentAttachmentCard,
@@ -19,7 +23,6 @@ import type {
   AgentAttachmentRelease,
   AgentAttachmentScope,
   AgentDropSignal,
-  AgentModelLicence,
   AgentQuestionnaire,
   AgentQuestionnaireAnswer,
   AgentSendRequest,
@@ -1115,10 +1118,10 @@ export interface HostCommands {
   /** One model's licence text, from the ready agent's licence route. */
   agent_model_licence: {
     args: Authorized<{ provider: string; transport: string; model: string }>;
-    result: AgentModelLicence;
+    result: ModelLicenceResponse;
   };
   /** cadrumo-agent's skills, as `GET /v1/skills` lists them, unchanged. */
-  agent_skills: { args: Authorized; result: unknown };
+  agent_skills: { args: Authorized; result: SkillListResponse };
   /** One skill with its SKILL.md, as `GET /v1/skills/{name}` serves it. A
    * name outside the skill grammar is refused as `agent_invalid_request`
    * before the agent is asked, and an unknown one as

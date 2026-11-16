@@ -13,6 +13,7 @@ from datetime import date
 from decimal import Decimal
 
 from ...core.identity.transaction_ids import TransactionId
+from ...core.parsing.codes import IsoCurrencyCode
 from ...core.time.clock import now as clock_now_utc
 from ...domain.contribuyente.inventory.closing_foundations import InventoryLedgerError
 from ...domain.contribuyente.inventory.corrections import (
@@ -122,7 +123,7 @@ class InventoryClaimCandidate:
     booked_date: date
     counterparty: str | None
     description: str
-    currency: str
+    currency: IsoCurrencyCode
     taxable_base: Decimal | None
     iva_amount: Decimal | None
     recargo_amount: Decimal | None
